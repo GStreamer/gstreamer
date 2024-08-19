@@ -136,7 +136,6 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
   GstVulkanDecoderPrivate *priv;
   VkPhysicalDevice gpu;
   VkResult res;
-  VkVideoDecodeCapabilitiesKHR dec_caps;
   VkVideoFormatPropertiesKHR *fmts = NULL;
   VkVideoProfileListInfoKHR profile_list = {
     .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR,
@@ -191,7 +190,7 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
   switch (self->codec) {
     case VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR:
       /* *INDENT-OFF* */
-      priv->caps.codec.h264dec = (VkVideoDecodeH264CapabilitiesKHR) {
+      priv->caps.decoder.codec.h264 = (VkVideoDecodeH264CapabilitiesKHR) {
           .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_CAPABILITIES_KHR,
       };
       /* *INDENT-ON* */
@@ -199,7 +198,7 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
       break;
     case VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR:
       /* *INDENT-OFF* */
-      priv->caps.codec.h265dec = (VkVideoDecodeH265CapabilitiesKHR) {
+      priv->caps.decoder.codec.h265 = (VkVideoDecodeH265CapabilitiesKHR) {
           .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_CAPABILITIES_KHR,
       };
       /* *INDENT-ON* */
@@ -210,13 +209,13 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
   }
 
   /* *INDENT-OFF* */
-  dec_caps = (VkVideoDecodeCapabilitiesKHR) {
+  priv->caps.decoder.caps = (VkVideoDecodeCapabilitiesKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_CAPABILITIES_KHR,
-    .pNext = &priv->caps.codec,
+    .pNext = &priv->caps.decoder.codec,
   };
   priv->caps.caps =  (VkVideoCapabilitiesKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_CAPABILITIES_KHR,
-    .pNext = &dec_caps,
+    .pNext = &priv->caps.decoder.caps,
   };
   /* *INDENT-ON* */
 
@@ -229,10 +228,10 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
 
   switch (self->codec) {
     case VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR:
-      maxlevel = priv->caps.codec.h264dec.maxLevelIdc;
+      maxlevel = priv->caps.decoder.codec.h264.maxLevelIdc;
       break;
     case VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR:
-      maxlevel = priv->caps.codec.h265dec.maxLevelIdc;
+      maxlevel = priv->caps.decoder.codec.h265.maxLevelIdc;
       break;
     default:
       maxlevel = 0;
@@ -273,11 +272,11 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
       GST_STR_NULL (priv->caps.caps.stdHeaderVersion.extensionName),
       VK_CODEC_VERSION (priv->caps.caps.stdHeaderVersion.specVersion),
       VK_CODEC_VERSION (_vk_codec_extensions[codec_idx].specVersion),
-      dec_caps.flags ? "" : " invalid",
-      dec_caps.flags &
+      priv->caps.decoder.caps.flags ? "" : " invalid",
+      priv->caps.decoder.caps.flags &
       VK_VIDEO_DECODE_CAPABILITY_DPB_AND_OUTPUT_COINCIDE_BIT_KHR ?
       " reuse_output_DPB" : "",
-      dec_caps.flags &
+      priv->caps.decoder.caps.flags &
       VK_VIDEO_DECODE_CAPABILITY_DPB_AND_OUTPUT_DISTINCT_BIT_KHR ?
       " dedicated_DPB" : "");
 
@@ -288,7 +287,7 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
    * VK_VIDEO_DECODE_CAPABILITY_DPB_AND_OUTPUT_DISTINCT_BIT_KHR - reports the
    * implementation supports using distinct Video Picture Resources for decode
    * DPB and decode output. */
-  self->dedicated_dpb = ((dec_caps.flags &
+  self->dedicated_dpb = ((priv->caps.decoder.caps.flags &
           VK_VIDEO_DECODE_CAPABILITY_DPB_AND_OUTPUT_COINCIDE_BIT_KHR) == 0);
 
   /* The DPB or Reconstructed Video Picture Resources for the video session may
@@ -828,7 +827,8 @@ gst_vulkan_decoder_caps (GstVulkanDecoder * self,
 
   if (caps) {
     *caps = priv->caps;
-    caps->caps.pNext = &caps->codec;
+    caps->caps.pNext = &caps->decoder.caps;
+    caps->decoder.caps.pNext = &caps->decoder.codec;
   }
 
   return TRUE;

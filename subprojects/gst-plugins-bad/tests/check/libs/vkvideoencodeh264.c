@@ -503,7 +503,8 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
     .naluSliceEntryCount = 1,
     .pNaluSliceEntries = &frame->slice_info,
     .pStdPictureInfo = &frame->pic_info,
-    .generatePrefixNalu = (enc_caps.codec.h264enc.flags & VK_VIDEO_ENCODE_H264_CAPABILITY_GENERATE_PREFIX_NALU_BIT_KHR),
+    .generatePrefixNalu = (enc_caps.encoder.codec.h264.flags
+         & VK_VIDEO_ENCODE_H264_CAPABILITY_GENERATE_PREFIX_NALU_BIT_KHR),
     /* *INDENT-ON* */
   };
 
@@ -891,7 +892,7 @@ GST_START_TEST (test_encoder_h264_i_p_b)
 
   fail_unless (gst_vulkan_encoder_caps (enc, &enc_caps));
 
-  if (!enc_caps.codec.h264enc.maxL1ReferenceCount) {
+  if (!enc_caps.encoder.codec.h264.maxL1ReferenceCount) {
     GST_WARNING ("Driver does not support B frames");
     goto beach;
   }

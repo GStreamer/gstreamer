@@ -5924,25 +5924,40 @@ signalled and freed.</doc>
       <field name="caps" introspectable="0" readable="0" private="1">
         <type c:type="VkVideoCapabilitiesKHR"/>
       </field>
-      <union name="codec" c:type="codec">
+      <union>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-        <field name="base" writable="1">
-          <type name="Vulkan.BaseInStructure" c:type="VkBaseInStructure"/>
-        </field>
-        <field name="h264dec" introspectable="0" writable="1">
-          <type c:type="VkVideoDecodeH264CapabilitiesKHR"/>
-        </field>
-        <field name="h265dec" introspectable="0" writable="1">
-          <type c:type="VkVideoDecodeH265CapabilitiesKHR"/>
-        </field>
-        <field name="h264enc" introspectable="0" writable="1">
-          <type c:type="VkVideoEncodeH264CapabilitiesKHR"/>
-        </field>
-        <field name="h265enc" introspectable="0" writable="1">
-          <type c:type="VkVideoEncodeH265CapabilitiesKHR"/>
-        </field>
+        <record name="decoder" c:type="decoder">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
+          <field name="caps" introspectable="0" readable="0" private="1">
+            <type c:type="VkVideoDecodeCapabilitiesKHR"/>
+          </field>
+          <union name="codec" c:type="codec">
+            <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
+            <field name="h264" introspectable="0" readable="0" private="1">
+              <type c:type="VkVideoDecodeH264CapabilitiesKHR"/>
+            </field>
+            <field name="h265" introspectable="0" readable="0" private="1">
+              <type c:type="VkVideoDecodeH265CapabilitiesKHR"/>
+            </field>
+          </union>
+        </record>
+        <record name="encoder" c:type="encoder">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
+          <field name="caps" introspectable="0" readable="0" private="1">
+            <type c:type="VkVideoEncodeCapabilitiesKHR"/>
+          </field>
+          <union name="codec" c:type="codec">
+            <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
+            <field name="h264" introspectable="0" readable="0" private="1">
+              <type c:type="VkVideoEncodeH264CapabilitiesKHR"/>
+            </field>
+            <field name="h265" introspectable="0" readable="0" private="1">
+              <type c:type="VkVideoEncodeH265CapabilitiesKHR"/>
+            </field>
+          </union>
+        </record>
       </union>
-      <field name="_reserved" writable="1">
+      <field name="_reserved" readable="0" private="1">
         <array zero-terminated="0" fixed-size="4">
           <type name="gpointer" c:type="gpointer"/>
         </array>

@@ -388,7 +388,6 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
     GstVulkanH265EncodeFrame ** list1, gint list1_num, gint vps_id, gint sps_id,
     gint pps_id)
 {
-  GstVulkanVideoCapabilities enc_caps;
   int i, ref_pics_num = 0;
   GstVulkanEncoderPicture *ref_pics[16] = { NULL, };
   gint16 delta_poc_s0_minus1 = 0, delta_poc_s1_minus1 = 0;
@@ -399,8 +398,6 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
   gint picture_type = PICTURE_TYPE(slice_type, picture->is_ref);
 
   GST_DEBUG ("Encoding frame num: %d", frame_num);
-
-  fail_unless (gst_vulkan_encoder_caps (enc, &enc_caps));
 
   frame->slice_wt = (StdVideoEncodeH265WeightTable) {
     /* *INDENT-OFF* */
@@ -806,51 +803,44 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
   fail_unless (gst_vulkan_encoder_caps (enc, &enc_caps));
 
 
-  if (enc_caps.codec.h265enc.
-      ctbSizes & VK_VIDEO_ENCODE_H265_CTB_SIZE_64_BIT_KHR) {
+  if (enc_caps.encoder.codec.h265.ctbSizes
+      & VK_VIDEO_ENCODE_H265_CTB_SIZE_64_BIT_KHR)
     max_ctb_size = 64;
-  } else if (enc_caps.codec.h265enc.
-      ctbSizes & VK_VIDEO_ENCODE_H265_CTB_SIZE_32_BIT_KHR) {
+  else if (enc_caps.encoder.codec.h265.ctbSizes
+      & VK_VIDEO_ENCODE_H265_CTB_SIZE_32_BIT_KHR)
     max_ctb_size = 32;
-  }
-
-  if (enc_caps.codec.h265enc.
-      ctbSizes & VK_VIDEO_ENCODE_H265_CTB_SIZE_16_BIT_KHR) {
+  else if (enc_caps.encoder.codec.h265.ctbSizes
+      & VK_VIDEO_ENCODE_H265_CTB_SIZE_16_BIT_KHR)
     min_ctb_size = 16;
-  } else if (enc_caps.codec.h265enc.
-      ctbSizes & VK_VIDEO_ENCODE_H265_CTB_SIZE_32_BIT_KHR) {
-    min_ctb_size = 32;
-  }
 
-  if (enc_caps.codec.h265enc.transformBlockSizes &
+  if (enc_caps.encoder.codec.h265.transformBlockSizes &
       VK_VIDEO_ENCODE_H265_TRANSFORM_BLOCK_SIZE_4_BIT_KHR)
     min_tb_size = 4;
-  else if (enc_caps.codec.h265enc.transformBlockSizes &
+  else if (enc_caps.encoder.codec.h265.transformBlockSizes &
       VK_VIDEO_ENCODE_H265_TRANSFORM_BLOCK_SIZE_8_BIT_KHR)
     min_tb_size = 8;
-  else if (enc_caps.codec.h265enc.transformBlockSizes &
+  else if (enc_caps.encoder.codec.h265.transformBlockSizes &
       VK_VIDEO_ENCODE_H265_TRANSFORM_BLOCK_SIZE_16_BIT_KHR)
     min_tb_size = 16;
-  else if (enc_caps.codec.h265enc.transformBlockSizes &
+  else if (enc_caps.encoder.codec.h265.transformBlockSizes &
       VK_VIDEO_ENCODE_H265_TRANSFORM_BLOCK_SIZE_32_BIT_KHR)
     min_tb_size = 32;
 
-  if (enc_caps.codec.h265enc.transformBlockSizes &
-      VK_VIDEO_ENCODE_H265_TRANSFORM_BLOCK_SIZE_32_BIT_KHR)
+  if (enc_caps.encoder.codec.h265.transformBlockSizes
+      & VK_VIDEO_ENCODE_H265_TRANSFORM_BLOCK_SIZE_32_BIT_KHR)
     max_tb_size = 32;
-  else if (enc_caps.codec.h265enc.transformBlockSizes &
-      VK_VIDEO_ENCODE_H265_TRANSFORM_BLOCK_SIZE_16_BIT_KHR)
+  else if (enc_caps.encoder.codec.h265.transformBlockSizes
+      & VK_VIDEO_ENCODE_H265_TRANSFORM_BLOCK_SIZE_16_BIT_KHR)
     max_tb_size = 16;
-  else if (enc_caps.codec.h265enc.transformBlockSizes &
-      VK_VIDEO_ENCODE_H265_TRANSFORM_BLOCK_SIZE_8_BIT_KHR)
+  else if (enc_caps.encoder.codec.h265.transformBlockSizes
+      & VK_VIDEO_ENCODE_H265_TRANSFORM_BLOCK_SIZE_8_BIT_KHR)
     max_tb_size = 8;
-  else if (enc_caps.codec.h265enc.transformBlockSizes &
-      VK_VIDEO_ENCODE_H265_TRANSFORM_BLOCK_SIZE_4_BIT_KHR)
+  else if (enc_caps.encoder.codec.h265.transformBlockSizes
+      & VK_VIDEO_ENCODE_H265_TRANSFORM_BLOCK_SIZE_4_BIT_KHR)
     max_tb_size = 4;
 
   max_transform_hierarchy =
       gst_util_ceil_log2 (max_ctb_size) - gst_util_ceil_log2 (min_tb_size);
-
 
   h265_std_ptl.general_profile_idc = profile_idc;
   h265_std_vps.vps_video_parameter_set_id = vps_id;
@@ -878,14 +868,16 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
   h265_std_sps.conf_win_bottom_offset = 0;
 
   h265_std_pps.flags.transform_skip_enabled_flag =
-      enc_caps.codec.h265enc.stdSyntaxFlags &
-      VK_VIDEO_ENCODE_H265_STD_TRANSFORM_SKIP_ENABLED_FLAG_SET_BIT_KHR ? 1 : 0;
+      enc_caps.encoder.codec.h265.stdSyntaxFlags
+      & VK_VIDEO_ENCODE_H265_STD_TRANSFORM_SKIP_ENABLED_FLAG_SET_BIT_KHR
+      ? 1 : 0;
   h265_std_pps.flags.weighted_pred_flag =
-      enc_caps.codec.h265enc.stdSyntaxFlags &
-      VK_VIDEO_ENCODE_H265_STD_WEIGHTED_PRED_FLAG_SET_BIT_KHR ? 1 : 0;
+      enc_caps.encoder.codec.h265.stdSyntaxFlags
+      & VK_VIDEO_ENCODE_H265_STD_WEIGHTED_PRED_FLAG_SET_BIT_KHR ? 1 : 0;
   h265_std_pps.flags.entropy_coding_sync_enabled_flag =
-      (enc_caps.codec.h265enc.maxTiles.width > 1
-      || enc_caps.codec.h265enc.maxTiles.height > 1) ? 1 : 0;
+      (enc_caps.encoder.codec.h265.maxTiles.width > 1
+      || enc_caps.encoder.codec.h265.maxTiles.height > 1)
+      ? 1 : 0;
   h265_std_pps.sps_video_parameter_set_id = vps_id;
   h265_std_pps.pps_seq_parameter_set_id = sps_id;
   h265_std_pps.pps_pic_parameter_set_id = pps_id;
@@ -1075,7 +1067,7 @@ GST_START_TEST (test_encoder_h265_i_p_b)
 
   fail_unless (gst_vulkan_encoder_caps (enc, &enc_caps));
 
-  if (!enc_caps.codec.h265enc.maxL1ReferenceCount) {
+  if (!enc_caps.encoder.codec.h265.maxL1ReferenceCount) {
     GST_WARNING ("Driver does not support B frames");
     goto beach;
   }

@@ -80,23 +80,31 @@ struct _GstVulkanVideoCapabilities
   VkVideoCapabilitiesKHR caps;
   union
   {
-    VkBaseInStructure base;
-    VkVideoDecodeH264CapabilitiesKHR h264dec;
-    VkVideoDecodeH265CapabilitiesKHR h265dec;
-    /**
-     * GstVulkanVideoCapabilities.codec.h264enc:
-     *
-     * Since: 1.26
-     */
-    VkVideoEncodeH264CapabilitiesKHR h264enc;
-    /**
-     * GstVulkanVideoCapabilities.codec.h265enc:
-     *
-     * Since: 1.26
-     */
-    VkVideoEncodeH265CapabilitiesKHR h265enc;
-  } codec;
+    struct
+    {
+      /*< private >*/
+      VkVideoDecodeCapabilitiesKHR caps;
+      union
+      {
+        /*< private >*/
+        VkVideoDecodeH264CapabilitiesKHR h264;
+        VkVideoDecodeH265CapabilitiesKHR h265;
+      } codec;
+    } decoder;
+    struct
+    {
+      /*< private >*/
+      VkVideoEncodeCapabilitiesKHR caps;
+      union
+      {
+        /*< private >*/
+        VkVideoEncodeH264CapabilitiesKHR h264;
+        VkVideoEncodeH265CapabilitiesKHR h265;
+      } codec;
+    } encoder;
+  };
 #endif
+  /*< private >*/
   gpointer _reserved[GST_PADDING];
 };
 

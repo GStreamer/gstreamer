@@ -54,7 +54,6 @@ struct _GstVulkanEncoderPrivate
   GstVulkanVideoSession session;
   GstVulkanVideoCapabilities caps;
   VkVideoFormatPropertiesKHR format;
-  VkVideoEncodeCapabilitiesKHR enc_caps;
   VkVideoEncodeRateControlInfoKHR rate_control_info;
 
   GstVulkanVideoProfile profile;
@@ -492,7 +491,8 @@ gst_vulkan_encoder_caps (GstVulkanEncoder * self,
 
   if (caps) {
     *caps = priv->caps;
-    caps->caps.pNext = &caps->codec;
+    caps->caps.pNext = &caps->encoder.caps;
+    caps->encoder.caps.pNext = &caps->encoder.codec;
   }
 
   return TRUE;
@@ -607,7 +607,7 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
             "Invalid profile");
         return FALSE;
       }
-      priv->caps.codec.h264enc = (VkVideoEncodeH264CapabilitiesKHR) {
+      priv->caps.encoder.codec.h264 = (VkVideoEncodeH264CapabilitiesKHR) {
         /* *INDENT-OFF* */
         .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_CAPABILITIES_KHR,
         /* *INDENT-ON* */
@@ -620,7 +620,7 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
             "Invalid profile");
         return FALSE;
       }
-      priv->caps.codec.h265enc = (VkVideoEncodeH265CapabilitiesKHR) {
+      priv->caps.encoder.codec.h265 = (VkVideoEncodeH265CapabilitiesKHR) {
         /* *INDENT-OFF* */
         .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_CAPABILITIES_KHR,
         /* *INDENT-ON* */
@@ -640,13 +640,13 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   priv->profile.profile.pNext = &priv->profile.usage.encode;
 
   /* *INDENT-OFF* */
-  priv->enc_caps = (VkVideoEncodeCapabilitiesKHR) {
+  priv->caps.encoder.caps = (VkVideoEncodeCapabilitiesKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_CAPABILITIES_KHR,
-    .pNext = &priv->caps.codec,
+    .pNext = &priv->caps.encoder.codec,
   };
   priv->caps.caps = (VkVideoCapabilitiesKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_CAPABILITIES_KHR,
-    .pNext = &priv->enc_caps,
+    .pNext = &priv->caps.encoder.caps,
   };
   /* *INDENT-ON* */
 
@@ -677,29 +677,29 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
 
   GST_OBJECT_LOCK (self);
   if ((priv->prop.rate_control != VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DEFAULT_KHR)
-      && !(priv->prop.rate_control & priv->enc_caps.rateControlModes)) {
+      && !(priv->prop.rate_control & priv->caps.encoder.caps.rateControlModes)) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "The driver does not support the rate control requested %d, driver caps: %d",
-        priv->prop.rate_control, priv->enc_caps.rateControlModes);
+        priv->prop.rate_control, priv->caps.encoder.caps.rateControlModes);
     GST_OBJECT_UNLOCK (self);
     return FALSE;
   }
 
-  if (priv->enc_caps.maxQualityLevels
-      && priv->prop.quality_level >= priv->enc_caps.maxQualityLevels) {
+  if (priv->caps.encoder.caps.maxQualityLevels
+      && priv->prop.quality_level >= priv->caps.encoder.caps.maxQualityLevels) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "The driver does not support the quality level requested %d, driver caps: %d",
-        priv->prop.quality_level, priv->enc_caps.maxQualityLevels);
+        priv->prop.quality_level, priv->caps.encoder.caps.maxQualityLevels);
     GST_OBJECT_UNLOCK (self);
     return FALSE;
   }
 
-  if (priv->enc_caps.maxBitrate
-      && priv->prop.average_bitrate >= priv->enc_caps.maxBitrate) {
+  if (priv->caps.encoder.caps.maxBitrate
+      && priv->prop.average_bitrate >= priv->caps.encoder.caps.maxBitrate) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "The driver does not support the average bitrate requested %d, driver caps: %"
         G_GUINT64_FORMAT, priv->prop.average_bitrate,
-        priv->enc_caps.maxBitrate);
+        priv->caps.encoder.caps.maxBitrate);
     GST_OBJECT_UNLOCK (self);
     return FALSE;
   }
@@ -723,7 +723,7 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   query_create = (VkQueryPoolVideoEncodeFeedbackCreateInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_QUERY_POOL_VIDEO_ENCODE_FEEDBACK_CREATE_INFO_KHR,
     .pNext = &profile->profile,
-    .encodeFeedbackFlags = priv->enc_caps.supportedEncodeFeedbackFlags &
+    .encodeFeedbackFlags = priv->caps.encoder.caps.supportedEncodeFeedbackFlags &
         (~VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_HAS_OVERRIDES_BIT_KHR),
   };
   /* *INDENT-ON* */
@@ -750,7 +750,7 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
       priv->caps.caps.maxCodedExtent.width,
       priv->caps.caps.minCodedExtent.height,
       priv->caps.caps.maxCodedExtent.height,
-      priv->enc_caps.maxBitrate,
+      priv->caps.encoder.caps.maxBitrate,
       priv->caps.caps.flags &
       VK_VIDEO_CAPABILITY_SEPARATE_REFERENCE_IMAGES_BIT_KHR ?
       " separate_references" : "");
@@ -759,7 +759,6 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
       !(priv->caps.
       caps.flags & VK_VIDEO_CAPABILITY_SEPARATE_REFERENCE_IMAGES_BIT_KHR);
 
-  priv->caps.caps.pNext = NULL;
 
   /* *INDENT-OFF* */
   session_create = (VkVideoSessionCreateInfoKHR) {
@@ -1091,7 +1090,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
       .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_RATE_CONTROL_LAYER_INFO_KHR,
       .pNext = pic->codec_rc_layer_info,
       .averageBitrate = priv->prop.average_bitrate,
-      .maxBitrate = priv->enc_caps.maxBitrate,
+      .maxBitrate = priv->caps.encoder.caps.maxBitrate,
       .frameRateNumerator = pic->fps_n,
       .frameRateDenominator = pic->fps_d,
     };
@@ -1184,7 +1183,8 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     priv->vk.CmdControlVideoCoding (cmd_buf->cmd, &coding_ctrl);
 
     if (priv->prop.quality_level
-        && priv->prop.quality_level <= priv->enc_caps.maxQualityLevels) {
+        && priv->prop.quality_level <=
+        priv->caps.encoder.caps.maxQualityLevels) {
 
       /* *INDENT-OFF* */
       quality_level_info = (VkVideoEncodeQualityLevelInfoKHR) {
