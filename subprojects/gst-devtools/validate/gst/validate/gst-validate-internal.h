@@ -56,6 +56,7 @@ G_GNUC_INTERNAL gchar** gst_validate_scenario_get_include_paths(const gchar* rel
 G_GNUC_INTERNAL void _priv_validate_override_registry_deinit(void);
 
 G_GNUC_INTERNAL GstValidateReportingDetails gst_validate_runner_get_default_reporting_details (GstValidateRunner *runner);
+G_GNUC_INTERNAL void gst_validate_runner_set_monitor_all_pipelines (GstValidateRunner *runner, gboolean monitor_all_pipelines);
 
 #define GST_VALIDATE_VALIDATE_TEST_SUFFIX ".validatetest"
 G_GNUC_INTERNAL GstValidateMonitor * gst_validate_get_monitor (GObject *object);

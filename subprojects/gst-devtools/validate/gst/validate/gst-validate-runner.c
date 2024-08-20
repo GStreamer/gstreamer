@@ -96,6 +96,8 @@ struct _GstValidateRunnerPrivate
   gchar **pipeline_names_strv;
 
   GList *expected_issues;
+
+  gboolean monitor_all_pipelines;
 };
 
 /* Describes the reporting level to apply to a name pattern */
@@ -152,6 +154,10 @@ gst_validate_runner_should_monitor (GstValidateRunner * self,
 
   if (!GST_IS_PIPELINE (element)) {
     return FALSE;
+  }
+
+  if (self->priv->monitor_all_pipelines) {
+    return TRUE;
   }
 
   if (self->priv->user_created)
@@ -973,6 +979,15 @@ gst_validate_runner_get_default_reporting_details (GstValidateRunner * runner)
       GST_VALIDATE_SHOW_UNKNOWN);
 
   return runner->priv->default_level;
+}
+
+void
+gst_validate_runner_set_monitor_all_pipelines (GstValidateRunner * runner,
+    gboolean monitor_all_pipelines)
+{
+  g_return_if_fail (GST_IS_VALIDATE_RUNNER (runner));
+
+  runner->priv->monitor_all_pipelines = monitor_all_pipelines;
 }
 
 #ifdef __GST_VALIDATE_PLUGIN

@@ -194,7 +194,6 @@ typedef struct
 struct _GstValidateScenarioPrivate
 {
   GstBus *bus;
-  GstValidateRunner *runner;
   gboolean execute_on_idle;
 
   GMutex lock;
@@ -5490,6 +5489,18 @@ gst_validate_scenario_load_structures (GstValidateScenario * scenario,
           &priv->max_latency);
 
       gst_structure_get_int (structure, "max-dropped", &priv->max_dropped);
+      gboolean monitor_all_pipelines = FALSE;
+      if (gst_structure_get_boolean (structure, "monitor-all-pipelines",
+              &monitor_all_pipelines) && monitor_all_pipelines) {
+        GstValidateRunner *runner =
+            gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (scenario));
+
+        g_assert (runner);
+        gst_validate_runner_set_monitor_all_pipelines (runner, TRUE);
+        gst_object_unref (runner);
+
+      }
+
       scenario->description = gst_structure_copy (structure);
 
       continue;
