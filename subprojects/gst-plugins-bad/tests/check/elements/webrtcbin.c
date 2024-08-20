@@ -1850,18 +1850,18 @@ validate_stats (struct stats_check_state *state)
 static void
 _on_stats (GstPromise * promise, gpointer user_data)
 {
-  struct stats_check_state *state = user_data;
-  struct test_webrtc *t = state->t;
+  struct stats_check_state state = *(struct stats_check_state *) user_data;
+  struct test_webrtc *t = state.t;
   const GstStructure *reply = gst_promise_get_reply (promise);
   int i;
 
   GST_LOG ("Got stats %" GST_PTR_FORMAT, reply);
-  state->stats = reply;
+  state.stats = reply;
 
-  validate_stats (state);
+  validate_stats (&state);
 
-  if (state->n_streams > 0 && state->saw_inbound_rtp && state->saw_outbound_rtp
-      && state->saw_remote_inbound_rtp && state->saw_remote_outbound_rtp) {
+  if (state.n_streams > 0 && state.saw_inbound_rtp && state.saw_outbound_rtp
+      && state.saw_remote_inbound_rtp && state.saw_remote_outbound_rtp) {
     g_mutex_lock (&t->lock);
     i = GPOINTER_TO_INT (t->user_data);
     i++;
@@ -1880,15 +1880,16 @@ _on_stats (GstPromise * promise, gpointer user_data)
 GST_START_TEST (test_session_stats)
 {
   struct test_webrtc *t = test_webrtc_new ();
-  struct stats_check_state state = {.t = t, 0 };
   GstPromise *p;
 
   /* test that the stats generated without any streams are sane */
   t->on_negotiation_needed = NULL;
   test_validate_sdp (t, NULL, NULL);
 
+  struct stats_check_state state = {.t = t, 0 };
   p = gst_promise_new_with_change_func (_on_stats, &state, NULL);
   g_signal_emit_by_name (t->webrtc1, "get-stats", NULL, p);
+
   p = gst_promise_new_with_change_func (_on_stats, &state, NULL);
   g_signal_emit_by_name (t->webrtc2, "get-stats", NULL, p);
 
@@ -1935,6 +1936,7 @@ GST_START_TEST (test_stats_with_stream)
 
   p = gst_promise_new_with_change_func (_on_stats, &state, NULL);
   g_signal_emit_by_name (t->webrtc1, "get-stats", NULL, p);
+
   p = gst_promise_new_with_change_func (_on_stats, &state, NULL);
   g_signal_emit_by_name (t->webrtc2, "get-stats", NULL, p);
 
@@ -1982,12 +1984,14 @@ GST_START_TEST (test_stats_with_two_streams)
   /* We need to push data until the connection is established and the
    * statistics start reporting outbound-rtp stats before things will
    * unblock below */
-  gst_harness_push_from_src (h1);
-  gst_harness_push_from_src (h2);
+  for (int i = 0; i < 5; i++) {
+    gst_harness_push_from_src (h1);
+    gst_harness_push_from_src (h2);
+  }
+
+  struct stats_check_state state = {.t = t,.n_streams = 2, 0 };
 
   while (TRUE) {
-    struct stats_check_state state = {.t = t,.n_streams = 2, 0 };
-
     g_usleep (100 * 1000);
     p = gst_promise_new_with_change_func (_on_stats, &state, NULL);
     g_signal_emit_by_name (t->webrtc1, "get-stats", NULL, p);
@@ -1997,6 +2001,9 @@ GST_START_TEST (test_stats_with_two_streams)
 
     if (test_webrtc_check_for_state_mask (t, 1 << STATE_CUSTOM))
       break;
+
+    gst_harness_push_from_src (h1);
+    gst_harness_push_from_src (h2);
   }
 
   test_webrtc_free (t);
