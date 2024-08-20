@@ -70,6 +70,8 @@ variables:
     -Dgstreamer-sharp:werror=false
     -Ddoc=disabled
 
+  FF_TIMESTAMPS: true
+
 workflow:
   # https://docs.gitlab.com/ee/ci/yaml/index.html#switch-between-branch-pipelines-and-merge-request-pipelines
   rules:
