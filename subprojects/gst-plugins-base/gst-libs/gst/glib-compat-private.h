@@ -23,7 +23,6 @@
 #ifndef __GLIB_COMPAT_PRIVATE_H__
 #define __GLIB_COMPAT_PRIVATE_H__
 
-#if 0
 #include <glib.h>
 
 G_BEGIN_DECLS
@@ -32,7 +31,26 @@ G_BEGIN_DECLS
 
 /* adaptations */
 
-G_END_DECLS
+#if !GLIB_CHECK_VERSION(2, 81, 1)
+#define g_sort_array(a,n,s,f,udata) gst_g_sort_array(a,n,s,f,udata)
+
+// Don't need to maintain ABI compat here (n_elements), since we never pass
+// the function as pointer but always call it directly ourselves.
+static inline void
+gst_g_sort_array (const void       *array,
+                  gssize            n_elements,
+                  size_t            element_size,
+                  GCompareDataFunc  compare_func,
+                  void             *user_data)
+{
+  if (n_elements >= 0 && n_elements <= G_MAXINT) {
+    g_qsort_with_data (array, n_elements, element_size, compare_func, user_data);
+  } else {
+    g_abort ();
+  }
+}
 #endif
+
+G_END_DECLS
 
 #endif

@@ -98,6 +98,8 @@
 #include "gstaudiocdsrc.h"
 #include <glib/gi18n-lib.h>
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (gst_audio_cd_src_debug);
 #define GST_CAT_DEFAULT gst_audio_cd_src_debug
 
@@ -1575,7 +1577,7 @@ gst_audio_cd_src_start (GstBaseSrc * basesrc)
    * sort the data tracks to end and ignore them */
   src->priv->num_all_tracks = src->priv->num_tracks;
 
-  g_qsort_with_data (src->priv->tracks, src->priv->num_tracks,
+  g_sort_array (src->priv->tracks, src->priv->num_tracks,
       sizeof (GstAudioCdSrcTrack), gst_audio_cd_src_track_sort_func, NULL);
 
   while (src->priv->num_tracks > 0
