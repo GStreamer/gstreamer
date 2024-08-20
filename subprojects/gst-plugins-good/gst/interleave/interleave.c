@@ -76,6 +76,8 @@
 #include <gst/audio/audio.h>
 #include <gst/audio/audio-enumtypes.h>
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (gst_interleave_debug);
 #define GST_CAT_DEFAULT gst_interleave_debug
 
@@ -299,7 +301,7 @@ gst_interleave_channel_positions_to_mask (GValueArray * positions,
   for (i = 0; i < channels; i++) {
     default_ordering_map[i] = i;
   }
-  g_qsort_with_data (default_ordering_map, channels,
+  g_sort_array (default_ordering_map, channels,
       sizeof (*default_ordering_map), compare_positions, pos);
 
   ret = gst_audio_channel_positions_to_mask (pos, channels, FALSE, mask);
