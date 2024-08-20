@@ -68,6 +68,8 @@
 #include "vacompat.h"
 #include "gstvapluginutils.h"
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (gst_va_h264enc_debug);
 #define GST_CAT_DEFAULT gst_va_h264enc_debug
 
@@ -2647,10 +2649,10 @@ _insert_ref_pic_list_modification (GstH264SliceHdr * slice_hdr,
   memcpy (list_by_pic_num, list, sizeof (GstVaH264EncFrame *) * total_list_num);
 
   if (is_asc) {
-    g_qsort_with_data (list_by_pic_num, total_list_num, sizeof (gpointer),
+    g_sort_array (list_by_pic_num, total_list_num, sizeof (gpointer),
         (GCompareDataFunc) _frame_num_asc_compare, NULL);
   } else {
-    g_qsort_with_data (list_by_pic_num, total_list_num, sizeof (gpointer),
+    g_sort_array (list_by_pic_num, total_list_num, sizeof (gpointer),
         (GCompareDataFunc) _frame_num_des_compare, NULL);
   }
 
@@ -3051,7 +3053,7 @@ _encode_one_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
     }
 
     /* reorder to select the most nearest forward frames. */
-    g_qsort_with_data (list0, total_list0_num, sizeof (gpointer),
+    g_sort_array (list0, total_list0_num, sizeof (gpointer),
         (GCompareDataFunc) _poc_des_compare, NULL);
 
     list0_num = total_list0_num;
@@ -3074,7 +3076,7 @@ _encode_one_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
     }
 
     /* reorder to select the most nearest backward frames. */
-    g_qsort_with_data (list1, total_list1_num, sizeof (gpointer),
+    g_sort_array (list1, total_list1_num, sizeof (gpointer),
         (GCompareDataFunc) _poc_asc_compare, NULL);
 
     list1_num = total_list1_num;

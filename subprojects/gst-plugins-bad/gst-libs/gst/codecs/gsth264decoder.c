@@ -62,6 +62,8 @@
 #include "gsth264decoder.h"
 #include "gsth264picture-private.h"
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY (gst_h264_decoder_debug);
 #define GST_CAT_DEFAULT gst_h264_decoder_debug
 
@@ -2664,7 +2666,7 @@ construct_ref_pic_lists_p (GstH264Decoder * self,
   pos = priv->ref_pic_list_p0->len;
   gst_h264_dpb_get_pictures_long_term_ref (priv->dpb,
       FALSE, priv->ref_pic_list_p0);
-  g_qsort_with_data (&g_array_index (priv->ref_pic_list_p0, gpointer, pos),
+  g_sort_array (&g_array_index (priv->ref_pic_list_p0, gpointer, pos),
       priv->ref_pic_list_p0->len - pos, sizeof (gpointer),
       (GCompareDataFunc) long_term_pic_num_asc_compare, NULL);
 
@@ -2913,14 +2915,14 @@ construct_ref_pic_lists_b (GstH264Decoder * self,
   GST_DEBUG_OBJECT (self, "split point %i", pos);
 
   /* and sort [1] descending, thus finishing sequence [1] [2]. */
-  g_qsort_with_data (priv->ref_pic_list_b0->data, pos, sizeof (gpointer),
+  g_sort_array (priv->ref_pic_list_b0->data, pos, sizeof (gpointer),
       (GCompareDataFunc) poc_desc_compare, NULL);
 
   /* Now add [3] and sort by ascending long_term_pic_num. */
   pos = priv->ref_pic_list_b0->len;
   gst_h264_dpb_get_pictures_long_term_ref (priv->dpb,
       FALSE, priv->ref_pic_list_b0);
-  g_qsort_with_data (&g_array_index (priv->ref_pic_list_b0, gpointer, pos),
+  g_sort_array (&g_array_index (priv->ref_pic_list_b0, gpointer, pos),
       priv->ref_pic_list_b0->len - pos, sizeof (gpointer),
       (GCompareDataFunc) long_term_pic_num_asc_compare, NULL);
 
@@ -2941,14 +2943,14 @@ construct_ref_pic_lists_b (GstH264Decoder * self,
       (GCompareFunc) poc_desc_compare);
 
   /* and sort [1] ascending. */
-  g_qsort_with_data (priv->ref_pic_list_b1->data, pos, sizeof (gpointer),
+  g_sort_array (priv->ref_pic_list_b1->data, pos, sizeof (gpointer),
       (GCompareDataFunc) poc_asc_compare, NULL);
 
   /* Now add [3] and sort by ascending long_term_pic_num */
   pos = priv->ref_pic_list_b1->len;
   gst_h264_dpb_get_pictures_long_term_ref (priv->dpb,
       FALSE, priv->ref_pic_list_b1);
-  g_qsort_with_data (&g_array_index (priv->ref_pic_list_b1, gpointer, pos),
+  g_sort_array (&g_array_index (priv->ref_pic_list_b1, gpointer, pos),
       priv->ref_pic_list_b1->len - pos, sizeof (gpointer),
       (GCompareDataFunc) long_term_pic_num_asc_compare, NULL);
 
@@ -3010,7 +3012,7 @@ construct_ref_field_pic_lists_b (GstH264Decoder * self,
   GST_DEBUG_OBJECT (self, "split point %i", pos);
 
   /* and sort [1] descending, thus finishing sequence [1] [2]. */
-  g_qsort_with_data (priv->ref_frame_list_0_short_term->data, pos,
+  g_sort_array (priv->ref_frame_list_0_short_term->data, pos,
       sizeof (gpointer), (GCompareDataFunc) poc_desc_compare, NULL);
 
   /* refFrameList1ShortTerm (8.2.4.2.4) [[1] [2]], where:
@@ -3031,7 +3033,7 @@ construct_ref_field_pic_lists_b (GstH264Decoder * self,
       (GCompareFunc) poc_desc_compare);
 
   /* and sort [1] ascending. */
-  g_qsort_with_data (priv->ref_frame_list_1_short_term->data, pos,
+  g_sort_array (priv->ref_frame_list_1_short_term->data, pos,
       sizeof (gpointer), (GCompareDataFunc) poc_asc_compare, NULL);
 
   /* 8.2.4.2.2 refFrameList0LongTerm,:

@@ -58,6 +58,8 @@
 #include "gstvadisplay_priv.h"
 #include "gstvapluginutils.h"
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (gst_va_h265enc_debug);
 #define GST_CAT_DEFAULT gst_va_h265enc_debug
 
@@ -1918,7 +1920,7 @@ _h265_encode_one_frame (GstVaH265Enc * self, GstVideoCodecFrame * gst_frame)
     }
 
     /* reorder to select the most nearest forward frames. */
-    g_qsort_with_data (list_forward, list_forward_num, sizeof (gpointer),
+    g_sort_array (list_forward, list_forward_num, sizeof (gpointer),
         (GCompareDataFunc) _poc_des_compare, NULL);
 
     num_negative_pics = list_forward_num;
@@ -1956,7 +1958,7 @@ _h265_encode_one_frame (GstVaH265Enc * self, GstVideoCodecFrame * gst_frame)
     }
 
     /* reorder to select the most nearest backward frames. */
-    g_qsort_with_data (list_backward, list_backward_num, sizeof (gpointer),
+    g_sort_array (list_backward, list_backward_num, sizeof (gpointer),
         (GCompareDataFunc) _poc_asc_compare, NULL);
 
     num_positive_pics = list_backward_num;

@@ -59,6 +59,8 @@
 #include "gstvadisplay_priv.h"
 #include "gstvapluginutils.h"
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (gst_va_vp9enc_debug);
 #define GST_CAT_DEFAULT gst_va_vp9enc_debug
 
@@ -1239,7 +1241,7 @@ _vp9_assign_ref_index (GstVaVp9Enc * self, GstVideoCodecFrame * frame)
     return FALSE;
   }
 
-  g_qsort_with_data (all_refs, ref_num, sizeof (GstVaVp9Ref),
+  g_sort_array (all_refs, ref_num, sizeof (GstVaVp9Ref),
       _vp9_sort_by_frame_num, NULL);
 
   /* Assign the forward references in order of:
