@@ -42,6 +42,8 @@
 #include "gstaudiomixerelements.h"
 #include "gstaudiointerleave.h"
 
+#include "gst/glib-compat-private.h"
+
 #define GST_CAT_DEFAULT gst_audio_interleave_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -313,7 +315,7 @@ gst_audio_interleave_channel_positions_to_mask (GValueArray * positions,
   for (i = 0; i < channels; i++) {
     default_ordering_map[i] = i;
   }
-  g_qsort_with_data (default_ordering_map, channels,
+  g_sort_array (default_ordering_map, channels,
       sizeof (*default_ordering_map), compare_positions, pos);
 
   ret = gst_audio_channel_positions_to_mask (pos, channels, FALSE, mask);
