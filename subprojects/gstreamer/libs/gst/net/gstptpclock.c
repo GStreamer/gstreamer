@@ -60,6 +60,8 @@
 
 #include <gst/base/base.h>
 
+#include "gst/glib-compat-private.h"
+
 #ifdef G_OS_WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -1457,7 +1459,7 @@ update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
   } else {
     memcpy (&last_path_delays, &domain->last_path_delays,
         sizeof (last_path_delays));
-    g_qsort_with_data (&last_path_delays,
+    g_sort_array (&last_path_delays,
         MEDIAN_PRE_FILTERING_WINDOW, sizeof (GstClockTime),
         (GCompareDataFunc) compare_clock_time, NULL);
 
