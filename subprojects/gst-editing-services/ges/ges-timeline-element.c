@@ -120,6 +120,8 @@
 #include <string.h>
 #include <gobject/gvaluecollector.h>
 
+#include "glib-compat-private.h"
+
 /* maps type name quark => count */
 static GData *object_name_counts = NULL;
 
@@ -2248,7 +2250,7 @@ ges_timeline_element_list_children_properties (GESTimelineElement * self,
   }
 
   ret = class->list_children_properties (self, n_properties);
-  g_qsort_with_data (ret, *n_properties, sizeof (GParamSpec *),
+  g_sort_array (ret, *n_properties, sizeof (GParamSpec *),
       (GCompareDataFunc) compare_gparamspec, NULL);
 
   return ret;
