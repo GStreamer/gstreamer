@@ -50,6 +50,8 @@
 #include <TargetConditionals.h>
 #endif
 
+#include "gst/glib-compat-private.h"
+
 /* "R" : support color
  * "X" : do not clear the screen when leaving the pager
  * "F" : skip the pager if content fit into the screen
@@ -429,7 +431,7 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
   gboolean first_flag;
 
   property_specs = g_object_class_list_properties (obj_class, &num_properties);
-  g_qsort_with_data (property_specs, num_properties, sizeof (gpointer),
+  g_sort_array (property_specs, num_properties, sizeof (gpointer),
       (GCompareDataFunc) sort_gparamspecs, NULL);
 
   n_print ("%s%s%s:\n", HEADING_COLOR, desc, RESET_COLOR);
