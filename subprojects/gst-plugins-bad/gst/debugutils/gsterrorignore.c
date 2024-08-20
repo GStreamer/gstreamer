@@ -53,6 +53,7 @@ enum
   PROP_IGNORE_EOS,
   PROP_CONVERT_TO,
   PROP_POST_WARNINGS,
+  PROP_IGNORE_FLUSHING,
 };
 
 static void gst_error_ignore_set_property (GObject * object, guint prop_id,
@@ -151,6 +152,16 @@ gst_error_ignore_class_init (GstErrorIgnoreClass * klass)
       g_param_spec_boolean ("post-warnings", "Post warnings",
           "Whether to post warnings on first flow conversion",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstErrorIgnore:ignore-flushing:
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (object_class, PROP_IGNORE_FLUSHING,
+      g_param_spec_boolean ("ignore-flushing",
+          "Ignore GST_FLOW_FLUSHING", "Whether to ignore GST_FLOW_FLUSHING",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -178,6 +189,7 @@ gst_error_ignore_init (GstErrorIgnore * self)
   self->ignore_notlinked = FALSE;
   self->ignore_notnegotiated = TRUE;
   self->ignore_eos = FALSE;
+  self->ignore_flushing = FALSE;
   self->convert_to = GST_FLOW_NOT_LINKED;
   self->post_warnings = TRUE;
 }
@@ -206,6 +218,9 @@ gst_error_ignore_set_property (GObject * object, guint prop_id,
       break;
     case PROP_POST_WARNINGS:
       self->post_warnings = g_value_get_boolean (value);
+      break;
+    case PROP_IGNORE_FLUSHING:
+      self->ignore_flushing = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -237,6 +252,9 @@ gst_error_ignore_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_POST_WARNINGS:
       g_value_set_boolean (value, self->post_warnings);
+      break;
+    case PROP_IGNORE_FLUSHING:
+      g_value_set_boolean (value, self->ignore_flushing);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -286,7 +304,8 @@ gst_error_ignore_sink_chain (GstPad * pad, GstObject * parent,
   if ((ret == GST_FLOW_ERROR && self->ignore_error) ||
       (ret == GST_FLOW_NOT_LINKED && self->ignore_notlinked) ||
       (ret == GST_FLOW_EOS && self->ignore_eos) ||
-      (ret == GST_FLOW_NOT_NEGOTIATED && self->ignore_notnegotiated)) {
+      (ret == GST_FLOW_NOT_NEGOTIATED && self->ignore_notnegotiated) ||
+      (ret == GST_FLOW_FLUSHING && self->ignore_flushing)) {
     if (warn) {
       GST_ELEMENT_WARNING (self,
           STREAM, FAILED,
