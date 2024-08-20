@@ -338,12 +338,6 @@ _get_stats_from_rtp_source_stats (TransportStream * stream,
       }
     }
 
-    if (jb_stats)
-      gst_structure_get (jb_stats, "num-lost", G_TYPE_UINT64, &jb_lost,
-          "num-duplicates", G_TYPE_UINT64, &duplicates, "num-late",
-          G_TYPE_UINT64, &late, "rtx-success-count", G_TYPE_UINT64,
-          &rtx_success, NULL);
-
     in_id = g_strdup_printf ("rtp-inbound-stream-stats_%u", ssrc);
     r_out_id = g_strdup_printf ("rtp-remote-outbound-stream-stats_%u", ssrc);
 
@@ -359,20 +353,39 @@ _get_stats_from_rtp_source_stats (TransportStream * stream,
 
     /* RTCReceivedRtpStreamStats */
 
-    if (gst_structure_get_uint64 (source_stats, "packets-received", &packets))
+    if (gst_structure_get_uint64 (source_stats, "packets-received", &packets)) {
       gst_structure_set (in, "packets-received", G_TYPE_UINT64, packets, NULL);
+    } else {
+      gst_structure_set (in, "packets-received", G_TYPE_UINT64,
+          G_GUINT64_CONSTANT (0), NULL);
+    }
+
     if (jb_stats) {
+      gst_structure_get (jb_stats, "num-lost", G_TYPE_UINT64, &jb_lost,
+          "num-duplicates", G_TYPE_UINT64, &duplicates, "num-late",
+          G_TYPE_UINT64, &late, "rtx-success-count", G_TYPE_UINT64,
+          &rtx_success, NULL);
+
       gint64 packets_lost = jb_lost > G_MAXINT64 ?
           G_MAXINT64 : (gint64) jb_lost;
       gst_structure_set (in, "packets-lost", G_TYPE_INT64, packets_lost, NULL);
-    }
-    if (gst_structure_get_uint (source_stats, "jitter", &jitter))
-      gst_structure_set (in, "jitter", G_TYPE_DOUBLE,
-          CLOCK_RATE_VALUE_TO_SECONDS (jitter, clock_rate), NULL);
 
-    if (jb_stats)
       gst_structure_set (in, "packets-discarded", G_TYPE_UINT64, late,
           "packets-repaired", G_TYPE_UINT64, rtx_success, NULL);
+    } else {
+      gst_structure_set (in, "packets-lost", G_TYPE_INT64,
+          G_GINT64_CONSTANT (0), NULL);
+      gst_structure_set (in, "packets-discarded", G_TYPE_UINT64,
+          G_GUINT64_CONSTANT (0), "packets-repaired", G_TYPE_UINT64,
+          G_GUINT64_CONSTANT (0), NULL);
+    }
+
+    if (gst_structure_get_uint (source_stats, "jitter", &jitter)) {
+      gst_structure_set (in, "jitter", G_TYPE_DOUBLE,
+          CLOCK_RATE_VALUE_TO_SECONDS (jitter, clock_rate), NULL);
+    } else {
+      gst_structure_set (in, "jitter", G_TYPE_DOUBLE, 0.0, NULL);
+    }
 
     /*
        RTCReceivedRtpStreamStats
@@ -468,19 +481,20 @@ _get_stats_from_rtp_source_stats (TransportStream * stream,
     gst_structure_set (r_out, "codec-id", G_TYPE_STRING, codec_id, NULL);
     gst_structure_set (r_out, "transport-id", G_TYPE_STRING, transport_id,
         NULL);
+    if (kind)
+      gst_structure_set (r_out, "kind", G_TYPE_STRING, kind, NULL);
+
     /* XXX: mediaType, trackId */
 
     /* RTCSentRtpStreamStats */
 
+    guint sr_bytes = 0, sr_packets = 0;
     if (have_sr) {
-      guint sr_bytes, sr_packets;
-
-      if (gst_structure_get_uint (source_stats, "sr-octet-count", &sr_bytes))
-        gst_structure_set (r_out, "bytes-sent", G_TYPE_UINT, sr_bytes, NULL);
-      if (gst_structure_get_uint (source_stats, "sr-packet-count", &sr_packets))
-        gst_structure_set (r_out, "packets-sent", G_TYPE_UINT, sr_packets,
-            NULL);
+      gst_structure_get_uint (source_stats, "sr-octet-count", &sr_bytes);
+      gst_structure_get_uint (source_stats, "sr-packet-count", &sr_packets);
     }
+    gst_structure_set (r_out, "bytes-sent", G_TYPE_UINT, sr_bytes, NULL);
+    gst_structure_set (r_out, "packets-sent", G_TYPE_UINT, sr_packets, NULL);
 
     /* RTCSentRtpStreamStats:
 
