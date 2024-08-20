@@ -377,6 +377,24 @@ gst_vulkan_encoder_picture_clear (GstVulkanEncoderPicture * pic,
 }
 
 /**
+ * gst_vulkan_encoder_is_started:
+ * @self: a #GstVulkanEncoder
+ *
+ * Returns: whether gst_vulkan_encoder_start() was called correctly previously.
+ */
+gboolean
+gst_vulkan_encoder_is_started (GstVulkanEncoder * self)
+{
+  GstVulkanEncoderPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), FALSE);
+
+  priv = gst_vulkan_encoder_get_instance_private (self);
+  return priv->started;
+}
+
+
+/**
  * gst_vulkan_encoder_caps:
  * @self: a #GstVulkanEncoder
  * @caps: (out): a #GstVulkanVideoCapabilities

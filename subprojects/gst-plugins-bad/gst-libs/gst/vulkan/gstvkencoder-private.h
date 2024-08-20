@@ -204,6 +204,8 @@ GST_VULKAN_API
 gboolean                gst_vulkan_encoder_caps                 (GstVulkanEncoder * self,
                                                                  GstVulkanVideoCapabilities * caps);
 GST_VULKAN_API
+gboolean                gst_vulkan_encoder_is_started           (GstVulkanEncoder * self);
+GST_VULKAN_API
 GstCaps *               gst_vulkan_encoder_profile_caps         (GstVulkanEncoder * self);
 GST_VULKAN_API
 gint32                  gst_vulkan_encoder_quality_level        (GstVulkanEncoder * self);
