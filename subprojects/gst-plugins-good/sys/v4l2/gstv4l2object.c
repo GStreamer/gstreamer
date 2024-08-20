@@ -2754,7 +2754,8 @@ sort_by_frame_size (GstStructure * s1, GstStructure * s2)
 }
 
 static void
-check_alternate_and_append_struct (GstCaps * caps, GstStructure * s)
+check_alternate_and_append_struct (GstCaps * caps, GstStructure * s,
+    GstCapsFeatures * feat)
 {
   const GValue *mode;
 
@@ -2766,12 +2767,7 @@ check_alternate_and_append_struct (GstCaps * caps, GstStructure * s)
     /* Add the INTERLACED feature if the mode is alternate */
     if (!g_strcmp0 (gst_structure_get_string (s, "interlace-mode"),
             "alternate")) {
-      GstCapsFeatures *feat;
-
-      feat =
-          gst_caps_features_new_static_str (GST_CAPS_FEATURE_FORMAT_INTERLACED,
-          NULL);
-      gst_caps_set_features (caps, gst_caps_get_size (caps) - 1, feat);
+      gst_caps_features_add (feat, GST_CAPS_FEATURE_FORMAT_INTERLACED);
     }
   } else if (GST_VALUE_HOLDS_LIST (mode)) {
     /* If the mode is a list containing alternate, remove it from the list and add a
@@ -2787,29 +2783,46 @@ check_alternate_and_append_struct (GstCaps * caps, GstStructure * s)
     if (gst_value_intersect (&inter, mode, &alter)) {
       GValue minus_alter = G_VALUE_INIT;
       GstStructure *copy;
+      GstCapsFeatures *copy_feat;
 
       gst_value_subtract (&minus_alter, mode, &alter);
       gst_structure_take_value (s, "interlace-mode", &minus_alter);
 
       copy = gst_structure_copy (s);
+      copy_feat = gst_caps_features_copy (feat);
+      gst_caps_features_add (copy_feat, GST_CAPS_FEATURE_FORMAT_INTERLACED);
       gst_structure_take_value (copy, "interlace-mode", &inter);
-      gst_caps_append_structure_full (caps, copy,
-          gst_caps_features_new_static_str (GST_CAPS_FEATURE_FORMAT_INTERLACED,
-              NULL));
+      gst_caps_append_structure_full (caps, copy, copy_feat);
     }
     g_value_unset (&alter);
   }
 
 done:
-  gst_caps_append_structure (caps, s);
+  gst_caps_append_structure_full (caps, s, feat);
+}
+
+static gboolean
+foreach_field_cb (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  GstStructure *s = user_data;
+  gst_structure_id_set_value (s, field_id, value);
+  return TRUE;
+}
+
+static GstStructure *
+create_structure_from_fields (const GstStructure * fields,
+    const GstStructure * template)
+{
+  GstStructure *s = gst_structure_copy (template);
+  gst_structure_foreach (fields, foreach_field_cb, s);
+  return s;
 }
 
 static void
 gst_v4l2_object_update_and_append (GstV4l2Object * v4l2object,
-    guint32 format, GstCaps * caps, GstStructure * s)
+    guint32 format, GstCaps * caps, GstStructure * fields,
+    const GstStructure * sysmem_tmpl, const GstStructure * dmabuf_tmpl)
 {
-  GstStructure *alt_s = NULL;
-
   /* Encoded stream on output buffer need to be parsed */
   if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT ||
       v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
@@ -2819,49 +2832,68 @@ gst_v4l2_object_update_and_append (GstV4l2Object * v4l2object,
       if (format == gst_v4l2_formats[i].v4l2_format &&
           gst_v4l2_formats[i].flags & GST_V4L2_CODEC &&
           !(gst_v4l2_formats[i].flags & GST_V4L2_NO_PARSE)) {
-        gst_structure_set (s, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+        gst_structure_set (fields, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
         break;
       }
     }
   }
 
-  if (v4l2object->has_alpha_component &&
-      (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE ||
-          v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)) {
-    switch (format) {
-      case V4L2_PIX_FMT_RGB32:
-        alt_s = gst_structure_copy (s);
-        gst_structure_set (alt_s, "format", G_TYPE_STRING, "ARGB", NULL);
-        break;
-      case V4L2_PIX_FMT_BGR32:
-        alt_s = gst_structure_copy (s);
-        gst_structure_set (alt_s, "format", G_TYPE_STRING, "BGRA", NULL);
-        break;
-      default:
-        break;
+  if (sysmem_tmpl) {
+    GstStructure *sys_s = create_structure_from_fields (fields, sysmem_tmpl);
+    GstStructure *alt_s = NULL;
+
+    if (v4l2object->has_alpha_component &&
+        (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE ||
+            v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)) {
+      switch (format) {
+        case V4L2_PIX_FMT_RGB32:
+          alt_s = gst_structure_copy (sys_s);
+          gst_structure_set (alt_s, "format", G_TYPE_STRING, "ARGB", NULL);
+          break;
+        case V4L2_PIX_FMT_BGR32:
+          alt_s = gst_structure_copy (sys_s);
+          gst_structure_set (alt_s, "format", G_TYPE_STRING, "BGRA", NULL);
+          break;
+        default:
+          break;
+      }
+    }
+
+    check_alternate_and_append_struct (caps, sys_s,
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY));
+
+    if (alt_s) {
+      check_alternate_and_append_struct (caps, alt_s,
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY));
     }
   }
 
-  check_alternate_and_append_struct (caps, s);
-
-  if (alt_s) {
-    check_alternate_and_append_struct (caps, alt_s);
+  if (dmabuf_tmpl) {
+    GstStructure *dma_s = create_structure_from_fields (fields, dmabuf_tmpl);
+    check_alternate_and_append_struct (caps, dma_s,
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_DMABUF));
   }
+
+  gst_structure_free (fields);
 }
 
 static GstCaps *
 gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
-    guint32 pixelformat, const GstStructure * template)
+    guint32 pixelformat, const GstStructure * sysmem_tmpl,
+    const GstStructure * dmabuf_tmpl)
 {
   GstCaps *ret = gst_caps_new_empty ();
-  GstStructure *tmp;
+  GstStructure *template, *tmp;
   gint fd = v4l2object->video_fd;
   struct v4l2_frmsizeenum size;
   GList *results = NULL;
   guint32 w, h;
 
   if (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G')) {
-    gst_caps_append_structure (ret, gst_structure_copy (template));
+    gst_caps_append_structure (ret, gst_structure_copy (sysmem_tmpl));
     return ret;
   }
 
@@ -2875,6 +2907,8 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
 
   if (v4l2object->ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) < 0)
     goto enum_framesizes_failed;
+
+  template = gst_structure_new_empty ("fields/holder");
 
   if (size.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
     guint32 maxw = 0, maxh = 0;
@@ -2954,7 +2988,8 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
       gst_structure_take_value (tmp, "height", &step_range);
 
       /* no point using the results list here, since there's only one struct */
-      gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret, tmp);
+      gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret, tmp,
+          sysmem_tmpl, dmabuf_tmpl);
 
       v4l2object->max_width = maxw;
       v4l2object->max_height = maxh;
@@ -2986,7 +3021,8 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
           NULL);
 
       /* no point using the results list here, since there's only one struct */
-      gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret, tmp);
+      gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret, tmp,
+          sysmem_tmpl, dmabuf_tmpl);
 
       v4l2object->max_width = maxw;
       v4l2object->max_height = maxh;
@@ -3003,7 +3039,7 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
   results = g_list_sort (results, (GCompareFunc) sort_by_frame_size);
   while (results != NULL) {
     gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret,
-        results->data);
+        results->data, sysmem_tmpl, dmabuf_tmpl);
     results = g_list_delete_link (results, results);
   }
 
@@ -3084,7 +3120,7 @@ default_frame_sizes:
       }
     }
 
-    tmp = gst_structure_copy (template);
+    tmp = gst_structure_new_empty ("fields/holder");
     if (fix_num) {
       gst_structure_set (tmp, "framerate", GST_TYPE_FRACTION, fix_num,
           fix_denom, NULL);
@@ -3128,7 +3164,8 @@ default_frame_sizes:
           pixelformat);
     }
 
-    gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret, tmp);
+    gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret, tmp,
+        sysmem_tmpl, dmabuf_tmpl);
     return ret;
   }
 }
@@ -5056,10 +5093,27 @@ done:
   return TRUE;
 }
 
+static GstCaps *
+filter_sysmem (GstCaps * caps)
+{
+  GstCaps *ret = gst_caps_new_empty ();
+  gint i;
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    if (gst_caps_features_is_equal (gst_caps_get_features (caps, i),
+            GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
+      gst_caps_append_structure (ret,
+          gst_structure_copy (gst_caps_get_structure (caps, i)));
+    }
+  }
+
+  return ret;
+}
+
 GstCaps *
 gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 {
-  GstCaps *caps, *interlaced_caps;
+  GstCaps *caps, *sysmem_caps, *interlaced_caps, *interdma_caps;
   GSList *walk;
   GSList *formats;
   guint32 fourcc = 0;
@@ -5077,7 +5131,9 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
         gst_v4l2_object_get_format_from_fourcc (v4l2object, fourcc);
 
   caps = gst_caps_new_empty ();
+  sysmem_caps = gst_caps_new_empty ();
   interlaced_caps = gst_caps_new_empty ();
+  interdma_caps = gst_caps_new_empty ();
 
   if (v4l2object->keep_aspect && !v4l2object->par) {
     struct v4l2_cropcap cropcap;
@@ -5114,18 +5170,23 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 
   for (walk = formats; walk; walk = walk->next) {
     struct v4l2_fmtdesc *format;
-    GstStructure *template;
+    GstStructure *sysmem_tmpl, *dmabuf_tmpl;
     GstCaps *tmp;
 
     format = (struct v4l2_fmtdesc *) walk->data;
 
-    template = gst_v4l2_object_v4l2fourcc_to_bare_struct (format->pixelformat,
-        NULL);
+    sysmem_tmpl =
+        gst_v4l2_object_v4l2fourcc_to_bare_struct (format->pixelformat,
+        &dmabuf_tmpl);
 
-    if (!template) {
+    if (!sysmem_tmpl && !dmabuf_tmpl) {
       GST_DEBUG_OBJECT (v4l2object->dbg_obj,
           "unknown format %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (format->pixelformat));
+      if (sysmem_tmpl)
+        gst_structure_free (sysmem_tmpl);
+      if (dmabuf_tmpl)
+        gst_structure_free (dmabuf_tmpl);
       continue;
     }
 
@@ -5133,12 +5194,24 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
     if (filter) {
       GstCaps *format_caps = gst_caps_new_empty ();
 
-      gst_caps_append_structure (format_caps, gst_structure_copy (template));
-      add_alternate_variant (v4l2object, format_caps, template, NULL);
+      if (dmabuf_tmpl) {
+        gst_caps_append_structure (format_caps,
+            gst_structure_copy (dmabuf_tmpl));
+        add_alternate_variant (v4l2object, format_caps, dmabuf_tmpl, NULL);
+      }
+
+      if (sysmem_tmpl) {
+        gst_caps_append_structure (format_caps,
+            gst_structure_copy (sysmem_tmpl));
+        add_alternate_variant (v4l2object, format_caps, sysmem_tmpl, NULL);
+      }
 
       if (!gst_caps_can_intersect (format_caps, filter)) {
         gst_caps_unref (format_caps);
-        gst_structure_free (template);
+        if (sysmem_tmpl)
+          gst_structure_free (sysmem_tmpl);
+        if (dmabuf_tmpl)
+          gst_structure_free (dmabuf_tmpl);
         continue;
       }
 
@@ -5146,24 +5219,51 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
     }
 
     tmp = gst_v4l2_object_probe_caps_for_format (v4l2object,
-        format->pixelformat, template);
+        format->pixelformat, sysmem_tmpl, dmabuf_tmpl);
     if (tmp) {
-      /* Add a variant of the caps with the Interlaced feature so we can negotiate it if needed */
-      gint i;
-      for (i = 0; i < gst_caps_get_size (tmp); i++) {
-        GstStructure *s = gst_caps_get_structure (tmp, i);
-        add_alternate_variant (v4l2object, interlaced_caps, s, NULL);
-      }
+      GstCaps *filter, *filtered_caps;
 
-      gst_caps_append (caps, tmp);
+      filter = gst_caps_new_empty ();
+      gst_caps_append_structure (filter,
+          gst_structure_new_empty ("video/x-raw"));
+
+      gst_caps_set_features (filter, 0,
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_DMABUF));
+      if ((filtered_caps = gst_caps_intersect (tmp, filter)))
+        gst_caps_append (caps, filtered_caps);
+
+      gst_caps_set_features (filter, 0,
+          gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF,
+              GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL));
+      if ((filtered_caps = gst_caps_intersect (tmp, filter)))
+        gst_caps_append (interdma_caps, filtered_caps);
+
+      if ((filtered_caps = filter_sysmem (tmp)))
+        gst_caps_append (sysmem_caps, filtered_caps);
+
+      gst_caps_set_features (filter, 0,
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_FORMAT_INTERLACED));
+      if ((filtered_caps = gst_caps_intersect (tmp, filter)))
+        gst_caps_append (interlaced_caps, filtered_caps);
+
+      gst_caps_unref (filter);
     }
 
-    gst_structure_free (template);
+    if (sysmem_tmpl)
+      gst_structure_free (sysmem_tmpl);
+    if (dmabuf_tmpl)
+      gst_structure_free (dmabuf_tmpl);
   }
 
   caps = gst_caps_simplify (caps);
+  interdma_caps = gst_caps_simplify (interdma_caps);
+  sysmem_caps = gst_caps_simplify (sysmem_caps);
   interlaced_caps = gst_caps_simplify (interlaced_caps);
 
+  gst_caps_append (caps, interdma_caps);
+  gst_caps_append (caps, sysmem_caps);
   gst_caps_append (caps, interlaced_caps);
 
   if (filter) {
