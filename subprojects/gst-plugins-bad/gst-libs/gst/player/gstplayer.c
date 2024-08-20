@@ -49,6 +49,7 @@
 
 #include "gstplayer.h"
 #include "gstplayer-signal-dispatcher-private.h"
+#include "gstplayer-g-main-context-signal-dispatcher.h"
 #include "gstplayer-video-renderer-private.h"
 #include "gstplayer-media-info-private.h"
 #include "gstplayer-wrapped-video-renderer-private.h"
@@ -576,11 +577,16 @@ gst_player_constructed (GObject * object)
   if (self->signal_dispatcher != NULL) {
     GMainContext *context = NULL;
 
-    g_object_get (self->signal_dispatcher, "application-context", &context,
-        NULL);
-    self->signal_adapter =
-        gst_play_signal_adapter_new_with_main_context (self->play, context);
-    g_main_context_unref (context);
+    if (GST_IS_PLAYER_G_MAIN_CONTEXT_SIGNAL_DISPATCHER
+        (self->signal_dispatcher)) {
+      g_object_get (self->signal_dispatcher, "application-context", &context,
+          NULL);
+      self->signal_adapter =
+          gst_play_signal_adapter_new_with_main_context (self->play, context);
+      g_main_context_unref (context);
+    } else {
+      self->signal_adapter = gst_play_signal_adapter_new (self->play);
+    }
   } else {
     self->signal_adapter = gst_play_signal_adapter_new_sync_emit (self->play);
   }
