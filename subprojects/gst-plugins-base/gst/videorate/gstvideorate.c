@@ -1101,6 +1101,11 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
             GST_WARNING_OBJECT (videorate,
                 "Could not resend caps after closing " " segment");
 
+            if (GST_PAD_IS_FLUSHING (trans->srcpad)) {
+              gst_caps_unref (rolled_back_caps);
+              return TRUE;
+            }
+
             GST_ELEMENT_ERROR (videorate, CORE, NEGOTIATION,
                 ("Could not resend caps after closing segment"), (NULL));
             gst_caps_unref (rolled_back_caps);
