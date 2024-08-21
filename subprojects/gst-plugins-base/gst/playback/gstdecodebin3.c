@@ -2609,6 +2609,29 @@ db_collection_new (GstStreamCollection * collection)
   return db_collection;
 }
 
+static gboolean
+collections_are_identical (GstStreamCollection * collection,
+    GstStreamCollection * previous)
+{
+  guint i;
+
+  if (collection == previous)
+    return TRUE;
+
+  if (gst_stream_collection_get_size (collection) !=
+      gst_stream_collection_get_size (previous))
+    return FALSE;
+
+  for (i = 0; i < gst_stream_collection_get_size (previous); i++) {
+    GstStream *stream = gst_stream_collection_get_stream (previous, i);
+    const gchar *sid = gst_stream_get_stream_id (stream);
+    if (!stream_in_collection (collection, (gchar *) sid))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 /** handle_stream_collection_locked:
  * @dbin:
  * @collection: (transfer none): The new collection for @input. Can be %NULL.
@@ -2683,12 +2706,13 @@ handle_stream_collection_locked (GstDecodebin3 * dbin,
   if (dbin->input_collection) {
     GstStreamCollection *previous = dbin->input_collection->collection;
 
-    if (collection == previous) {
+    if (collections_are_identical (collection, previous)) {
       GST_DEBUG_OBJECT (dbin, "Collection didn't change");
       gst_object_unref (collection);
       SELECTION_UNLOCK (dbin);
       return NULL;
     }
+
     /* Check if this collection is an update of the previous one */
     if (gst_stream_collection_get_size (collection) >
         gst_stream_collection_get_size (previous)) {
