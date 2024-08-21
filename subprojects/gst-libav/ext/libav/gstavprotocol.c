@@ -325,7 +325,7 @@ gst_ffmpeg_pipe_read (void *priv_data, uint8_t * buf, int size)
   }
   GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
 
-  return size;
+  return size > 0 ? size : AVERROR_EOF;
 }
 
 int
