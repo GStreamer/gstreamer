@@ -41,7 +41,7 @@
  * ### Save the first 50 video frames generated for the GStreamer website as PNG files in /tmp
  *
  * ```
- * LIBGL_ALWAYS_SOFTWARE=true gst-launch-1.0 -v wpesrc num-buffers=50 location="https://gstreamer.freedesktop.org" ! videoconvert ! pngenc ! multifilesink location=/tmp/snapshot-%05d.png
+ * LIBGL_ALWAYS_SOFTWARE=true gst-launch-1.0 -v wpevideosrc num-buffers=50 location="https://gstreamer.freedesktop.org" ! videoconvert ! pngenc ! multifilesink location=/tmp/snapshot-%05d.png
  * ```
  *
  *
