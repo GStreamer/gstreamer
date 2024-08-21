@@ -25,6 +25,7 @@ echo "-> Running $tests"
     --mute \
     --shuffle \
     --no-display \
+    --validate-generate-expectations=disabled \
     --meson-no-rebuild \
     --timeout-factor "$timeout" \
     --fail-on-testlist-change \
