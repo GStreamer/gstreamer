@@ -2,11 +2,11 @@ GStreamer 1.24 Release Notes
 
 GStreamer 1.24.0 was originally released on 4 March 2024.
 
-The latest bug-fix release in the stable 1.24 series is 1.24.6 and was released on 29 July 2024.
+The latest bug-fix release in the stable 1.24 series is 1.24.6 and was released on 21 August 2024.
 
 See https://gstreamer.freedesktop.org/releases/1.24/ for the latest version of this document.
 
-Last updated: Monday 29 July 2024, 14:30 UTC (log)
+Last updated: Tuesday 20 August 2024, 20:30 UTC (log)
 
 ## Introduction
 
@@ -2288,6 +2288,133 @@ List of merge requests and issues fixed in 1.24.6
 
 -   List of Merge Requests applied in 1.24.6
 -   List of Issues fixed in 1.24.6
+
+1.24.7
+
+The seventh 1.24 bug-fix release (1.24.7) was released on 21 August 2024.
+
+This release only contains bugfixes and it should be safe to update from 1.24.x.
+
+Highlighted bugfixes in 1.24.7
+
+-   Fix APE and Musepack audio file and GIF playback with FFmpeg 7.0
+-   playbin3: Fix potential deadlock with multiple playbin3s with glimagesink used in parallel
+-   qt6: various qmlgl6src and qmlgl6sink fixes and improvements
+-   rtspsrc: expose property to force usage of non-compliant setup URLs for RTSP servers where the automatic fallback doesn’t
+    work
+-   urisourcebin: gapless playback and program switching fixes
+-   v4l2: various fixes
+-   va: Fix potential deadlock with multiple va elements used in parallel
+-   meson: option to disable gst-full for static-library build configurations that do not need this
+-   cerbero: libvpx updated to 1.14.1; map 2022Server to Windows11; disable rust variant on Linux if binutils is too old
+-   Various bug fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   bin: Don’t keep the object lock while setting a GstContext when handling NEED_CONTEXT
+-   core: Log pad name, not just the pointer
+
+gst-plugins-base
+
+-   pbutils: descriptions: use subsampling factor to get YUV subsampling
+-   rtspconnection: Handle invalid argument properly
+-   urisourcebin: Actually drop EOS on old-school pad switch
+-   urisourcebin: Don’t hold lock when emitting about-to-finish
+-   gst-launch deadlock with two playbin3s
+-   xvimagesink: Fix crash in pool on error
+
+gst-plugins-good
+
+-   qmlgl6src: Fix crash when use-default-fbo is not set
+-   qt6glwindow: Fallback to GL_RGB on CopyTexImage2D error, fixing usage with eglfs backend
+-   qt6glwindow: Only use GL_READ_FRAMEBUFFER when we do blits
+-   qt6: glwindow: Don’t leak previously rendered buffer
+-   rtspsrc: expose property for forcing usage of non-compliant URLs
+-   v4l2object: fix ARIB_STD_B67 colorimetry unmatch issue
+-   v4l2: Fix colorimetry mismatch for encoded format with RGB color-matrix
+
+gst-plugins-bad
+
+-   aom: av1enc: restrict allowed input width and height
+-   h264parse: bypass check for length_size_minus_one
+-   h265parse: Reject FD received before SPS
+-   msdk: replace strcmp with g_strcmp0
+-   msdkvc1dec crashes (segfault)
+-   rsvgoverlay: add debug category
+-   va: don’t use GST_ELEMENT_WARNING in set_context() vmethod to fix potential deadlock
+-   va: deadlock when playing two videos at once
+-   webrtc: Add missing G_BEGIN/END_DECLS in header for C++
+-   wpe: initialize threading.ready before reading it
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+-   gtk4: Move the dmabuf cfg to the correct bracket level
+
+gst-libav
+
+-   avdemux: Fix deadlock with FFmpeg 7.x when serialized events are received from upstream while opening, such as e.g. APE
+    files with tags
+-   libav: return EOF when stream is out of data
+-   avdemux: Never return 0 from read function, which would lead to infinite loops
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   vaapi: Fix sps_max_dec_pic_buffering_minus1 value in h265 decoder
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   nlecomposition: Don’t leak QoS events
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   validate: Fix copying of action name
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   Add a meson option to disable gst-full for static-library build configurations that do not need this
+
+Cerbero build tool and packaging changes in 1.24.7
+
+-   Disable rust variant on Linux if binutils is too old
+-   Added 2022Server to the Windows platform distro map as Windows11
+-   libvpx: Update to 1.14.1
+
+Contributors to 1.24.7
+
+David Rosca, Edward Hervey, Guillaume Desmottes, Hou Qi, Jan Schmidt, Jesper Jensen, Jordan Petridis, Jordan Yelloz, L. E.
+Segovia, Lyra McMillan, Mathieu Duponchelle, Max Romanov, Nicolas Dufresne, Nirbheek Chauhan, Qian Hu (胡骞), Sebastian Dröge,
+Tim-Philipp Müller, Víctor Manuel Jáquez Leal,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.24.7
+
+-   List of Merge Requests applied in 1.24.7
+-   List of Issues fixed in 1.24.7
 
 Schedule for 1.26
 
