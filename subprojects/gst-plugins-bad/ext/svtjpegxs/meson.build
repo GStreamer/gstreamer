@@ -1,6 +1,6 @@
 svtjpegxs_sources = [
   'gstsvtjpegxs.c',
-#  'gstsvtjpegxsdec.c',
+  'gstsvtjpegxsdec.c',
   'gstsvtjpegxsenc.c',
 ]
 

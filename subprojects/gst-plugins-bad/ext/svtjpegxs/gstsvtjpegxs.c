@@ -19,6 +19,7 @@
 #include "config.h"
 #endif
 
+#include "gstsvtjpegxsdec.h"
 #include "gstsvtjpegxsenc.h"
 
 #include <gst/gst.h>
@@ -26,7 +27,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  //GST_ELEMENT_REGISTER (svtjpegxsdec, plugin);
+  GST_ELEMENT_REGISTER (svtjpegxsdec, plugin);
   GST_ELEMENT_REGISTER (svtjpegxsenc, plugin);
   return TRUE;
 }
