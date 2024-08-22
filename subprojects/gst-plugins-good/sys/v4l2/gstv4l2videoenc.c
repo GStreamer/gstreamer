@@ -779,14 +779,14 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
           GST_V4L2_MIN_BUFFERS (self->v4l2output));
 
       gst_buffer_pool_config_set_params (config, self->input_state->caps,
-          self->v4l2output->info.size, min, min);
+          self->v4l2output->info.vinfo.size, min, min);
 
       /* There is no reason to refuse this config */
       if (!gst_buffer_pool_set_config (opool, config)) {
         config = gst_buffer_pool_get_config (opool);
 
         if (gst_buffer_pool_config_validate_params (config,
-                self->input_state->caps, self->v4l2output->info.size, min,
+                self->input_state->caps, self->v4l2output->info.vinfo.size, min,
                 min)) {
           gst_structure_free (config);
           if (opool)

@@ -1443,6 +1443,31 @@ gst_v4l2_object_get_desc_from_video_format (GstVideoFormat format,
   return ret;
 }
 
+static const GstV4L2FormatDesc *
+gst_v4l2_object_get_desc_from_drm_fourcc (guint32 drm_fourcc,
+    guint64 drm_modifier, const GstV4L2FormatDesc ** fallback)
+{
+  const GstV4L2FormatDesc *ret = NULL;
+  gint i;
+
+  if (fallback)
+    *fallback = NULL;
+
+  for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
+    if (gst_v4l2_formats[i].drm_fourcc == drm_fourcc
+        && gst_v4l2_formats[i].drm_modifier == drm_modifier) {
+      if (!ret)
+        ret = &gst_v4l2_formats[i];
+      else if (fallback && !*fallback)
+        *fallback = &gst_v4l2_formats[i];
+      else
+        break;
+    }
+  }
+
+  return ret;
+}
+
 static gboolean
 gst_v4l2_object_v4l2fourcc_is_codec (guint32 fourcc)
 {
@@ -1642,7 +1667,8 @@ gst_v4l2_object_is_raw (GstV4l2Object * v4l2object)
 {
   gint i;
 
-  if (GST_VIDEO_INFO_FORMAT (&v4l2object->info) != GST_VIDEO_FORMAT_ENCODED)
+  if (GST_VIDEO_INFO_FORMAT (&v4l2object->info.vinfo) !=
+      GST_VIDEO_FORMAT_ENCODED)
     return TRUE;
 
   for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
@@ -1876,6 +1902,8 @@ gst_v4l2_object_probe_template_caps (const gchar * device, gint video_fd,
 }
 
 /* collect data for the given caps
+ * @v4l2object: the associated GstV4l2Object
+ * @info: the format information as GstVideoInfoDmaDrm
  * @caps: given input caps
  * @format: location for the v4l format
  * @w/@h: location for width and height
@@ -1884,7 +1912,7 @@ gst_v4l2_object_probe_template_caps (const gchar * device, gint video_fd,
  */
 static gboolean
 gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
-    struct v4l2_fmtdesc **format, GstVideoInfo * info)
+    struct v4l2_fmtdesc **format, GstVideoInfoDmaDrm * info)
 {
   GstStructure *structure;
   guint32 fourcc = 0, fourcc_nc = 0;
@@ -1895,13 +1923,27 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
 
   mimetype = gst_structure_get_name (structure);
 
-  if (!gst_video_info_from_caps (info, caps))
+  if (!gst_video_info_dma_drm_from_caps (info, caps) &&
+      !gst_video_info_from_caps (&info->vinfo, caps))
     goto invalid_format;
 
   if (g_str_equal (mimetype, "video/x-raw")) {
-    const GstV4L2FormatDesc *desc, *fallback_desc;
-    GstVideoFormat format = GST_VIDEO_INFO_FORMAT (info);
-    desc = gst_v4l2_object_get_desc_from_video_format (format, &fallback_desc);
+    const GstV4L2FormatDesc *desc, *fallback_desc = NULL;
+    GstVideoFormat format = GST_VIDEO_INFO_FORMAT (&info->vinfo);
+    if (format == GST_VIDEO_FORMAT_DMA_DRM) {
+      const GstStructure *s = gst_caps_get_structure (caps, 0);
+      guint64 drm_modifier;
+      guint32 drm_fourcc =
+          gst_video_dma_drm_fourcc_from_string (gst_structure_get_string (s,
+              "drm-format"), &drm_modifier);
+      /* we can't support single plane fallback with opaque DRM fourcc since we
+       * don't know how to extrapolate the missing strides and offsets. */
+      desc = gst_v4l2_object_get_desc_from_drm_fourcc (drm_fourcc, drm_modifier,
+          NULL);
+    } else {
+      desc =
+          gst_v4l2_object_get_desc_from_video_format (format, &fallback_desc);
+    }
     if (desc)
       fourcc_nc = desc->v4l2_format;
     if (fallback_desc)
@@ -3149,11 +3191,12 @@ default_frame_sizes:
 
     if (!v4l2object->skip_try_fmt_probes) {
       gint probed_w, probed_h;
-      if (v4l2object->info.width >= min_w && v4l2object->info.width <= max_w &&
-          v4l2object->info.height >= min_h
-          && v4l2object->info.height <= max_h) {
-        probed_w = v4l2object->info.width;
-        probed_h = v4l2object->info.height;
+      if (v4l2object->info.vinfo.width >= min_w &&
+          v4l2object->info.vinfo.width <= max_w &&
+          v4l2object->info.vinfo.height >= min_h
+          && v4l2object->info.vinfo.height <= max_h) {
+        probed_w = v4l2object->info.vinfo.width;
+        probed_h = v4l2object->info.vinfo.height;
       } else {
         probed_w = max_w;
         probed_h = max_h;
@@ -3430,15 +3473,15 @@ gst_v4l2_object_extrapolate_info (GstV4l2Object * v4l2object,
 static void
 gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
     struct v4l2_fmtdesc *fmtdesc, struct v4l2_format *format,
-    GstVideoInfo * info, GstVideoAlignment * align)
+    GstVideoInfoDmaDrm * info, GstVideoAlignment * align)
 {
-  const GstVideoFormatInfo *finfo = info->finfo;
+  const GstVideoFormatInfo *finfo = info->vinfo.finfo;
   gboolean standard_stride = TRUE;
   gint stride, pstride, padded_width, padded_height, i;
 
-  if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_ENCODED) {
+  if (GST_VIDEO_INFO_FORMAT (&info->vinfo) == GST_VIDEO_FORMAT_ENCODED) {
     v4l2object->n_v4l2_planes = 1;
-    info->size = format->fmt.pix.sizeimage;
+    info->vinfo.size = format->fmt.pix.sizeimage;
     goto store_info;
   }
 
@@ -3455,7 +3498,7 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
     /* pstride can be 0 for complex formats */
     GST_WARNING_OBJECT (v4l2object->dbg_obj,
         "format %s has a pstride of 0, cannot compute padded with",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&info->vinfo)));
     padded_width = format->fmt.pix.width;
   }
 
@@ -3464,7 +3507,7 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
         "Driver bug detected, stride (%d) is too small for the width (%d)",
         padded_width, format->fmt.pix.width);
 
-  align->padding_right = padded_width - info->width - align->padding_left;
+  align->padding_right = padded_width - info->vinfo.width - align->padding_left;
 
   /* adjust bottom padding */
   padded_height = format->fmt.pix.height;
@@ -3477,8 +3520,8 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
         (padded_height + tile_height - 1) / tile_height * tile_height;
   }
 
-  align->padding_bottom =
-      padded_height - GST_VIDEO_INFO_FIELD_HEIGHT (info) - align->padding_top;
+  align->padding_bottom = padded_height -
+      GST_VIDEO_INFO_FIELD_HEIGHT (&info->vinfo) - align->padding_top;
 
   /* setup the strides and offset */
   if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
@@ -3486,33 +3529,40 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
 
     /* figure out the frame layout */
     v4l2object->n_v4l2_planes = MAX (1, pix_mp->num_planes);
-    info->size = 0;
+    info->vinfo.size = 0;
     for (i = 0; i < v4l2object->n_v4l2_planes; i++) {
       stride = pix_mp->plane_fmt[i].bytesperline;
 
-      if (info->stride[i] != stride)
+      if (info->vinfo.stride[i] != stride)
         standard_stride = FALSE;
 
-      gst_v4l2_object_set_stride (info, align, i, stride);
-      info->offset[i] = info->size;
-      info->size += pix_mp->plane_fmt[i].sizeimage;
+      gst_v4l2_object_set_stride (&info->vinfo, align, i, stride);
+      info->vinfo.offset[i] = info->vinfo.size;
+      info->vinfo.size += pix_mp->plane_fmt[i].sizeimage;
     }
 
     /* Extrapolate stride if planar format are being set in 1 v4l2 plane */
     if (v4l2object->n_v4l2_planes < finfo->n_planes) {
+      /* We should never negotiate single plane variant of formats unless the
+       * formats is mapped into libgstvideo, otherwise we don't know how to
+       * guess the missing strides and offsets. If you hit this assertion,
+       * please remove the mapping from V4L2 to DRM formats. */
+      g_assert (GST_VIDEO_INFO_FORMAT (&info->vinfo) !=
+          GST_VIDEO_FORMAT_UNKNOWN);
       stride = format->fmt.pix_mp.plane_fmt[0].bytesperline;
-      gst_v4l2_object_extrapolate_info (v4l2object, info, align, stride);
+      gst_v4l2_object_extrapolate_info (v4l2object, &info->vinfo, align,
+          stride);
     }
   } else {
     /* only one plane in non-MPLANE mode */
     v4l2object->n_v4l2_planes = 1;
-    info->size = format->fmt.pix.sizeimage;
+    info->vinfo.size = format->fmt.pix.sizeimage;
     stride = format->fmt.pix.bytesperline;
 
-    if (info->stride[0] != stride)
+    if (info->vinfo.stride[0] != stride)
       standard_stride = FALSE;
 
-    gst_v4l2_object_extrapolate_info (v4l2object, info, align, stride);
+    gst_v4l2_object_extrapolate_info (v4l2object, &info->vinfo, align, stride);
   }
 
   /* adjust the offset to take into account left and top */
@@ -3522,14 +3572,15 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
           "Left and top padding is not permitted for tiled formats");
     memset (v4l2object->plane_size, 0, sizeof (v4l2object->plane_size));
   } else {
-    if (!gst_video_info_align_full (info, align, v4l2object->plane_size)) {
+    if (!gst_video_info_align_full (&info->vinfo, align,
+            v4l2object->plane_size)) {
       GST_WARNING_OBJECT (v4l2object->dbg_obj, "Failed to align video info");
     }
   }
 
 store_info:
   GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Got sizeimage %" G_GSIZE_FORMAT,
-      info->size);
+      info->vinfo.size);
 
   /* to avoid copies we need video meta if there is padding */
   v4l2object->need_video_meta =
@@ -3550,10 +3601,10 @@ store_info:
   v4l2object->fmtdesc = fmtdesc;
 
   /* if we have a framerate pre-calculate duration */
-  if (info->fps_n > 0 && info->fps_d > 0) {
-    v4l2object->duration = gst_util_uint64_scale_int (GST_SECOND, info->fps_d,
-        info->fps_n);
-    if (GST_VIDEO_INFO_INTERLACE_MODE (info) ==
+  if (info->vinfo.fps_n > 0 && info->vinfo.fps_d > 0) {
+    v4l2object->duration = gst_util_uint64_scale_int (GST_SECOND,
+        info->vinfo.fps_d, info->vinfo.fps_n);
+    if (GST_VIDEO_INFO_INTERLACE_MODE (&info->vinfo) ==
         GST_VIDEO_INTERLACE_MODE_ALTERNATE)
       v4l2object->duration /= 2;
   } else {
@@ -3696,7 +3747,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   enum v4l2_field field;
   guint32 pixelformat;
   struct v4l2_fmtdesc *fmtdesc;
-  GstVideoInfo info;
+  GstVideoInfoDmaDrm info;
   GstVideoAlignment align;
   gint width, height, fps_n, fps_d;
   guint pixel_bitdepth = 8;
@@ -3720,7 +3771,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 
   is_mplane = V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type);
 
-  gst_video_info_init (&info);
+  gst_video_info_dma_drm_init (&info);
   gst_video_alignment_reset (&align);
   v4l2object->transfer = GST_VIDEO_TRANSFER_UNKNOWN;
   v4l2object->matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
@@ -3729,35 +3780,43 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     goto invalid_caps;
 
   pixelformat = fmtdesc->pixelformat;
-  width = GST_VIDEO_INFO_WIDTH (&info);
-  height = GST_VIDEO_INFO_FIELD_HEIGHT (&info);
+  width = GST_VIDEO_INFO_WIDTH (&info.vinfo);
+  height = GST_VIDEO_INFO_FIELD_HEIGHT (&info.vinfo);
   /* if caps has no width and height info, use default value */
   if (V4L2_TYPE_IS_OUTPUT (v4l2object->type) && width == 0 && height == 0) {
     width = GST_V4L2_DEFAULT_WIDTH;
     height = GST_V4L2_DEFAULT_HEIGHT;
   }
-  fps_n = GST_VIDEO_INFO_FPS_N (&info);
-  fps_d = GST_VIDEO_INFO_FPS_D (&info);
+  fps_n = GST_VIDEO_INFO_FPS_N (&info.vinfo);
+  fps_d = GST_VIDEO_INFO_FPS_D (&info.vinfo);
 
-  /* if encoded format (GST_VIDEO_INFO_N_PLANES return 0)
-   * or if contiguous is preferred */
-  n_v4l_planes = GST_VIDEO_INFO_N_PLANES (&info);
-  if (!n_v4l_planes || !v4l2object->prefered_non_contiguous)
+  n_v4l_planes = GST_VIDEO_INFO_N_PLANES (&info.vinfo);
+  if (!n_v4l_planes) {
+    /* For opaque DRM format we let the driver tell us how many planes
+     * otherwise its an encoded format and we will have 1 plane */
+    if (GST_VIDEO_INFO_FORMAT (&info.vinfo) == GST_VIDEO_FORMAT_DMA_DRM)
+      n_v4l_planes = GST_VIDEO_MAX_PLANES;
+    else
+      n_v4l_planes = 1;
+  }
+
+  /* If our preference is single plane, then set te number of plane to 1 */
+  if (!v4l2object->prefered_non_contiguous)
     n_v4l_planes = 1;
 
-  field = get_v4l2_field_for_info (&info);
+  field = get_v4l2_field_for_info (&info.vinfo);
   if (field != V4L2_FIELD_NONE)
     GST_DEBUG_OBJECT (v4l2object->dbg_obj, "interlaced video");
   else
     GST_DEBUG_OBJECT (v4l2object->dbg_obj, "progressive video");
 
   /* We first pick the main colorspace from the primaries */
-  switch (info.colorimetry.primaries) {
+  switch (info.vinfo.colorimetry.primaries) {
     case GST_VIDEO_COLOR_PRIMARIES_BT709:
       /* There is three colorspaces using these primaries, use the range
        * and format type to differentiate them  */
-      if (info.colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235) {
-        if (GST_VIDEO_INFO_IS_RGB (&info))
+      if (info.vinfo.colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235) {
+        if (GST_VIDEO_INFO_IS_RGB (&info.vinfo))
           colorspace = V4L2_COLORSPACE_SRGB;
         else
           colorspace = V4L2_COLORSPACE_REC709;
@@ -3788,11 +3847,11 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 
     default:
       GST_WARNING_OBJECT (v4l2object->dbg_obj,
-          "Unknown colorimetry primaries %d", info.colorimetry.primaries);
+          "Unknown colorimetry primaries %d", info.vinfo.colorimetry.primaries);
       break;
   }
 
-  switch (info.colorimetry.range) {
+  switch (info.vinfo.colorimetry.range) {
     case GST_VIDEO_COLOR_RANGE_0_255:
       range = V4L2_QUANTIZATION_FULL_RANGE;
       break;
@@ -3804,11 +3863,11 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       break;
     default:
       GST_WARNING_OBJECT (v4l2object->dbg_obj,
-          "Unknown colorimetry range %d", info.colorimetry.range);
+          "Unknown colorimetry range %d", info.vinfo.colorimetry.range);
       break;
   }
 
-  switch (info.colorimetry.matrix) {
+  switch (info.vinfo.colorimetry.matrix) {
     case GST_VIDEO_COLOR_MATRIX_RGB:
       /* save the matrix so we can restore it on get() call from default */
       v4l2object->matrix = GST_VIDEO_COLOR_MATRIX_RGB;
@@ -3833,11 +3892,11 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       break;
     default:
       GST_WARNING_OBJECT (v4l2object->dbg_obj,
-          "Unknown colorimetry matrix %d", info.colorimetry.matrix);
+          "Unknown colorimetry matrix %d", info.vinfo.colorimetry.matrix);
       break;
   }
 
-  switch (info.colorimetry.transfer) {
+  switch (info.vinfo.colorimetry.transfer) {
     case GST_VIDEO_TRANSFER_GAMMA18:
     case GST_VIDEO_TRANSFER_GAMMA20:
     case GST_VIDEO_TRANSFER_GAMMA22:
@@ -3855,7 +3914,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     case GST_VIDEO_TRANSFER_BT2020_12:
     case GST_VIDEO_TRANSFER_BT2020_10:
     case GST_VIDEO_TRANSFER_BT709:
-      v4l2object->transfer = info.colorimetry.transfer;
+      v4l2object->transfer = info.vinfo.colorimetry.transfer;
       transfer = V4L2_XFER_FUNC_709;
       break;
     case GST_VIDEO_TRANSFER_SMPTE240M:
@@ -3875,13 +3934,13 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       break;
     default:
       GST_WARNING_OBJECT (v4l2object->dbg_obj,
-          "Unknown colorimetry transfer %d", info.colorimetry.transfer);
+          "Unknown colorimetry transfer %d", info.vinfo.colorimetry.transfer);
       break;
   }
 
   if (colorspace == 0) {
     /* Try to guess colorspace according to pixelformat and size */
-    if (GST_VIDEO_INFO_IS_YUV (&info)) {
+    if (GST_VIDEO_INFO_IS_YUV (&info.vinfo)) {
       if (range == V4L2_QUANTIZATION_FULL_RANGE
           && matrix == V4L2_YCBCR_ENC_601 && transfer == 0) {
         /* Full range BT.601 YCbCr encoding with unknown primaries and transfer
@@ -3890,12 +3949,12 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
         transfer = V4L2_XFER_FUNC_SRGB;
       } else {
         /* SD streams likely use SMPTE170M and HD streams REC709 */
-        if (width <= 720 && GST_VIDEO_INFO_HEIGHT (&info) <= 576)
+        if (width <= 720 && GST_VIDEO_INFO_HEIGHT (&info.vinfo) <= 576)
           colorspace = V4L2_COLORSPACE_SMPTE170M;
         else
           colorspace = V4L2_COLORSPACE_REC709;
       }
-    } else if (GST_VIDEO_INFO_IS_RGB (&info)) {
+    } else if (GST_VIDEO_INFO_IS_RGB (&info.vinfo)) {
       colorspace = V4L2_COLORSPACE_SRGB;
       transfer = V4L2_XFER_FUNC_NONE;
     }
@@ -3903,7 +3962,8 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 
   GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Desired format %dx%d, format "
       "%" GST_FOURCC_FORMAT " stride: %d", width, height,
-      GST_FOURCC_ARGS (pixelformat), GST_VIDEO_INFO_PLANE_STRIDE (&info, 0));
+      GST_FOURCC_ARGS (pixelformat),
+      GST_VIDEO_INFO_PLANE_STRIDE (&info.vinfo, 0));
 
   s = gst_caps_get_structure (caps, 0);
 
@@ -3927,20 +3987,20 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     /* try to ask our preferred stride but it's not a failure if not
      * accepted */
     for (i = 0; i < n_v4l_planes; i++) {
-      gint stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, i);
+      gint stride = GST_VIDEO_INFO_PLANE_STRIDE (&info.vinfo, i);
 
-      if (GST_VIDEO_FORMAT_INFO_IS_TILED (info.finfo))
+      if (GST_VIDEO_FORMAT_INFO_IS_TILED (info.vinfo.finfo))
         stride = GST_VIDEO_TILE_X_TILES (stride) *
-            GST_VIDEO_FORMAT_INFO_TILE_STRIDE (info.finfo, i);
+            GST_VIDEO_FORMAT_INFO_TILE_STRIDE (info.vinfo.finfo, i);
 
       format.fmt.pix_mp.plane_fmt[i].bytesperline = stride;
     }
 
-    if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_ENCODED)
+    if (GST_VIDEO_INFO_FORMAT (&info.vinfo) == GST_VIDEO_FORMAT_ENCODED)
       format.fmt.pix_mp.plane_fmt[0].sizeimage =
           calculate_max_sizeimage (v4l2object, pixel_bitdepth);
   } else {
-    gint stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, 0);
+    gint stride = GST_VIDEO_INFO_PLANE_STRIDE (&info.vinfo, 0);
 
     format.type = v4l2object->type;
 
@@ -3949,14 +4009,14 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     format.fmt.pix.pixelformat = pixelformat;
     format.fmt.pix.field = field;
 
-    if (GST_VIDEO_FORMAT_INFO_IS_TILED (info.finfo))
+    if (GST_VIDEO_FORMAT_INFO_IS_TILED (info.vinfo.finfo))
       stride = GST_VIDEO_TILE_X_TILES (stride) *
-          GST_VIDEO_FORMAT_INFO_TILE_STRIDE (info.finfo, i);
+          GST_VIDEO_FORMAT_INFO_TILE_STRIDE (info.vinfo.finfo, i);
 
     /* try to ask our preferred stride */
     format.fmt.pix.bytesperline = stride;
 
-    if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_ENCODED)
+    if (GST_VIDEO_INFO_FORMAT (&info.vinfo) == GST_VIDEO_FORMAT_ENCODED)
       format.fmt.pix.sizeimage =
           calculate_max_sizeimage (v4l2object, pixel_bitdepth);
   }
@@ -4139,7 +4199,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
    * For some codecs the dimensions are *not* in the bitstream, IIRC VC1
    * in ASF mode for example, there is also not reason for a driver to
    * change the size. */
-  if (info.finfo->format != GST_VIDEO_FORMAT_ENCODED) {
+  if (GST_VIDEO_INFO_FORMAT (&info.vinfo) != GST_VIDEO_FORMAT_ENCODED) {
     /* We can crop larger images */
     if (format.fmt.pix.width < width || format.fmt.pix.height < height)
       goto invalid_dimensions;
@@ -4156,7 +4216,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 
   /* used to check colorimetry and interlace mode fields presence */
   if (gst_v4l2_object_get_interlace_mode (format.fmt.pix.field,
-          &info.interlace_mode)) {
+          &info.vinfo.interlace_mode)) {
     if (gst_structure_has_field (s, "interlace-mode")) {
       if (format.fmt.pix.field != field)
         goto invalid_field;
@@ -4169,9 +4229,10 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       gst_structure_remove_field (s, "interlace-mode");
   }
 
-  if (gst_v4l2_object_get_colorspace (v4l2object, &format, &info.colorimetry)) {
+  if (gst_v4l2_object_get_colorspace (v4l2object, &format,
+          &info.vinfo.colorimetry)) {
     if (gst_structure_has_field (s, "colorimetry")) {
-      if (!gst_v4l2_video_colorimetry_matches (&info.colorimetry, caps))
+      if (!gst_v4l2_video_colorimetry_matches (&info.vinfo.colorimetry, caps))
         goto invalid_colorimetry;
     }
   } else {
@@ -4187,10 +4248,10 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   if (v4l2object->skip_try_fmt_probes) {
     if (!disable_interlacing && !gst_structure_has_field (s, "interlace-mode")) {
       gst_structure_set (s, "interlace-mode", G_TYPE_STRING,
-          gst_video_interlace_mode_to_string (info.interlace_mode), NULL);
+          gst_video_interlace_mode_to_string (info.vinfo.interlace_mode), NULL);
     }
     if (!disable_colorimetry && !gst_structure_has_field (s, "colorimetry")) {
-      gchar *str = gst_video_colorimetry_to_string (&info.colorimetry);
+      gchar *str = gst_video_colorimetry_to_string (&info.vinfo.colorimetry);
       gst_structure_set (s, "colorimetry", G_TYPE_STRING, str, NULL);
       g_free (str);
     }
@@ -4281,7 +4342,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   if (try_only)                 /* good enough for trying only */
     return TRUE;
 
-  if (GST_VIDEO_INFO_HAS_ALPHA (&info)) {
+  if (GST_VIDEO_INFO_HAS_ALPHA (&info.vinfo)) {
     struct v4l2_control ctl = { 0, };
     ctl.id = V4L2_CID_ALPHA_COMPONENT;
     ctl.value = 0xff;
@@ -4303,9 +4364,9 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 
   if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE
       || v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
-    GST_VIDEO_INFO_FPS_N (&info) =
+    GST_VIDEO_INFO_FPS_N (&info.vinfo) =
         streamparm.parm.capture.timeperframe.denominator;
-    GST_VIDEO_INFO_FPS_D (&info) =
+    GST_VIDEO_INFO_FPS_D (&info.vinfo) =
         streamparm.parm.capture.timeperframe.numerator;
 
     GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Got capture framerate: %u/%u",
@@ -4374,13 +4435,13 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
           "Reuse caps framerate %u/%u - fix v4l2 capture driver", fps_n, fps_d);
     }
 
-    GST_VIDEO_INFO_FPS_N (&info) = fps_n;
-    GST_VIDEO_INFO_FPS_D (&info) = fps_d;
+    GST_VIDEO_INFO_FPS_N (&info.vinfo) = fps_n;
+    GST_VIDEO_INFO_FPS_D (&info.vinfo) = fps_d;
   } else if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT
       || v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
-    GST_VIDEO_INFO_FPS_N (&info) =
+    GST_VIDEO_INFO_FPS_N (&info.vinfo) =
         streamparm.parm.output.timeperframe.denominator;
-    GST_VIDEO_INFO_FPS_D (&info) =
+    GST_VIDEO_INFO_FPS_D (&info.vinfo) =
         streamparm.parm.output.timeperframe.numerator;
 
     GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Got output framerate: %u/%u",
@@ -4426,8 +4487,8 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
           "Reuse caps framerate %u/%u - fix v4l2 output driver", fps_n, fps_d);
     }
 
-    GST_VIDEO_INFO_FPS_N (&info) = fps_n;
-    GST_VIDEO_INFO_FPS_D (&info) = fps_d;
+    GST_VIDEO_INFO_FPS_N (&info.vinfo) = fps_n;
+    GST_VIDEO_INFO_FPS_D (&info.vinfo) = fps_d;
   }
 
 done:
@@ -4544,7 +4605,8 @@ invalid_colorimetry:
   {
     gchar *wanted_colorimetry;
 
-    wanted_colorimetry = gst_video_colorimetry_to_string (&info.colorimetry);
+    wanted_colorimetry =
+        gst_video_colorimetry_to_string (&info.vinfo.colorimetry);
 
     GST_V4L2_ERROR (error, RESOURCE, SETTINGS,
         (_("Device '%s' does not support %s colorimetry"),
@@ -4607,7 +4669,8 @@ gst_v4l2_object_try_format (GstV4l2Object * v4l2object, GstCaps * caps,
  * Returns: %TRUE on success, %FALSE on failure.
  */
 gboolean
-gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
+gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object,
+    GstVideoInfoDmaDrm * info)
 {
   struct v4l2_fmtdesc *fmtdesc;
   struct v4l2_format fmt;
@@ -4618,8 +4681,9 @@ gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
   guint width, height;
   GstVideoAlignment align;
   GstVideoInterlaceMode interlace_mode;
+  const GstV4L2FormatDesc *desc;
 
-  gst_video_info_init (info);
+  gst_video_info_dma_drm_init (info);
   gst_video_alignment_reset (&align);
   v4l2object->transfer = GST_VIDEO_TRANSFER_UNKNOWN;
   v4l2object->matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
@@ -4635,11 +4699,17 @@ gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
     goto unsupported_format;
 
   /* No need to care about mplane, the four first params are the same */
-  format = gst_v4l2_object_v4l2fourcc_to_video_format (fmt.fmt.pix.pixelformat);
-
-  /* fails if we do no translate the fmt.pix.pixelformat to GstVideoFormat */
-  if (format == GST_VIDEO_FORMAT_UNKNOWN)
+  desc = gst_v4l2_object_get_desc_from_v4l2fourcc (fmt.fmt.pix.pixelformat);
+  if (!desc)
     goto unsupported_format;
+
+  if (desc->gst_format == GST_VIDEO_FORMAT_UNKNOWN) {
+    if (!desc->drm_fourcc)
+      goto unsupported_format;
+    format = GST_VIDEO_FORMAT_DMA_DRM;
+  } else {
+    format = desc->gst_format;
+  }
 
   if (fmt.fmt.pix.width == 0 || fmt.fmt.pix.height == 0)
     goto invalid_dimensions;
@@ -4686,19 +4756,22 @@ gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
       goto unsupported_field;
   }
 
-  if (!gst_video_info_set_interlaced_format (info, format, interlace_mode,
-          width, height))
+  info->drm_fourcc = desc->drm_fourcc;
+  info->drm_modifier = desc->drm_modifier;
+
+  if (!gst_video_info_set_interlaced_format (&info->vinfo, format,
+          interlace_mode, width, height))
     goto invalid_dimensions;
 
-  gst_v4l2_object_get_colorspace (v4l2object, &fmt, &info->colorimetry);
-  gst_v4l2_object_get_streamparm (v4l2object, info);
-  if ((info->fps_n == 0 && v4l2object->info.fps_d != 0)
+  gst_v4l2_object_get_colorspace (v4l2object, &fmt, &info->vinfo.colorimetry);
+  gst_v4l2_object_get_streamparm (v4l2object, &info->vinfo);
+  if ((info->vinfo.fps_n == 0 && GST_V4L2_FPS_D (v4l2object) != 0)
       && (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE
           || v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)) {
-    info->fps_d = v4l2object->info.fps_d;
-    info->fps_n = v4l2object->info.fps_n;
+    info->vinfo.fps_d = GST_V4L2_FPS_D (v4l2object);
+    info->vinfo.fps_n = GST_V4L2_FPS_N (v4l2object);
     GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Set capture fps to %d/%d",
-        info->fps_n, info->fps_d);
+        info->vinfo.fps_n, info->vinfo.fps_d);
   }
 
   gst_v4l2_object_save_format (v4l2object, fmtdesc, &fmt, info, &align);
@@ -4886,8 +4959,8 @@ gst_v4l2_object_setup_padding (GstV4l2Object * obj)
 
   rect.left = align->padding_left;
   rect.top = align->padding_top;
-  rect.width = obj->info.width;
-  rect.height = GST_VIDEO_INFO_FIELD_HEIGHT (&obj->info);
+  rect.width = GST_V4L2_WIDTH (obj);
+  rect.height = GST_V4L2_FIELD_HEIGHT (obj);
 
   if (V4L2_TYPE_IS_OUTPUT (obj->type)) {
     return gst_v4l2_object_set_crop (obj, &rect);
@@ -5309,39 +5382,40 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
     gsize offset[GST_VIDEO_MAX_PLANES], gint stride[GST_VIDEO_MAX_PLANES],
     gsize buffer_size, guint padded_height)
 {
-  guint p;
   gboolean need_fmt_update = FALSE;
+  GstVideoInfo *info = &obj->info.vinfo;
+  guint p;
 
-  if (n_planes != GST_VIDEO_INFO_N_PLANES (&obj->info)) {
+  if (n_planes != GST_V4L2_N_PLANES (obj)) {
     GST_WARNING_OBJECT (obj->dbg_obj,
         "Cannot match buffers with different number planes");
     return FALSE;
   }
 
   for (p = 0; p < n_planes; p++) {
-    if (stride[p] < obj->info.stride[p]) {
+    if (stride[p] < info->stride[p]) {
       GST_DEBUG_OBJECT (obj->dbg_obj,
           "Not matching as remote stride %i is smaller than %i on plane %u",
-          stride[p], obj->info.stride[p], p);
+          stride[p], info->stride[p], p);
       return FALSE;
-    } else if (stride[p] > obj->info.stride[p]) {
+    } else if (stride[p] > info->stride[p]) {
       GST_LOG_OBJECT (obj->dbg_obj,
           "Remote stride %i is higher than %i on plane %u",
-          stride[p], obj->info.stride[p], p);
+          stride[p], info->stride[p], p);
       need_fmt_update = TRUE;
     }
 
-    if (offset[p] < obj->info.offset[p]) {
+    if (offset[p] < info->offset[p]) {
       GST_DEBUG_OBJECT (obj->dbg_obj,
           "Not matching as offset %" G_GSIZE_FORMAT
           " is smaller than %" G_GSIZE_FORMAT " on plane %u",
-          offset[p], obj->info.offset[p], p);
+          offset[p], info->offset[p], p);
       return FALSE;
-    } else if (offset[p] > obj->info.offset[p]) {
+    } else if (offset[p] > info->offset[p]) {
       GST_LOG_OBJECT (obj->dbg_obj,
           "Remote offset %" G_GSIZE_FORMAT
           " is higher than %" G_GSIZE_FORMAT " on plane %u",
-          offset[p], obj->info.offset[p], p);
+          offset[p], info->offset[p], p);
       need_fmt_update = TRUE;
     }
   }
@@ -5372,7 +5446,7 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
       GST_DEBUG_OBJECT (obj->dbg_obj, "Padded height %u", padded_height);
 
       obj->align.padding_bottom =
-          padded_height - GST_VIDEO_INFO_FIELD_HEIGHT (&obj->info);
+          padded_height - GST_VIDEO_INFO_FIELD_HEIGHT (info);
     } else {
       GST_WARNING_OBJECT (obj->dbg_obj,
           "Failed to compute padded height; keep the default one");
@@ -5388,9 +5462,9 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
       for (i = 0; i < obj->n_v4l2_planes; i++) {
         gint plane_stride = stride[i];
 
-        if (GST_VIDEO_FORMAT_INFO_IS_TILED (obj->info.finfo))
+        if (GST_VIDEO_FORMAT_INFO_IS_TILED (info->finfo))
           plane_stride = GST_VIDEO_TILE_X_TILES (plane_stride) *
-              GST_VIDEO_FORMAT_INFO_TILE_STRIDE (obj->info.finfo, i);
+              GST_VIDEO_FORMAT_INFO_TILE_STRIDE (info->finfo, i);
 
         format.fmt.pix_mp.plane_fmt[i].bytesperline = plane_stride;
         wanted_stride[i] = plane_stride;
@@ -5403,9 +5477,9 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
 
       GST_DEBUG_OBJECT (obj->dbg_obj, "Wanted stride: %i", plane_stride);
 
-      if (GST_VIDEO_FORMAT_INFO_IS_TILED (obj->info.finfo))
+      if (GST_VIDEO_FORMAT_INFO_IS_TILED (info->finfo))
         plane_stride = GST_VIDEO_TILE_X_TILES (plane_stride) *
-            GST_VIDEO_FORMAT_INFO_TILE_STRIDE (obj->info.finfo, 0);
+            GST_VIDEO_FORMAT_INFO_TILE_STRIDE (info->finfo, 0);
 
       format.fmt.pix.bytesperline = plane_stride;
       format.fmt.pix.height = padded_height;
@@ -5620,13 +5694,13 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
         /* use the bigest size, when we use our own pool we can't really do any
          * other size than what the hardware gives us but for downstream pools
          * we can try */
-        size = MAX (size, obj->info.size);
+        size = MAX (size, GST_V4L2_SIZE (obj));
       } else if (can_share_own_pool) {
         /* no downstream pool, use our own then */
         GST_DEBUG_OBJECT (obj->dbg_obj,
             "read/write mode: no downstream pool, using our own");
         pool = gst_object_ref (obj_pool);
-        size = obj->info.size;
+        size = GST_V4L2_SIZE (obj);
         pushing_from_our_pool = TRUE;
       }
       break;
@@ -5642,7 +5716,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
       other_pool = pool;
       gst_object_unref (pool);
       pool = gst_object_ref (obj_pool);
-      size = obj->info.size;
+      size = GST_V4L2_SIZE (obj);
       break;
 
     case GST_V4L2_IO_MMAP:
@@ -5653,7 +5727,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
         if (pool)
           gst_object_unref (pool);
         pool = gst_object_ref (obj_pool);
-        size = obj->info.size;
+        size = GST_V4L2_SIZE (obj);
         GST_DEBUG_OBJECT (obj->dbg_obj,
             "streaming mode: using our own pool %" GST_PTR_FORMAT, pool);
         pushing_from_our_pool = TRUE;
@@ -5664,7 +5738,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
       } else {
         GST_DEBUG_OBJECT (obj->dbg_obj,
             "streaming mode: no usable pool, copying to generic pool");
-        size = MAX (size, obj->info.size);
+        size = MAX (size, GST_V4L2_SIZE (obj));
       }
       break;
     case GST_V4L2_IO_AUTO:
@@ -5851,7 +5925,7 @@ gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
   GstStructure *allocation_meta = NULL;
 
   /* Set defaults allocation parameters */
-  size = obj->info.size;
+  size = GST_V4L2_SIZE (obj);
   min = GST_V4L2_MIN_BUFFERS (obj);
   max = VIDEO_MAX_FRAME;
 

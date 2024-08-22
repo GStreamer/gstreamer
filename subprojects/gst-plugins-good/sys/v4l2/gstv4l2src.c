@@ -922,10 +922,10 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 
     if (gst_query_get_n_allocation_pools (query))
       gst_query_set_nth_allocation_pool (query, 0, pool,
-          src->v4l2object->info.size, 1, 0);
+          src->v4l2object->info.vinfo.size, 1, 0);
     else
-      gst_query_add_allocation_pool (query, pool, src->v4l2object->info.size, 1,
-          0);
+      gst_query_add_allocation_pool (query, pool,
+          src->v4l2object->info.vinfo.size, 1, 0);
 
     if (pool)
       gst_object_unref (pool);
@@ -998,7 +998,7 @@ gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
 
       /* min latency is the time to capture one frame/field */
       min_latency = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
-      if (GST_VIDEO_INFO_INTERLACE_MODE (&obj->info) ==
+      if (GST_VIDEO_INFO_INTERLACE_MODE (&obj->info.vinfo) ==
           GST_VIDEO_INTERLACE_MODE_ALTERNATE)
         min_latency /= 2;
 
@@ -1160,7 +1160,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 
   do {
     ret = GST_BASE_SRC_CLASS (parent_class)->alloc (GST_BASE_SRC (src), 0,
-        obj->info.size, buf);
+        obj->info.vinfo.size, buf);
 
     if (G_UNLIKELY (ret != GST_FLOW_OK)) {
       if (ret == GST_V4L2_FLOW_RESOLUTION_CHANGE) {

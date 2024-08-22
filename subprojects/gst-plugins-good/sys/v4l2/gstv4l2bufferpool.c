@@ -449,7 +449,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
   GstVideoInfo *info;
 
   obj = pool->obj;
-  info = &obj->info;
+  info = &obj->info.vinfo;
 
   switch (obj->mode) {
     case GST_V4L2_IO_RW:
@@ -622,8 +622,8 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   }
 
   /* Always update the config to ensure the configured size matches */
-  gst_buffer_pool_config_set_params (config, caps, obj->info.size, min_buffers,
-      max_buffers);
+  gst_buffer_pool_config_set_params (config, caps, obj->info.vinfo.size,
+      min_buffers, max_buffers);
 
   /* keep a GstVideoInfo with defaults for the when we need to copy */
   gst_video_info_from_caps (&pool->caps_info, caps);
@@ -1244,7 +1244,7 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
   GstV4l2Object *obj = pool->obj;
   GstClockTime timestamp;
   GstV4l2MemoryGroup *group;
-  const GstVideoInfo *info = &obj->info;
+  const GstVideoInfo *info = &obj->info.vinfo;
   gint i;
   gint old_buffer_state;
 
@@ -1797,7 +1797,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   gst_object_ref (obj->element);
 
   config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
-  gst_buffer_pool_config_set_params (config, caps, obj->info.size, 0, 0);
+  gst_buffer_pool_config_set_params (config, caps, obj->info.vinfo.size, 0, 0);
   /* This will simply set a default config, but will not configure the pool
    * because min and max are not valid */
   gst_buffer_pool_set_config (GST_BUFFER_POOL_CAST (pool), config);
@@ -1827,7 +1827,7 @@ gst_v4l2_do_read (GstV4l2BufferPool * pool, GstBuffer * buf)
   GstMapInfo map;
   gint toread;
 
-  toread = obj->info.size;
+  toread = obj->info.vinfo.size;
 
   GST_LOG_OBJECT (pool, "reading %d bytes into buffer %p", toread, buf);
 
