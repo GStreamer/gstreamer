@@ -740,17 +740,57 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
 
   priv->profile_caps = gst_vulkan_video_profile_to_caps (&priv->profile);
 
-  GST_LOG_OBJECT (self, "Capabilities for %" GST_PTR_FORMAT ":\n"
-      "     Width from %i to %i\n"
-      "     Height from %i to %i\n"
-      "     MaxBitrate: %" G_GUINT64_FORMAT "\n"
-      "     Encode mode:%s",
+  GST_LOG_OBJECT (self, "Encoder capabilities for %" GST_PTR_FORMAT ":\n"
+      "    Codec header version: %i.%i.%i (driver), %i.%i.%i (compiled)\n"
+      "    Width from %i to %i\n"
+      "    Height from %i to %i\n"
+      "    Width granularity: %i\n"
+      "    Height granularity: %i\n"
+      "    Bitstream offset alignment: %" G_GUINT64_FORMAT "\n"
+      "    Bitstream size alignment: %" G_GUINT64_FORMAT "\n"
+      "    Maximum reference slots: %u\n"
+      "    Maximum active references: %u\n"
+      "    encode maximum bitrate: %" G_GUINT64_FORMAT "\n"
+      "    encode quality levels: %i\n"
+      "    encode image width granularity: %i\n"
+      "    encode image height granularity: %i\n"
+      "    encode pool feedback bitstream:%s%s%s%s\n"
+      "    encode rate-control modes:%s%s\n"
+      "    Capability flags:%s%s%s\n",
       priv->profile_caps,
+      VK_CODEC_VERSION (priv->caps.caps.stdHeaderVersion.specVersion),
+      VK_CODEC_VERSION (_vk_codec_extensions[codec_idx].specVersion),
       priv->caps.caps.minCodedExtent.width,
       priv->caps.caps.maxCodedExtent.width,
       priv->caps.caps.minCodedExtent.height,
       priv->caps.caps.maxCodedExtent.height,
+      priv->caps.caps.pictureAccessGranularity.width,
+      priv->caps.caps.pictureAccessGranularity.height,
+      priv->caps.caps.minBitstreamBufferOffsetAlignment,
+      priv->caps.caps.minBitstreamBufferSizeAlignment,
+      priv->caps.caps.maxDpbSlots,
+      priv->caps.caps.maxActiveReferencePictures,
       priv->caps.encoder.caps.maxBitrate,
+      priv->caps.encoder.caps.maxQualityLevels,
+      priv->caps.encoder.caps.encodeInputPictureGranularity.width,
+      priv->caps.encoder.caps.encodeInputPictureGranularity.height,
+      priv->caps.encoder.caps.supportedEncodeFeedbackFlags ? "" : " none",
+      priv->caps.encoder.caps.supportedEncodeFeedbackFlags &
+      VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_BUFFER_OFFSET_BIT_KHR ?
+      " buffer_offset" : "",
+      priv->caps.encoder.caps.supportedEncodeFeedbackFlags &
+      VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_BYTES_WRITTEN_BIT_KHR ?
+      " bytes_written" : "",
+      priv->caps.encoder.caps.supportedEncodeFeedbackFlags &
+      VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_HAS_OVERRIDES_BIT_KHR ?
+      " has_overrides" : "",
+      priv->caps.encoder.caps.rateControlModes &
+      VK_VIDEO_ENCODE_RATE_CONTROL_MODE_CBR_BIT_KHR ? " cbr" : "",
+      priv->caps.encoder.caps.rateControlModes &
+      VK_VIDEO_ENCODE_RATE_CONTROL_MODE_VBR_BIT_KHR ? " vbr" : "",
+      priv->caps.caps.flags ? "" : " none",
+      priv->caps.caps.flags &
+      VK_VIDEO_CAPABILITY_PROTECTED_CONTENT_BIT_KHR ? " protected" : "",
       priv->caps.caps.flags &
       VK_VIDEO_CAPABILITY_SEPARATE_REFERENCE_IMAGES_BIT_KHR ?
       " separate_references" : "");
