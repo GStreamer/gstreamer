@@ -55,7 +55,7 @@ GST_START_TEST (rtpfunnel_ssrc_demuxing)
   fail_unless_equals_int (2, gst_harness_upstream_events_received (h0));
   fail_unless_equals_int (2, gst_harness_upstream_events_received (h1));
 
-  /* unknown ssrc, we drop it */
+  /* unknown ssrc, we drop it by default */
   gst_harness_push_upstream_event (h,
       gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
           gst_structure_new ("GstForceKeyUnit",
@@ -63,12 +63,22 @@ GST_START_TEST (rtpfunnel_ssrc_demuxing)
   fail_unless_equals_int (2, gst_harness_upstream_events_received (h0));
   fail_unless_equals_int (2, gst_harness_upstream_events_received (h1));
 
+  /* unknown ssrc, we forward if property says to */
+  g_object_set (h->element, "forward-unknown-ssrc", TRUE, NULL);
+  gst_harness_push_upstream_event (h,
+      gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+          gst_structure_new ("GstForceKeyUnit",
+              "ssrc", G_TYPE_UINT, 666, NULL)));
+  fail_unless_equals_int (3, gst_harness_upstream_events_received (h0));
+  fail_unless_equals_int (3, gst_harness_upstream_events_received (h1));
+  g_object_set (h->element, "forward-unknown-ssrc", FALSE, NULL);
+
   /* no ssrc, we send to all */
   gst_harness_push_upstream_event (h,
       gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
           gst_structure_new_empty ("GstForceKeyUnit")));
-  fail_unless_equals_int (3, gst_harness_upstream_events_received (h0));
-  fail_unless_equals_int (3, gst_harness_upstream_events_received (h1));
+  fail_unless_equals_int (4, gst_harness_upstream_events_received (h0));
+  fail_unless_equals_int (4, gst_harness_upstream_events_received (h1));
 
   /* remove pad 0, and send an event referencing the now dead ssrc */
   gst_harness_teardown (h0);
@@ -76,7 +86,7 @@ GST_START_TEST (rtpfunnel_ssrc_demuxing)
       gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
           gst_structure_new ("GstForceKeyUnit",
               "ssrc", G_TYPE_UINT, 123, NULL)));
-  fail_unless_equals_int (3, gst_harness_upstream_events_received (h1));
+  fail_unless_equals_int (4, gst_harness_upstream_events_received (h1));
 
   gst_harness_teardown (h);
   gst_harness_teardown (h1);

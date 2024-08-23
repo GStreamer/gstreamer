@@ -18730,6 +18730,18 @@
                         "readable": true,
                         "type": "gint",
                         "writable": true
+                    },
+                    "forward-unknown-ssrc": {
+                        "blurb": "Whether to forward events or queries that reference unknown SSRCs",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
                     }
                 },
                 "rank": "none"

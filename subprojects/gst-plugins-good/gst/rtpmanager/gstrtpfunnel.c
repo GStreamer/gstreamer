@@ -109,9 +109,11 @@ enum
 {
   PROP_0,
   PROP_COMMON_TS_OFFSET,
+  PROP_FORWARD_UNKNOWN_SSRC,
 };
 
 #define DEFAULT_COMMON_TS_OFFSET -1
+#define DEFAULT_FORWARD_UNKNOWN_SSRC FALSE
 
 struct _GstRtpFunnelClass
 {
@@ -136,6 +138,7 @@ struct _GstRtpFunnel
 
   /* properties */
   gint common_ts_offset;
+  gboolean forward_unknown_ssrcs;
 };
 
 #define RTP_CAPS "application/x-rtp"
@@ -529,9 +532,10 @@ gst_rtp_funnel_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
     GstPad *fpad;
     guint ssrc;
     if (s && gst_structure_get_uint (s, "ssrc", &ssrc)) {
-      handled = TRUE;
+      gboolean forward_unknown = FALSE;
 
       GST_OBJECT_LOCK (funnel);
+      forward_unknown = funnel->forward_unknown_ssrcs;
       fpad = g_hash_table_lookup (funnel->ssrc_to_pad, GUINT_TO_POINTER (ssrc));
       if (fpad)
         gst_object_ref (fpad);
@@ -542,8 +546,10 @@ gst_rtp_funnel_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
             event, fpad);
         ret = gst_pad_push_event (fpad, event);
         gst_object_unref (fpad);
-      } else {
+        handled = TRUE;
+      } else if (!forward_unknown) {
         gst_event_unref (event);
+        handled = TRUE;
       }
     }
   }
@@ -600,6 +606,11 @@ gst_rtp_funnel_set_property (GObject * object, guint prop_id,
     case PROP_COMMON_TS_OFFSET:
       funnel->common_ts_offset = g_value_get_int (value);
       break;
+    case PROP_FORWARD_UNKNOWN_SSRC:
+      GST_OBJECT_LOCK (funnel);
+      funnel->forward_unknown_ssrcs = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (funnel);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -615,6 +626,11 @@ gst_rtp_funnel_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_COMMON_TS_OFFSET:
       g_value_set_int (value, funnel->common_ts_offset);
+      break;
+    case PROP_FORWARD_UNKNOWN_SSRC:
+      GST_OBJECT_LOCK (funnel);
+      g_value_set_boolean (value, funnel->forward_unknown_ssrcs);
+      GST_OBJECT_UNLOCK (funnel);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -706,6 +722,19 @@ gst_rtp_funnel_class_init (GstRtpFunnelClass * klass)
           -1, G_MAXINT32, DEFAULT_COMMON_TS_OFFSET,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * rtpfunnel:forward-unknown-ssrc:
+   *
+   * Whether to forward events or queries that reference unknown SSRCs.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_FORWARD_UNKNOWN_SSRC,
+      g_param_spec_boolean ("forward-unknown-ssrc", "Forward Unknown SSRC",
+          "Whether to forward events or queries that reference unknown SSRCs",
+          DEFAULT_FORWARD_UNKNOWN_SSRC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   GST_DEBUG_CATEGORY_INIT (gst_rtp_funnel_debug,
       "gstrtpfunnel", 0, "funnel element");
 }
@@ -723,4 +752,5 @@ gst_rtp_funnel_init (GstRtpFunnel * funnel)
   funnel->srccaps = gst_caps_new_empty_simple (RTP_CAPS);
   funnel->ssrc_to_pad = g_hash_table_new (NULL, NULL);
   funnel->current_pad = NULL;
+  funnel->forward_unknown_ssrcs = DEFAULT_FORWARD_UNKNOWN_SSRC;
 }
