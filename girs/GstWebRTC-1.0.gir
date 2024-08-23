@@ -2327,7 +2327,7 @@ for more information.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">Kind is audio</doc>
       </member>
       <member name="video" value="2" c:identifier="GST_WEBRTC_KIND_VIDEO" glib:nick="video">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">Kind is audio</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">Kind is video</doc>
       </member>
     </enumeration>
     <enumeration name="WebRTCPeerConnectionState" glib:type-name="GstWebRTCPeerConnectionState" glib:get-type="gst_webrtc_peer_connection_state_get_type" c:type="GstWebRTCPeerConnectionState">
