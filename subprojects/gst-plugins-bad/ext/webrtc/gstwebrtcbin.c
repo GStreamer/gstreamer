@@ -6045,6 +6045,10 @@ _connect_rtpfunnel (GstWebRTCBin * webrtc, guint session_id)
     goto done;
 
   webrtc->rtpfunnel = gst_element_factory_make ("rtpfunnel", NULL);
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (webrtc->rtpfunnel),
+          "forward-unknown-ssrc") != NULL) {
+    g_object_set (webrtc->rtpfunnel, "forward-unknown-ssrc", TRUE, NULL);
+  }
   gst_bin_add (GST_BIN (webrtc), webrtc->rtpfunnel);
   gst_element_sync_state_with_parent (webrtc->rtpfunnel);
 
