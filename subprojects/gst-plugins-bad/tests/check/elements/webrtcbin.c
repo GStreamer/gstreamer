@@ -4906,6 +4906,92 @@ GST_START_TEST (test_audio_sendrecv)
 
 GST_END_TEST;
 
+
+static void
+on_sdp_media_rtp_header_extensions (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  GArray *expected_extensions = user_data;
+  int i;
+
+  for (i = 0; i < gst_sdp_message_medias_len (desc->sdp); i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (desc->sdp, i);
+    if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0
+        || g_strcmp0 (gst_sdp_media_get_media (media), "video") == 0) {
+      int extension_idx = 0;
+      int j;
+      for (j = 0; j < gst_sdp_media_attributes_len (media); j++) {
+        const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, j);
+        if (g_strcmp0 (attr->key, "extmap") == 0) {
+          GStrv split = g_strsplit (attr->value, " ", 2);
+          fail_unless_equals_string (split[1],
+              g_array_index (expected_extensions, char *, extension_idx++));
+          g_strfreev (split);
+        }
+      }
+      fail_unless_equals_int (expected_extensions->len, extension_idx);
+    }
+  }
+}
+
+#define TWCC_URI "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+
+GST_START_TEST (test_rtp_header_extension_sendonly_recvonly_pair)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GstHarness *h;
+  GstWebRTCRTPTransceiver *trans;
+  GstCaps *caps;
+
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
+
+  h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
+
+  caps =
+      gst_caps_from_string (OPUS_RTP_CAPS (96) ", extmap-1=(string)" TWCC_URI);
+  GstStructure *s = gst_caps_get_structure (caps, 0);
+  gst_structure_set (s, "ssrc", G_TYPE_UINT, 0xDEADBEEF, NULL);
+  gst_structure_set (s, "payload", G_TYPE_INT, 96, NULL);
+  gst_harness_set_src_caps (h, gst_caps_copy (caps));
+  gst_harness_add_src_parse (h, "fakesrc is-live=true", TRUE);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  g_signal_emit_by_name (t->webrtc1, "get-transceiver", 0, &trans);
+  g_object_set (trans, "direction",
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY, NULL);
+  gst_object_unref (trans);
+
+  g_signal_emit_by_name (t->webrtc2, "add-transceiver",
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY, caps, &trans);
+  fail_unless (trans != NULL);
+  gst_object_unref (trans);
+  gst_caps_unref (caps);
+
+  const gchar *expected_offer_direction[] = { "sendonly", };
+  VAL_SDP_INIT (offer_direction, on_sdp_media_direction,
+      expected_offer_direction, NULL);
+  const gchar *expected_answer_direction[] = { "recvonly", };
+  VAL_SDP_INIT (answer_direction, on_sdp_media_direction,
+      expected_answer_direction, NULL);
+
+  const gchar *EXPECTED_EXTENSIONS_DATA[] = { TWCC_URI, };
+  GArray *expected_extensions = g_array_new (FALSE, FALSE, sizeof (gchar *));
+  g_array_append_vals (expected_extensions, EXPECTED_EXTENSIONS_DATA,
+      sizeof (EXPECTED_EXTENSIONS_DATA) / sizeof (gchar *));
+  VAL_SDP_INIT (offer, on_sdp_media_rtp_header_extensions, expected_extensions,
+      &offer_direction);
+  VAL_SDP_INIT (answer, on_sdp_media_rtp_header_extensions, expected_extensions,
+      &answer_direction);
+
+  test_validate_sdp (t, &offer, &answer);
+  test_webrtc_free (t);
+  g_array_free (expected_extensions, TRUE);
+}
+
+GST_END_TEST;
+
 static void
 new_jitterbuffer_set_fast_start (GstElement * rtpbin,
     GstElement * rtpjitterbuffer, guint session_id, guint ssrc,
@@ -6440,6 +6526,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_msid);
     tcase_add_test (tc, test_ice_end_of_candidates);
     tcase_add_test (tc, test_sdp_session_setup_attribute);
+    tcase_add_test (tc, test_rtp_header_extension_sendonly_recvonly_pair);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_create_two_channels);

@@ -6415,49 +6415,46 @@ _create_and_associate_transceivers_from_sdp (GstWebRTCBin * webrtc,
       }
     } else {
       if (!trans) {
-        /* RFC9429: If the "m=" section is "sendrecv" or "recvonly", and there are RtpTransceivers of the same type
-         * that were added to the PeerConnection by addTrack and are not associated with any "m=" section
-         * and are not stopped, find the first (according to the canonical order described in Section 5.2.1)
-         * such RtpTransceiver. */
-        if (direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV
-            || direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY) {
-          int j;
-          for (j = 0; j < webrtc->priv->transceivers->len; ++j) {
-            trans = g_ptr_array_index (webrtc->priv->transceivers, j);
-            if (trans->mid || trans->stopped) {
-              trans = NULL;
-              continue;
-            }
-
-            /* FIXME: Here we shouldn't in theory need to match caps, as the spec says only about
-             * "RtpTransceivers of the same type". However, transceivers created by requesting sink
-             * pads (aka addTrack) may still have unknown type at this point. We may be missing updating
-             * the transceiver type early enough during caps negotation.
-             */
-            GstCaps *trans_caps =
-                _find_codec_preferences (webrtc, trans, i, error);
-            if (error && *error)
-              goto out;
-
-            if (trans_caps) {
-              GstCaps *offer_caps = _rtp_caps_from_media (media);
-              GstCaps *caps = gst_caps_intersect (offer_caps, trans_caps);
-              gst_caps_unref (offer_caps);
-              gst_caps_unref (trans_caps);
-              if (caps) {
-                if (!gst_caps_is_empty (caps)) {
-                  GST_LOG_OBJECT (webrtc,
-                      "found compatible transceiver %" GST_PTR_FORMAT
-                      " for offer media %u", trans, i);
-                  gst_caps_unref (caps);
-                  break;
-                }
-                gst_caps_unref (caps);
-                caps = NULL;
-              }
-            }
+        int j;
+        /* XXX: According to RFC9429 Section 5.10. we should only be finding compatible unassociated transceivers here if the
+         * media direction is "sendrecv" or "recvonly", but webrtcsrc and possibly other applications rely on this working
+         * also for "sendonly".
+         */
+        for (j = 0; j < webrtc->priv->transceivers->len; ++j) {
+          trans = g_ptr_array_index (webrtc->priv->transceivers, j);
+          if (trans->mid || trans->stopped) {
             trans = NULL;
+            continue;
           }
+
+          /* FIXME: Here we shouldn't in theory need to match caps, as the spec says only about
+           * "RtpTransceivers of the same type". However, transceivers created by requesting sink
+           * pads (aka addTrack) may still have unknown type at this point. We may be missing updating
+           * the transceiver type early enough during caps negotation.
+           */
+          GstCaps *trans_caps =
+              _find_codec_preferences (webrtc, trans, i, error);
+          if (error && *error)
+            goto out;
+
+          if (trans_caps) {
+            GstCaps *offer_caps = _rtp_caps_from_media (media);
+            GstCaps *caps = gst_caps_intersect (offer_caps, trans_caps);
+            gst_caps_unref (offer_caps);
+            gst_caps_unref (trans_caps);
+            if (caps) {
+              if (!gst_caps_is_empty (caps)) {
+                GST_LOG_OBJECT (webrtc,
+                    "found compatible transceiver %" GST_PTR_FORMAT
+                    " for offer media %u", trans, i);
+                gst_caps_unref (caps);
+                break;
+              }
+              gst_caps_unref (caps);
+              caps = NULL;
+            }
+          }
+          trans = NULL;
         }
       }
 
