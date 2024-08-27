@@ -41356,14 +41356,14 @@ values are explicitly typed.
 
 Some types have special delimiters:
 
-- [GstValueArray](GST_TYPE_ARRAY) are inside curly brackets (`{` and `}`).
-  For example `a-structure, array={1, 2, 3}`
+- [GstValueArray](GST_TYPE_ARRAY) are inside "less and greater than" (`&lt;` and
+  `&gt;`). For example `a-structure, array=&lt;1, 2, 3&gt;
 - Ranges are inside brackets (`[` and `]`). For example `a-structure,
   range=[1, 6, 2]` 1 being the min value, 6 the maximum and 2 the step. To
   specify a #GST_TYPE_INT64_RANGE you need to explicitly specify it like:
   `a-structure, a-int64-range=(gint64) [1, 5]`
-- [GstValueList](GST_TYPE_LIST) are inside "less and greater than" (`&lt;` and
-  `&gt;`). For example `a-structure, list=&lt;1, 2, 3&gt;
+- [GstValueList](GST_TYPE_LIST) are inside curly brackets (`{` and `}`).
+  For example `a-structure, list={1, 2, 3}`
 
 Structures are delimited either by a null character `\0` or a semicolon `;`
 the latter allowing to store multiple structures in the same string (see
