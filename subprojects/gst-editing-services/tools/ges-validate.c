@@ -138,7 +138,14 @@ ges_validate_activate (GstPipeline * pipeline, GESLauncher * launcher,
   if (opts->testfile) {
     if (opts->scenario)
       g_error ("Can not specify scenario and testfile at the same time");
-    gst_validate_setup_test_file (opts->testfile, opts->mute);
+    if (!opts->mute) {
+      gst_validate_set_globals (gst_structure_new ("globals",
+              "videosink", G_TYPE_STRING,
+              opts->videosink ? opts->videosink : "autovideosink", "audiosink",
+              G_TYPE_STRING,
+              opts->audiosink ? opts->audiosink : "autoaudiosink", NULL)
+          );
+    }
   } else if (opts->scenario) {
     if (g_strcmp0 (opts->scenario, "none")) {
       gchar *scenario_name =

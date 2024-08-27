@@ -1352,9 +1352,8 @@ done:
   g_clear_pointer (&match_info, g_match_info_free);
 }
 
-static gboolean
-_structure_set_variables (const GstIdStr * fieldname, GValue * value,
-    ReplaceData * data)
+gboolean
+gst_validate_structure_file_field_is_metadata (const GstIdStr * fieldname)
 {
   static const gchar *skip_fields[] = {
     "__filename__",
@@ -1363,7 +1362,15 @@ _structure_set_variables (const GstIdStr * fieldname, GValue * value,
     NULL,
   };
 
-  if (fieldname && g_strv_contains (skip_fields, gst_id_str_as_str (fieldname)))
+  return fieldname
+      && g_strv_contains (skip_fields, gst_id_str_as_str (fieldname));
+}
+
+static gboolean
+_structure_set_variables (const GstIdStr * fieldname, GValue * value,
+    ReplaceData * data)
+{
+  if (gst_validate_structure_file_field_is_metadata (fieldname))
     return TRUE;
 
   if (GST_VALUE_HOLDS_LIST (value)) {

@@ -7698,6 +7698,9 @@ register_action_types (void)
   GBytes *meta_expected_issues_doc =
       g_resource_lookup_data (resource, "/validate/doc/meta-expected-issues.md",
       G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
+  GBytes *meta_features_rank_doc =
+      g_resource_lookup_data (resource, "/validate/doc/meta-features-rank.md",
+      G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
 
   /*  *INDENT-OFF* */
   REGISTER_ACTION_TYPE ("meta", NULL,
@@ -7874,12 +7877,31 @@ register_action_types (void)
         .possible_variables = NULL,
         .def = "{}"
       },
+      {
+        .name="features-rank",
+        .description=g_bytes_get_data (meta_features_rank_doc, NULL),
+        .mandatory = FALSE,
+        .types = "bool",
+        .possible_variables = NULL,
+        .def = "false"
+      },
+      {
+        .name="monitor-all-pipelines",
+        .description="This should only be used in `.validatetest` files, and allows forcing to monitor "
+                     "all pipelines instead of only the one the tools wanted to monitor, for example to "
+                     "use `validateflow` on auxilary pipelines",
+        .mandatory = FALSE,
+        .types = "bool",
+        .possible_variables = NULL,
+        .def = "false"
+      },
       {NULL}
       }),
       "Scenario metadata.\n\nNOTE: it used to be called \"description\"",
       GST_VALIDATE_ACTION_TYPE_CONFIG);
   g_bytes_unref (meta_config_doc);
   g_bytes_unref (meta_expected_issues_doc);
+  g_bytes_unref (meta_features_rank_doc);
 
   REGISTER_ACTION_TYPE ("seek", _execute_seek,
       ((GstValidateActionParameter [])  {

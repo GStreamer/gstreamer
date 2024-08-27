@@ -93,6 +93,7 @@ GST_VALIDATE_API
 void gst_validate_structure_resolve_variables (gpointer source, GstStructure *structure, GstStructure *local_variables,
     GstValidateStructureResolveVariablesFlags flags);
 void gst_validate_structure_set_variables_from_struct_file(GstStructure* vars, const gchar* struct_file);
+GST_VALIDATE_API
 void gst_validate_set_globals(GstStructure* structure);
 GST_VALIDATE_API
 gboolean gst_validate_fail_on_missing_plugin(void);

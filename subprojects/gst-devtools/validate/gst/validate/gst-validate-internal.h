@@ -64,6 +64,7 @@ G_GNUC_INTERNAL void gst_validate_deinit_runner (void);
 G_GNUC_INTERNAL void gst_validate_report_deinit (void);
 G_GNUC_INTERNAL gboolean gst_validate_send (JsonNode * root);
 G_GNUC_INTERNAL void gst_validate_set_test_file_globals (GstStructure* meta, const gchar* testfile, gboolean use_fakesinks);
+G_GNUC_INTERNAL gboolean gst_validate_structure_file_field_is_metadata (const GstIdStr *field_id);
 G_GNUC_INTERNAL gboolean gst_validate_get_test_file_scenario (GList** structs, const gchar** scenario_name, gchar** original_name);
 G_GNUC_INTERNAL GstValidateScenario* gst_validate_scenario_from_structs (GstValidateRunner* runner, GstElement* pipeline, GList* structures,
     const gchar* origin_file);

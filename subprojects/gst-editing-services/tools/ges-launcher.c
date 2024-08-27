@@ -33,6 +33,10 @@
 #include "utils.h"
 #include "ges-launcher-kb.h"
 
+#ifdef HAVE_GST_VALIDATE
+#include <gst/validate/validate.h>
+#endif
+
 typedef enum
 {
   GST_PLAY_TRICK_MODE_NONE = 0,
@@ -320,6 +324,19 @@ _parse_track_type (const gchar * option_name, const gchar * value,
   opts->track_types = (GESTrackType) flags;
   return TRUE;
 }
+
+
+#ifdef HAVE_GST_VALIDATE
+static gboolean
+_parse_test_file (const gchar * option_name, const gchar * value,
+    GESLauncherParsedOptions * opts, GError ** error)
+{
+  opts->testfile = g_strdup (value);
+  gst_validate_init_debug ();
+  gst_validate_setup_test_file (opts->testfile, FALSE);
+  return TRUE;
+}
+#endif
 
 static gboolean
 _set_track_restriction_caps (GESTrack * track, const gchar * caps_str)
@@ -1037,6 +1054,8 @@ bus_message_cb (GstBus * bus, GstMessage * message, GESLauncher * self)
       break;
     }
     case GST_MESSAGE_EOS:
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (self->priv->pipeline),
+          GST_DEBUG_GRAPH_SHOW_ALL, "ges-launch.eos");
       if (!self->priv->parsed_options.ignore_eos) {
         ges_ok ("\nDone\n");
         g_application_quit (G_APPLICATION (self));
@@ -1177,7 +1196,8 @@ _run_pipeline (GESLauncher * self)
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (self->priv->pipeline));
   gst_bus_add_signal_watch (bus);
-  g_signal_connect (bus, "message", G_CALLBACK (bus_message_cb), self);
+  g_signal_connect_object (bus, "message", G_CALLBACK (bus_message_cb), self,
+      0);
 
   g_application_hold (G_APPLICATION (self));
 
@@ -1433,7 +1453,7 @@ ges_launcher_parse_options (GESLauncher * self,
           "Specify the track restriction caps of the audio track.",
     },
 #ifdef HAVE_GST_VALIDATE
-    {"set-test-file", 0, 0, G_OPTION_ARG_STRING, &opts->testfile,
+    {"set-test-file", 0, 0, G_OPTION_ARG_CALLBACK, &_parse_test_file,
           "ges-launch-1.0 exposes gst-validate functionalities, such as test files and scenarios."
           " Scenarios describe actions to execute, such as seeks or setting of "
           "properties. "

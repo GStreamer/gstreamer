@@ -26,6 +26,7 @@
  * @short_description: Initialize GstValidate
  */
 
+#include "gst/gstidstr.h"
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -265,16 +266,23 @@ get_structures_from_array_in_meta (const gchar * fieldname)
   if (!meta)
     return NULL;
 
-  res = get_structures_from_array (meta, fieldname);
-  if (res)
-    return res;
-
   gst_structure_get (meta,
       "__lineno__", G_TYPE_INT, &current_lineno,
       "__debug__", G_TYPE_STRING, &debug,
       "__filename__", G_TYPE_STRING, &filename, NULL);
-  strs = gst_validate_utils_get_strv (meta, fieldname);
 
+  res = get_structures_from_array (meta, fieldname);
+  if (res) {
+    for (GList * tmp = res; tmp; tmp = tmp->next) {
+      gst_structure_set (tmp->data,
+          "__lineno__", G_TYPE_INT, current_lineno,
+          "__filename__", G_TYPE_STRING, filename,
+          "__debug__", G_TYPE_STRING, debug, NULL);
+    }
+    goto done;
+  }
+
+  strs = gst_validate_utils_get_strv (meta, fieldname);
   if (strs) {
     gint i;
 
@@ -294,6 +302,7 @@ get_structures_from_array_in_meta (const gchar * fieldname)
     }
   }
 
+done:
   g_free (filename);
   g_free (debug);
   g_strfreev (strs);
@@ -612,6 +621,46 @@ validate_test_include_paths (const gchar * includer_file)
   return env_configdir;
 }
 
+static gboolean
+_set_feature_rank (const GstIdStr * fieldname, GValue * value,
+    GstStructure * structure)
+{
+  GstRegistry *registry = gst_registry_get ();
+  guint rank = 0;
+
+  if (gst_validate_structure_file_field_is_metadata (fieldname))
+    return TRUE;
+
+  if (G_VALUE_TYPE (value) == G_TYPE_UINT) {
+    rank = (guint) g_value_get_uint (value);
+  } else if (G_VALUE_TYPE (value) == G_TYPE_INT) {
+    rank = g_value_get_int (value);
+  } else {
+    gst_validate_error_structure (structure,
+        "Invalid value %s for field '%s' (expecting int) in the 'features-rank' structure",
+        G_VALUE_TYPE_NAME (value), gst_value_serialize (value));
+
+    return FALSE;
+  }
+
+  GstPluginFeature *feature =
+      gst_registry_lookup_feature (registry, gst_id_str_as_str (fieldname));
+  if (!feature) {
+    if (gst_structure_has_name (structure, "mandatory")) {
+      gst_validate_error_structure (structure,
+          "Feature `%s` not found while its ranks has been requested to be set to %d",
+          gst_id_str_as_str (fieldname), rank);
+      return FALSE;
+    }
+
+    return TRUE;
+  }
+
+  gst_plugin_feature_set_rank (feature, rank);
+
+  return TRUE;
+}
+
 /* Only the first monitor pipeline will be used */
 GstStructure *
 gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
@@ -652,6 +701,21 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
 
   register_action_types ();
   gst_validate_scenario_check_and_set_needs_clock_sync (testfile_structs, &res);
+
+  GList *feature_ranks_def =
+      get_structures_from_array_in_meta ("features-rank");
+  for (GList * tmp = feature_ranks_def; tmp; tmp = tmp->next) {
+    GstStructure *feature_ranks = tmp->data;
+    if (!gst_structure_has_name (feature_ranks, "mandatory")
+        && !gst_structure_has_name (feature_ranks, "optional")) {
+      gst_validate_error_structure (res,
+          "Feature rank structures should have either `mandatory` or `optional` as a name, got: %s",
+          gst_structure_to_string (feature_ranks));
+      return NULL;
+    }
+    gst_structure_filter_and_map_in_place_id_str (feature_ranks,
+        (GstStructureFilterMapIdStrFunc) _set_feature_rank, feature_ranks);
+  }
 
   gst_validate_set_test_file_globals (res, global_testfile, use_fakesinks);
   gst_validate_structure_resolve_variables (NULL, res, NULL, 0);
