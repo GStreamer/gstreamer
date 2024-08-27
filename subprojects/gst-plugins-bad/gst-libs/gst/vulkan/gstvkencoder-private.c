@@ -844,6 +844,7 @@ gst_vulkan_encoder_video_session_parameters_overrides (GstVulkanEncoder * self,
   GstVulkanEncoderPrivate *priv;
   gsize size;
   gpointer param_data;
+  gboolean write;
 
   g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), FALSE);
   g_return_val_if_fail (params != NULL && feedback != NULL, FALSE);
@@ -854,29 +855,27 @@ gst_vulkan_encoder_video_session_parameters_overrides (GstVulkanEncoder * self,
 
   switch (self->codec) {
     case VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_KHR:
-      g_return_val_if_fail ((params->h264.writeStdPPS
-              || params->h264.writeStdSPS) && data, FALSE);
       if (params->h264.sType !=
           VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_SESSION_PARAMETERS_GET_INFO_KHR) {
         gst_vulkan_error_to_g_error (GST_VULKAN_ERROR, error,
             "Invalid parameter for H.264");
         return FALSE;
       }
+      write = params->h264.writeStdPPS || params->h264.writeStdSPS;
       if (feedback) {
         feedback->h264.sType =
             VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_SESSION_PARAMETERS_FEEDBACK_INFO_KHR;
       }
       break;
     case VK_VIDEO_CODEC_OPERATION_ENCODE_H265_BIT_KHR:
-      g_return_val_if_fail ((params->h265.writeStdPPS
-              || params->h265.writeStdSPS || params->h265.writeStdVPS)
-          && data, FALSE);
       if (params->h265.sType !=
           VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_SESSION_PARAMETERS_GET_INFO_KHR) {
         gst_vulkan_error_to_g_error (GST_VULKAN_ERROR, error,
             "Invalid parameter for H.265");
         return FALSE;
       }
+      write = params->h265.writeStdPPS || params->h265.writeStdSPS
+          || params->h265.writeStdVPS;
       if (feedback) {
         feedback->h265.sType =
             VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_SESSION_PARAMETERS_FEEDBACK_INFO_KHR;
@@ -905,7 +904,9 @@ gst_vulkan_encoder_video_session_parameters_overrides (GstVulkanEncoder * self,
           "vGetEncodedVideoSessionParametersKHR") != VK_SUCCESS)
     return FALSE;
 
-  if (!data)
+  /* FIXME: forcing because a bug in NVIDIA driver */
+  feedback_info.hasOverrides = 1;
+  if (!feedback_info.hasOverrides || !data || !write)
     return TRUE;
 
   GST_DEBUG_OBJECT (self, "allocating for bitstream parameters %"
