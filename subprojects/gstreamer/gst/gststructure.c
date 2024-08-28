@@ -1001,6 +1001,59 @@ gst_structure_new_id (GQuark name_quark, GQuark field_quark, ...)
 #define GIT_G_WARNING GST_WARNING
 #endif
 
+static gboolean
+gst_structure_validate_field_value (const GstStructure * structure,
+    GQuark field, const GValue * value)
+{
+  GType field_value_type;
+
+  field_value_type = G_VALUE_TYPE (value);
+  if (field_value_type == G_TYPE_STRING) {
+    const gchar *s;
+
+    s = g_value_get_string (value);
+    /* only check for NULL strings in taglists, as they are allowed in message
+     * structs, e.g. error message debug strings */
+    if (G_UNLIKELY (IS_TAGLIST (structure) && (s == NULL || *s == '\0'))) {
+      if (s == NULL) {
+        GIT_G_WARNING ("Trying to set NULL string on field '%s' on taglist. "
+            "Please file a bug.", g_quark_to_string (field));
+        return FALSE;
+      } else {
+        /* empty strings never make sense */
+        GIT_G_WARNING ("Trying to set empty string on taglist field '%s'. "
+            "Please file a bug.", g_quark_to_string (field));
+        return FALSE;
+      }
+    } else if (G_UNLIKELY (s != NULL && !g_utf8_validate (s, -1, NULL))) {
+      g_warning ("Trying to set string on %s field '%s', but string is not "
+          "valid UTF-8. Please file a bug.",
+          IS_TAGLIST (structure) ? "taglist" : "structure",
+          g_quark_to_string (field));
+      return FALSE;
+    }
+  } else if (G_UNLIKELY (field_value_type == G_TYPE_DATE)) {
+    const GDate *d;
+
+    d = g_value_get_boxed (value);
+    /* only check for NULL GDates in taglists, as they might make sense
+     * in other, generic structs */
+    if (G_UNLIKELY ((IS_TAGLIST (structure) && d == NULL))) {
+      GIT_G_WARNING ("Trying to set NULL GDate on field '%s' on taglist. "
+          "Please file a bug.", g_quark_to_string (field));
+      return FALSE;
+    } else if (G_UNLIKELY (d != NULL && !g_date_valid (d))) {
+      g_warning
+          ("Trying to set invalid GDate on %s field '%s'. Please file a bug.",
+          IS_TAGLIST (structure) ? "taglist" : "structure",
+          g_quark_to_string (field));
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
 /* If the structure currently contains a field with the same name, it is
  * replaced with the provided field. Otherwise, the field is added to the
  * structure. The field's value is not deeply copied.
@@ -1009,60 +1062,15 @@ static void
 gst_structure_set_field (GstStructure * structure, GstStructureField * field)
 {
   GstStructureField *f;
-  GType field_value_type;
   guint i, len;
 
-  len = GST_STRUCTURE_LEN (structure);
-
-  field_value_type = G_VALUE_TYPE (&field->value);
-  if (field_value_type == G_TYPE_STRING) {
-    const gchar *s;
-
-    s = g_value_get_string (&field->value);
-    /* only check for NULL strings in taglists, as they are allowed in message
-     * structs, e.g. error message debug strings */
-    if (G_UNLIKELY (IS_TAGLIST (structure) && (s == NULL || *s == '\0'))) {
-      if (s == NULL) {
-        GIT_G_WARNING ("Trying to set NULL string on field '%s' on taglist. "
-            "Please file a bug.", g_quark_to_string (field->name));
-        g_value_unset (&field->value);
-        return;
-      } else {
-        /* empty strings never make sense */
-        GIT_G_WARNING ("Trying to set empty string on taglist field '%s'. "
-            "Please file a bug.", g_quark_to_string (field->name));
-        g_value_unset (&field->value);
-        return;
-      }
-    } else if (G_UNLIKELY (s != NULL && !g_utf8_validate (s, -1, NULL))) {
-      g_warning ("Trying to set string on %s field '%s', but string is not "
-          "valid UTF-8. Please file a bug.",
-          IS_TAGLIST (structure) ? "taglist" : "structure",
-          g_quark_to_string (field->name));
-      g_value_unset (&field->value);
-      return;
-    }
-  } else if (G_UNLIKELY (field_value_type == G_TYPE_DATE)) {
-    const GDate *d;
-
-    d = g_value_get_boxed (&field->value);
-    /* only check for NULL GDates in taglists, as they might make sense
-     * in other, generic structs */
-    if (G_UNLIKELY ((IS_TAGLIST (structure) && d == NULL))) {
-      GIT_G_WARNING ("Trying to set NULL GDate on field '%s' on taglist. "
-          "Please file a bug.", g_quark_to_string (field->name));
-      g_value_unset (&field->value);
-      return;
-    } else if (G_UNLIKELY (d != NULL && !g_date_valid (d))) {
-      g_warning
-          ("Trying to set invalid GDate on %s field '%s'. Please file a bug.",
-          IS_TAGLIST (structure) ? "taglist" : "structure",
-          g_quark_to_string (field->name));
-      g_value_unset (&field->value);
-      return;
-    }
+  if (!gst_structure_validate_field_value (structure, field->name,
+          &field->value)) {
+    g_value_unset (&field->value);
+    return;
   }
 
+  len = GST_STRUCTURE_LEN (structure);
   for (i = 0; i < len; i++) {
     f = GST_STRUCTURE_FIELD (structure, i);
 
@@ -2845,13 +2853,16 @@ gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
 }
 
 static gboolean
-default_fixate (GQuark field_id, const GValue * value, gpointer data)
+default_fixate (GQuark field_id, GValue * value, gpointer data)
 {
   GstStructure *s = data;
   GValue v = { 0 };
 
   if (gst_value_fixate (&v, value)) {
-    gst_structure_id_take_value (s, field_id, &v);
+    if (gst_structure_validate_field_value (s, field_id, value)) {
+      g_value_unset (value);
+      *value = v;
+    }
   }
   return TRUE;
 }
@@ -3371,7 +3382,7 @@ gst_structure_fixate (GstStructure * structure)
 {
   g_return_if_fail (GST_IS_STRUCTURE (structure));
 
-  gst_structure_foreach (structure, default_fixate, structure);
+  gst_structure_map_in_place (structure, default_fixate, structure);
 }
 
 static gboolean
