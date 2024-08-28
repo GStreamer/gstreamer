@@ -794,7 +794,8 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
     GST_LOG ("descriptor 0x%02x length:%d", desc->tag, desc->length);
     GST_MEMDUMP ("descriptor", desc->data + 2, desc->length);
     /* extended descriptors */
-    if (G_UNLIKELY (desc->tag == 0x7f))
+    if (G_UNLIKELY (desc->tag == GST_MTS_DESC_DVB_EXTENSION
+            || desc->tag == GST_MTS_DESC_EXTENSION))
       desc->tag_extension = *data;
 
     data += desc->length;

@@ -1294,7 +1294,7 @@ and other specifications mentioned in the documentation.</doc>
         <type name="guint8" c:type="guint8"/>
       </field>
       <field name="tag_extension" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">the extended type (if @descriptor_tag is 0x7f)</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">the extended type (if @tag is 0x7f (for DVB) or 0x3f (for H.222.0))</doc>
         <type name="guint8" c:type="guint8"/>
       </field>
       <field name="length" writable="1">
@@ -2497,6 +2497,9 @@ Consult the relevant specifications for more details.</doc>
       </member>
       <member name="stereoscopic_video_info" value="54" c:identifier="GST_MTS_DESC_STEREOSCOPIC_VIDEO_INFO">
       </member>
+      <member name="extension" value="63" c:identifier="GST_MTS_DESC_EXTENSION" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">Extension Descriptor.</doc>
+      </member>
     </enumeration>
     <record name="DvbMultilingualBouquetNameItem" c:type="GstMpegtsDvbMultilingualBouquetNameItem" glib:type-name="GstMpegtsDvbMultilingualBouquetNameItem" glib:get-type="gst_mpegts_dvb_multilingual_bouquet_name_item_get_type" c:symbol-prefix="dvb_multilingual_bouquet_name_item">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.h">a multilingual bouquet name entry</doc>
@@ -2602,6 +2605,17 @@ Consult the relevant specifications for more details.</doc>
         </array>
       </field>
     </record>
+    <enumeration name="ExtendedDescriptorType" version="1.26" c:type="GstMpegtsExtendedDescriptorType">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">The type of an extended descriptor
+
+The values correpond to the registered extended descriptor types from the
+base ISO 13818 / ITU H.222.0 specifications
+
+Consult the specification for more details</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
+      <member name="mts_desc_ext_jxs_video" value="20" c:identifier="GST_MTS_DESC_EXT_JXS_VIDEO">
+      </member>
+    </enumeration>
     <record name="ExtendedEventDescriptor" c:type="GstMpegtsExtendedEventDescriptor" glib:type-name="GstMpegtsExtendedEventDescriptor" glib:get-type="gst_mpegts_extended_event_descriptor_get_type" c:symbol-prefix="extended_event_descriptor">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.h">Extended Event Descriptor (EN 300 468 v.1.13.1)</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.h"/>

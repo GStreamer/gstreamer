@@ -80,14 +80,14 @@ G_GNUC_INTERNAL gpointer __common_section_checks (GstMpegtsSection *section,
     GST_WARNING ("Descriptor is empty (data field == NULL)");           \
     return retval;                                                      \
   }                                                                     \
-  if (G_UNLIKELY ((desc)->tag != 0x7f) ||                               \
+  if (G_UNLIKELY (((desc)->tag != 0x7f) && ((desc)->tag != 0x3f)) ||	\
     ((desc)->tag_extension != (tagexttype))) {                          \
     GST_WARNING ("Wrong descriptor type (Got 0x%02x, expected 0x%02x)", \
                  (desc)->tag_extension, tagexttype);                    \
     return retval;                                                      \
   }
 #define __common_desc_ext_checks(desc, tagexttype, minlen, retval)      \
-  __common_desc_ext_check_base(desc, tagexttype, retval);                    \
+  __common_desc_ext_check_base(desc, tagexttype, retval);		\
   if (G_UNLIKELY ((desc)->length < (minlen))) {                         \
     GST_WARNING ("Descriptor too small (Got %d, expected at least %d)", \
                  (desc)->length, minlen);                               \

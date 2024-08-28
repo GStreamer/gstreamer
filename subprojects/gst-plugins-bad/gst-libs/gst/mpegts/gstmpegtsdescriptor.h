@@ -135,8 +135,32 @@ typedef enum {
   GST_MTS_DESC_STEREOSCOPIC_PROGRAM_INFO        = 0x35,
   GST_MTS_DESC_STEREOSCOPIC_VIDEO_INFO          = 0x36,
 
+  /**
+   * GST_MTS_DESC_EXTENSION:
+   *
+   * Extension Descriptor.
+   *
+   * Since: 1.26
+   */
+  GST_MTS_DESC_EXTENSION                        = 0x3f
   /* 55-63 ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved */
 } GstMpegtsDescriptorType;
+
+/**
+ * GstMpegtsExtendedDescriptorType:
+ *
+ * The type of an extended descriptor
+ *
+ * The values correpond to the registered extended descriptor types from the
+ * base ISO 13818 / ITU H.222.0 specifications
+ *
+ * Consult the specification for more details
+ *
+ * Since: 1.26
+ */
+typedef enum {
+  GST_MTS_DESC_EXT_JXS_VIDEO                    = 0x14,
+} GstMpegtsExtendedDescriptorType;
 
 /**
  * GstMpegtsMiscDescriptorType:
@@ -180,7 +204,7 @@ GType gst_mpegts_descriptor_get_type (void);
 /**
  * GstMpegtsDescriptor:
  * @tag: the type of descriptor
- * @tag_extension: the extended type (if @descriptor_tag is 0x7f)
+ * @tag_extension: the extended type (if @tag is 0x7f (for DVB) or 0x3f (for H.222.0))
  * @length: the length of the descriptor content (excluding tag/length field)
  * @data: the full descriptor data (including tag, extension, length). The first
  * two bytes are the @tag and @length.
