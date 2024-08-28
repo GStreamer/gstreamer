@@ -32,6 +32,7 @@
 #include "config.h"
 #endif
 
+#include "ges-internal.h"
 #include "ges-frame-composition-meta.h"
 #include "gstframepositioner.h"
 
@@ -54,6 +55,30 @@ ges_frame_composition_meta_api_get_type (void)
   return type;
 }
 
+/* Takes ownership of @properties, making @buffer its parent */
+void
+ges_frame_composition_meta_take_extra_properties (GESFrameCompositionMeta *
+    meta, GstBuffer * buffer, GstStructure * properties)
+{
+  if (meta->extra_properties) {
+    gst_structure_set_parent_refcount (meta->extra_properties, NULL);
+    gst_structure_free (meta->extra_properties);
+  }
+
+  meta->extra_properties = properties;
+  gst_structure_set_parent_refcount (properties,
+      &GST_MINI_OBJECT_REFCOUNT (buffer));
+}
+
+static void
+ges_frame_composition_meta_free (GstMeta * meta, GstBuffer * _buffer)
+{
+  GESFrameCompositionMeta *cmeta = (GESFrameCompositionMeta *) meta;
+
+  gst_structure_set_parent_refcount (cmeta->extra_properties, NULL);
+  gst_structure_free (cmeta->extra_properties);
+}
+
 static const GstMetaInfo *
 ges_frame_composition_meta_get_info (void)
 {
@@ -63,7 +88,8 @@ ges_frame_composition_meta_get_info (void)
     const GstMetaInfo *meta =
         gst_meta_register (ges_frame_composition_meta_api_get_type (),
         "GESFrameCompositionMeta",
-        sizeof (GESFrameCompositionMeta), ges_frame_composition_meta_init, NULL,
+        sizeof (GESFrameCompositionMeta), ges_frame_composition_meta_init,
+        ges_frame_composition_meta_free,
         ges_frame_composition_meta_transform);
     g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) meta);
   }
@@ -85,6 +111,9 @@ ges_frame_composition_meta_init (GstMeta * meta, gpointer params,
   smeta->posx = smeta->posy = smeta->height = smeta->width = 0;
   smeta->zorder = 0;
   smeta->operator = default_operator_value;
+  smeta->extra_properties = NULL;
+  ges_frame_composition_meta_take_extra_properties (smeta, buffer,
+      gst_structure_new_empty ("properties"));
 
   return TRUE;
 }
@@ -102,6 +131,8 @@ ges_frame_composition_meta_transform (GstBuffer * dest, GstMeta * meta,
     dmeta =
         (GESFrameCompositionMeta *) gst_buffer_add_meta (dest,
         ges_frame_composition_meta_get_info (), NULL);
+    ges_frame_composition_meta_take_extra_properties (dmeta, dest,
+        gst_structure_copy (smeta->extra_properties));
     dmeta->alpha = smeta->alpha;
     dmeta->posx = smeta->posx;
     dmeta->posy = smeta->posy;

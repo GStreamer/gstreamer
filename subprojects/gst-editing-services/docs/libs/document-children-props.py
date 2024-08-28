@@ -137,6 +137,8 @@ if __name__ == "__main__":
                     if typename is None:
                         if GObject.type_is_a(prop.owner_type, Gst.Element):
                             typename = GObject.new(prop.owner_type).get_factory().get_name()
+                        else:
+                            typename = prop.owner_type.name
                     lines += ["", "See #%s:%s" % (typename, prop.name)]
 
                 if len(lines) > 1:

@@ -1,0 +1,22 @@
+meta,
+    handles-states=true,
+    tool="ges-launch-$(gst_api_version)",
+    args={
+        --track-types, video, --video-caps,
+        "video/x-raw, format=(string)I420, width=(int)640, height=(int)380, framerate=(fraction)1/1, chroma-site=(string)jpeg, colorimetry=(string)bt601",
+        --videosink, "fakesink name=videosink",
+    }
+
+add-clip, name=clip, asset-id="testbin://video", layer-priority=0, type=GESUriClip, duration=2.0
+
+set-child-property,
+    element-name=clip,
+    property=converter-config,
+    value="GstVideoConverterConfig, GstVideoConverter.threads=(int)0;"
+
+wait,
+    deep-property-path="gessmartmixer0-compositor.sink_0::converter-config",
+    property-value="GstVideoConverterConfig, GstVideoConverter.threads=(int)0;",
+    non-blocking=true
+
+play

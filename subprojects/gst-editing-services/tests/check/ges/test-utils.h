@@ -304,6 +304,14 @@ void ges_test_check_object_props (const gchar * file, gint line,
         GES_TIMELINE_ELEMENT (el1), prop, &val1); \
     ges_timeline_element_get_child_property_by_pspec ( \
         GES_TIMELINE_ELEMENT (el2), prop, &val2); \
+    /* NULL structures can't be serialized, and two unset ones match */ \
+    if (G_VALUE_HOLDS (&val1, GST_TYPE_STRUCTURE) && \
+        gst_value_get_structure (&val1) == NULL && \
+        gst_value_get_structure (&val2) == NULL) { \
+      g_value_unset (&val1); \
+      g_value_unset (&val2); \
+      continue; \
+    } \
     ser1 = gst_value_serialize (&val1); \
     ser2 = gst_value_serialize (&val2); \
     fail_unless (gst_value_compare (&val1, &val2) == GST_VALUE_EQUAL, \

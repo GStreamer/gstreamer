@@ -39,6 +39,13 @@ GType ges_frame_composition_meta_api_get_type (void);
 #define GES_TYPE_META_FRAME_COMPOSITION (ges_frame_composition_meta_api_get_type())
 
 /**
+ * GESFrameCompositionMeta.extra_properties:
+ *
+ * Other compositor pad properties to apply.
+ *
+ * Since: 1.30
+ */
+/**
  * GESFrameCompositionMeta:
  * @meta: the parent #GstMeta.
  * @posx: The desired x position.
@@ -71,6 +78,8 @@ struct _GESFrameCompositionMeta {
 #else
   gint operator;
 #endif
+
+  GstStructure *extra_properties;
 };
 
 GES_API

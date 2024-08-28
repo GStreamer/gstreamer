@@ -1,0 +1,33 @@
+meta,
+    handles-states=true,
+    tool="ges-launch-$(gst_api_version)",
+    features-rank={
+        [mandatory, glvideomixer=9999],
+    },
+    args={
+        --track-types, video, --video-caps,
+        "video/x-raw, format=(string)I420, width=(int)640, height=(int)380, framerate=(fraction)1/1, chroma-site=(string)jpeg, colorimetry=(string)bt601",
+        --videosink, "fakesink name=videosink",
+    },
+    configs={
+        "$(validateflow), pad=videosink:sink, ignored-fields=\"stream-start={stream-id,group-id,stream}\"",
+    }
+
+add-clip,
+    name=clip,
+    asset-id="testbin://video,caps=[video/x-raw,format=I420,width=640,height=380,framerate=30/1]",
+    layer-priority=0,
+    type=GESUriClip,
+    duration=2.0
+set-control-source,
+    element-name=clip,
+    property-name=crop-bottom,
+    binding-type=direct-absolute,
+    source-type=interpolation
+add-keyframe, element-name=clip, timestamp=0.0, property-name=crop-bottom, value=100
+add-keyframe, element-name=clip, timestamp=1.0, property-name=crop-bottom, value=200
+
+wait, deep-property-path="gessmartmixer0-compositor-mixer.sink_0::crop-bottom", property-value=100, non-blocking=true
+wait, deep-property-path="gessmartmixer0-compositor-mixer.sink_0::crop-bottom", property-value=200, non-blocking=true
+
+play

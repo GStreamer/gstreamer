@@ -760,7 +760,9 @@ ges.test.check_set_inpoint
 ges.test.check_set_inpoint_on_nested_timeline
 ges.test.check_simple_seek
 ges.test.edit_deeply_nested_timeline_too_short
+ges.test.glvideomixer_pad_properties
 ges.test.input_audio_channels_reorder
+ges.test.n_threads_compositor_pad
 ges.test.play_deeply_nested_back_to_back
 ges.test.play_two_nested_back_to_back
 ges.test.render_selected_streams_to_tracks

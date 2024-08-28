@@ -1123,53 +1123,29 @@ _init_value_from_spec_for_serialization (GValue * value, GParamSpec * spec)
 
 static gchar *
 _serialize_properties (GObject * object, gint * ret_n_props,
-    const gchar * fieldname, ...)
+    const gchar * ignored_fields, ...)
 {
-  gchar *ret;
-  guint n_props, j;
-  GParamSpec *spec, **pspecs;
-  GObjectClass *class = G_OBJECT_GET_CLASS (object);
-  GstStructure *structure = gst_structure_new_empty ("properties");
+  gchar *ret = NULL;
+  gchar **ignored_fieldsv = NULL;
 
-  pspecs = g_object_class_list_properties (class, &n_props);
-  for (j = 0; j < n_props; j++) {
-    GValue val = { 0 };
-
-    spec = pspecs[j];
-    if (!ges_util_can_serialize_spec (spec))
-      continue;
-
-    _init_value_from_spec_for_serialization (&val, spec);
-    g_object_get_property (object, spec->name, &val);
-    if (gst_value_compare (g_param_spec_get_default_value (spec),
-            &val) == GST_VALUE_EQUAL) {
-      GST_INFO ("Ignoring %s as it is using the default value", spec->name);
-      goto next;
-    }
-
-    if (spec->value_type == GST_TYPE_CAPS) {
-      gchar *caps_str;
-      const GstCaps *caps = gst_value_get_caps (&val);
-
-      caps_str = gst_caps_to_string (caps);
-      gst_structure_set (structure, spec->name, G_TYPE_STRING, caps_str, NULL);
-      g_free (caps_str);
-      goto next;
-    }
-
-    gst_structure_set_value (structure, spec->name, &val);
-
-  next:
-    g_value_unset (&val);
-  }
-  g_free (pspecs);
-
-  if (fieldname) {
+  if (ignored_fields) {
+    GStrvBuilder *ignored_fields_builder = g_strv_builder_new ();
     va_list varargs;
-    va_start (varargs, fieldname);
-    gst_structure_remove_fields_valist (structure, fieldname, varargs);
+    va_start (varargs, ignored_fields);
+    gchar *field = (gchar *) ignored_fields;
+
+    while (field) {
+      g_strv_builder_add (ignored_fields_builder, field);
+      field = va_arg (varargs, gchar *);
+    }
+    ignored_fieldsv = g_strv_builder_end (ignored_fields_builder);
+    g_strv_builder_unref (ignored_fields_builder);
     va_end (varargs);
   }
+
+  GstStructure *structure = ges_util_object_properties_to_structure (object,
+      (const gchar **) ignored_fieldsv);
+  g_strfreev (ignored_fieldsv);
 
   ret = gst_structure_to_string (structure);
   if (ret_n_props)
@@ -1455,7 +1431,10 @@ _save_children_properties (GString * str, GESTimelineElement * element,
 
       _init_value_from_spec_for_serialization (&val, spec);
       ges_timeline_element_get_child_property_by_pspec (element, spec, &val);
-      gst_structure_set_value (structure, spec_name, &val);
+      /* A NULL structure can't be serialized, and means "unset" */
+      if (!G_VALUE_HOLDS (&val, GST_TYPE_STRUCTURE) ||
+          gst_value_get_structure (&val))
+        gst_structure_set_value (structure, spec_name, &val);
 
       g_free (spec_name);
       g_value_unset (&val);

@@ -4952,6 +4952,10 @@ applied.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The blending operator for the source.</doc>
         <type name="gint" c:type="gint"/>
       </field>
+      <field name="extra_properties" version="1.30" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">Other compositor pad properties to apply.</doc>
+        <type name="Gst.Structure" c:type="GstStructure*"/>
+      </field>
     </record>
     <class name="Group" c:symbol-prefix="group" c:type="GESGroup" parent="Container" glib:type-name="GESGroup" glib:get-type="ges_group_get_type" glib:type-struct="GroupClass">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-group.c">A #GESGroup controls one or more #GESContainer-s (usually #GESClip-s,

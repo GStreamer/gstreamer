@@ -37,6 +37,8 @@
 #include <gst/base/base.h>
 
 
+static GstElement *compositor_pad_creator = NULL;
+
 /**
  * ges_timeline_new_audio_video:
  *
@@ -179,4 +181,167 @@ ges_nle_object_commit (GstElement * nlesource, gboolean recurse)
   g_signal_emit_by_name (nlesource, "commit", recurse, &ret);
 
   return ret;
+}
+
+static GstElement *
+get_internal_mixer (GstElementFactory * factory)
+{
+  GstElement *mixer = NULL, *elem = NULL;
+
+  if (g_type_is_a (gst_element_factory_get_element_type (factory),
+          GST_TYPE_AGGREGATOR)) {
+    return gst_element_factory_create (factory, NULL);
+  }
+
+  if (!g_type_is_a (gst_element_factory_get_element_type (factory),
+          GST_TYPE_BIN)) {
+    goto done;
+  }
+
+  GParamSpec *pspec;
+
+  elem = gst_element_factory_create (factory, NULL);
+
+  /* Checks whether this element has mixer property and the internal element
+   * is aggregator subclass */
+  if (!elem) {
+    goto done;
+  }
+
+  pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (elem), "mixer");
+  if (!pspec) {
+    goto done;
+  }
+
+  if (!g_type_is_a (pspec->value_type, GST_TYPE_ELEMENT)) {
+    goto done;
+  }
+
+  g_object_get (elem, "mixer", &mixer, NULL);
+  if (!mixer) {
+    goto done;
+  }
+
+  if (!GST_IS_AGGREGATOR (mixer)) {
+    gst_clear_object (&mixer);
+  }
+
+done:
+  gst_clear_object (&elem);
+
+  return mixer;
+}
+
+static inline void
+_init_value_from_spec_for_serialization (GValue * value, GParamSpec * spec)
+{
+
+  if (g_type_is_a (spec->value_type, G_TYPE_ENUM) ||
+      g_type_is_a (spec->value_type, G_TYPE_FLAGS))
+    g_value_init (value, G_TYPE_INT);
+  else
+    g_value_init (value, spec->value_type);
+}
+
+GstStructure *
+ges_util_object_properties_to_structure (GObject * object,
+    const gchar ** ignored_fields)
+{
+  guint n_props, j;
+  GParamSpec *spec, **pspecs;
+  GObjectClass *class = G_OBJECT_GET_CLASS (object);
+  GstStructure *structure = gst_structure_new_empty ("properties");
+
+  pspecs = g_object_class_list_properties (class, &n_props);
+  for (j = 0; j < n_props; j++) {
+    GValue val = { 0 };
+
+
+    spec = pspecs[j];
+    if (!ges_util_can_serialize_spec (spec))
+      continue;
+
+    if (ignored_fields) {
+      if (g_strv_contains ((const gchar * const *) ignored_fields, spec->name))
+        continue;
+    }
+
+    _init_value_from_spec_for_serialization (&val, spec);
+    g_object_get_property (object, spec->name, &val);
+
+    /* A NULL structure (e.g. an unset `converter-config`) can't be
+     * serialized and is the default value anyway */
+    if (G_VALUE_HOLDS (&val, GST_TYPE_STRUCTURE) &&
+        gst_value_get_structure (&val) == NULL) {
+      GST_LOG ("Ignoring %s as it is NULL", spec->name);
+      goto next;
+    }
+
+    const GValue *default_val = g_param_spec_get_default_value (spec);
+    if (g_type_is_a (spec->value_type, G_TYPE_ENUM) ||
+        g_type_is_a (spec->value_type, G_TYPE_FLAGS)) {
+      gint default_int = g_type_is_a (spec->value_type,
+          G_TYPE_ENUM) ? g_value_get_enum (default_val) :
+          g_value_get_flags (default_val);
+      if (g_value_get_int (&val) == default_int) {
+        GST_LOG ("Ignoring %s as it is using the default value", spec->name);
+        goto next;
+      }
+
+    } else {
+      if (gst_value_compare (default_val, &val) == GST_VALUE_EQUAL) {
+        GST_LOG ("Ignoring %s as it is using the default value", spec->name);
+        goto next;
+      }
+    }
+
+    if (spec->value_type == GST_TYPE_CAPS) {
+      gchar *caps_str;
+      const GstCaps *caps = gst_value_get_caps (&val);
+
+      caps_str = gst_caps_to_string (caps);
+      gst_structure_set (structure, spec->name, G_TYPE_STRING, caps_str, NULL);
+      g_free (caps_str);
+      goto next;
+    }
+
+    gst_structure_set_value (structure, spec->name, &val);
+
+  next:
+    g_value_unset (&val);
+  }
+  g_free (pspecs);
+
+
+  return structure;
+}
+
+void
+ges_compositor_pad_reset (void)
+{
+  gst_clear_object (&compositor_pad_creator);
+}
+
+GstPad *
+ges_compositor_pad_new (void)
+{
+  if (!compositor_pad_creator) {
+    GstElementFactory *factory = NULL;
+    GstElement *compositor =
+        ges_video_element_selector_make_compositor
+        (ges_video_element_selector (), NULL);
+
+    if (!compositor)
+      return NULL;
+
+    factory = gst_element_get_factory (compositor);
+    if (factory)
+      compositor_pad_creator = get_internal_mixer (factory);
+    gst_object_unref (compositor);
+  }
+
+  if (!compositor_pad_creator)
+    return NULL;
+
+  return gst_element_request_pad_simple (compositor_pad_creator, "sink_%u");
 }

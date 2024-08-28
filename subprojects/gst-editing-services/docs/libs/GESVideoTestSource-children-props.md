@@ -12,6 +12,15 @@ Value type: #guint
 
 See #videotestsrc:background-color
 
+#### `converter-config`
+
+A GstStructure describing the configuration that should be used when scaling and
+converting this pad's video frames
+
+Value type: #GstStructure
+
+See #GstVideoAggregatorConvertPad:converter-config
+
 #### `fheight`
 
 height of the source in float
@@ -105,6 +114,14 @@ y position of the stream
 
 Value type: #gint
 
+#### `repeat-after-eos`
+
+Repeat the last frame after EOS until all pads are EOS
+
+Value type: #gboolean
+
+See #GstVideoAggregatorPad:repeat-after-eos
+
 #### `reverse`
 
 Whether to playback the source reverse or not
@@ -112,6 +129,16 @@ Whether to playback the source reverse or not
 Value type: #gboolean
 
 See #nlesource:reverse
+
+#### `sizing-policy`
+
+Sizing policy to use for image scaling
+
+Valid values:
+  - **None: Image is scaled to fill configured destination rectangle without padding or keeping the aspect ratio** (0) – none
+  - **Keep Aspect Ratio: Image is scaled to fit destination rectangle specified by GstCompositorPad:{xpos, ypos, width, height} with preserved aspect ratio. Resulting image will be centered in the destination rectangle with padding if necessary** (1) – keep-aspect-ratio
+
+See #GstCompositorPad:sizing-policy
 
 #### `video-direction`
 
@@ -136,6 +163,22 @@ See #GstVideoDirection:video-direction
 width of the source
 
 Value type: #gint
+
+#### `xpos`
+
+X Position of the picture
+
+Value type: #gint
+
+See #GstCompositorPad:xpos
+
+#### `ypos`
+
+Y Position of the picture
+
+Value type: #gint
+
+See #GstCompositorPad:ypos
 
 #### `zorder`
 
