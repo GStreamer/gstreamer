@@ -57,6 +57,7 @@ gst_gl_dmabuf_buffer_pool_set_config (GstBufferPool * pool,
 {
   GstGLDMABufBufferPool *self = GST_GL_DMABUF_BUFFER_POOL (pool);
 
+  GstStructure *dma_config;
   GstAllocator *allocator = NULL;
   GstAllocationParams alloc_params;
   GstGLAllocationParams *glparams;
@@ -123,6 +124,34 @@ gst_gl_dmabuf_buffer_pool_set_config (GstBufferPool * pool,
   self->priv->add_glsyncmeta = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_GL_SYNC_META);
 
+  /* Now configure the dma-buf pool, and sync the config */
+  dma_config = gst_buffer_pool_get_config (self->priv->dmabuf_pool);
+  gst_buffer_pool_config_set_params (dma_config, caps, size, min, max);
+  gst_buffer_pool_config_add_option (dma_config,
+      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+  gst_buffer_pool_config_set_video_alignment (dma_config, &video_align);
+
+  if (!gst_buffer_pool_set_config (self->priv->dmabuf_pool, dma_config)) {
+    dma_config = gst_buffer_pool_get_config (self->priv->dmabuf_pool);
+
+    if (!gst_buffer_pool_config_validate_params (dma_config, caps, size, min,
+            max)) {
+      gst_structure_free (config);
+      return FALSE;
+    }
+
+    if (!gst_buffer_pool_config_get_params (dma_config, &caps, &size, &min,
+            &max)) {
+      gst_structure_free (dma_config);
+      goto wrong_config;
+    }
+
+    if (!gst_buffer_pool_set_config (self->priv->dmabuf_pool, dma_config))
+      return FALSE;
+
+    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  }
+
   if (!GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config)) {
     return FALSE;
   }
@@ -135,15 +164,7 @@ gst_gl_dmabuf_buffer_pool_set_config (GstBufferPool * pool,
   self->priv->glparams->parent.alloc_flags |=
       GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE;
 
-  /* Now configure the dma-buf pool. */
-
-  config = gst_buffer_pool_get_config (self->priv->dmabuf_pool);
-  gst_buffer_pool_config_set_params (config, caps, size, min, max);
-  gst_buffer_pool_config_add_option (config,
-      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-  gst_buffer_pool_config_set_video_alignment (config, &video_align);
-
-  return gst_buffer_pool_set_config (self->priv->dmabuf_pool, config);
+  return TRUE;
 
 wrong_config:
   {
