@@ -333,7 +333,7 @@ gst_qml6_gl_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   GstStructure *config;
   GstCaps *caps;
   guint min, max, size, n, i;
-  gboolean update_pool, update_allocator;
+  gboolean update_allocator;
   GstAllocator *allocator;
   GstAllocationParams params;
   GstGLVideoAllocationParams *glparams;
@@ -355,22 +355,16 @@ gst_qml6_gl_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 
   n = gst_query_get_n_allocation_pools (query);
   if (n > 0) {
-    update_pool = TRUE;
     for (i = 0; i < n; i++) {
       gst_query_parse_nth_allocation_pool (query, i, &pool, &size, &min, &max);
 
-      if (!pool || !GST_IS_GL_BUFFER_POOL (pool)) {
-        if (pool)
-          gst_object_unref (pool);
-        pool = NULL;
-      }
-    }
-  }
+      if (pool && GST_IS_GL_BUFFER_POOL (pool))
+        break;
 
-  if (!pool) {
-    size = vinfo.size;
-    min = max = 0;
-    update_pool = FALSE;
+      if (pool)
+        gst_object_unref (pool);
+      pool = NULL;
+    }
   }
 
   if (!qt_src->context && !_find_local_gl_context (qt_src))
@@ -383,6 +377,8 @@ gst_qml6_gl_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     if (!qt_src->context || !GST_IS_GL_CONTEXT (qt_src->context))
       return FALSE;
 
+    size = vinfo.size;
+    min = max = 0;
     pool = gst_gl_buffer_pool_new (qt_src->context);
     GST_INFO_OBJECT (qt_src, "No pool, create one ourself %p", pool);
   }
@@ -423,10 +419,11 @@ gst_qml6_gl_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   if (allocator)
     gst_object_unref (allocator);
 
-  if (update_pool)
+  if (n > 0)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
+
   gst_object_unref (pool);
 
   GST_INFO_OBJECT (qt_src, "successfully decide_allocation");
@@ -437,20 +434,34 @@ static GstFlowReturn
 gst_qml6_gl_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
 {
   GstQml6GLSrc *qt_src = GST_QML6_GL_SRC (psrc);
-  GstCaps *updated_caps = NULL;
+  gboolean updated_caps = FALSE;
   GstGLContext* context = qt_src->context;
   GstGLSyncMeta *sync_meta;
 
+retry:
   *buffer = qt6_gl_window_take_buffer (qt_src->window, &updated_caps);
-  GST_DEBUG_OBJECT (qt_src, "produced buffer %p", *buffer);
-  if (!*buffer)
-    return GST_FLOW_FLUSHING;
 
   if (updated_caps) {
-    GST_DEBUG_OBJECT (qt_src, "new_caps %" GST_PTR_FORMAT, updated_caps);
-    gst_base_src_set_caps (GST_BASE_SRC (qt_src), updated_caps);
+    QSize size = qt_src->qwindow->size();
+
+    /* avoid spurious renegotiation */
+    if (GST_VIDEO_INFO_WIDTH (&qt_src->v_info) != size.width()
+        || GST_VIDEO_INFO_HEIGHT (&qt_src->v_info) != size.height()) {
+      GST_DEBUG_OBJECT (qt_src, "renegotiation needed");
+      if (!gst_base_src_negotiate (GST_BASE_SRC (qt_src)))
+        return GST_FLOW_NOT_NEGOTIATED;
+    }
+
+    qt6_gl_window_set_pool (qt_src->window,
+        gst_base_src_get_buffer_pool (GST_BASE_SRC (qt_src)));
+    updated_caps = FALSE;
+    goto retry;
   }
-  gst_clear_caps (&updated_caps);
+
+  GST_DEBUG_OBJECT (qt_src, "produced buffer %p", *buffer);
+
+  if (!*buffer)
+    return GST_FLOW_FLUSHING;
 
   sync_meta = gst_buffer_get_gl_sync_meta(*buffer);
   if (sync_meta)

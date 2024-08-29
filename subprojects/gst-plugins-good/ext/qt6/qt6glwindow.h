@@ -55,7 +55,7 @@ private:
 
 extern "C"
 {
-GstBuffer *     qt6_gl_window_take_buffer (Qt6GLWindow * qt6_window, GstCaps ** updated_caps);
+GstBuffer *     qt6_gl_window_take_buffer (Qt6GLWindow * qt6_window, gboolean * updated_caps);
 GstGLContext *  qt6_gl_window_get_qt_context (Qt6GLWindow * qt6_window);
 GstGLContext *  qt6_gl_window_get_context (Qt6GLWindow * qt6_window);
 gboolean        qt6_gl_window_set_context (Qt6GLWindow * qt6_window, GstGLContext * context);
@@ -64,6 +64,7 @@ gboolean        qt6_gl_window_is_scenegraph_initialized (Qt6GLWindow * qt6_windo
 void            qt6_gl_window_use_default_fbo (Qt6GLWindow * qt6_window, gboolean useDefaultFbo);
 void            qt6_gl_window_unlock(Qt6GLWindow* qt6_window);
 void            qt6_gl_window_unlock_stop(Qt6GLWindow* qt6_window);
+void            qt6_gl_window_set_pool (Qt6GLWindow * qt6_window, GstBufferPool * pool);
 }
 
 #endif /* __QT6_GL_WINDOW_H__ */
