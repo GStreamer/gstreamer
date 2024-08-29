@@ -198,23 +198,47 @@ rtp_source_class_init (RTPSourceClass * klass)
    * * "sent-rb-lsr"           G_TYPE_UINT     last SR time (seconds in NTP Short Format, 16.16 fixed point)
    * * "sent-rb-dlsr"          G_TYPE_UINT     delay since last SR (seconds in NTP Short Format, 16.16 fixed point)
    *
-   * The following fields are only present for non-internal sources and
-   * represents the last RB that this source sent. This is only updated
-   * when the source is receiving data and sending RB blocks.
+   * The following fields are present for non-internal and internal sources, but
+   * the meaning is different.
+   *   non-internal: it represents the last RB (RR in this case) that this source sent. This is
+   * only updated when the source is receiving data and sending RB blocks. It is
+   * deprecated and is present for backwards compatibility. Statistics about internal local sources
+   * should be retrieved from the source.
+   *   internal: it represents the last RB (RR in this case) received with remote statistics about this source.
    *
    * * "have-rb"          G_TYPE_BOOLEAN  the source has sent RB
+   * * "rb-ssrc"          G_TYPE_UINT     The SSRC of the source the RB is about
    * * "rb-fractionlost"  G_TYPE_UINT     lost 8-bit fraction
    * * "rb-packetslost"   G_TYPE_INT      lost packets
    * * "rb-exthighestseq" G_TYPE_UINT     highest received seqnum
    * * "rb-jitter"        G_TYPE_UINT     reception jitter (in clock rate units)
    * * "rb-lsr"           G_TYPE_UINT     last SR time (seconds in NTP Short Format, 16.16 fixed point)
    * * "rb-dlsr"          G_TYPE_UINT     delay since last SR (seconds in NTP Short Format, 16.16 fixed point)
+   * * "rb-round-trip"    G_TYPE_UINT     the round-trip time (seconds in NTP Short Format, 16.16 fixed point)
    *
    * The round trip of this source is calculated from the last RB
-   * values and the reception time of the last RB packet. It is only present for
-   * non-internal sources.
+   * values and the reception time of the last RB packet.
    *
-   * * "rb-round-trip"    G_TYPE_UINT     the round-trip time (seconds in NTP Short Format, 16.16 fixed point)
+   * The following field is present only for internal sources and
+   * contains an array of the the most recent receiver reports from each peer. In unicast
+   * scenarios this will be a single entry that is identical to the data provided by the have-rb and rb-*
+   * fields, but in multicast there will be one entry in the array for each peer that is sending
+   * receiver reports.
+   *
+   * * "received-rr"  GST_TYPE_LIST   Array of GstStructure entries, one for each peer that sent an RR.
+   *
+   * Each entry in the array contains the following fields:
+   *
+   *   * "rb-ssrc"          G_TYPE_UINT     The SSRC of this source
+   *   * "rb-sender-ssrc"   G_TYPE_UINT     The SSRC of the sender of this RR
+   *   * "rb-fractionlost"  G_TYPE_UINT     lost 8-bit fraction
+   *   * "rb-packetslost"   G_TYPE_INT      lost packets
+   *   * "rb-exthighestseq" G_TYPE_UINT     highest received seqnum
+   *   * "rb-jitter"        G_TYPE_UINT     reception jitter (in clock rate units)
+   *   * "rb-lsr"           G_TYPE_UINT     last SR time (seconds in NTP Short Format, 16.16 fixed point)
+   *   * "rb-dlsr"          G_TYPE_UINT     delay since last SR (seconds in NTP Short Format, 16.16 fixed point)
+   *   * "rb-round-trip"    G_TYPE_UINT     the round-trip time (seconds in NTP Short Format, 16.16 fixed point)
+   *
    *
    */
   g_object_class_install_property (gobject_class, PROP_STATS,
@@ -268,6 +292,7 @@ rtp_source_reset (RTPSource * src)
   src->bye_reason = NULL;
   src->sent_bye = FALSE;
   g_hash_table_remove_all (src->reported_in_sr_of);
+  g_hash_table_remove_all (src->received_rr);
   g_queue_foreach (src->retained_feedback, (GFunc) gst_buffer_unref, NULL);
   g_queue_clear (src->retained_feedback);
   src->last_rtptime = -1;
@@ -316,6 +341,8 @@ rtp_source_init (RTPSource * src)
   src->nack_deadlines = g_array_new (FALSE, FALSE, sizeof (GstClockTime));
 
   src->reported_in_sr_of = g_hash_table_new (g_direct_hash, g_direct_equal);
+  src->received_rr =
+      g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_free);
 
   src->last_keyframe_request = GST_CLOCK_TIME_NONE;
 
@@ -361,17 +388,14 @@ rtp_source_finalize (GObject * object)
     g_object_unref (src->rtcp_from);
 
   g_hash_table_unref (src->reported_in_sr_of);
+  g_hash_table_unref (src->received_rr);
 
   G_OBJECT_CLASS (rtp_source_parent_class)->finalize (object);
 }
 
-static GstStructure *
-rtp_source_create_stats (RTPSource * src)
+static void
+rtp_source_get_rb_stats (RTPSource * src, GstStructure * s)
 {
-  GstStructure *s;
-  gboolean is_sender = src->is_sender;
-  gboolean internal = src->internal;
-  gchar *address_str;
   gboolean have_rb;
   guint32 ssrc = 0;
   guint8 fractionlost = 0;
@@ -381,6 +405,63 @@ rtp_source_create_stats (RTPSource * src)
   guint32 lsr = 0;
   guint32 dlsr = 0;
   guint32 round_trip = 0;
+
+  have_rb = rtp_source_get_last_rb (src, &ssrc, &fractionlost,
+      &packetslost, &exthighestseq, &jitter, &lsr, &dlsr, &round_trip);
+
+  gst_structure_set (s,
+      "have-rb", G_TYPE_BOOLEAN, have_rb,
+      "rb-ssrc", G_TYPE_UINT, ssrc,
+      "rb-fractionlost", G_TYPE_UINT, (guint) fractionlost,
+      "rb-packetslost", G_TYPE_INT, (gint) packetslost,
+      "rb-exthighestseq", G_TYPE_UINT, (guint) exthighestseq,
+      "rb-jitter", G_TYPE_UINT, (guint) jitter,
+      "rb-lsr", G_TYPE_UINT, (guint) lsr,
+      "rb-dlsr", G_TYPE_UINT, (guint) dlsr,
+      "rb-round-trip", G_TYPE_UINT, (guint) round_trip, NULL);
+}
+
+static void
+_create_rr_entry (gpointer * key, gpointer val, gpointer userdata)
+{
+  GValue *res = userdata;
+  guint32 sender_ssrc = GPOINTER_TO_UINT (key);
+  RTPReceiverReport *rr = val;
+  GstStructure *s = gst_structure_new ("application/x-rtp-receiver-report",
+      "rb-ssrc", G_TYPE_UINT, (guint) rr->ssrc,
+      "rb-sender-ssrc", G_TYPE_UINT, (guint) sender_ssrc,
+      "rb-fractionlost", G_TYPE_UINT, (guint) rr->fractionlost,
+      "rb-packetslost", G_TYPE_INT, (gint) rr->packetslost,
+      "rb-exthighestseq", G_TYPE_UINT, (guint) rr->exthighestseq,
+      "rb-jitter", G_TYPE_UINT, (guint) rr->jitter,
+      "rb-lsr", G_TYPE_UINT, (guint) rr->lsr,
+      "rb-dlsr", G_TYPE_UINT, (guint) rr->dlsr,
+      "rb-round-trip", G_TYPE_UINT, (guint) rr->round_trip, NULL);
+
+  GValue v = G_VALUE_INIT;
+  g_value_init (&v, GST_TYPE_STRUCTURE);
+  gst_value_set_structure (&v, s);
+  gst_value_list_append_and_take_value (res, &v);
+  gst_structure_free (s);
+}
+
+static void
+rtp_source_get_rr_stats (RTPSource * src, GstStructure * s)
+{
+  GValue rr_list = G_VALUE_INIT;
+  g_value_init (&rr_list, GST_TYPE_LIST);
+  g_hash_table_foreach (src->received_rr, (GHFunc) _create_rr_entry, &rr_list);
+
+  gst_structure_take_value (s, "received-rr", &rr_list);
+}
+
+static GstStructure *
+rtp_source_create_stats (RTPSource * src)
+{
+  GstStructure *s;
+  gboolean is_sender = src->is_sender;
+  gboolean internal = src->internal;
+  gchar *address_str;
   gboolean have_sr;
   GstClockTime time = 0;
   guint64 ntptime = 0;
@@ -453,20 +534,12 @@ rtp_source_create_stats (RTPSource * src)
         (guint) src->last_rr.lsr, "sent-rb-dlsr", G_TYPE_UINT,
         (guint) src->last_rr.dlsr, NULL);
 
+    /* Deprecated, report block information is reported in each RTPSource */
     /* get the last RB */
-    have_rb = rtp_source_get_last_rb (src, &ssrc, &fractionlost,
-        &packetslost, &exthighestseq, &jitter, &lsr, &dlsr, &round_trip);
-
-    gst_structure_set (s,
-        "have-rb", G_TYPE_BOOLEAN, have_rb,
-        "rb-ssrc", G_TYPE_UINT, ssrc,
-        "rb-fractionlost", G_TYPE_UINT, (guint) fractionlost,
-        "rb-packetslost", G_TYPE_INT, (gint) packetslost,
-        "rb-exthighestseq", G_TYPE_UINT, (guint) exthighestseq,
-        "rb-jitter", G_TYPE_UINT, (guint) jitter,
-        "rb-lsr", G_TYPE_UINT, (guint) lsr,
-        "rb-dlsr", G_TYPE_UINT, (guint) dlsr,
-        "rb-round-trip", G_TYPE_UINT, (guint) round_trip, NULL);
+    rtp_source_get_rb_stats (src, s);
+  } else {
+    rtp_source_get_rb_stats (src, s);
+    rtp_source_get_rr_stats (src, s);
   }
 
   return s;
@@ -1514,7 +1587,8 @@ rtp_source_process_sr (RTPSource * src, GstClockTime time, guint64 ntptime,
 /**
  * rtp_source_process_rb:
  * @src: an #RTPSource
- * @ssrc: SSRC of the local source for this this RB was sent
+ * @ssrc: SSRC of the local source for which this RB was sent
+ * @sender_ssrc: SSRC from which this RB was received
  * @ntpnstime: the current time in nanoseconds since 1970
  * @fractionlost: fraction lost since last SR/RR
  * @packetslost: the cumulative number of packets lost
@@ -1528,9 +1602,9 @@ rtp_source_process_sr (RTPSource * src, GstClockTime time, guint64 ntptime,
  * Update the report block in @src.
  */
 void
-rtp_source_process_rb (RTPSource * src, guint32 ssrc, guint64 ntpnstime,
-    guint8 fractionlost, gint32 packetslost, guint32 exthighestseq,
-    guint32 jitter, guint32 lsr, guint32 dlsr)
+rtp_source_process_rb (RTPSource * src, guint32 ssrc, guint32 sender_ssrc,
+    guint64 ntpnstime, guint8 fractionlost, gint32 packetslost,
+    guint32 exthighestseq, guint32 jitter, guint32 lsr, guint32 dlsr)
 {
   RTPReceiverReport *curr;
   gint curridx;
@@ -1574,6 +1648,14 @@ rtp_source_process_rb (RTPSource * src, guint32 ssrc, guint64 ntpnstime,
 
   /* make current */
   src->stats.curr_rr = curridx;
+
+  if (src->internal) {
+    /* Make a copy to store in the received rr's hash table, but only for
+     * internal sources to track which remote sources sent reports for this source */
+    RTPReceiverReport *copy = g_memdup2 (curr, sizeof (RTPReceiverReport));
+    g_hash_table_replace (src->received_rr, GUINT_TO_POINTER (sender_ssrc),
+        copy);
+  }
 }
 
 /**
