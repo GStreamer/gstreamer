@@ -1076,7 +1076,8 @@ nle_composition_handle_message (GstBin * bin, GstMessage * message)
 
       g_atomic_rc_box_release (q);
 
-      goto drop;
+      /* We recursed up already */
+      return;
     } else if (gst_structure_has_name (structure,
             QUERY_PIPELINE_POSITION_STRUCT_NAME)) {
       NleCompositionQueryPipelinePosition *q;
