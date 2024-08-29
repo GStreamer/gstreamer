@@ -856,6 +856,20 @@ get_all_formats_and_modifiers (GstKMSSink * self, drmModePlane * plane,
     drmModeFreePropertyBlob (blob);
   }
 
+  if (formats->len == 0) {
+    /* IN_FORMATS not found. Fill the arrays from plane->formats, assuming
+     * only linear modifier. */
+    const guint64 LINEAR_MODIFIER = DRM_FORMAT_MOD_LINEAR;
+
+    for (i = 0; i < plane->count_formats; ++i) {
+      g_array_append_val (formats, plane->formats[i]);
+      g_array_append_val (modifiers, LINEAR_MODIFIER);
+      GST_DEBUG_OBJECT (self, "Plane id %d, get format/modifier pair %"
+          GST_FOURCC_FORMAT ":0x0", plane->plane_id,
+          GST_FOURCC_ARGS (plane->formats[i]));
+    }
+  }
+
   if (formats->len == 0)
     goto out;
 
