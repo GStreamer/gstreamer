@@ -111,7 +111,7 @@ _get_stats_from_remote_rtp_source_stats (TransportStream * stream,
     const gchar * codec_id, const gchar * kind, const gchar * transport_id,
     GstStructure * s)
 {
-  gboolean have_rb = FALSE, internal = FALSE;
+  gboolean have_rb = FALSE;
   int lost;
   GstStructure *r_in;
   gchar *r_in_id, *out_id;
@@ -120,11 +120,10 @@ _get_stats_from_remote_rtp_source_stats (TransportStream * stream,
   double ts;
 
   gst_structure_get_double (s, "timestamp", &ts);
-  gst_structure_get (source_stats, "internal", G_TYPE_BOOLEAN, &internal,
-      "have-rb", G_TYPE_BOOLEAN, &have_rb, NULL);
+  gst_structure_get (source_stats, "have-rb", G_TYPE_BOOLEAN, &have_rb, NULL);
 
   /* This isn't what we're looking for */
-  if (internal == TRUE || have_rb == FALSE)
+  if (have_rb == FALSE)
     return FALSE;
 
   r_in_id = g_strdup_printf ("rtp-remote-inbound-stream-stats_%u", ssrc);
@@ -920,7 +919,6 @@ webrtc_stats_get_from_transport_for_one_ssrc (SsrcMapItem * entry,
 
     guint stats_ssrc = 0;
 
-    /* skip foreign sources */
     if (gst_structure_get_uint (stats, "ssrc", &stats_ssrc) &&
         entry->ssrc == stats_ssrc) {
       GST_TRACE ("Found source stats for ssrc %u: %" GST_PTR_FORMAT, stats_ssrc,
@@ -928,7 +926,9 @@ webrtc_stats_get_from_transport_for_one_ssrc (SsrcMapItem * entry,
       _get_stats_from_rtp_source_stats (ts_stats->stream, stats,
           ts_stats->codec_id, ts_stats->kind, ts_stats->transport_id,
           ts_stats->s);
-    } else if (gst_structure_get_uint (stats, "rb-ssrc", &stats_ssrc)
+    }
+
+    if (gst_structure_get_uint (stats, "rb-ssrc", &stats_ssrc)
         && entry->ssrc == stats_ssrc) {
       GST_TRACE ("Found remote source stats for ssrc %u: %" GST_PTR_FORMAT,
           stats_ssrc, stats);
