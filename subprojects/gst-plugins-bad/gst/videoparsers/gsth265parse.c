@@ -3289,6 +3289,9 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       if (h265parse->sei_pic_struct != GST_H265_SEI_PIC_STRUCT_FRAME)
         flags |= GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
 
+      if (h265parse->time_code.discontinuity_flag[i])
+        flags |= GST_VIDEO_TIME_CODE_FLAGS_DISCONT;
+
       /* Equation D-26 (without and tOffset)
        *
        * clockTimestamp[i] = ( ( hH * 60 + mM ) * 60 + sS ) * vui_time_scale +
