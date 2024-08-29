@@ -45,6 +45,16 @@
 #include <gst/gl/wayland/gstgldisplay_wayland.h>
 #endif
 
+#if GST_GL_HAVE_PLATFORM_EGL
+#include "egl/gstglcontext_egl.h"
+#endif
+
+#if GST_GL_HAVE_DMABUF
+#ifdef HAVE_LIBDRM
+#include <drm_fourcc.h>
+#endif
+#endif
+
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
 #define USING_OPENGL3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 1))
 #define USING_GLES(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES, 1, 0))
@@ -915,4 +925,237 @@ void gst_gl_set_affine_transformation_meta_from_ndc
   /* change of basis multiplications */
   gst_gl_multiply_matrix4 (to_ndc_matrix, matrix, tmp);
   gst_gl_multiply_matrix4 (tmp, from_ndc_matrix, meta->matrix);
+}
+
+#ifdef HAVE_LIBDRM
+/* Append all drm format strings to drm_formats array. */
+static void
+_append_drm_formats_from_video_format (GstGLContext * context,
+    GstVideoFormat format, GstGLDrmFormatFlags flags, GPtrArray * drm_formats)
+{
+  gint32 i, fourcc;
+  const GArray *dma_modifiers = NULL;
+  char *drm_format;
+
+  fourcc = gst_video_dma_drm_fourcc_from_format (format);
+  if (fourcc == DRM_FORMAT_INVALID)
+    return;
+
+  if (!gst_gl_context_egl_get_format_modifiers (context, fourcc,
+          &dma_modifiers))
+    return;
+
+  /* No modifier info, lets warn and move on */
+  if (!dma_modifiers) {
+    GST_WARNING_OBJECT (context, "Undefined modifiers list for %"
+        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+    return;
+  }
+
+  for (i = 0; i < dma_modifiers->len; i++) {
+    GstGLDmaModifier *mod = &g_array_index (dma_modifiers, GstGLDmaModifier, i);
+
+    if (!(flags & GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL) && mod->external_only)
+      continue;
+
+    if (flags & GST_GL_DRM_FORMAT_LINEAR_ONLY &&
+        mod->modifier != DRM_FORMAT_MOD_LINEAR)
+      continue;
+
+    drm_format = gst_video_dma_drm_fourcc_to_string (fourcc, mod->modifier);
+    g_ptr_array_add (drm_formats, drm_format);
+  }
+}
+#endif
+
+/**
+ * gst_gl_dma_buf_transform_gst_formats_to_drm_formats:
+ * @context: (transfer none): a #GstContext
+ * @src: value of "format" field in #GstCaps as #GValue
+ * @flags: transformation flags
+ * @dst: (inout): empty destination #GValue
+ *
+ * Given the video formats in @src #GValue, collect corresponding drm formats
+ * supported by @context into @dst #GValue. This function returns %FALSE if
+ * the context is not an EGL context.
+ *
+ * Returns: whether any valid drm formats were found and stored in @dst
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_gl_dma_buf_transform_gst_formats_to_drm_formats (GstGLContext * context,
+    const GValue * src, GstGLDrmFormatFlags flags, GValue * dst)
+{
+#ifdef HAVE_LIBDRM
+  GstVideoFormat gst_format;
+  GPtrArray *all_drm_formats = NULL;
+  guint i;
+
+  /* This is only supported with EGL */
+  if (!GST_IS_GL_CONTEXT_EGL (context))
+    return FALSE;
+
+  all_drm_formats = g_ptr_array_new ();
+
+  if (G_VALUE_HOLDS_STRING (src)) {
+    gst_format = gst_video_format_from_string (g_value_get_string (src));
+    if (gst_format != GST_VIDEO_FORMAT_UNKNOWN) {
+      _append_drm_formats_from_video_format (context, gst_format,
+          flags, all_drm_formats);
+    }
+  } else if (GST_VALUE_HOLDS_LIST (src)) {
+    guint num_values = gst_value_list_get_size (src);
+
+    for (i = 0; i < num_values; i++) {
+      const GValue *val = gst_value_list_get_value (src, i);
+
+      gst_format = gst_video_format_from_string (g_value_get_string (val));
+      if (gst_format == GST_VIDEO_FORMAT_UNKNOWN)
+        continue;
+
+      _append_drm_formats_from_video_format (context, gst_format,
+          flags, all_drm_formats);
+    }
+  }
+
+  if (all_drm_formats->len == 0) {
+    g_ptr_array_unref (all_drm_formats);
+    return FALSE;
+  }
+
+  if (all_drm_formats->len == 1) {
+    g_value_init (dst, G_TYPE_STRING);
+    g_value_take_string (dst, g_ptr_array_index (all_drm_formats, 0));
+  } else {
+    GValue item = G_VALUE_INIT;
+
+    gst_value_list_init (dst, all_drm_formats->len);
+
+    for (i = 0; i < all_drm_formats->len; i++) {
+      g_value_init (&item, G_TYPE_STRING);
+      g_value_take_string (&item, g_ptr_array_index (all_drm_formats, i));
+      gst_value_list_append_value (dst, &item);
+      g_value_unset (&item);
+    }
+  }
+
+  /* The strings are already taken by the GValue, no need to free. */
+  g_ptr_array_unref (all_drm_formats);
+
+  return TRUE;
+#else
+  return FALSE;
+#endif
+}
+
+#ifdef HAVE_LIBDRM
+static GstVideoFormat
+_get_video_format_from_drm_format (GstGLContext * context,
+    const gchar * drm_format, GstGLDrmFormatFlags flags)
+{
+  GstVideoFormat gst_format;
+  guint32 fourcc;
+  guint64 modifier;
+
+  fourcc = gst_video_dma_drm_fourcc_from_string (drm_format, &modifier);
+  if (fourcc == DRM_FORMAT_INVALID)
+    return GST_VIDEO_FORMAT_UNKNOWN;
+
+  if (flags & GST_GL_DRM_FORMAT_LINEAR_ONLY &&
+      modifier != DRM_FORMAT_MOD_LINEAR)
+    return GST_VIDEO_FORMAT_UNKNOWN;
+
+  gst_format = gst_video_dma_drm_fourcc_to_format (fourcc);
+  if (gst_format == GST_VIDEO_FORMAT_UNKNOWN)
+    return GST_VIDEO_FORMAT_UNKNOWN;
+
+  if (!gst_gl_context_egl_format_supports_modifier (context, fourcc, modifier,
+      flags & GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL))
+    return GST_VIDEO_FORMAT_UNKNOWN;
+
+  return gst_format;
+}
+#endif
+
+/**
+ * gst_gl_dma_buf_transform_drm_formats_to_gst_formats:
+ * @context: (transfer none): a #GstContext
+ * @src: value of "drm-format" field in #GstCaps as #GValue
+ * @flags: transformation flags
+ * @dst: (inout): empty destination #GValue
+ *
+ * Given the DRM formats in @src #GValue, collect corresponding GST formats to
+ * @dst #GValue. This function returns %FALSE if  the context is not an EGL
+ * context.
+ *
+ * Returns: whether any valid GST video formats were found and stored in @dst
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_gl_dma_buf_transform_drm_formats_to_gst_formats (GstGLContext * context,
+    const GValue * src, GstGLDrmFormatFlags flags, GValue * dst)
+{
+#ifdef HAVE_LIBDRM
+  GstVideoFormat gst_format;
+  GArray *all_formats = NULL;
+  guint i;
+
+  /* This is only supported with EGL */
+  if (!GST_IS_GL_CONTEXT_EGL (context))
+    return FALSE;
+
+  all_formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
+
+  if (G_VALUE_HOLDS_STRING (src)) {
+    gst_format = _get_video_format_from_drm_format (context,
+        g_value_get_string (src), flags);
+
+    if (gst_format != GST_VIDEO_FORMAT_UNKNOWN)
+      g_array_append_val (all_formats, gst_format);
+  } else if (GST_VALUE_HOLDS_LIST (src)) {
+    guint num_values = gst_value_list_get_size (src);
+
+    for (i = 0; i < num_values; i++) {
+      const GValue *val = gst_value_list_get_value (src, i);
+
+      gst_format = _get_video_format_from_drm_format (context,
+          g_value_get_string (val), flags);
+      if (gst_format == GST_VIDEO_FORMAT_UNKNOWN)
+        continue;
+
+      g_array_append_val (all_formats, gst_format);
+    }
+  }
+
+  if (all_formats->len == 0) {
+    g_array_unref (all_formats);
+    return FALSE;
+  }
+
+  if (all_formats->len == 1) {
+    g_value_init (dst, G_TYPE_STRING);
+    gst_format = g_array_index (all_formats, GstVideoFormat, 0);
+    g_value_set_string (dst, gst_video_format_to_string (gst_format));
+  } else {
+    GValue item = G_VALUE_INIT;
+
+    gst_value_list_init (dst, all_formats->len);
+
+    for (i = 0; i < all_formats->len; i++) {
+      g_value_init (&item, G_TYPE_STRING);
+      gst_format = g_array_index (all_formats, GstVideoFormat, i);
+      g_value_set_string (&item, gst_video_format_to_string (gst_format));
+      gst_value_list_append_value (dst, &item);
+      g_value_unset (&item);
+    }
+  }
+
+  g_array_unref (all_formats);
+
+  return TRUE;
+#else
+  return FALSE;
+#endif
 }

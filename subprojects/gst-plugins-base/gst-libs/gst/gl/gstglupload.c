@@ -717,12 +717,6 @@ static const UploadMethod _gl_memory_upload = {
 
 #if GST_GL_HAVE_DMABUF
 
-typedef enum
-{
-  GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL = 1 << 1,
-  GST_GL_DRM_FORMAT_LINEAR_ONLY = 2 << 1,
-} GstGLDrmFormatFlags;
-
 typedef struct _GstEGLImageCacheEntry
 {
   GstEGLImage *eglimage[GST_VIDEO_MAX_PLANES];
@@ -873,107 +867,6 @@ _dma_buf_upload_new (GstGLUpload * upload)
   return dmabuf;
 }
 
-/* Append all drm format strings to drm_formats array. */
-static void
-_append_drm_formats_from_video_format (GstGLContext * context,
-    GstVideoFormat format, GstGLDrmFormatFlags flags,
-    GPtrArray * drm_formats)
-{
-  gint32 i, fourcc;
-  const GArray *dma_modifiers = NULL;
-  char *drm_format;
-
-  fourcc = gst_video_dma_drm_fourcc_from_format (format);
-  if (fourcc == DRM_FORMAT_INVALID)
-    return;
-
-  if (!gst_gl_context_egl_get_format_modifiers (context, fourcc,
-          &dma_modifiers))
-    return;
-
-  /* No modifier info, lets warn and move on */
-  if (!dma_modifiers) {
-    GST_WARNING_OBJECT (context, "Undefined modifiers list for %"
-        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
-    return;
-  }
-
-  for (i = 0; i < dma_modifiers->len; i++) {
-    GstGLDmaModifier *mod = &g_array_index (dma_modifiers, GstGLDmaModifier, i);
-
-    if (!(flags & GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL) && mod->external_only)
-      continue;
-
-    if (flags & GST_GL_DRM_FORMAT_LINEAR_ONLY && mod->modifier != DRM_FORMAT_MOD_LINEAR)
-      continue;
-
-    drm_format = gst_video_dma_drm_fourcc_to_string (fourcc, mod->modifier);
-    g_ptr_array_add (drm_formats, drm_format);
-  }
-}
-
-/* Given the video formats in src GValue, collecting all the according
-   drm formats to dst GValue. Return FALSE if no valid drm formats found. */
-static gboolean
-_dma_buf_transform_gst_formats_to_drm_formats (GstGLContext * context,
-    const GValue * video_value, GstGLDrmFormatFlags flags,
-    GValue * drm_value)
-{
-  GstVideoFormat gst_format;
-  GPtrArray *all_drm_formats = NULL;
-  guint i;
-
-  all_drm_formats = g_ptr_array_new ();
-
-  if (G_VALUE_HOLDS_STRING (video_value)) {
-    gst_format =
-        gst_video_format_from_string (g_value_get_string (video_value));
-    if (gst_format != GST_VIDEO_FORMAT_UNKNOWN) {
-      _append_drm_formats_from_video_format (context, gst_format,
-          flags, all_drm_formats);
-    }
-  } else if (GST_VALUE_HOLDS_LIST (video_value)) {
-    guint num_values = gst_value_list_get_size (video_value);
-
-    for (i = 0; i < num_values; i++) {
-      const GValue *val = gst_value_list_get_value (video_value, i);
-
-      gst_format = gst_video_format_from_string (g_value_get_string (val));
-      if (gst_format == GST_VIDEO_FORMAT_UNKNOWN)
-        continue;
-
-      _append_drm_formats_from_video_format (context, gst_format,
-          flags, all_drm_formats);
-    }
-  }
-
-  if (all_drm_formats->len == 0) {
-    g_ptr_array_unref (all_drm_formats);
-    return FALSE;
-  }
-
-  if (all_drm_formats->len == 1) {
-    g_value_init (drm_value, G_TYPE_STRING);
-    g_value_take_string (drm_value, g_ptr_array_index (all_drm_formats, 0));
-  } else {
-    GValue item = G_VALUE_INIT;
-
-    gst_value_list_init (drm_value, all_drm_formats->len);
-
-    for (i = 0; i < all_drm_formats->len; i++) {
-      g_value_init (&item, G_TYPE_STRING);
-      g_value_take_string (&item, g_ptr_array_index (all_drm_formats, i));
-      gst_value_list_append_value (drm_value, &item);
-      g_value_unset (&item);
-    }
-  }
-
-  /* The strings are already token by the GValue, no need to free. */
-  g_ptr_array_unref (all_drm_formats);
-
-  return TRUE;
-}
-
 static gboolean
 _check_modifier (GstGLContext * context, guint32 fourcc,
     guint64 modifier, gboolean include_external)
@@ -1019,93 +912,6 @@ _set_default_formats_list (GstStructure * structure)
   gst_structure_take_value (structure, "format", &formats);
 }
 
-static GstVideoFormat
-_get_video_format_from_drm_format (GstGLContext * context,
-    const gchar * drm_format, GstGLDrmFormatFlags flags)
-{
-  GstVideoFormat gst_format;
-  guint32 fourcc;
-  guint64 modifier;
-
-  fourcc = gst_video_dma_drm_fourcc_from_string (drm_format, &modifier);
-  if (fourcc == DRM_FORMAT_INVALID)
-    return GST_VIDEO_FORMAT_UNKNOWN;
-
-  if (flags & GST_GL_DRM_FORMAT_LINEAR_ONLY && modifier != DRM_FORMAT_MOD_LINEAR)
-    return GST_VIDEO_FORMAT_UNKNOWN;
-
-  gst_format = gst_video_dma_drm_fourcc_to_format (fourcc);
-  if (gst_format == GST_VIDEO_FORMAT_UNKNOWN)
-    return GST_VIDEO_FORMAT_UNKNOWN;
-
-  if (!_check_modifier (context, fourcc, modifier, flags & GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL))
-    return GST_VIDEO_FORMAT_UNKNOWN;
-
-  return gst_format;
-}
-
-/* Given the drm formats in src GValue, collecting all the according
-   gst formats to dst GValue. Return FALSE if no valid drm formats found. */
-static gboolean
-_dma_buf_transform_drm_formats_to_gst_formats (GstGLContext * context,
-    const GValue * drm_value, GstGLDrmFormatFlags flags,
-    GValue * video_value)
-{
-  GstVideoFormat gst_format;
-  GArray *all_formats = NULL;
-  guint i;
-
-  all_formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
-
-  if (G_VALUE_HOLDS_STRING (drm_value)) {
-    gst_format = _get_video_format_from_drm_format (context,
-        g_value_get_string (drm_value), flags);
-
-    if (gst_format != GST_VIDEO_FORMAT_UNKNOWN)
-      g_array_append_val (all_formats, gst_format);
-  } else if (GST_VALUE_HOLDS_LIST (drm_value)) {
-    guint num_values = gst_value_list_get_size (drm_value);
-
-    for (i = 0; i < num_values; i++) {
-      const GValue *val = gst_value_list_get_value (drm_value, i);
-
-      gst_format = _get_video_format_from_drm_format (context,
-          g_value_get_string (val), flags);
-      if (gst_format == GST_VIDEO_FORMAT_UNKNOWN)
-        continue;
-
-      g_array_append_val (all_formats, gst_format);
-    }
-  }
-
-  if (all_formats->len == 0) {
-    g_array_unref (all_formats);
-    return FALSE;
-  }
-
-  if (all_formats->len == 1) {
-    g_value_init (video_value, G_TYPE_STRING);
-    gst_format = g_array_index (all_formats, GstVideoFormat, 0);
-    g_value_set_string (video_value, gst_video_format_to_string (gst_format));
-  } else {
-    GValue item = G_VALUE_INIT;
-
-    gst_value_list_init (video_value, all_formats->len);
-
-    for (i = 0; i < all_formats->len; i++) {
-      g_value_init (&item, G_TYPE_STRING);
-      gst_format = g_array_index (all_formats, GstVideoFormat, i);
-      g_value_set_string (&item, gst_video_format_to_string (gst_format));
-      gst_value_list_append_value (video_value, &item);
-      g_value_unset (&item);
-    }
-  }
-
-  g_array_unref (all_formats);
-
-  return TRUE;
-}
-
 static gboolean
 _dma_buf_convert_format_field_in_structure (GstGLContext * context,
     GstStructure * structure, GstPadDirection direction,
@@ -1132,7 +938,7 @@ _dma_buf_convert_format_field_in_structure (GstGLContext * context,
       val = gst_structure_get_value (structure, "format");
     }
 
-    if (_dma_buf_transform_gst_formats_to_drm_formats (context,
+    if (gst_gl_dma_buf_transform_gst_formats_to_drm_formats (context,
             val, flags, &drm_formats)) {
       gst_structure_take_value (structure, "drm-format", &drm_formats);
     } else {
@@ -1157,7 +963,7 @@ _dma_buf_convert_format_field_in_structure (GstGLContext * context,
       return TRUE;
     }
 
-    if (_dma_buf_transform_drm_formats_to_gst_formats (context,
+    if (gst_gl_dma_buf_transform_drm_formats_to_gst_formats (context,
             val, flags, &gst_formats)) {
       gst_structure_take_value (structure, "format", &gst_formats);
     } else {
@@ -1192,7 +998,8 @@ _dma_buf_check_formats_in_structure (GstGLContext * context,
     if (fourcc == DRM_FORMAT_INVALID)
       return FALSE;
 
-    if (!_check_modifier (context, fourcc,
+    if (context &&
+        !gst_gl_context_egl_format_supports_modifier (context, fourcc,
             DRM_FORMAT_MOD_LINEAR, include_external))
       return FALSE;
 
@@ -1214,7 +1021,8 @@ _dma_buf_check_formats_in_structure (GstGLContext * context,
       if (fourcc == DRM_FORMAT_INVALID)
         continue;
 
-      if (!_check_modifier (context, fourcc,
+      if (context &&
+          !gst_gl_context_egl_format_supports_modifier (context, fourcc,
               DRM_FORMAT_MOD_LINEAR, include_external))
         continue;
 

@@ -3500,6 +3500,14 @@ extension.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">any display type</doc>
       </member>
     </bitfield>
+    <bitfield name="GLDrmFormatFlags" version="1.26" glib:type-name="GstGLDrmFormatFlags" glib:get-type="gst_gl_drm_format_flags_get_type" c:type="GstGLDrmFormatFlags">
+      <member name="include_external" value="1" c:identifier="GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL" version="1.26" glib:nick="include-external" glib:name="GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.h">include external-only formats</doc>
+      </member>
+      <member name="linear_only" value="2" c:identifier="GST_GL_DRM_FORMAT_LINEAR_ONLY" version="1.26" glib:nick="linear-only" glib:name="GST_GL_DRM_FORMAT_LINEAR_ONLY">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.h">only include formats with linear modifier</doc>
+      </member>
+    </bitfield>
     <class name="GLFilter" c:symbol-prefix="gl_filter" c:type="GstGLFilter" parent="GLBaseFilter" glib:type-name="GstGLFilter" glib:get-type="gst_gl_filter_get_type" glib:type-struct="GLFilterClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglfilter.c">#GstGLFilter helps to implement simple OpenGL filter elements taking a
 single input and producing a single output with a #GstGLFramebuffer</doc>
@@ -10910,6 +10918,62 @@ multiple times.  This must be called before any other #GstGLBuffer operation.</d
         </parameter>
       </parameters>
     </function-macro>
+    <function name="gl_dma_buf_transform_drm_formats_to_gst_formats" c:identifier="gst_gl_dma_buf_transform_drm_formats_to_gst_formats" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.c">Given the DRM formats in @src #GValue, collect corresponding GST formats to
+@dst #GValue. This function returns %FALSE if  the context is not an EGL
+context.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.c">whether any valid GST video formats were found and stored in @dst</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.c">a #GstContext</doc>
+          <type name="GLContext" c:type="GstGLContext*"/>
+        </parameter>
+        <parameter name="src" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.c">value of "drm-format" field in #GstCaps as #GValue</doc>
+          <type name="GObject.Value" c:type="const GValue*"/>
+        </parameter>
+        <parameter name="flags" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.c">transformation flags</doc>
+          <type name="GLDrmFormatFlags" c:type="GstGLDrmFormatFlags"/>
+        </parameter>
+        <parameter name="dst" direction="inout" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.c">empty destination #GValue</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="gl_dma_buf_transform_gst_formats_to_drm_formats" c:identifier="gst_gl_dma_buf_transform_gst_formats_to_drm_formats" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.c">Given the video formats in @src #GValue, collect corresponding drm formats
+supported by @context into @dst #GValue. This function returns %FALSE if
+the context is not an EGL context.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.c">whether any valid drm formats were found and stored in @dst</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.c">a #GstContext</doc>
+          <type name="GLContext" c:type="GstGLContext*"/>
+        </parameter>
+        <parameter name="src" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.c">value of "format" field in #GstCaps as #GValue</doc>
+          <type name="GObject.Value" c:type="const GValue*"/>
+        </parameter>
+        <parameter name="flags" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.c">transformation flags</doc>
+          <type name="GLDrmFormatFlags" c:type="GstGLDrmFormatFlags"/>
+        </parameter>
+        <parameter name="dst" direction="inout" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.c">empty destination #GValue</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="gl_element_propagate_display_context" c:identifier="gst_gl_element_propagate_display_context">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.h"/>
       <return-value transfer-ownership="none">
