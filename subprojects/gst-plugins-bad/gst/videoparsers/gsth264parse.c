@@ -3270,7 +3270,8 @@ gst_h264_parse_create_pic_timing_sei (GstH264Parse * h264parse,
         tim->counting_type = 6;
     }
 
-    tim->discontinuity_flag = 0;
+    tim->discontinuity_flag =
+        !!(tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DISCONT);
     tim->cnt_dropped_flag = 0;
     tim->n_frames = tc->frames;
 
@@ -3576,6 +3577,9 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
       if (!h264parse->pic_timing_sei.clock_timestamp_flag[i])
         continue;
+
+      if (tim->discontinuity_flag)
+        flags |= GST_VIDEO_TIME_CODE_FLAGS_DISCONT;
 
       /* Table D-1 */
       switch (h264parse->sei_pic_struct) {
