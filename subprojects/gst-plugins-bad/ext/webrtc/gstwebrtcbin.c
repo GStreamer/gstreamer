@@ -4820,7 +4820,7 @@ out:
   webrtc->priv->last_generated_offer = NULL;
   if (webrtc->priv->last_generated_answer)
     gst_webrtc_session_description_free (webrtc->priv->last_generated_answer);
-  {
+  if (ret) {
     GstSDPMessage *copy;
     gst_sdp_message_copy (ret, &copy);
     webrtc->priv->last_generated_answer =
