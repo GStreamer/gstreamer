@@ -28,6 +28,7 @@
 #include <string.h>
 #include <map>
 #include <memory>
+#include <mutex>
 
 #ifdef G_OS_WIN32
 #include <windows.h>
@@ -39,6 +40,13 @@ GST_DEBUG_CATEGORY_STATIC (cuda_allocator_debug);
 #define GST_CAT_DEFAULT cuda_allocator_debug
 
 static GstAllocator *_gst_cuda_allocator = nullptr;
+
+/* *INDENT-OFF* */
+static std::recursive_mutex _callback_lock;
+/* *INDENT-ON* */
+static GstCudaMemoryAllocatorNeedPoolCallback _need_pool_callback = nullptr;
+static gpointer _alloc_callback_user_data = nullptr;
+static GDestroyNotify _alloc_callback_notify = nullptr;
 
 GType
 gst_cuda_memory_alloc_method_get_type (void)
@@ -292,7 +300,8 @@ do_align (size_t value, size_t align)
 static GstMemory *
 gst_cuda_allocator_alloc_internal (GstCudaAllocator * self,
     GstCudaContext * context, GstCudaStream * stream, const GstVideoInfo * info,
-    guint width_in_bytes, guint alloc_height, gboolean stream_ordered)
+    guint width_in_bytes, guint alloc_height, gboolean stream_ordered,
+    GstCudaMemoryPool * pool)
 {
   GstCudaMemoryPrivate *priv;
   GstCudaMemory *mem;
@@ -310,8 +319,14 @@ gst_cuda_allocator_alloc_internal (GstCudaAllocator * self,
     g_assert (stream_handle);
 
     pitch = do_align (width_in_bytes, texture_align);
-    ret = gst_cuda_result (CuMemAllocAsync (&data, pitch * alloc_height,
-            stream_handle));
+    if (pool) {
+      ret = gst_cuda_result (CuMemAllocFromPoolAsync (&data,
+              pitch * alloc_height, gst_cuda_memory_pool_get_handle (pool),
+              stream_handle));
+    } else {
+      ret = gst_cuda_result (CuMemAllocAsync (&data, pitch * alloc_height,
+              stream_handle));
+    }
 
     if (ret)
       ret = gst_cuda_result (CuStreamSynchronize (stream_handle));
@@ -605,7 +620,7 @@ cuda_mem_copy (GstMemory * mem, gssize offset, gssize size)
   if (!copy) {
     copy = gst_cuda_allocator_alloc_internal (self, context, stream,
         &src_mem->info, src_mem->priv->width_in_bytes, src_mem->priv->height,
-        FALSE);
+        FALSE, nullptr);
   }
 
   if (!copy) {
@@ -1148,7 +1163,7 @@ gst_cuda_allocator_alloc (GstCudaAllocator * allocator,
   alloc_height = gst_cuda_allocator_calculate_alloc_height (info);
 
   return gst_cuda_allocator_alloc_internal (allocator, context, stream,
-      info, info->stride[0], alloc_height, FALSE);
+      info, info->stride[0], alloc_height, FALSE, nullptr);
 }
 
 /**
@@ -1441,6 +1456,8 @@ struct _GstCudaPoolAllocatorPrivate
   guint cur_mems;
   gboolean flushing;
   gboolean stream_ordered_alloc;
+
+  GstCudaMemoryPool *mem_pool;
 };
 
 static void gst_cuda_pool_allocator_finalize (GObject * object);
@@ -1503,6 +1520,7 @@ gst_cuda_pool_allocator_finalize (GObject * object)
   gst_atomic_queue_unref (priv->queue);
   gst_poll_free (priv->poll);
   g_rec_mutex_clear (&priv->lock);
+  gst_clear_cuda_memory_pool (&priv->mem_pool);
 
   gst_clear_cuda_stream (&self->stream);
   gst_clear_object (&self->context);
@@ -1516,6 +1534,14 @@ gst_cuda_pool_allocator_start (GstCudaPoolAllocator * self)
   GstCudaPoolAllocatorPrivate *priv = self->priv;
 
   priv->started = TRUE;
+
+  if (priv->stream_ordered_alloc && !priv->mem_pool) {
+    std::lock_guard < std::recursive_mutex > lk (_callback_lock);
+    if (_need_pool_callback) {
+      priv->mem_pool = _need_pool_callback (GST_CUDA_ALLOCATOR (self),
+          self->context, _alloc_callback_user_data);
+    }
+  }
 
   return TRUE;
 }
@@ -1744,7 +1770,8 @@ gst_cuda_pool_allocator_alloc (GstCudaPoolAllocator * self, GstMemory ** mem)
     auto allocator = (GstCudaAllocator *) _gst_cuda_allocator;
     new_mem = gst_cuda_allocator_alloc_internal (allocator,
         self->context, self->stream, &self->info, self->info.stride[0],
-        gst_cuda_allocator_calculate_alloc_height (&self->info), TRUE);
+        gst_cuda_allocator_calculate_alloc_height (&self->info), TRUE,
+        priv->mem_pool);
   } else {
     new_mem = gst_cuda_allocator_alloc (nullptr,
         self->context, self->stream, &self->info);
@@ -1990,4 +2017,28 @@ gst_cuda_pool_allocator_acquire_memory (GstCudaPoolAllocator * allocator,
   }
 
   return result;
+}
+
+/**
+ * gst_cuda_register_allocator_need_pool_callback:
+ * @callback: the callbacks
+ * @user_data: an user_data argument for the callback
+ * @notify: a destory notify function
+ *
+ * Sets global need-pool callback function
+ *
+ * Since: 1.26
+ */
+void gst_cuda_register_allocator_need_pool_callback
+    (GstCudaMemoryAllocatorNeedPoolCallback callback, gpointer user_data,
+    GDestroyNotify notify)
+{
+  std::lock_guard < std::recursive_mutex > lk (_callback_lock);
+
+  if (_alloc_callback_notify)
+    _alloc_callback_notify (_alloc_callback_user_data);
+
+  _need_pool_callback = callback;
+  _alloc_callback_user_data = user_data;
+  _alloc_callback_notify = notify;
 }

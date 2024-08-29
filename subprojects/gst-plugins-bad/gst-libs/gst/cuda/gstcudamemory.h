@@ -25,6 +25,7 @@
 #include <gst/cuda/cuda-prelude.h>
 #include <gst/cuda/gstcudacontext.h>
 #include <gst/cuda/gstcudastream.h>
+#include <gst/cuda/gstcudamemorypool.h>
 
 G_BEGIN_DECLS
 
@@ -182,6 +183,24 @@ GType gst_cuda_memory_alloc_method_get_type (void);
  * Since: 1.26
  */
 #define GST_CUDA_ALLOCATOR_OPT_STREAM_ORDERED "GstCudaAllocator.stream-ordered"
+
+/**
+ * GstCudaMemoryAllocatorNeedPoolCallback: (skip)
+ * @allocator: a #GstCudaAllocator
+ * @context: a #GstCudaContext
+ * @user_data: the user data
+ *
+ * Called to request cuda memory pool object. If callee returns a memory pool,
+ * @allocator will allocate memory via cuMemAllocFromPoolAsync.
+ * Otherwise device default memory pool will be used with cuMemAllocAsync method
+ *
+ * Returns: (transfer full) (nullable): Configured #GstCudaMemoryPool object
+ *
+ * Since: 1.26
+ */
+typedef GstCudaMemoryPool * (*GstCudaMemoryAllocatorNeedPoolCallback) (GstCudaAllocator * allocator,
+                                                                       GstCudaContext * context,
+                                                                       gpointer user_data);
 
 /**
  * GstCudaMemory:
@@ -355,6 +374,11 @@ GstCudaPoolAllocator * gst_cuda_pool_allocator_new_full (GstCudaContext * contex
 GST_CUDA_API
 GstFlowReturn          gst_cuda_pool_allocator_acquire_memory (GstCudaPoolAllocator * allocator,
                                                                GstMemory ** memory);
+
+GST_CUDA_API
+void                   gst_cuda_register_allocator_need_pool_callback (GstCudaMemoryAllocatorNeedPoolCallback callback,
+                                                                       gpointer user_data,
+                                                                       GDestroyNotify notify);
 
 G_END_DECLS
 
