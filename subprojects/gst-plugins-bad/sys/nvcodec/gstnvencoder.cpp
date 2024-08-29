@@ -757,6 +757,9 @@ gst_nv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   if (use_cuda_pool && priv->stream) {
     /* Set our stream on buffer pool config so that CUstream can be shared */
     gst_buffer_pool_config_set_cuda_stream (config, priv->stream);
+
+    /* Encoder does not seem to support stream ordered allocation */
+    gst_buffer_pool_config_set_cuda_stream_ordered_alloc (config, FALSE);
   }
 
   if (!gst_buffer_pool_set_config (pool, config)) {
@@ -1048,6 +1051,9 @@ gst_nv_encoder_create_pool (GstNvEncoder * self, GstVideoCodecState * state)
       GST_VIDEO_INFO_SIZE (&state->info), 0, 0);
   if (priv->selected_device_mode == GST_NV_ENCODER_DEVICE_CUDA && priv->stream)
     gst_buffer_pool_config_set_cuda_stream (config, priv->stream);
+
+  /* Encoder does not seem to support stream ordered allocation */
+  gst_buffer_pool_config_set_cuda_stream_ordered_alloc (config, FALSE);
 
   if (!gst_buffer_pool_set_config (pool, config)) {
     GST_ERROR_OBJECT (self, "Failed to set pool config");
@@ -1559,11 +1565,82 @@ gst_nv_encoder_prepare_task_input_cuda (GstNvEncoder * self,
     return gst_nv_encoder_copy_system (self, info, buffer, task);
   }
 
+  if (gst_cuda_memory_is_stream_ordered (mem)) {
+    GstBuffer *copy = nullptr;
+    GstVideoFrame in_frame, out_frame;
+    CUDA_MEMCPY2D copy_params = { };
+
+    stream = gst_cuda_memory_get_stream (cmem);
+
+    GST_LOG_OBJECT (self, "Stream ordered allocation needs memory copy");
+
+    gst_buffer_pool_acquire_buffer (priv->internal_pool, &copy, nullptr);
+    if (!copy) {
+      GST_ERROR_OBJECT (self, "Couldn't allocate internal buffer");
+      return GST_FLOW_ERROR;
+    }
+
+    if (!gst_video_frame_map (&in_frame, info, buffer,
+            (GstMapFlags) (GST_MAP_READ | GST_MAP_CUDA))) {
+      GST_ERROR_OBJECT (self, "Couldn't map input buffer");
+      gst_buffer_unref (copy);
+      return GST_FLOW_ERROR;
+    }
+
+    if (!gst_video_frame_map (&out_frame, info, copy,
+            (GstMapFlags) (GST_MAP_WRITE | GST_MAP_CUDA))) {
+      GST_ERROR_OBJECT (self, "Couldn't map output buffer");
+      gst_video_frame_unmap (&in_frame);
+      gst_buffer_unref (copy);
+      return GST_FLOW_ERROR;
+    }
+
+    for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&in_frame); i++) {
+      copy_params.srcMemoryType = CU_MEMORYTYPE_DEVICE;
+      copy_params.srcDevice = (CUdeviceptr)
+          GST_VIDEO_FRAME_PLANE_DATA (&in_frame, i);
+      copy_params.srcPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, i);
+
+      copy_params.dstMemoryType = CU_MEMORYTYPE_DEVICE;
+      copy_params.dstDevice = (CUdeviceptr)
+          GST_VIDEO_FRAME_PLANE_DATA (&out_frame, i);
+      copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, i);
+
+      copy_params.WidthInBytes = GST_VIDEO_INFO_COMP_WIDTH (info, i) *
+          GST_VIDEO_INFO_COMP_PSTRIDE (info, i);
+      copy_params.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
+
+      auto cuda_ret = CuMemcpy2DAsync (&copy_params,
+          gst_cuda_stream_get_handle (stream));
+      if (!gst_cuda_result (cuda_ret)) {
+        GST_ERROR_OBJECT (self, "Copy failed");
+        gst_video_frame_unmap (&in_frame);
+        gst_video_frame_unmap (&out_frame);
+
+        gst_buffer_unref (copy);
+        return GST_FLOW_ERROR;
+      }
+    }
+
+    gst_video_frame_unmap (&in_frame);
+    gst_video_frame_unmap (&out_frame);
+
+    if (stream && stream != priv->stream)
+      CuStreamSynchronize (gst_cuda_stream_get_handle (stream));
+
+    buffer = copy;
+    mem = gst_buffer_peek_memory (copy, 0);
+    cmem = GST_CUDA_MEMORY_CAST (mem);
+  } else {
+    buffer = gst_buffer_ref (buffer);
+  }
+
   status = object->AcquireResource (mem, &resource);
 
   if (status != NV_ENC_SUCCESS) {
     GST_ERROR_OBJECT (self, "Failed to get resource, status %"
         GST_NVENC_STATUS_FORMAT, GST_NVENC_STATUS_ARGS (status));
+    gst_buffer_unref (buffer);
 
     return GST_FLOW_ERROR;
   }
@@ -1574,7 +1651,7 @@ gst_nv_encoder_prepare_task_input_cuda (GstNvEncoder * self,
     gst_cuda_memory_sync (cmem);
   }
 
-  gst_nv_enc_task_set_resource (task, gst_buffer_ref (buffer), resource);
+  gst_nv_enc_task_set_resource (task, buffer, resource);
 
   return GST_FLOW_OK;
 }
