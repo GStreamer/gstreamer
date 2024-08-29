@@ -724,6 +724,7 @@ check video formats:
     MESON_ARGS: "${SIMPLE_BUILD}"
     BUILD_GST_DEBUG: "-Dgstreamer:gst_debug=true"
     GST_WERROR: "true"
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
     VIDEO_TOKEN: "GST_VIDEO_FORMATS_ALL_STR"
     VIDEO_HEADER: "subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"
     WL_TOKEN: "GST_WL_VIDEO_FORMATS"
