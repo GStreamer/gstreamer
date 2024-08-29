@@ -4992,6 +4992,58 @@ GST_START_TEST (test_rtp_header_extension_sendonly_recvonly_pair)
 
 GST_END_TEST;
 
+GST_START_TEST (test_invalid_bundle_in_pending_remote_description)
+{
+  GstPromise *promise;
+  struct test_webrtc *t = test_webrtc_new ();
+  const gchar *invalid_bundle = "v=0\r\n\
+o=thisisadapterortc 2683876491 2 IN IP4 127.0.0.1\r\n\
+s=-\r\n\
+t=0 0\r\n\
+a=setup:actpass\r\n\
+a=fingerprint:sha-256 95:B3:DB:24:83:3B:9E:3F:B0:AD:93:2D:EF:73:C9:D2:1C:68:EA:19:C6:F8:73:BA:9A:FA:34:A9:64:69:C0:D8\r\n\
+a=ice-ufrag:ERn4TYI2HSbtKrzQNCdp9wD2EHt4wM2O\r\n\
+a=ice-pwd:QxEZFuCPRwIURJPMSYNNYFr2XFNgqNkG\r\n\
+a=group:BUNDLE \r\n\
+";
+  GstSDPMessage *sdp;
+  const GstStructure *reply;
+  GError *error = NULL;
+
+  t->on_negotiation_needed = NULL;
+  t->on_offer_created = NULL;
+  t->on_answer_created = NULL;
+
+  gst_sdp_message_new_from_text (invalid_bundle, &sdp);
+  GstWebRTCSessionDescription *desc =
+      gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_OFFER,
+      sdp);
+  gst_element_set_state (t->webrtc1, GST_STATE_READY);
+
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc1, "set-remote-description", desc, promise);
+  gst_promise_wait (promise);
+  gst_promise_unref (promise);
+  gst_webrtc_session_description_free (desc);
+
+  /* Creating an answer from SDP with invalid BUNDLE group should trigger no crash. */
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc1, "create-answer", NULL, promise);
+  gst_promise_wait (promise);
+  reply = gst_promise_get_reply (promise);
+  fail_unless (gst_structure_get (reply, "error", G_TYPE_ERROR, &error, NULL));
+  fail_unless (g_error_matches (error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR));
+  fail_unless_equals_string (error->message,
+      "Invalid format for BUNDLE group, expected at least one mid (BUNDLE )");
+  g_clear_error (&error);
+  gst_promise_unref (promise);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static void
 new_jitterbuffer_set_fast_start (GstElement * rtpbin,
     GstElement * rtpjitterbuffer, guint session_id, guint ssrc,
@@ -6527,6 +6579,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_ice_end_of_candidates);
     tcase_add_test (tc, test_sdp_session_setup_attribute);
     tcase_add_test (tc, test_rtp_header_extension_sendonly_recvonly_pair);
+    tcase_add_test (tc, test_invalid_bundle_in_pending_remote_description);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_create_two_channels);
