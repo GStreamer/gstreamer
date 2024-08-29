@@ -133,8 +133,14 @@ gst_cuda_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     priv->alloc = gst_cuda_pool_allocator_new_for_virtual_memory (self->context,
         priv->stream, &info, &priv->prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM);
   } else {
-    priv->alloc = gst_cuda_pool_allocator_new (self->context, priv->stream,
-        &info);
+    gboolean stream_ordered =
+        gst_buffer_pool_config_get_cuda_stream_ordered_alloc (config);
+    GstStructure *alloc_config = gst_structure_new ("alloc-config",
+        GST_CUDA_ALLOCATOR_OPT_STREAM_ORDERED, G_TYPE_BOOLEAN, stream_ordered,
+        nullptr);
+
+    priv->alloc = gst_cuda_pool_allocator_new_full (self->context, priv->stream,
+        &info, alloc_config);
   }
 
   if (!priv->alloc) {
@@ -332,6 +338,49 @@ gst_buffer_pool_config_set_cuda_alloc_method (GstStructure * config,
 
   gst_structure_set (config, "cuda-alloc-method",
       GST_TYPE_CUDA_MEMORY_ALLOC_METHOD, method, nullptr);
+}
+
+/**
+ * gst_buffer_pool_config_get_cuda_stream_ordered_alloc:
+ * @config: a buffer pool config
+ *
+ * Returns: %TRUE if stream ordered allocation is enabled
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_buffer_pool_config_get_cuda_stream_ordered_alloc (GstStructure * config)
+{
+  gboolean stream_ordered = FALSE;
+
+  g_return_val_if_fail (config, FALSE);
+
+  if (!gst_structure_get_boolean (config,
+          "cuda-stream-ordered-alloc", &stream_ordered)) {
+    /* Disable stream-ordered alloc by default */
+    return FALSE;
+  }
+
+  return stream_ordered;
+}
+
+/**
+ * gst_buffer_pool_config_set_cuda_stream_ordered_alloc:
+ * @config: a buffer pool config
+ * @stream_ordered: whether stream ordered allocation is allowed
+ *
+ * Sets stream ordered allocation option
+ *
+ * Since: 1.26
+ */
+void
+gst_buffer_pool_config_set_cuda_stream_ordered_alloc (GstStructure * config,
+    gboolean stream_ordered)
+{
+  g_return_if_fail (config);
+
+  gst_structure_set (config, "cuda-stream-ordered-alloc", G_TYPE_BOOLEAN,
+      stream_ordered, nullptr);
 }
 
 static void
