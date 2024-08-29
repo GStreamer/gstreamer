@@ -401,7 +401,7 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_end_current_clip       (GESBaseXmlFo
 
 G_GNUC_INTERNAL void ges_xml_formatter_deinit                      (void);
 
-G_GNUC_INTERNAL gboolean set_property_foreach                   (GQuark field_id,
+G_GNUC_INTERNAL gboolean set_property_foreach                   (const GstIdStr *fieldname,
                                                                  const GValue * value,
                                                                  GObject * object);
 

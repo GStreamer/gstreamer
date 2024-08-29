@@ -301,12 +301,12 @@ _incompatible_fields_info_set_found (StructureIncompatibleFieldsInfo * info)
 }
 
 static gboolean
-_find_structure_incompatible_fields (GQuark field_id, const GValue * value,
-    StructureIncompatibleFieldsInfo * info)
+_find_structure_incompatible_fields (const GstIdStr * fieldname,
+    const GValue * value, StructureIncompatibleFieldsInfo * info)
 {
   gchar *value_str, *filter_str;
-  const GValue *filter_value = gst_structure_id_get_value (info->filter,
-      field_id);
+  const GValue *filter_value = gst_structure_id_str_get_value (info->filter,
+      fieldname);
 
   if (!filter_value)
     return TRUE;
@@ -319,7 +319,7 @@ _find_structure_incompatible_fields (GQuark field_id, const GValue * value,
     g_string_append_printf (info->str,
         "\n    -> Field '%s' downstream value from structure %d '(%s)%s' can't intersect with"
         " filter value from structure number %d '(%s)%s' because of their types.",
-        g_quark_to_string (field_id), info->caps_struct_num,
+        gst_id_str_as_str (fieldname), info->caps_struct_num,
         G_VALUE_TYPE_NAME (value), value_str, info->filter_caps_struct_num,
         G_VALUE_TYPE_NAME (filter_value), filter_str);
 
@@ -337,7 +337,7 @@ _find_structure_incompatible_fields (GQuark field_id, const GValue * value,
   g_string_append_printf (info->str,
       "\n    -> Field '%s' downstream value from structure %d '(%s)%s' can't intersect with"
       " filter value from structure number %d '(%s)%s'",
-      g_quark_to_string (field_id), info->caps_struct_num,
+      gst_id_str_as_str (fieldname), info->caps_struct_num,
       G_VALUE_TYPE_NAME (value), value_str, info->filter_caps_struct_num,
       G_VALUE_TYPE_NAME (filter_value), filter_str);
 
@@ -411,8 +411,9 @@ _append_query_caps_failure_details (GstValidatePadMonitor * monitor,
         continue;
       }
 
-      gst_structure_foreach (possible_struct,
-          (GstStructureForeachFunc) _find_structure_incompatible_fields, &info);
+      gst_structure_foreach_id_str (possible_struct,
+          (GstStructureForeachIdStrFunc) _find_structure_incompatible_fields,
+          &info);
 
       if (info.found)
         found = TRUE;
@@ -481,8 +482,9 @@ _append_accept_caps_failure_details (GstValidatePadMonitor * monitor,
         continue;
       }
 
-      gst_structure_foreach (refused_struct,
-          (GstStructureForeachFunc) _find_structure_incompatible_fields, &info);
+      gst_structure_foreach_id_str (refused_struct,
+          (GstStructureForeachIdStrFunc) _find_structure_incompatible_fields,
+          &info);
     }
   }
 

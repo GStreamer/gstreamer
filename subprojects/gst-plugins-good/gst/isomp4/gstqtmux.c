@@ -5714,20 +5714,19 @@ gst_qt_mux_aggregate (GstAggregator * agg, gboolean timeout)
 }
 
 static gboolean
-field_is_in (GQuark field_id, const gchar * fieldname, ...)
+field_is_in (const GstIdStr * fieldname, const gchar * name, ...)
 {
   va_list varargs;
-  gchar *name = (gchar *) fieldname;
 
-  va_start (varargs, fieldname);
+  va_start (varargs, name);
   while (name) {
-    if (field_id == g_quark_from_static_string (name)) {
+    if (gst_id_str_is_equal_to_str (fieldname, name)) {
       va_end (varargs);
 
       return TRUE;
     }
 
-    name = va_arg (varargs, char *);
+    name = va_arg (varargs, const char *);
   }
   va_end (varargs);
 
@@ -5735,15 +5734,16 @@ field_is_in (GQuark field_id, const gchar * fieldname, ...)
 }
 
 static gboolean
-check_field (GQuark field_id, const GValue * value, gpointer user_data)
+check_field (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
 {
   GstStructure *structure = (GstStructure *) user_data;
-  const GValue *other = gst_structure_id_get_value (structure, field_id);
+  const GValue *other = gst_structure_id_str_get_value (structure, fieldname);
   const gchar *name = gst_structure_get_name (structure);
 
   if (g_str_has_prefix (name, "video/")) {
     /* ignore framerate with video caps */
-    if (g_strcmp0 (g_quark_to_string (field_id), "framerate") == 0)
+    if (gst_id_str_is_equal_to_str (fieldname, "framerate"))
       return TRUE;
   }
 
@@ -5753,7 +5753,7 @@ check_field (GQuark field_id, const GValue * value, gpointer user_data)
      * will contain updated tier / level / profiles, which means we do
      * not need to fail renegotiation when those change.
      */
-    if (field_is_in (field_id,
+    if (field_is_in (fieldname,
             "codec_data", "tier", "level", "profile",
             "chroma-site", "chroma-format", "bit-depth-luma", "colorimetry",
             /* TODO: this may require a separate track but gst, vlc, ffmpeg and
@@ -5765,7 +5765,7 @@ check_field (GQuark field_id, const GValue * value, gpointer user_data)
   }
 
   if (other == NULL) {
-    if (field_is_in (field_id, "interlace-mode", NULL) &&
+    if (field_is_in (fieldname, "interlace-mode", NULL) &&
         !g_strcmp0 (g_value_get_string (value), "progressive")) {
       return TRUE;
     }
@@ -5785,7 +5785,7 @@ gst_qtmux_caps_is_subset_full (GstQTMux * qtmux, GstCaps * subset,
   if (!gst_structure_has_name (sup_s, gst_structure_get_name (sub_s)))
     return FALSE;
 
-  return gst_structure_foreach (sub_s, check_field, sup_s);
+  return gst_structure_foreach_id_str (sub_s, check_field, sup_s);
 }
 
 /* will unref @qtmux */

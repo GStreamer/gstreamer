@@ -940,10 +940,11 @@ gst_soup_http_src_add_range_header (GstSoupHTTPSrc * src, guint64 offset,
 }
 
 static gboolean
-_append_extra_header (GQuark field_id, const GValue * value, gpointer user_data)
+_append_extra_header (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
 {
   GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (user_data);
-  const gchar *field_name = g_quark_to_string (field_id);
+  const gchar *field_name = gst_id_str_as_str (fieldname);
   gchar *field_content = NULL;
   SoupMessageHeaders *request_headers =
       _soup_message_get_request_headers (src->msg);
@@ -975,7 +976,7 @@ _append_extra_header (GQuark field_id, const GValue * value, gpointer user_data)
 }
 
 static gboolean
-_append_extra_headers (GQuark field_id, const GValue * value,
+_append_extra_headers (const GstIdStr * fieldname, const GValue * value,
     gpointer user_data)
 {
   if (G_VALUE_TYPE (value) == GST_TYPE_ARRAY) {
@@ -985,7 +986,7 @@ _append_extra_headers (GQuark field_id, const GValue * value,
     for (i = 0; i < n; i++) {
       const GValue *v = gst_value_array_get_value (value, i);
 
-      if (!_append_extra_header (field_id, v, user_data))
+      if (!_append_extra_header (fieldname, v, user_data))
         return FALSE;
     }
   } else if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
@@ -995,11 +996,11 @@ _append_extra_headers (GQuark field_id, const GValue * value,
     for (i = 0; i < n; i++) {
       const GValue *v = gst_value_list_get_value (value, i);
 
-      if (!_append_extra_header (field_id, v, user_data))
+      if (!_append_extra_header (fieldname, v, user_data))
         return FALSE;
     }
   } else {
-    return _append_extra_header (field_id, value, user_data);
+    return _append_extra_header (fieldname, value, user_data);
   }
 
   return TRUE;
@@ -1012,7 +1013,8 @@ gst_soup_http_src_add_extra_headers (GstSoupHTTPSrc * src)
   if (!src->extra_headers)
     return TRUE;
 
-  return gst_structure_foreach (src->extra_headers, _append_extra_headers, src);
+  return gst_structure_foreach_id_str (src->extra_headers,
+      _append_extra_headers, src);
 }
 
 static gpointer

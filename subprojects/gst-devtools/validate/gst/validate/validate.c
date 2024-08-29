@@ -138,9 +138,10 @@ gst_structure_validate_name (const gchar * name)
 }
 
 static gboolean
-_set_vars_func (GQuark field_id, const GValue * value, GstStructure * vars)
+_set_vars_func (const GstIdStr * fieldname, const GValue * value,
+    GstStructure * vars)
 {
-  gst_structure_id_set_value (vars, field_id, value);
+  gst_structure_id_str_set_value (vars, fieldname, value);
 
   return TRUE;
 }
@@ -199,8 +200,8 @@ create_config (const gchar * config)
 
     if (gst_structure_has_field (structure, "set-vars")) {
       gst_structure_remove_field (structure, "set-vars");
-      gst_structure_foreach (structure,
-          (GstStructureForeachFunc) _set_vars_func, local_vars);
+      gst_structure_foreach_id_str (structure,
+          (GstStructureForeachIdStrFunc) _set_vars_func, local_vars);
       gst_structure_free (structure);
     } else if (!loaded_globals
         && gst_structure_has_name (structure, "set-globals")) {

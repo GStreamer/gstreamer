@@ -402,7 +402,7 @@ static void update_text_offset (GstPlaySink * playsink);
 
 static gboolean gst_play_sink_do_reconfigure (GstPlaySink * playsink);
 
-static GQuark _playsink_reset_segment_event_marker_id = 0;
+#define PLAYSINK_RESET_SEGMENT_EVENT_MARKER "gst-playsink-reset-segment-event-marker"
 
 /* static guint gst_play_sink_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -670,9 +670,6 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
 
   klass->reconfigure = GST_DEBUG_FUNCPTR (gst_play_sink_reconfigure);
   klass->convert_sample = GST_DEBUG_FUNCPTR (gst_play_sink_convert_sample);
-
-  _playsink_reset_segment_event_marker_id =
-      g_quark_from_static_string ("gst-playsink-reset-segment-event-marker");
 
   g_type_class_ref (GST_TYPE_STREAM_SYNCHRONIZER);
   g_type_class_ref (GST_TYPE_COLOR_BALANCE_CHANNEL);
@@ -2248,8 +2245,8 @@ gst_play_sink_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer,
     if (segment_event)
       gst_event_set_seqnum (event, gst_event_get_seqnum (segment_event));
     structure = gst_event_writable_structure (event);
-    gst_structure_id_set (structure,
-        _playsink_reset_segment_event_marker_id, G_TYPE_BOOLEAN, TRUE, NULL);
+    gst_structure_set_static_str (structure,
+        PLAYSINK_RESET_SEGMENT_EVENT_MARKER, G_TYPE_BOOLEAN, TRUE, NULL);
 
     GST_DEBUG_OBJECT (pad,
         "Pushing %s flush-start event with reset segment marker set: %"
@@ -2262,8 +2259,8 @@ gst_play_sink_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer,
     if (segment_event)
       gst_event_set_seqnum (event, gst_event_get_seqnum (segment_event));
     structure = gst_event_writable_structure (event);
-    gst_structure_id_set (structure,
-        _playsink_reset_segment_event_marker_id, G_TYPE_BOOLEAN, TRUE, NULL);
+    gst_structure_set_static_str (structure,
+        PLAYSINK_RESET_SEGMENT_EVENT_MARKER, G_TYPE_BOOLEAN, TRUE, NULL);
 
     GST_DEBUG_OBJECT (pad,
         "Pushing %s flush-stop event with reset segment marker set: %"
@@ -2275,8 +2272,8 @@ gst_play_sink_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer,
     if (segment_event) {
       event = gst_event_copy (segment_event);
       structure = gst_event_writable_structure (event);
-      gst_structure_id_set (structure,
-          _playsink_reset_segment_event_marker_id, G_TYPE_BOOLEAN, TRUE, NULL);
+      gst_structure_set_static_str (structure,
+          PLAYSINK_RESET_SEGMENT_EVENT_MARKER, G_TYPE_BOOLEAN, TRUE, NULL);
 
       GST_DEBUG_OBJECT (playsink,
           "Pushing segment event with reset "
@@ -2424,8 +2421,8 @@ gst_play_sink_text_src_event (GstPad * pad, GstObject * parent,
   structure = gst_event_get_structure (event);
 
   if (structure &&
-      gst_structure_id_has_field (structure,
-          _playsink_reset_segment_event_marker_id)) {
+      gst_structure_has_field (structure,
+          PLAYSINK_RESET_SEGMENT_EVENT_MARKER)) {
     /* the events marked with a reset segment marker
      * are sent internally to reset the queue and
      * must be dropped here */

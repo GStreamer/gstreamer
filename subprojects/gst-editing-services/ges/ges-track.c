@@ -305,9 +305,10 @@ track_resort_and_fill_gaps (GESTrack * track)
 }
 
 static gboolean
-update_field (GQuark field_id, const GValue * value, GstStructure * original)
+update_field (const GstIdStr * fieldname, const GValue * value,
+    GstStructure * original)
 {
-  gst_structure_id_set_value (original, field_id, value);
+  gst_structure_id_str_set_value (original, fieldname, value);
   return TRUE;
 }
 
@@ -1094,8 +1095,8 @@ ges_track_update_restriction_caps (GESTrack * self, const GstCaps * caps)
 
     if (gst_caps_get_size (new_restriction_caps) > i) {
       GstStructure *original = gst_caps_get_structure (new_restriction_caps, i);
-      gst_structure_foreach (new, (GstStructureForeachFunc) update_field,
-          original);
+      gst_structure_foreach_id_str (new,
+          (GstStructureForeachIdStrFunc) update_field, original);
     } else
       gst_caps_append_structure (new_restriction_caps,
           gst_structure_copy (new));

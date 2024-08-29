@@ -977,7 +977,8 @@ gst_matroska_mux_set_codec_id (GstMatroskaTrackContext * context,
 }
 
 static gboolean
-check_field (GQuark field_id, const GValue * value, gpointer user_data)
+check_field (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
 {
   GstStructure *structure = (GstStructure *) user_data;
   const gchar *name = gst_structure_get_name (structure);
@@ -994,48 +995,48 @@ check_field (GQuark field_id, const GValue * value, gpointer user_data)
      *
      * We don't warn here as we already warned elsewhere.
      */
-    if (field_id == g_quark_from_static_string ("codec_data")) {
+    if (gst_id_str_is_equal_to_str (fieldname, "codec_data")) {
       return FALSE;
-    } else if (field_id == g_quark_from_static_string ("tier")) {
+    } else if (gst_id_str_is_equal_to_str (fieldname, "tier")) {
       return FALSE;
-    } else if (field_id == g_quark_from_static_string ("profile")) {
+    } else if (gst_id_str_is_equal_to_str (fieldname, "profile")) {
       return FALSE;
-    } else if (field_id == g_quark_from_static_string ("level")) {
+    } else if (gst_id_str_is_equal_to_str (fieldname, "level")) {
       return FALSE;
-    } else if (field_id == g_quark_from_static_string ("width")) {
+    } else if (gst_id_str_is_equal_to_str (fieldname, "width")) {
       return FALSE;
-    } else if (field_id == g_quark_from_static_string ("height")) {
+    } else if (gst_id_str_is_equal_to_str (fieldname, "height")) {
       return FALSE;
     }
   } else if (gst_structure_has_name (structure, "video/x-vp8")
       || gst_structure_has_name (structure, "video/x-vp9")) {
     /* We do not use profile and streamheader for VPX so let it change
      * mid stream */
-    if (field_id == g_quark_from_static_string ("streamheader"))
+    if (gst_id_str_is_equal_to_str (fieldname, "streamheader"))
       return FALSE;
-    else if (field_id == g_quark_from_static_string ("profile"))
+    else if (gst_id_str_is_equal_to_str (fieldname, "profile"))
       return FALSE;
-    else if (field_id == g_quark_from_static_string ("width"))
+    else if (gst_id_str_is_equal_to_str (fieldname, "width"))
       return FALSE;
-    else if (field_id == g_quark_from_static_string ("height"))
+    else if (gst_id_str_is_equal_to_str (fieldname, "height"))
       return FALSE;
   }
 
   /* This fields aren't used and are not retained into the bitstream so we can
    * discard them. */
   if (g_str_has_prefix (gst_structure_get_name (structure), "video/")) {
-    if (field_id == g_quark_from_static_string ("chroma-site"))
+    if (gst_id_str_is_equal_to_str (fieldname, "chroma-site"))
       return FALSE;
-    else if (field_id == g_quark_from_static_string ("chroma-format"))
+    else if (gst_id_str_is_equal_to_str (fieldname, "chroma-format"))
       return FALSE;
-    else if (field_id == g_quark_from_static_string ("bit-depth-luma"))
+    else if (gst_id_str_is_equal_to_str (fieldname, "bit-depth-luma"))
       return FALSE;
 
     /* Remove pixel-aspect-ratio field if it contains 1/1 as that's considered
      * equivalent to not having the field but are not considered equivalent
      * by the generic caps functions
      */
-    if (field_id == g_quark_from_static_string ("pixel-aspect-ratio")) {
+    if (gst_id_str_is_equal_to_str (fieldname, "pixel-aspect-ratio")) {
       gint par_n = gst_value_get_fraction_numerator (value);
       gint par_d = gst_value_get_fraction_denominator (value);
 
@@ -1047,14 +1048,14 @@ check_field (GQuark field_id, const GValue * value, gpointer user_data)
      * equivalent with not having the fields but are not considered equivalent
      * by the generic caps functions.
      */
-    if (field_id == g_quark_from_static_string ("multiview-mode")) {
+    if (gst_id_str_is_equal_to_str (fieldname, "multiview-mode")) {
       const gchar *s = g_value_get_string (value);
 
       if (g_strcmp0 (s, "mono") == 0)
         return FALSE;
     }
 
-    if (field_id == g_quark_from_static_string ("multiview-flags")) {
+    if (gst_id_str_is_equal_to_str (fieldname, "multiview-flags")) {
       guint multiview_flags = gst_value_get_flagset_flags (value);
 
       if (multiview_flags == 0)
@@ -1078,10 +1079,10 @@ check_new_caps (GstMatroskaTrackVideoContext * videocontext, GstCaps * old_caps,
   new_s = gst_caps_get_structure (new_caps, 0);
   old_s = gst_caps_get_structure (old_caps, 0);
 
-  gst_structure_filter_and_map_in_place (new_s,
-      (GstStructureFilterMapFunc) check_field, new_s);
-  gst_structure_filter_and_map_in_place (old_s,
-      (GstStructureFilterMapFunc) check_field, old_s);
+  gst_structure_filter_and_map_in_place_id_str (new_s,
+      (GstStructureFilterMapIdStrFunc) check_field, new_s);
+  gst_structure_filter_and_map_in_place_id_str (old_s,
+      (GstStructureFilterMapIdStrFunc) check_field, old_s);
 
   ret = gst_caps_is_subset (new_caps, old_caps);
 

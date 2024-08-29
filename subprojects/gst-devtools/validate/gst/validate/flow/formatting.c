@@ -148,9 +148,10 @@ typedef struct
 } StructureValues;
 
 static gboolean
-structure_set_fields (GQuark field_id, GValue * value, StructureValues * data)
+structure_set_fields (const GstIdStr * fieldname, GValue * value,
+    StructureValues * data)
 {
-  const gchar *field = g_quark_to_string (field_id);
+  const gchar *field = gst_id_str_as_str (fieldname);
 
   if (data->ignored_fields
       && g_strv_contains ((const gchar **) data->ignored_fields, field))
@@ -176,8 +177,8 @@ validate_flow_structure_cleanup (const GstStructure * structure,
     .ignored_fields = ignored_fields,
   };
 
-  gst_structure_foreach (structure,
-      (GstStructureForeachFunc) structure_set_fields, &d);
+  gst_structure_foreach_id_str (structure,
+      (GstStructureForeachIdStrFunc) structure_set_fields, &d);
   d.fields = g_list_sort (d.fields, (GCompareFunc) g_ascii_strcasecmp);
   nstructure = gst_structure_new_empty (gst_structure_get_name (structure));
   for (GList * tmp = d.fields; tmp; tmp = tmp->next) {

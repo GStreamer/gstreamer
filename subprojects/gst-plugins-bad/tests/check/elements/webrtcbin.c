@@ -1790,13 +1790,13 @@ struct stats_check_state
 };
 
 static gboolean
-validate_stats_foreach (GQuark field_id, const GValue * value,
+validate_stats_foreach (const GstIdStr * fieldname, const GValue * value,
     gpointer user_data)
 {
   struct stats_check_state *state = (struct stats_check_state *) (user_data);
   const GstStructure *stats = state->stats;
 
-  const gchar *field = g_quark_to_string (field_id);
+  const gchar *field = gst_id_str_as_str (fieldname);
   GstWebRTCStatsType type;
 
   fail_unless (GST_VALUE_HOLDS_STRUCTURE (value));
@@ -1843,8 +1843,8 @@ validate_stats_foreach (GQuark field_id, const GValue * value,
 static void
 validate_stats (struct stats_check_state *state)
 {
-  gst_structure_foreach (state->stats,
-      (GstStructureForeachFunc) validate_stats_foreach, (gpointer) state);
+  gst_structure_foreach_id_str (state->stats,
+      (GstStructureForeachIdStrFunc) validate_stats_foreach, (gpointer) state);
 }
 
 static void

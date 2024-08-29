@@ -314,15 +314,14 @@ gst_rtp_pt_demux_finalize (GObject * object)
 
 /* Removes "ssrc-*" attributes matching other SSRCs. */
 static gboolean
-_filter_ssrc (GQuark field_id, GValue * value, gpointer ssrc)
+_filter_ssrc (const GstIdStr * fieldname, GValue * value, gpointer ssrc)
 {
-  const gchar *field_name = g_quark_to_string (field_id);
-
-  if (!g_str_has_prefix (field_name, "ssrc-"))
+  if (!g_str_has_prefix (gst_id_str_as_str (fieldname), "ssrc-"))
     return TRUE;
 
   gchar *endptr;
-  guint32 field_ssrc = g_ascii_strtoll (field_name + 5, &endptr, 10);
+  guint32 field_ssrc =
+      g_ascii_strtoll (gst_id_str_as_str (fieldname) + 5, &endptr, 10);
 
   if (!endptr || *endptr != '-')
     return TRUE;
@@ -376,7 +375,7 @@ gst_rtp_pt_demux_get_caps (GstRtpPtDemux * rtpdemux, guint pt)
 
     caps = gst_caps_make_writable (caps);
     s = gst_caps_get_structure (caps, 0);
-    gst_structure_filter_and_map_in_place (s, _filter_ssrc, &ssrc);
+    gst_structure_filter_and_map_in_place_id_str (s, _filter_ssrc, &ssrc);
 
     gst_caps_set_simple (caps, "payload", G_TYPE_INT, pt, NULL);
     if (have_ssrc)

@@ -965,10 +965,11 @@ gst_rtp_base_payload_set_options (GstRTPBasePayload * payload,
 }
 
 static gboolean
-copy_fixed (GQuark field_id, const GValue * value, GstStructure * dest)
+copy_fixed (const GstIdStr * fieldname, const GValue * value,
+    GstStructure * dest)
 {
   if (gst_value_is_fixed (value)) {
-    gst_structure_id_set_value (dest, field_id, value);
+    gst_structure_id_str_set_value (dest, fieldname, value);
   }
   return TRUE;
 }
@@ -989,9 +990,9 @@ update_max_ptime (GstRTPBasePayload * rtpbasepayload)
 }
 
 static gboolean
-_set_caps (GQuark field_id, const GValue * value, GstCaps * caps)
+_set_caps (const GstIdStr * fieldname, const GValue * value, GstCaps * caps)
 {
-  gst_caps_set_value (caps, g_quark_to_string (field_id), value);
+  gst_caps_set_value (caps, gst_id_str_as_str (fieldname), value);
 
   return TRUE;
 }
@@ -1022,7 +1023,8 @@ gst_rtp_base_payload_set_outcaps_structure (GstRTPBasePayload * payload,
   GST_DEBUG_OBJECT (payload, "defaults: %" GST_PTR_FORMAT, srccaps);
 
   if (s && gst_structure_n_fields (s) > 0) {
-    gst_structure_foreach (s, (GstStructureForeachFunc) _set_caps, srccaps);
+    gst_structure_foreach_id_str (s, (GstStructureForeachIdStrFunc) _set_caps,
+        srccaps);
 
     GST_DEBUG_OBJECT (payload, "custom added: %" GST_PTR_FORMAT, srccaps);
   }
@@ -1349,7 +1351,8 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
     srccaps = gst_caps_new_empty_simple (gst_structure_get_name (s));
     d = gst_caps_get_structure (srccaps, 0);
 
-    gst_structure_foreach (s, (GstStructureForeachFunc) copy_fixed, d);
+    gst_structure_foreach_id_str (s, (GstStructureForeachIdStrFunc) copy_fixed,
+        d);
 
     gst_caps_unref (temp);
 

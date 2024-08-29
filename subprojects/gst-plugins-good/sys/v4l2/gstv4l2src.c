@@ -390,17 +390,18 @@ gst_v4l2src_get_property (GObject * object,
 }
 
 static gboolean
-gst_vl42_src_fixate_fields (GQuark field_id, GValue * value, gpointer user_data)
+gst_vl42_src_fixate_fields (const GstIdStr * fieldname, GValue * value,
+    gpointer user_data)
 {
   GstStructure *s = user_data;
 
-  if (field_id == g_quark_from_string ("interlace-mode"))
+  if (gst_id_str_is_equal_to_str (fieldname, "interlace-mode"))
     return TRUE;
 
-  if (field_id == g_quark_from_string ("colorimetry"))
+  if (gst_id_str_is_equal_to_str (fieldname, "colorimetry"))
     return TRUE;
 
-  gst_structure_fixate_field (s, g_quark_to_string (field_id));
+  gst_structure_fixate_field (s, gst_id_str_as_str (fieldname));
 
   return TRUE;
 }
@@ -421,7 +422,7 @@ gst_v4l2_src_fixate_struct_with_preference (GstStructure * s,
 
   /* Finally, fixate everything else except the interlace-mode and colorimetry
    * which still need further negotiation as it wasn't probed */
-  gst_structure_map_in_place (s, gst_vl42_src_fixate_fields, s);
+  gst_structure_map_in_place_id_str (s, gst_vl42_src_fixate_fields, s);
 }
 
 static void

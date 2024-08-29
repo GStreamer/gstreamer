@@ -59,10 +59,6 @@ static void latency_query_stack_destroy (gpointer data);
 
 static GQuark latency_probe_id;
 static GQuark sub_latency_probe_id;
-static GQuark latency_probe_pad;
-static GQuark latency_probe_element;
-static GQuark latency_probe_element_id;
-static GQuark latency_probe_ts;
 static GQuark drop_sub_latency_quark;
 
 static GstTracerRecord *tr_latency;
@@ -182,16 +178,16 @@ log_latency (const GstStructure * data, GstElement * sink_parent,
   g_return_if_fail (sink_parent);
   g_return_if_fail (sink_pad);
 
-  value = gst_structure_id_get_value (data, latency_probe_ts);
+  value = gst_structure_get_value (data, "latency_probe.ts");
   src_ts = g_value_get_uint64 (value);
 
-  value = gst_structure_id_get_value (data, latency_probe_pad);
+  value = gst_structure_get_value (data, "latency_probe.pad");
   src = g_value_get_string (value);
 
-  value = gst_structure_id_get_value (data, latency_probe_element);
+  value = gst_structure_get_value (data, "latency_probe.element");
   element_src = g_value_get_string (value);
 
-  value = gst_structure_id_get_value (data, latency_probe_element_id);
+  value = gst_structure_get_value (data, "latency_probe.element_id");
   id_element_src = g_value_get_string (value);
 
   id_element_sink = g_strdup_printf ("%p", sink_parent);
@@ -222,7 +218,7 @@ log_element_latency (const GstStructure * data, GstElement * parent,
 
   /* TODO filtering */
 
-  value = gst_structure_id_get_value (data, latency_probe_ts);
+  value = gst_structure_get_value (data, "latency_probe.ts");
   src_ts = g_value_get_uint64 (value);
 
   gst_tracer_record_log (tr_element_latency, element_id, element_name, pad_name,
@@ -387,9 +383,9 @@ do_drop_sub_latency_event (GstPad * pad, GstPadProbeInfo * info,
       const gchar *value_element_id, *value_pad_name;
 
       /* Get the element id, element name and pad name from data */
-      value = gst_structure_id_get_value (data, latency_probe_element_id);
+      value = gst_structure_get_value (data, "latency_probe.element_id");
       value_element_id = g_value_get_string (value);
-      value = gst_structure_id_get_value (data, latency_probe_pad);
+      value = gst_structure_get_value (data, "latency_probe.pad");
       value_pad_name = g_value_get_string (value);
 
       if (pad_name == NULL ||
@@ -453,9 +449,9 @@ do_push_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * ev)
       const gchar *value_element_id, *value_pad_name;
 
       /* Get the element id, element name and pad name from data */
-      value = gst_structure_id_get_value (data, latency_probe_element_id);
+      value = gst_structure_get_value (data, "latency_probe.element_id");
       value_element_id = g_value_get_string (value);
-      value = gst_structure_id_get_value (data, latency_probe_pad);
+      value = gst_structure_get_value (data, "latency_probe.pad");
       value_pad_name = g_value_get_string (value);
 
       if (!g_str_equal (value_element_id, element_id) ||
@@ -603,11 +599,6 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
 
   latency_probe_id = g_quark_from_static_string ("latency_probe.id");
   sub_latency_probe_id = g_quark_from_static_string ("sub_latency_probe.id");
-  latency_probe_pad = g_quark_from_static_string ("latency_probe.pad");
-  latency_probe_element = g_quark_from_static_string ("latency_probe.element");
-  latency_probe_element_id =
-      g_quark_from_static_string ("latency_probe.element_id");
-  latency_probe_ts = g_quark_from_static_string ("latency_probe.ts");
   drop_sub_latency_quark =
       g_quark_from_static_string ("drop_sub_latency.quark");
 

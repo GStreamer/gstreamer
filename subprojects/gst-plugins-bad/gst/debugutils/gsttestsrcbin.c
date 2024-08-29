@@ -235,20 +235,20 @@ gst_test_src_bin_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
 }
 
 static gboolean
-gst_test_src_bin_set_element_property (GQuark property_id, const GValue * value,
-    GObject * element)
+gst_test_src_bin_set_element_property (const GstIdStr * property,
+    const GValue * value, GObject * element)
 {
-  if (property_id == g_quark_from_static_string ("__streamobj__"))
+  if (gst_id_str_is_equal_to_str (property, "__streamobj__"))
     return TRUE;
 
-  if (property_id == g_quark_from_static_string ("caps"))
+  if (gst_id_str_is_equal_to_str (property, "caps"))
     return TRUE;
 
   if (G_VALUE_HOLDS_STRING (value))
-    gst_util_set_object_arg (element, g_quark_to_string (property_id),
+    gst_util_set_object_arg (element, gst_id_str_as_str (property),
         g_value_get_string (value));
   else
-    g_object_set_property (element, g_quark_to_string (property_id), value);
+    g_object_set_property (element, gst_id_str_as_str (property), value);
 
   return TRUE;
 }
@@ -352,8 +352,9 @@ gst_test_src_bin_setup_src (GstTestSrcBin * self, const gchar * srcfactory,
       (*n_stream == 0) ? GST_STREAM_FLAG_SELECT : GST_STREAM_FLAG_UNSELECT);
   stream_start = gst_event_new_stream_start (gst_stream_get_stream_id (stream));
 
-  gst_structure_foreach (props,
-      (GstStructureForeachFunc) gst_test_src_bin_set_element_property, src);
+  gst_structure_foreach_id_str (props,
+      (GstStructureForeachIdStrFunc) gst_test_src_bin_set_element_property,
+      src);
 
   gst_event_set_stream (stream_start, stream);
   gst_event_set_group_id (stream_start, self->group_id);

@@ -79,7 +79,6 @@
 #include "gstevent.h"
 #include "gstenumtypes.h"
 #include "gstutils.h"
-#include "gstquark.h"
 #include "gstvalue.h"
 
 GType _gst_event_type = 0;
@@ -630,8 +629,7 @@ gst_event_parse_flush_stop (GstEvent * event, gboolean * reset_time)
   structure = GST_EVENT_STRUCTURE (event);
   if (G_LIKELY (reset_time))
     *reset_time =
-        g_value_get_boolean (gst_structure_id_get_value (structure,
-            GST_QUARK (RESET_TIME)));
+        g_value_get_boolean (gst_structure_get_value (structure, "reset-time"));
 }
 
 /**
@@ -675,7 +673,7 @@ gst_event_new_select_streams (GList * streams)
     g_value_set_string (&strval, str);
     gst_value_list_append_and_take_value (&val, &strval);
   }
-  gst_structure_id_take_value (struc, GST_QUARK (STREAMS), &val);
+  gst_structure_take_value (struc, "streams", &val);
   event = gst_event_new_custom (GST_EVENT_SELECT_STREAMS, struc);
 
   return event;
@@ -701,8 +699,7 @@ gst_event_parse_select_streams (GstEvent * event, GList ** streams)
 
   structure = GST_EVENT_STRUCTURE (event);
   if (G_LIKELY (streams)) {
-    const GValue *vlist =
-        gst_structure_id_get_value (structure, GST_QUARK (STREAMS));
+    const GValue *vlist = gst_structure_get_value (structure, "streams");
     guint i, sz = gst_value_list_get_size (vlist);
     for (i = 0; i < sz; i++) {
       const GValue *strv = gst_value_list_get_value (vlist, i);
@@ -761,8 +758,8 @@ gst_event_parse_stream_group_done (GstEvent * event, guint * group_id)
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_GROUP_DONE);
 
   if (group_id) {
-    gst_structure_id_get (GST_EVENT_STRUCTURE (event),
-        GST_QUARK (GROUP_ID), G_TYPE_UINT, group_id, NULL);
+    gst_structure_get (GST_EVENT_STRUCTURE (event),
+        "group-id", G_TYPE_UINT, group_id, NULL);
   }
 }
 
@@ -844,9 +841,9 @@ gst_event_parse_gap (GstEvent * event, GstClockTime * timestamp,
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_GAP);
 
   structure = GST_EVENT_STRUCTURE (event);
-  gst_structure_id_get (structure,
-      GST_QUARK (TIMESTAMP), GST_TYPE_CLOCK_TIME, timestamp,
-      GST_QUARK (DURATION), GST_TYPE_CLOCK_TIME, duration, NULL);
+  gst_structure_get (structure,
+      "timestamp", GST_TYPE_CLOCK_TIME, timestamp,
+      "duration", GST_TYPE_CLOCK_TIME, duration, NULL);
 }
 
 /**
@@ -866,8 +863,8 @@ gst_event_set_gap_flags (GstEvent * event, GstGapFlags flags)
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_GAP);
   g_return_if_fail (gst_event_is_writable (event));
 
-  gst_structure_id_set (GST_EVENT_STRUCTURE (event),
-      GST_QUARK (GAP_FLAGS), GST_TYPE_GAP_FLAGS, flags, NULL);
+  gst_structure_set (GST_EVENT_STRUCTURE (event),
+      "gap-flags", GST_TYPE_GAP_FLAGS, flags, NULL);
 }
 
 /**
@@ -890,8 +887,8 @@ gst_event_parse_gap_flags (GstEvent * event, GstGapFlags * flags)
   if (flags)
     *flags = 0;
 
-  gst_structure_id_get (GST_EVENT_STRUCTURE (event),
-      GST_QUARK (GAP_FLAGS), GST_TYPE_GAP_FLAGS, flags, NULL);
+  gst_structure_get (GST_EVENT_STRUCTURE (event),
+      "gap-flags", GST_TYPE_GAP_FLAGS, flags, NULL);
 }
 
 /**
@@ -939,9 +936,7 @@ gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
 
   structure = GST_EVENT_STRUCTURE (event);
   if (G_LIKELY (caps))
-    *caps =
-        g_value_get_boxed (gst_structure_id_get_value (structure,
-            GST_QUARK (CAPS)));
+    *caps = g_value_get_boxed (gst_structure_get_value (structure, "caps"));
 }
 
 /**
@@ -1021,8 +1016,8 @@ gst_event_parse_segment (GstEvent * event, const GstSegment ** segment)
 
   if (segment) {
     structure = GST_EVENT_STRUCTURE (event);
-    *segment = g_value_get_boxed (gst_structure_id_get_value (structure,
-            GST_QUARK (SEGMENT)));
+    *segment = g_value_get_boxed (gst_structure_get_value (structure,
+            "segment"));
   }
 }
 
@@ -1076,7 +1071,7 @@ gst_event_new_tag (GstTagList * taglist)
           (taglist)]);
   g_value_init (&val, GST_TYPE_TAG_LIST);
   g_value_take_boxed (&val, taglist);
-  gst_structure_id_take_value (s, GST_QUARK (TAGLIST), &val);
+  gst_structure_take_value (s, "taglist", &val);
   return gst_event_new_custom (GST_EVENT_TAG, s);
 }
 
@@ -1098,8 +1093,7 @@ gst_event_parse_tag (GstEvent * event, GstTagList ** taglist)
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_TAG);
 
-  val = gst_structure_id_get_value (GST_EVENT_STRUCTURE (event),
-      GST_QUARK (TAGLIST));
+  val = gst_structure_get_value (GST_EVENT_STRUCTURE (event), "taglist");
 
   if (taglist)
     *taglist = (GstTagList *) g_value_get_boxed (val);
@@ -1163,20 +1157,15 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
   structure = GST_EVENT_STRUCTURE (event);
   if (format)
     *format = (GstFormat)
-        g_value_get_enum (gst_structure_id_get_value (structure,
-            GST_QUARK (FORMAT)));
+        g_value_get_enum (gst_structure_get_value (structure, "format"));
   if (minsize)
     *minsize =
-        g_value_get_int64 (gst_structure_id_get_value (structure,
-            GST_QUARK (MINSIZE)));
+        g_value_get_int64 (gst_structure_get_value (structure, "minsize"));
   if (maxsize)
     *maxsize =
-        g_value_get_int64 (gst_structure_id_get_value (structure,
-            GST_QUARK (MAXSIZE)));
+        g_value_get_int64 (gst_structure_get_value (structure, "maxsize"));
   if (async)
-    *async =
-        g_value_get_boolean (gst_structure_id_get_value (structure,
-            GST_QUARK (ASYNC)));
+    *async = g_value_get_boolean (gst_structure_get_value (structure, "async"));
 }
 
 /**
@@ -1280,25 +1269,20 @@ gst_event_parse_qos (GstEvent * event, GstQOSType * type,
   structure = GST_EVENT_STRUCTURE (event);
   if (type)
     *type = (GstQOSType)
-        g_value_get_enum (gst_structure_id_get_value (structure,
-            GST_QUARK (TYPE)));
+        g_value_get_enum (gst_structure_get_value (structure, "type"));
   if (proportion)
     *proportion =
-        g_value_get_double (gst_structure_id_get_value (structure,
-            GST_QUARK (PROPORTION)));
+        g_value_get_double (gst_structure_get_value (structure, "proportion"));
   if (diff)
-    *diff =
-        g_value_get_int64 (gst_structure_id_get_value (structure,
-            GST_QUARK (DIFF)));
+    *diff = g_value_get_int64 (gst_structure_get_value (structure, "diff"));
   if (timestamp) {
     gint64 offset = gst_event_get_running_time_offset (event);
     GstClockTimeDiff diff_ =
-        g_value_get_int64 (gst_structure_id_get_value (structure,
-            GST_QUARK (DIFF)));
+        g_value_get_int64 (gst_structure_get_value (structure,
+            "diff"));
 
     *timestamp =
-        g_value_get_uint64 (gst_structure_id_get_value (structure,
-            GST_QUARK (TIMESTAMP)));
+        g_value_get_uint64 (gst_structure_get_value (structure, "timestamp"));
     /* Catch underflows */
     if (*timestamp > -offset)
       *timestamp += offset;
@@ -1436,33 +1420,23 @@ gst_event_parse_seek (GstEvent * event, gdouble * rate,
 
   structure = GST_EVENT_STRUCTURE (event);
   if (rate)
-    *rate =
-        g_value_get_double (gst_structure_id_get_value (structure,
-            GST_QUARK (RATE)));
+    *rate = g_value_get_double (gst_structure_get_value (structure, "rate"));
   if (format)
     *format = (GstFormat)
-        g_value_get_enum (gst_structure_id_get_value (structure,
-            GST_QUARK (FORMAT)));
+        g_value_get_enum (gst_structure_get_value (structure, "format"));
   if (flags)
     *flags = (GstSeekFlags)
-        g_value_get_flags (gst_structure_id_get_value (structure,
-            GST_QUARK (FLAGS)));
+        g_value_get_flags (gst_structure_get_value (structure, "flags"));
   if (start_type)
     *start_type = (GstSeekType)
-        g_value_get_enum (gst_structure_id_get_value (structure,
-            GST_QUARK (CUR_TYPE)));
+        g_value_get_enum (gst_structure_get_value (structure, "cur-type"));
   if (start)
-    *start =
-        g_value_get_int64 (gst_structure_id_get_value (structure,
-            GST_QUARK (CUR)));
+    *start = g_value_get_int64 (gst_structure_get_value (structure, "cur"));
   if (stop_type)
     *stop_type = (GstSeekType)
-        g_value_get_enum (gst_structure_id_get_value (structure,
-            GST_QUARK (STOP_TYPE)));
+        g_value_get_enum (gst_structure_get_value (structure, "stop-type"));
   if (stop)
-    *stop =
-        g_value_get_int64 (gst_structure_id_get_value (structure,
-            GST_QUARK (STOP)));
+    *stop = g_value_get_int64 (gst_structure_get_value (structure, "stop"));
 }
 
 /**
@@ -1482,8 +1456,8 @@ gst_event_set_seek_trickmode_interval (GstEvent * event, GstClockTime interval)
   g_return_if_fail (gst_event_is_writable (event));
   g_return_if_fail (GST_CLOCK_TIME_IS_VALID (interval));
 
-  gst_structure_id_set (GST_EVENT_STRUCTURE (event),
-      GST_QUARK (TRICKMODE_INTERVAL), GST_TYPE_CLOCK_TIME, interval, NULL);
+  gst_structure_set_static_str (GST_EVENT_STRUCTURE (event),
+      "trickmode-interval", GST_TYPE_CLOCK_TIME, interval, NULL);
 }
 
 /**
@@ -1506,8 +1480,8 @@ gst_event_parse_seek_trickmode_interval (GstEvent * event,
   if (interval)
     *interval = GST_CLOCK_TIME_NONE;
 
-  gst_structure_id_get (GST_EVENT_STRUCTURE (event),
-      GST_QUARK (TRICKMODE_INTERVAL), GST_TYPE_CLOCK_TIME, interval, NULL);
+  gst_structure_get (GST_EVENT_STRUCTURE (event),
+      "trickmode-interval", GST_TYPE_CLOCK_TIME, interval, NULL);
 }
 
 /**
@@ -1574,8 +1548,8 @@ gst_event_parse_latency (GstEvent * event, GstClockTime * latency)
 
   if (latency)
     *latency =
-        g_value_get_uint64 (gst_structure_id_get_value (GST_EVENT_STRUCTURE
-            (event), GST_QUARK (LATENCY)));
+        g_value_get_uint64 (gst_structure_get_value (GST_EVENT_STRUCTURE
+            (event), "latency"));
 }
 
 /**
@@ -1648,20 +1622,18 @@ gst_event_parse_step (GstEvent * event, GstFormat * format, guint64 * amount,
   structure = GST_EVENT_STRUCTURE (event);
   if (format)
     *format =
-        (GstFormat) g_value_get_enum (gst_structure_id_get_value (structure,
-            GST_QUARK (FORMAT)));
+        (GstFormat) g_value_get_enum (gst_structure_get_value (structure,
+            "format"));
   if (amount)
-    *amount = g_value_get_uint64 (gst_structure_id_get_value (structure,
-            GST_QUARK (AMOUNT)));
+    *amount = g_value_get_uint64 (gst_structure_get_value (structure,
+            "amount"));
   if (rate)
-    *rate = g_value_get_double (gst_structure_id_get_value (structure,
-            GST_QUARK (RATE)));
+    *rate = g_value_get_double (gst_structure_get_value (structure, "rate"));
   if (flush)
-    *flush = g_value_get_boolean (gst_structure_id_get_value (structure,
-            GST_QUARK (FLUSH)));
+    *flush = g_value_get_boolean (gst_structure_get_value (structure, "flush"));
   if (intermediate)
-    *intermediate = g_value_get_boolean (gst_structure_id_get_value (structure,
-            GST_QUARK (INTERMEDIATE)));
+    *intermediate = g_value_get_boolean (gst_structure_get_value (structure,
+            "intermediate"));
 }
 
 /**
@@ -1736,8 +1708,8 @@ gst_event_parse_sink_message (GstEvent * event, GstMessage ** msg)
   structure = GST_EVENT_STRUCTURE (event);
   if (msg)
     *msg =
-        GST_MESSAGE (g_value_dup_boxed (gst_structure_id_get_value
-            (structure, GST_QUARK (MESSAGE))));
+        GST_MESSAGE (g_value_dup_boxed (gst_structure_get_value
+            (structure, "message")));
 }
 
 /**
@@ -1802,7 +1774,7 @@ gst_event_parse_stream_start (GstEvent * event, const gchar ** stream_id)
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
 
   structure = gst_event_get_structure (event);
-  val = gst_structure_id_get_value (structure, GST_QUARK (STREAM_ID));
+  val = gst_structure_get_value (structure, "stream-id");
 
   if (stream_id)
     *stream_id = g_value_get_string (val);
@@ -1824,8 +1796,8 @@ gst_event_set_stream (GstEvent * event, GstStream * stream)
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
   g_return_if_fail (gst_event_is_writable (event));
 
-  gst_structure_id_set (GST_EVENT_STRUCTURE (event),
-      GST_QUARK (STREAM), GST_TYPE_STREAM, stream, NULL);
+  gst_structure_set (GST_EVENT_STRUCTURE (event),
+      "stream", GST_TYPE_STREAM, stream, NULL);
 }
 
 /**
@@ -1845,8 +1817,8 @@ gst_event_parse_stream (GstEvent * event, GstStream ** stream)
 
   if (stream) {
     *stream = NULL;
-    gst_structure_id_get (GST_EVENT_STRUCTURE (event),
-        GST_QUARK (STREAM), GST_TYPE_STREAM, stream, NULL);
+    gst_structure_get (GST_EVENT_STRUCTURE (event),
+        "stream", GST_TYPE_STREAM, stream, NULL);
   }
 }
 
@@ -1864,8 +1836,8 @@ gst_event_set_stream_flags (GstEvent * event, GstStreamFlags flags)
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
   g_return_if_fail (gst_event_is_writable (event));
 
-  gst_structure_id_set (GST_EVENT_STRUCTURE (event),
-      GST_QUARK (FLAGS), GST_TYPE_STREAM_FLAGS, flags, NULL);
+  gst_structure_set (GST_EVENT_STRUCTURE (event),
+      "flags", GST_TYPE_STREAM_FLAGS, flags, NULL);
 }
 
 /**
@@ -1883,8 +1855,8 @@ gst_event_parse_stream_flags (GstEvent * event, GstStreamFlags * flags)
 
   if (flags) {
     *flags = 0;
-    gst_structure_id_get (GST_EVENT_STRUCTURE (event),
-        GST_QUARK (FLAGS), GST_TYPE_STREAM_FLAGS, flags, NULL);
+    gst_structure_get (GST_EVENT_STRUCTURE (event),
+        "flags", GST_TYPE_STREAM_FLAGS, flags, NULL);
   }
 }
 
@@ -1911,8 +1883,8 @@ gst_event_set_group_id (GstEvent * event, guint group_id)
   g_return_if_fail (gst_event_is_writable (event));
   g_return_if_fail (group_id != GST_GROUP_ID_INVALID);
 
-  gst_structure_id_set (GST_EVENT_STRUCTURE (event),
-      GST_QUARK (GROUP_ID), G_TYPE_UINT, group_id, NULL);
+  gst_structure_set (GST_EVENT_STRUCTURE (event),
+      "group-id", G_TYPE_UINT, group_id, NULL);
 }
 
 /**
@@ -1934,8 +1906,8 @@ gst_event_parse_group_id (GstEvent * event, guint * group_id)
 
   if (group_id) {
     *group_id = 0;
-    return gst_structure_id_get (GST_EVENT_STRUCTURE (event),
-        GST_QUARK (GROUP_ID), G_TYPE_UINT, group_id, NULL);
+    return gst_structure_get (GST_EVENT_STRUCTURE (event),
+        "group-id", G_TYPE_UINT, group_id, NULL);
   }
 
   return TRUE;
@@ -1993,8 +1965,8 @@ gst_event_parse_stream_collection (GstEvent * event,
   structure = gst_event_get_structure (event);
 
   if (collection) {
-    gst_structure_id_get (structure,
-        GST_QUARK (COLLECTION), GST_TYPE_STREAM_COLLECTION, collection, NULL);
+    gst_structure_get (structure,
+        "collection", GST_TYPE_STREAM_COLLECTION, collection, NULL);
   }
 }
 
@@ -2050,9 +2022,8 @@ gst_event_parse_toc (GstEvent * event, GstToc ** toc, gboolean * updated)
 
   structure = gst_event_get_structure (event);
 
-  gst_structure_id_get (structure,
-      GST_QUARK (TOC), GST_TYPE_TOC, toc,
-      GST_QUARK (UPDATED), G_TYPE_BOOLEAN, updated, NULL);
+  gst_structure_get (structure,
+      "toc", GST_TYPE_TOC, toc, "updated", G_TYPE_BOOLEAN, updated, NULL);
 }
 
 /**
@@ -2097,7 +2068,7 @@ gst_event_parse_toc_select (GstEvent * event, gchar ** uid)
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_TOC_SELECT);
 
   structure = gst_event_get_structure (event);
-  val = gst_structure_id_get_value (structure, GST_QUARK (UID));
+  val = gst_structure_get_value (structure, "uid");
 
   if (uid != NULL)
     *uid = g_value_dup_string (val);
@@ -2264,11 +2235,11 @@ gst_event_parse_segment_done (GstEvent * event, GstFormat * format,
 
   structure = gst_event_get_structure (event);
 
-  val = gst_structure_id_get_value (structure, GST_QUARK (FORMAT));
+  val = gst_structure_get_value (structure, "format");
   if (format != NULL)
     *format = g_value_get_enum (val);
 
-  val = gst_structure_id_get_value (structure, GST_QUARK (POSITION));
+  val = gst_structure_get_value (structure, "position");
   if (position != NULL)
     *position = g_value_get_int64 (val);
 }
@@ -2335,9 +2306,8 @@ gst_event_parse_instant_rate_change (GstEvent * event,
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_INSTANT_RATE_CHANGE);
 
   structure = GST_EVENT_STRUCTURE (event);
-  gst_structure_id_get (structure, GST_QUARK (RATE), G_TYPE_DOUBLE,
-      rate_multiplier, GST_QUARK (FLAGS), GST_TYPE_SEGMENT_FLAGS, new_flags,
-      NULL);
+  gst_structure_get (structure, "rate", G_TYPE_DOUBLE,
+      rate_multiplier, "flags", GST_TYPE_SEGMENT_FLAGS, new_flags, NULL);
 }
 
 /**
@@ -2414,9 +2384,9 @@ gst_event_parse_instant_rate_sync_time (GstEvent * event,
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_INSTANT_RATE_SYNC_TIME);
 
   structure = GST_EVENT_STRUCTURE (event);
-  gst_structure_id_get (structure, GST_QUARK (RATE), G_TYPE_DOUBLE,
-      rate_multiplier, GST_QUARK (RUNNING_TIME), GST_TYPE_CLOCK_TIME,
-      running_time, GST_QUARK (UPSTREAM_RUNNING_TIME), GST_TYPE_CLOCK_TIME,
+  gst_structure_get (structure, "rate", G_TYPE_DOUBLE,
+      rate_multiplier, "running-time", GST_TYPE_CLOCK_TIME,
+      running_time, "upstream-running-time", GST_TYPE_CLOCK_TIME,
       upstream_running_time, NULL);
 }
 

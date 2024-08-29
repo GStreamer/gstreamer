@@ -722,10 +722,11 @@ _handle_event (GstValidateOverride * override,
 }
 
 static gboolean
-_map_confg (GQuark field_id, GValue * value, GstStructure * structure)
+_map_confg (const GstIdStr * fieldname, GValue * value,
+    GstStructure * structure)
 {
-  if (!gst_structure_id_has_field (structure, field_id))
-    gst_structure_id_set_value (structure, field_id, value);
+  if (!gst_structure_id_str_has_field (structure, fieldname))
+    gst_structure_id_str_set_value (structure, fieldname, value);
 
   return TRUE;
 }
@@ -760,8 +761,8 @@ gst_validate_ssim_init (GstPlugin * plugin)
       continue;
 
     if (config_structure) {
-      gst_structure_map_in_place (config_structure,
-          (GstStructureMapFunc) _map_confg, tmp->data);
+      gst_structure_map_in_place_id_str (config_structure,
+          (GstStructureMapIdStrFunc) _map_confg, tmp->data);
     }
     if ((name || target_element_classification)) {
       GstValidateOverride *override =

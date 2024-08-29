@@ -1199,13 +1199,14 @@ gst_rtp_rtx_send_get_property (GObject * object,
 }
 
 static gboolean
-structure_to_hash_table (GQuark field_id, const GValue * value, gpointer hash)
+structure_to_hash_table (const GstIdStr * fieldname, const GValue * value,
+    gpointer hash)
 {
   const gchar *field_str;
   guint field_uint;
   guint value_uint;
 
-  field_str = g_quark_to_string (field_id);
+  field_str = gst_id_str_as_str (fieldname);
   field_uint = atoi (field_str);
   value_uint = g_value_get_uint (value);
   g_hash_table_insert ((GHashTable *) hash, GUINT_TO_POINTER (field_uint),
@@ -1234,8 +1235,8 @@ gst_rtp_rtx_send_set_property (GObject * object,
         gst_structure_free (rtx->rtx_pt_map_structure);
       rtx->rtx_pt_map_structure = g_value_dup_boxed (value);
       g_hash_table_remove_all (rtx->rtx_pt_map);
-      gst_structure_foreach (rtx->rtx_pt_map_structure, structure_to_hash_table,
-          rtx->rtx_pt_map);
+      gst_structure_foreach_id_str (rtx->rtx_pt_map_structure,
+          structure_to_hash_table, rtx->rtx_pt_map);
       GST_OBJECT_UNLOCK (rtx);
 
       if (IS_RTX_ENABLED (rtx))
@@ -1260,7 +1261,7 @@ gst_rtp_rtx_send_set_property (GObject * object,
         gst_structure_free (rtx->clock_rate_map_structure);
       rtx->clock_rate_map_structure = g_value_dup_boxed (value);
       g_hash_table_remove_all (rtx->clock_rate_map);
-      gst_structure_foreach (rtx->clock_rate_map_structure,
+      gst_structure_foreach_id_str (rtx->clock_rate_map_structure,
           structure_to_hash_table, rtx->clock_rate_map);
       GST_OBJECT_UNLOCK (rtx);
       break;

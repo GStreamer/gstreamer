@@ -931,14 +931,15 @@ typedef struct
 } SetPropsIter;
 
 static gboolean
-set_obj_prop (GQuark field_id, const GValue * value, gpointer user_data)
+set_obj_prop (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
 {
   SetPropsIter *iter = user_data;
   GstKMSSink *self = iter->self;
   const gchar *name;
   guint64 v;
 
-  name = g_quark_to_string (field_id);
+  name = gst_id_str_as_str (fieldname);
 
   if (G_VALUE_HOLDS (value, G_TYPE_INT))
     v = g_value_get_int (value);
@@ -976,7 +977,7 @@ gst_kms_sink_update_properties (SetPropsIter * iter, GstStructure * props)
   iter->properties = drmModeObjectGetProperties (self->fd, iter->obj_id,
       iter->obj_type);
 
-  gst_structure_foreach (props, set_obj_prop, iter);
+  gst_structure_foreach_id_str (props, set_obj_prop, iter);
 
   drmModeFreeObjectProperties (iter->properties);
 }

@@ -182,13 +182,13 @@ n_print (const char *format, ...)
 }
 
 static gboolean
-print_field (GQuark field, const GValue * value, gpointer pfx)
+print_field (const GstIdStr * fieldname, const GValue * value, gpointer pfx)
 {
   gchar *str = gst_value_serialize (value);
 
   n_print ("%s  %s%15s%s: %s%s%s\n",
-      (gchar *) pfx, FIELD_NAME_COLOR, g_quark_to_string (field), RESET_COLOR,
-      FIELD_VALUE_COLOR, str, RESET_COLOR);
+      (gchar *) pfx, FIELD_NAME_COLOR, gst_id_str_as_str (fieldname),
+      RESET_COLOR, FIELD_VALUE_COLOR, str, RESET_COLOR);
   g_free (str);
   return TRUE;
 }
@@ -226,7 +226,7 @@ print_caps (const GstCaps * caps, const gchar * pfx)
       n_print ("%s%s%s%s\n", pfx, STRUCT_NAME_COLOR,
           gst_structure_get_name (structure), RESET_COLOR);
     }
-    gst_structure_foreach (structure, print_field, (gpointer) pfx);
+    gst_structure_foreach_id_str (structure, print_field, (gpointer) pfx);
   }
 }
 
@@ -719,7 +719,7 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
             const GstStructure *s = gst_value_get_structure (&value);
             if (s) {
               g_print ("\n");
-              gst_structure_foreach (s, print_field,
+              gst_structure_foreach_id_str (s, print_field,
                   (gpointer) "                           ");
             }
           }

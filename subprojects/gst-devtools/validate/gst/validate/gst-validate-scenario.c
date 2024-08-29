@@ -1265,9 +1265,10 @@ _pause_action_restore_playing (GstValidateScenario * scenario)
 }
 
 static gboolean
-_set_const_func (GQuark field_id, const GValue * value, GstStructure * consts)
+_set_const_func (const GstIdStr * fieldname, const GValue * value,
+    GstStructure * consts)
 {
-  gst_structure_id_set_value (consts, field_id, value);
+  gst_structure_id_str_set_value (consts, fieldname, value);
 
   return TRUE;
 }
@@ -1276,14 +1277,14 @@ static GstValidateExecuteActionReturn
 _execute_define_vars (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
-  gst_structure_foreach (action->structure,
-      (GstStructureForeachFunc) _set_const_func, scenario->priv->vars);
+  gst_structure_foreach_id_str (action->structure,
+      (GstStructureForeachIdStrFunc) _set_const_func, scenario->priv->vars);
 
   return GST_VALIDATE_EXECUTE_ACTION_OK;
 }
 
 static GstValidateExecuteActionReturn
-_set_timed_value (GQuark field_id, const GValue * gvalue,
+_set_timed_value (const GstIdStr * fieldname, const GValue * gvalue,
     GstStructure * structure)
 {
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
@@ -1295,7 +1296,7 @@ _set_timed_value (GQuark field_id, const GValue * gvalue,
   GstValidateAction *action;
   GstObject *obj = NULL;
   GParamSpec *paramspec = NULL;
-  const gchar *field = g_quark_to_string (field_id);
+  const gchar *field = gst_id_str_as_str (fieldname);
   const gchar *unused_fields[] =
       { "binding-type", "source-type", "interpolation-mode",
     "timestamp", "__scenario__", "__action__", "__res__", "repeat",
@@ -1408,8 +1409,8 @@ _set_timed_value_property (GstValidateScenario * scenario,
   gst_structure_set (action->structure, "__action__", G_TYPE_POINTER,
       action, "__scenario__", G_TYPE_POINTER, scenario, NULL);
 
-  gst_structure_foreach (action->structure,
-      (GstStructureForeachFunc) _set_timed_value, action->structure);
+  gst_structure_foreach_id_str (action->structure,
+      (GstStructureForeachIdStrFunc) _set_timed_value, action->structure);
   gst_structure_get_int (action->structure, "__res__", &res);
   gst_structure_remove_fields (action->structure, "__action__", "__scenario__",
       "__res__", NULL);
@@ -1455,7 +1456,7 @@ _check_property (GstValidateScenario * scenario, GstValidateAction * action,
 }
 
 static GstValidateExecuteActionReturn
-_set_or_check_properties (GQuark field_id, const GValue * value,
+_set_or_check_properties (const GstIdStr * fieldname, const GValue * value,
     GstStructure * structure)
 {
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
@@ -1465,7 +1466,7 @@ _set_or_check_properties (GQuark field_id, const GValue * value,
   GParamSpec *paramspec = NULL;
   gboolean no_value_check = FALSE;
   GstValidateObjectSetPropertyFlags flags = 0;
-  const gchar *field = g_quark_to_string (field_id);
+  const gchar *field = gst_id_str_as_str (fieldname);
   const gchar *unused_fields[] = { "__scenario__", "__action__", "__res__",
     "playback-time", "repeat", "no-value-check", NULL
   };
@@ -1513,8 +1514,9 @@ _execute_set_or_check_properties (GstValidateScenario * scenario,
   gst_structure_set (action->structure, "__action__", G_TYPE_POINTER,
       action, "__scenario__", G_TYPE_POINTER, scenario, NULL);
 
-  gst_structure_foreach (action->structure,
-      (GstStructureForeachFunc) _set_or_check_properties, action->structure);
+  gst_structure_foreach_id_str (action->structure,
+      (GstStructureForeachIdStrFunc) _set_or_check_properties,
+      action->structure);
   gst_structure_get_int (action->structure, "__res__", &res);
   gst_structure_remove_fields (action->structure, "__action__", "__scenario__",
       "__res__", NULL);
@@ -2663,10 +2665,10 @@ gst_validate_parse_next_action_playback_time (GstValidateScenario * self)
 }
 
 static gboolean
-_foreach_find_iterator (GQuark field_id, GValue * value,
+_foreach_find_iterator (const GstIdStr * fieldname, GValue * value,
     GstValidateAction * action)
 {
-  const gchar *field = g_quark_to_string (field_id);
+  const gchar *field = gst_id_str_as_str (fieldname);
 
   if (!g_strcmp0 (field, "actions"))
     return TRUE;
@@ -3720,10 +3722,10 @@ done:
 }
 
 static gboolean
-set_env_var (GQuark field_id, GValue * value,
+set_env_var (const GstIdStr * fieldname, GValue * value,
     GSubprocessLauncher * subproc_launcher)
 {
-  g_subprocess_launcher_setenv (subproc_launcher, g_quark_to_string (field_id),
+  g_subprocess_launcher_setenv (subproc_launcher, gst_id_str_as_str (fieldname),
       g_value_get_string (value), TRUE);
 
   return TRUE;
@@ -3754,8 +3756,8 @@ _run_command (GstValidateScenario * scenario, GstValidateAction * action)
       "The `env` parameter should be a GstStructure, got %s",
       G_VALUE_TYPE_NAME (env));
   if (env) {
-    gst_structure_foreach (gst_value_get_structure (env),
-        (GstStructureForeachFunc) set_env_var, subproc_launcher);
+    gst_structure_foreach_id_str (gst_value_get_structure (env),
+        (GstStructureForeachIdStrFunc) set_env_var, subproc_launcher);
   }
 
   REPORT_UNLESS (
@@ -4720,8 +4722,8 @@ gst_validate_foreach_prepare (GstValidateAction * action)
 
   g_free (GST_VALIDATE_ACTION_RANGE_NAME (action));
   GST_VALIDATE_ACTION_RANGE_NAME (action) = NULL;
-  gst_structure_foreach (action->structure,
-      (GstStructureForeachFunc) _foreach_find_iterator, action);
+  gst_structure_foreach_id_str (action->structure,
+      (GstStructureForeachIdStrFunc) _foreach_find_iterator, action);
 
   /* Allow using the repeat field here too */
   if (!GST_VALIDATE_ACTION_RANGE_NAME (action)
@@ -4792,10 +4794,10 @@ gst_validate_foreach_prepare (GstValidateAction * action)
 }
 
 static gboolean
-_check_structure_has_expected_value (GQuark field_id, const GValue * value,
-    GstStructure * message_struct)
+_check_structure_has_expected_value (const GstIdStr * fieldname,
+    const GValue * value, GstStructure * message_struct)
 {
-  const GValue *v = gst_structure_id_get_value (message_struct, field_id);
+  const GValue *v = gst_structure_id_str_get_value (message_struct, fieldname);
 
   if (!v) {
     gst_structure_set (message_struct, "__validate_has_expected_values",
@@ -4855,8 +4857,8 @@ _check_waiting_for_message (GstValidateScenario * scenario,
 
     gst_structure_set (message_struct, "__validate_has_expected_values",
         G_TYPE_BOOLEAN, FALSE, NULL);
-    gst_structure_foreach (expected_values,
-        (GstStructureForeachFunc) _check_structure_has_expected_value,
+    gst_structure_foreach_id_str (expected_values,
+        (GstStructureForeachIdStrFunc) _check_structure_has_expected_value,
         message_struct);
 
     if (!gst_structure_get_boolean (message_struct,
@@ -6078,13 +6080,14 @@ gst_validate_scenario_factory_create (GstValidateRunner *
 }
 
 static gboolean
-_add_description (GQuark field_id, const GValue * value, KeyFileGroupName * kfg)
+_add_description (const GstIdStr * fieldname, const GValue * value,
+    KeyFileGroupName * kfg)
 {
   gchar *tmp = gst_value_serialize (value);
   gchar *tmpcompress = g_strcompress (tmp);
 
   g_key_file_set_string (kfg->kf, kfg->group_name,
-      g_quark_to_string (field_id), tmpcompress);
+      gst_id_str_as_str (fieldname), tmpcompress);
 
   g_free (tmpcompress);
   g_free (tmp);
@@ -6154,8 +6157,8 @@ _parse_scenario (GFile * f, GKeyFile * kf)
 
       gst_structure_remove_fields (meta, "__lineno__", "__filename__",
           "__debug__", NULL);
-      gst_structure_foreach (meta,
-          (GstStructureForeachFunc) _add_description, &kfg);
+      gst_structure_foreach_id_str (meta,
+          (GstStructureForeachIdStrFunc) _add_description, &kfg);
       gst_structure_free (meta);
       g_free (kfg.group_name);
     } else {

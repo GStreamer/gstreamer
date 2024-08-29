@@ -68,6 +68,7 @@
 
 #define GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 #include "gst_private.h"
+#include "gstidstr-private.h"
 #include <gst/gst.h>
 #include <gobject/gvaluecollector.h>
 
@@ -1217,7 +1218,7 @@ gst_caps_is_empty (const GstCaps * caps)
 }
 
 static gboolean
-gst_caps_is_fixed_foreach (GQuark field_id, const GValue * value,
+gst_caps_is_fixed_foreach (const GstIdStr * field, const GValue * value,
     gpointer unused)
 {
   return gst_value_is_fixed (value);
@@ -1254,7 +1255,7 @@ gst_caps_is_fixed (const GstCaps * caps)
 
   structure = gst_caps_get_structure_unchecked (caps, 0);
 
-  return gst_structure_foreach (structure, gst_caps_is_fixed_foreach, NULL);
+  return gst_structure_foreach_id_str (structure, gst_caps_is_fixed_foreach, NULL);
 }
 
 /**
@@ -1810,7 +1811,7 @@ typedef struct
 } SubtractionEntry;
 
 static gboolean
-gst_caps_structure_subtract_field (GQuark field_id, const GValue * value,
+gst_caps_structure_subtract_field (const GstIdStr * field, const GValue * value,
     gpointer user_data)
 {
   SubtractionEntry *e = user_data;
@@ -1818,7 +1819,7 @@ gst_caps_structure_subtract_field (GQuark field_id, const GValue * value,
   const GValue *other;
   GstStructure *structure;
 
-  other = gst_structure_id_get_value (e->subtract_from, field_id);
+  other = gst_structure_id_str_get_value (e->subtract_from, field);
 
   if (!other) {
     return FALSE;
@@ -1832,7 +1833,7 @@ gst_caps_structure_subtract_field (GQuark field_id, const GValue * value,
     return FALSE;
   } else {
     structure = gst_structure_copy (e->subtract_from);
-    gst_structure_id_take_value (structure, field_id, &subtraction);
+    gst_structure_id_str_take_value (structure, field, &subtraction);
     e->put_into = g_slist_prepend (e->put_into, structure);
     return TRUE;
   }
@@ -1847,7 +1848,7 @@ gst_caps_structure_subtract (GSList ** into, const GstStructure * minuend,
 
   e.subtract_from = minuend;
   e.put_into = NULL;
-  ret = gst_structure_foreach ((GstStructure *) subtrahend,
+  ret = gst_structure_foreach_id_str ((GstStructure *) subtrahend,
       gst_caps_structure_subtract_field, &e);
 
   if (ret) {
@@ -1972,7 +1973,7 @@ typedef struct _NormalizeForeach
 } NormalizeForeach;
 
 static gboolean
-gst_caps_normalize_foreach (GQuark field_id, const GValue * value, gpointer ptr)
+gst_caps_normalize_foreach (const GstIdStr * field, const GValue * value, gpointer ptr)
 {
   NormalizeForeach *nf = (NormalizeForeach *) ptr;
   GValue val = { 0 };
@@ -1985,13 +1986,13 @@ gst_caps_normalize_foreach (GQuark field_id, const GValue * value, gpointer ptr)
       const GValue *v = gst_value_list_get_value (value, i);
       GstStructure *structure = gst_structure_copy (nf->structure);
 
-      gst_structure_id_set_value (structure, field_id, v);
+      gst_structure_id_str_set_value (structure, field, v);
       gst_caps_append_structure_unchecked (nf->caps, structure,
           gst_caps_features_copy_conditional (nf->features));
     }
 
     gst_value_init_and_copy (&val, gst_value_list_get_value (value, 0));
-    gst_structure_id_take_value (nf->structure, field_id, &val);
+    gst_structure_id_str_take_value (nf->structure, field, &val);
     return FALSE;
   }
 
@@ -2026,7 +2027,7 @@ gst_caps_normalize (GstCaps * caps)
   for (i = 0; i < gst_caps_get_size (nf.caps); i++) {
     nf.structure = gst_caps_get_structure_unchecked (nf.caps, i);
     nf.features = gst_caps_get_features_unchecked (nf.caps, i);
-    while (!gst_structure_foreach (nf.structure,
+    while (!gst_structure_foreach_id_str (nf.structure,
             gst_caps_normalize_foreach, &nf));
   }
 
@@ -2053,20 +2054,20 @@ gst_caps_compare_structures (gconstpointer one, gconstpointer two)
 
 typedef struct
 {
-  GQuark name;
+  GstIdStr name;
   GValue value;
   GstStructure *compare;
 } UnionField;
 
 static gboolean
-gst_caps_structure_figure_out_union (GQuark field_id, const GValue * value,
+gst_caps_structure_figure_out_union (const GstIdStr * field, const GValue * value,
     gpointer user_data)
 {
   UnionField *u = user_data;
-  const GValue *val = gst_structure_id_get_value (u->compare, field_id);
+  const GValue *val = gst_structure_id_str_get_value (u->compare, field);
 
   if (!val) {
-    if (u->name)
+    if (G_VALUE_TYPE (&u->value) != G_TYPE_INVALID)
       g_value_unset (&u->value);
     return FALSE;
   }
@@ -2074,12 +2075,12 @@ gst_caps_structure_figure_out_union (GQuark field_id, const GValue * value,
   if (gst_value_compare (val, value) == GST_VALUE_EQUAL)
     return TRUE;
 
-  if (u->name) {
+  if (G_VALUE_TYPE (&u->value) != G_TYPE_INVALID) {
     g_value_unset (&u->value);
     return FALSE;
   }
 
-  u->name = field_id;
+  gst_id_str_copy_into (&u->name, field);
   gst_value_union (&u->value, val, value);
 
   return TRUE;
@@ -2090,7 +2091,7 @@ gst_caps_structure_simplify (GstStructure ** result,
     GstStructure * simplify, GstStructure * compare)
 {
   GSList *list;
-  UnionField field = { 0, {0,}, NULL };
+  UnionField field = { GST_ID_STR_INIT, G_VALUE_INIT, NULL };
 
   /* try to subtract to get a real subset */
   if (gst_caps_structure_subtract (&list, simplify, compare)) {
@@ -2110,7 +2111,7 @@ gst_caps_structure_simplify (GstStructure ** result,
 
   /* try to union both structs */
   field.compare = compare;
-  if (gst_structure_foreach (simplify,
+  if (gst_structure_foreach_id_str (simplify,
           gst_caps_structure_figure_out_union, &field)) {
     gboolean ret = FALSE;
 
@@ -2118,7 +2119,7 @@ gst_caps_structure_simplify (GstStructure ** result,
      * but at most one field: field.name */
     if (G_IS_VALUE (&field.value)) {
       if (gst_structure_n_fields (simplify) == gst_structure_n_fields (compare)) {
-        gst_structure_id_take_value (compare, field.name, &field.value);
+        gst_structure_id_str_take_value (compare, &field.name, &field.value);
         *result = NULL;
         ret = TRUE;
       } else {

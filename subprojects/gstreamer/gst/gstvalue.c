@@ -2953,18 +2953,18 @@ gst_value_deserialize_segment_internal (GValue * dest, const gchar * s,
   if (G_UNLIKELY (str == NULL))
     return FALSE;
 
-  res = gst_structure_id_get (str,
-      GST_QUARK (FLAGS), GST_TYPE_SEGMENT_FLAGS, &seg.flags,
-      GST_QUARK (RATE), G_TYPE_DOUBLE, &seg.rate,
-      GST_QUARK (APPLIED_RATE), G_TYPE_DOUBLE, &seg.applied_rate,
-      GST_QUARK (FORMAT), GST_TYPE_FORMAT, &seg.format,
-      GST_QUARK (BASE), G_TYPE_UINT64, &seg.base,
-      GST_QUARK (OFFSET), G_TYPE_UINT64, &seg.offset,
-      GST_QUARK (START), G_TYPE_UINT64, &seg.start,
-      GST_QUARK (STOP), G_TYPE_UINT64, &seg.stop,
-      GST_QUARK (TIME), G_TYPE_UINT64, &seg.time,
-      GST_QUARK (POSITION), G_TYPE_UINT64, &seg.position,
-      GST_QUARK (DURATION), G_TYPE_UINT64, &seg.duration, NULL);
+  res = gst_structure_get (str,
+      "flags", GST_TYPE_SEGMENT_FLAGS, &seg.flags,
+      "rate", G_TYPE_DOUBLE, &seg.rate,
+      "applied-rate", G_TYPE_DOUBLE, &seg.applied_rate,
+      "format", GST_TYPE_FORMAT, &seg.format,
+      "base", G_TYPE_UINT64, &seg.base,
+      "offset", G_TYPE_UINT64, &seg.offset,
+      "start", G_TYPE_UINT64, &seg.start,
+      "stop", G_TYPE_UINT64, &seg.stop,
+      "time", G_TYPE_UINT64, &seg.time,
+      "position", G_TYPE_UINT64, &seg.position,
+      "duration", G_TYPE_UINT64, &seg.duration, NULL);
   gst_structure_free (str);
 
   if (res)
@@ -4736,13 +4736,14 @@ gst_value_union_flagset_flagset (GValue * dest, const GValue * src1,
 
 /* iterating over the result taking the union with the other structure's value */
 static gboolean
-structure_field_union_into (GQuark field_id, GValue * val, gpointer user_data)
+structure_field_union_into (const GstIdStr * field, GValue * val,
+    gpointer user_data)
 {
   GstStructure *other = user_data;
   const GValue *other_value;
   GValue res_value = G_VALUE_INIT;
 
-  other_value = gst_structure_id_get_value (other, field_id);
+  other_value = gst_structure_id_str_get_value (other, field);
   /* no value in the other struct, just keep this value */
   if (!other_value)
     return TRUE;
@@ -4757,15 +4758,15 @@ structure_field_union_into (GQuark field_id, GValue * val, gpointer user_data)
 
 /* iterating over the other source structure adding missing values */
 static gboolean
-structure_field_union_from (GQuark field_id, const GValue * other_val,
+structure_field_union_from (const GstIdStr * field, const GValue * other_val,
     gpointer user_data)
 {
   GstStructure *result = user_data;
   const GValue *result_value;
 
-  result_value = gst_structure_id_get_value (result, field_id);
+  result_value = gst_structure_id_str_get_value (result, field);
   if (!result_value)
-    gst_structure_id_set_value (result, field_id, other_val);
+    gst_structure_id_str_set_value (result, field, other_val);
 
   return TRUE;
 }
@@ -4792,12 +4793,13 @@ gst_value_union_structure_structure (GValue * dest, const GValue * src1,
 
   result = gst_structure_copy (s1);
   ret =
-      gst_structure_map_in_place (result, structure_field_union_into,
+      gst_structure_map_in_place_id_str (result, structure_field_union_into,
       (gpointer) s2);
   if (!ret)
     goto out;
   ret =
-      gst_structure_foreach (s2, structure_field_union_from, (gpointer) result);
+      gst_structure_foreach_id_str (s2, structure_field_union_from,
+      (gpointer) result);
 
   if (ret) {
     g_value_init (dest, GST_TYPE_STRUCTURE);
@@ -6819,7 +6821,7 @@ gst_value_deserialize_with_pspec (GValue * dest, const gchar * src,
 }
 
 static gboolean
-structure_field_is_fixed (GQuark field_id, const GValue * val,
+structure_field_is_fixed (const GstIdStr * field, const GValue * val,
     gpointer user_data)
 {
   return gst_value_is_fixed (val);
@@ -6867,7 +6869,7 @@ gst_value_is_fixed (const GValue * value)
     /* Flagsets are only fixed if there are no 'don't care' bits */
     return (gst_value_get_flagset_mask (value) == GST_FLAG_SET_MASK_EXACT);
   } else if (GST_VALUE_HOLDS_STRUCTURE (value)) {
-    return gst_structure_foreach (gst_value_get_structure (value),
+    return gst_structure_foreach_id_str (gst_value_get_structure (value),
         structure_field_is_fixed, NULL);
   }
   return gst_type_is_fixed (type);

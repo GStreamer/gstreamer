@@ -1680,11 +1680,11 @@ gst_ipc_pipeline_comm_cancel (GstIpcPipelineComm * comm, gboolean cleanup)
 }
 
 static gboolean
-set_field (GQuark field_id, const GValue * value, gpointer user_data)
+set_field (const GstIdStr * fieldname, const GValue * value, gpointer user_data)
 {
   GstStructure *structure = user_data;
 
-  gst_structure_id_set_value (structure, field_id, value);
+  gst_structure_id_str_set_value (structure, fieldname, value);
 
   return TRUE;
 }
@@ -1711,7 +1711,7 @@ gst_ipc_pipeline_comm_reply_request (GstIpcPipelineComm * comm, guint32 id,
          will expect the object to be the same */
       GstStructure *structure = gst_query_writable_structure (req->query);
       gst_structure_remove_all_fields (structure);
-      gst_structure_foreach (gst_query_get_structure (query), set_field,
+      gst_structure_foreach_id_str (gst_query_get_structure (query), set_field,
           structure);
     } else {
       GST_WARNING_OBJECT (comm->element,

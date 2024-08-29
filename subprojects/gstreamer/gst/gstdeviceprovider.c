@@ -279,11 +279,11 @@ gst_device_provider_class_set_metadata (GstDeviceProviderClass * klass,
   g_return_if_fail (description != NULL && *description != '\0');
   g_return_if_fail (author != NULL && *author != '\0');
 
-  gst_structure_id_set ((GstStructure *) klass->metadata,
-      GST_QUARK (ELEMENT_METADATA_LONGNAME), G_TYPE_STRING, longname,
-      GST_QUARK (ELEMENT_METADATA_KLASS), G_TYPE_STRING, classification,
-      GST_QUARK (ELEMENT_METADATA_DESCRIPTION), G_TYPE_STRING, description,
-      GST_QUARK (ELEMENT_METADATA_AUTHOR), G_TYPE_STRING, author, NULL);
+  gst_structure_set_static_str ((GstStructure *) klass->metadata,
+      GST_ELEMENT_METADATA_LONGNAME, G_TYPE_STRING, longname,
+      GST_ELEMENT_METADATA_KLASS, G_TYPE_STRING, classification,
+      GST_ELEMENT_METADATA_DESCRIPTION, G_TYPE_STRING, description,
+      GST_ELEMENT_METADATA_AUTHOR, G_TYPE_STRING, author, NULL);
 }
 
 /**
@@ -327,17 +327,17 @@ gst_device_provider_class_set_static_metadata (GstDeviceProviderClass * klass,
   g_value_init (&val, G_TYPE_STRING);
 
   g_value_set_static_string (&val, longname);
-  gst_structure_id_set_value (s, GST_QUARK (ELEMENT_METADATA_LONGNAME), &val);
+  gst_structure_set_value_static_str (s, GST_ELEMENT_METADATA_LONGNAME, &val);
 
   g_value_set_static_string (&val, classification);
-  gst_structure_id_set_value (s, GST_QUARK (ELEMENT_METADATA_KLASS), &val);
+  gst_structure_set_value_static_str (s, GST_ELEMENT_METADATA_KLASS, &val);
 
   g_value_set_static_string (&val, description);
-  gst_structure_id_set_value (s, GST_QUARK (ELEMENT_METADATA_DESCRIPTION),
+  gst_structure_set_value_static_str (s, GST_ELEMENT_METADATA_DESCRIPTION,
       &val);
 
   g_value_set_static_string (&val, author);
-  gst_structure_id_take_value (s, GST_QUARK (ELEMENT_METADATA_AUTHOR), &val);
+  gst_structure_set_value_static_str (s, GST_ELEMENT_METADATA_AUTHOR, &val);
 }
 
 /**

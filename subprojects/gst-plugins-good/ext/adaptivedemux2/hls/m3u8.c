@@ -2597,7 +2597,7 @@ gst_hls_media_playlist_recommended_buffering_threshold (GstHLSMediaPlaylist *
       3 * (playlist->duration / playlist->segments->len) / 2;
 
   if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist)) {
-    /* For live playlists, reduce the recommended buffering threshold 
+    /* For live playlists, reduce the recommended buffering threshold
      * to match the starting hold back distance if needed, otherwise
      * we'll hit the live edge and have to wait before we hit 100% */
     if (GST_CLOCK_TIME_IS_VALID (playlist->hold_back)
@@ -3375,12 +3375,12 @@ hls_master_playlist_get_variant_for_bitrate (GstHLSMasterPlaylist *
 }
 
 static gboolean
-remove_uncommon (GQuark field_id, GValue * value, GstStructure * st2)
+remove_uncommon (const GstIdStr * fieldname, GValue * value, GstStructure * st2)
 {
   const GValue *other;
   GValue dest = G_VALUE_INIT;
 
-  other = gst_structure_id_get_value (st2, field_id);
+  other = gst_structure_id_str_get_value (st2, fieldname);
 
   if (other == NULL || (G_VALUE_TYPE (value) != G_VALUE_TYPE (other)))
     return FALSE;
@@ -3414,8 +3414,8 @@ gst_caps_merge_common (GstCaps * caps1, GstCaps * caps2)
       if (gst_structure_has_name (st2, name1)) {
         if (merged == NULL)
           merged = gst_structure_copy (st1);
-        gst_structure_filter_and_map_in_place (merged,
-            (GstStructureFilterMapFunc) remove_uncommon, st2);
+        gst_structure_filter_and_map_in_place_id_str (merged,
+            (GstStructureFilterMapIdStrFunc) remove_uncommon, st2);
       }
     }
 

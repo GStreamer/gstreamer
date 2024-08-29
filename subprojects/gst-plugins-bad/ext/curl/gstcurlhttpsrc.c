@@ -1056,12 +1056,13 @@ escape:
  * understand.
  */
 static gboolean
-_headers_to_curl_slist (GQuark field_id, const GValue * value, gpointer ptr)
+_headers_to_curl_slist (const GstIdStr * fieldname, const GValue * value,
+    gpointer ptr)
 {
   gchar *field;
   struct curl_slist **p_slist = ptr;
 
-  field = g_strdup_printf ("%s: %s", g_quark_to_string (field_id),
+  field = g_strdup_printf ("%s: %s", gst_id_str_as_str (fieldname),
       g_value_get_string (value));
 
   *p_slist = curl_slist_append (*p_slist, field);
@@ -1124,7 +1125,7 @@ gst_curl_http_src_create_easy_handle (GstCurlHttpSrc * s)
 
   /* curl_slist_append dynamically allocates memory, but I need to free it */
   if (s->request_headers != NULL) {
-    gst_structure_foreach (s->request_headers, _headers_to_curl_slist,
+    gst_structure_foreach_id_str (s->request_headers, _headers_to_curl_slist,
         &s->slist);
     if (curl_easy_setopt (handle, CURLOPT_HTTPHEADER, s->slist) != CURLE_OK) {
       GST_WARNING_OBJECT (s, "Failed to set HTTP headers!");

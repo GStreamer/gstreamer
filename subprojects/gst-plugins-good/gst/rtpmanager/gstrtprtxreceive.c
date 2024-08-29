@@ -1002,14 +1002,14 @@ gst_rtp_rtx_receive_get_property (GObject * object,
 }
 
 static gboolean
-structure_to_hash_table_inv (GQuark field_id, const GValue * value,
+structure_to_hash_table_inv (const GstIdStr * fieldname, const GValue * value,
     gpointer hash)
 {
   const gchar *field_str;
   guint field_uint;
   guint value_uint;
 
-  field_str = g_quark_to_string (field_id);
+  field_str = gst_id_str_as_str (fieldname);
   field_uint = atoi (field_str);
   value_uint = g_value_get_uint (value);
   g_hash_table_insert ((GHashTable *) hash, GUINT_TO_POINTER (value_uint),
@@ -1031,7 +1031,7 @@ gst_rtp_rtx_receive_set_property (GObject * object,
         gst_structure_free (rtx->external_ssrc_map);
       rtx->external_ssrc_map = g_value_dup_boxed (value);
       g_hash_table_remove_all (rtx->ssrc2_ssrc1_map);
-      gst_structure_foreach (rtx->external_ssrc_map,
+      gst_structure_foreach_id_str (rtx->external_ssrc_map,
           structure_to_hash_table_inv, rtx->ssrc2_ssrc1_map);
       GST_OBJECT_UNLOCK (rtx);
       break;
@@ -1041,7 +1041,7 @@ gst_rtp_rtx_receive_set_property (GObject * object,
         gst_structure_free (rtx->rtx_pt_map_structure);
       rtx->rtx_pt_map_structure = g_value_dup_boxed (value);
       g_hash_table_remove_all (rtx->rtx_pt_map);
-      gst_structure_foreach (rtx->rtx_pt_map_structure,
+      gst_structure_foreach_id_str (rtx->rtx_pt_map_structure,
           structure_to_hash_table_inv, rtx->rtx_pt_map);
       GST_OBJECT_UNLOCK (rtx);
       break;

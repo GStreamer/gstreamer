@@ -50,10 +50,10 @@ setup_backchannel_shoveler (GstElement * rtspsrc, GstCaps * caps)
 }
 
 static gboolean
-remove_extra_fields (GQuark field_id, GValue * value G_GNUC_UNUSED,
+remove_extra_fields (const GstIdStr * fieldname, GValue * value G_GNUC_UNUSED,
     gpointer user_data G_GNUC_UNUSED)
 {
-  return !g_str_has_prefix (g_quark_to_string (field_id), "a-");
+  return !g_str_has_prefix (gst_id_str_as_str (fieldname), "a-");
 }
 
 static gboolean
@@ -71,7 +71,7 @@ find_backchannel (GstElement * rtspsrc, guint idx, GstCaps * caps,
     caps = gst_caps_new_empty ();
     s = gst_structure_copy (s);
     gst_structure_set_name (s, "application/x-rtp");
-    gst_structure_filter_and_map_in_place (s, remove_extra_fields, NULL);
+    gst_structure_filter_and_map_in_place_id_str (s, remove_extra_fields, NULL);
     gst_caps_append_structure (caps, s);
     setup_backchannel_shoveler (rtspsrc, caps);
   }

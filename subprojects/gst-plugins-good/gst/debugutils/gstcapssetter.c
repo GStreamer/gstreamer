@@ -249,7 +249,7 @@ gst_caps_setter_transform_ip (GstBaseTransform * btrans, GstBuffer * in)
 }
 
 static gboolean
-gst_caps_is_fixed_foreach (GQuark field_id, const GValue * value,
+gst_caps_is_fixed_foreach (const GstIdStr * fieldname, const GValue * value,
     gpointer unused)
 {
   return gst_value_is_fixed (value);
@@ -277,7 +277,7 @@ gst_caps_setter_set_property (GObject * object, guint prop_id,
         GstStructure *s;
 
         s = gst_caps_get_structure (new_caps, i);
-        if (!gst_structure_foreach (s, gst_caps_is_fixed_foreach, NULL)) {
+        if (!gst_structure_foreach_id_str (s, gst_caps_is_fixed_foreach, NULL)) {
           GST_ERROR_OBJECT (filter, "rejected unfixed caps: %" GST_PTR_FORMAT,
               new_caps);
           gst_caps_unref (new_caps);

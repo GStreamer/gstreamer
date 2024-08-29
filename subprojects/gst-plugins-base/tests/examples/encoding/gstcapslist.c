@@ -24,14 +24,15 @@
  */
 
 static gboolean
-remove_range_foreach (GQuark field_id, const GValue * value, GstStructure * st)
+remove_range_foreach (const GstIdStr * fieldname, const GValue * value,
+    GstStructure * st)
 {
   GType ftype = G_VALUE_TYPE (value);
   /* const gchar *fname; */
 
   if (ftype == GST_TYPE_INT_RANGE || ftype == GST_TYPE_DOUBLE_RANGE ||
       ftype == GST_TYPE_FRACTION_RANGE) {
-    gst_structure_remove_field (st, g_quark_to_string (field_id));
+    gst_structure_remove_field (st, gst_id_str_as_str (fieldname));
     return FALSE;
   }
 
@@ -61,8 +62,8 @@ clear_caps (GstCaps * caps, GstCaps * rescaps)
     st = gst_caps_get_structure (res, i - 1);
 
     /* Remove range fields */
-    while (!gst_structure_foreach (st,
-            (GstStructureForeachFunc) remove_range_foreach, st));
+    while (!gst_structure_foreach_id_str (st,
+            (GstStructureForeachIdStrFunc) remove_range_foreach, st));
   }
 
   GST_DEBUG ("stripped %" GST_PTR_FORMAT, res);

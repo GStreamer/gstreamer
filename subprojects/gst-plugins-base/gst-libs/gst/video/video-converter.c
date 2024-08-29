@@ -2689,11 +2689,12 @@ gst_video_converter_free (GstVideoConverter * convert)
 }
 
 static gboolean
-copy_config (GQuark field_id, const GValue * value, gpointer user_data)
+copy_config (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
 {
   GstVideoConverter *convert = user_data;
 
-  gst_structure_id_set_value (convert->config, field_id, value);
+  gst_structure_id_str_set_value (convert->config, fieldname, value);
 
   return TRUE;
 }
@@ -2723,7 +2724,7 @@ gst_video_converter_set_config (GstVideoConverter * convert,
   g_return_val_if_fail (convert != NULL, FALSE);
   g_return_val_if_fail (config != NULL, FALSE);
 
-  gst_structure_foreach (config, copy_config, convert);
+  gst_structure_foreach_id_str (config, copy_config, convert);
   gst_structure_free (config);
 
   gst_video_converter_init_from_config (convert);

@@ -346,10 +346,11 @@ gst_pulse_cvolume_from_linear (pa_cvolume * v, unsigned channels,
 }
 
 static gboolean
-make_proplist_item (GQuark field_id, const GValue * value, gpointer user_data)
+make_proplist_item (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
 {
   pa_proplist *p = (pa_proplist *) user_data;
-  gchar *prop_id = (gchar *) g_quark_to_string (field_id);
+  const gchar *prop_id = gst_id_str_as_str (fieldname);
 
   /* http://0pointer.de/lennart/projects/pulseaudio/doxygen/proplist_8h.html */
 
@@ -374,7 +375,7 @@ gst_pulse_make_proplist (const GstStructure * properties)
   pa_proplist *proplist = pa_proplist_new ();
 
   /* iterate the structure and fill the proplist */
-  gst_structure_foreach (properties, make_proplist_item, proplist);
+  gst_structure_foreach_id_str (properties, make_proplist_item, proplist);
   return proplist;
 }
 

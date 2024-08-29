@@ -2207,11 +2207,12 @@ error:
 }
 
 static gboolean
-copy_config (GQuark field_id, const GValue * value, gpointer user_data)
+copy_config (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
 {
   GstCudaConverter *self = (GstCudaConverter *) user_data;
 
-  gst_structure_id_set_value (self->priv->config, field_id, value);
+  gst_structure_id_str_set_value (self->priv->config, fieldname, value);
 
   return TRUE;
 }
@@ -2219,7 +2220,7 @@ copy_config (GQuark field_id, const GValue * value, gpointer user_data)
 static void
 gst_cuda_converter_set_config (GstCudaConverter * self, GstStructure * config)
 {
-  gst_structure_foreach (config, copy_config, self);
+  gst_structure_foreach_id_str (config, copy_config, self);
   gst_structure_free (config);
 }
 

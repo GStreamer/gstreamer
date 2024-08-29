@@ -962,10 +962,11 @@ typedef struct
 } PrintActionFieldData;
 
 static gboolean
-_append_value (GQuark field_id, const GValue * value, PrintActionFieldData * d)
+_append_value (const GstIdStr * field, const GValue * value,
+    PrintActionFieldData * d)
 {
   gchar *val_str = NULL;
-  const gchar *fieldname = g_quark_to_string (field_id);
+  const gchar *fieldname = gst_id_str_as_str (field);
 
   if (g_str_has_prefix (fieldname, "__") && g_str_has_suffix (fieldname, "__"))
     return TRUE;
@@ -1021,8 +1022,8 @@ gst_validate_print_action (GstValidateAction * action, const gchar * message)
           GST_VALIDATE_ACTION_N_REPEATS (action));
 
     g_string_append (string, " ( ");
-    gst_structure_foreach (action->structure,
-        (GstStructureForeachFunc) _append_value, &d);
+    gst_structure_foreach_id_str (action->structure,
+        (GstStructureForeachIdStrFunc) _append_value, &d);
     if (d.printed)
       g_string_append_printf (string, "\n%*c)\n", indent, ' ');
     else

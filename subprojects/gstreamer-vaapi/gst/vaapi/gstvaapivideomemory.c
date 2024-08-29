@@ -1255,32 +1255,6 @@ gst_vaapi_video_info_quark_get (void)
   return g_quark;
 }
 
-#define ALLOCATION_VINFO_QUARK allocation_vinfo_quark_get ()
-static GQuark
-allocation_vinfo_quark_get (void)
-{
-  static gsize g_quark;
-
-  if (g_once_init_enter (&g_quark)) {
-    gsize quark = (gsize) g_quark_from_static_string ("allocation-vinfo");
-    g_once_init_leave (&g_quark, quark);
-  }
-  return g_quark;
-}
-
-#define SURFACE_ALLOC_FLAGS_QUARK surface_alloc_flags_quark_get ()
-static GQuark
-surface_alloc_flags_quark_get (void)
-{
-  static gsize g_quark;
-
-  if (g_once_init_enter (&g_quark)) {
-    gsize quark = (gsize) g_quark_from_static_string ("surface-alloc-flags");
-    g_once_init_leave (&g_quark, quark);
-  }
-  return g_quark;
-}
-
 #define NEGOTIATED_VINFO_QUARK negotiated_vinfo_quark_get ()
 static GQuark
 negotiated_vinfo_quark_get (void)
@@ -1323,13 +1297,13 @@ gst_allocator_get_vaapi_video_info (GstAllocator * allocator,
     return NULL;
 
   if (out_flags_ptr) {
-    value = gst_structure_id_get_value (structure, SURFACE_ALLOC_FLAGS_QUARK);
+    value = gst_structure_get_value (structure, "surface-alloc-flags");
     if (!value)
       return NULL;
     *out_flags_ptr = g_value_get_uint (value);
   }
 
-  value = gst_structure_id_get_value (structure, ALLOCATION_VINFO_QUARK);
+  value = gst_structure_get_value (structure, "allocation-vinfo");
   if (!value)
     return NULL;
   return g_value_get_boxed (value);

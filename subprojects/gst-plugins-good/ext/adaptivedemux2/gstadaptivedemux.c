@@ -1107,12 +1107,12 @@ struct http_headers_collector
 };
 
 static gboolean
-gst_adaptive_demux_handle_upstream_http_header (GQuark field_id,
+gst_adaptive_demux_handle_upstream_http_header (const GstIdStr * fieldname,
     const GValue * value, gpointer userdata)
 {
   struct http_headers_collector *hdr_data = userdata;
   GstAdaptiveDemux *demux = hdr_data->demux;
-  const gchar *field_name = g_quark_to_string (field_id);
+  const gchar *field_name = gst_id_str_as_str (fieldname);
 
   if (G_UNLIKELY (value == NULL))
     return TRUE;                /* This should not happen */
@@ -1137,7 +1137,7 @@ gst_adaptive_demux_handle_upstream_http_header (GQuark field_id,
       cookies = (gchar **) g_malloc0 ((total_len + 1) * sizeof (gchar *));
 
       for (i = 0; i < gst_value_array_get_size (value); i++) {
-        GST_INFO_OBJECT (demux, "%s : %s", g_quark_to_string (field_id),
+        GST_INFO_OBJECT (demux, "%s : %s", gst_id_str_as_str (fieldname),
             g_value_get_string (gst_value_array_get_value (value, i)));
         cookies[i] = g_value_dup_string (gst_value_array_get_value (value, i));
       }
@@ -1145,12 +1145,12 @@ gst_adaptive_demux_handle_upstream_http_header (GQuark field_id,
       total_len = 1 + prev_len;
       cookies = (gchar **) g_malloc0 ((total_len + 1) * sizeof (gchar *));
 
-      GST_INFO_OBJECT (demux, "%s : %s", g_quark_to_string (field_id),
+      GST_INFO_OBJECT (demux, "%s : %s", gst_id_str_as_str (fieldname),
           g_value_get_string (value));
       cookies[0] = g_value_dup_string (value);
     } else {
       GST_WARNING_OBJECT (demux, "%s field is not string or array",
-          g_quark_to_string (field_id));
+          gst_id_str_as_str (fieldname));
     }
 
     if (cookies) {
@@ -1260,7 +1260,7 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
           gst_structure_get (structure, "request-headers", GST_TYPE_STRUCTURE,
               &req_headers, NULL);
           if (req_headers) {
-            gst_structure_foreach (req_headers,
+            gst_structure_foreach_id_str (req_headers,
                 gst_adaptive_demux_handle_upstream_http_header, &c);
             gst_structure_free (req_headers);
           }
@@ -1270,7 +1270,7 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
           gst_structure_get (structure, "response-headers", GST_TYPE_STRUCTURE,
               &res_headers, NULL);
           if (res_headers) {
-            gst_structure_foreach (res_headers,
+            gst_structure_foreach_id_str (res_headers,
                 gst_adaptive_demux_handle_upstream_http_header, &c);
             gst_structure_free (res_headers);
           }

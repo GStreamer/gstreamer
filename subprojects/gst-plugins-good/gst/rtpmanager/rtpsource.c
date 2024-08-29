@@ -490,22 +490,20 @@ rtp_source_get_sdes_struct (RTPSource * src)
 }
 
 static gboolean
-sdes_struct_compare_func (GQuark field_id, const GValue * value,
+sdes_struct_compare_func (const GstIdStr * fieldname, const GValue * value,
     gpointer user_data)
 {
   GstStructure *old;
-  const gchar *field;
 
   old = GST_STRUCTURE (user_data);
-  field = g_quark_to_string (field_id);
 
-  if (!gst_structure_has_field (old, field))
+  if (!gst_structure_id_str_has_field (old, fieldname))
     return FALSE;
 
   g_assert (G_VALUE_HOLDS_STRING (value));
 
   return strcmp (g_value_get_string (value), gst_structure_get_string (old,
-          field)) == 0;
+          gst_id_str_as_str (fieldname))) == 0;
 }
 
 /**
@@ -529,7 +527,8 @@ rtp_source_set_sdes_struct (RTPSource * src, GstStructure * sdes)
   g_return_val_if_fail (strcmp (gst_structure_get_name (sdes),
           "application/x-rtp-source-sdes") == 0, FALSE);
 
-  changed = !gst_structure_foreach (sdes, sdes_struct_compare_func, src->sdes);
+  changed =
+      !gst_structure_foreach_id_str (sdes, sdes_struct_compare_func, src->sdes);
 
   if (changed) {
     gst_structure_free (src->sdes);

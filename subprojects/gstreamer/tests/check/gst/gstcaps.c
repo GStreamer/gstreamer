@@ -1160,7 +1160,8 @@ GST_START_TEST (test_union)
 GST_END_TEST;
 
 static gboolean
-_caps_is_fixed_foreach (GQuark field_id, const GValue * value, gpointer unused)
+_caps_is_fixed_foreach (const GstIdStr * fieldname, const GValue * value,
+    gpointer unused)
 {
   return gst_value_is_fixed (value);
 }
@@ -1179,7 +1180,8 @@ GST_START_TEST (test_normalize)
   for (i = 0; i < gst_caps_get_size (norm); i++) {
     GstStructure *st = gst_caps_get_structure (norm, i);
     /* Make sure all fields of all structures are fixed */
-    fail_unless (gst_structure_foreach (st, _caps_is_fixed_foreach, NULL));
+    fail_unless (gst_structure_foreach_id_str (st, _caps_is_fixed_foreach,
+            NULL));
   }
 
   gst_caps_unref (out);
@@ -1197,7 +1199,8 @@ GST_START_TEST (test_normalize)
   for (i = 0; i < gst_caps_get_size (norm); i++) {
     GstStructure *st = gst_caps_get_structure (norm, i);
     /* Make sure all fields of all structures are fixed */
-    fail_unless (gst_structure_foreach (st, _caps_is_fixed_foreach, NULL));
+    fail_unless (gst_structure_foreach_id_str (st, _caps_is_fixed_foreach,
+            NULL));
   }
 
   gst_caps_unref (out);
@@ -1214,7 +1217,8 @@ GST_START_TEST (test_normalize)
   for (i = 0; i < gst_caps_get_size (norm); i++) {
     GstStructure *st = gst_caps_get_structure (norm, i);
     /* Make sure all fields of all structures are fixed */
-    fail_unless (gst_structure_foreach (st, _caps_is_fixed_foreach, NULL));
+    fail_unless (gst_structure_foreach_id_str (st, _caps_is_fixed_foreach,
+            NULL));
   }
 
   gst_caps_unref (out);

@@ -88,12 +88,11 @@ enum
 #define gst_subtitle_overlay_parent_class parent_class
 G_DEFINE_TYPE (GstSubtitleOverlay, gst_subtitle_overlay, GST_TYPE_BIN);
 
-static GQuark _subtitle_overlay_event_marker_id = 0;
+#define SUBTITLE_OVERLAY_EVENT_MARKER "gst-subtitle-overlay-event-marker"
 
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (subtitle_overlay_debug, "subtitleoverlay", 0, "Subtitle Overlay"); \
-    playback_element_init (plugin); \
-    _subtitle_overlay_event_marker_id = g_quark_from_static_string ("gst-subtitle-overlay-event-marker")
+    playback_element_init (plugin);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (subtitleoverlay, "subtitleoverlay",
     GST_RANK_NONE, GST_TYPE_SUBTITLE_OVERLAY, _do_init);
 
@@ -1710,7 +1709,7 @@ gst_subtitle_overlay_src_proxy_event (GstPad * proxypad, GstObject * parent,
     goto out;
 
   s = gst_event_get_structure (event);
-  if (s && gst_structure_id_has_field (s, _subtitle_overlay_event_marker_id)) {
+  if (s && gst_structure_has_field (s, SUBTITLE_OVERLAY_EVENT_MARKER)) {
     GST_DEBUG_OBJECT (ghostpad,
         "Dropping event with marker: %" GST_PTR_FORMAT,
         gst_event_get_structure (event));
@@ -2189,7 +2188,7 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstObject * parent,
       event = GST_EVENT_CAST (gst_event_make_writable (event));
       structure = gst_event_writable_structure (event);
 
-      gst_structure_id_set (structure, _subtitle_overlay_event_marker_id,
+      gst_structure_set_static_str (structure, SUBTITLE_OVERLAY_EVENT_MARKER,
           G_TYPE_BOOLEAN, TRUE, NULL);
       break;
     }

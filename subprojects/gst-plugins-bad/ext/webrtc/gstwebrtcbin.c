@@ -3088,13 +3088,13 @@ done:
 
 /* https://tools.ietf.org/html/rfc5576#section-4.2 */
 static gboolean
-_media_add_rtx_ssrc_group (GQuark field_id, const GValue * value,
+_media_add_rtx_ssrc_group (const GstIdStr * fieldname, const GValue * value,
     GstSDPMedia * media)
 {
   gchar *str;
 
   str =
-      g_strdup_printf ("FID %s %u", g_quark_to_string (field_id),
+      g_strdup_printf ("FID %s %u", gst_id_str_as_str (fieldname),
       g_value_get_uint (value));
   gst_sdp_media_add_attribute (media, "ssrc-group", str);
 
@@ -3111,7 +3111,8 @@ typedef struct
 } RtxSsrcData;
 
 static gboolean
-_media_add_rtx_ssrc (GQuark field_id, const GValue * value, RtxSsrcData * data)
+_media_add_rtx_ssrc (const GstIdStr * fieldname, const GValue * value,
+    RtxSsrcData * data)
 {
   gchar *str;
   GstStructure *sdes;
@@ -3164,8 +3165,8 @@ _media_add_ssrcs (GstSDPMedia * media, GstCaps * caps, GstWebRTCBin * webrtc,
   cname = gst_structure_get_string (sdes, "cname");
 
   if (trans->local_rtx_ssrc_map)
-    gst_structure_foreach (trans->local_rtx_ssrc_map,
-        (GstStructureForeachFunc) _media_add_rtx_ssrc_group, media);
+    gst_structure_foreach_id_str (trans->local_rtx_ssrc_map,
+        (GstStructureForeachIdStrFunc) _media_add_rtx_ssrc_group, media);
 
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     const GstStructure *s = gst_caps_get_structure (caps, i);
@@ -3204,8 +3205,8 @@ _media_add_ssrcs (GstSDPMedia * media, GstCaps * caps, GstWebRTCBin * webrtc,
   gst_structure_free (sdes);
 
   if (trans->local_rtx_ssrc_map)
-    gst_structure_foreach (trans->local_rtx_ssrc_map,
-        (GstStructureForeachFunc) _media_add_rtx_ssrc, &data);
+    gst_structure_foreach_id_str (trans->local_rtx_ssrc_map,
+        (GstStructureForeachIdStrFunc) _media_add_rtx_ssrc, &data);
 }
 
 static void
@@ -3229,7 +3230,8 @@ _add_fingerprint_to_media (GstWebRTCDTLSTransport * transport,
 }
 
 static gchar *
-_parse_extmap (GQuark field_id, const GValue * value, GError ** error)
+_parse_extmap (const GstIdStr * fieldname, const GValue * value,
+    GError ** error)
 {
   gchar *ret = NULL;
 
@@ -3271,7 +3273,7 @@ _parse_extmap (GQuark field_id, const GValue * value, GError ** error)
 
     g_set_error (error, GST_WEBRTC_ERROR,
         GST_WEBRTC_ERROR_INTERNAL_FAILURE,
-        "Invalid value for %s: %s", g_quark_to_string (field_id), val_str);
+        "Invalid value for %s: %s", gst_id_str_as_str (fieldname), val_str);
     g_free (val_str);
   }
 
@@ -3287,37 +3289,38 @@ typedef struct
 } ExtmapData;
 
 static gboolean
-_dedup_extmap_field (GQuark field_id, const GValue * value, ExtmapData * data)
+_dedup_extmap_field (const GstIdStr * fieldname, const GValue * value,
+    ExtmapData * data)
 {
   gboolean is_extmap =
-      g_str_has_prefix (g_quark_to_string (field_id), "extmap-");
+      g_str_has_prefix (gst_id_str_as_str (fieldname), "extmap-");
 
   if (!data->ret)
     goto done;
 
   if (is_extmap) {
-    gchar *new_value = _parse_extmap (field_id, value, data->error);
+    gchar *new_value = _parse_extmap (fieldname, value, data->error);
 
     if (!new_value) {
       data->ret = FALSE;
       goto done;
     }
 
-    if (gst_structure_id_has_field (data->extmap, field_id)) {
-      gchar *old_value =
-          _parse_extmap (field_id, gst_structure_id_get_value (data->extmap,
-              field_id), NULL);
+    if (gst_structure_id_str_has_field (data->extmap, fieldname)) {
+      gchar *old_value = _parse_extmap (fieldname,
+          gst_structure_id_str_get_value (data->extmap,
+              fieldname), NULL);
 
       g_assert (old_value);
 
       if (g_strcmp0 (new_value, old_value)) {
         GST_ERROR
             ("extmap contains different values for id %s (%s != %s)",
-            g_quark_to_string (field_id), old_value, new_value);
+            gst_id_str_as_str (fieldname), old_value, new_value);
         g_set_error (data->error, GST_WEBRTC_ERROR,
             GST_WEBRTC_ERROR_INTERNAL_FAILURE,
             "extmap contains different values for id %s (%s != %s)",
-            g_quark_to_string (field_id), old_value, new_value);
+            gst_id_str_as_str (fieldname), old_value, new_value);
         data->ret = FALSE;
       }
 
@@ -3326,7 +3329,7 @@ _dedup_extmap_field (GQuark field_id, const GValue * value, ExtmapData * data)
     }
 
     if (data->ret) {
-      gst_structure_id_set_value (data->extmap, field_id, value);
+      gst_structure_id_str_set_value (data->extmap, fieldname, value);
     }
 
     g_free (new_value);
@@ -3348,8 +3351,8 @@ _gather_extmap (GstCaps * caps, GError ** error)
   for (i = 0; i < n; i++) {
     GstStructure *s = gst_caps_get_structure (caps, i);
 
-    gst_structure_filter_and_map_in_place (s,
-        (GstStructureFilterMapFunc) _dedup_extmap_field, &edata);
+    gst_structure_filter_and_map_in_place_id_str (s,
+        (GstStructureFilterMapIdStrFunc) _dedup_extmap_field, &edata);
 
     if (!edata.ret) {
       gst_clear_structure (&edata.extmap);
@@ -3367,11 +3370,11 @@ struct hdrext_id
 };
 
 static gboolean
-structure_value_get_rtphdrext_id (GQuark field_id, const GValue * value,
-    gpointer user_data)
+structure_value_get_rtphdrext_id (const GstIdStr * fieldname,
+    const GValue * value, gpointer user_data)
 {
   struct hdrext_id *rtphdrext = user_data;
-  const char *field_name = g_quark_to_string (field_id);
+  const char *field_name = gst_id_str_as_str (fieldname);
 
   if (g_str_has_prefix (field_name, "extmap-")) {
     const char *val = NULL;
@@ -3408,7 +3411,7 @@ caps_get_rtp_header_extension_id (const GstCaps * caps,
     const GstStructure *s = gst_caps_get_structure (caps, i);
     struct hdrext_id data = { rtphdrext_uri, -1 };
 
-    gst_structure_foreach (s, structure_value_get_rtphdrext_id, &data);
+    gst_structure_foreach_id_str (s, structure_value_get_rtphdrext_id, &data);
 
     if (data.ext_id != -1)
       return data.ext_id;
@@ -3425,9 +3428,9 @@ caps_contain_rtp_header_extension (const GstCaps * caps,
 }
 
 static gboolean
-_copy_field (GQuark field_id, const GValue * value, GstStructure * s)
+_copy_field (const GstIdStr * fieldname, const GValue * value, GstStructure * s)
 {
-  gst_structure_id_set_value (s, field_id, value);
+  gst_structure_id_str_set_value (s, fieldname, value);
 
   return TRUE;
 }
@@ -3595,7 +3598,8 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
     GstStructure *s = gst_structure_copy (gst_caps_get_structure (caps, i));
 
     if (i == 0) {
-      gst_structure_foreach (extmap, (GstStructureForeachFunc) _copy_field, s);
+      gst_structure_foreach_id_str (extmap,
+          (GstStructureForeachIdStrFunc) _copy_field, s);
     }
 
     gst_caps_append_structure (format, s);
@@ -4992,11 +4996,12 @@ _build_fec_encoder (GstWebRTCBin * webrtc, WebRTCTransceiver * trans)
 }
 
 static gboolean
-_merge_structure (GQuark field_id, const GValue * value, gpointer user_data)
+_merge_structure (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
 {
   GstStructure *s = user_data;
 
-  gst_structure_id_set_value (s, field_id, value);
+  gst_structure_id_str_set_value (s, fieldname, value);
 
   return TRUE;
 }
@@ -5147,7 +5152,7 @@ _set_internal_rtpbin_element_props_from_stream (GstWebRTCBin * webrtc,
       }
 
       if (trans->local_rtx_ssrc_map) {
-        gst_structure_foreach (trans->local_rtx_ssrc_map,
+        gst_structure_foreach_id_str (trans->local_rtx_ssrc_map,
             _merge_structure, merged_local_rtx_ssrc_map);
       }
     }
@@ -5452,11 +5457,11 @@ _add_end_of_candidate_to_sdp (GstWebRTCBin * webrtc,
 }
 
 static gboolean
-_filter_sdp_fields (GQuark field_id, const GValue * value,
+_filter_sdp_fields (const GstIdStr * fieldname, const GValue * value,
     GstStructure * new_structure)
 {
-  if (!g_str_has_prefix (g_quark_to_string (field_id), "a-")) {
-    gst_structure_id_set_value (new_structure, field_id, value);
+  if (!g_str_has_prefix (gst_id_str_as_str (fieldname), "a-")) {
+    gst_structure_id_str_set_value (new_structure, fieldname, value);
   }
   return TRUE;
 }
@@ -5621,8 +5626,8 @@ _update_transport_ptmap_from_media (GstWebRTCBin * webrtc,
         GstStructure *filtered =
             gst_structure_new_empty (gst_structure_get_name (s));
 
-        gst_structure_foreach (s,
-            (GstStructureForeachFunc) _filter_sdp_fields, filtered);
+        gst_structure_foreach_id_str (s,
+            (GstStructureForeachIdStrFunc) _filter_sdp_fields, filtered);
         gst_caps_append_structure (item.caps, filtered);
       }
 

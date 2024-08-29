@@ -534,11 +534,12 @@ typedef struct
 } PropertyData;
 
 static gboolean
-check_property (GQuark field_id, GValue * expected_value, PropertyData * data)
+check_property (const GstIdStr * fieldname, GValue * expected_value,
+    PropertyData * data)
 {
   GValue cvalue = G_VALUE_INIT, *tvalue = NULL, comparable_value = G_VALUE_INIT,
       *observed_value;
-  const gchar *property = g_quark_to_string (field_id);
+  const gchar *property = gst_id_str_as_str (fieldname);
   GstControlBinding *binding = NULL;
 
   if (!data->on_children) {
@@ -665,9 +666,10 @@ compare:
 }
 
 static gboolean
-set_property (GQuark field_id, const GValue * value, PropertyData * data)
+set_property (const GstIdStr * fieldname, const GValue * value,
+    PropertyData * data)
 {
-  const gchar *property = g_quark_to_string (field_id);
+  const gchar *property = gst_id_str_as_str (fieldname);
 
   if (data->on_children) {
     if (!ges_timeline_element_set_child_property (data->element, property,
@@ -729,9 +731,9 @@ GES_START_VALIDATE_ACTION (set_or_check_properties)
   data.element = element;
   gst_structure_remove_fields (structure, "element-name", "at-time",
       "project-uri", NULL);
-  gst_structure_foreach (structure,
-      is_setting ? (GstStructureForeachFunc) set_property
-      : (GstStructureForeachFunc) check_property, &data);
+  gst_structure_foreach_id_str (structure,
+      is_setting ? (GstStructureForeachIdStrFunc) set_property
+      : (GstStructureForeachIdStrFunc) check_property, &data);
   gst_object_unref (element);
 
 local_done:

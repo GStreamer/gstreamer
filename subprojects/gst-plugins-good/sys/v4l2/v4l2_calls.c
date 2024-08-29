@@ -1035,10 +1035,10 @@ ctrl_failed:
 }
 
 static gboolean
-set_control (GQuark field_id, const GValue * value, gpointer user_data)
+set_control (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
 {
   GstV4l2Object *v4l2object = user_data;
-  GQuark normalised_field_id;
   gpointer *d;
 
   /* 32 bytes is the maximum size for a control name according to v4l2 */
@@ -1048,22 +1048,21 @@ set_control (GQuark field_id, const GValue * value, gpointer user_data)
      a subtly different way to v4l2-ctl.  e.g. the kernel's "Focus (absolute)"
      would become "focus__absolute_" whereas now it becomes "focus_absolute".
      Please remove the following in GStreamer 1.5 for 1.6 */
-  strncpy (name, g_quark_to_string (field_id), sizeof (name));
+  strncpy (name, gst_id_str_as_str (fieldname), sizeof (name));
   name[31] = '\0';
   gst_v4l2_normalise_control_name (name);
-  normalised_field_id = g_quark_from_string (name);
-  if (normalised_field_id != field_id)
+  if (!gst_id_str_is_equal_to_str (fieldname, name))
     g_warning ("In GStreamer 1.4 the way V4L2 control names were normalised "
         "changed.  Instead of setting \"%s\" please use \"%s\".  The former is "
         "deprecated and will be removed in a future version of GStreamer",
-        g_quark_to_string (field_id), name);
-  field_id = normalised_field_id;
+        gst_id_str_as_str (fieldname), name);
 
-  d = g_datalist_id_get_data (&v4l2object->controls, field_id);
+  d = g_datalist_id_get_data (&v4l2object->controls,
+      g_quark_from_string (gst_id_str_as_str (fieldname)));
   if (!d) {
     GST_WARNING_OBJECT (v4l2object,
         "Control '%s' does not exist or has an unsupported type.",
-        g_quark_to_string (field_id));
+        gst_id_str_as_str (fieldname));
     return TRUE;
   }
   if (G_VALUE_HOLDS (value, G_TYPE_INT)) {
@@ -1078,7 +1077,7 @@ set_control (GQuark field_id, const GValue * value, gpointer user_data)
   } else {
     GST_WARNING_OBJECT (v4l2object,
         "no compatible value expected for control '%s'.",
-        g_quark_to_string (field_id));
+        gst_id_str_as_str (fieldname));
     return TRUE;
   }
   return TRUE;
@@ -1087,7 +1086,7 @@ set_control (GQuark field_id, const GValue * value, gpointer user_data)
 gboolean
 gst_v4l2_set_controls (GstV4l2Object * v4l2object, GstStructure * controls)
 {
-  return gst_structure_foreach (controls, set_control, v4l2object);
+  return gst_structure_foreach_id_str (controls, set_control, v4l2object);
 }
 
 gboolean

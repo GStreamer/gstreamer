@@ -593,12 +593,12 @@ _add_properties (GString * json, GString * other_types,
 }
 
 static gboolean
-print_field (GQuark field, const GValue * value, GString * jcaps)
+print_field (const GstIdStr * fieldname, const GValue * value, GString * jcaps)
 {
   gchar *tmp, *str = gst_value_serialize (value);
 
-  if (!g_strcmp0 (g_quark_to_string (field), "format") ||
-      !g_strcmp0 (g_quark_to_string (field), "rate")) {
+  if (!g_strcmp0 (gst_id_str_as_str (fieldname), "format") ||
+      !g_strcmp0 (gst_id_str_as_str (fieldname), "rate")) {
     if (!cleanup_caps_field)
       cleanup_caps_field = g_regex_new ("\\(string\\)|\\(rate\\)", 0, 0, NULL);
 
@@ -607,7 +607,8 @@ print_field (GQuark field, const GValue * value, GString * jcaps)
     g_free (tmp);
   }
 
-  g_string_append_printf (jcaps, "%15s: %s\n", g_quark_to_string (field), str);
+  g_string_append_printf (jcaps, "%15s: %s\n", gst_id_str_as_str (fieldname),
+      str);
   g_free (str);
   return TRUE;
 }
@@ -645,8 +646,8 @@ _build_caps (const GstCaps * caps)
       g_string_append_printf (jcaps, "%s:\n",
           gst_structure_get_name (structure));
     }
-    gst_structure_foreach (structure, (GstStructureForeachFunc) print_field,
-        jcaps);
+    gst_structure_foreach_id_str (structure,
+        (GstStructureForeachIdStrFunc) print_field, jcaps);
   }
 
   res = json_strescape (jcaps->str);

@@ -5420,9 +5420,10 @@ accept_certificate_cb (GTlsConnection * conn, GTlsCertificate * peer_cert,
 }
 
 static gboolean
-_add_header_to_conn (GQuark field_id, const GValue * value, gpointer user_data)
+_add_header_to_conn (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
 {
-  const gchar *key_str = g_quark_to_string (field_id);
+  const gchar *key_str = gst_id_str_as_str (fieldname);
   const gchar *value_str = g_value_get_string (value);
 
   GstRTSPConnection *conn = (GstRTSPConnection *) user_data;
@@ -5493,7 +5494,7 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
       }
 
       if (src->prop_extra_http_request_headers != NULL) {
-        gst_structure_foreach (src->prop_extra_http_request_headers,
+        gst_structure_foreach_id_str (src->prop_extra_http_request_headers,
             _add_header_to_conn, info->connection);
       }
     }

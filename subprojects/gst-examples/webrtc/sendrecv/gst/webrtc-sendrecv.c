@@ -380,14 +380,15 @@ on_ice_gathering_state_notify (GstElement * webrtcbin, GParamSpec * pspec,
 static gboolean webrtcbin_get_stats (GstElement * webrtcbin);
 
 static gboolean
-on_webrtcbin_stat (GQuark field_id, const GValue * value, gpointer unused)
+on_webrtcbin_stat (const GstIdStr * fieldname, const GValue * value,
+    gpointer unused)
 {
   if (GST_VALUE_HOLDS_STRUCTURE (value)) {
-    GST_DEBUG ("stat: \'%s\': %" GST_PTR_FORMAT, g_quark_to_string (field_id),
+    GST_DEBUG ("stat: \'%s\': %" GST_PTR_FORMAT, gst_id_str_as_str (fieldname),
         gst_value_get_structure (value));
   } else {
     GST_FIXME ("unknown field \'%s\' value type: \'%s\'",
-        g_quark_to_string (field_id), g_type_name (G_VALUE_TYPE (value)));
+        gst_id_str_as_str (fieldname), g_type_name (G_VALUE_TYPE (value)));
   }
 
   return TRUE;
@@ -401,7 +402,7 @@ on_webrtcbin_get_stats (GstPromise * promise, GstElement * webrtcbin)
   g_return_if_fail (gst_promise_wait (promise) == GST_PROMISE_RESULT_REPLIED);
 
   stats = gst_promise_get_reply (promise);
-  gst_structure_foreach (stats, on_webrtcbin_stat, NULL);
+  gst_structure_foreach_id_str (stats, on_webrtcbin_stat, NULL);
 
   g_timeout_add (100, (GSourceFunc) webrtcbin_get_stats, webrtcbin);
 }

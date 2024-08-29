@@ -2123,10 +2123,10 @@ block_context (MqStreamCtx * ctx, GstSplitMuxSink * splitmux)
 }
 
 static gboolean
-_set_property_from_structure (GQuark field_id, const GValue * value,
+_set_property_from_structure (const GstIdStr * fieldname, const GValue * value,
     gpointer user_data)
 {
-  const gchar *property_name = g_quark_to_string (field_id);
+  const gchar *property_name = gst_id_str_as_str (fieldname);
   GObject *element = G_OBJECT (user_data);
 
   g_object_set_property (element, property_name, value);
@@ -2204,7 +2204,7 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
         gst_preset_load_preset (GST_PRESET (splitmux->sink),
             splitmux->sink_preset);
       if (splitmux->sink_properties)
-        gst_structure_foreach (splitmux->sink_properties,
+        gst_structure_foreach_id_str (splitmux->sink_properties,
             _set_property_from_structure, splitmux->sink);
       splitmux->active_sink = splitmux->sink;
       g_signal_emit (splitmux, signals[SIGNAL_SINK_ADDED], 0, splitmux->sink);
@@ -2224,7 +2224,7 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
         gst_preset_load_preset (GST_PRESET (splitmux->muxer),
             splitmux->muxer_preset);
       if (splitmux->muxer_properties)
-        gst_structure_foreach (splitmux->muxer_properties,
+        gst_structure_foreach_id_str (splitmux->muxer_properties,
             _set_property_from_structure, splitmux->muxer);
       g_signal_emit (splitmux, signals[SIGNAL_MUXER_ADDED], 0, splitmux->muxer);
       g_free (newname);
@@ -3888,7 +3888,7 @@ create_muxer (GstSplitMuxSink * splitmux)
         gst_preset_load_preset (GST_PRESET (splitmux->muxer),
             splitmux->muxer_preset);
       if (splitmux->muxer_properties)
-        gst_structure_foreach (splitmux->muxer_properties,
+        gst_structure_foreach_id_str (splitmux->muxer_properties,
             _set_property_from_structure, splitmux->muxer);
     } else {
       /* Ensure it's not in locked state (we might be reusing an old element) */
@@ -3985,7 +3985,7 @@ create_sink (GstSplitMuxSink * splitmux)
         gst_preset_load_preset (GST_PRESET (splitmux->sink),
             splitmux->sink_preset);
       if (splitmux->sink_properties)
-        gst_structure_foreach (splitmux->sink_properties,
+        gst_structure_foreach_id_str (splitmux->sink_properties,
             _set_property_from_structure, splitmux->sink);
       splitmux->active_sink = splitmux->sink;
     } else {
