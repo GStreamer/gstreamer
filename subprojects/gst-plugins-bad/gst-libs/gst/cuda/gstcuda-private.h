@@ -56,8 +56,6 @@ void          gst_cuda_memory_set_from_fixed_pool (GstMemory * mem);
 GST_CUDA_API
 gboolean      gst_cuda_memory_is_from_fixed_pool (GstMemory * mem);
 
-gboolean      gst_cuda_virtual_memory_symbol_loaded (void);
-
 gpointer      gst_cuda_get_win32_handle_metadata (void);
 
 G_END_DECLS

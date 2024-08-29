@@ -26,6 +26,7 @@
 #include "gstcudautils.h"
 #include "gstcudamemory.h"
 #include "gstcuda-private.h"
+#include "gstcudaloader-private.h"
 
 #ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
@@ -53,6 +54,7 @@ enum
   PROP_DXGI_ADAPTER_LUID,
   PROP_VIRTUAL_MEMORY,
   PROP_OS_HANDLE,
+  PROP_STREAM_ORDERED_ALLOC,
 };
 
 struct _GstCudaContextPrivate
@@ -63,6 +65,7 @@ struct _GstCudaContextPrivate
   gint64 dxgi_adapter_luid;
   gboolean virtual_memory_supported;
   gboolean os_handle_supported;
+  gboolean stream_ordered_alloc_supported;
 
   gint tex_align;
 
@@ -139,6 +142,16 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
           "Whether OS specific handle is supported via virtual memory", FALSE,
           (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstCudaContext:stream-ordered-alloc:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_STREAM_ORDERED_ALLOC,
+      g_param_spec_boolean ("stream-ordered-alloc", "Stream Ordered Alloc",
+          "Device supports stream ordered allocation", FALSE,
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
   gst_cuda_memory_init_once ();
 }
 
@@ -189,6 +202,9 @@ gst_cuda_context_get_property (GObject * object, guint prop_id,
       break;
     case PROP_OS_HANDLE:
       g_value_set_boolean (value, priv->os_handle_supported);
+      break;
+    case PROP_STREAM_ORDERED_ALLOC:
+      g_value_set_boolean (value, priv->stream_ordered_alloc_supported);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -571,7 +587,6 @@ gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
 {
   GList *iter;
   gint tex_align = 0;
-
   GstCudaContext *self;
 
   g_return_val_if_fail (handler, nullptr);
@@ -617,6 +632,16 @@ gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
 #endif
     if (ret == CUDA_SUCCESS && supported)
       self->priv->os_handle_supported = TRUE;
+  }
+
+  if (gst_cuda_stream_ordered_symbol_loaded ()) {
+    CUresult ret;
+    int supported = 0;
+
+    ret = CuDeviceGetAttribute (&supported,
+        CU_DEVICE_ATTRIBUTE_MEMORY_POOLS_SUPPORTED, device);
+    if (ret == CUDA_SUCCESS && supported)
+      self->priv->stream_ordered_alloc_supported = TRUE;
   }
 
   std::lock_guard < std::mutex > lk (list_lock);

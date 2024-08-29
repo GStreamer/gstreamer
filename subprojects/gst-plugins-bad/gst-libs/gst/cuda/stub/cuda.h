@@ -31,6 +31,7 @@ typedef gpointer CUmodule;
 typedef gpointer CUfunction;
 typedef gpointer CUmipmappedArray;
 typedef gpointer CUevent;
+typedef gpointer CUmemoryPool;
 
 typedef guint64  CUtexObject;
 typedef guintptr CUdeviceptr;
@@ -62,6 +63,7 @@ typedef enum
   CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED = 103,
   CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_HANDLE_SUPPORTED = 104,
   CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_KMT_HANDLE_SUPPORTED = 105,
+  CU_DEVICE_ATTRIBUTE_MEMORY_POOLS_SUPPORTED = 115,
 } CUdevice_attribute;
 
 typedef enum
@@ -291,6 +293,28 @@ typedef struct
   CUmemLocation location;
   CUmemAccess_flags flags;
 } CUmemAccessDesc;
+
+typedef struct
+{
+  CUmemAllocationType allocType;
+  CUmemAllocationHandleType handleTypes;
+  CUmemLocation location;
+  void *win32SecurityAttributes;
+  size_t maxSize;
+  unsigned char reserved[56];
+} CUmemPoolProps;
+
+typedef enum
+{
+  CU_MEMPOOL_ATTR_REUSE_FOLLOW_EVENT_DEPENDENCIES = 1,
+  CU_MEMPOOL_ATTR_REUSE_ALLOW_OPPORTUNISTIC,
+  CU_MEMPOOL_ATTR_REUSE_ALLOW_INTERNAL_DEPENDENCIES,
+  CU_MEMPOOL_ATTR_RELEASE_THRESHOLD,
+  CU_MEMPOOL_ATTR_RESERVED_MEM_CURRENT,
+  CU_MEMPOOL_ATTR_RESERVED_MEM_HIGH,
+  CU_MEMPOOL_ATTR_USED_MEM_CURRENT,
+  CU_MEMPOOL_ATTR_USED_MEM_HIGH,
+} CUmemPool_attribute;
 
 #define CUDA_VERSION 10000
 

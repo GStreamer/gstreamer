@@ -25,6 +25,7 @@
 #include "gstcudaloader.h"
 #include <gmodule.h>
 #include "gstcuda-private.h"
+#include "gstcudaloader-private.h"
 
 #ifdef HAVE_CUDA_GST_GL
 #include <gst/gl/gstglconfig.h>
@@ -62,6 +63,7 @@ typedef struct _GstNvCodecCudaVTable
 {
   gboolean loaded;
   gboolean have_virtual_alloc;
+  gboolean have_stream_ordered_alloc;
 
   CUresult (CUDAAPI * CuInit) (unsigned int Flags);
   CUresult (CUDAAPI * CuGetErrorName) (CUresult error, const char **pStr);
@@ -211,6 +213,19 @@ typedef struct _GstNvCodecCudaVTable
   CUresult (CUDAAPI * CuMemUnmap) (CUdeviceptr ptr, size_t size);
   CUresult (CUDAAPI * CuMemRetainAllocationHandle)
       (CUmemGenericAllocationHandle *handle, void *addr);
+
+  CUresult (CUDAAPI * CuMemAllocAsync) (CUdeviceptr *dptr, size_t bytesize,
+      CUstream hStream);
+  CUresult (CUDAAPI * CuMemAllocFromPoolAsync) (CUdeviceptr *dptr,
+      size_t bytesize, CUmemoryPool pool, CUstream hStream);
+  CUresult (CUDAAPI * CuMemFreeAsync) (CUdeviceptr dptr, CUstream hStream);
+  CUresult (CUDAAPI * CuMemPoolCreate) (CUmemoryPool *pool,
+      const CUmemPoolProps *poolProps);
+  CUresult (CUDAAPI * CuMemPoolDestroy) (CUmemoryPool pool);
+  CUresult (CUDAAPI * CuMemPoolSetAttribute) (CUmemoryPool pool,
+      CUmemPool_attribute attr, void *value);
+  CUresult (CUDAAPI * CuMemPoolGetAttribute) (CUmemoryPool pool,
+      CUmemPool_attribute attr, void *value);
 } GstNvCodecCudaVTable;
 /* *INDENT-ON* */
 
@@ -243,6 +258,24 @@ gst_cuda_load_optional_symbols (GModule * module)
   GST_INFO ("Virtual alloc symbols are loaded");
 
   vtable->have_virtual_alloc = TRUE;
+}
+
+static void
+gst_cuda_load_stream_ordered_alloc_symbols (GModule * module)
+{
+  GstNvCodecCudaVTable *vtable = &gst_cuda_vtable;
+
+  LOAD_OPTIONAL_SYMBOL (cuMemAllocAsync, CuMemAllocAsync);
+  LOAD_OPTIONAL_SYMBOL (cuMemAllocFromPoolAsync, CuMemAllocFromPoolAsync);
+  LOAD_OPTIONAL_SYMBOL (cuMemFreeAsync, CuMemFreeAsync);
+  LOAD_OPTIONAL_SYMBOL (cuMemPoolCreate, CuMemPoolCreate);
+  LOAD_OPTIONAL_SYMBOL (cuMemPoolDestroy, CuMemPoolDestroy);
+  LOAD_OPTIONAL_SYMBOL (cuMemPoolSetAttribute, CuMemPoolSetAttribute);
+  LOAD_OPTIONAL_SYMBOL (cuMemPoolGetAttribute, CuMemPoolGetAttribute);
+
+  GST_INFO ("Stream ordered alloc symbols are loaded");
+
+  vtable->have_stream_ordered_alloc = TRUE;
 }
 
 static void
@@ -353,6 +386,7 @@ gst_cuda_load_library_once_func (void)
   vtable->loaded = TRUE;
 
   gst_cuda_load_optional_symbols (module);
+  gst_cuda_load_stream_ordered_alloc_symbols (module);
 }
 
 /**
@@ -380,6 +414,14 @@ gst_cuda_virtual_memory_symbol_loaded (void)
   gst_cuda_load_library ();
 
   return gst_cuda_vtable.have_virtual_alloc;
+}
+
+gboolean
+gst_cuda_stream_ordered_symbol_loaded (void)
+{
+  gst_cuda_load_library ();
+
+  return gst_cuda_vtable.have_stream_ordered_alloc;
 }
 
 CUresult CUDAAPI
@@ -964,6 +1006,71 @@ CuMemRetainAllocationHandle (CUmemGenericAllocationHandle * handle, void *addr)
     return CUDA_ERROR_NOT_SUPPORTED;
 
   return gst_cuda_vtable.CuMemRetainAllocationHandle (handle, addr);
+}
+
+CUresult CUDAAPI
+CuMemAllocAsync (CUdeviceptr * dptr, size_t bytesize, CUstream hStream)
+{
+  if (!gst_cuda_vtable.CuMemAllocAsync)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemAllocAsync (dptr, bytesize, hStream);
+}
+
+CUresult CUDAAPI
+CuMemAllocFromPoolAsync (CUdeviceptr * dptr, size_t bytesize, CUmemoryPool pool,
+    CUstream hStream)
+{
+  if (!gst_cuda_vtable.CuMemAllocFromPoolAsync)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemAllocFromPoolAsync (dptr,
+      bytesize, pool, hStream);
+}
+
+CUresult CUDAAPI
+CuMemFreeAsync (CUdeviceptr dptr, CUstream hStream)
+{
+  if (!gst_cuda_vtable.CuMemFreeAsync)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemFreeAsync (dptr, hStream);
+}
+
+CUresult CUDAAPI
+CuMemPoolCreate (CUmemoryPool * pool, const CUmemPoolProps * poolProps)
+{
+  if (!gst_cuda_vtable.CuMemPoolCreate)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemPoolCreate (pool, poolProps);
+}
+
+CUresult CUDAAPI
+CuMemPoolDestroy (CUmemoryPool pool)
+{
+  if (!gst_cuda_vtable.CuMemPoolDestroy)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemPoolDestroy (pool);
+}
+
+CUresult CUDAAPI
+CuMemPoolSetAttribute (CUmemoryPool pool, CUmemPool_attribute attr, void *value)
+{
+  if (!gst_cuda_vtable.CuMemPoolSetAttribute)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemPoolSetAttribute (pool, attr, value);
+}
+
+CUresult CUDAAPI
+CuMemPoolGetAttribute (CUmemoryPool pool, CUmemPool_attribute attr, void *value)
+{
+  if (!gst_cuda_vtable.CuMemPoolGetAttribute)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemPoolGetAttribute (pool, attr, value);
 }
 
 /* cudaGL.h */

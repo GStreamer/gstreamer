@@ -307,6 +307,38 @@ GST_CUDA_API
 CUresult CUDAAPI CuMemRetainAllocationHandle (CUmemGenericAllocationHandle *handle,
                                               void *addr);
 
+GST_CUDA_API
+CUresult CUDAAPI CuMemAllocAsync (CUdeviceptr *dptr,
+                                  size_t bytesize,
+                                  CUstream hStream);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemAllocFromPoolAsync (CUdeviceptr *dptr,
+                                          size_t bytesize,
+                                          CUmemoryPool pool,
+                                          CUstream hStream);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemFreeAsync (CUdeviceptr dptr,
+                                 CUstream hStream);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemPoolCreate (CUmemoryPool *pool,
+                                  const CUmemPoolProps *poolProps);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemPoolDestroy (CUmemoryPool pool);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemPoolSetAttribute (CUmemoryPool pool,
+                                        CUmemPool_attribute attr,
+                                        void *value);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemPoolGetAttribute (CUmemoryPool pool,
+                                        CUmemPool_attribute attr,
+                                        void *value);
+
 /* cudaGL.h */
 GST_CUDA_API
 CUresult CUDAAPI CuGraphicsGLRegisterImage  (CUgraphicsResource * pCudaResource,
