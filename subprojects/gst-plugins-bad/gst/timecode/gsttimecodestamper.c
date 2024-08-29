@@ -1586,13 +1586,19 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
             GST_STIME_ARGS (current_drift));
 
         if (ABS (current_drift) > max_drift) {
+          /* TODO: Maybe the flag on incoming timecodes should also cause a
+           * resync? */
           gst_video_time_code_free (timecodestamper->last_tc);
           timecodestamper->last_tc = g_steal_pointer (&scaled_tc);
+          timecodestamper->last_tc->config.flags |=
+              GST_VIDEO_TIME_CODE_FLAGS_DISCONT;
 
           report_tc_update (timecodestamper, "Reset scaled",
               timecodestamper->last_tc);
         } else {
           /* No resync necessary */
+          timecodestamper->last_tc->config.flags &=
+              ~GST_VIDEO_TIME_CODE_FLAGS_DISCONT;
           report_tc_update (timecodestamper, "Incremented scaled",
               timecodestamper->last_tc);
         }
@@ -1747,11 +1753,15 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
           && ABS (rtc_drift) > timecodestamper->rtc_max_drift) {
         gst_video_time_code_free (timecodestamper->rtc_tc);
         timecodestamper->rtc_tc = g_steal_pointer (&rtc_timecode_now);
+        timecodestamper->rtc_tc->config.flags |=
+            GST_VIDEO_TIME_CODE_FLAGS_DISCONT;
 
         report_tc_update (timecodestamper, "Updated RTC",
             timecodestamper->rtc_tc);
       } else {
         /* No resync necessary */
+        timecodestamper->rtc_tc->config.flags &=
+            ~GST_VIDEO_TIME_CODE_FLAGS_DISCONT;
         report_tc_update (timecodestamper, "Incremented RTC",
             timecodestamper->rtc_tc);
       }
