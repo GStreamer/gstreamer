@@ -248,6 +248,12 @@ gst_osx_audio_sink_change_state (GstElement * element,
   GstStateChangeReturn ret;
 
   switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      GST_OBJECT_LOCK (osxsink);
+      osxsink->device_id = kAudioDeviceUnknown;
+      osxsink->unique_id = NULL;
+      GST_OBJECT_UNLOCK (osxsink);
+      break;
     default:
       break;
   }
@@ -265,8 +271,10 @@ gst_osx_audio_sink_change_state (GstElement * element,
       ringbuffer =
           GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SINK (osxsink)->ringbuffer);
       if (ringbuffer->core_audio->device_id != osxsink->device_id) {
+        GST_OBJECT_LOCK (osxsink);
         osxsink->device_id = ringbuffer->core_audio->device_id;
         osxsink->unique_id = ringbuffer->core_audio->unique_id;
+        GST_OBJECT_UNLOCK (osxsink);
         g_object_notify (G_OBJECT (osxsink), "device");
       }
       break;
@@ -290,7 +298,9 @@ gst_osx_audio_sink_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, sink->device_id);
       break;
     case ARG_UNIQUE_ID:
+      GST_OBJECT_LOCK (sink);
       g_value_set_string (value, sink->unique_id);
+      GST_OBJECT_UNLOCK (sink);
       break;
 #endif
     case ARG_VOLUME:

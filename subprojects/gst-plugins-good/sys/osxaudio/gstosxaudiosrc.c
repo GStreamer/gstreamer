@@ -207,7 +207,9 @@ gst_osx_audio_src_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, src->device_id);
       break;
     case ARG_UNIQUE_ID:
+      GST_OBJECT_LOCK (src);
       g_value_set_string (value, src->unique_id);
+      GST_OBJECT_UNLOCK (src);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -223,6 +225,13 @@ gst_osx_audio_src_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret;
 
   switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:{
+      GST_OBJECT_LOCK (osxsrc);
+      osxsrc->device_id = kAudioDeviceUnknown;
+      osxsrc->unique_id = NULL;
+      GST_OBJECT_UNLOCK (osxsrc);
+      break;
+    }
     default:
       break;
   }
@@ -237,8 +246,11 @@ gst_osx_audio_src_change_state (GstElement * element, GstStateChange transition)
       ringbuffer =
           GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SRC (osxsrc)->ringbuffer);
       if (ringbuffer->core_audio->device_id != osxsrc->device_id) {
+        GST_OBJECT_LOCK (osxsrc);
         osxsrc->device_id = ringbuffer->core_audio->device_id;
         osxsrc->unique_id = ringbuffer->core_audio->unique_id;
+        GST_OBJECT_UNLOCK (osxsrc);
+
         g_object_notify (G_OBJECT (osxsrc), "device");
       }
       break;
