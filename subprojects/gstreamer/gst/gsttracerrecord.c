@@ -82,14 +82,13 @@ build_field_template (GQuark field_id, const GValue * value, gpointer user_data)
 
     /* add a boolean field, that indicates the presence of the next field */
     g_value_init (&template_value, G_TYPE_BOOLEAN);
-    priv__gst_structure_append_template_to_gstring (g_quark_from_string
-        (opt_name), &template_value, s);
+    priv__gst_structure_append_template_to_gstring (opt_name, &template_value, s);
     g_value_unset (&template_value);
     g_free (opt_name);
   }
 
   g_value_init (&template_value, type);
-  res = priv__gst_structure_append_template_to_gstring (field_id,
+  res = priv__gst_structure_append_template_to_gstring (g_quark_to_string (field_id),
       &template_value, s);
   g_value_unset (&template_value);
   return res;

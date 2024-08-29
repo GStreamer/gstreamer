@@ -153,7 +153,7 @@ typedef struct _GstStructureField GstStructureField;
 
 struct _GstStructureField
 {
-  GQuark name;
+  GstIdStr name;
   GValue value;
 };
 
@@ -247,8 +247,8 @@ static void gst_structure_set_field (GstStructure * structure,
     GstStructureField * field);
 static GstStructureField *gst_structure_get_field (const GstStructure *
     structure, const gchar * fieldname);
-static GstStructureField *gst_structure_id_get_field (const GstStructure *
-    structure, GQuark field);
+static GstStructureField *gst_structure_id_str_get_field (const GstStructure *
+    structure, const GstIdStr * fieldname);
 static void gst_structure_transform_to_string (const GValue * src_value,
     GValue * dest_value);
 static GstStructure *gst_structure_copy_conditional (const GstStructure *
@@ -460,8 +460,8 @@ gst_structure_new_static_str_empty (const gchar * name)
  * Variable arguments should be passed as field name, field type,
  * and value.  Last variable argument should be %NULL.
  *
- * @name needs to be valid for the remaining lifetime of the process, e.g. has
- * to be a static string.
+ * @name, @firstfield and all field names need to be valid for the remaining
+ * lifetime of the process, e.g. have to be a static string.
  *
  * Free-function: gst_structure_free
  *
@@ -568,8 +568,8 @@ gst_structure_new_valist (const gchar * name,
  *
  * See gst_structure_set_name() for constraints on the @name parameter.
  *
- * @name needs to be valid for the remaining lifetime of the process, e.g. has
- * to be a static string.
+ * @name, @firstfield and all field names need to be valid for the remaining
+ * lifetime of the process, e.g. have to be a static string.
  *
  * Free-function: gst_structure_free
  *
@@ -605,7 +605,7 @@ gst_structure_new_static_str_valist (const gchar * name,
   structure = gst_structure_new_take_id_str_empty_with_size (&s, len);
 
   if (structure)
-    gst_structure_set_valist (structure, firstfield, varargs);
+    gst_structure_set_static_str_valist (structure, firstfield, varargs);
 
   return structure;
 }
@@ -671,11 +671,11 @@ gst_structure_copy (const GstStructure * structure)
       len);
 
   for (i = 0; i < len; i++) {
-    GstStructureField new_field = { 0 };
+    GstStructureField new_field = { GST_ID_STR_INIT, G_VALUE_INIT };
 
     field = GST_STRUCTURE_FIELD (structure, i);
 
-    new_field.name = field->name;
+    gst_id_str_copy_into (&new_field.name, &field->name);
     gst_value_init_and_copy (&new_field.value, &field->value);
     _structure_append_val (new_structure, &new_field);
   }
@@ -708,6 +708,7 @@ gst_structure_free (GstStructure * structure)
     if (G_IS_VALUE (&field->value)) {
       g_value_unset (&field->value);
     }
+    gst_id_str_clear (&field->name);
   }
   if (GST_STRUCTURE_IS_USING_DYNAMIC_ARRAY (structure))
     g_free (((GstStructureImpl *) structure)->fields);
@@ -829,6 +830,8 @@ gst_structure_has_name (const GstStructure * structure, const gchar * name)
  * Get the name of @structure as a GQuark.
  *
  * Returns: the quark representing the name of the structure.
+ *
+ * Deprecated: 1.26: Use gst_structure_get_name_id_str().
  */
 GQuark
 gst_structure_get_name_id (const GstStructure * structure)
@@ -900,13 +903,14 @@ gst_structure_set_name_static_str (GstStructure * structure, const gchar * name)
   gst_id_str_set_static_str (GST_STRUCTURE_NAME (structure), name);
 }
 
+/* takes ownership of fieldname (but not value) */
 static inline void
-gst_structure_id_set_value_internal (GstStructure * structure, GQuark field,
-    const GValue * value)
+gst_structure_id_str_set_value_internal (GstStructure * structure,
+    GstIdStr * fieldname, const GValue * value)
 {
-  GstStructureField gsfield = { 0, {0,} };
+  GstStructureField gsfield = { GST_ID_STR_INIT, G_VALUE_INIT };
 
-  gsfield.name = field;
+  gst_id_str_move (&gsfield.name, fieldname);
   gst_value_init_and_copy (&gsfield.value, value);
 
   gst_structure_set_field (structure, &gsfield);
@@ -921,17 +925,21 @@ gst_structure_id_set_value_internal (GstStructure * structure, GQuark field,
  * Sets the field with the given GQuark @field to @value.  If the field
  * does not exist, it is created.  If the field exists, the previous
  * value is replaced and freed.
+ *
+ * Deprecated: 1.26: Use gst_structure_id_str_set_value().
  */
 void
 gst_structure_id_set_value (GstStructure * structure,
     GQuark field, const GValue * value)
 {
+  GstIdStr s = GST_ID_STR_INIT;
 
   g_return_if_fail (structure != NULL);
   g_return_if_fail (G_IS_VALUE (value));
   g_return_if_fail (IS_MUTABLE (structure));
 
-  gst_structure_id_set_value_internal (structure, field, value);
+  gst_id_str_set_static_str (&s, g_quark_to_string (field));
+  gst_structure_id_str_set_value_internal (structure, &s, value);
 }
 
 /**
@@ -948,22 +956,82 @@ void
 gst_structure_set_value (GstStructure * structure,
     const gchar * fieldname, const GValue * value)
 {
+  GstIdStr s = GST_ID_STR_INIT;
+
   g_return_if_fail (structure != NULL);
   g_return_if_fail (fieldname != NULL);
   g_return_if_fail (G_IS_VALUE (value));
   g_return_if_fail (IS_MUTABLE (structure));
 
-  gst_structure_id_set_value_internal (structure,
-      g_quark_from_string (fieldname), value);
+  gst_id_str_set (&s, fieldname);
+  gst_structure_id_str_set_value_internal (structure, &s, value);
 }
 
-static inline void
-gst_structure_id_take_value_internal (GstStructure * structure, GQuark field,
-    GValue * value)
+/**
+ * gst_structure_set_value_static_str:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to set
+ * @value: the new value of the field
+ *
+ * Sets the field with the given name @field to @value.  If the field
+ * does not exist, it is created.  If the field exists, the previous
+ * value is replaced and freed.
+ *
+ * @fieldname needs to be valid for the remaining lifetime of the process, e.g.
+ * has to be a static string.
+ *
+ * Since: 1.26
+ */
+void
+gst_structure_set_value_static_str (GstStructure * structure,
+    const gchar * fieldname, const GValue * value)
 {
-  GstStructureField gsfield = { 0, {0,} };
+  GstIdStr s = GST_ID_STR_INIT;
 
-  gsfield.name = field;
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (fieldname != NULL);
+  g_return_if_fail (G_IS_VALUE (value));
+  g_return_if_fail (IS_MUTABLE (structure));
+
+  gst_id_str_set_static_str (&s, fieldname);
+  gst_structure_id_str_set_value_internal (structure, &s, value);
+}
+
+/**
+ * gst_structure_id_str_set_value:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to set
+ * @value: the new value of the field
+ *
+ * Sets the field with the given name @field to @value.  If the field
+ * does not exist, it is created.  If the field exists, the previous
+ * value is replaced and freed.
+ *
+ * Since: 1.26
+ */
+void
+gst_structure_id_str_set_value (GstStructure * structure,
+    const GstIdStr * fieldname, const GValue * value)
+{
+  GstIdStr s = GST_ID_STR_INIT;
+
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (fieldname != NULL);
+  g_return_if_fail (G_IS_VALUE (value));
+  g_return_if_fail (IS_MUTABLE (structure));
+
+  gst_id_str_copy_into (&s, fieldname);
+  gst_structure_id_str_set_value_internal (structure, &s, value);
+}
+
+/* takes ownership of both fieldname and value */
+static inline void
+gst_structure_id_str_take_value_internal (GstStructure * structure,
+    GstIdStr * fieldname, GValue * value)
+{
+  GstStructureField gsfield = { GST_ID_STR_INIT, G_VALUE_INIT };
+
+  gst_id_str_move (&gsfield.name, fieldname);
   gsfield.value = *value;
 
   gst_structure_set_field (structure, &gsfield);
@@ -985,16 +1053,21 @@ gst_structure_id_take_value_internal (GstStructure * structure, GQuark field,
  * Sets the field with the given GQuark @field to @value.  If the field
  * does not exist, it is created.  If the field exists, the previous
  * value is replaced and freed.
+ *
+ * Deprecated: 1.26: Use gst_structure_id_str_take_value().
  */
 void
 gst_structure_id_take_value (GstStructure * structure, GQuark field,
     GValue * value)
 {
+  GstIdStr s = GST_ID_STR_INIT;
+
   g_return_if_fail (structure != NULL);
   g_return_if_fail (G_IS_VALUE (value));
   g_return_if_fail (IS_MUTABLE (structure));
 
-  gst_structure_id_take_value_internal (structure, field, value);
+  gst_id_str_set_static_str (&s, g_quark_to_string (field));
+  gst_structure_id_str_take_value_internal (structure, &s, value);
 }
 
 /**
@@ -1011,38 +1084,99 @@ void
 gst_structure_take_value (GstStructure * structure, const gchar * fieldname,
     GValue * value)
 {
+  GstIdStr s = GST_ID_STR_INIT;
+
   g_return_if_fail (structure != NULL);
   g_return_if_fail (fieldname != NULL);
   g_return_if_fail (G_IS_VALUE (value));
   g_return_if_fail (IS_MUTABLE (structure));
 
-  gst_structure_id_take_value_internal (structure,
-      g_quark_from_string (fieldname), value);
+  gst_id_str_set (&s, fieldname);
+  gst_structure_id_str_take_value_internal (structure, &s, value);
+}
+
+/**
+ * gst_structure_take_value_static_str:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to set
+ * @value: (transfer full): the new value of the field
+ *
+ * Sets the field with the given name @field to @value.  If the field
+ * does not exist, it is created.  If the field exists, the previous
+ * value is replaced and freed. The function will take ownership of @value.
+ *
+ * @fieldname needs to be valid for the remaining lifetime of the process, e.g.
+ * has to be a static string.
+ *
+ * Since: 1.26
+ */
+void
+gst_structure_take_value_static_str (GstStructure * structure,
+    const gchar * fieldname, GValue * value)
+{
+  GstIdStr s = GST_ID_STR_INIT;
+
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (fieldname != NULL);
+  g_return_if_fail (G_IS_VALUE (value));
+  g_return_if_fail (IS_MUTABLE (structure));
+
+  gst_id_str_set_static_str (&s, fieldname);
+  gst_structure_id_str_take_value_internal (structure, &s, value);
+}
+
+/**
+ * gst_structure_id_str_take_value:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to set
+ * @value: (transfer full): the new value of the field
+ *
+ * Sets the field with the given GstIdStr @field to @value.  If the field
+ * does not exist, it is created.  If the field exists, the previous
+ * value is replaced and freed.
+ *
+ * Since: 1.26
+ */
+void
+gst_structure_id_str_take_value (GstStructure * structure,
+    const GstIdStr * fieldname, GValue * value)
+{
+  GstIdStr s = GST_ID_STR_INIT;
+
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (G_IS_VALUE (value));
+  g_return_if_fail (IS_MUTABLE (structure));
+
+  gst_id_str_copy_into (&s, fieldname);
+  gst_structure_id_str_take_value_internal (structure, &s, value);
 }
 
 static void
 gst_structure_set_valist_internal (GstStructure * structure,
-    const gchar * fieldname, va_list varargs)
+    gboolean static_string, const gchar * fieldname, va_list varargs)
 {
   gchar *err = NULL;
   GType type;
 
   while (fieldname) {
-    GstStructureField field = { 0 };
+    GstStructureField field = { GST_ID_STR_INIT, G_VALUE_INIT };
 
-    field.name = g_quark_from_string (fieldname);
-
+    if (static_string)
+      gst_id_str_set_static_str (&field.name, fieldname);
+    else
+      gst_id_str_set (&field.name, fieldname);
     type = va_arg (varargs, GType);
 
     G_VALUE_COLLECT_INIT (&field.value, type, varargs, 0, &err);
     if (G_UNLIKELY (err)) {
       g_critical ("%s", err);
       g_free (err);
+      gst_id_str_clear (&field.name);
       return;
     }
     gst_structure_set_field (structure, &field);
 
-    fieldname = va_arg (varargs, gchar *);
+    fieldname = va_arg (varargs, const gchar *);
   }
 }
 
@@ -1066,7 +1200,37 @@ gst_structure_set (GstStructure * structure, const gchar * field, ...)
   g_return_if_fail (IS_MUTABLE (structure) || field == NULL);
 
   va_start (varargs, field);
-  gst_structure_set_valist_internal (structure, field, varargs);
+  gst_structure_set_valist_internal (structure, FALSE, field, varargs);
+  va_end (varargs);
+}
+
+/**
+ * gst_structure_set_static_str:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to set
+ * @...: variable arguments
+ *
+ * Parses the variable arguments and sets fields accordingly. Fields that
+ * weren't already part of the structure are added as needed.
+ * Variable arguments should be in the form field name, field type
+ * (as a GType), value(s).  The last variable argument should be %NULL.
+ *
+ * @fieldname and all other field names needs to be valid for the remaining
+ * lifetime of the process, e.g. has to be a static string.
+ *
+ * Since: 1.26
+ */
+void
+gst_structure_set_static_str (GstStructure * structure, const gchar * field,
+    ...)
+{
+  va_list varargs;
+
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (IS_MUTABLE (structure) || field == NULL);
+
+  va_start (varargs, field);
+  gst_structure_set_valist_internal (structure, TRUE, field, varargs);
   va_end (varargs);
 }
 
@@ -1085,7 +1249,30 @@ gst_structure_set_valist (GstStructure * structure,
   g_return_if_fail (structure != NULL);
   g_return_if_fail (IS_MUTABLE (structure));
 
-  gst_structure_set_valist_internal (structure, fieldname, varargs);
+  gst_structure_set_valist_internal (structure, FALSE, fieldname, varargs);
+}
+
+/**
+ * gst_structure_set_static_str_valist:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to set
+ * @varargs: variable arguments
+ *
+ * va_list form of gst_structure_set_static_str().
+ *
+ * @fieldname and all other field names needs to be valid for the remaining
+ * lifetime of the process, e.g. has to be a static string.
+ *
+ * Since: 1.26
+ */
+void
+gst_structure_set_static_str_valist (GstStructure * structure,
+    const gchar * fieldname, va_list varargs)
+{
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (IS_MUTABLE (structure));
+
+  gst_structure_set_valist_internal (structure, TRUE, fieldname, varargs);
 }
 
 static void
@@ -1096,15 +1283,16 @@ gst_structure_id_set_valist_internal (GstStructure * structure,
   GType type;
 
   while (fieldname) {
-    GstStructureField field = { 0 };
+    GstStructureField field = { GST_ID_STR_INIT, G_VALUE_INIT };
 
-    field.name = fieldname;
+    gst_id_str_set_static_str (&field.name, g_quark_to_string (fieldname));
     type = va_arg (varargs, GType);
 
     G_VALUE_COLLECT_INIT (&field.value, type, varargs, 0, &err);
     if (G_UNLIKELY (err)) {
       g_critical ("%s", err);
       g_free (err);
+      gst_id_str_clear (&field.name);
       return;
     }
     gst_structure_set_field (structure, &field);
@@ -1124,6 +1312,8 @@ gst_structure_id_set_valist_internal (GstStructure * structure,
  * setting of the structure if the caller already knows the associated
  * quark values.
  * The last variable argument must be %NULL.
+ *
+ * Deprecated: 1.26: Use gst_structure_id_str_set().
  */
 void
 gst_structure_id_set (GstStructure * structure, GQuark field, ...)
@@ -1144,6 +1334,8 @@ gst_structure_id_set (GstStructure * structure, GQuark field, ...)
  * @varargs: variable arguments
  *
  * va_list form of gst_structure_id_set().
+ *
+ * Deprecated: 1.26: Use gst_structure_id_str_set_valist().
  */
 void
 gst_structure_id_set_valist (GstStructure * structure,
@@ -1153,6 +1345,79 @@ gst_structure_id_set_valist (GstStructure * structure,
   g_return_if_fail (IS_MUTABLE (structure));
 
   gst_structure_id_set_valist_internal (structure, fieldname, varargs);
+}
+
+static void
+gst_structure_id_str_set_valist_internal (GstStructure * structure,
+    const GstIdStr * fieldname, va_list varargs)
+{
+  gchar *err = NULL;
+  GType type;
+
+  while (fieldname) {
+    GstStructureField field = { GST_ID_STR_INIT, G_VALUE_INIT };
+
+    gst_id_str_copy_into (&field.name, fieldname);
+    type = va_arg (varargs, GType);
+
+    G_VALUE_COLLECT_INIT (&field.value, type, varargs, 0, &err);
+    if (G_UNLIKELY (err)) {
+      g_critical ("%s", err);
+      g_free (err);
+      gst_id_str_clear (&field.name);
+      return;
+    }
+    gst_structure_set_field (structure, &field);
+
+    fieldname = va_arg (varargs, const GstIdStr *);
+  }
+}
+
+/**
+ * gst_structure_id_str_set:
+ * @structure: a #GstStructure
+ * @fieldname: the the name of the field to set
+ * @...: variable arguments
+ *
+ * Identical to gst_structure_set, except that field names are
+ * passed using a GstIdStr for the field name. This allows more efficient
+ * setting of the structure if the caller already knows the associated
+ * quark values.
+ * The last variable argument must be %NULL.
+ *
+ * Since: 1.26
+ */
+void
+gst_structure_id_str_set (GstStructure * structure, const GstIdStr * fieldname,
+    ...)
+{
+  va_list varargs;
+
+  g_return_if_fail (structure != NULL);
+
+  va_start (varargs, fieldname);
+  gst_structure_id_str_set_valist_internal (structure, fieldname, varargs);
+  va_end (varargs);
+}
+
+/**
+ * gst_structure_id_str_set_valist:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to set
+ * @varargs: variable arguments
+ *
+ * va_list form of gst_structure_id_str_set().
+ *
+ * Since: 1.26
+ */
+void
+gst_structure_id_str_set_valist (GstStructure * structure,
+    const GstIdStr * fieldname, va_list varargs)
+{
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (IS_MUTABLE (structure));
+
+  gst_structure_id_str_set_valist_internal (structure, fieldname, varargs);
 }
 
 /**
@@ -1171,6 +1436,8 @@ gst_structure_id_set_valist (GstStructure * structure,
  * Free-function: gst_structure_free
  *
  * Returns: (transfer full): a new #GstStructure
+ *
+ * Deprecated: 1.26: Use gst_structure_new_id_str().
  */
 GstStructure *
 gst_structure_new_id (GQuark name_quark, GQuark field_quark, ...)
@@ -1210,7 +1477,7 @@ gst_structure_new_id (GQuark name_quark, GQuark field_quark, ...)
 /**
  * gst_structure_new_id_str:
  * @name: name of new structure
- * @field_quark: the GQuark for the name of the field to set
+ * @fieldname: the GstIdStr for the name of the field to set
  * @...: variable arguments
  *
  * Creates a new #GstStructure with the given name as a GQuark, followed by
@@ -1227,35 +1494,36 @@ gst_structure_new_id (GQuark name_quark, GQuark field_quark, ...)
  * Since: 1.26
  */
 GstStructure *
-gst_structure_new_id_str (const GstIdStr * name, GQuark field_quark, ...)
+gst_structure_new_id_str (const GstIdStr * name, const GstIdStr * fieldname,
+    ...)
 {
   GstStructure *s;
   va_list varargs;
   va_list copy;
   guint len = 0;
-  GQuark quark_copy = field_quark;
+  const GstIdStr *fieldname_copy = fieldname;
   GType type_copy;
 
   g_return_val_if_fail (name != 0, NULL);
   g_return_val_if_fail (gst_structure_validate_name (gst_id_str_as_str (name)),
       NULL);
-  g_return_val_if_fail (field_quark != 0, NULL);
+  g_return_val_if_fail (fieldname != NULL, NULL);
 
-  va_start (varargs, field_quark);
+  va_start (varargs, fieldname);
 
   /* Calculate size of varargs */
   va_copy (copy, varargs);
-  while (quark_copy) {
+  while (fieldname_copy) {
     type_copy = va_arg (copy, GType);
     G_VALUE_COLLECT_SKIP (type_copy, copy);
-    quark_copy = va_arg (copy, GQuark);
+    fieldname_copy = va_arg (copy, const GstIdStr *);
     len++;
   }
   va_end (copy);
 
   s = gst_structure_new_id_str_empty_with_size (name, len);
 
-  gst_structure_id_set_valist_internal (s, field_quark, varargs);
+  gst_structure_id_str_set_valist_internal (s, fieldname, varargs);
   va_end (varargs);
 
   return s;
@@ -1269,9 +1537,12 @@ gst_structure_new_id_str (const GstIdStr * name, GQuark field_quark, ...)
 
 static gboolean
 gst_structure_validate_field_value (const GstStructure * structure,
-    GQuark field, const GValue * value)
+    const gchar * field_name, const GValue * value)
 {
   GType field_value_type;
+  gboolean is_tag_list;
+
+  is_tag_list = IS_TAGLIST (structure);
 
   field_value_type = G_VALUE_TYPE (value);
   if (field_value_type == G_TYPE_STRING) {
@@ -1280,22 +1551,21 @@ gst_structure_validate_field_value (const GstStructure * structure,
     s = g_value_get_string (value);
     /* only check for NULL strings in taglists, as they are allowed in message
      * structs, e.g. error message debug strings */
-    if (G_UNLIKELY (IS_TAGLIST (structure) && (s == NULL || *s == '\0'))) {
+    if (G_UNLIKELY (is_tag_list && (s == NULL || *s == '\0'))) {
       if (s == NULL) {
         GIT_G_WARNING ("Trying to set NULL string on field '%s' on taglist. "
-            "Please file a bug.", g_quark_to_string (field));
+            "Please file a bug.", field_name);
         return FALSE;
       } else {
         /* empty strings never make sense */
         GIT_G_WARNING ("Trying to set empty string on taglist field '%s'. "
-            "Please file a bug.", g_quark_to_string (field));
+            "Please file a bug.", field_name);
         return FALSE;
       }
     } else if (G_UNLIKELY (s != NULL && !g_utf8_validate (s, -1, NULL))) {
       g_warning ("Trying to set string on %s field '%s', but string is not "
           "valid UTF-8. Please file a bug.",
-          IS_TAGLIST (structure) ? "taglist" : "structure",
-          g_quark_to_string (field));
+          is_tag_list ? "taglist" : "structure", field_name);
       return FALSE;
     }
   } else if (G_UNLIKELY (field_value_type == G_TYPE_DATE)) {
@@ -1304,15 +1574,14 @@ gst_structure_validate_field_value (const GstStructure * structure,
     d = g_value_get_boxed (value);
     /* only check for NULL GDates in taglists, as they might make sense
      * in other, generic structs */
-    if (G_UNLIKELY ((IS_TAGLIST (structure) && d == NULL))) {
+    if (G_UNLIKELY ((is_tag_list && d == NULL))) {
       GIT_G_WARNING ("Trying to set NULL GDate on field '%s' on taglist. "
-          "Please file a bug.", g_quark_to_string (field));
+          "Please file a bug.", field_name);
       return FALSE;
     } else if (G_UNLIKELY (d != NULL && !g_date_valid (d))) {
       g_warning
           ("Trying to set invalid GDate on %s field '%s'. Please file a bug.",
-          IS_TAGLIST (structure) ? "taglist" : "structure",
-          g_quark_to_string (field));
+          is_tag_list ? "taglist" : "structure", field_name);
       return FALSE;
     }
   }
@@ -1330,8 +1599,8 @@ gst_structure_set_field (GstStructure * structure, GstStructureField * field)
   GstStructureField *f;
   guint i, len;
 
-  if (!gst_structure_validate_field_value (structure, field->name,
-          &field->value)) {
+  if (!gst_structure_validate_field_value (structure,
+          gst_id_str_as_str (&field->name), &field->value)) {
     g_value_unset (&field->value);
     return;
   }
@@ -1340,9 +1609,10 @@ gst_structure_set_field (GstStructure * structure, GstStructureField * field)
   for (i = 0; i < len; i++) {
     f = GST_STRUCTURE_FIELD (structure, i);
 
-    if (G_UNLIKELY (f->name == field->name)) {
+    if (G_UNLIKELY (gst_id_str_is_equal (&f->name, &field->name))) {
       g_value_unset (&f->value);
-      memcpy (f, field, sizeof (GstStructureField));
+      f->value = field->value;
+      gst_id_str_clear (&field->name);
       return;
     }
   }
@@ -1353,7 +1623,8 @@ gst_structure_set_field (GstStructure * structure, GstStructureField * field)
 /* If there is no field with the given ID, NULL is returned.
  */
 static GstStructureField *
-gst_structure_id_get_field (const GstStructure * structure, GQuark field_id)
+gst_structure_id_str_get_field (const GstStructure * structure,
+    const GstIdStr * fieldname)
 {
   GstStructureField *field;
   guint i, len;
@@ -1363,7 +1634,7 @@ gst_structure_id_get_field (const GstStructure * structure, GQuark field_id)
   for (i = 0; i < len; i++) {
     field = GST_STRUCTURE_FIELD (structure, i);
 
-    if (G_UNLIKELY (field->name == field_id))
+    if (G_UNLIKELY (gst_id_str_is_equal (&field->name, fieldname)))
       return field;
   }
 
@@ -1376,11 +1647,18 @@ static GstStructureField *
 gst_structure_get_field (const GstStructure * structure,
     const gchar * fieldname)
 {
+  GstIdStr s = GST_ID_STR_INIT;
+  GstStructureField *res;
+
   g_return_val_if_fail (structure != NULL, NULL);
   g_return_val_if_fail (fieldname != NULL, NULL);
 
-  return gst_structure_id_get_field (structure,
-      g_quark_from_string (fieldname));
+  // Not technically correct but the string is never leaving this scope and is never copied
+  gst_id_str_set_static_str (&s, fieldname);
+  res = gst_structure_id_str_get_field (structure, &s);
+  gst_id_str_clear (&s);
+
+  return res;
 }
 
 /**
@@ -1410,6 +1688,34 @@ gst_structure_get_value (const GstStructure * structure,
 }
 
 /**
+ * gst_structure_id_str_get_value:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to get
+ *
+ * Get the value of the field with name @fieldname.
+ *
+ * Returns: (nullable): the #GValue corresponding to the field with the given
+ * name.
+ *
+ * Since: 1.26
+ */
+const GValue *
+gst_structure_id_str_get_value (const GstStructure * structure,
+    const GstIdStr * fieldname)
+{
+  GstStructureField *field;
+
+  g_return_val_if_fail (structure != NULL, NULL);
+  g_return_val_if_fail (fieldname != NULL, NULL);
+
+  field = gst_structure_id_str_get_field (structure, fieldname);
+  if (field == NULL)
+    return NULL;
+
+  return &field->value;
+}
+
+/**
  * gst_structure_id_get_value:
  * @structure: a #GstStructure
  * @field: the #GQuark of the field to get
@@ -1423,10 +1729,12 @@ const GValue *
 gst_structure_id_get_value (const GstStructure * structure, GQuark field)
 {
   GstStructureField *gsfield;
+  GstIdStr s = GST_ID_STR_INIT;
 
   g_return_val_if_fail (structure != NULL, NULL);
 
-  gsfield = gst_structure_id_get_field (structure, field);
+  gst_id_str_set_static_str (&s, g_quark_to_string (field));
+  gsfield = gst_structure_id_str_get_field (structure, &s);
   if (gsfield == NULL)
     return NULL;
 
@@ -1444,28 +1752,31 @@ gst_structure_id_get_value (const GstStructure * structure, GQuark field)
 void
 gst_structure_remove_field (GstStructure * structure, const gchar * fieldname)
 {
+  GstIdStr s = GST_ID_STR_INIT;
   GstStructureField *field;
-  GQuark id;
   guint i, len;
 
   g_return_if_fail (structure != NULL);
   g_return_if_fail (fieldname != NULL);
   g_return_if_fail (IS_MUTABLE (structure));
 
-  id = g_quark_from_string (fieldname);
+  // Not technically correct but the string is never leaving this scope and is never copied
+  gst_id_str_set_static_str (&s, fieldname);
   len = GST_STRUCTURE_LEN (structure);
-
   for (i = 0; i < len; i++) {
     field = GST_STRUCTURE_FIELD (structure, i);
 
-    if (field->name == id) {
+    if (gst_id_str_is_equal (&field->name, &s)) {
       if (G_IS_VALUE (&field->value)) {
         g_value_unset (&field->value);
       }
+      gst_id_str_clear (&field->name);
+      gst_id_str_clear (&s);
       _structure_remove_index (structure, i);
       return;
     }
   }
+  gst_id_str_clear (&s);
 }
 
 /**
@@ -1537,6 +1848,7 @@ gst_structure_remove_all_fields (GstStructure * structure)
     if (G_IS_VALUE (&field->value)) {
       g_value_unset (&field->value);
     }
+    gst_id_str_clear (&field->name);
     _structure_remove_index (structure, i);
   }
 }
@@ -1603,7 +1915,23 @@ gst_structure_nth_field_name (const GstStructure * structure, guint index)
 
   field = GST_STRUCTURE_FIELD (structure, index);
 
-  return g_quark_to_string (field->name);
+  return gst_id_str_as_str (&field->name);
+}
+
+typedef struct
+{
+  GstStructureForeachFunc func;
+  gpointer user_data;
+} ForeachAdapterData;
+
+static gboolean
+foreach_quark_adapter (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
+{
+  ForeachAdapterData *data = user_data;
+
+  return data->func (g_quark_from_string (gst_id_str_as_str (fieldname)), value,
+      data->user_data);
 }
 
 /**
@@ -1618,29 +1946,32 @@ gst_structure_nth_field_name (const GstStructure * structure, guint index)
  *
  * Returns: %TRUE if the supplied function returns %TRUE For each of the fields,
  * %FALSE otherwise.
+ *
+ * Deprecated: 1.26: Use gst_structure_foreach_id_str().
  */
 gboolean
 gst_structure_foreach (const GstStructure * structure,
     GstStructureForeachFunc func, gpointer user_data)
 {
-  guint i, len;
-  GstStructureField *field;
-  gboolean ret;
+  ForeachAdapterData data = { func, user_data };
 
-  g_return_val_if_fail (structure != NULL, FALSE);
-  g_return_val_if_fail (func != NULL, FALSE);
+  return gst_structure_foreach_id_str (structure, foreach_quark_adapter, &data);
+}
 
-  len = GST_STRUCTURE_LEN (structure);
+typedef struct
+{
+  GstStructureMapFunc func;
+  gpointer user_data;
+} MapInPlaceAdapterData;
 
-  for (i = 0; i < len; i++) {
-    field = GST_STRUCTURE_FIELD (structure, i);
+static gboolean
+map_in_place_quark_adapter (const GstIdStr * fieldname, GValue * value,
+    gpointer user_data)
+{
+  MapInPlaceAdapterData *data = user_data;
 
-    ret = func (field->name, &field->value, user_data);
-    if (G_UNLIKELY (!ret))
-      return FALSE;
-  }
-
-  return TRUE;
+  return data->func (g_quark_from_string (gst_id_str_as_str (fieldname)), value,
+      data->user_data);
 }
 
 /**
@@ -1655,29 +1986,33 @@ gst_structure_foreach (const GstStructure * structure,
  *
  * Returns: %TRUE if the supplied function returns %TRUE For each of the fields,
  * %FALSE otherwise.
+ *
+ * Deprecated: 1.26: Use gst_structure_map_in_place_id_str().
  */
 gboolean
 gst_structure_map_in_place (GstStructure * structure,
     GstStructureMapFunc func, gpointer user_data)
 {
-  guint i, len;
-  GstStructureField *field;
-  gboolean ret;
+  MapInPlaceAdapterData data = { func, user_data };
 
-  g_return_val_if_fail (structure != NULL, FALSE);
-  g_return_val_if_fail (IS_MUTABLE (structure), FALSE);
-  g_return_val_if_fail (func != NULL, FALSE);
-  len = GST_STRUCTURE_LEN (structure);
+  return gst_structure_map_in_place_id_str (structure,
+      map_in_place_quark_adapter, &data);
+}
 
-  for (i = 0; i < len; i++) {
-    field = GST_STRUCTURE_FIELD (structure, i);
+typedef struct
+{
+  GstStructureFilterMapFunc func;
+  gpointer user_data;
+} FilterAndMapInPlaceAdapterData;
 
-    ret = func (field->name, &field->value, user_data);
-    if (!ret)
-      return FALSE;
-  }
+static gboolean
+filter_and_map_in_place_quark_adapter (const GstIdStr * fieldname,
+    GValue * value, gpointer user_data)
+{
+  FilterAndMapInPlaceAdapterData *data = user_data;
 
-  return TRUE;
+  return data->func (g_quark_from_string (gst_id_str_as_str (fieldname)), value,
+      data->user_data);
 }
 
 /**
@@ -1693,10 +2028,114 @@ gst_structure_map_in_place (GstStructure * structure,
  * The structure must be mutable.
  *
  * Since: 1.6
+ *
+ * Deprecated: 1.26: Use gst_structure_filter_and_map_in_place_id_str().
  */
 void
 gst_structure_filter_and_map_in_place (GstStructure * structure,
     GstStructureFilterMapFunc func, gpointer user_data)
+{
+  FilterAndMapInPlaceAdapterData data = { func, user_data };
+
+  gst_structure_filter_and_map_in_place_id_str (structure,
+      filter_and_map_in_place_quark_adapter, &data);
+}
+
+/**
+ * gst_structure_foreach_id_str:
+ * @structure: a #GstStructure
+ * @func: (scope call): a function to call for each field
+ * @user_data: (closure): private data
+ *
+ * Calls the provided function once for each field in the #GstStructure. The
+ * function must not modify the fields. Also see gst_structure_map_in_place_id_str()
+ * and gst_structure_filter_and_map_in_place_id_str().
+ *
+ * Returns: %TRUE if the supplied function returns %TRUE For each of the fields,
+ * %FALSE otherwise.
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_structure_foreach_id_str (const GstStructure * structure,
+    GstStructureForeachIdStrFunc func, gpointer user_data)
+{
+  guint i, len;
+  GstStructureField *field;
+  gboolean ret;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (func != NULL, FALSE);
+
+  len = GST_STRUCTURE_LEN (structure);
+
+  for (i = 0; i < len; i++) {
+    field = GST_STRUCTURE_FIELD (structure, i);
+
+    ret = func (&field->name, &field->value, user_data);
+    if (G_UNLIKELY (!ret))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_structure_map_in_place_id_str:
+ * @structure: a #GstStructure
+ * @func: (scope call): a function to call for each field
+ * @user_data: (closure): private data
+ *
+ * Calls the provided function once for each field in the #GstStructure. In
+ * contrast to gst_structure_foreach_id_str(), the function may modify but not delete the
+ * fields. The structure must be mutable.
+ *
+ * Returns: %TRUE if the supplied function returns %TRUE For each of the fields,
+ * %FALSE otherwise.
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_structure_map_in_place_id_str (GstStructure * structure,
+    GstStructureMapIdStrFunc func, gpointer user_data)
+{
+  guint i, len;
+  GstStructureField *field;
+  gboolean ret;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (IS_MUTABLE (structure), FALSE);
+  g_return_val_if_fail (func != NULL, FALSE);
+  len = GST_STRUCTURE_LEN (structure);
+
+  for (i = 0; i < len; i++) {
+    field = GST_STRUCTURE_FIELD (structure, i);
+
+    ret = func (&field->name, &field->value, user_data);
+    if (!ret)
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_structure_filter_and_map_in_place_id_str:
+ * @structure: a #GstStructure
+ * @func: (scope call): a function to call for each field
+ * @user_data: (closure): private data
+ *
+ * Calls the provided function once for each field in the #GstStructure. In
+ * contrast to gst_structure_foreach_id_str(), the function may modify the fields.
+ * In contrast to gst_structure_map_in_place_id_str(), the field is removed from
+ * the structure if %FALSE is returned from the function.
+ * The structure must be mutable.
+ *
+ * Since: 1.26
+ */
+void
+gst_structure_filter_and_map_in_place_id_str (GstStructure * structure,
+    GstStructureFilterMapIdStrFunc func, gpointer user_data)
 {
   guint i, len;
   GstStructureField *field;
@@ -1710,12 +2149,13 @@ gst_structure_filter_and_map_in_place (GstStructure * structure,
   for (i = 0; i < len;) {
     field = GST_STRUCTURE_FIELD (structure, i);
 
-    ret = func (field->name, &field->value, user_data);
+    ret = func (&field->name, &field->value, user_data);
 
     if (!ret) {
       if (G_IS_VALUE (&field->value)) {
         g_value_unset (&field->value);
       }
+      gst_id_str_clear (&field->name);
       _structure_remove_index (structure, i);
       len = GST_STRUCTURE_LEN (structure);
     } else {
@@ -1732,16 +2172,43 @@ gst_structure_filter_and_map_in_place (GstStructure * structure,
  * Check if @structure contains a field named @field.
  *
  * Returns: %TRUE if the structure contains a field with the given name
+ *
+ * Deprecated: 1.26: Use gst_structure_id_str_has_field().
  */
 gboolean
 gst_structure_id_has_field (const GstStructure * structure, GQuark field)
 {
-  GstStructureField *f;
+  GstIdStr s = GST_ID_STR_INIT;
 
   g_return_val_if_fail (structure != NULL, FALSE);
   g_return_val_if_fail (field != 0, FALSE);
 
-  f = gst_structure_id_get_field (structure, field);
+  gst_id_str_set_static_str (&s, g_quark_to_string (field));
+
+  return gst_structure_id_str_has_field (structure, &s);
+}
+
+/**
+ * gst_structure_id_str_has_field:
+ * @structure: a #GstStructure
+ * @fieldname: the name of a field
+ *
+ * Check if @structure contains a field named @fieldname.
+ *
+ * Returns: %TRUE if the structure contains a field with the given name
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_structure_id_str_has_field (const GstStructure * structure,
+    const GstIdStr * fieldname)
+{
+  GstStructureField *f;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (fieldname != NULL, FALSE);
+
+  f = gst_structure_id_str_get_field (structure, fieldname);
 
   return (f != NULL);
 }
@@ -1759,11 +2226,18 @@ gboolean
 gst_structure_has_field (const GstStructure * structure,
     const gchar * fieldname)
 {
+  GstIdStr s = GST_ID_STR_INIT;
+  gboolean res;
+
   g_return_val_if_fail (structure != NULL, FALSE);
   g_return_val_if_fail (fieldname != NULL, FALSE);
 
-  return gst_structure_id_has_field (structure,
-      g_quark_from_string (fieldname));
+  // Not technically correct but the string is never leaving this scope and is never copied
+  gst_id_str_set_static_str (&s, fieldname);
+  res = gst_structure_id_str_has_field (structure, &s);
+  gst_id_str_clear (&s);
+
+  return res;
 }
 
 /**
@@ -1775,17 +2249,45 @@ gst_structure_has_field (const GstStructure * structure,
  * Check if @structure contains a field named @field and with GType @type.
  *
  * Returns: %TRUE if the structure contains a field with the given name and type
+ *
+ * Deprecated: 1.26: Use gst_structure_id_str_has_field_typed().
  */
 gboolean
 gst_structure_id_has_field_typed (const GstStructure * structure,
     GQuark field, GType type)
 {
-  GstStructureField *f;
+  GstIdStr s = GST_ID_STR_INIT;
 
   g_return_val_if_fail (structure != NULL, FALSE);
   g_return_val_if_fail (field != 0, FALSE);
 
-  f = gst_structure_id_get_field (structure, field);
+  gst_id_str_set_static_str (&s, g_quark_to_string (field));
+
+  return gst_structure_id_str_has_field_typed (structure, &s, type);
+}
+
+/**
+ * gst_structure_id_str_has_field_typed:
+ * @structure: a #GstStructure
+ * @fieldname: the name of a field
+ * @type: the type of a value
+ *
+ * Check if @structure contains a field named @fieldname and with GType @type.
+ *
+ * Returns: %TRUE if the structure contains a field with the given name and type
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_structure_id_str_has_field_typed (const GstStructure * structure,
+    const GstIdStr * fieldname, GType type)
+{
+  GstStructureField *f;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (fieldname != NULL, FALSE);
+
+  f = gst_structure_id_str_get_field (structure, fieldname);
   if (f == NULL)
     return FALSE;
 
@@ -1806,11 +2308,18 @@ gboolean
 gst_structure_has_field_typed (const GstStructure * structure,
     const gchar * fieldname, GType type)
 {
+  GstIdStr s = GST_ID_STR_INIT;
+  gboolean res;
+
   g_return_val_if_fail (structure != NULL, FALSE);
   g_return_val_if_fail (fieldname != NULL, FALSE);
 
-  return gst_structure_id_has_field_typed (structure,
-      g_quark_from_string (fieldname), type);
+  // Not technically correct but the string is never leaving this scope and is never copied
+  gst_id_str_set_static_str (&s, fieldname);
+  res = gst_structure_id_str_has_field_typed (structure, &s, type);
+  gst_id_str_clear (&s);
+
+  return res;
 }
 
 /* utility functions */
@@ -2334,7 +2843,7 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
 
     g_string_append_len (s, ", ", 2);
     /* FIXME: do we need to escape fieldnames? */
-    g_string_append (s, g_quark_to_string (field->name));
+    g_string_append (s, gst_id_str_as_str (&field->name));
     g_string_append_len (s, "=(", 2);
     g_string_append (s, _priv_gst_value_gtype_to_abbr (type));
     g_string_append_c (s, ')');
@@ -2375,7 +2884,7 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
     } else {
       if (!G_TYPE_CHECK_VALUE_TYPE (&field->value, G_TYPE_STRING))
         GST_WARNING ("No value transform to serialize field '%s' of type '%s'",
-            g_quark_to_string (field->name),
+            gst_id_str_as_str (&field->name),
             _priv_gst_value_gtype_to_abbr (type));
       if (strict)
         return FALSE;
@@ -2389,7 +2898,7 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
 }
 
 gboolean
-priv__gst_structure_append_template_to_gstring (GQuark field_id,
+priv__gst_structure_append_template_to_gstring (const gchar * field,
     const GValue * value, gpointer user_data)
 {
   GType type = gst_structure_value_get_generic_type (value);
@@ -2397,7 +2906,7 @@ priv__gst_structure_append_template_to_gstring (GQuark field_id,
 
   g_string_append_len (s, ", ", 2);
   /* FIXME: do we need to escape fieldnames? */
-  g_string_append (s, g_quark_to_string (field_id));
+  g_string_append (s, field);
   g_string_append_len (s, "=(", 2);
   g_string_append (s, _priv_gst_value_gtype_to_abbr (type));
   g_string_append_c (s, ')');
@@ -2571,7 +3080,7 @@ gst_structure_parse_field (gchar * str,
 
   c = *name_end;
   *name_end = '\0';
-  field->name = g_quark_from_string (name);
+  gst_id_str_set (&field->name, name);
   GST_DEBUG ("trying field name '%s'", name);
   *name_end = c;
 
@@ -3119,13 +3628,14 @@ gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
 }
 
 static gboolean
-default_fixate (GQuark field_id, GValue * value, gpointer data)
+default_fixate (const GstIdStr * fieldname, GValue * value, gpointer data)
 {
   GstStructure *s = data;
   GValue v = { 0 };
 
   if (gst_value_fixate (&v, value)) {
-    if (gst_structure_validate_field_value (s, field_id, value)) {
+    if (gst_structure_validate_field_value (s, gst_id_str_as_str (fieldname),
+            value)) {
       g_value_unset (value);
       *value = v;
     }
@@ -3153,7 +3663,7 @@ gst_structure_fixate_field (GstStructure * structure, const char *field_name)
   if (!(field = gst_structure_get_field (structure, field_name)))
     return FALSE;
 
-  return default_fixate (field->name, &field->value, structure);
+  return default_fixate (&field->name, &field->value, structure);
 }
 
 /* our very own version of G_VALUE_LCOPY that allows NULL return locations
@@ -3250,6 +3760,76 @@ wrong_type:
 }
 
 /**
+ * gst_structure_id_str_get_valist:
+ * @structure: a #GstStructure
+ * @first_fieldname: the name of the first field to read
+ * @args: variable arguments
+ *
+ * Parses the variable arguments and reads fields from @structure accordingly.
+ * valist-variant of gst_structure_id_str_get(). Look at the documentation of
+ * gst_structure_id_str_get() for more details.
+ *
+ * Returns: %TRUE, or %FALSE if there was a problem reading any of the fields
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_structure_id_str_get_valist (const GstStructure * structure,
+    const GstIdStr * first_fieldname, va_list args)
+{
+  const GstIdStr *fieldname;
+  GType expected_type = G_TYPE_INVALID;
+
+  g_return_val_if_fail (GST_IS_STRUCTURE (structure), FALSE);
+  g_return_val_if_fail (first_fieldname != NULL, FALSE);
+
+  fieldname = first_fieldname;
+  while (fieldname) {
+    const GValue *val = NULL;
+    gchar *err = NULL;
+
+    expected_type = va_arg (args, GType);
+
+    val = gst_structure_id_str_get_value (structure, fieldname);
+
+    if (val == NULL)
+      goto no_such_field;
+
+    if (G_VALUE_TYPE (val) != expected_type)
+      goto wrong_type;
+
+    GST_VALUE_LCOPY (val, args, 0, &err, gst_id_str_as_str (fieldname));
+    if (err) {
+      g_warning ("%s: %s", G_STRFUNC, err);
+      g_free (err);
+      return FALSE;
+    }
+
+    fieldname = va_arg (args, const GstIdStr *);
+  }
+
+  return TRUE;
+
+/* ERRORS */
+no_such_field:
+  {
+    GST_INFO ("Expected field '%s' in structure: %" GST_PTR_FORMAT,
+        gst_id_str_as_str (fieldname), structure);
+    return FALSE;
+  }
+wrong_type:
+  {
+    GST_INFO ("Expected field '%s' in structure to be of type '%s', but "
+        "field was of type '%s': %" GST_PTR_FORMAT,
+        gst_id_str_as_str (fieldname),
+        GST_STR_NULL (g_type_name (expected_type)),
+        G_VALUE_TYPE_NAME (gst_structure_id_str_get_value (structure,
+                fieldname)), structure);
+    return FALSE;
+  }
+}
+
+/**
  * gst_structure_id_get_valist:
  * @structure: a #GstStructure
  * @first_field_id: the quark of the first field to read
@@ -3260,6 +3840,8 @@ wrong_type:
  * gst_structure_id_get() for more details.
  *
  * Returns: %TRUE, or %FALSE if there was a problem reading any of the fields
+ *
+ * Deprecated: 1.26: Use gst_structure_id_str_get_valist().
  */
 gboolean
 gst_structure_id_get_valist (const GstStructure * structure,
@@ -3278,7 +3860,10 @@ gst_structure_id_get_valist (const GstStructure * structure,
 
     expected_type = va_arg (args, GType);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     val = gst_structure_id_get_value (structure, field_id);
+#pragma GCC diagnostic pop
 
     if (val == NULL)
       goto no_such_field;
@@ -3307,12 +3892,15 @@ no_such_field:
   }
 wrong_type:
   {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     GST_DEBUG ("Expected field '%s' in structure to be of type '%s', but "
         "field was of type '%s': %" GST_PTR_FORMAT,
         g_quark_to_string (field_id),
         GST_STR_NULL (g_type_name (expected_type)),
         G_VALUE_TYPE_NAME (gst_structure_id_get_value (structure, field_id)),
         structure);
+#pragma GCC diagnostic pop
     return FALSE;
   }
 }
@@ -3355,6 +3943,45 @@ gst_structure_get (const GstStructure * structure, const char *first_fieldname,
 }
 
 /**
+ * gst_structure_id_str_get:
+ * @structure: a #GstStructure
+ * @first_fieldname: the name of the first field to read
+ * @...: variable arguments
+ *
+ * Parses the variable arguments and reads fields from @structure accordingly.
+ * Variable arguments should be in the form field name (as GstIdStr), field type
+ * (as a GType), pointer(s) to a variable(s) to hold the return value(s). The
+ * last variable argument should be %NULL.
+ *
+ * For refcounted (mini)objects you will receive a new reference which
+ * you must release with a suitable _unref\() when no longer needed. For
+ * strings and boxed types you will receive a copy which you will need to
+ * release with either g_free() or the suitable function for the boxed type.
+ *
+ * Returns: %FALSE if there was a problem reading any of the fields (e.g.
+ *     because the field requested did not exist, or was of a type other
+ *     than the type specified), otherwise %TRUE.
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_structure_id_str_get (const GstStructure * structure,
+    const GstIdStr * first_fieldname, ...)
+{
+  gboolean ret;
+  va_list args;
+
+  g_return_val_if_fail (GST_IS_STRUCTURE (structure), FALSE);
+  g_return_val_if_fail (first_fieldname != NULL, FALSE);
+
+  va_start (args, first_fieldname);
+  ret = gst_structure_id_str_get_valist (structure, first_fieldname, args);
+  va_end (args);
+
+  return ret;
+}
+
+/**
  * gst_structure_id_get:
  * @structure: a #GstStructure
  * @first_field_id: the quark of the first field to read
@@ -3379,6 +4006,8 @@ gst_structure_get (const GstStructure * structure, const char *first_fieldname,
  * Returns: %FALSE if there was a problem reading any of the fields (e.g.
  *     because the field requested did not exist, or was of a type other
  *     than the type specified), otherwise %TRUE.
+ *
+ * Deprecated: 1.26: Use gst_structure_id_str_get().
  */
 gboolean
 gst_structure_id_get (const GstStructure * structure, GQuark first_field_id,
@@ -3391,18 +4020,21 @@ gst_structure_id_get (const GstStructure * structure, GQuark first_field_id,
   g_return_val_if_fail (first_field_id != 0, FALSE);
 
   va_start (args, first_field_id);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   ret = gst_structure_id_get_valist (structure, first_field_id, args);
+#pragma GCC diagnostic pop
   va_end (args);
 
   return ret;
 }
 
 static gboolean
-gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
+gst_structure_is_equal_foreach (const GstIdStr * fieldname, const GValue * val2,
     gpointer data)
 {
   const GstStructure *struct1 = (const GstStructure *) data;
-  const GValue *val1 = gst_structure_id_get_value (struct1, field_id);
+  const GValue *val1 = gst_structure_id_str_get_value (struct1, fieldname);
 
   if (G_UNLIKELY (val1 == NULL))
     return FALSE;
@@ -3440,8 +4072,8 @@ gst_structure_is_equal (const GstStructure * structure1,
     return FALSE;
   }
 
-  return gst_structure_foreach (structure1, gst_structure_is_equal_foreach,
-      (gpointer) structure2);
+  return gst_structure_foreach_id_str (structure1,
+      gst_structure_is_equal_foreach, (gpointer) structure2);
 }
 
 /**
@@ -3482,12 +4114,12 @@ gst_structure_intersect (const GstStructure * struct1,
     gboolean seenother = FALSE;
     for (it2 = 0; it2 < len2; it2++) {
       GstStructureField *field2 = GST_STRUCTURE_FIELD (struct2, it2);
-      if (field1->name == field2->name) {
-        GValue dest_value = { 0 };
+      if (gst_id_str_is_equal (&field1->name, &field2->name)) {
+        GValue dest_value = G_VALUE_INIT;
         seenother = TRUE;
         /* Get the intersection if any */
         if (gst_value_intersect (&dest_value, &field1->value, &field2->value)) {
-          gst_structure_id_take_value (dest, field1->name, &dest_value);
+          gst_structure_id_str_take_value (dest, &field1->name, &dest_value);
           break;
         } else {
           /* No intersection, return nothing */
@@ -3497,7 +4129,7 @@ gst_structure_intersect (const GstStructure * struct1,
     }
     /* Field1 was only present in struct1, copy it over */
     if (!seenother)
-      gst_structure_id_set_value (dest, field1->name, &field1->value);
+      gst_structure_id_str_set_value (dest, &field1->name, &field1->value);
   }
 
   /* Now iterate over the 2nd struct and copy over everything which
@@ -3508,13 +4140,13 @@ gst_structure_intersect (const GstStructure * struct1,
     gboolean seenother = FALSE;
     for (it1 = 0; it1 < len1; it1++) {
       GstStructureField *field1 = GST_STRUCTURE_FIELD (struct1, it1);
-      if (field1->name == field2->name) {
+      if (gst_id_str_is_equal (&field1->name, &field2->name)) {
         seenother = TRUE;
         break;
       }
     }
     if (!seenother)
-      gst_structure_id_set_value (dest, field2->name, &field2->value);
+      gst_structure_id_str_set_value (dest, &field2->name, &field2->value);
 
   }
 
@@ -3526,11 +4158,11 @@ error:
 }
 
 static gboolean
-gst_caps_structure_can_intersect_field (GQuark id, const GValue * val1,
-    gpointer data)
+gst_caps_structure_can_intersect_field (const GstIdStr * fieldname,
+    const GValue * val1, gpointer data)
 {
   GstStructure *other = (GstStructure *) data;
-  const GValue *val2 = gst_structure_id_get_value (other, id);
+  const GValue *val2 = gst_structure_id_str_get_value (other, fieldname);
 
   if (G_LIKELY (val2)) {
     if (!gst_value_can_intersect (val1, val2)) {
@@ -3573,7 +4205,7 @@ gst_structure_can_intersect (const GstStructure * struct1,
     return FALSE;
 
   /* tries to intersect if we have the field in both */
-  return gst_structure_foreach ((GstStructure *) struct1,
+  return gst_structure_foreach_id_str ((GstStructure *) struct1,
       gst_caps_structure_can_intersect_field, (gpointer) struct2);
 }
 
@@ -3611,7 +4243,7 @@ gst_structure_is_subset (const GstStructure * subset,
     gboolean seenother = FALSE;
     for (it1 = 0; it1 < len1; it1++) {
       GstStructureField *subfield = GST_STRUCTURE_FIELD (subset, it1);
-      if (subfield->name == superfield->name) {
+      if (gst_id_str_is_equal (&subfield->name, &superfield->name)) {
         int comparison =
             gst_value_compare (&subfield->value, &superfield->value);
         seenother = TRUE;
@@ -3654,7 +4286,7 @@ gst_structure_fixate (GstStructure * structure)
 {
   g_return_if_fail (GST_IS_STRUCTURE (structure));
 
-  gst_structure_map_in_place (structure, default_fixate, structure);
+  gst_structure_map_in_place_id_str (structure, default_fixate, structure);
 }
 
 static gboolean
@@ -3751,14 +4383,15 @@ _gst_structure_set_any_list (GstStructure * structure, GType type,
   g_value_set_static_boxed (&arval, array);
 
   if (g_value_transform (&arval, &value)) {
-    gst_structure_id_set_value_internal (structure,
-        g_quark_from_string (fieldname), &value);
+    GstIdStr s = GST_ID_STR_INIT;
+    gst_id_str_set (&s, fieldname);
+    gst_structure_id_str_take_value_internal (structure, &s, &value);
   } else {
     g_warning ("Failed to convert a GValueArray");
+    g_value_unset (&value);
   }
 
   g_value_unset (&arval);
-  g_value_unset (&value);
 }
 
 /**
