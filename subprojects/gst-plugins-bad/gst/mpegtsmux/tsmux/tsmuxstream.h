@@ -147,7 +147,12 @@ enum TsMuxStreamState {
 struct TsMuxStream {
   TsMuxStreamState state;
   TsMuxPacketInfo pi;
-  guint stream_type;
+  /* Stream type to be used in PES/PSI */
+  TsMuxStreamType stream_type;
+  /* internal stream identifier (used for private section/pes) */
+  TsMuxStreamType internal_stream_type;
+  /* Nature of the stream (audio, video, ..) */
+  GstStreamType gst_stream_type;
 
   /* stream_id (13818-1) */
   guint8 id;
@@ -158,8 +163,6 @@ struct TsMuxStream {
 
   /* requested index in the PMT */
   gint pmt_index;
-
-  gboolean is_video_stream;
 
   /* data available for writing out
    * and total sum of sizes */
@@ -210,11 +213,7 @@ struct TsMuxStream {
   gboolean is_dvb_sub;
   gchar language[4];
 
-  gboolean is_meta;
-  gboolean is_audio;
-
   /* Opus */
-  gboolean is_opus;
   guint8 opus_channel_config[1 + 2 + 1 + 1 + 255];
   gsize opus_channel_config_len;
 
@@ -228,8 +227,6 @@ struct TsMuxStream {
   guint16 profile_and_level;
   gboolean interlace_mode;
   guint8 color_spec;
-
-  gboolean is_id3_metadata;
 };
 
 /* stream management */

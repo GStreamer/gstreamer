@@ -1859,7 +1859,7 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
     for (i = 0; i < program->streams->len; i++) {
       TsMuxStream *stream = g_ptr_array_index (program->streams, i);
 
-      if (stream->is_id3_metadata == TRUE) {
+      if (stream->internal_stream_type == TSMUX_ST_PS_ID3) {
         GstMpegtsMetadataPointerDescriptor metadata_pointer_descriptor;
         metadata_pointer_descriptor.metadata_application_format =
             GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD;

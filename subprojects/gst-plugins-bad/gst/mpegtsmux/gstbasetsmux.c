@@ -1413,7 +1413,8 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
     buf = tmp;
   }
 
-  if (mux->force_key_unit_event != NULL && best->stream->is_video_stream) {
+  if (mux->force_key_unit_event != NULL
+      && best->stream->gst_stream_type == GST_STREAM_TYPE_VIDEO) {
     GstEvent *event;
 
     g_mutex_unlock (&mux->lock);
@@ -1494,12 +1495,13 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
     pts = dts;
   }
 
-  if (best->stream->is_video_stream) {
+  if (best->stream->gst_stream_type == GST_STREAM_TYPE_VIDEO) {
     delta = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
     header = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_HEADER);
   }
 
-  if (best->stream->is_meta && gst_buffer_get_size (buf) > (G_MAXUINT16 - 3)) {
+  if (best->stream->internal_stream_type == TSMUX_ST_PS_KLV &&
+      gst_buffer_get_size (buf) > (G_MAXUINT16 - 3)) {
     GST_WARNING_OBJECT (mux, "KLV meta unit too big, splitting not supported");
 
     gst_buffer_unref (buf);

@@ -124,6 +124,7 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
   stream->state = TSMUX_STREAM_STATE_HEADER;
   stream->pi.pid = pid;
   stream->stream_type = stream_type;
+  stream->internal_stream_type = stream_type;
 
   stream->pes_payload_size = 0;
   stream->cur_pes_payload_size = 0;
@@ -144,13 +145,13 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
       }
       stream->id = 0xE0 | stream_number;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
-      stream->is_video_stream = TRUE;
+      stream->gst_stream_type = GST_STREAM_TYPE_VIDEO;
       supports_user_specified_stream_number = TRUE;
       break;
     case TSMUX_ST_VIDEO_JP2K:
       stream->id = 0xBD;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
-      stream->is_video_stream = TRUE;
+      stream->gst_stream_type = GST_STREAM_TYPE_VIDEO;
       break;
     case TSMUX_ST_AUDIO_AAC:
     case TSMUX_ST_AUDIO_MPEG1:
@@ -161,7 +162,7 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
             stream_number);
         stream_number = 0;
       }
-      stream->is_audio = TRUE;
+      stream->gst_stream_type = GST_STREAM_TYPE_AUDIO;
       stream->id = 0xC0 | stream_number;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
       supports_user_specified_stream_number = TRUE;
@@ -175,18 +176,18 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
       switch (stream_type) {
         case TSMUX_ST_VIDEO_DIRAC:
           stream->id_extended = 0x60;
-          stream->is_video_stream = TRUE;
+          stream->gst_stream_type = GST_STREAM_TYPE_VIDEO;
           break;
         case TSMUX_ST_PS_AUDIO_LPCM:
-          stream->is_audio = TRUE;
+          stream->gst_stream_type = GST_STREAM_TYPE_AUDIO;
           stream->id_extended = 0x80;
           break;
         case TSMUX_ST_PS_AUDIO_AC3:
-          stream->is_audio = TRUE;
+          stream->gst_stream_type = GST_STREAM_TYPE_AUDIO;
           stream->id_extended = 0x71;
           break;
         case TSMUX_ST_PS_AUDIO_DTS:
-          stream->is_audio = TRUE;
+          stream->gst_stream_type = GST_STREAM_TYPE_AUDIO;
           stream->id_extended = 0x82;
           break;
         default:
@@ -214,7 +215,6 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
       /* FIXME: assign sequential extended IDs? */
       stream->id = 0xBD;
       stream->stream_type = TSMUX_ST_PRIVATE_DATA;
-      stream->is_meta = TRUE;
       stream->pi.flags |=
           TSMUX_PACKET_FLAG_PES_FULL_HEADER |
           TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
@@ -222,17 +222,14 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
     case TSMUX_ST_PS_ID3:
       stream->id = 0xBD;        // private stream
       stream->stream_type = TSMUX_ST_PES_METADATA;
-      stream->is_meta = TRUE;
-      stream->is_id3_metadata = TRUE;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER |
           TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
       break;
     case TSMUX_ST_PS_OPUS:
       /* FIXME: assign sequential extended IDs? */
       stream->id = 0xBD;
-      stream->is_audio = TRUE;
+      stream->gst_stream_type = GST_STREAM_TYPE_AUDIO;
       stream->stream_type = TSMUX_ST_PRIVATE_DATA;
-      stream->is_opus = TRUE;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
       break;
     default:
@@ -494,7 +491,7 @@ tsmux_stream_initialize_pes_packet (TsMuxStream * stream)
     }
   }
 
-  if (stream->is_video_stream) {
+  if (stream->gst_stream_type == GST_STREAM_TYPE_VIDEO) {
     guint8 hdr_len;
 
     hdr_len = tsmux_stream_pes_header_length (stream);
@@ -504,10 +501,8 @@ tsmux_stream_initialize_pes_packet (TsMuxStream * stream)
       stream->cur_pes_payload_size = 0;
   }
   // stream_type specific flags
-  switch (stream->stream_type) {
-    case TSMUX_ST_PES_METADATA:
-      stream->pi.flags |= TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
-      break;
+  if (stream->stream_type == TSMUX_ST_PES_METADATA) {
+    stream->pi.flags |= TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
   }
 
   return TRUE;
@@ -796,7 +791,8 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
   g_return_if_fail (stream != NULL);
   g_return_if_fail (pmt_stream != NULL);
 
-  if (stream->is_audio && stream->language[0] != '\0') {
+  if (stream->gst_stream_type == GST_STREAM_TYPE_AUDIO
+      && stream->language[0] != '\0') {
     descriptor = gst_mpegts_descriptor_from_iso_639_language (stream->language);
     g_ptr_array_add (pmt_stream->descriptors, descriptor);
     descriptor = NULL;
@@ -928,7 +924,7 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
 
     case TSMUX_ST_PES_METADATA:
 
-      if (stream->is_id3_metadata) {
+      if (stream->internal_stream_type == TSMUX_ST_PS_ID3) {
         // metadata_descriptor
         GstMpegtsMetadataDescriptor metadata_descriptor;
 
@@ -972,7 +968,7 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
         break;
       }
-      if (stream->is_opus) {
+      if (stream->internal_stream_type == TSMUX_ST_PS_OPUS) {
         descriptor = gst_mpegts_descriptor_from_registration ("Opus", NULL, 0);
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
 
@@ -983,7 +979,7 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
 
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
       }
-      if (stream->is_meta) {
+      if (stream->internal_stream_type == TSMUX_ST_PS_KLV) {
         descriptor = gst_mpegts_descriptor_from_registration ("KLVA", NULL, 0);
         GST_DEBUG ("adding KLVA registration descriptor");
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
