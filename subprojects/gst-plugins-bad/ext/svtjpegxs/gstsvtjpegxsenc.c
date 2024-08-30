@@ -544,9 +544,12 @@ gst_svt_jpeg_xs_enc_set_format (GstVideoEncoder * encoder,
 
   src_caps = gst_caps_make_writable (src_caps);
 
-  // ToDo: might want to add more things to the caps, such as depth etc.
-  gst_caps_set_simple (src_caps, "sampling", G_TYPE_STRING, sampling,
-      "depth", G_TYPE_INT, enc->input_bit_depth, NULL);
+  // ToDo: add more things to the caps?
+  gst_caps_set_simple (src_caps,        //
+      "sampling", G_TYPE_STRING, sampling,      //
+      "depth", G_TYPE_INT, enc->input_bit_depth,        //
+      "codestream-length", G_TYPE_INT, jxsenc->bytes_per_frame, //
+      NULL);
 
   GstVideoCodecState *output_state =
       gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (encoder), src_caps,
