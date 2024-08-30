@@ -98,6 +98,7 @@ gst_wl_display_init (GstWlDisplay * self)
   g_rec_mutex_init (&priv->sync_mutex);
 
   gst_wl_linux_dmabuf_init_once ();
+  gst_wl_shm_init_once ();
   gst_shm_allocator_init_once ();
   gst_wl_videoformat_init_once ();
 }

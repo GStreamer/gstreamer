@@ -26,6 +26,19 @@
 
 #include "gstwlshmallocator.h"
 
+GST_DEBUG_CATEGORY (gst_wl_shm_debug);
+#define GST_CAT_DEFAULT gst_wl_shm_debug
+
+void
+gst_wl_shm_init_once (void)
+{
+  static gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT (gst_wl_shm_debug, "wl_shm", 0, "wl_shm library");
+    g_once_init_leave (&_init, 1);
+  }
+}
 
 static gboolean
 gst_wl_shm_validate_video_info (const GstVideoInfo * vinfo)
