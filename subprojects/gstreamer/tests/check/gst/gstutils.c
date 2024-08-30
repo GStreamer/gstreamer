@@ -1990,6 +1990,21 @@ GST_START_TEST (test_regression)
 
 GST_END_TEST;
 
+// 10 Values
+static const int ceil_log2_values[] = {
+  -1, 0, 1, 2, 2, 3, 3, 3, 3, 4
+};
+
+GST_START_TEST (test_ceil_log2)
+{
+  int i;
+  for (i = 1; i < 10; i++) {
+    fail_unless_equals_int (gst_util_ceil_log2 (i), ceil_log2_values[i]);
+  }
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_mark_as_plugin_api)
 {
   GstPluginAPIFlags api_flags;
@@ -2052,6 +2067,8 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_regression);
 
   tcase_add_test (tc_chain, test_mark_as_plugin_api);
+
+  tcase_add_test (tc_chain, test_ceil_log2);
 
   return s;
 }

@@ -57259,7 +57259,7 @@ element or %NULL if nothing was found</doc>
       </parameters>
     </function>
     <function name="util_ceil_log2" c:identifier="gst_util_ceil_log2" version="1.24">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Return a max num of log2.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Returns smallest integral value not less than log2(v).</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a computed #guint val.</doc>

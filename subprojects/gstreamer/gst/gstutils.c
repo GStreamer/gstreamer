@@ -4484,7 +4484,7 @@ gst_bit_storage_uint64 (guint64 in)
  * gst_util_ceil_log2:
  * @v: a #guint32 value.
  *
- * Return a max num of log2.
+ * Returns smallest integral value not less than log2(v).
  *
  * Returns: a computed #guint val.
  *
@@ -4493,25 +4493,29 @@ gst_bit_storage_uint64 (guint64 in)
 guint
 gst_util_ceil_log2 (guint32 v)
 {
-  /* Compute Ceil(Log2(v)) */
-  /* Derived from branchless code for integer log2(v) from:
-     <http://graphics.stanford.edu/~seander/bithacks.html#IntegerLog> */
-  guint r, shift;
+  static const unsigned int t[6] = {
+    0x00000000ull,
+    0xFFFF0000ull,
+    0x0000FF00ull,
+    0x000000F0ull,
+    0x0000000Cull,
+    0x000000002ull
+  };
 
-  v--;
-  r = (v > 0xFFFF) << 4;
-  v >>= r;
-  shift = (v > 0xFF) << 3;
-  v >>= shift;
-  r |= shift;
-  shift = (v > 0xF) << 2;
-  v >>= shift;
-  r |= shift;
-  shift = (v > 0x3) << 1;
-  v >>= shift;
-  r |= shift;
-  r |= (v >> 1);
-  return r + 1;
+  g_return_val_if_fail (v != 0, -1);
+
+  int y = (((v & (v - 1)) == 0) ? 0 : 1);
+  int j = 32;
+  int i;
+
+  for (i = 0; i < 6; i++) {
+    int k = (((v & t[i]) == 0) ? 0 : j);
+    y += k;
+    v >>= k;
+    j >>= 1;
+  }
+
+  return y;
 }
 
 /**
