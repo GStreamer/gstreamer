@@ -1194,7 +1194,9 @@ gst_va_base_enc_add_codec_tag (GstVaBaseEnc * base, const gchar * codec_name)
   const gchar *encoder_name;
   guint bitrate = 0;
 
-  g_object_get (venc, "bitrate", &bitrate, NULL);
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (base), "bitrate"))
+    g_object_get (venc, "bitrate", &bitrate, NULL);
+
   if (bitrate > 0)
     gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_NOMINAL_BITRATE,
         bitrate, NULL);
