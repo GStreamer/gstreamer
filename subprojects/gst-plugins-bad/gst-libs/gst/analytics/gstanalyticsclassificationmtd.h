@@ -27,7 +27,6 @@
 #include <gst/analytics/gstanalyticsmeta.h>
 
 G_BEGIN_DECLS
-
 /**
  * GstAnalyticsClsMtd:
  * @id: Instance identifier.
@@ -45,18 +44,18 @@ GST_ANALYTICS_META_API
 GstAnalyticsMtdType gst_analytics_cls_mtd_get_mtd_type (void);
 
 GST_ANALYTICS_META_API
-gfloat gst_analytics_cls_mtd_get_level (GstAnalyticsClsMtd * handle,
+gfloat gst_analytics_cls_mtd_get_level (const GstAnalyticsClsMtd * handle,
     gsize index);
 
 GST_ANALYTICS_META_API
-gint gst_analytics_cls_mtd_get_index_by_quark (GstAnalyticsClsMtd * handle,
-    GQuark quark);
+gint gst_analytics_cls_mtd_get_index_by_quark (const GstAnalyticsClsMtd *
+    handle, GQuark quark);
 
 GST_ANALYTICS_META_API
-gsize gst_analytics_cls_mtd_get_length (GstAnalyticsClsMtd * handle);
+gsize gst_analytics_cls_mtd_get_length (const GstAnalyticsClsMtd * handle);
 
 GST_ANALYTICS_META_API
-GQuark gst_analytics_cls_mtd_get_quark (GstAnalyticsClsMtd * handle,
+GQuark gst_analytics_cls_mtd_get_quark (const GstAnalyticsClsMtd * handle,
     gsize index);
 
 GST_ANALYTICS_META_API

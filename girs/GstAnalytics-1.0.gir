@@ -34,7 +34,7 @@ identified by @id is stored.</doc>
         <parameters>
           <instance-parameter name="handle" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Instance handle</doc>
-            <type name="ClsMtd" c:type="GstAnalyticsClsMtd*"/>
+            <type name="ClsMtd" c:type="const GstAnalyticsClsMtd*"/>
           </instance-parameter>
           <parameter name="quark" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Quark of the class
@@ -53,7 +53,7 @@ Get index of class represented by @quark</doc>
           <instance-parameter name="handle" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Instance handle
 Get number of classes</doc>
-            <type name="ClsMtd" c:type="GstAnalyticsClsMtd*"/>
+            <type name="ClsMtd" c:type="const GstAnalyticsClsMtd*"/>
           </instance-parameter>
         </parameters>
       </method>
@@ -67,7 +67,7 @@ Get number of classes</doc>
         <parameters>
           <instance-parameter name="handle" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">instance handle</doc>
-            <type name="ClsMtd" c:type="GstAnalyticsClsMtd*"/>
+            <type name="ClsMtd" c:type="const GstAnalyticsClsMtd*"/>
           </instance-parameter>
           <parameter name="index" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Object class index</doc>
@@ -84,7 +84,7 @@ Get number of classes</doc>
         <parameters>
           <instance-parameter name="handle" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Instance handle</doc>
-            <type name="ClsMtd" c:type="GstAnalyticsClsMtd*"/>
+            <type name="ClsMtd" c:type="const GstAnalyticsClsMtd*"/>
           </instance-parameter>
           <parameter name="index" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">index of the class
@@ -143,7 +143,7 @@ identified by @id is stored.</doc>
         <parameters>
           <instance-parameter name="instance" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of #GstAnalyticsMtd</doc>
-            <type name="Mtd" c:type="GstAnalyticsMtd*"/>
+            <type name="Mtd" c:type="const GstAnalyticsMtd*"/>
           </instance-parameter>
         </parameters>
       </method>
@@ -157,7 +157,7 @@ identified by @id is stored.</doc>
           <instance-parameter name="instance" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of #GstAnalyticsMtd
 Get analysis result type.</doc>
-            <type name="Mtd" c:type="GstAnalyticsMtd*"/>
+            <type name="Mtd" c:type="const GstAnalyticsMtd*"/>
           </instance-parameter>
         </parameters>
       </method>
@@ -171,7 +171,7 @@ Get analysis result type.</doc>
         <parameters>
           <instance-parameter name="instance" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of #GstAnalyticsMtd</doc>
-            <type name="Mtd" c:type="GstAnalyticsMtd*"/>
+            <type name="Mtd" c:type="const GstAnalyticsMtd*"/>
           </instance-parameter>
         </parameters>
       </method>
@@ -252,7 +252,7 @@ identified by @id is stored.</doc>
         <parameters>
           <instance-parameter name="instance" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">instance</doc>
-            <type name="ODMtd" c:type="GstAnalyticsODMtd*"/>
+            <type name="ODMtd" c:type="const GstAnalyticsODMtd*"/>
           </instance-parameter>
           <parameter name="loc_conf_lvl" direction="out" caller-allocates="0" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Confidence on object location</doc>
@@ -270,7 +270,7 @@ identified by @id is stored.</doc>
         <parameters>
           <instance-parameter name="instance" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">instance</doc>
-            <type name="ODMtd" c:type="GstAnalyticsODMtd*"/>
+            <type name="ODMtd" c:type="const GstAnalyticsODMtd*"/>
           </instance-parameter>
           <parameter name="x" direction="out" caller-allocates="0" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">x component of upper-left corner of the object location</doc>
@@ -304,7 +304,7 @@ identified by @id is stored.</doc>
         <parameters>
           <instance-parameter name="handle" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Instance handle</doc>
-            <type name="ODMtd" c:type="GstAnalyticsODMtd*"/>
+            <type name="ODMtd" c:type="const GstAnalyticsODMtd*"/>
           </instance-parameter>
         </parameters>
       </method>
@@ -517,7 +517,7 @@ between @an_meta_first_id and @an_meta_second_id.</doc>
           <instance-parameter name="rmeta" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">a #GstAnalyticsRelationMeta describing analysis-meta
    relation</doc>
-            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+            <type name="RelationMeta" c:type="const GstAnalyticsRelationMeta*"/>
           </instance-parameter>
           <parameter name="an_meta_first_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">First analysis-meta</doc>
@@ -649,7 +649,7 @@ otherwise this method return FALSE and @rlt is invalid.</doc>
         <parameters>
           <instance-parameter name="meta" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of GstAnalyticsRelationMeta</doc>
-            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+            <type name="RelationMeta" c:type="const GstAnalyticsRelationMeta*"/>
           </instance-parameter>
           <parameter name="an_meta_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Id of GstAnalyticsMtd instance to retrieve</doc>
@@ -693,7 +693,7 @@ Ids (@an_meta_first_id and @an_meta_second_id) must be from a call to
         <parameters>
           <instance-parameter name="meta" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">a #GstAnalyticsRelationMeta</doc>
-            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+            <type name="RelationMeta" c:type="const GstAnalyticsRelationMeta*"/>
           </instance-parameter>
           <parameter name="an_meta_first_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Id of first analysis-meta</doc>
@@ -828,7 +828,7 @@ identified by @id is stored.</doc>
         <parameters>
           <instance-parameter name="instance" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Instance of tracking metadata</doc>
-            <type name="TrackingMtd" c:type="GstAnalyticsTrackingMtd*"/>
+            <type name="TrackingMtd" c:type="const GstAnalyticsTrackingMtd*"/>
           </instance-parameter>
           <parameter name="tracking_id" direction="out" caller-allocates="0" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Updated tracking id</doc>
@@ -1005,7 +1005,7 @@ information about the tracking, for example, it can be used alongside a
       <parameters>
         <parameter name="instance" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of #GstAnalyticsRelationMeta</doc>
-          <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          <type name="RelationMeta" c:type="const GstAnalyticsRelationMeta*"/>
         </parameter>
       </parameters>
     </function>

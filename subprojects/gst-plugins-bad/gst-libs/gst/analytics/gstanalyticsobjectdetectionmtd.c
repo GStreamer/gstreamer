@@ -135,7 +135,7 @@ gst_analytics_od_mtd_get_mtd_type (void)
  * Since: 1.24
  */
 gboolean
-gst_analytics_od_mtd_get_location (GstAnalyticsODMtd * instance,
+gst_analytics_od_mtd_get_location (const GstAnalyticsODMtd * instance,
     gint * x, gint * y, gint * w, gint * h, gfloat * loc_conf_lvl)
 {
   GstAnalyticsODMtdData *data;
@@ -168,7 +168,7 @@ gst_analytics_od_mtd_get_location (GstAnalyticsODMtd * instance,
  * Since: 1.24
  */
 gboolean
-gst_analytics_od_mtd_get_confidence_lvl (GstAnalyticsODMtd * instance,
+gst_analytics_od_mtd_get_confidence_lvl (const GstAnalyticsODMtd * instance,
     gfloat * loc_conf_lvl)
 {
   GstAnalyticsODMtdData *data;
@@ -194,7 +194,7 @@ gst_analytics_od_mtd_get_confidence_lvl (GstAnalyticsODMtd * instance,
  * Since: 1.24
  */
 GQuark
-gst_analytics_od_mtd_get_obj_type (GstAnalyticsODMtd * handle)
+gst_analytics_od_mtd_get_obj_type (const GstAnalyticsODMtd * handle)
 {
   GstAnalyticsODMtdData *data;
   g_return_val_if_fail (handle != NULL, 0);

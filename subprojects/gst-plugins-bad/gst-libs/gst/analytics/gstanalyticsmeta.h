@@ -30,7 +30,6 @@
 #include <gst/analytics/analytics-meta-prelude.h>
 
 G_BEGIN_DECLS
-
 /**
  * GST_INF_RELATION_SPAN:
  *
@@ -112,31 +111,33 @@ struct _GstAnalyticsMtd
  * Since: 1.24
  */
 
-typedef struct {
+typedef struct
+{
   const char *name;
 
-  gboolean (*mtd_meta_transform) (GstBuffer *transbuf, GstAnalyticsMtd *transmtd,
-                                  GstBuffer *buffer, GQuark type,
-                                  gpointer data);
+gboolean (*mtd_meta_transform) (GstBuffer * transbuf,
+      GstAnalyticsMtd * transmtd, GstBuffer * buffer, GQuark type,
+      gpointer data);
 
-  /*< private >*/
+  /*< private > */
   gpointer _reserved[GST_PADDING_LARGE];
 } GstAnalyticsMtdImpl;
 
 GST_ANALYTICS_META_API
-GstAnalyticsMtdType gst_analytics_mtd_get_mtd_type (GstAnalyticsMtd * instance);
+GstAnalyticsMtdType gst_analytics_mtd_get_mtd_type (const GstAnalyticsMtd *
+    instance);
 
 GST_ANALYTICS_META_API
-guint gst_analytics_mtd_get_id (GstAnalyticsMtd * instance);
+guint gst_analytics_mtd_get_id (const GstAnalyticsMtd * instance);
 
 GST_ANALYTICS_META_API
-gsize gst_analytics_mtd_get_size (GstAnalyticsMtd * instance);
+gsize gst_analytics_mtd_get_size (const GstAnalyticsMtd * instance);
 
 GST_ANALYTICS_META_API
 const gchar *gst_analytics_mtd_type_get_name (GstAnalyticsMtdType type);
 
 typedef struct _GstAnalyticsRelationMetaInitParams
-    GstAnalyticsRelationMetaInitParams;
+GstAnalyticsRelationMetaInitParams;
 
 /**
  * GST_ANALYTICS_RELATION_META_API_TYPE:
@@ -202,13 +203,12 @@ const GstMetaInfo *gst_analytics_relation_meta_get_info (void);
 
 GST_ANALYTICS_META_API
 gsize
-gst_analytics_relation_get_length (GstAnalyticsRelationMeta *
-    instance);
+gst_analytics_relation_get_length (const GstAnalyticsRelationMeta * instance);
 
 GST_ANALYTICS_META_API
 GstAnalyticsRelTypes
-gst_analytics_relation_meta_get_relation (GstAnalyticsRelationMeta * meta,
-    guint an_meta_first_id, guint an_meta_second_id);
+gst_analytics_relation_meta_get_relation (const GstAnalyticsRelationMeta * meta,
+guint an_meta_first_id, guint an_meta_second_id);
 
 GST_ANALYTICS_META_API
 gboolean
@@ -218,7 +218,7 @@ gst_analytics_relation_meta_set_relation (GstAnalyticsRelationMeta
 
 GST_ANALYTICS_META_API
 gboolean
-gst_analytics_relation_meta_exist (GstAnalyticsRelationMeta *
+gst_analytics_relation_meta_exist (const GstAnalyticsRelationMeta *
     rmeta, guint an_meta_first_id, guint an_meta_second_id,
     gint max_relation_span, GstAnalyticsRelTypes cond_types,
     GArray ** relations_path);
@@ -248,19 +248,19 @@ gst_analytics_relation_meta_get_mtd (GstAnalyticsRelationMeta *
 
 GST_ANALYTICS_META_API
 gpointer
-gst_analytics_relation_meta_get_mtd_data (GstAnalyticsRelationMeta * meta,
+gst_analytics_relation_meta_get_mtd_data (const GstAnalyticsRelationMeta * meta,
     guint an_meta_id);
 
 GST_ANALYTICS_META_API
 gboolean
 gst_analytics_relation_meta_iterate (GstAnalyticsRelationMeta *
     meta, gpointer * state, GstAnalyticsMtdType type,
-    GstAnalyticsMtd * rlt_mtd);
+GstAnalyticsMtd * rlt_mtd);
 
 GST_ANALYTICS_META_API
 gboolean
-gst_analytics_relation_meta_get_direct_related (GstAnalyticsRelationMeta * meta,
-    guint an_meta_id, GstAnalyticsRelTypes relation_type,
+gst_analytics_relation_meta_get_direct_related (GstAnalyticsRelationMeta *
+    meta, guint an_meta_id, GstAnalyticsRelTypes relation_type,
     GstAnalyticsMtdType type, gpointer * state, GstAnalyticsMtd * rlt_mtd);
 
 G_END_DECLS

@@ -138,7 +138,7 @@ gst_analytics_tracking_mtd_set_lost (GstAnalyticsTrackingMtd * instance)
  * Since: 1.24
  */
 gboolean
-gst_analytics_tracking_mtd_get_info (GstAnalyticsTrackingMtd * instance,
+gst_analytics_tracking_mtd_get_info (const GstAnalyticsTrackingMtd * instance,
     guint64 * tracking_id, GstClockTime * tracking_first_seen, GstClockTime *
     tracking_last_seen, gboolean * tracking_lost)
 {

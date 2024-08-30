@@ -113,8 +113,8 @@ gst_analytics_relation_meta_get_next_id (GstAnalyticsRelationMeta * meta);
 
 
 static GstAnalyticsRelatableMtdData *
-gst_analytics_relation_meta_get_mtd_data_internal (GstAnalyticsRelationMeta *
-    meta, guint an_meta_id)
+gst_analytics_relation_meta_get_mtd_data_internal (const
+    GstAnalyticsRelationMeta * meta, guint an_meta_id)
 {
   GstAnalyticsRelatableMtdData *rv;
   g_return_val_if_fail (meta, NULL);
@@ -137,7 +137,7 @@ gst_analytics_relation_meta_get_mtd_data_internal (GstAnalyticsRelationMeta *
  * Since: 1.24
  */
 GstAnalyticsMtdType
-gst_analytics_mtd_get_mtd_type (GstAnalyticsMtd * instance)
+gst_analytics_mtd_get_mtd_type (const GstAnalyticsMtd * instance)
 {
   GstAnalyticsRelatableMtdData *rlt;
 
@@ -159,7 +159,7 @@ gst_analytics_mtd_get_mtd_type (GstAnalyticsMtd * instance)
  * Since: 1.24
  */
 guint
-gst_analytics_mtd_get_id (GstAnalyticsMtd * instance)
+gst_analytics_mtd_get_id (const GstAnalyticsMtd * instance)
 {
   return instance->id;
 }
@@ -174,7 +174,7 @@ gst_analytics_mtd_get_id (GstAnalyticsMtd * instance)
  * Since: 1.24
  */
 gsize
-gst_analytics_mtd_get_size (GstAnalyticsMtd * instance)
+gst_analytics_mtd_get_size (const GstAnalyticsMtd * instance)
 {
   GstAnalyticsRelatableMtdData *rlt;
 
@@ -222,7 +222,7 @@ gst_analytics_mtd_type_get_name (GstAnalyticsMtdType type)
  * Since: 1.24
  */
 gsize
-gst_analytics_relation_get_length (GstAnalyticsRelationMeta * instance)
+gst_analytics_relation_get_length (const GstAnalyticsRelationMeta * instance)
 {
   gsize rv;
   g_return_val_if_fail (instance, 0);
@@ -583,7 +583,7 @@ gst_analytics_relation_meta_get_next_id (GstAnalyticsRelationMeta * meta)
  * Since: 1.24
  */
 GstAnalyticsRelTypes
-gst_analytics_relation_meta_get_relation (GstAnalyticsRelationMeta * meta,
+gst_analytics_relation_meta_get_relation (const GstAnalyticsRelationMeta * meta,
     guint an_meta_first_id, guint an_meta_second_id)
 {
   GstAnalyticsRelTypes types = GST_ANALYTICS_REL_TYPE_NONE;
@@ -675,7 +675,7 @@ gst_analytics_relation_meta_set_relation (GstAnalyticsRelationMeta * meta,
  * Since: 1.24
  */
 gboolean
-gst_analytics_relation_meta_exist (GstAnalyticsRelationMeta * rmeta,
+gst_analytics_relation_meta_exist (const GstAnalyticsRelationMeta * rmeta,
     guint an_meta_first_id,
     guint an_meta_second_id,
     gint max_relation_span,
@@ -999,7 +999,7 @@ gst_analytics_relation_meta_get_mtd (GstAnalyticsRelationMeta * meta,
  * Since: 1.24
  */
 gpointer
-gst_analytics_relation_meta_get_mtd_data (GstAnalyticsRelationMeta *
+gst_analytics_relation_meta_get_mtd_data (const GstAnalyticsRelationMeta *
     meta, guint an_meta_id)
 {
   GstAnalyticsRelatableMtdData *rv =

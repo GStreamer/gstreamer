@@ -31,7 +31,6 @@
 #include <gst/analytics/gstanalyticsmeta.h>
 
 G_BEGIN_DECLS
-
 /**
  * GstAnalyticsODMtd:
  * @id: Instance identifier.
@@ -49,20 +48,20 @@ GST_ANALYTICS_META_API
 GstAnalyticsMtdType gst_analytics_od_mtd_get_mtd_type (void);
 
 GST_ANALYTICS_META_API
-gboolean gst_analytics_od_mtd_get_location (GstAnalyticsODMtd * instance,
-    gint * x, gint * y, gint * w, gint * h, gfloat * loc_conf_lvl);
+gboolean gst_analytics_od_mtd_get_location (const GstAnalyticsODMtd *
+    instance, gint * x, gint * y, gint * w, gint * h, gfloat * loc_conf_lvl);
 
 GST_ANALYTICS_META_API
-gboolean gst_analytics_od_mtd_get_confidence_lvl (GstAnalyticsODMtd * instance,
-    gfloat * loc_conf_lvl);
+gboolean gst_analytics_od_mtd_get_confidence_lvl (const GstAnalyticsODMtd *
+    instance, gfloat * loc_conf_lvl);
 
 GST_ANALYTICS_META_API
-GQuark gst_analytics_od_mtd_get_obj_type (GstAnalyticsODMtd * handle);
+GQuark gst_analytics_od_mtd_get_obj_type (const GstAnalyticsODMtd * handle);
 
 GST_ANALYTICS_META_API
-gboolean gst_analytics_relation_meta_add_od_mtd (
-    GstAnalyticsRelationMeta * instance, GQuark type, gint x, gint y,
-    gint w, gint h, gfloat loc_conf_lvl, GstAnalyticsODMtd * od_mtd);
+gboolean gst_analytics_relation_meta_add_od_mtd (GstAnalyticsRelationMeta *
+    instance, GQuark type, gint x, gint y, gint w, gint h, gfloat loc_conf_lvl,
+    GstAnalyticsODMtd * od_mtd);
 
 GST_ANALYTICS_META_API
 gboolean

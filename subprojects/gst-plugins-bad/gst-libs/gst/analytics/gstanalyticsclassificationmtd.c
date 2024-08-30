@@ -95,7 +95,7 @@ gst_analytics_cls_mtd_get_mtd_type (void)
  * Since: 1.24
  */
 gfloat
-gst_analytics_cls_mtd_get_level (GstAnalyticsClsMtd * handle, gsize index)
+gst_analytics_cls_mtd_get_level (const GstAnalyticsClsMtd * handle, gsize index)
 {
   g_return_val_if_fail (handle, -1.0);
   g_return_val_if_fail (handle->meta != NULL, -1.0);
@@ -118,7 +118,7 @@ gst_analytics_cls_mtd_get_level (GstAnalyticsClsMtd * handle, gsize index)
  * Since: 1.24
  */
 gint
-gst_analytics_cls_mtd_get_index_by_quark (GstAnalyticsClsMtd * handle,
+gst_analytics_cls_mtd_get_index_by_quark (const GstAnalyticsClsMtd * handle,
     GQuark quark)
 {
   g_return_val_if_fail (handle, -1);
@@ -145,7 +145,7 @@ gst_analytics_cls_mtd_get_index_by_quark (GstAnalyticsClsMtd * handle,
  * Since: 1.24
  */
 gsize
-gst_analytics_cls_mtd_get_length (GstAnalyticsClsMtd * handle)
+gst_analytics_cls_mtd_get_length (const GstAnalyticsClsMtd * handle)
 {
   GstAnalyticsClsMtdData *cls_mtd_data;
   cls_mtd_data = gst_analytics_relation_meta_get_mtd_data (handle->meta,
@@ -164,7 +164,7 @@ gst_analytics_cls_mtd_get_length (GstAnalyticsClsMtd * handle)
  * Since: 1.24
  */
 GQuark
-gst_analytics_cls_mtd_get_quark (GstAnalyticsClsMtd * handle, gsize index)
+gst_analytics_cls_mtd_get_quark (const GstAnalyticsClsMtd * handle, gsize index)
 {
   GstAnalyticsClsMtdData *cls_mtd_data;
   g_return_val_if_fail (handle, 0);
