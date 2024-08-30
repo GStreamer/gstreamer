@@ -848,13 +848,13 @@ gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
   GstCapsFeatures *features;
   guint num_structures, i, j;
   gboolean is_any;
-  /* array designators might not be supported by some compilers */
-  const GQuark feats[] = {
-    /* [VA] = */ g_quark_from_string (GST_CAPS_FEATURE_MEMORY_VA),
-    /* [DMABUF] = */ g_quark_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF),
-    /* [SYSMEM] = */
-    g_quark_from_string (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY),
-  };
+  GstIdStr sysmem = GST_ID_STR_INIT, dmabuf = GST_ID_STR_INIT, va =
+      GST_ID_STR_INIT;
+  const GstIdStr *feats[] = { &va, &dmabuf, &sysmem };
+
+  gst_id_str_set_static_str (&sysmem, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+  gst_id_str_set_static_str (&dmabuf, GST_CAPS_FEATURE_MEMORY_DMABUF);
+  gst_id_str_set_static_str (&va, GST_CAPS_FEATURE_MEMORY_VA);
 
   g_return_if_fail (base);
 
@@ -897,7 +897,7 @@ gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
       guint64 mod = 0;
 
       features = gst_caps_get_features (allowed_caps, j);
-      if (!gst_caps_features_contains_id (features, feats[i]))
+      if (!gst_caps_features_contains_id_str (features, feats[i]))
         continue;
 
       structure = gst_caps_get_structure (allowed_caps, j);
@@ -918,7 +918,7 @@ gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
       if (i == DMABUF && modifier)
         *modifier = mod;
       if (capsfeatures)
-        *capsfeatures = gst_caps_features_new_id (feats[i], NULL);
+        *capsfeatures = gst_caps_features_new_id_str (feats[i], NULL);
 
       goto bail;
     }

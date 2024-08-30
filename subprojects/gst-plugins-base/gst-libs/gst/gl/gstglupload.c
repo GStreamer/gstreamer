@@ -131,7 +131,7 @@ filter_features (GstCapsFeatures * features,
     G_GNUC_UNUSED GstStructure * structure, gpointer user_data)
 {
   const GstCapsFeatures *user_features = user_data;
-  GQuark feature;
+  const GstIdStr *feature;
   guint i, num;
 
   if (gst_caps_features_is_any (features))
@@ -139,8 +139,8 @@ filter_features (GstCapsFeatures * features,
 
   num = gst_caps_features_get_size (user_features);
   for (i = 0; i < num; i++) {
-    feature = gst_caps_features_get_nth_id (user_features, i);
-    if (gst_caps_features_contains_id (features, feature))
+    feature = gst_caps_features_get_nth_id_str (user_features, i);
+    if (gst_caps_features_contains_id_str (features, feature))
       return TRUE;
   }
 
