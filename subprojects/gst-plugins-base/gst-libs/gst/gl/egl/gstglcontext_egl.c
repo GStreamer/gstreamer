@@ -1733,11 +1733,12 @@ gst_gl_context_egl_fetch_dma_formats (GstGLContext * context)
 
       if (mods_len == 0) {
         modifiers = g_new (EGLuint64KHR, num_mods);
-        ext_only = g_new (EGLBoolean, num_mods);
+        ext_only = g_new0 (EGLBoolean, num_mods);
         mods_len = num_mods;
       } else if (mods_len < num_mods) {
         modifiers = g_renew (EGLuint64KHR, modifiers, num_mods);
         ext_only = g_renew (EGLBoolean, ext_only, num_mods);
+        memset (ext_only, 0, num_mods * sizeof (EGLBoolean));
         mods_len = num_mods;
       }
 
