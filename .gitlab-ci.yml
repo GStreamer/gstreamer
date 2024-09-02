@@ -320,6 +320,16 @@ commitlint:
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: manual
 
+# Check whether the gtk wrap had any changes, and if so, build it
+.gtk-build-rules:
+  rules:
+    - changes:
+        - .gitlab-ci.yml
+        - meson.build
+        - subprojects/*.wrap
+      variables:
+        GTK_ARGS: "-Dgtk=enabled"
+
 .build:
   stage: 'build'
   needs:
@@ -465,8 +475,8 @@ build debian x86_64:
       -Dgst-plugins-good:cairo=enabled
       -Dgst-plugins-good:soup=enabled
       -Dgst-plugins-bad:d3d11-wgc=enabled
-      -Dgtk=enabled
   rules:
+    - !reference [.gtk-build-rules, rules]
     - !reference [.upstream-branch-rules, rules]
     - changes:
         *modules_changes
@@ -484,7 +494,7 @@ build debian x86_64:
     - $env:PYTHONUNBUFFERED = '1'
     - ci/scripts/handle-subprojects-cache.py --cache-dir /subprojects subprojects/
     - $env:PYTHONUNBUFFERED = ''
-    - echo $env:MESON_ARGS
+    - echo $env:MESON_ARGS $env:GTK_ARGS
     # We do not pick up any deps with cmake, so speed up dependency checks
     - $env:CMAKE = 'false'
   artifacts:
@@ -497,7 +507,7 @@ build vs2022 amd64:
   extends: '.build windows'
   script:
     - !reference [".build windows", "script"]
-    - meson setup --vsenv build $env:MESON_ARGS
+    - meson setup --vsenv build $env:MESON_ARGS $env:GTK_ARGS
     - meson compile -C build --jobs $env:FDO_CI_CONCURRENT
     - .\gst-env.py gst-inspect-1.0.exe --version
     - .\gst-env.py gst-inspect-1.0.exe
@@ -512,7 +522,6 @@ build vs2022 amd64 full-static:
   extends: ".build windows"
   script:
     - !reference [".build windows", "script"]
-    - echo $env:MESON_ARGS
     - cmd.exe /C "meson setup --vsenv build --default-library=static $env:MESON_ARGS"
     - meson compile -C build --jobs $env:FDO_CI_CONCURRENT
     - .\gst-env.py gst-inspect-1.0.exe --version
@@ -532,7 +541,7 @@ build vs2022 amd64 full-static:
       # Setting up a cross build with MSVC is still non-trivial because
       # the --vsenv argument cannot be used to set it up
     - echo $env:MESON_CROSS_ARGS
-    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH && meson setup build $env:MESON_ARGS $env:MESON_CROSS_ARGS"
+    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH && meson setup build $env:MESON_ARGS $env:GTK_ARGS $env:MESON_CROSS_ARGS"
     - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH && meson compile -C build --jobs $env:FDO_CI_CONCURRENT"
 
 build vs2022 x86:
@@ -576,7 +585,7 @@ build msys2:
     - $env:MESON_ARGS = $env:MESON_ARGS.replace('-Dgst-plugins-bad:d3d11-wgc=enabled','') + ' -Dpython=disabled -Dintrospection=disabled'
     # Configure MSYS2 to use the UCRT64 environment, start in the same directory
     # and inherit PATH
-    - C:\msys64\msys2_shell.cmd -ucrt64 -defterm -no-start -here -use-full-path -lc "meson setup build $env:MESON_ARGS && meson compile -C build --jobs $env:FDO_CI_CONCURRENT"
+    - C:\msys64\msys2_shell.cmd -ucrt64 -defterm -no-start -here -use-full-path -lc "meson setup build $env:MESON_ARGS $env:GTK_ARGS && meson compile -C build --jobs $env:FDO_CI_CONCURRENT"
 
 build macos:
   extends:
@@ -588,6 +597,7 @@ build macos:
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
     SUBPROJECTS_CACHE_DIR: "/Users/gst-ci/subprojects"
   rules:
+    - !reference [.gtk-build-rules, rules]
     - !reference [.upstream-branch-rules, rules]
     - changes:
         *modules_changes
@@ -609,7 +619,6 @@ build macos:
           -Dgst-plugins-base:pango=enabled
           -Dgst-plugins-good:cairo=enabled
           -Dgst-plugins-good:soup=enabled
-          -Dgtk=enabled
 
 # ---- Tests ----- #
 

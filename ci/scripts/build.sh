@@ -22,6 +22,9 @@ export RUSTUP_HOME="/usr/local/rustup"
 export CARGO_HOME="/usr/local/cargo"
 export PATH="/usr/local/cargo/bin:$PATH"
 
+# Allow unbound variable
+GTK_ARGS="${GTK_ARGS:-}"
+
 # nproc works on linux
 # sysctl for macos
 _jobs=$(nproc || sysctl -n hw.ncpu)
@@ -30,7 +33,7 @@ jobs="${FDO_CI_CONCURRENT:-$_jobs}"
 date -R
 ci/scripts/handle-subprojects-cache.py --cache-dir "${SUBPROJECTS_CACHE_DIR}" subprojects/
 
-ARGS="${BUILD_TYPE:---default-library=both} ${BUILD_GST_DEBUG:--Dgstreamer:gst_debug=true} ${MESON_ARGS}"
+ARGS="${BUILD_TYPE:---default-library=both} ${BUILD_GST_DEBUG:--Dgstreamer:gst_debug=true} ${MESON_ARGS} ${GTK_ARGS}"
 echo "Werror: $GST_WERROR"
 
 if [ "$GST_WERROR" = "true" ]; then
