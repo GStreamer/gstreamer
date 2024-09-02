@@ -818,9 +818,9 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
           gst_object_unref (opool);
         goto activate_failed;
       }
-      if (opool)
-        gst_object_unref (opool);
     }
+    if (opool)
+      gst_object_unref (opool);
   }
 
   if (task_state == GST_TASK_STOPPED || task_state == GST_TASK_PAUSED) {
