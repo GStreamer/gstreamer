@@ -1652,29 +1652,39 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
       "Device Path", GST_VA_DEVICE_PATH_PROP_DESC, NULL,
       GST_PARAM_DOC_SHOW_DEFAULT | G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
+  g_object_class_install_property (object_class, PROP_DEVICE_PATH,
+      properties[PROP_DEVICE_PATH]);
+
   /**
    * GstVaCompositor:scale-method:
    *
    * Sets the scale method algorithm to use when resizing.
    */
-  properties[PROP_SCALE_METHOD] = g_param_spec_enum ("scale-method",
-      "Scale Method", "Scale method to use", GST_TYPE_VA_SCALE_METHOD,
-      VA_FILTER_SCALING_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-
-  gst_type_mark_as_plugin_api (GST_TYPE_VA_SCALE_METHOD, 0);
+  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_IHD)) {
+    g_object_class_install_property (object_class,
+        GST_VA_FILTER_PROP_SCALE_METHOD,
+        g_param_spec_enum ("scale-method", "Scale Method",
+            "Scale method to use", GST_TYPE_VA_SCALE_METHOD,
+            VA_FILTER_SCALING_DEFAULT,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+    gst_type_mark_as_plugin_api (GST_TYPE_VA_SCALE_METHOD, 0);
+  }
 
   /**
    * GstVaCompositor:interpolation-method:
    *
    * Sets the interpolation method algorithm to use when resizing.
    */
-  properties[PROP_INTERPOLATION_METHOD] =
-      g_param_spec_enum ("interpolation-method", "Interpolation Method",
-      "Interpolation method to use for scaling",
-      GST_TYPE_VA_INTERPOLATION_METHOD, VA_FILTER_INTERPOLATION_DEFAULT,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_IHD)) {
+    g_object_class_install_property (object_class,
+        PROP_INTERPOLATION_METHOD,
+        g_param_spec_enum ("interpolation-method", "Interpolation Method",
+            "Interpolation method to use for scaling",
+            GST_TYPE_VA_INTERPOLATION_METHOD, VA_FILTER_INTERPOLATION_DEFAULT,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+    gst_type_mark_as_plugin_api (GST_TYPE_VA_INTERPOLATION_METHOD, 0);
+  }
 
-  g_object_class_install_properties (object_class, N_PROPERTIES, properties);
 
   g_free (long_name);
   g_free (cdata->description);

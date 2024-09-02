@@ -143,8 +143,6 @@ enum
 {
   PROP_DISABLE_PASSTHROUGH = GST_VA_FILTER_PROP_LAST + 1,
   PROP_ADD_BORDERS,
-  PROP_SCALE_METHOD,
-  PROP_INTERPOLATION_METHOD,
   N_PROPERTIES
 };
 
@@ -334,10 +332,10 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
     case PROP_ADD_BORDERS:
       self->add_borders = g_value_get_boolean (value);
       break;
-    case PROP_SCALE_METHOD:
+    case GST_VA_FILTER_PROP_SCALE_METHOD:
       self->scale_method = g_value_get_enum (value);
       break;
-    case PROP_INTERPOLATION_METHOD:
+    case GST_VA_FILTER_PROP_INTERPOLATION_METHOD:
       self->interpolation_method = g_value_get_enum (value);
       break;
     default:
@@ -404,10 +402,10 @@ gst_va_vpp_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_ADD_BORDERS:
       g_value_set_boolean (value, self->add_borders);
       break;
-    case PROP_SCALE_METHOD:
+    case GST_VA_FILTER_PROP_SCALE_METHOD:
       g_value_set_enum (value, self->scale_method);
       break;
-    case PROP_INTERPOLATION_METHOD:
+    case GST_VA_FILTER_PROP_INTERPOLATION_METHOD:
       g_value_set_enum (value, self->interpolation_method);
       break;
     default:
@@ -2167,33 +2165,6 @@ _install_static_properties (GObjectClass * klass)
   g_object_class_install_property (klass, PROP_ADD_BORDERS,
       PROPERTIES (PROP_ADD_BORDERS));
 
-  /**
-   * GstVaPostProc:scale-method
-   *
-   * Sets the scale method algorithm to use when resizing.
-   *
-   * Since: 1.22
-   */
-  PROPERTIES (PROP_SCALE_METHOD) = g_param_spec_enum ("scale-method",
-      "Scale Method", "Scale method to use", GST_TYPE_VA_SCALE_METHOD,
-      VA_FILTER_SCALING_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
-      | GST_PARAM_MUTABLE_PLAYING);
-  g_object_class_install_property (klass, PROP_SCALE_METHOD,
-      PROPERTIES (PROP_SCALE_METHOD));
-
-  /**
-   * GstVaPostProc:interpolation-method
-   *
-   * Sets the interpolation method algorithm to use when resizing.
-   *
-   */
-  PROPERTIES (PROP_INTERPOLATION_METHOD) =
-      g_param_spec_enum ("interpolation-method", "Interpolation Method",
-      "Interpolation method to use for scaling",
-      GST_TYPE_VA_INTERPOLATION_METHOD, VA_FILTER_INTERPOLATION_DEFAULT,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING);
-  g_object_class_install_property (klass, PROP_INTERPOLATION_METHOD,
-      PROPERTIES (PROP_INTERPOLATION_METHOD));
 }
 
 static void

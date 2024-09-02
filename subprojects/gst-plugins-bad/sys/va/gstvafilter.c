@@ -699,6 +699,22 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
             common_flags));
   }
 
+  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (self->display, INTEL_IHD)) {
+    g_object_class_install_property (klass,
+        GST_VA_FILTER_PROP_SCALE_METHOD,
+        g_param_spec_enum ("scale-method", "Scale Method",
+            "Scale method to use",
+            GST_TYPE_VA_SCALE_METHOD, VA_FILTER_SCALING_DEFAULT, common_flags));
+  }
+
+  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (self->display, INTEL_IHD)) {
+    g_object_class_install_property (klass,
+        GST_VA_FILTER_PROP_INTERPOLATION_METHOD,
+        g_param_spec_enum ("interpolation-method", "Interpolation Method",
+            "Interpolation method to use for scaling",
+            GST_TYPE_VA_INTERPOLATION_METHOD, VA_FILTER_INTERPOLATION_DEFAULT,
+            common_flags));
+  }
   return TRUE;
 }
 
