@@ -57,6 +57,14 @@
 #include "../viv-fb/gstglwindow_viv_fb_egl.h"
 #endif
 
+#if GST_GL_HAVE_DMABUF
+#ifdef HAVE_LIBDRM
+#include <drm_fourcc.h>
+#endif
+#else
+#define DRM_FORMAT_MOD_LINEAR  0ULL
+#endif
+
 #define GST_CAT_DEFAULT gst_gl_context_debug
 
 typedef struct _GstGLDmaFormat GstGLDmaFormat;
@@ -1826,6 +1834,48 @@ gst_gl_context_egl_get_format_modifiers (GstGLContext * context, gint fourcc,
 beach:
   GST_OBJECT_UNLOCK (context);
   return ret;
+#endif
+  return FALSE;
+}
+
+/**
+ * gst_gl_context_egl_format_supports_modifier: (skip)
+ * @context: an EGL #GstGLContext
+ * @fourcc: the FourCC format to look up
+ * @modifier: the format modifier to check
+ * @include_externam: whether to take external-only modifiers into account
+ *
+ * Returns: %TRUE if @fourcc supports @modifier.
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_gl_context_egl_format_supports_modifier (GstGLContext * context,
+    guint32 fourcc, guint64 modifier, gboolean include_external)
+{
+#if GST_GL_HAVE_DMABUF
+  const GArray *dma_modifiers;
+  guint i;
+
+  g_return_val_if_fail (GST_IS_GL_CONTEXT_EGL (context), FALSE);
+
+  if (!gst_gl_context_egl_get_format_modifiers (context, fourcc,
+          &dma_modifiers))
+    return FALSE;
+
+  if (!dma_modifiers) {
+    /* fourcc found, but no modifier info; consider only linear is supported */
+    return (modifier == DRM_FORMAT_MOD_LINEAR);
+  }
+
+  for (i = 0; i < dma_modifiers->len; i++) {
+    GstGLDmaModifier *mod = &g_array_index (dma_modifiers, GstGLDmaModifier, i);
+
+    if (!mod->external_only || include_external) {
+      if (mod->modifier == modifier)
+        return TRUE;
+    }
+  }
 #endif
   return FALSE;
 }

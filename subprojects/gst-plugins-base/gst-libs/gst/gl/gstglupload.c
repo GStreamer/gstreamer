@@ -867,41 +867,6 @@ _dma_buf_upload_new (GstGLUpload * upload)
   return dmabuf;
 }
 
-static gboolean
-_check_modifier (GstGLContext * context, guint32 fourcc,
-    guint64 modifier, gboolean include_external)
-{
-  const GArray *dma_modifiers;
-  guint i;
-
-  /* If no context provide, no further check. */
-  if (!context)
-    return TRUE;
-
-  if (!gst_gl_context_egl_get_format_modifiers (context, fourcc,
-          &dma_modifiers))
-    return FALSE;
-
-  if (!dma_modifiers) {
-    /* recognize the fourcc but no modifier info, consider it as linear */
-    if (modifier == DRM_FORMAT_MOD_LINEAR)
-      return TRUE;
-
-    return FALSE;
-  }
-
-  for (i = 0; i < dma_modifiers->len; i++) {
-    GstGLDmaModifier *mod = &g_array_index (dma_modifiers, GstGLDmaModifier, i);
-
-    if (!mod->external_only || include_external) {
-      if (mod->modifier == modifier)
-        return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-
 static void
 _set_default_formats_list (GstStructure * structure)
 {
