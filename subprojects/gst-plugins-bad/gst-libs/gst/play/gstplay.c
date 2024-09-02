@@ -1422,8 +1422,12 @@ state_changed_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
       }
 
       if (self->seek_position != GST_CLOCK_TIME_NONE) {
-        GST_DEBUG_OBJECT (self, "Seeking now that we reached PAUSED state");
-        gst_play_seek_internal_locked (self);
+        if (!self->media_info->seekable) {
+          GST_DEBUG_OBJECT (self, "Media is not seekable");
+        } else {
+          GST_DEBUG_OBJECT (self, "Seeking now that we reached PAUSED state");
+          gst_play_seek_internal_locked (self);
+        }
         g_mutex_unlock (&self->lock);
       } else if (!self->seek_pending) {
         g_mutex_unlock (&self->lock);
