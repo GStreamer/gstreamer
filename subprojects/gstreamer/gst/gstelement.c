@@ -98,7 +98,6 @@
 #include "gstghostpad.h"
 #include "gstutils.h"
 #include "gstinfo.h"
-#include "gstquark.h"
 #include "gsttracerutils.h"
 #include "gstvalue.h"
 #include <glib/gi18n-lib.h>

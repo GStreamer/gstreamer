@@ -47,7 +47,6 @@
 #include "gstdeviceprovider.h"
 
 #include "gstelementmetadata.h"
-#include "gstquark.h"
 
 struct _GstDeviceProviderPrivate
 {

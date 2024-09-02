@@ -64,7 +64,6 @@
 #include "gst_private.h"
 #include <string.h>
 #include "gstcontext.h"
-#include "gstquark.h"
 
 struct _GstContext
 {

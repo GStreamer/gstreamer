@@ -44,7 +44,6 @@
 #include "gstinfo.h"
 #include "gstparse.h"
 #include "gstvalue.h"
-#include "gstquark.h"
 #include <glib/gi18n-lib.h>
 #include "glib-compat-private.h"
 #include <math.h>
@@ -4767,6 +4766,10 @@ invalid:
   }
 }
 
+/* Initialized in _priv_gst_plugin_initialize(). */
+GQuark _priv_gst_plugin_api_quark;
+GQuark _priv_gst_plugin_api_flags_quark;
+
 /**
  * gst_type_mark_as_plugin_api:
  * @type: a GType
@@ -4788,8 +4791,8 @@ invalid:
 void
 gst_type_mark_as_plugin_api (GType type, GstPluginAPIFlags flags)
 {
-  g_type_set_qdata (type, GST_QUARK (PLUGIN_API), GINT_TO_POINTER (TRUE));
-  g_type_set_qdata (type, GST_QUARK (PLUGIN_API_FLAGS),
+  g_type_set_qdata (type, _priv_gst_plugin_api_quark, GINT_TO_POINTER (TRUE));
+  g_type_set_qdata (type, _priv_gst_plugin_api_flags_quark,
       GINT_TO_POINTER (flags));
 }
 
@@ -4809,11 +4812,12 @@ gboolean
 gst_type_is_plugin_api (GType type, GstPluginAPIFlags * flags)
 {
   gboolean ret =
-      !!GPOINTER_TO_INT (g_type_get_qdata (type, GST_QUARK (PLUGIN_API)));
+      !!GPOINTER_TO_INT (g_type_get_qdata (type, _priv_gst_plugin_api_quark));
 
   if (ret && flags) {
     *flags =
-        GPOINTER_TO_INT (g_type_get_qdata (type, GST_QUARK (PLUGIN_API_FLAGS)));
+        GPOINTER_TO_INT (g_type_get_qdata (type,
+            _priv_gst_plugin_api_flags_quark));
   }
 
   return ret;

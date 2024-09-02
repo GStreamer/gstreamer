@@ -101,7 +101,6 @@
 
 #include "gst_private.h"
 #include "gstutils.h"
-#include "gstquark.h"
 #include "gstsegment.h"
 #include "gstvalue.h"
 #include "gstvecdeque.h"

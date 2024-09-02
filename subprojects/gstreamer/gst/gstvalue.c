@@ -46,7 +46,6 @@
 #include <gst/gst.h>
 #include <gobject/gvaluecollector.h>
 #include "gstutils.h"
-#include "gstquark.h"
 
 /* GstValueUnionFunc:
  * @dest: a #GValue for the result

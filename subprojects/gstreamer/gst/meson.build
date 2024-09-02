@@ -44,7 +44,6 @@ gst_sources = files(
   'gstpoll.c',
   'gstpreset.c',
   'gstprotection.c',
-  'gstquark.c',
   'gstquery.c',
   'gstregistry.c',
   'gstregistrychunks.c',

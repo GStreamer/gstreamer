@@ -72,7 +72,6 @@
 
 #include "gstvecdeque.h"
 #include "gstinfo.h"
-#include "gstquark.h"
 #include "gstvalue.h"
 
 #include "gstbufferpool.h"

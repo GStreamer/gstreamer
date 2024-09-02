@@ -662,7 +662,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   }
 
   _priv_gst_mini_object_initialize ();
-  _priv_gst_quarks_initialize ();
   _priv_gst_allocator_initialize ();
   _priv_gst_memory_initialize ();
   _priv_gst_format_initialize ();

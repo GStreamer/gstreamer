@@ -50,7 +50,6 @@
 #include "gstmeta.h"
 #include "gstinfo.h"
 #include "gstutils.h"
-#include "gstquark.h"
 
 static GHashTable *metainfo = NULL;
 static GRWLock lock;
@@ -58,6 +57,7 @@ static GRWLock lock;
 GQuark _gst_meta_transform_copy;
 GQuark _gst_meta_tag_memory;
 GQuark _gst_meta_tag_memory_reference;
+static GQuark _gst_meta_tags_quark;
 
 typedef struct
 {
@@ -84,6 +84,7 @@ _priv_gst_meta_initialize (void)
   _gst_meta_tag_memory = g_quark_from_static_string ("memory");
   _gst_meta_tag_memory_reference =
       g_quark_from_static_string ("memory-reference");
+  _gst_meta_tags_quark = g_quark_from_static_string ("tags");
 }
 
 static gboolean
@@ -139,7 +140,7 @@ gst_meta_api_type_register (const gchar * api, const gchar ** tags)
     }
   }
 
-  g_type_set_qdata (type, GST_QUARK (TAGS), g_strdupv ((gchar **) tags));
+  g_type_set_qdata (type, _gst_meta_tags_quark, g_strdupv ((gchar **) tags));
 
   return type;
 }
@@ -400,7 +401,7 @@ gst_meta_api_type_get_tags (GType api)
   const gchar **tags;
   g_return_val_if_fail (api != 0, FALSE);
 
-  tags = g_type_get_qdata (api, GST_QUARK (TAGS));
+  tags = g_type_get_qdata (api, _gst_meta_tags_quark);
 
   if (!tags[0])
     return NULL;
