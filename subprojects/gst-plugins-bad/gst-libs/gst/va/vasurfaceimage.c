@@ -372,6 +372,15 @@ va_check_surface (GstVaDisplay * display, VASurfaceID surface)
   return va_check_surface_has_status (display, surface, 0);
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
+static const char *surface_status_str_map[] = {
+  [VASurfaceRendering] = "rendering",
+  [VASurfaceDisplaying] = "displaying",
+  [VASurfaceReady] = "ready",
+  [VASurfaceSkipped] = "skipped"
+};
+#endif
+
 gboolean
 va_check_surface_has_status (GstVaDisplay * display, VASurfaceID surface,
     VASurfaceStatus surface_status)
@@ -387,7 +396,7 @@ va_check_surface_has_status (GstVaDisplay * display, VASurfaceID surface,
     return FALSE;
   }
 
-  GST_LOG ("surface %#x status %d", surface, state);
+  GST_LOG ("surface %#x status: %s", surface, surface_status_str_map[state]);
 
   /* Just query the surface, no flag to compare, we succeed. */
   if (!surface_status)
