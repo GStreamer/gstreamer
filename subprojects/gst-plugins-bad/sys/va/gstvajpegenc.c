@@ -313,6 +313,7 @@ gst_va_jpeg_enc_reconfig (GstVaBaseEnc * base)
   GstVideoFormat format, reconf_format = GST_VIDEO_FORMAT_UNKNOWN;
   guint rt_format = 0, codedbuf_size, latency_num,
       max_surfaces = 0, max_cached_frames;
+  const char *colorspace, *sampling;
 
   width = GST_VIDEO_INFO_WIDTH (&base->in_info);
   height = GST_VIDEO_INFO_HEIGHT (&base->in_info);
@@ -428,10 +429,63 @@ gst_va_jpeg_enc_reconfig (GstVaBaseEnc * base)
 
   out_caps = gst_va_profile_caps (base->profile, klass->entrypoint);
   g_assert (out_caps);
+  GST_WARNING ("caps: %" GST_PTR_FORMAT, out_caps);
   out_caps = gst_caps_fixate (out_caps);
 
+  if (GST_VIDEO_INFO_IS_YUV (&base->in_info)) {
+    gint w_sub, h_sub;
+
+    colorspace = "sYUV";
+
+    w_sub = 1 << GST_VIDEO_FORMAT_INFO_W_SUB (base->in_info.finfo, 1);
+    h_sub = 1 << GST_VIDEO_FORMAT_INFO_H_SUB (base->in_info.finfo, 1);
+
+    if (w_sub == 1 && h_sub == 1) {
+      sampling = "YCbCr-4:4:4";
+    } else if (w_sub == 2 && h_sub == 1) {
+      sampling = "YCbCr-4:2:2";
+    } else if (w_sub == 2 && h_sub == 2) {
+      sampling = "YCbCr-4:2:0";
+    } else {
+      sampling = NULL;
+    }
+  } else if (GST_VIDEO_INFO_IS_RGB (&base->in_info)) {
+    colorspace = "sRGB";
+    switch (GST_VIDEO_INFO_FORMAT (&base->in_info)) {
+      case GST_VIDEO_FORMAT_BGRA:
+      case GST_VIDEO_FORMAT_BGR:
+      case GST_VIDEO_FORMAT_ABGR:
+      case GST_VIDEO_FORMAT_xBGR:
+      case GST_VIDEO_FORMAT_BGRx:
+        sampling = "BGR";
+        break;
+      case GST_VIDEO_FORMAT_RGBA:
+      case GST_VIDEO_FORMAT_ARGB:
+      case GST_VIDEO_FORMAT_RGBx:
+      case GST_VIDEO_FORMAT_xRGB:
+      case GST_VIDEO_FORMAT_RGB:
+        sampling = "RGB";
+        break;
+      default:
+        sampling = NULL;
+    }
+  } else if (GST_VIDEO_INFO_IS_GRAY (&base->in_info)) {
+    colorspace = "GRAY";
+    sampling = "GRAYSCALE";
+  } else {
+    colorspace = sampling = NULL;
+  }
+
   gst_caps_set_simple (out_caps, "width", G_TYPE_INT, base->width,
-      "height", G_TYPE_INT, base->height, NULL);
+      "height", G_TYPE_INT, base->height, "interlace-mode", G_TYPE_STRING,
+      "progressive", NULL);
+
+  if (colorspace) {
+    gst_caps_set_simple (out_caps, "colorspace", G_TYPE_STRING, colorspace,
+        NULL);
+  }
+  if (sampling)
+    gst_caps_set_simple (out_caps, "sampling", G_TYPE_STRING, sampling, NULL);
 
   if (!need_negotiation) {
     output_state = gst_video_encoder_get_output_state (venc);
