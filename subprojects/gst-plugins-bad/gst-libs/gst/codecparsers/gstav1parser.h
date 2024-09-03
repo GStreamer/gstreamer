@@ -85,6 +85,7 @@ G_BEGIN_DECLS
 
 
 typedef struct _GstAV1Parser GstAV1Parser;
+typedef struct _GstAV1ParserState GstAV1ParserState;
 
 typedef struct _GstAV1OBUHeader GstAV1OBUHeader;
 typedef struct _GstAV1OBU GstAV1OBU;
@@ -93,7 +94,9 @@ typedef struct _GstAV1SequenceHeaderOBU GstAV1SequenceHeaderOBU;
 typedef struct _GstAV1MetadataOBU GstAV1MetadataOBU;
 typedef struct _GstAV1FrameHeaderOBU GstAV1FrameHeaderOBU;
 typedef struct _GstAV1TileListOBU GstAV1TileListOBU;
+typedef struct _GstAV1TileListOBUEntry GstAV1TileListOBUEntry;
 typedef struct _GstAV1TileGroupOBU GstAV1TileGroupOBU;
+typedef struct _GstAV1TileGroupOBUEntry GstAV1TileGroupOBUEntry;
 typedef struct _GstAV1FrameOBU GstAV1FrameOBU;
 
 typedef struct _GstAV1OperatingPoint GstAV1OperatingPoint;
@@ -115,6 +118,7 @@ typedef struct _GstAV1GlobalMotionParams GstAV1GlobalMotionParams;
 typedef struct _GstAV1FilmGrainParams GstAV1FilmGrainParams;
 
 typedef struct _GstAV1ReferenceFrameInfo GstAV1ReferenceFrameInfo;
+typedef struct _GstAV1ReferenceFrameInfoEntry GstAV1ReferenceFrameInfoEntry;
 
 /**
  * GstAV1ParserResult:
@@ -1627,32 +1631,51 @@ struct _GstAV1FrameHeaderOBU {
 };
 
 /**
+ * GstAV1ReferenceFrameInfoEntry:
+ *
+ */
+struct _GstAV1ReferenceFrameInfoEntry {
+  gboolean ref_valid;             /* RefValid */
+  guint32 ref_frame_id;           /* RefFrameId */
+  guint32 ref_upscaled_width;     /* RefUpscaledWidth */
+  guint32 ref_frame_width;        /* RefFrameWidth */
+  guint32 ref_frame_height;       /* RefFrameHeight */
+  guint32 ref_render_width;       /* RefRenderWidth */
+  guint32 ref_render_height;      /* RefRenderHeight */
+  guint32 ref_mi_cols;            /* RefMiCols */
+  guint32 ref_mi_rows;            /* RefMiRows */
+  GstAV1FrameType ref_frame_type; /* RefFrameType */
+  guint8 ref_subsampling_x;       /* RefSubsamplingX */
+  guint8 ref_subsampling_y;       /* RefSubsamplingY */
+  guint8 ref_bit_depth;           /* RefBitDepth */
+  guint32 ref_order_hint;         /* RefOrderHint */
+  GstAV1SegmenationParams ref_segmentation_params;
+  GstAV1GlobalMotionParams ref_global_motion_params;
+  GstAV1LoopFilterParams ref_lf_params;
+  GstAV1FilmGrainParams ref_film_grain_params;
+  GstAV1TileInfo ref_tile_info;
+};
+
+/**
  * GstAV1ReferenceFrameInfo:
  *
  * All the info related to a reference frames.
  */
 struct _GstAV1ReferenceFrameInfo {
-  struct {
-    gboolean ref_valid; /* RefValid */
-    guint32 ref_frame_id; /* RefFrameId */
-    guint32 ref_upscaled_width; /* RefUpscaledWidth */
-    guint32 ref_frame_width; /* RefFrameWidth */
-    guint32 ref_frame_height; /* RefFrameHeight */
-    guint32 ref_render_width; /* RefRenderWidth */
-    guint32 ref_render_height; /* RefRenderHeight */
-    guint32 ref_mi_cols; /* RefMiCols */
-    guint32 ref_mi_rows; /* RefMiRows */
-    GstAV1FrameType ref_frame_type; /* RefFrameType */
-    guint8 ref_subsampling_x; /* RefSubsamplingX */
-    guint8 ref_subsampling_y; /* RefSubsamplingY */
-    guint8 ref_bit_depth; /* RefBitDepth */
-    guint32 ref_order_hint; /* RefOrderHint */
-    GstAV1SegmenationParams ref_segmentation_params;
-    GstAV1GlobalMotionParams ref_global_motion_params;
-    GstAV1LoopFilterParams ref_lf_params;
-    GstAV1FilmGrainParams ref_film_grain_params;
-    GstAV1TileInfo ref_tile_info;
-  } entry[GST_AV1_NUM_REF_FRAMES];
+  GstAV1ReferenceFrameInfoEntry entry[GST_AV1_NUM_REF_FRAMES];
+};
+
+/**
+ * GstAV1TileListOBUEntry:
+ *
+ */
+struct _GstAV1TileListOBUEntry {
+  gint8 anchor_frame_idx;
+  guint8 anchor_tile_row;
+  guint8 anchor_tile_col;
+  guint16 tile_data_size_minus_1;
+  /* Just refer to obu's data, invalid after OBU data released */
+  guint8 *coded_tile_data;
 };
 
 /**
@@ -1677,18 +1700,27 @@ struct _GstAV1TileListOBU {
   guint8 output_frame_width_in_tiles_minus_1;
   guint8 output_frame_height_in_tiles_minus_1;
   guint16 tile_count_minus_1;
-  struct {
-    gint8 anchor_frame_idx;
-    guint8 anchor_tile_row;
-    guint8 anchor_tile_col;
-    guint16 tile_data_size_minus_1;
-    /* Just refer to obu's data, invalid after OBU data released */
-    guint8 *coded_tile_data;
-  } entry[GST_AV1_MAX_TILE_COUNT];
+  GstAV1TileListOBUEntry entry[GST_AV1_MAX_TILE_COUNT];
 };
 
 /**
- * GstAV1TileListOBU:
+ * GstAV1TileGroupOBUEntry:
+ *
+ */
+struct _GstAV1TileGroupOBUEntry {
+  guint32 tile_offset; /* Tile data offset from the OBU data. */
+  guint32 tile_size;   /* Data size of this tile */
+  guint32 tile_row;    /* tileRow */
+  guint32 tile_col;    /* tileCol */
+  /* global varialbes */
+  guint32 mi_row_start; /* MiRowStart */
+  guint32 mi_row_end;   /* MiRowEnd */
+  guint32 mi_col_start; /* MiColStart */
+  guint32 mi_col_end;   /* MiColEnd */
+};
+
+/**
+ * GstAV1TileGroupOBU:
  * @tile_start_and_end_present_flag: specifies whether @tg_start and @tg_end are present
  *   in the bitstream. If @tg_start and @tg_end are not present in the bitstream, this
  *   tile group covers the entire frame. If @obu_type is equal to #GST_AV1_OBU_FRAME, it is a
@@ -1715,17 +1747,7 @@ struct _GstAV1TileGroupOBU {
   gboolean tile_start_and_end_present_flag;
   guint8 tg_start;
   guint8 tg_end;
-  struct {
-    guint32 tile_offset; /* Tile data offset from the OBU data. */
-    guint32 tile_size; /* Data size of this tile */
-    guint32 tile_row; /* tileRow */
-    guint32 tile_col; /* tileCol */
-    /* global varialbes */
-    guint32 mi_row_start; /* MiRowStart */
-    guint32 mi_row_end; /* MiRowEnd */
-    guint32 mi_col_start; /* MiColStart */
-    guint32 mi_col_end; /* MiColEnd */
-  } entry[GST_AV1_MAX_TILE_COUNT];
+  GstAV1TileGroupOBUEntry entry[GST_AV1_MAX_TILE_COUNT];
 
   guint32 num_tiles; /* NumTiles */
 };
@@ -1741,6 +1763,38 @@ struct _GstAV1FrameOBU {
 };
 
 /**
+ * GstAV1ParserState:
+ *
+ */
+struct _GstAV1ParserState {
+  guint32 operating_point;     /* Set by choose_operating_point() */
+  guint8 seen_frame_header;    /* SeenFrameHeader */
+  guint32 operating_point_idc; /* OperatingPointIdc */
+  gboolean sequence_changed;   /* Received a new sequence */
+  gboolean begin_first_frame;  /* already find the first frame */
+
+  /* frame */
+  guint32 upscaled_width;            /* UpscaledWidth */
+  guint32 frame_width;               /* FrameWidth */
+  guint32 frame_height;              /* FrameHeight */
+  guint32 mi_cols;                   /* MiCols */
+  guint32 mi_rows;                   /* MiRows */
+  guint32 render_width;              /* RenderWidth */
+  guint32 render_height;             /* RenderHeight */
+  guint32 prev_frame_id;             /* PrevFrameID */
+  guint32 current_frame_id;          /* the current frame ID */
+  GstAV1ReferenceFrameInfo ref_info; /* RefInfo */
+
+  guint32 mi_col_starts[GST_AV1_MAX_TILE_COLS + 1]; /* MiColStarts */
+  guint32 mi_row_starts[GST_AV1_MAX_TILE_ROWS + 1]; /* MiRowStarts */
+  guint8 tile_cols_log2;                            /* TileColsLog2 */
+  guint8 tile_cols;                                 /* TileCols */
+  guint8 tile_rows_log2;                            /* TileRowsLog2 */
+  guint8 tile_rows;                                 /* TileRows */
+  guint8 tile_size_bytes;                           /* TileSizeBytes */
+};
+
+/**
  * GstAV1Parser:
  *
  * #GstAV1Parser opaque structure
@@ -1751,34 +1805,7 @@ struct _GstAV1FrameOBU {
 struct _GstAV1Parser
 {
   /*< private >*/
-  struct
-  {
-    guint32 operating_point;    /* Set by choose_operating_point() */
-    guint8 seen_frame_header;   /* SeenFrameHeader */
-    guint32 operating_point_idc;        /* OperatingPointIdc */
-    gboolean sequence_changed;  /* Received a new sequence */
-    gboolean begin_first_frame; /* already find the first frame */
-
-    /* frame */
-    guint32 upscaled_width;     /* UpscaledWidth */
-    guint32 frame_width;        /* FrameWidth */
-    guint32 frame_height;       /* FrameHeight */
-    guint32 mi_cols;            /* MiCols */
-    guint32 mi_rows;            /* MiRows */
-    guint32 render_width;       /* RenderWidth */
-    guint32 render_height;      /* RenderHeight */
-    guint32 prev_frame_id;      /* PrevFrameID */
-    guint32 current_frame_id;   /* the current frame ID */
-    GstAV1ReferenceFrameInfo ref_info;  /* RefInfo */
-
-    guint32 mi_col_starts[GST_AV1_MAX_TILE_COLS + 1];   /* MiColStarts */
-    guint32 mi_row_starts[GST_AV1_MAX_TILE_ROWS + 1];   /* MiRowStarts */
-    guint8 tile_cols_log2;      /* TileColsLog2 */
-    guint8 tile_cols;           /* TileCols */
-    guint8 tile_rows_log2;      /* TileRowsLog2 */
-    guint8 tile_rows;           /* TileRows */
-    guint8 tile_size_bytes;     /* TileSizeBytes */
-  } state;
+  GstAV1ParserState state;
 
   gboolean annex_b;
   guint32 temporal_unit_size;
