@@ -46,6 +46,7 @@
 #include <memory>
 #include <vector>
 #include <queue>
+#include <atomic>
 #include <gst/d3dshader/gstd3dshader.h>
 
 /* *INDENT-OFF* */
@@ -120,13 +121,13 @@ enum
   PROP_PATTERN,
   PROP_ALPHA,
   PROP_ALPHA_MODE,
+  PROP_ASYNC_DEPTH,
 };
 
 #define DEFAULT_ADAPTER -1
 #define DEFAULT_PATTERN GST_D3D12_TEST_SRC_SMPTE
 #define DEFAULT_ALPHA 1.0f
-
-#define ASYNC_DEPTH 2
+#define DEFAULT_ASYNC_DEPTH 0
 
 struct ColorValue
 {
@@ -321,6 +322,7 @@ struct GstD3D12TestSrcPrivate
   gint64 accum_frames = 0;
   GstClockTime accum_rtime = 0;
   GstClockTime running_time = 0;
+  std::atomic<guint> async_depth = { DEFAULT_ASYNC_DEPTH };
 };
 /* *INDENT-ON* */
 
@@ -1387,6 +1389,12 @@ gst_d3d12_test_src_class_init (GstD3D12TestSrcClass * klass)
           0, 1, DEFAULT_ALPHA,
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
               G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_ASYNC_DEPTH,
+      g_param_spec_uint ("async-depth", "Async Depth",
+          "Number of in-flight GPU commands which can be scheduled without "
+          "synchronization (0 = unlimited)", 0, G_MAXINT, DEFAULT_ASYNC_DEPTH,
+          (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d12_test_src_set_context);
@@ -1456,6 +1464,9 @@ gst_d3d12_test_src_set_property (GObject * object, guint prop_id,
     case PROP_ALPHA:
       priv->alpha = g_value_get_float (value);
       break;
+    case PROP_ASYNC_DEPTH:
+      priv->async_depth = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1481,6 +1492,9 @@ gst_d3d12_test_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ALPHA:
       g_value_set_float (value, priv->alpha);
+      break;
+    case PROP_ASYNC_DEPTH:
+      g_value_set_uint (value, priv->async_depth);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2166,22 +2180,6 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
   if (ret != GST_FLOW_OK)
     return ret;
 
-  auto completed = gst_d3d12_device_get_completed_value (self->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT);
-  while (!priv->ctx->scheduled.empty ()) {
-    if (priv->ctx->scheduled.front () > completed)
-      break;
-
-    priv->ctx->scheduled.pop ();
-  }
-
-  if (priv->ctx->scheduled.size () >= ASYNC_DEPTH) {
-    auto fence_to_wait = priv->ctx->scheduled.front ();
-    priv->ctx->scheduled.pop ();
-    gst_d3d12_device_fence_wait (self->device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait);
-  }
-
   GstD3D12CommandAllocator *gst_ca;
   if (!gst_d3d12_command_allocator_pool_acquire (priv->ctx->ca_pool, &gst_ca)) {
     GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
@@ -2263,6 +2261,23 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
       FENCE_NOTIFY_MINI_OBJECT (fence_data));
 
   priv->ctx->scheduled.push (priv->ctx->fence_val);
+
+  auto completed = gst_d3d12_device_get_completed_value (self->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+  while (!priv->ctx->scheduled.empty ()) {
+    if (priv->ctx->scheduled.front () > completed)
+      break;
+
+    priv->ctx->scheduled.pop ();
+  }
+
+  auto async_depth = priv->async_depth.load ();
+  if (async_depth > 0 && priv->ctx->scheduled.size () > async_depth) {
+    auto fence_to_wait = priv->ctx->scheduled.front ();
+    priv->ctx->scheduled.pop ();
+    gst_d3d12_device_fence_wait (self->device,
+        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait);
+  }
 
   if (priv->downstream_supports_d3d12) {
     buffer = convert_buffer;

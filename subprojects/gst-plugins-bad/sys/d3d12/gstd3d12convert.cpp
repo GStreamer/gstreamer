@@ -28,6 +28,7 @@
 #include <memory>
 #include <queue>
 #include <wrl.h>
+#include <atomic>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -65,6 +66,7 @@ enum
   PROP_VIDEO_DIRECTION,
   PROP_GAMMA_MODE,
   PROP_PRIMARIES_MODE,
+  PROP_ASYNC_DEPTH,
 };
 
 #define DEFAULT_ADD_BORDERS TRUE
@@ -72,8 +74,7 @@ enum
 #define DEFAULT_GAMMA_MODE GST_VIDEO_GAMMA_MODE_NONE
 #define DEFAULT_PRIMARIES_MODE GST_VIDEO_PRIMARIES_MODE_NONE
 #define DEFAULT_SAMPLING_METHOD GST_D3D12_SAMPLING_METHOD_BILINEAR
-
-#define ASYNC_DEPTH 2
+#define DEFAULT_ASYNC_DEPTH 0
 
 /* *INDENT-OFF* */
 struct ConvertContext
@@ -153,6 +154,8 @@ struct GstD3D12ConvertPrivate
   GstVideoOrientationMethod selected_method = GST_VIDEO_ORIENTATION_IDENTITY;
   /* method previously selected and used for negotiation */
   GstVideoOrientationMethod active_method = GST_VIDEO_ORIENTATION_IDENTITY;
+
+  std::atomic<guint> async_depth = { DEFAULT_ASYNC_DEPTH };
 
   std::mutex lock;
 };
@@ -250,6 +253,13 @@ gst_d3d12_convert_class_init (GstD3D12ConvertClass * klass)
       g_param_spec_enum ("primaries-mode", "Primaries Mode",
           "Primaries conversion mode", GST_TYPE_VIDEO_PRIMARIES_MODE,
           DEFAULT_PRIMARIES_MODE, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_ASYNC_DEPTH,
+      g_param_spec_uint ("async-depth", "Async Depth",
+          "Number of in-flight GPU commands which can be scheduled without "
+          "synchronization (0 = unlimited)", 0, G_MAXINT, DEFAULT_ASYNC_DEPTH,
+          (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
@@ -425,6 +435,7 @@ gst_d3d12_convert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   auto self = GST_D3D12_CONVERT (object);
+  auto priv = self->priv;
 
   switch (prop_id) {
     case PROP_SAMPLING_METHOD:
@@ -448,6 +459,9 @@ gst_d3d12_convert_set_property (GObject * object, guint prop_id,
     case PROP_PRIMARIES_MODE:
       gst_d3d12_convert_set_primaries_mode (self,
           (GstVideoPrimariesMode) g_value_get_enum (value));
+      break;
+    case PROP_ASYNC_DEPTH:
+      priv->async_depth = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -481,6 +495,9 @@ gst_d3d12_convert_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PRIMARIES_MODE:
       g_value_set_enum (value, priv->primaries_mode);
+      break;
+    case PROP_ASYNC_DEPTH:
+      g_value_set_uint (value, priv->async_depth);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1971,22 +1988,6 @@ gst_d3d12_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
         "src-height", (gint) in_rect.bottom - in_rect.top, nullptr);
   }
 
-  auto completed = gst_d3d12_device_get_completed_value (priv->ctx->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT);
-  while (!priv->ctx->scheduled.empty ()) {
-    if (priv->ctx->scheduled.front () > completed)
-      break;
-
-    priv->ctx->scheduled.pop ();
-  }
-
-  if (priv->ctx->scheduled.size () >= ASYNC_DEPTH) {
-    auto fence_to_wait = priv->ctx->scheduled.front ();
-    priv->ctx->scheduled.pop ();
-    gst_d3d12_device_fence_wait (priv->ctx->device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait);
-  }
-
   GstD3D12CommandAllocator *gst_ca;
   if (!gst_d3d12_command_allocator_pool_acquire (priv->ctx->ca_pool, &gst_ca)) {
     GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
@@ -2056,6 +2057,23 @@ gst_d3d12_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       FENCE_NOTIFY_MINI_OBJECT (fence_data));
 
   priv->ctx->scheduled.push (priv->ctx->fence_val);
+
+  auto completed = gst_d3d12_device_get_completed_value (priv->ctx->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+  while (!priv->ctx->scheduled.empty ()) {
+    if (priv->ctx->scheduled.front () > completed)
+      break;
+
+    priv->ctx->scheduled.pop ();
+  }
+
+  auto async_depth = priv->async_depth.load ();
+  if (async_depth > 0 && priv->ctx->scheduled.size () > async_depth) {
+    auto fence_to_wait = priv->ctx->scheduled.front ();
+    priv->ctx->scheduled.pop ();
+    gst_d3d12_device_fence_wait (priv->ctx->device,
+        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait);
+  }
 
   return GST_FLOW_OK;
 }

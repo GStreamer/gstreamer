@@ -42,6 +42,7 @@
 #include <future>
 #include <vector>
 #include <queue>
+#include <atomic>
 #include <string.h>
 #include <wrl.h>
 #include <gst/d3dshader/gstd3dshader.h>
@@ -172,10 +173,12 @@ enum
   PROP_ADAPTER,
   PROP_BACKGROUND,
   PROP_IGNORE_INACTIVE_PADS,
+  PROP_ASYNC_DEPTH,
 };
 
 #define DEFAULT_ADAPTER -1
 #define DEFAULT_BACKGROUND GST_D3D12_COMPOSITOR_BACKGROUND_CHECKER
+#define DEFAULT_ASYNC_DEPTH 0
 
 static const D3D12_RENDER_TARGET_BLEND_DESC g_blend_source = {
   TRUE,
@@ -527,7 +530,6 @@ struct BackgroundRender
   bool is_valid = false;
   guint64 fence_val = 0;
 };
-/* *INDENT-ON* */
 
 struct ClearColor
 {
@@ -556,8 +558,8 @@ struct GStD3D12CompositorPrivate
   /* black/white/transparent */
   ClearColor clear_color[3];
   GstD3D12FenceDataPool *fence_data_pool;
-  std::vector < D3D12_CPU_DESCRIPTOR_HANDLE > rtv_handles;
-  std::queue < guint64 > scheduled;
+  std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtv_handles;
+  std::queue<guint64> scheduled;
 
   GstVideoInfo negotiated_info;
 
@@ -568,7 +570,9 @@ struct GStD3D12CompositorPrivate
   /* properties */
   gint adapter = DEFAULT_ADAPTER;
   GstD3D12CompositorBackground background = DEFAULT_BACKGROUND;
+  std::atomic<guint> async_depth = { DEFAULT_ASYNC_DEPTH };
 };
+/* *INDENT-ON* */
 
 struct _GstD3D12Compositor
 {
@@ -1308,6 +1312,13 @@ gst_d3d12_compositor_class_init (GstD3D12CompositorClass * klass)
           "Avoid timing out waiting for inactive pads", FALSE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (object_class, PROP_ASYNC_DEPTH,
+      g_param_spec_uint ("async-depth", "Async Depth",
+          "Number of in-flight GPU commands which can be scheduled without "
+          "synchronization (0 = unlimited)", 0, G_MAXINT, DEFAULT_ASYNC_DEPTH,
+          (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   element_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_d3d12_compositor_request_new_pad);
   element_class->release_pad =
@@ -1389,6 +1400,9 @@ gst_d3d12_compositor_set_property (GObject * object,
       gst_aggregator_set_ignore_inactive_pads (GST_AGGREGATOR (object),
           g_value_get_boolean (value));
       break;
+    case PROP_ASYNC_DEPTH:
+      priv->async_depth = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1413,6 +1427,9 @@ gst_d3d12_compositor_get_property (GObject * object,
     case PROP_IGNORE_INACTIVE_PADS:
       g_value_set_boolean (value,
           gst_aggregator_get_ignore_inactive_pads (GST_AGGREGATOR (object)));
+      break;
+    case PROP_ASYNC_DEPTH:
+      g_value_set_uint (value, priv->async_depth);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2355,25 +2372,6 @@ gst_d3d12_compositor_aggregate_frames (GstVideoAggregator * vagg,
     return GST_FLOW_ERROR;
   }
 
-  auto completed = gst_d3d12_device_get_completed_value (self->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT);
-  while (!priv->scheduled.empty ()) {
-    if (priv->scheduled.front () > completed)
-      break;
-
-    priv->scheduled.pop ();
-  }
-
-  /* avoid too large buffering */
-  if (priv->scheduled.size () > 2) {
-    auto fence_to_wait = priv->scheduled.front ();
-    priv->scheduled.pop ();
-    GST_LOG_OBJECT (self, "Waiting for previous command, %" G_GUINT64_FORMAT,
-        fence_to_wait);
-    gst_d3d12_device_fence_wait (self->device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait);
-  }
-
   if (!gst_d3d12_compositor_draw_background (self)) {
     GST_ERROR_OBJECT (self, "Couldn't draw background");
     return GST_FLOW_ERROR;
@@ -2429,6 +2427,26 @@ gst_d3d12_compositor_aggregate_frames (GstVideoAggregator * vagg,
     return ret;
 
   priv->scheduled.push (fence_val);
+
+  auto completed = gst_d3d12_device_get_completed_value (self->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+  while (!priv->scheduled.empty ()) {
+    if (priv->scheduled.front () > completed)
+      break;
+
+    priv->scheduled.pop ();
+  }
+
+  auto async_depth = priv->async_depth.load ();
+  if (async_depth > 0 && priv->scheduled.size () > async_depth) {
+    auto fence_to_wait = priv->scheduled.front ();
+    priv->scheduled.pop ();
+    GST_LOG_OBJECT (self, "Waiting for previous command, %" G_GUINT64_FORMAT,
+        fence_to_wait);
+    gst_d3d12_device_fence_wait (self->device,
+        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait);
+  }
+
   if (priv->generated_output_buf != outbuf) {
     GstVideoFrame out_frame, in_frame;
     if (!gst_video_frame_map (&in_frame, &vagg->info,
