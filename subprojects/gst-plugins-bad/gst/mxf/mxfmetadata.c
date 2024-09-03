@@ -110,8 +110,7 @@ mxf_metadata_base_to_structure_default (MXFMetadataBase * self)
       gst_structure_id_set (s, MXF_QUARK (NAME), G_TYPE_STRING, str,
           MXF_QUARK (DATA), GST_TYPE_BUFFER, buf, NULL);
 
-      gst_value_set_structure (&v, s);
-      gst_structure_free (s);
+      gst_value_take_structure (&v, s);
       gst_buffer_unref (buf);
       gst_value_array_append_value (&va, &v);
       g_value_unset (&v);
@@ -749,8 +748,7 @@ mxf_metadata_preface_to_structure (MXFMetadataBase * m)
 
       s = mxf_metadata_base_to_structure (MXF_METADATA_BASE
           (self->identifications[i]));
-      gst_value_set_structure (&val, s);
-      gst_structure_free (s);
+      gst_value_take_structure (&val, s);
       gst_value_array_append_value (&arr, &val);
       g_value_unset (&val);
     }
@@ -1436,8 +1434,7 @@ mxf_metadata_content_storage_to_structure (MXFMetadataBase * m)
 
       s = mxf_metadata_base_to_structure (MXF_METADATA_BASE (self->packages
               [i]));
-      gst_value_set_structure (&val, s);
-      gst_structure_free (s);
+      gst_value_take_structure (&val, s);
       gst_value_array_append_value (&arr, &val);
       g_value_unset (&val);
     }
@@ -1466,8 +1463,7 @@ mxf_metadata_content_storage_to_structure (MXFMetadataBase * m)
 
       s = mxf_metadata_base_to_structure (MXF_METADATA_BASE
           (self->essence_container_data[i]));
-      gst_value_set_structure (&val, s);
-      gst_structure_free (s);
+      gst_value_take_structure (&val, s);
       gst_value_array_append_value (&arr, &val);
       g_value_unset (&val);
     }
@@ -1929,8 +1925,7 @@ mxf_metadata_generic_package_to_structure (MXFMetadataBase * m)
       g_value_init (&val, GST_TYPE_STRUCTURE);
 
       s = mxf_metadata_base_to_structure (MXF_METADATA_BASE (self->tracks[i]));
-      gst_value_set_structure (&val, s);
-      gst_structure_free (s);
+      gst_value_take_structure (&val, s);
       gst_value_array_append_value (&arr, &val);
       g_value_unset (&val);
     }
@@ -2978,8 +2973,7 @@ mxf_metadata_sequence_to_structure (MXFMetadataBase * m)
 
       s = mxf_metadata_base_to_structure (MXF_METADATA_BASE
           (self->structural_components[i]));
-      gst_value_set_structure (&val, s);
-      gst_structure_free (s);
+      gst_value_take_structure (&val, s);
       gst_value_array_append_value (&arr, &val);
       g_value_unset (&val);
     }
@@ -4090,8 +4084,7 @@ mxf_metadata_generic_descriptor_to_structure (MXFMetadataBase * m)
 
       s = mxf_metadata_base_to_structure (MXF_METADATA_BASE (self->locators
               [i]));
-      gst_value_set_structure (&val, s);
-      gst_structure_free (s);
+      gst_value_take_structure (&val, s);
       gst_value_array_append_value (&arr, &val);
       g_value_unset (&val);
     }
@@ -6163,8 +6156,7 @@ mxf_metadata_multiple_descriptor_to_structure (MXFMetadataBase * m)
 
       s = mxf_metadata_base_to_structure (MXF_METADATA_BASE
           (self->sub_descriptors[i]));
-      gst_value_set_structure (&val, s);
-      gst_structure_free (s);
+      gst_value_take_structure (&val, s);
       gst_value_array_append_value (&arr, &val);
       g_value_unset (&val);
     }

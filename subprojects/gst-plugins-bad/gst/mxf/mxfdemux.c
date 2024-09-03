@@ -6444,20 +6444,17 @@ gst_mxf_demux_get_property (GObject * object, guint prop_id,
       g_value_set_uint64 (value, demux->max_drift);
       break;
     case PROP_STRUCTURE:{
-      GstStructure *s;
 
       g_rw_lock_reader_lock (&demux->metadata_lock);
       if (demux->preface &&
           MXF_METADATA_BASE (demux->preface)->resolved ==
-          MXF_METADATA_BASE_RESOLVE_STATE_SUCCESS)
-        s = mxf_metadata_base_to_structure (MXF_METADATA_BASE (demux->preface));
-      else
-        s = NULL;
-
-      gst_value_set_structure (value, s);
-
-      if (s)
-        gst_structure_free (s);
+          MXF_METADATA_BASE_RESOLVE_STATE_SUCCESS) {
+        GstStructure *s =
+            mxf_metadata_base_to_structure (MXF_METADATA_BASE (demux->preface));
+        gst_value_take_structure (value, s);
+      } else {
+        gst_value_set_structure (value, NULL);
+      }
 
       g_rw_lock_reader_unlock (&demux->metadata_lock);
       break;
