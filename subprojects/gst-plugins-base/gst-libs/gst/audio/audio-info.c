@@ -386,7 +386,7 @@ gst_audio_info_to_caps (const GstAudioInfo * info)
         "but no channel positions present");
   }
 
-  caps = gst_caps_new_simple ("audio/x-raw",
+  caps = gst_caps_new_simple_static_str ("audio/x-raw",
       "format", G_TYPE_STRING, format,
       "layout", G_TYPE_STRING, layout,
       "rate", G_TYPE_INT, info->rate,
@@ -408,8 +408,8 @@ gst_audio_info_to_caps (const GstAudioInfo * info)
         && info->position[0] == GST_AUDIO_CHANNEL_POSITION_MONO) {
       /* Default mono special case */
     } else {
-      gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, channel_mask,
-          NULL);
+      gst_caps_set_simple_static_str (caps, "channel-mask", GST_TYPE_BITMASK,
+          channel_mask, NULL);
     }
   }
 

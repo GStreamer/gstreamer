@@ -668,12 +668,12 @@ gst_audio_make_raw_caps (const GstAudioFormat formats[], guint len,
   else
     layout_str = "non-interleaved";
 
-  s = gst_structure_new ("audio/x-raw",
+  s = gst_structure_new_static_str ("audio/x-raw",
       "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "layout", G_TYPE_STRING, layout_str, NULL);
 
-  gst_structure_take_value (s, "format", &format);
+  gst_structure_take_value_static_str (s, "format", &format);
 
   caps = gst_caps_new_full (s, NULL);
 

@@ -327,11 +327,13 @@ gst_audio_resample_transform_caps (GstBaseTransform * base,
     val = gst_structure_get_value (s, "rate");
     if (val == NULL || GST_VALUE_HOLDS_INT_RANGE (val)) {
       /* overwrite existing range, or add field if it doesn't exist yet */
-      gst_structure_set (s, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+      gst_structure_set_static_str (s, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          NULL);
     } else {
       /* append caps with full range to existing caps with non-range rate field */
       gst_caps_append_structure (res, gst_structure_copy (s));
-      gst_structure_set (s, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+      gst_structure_set_static_str (s, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          NULL);
     }
     gst_caps_append_structure (res, s);
   }
@@ -374,12 +376,12 @@ make_options (GstAudioResample * resample, GstAudioInfo * in,
 {
   GstStructure *options;
 
-  options = gst_structure_new_empty ("resampler-options");
+  options = gst_structure_new_static_str_empty ("resampler-options");
   if (in != NULL && out != NULL)
     gst_audio_resampler_options_set_quality (resample->method,
         resample->quality, in->rate, out->rate, options);
 
-  gst_structure_set (options,
+  gst_structure_set_static_str (options,
       GST_AUDIO_CONVERTER_OPT_RESAMPLER_METHOD, GST_TYPE_AUDIO_RESAMPLER_METHOD,
       resample->method,
       GST_AUDIO_RESAMPLER_OPT_FILTER_MODE, GST_TYPE_AUDIO_RESAMPLER_FILTER_MODE,

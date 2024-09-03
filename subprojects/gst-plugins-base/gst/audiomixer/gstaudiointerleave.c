@@ -189,9 +189,10 @@ __set_channels (GstCaps * caps, gint channels)
   for (i = 0; i < size; i++) {
     s = gst_caps_get_structure (caps, i);
     if (channels > 0)
-      gst_structure_set (s, "channels", G_TYPE_INT, channels, NULL);
+      gst_structure_set_static_str (s, "channels", G_TYPE_INT, channels, NULL);
     else
-      gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+      gst_structure_set_static_str (s, "channels", GST_TYPE_INT_RANGE, 1,
+          G_MAXINT, NULL);
   }
 }
 
@@ -524,8 +525,8 @@ gst_audio_interleave_update_src_caps (GstAggregator * agg, GstCaps * caps,
   *ret = gst_caps_copy (self->sinkcaps);
   s = gst_caps_get_structure (*ret, 0);
 
-  gst_structure_set (s, "channels", G_TYPE_INT, self->channels, "layout",
-      G_TYPE_STRING, "interleaved", "channel-mask", GST_TYPE_BITMASK,
+  gst_structure_set_static_str (s, "channels", G_TYPE_INT, self->channels,
+      "layout", G_TYPE_STRING, "interleaved", "channel-mask", GST_TYPE_BITMASK,
       gst_audio_interleave_get_channel_mask (self), NULL);
 
   GST_OBJECT_UNLOCK (self);

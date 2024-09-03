@@ -773,7 +773,8 @@ gst_audio_aggregator_init (GstAudioAggregator * aagg)
   aagg->current_caps = NULL;
 
   aagg->priv->selected_samples_info =
-      gst_structure_new_empty ("GstAudioAggregatorSelectedSamplesInfo");
+      gst_structure_new_static_str_empty
+      ("GstAudioAggregatorSelectedSamplesInfo");
 
   g_queue_init (&aagg->priv->messages);
 }
@@ -979,7 +980,7 @@ gst_audio_aggregator_convert_sink_getcaps (GstPad * pad, GstAggregator * agg,
     GST_INFO_OBJECT (pad, "first configured pad has sample rate %d",
         first_configured_pad->info.rate);
     sink_template_caps = gst_caps_make_writable (sink_template_caps);
-    gst_caps_set_simple (sink_template_caps, "rate", G_TYPE_INT,
+    gst_caps_set_simple_static_str (sink_template_caps, "rate", G_TYPE_INT,
         first_configured_pad->info.rate, NULL);
     gst_object_unref (first_configured_pad);
   }
@@ -1005,9 +1006,9 @@ gst_audio_aggregator_convert_sink_getcaps (GstPad * pad, GstAggregator * agg,
     for (i = 0; i < n; i++) {
       GstStructure *s = gst_caps_get_structure (tmp, i);
       GstStructure *new_s =
-          gst_structure_new_empty (gst_structure_get_name (s));
-      gst_structure_set_value (new_s, "rate", gst_structure_get_value (s,
-              "rate"));
+          gst_structure_new_id_str_empty (gst_structure_get_name_id_str (s));
+      gst_structure_set_value_static_str (new_s, "rate",
+          gst_structure_get_value (s, "rate"));
       sink_caps = gst_caps_merge_structure (sink_caps, new_s);
     }
     gst_caps_unref (tmp);
@@ -1069,7 +1070,8 @@ gst_audio_aggregator_sink_setcaps (GstAudioAggregatorPad * aaggpad,
     /* Returns NULL if there is no downstream peer */
     if (downstream_caps) {
       GstCaps *rate_caps =
-          gst_caps_new_simple ("audio/x-raw", "rate", G_TYPE_INT, info.rate,
+          gst_caps_new_simple_static_str ("audio/x-raw", "rate", G_TYPE_INT,
+          info.rate,
           NULL);
 
       gst_caps_set_features_simple (rate_caps,
@@ -1171,7 +1173,8 @@ gst_audio_aggregator_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
               NULL)) {
         mask = gst_audio_channel_get_fallback_mask (channels);
       }
-      gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK, mask, NULL);
+      gst_structure_set_static_str (s, "channel-mask", GST_TYPE_BITMASK, mask,
+          NULL);
     }
 
     gst_caps_unref (first_configured_caps);
@@ -1189,7 +1192,8 @@ gst_audio_aggregator_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
 
     if (gst_structure_get_int (s, "channels", &channels) && channels > 2) {
       if (!gst_structure_has_field_typed (s, "channel-mask", GST_TYPE_BITMASK))
-        gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK, 0ULL, NULL);
+        gst_structure_set_static_str (s, "channel-mask", GST_TYPE_BITMASK, 0ULL,
+            NULL);
     }
   }
 
@@ -1791,7 +1795,7 @@ gst_audio_aggregator_post_messages (GstAudioAggregator * aagg)
     while ((msg = g_queue_pop_head (&aagg->priv->messages))) {
       if (is_live) {
         GstStructure *s = gst_message_writable_structure (msg);
-        gst_structure_set (s, "live", G_TYPE_BOOLEAN, TRUE, NULL);
+        gst_structure_set_static_str (s, "live", G_TYPE_BOOLEAN, TRUE, NULL);
       }
 
       gst_element_post_message (e, msg);
@@ -2162,7 +2166,7 @@ gst_audio_aggregator_peek_next_sample (GstAggregator * agg,
       aagg->priv->offset + aagg->priv->samples_per_buffer) {
     GstCaps *caps = gst_pad_get_current_caps (GST_PAD (aggpad));
     GstStructure *info =
-        gst_structure_new ("GstAudioAggregatorPadNextSampleInfo",
+        gst_structure_new_static_str ("GstAudioAggregatorPadNextSampleInfo",
         "output-offset", G_TYPE_UINT64, pad->priv->output_offset,
         "position", G_TYPE_UINT, pad->priv->position,
         "size", G_TYPE_UINT, pad->priv->size,
@@ -2456,7 +2460,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   gst_audio_aggregator_post_messages (aagg);
 
   {
-    gst_structure_set (aagg->priv->selected_samples_info, "offset",
+    gst_structure_set_static_str (aagg->priv->selected_samples_info, "offset",
         G_TYPE_UINT64, aagg->priv->offset, "frames", G_TYPE_UINT, blocksize,
         NULL);
     gst_aggregator_selected_samples (agg, agg_segment->position,

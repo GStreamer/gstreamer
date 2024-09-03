@@ -1136,7 +1136,8 @@ add_other_channels_to_structure (GstCapsFeatures * features, GstStructure * s,
 {
   gint other_channels = GPOINTER_TO_INT (user_data);
 
-  gst_structure_set (s, "channels", G_TYPE_INT, other_channels, NULL);
+  gst_structure_set_static_str (s, "channels", G_TYPE_INT, other_channels,
+      NULL);
 
   return TRUE;
 }
@@ -1334,7 +1335,7 @@ gst_audio_convert_fixate_format (GstBaseTransform * base, GstStructure * ins,
   }
 
   if (out_info)
-    gst_structure_set (outs, "format", G_TYPE_STRING,
+    gst_structure_set_static_str (outs, "format", G_TYPE_STRING,
         GST_AUDIO_FORMAT_INFO_NAME (out_info), NULL);
 }
 
@@ -1376,8 +1377,8 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
           GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
           GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
       has_out_mask = TRUE;
-      gst_structure_set (outs, "channel-mask", GST_TYPE_BITMASK, out_mask,
-          NULL);
+      gst_structure_set_static_str (outs, "channel-mask", GST_TYPE_BITMASK,
+          out_mask, NULL);
     }
   }
 
@@ -1405,7 +1406,8 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
     /* same number of channels and no output layout: just use input layout */
     if (!has_out_mask) {
       /* in_chans == 1 handled above already */
-      gst_structure_set (outs, "channel-mask", GST_TYPE_BITMASK, in_mask, NULL);
+      gst_structure_set_static_str (outs, "channel-mask", GST_TYPE_BITMASK,
+          in_mask, NULL);
       return;
     }
 
@@ -1428,8 +1430,8 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
        * the input layout */
       intersection = in_mask & out_mask;
       if (n_bits_set (intersection) >= in_chans) {
-        gst_structure_set (outs, "channel-mask", GST_TYPE_BITMASK, in_mask,
-            NULL);
+        gst_structure_set_static_str (outs, "channel-mask", GST_TYPE_BITMASK,
+            in_mask, NULL);
         return;
       }
 
@@ -1437,8 +1439,8 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
        * just pick the first possibility */
       intersection = find_suitable_mask (out_mask, out_chans);
       if (intersection) {
-        gst_structure_set (outs, "channel-mask", GST_TYPE_BITMASK, intersection,
-            NULL);
+        gst_structure_set_static_str (outs, "channel-mask", GST_TYPE_BITMASK,
+            intersection, NULL);
         return;
       }
     }
@@ -1456,8 +1458,8 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
      * if the first one is something unexpected or non-channel-pos-array-y */
     if (n_bits_set (out_mask) >= out_chans) {
       intersection = find_suitable_mask (out_mask, out_chans);
-      gst_structure_set (outs, "channel-mask", GST_TYPE_BITMASK, intersection,
-          NULL);
+      gst_structure_set_static_str (outs, "channel-mask", GST_TYPE_BITMASK,
+          intersection, NULL);
       return;
     }
 
@@ -1473,11 +1475,12 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
   if (out_chans > 1
       && (out_mask = gst_audio_channel_get_fallback_mask (out_chans))) {
     GST_DEBUG_OBJECT (base, "using default channel layout as fallback");
-    gst_structure_set (outs, "channel-mask", GST_TYPE_BITMASK, out_mask, NULL);
+    gst_structure_set_static_str (outs, "channel-mask", GST_TYPE_BITMASK,
+        out_mask, NULL);
   } else if (out_chans > 1) {
     GST_ERROR_OBJECT (base, "Have no default layout for %d channels",
         out_chans);
-    gst_structure_set (outs, "channel-mask", GST_TYPE_BITMASK,
+    gst_structure_set_static_str (outs, "channel-mask", GST_TYPE_BITMASK,
         G_GUINT64_CONSTANT (0), NULL);
   }
 }
@@ -1556,7 +1559,7 @@ gst_audio_convert_ensure_converter (GstBaseTransform * base,
     goto done;
   }
 
-  config = gst_structure_new ("GstAudioConverterConfig",
+  config = gst_structure_new_static_str ("GstAudioConverterConfig",
       GST_AUDIO_CONVERTER_OPT_DITHER_METHOD, GST_TYPE_AUDIO_DITHER_METHOD,
       this->dither,
       GST_AUDIO_CONVERTER_OPT_DITHER_THRESHOLD, G_TYPE_UINT,
@@ -1565,8 +1568,8 @@ gst_audio_convert_ensure_converter (GstBaseTransform * base,
       GST_TYPE_AUDIO_NOISE_SHAPING_METHOD, this->ns, NULL);
 
   if (this->mix_matrix_is_set) {
-    gst_structure_set_value (config, GST_AUDIO_CONVERTER_OPT_MIX_MATRIX,
-        &this->mix_matrix);
+    gst_structure_set_value_static_str (config,
+        GST_AUDIO_CONVERTER_OPT_MIX_MATRIX, &this->mix_matrix);
 
     this->convert = gst_audio_converter_new (0, in_info, out_info, config);
   } else if (this->input_channels_reorder_mode !=

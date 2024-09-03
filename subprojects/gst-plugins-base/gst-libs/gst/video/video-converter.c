@@ -2441,7 +2441,7 @@ gst_video_converter_new_with_pool (const GstVideoInfo * in_info,
   convert->out_maxwidth = GST_VIDEO_INFO_WIDTH (out_info);
   convert->out_maxheight = GST_VIDEO_INFO_FIELD_HEIGHT (out_info);
 
-  convert->config = gst_structure_new_empty ("GstVideoConverter");
+  convert->config = gst_structure_new_static_str_empty ("GstVideoConverter");
   if (config)
     gst_video_converter_set_config (convert, config);
   else

@@ -800,10 +800,11 @@ static void
       if (pad->priv->converter_config) {
         conv_config = gst_structure_copy (pad->priv->converter_config);
       } else {
-        conv_config = gst_structure_new_empty ("GstVideoConverterConfig");
+        conv_config =
+            gst_structure_new_static_str_empty ("GstVideoConverterConfig");
       }
-      gst_structure_set (conv_config, GST_VIDEO_CONVERTER_OPT_ASYNC_TASKS,
-          G_TYPE_BOOLEAN, TRUE, NULL);
+      gst_structure_set_static_str (conv_config,
+          GST_VIDEO_CONVERTER_OPT_ASYNC_TASKS, G_TYPE_BOOLEAN, TRUE, NULL);
 
       pad->priv->convert =
           gst_video_converter_new_with_pool (&vpad->info,
@@ -1252,7 +1253,7 @@ gst_video_aggregator_default_update_caps (GstVideoAggregator * vagg,
       GST_STR_NULL (chroma_site), GST_STR_NULL (color_name));
 
   best_format_caps = gst_caps_copy (caps);
-  gst_caps_set_simple (best_format_caps, "format", G_TYPE_STRING,
+  gst_caps_set_simple_static_str (best_format_caps, "format", G_TYPE_STRING,
       gst_video_format_to_string (best_format), NULL);
   /*
    * set_simple() will likely create some invalid combination, as it may as an
@@ -1265,11 +1266,11 @@ gst_video_aggregator_default_update_caps (GstVideoAggregator * vagg,
   gst_clear_caps (&ret);
 
   if (chroma_site != NULL)
-    gst_caps_set_simple (best_format_caps, "chroma-site", G_TYPE_STRING,
-        chroma_site, NULL);
+    gst_caps_set_simple_static_str (best_format_caps, "chroma-site",
+        G_TYPE_STRING, chroma_site, NULL);
   if (color_name != NULL)
-    gst_caps_set_simple (best_format_caps, "colorimetry", G_TYPE_STRING,
-        color_name, NULL);
+    gst_caps_set_simple_static_str (best_format_caps, "colorimetry",
+        G_TYPE_STRING, color_name, NULL);
 
   g_free (color_name);
   g_free (chroma_site);
@@ -1562,7 +1563,7 @@ _get_non_alpha_caps (GstCaps * caps)
 
       if (has_format) {
         s = gst_structure_copy (s);
-        gst_structure_take_value (s, "format", &new_formats);
+        gst_structure_take_value_static_str (s, "format", &new_formats);
         gst_caps_append_structure_full (result, s,
             gst_caps_features_copy (gst_caps_get_features (caps, i)));
       }
@@ -1603,18 +1604,18 @@ gst_video_aggregator_pad_sink_getcaps (GstPad * pad, GstVideoAggregator * vagg,
   n = gst_caps_get_size (srccaps);
   for (i = 0; i < n; i++) {
     s = gst_caps_get_structure (srccaps, i);
-    gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT,
-        1, NULL);
+    gst_structure_set_static_str (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
+        G_MAXINT, 1, NULL);
 
     if (GST_IS_VIDEO_AGGREGATOR_CONVERT_PAD (pad)) {
-      gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      gst_structure_set_static_str (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
       gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
           "pixel-aspect-ratio", NULL);
     }
 
     if (has_interlace_mode)
-      gst_structure_set (s, "interlace-mode", G_TYPE_STRING,
+      gst_structure_set_static_str (s, "interlace-mode", G_TYPE_STRING,
           gst_video_interlace_mode_to_string (interlace_mode), NULL);
   }
 
@@ -2907,11 +2908,11 @@ gst_video_aggregator_pad_sink_acceptcaps (GstPad * pad,
   n = gst_caps_get_size (accepted_caps);
   for (i = 0; i < n; i++) {
     s = gst_caps_get_structure (accepted_caps, i);
-    gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT,
-        1, NULL);
+    gst_structure_set_static_str (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
+        G_MAXINT, 1, NULL);
 
     if (GST_IS_VIDEO_AGGREGATOR_CONVERT_PAD (pad)) {
-      gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      gst_structure_set_static_str (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
       gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
           "pixel-aspect-ratio", NULL);

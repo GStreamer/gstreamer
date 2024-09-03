@@ -8686,12 +8686,12 @@ gst_video_make_raw_caps_with_features (const GstVideoFormat formats[],
         gst_video_format_to_string (formats[0]));
   }
 
-  s = gst_structure_new ("video/x-raw",
+  s = gst_structure_new_static_str ("video/x-raw",
       "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
 
-  gst_structure_take_value (s, "format", &format);
+  gst_structure_take_value_static_str (s, "format", &format);
 
   caps = gst_caps_new_full (s, NULL);
 

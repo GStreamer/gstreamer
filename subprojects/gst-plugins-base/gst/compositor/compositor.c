@@ -1467,8 +1467,8 @@ _negotiated_caps (GstAggregator * agg, GstCaps * caps)
     GstTaskPool *pool = gst_video_aggregator_get_execution_task_pool (vagg);
 
     if (pool && n_threads > 1) {
-      config = gst_structure_new_empty ("GstVideoConverterConfig");
-      gst_structure_set (config, GST_VIDEO_CONVERTER_OPT_THREADS,
+      config = gst_structure_new_static_str_empty ("GstVideoConverterConfig");
+      gst_structure_set_static_str (config, GST_VIDEO_CONVERTER_OPT_THREADS,
           G_TYPE_UINT, n_threads, NULL);
     }
 
@@ -1848,7 +1848,7 @@ src_pad_mouse_event (GstElement * element, GstPad * pad, gpointer user_data)
     x = (event_x - (gdouble) rect.x) * (w / (gdouble) rect.w);
     y = (event_y - (gdouble) rect.y) * (h / (gdouble) rect.h);
 
-    gst_structure_set (st, "pointer_x", G_TYPE_DOUBLE, x,
+    gst_structure_set_static_str (st, "pointer_x", G_TYPE_DOUBLE, x,
         "pointer_y", G_TYPE_DOUBLE, y, NULL);
     gst_pad_push_event (pad, gst_event_new_navigation (st));
   } else {

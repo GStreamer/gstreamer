@@ -1374,7 +1374,7 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
   convert->out = *out_info;
 
   /* default config */
-  convert->config = gst_structure_new_empty ("GstAudioConverter");
+  convert->config = gst_structure_new_static_str_empty ("GstAudioConverter");
   if (config)
     gst_audio_converter_update_config (convert, 0, 0, config);
 
