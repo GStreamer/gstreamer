@@ -448,7 +448,7 @@ GST_START_TEST (test_passthrough)
         in_caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
             gst_video_format_to_string (in_format), NULL);
         gst_caps_set_features_simple (in_caps,
-            gst_caps_features_from_string (in_feature));
+            gst_caps_features_new_single_static_str (in_feature));
 
 
         for (l = 0; l < features_size; l++) {
@@ -458,7 +458,7 @@ GST_START_TEST (test_passthrough)
           out_caps = gst_caps_new_simple ("video/x-raw", "format",
               G_TYPE_STRING, gst_video_format_to_string (out_format), NULL);
           gst_caps_set_features_simple (out_caps,
-              gst_caps_features_from_string (out_feature));
+              gst_caps_features_new_single_static_str (out_feature));
 
           if (gst_caps_is_equal (in_caps, out_caps)) {
             GstCaps *tmp_caps, *tmp_caps2, *tmp_caps3;

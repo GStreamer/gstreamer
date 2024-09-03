@@ -1197,7 +1197,8 @@ gst_qsv_decoder_negotiate_internal (GstVideoDecoder * decoder,
   if (priv->use_video_memory) {
     GST_DEBUG_OBJECT (self, "Downstream supports D3D11 memory");
     gst_caps_set_features (priv->output_state->caps, 0,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr));
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+            nullptr));
   }
 #endif
 

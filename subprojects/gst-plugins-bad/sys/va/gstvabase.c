@@ -210,7 +210,7 @@ gst_va_base_convert_caps_to_va (GstCaps * caps)
   }
 
   gst_caps_set_features_simple (caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
+      gst_caps_features_new_single_static_str (GST_CAPS_FEATURE_MEMORY_VA));
 
   return TRUE;
 }

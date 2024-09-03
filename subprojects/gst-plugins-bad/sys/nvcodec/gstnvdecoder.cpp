@@ -1249,7 +1249,8 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
     {
       GstCaps *cuda_caps = gst_caps_copy (src_templ);
       gst_caps_set_features_simple (cuda_caps,
-          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY));
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY));
 
 #ifdef G_OS_WIN32
       if (is_stateless) {
@@ -1266,7 +1267,8 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
       {
         GstCaps *gl_caps = gst_caps_copy (src_templ);
         gst_caps_set_features_simple (gl_caps,
-            gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+            gst_caps_features_new_single_static_str
+            (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
         gst_caps_append (src_templ, gl_caps);
       }
 #endif
@@ -1414,7 +1416,8 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
 
     src_templ = gst_caps_copy (raw_caps);
     gst_caps_set_features_simple (src_templ,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY));
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY));
 
 #ifdef G_OS_WIN32
     if (is_stateless) {
@@ -1438,7 +1441,8 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
       src_caps_string = "video/x-raw, format = (string) " + format_str;
       GstCaps *d3d11_caps = gst_caps_from_string (src_caps_string.c_str ());
       gst_caps_set_features_simple (d3d11_caps,
-          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
       gst_caps_append (src_templ, d3d11_caps);
     }
 #endif
@@ -1463,7 +1467,8 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
     src_caps_string = "video/x-raw, format = (string) " + format_str;
     GstCaps *gl_caps = gst_caps_from_string (src_caps_string.c_str ());
     gst_caps_set_features_simple (gl_caps,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
     gst_caps_append (src_templ, gl_caps);
 #endif
     gst_caps_append (src_templ, raw_caps);
@@ -1853,21 +1858,24 @@ gst_nv_decoder_negotiate (GstNvDecoder * decoder,
     case GST_NV_DECODER_OUTPUT_TYPE_CUDA:
       GST_DEBUG_OBJECT (videodec, "using CUDA memory");
       gst_caps_set_features (state->caps, 0,
-          gst_caps_features_new_single (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY));
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY));
       break;
 #ifdef G_OS_WIN32
     case GST_NV_DECODER_OUTPUT_TYPE_D3D11:
       gst_caps_set_features (state->caps, 0,
-          gst_caps_features_new_single (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
       break;
 #endif
 #ifdef HAVE_CUDA_GST_GL
     case GST_NV_DECODER_OUTPUT_TYPE_GL:
       GST_DEBUG_OBJECT (videodec, "using GL memory");
       gst_caps_set_features (state->caps, 0,
-          gst_caps_features_new_single (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
-      gst_caps_set_simple (state->caps, "texture-target", G_TYPE_STRING,
-          "2D", nullptr);
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+      gst_caps_set_simple (state->caps, "texture-target", G_TYPE_STRING, "2D",
+          nullptr);
       break;
 #endif
     default:

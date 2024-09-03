@@ -685,8 +685,8 @@ gst_d3d11_screen_capture_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
         gst_caps_append_structure (d3d11_caps, gst_structure_copy (s));
 
         gst_caps_set_features (d3d11_caps, 0,
-            gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
-                nullptr));
+            gst_caps_features_new_static_str
+            (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr));
 
         break;
       }

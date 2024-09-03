@@ -444,11 +444,13 @@ gst_v4l2_decoder_probe_caps_for_format (GstV4l2Decoder * self,
         "DMA_DRM", "drm-format", G_TYPE_STRING,
         gst_video_dma_drm_fourcc_to_string (drm_fourcc, 0), NULL);
     gst_caps_set_features_simple (drm_caps,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_DMABUF));
 
     if (!gst_caps_is_empty (size_caps)) {
       gst_caps_set_features_simple (size_caps,
-          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_DMABUF));
       tmp = drm_caps;
       drm_caps =
           gst_caps_intersect_full (tmp, size_caps, GST_CAPS_INTERSECT_FIRST);

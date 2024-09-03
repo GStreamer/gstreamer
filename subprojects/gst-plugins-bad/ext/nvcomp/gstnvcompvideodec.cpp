@@ -1029,12 +1029,14 @@ gst_nv_comp_video_dec_negotiate (GstVideoDecoder * decoder)
   auto format = GST_VIDEO_INFO_FORMAT (&priv->info);
   if (is_cuda && is_supported_cuda_format (format)) {
     gst_caps_set_features_simple (state->caps,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, nullptr));
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY,
+            nullptr));
   }
 #ifdef HAVE_GST_GL
   else if (is_gl && is_supported_gl_format (format)) {
     gst_caps_set_features_simple (state->caps,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, nullptr));
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+            nullptr));
     priv->gl_interop = TRUE;
   }
 #endif

@@ -1612,9 +1612,10 @@ update_output_format (GstGLImageSink * glimage_sink)
 
   out_caps = gst_video_info_to_caps (out_info);
   gst_caps_set_features (out_caps, 0,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
-  gst_caps_set_simple (out_caps, "texture-target", G_TYPE_STRING,
-      target_str, NULL);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+  gst_caps_set_simple (out_caps, "texture-target", G_TYPE_STRING, target_str,
+      NULL);
 
   if (glimage_sink->convert_views) {
     gst_caps_set_simple (out_caps, "texture-target", G_TYPE_STRING,

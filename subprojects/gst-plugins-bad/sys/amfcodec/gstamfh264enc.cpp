@@ -2261,7 +2261,8 @@ gst_amf_h264_enc_create_class_data (GstD3D11Device * device,
   system_caps = gst_caps_from_string (sink_caps_str.c_str ());
   sink_caps = gst_caps_copy (system_caps);
   gst_caps_set_features (sink_caps, 0,
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+          nullptr));
   gst_caps_append (sink_caps, system_caps);
 
   cdata = g_new0 (GstAmfH264EncClassData, 1);

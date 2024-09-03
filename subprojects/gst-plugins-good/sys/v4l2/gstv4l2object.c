@@ -1667,7 +1667,8 @@ add_alternate_variant (GstV4l2Object * v4l2object, GstCaps * caps,
   gst_structure_set (alt_s, "interlace-mode", G_TYPE_STRING, "alternate", NULL);
 
   gst_caps_append_structure_full (caps, alt_s,
-      gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_FORMAT_INTERLACED,
+          NULL));
 }
 
 static void
@@ -2730,7 +2731,9 @@ check_alternate_and_append_struct (GstCaps * caps, GstStructure * s)
             "alternate")) {
       GstCapsFeatures *feat;
 
-      feat = gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL);
+      feat =
+          gst_caps_features_new_static_str (GST_CAPS_FEATURE_FORMAT_INTERLACED,
+          NULL);
       gst_caps_set_features (caps, gst_caps_get_size (caps) - 1, feat);
     }
   } else if (GST_VALUE_HOLDS_LIST (mode)) {
@@ -2754,7 +2757,8 @@ check_alternate_and_append_struct (GstCaps * caps, GstStructure * s)
       copy = gst_structure_copy (s);
       gst_structure_take_value (copy, "interlace-mode", &inter);
       gst_caps_append_structure_full (caps, copy,
-          gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL));
+          gst_caps_features_new_static_str (GST_CAPS_FEATURE_FORMAT_INTERLACED,
+              NULL));
     }
     g_value_unset (&alter);
   }

@@ -417,7 +417,8 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
 
   d3d11_caps = gst_caps_copy (src_caps);
   gst_caps_set_features_simple (d3d11_caps,
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+          nullptr));
   src_caps = gst_caps_merge (d3d11_caps, src_caps);
 
   /* To cover both landscape and portrait, select max value */

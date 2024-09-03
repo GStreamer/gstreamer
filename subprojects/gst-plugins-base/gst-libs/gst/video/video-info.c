@@ -702,7 +702,9 @@ gst_video_info_to_caps (const GstVideoInfo * info)
      */
     GstCapsFeatures *features;
 
-    features = gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL);
+    features =
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_FORMAT_INTERLACED,
+        NULL);
     gst_caps_set_features (caps, 0, features);
   }
 

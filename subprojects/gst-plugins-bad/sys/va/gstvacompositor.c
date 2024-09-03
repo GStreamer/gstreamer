@@ -1223,7 +1223,7 @@ _caps_from_format_and_feature (GstVideoFormat format,
   if (g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_DMABUF) == 0 ||
       g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_VA) == 0)
     gst_caps_set_features_simple (caps,
-        gst_caps_features_from_string (feature));
+        gst_caps_features_new_single_static_str (feature));
 
   return caps;
 }
@@ -1455,7 +1455,7 @@ gst_va_compositor_update_caps (GstVideoAggregator * vagg, GstCaps * src_caps)
     } else {
       clip_caps = gst_caps_new_empty_simple ("video/x-raw");
       gst_caps_set_features_simple (clip_caps,
-          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
+          gst_caps_features_new_single_static_str (GST_CAPS_FEATURE_MEMORY_VA));
     }
   } else if (dma_formats) {
     g_assert (dma_formats->len == modifiers->len);
@@ -1474,7 +1474,8 @@ gst_va_compositor_update_caps (GstVideoAggregator * vagg, GstCaps * src_caps)
     } else {
       clip_caps = gst_caps_new_empty_simple ("video/x-raw");
       gst_caps_set_features_simple (clip_caps,
-          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_DMABUF));
     }
   } else if (sys_formats) {
     if (best_sys != GST_VIDEO_FORMAT_UNKNOWN) {

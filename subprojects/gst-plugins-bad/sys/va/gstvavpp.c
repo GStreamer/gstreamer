@@ -1015,7 +1015,7 @@ gst_va_vpp_complete_caps_features (const GstCaps * caps,
       continue;
     }
 
-    features = gst_caps_features_new (feature_name, NULL);
+    features = gst_caps_features_new_static_str (feature_name, NULL);
     if (!gst_caps_is_subset_structure_full (tmp, s, features))
       gst_caps_append_structure_full (tmp, gst_structure_copy (s), features);
     else

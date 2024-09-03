@@ -285,7 +285,7 @@ _create_internal_pool (GstVaAV1Dec * self, gint width, gint height)
   }
 
   gst_caps_set_features_simple (caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
+      gst_caps_features_new_single_static_str (GST_CAPS_FEATURE_MEMORY_VA));
 
   surface_formats = gst_va_decoder_get_surface_formats (base->decoder);
   allocator = gst_va_allocator_new (base->display, surface_formats);

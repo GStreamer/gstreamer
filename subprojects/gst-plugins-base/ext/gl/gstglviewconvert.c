@@ -196,12 +196,14 @@ gst_gl_view_convert_element_set_caps (GstGLFilter * filter, GstCaps * incaps,
 
   gst_caps_set_simple (incaps, "format", G_TYPE_STRING, "RGBA", NULL);
   gl_features =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   gst_caps_set_features (incaps, 0, gl_features);
 
   gst_caps_set_simple (outcaps, "format", G_TYPE_STRING, "RGBA", NULL);
   gl_features =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
   gst_caps_set_features (outcaps, 0, gl_features);
 
   ret = gst_gl_view_convert_set_caps (viewconvert_filter->viewconvert,

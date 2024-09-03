@@ -498,7 +498,8 @@ gst_qsv_h264_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
 #ifdef G_OS_WIN32
   GstCaps *d3d11_caps = gst_caps_copy (src_caps);
   GstCapsFeatures *caps_features =
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr);
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+      nullptr);
   gst_caps_set_features_simple (d3d11_caps, caps_features);
   gst_caps_append (d3d11_caps, src_caps);
   src_caps = d3d11_caps;

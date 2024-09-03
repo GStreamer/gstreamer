@@ -111,7 +111,8 @@ allocate_image_buffer_pool (GstVulkanEncoder * enc, uint32_t width,
   gsize frame_size = width * height * 2;        //NV12
 
   gst_caps_set_features_simple (caps,
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, NULL));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
+          NULL));
   fail_unless (gst_vulkan_encoder_create_dpb_pool (enc, caps));
 
   gst_video_info_from_caps (&out_info, caps);
@@ -147,7 +148,8 @@ allocate_buffer_pool (GstVulkanEncoder * enc, uint32_t width, uint32_t height)
   GstStructure *config = gst_buffer_pool_get_config (pool);
 
   gst_caps_set_features_simple (caps,
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER, NULL));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER,
+          NULL));
 
   gst_video_info_from_caps (&in_info, caps);
 

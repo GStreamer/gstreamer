@@ -669,15 +669,17 @@ gst_nvdec_negotiate (GstVideoDecoder * decoder)
     case GST_NVDEC_MEM_TYPE_CUDA:
       GST_DEBUG_OBJECT (nvdec, "use cuda memory");
       gst_caps_set_features (state->caps, 0,
-          gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, NULL));
+          gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY,
+              NULL));
       break;
 #ifdef HAVE_CUDA_GST_GL
     case GST_NVDEC_MEM_TYPE_GL:
       GST_DEBUG_OBJECT (nvdec, "use gl memory");
       gst_caps_set_features (state->caps, 0,
-          gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
-      gst_caps_set_simple (state->caps, "texture-target", G_TYPE_STRING,
-          "2D", NULL);
+          gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+              NULL));
+      gst_caps_set_simple (state->caps, "texture-target", G_TYPE_STRING, "2D",
+          NULL);
       break;
 #endif
     default:

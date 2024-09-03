@@ -970,12 +970,14 @@ gst_qsv_vp9_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
 #ifdef G_OS_WIN32
   GstCaps *d3d11_caps = gst_caps_copy (sink_caps);
   GstCapsFeatures *caps_features =
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr);
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+      nullptr);
   gst_caps_set_features_simple (d3d11_caps, caps_features);
 #ifdef HAVE_GST_D3D12
   auto d3d12_caps = gst_caps_copy (sink_caps);
   auto d3d12_feature =
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, nullptr);
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY,
+      nullptr);
   gst_caps_set_features_simple (d3d12_caps, d3d12_feature);
   gst_caps_append (d3d11_caps, d3d12_caps);
 #endif
@@ -984,7 +986,7 @@ gst_qsv_vp9_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
 #else
   GstCaps *va_caps = gst_caps_copy (sink_caps);
   GstCapsFeatures *caps_features =
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VA, nullptr);
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VA, nullptr);
   gst_caps_set_features_simple (va_caps, caps_features);
   gst_caps_append (va_caps, sink_caps);
   sink_caps = va_caps;

@@ -185,7 +185,8 @@ gst_d3d11_base_convert_caps_remove_format_info (GstCaps * caps)
   gint i, n;
   GstCaps *res;
   GstCapsFeatures *feature =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
 
   res = gst_caps_new_empty ();
 
@@ -222,7 +223,8 @@ gst_d3d11_base_convert_caps_rangify_size_info (GstCaps * caps)
   gint i, n;
   GstCaps *res;
   GstCapsFeatures *feature =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
 
   res = gst_caps_new_empty ();
 
@@ -265,7 +267,8 @@ gst_d3d11_base_convert_caps_remove_format_and_rangify_size_info (GstCaps * caps)
   gint i, n;
   GstCaps *res;
   GstCapsFeatures *feature =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
 
   res = gst_caps_new_empty ();
 

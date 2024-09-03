@@ -1323,7 +1323,7 @@ gst_vaapisink_get_caps_impl (GstBaseSink * base_sink)
   gst_caps_append (out_caps, gst_caps_copy (raw_caps));
 
   feature_caps = gst_caps_copy (raw_caps);
-  features = gst_caps_features_new
+  features = gst_caps_features_new_static_str
       (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, NULL);
   gst_caps_set_features (feature_caps, 0, features);
   gst_caps_append (out_caps, feature_caps);

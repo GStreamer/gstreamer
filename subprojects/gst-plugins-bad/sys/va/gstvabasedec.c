@@ -372,7 +372,7 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
 
   va_caps = gst_caps_copy (caps);
   gst_caps_set_features_simple (va_caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
+      gst_caps_features_new_single_static_str (GST_CAPS_FEATURE_MEMORY_VA));
 
   if (!(allocator = _create_allocator (base, va_caps)))
     goto cleanup;

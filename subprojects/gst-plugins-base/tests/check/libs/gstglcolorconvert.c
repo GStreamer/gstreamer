@@ -156,7 +156,8 @@ check_conversion (TestFrame * frames, guint size)
     gst_video_info_set_format (&in_info, in_v_format, in_width, in_height);
     in_caps = gst_video_info_to_caps (&in_info);
     gst_caps_set_features (in_caps, 0,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
 
     /* create GL buffer */
     inbuf = gst_buffer_new ();
@@ -204,7 +205,8 @@ check_conversion (TestFrame * frames, guint size)
           out_height);
       out_caps = gst_video_info_to_caps (&out_info);
       gst_caps_set_features (out_caps, 0,
-          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
 
       for (k = 0; k < GST_VIDEO_INFO_N_PLANES (&out_info); k++) {
         out_data[k] = frames[j].data[k];
@@ -283,7 +285,7 @@ GST_START_TEST (test_passthrough)
         in_caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
             gst_video_format_to_string (in_format), NULL);
         gst_caps_set_features_simple (in_caps,
-            gst_caps_features_from_string (in_feature));
+            gst_caps_features_new_single_static_str (in_feature));
 
 
         for (l = 0; l < features_size; l++) {
@@ -293,7 +295,7 @@ GST_START_TEST (test_passthrough)
           out_caps = gst_caps_new_simple ("video/x-raw", "format",
               G_TYPE_STRING, gst_video_format_to_string (out_format), NULL);
           gst_caps_set_features_simple (out_caps,
-              gst_caps_features_from_string (out_feature));
+              gst_caps_features_new_single_static_str (out_feature));
 
           if (gst_caps_is_equal (in_caps, out_caps)) {
             GstCaps *tmp_caps, *tmp_caps2, *tmp_caps3;

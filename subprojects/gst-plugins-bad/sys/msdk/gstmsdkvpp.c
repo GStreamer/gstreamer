@@ -439,7 +439,8 @@ gst_msdk_create_va_pool (GstMsdkVPP * thiz, GstVideoInfo * info,
     usage_hint |= VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ |
         VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
     gst_caps_set_features (aligned_caps, 0,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_DMABUF,
+            NULL));
   } else
     aligned_caps = gst_video_info_to_caps (info);
 
@@ -879,7 +880,7 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
      * msdkenc and msdkvpp re-use surface from decoder and they both need to set
      * timestamp for input mfx surface; but encoder use input frame->pts while vpp
      * use input buffer->pts, and frame->pts has 1000h offset larger than inbuf->pts;
-     * It is very likely to cause conflict or mfx surface timestamp. So we add this 
+     * It is very likely to cause conflict or mfx surface timestamp. So we add this
      * PTS_OFFSET here to ensure enc and vpp set the same value to input mfx surface
      * meanwhile does not break encoder's setting min_pts for dts protection.
      */

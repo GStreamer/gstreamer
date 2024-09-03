@@ -68,7 +68,8 @@ create_buffer_pool (const char *format, VkImageUsageFlags usage,
   caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, format,
       "width", G_TYPE_INT, 1024, "height", G_TYPE_INT, 780, NULL);
   gst_caps_set_features_simple (caps,
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, NULL));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
+          NULL));
 
   pool = gst_vulkan_image_buffer_pool_new (device);
 

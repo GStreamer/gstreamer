@@ -306,7 +306,7 @@ gst_video_info_dma_drm_to_caps (const GstVideoInfoDmaDrm * drm_info)
   }
 
   gst_caps_set_features_simple (caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
+      gst_caps_features_new_single_static_str (GST_CAPS_FEATURE_MEMORY_DMABUF));
 
   str = gst_video_dma_drm_fourcc_to_string (drm_info->drm_fourcc,
       drm_info->drm_modifier);

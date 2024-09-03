@@ -294,7 +294,8 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
   GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 
   features_format_interlaced =
-      gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL);
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_FORMAT_INTERLACED,
+      NULL);
   features_format_interlaced_sysmem =
       gst_caps_features_copy (features_format_interlaced);
   gst_caps_features_add (features_format_interlaced_sysmem,

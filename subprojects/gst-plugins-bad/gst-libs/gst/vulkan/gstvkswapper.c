@@ -670,7 +670,8 @@ gst_vulkan_swapper_get_supported_caps (GstVulkanSwapper * swapper,
 
   caps = gst_caps_new_empty_simple ("video/x-raw");
   gst_caps_set_features (caps, 0,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE));
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE));
   s = gst_caps_get_structure (caps, 0);
 
   {

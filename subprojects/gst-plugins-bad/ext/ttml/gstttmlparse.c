@@ -387,7 +387,8 @@ static GstCaps *
 gst_ttml_parse_get_src_caps (GstTtmlParse * self)
 {
   GstCaps *caps;
-  GstCapsFeatures *features = gst_caps_features_new ("meta:GstSubtitleMeta",
+  GstCapsFeatures *features =
+      gst_caps_features_new_static_str ("meta:GstSubtitleMeta",
       NULL);
 
   caps = gst_caps_new_empty_simple ("text/x-raw");

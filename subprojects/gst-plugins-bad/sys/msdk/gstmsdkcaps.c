@@ -2012,7 +2012,7 @@ gst_msdkcaps_set_strings (GstCaps * caps,
 
   if (features) {
     GstStructure *s = NULL;
-    GstCapsFeatures *f = gst_caps_features_from_string (features);
+    GstCapsFeatures *f = gst_caps_features_new_single_static_str (features);
 
     for (guint i = 0; i < size; i++) {
       if (gst_caps_features_is_equal (f, gst_caps_get_features (caps, i))) {

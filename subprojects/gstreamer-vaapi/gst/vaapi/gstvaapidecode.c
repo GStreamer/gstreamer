@@ -258,7 +258,8 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
 
   va_caps = gst_caps_copy (base_caps);
   gst_caps_set_features_simple (va_caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE,
+          NULL));
 
 #if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
   if (!GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF (decode)
@@ -374,7 +375,7 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
       if (!structure)
         break;
       feature_str = gst_vaapi_caps_feature_to_string (feature);
-      features = gst_caps_features_new (feature_str, NULL);
+      features = gst_caps_features_new_static_str (feature_str, NULL);
       gst_caps_set_features (state->caps, 0, features);
       break;
     }

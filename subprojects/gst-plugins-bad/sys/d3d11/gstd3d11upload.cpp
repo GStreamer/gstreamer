@@ -145,7 +145,7 @@ _set_caps_features (const GstCaps * caps, const gchar * feature_name)
     GstStructure *s = gst_caps_get_structure (caps, i);
 
     orig_features = gst_caps_get_features (caps, i);
-    features = gst_caps_features_new (feature_name, NULL);
+    features = gst_caps_features_new_static_str (feature_name, NULL);
 
     if (gst_caps_features_is_any (orig_features)) {
       gst_caps_append_structure_full (tmp, gst_structure_copy (s),

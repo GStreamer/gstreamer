@@ -809,7 +809,8 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
       gst_caps_unref (output_state->caps);
     output_state->caps = gst_video_info_to_caps (&output_state->info);
     gst_caps_set_features (output_state->caps, 0,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+            NULL));
     gst_caps_set_simple (output_state->caps, "texture-target", G_TYPE_STRING,
         "external-oes", NULL);
     GST_DEBUG_OBJECT (self, "Configuring for Surface output");
@@ -1954,7 +1955,8 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
 
         output_state->caps = gst_video_info_to_caps (&output_state->info);
         gst_caps_set_features (output_state->caps, 0,
-            gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
+            gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+                NULL));
 
         /* gst_amc_video_dec_decide_allocation will update
          * self->downstream_supports_gl */

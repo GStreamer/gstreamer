@@ -516,7 +516,8 @@ pad_accept_memory (GstMsdkDec * thiz, const gchar * mem_type, GstCaps ** filter)
   pad = GST_VIDEO_DECODER_SRC_PAD (thiz);
 
   caps = gst_caps_copy (*filter);
-  gst_caps_set_features (caps, 0, gst_caps_features_from_string (mem_type));
+  gst_caps_set_features (caps, 0,
+      gst_caps_features_new_single_static_str (mem_type));
 
 #ifndef _WIN32
   /* In dma caps case, we need to set drm-format for raw caps */
@@ -1766,7 +1767,8 @@ gst_msdk_create_va_pool (GstMsdkDec * thiz, GstVideoInfo * info,
   if (thiz->use_dmabuf && thiz->modifier != DRM_FORMAT_MOD_INVALID) {
     caps = gst_msdkcaps_video_info_to_drm_caps (info, thiz->modifier);
     gst_caps_set_features (caps, 0,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_DMABUF,
+            NULL));
   } else {
     caps = gst_video_info_to_caps (info);
   }
@@ -1835,7 +1837,8 @@ gst_msdkdec_create_buffer_pool (GstMsdkDec * thiz, GstVideoInfo * info,
   if (thiz->use_dmabuf) {
     caps = gst_msdkcaps_video_info_to_drm_caps (&vinfo, thiz->modifier);
     gst_caps_set_features (caps, 0,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_DMABUF,
+            NULL));
   } else {
     caps = gst_video_info_to_caps (&vinfo);
   }

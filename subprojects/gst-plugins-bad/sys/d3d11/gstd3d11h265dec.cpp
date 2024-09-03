@@ -419,7 +419,8 @@ gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
 
   /* System memory with alternate interlace-mode */
   tmp = gst_caps_copy (src_caps_copy);
-  caps_features = gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED,
+  caps_features =
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_FORMAT_INTERLACED,
       nullptr);
   gst_caps_set_features_simple (tmp, caps_features);
   gst_caps_set_simple (tmp, "interlace-mode", G_TYPE_STRING, "alternate",
@@ -428,7 +429,8 @@ gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
 
   /* D3D11 memory feature */
   tmp = gst_caps_copy (src_caps_copy);
-  caps_features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+  caps_features =
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
       nullptr);
   gst_caps_set_features_simple (tmp, caps_features);
   gst_caps_append (src_caps, tmp);
@@ -438,7 +440,8 @@ gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
 #if 0
   /* D3D11 memory with alternate interlace-mode */
   tmp = gst_caps_copy (src_caps_copy);
-  caps_features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+  caps_features =
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
       GST_CAPS_FEATURE_FORMAT_INTERLACED, nullptr);
   gst_caps_set_features_simple (tmp, caps_features);
   gst_caps_set_simple (tmp, "interlace-mode", G_TYPE_STRING, "alternate",

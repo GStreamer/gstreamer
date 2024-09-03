@@ -51,7 +51,7 @@ _set_caps_features_with_passthrough (const GstCaps * caps,
     GstCapsFeatures *features, *orig_features;
 
     orig_features = gst_caps_get_features (caps, i);
-    features = gst_caps_features_new (feature_name, NULL);
+    features = gst_caps_features_new_static_str (feature_name, NULL);
 
     m = gst_caps_features_get_size (orig_features);
     for (j = 0; j < m; j++) {

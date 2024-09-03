@@ -460,7 +460,9 @@ dup_caps_with_alternate (GstCaps * caps)
   GstCapsFeatures *features;
 
   with_alternate = gst_caps_copy (caps);
-  features = gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL);
+  features =
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_FORMAT_INTERLACED,
+      NULL);
   gst_caps_set_features_simple (with_alternate, features);
 
   gst_caps_set_simple (with_alternate, "interlace-mode", G_TYPE_STRING,

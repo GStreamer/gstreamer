@@ -364,7 +364,7 @@ _create_reconstruct_pool (GstVaDisplay * display, GArray * surface_formats,
 
   caps = gst_video_info_to_caps (&info);
   gst_caps_set_features_simple (caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
+      gst_caps_features_new_single_static_str (GST_CAPS_FEATURE_MEMORY_VA));
 
   allocator = gst_va_allocator_new (display, surface_formats);
 

@@ -196,15 +196,17 @@ fixate_output_format (GstMsdkVPP * thiz, GstVideoInfo * vinfo, GstCaps * caps)
 #ifndef _WIN32
   if (is_va)
     gst_caps_set_features (ret, 0,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
+        gst_caps_features_new_single_static_str (GST_CAPS_FEATURE_MEMORY_VA));
 #else
   if (is_d3d)
     gst_caps_set_features (ret, 0,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
 #endif
   else if (is_dma)
     gst_caps_set_features (ret, 0,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_DMABUF));
 
   return ret;
 }

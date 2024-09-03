@@ -286,7 +286,8 @@ gst_vulkan_h265_decoder_negotiate (GstVideoDecoder * decoder)
 
   self->output_state->caps = gst_video_info_to_caps (&self->output_state->info);
   gst_caps_set_features_simple (self->output_state->caps,
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, NULL));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
+          NULL));
 
   GST_INFO_OBJECT (self, "Negotiated caps %" GST_PTR_FORMAT,
       self->output_state->caps);

@@ -112,7 +112,8 @@ get_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
   GstStructure *config;
 
   gst_caps_set_features_simple (caps,
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, NULL));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
+          NULL));
 
   profile_caps = gst_vulkan_decoder_profile_caps (dec);
   fail_unless (profile_caps);

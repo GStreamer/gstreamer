@@ -1593,7 +1593,7 @@ gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutpu
           gst_caps_append (result_caps, gst_caps_copy (caps));
           /* Set GLMemory features on caps */
           gst_caps_set_features (caps, 0,
-                                 gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+                                 gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
                                                         NULL));
           gst_caps_set_simple (caps,
                                "texture-target", G_TYPE_STRING,

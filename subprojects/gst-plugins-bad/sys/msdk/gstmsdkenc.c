@@ -1206,7 +1206,8 @@ gst_msdk_create_va_pool (GstMsdkEnc * thiz, GstVideoInfo * info,
   if (thiz->use_dmabuf && thiz->modifier != DRM_FORMAT_MOD_INVALID) {
     aligned_caps = gst_msdkcaps_video_info_to_drm_caps (info, thiz->modifier);
     gst_caps_set_features (aligned_caps, 0,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_DMABUF,
+            NULL));
   } else
     aligned_caps = gst_video_info_to_caps (info);
 
@@ -1426,7 +1427,8 @@ gst_msdkenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   if (!thiz->use_va && sinkpad_can_dmabuf (thiz)) {
     thiz->input_state->caps = gst_caps_make_writable (thiz->input_state->caps);
     gst_caps_set_features (thiz->input_state->caps, 0,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_DMABUF,
+            NULL));
     thiz->use_dmabuf = TRUE;
     thiz->modifier = get_msdkcaps_get_modifier (state->caps);
   }

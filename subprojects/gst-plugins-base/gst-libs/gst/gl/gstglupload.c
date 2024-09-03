@@ -198,7 +198,7 @@ _set_caps_features_with_passthrough (const GstCaps * caps,
     GstStructure *s = gst_caps_get_structure (caps, i);
 
     orig_features = gst_caps_get_features (caps, i);
-    features = gst_caps_features_new (feature_name, NULL);
+    features = gst_caps_features_new_static_str (feature_name, NULL);
 
     if (gst_caps_features_is_any (orig_features)) {
       /* if we have any features, we add both the features with and without @passthrough */
@@ -430,7 +430,8 @@ _gl_memory_upload_transform_caps (gpointer impl, GstGLContext * context,
     GstCapsFeatures *filter_features;
     GstGLTextureTarget target_mask;
 
-    filter_features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+    filter_features =
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
         GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, NULL);
     if (!_filter_caps_with_features (caps, filter_features, &tmp)) {
       gst_caps_features_free (filter_features);
@@ -538,9 +539,12 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
 
   g_assert (gst_caps_is_fixed (caps));
 
-  features_gl = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL);
+  features_gl =
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+      NULL);
   features_sys =
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, NULL);
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY,
+      NULL);
   /* Only offer our custom allocator if that type of memory was negotiated. */
   if (_filter_caps_with_features (caps, features_sys, NULL)) {
     use_sys_mem = TRUE;
@@ -1277,7 +1281,7 @@ _dma_buf_upload_transform_caps_common (GstCaps * caps,
         (!g_strcmp0 (from_feature, GST_CAPS_FEATURE_MEMORY_GL_MEMORY), NULL);
   }
 
-  features = gst_caps_features_new (from_feature, NULL);
+  features = gst_caps_features_new_static_str (from_feature, NULL);
   if (!_filter_caps_with_features (caps, features, &caps_to_transform)) {
     gst_caps_features_free (features);
     return NULL;
@@ -1335,8 +1339,8 @@ _dma_buf_upload_transform_caps_common (GstCaps * caps,
 
 passthrough:
   /* Change the feature name. */
-  passthrough = gst_caps_features_from_string
-      (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+  passthrough = gst_caps_features_new_static_str
+      (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, NULL);
   ret_caps = _set_caps_features_with_passthrough (tmp_caps,
       to_feature, passthrough);
 
@@ -2231,7 +2235,8 @@ _raw_data_upload_transform_caps (gpointer impl, GstGLContext * context,
     GstCaps *tmp;
 
     filter_features =
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
     if (!_filter_caps_with_features (caps, filter_features, &tmp)) {
       gst_caps_features_free (filter_features);
       gst_caps_features_free (passthrough);
@@ -2276,7 +2281,8 @@ _raw_data_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   GstCapsFeatures *features;
 
   features =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
   /* Also consider the omited system memory feature cases, such as
      video/x-raw(meta:GstVideoOverlayComposition) */
   if (!_filter_caps_with_features (in_caps, features, NULL)) {
@@ -2438,7 +2444,8 @@ _directviv_upload_transform_caps (gpointer impl, GstGLContext * context,
     GstCapsFeatures *filter_features;
 
     filter_features =
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
     if (!_filter_caps_with_features (caps, filter_features, &tmp)) {
       gst_caps_features_free (filter_features);
       gst_caps_features_free (passthrough);
@@ -2494,7 +2501,8 @@ _directviv_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     return FALSE;
 
   features =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
   /* Also consider the omited system memory feature cases, such as
      video/x-raw(meta:GstVideoOverlayComposition) */
   if (!_filter_caps_with_features (in_caps, features, NULL)) {
@@ -2772,7 +2780,7 @@ _nvmm_upload_transform_caps (gpointer impl, GstGLContext * context,
     GstCapsFeatures *filter_features;
 
     filter_features =
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_NVMM);
+        gst_caps_features_new_single_static_str (GST_CAPS_FEATURE_MEMORY_NVMM);
     if (!_filter_caps_with_features (caps, filter_features, &tmp)) {
       gst_caps_features_free (filter_features);
       gst_caps_features_free (passthrough);

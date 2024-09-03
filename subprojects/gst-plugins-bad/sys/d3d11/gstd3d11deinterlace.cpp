@@ -745,7 +745,8 @@ gst_d3d11_deinterlace_remove_interlace_info (GstCaps * caps,
   gint i, n;
   GstCaps *res;
   GstCapsFeatures *feature =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
 
   res = gst_caps_new_empty ();
 
@@ -2411,11 +2412,13 @@ gst_d3d11_deinterlace_register (GstPlugin * plugin, GstD3D11Device * device,
 
   /* TODO: Add alternating deinterlace */
   src_caps = gst_caps_copy (caps);
-  caps_features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+  caps_features =
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
       NULL);
   gst_caps_set_features_simple (src_caps, caps_features);
 
-  caps_features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+  caps_features =
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
       GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, NULL);
   gst_caps_set_features_simple (caps, caps_features);
   gst_caps_append (src_caps, caps);

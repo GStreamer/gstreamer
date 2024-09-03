@@ -1909,12 +1909,14 @@ gst_d3d12_decoder_negotiate (GstD3D12Decoder * decoder,
   switch (priv->session->output_type) {
     case GST_D3D12_DECODER_OUTPUT_D3D12:
       gst_caps_set_features (state->caps, 0,
-          gst_caps_features_new_single (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY));
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY));
       break;
 #ifdef HAVE_GST_D3D11
     case GST_D3D12_DECODER_OUTPUT_D3D11:
       gst_caps_set_features (state->caps, 0,
-          gst_caps_features_new_single (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
       break;
 #endif
     default:
@@ -2356,11 +2358,13 @@ gst_d3d12_decoder_check_feature_support (GstD3D12Device * device,
   auto raw_caps = gst_caps_from_string (src_caps_string.c_str ());
   auto src_caps = gst_caps_copy (raw_caps);
   gst_caps_set_features_simple (src_caps,
-      gst_caps_features_new_single (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY));
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY));
 #ifdef HAVE_GST_D3D11
   auto d3d11_caps = gst_caps_copy (raw_caps);
   gst_caps_set_features_simple (d3d11_caps,
-      gst_caps_features_new_single (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
   gst_caps_append (src_caps, d3d11_caps);
 #endif
   gst_caps_append (src_caps, raw_caps);

@@ -124,7 +124,9 @@ gst_qml6_gl_mixer_pad_prepare_frame (GstVideoAggregatorPad *vagg_pad, GstVideoAg
     GstGLContext *context;
 
     in_caps = gst_video_info_to_caps (&vagg_pad->info);
-    gst_caps_set_features_simple (in_caps, gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+    gst_caps_set_features_simple (in_caps,
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
     pad->widget->setCaps (in_caps);
     gst_clear_caps (&in_caps);
 

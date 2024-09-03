@@ -1769,7 +1769,8 @@ gst_d3d11_decoder_negotiate (GstD3D11Decoder * decoder,
 
   if (d3d11_supported) {
     gst_caps_set_features (state->caps, 0,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, NULL));
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+            NULL));
   }
 
   decoder->downstream_supports_d3d11 = d3d11_supported;

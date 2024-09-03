@@ -2417,7 +2417,8 @@ gst_d3d12_h264_enc_register (GstPlugin * plugin, GstD3D12Device * device,
   auto sysmem_caps = gst_caps_from_string (sink_caps_str.c_str ());
   auto sink_caps = gst_caps_copy (sysmem_caps);
   gst_caps_set_features_simple (sink_caps,
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, nullptr));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY,
+          nullptr));
   gst_caps_append (sink_caps, sysmem_caps);
   auto src_caps = gst_caps_from_string (src_caps_str.c_str ());
 

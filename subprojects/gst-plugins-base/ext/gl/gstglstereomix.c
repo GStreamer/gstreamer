@@ -605,7 +605,8 @@ _update_caps (GstVideoAggregator * vagg, GstCaps * caps)
   blend_caps = gst_video_info_to_caps (mix_info);
 
   gst_caps_set_features (blend_caps, 0,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
 
   tmp_caps = get_converted_caps (GST_GL_STEREO_MIX (vagg), blend_caps);
   gst_caps_unref (blend_caps);
@@ -640,7 +641,8 @@ _negotiated_caps (GstAggregator * agg, GstCaps * caps)
 
   in_caps = gst_video_info_to_caps (&mix->mix_info);
   gst_caps_set_features (in_caps, 0,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
   gst_caps_set_simple (in_caps, "texture-target", G_TYPE_STRING,
       GST_GL_TEXTURE_TARGET_2D_STR, NULL);
 
