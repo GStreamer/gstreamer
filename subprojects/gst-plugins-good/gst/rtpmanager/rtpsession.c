@@ -2476,7 +2476,7 @@ rtp_session_process_rb (RTPSession * sess, RTPSource * source,
 }
 
 /* A Sender report contains statistics about how the sender is doing. This
- * includes timing informataion such as the relation between RTP and NTP
+ * includes timing information such as the relation between RTP and NTP
  * timestamps and the number of packets/bytes it sent to us.
  *
  * In this report is also included a set of report blocks related to how this
