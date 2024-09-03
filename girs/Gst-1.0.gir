@@ -62536,6 +62536,23 @@ Note that this means subtraction as in sets, not as in mathematics.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function name="value_take_structure" c:identifier="gst_value_take_structure" version="1.30">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Sets the contents of @value to @structure. Takes ownership of the structure</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_STRUCTURE</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="structure" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">the structure to set the value to</doc>
+          <type name="Structure" c:type="GstStructure*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="value_union" c:identifier="gst_value_union">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Creates a GValue corresponding to the union of @value1 and @value2.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>

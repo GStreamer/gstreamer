@@ -3332,6 +3332,25 @@ gst_value_set_structure (GValue * value, const GstStructure * structure)
 }
 
 /**
+ * gst_value_take_structure:
+ * @value: a GValue initialized to GST_TYPE_STRUCTURE
+ * @structure: (transfer full): the structure to set the value to
+ *
+ * Sets the contents of @value to @structure. Takes ownership of the structure
+ *
+ * Since: 1.30
+ */
+void
+gst_value_take_structure (GValue * value, GstStructure * structure)
+{
+  g_return_if_fail (G_IS_VALUE (value));
+  g_return_if_fail (G_VALUE_TYPE (value) == GST_TYPE_STRUCTURE);
+  g_return_if_fail (structure == NULL || GST_IS_STRUCTURE (structure));
+
+  g_value_take_boxed (value, structure);
+}
+
+/**
  * gst_value_get_structure:
  * @value: a GValue initialized to GST_TYPE_STRUCTURE
  *

@@ -771,6 +771,10 @@ GST_API
 void            gst_value_set_structure         (GValue         *value,
                                                  const GstStructure  *structure);
 
+GST_API
+void            gst_value_take_structure        (GValue         *value,
+                                                 GstStructure  *structure);
+
 /* caps features */
 
 GST_API
