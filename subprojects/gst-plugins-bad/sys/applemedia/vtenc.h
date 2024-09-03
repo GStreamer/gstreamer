@@ -113,6 +113,10 @@ struct _GstVTEnc
   gboolean negotiate_downstream;
   gboolean is_flushing;
   gboolean pause_task;
+
+  /* If we get an EncoderMalfunctionErr or similar, we restart the session
+   * before the next encode call */
+  gboolean require_restart;
 };
 
 void gst_vtenc_register_elements (GstPlugin * plugin);

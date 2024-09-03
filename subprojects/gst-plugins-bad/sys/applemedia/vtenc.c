@@ -215,7 +215,7 @@ static void gst_vtenc_finalize (GObject * obj);
 
 static gboolean gst_vtenc_start (GstVideoEncoder * enc);
 static gboolean gst_vtenc_stop (GstVideoEncoder * enc);
-static void gst_vtenc_loop (GstVTEnc * self);
+static void gst_vtenc_output_loop (GstVTEnc * self);
 static gboolean gst_vtenc_set_format (GstVideoEncoder * enc,
     GstVideoCodecState * input_state);
 static GstFlowReturn gst_vtenc_handle_frame (GstVideoEncoder * enc,
@@ -864,6 +864,7 @@ gst_vtenc_start (GstVideoEncoder * enc)
 
   self->is_flushing = FALSE;
   self->downstream_ret = GST_FLOW_OK;
+  g_atomic_int_set (&self->require_restart, FALSE);
 
   self->output_queue = gst_vec_deque_new (VTENC_OUTPUT_QUEUE_SIZE);
   /* Set clear_func to unref all remaining frames in gst_vec_deque_free() */
@@ -873,7 +874,7 @@ gst_vtenc_start (GstVideoEncoder * enc)
   /* Create the output task, but pause it immediately */
   self->pause_task = TRUE;
   if (!gst_pad_start_task (GST_VIDEO_ENCODER_SRC_PAD (enc),
-          (GstTaskFunction) gst_vtenc_loop, self, NULL)) {
+          (GstTaskFunction) gst_vtenc_output_loop, self, NULL)) {
     GST_ERROR_OBJECT (self, "failed to start output thread");
     return FALSE;
   }
@@ -1640,6 +1641,7 @@ beach:
 static void
 gst_vtenc_destroy_session (GstVTEnc * self, VTCompressionSessionRef * session)
 {
+  GST_DEBUG_OBJECT (self, "Destroying VT session");
   VTCompressionSessionInvalidate (*session);
   if (*session != NULL) {
     CFRelease (*session);
@@ -1921,6 +1923,49 @@ gst_vtenc_update_timestamps (GstVTEnc * self, GstVideoCodecFrame * frame,
   }
 }
 
+static Boolean
+gst_vtenc_is_recoverable_error (OSStatus status)
+{
+  return status == kVTVideoEncoderMalfunctionErr
+      || status == kVTVideoEncoderNotAvailableNowErr;
+}
+
+static void
+gst_vtenc_restart_session (GstVTEnc * self)
+{
+  OSStatus status;
+  VTCompressionSessionRef session;
+
+  /* We need to push out all frames still inside the encoder,
+   * otherwise destroy_session() will wait for all callbacks to fire
+   * and very likely deadlock due to the object lock being taken */
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
+  status = VTCompressionSessionCompleteFrames (self->session,
+      kCMTimePositiveInfinity);
+  if (status != noErr) {
+    GST_WARNING_OBJECT (self,
+        "Error when emptying encoder before restart: %d, will retry on next frame encode",
+        (int) status);
+    GST_VIDEO_ENCODER_STREAM_LOCK (self);
+    return;
+  } else {
+    GST_DEBUG_OBJECT (self, "All frames out, restarting encoder session");
+  }
+  GST_VIDEO_ENCODER_STREAM_LOCK (self);
+
+  GST_OBJECT_LOCK (self);
+  gst_vtenc_destroy_session (self, &self->session);
+  GST_OBJECT_UNLOCK (self);
+
+  session = gst_vtenc_create_session (self);
+
+  GST_OBJECT_LOCK (self);
+  self->session = session;
+  GST_OBJECT_UNLOCK (self);
+
+  g_atomic_int_set (&self->require_restart, FALSE);
+}
+
 static GstFlowReturn
 gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
 {
@@ -1969,6 +2014,11 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
       goto drop;
     }
   }
+
+  /* Flushes all remaining frames out of the encoder
+   * and recreates the encoding session. */
+  if (g_atomic_int_get (&self->require_restart))
+    gst_vtenc_restart_session (self);
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
     GST_INFO_OBJECT (self, "received force-keyframe-event, will force intra");
@@ -2158,9 +2208,16 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
       GINT_TO_POINTER (frame->system_frame_number), NULL);
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
-  if (vt_status != noErr) {
-    GST_WARNING_OBJECT (self, "VTCompressionSessionEncodeFrame returned %d",
-        (int) vt_status);
+  if (gst_vtenc_is_recoverable_error (vt_status)) {
+    GST_ELEMENT_WARNING (self, LIBRARY, ENCODE, (NULL),
+        ("Failed to encode frame %d: %d, restarting session on next frame encode",
+            frame->system_frame_number, (int) vt_status));
+
+    g_atomic_int_set (&self->require_restart, TRUE);
+  } else if (vt_status != noErr) {
+    GST_ELEMENT_ERROR (self, LIBRARY, ENCODE, (NULL),
+        ("Failed to encode frame %d: %d", frame->system_frame_number,
+            (int) vt_status));
   }
 
   gst_video_codec_frame_unref (frame);
@@ -2195,8 +2252,18 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
       gst_video_encoder_get_frame (GST_VIDEO_ENCODER_CAST (self),
       GPOINTER_TO_INT (sourceFrameRefCon));
 
+  if (g_atomic_int_get (&self->require_restart)) {
+    GST_DEBUG_OBJECT (self, "Ignoring frame because of scheduled restart");
+    goto drop;
+  }
+
   if (status != noErr) {
-    if (frame) {
+    if (gst_vtenc_is_recoverable_error (status)) {
+      GST_ELEMENT_WARNING (self, LIBRARY, ENCODE, (NULL),
+          ("Failed to encode frame (%d), restarting session on next frame encode",
+              (int) status));
+      g_atomic_int_set (&self->require_restart, TRUE);
+    } else if (frame) {
       GST_ELEMENT_ERROR (self, LIBRARY, ENCODE, (NULL),
           ("Failed to encode frame %d: %d", frame->system_frame_number,
               (int) status));
@@ -2204,7 +2271,8 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
       GST_ELEMENT_ERROR (self, LIBRARY, ENCODE, (NULL),
           ("Failed to encode (frame unknown): %d", (int) status));
     }
-    goto beach;
+
+    goto drop;
   }
 
   if (self->specific_format_id == kCMVideoCodecType_HEVCWithAlpha) {
@@ -2216,21 +2284,23 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
 
   if (!frame) {
     GST_WARNING_OBJECT (self, "No corresponding frame found!");
-    goto beach;
+    return;
   }
 
   g_mutex_lock (&self->queue_mutex);
-  is_flushing = self->is_flushing;
-  g_mutex_unlock (&self->queue_mutex);
-  if (is_flushing) {
+  if (self->is_flushing) {
     GST_DEBUG_OBJECT (self, "Ignoring frame %d because we're flushing",
         frame->system_frame_number);
-    goto beach;
+
+    gst_video_encoder_release_frame (GST_VIDEO_ENCODER_CAST (self), frame);
+    g_mutex_unlock (&self->queue_mutex);
+    return;
   }
+  g_mutex_unlock (&self->queue_mutex);
 
   /* This may happen if we don't have enough bitrate */
   if (sampleBuffer == NULL)
-    goto beach;
+    goto drop;
 
   if (gst_vtenc_buffer_is_keyframe (self, sampleBuffer))
     GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
@@ -2248,28 +2318,18 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
       VTENC_OUTPUT_QUEUE_SIZE) {
     g_cond_wait (&self->queue_cond, &self->queue_mutex);
   }
-  g_mutex_unlock (&self->queue_mutex);
 
-beach:
-  if (!frame)
-    return;
-
-  g_mutex_lock (&self->queue_mutex);
-  if (self->is_flushing) {
-    /* We can discard the frame here, no need to have the output loop do that */
-    gst_video_codec_frame_unref (frame);
-    g_mutex_unlock (&self->queue_mutex);
-    return;
-  }
-
-  /* Buffer-less frames will be discarded in the output loop */
   gst_vec_deque_push_tail (self->output_queue, frame);
   g_cond_signal (&self->queue_cond);
   g_mutex_unlock (&self->queue_mutex);
+  return;
+
+drop:
+  gst_video_encoder_drop_frame (GST_VIDEO_ENCODER_CAST (self), frame);
 }
 
 static void
-gst_vtenc_loop (GstVTEnc * self)
+gst_vtenc_output_loop (GstVTEnc * self)
 {
   GstVideoCodecFrame *outframe;
   GstCoreMediaMeta *meta;
