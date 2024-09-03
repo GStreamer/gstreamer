@@ -1248,7 +1248,7 @@ gst_vtenc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
   return gst_vtenc_encode_frame (self, frame);
 
 not_negotiated:
-  gst_video_codec_frame_unref (frame);
+  gst_video_encoder_release_frame (enc, frame);
   return GST_FLOW_NOT_NEGOTIATED;
 }
 
@@ -2051,7 +2051,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
     } else {
       GST_WARNING_OBJECT (self, "have interlaced content, but don't know field "
           "order yet, skipping buffer");
-      gst_video_codec_frame_unref (frame);
+      gst_video_encoder_release_frame (GST_VIDEO_ENCODER (self), frame);
       return GST_FLOW_OK;
     }
 
@@ -2227,13 +2227,13 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
 
 drop:
   {
-    gst_video_codec_frame_unref (frame);
+    gst_video_encoder_drop_frame (GST_VIDEO_ENCODER_CAST (self), frame);
     return ret;
   }
 
 cv_error:
   {
-    gst_video_codec_frame_unref (frame);
+    gst_video_encoder_drop_frame (GST_VIDEO_ENCODER_CAST (self), frame);
     return GST_FLOW_ERROR;
   }
 }
@@ -2246,7 +2246,6 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
 {
   GstVTEnc *self = outputCallbackRefCon;
   GstVideoCodecFrame *frame;
-  gboolean is_flushing;
 
   frame =
       gst_video_encoder_get_frame (GST_VIDEO_ENCODER_CAST (self),
@@ -2358,7 +2357,7 @@ gst_vtenc_output_loop (GstVTEnc * self)
     g_mutex_lock (&self->queue_mutex);
     if (self->is_flushing) {
       GST_LOG_OBJECT (self, "flushing frame %d", outframe->system_frame_number);
-      gst_video_codec_frame_unref (outframe);
+      gst_video_encoder_release_frame (GST_VIDEO_ENCODER_CAST (self), outframe);
       GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
       continue;
     }
@@ -2368,7 +2367,8 @@ gst_vtenc_output_loop (GstVTEnc * self)
         (meta = gst_buffer_get_core_media_meta (outframe->output_buffer))) {
       if (!gst_vtenc_negotiate_downstream (self, meta->sample_buf)) {
         ret = GST_FLOW_NOT_NEGOTIATED;
-        gst_video_codec_frame_unref (outframe);
+        gst_video_encoder_release_frame (GST_VIDEO_ENCODER_CAST (self),
+            outframe);
         g_mutex_lock (&self->queue_mutex);
         /* the rest of the frames will be pop'd and unref'd later */
         break;
@@ -2403,7 +2403,7 @@ gst_vtenc_output_loop (GstVTEnc * self)
 
     while ((outframe = gst_vec_deque_pop_head (self->output_queue))) {
       GST_LOG_OBJECT (self, "flushing frame %d", outframe->system_frame_number);
-      gst_video_codec_frame_unref (outframe);
+      gst_video_encoder_release_frame (GST_VIDEO_ENCODER_CAST (self), outframe);
     }
 
     g_cond_signal (&self->queue_cond);
