@@ -1403,8 +1403,7 @@ _structure_set_variables (const GstIdStr * fieldname, GValue * value,
     gst_validate_structure_resolve_variables (data->source,
         s, data->local_vars, data->flags);
 
-    gst_value_set_structure (value, s);
-    gst_structure_free (s);
+    gst_value_take_structure (value, s);
 
     return TRUE;
   }
