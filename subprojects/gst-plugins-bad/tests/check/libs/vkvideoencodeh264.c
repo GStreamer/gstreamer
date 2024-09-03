@@ -47,6 +47,8 @@ typedef struct
 {
   GstVulkanEncoderPicture *picture;
 
+  gboolean is_ref;
+
   VkVideoEncodeH264NaluSliceInfoKHR slice_info;
   VkVideoEncodeH264PictureInfoKHR enc_pic_info;
   VkVideoEncodeH264DpbSlotInfoKHR dpb_slot_info;
@@ -61,13 +63,14 @@ typedef struct
 } GstVulkanH264EncodeFrame;
 
 static GstVulkanH264EncodeFrame *
-_h264_encode_frame_new (GstVulkanEncoderPicture * picture)
+_h264_encode_frame_new (GstVulkanEncoderPicture * picture, gboolean is_ref)
 {
   GstVulkanH264EncodeFrame *frame;
 
   g_return_val_if_fail (picture, NULL);
   frame = g_new (GstVulkanH264EncodeFrame, 1);
   frame->picture = picture;
+  frame->is_ref = is_ref;
 
   return frame;
 }
@@ -357,7 +360,7 @@ allocate_frame (GstVulkanEncoder * enc, int width,
   upload_buffer_to_image(img_pool, in_buffer, &img_buffer);
 
   frame = _h264_encode_frame_new (gst_vulkan_encoder_picture_new (enc,
-      img_buffer, width, height, width * height * 3, is_ref, nb_refs));
+      img_buffer, width, height, width * height * 3, nb_refs), is_ref);
   fail_unless (frame);
   fail_unless (frame->picture);
   gst_buffer_unref (in_buffer);
@@ -407,15 +410,15 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
   frame->pic_info = (StdVideoEncodeH264PictureInfo) {
     /* *INDENT-OFF* */
     .flags = (StdVideoEncodeH264PictureInfoFlags) {
-        .IdrPicFlag = (slice_type == STD_VIDEO_H264_SLICE_TYPE_I && picture->is_ref),
-        .is_reference = picture->is_ref, /* TODO: Check why it creates a deadlock in query result when TRUE  */
+        .IdrPicFlag = (slice_type == STD_VIDEO_H264_SLICE_TYPE_I && frame->is_ref),
+        .is_reference = frame->is_ref,   /* TODO: Check why it creates a deadlock in query result when TRUE  */
         .no_output_of_prior_pics_flag = 0,
         .long_term_reference_flag = 0,
         .adaptive_ref_pic_marking_mode_flag = 0,
     },
     .seq_parameter_set_id = sps_id,
     .pic_parameter_set_id = pps_id,
-    .primary_pic_type = PICTURE_TYPE (slice_type, picture->is_ref),
+    .primary_pic_type = PICTURE_TYPE (slice_type, frame->is_ref),
     .frame_num = frame_num,
     .PicOrderCnt = picture->pic_order_cnt,
     /* *INDENT-ON* */
@@ -513,7 +516,7 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
     .flags = {
       .used_for_long_term_reference = 0,
     },
-    .primary_pic_type = PICTURE_TYPE (slice_type, picture->is_ref),
+    .primary_pic_type = PICTURE_TYPE (slice_type, frame->is_ref),
     .FrameNum = frame_num,
     .PicOrderCnt = picture->pic_order_cnt,
     .long_term_pic_num = 0,

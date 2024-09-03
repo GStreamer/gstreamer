@@ -40,7 +40,6 @@ typedef struct _GstVulkanEncoderPicture GstVulkanEncoderPicture;
 
 /**
  * GstVulkanEncoderPicture:
- * @is_ref: picture is reference
  * @nb_refs: number of references
  * @slotIndex: slot index
  * @packed_headers: packed headers
@@ -59,7 +58,6 @@ typedef struct _GstVulkanEncoderPicture GstVulkanEncoderPicture;
  */
 struct _GstVulkanEncoderPicture
 {
-  gboolean is_ref;
   gint nb_refs;
   gint slotIndex;
 
@@ -187,7 +185,6 @@ GstVulkanEncoderPicture* gst_vulkan_encoder_picture_new         (GstVulkanEncode
                                                                  gint width,
                                                                  gint height,
                                                                  gsize size,
-                                                                 gboolean is_ref,
                                                                  gint nb_refs);
 GST_VULKAN_API
 void                     gst_vulkan_encoder_picture_free        (GstVulkanEncoderPicture * pic);

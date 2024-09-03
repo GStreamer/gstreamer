@@ -377,7 +377,6 @@ gst_vulkan_encoder_new_video_session_parameters (GstVulkanEncoder * self,
  * @in_buffer: (transfer none): the input #GstBuffer.
  * @width: the picture width
  * @height: the picture height
- * @is_ref: the picture reference flag
  * @nb_refs: the picture number of references
  *
  * Create a new vulkan encode picture from the input buffer.
@@ -387,7 +386,7 @@ gst_vulkan_encoder_new_video_session_parameters (GstVulkanEncoder * self,
  */
 GstVulkanEncoderPicture *
 gst_vulkan_encoder_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
-    int width, int height, gsize size, gboolean is_ref, gint nb_refs)
+    int width, int height, gsize size, gint nb_refs)
 {
   GstVulkanEncoderPicture *pic;
   GstVulkanEncoderPrivate *priv;
@@ -423,7 +422,6 @@ gst_vulkan_encoder_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
       VK_BUFFER_USAGE_VIDEO_ENCODE_DST_BIT_KHR, size_aligned);
   pic->width = width;
   pic->height = height;
-  pic->is_ref = is_ref;
   pic->nb_refs = nb_refs;
   pic->packed_headers =
       g_ptr_array_new_with_free_func ((GDestroyNotify) gst_buffer_unref);

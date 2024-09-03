@@ -49,6 +49,8 @@ typedef struct
 {
   GstVulkanEncoderPicture *picture;
 
+  gboolean is_ref;
+
   VkVideoEncodeH265PictureInfoKHR enc_pic_info;
   VkVideoEncodeH265NaluSliceSegmentInfoKHR slice_info;
   VkVideoEncodeH265DpbSlotInfoKHR dpb_slot_info;
@@ -66,13 +68,14 @@ typedef struct
 
 
 static GstVulkanH265EncodeFrame *
-_h265_encode_frame_new (GstVulkanEncoderPicture * picture)
+_h265_encode_frame_new (GstVulkanEncoderPicture * picture, gboolean is_ref)
 {
   GstVulkanH265EncodeFrame *frame;
 
   g_return_val_if_fail (picture, NULL);
   frame = g_new (GstVulkanH265EncodeFrame, 1);
   frame->picture = picture;
+  frame->is_ref = is_ref;
 
   return frame;
 }
@@ -364,7 +367,7 @@ allocate_frame (GstVulkanEncoder * enc, int width,
   upload_buffer_to_image(img_pool, in_buffer, &img_buffer);
 
   frame = _h265_encode_frame_new (gst_vulkan_encoder_picture_new (enc,
-      img_buffer, width, height, width * height * 3, is_ref, nb_refs));
+      img_buffer, width, height, width * height * 3, nb_refs), is_ref);
   fail_unless (frame);
   fail_unless (frame->picture);
   gst_buffer_unref (in_buffer);
@@ -394,7 +397,7 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
   guint qp_p = 26;
   guint qp_b = 26;
   GstVulkanEncoderPicture *picture = frame->picture;
-  gint picture_type = PICTURE_TYPE(slice_type, picture->is_ref);
+  gint picture_type = PICTURE_TYPE(slice_type, frame->is_ref);
 
   GST_DEBUG ("Encoding frame num: %d", frame_num);
 
@@ -482,7 +485,7 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
   frame->pic_info = (StdVideoEncodeH265PictureInfo) {
     /* *INDENT-OFF* */
     .flags = (StdVideoEncodeH265PictureInfoFlags) {
-          .is_reference = picture->is_ref,
+          .is_reference = frame->is_ref,
           .IrapPicFlag = (picture_type == STD_VIDEO_H265_PICTURE_TYPE_IDR),
           .used_for_long_term_reference = 0,
           .discardable_flag = 0,
