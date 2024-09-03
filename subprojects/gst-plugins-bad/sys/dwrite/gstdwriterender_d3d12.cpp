@@ -32,8 +32,6 @@
 GST_DEBUG_CATEGORY_EXTERN (dwrite_overlay_object_debug);
 #define GST_CAT_DEFAULT dwrite_overlay_object_debug
 
-#define ASYNC_DEPTH 4
-
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 
@@ -85,7 +83,6 @@ struct GstDWriteD3D12RenderPrivate
     gst_clear_object (&device);
     prepared = FALSE;
     fence_val = 0;
-    scheduled = { };
   }
 
   GstD3D12Device *device = nullptr;
@@ -115,7 +112,6 @@ struct GstDWriteD3D12RenderPrivate
   ComPtr<ID3D11On12Device> device11on12;
   ComPtr<ID3D11Device> device11;
   ComPtr<ID3D11DeviceContext> d3d11_context;
-  std::queue<guint64> scheduled;
 };
 /* *INDENT-ON* */
 
@@ -324,13 +320,6 @@ gst_dwrite_d3d12_render_draw_layout (GstDWriteRender * render,
     }
   }
 
-  if (priv->scheduled.size () >= ASYNC_DEPTH) {
-    auto fence_to_wait = priv->scheduled.front ();
-    priv->scheduled.pop ();
-    gst_d3d12_device_fence_wait (priv->device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait);
-  }
-
   GstBuffer *layout_buf = nullptr;
   gst_buffer_pool_acquire_buffer (priv->layout_pool, &layout_buf, nullptr);
   if (!layout_buf) {
@@ -374,7 +363,6 @@ gst_dwrite_d3d12_render_draw_layout (GstDWriteRender * render,
       1, &args, fence_data, 0, nullptr, nullptr, D3D12_COMMAND_LIST_TYPE_DIRECT,
       &priv->fence_val);
 
-  priv->scheduled.push (priv->fence_val);
   gst_d3d12_memory_set_fence (dmem,
       gst_d3d12_device_get_fence_handle (priv->device,
           D3D12_COMMAND_LIST_TYPE_DIRECT), priv->fence_val, FALSE);
@@ -395,13 +383,6 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
   if (!priv->prepared) {
     GST_ERROR_OBJECT (self, "Not prepapred");
     return FALSE;
-  }
-
-  if (priv->scheduled.size () >= ASYNC_DEPTH) {
-    auto fence_to_wait = priv->scheduled.front ();
-    priv->scheduled.pop ();
-    gst_d3d12_device_fence_wait (priv->device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait);
   }
 
   GstD3D12Frame out_frame;
@@ -542,8 +523,6 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
   if (ret) {
     gst_d3d12_command_queue_set_notify (cq, priv->fence_val,
         FENCE_NOTIFY_MINI_OBJECT (fence_data));
-
-    priv->scheduled.push (priv->fence_val);
 
     for (guint i = 0; i < gst_buffer_n_memory (output); i++) {
       auto dmem = (GstD3D12Memory *) gst_buffer_peek_memory (output, i);
