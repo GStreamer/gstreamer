@@ -1350,7 +1350,7 @@ bail:
 }
 
 /**
- * gst_vulkan_queue_create_encoder:
+ * gst_vulkan_create_encoder_from_queue:
  * @queue: a #GstVulkanQueue
  * @codec: (type guint): the VkVideoCodecOperationFlagBitsKHR to encode
  *
