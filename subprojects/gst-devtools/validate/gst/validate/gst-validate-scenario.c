@@ -453,7 +453,8 @@ _action_copy (GstValidateAction * act)
       g_strdup (GST_VALIDATE_ACTION_FILENAME (act));
   GST_VALIDATE_ACTION_DEBUG (copy) = g_strdup (GST_VALIDATE_ACTION_DEBUG (act));
   GST_VALIDATE_ACTION_N_REPEATS (copy) = GST_VALIDATE_ACTION_N_REPEATS (act);
-  GST_VALIDATE_ACTION_RANGE_NAME (copy) = GST_VALIDATE_ACTION_RANGE_NAME (act);
+  GST_VALIDATE_ACTION_RANGE_NAME (copy) =
+      g_strdup (GST_VALIDATE_ACTION_RANGE_NAME (act));
 
   if (act->priv->it_value.g_type != 0) {
     g_value_init (&copy->priv->it_value, G_VALUE_TYPE (&act->priv->it_value));
@@ -504,6 +505,7 @@ _action_free (GstValidateAction * action)
   g_free (GST_VALIDATE_ACTION_FILENAME (action));
   g_free (GST_VALIDATE_ACTION_DEBUG (action));
 
+  g_free (action->rangename);
   g_free (action->priv);
   g_free (action);
 }
@@ -2683,7 +2685,7 @@ _foreach_find_iterator (GQuark field_id, GValue * value,
     return FALSE;
   }
 
-  GST_VALIDATE_ACTION_RANGE_NAME (action) = field;
+  GST_VALIDATE_ACTION_RANGE_NAME (action) = g_strdup (field);
   return TRUE;
 }
 
@@ -4683,7 +4685,7 @@ gst_validate_create_subaction (GstValidateScenario * scenario,
         "Unknown action type: '%s'", gst_structure_get_name (nstruct));
   subaction = gst_validate_action_new (scenario, action_type, nstruct, FALSE);
   GST_VALIDATE_ACTION_RANGE_NAME (subaction) =
-      GST_VALIDATE_ACTION_RANGE_NAME (action);
+      g_strdup (GST_VALIDATE_ACTION_RANGE_NAME (action));
   GST_VALIDATE_ACTION_FILENAME (subaction) =
       g_strdup (GST_VALIDATE_ACTION_FILENAME (action));
   GST_VALIDATE_ACTION_DEBUG (subaction) =
@@ -4716,6 +4718,7 @@ gst_validate_foreach_prepare (GstValidateAction * action)
   _update_well_known_vars (scenario);
   gst_validate_action_setup_repeat (scenario, action);
 
+  g_free (GST_VALIDATE_ACTION_RANGE_NAME (action));
   GST_VALIDATE_ACTION_RANGE_NAME (action) = NULL;
   gst_structure_foreach (action->structure,
       (GstStructureForeachFunc) _foreach_find_iterator, action);

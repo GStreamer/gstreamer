@@ -152,7 +152,7 @@ struct _GstValidateAction
   gchar *filename;
   gchar *debug;
   gint n_repeats;
-  const gchar *rangename;
+  gchar *rangename;
 
   GstValidateActionPrivate *priv;
 

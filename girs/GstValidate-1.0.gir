@@ -94,7 +94,7 @@ Only access it from the default main context.</doc>
         <type name="gint" c:type="gint"/>
       </field>
       <field name="rangename" readable="0" private="1">
-        <type name="utf8" c:type="const gchar*"/>
+        <type name="utf8" c:type="gchar*"/>
       </field>
       <field name="priv" readable="0" private="1">
         <type name="ActionPrivate" c:type="GstValidateActionPrivate*"/>
