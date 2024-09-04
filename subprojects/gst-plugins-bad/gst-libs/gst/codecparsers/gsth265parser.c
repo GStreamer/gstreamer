@@ -37,15 +37,15 @@
  * Then, depending on the #GstH265NalUnitType of the newly parsed #GstH265NalUnit,
  * you should call the differents functions to parse the structure:
  *
- *   * From #GST_H265_NAL_SLICE_TRAIL_N to #GST_H265_NAL_SLICE_CRA_NUT: gst_h265_parser_parse_slice_hdr()
+ *   * From %GST_H265_NAL_SLICE_TRAIL_N to %GST_H265_NAL_SLICE_CRA_NUT: gst_h265_parser_parse_slice_hdr()
  *
  *   * `GST_H265_NAL_*_SEI`: gst_h265_parser_parse_sei()
  *
- *   * #GST_H265_NAL_VPS: gst_h265_parser_parse_vps()
+ *   * %GST_H265_NAL_VPS: gst_h265_parser_parse_vps()
  *
- *   * #GST_H265_NAL_SPS: gst_h265_parser_parse_sps()
+ *   * %GST_H265_NAL_SPS: gst_h265_parser_parse_sps()
  *
- *   * #GST_H265_NAL_PPS: #gst_h265_parser_parse_pps()
+ *   * %GST_H265_NAL_PPS: #gst_h265_parser_parse_pps()
  *
  *   * Any other: gst_h265_parser_parse_nal()
  *
@@ -1832,7 +1832,7 @@ gst_h265_parser_parse_nal (GstH265Parser * parser, GstH265NalUnit * nalu)
 /**
  * gst_h265_parser_parse_vps:
  * @parser: a #GstH265Parser
- * @nalu: The #GST_H265_NAL_VPS #GstH265NalUnit to parse
+ * @nalu: The %GST_H265_NAL_VPS #GstH265NalUnit to parse
  * @vps: The #GstH265VPS to fill.
  *
  * Parses @data, and fills the @vps structure.
@@ -1857,7 +1857,7 @@ gst_h265_parser_parse_vps (GstH265Parser * parser, GstH265NalUnit * nalu,
 
 /**
  * gst_h265_parse_vps:
- * @nalu: The #GST_H265_NAL_VPS #GstH265NalUnit to parse
+ * @nalu: The %GST_H265_NAL_VPS #GstH265NalUnit to parse
  * @sps: The #GstH265VPS to fill.
  *
  * Parses @data, and fills the @vps structure.
@@ -2002,7 +2002,7 @@ error:
 /**
  * gst_h265_parser_parse_sps:
  * @parser: a #GstH265Parser
- * @nalu: The #GST_H265_NAL_SPS #GstH265NalUnit to parse
+ * @nalu: The %GST_H265_NAL_SPS #GstH265NalUnit to parse
  * @sps: The #GstH265SPS to fill.
  * @parse_vui_params: Whether to parse the vui_params or not
  *
@@ -2030,7 +2030,7 @@ gst_h265_parser_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
 /**
  * gst_h265_parse_sps:
  * parser: The #GstH265Parser
- * @nalu: The #GST_H265_NAL_SPS #GstH265NalUnit to parse
+ * @nalu: The %GST_H265_NAL_SPS #GstH265NalUnit to parse
  * @sps: The #GstH265SPS to fill.
  * @parse_vui_params: Whether to parse the vui_params or not
  *
@@ -2293,7 +2293,7 @@ error:
 /**
  * gst_h265_parse_pps:
  * @parser: a #GstH265Parser
- * @nalu: The #GST_H265_NAL_PPS #GstH265NalUnit to parse
+ * @nalu: The %GST_H265_NAL_PPS #GstH265NalUnit to parse
  * @pps: The #GstH265PPS to fill.
  *
  * Parses @data, and fills the @pps structure.
@@ -2612,7 +2612,7 @@ error:
 /**
  * gst_h265_parser_parse_pps:
  * @parser: a #GstH265Parser
- * @nalu: The #GST_H265_NAL_PPS #GstH265NalUnit to parse
+ * @nalu: The %GST_H265_NAL_PPS #GstH265NalUnit to parse
  * @pps: The #GstH265PPS to fill.
  *
  * Parses @data, and fills the @pps structure.

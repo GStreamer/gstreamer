@@ -1408,7 +1408,7 @@ struct _GstAV1FilmGrainParams {
  * GstAV1FrameHeaderOBU:
  * @show_existing_frame: equal to 1, indicates the frame indexed by @frame_to_show_map_idx is
  *   to be output; @show_existing_frame equal to 0 indicates that further processing is required.
- *   If @obu_type is equal to #GST_AV1_OBU_FRAME, it is a requirement of bitstream conformance that
+ *   If @obu_type is equal to %GST_AV1_OBU_FRAME, it is a requirement of bitstream conformance that
  *   @show_existing_frame is equal to 0.
  * @frame_to_show_map_idx: specifies the frame to be output. It is only available if
  *   @show_existing_frame is 1.
@@ -1466,7 +1466,7 @@ struct _GstAV1FilmGrainParams {
  *   is the remainder of a modulo 1 << ( @buffer_removal_time_length_minus_1 + 1 ) counter.
  * @refresh_frame_flags: contains a bitmask that specifies which reference frame slots will be
  *   updated with the current frame after it is decoded. If @frame_type is equal to
- *   #GST_AV1_INTRA_ONLY_FRAME, it is a requirement of bitstream conformance that
+ *   %GST_AV1_INTRA_ONLY_FRAME, it is a requirement of bitstream conformance that
  *   @refresh_frame_flags is not equal to 0xff.
  * @ref_order_hint: specifies the expected output order hint for each reference buffer.
  * @allow_intrabc: equal to 1 indicates that intra block copy may be used in this frame.
@@ -1723,7 +1723,7 @@ struct _GstAV1TileGroupOBUEntry {
  * GstAV1TileGroupOBU:
  * @tile_start_and_end_present_flag: specifies whether @tg_start and @tg_end are present
  *   in the bitstream. If @tg_start and @tg_end are not present in the bitstream, this
- *   tile group covers the entire frame. If @obu_type is equal to #GST_AV1_OBU_FRAME, it is a
+ *   tile group covers the entire frame. If @obu_type is equal to %GST_AV1_OBU_FRAME, it is a
  *   requirement of bitstream conformance that the value of @tile_start_and_end_present_flag
  *   is equal to 0.
  * @tg_start: specifies the zero-based index of the first tile in the current tile group.
