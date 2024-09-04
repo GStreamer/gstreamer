@@ -357,7 +357,7 @@ error:
 /* allocate a frame to be encoded from given buffer pools */
 static GstVulkanH265EncodeFrame *
 allocate_frame (GstVulkanEncoder * enc, int width,
-    int height, gboolean is_ref, gint nb_refs)
+    int height, gboolean is_ref)
 {
   GstVulkanH265EncodeFrame *frame;
   GstBuffer *in_buffer, *img_buffer;
@@ -369,7 +369,7 @@ allocate_frame (GstVulkanEncoder * enc, int width,
   upload_buffer_to_image(img_pool, in_buffer, &img_buffer);
 
   frame = _h265_encode_frame_new (gst_vulkan_encoder_picture_new (enc,
-      img_buffer, width, height, width * height * 3, nb_refs), is_ref);
+      img_buffer, width, height, width * height * 3), is_ref);
   fail_unless (frame);
   fail_unless (frame->picture);
   gst_buffer_unref (in_buffer);
@@ -402,6 +402,8 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
   gint picture_type = PICTURE_TYPE(slice_type, frame->is_ref);
 
   GST_DEBUG ("Encoding frame num: %d", frame_num);
+
+  ref_pics_num = list0_num + list1_num;
 
   frame->slice_wt = (StdVideoEncodeH265WeightTable) {
     /* *INDENT-OFF* */
@@ -503,7 +505,7 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
     /* *INDENT-ON* */
   };
 
-  if (picture->nb_refs) {
+  if (ref_pics_num > 0) {
     frame->ref_list_info = (StdVideoEncodeH265ReferenceListsInfo) {
       /* *INDENT-OFF* */
       .flags = (StdVideoEncodeH265ReferenceListsInfoFlags) {
@@ -610,17 +612,14 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
   for (i = 0; i < list0_num; i++) {
     ref_pics[i] = list0[i]->picture;
     frame->ref_list_info.RefPicList0[0] = list0[i]->picture->slotIndex;
-    ref_pics_num++;
   }
   for (i = 0; i < list1_num; i++) {
     ref_pics[i + list0_num] = list1[i]->picture;
-    ref_pics_num++;
     frame->ref_list_info.RefPicList1[i] = list1[i]->picture->slotIndex;
   }
 
-  picture->nb_refs = ref_pics_num;
-
-  fail_unless (gst_vulkan_encoder_encode (enc, picture, ref_pics));
+  fail_unless (gst_vulkan_encoder_encode (enc, picture, ref_pics_num,
+          ref_pics));
 }
 
 static void
@@ -970,7 +969,7 @@ GST_START_TEST (test_encoder_h265_i)
 
   /* Encode N_BUFFERS I-Frames */
   for (i = 0; i < N_BUFFERS; i++) {
-    frame = allocate_frame (enc, width, height, TRUE, 0);
+    frame = allocate_frame (enc, width, height, TRUE);
     encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_I,
         frame_num, NULL, 0, NULL, 0, vps_id, sps_id, pps_id);
     check_encoded_frame (frame, GST_H265_NAL_SLICE_IDR_W_RADL);
@@ -1012,7 +1011,7 @@ GST_START_TEST (test_encoder_h265_i_p)
   buffer_pool = allocate_buffer_pool (enc, width, height);
   img_pool = allocate_image_buffer_pool (enc, width, height);
 
-  frame = allocate_frame (enc, width, height, TRUE, 0);
+  frame = allocate_frame (enc, width, height, TRUE);
   /* Encode first picture as an IDR-Frame */
   encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_I,
       frame_num, NULL, 0, NULL, 0, vps_id, sps_id, pps_id);
@@ -1022,7 +1021,7 @@ GST_START_TEST (test_encoder_h265_i_p)
 
   /* Encode following pictures as a P-Frames */
   for (i = 1; i < N_BUFFERS; i++) {
-    frame = allocate_frame (enc, width, height, TRUE, list0_num);
+    frame = allocate_frame (enc, width, height, TRUE);
     frame->pic_num = frame_num;
     encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_P,
         frame_num, list0, list0_num, NULL, 0, vps_id, sps_id, pps_id);
@@ -1075,7 +1074,7 @@ GST_START_TEST (test_encoder_h265_i_p_b)
   img_pool = allocate_image_buffer_pool (enc, width, height);
 
   /* Encode first picture as an IDR-Frame */
-  frame = allocate_frame (enc, width, height, TRUE, 0);
+  frame = allocate_frame (enc, width, height, TRUE);
   frame->pic_num = frame_num;
   encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_I,
       frame_num, NULL, 0, NULL, 0, vps_id, sps_id, pps_id);
@@ -1084,7 +1083,7 @@ GST_START_TEST (test_encoder_h265_i_p_b)
   frame_num++;
 
   /* Encode 4th picture as a P-Frame */
-  frame = allocate_frame (enc, width, height, TRUE, list0_num);
+  frame = allocate_frame (enc, width, height, TRUE);
   frame->pic_num = frame_num + 2;
   encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_P,
       frame_num, list0, list0_num, NULL, 0, vps_id, sps_id, pps_id);
@@ -1093,7 +1092,7 @@ GST_START_TEST (test_encoder_h265_i_p_b)
   frame_num++;
 
   /* Encode 2nd picture as a B-Frame */
-  frame = allocate_frame (enc, width, height, FALSE, list0_num + list1_num);
+  frame = allocate_frame (enc, width, height, FALSE);
   frame->pic_num = frame_num - 1;
   encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_B,
       frame_num, list0, list0_num, list1, list1_num, vps_id, sps_id, pps_id);
@@ -1102,7 +1101,7 @@ GST_START_TEST (test_encoder_h265_i_p_b)
   _h265_encode_frame_free (frame);
 
   /* Encode 3rd picture as a B-Frame */
-  frame = allocate_frame (enc, width, height, FALSE, list0_num + list1_num);
+  frame = allocate_frame (enc, width, height, FALSE);
   frame->pic_num = frame_num - 1;
   encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_B,
       frame_num, list0, list0_num, list1, list1_num, vps_id, sps_id, pps_id);

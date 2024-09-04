@@ -40,7 +40,6 @@ typedef struct _GstVulkanEncoderPicture GstVulkanEncoderPicture;
 
 /**
  * GstVulkanEncoderPicture:
- * @nb_refs: number of references
  * @slotIndex: slot index
  * @packed_headers: packed headers
  * @width: picture width
@@ -56,7 +55,6 @@ typedef struct _GstVulkanEncoderPicture GstVulkanEncoderPicture;
  */
 struct _GstVulkanEncoderPicture
 {
-  gint nb_refs;
   gint slotIndex;
 
   /* picture parameters */
@@ -168,6 +166,7 @@ gboolean                gst_vulkan_encoder_create_dpb_pool      (GstVulkanEncode
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_encode               (GstVulkanEncoder * self,
                                                                  GstVulkanEncoderPicture * pic,
+                                                                 guint nb_refs,
                                                                  GstVulkanEncoderPicture ** ref_pics);
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_caps                 (GstVulkanEncoder * self,
@@ -179,7 +178,6 @@ GstVulkanEncoderPicture* gst_vulkan_encoder_picture_new         (GstVulkanEncode
                                                                  GstBuffer * in_buffer,
                                                                  gint width,
                                                                  gint height,
-                                                                 gsize size,
-                                                                 gint nb_refs);
+                                                                 gsize size);
 GST_VULKAN_API
 void                     gst_vulkan_encoder_picture_free        (GstVulkanEncoderPicture * pic);
