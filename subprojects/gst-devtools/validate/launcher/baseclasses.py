@@ -282,11 +282,8 @@ class Test(Loggable):
         self.out = None
 
     def _get_file_content(self, file_name):
-        f = open(file_name, 'r+')
-        value = f.read()
-        f.close()
-
-        return value
+        with open(file_name, 'r', encoding='utf-8', errors='replace') as f:
+            return f.read()
 
     def get_log_content(self):
         return self._get_file_content(self.logfile)

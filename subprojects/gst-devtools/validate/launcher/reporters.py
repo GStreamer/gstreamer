@@ -180,7 +180,7 @@ class XunitReporter(Reporter):
         """
         self.debug("Writing XML file to: %s", self.options.xunit_file)
         xml_file = codecs.open(self.options.xunit_file, 'w',
-                               self.encoding, 'replace')
+                               self.encoding, errors = 'replace')
 
         self.stats['encoding'] = self.encoding
         self.stats['total'] = (self.stats['timeout'] + self.stats['failures']
@@ -192,7 +192,7 @@ class XunitReporter(Reporter):
                        'skipped="%(skipped)d">' % self.stats)
 
         tmp_xml_file = codecs.open(self.tmp_xml_file.name, 'r',
-                                   self.encoding, 'replace')
+                                   self.encoding, errors = 'replace')
 
         for l in tmp_xml_file:
             xml_file.write(l)
@@ -214,7 +214,7 @@ class XunitReporter(Reporter):
         super().set_failed(test)
 
         xml_file = codecs.open(self.tmp_xml_file.name, 'a',
-                               self.encoding, 'replace')
+                               self.encoding, errors = 'replace')
         xml_file.write(self._forceUnicode(
             '<testcase name=%(name)s time="%(taken).3f">%(systemout)s'
             '<failure type=%(errtype)s message=%(message)s>'
@@ -233,7 +233,7 @@ class XunitReporter(Reporter):
         self.stats['passed'] += 1
 
         xml_file = codecs.open(self.tmp_xml_file.name, 'a',
-                               self.encoding, 'replace')
+                               self.encoding, errors = 'replace')
         xml_file.write(self._forceUnicode(
             '<testcase name=%(name)s '
             'time="%(taken).3f">%(systemout)s</testcase>' %
@@ -246,5 +246,5 @@ class XunitReporter(Reporter):
     def _forceUnicode(self, s):
         if not UNICODE_STRINGS:
             if isinstance(s, str):
-                s = s.decode(self.encoding, 'replace')
+                s = s.decode(self.encoding, errors = 'replace')
         return s
