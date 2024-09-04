@@ -542,6 +542,8 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
   } else if (strcmp (info->type, "video/x-h264") == 0) {
     const gchar *variant, *ret;
     const gchar *profile;
+    gboolean lcevc = FALSE;
+    const gchar *lcevc_str = "";
 
     variant = gst_structure_get_string (s, "variant");
     if (variant == NULL)
@@ -560,9 +562,13 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
     profile = gst_structure_get_string (s, "profile");
     if (profile != NULL)
       profile = pbutils_desc_get_h264_profile_name_from_nick (profile);
+    gst_structure_get_boolean (s, "lcevc", &lcevc);
+    if (lcevc)
+      lcevc_str = " (LCEVC)";
     if (profile == NULL)
-      return g_strdup (ret);
-    return g_strdup_printf ("%s (%s Profile)", ret, profile);
+      return g_strdup_printf ("%s%s", ret, lcevc_str);
+    else
+      return g_strdup_printf ("%s (%s Profile)%s", ret, profile, lcevc_str);
   } else if (strcmp (info->type, "video/x-h265") == 0) {
     const gchar *profile = gst_structure_get_string (s, "profile");
 
