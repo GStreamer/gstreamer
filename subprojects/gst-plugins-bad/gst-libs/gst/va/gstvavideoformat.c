@@ -44,7 +44,7 @@ static struct FormatMap
 #define G(format, fourcc, rtformat, order, bpp) \
     F (format, fourcc, rtformat, order, bpp, 0, 0, 0 ,0, 0)
   G (NV12, ('N', 'V', '1', '2'), YUV420, NSB, 12),
-  G (NV21, ('N', 'V', '2', '1'), YUV420, NSB, 21),
+  G (NV21, ('N', 'V', '2', '1'), YUV420, NSB, 12),
   G (VUYA, ('A', 'Y', 'U', 'V'), YUV444, LSB, 32),
   F (RGBA, ('R', 'G', 'B', 'A'), RGB32, LSB, 32, 32, 0x000000ff,
       0x0000ff00, 0x00ff0000, 0xff000000),
