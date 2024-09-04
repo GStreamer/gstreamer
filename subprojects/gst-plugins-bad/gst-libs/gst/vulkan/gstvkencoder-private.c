@@ -1219,7 +1219,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
   }
 
   if (!pic->out_buffer)
-    return GST_FLOW_ERROR;
+    return FALSE;
 
   /* Add the packed headers if present on head of the output buffer */
   for (i = 0; pic->packed_headers && i < pic->packed_headers->len; i++) {
