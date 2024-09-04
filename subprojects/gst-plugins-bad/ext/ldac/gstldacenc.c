@@ -142,6 +142,8 @@ gst_ldac_enc_class_init (GstLdacEncClass * klass)
       "Encode an LDAC audio stream",
       "Sanchayan Maity <sanchayan@asymptotic.io>");
 
+  gst_type_mark_as_plugin_api (GST_LDAC_EQMID, 0);
+
   GST_DEBUG_CATEGORY_INIT (ldac_enc_debug, "ldacenc", 0,
       "LDAC encoding element");
 }

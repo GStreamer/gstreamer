@@ -621,6 +621,12 @@ gst_svthevc_enc_class_init (GstSvtHevcEncClass * klass)
 
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
   gst_element_class_add_static_pad_template (element_class, &src_factory);
+
+  gst_type_mark_as_plugin_api (GST_SVTHEVC_ENC_B_PYRAMID_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_SVTHEVC_ENC_BASE_LAYER_MODE_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_SVTHEVC_ENC_PRED_STRUCT_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_SVTHEVC_ENC_RC_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_SVTHEVC_ENC_TUNE_TYPE, 0);
 }
 
 static void

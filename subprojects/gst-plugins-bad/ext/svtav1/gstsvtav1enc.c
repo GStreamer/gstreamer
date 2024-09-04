@@ -334,6 +334,8 @@ gst_svtav1enc_class_init (GstSvtAv1EncClass * klass)
           "Colon-delimited list of key=value pairs of additional parameters to set",
           PROP_PARAMETERS_STRING_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_type_mark_as_plugin_api (GST_SVTAV1ENC_TYPE_INTRA_REFRESH_TYPE, 0);
 }
 
 static void
