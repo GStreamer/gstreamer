@@ -42,10 +42,6 @@ typedef struct _GstVulkanEncoderPicture GstVulkanEncoderPicture;
  * GstVulkanEncoderPicture:
  * @slotIndex: slot index
  * @offset: headers offset
- * @width: picture width
- * @height: picture height
- * @fps_n: fps numerator
- * @fps_d: fps denominator
  * @in_buffer: input buffer
  * @out_buffer: output buffer
  *
@@ -58,12 +54,6 @@ struct _GstVulkanEncoderPicture
   gint slotIndex;
 
   guint64 offset;
-
-  gint width;
-  gint height;
-
-  gint fps_n;
-  gint fps_d;
 
   GstBuffer *in_buffer;
   GstBuffer *dpb_buffer;
@@ -164,6 +154,7 @@ gboolean                gst_vulkan_encoder_create_dpb_pool      (GstVulkanEncode
                                                                  GstCaps * caps);
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_encode               (GstVulkanEncoder * self,
+                                                                 GstVideoInfo * info,
                                                                  GstVulkanEncoderPicture * pic,
                                                                  guint nb_refs,
                                                                  GstVulkanEncoderPicture ** ref_pics);
@@ -175,8 +166,6 @@ GstCaps *               gst_vulkan_encoder_profile_caps         (GstVulkanEncode
 GST_VULKAN_API
 GstVulkanEncoderPicture* gst_vulkan_encoder_picture_new         (GstVulkanEncoder * self,
                                                                  GstBuffer * in_buffer,
-                                                                 gint width,
-                                                                 gint height,
                                                                  gsize size);
 GST_VULKAN_API
 void                     gst_vulkan_encoder_picture_free        (GstVulkanEncoderPicture * pic);

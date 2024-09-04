@@ -369,7 +369,7 @@ allocate_frame (GstVulkanEncoder * enc, int width,
   upload_buffer_to_image(img_pool, in_buffer, &img_buffer);
 
   frame = _h265_encode_frame_new (gst_vulkan_encoder_picture_new (enc,
-      img_buffer, width, height, width * height * 3), is_ref);
+      img_buffer, width * height * 3), is_ref);
   fail_unless (frame);
   fail_unless (frame->picture);
   gst_buffer_unref (in_buffer);
@@ -618,7 +618,7 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
     frame->ref_list_info.RefPicList1[i] = list1[i]->picture->slotIndex;
   }
 
-  fail_unless (gst_vulkan_encoder_encode (enc, picture, ref_pics_num,
+  fail_unless (gst_vulkan_encoder_encode (enc, &in_info, picture, ref_pics_num,
           ref_pics));
 }
 

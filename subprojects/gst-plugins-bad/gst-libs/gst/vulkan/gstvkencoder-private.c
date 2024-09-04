@@ -375,8 +375,7 @@ gst_vulkan_encoder_new_video_session_parameters (GstVulkanEncoder * self,
  * gst_vulkan_encoder_picture_new:
  * @self: the #GstVulkanEncoder with the pool's configuration.
  * @in_buffer: (transfer none): the input #GstBuffer.
- * @width: the picture width
- * @height: the picture height
+ * @size: size of the output buffer
  *
  * Create a new vulkan encode picture from the input buffer.
  *
@@ -385,7 +384,7 @@ gst_vulkan_encoder_new_video_session_parameters (GstVulkanEncoder * self,
  */
 GstVulkanEncoderPicture *
 gst_vulkan_encoder_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
-    int width, int height, gsize size)
+    gsize size)
 {
   GstVulkanEncoderPicture *pic;
   GstVulkanEncoderPrivate *priv;
@@ -419,8 +418,6 @@ gst_vulkan_encoder_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
   pic->out_buffer =
       gst_vulkan_video_codec_buffer_new (self->queue->device, &priv->profile,
       VK_BUFFER_USAGE_VIDEO_ENCODE_DST_BIT_KHR, size_aligned);
-  pic->width = width;
-  pic->height = height;
   pic->slotIndex = -1;
   pic->offset = 0;
 
@@ -1057,6 +1054,7 @@ bail:
 /**
  * gst_vulkan_encoder_encode:
  * @self: a #GstVulkanEncoder
+ * @info: the #GstVideoInfo of the @pic to process
  * @pic: a #GstVulkanEncoderPicture
  * @nb_refs: number of @ref_pics
  * @ref_pics: an array of #GstVulkanEncoderPicture
@@ -1067,7 +1065,7 @@ bail:
  *
  */
 gboolean
-gst_vulkan_encoder_encode (GstVulkanEncoder * self,
+gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
     GstVulkanEncoderPicture * pic, guint nb_refs,
     GstVulkanEncoderPicture ** ref_pics)
 {
@@ -1090,7 +1088,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
   GArray *barriers;
 
   g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), FALSE);
-  g_return_val_if_fail (pic != NULL, FALSE);
+  g_return_val_if_fail (info != NULL && pic != NULL, FALSE);
 
   priv = gst_vulkan_encoder_get_instance_private (self);
 
@@ -1123,8 +1121,8 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
       .pNext = pic->codec_rc_layer_info,
       .averageBitrate = priv->prop.average_bitrate,
       .maxBitrate = priv->caps.encoder.caps.maxBitrate,
-      .frameRateNumerator = pic->fps_n,
-      .frameRateDenominator = pic->fps_d,
+      .frameRateNumerator = GST_VIDEO_INFO_FPS_N (info),
+      .frameRateDenominator = GST_VIDEO_INFO_FPS_D (info),
     };
     priv->rate_control_info = (VkVideoEncodeRateControlInfoKHR) {
       .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_RATE_CONTROL_INFO_KHR,
@@ -1166,8 +1164,8 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     .pNext = NULL,
     .codedOffset = { 0, 0 },
     .codedExtent = {
-      .width = pic->width,
-      .height = pic->height
+      .width = GST_VIDEO_INFO_WIDTH (info),
+      .height = GST_VIDEO_INFO_HEIGHT (info),
     },
     .baseArrayLayer = 0,
     .imageViewBinding = pic->dpb_view->view,
@@ -1269,8 +1267,8 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
         .pNext = NULL,
         .codedOffset = { 0, 0 },
         .codedExtent = {
-          .width = pic->width,
-          .height = pic->height
+          .width = GST_VIDEO_INFO_WIDTH (info),
+          .height = GST_VIDEO_INFO_HEIGHT (info),
         },
         .baseArrayLayer = 0,
         .imageViewBinding = pic->img_view->view,
