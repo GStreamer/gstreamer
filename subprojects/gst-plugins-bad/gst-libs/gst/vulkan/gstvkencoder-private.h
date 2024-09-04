@@ -43,8 +43,6 @@ typedef struct _GstVulkanEncoderPicture GstVulkanEncoderPicture;
  * @nb_refs: number of references
  * @slotIndex: slot index
  * @packed_headers: packed headers
- * @pic_num: picture number
- * @pic_order_cnt: order count
  * @width: picture width
  * @height: picture height
  * @fps_n: fps numerator
@@ -63,9 +61,6 @@ struct _GstVulkanEncoderPicture
 
   /* picture parameters */
   GPtrArray *packed_headers;
-
-  gint pic_num;
-  gint pic_order_cnt;
 
   gint width;
   gint height;

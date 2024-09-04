@@ -1355,8 +1355,8 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
 
   gst_vulkan_operation_get_query (priv->exec, (gpointer *) & encode_res, &err);
   if (encode_res->status == VK_QUERY_RESULT_STATUS_COMPLETE_KHR) {
-    GST_INFO_OBJECT (self, "The frame %d has been encoded with size %lu",
-        pic->pic_num, encode_res->data_size + params_size);
+    GST_INFO_OBJECT (self, "The frame %p has been encoded with size %lu",
+        pic, encode_res->data_size + params_size);
     gst_buffer_resize (pic->out_buffer, encode_res->offset,
         encode_res->data_size + params_size);
   } else {

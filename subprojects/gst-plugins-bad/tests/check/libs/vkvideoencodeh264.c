@@ -48,6 +48,8 @@ typedef struct
   GstVulkanEncoderPicture *picture;
 
   gboolean is_ref;
+  gint pic_num;
+  gint pic_order_cnt;
 
   VkVideoEncodeH264NaluSliceInfoKHR slice_info;
   VkVideoEncodeH264PictureInfoKHR enc_pic_info;
@@ -420,7 +422,7 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
     .pic_parameter_set_id = pps_id,
     .primary_pic_type = PICTURE_TYPE (slice_type, frame->is_ref),
     .frame_num = frame_num,
-    .PicOrderCnt = picture->pic_order_cnt,
+    .PicOrderCnt = frame->pic_order_cnt,
     /* *INDENT-ON* */
   };
 
@@ -518,7 +520,7 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
     },
     .primary_pic_type = PICTURE_TYPE (slice_type, frame->is_ref),
     .FrameNum = frame_num,
-    .PicOrderCnt = picture->pic_order_cnt,
+    .PicOrderCnt = frame->pic_order_cnt,
     .long_term_pic_num = 0,
     .long_term_frame_idx = 0,
     .temporal_id = 0,
@@ -848,8 +850,8 @@ GST_START_TEST (test_encoder_h264_i_p)
   /* Encode following pictures as P-Frames */
   for (i = 1; i < N_BUFFERS; i++) {
     frame = allocate_frame (enc, width, height, TRUE, list0_num);
-    frame->picture->pic_num = frame_num;
-    frame->picture->pic_order_cnt = frame_num;
+    frame->pic_num = frame_num;
+    frame->pic_order_cnt = frame_num;
 
     encode_frame (enc, frame, STD_VIDEO_H264_SLICE_TYPE_P,
         frame_num, list0, list0_num, NULL, 0, sps_id, pps_id);
@@ -914,8 +916,8 @@ GST_START_TEST (test_encoder_h264_i_p_b)
 
   /* Encode 4th picture as a P-Frame */
   frame = allocate_frame (enc, width, height, TRUE, list0_num);
-  frame->picture->pic_num = 3;
-  frame->picture->pic_order_cnt = frame->picture->pic_num * 2;
+  frame->pic_num = 3;
+  frame->pic_order_cnt = frame->pic_num * 2;
   encode_frame (enc, frame, STD_VIDEO_H264_SLICE_TYPE_P,
       frame_num, list0, list0_num, list1, list1_num, sps_id, pps_id);
   check_encoded_frame (frame, GST_H264_NAL_SLICE);
@@ -925,8 +927,8 @@ GST_START_TEST (test_encoder_h264_i_p_b)
 
   /* Encode second picture as a B-Frame */
   frame = allocate_frame (enc, width, height, FALSE, list0_num + list1_num);
-  frame->picture->pic_num = 1;
-  frame->picture->pic_order_cnt = frame->picture->pic_num * 2;
+  frame->pic_num = 1;
+  frame->pic_order_cnt = frame->pic_num * 2;
   encode_frame (enc, frame, STD_VIDEO_H264_SLICE_TYPE_B,
       frame_num, list0, list0_num, list1, list1_num, sps_id, pps_id);
   check_encoded_frame (frame, GST_H264_NAL_SLICE);
@@ -935,8 +937,8 @@ GST_START_TEST (test_encoder_h264_i_p_b)
 
   /* Encode third picture as a B-Frame */
   frame = allocate_frame (enc, width, height, FALSE, list0_num + list1_num);
-  frame->picture->pic_num = 2;
-  frame->picture->pic_order_cnt = frame->picture->pic_num * 2;
+  frame->pic_num = 2;
+  frame->pic_order_cnt = frame->pic_num * 2;
 
   encode_frame (enc, frame, STD_VIDEO_H264_SLICE_TYPE_B,
       frame_num, list0, list0_num, list1, list1_num, sps_id, pps_id);
