@@ -391,8 +391,8 @@ gst_vulkan_encoder_get_image_view_from_buffer (GstVulkanEncoder * self,
 
   vkmem = (GstVulkanImageMemory *) mem;
 
+  /* *INDENT-OFF* */
   view_create_info = (VkImageViewCreateInfo) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
     .viewType = (dpb && priv->layered_dpb) ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D,
     .format = vkmem->create_info.format,
@@ -404,8 +404,8 @@ gst_vulkan_encoder_get_image_view_from_buffer (GstVulkanEncoder * self,
       .layerCount     = 1,
       .levelCount     = 1,
     },
-     /* *INDENT-ON* */
   };
+  /* *INDENT-ON* */
 
   return gst_vulkan_get_or_create_image_view_with_info (vkmem,
       &view_create_info);
@@ -661,30 +661,28 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
 
   priv->profile = *profile;
 
+  /* *INDENT-OFF* */
   priv->profile.usage.encode = (VkVideoEncodeUsageInfoKHR) {
-    /* *INDENT-OFF* */
     .pNext = &priv->profile.codec,
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_USAGE_INFO_KHR,
     .tuningMode = VK_VIDEO_ENCODE_TUNING_MODE_DEFAULT_KHR,
     .videoContentHints = VK_VIDEO_ENCODE_CONTENT_DEFAULT_KHR,
     .videoUsageHints = VK_VIDEO_ENCODE_USAGE_DEFAULT_KHR,
-    /* *INDENT-ON* */
   };
+  /* *INDENT-ON* */
 
   priv->profile.profile.pNext = &priv->profile.usage.encode;
 
+  /* *INDENT-OFF* */
   priv->enc_caps = (VkVideoEncodeCapabilitiesKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_CAPABILITIES_KHR,
     .pNext = &priv->caps.codec,
-    /* *INDENT-ON* */
   };
   priv->caps.caps = (VkVideoCapabilitiesKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_CAPABILITIES_KHR,
     .pNext = &priv->enc_caps,
-    /* *INDENT-ON* */
   };
+  /* *INDENT-ON* */
 
   gpu = gst_vulkan_device_get_physical_device (self->queue->device);
   res = priv->vk.GetPhysicalDeviceVideoCapabilities (gpu,
@@ -772,8 +770,8 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   if (pic_format == VK_FORMAT_UNDEFINED)
     goto failed;
 
+  /* *INDENT-OFF* */
   session_create = (VkVideoSessionCreateInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_SESSION_CREATE_INFO_KHR,
     .queueFamilyIndex = self->queue->family,
     .pVideoProfile = &profile->profile,
@@ -783,8 +781,8 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
     .maxDpbSlots = priv->caps.caps.maxDpbSlots,
     .maxActiveReferencePictures = priv->caps.caps.maxActiveReferencePictures,
     .pStdHeaderVersion = &_vk_codec_extensions[codec_idx],
-    /* *INDENT-ON* */
   };
+  /* *INDENT-ON* */
 
   if (!gst_vulkan_video_session_create (&priv->session, self->queue->device,
           &priv->vk, &session_create, error))
@@ -1078,45 +1076,40 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     goto bail;
 
   /* Prepare the encoding scope by flling the VkVideoBeginCodingInfoKHR structure */
+  /* *INDENT-OFF* */
   begin_coding = (VkVideoBeginCodingInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_BEGIN_CODING_INFO_KHR,
     .pNext = NULL,
     .videoSession = priv->session.session->handle,
     .videoSessionParameters = priv->session_params->handle,
-    /* *INDENT-ON* */
   };
-
   coding_ctrl = (VkVideoCodingControlInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_CODING_CONTROL_INFO_KHR,
-    /* *INDENT-ON* */
   };
+  /* *INDENT-ON* */
 
   /* First run, some information such as rate_control and slot index must be initialized. */
   if (!priv->first_encode_cmd) {
     priv->current_slot_index = 0;
     GST_OBJECT_LOCK (self);
+    /* *INDENT-OFF* */
     rate_control_layer = (VkVideoEncodeRateControlLayerInfoKHR) {
-      /* *INDENT-OFF* */
       .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_RATE_CONTROL_LAYER_INFO_KHR,
       .pNext = pic->codec_rc_layer_info,
       .averageBitrate = priv->prop.average_bitrate,
       .maxBitrate = priv->enc_caps.maxBitrate,
       .frameRateNumerator = pic->fps_n,
       .frameRateDenominator = pic->fps_d,
-      /* *INDENT-ON* */
     };
     priv->rate_control_info = (VkVideoEncodeRateControlInfoKHR) {
-      /* *INDENT-OFF* */
       .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_RATE_CONTROL_INFO_KHR,
       .rateControlMode = priv->prop.rate_control,
       .layerCount = 0,
       .pLayers = NULL,
       .initialVirtualBufferSizeInMs = 0,
       .virtualBufferSizeInMs = 0,
-      /* *INDENT-ON* */
     };
+    /* *INDENT-ON* */
     switch (priv->prop.rate_control) {
       case VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR:
         begin_coding.pNext = &priv->rate_control_info;
@@ -1141,42 +1134,44 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
   pic->dpb_view =
       gst_vulkan_encoder_get_image_view_from_buffer (self, pic->dpb_buffer,
       TRUE);
+
+  /* *INDENT-OFF* */
   pic->dpb = (VkVideoPictureResourceInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
     .pNext = NULL,
-    .codedOffset = (VkOffset2D) {
-      0,
-      0
-    },
-    .codedExtent = (VkExtent2D) {
-      pic->width,
-      pic->height
+    .codedOffset = { 0, 0 },
+    .codedExtent = {
+      .width = pic->width,
+      .height = pic->height
     },
     .baseArrayLayer = 0,
     .imageViewBinding = pic->dpb_view->view,
-    /* *INDENT-ON* */
   };
+  /* *INDENT-ON* */
+
   for (i = 0; i < pic->nb_refs; i++) {
+    /* *INDENT-OFF* */
     ref_slots[i] = (VkVideoReferenceSlotInfoKHR) {
-      /* *INDENT-OFF* */
       .sType = VK_STRUCTURE_TYPE_VIDEO_REFERENCE_SLOT_INFO_KHR,
       .pNext = ref_pics[i]->codec_dpb_slot_info,
       .slotIndex = ref_pics[i]->slotIndex,
       .pPictureResource = &ref_pics[i]->dpb,
-      /* *INDENT-ON* */
     };
+    /* *INDENT-ON* */
     ref_slot_num++;
   }
+
+  /* *INDENT-OFF* */
   ref_slots[ref_slot_num] = (VkVideoReferenceSlotInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_REFERENCE_SLOT_INFO_KHR,
     .pNext = pic->codec_dpb_slot_info,
     .slotIndex = pic->slotIndex,
     .pPictureResource = &pic->dpb,
-    /* *INDENT-ON* */
   };
+  /* *INDENT-ON* */
+
   ref_slot_num++;
+
   /* Setup the begin coding structure using the reference slots */
   begin_coding.referenceSlotCount = ref_slot_num;
   begin_coding.pReferenceSlots = ref_slots;
@@ -1197,12 +1192,12 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     if (priv->prop.quality_level
         && priv->prop.quality_level <= priv->enc_caps.maxQualityLevels) {
 
+      /* *INDENT-OFF* */
       quality_level_info = (VkVideoEncodeQualityLevelInfoKHR) {
-        /* *INDENT-OFF* */
         .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_QUALITY_LEVEL_INFO_KHR,
         .qualityLevel = priv->prop.quality_level,
-         /* *INDENT-ON* */
       };
+      /* *INDENT-ON* */
 
       coding_ctrl.pNext = &quality_level_info;
       coding_ctrl.flags = VK_VIDEO_CODING_CONTROL_ENCODE_QUALITY_LEVEL_BIT_KHR;
@@ -1256,8 +1251,8 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     priv->current_slot_index = 0;
 
   /* Setup the encode info */
+  /* *INDENT-OFF* */
   encode_info = (VkVideoEncodeInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_INFO_KHR,
     .pNext = pic->codec_pic_info,
     .flags = 0x0,
@@ -1267,8 +1262,11 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     .srcPictureResource = (VkVideoPictureResourceInfoKHR) { // SPEC: this should be separate
         .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
         .pNext = NULL,
-        .codedOffset = (VkOffset2D) {0, 0},
-        .codedExtent = (VkExtent2D){ pic->width, pic->height },
+        .codedOffset = { 0, 0 },
+        .codedExtent = {
+          .width = pic->width,
+          .height = pic->height
+        },
         .baseArrayLayer = 0,
         .imageViewBinding = pic->img_view->view,
     },
@@ -1276,8 +1274,8 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     .referenceSlotCount = pic->nb_refs,
     .pReferenceSlots = pic->nb_refs ? ref_slots  : NULL,
     .precedingExternallyEncodedBytes = 0,
-    /* *INDENT-ON* */
   };
+  /* *INDENT-ON* */
 
   gst_vulkan_operation_add_dependency_frame (priv->exec, pic->in_buffer,
       VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
@@ -1299,26 +1297,26 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
 
   barriers = gst_vulkan_operation_retrieve_image_barriers (priv->exec);
 
+  /* *INDENT-OFF* */
   vkCmdPipelineBarrier2 (cmd_buf->cmd, &(VkDependencyInfo) {
-      /* *INDENT-OFF* */
       .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
       .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT,
       .pImageMemoryBarriers = (VkImageMemoryBarrier2 *) barriers->data,
       .imageMemoryBarrierCount = barriers->len,
-      /* *INDENT-ON* */
       }
   );
+  /* *INDENT-ON* */
   g_array_unref (barriers);
 
   gst_vulkan_operation_begin_query (priv->exec, 0);
   priv->vk.CmdEncodeVideo (cmd_buf->cmd, &encode_info);
   gst_vulkan_operation_end_query (priv->exec, 0);
 
+  /* *INDENT-OFF* */
   end_coding = (VkVideoEndCodingInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_END_CODING_INFO_KHR,
-    /* *INDENT-ON* */
   };
+  /* *INDENT-ON* */
 
   /* 41.5 4. vkCmdEndVideoCodingKHR signals the end of the recording of the
    * Vulkan Video Context, as established by vkCmdBeginVideoCodingKHR. */
