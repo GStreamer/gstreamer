@@ -534,7 +534,7 @@ gst_monoscope_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         /* we're late, this is a good estimate for next displayable
          * frame (see part-qos.txt) */
         monoscope->earliest_time =
-            timestamp + 2 * diff + monoscope->frame_duration;
+            timestamp + MIN (2 * diff, GST_SECOND) + monoscope->frame_duration;
       else
         monoscope->earliest_time = timestamp + diff;
       GST_OBJECT_UNLOCK (monoscope);

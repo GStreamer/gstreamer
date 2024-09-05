@@ -1288,7 +1288,7 @@ gst_deinterlace_update_qos (GstDeinterlace * self, gdouble proportion,
   if (G_LIKELY (timestamp != GST_CLOCK_TIME_NONE)) {
     if (G_UNLIKELY (diff > 0))
       self->earliest_time =
-          timestamp + 2 * diff + ((self->fields ==
+          timestamp + MIN (2 * diff, GST_SECOND) + ((self->fields ==
               GST_DEINTERLACE_ALL) ? self->field_duration : 2 *
           self->field_duration);
     else

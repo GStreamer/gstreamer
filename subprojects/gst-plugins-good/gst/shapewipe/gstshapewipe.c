@@ -695,7 +695,8 @@ gst_shape_wipe_update_qos (GstShapeWipe * self, gdouble proportion,
   self->proportion = proportion;
   if (G_LIKELY (timestamp != GST_CLOCK_TIME_NONE)) {
     if (G_UNLIKELY (diff > 0))
-      self->earliest_time = timestamp + 2 * diff + self->frame_duration;
+      self->earliest_time =
+          timestamp + MIN (2 * diff, GST_SECOND) + self->frame_duration;
     else
       self->earliest_time = timestamp + diff;
   } else {
