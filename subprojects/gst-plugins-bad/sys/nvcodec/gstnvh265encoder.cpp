@@ -2246,7 +2246,7 @@ gst_nv_h265_encoder_create_class_data (GstObject * device, gpointer session,
       + ", interlace-mode = (string) progressive";
 
   src_caps_str = "video/x-h265, " + resolution_str + ", " + profile_str +
-      ", stream-format = (string) { hvc1, hev1, byte-stream }" +
+      ", stream-format = (string) { byte-stream, hvc1, hev1 }" +
       ", alignment = (string) au";
 
   system_caps = gst_caps_from_string (sink_caps_str.c_str ());
@@ -2572,7 +2572,7 @@ gst_nv_h265_encoder_register_auto_select (GstPlugin * plugin,
       + ", interlace-mode = (string) progressive";
 
   src_caps_str = "video/x-h265, " + resolution_str + ", " + profile_str +
-      ", stream-format = (string) { hvc1, hev1, byte-stream }" +
+      ", stream-format = (string) { byte-stream, hvc1, hev1 }" +
       ", alignment = (string) au";
 
   system_caps = gst_caps_from_string (sink_caps_str.c_str ());

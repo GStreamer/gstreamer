@@ -2189,7 +2189,7 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
   }
 
   src_caps_str = "video/x-h264, " + resolution_str + ", " + profile_str +
-      ", stream-format = (string) { avc, byte-stream }, alignment = (string) au";
+      ", stream-format = (string) { byte-stream, avc }, alignment = (string) au";
 
   system_caps = gst_caps_from_string (sink_caps_str.c_str ());
   sink_caps = gst_caps_copy (system_caps);
@@ -2518,7 +2518,7 @@ gst_nv_h264_encoder_register_auto_select (GstPlugin * plugin,
   }
 
   src_caps_str = "video/x-h264, " + resolution_str + ", " + profile_str +
-      ", stream-format = (string) { avc, byte-stream }, alignment = (string) au";
+      ", stream-format = (string) { byte-stream, avc }, alignment = (string) au";
 
   system_caps = gst_caps_from_string (sink_caps_str.c_str ());
   sink_caps = gst_caps_new_empty ();
