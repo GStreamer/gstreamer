@@ -8749,10 +8749,10 @@ unscheduled with gst_clock_id_unschedule().</doc>
         </parameters>
       </virtual-method>
       <method name="add_observation" c:identifier="gst_clock_add_observation">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">The time @master of the master clock and the time @slave of the slave
-clock are added to the list of observations. If enough observations
-are available, a linear regression algorithm is run on the
-observations and @clock is recalibrated.
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">The time @observation_external of the external or master clock and the time
+@observation_internal of the internal or slave clock are added to the list of
+observations. If enough observations are available, a linear regression
+algorithm is run on the observations and @clock is recalibrated.
 
 If this functions returns %TRUE, @r_squared will contain the
 correlation coefficient of the interpolation. A value of 1.0
@@ -8770,12 +8770,12 @@ regression algorithm.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">a #GstClock</doc>
             <type name="Clock" c:type="GstClock*"/>
           </instance-parameter>
-          <parameter name="slave" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">a time on the slave</doc>
+          <parameter name="observation_internal" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">a time on the internal clock</doc>
             <type name="ClockTime" c:type="GstClockTime"/>
           </parameter>
-          <parameter name="master" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">a time on the master</doc>
+          <parameter name="observation_external" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">a time on the external clock</doc>
             <type name="ClockTime" c:type="GstClockTime"/>
           </parameter>
           <parameter name="r_squared" direction="out" caller-allocates="0" transfer-ownership="full">
@@ -8786,8 +8786,8 @@ regression algorithm.</doc>
       </method>
       <method name="add_observation_unapplied" c:identifier="gst_clock_add_observation_unapplied" version="1.6">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">Add a clock observation to the internal slaving algorithm the same as
-gst_clock_add_observation(), and return the result of the master clock
-estimation, without updating the internal calibration.
+gst_clock_add_observation(), and return the result of the external or master
+clock estimation, without updating the internal calibration.
 
 The caller can then take the results and call gst_clock_set_calibration()
 with the values, or some modified version of them.</doc>
@@ -8802,12 +8802,12 @@ regression algorithm.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">a #GstClock</doc>
             <type name="Clock" c:type="GstClock*"/>
           </instance-parameter>
-          <parameter name="slave" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">a time on the slave</doc>
+          <parameter name="observation_internal" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">a time on the internal clock</doc>
             <type name="ClockTime" c:type="GstClockTime"/>
           </parameter>
-          <parameter name="master" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">a time on the master</doc>
+          <parameter name="observation_external" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">a time on the external clock</doc>
             <type name="ClockTime" c:type="GstClockTime"/>
           </parameter>
           <parameter name="r_squared" direction="out" caller-allocates="0" transfer-ownership="full">
