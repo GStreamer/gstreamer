@@ -1667,7 +1667,8 @@ gst_video_aggregator_update_qos (GstVideoAggregator * vagg, gdouble proportion,
   if (G_LIKELY (timestamp != GST_CLOCK_TIME_NONE)) {
     if (!live && G_UNLIKELY (diff > 0))
       vagg->priv->earliest_time =
-          timestamp + 2 * diff + gst_util_uint64_scale_int_round (GST_SECOND,
+          timestamp + MIN (2 * diff,
+          GST_SECOND) + gst_util_uint64_scale_int_round (GST_SECOND,
           GST_VIDEO_INFO_FPS_D (&vagg->info),
           GST_VIDEO_INFO_FPS_N (&vagg->info));
     else

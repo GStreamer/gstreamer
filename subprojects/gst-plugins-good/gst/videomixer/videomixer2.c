@@ -816,7 +816,8 @@ gst_videomixer2_update_qos (GstVideoMixer2 * mix, gdouble proportion,
   if (G_LIKELY (timestamp != GST_CLOCK_TIME_NONE)) {
     if (!mix->live && G_UNLIKELY (diff > 0))
       mix->earliest_time =
-          timestamp + 2 * diff + gst_util_uint64_scale_int_round (GST_SECOND,
+          timestamp + MIN (2 * diff,
+          GST_SECOND) + gst_util_uint64_scale_int_round (GST_SECOND,
           GST_VIDEO_INFO_FPS_D (&mix->info), GST_VIDEO_INFO_FPS_N (&mix->info));
     else
       mix->earliest_time = timestamp + diff;

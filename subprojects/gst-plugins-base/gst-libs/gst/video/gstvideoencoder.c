@@ -1372,7 +1372,8 @@ gst_video_encoder_src_event_default (GstVideoEncoder * encoder,
       priv->proportion = proportion;
       if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (timestamp))) {
         if (G_UNLIKELY (diff > 0)) {
-          priv->earliest_time = timestamp + 2 * diff + priv->qos_frame_duration;
+          priv->earliest_time =
+              timestamp + MIN (2 * diff, GST_SECOND) + priv->qos_frame_duration;
         } else {
           priv->earliest_time = timestamp + diff;
         }
@@ -2172,7 +2173,7 @@ gst_video_encoder_release_frame_unlocked (GstVideoEncoder * enc,
  * @encoder: a #GstVideoEncoder
  * @frame: (transfer full): a #GstVideoCodecFrame
  *
- * Removes @frame from list of pending frames and releases it, similar 
+ * Removes @frame from list of pending frames and releases it, similar
  * to calling gst_video_encoder_finish_frame() without a buffer attached
  * to the frame, but does not post a QoS message or do any additional
  * processing. Events from @frame are moved to the pending events list.
@@ -2198,11 +2199,11 @@ gst_video_encoder_release_frame (GstVideoEncoder * enc,
  * @encoder: a #GstVideoEncoder
  * @frame: (transfer full): a #GstVideoCodecFrame
  *
- * Removes @frame from the list of pending frames, releases it 
+ * Removes @frame from the list of pending frames, releases it
  * and posts a QoS message with the frame's details on the bus.
- * Similar to calling gst_video_encoder_finish_frame() without a buffer 
+ * Similar to calling gst_video_encoder_finish_frame() without a buffer
  * attached to @frame, but this function additionally stores events
- * from @frame as pending, to be pushed out alongside the next frame 
+ * from @frame as pending, to be pushed out alongside the next frame
  * submitted via gst_video_encoder_finish_frame().
  *
  * Since: 1.26
