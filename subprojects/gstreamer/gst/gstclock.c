@@ -499,7 +499,7 @@ gst_clock_id_get_time (GstClockID id)
 /**
  * gst_clock_id_wait:
  * @id: The #GstClockID to wait on
- * @jitter: (out) (allow-none): a pointer that will contain the jitter,
+ * @jitter: (out) (optional): a pointer that will contain the jitter,
  *     can be %NULL.
  *
  * Performs a blocking wait on @id.
@@ -883,7 +883,7 @@ gst_clock_get_resolution (GstClock * clock)
 /* FIXME 2.0: Remove clock parameter below */
 /**
  * gst_clock_adjust_with_calibration:
- * @clock: (allow-none): a #GstClock to use
+ * @clock: (nullable): a #GstClock to use
  * @internal_target: a clock time
  * @cinternal: a reference internal time
  * @cexternal: a reference external time
@@ -976,7 +976,7 @@ gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
 /* FIXME 2.0: Remove clock parameter below */
 /**
  * gst_clock_unadjust_with_calibration:
- * @clock: (allow-none): a #GstClock to use
+ * @clock: (nullable): a #GstClock to use
  * @external_target: a clock time
  * @cinternal: a reference internal time
  * @cexternal: a reference external time
@@ -1194,10 +1194,10 @@ gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
 /**
  * gst_clock_get_calibration:
  * @clock: a #GstClock
- * @internal: (out) (allow-none): a location to store the internal time
- * @external: (out) (allow-none): a location to store the external time
- * @rate_num: (out) (allow-none): a location to store the rate numerator
- * @rate_denom: (out) (allow-none): a location to store the rate denominator
+ * @internal: (out) (optional): a location to store the internal time
+ * @external: (out) (optional): a location to store the external time
+ * @rate_num: (out) (optional): a location to store the rate numerator
+ * @rate_denom: (out) (optional): a location to store the rate denominator
  *
  * Gets the internal rate and reference time of @clock. See
  * gst_clock_set_calibration() for more information.
@@ -1262,7 +1262,7 @@ gst_clock_slave_callback (GstClock * master, GstClockTime time,
 /**
  * gst_clock_set_master:
  * @clock: a #GstClock
- * @master: (allow-none): a master #GstClock
+ * @master: (nullable): a master #GstClock
  *
  * Sets @master as the master clock for @clock. @clock will be automatically
  * calibrated so that gst_clock_get_time() reports the same time as the
@@ -1472,10 +1472,10 @@ gst_clock_add_observation (GstClock * clock, GstClockTime slave,
  * @slave: a time on the slave
  * @master: a time on the master
  * @r_squared: (out): a pointer to hold the result
- * @internal: (out) (allow-none): a location to store the internal time
- * @external: (out) (allow-none): a location to store the external time
- * @rate_num: (out) (allow-none): a location to store the rate numerator
- * @rate_denom: (out) (allow-none): a location to store the rate denominator
+ * @internal: (out) (optional): a location to store the internal time
+ * @external: (out) (optional): a location to store the external time
+ * @rate_num: (out) (optional): a location to store the rate numerator
+ * @rate_denom: (out) (optional): a location to store the rate denominator
  *
  * Add a clock observation to the internal slaving algorithm the same as
  * gst_clock_add_observation(), and return the result of the master clock
