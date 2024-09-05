@@ -66,9 +66,7 @@ struct _GstVulkanEncoderPicture
 
   gpointer codec_rc_info;
   gpointer codec_pic_info;
-  gpointer codec_rc_layer_info;
   gpointer codec_dpb_slot_info;
-  gpointer codec_quality_level;
 };
 
 /**

@@ -26,19 +26,7 @@
 
 #include "gstvkvideo-private.h"
 
-enum
-{
-  PROP_0,
-  PROP_RATE_CONTROL,
-  PROP_AVERAGE_BITRATE,
-  PROP_QUALITY_LEVEL,
-  PROP_MAX
-};
-
-static GParamSpec *properties[PROP_MAX];
-
 extern const VkExtensionProperties vk_codec_extensions[3];
-
 extern const uint32_t _vk_codec_supported_extensions[4];
 
 typedef struct _GstVulkanEncoderPrivate GstVulkanEncoderPrivate;
@@ -54,7 +42,6 @@ struct _GstVulkanEncoderPrivate
   GstVulkanVideoSession session;
   GstVulkanVideoCapabilities caps;
   VkVideoFormatPropertiesKHR format;
-  VkVideoEncodeRateControlInfoKHR rate_control_info;
 
   GstVulkanVideoProfile profile;
 
@@ -65,12 +52,6 @@ struct _GstVulkanEncoderPrivate
 
   gboolean started;
   gboolean first_encode_cmd;
-  struct
-  {
-    guint rate_control;
-    guint average_bitrate;
-    guint quality_level;
-  } prop;
 
   gboolean layered_dpb;
   GstBufferPool *dpb_pool;
@@ -97,32 +78,6 @@ const uint32_t _vk_codec_supported_extensions[] = {
   [GST_VK_VIDEO_EXTENSION_ENCODE_H264] = VK_MAKE_VIDEO_STD_VERSION (0, 9, 11),
   [GST_VK_VIDEO_EXTENSION_ENCODE_H265] = VK_MAKE_VIDEO_STD_VERSION (0, 9, 12),
 };
-
-#define GST_TYPE_VULKAN_ENCODE_RATE_CONTROL_MODE (gst_vulkan_enc_rate_control_mode_get_type ())
-static GType
-gst_vulkan_enc_rate_control_mode_get_type (void)
-{
-  static GType qtype = 0;
-
-  if (qtype == 0) {
-    static const GEnumValue values[] = {
-      {VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DEFAULT_KHR, "default", "default"},
-      {VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR,
-            "Rate control is disabled",
-          "disabled"},
-      {VK_VIDEO_ENCODE_RATE_CONTROL_MODE_CBR_BIT_KHR,
-            "Constant bitrate mode rate control mode",
-          "cbr"},
-      {VK_VIDEO_ENCODE_RATE_CONTROL_MODE_VBR_BIT_KHR,
-            "Variable bitrate mode rate control mode",
-          "vbr"},
-      {0, NULL, NULL}
-    };
-
-    qtype = g_enum_register_static ("GstVulkanEncRateControlMode", values);
-  }
-  return qtype;
-}
 
 static gboolean
 _populate_function_table (GstVulkanEncoder * self)
@@ -161,83 +116,11 @@ gst_vulkan_encoder_init (GstVulkanEncoder * self)
 }
 
 static void
-gst_vulkan_encoder_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstVulkanEncoder *self = GST_VULKAN_ENCODER (object);
-  GstVulkanEncoderPrivate *priv =
-      gst_vulkan_encoder_get_instance_private (self);
-  GST_OBJECT_LOCK (self);
-  switch (prop_id) {
-    case PROP_RATE_CONTROL:
-      priv->prop.rate_control = g_value_get_enum (value);
-      break;
-    case PROP_AVERAGE_BITRATE:
-      priv->prop.average_bitrate = g_value_get_uint (value);
-      break;
-    case PROP_QUALITY_LEVEL:
-      priv->prop.quality_level = g_value_get_uint (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-  GST_OBJECT_UNLOCK (self);
-}
-
-static void
-gst_vulkan_encoder_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstVulkanEncoder *self = GST_VULKAN_ENCODER (object);
-  GstVulkanEncoderPrivate *priv =
-      gst_vulkan_encoder_get_instance_private (self);
-  GST_OBJECT_LOCK (self);
-  switch (prop_id) {
-    case PROP_RATE_CONTROL:
-      g_value_set_enum (value, priv->prop.rate_control);
-      break;
-    case PROP_AVERAGE_BITRATE:
-      g_value_set_uint (value, priv->prop.average_bitrate);
-      break;
-    case PROP_QUALITY_LEVEL:
-      g_value_set_uint (value, priv->prop.quality_level);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-  GST_OBJECT_UNLOCK (self);
-}
-
-static void
 gst_vulkan_encoder_class_init (GstVulkanEncoderClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  gint n_props = PROP_MAX;
-  GParamFlags param_flags =
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT;
 
   gobject_class->finalize = gst_vulkan_encoder_finalize;
-  gobject_class->set_property = gst_vulkan_encoder_set_property;
-  gobject_class->get_property = gst_vulkan_encoder_get_property;
-
-  properties[PROP_RATE_CONTROL] =
-      g_param_spec_enum ("rate-control", "Vulkan rate control",
-      "Choose the vulkan rate control",
-      GST_TYPE_VULKAN_ENCODE_RATE_CONTROL_MODE,
-      VK_VIDEO_ENCODE_CONTENT_DEFAULT_KHR, param_flags);
-
-  properties[PROP_AVERAGE_BITRATE] =
-      g_param_spec_uint ("average-bitrate", "Vulkan encode average bitrate",
-      "Choose the vulkan average encoding bitrate", 0, UINT_MAX, 0,
-      param_flags);
-
-  properties[PROP_QUALITY_LEVEL] =
-      g_param_spec_uint ("quality-level", "Vulkan encode quality level",
-      "Choose the vulkan encoding quality level", 0, UINT_MAX, 0, param_flags);
-
-  g_object_class_install_properties (gobject_class, n_props, properties);
 }
 
 static VkFormat
@@ -675,36 +558,6 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
     return FALSE;
   }
 
-  GST_OBJECT_LOCK (self);
-  if ((priv->prop.rate_control != VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DEFAULT_KHR)
-      && !(priv->prop.rate_control & priv->caps.encoder.caps.rateControlModes)) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "The driver does not support the rate control requested %d, driver caps: %d",
-        priv->prop.rate_control, priv->caps.encoder.caps.rateControlModes);
-    GST_OBJECT_UNLOCK (self);
-    return FALSE;
-  }
-
-  if (priv->caps.encoder.caps.maxQualityLevels
-      && priv->prop.quality_level >= priv->caps.encoder.caps.maxQualityLevels) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "The driver does not support the quality level requested %d, driver caps: %d",
-        priv->prop.quality_level, priv->caps.encoder.caps.maxQualityLevels);
-    GST_OBJECT_UNLOCK (self);
-    return FALSE;
-  }
-
-  if (priv->caps.encoder.caps.maxBitrate
-      && priv->prop.average_bitrate >= priv->caps.encoder.caps.maxBitrate) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "The driver does not support the average bitrate requested %d, driver caps: %"
-        G_GUINT64_FORMAT, priv->prop.average_bitrate,
-        priv->caps.encoder.caps.maxBitrate);
-    GST_OBJECT_UNLOCK (self);
-    return FALSE;
-  }
-  GST_OBJECT_UNLOCK (self);
-
   /* Get output format */
   pic_format = gst_vulkan_video_encoder_get_format (self,
       VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR |
@@ -1083,8 +936,6 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   GstMemory *mem;
   int i, slot_index = -1;
   GstVulkanEncodeQueryResult *encode_res;
-  VkVideoEncodeRateControlLayerInfoKHR rate_control_layer;
-  VkVideoEncodeQualityLevelInfoKHR quality_level_info;
   VkVideoCodingControlInfoKHR coding_ctrl;
   VkVideoBeginCodingInfoKHR begin_coding;
   VkVideoEncodeInfoKHR encode_info;
@@ -1117,41 +968,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
 
   /* First run, some information such as rate_control and slot index must be initialized. */
   if (!priv->first_encode_cmd) {
-    GST_OBJECT_LOCK (self);
-    /* *INDENT-OFF* */
-    rate_control_layer = (VkVideoEncodeRateControlLayerInfoKHR) {
-      .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_RATE_CONTROL_LAYER_INFO_KHR,
-      .pNext = pic->codec_rc_layer_info,
-      .averageBitrate = priv->prop.average_bitrate,
-      .maxBitrate = priv->caps.encoder.caps.maxBitrate,
-      .frameRateNumerator = GST_VIDEO_INFO_FPS_N (info),
-      .frameRateDenominator = GST_VIDEO_INFO_FPS_D (info),
-    };
-    priv->rate_control_info = (VkVideoEncodeRateControlInfoKHR) {
-      .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_RATE_CONTROL_INFO_KHR,
-      .rateControlMode = priv->prop.rate_control,
-      .layerCount = 0,
-      .pLayers = NULL,
-      .initialVirtualBufferSizeInMs = 0,
-      .virtualBufferSizeInMs = 0,
-    };
-    /* *INDENT-ON* */
-    switch (priv->prop.rate_control) {
-      case VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR:
-        begin_coding.pNext = &priv->rate_control_info;
-        break;
-      case VK_VIDEO_ENCODE_RATE_CONTROL_MODE_CBR_BIT_KHR:
-        rate_control_layer.maxBitrate = rate_control_layer.averageBitrate;
-        begin_coding.pNext = &priv->rate_control_info;
-        break;
-      case VK_VIDEO_ENCODE_RATE_CONTROL_MODE_VBR_BIT_KHR:
-        priv->rate_control_info.layerCount = 1;
-        priv->rate_control_info.pLayers = &rate_control_layer;
-        priv->rate_control_info.virtualBufferSizeInMs = 1;
-        begin_coding.pNext = &priv->rate_control_info;
-        break;
-    };
-    GST_OBJECT_UNLOCK (self);
+    /* begin_coding.pNext = &rate_control_info; */
   }
 
   g_assert (pic->dpb_buffer && pic->dpb_view);
@@ -1214,33 +1031,6 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
     coding_ctrl.pNext = NULL;
     priv->vk.CmdControlVideoCoding (cmd_buf->cmd, &coding_ctrl);
 
-    if (priv->prop.quality_level
-        && priv->prop.quality_level <=
-        priv->caps.encoder.caps.maxQualityLevels) {
-
-      /* *INDENT-OFF* */
-      quality_level_info = (VkVideoEncodeQualityLevelInfoKHR) {
-        .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_QUALITY_LEVEL_INFO_KHR,
-        .qualityLevel = priv->prop.quality_level,
-      };
-      /* *INDENT-ON* */
-
-      coding_ctrl.pNext = &quality_level_info;
-      coding_ctrl.flags = VK_VIDEO_CODING_CONTROL_ENCODE_QUALITY_LEVEL_BIT_KHR;
-      GST_INFO ("quality_level_info.qualityLevel %d",
-          quality_level_info.qualityLevel);
-      priv->vk.CmdControlVideoCoding (cmd_buf->cmd, &coding_ctrl);
-    }
-
-    if (priv->prop.rate_control !=
-        VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DEFAULT_KHR) {
-
-      coding_ctrl.pNext = &priv->rate_control_info;
-      coding_ctrl.flags = VK_VIDEO_CODING_CONTROL_ENCODE_RATE_CONTROL_BIT_KHR;
-      GST_INFO ("rate_control_info.rateControlMode %d",
-          priv->rate_control_info.rateControlMode);
-      priv->vk.CmdControlVideoCoding (cmd_buf->cmd, &coding_ctrl);
-    }
     priv->first_encode_cmd = TRUE;
   }
 

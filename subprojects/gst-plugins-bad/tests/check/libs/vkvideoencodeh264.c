@@ -55,8 +55,6 @@ typedef struct
   VkVideoEncodeH264PictureInfoKHR enc_pic_info;
   VkVideoEncodeH264DpbSlotInfoKHR dpb_slot_info;
   VkVideoEncodeH264RateControlInfoKHR rc_info;
-  VkVideoEncodeH264RateControlLayerInfoKHR rc_layer_info;
-  VkVideoEncodeH264QualityLevelPropertiesKHR quality_level;
 
   StdVideoEncodeH264SliceHeader slice_hdr;
   StdVideoEncodeH264PictureInfo pic_info;
@@ -384,9 +382,6 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
   GstVulkanVideoCapabilities enc_caps;
   int i, ref_pics_num = 0;
   GstVulkanEncoderPicture *ref_pics[16] = { NULL, };
-  guint qp_i = 26;
-  guint qp_p = 26;
-  guint qp_b = 26;
   GstVulkanEncoderPicture *picture = &frame->picture;
 
   GST_DEBUG ("Encoding frame num:%d", frame_num);
@@ -456,55 +451,18 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
   memset (frame->ref_list_info.RefPicList1, STD_VIDEO_H264_NO_REFERENCE_PICTURE,
       STD_VIDEO_H264_MAX_NUM_LIST_REF);
 
+  /* *INDENT-OFF* */
   frame->slice_info = (VkVideoEncodeH264NaluSliceInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_NALU_SLICE_INFO_KHR,
     .pNext = NULL,
     .pStdSliceHeader = &frame->slice_hdr,
-    /* *INDENT-ON* */
-  };
-
-  frame->rc_layer_info = (VkVideoEncodeH264RateControlLayerInfoKHR) {
-    /* *INDENT-OFF* */
-    .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_LAYER_INFO_KHR,
-    .pNext = NULL,
-    .useMinQp = TRUE,
-    .minQp = { qp_i, qp_p, qp_b },
-    .useMaxQp = TRUE,
-    .maxQp = { qp_i, qp_p, qp_b },
-    .useMaxFrameSize = 0,
-    .maxFrameSize = (VkVideoEncodeH264FrameSizeKHR) {0, 0, 0},
-    /* *INDENT-ON* */
   };
 
   frame->rc_info = (VkVideoEncodeH264RateControlInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_INFO_KHR,
-    .pNext = &frame->rc_layer_info,
-    .gopFrameCount = 0,
-    .idrPeriod = 0,
-    .consecutiveBFrameCount = 0,
-    .temporalLayerCount = 1,
-    /* *INDENT-ON* */
-  };
-
-  frame->quality_level = (VkVideoEncodeH264QualityLevelPropertiesKHR) {
-    /* *INDENT-OFF* */
-    .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_QUALITY_LEVEL_PROPERTIES_KHR,
-    .pNext = NULL,
-    .preferredRateControlFlags = VK_VIDEO_ENCODE_H264_RATE_CONTROL_REGULAR_GOP_BIT_KHR,
-    .preferredGopFrameCount = 0,
-    .preferredIdrPeriod = 0,
-    .preferredConsecutiveBFrameCount = 0,
-    .preferredConstantQp = { qp_i, qp_p, qp_b },
-    .preferredMaxL0ReferenceCount = 0,
-    .preferredMaxL1ReferenceCount = 0,
-    .preferredStdEntropyCodingModeFlag = 0,
-    /* *INDENT-ON* */
   };
 
   frame->enc_pic_info = (VkVideoEncodeH264PictureInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PICTURE_INFO_KHR,
     .pNext = NULL,
     .naluSliceEntryCount = 1,
@@ -512,11 +470,9 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
     .pStdPictureInfo = &frame->pic_info,
     .generatePrefixNalu = (enc_caps.encoder.codec.h264.flags
          & VK_VIDEO_ENCODE_H264_CAPABILITY_GENERATE_PREFIX_NALU_BIT_KHR),
-    /* *INDENT-ON* */
   };
 
   frame->ref_info = (StdVideoEncodeH264ReferenceInfo) {
-    /* *INDENT-OFF* */
     .flags = {
       .used_for_long_term_reference = 0,
     },
@@ -526,20 +482,16 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
     .long_term_pic_num = 0,
     .long_term_frame_idx = 0,
     .temporal_id = 0,
-    /* *INDENT-ON* */
   };
 
   frame->dpb_slot_info = (VkVideoEncodeH264DpbSlotInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_DPB_SLOT_INFO_KHR,
     .pNext = NULL,
     .pStdReferenceInfo = &frame->ref_info,
-    /* *INDENT-ON* */
   };
+  /* *INDENT-ON* */
 
   picture->codec_pic_info = &frame->enc_pic_info;
-  picture->codec_rc_layer_info = &frame->rc_layer_info;
-  picture->codec_quality_level = &frame->quality_level;
   picture->codec_rc_info = &frame->rc_info;
   picture->codec_dpb_slot_info = &frame->dpb_slot_info;
 
