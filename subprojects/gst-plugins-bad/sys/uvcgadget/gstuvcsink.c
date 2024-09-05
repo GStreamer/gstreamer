@@ -624,12 +624,14 @@ gst_uvc_sink_task (gpointer data)
           gst_caps_unref (configured_caps);
 
           prev_caps = gst_pad_get_current_caps (self->sinkpad);
-          if (!gst_caps_is_subset (prev_caps, self->cur_caps)) {
-            self->caps_changed = TRUE;
-            GST_DEBUG_OBJECT (self,
-                "caps changed from %" GST_PTR_FORMAT, prev_caps);
+          if (prev_caps) {
+            if (!gst_caps_is_subset (prev_caps, self->cur_caps)) {
+              self->caps_changed = TRUE;
+              GST_DEBUG_OBJECT (self,
+                  "caps changed from %" GST_PTR_FORMAT, prev_caps);
+            }
+            gst_caps_unref (prev_caps);
           }
-          gst_caps_unref (prev_caps);
         }
         break;
       default:
