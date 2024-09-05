@@ -6317,6 +6317,24 @@ The #GstCaps is guaranteed to be writable.</doc>
           </parameter>
         </parameters>
       </constructor>
+      <constructor name="new_empty_simple_static_str" c:identifier="gst_caps_new_empty_simple_static_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Creates a new #GstCaps that contains one #GstStructure with name
+@media_type.
+
+@media_type needs to be valid for the remaining lifetime of the process, e.g.
+has to be a static string.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the new #GstCaps</doc>
+          <type name="Caps" c:type="GstCaps*"/>
+        </return-value>
+        <parameters>
+          <parameter name="media_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the media type of the structure</doc>
+            <type name="utf8" c:type="const char*"/>
+          </parameter>
+        </parameters>
+      </constructor>
       <constructor name="new_full" c:identifier="gst_caps_new_full" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Creates a new #GstCaps and adds all the structures listed as
 arguments.  The list must be %NULL-terminated.  The structures
@@ -6361,6 +6379,33 @@ are not copied; the returned #GstCaps owns the structures.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Creates a new #GstCaps that contains one #GstStructure.  The
 structure is defined by the arguments, which have the same format
 as gst_structure_new().</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the new #GstCaps</doc>
+          <type name="Caps" c:type="GstCaps*"/>
+        </return-value>
+        <parameters>
+          <parameter name="media_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the media type of the structure</doc>
+            <type name="utf8" c:type="const char*"/>
+          </parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">first field to set</doc>
+            <type name="utf8" c:type="const char*"/>
+          </parameter>
+          <parameter name="..." transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">additional arguments</doc>
+            <varargs/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_simple_static_str" c:identifier="gst_caps_new_simple_static_str" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Creates a new #GstCaps that contains one #GstStructure.  The
+structure is defined by the arguments, which have the same format
+as gst_structure_new().
+
+@media_type, @fieldname and all other fieldnames need to be valid for the
+remaining lifetime of the process, e.g. have to be static strings.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the new #GstCaps</doc>
@@ -7096,6 +7141,56 @@ manner as gst_structure_set(), and be %NULL-terminated.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="set_simple_static_str" c:identifier="gst_caps_set_simple_static_str" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Sets fields in a #GstCaps.  The arguments must be passed in the same
+manner as gst_structure_set(), and be %NULL-terminated.
+
+@field and all other field names need to be valid for the remaining lifetime
+of the process, e.g. have to be static strings.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the #GstCaps to set</doc>
+            <type name="Caps" c:type="GstCaps*"/>
+          </instance-parameter>
+          <parameter name="field" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">first field to set</doc>
+            <type name="utf8" c:type="const char*"/>
+          </parameter>
+          <parameter name="..." transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">additional parameters</doc>
+            <varargs/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_simple_static_str_valist" c:identifier="gst_caps_set_simple_static_str_valist" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Sets fields in a #GstCaps.  The arguments must be passed in the same
+manner as gst_structure_set(), and be %NULL-terminated.
+
+@field and all other field names need to be valid for the remaining lifetime
+of the process, e.g. have to be static strings.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the #GstCaps to set</doc>
+            <type name="Caps" c:type="GstCaps*"/>
+          </instance-parameter>
+          <parameter name="field" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">first field to set</doc>
+            <type name="utf8" c:type="const char*"/>
+          </parameter>
+          <parameter name="varargs" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">additional parameters</doc>
+            <type name="va_list" c:type="va_list"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="set_simple_valist" c:identifier="gst_caps_set_simple_valist" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Sets fields in a #GstCaps.  The arguments must be passed in the same
 manner as gst_structure_set(), and be %NULL-terminated.</doc>
@@ -7122,6 +7217,32 @@ manner as gst_structure_set(), and be %NULL-terminated.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Sets the given @field on all structures of @caps to the given @value.
 This is a convenience function for calling gst_structure_set_value() on
 all structures of @caps.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">a writable caps</doc>
+            <type name="Caps" c:type="GstCaps*"/>
+          </instance-parameter>
+          <parameter name="field" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">name of the field to set</doc>
+            <type name="utf8" c:type="const char*"/>
+          </parameter>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">value to set the field to</doc>
+            <type name="GObject.Value" c:type="const GValue*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_value_static_str" c:identifier="gst_caps_set_value_static_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Sets the given @field on all structures of @caps to the given @value.
+This is a convenience function for calling gst_structure_set_value() on
+all structures of @caps.
+
+@field needs to be valid for the remaining lifetime of the process, e.g.
+has to be a static string.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -7389,9 +7510,10 @@ unfixed.</doc>
           <type name="CapsFeatures" c:type="GstCapsFeatures*"/>
         </return-value>
       </constructor>
-      <constructor name="new_id" c:identifier="gst_caps_features_new_id" version="1.2" introspectable="0">
+      <constructor name="new_id" c:identifier="gst_caps_features_new_id" version="1.2" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Creates a new #GstCapsFeatures with the given features.
 The last argument must be 0.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_caps_features_new_id_str().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a new, empty #GstCapsFeatures</doc>
@@ -7408,8 +7530,46 @@ The last argument must be 0.</doc>
           </parameter>
         </parameters>
       </constructor>
-      <constructor name="new_id_valist" c:identifier="gst_caps_features_new_id_valist" version="1.2" introspectable="0">
+      <constructor name="new_id_str" c:identifier="gst_caps_features_new_id_str" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Creates a new #GstCapsFeatures with the given features.
+The last argument must be 0.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a new, empty #GstCapsFeatures</doc>
+          <type name="CapsFeatures" c:type="GstCapsFeatures*"/>
+        </return-value>
+        <parameters>
+          <parameter name="feature1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">name of first feature to set</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="..." transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">additional features</doc>
+            <varargs/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_id_str_valist" c:identifier="gst_caps_features_new_id_str_valist" version="1.26" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Creates a new #GstCapsFeatures with the given features.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a new, empty #GstCapsFeatures</doc>
+          <type name="CapsFeatures" c:type="GstCapsFeatures*"/>
+        </return-value>
+        <parameters>
+          <parameter name="feature1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">name of first feature to set</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="varargs" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">variable argument list</doc>
+            <type name="va_list" c:type="va_list"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_id_valist" c:identifier="gst_caps_features_new_id_valist" version="1.2" introspectable="0" deprecated="1" deprecated-version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Creates a new #GstCapsFeatures with the given features.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_caps_features_new_id_str_valist().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a new, empty #GstCapsFeatures</doc>
@@ -7437,6 +7597,66 @@ The last argument must be 0.</doc>
           <parameter name="feature" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">The feature</doc>
             <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_single_static_str" c:identifier="gst_caps_features_new_single_static_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Creates a new #GstCapsFeatures with a single feature.
+
+@feature needs to be valid for the remaining lifetime of the process, e.g. has
+to be a static string.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a new #GstCapsFeatures</doc>
+          <type name="CapsFeatures" c:type="GstCapsFeatures*"/>
+        </return-value>
+        <parameters>
+          <parameter name="feature" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">The feature</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_static_str" c:identifier="gst_caps_features_new_static_str" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Creates a new #GstCapsFeatures with the given features.
+The last argument must be %NULL.
+
+@feature1 and all other features need to be valid for the remaining lifetime
+of the process, e.g. have to be a static string.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a new, empty #GstCapsFeatures</doc>
+          <type name="CapsFeatures" c:type="GstCapsFeatures*"/>
+        </return-value>
+        <parameters>
+          <parameter name="feature1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">name of first feature to set</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="..." transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">additional features</doc>
+            <varargs/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_static_str_valist" c:identifier="gst_caps_features_new_static_str_valist" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Creates a new #GstCapsFeatures with the given features.
+
+@feature1 and all other features need to be valid for the remaining lifetime
+of the process, e.g. have to be a static string.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a new, empty #GstCapsFeatures</doc>
+          <type name="CapsFeatures" c:type="GstCapsFeatures*"/>
+        </return-value>
+        <parameters>
+          <parameter name="feature1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">name of first feature to set</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="varargs" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">variable argument list</doc>
+            <type name="va_list" c:type="va_list"/>
           </parameter>
         </parameters>
       </constructor>
@@ -7475,8 +7695,9 @@ The last argument must be 0.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="add_id" c:identifier="gst_caps_features_add_id" version="1.2">
+      <method name="add_id" c:identifier="gst_caps_features_add_id" version="1.2" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Adds @feature to @features.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_caps_features_add_id_str().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -7489,6 +7710,43 @@ The last argument must be 0.</doc>
           <parameter name="feature" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a feature.</doc>
             <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_id_str" c:identifier="gst_caps_features_add_id_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Adds @feature to @features.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="features" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a #GstCapsFeatures.</doc>
+            <type name="CapsFeatures" c:type="GstCapsFeatures*"/>
+          </instance-parameter>
+          <parameter name="feature" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a feature.</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_static_str" c:identifier="gst_caps_features_add_static_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Adds @feature to @features.
+
+@feature needs to be valid for the remaining lifetime of the process, e.g. has
+to be a static string.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="features" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a #GstCapsFeatures.</doc>
+            <type name="CapsFeatures" c:type="GstCapsFeatures*"/>
+          </instance-parameter>
+          <parameter name="feature" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a feature.</doc>
+            <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
       </method>
@@ -7510,8 +7768,9 @@ The last argument must be 0.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="contains_id" c:identifier="gst_caps_features_contains_id" version="1.2">
+      <method name="contains_id" c:identifier="gst_caps_features_contains_id" version="1.2" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Checks if @features contains @feature.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_caps_features_contains_id_str().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">%TRUE if @features contains @feature.</doc>
@@ -7525,6 +7784,24 @@ The last argument must be 0.</doc>
           <parameter name="feature" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a feature</doc>
             <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="contains_id_str" c:identifier="gst_caps_features_contains_id_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Checks if @features contains @feature.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">%TRUE if @features contains @feature.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="features" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a #GstCapsFeatures.</doc>
+            <type name="CapsFeatures" c:type="const GstCapsFeatures*"/>
+          </instance-parameter>
+          <parameter name="feature" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a feature</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
           </parameter>
         </parameters>
       </method>
@@ -7574,12 +7851,31 @@ have a parent when this function is called.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_nth_id" c:identifier="gst_caps_features_get_nth_id" version="1.2">
+      <method name="get_nth_id" c:identifier="gst_caps_features_get_nth_id" version="1.2" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Returns the @i-th feature of @features.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_caps_features_get_nth_id_str().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">The @i-th feature of @features.</doc>
           <type name="GLib.Quark" c:type="GQuark"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="features" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a #GstCapsFeatures.</doc>
+            <type name="CapsFeatures" c:type="const GstCapsFeatures*"/>
+          </instance-parameter>
+          <parameter name="i" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">index of the feature</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_nth_id_str" c:identifier="gst_caps_features_get_nth_id_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Returns the @i-th feature of @features.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">The @i-th feature of @features.</doc>
+          <type name="IdStr" c:type="const GstIdStr*"/>
         </return-value>
         <parameters>
           <instance-parameter name="features" transfer-ownership="none">
@@ -7655,8 +7951,9 @@ have a parent when this function is called.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="remove_id" c:identifier="gst_caps_features_remove_id" version="1.2">
+      <method name="remove_id" c:identifier="gst_caps_features_remove_id" version="1.2" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Removes @feature from @features.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_caps_features_remove_id_str().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -7669,6 +7966,23 @@ have a parent when this function is called.</doc>
           <parameter name="feature" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a feature.</doc>
             <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="remove_id_str" c:identifier="gst_caps_features_remove_id_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">Removes @feature from @features.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcapsfeatures.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="features" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a #GstCapsFeatures.</doc>
+            <type name="CapsFeatures" c:type="GstCapsFeatures*"/>
+          </instance-parameter>
+          <parameter name="feature" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcapsfeatures.c">a feature.</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
           </parameter>
         </parameters>
       </method>
@@ -18841,9 +19155,10 @@ check the name of a custom event.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="has_name_id" c:identifier="gst_event_has_name_id" version="1.18">
+      <method name="has_name_id" c:identifier="gst_event_has_name_id" version="1.18" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.c">Checks if @event has the given @name. This function is usually used to
 check the name of a custom event.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_event_has_name().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gstevent.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstevent.c">%TRUE if @name matches the name of the event structure.</doc>
@@ -21074,6 +21389,298 @@ whenever the datastructure changes.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <record name="IdStr" c:type="GstIdStr" version="1.26" glib:type-name="GstIdStr" glib:get-type="gst_id_str_get_type" c:symbol-prefix="id_str">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A #GstIdStr is string type optimized for short strings and used for structure
+names, structure field names and in other places.
+
+Strings up to 16 bytes (including NUL terminator) are stored inline, other
+strings are stored on the heap.
+
+```cpp
+GstIdStr s = GST_ID_STR_INIT;
+
+gst_id_str_set (&amp;s, "Hello, World!");
+g_print ("%s\n", gst_id_str_as_str (&amp;s));
+
+gst_id_str_clear (&amp;s);
+```</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+      <field name="pointer" readable="0" private="1">
+        <type name="gpointer" c:type="gpointer"/>
+      </field>
+      <field name="padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="8">
+          <type name="guint8" c:type="guint8"/>
+        </array>
+      </field>
+      <constructor name="new" c:identifier="gst_id_str_new" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Returns a newly heap allocated empty string.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A heap-allocated string.</doc>
+          <type name="IdStr" c:type="GstIdStr*"/>
+        </return-value>
+      </constructor>
+      <method name="as_str" c:identifier="gst_id_str_as_str" version="1.26">
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">the NUL-terminated string representation of @s.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="s" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A %GstIdStr</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="clear" c:identifier="gst_id_str_clear" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Clears @s and sets it to the empty string.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="s" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A %GstIdStr</doc>
+            <type name="IdStr" c:type="GstIdStr*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="copy" c:identifier="gst_id_str_copy" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Copies @s into newly allocated heap memory.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A heap-allocated copy of @s.</doc>
+          <type name="IdStr" c:type="GstIdStr*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="s" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A %GstIdStr</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="copy_into" c:identifier="gst_id_str_copy_into" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Copies @s into @d.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="d" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">The destination %GstIdStr</doc>
+            <type name="IdStr" c:type="GstIdStr*"/>
+          </instance-parameter>
+          <parameter name="s" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">The source %GstIdStr</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="free" c:identifier="gst_id_str_free" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Frees @s. This should only be called for heap-allocated #GstIdStr.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="s" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A heap allocated %GstIdStr</doc>
+            <type name="IdStr" c:type="GstIdStr*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_len" c:identifier="gst_id_str_get_len" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Returns the length of @s, exluding the NUL-terminator. This is equivalent to
+calling `strcmp()` but potentially faster.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gsize" c:type="gsize"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="s" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A %GstIdStr</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="init" c:identifier="gst_id_str_init" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Initializes a (usually stack-allocated) id string @s. The newly-initialized
+id string will contain an empty string by default as value.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="s" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A %GstIdStr</doc>
+            <type name="IdStr" c:type="GstIdStr*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="is_equal" c:identifier="gst_id_str_is_equal" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Compares @s1 and @s2 for equality.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">%TRUE if @s1 and @s2 are equal.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="s1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A %GstIdStr</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </instance-parameter>
+          <parameter name="s2" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A %GstIdStr</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="is_equal_to_str" c:identifier="gst_id_str_is_equal_to_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Compares @s1 and @s2 for equality.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">%TRUE if @s1 and @s2 are equal.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="s1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A %GstIdStr</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </instance-parameter>
+          <parameter name="s2" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A string</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="is_equal_to_str_with_len" c:identifier="gst_id_str_is_equal_to_str_with_len" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Compares @s1 and @s2 with length @len for equality. @s2 does not have to be
+NUL-terminated and @len should not include the NUL-terminator.
+
+This is generally faster than gst_id_str_is_equal_to_str() if the length is
+already known.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">%TRUE if @s1 and @s2 are equal.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="s1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A %GstIdStr</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </instance-parameter>
+          <parameter name="s2" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A string</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="len" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Length of @s2.</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="move" c:identifier="gst_id_str_move" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Moves @s into @d and resets @s.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="d" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">The destination %GstIdStr</doc>
+            <type name="IdStr" c:type="GstIdStr*"/>
+          </instance-parameter>
+          <parameter name="s" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">The source %GstIdStr</doc>
+            <type name="IdStr" c:type="GstIdStr*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set" c:identifier="gst_id_str_set" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Sets @s to the string @value.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="s" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A %GstIdStr</doc>
+            <type name="IdStr" c:type="GstIdStr*"/>
+          </instance-parameter>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A NUL-terminated string</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_static_str" c:identifier="gst_id_str_set_static_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Sets @s to the string @value. @value needs to be valid for the remaining
+lifetime of the process, e.g. has to be a static string.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="s" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A %GstIdStr</doc>
+            <type name="IdStr" c:type="GstIdStr*"/>
+          </instance-parameter>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A NUL-terminated string</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_static_str_with_len" c:identifier="gst_id_str_set_static_str_with_len" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Sets @s to the string @value of length @len. @value needs to be valid for the
+remaining lifetime of the process, e.g. has to be a static string.
+
+@value does not have to be NUL-terminated and @len should not include the
+NUL-terminator.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="s" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A %GstIdStr</doc>
+            <type name="IdStr" c:type="GstIdStr*"/>
+          </instance-parameter>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A string</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="len" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Length of the string</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_with_len" c:identifier="gst_id_str_set_with_len" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Sets @s to the string @value of length @len. @value does not have to be
+NUL-terminated and @len should not include the NUL-terminator.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="s" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A %GstIdStr</doc>
+            <type name="IdStr" c:type="GstIdStr*"/>
+          </instance-parameter>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">A string</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="len" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Length of the string</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+        </parameters>
+      </method>
+    </record>
     <class name="Int64Range" c:symbol-prefix="int64_range" glib:type-name="GstInt64Range" glib:get-type="gst_int64_range_get_type" glib:fundamental="1">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">A fundamental type that describes a #gint64 range</doc>
     </class>
@@ -41504,7 +42111,7 @@ Free-function: gst_structure_free</doc>
           </parameter>
         </parameters>
       </constructor>
-      <constructor name="new_id" c:identifier="gst_structure_new_id" introspectable="0">
+      <constructor name="new_id" c:identifier="gst_structure_new_id" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Creates a new #GstStructure with the given name as a GQuark, followed by
 fieldname quark, GType, argument(s) "triplets" in the same format as
 gst_structure_id_set(). Basically a convenience wrapper around
@@ -41513,6 +42120,7 @@ gst_structure_new_id_empty() and gst_structure_id_set().
 The last variable argument must be %NULL (or 0).
 
 Free-function: gst_structure_free</doc>
+        <doc-deprecated xml:space="preserve">Use gst_structure_new_id_str().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a new #GstStructure</doc>
@@ -41533,10 +42141,11 @@ Free-function: gst_structure_free</doc>
           </parameter>
         </parameters>
       </constructor>
-      <constructor name="new_id_empty" c:identifier="gst_structure_new_id_empty">
+      <constructor name="new_id_empty" c:identifier="gst_structure_new_id_empty" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Creates a new, empty #GstStructure with the given name as a GQuark.
 
 Free-function: gst_structure_free</doc>
+        <doc-deprecated xml:space="preserve">Use gst_structure_new_id_str_empty().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a new, empty #GstStructure</doc>
@@ -41546,6 +42155,133 @@ Free-function: gst_structure_free</doc>
           <parameter name="quark" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">name of new structure</doc>
             <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_id_str" c:identifier="gst_structure_new_id_str" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Creates a new #GstStructure with the given name as a GQuark, followed by
+fieldname quark, GType, argument(s) "triplets" in the same format as
+gst_structure_id_set(). Basically a convenience wrapper around
+gst_structure_new_id_empty() and gst_structure_id_set().
+
+The last variable argument must be %NULL (or 0).
+
+Free-function: gst_structure_free</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a new #GstStructure</doc>
+          <type name="Structure" c:type="GstStructure*"/>
+        </return-value>
+        <parameters>
+          <parameter name="name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">name of new structure</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the GstIdStr for the name of the field to set</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="..." transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">variable arguments</doc>
+            <varargs/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_id_str_empty" c:identifier="gst_structure_new_id_str_empty" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Creates a new, empty #GstStructure with the given name.
+
+Free-function: gst_structure_free</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a new, empty #GstStructure</doc>
+          <type name="Structure" c:type="GstStructure*"/>
+        </return-value>
+        <parameters>
+          <parameter name="name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">name of new structure</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_static_str" c:identifier="gst_structure_new_static_str" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Creates a new #GstStructure with the given name.  Parses the
+list of variable arguments and sets fields to the values listed.
+Variable arguments should be passed as field name, field type,
+and value.  Last variable argument should be %NULL.
+
+@name, @firstfield and all field names need to be valid for the remaining
+lifetime of the process, e.g. have to be a static string.
+
+Free-function: gst_structure_free</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a new #GstStructure</doc>
+          <type name="Structure" c:type="GstStructure*"/>
+        </return-value>
+        <parameters>
+          <parameter name="name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">name of new structure</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="firstfield" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">name of first field to set</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="..." transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">additional arguments</doc>
+            <varargs/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_static_str_empty" c:identifier="gst_structure_new_static_str_empty" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Creates a new, empty #GstStructure with the given @name.
+
+See gst_structure_set_name() for constraints on the @name parameter.
+
+@name needs to be valid for the remaining lifetime of the process, e.g. has
+to be a static string.
+
+Free-function: gst_structure_free</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a new, empty #GstStructure</doc>
+          <type name="Structure" c:type="GstStructure*"/>
+        </return-value>
+        <parameters>
+          <parameter name="name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">name of new structure</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_static_str_valist" c:identifier="gst_structure_new_static_str_valist" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Creates a new #GstStructure with the given @name.  Structure fields
+are set according to the varargs in a manner similar to
+gst_structure_new().
+
+See gst_structure_set_name() for constraints on the @name parameter.
+
+@name, @firstfield and all field names need to be valid for the remaining
+lifetime of the process, e.g. have to be a static string.
+
+Free-function: gst_structure_free</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a new #GstStructure</doc>
+          <type name="Structure" c:type="GstStructure*"/>
+        </return-value>
+        <parameters>
+          <parameter name="name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">name of new structure</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="firstfield" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">name of first field to set</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="varargs" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">variable argument list</doc>
+            <type name="va_list" c:type="va_list"/>
           </parameter>
         </parameters>
       </constructor>
@@ -41612,10 +42348,36 @@ Free-function: gst_structure_free</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="filter_and_map_in_place" c:identifier="gst_structure_filter_and_map_in_place" version="1.6">
+      <method name="filter_and_map_in_place" c:identifier="gst_structure_filter_and_map_in_place" version="1.6" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Calls the provided function once for each field in the #GstStructure. In
 contrast to gst_structure_foreach(), the function may modify the fields.
 In contrast to gst_structure_map_in_place(), the field is removed from
+the structure if %FALSE is returned from the function.
+The structure must be mutable.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_structure_filter_and_map_in_place_id_str().</doc-deprecated>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="func" transfer-ownership="none" scope="call" closure="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a function to call for each field</doc>
+            <type name="StructureFilterMapFunc" c:type="GstStructureFilterMapFunc"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">private data</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="filter_and_map_in_place_id_str" c:identifier="gst_structure_filter_and_map_in_place_id_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Calls the provided function once for each field in the #GstStructure. In
+contrast to gst_structure_foreach_id_str(), the function may modify the fields.
+In contrast to gst_structure_map_in_place_id_str(), the field is removed from
 the structure if %FALSE is returned from the function.
 The structure must be mutable.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
@@ -41629,7 +42391,7 @@ The structure must be mutable.</doc>
           </instance-parameter>
           <parameter name="func" transfer-ownership="none" scope="call" closure="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a function to call for each field</doc>
-            <type name="StructureFilterMapFunc" c:type="GstStructureFilterMapFunc"/>
+            <type name="StructureFilterMapIdStrFunc" c:type="GstStructureFilterMapIdStrFunc"/>
           </parameter>
           <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">private data</doc>
@@ -41789,10 +42551,11 @@ integer to @target that is a subset of the existing field.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="foreach" c:identifier="gst_structure_foreach">
+      <method name="foreach" c:identifier="gst_structure_foreach" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Calls the provided function once for each field in the #GstStructure. The
 function must not modify the fields. Also see gst_structure_map_in_place()
 and gst_structure_filter_and_map_in_place().</doc>
+        <doc-deprecated xml:space="preserve">Use gst_structure_foreach_id_str().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%TRUE if the supplied function returns %TRUE For each of the fields,
@@ -41807,6 +42570,31 @@ and gst_structure_filter_and_map_in_place().</doc>
           <parameter name="func" transfer-ownership="none" scope="call" closure="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a function to call for each field</doc>
             <type name="StructureForeachFunc" c:type="GstStructureForeachFunc"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">private data</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="foreach_id_str" c:identifier="gst_structure_foreach_id_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Calls the provided function once for each field in the #GstStructure. The
+function must not modify the fields. Also see gst_structure_map_in_place_id_str()
+and gst_structure_filter_and_map_in_place_id_str().</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%TRUE if the supplied function returns %TRUE For each of the fields,
+%FALSE otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="const GstStructure*"/>
+          </instance-parameter>
+          <parameter name="func" transfer-ownership="none" scope="call" closure="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a function to call for each field</doc>
+            <type name="StructureForeachIdStrFunc" c:type="GstStructureForeachIdStrFunc"/>
           </parameter>
           <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">private data</doc>
@@ -42259,12 +43047,27 @@ function returns %FALSE.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_name_id" c:identifier="gst_structure_get_name_id">
+      <method name="get_name_id" c:identifier="gst_structure_get_name_id" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Get the name of @structure as a GQuark.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_structure_get_name_id_str().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the quark representing the name of the structure.</doc>
           <type name="GLib.Quark" c:type="GQuark"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="const GstStructure*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_name_id_str" c:identifier="gst_structure_get_name_id_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Get the name of @structure as a GstIdStr.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the quark representing the name of the structure.</doc>
+          <type name="IdStr" c:type="const GstIdStr*"/>
         </return-value>
         <parameters>
           <instance-parameter name="structure" transfer-ownership="none">
@@ -42450,7 +43253,7 @@ name.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="id_get" c:identifier="gst_structure_id_get" introspectable="0">
+      <method name="id_get" c:identifier="gst_structure_id_get" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Parses the variable arguments and reads fields from @structure accordingly.
 Variable arguments should be in the form field id quark, field type
 (as a GType), pointer(s) to a variable(s) to hold the return value(s).
@@ -42466,6 +43269,7 @@ For refcounted (mini)objects you will receive a new reference which
 you must release with a suitable _unref\() when no longer needed. For
 strings and boxed types you will receive a copy which you will need to
 release with either g_free() or the suitable function for the boxed type.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_structure_id_str_get().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%FALSE if there was a problem reading any of the fields (e.g.
@@ -42488,10 +43292,11 @@ release with either g_free() or the suitable function for the boxed type.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="id_get_valist" c:identifier="gst_structure_id_get_valist" introspectable="0">
+      <method name="id_get_valist" c:identifier="gst_structure_id_get_valist" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Parses the variable arguments and reads fields from @structure accordingly.
 valist-variant of gst_structure_id_get(). Look at the documentation of
 gst_structure_id_get() for more details.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_structure_id_str_get_valist().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%TRUE, or %FALSE if there was a problem reading any of the fields</doc>
@@ -42531,8 +43336,9 @@ name identifier.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="id_has_field" c:identifier="gst_structure_id_has_field">
+      <method name="id_has_field" c:identifier="gst_structure_id_has_field" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Check if @structure contains a field named @field.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_structure_id_str_has_field().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%TRUE if the structure contains a field with the given name</doc>
@@ -42549,8 +43355,9 @@ name identifier.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="id_has_field_typed" c:identifier="gst_structure_id_has_field_typed">
+      <method name="id_has_field_typed" c:identifier="gst_structure_id_has_field_typed" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Check if @structure contains a field named @field and with GType @type.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_structure_id_str_has_field_typed().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%TRUE if the structure contains a field with the given name and type</doc>
@@ -42571,12 +43378,13 @@ name identifier.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="id_set" c:identifier="gst_structure_id_set" introspectable="0">
+      <method name="id_set" c:identifier="gst_structure_id_set" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Identical to gst_structure_set, except that field names are
 passed using the GQuark for the field name. This allows more efficient
 setting of the structure if the caller already knows the associated
 quark values.
 The last variable argument must be %NULL.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_structure_id_str_set().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -42596,8 +43404,9 @@ The last variable argument must be %NULL.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="id_set_valist" c:identifier="gst_structure_id_set_valist" introspectable="0">
+      <method name="id_set_valist" c:identifier="gst_structure_id_set_valist" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">va_list form of gst_structure_id_set().</doc>
+        <doc-deprecated xml:space="preserve">Use gst_structure_id_str_set_valist().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -42617,10 +43426,11 @@ The last variable argument must be %NULL.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="id_set_value" c:identifier="gst_structure_id_set_value">
+      <method name="id_set_value" c:identifier="gst_structure_id_set_value" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Sets the field with the given GQuark @field to @value.  If the field
 does not exist, it is created.  If the field exists, the previous
 value is replaced and freed.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_structure_id_str_set_value().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -42640,10 +43450,218 @@ value is replaced and freed.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="id_take_value" c:identifier="gst_structure_id_take_value">
+      <method name="id_str_get" c:identifier="gst_structure_id_str_get" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Parses the variable arguments and reads fields from @structure accordingly.
+Variable arguments should be in the form field name (as GstIdStr), field type
+(as a GType), pointer(s) to a variable(s) to hold the return value(s). The
+last variable argument should be %NULL.
+
+For refcounted (mini)objects you will receive a new reference which
+you must release with a suitable _unref\() when no longer needed. For
+strings and boxed types you will receive a copy which you will need to
+release with either g_free() or the suitable function for the boxed type.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%FALSE if there was a problem reading any of the fields (e.g.
+    because the field requested did not exist, or was of a type other
+    than the type specified), otherwise %TRUE.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="const GstStructure*"/>
+          </instance-parameter>
+          <parameter name="first_fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the first field to read</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="..." transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">variable arguments</doc>
+            <varargs/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_str_get_valist" c:identifier="gst_structure_id_str_get_valist" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Parses the variable arguments and reads fields from @structure accordingly.
+valist-variant of gst_structure_id_str_get(). Look at the documentation of
+gst_structure_id_str_get() for more details.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%TRUE, or %FALSE if there was a problem reading any of the fields</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="const GstStructure*"/>
+          </instance-parameter>
+          <parameter name="first_fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the first field to read</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="args" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">variable arguments</doc>
+            <type name="va_list" c:type="va_list"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_str_get_value" c:identifier="gst_structure_id_str_get_value" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Get the value of the field with name @fieldname.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the #GValue corresponding to the field with the given
+name.</doc>
+          <type name="GObject.Value" c:type="const GValue*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="const GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the field to get</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_str_has_field" c:identifier="gst_structure_id_str_has_field" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Check if @structure contains a field named @fieldname.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%TRUE if the structure contains a field with the given name</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="const GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of a field</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_str_has_field_typed" c:identifier="gst_structure_id_str_has_field_typed" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Check if @structure contains a field named @fieldname and with GType @type.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%TRUE if the structure contains a field with the given name and type</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="const GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of a field</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the type of a value</doc>
+            <type name="GType" c:type="GType"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_str_set" c:identifier="gst_structure_id_str_set" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Identical to gst_structure_set, except that field names are
+passed using a GstIdStr for the field name. This allows more efficient
+setting of the structure if the caller already knows the associated
+quark values.
+The last variable argument must be %NULL.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the the name of the field to set</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="..." transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">variable arguments</doc>
+            <varargs/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_str_set_valist" c:identifier="gst_structure_id_str_set_valist" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">va_list form of gst_structure_id_str_set().</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the field to set</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="varargs" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">variable arguments</doc>
+            <type name="va_list" c:type="va_list"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_str_set_value" c:identifier="gst_structure_id_str_set_value" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Sets the field with the given name @field to @value.  If the field
+does not exist, it is created.  If the field exists, the previous
+value is replaced and freed.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the field to set</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the new value of the field</doc>
+            <type name="GObject.Value" c:type="const GValue*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_str_take_value" c:identifier="gst_structure_id_str_take_value" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Sets the field with the given GstIdStr @field to @value.  If the field
+does not exist, it is created.  If the field exists, the previous
+value is replaced and freed.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the field to set</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="value" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the new value of the field</doc>
+            <type name="GObject.Value" c:type="GValue*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_take_value" c:identifier="gst_structure_id_take_value" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Sets the field with the given GQuark @field to @value.  If the field
 does not exist, it is created.  If the field exists, the previous
 value is replaced and freed.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_structure_id_str_take_value().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -42719,10 +43737,11 @@ structure name and for all fields that are existing in @superset,
           </parameter>
         </parameters>
       </method>
-      <method name="map_in_place" c:identifier="gst_structure_map_in_place">
+      <method name="map_in_place" c:identifier="gst_structure_map_in_place" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Calls the provided function once for each field in the #GstStructure. In
 contrast to gst_structure_foreach(), the function may modify but not delete the
 fields. The structure must be mutable.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_structure_map_in_place_id_str().</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%TRUE if the supplied function returns %TRUE For each of the fields,
@@ -42737,6 +43756,31 @@ fields. The structure must be mutable.</doc>
           <parameter name="func" transfer-ownership="none" scope="call" closure="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a function to call for each field</doc>
             <type name="StructureMapFunc" c:type="GstStructureMapFunc"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">private data</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="map_in_place_id_str" c:identifier="gst_structure_map_in_place_id_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Calls the provided function once for each field in the #GstStructure. In
+contrast to gst_structure_foreach_id_str(), the function may modify but not delete the
+fields. The structure must be mutable.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%TRUE if the supplied function returns %TRUE For each of the fields,
+%FALSE otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="func" transfer-ownership="none" scope="call" closure="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a function to call for each field</doc>
+            <type name="StructureMapIdStrFunc" c:type="GstStructureMapIdStrFunc"/>
           </parameter>
           <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">private data</doc>
@@ -42992,6 +44036,28 @@ letter and can be followed by letters, numbers and any of "/-_.:".</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="set_name_static_str" c:identifier="gst_structure_set_name_static_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Sets the name of the structure to the given @name.  The string
+provided is copied before being used. It must not be empty, start with a
+letter and can be followed by letters, numbers and any of "/-_.:".
+
+@name needs to be valid for the remaining lifetime of the process, e.g. has
+to be a static string.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the new name of the structure</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="set_parent_refcount" c:identifier="gst_structure_set_parent_refcount">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Sets the parent_refcount field of #GstStructure. This field is used to
 determine whether a structure is mutable or not. This function should only be
@@ -43010,6 +44076,57 @@ the MT Refcounting section of the design documents.</doc>
           <parameter name="refcount" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a pointer to the parent's refcount</doc>
             <type name="gint" c:type="gint*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_static_str" c:identifier="gst_structure_set_static_str" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Parses the variable arguments and sets fields accordingly. Fields that
+weren't already part of the structure are added as needed.
+Variable arguments should be in the form field name, field type
+(as a GType), value(s).  The last variable argument should be %NULL.
+
+@fieldname and all other field names needs to be valid for the remaining
+lifetime of the process, e.g. has to be a static string.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the field to set</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="..." transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">variable arguments</doc>
+            <varargs/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_static_str_valist" c:identifier="gst_structure_set_static_str_valist" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">va_list form of gst_structure_set_static_str().
+
+@fieldname and all other field names needs to be valid for the remaining
+lifetime of the process, e.g. has to be a static string.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the field to set</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="varargs" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">variable arguments</doc>
+            <type name="va_list" c:type="va_list"/>
           </parameter>
         </parameters>
       </method>
@@ -43057,10 +44174,62 @@ value is replaced and freed.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="set_value_static_str" c:identifier="gst_structure_set_value_static_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Sets the field with the given name @field to @value.  If the field
+does not exist, it is created.  If the field exists, the previous
+value is replaced and freed.
+
+@fieldname needs to be valid for the remaining lifetime of the process, e.g.
+has to be a static string.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the field to set</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the new value of the field</doc>
+            <type name="GObject.Value" c:type="const GValue*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="take_value" c:identifier="gst_structure_take_value">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Sets the field with the given name @field to @value.  If the field
 does not exist, it is created.  If the field exists, the previous
 value is replaced and freed. The function will take ownership of @value.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the field to set</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="value" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the new value of the field</doc>
+            <type name="GObject.Value" c:type="GValue*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="take_value_static_str" c:identifier="gst_structure_take_value_static_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Sets the field with the given name @field to @value.  If the field
+does not exist, it is created.  If the field exists, the previous
+value is replaced and freed. The function will take ownership of @value.
+
+@fieldname needs to be valid for the remaining lifetime of the process, e.g.
+has to be a static string.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -43167,6 +44336,31 @@ should be removed.</doc>
         </parameter>
       </parameters>
     </callback>
+    <callback name="StructureFilterMapIdStrFunc" c:type="GstStructureFilterMapIdStrFunc" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">A function that will be called in gst_structure_filter_and_map_in_place_id_str().
+The function may modify @value, and the value will be removed from the
+structure if %FALSE is returned.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">%TRUE if the field should be preserved, %FALSE if it
+should be removed.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="fieldname" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">the #GstIdStr field name</doc>
+          <type name="IdStr" c:type="const GstIdStr*"/>
+        </parameter>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">the #GValue of the field</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="2">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">user data</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
     <callback name="StructureForeachFunc" c:type="GstStructureForeachFunc">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">A function that will be called in gst_structure_foreach(). The function may
 not modify @value.</doc>
@@ -43191,6 +44385,30 @@ the foreach operation should stop with %FALSE.</doc>
         </parameter>
       </parameters>
     </callback>
+    <callback name="StructureForeachIdStrFunc" c:type="GstStructureForeachIdStrFunc" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">A function that will be called in gst_structure_foreach_id_str(). The
+function may not modify @value.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">%TRUE if the foreach operation should continue, %FALSE if
+the foreach operation should stop with %FALSE.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="fieldname" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">the #GstIdStr field name</doc>
+          <type name="IdStr" c:type="const GstIdStr*"/>
+        </parameter>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">the #GValue of the field</doc>
+          <type name="GObject.Value" c:type="const GValue*"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="2">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">user data</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
     <callback name="StructureMapFunc" c:type="GstStructureMapFunc">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">A function that will be called in gst_structure_map_in_place(). The function
 may modify @value.</doc>
@@ -43204,6 +44422,30 @@ the map operation should stop with %FALSE.</doc>
         <parameter name="field_id" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">the #GQuark of the field name</doc>
           <type name="GLib.Quark" c:type="GQuark"/>
+        </parameter>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">the #GValue of the field</doc>
+          <type name="GObject.Value" c:type="GValue*"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="2">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">user data</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
+    <callback name="StructureMapIdStrFunc" c:type="GstStructureMapIdStrFunc" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">A function that will be called in gst_structure_map_in_place_id_str(). The
+function may modify @value.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">%TRUE if the map operation should continue, %FALSE if
+the map operation should stop with %FALSE.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="fieldname" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">the #GstIdStr field name</doc>
+          <type name="IdStr" c:type="const GstIdStr*"/>
         </parameter>
         <parameter name="value" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.h">the #GValue of the field</doc>
