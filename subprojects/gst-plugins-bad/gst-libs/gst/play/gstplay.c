@@ -314,6 +314,7 @@ gst_play_init (GstPlay * self)
   self->context = g_main_context_new ();
   self->loop = g_main_loop_new (self->context, FALSE);
   self->api_bus = gst_bus_new ();
+  gst_object_set_name (GST_OBJECT (self->api_bus), "api_bus");
 
   /* *INDENT-OFF* */
   self->config = gst_structure_new_id (QUARK_CONFIG,
@@ -2653,6 +2654,7 @@ gst_play_main (gpointer data)
   }
 
   self->bus = bus = gst_element_get_bus (self->playbin);
+  gst_object_set_name (GST_OBJECT (self->bus), "playbin_bus");
   gst_bus_add_signal_watch (bus);
 
   g_signal_connect (G_OBJECT (bus), "message::error", G_CALLBACK (error_cb),
