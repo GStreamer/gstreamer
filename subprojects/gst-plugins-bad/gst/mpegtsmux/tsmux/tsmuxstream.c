@@ -224,6 +224,14 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
           TSMUX_PACKET_FLAG_PES_FULL_HEADER |
           TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
       break;
+    case TSMUX_ST_PS_ST_2038:
+      /* FIXME: assign sequential extended IDs? */
+      stream->id = 0xBD;
+      stream->stream_type = TSMUX_ST_PRIVATE_DATA;
+      stream->pi.flags |=
+          TSMUX_PACKET_FLAG_PES_FULL_HEADER |
+          TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
+      break;
     case TSMUX_ST_PS_ID3:
       stream->id = 0xBD;        // private stream
       stream->stream_type = TSMUX_ST_PES_METADATA;
@@ -1005,6 +1013,13 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
       if (stream->internal_stream_type == TSMUX_ST_PS_KLV) {
         descriptor = gst_mpegts_descriptor_from_registration ("KLVA", NULL, 0);
         GST_DEBUG ("adding KLVA registration descriptor");
+        g_ptr_array_add (pmt_stream->descriptors, descriptor);
+      }
+      if (stream->internal_stream_type == TSMUX_ST_PS_ST_2038) {
+        descriptor = gst_mpegts_descriptor_from_registration ("VANC", NULL, 0);
+        GST_DEBUG ("adding VANC registration descriptor");
+        g_ptr_array_add (pmt_stream->descriptors, descriptor);
+        descriptor = gst_mpegts_descriptor_from_custom (0xc4, NULL, 0);
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
       }
     default:

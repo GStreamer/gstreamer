@@ -810,6 +810,8 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     ts_pad->prepare_func = gst_base_ts_mux_prepare_opus;
   } else if (strcmp (mt, "meta/x-klv") == 0) {
     st = TSMUX_ST_PS_KLV;
+  } else if (strcmp (mt, "meta/x-st-2038") == 0) {
+    st = TSMUX_ST_PS_ST_2038;
   } else if (strcmp (mt, "meta/x-id3") == 0) {
     st = TSMUX_ST_PS_ID3;
   } else if (strcmp (mt, "image/x-jxsc") == 0) {

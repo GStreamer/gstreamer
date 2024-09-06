@@ -1695,6 +1695,12 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
           is_audio = TRUE;
           caps = gst_caps_new_empty_simple ("audio/x-ac4");
           break;
+        case DRF_ID_VANC:
+          is_private = TRUE;
+          caps =
+              gst_caps_new_simple ("meta/x-st-2038", "alignment", G_TYPE_STRING,
+              "line", NULL);
+          break;
       }
       if (caps)
         break;
