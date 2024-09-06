@@ -85,11 +85,11 @@ struct _GstVulkanEncodePicture
 
   VkVideoPictureResourceInfoKHR dpb;
 
-  void              *codec_rc_info;
-  void              *codec_pic_info;
-  void              *codec_rc_layer_info;
-  void              *codec_dpb_slot_info;
-  void              *codec_quality_level;
+  gpointer codec_rc_info;
+  gpointer codec_pic_info;
+  gpointer codec_rc_layer_info;
+  gpointer codec_dpb_slot_info;
+  gpointer codec_quality_level;
 };
 
 /**
