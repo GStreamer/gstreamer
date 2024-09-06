@@ -55,6 +55,7 @@ struct _GstClockSync
   GstClockID     clock_id;
   gboolean       flushing;
   gboolean 	     sync;
+  gdouble        rate;
 
   GCond          blocked_cond;
   gboolean       blocked;
