@@ -1664,6 +1664,13 @@ gst_kms_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   } else {
     if (!gst_video_info_from_caps (&vinfo, caps))
       goto invalid_format;
+    self->vinfo_drm.drm_fourcc =
+        gst_video_dma_drm_fourcc_from_format (GST_VIDEO_INFO_FORMAT (&vinfo));
+    if (self->vinfo_drm.drm_fourcc == DRM_FORMAT_INVALID)
+      goto invalid_format;
+
+    self->vinfo_drm.vinfo = vinfo;
+    self->vinfo_drm.drm_modifier = DRM_FORMAT_MOD_LINEAR;
   }
   self->vinfo = vinfo;
 
@@ -1900,11 +1907,6 @@ gst_kms_sink_import_dmabuf (GstKMSSink * self, GstBuffer * inbuf,
   GstMemory *mems[GST_VIDEO_MAX_PLANES];
 
   if (!self->has_prime_import)
-    return FALSE;
-
-  /* Not a DMA format. */
-  if (GST_VIDEO_INFO_FORMAT (&self->vinfo_drm.vinfo) !=
-      GST_VIDEO_FORMAT_DMA_DRM)
     return FALSE;
 
   /* This will eliminate most non-dmabuf out there */
