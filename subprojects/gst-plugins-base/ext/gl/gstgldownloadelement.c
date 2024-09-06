@@ -1221,6 +1221,7 @@ _try_export_dmabuf (GstGLDownloadElement * download, GstBuffer * inbuf)
   gsize offset[GST_VIDEO_MAX_PLANES];
   gint stride[GST_VIDEO_MAX_PLANES];
   GstCaps *src_caps;
+  GstVideoInfoDmaDrm out_info_drm;
   GstVideoInfo out_info;
   gsize total_offset;
   GstVideoAlignment *alig = NULL;
@@ -1232,6 +1233,11 @@ _try_export_dmabuf (GstGLDownloadElement * download, GstBuffer * inbuf)
       return NULL;
     alig = &glmem->valign;
   }
+
+  src_caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM (download)->srcpad);
+  if (!gst_video_info_dma_drm_from_caps (&out_info_drm, src_caps) ||
+      !gst_video_info_dma_drm_to_video_info (&out_info_drm, &out_info))
+    goto export_complete;
 
   buffer = gst_buffer_new ();
   total_offset = 0;
@@ -1268,10 +1274,6 @@ _try_export_dmabuf (GstGLDownloadElement * download, GstBuffer * inbuf)
     }
   }
 
-  src_caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM (download)->srcpad);
-  gst_video_info_from_caps (&out_info, src_caps);
-  gst_caps_unref (src_caps);
-
   if (download->add_videometa) {
     GstVideoMeta *meta;
 
@@ -1298,6 +1300,7 @@ _try_export_dmabuf (GstGLDownloadElement * download, GstBuffer * inbuf)
   }
 
 export_complete:
+  gst_clear_caps (&src_caps);
 
   return buffer;
 }
