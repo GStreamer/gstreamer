@@ -164,8 +164,9 @@ gboolean                gst_vulkan_encoder_caps                 (GstVulkanEncode
 GST_VULKAN_API
 GstCaps *               gst_vulkan_encoder_profile_caps         (GstVulkanEncoder * self);
 GST_VULKAN_API
-GstVulkanEncoderPicture* gst_vulkan_encoder_picture_new         (GstVulkanEncoder * self,
+gboolean                gst_vulkan_encoder_picture_init         (GstVulkanEncoderPicture * pic,
+                                                                 GstVulkanEncoder * self,
                                                                  GstBuffer * in_buffer,
                                                                  gsize size);
 GST_VULKAN_API
-void                     gst_vulkan_encoder_picture_free        (GstVulkanEncoderPicture * pic);
+void                    gst_vulkan_encoder_picture_clear        (GstVulkanEncoderPicture * pic);

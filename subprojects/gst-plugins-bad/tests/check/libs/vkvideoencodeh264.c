@@ -45,7 +45,7 @@ static GstVideoInfo out_info;
 
 typedef struct
 {
-  GstVulkanEncoderPicture *picture;
+  GstVulkanEncoderPicture picture;
 
   gboolean is_ref;
   gint pic_num;
@@ -65,13 +65,14 @@ typedef struct
 } GstVulkanH264EncodeFrame;
 
 static GstVulkanH264EncodeFrame *
-_h264_encode_frame_new (GstVulkanEncoderPicture * picture, gboolean is_ref)
+_h264_encode_frame_new (GstVulkanEncoder * enc, GstBuffer * img_buffer,
+    gsize size, gboolean is_ref)
 {
   GstVulkanH264EncodeFrame *frame;
 
-  g_return_val_if_fail (picture, NULL);
   frame = g_new (GstVulkanH264EncodeFrame, 1);
-  frame->picture = picture;
+  fail_unless (gst_vulkan_encoder_picture_init (&frame->picture, enc,
+          img_buffer, size));
   frame->is_ref = is_ref;
 
   return frame;
@@ -81,7 +82,8 @@ static void
 _h264_encode_frame_free (gpointer pframe)
 {
   GstVulkanH264EncodeFrame *frame = pframe;
-  g_clear_pointer (&frame->picture, gst_vulkan_encoder_picture_free);
+
+  gst_vulkan_encoder_picture_clear (&frame->picture);
   g_free (frame);
 }
 
@@ -361,10 +363,8 @@ allocate_frame (GstVulkanEncoder * enc, int width,
 
   upload_buffer_to_image(img_pool, in_buffer, &img_buffer);
 
-  frame = _h264_encode_frame_new (gst_vulkan_encoder_picture_new (enc,
-      img_buffer, width * height * 3), is_ref);
+  frame = _h264_encode_frame_new (enc, img_buffer, width * height * 3, is_ref);
   fail_unless (frame);
-  fail_unless (frame->picture);
   gst_buffer_unref (in_buffer);
   gst_buffer_unref (img_buffer);
 
@@ -387,7 +387,7 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
   guint qp_i = 26;
   guint qp_p = 26;
   guint qp_b = 26;
-  GstVulkanEncoderPicture *picture = frame->picture;
+  GstVulkanEncoderPicture *picture = &frame->picture;
 
   GST_DEBUG ("Encoding frame num:%d", frame_num);
 
@@ -544,12 +544,12 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
   picture->codec_dpb_slot_info = &frame->dpb_slot_info;
 
   for (i = 0; i < list0_num; i++) {
-    ref_pics[i] = list0[i]->picture;
-    frame->ref_list_info.RefPicList0[0] = list0[i]->picture->slotIndex;
+    ref_pics[i] = &list0[i]->picture;
+    frame->ref_list_info.RefPicList0[0] = list0[i]->picture.slotIndex;
   }
   for (i = 0; i < list1_num; i++) {
-    ref_pics[i + list0_num] = list1[i]->picture;
-    frame->ref_list_info.RefPicList1[i] = list1[i]->picture->slotIndex;
+    ref_pics[i + list0_num] = &list1[i]->picture;
+    frame->ref_list_info.RefPicList1[i] = list1[i]->picture.slotIndex;
   }
 
   fail_unless (gst_vulkan_encoder_encode (enc, &in_info, picture, ref_pics_num,
@@ -762,12 +762,12 @@ check_encoded_frame (GstVulkanH264EncodeFrame * frame,
     GstH264NalUnitType nal_type)
 {
   GstMapInfo info;
-  fail_unless (frame->picture->out_buffer != NULL);
-  gst_buffer_map (frame->picture->out_buffer, &info, GST_MAP_READ);
+  fail_unless (frame->picture.out_buffer != NULL);
+  gst_buffer_map (frame->picture.out_buffer, &info, GST_MAP_READ);
   fail_unless (info.size);
   GST_MEMDUMP ("out buffer", info.data, info.size);
   check_h264_nalu (info.data, info.size, nal_type);
-  gst_buffer_unmap (frame->picture->out_buffer, &info);
+  gst_buffer_unmap (frame->picture.out_buffer, &info);
 }
 
 /* Greater than the maxDpbSlots == 16*/
@@ -905,7 +905,6 @@ GST_START_TEST (test_encoder_h264_i_p_b)
 
   /* Encode 1st picture as an IDR-Frame */
   frame = allocate_frame (enc, width, height, TRUE);
-  fail_unless (frame->picture != NULL);
   encode_frame (enc, frame, STD_VIDEO_H264_SLICE_TYPE_I,
       frame_num, NULL, 0, NULL, 0, sps_id, pps_id);
   check_encoded_frame (frame, GST_H264_NAL_SLICE_IDR);

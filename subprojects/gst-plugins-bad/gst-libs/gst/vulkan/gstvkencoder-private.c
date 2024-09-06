@@ -372,30 +372,28 @@ gst_vulkan_encoder_new_video_session_parameters (GstVulkanEncoder * self,
 }
 
 /**
- * gst_vulkan_encoder_picture_new:
+ * gst_vulkan_encode_picture_init:
+ * @pic: the #GstVulkanEncoderPicture to initialize
  * @self: the #GstVulkanEncoder with the pool's configuration.
  * @in_buffer: (transfer none): the input #GstBuffer.
  * @size: size of the output buffer
  *
- * Create a new vulkan encode picture from the input buffer.
+ * Initialize @pic structure.
  *
- * Returns: a new #GstVulkanEncoderPicture.
- *
+ * Returns: %TRUE if @pic was initialized correctly; otherwise %FALSE
  */
-GstVulkanEncoderPicture *
-gst_vulkan_encoder_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
-    gsize size)
+gboolean
+gst_vulkan_encoder_picture_init (GstVulkanEncoderPicture * pic,
+    GstVulkanEncoder * self, GstBuffer * in_buffer, gsize size)
 {
-  GstVulkanEncoderPicture *pic;
   GstVulkanEncoderPrivate *priv;
   gsize size_aligned;
 
-  g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), NULL);
-  g_return_val_if_fail (GST_IS_BUFFER (in_buffer), NULL);
+  g_return_val_if_fail (pic != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (in_buffer), FALSE);
 
   priv = gst_vulkan_encoder_get_instance_private (self);
-
-  pic = g_new0 (GstVulkanEncoderPicture, 1);
 
   size_aligned = GST_ROUND_UP_N (size,
       priv->caps.caps.minBitstreamBufferSizeAlignment);
@@ -409,10 +407,8 @@ gst_vulkan_encoder_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
     g_assert (GST_IS_BUFFER_POOL (priv->dpb_pool));
     ret =
         gst_buffer_pool_acquire_buffer (priv->dpb_pool, &pic->dpb_buffer, NULL);
-    if (ret != GST_FLOW_OK) {
-      gst_vulkan_encoder_picture_free (pic);
-      return NULL;
-    }
+    if (ret != GST_FLOW_OK)
+      return FALSE;
   }
   pic->in_buffer = gst_buffer_ref (in_buffer);
   pic->out_buffer =
@@ -431,18 +427,17 @@ gst_vulkan_encoder_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
         priv->layered_dpb, FALSE, NULL);
   }
 
-  return pic;
+  return TRUE;
 }
 
 /**
- * gst_vulkan_encoder_picture_free:
+ * gst_vulkan_encoder_picture_clear:
  * @pic: the #GstVulkanEncoderPicture to free.
  *
- * Free the #GstVulkanEncoderPicture.
- *
+ * Release data of @pic.
  */
 void
-gst_vulkan_encoder_picture_free (GstVulkanEncoderPicture * pic)
+gst_vulkan_encoder_picture_clear (GstVulkanEncoderPicture * pic)
 {
   g_return_if_fail (pic != NULL);
 
@@ -455,8 +450,6 @@ gst_vulkan_encoder_picture_free (GstVulkanEncoderPicture * pic)
 
   gst_vulkan_image_view_unref (pic->dpb_view);
   pic->dpb_view = NULL;
-
-  g_free (pic);
 }
 
 /**
