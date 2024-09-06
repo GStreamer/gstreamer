@@ -881,20 +881,25 @@ bail:
 GstCaps *
 gst_va_base_transform_get_filter_caps (GstVaBaseTransform * self)
 {
+  GstCaps *ret = NULL;
+
   g_return_val_if_fail (GST_IS_VA_BASE_TRANSFORM (self), NULL);
 
-  GST_OBJECT_LOCK (self);
-  if (self->priv->filter_caps) {
-    GST_OBJECT_UNLOCK (self);
-    return self->priv->filter_caps;
+  gst_caps_replace (&ret, self->priv->filter_caps);
+
+  if (ret) {
+    /* Release the extra reference. */
+    gst_caps_unref (ret);
+    return ret;
   }
-  GST_OBJECT_UNLOCK (self);
 
   if (!self->filter)
     return NULL;
 
-  GST_OBJECT_LOCK (self);
-  self->priv->filter_caps = gst_va_filter_get_caps (self->filter);
-  GST_OBJECT_UNLOCK (self);
-  return self->priv->filter_caps;
+  ret = gst_va_filter_get_caps (self->filter);
+  /* We do not cmp and assign here, just use our new value. */
+  gst_caps_replace (&self->priv->filter_caps, ret);
+  /* Release the extra got reference. */
+  gst_caps_unref (ret);
+  return ret;
 }
