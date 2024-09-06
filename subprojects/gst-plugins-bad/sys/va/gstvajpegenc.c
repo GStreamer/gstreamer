@@ -1216,8 +1216,10 @@ _filter_sink_caps (GstCaps * sinkcaps)
       guint32 fourcc;
 
       val = gst_structure_get_value (st, "drm-format");
-      if (!val)
+      if (!val) {
+        gst_structure_free (st);
         continue;
+      }
 
       if (G_VALUE_HOLDS_STRING (val)) {
         format_str = g_value_get_string (val);
@@ -1253,8 +1255,10 @@ _filter_sink_caps (GstCaps * sinkcaps)
           gst_caps_features_copy (features));
     } else {
       val = gst_structure_get_value (st, "format");
-      if (!val)
+      if (!val) {
+        gst_structure_free (st);
         continue;
+      }
 
       if (G_VALUE_HOLDS_STRING (val)) {
         format_str = g_value_get_string (val);
@@ -1298,7 +1302,6 @@ _filter_sink_caps (GstCaps * sinkcaps)
 
   return ret;
 }
-
 
 gboolean
 gst_va_jpeg_enc_register (GstPlugin * plugin, GstVaDevice * device,
