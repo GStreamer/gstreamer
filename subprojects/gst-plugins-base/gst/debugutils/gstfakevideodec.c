@@ -460,7 +460,7 @@ gst_fake_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
   g_assert (pool != NULL);
 
   /* Initialize at least 2 buffers. */
-  dec->min_buffers = MIN (min_buffers, 2);
+  dec->min_buffers = MAX (min_buffers, 2);
 
   config = gst_buffer_pool_get_config (pool);
   if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
