@@ -108,6 +108,7 @@ gst_d3d12_command_list_pool_new (ID3D12Device * device,
   g_return_val_if_fail (device, nullptr);
 
   if (type != D3D12_COMMAND_LIST_TYPE_DIRECT &&
+      type != D3D12_COMMAND_LIST_TYPE_COMPUTE &&
       type != D3D12_COMMAND_LIST_TYPE_COPY) {
     GST_ERROR ("Not supported command list type");
     return nullptr;

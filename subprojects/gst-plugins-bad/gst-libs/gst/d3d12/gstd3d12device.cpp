@@ -127,12 +127,16 @@ struct DeviceInner
     Drain ();
 
     gst_clear_object (&direct_queue);
+    gst_clear_object (&compute_queue);
     gst_clear_object (&copy_queue);
     for (guint i = 0; i < num_decode_queue; i++)
       gst_clear_object (&decode_queue[i]);
 
     gst_clear_object (&direct_ca_pool);
     gst_clear_object (&direct_cl_pool);
+
+    gst_clear_object (&compute_ca_pool);
+    gst_clear_object (&compute_cl_pool);
 
     gst_clear_object (&copy_ca_pool);
     gst_clear_object (&copy_cl_pool);
@@ -155,6 +159,9 @@ struct DeviceInner
   {
     if (direct_queue)
       gst_d3d12_command_queue_drain (direct_queue);
+
+    if (compute_queue)
+      gst_d3d12_command_queue_drain (compute_queue);
 
     if (copy_queue)
       gst_d3d12_command_queue_drain (copy_queue);
@@ -236,6 +243,7 @@ struct DeviceInner
   ComPtr<ID3D12InfoQueue> info_queue;
 
   GstD3D12CommandQueue *direct_queue = nullptr;
+  GstD3D12CommandQueue *compute_queue = nullptr;
   GstD3D12CommandQueue *copy_queue = nullptr;
   GstD3D12CommandQueue *decode_queue[2] = { nullptr, };
   guint num_decode_queue = 0;
@@ -245,6 +253,9 @@ struct DeviceInner
 
   GstD3D12CommandListPool *direct_cl_pool = nullptr;
   GstD3D12CommandAllocatorPool *direct_ca_pool = nullptr;
+
+  GstD3D12CommandListPool *compute_cl_pool = nullptr;
+  GstD3D12CommandAllocatorPool *compute_ca_pool = nullptr;
 
   GstD3D12CommandListPool *copy_cl_pool = nullptr;
   GstD3D12CommandAllocatorPool *copy_ca_pool = nullptr;
@@ -1297,6 +1308,22 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   if (!priv->direct_ca_pool)
     goto error;
 
+  queue_desc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
+  priv->compute_queue = gst_d3d12_command_queue_new (device.Get (),
+      &queue_desc, D3D12_FENCE_FLAG_SHARED, 32);
+  if (!priv->compute_queue)
+    goto error;
+
+  priv->compute_cl_pool = gst_d3d12_command_list_pool_new (device.Get (),
+      D3D12_COMMAND_LIST_TYPE_COMPUTE);
+  if (!priv->compute_cl_pool)
+    goto error;
+
+  priv->compute_ca_pool = gst_d3d12_command_allocator_pool_new (device.Get (),
+      D3D12_COMMAND_LIST_TYPE_COMPUTE);
+  if (!priv->compute_ca_pool)
+    goto error;
+
   queue_desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
   priv->copy_queue = gst_d3d12_command_queue_new (device.Get (),
       &queue_desc, D3D12_FENCE_FLAG_NONE, 32);
@@ -1345,6 +1372,10 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   GST_OBJECT_FLAG_SET (priv->direct_queue, GST_OBJECT_FLAG_MAY_BE_LEAKED);
   GST_OBJECT_FLAG_SET (priv->direct_cl_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
   GST_OBJECT_FLAG_SET (priv->direct_ca_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  GST_OBJECT_FLAG_SET (priv->compute_queue, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (priv->compute_cl_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (priv->compute_ca_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
 
   GST_OBJECT_FLAG_SET (priv->copy_queue, GST_OBJECT_FLAG_MAY_BE_LEAKED);
   GST_OBJECT_FLAG_SET (priv->copy_cl_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
@@ -1473,6 +1504,27 @@ gst_d3d12_device_get_factory_handle (GstD3D12Device * device)
   return device->priv->inner->factory.Get ();
 }
 
+static GstD3D12CommandQueue *
+gst_d3d12_device_get_queue_unchecked (GstD3D12Device * device,
+    D3D12_COMMAND_LIST_TYPE queue_type)
+{
+  auto priv = device->priv->inner;
+
+  switch (queue_type) {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+      return priv->direct_queue;
+    case D3D12_COMMAND_LIST_TYPE_COMPUTE:
+      return priv->compute_queue;
+    case D3D12_COMMAND_LIST_TYPE_COPY:
+      return priv->copy_queue;
+    default:
+      GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
+      break;
+  }
+
+  return nullptr;
+}
+
 /**
  * gst_d3d12_device_get_fence_handle:
  * @device: a #GstD3D12Device
@@ -1490,20 +1542,9 @@ gst_d3d12_device_get_fence_handle (GstD3D12Device * device,
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
 
-  auto priv = device->priv->inner;
-  GstD3D12CommandQueue *queue;
-
-  switch (queue_type) {
-    case D3D12_COMMAND_LIST_TYPE_DIRECT:
-      queue = priv->direct_queue;
-      break;
-    case D3D12_COMMAND_LIST_TYPE_COPY:
-      queue = priv->copy_queue;
-      break;
-    default:
-      GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
-      return nullptr;
-  }
+  auto queue = gst_d3d12_device_get_queue_unchecked (device, queue_type);
+  if (!queue)
+    return nullptr;
 
   return gst_d3d12_command_queue_get_fence_handle (queue);
 }
@@ -1555,20 +1596,7 @@ gst_d3d12_device_get_command_queue (GstD3D12Device * device,
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
 
-  auto priv = device->priv->inner;
-
-  switch (queue_type) {
-    case D3D12_COMMAND_LIST_TYPE_DIRECT:
-      return priv->direct_queue;
-    case D3D12_COMMAND_LIST_TYPE_COPY:
-      return priv->copy_queue;
-    default:
-      break;
-  }
-
-  GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
-
-  return nullptr;
+  return gst_d3d12_device_get_queue_unchecked (device, queue_type);
 }
 
 /**
@@ -1593,20 +1621,9 @@ gst_d3d12_device_execute_command_lists (GstD3D12Device * device,
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), E_INVALIDARG);
 
-  auto priv = device->priv->inner;
-  GstD3D12CommandQueue *queue;
-
-  switch (queue_type) {
-    case D3D12_COMMAND_LIST_TYPE_DIRECT:
-      queue = priv->direct_queue;
-      break;
-    case D3D12_COMMAND_LIST_TYPE_COPY:
-      queue = priv->copy_queue;
-      break;
-    default:
-      GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
-      return E_INVALIDARG;
-  }
+  auto queue = gst_d3d12_device_get_queue_unchecked (device, queue_type);
+  if (!queue)
+    return E_INVALIDARG;
 
   return gst_d3d12_command_queue_execute_command_lists (queue,
       num_command_lists, command_lists, fence_value);
@@ -1630,20 +1647,9 @@ gst_d3d12_device_get_completed_value (GstD3D12Device * device,
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), G_MAXUINT64);
 
-  auto priv = device->priv->inner;
-  GstD3D12CommandQueue *queue;
-
-  switch (queue_type) {
-    case D3D12_COMMAND_LIST_TYPE_DIRECT:
-      queue = priv->direct_queue;
-      break;
-    case D3D12_COMMAND_LIST_TYPE_COPY:
-      queue = priv->copy_queue;
-      break;
-    default:
-      GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
-      return G_MAXUINT64;
-  }
+  auto queue = gst_d3d12_device_get_queue_unchecked (device, queue_type);
+  if (!queue)
+    return G_MAXUINT64;
 
   return gst_d3d12_command_queue_get_completed_value (queue);
 }
@@ -1671,20 +1677,9 @@ gst_d3d12_device_set_fence_notify (GstD3D12Device * device,
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
   g_return_val_if_fail (fence_data, FALSE);
 
-  auto priv = device->priv->inner;
-  GstD3D12CommandQueue *queue;
-
-  switch (queue_type) {
-    case D3D12_COMMAND_LIST_TYPE_DIRECT:
-      queue = priv->direct_queue;
-      break;
-    case D3D12_COMMAND_LIST_TYPE_COPY:
-      queue = priv->copy_queue;
-      break;
-    default:
-      GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
-      return FALSE;
-  }
+  auto queue = gst_d3d12_device_get_queue_unchecked (device, queue_type);
+  if (!queue)
+    return FALSE;
 
   gst_d3d12_command_queue_set_notify (queue, fence_value, fence_data, notify);
 
@@ -1710,20 +1705,9 @@ gst_d3d12_device_fence_wait (GstD3D12Device * device,
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), E_INVALIDARG);
 
-  auto priv = device->priv->inner;
-  GstD3D12CommandQueue *queue;
-
-  switch (queue_type) {
-    case D3D12_COMMAND_LIST_TYPE_DIRECT:
-      queue = priv->direct_queue;
-      break;
-    case D3D12_COMMAND_LIST_TYPE_COPY:
-      queue = priv->copy_queue;
-      break;
-    default:
-      GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
-      return E_INVALIDARG;
-  }
+  auto queue = gst_d3d12_device_get_queue_unchecked (device, queue_type);
+  if (!queue)
+    return E_INVALIDARG;
 
   return gst_d3d12_command_queue_fence_wait (queue, fence_value);
 }
@@ -1756,6 +1740,11 @@ gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
       queue = priv->direct_queue;
       ca_pool = priv->direct_ca_pool;
       cl_pool = priv->direct_cl_pool;
+      break;
+    case D3D12_COMMAND_LIST_TYPE_COMPUTE:
+      queue = priv->compute_queue;
+      ca_pool = priv->compute_ca_pool;
+      cl_pool = priv->compute_cl_pool;
       break;
     case D3D12_COMMAND_LIST_TYPE_COPY:
       queue = priv->copy_queue;
