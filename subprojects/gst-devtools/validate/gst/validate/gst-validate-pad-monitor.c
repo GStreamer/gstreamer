@@ -2999,21 +2999,28 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
 
   pad_monitor->event_func = GST_PAD_EVENTFUNC (pad);
   pad_monitor->event_full_func = GST_PAD_EVENTFULLFUNC (pad);
-  pad_monitor->query_func = GST_PAD_QUERYFUNC (pad);
-  pad_monitor->activatemode_func = GST_PAD_ACTIVATEMODEFUNC (pad);
-  pad_monitor->get_range_func = GST_PAD_GETRANGEFUNC (pad);
-  if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
+  gpointer eventdata = pad->eventdata;
+  GDestroyNotify eventnotify = pad->eventnotify;
+  pad->eventdata = NULL;
+  pad->eventnotify = NULL;
 
+  if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
     pad_monitor->chain_func = GST_PAD_CHAINFUNC (pad);
+    gpointer chaindata = pad->chaindata;
+    GDestroyNotify chainnotify = pad->chainnotify;
+    pad->chaindata = NULL;
+    pad->chainnotify = NULL;
     if (pad_monitor->chain_func)
-      gst_pad_set_chain_function (pad, gst_validate_pad_monitor_chain_func);
+      gst_pad_set_chain_function_full (pad, gst_validate_pad_monitor_chain_func,
+          chaindata, chainnotify);
 
     if (pad_monitor->event_full_func)
-      gst_pad_set_event_full_function (pad,
-          gst_validate_pad_monitor_sink_event_full_func);
+      gst_pad_set_event_full_function_full (pad,
+          gst_validate_pad_monitor_sink_event_full_func,
+          eventdata, eventnotify);
     else
-      gst_pad_set_event_function (pad,
-          gst_validate_pad_monitor_sink_event_func);
+      gst_pad_set_event_function_full (pad,
+          gst_validate_pad_monitor_sink_event_func, eventdata, eventnotify);
   } else {
     gst_pad_set_event_function (pad, gst_validate_pad_monitor_src_event_func);
 
@@ -3025,13 +3032,32 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
         (GstPadProbeCallback) gst_validate_pad_monitor_pad_probe, pad_monitor,
         NULL);
   }
-  gst_pad_set_query_function (pad, gst_validate_pad_monitor_query_func);
-  gst_pad_set_activatemode_function (pad,
-      gst_validate_pad_monitor_activatemode_func);
+
+  pad_monitor->query_func = GST_PAD_QUERYFUNC (pad);
+  gpointer querydata = pad->querydata;
+  GDestroyNotify querynotify = pad->querynotify;
+  pad->querydata = NULL;
+  pad->querynotify = NULL;
+  gst_pad_set_query_function_full (pad, gst_validate_pad_monitor_query_func,
+      querydata, querynotify);
+
+  pad_monitor->activatemode_func = GST_PAD_ACTIVATEMODEFUNC (pad);
+  gpointer activatemodedata = pad->activatemodedata;
+  GDestroyNotify activatemodenotify = pad->activatemodenotify;
+  pad->activatemodedata = NULL;
+  pad->activatemodenotify = NULL;
+  gst_pad_set_activatemode_function_full (pad,
+      gst_validate_pad_monitor_activatemode_func,
+      activatemodedata, activatemodenotify);
 
   if (GST_PAD_IS_SRC (pad)) {
-    gst_pad_set_getrange_function (pad,
-        gst_validate_pad_monitor_get_range_func);
+    pad_monitor->get_range_func = GST_PAD_GETRANGEFUNC (pad);
+    gpointer getrangedata = pad->getrangedata;
+    GDestroyNotify getrangenotify = pad->getrangenotify;
+    pad->getrangedata = NULL;
+    pad->getrangenotify = NULL;
+    gst_pad_set_getrange_function_full (pad,
+        gst_validate_pad_monitor_get_range_func, getrangedata, getrangenotify);
   }
 
   gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (monitor),
