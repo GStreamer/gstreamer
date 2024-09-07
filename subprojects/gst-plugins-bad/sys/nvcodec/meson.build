@@ -40,6 +40,10 @@ nvcodec_unix_sources = [
   'gstcudaipcserver_unix.cpp',
 ]
 
+nvcodec_d3d12_sources = [
+  'gstcudainterop_d3d12.cpp',
+]
+
 if get_option('nvcodec').disabled()
   subdir_done()
 endif
@@ -77,6 +81,12 @@ endif
 if not nvbuf_dep.found()
   extra_args += ['-DHAVE_NVCODEC_DGPU']
   nvcodec_sources += nvcodec_dgpu_sources
+endif
+
+if gstd3d12_dep.found()
+  extra_args += ['-DHAVE_GST_D3D12']
+  extra_deps += [gstd3d12_dep]
+  nvcodec_sources += nvcodec_d3d12_sources
 endif
 
 if cc.get_id() != 'msvc'
