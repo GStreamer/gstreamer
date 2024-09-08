@@ -25,6 +25,7 @@
 #include "gstd3d12-private.h"
 #include <mutex>
 #include <atomic>
+#include <directx/d3dx12.h>
 
 /* *INDENT-OFF* */
 static std::recursive_mutex context_lock_;
@@ -670,6 +671,110 @@ gst_d3d12_buffer_set_fence (GstBuffer * buffer, ID3D12Fence * fence,
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
     GST_MINI_OBJECT_FLAG_UNSET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
   }
+}
+
+static void
+do_align_desc (D3D12_RESOURCE_DESC & desc)
+{
+  UINT width_align =
+      D3D12_PROPERTY_LAYOUT_FORMAT_TABLE::GetWidthAlignment (desc.Format);
+  UINT height_align =
+      D3D12_PROPERTY_LAYOUT_FORMAT_TABLE::GetHeightAlignment (desc.Format);
+
+  if (width_align > 1)
+    desc.Width = GST_ROUND_UP_N (desc.Width, (UINT64) width_align);
+
+  if (height_align > 1)
+    desc.Height = GST_ROUND_UP_N (desc.Height, height_align);
+}
+
+/**
+ * gst_d3d12_get_copyable_footprints:
+ * @device: a GstD3D12Device
+ * @info: a GstVideoInfo
+ * @layout: (out caller-allocates): copyable footprints
+ * @size: (out): total size in bytes
+ *
+ * Calculates copyable footprints for given @info
+ *
+ * Returns:
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_d3d12_get_copyable_footprints (GstD3D12Device * device,
+    const GstVideoInfo * info,
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES],
+    guint64 * size)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), 0);
+  g_return_val_if_fail (info, 0);
+
+  GstD3D12Format format12;
+
+  if (!gst_d3d12_device_get_format (device, GST_VIDEO_INFO_FORMAT (info),
+          &format12)) {
+    return FALSE;
+  }
+
+  auto device_handle = gst_d3d12_device_get_device_handle (device);
+  auto dxgi_format = format12.dxgi_format;
+
+  if (dxgi_format != DXGI_FORMAT_UNKNOWN) {
+    D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D (dxgi_format,
+        info->width, info->height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_NONE);
+
+    do_align_desc (desc);
+    device_handle->GetCopyableFootprints (&desc, 0,
+        D3D12GetFormatPlaneCount (device_handle, dxgi_format), 0, layout,
+        nullptr, nullptr, size);
+    return TRUE;
+  }
+
+  auto finfo = info->finfo;
+  UINT64 base_offset = 0;
+  D3D12_PLACED_SUBRESOURCE_FOOTPRINT tmp_layout[GST_VIDEO_MAX_PLANES];
+
+  for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    dxgi_format = format12.resource_format[i];
+
+    if (dxgi_format == DXGI_FORMAT_UNKNOWN)
+      break;
+
+    gint comp[GST_VIDEO_MAX_COMPONENTS];
+    gst_video_format_info_component (finfo, i, comp);
+
+    guint width = GST_VIDEO_INFO_COMP_WIDTH (info, comp[0]);
+    guint height = GST_VIDEO_INFO_COMP_HEIGHT (info, comp[0]);
+    width = MAX (width, 1);
+    height = MAX (height, 1);
+
+    D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D (dxgi_format,
+        width, height, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_NONE);
+
+    do_align_desc (desc);
+
+    device_handle->GetCopyableFootprints (&desc,
+        0, 1, base_offset, &tmp_layout[i], nullptr, nullptr, nullptr);
+    base_offset = tmp_layout[i].Offset +
+        (tmp_layout[i].Footprint.RowPitch * tmp_layout[i].Footprint.Height);
+    base_offset = GST_ROUND_UP_N (base_offset,
+        D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
+  }
+
+  if (layout) {
+    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+      layout[i] = tmp_layout[i];
+    }
+  }
+
+  if (size) {
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT *last =
+        &tmp_layout[GST_VIDEO_INFO_N_PLANES (info) - 1];
+    *size = last->Offset + (last->Footprint.RowPitch * last->Footprint.Height);
+  }
+
+  return TRUE;
 }
 
 /**
