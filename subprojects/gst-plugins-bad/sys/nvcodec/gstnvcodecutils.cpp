@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2023 Seungha Yang <seungha@centricular.com>
+ * Copyright (C) 2024 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,14 +17,23 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#pragma once
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include <gst/gst.h>
+#include "gstnvcodecutils.h"
+#include <gst/cuda/gstcuda-private.h>
 
-G_BEGIN_DECLS
+gboolean
+gst_nvcodec_is_windows_10_or_greater (void)
+{
+  static gboolean ret = FALSE;
 
-void gst_cuda_ipc_client_deinit (void);
+#ifdef G_OS_WIN32
+  GST_CUDA_CALL_ONCE_BEGIN {
+    ret = g_win32_check_windows_version (10, 0, 0, G_WIN32_OS_ANY);
+  } GST_CUDA_CALL_ONCE_END;
+#endif
 
-gboolean gst_nvcodec_is_windows_10_or_greater (void);
-
-G_END_DECLS
+  return ret;
+}

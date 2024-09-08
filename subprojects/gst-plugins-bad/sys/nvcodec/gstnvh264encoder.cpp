@@ -2203,6 +2203,20 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
   if (device_mode == GST_NV_ENCODER_DEVICE_CUDA) {
     gst_caps_set_features (sink_caps, 0,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, nullptr));
+#ifdef HAVE_GST_D3D12
+    if (gst_nvcodec_is_windows_10_or_greater ()) {
+      gboolean have_interop = FALSE;
+      g_object_get (device,
+          "external-resource-interop", &have_interop, nullptr);
+      if (have_interop) {
+        auto d3d12_caps = gst_caps_copy (system_caps);
+        gst_caps_set_features_simple (d3d12_caps,
+            gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY,
+                nullptr));
+        gst_caps_append (sink_caps, d3d12_caps);
+      }
+    }
+#endif
 #ifdef HAVE_CUDA_GST_GL
     GstCaps *gl_caps = gst_caps_copy (system_caps);
     gst_caps_set_features (gl_caps, 0,
@@ -2227,8 +2241,12 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
     cdata->profiles = g_list_append (cdata->profiles, g_strdup (iter.c_str()));
   /* *INDENT-ON* */
 
+#ifdef G_OS_WIN32
   if (device_mode == GST_NV_ENCODER_DEVICE_D3D11)
     g_object_get (device, "adapter-luid", &cdata->adapter_luid, nullptr);
+  else
+    g_object_get (device, "dxgi-adapter-luid", &cdata->adapter_luid, nullptr);
+#endif
 
   if (device_mode == GST_NV_ENCODER_DEVICE_CUDA)
     g_object_get (device, "cuda-device-id", &cdata->cuda_device_id, nullptr);

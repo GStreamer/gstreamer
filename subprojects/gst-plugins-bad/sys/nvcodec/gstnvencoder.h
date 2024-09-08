@@ -22,6 +22,10 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
+#ifdef HAVE_GST_D3D12
+#include <gst/d3d12/gstd3d12.h>
+#endif
+
 #ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
 #endif
@@ -35,6 +39,7 @@
 #include <gst/cuda/gstcuda.h>
 #include "nvEncodeAPI.h"
 #include "gstnvenc.h"
+#include "gstnvcodecutils.h"
 
 G_BEGIN_DECLS
 

@@ -37,6 +37,10 @@
 #include <atomic>
 #include "gstnvencobject.h"
 
+#ifdef HAVE_GST_D3D12
+#include "gstcudainterop_d3d12.h"
+#endif
+
 #ifdef G_OS_WIN32
 #include <wrl.h>
 
@@ -85,6 +89,11 @@ struct _GstNvEncoderPrivate
   GstGLContext *other_gl_context = nullptr;
 
   gboolean gl_interop = FALSE;
+#endif
+
+#ifdef HAVE_GST_D3D12
+  GstD3D12Device *device_12 = nullptr;
+  GstCudaD3D12Interop *interop_12 = nullptr;
 #endif
 
   std::shared_ptr < GstNvEncObject > object;
@@ -286,6 +295,10 @@ gst_nv_encoder_set_context (GstElement * element, GstContext * context)
           gst_gl_display_filter_gl_api (priv->gl_display, SUPPORTED_GL_APIS);
       }
 #endif
+#ifdef HAVE_GST_D3D12
+      gst_d3d12_handle_set_context_for_adapter_luid (element,
+          context, priv->dxgi_adapter_luid, &priv->device_12);
+#endif
       break;
     default:
       break;
@@ -472,6 +485,10 @@ gst_nv_encoder_close (GstVideoEncoder * encoder)
   gst_clear_object (&priv->gl_context);
   gst_clear_object (&priv->other_gl_context);
 #endif
+#ifdef HAVE_GST_D3D12
+  gst_clear_object (&priv->interop_12);
+  gst_clear_object (&priv->device_12);
+#endif
 
   return TRUE;
 }
@@ -609,6 +626,12 @@ gst_nv_encoder_handle_context_query (GstNvEncoder * self, GstQuery * query)
       if (ret)
         return ret;
     }
+#endif
+#ifdef HAVE_GST_D3D12
+      if (gst_d3d12_handle_context_query (GST_ELEMENT (self), query,
+              priv->device_12)) {
+        return TRUE;
+      }
 #endif
       ret = gst_cuda_handle_context_query (GST_ELEMENT (self),
           query, priv->context);
@@ -1283,6 +1306,20 @@ gst_nv_encoder_set_format (GstVideoEncoder * encoder,
   }
 #endif
 
+#ifdef HAVE_GST_D3D12
+  {
+    auto features = gst_caps_get_features (state->caps, 0);
+    gst_clear_object (&priv->interop_12);
+    if (gst_caps_features_contains (features,
+            GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY) &&
+        gst_d3d12_ensure_element_data_for_adapter_luid (GST_ELEMENT (self),
+            priv->dxgi_adapter_luid, &priv->device_12)) {
+      priv->interop_12 = gst_cuda_d3d12_interop_new (priv->context,
+          priv->device_12, &state->info);
+    }
+  }
+#endif
+
   /* select device again on next buffer */
   if (priv->subclass_device_mode == GST_NV_ENCODER_DEVICE_AUTO_SELECT)
     priv->selected_device_mode = GST_NV_ENCODER_DEVICE_AUTO_SELECT;
@@ -1550,6 +1587,52 @@ gst_nv_encoder_prepare_task_input_cuda (GstNvEncoder * self,
         GST_WARNING_OBJECT (self, "GL interop failed");
         priv->gl_interop = FALSE;
       }
+    }
+  }
+#endif
+
+#ifdef HAVE_GST_D3D12
+  if (priv->interop_12) {
+    if (gst_is_d3d12_memory (mem)) {
+      auto dmem = GST_D3D12_MEMORY_CAST (mem);
+      if (!gst_d3d12_device_is_equal (dmem->device, priv->device_12)) {
+        GST_DEBUG_OBJECT (self, "Different d3d12 device");
+        gst_clear_object (&priv->interop_12);
+      }
+    } else {
+      GST_WARNING_OBJECT (self, "Not a d3d12 buffer");
+      gst_clear_object (&priv->interop_12);
+    }
+  }
+
+  if (priv->interop_12) {
+    GstBuffer *copy = nullptr;
+    gst_buffer_pool_acquire_buffer (priv->internal_pool, &copy, nullptr);
+    if (!copy) {
+      GST_ERROR_OBJECT (self, "Couldn't acquire buffer");
+      return GST_FLOW_ERROR;
+    }
+
+    if (!gst_cuda_d3d12_interop_upload_async (priv->interop_12,
+            copy, buffer, priv->stream)) {
+      GST_WARNING_OBJECT (self, "Couldn't upload d3d12 to cuda");
+      gst_buffer_unref (copy);
+      gst_clear_object (&priv->interop_12);
+    } else {
+      mem = gst_buffer_peek_memory (copy, 0);
+
+      status = object->AcquireResource (mem, &resource);
+      if (status != NV_ENC_SUCCESS) {
+        GST_ERROR_OBJECT (self, "Failed to get resource, status %"
+            GST_NVENC_STATUS_FORMAT, GST_NVENC_STATUS_ARGS (status));
+        gst_buffer_unref (copy);
+
+        return GST_FLOW_ERROR;
+      }
+
+      gst_nv_enc_task_set_resource (task, copy, resource);
+
+      return GST_FLOW_OK;
     }
   }
 #endif
