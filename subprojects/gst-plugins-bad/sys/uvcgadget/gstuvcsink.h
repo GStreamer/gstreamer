@@ -17,6 +17,9 @@
 
 G_BEGIN_DECLS GST_DEBUG_CATEGORY_EXTERN (uvcsink_debug);
 
+#define REQUEST_ERROR_CODE_NO_ERROR 0x0
+#define REQUEST_ERROR_CODE_INVALID_REQUEST 0x6
+
 #define GST_TYPE_UVCSINK (gst_uvc_sink_get_type())
 G_DECLARE_FINAL_TYPE (GstUvcSink, gst_uvc_sink, GST, UVCSINK, GstBin)
 
@@ -53,6 +56,8 @@ struct _GstUvcSink
   struct uvc_streaming_control commit;
 
   int control;
+
+  int request_error_code;
 
   /* probes */
   int buffer_peer_probe_id;

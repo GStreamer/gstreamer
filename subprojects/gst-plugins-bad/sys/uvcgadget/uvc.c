@@ -343,7 +343,7 @@ uvc_events_process_streaming (GstUvcSink * self, uint8_t req, uint8_t cs,
   return 0;
 }
 
-static void
+static int
 uvc_events_parse_control (GstUvcSink * self, uint8_t req,
     uint8_t cs, uint8_t entity_id, uint8_t len, struct uvc_request_data *resp)
 {
@@ -357,26 +357,50 @@ uvc_events_parse_control (GstUvcSink * self, uint8_t req,
     case 0:
       GST_DEBUG_OBJECT (self, "%s",
           uvc_video_control_interface_control_selector_name (cs));
-      break;
+      /*
+       * For ERROR_CODE_CONTROL requests we have to return not implemented so
+       * bail out gracefully here to properly send control is not
+       * currently implemented. (0x06) (4.2.1.2 Request Error Code Control)
+       */
+      if (cs == UVC_VC_REQUEST_ERROR_CODE_CONTROL) {
+        resp->data[0] = self->request_error_code;
+        resp->length = 1;
+
+        break;
+      }
+      goto error;
 
     case 1:
       GST_DEBUG_OBJECT (self, "%s: %s",
           uvc_camera_terminal_control_selector_name (cs),
           uvc_request_name (req));
-      break;
+      goto error;
 
     case 2:
       GST_DEBUG_OBJECT (self, "%s: %s",
           uvc_processing_unit_control_selector_name (cs),
           uvc_request_name (req));
-      break;
+      goto error;
 
     default:
       GST_DEBUG_OBJECT (self,
           "Unknown entity ID (0x%02x), CS: 0x%02x, Request %s (0x%02x)",
           entity_id, cs, uvc_request_name (req), req);
-      break;
+      goto error;
   }
+
+  self->request_error_code = REQUEST_ERROR_CODE_NO_ERROR;
+
+  return 0;
+
+error:
+
+  self->request_error_code = REQUEST_ERROR_CODE_INVALID_REQUEST;
+  /*
+   * Stall and don't response the control requests that are
+   * actually not implemented
+   */
+  return -EOPNOTSUPP;
 }
 
 static int
@@ -389,9 +413,8 @@ uvc_events_process_class (GstUvcSink * self,
     return -EINVAL;
 
   if (interface == UVC_STRING_CONTROL_IDX) {
-    uvc_events_parse_control (self, ctrl->bRequest, ctrl->wValue >> 8,
-        ctrl->wIndex >> 8, ctrl->wLength, resp);
-    return -EOPNOTSUPP;
+    return uvc_events_parse_control (self, ctrl->bRequest,
+        ctrl->wValue >> 8, ctrl->wIndex >> 8, ctrl->wLength, resp);
   } else if (interface == UVC_STRING_STREAMING_IDX) {
     return uvc_events_process_streaming (self, ctrl->bRequest,
         le16toh (ctrl->wValue) >> 8, resp);
