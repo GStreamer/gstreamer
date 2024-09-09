@@ -1314,6 +1314,17 @@ typedef struct
   GstValidateStructureResolveVariablesFlags flags;
 } ReplaceData;
 
+
+static gboolean
+_set_variable_from_globals (const gchar * name, double *value,
+    gpointer user_data)
+{
+  if (!global_vars || !gst_structure_get_double (global_vars, name, value))
+    return FALSE;
+
+  return TRUE;
+}
+
 static void
 _resolve_expression (gpointer source, GValue * value)
 {
@@ -1339,7 +1350,9 @@ _resolve_expression (gpointer source, GValue * value)
     goto done;
 
   *tmp = '\0';
-  new_value = gst_validate_utils_parse_expression (expr, NULL, NULL, &error);
+  new_value =
+      gst_validate_utils_parse_expression (expr, _set_variable_from_globals,
+      NULL, &error);
   if (error)
     gst_validate_error_structure (source, "Could not parse expression %s: %s",
         expr, error);
