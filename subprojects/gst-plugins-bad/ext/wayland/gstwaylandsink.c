@@ -365,35 +365,62 @@ gst_wayland_sink_set_display_from_context (GstWaylandSink * self,
 }
 
 static gboolean
-gst_wayland_sink_find_display (GstWaylandSink * self)
+gst_wayland_sink_query_context (GstWaylandSink * self, const gchar * type)
 {
   GstQuery *query;
+  gboolean ret;
+
+  query = gst_query_new_context (type);
+  ret = gst_pad_peer_query (GST_VIDEO_SINK_PAD (self), query);
+
+  if (ret) {
+    GstContext *context = NULL;
+    gst_query_parse_context (query, &context);
+    gst_wayland_sink_set_display_from_context (self, context);
+  }
+
+  gst_query_unref (query);
+  return ret;
+}
+
+static gboolean
+gst_wayland_sink_post_need_context (GstWaylandSink * self, const gchar * type)
+{
   GstMessage *msg;
-  GstContext *context = NULL;
+
+  /* now ask the application to set the display handle */
+  msg = gst_message_new_need_context (GST_OBJECT_CAST (self), type);
+
+  g_mutex_unlock (&self->display_lock);
+  gst_element_post_message (GST_ELEMENT_CAST (self), msg);
+  /* at this point we expect gst_wayland_sink_set_context
+   * to get called and fill self->display */
+  g_mutex_lock (&self->display_lock);
+
+  return self->display != NULL;
+}
+
+static gboolean
+gst_wayland_sink_find_display (GstWaylandSink * self)
+{
   GError *error = NULL;
   gboolean ret = TRUE;
 
   g_mutex_lock (&self->display_lock);
 
   if (!self->display) {
-    /* first query upstream for the needed display handle */
-    query = gst_query_new_context (GST_WL_DISPLAY_HANDLE_CONTEXT_TYPE);
-    if (gst_pad_peer_query (GST_VIDEO_SINK_PAD (self), query)) {
-      gst_query_parse_context (query, &context);
-      gst_wayland_sink_set_display_from_context (self, context);
+    if (!gst_wayland_sink_query_context (self,
+            GST_WL_DISPLAY_HANDLE_CONTEXT_TYPE)) {
+      gst_wayland_sink_query_context (self,
+          GST_WL_DISPLAY_HANDLE_LEGACY_CONTEXT_TYPE);
     }
-    gst_query_unref (query);
 
     if (G_LIKELY (!self->display)) {
-      /* now ask the application to set the display handle */
-      msg = gst_message_new_need_context (GST_OBJECT_CAST (self),
-          GST_WL_DISPLAY_HANDLE_CONTEXT_TYPE);
-
-      g_mutex_unlock (&self->display_lock);
-      gst_element_post_message (GST_ELEMENT_CAST (self), msg);
-      /* at this point we expect gst_wayland_sink_set_context
-       * to get called and fill self->display */
-      g_mutex_lock (&self->display_lock);
+      if (!gst_wayland_sink_post_need_context (self,
+              GST_WL_DISPLAY_HANDLE_CONTEXT_TYPE)) {
+        gst_wayland_sink_post_need_context (self,
+            GST_WL_DISPLAY_HANDLE_LEGACY_CONTEXT_TYPE);
+      }
 
       if (!self->display) {
         /* if the application didn't set a display, let's create it ourselves */
@@ -480,7 +507,9 @@ gst_wayland_sink_set_context (GstElement * element, GstContext * context)
   GstWaylandSink *self = GST_WAYLAND_SINK (element);
 
   if (gst_context_has_context_type (context,
-          GST_WL_DISPLAY_HANDLE_CONTEXT_TYPE)) {
+          GST_WL_DISPLAY_HANDLE_CONTEXT_TYPE) ||
+      gst_context_has_context_type (context,
+          GST_WL_DISPLAY_HANDLE_LEGACY_CONTEXT_TYPE)) {
     g_mutex_lock (&self->display_lock);
     if (G_LIKELY (!self->display)) {
       gst_wayland_sink_set_display_from_context (self, context);

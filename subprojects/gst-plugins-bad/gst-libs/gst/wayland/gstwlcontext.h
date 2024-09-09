@@ -26,7 +26,10 @@ G_BEGIN_DECLS
 
 /* The type of GstContext used to pass the wl_display pointer
  * from the application to the sink */
-#define GST_WL_DISPLAY_HANDLE_CONTEXT_TYPE "GstWlDisplayHandleContextType"
+#define GST_WL_DISPLAY_HANDLE_CONTEXT_TYPE "GstWaylandDisplayHandleContextType"
+
+/* Accidental naming, used for implementing backward compatibility */
+#define GST_WL_DISPLAY_HANDLE_LEGACY_CONTEXT_TYPE "GstWlDisplayHandleContextType"
 
 GST_WL_API
 gboolean gst_is_wl_display_handle_need_context_message (GstMessage * msg);
