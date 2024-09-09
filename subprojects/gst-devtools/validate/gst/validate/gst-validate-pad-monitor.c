@@ -3022,7 +3022,8 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
       gst_pad_set_event_function_full (pad,
           gst_validate_pad_monitor_sink_event_func, eventdata, eventnotify);
   } else {
-    gst_pad_set_event_function (pad, gst_validate_pad_monitor_src_event_func);
+    gst_pad_set_event_function_full (pad,
+        gst_validate_pad_monitor_src_event_func, eventdata, eventnotify);
 
     /* add buffer/event probes */
     pad_monitor->pad_probe_id =
