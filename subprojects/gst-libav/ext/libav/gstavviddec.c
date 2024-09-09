@@ -1145,7 +1145,7 @@ map_failed:
     GST_ELEMENT_ERROR (ffmpegdec, RESOURCE, OPEN_READ_WRITE,
         ("Cannot access memory for read and write operation."),
         ("The video memory allocated from downstream pool could not mapped for"
-            "read and write."));
+            " read and write."));
     return -1;
   }
 duplicate_frame:
@@ -1874,7 +1874,7 @@ map_failed:
     GST_ELEMENT_ERROR (ffmpegdec, RESOURCE, OPEN_READ_WRITE,
         ("Cannot access memory for read and write operation."),
         ("The video memory allocated from downstream pool could not mapped for"
-            "read and write."));
+            " read and write."));
     return ret;
   }
 not_negotiated:
