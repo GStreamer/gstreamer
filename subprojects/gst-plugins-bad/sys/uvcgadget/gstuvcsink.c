@@ -640,6 +640,8 @@ gst_uvc_sink_init (GstUvcSink * self)
   gst_pad_set_query_function (self->sinkpad, gst_uvc_sink_query);
   gst_pad_set_event_function (self->sinkpad, gst_uvc_sink_event);
 
+  self->request_error_code = REQUEST_ERROR_CODE_NO_ERROR;
+
   self->cur_caps = gst_caps_new_empty ();
 }
 
@@ -985,6 +987,7 @@ gst_uvc_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_element_sync_state_with_parent (GST_ELEMENT (self->fakesink));
       gst_uvc_sink_remove_idle_probe (self);
+      self->request_error_code = REQUEST_ERROR_CODE_NO_ERROR;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (!gst_uvc_sink_unwatch (self))
