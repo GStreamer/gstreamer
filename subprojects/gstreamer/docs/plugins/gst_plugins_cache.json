@@ -1905,6 +1905,18 @@
                         "type": "guint64",
                         "writable": true
                     },
+                    "notify-levels": {
+                        "blurb": "Whether to emit `notify` signals on levels changes or not",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "silent": {
                         "blurb": "Don't emit queue signals",
                         "conditionally-available": false,

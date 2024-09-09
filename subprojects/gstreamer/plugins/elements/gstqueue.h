@@ -129,7 +129,8 @@ struct _GstQueue {
   gboolean head_needs_discont, tail_needs_discont;
   gboolean push_newsegment;
 
-  gboolean silent;      /* don't emit signals */
+  gboolean silent;             /* don't emit signals */
+  gboolean notify_levels;      /* emit 'notify' signals on level changes */
 
   /* whether the first new segment has been applied to src */
   gboolean newseg_applied_to_src;
