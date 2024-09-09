@@ -145,7 +145,7 @@ gst_vulkan_image_buffer_pool_config_set_encode_caps (GstStructure * config,
  * gst_vulkan_image_buffer_pool_config_get_allocation_params:
  * @config: the #GstStructure with the pool's configuration.
  * @usage: (out) (optional): The Vulkan image usage flags.
- * @mem_properties: (out) (optional): Vulkan memory property flags.
+ * @mem_props: (out) (optional): Vulkan memory property flags.
  * @initial_layout: (out) (optional): Initial Vulkan image layout.
  * @initial_access: (out) (optional): Initial Vulkan access flags.
  *

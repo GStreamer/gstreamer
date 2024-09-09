@@ -1681,7 +1681,7 @@ error:
 
 /**
  * gst_vulkan_full_screen_quad_get_queue:
- * @filter: a #GstVulkanVideoFilter
+ * @self: a #GstVulkanFullScreenQuad
  *
  * Returns: (transfer full) (nullable): The currently configured
  *     #GstVulkanQueue

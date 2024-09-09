@@ -778,7 +778,9 @@ gst_vulkan_operation_new_extra_image_barriers (GstVulkanOperation * self)
 /**
  * gst_vulkan_operation_add_extra_image_barriers:
  * @self: a #GstVulkanOperation
- * @extra_barriers: a #GArray of extra image memory barriers to handle
+ * @extra_barriers: a #GArray of extra image memory barriers to handle, either
+ * VkImageMemoryBarrier or VkImageMemoryBarrier2KHR, depending whether
+ * synchronization2 extension is used.
  *
  * See also: gst_vulkan_operation_use_sync2(),
  *     gst_vulkan_operation_new_extra_image_barriers() and

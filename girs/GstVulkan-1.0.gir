@@ -2681,6 +2681,7 @@ gst_vulkan_full_screen_quad_set_blend_factors().</doc>
         </return-value>
         <parameters>
           <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">a #GstVulkanFullScreenQuad</doc>
             <type name="VulkanFullScreenQuad" c:type="GstVulkanFullScreenQuad*"/>
           </instance-parameter>
         </parameters>
@@ -3528,7 +3529,8 @@ inside @handle.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">The Vulkan image usage flags.</doc>
             <type name="Vulkan.ImageUsageFlags" c:type="VkImageUsageFlags*"/>
           </parameter>
-          <parameter name="mem_props" transfer-ownership="none">
+          <parameter name="mem_props" direction="out" caller-allocates="1" transfer-ownership="none" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Vulkan memory property flags.</doc>
             <type name="Vulkan.MemoryPropertyFlags" c:type="VkMemoryPropertyFlags*"/>
           </parameter>
           <parameter name="initial_layout" direction="out" caller-allocates="1" transfer-ownership="none" optional="1" allow-none="1">
@@ -4642,7 +4644,9 @@ images in @extra_barriers.</doc>
             <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
           </instance-parameter>
           <parameter name="extra_barriers" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GArray of extra image memory barriers to handle</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GArray of extra image memory barriers to handle, either
+VkImageMemoryBarrier or VkImageMemoryBarrier2KHR, depending whether
+synchronization2 extension is used.</doc>
             <array name="GLib.Array" c:type="GArray*">
               <type name="gpointer" c:type="gpointer"/>
             </array>
