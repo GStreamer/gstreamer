@@ -1976,7 +1976,6 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
   GstFlowReturn ret = GST_FLOW_OK;
   CFDictionaryRef frame_props = NULL;
   GstTaskState task_state;
-  gboolean is_flushing;
 
   /* If this condition changes later while we're still in this function,
    * it'll just fail on next frame encode or in _finish() */
@@ -1984,28 +1983,30 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
   if (task_state == GST_TASK_STOPPED || task_state == GST_TASK_PAUSED) {
     /* Abort if our loop failed to push frames downstream... */
     if (self->downstream_ret != GST_FLOW_OK) {
-      if (self->downstream_ret == GST_FLOW_FLUSHING)
+      ret = self->downstream_ret;
+
+      if (ret == GST_FLOW_FLUSHING) {
         GST_DEBUG_OBJECT (self,
             "Output loop stopped because of flushing, ignoring frame");
-      else
+        goto release;
+      } else {
         GST_WARNING_OBJECT (self,
             "Output loop stopped with error (%s), leaving",
-            gst_flow_get_name (self->downstream_ret));
-
-      ret = self->downstream_ret;
-      goto drop;
+            gst_flow_get_name (ret));
+        goto drop;
+      }
     }
 
     /* ...or if it stopped because of the flushing flag while the queue
      * was empty, in which case we didn't get GST_FLOW_FLUSHING... */
     g_mutex_lock (&self->queue_mutex);
-    is_flushing = self->is_flushing;
-    g_mutex_unlock (&self->queue_mutex);
-    if (is_flushing) {
+    if (self->is_flushing) {
+      g_mutex_unlock (&self->queue_mutex);
       GST_DEBUG_OBJECT (self, "Flushing flag set, ignoring frame");
       ret = GST_FLOW_FLUSHING;
-      goto drop;
+      goto release;
     }
+    g_mutex_unlock (&self->queue_mutex);
 
     /* .. or if it refuses to resume - e.g. it was stopped instead of paused */
     if (!gst_vtenc_ensure_output_loop (self)) {
@@ -2225,17 +2226,16 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
 
   return ret;
 
-drop:
-  {
-    gst_video_encoder_drop_frame (GST_VIDEO_ENCODER_CAST (self), frame);
-    return ret;
-  }
-
 cv_error:
-  {
-    gst_video_encoder_drop_frame (GST_VIDEO_ENCODER_CAST (self), frame);
-    return GST_FLOW_ERROR;
-  }
+  ret = GST_FLOW_ERROR;
+
+drop:
+  gst_video_encoder_drop_frame (GST_VIDEO_ENCODER_CAST (self), frame);
+  return ret;
+
+release:
+  gst_video_encoder_release_frame (GST_VIDEO_ENCODER_CAST (self), frame);
+  return ret;
 }
 
 static void
