@@ -324,9 +324,10 @@ commitlint:
 .gtk-build-rules:
   rules:
     - changes:
-        - .gitlab-ci.yml
-        - meson.build
-        - subprojects/*.wrap
+        paths:
+          - ".gitlab-ci.yml"
+          - "meson.build"
+          - "subprojects/*.wrap"
       variables:
         GTK_ARGS: "-Dgtk=enabled"
 
@@ -359,9 +360,11 @@ commitlint:
   rules:
     - !reference [.upstream-branch-rules, rules]
     - changes:
-        *modules_changes
+        paths:
+          *modules_changes
     - changes:
-        - subprojects/gstreamer-vaapi/**/*
+        paths:
+          - "subprojects/gstreamer-vaapi/**/*"
 
 .build simple:
   extends:
@@ -479,9 +482,11 @@ build debian x86_64:
     - !reference [.gtk-build-rules, rules]
     - !reference [.upstream-branch-rules, rules]
     - changes:
-        *modules_changes
+        paths:
+          *modules_changes
     - changes:
-        - subprojects/win-*/*
+        paths:
+          - "subprojects/win-*/*"
   script:
     # Make sure powershell exits on errors
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
@@ -600,9 +605,11 @@ build macos:
     - !reference [.gtk-build-rules, rules]
     - !reference [.upstream-branch-rules, rules]
     - changes:
-        *modules_changes
+        paths:
+          *modules_changes
     - changes:
-        - subprojects/macos-*/*
+        paths:
+          - "subprojects/macos-*/*"
   parallel:
     matrix:
       - BUILD_TYPE: ["--default-library=both"]
@@ -647,7 +654,8 @@ build macos:
     PYTHONFAULTHANDLER: "enabled"
   rules:
     - changes:
-        *modules_changes
+        paths:
+          *modules_changes
   script:
     # Disable gdb debugdir safeload
     # The CI will execute any code submitted to it anyway
@@ -684,9 +692,11 @@ check fedora:
     TEST_SUITE: "check.gst*"
   rules:
     - changes:
-        *modules_changes
+        paths:
+          *modules_changes
     - changes:
-        - subprojects/gstreamer-vaapi/**/*
+        paths:
+          - "subprojects/gstreamer-vaapi/**/*"
 
 integration testsuites fedora:
   extends: '.test fedora x86_64'
@@ -734,8 +744,9 @@ check video formats:
     - $CI_PROJECT_DIR/ci/scripts/check-video-formats.sh
   rules:
     - changes:
-      - ${VIDEO_HEADER}
-      - ${WL_HEADER}
+        paths:
+          - "${VIDEO_HEADER}"
+          - "${WL_HEADER}"
 
 playbin3 integration:
   extends: 'integration testsuites fedora'
@@ -826,15 +837,16 @@ fluster v4l2-stateless on visl:
       junit: build/fluster-results-*.xml
   rules:
     - changes:
-      - .gitlab-ci.yml
-      - .gitlab-image-tags.yml
-      - subprojects/gst-plugins-bad/sys/v4l2codecs/*
-      - subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/*
-      - subprojects/gst-plugins-bad/gst-libs/gst/codecs/*
-      - subprojects/gst-plugins-bad/gst/videoparsers/*
-      - tests/virtme/*
-      - ci/scripts/build-linux.sh
-      - ci/docker/fedora/*
+        paths:
+          - ".gitlab-ci.yml"
+          - ".gitlab-image-tags.yml"
+          - "subprojects/gst-plugins-bad/sys/v4l2codecs/*"
+          - "subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/*"
+          - "subprojects/gst-plugins-bad/gst-libs/gst/codecs/*"
+          - "subprojects/gst-plugins-bad/gst/videoparsers/*"
+          - "tests/virtme/*"
+          - "ci/scripts/build-linux.sh"
+          - "ci/docker/fedora/*"
 
 # Valgrind
 .valgrind fedora x86_64:
@@ -844,9 +856,11 @@ fluster v4l2-stateless on visl:
     EXTRA_VALIDATE_ARGS: "--valgrind"
   rules:
     - changes:
-        *modules_changes
+        paths:
+          *modules_changes
     - changes:
-        - subprojects/gstreamer-vaapi/**/*
+        paths:
+          - "subprojects/gstreamer-vaapi/**/*"
 
 valgrind core:
   extends: '.valgrind fedora x86_64'
@@ -854,11 +868,12 @@ valgrind core:
     TEST_SUITE: "check.gstreamer\\..*"
   rules:
     - changes:
-      - "*"
-      - scripts/*
-      - ci/**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gstreamer/**/*
+        paths:
+          - "*"
+          - "scripts/*"
+          - "ci/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gstreamer/**/*"
 
 valgrind base:
   extends: '.valgrind fedora x86_64'
@@ -866,12 +881,13 @@ valgrind base:
     TEST_SUITE: "check.gst-plugins-base\\..*"
   rules:
     - changes:
-      - "*"
-      - scripts/*
-      - ci//**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gst-plugins-base/**/*
+        paths:
+          - "*"
+          - "scripts/*"
+          - "ci/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gst-plugins-base/**/*"
 
 valgrind good:
   extends: '.valgrind fedora x86_64'
@@ -881,13 +897,14 @@ valgrind good:
     TIMEOUT_FACTOR: "4"
   rules:
     - changes:
-      - "*"
-      - scripts/*
-      - ci/**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gst-plugins-base/**/*
-      - subprojects/gst-plugins-good/**/*
+        paths:
+          - "*"
+          - "scripts/*"
+          - "ci/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gst-plugins-base/**/*"
+          - "subprojects/gst-plugins-good/**/*"
 
 valgrind ugly:
   extends: '.valgrind fedora x86_64'
@@ -895,14 +912,15 @@ valgrind ugly:
     TEST_SUITE: "check.gst-plugins-ugly\\..*"
   rules:
     - changes:
-      - "*"
-      - scripts/*
-      - ci/**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gst-plugins-base/**/*
-      - subprojects/gst-plugins-good/**/*
-      - subprojects/gst-plugins-ugly/**/*
+        paths:
+          - "*"
+          - "scripts/*"
+          - "ci/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gst-plugins-base/**/*"
+          - "subprojects/gst-plugins-good/**/*"
+          - "subprojects/gst-plugins-ugly/**/*"
 
 valgrind bad:
   extends: '.valgrind fedora x86_64'
@@ -910,14 +928,15 @@ valgrind bad:
     TEST_SUITE: "check.gst-plugins-bad\\..*"
   rules:
     - changes:
-      - "*"
-      - scripts/*
-      - ci/**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gst-plugins-base/**/*
-      - subprojects/gst-plugins-good/**/*
-      - subprojects/gst-plugins-bad/**/*
+        paths:
+          - "*"
+          - "scripts/*"
+          - "ci/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gst-plugins-base/**/*"
+          - "subprojects/gst-plugins-good/**/*"
+          - "subprojects/gst-plugins-bad/**/*"
 
 valgrind ges:
   extends: '.valgrind fedora x86_64'
@@ -925,16 +944,17 @@ valgrind ges:
     TEST_SUITE: "check.gst-editing-services\\..*"
   rules:
     - changes:
-      - "*"
-      - scripts/*
-      - ci/**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gst-plugins-base/**/*
-      - subprojects/gst-plugins-good/**/*
-      - subprojects/gst-plugins-bad/**/*
-      - subprojects/gst-editing-services/**/*
-      - subprojects/gst-python/**/*
+        paths:
+          - "*"
+          - "scripts/*"
+          - "ci/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gst-plugins-base/**/*"
+          - "subprojects/gst-plugins-good/**/*"
+          - "subprojects/gst-plugins-bad/**/*"
+          - "subprojects/gst-editing-services/**/*"
+          - "subprojects/gst-python/**/*"
   # valgrind ges jobs are racy across the board and simply fail too often.
   # Someone needs to go through job logs and figure out which jobs to mark
   # as flaky. Until then, just ignore failures.
@@ -995,21 +1015,22 @@ build documentation:
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: never
     - changes:
-      - .gitlab-ci.yml
-      - .gitlab-image-tags.yml
-      - ci/gitlab/*.py
-      - subprojects/*.wrap
-      - subprojects/gst-docs/**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gst-editing-services/**/*
-      - subprojects/gst-libav/**/*
-      - subprojects/gst-plugins-bad/**/*
-      - subprojects/gst-plugins-base/**/*
-      - subprojects/gst-plugins-good/**/*
-      - subprojects/gst-plugins-ugly/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gstreamer-vaapi/**/*
-      - subprojects/gst-rtsp-server/**/*
+        paths:
+          - ".gitlab-ci.yml"
+          - ".gitlab-image-tags.yml"
+          - "ci/gitlab/*.py"
+          - "subprojects/*.wrap"
+          - "subprojects/gst-docs/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gst-editing-services/**/*"
+          - "subprojects/gst-libav/**/*"
+          - "subprojects/gst-plugins-bad/**/*"
+          - "subprojects/gst-plugins-base/**/*"
+          - "subprojects/gst-plugins-good/**/*"
+          - "subprojects/gst-plugins-ugly/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gstreamer-vaapi/**/*"
+          - "subprojects/gst-rtsp-server/**/*"
 
 # FIXME: Using trigger: causes permission issues, workaround using old REST API.
 # https://gitlab.com/gitlab-org/gitlab/-/issues/341737
@@ -1033,16 +1054,17 @@ cerbero trigger:
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: never
     - changes:
-      - .gitlab-ci.yml
-      - ci/gitlab/*.py
-      - subprojects/gst-devtools/**/*
-      - subprojects/gst-editing-services/**/*
-      - subprojects/gst-libav/**/*
-      - subprojects/gst-plugins-bad/**/*
-      - subprojects/gst-plugins-base/**/*
-      - subprojects/gst-plugins-good/**/*
-      - subprojects/gst-plugins-ugly/**/*
-      - subprojects/gst-python/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gst-rtsp-server/**/*
-      - subprojects/gst-examples/**/*
+        paths:
+          - ".gitlab-ci.yml"
+          - "ci/gitlab/*.py"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gst-editing-services/**/*"
+          - "subprojects/gst-libav/**/*"
+          - "subprojects/gst-plugins-bad/**/*"
+          - "subprojects/gst-plugins-base/**/*"
+          - "subprojects/gst-plugins-good/**/*"
+          - "subprojects/gst-plugins-ugly/**/*"
+          - "subprojects/gst-python/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gst-rtsp-server/**/*"
+          - "subprojects/gst-examples/**/*"
