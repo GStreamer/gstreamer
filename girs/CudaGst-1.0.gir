@@ -35,6 +35,10 @@ and/or use gtk-doc annotations.  -->
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
       <type name="unsigned long long" c:type="unsigned long long"/>
     </alias>
+    <alias name="memoryPool" c:type="CUmemoryPool">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <type name="gpointer" c:type="gpointer"/>
+    </alias>
     <alias name="mipmappedArray" c:type="CUmipmappedArray">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
       <type name="gpointer" c:type="gpointer"/>
@@ -294,6 +298,8 @@ and/or use gtk-doc annotations.  -->
       </member>
       <member name="handle_type_win32_kmt_handle_supported" value="105" c:identifier="CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_KMT_HANDLE_SUPPORTED">
       </member>
+      <member name="memory_pools_supported" value="115" c:identifier="CU_DEVICE_ATTRIBUTE_MEMORY_POOLS_SUPPORTED">
+      </member>
     </enumeration>
     <enumeration name="event_flags" c:type="CUevent_flags">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
@@ -456,6 +462,48 @@ and/or use gtk-doc annotations.  -->
       <member name="device" value="1" c:identifier="CU_MEM_LOCATION_TYPE_DEVICE">
       </member>
       <member name="max" value="2147483647" c:identifier="CU_MEM_LOCATION_TYPE_MAX">
+      </member>
+    </enumeration>
+    <record name="memPoolProps" c:type="CUmemPoolProps">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <field name="allocType" writable="1">
+        <type name="memAllocationType" c:type="CUmemAllocationType"/>
+      </field>
+      <field name="handleTypes" writable="1">
+        <type name="memAllocationHandleType" c:type="CUmemAllocationHandleType"/>
+      </field>
+      <field name="location" writable="1">
+        <type name="memLocation" c:type="CUmemLocation"/>
+      </field>
+      <field name="win32SecurityAttributes" writable="1">
+        <type name="gpointer" c:type="void*"/>
+      </field>
+      <field name="maxSize" writable="1">
+        <type name="gsize" c:type="size_t"/>
+      </field>
+      <field name="reserved" writable="1">
+        <array zero-terminated="0" fixed-size="56">
+          <type name="guint8" c:type="unsigned char"/>
+        </array>
+      </field>
+    </record>
+    <enumeration name="memPool_attribute" c:type="CUmemPool_attribute">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <member name="reuse_follow_event_dependencies" value="1" c:identifier="CU_MEMPOOL_ATTR_REUSE_FOLLOW_EVENT_DEPENDENCIES">
+      </member>
+      <member name="reuse_allow_opportunistic" value="2" c:identifier="CU_MEMPOOL_ATTR_REUSE_ALLOW_OPPORTUNISTIC">
+      </member>
+      <member name="reuse_allow_internal_dependencies" value="3" c:identifier="CU_MEMPOOL_ATTR_REUSE_ALLOW_INTERNAL_DEPENDENCIES">
+      </member>
+      <member name="release_threshold" value="4" c:identifier="CU_MEMPOOL_ATTR_RELEASE_THRESHOLD">
+      </member>
+      <member name="reserved_mem_current" value="5" c:identifier="CU_MEMPOOL_ATTR_RESERVED_MEM_CURRENT">
+      </member>
+      <member name="reserved_mem_high" value="6" c:identifier="CU_MEMPOOL_ATTR_RESERVED_MEM_HIGH">
+      </member>
+      <member name="used_mem_current" value="7" c:identifier="CU_MEMPOOL_ATTR_USED_MEM_CURRENT">
+      </member>
+      <member name="used_mem_high" value="8" c:identifier="CU_MEMPOOL_ATTR_USED_MEM_HIGH">
       </member>
     </enumeration>
     <enumeration name="memorytype" c:type="CUmemorytype">
