@@ -4567,7 +4567,7 @@ probe_handled:
 probe_stopped:
   {
     /* We unref the buffer, except if the probe handled it (CUSTOM_SUCCESS_1) */
-    if (!handled)
+    if (data && !handled)
       gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
 
     switch (ret) {
@@ -5636,7 +5636,7 @@ inactive:
 probe_stopped:
   {
     GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
-    if (ret != GST_FLOW_CUSTOM_SUCCESS_1)
+    if (event && ret != GST_FLOW_CUSTOM_SUCCESS_1)
       gst_event_unref (event);
 
     switch (ret) {
@@ -6045,7 +6045,7 @@ probe_stopped:
     if (need_unlock)
       GST_PAD_STREAM_UNLOCK (pad);
     /* Only unref if unhandled */
-    if (ret != GST_FLOW_CUSTOM_SUCCESS_1)
+    if (event && ret != GST_FLOW_CUSTOM_SUCCESS_1)
       gst_event_unref (event);
 
     switch (ret) {
