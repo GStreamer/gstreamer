@@ -25,24 +25,24 @@ if host_system == 'windows'
   endif
 endif
 
-  gst_tools = {
-    'gst-device-monitor': {
-      'files': files('gst-device-monitor.c'),
-      'deps': tool_deps,
-      'man_page': files('gst-device-monitor-@0@.1'.format(api_version))
-    },
-    'gst-discoverer': {
-      'files': files('gst-discoverer.c'),
-      'deps': tool_deps,
-      'man_page': files('gst-discoverer-@0@.1'.format(api_version))
-    },
-    'gst-play': {
-      'files': files('gst-play.c', 'gst-play-kb.c'),
-      'deps': tool_deps + extra_deps,
-      'man_page': files('gst-play-@0@.1'.format(api_version)),
-      'extra_c_args': extra_args
-    },
-  }
+gst_tools = {
+  'gst-device-monitor': {
+    'files': files('gst-device-monitor.c'),
+    'deps': tool_deps,
+    'man_page': files('gst-device-monitor-@0@.1'.format(api_version))
+  },
+  'gst-discoverer': {
+    'files': files('gst-discoverer.c'),
+    'deps': tool_deps,
+    'man_page': files('gst-discoverer-@0@.1'.format(api_version))
+  },
+  'gst-play': {
+    'files': files('gst-play.c', 'gst-play-kb.c'),
+    'deps': tool_deps + libm + extra_deps,
+    'man_page': files('gst-play-@0@.1'.format(api_version)),
+    'extra_c_args': extra_args
+  },
+}
 
 if not get_option('tools').disabled() and not static_build
   foreach tool, data: gst_tools
