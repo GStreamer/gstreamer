@@ -2453,7 +2453,7 @@ beach:
 }
 
 static GstBaseTsMuxPad *
-gst_base_ts_mux_find_best_pad (GstAggregator * aggregator)
+gst_base_ts_mux_find_best_pad (GstAggregator * aggregator, gboolean timeout)
 {
   GstBaseTsMuxPad *best = NULL;
   GstClockTime best_ts = GST_CLOCK_TIME_NONE;
@@ -2467,8 +2467,14 @@ gst_base_ts_mux_find_best_pad (GstAggregator * aggregator)
     GstBuffer *buffer;
 
     buffer = gst_aggregator_pad_peek_buffer (apad);
-    if (!buffer)
+    if (!buffer) {
+      if (!timeout && !GST_PAD_IS_EOS (apad)) {
+        gst_object_replace ((GstObject **) & best, NULL);
+        best_ts = GST_CLOCK_TIME_NONE;
+        break;
+      }
       continue;
+    }
     if (best_ts == GST_CLOCK_TIME_NONE) {
       best = tpad;
       best_ts = GST_BUFFER_DTS_OR_PTS (buffer);
@@ -2522,7 +2528,7 @@ gst_base_ts_mux_aggregate (GstAggregator * agg, gboolean timeout)
 {
   GstBaseTsMux *mux = GST_BASE_TS_MUX (agg);
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBaseTsMuxPad *best = gst_base_ts_mux_find_best_pad (agg);
+  GstBaseTsMuxPad *best = gst_base_ts_mux_find_best_pad (agg, timeout);
   GstCaps *caps;
 
   /* set caps on the srcpad if no caps were set yet */
