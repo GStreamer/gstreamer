@@ -4203,12 +4203,30 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
     }
   }
 
+  if (!strcmp (collect_pad->track->codec_id, GST_MATROSKA_CODEC_ID_AUDIO_OPUS)) {
+    cmeta = gst_buffer_get_audio_clipping_meta (buf);
+    g_assert (!cmeta || cmeta->format == GST_FORMAT_DEFAULT);
+
+    /* Start clipping is done via header and CodecDelay */
+    if (cmeta && !cmeta->end)
+      cmeta = NULL;
+  }
+
   /* Check if the duration differs from the default duration. */
   write_duration = FALSE;
   block_duration = 0;
   if (pad->frame_duration && GST_BUFFER_DURATION_IS_VALID (buf)) {
     block_duration = GST_BUFFER_DURATION (buf) + duration_diff;
     block_duration = gst_util_uint64_scale (block_duration, 1, mux->time_scale);
+
+    /* Padding should be considered in the block duration and is clipped off
+     * again during playback. Specifically, firefox considers it a fatal error
+     * if there is more padding than the block duration */
+    if (cmeta) {
+      guint64 end = gst_util_uint64_scale_round (cmeta->end, GST_SECOND, 48000);
+      end = gst_util_uint64_scale (end, 1, mux->time_scale);
+      block_duration += end;
+    }
 
     /* small difference should be ok. */
     if (block_duration > collect_pad->default_duration_scaled + 1 ||
@@ -4236,15 +4254,6 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
 
   if (is_video_invisible)
     flags |= 0x08;
-
-  if (!strcmp (collect_pad->track->codec_id, GST_MATROSKA_CODEC_ID_AUDIO_OPUS)) {
-    cmeta = gst_buffer_get_audio_clipping_meta (buf);
-    g_assert (!cmeta || cmeta->format == GST_FORMAT_DEFAULT);
-
-    /* Start clipping is done via header and CodecDelay */
-    if (cmeta && !cmeta->end)
-      cmeta = NULL;
-  }
 
   if (mux->doctype_version > 1 && !write_duration && !cmeta) {
     if (is_video_keyframe)
