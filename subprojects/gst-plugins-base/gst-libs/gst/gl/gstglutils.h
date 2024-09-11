@@ -71,6 +71,7 @@ void gst_gl_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * resul
  * GstGLDrmFormatFlags:
  * @GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL: include external-only formats (Since: 1.26)
  * @GST_GL_DRM_FORMAT_LINEAR_ONLY: only include formats with linear modifier (Since: 1.26)
+ * @GST_GL_DRM_FORMAT_INCLUDE_EMULATED: include emulated formats (Since: 1.26)
  *
  * Since: 1.26
  */
@@ -92,6 +93,14 @@ typedef enum
   * Since: 1.26
   */
   GST_GL_DRM_FORMAT_LINEAR_ONLY = 1 << 1,
+  /**
+   * GST_GL_DRM_FORMAT_INCLUDE_EMULATED:
+   *
+   * include emulated formats
+   *
+   * Since: 1.26
+   */
+  GST_GL_DRM_FORMAT_INCLUDE_EMULATED = 1 << 2,
 } GstGLDrmFormatFlags;
 
 GST_GL_API

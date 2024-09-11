@@ -3507,6 +3507,9 @@ extension.</doc>
       <member name="linear_only" value="2" c:identifier="GST_GL_DRM_FORMAT_LINEAR_ONLY" version="1.26" glib:nick="linear-only" glib:name="GST_GL_DRM_FORMAT_LINEAR_ONLY">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.h">only include formats with linear modifier</doc>
       </member>
+      <member name="include_emulated" value="4" c:identifier="GST_GL_DRM_FORMAT_INCLUDE_EMULATED" version="1.26" glib:nick="include-emulated" glib:name="GST_GL_DRM_FORMAT_INCLUDE_EMULATED">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.h">include emulated formats</doc>
+      </member>
     </bitfield>
     <class name="GLFilter" c:symbol-prefix="gl_filter" c:type="GstGLFilter" parent="GLBaseFilter" glib:type-name="GstGLFilter" glib:get-type="gst_gl_filter_get_type" glib:type-struct="GLFilterClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglfilter.c">#GstGLFilter helps to implement simple OpenGL filter elements taking a

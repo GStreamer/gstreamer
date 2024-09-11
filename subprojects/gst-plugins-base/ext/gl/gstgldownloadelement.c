@@ -958,7 +958,7 @@ _convert_dma_drm (GstGLContext * context, GstStructure * s)
     GValue newfmtval = G_VALUE_INIT;
 
     if (context && gst_gl_dma_buf_transform_drm_formats_to_gst_formats (context,
-        drmval, 0, &newfmtval)) {
+            drmval, GST_GL_DRM_FORMAT_INCLUDE_EMULATED, &newfmtval)) {
       gst_structure_set_value (s, "format", &newfmtval);
       gst_structure_remove_field (s, "drm-format");
       g_value_unset (&newfmtval);

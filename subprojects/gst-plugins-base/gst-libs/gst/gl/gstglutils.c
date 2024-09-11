@@ -47,11 +47,11 @@
 
 #if GST_GL_HAVE_PLATFORM_EGL
 #include "egl/gstglcontext_egl.h"
-#endif
-
+#include "egl/gsteglimage.h"
 #if GST_GL_HAVE_DMABUF
 #ifdef HAVE_LIBDRM
 #include <drm_fourcc.h>
+#endif
 #endif
 #endif
 
@@ -934,6 +934,7 @@ _append_drm_formats_from_video_format (GstGLContext * context,
     GstVideoFormat format, GstGLDrmFormatFlags flags, GPtrArray * drm_formats)
 {
   gint32 i, fourcc;
+  gint32 num_added = 0;
   const GArray *dma_modifiers = NULL;
   char *drm_format;
 
@@ -963,6 +964,14 @@ _append_drm_formats_from_video_format (GstGLContext * context,
       continue;
 
     drm_format = gst_video_dma_drm_fourcc_to_string (fourcc, mod->modifier);
+    g_ptr_array_add (drm_formats, drm_format);
+    ++num_added;
+  }
+
+  if (num_added == 0 && (flags & GST_GL_DRM_FORMAT_INCLUDE_EMULATED) &&
+      gst_egl_image_can_emulate (context, format)) {
+    drm_format =
+        gst_video_dma_drm_fourcc_to_string (fourcc, DRM_FORMAT_MOD_LINEAR);
     g_ptr_array_add (drm_formats, drm_format);
   }
 }
@@ -1071,7 +1080,9 @@ _get_video_format_from_drm_format (GstGLContext * context,
     return GST_VIDEO_FORMAT_UNKNOWN;
 
   if (!gst_gl_context_egl_format_supports_modifier (context, fourcc, modifier,
-      flags & GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL))
+          flags & GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL) &&
+      !(flags & GST_GL_DRM_FORMAT_INCLUDE_EMULATED &&
+          gst_egl_image_can_emulate (context, gst_format)))
     return GST_VIDEO_FORMAT_UNKNOWN;
 
   return gst_format;

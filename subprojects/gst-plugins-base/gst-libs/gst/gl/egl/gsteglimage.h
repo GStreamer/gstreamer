@@ -111,6 +111,10 @@ GstEGLImage *           gst_egl_image_from_dmabuf_direct_target_with_dma_drm
                                                                  GstGLTextureTarget target);
 GST_GL_API
 gboolean                gst_egl_image_export_dmabuf             (GstEGLImage *image, int *fd, gint *stride, gsize *offset);
+
+GST_GL_API
+gboolean                gst_egl_image_can_emulate               (GstGLContext * context,
+                                                                 GstVideoFormat format);
 #endif
 
 /**
