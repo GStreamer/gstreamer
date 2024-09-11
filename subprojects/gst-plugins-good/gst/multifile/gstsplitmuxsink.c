@@ -3056,6 +3056,25 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
       default:
         return GST_PAD_PROBE_PASS;
     }
+  } else if (info->type & GST_PAD_PROBE_TYPE_QUERY_UPSTREAM) {
+    switch (GST_QUERY_TYPE (GST_QUERY (info->data))) {
+      case GST_QUERY_LATENCY:
+        // Override the latency query to pretend that everything downstream
+        // of the sink pads is actually not live. splitmuxsink doesn't know
+        // how much latency it will possibly introduce.
+        if (info->type & GST_PAD_PROBE_TYPE_PUSH) {
+          GST_DEBUG_OBJECT (pad,
+              "Overriding latency query to pretend we're not live");
+          gst_query_set_latency (info->data, FALSE, 0, GST_CLOCK_TIME_NONE);
+          return GST_PAD_PROBE_HANDLED;
+        } else {
+          // Should not happen as we already handled it above.
+          g_warn_if_reached ();
+          return GST_PAD_PROBE_PASS;
+        }
+      default:
+        return GST_PAD_PROBE_PASS;
+    }
   }
 
   buf = gst_pad_probe_info_get_buffer (info);
@@ -3713,7 +3732,7 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
   ctx->sink_pad_block_id =
       gst_pad_add_probe (q_sink,
       GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH |
-      GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM,
+      GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM | GST_PAD_PROBE_TYPE_QUERY_UPSTREAM,
       (GstPadProbeCallback) handle_mq_input, ctx, NULL);
 
   GST_DEBUG_OBJECT (splitmux, "splitmuxsink pad %" GST_PTR_FORMAT
