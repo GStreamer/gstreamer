@@ -5,7 +5,7 @@
  */
 
 /**
- * SECTION:element-gstsvtjpegxsenc
+ * SECTION:element-svtjpegxsenc
  *
  * The svtjpegxsenc element does JPEG XS encoding using Scalable
  * Video Technology for JPEG_XS Encoder (SVT JPEG XS Encoder).

@@ -5,7 +5,7 @@
  */
 
 /**
- * SECTION:element-gstsvtjpegxsdec
+ * SECTION:element-svtjpegxsdec
  *
  * The svtjpegxsdec element does JPEG XS decoding using Scalable
  * Video Technology for JPEG XS Decoder (SVT JPEG XS Decoder).

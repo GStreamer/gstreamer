@@ -5,7 +5,7 @@
  */
 
 /**
- * SECTION:plugin-gstsvtjpegxs
+ * SECTION:plugin-svtjpegxs
  *
  * The svtjpegxs plugin provides JPEG XS encoding and decoding using the
  * Scalable Video Technology for JPEG XS library ([SVT-JPEG-XS][svtjpegxs]).
