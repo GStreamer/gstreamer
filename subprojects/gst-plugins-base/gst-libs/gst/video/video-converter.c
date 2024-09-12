@@ -3784,6 +3784,157 @@ convert_I420_v210 (GstVideoConverter * convert, const GstVideoFrame * src,
 }
 
 static void
+convert_I420_10_v210_task (FConvertTask * task)
+{
+  gint i, j;
+  gint l1, l2;
+  const guint16 *s_y1, *s_y2, *s_u, *s_v;
+  guint8 *d1, *d2;
+  guint32 a0, a1, a2, a3;
+  guint16 y0_1, y1_1, y2_1, y3_1, y4_1, y5_1;
+  guint16 u0_1, u2_1, u4_1;
+  guint16 v0_1, v2_1, v4_1;
+  guint16 y0_2, y1_2, y2_2, y3_2, y4_2, y5_2;
+  guint16 u0_2, u2_2, u4_2;
+  guint16 v0_2, v2_2, v4_2;
+
+  for (i = task->height_0; i < task->height_1; i += 2) {
+    GET_LINE_OFFSETS (task->interlaced, i, l1, l2);
+
+    s_y1 = FRAME_GET_Y_LINE (task->src, l1);
+    s_y2 = FRAME_GET_Y_LINE (task->src, l2);
+    s_u = FRAME_GET_U_LINE (task->src, i >> 1);
+    s_v = FRAME_GET_V_LINE (task->src, i >> 1);
+
+    d1 = FRAME_GET_LINE (task->dest, l1);
+    d2 = FRAME_GET_LINE (task->dest, l2);
+
+    for (j = 0; j < task->width; j += 6) {
+      y1_1 = y2_1 = y3_1 = y4_1 = y5_1 = 0;
+      u2_1 = u4_1 = v2_1 = v4_1 = 0;
+      y1_2 = y2_2 = y3_2 = y4_2 = y5_2 = 0;
+      u2_2 = u4_2 = v2_2 = v4_2 = 0;
+
+      y0_1 = s_y1[j];
+      y0_2 = s_y2[j];
+
+      u0_1 = u0_2 = s_u[j / 2];
+      v0_1 = v0_2 = s_v[j / 2];
+
+      if (j < task->width - 1) {
+        y1_1 = s_y1[j + 1];
+        y1_2 = s_y2[j + 1];
+      }
+
+      if (j < task->width - 2) {
+        y2_1 = s_y1[j + 2];
+        y2_2 = s_y2[j + 2];
+
+        u2_1 = u2_2 = s_u[j / 2 + 1];
+        v2_1 = v2_2 = s_v[j / 2 + 1];
+      }
+
+      if (j < task->width - 3) {
+        y3_1 = s_y1[j + 3];
+        y3_2 = s_y2[j + 3];
+      }
+
+      if (j < task->width - 4) {
+        y4_1 = s_y1[j + 4];
+        y4_2 = s_y2[j + 4];
+
+        u4_1 = u4_2 = s_u[j / 2 + 2];
+        v4_1 = v4_2 = s_v[j / 2 + 2];
+      }
+
+      if (j < task->width - 5) {
+        y5_1 = s_y1[j + 5];
+        y5_2 = s_y2[j + 5];
+      }
+
+      a0 = u0_1 | (y0_1 << 10) | (v0_1 << 20);
+      a1 = y1_1 | (u2_1 << 10) | (y2_1 << 20);
+      a2 = v2_1 | (y3_1 << 10) | (u4_1 << 20);
+      a3 = y4_1 | (v4_1 << 10) | (y5_1 << 20);
+
+      GST_WRITE_UINT32_LE (d1 + (j / 6) * 16 + 0, a0);
+      GST_WRITE_UINT32_LE (d1 + (j / 6) * 16 + 4, a1);
+      GST_WRITE_UINT32_LE (d1 + (j / 6) * 16 + 8, a2);
+      GST_WRITE_UINT32_LE (d1 + (j / 6) * 16 + 12, a3);
+
+      a0 = u0_2 | (y0_2 << 10) | (v0_2 << 20);
+      a1 = y1_2 | (u2_2 << 10) | (y2_2 << 20);
+      a2 = v2_2 | (y3_2 << 10) | (u4_2 << 20);
+      a3 = y4_2 | (v4_2 << 10) | (y5_2 << 20);
+
+      GST_WRITE_UINT32_LE (d2 + (j / 6) * 16 + 0, a0);
+      GST_WRITE_UINT32_LE (d2 + (j / 6) * 16 + 4, a1);
+      GST_WRITE_UINT32_LE (d2 + (j / 6) * 16 + 8, a2);
+      GST_WRITE_UINT32_LE (d2 + (j / 6) * 16 + 12, a3);
+    }
+  }
+}
+
+static void
+convert_I420_10_v210 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
+{
+  int i;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
+  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src)
+      && (GST_VIDEO_INFO_INTERLACE_MODE (&src->info) !=
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE);
+  gint h2;
+  FConvertTask *tasks;
+  FConvertTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+
+  /* I420 has half as many chroma lines, as such we have to
+   * always merge two into one. For non-interlaced these are
+   * the two next to each other, for interlaced one is skipped
+   * in between. */
+  if (interlaced)
+    h2 = GST_ROUND_DOWN_4 (height);
+  else
+    h2 = GST_ROUND_DOWN_2 (height);
+
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = convert->tasks[0] =
+      g_renew (FConvertTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertTask *, convert->tasks_p[0], n_threads);
+
+  lines_per_thread = GST_ROUND_UP_2 ((h2 + n_threads - 1) / n_threads);
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].src = src;
+    tasks[i].dest = dest;
+
+    tasks[i].interlaced = interlaced;
+    tasks[i].width = width;
+
+    tasks[i].height_0 = i * lines_per_thread;
+    tasks[i].height_1 = tasks[i].height_0 + lines_per_thread;
+    tasks[i].height_1 = MIN (h2, tasks[i].height_1);
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_I420_10_v210_task, (gpointer) tasks_p);
+
+  /* now handle last lines. For interlaced these are up to 3 */
+  if (h2 != height) {
+    for (i = h2; i < height; i++) {
+      UNPACK_FRAME (src, convert->tmpline[0], i, convert->in_x, width);
+      PACK_FRAME (dest, convert->tmpline[0], i, width);
+    }
+  }
+}
+
+static void
 convert_YUY2_I420_task (FConvertTask * task)
 {
   gint i;
@@ -4029,6 +4180,170 @@ convert_v210_I420 (GstVideoConverter * convert, const GstVideoFrame * src,
     }
   }
 }
+
+static void
+convert_v210_I420_10_task (FConvertTask * task)
+{
+  gint i, j;
+  gint l1, l2;
+  guint16 *d_y1, *d_y2, *d_u, *d_v;
+  const guint8 *s1, *s2;
+  guint32 a0, a1, a2, a3;
+  guint16 y0_1, y1_1, y2_1, y3_1, y4_1, y5_1;
+  guint16 u0_1, u2_1, u4_1;
+  guint16 v0_1, v2_1, v4_1;
+  guint16 y0_2, y1_2, y2_2, y3_2, y4_2, y5_2;
+  guint16 u0_2, u2_2, u4_2;
+  guint16 v0_2, v2_2, v4_2;
+
+  for (i = task->height_0; i < task->height_1; i += 2) {
+    GET_LINE_OFFSETS (task->interlaced, i, l1, l2);
+
+    d_y1 = FRAME_GET_Y_LINE (task->dest, l1);
+    d_y2 = FRAME_GET_Y_LINE (task->dest, l2);
+    d_u = FRAME_GET_U_LINE (task->dest, i >> 1);
+    d_v = FRAME_GET_V_LINE (task->dest, i >> 1);
+
+    s1 = FRAME_GET_LINE (task->src, l1);
+    s2 = FRAME_GET_LINE (task->src, l2);
+
+    for (j = 0; j < task->width; j += 6) {
+      a0 = GST_READ_UINT32_LE (s1 + (j / 6) * 16 + 0);
+      a1 = GST_READ_UINT32_LE (s1 + (j / 6) * 16 + 4);
+      a2 = GST_READ_UINT32_LE (s1 + (j / 6) * 16 + 8);
+      a3 = GST_READ_UINT32_LE (s1 + (j / 6) * 16 + 12);
+
+      u0_1 = ((a0 >> 0) & 0x3ff);
+      y0_1 = ((a0 >> 10) & 0x3ff);
+      v0_1 = ((a0 >> 20) & 0x3ff);
+      y1_1 = ((a1 >> 0) & 0x3ff);
+
+      u2_1 = ((a1 >> 10) & 0x3ff);
+      y2_1 = ((a1 >> 20) & 0x3ff);
+      v2_1 = ((a2 >> 0) & 0x3ff);
+      y3_1 = ((a2 >> 10) & 0x3ff);
+
+      u4_1 = ((a2 >> 20) & 0x3ff);
+      y4_1 = ((a3 >> 0) & 0x3ff);
+      v4_1 = ((a3 >> 10) & 0x3ff);
+      y5_1 = ((a3 >> 20) & 0x3ff);
+
+      a0 = GST_READ_UINT32_LE (s2 + (j / 6) * 16 + 0);
+      a1 = GST_READ_UINT32_LE (s2 + (j / 6) * 16 + 4);
+      a2 = GST_READ_UINT32_LE (s2 + (j / 6) * 16 + 8);
+      a3 = GST_READ_UINT32_LE (s2 + (j / 6) * 16 + 12);
+
+      u0_2 = ((a0 >> 0) & 0x3ff);
+      y0_2 = ((a0 >> 10) & 0x3ff);
+      v0_2 = ((a0 >> 20) & 0x3ff);
+      y1_2 = ((a1 >> 0) & 0x3ff);
+
+      u2_2 = ((a1 >> 10) & 0x3ff);
+      y2_2 = ((a1 >> 20) & 0x3ff);
+      v2_2 = ((a2 >> 0) & 0x3ff);
+      y3_2 = ((a2 >> 10) & 0x3ff);
+
+      u4_2 = ((a2 >> 20) & 0x3ff);
+      y4_2 = ((a3 >> 0) & 0x3ff);
+      v4_2 = ((a3 >> 10) & 0x3ff);
+      y5_2 = ((a3 >> 20) & 0x3ff);
+
+      d_y1[j] = y0_1;
+      d_y2[j] = y0_2;
+      d_u[j / 2] = (u0_1 + u0_2) / 2;
+      d_v[j / 2] = (v0_1 + v0_2) / 2;
+
+      if (j < task->width - 1) {
+        d_y1[j + 1] = y1_1;
+        d_y2[j + 1] = y1_2;
+      }
+
+      if (j < task->width - 2) {
+        d_y1[j + 2] = y2_1;
+        d_y2[j + 2] = y2_2;
+        d_u[j / 2 + 1] = (u2_1 + u2_2) / 2;
+        d_v[j / 2 + 1] = (v2_1 + v2_2) / 2;
+      }
+
+      if (j < task->width - 3) {
+        d_y1[j + 3] = y3_1;
+        d_y2[j + 3] = y3_2;
+      }
+
+      if (j < task->width - 4) {
+        d_y1[j + 4] = y4_1;
+        d_y2[j + 4] = y4_2;
+        d_u[j / 2 + 2] = (u4_1 + u4_2) / 2;
+        d_v[j / 2 + 2] = (v4_1 + v4_2) / 2;
+      }
+
+      if (j < task->width - 5) {
+        d_y1[j + 5] = y5_1;
+        d_y2[j + 5] = y5_2;
+      }
+    }
+  }
+}
+
+static void
+convert_v210_I420_10 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
+{
+  int i;
+  gint width = convert->in_width;
+  gint height = convert->in_height;
+  gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src)
+      && (GST_VIDEO_INFO_INTERLACE_MODE (&src->info) !=
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE);
+  gint h2;
+  FConvertTask *tasks;
+  FConvertTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+
+  /* I420 has half as many chroma lines, as such we have to
+   * always merge two into one. For non-interlaced these are
+   * the two next to each other, for interlaced one is skipped
+   * in between. */
+  if (interlaced)
+    h2 = GST_ROUND_DOWN_4 (height);
+  else
+    h2 = GST_ROUND_DOWN_2 (height);
+
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = convert->tasks[0] =
+      g_renew (FConvertTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertTask *, convert->tasks_p[0], n_threads);
+
+  lines_per_thread = GST_ROUND_UP_2 ((h2 + n_threads - 1) / n_threads);
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].src = src;
+    tasks[i].dest = dest;
+
+    tasks[i].interlaced = interlaced;
+    tasks[i].width = width;
+
+    tasks[i].height_0 = i * lines_per_thread;
+    tasks[i].height_1 = tasks[i].height_0 + lines_per_thread;
+    tasks[i].height_1 = MIN (h2, tasks[i].height_1);
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_v210_I420_10_task, (gpointer) tasks_p);
+
+  /* now handle last lines. For interlaced these are up to 3 */
+  if (h2 != height) {
+    for (i = h2; i < height; i++) {
+      UNPACK_FRAME (src, convert->tmpline[0], i, convert->in_x, width);
+      PACK_FRAME (dest, convert->tmpline[0], i, width);
+    }
+  }
+}
+
 
 typedef struct
 {
@@ -4450,6 +4765,130 @@ convert_v210_Y42B (GstVideoConverter * convert, const GstVideoFrame * src,
 
   gst_parallelized_task_runner_run (convert->conversion_runner,
       (GstParallelizedTaskFunc) convert_v210_Y42B_task, (gpointer) tasks_p);
+
+  convert_fill_border (convert, dest);
+}
+
+static void
+convert_v210_I422_10_task (FConvertPlaneTask * task)
+{
+  gint i, j;
+  guint16 *d_y, *d_u, *d_v;
+  const guint8 *s;
+  guint32 a0, a1, a2, a3;
+  guint16 y0, y1, y2, y3, y4, y5;
+  guint16 u0, u2, u4;
+  guint16 v0, v2, v4;
+
+  for (i = 0; i < task->height; i++) {
+    d_y = (guint16 *) (task->d + i * task->dstride);
+    d_u = (guint16 *) (task->du + i * task->dustride);
+    d_v = (guint16 *) (task->dv + i * task->dvstride);
+    s = task->s + i * task->sstride;
+
+    for (j = 0; j < task->width; j += 6) {
+      a0 = GST_READ_UINT32_LE (s + (j / 6) * 16 + 0);
+      a1 = GST_READ_UINT32_LE (s + (j / 6) * 16 + 4);
+      a2 = GST_READ_UINT32_LE (s + (j / 6) * 16 + 8);
+      a3 = GST_READ_UINT32_LE (s + (j / 6) * 16 + 12);
+
+      u0 = ((a0 >> 0) & 0x3ff);
+      y0 = ((a0 >> 10) & 0x3ff);
+      v0 = ((a0 >> 20) & 0x3ff);
+      y1 = ((a1 >> 0) & 0x3ff);
+
+      u2 = ((a1 >> 10) & 0x3ff);
+      y2 = ((a1 >> 20) & 0x3ff);
+      v2 = ((a2 >> 0) & 0x3ff);
+      y3 = ((a2 >> 10) & 0x3ff);
+
+      u4 = ((a2 >> 20) & 0x3ff);
+      y4 = ((a3 >> 0) & 0x3ff);
+      v4 = ((a3 >> 10) & 0x3ff);
+      y5 = ((a3 >> 20) & 0x3ff);
+
+      d_y[j] = y0;
+      d_u[j / 2] = u0;
+      d_v[j / 2] = v0;
+
+      if (j < task->width - 1) {
+        d_y[j + 1] = y1;
+      }
+
+      if (j < task->width - 2) {
+        d_y[j + 2] = y2;
+        d_u[j / 2 + 1] = u2;
+        d_v[j / 2 + 1] = v2;
+      }
+
+      if (j < task->width - 3) {
+        d_y[j + 3] = y3;
+      }
+
+      if (j < task->width - 4) {
+        d_y[j + 4] = y4;
+        d_u[j / 2 + 2] = u4;
+        d_v[j / 2 + 2] = v4;
+      }
+
+      if (j < task->width - 5) {
+        d_y[j + 5] = y5;
+      }
+    }
+  }
+}
+
+static void
+convert_v210_I422_10 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
+{
+  gint width = convert->in_width;
+  gint height = convert->in_height;
+  guint8 *s, *dy, *du, *dv;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
+
+  s = FRAME_GET_LINE (src, convert->in_y);
+  s += (GST_ROUND_UP_2 (convert->in_x) * 2);
+
+  dy = FRAME_GET_Y_LINE (dest, convert->out_y);
+  dy += convert->out_x;
+  du = FRAME_GET_U_LINE (dest, convert->out_y);
+  du += convert->out_x >> 1;
+  dv = FRAME_GET_V_LINE (dest, convert->out_y);
+  dv += convert->out_x >> 1;
+
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_Y_STRIDE (dest);
+    tasks[i].dustride = FRAME_GET_U_STRIDE (dest);
+    tasks[i].dvstride = FRAME_GET_V_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_STRIDE (src);
+    tasks[i].d = dy + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].du = du + i * lines_per_thread * tasks[i].dustride;
+    tasks[i].dv = dv + i * lines_per_thread * tasks[i].dvstride;
+    tasks[i].s = s + i * lines_per_thread * tasks[i].sstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_v210_I422_10_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
 }
@@ -5769,6 +6208,123 @@ convert_Y42B_v210 (GstVideoConverter * convert, const GstVideoFrame * src,
 
   gst_parallelized_task_runner_run (convert->conversion_runner,
       (GstParallelizedTaskFunc) convert_Y42B_v210_task, (gpointer) tasks_p);
+
+  convert_fill_border (convert, dest);
+}
+
+static void
+convert_I422_10_v210_task (FConvertPlaneTask * task)
+{
+  gint i, j;
+  guint8 *d;
+  const guint16 *s_y, *s_u, *s_v;
+  guint32 a0, a1, a2, a3;
+  guint16 y0, y1, y2, y3, y4, y5;
+  guint16 u0, u2, u4;
+  guint16 v0, v2, v4;
+
+  for (i = 0; i < task->height; i++) {
+    d = task->d + i * task->dstride;
+    s_y = (const guint16 *) (task->s + i * task->sstride);
+    s_u = (const guint16 *) (task->su + i * task->sustride);
+    s_v = (const guint16 *) (task->sv + i * task->svstride);
+
+    for (j = 0; j < task->width; j += 6) {
+      y1 = y2 = y3 = y4 = y5 = 0;
+      u2 = u4 = v2 = v4 = 0;
+
+      y0 = s_y[j];
+      u0 = s_u[j / 2];
+      v0 = s_v[j / 2];
+
+      if (j < task->width - 1) {
+        y1 = s_y[j + 1];
+      }
+
+      if (j < task->width - 2) {
+        y2 = s_y[j + 2];
+        u2 = s_u[j / 2 + 1];
+        v2 = s_v[j / 2 + 1];
+      }
+
+      if (j < task->width - 3) {
+        y3 = s_y[j + 3];
+      }
+
+      if (j < task->width - 4) {
+        y4 = s_y[j + 4];
+        u4 = s_u[j / 2 + 2];
+        v4 = s_v[j / 2 + 2];
+      }
+
+      if (j < task->width - 5) {
+        y5 = s_y[j + 5];
+      }
+
+      a0 = u0 | (y0 << 10) | (v0 << 20);
+      a1 = y1 | (u2 << 10) | (y2 << 20);
+      a2 = v2 | (y3 << 10) | (u4 << 20);
+      a3 = y4 | (v4 << 10) | (y5 << 20);
+
+      GST_WRITE_UINT32_LE (d + (j / 6) * 16 + 0, a0);
+      GST_WRITE_UINT32_LE (d + (j / 6) * 16 + 4, a1);
+      GST_WRITE_UINT32_LE (d + (j / 6) * 16 + 8, a2);
+      GST_WRITE_UINT32_LE (d + (j / 6) * 16 + 12, a3);
+    }
+  }
+}
+
+static void
+convert_I422_10_v210 (GstVideoConverter * convert, const GstVideoFrame * src,
+    GstVideoFrame * dest)
+{
+  gint width = convert->in_width;
+  gint height = convert->in_height;
+  guint8 *d, *sy, *su, *sv;
+  FConvertPlaneTask *tasks;
+  FConvertPlaneTask **tasks_p;
+  gint n_threads;
+  gint lines_per_thread;
+  gint i;
+
+  d = FRAME_GET_LINE (dest, convert->out_y);
+  d += (GST_ROUND_UP_2 (convert->out_x) * 2);
+
+  sy = FRAME_GET_Y_LINE (src, convert->in_y);
+  sy += convert->in_x;
+  su = FRAME_GET_U_LINE (src, convert->in_y);
+  su += convert->in_x >> 1;
+  sv = FRAME_GET_V_LINE (src, convert->in_y);
+  sv += convert->in_x >> 1;
+
+  n_threads = convert->conversion_runner->n_threads;
+  tasks = convert->tasks[0] =
+      g_renew (FConvertPlaneTask, convert->tasks[0], n_threads);
+  tasks_p = convert->tasks_p[0] =
+      g_renew (FConvertPlaneTask *, convert->tasks_p[0], n_threads);
+
+  lines_per_thread = (height + n_threads - 1) / n_threads;
+
+  for (i = 0; i < n_threads; i++) {
+    tasks[i].dstride = FRAME_GET_STRIDE (dest);
+    tasks[i].sstride = FRAME_GET_Y_STRIDE (src);
+    tasks[i].sustride = FRAME_GET_U_STRIDE (src);
+    tasks[i].svstride = FRAME_GET_V_STRIDE (src);
+    tasks[i].d = d + i * lines_per_thread * tasks[i].dstride;
+    tasks[i].s = sy + i * lines_per_thread * tasks[i].sstride;
+    tasks[i].su = su + i * lines_per_thread * tasks[i].sustride;
+    tasks[i].sv = sv + i * lines_per_thread * tasks[i].svstride;
+
+    tasks[i].width = width;
+    tasks[i].height = (i + 1) * lines_per_thread;
+    tasks[i].height = MIN (tasks[i].height, height);
+    tasks[i].height -= i * lines_per_thread;
+
+    tasks_p[i] = &tasks[i];
+  }
+
+  gst_parallelized_task_runner_run (convert->conversion_runner,
+      (GstParallelizedTaskFunc) convert_I422_10_v210_task, (gpointer) tasks_p);
 
   convert_fill_border (convert, dest);
 }
@@ -7827,6 +8383,26 @@ static const VideoTransform transforms[] = {
       FALSE, FALSE, FALSE, FALSE, 0, 0, convert_v210_I420},
   {GST_VIDEO_FORMAT_v210, GST_VIDEO_FORMAT_Y42B, TRUE, FALSE, TRUE, FALSE,
       FALSE, FALSE, FALSE, FALSE, 0, 0, convert_v210_Y42B},
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  {GST_VIDEO_FORMAT_v210, GST_VIDEO_FORMAT_I420_10LE, TRUE, FALSE, TRUE, FALSE,
+      FALSE, FALSE, FALSE, FALSE, 0, 0, convert_v210_I420_10},
+  {GST_VIDEO_FORMAT_v210, GST_VIDEO_FORMAT_I422_10LE, TRUE, FALSE, TRUE, FALSE,
+      FALSE, FALSE, FALSE, FALSE, 0, 0, convert_v210_I422_10},
+  {GST_VIDEO_FORMAT_I420_10LE, GST_VIDEO_FORMAT_v210, TRUE, FALSE, TRUE, FALSE,
+      FALSE, FALSE, FALSE, FALSE, 0, 0, convert_I420_10_v210},
+  {GST_VIDEO_FORMAT_I422_10LE, GST_VIDEO_FORMAT_v210, TRUE, FALSE, TRUE, TRUE,
+      TRUE, FALSE, FALSE, FALSE, 0, 0, convert_I422_10_v210},
+#else
+  {GST_VIDEO_FORMAT_v210, GST_VIDEO_FORMAT_I420_10BE, TRUE, FALSE, TRUE, FALSE,
+      FALSE, FALSE, FALSE, FALSE, 0, 0, convert_v210_I420_10},
+  {GST_VIDEO_FORMAT_v210, GST_VIDEO_FORMAT_I422_10BE, TRUE, FALSE, TRUE, FALSE,
+      FALSE, FALSE, FALSE, FALSE, 0, 0, convert_v210_I422_10},
+  {GST_VIDEO_FORMAT_I420_10BE, GST_VIDEO_FORMAT_v210, TRUE, FALSE, TRUE, FALSE,
+      FALSE, FALSE, FALSE, FALSE, 0, 0, convert_I420_10_v210},
+  {GST_VIDEO_FORMAT_I422_10BE, GST_VIDEO_FORMAT_v210, TRUE, FALSE, TRUE, TRUE,
+      TRUE, FALSE, FALSE, FALSE, 0, 0, convert_I422_10_v210},
+#endif
 
   /* planar -> planar */
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_I420, TRUE, FALSE, FALSE, TRUE,
