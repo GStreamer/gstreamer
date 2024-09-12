@@ -751,7 +751,7 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
   GstTaskState task_state;
   gboolean active;
 
-  GST_DEBUG_OBJECT (self, "Handling frame %d", frame->system_frame_number);
+  GST_LOG_OBJECT (self, "Handling frame %d", frame->system_frame_number);
 
   if (G_UNLIKELY (!g_atomic_int_get (&self->active)))
     goto flushing;
