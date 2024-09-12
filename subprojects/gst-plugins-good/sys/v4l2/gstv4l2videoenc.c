@@ -222,7 +222,6 @@ gst_v4l2_video_enc_stop (GstVideoEncoder * encoder)
 
   /* Should have been flushed already */
   g_assert (g_atomic_int_get (&self->active) == FALSE);
-  g_assert (g_atomic_int_get (&self->processing) == FALSE);
 
   gst_v4l2_object_stop (self->v4l2output);
   gst_v4l2_object_stop (self->v4l2capture);
@@ -316,19 +315,6 @@ gst_v4l2_video_enc_flush (GstVideoEncoder * encoder)
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
 
   GST_DEBUG_OBJECT (self, "Flushing");
-
-  /* Ensure the processing thread has stopped for the reverse playback
-   * iscount case */
-  if (g_atomic_int_get (&self->processing)) {
-    GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
-
-    gst_v4l2_object_unlock_stop (self->v4l2output);
-    gst_v4l2_object_unlock_stop (self->v4l2capture);
-    gst_pad_stop_task (encoder->srcpad);
-
-    GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
-
-  }
 
   self->output_flow = GST_FLOW_OK;
 
@@ -744,7 +730,6 @@ beach:
 
   gst_buffer_replace (&buffer, NULL);
   self->output_flow = ret;
-  g_atomic_int_set (&self->processing, FALSE);
   gst_v4l2_object_unlock (self->v4l2output);
   gst_pad_pause_task (encoder->srcpad);
 }
@@ -752,12 +737,6 @@ beach:
 static void
 gst_v4l2_video_enc_loop_stopped (GstV4l2VideoEnc * self)
 {
-  if (g_atomic_int_get (&self->processing)) {
-    GST_DEBUG_OBJECT (self, "Early stop of encoding thread");
-    self->output_flow = GST_FLOW_FLUSHING;
-    g_atomic_int_set (&self->processing, FALSE);
-  }
-
   GST_DEBUG_OBJECT (self, "Encoding task destroyed: %s",
       gst_flow_get_name (self->output_flow));
 
@@ -911,7 +890,6 @@ start_task_failed:
   {
     GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
         (_("Failed to start encoding thread.")), (NULL));
-    g_atomic_int_set (&self->processing, FALSE);
     ret = GST_FLOW_ERROR;
     goto drop;
   }
