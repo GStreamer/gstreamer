@@ -466,6 +466,38 @@ Other style guidelines:
 [bitreader]: https://gstreamer.freedesktop.org/documentation/base/gstbitreader.html?gi-language=c#GstBitReader
 [bytereader]: https://gstreamer.freedesktop.org/documentation/base/gstbytereader.html?gi-language=c#GstByteReader
 
+##### Pre-commit
+
+GStreamer uses [pre-commit](https://pre-commit.com/) to validate coding style automatically when you create a new commit.
+
+pre-commit can be installed with `pip`:
+```
+pip install pre-commit
+```
+
+The pre-commit hooks are automatically installed the first you run `meson setup`.
+They can be also be installed manually using:
+```
+pre-commit install
+```
+
+One installed, pre-commit will run automatically on every `git commit`.
+You can also run manually all the pre-commit hooks using:
+```
+pre-commit run --all-files --show-diff-on-failure
+```
+
+When you create a new commit, the pre-commit hooks may apply changes to your files,
+automatically fixing the issues found. When this happens, simply add the changes to
+your staging environment, and re-run the commit.
+
+You can bypass the pre-commit hooks using `git commit --no-verify`. The commits will
+be validated in the CI's `check` stage, so you will still need to ensure that all
+hooks passes correctly. To fix your commits,  you can use the helper script located in
+`scripts/check-commits.py` that will rebase your work starting from the commit passed
+as first argument and it will run pre-commit for each commit, allowing you to fix them
+individually rather than using a new commit on top of your branch to fix the issues found.
+
 ### Writing Good Commit Messages
 
 Please take the time to write good and concise commit messages.
