@@ -4010,6 +4010,11 @@ gst_aggregator_simple_get_next_time (GstAggregator * self)
   GstSegment *segment = &srcpad->segment;
 
   GST_OBJECT_LOCK (self);
+  if (segment->format != GST_FORMAT_TIME) {
+    GST_OBJECT_UNLOCK (self);
+    return GST_CLOCK_TIME_NONE;
+  }
+
   if (segment->position == -1 || segment->position < segment->start)
     next_time = segment->start;
   else
