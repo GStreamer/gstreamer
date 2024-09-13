@@ -370,6 +370,11 @@ static void gst_parse_add_delayed_set (GstElement *element, gchar *name, gchar *
     parent = gst_bin_get_by_name (GST_BIN_CAST (element), current[0]);
     current++;
     while (parent && current[0]) {
+      if (!GST_IS_BIN (parent)) {
+        GST_INFO ("Not recursing into non-bin child %s",
+            gst_object_get_name (GST_OBJECT (parent)));
+        break;
+      }
       child = gst_bin_get_by_name (GST_BIN (parent), current[0]);
       if (!child && current[1]) {
         char *sub_name = g_strjoinv ("::", &current[0]);
