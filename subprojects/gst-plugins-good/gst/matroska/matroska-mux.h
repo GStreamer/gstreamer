@@ -126,6 +126,7 @@ struct _GstMatroskaMux {
   guint64        earliest_time;
   /* length, position (time, ns) */
   guint64        duration;
+  GstClockTime   last_pos;
 
   /* byte-positions of master-elements (for replacing contents) */
   guint64        segment_pos,

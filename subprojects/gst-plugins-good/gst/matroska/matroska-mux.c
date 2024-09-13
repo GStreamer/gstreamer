@@ -239,6 +239,7 @@ static gboolean gst_matroska_mux_src_event (GstAggregator * agg,
 static gboolean gst_matroska_mux_stop (GstAggregator * agg);
 static GstBuffer *gst_matroska_mux_clip (GstAggregator * agg,
     GstAggregatorPad * agg_pad, GstBuffer * buffer);
+static GstClockTime gst_matroska_mux_get_next_time (GstAggregator * agg);
 
 static GstPad *gst_matroska_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
@@ -415,6 +416,8 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_matroska_mux_sink_event);
   gstaggregator_class->src_event =
       GST_DEBUG_FUNCPTR (gst_matroska_mux_src_event);
+  gstaggregator_class->get_next_time =
+      GST_DEBUG_FUNCPTR (gst_matroska_mux_get_next_time);
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -662,6 +665,7 @@ gst_matroska_mux_stop (GstAggregator * agg)
 
   /* reset timers */
   mux->duration = 0;
+  mux->last_pos = 0;
 
   /* reset cluster */
   mux->cluster = 0;
@@ -699,6 +703,20 @@ gst_matroska_mux_src_event (GstAggregator * agg, GstEvent * event)
   }
 
   return GST_AGGREGATOR_CLASS (parent_class)->src_event (agg, event);
+}
+
+static GstClockTime
+gst_matroska_mux_get_next_time (GstAggregator * agg)
+{
+  GstMatroskaMux *mux = GST_MATROSKA_MUX (agg);
+  GstSegment segment;
+  GstClockTime next_time;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  next_time =
+      gst_segment_to_running_time (&segment, GST_FORMAT_TIME, mux->last_pos);
+
+  return next_time;
 }
 
 static void
@@ -4174,7 +4192,7 @@ gst_matroska_mux_find_best_pad (GstMatroskaMux * mux, gboolean timeout)
 
     buffer = gst_aggregator_pad_peek_buffer (GST_AGGREGATOR_PAD (mux_pad));
     if (!buffer) {
-      if (!GST_PAD_IS_EOS (mux_pad)) {
+      if (!timeout && !GST_PAD_IS_EOS (mux_pad)) {
         best = NULL;
         best_time = GST_CLOCK_TIME_NONE;
         break;
@@ -4203,11 +4221,31 @@ gst_matroska_mux_find_best_pad (GstMatroskaMux * mux, gboolean timeout)
   return best;
 }
 
+static gboolean
+gst_matroska_mux_all_pads_eos (GstMatroskaMux * mux)
+{
+  GList *l;
+
+  GST_OBJECT_LOCK (mux);
+  for (l = GST_ELEMENT_CAST (mux)->sinkpads; l; l = l->next) {
+    GstMatroskaMuxPad *pad = GST_MATROSKA_MUX_PAD (l->data);
+
+    if (gst_aggregator_pad_has_buffer (GST_AGGREGATOR_PAD (pad))
+        || !gst_aggregator_pad_is_eos (GST_AGGREGATOR_PAD (pad))) {
+      GST_OBJECT_UNLOCK (mux);
+      return FALSE;
+    }
+  }
+  GST_OBJECT_UNLOCK (mux);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
 {
   GstMatroskaMux *mux = GST_MATROSKA_MUX (agg);
-  GstClockTime buffer_timestamp;
+  GstClockTime buffer_timestamp, end_ts = GST_CLOCK_TIME_NONE;
   GstEbmlWrite *ebml = mux->ebml_write;
   GstMatroskaMuxPad *best = NULL;
   GstBuffer *buf;
@@ -4229,15 +4267,20 @@ gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
 
   best = gst_matroska_mux_find_best_pad (mux, timeout);
 
-  /* if there is no best pad, we have reached EOS */
+  /* if there is no best pad, we have reached EOS or timed out without any
+   * buffers */
   if (best == NULL) {
-    GST_DEBUG_OBJECT (mux, "No best pad. Finishing...");
-    if (!mux->ebml_write->streamable) {
-      gst_matroska_mux_finish (mux);
+    if (gst_matroska_mux_all_pads_eos (mux)) {
+      GST_DEBUG_OBJECT (mux, "All pads EOS. Finishing...");
+      if (!mux->ebml_write->streamable) {
+        gst_matroska_mux_finish (mux);
+      } else {
+        GST_DEBUG_OBJECT (mux, "... but streamable, nothing to finish");
+      }
+      ret = GST_FLOW_EOS;
     } else {
-      GST_DEBUG_OBJECT (mux, "... but streamable, nothing to finish");
+      ret = GST_AGGREGATOR_FLOW_NEED_DATA;
     }
-    ret = GST_FLOW_EOS;
     goto exit;
   }
 
@@ -4271,8 +4314,7 @@ gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
   /* make note of first and last encountered timestamps, so we can calculate
    * the actual duration later when we send an updated header on eos */
   if (GST_CLOCK_TIME_IS_VALID (buffer_timestamp)) {
-    GstClockTime start_ts = buffer_timestamp;
-    GstClockTime end_ts = start_ts;
+    end_ts = buffer_timestamp;
 
     if (GST_BUFFER_DURATION_IS_VALID (buf))
       end_ts += GST_BUFFER_DURATION (buf);
@@ -4283,8 +4325,8 @@ gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
       best->end_ts = end_ts;
 
     if (G_UNLIKELY (best->start_ts == GST_CLOCK_TIME_NONE ||
-            start_ts < best->start_ts))
-      best->start_ts = start_ts;
+            buffer_timestamp < best->start_ts))
+      best->start_ts = buffer_timestamp;
   }
 
   if ((gst_buffer_get_size (buf) == 0 &&
@@ -4295,6 +4337,14 @@ gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
   } else {
     /* write one buffer */
     ret = gst_matroska_mux_write_data (mux, best, buf);
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (buffer_timestamp)) {
+    if (GST_CLOCK_TIME_IS_VALID (end_ts)
+        && mux->last_pos < end_ts)
+      mux->last_pos = end_ts;
+    else if (mux->last_pos < buffer_timestamp)
+      mux->last_pos = buffer_timestamp;
   }
 
 exit:
