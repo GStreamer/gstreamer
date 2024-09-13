@@ -509,6 +509,10 @@ so all CUDA functions that operate on the current context are affected.</doc>
       <property name="cuda-device-id" writable="1" construct-only="1" transfer-ownership="none">
         <type name="guint" c:type="guint"/>
       </property>
+      <property name="external-resource-interop" version="1.26" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">External resource interop API support</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
       <property name="os-handle" version="1.24" transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">OS handle supportability in virtual memory management</doc>
         <type name="gboolean" c:type="gboolean"/>
