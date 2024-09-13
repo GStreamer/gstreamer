@@ -9811,6 +9811,7 @@
                 "description": "Muxes video/audio/subtitle streams into a matroska stream",
                 "hierarchy": [
                     "GstMatroskaMux",
+                    "GstAggregator",
                     "GstElement",
                     "GstObject",
                     "GInitiallyUnowned",
@@ -9826,7 +9827,8 @@
                     "audio_%%u": {
                         "caps": "audio/mpeg:\n    mpegversion: 1\n          layer: [ 1, 3 ]\n       channels: [ 1, 2147483647 ]\n           rate: [ 1, 2147483647 ]\naudio/mpeg:\n    mpegversion: { (int)2, (int)4 }\n  stream-format: raw\n       channels: [ 1, 2147483647 ]\n           rate: [ 1, 2147483647 ]\naudio/x-ac3:\n       channels: [ 1, 2147483647 ]\n           rate: [ 1, 2147483647 ]\naudio/x-eac3:\n       channels: [ 1, 2147483647 ]\n           rate: [ 1, 2147483647 ]\naudio/x-dts:\n       channels: [ 1, 2147483647 ]\n           rate: [ 1, 2147483647 ]\naudio/x-vorbis:\n       channels: [ 1, 2147483647 ]\n           rate: [ 1, 2147483647 ]\naudio/x-flac:\n       channels: [ 1, 2147483647 ]\n           rate: [ 1, 2147483647 ]\naudio/x-opus:\n       channels: [ 1, 8 ]\n           rate: { (int)8000, (int)16000, (int)24000, (int)32000, (int)48000 }\naudio/x-speex:\n       channels: [ 1, 2147483647 ]\n           rate: [ 1, 2147483647 ]\naudio/x-raw:\n         format: { U8, S16BE, S16LE, S24BE, S24LE, S32BE, S32LE, F32LE, F64LE }\n         layout: interleaved\n       channels: [ 1, 2147483647 ]\n           rate: [ 1, 2147483647 ]\naudio/x-tta:\n          width: { (int)8, (int)16, (int)24 }\n       channels: { (int)1, (int)2 }\n           rate: [ 8000, 96000 ]\naudio/x-pn-realaudio:\n      raversion: { (int)1, (int)2, (int)8 }\n       channels: [ 1, 2147483647 ]\n           rate: [ 1, 2147483647 ]\naudio/x-wma:\n     wmaversion: [ 1, 3 ]\n    block_align: [ 0, 65535 ]\n        bitrate: [ 0, 524288 ]\n       channels: [ 1, 2147483647 ]\n           rate: [ 1, 2147483647 ]\naudio/x-alaw:\n       channels: { (int)1, (int)2 }\n           rate: [ 8000, 192000 ]\naudio/x-mulaw:\n       channels: { (int)1, (int)2 }\n           rate: [ 8000, 192000 ]\naudio/x-adpcm:\n         layout: dvi\n    block_align: [ 64, 8192 ]\n       channels: { (int)1, (int)2 }\n           rate: [ 8000, 96000 ]\naudio/G722:\n       channels: 1\n           rate: 16000\naudio/x-adpcm:\n         layout: g726\n       channels: 1\n           rate: 8000\n",
                         "direction": "sink",
-                        "presence": "request"
+                        "presence": "request",
+                        "type": "GstMatroskaMuxPad"
                     },
                     "src": {
                         "caps": "video/x-matroska:\nvideo/x-matroska-3d:\naudio/x-matroska:\n",
@@ -9836,12 +9838,14 @@
                     "subtitle_%%u": {
                         "caps": "subtitle/x-kate:\ntext/x-raw:\n         format: utf8\napplication/x-ssa:\napplication/x-ass:\napplication/x-usf:\nsubpicture/x-dvd:\napplication/x-subtitle-unknown:\n",
                         "direction": "sink",
-                        "presence": "request"
+                        "presence": "request",
+                        "type": "GstMatroskaMuxPad"
                     },
                     "video_%%u": {
                         "caps": "video/mpeg:\n    mpegversion: { (int)1, (int)2, (int)4 }\n   systemstream: false\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-h264:\n  stream-format: { (string)avc, (string)avc3 }\n      alignment: au\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-h265:\n  stream-format: { (string)hvc1, (string)hev1 }\n      alignment: au\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-divx:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-huffyuv:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-dv:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-h263:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-msmpeg:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nimage/jpeg:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-theora:\nvideo/x-dirac:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-pn-realvideo:\n      rmversion: [ 1, 4 ]\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-vp8:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-vp9:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-raw:\n         format: { YUY2, I420, YV12, UYVY, AYUV, GRAY8, GRAY10_LE32, GRAY16_LE, BGR, RGB, RGBA64_LE, BGRA64_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-prores:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-wmv:\n     wmvversion: [ 1, 3 ]\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-av1:\n  stream-format: obu-stream\n      alignment: tu\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\nvideo/x-ffv:\n      ffversion: 1\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n",
                         "direction": "sink",
-                        "presence": "request"
+                        "presence": "request",
+                        "type": "GstMatroskaMuxPad"
                     }
                 },
                 "properties": {
@@ -10011,6 +10015,7 @@
                 "hierarchy": [
                     "GstWebMMux",
                     "GstMatroskaMux",
+                    "GstAggregator",
                     "GstElement",
                     "GstObject",
                     "GInitiallyUnowned",
@@ -10026,7 +10031,8 @@
                     "audio_%%u": {
                         "caps": "audio/x-vorbis:\n       channels: [ 1, 2147483647 ]\n           rate: [ 1, 2147483647 ]\naudio/x-opus:\n       channels: [ 1, 2147483647 ]\n           rate: [ 1, 2147483647 ]\n",
                         "direction": "sink",
-                        "presence": "request"
+                        "presence": "request",
+                        "type": "GstMatroskaMuxPad"
                     },
                     "src": {
                         "caps": "video/webm:\naudio/webm:\n",
@@ -10036,12 +10042,14 @@
                     "subtitle_%%u": {
                         "caps": "subtitle/x-kate:\ntext/x-raw:\n         format: utf8\napplication/x-ssa:\napplication/x-ass:\napplication/x-usf:\nsubpicture/x-dvd:\napplication/x-subtitle-unknown:\n",
                         "direction": "sink",
-                        "presence": "request"
+                        "presence": "request",
+                        "type": "GstMatroskaMuxPad"
                     },
                     "video_%%u": {
                         "caps": "video/x-vp8:\n          width: [ 16, 2147483647 ]\n         height: [ 16, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-vp9:\n          width: [ 16, 2147483647 ]\n         height: [ 16, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-av1:\n  stream-format: obu-stream\n      alignment: tu\n          width: [ 16, 2147483647 ]\n         height: [ 16, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
-                        "presence": "request"
+                        "presence": "request",
+                        "type": "GstMatroskaMuxPad"
                     }
                 },
                 "properties": {},
@@ -10050,7 +10058,33 @@
         },
         "filename": "gstmatroska",
         "license": "LGPL",
-        "other-types": {},
+        "other-types": {
+            "GstMatroskaMuxPad": {
+                "hierarchy": [
+                    "GstMatroskaMuxPad",
+                    "GstAggregatorPad",
+                    "GstPad",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object",
+                "properties": {
+                    "frame-duration": {
+                        "blurb": "Default frame duration",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                }
+            }
+        },
         "package": "GStreamer Good Plug-ins",
         "source": "gst-plugins-good",
         "tracers": {},

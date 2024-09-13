@@ -25,7 +25,7 @@
 
 #include <glib.h>
 #include <gst/gst.h>
-#include <gst/base/gstbytewriter.h>
+#include <gst/base/base.h>
 
 G_BEGIN_DECLS
 
@@ -45,7 +45,8 @@ G_BEGIN_DECLS
 typedef struct _GstEbmlWrite {
   GstObject object;
 
-  GstPad *srcpad;
+  GstAggregator *agg;
+
   guint64 pos;
   guint64 last_pos;
   GstClockTime timestamp;
@@ -70,7 +71,7 @@ typedef struct _GstEbmlWriteClass {
 
 GType   gst_ebml_write_get_type      (void);
 
-GstEbmlWrite *gst_ebml_write_new     (GstPad *srcpad);
+GstEbmlWrite *gst_ebml_write_new     (GstAggregator *agg);
 void    gst_ebml_write_reset         (GstEbmlWrite *ebml);
 
 GstFlowReturn gst_ebml_last_write_result (GstEbmlWrite *ebml);

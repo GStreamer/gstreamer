@@ -12446,6 +12446,8 @@
   "GstMatroskaMux:timecodescale",
   "GstMatroskaMux:version",
   "GstMatroskaMux:writing-app",
+  "GstMatroskaMuxPad",
+  "GstMatroskaMuxPad:frame-duration",
   "GstMatroskaParse",
   "GstMatroskaParse!sink",
   "GstMatroskaParse!src",

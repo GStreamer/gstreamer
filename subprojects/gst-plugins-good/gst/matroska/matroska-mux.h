@@ -24,7 +24,7 @@
 #define __GST_MATROSKA_MUX_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/base/base.h>
 
 #include "ebml-write.h"
 #include "matroska-ids.h"
@@ -42,6 +42,11 @@ G_BEGIN_DECLS
 #define GST_IS_MATROSKA_MUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MATROSKA_MUX))
 
+#define GST_TYPE_MATROSKA_MUX_PAD (gst_matroska_mux_pad_get_type())
+#define GST_MATROSKA_MUX_PAD(pad) (G_TYPE_CHECK_INSTANCE_CAST((pad),GST_TYPE_MATROSKA_MUX_PAD,GstMatroskaMuxPad))
+#define GST_MATROSKA_MUX_PAD_CAST(pad) ((GstMatroskaMuxPad *) pad)
+#define GST_IS_MATROSKA_MUX_PAD(pad) (G_TYPE_CHECK_INSTANCE_TYPE((pad),GST_TYPE_MATROSKA_MUX_PAD))
+
 typedef enum {
   GST_MATROSKA_MUX_STATE_START,
   GST_MATROSKA_MUX_STATE_HEADER,
@@ -53,37 +58,38 @@ typedef struct _GstMatroskaMetaSeekIndex {
   guint64  pos;
 } GstMatroskaMetaSeekIndex;
 
-typedef gboolean (*GstMatroskaCapsFunc) (GstPad *pad, GstCaps *caps);
-
 typedef struct _GstMatroskaMux GstMatroskaMux;
+typedef struct _GstMatroskaMuxPad GstMatroskaMuxPad;
+
+typedef gboolean (*GstMatroskaCapsFunc) (GstMatroskaMux *mux, GstMatroskaMuxPad *mux_pad, GstCaps *caps);
 
 /* all information needed for one matroska stream */
-typedef struct
-{
-  GstCollectData collect;       /* we extend the CollectData */
+struct _GstMatroskaMuxPad {
+  GstAggregatorPad pad;
+
+  gboolean frame_duration;
+  gboolean frame_duration_user;
+
   GstMatroskaCapsFunc capsfunc;
   GstMatroskaTrackContext *track;
-
-  GstMatroskaMux *mux;
 
   GstTagList *tags;
 
   GstClockTime start_ts;
   GstClockTime end_ts;    /* last timestamp + (if available) duration */
   guint64 default_duration_scaled;
-}
-GstMatroskaPad;
+};
 
+typedef struct _GstMatroskaMuxPadClass {
+  GstAggregatorPadClass pad_class;
+} GstMatroskaMuxPadClass;
 
 struct _GstMatroskaMux {
-  GstElement     element;
+  GstAggregator aggregator;
 
   /* < private > */
 
-  /* pads */
-  GstPad        *srcpad;
-  GstCollectPads *collect;
-  GstEbmlWrite *ebml_write;
+  GstEbmlWrite  *ebml_write;
 
   guint          num_streams,
                  num_v_streams, num_a_streams, num_t_streams;
@@ -150,10 +156,11 @@ struct _GstMatroskaMux {
 };
 
 typedef struct _GstMatroskaMuxClass {
-  GstElementClass parent;
+  GstAggregatorClass parent;
 } GstMatroskaMuxClass;
 
 GType   gst_matroska_mux_get_type (void);
+GType   gst_matroska_mux_pad_get_type (void);
 
 G_END_DECLS
 
