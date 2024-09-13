@@ -64,6 +64,7 @@ typedef struct _GstNvCodecCudaVTable
   gboolean loaded;
   gboolean have_virtual_alloc;
   gboolean have_stream_ordered_alloc;
+  gboolean have_ext_interop;
 
   CUresult (CUDAAPI * CuInit) (unsigned int Flags);
   CUresult (CUDAAPI * CuGetErrorName) (CUresult error, const char **pStr);
@@ -226,6 +227,29 @@ typedef struct _GstNvCodecCudaVTable
       CUmemPool_attribute attr, void *value);
   CUresult (CUDAAPI * CuMemPoolGetAttribute) (CUmemoryPool pool,
       CUmemPool_attribute attr, void *value);
+
+  CUresult (CUDAAPI * CuDestroyExternalMemory) (CUexternalMemory extMem);
+  CUresult (CUDAAPI * CuDestroyExternalSemaphore) (CUexternalSemaphore extSem);
+  CUresult (CUDAAPI * CuExternalMemoryGetMappedBuffer) (CUdeviceptr *devPtr,
+      CUexternalMemory extMem,
+      const CUDA_EXTERNAL_MEMORY_BUFFER_DESC *bufferDesc);
+  CUresult (CUDAAPI * CuExternalMemoryGetMappedMipmappedArray)
+      (CUmipmappedArray *mipmap, CUexternalMemory extMem,
+      const CUDA_EXTERNAL_MEMORY_MIPMAPPED_ARRAY_DESC *mipmapDesc);
+
+  CUresult (CUDAAPI * CuImportExternalMemory) (CUexternalMemory *extMem_out,
+      const CUDA_EXTERNAL_MEMORY_HANDLE_DESC *memHandleDesc);
+  CUresult (CUDAAPI * CuImportExternalSemaphore)
+      (CUexternalSemaphore *extSem_out,
+      const CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC *semHandleDesc);
+  CUresult (CUDAAPI * CuSignalExternalSemaphoresAsync)
+      (const CUexternalSemaphore *extSemArray,
+      const CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS *paramsArray,
+      unsigned int numExtSems, CUstream stream);
+  CUresult (CUDAAPI * CuWaitExternalSemaphoresAsync)
+      (const CUexternalSemaphore *extSemArray,
+      const CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS *paramsArray,
+      unsigned int numExtSems, CUstream stream);
 } GstNvCodecCudaVTable;
 /* *INDENT-ON* */
 
@@ -276,6 +300,29 @@ gst_cuda_load_stream_ordered_alloc_symbols (GModule * module)
   GST_INFO ("Stream ordered alloc symbols are loaded");
 
   vtable->have_stream_ordered_alloc = TRUE;
+}
+
+static void
+gst_cuda_load_ext_interop_symbols (GModule * module)
+{
+  GstNvCodecCudaVTable *vtable = &gst_cuda_vtable;
+
+  LOAD_OPTIONAL_SYMBOL (cuDestroyExternalMemory, CuDestroyExternalMemory);
+  LOAD_OPTIONAL_SYMBOL (cuDestroyExternalSemaphore, CuDestroyExternalSemaphore);
+  LOAD_OPTIONAL_SYMBOL (cuExternalMemoryGetMappedBuffer,
+      CuExternalMemoryGetMappedBuffer);
+  LOAD_OPTIONAL_SYMBOL (cuExternalMemoryGetMappedMipmappedArray,
+      CuExternalMemoryGetMappedMipmappedArray);
+  LOAD_OPTIONAL_SYMBOL (cuImportExternalMemory, CuImportExternalMemory);
+  LOAD_OPTIONAL_SYMBOL (cuImportExternalSemaphore, CuImportExternalSemaphore);
+  LOAD_OPTIONAL_SYMBOL (cuSignalExternalSemaphoresAsync,
+      CuSignalExternalSemaphoresAsync);
+  LOAD_OPTIONAL_SYMBOL (cuWaitExternalSemaphoresAsync,
+      CuWaitExternalSemaphoresAsync);
+
+  GST_INFO ("External resource interop symbols are loaded");
+
+  vtable->have_ext_interop = TRUE;
 }
 
 static void
@@ -387,6 +434,7 @@ gst_cuda_load_library_once_func (void)
 
   gst_cuda_load_optional_symbols (module);
   gst_cuda_load_stream_ordered_alloc_symbols (module);
+  gst_cuda_load_ext_interop_symbols (module);
 }
 
 /**
@@ -422,6 +470,14 @@ gst_cuda_stream_ordered_symbol_loaded (void)
   gst_cuda_load_library ();
 
   return gst_cuda_vtable.have_stream_ordered_alloc;
+}
+
+gboolean
+gst_cuda_external_resource_interop_symbol_loaded (void)
+{
+  gst_cuda_load_library ();
+
+  return gst_cuda_vtable.have_ext_interop;
 }
 
 CUresult CUDAAPI
@@ -1071,6 +1127,91 @@ CuMemPoolGetAttribute (CUmemoryPool pool, CUmemPool_attribute attr, void *value)
     return CUDA_ERROR_NOT_SUPPORTED;
 
   return gst_cuda_vtable.CuMemPoolGetAttribute (pool, attr, value);
+}
+
+CUresult CUDAAPI
+CuDestroyExternalMemory (CUexternalMemory extMem)
+{
+  if (!gst_cuda_vtable.CuDestroyExternalMemory)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuDestroyExternalMemory (extMem);
+}
+
+CUresult CUDAAPI
+CuDestroyExternalSemaphore (CUexternalSemaphore extSem)
+{
+  if (!gst_cuda_vtable.CuDestroyExternalSemaphore)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuDestroyExternalSemaphore (extSem);
+}
+
+CUresult CUDAAPI
+CuExternalMemoryGetMappedBuffer (CUdeviceptr * devPtr, CUexternalMemory extMem,
+    const CUDA_EXTERNAL_MEMORY_BUFFER_DESC * bufferDesc)
+{
+  if (!gst_cuda_vtable.CuExternalMemoryGetMappedBuffer)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuExternalMemoryGetMappedBuffer (devPtr, extMem,
+      bufferDesc);
+}
+
+CUresult CUDAAPI
+CuExternalMemoryGetMappedMipmappedArray (CUmipmappedArray * mipmap,
+    CUexternalMemory extMem,
+    const CUDA_EXTERNAL_MEMORY_MIPMAPPED_ARRAY_DESC * mipmapDesc)
+{
+  if (!gst_cuda_vtable.CuExternalMemoryGetMappedMipmappedArray)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuExternalMemoryGetMappedMipmappedArray (mipmap,
+      extMem, mipmapDesc);
+}
+
+CUresult CUDAAPI
+CuImportExternalMemory (CUexternalMemory * extMem_out,
+    const CUDA_EXTERNAL_MEMORY_HANDLE_DESC * memHandleDesc)
+{
+  if (!gst_cuda_vtable.CuImportExternalMemory)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuImportExternalMemory (extMem_out, memHandleDesc);
+}
+
+CUresult CUDAAPI
+CuImportExternalSemaphore (CUexternalSemaphore * extSem_out,
+    const CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC * semHandleDesc)
+{
+  if (!gst_cuda_vtable.CuImportExternalSemaphore)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuImportExternalSemaphore (extSem_out, semHandleDesc);
+}
+
+CUresult CUDAAPI
+CuSignalExternalSemaphoresAsync (const CUexternalSemaphore * extSemArray,
+    const CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS * paramsArray,
+    unsigned int numExtSems, CUstream stream)
+{
+  if (!gst_cuda_vtable.CuSignalExternalSemaphoresAsync)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuSignalExternalSemaphoresAsync (extSemArray,
+      paramsArray, numExtSems, stream);
+}
+
+CUresult CUDAAPI
+CuWaitExternalSemaphoresAsync (const CUexternalSemaphore * extSemArray,
+    const CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS * paramsArray,
+    unsigned int numExtSems, CUstream stream)
+{
+  if (!gst_cuda_vtable.CuWaitExternalSemaphoresAsync)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuWaitExternalSemaphoresAsync (extSemArray,
+      paramsArray, numExtSems, stream);
 }
 
 /* cudaGL.h */

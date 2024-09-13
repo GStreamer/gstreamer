@@ -56,6 +56,7 @@ enum
   PROP_OS_HANDLE,
   PROP_STREAM_ORDERED_ALLOC,
   PROP_PREFER_STREAM_ORDERED_ALLLOC,
+  PROP_EXT_INTEROP,
 };
 
 struct _GstCudaContextPrivate
@@ -68,6 +69,7 @@ struct _GstCudaContextPrivate
   gboolean os_handle_supported;
   gboolean stream_ordered_alloc_supported;
   gboolean prefer_stream_ordered_alloc;
+  gboolean ext_interop_supported;
 
   gint tex_align;
 
@@ -167,6 +169,19 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
           "Prefer Stream Ordered Alloc", "Prefers stream ordered allocation",
           FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstCudaContext:external-resource-interop:
+   *
+   * External resource interop API support
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_EXT_INTEROP,
+      g_param_spec_boolean ("external-resource-interop",
+          "External Resource Interop",
+          "External resource interop API support", FALSE,
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
   gst_cuda_memory_init_once ();
 }
 
@@ -232,6 +247,9 @@ gst_cuda_context_get_property (GObject * object, guint prop_id,
       g_mutex_lock (&priv->lock);
       g_value_set_boolean (value, priv->prefer_stream_ordered_alloc);
       g_mutex_unlock (&priv->lock);
+      break;
+    case PROP_EXT_INTEROP:
+      g_value_set_boolean (value, priv->ext_interop_supported);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -672,6 +690,9 @@ gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
     if (ret == CUDA_SUCCESS && supported)
       self->priv->stream_ordered_alloc_supported = TRUE;
   }
+
+  self->priv->ext_interop_supported =
+      gst_cuda_external_resource_interop_symbol_loaded ();
 
   std::lock_guard < std::mutex > lk (list_lock);
   g_object_weak_ref (G_OBJECT (self),

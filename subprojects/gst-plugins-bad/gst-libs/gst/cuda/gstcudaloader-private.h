@@ -27,4 +27,6 @@ gboolean      gst_cuda_virtual_memory_symbol_loaded (void);
 
 gboolean      gst_cuda_stream_ordered_symbol_loaded (void);
 
+gboolean      gst_cuda_external_resource_interop_symbol_loaded (void);
+
 G_END_DECLS

@@ -339,6 +339,60 @@ CUresult CUDAAPI CuMemPoolGetAttribute (CUmemoryPool pool,
                                         CUmemPool_attribute attr,
                                         void *value);
 
+GST_CUDA_API
+CUresult CUDAAPI CuDestroyExternalMemory (CUexternalMemory extMem);
+
+GST_CUDA_API
+CUresult CUDAAPI CuDestroyExternalSemaphore (CUexternalSemaphore extSem);
+
+/**
+ * CuExternalMemoryGetMappedBuffer: (skip) (attributes doc.skip=true)
+ */
+GST_CUDA_API
+CUresult CUDAAPI CuExternalMemoryGetMappedBuffer (CUdeviceptr *devPtr,
+                                                  CUexternalMemory extMem,
+                                                  const CUDA_EXTERNAL_MEMORY_BUFFER_DESC *bufferDesc);
+
+/**
+ * CuExternalMemoryGetMappedMipmappedArray: (skip) (attributes doc.skip=true)
+ */
+GST_CUDA_API
+CUresult CUDAAPI CuExternalMemoryGetMappedMipmappedArray (CUmipmappedArray *mipmap,
+                                                          CUexternalMemory extMem,
+                                                          const CUDA_EXTERNAL_MEMORY_MIPMAPPED_ARRAY_DESC *mipmapDesc);
+
+/**
+ * CuImportExternalMemory: (skip) (attributes doc.skip=true)
+ */
+GST_CUDA_API
+CUresult CUDAAPI CuImportExternalMemory (CUexternalMemory *extMem_out,
+                                         const CUDA_EXTERNAL_MEMORY_HANDLE_DESC *memHandleDesc);
+
+/**
+ * CuImportExternalSemaphore: (skip) (attributes doc.skip=true)
+ */
+GST_CUDA_API
+CUresult CUDAAPI CuImportExternalSemaphore (CUexternalSemaphore *extSem_out,
+                                            const CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC *semHandleDesc);
+
+/**
+ * CuSignalExternalSemaphoresAsync: (skip) (attributes doc.skip=true)
+ */
+GST_CUDA_API
+CUresult CUDAAPI CuSignalExternalSemaphoresAsync (const CUexternalSemaphore *extSemArray,
+                                                  const CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS *paramsArray,
+                                                  unsigned int numExtSems,
+                                                  CUstream stream);
+
+/**
+ * CuWaitExternalSemaphoresAsync: (skip) (attributes doc.skip=true)
+ */
+GST_CUDA_API
+CUresult CUDAAPI CuWaitExternalSemaphoresAsync (const CUexternalSemaphore *extSemArray,
+                                                const CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS *paramsArray,
+                                                unsigned int numExtSems,
+                                                CUstream stream);
+
 /* cudaGL.h */
 GST_CUDA_API
 CUresult CUDAAPI CuGraphicsGLRegisterImage  (CUgraphicsResource * pCudaResource,
