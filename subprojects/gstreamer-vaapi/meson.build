@@ -80,9 +80,9 @@ else
 endif
 
 libva_dep = dependency('libva', version: libva_req)
-libva_drm_dep = dependency('libva-drm', version: libva_req)
-libva_wayland_dep = dependency('libva-wayland', version: libva_req)
-libva_x11_dep = dependency('libva-x11', version: libva_req)
+libva_drm_dep = dependency('libva-drm', required: get_option('drm'), version: libva_req)
+libva_wayland_dep = dependency('libva-wayland', required: get_option('wayland'), version: libva_req)
+libva_x11_dep = dependency('libva-x11', required: get_option('x11'), version: libva_req)
 
 libdrm_dep = dependency('libdrm', version: libdrm_req, required: get_option('drm'))
 libudev_dep = dependency('libudev', required: get_option('drm'))
