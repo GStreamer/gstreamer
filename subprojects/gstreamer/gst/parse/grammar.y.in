@@ -345,7 +345,7 @@ static void gst_parse_free_delayed_set (DelayedSet *set)
   g_free(set);
 }
 
-static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
+static void gst_parse_new_child (GstChildProxy *child_proxy, GObject *object,
     const gchar * name, gpointer data);
 
 static void gst_parse_add_delayed_set (GstElement *element, gchar *name, gchar *value_str)
@@ -477,14 +477,14 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
 
     /* Cases 1,2: The child just added corresponds to this delayed set */
     if ((strlen (set->name) > (len+2)) && !strncmp (set->name, name, len)
-	&& !strncmp (&set->name[len], "::", 2)) {
+        && !strncmp (&set->name[len], "::", 2)) {
       gchar *children = NULL;
       gchar *prop = NULL;
       GObject *child = NULL;
 
       if (!gst_parse_separate_prop_from_children (set->name, &children, &prop)) {
-	/* Malformed property name, ignore */
-	return;
+        /* Malformed property name, ignore */
+        return;
       }
 
       child = gst_child_proxy_get_child_by_name_recurse (child_proxy, children);
@@ -493,14 +493,14 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
 
       /* Case 1: A child in the hierarchy does not exist yet, add a new delayed set */
       if (NULL == child) {
-	gst_parse_add_delayed_set (GST_ELEMENT (child_proxy), set->name, set->value_str);
+        gst_parse_add_delayed_set (GST_ELEMENT (child_proxy), set->name, set->value_str);
       }
       /* Case 2: The target child exists already but there's no such property */
       else {
-	gst_object_unref (child);
-	GST_ELEMENT_WARNING(GST_ELEMENT (child_proxy), PARSE, NO_SUCH_PROPERTY,
-          (_("No such property.")), (_("no property \"%s\" in element \"%s\""),
-        set->name, GST_ELEMENT_NAME(child_proxy)));
+        gst_object_unref (child);
+        GST_ELEMENT_WARNING(GST_ELEMENT (child_proxy), PARSE, NO_SUCH_PROPERTY,
+            (_("No such property.")), (_("no property \"%s\" in element \"%s\""),
+              set->name, GST_ELEMENT_NAME(child_proxy)));
       }
     }
     /* Case 3: The child just added does not correspond to this delayed set, just ignore
@@ -595,13 +595,13 @@ out:
 not_a_preset:
   SET_ERROR (graph->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
          _("Element \"%s\" is not a GstPreset"),
-	 GST_ELEMENT_NAME (element));
+         GST_ELEMENT_NAME (element));
   goto out;
 
 error:
   SET_ERROR (graph->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
          _("could not set preset \"%s\" in element \"%s\""),
-	 value, GST_ELEMENT_NAME (element));
+         value, GST_ELEMENT_NAME (element));
   goto out;
 }
 
@@ -631,7 +631,7 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
   GstElement *ret = NULL;
 
   if (!factory) {
-		SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, _("no element \"%s\""), data->factory_name);
+    SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, _("no element \"%s\""), data->factory_name);
     return NULL;
   }
 
@@ -706,8 +706,8 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
       gchar *children = NULL;
       gchar *property = NULL;
       if (!gst_parse_separate_prop_from_children (pp->name, &children, &property)) {
-	/* malformed childproxy path, skip */
-	continue;
+        /* malformed childproxy path, skip */
+        continue;
       }
 
       target = gst_child_proxy_get_child_by_name_recurse (GST_CHILD_PROXY (ret), children);
@@ -715,13 +715,13 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
       g_free (property);
 
       if (target == NULL) {
-	gst_parse_add_delayed_set (ret, pp->name, pp->value);
+        gst_parse_add_delayed_set (ret, pp->name, pp->value);
       } else {
-	gst_object_unref (target);
-	SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY,	\
-          _("no property \"%s\" in element \"%s\""), pp->name, \
-          GST_ELEMENT_NAME (ret));
-	goto done;
+        gst_object_unref (target);
+        SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
+            _("no property \"%s\" in element \"%s\""), pp->name, \
+            GST_ELEMENT_NAME (ret));
+        goto done;
       }
     } else {
       GValue v = { 0, };
@@ -821,9 +821,9 @@ static void gst_parse_element_set (gchar *value, GstElement *element, graph_t *g
          the child was found, we fail since the property doesn't exist.
       */
       if (!gst_parse_child_proxy_find_child (GST_CHILD_PROXY (element), value)) {
-	gst_parse_add_delayed_set (element, value, pos);
+        gst_parse_add_delayed_set (element, value, pos);
       } else {
-	goto error;
+        goto error;
       }
     }
   } else {
@@ -857,7 +857,7 @@ out:
 error:
   SET_ERROR (graph->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
          _("could not set property \"%s\" in element \"%s\" to \"%s\""),
-	 value, GST_ELEMENT_NAME (element), pos);
+         value, GST_ELEMENT_NAME (element), pos);
   goto out;
 }
 
@@ -932,7 +932,7 @@ static void gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
 
   GST_CAT_INFO (GST_CAT_PIPELINE,
                 "trying delayed linking %s " PRETTY_PAD_NAME_FMT " to " PRETTY_PAD_NAME_FMT,
-		            link->all_pads ? "all pads" : "one pad",
+                link->all_pads ? "all pads" : "one pad",
                 PRETTY_PAD_NAME_ARGS (src, link->src_pad),
                 PRETTY_PAD_NAME_ARGS (link->sink, link->sink_pad));
 
@@ -942,8 +942,8 @@ static void gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
      * unlocking states */
     GST_CAT_DEBUG (GST_CAT_PIPELINE,
                    "delayed linking %s " PRETTY_PAD_NAME_FMT " to " PRETTY_PAD_NAME_FMT " worked",
-		               link->all_pads ? "all pads" : "one pad",
-               	   PRETTY_PAD_NAME_ARGS (src, link->src_pad),
+                   link->all_pads ? "all pads" : "one pad",
+                   PRETTY_PAD_NAME_ARGS (src, link->src_pad),
                    PRETTY_PAD_NAME_ARGS (link->sink, link->sink_pad));
     /* releases 'link' */
     if (!link->all_pads) {
@@ -982,9 +982,9 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
       data->sink = sink;
       data->sink_pad = g_strdup (sink_pad);
       if (caps) {
-      	data->caps = gst_caps_copy (caps);
+        data->caps = gst_caps_copy (caps);
       } else {
-      	data->caps = NULL;
+        data->caps = NULL;
       }
       data->pad_added_signal_id = g_signal_connect_data (src, "pad-added",
           G_CALLBACK (gst_parse_found_pad), data,
@@ -1086,7 +1086,7 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
     if (gst_parse_perform_delayed_link (src,
           srcs ? (const gchar *) srcs->data : NULL,
           sink, sinks ? (const gchar *) sinks->data : NULL, link->caps,
-	  link->all_pads) || link->all_pads) {
+          link->all_pads) || link->all_pads) {
       goto success;
     } else {
       goto error;
@@ -1106,8 +1106,8 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
     } else {
       if (gst_parse_perform_delayed_link (src, src_pad,
                                           sink, sink_pad,
-					  link->caps, link->all_pads)) {
-	continue;
+                                          link->caps, link->all_pads)) {
+        continue;
       } else {
         goto error;
       }
