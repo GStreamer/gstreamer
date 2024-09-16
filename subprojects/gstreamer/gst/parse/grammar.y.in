@@ -348,48 +348,47 @@ static void gst_parse_free_delayed_set (DelayedSet *set)
 static void gst_parse_new_child (GstChildProxy *child_proxy, GObject *object,
     const gchar * name, gpointer data);
 
-static void gst_parse_add_delayed_set (GstElement *element, gchar *name, gchar *value_str)
+static void gst_parse_add_delayed_set (GstChildProxy *proxy, gchar *name, gchar *value_str)
 {
   DelayedSet *data = g_new0 (DelayedSet, 1);
+  gchar **names, **current;
+  GObject *parent, *child;
 
-  GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, element, "delaying property set %s to %s",
+  GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, proxy, "delaying property set %s to %s",
     name, value_str);
 
-  data->name = g_strdup(name);
-  data->value_str = g_strdup(value_str);
-  data->signal_id = g_signal_connect_data(element, "child-added",
+  data->name = g_strdup (name);
+  data->value_str = g_strdup (value_str);
+  data->signal_id = g_signal_connect_data (proxy, "child-added",
       G_CALLBACK (gst_parse_new_child), data, (GClosureNotify)
       gst_parse_free_delayed_set, (GConnectFlags) 0);
 
-  /* FIXME: we would need to listen on all intermediate bins too */
-  if (GST_IS_BIN (element)) {
-    gchar **names, **current;
-    GstElement *parent, *child;
+  current = names = g_strsplit (name, "::", -1);
+  parent = gst_child_proxy_get_child_by_name (GST_CHILD_PROXY (proxy), current[0]);
+  current++;
 
-    current = names = g_strsplit (name, "::", -1);
-    parent = gst_bin_get_by_name (GST_BIN_CAST (element), current[0]);
-    current++;
-    while (parent && current[0]) {
-      if (!GST_IS_BIN (parent)) {
-        GST_INFO ("Not recursing into non-bin child %s",
-            gst_object_get_name (GST_OBJECT (parent)));
-        break;
-      }
-      child = gst_bin_get_by_name (GST_BIN (parent), current[0]);
-      if (!child && current[1]) {
-        char *sub_name = g_strjoinv ("::", &current[0]);
-
-        gst_parse_add_delayed_set(parent, sub_name, value_str);
-        g_free (sub_name);
-      }
-      gst_object_unref (parent);
-      parent = child;
-      current++;
+  while (parent && current[0]) {
+    if (!GST_IS_CHILD_PROXY (parent)) {
+      GST_INFO ("Not recursing into non-proxy child %p", parent);
+      break;
     }
-    if (parent)
-      gst_object_unref (parent);
-    g_strfreev (names);
+
+    child = gst_child_proxy_get_child_by_name (GST_CHILD_PROXY (parent), current[0]);
+    if (!child && current[1]) {
+      char *sub_name = g_strjoinv ("::", &current[0]);
+
+      gst_parse_add_delayed_set (GST_CHILD_PROXY (parent), sub_name, value_str);
+      g_free (sub_name);
+    }
+
+    gst_object_unref (parent);
+    parent = child;
+    current++;
   }
+
+  if (parent)
+    gst_object_unref (parent);
+  g_strfreev (names);
 }
 
 static gboolean
@@ -493,7 +492,7 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
 
       /* Case 1: A child in the hierarchy does not exist yet, add a new delayed set */
       if (NULL == child) {
-        gst_parse_add_delayed_set (GST_ELEMENT (child_proxy), set->name, set->value_str);
+        gst_parse_add_delayed_set (child_proxy, set->name, set->value_str);
       }
       /* Case 2: The target child exists already but there's no such property */
       else {
@@ -715,7 +714,7 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
       g_free (property);
 
       if (target == NULL) {
-        gst_parse_add_delayed_set (ret, pp->name, pp->value);
+        gst_parse_add_delayed_set (GST_CHILD_PROXY (ret), pp->name, pp->value);
       } else {
         gst_object_unref (target);
         SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
@@ -821,7 +820,7 @@ static void gst_parse_element_set (gchar *value, GstElement *element, graph_t *g
          the child was found, we fail since the property doesn't exist.
       */
       if (!gst_parse_child_proxy_find_child (GST_CHILD_PROXY (element), value)) {
-        gst_parse_add_delayed_set (element, value, pos);
+        gst_parse_add_delayed_set (GST_CHILD_PROXY (element), value, pos);
       } else {
         goto error;
       }
