@@ -34,12 +34,18 @@ GType gst_cuda_d3d12_interop_resource_get_type (void);
 
 GstCudaD3D12Interop * gst_cuda_d3d12_interop_new (GstCudaContext * context,
                                                   GstD3D12Device * device,
-                                                  const GstVideoInfo * info);
+                                                  const GstVideoInfo * info,
+                                                  gboolean is_uploader);
 
 gboolean gst_cuda_d3d12_interop_upload_async (GstCudaD3D12Interop * interop,
                                               GstBuffer * dst_cuda,
                                               GstBuffer * src_d3d12,
                                               GstCudaStream * stream);
+
+gboolean gst_cuda_d3d12_interop_download_async (GstCudaD3D12Interop * interop,
+                                                GstBuffer * dst_d3d12,
+                                                GstBuffer * src_cuda,
+                                                GstCudaStream * stream);
 
 G_END_DECLS
 

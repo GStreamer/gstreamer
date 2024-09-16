@@ -1315,7 +1315,7 @@ gst_nv_encoder_set_format (GstVideoEncoder * encoder,
         gst_d3d12_ensure_element_data_for_adapter_luid (GST_ELEMENT (self),
             priv->dxgi_adapter_luid, &priv->device_12)) {
       priv->interop_12 = gst_cuda_d3d12_interop_new (priv->context,
-          priv->device_12, &state->info);
+          priv->device_12, &state->info, TRUE);
     }
   }
 #endif
