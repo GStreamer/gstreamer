@@ -201,9 +201,6 @@ plugin_init (GstPlugin * plugin)
 
   for (i = 0; i < dev_count; i++) {
     GstCudaContext *context = gst_cuda_context_new (i);
-#ifdef HAVE_NVCODEC_DGPU
-    CUcontext cuda_ctx;
-#endif
 #if defined(G_OS_WIN32) || defined(HAVE_NVCODEC_DGPU)
     gint64 adapter_luid = 0;
 #endif
@@ -217,7 +214,6 @@ plugin_init (GstPlugin * plugin)
 #endif
 
 #ifdef HAVE_NVCODEC_DGPU
-    cuda_ctx = gst_cuda_context_get_handle (context);
     if (nvdec_available) {
       gint j;
 
@@ -227,7 +223,7 @@ plugin_init (GstPlugin * plugin)
         cudaVideoCodec codec = (cudaVideoCodec) j;
         gboolean register_cuviddec = FALSE;
 
-        if (gst_nv_decoder_check_device_caps (cuda_ctx,
+        if (gst_nv_decoder_check_device_caps (context,
                 codec, &sink_template, &src_template)) {
           const gchar *codec_name = gst_cuda_video_codec_to_string (codec);
 

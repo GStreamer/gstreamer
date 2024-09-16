@@ -83,7 +83,7 @@ void           gst_nv_decoder_set_flushing   (GstNvDecoder * decoder,
 void           gst_nv_decoder_reset          (GstNvDecoder * decoder);
 
 /* utils for class registration */
-gboolean gst_nv_decoder_check_device_caps (CUcontext cuda_ctx,
+gboolean gst_nv_decoder_check_device_caps (GstCudaContext * context,
                                            cudaVideoCodec codec,
                                            GstCaps **sink_template,
                                            GstCaps **src_template);
