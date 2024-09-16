@@ -16298,6 +16298,18 @@
                         "type": "guint",
                         "writable": true
                     },
+                    "retimestamp-mode": {
+                        "blurb": "RTP timestamp regeneration mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "disabled (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstRtpPassthroughPayRetimestampMode",
+                        "writable": true
+                    },
                     "seqnum": {
                         "blurb": "The RTP sequence number of the last processed packet",
                         "conditionally-available": false,
@@ -17742,6 +17754,21 @@
                         "desc": "Aggregate all NAL units with the same timestamp (adds one frame of latency)",
                         "name": "max",
                         "value": "2"
+                    }
+                ]
+            },
+            "GstRtpPassthroughPayRetimestampMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "No retimestamping",
+                        "name": "disabled",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Retimestamp based on PTS of each buffer",
+                        "name": "enabled",
+                        "value": "1"
                     }
                 ]
             },

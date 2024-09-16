@@ -72,6 +72,28 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, " "payload = (int) [ 0, 127 ],"
         "clock-rate = (int) [ 1, 2147483647 ]"));
 
+
+#define GST_RTPPASSTHROUGHPAY_RETIMESTAMP_MODE_TYPE (gst_rtp_passthrough_pay_retimestamp_mode_get_type())
+static GType
+gst_rtp_passthrough_pay_retimestamp_mode_get_type (void)
+{
+  static GType mode_type = 0;
+  static const GEnumValue enum_values[] = {
+    {GST_RTPPASSTHROUGHPAY_RETIMESTAMP_MODE_DISABLED, "No retimestamping",
+        "disabled"},
+    {GST_RTPPASSTHROUGHPAY_RETIMESTAMP_MODE_ENABLED,
+        "Retimestamp based on PTS of each buffer", "enabled"},
+    {0, NULL, NULL},
+  };
+
+  if (!mode_type)
+    mode_type =
+        g_enum_register_static ("GstRtpPassthroughPayRetimestampMode",
+        enum_values);
+
+  return mode_type;
+}
+
 enum
 {
   PROP_0,
@@ -82,6 +104,7 @@ enum
   PROP_SEQNUM_OFFSET,
   PROP_TIMESTAMP,
   PROP_TIMESTAMP_OFFSET,
+  PROP_RETIMESTAMP_MODE,
 };
 
 static void gst_rtp_passthrough_pay_get_property (GObject * object,
@@ -208,6 +231,21 @@ gst_rtp_passthrough_pay_class_init (GstRtpPassthroughPayClass
       g_param_spec_boxed ("stats", "Statistics", "Various statistics",
           GST_TYPE_STRUCTURE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpPassthroughPay:retimestamp-mode:
+   *
+   * If enabled, this mode will cause RTP timestamps to be re-generated
+   * based on the PTS of each processed buffer.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_RETIMESTAMP_MODE,
+      g_param_spec_enum ("retimestamp-mode", "Retimestamp mode",
+          "RTP timestamp regeneration mode",
+          GST_RTPPASSTHROUGHPAY_RETIMESTAMP_MODE_TYPE,
+          GST_RTPPASSTHROUGHPAY_RETIMESTAMP_MODE_DISABLED,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   element_class->change_state = gst_rtp_passthrough_pay_change_state;
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
@@ -221,6 +259,8 @@ gst_rtp_passthrough_pay_class_init (GstRtpPassthroughPayClass
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_passthrough_pay_debug, "rtppassthroughpay",
       0, "RTP Passthrough Payloader");
+
+  gst_type_mark_as_plugin_api (GST_RTPPASSTHROUGHPAY_RETIMESTAMP_MODE_TYPE, 0);
 }
 
 static void
@@ -260,6 +300,9 @@ gst_rtp_passthrough_pay_get_property (GObject * object, guint prop_id,
     case PROP_STATS:
       g_value_take_boxed (value, gst_rtp_passthrough_pay_create_stats (self));
       break;
+    case PROP_RETIMESTAMP_MODE:
+      g_value_set_enum (value, self->retimestamp_mode);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -286,6 +329,9 @@ gst_rtp_passthrough_pay_set_property (GObject * object, guint prop_id,
     case PROP_SEQNUM_OFFSET:
       GST_FIXME_OBJECT (self,
           "Setting the seqnum-offset property has no effect");
+      break;
+    case PROP_RETIMESTAMP_MODE:
+      self->retimestamp_mode = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -323,6 +369,46 @@ gst_rtp_passthrough_pay_change_state (GstElement * element,
   }
 
   return ret;
+}
+
+static void
+gst_rtppassthrough_pay_handle_retimestamp (GstRtpPassthroughPay * self,
+    GstRTPBuffer * rtp_buffer)
+{
+  GstClockTime buf_pts = GST_BUFFER_PTS (rtp_buffer->buffer);
+  guint32 old_timestamp = gst_rtp_buffer_get_timestamp (rtp_buffer);
+  guint32 new_timestamp;
+
+  /* Code below is mostly borrowed from gst_rtp_base_payload_prepare_push() */
+  if (GST_CLOCK_TIME_IS_VALID (buf_pts)) {
+    guint64 rtime_hz, rtime_ns;
+
+    rtime_ns =
+        gst_segment_to_running_time (&self->segment, GST_FORMAT_TIME, buf_pts);
+
+    if (!GST_CLOCK_TIME_IS_VALID (rtime_ns)) {
+      GST_LOG_OBJECT (self, "Clipped pts, using base RTP timestamp");
+      rtime_hz = 0;
+    } else {
+      GST_LOG_OBJECT (self,
+          "Using running_time %" GST_TIME_FORMAT " for RTP timestamp",
+          GST_TIME_ARGS (rtime_ns));
+      rtime_hz =
+          gst_util_uint64_scale_int (rtime_ns, self->clock_rate, GST_SECOND);
+    }
+
+    /* add running_time in clock-rate units to the base timestamp */
+    new_timestamp = self->timestamp_offset + rtime_hz;
+  } else {
+    GST_LOG_OBJECT (self,
+        "Using previous RTP timestamp %" G_GUINT32_FORMAT, self->timestamp);
+    /* no timestamp to convert, take previous timestamp */
+    new_timestamp = self->timestamp;
+  }
+
+  GST_LOG_OBJECT (self, "Retimestamped from %u to %u", old_timestamp,
+      new_timestamp);
+  gst_rtp_buffer_set_timestamp (rtp_buffer, new_timestamp);
 }
 
 static GstFlowReturn
@@ -370,8 +456,13 @@ gst_rtp_passthrough_pay_chain (GstPad * pad,
     g_object_notify (G_OBJECT (self), "seqnum-offset");
   }
 
+  if (self->retimestamp_mode != GST_RTPPASSTHROUGHPAY_RETIMESTAMP_MODE_DISABLED) {
+    gst_rtppassthrough_pay_handle_retimestamp (self, &rtp_buffer);
+  }
+
   timestamp = gst_rtp_buffer_get_timestamp (&rtp_buffer);
   self->timestamp = timestamp;
+
   if (!self->timestamp_offset_set) {
     self->timestamp_offset = timestamp;
     self->timestamp_offset_set = TRUE;
