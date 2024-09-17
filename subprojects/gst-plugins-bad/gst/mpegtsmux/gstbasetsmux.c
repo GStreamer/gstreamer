@@ -2631,7 +2631,7 @@ gst_base_ts_mux_find_best_pad (GstAggregator * aggregator, gboolean timeout)
     buffer = gst_aggregator_pad_peek_buffer (apad);
     if (!buffer) {
       if (!timeout && !GST_PAD_IS_EOS (apad)) {
-        gst_object_replace ((GstObject **) & best, NULL);
+        best = NULL;
         best_ts = GST_CLOCK_TIME_NONE;
         break;
       }
