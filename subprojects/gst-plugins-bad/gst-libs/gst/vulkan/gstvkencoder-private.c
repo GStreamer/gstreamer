@@ -572,12 +572,7 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   VkFormat pic_format = VK_FORMAT_UNDEFINED;
   int codec_idx;
   GstVulkanCommandPool *cmd_pool;
-  VkQueryPoolVideoEncodeFeedbackCreateInfoKHR query_create = {
-    .sType = VK_STRUCTURE_TYPE_QUERY_POOL_VIDEO_ENCODE_FEEDBACK_CREATE_INFO_KHR,
-    .encodeFeedbackFlags =
-        VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_BUFFER_OFFSET_BIT_KHR |
-        VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_BYTES_WRITTEN_BIT_KHR,
-  };
+  VkQueryPoolVideoEncodeFeedbackCreateInfoKHR query_create;
   GError *query_err = NULL;
 
   g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), FALSE);
@@ -754,7 +749,14 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   priv->exec = gst_vulkan_operation_new (cmd_pool);
   gst_object_unref (cmd_pool);
 
-  query_create.pNext = &profile->profile;
+  /* *INDENT-OFF* */
+  query_create = (VkQueryPoolVideoEncodeFeedbackCreateInfoKHR) {
+    .sType = VK_STRUCTURE_TYPE_QUERY_POOL_VIDEO_ENCODE_FEEDBACK_CREATE_INFO_KHR,
+    .pNext = &profile->profile,
+    .encodeFeedbackFlags = priv->enc_caps.supportedEncodeFeedbackFlags &
+        (~VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_HAS_OVERRIDES_BIT_KHR),
+  };
+  /* *INDENT-ON* */
   if (!gst_vulkan_operation_enable_query (priv->exec,
           VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR, 1, &query_create,
           &query_err)) {
