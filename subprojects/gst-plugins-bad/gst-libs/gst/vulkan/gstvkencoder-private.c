@@ -701,6 +701,32 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   if (pic_format == VK_FORMAT_UNDEFINED)
     return FALSE;
 
+  cmd_pool = gst_vulkan_queue_create_command_pool (self->queue, error);
+  if (!cmd_pool)
+    return FALSE;
+  priv->exec = gst_vulkan_operation_new (cmd_pool);
+  gst_object_unref (cmd_pool);
+
+  /* we don't want overridden parameters in queries */
+  /* *INDENT-OFF* */
+  query_create = (VkQueryPoolVideoEncodeFeedbackCreateInfoKHR) {
+    .sType = VK_STRUCTURE_TYPE_QUERY_POOL_VIDEO_ENCODE_FEEDBACK_CREATE_INFO_KHR,
+    .pNext = &profile->profile,
+    .encodeFeedbackFlags = priv->enc_caps.supportedEncodeFeedbackFlags &
+        (~VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_HAS_OVERRIDES_BIT_KHR),
+  };
+  /* *INDENT-ON* */
+
+  if (!gst_vulkan_operation_enable_query (priv->exec,
+          VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR, 1, &query_create,
+          &query_err)) {
+    if (query_err->code != VK_ERROR_FEATURE_NOT_PRESENT) {
+      g_propagate_error (error, query_err);
+      goto failed;
+    }
+    g_clear_error (&query_err);
+  }
+
   priv->profile_caps = gst_vulkan_video_profile_to_caps (&priv->profile);
 
   GST_LOG_OBJECT (self, "Capabilities for %" GST_PTR_FORMAT ":\n"
@@ -742,29 +768,6 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
           &priv->vk, &session_create, error))
     goto failed;
 
-  cmd_pool = gst_vulkan_queue_create_command_pool (self->queue, error);
-  if (!cmd_pool)
-    goto failed;
-  priv->exec = gst_vulkan_operation_new (cmd_pool);
-  gst_object_unref (cmd_pool);
-
-  /* *INDENT-OFF* */
-  query_create = (VkQueryPoolVideoEncodeFeedbackCreateInfoKHR) {
-    .sType = VK_STRUCTURE_TYPE_QUERY_POOL_VIDEO_ENCODE_FEEDBACK_CREATE_INFO_KHR,
-    .pNext = &profile->profile,
-    .encodeFeedbackFlags = priv->enc_caps.supportedEncodeFeedbackFlags &
-        (~VK_VIDEO_ENCODE_FEEDBACK_BITSTREAM_HAS_OVERRIDES_BIT_KHR),
-  };
-  /* *INDENT-ON* */
-  if (!gst_vulkan_operation_enable_query (priv->exec,
-          VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR, 1, &query_create,
-          &query_err)) {
-    if (query_err->code != VK_ERROR_FEATURE_NOT_PRESENT) {
-      g_propagate_error (error, query_err);
-      goto failed;
-    }
-    g_clear_error (&query_err);
-  }
 
   priv->out_buffer_size_aligned = GST_ROUND_UP_N (out_buffer_size,
       priv->caps.caps.minBitstreamBufferSizeAlignment);
@@ -774,6 +777,7 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   return TRUE;
 
 failed:
+  gst_clear_object (&priv->exec);
   gst_clear_caps (&priv->profile_caps);
   return FALSE;
 }
