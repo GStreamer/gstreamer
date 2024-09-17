@@ -461,7 +461,7 @@ gst_v4l2_codec_h265_dec_decide_allocation (GstVideoDecoder * decoder,
 {
   GstV4l2CodecH265Dec *self = GST_V4L2_CODEC_H265_DEC (decoder);
   GstCaps *caps = NULL;
-  guint min = 0;
+  guint min = 0, num_bitstream;
 
   if (self->streaming)
     goto no_internal_changes;
@@ -489,10 +489,26 @@ gst_v4l2_codec_h265_dec_decide_allocation (GstVideoDecoder * decoder,
 
   min = MAX (2, min);
 
+  num_bitstream = 1 +
+      MAX (1, gst_v4l2_decoder_get_render_delay (self->decoder));
+
   self->sink_allocator = gst_v4l2_codec_allocator_new (self->decoder,
-      GST_PAD_SINK, self->min_pool_size + 2);
+      GST_PAD_SINK, num_bitstream);
+  if (!self->sink_allocator) {
+    GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT,
+        ("Not enough memory to allocate sink buffers."), (NULL));
+    return FALSE;
+  }
+
   self->src_allocator = gst_v4l2_codec_allocator_new (self->decoder,
-      GST_PAD_SRC, self->min_pool_size + min + 1);
+      GST_PAD_SRC, self->min_pool_size + min);
+  if (!self->src_allocator) {
+    GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT,
+        ("Not enough memory to allocate source buffers."), (NULL));
+    g_clear_object (&self->sink_allocator);
+    return FALSE;
+  }
+
   self->src_pool = gst_v4l2_codec_pool_new (self->src_allocator, &self->vinfo);
 
 no_internal_changes:
