@@ -47,10 +47,8 @@ G_DEFINE_TYPE(GstAjaSinkCombiner, gst_aja_sink_combiner, GST_TYPE_AGGREGATOR);
 static void gst_aja_sink_combiner_finalize(GObject *object) {
   GstAjaSinkCombiner *self = GST_AJA_SINK_COMBINER(object);
 
-  GST_OBJECT_LOCK(self);
   gst_caps_replace(&self->audio_caps, NULL);
   gst_caps_replace(&self->video_caps, NULL);
-  GST_OBJECT_UNLOCK(self);
 
   G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -154,15 +152,11 @@ static gboolean gst_aja_sink_combiner_sink_event(GstAggregator *aggregator,
       gst_event_parse_caps(event, &caps);
 
       if (agg_pad == GST_AGGREGATOR_PAD_CAST(self->audio_sinkpad)) {
-        GST_OBJECT_LOCK(self);
         gst_caps_replace(&self->audio_caps, caps);
         self->caps_changed = TRUE;
-        GST_OBJECT_UNLOCK(self);
       } else if (agg_pad == GST_AGGREGATOR_PAD_CAST(self->video_sinkpad)) {
-        GST_OBJECT_LOCK(self);
         gst_caps_replace(&self->video_caps, caps);
         self->caps_changed = TRUE;
-        GST_OBJECT_UNLOCK(self);
       }
 
       break;
@@ -230,10 +224,8 @@ static gboolean gst_aja_sink_combiner_negotiate(GstAggregator *aggregator) {
 static gboolean gst_aja_sink_combiner_stop(GstAggregator *aggregator) {
   GstAjaSinkCombiner *self = GST_AJA_SINK_COMBINER(aggregator);
 
-  GST_OBJECT_LOCK(self);
   gst_caps_replace(&self->audio_caps, NULL);
   gst_caps_replace(&self->video_caps, NULL);
-  GST_OBJECT_UNLOCK(self);
 
   return TRUE;
 }
