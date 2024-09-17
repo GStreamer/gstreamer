@@ -3898,12 +3898,16 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     format.fmt.pix_mp.quantization = range;
     format.fmt.pix_mp.ycbcr_enc = matrix;
     format.fmt.pix_mp.xfer_func = transfer;
+    if (V4L2_TYPE_IS_CAPTURE (v4l2object->type))
+      format.fmt.pix_mp.flags |= V4L2_PIX_FMT_FLAG_SET_CSC;
   } else {
     format.fmt.pix.priv = V4L2_PIX_FMT_PRIV_MAGIC;
     format.fmt.pix.colorspace = colorspace;
     format.fmt.pix.quantization = range;
     format.fmt.pix.ycbcr_enc = matrix;
     format.fmt.pix.xfer_func = transfer;
+    if (V4L2_TYPE_IS_CAPTURE (v4l2object->type))
+      format.fmt.pix.flags |= V4L2_PIX_FMT_FLAG_SET_CSC;
   }
 
   GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Desired colorspace is %d:%d:%d:%d",
