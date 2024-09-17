@@ -502,7 +502,7 @@ static void
 get_framerate_output_scale (GstCCConverter * self,
     const struct cdp_fps_entry *in_fps_entry, gint * scale_n, gint * scale_d)
 {
-  if (self->in_fps_n == 0 || self->out_fps_d == 0) {
+  if (in_fps_entry->fps_n == 0 || self->out_fps_d == 0) {
     *scale_n = 1;
     *scale_d = 1;
     return;
@@ -590,24 +590,30 @@ can_take_buffer (GstCCConverter * self,
   int input_frame_n, input_frame_d, output_frame_n, output_frame_d;
   int output_time_cmp, scale_n, scale_d;
 
+  g_assert (out_fps_entry);
+
+  if (!in_fps_entry || in_fps_entry->fps_n == 0)
+    in_fps_entry = cdp_fps_entry_from_fps (self->in_fps_n, self->in_fps_d);
+  g_assert (in_fps_entry);
+
   /* TODO: handle input discont */
 
-  if (self->in_fps_n == 0) {
+  if (in_fps_entry->fps_n == 0) {
     input_frame_n = self->input_frames;
     input_frame_d = 1;
   } else {
     /* compute the relative frame count for each */
-    if (!gst_util_fraction_multiply (self->in_fps_d, self->in_fps_n,
+    if (!gst_util_fraction_multiply (in_fps_entry->fps_d, in_fps_entry->fps_n,
             self->input_frames, 1, &input_frame_n, &input_frame_d))
       /* we should never overflow */
       g_assert_not_reached ();
   }
 
-  if (self->in_fps_n == 0) {
+  if (in_fps_entry->fps_n == 0) {
     output_frame_n = self->output_frames;
     output_frame_d = 1;
   } else {
-    if (!gst_util_fraction_multiply (self->out_fps_d, self->out_fps_n,
+    if (!gst_util_fraction_multiply (out_fps_entry->fps_d, out_fps_entry->fps_n,
             self->output_frames, 1, &output_frame_n, &output_frame_d))
       /* we should never overflow */
       g_assert_not_reached ();
@@ -620,10 +626,6 @@ can_take_buffer (GstCCConverter * self,
     self->output_frames = 0;
     self->input_frames = 0;
   }
-
-  in_fps_entry = cdp_fps_entry_from_fps (self->in_fps_n, self->in_fps_d);
-  if (!in_fps_entry || in_fps_entry->fps_n == 0)
-    g_assert_not_reached ();
 
   /* compute the relative rates of the two framerates */
   get_framerate_output_scale (self, in_fps_entry, &scale_n, &scale_d);
