@@ -1446,11 +1446,16 @@ gst_v4l2_video_dec_register (GstPlugin * plugin, const gchar * basename,
     cdata->device = g_strdup (device_path);
     cdata->sink_caps = gst_caps_new_empty ();
     gst_caps_append_structure (cdata->sink_caps, gst_structure_copy (s));
+    GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
+        GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
     cdata->src_caps = gst_caps_ref (src_caps);
     type_name = gst_v4l2_video_dec_set_metadata (s, cdata, basename);
 
     /* Skip over if we hit an unmapped type */
     if (!type_name) {
+      g_free (cdata->device);
+      gst_caps_unref (cdata->sink_caps);
+      gst_caps_unref (cdata->src_caps);
       g_free (cdata);
       continue;
     }
