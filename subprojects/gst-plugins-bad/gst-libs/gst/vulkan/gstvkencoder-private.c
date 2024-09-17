@@ -694,6 +694,13 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   }
   GST_OBJECT_UNLOCK (self);
 
+  /* Get output format */
+  pic_format = gst_vulkan_video_encoder_get_format (self,
+      VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR |
+      VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR, error);
+  if (pic_format == VK_FORMAT_UNDEFINED)
+    return FALSE;
+
   priv->profile_caps = gst_vulkan_video_profile_to_caps (&priv->profile);
 
   GST_LOG_OBJECT (self, "Capabilities for %" GST_PTR_FORMAT ":\n"
@@ -716,14 +723,6 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
       caps.flags & VK_VIDEO_CAPABILITY_SEPARATE_REFERENCE_IMAGES_BIT_KHR);
 
   priv->caps.caps.pNext = NULL;
-
-  /* Get output format */
-  pic_format =
-      gst_vulkan_video_encoder_get_format (self,
-      VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR |
-      VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR, error);
-  if (pic_format == VK_FORMAT_UNDEFINED)
-    goto failed;
 
   /* *INDENT-OFF* */
   session_create = (VkVideoSessionCreateInfoKHR) {
