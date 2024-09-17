@@ -39,30 +39,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d12_decoder_cpb_pool_debug);
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 
-struct AllocBlock
-{
-  AllocBlock() = delete;
-
-  explicit AllocBlock (UINT64 offset, UINT64 size)
-    : offset_(offset), size_(size) {}
-
-  AllocBlock (const AllocBlock & other)
-    : offset_(other.offset_), size_(other.size_) {}
-
-  AllocBlock (AllocBlock && other)
-    : offset_(other.offset_), size_(other.size_) {}
-
-  AllocBlock& operator=(const AllocBlock & other)
-  {
-    offset_ = other.offset_;
-    size_ = other.size_;
-    return *this;
-  }
-
-  UINT64 offset_ = 0;
-  UINT64 size_ = 0;
-};
-
 struct DecoderBuffer
 {
   DecoderBuffer() = delete;
@@ -71,8 +47,6 @@ struct DecoderBuffer
   {
     resource_ = resource;
     mapped_data_ = mapped_data;
-    alloc_vec_.emplace_back (0, size);
-    largest_block_ = size;
     alloc_size_ = size;
     id_ = id;
     if (debug_name)
@@ -90,7 +64,10 @@ struct DecoderBuffer
 
   bool HasSpace (UINT64 size)
   {
-    if (largest_block_ >= size)
+    if (!IsUnused ())
+      return false;
+
+    if (alloc_size_ >= size)
       return true;
 
     return false;
@@ -98,123 +75,12 @@ struct DecoderBuffer
 
   bool IsUnused ()
   {
-    if (alloc_vec_.size () == 1 && alloc_vec_[0].size_ == alloc_size_)
-      return true;
-
-    return false;
+    return is_unused_;
   }
 
-  void InsertBs (const D3D12_VIDEO_DECODE_COMPRESSED_BITSTREAM & bs)
+  void MarkUnused ()
   {
-    if (bs.Size == 0)
-      return;
-
-    g_assert (bs.Offset + bs.Size <= alloc_size_);
-
-#ifndef GST_DISABLE_GST_DEBUG
-    if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE) {
-      auto it = alloc_vec_.cbegin ();
-      guint i = 0;
-      while (it != alloc_vec_.cend ()) {
-        GST_TRACE_ID (debug_name_.c_str (), "BeforeInsert[%u], Offset: %"
-            G_GUINT64_FORMAT ", Size: %" G_GSIZE_FORMAT, i,
-            it->offset_, it->size_);
-        it++;
-        i++;
-      }
-    }
-#endif
-
-    if (largest_block_ < bs.Size)
-      largest_block_ = bs.Size;
-
-    if (alloc_vec_.empty ()) {
-      alloc_vec_.emplace_back (bs.Offset, bs.Size);
-      GST_TRACE_ID (debug_name_.c_str (),
-          "[%" G_GUINT64_FORMAT "] pushed to empty array", id_);
-      return;
-    }
-
-    auto new_block = AllocBlock (bs.Offset, bs.Size);
-    auto end_offset = bs.Offset + bs.Size;
-
-    auto it = alloc_vec_.insert (std::lower_bound (alloc_vec_.begin (),
-        alloc_vec_.end (), new_block), new_block);
-    auto next = std::next (it);
-    if (it == alloc_vec_.begin ()) {
-      /* Check if we can merge this block with the next block */
-      bool merged = false;
-      if (next != alloc_vec_.end () && next->offset_ == end_offset) {
-        /* contiguous, do merge */
-        merged = true;
-        it->size_ += next->size_;
-        if (largest_block_ < it->size_)
-          largest_block_ = it->size_;
-
-        alloc_vec_.erase (next);
-      }
-
-      GST_TRACE_ID (debug_name_.c_str (),
-          "InsertedPos: begin, MergeNext: %d", merged);
-    } else if (next == alloc_vec_.end ()) {
-      /* This is the last element, and not the first element.
-       * Check if this block can be merged with previous one */
-      auto prev = std::prev (it);
-      bool merged = false;
-      if (prev->offset_ + prev->size_ == it->offset_) {
-        /* contiguous, do merge */
-        merged = true;
-        prev->size_ += it->size_;
-        if (largest_block_ < prev->size_)
-          largest_block_ = prev->size_;
-        alloc_vec_.erase (it);
-      }
-
-      GST_TRACE_ID (debug_name_.c_str (),
-          "InsertedPos: end, MergePrev: %d", merged);
-    } else {
-      /* Checks if we can merge new block with prev and/or next */
-      auto prev = std::prev (it);
-      bool merge_prev = false;
-      bool merge_next = false;
-      if (prev->offset_ + prev->size_ == it->offset_) {
-        /* contiguous, do merge */
-        merge_prev = true;
-        prev->size_ += it->size_;
-        if (largest_block_ < prev->size_)
-          largest_block_ = prev->size_;
-        next = alloc_vec_.erase (it);
-        it = prev;
-      }
-
-      if (next->offset_ == end_offset) {
-        /* contiguous, do merge */
-        merge_next = true;
-        it->size_ += next->size_;
-        if (largest_block_ < it->size_)
-          largest_block_ = it->size_;
-
-        alloc_vec_.erase (next);
-      }
-
-      GST_TRACE_ID (debug_name_.c_str (),
-          "InsertedPos: end, MergePrev: %d, MergeNext", merge_prev,
-          merge_next);
-    }
-
-#ifndef GST_DISABLE_GST_DEBUG
-    if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE) {
-      auto it = alloc_vec_.cbegin ();
-      guint i = 0;
-      while (it != alloc_vec_.cend ()) {
-        GST_TRACE_ID (debug_name_.c_str (), "AfterInsert[%u], Offset: %"
-            G_GUINT64_FORMAT ", Size: %" G_GUINT64_FORMAT, i,
-            it->offset_, it->size_);
-        it++;
-        i++;
-      }
-    }
-#endif
+    is_unused_ = true;
   }
 
   bool PopBs (UINT64 size, D3D12_VIDEO_DECODE_COMPRESSED_BITSTREAM & bs)
@@ -222,52 +88,21 @@ struct DecoderBuffer
     if (!HasSpace (size))
       return false;
 
-    auto it = alloc_vec_.begin ();
-    bool found = false;
-    largest_block_ = 0;
+    bs.pBuffer = resource_.Get ();
+    bs.Offset = 0;
+    bs.Size = size;
 
-    /* Extracts allocation block and updates largest block size after
-     * extracted */
-    while (it != alloc_vec_.end ()) {
-      if (!found) {
-        if (it->size_ >= size) {
-          bs.pBuffer = resource_.Get ();
-          bs.Offset = it->offset_;
-          bs.Size = size;
-          if (it->size_ == size) {
-            it = alloc_vec_.erase (it);
-          } else {
-            it->offset_ += size;
-            it->size_ -= size;
-            if (largest_block_ < it->size_)
-              largest_block_ = it->size_;
-
-            it++;
-          }
-
-          found = true;
-          continue;
-        }
-      }
-
-      if (largest_block_ < it->size_)
-        largest_block_ = it->size_;
-
-      it++;
-    }
-
-    g_assert (found);
+    is_unused_ = false;
 
     return true;
   }
 
   ComPtr<ID3D12Resource> resource_;
-  std::vector<AllocBlock> alloc_vec_;
-  UINT64 largest_block_;
   UINT64 alloc_size_;
   guint8 *mapped_data_;
   UINT64 id_;
   std::string debug_name_;
+  bool is_unused_ = true;
 };
 
 struct _GstD3D12DecoderCpb : public GstMiniObject
@@ -277,11 +112,6 @@ struct _GstD3D12DecoderCpb : public GstMiniObject
   ComPtr<ID3D12CommandAllocator> ca;
   D3D12_VIDEO_DECODE_COMPRESSED_BITSTREAM bs = { };
 };
-
-bool operator<(const AllocBlock & a, const AllocBlock & b)
-{
-  return a.offset_ < b.offset_;
-}
 
 bool operator<(const std::shared_ptr<DecoderBuffer> & a,
     const std::shared_ptr<DecoderBuffer> & b)
@@ -384,17 +214,8 @@ gst_d3d12_decoder_cpb_pool_release (GstD3D12DecoderCpbPool * pool,
         cpb->bs.pBuffer, cpb->bs.Offset, cpb->bs.Size);
     cpb->dispose = nullptr;
     cpb->pool = nullptr;
-    if (cpb->buffer) {
-      cpb->buffer->InsertBs (cpb->bs);
-#ifndef GST_DISABLE_GST_DEBUG
-      const auto & buffer = cpb->buffer;
-      GST_TRACE_OBJECT (pool, "Buffer[%" G_GUINT64_FORMAT "] status, "
-          "alloc-size %" G_GUINT64_FORMAT ", num-free-blocks %"
-          G_GSIZE_FORMAT ", largest-block-size %" G_GUINT64_FORMAT,
-          buffer->id_, buffer->alloc_size_, buffer->alloc_vec_.size (),
-          buffer->largest_block_);
-#endif
-    }
+    if (cpb->buffer)
+      cpb->buffer->MarkUnused ();
     cpb->buffer = nullptr;
     priv->cpb_pool.push (cpb);
   }
@@ -540,27 +361,6 @@ gst_d3d12_decoder_cpb_pool_acquire (GstD3D12DecoderCpbPool * pool,
     }
   }
 
-#ifndef GST_DISABLE_GST_DEBUG
-  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE) {
-    GST_TRACE_OBJECT (pool, "Total num-buffers: %" G_GSIZE_FORMAT
-        ", Buffer[%" G_GUINT64_FORMAT "] status, "
-        "alloc-size %" G_GUINT64_FORMAT ", num-free-blocks %"
-        G_GSIZE_FORMAT ", largest-block-size %" G_GUINT64_FORMAT
-        ", popped-offset: %" G_GUINT64_FORMAT ", popped-size %"
-        G_GUINT64_FORMAT, priv->buffer_pool.size (),
-        buffer->id_, buffer->alloc_size_, buffer->alloc_vec_.size (),
-        buffer->largest_block_, ret->bs.Offset, ret->bs.Size);
-
-    auto it = buffer->alloc_vec_.cbegin ();
-    guint i = 0;
-    while (it != buffer->alloc_vec_.cend ()) {
-      GST_TRACE_OBJECT (pool, "Remaining[%u] Offset: %" G_GUINT64_FORMAT
-          ", Size: %" G_GSIZE_FORMAT, i, it->offset_, it->size_);
-      it++;
-      i++;
-    }
-  }
-#endif
   lk.unlock ();
 
   memcpy (buffer->mapped_data_ + ret->bs.Offset, data, size);
