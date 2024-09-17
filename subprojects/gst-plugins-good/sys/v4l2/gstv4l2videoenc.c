@@ -1227,6 +1227,7 @@ gst_v4l2_video_enc_register (GstPlugin * plugin, GType type,
   GValue value = G_VALUE_INIT;
 
   filtered_caps = gst_caps_intersect (src_caps, codec_caps);
+  GST_MINI_OBJECT_FLAG_SET (filtered_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
 
   if (codec != NULL && video_fd != -1) {
     if (gst_v4l2_codec_probe_levels (codec, video_fd, &value)) {
@@ -1243,7 +1244,7 @@ gst_v4l2_video_enc_register (GstPlugin * plugin, GType type,
   cdata = g_new0 (GstV4l2VideoEncCData, 1);
   cdata->device = g_strdup (device_path);
   cdata->sink_caps = gst_caps_ref (sink_caps);
-  cdata->src_caps = gst_caps_ref (filtered_caps);
+  cdata->src_caps = filtered_caps;
   cdata->codec = codec;
 
   g_type_query (type, &type_query);
