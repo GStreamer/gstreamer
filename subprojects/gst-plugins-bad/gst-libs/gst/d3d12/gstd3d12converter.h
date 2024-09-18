@@ -116,6 +116,26 @@ GType gst_d3d12_converter_alpha_mode_get_type (void);
 #define GST_D3D12_CONVERTER_OPT_DEST_ALPHA_MODE "GstD3D12Converter.dest-alpha-mode"
 
 /**
+ * GST_D3D12_CONVERTER_OPT_PSO_SAMPLE_DESC_COUNT:
+ *
+ * #G_TYPE_UINT, D3D12_GRAPHICS_PIPELINE_STATE_DESC.SampleDesc.Count value to use.
+ * Default is 1.
+ *
+ * Since: 1.26
+ */
+#define GST_D3D12_CONVERTER_OPT_PSO_SAMPLE_DESC_COUNT "GstD3D12Converter.pso-sample-desc-count"
+
+/**
+ * GST_D3D12_CONVERTER_OPT_PSO_SAMPLE_DESC_QUALITY:
+ *
+ * #G_TYPE_UINT, D3D12_GRAPHICS_PIPELINE_STATE_DESC.SampleDesc.Quality value to use.
+ * Default is 0.
+ *
+ * Since: 1.26
+ */
+#define GST_D3D12_CONVERTER_OPT_PSO_SAMPLE_DESC_QUALITY "GstD3D12Converter.pso-sample-desc-quality"
+
+/**
  * GstD3D12Converter:
  *
  * Opaque GstD3D12Converter struct

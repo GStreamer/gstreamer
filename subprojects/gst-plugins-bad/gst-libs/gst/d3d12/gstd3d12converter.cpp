@@ -738,7 +738,7 @@ static gboolean
 gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info,
     const GstD3D12Format * in_format, const GstD3D12Format * out_format,
-    D3D12_FILTER sampler_filter)
+    D3D12_FILTER sampler_filter, guint sample_count, guint sample_quality)
 {
   auto priv = self->priv;
   HRESULT hr;
@@ -842,7 +842,8 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
       pso_desc.RTVFormats[j] = rtv_formats.front ();
       rtv_formats.pop ();
     }
-    pso_desc.SampleDesc.Count = 1;
+    pso_desc.SampleDesc.Count = sample_count;
+    pso_desc.SampleDesc.Quality = sample_quality;
 
     ComPtr < ID3D12PipelineState > pso;
     hr = device->CreateGraphicsPipelineState (&pso_desc, IID_PPV_ARGS (&pso));
@@ -1890,6 +1891,8 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CommandQueue * queue,
   D3D12_FILTER sampler_filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
   GstVideoInfo matrix_in_info;
   GstVideoInfo matrix_out_info;
+  guint sample_count = 1;
+  guint sample_quality = 0;
 
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
   g_return_val_if_fail (in_info != nullptr, nullptr);
@@ -1950,6 +1953,14 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CommandQueue * queue,
         GST_TYPE_D3D12_CONVERTER_ALPHA_MODE, (int *) &priv->src_alpha_mode);
     gst_structure_get_enum (config, GST_D3D12_CONVERTER_OPT_DEST_ALPHA_MODE,
         GST_TYPE_D3D12_CONVERTER_ALPHA_MODE, (int *) &priv->dst_alpha_mode);
+
+    gst_structure_get_uint (config,
+        GST_D3D12_CONVERTER_OPT_PSO_SAMPLE_DESC_COUNT, &sample_count);
+    gst_structure_get_uint (config,
+        GST_D3D12_CONVERTER_OPT_PSO_SAMPLE_DESC_QUALITY, &sample_quality);
+
+    priv->sample_desc.Count = sample_count;
+    priv->sample_desc.Quality = sample_quality;
 
     gst_structure_free (config);
   }
@@ -2075,7 +2086,7 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CommandQueue * queue,
 
   if (!gst_d3d12_converter_setup_resource (self, &priv->in_info,
           &priv->out_info, &in_d3d12_format, &out_d3d12_format,
-          sampler_filter)) {
+          sampler_filter, sample_count, sample_quality)) {
     gst_object_unref (self);
     return nullptr;
   }
