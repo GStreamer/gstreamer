@@ -66,8 +66,8 @@ struct _GstRtpPassthroughPay
   GstCaps *caps;
   GstSegment segment;
 
-  guint clock_rate;
-  guint pt;
+  gint clock_rate;
+  gint pt;
   gboolean pt_override;
   guint ssrc;
   gboolean ssrc_set;

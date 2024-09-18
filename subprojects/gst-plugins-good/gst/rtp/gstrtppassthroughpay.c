@@ -502,8 +502,12 @@ gst_rtp_passthrough_pay_sink_event (GstPad * pad,
 
       s = gst_caps_get_structure (caps, 0);
 
-      gst_structure_get_uint (s, "payload", &self->pt);
-      gst_structure_get_uint (s, "clock-rate", &self->clock_rate);
+      if (!self->pt_override
+          && !gst_structure_get_int (s, "payload", &self->pt)) {
+        GST_WARNING_OBJECT (self, "Caps are missing payload type!");
+      }
+      if (!gst_structure_get_int (s, "clock-rate", &self->clock_rate))
+        GST_WARNING_OBJECT (self, "Caps are missing clock-rate!");
       if (gst_structure_get_uint (s, "ssrc", &self->ssrc))
         self->ssrc_set = TRUE;
       if (gst_structure_get_uint (s, "clock-base", &self->timestamp_offset))
@@ -551,10 +555,10 @@ gst_rtp_passthrough_pay_create_stats (GstRtpPassthroughPay * self)
   }
 
   return gst_structure_new ("application/x-rtp-payload-stats", "clock-rate",
-      G_TYPE_UINT, (guint) self->clock_rate, "running-time", G_TYPE_UINT64,
+      G_TYPE_INT, self->clock_rate, "running-time", G_TYPE_UINT64,
       running_time, "seqnum", G_TYPE_UINT, (guint) self->seqnum, "timestamp",
       G_TYPE_UINT, (guint) self->timestamp, "ssrc", G_TYPE_UINT, self->ssrc,
-      "pt", G_TYPE_UINT, self->pt, "seqnum-offset", G_TYPE_UINT,
+      "pt", G_TYPE_INT, self->pt, "seqnum-offset", G_TYPE_UINT,
       (guint) self->seqnum_offset, "timestamp-offset", G_TYPE_UINT,
       (guint) self->timestamp_offset, NULL);
 

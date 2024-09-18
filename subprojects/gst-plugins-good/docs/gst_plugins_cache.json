@@ -16344,7 +16344,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "application/x-rtp-payload-stats, clock-rate=(uint)0, running-time=(guint64)0, seqnum=(uint)0, timestamp=(uint)0, ssrc=(uint)0, pt=(uint)128, seqnum-offset=(uint)0, timestamp-offset=(uint)0;",
+                        "default": "application/x-rtp-payload-stats, clock-rate=(int)0, running-time=(guint64)0, seqnum=(uint)0, timestamp=(uint)0, ssrc=(uint)0, pt=(int)128, seqnum-offset=(uint)0, timestamp-offset=(uint)0;",
                         "mutable": "null",
                         "readable": true,
                         "type": "GstStructure",
