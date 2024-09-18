@@ -11060,6 +11060,13 @@ Used to generate `gst_device_provider_register_*(GstPlugin* plugin)`.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="DYNAMIC_TYPE_FACTORY_CLASS" c:identifier="GST_DYNAMIC_TYPE_FACTORY_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gstreamer/gst/gstdynamictypefactory.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="DYNAMIC_TYPE_REGISTER" c:identifier="GST_DYNAMIC_TYPE_REGISTER" version="1.20" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstdynamictypefactory.h">This macro can be used to register a dynamic type into a #GstPlugin.
 This method will be usually called in the plugin init function
