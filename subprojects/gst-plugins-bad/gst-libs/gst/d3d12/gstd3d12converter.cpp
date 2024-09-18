@@ -274,6 +274,7 @@ struct _GstD3D12ConverterPrivate
   ComPtr<ID3D12Resource> gamma_enc_lut;
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT gamma_lut_layout;
   ComPtr<ID3D12DescriptorHeap> gamma_lut_heap;
+  ComPtr<ID3D12DescriptorHeap> sampler_heap;
 
   std::vector<QuadData> quad_data;
 
@@ -281,6 +282,7 @@ struct _GstD3D12ConverterPrivate
 
   guint srv_inc_size;
   guint rtv_inc_size;
+  guint sampler_inc_size;
 
   guint64 input_texture_width;
   guint input_texture_height;
@@ -673,11 +675,13 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
       (D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
   priv->rtv_inc_size = device->GetDescriptorHandleIncrementSize
       (D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+  priv->sampler_inc_size = device->GetDescriptorHandleIncrementSize
+      (D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 
   ComPtr < ID3DBlob > rs_blob;
   priv->crs =
       gst_d3d12_get_converter_root_signature (self->device,
-      GST_VIDEO_INFO_FORMAT (in_info), priv->convert_type, sampler_filter);
+      GST_VIDEO_INFO_FORMAT (in_info), priv->convert_type);
   if (!priv->crs) {
     GST_ERROR_OBJECT (self, "Couldn't get root signature blob");
     return FALSE;
@@ -689,6 +693,60 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't create root signature");
     return FALSE;
+  }
+
+  ComPtr < ID3D12DescriptorHeap > sampler_heap;
+  hr = gst_d3d12_device_get_sampler_state (self->device, sampler_filter,
+      &sampler_heap);
+  if (FAILED (hr) && sampler_filter != D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT) {
+    sampler_filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+
+    GST_WARNING_OBJECT (self,
+        "Couldn't create requested sampler, trying linear sampler");
+    hr = gst_d3d12_device_get_sampler_state (self->device,
+        sampler_filter, &sampler_heap);
+  }
+
+  if (!gst_d3d12_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Couldn't create sampler");
+    return FALSE;
+  }
+
+  if (priv->crs->HaveLut ()) {
+    D3D12_DESCRIPTOR_HEAP_DESC heap_desc = { };
+    heap_desc.NumDescriptors = 1;
+    heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+    heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    hr = device->CreateDescriptorHeap (&heap_desc,
+        IID_PPV_ARGS (&priv->sampler_heap));
+    if (!gst_d3d12_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't create sampler heap");
+      return FALSE;
+    }
+
+    auto dst_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
+        (GetCPUDescriptorHandleForHeapStart (priv->sampler_heap));
+    device->CopyDescriptorsSimple (1, dst_handle,
+        GetCPUDescriptorHandleForHeapStart (sampler_heap),
+        D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+
+    if (sampler_filter != D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT) {
+      hr = gst_d3d12_device_get_sampler_state (self->device,
+          D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT,
+          sampler_heap.ReleaseAndGetAddressOf ());
+
+      if (!gst_d3d12_result (hr, self->device)) {
+        GST_ERROR_OBJECT (self, "Couldn't create sampler heap");
+        return FALSE;
+      }
+    }
+
+    dst_handle.Offset (priv->sampler_inc_size);
+    device->CopyDescriptorsSimple (1, dst_handle,
+        GetCPUDescriptorHandleForHeapStart (sampler_heap),
+        D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+  } else {
+    priv->sampler_heap = sampler_heap;
   }
 
   auto psblob_list =
@@ -2138,10 +2196,12 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
   cl->SetGraphicsRootSignature (priv->rs.Get ());
   cl->SetPipelineState (pso);
 
-  ID3D12DescriptorHeap *heaps[] = { srv_heap };
-  cl->SetDescriptorHeaps (1, heaps);
+  ID3D12DescriptorHeap *heaps[] = { srv_heap, priv->sampler_heap.Get () };
+  cl->SetDescriptorHeaps (2, heaps);
   cl->SetGraphicsRootDescriptorTable (priv->crs->GetPsSrvIdx (),
       GetGPUDescriptorHandleForHeapStart (srv_heap));
+  cl->SetGraphicsRootDescriptorTable (priv->crs->GetPsSamplerIdx (),
+      GetGPUDescriptorHandleForHeapStart (priv->sampler_heap));
   cl->SetGraphicsRoot32BitConstants (priv->crs->GetVsRootConstIdx (),
       16, &priv->transform, 0);
   cl->SetGraphicsRoot32BitConstants (priv->crs->GetPsRootConstIdx (),

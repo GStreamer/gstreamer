@@ -121,34 +121,21 @@ gst_d3d12_get_converter_vertex_shader_blob (D3D12_SHADER_BYTECODE * vs,
 
 /* root signature
  *
- * +-----+---------+--------------+
- * | RS  | size in |              |
- * | idx |  DWORD  |              |
- * +-----+---------+--------------+
- * | 0   |  1      | table (SRV)  |
- * +-----+---------+--------------+
- * | 1   |  16     |  VS matrix   |
- * +-----+---------+--------------+
- * | 2   |  1      |   PS alpha   |
- * +-----+---------+--------------+
- * | 3   |  2      |   PS CBV     |
- * +-----+---------+--------------+
+ * +-----+---------+------------------+
+ * | RS  | size in |                  |
+ * | idx |  DWORD  |                  |
+ * +-----+---------+------------------+
+ * | 0   |  1      | table (SRV)      |
+ * +-----+---------+------------------+
+ * | 1   |  1      | table (Sampler)  |
+ * +-----+---------+------------------+
+ * | 2   |  16     |  VS matrix       |
+ * +-----+---------+------------------+
+ * | 3   |  1      |   PS alpha       |
+ * +-----+---------+------------------+
+ * | 4   |  2      |   PS CBV         |
+ * +-----+---------+------------------+
  */
-static const D3D12_STATIC_SAMPLER_DESC static_sampler_desc_ = {
-  D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT,
-  D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
-  D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
-  D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
-  0,
-  1,
-  D3D12_COMPARISON_FUNC_ALWAYS,
-  D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK,
-  0,
-  D3D12_FLOAT32_MAX,
-  0,
-  0,
-  D3D12_SHADER_VISIBILITY_PIXEL
-};
 
 static const D3D12_ROOT_SIGNATURE_FLAGS rs_flags_ =
     D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
@@ -159,28 +146,15 @@ static const D3D12_ROOT_SIGNATURE_FLAGS rs_flags_ =
     D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS;
 
 ConverterRootSignature::ConverterRootSignature (D3D_ROOT_SIGNATURE_VERSION
-    version, UINT num_srv, D3D12_FILTER filter, bool build_lut)
+    version, UINT num_srv, bool build_lut)
 {
   D3D12_VERSIONED_ROOT_SIGNATURE_DESC desc = { };
 
   num_srv_ = num_srv;
   have_lut_ = build_lut;
 
-  std::vector < D3D12_STATIC_SAMPLER_DESC > static_sampler;
-  D3D12_STATIC_SAMPLER_DESC sampler_desc = static_sampler_desc_;
-  sampler_desc.Filter = filter;
-  if (filter == D3D12_FILTER_ANISOTROPIC)
-    sampler_desc.MaxAnisotropy = 16;
-
-  static_sampler.push_back (sampler_desc);
-
-  if (build_lut) {
-    sampler_desc = static_sampler_desc_;
-    sampler_desc.ShaderRegister = 1;
-    static_sampler.push_back (sampler_desc);
-  }
-
   std::vector < D3D12_DESCRIPTOR_RANGE1 > range_v1_1;
+  std::vector < D3D12_DESCRIPTOR_RANGE1 > sampler_range_v1_1;
   std::vector < D3D12_ROOT_PARAMETER1 > param_list_v1_1;
 
   CD3DX12_ROOT_PARAMETER1 param;
@@ -207,6 +181,20 @@ ConverterRootSignature::ConverterRootSignature (D3D_ROOT_SIGNATURE_VERSION
       range_v1_1.data (), D3D12_SHADER_VISIBILITY_PIXEL);
   param_list_v1_1.push_back (param);
 
+  /* sampler state, can be updated */
+  ps_sampler_ = (UINT) param_list_v1_1.size ();
+  sampler_range_v1_1.push_back (CD3DX12_DESCRIPTOR_RANGE1
+      (D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, 0,
+          D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE));
+  if (build_lut) {
+    sampler_range_v1_1.push_back (CD3DX12_DESCRIPTOR_RANGE1
+        (D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1, 0,
+            D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE));
+  }
+  param.InitAsDescriptorTable (sampler_range_v1_1.size (),
+      sampler_range_v1_1.data (), D3D12_SHADER_VISIBILITY_PIXEL);
+  param_list_v1_1.push_back (param);
+
   /* VS root const, maybe updated */
   vs_root_const_ = (UINT) param_list_v1_1.size ();
   param.InitAsConstants (16, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
@@ -225,8 +213,7 @@ ConverterRootSignature::ConverterRootSignature (D3D_ROOT_SIGNATURE_VERSION
   param_list_v1_1.push_back (param);
 
   CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC::Init_1_1 (desc,
-      param_list_v1_1.size (), param_list_v1_1.data (),
-      static_sampler.size (), static_sampler.data (), rs_flags_);
+      param_list_v1_1.size (), param_list_v1_1.data (), 0, nullptr, rs_flags_);
 
   ComPtr < ID3DBlob > error_blob;
   hr_ = D3DX12SerializeVersionedRootSignature (&desc,
@@ -242,7 +229,7 @@ ConverterRootSignature::ConverterRootSignature (D3D_ROOT_SIGNATURE_VERSION
 
 ConverterRootSignaturePtr
 gst_d3d12_get_converter_root_signature (GstD3D12Device * device,
-    GstVideoFormat in_format, CONVERT_TYPE type, D3D12_FILTER filter)
+    GstVideoFormat in_format, CONVERT_TYPE type)
 {
   auto info = gst_video_format_get_info (in_format);
   auto num_planes = GST_VIDEO_FORMAT_INFO_N_PLANES (info);
@@ -264,7 +251,7 @@ gst_d3d12_get_converter_root_signature (GstD3D12Device * device,
     build_lut = true;
 
   auto rs = std::make_shared < ConverterRootSignature >
-      (rs_version, num_planes, filter, build_lut);
+      (rs_version, num_planes, build_lut);
   if (!rs->IsValid ())
     return nullptr;
 

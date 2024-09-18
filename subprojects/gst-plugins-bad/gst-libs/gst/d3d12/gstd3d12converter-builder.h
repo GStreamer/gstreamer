@@ -47,11 +47,16 @@ class ConverterRootSignature
 public:
   ConverterRootSignature () = delete;
   ConverterRootSignature (D3D_ROOT_SIGNATURE_VERSION version, UINT num_srv,
-      D3D12_FILTER filter, bool build_lut);
+      bool build_lut);
 
   UINT GetPsSrvIdx ()
   {
     return ps_srv_;
+  }
+
+  UINT GetPsSamplerIdx ()
+  {
+    return ps_sampler_;
   }
 
   UINT GetNumSrv ()
@@ -98,6 +103,7 @@ private:
   Microsoft::WRL::ComPtr<ID3DBlob> blob_;
 
   UINT ps_srv_ = 0;
+  UINT ps_sampler_ = 0;
   UINT ps_cbv_ = 0;
   UINT vs_root_const_ = 0;
   UINT num_srv_ = 0;
@@ -123,5 +129,4 @@ gst_d3d12_get_converter_vertex_shader_blob (D3D12_SHADER_BYTECODE * vs,
 ConverterRootSignaturePtr
 gst_d3d12_get_converter_root_signature (GstD3D12Device * device,
                                         GstVideoFormat in_format,
-                                        CONVERT_TYPE type,
-                                        D3D12_FILTER filter);
+                                        CONVERT_TYPE type);
