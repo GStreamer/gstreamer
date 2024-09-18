@@ -44,6 +44,7 @@ enum
   PROP_HEIGHT,
   PROP_BORDER_COLOR,
   PROP_SWAPCHAIN,
+  PROP_SAMPLING_METHOD,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -51,6 +52,7 @@ enum
 #define DEFAULT_WIDTH 1280
 #define DEFAULT_HEIGHT 720
 #define DEFAULT_BORDER_COLOR (G_GUINT64_CONSTANT(0xffff000000000000))
+#define DEFAULT_SAMPLING_METHOD GST_D3D12_SAMPLING_METHOD_BILINEAR
 
 #define BACK_BUFFER_COUNT 2
 
@@ -179,6 +181,7 @@ struct GstD3D12SwapChainSinkPrivate
   guint width = DEFAULT_WIDTH;
   guint height = DEFAULT_HEIGHT;
   guint64 border_color = DEFAULT_BORDER_COLOR;
+  GstD3D12SamplingMethod sampling_method = DEFAULT_SAMPLING_METHOD;
 };
 /* *INDENT-ON* */
 
@@ -267,6 +270,12 @@ gst_d3d12_swapchain_sink_class_init (GstD3D12SwapChainSinkClass * klass)
           (GParamFlags) (GST_PARAM_DOC_SHOW_DEFAULT | G_PARAM_READABLE |
               G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (object_class, PROP_SAMPLING_METHOD,
+      g_param_spec_enum ("sampling-method", "Sampling method",
+          "Sampler filter type to use", GST_TYPE_D3D12_SAMPLING_METHOD,
+          DEFAULT_SAMPLING_METHOD,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   d3d12_swapchain_sink_signals[SIGNAL_RESIZE] =
       g_signal_new_class_handler ("resize", G_TYPE_FROM_CLASS (klass),
       (GSignalFlags) (G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
@@ -298,6 +307,9 @@ gst_d3d12_swapchain_sink_class_init (GstD3D12SwapChainSinkClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_swapchain_sink_debug,
       "d3d12swapchainsink", 0, "d3d12swapchainsink");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D12_SAMPLING_METHOD,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -343,6 +355,19 @@ gst_d3d12_swapchain_sink_set_property (GObject * object, guint prop_id,
       priv->border_color = g_value_get_uint64 (value);
       priv->update_border_color ();
       break;
+    case PROP_SAMPLING_METHOD:
+    {
+      auto sampling_method = (GstD3D12SamplingMethod) g_value_get_enum (value);
+      if (priv->sampling_method != sampling_method) {
+        priv->sampling_method = sampling_method;
+        if (priv->conv) {
+          g_object_set (priv->conv, "sampler-filter",
+              gst_d3d12_sampling_method_to_native (priv->sampling_method),
+              nullptr);
+        }
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -482,6 +507,9 @@ gst_d3d12_swapchain_sink_get_property (GObject * object, guint prop_id,
     case PROP_SWAPCHAIN:
       gst_d3d12_swapchain_sink_ensure_swapchain (self);
       g_value_set_pointer (value, priv->swapchain.Get ());
+      break;
+    case PROP_SAMPLING_METHOD:
+      g_value_set_enum (value, priv->sampling_method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -812,7 +840,10 @@ gst_d3d12_swapchain_sink_set_buffer (GstD3D12SwapChainSink * self,
           GST_TYPE_D3D12_CONVERTER_ALPHA_MODE,
           GST_VIDEO_INFO_HAS_ALPHA (&priv->info) ?
           GST_D3D12_CONVERTER_ALPHA_MODE_PREMULTIPLIED :
-          GST_D3D12_CONVERTER_ALPHA_MODE_UNSPECIFIED, nullptr);
+          GST_D3D12_CONVERTER_ALPHA_MODE_UNSPECIFIED,
+          GST_D3D12_CONVERTER_OPT_SAMPLER_FILTER,
+          GST_TYPE_D3D12_CONVERTER_SAMPLER_FILTER,
+          gst_d3d12_sampling_method_to_native (priv->sampling_method), nullptr);
 
       priv->conv = gst_d3d12_converter_new (self->device, nullptr, &priv->info,
           &priv->display_info, nullptr, nullptr,
