@@ -1824,7 +1824,6 @@ static GstFlowReturn
 gst_flv_mux_rewrite_header (GstFlvMux * mux)
 {
   GstBuffer *rewrite, *index, *tmp;
-  GstEvent *event;
   guint8 *data;
   gdouble d;
   GList *l;
@@ -1839,11 +1838,7 @@ gst_flv_mux_rewrite_header (GstFlvMux * mux)
   /* seek back to the preallocated index space */
   gst_segment_init (&segment, GST_FORMAT_BYTES);
   segment.start = segment.time = 13 + 29;
-  event = gst_event_new_segment (&segment);
-  if (!gst_pad_push_event (mux->srcpad, event)) {
-    GST_WARNING_OBJECT (mux, "Seek to rewrite header failed");
-    return GST_FLOW_OK;
-  }
+  gst_aggregator_update_segment (GST_AGGREGATOR (mux), &segment);
 
   /* determine duration now based on our own timestamping,
    * so that it is likely many times better and consistent
