@@ -206,6 +206,7 @@ enum
   PROP_FILL_BORDER,
   PROP_BORDER_COLOR,
   PROP_VIDEO_DIRECTION,
+  PROP_SAMPLER_FILTER,
 };
 
 /* *INDENT-OFF* */
@@ -261,6 +262,7 @@ struct _GstD3D12ConverterPrivate
   FLOAT blend_factor[4];
   DXGI_SAMPLE_DESC sample_desc;
   gboolean update_pso = FALSE;
+  gboolean update_sampler = FALSE;
 
   ConverterRootSignaturePtr crs;
   ComPtr<ID3D12RootSignature> rs;
@@ -319,6 +321,7 @@ struct _GstD3D12ConverterPrivate
       GST_D3D12_CONVERTER_ALPHA_MODE_UNSPECIFIED;
   GstD3D12ConverterAlphaMode dst_alpha_mode =
       GST_D3D12_CONVERTER_ALPHA_MODE_UNSPECIFIED;
+  D3D12_FILTER sampler_filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
 };
 /* *INDENT-ON* */
 
@@ -386,6 +389,10 @@ gst_d3d12_converter_class_init (GstD3D12ConverterClass * klass)
       g_param_spec_enum ("video-direction", "Video Direction",
           "Video direction", GST_TYPE_VIDEO_ORIENTATION_METHOD,
           GST_VIDEO_ORIENTATION_IDENTITY, param_flags));
+  g_object_class_install_property (object_class, PROP_SAMPLER_FILTER,
+      g_param_spec_enum ("sampler-filter", "Sampler Filter",
+          "Sampler Filter", GST_TYPE_D3D12_CONVERTER_SAMPLER_FILTER,
+          D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT, param_flags));
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_converter_debug,
       "d3d12converter", 0, "d3d12converter");
@@ -472,7 +479,8 @@ gst_d3d12_converter_set_property (GObject * object, guint prop_id,
     case PROP_ALPHA:
       priv->alpha = g_value_get_double (value);
       break;
-    case PROP_FILL_BORDER:{
+    case PROP_FILL_BORDER:
+    {
       gboolean fill_border = g_value_get_boolean (value);
 
       if (fill_border != priv->fill_border) {
@@ -481,7 +489,8 @@ gst_d3d12_converter_set_property (GObject * object, guint prop_id,
       }
       break;
     }
-    case PROP_BORDER_COLOR:{
+    case PROP_BORDER_COLOR:
+    {
       guint64 border_color = g_value_get_uint64 (value);
 
       if (border_color != priv->border_color) {
@@ -490,12 +499,22 @@ gst_d3d12_converter_set_property (GObject * object, guint prop_id,
       }
       break;
     }
-    case PROP_VIDEO_DIRECTION:{
+    case PROP_VIDEO_DIRECTION:
+    {
       GstVideoOrientationMethod video_direction =
           (GstVideoOrientationMethod) g_value_get_enum (value);
       if (video_direction != priv->video_direction) {
         priv->video_direction = video_direction;
         priv->update_transform = TRUE;
+      }
+      break;
+    }
+    case PROP_SAMPLER_FILTER:
+    {
+      auto filter = (D3D12_FILTER) g_value_get_enum (value);
+      if (filter != priv->sampler_filter) {
+        priv->sampler_filter = filter;
+        priv->update_sampler = TRUE;
       }
       break;
     }
@@ -549,6 +568,9 @@ gst_d3d12_converter_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VIDEO_DIRECTION:
       g_value_set_enum (value, priv->video_direction);
+      break;
+    case PROP_SAMPLER_FILTER:
+      g_value_set_enum (value, priv->sampler_filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -657,6 +679,62 @@ reorder_rtv_index (GstVideoFormat output_format, guint index)
 }
 
 static gboolean
+gst_d3d12_converter_create_sampler (GstD3D12Converter * self,
+    D3D12_FILTER filter, ID3D12DescriptorHeap ** heap)
+{
+  auto priv = self->priv;
+
+  ComPtr < ID3D12DescriptorHeap > sampler_heap;
+  auto hr = gst_d3d12_device_get_sampler_state (self->device, filter,
+      &sampler_heap);
+  if (!gst_d3d12_result (hr, self->device))
+    return FALSE;
+
+  if (priv->crs->HaveLut ()) {
+    D3D12_DESCRIPTOR_HEAP_DESC heap_desc = { };
+    heap_desc.NumDescriptors = 1;
+    heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+    heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+    ComPtr < ID3D12DescriptorHeap > new_heap;
+    auto device = gst_d3d12_device_get_device_handle (self->device);
+    hr = device->CreateDescriptorHeap (&heap_desc, IID_PPV_ARGS (&new_heap));
+    if (!gst_d3d12_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't create sampler heap");
+      return FALSE;
+    }
+
+    auto dst_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
+        (GetCPUDescriptorHandleForHeapStart (new_heap));
+    device->CopyDescriptorsSimple (1, dst_handle,
+        GetCPUDescriptorHandleForHeapStart (sampler_heap),
+        D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+
+    if (filter != D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT) {
+      hr = gst_d3d12_device_get_sampler_state (self->device,
+          D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT,
+          sampler_heap.ReleaseAndGetAddressOf ());
+
+      if (!gst_d3d12_result (hr, self->device)) {
+        GST_ERROR_OBJECT (self, "Couldn't create sampler heap");
+        return FALSE;
+      }
+    }
+
+    dst_handle.Offset (priv->sampler_inc_size);
+    device->CopyDescriptorsSimple (1, dst_handle,
+        GetCPUDescriptorHandleForHeapStart (sampler_heap),
+        D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+
+    *heap = new_heap.Detach ();
+  } else {
+    *heap = sampler_heap.Detach ();
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info,
     const GstD3D12Format * in_format, const GstD3D12Format * out_format,
@@ -695,59 +773,20 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     return FALSE;
   }
 
-  ComPtr < ID3D12DescriptorHeap > sampler_heap;
-  hr = gst_d3d12_device_get_sampler_state (self->device, sampler_filter,
-      &sampler_heap);
-  if (FAILED (hr) && sampler_filter != D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT) {
-    sampler_filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-
-    GST_WARNING_OBJECT (self,
-        "Couldn't create requested sampler, trying linear sampler");
-    hr = gst_d3d12_device_get_sampler_state (self->device,
-        sampler_filter, &sampler_heap);
-  }
-
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't create sampler");
-    return FALSE;
-  }
-
-  if (priv->crs->HaveLut ()) {
-    D3D12_DESCRIPTOR_HEAP_DESC heap_desc = { };
-    heap_desc.NumDescriptors = 1;
-    heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-    heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    hr = device->CreateDescriptorHeap (&heap_desc,
-        IID_PPV_ARGS (&priv->sampler_heap));
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't create sampler heap");
-      return FALSE;
-    }
-
-    auto dst_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
-        (GetCPUDescriptorHandleForHeapStart (priv->sampler_heap));
-    device->CopyDescriptorsSimple (1, dst_handle,
-        GetCPUDescriptorHandleForHeapStart (sampler_heap),
-        D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-
+  if (!gst_d3d12_converter_create_sampler (self, sampler_filter,
+          &priv->sampler_heap)) {
     if (sampler_filter != D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT) {
-      hr = gst_d3d12_device_get_sampler_state (self->device,
-          D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT,
-          sampler_heap.ReleaseAndGetAddressOf ());
-
-      if (!gst_d3d12_result (hr, self->device)) {
-        GST_ERROR_OBJECT (self, "Couldn't create sampler heap");
+      sampler_filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+      if (!gst_d3d12_converter_create_sampler (self, sampler_filter,
+              &priv->sampler_heap)) {
         return FALSE;
       }
+    } else {
+      return FALSE;
     }
-
-    dst_handle.Offset (priv->sampler_inc_size);
-    device->CopyDescriptorsSimple (1, dst_handle,
-        GetCPUDescriptorHandleForHeapStart (sampler_heap),
-        D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-  } else {
-    priv->sampler_heap = sampler_heap;
   }
+
+  priv->sampler_filter = sampler_filter;
 
   auto psblob_list =
       gst_d3d12_get_converter_pixel_shader_blob (GST_VIDEO_INFO_FORMAT
@@ -2081,6 +2120,21 @@ gst_d3d12_converter_update_pso (GstD3D12Converter * self)
 }
 
 static void
+gst_d3d12_converter_update_sampler (GstD3D12Converter * self)
+{
+  auto priv = self->priv;
+  if (!priv->update_sampler)
+    return;
+
+  priv->update_sampler = FALSE;
+  ComPtr < ID3D12DescriptorHeap > sampler_heap;
+  if (gst_d3d12_converter_create_sampler (self, priv->sampler_filter,
+          &sampler_heap)) {
+    priv->sampler_heap = sampler_heap;
+  }
+}
+
+static void
 reorder_rtv_handles (GstVideoFormat output_format,
     D3D12_CPU_DESCRIPTOR_HANDLE * src, D3D12_CPU_DESCRIPTOR_HANDLE * dst)
 {
@@ -2136,6 +2190,8 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
     GST_ERROR_OBJECT (self, "Failed to update pso");
     return FALSE;
   }
+
+  gst_d3d12_converter_update_sampler (self);
 
   if (priv->vertex_upload) {
     auto barrier =
@@ -2243,6 +2299,10 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
     gst_d3d12_fence_data_push (fence_data,
         FENCE_NOTIFY_COM (priv->vertex_upload.Detach ()));
   }
+
+  auto sampler = priv->sampler_heap.Get ();
+  sampler->AddRef ();
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (sampler));
 
   return TRUE;
 }
