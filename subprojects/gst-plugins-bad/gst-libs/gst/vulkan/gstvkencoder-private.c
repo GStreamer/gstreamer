@@ -426,6 +426,11 @@ gst_vulkan_encode_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
       g_ptr_array_new_with_free_func ((GDestroyNotify) gst_buffer_unref);
   pic->slotIndex = -1;
 
+  pic->img_view = gst_vulkan_video_image_create_view (pic->in_buffer,
+      priv->layered_dpb, TRUE, NULL);
+  pic->dpb_view = gst_vulkan_video_image_create_view (pic->dpb_buffer,
+      priv->layered_dpb, FALSE, NULL);
+
   return pic;
 }
 
@@ -445,14 +450,12 @@ gst_vulkan_encode_picture_free (GstVulkanEncodePicture * pic)
   gst_clear_buffer (&pic->dpb_buffer);
   gst_clear_buffer (&pic->out_buffer);
 
-  if (pic->img_view) {
-    gst_vulkan_image_view_unref (pic->img_view);
-    pic->img_view = NULL;
-  }
-  if (pic->dpb_view) {
-    gst_vulkan_image_view_unref (pic->dpb_view);
-    pic->dpb_view = NULL;
-  }
+  gst_vulkan_image_view_unref (pic->img_view);
+  pic->img_view = NULL;
+
+  gst_vulkan_image_view_unref (pic->dpb_view);
+  pic->dpb_view = NULL;
+
   g_clear_pointer (&pic->packed_headers, g_ptr_array_unref);
 
   g_free (pic);
@@ -1105,12 +1108,13 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     GST_OBJECT_UNLOCK (self);
   }
 
+  g_assert (pic->dpb_buffer && pic->dpb_view);
+  g_assert (pic->in_buffer && pic->img_view);
+  g_assert (pic->out_buffer);
+
   /* Set the ref slots according to the pic refs to bound the video
      session encoding. It should contain all the references + 1 to book
      a new slotIndex (-1) for the current picture. */
-  pic->dpb_view = gst_vulkan_video_image_create_view (pic->dpb_buffer,
-      priv->layered_dpb, FALSE, NULL);
-
   /* *INDENT-OFF* */
   pic->dpb = (VkVideoPictureResourceInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
@@ -1194,9 +1198,6 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     priv->first_encode_cmd = TRUE;
   }
 
-  if (!pic->out_buffer)
-    return FALSE;
-
   /* Add the packed headers if present on head of the output buffer */
   for (i = 0; pic->packed_headers && i < pic->packed_headers->len; i++) {
     GstBuffer *buffer;
@@ -1213,9 +1214,6 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
   g_clear_pointer (&pic->packed_headers, g_ptr_array_unref);
   /* Peek the output memory to be used by VkVideoEncodeInfoKHR.dstBuffer */
   mem = gst_buffer_peek_memory (pic->out_buffer, n_mems);
-  /* Peek the image view to be encoded */
-  pic->img_view = gst_vulkan_video_image_create_view (pic->in_buffer,
-      priv->layered_dpb, TRUE, NULL);
 
   /* Attribute a free slot index to the picture to be used later as a reference.
    * The picture is kept until it remains useful to the encoding process.*/
