@@ -57,4 +57,9 @@ gboolean      gst_d3d12_need_transform (gfloat rotation_x,
 
 gboolean      gst_d3d12_is_windows_10_or_greater (void);
 
+void          gst_d3d12_calculate_sample_desc_for_msaa (GstD3D12Device * device,
+                                                        DXGI_FORMAT format,
+                                                        GstD3D12MSAAMode msaa_mode,
+                                                        DXGI_SAMPLE_DESC * desc);
+
 G_END_DECLS

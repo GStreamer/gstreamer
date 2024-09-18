@@ -321,9 +321,24 @@ SwapChain::setup_swapchain (GstD3D12Window * window, GstD3D12Device * device,
     gst_structure_free (converter_config_);
   converter_config_ = gst_structure_copy (conv_config);
 
+  GstD3D12MSAAMode msaa_mode;
+  DXGI_SAMPLE_DESC sample_desc = { };
+  gst_d3d12_window_get_msaa (window, msaa_mode);
+  gst_d3d12_calculate_sample_desc_for_msaa (device,
+      format, msaa_mode, &sample_desc);
+
+  if (sample_desc.Count > 1) {
+    gst_structure_set (converter_config_,
+        GST_D3D12_CONVERTER_OPT_PSO_SAMPLE_DESC_COUNT, G_TYPE_UINT,
+        sample_desc.Count,
+        GST_D3D12_CONVERTER_OPT_PSO_SAMPLE_DESC_QUALITY, G_TYPE_UINT,
+        sample_desc.Quality, nullptr);
+  }
+
   if (!resource_->conv) {
     resource_->conv = gst_d3d12_converter_new (resource_->device, nullptr,
-      in_info, out_info, nullptr, nullptr, gst_structure_copy (conv_config));
+      in_info, out_info, nullptr, nullptr,
+      gst_structure_copy (converter_config_));
     if (!resource_->conv) {
       GST_ERROR ("Couldn't create converter");
       return GST_FLOW_ERROR;
@@ -420,47 +435,21 @@ SwapChain::resize_buffer (GstD3D12Window * window)
 
   auto buffer_desc = resource_->buffer_desc;
   GstD3D12MSAAMode msaa_mode;
+  DXGI_SAMPLE_DESC sample_desc = { };
   gst_d3d12_window_get_msaa (window, msaa_mode);
-
-  UINT sample_count = 1;
-  switch (msaa_mode) {
-    case GST_D3D12_MSAA_2X:
-      sample_count = 2;
-      break;
-    case GST_D3D12_MSAA_4X:
-      sample_count = 4;
-      break;
-    case GST_D3D12_MSAA_8X:
-      sample_count = 8;
-      break;
-    default:
-      break;
-  }
+  gst_d3d12_calculate_sample_desc_for_msaa (device, buffer_desc.Format,
+      msaa_mode, &sample_desc);
 
   auto device_handle = gst_d3d12_device_get_device_handle (device);
-  D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS feature_data = { };
-  feature_data.Format = buffer_desc.Format;
-  feature_data.SampleCount = sample_count;
-
-  while (feature_data.SampleCount > 1) {
-    hr = device_handle->CheckFeatureSupport (
-      D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
-        &feature_data, sizeof (feature_data));
-    if (SUCCEEDED (hr) && feature_data.NumQualityLevels > 0)
-      break;
-
-    feature_data.SampleCount /= 2;
-  }
-
-  if (feature_data.SampleCount > 1 && feature_data.NumQualityLevels > 0) {
+  if (sample_desc.Count > 1) {
     GST_DEBUG_OBJECT (device, "Enable MSAA x%d with quality level %d",
-        feature_data.SampleCount, feature_data.NumQualityLevels - 1);
+        sample_desc.Count, sample_desc.Quality);
     D3D12_HEAP_PROPERTIES heap_prop =
         CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
     D3D12_RESOURCE_DESC resource_desc =
         CD3DX12_RESOURCE_DESC::Tex2D (buffer_desc.Format,
         buffer_desc.Width, buffer_desc.Height,
-        1, 1, feature_data.SampleCount, feature_data.NumQualityLevels - 1,
+        1, 1, sample_desc.Count, sample_desc.Quality,
         D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
     D3D12_CLEAR_VALUE clear_value = { };
     clear_value.Format = buffer_desc.Format;

@@ -140,3 +140,48 @@ gst_d3d12_is_windows_10_or_greater (void)
 
   return ret;
 }
+
+void
+gst_d3d12_calculate_sample_desc_for_msaa (GstD3D12Device * device,
+    DXGI_FORMAT format, GstD3D12MSAAMode msaa_mode, DXGI_SAMPLE_DESC * desc)
+{
+  desc->Count = 1;
+  desc->Quality = 0;
+
+  auto device_handle = gst_d3d12_device_get_device_handle (device);
+
+  UINT sample_count = 1;
+  switch (msaa_mode) {
+    case GST_D3D12_MSAA_2X:
+      sample_count = 2;
+      break;
+    case GST_D3D12_MSAA_4X:
+      sample_count = 4;
+      break;
+    case GST_D3D12_MSAA_8X:
+      sample_count = 8;
+      break;
+    default:
+      break;
+  }
+
+  D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS feature_data = { };
+  feature_data.Format = format;
+  feature_data.SampleCount = sample_count;
+
+  while (feature_data.SampleCount > 1) {
+    auto hr =
+        device_handle->CheckFeatureSupport
+        (D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
+        &feature_data, sizeof (feature_data));
+    if (SUCCEEDED (hr) && feature_data.NumQualityLevels > 0)
+      break;
+
+    feature_data.SampleCount /= 2;
+  }
+
+  if (feature_data.SampleCount > 1 && feature_data.NumQualityLevels > 0) {
+    desc->Count = feature_data.SampleCount;
+    desc->Quality = feature_data.NumQualityLevels - 1;
+  }
+}
