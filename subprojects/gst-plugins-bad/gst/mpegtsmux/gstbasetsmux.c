@@ -1597,7 +1597,7 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
       GST_INFO_OBJECT (mux, "pushing downstream force-key-unit event %d "
           "%" GST_TIME_FORMAT " count %d", gst_event_get_seqnum (event),
           GST_TIME_ARGS (running_time), count);
-      gst_pad_push_event (GST_AGGREGATOR_SRC_PAD (mux), event);
+      gst_aggregator_push_src_event (GST_AGGREGATOR (mux), event);
 
       g_mutex_lock (&mux->lock);
       /* output PAT, SI tables */
