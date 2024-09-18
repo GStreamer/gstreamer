@@ -135,11 +135,6 @@ gst_aggregator_start_time_selection_get_type (void)
   return gtype;
 }
 
-/*  Might become API */
-#if 0
-static void gst_aggregator_merge_tags (GstAggregator * aggregator,
-    const GstTagList * tags, GstTagMergeMode mode);
-#endif
 static void gst_aggregator_set_latency_property (GstAggregator * agg,
     GstClockTime latency);
 static GstClockTime gst_aggregator_get_latency_property (GstAggregator * agg);
@@ -384,9 +379,6 @@ struct _GstAggregatorPrivate
   gboolean got_eos_event;       /* protected by srcpad stream lock */
 
   GstCaps *srccaps;             /* protected by the srcpad stream lock */
-
-  GstTagList *tags;
-  gboolean tags_changed;
 
   gboolean peer_latency_live;   /* protected by src_lock */
   GstClockTime peer_latency_min;        /* protected by src_lock */
@@ -633,9 +625,7 @@ gst_aggregator_reset_flow_values (GstAggregator * self)
 static inline void
 gst_aggregator_push_mandatory_events (GstAggregator * self, gboolean up_to_caps)
 {
-  GstAggregatorPrivate *priv = self->priv;
   GstEvent *segment = NULL;
-  GstEvent *tags = NULL;
 
   if (self->priv->send_stream_start) {
     gchar s_id[32];
@@ -679,17 +669,10 @@ gst_aggregator_push_mandatory_events (GstAggregator * self, gboolean up_to_caps)
 
     GST_DEBUG_OBJECT (self, "pushing segment %" GST_PTR_FORMAT, segment);
   }
-
-  if (priv->tags && priv->tags_changed && !self->priv->flushing) {
-    tags = gst_event_new_tag (gst_tag_list_ref (priv->tags));
-    priv->tags_changed = FALSE;
-  }
   GST_OBJECT_UNLOCK (self);
 
   if (segment)
     gst_pad_push_event (self->srcpad, segment);
-  if (tags)
-    gst_pad_push_event (self->srcpad, tags);
 }
 
 /**
@@ -1632,7 +1615,6 @@ gst_aggregator_flush (GstAggregator * self)
   GST_OBJECT_LOCK (self);
   priv->send_segment = TRUE;
   priv->flushing = FALSE;
-  priv->tags_changed = FALSE;
   GST_OBJECT_UNLOCK (self);
   if (klass->flush)
     ret = klass->flush (self);
@@ -2034,10 +2016,6 @@ gst_aggregator_stop (GstAggregator * agg)
   agg->priv->peer_latency_live = FALSE;
   agg->priv->peer_latency_min = agg->priv->peer_latency_max = 0;
   agg->priv->posted_latency_msg = FALSE;
-
-  if (agg->priv->tags)
-    gst_tag_list_unref (agg->priv->tags);
-  agg->priv->tags = NULL;
 
   gst_aggregator_set_allocation (agg, NULL, NULL, NULL, NULL);
 
@@ -3114,7 +3092,6 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
   g_return_if_fail (pad_template != NULL);
 
   priv->max_padserial = -1;
-  priv->tags_changed = FALSE;
   priv->ignore_inactive_pads = FALSE;
 
   self->priv->peer_latency_live = FALSE;
@@ -3855,43 +3832,6 @@ gst_aggregator_pad_is_inactive (GstAggregatorPad * pad)
 
   return inactive;
 }
-
-#if 0
-/*
- * gst_aggregator_merge_tags:
- * @self: a #GstAggregator
- * @tags: a #GstTagList to merge
- * @mode: the #GstTagMergeMode to use
- *
- * Adds tags to so-called pending tags, which will be processed
- * before pushing out data downstream.
- *
- * Note that this is provided for convenience, and the subclass is
- * not required to use this and can still do tag handling on its own.
- *
- * MT safe.
- */
-void
-gst_aggregator_merge_tags (GstAggregator * self,
-    const GstTagList * tags, GstTagMergeMode mode)
-{
-  GstTagList *otags;
-
-  g_return_if_fail (GST_IS_AGGREGATOR (self));
-  g_return_if_fail (tags == NULL || GST_IS_TAG_LIST (tags));
-
-  /* FIXME Check if we can use OBJECT lock here! */
-  GST_OBJECT_LOCK (self);
-  if (tags)
-    GST_DEBUG_OBJECT (self, "merging tags %" GST_PTR_FORMAT, tags);
-  otags = self->priv->tags;
-  self->priv->tags = gst_tag_list_merge (self->priv->tags, tags, mode);
-  if (otags)
-    gst_tag_list_unref (otags);
-  self->priv->tags_changed = TRUE;
-  GST_OBJECT_UNLOCK (self);
-}
-#endif
 
 /**
  * gst_aggregator_set_latency:
