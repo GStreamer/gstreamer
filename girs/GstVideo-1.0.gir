@@ -16363,6 +16363,9 @@ For drop frame, only 30000/1001 and 60000/1001 frame rates are supported.</doc>
       <member name="interlaced" value="2" c:identifier="GST_VIDEO_TIME_CODE_FLAGS_INTERLACED" glib:nick="interlaced" glib:name="GST_VIDEO_TIME_CODE_FLAGS_INTERLACED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideotimecode.h">Whether we have interlaced video</doc>
       </member>
+      <member name="discont" value="4" c:identifier="GST_VIDEO_TIME_CODE_FLAGS_DISCONT" version="1.30" glib:nick="discont" glib:name="GST_VIDEO_TIME_CODE_FLAGS_DISCONT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideotimecode.h">Whether there is a timecode discontinuity</doc>
+      </member>
     </bitfield>
     <record name="VideoTimeCodeInterval" c:type="GstVideoTimeCodeInterval" version="1.12" glib:type-name="GstVideoTimeCodeInterval" glib:get-type="gst_video_time_code_interval_get_type" c:symbol-prefix="video_time_code_interval">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideotimecode.h">A representation of a difference between two #GstVideoTimeCode instances.

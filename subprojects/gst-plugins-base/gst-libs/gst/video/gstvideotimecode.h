@@ -34,6 +34,8 @@ typedef struct _GstVideoTimeCodeInterval GstVideoTimeCodeInterval;
  * @GST_VIDEO_TIME_CODE_FLAGS_NONE: No flags
  * @GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME: Whether we have drop frame rate
  * @GST_VIDEO_TIME_CODE_FLAGS_INTERLACED: Whether we have interlaced video
+ * @GST_VIDEO_TIME_CODE_FLAGS_DISCONT: Whether there is a timecode
+ * discontinuity. Since: 1.30
  *
  * Flags related to the time code information.
  * For drop frame, only 30000/1001 and 60000/1001 frame rates are supported.
@@ -44,10 +46,18 @@ typedef enum
 {
   GST_VIDEO_TIME_CODE_FLAGS_NONE = 0,
   GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME = (1<<0),
-  GST_VIDEO_TIME_CODE_FLAGS_INTERLACED = (1<<1)
+  GST_VIDEO_TIME_CODE_FLAGS_INTERLACED = (1<<1),
+  /**
+   * GST_VIDEO_TIME_CODE_FLAGS_DISCONT:
+   *
+   * Whether there is a timecode discontinuity
+   *
+   * Since: 1.30
+   */
+  GST_VIDEO_TIME_CODE_FLAGS_DISCONT = (1<<2)
   /* Not supported yet:
-   * GST_VIDEO_TIME_CODE_ALLOW_MORE_THAN_24H = (1<<2)
-   * GST_VIDEO_TIME_CODE_ALLOW_NEGATIVE = (1<<3)
+   * GST_VIDEO_TIME_CODE_ALLOW_MORE_THAN_24H = (1<<3)
+   * GST_VIDEO_TIME_CODE_ALLOW_NEGATIVE = (1<<4)
    */
 } GstVideoTimeCodeFlags;
 
