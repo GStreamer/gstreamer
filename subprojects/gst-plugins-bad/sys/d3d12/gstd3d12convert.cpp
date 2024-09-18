@@ -143,7 +143,6 @@ struct GstD3D12ConvertPrivate
 
   /* sampling method, configured via property */
   GstD3D12SamplingMethod sampling_method = DEFAULT_SAMPLING_METHOD;
-  GstD3D12SamplingMethod active_sampling_method = DEFAULT_SAMPLING_METHOD;
 
   /* orientation */
   /* method configured via property */
@@ -326,8 +325,10 @@ gst_d3d12_convert_set_sampling_method (GstD3D12Convert * self,
       "Sampling method %d -> %d", priv->sampling_method, method);
 
   priv->sampling_method = method;
-  if (priv->sampling_method != priv->active_sampling_method)
-    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+  if (priv->ctx && priv->ctx->conv) {
+    g_object_set (priv->ctx->conv, "sampler-filter",
+        gst_d3d12_sampling_method_to_native (method), nullptr);
+  }
 }
 
 static void
@@ -1678,12 +1679,11 @@ gst_d3d12_convert_set_info (GstD3D12BaseFilter * filter,
   priv->active_add_borders = priv->add_borders;
   priv->active_gamma_mode = priv->gamma_mode;
   priv->active_primaries_mode = priv->primaries_mode;
-  priv->active_sampling_method = priv->sampling_method;
 
   GST_DEBUG_OBJECT (self, "method %d, add-borders %d, gamma-mode %d, "
       "primaries-mode %d, sampling %d", priv->active_method,
       priv->active_add_borders, priv->active_gamma_mode,
-      priv->active_primaries_mode, priv->active_sampling_method);
+      priv->active_primaries_mode, priv->sampling_method);
 
   if (priv->active_method != GST_VIDEO_ORIENTATION_IDENTITY)
     need_flip = TRUE;
@@ -1776,8 +1776,7 @@ gst_d3d12_convert_set_info (GstD3D12BaseFilter * filter,
       GST_TYPE_VIDEO_PRIMARIES_MODE, priv->active_primaries_mode,
       GST_D3D12_CONVERTER_OPT_SAMPLER_FILTER,
       GST_TYPE_D3D12_CONVERTER_SAMPLER_FILTER,
-      gst_d3d12_sampling_method_to_native
-      (priv->active_sampling_method), nullptr);
+      gst_d3d12_sampling_method_to_native (priv->sampling_method), nullptr);
 
   auto ctx = std::make_unique < ConvertContext > (filter->device);
 
@@ -1929,8 +1928,7 @@ gst_d3d12_convert_before_transform (GstBaseTransform * trans,
   if (priv->selected_method != priv->active_method ||
       priv->add_borders != priv->active_add_borders ||
       priv->gamma_mode != priv->active_gamma_mode ||
-      priv->primaries_mode != priv->active_primaries_mode ||
-      priv->sampling_method != priv->active_sampling_method) {
+      priv->primaries_mode != priv->active_primaries_mode) {
     update = TRUE;
   }
   priv->lock.unlock ();
