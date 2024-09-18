@@ -384,6 +384,10 @@ GstFlowReturn  gst_aggregator_finish_buffer_list    (GstAggregator              
                                                      GstBufferList                *  bufferlist);
 
 GST_BASE_API
+gboolean       gst_aggregator_push_src_event        (GstAggregator                *  aggregator,
+                                                     GstEvent                     *  event);
+
+GST_BASE_API
 void           gst_aggregator_set_src_caps          (GstAggregator                *  self,
                                                      GstCaps                      *  caps);
 

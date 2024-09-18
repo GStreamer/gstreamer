@@ -1551,6 +1551,28 @@ control aggregating parameters for a given set of input samples.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="push_src_event" c:identifier="gst_aggregator_push_src_event" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">This method will push the provided event downstream. If needed, mandatory
+events such as stream-start, caps, and segment events will be sent before
+pushing the event.
+
+This API does not allow pushing stream-start, caps, segment and EOS events.
+Specific API like gst_aggregator_set_src_caps() should be used for these.</doc>
+        <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="aggregator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">The #GstAggregator</doc>
+            <type name="Aggregator" c:type="GstAggregator*"/>
+          </instance-parameter>
+          <parameter name="event" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">the #GstEvent to push.</doc>
+            <type name="Gst.Event" c:type="GstEvent*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="selected_samples" c:identifier="gst_aggregator_selected_samples" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">Subclasses should call this when they have prepared the
 buffers they will aggregate for each of their sink pads, but

@@ -786,6 +786,36 @@ gst_aggregator_finish_buffer_list (GstAggregator * aggregator,
   return klass->finish_buffer_list (aggregator, bufferlist);
 }
 
+/**
+ * gst_aggregator_push_src_event:
+ * @aggregator: The #GstAggregator
+ * @event: (transfer full): the #GstEvent to push.
+ *
+ * This method will push the provided event downstream. If needed, mandatory
+ * events such as stream-start, caps, and segment events will be sent before
+ * pushing the event.
+ *
+ * This API does not allow pushing stream-start, caps, segment and EOS events.
+ * Specific API like gst_aggregator_set_src_caps() should be used for these.
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_aggregator_push_src_event (GstAggregator * aggregator, GstEvent * event)
+{
+  g_return_val_if_fail (GST_EVENT_IS_DOWNSTREAM (event), FALSE);
+  g_return_val_if_fail (GST_EVENT_TYPE (event) != GST_EVENT_STREAM_START &&
+      GST_EVENT_TYPE (event) != GST_EVENT_CAPS &&
+      GST_EVENT_TYPE (event) != GST_EVENT_SEGMENT &&
+      GST_EVENT_TYPE (event) != GST_EVENT_EOS, FALSE);
+
+  if (GST_EVENT_IS_SERIALIZED (event)) {
+    gst_aggregator_push_mandatory_events (aggregator, FALSE);
+  }
+
+  return gst_pad_push_event (aggregator->srcpad, event);
+}
+
 static void
 gst_aggregator_push_eos (GstAggregator * self)
 {
