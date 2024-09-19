@@ -212,7 +212,6 @@ enum
 /* *INDENT-OFF* */
 struct QuadData
 {
-  D3D12_INPUT_ELEMENT_DESC input_desc[2];
   D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = { };
   ComPtr<ID3D12PipelineState> pso;
   guint num_rtv;
@@ -259,6 +258,7 @@ struct _GstD3D12ConverterPrivate
   D3D12_RECT scissor_rect[GST_VIDEO_MAX_PLANES];
 
   D3D12_BLEND_DESC blend_desc;
+  D3D12_INPUT_ELEMENT_DESC input_desc[2];
   FLOAT blend_factor[4];
   DXGI_SAMPLE_DESC sample_desc;
   gboolean update_pso = FALSE;
@@ -800,8 +800,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   }
 
   D3D12_SHADER_BYTECODE vs_blob;
-  D3D12_INPUT_ELEMENT_DESC input_desc[2];
-  hr = gst_d3d12_get_converter_vertex_shader_blob (&vs_blob, input_desc);
+  hr = gst_d3d12_get_converter_vertex_shader_blob (&vs_blob, priv->input_desc);
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't get vertex shader blob");
     return FALSE;
@@ -821,9 +820,6 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   priv->quad_data.resize (psblob_list.size ());
 
   for (size_t i = 0; i < psblob_list.size (); i++) {
-    priv->quad_data[i].input_desc[0] = input_desc[0];
-    priv->quad_data[i].input_desc[1] = input_desc[1];
-
     auto & pso_desc = priv->quad_data[i].desc;
     pso_desc.pRootSignature = priv->rs.Get ();
     pso_desc.VS = vs_blob;
@@ -834,7 +830,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     pso_desc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
     pso_desc.DepthStencilState.DepthEnable = FALSE;
     pso_desc.DepthStencilState.StencilEnable = FALSE;
-    pso_desc.InputLayout.pInputElementDescs = priv->quad_data[i].input_desc;
+    pso_desc.InputLayout.pInputElementDescs = priv->input_desc;
     pso_desc.InputLayout.NumElements = 2;
     pso_desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     pso_desc.NumRenderTargets = psblob_list[i].num_rtv;
