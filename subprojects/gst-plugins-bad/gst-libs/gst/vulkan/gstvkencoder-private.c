@@ -50,6 +50,8 @@ struct _GstVulkanEncoderPrivate
 
   GstVulkanEncoderPicture *slots[32];
 
+  guint32 quality;
+
   gboolean started;
   gboolean session_reset;
 
@@ -222,6 +224,7 @@ gst_vulkan_encoder_new_video_session_parameters (GstVulkanEncoder * self,
 {
   GstVulkanEncoderPrivate *priv;
   VkVideoSessionParametersCreateInfoKHR session_params_info;
+  VkVideoEncodeQualityLevelInfoKHR quality_info;
   VkResult res;
   VkVideoSessionParametersKHR session_params;
 
@@ -234,9 +237,14 @@ gst_vulkan_encoder_new_video_session_parameters (GstVulkanEncoder * self,
     return NULL;
 
   /* *INDENT-OFF* */
+  quality_info = (VkVideoEncodeQualityLevelInfoKHR) {
+    .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_QUALITY_LEVEL_INFO_KHR,
+    .pNext = params,
+    .qualityLevel = priv->quality,
+  };
   session_params_info = (VkVideoSessionParametersCreateInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_SESSION_PARAMETERS_CREATE_INFO_KHR,
-    .pNext = params,
+    .pNext = &quality_info,
     .videoSession = priv->session.session->handle,
   };
   /* *INDENT-ON* */
@@ -407,6 +415,30 @@ gst_vulkan_encoder_profile_caps (GstVulkanEncoder * self)
 }
 
 /**
+ * gst_vulkan_encoder_quality_level:
+ * @self: a #GstVulkanEncoder
+ *
+ * Get the current encoding quality level.
+ *
+ * Returns: whether the encoder has started, it will return the quality level;
+ *     otherwise it will return -1
+ */
+gint32
+gst_vulkan_encoder_quality_level (GstVulkanEncoder * self)
+{
+  GstVulkanEncoderPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), -1);
+
+  priv = gst_vulkan_encoder_get_instance_private (self);
+
+  if (!priv->started)
+    return -1;
+
+  return priv->quality;
+}
+
+/**
  * gst_vulkan_encoder_stop:
  * @self: a #GstVulkanEncoder
  *
@@ -448,6 +480,7 @@ gst_vulkan_encoder_stop (GstVulkanEncoder * self)
  * gst_vulkan_encoder_start:
  * @self: a #GstVulkanEncoder
  * @profile: a #GstVulkanVideoProfile
+ * @codec_quality_props: codec specific quality structure to fetch
  * @error: (out) : an error result in case of failure or %NULL
  *
  * Start the encoding session according to a valid Vulkan profile
@@ -457,7 +490,8 @@ gst_vulkan_encoder_stop (GstVulkanEncoder * self)
  */
 gboolean
 gst_vulkan_encoder_start (GstVulkanEncoder * self,
-    GstVulkanVideoProfile * profile, GError ** error)
+    GstVulkanVideoProfile * profile,
+    GstVulkanEncoderQualityProperties * codec_quality_props, GError ** error)
 {
   GstVulkanEncoderPrivate *priv;
   VkResult res;
@@ -467,10 +501,13 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   int codec_idx;
   GstVulkanCommandPool *cmd_pool;
   VkQueryPoolVideoEncodeFeedbackCreateInfoKHR query_create;
+  VkPhysicalDeviceVideoEncodeQualityLevelInfoKHR quality_info;
+  VkVideoEncodeQualityLevelPropertiesKHR quality_props;
   GError *query_err = NULL;
 
   g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), FALSE);
   g_return_val_if_fail (profile != NULL, FALSE);
+  g_return_val_if_fail (codec_quality_props != NULL, FALSE);
 
   priv = gst_vulkan_encoder_get_instance_private (self);
 
@@ -652,6 +689,31 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
       !(priv->caps.
       caps.flags & VK_VIDEO_CAPABILITY_SEPARATE_REFERENCE_IMAGES_BIT_KHR);
 
+  if (codec_quality_props->quality_level >= 0) {
+    priv->quality = MIN (codec_quality_props->quality_level,
+        priv->caps.encoder.caps.maxQualityLevels - 1);
+  } else {
+    priv->quality = priv->caps.encoder.caps.maxQualityLevels / 2;
+  }
+
+  /* *INDENT-OFF* */
+  quality_info = (VkPhysicalDeviceVideoEncodeQualityLevelInfoKHR) {
+    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_ENCODE_QUALITY_LEVEL_INFO_KHR,
+    .pVideoProfile = &profile->profile,
+    .qualityLevel = priv->quality,
+  };
+  quality_props = (VkVideoEncodeQualityLevelPropertiesKHR) {
+    .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_QUALITY_LEVEL_PROPERTIES_KHR,
+    .pNext = &codec_quality_props->codec,
+  };
+  /* *INDENT-ON* */
+
+  res = priv->vk.GetPhysicalDeviceVideoEncodeQualityLevelProperties (gpu,
+      &quality_info, &quality_props);
+  if (gst_vulkan_error_to_g_error (res, error,
+          "vketPhysicalDeviceVideoEncodeQualityLevelPropertiesKHR")
+      != VK_SUCCESS)
+    goto failed;
 
   /* *INDENT-OFF* */
   session_create = (VkVideoSessionCreateInfoKHR) {
@@ -943,6 +1005,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   VkVideoReferenceSlotInfoKHR ref_slots[37];
   GstVulkanCommandBuffer *cmd_buf;
   GArray *barriers;
+  VkVideoEncodeQualityLevelInfoKHR quality_info;
 
   g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), FALSE);
   g_return_val_if_fail (info != NULL && pic != NULL, FALSE);
@@ -954,9 +1017,16 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
     goto bail;
 
   /* *INDENT-OFF* */
+  quality_info = (VkVideoEncodeQualityLevelInfoKHR) {
+    .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_QUALITY_LEVEL_INFO_KHR,
+    .pNext = NULL,
+    .qualityLevel = priv->quality,
+  };
   coding_ctrl = (VkVideoCodingControlInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_CODING_CONTROL_INFO_KHR,
-    .flags = VK_VIDEO_CODING_CONTROL_RESET_BIT_KHR,
+    .pNext = &quality_info,
+    .flags = VK_VIDEO_CODING_CONTROL_ENCODE_QUALITY_LEVEL_BIT_KHR
+        | VK_VIDEO_CODING_CONTROL_RESET_BIT_KHR,
   };
   /* *INDENT-ON* */
 

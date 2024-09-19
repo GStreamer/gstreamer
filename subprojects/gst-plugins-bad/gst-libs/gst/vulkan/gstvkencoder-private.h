@@ -33,6 +33,7 @@ GType gst_vulkan_encoder_get_type       (void);
 
 typedef struct _GstVulkanEncoder GstVulkanEncoder;
 typedef struct _GstVulkanEncoderClass GstVulkanEncoderClass;
+typedef struct _GstVulkanEncoderQualityPoperties GstVulkanEncoderQualityProperties;
 typedef union _GstVulkanEncoderParameters GstVulkanEncoderParameters;
 typedef union _GstVulkanEncoderParametersOverrides GstVulkanEncoderParametersOverrides;
 typedef union _GstVulkanEncoderParametersFeedback GstVulkanEncoderParametersFeedback;
@@ -121,6 +122,16 @@ union _GstVulkanEncoderParametersFeedback
   VkVideoEncodeH265SessionParametersFeedbackInfoKHR h265;
 };
 
+struct _GstVulkanEncoderQualityPoperties
+{
+  gint32 quality_level;
+  union
+  {
+    VkVideoEncodeH264QualityLevelPropertiesKHR h264;
+    VkVideoEncodeH265QualityLevelPropertiesKHR h265;
+  } codec;
+};
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanEncoder, gst_object_unref)
 
 GST_VULKAN_API
@@ -130,6 +141,7 @@ GstVulkanEncoder *      gst_vulkan_encoder_create_from_queue    (GstVulkanQueue 
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_start                (GstVulkanEncoder * self,
                                                                  GstVulkanVideoProfile * profile,
+                                                                 GstVulkanEncoderQualityProperties * codec_quality_props,
                                                                  GError ** error);
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_stop                 (GstVulkanEncoder * self);
@@ -160,6 +172,9 @@ gboolean                gst_vulkan_encoder_caps                 (GstVulkanEncode
                                                                  GstVulkanVideoCapabilities * caps);
 GST_VULKAN_API
 GstCaps *               gst_vulkan_encoder_profile_caps         (GstVulkanEncoder * self);
+GST_VULKAN_API
+gint32                  gst_vulkan_encoder_quality_level        (GstVulkanEncoder * self);
+
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_picture_init         (GstVulkanEncoderPicture * pic,
                                                                  GstVulkanEncoder * self,

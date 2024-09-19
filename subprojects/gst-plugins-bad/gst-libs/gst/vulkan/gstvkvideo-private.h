@@ -63,7 +63,8 @@ typedef enum {
   V(CmdEndVideoCoding)                                                         \
   V(CmdDecodeVideo)                                                            \
   V(CmdEncodeVideo)                                                            \
-  V(GetEncodedVideoSessionParameters)
+  V(GetEncodedVideoSessionParameters)                                          \
+  V(GetPhysicalDeviceVideoEncodeQualityLevelProperties)
 
 struct _GstVulkanVideoFunctions
 {

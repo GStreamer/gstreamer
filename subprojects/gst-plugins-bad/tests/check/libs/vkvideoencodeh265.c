@@ -696,9 +696,10 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
   gint min_ctb_size = 64, max_ctb_size = 16;
   gint max_tb_size = 0, min_tb_size = 0;
   gint max_transform_hierarchy;
+  GstVulkanEncoderQualityProperties quality_props;
 
+  /* *INDENT-OFF* */
   profile = (GstVulkanVideoProfile) {
-    /* *INDENT-OFF* */
     .profile = {
       .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR,
       .pNext = &profile.codec,
@@ -718,8 +719,14 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
       .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_PROFILE_INFO_KHR,
       .stdProfileIdc = profile_idc,
     }
-    /* *INDENT-ON* */
   };
+  quality_props = (GstVulkanEncoderQualityProperties) {
+    .quality_level = -1,
+    .codec.h265 = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_QUALITY_LEVEL_PROPERTIES_KHR,
+    },
+  };
+  /* *INDENT-ON* */
 
   for (i = 0; i < instance->n_physical_devices; i++) {
     GstVulkanDevice *device = gst_vulkan_device_new_with_index (instance, i);
@@ -750,10 +757,13 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
     return NULL;
   }
 
-  fail_unless (gst_vulkan_encoder_start (enc, &profile, &err));
+  fail_unless (gst_vulkan_encoder_quality_level (enc) == -1);
+
+  fail_unless (gst_vulkan_encoder_start (enc, &profile, &quality_props, &err));
+
+  fail_unless (gst_vulkan_encoder_quality_level (enc) > -1);
 
   fail_unless (gst_vulkan_encoder_caps (enc, &enc_caps));
-
 
   if (enc_caps.encoder.codec.h265.ctbSizes
       & VK_VIDEO_ENCODE_H265_CTB_SIZE_64_BIT_KHR)
@@ -834,8 +844,8 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
   h265_std_pps.pps_seq_parameter_set_id = sps_id;
   h265_std_pps.pps_pic_parameter_set_id = pps_id;
 
+  /* *INDENT-OFF* */
   params_add = (VkVideoEncodeH265SessionParametersAddInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_SESSION_PARAMETERS_ADD_INFO_KHR,
     .pStdVPSs = &h265_std_vps,
     .stdVPSCount = 1,
@@ -843,18 +853,15 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
     .stdSPSCount = 1,
     .pStdPPSs = &h265_std_pps,
     .stdPPSCount = 1,
-    /* *INDENT-ON* */
   };
-
   enc_params.h265 = (VkVideoEncodeH265SessionParametersCreateInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_SESSION_PARAMETERS_CREATE_INFO_KHR,
     .maxStdVPSCount = 1,
     .maxStdSPSCount = 1,
     .maxStdPPSCount = 1,
     .pParametersAddInfo = &params_add
-    /* *INDENT-ON* */
   };
+  /* *INDENT-ON* */
 
   fail_unless (gst_vulkan_encoder_update_video_session_parameters (enc,
           &enc_params, &err));

@@ -595,9 +595,10 @@ setup_h264_encoder (guint32 width, gint32 height, gint sps_id, gint pps_id)
   StdVideoH264ProfileIdc profile_idc = STD_VIDEO_H264_PROFILE_IDC_HIGH;
   GstVulkanEncoderParameters enc_params;
   VkVideoEncodeH264SessionParametersAddInfoKHR params_add;
+  GstVulkanEncoderQualityProperties quality_props;
 
+  /* *INDENT-OFF* */
   profile = (GstVulkanVideoProfile) {
-    /* *INDENT-OFF* */
     .profile = {
       .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR,
       .pNext = &profile.usage.encode,
@@ -617,8 +618,14 @@ setup_h264_encoder (guint32 width, gint32 height, gint sps_id, gint pps_id)
       .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PROFILE_INFO_KHR,
       .stdProfileIdc = profile_idc,
     }
-    /* *INDENT-ON* */
   };
+  quality_props = (GstVulkanEncoderQualityProperties) {
+    .quality_level = -1,
+    .codec.h264 = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_QUALITY_LEVEL_PROPERTIES_KHR,
+    },
+  };
+  /* *INDENT-ON* */
 
   for (i = 0; i < instance->n_physical_devices; i++) {
     GstVulkanDevice *device = gst_vulkan_device_new_with_index (instance, i);
@@ -649,7 +656,11 @@ setup_h264_encoder (guint32 width, gint32 height, gint sps_id, gint pps_id)
     return NULL;
   }
 
-  fail_unless (gst_vulkan_encoder_start (enc, &profile, &err));
+  fail_unless (gst_vulkan_encoder_quality_level (enc) == -1);
+
+  fail_unless (gst_vulkan_encoder_start (enc, &profile, &quality_props, &err));
+
+  fail_unless (gst_vulkan_encoder_quality_level (enc) > -1);
 
   mbAlignedWidth = GST_ROUND_UP_16 (width);
   mbAlignedHeight = GST_ROUND_UP_16 (height);
@@ -663,24 +674,21 @@ setup_h264_encoder (guint32 width, gint32 height, gint sps_id, gint pps_id)
   h264_std_sps.frame_crop_right_offset = mbAlignedWidth - width;
   h264_std_sps.frame_crop_bottom_offset = mbAlignedHeight - height;
 
+  /* *INDENT-OFF* */
   params_add = (VkVideoEncodeH264SessionParametersAddInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_SESSION_PARAMETERS_ADD_INFO_KHR,
     .pStdSPSs = &h264_std_sps,
     .stdSPSCount = 1,
     .pStdPPSs = &h264_std_pps,
     .stdPPSCount = 1,
-    /* *INDENT-ON* */
   };
-
   enc_params.h264 = (VkVideoEncodeH264SessionParametersCreateInfoKHR) {
-    /* *INDENT-OFF* */
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_SESSION_PARAMETERS_CREATE_INFO_KHR,
     .maxStdSPSCount = 1,
     .maxStdPPSCount = 1,
     .pParametersAddInfo = &params_add
-    /* *INDENT-ON* */
   };
+  /* *INDENT-ON* */
 
   fail_unless (gst_vulkan_encoder_update_video_session_parameters (enc,
           &enc_params, &err));
