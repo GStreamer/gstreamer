@@ -51,8 +51,6 @@ typedef struct _GstVulkanEncoderPicture GstVulkanEncoderPicture;
  */
 struct _GstVulkanEncoderPicture
 {
-  gint slotIndex;
-
   guint64 offset;
 
   GstBuffer *in_buffer;
@@ -64,6 +62,7 @@ struct _GstVulkanEncoderPicture
   GstVulkanImageView *dpb_view;
 
   VkVideoPictureResourceInfoKHR dpb;
+  VkVideoReferenceSlotInfoKHR dpb_slot;
 
   gpointer codec_rc_info;
   gpointer codec_pic_info;

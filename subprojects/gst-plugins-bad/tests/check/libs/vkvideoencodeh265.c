@@ -611,11 +611,11 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
 
   for (i = 0; i < list0_num; i++) {
     ref_pics[i] = &list0[i]->picture;
-    frame->ref_list_info.RefPicList0[0] = list0[i]->picture.slotIndex;
+    frame->ref_list_info.RefPicList0[0] = list0[i]->picture.dpb_slot.slotIndex;
   }
   for (i = 0; i < list1_num; i++) {
     ref_pics[i + list0_num] = &list1[i]->picture;
-    frame->ref_list_info.RefPicList1[i] = list1[i]->picture.slotIndex;
+    frame->ref_list_info.RefPicList1[i] = list1[i]->picture.dpb_slot.slotIndex;
   }
 
   fail_unless (gst_vulkan_encoder_encode (enc, &in_info, picture, ref_pics_num,

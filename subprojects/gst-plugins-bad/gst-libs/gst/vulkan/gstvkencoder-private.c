@@ -418,7 +418,6 @@ gst_vulkan_encoder_picture_init (GstVulkanEncoderPicture * pic,
     gst_clear_buffer (&pic->dpb_buffer);
     return FALSE;
   }
-  pic->slotIndex = -1;
   pic->offset = 0;
 
   pic->img_view = gst_vulkan_video_image_create_view (pic->in_buffer,
@@ -1080,7 +1079,6 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   VkVideoEndCodingInfoKHR end_coding;
   gint maxDpbSlots;
   VkVideoReferenceSlotInfoKHR ref_slots[37];
-  gint ref_slot_num = 0;
   GstVulkanCommandBuffer *cmd_buf;
   GArray *barriers;
 
@@ -1167,33 +1165,22 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
     .baseArrayLayer = 0,
     .imageViewBinding = pic->dpb_view->view,
   };
-  /* *INDENT-ON* */
-
-  for (i = 0; i < nb_refs; i++) {
-    /* *INDENT-OFF* */
-    ref_slots[i] = (VkVideoReferenceSlotInfoKHR) {
-      .sType = VK_STRUCTURE_TYPE_VIDEO_REFERENCE_SLOT_INFO_KHR,
-      .pNext = ref_pics[i]->codec_dpb_slot_info,
-      .slotIndex = ref_pics[i]->slotIndex,
-      .pPictureResource = &ref_pics[i]->dpb,
-    };
-    /* *INDENT-ON* */
-    ref_slot_num++;
-  }
-
-  /* *INDENT-OFF* */
-  ref_slots[ref_slot_num] = (VkVideoReferenceSlotInfoKHR) {
+  pic->dpb_slot = (VkVideoReferenceSlotInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_REFERENCE_SLOT_INFO_KHR,
     .pNext = pic->codec_dpb_slot_info,
-    .slotIndex = pic->slotIndex,
+    .slotIndex = priv->current_slot_index,
     .pPictureResource = &pic->dpb,
   };
   /* *INDENT-ON* */
 
-  ref_slot_num++;
+  for (i = 0; i < nb_refs; i++)
+    ref_slots[i] = ref_pics[i]->dpb_slot;
+
+  ref_slots[nb_refs] = pic->dpb_slot;
+  ref_slots[nb_refs].slotIndex = -1;
 
   /* Setup the begin coding structure using the reference slots */
-  begin_coding.referenceSlotCount = ref_slot_num;
+  begin_coding.referenceSlotCount = nb_refs + 1;
   begin_coding.pReferenceSlots = ref_slots;
 
   cmd_buf = priv->exec->cmd_buf;
@@ -1244,8 +1231,6 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
 
   /* Attribute a free slot index to the picture to be used later as a reference.
    * The picture is kept until it remains useful to the encoding process.*/
-  pic->slotIndex = priv->current_slot_index;
-  ref_slots[ref_slot_num - 1].slotIndex = pic->slotIndex;
   priv->current_slot_index++;
   if (priv->current_slot_index >= maxDpbSlots)
     priv->current_slot_index = 0;
@@ -1270,9 +1255,9 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
         .baseArrayLayer = 0,
         .imageViewBinding = pic->img_view->view,
     },
-    .pSetupReferenceSlot = &ref_slots[ref_slot_num - 1],
+    .pSetupReferenceSlot = &pic->dpb_slot,
     .referenceSlotCount = nb_refs,
-    .pReferenceSlots = nb_refs ? ref_slots  : NULL,
+    .pReferenceSlots = ref_slots,
     .precedingExternallyEncodedBytes = 0,
   };
   /* *INDENT-ON* */
