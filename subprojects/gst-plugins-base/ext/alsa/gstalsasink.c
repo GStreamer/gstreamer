@@ -74,8 +74,61 @@ enum
   PROP_LAST
 };
 
+static GstURIType
+gst_alsasink_uri_handler_get_type (GType type)
+{
+  return GST_URI_SINK;
+}
+
+static const gchar *const *
+gst_alsasink_uri_handler_get_protocols (GType type)
+{
+  static const gchar *protocols[] = { "alsa", NULL };
+
+  return protocols;
+}
+
+static gchar *
+gst_alsasink_uri_handler_get_uri (GstURIHandler * handler)
+{
+  GstAlsaSink *sink = GST_ALSA_SINK (handler);
+  gchar *uri;
+  GST_OBJECT_LOCK (sink);
+  uri = g_strdup_printf ("alsa://%s", sink->device);
+  GST_OBJECT_UNLOCK (sink);
+  return uri;
+}
+
+static gboolean
+gst_alsasink_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
+{
+  GstAlsaSink *sink = GST_ALSA_SINK (handler);
+  const gchar *device = DEFAULT_DEVICE;
+
+  if (strcmp (uri, "alsa://") != 0) {
+    device = uri + 7;
+  }
+  g_object_set (sink, "device", device, NULL);
+
+  return TRUE;
+}
+
+static void
+gst_alsasink_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = gst_alsasink_uri_handler_get_type;
+  iface->get_uri = gst_alsasink_uri_handler_get_uri;
+  iface->set_uri = gst_alsasink_uri_handler_set_uri;
+  iface->get_protocols = gst_alsasink_uri_handler_get_protocols;
+}
+
 #define gst_alsasink_parent_class parent_class
-G_DEFINE_TYPE (GstAlsaSink, gst_alsasink, GST_TYPE_AUDIO_SINK);
+G_DEFINE_TYPE_WITH_CODE (GstAlsaSink, gst_alsasink, GST_TYPE_AUDIO_SINK,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        gst_alsasink_uri_handler_init));
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (alsasink, "alsasink", GST_RANK_PRIMARY,
     GST_TYPE_ALSA_SINK, alsa_element_init (plugin));
 
