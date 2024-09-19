@@ -51,7 +51,7 @@ struct _GstVulkanEncoderPrivate
   GstVulkanEncoderPicture *slots[32];
 
   gboolean started;
-  gboolean first_encode_cmd;
+  gboolean session_reset;
 
   gboolean layered_dpb;
   GstBufferPool *dpb_pool;
@@ -671,7 +671,7 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
           &priv->vk, &session_create, error))
     goto failed;
 
-
+  priv->session_reset = TRUE;
   priv->started = TRUE;
 
   return TRUE;
@@ -956,11 +956,12 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   /* *INDENT-OFF* */
   coding_ctrl = (VkVideoCodingControlInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_CODING_CONTROL_INFO_KHR,
+    .flags = VK_VIDEO_CODING_CONTROL_RESET_BIT_KHR,
   };
   /* *INDENT-ON* */
 
-  /* First run, some information such as rate_control and slot index must be initialized. */
-  if (!priv->first_encode_cmd) {
+  /* some information such as rate_control must be initialized. */
+  if (!priv->session_reset) {
     /* begin_coding.pNext = &rate_control_info; */
   }
 
@@ -1027,12 +1028,9 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
      quality information. This should be done when requesting a new coding contol ie
      first attempt of encoding.
    */
-  if (!priv->first_encode_cmd) {
-    coding_ctrl.flags = VK_VIDEO_CODING_CONTROL_RESET_BIT_KHR;
-    coding_ctrl.pNext = NULL;
+  if (priv->session_reset) {
     priv->vk.CmdControlVideoCoding (cmd_buf->cmd, &coding_ctrl);
-
-    priv->first_encode_cmd = TRUE;
+    priv->session_reset = FALSE;
   }
 
   /* Peek the output memory to be used by VkVideoEncodeInfoKHR.dstBuffer */
