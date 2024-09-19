@@ -953,14 +953,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   if (!gst_vulkan_operation_begin (priv->exec, &err))
     goto bail;
 
-  /* Prepare the encoding scope by flling the VkVideoBeginCodingInfoKHR structure */
   /* *INDENT-OFF* */
-  begin_coding = (VkVideoBeginCodingInfoKHR) {
-    .sType = VK_STRUCTURE_TYPE_VIDEO_BEGIN_CODING_INFO_KHR,
-    .pNext = NULL,
-    .videoSession = priv->session.session->handle,
-    .videoSessionParameters = priv->session_params->handle,
-  };
   coding_ctrl = (VkVideoCodingControlInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_CODING_CONTROL_INFO_KHR,
   };
@@ -1015,8 +1008,16 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   ref_slots[nb_refs].slotIndex = -1;
 
   /* Setup the begin coding structure using the reference slots */
-  begin_coding.referenceSlotCount = nb_refs + 1;
-  begin_coding.pReferenceSlots = ref_slots;
+  /* *INDENT-OFF* */
+  begin_coding = (VkVideoBeginCodingInfoKHR) {
+    .sType = VK_STRUCTURE_TYPE_VIDEO_BEGIN_CODING_INFO_KHR,
+    .pNext = NULL,
+    .videoSession = priv->session.session->handle,
+    .videoSessionParameters = priv->session_params->handle,
+    .referenceSlotCount = nb_refs + 1,
+    .pReferenceSlots = ref_slots,
+  };
+  /* *INDENT-ON* */
 
   cmd_buf = priv->exec->cmd_buf;
   priv->vk.CmdBeginVideoCoding (cmd_buf->cmd, &begin_coding);
