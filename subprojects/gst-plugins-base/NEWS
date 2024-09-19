@@ -2,11 +2,11 @@ GStreamer 1.24 Release Notes
 
 GStreamer 1.24.0 was originally released on 4 March 2024.
 
-The latest bug-fix release in the stable 1.24 series is 1.24.6 and was released on 21 August 2024.
+The latest bug-fix release in the stable 1.24 series is 1.24.8 and was released on 19 September 2024.
 
 See https://gstreamer.freedesktop.org/releases/1.24/ for the latest version of this document.
 
-Last updated: Tuesday 20 August 2024, 20:30 UTC (log)
+Last updated: Thursday 19 September 2024, 00:30 UTC (log)
 
 ## Introduction
 
@@ -2415,6 +2415,137 @@ List of merge requests and issues fixed in 1.24.7
 
 -   List of Merge Requests applied in 1.24.7
 -   List of Issues fixed in 1.24.7
+
+1.24.8
+
+The eigth 1.24 bug-fix release (1.24.8) was released on 19 September 2024.
+
+This release only contains bugfixes and it should be safe to update from 1.24.x.
+
+Highlighted bugfixes in 1.24.8
+
+-   decodebin3: collection handling fixes
+-   encodebin: Fix pad removal (and smart rendering in gst-editing-services)
+-   glimagesink: Fix cannot resize viewport when video size changed in caps
+-   matroskamux, webmmux: fix firefox compatibility issue with Opus audio streams
+-   mpegtsmux: Wait for data on all pads before deciding on a best pad unless timing out
+-   splitmuxsink: Override LATENCY query to pretend to downstream that we’re not live
+-   video: QoS event handling improvements
+-   voamrwbenc: fix list of bitrates
+-   vtenc: Restart encoding session when certain errors are detected
+-   wayland: Fix ABI break in WL context type name
+-   webrtcbin: Prevent crash when attempting to set answer on invalid SDP
+-   cerbero: ship vp8/vp9 software encoders again, which went missing in 1.24.7; ship transcode plugin
+-   Various bug fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   clock: Fix unchecked overflows in linear regression code
+-   meta: Add missing include of gststructure.h
+-   pad: Check data NULL-ness when probes are stopped
+-   aggregator: Immediately return NONE from simple_get_next_time() on non-TIME segments
+
+gst-plugins-base
+
+-   decodebin3: Fix collection identity check
+-   encodebin: Fix pad removal
+-   glimagesink: Fix cannot resize viewport when video size changed in caps
+-   v4l2bufferpool: actually queue back the empty buffer flagged LAST
+-   v4l2videoenc: unref buffer pool after usage properly
+-   video: Don’t overshoot QoS earliest time by a factor of 2
+-   meson: gst-play: link to libm
+
+gst-plugins-good
+
+-   jackaudiosrc: actually use the queried ports from JACK
+-   matroskamux: Include end padding in the block duration for Opus streams, fixing firefox compatibility
+-   osxaudio: Avoid dangling pointer on shutdown
+-   splitmuxsink: Override LATENCY query to pretend to downstream that we’re not live
+-   v4l2: encoder: Add dynamic framerate support
+
+gst-plugins-bad
+
+-   GstPlay: Name the different bus
+-   GstPlay: check whether stream is seekable before seeking when state change
+-   GstPlayer: Check GstPlayerSignalDispatcher type
+-   mpegtsmux: Wait for data on all pads before deciding on a best pad unless timing out
+-   mpegtsmux: Fix refcounting issue when selecting the best pad
+-   uvcsink: fix caps event handling
+-   v4l2codecs: h265: Minimize memory allocation
+-   voamrwbenc: fix list of bitrates
+-   vtenc: Restart encoding session when certain errors are detected
+-   wayland: Fix ABI break in WL context type name
+-   webrtcbin: Prevent crash when attempting to set answer on invalid SDP
+-   wpe: fix gst-launch example
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+-   No changes
+
+gst-libav
+
+-   No changes
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   discoverer-manager: Fix race leading to assertion when stopping
+-   structured-interface: Fix memory leak of invalid fields GList
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   pad-monitor: Fix remaining pad function data handling
+-   pad-monitor: Fix pad function data properly
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   meson: Update openjpeg wrap to 2.5.2, fixes a warning
+
+Cerbero build tool and packaging changes in 1.24.8
+
+-   No vp8 / vp9 encoders packaged (regression)
+-   libvpx: Fix codec detection to fix vp8enc/vp9enc elements not being shipped
+-   gst-plugins-bad: Add missing transcode plugin
+
+Contributors to 1.24.8
+
+Andoni Morales Alastruey, Arun Raghavan, Benjamin Gaignard, Carlos Bentzen, Chao Guo, Edward Hervey, Francis Quiers, Guillaume
+Desmottes, Hou Qi, Jan Schmidt,, L. E. Segovia, Michael Tretter, Nicolas Dufresne, Nirbheek Chauhan, Peter Kjellerstedt,
+Philippe Normand, Piotr Brzeziński, Randy Li (ayaka), Sebastian Dröge, Thibault Saunier, Tim-Philipp Müller, Wim Taymans,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.24.8
+
+-   List of Merge Requests applied in 1.24.8
+-   List of Issues fixed in 1.24.8
 
 Schedule for 1.26
 
