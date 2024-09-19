@@ -1039,7 +1039,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
   VkVideoEncodeInfoKHR encode_info;
   VkVideoEndCodingInfoKHR end_coding;
   gint maxDpbSlots;
-  VkVideoReferenceSlotInfoKHR ref_slots[16];
+  VkVideoReferenceSlotInfoKHR ref_slots[37];
   gint ref_slot_num = 0;
   GstVulkanCommandBuffer *cmd_buf;
   GArray *barriers;
