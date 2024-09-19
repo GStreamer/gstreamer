@@ -693,6 +693,10 @@ params = gst_structure_new ("video-meta",
     "padding-bottom", G_TYPE_UINT, align.padding_bottom,
     "padding-left", G_TYPE_UINT, align.padding_left,
     "padding-right", G_TYPE_UINT, align.padding_right,
+    "stride-align0", G_TYPE_UINT, align->stride_align[0],
+    "stride-align1", G_TYPE_UINT, align->stride_align[1],
+    "stride-align2", G_TYPE_UINT, align->stride_align[2],
+    "stride-align3", G_TYPE_UINT, align->stride_align[3],
     NULL);
 ```
   3. *v4l2h264enc*: when handling the `ALLOCATION` query (`propose_allocation()`),
@@ -722,6 +726,10 @@ if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, &video_idx))
     gst_structure_get_uint (s, "padding-bottom", &align.padding_bottom);
     gst_structure_get_uint (s, "padding-left", &align.padding_left);
     gst_structure_get_uint (s, "padding-right", &align.padding_right);
+    gst_structure_get_uint (s, "stride-align0", &align.stride_align[0]);
+    gst_structure_get_uint (s, "stride-align1", &align.stride_align[1]);
+    gst_structure_get_uint (s, "stride-align2", &align.stride_align[2]);
+    gst_structure_get_uint (s, "stride-align3", &align.stride_align[3]);
 
     gst_video_info_from_caps (&info, caps);
 
