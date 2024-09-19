@@ -1258,7 +1258,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     .flags = 0x0,
     .dstBuffer = ((GstVulkanBufferMemory *) mem)->buffer,
     .dstBufferOffset = 0,
-    .dstBufferRange = ((GstVulkanBufferMemory *) mem)->barrier.size, //FIXME is it the correct value ?
+    .dstBufferRange = gst_memory_get_sizes (mem, NULL, NULL),
     .srcPictureResource = (VkVideoPictureResourceInfoKHR) { // SPEC: this should be separate
         .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
         .pNext = NULL,
