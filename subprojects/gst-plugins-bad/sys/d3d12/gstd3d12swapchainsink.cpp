@@ -179,6 +179,7 @@ struct GstD3D12SwapChainSinkPrivate
   D3D12_BOX prev_crop_rect = { };
   FLOAT border_color_val[4];
   GstVideoRectangle viewport = { };
+  gboolean auto_resize = FALSE;
 
   gint adapter = DEFAULT_ADAPTER;
   gint force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
@@ -219,6 +220,9 @@ static gboolean gst_d3d12_swapchain_sink_set_info (GstVideoSink * sink,
 static GstFlowReturn gst_d3d12_swapchain_sink_show_frame (GstVideoSink * sink,
     GstBuffer * buf);
 static void gst_d3d12_swapchain_sink_resize (GstD3D12SwapChainSink * self,
+    guint width, guint height);
+static void
+gst_d3d12_swapchain_sink_resize_internal (GstD3D12SwapChainSink * self,
     guint width, guint height);
 
 #define gst_d3d12_swapchain_sink_parent_class parent_class
@@ -359,7 +363,8 @@ gst_d3d12_swapchain_sink_set_property (GObject * object, guint prop_id,
       auto val = g_value_get_boolean (value);
       if (val != priv->force_aspect_ratio) {
         priv->force_aspect_ratio = val;
-        gst_d3d12_swapchain_sink_resize (self, priv->width, priv->height);
+        gst_d3d12_swapchain_sink_resize_internal (self,
+            priv->width, priv->height);
       }
       break;
     }
@@ -385,7 +390,8 @@ gst_d3d12_swapchain_sink_set_property (GObject * object, guint prop_id,
       auto msaa = (GstD3D12MSAAMode) g_value_get_enum (value);
       if (priv->msaa_mode != msaa) {
         priv->msaa_mode = msaa;
-        gst_d3d12_swapchain_sink_resize (self, priv->width, priv->height);
+        gst_d3d12_swapchain_sink_resize_internal (self,
+            priv->width, priv->height);
       }
       break;
     }
@@ -904,6 +910,11 @@ gst_d3d12_swapchain_sink_set_buffer (GstD3D12SwapChainSink * self,
       need_render = true;
       update_converter = true;
       priv->caps_updated = false;
+      if (priv->auto_resize) {
+        gst_clear_buffer (&priv->cached_buf);
+        gst_d3d12_swapchain_sink_resize_internal (self,
+            GST_VIDEO_SINK_WIDTH (self), GST_VIDEO_SINK_HEIGHT (self));
+      }
     } else {
       need_render = false;
       update_converter = false;
@@ -1007,20 +1018,10 @@ gst_d3d12_swapchain_sink_set_buffer (GstD3D12SwapChainSink * self,
 }
 
 static void
-gst_d3d12_swapchain_sink_resize (GstD3D12SwapChainSink * self, guint width,
-    guint height)
+gst_d3d12_swapchain_sink_resize_internal (GstD3D12SwapChainSink * self,
+    guint width, guint height)
 {
   auto priv = self->priv;
-
-  if (width == 0 || width > D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION) {
-    GST_WARNING_OBJECT (self, "Invalid width value %u", width);
-    return;
-  }
-
-  if (height == 0 || height > D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION) {
-    GST_WARNING_OBJECT (self, "Invalid height value %u", height);
-    return;
-  }
 
   std::lock_guard < std::recursive_mutex > lk (priv->lock);
   if (!gst_d3d12_swapchain_sink_resize_unlocked (self, width, height)) {
@@ -1038,6 +1039,40 @@ gst_d3d12_swapchain_sink_resize (GstD3D12SwapChainSink * self, guint width,
     gst_d3d12_command_queue_execute_command_lists (priv->cq,
         0, nullptr, &priv->fence_val);
   }
+}
+
+static void
+gst_d3d12_swapchain_sink_resize (GstD3D12SwapChainSink * self, guint width,
+    guint height)
+{
+  auto priv = self->priv;
+
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  if (width == 0 && height == 0) {
+    GST_DEBUG_OBJECT (self, "Enable auto resize");
+    priv->auto_resize = TRUE;
+    if (GST_VIDEO_SINK_WIDTH (self) > 0 && GST_VIDEO_SINK_HEIGHT (self) > 0) {
+      width = GST_VIDEO_SINK_WIDTH (self);
+      height = GST_VIDEO_SINK_HEIGHT (self);
+    } else {
+      GST_DEBUG_OBJECT (self, "Caps is not configured yet");
+      return;
+    }
+  } else {
+    if (width == 0 || width > D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION) {
+      GST_WARNING_OBJECT (self, "Invalid width value %u", width);
+      return;
+    }
+
+    if (height == 0 || height > D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION) {
+      GST_WARNING_OBJECT (self, "Invalid height value %u", height);
+      return;
+    }
+
+    priv->auto_resize = FALSE;
+  }
+
+  gst_d3d12_swapchain_sink_resize_internal (self, width, height);
 }
 
 static gboolean
