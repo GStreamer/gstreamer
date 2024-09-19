@@ -47,7 +47,8 @@ ges_frame_composition_meta_api_get_type (void)
   static const gchar *tags[] = { "video", NULL };
 
   if (g_once_init_enter (&type)) {
-    GType _type = gst_meta_api_type_register ("GstFrameCompositionApi", tags);
+    GType _type =
+        gst_meta_api_type_register ("GESFrameCompositionMetaAPI", tags);
     g_once_init_leave (&type, _type);
   }
   return type;
