@@ -61,7 +61,7 @@ struct _GstVulkanEncoderPrivate
   gboolean vk_loaded;
   GstVulkanVideoFunctions vk;
 
-  gint current_slot_index;
+  GstVulkanEncoderPicture *slots[32];
 
   gboolean started;
   gboolean first_encode_cmd;
@@ -436,13 +436,25 @@ gst_vulkan_encoder_picture_init (GstVulkanEncoderPicture * pic,
 /**
  * gst_vulkan_encoder_picture_clear:
  * @pic: the #GstVulkanEncoderPicture to free.
+ * @self: the #GstVulkanEncoder instance.
  *
  * Release data of @pic.
  */
 void
-gst_vulkan_encoder_picture_clear (GstVulkanEncoderPicture * pic)
+gst_vulkan_encoder_picture_clear (GstVulkanEncoderPicture * pic,
+    GstVulkanEncoder * self)
 {
+  GstVulkanEncoderPrivate *priv;
+
+  g_return_if_fail (GST_IS_VULKAN_ENCODER (self));
   g_return_if_fail (pic != NULL);
+
+  priv = gst_vulkan_encoder_get_instance_private (self);
+
+  if (pic->dpb_slot.slotIndex > 0) {
+    priv->slots[pic->dpb_slot.slotIndex] = NULL;
+    pic->dpb_slot.slotIndex = -1;
+  }
 
   gst_clear_buffer (&pic->in_buffer);
   gst_clear_buffer (&pic->dpb_buffer);
@@ -1069,7 +1081,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   GError *err = NULL;
   gboolean ret = TRUE;
   GstMemory *mem;
-  int i;
+  int i, slot_index = -1;
   GstVulkanEncodeQueryResult *encode_res;
   VkVideoEncodeRateControlLayerInfoKHR rate_control_layer;
   VkVideoEncodeQualityLevelInfoKHR quality_level_info;
@@ -1077,7 +1089,6 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   VkVideoBeginCodingInfoKHR begin_coding;
   VkVideoEncodeInfoKHR encode_info;
   VkVideoEndCodingInfoKHR end_coding;
-  gint maxDpbSlots;
   VkVideoReferenceSlotInfoKHR ref_slots[37];
   GstVulkanCommandBuffer *cmd_buf;
   GArray *barriers;
@@ -1086,8 +1097,6 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   g_return_val_if_fail (info != NULL && pic != NULL, FALSE);
 
   priv = gst_vulkan_encoder_get_instance_private (self);
-
-  maxDpbSlots = priv->layered_dpb ? 2 : priv->caps.caps.maxDpbSlots;
 
   /* initialize the vulkan operation */
   if (!gst_vulkan_operation_begin (priv->exec, &err))
@@ -1108,7 +1117,6 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
 
   /* First run, some information such as rate_control and slot index must be initialized. */
   if (!priv->first_encode_cmd) {
-    priv->current_slot_index = 0;
     GST_OBJECT_LOCK (self);
     /* *INDENT-OFF* */
     rate_control_layer = (VkVideoEncodeRateControlLayerInfoKHR) {
@@ -1150,6 +1158,16 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   g_assert (pic->in_buffer && pic->img_view);
   g_assert (pic->out_buffer);
 
+  /* Attribute a free slot index to the picture to be used later as a reference.
+   * The picture is kept until it remains useful to the encoding process.*/
+  for (i = 0; i < priv->caps.caps.maxDpbSlots; i++) {
+    if (!priv->slots[i]) {
+      priv->slots[i] = pic;
+      slot_index = i;
+      break;
+    }
+  }
+
   /* Set the ref slots according to the pic refs to bound the video
      session encoding. It should contain all the references + 1 to book
      a new slotIndex (-1) for the current picture. */
@@ -1168,7 +1186,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   pic->dpb_slot = (VkVideoReferenceSlotInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_REFERENCE_SLOT_INFO_KHR,
     .pNext = pic->codec_dpb_slot_info,
-    .slotIndex = priv->current_slot_index,
+    .slotIndex = slot_index,
     .pPictureResource = &pic->dpb,
   };
   /* *INDENT-ON* */
@@ -1229,12 +1247,6 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   /* Peek the output memory to be used by VkVideoEncodeInfoKHR.dstBuffer */
   mem = gst_buffer_peek_memory (pic->out_buffer, 0);
 
-  /* Attribute a free slot index to the picture to be used later as a reference.
-   * The picture is kept until it remains useful to the encoding process.*/
-  priv->current_slot_index++;
-  if (priv->current_slot_index >= maxDpbSlots)
-    priv->current_slot_index = 0;
-
   /* Setup the encode info */
   /* *INDENT-OFF* */
   encode_info = (VkVideoEncodeInfoKHR) {
@@ -1244,7 +1256,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
     .dstBuffer = ((GstVulkanBufferMemory *) mem)->buffer,
     .dstBufferOffset = pic->offset,
     .dstBufferRange = gst_memory_get_sizes (mem, NULL, NULL),
-    .srcPictureResource = (VkVideoPictureResourceInfoKHR) { // SPEC: this should be separate
+    .srcPictureResource = (VkVideoPictureResourceInfoKHR) {
         .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
         .pNext = NULL,
         .codedOffset = { 0, 0 },

@@ -84,11 +84,11 @@ _h265_encode_frame_new (GstVulkanEncoder * enc, GstBuffer * img_buffer,
 }
 
 static void
-_h265_encode_frame_free (gpointer pframe)
+_h265_encode_frame_free (GstVulkanEncoder * enc, gpointer pframe)
 {
   GstVulkanH265EncodeFrame *frame = pframe;
 
-  gst_vulkan_encoder_picture_clear (&frame->picture);
+  gst_vulkan_encoder_picture_clear (&frame->picture, enc);
   g_free (frame);
 }
 
@@ -975,7 +975,7 @@ GST_START_TEST (test_encoder_h265_i)
     check_encoded_frame (frame, GST_H265_NAL_SLICE_IDR_W_RADL);
 
     frame_num++;
-    _h265_encode_frame_free (frame);
+    _h265_encode_frame_free (enc, frame);
   }
 
   fail_unless (gst_buffer_pool_set_active (buffer_pool, FALSE));
@@ -1026,11 +1026,11 @@ GST_START_TEST (test_encoder_h265_i_p)
     encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_P,
         frame_num, list0, list0_num, NULL, 0, vps_id, sps_id, pps_id);
     check_encoded_frame (frame, GST_H265_NAL_SLICE_TRAIL_R);
-    _h265_encode_frame_free (list0[0]);
+    _h265_encode_frame_free (enc, list0[0]);
     list0[0] = frame;
     frame_num++;
   }
-  _h265_encode_frame_free (list0[0]);
+  _h265_encode_frame_free (enc, list0[0]);
   fail_unless (gst_buffer_pool_set_active (buffer_pool, FALSE));
   gst_object_unref (buffer_pool);
   fail_unless (gst_buffer_pool_set_active (img_pool, FALSE));
@@ -1098,7 +1098,7 @@ GST_START_TEST (test_encoder_h265_i_p_b)
       frame_num, list0, list0_num, list1, list1_num, vps_id, sps_id, pps_id);
   check_encoded_frame (frame, GST_H265_NAL_SLICE_TRAIL_N);
   frame_num++;
-  _h265_encode_frame_free (frame);
+  _h265_encode_frame_free (enc, frame);
 
   /* Encode 3rd picture as a B-Frame */
   frame = allocate_frame (enc, width, height, FALSE);
@@ -1107,10 +1107,10 @@ GST_START_TEST (test_encoder_h265_i_p_b)
       frame_num, list0, list0_num, list1, list1_num, vps_id, sps_id, pps_id);
   check_encoded_frame (frame, GST_H265_NAL_SLICE_TRAIL_N);
   frame_num++;
-  _h265_encode_frame_free (frame);
+  _h265_encode_frame_free (enc, frame);
 
-  _h265_encode_frame_free (list0[0]);
-  _h265_encode_frame_free (list1[0]);
+  _h265_encode_frame_free (enc, list0[0]);
+  _h265_encode_frame_free (enc, list1[0]);
 
   fail_unless (gst_buffer_pool_set_active (buffer_pool, FALSE));
   gst_object_unref (buffer_pool);

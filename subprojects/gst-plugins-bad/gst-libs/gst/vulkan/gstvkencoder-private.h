@@ -168,4 +168,5 @@ gboolean                gst_vulkan_encoder_picture_init         (GstVulkanEncode
                                                                  GstBuffer * in_buffer,
                                                                  gsize size);
 GST_VULKAN_API
-void                    gst_vulkan_encoder_picture_clear        (GstVulkanEncoderPicture * pic);
+void                    gst_vulkan_encoder_picture_clear        (GstVulkanEncoderPicture * pic,
+                                                                 GstVulkanEncoder * self);

@@ -79,11 +79,11 @@ _h264_encode_frame_new (GstVulkanEncoder * enc, GstBuffer * img_buffer,
 }
 
 static void
-_h264_encode_frame_free (gpointer pframe)
+_h264_encode_frame_free (GstVulkanEncoder * enc, gpointer pframe)
 {
   GstVulkanH264EncodeFrame *frame = pframe;
 
-  gst_vulkan_encoder_picture_clear (&frame->picture);
+  gst_vulkan_encoder_picture_clear (&frame->picture, enc);
   g_free (frame);
 }
 
@@ -803,7 +803,7 @@ GST_START_TEST (test_encoder_h264_i)
     check_encoded_frame (frame, GST_H264_NAL_SLICE_IDR);
 
     frame_num++;
-    _h264_encode_frame_free (frame);
+    _h264_encode_frame_free (enc, frame);
   }
 
   fail_unless (gst_buffer_pool_set_active (buffer_pool, FALSE));
@@ -855,12 +855,12 @@ GST_START_TEST (test_encoder_h264_i_p)
     encode_frame (enc, frame, STD_VIDEO_H264_SLICE_TYPE_P,
         frame_num, list0, list0_num, NULL, 0, sps_id, pps_id);
     check_encoded_frame (frame, GST_H264_NAL_SLICE);
-    _h264_encode_frame_free (list0[0]);
+    _h264_encode_frame_free (enc, list0[0]);
     list0[0] = frame;
     frame_num++;
   }
 
-  _h264_encode_frame_free (list0[0]);
+  _h264_encode_frame_free (enc, list0[0]);
 
   fail_unless (gst_buffer_pool_set_active (buffer_pool, FALSE));
   gst_object_unref (buffer_pool);
@@ -931,7 +931,7 @@ GST_START_TEST (test_encoder_h264_i_p_b)
       frame_num, list0, list0_num, list1, list1_num, sps_id, pps_id);
   check_encoded_frame (frame, GST_H264_NAL_SLICE);
   frame_num++;
-  _h264_encode_frame_free (frame);
+  _h264_encode_frame_free (enc, frame);
 
   /* Encode third picture as a B-Frame */
   frame = allocate_frame (enc, width, height, FALSE);
@@ -942,10 +942,10 @@ GST_START_TEST (test_encoder_h264_i_p_b)
       frame_num, list0, list0_num, list1, list1_num, sps_id, pps_id);
   check_encoded_frame (frame, GST_H264_NAL_SLICE);
   frame_num++;
-  _h264_encode_frame_free (frame);
+  _h264_encode_frame_free (enc, frame);
 
-  _h264_encode_frame_free (list0[0]);
-  _h264_encode_frame_free (list1[0]);
+  _h264_encode_frame_free (enc, list0[0]);
+  _h264_encode_frame_free (enc, list1[0]);
 
   fail_unless (gst_buffer_pool_set_active (buffer_pool, FALSE));
   gst_object_unref (buffer_pool);
