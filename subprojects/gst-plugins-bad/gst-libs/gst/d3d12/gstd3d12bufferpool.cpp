@@ -205,7 +205,7 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (params->d3d12_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
     desc[0] = CD3DX12_RESOURCE_DESC::Tex2D (params->d3d12_format.dxgi_format,
         params->aligned_info.width, params->aligned_info.height,
-        params->array_size, 1, 1, 0, params->resource_flags);
+        params->array_size, params->mip_levels, 1, 0, params->resource_flags);
 
     gst_d3d12_buffer_pool_do_align (desc[0]);
 
@@ -218,6 +218,7 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
     auto single_array_desc = desc[0];
     single_array_desc.DepthOrArraySize = 1;
+    single_array_desc.MipLevels = 1;
 
     UINT64 mem_size;
     device->GetCopyableFootprints (&single_array_desc, 0, num_planes, 0,
@@ -247,7 +248,8 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
       desc[i] =
           CD3DX12_RESOURCE_DESC::Tex2D (params->d3d12_format.resource_format[i],
-          width, height, params->array_size, 1, 1, 0, params->resource_flags);
+          width, height, params->array_size, params->mip_levels, 1, 0,
+          params->resource_flags);
 
       gst_d3d12_buffer_pool_do_align (desc[i]);
 
@@ -257,6 +259,7 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
           D3D12_RESOURCE_STATE_COMMON, nullptr);
 
       UINT64 mem_size;
+      desc[i].MipLevels = 1;
       device->GetCopyableFootprints (&desc[i], 0, 1, 0,
           &layout[i], nullptr, nullptr, &mem_size);
 

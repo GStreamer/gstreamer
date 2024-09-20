@@ -150,6 +150,10 @@ GST_D3D12_API
 gboolean                   gst_d3d12_allocation_params_set_array_size (GstD3D12AllocationParams * params,
                                                                        guint size);
 
+GST_D3D12_API
+gboolean                   gst_d3d12_allocation_params_set_mip_levels (GstD3D12AllocationParams * params,
+                                                                       guint mip_levels);
+
 /**
  * GstD3D12Memory:
  *

@@ -130,6 +130,7 @@ gst_d3d12_allocation_params_new (GstD3D12Device * device,
   ret->aligned_info = *info;
   ret->d3d12_format = d3d12_format;
   ret->array_size = 1;
+  ret->mip_levels = 1;
   ret->flags = flags;
   ret->heap_flags = heap_flags;
   ret->resource_flags = resource_flags;
@@ -296,6 +297,26 @@ gst_d3d12_allocation_params_set_array_size (GstD3D12AllocationParams * params,
   g_return_val_if_fail (size <= G_MAXUINT16, FALSE);
 
   params->array_size = size;
+
+  return TRUE;
+}
+
+/**
+ * gst_d3d12_allocation_params_set_mip_levels:
+ * @params: a #GstD3D12AllocationParams
+ * @mip_levels: a texture mip levels
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_d3d12_allocation_params_set_mip_levels (GstD3D12AllocationParams * params,
+    guint mip_levels)
+{
+  g_return_val_if_fail (params, FALSE);
+
+  params->mip_levels = mip_levels;
 
   return TRUE;
 }
@@ -786,7 +807,7 @@ gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem)
     D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
     srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srv_desc.Texture2D.MipLevels = 1;
+    srv_desc.Texture2D.MipLevels = priv->desc.MipLevels;
 
     auto cpu_handle =
         CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
@@ -1413,6 +1434,7 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
   /* Then calculate staging memory size and copyable layout */
   UINT64 size;
   desc.DepthOrArraySize = 1;
+  desc.MipLevels = 1;
   device_handle->GetCopyableFootprints (&desc, 0,
       num_subresources, 0, priv->layout, nullptr, nullptr, &size);
   priv->size = size;

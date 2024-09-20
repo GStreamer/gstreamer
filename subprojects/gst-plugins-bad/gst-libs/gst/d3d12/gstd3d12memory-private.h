@@ -36,6 +36,7 @@ struct _GstD3D12AllocationParams
   D3D12_HEAP_FLAGS heap_flags;
   D3D12_RESOURCE_FLAGS resource_flags;
   guint array_size;
+  guint mip_levels;
 };
 
 G_END_DECLS
