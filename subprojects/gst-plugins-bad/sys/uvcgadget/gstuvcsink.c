@@ -1005,6 +1005,7 @@ gst_uvc_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_uvc_sink_to_fakesink (self);
       break;
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_uvc_sink_watch (self))
