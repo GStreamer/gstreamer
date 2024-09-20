@@ -49,6 +49,12 @@ typedef enum
   GST_D3D_PLUGIN_VS_LAST,
 } GstD3DPluginVS;
 
+typedef enum
+{
+  GST_D3D_PLUGIN_CS_MIP_GEN,
+
+  GST_D3D_PLUGIN_CS_LAST,
+} GstD3DPluginCS;
 
 typedef enum
 {
@@ -96,6 +102,11 @@ gboolean gst_d3d_plugin_shader_get_vs_blob (GstD3DPluginVS type,
 
 GST_D3D_SHADER_API
 gboolean gst_d3d_plugin_shader_get_ps_blob (GstD3DPluginPS type,
+                                            GstD3DShaderModel shader_model,
+                                            GstD3DShaderByteCode * byte_code);
+
+GST_D3D_SHADER_API
+gboolean gst_d3d_plugin_shader_get_cs_blob (GstD3DPluginCS type,
                                             GstD3DShaderModel shader_model,
                                             GstD3DShaderByteCode * byte_code);
 

@@ -10,6 +10,7 @@ hlsl_sources = [
   ['VSMain_color', 'vs'],
   ['VSMain_coord', 'vs'],
   ['VSMain_pos', 'vs'],
+  ['CSMain_mipgen', 'cs'],
 ]
 
 shader_model = '5_0'
@@ -58,8 +59,19 @@ plugin_vs_collection = custom_target('plugin_hlsl_vs',
         '--output', '@OUTPUT@'
     ])
 
+plugin_cs_collection = custom_target('plugin_hlsl_cs',
+    input : plugin_hlsl_precompiled,
+    output : 'plugin_hlsl_cs.h',
+    command : [header_collector,
+        '--input', meson.current_build_dir(),
+        '--prefix', 'CSMain_',
+        '--name', 'g_plugin_cs_table',
+        '--output', '@OUTPUT@'
+    ])
+
 hlsl_precompiled += [
   plugin_hlsl_precompiled,
   plugin_ps_collection,
   plugin_vs_collection,
+  plugin_cs_collection,
 ]

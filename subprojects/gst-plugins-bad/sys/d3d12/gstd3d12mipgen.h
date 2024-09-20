@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2023 Seungha Yang <seungha@centricular.com>
+ * Copyright (C) 2024 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,15 +19,20 @@
 
 #pragma once
 
-#include "PSMain_checker_luma.hlsl"
-#include "PSMain_checker_rgb.hlsl"
-#include "PSMain_checker_vuya.hlsl"
-#include "PSMain_checker.hlsl"
-#include "PSMain_color.hlsl"
-#include "PSMain_sample_premul.hlsl"
-#include "PSMain_sample.hlsl"
-#include "PSMain_snow.hlsl"
-#include "VSMain_color.hlsl"
-#include "VSMain_coord.hlsl"
-#include "VSMain_pos.hlsl"
-#include "CSMain_mipgen.hlsl"
+#include <gst/gst.h>
+#include <gst/d3d12/gstd3d12.h>
+
+G_BEGIN_DECLS
+
+#define GST_TYPE_D3D12_MIP_GEN (gst_d3d12_mip_gen_get_type())
+G_DECLARE_FINAL_TYPE (GstD3D12MipGen, gst_d3d12_mip_gen, GST, D3D12_MIP_GEN, GstObject);
+
+GstD3D12MipGen * gst_d3d12_mip_gen_new (GstD3D12Device * device);
+
+gboolean         gst_d3d12_mip_gen_execute (GstD3D12MipGen * gen,
+                                            ID3D12Resource * resource,
+                                            GstD3D12FenceData * fence_data,
+                                            ID3D12GraphicsCommandList * cl);
+
+G_END_DECLS
+

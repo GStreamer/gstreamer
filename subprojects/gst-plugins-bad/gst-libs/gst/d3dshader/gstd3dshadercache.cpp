@@ -41,12 +41,14 @@ using namespace Microsoft::WRL;
 #include "converter_hlsl_cs.h"
 #include "plugin_hlsl_ps.h"
 #include "plugin_hlsl_vs.h"
+#include "plugin_hlsl_cs.h"
 #else
 static std::unordered_map<std::string, std::pair<const BYTE *, SIZE_T>> g_converter_ps_table;
 static std::unordered_map<std::string, std::pair<const BYTE *, SIZE_T>> g_converter_vs_table;
 static std::unordered_map<std::string, std::pair<const BYTE *, SIZE_T>> g_converter_cs_table;
 static std::unordered_map<std::string, std::pair<const BYTE *, SIZE_T>> g_plugin_ps_table;
 static std::unordered_map<std::string, std::pair<const BYTE *, SIZE_T>> g_plugin_vs_table;
+static std::unordered_map<std::string, std::pair<const BYTE *, SIZE_T>> g_plugin_cs_table;
 #endif
 
 static std::vector<std::pair<std::string, ID3DBlob *>> g_compiled_blobs;
@@ -79,6 +81,10 @@ static const ShaderItem g_vs_map[] = {
   {GST_D3D_PLUGIN_VS_COLOR, BUILD_SOURCE (VSMain_color)},
   {GST_D3D_PLUGIN_VS_COORD, BUILD_SOURCE (VSMain_coord)},
   {GST_D3D_PLUGIN_VS_POS, BUILD_SOURCE (VSMain_pos)},
+};
+
+static const ShaderItem g_cs_map[] = {
+  {GST_D3D_PLUGIN_CS_MIP_GEN, BUILD_SOURCE (CSMain_mipgen)},
 };
 
 #undef BUILD_SOURCE
@@ -194,6 +200,60 @@ gst_d3d_plugin_shader_get_ps_blob (GstD3DPluginPS type,
 
   return TRUE;
 }
+
+gboolean
+gst_d3d_plugin_shader_get_cs_blob (GstD3DPluginCS type,
+    GstD3DShaderModel shader_model, GstD3DShaderByteCode * byte_code)
+{
+  g_return_val_if_fail (type < GST_D3D_PLUGIN_CS_LAST, FALSE);
+  g_return_val_if_fail (shader_model < GST_D3D_SM_LAST, FALSE);
+  g_return_val_if_fail (byte_code, FALSE);
+
+  static std::mutex cache_lock;
+
+  auto shader_name = std::string (g_cs_map[type].name) + "_" +
+      std::string (g_sm_map[shader_model]);
+
+  std::lock_guard <std::mutex> lk (cache_lock);
+  auto it = g_plugin_cs_table.find (shader_name);
+  if (it != g_plugin_cs_table.end ()) {
+    byte_code->byte_code = it->second.first;
+    byte_code->byte_code_len = it->second.second;
+
+    return TRUE;
+  }
+
+  auto target = std::string ("cs_") + g_sm_map[shader_model];
+
+  ID3DBlob *blob = nullptr;
+  ComPtr<ID3DBlob> error_msg;
+
+  auto hr = gst_d3d_compile (g_cs_map[type].source, g_cs_map[type].source_size,
+      nullptr, nullptr, nullptr, "ENTRY_POINT", target.c_str (), 0, 0,
+      &blob, &error_msg);
+  if (FAILED (hr)) {
+    const gchar *err = nullptr;
+    if (error_msg)
+      err = (const gchar *) error_msg->GetBufferPointer ();
+
+    GST_ERROR ("Couldn't compile code, hr: 0x%x, error detail: %s, "
+        "source code: \n%s", (guint) hr, GST_STR_NULL (err),
+        g_cs_map[type].source);
+    return FALSE;
+  }
+
+  byte_code->byte_code = blob->GetBufferPointer ();
+  byte_code->byte_code_len = blob->GetBufferSize ();
+
+  g_plugin_cs_table[shader_name] = { (const BYTE *) blob->GetBufferPointer (),
+      blob->GetBufferSize ()};
+
+  std::lock_guard <std::mutex> blk (g_blob_lock);
+  g_compiled_blobs.push_back ({ shader_name, blob });
+
+  return TRUE;
+}
+
 
 gboolean
 gst_d3d_converter_shader_get_vs_blob (GstD3DShaderModel shader_model,
