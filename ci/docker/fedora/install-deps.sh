@@ -38,7 +38,8 @@ dnf remove -y \
 dnf install --setopt=install_weak_deps=false -y $(<./ci/docker/fedora/deps.txt)
 
 dnf remove -y meson -x ninja-build
-pip3 install meson hotdoc python-gitlab tomli junitparser
+pip3 install meson python-gitlab tomli junitparser
+pip3 install git+https://github.com/hotdoc/hotdoc.git@8c1cc997f5bc16e068710a8a8121f79ac25cbcce
 
 # Remove gst-devel packages installed by builddep above
 dnf remove -y "gstreamer1*devel"
