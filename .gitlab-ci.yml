@@ -438,6 +438,15 @@ commitlint:
     - "trigger"
     - "fedora amd64 docker"
 
+.build fedora fluster x86_64:
+  extends:
+    - '.fedora fluster image'
+    - '.fdo.suffixed-image@fedora'
+    - '.build simple'
+  needs:
+    - "trigger"
+    - "fedora amd64 docker fluster"
+
 build fedora gcc:
   extends: '.build fedora x86_64'
   variables:
@@ -871,8 +880,7 @@ gstreamer-full-minimal static build:
 # v4l2-stateless-decoders tests
 fluster v4l2-stateless on visl:
   extends:
-    - '.fedora fluster image'
-    - '.fdo.suffixed-image@fedora'
+    - '.build fedora fluster x86_64'
   stage: 'test'
   variables:
     BUILD_GST_DEBUG: '-Dgstreamer:gst_debug=false'
