@@ -110,6 +110,7 @@ svt-hevc-libs
 svt-vp9
 svt-vp9-devel
 svt-vp9-libs
+systemd-udev
 valgrind
 valgrind-devel
 vulkan-devel
