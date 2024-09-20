@@ -59,7 +59,7 @@ virtme-run \
   --script-sh "sh -c \"$SCRIPT\"" \
   -a visl.stable_output=true \
   -a visl.codec_variability=true \
-  --show-boot-console --show-command \
+  --show-boot-console --show-command --force-9p \
   --qemu-opts -cpu host,pdcm=off -smp 8
 VM_RESULT=$?
 if [ $VM_RESULT != 0 ]; then
