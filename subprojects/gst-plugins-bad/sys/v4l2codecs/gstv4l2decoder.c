@@ -78,7 +78,6 @@ struct _GstV4l2Decoder
   GstVecDeque *request_pool;
   GstVecDeque *pending_requests;
   guint version;
-  GstVideoInfo *info;
 
   enum v4l2_buf_type src_buf_type;
   enum v4l2_buf_type sink_buf_type;
