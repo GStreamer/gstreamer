@@ -500,6 +500,24 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     picture->data = map.data;
     picture->size = map.size;
 
+    /* If changing of resolution drain all output buffers.
+     * This will allow subclass to renegotiate immediatly. */
+    if (priv->support_non_kf_change
+        && gst_vp9_decoder_is_format_change (self, &frame_hdr)) {
+      gst_vp9_decoder_drain_output_queue (self, 0, &ret);
+      if (ret != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (self, "Failed to drain pending frames, returned %s",
+            gst_flow_get_name (ret));
+        goto unmap_and_error;
+      }
+
+      priv->frame_width = frame_hdr.width;
+      priv->frame_height = frame_hdr.height;
+      priv->render_width = frame_hdr.render_width;
+      priv->render_height = frame_hdr.render_height;
+      priv->profile = frame_hdr.profile;
+    }
+
     if (klass->new_picture) {
       ret = klass->new_picture (self, frame, picture);
       if (ret != GST_FLOW_OK) {
