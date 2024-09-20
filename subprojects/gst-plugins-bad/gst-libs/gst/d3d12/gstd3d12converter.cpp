@@ -55,6 +55,8 @@ gst_d3d12_converter_sampler_filter_get_type (void)
         "D3D12_FILTER_MIN_LINEAR_MAG_MIP_POINT", "min-linear-mag-mip-point"},
     {D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT,
         "D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT", "min-mag-linear-mip-point"},
+    {D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+        "D3D12_FILTER_MIN_MAG_MIP_LINEAR", "min-mag-mip-linear"},
     {D3D12_FILTER_ANISOTROPIC, "D3D12_FILTER_ANISOTROPIC", "anisotropic"},
     {0, nullptr, nullptr},
   };
@@ -95,6 +97,7 @@ using namespace DirectX;
 
 #define GAMMA_LUT_SIZE 4096
 #define DEFAULT_BUFFER_COUNT 2
+#define DEFAULT_SAMPLER_FILTER D3D12_FILTER_MIN_MAG_MIP_LINEAR
 static const WORD g_indices[6] = { 0, 1, 2, 3, 0, 2 };
 
 struct PSColorSpace
@@ -321,7 +324,7 @@ struct _GstD3D12ConverterPrivate
       GST_D3D12_CONVERTER_ALPHA_MODE_UNSPECIFIED;
   GstD3D12ConverterAlphaMode dst_alpha_mode =
       GST_D3D12_CONVERTER_ALPHA_MODE_UNSPECIFIED;
-  D3D12_FILTER sampler_filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+  D3D12_FILTER sampler_filter = DEFAULT_SAMPLER_FILTER;
 };
 /* *INDENT-ON* */
 
@@ -392,7 +395,7 @@ gst_d3d12_converter_class_init (GstD3D12ConverterClass * klass)
   g_object_class_install_property (object_class, PROP_SAMPLER_FILTER,
       g_param_spec_enum ("sampler-filter", "Sampler Filter",
           "Sampler Filter", GST_TYPE_D3D12_CONVERTER_SAMPLER_FILTER,
-          D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT, param_flags));
+          DEFAULT_SAMPLER_FILTER, param_flags));
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_converter_debug,
       "d3d12converter", 0, "d3d12converter");
@@ -710,10 +713,9 @@ gst_d3d12_converter_create_sampler (GstD3D12Converter * self,
         GetCPUDescriptorHandleForHeapStart (sampler_heap),
         D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 
-    if (filter != D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT) {
+    if (filter != DEFAULT_SAMPLER_FILTER) {
       hr = gst_d3d12_device_get_sampler_state (self->device,
-          D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT,
-          sampler_heap.ReleaseAndGetAddressOf ());
+          DEFAULT_SAMPLER_FILTER, sampler_heap.ReleaseAndGetAddressOf ());
 
       if (!gst_d3d12_result (hr, self->device)) {
         GST_ERROR_OBJECT (self, "Couldn't create sampler heap");
@@ -775,8 +777,8 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
 
   if (!gst_d3d12_converter_create_sampler (self, sampler_filter,
           &priv->sampler_heap)) {
-    if (sampler_filter != D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT) {
-      sampler_filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+    if (sampler_filter != DEFAULT_SAMPLER_FILTER) {
+      sampler_filter = DEFAULT_SAMPLER_FILTER;
       if (!gst_d3d12_converter_create_sampler (self, sampler_filter,
               &priv->sampler_heap)) {
         return FALSE;
@@ -1884,7 +1886,7 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CommandQueue * queue,
   GstD3D12Format out_d3d12_format;
   gboolean allow_gamma = FALSE;
   gboolean allow_primaries = FALSE;
-  D3D12_FILTER sampler_filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+  D3D12_FILTER sampler_filter = DEFAULT_SAMPLER_FILTER;
   GstVideoInfo matrix_in_info;
   GstVideoInfo matrix_out_info;
   guint sample_count = 1;

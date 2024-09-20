@@ -2175,6 +2175,7 @@ gst_d3d12_device_get_sampler_state (GstD3D12Device * device,
     case D3D12_FILTER_MIN_MAG_MIP_POINT:
     case D3D12_FILTER_MIN_LINEAR_MAG_MIP_POINT:
     case D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT:
+    case D3D12_FILTER_MIN_MAG_MIP_LINEAR:
       break;
     case D3D12_FILTER_ANISOTROPIC:
       max_anisotropy = 16;
