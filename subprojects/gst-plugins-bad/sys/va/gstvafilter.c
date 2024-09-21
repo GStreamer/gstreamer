@@ -699,6 +699,13 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
             common_flags));
   }
 
+  /**
+  * GstVaPostProc:scale-method
+  *
+  * Sets the scale method algorithm to use when resizing.
+  *
+  * Since: 1.22
+  */
   if (GST_VA_DISPLAY_IS_IMPLEMENTATION (self->display, INTEL_IHD)) {
     g_object_class_install_property (klass,
         GST_VA_FILTER_PROP_SCALE_METHOD,
@@ -707,6 +714,13 @@ gst_va_filter_install_properties (GstVaFilter * self, GObjectClass * klass)
             GST_TYPE_VA_SCALE_METHOD, VA_FILTER_SCALING_DEFAULT, common_flags));
   }
 
+  /**
+  * GstVaPostProc:interpolation-method
+  *
+  * Sets the interpolation method algorithm to use when resizing.
+  *
+  * Since: 1.26
+  */
   if (GST_VA_DISPLAY_IS_IMPLEMENTATION (self->display, INTEL_IHD)) {
     g_object_class_install_property (klass,
         GST_VA_FILTER_PROP_INTERPOLATION_METHOD,
