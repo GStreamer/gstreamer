@@ -24,7 +24,7 @@ ninja -C "$builddir" update_girs
 git checkout $(git ls-files 'subprojects/*.wrap')
 ./ci/scripts/check-diff.py "gir files"
 
-./gst-env.py ninja -C "$builddir" plugins_doc_caches
+./gst-env.py --builddir "$builddir" ninja -C "$builddir" plugins_doc_caches
 
 # Ignore modifications to wrap files made by meson
 git checkout $(git ls-files 'subprojects/*.wrap')
