@@ -1847,6 +1847,118 @@ GST_START_TEST (test_fixed)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_nested)
+{
+  GstCaps *caps1, *caps2, *caps3, *caps4, *capsi1, *capsi2, *capsi3;
+
+  /* *INDENT-OFF* */
+  caps1 = gst_caps_from_string (
+            "data/tensors, "
+              "model-name=ssd,"
+              "data=(GstStructure)["
+                "tensors,"
+                  "tensor-a=(GstStructure)["
+                    "tensor/raw,"
+                      "dims=<1>,"
+                      "type=uint32"
+                  "],"
+                  "tensor-b=(GstStructure)["
+                    "tensor/raw,"
+                      "dims=<1>,"
+                      "type=uint32"
+                  "]"
+              "]");
+
+  fail_unless (gst_caps_is_fixed (caps1));
+  caps2 = gst_caps_from_string (
+            "data/tensors, "
+              "model-name=ssd,"
+              "data=(GstStructure)["
+                "tensors,"
+                  "tensor-b=(GstStructure)["
+                    "tensor/raw,"
+                      "type=uint32"
+                  "]"
+              "]");
+
+  capsi1 = gst_caps_intersect (caps1, caps2);
+  fail_unless (gst_caps_is_equal (capsi1, caps1));
+
+  capsi2 = gst_caps_intersect (caps2, caps1);
+  fail_unless (gst_caps_is_equal (capsi2, caps1));
+
+  fail_unless (gst_caps_is_equal (capsi2, capsi1));
+
+  caps3 = gst_caps_from_string (
+    "video/x-raw, " \
+      "tensors=(GstCaps)" \
+        "data/tensors," \
+          "model-name=(string)ssd," \
+          "data=(structure)[" \
+            "tensors," \
+              "num-detections=(structure)[" \
+                "tensor/raw," \
+                  "dims=(int)<1>," \
+                  "type=(string)uint32;]," \
+              "scores=(structure)[" \
+                "tensor/raw," \
+                  "dims=(int)<0,1>," \
+                  "type=(string)float32;]," \
+              "boundingboxes=(structure)[" \
+                "tensor/raw," \
+                  "dims=(int)<0,4>," \
+                  "type=(string)float32;]," \
+            "classes=(structure)[" \
+              "tensor/raw," \
+                "dims=(int)< 0, 1 >, " \
+                "type=(string)uint32;];" \
+          "]"
+      );
+
+  caps4 = gst_caps_from_string (
+      "video/x-raw, " \
+        "tensors=(GstCaps)" \
+          "data/tensors," \
+            "model-name=(string)ssd," \
+            "data=(structure)[" \
+              "tensors," \
+                "num-detections=(structure)[" \
+                  "tensor/raw," \
+                    "type=(string)uint32;]," \
+                "scores=(structure)[" \
+                  "tensor/raw," \
+                    "dims=(int)<0,1>," \
+                    "type=(string)float32;]," \
+                "boundingboxes=(structure)[" \
+                  "tensor/raw," \
+                    "dims=(int)<0,4>," \
+                    "type=(string)float32;]," \
+              "classes=(structure)[" \
+                "tensor/raw," \
+                  "dims=(int)< 0, 1 >, " \
+                  "type=(string)uint32;];" \
+            "]"
+      );
+
+  /* *INDENT-ON* */
+
+  capsi3 = gst_caps_intersect (caps3, caps4);
+
+  fail_unless (gst_caps_is_empty (capsi3) == FALSE);
+  fail_unless (gst_caps_is_equal (capsi3, caps3));
+
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+  gst_caps_unref (caps3);
+  gst_caps_unref (caps4);
+  gst_caps_unref (capsi1);
+  gst_caps_unref (capsi2);
+  gst_caps_unref (capsi3);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_caps_suite (void)
 {
@@ -1885,6 +1997,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_equality);
   tcase_add_test (tc_chain, test_remains_any);
   tcase_add_test (tc_chain, test_fixed);
+  tcase_add_test (tc_chain, test_nested);
 
   return s;
 }
