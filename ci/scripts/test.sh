@@ -20,6 +20,10 @@ parent="${CI_PROJECT_DIR:-$(pwd)}"
 export XDG_RUNTIME_DIR="$(mktemp -p $(pwd) -d xdg-runtime-XXXXXX)"
 echo "-> Running $tests"
 
+# Disable all cpu extensions post AVX to match what valgrind supports
+# https://github.com/openssl/openssl/blob/master/NOTES-VALGRIND.md
+export OPENSSL_ia32cap=":0"
+
 ./gst-env.py \
     "--builddir=$builddir" \
     gst-validate-launcher "$tests" \
