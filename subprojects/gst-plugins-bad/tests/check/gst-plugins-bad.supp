@@ -49,3 +49,70 @@
    Memcheck:Cond
    fun:_ZN3srt4CUDT11sendCtrlAckERNS_7CPacketEi
 }
+
+
+{
+   <openssl_poll leaks all over the place atm, needs debugging>
+   Memcheck:Leak
+   match-leak-kinds: indirect,definite
+   fun:malloc
+   fun:CRYPTO_malloc
+   ...
+   fun:openssl_poll
+   ...
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: indirect,definite
+   fun:malloc
+   fun:CRYPTO_malloc
+   ...
+   fun:SSL_read
+   ...
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: indirect
+   fun:malloc
+   fun:CRYPTO_malloc
+   ...
+   fun:dtls1_read_bytes
+   fun:ssl3_read_internal.part.0
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: indirect,definite
+   fun:malloc
+   fun:CRYPTO_malloc
+   fun:CRYPTO_zalloc
+   fun:EVP_RAND_CTX_new
+   ...
+   fun:RSA_generate_multi_prime_key
+   fun:init_generated
+   ...
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: indirect,definite
+   fun:malloc
+   fun:CRYPTO_malloc
+   ...
+   fun:gst_dtls_certificate_set_property
+   ...
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: indirect
+   fun:malloc
+   fun:CRYPTO_malloc
+   ...
+   fun:srtp_crypto_kernel_init
+   fun:srtp_init
+   fun:srtp_element_init
+   fun:gst_element_register_srtpenc
+}
