@@ -4536,6 +4536,9 @@ gst_value_is_subset (const GValue * value1, const GValue * value2)
     if (type1 == GST_TYPE_LIST)
       return gst_value_is_subset_list_list (value1, value2);
     return gst_value_is_subset_list (value1, value2);
+  } else if (type2 == GST_TYPE_CAPS) {
+    return gst_caps_is_subset (gst_value_get_caps (value1),
+        gst_value_get_caps (value2));
   }
 
   /*
@@ -6350,6 +6353,28 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
   return gst_value_can_compare_unchecked (value1, value2);
 }
 
+static gboolean
+gst_value_intersect_caps (GValue * dest, const GValue * value1, const GValue *
+    value2)
+{
+  gboolean empty;
+  GstCaps *icaps;
+  GstCaps *caps1 = g_value_get_boxed (value1);
+  GstCaps *caps2 = g_value_get_boxed (value2);
+  g_return_val_if_fail (caps1 != NULL, FALSE);
+  g_return_val_if_fail (caps2 != NULL, FALSE);
+
+  icaps = gst_caps_intersect (caps1, caps2);
+  empty = gst_caps_is_empty (icaps);
+
+  if (dest != NULL) {
+    g_value_init (dest, GST_TYPE_CAPS);
+    gst_value_set_caps (dest, icaps);
+  }
+  gst_caps_unref (icaps);
+  return !empty;
+}
+
 /**
  * gst_value_intersect:
  * @dest: (out caller-allocates) (transfer full) (allow-none):
@@ -6410,6 +6435,8 @@ gst_value_intersect (GValue * dest, const GValue * value1,
       return gst_value_intersect_flagset_flagset (dest, value1, value2);
     if (type1 == GST_TYPE_STRUCTURE)
       return gst_value_intersect_structure_structure (dest, value1, value2);
+    if (type1 == GST_TYPE_CAPS)
+      return gst_value_intersect_caps (dest, value1, value2);
   } else {
     /* Different type comparison */
     len = gst_value_intersect_funcs->len;
