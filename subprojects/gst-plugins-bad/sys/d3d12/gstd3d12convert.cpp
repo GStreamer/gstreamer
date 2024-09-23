@@ -34,8 +34,8 @@
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
 
-GST_DEBUG_CATEGORY_STATIC (gst_d3d12_convert_debug);
-#define GST_CAT_DEFAULT gst_d3d12_convert_debug
+GST_DEBUG_CATEGORY_STATIC (gst_d3d12_base_convert_debug);
+#define GST_CAT_DEFAULT gst_d3d12_base_convert_debug
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -59,13 +59,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 enum
 {
-  PROP_0,
-  PROP_SAMPLING_METHOD,
-  PROP_ADD_BORDERS,
-  PROP_BORDER_COLOR,
-  PROP_VIDEO_DIRECTION,
-  PROP_GAMMA_MODE,
-  PROP_PRIMARIES_MODE,
+  PROP_SAMPLING_METHOD = 1,
   PROP_ASYNC_DEPTH,
 };
 
@@ -105,14 +99,14 @@ struct ConvertContext
   guint64 fence_val = 0;
 };
 
-struct GstD3D12ConvertPrivate
+struct GstD3D12BaseConvertPrivate
 {
-  GstD3D12ConvertPrivate ()
+  GstD3D12BaseConvertPrivate ()
   {
     fence_data_pool = gst_d3d12_fence_data_pool_new ();
   }
 
-  ~GstD3D12ConvertPrivate ()
+  ~GstD3D12BaseConvertPrivate ()
   {
     gst_clear_object (&fence_data_pool);
   }
@@ -160,65 +154,61 @@ struct GstD3D12ConvertPrivate
 };
 /* *INDENT-ON* */
 
-struct _GstD3D12Convert
+struct _GstD3D12BaseConvert
 {
   GstD3D12BaseFilter parent;
 
-  GstD3D12ConvertPrivate *priv;
+  GstD3D12BaseConvertPrivate *priv;
 };
 
-static void gst_d3d12_convert_finalize (GObject * object);
-static void gst_d3d12_convert_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_d3d12_convert_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-static gboolean gst_d3d12_convert_stop (GstBaseTransform * trans);
-static GstCaps *gst_d3d12_convert_transform_caps (GstBaseTransform *
+static void gst_d3d12_base_convert_finalize (GObject * object);
+static void gst_d3d12_base_convert_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_d3d12_base_convert_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
+static gboolean gst_d3d12_base_convert_stop (GstBaseTransform * trans);
+static GstCaps *gst_d3d12_base_convert_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
-static GstCaps *gst_d3d12_convert_fixate_caps (GstBaseTransform *
+static GstCaps *gst_d3d12_base_convert_fixate_caps (GstBaseTransform *
     base, GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
-static gboolean gst_d3d12_convert_propose_allocation (GstBaseTransform * trans,
-    GstQuery * decide_query, GstQuery * query);
-static gboolean gst_d3d12_convert_decide_allocation (GstBaseTransform * trans,
-    GstQuery * query);
-static gboolean gst_d3d12_convert_sink_event (GstBaseTransform * trans,
-    GstEvent * event);
-static GstFlowReturn
-gst_d3d12_convert_generate_output (GstBaseTransform * trans,
-    GstBuffer ** buffer);
-static gboolean gst_d3d12_convert_transform_meta (GstBaseTransform * trans,
+static gboolean gst_d3d12_base_convert_propose_allocation (GstBaseTransform *
+    trans, GstQuery * decide_query, GstQuery * query);
+static gboolean gst_d3d12_base_convert_decide_allocation (GstBaseTransform *
+    trans, GstQuery * query);
+static GstFlowReturn gst_d3d12_base_convert_generate_output (GstBaseTransform *
+    trans, GstBuffer ** buffer);
+static gboolean gst_d3d12_base_convert_transform_meta (GstBaseTransform * trans,
     GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
-static void gst_d3d12_convert_before_transform (GstBaseTransform * trans,
+static void gst_d3d12_base_convert_before_transform (GstBaseTransform * trans,
     GstBuffer * buffer);
-static GstFlowReturn gst_d3d12_convert_transform (GstBaseTransform * trans,
+static GstFlowReturn gst_d3d12_base_convert_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static gboolean gst_d3d12_convert_set_info (GstD3D12BaseFilter * filter,
+static gboolean gst_d3d12_base_convert_set_info (GstD3D12BaseFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info);
 
-static void
-gst_d3d12_convert_video_direction_interface_init (GstVideoDirectionInterface *
-    iface)
-{
-}
-
-#define gst_d3d12_convert_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstD3D12Convert, gst_d3d12_convert,
+/**
+ * GstD3D12BaseConvert:
+ *
+ * Since: 1.26
+ */
+#define gst_d3d12_base_convert_parent_class parent_class
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstD3D12BaseConvert, gst_d3d12_base_convert,
     GST_TYPE_D3D12_BASE_FILTER,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_DIRECTION,
-        gst_d3d12_convert_video_direction_interface_init));
+    GST_DEBUG_CATEGORY_INIT (gst_d3d12_base_convert_debug, "d3d12convert", 0,
+        "d3d12convert"));
 
 static void
-gst_d3d12_convert_class_init (GstD3D12ConvertClass * klass)
+gst_d3d12_base_convert_class_init (GstD3D12BaseConvertClass * klass)
 {
   auto object_class = G_OBJECT_CLASS (klass);
   auto element_class = GST_ELEMENT_CLASS (klass);
   auto trans_class = GST_BASE_TRANSFORM_CLASS (klass);
   auto filter_class = GST_D3D12_BASE_FILTER_CLASS (klass);
 
-  object_class->set_property = gst_d3d12_convert_set_property;
-  object_class->get_property = gst_d3d12_convert_get_property;
-  object_class->finalize = gst_d3d12_convert_finalize;
+  object_class->set_property = gst_d3d12_base_convert_set_property;
+  object_class->get_property = gst_d3d12_base_convert_get_property;
+  object_class->finalize = gst_d3d12_base_convert_finalize;
 
   g_object_class_install_property (object_class, PROP_SAMPLING_METHOD,
       g_param_spec_enum ("method", "Method",
@@ -226,33 +216,6 @@ gst_d3d12_convert_class_init (GstD3D12ConvertClass * klass)
           GST_TYPE_D3D12_SAMPLING_METHOD, DEFAULT_SAMPLING_METHOD,
           (GParamFlags) (GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS)));
-
-  g_object_class_install_property (object_class, PROP_ADD_BORDERS,
-      g_param_spec_boolean ("add-borders", "Add Borders",
-          "Add black borders if necessary to keep the display aspect ratio",
-          DEFAULT_ADD_BORDERS, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
-              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
-  g_object_class_install_property (object_class, PROP_BORDER_COLOR,
-      g_param_spec_uint64 ("border-color", "Border color",
-          "Border color to use in ARGB64 format", 0, G_MAXUINT64,
-          DEFAULT_BORDER_COLOR, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
-              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
-  g_object_class_override_property (object_class, PROP_VIDEO_DIRECTION,
-      "video-direction");
-
-  g_object_class_install_property (object_class, PROP_GAMMA_MODE,
-      g_param_spec_enum ("gamma-mode", "Gamma mode",
-          "Gamma conversion mode", GST_TYPE_VIDEO_GAMMA_MODE,
-          DEFAULT_GAMMA_MODE, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
-              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
-  g_object_class_install_property (object_class, PROP_PRIMARIES_MODE,
-      g_param_spec_enum ("primaries-mode", "Primaries Mode",
-          "Primaries conversion mode", GST_TYPE_VIDEO_PRIMARIES_MODE,
-          DEFAULT_PRIMARIES_MODE, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
-              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (object_class, PROP_ASYNC_DEPTH,
       g_param_spec_uint ("async-depth", "Async Depth",
@@ -264,50 +227,43 @@ gst_d3d12_convert_class_init (GstD3D12ConvertClass * klass)
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);
 
-  gst_element_class_set_static_metadata (element_class,
-      "Direct3D12 Converter",
-      "Filter/Converter/Scaler/Effect/Video/Hardware",
-      "Performs resizing, colorspace conversion, cropping and flipping/rotating using Direct3D12",
-      "Seungha Yang <seungha@centricular.com>");
-
   trans_class->passthrough_on_same_caps = FALSE;
 
-  trans_class->stop = GST_DEBUG_FUNCPTR (gst_d3d12_convert_stop);
+  trans_class->stop = GST_DEBUG_FUNCPTR (gst_d3d12_base_convert_stop);
   trans_class->transform_caps =
-      GST_DEBUG_FUNCPTR (gst_d3d12_convert_transform_caps);
-  trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_d3d12_convert_fixate_caps);
+      GST_DEBUG_FUNCPTR (gst_d3d12_base_convert_transform_caps);
+  trans_class->fixate_caps =
+      GST_DEBUG_FUNCPTR (gst_d3d12_base_convert_fixate_caps);
   trans_class->propose_allocation =
-      GST_DEBUG_FUNCPTR (gst_d3d12_convert_propose_allocation);
+      GST_DEBUG_FUNCPTR (gst_d3d12_base_convert_propose_allocation);
   trans_class->decide_allocation =
-      GST_DEBUG_FUNCPTR (gst_d3d12_convert_decide_allocation);
-  trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_d3d12_convert_sink_event);
+      GST_DEBUG_FUNCPTR (gst_d3d12_base_convert_decide_allocation);
   trans_class->generate_output =
-      GST_DEBUG_FUNCPTR (gst_d3d12_convert_generate_output);
+      GST_DEBUG_FUNCPTR (gst_d3d12_base_convert_generate_output);
   trans_class->transform_meta =
-      GST_DEBUG_FUNCPTR (gst_d3d12_convert_transform_meta);
+      GST_DEBUG_FUNCPTR (gst_d3d12_base_convert_transform_meta);
   trans_class->before_transform =
-      GST_DEBUG_FUNCPTR (gst_d3d12_convert_before_transform);
-  trans_class->transform = GST_DEBUG_FUNCPTR (gst_d3d12_convert_transform);
+      GST_DEBUG_FUNCPTR (gst_d3d12_base_convert_before_transform);
+  trans_class->transform = GST_DEBUG_FUNCPTR (gst_d3d12_base_convert_transform);
 
-  filter_class->set_info = GST_DEBUG_FUNCPTR (gst_d3d12_convert_set_info);
+  filter_class->set_info = GST_DEBUG_FUNCPTR (gst_d3d12_base_convert_set_info);
 
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D12_BASE_CONVERT,
+      (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_D3D12_SAMPLING_METHOD,
       (GstPluginAPIFlags) 0);
-
-  GST_DEBUG_CATEGORY_INIT (gst_d3d12_convert_debug, "d3d12convert", 0,
-      "d3d12convert");
 }
 
 static void
-gst_d3d12_convert_init (GstD3D12Convert * self)
+gst_d3d12_base_convert_init (GstD3D12BaseConvert * self)
 {
-  self->priv = new GstD3D12ConvertPrivate ();
+  self->priv = new GstD3D12BaseConvertPrivate ();
 }
 
 static void
-gst_d3d12_convert_finalize (GObject * object)
+gst_d3d12_base_convert_finalize (GObject * object)
 {
-  auto self = GST_D3D12_CONVERT (object);
+  auto self = GST_D3D12_BASE_CONVERT (object);
 
   delete self->priv;
 
@@ -315,7 +271,7 @@ gst_d3d12_convert_finalize (GObject * object)
 }
 
 static void
-gst_d3d12_convert_set_sampling_method (GstD3D12Convert * self,
+gst_d3d12_base_convert_set_sampling_method (GstD3D12BaseConvert * self,
     GstD3D12SamplingMethod method)
 {
   auto priv = self->priv;
@@ -332,7 +288,8 @@ gst_d3d12_convert_set_sampling_method (GstD3D12Convert * self,
 }
 
 static void
-gst_d3d12_convert_set_add_border (GstD3D12Convert * self, gboolean add_border)
+gst_d3d12_base_convert_set_add_border (GstD3D12BaseConvert * self,
+    gboolean add_border)
 {
   auto priv = self->priv;
   std::lock_guard < std::mutex > lk (priv->lock);
@@ -343,7 +300,7 @@ gst_d3d12_convert_set_add_border (GstD3D12Convert * self, gboolean add_border)
 }
 
 static void
-gst_d3d12_convert_set_border_color (GstD3D12Convert * self,
+gst_d3d12_base_convert_set_border_color (GstD3D12BaseConvert * self,
     guint64 border_color)
 {
   auto priv = self->priv;
@@ -355,7 +312,7 @@ gst_d3d12_convert_set_border_color (GstD3D12Convert * self,
 }
 
 static void
-gst_d3d12_convert_set_orientation (GstD3D12Convert * self,
+gst_d3d12_base_convert_set_orientation (GstD3D12BaseConvert * self,
     GstVideoOrientationMethod method, gboolean from_tag)
 {
   if (method == GST_VIDEO_ORIENTATION_CUSTOM) {
@@ -386,7 +343,7 @@ gst_d3d12_convert_set_orientation (GstD3D12Convert * self,
 }
 
 static void
-gst_d3d12_convert_set_gamma_mode (GstD3D12Convert * self,
+gst_d3d12_base_convert_set_gamma_mode (GstD3D12BaseConvert * self,
     GstVideoGammaMode mode)
 {
   auto priv = self->priv;
@@ -402,7 +359,7 @@ gst_d3d12_convert_set_gamma_mode (GstD3D12Convert * self,
 }
 
 static void
-gst_d3d12_convert_set_primaries_mode (GstD3D12Convert * self,
+gst_d3d12_base_convert_set_primaries_mode (GstD3D12BaseConvert * self,
     GstVideoPrimariesMode mode)
 {
   auto priv = self->priv;
@@ -432,34 +389,16 @@ gst_d3d12_convert_set_primaries_mode (GstD3D12Convert * self,
 }
 
 static void
-gst_d3d12_convert_set_property (GObject * object, guint prop_id,
+gst_d3d12_base_convert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  auto self = GST_D3D12_CONVERT (object);
+  auto self = GST_D3D12_BASE_CONVERT (object);
   auto priv = self->priv;
 
   switch (prop_id) {
     case PROP_SAMPLING_METHOD:
-      gst_d3d12_convert_set_sampling_method (self,
+      gst_d3d12_base_convert_set_sampling_method (self,
           (GstD3D12SamplingMethod) g_value_get_enum (value));
-      break;
-    case PROP_ADD_BORDERS:
-      gst_d3d12_convert_set_add_border (self, g_value_get_boolean (value));
-      break;
-    case PROP_BORDER_COLOR:
-      gst_d3d12_convert_set_border_color (self, g_value_get_uint64 (value));
-      break;
-    case PROP_VIDEO_DIRECTION:
-      gst_d3d12_convert_set_orientation (self,
-          (GstVideoOrientationMethod) g_value_get_enum (value), FALSE);
-      break;
-    case PROP_GAMMA_MODE:
-      gst_d3d12_convert_set_gamma_mode (self,
-          (GstVideoGammaMode) g_value_get_enum (value));
-      break;
-    case PROP_PRIMARIES_MODE:
-      gst_d3d12_convert_set_primaries_mode (self,
-          (GstVideoPrimariesMode) g_value_get_enum (value));
       break;
     case PROP_ASYNC_DEPTH:
       priv->async_depth = g_value_get_uint (value);
@@ -471,31 +410,16 @@ gst_d3d12_convert_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_d3d12_convert_get_property (GObject * object, guint prop_id,
+gst_d3d12_base_convert_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  auto self = GST_D3D12_CONVERT (object);
+  auto self = GST_D3D12_BASE_CONVERT (object);
   auto priv = self->priv;
 
   std::lock_guard < std::mutex > lk (priv->lock);
   switch (prop_id) {
     case PROP_SAMPLING_METHOD:
       g_value_set_enum (value, priv->sampling_method);
-      break;
-    case PROP_ADD_BORDERS:
-      g_value_set_boolean (value, priv->add_borders);
-      break;
-    case PROP_BORDER_COLOR:
-      g_value_set_uint64 (value, priv->border_color);
-      break;
-    case PROP_VIDEO_DIRECTION:
-      g_value_set_enum (value, priv->method);
-      break;
-    case PROP_GAMMA_MODE:
-      g_value_set_enum (value, priv->gamma_mode);
-      break;
-    case PROP_PRIMARIES_MODE:
-      g_value_set_enum (value, priv->primaries_mode);
       break;
     case PROP_ASYNC_DEPTH:
       g_value_set_uint (value, priv->async_depth);
@@ -507,9 +431,9 @@ gst_d3d12_convert_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_d3d12_convert_stop (GstBaseTransform * trans)
+gst_d3d12_base_convert_stop (GstBaseTransform * trans)
 {
-  auto self = GST_D3D12_CONVERT (trans);
+  auto self = GST_D3D12_BASE_CONVERT (trans);
   auto priv = self->priv;
 
   priv->ctx = nullptr;
@@ -518,7 +442,87 @@ gst_d3d12_convert_stop (GstBaseTransform * trans)
 }
 
 static GstCaps *
-gst_d3d12_convert_caps_remove_format_and_rangify_size_info (GstCaps * caps)
+gst_d3d12_base_convert_caps_remove_format_info (GstCaps * caps)
+{
+  GstStructure *st;
+  GstCapsFeatures *f;
+  gint i, n;
+  GstCaps *res;
+  GstCapsFeatures *feature =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY);
+
+  res = gst_caps_new_empty ();
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    st = gst_caps_get_structure (caps, i);
+    f = gst_caps_get_features (caps, i);
+
+    /* If this is already expressed by the existing caps
+     * skip this structure */
+    if (i > 0 && gst_caps_is_subset_structure_full (res, st, f))
+      continue;
+
+    st = gst_structure_copy (st);
+    /* Only remove format info for the cases when we can actually convert */
+    if (!gst_caps_features_is_any (f)
+        && gst_caps_features_is_equal (f, feature)) {
+      gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
+          NULL);
+    }
+
+    gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
+  }
+  gst_caps_features_free (feature);
+
+  return res;
+}
+
+static GstCaps *
+gst_d3d12_base_convert_caps_rangify_size_info (GstCaps * caps)
+{
+  GstStructure *st;
+  GstCapsFeatures *f;
+  gint i, n;
+  GstCaps *res;
+  GstCapsFeatures *feature =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY);
+
+  res = gst_caps_new_empty ();
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    st = gst_caps_get_structure (caps, i);
+    f = gst_caps_get_features (caps, i);
+
+    /* If this is already expressed by the existing caps
+     * skip this structure */
+    if (i > 0 && gst_caps_is_subset_structure_full (res, st, f))
+      continue;
+
+    st = gst_structure_copy (st);
+    /* Only remove format info for the cases when we can actually convert */
+    if (!gst_caps_features_is_any (f)
+        && gst_caps_features_is_equal (f, feature)) {
+      gst_structure_set (st, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+
+      /* if pixel aspect ratio, make a range of it */
+      if (gst_structure_has_field (st, "pixel-aspect-ratio")) {
+        gst_structure_set (st, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
+      }
+    }
+
+    gst_caps_append_structure_full (res, st, gst_caps_features_copy (f));
+  }
+  gst_caps_features_free (feature);
+
+  return res;
+}
+
+static GstCaps *
+gst_d3d12_base_convert_caps_remove_format_and_rangify_size_info (GstCaps * caps)
 {
   GstStructure *st;
   GstCapsFeatures *f;
@@ -562,27 +566,22 @@ gst_d3d12_convert_caps_remove_format_and_rangify_size_info (GstCaps * caps)
 }
 
 static GstCaps *
-gst_d3d12_convert_transform_caps (GstBaseTransform *
+gst_d3d12_base_convert_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  GstCaps *tmp, *tmp2;
-  GstCaps *result;
-
-  /* Get all possible caps that we can transform to */
-  tmp = gst_d3d12_convert_caps_remove_format_and_rangify_size_info (caps);
+  auto ret =
+      gst_d3d12_base_convert_caps_remove_format_and_rangify_size_info (caps);
 
   if (filter) {
-    tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (tmp);
-    tmp = tmp2;
+    auto tmp = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = tmp;
   }
 
-  result = tmp;
-
   GST_DEBUG_OBJECT (trans, "transformed %" GST_PTR_FORMAT " into %"
-      GST_PTR_FORMAT, caps, result);
+      GST_PTR_FORMAT, caps, ret);
 
-  return result;
+  return ret;
 }
 
 /*
@@ -710,7 +709,7 @@ score_value (GstBaseTransform * base, const GstVideoFormatInfo * in_info,
 }
 
 static void
-gst_d3d12_convert_fixate_format (GstBaseTransform * trans, GstCaps * caps,
+gst_d3d12_base_convert_fixate_format (GstBaseTransform * trans, GstCaps * caps,
     GstCaps * result)
 {
   GstStructure *ins, *outs;
@@ -872,7 +871,7 @@ transfer_colorimetry_from_input (GstBaseTransform * trans, GstCaps * in_caps,
 }
 
 static GstCaps *
-gst_d3d12_convert_get_fixed_format (GstBaseTransform * trans,
+gst_d3d12_base_convert_get_fixed_format (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
   GstCaps *result;
@@ -883,7 +882,7 @@ gst_d3d12_convert_get_fixed_format (GstBaseTransform * trans,
     result = gst_caps_copy (othercaps);
   }
 
-  gst_d3d12_convert_fixate_format (trans, caps, result);
+  gst_d3d12_base_convert_fixate_format (trans, caps, result);
 
   /* fixate remaining fields */
   result = gst_caps_fixate (result);
@@ -901,10 +900,10 @@ gst_d3d12_convert_get_fixed_format (GstBaseTransform * trans,
 }
 
 static GstCaps *
-gst_d3d12_convert_fixate_size (GstBaseTransform * base,
+gst_d3d12_base_convert_fixate_size (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
-  auto self = GST_D3D12_CONVERT (base);
+  auto self = GST_D3D12_BASE_CONVERT (base);
   auto priv = self->priv;
   GstStructure *ins, *outs;
   const GValue *from_par, *to_par;
@@ -1381,14 +1380,14 @@ done:
 }
 
 static GstCaps *
-gst_d3d12_convert_fixate_caps (GstBaseTransform * trans,
+gst_d3d12_base_convert_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
   GST_DEBUG_OBJECT (trans,
       "trying to fixate othercaps %" GST_PTR_FORMAT " based on caps %"
       GST_PTR_FORMAT, othercaps, caps);
 
-  auto format = gst_d3d12_convert_get_fixed_format (trans, direction, caps,
+  auto format = gst_d3d12_base_convert_get_fixed_format (trans, direction, caps,
       othercaps);
 
   if (gst_caps_is_empty (format)) {
@@ -1397,7 +1396,8 @@ gst_d3d12_convert_fixate_caps (GstBaseTransform * trans,
   }
 
   /* convert mode is "all" or "size" here */
-  othercaps = gst_d3d12_convert_fixate_size (trans, direction, caps, othercaps);
+  othercaps =
+      gst_d3d12_base_convert_fixate_size (trans, direction, caps, othercaps);
 
   if (gst_caps_get_size (othercaps) == 1) {
     guint i;
@@ -1426,11 +1426,11 @@ gst_d3d12_convert_fixate_caps (GstBaseTransform * trans,
 }
 
 static gboolean
-gst_d3d12_convert_propose_allocation (GstBaseTransform * trans,
+gst_d3d12_base_convert_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
   auto filter = GST_D3D12_BASE_FILTER (trans);
-  auto self = GST_D3D12_CONVERT (trans);
+  auto self = GST_D3D12_BASE_CONVERT (trans);
   auto priv = self->priv;
   GstVideoInfo info;
   GstBufferPool *pool = nullptr;
@@ -1528,10 +1528,11 @@ gst_d3d12_convert_propose_allocation (GstBaseTransform * trans,
 }
 
 static gboolean
-gst_d3d12_convert_decide_allocation (GstBaseTransform * trans, GstQuery * query)
+gst_d3d12_base_convert_decide_allocation (GstBaseTransform * trans,
+    GstQuery * query)
 {
   auto filter = GST_D3D12_BASE_FILTER (trans);
-  auto self = GST_D3D12_CONVERT (trans);
+  auto self = GST_D3D12_BASE_CONVERT (trans);
   auto priv = self->priv;
   GstCaps *outcaps = nullptr;
   GstBufferPool *pool = nullptr;
@@ -1631,7 +1632,7 @@ gst_d3d12_convert_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 }
 
 static gboolean
-gst_d3d12_convert_needs_color_convert (GstD3D12Convert * self,
+gst_d3d12_base_convert_needs_color_convert (GstD3D12BaseConvert * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info)
 {
   auto priv = self->priv;
@@ -1660,11 +1661,11 @@ gst_d3d12_convert_needs_color_convert (GstD3D12Convert * self,
 }
 
 static gboolean
-gst_d3d12_convert_set_info (GstD3D12BaseFilter * filter,
+gst_d3d12_base_convert_set_info (GstD3D12BaseFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info)
 {
-  auto self = GST_D3D12_CONVERT (filter);
+  auto self = GST_D3D12_BASE_CONVERT (filter);
   auto priv = self->priv;
   gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
   gint border_offset_x = 0;
@@ -1765,7 +1766,7 @@ gst_d3d12_convert_set_info (GstD3D12BaseFilter * filter,
   if (in_width == out_info->width && in_height == out_info->height
       && in_info->finfo == out_info->finfo && priv->borders_w == 0 &&
       priv->borders_h == 0 && !need_flip &&
-      !gst_d3d12_convert_needs_color_convert (self, in_info, out_info)) {
+      !gst_d3d12_base_convert_needs_color_convert (self, in_info, out_info)) {
     priv->same_caps = TRUE;
   }
 
@@ -1835,34 +1836,11 @@ gst_d3d12_convert_set_info (GstD3D12BaseFilter * filter,
   return TRUE;
 }
 
-static gboolean
-gst_d3d12_convert_sink_event (GstBaseTransform * trans, GstEvent * event)
-{
-  GstD3D12Convert *base = GST_D3D12_CONVERT (trans);
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_TAG:{
-      GstTagList *taglist;
-      GstVideoOrientationMethod method = GST_VIDEO_ORIENTATION_IDENTITY;
-
-      gst_event_parse_tag (event, &taglist);
-      if (gst_video_orientation_from_tag (taglist, &method))
-        gst_d3d12_convert_set_orientation (base, method, TRUE);
-      break;
-    }
-    default:
-      break;
-  }
-
-  return GST_BASE_TRANSFORM_CLASS (gst_d3d12_convert_parent_class)->sink_event
-      (trans, event);
-}
-
 static GstFlowReturn
-gst_d3d12_convert_generate_output (GstBaseTransform * trans,
+gst_d3d12_base_convert_generate_output (GstBaseTransform * trans,
     GstBuffer ** buffer)
 {
-  auto self = GST_D3D12_CONVERT (trans);
+  auto self = GST_D3D12_BASE_CONVERT (trans);
   auto priv = self->priv;
   gboolean passthrough = priv->same_caps;
 
@@ -1889,7 +1867,7 @@ gst_d3d12_convert_generate_output (GstBaseTransform * trans,
 }
 
 static gboolean
-gst_d3d12_convert_transform_meta (GstBaseTransform * trans,
+gst_d3d12_base_convert_transform_meta (GstBaseTransform * trans,
     GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
 {
   /* Do not copy crop meta in any case.
@@ -1912,10 +1890,10 @@ gst_d3d12_convert_transform_meta (GstBaseTransform * trans,
 }
 
 static void
-gst_d3d12_convert_before_transform (GstBaseTransform * trans,
+gst_d3d12_base_convert_before_transform (GstBaseTransform * trans,
     GstBuffer * buffer)
 {
-  auto self = GST_D3D12_CONVERT (trans);
+  auto self = GST_D3D12_BASE_CONVERT (trans);
   auto priv = self->priv;
   GstCaps *in_caps;
   GstCaps *out_caps;
@@ -1960,10 +1938,10 @@ gst_d3d12_convert_before_transform (GstBaseTransform * trans,
 }
 
 static GstFlowReturn
-gst_d3d12_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
+gst_d3d12_base_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
-  auto self = GST_D3D12_CONVERT (trans);
+  auto self = GST_D3D12_BASE_CONVERT (trans);
   auto priv = self->priv;
   D3D12_BOX in_rect;
 
@@ -2074,4 +2052,454 @@ gst_d3d12_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   }
 
   return GST_FLOW_OK;
+}
+
+enum
+{
+  PROP_CONVERT_ADD_BORDERS = 1,
+  PROP_CONVERT_BORDER_COLOR,
+  PROP_CONVERT_VIDEO_DIRECTION,
+  PROP_CONVERT_GAMMA_MODE,
+  PROP_CONVERT_PRIMARIES_MODE,
+};
+
+struct _GstD3D12Convert
+{
+  GstD3D12BaseConvert parent;
+};
+
+static void
+gst_d3d12_convert_video_direction_interface_init (GstVideoDirectionInterface *
+    iface)
+{
+}
+
+G_DEFINE_TYPE_WITH_CODE (GstD3D12Convert, gst_d3d12_convert,
+    GST_TYPE_D3D12_BASE_CONVERT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_DIRECTION,
+        gst_d3d12_convert_video_direction_interface_init));
+
+static void gst_d3d12_convert_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_d3d12_convert_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static gboolean gst_d3d12_convert_sink_event (GstBaseTransform * trans,
+    GstEvent * event);
+
+static void
+gst_d3d12_convert_class_init (GstD3D12ConvertClass * klass)
+{
+  auto object_class = G_OBJECT_CLASS (klass);
+  auto element_class = GST_ELEMENT_CLASS (klass);
+  auto trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+
+  object_class->set_property = gst_d3d12_convert_set_property;
+  object_class->get_property = gst_d3d12_convert_get_property;
+
+  g_object_class_install_property (object_class, PROP_CONVERT_ADD_BORDERS,
+      g_param_spec_boolean ("add-borders", "Add Borders",
+          "Add black borders if necessary to keep the display aspect ratio",
+          DEFAULT_ADD_BORDERS, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_CONVERT_BORDER_COLOR,
+      g_param_spec_uint64 ("border-color", "Border color",
+          "Border color to use in ARGB64 format", 0, G_MAXUINT64,
+          DEFAULT_BORDER_COLOR, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_override_property (object_class, PROP_CONVERT_VIDEO_DIRECTION,
+      "video-direction");
+
+  g_object_class_install_property (object_class, PROP_CONVERT_GAMMA_MODE,
+      g_param_spec_enum ("gamma-mode", "Gamma mode",
+          "Gamma conversion mode", GST_TYPE_VIDEO_GAMMA_MODE,
+          DEFAULT_GAMMA_MODE, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_CONVERT_PRIMARIES_MODE,
+      g_param_spec_enum ("primaries-mode", "Primaries Mode",
+          "Primaries conversion mode", GST_TYPE_VIDEO_PRIMARIES_MODE,
+          DEFAULT_PRIMARIES_MODE, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  gst_element_class_set_static_metadata (element_class,
+      "Direct3D12 Converter",
+      "Filter/Converter/Scaler/Effect/Video/Hardware",
+      "Performs resizing, colorspace conversion, cropping and flipping/rotating using Direct3D12",
+      "Seungha Yang <seungha@centricular.com>");
+
+  trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_d3d12_convert_sink_event);
+}
+
+static void
+gst_d3d12_convert_init (GstD3D12Convert * self)
+{
+}
+
+static void
+gst_d3d12_convert_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  auto self = GST_D3D12_BASE_CONVERT (object);
+
+  switch (prop_id) {
+    case PROP_CONVERT_ADD_BORDERS:
+      gst_d3d12_base_convert_set_add_border (self, g_value_get_boolean (value));
+      break;
+    case PROP_CONVERT_BORDER_COLOR:
+      gst_d3d12_base_convert_set_border_color (self,
+          g_value_get_uint64 (value));
+      break;
+    case PROP_CONVERT_VIDEO_DIRECTION:
+      gst_d3d12_base_convert_set_orientation (self,
+          (GstVideoOrientationMethod) g_value_get_enum (value), FALSE);
+      break;
+    case PROP_CONVERT_GAMMA_MODE:
+      gst_d3d12_base_convert_set_gamma_mode (self,
+          (GstVideoGammaMode) g_value_get_enum (value));
+      break;
+    case PROP_CONVERT_PRIMARIES_MODE:
+      gst_d3d12_base_convert_set_primaries_mode (self,
+          (GstVideoPrimariesMode) g_value_get_enum (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_d3d12_convert_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  auto self = GST_D3D12_BASE_CONVERT (object);
+  auto priv = self->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  switch (prop_id) {
+    case PROP_CONVERT_ADD_BORDERS:
+      g_value_set_boolean (value, priv->add_borders);
+      break;
+    case PROP_CONVERT_BORDER_COLOR:
+      g_value_set_uint64 (value, priv->border_color);
+      break;
+    case PROP_CONVERT_VIDEO_DIRECTION:
+      g_value_set_enum (value, priv->method);
+      break;
+    case PROP_CONVERT_GAMMA_MODE:
+      g_value_set_enum (value, priv->gamma_mode);
+      break;
+    case PROP_CONVERT_PRIMARIES_MODE:
+      g_value_set_enum (value, priv->primaries_mode);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static gboolean
+gst_d3d12_convert_sink_event (GstBaseTransform * trans, GstEvent * event)
+{
+  auto base = GST_D3D12_BASE_CONVERT (trans);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:{
+      GstTagList *taglist;
+      GstVideoOrientationMethod method = GST_VIDEO_ORIENTATION_IDENTITY;
+
+      gst_event_parse_tag (event, &taglist);
+      if (gst_video_orientation_from_tag (taglist, &method))
+        gst_d3d12_base_convert_set_orientation (base, method, TRUE);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return
+      GST_BASE_TRANSFORM_CLASS (gst_d3d12_base_convert_parent_class)->sink_event
+      (trans, event);
+}
+
+enum
+{
+  PROP_COLOR_CONVERT_GAMMA_MODE = 1,
+  PROP_COLOR_CONVERT_PRIMARIES_MODE,
+  PROP_COLOR_CONVERT_SRC_ALPHA_MODE,
+  PROP_COLOR_CONVERT_DEST_ALPHA_MODE,
+};
+
+struct _GstD3D12ColorConvert
+{
+  GstD3D12BaseConvert parent;
+};
+
+static void gst_d3d12_color_convert_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_d3d12_color_convert_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
+static GstCaps *gst_d3d12_color_convert_transform_caps (GstBaseTransform *
+    trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
+static GstCaps *gst_d3d12_color_convert_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
+
+G_DEFINE_TYPE (GstD3D12ColorConvert, gst_d3d12_color_convert,
+    GST_TYPE_D3D12_BASE_CONVERT);
+
+static void
+gst_d3d12_color_convert_class_init (GstD3D12ColorConvertClass * klass)
+{
+  auto object_class = G_OBJECT_CLASS (klass);
+  auto element_class = GST_ELEMENT_CLASS (klass);
+  auto trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+
+  object_class->set_property = gst_d3d12_color_convert_set_property;
+  object_class->get_property = gst_d3d12_color_convert_get_property;
+
+  g_object_class_install_property (object_class, PROP_COLOR_CONVERT_GAMMA_MODE,
+      g_param_spec_enum ("gamma-mode", "Gamma mode",
+          "Gamma conversion mode", GST_TYPE_VIDEO_GAMMA_MODE,
+          DEFAULT_GAMMA_MODE, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class,
+      PROP_COLOR_CONVERT_PRIMARIES_MODE,
+      g_param_spec_enum ("primaries-mode", "Primaries Mode",
+          "Primaries conversion mode", GST_TYPE_VIDEO_PRIMARIES_MODE,
+          DEFAULT_PRIMARIES_MODE, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  gst_element_class_set_static_metadata (element_class,
+      "Direct3D12 Colorspace Converter",
+      "Filter/Converter/Video/Hardware",
+      "Color conversion using Direct3D12",
+      "Seungha Yang <seungha@centricular.com>");
+
+  trans_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_d3d12_color_convert_transform_caps);
+  trans_class->fixate_caps =
+      GST_DEBUG_FUNCPTR (gst_d3d12_color_convert_fixate_caps);
+}
+
+static void
+gst_d3d12_color_convert_init (GstD3D12ColorConvert * self)
+{
+}
+
+static void
+gst_d3d12_color_convert_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  auto base = GST_D3D12_BASE_CONVERT (object);
+
+  switch (prop_id) {
+    case PROP_COLOR_CONVERT_GAMMA_MODE:
+      gst_d3d12_base_convert_set_gamma_mode (base,
+          (GstVideoGammaMode) g_value_get_enum (value));
+      break;
+    case PROP_COLOR_CONVERT_PRIMARIES_MODE:
+      gst_d3d12_base_convert_set_primaries_mode (base,
+          (GstVideoPrimariesMode) g_value_get_enum (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_d3d12_color_convert_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  auto base = GST_D3D12_BASE_CONVERT (object);
+  auto priv = base->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  switch (prop_id) {
+    case PROP_COLOR_CONVERT_GAMMA_MODE:
+      g_value_set_enum (value, priv->gamma_mode);
+      break;
+    case PROP_COLOR_CONVERT_PRIMARIES_MODE:
+      g_value_set_enum (value, priv->primaries_mode);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static GstCaps *
+gst_d3d12_color_convert_transform_caps (GstBaseTransform *
+    trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+{
+  auto ret = gst_d3d12_base_convert_caps_remove_format_info (caps);
+
+  if (filter) {
+    auto tmp = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = tmp;
+  }
+
+  GST_DEBUG_OBJECT (trans, "transformed %" GST_PTR_FORMAT " into %"
+      GST_PTR_FORMAT, caps, ret);
+
+  return ret;
+}
+
+static GstCaps *
+gst_d3d12_color_convert_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+{
+  GST_DEBUG_OBJECT (base,
+      "trying to fixate othercaps %" GST_PTR_FORMAT " based on caps %"
+      GST_PTR_FORMAT, othercaps, caps);
+
+  auto format = gst_d3d12_base_convert_get_fixed_format (base, direction, caps,
+      othercaps);
+  gst_caps_unref (othercaps);
+
+  if (gst_caps_is_empty (format)) {
+    GST_ERROR_OBJECT (base, "Could not convert formats");
+  } else {
+    GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, format);
+  }
+
+  return format;
+}
+
+enum
+{
+  PROP_SCALE_ADD_BORDERS = 1,
+  PROP_SCALE_BORDER_COLOR,
+};
+
+struct _GstD3D12Scale
+{
+  GstD3D12BaseConvert parent;
+};
+
+static void gst_d3d12_scale_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_d3d12_scale_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static GstCaps *gst_d3d12_scale_transform_caps (GstBaseTransform *
+    trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
+static GstCaps *gst_d3d12_scale_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
+
+G_DEFINE_TYPE (GstD3D12Scale, gst_d3d12_scale, GST_TYPE_D3D12_BASE_CONVERT);
+
+static void
+gst_d3d12_scale_class_init (GstD3D12ScaleClass * klass)
+{
+  auto object_class = G_OBJECT_CLASS (klass);
+  auto element_class = GST_ELEMENT_CLASS (klass);
+  auto trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+
+  object_class->set_property = gst_d3d12_scale_set_property;
+  object_class->get_property = gst_d3d12_scale_get_property;
+
+  g_object_class_install_property (object_class, PROP_SCALE_ADD_BORDERS,
+      g_param_spec_boolean ("add-borders", "Add Borders",
+          "Add black borders if necessary to keep the display aspect ratio",
+          DEFAULT_ADD_BORDERS, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_SCALE_BORDER_COLOR,
+      g_param_spec_uint64 ("border-color", "Border color",
+          "Border color to use in ARGB64 format", 0, G_MAXUINT64,
+          DEFAULT_BORDER_COLOR, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  gst_element_class_set_static_metadata (element_class,
+      "Direct3D12 Scaler",
+      "Filter/Converter/Video/Scaler/Hardware",
+      "Resizes video using Direct3D12",
+      "Seungha Yang <seungha@centricular.com>");
+
+  trans_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_d3d12_scale_transform_caps);
+  trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_d3d12_scale_fixate_caps);
+}
+
+static void
+gst_d3d12_scale_init (GstD3D12Scale * self)
+{
+}
+
+static void
+gst_d3d12_scale_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  auto base = GST_D3D12_BASE_CONVERT (object);
+
+  switch (prop_id) {
+    case PROP_SCALE_ADD_BORDERS:
+      gst_d3d12_base_convert_set_add_border (base, g_value_get_boolean (value));
+      break;
+    case PROP_SCALE_BORDER_COLOR:
+      gst_d3d12_base_convert_set_border_color (base,
+          g_value_get_uint64 (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_d3d12_scale_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  auto base = GST_D3D12_BASE_CONVERT (object);
+  auto priv = base->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  switch (prop_id) {
+    case PROP_SCALE_ADD_BORDERS:
+      g_value_set_boolean (value, priv->add_borders);
+      break;
+    case PROP_SCALE_BORDER_COLOR:
+      g_value_set_uint64 (value, priv->border_color);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static GstCaps *
+gst_d3d12_scale_transform_caps (GstBaseTransform *
+    trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+{
+  auto ret = gst_d3d12_base_convert_caps_rangify_size_info (caps);
+
+  if (filter) {
+    auto tmp = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = tmp;
+  }
+
+  GST_DEBUG_OBJECT (trans, "transformed %" GST_PTR_FORMAT " into %"
+      GST_PTR_FORMAT, caps, ret);
+
+  return ret;
+}
+
+static GstCaps *
+gst_d3d12_scale_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+{
+  GST_DEBUG_OBJECT (base,
+      "trying to fixate othercaps %" GST_PTR_FORMAT " based on caps %"
+      GST_PTR_FORMAT, othercaps, caps);
+
+  othercaps =
+      gst_d3d12_base_convert_fixate_size (base, direction, caps, othercaps);
+
+  GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
+
+  return othercaps;
 }
