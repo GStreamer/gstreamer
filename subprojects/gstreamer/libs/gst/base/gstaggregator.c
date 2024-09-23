@@ -828,7 +828,8 @@ gst_aggregator_push_eos (GstAggregator * self)
 
   GST_OBJECT_LOCK (self);
   self->priv->send_eos = FALSE;
-  gst_event_set_seqnum (event, self->priv->seqnum);
+  if (self->priv->seqnum != GST_SEQNUM_INVALID)
+    gst_event_set_seqnum (event, self->priv->seqnum);
   GST_OBJECT_UNLOCK (self);
 
   gst_pad_push_event (self->srcpad, event);
