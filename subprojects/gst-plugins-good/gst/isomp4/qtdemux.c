@@ -12219,9 +12219,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               else
                 size = len - 0x8;
 
-              if (size < 1)
-                /* No real data, so break out */
-                break;
+              /* No real data, so skip */
+              if (size < 1) {
+                len -= 8;
+                avc_data += 8;
+                continue;
+              }
 
               switch (QT_FOURCC (avc_data + 0x4)) {
                 case FOURCC_avcC:
@@ -12336,9 +12339,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               else
                 size = len - 0x8;
 
-              if (size < 1)
-                /* No real data, so break out */
-                break;
+              /* No real data, so skip */
+              if (size < 1) {
+                len -= 8;
+                hevc_data += 8;
+                continue;
+              }
 
               switch (QT_FOURCC (hevc_data + 0x4)) {
                 case FOURCC_hvcC:
@@ -12760,9 +12766,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               else
                 size = len - 8;
 
-              if (size < 1)
-                /* No real data, so break out */
-                break;
+              /* No real data, so skip */
+              if (size < 1) {
+                len -= 8;
+                vc1_data += 8;
+                continue;
+              }
 
               switch (QT_FOURCC (vc1_data + 0x4)) {
                 case GST_MAKE_FOURCC ('d', 'v', 'c', '1'):
@@ -12802,9 +12811,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               else
                 size = len - 0x8;
 
-              if (size < 1)
-                /* No real data, so break out */
-                break;
+              /* No real data, so skip */
+              if (size < 1) {
+                len -= 8;
+                av1_data += 8;
+                continue;
+              }
 
               switch (QT_FOURCC (av1_data + 0x4)) {
                 case FOURCC_av1C:
@@ -12912,9 +12924,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               else
                 size = len - 0x8;
 
-              if (size < 1)
-                /* No real data, so break out */
-                break;
+              /* No real data, so skip */
+              if (size < 1) {
+                len -= 8;
+                vpcc_data += 8;
+                continue;
+              }
 
               switch (QT_FOURCC (vpcc_data + 0x4)) {
                 case FOURCC_vpcC:
@@ -13414,9 +13429,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             else
               size = len - 8;
 
-            if (size < 1)
-              /* No real data, so break out */
-              break;
+            /* No real data, so skip */
+            if (size < 1) {
+              len -= 8;
+              wfex_data += 8;
+              continue;
+            }
 
             switch (QT_FOURCC (wfex_data + 4)) {
               case GST_MAKE_FOURCC ('w', 'f', 'e', 'x'):
