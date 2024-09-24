@@ -73,6 +73,7 @@ GstWPEContextThread::GstWPEContextThread()
 {
     g_mutex_init(&threading.mutex);
     g_cond_init(&threading.cond);
+    threading.ready = FALSE;
 
     {
         GMutexHolder lock(threading.mutex);
