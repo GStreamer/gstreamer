@@ -110,6 +110,8 @@ public:
       case GST_VIDEO_FORMAT_RGB:
       case GST_VIDEO_FORMAT_RGBA:
       case GST_VIDEO_FORMAT_BGRA:
+      case GST_VIDEO_FORMAT_RGB16:
+      case GST_VIDEO_FORMAT_BGR16:
         tex_names[0] = UNIFORM_TEXTURE0_NAME;
         break;
       case GST_VIDEO_FORMAT_YV12:
@@ -201,11 +203,13 @@ GstQSGMaterial::new_for_format_and_target(GstVideoFormat format, GstGLTextureTar
   switch (format) {
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_RGB16:
       if (target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
         return static_cast<GstQSGMaterial *>(new GstQSGMaterial_RGBA_external());
 
       return static_cast<GstQSGMaterial *>(new GstQSGMaterial_RGBA());
     case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGR16:
       return static_cast<GstQSGMaterial *>(new GstQSGMaterial_RGBA_SWIZZLE());
     case GST_VIDEO_FORMAT_YV12:
       return static_cast<GstQSGMaterial *>(new GstQSGMaterial_YUV_TRIPLANAR());
@@ -306,7 +310,8 @@ fragmentShaderForFormatAndTarget(GstVideoFormat v_format, GstGLTextureTarget tex
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_RGBA: {
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_RGB16: {
       char *swizzle = gst_gl_color_convert_swizzle_shader_string (context);
       char *ret = NULL;
 
@@ -326,7 +331,8 @@ fragmentShaderForFormatAndTarget(GstVideoFormat v_format, GstGLTextureTarget tex
       g_clear_pointer (&swizzle, g_free);
       return ret;
     }
-    case GST_VIDEO_FORMAT_BGRA: {
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGR16: {
       char *swizzle = gst_gl_color_convert_swizzle_shader_string (context);
       char *ret = g_strdup_printf ("%s" texcoord_input single_texture_input uniform_swizzle uniform_opacity
           "%s\n"
@@ -564,6 +570,9 @@ out:
       funcs->glActiveTexture(GL_TEXTURE0 + i);
 
       if (this->dummy_textures[i] == 0) {
+        /* Default GL formats for most supported input formats. */
+        guint glformat = GL_RGBA;
+        guint gltype = GL_UNSIGNED_BYTE;
         /* Make this a black 64x64 pixel RGBA texture.
          * This size and format is supported pretty much everywhere, so these
          * are a safe pick. (64 pixel sidelength must be supported according
@@ -581,6 +590,18 @@ out:
             for (gsize j = 0; j < tex_sidelength; j++) {
               for (gsize k = 0; k < tex_sidelength; k++) {
                 data[(j * tex_sidelength + k) * 4 + 3] = 0xFF; // opaque
+              }
+            }
+            break;
+          case GST_VIDEO_FORMAT_RGB16:
+          case GST_VIDEO_FORMAT_BGR16:
+            /* Override GL formats to support RGB565/BGR565 */
+            glformat = GL_RGB;
+            gltype = GL_UNSIGNED_SHORT_5_6_5;
+            for (gsize j = 0; j < tex_sidelength; j++) {
+              for (gsize k = 0; k < tex_sidelength; k++) {
+                data[(j * tex_sidelength + k) * 2 + 0] = 0xFF;
+                data[(j * tex_sidelength + k) * 2 + 1] = 0xFF;
               }
             }
             break;
@@ -612,8 +633,8 @@ out:
         funcs->glBindTexture (GL_TEXTURE_2D, this->dummy_textures[i]);
         funcs->glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         funcs->glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        funcs->glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, tex_sidelength,
-            tex_sidelength, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        funcs->glTexImage2D (GL_TEXTURE_2D, 0, glformat, tex_sidelength,
+            tex_sidelength, 0, glformat, gltype, data);
       }
 
       g_assert (this->dummy_textures[i] != 0);
