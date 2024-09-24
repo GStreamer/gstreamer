@@ -2321,6 +2321,12 @@ class _TestsLauncher(Loggable):
                         if test.max_retries:
                             test.max_retries -= 1
                             to_report = False
+                elif not self.options.keep_logs:
+                    for logfile in set([test.logfile]) | test.extra_logfiles:
+                        try:
+                            os.remove(logfile)
+                        except FileNotFoundError as e:
+                            self.error(f"{logfile} doesn't exist {e}, can't remove")
                 self.print_result(current_test_num - 1, test,
                     retry_on_failures=retry_on_failures,
                     total_num_tests=total_num_tests)
