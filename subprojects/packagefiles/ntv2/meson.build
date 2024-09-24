@@ -1,5 +1,5 @@
 project('ajantv2', ['c', 'cpp'],
-  version : '17.0.1',
+  version : '17.1.0',
   meson_version : '>= 0.54.0',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized',
@@ -30,10 +30,10 @@ endif
 
 conf_data = configuration_data()
 conf_data.set('AJA_NTV2_SDK_VERSION_MAJOR', '17')
-conf_data.set('AJA_NTV2_SDK_VERSION_MINOR', '0')
-conf_data.set('AJA_NTV2_SDK_VERSION_POINT', '1')
+conf_data.set('AJA_NTV2_SDK_VERSION_MINOR', '1')
+conf_data.set('AJA_NTV2_SDK_VERSION_POINT', '0')
 conf_data.set('AJA_NTV2_SDK_BUILD_NUMBER', '0')
-conf_data.set('AJA_NTV2_SDK_BUILD_DATETIME', '2024-02-15T17:41:48-08:00')
+conf_data.set('AJA_NTV2_SDK_BUILD_DATETIME', '2024-07-18T13:40:28-07:00')
 conf_data.set('AJA_NTV2_SDK_BUILD_TYPE', '')
 configure_file(input : 'ajantv2/includes/ntv2version.h.in',
                output : 'ntv2version.h',
@@ -58,6 +58,7 @@ ajantv2_sources = [
   'ajaanc/src/ancillarydata_timecode.cpp',
   'ajaanc/src/ancillarydata_timecode_atc.cpp',
   'ajaanc/src/ancillarydata_timecode_vitc.cpp',
+  'ajaanc/src/ancillarydata_hdmi_aux.cpp',
   'ajaanc/src/ancillarylist.cpp',
   'ajabase/common/audioutilities.cpp',
   'ajabase/common/buffer.cpp',
@@ -103,6 +104,7 @@ ajantv2_sources = [
   'ajabase/system/linux/processimpl.cpp',
   'ajabase/system/linux/threadimpl.cpp',
   'ajantv2/src/ntv2anc.cpp',
+  'ajantv2/src/ntv2aux.cpp',
   'ajantv2/src/ntv2audio.cpp',
   'ajantv2/src/ntv2autocirculate.cpp',
   'ajantv2/src/ntv2bitfile.cpp',
@@ -148,7 +150,6 @@ ajantv2_sources = [
   'ajantv2/src/ntv2task.cpp',
   'ajantv2/src/ntv2testpatterngen.cpp',
   'ajantv2/src/ntv2transcode.cpp',
-  'ajantv2/src/ntv2utf8.cpp',
   'ajantv2/src/ntv2utils.cpp',
   'ajantv2/src/ntv2version.cpp',
   'ajantv2/src/ntv2verticalfilter.cpp',
@@ -164,6 +165,7 @@ ajantv2_args = [
   '-DAJA_USE_CPLUSPLUS11',
   '-DNDEBUG',
   '-DNTV2_USE_CPLUSPLUS11',
+  '-DNTV2_PREVENT_PLUGIN_LOAD',
 ]
 
 ajantv2_inc = include_directories(

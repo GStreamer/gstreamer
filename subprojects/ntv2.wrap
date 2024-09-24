@@ -1,8 +1,8 @@
 [wrap-file]
-directory = libajantv2-ntv2_17_0_1
-source_url = https://github.com/aja-video/libajantv2/archive/refs/tags/ntv2_17_0_1.tar.gz
-source_filename = libajantv2-ntv2_17_0_1.tar.gz
-source_hash = a4be947e4e34dd8065b25082a681994067877966c2aaef8fbc9a25681f03ebe7
+directory = libajantv2-ntv2_17_1_0
+source_url = https://github.com/aja-video/libajantv2/archive/refs/tags/ntv2_17_1_0.tar.gz
+source_filename = libajantv2-ntv2_17_1_0.tar.gz
+source_hash = b19bd5d2eb2cb20552d084cd709549517875922c4a6960e077ce96bf2922b7dd
 patch_directory = ntv2
 
 [provide]

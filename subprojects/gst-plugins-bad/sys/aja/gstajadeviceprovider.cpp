@@ -25,7 +25,8 @@
 #include "gstajacommon.h"
 #include "gstajadeviceprovider.h"
 
-static GstDevice *gst_aja_device_new(NTV2DeviceInfo &device, gboolean video);
+static GstDevice *gst_aja_device_new(CNTV2Device &device, guint index,
+                                     gboolean video);
 
 G_DEFINE_TYPE(GstAjaDeviceProvider, gst_aja_device_provider,
               GST_TYPE_DEVICE_PROVIDER);
@@ -35,18 +36,19 @@ static void gst_aja_device_provider_init(GstAjaDeviceProvider *self) {}
 static GList *gst_aja_device_provider_probe(GstDeviceProvider *provider) {
   GList *ret = NULL;
 
-  CNTV2DeviceScanner scanner;
+  CNTV2Card device;
+  guint device_idx = 0;
 
-  NTV2DeviceInfoList devices = scanner.GetDeviceInfoList();
-  for (NTV2DeviceInfoList::iterator it = devices.begin(); it != devices.end();
-       it++) {
+  while (CNTV2DeviceScanner::GetDeviceAtIndex(device_idx, device)) {
+    auto features = device.features();
     // Skip non-input / non-output devices
-    if (it->numVidInputs == 0 && it->numVidOutputs == 0) continue;
+    if (features.GetNumVideoInputs() == 0 && features.GetNumVideoOutputs() == 0)
+      continue;
 
-    if (it->numVidInputs > 0)
-      ret = g_list_prepend(ret, gst_aja_device_new(*it, TRUE));
-    if (it->numVidOutputs > 0)
-      ret = g_list_prepend(ret, gst_aja_device_new(*it, FALSE));
+    if (features.GetNumVideoInputs() > 0)
+      ret = g_list_prepend(ret, gst_aja_device_new(device, device_idx, TRUE));
+    if (features.GetNumVideoOutputs() > 0)
+      ret = g_list_prepend(ret, gst_aja_device_new(device, device_idx, FALSE));
   }
 
   ret = g_list_reverse(ret);
@@ -98,7 +100,7 @@ static void gst_aja_device_class_init(GstAjaDeviceClass *klass) {
       GST_DEBUG_FUNCPTR(gst_aja_device_create_element);
 }
 
-static GstDevice *gst_aja_device_new(NTV2DeviceInfo &device,
+static GstDevice *gst_aja_device_new(CNTV2Card &device, guint index,
                                      gboolean is_capture) {
   GstDevice *ret;
   gchar *display_name;
@@ -107,52 +109,62 @@ static GstDevice *gst_aja_device_new(NTV2DeviceInfo &device,
   GstStructure *properties;
 
   device_class = is_capture ? "Audio/Video/Source" : "Audio/Video/Sink";
-  display_name = g_strdup_printf("AJA %s (%s)", device.deviceIdentifier.c_str(),
+  display_name = g_strdup_printf("AJA %s (%s)", device.GetDisplayName().c_str(),
                                  is_capture ? "Source" : "Sink");
 
-  caps = gst_ntv2_supported_caps(device.deviceID);
+  caps = gst_ntv2_supported_caps(device.GetDeviceID());
 
   properties = gst_structure_new_empty("properties");
 
+  auto features = device.features();
+  auto widget_ids = device.GetSupportedItems(kNTV2EnumsID_WidgetID);
   gst_structure_set(
-      properties, "device-id", G_TYPE_UINT, device.deviceID, "device-index",
-      G_TYPE_UINT, device.deviceIndex, "pci-slot", G_TYPE_UINT, device.pciSlot,
-      "serial-number", G_TYPE_UINT64, device.deviceSerialNumber,
-      "device-identifier", G_TYPE_STRING, device.deviceIdentifier.c_str(),
-      "num-audio-streams", G_TYPE_UINT, device.numAudioStreams,
-      "dual-link-support", G_TYPE_BOOLEAN, device.dualLinkSupport,
-      "sdi-3g-support", G_TYPE_BOOLEAN, device.sdi3GSupport, "sdi-12g-support",
-      G_TYPE_BOOLEAN, device.sdi12GSupport, "ip-support", G_TYPE_BOOLEAN,
-      device.ipSupport, "bi-directional-sdi", G_TYPE_BOOLEAN,
-      device.biDirectionalSDI, "ltc-in-support", G_TYPE_BOOLEAN,
-      device.ltcInSupport, "ltc-in-on-ref-port", G_TYPE_BOOLEAN,
-      device.ltcInOnRefPort, "2k-support", G_TYPE_BOOLEAN, device.has2KSupport,
-      "4k-support", G_TYPE_BOOLEAN, device.has4KSupport, "8k-support",
-      G_TYPE_BOOLEAN, device.has8KSupport, "multiformat-support",
-      G_TYPE_BOOLEAN, device.multiFormat, NULL);
+      properties, "device-id", G_TYPE_UINT, device.GetDeviceID(),
+      "device-index", G_TYPE_UINT, index, "serial-number", G_TYPE_UINT64,
+      device.GetSerialNumber(), "device-identifier", G_TYPE_STRING,
+      device.GetDisplayName().c_str(), "num-audio-streams", G_TYPE_UINT,
+      features.GetNumAudioSystems(), "dual-link-support", G_TYPE_BOOLEAN,
+      features.CanDoDualLink(), "sdi-3g-support", G_TYPE_BOOLEAN,
+      widget_ids.find(NTV2_Wgt3GSDIOut1) != widget_ids.end(), "sdi-12g-support",
+      G_TYPE_BOOLEAN, device.IsSupported(kDeviceCanDo12GSDI), "ip-support",
+      G_TYPE_BOOLEAN, device.IsSupported(kDeviceCanDoIP), "bi-directional-sdi",
+      G_TYPE_BOOLEAN, device.IsSupported(kDeviceHasBiDirectionalSDI),
+      "ltc-in-support", G_TYPE_BOOLEAN,
+      device.GetNumSupported(kDeviceGetNumLTCInputs) > 0, "ltc-in-on-ref-port",
+      G_TYPE_BOOLEAN, device.IsSupported(kDeviceCanDoLTCInOnRefPort),
+      "2k-support", G_TYPE_BOOLEAN, device.IsSupported(kDeviceCanDo2KVideo),
+      "4k-support", G_TYPE_BOOLEAN, device.IsSupported(kDeviceCanDo4KVideo),
+      "8k-support", G_TYPE_BOOLEAN, device.IsSupported(kDeviceCanDo8KVideo),
+      "multiformat-support", G_TYPE_BOOLEAN,
+      device.IsSupported(kDeviceCanDoMultiFormat), NULL);
 
   if (is_capture) {
     gst_structure_set(
-        properties, "num-vid-inputs", G_TYPE_UINT, device.numVidInputs,
-        "num-anlg-vid-inputs", G_TYPE_UINT, device.numAnlgVidInputs,
-        "num-hdmi-vid-inputs", G_TYPE_UINT, device.numHDMIVidInputs,
+        properties, "num-vid-inputs", G_TYPE_UINT, features.GetNumVideoInputs(),
+        "num-anlg-vid-inputs", G_TYPE_UINT, features.GetNumAnalogVideoInputs(),
+        "num-hdmi-vid-inputs", G_TYPE_UINT, features.GetNumHDMIVideoInputs(),
         "num-analog-audio-input-channels", G_TYPE_UINT,
-        device.numAnalogAudioInputChannels, "num-aes-audio-input-channels",
-        G_TYPE_UINT, device.numAESAudioInputChannels,
+        features.GetNumAnalogAudioInputChannels(),
+        "num-aes-audio-input-channels", G_TYPE_UINT,
+        features.GetNumAESAudioInputChannels(),
         "num-embedded-audio-input-channels", G_TYPE_UINT,
-        device.numEmbeddedAudioInputChannels, "num-hdmi-audio-input-channels",
-        G_TYPE_UINT, device.numHDMIAudioInputChannels, NULL);
+        features.GetNumEmbeddedAudioInputChannels(),
+        "num-hdmi-audio-input-channels", G_TYPE_UINT,
+        features.GetNumHDMIAudioInputChannels(), NULL);
   } else {
-    gst_structure_set(
-        properties, "num-vid-outputs", G_TYPE_UINT, device.numVidOutputs,
-        "num-anlg-vid-outputs", G_TYPE_UINT, device.numAnlgVidOutputs,
-        "num-hdmi-vid-outputs", G_TYPE_UINT, device.numHDMIVidOutputs,
-        "num-analog-audio-output-channels", G_TYPE_UINT,
-        device.numAnalogAudioOutputChannels, "num-aes-audio-output-channels",
-        G_TYPE_UINT, device.numAESAudioOutputChannels,
-        "num-embedded-audio-output-channels", G_TYPE_UINT,
-        device.numEmbeddedAudioOutputChannels, "num-hdmi-audio-output-channels",
-        G_TYPE_UINT, device.numHDMIAudioOutputChannels, NULL);
+    gst_structure_set(properties, "num-vid-outputs", G_TYPE_UINT,
+                      features.GetNumVideoOutputs(), "num-anlg-vid-outputs",
+                      G_TYPE_UINT, features.GetNumAnalogVideoOutputs(),
+                      "num-hdmi-vid-outputs", G_TYPE_UINT,
+                      features.GetNumHDMIVideoOutputs(),
+                      "num-analog-audio-output-channels", G_TYPE_UINT,
+                      features.GetNumAnalogAudioOutputChannels(),
+                      "num-aes-audio-output-channels", G_TYPE_UINT,
+                      features.GetNumAESAudioOutputChannels(),
+                      "num-embedded-audio-output-channels", G_TYPE_UINT,
+                      features.GetNumEmbeddedAudioOutputChannels(),
+                      "num-hdmi-audio-output-channels", G_TYPE_UINT,
+                      features.GetNumHDMIAudioOutputChannels(), NULL);
   }
 
   ret = GST_DEVICE(g_object_new(GST_TYPE_AJA_DEVICE, "display-name",
@@ -164,7 +176,7 @@ static GstDevice *gst_aja_device_new(NTV2DeviceInfo &device,
   gst_structure_free(properties);
 
   GST_AJA_DEVICE(ret)->is_capture = is_capture;
-  GST_AJA_DEVICE(ret)->device_index = device.deviceIndex;
+  GST_AJA_DEVICE(ret)->device_index = index;
 
   return ret;
 }
