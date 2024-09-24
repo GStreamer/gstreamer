@@ -73,15 +73,21 @@ typedef enum _GstTensorDataType
  * GstTensorDimOrder:
  * @GST_TENSOR_DIM_ORDER_ROW_MAJOR: elements along a row are consecutive in memory
  * @GST_TENSOR_DIM_ORDER_COL_MAJOR: elements along a column are consecutive in memory
+ * @GST_TENSOR_DIM_ORDER_INDEXED: elements storage follow the order defined by
+ *    #GstTensorDim.order_index This mean that when iterating the tensor
+ *    the dimension with index 0 is the most nested in the loops and consecutive
+ *    in memory, followed by other dimensions in the order defined by
+ *    #GstTensorDim.order_index.
  *
- * Indicate to read tensor from memory in row-major or column-major.
+ * Indicate to read tensor from memory in row-major or column-major order.
  *
  * Since: 1.26
  */
 typedef enum _GstTensorDimOrder
 {
   GST_TENSOR_DIM_ORDER_ROW_MAJOR,
-  GST_TENSOR_DIM_ORDER_COL_MAJOR
+  GST_TENSOR_DIM_ORDER_COL_MAJOR,
+  GST_TENSOR_DIM_ORDER_INDEXED
 } GstTensorDimOrder;
 
 /**
@@ -97,16 +103,32 @@ typedef enum _GstTensorLayout
   GST_TENSOR_LAYOUT_STRIDED
 } GstTensorLayout;
 
+
+/**
+ * GstTensorDim:
+ * @size: Size of the dimension
+ * @order_index: Dimension order in memory. @see_also #GST_TENSOR_DIM_ORDER_INDEXED
+ *
+ * Hold properties of the tensor's dimension
+ *
+ * Since: 1.26
+ */
+typedef struct _GstTensorDim
+{
+  gsize size;
+  gsize order_index;
+} GstTensorDim;
+
 /**
  * GstTensor:
  * @id: semantically identify the contents of the tensor
- * @num_dims: number of tensor dimensions
- * @dims: tensor dimensions
- * @dims_order: Indicate tensor elements layout in memory.
  * @layout: Indicate tensor layout
- * @type: #GstTensorDataType of tensor data
+ * @data_type: #GstTensorDataType of tensor data
  * @batch_size: Model batch size
  * @data: #GstBuffer holding tensor data
+ * @dims_order: Indicate tensor elements layout in memory.
+ * @num_dims: number of tensor dimensions
+ * @dims: (array length=num_dims): number of tensor dimensions
  *
  * Hold tensor data
  *
@@ -115,13 +137,13 @@ typedef enum _GstTensorLayout
 typedef struct _GstTensor
 {
   GQuark id;
-  GstTensorDimOrder dims_order;
   GstTensorLayout layout;
   GstTensorDataType data_type;
   gsize batch_size;
   GstBuffer *data;
+  GstTensorDimOrder dims_order;
   gsize num_dims;
-  gsize dims[];
+  GstTensorDim dims[];
 } GstTensor;
 
 G_BEGIN_DECLS

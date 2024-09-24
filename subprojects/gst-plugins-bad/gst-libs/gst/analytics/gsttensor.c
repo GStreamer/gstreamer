@@ -25,7 +25,7 @@
 #include "gsttensor.h"
 
 #define GST_TENSOR_SIZE(num_dims) \
-  (sizeof (GstTensor) + (sizeof (gsize) * num_dims))
+  (sizeof (GstTensor) + (sizeof (GstTensorDim) * num_dims))
 
 G_DEFINE_BOXED_TYPE (GstTensor, gst_tensor,
     (GBoxedCopyFunc) gst_tensor_copy, (GBoxedFreeFunc) gst_tensor_free);

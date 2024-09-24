@@ -353,7 +353,7 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
       tensor->batch_size = 1;
 
       for (size_t j = 0; j < tensorShape.size (); ++j)
-        tensor->dims[j] = tensorShape[j];
+        tensor->dims[j].size = tensorShape[j];
 
       size_t numElements =
           outputTensor.GetTensorTypeAndShapeInfo ().GetElementCount ();
