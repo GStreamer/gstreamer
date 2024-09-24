@@ -221,6 +221,7 @@ class LauncherConfig(Loggable):
         self.num_jobs = max(multiprocessing.cpu_count(), 1)
         self.dest = None
         self._using_default_paths = False
+        self.keep_logs = False
         # paths passed with --media-path, and not defined by a testsuite
         self.user_paths = []
         self.paths = []
@@ -266,6 +267,9 @@ class LauncherConfig(Loggable):
             self.logsdir = "stdout"
             self.debug = True
             self.num_jobs = 1
+
+        if self.xunit_file:
+            self.keep_logs = True
 
         # other output directories
         if self.logsdir in ['stdout', 'stderr']:
@@ -520,6 +524,9 @@ class LauncherConfig(Loggable):
                             help="Disable retrying on failure, event for known to be flaky tests.")
         parser.add_argument('--html', dest="html", action="store_true",
                             help="Write logs as html")
+        parser.add_argument("--keep-logs", dest="keep_logs",
+                            action="store_true",
+                            help="Keep the logs in the output directory on success, by default logs are removed unless the test passes")
         dir_group = parser.add_argument_group(
             "Directories and files to be used by the launcher")
         dir_group.add_argument("-M", "--main-dir", dest="main_dir",
