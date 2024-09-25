@@ -500,11 +500,6 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   guint i;
   mfxExtVideoSignalInfo ext_vsi;
 
-  if (thiz->initialized) {
-    GST_DEBUG_OBJECT (thiz, "Already initialized");
-    return TRUE;
-  }
-
   if (!thiz->context) {
     GST_WARNING_OBJECT (thiz, "No MSDK Context");
     return FALSE;
@@ -522,6 +517,12 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   }
 
   GST_OBJECT_LOCK (thiz);
+  if (thiz->initialized) {
+    GST_DEBUG_OBJECT (thiz, "Already initialized");
+    GST_OBJECT_UNLOCK (thiz);
+    return TRUE;
+  }
+
   session = gst_msdk_context_get_session (thiz->context);
   thiz->codename = msdk_get_platform_codename (session);
 
