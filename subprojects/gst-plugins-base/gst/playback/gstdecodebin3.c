@@ -1133,6 +1133,8 @@ remove_input_stream (GstDecodebin3 * dbin, DecodebinInputStream * stream)
     }
     if (stream->buffer_probe_id)
       gst_pad_remove_probe (stream->srcpad, stream->buffer_probe_id);
+    if (stream->output_event_probe_id)
+      gst_pad_remove_probe (stream->srcpad, stream->output_event_probe_id);
     gst_object_unref (stream->srcpad);
   }
 
