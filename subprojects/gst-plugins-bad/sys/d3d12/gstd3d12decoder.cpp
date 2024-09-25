@@ -741,7 +741,10 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
   align.padding_right = session->aligned_width - info->width;
   align.padding_bottom = session->aligned_height - info->height;
 
-  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+  if (gst_d3d12_device_non_zeroed_supported (decoder->device))
+    heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
   if (!session->reference_only)
     heap_flags |= D3D12_HEAP_FLAG_SHARED;
 
@@ -775,11 +778,15 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
     session->output_pool = gst_d3d12_buffer_pool_new (decoder->device);
     config = gst_buffer_pool_get_config (session->output_pool);
 
+    heap_flags = D3D12_HEAP_FLAG_NONE;
+    if (gst_d3d12_device_non_zeroed_supported (decoder->device))
+      heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
     params = gst_d3d12_allocation_params_new (decoder->device, info,
         GST_D3D12_ALLOCATION_FLAG_DEFAULT,
         D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
         D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED | D3D12_HEAP_FLAG_SHARED);
+        heap_flags | D3D12_HEAP_FLAG_SHARED);
     gst_d3d12_allocation_params_alignment (params, &align);
     gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
     gst_d3d12_allocation_params_free (params);
@@ -1285,9 +1292,11 @@ gst_d3d12_decoder_ensure_staging_texture (GstD3D12Decoder * self)
   D3D12_HEAP_PROPERTIES heap_prop = CD3DX12_HEAP_PROPERTIES
       (D3D12_HEAP_TYPE_READBACK);
   D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer (size);
+  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+  if (gst_d3d12_device_non_zeroed_supported (self->device))
+    heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
 
-  hr = device->CreateCommittedResource (&heap_prop,
-      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+  hr = device->CreateCommittedResource (&heap_prop, heap_flags,
       &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS (&staging));
   if (!gst_d3d12_result (hr, self->device))
     return FALSE;

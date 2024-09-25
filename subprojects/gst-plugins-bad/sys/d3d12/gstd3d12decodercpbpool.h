@@ -37,7 +37,7 @@ GstD3D12DecoderCpbPool * gst_d3d12_decoder_cpb_pool_new (ID3D12Device * device);
 HRESULT                  gst_d3d12_decoder_cpb_pool_acquire (GstD3D12DecoderCpbPool * pool,
                                                              gpointer data,
                                                              gsize size,
-                                                            GstD3D12DecoderCpb ** cpb);
+                                                             GstD3D12DecoderCpb ** cpb);
 
 GstD3D12DecoderCpb *     gst_d3d12_decoder_cpb_ref (GstD3D12DecoderCpb * cpb);
 

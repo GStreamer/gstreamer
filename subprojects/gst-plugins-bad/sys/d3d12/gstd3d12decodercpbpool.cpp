@@ -138,6 +138,7 @@ struct GstD3D12DecoderCpbPoolPrivate
   UINT64 buffer_id = 0;
   UINT64 max_alloc_size = 0;
   guint allocated_ca_size = 0;
+  bool supports_non_zeroed = false;
 
   std::mutex lock;
 };
@@ -145,7 +146,6 @@ struct GstD3D12DecoderCpbPoolPrivate
 struct _GstD3D12DecoderCpbPool
 {
   GstObject parent;
-  GstD3D12Device *device;
   GstD3D12DecoderCpbPoolPrivate *priv;
 };
 /* *INDENT-ON* */
@@ -181,7 +181,6 @@ gst_d3d12_decoder_cpb_pool_finalize (GObject * object)
   auto self = GST_D3D12_DECODER_CPB_POOL (object);
 
   delete self->priv;
-  gst_clear_object (&self->device);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -197,6 +196,13 @@ gst_d3d12_decoder_cpb_pool_new (ID3D12Device * device)
 
   auto priv = self->priv;
   priv->device = device;
+
+  D3D12_FEATURE_DATA_D3D12_OPTIONS7 options7 = { };
+  auto hr =
+      device->CheckFeatureSupport (D3D12_FEATURE_D3D12_OPTIONS7, &options7,
+      sizeof (options7));
+  if (SUCCEEDED (hr))
+    priv->supports_non_zeroed = true;
 
   return self;
 }
@@ -286,13 +292,17 @@ gst_d3d12_decoder_cpb_pool_acquire (GstD3D12DecoderCpbPool * pool,
     D3D12_HEAP_PROPERTIES heap_prop =
         CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
     D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer (alloc_size);
+    D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+    if (priv->supports_non_zeroed)
+      heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
     ComPtr < ID3D12Resource > resource;
 
     GST_DEBUG_OBJECT (pool, "Allocating new buffer, size %" G_GUINT64_FORMAT,
         alloc_size);
 
     auto hr = priv->device->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED, &desc,
+        heap_flags, &desc,
         D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS (&resource));
     if (FAILED (hr)) {
       GST_ERROR_OBJECT (pool, "Couldn't allocate upload resource");

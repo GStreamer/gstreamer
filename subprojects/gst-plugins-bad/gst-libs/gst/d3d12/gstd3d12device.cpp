@@ -271,6 +271,7 @@ struct DeviceInner
   guint vendor_id = 0;
   std::string description;
   gint64 adapter_luid = 0;
+  gboolean non_zeroed_supported = FALSE;
 
   HANDLE dev_removed_monitor_handle = nullptr;
   HANDLE dev_removed_event;
@@ -1407,6 +1408,16 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
       priv->dev_removed_event, on_device_removed, priv.get (), INFINITE,
       WT_EXECUTEONLYONCE);
 
+  /* D3D12_HEAP_FLAG_CREATE_NOT_ZEROED was introduced as of Windows 10 May 2020
+   * update, and supported if D3D12_FEATURE_D3D12_OPTIONS7 check is succeeded */
+  {
+    D3D12_FEATURE_DATA_D3D12_OPTIONS7 options7 = { };
+    hr = device->CheckFeatureSupport (D3D12_FEATURE_D3D12_OPTIONS7, &options7,
+        sizeof (options7));
+    if (SUCCEEDED (hr))
+      priv->non_zeroed_supported = TRUE;
+  }
+
   return self;
 
 error:
@@ -2228,4 +2239,12 @@ gst_d3d12_device_get_sampler_state (GstD3D12Device * device,
   }
 
   return S_OK;
+}
+
+gboolean
+gst_d3d12_device_non_zeroed_supported (GstD3D12Device * device)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
+
+  return device->priv->inner->non_zeroed_supported;
 }

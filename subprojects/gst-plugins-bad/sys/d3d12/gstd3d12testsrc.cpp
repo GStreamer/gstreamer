@@ -547,9 +547,12 @@ setup_snow_render (GstD3D12TestSrc * self, RenderContext * ctx,
   D3D12_RESOURCE_DESC buffer_desc =
       CD3DX12_RESOURCE_DESC::Buffer (sizeof (UvVertexData) * 4
       + sizeof (indices));
+  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+  if (gst_d3d12_device_non_zeroed_supported (self->device))
+    heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
   ComPtr < ID3D12Resource > vertex_index_upload;
-  hr = device->CreateCommittedResource (&heap_prop,
-      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+  hr = device->CreateCommittedResource (&heap_prop, heap_flags,
       &buffer_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
       IID_PPV_ARGS (&vertex_index_upload));
   if (!gst_d3d12_result (hr, self->device)) {
@@ -571,8 +574,7 @@ setup_snow_render (GstD3D12TestSrc * self, RenderContext * ctx,
 
   heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
   ComPtr < ID3D12Resource > vertex_index_buf;
-  hr = device->CreateCommittedResource (&heap_prop,
-      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+  hr = device->CreateCommittedResource (&heap_prop, heap_flags,
       &buffer_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
       IID_PPV_ARGS (&vertex_index_buf));
   if (!gst_d3d12_result (hr, self->device)) {
@@ -938,9 +940,12 @@ setup_smpte_render (GstD3D12TestSrc * self, RenderContext * ctx)
   D3D12_RESOURCE_DESC buffer_desc =
       CD3DX12_RESOURCE_DESC::Buffer (sizeof (ColorVertexData) * 4 * 20
       + sizeof (WORD) * 6 * 20);
+  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+  if (gst_d3d12_device_non_zeroed_supported (self->device))
+    heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
   ComPtr < ID3D12Resource > vertex_index_upload;
-  hr = device->CreateCommittedResource (&heap_prop,
-      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+  hr = device->CreateCommittedResource (&heap_prop, heap_flags,
       &buffer_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
       IID_PPV_ARGS (&vertex_index_upload));
   if (!gst_d3d12_result (hr, self->device)) {
@@ -963,8 +968,7 @@ setup_smpte_render (GstD3D12TestSrc * self, RenderContext * ctx)
 
   heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
   ComPtr < ID3D12Resource > vertex_index_buf;
-  hr = device->CreateCommittedResource (&heap_prop,
-      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+  hr = device->CreateCommittedResource (&heap_prop, heap_flags,
       &buffer_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
       IID_PPV_ARGS (&vertex_index_buf));
   if (!gst_d3d12_result (hr, self->device)) {
@@ -1119,9 +1123,12 @@ setup_checker_render (GstD3D12TestSrc * self, RenderContext * ctx,
   D3D12_RESOURCE_DESC buffer_desc =
       CD3DX12_RESOURCE_DESC::Buffer (sizeof (UvVertexData) * 4
       + sizeof (indices));
+  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+  if (gst_d3d12_device_non_zeroed_supported (self->device))
+    heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
   ComPtr < ID3D12Resource > vertex_index_upload;
-  hr = device->CreateCommittedResource (&heap_prop,
-      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+  hr = device->CreateCommittedResource (&heap_prop, heap_flags,
       &buffer_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
       IID_PPV_ARGS (&vertex_index_upload));
   if (!gst_d3d12_result (hr, self->device)) {
@@ -1143,8 +1150,7 @@ setup_checker_render (GstD3D12TestSrc * self, RenderContext * ctx,
 
   heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
   ComPtr < ID3D12Resource > vertex_index_buf;
-  hr = device->CreateCommittedResource (&heap_prop,
-      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+  hr = device->CreateCommittedResource (&heap_prop, heap_flags,
       &buffer_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
       IID_PPV_ARGS (&vertex_index_buf));
   if (!gst_d3d12_result (hr, self->device)) {
@@ -1611,7 +1617,10 @@ gst_d3d12_test_src_setup_context (GstD3D12TestSrc * self, GstCaps * caps)
       D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
       D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
   D3D12_CLEAR_VALUE clear_value = { };
-  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+  if (gst_d3d12_device_non_zeroed_supported (self->device))
+    heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
   clear_value.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
   clear_value.Color[0] = 0.0f;
   clear_value.Color[1] = 0.0f;

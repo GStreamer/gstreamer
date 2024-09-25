@@ -447,10 +447,12 @@ struct BackgroundRender
     D3D12_RESOURCE_DESC buffer_desc =
         CD3DX12_RESOURCE_DESC::Buffer (sizeof (VertexData) * 4 +
         sizeof (indices));
+    D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+    if (gst_d3d12_device_non_zeroed_supported (device))
+      heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
 
     hr = device_handle->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED, &buffer_desc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
+        heap_flags, &buffer_desc, D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr, IID_PPV_ARGS (&vertex_index_upload));
     if (!gst_d3d12_result (hr, device)) {
       GST_ERROR_OBJECT (device, "Couldn't create vertex upload buf");
@@ -471,7 +473,7 @@ struct BackgroundRender
 
     heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
     hr = device_handle->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED, &buffer_desc,
+        heap_flags, &buffer_desc,
         D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS (&vertex_index_buf));
     if (!gst_d3d12_result (hr, device)) {
       GST_ERROR_OBJECT (device, "Couldn't create index buffer");

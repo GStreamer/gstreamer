@@ -413,9 +413,12 @@ gst_d3d12_memory_ensure_staging_resource (GstD3D12Memory * dmem)
       CD3DX12_HEAP_PROPERTIES (D3D12_CPU_PAGE_PROPERTY_WRITE_BACK,
       D3D12_MEMORY_POOL_L0);
   D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer (priv->size);
+  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+  if (gst_d3d12_device_non_zeroed_supported (dmem->device))
+    heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
   ComPtr < ID3D12Resource > staging;
-  hr = device->CreateCommittedResource (&prop,
-      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+  hr = device->CreateCommittedResource (&prop, heap_flags,
       &desc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS (&staging));
   if (!gst_d3d12_result (hr, dmem->device)) {
     GST_ERROR_OBJECT (dmem->device, "Couldn't create staging resource");

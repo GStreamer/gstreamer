@@ -215,6 +215,10 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
 
   ComPtr < ID3D12Resource > staging;
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout;
+  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+  if (gst_d3d12_device_non_zeroed_supported (self->device))
+    heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
   if (!is_d3d12) {
     auto vmeta = gst_buffer_get_video_meta (buf);
 
@@ -229,8 +233,7 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
         CD3DX12_RESOURCE_DESC::Tex2D (DXGI_FORMAT_B8G8R8A8_UNORM, vmeta->width,
         vmeta->height, 1, 1);
 
-    auto hr = device->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+    auto hr = device->CreateCommittedResource (&heap_prop, heap_flags,
         &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
         IID_PPV_ARGS (&texture));
     if (!gst_d3d12_result (hr, self->device)) {
@@ -244,8 +247,7 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
 
     heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
     desc = CD3DX12_RESOURCE_DESC::Buffer (size);
-    hr = device->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+    hr = device->CreateCommittedResource (&heap_prop, heap_flags,
         &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
         IID_PPV_ARGS (&staging));
     if (!gst_d3d12_result (hr, self->device)) {
@@ -333,8 +335,7 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
       CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
   D3D12_RESOURCE_DESC desc =
       CD3DX12_RESOURCE_DESC::Buffer (sizeof (VertexData) * 4);
-  auto hr = device->CreateCommittedResource (&heap_prop,
-      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+  auto hr = device->CreateCommittedResource (&heap_prop, heap_flags,
       &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
       IID_PPV_ARGS (&vertex_buf));
   if (!gst_d3d12_result (hr, self->device)) {
@@ -547,9 +548,12 @@ gst_d3d12_overlay_compositor_setup_shader (GstD3D12OverlayCompositor * self)
       CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
   D3D12_RESOURCE_DESC buffer_desc =
       CD3DX12_RESOURCE_DESC::Buffer (sizeof (indices));
+  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+  if (gst_d3d12_device_non_zeroed_supported (self->device))
+    heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
   ComPtr < ID3D12Resource > index_buf;
-  hr = device->CreateCommittedResource (&heap_prop,
-      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+  hr = device->CreateCommittedResource (&heap_prop, heap_flags,
       &buffer_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
       IID_PPV_ARGS (&index_buf));
   if (!gst_d3d12_result (hr, self->device)) {

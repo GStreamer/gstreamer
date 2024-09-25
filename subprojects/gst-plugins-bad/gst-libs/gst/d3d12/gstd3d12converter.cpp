@@ -897,6 +897,10 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   D3D12_RESOURCE_DESC resource_desc;
   CD3DX12_RANGE range (0, 0);
   guint8 *data;
+  D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+  if (gst_d3d12_device_non_zeroed_supported (self->device))
+    heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
   {
     guint vertex_index_size = g_vertex_buf_size + g_index_buf_size;
     vertex_index_size = GST_ROUND_UP_N (vertex_index_size,
@@ -907,8 +911,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
     resource_desc =
         CD3DX12_RESOURCE_DESC::Buffer (vertex_index_size + const_size);
-    hr = device->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+    hr = device->CreateCommittedResource (&heap_prop, heap_flags,
         &resource_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
         IID_PPV_ARGS (&priv->shader_buf));
     if (!gst_d3d12_result (hr, self->device)) {
@@ -928,8 +931,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
 
     heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
     hr = device->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-        &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+        heap_flags, &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
         IID_PPV_ARGS (&upload_buf));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create vertex buffer upload");
@@ -954,8 +956,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
         GAMMA_LUT_SIZE, 1, 1);
 
     hr = device->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-        &resource_desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
+        heap_flags, &resource_desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
         IID_PPV_ARGS (&priv->gamma_dec_lut));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create gamma decoding LUT");
@@ -963,8 +964,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     }
 
     hr = device->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-        &resource_desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
+        heap_flags, &resource_desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
         IID_PPV_ARGS (&priv->gamma_enc_lut));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create gamma encoding LUT");
@@ -979,8 +979,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     resource_desc = CD3DX12_RESOURCE_DESC::Buffer (gamma_lut_size);
 
     hr = device->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-        &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+        heap_flags, &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
         IID_PPV_ARGS (&gamma_dec_lut_upload));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create gamma decoding LUT upload");
@@ -988,8 +987,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     }
 
     hr = device->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-        &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+        heap_flags, &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
         IID_PPV_ARGS (&gamma_enc_lut_upload));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create gamma encoding LUT upload");
