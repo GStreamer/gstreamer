@@ -12244,33 +12244,25 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           case FOURCC_avc1:
           case FOURCC_avc3:
           {
-            guint len = QT_UINT32 (stsd_entry_data);
+            guint32 len = QT_UINT32 (stsd_entry_data);
             len = len <= 0x56 ? 0 : len - 0x56;
             const guint8 *avc_data = stsd_entry_data + 0x56;
 
             /* find avcC */
-            while (len >= 0x8) {
-              guint size;
+            while (len >= 8) {
+              guint32 size = QT_UINT32 (avc_data);
 
-              if (QT_UINT32 (avc_data) <= 0x8)
-                size = 0;
-              else if (QT_UINT32 (avc_data) <= len)
-                size = QT_UINT32 (avc_data) - 0x8;
-              else
-                size = len - 0x8;
+              if (size < 8 || size > len)
+                break;
 
-              /* No real data, so skip */
-              if (size < 1) {
-                len -= 8;
-                avc_data += 8;
-                continue;
-              }
-
-              switch (QT_FOURCC (avc_data + 0x4)) {
+              switch (QT_FOURCC (avc_data + 4)) {
                 case FOURCC_avcC:
                 {
                   /* parse, if found */
                   GstBuffer *buf;
+
+                  if (size < 8 + 1)
+                    break;
 
                   GST_DEBUG_OBJECT (qtdemux, "found avcC codec_data in stsd");
 
@@ -12278,9 +12270,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                    * are the fourcc, the next 1 byte is the version, and the
                    * subsequent bytes are profile_tier_level structure like data. */
                   gst_codec_utils_h264_caps_set_level_and_profile (entry->caps,
-                      avc_data + 8 + 1, size - 1);
-                  buf = gst_buffer_new_and_alloc (size);
-                  gst_buffer_fill (buf, 0, avc_data + 0x8, size);
+                      avc_data + 8 + 1, size - 8 - 1);
+                  buf = gst_buffer_new_and_alloc (size - 8);
+                  gst_buffer_fill (buf, 0, avc_data + 8, size - 8);
                   gst_caps_set_simple (entry->caps,
                       "codec_data", GST_TYPE_BUFFER, buf, NULL);
                   gst_buffer_unref (buf);
@@ -12291,6 +12283,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                 {
                   GstBuffer *buf;
 
+                  if (size < 8 + 40 + 1)
+                    break;
+
                   GST_DEBUG_OBJECT (qtdemux, "found strf codec_data in stsd");
 
                   /* First 4 bytes are the length of the atom, the next 4 bytes
@@ -12298,17 +12293,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                    * next 1 byte is the version, and the
                    * subsequent bytes are sequence parameter set like data. */
 
-                  size -= 40;   /* we'll be skipping BITMAPINFOHEADER */
-                  if (size > 1) {
-                    gst_codec_utils_h264_caps_set_level_and_profile
-                        (entry->caps, avc_data + 8 + 40 + 1, size - 1);
+                  gst_codec_utils_h264_caps_set_level_and_profile
+                      (entry->caps, avc_data + 8 + 40 + 1, size - 8 - 40 - 1);
 
-                    buf = gst_buffer_new_and_alloc (size);
-                    gst_buffer_fill (buf, 0, avc_data + 8 + 40, size);
-                    gst_caps_set_simple (entry->caps,
-                        "codec_data", GST_TYPE_BUFFER, buf, NULL);
-                    gst_buffer_unref (buf);
-                  }
+                  buf = gst_buffer_new_and_alloc (size - 8 - 40);
+                  gst_buffer_fill (buf, 0, avc_data + 8 + 40, size - 8 - 40);
+                  gst_caps_set_simple (entry->caps,
+                      "codec_data", GST_TYPE_BUFFER, buf, NULL);
+                  gst_buffer_unref (buf);
                   break;
                 }
                 case FOURCC_btrt:
@@ -12316,11 +12308,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                   guint avg_bitrate, max_bitrate;
 
                   /* bufferSizeDB, maxBitrate and avgBitrate - 4 bytes each */
-                  if (size < 12)
+                  if (size < 8 + 12)
                     break;
 
-                  max_bitrate = QT_UINT32 (avc_data + 0xc);
-                  avg_bitrate = QT_UINT32 (avc_data + 0x10);
+                  max_bitrate = QT_UINT32 (avc_data + 8 + 4);
+                  avg_bitrate = QT_UINT32 (avc_data + 8 + 8);
 
                   if (!max_bitrate && !avg_bitrate)
                     break;
@@ -12352,8 +12344,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                   break;
               }
 
-              len -= size + 8;
-              avc_data += size + 8;
+              len -= size;
+              avc_data += size;
             }
 
             break;
@@ -12364,33 +12356,25 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           case FOURCC_dvh1:
           case FOURCC_dvhe:
           {
-            guint len = QT_UINT32 (stsd_entry_data);
+            guint32 len = QT_UINT32 (stsd_entry_data);
             len = len <= 0x56 ? 0 : len - 0x56;
             const guint8 *hevc_data = stsd_entry_data + 0x56;
 
             /* find hevc */
-            while (len >= 0x8) {
-              guint size;
+            while (len >= 8) {
+              guint32 size = QT_UINT32 (hevc_data);
 
-              if (QT_UINT32 (hevc_data) <= 0x8)
-                size = 0;
-              else if (QT_UINT32 (hevc_data) <= len)
-                size = QT_UINT32 (hevc_data) - 0x8;
-              else
-                size = len - 0x8;
+              if (size < 8 || size > len)
+                break;
 
-              /* No real data, so skip */
-              if (size < 1) {
-                len -= 8;
-                hevc_data += 8;
-                continue;
-              }
-
-              switch (QT_FOURCC (hevc_data + 0x4)) {
+              switch (QT_FOURCC (hevc_data + 4)) {
                 case FOURCC_hvcC:
                 {
                   /* parse, if found */
                   GstBuffer *buf;
+
+                  if (size < 8 + 1)
+                    break;
 
                   GST_DEBUG_OBJECT (qtdemux, "found hvcC codec_data in stsd");
 
@@ -12398,10 +12382,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                    * are the fourcc, the next 1 byte is the version, and the
                    * subsequent bytes are sequence parameter set like data. */
                   gst_codec_utils_h265_caps_set_level_tier_and_profile
-                      (entry->caps, hevc_data + 8 + 1, size - 1);
+                      (entry->caps, hevc_data + 8 + 1, size - 8 - 1);
 
-                  buf = gst_buffer_new_and_alloc (size);
-                  gst_buffer_fill (buf, 0, hevc_data + 0x8, size);
+                  buf = gst_buffer_new_and_alloc (size - 8);
+                  gst_buffer_fill (buf, 0, hevc_data + 8, size - 8);
                   gst_caps_set_simple (entry->caps,
                       "codec_data", GST_TYPE_BUFFER, buf, NULL);
                   gst_buffer_unref (buf);
@@ -12410,8 +12394,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                 default:
                   break;
               }
-              len -= size + 8;
-              hevc_data += size + 8;
+              len -= size;
+              hevc_data += size;
             }
             break;
           }
@@ -12791,36 +12775,25 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           }
           case FOURCC_vc_1:
           {
-            guint len = QT_UINT32 (stsd_entry_data);
+            guint32 len = QT_UINT32 (stsd_entry_data);
             len = len <= 0x56 ? 0 : len - 0x56;
             const guint8 *vc1_data = stsd_entry_data + 0x56;
 
             /* find dvc1 */
             while (len >= 8) {
-              guint size;
+              guint32 size = QT_UINT32 (vc1_data);
 
-              if (QT_UINT32 (vc1_data) <= 8)
-                size = 0;
-              else if (QT_UINT32 (vc1_data) <= len)
-                size = QT_UINT32 (vc1_data) - 8;
-              else
-                size = len - 8;
+              if (size < 8 || size > len)
+                break;
 
-              /* No real data, so skip */
-              if (size < 1) {
-                len -= 8;
-                vc1_data += 8;
-                continue;
-              }
-
-              switch (QT_FOURCC (vc1_data + 0x4)) {
+              switch (QT_FOURCC (vc1_data + 4)) {
                 case GST_MAKE_FOURCC ('d', 'v', 'c', '1'):
                 {
                   GstBuffer *buf;
 
                   GST_DEBUG_OBJECT (qtdemux, "found dvc1 codec_data in stsd");
-                  buf = gst_buffer_new_and_alloc (size);
-                  gst_buffer_fill (buf, 0, vc1_data + 8, size);
+                  buf = gst_buffer_new_and_alloc (size - 8);
+                  gst_buffer_fill (buf, 0, vc1_data + 8, size - 8);
                   gst_caps_set_simple (entry->caps,
                       "codec_data", GST_TYPE_BUFFER, buf, NULL);
                   gst_buffer_unref (buf);
@@ -12829,36 +12802,25 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                 default:
                   break;
               }
-              len -= size + 8;
-              vc1_data += size + 8;
+              len -= size;
+              vc1_data += size;
             }
             break;
           }
           case FOURCC_av01:
           {
-            guint len = QT_UINT32 (stsd_entry_data);
+            guint32 len = QT_UINT32 (stsd_entry_data);
             len = len <= 0x56 ? 0 : len - 0x56;
             const guint8 *av1_data = stsd_entry_data + 0x56;
 
             /* find av1C */
-            while (len >= 0x8) {
-              guint size;
+            while (len >= 8) {
+              guint32 size = QT_UINT32 (av1_data);
 
-              if (QT_UINT32 (av1_data) <= 0x8)
-                size = 0;
-              else if (QT_UINT32 (av1_data) <= len)
-                size = QT_UINT32 (av1_data) - 0x8;
-              else
-                size = len - 0x8;
+              if (size < 8 || size > len)
+                break;
 
-              /* No real data, so skip */
-              if (size < 1) {
-                len -= 8;
-                av1_data += 8;
-                continue;
-              }
-
-              switch (QT_FOURCC (av1_data + 0x4)) {
+              switch (QT_FOURCC (av1_data + 4)) {
                 case FOURCC_av1C:
                 {
                   /* parse, if found */
@@ -12868,7 +12830,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                       "found av1C codec_data in stsd of size %d", size);
 
                   /* not enough data, just ignore and hope for the best */
-                  if (size < 4)
+                  if (size < 8 + 4)
                     break;
 
                   /* Content is:
@@ -12917,9 +12879,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                             (gint) (pres_delay_field & 0x0F) + 1, NULL);
                       }
 
-                      buf = gst_buffer_new_and_alloc (size);
+                      buf = gst_buffer_new_and_alloc (size - 8);
                       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
-                      gst_buffer_fill (buf, 0, av1_data + 8, size);
+                      gst_buffer_fill (buf, 0, av1_data + 8, size - 8);
                       gst_caps_set_simple (entry->caps,
                           "codec_data", GST_TYPE_BUFFER, buf, NULL);
                       gst_buffer_unref (buf);
@@ -12937,8 +12899,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                   break;
               }
 
-              len -= size + 8;
-              av1_data += size + 8;
+              len -= size;
+              av1_data += size;
             }
 
             break;
@@ -12949,29 +12911,18 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
              * vp08, vp09, and vp10 fourcc. */
           case FOURCC_vp09:
           {
-            guint len = QT_UINT32 (stsd_entry_data);
+            guint32 len = QT_UINT32 (stsd_entry_data);
             len = len <= 0x56 ? 0 : len - 0x56;
             const guint8 *vpcc_data = stsd_entry_data + 0x56;
 
             /* find vpcC */
-            while (len >= 0x8) {
-              guint size;
+            while (len >= 8) {
+              guint32 size = QT_UINT32 (vpcc_data);
 
-              if (QT_UINT32 (vpcc_data) <= 0x8)
-                size = 0;
-              else if (QT_UINT32 (vpcc_data) <= len)
-                size = QT_UINT32 (vpcc_data) - 0x8;
-              else
-                size = len - 0x8;
+              if (size < 8 || size > len)
+                break;
 
-              /* No real data, so skip */
-              if (size < 1) {
-                len -= 8;
-                vpcc_data += 8;
-                continue;
-              }
-
-              switch (QT_FOURCC (vpcc_data + 0x4)) {
+              switch (QT_FOURCC (vpcc_data + 4)) {
                 case FOURCC_vpcC:
                 {
                   const gchar *profile_str = NULL;
@@ -12987,7 +12938,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
                   /* the meaning of "size" is length of the atom body, excluding
                    * atom length and fourcc fields */
-                  if (size < 12)
+                  if (size < 8 + 12)
                     break;
 
                   /* Content is:
@@ -13093,8 +13044,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                   break;
               }
 
-              len -= size + 8;
-              vpcc_data += size + 8;
+              len -= size;
+              vpcc_data += size;
             }
 
             break;
@@ -13435,7 +13386,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         case FOURCC_wma_:
         {
-          guint len = QT_UINT32 (stsd_entry_data);
+          guint32 len = QT_UINT32 (stsd_entry_data);
           len = len <= offset ? 0 : len - offset;
           const guint8 *wfex_data = stsd_entry_data + offset;
           const gchar *codec_name = NULL;
@@ -13460,21 +13411,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
           /* find wfex */
           while (len >= 8) {
-            guint size;
+            guint32 size = QT_UINT32 (wfex_data);
 
-            if (QT_UINT32 (wfex_data) <= 0x8)
-              size = 0;
-            else if (QT_UINT32 (wfex_data) <= len)
-              size = QT_UINT32 (wfex_data) - 8;
-            else
-              size = len - 8;
-
-            /* No real data, so skip */
-            if (size < 1) {
-              len -= 8;
-              wfex_data += 8;
-              continue;
-            }
+            if (size < 8 || size > len)
+              break;
 
             switch (QT_FOURCC (wfex_data + 4)) {
               case GST_MAKE_FOURCC ('w', 'f', 'e', 'x'):
@@ -13519,12 +13459,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                     "width", G_TYPE_INT, wfex.wBitsPerSample,
                     "depth", G_TYPE_INT, wfex.wBitsPerSample, NULL);
 
-                if (size > wfex.cbSize) {
+                if (size > 8 + wfex.cbSize) {
                   GstBuffer *buf;
 
-                  buf = gst_buffer_new_and_alloc (size - wfex.cbSize);
+                  buf = gst_buffer_new_and_alloc (size - 8 - wfex.cbSize);
                   gst_buffer_fill (buf, 0, wfex_data + 8 + wfex.cbSize,
-                      size - wfex.cbSize);
+                      size - 8 - wfex.cbSize);
                   gst_caps_set_simple (entry->caps,
                       "codec_data", GST_TYPE_BUFFER, buf, NULL);
                   gst_buffer_unref (buf);
@@ -13541,8 +13481,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               default:
                 break;
             }
-            len -= size + 8;
-            wfex_data += size + 8;
+            len -= size;
+            wfex_data += size;
           }
           break;
         }
