@@ -3364,6 +3364,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   gint i;
   guint8 *data;
   guint entry_size, dur_offset, size_offset, flags_offset = 0, ct_offset = 0;
+  guint new_n_samples;
   QtDemuxSample *sample;
   gboolean ismv = FALSE;
   gint64 initial_offset;
@@ -3475,14 +3476,13 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     goto fail;
   data = (guint8 *) gst_byte_reader_peek_data_unchecked (trun);
 
-  if (stream->n_samples + samples_count >=
-      QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample))
+  if (!g_uint_checked_add (&new_n_samples, stream->n_samples, samples_count) ||
+      new_n_samples >= QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample))
     goto index_too_big;
 
   GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u * %u (%.2f MB)",
-      stream->n_samples + samples_count, (guint) sizeof (QtDemuxSample),
-      (stream->n_samples + samples_count) *
-      sizeof (QtDemuxSample) / (1024.0 * 1024.0));
+      new_n_samples, (guint) sizeof (QtDemuxSample),
+      (new_n_samples) * sizeof (QtDemuxSample) / (1024.0 * 1024.0));
 
   /* create a new array of samples if it's the first sample parsed */
   if (stream->n_samples == 0) {
@@ -3491,7 +3491,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     /* or try to reallocate it with space enough to insert the new samples */
   } else
     stream->samples = g_try_renew (QtDemuxSample, stream->samples,
-        stream->n_samples + samples_count);
+        new_n_samples);
   if (stream->samples == NULL)
     goto out_of_memory;
 
