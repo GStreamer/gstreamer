@@ -6145,6 +6145,11 @@ convert_to_s334_1a (const guint8 * ccpair, guint8 ccpair_size, guint field,
   guint8 *storage;
   gsize i;
 
+  /* Strip off any leftover odd bytes and assume everything before is valid */
+  if (ccpair_size % 2 != 0) {
+    ccpair_size -= 1;
+  }
+
   /* We are converting from pairs to triplets */
   *res = ccpair_size / 2 * 3;
   storage = g_malloc (*res);
