@@ -3370,8 +3370,8 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   gint64 initial_offset;
   gint32 min_ct = 0;
 
-  GST_LOG_OBJECT (qtdemux, "parsing trun track-id %d; "
-      "default dur %d, size %d, flags 0x%x, base offset %" G_GINT64_FORMAT ", "
+  GST_LOG_OBJECT (qtdemux, "parsing trun track-id %u; "
+      "default dur %u, size %u, flags 0x%x, base offset %" G_GINT64_FORMAT ", "
       "decode ts %" G_GINT64_FORMAT, stream->track_id, d_sample_duration,
       d_sample_size, d_sample_flags, *base_offset, decode_ts);
 
@@ -3410,7 +3410,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
           "trun offset is less than the moof size, assuming offset is after moof");
       data_offset = moof_length + 8;
     }
-    GST_LOG_OBJECT (qtdemux, "trun data offset %d", data_offset);
+    GST_LOG_OBJECT (qtdemux, "trun data offset %u", data_offset);
     /* default base offset = first byte of moof */
     if (*base_offset == -1) {
       GST_LOG_OBJECT (qtdemux, "base_offset at moof");
@@ -3432,7 +3432,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
 
   GST_LOG_OBJECT (qtdemux, "running offset now %" G_GINT64_FORMAT,
       *running_offset);
-  GST_LOG_OBJECT (qtdemux, "trun offset %d, flags 0x%x, entries %d",
+  GST_LOG_OBJECT (qtdemux, "trun offset %u, flags 0x%x, entries %u",
       data_offset, flags, samples_count);
 
   if (flags & TR_FIRST_SAMPLE_FLAGS) {
@@ -3641,14 +3641,15 @@ fail:
   }
 out_of_memory:
   {
-    GST_WARNING_OBJECT (qtdemux, "failed to allocate %d samples",
-        stream->n_samples);
+    GST_WARNING_OBJECT (qtdemux, "failed to allocate %u + %u samples",
+        stream->n_samples, samples_count);
     return FALSE;
   }
 index_too_big:
   {
-    GST_WARNING_OBJECT (qtdemux, "not allocating index of %d samples, would "
-        "be larger than %uMB (broken file?)", stream->n_samples,
+    GST_WARNING_OBJECT (qtdemux,
+        "not allocating index of %u + %u samples, would "
+        "be larger than %uMB (broken file?)", stream->n_samples, samples_count,
         QTDEMUX_MAX_SAMPLE_INDEX_SIZE >> 20);
     return FALSE;
   }
