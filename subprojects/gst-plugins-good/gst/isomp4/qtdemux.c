@@ -8262,7 +8262,7 @@ qtdemux_parse_theora_extension (GstQTDemux * qtdemux, QtDemuxStream * stream,
   end -= 8;
 
   while (buf < end) {
-    gint size;
+    guint32 size;
     guint32 type;
 
     size = QT_UINT32 (buf);
@@ -8270,7 +8270,7 @@ qtdemux_parse_theora_extension (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     GST_LOG_OBJECT (qtdemux, "%p %p", buf, end);
 
-    if (buf + size > end || size <= 0)
+    if (end - buf < size || size < 8)
       break;
 
     buf += 8;
