@@ -13704,47 +13704,53 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         } else {
           guint32 datalen = QT_UINT32 (stsd_entry_data + offset + 16);
           const guint8 *data = stsd_entry_data + offset + 16;
-          GNode *wavenode;
-          GNode *waveheadernode;
 
-          wavenode = g_node_new ((guint8 *) data);
-          if (qtdemux_parse_node (qtdemux, wavenode, data, datalen)) {
-            const guint8 *waveheader;
-            guint32 headerlen;
+          if (len < datalen || len - datalen < offset + 16) {
+            GST_WARNING_OBJECT (qtdemux, "Not enough data for waveheadernode");
+          } else {
+            GNode *wavenode;
+            GNode *waveheadernode;
 
-            waveheadernode = qtdemux_tree_get_child_by_type (wavenode, fourcc);
-            if (waveheadernode) {
-              waveheader = (const guint8 *) waveheadernode->data;
-              headerlen = QT_UINT32 (waveheader);
+            wavenode = g_node_new ((guint8 *) data);
+            if (qtdemux_parse_node (qtdemux, wavenode, data, datalen)) {
+              const guint8 *waveheader;
+              guint32 headerlen;
 
-              if (headerlen > 8) {
-                gst_riff_strf_auds *header = NULL;
-                GstBuffer *headerbuf;
-                GstBuffer *extra;
+              waveheadernode =
+                  qtdemux_tree_get_child_by_type (wavenode, fourcc);
+              if (waveheadernode) {
+                waveheader = (const guint8 *) waveheadernode->data;
+                headerlen = QT_UINT32 (waveheader);
 
-                waveheader += 8;
-                headerlen -= 8;
+                if (headerlen > 8) {
+                  gst_riff_strf_auds *header = NULL;
+                  GstBuffer *headerbuf;
+                  GstBuffer *extra;
 
-                headerbuf = gst_buffer_new_and_alloc (headerlen);
-                gst_buffer_fill (headerbuf, 0, waveheader, headerlen);
+                  waveheader += 8;
+                  headerlen -= 8;
 
-                if (gst_riff_parse_strf_auds (GST_ELEMENT_CAST (qtdemux),
-                        headerbuf, &header, &extra)) {
-                  gst_caps_unref (entry->caps);
-                  /* FIXME: Need to do something with the channel reorder map */
-                  entry->caps =
-                      gst_riff_create_audio_caps (header->format, NULL, header,
-                      extra, NULL, NULL, NULL);
+                  headerbuf = gst_buffer_new_and_alloc (headerlen);
+                  gst_buffer_fill (headerbuf, 0, waveheader, headerlen);
 
-                  if (extra)
-                    gst_buffer_unref (extra);
-                  g_free (header);
+                  if (gst_riff_parse_strf_auds (GST_ELEMENT_CAST (qtdemux),
+                          headerbuf, &header, &extra)) {
+                    gst_caps_unref (entry->caps);
+                    /* FIXME: Need to do something with the channel reorder map */
+                    entry->caps =
+                        gst_riff_create_audio_caps (header->format, NULL,
+                        header, extra, NULL, NULL, NULL);
+
+                    if (extra)
+                      gst_buffer_unref (extra);
+                    g_free (header);
+                  }
                 }
-              }
-            } else
-              GST_DEBUG ("Didn't find waveheadernode for this codec");
+              } else
+                GST_DEBUG ("Didn't find waveheadernode for this codec");
+            }
+            g_node_destroy (wavenode);
           }
-          g_node_destroy (wavenode);
         }
       } else if (esds) {
         gst_qtdemux_handle_esds (qtdemux, stream, entry, esds,
