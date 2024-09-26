@@ -6193,7 +6193,7 @@ extract_cc_from_data (QtDemuxStream * stream, const guint8 * data, gsize size,
     goto invalid_cdat;
   atom_length = QT_UINT32 (data);
   fourcc = QT_FOURCC (data + 4);
-  if (G_UNLIKELY (atom_length > size || atom_length == 8))
+  if (G_UNLIKELY (atom_length > size || atom_length <= 8))
     goto invalid_cdat;
 
   GST_DEBUG_OBJECT (stream->pad, "here");
