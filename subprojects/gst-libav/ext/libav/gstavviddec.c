@@ -2146,9 +2146,16 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
           GST_VIDEO_BUFFER_FLAG_TFF);
     }
   }
+
+  /* Temporarily release the video decoder stream lock so that other
+   * threads can continue decoding (e.g. call get_frame()) while data
+   * is being pushed downstream.
+   */
+  GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
   *ret =
       gst_video_decoder_finish_frame (GST_VIDEO_DECODER (ffmpegdec),
       output_frame);
+  GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
 
 beach:
   GST_DEBUG_OBJECT (ffmpegdec, "return flow %s, got frame: %d",
