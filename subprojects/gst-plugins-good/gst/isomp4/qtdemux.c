@@ -6217,7 +6217,7 @@ extract_cc_from_data (QtDemuxStream * stream, const guint8 * data, gsize size,
             else
               GST_WARNING_OBJECT (stream->pad,
                   "Got multiple [cdat] atoms in a c608 sample. This is unsupported for now. Please file a bug");
-          } else {
+          } else if (fourcc == FOURCC_cdt2) {
             if (cdt2 == NULL)
               cdt2 =
                   convert_to_s334_1a (data + atom_length + 8,
@@ -6225,6 +6225,10 @@ extract_cc_from_data (QtDemuxStream * stream, const guint8 * data, gsize size,
             else
               GST_WARNING_OBJECT (stream->pad,
                   "Got multiple [cdt2] atoms in a c608 sample. This is unsupported for now. Please file a bug");
+          } else {
+            GST_WARNING_OBJECT (stream->pad,
+                "Unknown second data atom (%" GST_FOURCC_FORMAT ") for CEA608",
+                GST_FOURCC_ARGS (fourcc));
           }
         }
       }
