@@ -11198,8 +11198,9 @@ qtdemux_parse_svq3_stsd_data (GstQTDemux * qtdemux,
                 GST_WARNING_OBJECT (qtdemux, "Unexpected second SEQH SMI atom "
                     " found, ignoring");
               } else {
+                /* Note: The size does *not* include the fourcc and the size field itself */
                 seqh_size = QT_UINT32 (data + 4);
-                if (seqh_size > 0) {
+                if (seqh_size > 0 && seqh_size <= size - 8) {
                   _seqh = gst_buffer_new_and_alloc (seqh_size);
                   gst_buffer_fill (_seqh, 0, data + 8, seqh_size);
                 }
