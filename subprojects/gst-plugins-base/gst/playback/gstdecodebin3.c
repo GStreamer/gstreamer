@@ -731,6 +731,7 @@ gst_decodebin3_reset (GstDecodebin3 * dbin)
 
   GST_DEBUG_OBJECT (dbin, "Resetting");
 
+  SELECTION_LOCK (dbin);
   /* Free output streams */
   g_list_free_full (dbin->output_streams,
       (GDestroyNotify) db_output_stream_free);
@@ -744,6 +745,7 @@ gst_decodebin3_reset (GstDecodebin3 * dbin)
   g_list_free (dbin->slots);
   dbin->slots = NULL;
   dbin->current_group_id = GST_GROUP_ID_INVALID;
+  SELECTION_UNLOCK (dbin);
 
   /* Reset the inputs */
   gst_decodebin_input_reset (dbin->main_input);
@@ -754,12 +756,15 @@ gst_decodebin3_reset (GstDecodebin3 * dbin)
   /* Reset multiqueue to default interleave */
   g_object_set (dbin->multiqueue, "min-interleave-time",
       dbin->default_mq_min_interleave, NULL);
+
+  SELECTION_LOCK (dbin);
   dbin->current_mq_min_interleave = dbin->default_mq_min_interleave;
   dbin->upstream_handles_selection = FALSE;
 
   g_list_free_full (dbin->collections, (GDestroyNotify) db_collection_free);
   dbin->collections = NULL;
   dbin->input_collection = dbin->output_collection = NULL;
+  SELECTION_UNLOCK (dbin);
 }
 
 static void
