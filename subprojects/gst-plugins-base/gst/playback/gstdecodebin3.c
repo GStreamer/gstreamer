@@ -3172,20 +3172,23 @@ mq_slot_check_reconfiguration (MultiQueueSlot * slot)
     SELECTION_UNLOCK (dbin);
     if (msg)
       gst_element_post_message ((GstElement *) slot->dbin, msg);
-    if (no_more_streams)
+    if (no_more_streams) {
       GST_ELEMENT_ERROR (slot->dbin, CORE, MISSING_PLUGIN, (NULL),
           ("No suitable plugins found"));
-    else
-      GST_ELEMENT_WARNING (slot->dbin, CORE, MISSING_PLUGIN, (NULL),
-          ("Some plugins were missing"));
-  } else {
-    GstMessage *selection_msg = is_selection_done (dbin);
-    /* All good, we reconfigured the associated output. Check if we're done with
-     * the current selection */
-    SELECTION_UNLOCK (dbin);
-    if (selection_msg)
-      gst_element_post_message ((GstElement *) slot->dbin, selection_msg);
+      return;
+    }
+
+    GST_ELEMENT_WARNING (slot->dbin, CORE, MISSING_PLUGIN, (NULL),
+        ("Some plugins were missing"));
+    SELECTION_LOCK (dbin);
   }
+
+  GstMessage *selection_msg = is_selection_done (dbin);
+  /* We reconfigured the associated output. Check if we're done with
+   * the current selection */
+  SELECTION_UNLOCK (dbin);
+  if (selection_msg)
+    gst_element_post_message ((GstElement *) slot->dbin, selection_msg);
 }
 
 static void
