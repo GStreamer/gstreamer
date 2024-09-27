@@ -3834,7 +3834,7 @@ qtdemux_get_cenc_sample_properties (GstQTDemux * qtdemux,
 static gboolean
 qtdemux_parse_sbgp (GstQTDemux * qtdemux, QtDemuxStream * stream,
     GstByteReader * br, guint32 group, GPtrArray ** sample_to_group_array,
-    GstStructure * default_properties, GPtrArray * tack_properties_array,
+    GstStructure * default_properties, GPtrArray * track_properties_array,
     GPtrArray * group_properties_array)
 {
   guint32 flags = 0;
@@ -3893,15 +3893,15 @@ qtdemux_parse_sbgp (GstQTDemux * qtdemux, QtDemuxStream * stream,
     if (index > 0x10000) {
       /* Index is referring the current fragment. */
       index -= 0x10001;
-      if (index < group_properties_array->len)
+      if (group_properties_array && index < group_properties_array->len)
         properties = g_ptr_array_index (group_properties_array, index);
       else
         GST_ERROR_OBJECT (qtdemux, "invalid group index %u", index);
     } else if (index > 0) {
       /* Index is referring to the whole track. */
       index--;
-      if (index < tack_properties_array->len)
-        properties = g_ptr_array_index (tack_properties_array, index);
+      if (track_properties_array && index < track_properties_array->len)
+        properties = g_ptr_array_index (track_properties_array, index);
       else
         GST_ERROR_OBJECT (qtdemux, "invalid group index %u", index);
     } else {
@@ -4451,6 +4451,11 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
       QtDemuxCencSampleSetInfo *info = stream->protection_scheme_info;
       GNode *sgpd_node;
       GstByteReader sgpd_data;
+
+      if (!info) {
+        GST_ERROR_OBJECT (qtdemux, "Have no valid protection scheme info");
+        goto fail;
+      }
 
       if (info->fragment_group_properties) {
         g_ptr_array_free (info->fragment_group_properties, TRUE);
@@ -11965,12 +11970,15 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       if (stream->subtype != FOURCC_soun) {
         GST_ERROR_OBJECT (qtdemux,
             "Unexpeced stsd type 'aavd' outside 'soun' track");
+        goto corrupt_file;
       } else {
         /* encrypted audio with sound sample description v0 */
         GNode *enc = qtdemux_tree_get_child_by_type (stsd, fourcc);
         stream->protected = TRUE;
-        if (!qtdemux_parse_protection_aavd (qtdemux, stream, enc, &fourcc))
+        if (!qtdemux_parse_protection_aavd (qtdemux, stream, enc, &fourcc)) {
           GST_ERROR_OBJECT (qtdemux, "Failed to parse protection scheme info");
+          goto corrupt_file;
+        }
       }
     }
 
@@ -11979,8 +11987,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
        * with the same type */
       GNode *enc = qtdemux_tree_get_child_by_type (stsd, fourcc);
       stream->protected = TRUE;
-      if (!qtdemux_parse_protection_scheme_info (qtdemux, stream, enc, &fourcc))
+      if (!qtdemux_parse_protection_scheme_info (qtdemux, stream, enc, &fourcc)) {
         GST_ERROR_OBJECT (qtdemux, "Failed to parse protection scheme info");
+        goto corrupt_file;
+      }
     }
 
     if (stream->subtype == FOURCC_vide) {
@@ -14077,6 +14087,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     QtDemuxCencSampleSetInfo *info = stream->protection_scheme_info;
     GNode *sgpd_node;
     GstByteReader sgpd_data;
+
+    if (!info)
+      goto corrupt_file;
 
     if (info->track_group_properties) {
       g_ptr_array_free (info->fragment_group_properties, TRUE);
