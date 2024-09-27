@@ -225,7 +225,7 @@ gst_drm_bpp_from_drm (guint32 drm_fourcc)
       bpp = 8;
       break;
     case DRM_FORMAT_P010:
-      bpp = 10;
+      bpp = 16;
       break;
     case DRM_FORMAT_UYVY:
     case DRM_FORMAT_YUYV:
