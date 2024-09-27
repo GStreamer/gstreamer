@@ -5211,10 +5211,15 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
 beach:
   if (ret == GST_FLOW_EOS && (qtdemux->got_moov || qtdemux->media_caps)) {
     /* digested all data, show what we have */
-    qtdemux_prepare_streams (qtdemux);
+    ret = qtdemux_prepare_streams (qtdemux);
+    if (ret != GST_FLOW_OK)
+      return ret;
+
     QTDEMUX_EXPOSE_LOCK (qtdemux);
     ret = qtdemux_expose_streams (qtdemux);
     QTDEMUX_EXPOSE_UNLOCK (qtdemux);
+    if (ret != GST_FLOW_OK)
+      return ret;
 
     qtdemux->state = QTDEMUX_STATE_MOVIE;
     GST_DEBUG_OBJECT (qtdemux, "switching state to STATE_MOVIE (%d)",
@@ -8118,13 +8123,21 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             gst_qtdemux_stream_concat (demux,
                 demux->old_streams, demux->active_streams);
 
-            qtdemux_parse_moov (demux, data, demux->neededbytes);
+            if (!qtdemux_parse_moov (demux, data, demux->neededbytes)) {
+              ret = GST_FLOW_ERROR;
+              break;
+            }
             qtdemux_node_dump (demux, demux->moov_node);
             qtdemux_parse_tree (demux);
-            qtdemux_prepare_streams (demux);
+            ret = qtdemux_prepare_streams (demux);
+            if (ret != GST_FLOW_OK)
+              break;
+
             QTDEMUX_EXPOSE_LOCK (demux);
-            qtdemux_expose_streams (demux);
+            ret = qtdemux_expose_streams (demux);
             QTDEMUX_EXPOSE_UNLOCK (demux);
+            if (ret != GST_FLOW_OK)
+              break;
 
             demux->got_moov = TRUE;
 
@@ -8215,8 +8228,10 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             /* in MSS we need to expose the pads after the first moof as we won't get a moov */
             if (demux->variant == VARIANT_MSS_FRAGMENTED && !demux->exposed) {
               QTDEMUX_EXPOSE_LOCK (demux);
-              qtdemux_expose_streams (demux);
+              ret = qtdemux_expose_streams (demux);
               QTDEMUX_EXPOSE_UNLOCK (demux);
+              if (ret != GST_FLOW_OK)
+                goto done;
             }
 
             gst_qtdemux_check_send_pending_segment (demux);
@@ -14368,8 +14383,10 @@ qtdemux_prepare_streams (GstQTDemux * qtdemux)
 
     /* parse the initial sample for use in setting the frame rate cap */
     while (sample_num == 0 && sample_num < stream->n_samples) {
-      if (!qtdemux_parse_samples (qtdemux, stream, sample_num))
+      if (!qtdemux_parse_samples (qtdemux, stream, sample_num)) {
+        ret = GST_FLOW_ERROR;
         break;
+      }
       ++sample_num;
     }
   }
