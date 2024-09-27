@@ -54,6 +54,7 @@ struct _GstGLDownloadElement
   GstGlDownloadMode mode;
   gboolean try_dmabuf_exports;
   GstAllocator * dmabuf_allocator;
+  GstBufferPool * foreign_dmabuf_pool;
   gboolean add_videometa;
 };
 

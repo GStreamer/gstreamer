@@ -93,6 +93,12 @@ if png_dep.found()
   endif
 endif
 
+if glconf.get('GST_GL_HAVE_DMABUF', 0) == 1
+  opengl_sources += [
+    'gstgldmabufbufferpool.c',
+  ]
+endif
+
 if glconf.get('GST_GL_HAVE_WINDOW_COCOA', 0) == 1
   corefoundation_dep = dependency('appleframeworks', modules : ['CoreFoundation'], required : false)
   foundation_dep = dependency('appleframeworks', modules : ['Foundation'], required : false)
