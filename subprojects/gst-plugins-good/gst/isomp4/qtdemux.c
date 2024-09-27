@@ -10635,9 +10635,9 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
           goto done;
         }
 
-        cur->offset =
-            qt_atom_parser_get_offset_unchecked (&stream->co_chunk,
-            stream->co_size);
+        if (!qt_atom_parser_get_offset (&stream->co_chunk,
+                stream->co_size, &cur->offset))
+          goto corrupt_file;
 
         GST_LOG_OBJECT (qtdemux, "Created entry %d with offset "
             "%" G_GUINT64_FORMAT, j, cur->offset);
