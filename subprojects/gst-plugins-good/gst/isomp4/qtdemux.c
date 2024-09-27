@@ -11404,12 +11404,15 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       if (stream->subtype != FOURCC_soun) {
         GST_ERROR_OBJECT (qtdemux,
             "Unexpeced stsd type 'aavd' outside 'soun' track");
+        goto corrupt_file;
       } else {
         /* encrypted audio with sound sample description v0 */
         GNode *enc = qtdemux_tree_get_child_by_type (stsd, fourcc);
         stream->protected = TRUE;
-        if (!qtdemux_parse_protection_aavd (qtdemux, stream, enc, &fourcc))
+        if (!qtdemux_parse_protection_aavd (qtdemux, stream, enc, &fourcc)) {
           GST_ERROR_OBJECT (qtdemux, "Failed to parse protection scheme info");
+          goto corrupt_file;
+        }
       }
     }
 
@@ -11418,8 +11421,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
        * with the same type */
       GNode *enc = qtdemux_tree_get_child_by_type (stsd, fourcc);
       stream->protected = TRUE;
-      if (!qtdemux_parse_protection_scheme_info (qtdemux, stream, enc, &fourcc))
+      if (!qtdemux_parse_protection_scheme_info (qtdemux, stream, enc, &fourcc)) {
         GST_ERROR_OBJECT (qtdemux, "Failed to parse protection scheme info");
+        goto corrupt_file;
+      }
     }
 
     if (stream->subtype == FOURCC_vide) {
