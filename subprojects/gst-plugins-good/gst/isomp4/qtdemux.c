@@ -10040,6 +10040,21 @@ qtdemux_merge_sample_table (GstQTDemux * qtdemux, QtDemuxStream * stream)
     return;
   }
 
+  if (gst_byte_reader_get_remaining (&stream->stts) < 8) {
+    GST_DEBUG_OBJECT (qtdemux, "Too small stts");
+    return;
+  }
+
+  if (stream->stco.size < 8) {
+    GST_DEBUG_OBJECT (qtdemux, "Too small stco");
+    return;
+  }
+
+  if (stream->n_samples_per_chunk == 0) {
+    GST_DEBUG_OBJECT (qtdemux, "No samples per chunk");
+    return;
+  }
+
   /* Parse the stts to get the sample duration and number of samples */
   gst_byte_reader_skip_unchecked (&stream->stts, 4);
   stts_duration = gst_byte_reader_get_uint32_be_unchecked (&stream->stts);
@@ -10050,6 +10065,13 @@ qtdemux_merge_sample_table (GstQTDemux * qtdemux, QtDemuxStream * stream)
 
   GST_DEBUG_OBJECT (qtdemux, "sample_duration %d, num_chunks %u", stts_duration,
       num_chunks);
+
+  if (gst_byte_reader_get_remaining (&stream->stsc) <
+      stream->n_samples_per_chunk * 3 * 4 +
+      (stream->n_samples_per_chunk - 1) * 4) {
+    GST_DEBUG_OBJECT (qtdemux, "Too small stsc");
+    return;
+  }
 
   /* Now parse stsc, convert chunks into single samples and generate a
    * new stsc, stts and stsz from this information */
