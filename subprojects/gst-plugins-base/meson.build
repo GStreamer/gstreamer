@@ -199,6 +199,7 @@ check_functions = [
   ['HAVE_LRINTF', 'lrintf', '#include<math.h>'],
   ['HAVE_MMAP', 'mmap', '#include<sys/mman.h>'],
   ['HAVE_LOG2', 'log2', '#include<math.h>'],
+  ['HAVE_MEMMEM', 'memmem', '#include<string.h>'],
 ]
 
 libm = cc.find_library('m', required : false)
