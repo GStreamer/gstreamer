@@ -146,6 +146,35 @@ gst_ssa_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return res;
 }
 
+#ifndef HAVE_MEMMEM
+// memmem() is a GNU extension so if it's not available we'll need
+// our own implementation here. Thanks C.
+static void *
+my_memmem (const void *haystack, size_t haystacklen, const void *needle,
+    size_t needlelen)
+{
+  const guint8 *cur, *end;
+
+  if (needlelen > haystacklen)
+    return NULL;
+  if (needlelen == 0)
+    return (void *) haystack;
+
+
+  cur = haystack;
+  end = cur + haystacklen - needlelen;
+
+  for (; cur <= end; cur++) {
+    if (memcmp (cur, needle, needlelen) == 0)
+      return (void *) cur;
+  }
+
+  return NULL;
+}
+#else
+#define my_memmem memmem
+#endif
+
 static gboolean
 gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
 {
@@ -154,6 +183,7 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
   const GValue *val;
   GstStructure *s;
   const guchar bom_utf8[] = { 0xEF, 0xBB, 0xBF };
+  const guint8 header[] = "[Script Info]";
   const gchar *end;
   GstBuffer *priv;
   GstMapInfo map;
@@ -193,7 +223,7 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
     left -= 3;
   }
 
-  if (!strstr (ptr, "[Script Info]"))
+  if (!my_memmem (ptr, left, header, sizeof (header) - 1))
     goto invalid_init;
 
   if (!g_utf8_validate (ptr, left, &end)) {
@@ -230,6 +260,10 @@ invalid_init:
     return FALSE;
   }
 }
+
+#ifdef my_memmem
+#undef my_memmem
+#endif
 
 static gboolean
 gst_ssa_parse_remove_override_codes (GstSsaParse * parse, gchar * txt)
