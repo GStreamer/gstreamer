@@ -10,6 +10,9 @@ fi
 
 set -eux
 
+_jobs=$(nproc || sysctl -n hw.ncpu)
+jobs="${FDO_CI_CONCURRENT:-$_jobs}"
+
 timeout="${TIMEOUT_FACTOR:="2"}"
 validate="${EXTRA_VALIDATE_ARGS:=""}"
 parent="${CI_PROJECT_DIR:-$(pwd)}"
@@ -20,6 +23,7 @@ echo "-> Running $tests"
 ./gst-env.py \
     "--builddir=$builddir" \
     gst-validate-launcher "$tests" \
+    --jobs "$jobs" \
     --check-bugs \
     --dump-on-failure \
     --mute \

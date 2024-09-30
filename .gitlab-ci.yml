@@ -876,6 +876,7 @@ fluster v4l2-stateless on visl:
   stage: 'test'
   variables:
     EXTRA_VALIDATE_ARGS: "--valgrind"
+  timeout: "1h30m"
   rules:
     - changes:
         compare_to: "$GST_UPSTREAM_BRANCH"
