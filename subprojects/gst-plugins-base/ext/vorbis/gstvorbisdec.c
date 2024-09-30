@@ -204,7 +204,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
     }
     default:{
       GstAudioChannelPosition position[64];
-      gint i, max_pos = MAX (vd->vi.channels, 64);
+      gint i, max_pos = MIN (vd->vi.channels, 64);
 
       GST_ELEMENT_WARNING (vd, STREAM, DECODE,
           (NULL), ("Using NONE channel layout for more than 8 channels"));
