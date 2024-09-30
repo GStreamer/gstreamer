@@ -238,7 +238,7 @@ gst_ssa_parse_remove_override_codes (GstSsaParse * parse, gchar * txt)
   gboolean removed_any = FALSE;
 
   while ((t = strchr (txt, '{'))) {
-    end = strchr (txt, '}');
+    end = strchr (t, '}');
     if (end == NULL) {
       GST_WARNING_OBJECT (parse, "Missing { for style override code");
       return removed_any;
