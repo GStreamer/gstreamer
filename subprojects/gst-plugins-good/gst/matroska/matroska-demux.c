@@ -4988,6 +4988,18 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       if (stream->postprocess_frame) {
         GST_LOG_OBJECT (demux, "running post process");
         ret = stream->postprocess_frame (GST_ELEMENT (demux), stream, &sub);
+        if (ret != GST_FLOW_OK) {
+          gst_clear_buffer (&sub);
+          goto next_lace;
+        }
+
+        if (sub == NULL) {
+          GST_WARNING_OBJECT (demux,
+              "Postprocessing buffer with timestamp %" GST_TIME_FORMAT
+              " for stream %d failed", GST_TIME_ARGS (buffer_timestamp),
+              stream_num);
+          goto next_lace;
+        }
       }
 
       /* At this point, we have a sub-buffer pointing at data within a larger
