@@ -2261,10 +2261,24 @@ mpegts_packetizer_pts_to_ts_internal (MpegTSPacketizer2 * packetizer,
   PACKETIZER_GROUP_LOCK (packetizer);
   pcrtable = get_pcr_table (packetizer, pcr_pid);
 
-  if (!GST_CLOCK_TIME_IS_VALID (pcrtable->base_time) && pcr_pid == 0x1fff &&
-      GST_CLOCK_TIME_IS_VALID (packetizer->last_in_time)) {
-    pcrtable->base_time = packetizer->last_in_time;
-    pcrtable->base_pcrtime = pts;
+  if (pcr_pid == 0x1fff && GST_CLOCK_TIME_IS_VALID (packetizer->last_in_time)) {
+    if (!GST_CLOCK_TIME_IS_VALID (pcrtable->base_time)) {
+      pcrtable->base_time = packetizer->last_in_time;
+      pcrtable->base_pcrtime = pts;
+    } else if (check_diff) {
+      /* Handle discont and wraparound */
+      guint64 tmp_pts = pts + pcrtable->pcroffset + packetizer->extra_shift;
+      if (pcrtable->base_pcrtime < tmp_pts
+          && tmp_pts - pcrtable->base_pcrtime >= 5 * GST_SECOND) {
+        guint64 diff = tmp_pts - pcrtable->base_pcrtime - 2 * GST_SECOND;
+
+        pcrtable->base_time += diff;
+        pcrtable->base_pcrtime += diff;
+      } else if (pcrtable->base_pcrtime > tmp_pts
+          && pcrtable->base_pcrtime > PCR_GST_MAX_VALUE / 2) {
+        pcrtable->pcroffset += PCR_GST_MAX_VALUE;
+      }
+    }
   }
 
   /* Use clock skew if present */
