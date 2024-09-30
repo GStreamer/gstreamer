@@ -3976,7 +3976,7 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
     data += 4;
     size -= 4;
 
-    while (size > 12) {
+    while (size >= 12) {
       flags = GST_READ_UINT32_LE (data);
       data += 4;
       size -= 4;
