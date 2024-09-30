@@ -3891,7 +3891,6 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
   GstMatroskaTrackAudioContext *audiocontext =
       (GstMatroskaTrackAudioContext *) stream;
   GstBuffer *newbuf = NULL;
-  GstMapInfo map, outmap;
   guint8 *buf_data, *data;
   Wavpack4Header wvh;
 
@@ -3908,11 +3907,11 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
 
   if (audiocontext->channels <= 2) {
     guint32 block_samples, tmp;
+    GstMapInfo outmap;
     gsize size = gst_buffer_get_size (*buf);
 
     if (size < 4) {
       GST_ERROR_OBJECT (element, "Too small wavpack buffer");
-      gst_buffer_unmap (*buf, &map);
       return GST_FLOW_ERROR;
     }
 
@@ -3950,6 +3949,7 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
     *buf = newbuf;
     audiocontext->wvpk_block_index += block_samples;
   } else {
+    GstMapInfo map, outmap;
     guint8 *outdata = NULL;
     gsize buf_size, size;
     guint32 block_samples, flags, crc;
