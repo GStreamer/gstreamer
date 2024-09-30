@@ -3894,6 +3894,11 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
   guint8 *buf_data, *data;
   Wavpack4Header wvh;
 
+  if (!stream->codec_priv || stream->codec_priv_size < 2) {
+    GST_ERROR_OBJECT (element, "No or too small wavpack codec private data");
+    return GST_FLOW_ERROR;
+  }
+
   wvh.ck_id[0] = 'w';
   wvh.ck_id[1] = 'v';
   wvh.ck_id[2] = 'p';
