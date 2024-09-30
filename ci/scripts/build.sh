@@ -2,12 +2,18 @@
 
 builddir="$1"
 
+error="${GST_WERROR:-false}"
+gtk_args="${GTK_ARGS:-}"
+meson_args="${MESON_ARGS:-}"
+
 if [[ -z "$builddir" ]]; then
   echo "Usage: build.sh <build_directory>"
   exit 1
 fi
 
 set -eux
+
+source "ci/scripts/source_image_env.sh"
 
 # Expects:
 # BUILD_TYPE: Proxy of meson's --default-library arg
@@ -18,25 +24,18 @@ set -eux
 #   must be a string of a boolean, "true" or "false". Not yaml bool.
 # SUBPROJECTS_CACHE_DIR: The location in the image of the subprojects cache
 
-export RUSTUP_HOME="/usr/local/rustup"
-export CARGO_HOME="/usr/local/cargo"
-export PATH="/usr/local/cargo/bin:$PATH"
-
-# Allow unbound variable
-GTK_ARGS="${GTK_ARGS:-}"
-
 # nproc works on linux
 # sysctl for macos
 _jobs=$(nproc || sysctl -n hw.ncpu)
 jobs="${FDO_CI_CONCURRENT:-$_jobs}"
 
 date -R
-ci/scripts/handle-subprojects-cache.py --cache-dir "${SUBPROJECTS_CACHE_DIR}" subprojects/
 
-ARGS="${BUILD_TYPE:---default-library=both} ${BUILD_GST_DEBUG:--Dgstreamer:gst_debug=true} ${MESON_ARGS} ${GTK_ARGS}"
-echo "Werror: $GST_WERROR"
+ARGS="${BUILD_TYPE:---default-library=both} ${BUILD_GST_DEBUG:--Dgstreamer:gst_debug=true} $meson_args $gtk_args"
+echo "Werror: $error"
 
-if [ "$GST_WERROR" = "true" ]; then
+# If the variable is not true, we are either running locally or explicitly false. Thus false by default.
+if [ "$error" = "true" ]; then
   ARGS="$ARGS --native-file ./ci/meson/gst-werror.ini"
 fi
 

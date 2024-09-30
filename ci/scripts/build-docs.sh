@@ -1,7 +1,6 @@
 #! /bin/bash
 
 builddir="$1"
-
 if [[ -z "$builddir" ]]; then
   echo "Usage: build-docs.sh <build_directory>"
   exit 1
@@ -9,14 +8,11 @@ fi
 
 set -eux
 
-export PATH="/usr/local/cargo/bin/:/usr/local/bin/:$PATH"
-export RUSTUP_HOME="/usr/local/rustup"
-export CARGO_HOME="/usr/local/cargo"
+source "ci/scripts/source_image_env.sh"
 
-./ci/scripts/handle-subprojects-cache.py --cache-dir /subprojects subprojects/
-
-echo "$MESON_ARGS"
-meson setup "$builddir" $MESON_ARGS
+meson_args="${MESON_ARGS:--Ddoc=enabled -Drs=enabled -Dgst-docs:fatal_warnings=true}"
+echo "$meson_args"
+meson setup "$builddir" $meson_args
 ccache --show-stats
 
 ninja -C "$builddir" update_girs
