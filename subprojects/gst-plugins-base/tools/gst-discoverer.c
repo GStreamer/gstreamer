@@ -222,7 +222,7 @@ format_channel_mask (GstDiscovererAudioInfo * ainfo)
 
   channel_mask = gst_discoverer_audio_info_get_channel_mask (ainfo);
 
-  if (channel_mask != 0) {
+  if (channel_mask != 0 && channels <= 64) {
     gst_audio_channel_positions_from_mask (channels, channel_mask, position);
 
     for (i = 0; i < channels; i++) {
