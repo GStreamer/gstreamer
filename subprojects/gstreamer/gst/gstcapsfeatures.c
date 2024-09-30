@@ -405,10 +405,9 @@ gst_caps_features_new_id (GQuark feature1, ...)
   g_return_val_if_fail (feature1 != 0, NULL);
 
   va_start (varargs, feature1);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
   features = gst_caps_features_new_id_valist (feature1, varargs);
-#pragma GCC diagnostic pop
+  G_GNUC_END_IGNORE_DEPRECATIONS;
   va_end (varargs);
 
   return features;
@@ -437,10 +436,9 @@ gst_caps_features_new_id_valist (GQuark feature1, va_list varargs)
   features = gst_caps_features_new_empty ();
 
   while (feature1) {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
     gst_caps_features_add_id (features, feature1);
-#pragma GCC diagnostic pop
+    G_GNUC_END_IGNORE_DEPRECATIONS;
     feature1 = va_arg (varargs, GQuark);
   }
 

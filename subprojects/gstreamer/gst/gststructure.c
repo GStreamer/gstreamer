@@ -3860,10 +3860,9 @@ gst_structure_id_get_valist (const GstStructure * structure,
 
     expected_type = va_arg (args, GType);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
     val = gst_structure_id_get_value (structure, field_id);
-#pragma GCC diagnostic pop
+    G_GNUC_END_IGNORE_DEPRECATIONS;
 
     if (val == NULL)
       goto no_such_field;
@@ -3892,15 +3891,14 @@ no_such_field:
   }
 wrong_type:
   {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
     GST_DEBUG ("Expected field '%s' in structure to be of type '%s', but "
         "field was of type '%s': %" GST_PTR_FORMAT,
         g_quark_to_string (field_id),
         GST_STR_NULL (g_type_name (expected_type)),
         G_VALUE_TYPE_NAME (gst_structure_id_get_value (structure, field_id)),
         structure);
-#pragma GCC diagnostic pop
+    G_GNUC_END_IGNORE_DEPRECATIONS;
     return FALSE;
   }
 }
@@ -4020,10 +4018,9 @@ gst_structure_id_get (const GstStructure * structure, GQuark first_field_id,
   g_return_val_if_fail (first_field_id != 0, FALSE);
 
   va_start (args, first_field_id);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
   ret = gst_structure_id_get_valist (structure, first_field_id, args);
-#pragma GCC diagnostic pop
+  G_GNUC_END_IGNORE_DEPRECATIONS;
   va_end (args);
 
   return ret;
