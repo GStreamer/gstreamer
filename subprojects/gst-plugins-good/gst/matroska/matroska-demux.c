@@ -4042,11 +4042,16 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
     }
     gst_buffer_unmap (*buf, &map);
 
-    newbuf = gst_adapter_take_buffer (adapter, gst_adapter_available (adapter));
+    size = gst_adapter_available (adapter);
+    if (size > 0) {
+      newbuf = gst_adapter_take_buffer (adapter, size);
+      gst_buffer_copy_into (newbuf, *buf,
+          GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS, 0, -1);
+    } else {
+      newbuf = NULL;
+    }
     g_object_unref (adapter);
 
-    gst_buffer_copy_into (newbuf, *buf,
-        GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS, 0, -1);
     gst_buffer_unref (*buf);
     *buf = newbuf;
 
