@@ -1068,13 +1068,14 @@ gst_jpeg_turbo_parse_ext_fmt_convert (GstJpegDec * dec, gint * clrspc)
 }
 #endif
 
-static void
+static gboolean
 gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc,
     gboolean interlaced)
 {
   GstVideoCodecState *outstate;
   GstVideoInfo *info;
   GstVideoFormat format;
+  gboolean res;
 
 #ifdef JCS_EXTENSIONS
   if (dec->format_convert) {
@@ -1104,7 +1105,7 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc,
         height == GST_VIDEO_INFO_HEIGHT (info) &&
         format == GST_VIDEO_INFO_FORMAT (info)) {
       gst_video_codec_state_unref (outstate);
-      return;
+      return TRUE;
     }
     gst_video_codec_state_unref (outstate);
   }
@@ -1118,6 +1119,8 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc,
   outstate =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec), format,
       width, height, dec->input_state);
+  if (!outstate)
+    return FALSE;
 
   switch (clrspc) {
     case JCS_RGB:
@@ -1142,10 +1145,12 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc,
 
   gst_video_codec_state_unref (outstate);
 
-  gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec));
+  res = gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec));
 
   GST_DEBUG_OBJECT (dec, "max_v_samp_factor=%d", dec->cinfo.max_v_samp_factor);
   GST_DEBUG_OBJECT (dec, "max_h_samp_factor=%d", dec->cinfo.max_h_samp_factor);
+
+  return res;
 }
 
 static GstFlowReturn
@@ -1425,8 +1430,9 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
     num_fields = 1;
   }
 
-  gst_jpeg_dec_negotiate (dec, width, output_height,
-      dec->cinfo.jpeg_color_space, num_fields == 2);
+  if (!gst_jpeg_dec_negotiate (dec, width, output_height,
+          dec->cinfo.jpeg_color_space, num_fields == 2))
+    goto negotiation_failed;
 
   state = gst_video_decoder_get_output_state (bdec);
   ret = gst_video_decoder_allocate_output_frame (bdec, frame);
@@ -1556,6 +1562,12 @@ map_failed:
     GST_ELEMENT_ERROR (dec, RESOURCE, READ, (_("Failed to read memory")),
         ("gst_buffer_map() failed for READ access"));
     ret = GST_FLOW_ERROR;
+    goto exit;
+  }
+negotiation_failed:
+  {
+    GST_ELEMENT_ERROR (dec, CORE, NEGOTIATION, (NULL), ("failed to negotiate"));
+    ret = GST_FLOW_NOT_NEGOTIATED;
     goto exit;
   }
 decode_error:
