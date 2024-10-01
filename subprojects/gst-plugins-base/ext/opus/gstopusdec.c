@@ -440,12 +440,12 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
         posn = gst_opus_channel_positions[dec->n_channels - 1];
         break;
       default:{
-        gint i;
+        guint i, max_pos = MIN (dec->n_channels, 64);
 
         GST_ELEMENT_WARNING (GST_ELEMENT (dec), STREAM, DECODE,
             (NULL), ("Using NONE channel layout for more than 8 channels"));
 
-        for (i = 0; i < dec->n_channels; i++)
+        for (i = 0; i < max_pos; i++)
           pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
 
         posn = pos;
