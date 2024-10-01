@@ -494,7 +494,12 @@ new struct sub-classing GstAnalyticsRelatableMtd.</doc>
         </parameters>
       </method>
       <method name="add_segmentation_mtd" c:identifier="gst_analytics_relation_meta_add_segmentation_mtd" version="1.26">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Add analytics segmentation metadata to @instance.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Add analytics segmentation metadata to @instance. The rectangle (@masks_loc_x,
+@mask_loc_y, @mask_loc_w, @mask_loc_h) define a area of the image that
+correspond to the segmentation masks stored in @buffer. For example if the
+segmentation masks stored in @buffer describe the segmented regions for the
+entire image the rectangular area will be (@masks_loc_x = 0, @masks_loc_y = 0,
+@masks_loc_w = image_width, @masks_loc_h = image_height).</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">TRUE if added successfully, otherwise FALSE</doc>
@@ -525,8 +530,24 @@ must have a #GstVideoMeta attached</doc>
               <type name="guint" c:type="guint"/>
             </array>
           </parameter>
+          <parameter name="masks_loc_x" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Left coordinate of the rectangle corresponding to the masks in the image.</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="masks_loc_y" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Top coordinate of the rectangle corresponding to the masks in the image.</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="masks_loc_w" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Width of the rectangle corresponding to the masks in the image.</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="masks_loc_h" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Height of the rectangle corresponding to the masks in the image.</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
           <parameter name="segmentation_mtd" direction="out" caller-allocates="1" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Handle update with newly added segmenation meta.</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Handle update with newly added segmentation meta.</doc>
             <type name="SegmentationMtd" c:type="GstAnalyticsSegmentationMtd*"/>
           </parameter>
         </parameters>
@@ -942,7 +963,7 @@ Ids must have been obtained a call to
 
  Example: Associate Semantic Segmentation with Classification
  Assuming the same context as for Instance Segmentation above but instead
- a semantic segmentation is performed, therfore region-id-12 and region-id-7
+ a semantic segmentation is performed, therefore region-id-12 and region-id-7
  are now represented by the same region-id-12
 
  region_ids: (here
@@ -974,7 +995,7 @@ Ids must have been obtained a call to
     GST_ANALYTICS_REL_TYPE_RELATE_TO, segmtd.id, clsmtd.id);
  ```
 
- Example: Retriving class associated with a segmentation region-id-12
+ Example: Retrieving class associated with a segmentation region-id-12
  This the typical case for an overlay as we visit the segmentation mask we
  we find region-id values
 
@@ -1010,8 +1031,28 @@ identified by @id is stored.</doc>
         <parameters>
           <instance-parameter name="handle" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Instance</doc>
-            <type name="SegmentationMtd" c:type="GstAnalyticsSegmentationMtd*"/>
+            <type name="SegmentationMtd" c:type="const GstAnalyticsSegmentationMtd*"/>
           </instance-parameter>
+          <parameter name="masks_loc_x" direction="out" caller-allocates="1" transfer-ownership="none" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Left coordinate of the
+rectangle corresponding to the mask in the image.</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="masks_loc_y" direction="out" caller-allocates="1" transfer-ownership="none" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Top coordinate of the
+rectangle corresponding to the mask in the image.</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="masks_loc_w" direction="out" caller-allocates="1" transfer-ownership="none" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Width of the rectangle
+corresponding to the mask in the image.</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+          <parameter name="masks_loc_h" direction="out" caller-allocates="1" transfer-ownership="none" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Height of the rectangle
+corresponding to the mask in the image.</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
         </parameters>
       </method>
       <method name="get_region_count" c:identifier="gst_analytics_segmentation_mtd_get_region_count" version="1.26">
@@ -1024,12 +1065,12 @@ identified by @id is stored.</doc>
         <parameters>
           <instance-parameter name="handle" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Instance</doc>
-            <type name="SegmentationMtd" c:type="GstAnalyticsSegmentationMtd*"/>
+            <type name="SegmentationMtd" c:type="const GstAnalyticsSegmentationMtd*"/>
           </instance-parameter>
         </parameters>
       </method>
       <method name="get_region_id" c:identifier="gst_analytics_segmentation_mtd_get_region_id" version="1.26">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Get id of the region corresponding to @index. which should be
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Get id of the region corresponding to @index, which should be
 smaller than the return value of
 gst_analytics_segmentation_mtd_get_region_count()</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
@@ -1040,7 +1081,7 @@ gst_analytics_segmentation_mtd_get_region_count()</doc>
         <parameters>
           <instance-parameter name="handle" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Instance</doc>
-            <type name="SegmentationMtd" c:type="GstAnalyticsSegmentationMtd*"/>
+            <type name="SegmentationMtd" c:type="const GstAnalyticsSegmentationMtd*"/>
           </instance-parameter>
           <parameter name="index" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Region index</doc>
@@ -1058,7 +1099,7 @@ gst_analytics_segmentation_mtd_get_region_count()</doc>
         <parameters>
           <instance-parameter name="handle" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Instance</doc>
-            <type name="SegmentationMtd" c:type="GstAnalyticsSegmentationMtd*"/>
+            <type name="SegmentationMtd" c:type="const GstAnalyticsSegmentationMtd*"/>
           </instance-parameter>
           <parameter name="index" direction="out" caller-allocates="1" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Region index</doc>
@@ -1083,11 +1124,13 @@ metadata type.</doc>
     <enumeration name="SegmentationType" version="1.26" c:type="GstSegmentationType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Enum value describing supported segmentation type</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
-      <member name="semantic" value="0" c:identifier="GST_SEGMENTATION_TYPE_SEMANTIC" version="1.26">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Each region of the same type have the same id.</doc>
+      <member name="semantic" value="0" c:identifier="GST_SEGMENTATION_TYPE_SEMANTIC">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Segmentation where the belonging of each
+pixel to a class of objects is identified.</doc>
       </member>
-      <member name="instance" value="1" c:identifier="GST_SEGMENTATION_TYPE_INSTANCE" version="1.26">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Each instance of a region have different id.</doc>
+      <member name="instance" value="1" c:identifier="GST_SEGMENTATION_TYPE_INSTANCE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Segmentation where the belonging of each
+pixel to instance of an object is identified.</doc>
       </member>
     </enumeration>
     <record name="TrackingMtd" c:type="GstAnalyticsTrackingMtd" version="1.24">
