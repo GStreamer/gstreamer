@@ -260,6 +260,10 @@ struct _GstDecodebin3
   guint32 input_counter;
   /* Current stream group_id (default : GST_GROUP_ID_INVALID) */
   guint32 current_group_id;
+  /* Whether decodebin is currently posting a stream collection on the bus */
+  gboolean posting_collection;
+  /* GCond to block against and know when posting_collection changed */
+  GCond posting_cond;
   /* End of variables protected by input_lock */
 
   GstElement *multiqueue;
@@ -712,6 +716,8 @@ gst_decodebin3_init (GstDecodebin3 * dbin)
   g_mutex_init (&dbin->factories_lock);
   g_mutex_init (&dbin->selection_lock);
   g_mutex_init (&dbin->input_lock);
+  g_cond_init (&dbin->posting_cond);
+  dbin->posting_collection = FALSE;
 
   dbin->caps = gst_static_caps_get (&default_raw_caps);
 
@@ -802,6 +808,7 @@ gst_decodebin3_finalize (GObject * object)
   g_mutex_clear (&dbin->factories_lock);
   g_mutex_clear (&dbin->selection_lock);
   g_mutex_clear (&dbin->input_lock);
+  g_cond_clear (&dbin->posting_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1992,13 +1999,29 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
       gst_event_parse_stream_collection (event, &collection);
       if (collection) {
         GstMessage *collection_msg;
+
+        /* If we post a collection, we need to release the input lock, but we
+         * want to ensure code that needs to check of validity of the input
+         * collection to wait until the message was properly posted so that any
+         * synchronous handler can properly set their requested stream
+         * selection. */
         INPUT_LOCK (dbin);
+        while (dbin->posting_collection)
+          g_cond_wait (&dbin->posting_cond, &dbin->input_lock);
         collection_msg =
             handle_stream_collection_locked (dbin, collection, input);
         gst_object_unref (collection);
-        INPUT_UNLOCK (dbin);
-        if (collection_msg)
+        if (collection_msg) {
+          GST_DEBUG_OBJECT (sinkpad, "Posting collection");
+          dbin->posting_collection = TRUE;
+          INPUT_UNLOCK (dbin);
           gst_element_post_message (GST_ELEMENT_CAST (dbin), collection_msg);
+          INPUT_LOCK (dbin);
+          dbin->posting_collection = FALSE;
+          GST_DEBUG_OBJECT (sinkpad, "Done posting collection");
+          g_cond_broadcast (&dbin->posting_cond);
+        }
+        INPUT_UNLOCK (dbin);
       }
 
       /* If we are waiting to create an identity passthrough, do it now */
@@ -2013,6 +2036,7 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
 
       /* Drain all pending events */
       if (input->events_waiting_for_collection) {
+        GST_DEBUG_OBJECT (sinkpad, "Draining pending events");
         GList *tmp;
         for (tmp = input->events_waiting_for_collection; tmp; tmp = tmp->next)
           gst_pad_event_default (sinkpad, GST_OBJECT (dbin), tmp->data);
@@ -2100,12 +2124,21 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
 
   /* For parsed inputs, if we are waiting for a collection event, store them for
    * now */
-  if (!input->collection && input->input_is_parsed) {
-    GST_DEBUG_OBJECT (sinkpad,
-        "Postponing event until we get a stream collection");
-    input->events_waiting_for_collection =
-        g_list_append (input->events_waiting_for_collection, event);
-    return TRUE;
+  if (input->input_is_parsed) {
+    gboolean have_collection;
+    INPUT_LOCK (dbin);
+    while (dbin->posting_collection) {
+      g_cond_wait (&dbin->posting_cond, &dbin->input_lock);
+    }
+    have_collection = (input->collection != NULL);
+    INPUT_UNLOCK (dbin);
+    if (!have_collection) {
+      GST_DEBUG_OBJECT (sinkpad,
+          "Postponing event until we get a stream collection");
+      input->events_waiting_for_collection =
+          g_list_append (input->events_waiting_for_collection, event);
+      return TRUE;
+    }
   }
 
   /* Chain to parent function */
