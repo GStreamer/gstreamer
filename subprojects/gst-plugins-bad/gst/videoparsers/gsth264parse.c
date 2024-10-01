@@ -1116,8 +1116,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         h264parse->field_pic_flag = slice.field_pic_flag;
       }
 
-      if (G_LIKELY (nal_type != GST_H264_NAL_SLICE_IDR &&
-              !h264parse->push_codec))
+      if (G_LIKELY (nal_type != GST_H264_NAL_SLICE_IDR))
         break;
 
       /* if we need to sneak codec NALs into the stream,
