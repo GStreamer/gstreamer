@@ -1208,6 +1208,19 @@ setup_multiqueue (GstURISourceBin * urisrc, ChildSrcPadInfo * info,
   gst_element_sync_state_with_parent (info->multiqueue);
 }
 
+static gboolean
+mark_stream_start_parsed (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  if (GST_EVENT_TYPE (*event) == GST_EVENT_STREAM_START) {
+    GstStructure *s;
+    *event = gst_event_make_writable (*event);
+    s = (GstStructure *) gst_event_get_structure (*event);
+    gst_structure_set (s, "urisourcebin-parsed-data", G_TYPE_BOOLEAN, TRUE,
+        NULL);
+  }
+  return TRUE;
+}
+
 /* Called with lock held */
 static OutputSlotInfo *
 new_output_slot (ChildSrcPadInfo * info, GstPad * originating_pad)
@@ -1247,6 +1260,13 @@ new_output_slot (ChildSrcPadInfo * info, GstPad * originating_pad)
     slot->queue_sinkpad =
         gst_element_request_pad_simple (info->multiqueue, "sink_%u");
     srcpad = gst_pad_get_single_internal_link (slot->queue_sinkpad);
+    if (urisrc->is_adaptive || (slot->linked_info
+            && slot->linked_info->demuxer_is_parsebin)) {
+      /* This is a temporary hack to notify downstream decodebin3 to *not*
+       * plug in an extra parsebin */
+      gst_pad_sticky_events_foreach (originating_pad, mark_stream_start_parsed,
+          NULL);
+    }
     gst_pad_sticky_events_foreach (originating_pad, copy_sticky_events, srcpad);
     slot->output_pad = create_output_pad (slot, srcpad);
     gst_object_unref (srcpad);
