@@ -322,7 +322,8 @@ gst_gdk_pixbuf_dec_flush (GstGdkPixbufDec * filter)
 
 
     gst_video_info_init (&info);
-    gst_video_info_set_format (&info, fmt, width, height);
+    if (!gst_video_info_set_format (&info, fmt, width, height))
+      goto format_not_supported;
     info.fps_n = filter->in_fps_n;
     info.fps_d = filter->in_fps_d;
     caps = gst_video_info_to_caps (&info);
@@ -382,6 +383,12 @@ channels_not_supported:
   {
     GST_ELEMENT_ERROR (filter, STREAM, DECODE, (NULL),
         ("%d channels not supported", n_channels));
+    return GST_FLOW_ERROR;
+  }
+format_not_supported:
+  {
+    GST_ELEMENT_ERROR (filter, STREAM, DECODE, (NULL),
+        ("%d channels with %dx%d not supported", n_channels, width, height));
     return GST_FLOW_ERROR;
   }
 no_buffer:
