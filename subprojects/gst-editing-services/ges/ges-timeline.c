@@ -330,6 +330,7 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
   iface->asset_type = GES_TYPE_PROJECT;
   iface->check_id = (GESExtractableCheckId) extractable_check_id;
   iface->get_id = extractable_get_id;
+  iface->can_update_asset = TRUE;
 }
 
 static void

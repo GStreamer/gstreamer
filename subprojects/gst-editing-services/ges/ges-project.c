@@ -1293,11 +1293,17 @@ ges_project_load (GESProject * project, GESTimeline * timeline, GError ** error)
   g_return_val_if_fail (project->priv->uri, FALSE);
   g_return_val_if_fail (timeline->tracks == NULL, FALSE);
 
-  if (!_load_project (project, timeline, error))
-    return FALSE;
+  GESProject *previous = gst_object_ref (ges_timeline_get_project (timeline));
 
   ges_extractable_set_asset (GES_EXTRACTABLE (timeline), GES_ASSET (project));
+  if (!_load_project (project, timeline, error)) {
+    ges_extractable_set_asset (GES_EXTRACTABLE (timeline),
+        GES_ASSET (previous));
+    gst_object_unref (previous);
 
+    return FALSE;
+  }
+  gst_object_unref (previous);
   return TRUE;
 }
 
