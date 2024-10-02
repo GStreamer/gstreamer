@@ -665,11 +665,6 @@ setup_vp8_mapper (GstOggStream * pad, ogg_packet * packet)
 {
   gint width, height, par_n, par_d, fps_n, fps_d;
 
-  if (packet->bytes < 26) {
-    GST_DEBUG ("Failed to parse VP8 BOS page");
-    return FALSE;
-  }
-
   width = GST_READ_UINT16_BE (packet->packet + 8);
   height = GST_READ_UINT16_BE (packet->packet + 10);
   par_n = GST_READ_UINT24_BE (packet->packet + 12);
@@ -1221,11 +1216,6 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
   gint64 prestime_n, prestime_d;
   gint64 basetime_n, basetime_d;
 
-  if (packet->bytes < 44) {
-    GST_DEBUG ("Not enough data for fishead header");
-    return FALSE;
-  }
-
   data = packet->packet;
 
   data += 8;                    /* header */
@@ -1256,8 +1246,8 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
     pad->prestime = -1;
 
   /* Ogg Skeleton 3.3+ streams provide additional information in the header */
-  if (packet->bytes >= SKELETON_FISHEAD_3_3_MIN_SIZE && pad->skeleton_major == 3
-      && pad->skeleton_minor > 0) {
+  if (packet->bytes - 44 >= SKELETON_FISHEAD_3_3_MIN_SIZE
+      && pad->skeleton_major == 3 && pad->skeleton_minor > 0) {
     gint64 firstsampletime_n, firstsampletime_d;
     gint64 lastsampletime_n, lastsampletime_d;
     gint64 firstsampletime, lastsampletime;
@@ -1296,7 +1286,7 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
 
     GST_INFO ("skeleton fishead parsed total: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (pad->total_time));
-  } else if (packet->bytes >= SKELETON_FISHEAD_4_0_MIN_SIZE
+  } else if (packet->bytes - 44 >= SKELETON_FISHEAD_4_0_MIN_SIZE
       && pad->skeleton_major == 4) {
     guint64 segment_length, content_offset;
 
@@ -1980,9 +1970,6 @@ setup_kate_mapper (GstOggStream * pad, ogg_packet * packet)
   guint8 *data = packet->packet;
   const char *category;
 
-  if (packet->bytes < 64)
-    return FALSE;
-
   pad->granulerate_n = GST_READ_UINT32_LE (data + 24);
   pad->granulerate_d = GST_READ_UINT32_LE (data + 28);
   pad->granuleshift = GST_READ_UINT8 (data + 15);
@@ -2110,9 +2097,6 @@ static gboolean
 setup_opus_mapper (GstOggStream * pad, ogg_packet * packet)
 {
   GstBuffer *buffer;
-
-  if (packet->bytes < 19)
-    return FALSE;
 
   pad->granulerate_n = 48000;
   pad->granulerate_d = 1;
@@ -2394,7 +2378,7 @@ const GstOggMap mappers[] = {
     NULL
   },
   {
-    "\001vorbis", 7, 22,
+    "\001vorbis", 7, 29,
     "audio/x-vorbis",
     setup_vorbis_mapper,
     NULL,
@@ -2426,7 +2410,7 @@ const GstOggMap mappers[] = {
     NULL
   },
   {
-    "PCM     ", 8, 0,
+    "PCM     ", 8, 28,
     "audio/x-raw",
     setup_pcm_mapper,
     NULL,
@@ -2442,7 +2426,7 @@ const GstOggMap mappers[] = {
     NULL
   },
   {
-    "CMML\0\0\0\0", 8, 0,
+    "CMML\0\0\0\0", 8, 29,
     "text/x-cmml",
     setup_cmml_mapper,
     NULL,
@@ -2458,7 +2442,7 @@ const GstOggMap mappers[] = {
     NULL
   },
   {
-    "Annodex", 7, 0,
+    "Annodex", 7, 44,
     "application/x-annodex",
     setup_fishead_mapper,
     NULL,
@@ -2537,7 +2521,7 @@ const GstOggMap mappers[] = {
     NULL
   },
   {
-    "CELT    ", 8, 0,
+    "CELT    ", 8, 60,
     "audio/x-celt",
     setup_celt_mapper,
     NULL,
@@ -2553,7 +2537,7 @@ const GstOggMap mappers[] = {
     NULL
   },
   {
-    "\200kate\0\0\0", 8, 0,
+    "\200kate\0\0\0", 8, 64,
     "text/x-kate",
     setup_kate_mapper,
     NULL,
@@ -2585,7 +2569,7 @@ const GstOggMap mappers[] = {
     NULL
   },
   {
-    "OVP80\1\1", 7, 4,
+    "OVP80\1\1", 7, 26,
     "video/x-vp8",
     setup_vp8_mapper,
     setup_vp8_mapper_from_caps,
@@ -2601,7 +2585,7 @@ const GstOggMap mappers[] = {
     update_stats_vp8
   },
   {
-    "OpusHead", 8, 0,
+    "OpusHead", 8, 19,
     "audio/x-opus",
     setup_opus_mapper,
     NULL,
@@ -2649,7 +2633,7 @@ const GstOggMap mappers[] = {
     NULL
   },
   {
-    "\001text\0\0\0", 9, 9,
+    "\001text\0\0\0", 9, 25,
     "application/x-ogm-text",
     setup_ogmtext_mapper,
     NULL,
