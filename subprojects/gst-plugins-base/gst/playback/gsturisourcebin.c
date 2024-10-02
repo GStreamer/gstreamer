@@ -2896,10 +2896,14 @@ handle_message (GstBin * bin, GstMessage * msg)
     case GST_MESSAGE_STREAM_COLLECTION:
     {
       ChildSrcPadInfo *info;
-      /* We only want to forward stream collection from the source element *OR*
-       * from adaptive demuxers. We do not want to forward them from the
-       * potential parsebins since there might be many and require aggregation
-       * to be useful/coherent. */
+      /* We only want to forward stream collections:
+       * * from the source element
+       * * OR from adaptive demuxers
+       * * OR from parsebin if there is only a single ChildSrcPadInfo
+       *
+       * We do not want to forward them if there are multiple parsebins since it
+       * requires them to be aggregated to be coherent to the outside world.
+       */
       GST_URI_SOURCE_BIN_LOCK (urisrc);
       info =
           find_adaptive_demuxer_cspi_for_msg (urisrc,
@@ -2909,14 +2913,17 @@ handle_message (GstBin * bin, GstMessage * msg)
         if (info->demuxer_is_parsebin) {
           GstStreamCollection *collection = NULL;
           gst_message_parse_stream_collection (msg, &collection);
-          GST_DEBUG_OBJECT (bin, "Dropping stream-collection from parsebin");
           /* Check if some output slots can/could be re-used with this new collection */
           if (collection) {
             handle_parsebin_collection (info, collection);
             gst_object_unref (collection);
           }
-          gst_message_unref (msg);
-          msg = NULL;
+          if (g_list_length (urisrc->src_infos) > 1) {
+            GST_DEBUG_OBJECT (bin,
+                "Dropping stream-collection, multiple parsebins present");
+            gst_message_unref (msg);
+            msg = NULL;
+          }
         }
       } else if (GST_MESSAGE_SRC (msg) != (GstObject *) urisrc->source) {
         GST_LOG_OBJECT (bin, "Collection %" GST_PTR_FORMAT, msg);
@@ -3176,6 +3183,26 @@ gst_uri_source_bin_query (GstElement * element, GstQuery * query)
       fold_init = uri_source_query_init;
       fold_done = uri_source_query_seeking_done;
       break;
+    case GST_QUERY_SELECTABLE:
+      /* This is a special case, we need to respond to it potentially before any
+       * pads are present, so we directly target childsrcpadinfos or the source */
+      if (urisrc->is_adaptive) {
+        /* Forward directly to adaptive demuxer */
+        if (urisrc->src_infos) {
+          ChildSrcPadInfo *child = urisrc->src_infos->data;
+          if (child->demuxer) {
+            return gst_element_query (child->demuxer, query);
+          }
+        }
+        GST_ERROR_OBJECT (urisrc,
+            "Source is adaptive ... but no adaptive demuxer present ?");
+        return FALSE;
+      }
+      /* FIXME: Theoretically we should fold/try on all chilsrcpadinfo, but they
+       * might not have exposed any pads yet and as of this implementation there
+       * are no known SELECTABLE support in other elements, so we fallback on the
+       * source element */
+      return gst_element_query (urisrc->source, query);
     default:
       fold_func = (GstIteratorFoldFunction) uri_source_query_generic_fold;
       break;
