@@ -1031,7 +1031,7 @@ gst_vulkan_encoder_create_dpb_pool (GstVulkanEncoder * self, GstCaps * caps)
   return TRUE;
 
 bail:
-  g_clear_object (&priv->dpb_pool);
+  gst_clear_object (&priv->dpb_pool);
   return FALSE;
 }
 
