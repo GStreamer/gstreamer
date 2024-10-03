@@ -6,6 +6,7 @@ prefix/
 .gdbinit
 
 # Editor/IDE spcific
+.helix/
 .vscode/
 .vscode-server/
 
