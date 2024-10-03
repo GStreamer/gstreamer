@@ -884,11 +884,6 @@ new_demuxer_pad_added_cb (GstElement * element, GstPad * pad,
   slot = new_output_slot (info, pad);
   output_pad = gst_object_ref (slot->output_pad);
 
-  slot->demuxer_event_probe_id =
-      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM |
-      GST_PAD_PROBE_TYPE_EVENT_FLUSH, (GstPadProbeCallback) demux_pad_events,
-      slot, NULL);
-
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
   expose_output_pad (urisrc, output_pad);
   gst_object_unref (output_pad);
@@ -1275,11 +1270,18 @@ new_output_slot (ChildSrcPadInfo * info, GstPad * originating_pad)
     gst_pad_sticky_events_foreach (originating_pad, copy_sticky_events,
         &copy_data);
 
+    if (info->demuxer) {
+      /* Make sure we add the event probe *before* linking */
+      slot->demuxer_event_probe_id =
+          gst_pad_add_probe (originating_pad,
+          GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH,
+          (GstPadProbeCallback) demux_pad_events, slot, NULL);
     }
 
     slot->output_pad = create_output_pad (slot, srcpad);
     gst_object_unref (srcpad);
     gst_pad_link (originating_pad, slot->queue_sinkpad);
+    GST_PAD_STREAM_UNLOCK (originating_pad);
   }
   /* If buffering is required, create the element. If downloadbuffer is
    * required, it will take precedence over queue2 */
