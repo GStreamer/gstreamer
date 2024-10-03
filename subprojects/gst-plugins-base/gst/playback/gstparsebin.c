@@ -3715,6 +3715,14 @@ retry:
     gst_pad_sticky_events_foreach (GST_PAD_CAST (parsepad), debug_sticky_event,
         parsepad);
 
+    /* Store the stream-collection event on the pad */
+    if (parsepad->active_collection == NULL && fallback_collection) {
+      GstEvent *new_collection =
+          gst_event_new_stream_collection (fallback_collection);
+      gst_pad_store_sticky_event (GST_PAD (parsepad), new_collection);
+      gst_event_unref (new_collection);
+    }
+
     /* 2. activate and add */
     parsepad->exposed = TRUE;
     if (!gst_element_add_pad (GST_ELEMENT (parsebin), GST_PAD_CAST (parsepad))) {
@@ -3738,13 +3746,6 @@ retry:
       GST_DEBUG_OBJECT (parsepad, "unblocking");
       gst_parse_pad_unblock (parsepad);
       GST_DEBUG_OBJECT (parsepad, "unblocked");
-    }
-
-    /* Send stream-collection events for any pads that don't have them,
-     * and post a stream-collection onto the bus */
-    if (parsepad->active_collection == NULL && fallback_collection) {
-      gst_pad_push_event (GST_PAD (parsepad),
-          gst_event_new_stream_collection (fallback_collection));
     }
     gst_object_unref (parsepad);
   }
