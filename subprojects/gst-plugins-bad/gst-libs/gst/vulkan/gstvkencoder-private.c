@@ -77,6 +77,7 @@ struct _GstVulkanEncoderPrivate
   gboolean layered_dpb;
   GstBufferPool *dpb_pool;
   GstBuffer *layered_buffer;
+  GstVulkanImageView *layered_view;
 };
 
 /**
@@ -428,8 +429,13 @@ gst_vulkan_encode_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
 
   pic->img_view = gst_vulkan_video_image_create_view (pic->in_buffer,
       priv->layered_dpb, TRUE, NULL);
-  pic->dpb_view = gst_vulkan_video_image_create_view (pic->dpb_buffer,
-      priv->layered_dpb, FALSE, NULL);
+
+  if (priv->layered_dpb) {
+    pic->dpb_view = gst_vulkan_image_view_ref (priv->layered_view);
+  } else {
+    pic->dpb_view = gst_vulkan_video_image_create_view (pic->dpb_buffer,
+        priv->layered_dpb, FALSE, NULL);
+  }
 
   return pic;
 }
@@ -542,6 +548,8 @@ gst_vulkan_encoder_stop (GstVulkanEncoder * self)
 
   gst_clear_vulkan_handle (&priv->session_params);
 
+  if (priv->layered_view)
+    gst_vulkan_image_view_unref (priv->layered_view);
   gst_clear_buffer (&priv->layered_buffer);
   gst_clear_object (&priv->dpb_pool);
 
@@ -1000,6 +1008,12 @@ gst_vulkan_encoder_create_dpb_pool (GstVulkanEncoder * self, GstCaps * caps)
         NULL);
     if (ret != GST_FLOW_OK)
       goto bail;
+
+    priv->layered_view =
+        gst_vulkan_video_image_create_view (priv->layered_buffer,
+        priv->layered_dpb, FALSE, NULL);
+
+    gst_clear_object (&priv->dpb_pool);
   }
 
   return TRUE;
