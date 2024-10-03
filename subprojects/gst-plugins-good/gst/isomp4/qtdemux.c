@@ -11405,7 +11405,8 @@ qtdemux_inspect_transformation_matrix (GstQTDemux * qtdemux,
       /* NOP */
     } else if (QTCHECK_MATRIX (matrix, 0, 1, G_MAXUINT16, 0)) {
       rotation_tag = "rotate-90";
-    } else if (QTCHECK_MATRIX (matrix, G_MAXUINT16, 0, 0, G_MAXUINT16)) {
+    } else if (QTCHECK_MATRIX (matrix, G_MAXUINT16, 0, 0, G_MAXUINT16) ||
+        QTCHECK_MATRIX (matrix, G_MAXUINT16, 0, 0, 1)) {
       rotation_tag = "rotate-180";
     } else if (QTCHECK_MATRIX (matrix, 0, G_MAXUINT16, 1, 0)) {
       rotation_tag = "rotate-270";
