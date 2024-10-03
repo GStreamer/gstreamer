@@ -675,10 +675,19 @@ db_src_probe (GstPad * pad, GstPadProbeInfo * info, OutputPad * output)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
+      gboolean drop_event = FALSE;
+      GstPlayItem *last;
+
+      PLAY_ITEMS_LOCK (uridecodebin);
+      last = g_list_last (uridecodebin->play_items)->data;
+
       /* If there is a next input, drop the EOS event */
       if (uridecodebin->input_item != uridecodebin->output_item ||
-          uridecodebin->input_item !=
-          g_list_last (uridecodebin->play_items)->data) {
+          uridecodebin->input_item != last) {
+        drop_event = TRUE;
+      }
+      PLAY_ITEMS_UNLOCK (uridecodebin);
+      if (drop_event) {
         GST_DEBUG_OBJECT (uridecodebin,
             "Dropping EOS event because in gapless mode");
         return GST_PAD_PROBE_DROP;
