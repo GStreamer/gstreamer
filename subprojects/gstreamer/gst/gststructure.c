@@ -848,7 +848,7 @@ gst_structure_get_name_id (const GstStructure * structure)
  *
  * Get the name of @structure as a GstIdStr.
  *
- * Returns: the quark representing the name of the structure.
+ * Returns: the name of the structure.
  *
  * Since: 1.26
  */
@@ -1381,8 +1381,8 @@ gst_structure_id_str_set_valist_internal (GstStructure * structure,
  *
  * Identical to gst_structure_set, except that field names are
  * passed using a GstIdStr for the field name. This allows more efficient
- * setting of the structure if the caller already knows the associated
- * quark values.
+ * setting of the structure if the caller already owns the associated
+ * GstIdStr values or if they can be built from static literals.
  * The last variable argument must be %NULL.
  *
  * Since: 1.26
@@ -1481,7 +1481,7 @@ gst_structure_new_id (GQuark name_quark, GQuark field_quark, ...)
  * @...: variable arguments
  *
  * Creates a new #GstStructure with the given name as a GQuark, followed by
- * fieldname quark, GType, argument(s) "triplets" in the same format as
+ * fieldname GstIdStr, GType, argument(s) "triplets" in the same format as
  * gst_structure_id_set(). Basically a convenience wrapper around
  * gst_structure_new_id_empty() and gst_structure_id_set().
  *
