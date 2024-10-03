@@ -372,45 +372,6 @@ gst_vulkan_encoder_new_video_session_parameters (GstVulkanEncoder * self,
       priv->vk.DestroyVideoSessionParameters);
 }
 
-static GstVulkanImageView *
-gst_vulkan_encoder_get_image_view_from_buffer (GstVulkanEncoder * self,
-    GstBuffer * buf, gboolean dpb)
-{
-  GstVulkanEncoderPrivate *priv =
-      gst_vulkan_encoder_get_instance_private (self);
-  VkImageViewCreateInfo view_create_info;
-  GstVulkanImageMemory *vkmem;
-  GstMemory *mem;
-  guint n_mems;
-
-  n_mems = gst_buffer_n_memory (buf);
-  g_assert (n_mems == 1);
-
-  mem = gst_buffer_peek_memory (buf, 0);
-  g_assert (gst_is_vulkan_image_memory (mem));
-
-  vkmem = (GstVulkanImageMemory *) mem;
-
-  /* *INDENT-OFF* */
-  view_create_info = (VkImageViewCreateInfo) {
-    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-    .viewType = (dpb && priv->layered_dpb) ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D,
-    .format = vkmem->create_info.format,
-    .image = vkmem->image,
-    .components = _vk_identity_component_map,
-    .subresourceRange = (VkImageSubresourceRange) {
-      .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
-      .baseArrayLayer = (dpb && priv->layered_dpb) ? priv->current_slot_index : 0,
-      .layerCount     = 1,
-      .levelCount     = 1,
-    },
-  };
-  /* *INDENT-ON* */
-
-  return gst_vulkan_get_or_create_image_view_with_info (vkmem,
-      &view_create_info);
-}
-
 /**
  * gst_vulkan_encode_picture_new:
  * @self: the #GstVulkanEncoder with the pool's configuration.
@@ -1141,9 +1102,8 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
   /* Set the ref slots according to the pic refs to bound the video
      session encoding. It should contain all the references + 1 to book
      a new slotIndex (-1) for the current picture. */
-  pic->dpb_view =
-      gst_vulkan_encoder_get_image_view_from_buffer (self, pic->dpb_buffer,
-      TRUE);
+  pic->dpb_view = gst_vulkan_video_image_create_view (pic->dpb_buffer,
+      priv->layered_dpb, FALSE, NULL);
 
   /* *INDENT-OFF* */
   pic->dpb = (VkVideoPictureResourceInfoKHR) {
@@ -1248,9 +1208,8 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
   /* Peek the output memory to be used by VkVideoEncodeInfoKHR.dstBuffer */
   mem = gst_buffer_peek_memory (pic->out_buffer, n_mems);
   /* Peek the image view to be encoded */
-  pic->img_view =
-      gst_vulkan_encoder_get_image_view_from_buffer (self, pic->in_buffer,
-      FALSE);
+  pic->img_view = gst_vulkan_video_image_create_view (pic->in_buffer,
+      priv->layered_dpb, TRUE, NULL);
 
   /* Attribute a free slot index to the picture to be used later as a reference.
    * The picture is kept until it remains useful to the encoding process.*/

@@ -1088,61 +1088,14 @@ gst_vulkan_decoder_picture_create_view (GstVulkanDecoder * self,
     GstBuffer * buf, gboolean is_out)
 {
   GstVulkanDecoderPrivate *priv;
-  VkSamplerYcbcrConversionInfo yuv_sampler_info;
-  VkImageViewCreateInfo view_create_info;
-  GstVulkanImageMemory *vkmem;
-  GstMemory *mem;
-  gpointer pnext;
-  guint n_mems;
 
   g_return_val_if_fail (GST_IS_VULKAN_DECODER (self) && GST_IS_BUFFER (buf),
       NULL);
 
-  n_mems = gst_buffer_n_memory (buf);
-  if (n_mems != 1)
-    return NULL;
-
-  mem = gst_buffer_peek_memory (buf, 0);
-  if (!gst_is_vulkan_image_memory (mem))
-    return NULL;
-
   priv = gst_vulkan_decoder_get_instance_private (self);
 
-  pnext = NULL;
-  if (priv->sampler) {
-    /* *INDENT-OFF* */
-    yuv_sampler_info = (VkSamplerYcbcrConversionInfo) {
-      .sType = VK_STRUCTURE_TYPE_SAMPLER_YCBCR_CONVERSION_INFO,
-      .conversion = priv->sampler->handle,
-    };
-    /* *INDENT-ON* */
-
-    pnext = &yuv_sampler_info;
-  }
-
-  vkmem = (GstVulkanImageMemory *) mem;
-
-  /* *INDENT-OFF* */
-  view_create_info = (VkImageViewCreateInfo) {
-    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-    .pNext = pnext,
-    .viewType = self->layered_dpb && !is_out ?
-        VK_IMAGE_VIEW_TYPE_2D_ARRAY: VK_IMAGE_VIEW_TYPE_2D,
-    .format = vkmem->create_info.format,
-    .image = vkmem->image,
-    .components = _vk_identity_component_map,
-    .subresourceRange = (VkImageSubresourceRange) {
-      .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
-      .baseArrayLayer = 0,
-      .layerCount     = self->layered_dpb && !is_out ?
-          VK_REMAINING_ARRAY_LAYERS : 1,
-      .levelCount     = 1,
-    },
-  };
-  /* *INDENT-ON* */
-
-  return gst_vulkan_get_or_create_image_view_with_info (vkmem,
-      &view_create_info);
+  return gst_vulkan_video_image_create_view (buf, self->layered_dpb, is_out,
+      priv->sampler);
 }
 
 /**

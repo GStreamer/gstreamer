@@ -91,4 +91,9 @@ GstBuffer *             gst_vulkan_video_codec_buffer_new       (GstVulkanDevice
                                                                  VkBufferUsageFlags usage,
                                                                  gsize size);
 
+GstVulkanImageView *    gst_vulkan_video_image_create_view     (GstBuffer * buf,
+                                                                gboolean layered_dpb,
+                                                                gboolean is_out,
+                                                                GstVulkanHandle * sampler);
+
 G_END_DECLS

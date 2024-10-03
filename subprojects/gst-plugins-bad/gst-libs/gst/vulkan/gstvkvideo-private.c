@@ -241,3 +241,74 @@ gst_vulkan_video_codec_buffer_new (GstVulkanDevice * device,
   gst_buffer_append_memory (buf, mem);
   return buf;
 }
+
+/**
+ * gst_vulkan_video_image_create_view:
+ * @buf: a #GstBuffer
+ * @layered_dpb: if DPB is layered
+ * @is_out: if @buf is for output or for DPB
+ * @sampler: (optional): sampler #GstVulkanHandle
+ *
+ * Creates a #GstVulkanImageView for @buf for decoding, with the internal Ycbcr
+ * sampler, if available.
+ *
+ * Returns: (transfer full) (nullable): the #GstVulkanImageView.
+ */
+GstVulkanImageView *
+gst_vulkan_video_image_create_view (GstBuffer * buf, gboolean layered_dpb,
+    gboolean is_out, GstVulkanHandle * sampler)
+{
+  VkSamplerYcbcrConversionInfo yuv_sampler_info;
+  VkImageViewCreateInfo view_create_info;
+  GstVulkanImageMemory *vkmem;
+  GstMemory *mem;
+  gpointer pnext;
+  guint n_mems;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buf), NULL);
+
+  n_mems = gst_buffer_n_memory (buf);
+  if (n_mems != 1)
+    return NULL;
+
+  mem = gst_buffer_peek_memory (buf, 0);
+  if (!gst_is_vulkan_image_memory (mem))
+    return NULL;
+
+  pnext = NULL;
+  if (sampler
+      && sampler->type == GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION) {
+    yuv_sampler_info = (VkSamplerYcbcrConversionInfo) {
+      /* *INDENT-OFF* */
+      .sType = VK_STRUCTURE_TYPE_SAMPLER_YCBCR_CONVERSION_INFO,
+      .conversion = sampler->handle,
+      /* *INDENT-ON* */
+    };
+
+    pnext = &yuv_sampler_info;
+  }
+
+  vkmem = (GstVulkanImageMemory *) mem;
+
+  /* *INDENT-OFF* */
+  view_create_info = (VkImageViewCreateInfo) {
+    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+    .pNext = pnext,
+    .viewType = layered_dpb && !is_out ?
+        VK_IMAGE_VIEW_TYPE_2D_ARRAY: VK_IMAGE_VIEW_TYPE_2D,
+    .format = vkmem->create_info.format,
+    .image = vkmem->image,
+    .components = _vk_identity_component_map,
+    .subresourceRange = (VkImageSubresourceRange) {
+      .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+      .baseArrayLayer = 0,
+      .layerCount     = layered_dpb && !is_out ?
+          VK_REMAINING_ARRAY_LAYERS : 1,
+      .levelCount     = 1,
+    },
+  };
+  /* *INDENT-ON* */
+
+  return gst_vulkan_get_or_create_image_view_with_info (vkmem,
+      &view_create_info);
+}
