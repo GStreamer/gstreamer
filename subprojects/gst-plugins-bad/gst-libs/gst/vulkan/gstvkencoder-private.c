@@ -983,6 +983,10 @@ gst_vulkan_encoder_create_dpb_pool (GstVulkanEncoder * self, GstCaps * caps)
   if (!priv->started)
     return FALSE;
 
+  if ((!priv->layered_dpb && priv->dpb_pool)
+      || (priv->layered_dpb && priv->layered_buffer))
+    return TRUE;
+
   if (priv->layered_dpb) {
     min_buffers = max_buffers = 1;
   } else {
