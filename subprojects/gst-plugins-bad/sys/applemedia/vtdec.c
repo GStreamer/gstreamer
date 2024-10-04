@@ -685,6 +685,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
 static gboolean
 gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 {
+  gboolean negotiate_now = TRUE;
   GstStructure *structure;
   CMVideoCodecType cm_format = 0;
   CMFormatDescriptionRef format_description = NULL;
@@ -718,15 +719,20 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   if ((cm_format == kCMVideoCodecType_H264
           || cm_format == kCMVideoCodecType_HEVC)
       && state->codec_data == NULL) {
-    GST_INFO_OBJECT (vtdec, "no codec data, wait for one");
-    return TRUE;
+    GST_INFO_OBJECT (vtdec, "waiting for codec_data before negotiation");
+    negotiate_now = FALSE;
   }
 
   gst_video_info_from_caps (&vtdec->video_info, state->caps);
 
-  if (!gst_vtdec_compute_dpb_size (vtdec, cm_format, state->codec_data))
+  if (negotiate_now &&
+      !gst_vtdec_compute_dpb_size (vtdec, cm_format, state->codec_data)) {
+    GST_INFO_OBJECT (vtdec, "Failed to compute DPB size");
     return FALSE;
-  gst_vtdec_set_latency (vtdec);
+  }
+
+  if (negotiate_now)
+    gst_vtdec_set_latency (vtdec);
 
   if (state->codec_data) {
     format_description = create_format_description_from_codec_data (vtdec,
@@ -743,7 +749,7 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     gst_video_codec_state_unref (vtdec->input_state);
   vtdec->input_state = gst_video_codec_state_ref (state);
 
-  return gst_vtdec_negotiate (decoder);
+  return negotiate_now ? gst_vtdec_negotiate (decoder) : TRUE;
 }
 
 static gboolean
