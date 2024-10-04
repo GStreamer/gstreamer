@@ -1338,10 +1338,11 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     }
 
     /* Clip to upstream size if known */
-    if (upstream_size > 0 && size + wav->offset > upstream_size) {
+    if (upstream_size > 0 && size + 8 + wav->offset > upstream_size) {
       GST_WARNING_OBJECT (wav, "Clipping chunk size to file size");
       g_assert (upstream_size >= wav->offset);
-      size = upstream_size - wav->offset;
+      g_assert (upstream_size - wav->offset >= 8);
+      size = upstream_size - wav->offset - 8;
     }
 
     /* wav is a st00pid format, we don't know for sure where data starts.
