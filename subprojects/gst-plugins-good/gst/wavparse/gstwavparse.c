@@ -894,6 +894,9 @@ gst_wavparse_smpl_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
 {
   guint32 note_number;
 
+  if (size < 32)
+    return FALSE;
+
   /*
      manufacturer_id = GST_READ_UINT32_LE (data);
      product_id = GST_READ_UINT32_LE (data + 4);
