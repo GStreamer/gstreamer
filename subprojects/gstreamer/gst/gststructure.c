@@ -1828,6 +1828,94 @@ gst_structure_remove_fields_valist (GstStructure * structure,
 }
 
 /**
+ * gst_structure_id_str_remove_field:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to remove
+ *
+ * Removes the field with the given name.  If the field with the given
+ * name does not exist, the structure is unchanged.
+ *
+ * Since: 1.26
+ */
+void
+gst_structure_id_str_remove_field (GstStructure * structure,
+    const GstIdStr * fieldname)
+{
+  GstStructureField *field;
+  guint i, len;
+
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (fieldname != NULL);
+  g_return_if_fail (IS_MUTABLE (structure));
+
+  len = GST_STRUCTURE_LEN (structure);
+  for (i = 0; i < len; i++) {
+    field = GST_STRUCTURE_FIELD (structure, i);
+
+    if (gst_id_str_is_equal (&field->name, fieldname)) {
+      if (G_IS_VALUE (&field->value)) {
+        g_value_unset (&field->value);
+      }
+      gst_id_str_clear (&field->name);
+      _structure_remove_index (structure, i);
+      return;
+    }
+  }
+}
+
+/**
+ * gst_structure_id_str_remove_fields:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to remove
+ * @...: %NULL-terminated list of more fieldnames to remove
+ *
+ * Removes the fields with the given names. If a field does not exist, the
+ * argument is ignored.
+ *
+ * Since: 1.26
+ */
+void
+gst_structure_id_str_remove_fields (GstStructure * structure,
+    const GstIdStr * fieldname, ...)
+{
+  va_list varargs;
+
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (fieldname != NULL);
+  /* mutability checked in remove_field */
+
+  va_start (varargs, fieldname);
+  gst_structure_id_str_remove_fields_valist (structure, fieldname, varargs);
+  va_end (varargs);
+}
+
+/**
+ * gst_structure_id_str_remove_fields_valist:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to remove
+ * @varargs: %NULL-terminated list of more fieldnames to remove
+ *
+ * va_list form of gst_structure_id_str_remove_fields().
+ *
+ * Since: 1.26
+ */
+void
+gst_structure_id_str_remove_fields_valist (GstStructure * structure,
+    const GstIdStr * fieldname, va_list varargs)
+{
+  const GstIdStr *field = fieldname;
+
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (fieldname != NULL);
+  /* mutability checked in remove_field */
+
+  while (field) {
+    gst_structure_id_str_remove_field (structure, field);
+    field = va_arg (varargs, const GstIdStr *);
+  }
+}
+
+/**
  * gst_structure_remove_all_fields:
  * @structure: a #GstStructure
  *
@@ -1916,6 +2004,32 @@ gst_structure_nth_field_name (const GstStructure * structure, guint index)
   field = GST_STRUCTURE_FIELD (structure, index);
 
   return gst_id_str_as_str (&field->name);
+}
+
+/**
+ * gst_structure_id_str_nth_field_name:
+ * @structure: a #GstStructure
+ * @index: the index to get the name of
+ *
+ * Get the name (as a GstIdStr) of the given field number,
+ * counting from 0 onwards.
+ *
+ * Returns: the name of the given field number
+ *
+ * Since: 1.26
+ */
+const GstIdStr *
+gst_structure_id_str_nth_field_name (const GstStructure * structure,
+    guint index)
+{
+  GstStructureField *field;
+
+  g_return_val_if_fail (structure != NULL, NULL);
+  g_return_val_if_fail (index < GST_STRUCTURE_LEN (structure), NULL);
+
+  field = GST_STRUCTURE_FIELD (structure, index);
+
+  return &field->name;
 }
 
 typedef struct

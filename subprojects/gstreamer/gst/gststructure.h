@@ -377,6 +377,17 @@ void                  gst_structure_remove_fields_valist (GstStructure        * 
                                                           const gchar         * fieldname,
                                                           va_list               varargs);
 GST_API
+void                  gst_structure_id_str_remove_field  (GstStructure        * structure,
+                                                          const GstIdStr      * fieldname);
+GST_API
+void                  gst_structure_id_str_remove_fields (GstStructure        * structure,
+                                                          const GstIdStr      * fieldname,
+                                                          ...) G_GNUC_NULL_TERMINATED;
+GST_API
+void                  gst_structure_id_str_remove_fields_valist(GstStructure  * structure,
+                                                          const GstIdStr      * fieldname,
+                                                          va_list               varargs);
+GST_API
 void                  gst_structure_remove_all_fields    (GstStructure        * structure);
 
 GST_API
@@ -411,6 +422,9 @@ gint                  gst_structure_n_fields             (const GstStructure  * 
 
 GST_API
 const gchar *         gst_structure_nth_field_name       (const GstStructure  * structure,
+                                                          guint                 index);
+GST_API
+const GstIdStr *      gst_structure_id_str_nth_field_name(const GstStructure  * structure,
                                                           guint                 index);
 GST_DEPRECATED_FOR(gst_structure_id_str_has_field)
 gboolean              gst_structure_id_has_field         (const GstStructure  * structure,

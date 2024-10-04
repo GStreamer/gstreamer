@@ -42160,7 +42160,7 @@ Free-function: gst_structure_free</doc>
       </constructor>
       <constructor name="new_id_str" c:identifier="gst_structure_new_id_str" version="1.26" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Creates a new #GstStructure with the given name as a GQuark, followed by
-fieldname quark, GType, argument(s) "triplets" in the same format as
+fieldname GstIdStr, GType, argument(s) "triplets" in the same format as
 gst_structure_id_set(). Basically a convenience wrapper around
 gst_structure_new_id_empty() and gst_structure_id_set().
 
@@ -43066,7 +43066,7 @@ function returns %FALSE.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Get the name of @structure as a GstIdStr.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the quark representing the name of the structure.</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the structure.</doc>
           <type name="IdStr" c:type="const GstIdStr*"/>
         </return-value>
         <parameters>
@@ -43565,11 +43565,91 @@ name.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="id_str_nth_field_name" c:identifier="gst_structure_id_str_nth_field_name" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Get the name (as a GstIdStr) of the given field number,
+counting from 0 onwards.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the given field number</doc>
+          <type name="IdStr" c:type="const GstIdStr*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="const GstStructure*"/>
+          </instance-parameter>
+          <parameter name="index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the index to get the name of</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_str_remove_field" c:identifier="gst_structure_id_str_remove_field" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Removes the field with the given name.  If the field with the given
+name does not exist, the structure is unchanged.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the field to remove</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_str_remove_fields" c:identifier="gst_structure_id_str_remove_fields" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Removes the fields with the given names. If a field does not exist, the
+argument is ignored.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the field to remove</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="..." transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%NULL-terminated list of more fieldnames to remove</doc>
+            <varargs/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_str_remove_fields_valist" c:identifier="gst_structure_id_str_remove_fields_valist" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">va_list form of gst_structure_id_str_remove_fields().</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the field to remove</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="varargs" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%NULL-terminated list of more fieldnames to remove</doc>
+            <type name="va_list" c:type="va_list"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="id_str_set" c:identifier="gst_structure_id_str_set" version="1.26" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Identical to gst_structure_set, except that field names are
 passed using a GstIdStr for the field name. This allows more efficient
-setting of the structure if the caller already knows the associated
-quark values.
+setting of the structure if the caller already owns the associated
+GstIdStr values or if they can be built from static literals.
 The last variable argument must be %NULL.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
         <return-value transfer-ownership="none">
