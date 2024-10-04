@@ -196,7 +196,7 @@ gst_avi_subtitle_parse_gab2_chunk (GstAviSubtitle * sub, GstBuffer * buf)
   /* read 'name' of subtitle */
   name_length = GST_READ_UINT32_LE (map.data + 5 + 2);
   GST_LOG_OBJECT (sub, "length of name: %u", name_length);
-  if (map.size <= 17 + name_length)
+  if (G_MAXUINT32 - 17 < name_length || map.size < 17 + name_length)
     goto wrong_name_length;
 
   name_utf8 =
@@ -216,7 +216,8 @@ gst_avi_subtitle_parse_gab2_chunk (GstAviSubtitle * sub, GstBuffer * buf)
   file_length = GST_READ_UINT32_LE (map.data + 13 + name_length);
   GST_LOG_OBJECT (sub, "length srt/ssa file: %u", file_length);
 
-  if (map.size < (17 + name_length + file_length))
+  if (G_MAXUINT32 - 17 - name_length < file_length
+      || map.size < 17 + name_length + file_length)
     goto wrong_total_length;
 
   /* store this, so we can send it again after a seek; note that we shouldn't
