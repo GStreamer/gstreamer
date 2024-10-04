@@ -39,6 +39,7 @@ subprojects/libsass.wrap
 subprojects/libtiff.wrap
 subprojects/sassc.wrap
 subprojects/abseil-cpp.wrap
+subprojects/sysprof.wrap
 
 subprojects/*/
 !subprojects/gst-devtools
