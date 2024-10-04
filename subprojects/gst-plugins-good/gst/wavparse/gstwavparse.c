@@ -1088,6 +1088,11 @@ parse_ds64 (GstWavParse * wav, GstBuffer * buf)
   guint32 sampleCountLow, sampleCountHigh;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
+  if (map.size < 6 * 4) {
+    GST_WARNING_OBJECT (wav, "Too small ds64 chunk (%" G_GSIZE_FORMAT ")",
+        map.size);
+    return FALSE;
+  }
   dataSizeLow = GST_READ_UINT32_LE (map.data + 2 * 4);
   dataSizeHigh = GST_READ_UINT32_LE (map.data + 3 * 4);
   sampleCountLow = GST_READ_UINT32_LE (map.data + 4 * 4);
