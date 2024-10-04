@@ -16,7 +16,8 @@ if have_lame
     lame_extra_c_args += ['-DGSTLAME_PRESET']
   endif
 else
-  lame_dep = dependency('mp3lame', fallback: ['lame', 'lame_dep'], required: lame_option)
+  lame_dep = dependency('mp3lame', allow_fallback: true, required: lame_option,
+      default_options: ['tools=disabled'])
   have_lame = lame_dep.found()
   lame_extra_c_args += ['-DHAVE_LAME_SET_VBR_QUALITY', '-DGSTLAME_PRESET', '-DLAME_SUBPROJECT']
 endif
