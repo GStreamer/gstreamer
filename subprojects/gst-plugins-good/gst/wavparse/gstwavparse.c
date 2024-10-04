@@ -1434,8 +1434,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         break;
       }
       case GST_RIFF_TAG_acid:{
-        const gst_riff_acid *acid = NULL;
-        const guint data_size = sizeof (gst_riff_acid);
+        const guint data_size = 24;
         gfloat tempo;
 
         GST_INFO_OBJECT (wav, "Have acid chunk");
@@ -1449,13 +1448,13 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           break;
         }
         if (wav->streaming) {
+          const guint8 *data;
           if (!gst_wavparse_peek_chunk (wav, &tag, &size)) {
             goto exit;
           }
           gst_adapter_flush (wav->adapter, 8);
-          acid = (const gst_riff_acid *) gst_adapter_map (wav->adapter,
-              data_size);
-          tempo = acid->tempo;
+          data = gst_adapter_map (wav->adapter, data_size);
+          tempo = GST_READ_FLOAT_LE (data + 20);
           gst_adapter_unmap (wav->adapter);
         } else {
           GstMapInfo map;
@@ -1466,8 +1465,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
                       &buf)) != GST_FLOW_OK)
             goto header_pull_error;
           gst_buffer_map (buf, &map, GST_MAP_READ);
-          acid = (const gst_riff_acid *) map.data;
-          tempo = acid->tempo;
+          tempo = GST_READ_FLOAT_LE (map.data + 20);
           gst_buffer_unmap (buf, &map);
         }
         /* send data as tags */
