@@ -1489,6 +1489,10 @@ gst_wavparse_stream_headers (GstWavParse * wav)
       case GST_RIFF_TAG_LIST:{
         guint32 ltag;
 
+        /* Need at least the ltag */
+        if (size < 4)
+          goto exit;
+
         if (wav->streaming) {
           const guint8 *data = NULL;
 
