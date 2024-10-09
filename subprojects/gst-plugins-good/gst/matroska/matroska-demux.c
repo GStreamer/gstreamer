@@ -7183,8 +7183,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
 
       /* 18 is the waveformatex size */
       if (size > 18) {
-        codec_data = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-            data + 18, size - 18, 0, size - 18, NULL, NULL);
+        codec_data = gst_buffer_new_memdup (data + 18, size - 18);
       }
 
       if (riff_audio_fmt)
