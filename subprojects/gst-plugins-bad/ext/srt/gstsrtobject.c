@@ -1139,20 +1139,22 @@ gst_srt_object_wait_connect (GstSRTObject * srtobject,
     goto failed;
   }
 
-  GST_DEBUG_OBJECT (srtobject->element, "Starting to listen on bind socket");
-  if (srt_listen (sock, 1) == SRT_ERROR) {
-    g_set_error (error, GST_RESOURCE_ERROR,
-        GST_RESOURCE_ERROR_OPEN_READ_WRITE, "Cannot listen on bind socket: %s",
-        srt_getlasterror_str ());
-
-    goto failed;
-  }
-
   srtobject->listener_sock = sock;
 
   /* Register the SRT listen callback */
   if (srt_listen_callback (srtobject->listener_sock,
           (srt_listen_callback_fn *) srt_listen_callback_func, srtobject)) {
+    g_set_error (error, GST_RESOURCE_ERROR,
+        GST_RESOURCE_ERROR_OPEN_READ_WRITE,
+        "Failed to register SRT listen callback: %s", srt_getlasterror_str ());
+    goto failed;
+  }
+
+  GST_DEBUG_OBJECT (srtobject->element, "Starting to listen on bind socket");
+  if (srt_listen (sock, 1) == SRT_ERROR) {
+    g_set_error (error, GST_RESOURCE_ERROR,
+        GST_RESOURCE_ERROR_OPEN_READ_WRITE, "Cannot listen on bind socket: %s",
+        srt_getlasterror_str ());
     goto failed;
   }
 
