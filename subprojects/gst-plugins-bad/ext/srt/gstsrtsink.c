@@ -155,7 +155,7 @@ gst_srt_sink_start (GstBaseSink * bsink)
   if (!ret) {
     /* ensure error is posted since state change will fail */
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE, (NULL),
-        ("Failed to open SRT: %s", error->message));
+        ("Failed to open SRT: %s", error ? error->message : "Unknown error"));
     g_clear_error (&error);
   }
 
