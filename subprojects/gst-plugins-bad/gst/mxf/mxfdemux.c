@@ -2875,6 +2875,9 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     return ret;
   }
 
+  if (!etrack->offsets)
+    etrack->offsets = g_array_new (FALSE, TRUE, sizeof (GstMXFDemuxIndex));
+
   if (!index_entry.initialized) {
     /* This can happen when doing scanning without entry tables */
     index_entry.duration = 1;
@@ -2890,11 +2893,10 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         etrack->track_id, index_entry.dts, index_entry.offset,
         index_entry.keyframe);
 
-    if (!etrack->offsets)
-      etrack->offsets = g_array_new (FALSE, TRUE, sizeof (GstMXFDemuxIndex));
-
     /* We only ever append to the track offset entry. */
     g_assert (etrack->position <= etrack->offsets->len);
+    g_array_insert_val (etrack->offsets, etrack->position, index_entry);
+  } else if (etrack->position == etrack->offsets->len) {
     g_array_insert_val (etrack->offsets, etrack->position, index_entry);
   }
 
