@@ -11,6 +11,11 @@ hlsl_sources = [
   ['VSMain_coord', 'vs'],
   ['VSMain_pos', 'vs'],
   ['CSMain_mipgen', 'cs'],
+  ['CSMain_yadif_1_10', 'cs'],
+  ['CSMain_yadif_1_12', 'cs'],
+  ['CSMain_yadif_1', 'cs'],
+  ['CSMain_yadif_2', 'cs'],
+  ['CSMain_yadif_4', 'cs'],
 ]
 
 shader_model = '5_0'
