@@ -2320,7 +2320,8 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
       gint i;
 
       READ_UE (&nr, pps->pic_size_in_map_units_minus1);
-      bits = g_bit_storage (pps->num_slice_groups_minus1);
+      /* 7.4.2.2 7-23 slice_group_id */
+      bits = gst_util_ceil_log2 (pps->num_slice_groups_minus1 + 1);
 
       pps->slice_group_id =
           g_new (guint8, pps->pic_size_in_map_units_minus1 + 1);
@@ -2600,11 +2601,12 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
 
   if (pps->num_slice_groups_minus1 > 0 &&
       pps->slice_group_map_type >= 3 && pps->slice_group_map_type <= 5) {
-    /* Ceil(Log2(PicSizeInMapUnits / SliceGroupChangeRate + 1))  [7-33] */
+
     guint32 PicWidthInMbs = sps->pic_width_in_mbs_minus1 + 1;
     guint32 PicHeightInMapUnits = sps->pic_height_in_map_units_minus1 + 1;
     guint32 PicSizeInMapUnits = PicWidthInMbs * PicHeightInMapUnits;
     guint32 SliceGroupChangeRate = pps->slice_group_change_rate_minus1 + 1;
+    /* Ceil(Log2(PicSizeInMapUnits / SliceGroupChangeRate + 1))  [7-35] */
     const guint n =
         gst_util_ceil_log2 (PicSizeInMapUnits / SliceGroupChangeRate + 1);
     READ_UINT16 (&nr, slice->slice_group_change_cycle, n);
