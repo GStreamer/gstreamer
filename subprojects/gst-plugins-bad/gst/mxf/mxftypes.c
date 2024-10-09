@@ -1273,6 +1273,41 @@ mxf_index_table_segment_parse (const MXFUL * ul,
         }
         break;
       }
+      case 0x3f0f:
+        if (tag_size != 8)
+          goto error;
+        segment->ext_start_offset = GST_READ_UINT64_BE (tag_data);
+        GST_DEBUG ("  ext start offset = %" G_GUINT64_FORMAT,
+            segment->ext_start_offset);
+        break;
+      case 0x3f10:
+        if (tag_size != 8)
+          goto error;
+        segment->vbe_byte_count = GST_READ_UINT64_BE (tag_data);
+        GST_DEBUG ("  vbe byte count = %" G_GUINT64_FORMAT,
+            segment->vbe_byte_count);
+        break;
+      case 0x3f11:
+        if (tag_size != 1)
+          goto error;
+        segment->single_index_location = (GST_READ_UINT8 (tag_data) != 0);
+        GST_DEBUG ("   single index location = %d",
+            segment->single_index_location);
+        break;
+      case 0x3f12:
+        if (tag_size != 1)
+          goto error;
+        segment->single_essence_location = (GST_READ_UINT8 (tag_data) != 0);
+        GST_DEBUG ("   single essence location = %d",
+            segment->single_essence_location);
+        break;
+      case 0x3f13:
+        if (tag_size != 1)
+          goto error;
+        segment->forward_index_direction = (GST_READ_UINT8 (tag_data) != 0);
+        GST_DEBUG ("   forward index direction = %d",
+            segment->forward_index_direction);
+        break;
       default:
         GST_WARNING
             ("Unknown local tag 0x%04x of size %d in index table segment", tag,
