@@ -83,7 +83,7 @@ struct GstD3D12MipGenPrivate
   }
 
   GstD3D12Device *device = nullptr;
-  GstD3D12DescriptorPool *desc_pool = nullptr;
+  GstD3D12DescHeapPool *desc_pool = nullptr;
   ComPtr < ID3D12PipelineState > pso;
   ComPtr < ID3D12RootSignature > rs;
   guint desc_inc_size;
@@ -222,7 +222,7 @@ gst_d3d12_mip_gen_new (GstD3D12Device * device)
   desc_heap_desc.NumDescriptors = 5;
   desc_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
-  priv->desc_pool = gst_d3d12_descriptor_pool_new (device_handle,
+  priv->desc_pool = gst_d3d12_desc_heap_pool_new (device_handle,
       &desc_heap_desc);
   if (!priv->desc_pool) {
     GST_ERROR_OBJECT (self, "Couldn't create descriptor pool");
@@ -319,15 +319,15 @@ gst_d3d12_mip_gen_execute (GstD3D12MipGen * gen, ID3D12Resource * resource,
       cl->ResourceBarrier (1, &barrier);
     }
 
-    GstD3D12Descriptor *desc_heap;
-    if (!gst_d3d12_descriptor_pool_acquire (priv->desc_pool, &desc_heap)) {
+    GstD3D12DescHeap *desc_heap;
+    if (!gst_d3d12_desc_heap_pool_acquire (priv->desc_pool, &desc_heap)) {
       GST_ERROR_OBJECT (gen, "Couldn't acquire descriptor heap");
       return FALSE;
     }
 
     gst_d3d12_fence_data_push (fence_data,
         FENCE_NOTIFY_MINI_OBJECT (desc_heap));
-    auto desc_handle = gst_d3d12_descriptor_get_handle (desc_heap);
+    auto desc_handle = gst_d3d12_desc_heap_get_handle (desc_heap);
     auto cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
         (GetCPUDescriptorHandleForHeapStart (desc_handle));
 

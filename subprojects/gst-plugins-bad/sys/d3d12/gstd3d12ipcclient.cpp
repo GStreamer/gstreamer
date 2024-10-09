@@ -503,11 +503,11 @@ gst_d3d12_ipc_client_have_data (GstD3D12IpcClient * self)
       copy_args.push_back (args);
     }
 
-    auto queue = gst_d3d12_device_get_command_queue (priv->device,
+    auto queue = gst_d3d12_device_get_cmd_queue (priv->device,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
     auto completed = priv->server_fence->GetCompletedValue ();
     if (completed < fence_val) {
-      gst_d3d12_command_queue_execute_wait (queue, priv->server_fence.Get (),
+      gst_d3d12_cmd_queue_execute_wait (queue, priv->server_fence.Get (),
           fence_val);
     }
 
@@ -522,7 +522,7 @@ gst_d3d12_ipc_client_have_data (GstD3D12IpcClient * self)
     data->self = (GstD3D12IpcClient *) gst_object_ref (self);
     data->imported = import_data;
 
-    gst_d3d12_command_queue_set_notify (queue, copy_fence_val, data,
+    gst_d3d12_cmd_queue_set_notify (queue, copy_fence_val, data,
         (GDestroyNotify) gst_d3d12_ipc_client_release_imported_data);
 
     gst_d3d12_buffer_set_fence (buffer,

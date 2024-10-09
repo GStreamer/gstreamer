@@ -234,7 +234,7 @@ struct PadContext
   {
     device = (GstD3D12Device *) gst_object_ref (dev);
     auto device_handle = gst_d3d12_device_get_device_handle (device);
-    ca_pool = gst_d3d12_command_allocator_pool_new (device_handle,
+    ca_pool = gst_d3d12_cmd_alloc_pool_new (device_handle,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
     gst_video_info_init (&info);
   }
@@ -253,7 +253,7 @@ struct PadContext
   }
 
   GstVideoInfo info;
-  GstD3D12CommandAllocatorPool *ca_pool;
+  GstD3D12CmdAllocPool *ca_pool;
   ComPtr < ID3D12GraphicsCommandList > cl;
   GstD3D12FenceData *fence_data = nullptr;
   GstD3D12Device *device;
@@ -322,7 +322,7 @@ struct BackgroundRender
   {
     device = (GstD3D12Device *) gst_object_ref (dev);
     auto device_handle = gst_d3d12_device_get_device_handle (device);
-    ca_pool = gst_d3d12_command_allocator_pool_new (device_handle,
+    ca_pool = gst_d3d12_cmd_alloc_pool_new (device_handle,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     D3D12_VERSIONED_ROOT_SIGNATURE_DESC rs_desc = { };
@@ -524,7 +524,7 @@ struct BackgroundRender
   D3D12_VERTEX_BUFFER_VIEW vbv;
   D3D12_INDEX_BUFFER_VIEW ibv;
   ComPtr < ID3D12GraphicsCommandList > cl;
-  GstD3D12CommandAllocatorPool *ca_pool;
+  GstD3D12CmdAllocPool *ca_pool;
   D3D12_VIEWPORT viewport;
   D3D12_RECT scissor_rect;
   guint rtv_inc_size;
@@ -1117,8 +1117,8 @@ gst_d3d12_compositor_preprare_func (GstVideoAggregatorPad * pad,
   g_object_set (priv->ctx->conv, "src-x", x, "src-y", y, "src-width", w,
       "src-height", h, nullptr);
 
-  GstD3D12CommandAllocator *gst_ca;
-  if (!gst_d3d12_command_allocator_pool_acquire (priv->ctx->ca_pool, &gst_ca)) {
+  GstD3D12CmdAlloc *gst_ca;
+  if (!gst_d3d12_cmd_alloc_pool_acquire (priv->ctx->ca_pool, &gst_ca)) {
     GST_ERROR_OBJECT (cpad, "Couldn't acquire command allocator");
     return FALSE;
   }
@@ -1127,7 +1127,7 @@ gst_d3d12_compositor_preprare_func (GstVideoAggregatorPad * pad,
   gst_d3d12_fence_data_pool_acquire (self->priv->fence_data_pool, &fence_data);
   gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
 
-  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
+  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
 
   auto hr = ca->Reset ();
   if (!gst_d3d12_result (hr, priv->ctx->device)) {
@@ -2237,8 +2237,8 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
     }
   }
 
-  GstD3D12CommandAllocator *gst_ca;
-  if (!gst_d3d12_command_allocator_pool_acquire (bg_render->ca_pool, &gst_ca)) {
+  GstD3D12CmdAlloc *gst_ca;
+  if (!gst_d3d12_cmd_alloc_pool_acquire (bg_render->ca_pool, &gst_ca)) {
     GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
     return FALSE;
   }
@@ -2247,7 +2247,7 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
   gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
 
-  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
+  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
 
   auto hr = ca->Reset ();
   if (!gst_d3d12_result (hr, self->device)) {

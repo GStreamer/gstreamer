@@ -442,9 +442,9 @@ gst_d3d12_frame_copy_plane (GstD3D12Frame * dest, const GstD3D12Frame * src,
   gst_d3d12_fence_data_push (fence_data,
       FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (src->buffer)));
 
-  auto cq = gst_d3d12_device_get_command_queue (src->device,
+  auto cq = gst_d3d12_device_get_cmd_queue (src->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
-  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
+  auto cq_handle = gst_d3d12_cmd_queue_get_handle (cq);
 
   if (src->fence[plane].fence)
     cq_handle->Wait (src->fence[plane].fence, src->fence[plane].fence_value);
@@ -460,7 +460,7 @@ gst_d3d12_frame_copy_plane (GstD3D12Frame * dest, const GstD3D12Frame * src,
 /**
  * gst_d3d12_frame_fence_gpu_wait:
  * @frame: a #GstD3D12Frame
- * @queue: a GstD3D12CommandQueue
+ * @queue: a GstD3D12CmdQueue
  *
  * Executes ID3D12CommandQueue::Wait() if @frame has different fence object
  *
@@ -470,15 +470,15 @@ gst_d3d12_frame_copy_plane (GstD3D12Frame * dest, const GstD3D12Frame * src,
  */
 gboolean
 gst_d3d12_frame_fence_gpu_wait (const GstD3D12Frame * frame,
-    GstD3D12CommandQueue * queue)
+    GstD3D12CmdQueue * queue)
 {
   g_return_val_if_fail (frame, FALSE);
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (frame->device), FALSE);
-  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), FALSE);
+  g_return_val_if_fail (GST_IS_D3D12_CMD_QUEUE (queue), FALSE);
 
   ID3D12Fence *last_fence = nullptr;
   guint64 last_fence_val = 0;
-  auto fence = gst_d3d12_command_queue_get_fence_handle (queue);
+  auto fence = gst_d3d12_cmd_queue_get_fence_handle (queue);
 
   for (guint i = 0; i < G_N_ELEMENTS (frame->fence); i++) {
     if (frame->fence[i].fence && frame->fence[i].fence != fence) {
@@ -489,7 +489,7 @@ gst_d3d12_frame_fence_gpu_wait (const GstD3D12Frame * frame,
       last_fence = frame->fence[i].fence;
       last_fence_val = frame->fence[i].fence_value;
 
-      auto hr = gst_d3d12_command_queue_execute_wait (queue,
+      auto hr = gst_d3d12_cmd_queue_execute_wait (queue,
           frame->fence[i].fence, frame->fence[i].fence_value);
       if (!gst_d3d12_result (hr, frame->device))
         return FALSE;

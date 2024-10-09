@@ -94,7 +94,7 @@ gboolean                gst_d3d12_device_get_format               (GstD3D12Devic
                                                                    GstD3D12Format * device_format);
 
 GST_D3D12_API
-GstD3D12CommandQueue *  gst_d3d12_device_get_command_queue        (GstD3D12Device * device,
+GstD3D12CmdQueue *      gst_d3d12_device_get_cmd_queue            (GstD3D12Device * device,
                                                                    D3D12_COMMAND_LIST_TYPE queue_type);
 
 GST_D3D12_API

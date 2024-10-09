@@ -501,17 +501,17 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
 
   gst_d3d12_overlay_compositor_upload (resource->comp, buffer);
 
-  GstD3D12CommandAllocator *gst_ca;
-  if (!gst_d3d12_command_allocator_pool_acquire (resource->ca_pool, &gst_ca)) {
+  GstD3D12CmdAlloc *gst_ca;
+  if (!gst_d3d12_cmd_alloc_pool_acquire (resource->ca_pool, &gst_ca)) {
     GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
     return GST_FLOW_ERROR;
   }
 
-  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
+  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
   auto hr = ca->Reset ();
   if (!gst_d3d12_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't reset command list");
-    gst_d3d12_command_allocator_unref (gst_ca);
+    gst_d3d12_cmd_alloc_unref (gst_ca);
     return GST_FLOW_ERROR;
   }
 
@@ -522,7 +522,7 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
         ca, nullptr, IID_PPV_ARGS (&cl));
     if (!gst_d3d12_result (hr, device)) {
       GST_ERROR_OBJECT (self, "Couldn't create command list");
-      gst_d3d12_command_allocator_unref (gst_ca);
+      gst_d3d12_cmd_alloc_unref (gst_ca);
       return GST_FLOW_ERROR;
     }
 
@@ -532,7 +532,7 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
     hr = cl->Reset (ca, nullptr);
     if (!gst_d3d12_result (hr, device)) {
       GST_ERROR_OBJECT (self, "Couldn't reset command list");
-      gst_d3d12_command_allocator_unref (gst_ca);
+      gst_d3d12_cmd_alloc_unref (gst_ca);
       return GST_FLOW_ERROR;
     }
   }
@@ -567,9 +567,9 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
 
   swapbuf->is_first = false;
 
-  auto cq = gst_d3d12_device_get_command_queue (device,
+  auto cq = gst_d3d12_device_get_cmd_queue (device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
-  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
+  auto cq_handle = gst_d3d12_cmd_queue_get_handle (cq);
   if (!gst_d3d12_converter_convert_buffer (resource->conv,
           buffer, conv_outbuf, fence_data, cl.Get (), TRUE)) {
     GST_ERROR_OBJECT (self, "Couldn't build convert command");
@@ -646,7 +646,7 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
   }
 
   ID3D12CommandList *cmd_list[] = { cl.Get () };
-  hr = gst_d3d12_command_queue_execute_command_lists (cq,
+  hr = gst_d3d12_cmd_queue_execute_command_lists (cq,
       1, cmd_list, &resource->fence_val);
   if (!gst_d3d12_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Signal failed");
@@ -654,7 +654,7 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
     return GST_FLOW_ERROR;
   }
 
-  gst_d3d12_command_queue_set_notify (cq, resource->fence_val,
+  gst_d3d12_cmd_queue_set_notify (cq, resource->fence_val,
       fence_data, (GDestroyNotify) gst_d3d12_fence_data_unref);
 
   if (selected_overlay_mode != GST_D3D12_WINDOW_OVERLAY_NONE) {
@@ -675,23 +675,23 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
   }
 
   if (state_after != D3D12_RESOURCE_STATE_COMMON) {
-    if (!gst_d3d12_command_allocator_pool_acquire (resource->ca_pool, &gst_ca)) {
+    if (!gst_d3d12_cmd_alloc_pool_acquire (resource->ca_pool, &gst_ca)) {
       GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
       return GST_FLOW_ERROR;
     }
 
-    ca = gst_d3d12_command_allocator_get_handle (gst_ca);
+    ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
     hr = ca->Reset ();
     if (!gst_d3d12_result (hr, device)) {
       GST_ERROR_OBJECT (self, "Couldn't reset command allocator");
-      gst_d3d12_command_allocator_unref (gst_ca);
+      gst_d3d12_cmd_alloc_unref (gst_ca);
       return GST_FLOW_ERROR;
     }
 
     hr = cl->Reset (ca, nullptr);
     if (!gst_d3d12_result (hr, device)) {
       GST_ERROR_OBJECT (self, "Couldn't reset command list");
-      gst_d3d12_command_allocator_unref (gst_ca);
+      gst_d3d12_cmd_alloc_unref (gst_ca);
       return GST_FLOW_ERROR;
     }
 
@@ -709,7 +709,7 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
       return GST_FLOW_ERROR;
     }
 
-    hr = gst_d3d12_command_queue_execute_command_lists (cq,
+    hr = gst_d3d12_cmd_queue_execute_command_lists (cq,
         1, cmd_list, &resource->fence_val);
     if (!gst_d3d12_result (hr, device)) {
       GST_ERROR_OBJECT (self, "Signal failed");
@@ -717,7 +717,7 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
       return GST_FLOW_ERROR;
     }
 
-    gst_d3d12_command_queue_set_notify (cq, resource->fence_val,
+    gst_d3d12_cmd_queue_set_notify (cq, resource->fence_val,
         fence_data, (GDestroyNotify) gst_d3d12_fence_data_unref);
   }
 

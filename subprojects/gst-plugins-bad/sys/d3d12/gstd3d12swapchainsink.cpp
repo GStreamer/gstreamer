@@ -126,7 +126,7 @@ struct GstD3D12SwapChainSinkPrivate
   void stop ()
   {
     if (cq && swapchain && fence_val > 0)
-     gst_d3d12_command_queue_idle_for_swapchain (cq, fence_val);
+     gst_d3d12_cmd_queue_idle_for_swapchain (cq, fence_val);
     if (pool) {
       gst_buffer_pool_set_active (pool, FALSE);
       gst_clear_object (&pool);
@@ -165,8 +165,8 @@ struct GstD3D12SwapChainSinkPrivate
   GstStructure *convert_config = nullptr;
   GstD3D12FenceDataPool *fence_data_pool = nullptr;
   GstBufferPool *pool = nullptr;
-  GstD3D12CommandQueue *cq = nullptr;
-  GstD3D12CommandAllocatorPool *ca_pool = nullptr;
+  GstD3D12CmdQueue *cq = nullptr;
+  GstD3D12CmdAllocPool *ca_pool = nullptr;
   GstBuffer *cached_buf = nullptr;
   GstBuffer *msaa_buf = nullptr;
   GstCaps *caps = nullptr;
@@ -411,7 +411,7 @@ gst_d3d12_swapchain_sink_resize_unlocked (GstD3D12SwapChainSink * self,
     GST_DEBUG_OBJECT (self, "Resizing swapchain, %ux%u -> %ux%u",
         priv->width, priv->height, width, height);
     if (priv->cq && priv->swapchain && priv->fence_val > 0)
-      gst_d3d12_command_queue_idle_for_swapchain (priv->cq, priv->fence_val);
+      gst_d3d12_cmd_queue_idle_for_swapchain (priv->cq, priv->fence_val);
 
     priv->backbuf.clear ();
     priv->width = width;
@@ -500,10 +500,10 @@ gst_d3d12_swapchain_sink_ensure_swapchain (GstD3D12SwapChainSink * self)
     return FALSE;
   }
 
-  priv->cq = gst_d3d12_device_get_command_queue (self->device,
+  priv->cq = gst_d3d12_device_get_cmd_queue (self->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-  auto cq = gst_d3d12_command_queue_get_handle (priv->cq);
+  auto cq = gst_d3d12_cmd_queue_get_handle (priv->cq);
   auto factory = gst_d3d12_device_get_factory_handle (self->device);
 
   DXGI_SWAP_CHAIN_DESC1 desc = { };
@@ -532,7 +532,7 @@ gst_d3d12_swapchain_sink_ensure_swapchain (GstD3D12SwapChainSink * self)
   }
 
   auto device = gst_d3d12_device_get_device_handle (self->device);
-  priv->ca_pool = gst_d3d12_command_allocator_pool_new (device,
+  priv->ca_pool = gst_d3d12_cmd_alloc_pool_new (device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
 
   GstVideoInfo info;
@@ -752,17 +752,17 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
 
   gst_d3d12_overlay_compositor_upload (priv->comp, priv->cached_buf);
 
-  GstD3D12CommandAllocator *gst_ca;
-  if (!gst_d3d12_command_allocator_pool_acquire (priv->ca_pool, &gst_ca)) {
+  GstD3D12CmdAlloc *gst_ca;
+  if (!gst_d3d12_cmd_alloc_pool_acquire (priv->ca_pool, &gst_ca)) {
     GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
     return FALSE;
   }
 
-  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
+  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
   auto hr = ca->Reset ();
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't reset command list");
-    gst_d3d12_command_allocator_unref (gst_ca);
+    gst_d3d12_cmd_alloc_unref (gst_ca);
     return FALSE;
   }
 
@@ -773,7 +773,7 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
         ca, nullptr, IID_PPV_ARGS (&cl));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create command list");
-      gst_d3d12_command_allocator_unref (gst_ca);
+      gst_d3d12_cmd_alloc_unref (gst_ca);
       return FALSE;
     }
 
@@ -783,7 +783,7 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
     hr = cl->Reset (ca, nullptr);
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't reset command list");
-      gst_d3d12_command_allocator_unref (gst_ca);
+      gst_d3d12_cmd_alloc_unref (gst_ca);
       return FALSE;
     }
   }
@@ -869,7 +869,7 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
   }
 
   ID3D12CommandList *cmd_list[] = { cl.Get () };
-  hr = gst_d3d12_command_queue_execute_command_lists (priv->cq,
+  hr = gst_d3d12_cmd_queue_execute_command_lists (priv->cq,
       1, cmd_list, &priv->fence_val);
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Signal failed");
@@ -877,7 +877,7 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
     return FALSE;
   }
 
-  gst_d3d12_command_queue_set_notify (priv->cq, priv->fence_val,
+  gst_d3d12_cmd_queue_set_notify (priv->cq, priv->fence_val,
       fence_data, (GDestroyNotify) gst_d3d12_fence_data_unref);
 
   return TRUE;
@@ -922,7 +922,7 @@ gst_d3d12_swapchain_sink_set_buffer (GstD3D12SwapChainSink * self,
   }
 
   if (update_converter) {
-    gst_d3d12_command_queue_idle_for_swapchain (priv->cq, priv->fence_val);
+    gst_d3d12_cmd_queue_idle_for_swapchain (priv->cq, priv->fence_val);
 
     auto format = GST_VIDEO_INFO_FORMAT (&priv->info);
     if (priv->convert_format != format)
@@ -1036,7 +1036,7 @@ gst_d3d12_swapchain_sink_resize_internal (GstD3D12SwapChainSink * self,
     if (!gst_d3d12_result (hr, self->device))
       GST_ERROR_OBJECT (self, "Present failed");
 
-    gst_d3d12_command_queue_execute_command_lists (priv->cq,
+    gst_d3d12_cmd_queue_execute_command_lists (priv->cq,
         0, nullptr, &priv->fence_val);
   }
 }
@@ -1240,7 +1240,7 @@ gst_d3d12_swapchain_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
   }
 
   /* To update fence value */
-  gst_d3d12_command_queue_execute_command_lists (priv->cq,
+  gst_d3d12_cmd_queue_execute_command_lists (priv->cq,
       0, nullptr, &priv->fence_val);
 
   return GST_FLOW_OK;

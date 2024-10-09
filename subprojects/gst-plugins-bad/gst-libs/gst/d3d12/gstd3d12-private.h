@@ -24,7 +24,7 @@
 #include <gst/d3d12/gstd3d12device-private.h>
 #include <gst/d3d12/gstd3d12format-private.h>
 #include <gst/d3d12/gstd3d12converter-private.h>
-#include <gst/d3d12/gstd3d12commandqueue-private.h>
+#include <gst/d3d12/gstd3d12cmdqueue-private.h>
 #include <gst/d3d12/gstd3d12compat.h>
 
 /*

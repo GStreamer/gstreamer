@@ -56,7 +56,7 @@ struct GstD3D12PackPrivate
   guint tg_x = 0;
   guint tg_y = 0;
 
-  GstD3D12DescriptorPool *desc_pool = nullptr;
+  GstD3D12DescHeapPool *desc_pool = nullptr;
 
   GstBufferPool *render_target_pool = nullptr;
   bool need_process = false;
@@ -215,7 +215,7 @@ gst_d3d12_pack_new (GstD3D12Device * device,
   heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
   heap_desc.NumDescriptors = 2;
 
-  priv->desc_pool = gst_d3d12_descriptor_pool_new (dev_handle, &heap_desc);
+  priv->desc_pool = gst_d3d12_desc_heap_pool_new (dev_handle, &heap_desc);
 
   D3D12_ROOT_SIGNATURE_FLAGS rs_flags =
       D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
@@ -365,8 +365,8 @@ gst_d3d12_pack_execute (GstD3D12Pack * pack, GstBuffer * in_buf,
     return FALSE;
   }
 
-  GstD3D12Descriptor *descriptor;
-  if (!gst_d3d12_descriptor_pool_acquire (priv->desc_pool, &descriptor)) {
+  GstD3D12DescHeap *descriptor;
+  if (!gst_d3d12_desc_heap_pool_acquire (priv->desc_pool, &descriptor)) {
     GST_ERROR_OBJECT (pack, "Couldn't acquire descriptor heap");
     gst_d3d12_frame_unmap (&in_frame);
     gst_d3d12_frame_unmap (&out_frame);
@@ -378,7 +378,7 @@ gst_d3d12_pack_execute (GstD3D12Pack * pack, GstBuffer * in_buf,
   auto device = gst_d3d12_device_get_device_handle (priv->device);
   auto in_resource = in_frame.data[0];
 
-  auto desc_handle = gst_d3d12_descriptor_get_handle (descriptor);
+  auto desc_handle = gst_d3d12_desc_heap_get_handle (descriptor);
   auto desc_cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
       (GetCPUDescriptorHandleForHeapStart (desc_handle));
   device->CopyDescriptorsSimple (1, desc_cpu_handle,

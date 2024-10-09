@@ -240,7 +240,7 @@ struct _GstD3D12ConverterPrivate
   ~_GstD3D12ConverterPrivate ()
   {
     if (fence_val > 0 && cq)
-      gst_d3d12_command_queue_fence_wait (cq, fence_val);
+      gst_d3d12_cmd_queue_fence_wait (cq, fence_val);
 
     gst_clear_object (&srv_heap_pool);
     gst_clear_object (&cq);
@@ -248,7 +248,7 @@ struct _GstD3D12ConverterPrivate
     gst_clear_object (&unpack);
   }
 
-  GstD3D12CommandQueue *cq = nullptr;
+  GstD3D12CmdQueue *cq = nullptr;
   GstD3D12Unpack *unpack = nullptr;
   GstD3D12Pack *pack = nullptr;
 
@@ -283,7 +283,7 @@ struct _GstD3D12ConverterPrivate
 
   std::vector<QuadData> quad_data;
 
-  GstD3D12DescriptorPool *srv_heap_pool = nullptr;
+  GstD3D12DescHeapPool *srv_heap_pool = nullptr;
 
   guint srv_inc_size;
   guint rtv_inc_size;
@@ -862,7 +862,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
 
   srv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
-  priv->srv_heap_pool = gst_d3d12_descriptor_pool_new (device, &srv_heap_desc);
+  priv->srv_heap_pool = gst_d3d12_desc_heap_pool_new (device, &srv_heap_desc);
 
   /* bottom left */
   vertex_data[0].position.x = -1.0f;
@@ -1117,7 +1117,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
 
   ID3D12CommandList *cmd_list[] = { cl.Get () };
 
-  hr = gst_d3d12_command_queue_execute_command_lists (priv->cq, 1, cmd_list,
+  hr = gst_d3d12_cmd_queue_execute_command_lists (priv->cq, 1, cmd_list,
       &priv->fence_val);
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't execute command list");
@@ -1140,7 +1140,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
         FENCE_NOTIFY_COM (gamma_enc_lut_upload.Detach ()));
   }
 
-  gst_d3d12_command_queue_set_notify (priv->cq, priv->fence_val,
+  gst_d3d12_cmd_queue_set_notify (priv->cq, priv->fence_val,
       FENCE_NOTIFY_MINI_OBJECT (fence_data));
 
   return TRUE;
@@ -1859,7 +1859,7 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
 /**
  * gst_d3d12_converter_new:
  * @device: a #GstD3D12Device
- * @queue: (allow-none): a #GstD3D12CommandQueue
+ * @queue: (allow-none): a #GstD3D12CmdQueue
  * @in_info: a #GstVideoInfo
  * @out_info: a #GstVideoInfo
  * @blend_desc: (nullable): D3D12_BLEND_DESC
@@ -1874,7 +1874,7 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
  * Since: 1.26
  */
 GstD3D12Converter *
-gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CommandQueue * queue,
+gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info,
     const D3D12_BLEND_DESC * blend_desc, const gfloat blend_factor[4],
     GstStructure * config)
@@ -1893,15 +1893,14 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CommandQueue * queue,
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
   g_return_val_if_fail (in_info != nullptr, nullptr);
   g_return_val_if_fail (out_info != nullptr, nullptr);
-  g_return_val_if_fail (queue == nullptr || GST_IS_D3D12_COMMAND_QUEUE (queue),
-      nullptr);
+  g_return_val_if_fail (!queue || GST_IS_D3D12_CMD_QUEUE (queue), nullptr);
 
   self = (GstD3D12Converter *) g_object_new (GST_TYPE_D3D12_CONVERTER, nullptr);
   gst_object_ref_sink (self);
   auto priv = self->priv;
   priv->cq = queue;
   if (!priv->cq) {
-    priv->cq = gst_d3d12_device_get_command_queue (device,
+    priv->cq = gst_d3d12_device_get_cmd_queue (device,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
   }
   gst_object_ref (priv->cq);
@@ -2218,13 +2217,13 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
 
   auto device = gst_d3d12_device_get_device_handle (self->device);
 
-  GstD3D12Descriptor *descriptor;
-  if (!gst_d3d12_descriptor_pool_acquire (priv->srv_heap_pool, &descriptor)) {
+  GstD3D12DescHeap *descriptor;
+  if (!gst_d3d12_desc_heap_pool_acquire (priv->srv_heap_pool, &descriptor)) {
     GST_ERROR_OBJECT (self, "Couldn't acquire srv heap");
     return FALSE;
   }
 
-  auto srv_heap = gst_d3d12_descriptor_get_handle (descriptor);
+  auto srv_heap = gst_d3d12_desc_heap_get_handle (descriptor);
   gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (descriptor));
 
   auto cpu_handle =

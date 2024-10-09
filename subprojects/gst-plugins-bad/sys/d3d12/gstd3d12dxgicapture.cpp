@@ -851,7 +851,7 @@ struct GstD3D12DxgiCapturePrivate
 
   std::unique_ptr<DesktopDupCtx> ctx;
   ComPtr<IDXGIOutput1> output;
-  GstD3D12CommandAllocatorPool *ca_pool = nullptr;
+  GstD3D12CmdAllocPool *ca_pool = nullptr;
   GstD3D12FenceDataPool *fence_data_pool;
   ComPtr<ID3D12GraphicsCommandList> cl;
   ComPtr<ID3D12Fence> shared_fence;
@@ -1044,7 +1044,7 @@ gst_d3d12_dxgi_capture_open (GstD3D12DxgiCapture * self,
     return FALSE;
   }
 
-  priv->ca_pool = gst_d3d12_command_allocator_pool_new (device,
+  priv->ca_pool = gst_d3d12_cmd_alloc_pool_new (device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
 
   D3D_FEATURE_LEVEL feature_level = D3D_FEATURE_LEVEL_11_1;
@@ -1368,8 +1368,8 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
   GstD3D12FenceData *fence_data = nullptr;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
 
-  GstD3D12CommandAllocator *gst_ca = nullptr;
-  if (!gst_d3d12_command_allocator_pool_acquire (priv->ca_pool, &gst_ca)) {
+  GstD3D12CmdAlloc *gst_ca = nullptr;
+  if (!gst_d3d12_cmd_alloc_pool_acquire (priv->ca_pool, &gst_ca)) {
     GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
     gst_d3d12_fence_data_unref (fence_data);
     return FALSE;
@@ -1377,7 +1377,7 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
 
   gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
 
-  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
+  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
   hr = ca->Reset ();
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't reset command allocator");
@@ -1408,7 +1408,7 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
       ptr_w, "src-height", ptr_h, "dest-x", ptr_x, "dest-y", ptr_y,
       "dest-width", ptr_w, "dest-height", ptr_h, nullptr);
 
-  auto cq = gst_d3d12_device_get_command_queue (self->device,
+  auto cq = gst_d3d12_device_get_cmd_queue (self->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
   if (!gst_d3d12_converter_convert_buffer (priv->mouse_blend,
           priv->mouse_buf, buffer, fence_data, cl.Get (), TRUE)) {
@@ -1440,18 +1440,17 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
   ID3D12CommandList *cmd_list[] = { cl.Get () };
 
   guint64 fence_val = 0;
-  hr = gst_d3d12_command_queue_execute_command_lists (cq, 1, cmd_list,
-      &fence_val);
+  hr = gst_d3d12_cmd_queue_execute_command_lists (cq, 1, cmd_list, &fence_val);
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't execute command list");
     gst_d3d12_fence_data_unref (fence_data);
     return FALSE;
   }
 
-  gst_d3d12_command_queue_set_notify (cq, fence_val, fence_data,
+  gst_d3d12_cmd_queue_set_notify (cq, fence_val, fence_data,
       (GDestroyNotify) gst_d3d12_fence_data_unref);
   gst_d3d12_buffer_set_fence (buffer,
-      gst_d3d12_command_queue_get_fence_handle (cq), fence_val, FALSE);
+      gst_d3d12_cmd_queue_get_fence_handle (cq), fence_val, FALSE);
 
   return TRUE;
 }

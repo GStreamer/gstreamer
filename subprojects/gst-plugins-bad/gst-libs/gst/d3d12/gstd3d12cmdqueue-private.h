@@ -25,7 +25,7 @@
 G_BEGIN_DECLS
 
 GST_D3D12_API
-HRESULT gst_d3d12_command_queue_idle_for_swapchain (GstD3D12CommandQueue * queue,
-                                                    guint64 fence_value);
+HRESULT gst_d3d12_cmd_queue_idle_for_swapchain (GstD3D12CmdQueue * queue,
+                                                guint64 fence_value);
 
 G_END_DECLS

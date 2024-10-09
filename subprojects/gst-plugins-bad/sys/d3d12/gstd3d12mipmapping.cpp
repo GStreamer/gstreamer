@@ -73,7 +73,7 @@ struct MipMappingContext
   {
     device = (GstD3D12Device *) gst_object_ref (dev);
     auto device_handle = gst_d3d12_device_get_device_handle (device);
-    ca_pool = gst_d3d12_command_allocator_pool_new (device_handle,
+    ca_pool = gst_d3d12_cmd_alloc_pool_new (device_handle,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
   }
 
@@ -93,7 +93,7 @@ struct MipMappingContext
   GstD3D12MipGen *gen = nullptr;
   ComPtr<ID3D12GraphicsCommandList> cl;
   std::queue<guint64> scheduled;
-  GstD3D12CommandAllocatorPool *ca_pool;
+  GstD3D12CmdAllocPool *ca_pool;
   guint64 fence_val = 0;
 };
 
@@ -914,17 +914,17 @@ gst_d3d12_mip_mapping_transform (GstBaseTransform * trans, GstBuffer * inbuf,
         "src-height", (gint) in_rect.bottom - in_rect.top, nullptr);
   }
 
-  GstD3D12CommandAllocator *gst_ca;
-  if (!gst_d3d12_command_allocator_pool_acquire (priv->ctx->ca_pool, &gst_ca)) {
+  GstD3D12CmdAlloc *gst_ca;
+  if (!gst_d3d12_cmd_alloc_pool_acquire (priv->ctx->ca_pool, &gst_ca)) {
     GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
     return GST_FLOW_ERROR;
   }
 
-  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
+  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
   auto hr = ca->Reset ();
   if (!gst_d3d12_result (hr, priv->ctx->device)) {
     GST_ERROR_OBJECT (self, "Couldn't reset command allocator");
-    gst_d3d12_command_allocator_unref (gst_ca);
+    gst_d3d12_cmd_alloc_unref (gst_ca);
     return GST_FLOW_ERROR;
   }
 
@@ -934,14 +934,14 @@ gst_d3d12_mip_mapping_transform (GstBaseTransform * trans, GstBuffer * inbuf,
         ca, nullptr, IID_PPV_ARGS (&priv->ctx->cl));
     if (!gst_d3d12_result (hr, priv->ctx->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create command list");
-      gst_d3d12_command_allocator_unref (gst_ca);
+      gst_d3d12_cmd_alloc_unref (gst_ca);
       return GST_FLOW_ERROR;
     }
   } else {
     hr = priv->ctx->cl->Reset (ca, nullptr);
     if (!gst_d3d12_result (hr, priv->ctx->device)) {
       GST_ERROR_OBJECT (self, "Couldn't reset command list");
-      gst_d3d12_command_allocator_unref (gst_ca);
+      gst_d3d12_cmd_alloc_unref (gst_ca);
       return GST_FLOW_ERROR;
     }
   }
@@ -950,9 +950,9 @@ gst_d3d12_mip_mapping_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
   gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
 
-  auto cq = gst_d3d12_device_get_command_queue (priv->ctx->device,
+  auto cq = gst_d3d12_device_get_cmd_queue (priv->ctx->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
-  auto fence = gst_d3d12_command_queue_get_fence_handle (cq);
+  auto fence = gst_d3d12_cmd_queue_get_fence_handle (cq);
   if (!gst_d3d12_converter_convert_buffer (priv->ctx->conv,
           inbuf, outbuf, fence_data, priv->ctx->cl.Get (), TRUE)) {
     GST_ERROR_OBJECT (self, "Couldn't build command list");
@@ -984,7 +984,7 @@ gst_d3d12_mip_mapping_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   ID3D12CommandList *cmd_list[] = { priv->ctx->cl.Get () };
 
-  hr = gst_d3d12_command_queue_execute_command_lists (cq,
+  hr = gst_d3d12_cmd_queue_execute_command_lists (cq,
       1, cmd_list, &priv->ctx->fence_val);
   if (!gst_d3d12_result (hr, priv->ctx->device)) {
     GST_ERROR_OBJECT (self, "Couldn't execute command list");
@@ -993,7 +993,7 @@ gst_d3d12_mip_mapping_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   }
 
   gst_d3d12_buffer_set_fence (outbuf, fence, priv->ctx->fence_val, FALSE);
-  gst_d3d12_command_queue_set_notify (cq, priv->ctx->fence_val,
+  gst_d3d12_cmd_queue_set_notify (cq, priv->ctx->fence_val,
       FENCE_NOTIFY_MINI_OBJECT (fence_data));
 
   priv->ctx->scheduled.push (priv->ctx->fence_val);

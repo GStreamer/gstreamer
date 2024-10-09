@@ -115,7 +115,7 @@ gboolean  gst_d3d12_frame_copy_plane  (GstD3D12Frame * dest,
 
 GST_D3D12_API
 gboolean  gst_d3d12_frame_fence_gpu_wait (const GstD3D12Frame * frame,
-                                          GstD3D12CommandQueue * queue);
+                                          GstD3D12CmdQueue * queue);
 
 GST_D3D12_API
 gboolean  gst_d3d12_frame_fence_cpu_wait (const GstD3D12Frame * frame);

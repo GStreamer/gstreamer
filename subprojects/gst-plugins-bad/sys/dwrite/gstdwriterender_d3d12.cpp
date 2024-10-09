@@ -108,7 +108,7 @@ struct GstDWriteD3D12RenderPrivate
 
   ComPtr<ID3D12GraphicsCommandList> cl;
   GstD3D12FenceDataPool *fence_data_pool;
-  GstD3D12CommandAllocatorPool *ca_pool = nullptr;
+  GstD3D12CmdAllocPool *ca_pool = nullptr;
   ComPtr<ID3D11On12Device> device11on12;
   ComPtr<ID3D11Device> device11;
   ComPtr<ID3D11DeviceContext> d3d11_context;
@@ -393,17 +393,17 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
   }
   gst_d3d12_frame_unmap (&out_frame);
 
-  GstD3D12CommandAllocator *gst_ca;
-  if (!gst_d3d12_command_allocator_pool_acquire (priv->ca_pool, &gst_ca)) {
+  GstD3D12CmdAlloc *gst_ca;
+  if (!gst_d3d12_cmd_alloc_pool_acquire (priv->ca_pool, &gst_ca)) {
     GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
     return FALSE;
   }
 
-  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
+  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
   auto hr = ca->Reset ();
   if (!gst_d3d12_result (hr, priv->device)) {
     GST_ERROR_OBJECT (self, "Couldn't reset command allocator");
-    gst_d3d12_command_allocator_unref (gst_ca);
+    gst_d3d12_cmd_alloc_unref (gst_ca);
     return FALSE;
   }
 
@@ -413,14 +413,14 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
         ca, nullptr, IID_PPV_ARGS (&priv->cl));
     if (!gst_d3d12_result (hr, priv->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create command list");
-      gst_d3d12_command_allocator_unref (gst_ca);
+      gst_d3d12_cmd_alloc_unref (gst_ca);
       return FALSE;
     }
   } else {
     hr = priv->cl->Reset (ca, nullptr);
     if (!gst_d3d12_result (hr, priv->device)) {
       GST_ERROR_OBJECT (self, "Couldn't reset command list");
-      gst_d3d12_command_allocator_unref (gst_ca);
+      gst_d3d12_cmd_alloc_unref (gst_ca);
       return FALSE;
     }
   }
@@ -436,9 +436,9 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
 
   gboolean ret = TRUE;
   GstBuffer *bgra_buf = nullptr;
-  auto cq = gst_d3d12_device_get_command_queue (priv->device,
+  auto cq = gst_d3d12_device_get_cmd_queue (priv->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
-  auto fence = gst_d3d12_command_queue_get_fence_handle (cq);
+  auto fence = gst_d3d12_cmd_queue_get_fence_handle (cq);
 
   if (priv->direct_blend) {
     GST_LOG_OBJECT (self, "Direct blend");
@@ -515,13 +515,13 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
 
   if (ret) {
     ID3D12CommandList *cl[] = { priv->cl.Get () };
-    hr = gst_d3d12_command_queue_execute_command_lists (cq,
+    hr = gst_d3d12_cmd_queue_execute_command_lists (cq,
         1, cl, &priv->fence_val);
     ret = gst_d3d12_result (hr, priv->device);
   }
 
   if (ret) {
-    gst_d3d12_command_queue_set_notify (cq, priv->fence_val,
+    gst_d3d12_cmd_queue_set_notify (cq, priv->fence_val,
         FENCE_NOTIFY_MINI_OBJECT (fence_data));
 
     for (guint i = 0; i < gst_buffer_n_memory (output); i++) {
@@ -821,7 +821,7 @@ gst_dwrite_d3d12_render_prepare (GstDWriteD3D12Render * self)
   priv->device11->GetImmediateContext (&priv->d3d11_context);
 
   auto device = gst_d3d12_device_get_device_handle (priv->device);
-  priv->ca_pool = gst_d3d12_command_allocator_pool_new (device,
+  priv->ca_pool = gst_d3d12_cmd_alloc_pool_new (device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
 
   GST_DEBUG_OBJECT (self, "Resource prepared");

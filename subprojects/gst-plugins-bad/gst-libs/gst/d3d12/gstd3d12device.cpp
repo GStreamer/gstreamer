@@ -23,7 +23,7 @@
 
 #include "gstd3d12.h"
 #include "gstd3d12-private.h"
-#include "gstd3d12commandlistpool.h"
+#include "gstd3d12cmdlistpool.h"
 #include <directx/d3dx12.h>
 #include <d3d11on12.h>
 #include <wrl.h>
@@ -160,16 +160,16 @@ struct DeviceInner
   void Drain ()
   {
     if (direct_queue)
-      gst_d3d12_command_queue_drain (direct_queue);
+      gst_d3d12_cmd_queue_drain (direct_queue);
 
     if (compute_queue)
-      gst_d3d12_command_queue_drain (compute_queue);
+      gst_d3d12_cmd_queue_drain (compute_queue);
 
     if (copy_queue)
-      gst_d3d12_command_queue_drain (copy_queue);
+      gst_d3d12_cmd_queue_drain (copy_queue);
 
     for (guint i = 0; i < num_decode_queue; i++)
-      gst_d3d12_command_queue_drain (decode_queue[i]);
+      gst_d3d12_cmd_queue_drain (decode_queue[i]);
   }
 
   void ReportLiveObjects ()
@@ -244,23 +244,23 @@ struct DeviceInner
 
   ComPtr<ID3D12InfoQueue> info_queue;
 
-  GstD3D12CommandQueue *direct_queue = nullptr;
-  GstD3D12CommandQueue *compute_queue = nullptr;
-  GstD3D12CommandQueue *copy_queue = nullptr;
-  GstD3D12CommandQueue *decode_queue[2] = { nullptr, };
+  GstD3D12CmdQueue *direct_queue = nullptr;
+  GstD3D12CmdQueue *compute_queue = nullptr;
+  GstD3D12CmdQueue *copy_queue = nullptr;
+  GstD3D12CmdQueue *decode_queue[2] = { nullptr, };
   guint num_decode_queue = 0;
   guint decode_queue_index = 0;
   std::recursive_mutex decoder_lock;
   GstD3D12WAFlags wa_flags = GST_D3D12_WA_NONE;
 
-  GstD3D12CommandListPool *direct_cl_pool = nullptr;
-  GstD3D12CommandAllocatorPool *direct_ca_pool = nullptr;
+  GstD3D12CmdListPool *direct_cl_pool = nullptr;
+  GstD3D12CmdAllocPool *direct_ca_pool = nullptr;
 
-  GstD3D12CommandListPool *compute_cl_pool = nullptr;
-  GstD3D12CommandAllocatorPool *compute_ca_pool = nullptr;
+  GstD3D12CmdListPool *compute_cl_pool = nullptr;
+  GstD3D12CmdAllocPool *compute_ca_pool = nullptr;
 
-  GstD3D12CommandListPool *copy_cl_pool = nullptr;
-  GstD3D12CommandAllocatorPool *copy_ca_pool = nullptr;
+  GstD3D12CmdListPool *copy_cl_pool = nullptr;
+  GstD3D12CmdAllocPool *copy_ca_pool = nullptr;
 
   GstD3D12FenceDataPool *fence_data_pool = nullptr;
 
@@ -1298,49 +1298,49 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   queue_desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
   queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
-  priv->direct_queue = gst_d3d12_command_queue_new (device.Get (),
+  priv->direct_queue = gst_d3d12_cmd_queue_new (device.Get (),
       &queue_desc, D3D12_FENCE_FLAG_SHARED, 32);
   if (!priv->direct_queue)
     goto error;
 
-  priv->direct_cl_pool = gst_d3d12_command_list_pool_new (device.Get (),
+  priv->direct_cl_pool = gst_d3d12_cmd_list_pool_new (device.Get (),
       D3D12_COMMAND_LIST_TYPE_DIRECT);
   if (!priv->direct_cl_pool)
     goto error;
 
-  priv->direct_ca_pool = gst_d3d12_command_allocator_pool_new (device.Get (),
+  priv->direct_ca_pool = gst_d3d12_cmd_alloc_pool_new (device.Get (),
       D3D12_COMMAND_LIST_TYPE_DIRECT);
   if (!priv->direct_ca_pool)
     goto error;
 
   queue_desc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
-  priv->compute_queue = gst_d3d12_command_queue_new (device.Get (),
+  priv->compute_queue = gst_d3d12_cmd_queue_new (device.Get (),
       &queue_desc, D3D12_FENCE_FLAG_SHARED, 32);
   if (!priv->compute_queue)
     goto error;
 
-  priv->compute_cl_pool = gst_d3d12_command_list_pool_new (device.Get (),
+  priv->compute_cl_pool = gst_d3d12_cmd_list_pool_new (device.Get (),
       D3D12_COMMAND_LIST_TYPE_COMPUTE);
   if (!priv->compute_cl_pool)
     goto error;
 
-  priv->compute_ca_pool = gst_d3d12_command_allocator_pool_new (device.Get (),
+  priv->compute_ca_pool = gst_d3d12_cmd_alloc_pool_new (device.Get (),
       D3D12_COMMAND_LIST_TYPE_COMPUTE);
   if (!priv->compute_ca_pool)
     goto error;
 
   queue_desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
-  priv->copy_queue = gst_d3d12_command_queue_new (device.Get (),
+  priv->copy_queue = gst_d3d12_cmd_queue_new (device.Get (),
       &queue_desc, D3D12_FENCE_FLAG_NONE, 32);
   if (!priv->copy_queue)
     goto error;
 
-  priv->copy_cl_pool = gst_d3d12_command_list_pool_new (device.Get (),
+  priv->copy_cl_pool = gst_d3d12_cmd_list_pool_new (device.Get (),
       D3D12_COMMAND_LIST_TYPE_COPY);
   if (!priv->copy_cl_pool)
     goto error;
 
-  priv->copy_ca_pool = gst_d3d12_command_allocator_pool_new (device.Get (),
+  priv->copy_ca_pool = gst_d3d12_cmd_alloc_pool_new (device.Get (),
       D3D12_COMMAND_LIST_TYPE_COPY);
   if (!priv->copy_ca_pool)
     goto error;
@@ -1356,7 +1356,7 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
     if (SUCCEEDED (hr)) {
       queue_desc.Type = D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE;
       for (guint i = 0; i < G_N_ELEMENTS (priv->decode_queue); i++) {
-        priv->decode_queue[i] = gst_d3d12_command_queue_new (device.Get (),
+        priv->decode_queue[i] = gst_d3d12_cmd_queue_new (device.Get (),
             &queue_desc, D3D12_FENCE_FLAG_NONE, 8);
         if (!priv->decode_queue[i])
           break;
@@ -1519,7 +1519,7 @@ gst_d3d12_device_get_factory_handle (GstD3D12Device * device)
   return device->priv->inner->factory.Get ();
 }
 
-static GstD3D12CommandQueue *
+static GstD3D12CmdQueue *
 gst_d3d12_device_get_queue_unchecked (GstD3D12Device * device,
     D3D12_COMMAND_LIST_TYPE queue_type)
 {
@@ -1561,7 +1561,7 @@ gst_d3d12_device_get_fence_handle (GstD3D12Device * device,
   if (!queue)
     return nullptr;
 
-  return gst_d3d12_command_queue_get_fence_handle (queue);
+  return gst_d3d12_cmd_queue_get_fence_handle (queue);
 }
 
 /**
@@ -1595,18 +1595,18 @@ gst_d3d12_device_get_format (GstD3D12Device * device,
 }
 
 /**
- * gst_d3d12_device_get_command_queue:
+ * gst_d3d12_device_get_cmd_queue:
  * @device: a #GstD3D12Device
  * @queue_type: a D3D12_COMMAND_LIST_TYPE
  *
- * Gets #GstD3D12CommandQueue corresponding to @queue_type
+ * Gets #GstD3D12CmdQueue corresponding to @queue_type
  *
- * Returns: (transfer none): a #GstD3D12CommandQueue
+ * Returns: (transfer none): a #GstD3D12CmdQueue
  *
  * Since: 1.26
  */
-GstD3D12CommandQueue *
-gst_d3d12_device_get_command_queue (GstD3D12Device * device,
+GstD3D12CmdQueue *
+gst_d3d12_device_get_cmd_queue (GstD3D12Device * device,
     D3D12_COMMAND_LIST_TYPE queue_type)
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
@@ -1622,8 +1622,8 @@ gst_d3d12_device_get_command_queue (GstD3D12Device * device,
  * @command_lists: array of ID3D12CommandList
  * @fence_value: (out) (optional): fence value of submitted command
  *
- * Exectues gst_d3d12_command_queue_execute_command_lists ()
- * using a #GstD3D12CommandQueue corresponding to @queue_type
+ * Exectues gst_d3d12_cmd_queue_execute_command_lists ()
+ * using a #GstD3D12CmdQueue corresponding to @queue_type
  *
  * Returns: HRESULT code
  *
@@ -1640,7 +1640,7 @@ gst_d3d12_device_execute_command_lists (GstD3D12Device * device,
   if (!queue)
     return E_INVALIDARG;
 
-  return gst_d3d12_command_queue_execute_command_lists (queue,
+  return gst_d3d12_cmd_queue_execute_command_lists (queue,
       num_command_lists, command_lists, fence_value);
 }
 
@@ -1649,8 +1649,8 @@ gst_d3d12_device_execute_command_lists (GstD3D12Device * device,
  * @device: a #GstD3D12Device
  * @queue_type: a D3D12_COMMAND_LIST_TYPE
  *
- * Exectues gst_d3d12_command_queue_get_completed_value ()
- * using a #GstD3D12CommandQueue corresponding to @queue_type
+ * Exectues gst_d3d12_cmd_queue_get_completed_value ()
+ * using a #GstD3D12CmdQueue corresponding to @queue_type
  *
  * Returns: Completed fence value
  *
@@ -1666,7 +1666,7 @@ gst_d3d12_device_get_completed_value (GstD3D12Device * device,
   if (!queue)
     return G_MAXUINT64;
 
-  return gst_d3d12_command_queue_get_completed_value (queue);
+  return gst_d3d12_cmd_queue_get_completed_value (queue);
 }
 
 /**
@@ -1677,8 +1677,8 @@ gst_d3d12_device_get_completed_value (GstD3D12Device * device,
  * @fence_data: user data
  * @notify: a #GDestroyNotify
  *
- * Exectues gst_d3d12_command_queue_set_notify ()
- * using a #GstD3D12CommandQueue corresponding to @queue_type
+ * Exectues gst_d3d12_cmd_queue_set_notify ()
+ * using a #GstD3D12CmdQueue corresponding to @queue_type
  *
  * Returns: %TRUE if successful
  *
@@ -1696,7 +1696,7 @@ gst_d3d12_device_set_fence_notify (GstD3D12Device * device,
   if (!queue)
     return FALSE;
 
-  gst_d3d12_command_queue_set_notify (queue, fence_value, fence_data, notify);
+  gst_d3d12_cmd_queue_set_notify (queue, fence_value, fence_data, notify);
 
   return TRUE;
 }
@@ -1707,8 +1707,8 @@ gst_d3d12_device_set_fence_notify (GstD3D12Device * device,
  * @queue_type: a D3D12_COMMAND_LIST_TYPE
  * @fence_value: target fence value
  *
- * Exectues gst_d3d12_command_queue_fence_wait ()
- * using a #GstD3D12CommandQueue corresponding to @queue_type
+ * Exectues gst_d3d12_cmd_queue_fence_wait ()
+ * using a #GstD3D12CmdQueue corresponding to @queue_type
  *
  * Returns: HRESULT code
  *
@@ -1724,7 +1724,7 @@ gst_d3d12_device_fence_wait (GstD3D12Device * device,
   if (!queue)
     return E_INVALIDARG;
 
-  return gst_d3d12_command_queue_fence_wait (queue, fence_value);
+  return gst_d3d12_cmd_queue_fence_wait (queue, fence_value);
 }
 
 gboolean
@@ -1740,11 +1740,11 @@ gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
 
   HRESULT hr;
   auto priv = device->priv->inner;
-  GstD3D12CommandAllocatorPool *ca_pool;
-  GstD3D12CommandAllocator *gst_ca = nullptr;
-  GstD3D12CommandListPool *cl_pool;
-  GstD3D12CommandList *gst_cl = nullptr;
-  GstD3D12CommandQueue *queue = nullptr;
+  GstD3D12CmdAllocPool *ca_pool;
+  GstD3D12CmdAlloc *gst_ca = nullptr;
+  GstD3D12CmdListPool *cl_pool;
+  GstD3D12CmdList *gst_cl = nullptr;
+  GstD3D12CmdQueue *queue = nullptr;
   guint64 fence_val = 0;
 
   if (!fence_data)
@@ -1773,7 +1773,7 @@ gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
       return FALSE;
   }
 
-  gst_d3d12_command_allocator_pool_acquire (ca_pool, &gst_ca);
+  gst_d3d12_cmd_alloc_pool_acquire (ca_pool, &gst_ca);
   if (!gst_ca) {
     GST_ERROR_OBJECT (device, "Couldn't acquire command allocator");
     gst_d3d12_fence_data_unref (fence_data);
@@ -1782,8 +1782,8 @@ gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
 
   gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
 
-  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
-  gst_d3d12_command_list_pool_acquire (cl_pool, ca, &gst_cl);
+  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
+  gst_d3d12_cmd_list_pool_acquire (cl_pool, ca, &gst_cl);
 
   if (!gst_cl) {
     GST_ERROR_OBJECT (device, "Couldn't acquire command list");
@@ -1794,7 +1794,7 @@ gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
   ComPtr < ID3D12CommandList > cl_base;
   ComPtr < ID3D12GraphicsCommandList > cl;
 
-  cl_base = gst_d3d12_command_list_get_handle (gst_cl);
+  cl_base = gst_d3d12_cmd_list_get_handle (gst_cl);
   cl_base.As (&cl);
 
   for (guint i = 0; i < num_args; i++) {
@@ -1806,23 +1806,23 @@ gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
   hr = cl->Close ();
   if (!gst_d3d12_result (hr, device)) {
     GST_ERROR_OBJECT (device, "Couldn't close command list");
-    gst_clear_d3d12_command_list (&gst_cl);
+    gst_clear_d3d12_cmd_list (&gst_cl);
     gst_d3d12_fence_data_unref (fence_data);
     return FALSE;
   }
 
   ID3D12CommandList *cmd_list[] = { cl.Get () };
 
-  hr = gst_d3d12_command_queue_execute_command_lists_full (queue,
+  hr = gst_d3d12_cmd_queue_execute_command_lists_full (queue,
       num_fences_to_wait, fences_to_wait, fence_values_to_wait, 1, cmd_list,
       &fence_val);
   auto ret = gst_d3d12_result (hr, device);
 
   /* We can release command list since command list pool will hold it */
-  gst_d3d12_command_list_unref (gst_cl);
+  gst_d3d12_cmd_list_unref (gst_cl);
 
   if (ret) {
-    gst_d3d12_command_queue_set_notify (queue, fence_val, fence_data,
+    gst_d3d12_cmd_queue_set_notify (queue, fence_val, fence_data,
         (GDestroyNotify) gst_d3d12_fence_data_unref);
   } else {
     gst_d3d12_fence_data_unref (fence_data);
@@ -1975,24 +1975,24 @@ gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
   if (!gst_d3d12_memory_get_plane_rectangle (dmem, 1, &rect))
     return;
 
-  GstD3D12CommandAllocator *gst_ca = nullptr;
-  gst_d3d12_command_allocator_pool_acquire (priv->direct_ca_pool, &gst_ca);
+  GstD3D12CmdAlloc *gst_ca = nullptr;
+  gst_d3d12_cmd_alloc_pool_acquire (priv->direct_ca_pool, &gst_ca);
   if (!gst_ca)
     return;
 
-  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
+  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
 
-  GstD3D12CommandList *gst_cl = nullptr;
-  gst_d3d12_command_list_pool_acquire (priv->direct_cl_pool, ca, &gst_cl);
+  GstD3D12CmdList *gst_cl = nullptr;
+  gst_d3d12_cmd_list_pool_acquire (priv->direct_cl_pool, ca, &gst_cl);
   if (!gst_cl) {
-    gst_d3d12_command_allocator_unref (gst_ca);
+    gst_d3d12_cmd_alloc_unref (gst_ca);
     return;
   }
 
   ComPtr < ID3D12CommandList > cl_base;
   ComPtr < ID3D12GraphicsCommandList > cl;
 
-  cl_base = gst_d3d12_command_list_get_handle (gst_cl);
+  cl_base = gst_d3d12_cmd_list_get_handle (gst_cl);
   cl_base.As (&cl);
 
   auto rtv_handle =
@@ -2004,25 +2004,25 @@ gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
 
   auto hr = cl->Close ();
   if (!gst_d3d12_result (hr, device)) {
-    gst_clear_d3d12_command_list (&gst_cl);
-    gst_clear_d3d12_command_allocator (&gst_ca);
+    gst_clear_d3d12_cmd_list (&gst_cl);
+    gst_clear_d3d12_cmd_alloc (&gst_ca);
     return;
   }
 
   ID3D12CommandList *cmd_list[] = { cl.Get () };
   guint64 fence_val = 0;
-  auto fence = gst_d3d12_command_queue_get_fence_handle (priv->direct_queue);
-  hr = gst_d3d12_command_queue_execute_command_lists (priv->direct_queue,
+  auto fence = gst_d3d12_cmd_queue_get_fence_handle (priv->direct_queue);
+  hr = gst_d3d12_cmd_queue_execute_command_lists (priv->direct_queue,
       1, cmd_list, &fence_val);
   auto ret = gst_d3d12_result (hr, device);
-  gst_d3d12_command_list_unref (gst_cl);
+  gst_d3d12_cmd_list_unref (gst_cl);
 
   if (ret) {
-    gst_d3d12_command_queue_set_notify (priv->direct_queue, fence_val,
-        gst_ca, (GDestroyNotify) gst_d3d12_command_allocator_unref);
+    gst_d3d12_cmd_queue_set_notify (priv->direct_queue, fence_val,
+        gst_ca, (GDestroyNotify) gst_d3d12_cmd_alloc_unref);
     gst_d3d12_memory_set_fence (dmem, fence, fence_val, FALSE);
   } else {
-    gst_d3d12_command_allocator_unref (gst_ca);
+    gst_d3d12_cmd_alloc_unref (gst_ca);
   }
 }
 
@@ -2076,8 +2076,7 @@ gst_d3d12_device_get_11on12_handle (GstD3D12Device * device)
       D3D_FEATURE_LEVEL_11_0,
     };
 
-    IUnknown *cq[] =
-        { gst_d3d12_command_queue_get_handle (priv->direct_queue) };
+    IUnknown *cq[] = { gst_d3d12_cmd_queue_get_handle (priv->direct_queue) };
     ComPtr < ID3D11Device > device11;
     auto hr = GstD3D11On12CreateDevice (priv->device.Get (),
         D3D11_CREATE_DEVICE_BGRA_SUPPORT, feature_levels,
@@ -2129,7 +2128,7 @@ gst_d3d12_device_check_device_removed (GstD3D12Device * device)
   }
 }
 
-GstD3D12CommandQueue *
+GstD3D12CmdQueue *
 gst_d3d12_device_get_decode_queue (GstD3D12Device * device)
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);

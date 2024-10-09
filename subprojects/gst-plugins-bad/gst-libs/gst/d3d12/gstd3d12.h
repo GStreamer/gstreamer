@@ -27,10 +27,10 @@
 #include <gst/gst.h>
 #include <gst/d3d12/gstd3d12_fwd.h>
 #include <gst/d3d12/gstd3d12bufferpool.h>
-#include <gst/d3d12/gstd3d12commandallocatorpool.h>
-#include <gst/d3d12/gstd3d12commandqueue.h>
+#include <gst/d3d12/gstd3d12cmdallocpool.h>
+#include <gst/d3d12/gstd3d12cmdqueue.h>
 #include <gst/d3d12/gstd3d12converter.h>
-#include <gst/d3d12/gstd3d12descriptorpool.h>
+#include <gst/d3d12/gstd3d12descheappool.h>
 #include <gst/d3d12/gstd3d12device.h>
 #include <gst/d3d12/gstd3d12fencedatapool.h>
 #include <gst/d3d12/gstd3d12format.h>

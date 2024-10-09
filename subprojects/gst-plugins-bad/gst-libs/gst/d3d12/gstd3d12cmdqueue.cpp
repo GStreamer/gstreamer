@@ -29,8 +29,8 @@
 #include <memory>
 #include <condition_variable>
 
-GST_DEBUG_CATEGORY_STATIC (gst_d3d12_command_queue_debug);
-#define GST_CAT_DEFAULT gst_d3d12_command_queue_debug
+GST_DEBUG_CATEGORY_STATIC (gst_d3d12_cmd_queue_debug);
+#define GST_CAT_DEFAULT gst_d3d12_cmd_queue_debug
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -60,9 +60,9 @@ struct gc_cmp {
   }
 };
 
-struct _GstD3D12CommandQueuePrivate
+struct _GstD3D12CmdQueuePrivate
 {
-  ~_GstD3D12CommandQueuePrivate ()
+  ~_GstD3D12CmdQueuePrivate ()
   {
     {
       std::lock_guard <std::mutex> lk (lock);
@@ -95,29 +95,29 @@ struct _GstD3D12CommandQueuePrivate
 };
 /* *INDENT-ON* */
 
-static void gst_d3d12_command_queue_finalize (GObject * object);
+static void gst_d3d12_cmd_queue_finalize (GObject * object);
 
-#define gst_d3d12_command_queue_parent_class parent_class
-G_DEFINE_TYPE (GstD3D12CommandQueue, gst_d3d12_command_queue, GST_TYPE_OBJECT);
+#define gst_d3d12_cmd_queue_parent_class parent_class
+G_DEFINE_TYPE (GstD3D12CmdQueue, gst_d3d12_cmd_queue, GST_TYPE_OBJECT);
 
 static void
-gst_d3d12_command_queue_class_init (GstD3D12CommandQueueClass * klass)
+gst_d3d12_cmd_queue_class_init (GstD3D12CmdQueueClass * klass)
 {
   auto object_class = G_OBJECT_CLASS (klass);
 
-  object_class->finalize = gst_d3d12_command_queue_finalize;
+  object_class->finalize = gst_d3d12_cmd_queue_finalize;
 }
 
 static void
-gst_d3d12_command_queue_init (GstD3D12CommandQueue * self)
+gst_d3d12_cmd_queue_init (GstD3D12CmdQueue * self)
 {
-  self->priv = new GstD3D12CommandQueuePrivate ();
+  self->priv = new GstD3D12CmdQueuePrivate ();
 }
 
 static void
-gst_d3d12_command_queue_finalize (GObject * object)
+gst_d3d12_cmd_queue_finalize (GObject * object)
 {
-  auto self = GST_D3D12_COMMAND_QUEUE (object);
+  auto self = GST_D3D12_CMD_QUEUE (object);
 
   delete self->priv;
 
@@ -125,20 +125,20 @@ gst_d3d12_command_queue_finalize (GObject * object)
 }
 
 /**
- * gst_d3d12_command_queue_new:
+ * gst_d3d12_cmd_queue_new:
  * @device: a #GstD3D12Device
  * @desc: a D3D12_COMMAND_QUEUE_DESC
  * @fence_flags: a D3D12_FENCE_FLAGS
  * @queue_size: command queue size, Sets zero for unlimited queue size
  *
- * Creates GstD3D12CommandQueue with given parameters.
+ * Creates GstD3D12CmdQueue with given parameters.
  *
- * Returns: (transfer full): a new #GstD3D12CommandQueue instance
+ * Returns: (transfer full): a new #GstD3D12CmdQueue instance
  *
  * Since: 1.26
  */
-GstD3D12CommandQueue *
-gst_d3d12_command_queue_new (ID3D12Device * device,
+GstD3D12CmdQueue *
+gst_d3d12_cmd_queue_new (ID3D12Device * device,
     const D3D12_COMMAND_QUEUE_DESC * desc, D3D12_FENCE_FLAGS fence_flags,
     guint queue_size)
 {
@@ -146,7 +146,7 @@ gst_d3d12_command_queue_new (ID3D12Device * device,
   g_return_val_if_fail (desc, nullptr);
 
   GST_D3D12_CALL_ONCE_BEGIN {
-    GST_DEBUG_CATEGORY_INIT (gst_d3d12_command_queue_debug,
+    GST_DEBUG_CATEGORY_INIT (gst_d3d12_cmd_queue_debug,
         "d3d12commandqueue", 0, "d3d12commandqueue");
   } GST_D3D12_CALL_ONCE_END;
 
@@ -164,8 +164,8 @@ gst_d3d12_command_queue_new (ID3D12Device * device,
     return nullptr;
   }
 
-  auto self = (GstD3D12CommandQueue *)
-      g_object_new (GST_TYPE_D3D12_COMMAND_QUEUE, nullptr);
+  auto self = (GstD3D12CmdQueue *)
+      g_object_new (GST_TYPE_D3D12_CMD_QUEUE, nullptr);
   gst_object_ref_sink (self);
 
   auto priv = self->priv;
@@ -178,8 +178,8 @@ gst_d3d12_command_queue_new (ID3D12Device * device,
 }
 
 /**
- * gst_d3d12_command_queue_get_handle:
- * @queue: a #GstD3D12CommandQueue
+ * gst_d3d12_cmd_queue_get_handle:
+ * @queue: a #GstD3D12CmdQueue
  *
  * Gets command queue handle
  *
@@ -188,16 +188,16 @@ gst_d3d12_command_queue_new (ID3D12Device * device,
  * Since: 1.26
  */
 ID3D12CommandQueue *
-gst_d3d12_command_queue_get_handle (GstD3D12CommandQueue * queue)
+gst_d3d12_cmd_queue_get_handle (GstD3D12CmdQueue * queue)
 {
-  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), nullptr);
+  g_return_val_if_fail (GST_IS_D3D12_CMD_QUEUE (queue), nullptr);
 
   return queue->priv->cq.Get ();
 }
 
 /**
- * gst_d3d12_command_queue_get_fence_handle:
- * @queue: a #GstD3D12CommandQueue
+ * gst_d3d12_cmd_queue_get_fence_handle:
+ * @queue: a #GstD3D12CmdQueue
  *
  * Gets fence handle handle
  *
@@ -206,15 +206,15 @@ gst_d3d12_command_queue_get_handle (GstD3D12CommandQueue * queue)
  * Since: 1.26
  */
 ID3D12Fence *
-gst_d3d12_command_queue_get_fence_handle (GstD3D12CommandQueue * queue)
+gst_d3d12_cmd_queue_get_fence_handle (GstD3D12CmdQueue * queue)
 {
-  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), nullptr);
+  g_return_val_if_fail (GST_IS_D3D12_CMD_QUEUE (queue), nullptr);
 
   return queue->priv->fence.Get ();
 }
 
 static HRESULT
-gst_d3d12_command_queue_execute_command_lists_unlocked (GstD3D12CommandQueue *
+gst_d3d12_cmd_queue_execute_command_lists_unlocked (GstD3D12CmdQueue *
     queue, guint num_command_lists, ID3D12CommandList ** command_lists,
     guint64 * fence_value)
 {
@@ -254,8 +254,8 @@ gst_d3d12_command_queue_execute_command_lists_unlocked (GstD3D12CommandQueue *
 }
 
 /**
- * gst_d3d12_command_queue_execute_command_lists:
- * @queue: a #GstD3D12CommandQueue
+ * gst_d3d12_cmd_queue_execute_command_lists:
+ * @queue: a #GstD3D12CmdQueue
  * @num_command_lists: command list size
  * @command_lists: (allow-none): array of ID3D12CommandList
  * @fence_value: (out) (optional): fence value of submitted command
@@ -268,22 +268,22 @@ gst_d3d12_command_queue_execute_command_lists_unlocked (GstD3D12CommandQueue *
  * Since: 1.26
  */
 HRESULT
-gst_d3d12_command_queue_execute_command_lists (GstD3D12CommandQueue * queue,
+gst_d3d12_cmd_queue_execute_command_lists (GstD3D12CmdQueue * queue,
     guint num_command_lists, ID3D12CommandList ** command_lists,
     guint64 * fence_value)
 {
-  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), E_INVALIDARG);
+  g_return_val_if_fail (GST_IS_D3D12_CMD_QUEUE (queue), E_INVALIDARG);
 
   auto priv = queue->priv;
 
   std::lock_guard < std::mutex > lk (priv->execute_lock);
-  return gst_d3d12_command_queue_execute_command_lists_unlocked (queue,
+  return gst_d3d12_cmd_queue_execute_command_lists_unlocked (queue,
       num_command_lists, command_lists, fence_value);
 }
 
 /**
- * gst_d3d12_command_queue_execute_command_lists_full:
- * @queue: a #GstD3D12CommandQueue
+ * gst_d3d12_cmd_queue_execute_command_lists_full:
+ * @queue: a #GstD3D12CmdQueue
  * @num_fences_to_wait: the number of fences to wait
  * @fences_to_wait: (allow-none): array of ID3D11Fence
  * @fence_values_to_wait: (allow-none): array of fence value to wait
@@ -298,12 +298,12 @@ gst_d3d12_command_queue_execute_command_lists (GstD3D12CommandQueue * queue,
  * Since: 1.26
  */
 HRESULT
-gst_d3d12_command_queue_execute_command_lists_full (GstD3D12CommandQueue *
+gst_d3d12_cmd_queue_execute_command_lists_full (GstD3D12CmdQueue *
     queue, guint num_fences_to_wait, ID3D12Fence ** fences_to_wait,
     const guint64 * fence_values_to_wait, guint num_command_lists,
     ID3D12CommandList ** command_lists, guint64 * fence_value)
 {
-  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), E_INVALIDARG);
+  g_return_val_if_fail (GST_IS_D3D12_CMD_QUEUE (queue), E_INVALIDARG);
   g_return_val_if_fail (num_fences_to_wait == 0 ||
       (fences_to_wait && fence_values_to_wait), E_INVALIDARG);
 
@@ -320,13 +320,13 @@ gst_d3d12_command_queue_execute_command_lists_full (GstD3D12CommandQueue *
     }
   }
 
-  return gst_d3d12_command_queue_execute_command_lists_unlocked (queue,
+  return gst_d3d12_cmd_queue_execute_command_lists_unlocked (queue,
       num_command_lists, command_lists, fence_value);
 }
 
 /**
- * gst_d3d12_command_queue_execute_wait:
- * @queue: a #GstD3D12CommandQueue
+ * gst_d3d12_cmd_queue_execute_wait:
+ * @queue: a #GstD3D12CmdQueue
  * @fence: a ID3D12Fence
  * @fence_value: fence value to wait
  *
@@ -337,10 +337,10 @@ gst_d3d12_command_queue_execute_command_lists_full (GstD3D12CommandQueue *
  * Since: 1.26
  */
 HRESULT
-gst_d3d12_command_queue_execute_wait (GstD3D12CommandQueue * queue,
+gst_d3d12_cmd_queue_execute_wait (GstD3D12CmdQueue * queue,
     ID3D12Fence * fence, guint64 fence_value)
 {
-  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), E_INVALIDARG);
+  g_return_val_if_fail (GST_IS_D3D12_CMD_QUEUE (queue), E_INVALIDARG);
   g_return_val_if_fail (fence, E_INVALIDARG);
 
   auto priv = queue->priv;
@@ -349,8 +349,8 @@ gst_d3d12_command_queue_execute_wait (GstD3D12CommandQueue * queue,
 }
 
 /**
- * gst_d3d12_command_queue_get_completed_value:
- * @queue: a #GstD3D12CommandQueue
+ * gst_d3d12_cmd_queue_get_completed_value:
+ * @queue: a #GstD3D12CmdQueue
  *
  * Gets completed fence value
  *
@@ -359,16 +359,16 @@ gst_d3d12_command_queue_execute_wait (GstD3D12CommandQueue * queue,
  * Since: 1.26
  */
 guint64
-gst_d3d12_command_queue_get_completed_value (GstD3D12CommandQueue * queue)
+gst_d3d12_cmd_queue_get_completed_value (GstD3D12CmdQueue * queue)
 {
-  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), G_MAXUINT64);
+  g_return_val_if_fail (GST_IS_D3D12_CMD_QUEUE (queue), G_MAXUINT64);
 
   return queue->priv->fence->GetCompletedValue ();
 }
 
 /**
- * gst_d3d12_command_queue_fence_wait:
- * @queue: a #GstD3D12CommandQueue
+ * gst_d3d12_cmd_queue_fence_wait:
+ * @queue: a #GstD3D12CmdQueue
  * @fence_value: fence value to wait
  *
  * Blocks calling CPU thread until command corresponding @fence_value
@@ -380,10 +380,9 @@ gst_d3d12_command_queue_get_completed_value (GstD3D12CommandQueue * queue)
  * Since: 1.26
  */
 HRESULT
-gst_d3d12_command_queue_fence_wait (GstD3D12CommandQueue * queue,
-    guint64 fence_value)
+gst_d3d12_cmd_queue_fence_wait (GstD3D12CmdQueue * queue, guint64 fence_value)
 {
-  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), E_INVALIDARG);
+  g_return_val_if_fail (GST_IS_D3D12_CMD_QUEUE (queue), E_INVALIDARG);
 
   auto priv = queue->priv;
   guint64 fence_to_wait = fence_value;
@@ -414,7 +413,7 @@ gst_d3d12_command_queue_fence_wait (GstD3D12CommandQueue * queue,
 }
 
 static gpointer
-gst_d3d12_command_queue_gc_thread (GstD3D12CommandQueue * self)
+gst_d3d12_cmd_queue_gc_thread (GstD3D12CmdQueue * self)
 {
   auto priv = self->priv;
 
@@ -467,8 +466,8 @@ gst_d3d12_command_queue_gc_thread (GstD3D12CommandQueue * self)
 }
 
 /**
- * gst_d3d12_command_queue_set_notify:
- * @queue: a #GstD3D12CommandQueue
+ * gst_d3d12_cmd_queue_set_notify:
+ * @queue: a #GstD3D12CmdQueue
  * @fence_value: target fence value
  * @fence_data: user data
  * @notify: a #GDestroyNotify
@@ -481,16 +480,16 @@ gst_d3d12_command_queue_gc_thread (GstD3D12CommandQueue * self)
  * the storage with destructor, in order to keep resources alive during
  * command execution.
  *
- * GstD3D12CommandQueue launches internal worker thread to monitor fence value
+ * GstD3D12CmdQueue launches internal worker thread to monitor fence value
  * and once it reaches the scheduled value, @notify will be called with @fence_data
  *
  * Since: 1.26
  */
 void
-gst_d3d12_command_queue_set_notify (GstD3D12CommandQueue * queue,
+gst_d3d12_cmd_queue_set_notify (GstD3D12CmdQueue * queue,
     guint64 fence_value, gpointer fence_data, GDestroyNotify notify)
 {
-  g_return_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue));
+  g_return_if_fail (GST_IS_D3D12_CMD_QUEUE (queue));
 
   auto priv = queue->priv;
 
@@ -498,7 +497,7 @@ gst_d3d12_command_queue_set_notify (GstD3D12CommandQueue * queue,
   auto gc_data = std::make_shared < GCData > (fence_data, notify, fence_value);
   if (!priv->gc_thread) {
     priv->gc_thread = g_thread_new ("GstD3D12Gc",
-        (GThreadFunc) gst_d3d12_command_queue_gc_thread, queue);
+        (GThreadFunc) gst_d3d12_cmd_queue_gc_thread, queue);
   }
 
   GST_LOG_OBJECT (queue, "Pushing GC data %" G_GUINT64_FORMAT, fence_value);
@@ -509,8 +508,8 @@ gst_d3d12_command_queue_set_notify (GstD3D12CommandQueue * queue,
 }
 
 /**
- * gst_d3d12_command_queue_drain:
- * @queue: a #GstD3D12CommandQueue
+ * gst_d3d12_cmd_queue_drain:
+ * @queue: a #GstD3D12CmdQueue
  *
  * Waits for all scheduled GPU commands to be finished
  *
@@ -519,9 +518,9 @@ gst_d3d12_command_queue_set_notify (GstD3D12CommandQueue * queue,
  * Since: 1.26
  */
 HRESULT
-gst_d3d12_command_queue_drain (GstD3D12CommandQueue * queue)
+gst_d3d12_cmd_queue_drain (GstD3D12CmdQueue * queue)
 {
-  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), E_INVALIDARG);
+  g_return_val_if_fail (GST_IS_D3D12_CMD_QUEUE (queue), E_INVALIDARG);
 
   auto priv = queue->priv;
 
@@ -561,10 +560,10 @@ gst_d3d12_command_queue_drain (GstD3D12CommandQueue * queue)
 }
 
 HRESULT
-gst_d3d12_command_queue_idle_for_swapchain (GstD3D12CommandQueue * queue,
+gst_d3d12_cmd_queue_idle_for_swapchain (GstD3D12CmdQueue * queue,
     guint64 fence_value)
 {
-  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), E_INVALIDARG);
+  g_return_val_if_fail (GST_IS_D3D12_CMD_QUEUE (queue), E_INVALIDARG);
 
   auto priv = queue->priv;
   guint64 fence_to_wait = fence_value;

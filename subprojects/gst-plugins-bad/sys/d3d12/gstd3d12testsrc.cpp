@@ -229,7 +229,7 @@ struct RenderContext
   {
     device = (GstD3D12Device *) gst_object_ref (dev);
     auto device_handle = gst_d3d12_device_get_device_handle (device);
-    ca_pool = gst_d3d12_command_allocator_pool_new (device_handle,
+    ca_pool = gst_d3d12_cmd_alloc_pool_new (device_handle,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
   }
 
@@ -280,7 +280,7 @@ struct RenderContext
 
   ComPtr<ID3D12GraphicsCommandList> cl;
   std::queue<guint64> scheduled;
-  GstD3D12CommandAllocatorPool *ca_pool;
+  GstD3D12CmdAllocPool *ca_pool;
 
   D3D12_VIEWPORT viewport;
   D3D12_RECT scissor_rect;
@@ -2189,19 +2189,19 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
   if (ret != GST_FLOW_OK)
     return ret;
 
-  GstD3D12CommandAllocator *gst_ca;
-  if (!gst_d3d12_command_allocator_pool_acquire (priv->ctx->ca_pool, &gst_ca)) {
+  GstD3D12CmdAlloc *gst_ca;
+  if (!gst_d3d12_cmd_alloc_pool_acquire (priv->ctx->ca_pool, &gst_ca)) {
     GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
     gst_clear_buffer (&convert_buffer);
     return GST_FLOW_ERROR;
   }
 
-  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
+  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
 
   auto hr = ca->Reset ();
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't reset command allocator");
-    gst_d3d12_command_allocator_unref (gst_ca);
+    gst_d3d12_cmd_alloc_unref (gst_ca);
     gst_clear_buffer (&convert_buffer);
     return GST_FLOW_ERROR;
   }
@@ -2212,7 +2212,7 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
         ca, nullptr, IID_PPV_ARGS (&priv->ctx->cl));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't reset command list");
-      gst_d3d12_command_allocator_unref (gst_ca);
+      gst_d3d12_cmd_alloc_unref (gst_ca);
       gst_clear_buffer (&convert_buffer);
       return GST_FLOW_ERROR;
     }
@@ -2220,7 +2220,7 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
     hr = priv->ctx->cl->Reset (ca, nullptr);
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't reset command list");
-      gst_d3d12_command_allocator_unref (gst_ca);
+      gst_d3d12_cmd_alloc_unref (gst_ca);
       gst_clear_buffer (&convert_buffer);
       return GST_FLOW_ERROR;
     }

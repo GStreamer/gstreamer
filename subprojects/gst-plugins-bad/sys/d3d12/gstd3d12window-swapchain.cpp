@@ -51,7 +51,7 @@ SwapChainResource::SwapChainResource (GstD3D12Device * dev)
 {
   device = (GstD3D12Device *) gst_object_ref (dev);
   auto device_handle = gst_d3d12_device_get_device_handle (device);
-  ca_pool = gst_d3d12_command_allocator_pool_new (device_handle,
+  ca_pool = gst_d3d12_cmd_alloc_pool_new (device_handle,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
 }
 
@@ -85,9 +85,9 @@ void
 SwapChainResource::clear_resource ()
 {
   if (!buffers.empty ()) {
-    auto cq = gst_d3d12_device_get_command_queue (device,
+    auto cq = gst_d3d12_device_get_cmd_queue (device,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
-    gst_d3d12_command_queue_idle_for_swapchain (cq, fence_val);
+    gst_d3d12_cmd_queue_idle_for_swapchain (cq, fence_val);
     prev_fence_val = { };
   }
 
@@ -229,9 +229,9 @@ SwapChain::~SwapChain()
 {
   lock_.lock ();
   if (!resource_->buffers.empty ()) {
-    auto cq = gst_d3d12_device_get_command_queue (resource_->device,
+    auto cq = gst_d3d12_device_get_cmd_queue (resource_->device,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
-    gst_d3d12_command_queue_idle_for_swapchain (cq, resource_->fence_val);
+    gst_d3d12_cmd_queue_idle_for_swapchain (cq, resource_->fence_val);
   }
 
   resource_ = nullptr;
@@ -279,9 +279,9 @@ SwapChain::setup_swapchain (GstD3D12Window * window, GstD3D12Device * device,
 
     auto device = resource_->device;
     auto factory = gst_d3d12_device_get_factory_handle (device);
-    auto cq = gst_d3d12_device_get_command_queue (device,
+    auto cq = gst_d3d12_device_get_cmd_queue (device,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
-    auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
+    auto cq_handle = gst_d3d12_cmd_queue_get_handle (cq);
 
     ComPtr < IDXGISwapChain1 > swapchain;
     auto hr = factory->CreateSwapChainForHwnd (cq_handle, hwnd, &desc, nullptr,

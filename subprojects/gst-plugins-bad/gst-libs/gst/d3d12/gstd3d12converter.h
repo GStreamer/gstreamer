@@ -174,7 +174,7 @@ GType               gst_d3d12_converter_get_type (void);
 
 GST_D3D12_API
 GstD3D12Converter * gst_d3d12_converter_new  (GstD3D12Device * device,
-                                              GstD3D12CommandQueue * queue,
+                                              GstD3D12CmdQueue * queue,
                                               const GstVideoInfo * in_info,
                                               const GstVideoInfo * out_info,
                                               const D3D12_BLEND_DESC * blend_desc,

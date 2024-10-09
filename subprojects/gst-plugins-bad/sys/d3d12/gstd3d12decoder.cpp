@@ -230,7 +230,7 @@ struct DecoderCmdData
   ComPtr<ID3D12Device> device;
   ComPtr<ID3D12VideoDevice> video_device;
   ComPtr<ID3D12VideoDecodeCommandList> cl;
-  GstD3D12CommandQueue *queue = nullptr;
+  GstD3D12CmdQueue *queue = nullptr;
   bool need_full_drain = false;
 
   /* Fence to wait at command record thread */
@@ -480,7 +480,7 @@ gst_d3d12_decoder_drain (GstD3D12Decoder * decoder, GstVideoDecoder * videodec)
 
   GST_DEBUG_OBJECT (decoder, "Draining");
   if (priv->cmd)
-    gst_d3d12_command_queue_fence_wait (priv->cmd->queue, priv->cmd->fence_val);
+    gst_d3d12_cmd_queue_fence_wait (priv->cmd->queue, priv->cmd->fence_val);
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (videodec);
   if (priv->output_thread && priv->session) {
@@ -825,10 +825,9 @@ gst_d3d12_decoder_stop (GstD3D12Decoder * decoder)
   priv->flushing = true;
   if (priv->cmd) {
     if (priv->cmd->need_full_drain) {
-      gst_d3d12_command_queue_drain (priv->cmd->queue);
+      gst_d3d12_cmd_queue_drain (priv->cmd->queue);
     } else {
-      gst_d3d12_command_queue_fence_wait (priv->cmd->queue,
-          priv->cmd->fence_val);
+      gst_d3d12_cmd_queue_fence_wait (priv->cmd->queue, priv->cmd->fence_val);
     }
   }
 
@@ -1243,7 +1242,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
 
   ID3D12CommandList *cl[] = { priv->cmd->cl.Get () };
 
-  hr = gst_d3d12_command_queue_execute_command_lists (priv->cmd->queue,
+  hr = gst_d3d12_cmd_queue_execute_command_lists (priv->cmd->queue,
       1, cl, &priv->cmd->fence_val);
   if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't execute command list");
@@ -1264,7 +1263,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   }
   gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (cpb));
 
-  gst_d3d12_command_queue_set_notify (priv->cmd->queue, priv->cmd->fence_val,
+  gst_d3d12_cmd_queue_set_notify (priv->cmd->queue, priv->cmd->fence_val,
       fence_data, (GDestroyNotify) gst_d3d12_fence_data_unref);
 
   return GST_FLOW_OK;
@@ -1691,8 +1690,7 @@ gst_d3d12_decoder_output_loop (GstD3D12Decoder * self)
     auto decoder_pic = get_decoder_picture (output_data.picture);
     g_assert (decoder_pic);
 
-    gst_d3d12_command_queue_fence_wait (priv->cmd->queue,
-        decoder_pic->fence_val);
+    gst_d3d12_cmd_queue_fence_wait (priv->cmd->queue, decoder_pic->fence_val);
 
     if (priv->flushing) {
       GST_DEBUG_OBJECT (self, "Drop framem, we are flushing");
