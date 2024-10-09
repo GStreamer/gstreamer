@@ -5580,8 +5580,12 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH, event, probe_stopped);
 
   /* recheck sticky events because the probe might have cause a relink */
+  /* Note: FLUSH_STOP is a serialized event, but must not propagate sticky
+   * events. FLUSH_STOP is only targeted at removing the flushing state from
+   * pads and elements, and not actually pushing data/events. */
   if (GST_PAD_HAS_PENDING_EVENTS (pad) && GST_PAD_IS_SRC (pad)
-      && (GST_EVENT_IS_SERIALIZED (event))) {
+      && (GST_EVENT_IS_SERIALIZED (event))
+      && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_STOP) {
     PushStickyData data = { GST_FLOW_OK, FALSE, event };
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
 
@@ -5740,11 +5744,18 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
         break;
     }
   }
-  if (GST_PAD_IS_SRC (pad) && serialized) {
+  if (GST_PAD_IS_SRC (pad) && serialized
+      && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_STOP) {
     /* All serialized events on the srcpad trigger push of sticky events.
      *
      * Note that we do not do this for non-serialized sticky events since it
-     * could potentially block. */
+     * could potentially block.
+     *
+     * We must NOT propagate sticky events in response to FLUSH_STOP either, as
+     * FLUSH_STOP is only targeted at removing the flushing state from pads and
+     * elements, and not actually pushing data/events. This also makes it
+     * consistent with the way flush events are handled in "blocking" pad
+     * probes. */
     res = (check_sticky (pad, event) == GST_FLOW_OK);
   }
   if (!serialized || !sticky) {
