@@ -223,10 +223,12 @@ gst_d3d12_command_queue_execute_command_lists_unlocked (GstD3D12CommandQueue *
   priv->fence_val++;
   if (num_command_lists)
     priv->cq->ExecuteCommandLists (num_command_lists, command_lists);
+
   auto hr = priv->cq->Signal (priv->fence.Get (), priv->fence_val);
   if (FAILED (hr)) {
     GST_ERROR_OBJECT (queue, "Signal failed");
     priv->fence_val--;
+    return hr;
   } else if (fence_value) {
     *fence_value = priv->fence_val;
   }
