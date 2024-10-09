@@ -2864,6 +2864,8 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
     /* construct the type */
     if (!strcmp (in_plugin->name, "hevc")) {
       plugin_name = g_strdup ("h265");
+    } else if (!strcmp (in_plugin->name, "vvc")) {
+      plugin_name = g_strdup ("h266");
     } else {
       plugin_name = g_strdup ((gchar *) in_plugin->name);
     }
@@ -2891,6 +2893,7 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
       case AV_CODEC_ID_MSMPEG4V3:
       case AV_CODEC_ID_H264:
       case AV_CODEC_ID_HEVC:
+      case AV_CODEC_ID_VVC:
       case AV_CODEC_ID_RV10:
       case AV_CODEC_ID_RV20:
       case AV_CODEC_ID_RV30:
