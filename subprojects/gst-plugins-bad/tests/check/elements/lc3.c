@@ -252,7 +252,7 @@ static GstBuffer *
 create_test_buffer (guint64 num, guint64 size)
 {
   GstBuffer *buffer;
-  guint64 *data = g_malloc (sizeof (guint64));
+  guint64 *data = g_malloc (size);
 
   *data = num;
 
