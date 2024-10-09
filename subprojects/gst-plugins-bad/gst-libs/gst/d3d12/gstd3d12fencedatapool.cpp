@@ -184,7 +184,7 @@ gst_d3d12_fence_data_new (void)
  * @pool: a #GstD3D12FenceDataPool
  * @data: (out) (transfer full): a pointer to #GstD3D12FenceData
  *
- * Acquire #GstD3D12CommandAllocator object
+ * Acquire #GstD3D12FenceData object
  *
  * Returns: %TRUE if successful
  *
