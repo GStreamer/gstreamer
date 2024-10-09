@@ -43,7 +43,7 @@ enum
   PROP_0,
   PROP_X_AXIS,
   PROP_Y_AXIS,
-  PROP_PIXEL_SIZE,
+  PROP_SIZE,
   PROP_QRCODE_ERROR_CORRECTION,
   PROP_CASE_SENSITIVE,
 };
@@ -51,16 +51,18 @@ enum
 typedef struct _GstBaseQROverlayPrivate GstBaseQROverlayPrivate;
 struct _GstBaseQROverlayPrivate
 {
-  gfloat qrcode_size;
   guint qrcode_quality;
   guint span_frame;
   QRecLevel level;
   gfloat x_percent;
   gfloat y_percent;
+  gfloat size_percent;
   GstElement *overlaycomposition;
   GstVideoInfo info;
   gboolean valid;
   gboolean case_sensitive;
+  gint window_width;
+  gint window_height;
 
   GstPad *sinkpad, *srcpad;
   GstVideoOverlayComposition *prev_overlay;
@@ -86,7 +88,9 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 #define DEFAULT_PROP_QUALITY    1
-#define DEFAULT_PROP_PIXEL_SIZE    3
+#define DEFAULT_PROP_X 50
+#define DEFAULT_PROP_Y 50
+#define DEFAULT_PROP_SIZE 33
 #define DEFAULT_PROP_CASE_SENSITIVE FALSE
 
 #define GST_TYPE_QRCODE_QUALITY (gst_qrcode_quality_get_type())
@@ -125,6 +129,9 @@ gst_base_qr_overlay_caps_changed_cb (GstBaseQROverlay * self, GstCaps * caps,
 {
   GstBaseQROverlayPrivate *priv = PRIV (self);
 
+  priv->window_width = window_width;
+  priv->window_height = window_height;
+
   GST_DEBUG_OBJECT (self, "%" GST_PTR_FORMAT, caps);
 
   if (gst_video_info_from_caps (&priv->info, caps))
@@ -136,11 +143,30 @@ gst_base_qr_overlay_caps_changed_cb (GstBaseQROverlay * self, GstCaps * caps,
   gst_mini_object_replace (((GstMiniObject **) & priv->prev_overlay), NULL);
 }
 
+static void
+render_size (GstBaseQROverlay * self, int *width, int *height)
+{
+  GstBaseQROverlayPrivate *priv = PRIV (self);
+  gdouble video_aspect =
+      (gdouble) priv->info.width / (gdouble) priv->info.height;
+  gdouble window_aspect =
+      (gdouble) priv->window_width / (gdouble) priv->window_height;
+
+  /* Render size within the window */
+  if (video_aspect >= window_aspect) {
+    *width = priv->window_width;
+    *height = window_aspect * priv->window_height / video_aspect;
+  } else {
+    *width = video_aspect * priv->window_width / window_aspect;
+    *height = priv->window_height;
+  }
+}
+
 static GstVideoOverlayComposition *
 draw_overlay (GstBaseQROverlay * self, QRcode * qrcode)
 {
   guint8 *qr_data, *pixels;
-  gint stride, pstride, y, x, yy, square_size;
+  gint stride, pstride, y, x, yy;
   gsize offset, line_offset;
   GstVideoInfo info;
   GstVideoOverlayRectangle *rect;
@@ -150,7 +176,21 @@ draw_overlay (GstBaseQROverlay * self, QRcode * qrcode)
 
   gst_video_info_init (&info);
 
-  square_size = (qrcode->width + 4 * 2) * priv->qrcode_size;
+  int render_width, render_height;
+  render_size (self, &render_width, &render_height);
+
+  // Total size in pixels of the qrcode.
+  gdouble size_scale = priv->size_percent / 100;
+  int square_size =
+      render_width < render_height
+      ? render_width * size_scale : render_height * size_scale;
+  // Size in pixels of 1 qrcode block (1 block margin on each side).
+  int qrcode_size = square_size / (qrcode->width + 2);
+  // Update square_size for a round number of blocks.
+  square_size = qrcode_size * (qrcode->width + 2);
+  // Margin in pixels in each side to center the qrcode.
+  int margin = qrcode_size;
+
   gst_video_info_set_format (&info, GST_VIDEO_FORMAT_ARGB, square_size,
       square_size);
 
@@ -159,25 +199,21 @@ draw_overlay (GstBaseQROverlay * self, QRcode * qrcode)
   pstride = info.finfo->pixel_stride[0];
 
   /* White background */
-  for (y = 0; y < info.height; y++)
-    memset (&pixels[y * stride], 0xff, stride);
+  memset (pixels, 0xff, info.size);
 
-  /* Draw the black QR code blocks with 4px white space around it
-   * on top */
-  line_offset = 4 * priv->qrcode_size * stride;
+  /* Draw the black QR code blocks */
+  line_offset = margin * stride;
   qr_data = qrcode->data;
   for (y = 0; y < qrcode->width; y++) {
     for (x = 0; x < (qrcode->width); x++) {
-      for (yy = 0; yy < priv->qrcode_size * pstride; yy += pstride) {
+      for (yy = 0; yy < qrcode_size * pstride; yy += pstride) {
         if (!(*qr_data & 1))
           continue;
 
-        offset =
-            (((line_offset + (stride * (yy / pstride))) +
-                x * priv->qrcode_size * pstride)) +
-            (priv->qrcode_size * pstride) + (4 * priv->qrcode_size * pstride);
+        offset = line_offset + stride * (yy / pstride) +
+            x * qrcode_size * pstride + margin * pstride;
 
-        for (gint i = 0; i < priv->qrcode_size * pstride; i += pstride) {
+        for (gint i = 0; i < qrcode_size * pstride; i += pstride) {
           pixels[offset + i] = 0x00;
           pixels[offset + i + 1] = 0x00;
           pixels[offset + i + 2] = 0x00;
@@ -185,12 +221,16 @@ draw_overlay (GstBaseQROverlay * self, QRcode * qrcode)
       }
       qr_data++;
     }
-    line_offset += (stride * priv->qrcode_size);
+    line_offset += stride * qrcode_size;
   }
 
   buf = gst_buffer_new_wrapped (pixels, info.size);
   gst_buffer_add_video_meta (buf, GST_VIDEO_FRAME_FLAG_NONE,
       GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, info.width, info.height);
+
+  square_size =
+      priv->info.width < priv->info.height
+      ? priv->info.width * size_scale : priv->info.height * size_scale;
 
   x = (int) (priv->info.width - square_size) * (priv->x_percent / 100);
   x = GST_ROUND_DOWN_2 (x);
@@ -198,10 +238,11 @@ draw_overlay (GstBaseQROverlay * self, QRcode * qrcode)
   y = GST_ROUND_DOWN_4 (y);
 
   GST_DEBUG_OBJECT (self, "draw overlay at (%d,%d) size: %dx%d", x, y,
-      info.width, info.height);
+      square_size, square_size);
 
-  rect = gst_video_overlay_rectangle_new_raw (buf, x, y,
-      info.width, info.height, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  rect =
+      gst_video_overlay_rectangle_new_raw (buf, x, y, square_size, square_size,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
   comp = gst_video_overlay_composition_new (rect);
   gst_video_overlay_rectangle_unref (rect);
 
@@ -283,22 +324,21 @@ gst_base_qr_overlay_class_init (GstBaseQROverlayClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_base_qr_overlay_debug, "qroverlay", 0,
       "Qrcode overlay base class");
 
-  g_object_class_install_property (gobject_class,
-      PROP_X_AXIS, g_param_spec_float ("x",
-          "X position (in percent of the width)",
-          "X position (in percent of the width)",
-          0.0, 100.0, 50.0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_X_AXIS,
+      g_param_spec_float ("x", "X position (in percent of the width)",
+          "X position (in percent of the width)", 0.0, 100.0, DEFAULT_PROP_X,
+          G_PARAM_READWRITE));
 
-  g_object_class_install_property (gobject_class,
-      PROP_Y_AXIS, g_param_spec_float ("y",
-          "Y position (in percent of the height)",
-          "Y position (in percent of the height)",
-          0.0, 100.0, 50.0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_Y_AXIS,
+      g_param_spec_float ("y", "Y position (in percent of the height)",
+          "Y position (in percent of the height)", 0.0, 100.0, DEFAULT_PROP_Y,
+          G_PARAM_READWRITE));
 
-  g_object_class_install_property (gobject_class,
-      PROP_PIXEL_SIZE, g_param_spec_float ("pixel-size",
-          "pixel-size", "Pixel size of each Qrcode pixel",
-          1, 100.0, DEFAULT_PROP_PIXEL_SIZE, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_SIZE,
+      g_param_spec_float ("size",
+          "Size of the square (in percent of the smallest of width and height)",
+          "Size of the square (in percent of the smallest of width and height)",
+          0.0, 100.0, DEFAULT_PROP_SIZE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_QRCODE_ERROR_CORRECTION,
       g_param_spec_enum ("qrcode-error-correction", "qrcode-error-correction",
@@ -335,12 +375,12 @@ gst_base_qr_overlay_init (GstBaseQROverlay * self)
 {
   GstBaseQROverlayPrivate *priv = PRIV (self);
 
-  priv->x_percent = 50.0;
-  priv->y_percent = 50.0;
+  priv->x_percent = DEFAULT_PROP_X;
+  priv->y_percent = DEFAULT_PROP_X;
+  priv->size_percent = DEFAULT_PROP_SIZE;
   priv->qrcode_quality = DEFAULT_PROP_QUALITY;
   priv->case_sensitive = DEFAULT_PROP_CASE_SENSITIVE;
   priv->span_frame = 0;
-  priv->qrcode_size = DEFAULT_PROP_PIXEL_SIZE;
   priv->overlaycomposition =
       gst_element_factory_make ("overlaycomposition", NULL);
   gst_video_info_init (&priv->info);
@@ -380,8 +420,8 @@ gst_base_qr_overlay_set_property (GObject * object, guint prop_id,
     case PROP_Y_AXIS:
       priv->y_percent = g_value_get_float (value);
       break;
-    case PROP_PIXEL_SIZE:
-      priv->qrcode_size = g_value_get_float (value);
+    case PROP_SIZE:
+      priv->size_percent = g_value_get_float (value);
       break;
     case PROP_QRCODE_ERROR_CORRECTION:
       priv->qrcode_quality = g_value_get_enum (value);
@@ -408,8 +448,8 @@ gst_base_qr_overlay_get_property (GObject * object, guint prop_id,
     case PROP_Y_AXIS:
       g_value_set_float (value, priv->y_percent);
       break;
-    case PROP_PIXEL_SIZE:
-      g_value_set_float (value, priv->qrcode_size);
+    case PROP_SIZE:
+      g_value_set_float (value, priv->size_percent);
       break;
     case PROP_QRCODE_ERROR_CORRECTION:
       g_value_set_enum (value, priv->qrcode_quality);
