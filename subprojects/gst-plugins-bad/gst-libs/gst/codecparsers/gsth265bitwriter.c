@@ -1437,6 +1437,7 @@ _h265_slice_bit_writer_ref_pic_list_modification (const GstH265SliceHdr *
 
   if (rpl_mod->ref_pic_list_modification_flag_l0) {
     for (i = 0; i <= slice->num_ref_idx_l0_active_minus1; i++) {
+      /* 7.4.7.2 list_entry_l0 */
       WRITE_BITS (bw, rpl_mod->list_entry_l0[i], n);
     }
   }
@@ -1575,7 +1576,7 @@ _h265_bit_writer_slice_header (const GstH265SliceHdr * slice,
 
     if (slice->pps->dependent_slice_segments_enabled_flag)
       WRITE_BITS (bw, slice->dependent_slice_segment_flag, 1);
-    /* sice_segment_address parsing */
+    /* 7.4.7.1 slice_segment_address parsing */
     WRITE_BITS (bw, slice->segment_address, n);
   }
 
@@ -1610,6 +1611,7 @@ _h265_bit_writer_slice_header (const GstH265SliceHdr * slice,
             sps->num_short_term_ref_pic_sets - 1)
           goto error;
 
+        /*  7.4.7.1 short_term_ref_pic_set_idx */
         WRITE_BITS (bw, slice->short_term_ref_pic_set_idx, n);
       }
 
@@ -1625,6 +1627,7 @@ _h265_bit_writer_slice_header (const GstH265SliceHdr * slice,
         for (i = 0; i < limit; i++) {
           if (i < slice->num_long_term_sps) {
             if (sps->num_long_term_ref_pics_sps > 1) {
+              /* 7.4.7.1 lt_idx_sps */
               const guint n =
                   gst_util_ceil_log2 (sps->num_long_term_ref_pics_sps);
               WRITE_BITS (bw, slice->lt_idx_sps[i], n);
