@@ -1070,6 +1070,11 @@ parse_lrc (ParserState * state, const gchar * line)
     return NULL;
 
   start = strchr (line, ']');
+  // sscanf() does not check for the trailing ] but only up to the last
+  // placeholder, so there might be no ] at the end.
+  if (!start)
+    return NULL;
+
   if (start - line == 9)
     milli = 10;
   else
