@@ -319,7 +319,7 @@ gst_caps_new_empty_simple (const char *media_type)
 }
 
 /**
- * gst_caps_new_empty_simple_static_str:
+ * gst_caps_new_static_str_empty_simple:
  * @media_type: the media type of the structure
  *
  * Creates a new #GstCaps that contains one #GstStructure with name
@@ -333,7 +333,7 @@ gst_caps_new_empty_simple (const char *media_type)
  * Since: 1.26
  */
 GstCaps *
-gst_caps_new_empty_simple_static_str (const char *media_type)
+gst_caps_new_static_str_empty_simple (const char *media_type)
 {
   GstCaps *caps;
   GstStructure *structure;
@@ -390,7 +390,7 @@ gst_caps_new_simple (const char *media_type, const char *fieldname, ...)
 }
 
 /**
- * gst_caps_new_simple_static_str:
+ * gst_caps_new_static_str_simple:
  * @media_type: the media type of the structure
  * @fieldname: first field to set
  * @...: additional arguments
@@ -407,7 +407,7 @@ gst_caps_new_simple (const char *media_type, const char *fieldname, ...)
  * Since: 1.26
  */
 GstCaps *
-gst_caps_new_simple_static_str (const char *media_type, const char *fieldname,
+gst_caps_new_static_str_simple (const char *media_type, const char *fieldname,
     ...)
 {
   GstCaps *caps;

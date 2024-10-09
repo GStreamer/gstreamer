@@ -386,7 +386,7 @@ gst_audio_info_to_caps (const GstAudioInfo * info)
         "but no channel positions present");
   }
 
-  caps = gst_caps_new_simple_static_str ("audio/x-raw",
+  caps = gst_caps_new_static_str_simple ("audio/x-raw",
       "format", G_TYPE_STRING, format,
       "layout", G_TYPE_STRING, layout,
       "rate", G_TYPE_INT, info->rate,

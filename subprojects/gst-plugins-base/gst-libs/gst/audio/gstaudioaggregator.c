@@ -1070,7 +1070,7 @@ gst_audio_aggregator_sink_setcaps (GstAudioAggregatorPad * aaggpad,
     /* Returns NULL if there is no downstream peer */
     if (downstream_caps) {
       GstCaps *rate_caps =
-          gst_caps_new_simple_static_str ("audio/x-raw", "rate", G_TYPE_INT,
+          gst_caps_new_static_str_simple ("audio/x-raw", "rate", G_TYPE_INT,
           info.rate,
           NULL);
 

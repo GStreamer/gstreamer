@@ -678,7 +678,7 @@ gst_video_info_to_caps (const GstVideoInfo * info)
   format = gst_video_format_to_string (info->finfo->format);
   g_return_val_if_fail (format != NULL, NULL);
 
-  caps = gst_caps_new_simple_static_str ("video/x-raw",
+  caps = gst_caps_new_static_str_simple ("video/x-raw",
       "format", G_TYPE_STRING, format,
       "width", G_TYPE_INT, info->width,
       "height", G_TYPE_INT, info->height, NULL);

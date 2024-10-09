@@ -370,14 +370,14 @@ GST_API
 GstCaps *         gst_caps_new_empty_simple        (const char    *media_type) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
-GstCaps *         gst_caps_new_empty_simple_static_str (const char    *media_type) G_GNUC_WARN_UNUSED_RESULT;
+GstCaps *         gst_caps_new_static_str_empty_simple (const char    *media_type) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_API
 GstCaps *         gst_caps_new_simple              (const char    *media_type,
                                                     const char    *fieldname,
                                                     ...) G_GNUC_NULL_TERMINATED G_GNUC_WARN_UNUSED_RESULT;
 GST_API
-GstCaps *         gst_caps_new_simple_static_str   (const char    *media_type,
+GstCaps *         gst_caps_new_static_str_simple   (const char    *media_type,
                                                     const char    *fieldname,
                                                     ...) G_GNUC_NULL_TERMINATED G_GNUC_WARN_UNUSED_RESULT;
 GST_API
