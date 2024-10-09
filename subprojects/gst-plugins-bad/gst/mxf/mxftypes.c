@@ -1064,6 +1064,7 @@ mxf_index_table_segment_parse (const MXFUL * ul,
 #endif
   guint16 tag, tag_size;
   const guint8 *tag_data;
+  guint8 found_bitset = 0;
 
   g_return_val_if_fail (ul != NULL, FALSE);
 
@@ -1090,12 +1091,14 @@ mxf_index_table_segment_parse (const MXFUL * ul,
         memcpy (&segment->instance_id, tag_data, 16);
         GST_DEBUG ("  instance id = %s",
             mxf_uuid_to_string (&segment->instance_id, str));
+        found_bitset |= 1;
         break;
       case 0x3f0b:
         if (!mxf_fraction_parse (&segment->index_edit_rate, tag_data, tag_size))
           goto error;
         GST_DEBUG ("  index edit rate = %d/%d", segment->index_edit_rate.n,
             segment->index_edit_rate.d);
+        found_bitset |= 2;
         break;
       case 0x3f0c:
         if (tag_size != 8)
@@ -1103,6 +1106,7 @@ mxf_index_table_segment_parse (const MXFUL * ul,
         segment->index_start_position = GST_READ_UINT64_BE (tag_data);
         GST_DEBUG ("  index start position = %" G_GINT64_FORMAT,
             segment->index_start_position);
+        found_bitset |= 4;
         break;
       case 0x3f0d:
         if (tag_size != 8)
@@ -1110,6 +1114,7 @@ mxf_index_table_segment_parse (const MXFUL * ul,
         segment->index_duration = GST_READ_UINT64_BE (tag_data);
         GST_DEBUG ("  index duration = %" G_GINT64_FORMAT,
             segment->index_duration);
+        found_bitset |= 8;
         break;
       case 0x3f05:
         if (tag_size != 4)
@@ -1129,6 +1134,7 @@ mxf_index_table_segment_parse (const MXFUL * ul,
           goto error;
         segment->body_sid = GST_READ_UINT32_BE (tag_data);
         GST_DEBUG ("  body sid = %u", segment->body_sid);
+        found_bitset |= 16;
         break;
       case 0x3f08:
         if (tag_size != 1)
@@ -1273,6 +1279,11 @@ mxf_index_table_segment_parse (const MXFUL * ul,
             tag_size);
         break;
     }
+  }
+
+  if (found_bitset != 31) {
+    GST_WARNING ("Not all required fields present");
+    goto error;
   }
 
   /* If edit unit byte count is 0 there *must* be entries */
