@@ -34,26 +34,36 @@ GST_DEBUG_CATEGORY (gst_soup_debug);
 
 #ifndef LINK_SOUP
 
-#if defined(__APPLE__) || defined(G_OS_WIN32)
-#error "dlopen of libsoup is only supported on Linux"
+#if !defined(G_OS_UNIX)
+#error "dlopen of libsoup is only supported on UNIX"
 #endif
 
+#ifdef __APPLE__
+#define LIBSOUP_3_SONAME "libsoup-3.0.0.dylib"
+#define LIBSOUP_2_SONAME "libsoup-2.4.1.dylib"
+#else
 #define LIBSOUP_3_SONAME "libsoup-3.0.so.0"
 #define LIBSOUP_2_SONAME "libsoup-2.4.so.1"
+#endif
 
 #define LOAD_SYMBOL(name) G_STMT_START {                                \
-    if (!g_module_symbol (module, G_STRINGIFY (name), (gpointer *) &G_PASTE (vtable->_, name))) { \
-      GST_ERROR ("Failed to load '%s' from %s, %s", G_STRINGIFY (name), g_module_name (module), g_module_error()); \
+    gpointer sym = NULL;                                                \
+    if (!(sym = dlsym (handle, G_STRINGIFY (name)))) {                  \
+      GST_ERROR ("Failed to load '%s' from %s, %s", G_STRINGIFY (name), \
+          libsoup_sonames[i], dlerror());                               \
       goto error;                                                       \
     }                                                                   \
+    G_PASTE (vtable->_, name) = sym;                                    \
   } G_STMT_END;
 
-#define LOAD_VERSIONED_SYMBOL(version, name) G_STMT_START {             \
-  if (!g_module_symbol(module, G_STRINGIFY(name), (gpointer *)&G_PASTE(vtable->_, G_PASTE(name, G_PASTE(_, version))))) { \
-    GST_WARNING ("Failed to load '%s' from %s, %s", G_STRINGIFY(name),  \
-                g_module_name(module), g_module_error());               \
-    goto error;                                                         \
-  }                                                                     \
+#define LOAD_VERSIONED_SYMBOL(version, name) G_STMT_START {               \
+    gpointer sym = NULL;                                                  \
+    if (!(sym = dlsym(handle, G_STRINGIFY(name)))) {                      \
+      GST_WARNING ("Failed to load '%s' from %s, %s", G_STRINGIFY(name),  \
+                   libsoup_sonames[i], dlerror());                        \
+      goto error;                                                         \
+    }                                                                     \
+    G_PASTE(vtable->_, G_PASTE(name, G_PASTE(_, version))) = sym;         \
   } G_STMT_END;
 
 typedef struct _GstSoupVTable
@@ -136,18 +146,17 @@ typedef struct _GstSoupVTable
 
 static GstSoupVTable gst_soup_vtable = { 0, };
 
+#define SOUP_NAMES 2
+
 gboolean
 gst_soup_load_library (void)
 {
-  GModule *module;
   GstSoupVTable *vtable;
-  const gchar *libsoup_sonames[5] = { 0 };
-  guint len = 0;
+  const char *libsoup_sonames[SOUP_NAMES + 1] = { 0 };
+  gpointer handle = NULL;
 
   if (gst_soup_vtable.loaded)
     return TRUE;
-
-  g_assert (g_module_supported ());
 
 #ifdef BUILDING_ADAPTIVEDEMUX2
   GST_DEBUG_CATEGORY_INIT (gst_adaptivedemux_soup_debug, "adaptivedemux2-soup",
@@ -158,8 +167,6 @@ gst_soup_load_library (void)
 
 #ifdef HAVE_RTLD_NOLOAD
   {
-    gpointer handle = NULL;
-
     /* In order to avoid causing conflicts we detect if libsoup 2 or 3 is loaded already.
      * If so use that. Otherwise we will try to load our own version to use preferring 3. */
 
@@ -183,14 +190,12 @@ gst_soup_load_library (void)
 #endif /* HAVE_RTLD_NOLOAD */
 
   vtable = &gst_soup_vtable;
-  len = g_strv_length ((gchar **) libsoup_sonames);
 
-  for (guint i = 0; i < len; i++) {
-    module =
-        g_module_open (libsoup_sonames[i],
-        G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
-    if (module) {
-      GST_DEBUG ("Loaded %s", g_module_name (module));
+  for (guint i = 0; i < SOUP_NAMES; i++) {
+    if (!handle)
+      handle = dlopen (libsoup_sonames[i], RTLD_NOW | RTLD_GLOBAL);
+    if (handle) {
+      GST_DEBUG ("Loaded %s", libsoup_sonames[i]);
       if (g_strstr_len (libsoup_sonames[i], -1, "soup-2")) {
         vtable->lib_version = 2;
         LOAD_VERSIONED_SYMBOL (2, soup_logger_new);
@@ -251,7 +256,7 @@ gst_soup_load_library (void)
 
     error:
       GST_DEBUG ("Failed to find all libsoup symbols");
-      g_clear_pointer (&module, g_module_close);
+      g_clear_pointer (&handle, dlclose);
       continue;
     } else {
       GST_DEBUG ("Module %s not found", libsoup_sonames[i]);
