@@ -43,6 +43,10 @@ KNOWN_ISSUES = {
                 "timeout": True,
                 "sometimes": True,
             },
+            {
+                'returncode': 238,
+                'sometimes': True,
+            },
         ]
     },
     "https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/311": {
