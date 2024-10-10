@@ -55,7 +55,7 @@ typedef struct _GstPlayStreamInfoClass GstPlayStreamInfoClass;
 GST_PLAY_API
 GType         gst_play_stream_info_get_type (void);
 
-GST_PLAY_API
+GST_PLAY_DEPRECATED_FOR(gst_play_stream_info_get_stream_id)
 gint          gst_play_stream_info_get_index (const GstPlayStreamInfo *info);
 
 GST_PLAY_API
@@ -69,6 +69,9 @@ GstCaps*      gst_play_stream_info_get_caps  (const GstPlayStreamInfo *info);
 
 GST_PLAY_API
 const gchar*  gst_play_stream_info_get_codec (const GstPlayStreamInfo *info);
+
+GST_PLAY_API
+const gchar*  gst_play_stream_info_get_stream_id (const GstPlayStreamInfo *info);
 
 /**
  * GST_TYPE_PLAY_VIDEO_INFO:

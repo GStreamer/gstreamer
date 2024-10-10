@@ -74,6 +74,9 @@ gst_play_stream_info_class_init (GstPlayStreamInfoClass * klass)
  * unknown.
  *
  * Returns: the stream index of this stream.
+ *
+ * Deprecated: 1.26: Use gst_play_stream_info_get_stream_id().
+ *
  * Since: 1.20
  */
 gint
@@ -103,8 +106,11 @@ gst_play_stream_info_get_stream_type (const GstPlayStreamInfo * info)
     return "video";
   else if (GST_IS_PLAY_AUDIO_INFO (info))
     return "audio";
-  else
+  else if (GST_IS_PLAY_SUBTITLE_INFO (info))
     return "subtitle";
+  else
+    g_assert_not_reached ();
+  return NULL;
 }
 
 /**
@@ -137,6 +143,24 @@ gst_play_stream_info_get_codec (const GstPlayStreamInfo * info)
   g_return_val_if_fail (GST_IS_PLAY_STREAM_INFO (info), NULL);
 
   return info->codec;
+}
+
+/**
+ * gst_play_stream_info_get_stream_id:
+ * @info: a #GstPlayStreamInfo
+ *
+ * A string stream id identifying this #GstPlayStreamInfo.
+ *
+ * Returns: stream id string.
+ *
+ * Since: 1.26
+ */
+const gchar *
+gst_play_stream_info_get_stream_id (const GstPlayStreamInfo * info)
+{
+  g_return_val_if_fail (GST_IS_PLAY_STREAM_INFO (info), NULL);
+
+  return info->stream_id;
 }
 
 /**
@@ -610,7 +634,8 @@ gst_play_media_info_copy (GstPlayMediaInfo * ref)
 }
 
 GstPlayStreamInfo *
-gst_play_stream_info_new (gint stream_index, GType type)
+gst_play_stream_info_new (gint stream_index, const gchar * stream_id,
+    GType type)
 {
   GstPlayStreamInfo *info = NULL;
 
@@ -618,10 +643,13 @@ gst_play_stream_info_new (gint stream_index, GType type)
     info = (GstPlayStreamInfo *) gst_play_audio_info_new ();
   else if (type == GST_TYPE_PLAY_VIDEO_INFO)
     info = (GstPlayStreamInfo *) gst_play_video_info_new ();
-  else
+  else if (type == GST_TYPE_PLAY_SUBTITLE_INFO)
     info = (GstPlayStreamInfo *) gst_play_subtitle_info_new ();
+  else
+    g_assert_not_reached ();
 
   info->stream_index = stream_index;
+  info->stream_id = g_strdup (stream_id);
 
   return info;
 }

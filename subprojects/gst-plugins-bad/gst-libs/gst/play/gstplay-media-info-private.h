@@ -119,7 +119,7 @@ G_GNUC_INTERNAL GstPlayMediaInfo*   gst_play_media_info_new
 G_GNUC_INTERNAL GstPlayMediaInfo*   gst_play_media_info_copy
                                       (GstPlayMediaInfo *ref);
 G_GNUC_INTERNAL GstPlayStreamInfo*  gst_play_stream_info_new
-                                      (gint stream_index, GType type);
+                                      (gint stream_index, const gchar *stream_id, GType type);
 G_GNUC_INTERNAL GstPlayStreamInfo*  gst_play_stream_info_copy
                                       (GstPlayStreamInfo *ref);
 

@@ -273,17 +273,34 @@ GST_PLAY_API
 void         gst_play_set_subtitle_track_enabled    (GstPlay    * play,
                                                      gboolean enabled);
 
-GST_PLAY_API
+GST_PLAY_DEPRECATED_FOR(gst_play_set_audio_track_id)
 gboolean     gst_play_set_audio_track               (GstPlay    *play,
                                                      gint stream_index);
 
-GST_PLAY_API
+GST_PLAY_DEPRECATED_FOR(gst_play_set_video_track_id)
 gboolean     gst_play_set_video_track               (GstPlay    *play,
                                                      gint stream_index);
 
-GST_PLAY_API
+GST_PLAY_DEPRECATED_FOR(gst_play_set_subtitle_track_id)
 gboolean     gst_play_set_subtitle_track            (GstPlay    *play,
                                                      gint stream_index);
+GST_PLAY_API
+gboolean     gst_play_set_audio_track_id            (GstPlay     *play,
+                                                     const gchar *stream_id);
+
+GST_PLAY_API
+gboolean     gst_play_set_video_track_id            (GstPlay     *play,
+                                                     const gchar *stream_id);
+
+GST_PLAY_API
+gboolean     gst_play_set_subtitle_track_id         (GstPlay     *play,
+                                                     const gchar *stream_id);
+
+GST_PLAY_API
+gboolean     gst_play_set_track_ids                 (GstPlay     *play,
+                                                     const gchar *audio_stream_id,
+                                                     const gchar *video_stream_id,
+                                                     const gchar *subtitle_stream_id);
 
 GST_PLAY_API
 GstPlayMediaInfo *    gst_play_get_media_info     (GstPlay * play);
