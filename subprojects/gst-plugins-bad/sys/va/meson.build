@@ -23,6 +23,7 @@ va_sources = [
   'gstvapluginutils.c',
   'gstvaprofile.c',
   'gstvavp8dec.c',
+  'gstvavp8enc.c',
   'gstvavp9dec.c',
   'gstvavp9enc.c',
   'gstvavpp.c',

@@ -43,6 +43,7 @@
 #include "gstvampeg2dec.h"
 #include "gstvaprofile.h"
 #include "gstvavp8dec.h"
+#include "gstvavp8enc.h"
 #include "gstvavp9dec.h"
 #include "gstvavp9enc.h"
 #include "gstvavpp.h"
@@ -214,6 +215,13 @@ plugin_register_encoders (GstPlugin * plugin, GstVaDevice * device,
         if (!gst_va_h265_enc_register (plugin, device, sinkcaps, srccaps,
                 GST_RANK_NONE, entrypoint)) {
           GST_WARNING ("Failed to register H265 encoder: %s",
+              device->render_device_path);
+        }
+        break;
+      case VP8:
+        if (!gst_va_vp8_enc_register (plugin, device, sinkcaps, srccaps,
+                GST_RANK_NONE, entrypoint)) {
+          GST_WARNING ("Failed to register VP8 encoder: %s",
               device->render_device_path);
         }
         break;
