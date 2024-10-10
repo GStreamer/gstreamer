@@ -6317,24 +6317,6 @@ The #GstCaps is guaranteed to be writable.</doc>
           </parameter>
         </parameters>
       </constructor>
-      <constructor name="new_empty_simple_static_str" c:identifier="gst_caps_new_empty_simple_static_str" version="1.26">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Creates a new #GstCaps that contains one #GstStructure with name
-@media_type.
-
-@media_type needs to be valid for the remaining lifetime of the process, e.g.
-has to be a static string.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
-        <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the new #GstCaps</doc>
-          <type name="Caps" c:type="GstCaps*"/>
-        </return-value>
-        <parameters>
-          <parameter name="media_type" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the media type of the structure</doc>
-            <type name="utf8" c:type="const char*"/>
-          </parameter>
-        </parameters>
-      </constructor>
       <constructor name="new_full" c:identifier="gst_caps_new_full" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Creates a new #GstCaps and adds all the structures listed as
 arguments.  The list must be %NULL-terminated.  The structures
@@ -6375,6 +6357,45 @@ are not copied; the returned #GstCaps owns the structures.</doc>
           </parameter>
         </parameters>
       </constructor>
+      <constructor name="new_id_str_empty_simple" c:identifier="gst_caps_new_id_str_empty_simple" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Creates a new #GstCaps that contains one #GstStructure with name
+@media_type.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the new #GstCaps</doc>
+          <type name="Caps" c:type="GstCaps*"/>
+        </return-value>
+        <parameters>
+          <parameter name="media_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the media type of the structure</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_id_str_simple" c:identifier="gst_caps_new_id_str_simple" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Creates a new #GstCaps that contains one #GstStructure.  The
+structure is defined by the arguments, which have the same format
+as gst_structure_new().</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the new #GstCaps</doc>
+          <type name="Caps" c:type="GstCaps*"/>
+        </return-value>
+        <parameters>
+          <parameter name="media_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the media type of the structure</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">first field to set</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="..." transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">additional arguments</doc>
+            <varargs/>
+          </parameter>
+        </parameters>
+      </constructor>
       <constructor name="new_simple" c:identifier="gst_caps_new_simple" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Creates a new #GstCaps that contains one #GstStructure.  The
 structure is defined by the arguments, which have the same format
@@ -6399,7 +6420,25 @@ as gst_structure_new().</doc>
           </parameter>
         </parameters>
       </constructor>
-      <constructor name="new_simple_static_str" c:identifier="gst_caps_new_simple_static_str" version="1.26" introspectable="0">
+      <constructor name="new_static_str_empty_simple" c:identifier="gst_caps_new_static_str_empty_simple" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Creates a new #GstCaps that contains one #GstStructure with name
+@media_type.
+
+@media_type needs to be valid for the remaining lifetime of the process, e.g.
+has to be a static string.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the new #GstCaps</doc>
+          <type name="Caps" c:type="GstCaps*"/>
+        </return-value>
+        <parameters>
+          <parameter name="media_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the media type of the structure</doc>
+            <type name="utf8" c:type="const char*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_static_str_simple" c:identifier="gst_caps_new_static_str_simple" version="1.26" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Creates a new #GstCaps that contains one #GstStructure.  The
 structure is defined by the arguments, which have the same format
 as gst_structure_new().
@@ -6685,6 +6724,73 @@ gst_structure_set().</doc>
           <parameter name="index" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the index of the structure</doc>
             <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_str_set_simple" c:identifier="gst_caps_id_str_set_simple" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Sets fields in a #GstCaps.  The arguments must be passed in the same
+manner as gst_structure_id_str_set(), and be %NULL-terminated.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the #GstCaps to set</doc>
+            <type name="Caps" c:type="GstCaps*"/>
+          </instance-parameter>
+          <parameter name="field" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">first field to set</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="..." transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">additional parameters</doc>
+            <varargs/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_str_set_simple_valist" c:identifier="gst_caps_id_str_set_simple_valist" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Sets fields in a #GstCaps.  The arguments must be passed in the same
+manner as gst_structure_id_str_set(), and be %NULL-terminated.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">the #GstCaps to set</doc>
+            <type name="Caps" c:type="GstCaps*"/>
+          </instance-parameter>
+          <parameter name="field" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">first field to set</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="varargs" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">additional parameters</doc>
+            <type name="va_list" c:type="va_list"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="id_str_set_value" c:identifier="gst_caps_id_str_set_value" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Sets the given @field on all structures of @caps to the given @value.
+This is a convenience function for calling gst_structure_set_value() on
+all structures of @caps.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">a writable caps</doc>
+            <type name="Caps" c:type="GstCaps*"/>
+          </instance-parameter>
+          <parameter name="field" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">name of the field to set</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">value to set the field to</doc>
+            <type name="GObject.Value" c:type="const GValue*"/>
           </parameter>
         </parameters>
       </method>
@@ -42161,8 +42267,8 @@ Free-function: gst_structure_free</doc>
       <constructor name="new_id_str" c:identifier="gst_structure_new_id_str" version="1.26" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Creates a new #GstStructure with the given name as a GQuark, followed by
 fieldname GstIdStr, GType, argument(s) "triplets" in the same format as
-gst_structure_id_set(). Basically a convenience wrapper around
-gst_structure_new_id_empty() and gst_structure_id_set().
+gst_structure_id_str_set(). Basically a convenience wrapper around
+gst_structure_new_id_str_empty() and gst_structure_id_str_set().
 
 The last variable argument must be %NULL (or 0).
 
@@ -42200,6 +42306,32 @@ Free-function: gst_structure_free</doc>
           <parameter name="name" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">name of new structure</doc>
             <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_id_str_valist" c:identifier="gst_structure_new_id_str_valist" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Creates a new #GstStructure with the given @name.  Structure fields
+are set according to the varargs in a manner similar to
+gst_structure_new_id_str().
+
+Free-function: gst_structure_free</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a new #GstStructure</doc>
+          <type name="Structure" c:type="GstStructure*"/>
+        </return-value>
+        <parameters>
+          <parameter name="name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">name of new structure</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="firstfield" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">name of first field to set</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+          <parameter name="varargs" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">variable argument list</doc>
+            <type name="va_list" c:type="va_list"/>
           </parameter>
         </parameters>
       </constructor>
@@ -43482,6 +43614,26 @@ release with either g_free() or the suitable function for the boxed type.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="id_str_get_field_type" c:identifier="gst_structure_id_str_get_field_type" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Finds the field with the given name, and returns the type of the
+value it contains.  If the field is not found, G_TYPE_INVALID is
+returned.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the #GValue of the field</doc>
+          <type name="GType" c:type="GType"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="const GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the field</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="id_str_get_valist" c:identifier="gst_structure_id_str_get_valist" version="1.26" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Parses the variable arguments and reads fields from @structure accordingly.
 valist-variant of gst_structure_id_str_get(). Look at the documentation of
@@ -44113,6 +44265,25 @@ letter and can be followed by letters, numbers and any of "/-_.:".</doc>
           <parameter name="name" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the new name of the structure</doc>
             <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_name_id_str" c:identifier="gst_structure_set_name_id_str" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Sets the name of the structure to the given @name.  The string
+provided is copied before being used. It must not be empty, start with a
+letter and can be followed by letters, numbers and any of "/-_.:".</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="GstStructure*"/>
+          </instance-parameter>
+          <parameter name="name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the new name of the structure</doc>
+            <type name="IdStr" c:type="const GstIdStr*"/>
           </parameter>
         </parameters>
       </method>
