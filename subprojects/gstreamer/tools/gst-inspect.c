@@ -372,6 +372,29 @@ print_interfaces (GType type)
   }
 }
 
+static void
+print_element_flags (GstElement * element)
+{
+  n_print (_("%sElement Flags%s:\n"), HEADING_COLOR, RESET_COLOR);
+
+  push_indent ();
+  if (GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_LOCKED_STATE))
+    n_print ("- %s%s%s\n", DATATYPE_COLOR, "LOCKED_STATE", RESET_COLOR);
+  if (GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SINK))
+    n_print ("- %s%s%s\n", DATATYPE_COLOR, "SINK", RESET_COLOR);
+  if (GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SOURCE))
+    n_print ("- %s%s%s\n", DATATYPE_COLOR, "SOURCE", RESET_COLOR);
+  if (GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_PROVIDE_CLOCK))
+    n_print ("- %s%s%s\n", DATATYPE_COLOR, "PROVIDE_CLOCK", RESET_COLOR);
+  if (GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_REQUIRE_CLOCK))
+    n_print ("- %s%s%s\n", DATATYPE_COLOR, "REQUIRE_CLOCK", RESET_COLOR);
+  if (GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_INDEXABLE))
+    n_print ("- %s%s%s\n", DATATYPE_COLOR, "REQUIRE_INDEXABLE", RESET_COLOR);
+  pop_indent ();
+
+  n_print ("\n");
+}
+
 static gchar *
 flags_to_string (GFlagsValue * vals, guint flags)
 {
@@ -1799,6 +1822,7 @@ print_element_info (GstPluginFeature * feature, gboolean print_names)
 
   print_hierarchy (G_OBJECT_TYPE (element), 0, &maxlevel);
   print_interfaces (G_OBJECT_TYPE (element));
+  print_element_flags (element);
 
   print_pad_templates_info (element, factory);
   print_clocking_info (element);
