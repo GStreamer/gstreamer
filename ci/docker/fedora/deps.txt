@@ -88,6 +88,7 @@ python3-gobject
 python3-pip
 python3-wheel
 qemu-system-x86
+qrencode-devel
 qt5-linguist
 qt5-qtbase-devel
 qt5-qtbase-private-devel

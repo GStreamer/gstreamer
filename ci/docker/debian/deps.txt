@@ -163,6 +163,7 @@ libpolkit-gobject-1-dev
 libpulse-dev
 libpython3-all-dev
 libqrencode-dev
+libqrencode-dev
 libqt5waylandclient5-dev
 libqt5x11extras5-dev
 libraw1394-dev
