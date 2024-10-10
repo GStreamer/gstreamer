@@ -207,6 +207,10 @@ GstStructure *        gst_structure_new_static_str       (const gchar * name,
                                                           const gchar * firstfield,
                                                           ...) G_GNUC_NULL_TERMINATED  G_GNUC_MALLOC;
 GST_API
+GstStructure *        gst_structure_new_id_str_valist    (const GstIdStr * name,
+                                                          const GstIdStr * firstfield,
+                                                          va_list       varargs) G_GNUC_MALLOC;
+GST_API
 GstStructure *        gst_structure_new_valist           (const gchar * name,
                                                           const gchar * firstfield,
                                                           va_list       varargs) G_GNUC_MALLOC;
@@ -256,8 +260,12 @@ GST_API
 gboolean              gst_structure_has_name             (const GstStructure  * structure,
                                                           const gchar         * name);
 GST_API
+void                  gst_structure_set_name_id_str      (GstStructure        * structure,
+                                                          const GstIdStr      * name);
+GST_API
 void                  gst_structure_set_name             (GstStructure        * structure,
                                                           const gchar         * name);
+GST_API
 void                  gst_structure_set_name_static_str  (GstStructure        * structure,
                                                           const gchar         * name);
 GST_DEPRECATED_FOR(gst_structure_id_str_set_value)
@@ -393,6 +401,9 @@ void                  gst_structure_remove_all_fields    (GstStructure        * 
 GST_API
 GType                 gst_structure_get_field_type       (const GstStructure  * structure,
                                                           const gchar         * fieldname);
+GST_API
+GType                 gst_structure_id_str_get_field_type(const GstStructure  * structure,
+                                                          const GstIdStr      * fieldname);
 GST_DEPRECATED_FOR(gst_structure_foreach_id_str)
 gboolean              gst_structure_foreach              (const GstStructure  * structure,
                                                           GstStructureForeachFunc   func,

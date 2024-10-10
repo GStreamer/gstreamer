@@ -286,6 +286,42 @@ gst_caps_new_any (void)
 }
 
 /**
+ * gst_caps_new_id_str_empty_simple:
+ * @media_type: the media type of the structure
+ *
+ * Creates a new #GstCaps that contains one #GstStructure with name
+ * @media_type.
+ *
+ * Returns: (transfer full): the new #GstCaps
+ *
+ * Since: 1.26
+ */
+GstCaps *
+gst_caps_new_id_str_empty_simple (const GstIdStr * media_type)
+{
+  GstCaps *caps;
+  GstStructure *structure;
+
+  caps = gst_caps_new_empty ();
+  if (gst_id_str_is_equal_to_str (media_type, "ANY")) {
+    g_warning
+        ("media_type should not be ANY. Please consider using `gst_caps_new_any` or `gst_caps_from_string`.");
+  }
+  if (gst_id_str_get_len (media_type) == 0
+      || gst_id_str_is_equal_to_str (media_type, "EMPTY")
+      || gst_id_str_is_equal_to_str (media_type, "NONE")) {
+    g_warning
+        ("media_type should not be `%s`. Please consider using `gst_caps_new_empty` or `gst_caps_from_string`.",
+        gst_id_str_as_str (media_type));
+  }
+  structure = gst_structure_new_id_str_empty (media_type);
+  if (structure)
+    gst_caps_append_structure_unchecked (caps, structure, NULL);
+
+  return caps;
+}
+
+/**
  * gst_caps_new_empty_simple:
  * @media_type: the media type of the structure
  *
@@ -352,6 +388,42 @@ gst_caps_new_static_str_empty_simple (const char *media_type)
   structure = gst_structure_new_static_str_empty (media_type);
   if (structure)
     gst_caps_append_structure_unchecked (caps, structure, NULL);
+
+  return caps;
+}
+
+/**
+ * gst_caps_new_id_str_simple:
+ * @media_type: the media type of the structure
+ * @fieldname: first field to set
+ * @...: additional arguments
+ *
+ * Creates a new #GstCaps that contains one #GstStructure.  The
+ * structure is defined by the arguments, which have the same format
+ * as gst_structure_new().
+ *
+ * Returns: (transfer full): the new #GstCaps
+ *
+ * Since: 1.26
+ */
+GstCaps *
+gst_caps_new_id_str_simple (const GstIdStr * media_type,
+    const GstIdStr * fieldname, ...)
+{
+  GstCaps *caps;
+  GstStructure *structure;
+  va_list var_args;
+
+  caps = gst_caps_new_empty ();
+
+  va_start (var_args, fieldname);
+  structure = gst_structure_new_id_str_valist (media_type, fieldname, var_args);
+  va_end (var_args);
+
+  if (structure)
+    gst_caps_append_structure_unchecked (caps, structure, NULL);
+  else
+    gst_caps_replace (&caps, NULL);
 
   return caps;
 }
@@ -1172,6 +1244,36 @@ gst_caps_truncate (GstCaps * caps)
 }
 
 /**
+ * gst_caps_id_str_set_value:
+ * @caps: a writable caps
+ * @field: name of the field to set
+ * @value: value to set the field to
+ *
+ * Sets the given @field on all structures of @caps to the given @value.
+ * This is a convenience function for calling gst_structure_set_value() on
+ * all structures of @caps.
+ *
+ * Since: 1.26
+ **/
+void
+gst_caps_id_str_set_value (GstCaps * caps, const GstIdStr * field,
+    const GValue * value)
+{
+  guint i, len;
+
+  g_return_if_fail (GST_IS_CAPS (caps));
+  g_return_if_fail (IS_WRITABLE (caps));
+  g_return_if_fail (field != NULL);
+  g_return_if_fail (G_IS_VALUE (value));
+
+  len = GST_CAPS_LEN (caps);
+  for (i = 0; i < len; i++) {
+    GstStructure *structure = gst_caps_get_structure_unchecked (caps, i);
+    gst_structure_id_str_set_value (structure, field, value);
+  }
+}
+
+/**
  * gst_caps_set_value:
  * @caps: a writable caps
  * @field: name of the field to set
@@ -1228,6 +1330,47 @@ gst_caps_set_value_static_str (GstCaps * caps, const char *field,
   for (i = 0; i < len; i++) {
     GstStructure *structure = gst_caps_get_structure_unchecked (caps, i);
     gst_structure_set_value_static_str (structure, field, value);
+  }
+}
+
+/**
+ * gst_caps_id_str_set_simple_valist:
+ * @caps: the #GstCaps to set
+ * @field: first field to set
+ * @varargs: additional parameters
+ *
+ * Sets fields in a #GstCaps.  The arguments must be passed in the same
+ * manner as gst_structure_id_str_set(), and be %NULL-terminated.
+ *
+ * Since: 1.26
+ */
+void
+gst_caps_id_str_set_simple_valist (GstCaps * caps, const GstIdStr * field,
+    va_list varargs)
+{
+  GValue value = { 0, };
+
+  g_return_if_fail (GST_IS_CAPS (caps));
+  g_return_if_fail (IS_WRITABLE (caps));
+
+  while (field) {
+    GType type;
+    char *err;
+
+    type = va_arg (varargs, GType);
+
+    G_VALUE_COLLECT_INIT (&value, type, varargs, 0, &err);
+    if (G_UNLIKELY (err)) {
+      g_critical ("%s", err);
+      g_free (err);
+      return;
+    }
+
+    gst_caps_id_str_set_value (caps, field, &value);
+
+    g_value_unset (&value);
+
+    field = va_arg (varargs, const GstIdStr *);
   }
 }
 
@@ -1311,6 +1454,30 @@ gst_caps_set_simple_static_str_valist (GstCaps * caps, const char *field,
 
     field = va_arg (varargs, const gchar *);
   }
+}
+
+/**
+ * gst_caps_id_str_set_simple:
+ * @caps: the #GstCaps to set
+ * @field: first field to set
+ * @...: additional parameters
+ *
+ * Sets fields in a #GstCaps.  The arguments must be passed in the same
+ * manner as gst_structure_id_str_set(), and be %NULL-terminated.
+ *
+ * Since: 1.26
+ */
+void
+gst_caps_id_str_set_simple (GstCaps * caps, const GstIdStr * field, ...)
+{
+  va_list var_args;
+
+  g_return_if_fail (GST_IS_CAPS (caps));
+  g_return_if_fail (IS_WRITABLE (caps));
+
+  va_start (var_args, field);
+  gst_caps_id_str_set_simple_valist (caps, field, var_args);
+  va_end (var_args);
 }
 
 /**

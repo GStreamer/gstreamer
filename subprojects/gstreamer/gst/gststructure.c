@@ -511,6 +511,53 @@ gst_structure_new (const gchar * name, const gchar * firstfield, ...)
 }
 
 /**
+ * gst_structure_new_id_str_valist:
+ * @name: name of new structure
+ * @firstfield: name of first field to set
+ * @varargs: variable argument list
+ *
+ * Creates a new #GstStructure with the given @name.  Structure fields
+ * are set according to the varargs in a manner similar to
+ * gst_structure_new_id_str().
+ *
+ * Free-function: gst_structure_free
+ *
+ * Returns: (transfer full): a new #GstStructure
+ *
+ * Since: 1.26
+ */
+GstStructure *
+gst_structure_new_id_str_valist (const GstIdStr * name,
+    const GstIdStr * firstfield, va_list varargs)
+{
+  GstStructure *structure;
+  va_list copy;
+  guint len = 0;
+  const GstIdStr *field_copy = firstfield;
+  GType type_copy;
+
+  g_return_val_if_fail (gst_structure_validate_name (gst_id_str_as_str (name)),
+      NULL);
+
+  /* Calculate size of varargs */
+  va_copy (copy, varargs);
+  while (field_copy) {
+    type_copy = va_arg (copy, GType);
+    G_VALUE_COLLECT_SKIP (type_copy, copy);
+    field_copy = va_arg (copy, const GstIdStr *);
+    len++;
+  }
+  va_end (copy);
+
+  structure = gst_structure_new_id_str_empty_with_size (name, len);
+
+  if (structure)
+    gst_structure_id_str_set_valist (structure, firstfield, varargs);
+
+  return structure;
+}
+
+/**
  * gst_structure_new_valist:
  * @name: name of new structure
  * @firstfield: name of first field to set
@@ -858,6 +905,27 @@ gst_structure_get_name_id_str (const GstStructure * structure)
   g_return_val_if_fail (structure != NULL, 0);
 
   return GST_STRUCTURE_NAME (structure);
+}
+
+/**
+ * gst_structure_set_name_id_str:
+ * @structure: a #GstStructure
+ * @name: the new name of the structure
+ *
+ * Sets the name of the structure to the given @name.  The string
+ * provided is copied before being used. It must not be empty, start with a
+ * letter and can be followed by letters, numbers and any of "/-_.:".
+ *
+ * Since: 1.26
+ */
+void
+gst_structure_set_name_id_str (GstStructure * structure, const GstIdStr * name)
+{
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (IS_MUTABLE (structure));
+  g_return_if_fail (gst_structure_validate_name (gst_id_str_as_str (name)));
+
+  gst_id_str_copy_into (GST_STRUCTURE_NAME (structure), name);
 }
 
 /**
@@ -1482,8 +1550,8 @@ gst_structure_new_id (GQuark name_quark, GQuark field_quark, ...)
  *
  * Creates a new #GstStructure with the given name as a GQuark, followed by
  * fieldname GstIdStr, GType, argument(s) "triplets" in the same format as
- * gst_structure_id_set(). Basically a convenience wrapper around
- * gst_structure_new_id_empty() and gst_structure_id_set().
+ * gst_structure_id_str_set(). Basically a convenience wrapper around
+ * gst_structure_new_id_str_empty() and gst_structure_id_str_set().
  *
  * The last variable argument must be %NULL (or 0).
  *
@@ -1962,6 +2030,35 @@ gst_structure_get_field_type (const GstStructure * structure,
   g_return_val_if_fail (fieldname != NULL, G_TYPE_INVALID);
 
   field = gst_structure_get_field (structure, fieldname);
+  if (field == NULL)
+    return G_TYPE_INVALID;
+
+  return G_VALUE_TYPE (&field->value);
+}
+
+/**
+ * gst_structure_id_str_get_field_type:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field
+ *
+ * Finds the field with the given name, and returns the type of the
+ * value it contains.  If the field is not found, G_TYPE_INVALID is
+ * returned.
+ *
+ * Returns: the #GValue of the field
+ *
+ * Since: 1.26
+ */
+GType
+gst_structure_id_str_get_field_type (const GstStructure * structure,
+    const GstIdStr * fieldname)
+{
+  GstStructureField *field;
+
+  g_return_val_if_fail (structure != NULL, G_TYPE_INVALID);
+  g_return_val_if_fail (fieldname != NULL, G_TYPE_INVALID);
+
+  field = gst_structure_id_str_get_field (structure, fieldname);
   if (field == NULL)
     return G_TYPE_INVALID;
 
