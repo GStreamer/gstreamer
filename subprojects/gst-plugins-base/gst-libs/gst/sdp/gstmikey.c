@@ -37,6 +37,27 @@
 
 #include "gstmikey.h"
 
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT ensure_debug_category()
+static GstDebugCategory *
+ensure_debug_category (void)
+{
+  static gsize cat_gonce = 0;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    gsize cat_done;
+
+    cat_done = (gsize) _gst_debug_category_new ("sdpmikey", 0, "SDP mikey");
+
+    g_once_init_leave (&cat_gonce, cat_done);
+  }
+
+  return (GstDebugCategory *) cat_gonce;
+}
+#else
+#define ensure_debug_category() /* NOOP */
+#endif /* GST_DISABLE_GST_DEBUG */
+
 GST_DEFINE_MINI_OBJECT_TYPE (GstMIKEYPayload, gst_mikey_payload);
 GST_DEFINE_MINI_OBJECT_TYPE (GstMIKEYMessage, gst_mikey_message);
 
