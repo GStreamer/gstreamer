@@ -450,12 +450,13 @@ main (gint argc, gchar ** argv)
   gchar *codec = NULL;
   gulong deep_notify_id = 0;
   guint idx;
+  gboolean res;
 
   /* *INDENT-OFF* */
   const GOptionEntry options[] = {
     {"codec", 'c', 0, G_OPTION_ARG_STRING, &codec,
         "Codec to test: "
-        "[ *h264, h265, vp9, av1, h264lp, h265lp, vp9lp, av1lp ]"},
+        "[ *h264, h265, vp8, vp9, av1, h264lp, h265lp, vp9lp, av1lp ]"},
     {"alive", 'a', 0, G_OPTION_ARG_NONE, &alive,
         "Set test source as a live stream"},
     {NULL}
@@ -468,6 +469,7 @@ main (gint argc, gchar ** argv)
   } elements_map[] = {
     { "h264", "vah264enc", "h264parse", "vah264dec" },
     { "h265", "vah265enc", "h265parse", "vah265dec" },
+    { "vp8", "vavp8enc", NULL, "vavp8dec" },
     { "vp9", "vavp9enc", "vp9parse", "vavp9dec" },
     { "av1", "vaav1enc", "av1parse", "vaav1dec" },
     { "h264lp", "vah264lpenc", "h264parse", "vah264dec" },
@@ -525,14 +527,21 @@ main (gint argc, gchar ** argv)
   MAKE_ELEMENT_AND_ADD (convert, "videoconvert");
   MAKE_ELEMENT_AND_ADD (enc, elements_map[idx].encoder);
   MAKE_ELEMENT_AND_ADD (queue0, "queue");
-  MAKE_ELEMENT_AND_ADD (parser, elements_map[idx].parser);
   MAKE_ELEMENT_AND_ADD (dec, elements_map[idx].decoder);
   MAKE_ELEMENT_AND_ADD (vpp, "vapostproc");
   MAKE_ELEMENT_AND_ADD (queue1, "queue");
   MAKE_ELEMENT_AND_ADD (sink, "autovideosink");
 
-  if (!gst_element_link_many (src, capsfilter, convert, enc, queue0,
-          parser, dec, vpp, queue1, sink, NULL)) {
+  if (elements_map[idx].parser) {
+    MAKE_ELEMENT_AND_ADD (parser, elements_map[idx].parser);
+    res = gst_element_link_many (src, capsfilter, convert, enc, queue0, parser,
+        dec, vpp, queue1, sink, NULL);
+  } else {
+    res = gst_element_link_many (src, capsfilter, convert, enc, queue0, dec,
+        vpp, queue1, sink, NULL);
+  }
+
+  if (!res) {
     gst_printerrln ("Failed to link element");
     exit (1);
   }
