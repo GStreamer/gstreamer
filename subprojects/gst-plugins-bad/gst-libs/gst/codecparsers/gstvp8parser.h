@@ -34,6 +34,8 @@
 
 G_BEGIN_DECLS
 
+#define GST_VP8_MAX_REF_FRAMES 3
+
 typedef struct _GstVp8FrameHdr          GstVp8FrameHdr;
 typedef struct _GstVp8QuantIndices      GstVp8QuantIndices;
 typedef struct _GstVp8Segmentation      GstVp8Segmentation;
@@ -56,6 +58,40 @@ typedef enum {
   GST_VP8_PARSER_BROKEN_DATA,
   GST_VP8_PARSER_ERROR,
 } GstVp8ParserResult;
+
+/**
+ * GstVp8FrameType:
+ * @GST_VP8_KEY_FRAME: Key frame, only have intra blocks
+ * @GST_VP8_INTER_FRAME: Inter frame, both intra and inter blocks
+ *
+ * VP8 frame types
+ *
+ * Since: 1.26
+ */
+typedef enum {
+  GST_VP8_KEY_FRAME   = 0,
+  GST_VP8_INTER_FRAME = 1
+} GstVp8FrameType;
+
+/**
+ * GstVp8RefFrameType:
+ * @GST_VP8_REF_FRAME_INTRA: Intra reference frame
+ * @GST_VP8_REF_FRAME_LAST: Last Reference frame
+ * @GST_VP8_REF_FRAME_GOLDEN: Golden Reference frame
+ * @GST_VP8_REF_FRAME_ALTREF: Alternate Reference frame
+ * @GST_VP8_REF_FRAME_MAX:
+ *
+ * Reference Frame types
+ *
+ * Since: 1.26
+ */
+typedef enum {
+  GST_VP8_REF_FRAME_INTRA,
+  GST_VP8_REF_FRAME_LAST,
+  GST_VP8_REF_FRAME_GOLDEN,
+  GST_VP8_REF_FRAME_ALTREF,
+  GST_VP8_REF_FRAME_MAX,
+} GstVp8RefFrameType;
 
 /**
  * GstVpQuantIndices:
