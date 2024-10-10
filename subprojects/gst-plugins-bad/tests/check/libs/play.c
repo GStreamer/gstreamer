@@ -36,11 +36,7 @@
 # include <valgrind/valgrind.h>
 #endif
 
-#define SOUP_VERSION_MIN_REQUIRED (SOUP_VERSION_2_40)
 #include <libsoup/soup.h>
-#if !defined(SOUP_MINOR_VERSION) || SOUP_MINOR_VERSION < 44
-#define SoupStatus SoupKnownStatusCode
-#endif
 
 #include <gst/check/gstcheck.h>
 
@@ -1566,18 +1562,19 @@ START_TEST (test_restart)
 END_TEST;
 
 static void
-do_get (SoupMessage * msg, const char *path)
+do_get (SoupServerMessage * msg, const char *path)
 {
   char *uri;
   SoupStatus status = SOUP_STATUS_OK;
 
-  uri = soup_uri_to_string (soup_message_get_uri (msg), FALSE);
+  uri = g_uri_to_string (soup_server_message_get_uri (msg));
   GST_DEBUG ("request: \"%s\"", uri);
 
   if (status != (SoupStatus) SOUP_STATUS_OK)
     goto beach;
 
-  if (msg->method == SOUP_METHOD_GET) {
+  if (soup_server_message_get_method (msg) == SOUP_METHOD_GET) {
+    SoupMessageBody *response_body;
     char *full_path = g_strconcat (TEST_PATH, path, NULL);
     char *buf;
     gsize buflen;
@@ -1589,31 +1586,35 @@ do_get (SoupMessage * msg, const char *path)
     }
 
     g_free (full_path);
-    soup_message_body_append (msg->response_body, SOUP_MEMORY_TAKE,
-        buf, buflen);
+    response_body = soup_server_message_get_response_body (msg);
+    soup_message_body_append (response_body, SOUP_MEMORY_TAKE, buf, buflen);
   }
 
 beach:
-  soup_message_set_status (msg, status);
+  soup_server_message_set_status (msg, status, NULL);
   g_free (uri);
 }
 
 static void
-server_callback (SoupServer * server, SoupMessage * msg,
-    const char *path, GHashTable * query,
-    SoupClientContext * context, gpointer data)
+server_callback (SoupServer * server, SoupServerMessage * msg,
+    const char *path, GHashTable * query, gpointer data)
 {
-  GST_DEBUG ("%s %s HTTP/1.%d", msg->method, path,
-      soup_message_get_http_version (msg));
-  if (msg->request_body->length)
-    GST_DEBUG ("%s", msg->request_body->data);
+  SoupMessageBody *request_body;
 
-  if (msg->method == SOUP_METHOD_GET)
+  GST_DEBUG ("%s %s HTTP/1.%d", soup_server_message_get_method (msg),
+      path, soup_server_message_get_http_version (msg));
+  if ((request_body = soup_server_message_get_request_body (msg))
+      && request_body->length > 0) {
+    GST_DEBUG ("%s", request_body->data);
+  }
+
+  if (soup_server_message_get_method (msg) == SOUP_METHOD_GET)
     do_get (msg, path);
   else
-    soup_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED);
+    soup_server_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED, NULL);
 
-  GST_DEBUG ("  -> %d %s", msg->status_code, msg->reason_phrase);
+  GST_DEBUG ("  -> %d %s", soup_server_message_get_status (msg),
+      soup_server_message_get_reason_phrase (msg));
 }
 
 static guint
@@ -1624,8 +1625,8 @@ get_port_from_server (SoupServer * server)
 
   uris = soup_server_get_uris (server);
   g_assert (g_slist_length (uris) == 1);
-  port = soup_uri_get_port (uris->data);
-  g_slist_free_full (uris, (GDestroyNotify) soup_uri_free);
+  port = g_uri_get_port (uris->data);
+  g_slist_free_full (uris, (GDestroyNotify) g_uri_unref);
 
   return port;
 }
@@ -1668,9 +1669,7 @@ http_main (gpointer data)
     GError *err = NULL;
     SoupServerListenOptions listen_flags = 0;
 
-    address =
-        g_inet_socket_address_new_from_string ("0.0.0.0",
-        SOUP_ADDRESS_ANY_PORT);
+    address = g_inet_socket_address_new_from_string ("0.0.0.0", 0);
     soup_server_listen (context->server, address, listen_flags, &err);
     g_object_unref (address);
 
