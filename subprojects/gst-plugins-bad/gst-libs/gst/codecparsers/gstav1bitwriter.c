@@ -25,6 +25,25 @@
 #include "gstav1bitwriter.h"
 #include <gst/base/gstbitwriter.h>
 
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT gst_av1_debug_category_get()
+static GstDebugCategory *
+gst_av1_debug_category_get (void)
+{
+  static gsize cat_gonce = 0;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    GstDebugCategory *cat = NULL;
+
+    GST_DEBUG_CATEGORY_INIT (cat, "bitwriter_av1", 0, "av1 bitwriter library");
+
+    g_once_init_leave (&cat_gonce, (gsize) cat);
+  }
+
+  return (GstDebugCategory *) cat_gonce;
+}
+#endif /* GST_DISABLE_GST_DEBUG */
+
 #define WRITE_BITS_UNCHECK(bw, val, nbits)                                    \
   (nbits <= 8 ? gst_bit_writer_put_bits_uint8 (bw, val, nbits) :              \
    (nbits <= 16 ? gst_bit_writer_put_bits_uint16 (bw, val, nbits) :           \
