@@ -2998,6 +2998,8 @@ gst_codec_utils_caps_get_mime_codec (GstCaps * caps)
       GST_DEBUG ("h265 caps parsing failed");
       mime_codec = g_strdup ("hev1");
     }
+  } else if (g_strcmp0 (media_type, "video/x-h266") == 0) {
+    mime_codec = g_strdup ("vvc1");
   } else if (g_strcmp0 (media_type, "video/x-av1") == 0) {
     mime_codec = av1_caps_get_mime_codec (caps);
   } else if (g_strcmp0 (media_type, "video/x-vp8") == 0) {
@@ -3164,6 +3166,13 @@ gst_codec_utils_caps_from_mime_codec_single (const gchar * codec)
       caps = gst_caps_new_empty_simple ("video/x-h265");
 
       /* FIXME : Extract information from the following component */
+      break;
+    }
+    case GST_MAKE_FOURCC ('v', 'v', 'c', '1'):
+    case GST_MAKE_FOURCC ('v', 'v', 'i', '1'):
+    {
+      /* H.266 */
+      caps = gst_caps_new_empty_simple ("video/x-h266");
       break;
     }
       /* Following are not defined in rfc 6831 but are registered MP4RA codecs */
