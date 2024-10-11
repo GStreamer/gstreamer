@@ -523,6 +523,38 @@ GST_START_TEST (test_h264_bitwriter_sei)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h264_bitwriter_filler)
+{
+  GstH264ParserResult res;
+  GstH264BitWriterResult ret;
+  GstH264NalParser *const parser = gst_h264_nal_parser_new ();
+  guint size, nal_size;
+  guint8 header_data[128] = { 0, };
+  guint8 header_nal[128] = { 0, };
+  GstH264NalUnit nalu;
+
+  size = sizeof (header_data);
+  ret = gst_h264_bit_writer_filler (TRUE, 5, header_data, &size);
+  fail_if (ret != GST_H264_BIT_WRITER_OK);
+
+  nal_size = sizeof (header_nal);
+  ret = gst_h264_bit_writer_convert_to_nal (4, FALSE, TRUE, FALSE,
+      header_data, size * 8, header_nal, &nal_size);
+  fail_if (ret != GST_H264_BIT_WRITER_OK);
+  fail_if (nal_size < size);
+
+  /* Parse it again */
+  res = gst_h264_parser_identify_nalu (parser, header_nal, 0,
+      sizeof (header_nal), &nalu);
+  assert_equals_int (res, GST_H264_PARSER_NO_NAL_END);
+
+  fail_if (nalu.type != GST_H264_NAL_FILLER_DATA);
+  fail_if (nalu.size != sizeof (header_nal) - nalu.offset);
+  gst_h264_nal_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 h264bitwriter_suite (void)
 {
@@ -533,6 +565,7 @@ h264bitwriter_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_h264_bitwriter_sps_pps_slice_hdr);
   tcase_add_test (tc_chain, test_h264_bitwriter_sei);
+  tcase_add_test (tc_chain, test_h264_bitwriter_filler);
 
   return s;
 }

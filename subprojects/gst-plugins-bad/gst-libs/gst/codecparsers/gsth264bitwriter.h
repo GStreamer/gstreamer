@@ -74,6 +74,11 @@ GstH264BitWriterResult     gst_h264_bit_writer_aud       (guint8 primary_pic_typ
                                                           guint8 * data,
                                                           guint * size);
 GST_CODEC_PARSERS_API
+GstH264BitWriterResult     gst_h264_bit_writer_filler    (gboolean start_code,
+                                                          guint num,
+                                                          guint8 * data,
+                                                          guint * size);
+GST_CODEC_PARSERS_API
 GstH264BitWriterResult     gst_h264_bit_writer_convert_to_nal (guint nal_prefix_size,
                                                                gboolean packetized,
                                                                gboolean has_startcode,

@@ -1661,3 +1661,64 @@ error:
   return need_more_space ? GST_H264_BIT_WRITER_INVALID_DATA :
       GST_H264_BIT_WRITER_NO_MORE_SPACE;
 }
+
+/**
+ * gst_h264_bit_writer_filler:
+ * @start_code: whether adding the nal start code
+ * @num: number of filler codes to add
+ * @data: (inout): bit stream storage
+ * @size: (inout): size in bytes of the input and output
+ *
+ * Generates the according h264 bit stream nal bitstream of a filler with @size.
+ *
+ * Returns: a #GstH264BitWriterResult
+ *
+ * Since: 1.26
+ **/
+GstH264BitWriterResult
+gst_h264_bit_writer_filler (gboolean start_code, guint num, guint8 * data,
+    guint * size)
+{
+  gboolean have_space = TRUE;
+  GstBitWriter bw;
+  guint i;
+
+  g_return_val_if_fail (data != NULL, GST_H264_BIT_WRITER_ERROR);
+  g_return_val_if_fail (size != NULL, GST_H264_BIT_WRITER_ERROR);
+  g_return_val_if_fail (*size > 0, GST_H264_BIT_WRITER_ERROR);
+
+  gst_bit_writer_init_with_data (&bw, data, *size, FALSE);
+
+  if (start_code)
+    WRITE_BITS (&bw, 0x00000001, 32);
+
+  /* nal header */
+  /* forbidden_zero_bit */
+  WRITE_BITS (&bw, 0, 1);
+  /* nal_ref_idc */
+  WRITE_BITS (&bw, 0, 2);
+  /* nal_unit_type */
+  WRITE_BITS (&bw, GST_H264_NAL_FILLER_DATA, 5);
+
+  for (i = 0; i < num; i++)
+    WRITE_BITS (&bw, 0xff, 8);
+
+  /* Add trailings. */
+  WRITE_BITS (&bw, 1, 1);
+  if (!gst_bit_writer_align_bytes (&bw, 0)) {
+    have_space = FALSE;
+    goto error;
+  }
+
+  *size = (gst_bit_writer_get_size (&bw)) / 8;
+  gst_bit_writer_reset (&bw);
+
+  return GST_H264_BIT_WRITER_OK;
+
+error:
+  gst_bit_writer_reset (&bw);
+  *size = 0;
+
+  return have_space ? GST_H264_BIT_WRITER_INVALID_DATA :
+      GST_H264_BIT_WRITER_NO_MORE_SPACE;
+}
