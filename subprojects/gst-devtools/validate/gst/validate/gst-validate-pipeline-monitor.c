@@ -66,9 +66,15 @@ enum
   PROP_LAST
 };
 
+typedef struct
+{
+  gboolean print_position;
+} GstValidatePipelineMonitorPrivate;
+
 #define gst_validate_pipeline_monitor_parent_class parent_class
-G_DEFINE_TYPE (GstValidatePipelineMonitor, gst_validate_pipeline_monitor,
-    GST_TYPE_VALIDATE_BIN_MONITOR);
+G_DEFINE_TYPE_WITH_PRIVATE (GstValidatePipelineMonitor,
+    gst_validate_pipeline_monitor, GST_TYPE_VALIDATE_BIN_MONITOR);
+#define PRIV(self) ((GstValidatePipelineMonitorPrivate*)gst_validate_pipeline_monitor_get_instance_private (self))
 
 static void
 gst_validate_pipeline_monitor_dispose (GObject * object)
@@ -149,6 +155,7 @@ static void
 gst_validate_pipeline_monitor_init (GstValidatePipelineMonitor *
     pipeline_monitor)
 {
+  PRIV (pipeline_monitor)->print_position = TRUE;
 }
 
 static gboolean
@@ -294,12 +301,12 @@ _incompatible_fields_info_set_found (StructureIncompatibleFieldsInfo * info)
 }
 
 static gboolean
-_find_structure_incompatible_fields (GQuark field_id, const GValue * value,
-    StructureIncompatibleFieldsInfo * info)
+_find_structure_incompatible_fields (const GstIdStr * fieldname,
+    const GValue * value, StructureIncompatibleFieldsInfo * info)
 {
   gchar *value_str, *filter_str;
-  const GValue *filter_value = gst_structure_id_get_value (info->filter,
-      field_id);
+  const GValue *filter_value = gst_structure_id_str_get_value (info->filter,
+      fieldname);
 
   if (!filter_value)
     return TRUE;
@@ -312,7 +319,7 @@ _find_structure_incompatible_fields (GQuark field_id, const GValue * value,
     g_string_append_printf (info->str,
         "\n    -> Field '%s' downstream value from structure %d '(%s)%s' can't intersect with"
         " filter value from structure number %d '(%s)%s' because of their types.",
-        g_quark_to_string (field_id), info->caps_struct_num,
+        gst_id_str_as_str (fieldname), info->caps_struct_num,
         G_VALUE_TYPE_NAME (value), value_str, info->filter_caps_struct_num,
         G_VALUE_TYPE_NAME (filter_value), filter_str);
 
@@ -330,7 +337,7 @@ _find_structure_incompatible_fields (GQuark field_id, const GValue * value,
   g_string_append_printf (info->str,
       "\n    -> Field '%s' downstream value from structure %d '(%s)%s' can't intersect with"
       " filter value from structure number %d '(%s)%s'",
-      g_quark_to_string (field_id), info->caps_struct_num,
+      gst_id_str_as_str (fieldname), info->caps_struct_num,
       G_VALUE_TYPE_NAME (value), value_str, info->filter_caps_struct_num,
       G_VALUE_TYPE_NAME (filter_value), filter_str);
 
@@ -404,8 +411,9 @@ _append_query_caps_failure_details (GstValidatePadMonitor * monitor,
         continue;
       }
 
-      gst_structure_foreach (possible_struct,
-          (GstStructureForeachFunc) _find_structure_incompatible_fields, &info);
+      gst_structure_foreach_id_str (possible_struct,
+          (GstStructureForeachIdStrFunc) _find_structure_incompatible_fields,
+          &info);
 
       if (info.found)
         found = TRUE;
@@ -474,8 +482,9 @@ _append_accept_caps_failure_details (GstValidatePadMonitor * monitor,
         continue;
       }
 
-      gst_structure_foreach (refused_struct,
-          (GstStructureForeachFunc) _find_structure_incompatible_fields, &info);
+      gst_structure_foreach_id_str (refused_struct,
+          (GstStructureForeachIdStrFunc) _find_structure_incompatible_fields,
+          &info);
     }
   }
 
@@ -625,7 +634,8 @@ _bus_handler (GstBus * bus, GstMessage * message,
         gst_message_parse_state_changed (message, &oldstate, &newstate,
             &pending);
 
-        if (oldstate == GST_STATE_READY && newstate == GST_STATE_PAUSED) {
+        if (oldstate == GST_STATE_READY && newstate == GST_STATE_PAUSED
+            && PRIV (monitor)->print_position) {
           monitor->print_pos_srcid =
               g_timeout_add (PRINT_POSITION_TIMEOUT,
               (GSourceFunc) print_position, monitor);
@@ -759,10 +769,11 @@ _bus_handler (GstBus * bus, GstMessage * message,
 }
 
 static void
-gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor)
+gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor,
+    const gchar * scenario_name, GList * actions, gboolean is_sub_pipeline)
 {
   /* scenarios currently only make sense for pipelines */
-  const gchar *scenarios_names, *scenario_name = NULL;
+  const gchar *scenarios_names, *testfile_scenario_name = NULL;
   gchar **scenarios = NULL, *testfile = NULL;
   GstObject *target =
       gst_validate_monitor_get_target (GST_VALIDATE_MONITOR (monitor));
@@ -770,18 +781,26 @@ gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor)
       gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor));
   GList *scenario_structs = NULL;
 
-  if (gst_validate_get_test_file_scenario (&scenario_structs, &scenario_name,
-          &testfile)) {
-    if (scenario_name) {
+  if (is_sub_pipeline
+      || gst_validate_get_test_file_scenario (&scenario_structs,
+          &testfile_scenario_name, &testfile)) {
+    PRIV (GST_VALIDATE_PIPELINE_MONITOR (monitor))->print_position =
+        !is_sub_pipeline;
+    if (testfile_scenario_name || (scenario_name && !actions)) {
       monitor->scenario =
           gst_validate_scenario_factory_create (runner,
-          GST_ELEMENT_CAST (target), scenario_name);
+          GST_ELEMENT_CAST (target),
+          scenario_name ? scenario_name : testfile_scenario_name);
       goto done;
     }
 
-    monitor->scenario =
-        gst_validate_scenario_from_structs (runner,
-        GST_ELEMENT_CAST (target), scenario_structs, testfile);
+    if (actions || scenario_structs) {
+      monitor->scenario =
+          gst_validate_scenario_from_structs (runner,
+          GST_ELEMENT_CAST (target),
+          scenario_structs ? scenario_structs : actions,
+          is_sub_pipeline ? scenario_name : testfile);
+    }
 
     goto done;
   }
@@ -820,17 +839,10 @@ done:
     gst_object_unref (runner);
 }
 
-/**
- * gst_validate_pipeline_monitor_new:
- * @pipeline: (transfer none): a #GstPipeline to run Validate on
- * @runner: (transfer none): a #GstValidateRunner
- * @parent: (nullable): The parent of the new monitor
- *
- * Returns: (transfer full): A #GstValidatePipelineMonitor
- */
 GstValidatePipelineMonitor *
-gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
-    GstValidateRunner * runner, GstValidateMonitor * parent)
+gst_validate_pipeline_monitor_new_full (GstPipeline * pipeline,
+    GstValidateRunner * runner, GstValidateMonitor * parent,
+    const gchar * scenario_name, GList * actions, gboolean is_sub_pipeline)
 {
   GstBus *bus;
   GstValidatePipelineMonitor *monitor;
@@ -844,7 +856,7 @@ gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
       "pipeline", pipeline, NULL);
 
   gst_validate_pipeline_monitor_create_scenarios (GST_VALIDATE_BIN_MONITOR
-      (monitor));
+      (monitor), scenario_name, actions, is_sub_pipeline);
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
   gst_bus_enable_sync_message_emission (bus);
@@ -865,4 +877,21 @@ gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
     monitor->is_playbin3 = TRUE;
 
   return monitor;
+}
+
+
+/**
+ * gst_validate_pipeline_monitor_new:
+ * @pipeline: (transfer none): a #GstPipeline to run Validate on
+ * @runner: (transfer none): a #GstValidateRunner
+ * @parent: (nullable): The parent of the new monitor
+ *
+ * Returns: (transfer full): A #GstValidatePipelineMonitor
+ */
+GstValidatePipelineMonitor *
+gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
+    GstValidateRunner * runner, GstValidateMonitor * parent)
+{
+  return gst_validate_pipeline_monitor_new_full (pipeline,
+      runner, parent, NULL, NULL, FALSE);
 }

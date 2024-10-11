@@ -68,9 +68,9 @@ mxf_metadata_base_to_structure_default (MXFMetadataBase * self)
   GstStructure *ret;
   gchar str[48];
 
-  g_return_val_if_fail (klass->name_quark != 0, NULL);
+  g_return_val_if_fail (klass->name != NULL, NULL);
 
-  ret = gst_structure_new_id_empty (klass->name_quark);
+  ret = gst_structure_new_static_str_empty (klass->name);
 
   if (!mxf_uuid_is_zero (&self->instance_uid)) {
     mxf_uuid_to_string (&self->instance_uid, str);
@@ -98,7 +98,7 @@ mxf_metadata_base_to_structure_default (MXFMetadataBase * self)
 
     while (g_hash_table_iter_next (&iter, NULL, (gpointer) & tag)) {
       g_value_init (&v, GST_TYPE_STRUCTURE);
-      s = gst_structure_new_id_empty (MXF_QUARK (TAG));
+      s = gst_structure_new_static_str_empty ("tag");
 
       mxf_ul_to_string (&tag->ul, str);
 
@@ -957,7 +957,7 @@ mxf_metadata_preface_class_init (MXFMetadataPrefaceClass * klass)
   metadata_base_class->resolve = mxf_metadata_preface_resolve;
   metadata_base_class->to_structure = mxf_metadata_preface_to_structure;
   metadata_base_class->write_tags = mxf_metadata_preface_write_tags;
-  metadata_base_class->name_quark = MXF_QUARK (PREFACE);
+  metadata_base_class->name = "preface";
   metadata_class->type = 0x012f;
 }
 
@@ -1249,7 +1249,7 @@ mxf_metadata_identification_class_init (MXFMetadataIdentificationClass * klass)
 
   object_class->finalize = mxf_metadata_identification_finalize;
   metadata_base_class->handle_tag = mxf_metadata_identification_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (IDENTIFICATION);
+  metadata_base_class->name = "identification";
   metadata_base_class->to_structure = mxf_metadata_identification_to_structure;
   metadata_base_class->write_tags = mxf_metadata_identification_write_tags;
   metadata_class->type = 0x0130;
@@ -1551,7 +1551,7 @@ mxf_metadata_content_storage_class_init (MXFMetadataContentStorageClass * klass)
   object_class->finalize = mxf_metadata_content_storage_finalize;
   metadata_base_class->handle_tag = mxf_metadata_content_storage_handle_tag;
   metadata_base_class->resolve = mxf_metadata_content_storage_resolve;
-  metadata_base_class->name_quark = MXF_QUARK (CONTENT_STORAGE);
+  metadata_base_class->name = "content-storage";
   metadata_base_class->to_structure = mxf_metadata_content_storage_to_structure;
   metadata_base_class->write_tags = mxf_metadata_content_storage_write_tags;
   metadata_class->type = 0x0118;
@@ -1734,7 +1734,7 @@ static void
   metadata_base_class->handle_tag =
       mxf_metadata_essence_container_data_handle_tag;
   metadata_base_class->resolve = mxf_metadata_essence_container_data_resolve;
-  metadata_base_class->name_quark = MXF_QUARK (ESSENCE_CONTAINER_DATA);
+  metadata_base_class->name = "essence-container-data";
   metadata_base_class->to_structure =
       mxf_metadata_essence_container_data_to_structure;
   metadata_base_class->write_tags =
@@ -2136,7 +2136,7 @@ mxf_metadata_material_package_class_init (MXFMetadataMaterialPackageClass *
   MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->resolve = mxf_metadata_material_package_resolve;
-  metadata_base_class->name_quark = MXF_QUARK (MATERIAL_PACKAGE);
+  metadata_base_class->name = "material-package";
   metadata_class->type = 0x0136;
 }
 
@@ -2343,7 +2343,7 @@ mxf_metadata_source_package_class_init (MXFMetadataSourcePackageClass * klass)
 
   metadata_base_class->handle_tag = mxf_metadata_source_package_handle_tag;
   metadata_base_class->resolve = mxf_metadata_source_package_resolve;
-  metadata_base_class->name_quark = MXF_QUARK (SOURCE_PACKAGE);
+  metadata_base_class->name = "source-package";
   metadata_base_class->to_structure = mxf_metadata_source_package_to_structure;
   metadata_base_class->write_tags = mxf_metadata_source_package_write_tags;
   metadata_class->type = 0x0137;
@@ -2701,7 +2701,7 @@ mxf_metadata_timeline_track_class_init (MXFMetadataTimelineTrackClass * klass)
   MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag = mxf_metadata_timeline_track_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (TIMELINE_TRACK);
+  metadata_base_class->name = "timeline-track";
   metadata_base_class->to_structure = mxf_metadata_timeline_track_to_structure;
   metadata_base_class->write_tags = mxf_metadata_timeline_track_write_tags;
   metadata_class->type = 0x013b;
@@ -2806,7 +2806,7 @@ mxf_metadata_event_track_class_init (MXFMetadataEventTrackClass * klass)
   MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag = mxf_metadata_event_track_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (EVENT_TRACK);
+  metadata_base_class->name = "event-track";
   metadata_base_class->to_structure = mxf_metadata_event_track_to_structure;
   metadata_base_class->write_tags = mxf_metadata_event_track_write_tags;
   metadata_class->type = 0x0139;
@@ -2826,7 +2826,7 @@ mxf_metadata_static_track_class_init (MXFMetadataStaticTrackClass * klass)
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
   MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
-  metadata_base_class->name_quark = MXF_QUARK (STATIC_TRACK);
+  metadata_base_class->name = "static-track";
   metadata_class->type = 0x013a;
 }
 
@@ -3059,7 +3059,7 @@ mxf_metadata_sequence_class_init (MXFMetadataSequenceClass * klass)
   object_class->finalize = mxf_metadata_sequence_finalize;
   metadata_base_class->handle_tag = mxf_metadata_sequence_handle_tag;
   metadata_base_class->resolve = mxf_metadata_sequence_resolve;
-  metadata_base_class->name_quark = MXF_QUARK (SEQUENCE);
+  metadata_base_class->name = "sequence";
   metadata_base_class->to_structure = mxf_metadata_sequence_to_structure;
   metadata_base_class->write_tags = mxf_metadata_sequence_write_tags;
   metadata_class->type = 0x010f;
@@ -3293,7 +3293,7 @@ mxf_metadata_timecode_component_class_init (MXFMetadataTimecodeComponentClass *
   MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag = mxf_metadata_timecode_component_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (TIMECODE_COMPONENT);
+  metadata_base_class->name = "timecode-component";
   metadata_base_class->to_structure =
       mxf_metadata_timecode_component_to_structure;
   metadata_base_class->write_tags = mxf_metadata_timecode_component_write_tags;
@@ -3466,7 +3466,7 @@ mxf_metadata_source_clip_class_init (MXFMetadataSourceClipClass * klass)
 
   metadata_base_class->handle_tag = mxf_metadata_source_clip_handle_tag;
   metadata_base_class->resolve = mxf_metadata_source_clip_resolve;
-  metadata_base_class->name_quark = MXF_QUARK (SOURCE_CLIP);
+  metadata_base_class->name = "source-clip";
   metadata_base_class->to_structure = mxf_metadata_source_clip_to_structure;
   metadata_base_class->write_tags = mxf_metadata_source_clip_write_tags;
   metadata_class->type = 0x0111;
@@ -3488,7 +3488,7 @@ mxf_metadata_filler_class_init (MXFMetadataFillerClass * klass)
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
   MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
-  metadata_base_class->name_quark = MXF_QUARK (FILLER);
+  metadata_base_class->name = "filler";
   metadata_class->type = 0x0109;
 }
 
@@ -3643,7 +3643,7 @@ mxf_metadata_dm_source_clip_class_init (MXFMetadataDMSourceClipClass * klass)
 
   object_class->finalize = mxf_metadata_dm_source_clip_finalize;
   metadata_base_class->handle_tag = mxf_metadata_dm_source_clip_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (DM_SOURCE_CLIP);
+  metadata_base_class->name = "dm-source-clip";
   metadata_base_class->to_structure = mxf_metadata_dm_source_clip_to_structure;
   metadata_base_class->write_tags = mxf_metadata_dm_source_clip_write_tags;
   metadata_class->type = 0x0145;
@@ -3902,7 +3902,7 @@ mxf_metadata_dm_segment_class_init (MXFMetadataDMSegmentClass * klass)
   object_class->finalize = mxf_metadata_dm_segment_finalize;
   metadata_base_class->handle_tag = mxf_metadata_dm_segment_handle_tag;
   metadata_base_class->resolve = mxf_metadata_dm_segment_resolve;
-  metadata_base_class->name_quark = MXF_QUARK (DM_SEGMENT);
+  metadata_base_class->name = "dm-segment";
   metadata_base_class->to_structure = mxf_metadata_dm_segment_to_structure;
   metadata_base_class->write_tags = mxf_metadata_dm_segment_write_tags;
   metadata_class->type = 0x0141;
@@ -4329,7 +4329,7 @@ mxf_metadata_file_descriptor_class_init (MXFMetadataFileDescriptorClass * klass)
   MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag = mxf_metadata_file_descriptor_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (FILE_DESCRIPTOR);
+  metadata_base_class->name = "file-descriptor";
   metadata_base_class->to_structure = mxf_metadata_file_descriptor_to_structure;
   metadata_base_class->write_tags = mxf_metadata_file_descriptor_write_tags;
   metadata_class->type = 0x0125;
@@ -4910,8 +4910,7 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_generic_picture_essence_descriptor_handle_tag;
-  metadata_base_class->name_quark =
-      MXF_QUARK (GENERIC_PICTURE_ESSENCE_DESCRIPTOR);
+  metadata_base_class->name = "generic-picture-essence-descriptor";
   metadata_base_class->to_structure =
       mxf_metadata_generic_picture_essence_descriptor_to_structure;
   metadata_base_class->write_tags =
@@ -5295,8 +5294,7 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_generic_sound_essence_descriptor_handle_tag;
-  metadata_base_class->name_quark =
-      MXF_QUARK (GENERIC_SOUND_ESSENCE_DESCRIPTOR);
+  metadata_base_class->name = "generic-sound-essence-descriptor";
   metadata_base_class->to_structure =
       mxf_metadata_generic_sound_essence_descriptor_to_structure;
   metadata_base_class->write_tags =
@@ -5659,7 +5657,7 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_cdci_picture_essence_descriptor_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (CDCI_PICTURE_ESSENCE_DESCRIPTOR);
+  metadata_base_class->name = "cdci-picture-essence-descriptor";
   metadata_base_class->to_structure =
       mxf_metadata_cdci_picture_essence_descriptor_to_structure;
   metadata_base_class->write_tags =
@@ -5914,7 +5912,7 @@ static void
       mxf_metadata_rgba_picture_essence_descriptor_finalize;
   metadata_base_class->handle_tag =
       mxf_metadata_rgba_picture_essence_descriptor_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (RGBA_PICTURE_ESSENCE_DESCRIPTOR);
+  metadata_base_class->name = "rgba-picture-essence-descriptor";
   metadata_base_class->to_structure =
       mxf_metadata_rgba_picture_essence_descriptor_to_structure;
   metadata_base_class->write_tags =
@@ -6026,7 +6024,7 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_generic_data_essence_descriptor_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (GENERIC_DATA_ESSENCE_DESCRIPTOR);
+  metadata_base_class->name = "generic-data-essence-descriptor";
   metadata_base_class->to_structure =
       mxf_metadata_generic_data_essence_descriptor_to_structure;
   metadata_base_class->write_tags =
@@ -6230,7 +6228,7 @@ mxf_metadata_multiple_descriptor_class_init (MXFMetadataMultipleDescriptorClass
   object_class->finalize = mxf_metadata_multiple_descriptor_finalize;
   metadata_base_class->handle_tag = mxf_metadata_multiple_descriptor_handle_tag;
   metadata_base_class->resolve = mxf_metadata_multiple_descriptor_resolve;
-  metadata_base_class->name_quark = MXF_QUARK (MULTIPLE_DESCRIPTOR);
+  metadata_base_class->name = "multiple-descriptor";
   metadata_base_class->to_structure =
       mxf_metadata_multiple_descriptor_to_structure;
   metadata_base_class->write_tags = mxf_metadata_multiple_descriptor_write_tags;
@@ -6338,7 +6336,7 @@ mxf_metadata_text_locator_class_init (MXFMetadataTextLocatorClass * klass)
 
   object_class->finalize = mxf_metadata_text_locator_finalize;
   metadata_base_class->handle_tag = mxf_metadata_text_locator_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (TEXT_LOCATOR);
+  metadata_base_class->name = "text-locator";
   metadata_base_class->to_structure = mxf_metadata_text_locator_to_structure;
   metadata_base_class->write_tags = mxf_metadata_text_locator_write_tags;
   metadata_class->type = 0x0133;
@@ -6431,7 +6429,7 @@ mxf_metadata_network_locator_class_init (MXFMetadataNetworkLocatorClass * klass)
 
   object_class->finalize = mxf_metadata_network_locator_finalize;
   metadata_base_class->handle_tag = mxf_metadata_network_locator_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (NETWORK_LOCATOR);
+  metadata_base_class->name = "network-locator";
   metadata_base_class->to_structure = mxf_metadata_network_locator_to_structure;
   metadata_base_class->write_tags = mxf_metadata_network_locator_write_tags;
   metadata_class->type = 0x0133;

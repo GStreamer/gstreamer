@@ -69,9 +69,12 @@ end_of_stream_cb (GstPlaySignalAdapter * adapter, Player * play)
 }
 
 static void
-error_cb (GstPlaySignalAdapter * adapter, GError * err, Player * play)
+error_cb (GstPlaySignalAdapter * adapter, GError * err, GstStructure * details,
+    Player * play)
 {
   gst_printerr ("ERROR %s for %s\n", err->message, play->uris[play->cur_idx]);
+  if (details)
+    gst_printerr ("Error details: %" GST_PTR_FORMAT, details);
 
   /* if looping is enabled, then disable it else will keep looping forever */
   play->repeat = FALSE;
@@ -390,7 +393,13 @@ play_new (gchar ** uris, gdouble initial_volume)
 static void
 play_free (Player * play)
 {
+  GstBus *bus = NULL;
+
   play_reset (play);
+
+  bus = gst_play_get_message_bus (play->player);
+  gst_bus_set_flushing (bus, TRUE);
+  gst_object_unref (bus);
 
   g_clear_object (&play->signal_adapter);
   gst_object_unref (play->player);

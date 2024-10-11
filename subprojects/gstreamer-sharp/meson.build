@@ -1,5 +1,7 @@
-project('gstreamer-sharp', ['cs', 'c'], version: '1.23.0.1',
-    meson_version : '>= 0.62', license: 'LGPL')
+project('gstreamer-sharp', ['cs', 'c'], version: '1.25.0.1',
+    meson_version : '>= 1.1', license: 'LGPL')
+
+fs = import ('fs')
 
 if host_machine.system() == 'osx'
   lib_prefix=''
@@ -75,6 +77,7 @@ gst_deps_defs = [
   ['gstreamer-tag', ['gst-plugins-base', 'tag_dep'], 'gsttag'],
   ['gstreamer-video', ['gst-plugins-base', 'video_dep'], 'gstvideo'],
   ['gstreamer-webrtc', ['gst-plugins-bad', 'gstwebrtc_dep'], 'gstwebrtc'],
+  ['gstreamer-rtsp-server', ['gst-rtsp-server', 'gst_rtsp_server_dep'], 'gst_rtsp_server'],
 ]
 
 foreach dep: gst_deps_defs
@@ -136,7 +139,8 @@ if ges_dep.found()
           '--builddir', meson.current_build_dir(),
           '--dependency', 'GstSharp:' + meson.project_version(),
       ],
-      output: 'GESSharp.' + meson.project_version() + '.nupkg'
+      output: 'GESSharp.' + meson.project_version() + '.nupkg',
+      depends: [ges_sharp]
   )
 endif
 
@@ -153,35 +157,54 @@ custom_target('GstSharp-nuget',
         '--builddir', meson.current_build_dir(),
     ],
     output: 'GstSharp.' + meson.project_version() + '.nupkg',
+    depends: [gst_sharp]
 )
 
 subdir('samples')
 subdir('Tests')
 
-bindinator = subproject('bindinator', default_options: ['gapi_fixup=@0@'.format(gapi_fixup)])
-if bindinator.get_variable('found')
-    bindinate = bindinator.get_variable('bindinate')
+bindinate = find_program('bindinate', required: false)
+girs_dir = join_paths(meson.global_source_root(), 'girs')
+
+codegen_enabled = false
+if not bindinate.found()
+    warning('Bindinator not usable as some required dependencies are not avalaible.')
+elif not fs.is_dir(girs_dir)
+    message('Code generation disabled, gstreamer-sharp must be a GStreamer subproject.')
+else
+    codegen_enabled = true
+endif
+
+if codegen_enabled
+    env = environment()
+    env.set('GI_TYPELIB_PATH', girs_dir)
+    merge_with = '--merge-with=GstApp-1.0,GstAudio-1.0,GstBase-1.0,GstController-1.0,GstNet-1.0,GstPbutils-1.0,GstRtp-1.0,GstRtsp-1.0,GstSdp-1.0,GstTag-1.0,GstVideo-1.0,GstWebRTC-1.0,GstRtspServer-1.0'
     run_target('bindinate_gstreamer',
-        command: [bindinate,
-            '--name=gstreamer', '--regenerate=true',
-            '--merge-with=GstApp-1.0,GstAudio-1.0,GstBase-1.0,GstController-1.0,GstNet-1.0,GstPbutils-1.0,GstRtp-1.0,GstRtsp-1.0,GstSdp-1.0,GstTag-1.0,GstVideo-1.0,GstWebRTC-1.0',
-            '--gir=Gst-1.0',
-            '--copy-girs=@0@'.format(join_paths(meson.current_source_dir(), 'girs'))],
-        depends: []
+        command: ['sh', '-c',
+            '''@0@ --name=gstreamer --regenerate=true @3@ --gir=Gst-1.0 --out=@1@ && mv @1@/sources/gstreamer-sharp-api.raw @2@/sources/gstreamer-sharp-api.raw '''.format(
+            bindinate.full_path(),
+            meson.current_build_dir(),
+            meson.current_source_dir(),
+            merge_with
+            ),
+        ],
+        depends: [],
+        env:env,
     )
     run_target('bindinate_ges',
         command: ['sh', '-c',
-            '''@0@ --name=gst-editing-services --regenerate=true --gir=GES-1.0 && mv @1@/sources/gst-editing-services-sharp-api.raw @1@/ges/gst-editing-services-api.raw '''.format(
-            bindinate.path(),
-            meson.current_source_dir()),
+            '''@0@ --name=gst-editing-services --regenerate=true --gir=GES-1.0 --out=@1@ && mv @1@/sources/gst-editing-services-sharp-api.raw @2@/ges/gst-editing-services-api.raw '''.format(
+            bindinate.full_path(),
+            meson.current_build_dir(),
+            meson.current_source_dir()
+            ),
         ],
-        depends: []
+        depends: [],
+        env:env,
     )
     python3 = import('python3').find_python()
     run_target('update-code', command: [find_program('update_sources.py')])
     run_target('update-all', command: [find_program('update_sources.py'), 'bindinate'])
-else
-    warning('Bindinator not usable as some required dependencies are not avalaible.')
 endif
 
-meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.22.0', meson.project_version())

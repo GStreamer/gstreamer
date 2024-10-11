@@ -18,6 +18,122 @@ namespace GES {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		static SelectPadNativeDelegate SelectPad_cb_delegate;
+		static SelectPadNativeDelegate SelectPadVMCallback {
+			get {
+				if (SelectPad_cb_delegate == null)
+					SelectPad_cb_delegate = new SelectPadNativeDelegate (SelectPad_cb);
+				return SelectPad_cb_delegate;
+			}
+		}
+
+		static void OverrideSelectPad (GLib.GType gtype)
+		{
+			OverrideSelectPad (gtype, SelectPadVMCallback);
+		}
+
+		static void OverrideSelectPad (GLib.GType gtype, SelectPadNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("select_pad"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool SelectPadNativeDelegate (IntPtr inst, IntPtr pad);
+
+		static bool SelectPad_cb (IntPtr inst, IntPtr pad)
+		{
+			try {
+				Source __obj = GLib.Object.GetObject (inst, false) as Source;
+				bool __result;
+				__result = __obj.OnSelectPad (GLib.Object.GetObject(pad) as Gst.Pad);
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.Source), ConnectionMethod="OverrideSelectPad")]
+		protected virtual bool OnSelectPad (Gst.Pad pad)
+		{
+			return InternalSelectPad (pad);
+		}
+
+		private bool InternalSelectPad (Gst.Pad pad)
+		{
+			SelectPadNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("select_pad"));
+				unmanaged = (SelectPadNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(SelectPadNativeDelegate));
+			}
+			if (unmanaged == null) return false;
+
+			bool __result = unmanaged (this.Handle, pad == null ? IntPtr.Zero : pad.Handle);
+			return __result;
+		}
+
+		static CreateSourceNativeDelegate CreateSource_cb_delegate;
+		static CreateSourceNativeDelegate CreateSourceVMCallback {
+			get {
+				if (CreateSource_cb_delegate == null)
+					CreateSource_cb_delegate = new CreateSourceNativeDelegate (CreateSource_cb);
+				return CreateSource_cb_delegate;
+			}
+		}
+
+		static void OverrideCreateSource (GLib.GType gtype)
+		{
+			OverrideCreateSource (gtype, CreateSourceVMCallback);
+		}
+
+		static void OverrideCreateSource (GLib.GType gtype, CreateSourceNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("create_source"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr CreateSourceNativeDelegate (IntPtr inst);
+
+		static IntPtr CreateSource_cb (IntPtr inst)
+		{
+			try {
+				Source __obj = GLib.Object.GetObject (inst, false) as Source;
+				Gst.Element __result;
+				__result = __obj.OnCreateSource ();
+				return __result == null ? IntPtr.Zero : __result.Handle;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.Source), ConnectionMethod="OverrideCreateSource")]
+		protected virtual Gst.Element OnCreateSource ()
+		{
+			return InternalCreateSource ();
+		}
+
+		private Gst.Element InternalCreateSource ()
+		{
+			CreateSourceNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("create_source"));
+				unmanaged = (CreateSourceNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(CreateSourceNativeDelegate));
+			}
+			if (unmanaged == null) return null;
+
+			IntPtr __result = unmanaged (this.Handle);
+			return GLib.Object.GetObject(__result) as Gst.Element;
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -25,10 +141,26 @@ namespace GES {
 			get {
 				if (_class_abi == null)
 					_class_abi = new GLib.AbiStruct (new List<GLib.AbiField>{ 
-						new GLib.AbiField("_ges_reserved"
+						new GLib.AbiField("select_pad"
 							, GES.TrackElement.class_abi.Fields
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _ges_reserved
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // select_pad
 							, null
+							, "create_source"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("create_source"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // create_source
+							, "select_pad"
+							, "_ges_reserved"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("_ges_reserved"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 2 // _ges_reserved
+							, "create_source"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0

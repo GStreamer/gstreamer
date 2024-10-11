@@ -311,7 +311,7 @@ extensions)
     - filters: (string): A comma separated list of object types to trace (make sure to enclose in
       quotation marks)
 
-**Run the leaks tracer on all `GstProxyPad` objects logging the references with a full backtraces**
+**Run the leaks tracer on all `GstProxyPad` objects logging the references with full backtraces**
 
 ```
 GST_TRACERS=leaks(stack-traces-flags=full,filters=”GstProxyPad”,check-refs=true) COMMAND
@@ -422,22 +422,22 @@ little driver * <https://github.com/dkogan/feedgnuplot>
 ### Traces for buffer flow, events and messages in TRACE level:
 
 ```
-GST_DEBUG="GST_TRACER:7,GST_BUFFER*:7,GST_EVENT:7,GST_MESSAGE:7"
-GST_TRACERS=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink -
+GST_DEBUG="GST_TRACER:7,GST_BUFFER*:7,GST_EVENT:7,GST_MESSAGE:7" \
+GST_TRACERS=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink
 ```
 
 ### Print some pipeline stats on exit:
 
 ```
-GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage"
-GST_DEBUG_FILE=trace.log gst-launch-1.0 fakesrc num-buffers=10
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage" \
+GST_DEBUG_FILE=trace.log gst-launch-1.0 fakesrc num-buffers=10 \
 sizetype=fixed ! queue ! fakesink && gst-stats-1.0 trace.log
 ```
 
 ### get ts, average-cpuload, current-cpuload, time and plot
 
 ```
-GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage"
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="stats;rusage" \
 GST_DEBUG_FILE=trace.log /usr/bin/gst-play-1.0 $HOME/Videos/movie.mp4 &&
 ./scripts/gst-plot-traces.sh --format=png | gnuplot eog trace.log.*.png
 ```
@@ -453,7 +453,7 @@ autoaudiosink
 ### print processing latencies for each element
 
 ```
-GST_DEBUG="GST_TRACER:7" GST_TRACERS=latency(flags=element) gst-launch-1.0 \
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="latency(flags=element)" gst-launch-1.0 \
 audiotestsrc num-buffers=10 ! audioconvert ! volume volume=0.7 ! \
 autoaudiosink
 ```
@@ -461,7 +461,7 @@ autoaudiosink
 ### print reported latencies for each element
 
 ```
-GST_DEBUG="GST_TRACER:7" GST_TRACERS=latency(flags=reported) gst-launch-1.0 \
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="latency(flags=reported)" gst-launch-1.0 \
 audiotestsrc num-buffers=10 ! audioconvert ! volume volume=0.7 ! \
 autoaudiosink
 ```
@@ -470,7 +470,7 @@ autoaudiosink
 
 ```
 GST_DEBUG="GST_TRACER:7" \
-GST_TRACERS=latency(flags=pipeline+element+reported) gst-launch-1.0 \
+GST_TRACERS="latency(flags=pipeline+element+reported)" gst-launch-1.0 \
 alsasrc num-buffers=20 ! flacenc ! identity ! \
 fakesink
 ```
@@ -478,14 +478,14 @@ fakesink
 ### Raise a warning if a leak is detected
 
 ```
-GST_TRACERS="leaks" gst-launch-1.0 videotestsrc num-buffers=10 !
+GST_TRACERS="leaks" gst-launch-1.0 videotestsrc num-buffers=10 ! \
 fakesink
 ```
 
 ### check if any GstEvent or GstMessage is leaked and raise a warning
 
 ```
-GST_DEBUG="GST_TRACER:7" GST_TRACERS="leaks(GstEvent,GstMessage)"
+GST_DEBUG="GST_TRACER:7" GST_TRACERS="leaks(GstEvent,GstMessage)" \
 gst-launch-1.0 videotestsrc num-buffers=10 ! fakesink
 ```
 

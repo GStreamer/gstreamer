@@ -27,6 +27,7 @@
 G_BEGIN_DECLS
 
 typedef struct _GstVulkanFormatInfo GstVulkanFormatInfo;
+typedef struct _GstVulkanFormatMap GstVulkanFormatMap;
 
 /**
  * GST_VULKAN_MAX_COMPONENTS:
@@ -130,8 +131,25 @@ struct _GstVulkanFormatInfo
   VkImageAspectFlags aspect;
 };
 
+/**
+ * GstVulkanFormatMap:
+ * @format: the GStreamer video format
+ * @vkfrmt: the Vulkan format with a single memory
+ * @vkfrmts: Vulkan formats for multiple memories
+ *
+ * Since: 1.26
+ */
+struct _GstVulkanFormatMap {
+  GstVideoFormat format;
+  VkFormat vkfrmt;
+  VkFormat vkfrmts[GST_VIDEO_MAX_PLANES];
+};
+
 GST_VULKAN_API
 const GstVulkanFormatInfo *     gst_vulkan_format_get_info                      (VkFormat format);
+
+GST_VULKAN_API
+const GstVulkanFormatMap *     gst_vulkan_format_get_map                        (GstVideoFormat format);
 
 GST_VULKAN_API
 guint                           gst_vulkan_format_get_aspect                    (VkFormat format);
@@ -145,6 +163,7 @@ gboolean                        gst_vulkan_format_from_video_info_2            (
                                                                                 GstVideoInfo * info,
                                                                                 VkImageTiling tiling,
                                                                                 gboolean no_multiplane,
+                                                                                VkImageUsageFlags requested_usage,
                                                                                 VkFormat fmts[GST_VIDEO_MAX_PLANES],
                                                                                 int * n_imgs,
                                                                                 VkImageUsageFlags * usage);

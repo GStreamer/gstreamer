@@ -18,6 +18,25 @@ namespace Gst.PbUtils {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_encoding_profile_get_element_properties(IntPtr raw);
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_encoding_profile_set_element_properties(IntPtr raw, IntPtr element_properties);
+
+		[GLib.Property ("element-properties")]
+		public Gst.Structure ElementProperties {
+			get  {
+				IntPtr raw_ret = gst_encoding_profile_get_element_properties(Handle);
+				Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), true);
+				return ret;
+			}
+			set  {
+				value.Owned = false;
+				gst_encoding_profile_set_element_properties(Handle, value == null ? IntPtr.Zero : value.Handle);
+			}
+		}
+
 		[GLib.Property ("restriction-caps")]
 		public Gst.Caps RestrictionCaps {
 			get {

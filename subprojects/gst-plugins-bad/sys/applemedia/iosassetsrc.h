@@ -28,6 +28,9 @@
 
 #include <gst/gst.h>
 #include <gst/base/base.h>
+
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+
 #include <AssetsLibrary/ALAssetsLibrary.h>
 #include <AssetsLibrary/ALAssetRepresentation.h>
 
@@ -63,6 +66,7 @@ typedef struct _GstIOSAssetSrcClass GstIOSAssetSrcClass;
 
 - (ALAssetRepresentation *) assetForURLSync:(NSURL*) uri;
 @end
+G_GNUC_END_IGNORE_DEPRECATIONS
 
 /**
  * GstIOSAssetSrc:

@@ -3812,7 +3812,7 @@ GST_END_TEST;
 GST_START_TEST (test_serialize_deserialize_caps_features)
 {
   GstCapsFeatures *test_feats[] = {
-    gst_caps_features_new ("abc:val1", "xyz:val2", NULL),
+    gst_caps_features_new_static_str ("abc:val1", "xyz:val2", NULL),
     gst_caps_features_new ("feat:val", NULL),
     gst_caps_features_new_any (),
     gst_caps_features_new_empty ()

@@ -57,6 +57,8 @@ G_DECLARE_FINAL_TYPE (GESSrc, ges_src, GES, SRC, GESBaseBin);
 struct _GESSrc
 {
   GESBaseBin parent;
+
+  gchar *uri;
 };
 #define GES_SRC(obj) ((GESSrc*) obj)
 
@@ -82,6 +84,16 @@ ges_src_uri_get_uri (GstURIHandler * handler)
   GESSrc *self = GES_SRC (handler);
   GESTimeline *timeline = ges_base_bin_get_timeline (GES_BASE_BIN (self));
 
+  GST_OBJECT_LOCK (self);
+  if (self->uri) {
+    gchar *uri = g_strdup (self->uri);
+
+    GST_OBJECT_UNLOCK (self);
+
+    return uri;
+  }
+  GST_OBJECT_UNLOCK (self);
+
   return ges_command_line_formatter_get_timeline_uri (timeline);
 }
 
@@ -90,6 +102,7 @@ ges_src_uri_set_uri (GstURIHandler * handler, const gchar * uristr,
     GError ** error)
 {
   gboolean res = FALSE;
+  GESSrc *self = GES_SRC (handler);
   GstUri *uri = gst_uri_from_string (uristr);
   GESProject *project = NULL;
   GESTimeline *timeline = NULL;
@@ -109,6 +122,11 @@ ges_src_uri_set_uri (GstURIHandler * handler, const gchar * uristr,
 done:
   gst_uri_unref (uri);
   gst_clear_object (&project);
+
+  GST_OBJECT_LOCK (handler);
+  g_free (self->uri);
+  self->uri = g_strdup (uristr);
+  GST_OBJECT_UNLOCK (handler);
 
   return res;
 }

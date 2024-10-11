@@ -85,22 +85,12 @@ ensure_uri (const gchar * location)
 gchar *
 get_file_extension (gchar * uri)
 {
-  size_t len;
-  gint find;
+  gchar *dot = g_strrstr (uri, ".");
 
-  len = strlen (uri);
-  find = len - 1;
-
-  while (find >= 0) {
-    if (uri[find] == '.')
-      break;
-    find--;
-  }
-
-  if (find < 0)
+  if (!dot)
     return NULL;
 
-  return &uri[find + 1];
+  return dot + 1;
 }
 
 GList *

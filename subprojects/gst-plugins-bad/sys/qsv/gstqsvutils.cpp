@@ -198,3 +198,147 @@ gst_qsv_status_to_string (mfxStatus status)
 
   return "Unknown";
 }
+
+GstVideoFormat
+gst_qsv_frame_info_format_to_gst (const mfxFrameInfo * info, gboolean is_gbr)
+{
+  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+
+  switch (info->FourCC) {
+    case MFX_FOURCC_NV12:
+      format = GST_VIDEO_FORMAT_NV12;
+      break;
+    case MFX_FOURCC_P010:
+      format = GST_VIDEO_FORMAT_P010_10LE;
+      break;
+    case MFX_FOURCC_P016:
+      if (info->BitDepthLuma == 12)
+        format = GST_VIDEO_FORMAT_P012_LE;
+      else
+        format = GST_VIDEO_FORMAT_P016_LE;
+      break;
+    case MFX_FOURCC_YUY2:
+      format = GST_VIDEO_FORMAT_YUY2;
+      break;
+    case MFX_FOURCC_Y210:
+      format = GST_VIDEO_FORMAT_Y210;
+      break;
+    case MFX_FOURCC_Y216:
+      format = GST_VIDEO_FORMAT_Y212_LE;
+      break;
+      break;
+    case MFX_FOURCC_AYUV:
+      if (is_gbr)
+        format = GST_VIDEO_FORMAT_RBGA;
+      else
+        format = GST_VIDEO_FORMAT_VUYA;
+      break;
+    case MFX_FOURCC_Y410:
+      if (is_gbr)
+        format = GST_VIDEO_FORMAT_BGR10A2_LE;
+      else
+        format = GST_VIDEO_FORMAT_Y410;
+      break;
+    case MFX_FOURCC_Y416:
+      if (is_gbr)
+        format = GST_VIDEO_FORMAT_BGRA64_LE;
+      else
+        format = GST_VIDEO_FORMAT_Y412_LE;
+      break;
+    case MFX_FOURCC_RGB4:
+      format = GST_VIDEO_FORMAT_BGRA;
+      break;
+    default:
+      break;
+  }
+
+  return format;
+}
+
+gboolean
+gst_qsv_frame_info_set_format (mfxFrameInfo * info, GstVideoFormat format)
+{
+  switch (format) {
+    case GST_VIDEO_FORMAT_NV12:
+      info->FourCC = MFX_FOURCC_NV12;
+      info->ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+      info->BitDepthLuma = 8;
+      info->BitDepthChroma = 8;
+      info->Shift = 0;
+      break;
+    case GST_VIDEO_FORMAT_P010_10LE:
+      info->FourCC = MFX_FOURCC_P010;
+      info->ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+      info->BitDepthLuma = 10;
+      info->BitDepthChroma = 10;
+      info->Shift = 1;
+      break;
+    case GST_VIDEO_FORMAT_P012_LE:
+      info->FourCC = MFX_FOURCC_P016;
+      info->ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+      info->BitDepthLuma = 12;
+      info->BitDepthChroma = 12;
+      info->Shift = 1;
+      break;
+    case GST_VIDEO_FORMAT_P016_LE:
+      info->FourCC = MFX_FOURCC_P016;
+      info->ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+      info->BitDepthLuma = 16;
+      info->BitDepthChroma = 16;
+      info->Shift = 0;
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+      info->FourCC = MFX_FOURCC_YUY2;
+      info->ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+      info->BitDepthLuma = 8;
+      info->BitDepthChroma = 8;
+      info->Shift = 0;
+      break;
+    case GST_VIDEO_FORMAT_Y210:
+      info->FourCC = MFX_FOURCC_Y210;
+      info->ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+      info->BitDepthLuma = 10;
+      info->BitDepthChroma = 10;
+      info->Shift = 1;
+      break;
+    case GST_VIDEO_FORMAT_Y212_LE:
+      info->FourCC = MFX_FOURCC_Y216;
+      info->ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+      info->BitDepthLuma = 12;
+      info->BitDepthChroma = 12;
+      info->Shift = 1;
+      break;
+    case GST_VIDEO_FORMAT_VUYA:
+    case GST_VIDEO_FORMAT_RBGA:
+      info->FourCC = MFX_FOURCC_AYUV;
+      info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
+      info->BitDepthLuma = 8;
+      info->BitDepthChroma = 8;
+      info->Shift = 0;
+      break;
+    case GST_VIDEO_FORMAT_Y410:
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
+      info->FourCC = MFX_FOURCC_Y410;
+      info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
+      info->BitDepthLuma = 10;
+      info->BitDepthChroma = 10;
+      info->Shift = 0;
+      break;
+    case GST_VIDEO_FORMAT_Y412_LE:
+    case GST_VIDEO_FORMAT_BGRA64_LE:
+      info->FourCC = MFX_FOURCC_Y416;
+      info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
+      info->BitDepthLuma = 12;
+      info->BitDepthChroma = 12;
+      info->Shift = 1;
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+      info->FourCC = MFX_FOURCC_RGB4;
+      info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
+      break;
+    default:
+      return FALSE;
+  }
+
+  return TRUE;
+}

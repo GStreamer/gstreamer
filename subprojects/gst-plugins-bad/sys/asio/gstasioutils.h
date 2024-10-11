@@ -23,8 +23,7 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include <windows.h>
-#include <asiosys.h>
-#include <asio.h>
+#include "asio.h"
 
 G_BEGIN_DECLS
 

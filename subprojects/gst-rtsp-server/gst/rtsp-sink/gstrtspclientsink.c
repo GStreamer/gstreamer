@@ -101,6 +101,8 @@
 
 #include "gstrtspclientsink.h"
 
+#include "../glib-compat-private.h"
+
 typedef struct _GstRtspClientSinkPad GstRtspClientSinkPad;
 typedef GstGhostPadClass GstRtspClientSinkPadClass;
 
@@ -301,7 +303,7 @@ gst_rtsp_client_sink_ntp_time_source_get_type (void)
 #define DEFAULT_TLS_DATABASE     NULL
 #define DEFAULT_TLS_INTERACTION     NULL
 #define DEFAULT_NTP_TIME_SOURCE  NTP_TIME_SOURCE_NTP
-#define DEFAULT_USER_AGENT       "GStreamer/" PACKAGE_VERSION
+#define DEFAULT_USER_AGENT       "GStreamer/{VERSION}"
 #define DEFAULT_PROFILES         GST_RTSP_PROFILE_AVP
 #define DEFAULT_RTX_TIME_MS      500
 #define DEFAULT_PUBLISH_CLOCK_MODE GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK
@@ -627,13 +629,13 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
   /**
    * GstRTSPClientSink:port-range:
    *
-   * Configure the client port numbers that can be used to receive
+   * Configure the client port numbers that can be used to send RTP and receive
    * RTCP.
    */
   g_object_class_install_property (gobject_class, PROP_PORT_RANGE,
       g_param_spec_string ("port-range", "Port range",
-          "Client port range that can be used to receive RTCP data, "
-          "eg. 3000-3005 (NULL = no restrictions)", DEFAULT_PORT_RANGE,
+          "Client port range that can be used to send RTP data and receive RTCP "
+          "data, eg. 3000-3005 (NULL = no restrictions)", DEFAULT_PORT_RANGE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -898,6 +900,8 @@ gst_rtsp_client_sink_init (GstRTSPClientSink * sink)
   sink->user_agent = g_strdup (DEFAULT_USER_AGENT);
   sink->publish_clock_mode = DEFAULT_PUBLISH_CLOCK_MODE;
 
+  sink->pool = NULL;
+
   sink->profiles = DEFAULT_PROFILES;
 
   /* protects the streaming thread in interleaved mode or the polling
@@ -952,6 +956,10 @@ gst_rtsp_client_sink_finalize (GObject * object)
   g_free (rtsp_client_sink->multi_iface);
   g_free (rtsp_client_sink->user_agent);
 
+  if (rtsp_client_sink->pool) {
+    gst_object_unref (rtsp_client_sink->pool);
+    rtsp_client_sink->pool = NULL;
+  }
   if (rtsp_client_sink->uri_sdp) {
     gst_sdp_message_free (rtsp_client_sink->uri_sdp);
     rtsp_client_sink->uri_sdp = NULL;
@@ -1221,10 +1229,8 @@ gst_rtsp_client_sink_create_stream (GstRTSPClientSink * sink,
   gst_rtsp_stream_set_ulpfec_percentage (stream, context->ulpfec_percentage);
   gst_rtsp_stream_set_publish_clock_mode (stream, sink->publish_clock_mode);
 
-#if 0
-  if (priv->pool)
-    gst_rtsp_stream_set_address_pool (stream, priv->pool);
-#endif
+  if (sink->pool)
+    gst_rtsp_stream_set_address_pool (stream, sink->pool);
 
   return stream;
 no_free_pt:
@@ -2162,9 +2168,13 @@ gst_rtsp_client_sink_init_request (GstRTSPClientSink * sink,
     return res;
 
   /* set user-agent */
-  if (sink->user_agent)
-    gst_rtsp_message_add_header (msg, GST_RTSP_HDR_USER_AGENT,
-        sink->user_agent);
+  if (sink->user_agent) {
+    GString *user_agent = g_string_new (sink->user_agent);
+
+    g_string_replace (user_agent, "{VERSION}", PACKAGE_VERSION, 0);
+    gst_rtsp_message_add_header (msg, GST_RTSP_HDR_USER_AGENT, user_agent->str);
+    g_string_free (user_agent, TRUE);
+  }
 
   return res;
 }
@@ -3252,6 +3262,7 @@ gst_rtsp_client_sink_connect_to_server (GstRTSPClientSink * sink,
   sa = g_socket_get_remote_address (conn_socket, NULL);
   ia = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (sa));
 
+  g_free (sink->server_ip);
   sink->server_ip = g_inet_address_to_string (ia);
 
   g_object_unref (sa);
@@ -5065,6 +5076,21 @@ gst_rtsp_client_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* init some state */
       rtsp_client_sink->cur_protocols = rtsp_client_sink->protocols;
+
+      /* setup IPv4/IPv6 unicast port range. */
+      if (!rtsp_client_sink->pool)
+        rtsp_client_sink->pool = gst_rtsp_address_pool_new ();
+      if (rtsp_client_sink->client_port_range.max > 0) {
+        gst_rtsp_address_pool_add_range (rtsp_client_sink->pool,
+            GST_RTSP_ADDRESS_POOL_ANY_IPV4, GST_RTSP_ADDRESS_POOL_ANY_IPV4,
+            rtsp_client_sink->client_port_range.min,
+            rtsp_client_sink->client_port_range.max, 0);
+        gst_rtsp_address_pool_add_range (rtsp_client_sink->pool,
+            GST_RTSP_ADDRESS_POOL_ANY_IPV6, GST_RTSP_ADDRESS_POOL_ANY_IPV6,
+            rtsp_client_sink->client_port_range.min,
+            rtsp_client_sink->client_port_range.max, 0);
+      }
+
       /* first attempt, don't ignore timeouts */
       rtsp_client_sink->ignore_timeout = FALSE;
       rtsp_client_sink->open_error = FALSE;
@@ -5093,6 +5119,11 @@ gst_rtsp_client_sink_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_rtsp_client_sink_set_state (rtsp_client_sink, GST_STATE_READY);
+
+      if (rtsp_client_sink->pool) {
+        gst_object_unref (rtsp_client_sink->pool);
+        rtsp_client_sink->pool = NULL;
+      }
       break;
     default:
       break;

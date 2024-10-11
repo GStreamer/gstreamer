@@ -59,10 +59,6 @@ static void latency_query_stack_destroy (gpointer data);
 
 static GQuark latency_probe_id;
 static GQuark sub_latency_probe_id;
-static GQuark latency_probe_pad;
-static GQuark latency_probe_element;
-static GQuark latency_probe_element_id;
-static GQuark latency_probe_ts;
 static GQuark drop_sub_latency_quark;
 
 static GstTracerRecord *tr_latency;
@@ -182,16 +178,16 @@ log_latency (const GstStructure * data, GstElement * sink_parent,
   g_return_if_fail (sink_parent);
   g_return_if_fail (sink_pad);
 
-  value = gst_structure_id_get_value (data, latency_probe_ts);
+  value = gst_structure_get_value (data, "latency_probe.ts");
   src_ts = g_value_get_uint64 (value);
 
-  value = gst_structure_id_get_value (data, latency_probe_pad);
+  value = gst_structure_get_value (data, "latency_probe.pad");
   src = g_value_get_string (value);
 
-  value = gst_structure_id_get_value (data, latency_probe_element);
+  value = gst_structure_get_value (data, "latency_probe.element");
   element_src = g_value_get_string (value);
 
-  value = gst_structure_id_get_value (data, latency_probe_element_id);
+  value = gst_structure_get_value (data, "latency_probe.element_id");
   id_element_src = g_value_get_string (value);
 
   id_element_sink = g_strdup_printf ("%p", sink_parent);
@@ -222,7 +218,7 @@ log_element_latency (const GstStructure * data, GstElement * parent,
 
   /* TODO filtering */
 
-  value = gst_structure_id_get_value (data, latency_probe_ts);
+  value = gst_structure_get_value (data, "latency_probe.ts");
   src_ts = g_value_get_uint64 (value);
 
   gst_tracer_record_log (tr_element_latency, element_id, element_name, pad_name,
@@ -253,11 +249,11 @@ send_latency_probe (GstLatencyTracer * self, GstElement * parent, GstPad * pad,
       pad_name = gst_pad_get_name (pad);
 
       latency_probe = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-          gst_structure_new_id (latency_probe_id,
-              latency_probe_element_id, G_TYPE_STRING, element_id,
-              latency_probe_element, G_TYPE_STRING, element_name,
-              latency_probe_pad, G_TYPE_STRING, pad_name,
-              latency_probe_ts, G_TYPE_UINT64, ts, NULL));
+          gst_structure_new_static_str ("latency_probe.id",
+              "latency_probe.element_id", G_TYPE_STRING, element_id,
+              "latency_probe.element", G_TYPE_STRING, element_name,
+              "latency_probe.pad", G_TYPE_STRING, pad_name,
+              "latency_probe.ts", G_TYPE_UINT64, ts, NULL));
 
       GST_DEBUG ("%s_%s: Sending latency event %p", GST_DEBUG_PAD_NAME (pad),
           latency_probe);
@@ -275,11 +271,11 @@ send_latency_probe (GstLatencyTracer * self, GstElement * parent, GstPad * pad,
       pad_name = gst_pad_get_name (peer_pad);
 
       latency_probe = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-          gst_structure_new_id (sub_latency_probe_id,
-              latency_probe_element_id, G_TYPE_STRING, element_id,
-              latency_probe_element, G_TYPE_STRING, element_name,
-              latency_probe_pad, G_TYPE_STRING, pad_name,
-              latency_probe_ts, G_TYPE_UINT64, ts, NULL));
+          gst_structure_new_static_str ("sub_latency_probe.id",
+              "latency_probe.element_id", G_TYPE_STRING, element_id,
+              "latency_probe.element", G_TYPE_STRING, element_name,
+              "latency_probe.pad", G_TYPE_STRING, pad_name,
+              "latency_probe.ts", G_TYPE_UINT64, ts, NULL));
 
       GST_DEBUG ("%s_%s: Sending sub-latency event %p",
           GST_DEBUG_PAD_NAME (pad), latency_probe);
@@ -378,7 +374,7 @@ do_drop_sub_latency_event (GstPad * pad, GstPadProbeInfo * info,
   if (GST_EVENT_TYPE (ev) == GST_EVENT_CUSTOM_DOWNSTREAM) {
     const GstStructure *data = gst_event_get_structure (ev);
 
-    if (gst_structure_get_name_id (data) == sub_latency_probe_id) {
+    if (gst_structure_has_name (data, "sub_latency_probe.id")) {
       GstPad *peer_pad = gst_pad_get_peer (pad);
       GstElement *peer_parent = get_real_pad_parent (peer_pad);
       const GValue *value;
@@ -387,9 +383,9 @@ do_drop_sub_latency_event (GstPad * pad, GstPadProbeInfo * info,
       const gchar *value_element_id, *value_pad_name;
 
       /* Get the element id, element name and pad name from data */
-      value = gst_structure_id_get_value (data, latency_probe_element_id);
+      value = gst_structure_get_value (data, "latency_probe.element_id");
       value_element_id = g_value_get_string (value);
-      value = gst_structure_id_get_value (data, latency_probe_pad);
+      value = gst_structure_get_value (data, "latency_probe.pad");
       value_pad_name = g_value_get_string (value);
 
       if (pad_name == NULL ||
@@ -427,8 +423,7 @@ do_push_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * ev)
 
     /* if not set yet, add a pad probe that prevents sub-latency event from
      * flowing further */
-    if (gst_structure_get_name_id (data) == latency_probe_id) {
-
+    if (gst_structure_has_name (data, "latency_probe.id")) {
       if (!g_object_get_qdata ((GObject *) pad, drop_sub_latency_quark)) {
         GST_DEBUG ("%s_%s: Adding pad probe to drop sub-latency event",
             GST_DEBUG_PAD_NAME (pad));
@@ -447,16 +442,16 @@ do_push_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * ev)
       }
     }
 
-    if (gst_structure_get_name_id (data) == sub_latency_probe_id) {
+    if (gst_structure_has_name (data, "sub_latency_probe.id")) {
       const GValue *value;
       gchar *element_id = g_strdup_printf ("%p", peer_parent);
       gchar *pad_name = peer_pad ? gst_pad_get_name (peer_pad) : NULL;
       const gchar *value_element_id, *value_pad_name;
 
       /* Get the element id, element name and pad name from data */
-      value = gst_structure_id_get_value (data, latency_probe_element_id);
+      value = gst_structure_get_value (data, "latency_probe.element_id");
       value_element_id = g_value_get_string (value);
-      value = gst_structure_id_get_value (data, latency_probe_pad);
+      value = gst_structure_get_value (data, "latency_probe.pad");
       value_pad_name = g_value_get_string (value);
 
       if (!g_str_equal (value_element_id, element_id) ||
@@ -604,53 +599,48 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
 
   latency_probe_id = g_quark_from_static_string ("latency_probe.id");
   sub_latency_probe_id = g_quark_from_static_string ("sub_latency_probe.id");
-  latency_probe_pad = g_quark_from_static_string ("latency_probe.pad");
-  latency_probe_element = g_quark_from_static_string ("latency_probe.element");
-  latency_probe_element_id =
-      g_quark_from_static_string ("latency_probe.element_id");
-  latency_probe_ts = g_quark_from_static_string ("latency_probe.ts");
   drop_sub_latency_quark =
       g_quark_from_static_string ("drop_sub_latency.quark");
 
   /* announce trace formats */
   /* *INDENT-OFF* */
   tr_latency = gst_tracer_record_new ("latency.class",
-      "src-element-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+      "src-element-id", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
           GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
-      "src-element", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+      "src-element", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
           GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
-      "src", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+      "src", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
           NULL),
-      "sink-element-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+      "sink-element-id", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
           GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
-      "sink-element", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+      "sink-element", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
           GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
-      "sink", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+      "sink", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
           NULL),
-      "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+      "time", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING,
               "time it took for the buffer to go from src to sink ns",
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
-      "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+      "ts", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING, "ts when the latency has been logged",
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
@@ -659,28 +649,28 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
       NULL);
 
   tr_element_latency = gst_tracer_record_new ("element-latency.class",
-      "element-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+      "element-id", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
           GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
-      "element", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+      "element", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
           GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
-      "src", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+      "src", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
           NULL),
-      "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+      "time", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING,
               "time it took for the buffer to go from src to sink ns",
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
-      "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+      "ts", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING, "ts when the latency has been logged",
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
@@ -691,35 +681,35 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
 
   tr_element_reported_latency = gst_tracer_record_new (
       "element-reported-latency.class",
-      "element-id", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+      "element-id", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
           GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
-      "element", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+      "element", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
           "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
           GST_TRACER_VALUE_SCOPE_ELEMENT,
           NULL),
-      "live", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+      "live", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
           "type", G_TYPE_GTYPE, G_TYPE_BOOLEAN,
           "description", G_TYPE_STRING,
               "wether the it is a live stream or not",
           NULL),
-      "min", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+      "min", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING,
               "the minimum reported latency",
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
-      "max", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+      "max", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING, "the maximum reported latency",
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
-      "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+      "ts", GST_TYPE_STRUCTURE, gst_structure_new_static_str ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
           "description", G_TYPE_STRING, "ts when the latency has been reported",
           "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),

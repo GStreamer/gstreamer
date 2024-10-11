@@ -99,7 +99,7 @@ preferred by subclass or not.</doc>
       <virtual-method name="new_picture" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1decoder.h">Optional. Called whenever new #GstAV1Picture is created.
 Subclass can set implementation specific user data
-on the #GstAV1Picture via gst_av1_picture_set_user_data()</doc>
+on the #GstAV1Picture via gst_av1_picture_set_user_data</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1decoder.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -449,10 +449,7 @@ decoding process for the #GstAV1Picture</doc>
     <record name="AV1Picture" c:type="GstAV1Picture" version="1.20" glib:type-name="GstAV1Picture" glib:get-type="gst_av1_picture_get_type" c:symbol-prefix="av1_picture">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1picture.h"/>
       <field name="parent" readable="0" private="1">
-        <type name="Gst.MiniObject" c:type="GstMiniObject"/>
-      </field>
-      <field name="system_frame_number" readable="0" private="1">
-        <type name="guint32" c:type="guint32"/>
+        <type name="CodecPicture" c:type="GstCodecPicture"/>
       </field>
       <field name="frame_hdr" introspectable="0" readable="0" private="1">
         <type c:type="GstAV1FrameHeaderOBU"/>
@@ -475,15 +472,6 @@ decoding process for the #GstAV1Picture</doc>
       <field name="apply_grain" readable="0" private="1">
         <type name="gboolean" c:type="gboolean"/>
       </field>
-      <field name="discont_state" readable="0" private="1">
-        <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
-      </field>
-      <field name="user_data" readable="0" private="1">
-        <type name="gpointer" c:type="gpointer"/>
-      </field>
-      <field name="notify" readable="0" private="1">
-        <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
-      </field>
       <constructor name="new" c:identifier="gst_av1_picture_new" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1picture.c">Create new #GstAV1Picture</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1picture.h"/>
@@ -492,46 +480,6 @@ decoding process for the #GstAV1Picture</doc>
           <type name="AV1Picture" c:type="GstAV1Picture*"/>
         </return-value>
       </constructor>
-      <method name="get_user_data" c:identifier="gst_av1_picture_get_user_data" version="1.20">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1picture.c">Gets private data set on the picture via
-gst_av1_picture_set_user_data() previously.</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1picture.h"/>
-        <return-value transfer-ownership="none" nullable="1">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1picture.c">The previously set user_data</doc>
-          <type name="gpointer" c:type="gpointer"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="picture" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1picture.c">a #GstAV1Picture</doc>
-            <type name="AV1Picture" c:type="GstAV1Picture*"/>
-          </instance-parameter>
-        </parameters>
-      </method>
-      <method name="set_user_data" c:identifier="gst_av1_picture_set_user_data" version="1.20">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1picture.c">Sets @user_data on the picture and the #GDestroyNotify that will be called when
-the picture is freed.
-
-If a @user_data was previously set, then the previous set @notify will be called
-before the @user_data is replaced.</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1picture.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="picture" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1picture.c">a #GstAV1Picture</doc>
-            <type name="AV1Picture" c:type="GstAV1Picture*"/>
-          </instance-parameter>
-          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1picture.c">private data</doc>
-            <type name="gpointer" c:type="gpointer"/>
-          </parameter>
-          <parameter name="notify" transfer-ownership="none" scope="async" closure="0">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1picture.c">a #GDestroyNotify</doc>
-            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
-          </parameter>
-        </parameters>
-      </method>
     </record>
     <record name="AV1Tile" c:type="GstAV1Tile" version="1.20">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1picture.h"/>
@@ -570,6 +518,115 @@ before the @user_data is replaced.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="CODEC_PICTURE" c:identifier="GST_CODEC_PICTURE" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.h"/>
+      <parameters>
+        <parameter name="p">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CODEC_PICTURE_COPY_FRAME_NUMBER" c:identifier="GST_CODEC_PICTURE_COPY_FRAME_NUMBER" version="1.24" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.h">Copy system_frame_number of @src to @dst</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.h"/>
+      <parameters>
+        <parameter name="dst">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.h">a #GstCodecPicture</doc>
+        </parameter>
+        <parameter name="src">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.h">a #GstCodecPicture</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CODEC_PICTURE_FRAME_NUMBER" c:identifier="GST_CODEC_PICTURE_FRAME_NUMBER" version="1.24" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.h">Gets access to the system_frame_number field of @picture</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.h"/>
+      <parameters>
+        <parameter name="picture">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.h">a #GstCodecPicture</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <record name="CodecPicture" c:type="GstCodecPicture" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.h">Base struct for coded picture representation</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.h"/>
+      <field name="parent" readable="0" private="1">
+        <type name="Gst.MiniObject" c:type="GstMiniObject"/>
+      </field>
+      <field name="system_frame_number" readable="0" private="1">
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="discont_state" readable="0" private="1">
+        <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+      </field>
+      <field name="user_data" readable="0" private="1">
+        <type name="gpointer" c:type="gpointer"/>
+      </field>
+      <field name="notify" readable="0" private="1">
+        <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <method name="get_user_data" c:identifier="gst_codec_picture_get_user_data" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.c">Gets private data set on the picture via
+gst_codec_picture_set_user_data() previously.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.c">The previously set user_data</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="picture" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.c">a #GstCodecPicture</doc>
+            <type name="CodecPicture" c:type="GstCodecPicture*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="set_discont_state" c:identifier="gst_codec_picture_set_discont_state" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.c">Sets @discont_state to @picture</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="picture" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.c">a #GstCodecPicture</doc>
+            <type name="CodecPicture" c:type="GstCodecPicture*"/>
+          </instance-parameter>
+          <parameter name="discont_state" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.c">a #GstVideoCodecState</doc>
+            <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_user_data" c:identifier="gst_codec_picture_set_user_data" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.c">Sets @user_data on the picture and the #GDestroyNotify that will be called when
+the picture is freed.
+
+If a @user_data was previously set, then the previous set @notify will be called
+before the @user_data is replaced.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="picture" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.c">a #GstCodecPicture</doc>
+            <type name="CodecPicture" c:type="GstCodecPicture*"/>
+          </instance-parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.c">private data</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="notify" transfer-ownership="none" scope="async" closure="0">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstcodecpicture.c">a #GDestroyNotify</doc>
+            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </method>
+    </record>
     <class name="H264Decoder" c:symbol-prefix="h264_decoder" c:type="GstH264Decoder" parent="GstVideo.VideoDecoder" abstract="1" glib:type-name="GstH264Decoder" glib:get-type="gst_h264_decoder_get_type" glib:type-struct="H264DecoderClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h">The opaque #GstH264Decoder data structure.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h"/>
@@ -656,7 +713,7 @@ preferred by subclass or not.</doc>
       <virtual-method name="new_field_picture" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h">Called when a new field picture is created for interlaced field picture.
 Subclass can attach implementation specific user data on @second_field via
-gst_h264_picture_set_user_data()</doc>
+gst_h264_picture_set_user_data</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -679,7 +736,7 @@ gst_h264_picture_set_user_data()</doc>
       <virtual-method name="new_picture">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h">Optional. Called whenever new #GstH264Picture is created.
 Subclass can set implementation specific user data
-on the #GstH264Picture via gst_h264_picture_set_user_data()</doc>
+on the #GstH264Picture via gst_h264_picture_set_user_data</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -1509,13 +1566,10 @@ should not exceed the max size of DPB.</doc>
     <record name="H264Picture" c:type="GstH264Picture" glib:type-name="GstH264Picture" glib:get-type="gst_h264_picture_get_type" c:symbol-prefix="h264_picture">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.h"/>
       <field name="parent" readable="0" private="1">
-        <type name="Gst.MiniObject" c:type="GstMiniObject"/>
+        <type name="CodecPicture" c:type="GstCodecPicture"/>
       </field>
       <field name="type" introspectable="0" readable="0" private="1">
         <type c:type="GstH264SliceType"/>
-      </field>
-      <field name="system_frame_number" readable="0" private="1">
-        <type name="guint32" c:type="guint32"/>
       </field>
       <field name="pic_order_cnt_type" readable="0" private="1">
         <type name="guint8" c:type="guint8"/>
@@ -1595,6 +1649,9 @@ should not exceed the max size of DPB.</doc>
       <field name="dec_ref_pic_marking" introspectable="0" readable="0" private="1">
         <type c:type="GstH264DecRefPicMarking"/>
       </field>
+      <field name="reorder_frame_number" readable="0" private="1">
+        <type name="guint32" c:type="guint32"/>
+      </field>
       <field name="second_field" readable="0" private="1">
         <type name="gboolean" c:type="gboolean"/>
       </field>
@@ -1604,15 +1661,6 @@ should not exceed the max size of DPB.</doc>
       <field name="buffer_flags" readable="0" private="1">
         <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
       </field>
-      <field name="discont_state" readable="0" private="1">
-        <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
-      </field>
-      <field name="user_data" readable="0" private="1">
-        <type name="gpointer" c:type="gpointer"/>
-      </field>
-      <field name="notify" readable="0" private="1">
-        <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
-      </field>
       <constructor name="new" c:identifier="gst_h264_picture_new">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.c">Create new #GstH264Picture</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.h"/>
@@ -1621,46 +1669,6 @@ should not exceed the max size of DPB.</doc>
           <type name="H264Picture" c:type="GstH264Picture*"/>
         </return-value>
       </constructor>
-      <method name="get_user_data" c:identifier="gst_h264_picture_get_user_data">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.c">Gets private data set on the picture via
-gst_h264_picture_set_user_data() previously.</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.h"/>
-        <return-value transfer-ownership="none" nullable="1">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.c">The previously set user_data</doc>
-          <type name="gpointer" c:type="gpointer"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="picture" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.c">a #GstH264Picture</doc>
-            <type name="H264Picture" c:type="GstH264Picture*"/>
-          </instance-parameter>
-        </parameters>
-      </method>
-      <method name="set_user_data" c:identifier="gst_h264_picture_set_user_data">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.c">Sets @user_data on the picture and the #GDestroyNotify that will be called when
-the picture is freed.
-
-If a @user_data was previously set, then the previous set @notify will be called
-before the @user_data is replaced.</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="picture" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.c">a #GstH264Picture</doc>
-            <type name="H264Picture" c:type="GstH264Picture*"/>
-          </instance-parameter>
-          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.c">private data</doc>
-            <type name="gpointer" c:type="gpointer"/>
-          </parameter>
-          <parameter name="notify" transfer-ownership="none" scope="async" closure="0">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.c">a #GDestroyNotify</doc>
-            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
-          </parameter>
-        </parameters>
-      </method>
     </record>
     <enumeration name="H264PictureField" c:type="GstH264PictureField">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.h"/>
@@ -1855,7 +1863,7 @@ preferred by subclass or not.</doc>
       <virtual-method name="new_picture">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.h">Optional. Called whenever new #GstH265Picture is created.
 Subclass can set implementation specific user data
-on the #GstH265Picture via gst_h265_picture_set_user_data()</doc>
+on the #GstH265Picture via gst_h265_picture_set_user_data</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -2506,13 +2514,10 @@ corresponding to the @system_frame_number</doc>
     <record name="H265Picture" c:type="GstH265Picture" glib:type-name="GstH265Picture" glib:get-type="gst_h265_picture_get_type" c:symbol-prefix="h265_picture">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.h"/>
       <field name="parent" readable="0" private="1">
-        <type name="Gst.MiniObject" c:type="GstMiniObject"/>
+        <type name="CodecPicture" c:type="GstCodecPicture"/>
       </field>
       <field name="type" introspectable="0" readable="0" private="1">
         <type c:type="GstH265SliceType"/>
-      </field>
-      <field name="system_frame_number" readable="0" private="1">
-        <type name="guint32" c:type="guint32"/>
       </field>
       <field name="pic_order_cnt" readable="0" private="1">
         <type name="gint" c:type="gint"/>
@@ -2562,15 +2567,6 @@ corresponding to the @system_frame_number</doc>
       <field name="buffer_flags" readable="0" private="1">
         <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
       </field>
-      <field name="discont_state" readable="0" private="1">
-        <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
-      </field>
-      <field name="user_data" readable="0" private="1">
-        <type name="gpointer" c:type="gpointer"/>
-      </field>
-      <field name="notify" readable="0" private="1">
-        <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
-      </field>
       <constructor name="new" c:identifier="gst_h265_picture_new">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.c">Create new #GstH265Picture</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.h"/>
@@ -2579,46 +2575,6 @@ corresponding to the @system_frame_number</doc>
           <type name="H265Picture" c:type="GstH265Picture*"/>
         </return-value>
       </constructor>
-      <method name="get_user_data" c:identifier="gst_h265_picture_get_user_data">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.c">Gets private data set on the picture via
-gst_h265_picture_set_user_data() previously.</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.h"/>
-        <return-value transfer-ownership="none" nullable="1">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.c">The previously set user_data</doc>
-          <type name="gpointer" c:type="gpointer"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="picture" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.c">a #GstH265Picture</doc>
-            <type name="H265Picture" c:type="GstH265Picture*"/>
-          </instance-parameter>
-        </parameters>
-      </method>
-      <method name="set_user_data" c:identifier="gst_h265_picture_set_user_data">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.c">Sets @user_data on the picture and the #GDestroyNotify that will be called when
-the picture is freed.
-
-If a @user_data was previously set, then the previous set @notify will be called
-before the @user_data is replaced.</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="picture" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.c">a #GstH265Picture</doc>
-            <type name="H265Picture" c:type="GstH265Picture*"/>
-          </instance-parameter>
-          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.c">private data</doc>
-            <type name="gpointer" c:type="gpointer"/>
-          </parameter>
-          <parameter name="notify" transfer-ownership="none" scope="async" closure="0">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.c">a #GDestroyNotify</doc>
-            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
-          </parameter>
-        </parameters>
-      </method>
     </record>
     <record name="H265Slice" c:type="GstH265Slice">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.h"/>
@@ -2918,7 +2874,7 @@ preferred by subclass or not.</doc>
       <virtual-method name="new_field_picture" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2decoder.h">Called when a new field picture is created for interlaced field picture.
 Subclass can attach implementation specific user data on @second_field via
-gst_mpeg2_picture_set_user_data()</doc>
+gst_mpeg2_picture_set_user_data</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2decoder.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -2941,7 +2897,7 @@ gst_mpeg2_picture_set_user_data()</doc>
       <virtual-method name="new_picture" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2decoder.h">Optional. Called whenever new #GstMpeg2Picture is created.
 Subclass can set implementation specific user data
-on the #GstMpeg2Picture via gst_mpeg2_picture_set_user_data()</doc>
+on the #GstMpeg2Picture via gst_mpeg2_picture_set_user_data</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2decoder.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -3374,10 +3330,7 @@ outputted</doc>
     <record name="Mpeg2Picture" c:type="GstMpeg2Picture" version="1.20" glib:type-name="GstMpeg2Picture" glib:get-type="gst_mpeg2_picture_get_type" c:symbol-prefix="mpeg2_picture">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.h"/>
       <field name="parent" readable="0" private="1">
-        <type name="Gst.MiniObject" c:type="GstMiniObject"/>
-      </field>
-      <field name="system_frame_number" readable="0" private="1">
-        <type name="guint32" c:type="guint32"/>
+        <type name="CodecPicture" c:type="GstCodecPicture"/>
       </field>
       <field name="needed_for_output" readable="0" private="1">
         <type name="gboolean" c:type="gboolean"/>
@@ -3400,15 +3353,6 @@ outputted</doc>
       <field name="type" introspectable="0" readable="0" private="1">
         <type c:type="GstMpegVideoPictureType"/>
       </field>
-      <field name="discont_state" readable="0" private="1">
-        <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
-      </field>
-      <field name="user_data" readable="0" private="1">
-        <type name="gpointer" c:type="gpointer"/>
-      </field>
-      <field name="notify" readable="0" private="1">
-        <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
-      </field>
       <constructor name="new" c:identifier="gst_mpeg2_picture_new" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.c">Create new #GstMpeg2Picture</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.h"/>
@@ -3417,46 +3361,6 @@ outputted</doc>
           <type name="Mpeg2Picture" c:type="GstMpeg2Picture*"/>
         </return-value>
       </constructor>
-      <method name="get_user_data" c:identifier="gst_mpeg2_picture_get_user_data" version="1.20">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.c">Gets private data set on the picture via
-gst_mpeg2_picture_set_user_data() previously.</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.h"/>
-        <return-value transfer-ownership="none" nullable="1">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.c">The previously set user_data</doc>
-          <type name="gpointer" c:type="gpointer"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="picture" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.c">a #GstMpeg2Picture</doc>
-            <type name="Mpeg2Picture" c:type="GstMpeg2Picture*"/>
-          </instance-parameter>
-        </parameters>
-      </method>
-      <method name="set_user_data" c:identifier="gst_mpeg2_picture_set_user_data" version="1.20">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.c">Sets @user_data on the picture and the #GDestroyNotify that will be called when
-the picture is freed.
-
-If a @user_data was previously set, then the previous set @notify will be called
-before the @user_data is replaced.</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="picture" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.c">a #GstMpeg2Picture</doc>
-            <type name="Mpeg2Picture" c:type="GstMpeg2Picture*"/>
-          </instance-parameter>
-          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.c">private data</doc>
-            <type name="gpointer" c:type="gpointer"/>
-          </parameter>
-          <parameter name="notify" transfer-ownership="none" scope="async" closure="0">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.c">a #GDestroyNotify</doc>
-            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
-          </parameter>
-        </parameters>
-      </method>
     </record>
     <record name="Mpeg2Slice" c:type="GstMpeg2Slice" version="1.20">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.h"/>
@@ -3977,13 +3881,7 @@ preferred by subclass or not.</doc>
     <record name="Vp8Picture" c:type="GstVp8Picture" glib:type-name="GstVp8Picture" glib:get-type="gst_vp8_picture_get_type" c:symbol-prefix="vp8_picture">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8picture.h"/>
       <field name="parent" readable="0" private="1">
-        <type name="Gst.MiniObject" c:type="GstMiniObject"/>
-      </field>
-      <field name="pts" readable="0" private="1">
-        <type name="Gst.ClockTime" c:type="GstClockTime"/>
-      </field>
-      <field name="system_frame_number" readable="0" private="1">
-        <type name="guint32" c:type="guint32"/>
+        <type name="CodecPicture" c:type="GstCodecPicture"/>
       </field>
       <field name="frame_hdr" introspectable="0" readable="0" private="1">
         <type c:type="GstVp8FrameHdr"/>
@@ -3994,15 +3892,6 @@ preferred by subclass or not.</doc>
       <field name="size" readable="0" private="1">
         <type name="gsize" c:type="gsize"/>
       </field>
-      <field name="discont_state" readable="0" private="1">
-        <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
-      </field>
-      <field name="user_data" readable="0" private="1">
-        <type name="gpointer" c:type="gpointer"/>
-      </field>
-      <field name="notify" readable="0" private="1">
-        <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
-      </field>
       <constructor name="new" c:identifier="gst_vp8_picture_new">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8picture.c">Create new #GstVp8Picture</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8picture.h"/>
@@ -4011,46 +3900,6 @@ preferred by subclass or not.</doc>
           <type name="Vp8Picture" c:type="GstVp8Picture*"/>
         </return-value>
       </constructor>
-      <method name="get_user_data" c:identifier="gst_vp8_picture_get_user_data">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8picture.c">Gets private data set on the picture via
-gst_vp8_picture_set_user_data() previously.</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8picture.h"/>
-        <return-value transfer-ownership="none" nullable="1">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8picture.c">The previously set user_data</doc>
-          <type name="gpointer" c:type="gpointer"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="picture" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8picture.c">a #GstVp8Picture</doc>
-            <type name="Vp8Picture" c:type="GstVp8Picture*"/>
-          </instance-parameter>
-        </parameters>
-      </method>
-      <method name="set_user_data" c:identifier="gst_vp8_picture_set_user_data">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8picture.c">Sets @user_data on the picture and the #GDestroyNotify that will be called when
-the picture is freed.
-
-If a @user_data was previously set, then the previous set @notify will be called
-before the @user_data is replaced.</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8picture.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="picture" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8picture.c">a #GstVp8Picture</doc>
-            <type name="Vp8Picture" c:type="GstVp8Picture*"/>
-          </instance-parameter>
-          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8picture.c">private data</doc>
-            <type name="gpointer" c:type="gpointer"/>
-          </parameter>
-          <parameter name="notify" transfer-ownership="none" scope="async" closure="0">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8picture.c">a #GDestroyNotify</doc>
-            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
-          </parameter>
-        </parameters>
-      </method>
     </record>
     <class name="Vp9Decoder" c:symbol-prefix="vp9_decoder" c:type="GstVp9Decoder" parent="GstVideo.VideoDecoder" abstract="1" glib:type-name="GstVp9Decoder" glib:get-type="gst_vp9_decoder_get_type" glib:type-struct="Vp9DecoderClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9decoder.h">The opaque #GstVp9Decoder data structure.</doc>
@@ -4149,7 +3998,7 @@ GstVp9DecoderClass::output_picture</doc>
       <virtual-method name="new_picture" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9decoder.h">Optional. Called whenever new #GstVp9Picture is created.
 Subclass can set implementation specific user data on the #GstVp9Picture
-via gst_vp9_picture_set_user_data()</doc>
+via gst_vp9_picture_set_user_data</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9decoder.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -4726,18 +4575,17 @@ and can be used as a binary.</doc>
       <field name="header_size_in_bytes" writable="1">
         <type name="guint16" c:type="guint16"/>
       </field>
-      <field name="tx_mode" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h">specifies how the transform size is determined</doc>
+      <field name="tx_mode" version="1.20" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h">Specifies how the transform size is determined.</doc>
         <type name="Vp9TxMode" c:type="GstVp9TxMode"/>
       </field>
-      <field name="reference_mode" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h">is a derived syntax element that specifies the type of
-  inter prediction to be used</doc>
+      <field name="reference_mode" version="1.20" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h">Is a derived syntax element that specifies the type of
+inter prediction to be used.</doc>
         <type name="Vp9ReferenceMode" c:type="GstVp9ReferenceMode"/>
       </field>
-      <field name="delta_probabilities" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h">modification to the probabilities encoded in the
-  bitstream</doc>
+      <field name="delta_probabilities" version="1.20" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h">Modification to the probabilities encoded in the bitstream.</doc>
         <type name="Vp9DeltaProbabilities" c:type="GstVp9DeltaProbabilities"/>
       </field>
       <field name="lossless_flag" writable="1">
@@ -4859,10 +4707,7 @@ and can be used as a binary.</doc>
     <record name="Vp9Picture" c:type="GstVp9Picture" glib:type-name="GstVp9Picture" glib:get-type="gst_vp9_picture_get_type" c:symbol-prefix="vp9_picture">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9picture.h"/>
       <field name="parent" readable="0" private="1">
-        <type name="Gst.MiniObject" c:type="GstMiniObject"/>
-      </field>
-      <field name="system_frame_number" readable="0" private="1">
-        <type name="guint32" c:type="guint32"/>
+        <type name="CodecPicture" c:type="GstCodecPicture"/>
       </field>
       <field name="frame_hdr" readable="0" private="1">
         <type name="Vp9FrameHeader" c:type="GstVp9FrameHeader"/>
@@ -4873,15 +4718,6 @@ and can be used as a binary.</doc>
       <field name="size" readable="0" private="1">
         <type name="gsize" c:type="gsize"/>
       </field>
-      <field name="discont_state" readable="0" private="1">
-        <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
-      </field>
-      <field name="user_data" readable="0" private="1">
-        <type name="gpointer" c:type="gpointer"/>
-      </field>
-      <field name="notify" readable="0" private="1">
-        <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
-      </field>
       <constructor name="new" c:identifier="gst_vp9_picture_new">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9picture.c">Create new #GstVp9Picture</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9picture.h"/>
@@ -4890,46 +4726,6 @@ and can be used as a binary.</doc>
           <type name="Vp9Picture" c:type="GstVp9Picture*"/>
         </return-value>
       </constructor>
-      <method name="get_user_data" c:identifier="gst_vp9_picture_get_user_data">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9picture.c">Gets private data set on the picture via
-gst_vp9_picture_set_user_data() previously.</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9picture.h"/>
-        <return-value transfer-ownership="none" nullable="1">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9picture.c">The previously set user_data</doc>
-          <type name="gpointer" c:type="gpointer"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="picture" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9picture.c">a #GstVp9Picture</doc>
-            <type name="Vp9Picture" c:type="GstVp9Picture*"/>
-          </instance-parameter>
-        </parameters>
-      </method>
-      <method name="set_user_data" c:identifier="gst_vp9_picture_set_user_data">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9picture.c">Sets @user_data on the picture and the #GDestroyNotify that will be called when
-the picture is freed.
-
-If a @user_data was previously set, then the previous set @notify will be called
-before the @user_data is replaced.</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9picture.h"/>
-        <return-value transfer-ownership="none">
-          <type name="none" c:type="void"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="picture" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9picture.c">a #GstVp9Picture</doc>
-            <type name="Vp9Picture" c:type="GstVp9Picture*"/>
-          </instance-parameter>
-          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9picture.c">private data</doc>
-            <type name="gpointer" c:type="gpointer"/>
-          </parameter>
-          <parameter name="notify" transfer-ownership="none" scope="async" closure="0">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9picture.c">a #GDestroyNotify</doc>
-            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
-          </parameter>
-        </parameters>
-      </method>
     </record>
     <record name="Vp9QuantizationParams" c:type="GstVp9QuantizationParams" version="1.20">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h"/>

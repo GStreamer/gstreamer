@@ -129,6 +129,8 @@ gboolean gst_hls_demux_change_variant_playlist (GstHLSDemux * demux,
 GstFlowReturn gst_hls_demux_update_variant_playlist (GstHLSDemux * demux,
     GError ** err);
 
+void gst_time_map_set_values (GstHLSTimeMap *map, GstClockTimeDiff stream_time,
+			      GstClockTime internal_time, GDateTime *pdt);
 void gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
     GstClockTimeDiff stream_time, GDateTime * pdt);
 void gst_hls_update_time_mappings (GstHLSDemux * demux,

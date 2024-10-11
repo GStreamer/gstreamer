@@ -22,11 +22,18 @@
  * SECTION:element-ximagesrc
  * @title: ximagesrc
  *
- * This element captures your X Display and creates raw RGB video.  It uses
+ * This element captures your X Display and creates raw RGB video. It uses
  * the XDamage extension if available to only capture areas of the screen that
- * have changed since the last frame.  It uses the XFixes extension if
- * available to also capture your mouse pointer.  By default it will fixate to
- * 25 frames per second.
+ * have changed since the last frame. It uses the XFixes extension if
+ * available to also capture your mouse pointer. It supports handling of
+ * mouse and keyboard events. By default it will fixate to 25 frames per second.
+ * 
+ * Applications are expected to call `XinitThreads()` before any other threads
+ * are started. For use in gst-launch-1.0 or other GStreamer command line 
+ * applications it is also possible to set the GST_XINITTHREADS=1 environment 
+ * variable so that `XInitThreads()` gets called when the plugin is loaded. This 
+ * may be too late in other use case scenarios though, so applications should 
+ * not rely on that.
  *
  * ## Example pipelines
  * |[
@@ -39,6 +46,7 @@
 #include "config.h"
 #endif
 #include "gstximagesrc.h"
+#include "gst-ximage-navigation.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -54,6 +62,14 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_debug_ximage_src);
 #define GST_CAT_DEFAULT gst_debug_ximage_src
+
+#define MOUSE_SCROLL_UP_BUTTON 4
+#define MOUSE_SCROLL_DOWN_BUTTON 5
+
+#define KEYCODE_CTRL 0x25
+#define KEYCODE_SHIFT 0x32
+#define KEYCODE_ALT 0x40
+#define KEYCODE_META 0x85
 
 static GstStaticPadTemplate t =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
@@ -75,6 +91,7 @@ enum
   PROP_REMOTE,
   PROP_XID,
   PROP_XNAME,
+  PROP_ENABLE_NAVIGATION_EVENTS
 };
 
 #define gst_ximage_src_parent_class parent_class
@@ -943,7 +960,6 @@ gst_ximage_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DISPLAY_NAME:
-
       g_free (src->display_name);
       src->display_name = g_value_dup_string (value);
       break;
@@ -987,6 +1003,9 @@ gst_ximage_src_set_property (GObject * object, guint prop_id,
       g_free (src->xname);
       src->xname = g_value_dup_string (value);
       break;
+    case PROP_ENABLE_NAVIGATION_EVENTS:
+      src->enable_navigation_events = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -1004,7 +1023,6 @@ gst_ximage_src_get_property (GObject * object, guint prop_id,
         g_value_set_string (value, DisplayString (src->xcontext->disp));
       else
         g_value_set_string (value, src->display_name);
-
       break;
     case PROP_SHOW_POINTER:
       g_value_set_boolean (value, src->show_pointer);
@@ -1032,6 +1050,9 @@ gst_ximage_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_XNAME:
       g_value_set_string (value, src->xname);
+      break;
+    case PROP_ENABLE_NAVIGATION_EVENTS:
+      g_value_set_boolean (value, src->enable_navigation_events);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1195,6 +1216,72 @@ gst_ximage_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   return caps;
 }
 
+static gboolean
+gst_ximage_src_event (GstBaseSrc * base_src, GstEvent * event)
+{
+  gboolean ret = FALSE;
+#ifdef HAVE_XNAVIGATION
+  gboolean is_press = FALSE;
+  GstXImageSrc *src = GST_XIMAGE_SRC (base_src);
+  if (src->enable_navigation_events
+      && GST_EVENT_TYPE (event) == GST_EVENT_NAVIGATION) {
+    const gchar *key;
+    gint button;
+    gdouble x, y, delta_x, delta_y;
+
+    GST_DEBUG_OBJECT (src, "Processing event %" GST_PTR_FORMAT, event);
+    switch (gst_navigation_event_get_type (event)) {
+      case GST_NAVIGATION_EVENT_KEY_PRESS:
+        is_press = TRUE;        /* FALLTHROUGH */
+      case GST_NAVIGATION_EVENT_KEY_RELEASE:
+        if (gst_navigation_event_parse_key_event (event, &key)) {
+          gst_ximage_navigation_key (src->xcontext->disp, key, is_press);
+          ret = TRUE;
+        }
+        break;
+      case GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS:
+        is_press = TRUE;        /* FALLTHROUGH */
+      case GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE:
+        if (gst_navigation_event_parse_mouse_button_event (event, &button, &x,
+                &y)) {
+          gst_ximage_navigation_mouse_push_button (src->xcontext->disp, button,
+              is_press);
+          ret = TRUE;
+        }
+        break;
+      case GST_NAVIGATION_EVENT_MOUSE_MOVE:
+        if (gst_navigation_event_parse_mouse_move_event (event, &x, &y)) {
+          gst_ximage_navigation_mouse_move_pointer (src->xcontext->disp,
+              (int) x, (int) y);
+          ret = TRUE;
+        }
+        break;
+      case GST_NAVIGATION_EVENT_MOUSE_SCROLL:
+        if (gst_navigation_event_parse_mouse_scroll_event (event, &x, &y,
+                &delta_x, &delta_y)) {
+          int scroll_button =
+              (int) delta_y <
+              0 ? MOUSE_SCROLL_DOWN_BUTTON : MOUSE_SCROLL_UP_BUTTON;
+          gst_ximage_navigation_mouse_push_button (src->xcontext->disp,
+              scroll_button, TRUE);
+          gst_ximage_navigation_mouse_push_button (src->xcontext->disp,
+              scroll_button, FALSE);
+          ret = TRUE;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+#endif
+  if (!ret) {
+    ret =
+        GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS, event, (base_src,
+            event), FALSE);
+  }
+  return ret;
+}
+
 static void
 gst_ximage_src_class_init (GstXImageSrcClass * klass)
 {
@@ -1294,6 +1381,17 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
           "Window name to capture from", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstXImageSrc:enable-navigation-events:
+   *
+   * Enable navigation events
+   */
+  g_object_class_install_property (gc, PROP_ENABLE_NAVIGATION_EVENTS,
+      g_param_spec_boolean ("enable-navigation-events",
+          "Enable navigation events",
+          "When enabled, navigation events are handled", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (ec, "Ximage video source",
       "Source/Video",
       "Creates a screenshot video stream",
@@ -1309,6 +1407,7 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
   bc->stop = gst_ximage_src_stop;
   bc->unlock = gst_ximage_src_unlock;
   push_class->create = gst_ximage_src_create;
+  bc->event = gst_ximage_src_event;
 }
 
 static void
@@ -1328,12 +1427,16 @@ gst_ximage_src_init (GstXImageSrc * ximagesrc)
   ximagesrc->endx_fit_to_screen = TRUE;
   ximagesrc->endy_fit_to_screen = TRUE;
   ximagesrc->remote = FALSE;
+  ximagesrc->enable_navigation_events = FALSE;
 }
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
+
+  if (g_getenv ("GST_XINITTHREADS"))
+    XInitThreads ();
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_ximage_src, "ximagesrc", 0,
       "ximagesrc element debug");

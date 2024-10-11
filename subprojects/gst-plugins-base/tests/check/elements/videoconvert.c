@@ -31,17 +31,6 @@
 #include <gst/check/gstharness.h>
 #include <gst/video/video.h>
 
-static guint
-get_num_formats (void)
-{
-  guint i = 2;
-
-  while (gst_video_format_to_string ((GstVideoFormat) i) != NULL)
-    ++i;
-
-  return i;
-}
-
 static void
 check_pad_template (GstPadTemplate * tmpl)
 {
@@ -49,10 +38,9 @@ check_pad_template (GstPadTemplate * tmpl)
   GstStructure *s;
   gboolean *formats_supported;
   GstCaps *caps;
-  guint i, num_formats;
+  guint i;
 
-  num_formats = get_num_formats ();
-  formats_supported = g_new0 (gboolean, num_formats);
+  formats_supported = g_new0 (gboolean, GST_VIDEO_FORMAT_LAST);
 
   caps = gst_pad_template_get_caps (tmpl);
 
@@ -84,7 +72,10 @@ check_pad_template (GstPadTemplate * tmpl)
 
   gst_caps_unref (caps);
 
-  for (i = 2; i < num_formats; ++i) {
+  for (i = 2; i < GST_VIDEO_FORMAT_LAST; ++i) {
+    if (i == GST_VIDEO_FORMAT_DMA_DRM)
+      continue;
+
     if (!formats_supported[i]) {
       g_error ("videoconvert doesn't support format '%s'",
           gst_video_format_to_string ((GstVideoFormat) i));

@@ -104,6 +104,8 @@ struct _GstGLImageSink
     GstGLSyncMeta *stored_sync_meta;
     GLuint redisplay_texture;
 
+    gboolean need_resize_window;
+
     /* protected with drawing_lock */
     gboolean window_resized;
     guint window_width;

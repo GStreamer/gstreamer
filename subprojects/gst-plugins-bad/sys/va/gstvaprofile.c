@@ -33,11 +33,16 @@ static const struct ProfileMap
   const gchar *name;
   const gchar *media_type;
   const gchar *caps_str;
+  const gchar *decoder_compatible_caps_str;
 } profile_map[] = {
-#define P(codec, va_name, name, media_type, caps_str) {          \
-    G_PASTE (G_PASTE (VAProfile, codec), va_name), codec,        \
-    G_STRINGIFY (G_PASTE (G_PASTE (VAProfile, codec), va_name)), \
-    name, media_type, caps_str }
+#define O(codec, va_name, name, media_type, caps_str, all_caps_str)   \
+    G_PASTE (G_PASTE (VAProfile, codec), va_name), codec,             \
+    G_STRINGIFY (G_PASTE (G_PASTE (VAProfile, codec), va_name)),      \
+    name, media_type, caps_str, all_caps_str
+#define P(codec, va_name, name, media_type, caps_str) {               \
+    O(codec, va_name, name, media_type, caps_str, NULL) }
+#define Q(codec, va_name, name, media_type, caps_str, all_caps_str) { \
+    O(codec, va_name, name, media_type, caps_str, all_caps_str) }
   P (MPEG2, Simple, "simple", "video/mpeg",
       "mpegversion = (int) 2, profile = (string) simple"),
   P (MPEG2, Main, "main", "video/mpeg",
@@ -69,8 +74,10 @@ static const struct ProfileMap
   /*     "profile = (string) {  multiview-high, stereo-high }"), */
   /* P (H264, StereoHigh, "video/x-h264", */
   /*     "profile = (string) {  multiview-high, stereo-high }"), */
-  P (HEVC, Main, "main", "video/x-h265", "profile = (string) main"),
-  P (HEVC, Main10, "main-10", "video/x-h265", "profile = (string) main-10"),
+  Q (HEVC, Main, "main", "video/x-h265", "profile = (string) main",
+     "profile = (string) { main, main-intra, main-still-picture }"),
+  Q (HEVC, Main10, "main-10", "video/x-h265", "profile = (string) main-10",
+     "profile = (string) { main-10, main-10-intra }"),
   P (VP9, Profile0, "0", "video/x-vp9", "profile = (string) 0"),
   P (VP9, Profile1, "1", "video/x-vp9", "profile = (string) 1"),
   P (VP9, Profile2, "2", "video/x-vp9", "profile = (string) 2"),
@@ -111,7 +118,9 @@ static const struct ProfileMap
   P (AV1, Profile1, "high", "video/x-av1", "profile = (string) high"),
   P (HEVC, SccMain444_10, "screen-extended-main-444-10", "video/x-h265",
       "profile = (string) screen-extended-main-444-10"),
+#undef O
 #undef P
+#undef Q
 };
 /* *INDENT-ON* */
 
@@ -157,7 +166,7 @@ gst_va_profile_from_name (GstVaCodecs codec, const gchar * name)
 }
 
 GstCaps *
-gst_va_profile_caps (VAProfile profile)
+gst_va_profile_caps (VAProfile profile, VAEntrypoint entrypoint)
 {
   const struct ProfileMap *map = get_profile_map (profile);
   GstCaps *caps;
@@ -166,7 +175,10 @@ gst_va_profile_caps (VAProfile profile)
   if (!map)
     return NULL;
 
-  if (map->caps_str)
+  if (entrypoint == VAEntrypointVLD && map->decoder_compatible_caps_str) {
+    caps_str = g_strdup_printf ("%s, %s", map->media_type,
+        map->decoder_compatible_caps_str);
+  } else if (map->caps_str)
     caps_str = g_strdup_printf ("%s, %s", map->media_type, map->caps_str);
   else
     caps_str = g_strdup (map->media_type);

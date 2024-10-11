@@ -1,0 +1,127 @@
+{
+    "name": "JCT-VC-SCC",
+    "codec": "H.265",
+    "description": "JCT-VC HEVC Screen Content Coding Extension",
+    "test_vectors": [
+        {
+            "name": "Bipred_8by8_A_Qualcomm_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/Bipred_8by8_A_Qualcomm_2.zip",
+            "source_checksum": "45bf618ac6aa005529cd44965c28b39d",
+            "input_file": "Bipred_8by8_A_Qualcomm_2.bit",
+            "output_format": "yuv420p",
+            "result": "40e9c09b866f62e6d5e481f5eae33daf"
+        },
+        {
+            "name": "Delta_QP_Chroma_QP_Offsets_A_Qualcomm_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/Delta_QP_Chroma_QP_Offsets_A_Qualcomm_2.zip",
+            "source_checksum": "e00eedfcfbce62826b285747f3a96560",
+            "input_file": "Delta_QP_Chroma_QP_Offsets_A_Qualcomm_2.bit",
+            "output_format": "yuv444p",
+            "result": "bca297f41963fb942e0f3b5f0bf87baa"
+        },
+        {
+            "name": "DPB_Loop_Filters_A_MediaTek_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/DPB_Loop_Filters_A_MediaTek_2.zip",
+            "source_checksum": "00fc3d62677bf18c5213a8001796f7b7",
+            "input_file": "DPB_Loop_Filters_A_MediaTek_2.bit",
+            "output_format": "yuv444p",
+            "result": "374e08530029e724aa1660c233ffdd91"
+        },
+        {
+            "name": "HT_A_SCC_Apple_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/HT_A_SCC_Apple_2.zip",
+            "source_checksum": "64365e475628e06cd4466a5e5cb022b9",
+            "input_file": "HT_A_SCC_Apple_2.bit",
+            "output_format": "yuv444p10le",
+            "result": "8a301042ad7c4d2e3e26c97d96d33b37"
+        },
+        {
+            "name": "HT_B_SCC_Apple_3",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/HT_B_SCC_Apple_3.zip",
+            "source_checksum": "d2598ca27db45da430f1d79ab2217a0d",
+            "input_file": "HT_B_SCC_Apple_3.bit",
+            "output_format": "yuv444p",
+            "result": "123301bddabd6f356931ff3a66e47ff8"
+        },
+        {
+            "name": "HT_C_SCC_Apple_3",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/HT_C_SCC_Apple_3.zip",
+            "source_checksum": "ae7a116365b813b83698b2e68950c75a",
+            "input_file": "HT_C_SCC_Apple_3.bit",
+            "output_format": "yuv444p",
+            "result": "123301bddabd6f356931ff3a66e47ff8"
+        },
+        {
+            "name": "IBF_Disabled_A_MediaTek_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/IBF_Disabled_A_MediaTek_2.zip",
+            "source_checksum": "d84c5c2748bbf8bc47a392c09fb50c7d",
+            "input_file": "IBF_Disabled_A_MediaTek_2.bit",
+            "output_format": "yuv444p",
+            "result": "d2e7b3057e4ef220d017f5939b3abeec"
+        },
+        {
+            "name": "IBF_Disabled_B_MediaTek_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/IBF_Disabled_B_MediaTek_2.zip",
+            "source_checksum": "24a8e628d0cd725b175084e387c2a1e7",
+            "input_file": "IBF_Disabled_B_MediaTek_2.bit",
+            "output_format": "yuv420p",
+            "result": "fe4f19a37170afdcba9380d8eadf3f79"
+        },
+        {
+            "name": "MVRESIDC_A_MS_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/MVRESIDC_A_MS_2.zip",
+            "source_checksum": "8b7dbade3312d48383499d4583224fe7",
+            "input_file": "MVRESIDC_A_MS_2.bit",
+            "output_format": "yuv444p",
+            "result": "11e2b1a5006853ded70ce926e8425d99"
+        },
+        {
+            "name": "MVRESIDC_B_MS_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/MVRESIDC_B_MS_2.zip",
+            "source_checksum": "cec0546c29ce80ed1925798c35325973",
+            "input_file": "MVRESIDC_B_MS_2.bit",
+            "output_format": "yuv444p",
+            "result": "11e2b1a5006853ded70ce926e8425d99"
+        },
+        {
+            "name": "MVRESIDC_C_MS_3",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/MVRESIDC_C_MS_3.zip",
+            "source_checksum": "ede7fd9f0b103cf2910ebdff4e493813",
+            "input_file": "MVRESIDC_C_MS_3.bit",
+            "output_format": "yuv444p",
+            "result": "11e2b1a5006853ded70ce926e8425d99"
+        },
+        {
+            "name": "PPI_A_InterDigital_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/PPI_A_InterDigital_2.zip",
+            "source_checksum": "ea52bb50eb1ba77aa1007aa33a222aa5",
+            "input_file": "PPI_A_InterDigital_2.bit",
+            "output_format": "yuv444p",
+            "result": "d2e7b3057e4ef220d017f5939b3abeec"
+        },
+        {
+            "name": "PPI_B_InterDigital_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/PPI_B_InterDigital_2.zip",
+            "source_checksum": "6d8f343c85b719459b97362d978cf462",
+            "input_file": "PPI_B_InterDigital_2.bit",
+            "output_format": "yuv420p",
+            "result": "fe4f19a37170afdcba9380d8eadf3f79"
+        },
+        {
+            "name": "Slice_ACT_QP_Offsets_A_Qualcomm_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/Slice_ACT_QP_Offsets_A_Qualcomm_2.zip",
+            "source_checksum": "01cd4d5c02a6ae679e4a65ab3131c64c",
+            "input_file": "Slice_ACT_QP_Offsets_A_Qualcomm_2.bit",
+            "output_format": "yuv444p",
+            "result": "bca297f41963fb942e0f3b5f0bf87baa"
+        },
+        {
+            "name": "Zero_and_One_Palette_Size_A_Canon_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/SCC/Zero_and_One_Palette_Size_A_Canon_2.zip",
+            "source_checksum": "300926aca98e149a2a48e709f0738fae",
+            "input_file": "Zero_and_One_Palette_Size_A_Canon_2.bit",
+            "output_format": "yuv444p",
+            "result": "60232b373e694b5d132051bf3744d5ee"
+        }
+    ]
+}

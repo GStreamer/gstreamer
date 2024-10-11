@@ -280,21 +280,23 @@ gst_mf_device_provider_probe_internal (GstDeviceProvider * provider,
     GstCaps *caps = nullptr;
     gchar *device_name = nullptr;
     gchar *device_path = nullptr;
+    GstMFSourceResult ret = GST_MF_DEVICE_NOT_FOUND;
 
 #if GST_MF_WINAPI_DESKTOP
     if (try_dshow) {
-      obj = gst_mf_capture_dshow_new (GST_MF_SOURCE_TYPE_VIDEO, i,
-          nullptr, nullptr);
+      ret = gst_mf_capture_dshow_enumerate (i, &obj);
     } else {
-      obj = gst_mf_source_object_new (GST_MF_SOURCE_TYPE_VIDEO,
-          i, nullptr, nullptr, nullptr);
+      ret = gst_mf_source_object_enumerate (i, &obj);
     }
 #else
-    obj = gst_mf_source_object_new (GST_MF_SOURCE_TYPE_VIDEO,
-        i, nullptr, nullptr, nullptr);
+    ret = gst_mf_source_object_enumerate (i, &obj);
 #endif
-    if (!obj)
+    if (ret == GST_MF_DEVICE_NOT_FOUND)
       break;
+    else if (ret == GST_MF_ACTIVATION_FAILED)
+      continue;
+
+    g_assert (ret == GST_MF_OK);
 
     caps = gst_mf_source_object_get_caps (obj);
     if (!caps) {

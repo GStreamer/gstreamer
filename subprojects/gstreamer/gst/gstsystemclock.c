@@ -75,7 +75,7 @@ static LARGE_INTEGER performance_counter_frequency;
  * to a simple memory read.
  */
 #if defined __APPLE__ || defined G_OS_WIN32
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS)
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__)
 #include <stdatomic.h>
 
 typedef atomic_int gst_atomic_int;
@@ -112,11 +112,11 @@ gst_atomic_int_set_release (gst_atomic_int * x, gint val)
 {
   InterlockedOrRelease (x, 1);
 }
-#else /* defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS) */
+#else /* defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__) */
 typedef int gst_atomic_int;
 #define gst_atomic_int_get_acquire(x) g_atomic_int_get(x)
 #define gst_atomic_int_set_release(x, val) g_atomic_int_set(x, val)
-#endif /* defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS) */
+#endif /* defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__) */
 #endif /* defined __APPLE__ || defined G_OS_WIN32 */
 
 /* priv_gst_clock_init:
@@ -250,8 +250,12 @@ gst_futex_cond_broadcast (guint * cond_val)
 {
   g_atomic_int_inc (cond_val);
 
-#if defined(__NR_futex_time64)
+#if defined(HAVE_FUTEX_TIME64)
+#if defined(__ANDROID__)
+  if (__builtin_available (android 30, *)) {
+#else
   {
+#endif
     int res;
     res = syscall (__NR_futex_time64, cond_val, (gsize) FUTEX_WAKE_PRIVATE,
         (gsize) INT_MAX, NULL);
@@ -260,7 +264,7 @@ gst_futex_cond_broadcast (guint * cond_val)
      * normal `futex` syscall. This can happen if newer kernel headers are
      * used than the kernel that is actually running.
      */
-#ifdef __NR_futex
+#if defined(HAVE_FUTEX)
     if (res >= 0 || errno != ENOSYS) {
 #else
     {
@@ -270,7 +274,7 @@ gst_futex_cond_broadcast (guint * cond_val)
   }
 #endif
 
-#if defined(__NR_futex)
+#if defined(HAVE_FUTEX)
   syscall (__NR_futex, cond_val, (gsize) FUTEX_WAKE_PRIVATE, (gsize) INT_MAX,
       NULL);
 #endif
@@ -308,8 +312,12 @@ gst_futex_cond_wait_until (guint * cond_val, GMutex * mutex, gint64 end_time)
    * define `__NR_futex_time64`.
    */
 
-#ifdef __NR_futex_time64
+#if defined(HAVE_FUTEX_TIME64)
+#if defined(__ANDROID__)
+  if (__builtin_available (android 30, *)) {
+#else
   {
+#endif
     struct
     {
       gint64 tv_sec;
@@ -329,7 +337,7 @@ gst_futex_cond_wait_until (guint * cond_val, GMutex * mutex, gint64 end_time)
      * normal `futex` syscall. This can happen if newer kernel headers are
      * used than the kernel that is actually running.
      */
-#ifdef __NR_futex
+#if defined(HAVE_FUTEX)
     if (res >= 0 || errno != ENOSYS) {
 #else
     {
@@ -342,7 +350,7 @@ gst_futex_cond_wait_until (guint * cond_val, GMutex * mutex, gint64 end_time)
   }
 #endif
 
-#ifdef __NR_futex
+#if defined(HAVE_FUTEX)
   {
     struct
     {

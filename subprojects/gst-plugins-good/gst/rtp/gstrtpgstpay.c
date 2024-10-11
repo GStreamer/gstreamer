@@ -182,7 +182,6 @@ gst_rtp_gst_pay_reset (GstRtpGSTPay * rtpgstpay, gboolean full)
     rtpgstpay->current_CV = 0;
     rtpgstpay->next_CV = 0;
   }
-  rtpgstpay->received_buffer = FALSE;
 }
 
 static void
@@ -366,6 +365,16 @@ gst_rtp_gst_pay_create_from_adapter (GstRtpGSTPay * rtpgstpay,
   return TRUE;
 }
 
+static gboolean
+retimestamp_buffer (GstBuffer ** buffer, guint idx, gpointer user_data)
+{
+  GstClockTime *timestamp = user_data;
+
+  GST_BUFFER_PTS (*buffer) = *timestamp;
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_rtp_gst_pay_flush (GstRtpGSTPay * rtpgstpay, GstClockTime timestamp)
 {
@@ -373,13 +382,14 @@ gst_rtp_gst_pay_flush (GstRtpGSTPay * rtpgstpay, GstClockTime timestamp)
 
   gst_rtp_gst_pay_create_from_adapter (rtpgstpay, timestamp);
 
-  if (!rtpgstpay->received_buffer) {
-    GST_DEBUG_OBJECT (rtpgstpay,
-        "Can't flush without having received a buffer yet");
-    return GST_FLOW_OK;
-  }
-
   if (rtpgstpay->pending_buffers) {
+    // make sure all buffers in the buffer list have the correct timestamp.
+    // If we created packets based on an event they would have
+    // GST_CLOCK_TIME_NONE as PTS.
+
+    gst_buffer_list_foreach (rtpgstpay->pending_buffers, retimestamp_buffer,
+        &timestamp);
+
     /* push the whole buffer list at once */
     ret = gst_rtp_base_payload_push_list (GST_RTP_BASE_PAYLOAD (rtpgstpay),
         rtpgstpay->pending_buffers);
@@ -529,6 +539,11 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
     g_atomic_int_set (&rtpgstpay->force_config, TRUE);
   }
 
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    // We must flush at this point, as no next input frame is expected
+    gst_rtp_gst_pay_flush (rtpgstpay, GST_CLOCK_TIME_NONE);
+  }
+
   ret =
       GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (payload,
       gst_event_ref (event));
@@ -584,12 +599,10 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
     GST_DEBUG_OBJECT (rtpgstpay, "make event type %d for %s",
         etype, GST_EVENT_TYPE_NAME (event));
     gst_rtp_gst_pay_send_event (rtpgstpay, etype, event);
-    /* Do not send stream-start right away since caps/new-segment were not yet
-       sent, so our data would be considered invalid */
-    if (etype != 4) {
-      /* flush the adapter immediately */
-      gst_rtp_gst_pay_flush (rtpgstpay, GST_CLOCK_TIME_NONE);
-    }
+    // do not flush events here yet as they would get no timestamp at all or
+    // the timestamp of the previous buffer, both of which are bogus. We need
+    // to wait until the next actual input frame to know the timestamp that
+    // applies to the event.
   }
 
   gst_event_unref (event);
@@ -653,8 +666,6 @@ gst_rtp_gst_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GstClockTime timestamp, running_time;
 
   rtpgstpay = GST_RTP_GST_PAY (basepayload);
-
-  rtpgstpay->received_buffer = TRUE;
 
   timestamp = GST_BUFFER_PTS (buffer);
   running_time =

@@ -92,6 +92,37 @@ namespace Gst {
 			gst_buffer_list_remove(Handle, idx, length);
 		}
 
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_buffer_list_replace(ref IntPtr old_list, IntPtr new_list);
+
+		public static bool Replace(ref Gst.BufferList old_list, Gst.BufferList new_list) {
+			IntPtr native_old_list = old_list == null ? IntPtr.Zero : old_list.Handle ;
+			bool raw_ret = gst_buffer_list_replace(ref native_old_list, new_list == null ? IntPtr.Zero : new_list.Handle);
+			bool ret = raw_ret;
+			old_list = native_old_list == IntPtr.Zero ? null : (Gst.BufferList) GLib.Opaque.GetOpaque (native_old_list, typeof (Gst.BufferList), true);
+			return ret;
+		}
+
+		public static bool Replace(ref Gst.BufferList old_list) {
+			return Replace (ref old_list, null);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_buffer_list_take(ref IntPtr old_list, IntPtr new_list);
+
+		public static bool Take(ref Gst.BufferList old_list, Gst.BufferList new_list) {
+			IntPtr native_old_list = old_list == null ? IntPtr.Zero : old_list.Handle ;
+			new_list.Owned = false;
+			bool raw_ret = gst_buffer_list_take(ref native_old_list, new_list == null ? IntPtr.Zero : new_list.Handle);
+			bool ret = raw_ret;
+			old_list = native_old_list == IntPtr.Zero ? null : (Gst.BufferList) GLib.Opaque.GetOpaque (native_old_list, typeof (Gst.BufferList), true);
+			return ret;
+		}
+
+		public static bool Take(ref Gst.BufferList old_list) {
+			return Take (ref old_list, null);
+		}
+
 		public BufferList(IntPtr raw) : base(raw) {}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -108,34 +139,6 @@ namespace Gst {
 		public BufferList (uint size) 
 		{
 			Raw = gst_buffer_list_new_sized(size);
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_buffer_list_ref(IntPtr raw);
-
-		protected override void Ref (IntPtr raw)
-		{
-			if (!Owned) {
-				gst_buffer_list_ref (raw);
-				Owned = true;
-			}
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_buffer_list_unref(IntPtr raw);
-
-		protected override void Unref (IntPtr raw)
-		{
-			if (Owned) {
-				gst_buffer_list_unref (raw);
-				Owned = false;
-			}
-		}
-
-		protected override Action<IntPtr> DisposeUnmanagedFunc {
-			get {
-				return gst_buffer_list_unref;
-			}
 		}
 
 

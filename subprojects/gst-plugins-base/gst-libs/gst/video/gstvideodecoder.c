@@ -536,6 +536,9 @@ static gboolean gst_video_decoder_transform_meta_default (GstVideoDecoder *
 static gboolean gst_video_decoder_handle_missing_data_default (GstVideoDecoder *
     decoder, GstClockTime timestamp, GstClockTime duration);
 
+static void gst_video_decoder_replace_input_buffer (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame, GstBuffer ** dest_buffer);
+
 static void gst_video_decoder_copy_metas (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame, GstBuffer * src_buffer,
     GstBuffer * dest_buffer);
@@ -1831,7 +1834,8 @@ gst_video_decoder_src_event_default (GstVideoDecoder * decoder,
       priv->proportion = proportion;
       if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (timestamp))) {
         if (G_UNLIKELY (diff > 0)) {
-          priv->earliest_time = timestamp + 2 * diff + priv->qos_frame_duration;
+          priv->earliest_time =
+              timestamp + MIN (2 * diff, GST_SECOND) + priv->qos_frame_duration;
         } else {
           priv->earliest_time = timestamp + diff;
         }
@@ -2459,11 +2463,7 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
       GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
     }
 
-    if (frame->input_buffer) {
-      gst_video_decoder_copy_metas (decoder, frame, frame->input_buffer, buf);
-      gst_buffer_unref (frame->input_buffer);
-    }
-    frame->input_buffer = buf;
+    gst_video_decoder_replace_input_buffer (decoder, frame, &buf);
 
     if (decoder->input_segment.rate < 0.0) {
       priv->parse_gather = g_list_prepend (priv->parse_gather, frame);
@@ -3381,6 +3381,20 @@ gst_video_decoder_copy_metas (GstVideoDecoder * decoder,
   }
 }
 
+static void
+gst_video_decoder_replace_input_buffer (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame, GstBuffer ** dest_buffer)
+{
+  if (frame->input_buffer) {
+    *dest_buffer = gst_buffer_make_writable (*dest_buffer);
+    gst_video_decoder_copy_metas (decoder, frame, frame->input_buffer,
+        *dest_buffer);
+    gst_buffer_unref (frame->input_buffer);
+  }
+
+  frame->input_buffer = *dest_buffer;
+}
+
 /**
  * gst_video_decoder_finish_frame:
  * @decoder: a #GstVideoDecoder
@@ -3639,11 +3653,15 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
     goto done;
   }
 
-  /* Is buffer too late (QoS) ? */
-  if (priv->do_qos && GST_CLOCK_TIME_IS_VALID (priv->earliest_time)
-      && GST_CLOCK_TIME_IS_VALID (cstart)) {
-    GstClockTime deadline =
-        gst_segment_to_running_time (segment, GST_FORMAT_TIME, cstart);
+  /* Check if the buffer is too late (QoS). */
+  if (priv->do_qos && GST_CLOCK_TIME_IS_VALID (priv->earliest_time)) {
+    GstClockTime deadline = GST_CLOCK_TIME_NONE;
+    /* We prefer to use the frame stop position for checking for QoS since we
+     * don't want to drop a frame which is partially late */
+    if (GST_CLOCK_TIME_IS_VALID (cstop))
+      deadline = gst_segment_to_running_time (segment, GST_FORMAT_TIME, cstop);
+    else if (GST_CLOCK_TIME_IS_VALID (cstart))
+      deadline = gst_segment_to_running_time (segment, GST_FORMAT_TIME, cstart);
     if (GST_CLOCK_TIME_IS_VALID (deadline) && deadline < priv->earliest_time) {
       GST_WARNING_OBJECT (decoder,
           "Dropping frame due to QoS. start:%" GST_TIME_FORMAT " deadline:%"
@@ -3821,12 +3839,8 @@ gst_video_decoder_have_frame (GstVideoDecoder * decoder)
     buffer = gst_buffer_new_and_alloc (0);
   }
 
-  if (priv->current_frame->input_buffer) {
-    gst_video_decoder_copy_metas (decoder, priv->current_frame,
-        priv->current_frame->input_buffer, buffer);
-    gst_buffer_unref (priv->current_frame->input_buffer);
-  }
-  priv->current_frame->input_buffer = buffer;
+  gst_video_decoder_replace_input_buffer (decoder, priv->current_frame,
+      &buffer);
 
   gst_video_decoder_get_buffer_info_at_offset (decoder,
       priv->frame_offset, &pts, &dts, &duration, &flags);

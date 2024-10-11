@@ -71,8 +71,9 @@ _create_info_from_args (VkImageCreateInfo * info, VkFormat format, gsize width,
 gboolean
 gst_vulkan_image_memory_init (GstVulkanImageMemory * mem,
     GstAllocator * allocator, GstMemory * parent, GstVulkanDevice * device,
-    VkFormat format, VkImageUsageFlags usage, GstAllocationParams * params,
-    gsize size, gpointer user_data, GDestroyNotify notify)
+    VkFormat format, VkImageUsageFlags usage, VkImageLayout layout,
+    GstAllocationParams * params, gsize size, gpointer user_data,
+    GDestroyNotify notify)
 {
   gsize align = gst_memory_alignment, offset = 0, maxsize = size;
   GstMemoryFlags flags = 0;
@@ -91,7 +92,9 @@ gst_vulkan_image_memory_init (GstVulkanImageMemory * mem,
   mem->barrier.parent.type = GST_VULKAN_BARRIER_TYPE_IMAGE;
   mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
   mem->barrier.parent.access_flags = 0;
-  mem->barrier.image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+  mem->barrier.parent.semaphore = VK_NULL_HANDLE;
+  mem->barrier.parent.semaphore_value = 0;
+  mem->barrier.image_layout = layout;
   /* *INDENT-OFF* */
   mem->barrier.subresource_range = (VkImageSubresourceRange) {
           .aspectMask = gst_vulkan_format_get_aspect (format),
@@ -156,12 +159,33 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
   vkGetImageMemoryRequirements (device->device, image, &mem->requirements);
 
   gst_vulkan_image_memory_init (mem, allocator, parent, device,
-      image_info->format, image_info->usage, &params, mem->requirements.size,
-      user_data, notify);
+      image_info->format, image_info->usage, image_info->initialLayout, &params,
+      mem->requirements.size, user_data, notify);
   mem->create_info = *image_info;
   /* XXX: to avoid handling pNext lifetime  */
   mem->create_info.pNext = NULL;
   mem->image = image;
+
+#if defined(VK_KHR_timeline_semaphore)
+  if (gst_vulkan_device_is_extension_enabled (device,
+          VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME)) {
+    VkSemaphoreTypeCreateInfo semaphore_type_info = {
+      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO,
+      .semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE,
+      .initialValue = 0,
+    };
+    VkSemaphoreCreateInfo semaphore_create_info = {
+      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+      .pNext = &semaphore_type_info,
+    };
+
+    err = vkCreateSemaphore (device->device, &semaphore_create_info, NULL,
+        &mem->barrier.parent.semaphore);
+    if (gst_vulkan_error_to_g_error (err, &error, "vkCreateSemaphore") < 0)
+      goto vk_error;
+  }
+#endif
+
 
   err = vkGetPhysicalDeviceImageFormatProperties (gpu, image_info->format,
       VK_IMAGE_TYPE_2D, image_info->tiling, image_info->usage, 0,
@@ -247,7 +271,8 @@ _vk_image_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
   params.align = mem->requirements.alignment - 1;
   params.flags = GST_MEMORY_FLAG_NOT_MAPPABLE;
   gst_vulkan_image_memory_init (mem, allocator, parent, device, format, usage,
-      &params, mem->requirements.size, user_data, notify);
+      VK_IMAGE_LAYOUT_UNDEFINED, &params, mem->requirements.size, user_data,
+      notify);
   mem->wrapped = TRUE;
 
   if (!_create_info_from_args (&mem->create_info, format, width, height, tiling,
@@ -366,8 +391,15 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
   if (mem->image && !mem->wrapped)
     vkDestroyImage (mem->device->device, mem->image, NULL);
 
+  gst_clear_object (&mem->barrier.parent.queue);
+
   if (mem->vk_mem)
     gst_memory_unref ((GstMemory *) mem->vk_mem);
+
+  if (mem->barrier.parent.semaphore) {
+    vkDestroySemaphore (mem->device->device, mem->barrier.parent.semaphore,
+        NULL);
+  }
 
   if (mem->notify)
     mem->notify (mem->user_data);

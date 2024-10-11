@@ -97,9 +97,9 @@ gst_msdkvc1dec_configure (GstMsdkDec * decoder)
 
   profile_str = gst_structure_get_string (structure, "profile");
 
-  if (!strcmp (profile_str, "simple"))
+  if (!g_strcmp0 (profile_str, "simple"))
     decoder->param.mfx.CodecProfile = MFX_PROFILE_VC1_SIMPLE;
-  else if (!strcmp (profile_str, "main"))
+  else if (!g_strcmp0 (profile_str, "main"))
     decoder->param.mfx.CodecProfile = MFX_PROFILE_VC1_MAIN;
   else {
     decoder->param.mfx.CodecProfile = MFX_PROFILE_VC1_ADVANCED;
@@ -243,12 +243,7 @@ gst_msdkvc1dec_register (GstPlugin * plugin,
 
   cdata = g_new (MsdkDecCData, 1);
   cdata->sink_caps = gst_caps_ref (sink_caps);
-#ifndef _WIN32
   cdata->src_caps = gst_caps_ref (src_caps);
-#else
-  cdata->src_caps = gst_caps_copy (src_caps);
-  gst_msdkcaps_remove_structure (cdata->src_caps, "memory:D3D11Memory");
-#endif
 
   GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
       GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);

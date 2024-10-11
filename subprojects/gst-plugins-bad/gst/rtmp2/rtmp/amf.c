@@ -903,7 +903,7 @@ gst_amf_node_parse (const guint8 * data, gsize size, guint8 ** endptr)
   GST_TRACE ("Starting parse with %" G_GSIZE_FORMAT " bytes", parser.size);
 
   node = parse_value (&parser);
-  if (gst_amf_node_get_type (node) == GST_AMF_TYPE_INVALID) {
+  if (!node || gst_amf_node_get_type (node) == GST_AMF_TYPE_INVALID) {
     GST_ERROR ("invalid value");
     goto out;
   }
@@ -946,13 +946,13 @@ gst_amf_parse_command (const guint8 * data, gsize size,
   GST_TRACE ("Starting parse with %" G_GSIZE_FORMAT " bytes", parser.size);
 
   node1 = parse_value (&parser);
-  if (gst_amf_node_get_type (node1) != GST_AMF_TYPE_STRING) {
+  if (!node1 || gst_amf_node_get_type (node1) != GST_AMF_TYPE_STRING) {
     GST_ERROR ("no command name");
     goto out;
   }
 
   node2 = parse_value (&parser);
-  if (gst_amf_node_get_type (node2) != GST_AMF_TYPE_NUMBER) {
+  if (!node2 || gst_amf_node_get_type (node2) != GST_AMF_TYPE_NUMBER) {
     GST_ERROR ("no transaction ID");
     goto out;
   }
@@ -1202,6 +1202,39 @@ gst_amf_serialize_command_valist (gdouble transaction_id,
 
   GST_TRACE ("Done serializing; consumed %u args and produced %u bytes", i,
       array->len);
+
+  return g_byte_array_free_to_bytes (array);
+}
+
+GBytes *
+gst_amf_serialize_command_with_args (gdouble transaction_id,
+    const gchar * command_name, gsize n_arguments,
+    const GstAmfNode ** arguments)
+{
+  GByteArray *array = g_byte_array_new ();
+  gsize i = 0;
+
+  g_return_val_if_fail (command_name, NULL);
+  g_return_val_if_fail (n_arguments, NULL);
+  g_return_val_if_fail (arguments, NULL);
+
+  init_static ();
+
+  GST_LOG ("Serializing command '%s', transid %.0f", command_name,
+      transaction_id);
+
+  serialize_u8 (array, GST_AMF_TYPE_STRING);
+  serialize_string (array, command_name, -1);
+  serialize_u8 (array, GST_AMF_TYPE_NUMBER);
+  serialize_number (array, transaction_id);
+
+  for (i = 0; i < n_arguments; i++) {
+    serialize_value (array, arguments[i]);
+    dump_argument (arguments[i], i);
+  }
+
+  GST_TRACE ("Done serializing; consumed %" G_GSIZE_FORMAT
+      "args and produced %u bytes", i, array->len);
 
   return g_byte_array_free_to_bytes (array);
 }

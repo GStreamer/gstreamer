@@ -310,6 +310,9 @@ gst_adaptive_demux_loop_pause_and_lock (GstAdaptiveDemuxLoop * loop)
 
     g_rec_mutex_lock (&loop->context_lock);
   }
+
+  if (!loop->context)
+    return FALSE;
   g_main_context_push_thread_default (loop->context);
 
   return TRUE;
@@ -320,7 +323,8 @@ gst_adaptive_demux_loop_unlock_and_unpause (GstAdaptiveDemuxLoop * loop)
 {
   gboolean stopped;
 
-  g_main_context_pop_thread_default (loop->context);
+  if (loop->context)
+    g_main_context_pop_thread_default (loop->context);
   g_rec_mutex_unlock (&loop->context_lock);
 
   g_mutex_lock (&loop->lock);
@@ -543,14 +547,14 @@ gst_event_store_insert_event (GstEventStore * store, GstEvent * event,
 {
   guint i, len;
   GArray *events;
-  GQuark name_id = 0;
+  const gchar *name = NULL;
   gboolean insert = TRUE;
 
   GstEventType type = GST_EVENT_TYPE (event);
   guint event_sticky_order = gst_event_type_to_sticky_ordering (type);
 
   if (type & GST_EVENT_TYPE_STICKY_MULTI)
-    name_id = gst_structure_get_name_id (gst_event_get_structure (event));
+    name = gst_structure_get_name (gst_event_get_structure (event));
 
   events = store->events;
 
@@ -563,7 +567,7 @@ gst_event_store_insert_event (GstEventStore * store, GstEvent * event,
 
     if (type == GST_EVENT_TYPE (ev->event)) {
       /* matching types, check matching name if needed */
-      if (name_id && !gst_event_has_name_id (ev->event, name_id))
+      if (name && !gst_event_has_name (ev->event, name))
         continue;
 
       /* overwrite if different */

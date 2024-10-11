@@ -929,6 +929,41 @@ the schema wasn't in the list</doc>
         <type name="GObject.TypeInterface" c:type="GTypeInterface"/>
       </field>
     </record>
+    <docsection name="gsttag">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tags.c">Contains additional standardized GStreamer tag definitions for plugins
+and applications, and functions to register them with the GStreamer
+tag system.</doc>
+    </docsection>
+    <docsection name="gsttagexif">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gstexiftag.c">Contains utility function to parse #GstTagList&lt;!-- --&gt;s from exif
+buffers and to create exif buffers from #GstTagList&lt;!-- --&gt;s
+
+Note that next IFD fields on the created exif buffers are set to 0.</doc>
+    </docsection>
+    <docsection name="gsttagid3">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gstid3tag.c">Contains various utility functions for plugins to parse or create
+ID3 tags and map ID3v2 identifiers to and from GStreamer identifiers.</doc>
+    </docsection>
+    <docsection name="gsttaglanguagecodes">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/lang.c">Provides helper functions to convert between the various ISO-639 language
+codes, and to map language codes to language names.</doc>
+    </docsection>
+    <docsection name="gsttaglicenses">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/licenses.c">Provides information about Creative Commons media licenses, which are
+often expressed in media files as a license URI in tags. Also useful
+for applications creating media files, in case the user wants to license
+the content under a Creative Commons license.</doc>
+    </docsection>
+    <docsection name="gsttagvorbis">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gstvorbistag.c">Contains various utility functions for plugins to parse or create
+vorbiscomments and map them to and from #GstTagList&lt;!-- --&gt;s.</doc>
+    </docsection>
+    <docsection name="gsttagxmp">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gstxmptag.c">Contains various utility functions for plugins to parse or create
+xmp packets and map them to and from #GstTagList&lt;!-- --&gt;s.
+
+Please note that the xmp parser is very lightweight and not strict at all.</doc>
+    </docsection>
     <function name="tag_check_language_code" c:identifier="gst_tag_check_language_code">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/lang.c">Check if a given string contains a known ISO 639 language code.
 

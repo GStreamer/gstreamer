@@ -137,7 +137,7 @@ gst_sub_parse_class_init (GstSubParseClass * klass)
   gst_element_class_add_static_pad_template (element_class, &sink_templ);
   gst_element_class_add_static_pad_template (element_class, &src_templ);
   gst_element_class_set_static_metadata (element_class,
-      "Subtitle parser", "Codec/Parser/Subtitle",
+      "Subtitle parser", "Codec/Decoder/Subtitle",
       "Parses subtitle (.sub) files into text streams",
       "Gustavo J. A. M. Carneiro <gjc@inescporto.pt>, "
       "GStreamer maintainers <gstreamer-devel@lists.freedesktop.org>");
@@ -273,6 +273,11 @@ gst_sub_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         goto beach;
       }
 
+      /* Forward seek event first and return if succeeded */
+      ret = gst_pad_event_default (pad, parent, g_steal_pointer (&event));
+      if (ret)
+        break;
+
       /* Convert that seek to a seeking in bytes at position 0,
          FIXME: could use an index */
       ret = gst_pad_push_event (self->sinkpad,
@@ -294,7 +299,6 @@ gst_sub_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_WARNING_OBJECT (self, "seek to 0 bytes failed");
       }
 
-      gst_event_unref (event);
       break;
     }
     default:
@@ -776,7 +780,7 @@ subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
     }
 
     if (*next_tag == '<' && *(next_tag + 1) == '/') {
-      end_tag = strchr (cur, '>');
+      end_tag = strchr (next_tag, '>');
       if (end_tag) {
         const gchar *last = NULL;
         if (num_open_tags > 0)
@@ -791,6 +795,8 @@ subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
         } else {
           --num_open_tags;
           g_ptr_array_remove_index (open_tags, num_open_tags);
+          cur = end_tag + 1;
+          continue;
         }
       }
     }

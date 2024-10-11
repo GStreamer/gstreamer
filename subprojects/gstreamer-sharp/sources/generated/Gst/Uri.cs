@@ -68,6 +68,10 @@ namespace Gst {
 			return ret;
 		}
 
+		public bool AppendPath() {
+			return AppendPath (null);
+		}
+
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_append_path_segment(IntPtr raw, IntPtr path_segment);
 
@@ -81,6 +85,10 @@ namespace Gst {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 			GLib.Marshaller.Free (native_path_segment);
 			return ret;
+		}
+
+		public bool AppendPathSegment() {
+			return AppendPathSegment (null);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -246,6 +254,23 @@ namespace Gst {
 				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 				return ret;
 			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_uri_get_query_string_ordered(IntPtr raw, IntPtr keys);
+
+		public string GetQueryStringOrdered(GLib.List keys) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr raw_ret = gst_uri_get_query_string_ordered(this_as_native, keys == null ? IntPtr.Zero : keys.Handle);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		public string GetQueryStringOrdered() {
+			return GetQueryStringOrdered (null);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -428,6 +453,19 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_uri_ref(IntPtr raw);
+
+		public Gst.Uri Ref() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr raw_ret = gst_uri_ref(this_as_native);
+			Gst.Uri ret = Gst.Uri.New (raw_ret);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_remove_query_key(IntPtr raw, IntPtr query_key);
 
 		public bool RemoveQueryKey(string query_key) {
@@ -491,6 +529,10 @@ namespace Gst {
 			return ret;
 		}
 
+		public bool SetPath() {
+			return SetPath (null);
+		}
+
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_uri_set_path_segments(IntPtr raw, IntPtr path_segments);
 
@@ -549,6 +591,10 @@ namespace Gst {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 			GLib.Marshaller.Free (native_query);
 			return ret;
+		}
+
+		public bool SetQueryString() {
+			return SetQueryString (null);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -630,6 +676,34 @@ namespace Gst {
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_uri_to_string_with_keys(IntPtr raw, IntPtr keys);
+
+		public string ToStringWithKeys(GLib.List keys) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr raw_ret = gst_uri_to_string_with_keys(this_as_native, keys == null ? IntPtr.Zero : keys.Handle);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		public string ToStringWithKeys() {
+			return ToStringWithKeys (null);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_uri_unref(IntPtr raw);
+
+		public void Unref() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			gst_uri_unref(this_as_native);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

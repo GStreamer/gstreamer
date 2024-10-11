@@ -151,13 +151,16 @@ enum
 #define DEFAULT_RTX_MAX_RETRIES    -1
 #define DEFAULT_RTX_DEADLINE       -1
 #define DEFAULT_RTX_STATS_TIMEOUT   1000
-#define DEFAULT_MAX_RTCP_RTP_TIME_DIFF 1000
+#define DEFAULT_MAX_RTCP_RTP_TIME_DIFF -1
 #define DEFAULT_MAX_DROPOUT_TIME    60000
 #define DEFAULT_MAX_MISORDER_TIME   2000
 #define DEFAULT_RFC7273_SYNC        FALSE
 #define DEFAULT_ADD_REFERENCE_TIMESTAMP_META FALSE
 #define DEFAULT_FASTSTART_MIN_PACKETS 0
 #define DEFAULT_SYNC_INTERVAL 0
+#define DEFAULT_RFC7273_USE_SYSTEM_CLOCK FALSE
+#define DEFAULT_RFC7273_REFERENCE_TIMESTAMP_META_ONLY FALSE
+#define DEFAULT_MIN_SYNC_INTERVAL 15000
 
 #define DEFAULT_AUTO_RTX_DELAY (20 * GST_MSECOND)
 #define DEFAULT_AUTO_RTX_TIMEOUT (40 * GST_MSECOND)
@@ -193,6 +196,9 @@ enum
   PROP_ADD_REFERENCE_TIMESTAMP_META,
   PROP_FASTSTART_MIN_PACKETS,
   PROP_SYNC_INTERVAL,
+  PROP_RFC7273_USE_SYSTEM_CLOCK,
+  PROP_RFC7273_REFERENCE_TIMESTAMP_META_ONLY,
+  PROP_MIN_SYNC_INTERVAL,
 };
 
 #define JBUF_LOCK(priv)   G_STMT_START {			\
@@ -337,6 +343,9 @@ struct _GstRtpJitterBufferPrivate
   guint faststart_min_packets;
   gboolean add_reference_timestamp_meta;
   guint sync_interval;
+  gboolean rfc7273_use_system_clock;
+  gboolean rfc7273_reference_timestamp_meta_only;
+  guint min_sync_interval;
 
   /* Reference for GstReferenceTimestampMeta */
   GstCaps *reference_timestamp_caps;
@@ -403,13 +412,30 @@ struct _GstRtpJitterBufferPrivate
   /* the latency of the upstream peer, we have to take this into account when
    * synchronizing the buffers. */
   GstClockTime peer_latency;
-  guint64 last_sr_ext_rtptime;
+
+  /* Last RTCP SR */
   GstBuffer *last_sr;
   guint32 last_sr_ssrc;
   GstClockTime last_sr_ntpnstime;
+  guint64 last_sr_ext_rtptime;
+  gboolean have_new_sr;
 
+  /* Last inband NTP time */
+  GstClockTime last_inband_ntpnstime;
+  guint64 last_inband_ext_rtptime;
+  gboolean have_new_inband;
+
+  /* Latest known NTP/RTP time mapping from either RTCP SR or inband */
   GstClockTime last_known_ntpnstime;
   guint64 last_known_ext_rtptime;
+
+  /* If RTP-Info sync is pending */
+  gboolean rtp_info_sync_pending;
+
+  /* Last time the sync signal was emitted based on the monotonic system clock */
+  gint64 last_sync_time;
+  /* If we ever synced NTP times */
+  gboolean have_synced_ntp;
 
   /* some accounting */
   guint64 num_pushed;
@@ -427,7 +453,6 @@ struct _GstRtpJitterBufferPrivate
   GstClockTime last_dts;
   GstClockTime last_pts;
   guint64 last_rtptime;
-  GstClockTime last_ntpnstime;
   GstClockTime avg_jitter;
 
   /* for dropped packet messages */
@@ -573,9 +598,11 @@ gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer);
 static GstClockTime
 gst_rtp_jitter_buffer_set_active (GstRtpJitterBuffer * jitterbuffer,
     gboolean active, guint64 base_time);
-static void do_handle_sync (GstRtpJitterBuffer * jitterbuffer);
+static void do_handle_sync (GstRtpJitterBuffer * jitterbuffer, gint64 now);
 static void do_handle_sync_inband (GstRtpJitterBuffer * jitterbuffer,
-    guint64 ntpnstime);
+    gint64 now);
+static void do_handle_sync_rtp_info (GstRtpJitterBuffer * jitterbuffer,
+    gint64 now);
 
 static void unschedule_current_timer (GstRtpJitterBuffer * jitterbuffer);
 
@@ -998,6 +1025,72 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRtpJitterBuffer:rfc7273-use-system-clock:
+   *
+   * Uses the system clock as media clock in RFC7273 mode instead of
+   * instantiating an NTP or PTP clock.
+   *
+   * This will always provide the correct sender timestamps in the
+   * `GstReferenceTimestampMeta` as long as the system clock is synced to the
+   * actual media clock with at most a few seconds difference.
+   *
+   * PTS on outgoing buffers would be as accurate as the synchronization
+   * between the actual media clock and the system clock.
+   *
+   * This can be useful if only recovery of the original sender timestamps is
+   * needed and syncing to a PTP/NTP clock would be unnecessarily complex, or
+   * if the system clock already is synchronized to the correct clock and
+   * doing it another time inside GStreamer would be unnecessary.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_RFC7273_USE_SYSTEM_CLOCK,
+      g_param_spec_boolean ("rfc7273-use-system-clock",
+          "Use system clock as RFC7273 clock",
+          "Use system clock as RFC7273 media clock (requires system clock "
+          "to be synced externally)", DEFAULT_RFC7273_USE_SYSTEM_CLOCK,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtpJitterBuffer:rfc7273-reference-timestamp-meta-only:
+   *
+   * When enabled, the jitterbuffer calculates the PTS of the outgoing buffers
+   * according to the configured mode as if not RFC7273 mode is enabled.
+   *
+   * The timestamps calculated from the RFC7273 clock are only put into the
+   * reference timestamp meta, if enabled via the corresponding property.
+   *
+   * This is useful in combination with the `rfc7273-use-system-clock`, or
+   * generally if synchronization should not be affected by the original
+   * sender timestamps but the original sender timestamps should nonetheless
+   * be available as metadata.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_RFC7273_REFERENCE_TIMESTAMP_META_ONLY,
+      g_param_spec_boolean ("rfc7273-reference-timestamp-meta-only",
+          "Use RFC7273 clock only for reference timestamp meta",
+          "When enabled the PTS on the buffers are calculated normally and the "
+          "RFC7273 clock is only used for the reference timestamp meta",
+          DEFAULT_RFC7273_REFERENCE_TIMESTAMP_META_ONLY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtpJitterBuffer:min-sync-interval:
+   *
+   * Determines how often to sync streams using RTCP data or inband NTP-64
+   * header extensions, even if no new RTCP SR information is available.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_SYNC_INTERVAL,
+      g_param_spec_uint ("min-sync-interval", "Minimum Sync Interval",
+          "Minimum RTCP SR / NTP-64 interval synchronization (ms)",
+          0, G_MAXUINT, DEFAULT_MIN_SYNC_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRtpJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
    * @pt: the pt
@@ -1128,14 +1221,15 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->faststart_min_packets = DEFAULT_FASTSTART_MIN_PACKETS;
   priv->add_reference_timestamp_meta = DEFAULT_ADD_REFERENCE_TIMESTAMP_META;
   priv->sync_interval = DEFAULT_SYNC_INTERVAL;
+  priv->rfc7273_use_system_clock = DEFAULT_RFC7273_USE_SYSTEM_CLOCK;
+  priv->rfc7273_reference_timestamp_meta_only =
+      DEFAULT_RFC7273_REFERENCE_TIMESTAMP_META_ONLY;
+  priv->min_sync_interval = DEFAULT_MIN_SYNC_INTERVAL;
 
   priv->ts_offset_remainder = 0;
   priv->last_dts = -1;
   priv->last_pts = -1;
   priv->last_rtptime = -1;
-  priv->last_ntpnstime = -1;
-  priv->last_known_ext_rtptime = -1;
-  priv->last_known_ntpnstime = -1;
   priv->avg_jitter = 0;
   priv->last_drop_msg_timestamp = GST_CLOCK_TIME_NONE;
   priv->num_too_late = 0;
@@ -1157,6 +1251,14 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   rtp_jitter_buffer_set_delay (priv->jbuf, priv->latency_ns);
   rtp_jitter_buffer_set_buffering (priv->jbuf, FALSE);
   priv->active = TRUE;
+
+  priv->last_sr_ext_rtptime = -1;
+  priv->last_sr_ntpnstime = -1;
+  priv->last_inband_ext_rtptime = -1;
+  priv->last_inband_ntpnstime = -1;
+  priv->last_known_ext_rtptime = -1;
+  priv->last_known_ntpnstime = -1;
+  priv->last_sync_time = -1;
 
   priv->srcpad =
       gst_pad_new_from_static_template (&gst_rtp_jitter_buffer_src_template,
@@ -1399,6 +1501,7 @@ gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer)
   /* do not clear current content, but refresh state for new arrival */
   GST_DEBUG_OBJECT (jitterbuffer, "reset jitterbuffer");
   rtp_jitter_buffer_reset_skew (priv->jbuf);
+  priv->last_sync_time = -1;
   JBUF_UNLOCK (priv);
 }
 
@@ -1549,14 +1652,15 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
 
   gst_rtp_packet_rate_ctx_reset (&priv->packet_rate_ctx, priv->clock_rate);
 
-  /* The clock base is the RTP timestamp corrsponding to the npt-start value. We
+  /* The clock base is the RTP timestamp corresponding to the npt-start value. We
    * can use this to track the amount of time elapsed on the sender. */
-  if (gst_structure_get_uint (caps_struct, "clock-base", &val))
-    priv->clock_base = val;
-  else
+  priv->ext_timestamp = -1;
+  if (gst_structure_get_uint (caps_struct, "clock-base", &val)) {
+    priv->clock_base = gst_rtp_buffer_ext_timestamp (&priv->ext_timestamp, val);
+    priv->ext_timestamp = priv->clock_base;
+  } else {
     priv->clock_base = -1;
-
-  priv->ext_timestamp = priv->clock_base;
+  }
 
   GST_DEBUG_OBJECT (jitterbuffer, "got clock-base %" G_GINT64_FORMAT,
       priv->clock_base);
@@ -1588,17 +1692,24 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
     priv->npt_stop = tval;
   else
     priv->npt_stop = -1;
+  priv->rtp_info_sync_pending = TRUE;
 
   GST_DEBUG_OBJECT (jitterbuffer,
       "npt start/stop: %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
       GST_TIME_ARGS (priv->npt_start), GST_TIME_ARGS (priv->npt_stop));
 
   if ((ts_refclk = gst_structure_get_string (caps_struct, "a-ts-refclk"))) {
+    gboolean use_system_clock;
+    gboolean reference_timestamp_meta_only;
     GstClock *clock = NULL;
     guint64 clock_offset = -1;
+    gint64 clock_correction = 0;
 
     GST_DEBUG_OBJECT (jitterbuffer, "Have timestamp reference clock %s",
         ts_refclk);
+
+    use_system_clock = priv->rfc7273_use_system_clock;
+    reference_timestamp_meta_only = priv->rfc7273_reference_timestamp_meta_only;
 
     if (g_str_has_prefix (ts_refclk, "ntp=")) {
       if (g_str_has_prefix (ts_refclk, "ntp=/traceable/")) {
@@ -1629,7 +1740,15 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
         else
           hostname = g_strdup (host);
 
-        clock = gst_ntp_clock_new (NULL, hostname, port, 0);
+        if (use_system_clock) {
+          clock =
+              g_object_new (GST_TYPE_SYSTEM_CLOCK, "clock-type",
+              GST_CLOCK_TYPE_REALTIME, NULL);
+          /* difference between UNIX epoch and NTP epoch */
+          clock_correction = GST_RTP_NTP_UNIX_OFFSET * GST_SECOND;
+        } else {
+          clock = gst_ntp_clock_new (NULL, hostname, port, 0);
+        }
 
         ts_meta_ref = gst_caps_new_simple ("timestamp/x-ntp",
             "host", G_TYPE_STRING, hostname, "port", G_TYPE_INT, port, NULL);
@@ -1644,7 +1763,15 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
       if (domainstr[0] != ':' || sscanf (domainstr, ":%u", &domain) != 1)
         domain = 0;
 
-      clock = gst_ptp_clock_new (NULL, domain);
+      if (use_system_clock) {
+        clock =
+            g_object_new (GST_TYPE_SYSTEM_CLOCK, "clock-type",
+            GST_CLOCK_TYPE_REALTIME, NULL);
+        /* difference between UNIX and PTP/TAI (37 leap seconds as of October 2023) */
+        clock_correction = 37 * GST_SECOND;
+      } else {
+        clock = gst_ptp_clock_new (NULL, domain);
+      }
 
       ts_meta_ref = gst_caps_new_simple ("timestamp/x-ptp",
           "version", G_TYPE_STRING, "IEEE1588-2008",
@@ -1652,7 +1779,14 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
     } else if (!g_strcmp0 (ts_refclk, "local")) {
       ts_meta_ref = gst_caps_new_empty_simple ("timestamp/x-ntp");
     } else {
-      GST_FIXME_OBJECT (jitterbuffer, "Unsupported timestamp reference clock");
+      if (use_system_clock) {
+        clock =
+            g_object_new (GST_TYPE_SYSTEM_CLOCK, "clock-type",
+            GST_CLOCK_TYPE_REALTIME, NULL);
+      } else {
+        GST_FIXME_OBJECT (jitterbuffer,
+            "Unsupported timestamp reference clock");
+      }
     }
 
     if ((mediaclk = gst_structure_get_string (caps_struct, "a-mediaclk"))) {
@@ -1668,9 +1802,10 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
       }
     }
 
-    rtp_jitter_buffer_set_media_clock (priv->jbuf, clock, clock_offset);
+    rtp_jitter_buffer_set_media_clock (priv->jbuf, clock, clock_offset,
+        clock_correction, reference_timestamp_meta_only);
   } else {
-    rtp_jitter_buffer_set_media_clock (priv->jbuf, NULL, -1);
+    rtp_jitter_buffer_set_media_clock (priv->jbuf, NULL, -1, 0, FALSE);
     ts_meta_ref = gst_caps_new_empty_simple ("timestamp/x-ntp");
   }
 
@@ -1746,9 +1881,17 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->avg_jitter = 0;
   priv->last_dts = -1;
   priv->last_rtptime = -1;
-  priv->last_ntpnstime = -1;
+  priv->last_sr_ext_rtptime = -1;
+  priv->last_sr_ntpnstime = -1;
+  priv->last_inband_ext_rtptime = -1;
+  priv->last_inband_ntpnstime = -1;
   priv->last_known_ext_rtptime = -1;
   priv->last_known_ntpnstime = -1;
+  priv->last_sync_time = -1;
+  priv->have_synced_ntp = FALSE;
+  priv->have_new_inband = FALSE;
+  priv->have_new_sr = FALSE;
+  priv->rtp_info_sync_pending = TRUE;
   priv->last_in_pts = 0;
   priv->equidistant = 0;
   priv->segment_seqnum = GST_SEQNUM_INVALID;
@@ -1762,6 +1905,7 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   rtp_jitter_buffer_flush (priv->jbuf, NULL, NULL);
   rtp_jitter_buffer_disable_buffering (priv->jbuf, FALSE);
   rtp_jitter_buffer_reset_skew (priv->jbuf);
+  priv->last_sync_time = -1;
   rtp_timer_queue_remove_all (priv->timers);
   g_queue_foreach (&priv->gap_packets, (GFunc) gst_buffer_unref, NULL);
   g_queue_clear (&priv->gap_packets);
@@ -1830,6 +1974,10 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
       g_list_free_full (priv->cname_ssrc_mappings,
           (GDestroyNotify) cname_ssrc_mapping_free);
       priv->cname_ssrc_mappings = NULL;
+      priv->have_new_sr = FALSE;
+      priv->have_new_inband = FALSE;
+      priv->rtp_info_sync_pending = FALSE;
+      priv->have_synced_ntp = FALSE;
       /* block until we go to PLAYING */
       priv->blocked = TRUE;
       priv->timer_running = TRUE;
@@ -2669,7 +2817,7 @@ gst_rtp_jitter_buffer_handle_missing_packets (GstRtpJitterBuffer * jitterbuffer,
 
       /* based on the estimated packet duration, we
          can figure out how many packets we could possibly save */
-      if (est_pkt_duration)
+      if (est_pkt_duration && offset > 0)
         max_saveable_packets = offset / est_pkt_duration;
 
       /* and say that the amount of lost packet is the sequence-number
@@ -2981,6 +3129,7 @@ gst_rtp_jitter_buffer_reset (GstRtpJitterBuffer * jitterbuffer,
   rtp_timer_queue_remove_all (priv->timers);
   priv->discont = TRUE;
   priv->last_popped_seqnum = -1;
+  priv->last_sync_time = -1;
 
   if (priv->gap_packets.head) {
     GstBuffer *gap_buffer = priv->gap_packets.head->data;
@@ -3398,8 +3547,18 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     ext_rtptime = priv->jbuf->ext_rtptime;
     ext_rtptime = gst_rtp_buffer_ext_timestamp (&ext_rtptime, rtptime);
 
-    priv->last_known_ext_rtptime = ext_rtptime;
-    priv->last_known_ntpnstime = inband_ntp_time;
+    if (priv->last_inband_ntpnstime == GST_CLOCK_TIME_NONE ||
+        priv->last_inband_ntpnstime < inband_ntp_time) {
+      priv->last_inband_ntpnstime = inband_ntp_time;
+      priv->last_inband_ext_rtptime = ext_rtptime;
+      priv->have_new_inband = TRUE;
+    }
+
+    if (priv->last_known_ntpnstime == GST_CLOCK_TIME_NONE
+        || priv->last_known_ntpnstime < inband_ntp_time) {
+      priv->last_known_ext_rtptime = ext_rtptime;
+      priv->last_known_ntpnstime = inband_ntp_time;
+    }
   }
 
   if (is_rtx) {
@@ -3550,12 +3709,13 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     update_rtx_timers (jitterbuffer, seqnum, dts, pts, do_next_seqnum, is_rtx,
         g_steal_pointer (&timer));
 
-  /* we had an unhandled SR, handle it now */
-  if (priv->last_sr)
-    do_handle_sync (jitterbuffer);
+  /* do sync if necessary: prefer inband, otherwise RTCP SR, otherwise
+   * RTP-Info */
+  gint64 now_monotonic = g_get_monotonic_time ();
 
-  if (inband_ntp_time != GST_CLOCK_TIME_NONE)
-    do_handle_sync_inband (jitterbuffer, inband_ntp_time);
+  do_handle_sync_inband (jitterbuffer, now_monotonic);
+  do_handle_sync (jitterbuffer, now_monotonic);
+  do_handle_sync_rtp_info (jitterbuffer, now_monotonic);
 
   if (G_UNLIKELY (head)) {
     /* signal addition of new buffer when the _loop is waiting. */
@@ -4543,21 +4703,90 @@ pause:
 }
 
 static void
-do_handle_sync_inband (GstRtpJitterBuffer * jitterbuffer, guint64 ntpnstime)
+do_handle_sync_rtp_info (GstRtpJitterBuffer * jitterbuffer, gint64 now)
 {
-  GstRtpJitterBufferPrivate *priv;
-  GstStructure *s;
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   guint64 base_rtptime, base_time;
   guint32 clock_rate;
-  guint64 last_rtptime;
-  const gchar *cname = NULL;
-  GList *l;
+  /* clock-base is the RTP timestamp at npt-start */
+  const guint64 clock_base = priv->clock_base;
+  const guint64 npt_start = priv->npt_start;
 
-  priv = jitterbuffer->priv;
+  /* no RTSP information in the caps  */
+  if (priv->clock_base == -1 || priv->npt_start == -1)
+    return;
+
+  /* don't sync again if not required yet */
+  if (!priv->rtp_info_sync_pending && priv->last_sync_time != -1 &&
+      now - priv->last_sync_time < MAX (priv->sync_interval,
+          priv->min_sync_interval) * 1000)
+    return;
 
   /* get the last values from the jitterbuffer */
   rtp_jitter_buffer_get_sync (priv->jbuf, &base_rtptime, &base_time,
-      &clock_rate, &last_rtptime);
+      &clock_rate, NULL);
+
+  GST_DEBUG_OBJECT (jitterbuffer,
+      "NPT start %" GST_TIME_FORMAT ", clock-base %" G_GUINT64_FORMAT ", base %"
+      GST_TIME_FORMAT ", base RTP time %" G_GUINT64_FORMAT ", clock-rate %"
+      G_GUINT32_FORMAT, GST_TIME_ARGS (npt_start), clock_base,
+      GST_TIME_ARGS (base_time), base_rtptime, clock_rate);
+
+  if (base_rtptime == -1 || clock_rate == -1 || base_time == -1) {
+    GST_ERROR_OBJECT (jitterbuffer,
+        "No base RTP time, clock rate or base time");
+    return;
+  }
+
+  priv->last_sync_time = now;
+  priv->rtp_info_sync_pending = FALSE;
+
+  GstStructure *s;
+  GList *l;
+
+  s = gst_structure_new ("application/x-rtp-sync",
+      "base-rtptime", G_TYPE_UINT64, base_rtptime,
+      "base-time", G_TYPE_UINT64, base_time,
+      "clock-rate", G_TYPE_UINT, clock_rate,
+      "clock-base", G_TYPE_UINT64, clock_base & G_MAXUINT32,
+      "npt-start", G_TYPE_UINT64, npt_start,
+      "ssrc", G_TYPE_UINT, priv->last_ssrc, NULL);
+
+  for (l = priv->cname_ssrc_mappings; l; l = l->next) {
+    const CNameSSRCMapping *map = l->data;
+
+    if (map->ssrc == priv->last_ssrc) {
+      gst_structure_set (s, "cname", G_TYPE_STRING, map->cname, NULL);
+      break;
+    }
+  }
+
+  GST_DEBUG_OBJECT (jitterbuffer, "signaling sync");
+  JBUF_UNLOCK (priv);
+  g_signal_emit (jitterbuffer,
+      gst_rtp_jitter_buffer_signals[SIGNAL_HANDLE_SYNC], 0, s);
+  JBUF_LOCK (priv);
+  gst_structure_free (s);
+}
+
+static void
+do_handle_sync_inband (GstRtpJitterBuffer * jitterbuffer, gint64 now)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  GstStructure *s;
+  guint64 base_rtptime, base_time;
+  guint32 clock_rate;
+  const GstClockTime ntpnstime = priv->last_inband_ntpnstime;
+  const guint64 ext_rtptime = priv->last_inband_ext_rtptime;
+  const guint64 clock_base = priv->clock_base;
+  const guint64 npt_start = priv->npt_start;
+  gboolean have_new_inband;
+  const gchar *cname = NULL;
+  GList *l;
+
+  /* Have no inband NTP time */
+  if (ntpnstime == -1)
+    return;
 
   for (l = priv->cname_ssrc_mappings; l; l = l->next) {
     const CNameSSRCMapping *map = l->data;
@@ -4568,37 +4797,63 @@ do_handle_sync_inband (GstRtpJitterBuffer * jitterbuffer, guint64 ntpnstime)
     }
   }
 
-  GST_DEBUG_OBJECT (jitterbuffer,
-      "inband NTP-64 %" GST_TIME_FORMAT " rtptime %" G_GUINT64_FORMAT ", base %"
-      G_GUINT64_FORMAT ", clock-rate %" G_GUINT32_FORMAT ", clock-base %"
-      G_GUINT64_FORMAT ", CNAME %s", GST_TIME_ARGS (ntpnstime), last_rtptime,
-      base_rtptime, clock_rate, priv->clock_base, GST_STR_NULL (cname));
-
   /* no CNAME known yet for this ssrc */
   if (cname == NULL) {
     GST_DEBUG_OBJECT (jitterbuffer, "no CNAME for this packet known yet");
     return;
   }
 
-  if (priv->last_ntpnstime != GST_CLOCK_TIME_NONE
-      && ntpnstime - priv->last_ntpnstime < priv->sync_interval * GST_MSECOND) {
-    GST_DEBUG_OBJECT (jitterbuffer,
-        "discarding RTCP sender packet for sync; "
-        "previous sender info too recent " "(previous NTP %" G_GUINT64_FORMAT
-        ")", priv->last_ntpnstime);
+  have_new_inband = priv->have_new_inband;
+  priv->have_new_inband = FALSE;
+
+  /* don't sync again if not required yet */
+  if (!have_new_inband && priv->last_sync_time != -1 &&
+      now - priv->last_sync_time < MAX (priv->sync_interval,
+          priv->min_sync_interval) * 1000)
+    return;
+
+  /* don't sync based on the inband NTP time if a newer NTP time is known from
+   * the latest RTCP SR */
+  if (ntpnstime < priv->last_known_ntpnstime)
+    return;
+
+  /* get the last values from the jitterbuffer */
+  rtp_jitter_buffer_get_sync (priv->jbuf, &base_rtptime, &base_time,
+      &clock_rate, NULL);
+
+  GST_DEBUG_OBJECT (jitterbuffer,
+      "inband NTP-64 %" GST_TIME_FORMAT " rtptime %" G_GUINT64_FORMAT ", base %"
+      G_GUINT64_FORMAT ", clock-rate %" G_GUINT32_FORMAT ", clock-base %"
+      G_GUINT64_FORMAT ", CNAME %s", GST_TIME_ARGS (ntpnstime), ext_rtptime,
+      base_rtptime, clock_rate, priv->clock_base, GST_STR_NULL (cname));
+
+  if (priv->have_synced_ntp && priv->last_sync_time != -1
+      && now - priv->last_sync_time < priv->sync_interval * 1000) {
+    GST_TRACE_OBJECT (jitterbuffer,
+        "discarding inband NTP time for sync; "
+        "previous NTP info too recent " "(previous NTP %" G_GUINT64_FORMAT
+        ", inband NTP %" G_GUINT64_FORMAT ", synced %" G_GUINT64_FORMAT
+        "ms ago)", priv->last_known_ntpnstime, ntpnstime,
+        (now - priv->last_sync_time) / 1000);
     return;
   }
-  priv->last_ntpnstime = ntpnstime;
+  priv->last_sync_time = now;
+  priv->have_synced_ntp = TRUE;
 
   s = gst_structure_new ("application/x-rtp-sync",
       "base-rtptime", G_TYPE_UINT64, base_rtptime,
       "base-time", G_TYPE_UINT64, base_time,
       "clock-rate", G_TYPE_UINT, clock_rate,
-      "clock-base", G_TYPE_UINT64, priv->clock_base,
+      "clock-base", G_TYPE_UINT64, clock_base & G_MAXUINT32,
+      "npt-start", G_TYPE_UINT64, npt_start,
       "cname", G_TYPE_STRING, cname,
       "ssrc", G_TYPE_UINT, priv->last_ssrc,
-      "inband-ext-rtptime", G_TYPE_UINT64, last_rtptime,
+      "inband-ext-rtptime", G_TYPE_UINT64, ext_rtptime,
       "inband-ntpnstime", G_TYPE_UINT64, ntpnstime, NULL);
+
+  /* Same information is provided here already and doesn't have to be provided
+   * separately again */
+  priv->rtp_info_sync_pending = FALSE;
 
   GST_DEBUG_OBJECT (jitterbuffer, "signaling sync");
   JBUF_UNLOCK (priv);
@@ -4612,102 +4867,128 @@ do_handle_sync_inband (GstRtpJitterBuffer * jitterbuffer, guint64 ntpnstime)
  * some sanity checks and then emit the handle-sync signal with the parameters.
  * This function must be called with the LOCK */
 static void
-do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
+do_handle_sync (GstRtpJitterBuffer * jitterbuffer, gint64 now)
 {
-  GstRtpJitterBufferPrivate *priv;
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   guint64 base_rtptime, base_time;
   guint32 clock_rate;
   guint64 last_rtptime;
-  guint64 clock_base;
-  guint64 ext_rtptime, diff;
-  gboolean valid = TRUE, keep = FALSE;
+  const guint64 clock_base = priv->clock_base;
+  const GstClockTime npt_start = priv->npt_start;
+  const GstClockTime ntpnstime = priv->last_sr_ntpnstime;
+  guint64 ext_rtptime = priv->last_sr_ext_rtptime;
+  guint64 diff;
+  gboolean have_new_sr;
 
-  priv = jitterbuffer->priv;
+  /* If we had no RTCP SR yet, just return here */
+  if (!priv->last_sr)
+    return;
 
   /* get the last values from the jitterbuffer */
   rtp_jitter_buffer_get_sync (priv->jbuf, &base_rtptime, &base_time,
       &clock_rate, &last_rtptime);
 
-  clock_base = priv->clock_base;
-  ext_rtptime = priv->last_sr_ext_rtptime;
-
   GST_DEBUG_OBJECT (jitterbuffer,
       "ext SR %" G_GUINT64_FORMAT ", NTP %" G_GUINT64_FORMAT ", base %"
       G_GUINT64_FORMAT ", clock-rate %" G_GUINT32_FORMAT ", clock-base %"
       G_GUINT64_FORMAT ", last-rtptime %" G_GUINT64_FORMAT, ext_rtptime,
-      priv->last_sr_ntpnstime, base_rtptime, clock_rate, clock_base,
-      last_rtptime);
+      ntpnstime, base_rtptime, clock_rate, clock_base, last_rtptime);
 
   if (base_rtptime == -1 || clock_rate == -1 || base_time == -1) {
     /* we keep this SR packet for later. When we get a valid RTP packet the
      * above values will be set and we can try to use the SR packet */
     GST_DEBUG_OBJECT (jitterbuffer, "keeping for later, no RTP values");
-    keep = TRUE;
-  } else {
-    /* we can't accept anything that happened before we did the last resync */
-    if (base_rtptime > ext_rtptime) {
-      GST_DEBUG_OBJECT (jitterbuffer, "dropping, older than base time");
-      valid = FALSE;
-    } else {
-      /* the SR RTP timestamp must be something close to what we last observed
-       * in the jitterbuffer */
-      if (ext_rtptime > last_rtptime) {
-        /* check how far ahead it is to our RTP timestamps */
-        diff = ext_rtptime - last_rtptime;
-        /* if bigger than 1 second, we drop it */
-        if (jitterbuffer->priv->max_rtcp_rtp_time_diff != -1 &&
-            diff >
-            gst_util_uint64_scale (jitterbuffer->priv->max_rtcp_rtp_time_diff,
-                clock_rate, 1000)) {
-          GST_DEBUG_OBJECT (jitterbuffer, "too far ahead");
-          /* should drop this, but some RTSP servers end up with bogus
-           * way too ahead RTCP packet when repeated PAUSE/PLAY,
-           * so still trigger rptbin sync but invalidate RTCP data
-           * (sync might use other methods) */
-          ext_rtptime = -1;
-        }
-        GST_DEBUG_OBJECT (jitterbuffer, "ext last %" G_GUINT64_FORMAT ", diff %"
-            G_GUINT64_FORMAT, last_rtptime, diff);
-      }
+    return;
+  }
+
+  /* we can't accept anything that happened before we did the last resync */
+  if (base_rtptime > ext_rtptime) {
+    GST_DEBUG_OBJECT (jitterbuffer, "dropping, older than base time");
+    gst_buffer_replace (&priv->last_sr, NULL);
+    return;
+  }
+
+  have_new_sr = priv->have_new_sr;
+  priv->have_new_sr = FALSE;
+
+  /* don't sync again if not required yet */
+  if (!have_new_sr && priv->last_sync_time != -1 &&
+      now - priv->last_sync_time < MAX (priv->sync_interval,
+          priv->min_sync_interval) * 1000)
+    return;
+
+  /* don't sync based on the RTCP SR NTP time if a newer NTP time is known from
+   * inband RTP header extension */
+  if (ntpnstime < priv->last_known_ntpnstime)
+    return;
+
+  if (priv->have_synced_ntp && priv->last_sync_time != -1
+      && now - priv->last_sync_time < priv->sync_interval * 1000) {
+    GST_TRACE_OBJECT (jitterbuffer, "discarding RTCP SR packet for sync; "
+        "previous NTP info too recent "
+        "(previous NTP %" G_GUINT64_FORMAT ", SR NTP %" G_GUINT64_FORMAT
+        ", synced %" G_GUINT64_FORMAT "ms ago)", priv->last_known_ntpnstime,
+        ntpnstime, (now - priv->last_sync_time) / 1000);
+    return;
+  }
+
+  /* the SR RTP timestamp must be something close to what we last observed
+   * in the jitterbuffer */
+  if (ext_rtptime > last_rtptime) {
+    /* check how far ahead it is to our RTP timestamps */
+    diff = ext_rtptime - last_rtptime;
+    /* if bigger than configured maximum difference then we drop it */
+    if (jitterbuffer->priv->max_rtcp_rtp_time_diff != -1 &&
+        diff >
+        gst_util_uint64_scale (jitterbuffer->priv->max_rtcp_rtp_time_diff,
+            clock_rate, 1000)) {
+      GST_DEBUG_OBJECT (jitterbuffer, "too far ahead");
+      /* should drop this, but some RTSP servers end up with bogus
+       * way too ahead RTCP packet when repeated PAUSE/PLAY,
+       * so still trigger rtpbin sync but invalidate RTCP data
+       * (sync might use other methods) */
+      ext_rtptime = -1;
+    }
+    GST_DEBUG_OBJECT (jitterbuffer, "ext last %" G_GUINT64_FORMAT ", diff %"
+        G_GUINT64_FORMAT, last_rtptime, diff);
+  }
+
+  priv->last_sync_time = now;
+  priv->have_synced_ntp = TRUE;
+
+  GstStructure *s;
+  GList *l;
+
+  s = gst_structure_new ("application/x-rtp-sync",
+      "base-rtptime", G_TYPE_UINT64, base_rtptime,
+      "base-time", G_TYPE_UINT64, base_time,
+      "clock-rate", G_TYPE_UINT, clock_rate,
+      "clock-base", G_TYPE_UINT64, clock_base & G_MAXUINT32,
+      "npt-start", G_TYPE_UINT64, npt_start,
+      "ssrc", G_TYPE_UINT, priv->last_sr_ssrc,
+      "sr-ext-rtptime", G_TYPE_UINT64, ext_rtptime,
+      "sr-ntpnstime", G_TYPE_UINT64, priv->last_sr_ntpnstime,
+      "sr-buffer", GST_TYPE_BUFFER, priv->last_sr, NULL);
+
+  for (l = priv->cname_ssrc_mappings; l; l = l->next) {
+    const CNameSSRCMapping *map = l->data;
+
+    if (map->ssrc == priv->last_ssrc) {
+      gst_structure_set (s, "cname", G_TYPE_STRING, map->cname, NULL);
+      break;
     }
   }
 
-  if (keep) {
-    GST_DEBUG_OBJECT (jitterbuffer, "keeping RTCP packet for later");
-  } else if (valid) {
-    GstStructure *s;
-    GList *l;
+  /* Same information is provided here already and doesn't have to be provided
+   * separately again */
+  priv->rtp_info_sync_pending = FALSE;
 
-    s = gst_structure_new ("application/x-rtp-sync",
-        "base-rtptime", G_TYPE_UINT64, base_rtptime,
-        "base-time", G_TYPE_UINT64, base_time,
-        "clock-rate", G_TYPE_UINT, clock_rate,
-        "clock-base", G_TYPE_UINT64, clock_base,
-        "ssrc", G_TYPE_UINT, priv->last_sr_ssrc,
-        "sr-ext-rtptime", G_TYPE_UINT64, ext_rtptime,
-        "sr-ntpnstime", G_TYPE_UINT64, priv->last_sr_ntpnstime,
-        "sr-buffer", GST_TYPE_BUFFER, priv->last_sr, NULL);
-
-    for (l = priv->cname_ssrc_mappings; l; l = l->next) {
-      const CNameSSRCMapping *map = l->data;
-
-      if (map->ssrc == priv->last_ssrc) {
-        gst_structure_set (s, "cname", G_TYPE_STRING, map->cname, NULL);
-        break;
-      }
-    }
-
-    GST_DEBUG_OBJECT (jitterbuffer, "signaling sync");
-    gst_buffer_replace (&priv->last_sr, NULL);
-    JBUF_UNLOCK (priv);
-    g_signal_emit (jitterbuffer,
-        gst_rtp_jitter_buffer_signals[SIGNAL_HANDLE_SYNC], 0, s);
-    JBUF_LOCK (priv);
-    gst_structure_free (s);
-  } else {
-    GST_DEBUG_OBJECT (jitterbuffer, "dropping RTCP packet");
-    gst_buffer_replace (&priv->last_sr, NULL);
-  }
+  GST_DEBUG_OBJECT (jitterbuffer, "signaling sync");
+  JBUF_UNLOCK (priv);
+  g_signal_emit (jitterbuffer,
+      gst_rtp_jitter_buffer_signals[SIGNAL_HANDLE_SYNC], 0, s);
+  JBUF_LOCK (priv);
+  gst_structure_free (s);
 }
 
 #define GST_RTCP_BUFFER_FOR_PACKETS(b,buffer,packet) \
@@ -4832,20 +5113,22 @@ out:
   priv->last_sr_ssrc = ssrc;
   priv->last_sr_ntpnstime = ntpnstime;
 
-  priv->last_known_ext_rtptime = ext_rtptime;
-  priv->last_known_ntpnstime = ntpnstime;
-
-  if (priv->last_ntpnstime != GST_CLOCK_TIME_NONE
-      && ntpnstime - priv->last_ntpnstime < priv->sync_interval * GST_MSECOND) {
-    gst_buffer_replace (&priv->last_sr, NULL);
-    GST_DEBUG_OBJECT (jitterbuffer, "discarding RTCP sender packet for sync; "
-        "previous sender info too recent "
-        "(previous NTP %" G_GUINT64_FORMAT ")", priv->last_ntpnstime);
-  } else {
-    gst_buffer_replace (&priv->last_sr, buffer);
-    do_handle_sync (jitterbuffer);
-    priv->last_ntpnstime = ntpnstime;
+  if (priv->last_known_ntpnstime == GST_CLOCK_TIME_NONE
+      || priv->last_known_ntpnstime < ntpnstime) {
+    priv->last_known_ext_rtptime = ext_rtptime;
+    priv->last_known_ntpnstime = ntpnstime;
   }
+
+  if (G_UNLIKELY (priv->last_ssrc == -1)) {
+    GST_DEBUG_OBJECT (jitterbuffer, "SSRC changed from %u to %u",
+        priv->last_ssrc, ssrc);
+    priv->last_ssrc = ssrc;
+  }
+
+  gst_buffer_replace (&priv->last_sr, buffer);
+  priv->have_new_sr = TRUE;
+  gint64 now = g_get_monotonic_time ();
+  do_handle_sync (jitterbuffer, now);
 
   JBUF_UNLOCK (priv);
 
@@ -5205,6 +5488,21 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       priv->sync_interval = g_value_get_uint (value);
       JBUF_UNLOCK (priv);
       break;
+    case PROP_RFC7273_USE_SYSTEM_CLOCK:
+      JBUF_LOCK (priv);
+      priv->rfc7273_use_system_clock = g_value_get_boolean (value);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RFC7273_REFERENCE_TIMESTAMP_META_ONLY:
+      JBUF_LOCK (priv);
+      priv->rfc7273_reference_timestamp_meta_only = g_value_get_boolean (value);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_MIN_SYNC_INTERVAL:
+      JBUF_LOCK (priv);
+      priv->min_sync_interval = g_value_get_uint (value);
+      JBUF_UNLOCK (priv);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -5369,6 +5667,21 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
     case PROP_SYNC_INTERVAL:
       JBUF_LOCK (priv);
       g_value_set_uint (value, priv->sync_interval);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RFC7273_USE_SYSTEM_CLOCK:
+      JBUF_LOCK (priv);
+      g_value_set_boolean (value, priv->rfc7273_use_system_clock);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RFC7273_REFERENCE_TIMESTAMP_META_ONLY:
+      JBUF_LOCK (priv);
+      g_value_set_boolean (value, priv->rfc7273_reference_timestamp_meta_only);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_MIN_SYNC_INTERVAL:
+      JBUF_LOCK (priv);
+      g_value_set_uint (value, priv->min_sync_interval);
       JBUF_UNLOCK (priv);
       break;
     default:

@@ -79,7 +79,16 @@ gst_msdkcaps_set_strings (GstCaps * caps,
     const gchar * features, const char * field, const gchar * strings);
 
 gboolean
-gst_msdkcaps_remove_structure (GstCaps * caps, const gchar * features);
+gst_msdkcaps_video_info_from_caps (const GstCaps * caps,
+    GstVideoInfo * info, guint64 * modifier);
+
+#ifndef _WIN32
+GstCaps *
+gst_msdkcaps_video_info_to_drm_caps (GstVideoInfo * info, guint64 modifier);
+
+guint64
+get_msdkcaps_get_modifier (const GstCaps * caps);
+#endif
 
 G_END_DECLS
 

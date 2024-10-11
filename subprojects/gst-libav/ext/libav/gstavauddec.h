@@ -34,7 +34,6 @@ struct _GstFFMpegAudDec
 
   /* decoding */
   AVCodecContext *context;
-  gboolean opened;
 
   AVFrame *frame;
 

@@ -41,6 +41,16 @@ typedef struct _GstD3D11ScreenCaptureClass GstD3D11ScreenCaptureClass;
 #define GST_D3D11_SCREEN_CAPTURE_FLOW_SIZE_CHANGED GST_FLOW_CUSTOM_SUCCESS_1
 #define GST_D3D11_SCREEN_CAPTURE_FLOW_UNSUPPORTED GST_FLOW_CUSTOM_ERROR
 
+struct ShaderResource
+{
+  ID3D11VertexShader * vs;
+  ID3D11PixelShader * ps;
+  ID3D11InputLayout * layout;
+  ID3D11SamplerState * sampler;
+  ID3D11BlendState * blend;
+  ID3D11RasterizerState * rs;
+};
+
 struct _GstD3D11ScreenCapture
 {
   GstObject parent;
@@ -56,9 +66,6 @@ struct _GstD3D11ScreenCaptureClass
                              guint * width,
                              guint * height);
 
-  gboolean      (*get_colorimetry) (GstD3D11ScreenCapture * capture,
-                                    GstVideoColorimetry * colorimetry);
-
   gboolean      (*unlock)          (GstD3D11ScreenCapture * capture);
 
   gboolean      (*unlock_stop)     (GstD3D11ScreenCapture * capture);
@@ -70,11 +77,7 @@ struct _GstD3D11ScreenCaptureClass
                                     GstD3D11Device * device,
                                     ID3D11Texture2D * texture,
                                     ID3D11RenderTargetView * rtv,
-                                    ID3D11VertexShader * vs,
-                                    ID3D11PixelShader * ps,
-                                    ID3D11InputLayout * layout,
-                                    ID3D11SamplerState * sampler,
-                                    ID3D11BlendState * blend,
+                                    ShaderResource * resource,
                                     D3D11_BOX * crop_box,
                                     gboolean draw_mouse);
 };
@@ -87,9 +90,6 @@ gboolean        gst_d3d11_screen_capture_get_size (GstD3D11ScreenCapture * captu
                                                    guint * width,
                                                    guint * height);
 
-gboolean        gst_d3d11_screen_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
-                                                          GstVideoColorimetry * colorimetry);
-
 gboolean        gst_d3d11_screen_capture_unlock      (GstD3D11ScreenCapture * capture);
 
 gboolean        gst_d3d11_screen_capture_unlock_stop (GstD3D11ScreenCapture * capture);
@@ -101,11 +101,7 @@ GstFlowReturn   gst_d3d11_screen_capture_do_capture  (GstD3D11ScreenCapture * ca
                                                       GstD3D11Device * device,
                                                       ID3D11Texture2D * texture,
                                                       ID3D11RenderTargetView * rtv,
-                                                      ID3D11VertexShader * vs,
-                                                      ID3D11PixelShader * ps,
-                                                      ID3D11InputLayout * layout,
-                                                      ID3D11SamplerState * sampler,
-                                                      ID3D11BlendState * blend,
+                                                      ShaderResource * resource,
                                                       D3D11_BOX * crop_box,
                                                       gboolean draw_mouse);
 

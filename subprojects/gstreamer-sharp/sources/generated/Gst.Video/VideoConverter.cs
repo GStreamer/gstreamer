@@ -23,12 +23,41 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_video_converter_frame_finish(IntPtr raw);
+
+		public void FrameFinish() {
+			gst_video_converter_frame_finish(Handle);
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_converter_get_config(IntPtr raw);
 
 		public Gst.Structure Config { 
 			get {
 				IntPtr raw_ret = gst_video_converter_get_config(Handle);
 				Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), false);
+				return ret;
+			}
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_converter_get_in_info(IntPtr raw);
+
+		public Gst.Video.VideoInfo InInfo { 
+			get {
+				IntPtr raw_ret = gst_video_converter_get_in_info(Handle);
+				Gst.Video.VideoInfo ret = raw_ret == IntPtr.Zero ? null : (Gst.Video.VideoInfo) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Video.VideoInfo), false);
+				return ret;
+			}
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_converter_get_out_info(IntPtr raw);
+
+		public Gst.Video.VideoInfo OutInfo { 
+			get {
+				IntPtr raw_ret = gst_video_converter_get_out_info(Handle);
+				Gst.Video.VideoInfo ret = raw_ret == IntPtr.Zero ? null : (Gst.Video.VideoInfo) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Video.VideoInfo), false);
 				return ret;
 			}
 		}

@@ -21,7 +21,7 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <gst/vulkan/vulkan.h>
+#include <gst/vulkan/gstvkapi.h>
 
 G_BEGIN_DECLS
 
@@ -34,21 +34,99 @@ G_BEGIN_DECLS
  */
 struct _GstVulkanVideoProfile
 {
+  /*< private >*/
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   VkVideoProfileInfoKHR profile;
   union {
-    VkVideoDecodeH264ProfileInfoKHR h264;
-    VkVideoDecodeH265ProfileInfoKHR h265;
+    VkVideoDecodeUsageInfoKHR decode;
+    /**
+     * GstVulkanVideoProfile.usage.encode:
+     *
+     * Since: 1.26
+     **/
+    VkVideoEncodeUsageInfoKHR encode;
+  } usage;
+
+  union {
+    VkBaseInStructure base;
+    VkVideoDecodeH264ProfileInfoKHR h264dec;
+    VkVideoDecodeH265ProfileInfoKHR h265dec;
+    /**
+     * GstVulkanVideoProfile.usage.codec.h264enc:
+     *
+     * Since: 1.26
+     **/
+    VkVideoEncodeH264ProfileInfoKHR h264enc;
+    /**
+     * GstVulkanVideoProfile.usage.codec.h265enc:
+     *
+     * Since: 1.26
+     **/
+    VkVideoEncodeH265ProfileInfoKHR h265enc;
   } codec;
 #endif
-  /* <private> */
   gpointer _reserved[GST_PADDING];
 };
+
+/**
+ * GstVulkanVideoCapabilities:
+ *
+ * Since: 1.24
+ */
+struct _GstVulkanVideoCapabilities
+{
+  /*< private >*/
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+  VkVideoCapabilitiesKHR caps;
+  union
+  {
+    VkBaseInStructure base;
+    VkVideoDecodeH264CapabilitiesKHR h264dec;
+    VkVideoDecodeH265CapabilitiesKHR h265dec;
+    /**
+     * GstVulkanVideoCapabilities.codec.h264enc:
+     *
+     * Since: 1.26
+     */
+    VkVideoEncodeH264CapabilitiesKHR h264enc;
+    /**
+     * GstVulkanVideoCapabilities.codec.h265enc:
+     *
+     * Since: 1.26
+     */
+    VkVideoEncodeH265CapabilitiesKHR h265enc;
+  } codec;
+#endif
+  gpointer _reserved[GST_PADDING];
+};
+
+/**
+ * GstVulkanVideoOperation:
+ * @GST_VULKAN_VIDEO_OPERATION_DECODE: decode operation
+ * @GST_VULKAN_VIDEO_OPERATION_ENCODE: encode operation
+ * @GST_VULKAN_VIDEO_OPERATION_UNKNOWN: unknown
+ *
+ * The type of video operation.
+ *
+ * Since: 1.24
+ */
+typedef enum  {
+  GST_VULKAN_VIDEO_OPERATION_DECODE = 0,
+  GST_VULKAN_VIDEO_OPERATION_ENCODE,
+  GST_VULKAN_VIDEO_OPERATION_UNKNOWN,
+} GstVulkanVideoOperation;
 
 GST_VULKAN_API
 GstCaps *               gst_vulkan_video_profile_to_caps        (const GstVulkanVideoProfile * profile);
 GST_VULKAN_API
 gboolean                gst_vulkan_video_profile_from_caps      (GstVulkanVideoProfile * profile,
-                                                                 GstCaps * caps);
+                                                                 GstCaps * caps,
+                                                                 GstVulkanVideoOperation video_operation);
+GST_VULKAN_API
+gboolean                gst_vulkan_video_profile_is_valid       (GstVulkanVideoProfile * profile,
+                                                                 guint codec);
+GST_VULKAN_API
+gboolean                gst_vulkan_video_profile_is_equal       (const GstVulkanVideoProfile * a,
+                                                                 const GstVulkanVideoProfile * b);
 
 G_END_DECLS

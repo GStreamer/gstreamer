@@ -25,12 +25,20 @@ ges_tests = [
     ['nle/tempochange']
 ]
 
+# Make sure our headers are C++ clean
+if add_languages('cpp', native: false, required: false)
+  ges_tests += [
+    [ 'gescpp.cc', false ],
+  ]
+endif
+
+fsmod = import('fs')
 test_defines = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
-  '-DGES_TEST_FILES_PATH="@0@"'.format(join_paths(meson.current_source_dir(), 'assets')),
+  '-DGES_TEST_FILES_PATH="@0@"'.format(fsmod.as_posix(join_paths(meson.current_source_dir(), 'assets'))),
   '-DGST_CHECK_TEST_ENVIRONMENT_BEACON="GST_STATE_IGNORE_ELEMENTS"',
-  '-DTESTFILE="' + meson.current_source_dir() + '/meson.build"',
+  '-DTESTFILE="' + fsmod.as_posix(meson.current_source_dir()) + '/meson.build"',
   '-DGST_USE_UNSTABLE_API',
 ]
 
@@ -49,7 +57,11 @@ endif
 gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner')
 
 foreach t : ges_tests
-  fname = '@0@.c'.format(t.get(0))
+  if t.get(0).endswith('.cc')
+    fname = t.get(0)
+  else
+    fname = '@0@.c'.format(t.get(0))
+  endif
   test_name = t.get(0).underscorify()
   if t.length() == 2
     skip_test = t.get(1)

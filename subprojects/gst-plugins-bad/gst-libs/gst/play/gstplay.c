@@ -28,6 +28,40 @@
  * @symbols:
  * - GstPlay
  *
+ * The goal of the GstPlay library is to ease the integration of multimedia
+ * playback features in applications. Thus, if you need to build a media player
+ * from the ground-up, GstPlay provides the features you will most likely need.
+ *
+ * An example player is available in gst-examples/playback/player/gst-play/.
+ *
+ * Internally the GstPlay makes use of the `playbin3` element. The legacy
+ * `playbin2` can be selected if the `GST_PLAY_USE_PLAYBIN3=0` environment
+ * variable has been set.
+ *
+ * **Important note**: If your application relies on the GstBus to get
+ * notifications from GstPlay, you need to add some explicit clean-up code in
+ * order to prevent the GstPlay object from leaking. See below for the details.
+ * If you use the GstPlaySignalAdapter, no special clean-up is required.
+ *
+ * When the GstPlaySignalAdapter is not used, the GstBus owned by GstPlay should
+ * be set to flushing state before any attempt to drop the last reference of the
+ * GstPlay object. An example in C:
+ *
+ * ```c
+ * ...
+ * GstBus *bus = gst_play_get_message_bus (player);
+ * gst_bus_set_flushing (bus, TRUE);
+ * gst_object_unref (bus);
+ * gst_object_unref (player);
+ * ```
+ *
+ * The messages managed by the player contain a reference to itself, and if the
+ * bus watch is just removed together with dropping the player then the bus will
+ * simply keep them around forever (and the bus never goes away because the
+ * player has a strong reference to it, so there's a reference cycle as long as
+ * there are messages). Setting the bus to flushing state forces it to get rid
+ * of its queued messages, thus breaking any possible reference cycle.
+ *
  * Since: 1.20
  */
 
@@ -83,28 +117,6 @@ gst_play_error_quark (void)
 {
   return g_quark_from_static_string ("gst-play-error-quark");
 }
-
-static GQuark QUARK_CONFIG;
-
-/* Keep ConfigQuarkId and _config_quark_strings ordered and synced */
-typedef enum
-{
-  CONFIG_QUARK_USER_AGENT = 0,
-  CONFIG_QUARK_POSITION_INTERVAL_UPDATE,
-  CONFIG_QUARK_ACCURATE_SEEK,
-
-  CONFIG_QUARK_MAX
-} ConfigQuarkId;
-
-static const gchar *_config_quark_strings[] = {
-  "user-agent",
-  "position-interval-update",
-  "accurate-seek",
-};
-
-static GQuark _config_quark_table[CONFIG_QUARK_MAX];
-
-#define CONFIG_QUARK(q) _config_quark_table[CONFIG_QUARK_##q]
 
 enum
 {
@@ -278,11 +290,13 @@ gst_play_init (GstPlay * self)
   self->context = g_main_context_new ();
   self->loop = g_main_loop_new (self->context, FALSE);
   self->api_bus = gst_bus_new ();
+  gst_object_set_name (GST_OBJECT (self->api_bus), "api_bus");
 
   /* *INDENT-OFF* */
-  self->config = gst_structure_new_id (QUARK_CONFIG,
-      CONFIG_QUARK (POSITION_INTERVAL_UPDATE), G_TYPE_UINT, DEFAULT_POSITION_UPDATE_INTERVAL_MS,
-      CONFIG_QUARK (ACCURATE_SEEK), G_TYPE_BOOLEAN, FALSE,
+  self->config = gst_structure_new_static_str ("play-config",
+      "position-interval-update", G_TYPE_UINT, DEFAULT_POSITION_UPDATE_INTERVAL_MS,
+      "accurate-seek", G_TYPE_BOOLEAN, FALSE,
+      "pipeline-dump-error-in-details", G_TYPE_BOOLEAN, FALSE,
       NULL);
   /* *INDENT-ON* */
 
@@ -309,7 +323,7 @@ api_bus_post_message (GstPlay * self, GstPlayMessage message_type,
 
   GST_INFO ("Posting API-bus message-type: %s",
       gst_play_message_get_name (message_type));
-  message_data = gst_structure_new (GST_PLAY_MESSAGE_DATA,
+  message_data = gst_structure_new_static_str (GST_PLAY_MESSAGE_DATA,
       GST_PLAY_MESSAGE_DATA_TYPE, GST_TYPE_PLAY_MESSAGE, message_type, NULL);
 
   va_start (varargs, firstfield);
@@ -324,26 +338,12 @@ api_bus_post_message (GstPlay * self, GstPlayMessage message_type,
 }
 
 static void
-config_quark_initialize (void)
-{
-  gint i;
-
-  QUARK_CONFIG = g_quark_from_static_string ("play-config");
-
-  if (G_N_ELEMENTS (_config_quark_strings) != CONFIG_QUARK_MAX)
-    g_warning ("the quark table is not consistent! %d != %d",
-        (int) G_N_ELEMENTS (_config_quark_strings), CONFIG_QUARK_MAX);
-
-  for (i = 0; i < CONFIG_QUARK_MAX; i++) {
-    _config_quark_table[i] =
-        g_quark_from_static_string (_config_quark_strings[i]);
-  }
-}
-
-static void
 gst_play_class_init (GstPlayClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (gst_play_debug, "gst-play", 0, "GstPlay");
+  gst_play_error_quark ();
 
   gobject_class->set_property = gst_play_set_property;
   gobject_class->get_property = gst_play_get_property;
@@ -435,8 +435,6 @@ gst_play_class_init (GstPlayClass * klass)
       G_MININT64, G_MAXINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, PROP_LAST, param_specs);
-
-  config_quark_initialize ();
 }
 
 static void
@@ -935,12 +933,41 @@ remove_ready_timeout_source (GstPlay * self)
 static void
 on_error (GstPlay * self, GError * err, const GstStructure * details)
 {
+#ifndef GST_DISABLE_GST_DEBUG
+  GstStructure *extra_details = NULL;
+  gchar *dot_data = NULL;
+#endif
+
   GST_ERROR_OBJECT (self, "Error: %s (%s, %d)", err->message,
       g_quark_to_string (err->domain), err->code);
 
+#ifndef GST_DISABLE_GST_DEBUG
+  if (details != NULL) {
+    extra_details = gst_structure_copy (details);
+  } else {
+    extra_details = gst_structure_new_static_str_empty ("error-details");
+  }
+  if (gst_play_config_get_pipeline_dump_in_error_details (self->config)) {
+    dot_data = gst_debug_bin_to_dot_data (GST_BIN_CAST (self->playbin),
+        GST_DEBUG_GRAPH_SHOW_ALL);
+    gst_structure_set (extra_details, "pipeline-dump", G_TYPE_STRING, dot_data,
+        NULL);
+  }
+#endif
   api_bus_post_message (self, GST_PLAY_MESSAGE_ERROR,
       GST_PLAY_MESSAGE_DATA_ERROR, G_TYPE_ERROR, err,
-      GST_PLAY_MESSAGE_DATA_ERROR_DETAILS, GST_TYPE_STRUCTURE, details, NULL);
+      GST_PLAY_MESSAGE_DATA_ERROR_DETAILS, GST_TYPE_STRUCTURE,
+#ifndef GST_DISABLE_GST_DEBUG
+      extra_details
+#else
+      details
+#endif
+      , NULL);
+
+#ifndef GST_DISABLE_GST_DEBUG
+  g_free (dot_data);
+  gst_structure_free (extra_details);
+#endif
 
   g_error_free (err);
 
@@ -1353,8 +1380,12 @@ state_changed_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
       }
 
       if (self->seek_position != GST_CLOCK_TIME_NONE) {
-        GST_DEBUG_OBJECT (self, "Seeking now that we reached PAUSED state");
-        gst_play_seek_internal_locked (self);
+        if (!self->media_info->seekable) {
+          GST_DEBUG_OBJECT (self, "Media is not seekable");
+        } else {
+          GST_DEBUG_OBJECT (self, "Seeking now that we reached PAUSED state");
+          gst_play_seek_internal_locked (self);
+        }
         g_mutex_unlock (&self->lock);
       } else if (!self->seek_pending) {
         g_mutex_unlock (&self->lock);
@@ -1377,6 +1408,37 @@ state_changed_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
       }
     } else if (new_state == GST_STATE_PLAYING
         && pending_state == GST_STATE_VOID_PENDING) {
+      /* Try to query duration again if needed */
+      if (self->cached_duration == GST_CLOCK_TIME_NONE) {
+        gint64 duration = -1;
+
+        if (gst_element_query_duration (self->playbin, GST_FORMAT_TIME,
+                &duration)) {
+          on_duration_changed (self, duration);
+        }
+      }
+
+      /* Try to query seek information again for live stream */
+      if (self->is_live) {
+        gboolean seekable = FALSE;
+        gboolean updated = FALSE;
+
+        GstQuery *query = gst_query_new_seeking (GST_FORMAT_TIME);
+        if (gst_element_query (self->playbin, query))
+          gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
+        gst_query_unref (query);
+
+        g_mutex_lock (&self->lock);
+        if (self->media_info && seekable != self->media_info->seekable) {
+          self->media_info->seekable = seekable;
+          updated = TRUE;
+        }
+        g_mutex_unlock (&self->lock);
+
+        if (updated) {
+          on_media_info_updated (self);
+        }
+      }
       /* api_bus_post_message (self, GST_PLAY_MESSAGE_POSITION_UPDATED, */
       /*     GST_PLAY_MESSAGE_DATA_POSITION, GST_TYPE_CLOCK_TIME, 0, NULL); */
 
@@ -2517,7 +2579,9 @@ gst_play_main (gpointer data)
   g_source_unref (source);
 
   env = g_getenv ("GST_PLAY_USE_PLAYBIN3");
-  if (env && g_str_has_prefix (env, "1"))
+  if (env && g_str_has_prefix (env, "0"))
+    self->use_playbin3 = FALSE;
+  else
     self->use_playbin3 = TRUE;
 
   if (self->use_playbin3) {
@@ -2547,6 +2611,7 @@ gst_play_main (gpointer data)
   }
 
   self->bus = bus = gst_element_get_bus (self->playbin);
+  gst_object_set_name (GST_OBJECT (self->bus), "playbin_bus");
   gst_bus_add_signal_watch (bus);
 
   g_signal_connect (G_OBJECT (bus), "message::error", G_CALLBACK (error_cb),
@@ -2645,9 +2710,6 @@ gst_play_init_once (G_GNUC_UNUSED gpointer user_data)
 {
   gst_init (NULL, NULL);
 
-  GST_DEBUG_CATEGORY_INIT (gst_play_debug, "gst-play", 0, "GstPlay");
-  gst_play_error_quark ();
-
   return NULL;
 }
 
@@ -2660,6 +2722,9 @@ gst_play_init_once (G_GNUC_UNUSED gpointer user_data)
  * Video is going to be rendered by @video_renderer, or if %NULL is provided
  * no special video set up will be done and some default handling will be
  * performed.
+ *
+ * This also initializes GStreamer via `gst_init()` on the first call if this
+ * didn't happen before.
  *
  * Returns: (transfer full): a new #GstPlay instance
  * Since: 1.20
@@ -3186,7 +3251,7 @@ gst_play_set_subtitle_uri (GstPlay * self, const gchar * suburi)
  * gst_play_get_subtitle_uri:
  * @play: #GstPlay instance
  *
- * current subtitle URI
+ * Current subtitle URI
  *
  * Returns: (transfer full) (nullable): URI of the current external subtitle.
  *   g_free() after usage.
@@ -3688,7 +3753,7 @@ gst_play_set_subtitle_track_enabled (GstPlay * self, gboolean enabled)
  * @name: (nullable): visualization element obtained from
  * #gst_play_visualizations_get()
  *
- * Returns: %TRUE if the visualizations was set correctly. Otherwise,
+ * Returns: %TRUE if the visualization was set correctly. Otherwise,
  * %FALSE.
  * Since: 1.20
  */
@@ -4268,7 +4333,7 @@ gst_play_error_get_name (GstPlayError error)
  * @config: (transfer full): a #GstStructure
  *
  * Set the configuration of the play. If the play is already configured, and
- * the configuration haven't change, this function will return %TRUE. If the
+ * the configuration hasn't changed, this function will return %TRUE. If the
  * play is not in the GST_PLAY_STATE_STOPPED, this method will return %FALSE
  * and active configuration will remain.
  *
@@ -4347,8 +4412,7 @@ gst_play_config_set_user_agent (GstStructure * config, const gchar * agent)
   g_return_if_fail (config != NULL);
   g_return_if_fail (agent != NULL);
 
-  gst_structure_id_set (config,
-      CONFIG_QUARK (USER_AGENT), G_TYPE_STRING, agent, NULL);
+  gst_structure_set (config, "user-agent", G_TYPE_STRING, agent, NULL);
 }
 
 /**
@@ -4368,8 +4432,7 @@ gst_play_config_get_user_agent (const GstStructure * config)
 
   g_return_val_if_fail (config != NULL, NULL);
 
-  gst_structure_id_get (config,
-      CONFIG_QUARK (USER_AGENT), G_TYPE_STRING, &agent, NULL);
+  gst_structure_get (config, "user-agent", G_TYPE_STRING, &agent, NULL);
 
   return agent;
 }
@@ -4379,8 +4442,8 @@ gst_play_config_get_user_agent (const GstStructure * config)
  * @config: a #GstPlay configuration
  * @interval: interval in ms
  *
- * set desired interval in milliseconds between two position-updated messages.
- * pass 0 to stop updating the position.
+ * Set desired interval in milliseconds between two position-updated messages.
+ * Pass 0 to stop updating the position.
  * Since: 1.20
  */
 void
@@ -4390,8 +4453,8 @@ gst_play_config_set_position_update_interval (GstStructure * config,
   g_return_if_fail (config != NULL);
   g_return_if_fail (interval <= 10000);
 
-  gst_structure_id_set (config,
-      CONFIG_QUARK (POSITION_INTERVAL_UPDATE), G_TYPE_UINT, interval, NULL);
+  gst_structure_set (config,
+      "position-update-interval", G_TYPE_UINT, interval, NULL);
 }
 
 /**
@@ -4409,8 +4472,8 @@ gst_play_config_get_position_update_interval (const GstStructure * config)
 
   g_return_val_if_fail (config != NULL, DEFAULT_POSITION_UPDATE_INTERVAL_MS);
 
-  gst_structure_id_get (config,
-      CONFIG_QUARK (POSITION_INTERVAL_UPDATE), G_TYPE_UINT, &interval, NULL);
+  gst_structure_get (config,
+      "position-update-interval", G_TYPE_UINT, &interval, NULL);
 
   return interval;
 }
@@ -4437,8 +4500,7 @@ gst_play_config_set_seek_accurate (GstStructure * config, gboolean accurate)
 {
   g_return_if_fail (config != NULL);
 
-  gst_structure_id_set (config,
-      CONFIG_QUARK (ACCURATE_SEEK), G_TYPE_BOOLEAN, accurate, NULL);
+  gst_structure_set (config, "accurate-seek", G_TYPE_BOOLEAN, accurate, NULL);
 }
 
 /**
@@ -4456,10 +4518,54 @@ gst_play_config_get_seek_accurate (const GstStructure * config)
 
   g_return_val_if_fail (config != NULL, FALSE);
 
-  gst_structure_id_get (config,
-      CONFIG_QUARK (ACCURATE_SEEK), G_TYPE_BOOLEAN, &accurate, NULL);
+  gst_structure_get (config, "accurate-seek", G_TYPE_BOOLEAN, &accurate, NULL);
 
   return accurate;
+}
+
+/**
+ * gst_play_config_set_pipeline_dump_in_error_details:
+ * @config: a #GstPlay configuration
+ * @value: Include pipeline dumps in error details, or not.
+ *
+ * When enabled, the error message emitted by #GstPlay will include a pipeline
+ * dump (in Graphviz DOT format) in the error details #GstStructure. The field
+ * name is `pipeline-dump`.
+ *
+ * This option is disabled by default.
+ *
+ * Since: 1.24
+ */
+void
+gst_play_config_set_pipeline_dump_in_error_details (GstStructure * config,
+    gboolean value)
+{
+  g_return_if_fail (config != NULL);
+
+  gst_structure_set (config, "pipeline-dump-in-error-details",
+      G_TYPE_BOOLEAN, value, NULL);
+}
+
+/**
+ * gst_play_config_get_pipeline_dump_in_error_details:
+ * @config: a #GstPlay configuration
+ *
+ * Returns: %TRUE if pipeline dumps are included in #GstPlay error message
+ * details.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_play_config_get_pipeline_dump_in_error_details (const GstStructure * config)
+{
+  gboolean value = FALSE;
+
+  g_return_val_if_fail (config != NULL, FALSE);
+
+  gst_structure_get (config, "pipeline-dump-in-error-details",
+      G_TYPE_BOOLEAN, &value, NULL);
+
+  return value;
 }
 
 /**
@@ -4469,7 +4575,7 @@ gst_play_config_get_seek_accurate (const GstStructure * config)
  * @config: (allow-none): Additional configuration
  *
  * Get a snapshot of the currently selected video stream, if any. The format can be
- * selected with @format and optional configuration is possible with @config
+ * selected with @format and optional configuration is possible with @config.
  * Currently supported settings are:
  * - width, height of type G_TYPE_INT
  * - pixel-aspect-ratio of type GST_TYPE_FRACTION
@@ -4484,6 +4590,7 @@ gst_play_get_video_snapshot (GstPlay * self,
     GstPlaySnapshotFormat format, const GstStructure * config)
 {
   gint video_tracks = 0;
+  GstPlayVideoInfo *video_info = NULL;
   GstSample *sample = NULL;
   GstCaps *caps = NULL;
   gint width = -1;
@@ -4492,10 +4599,20 @@ gst_play_get_video_snapshot (GstPlay * self,
   gint par_d = 1;
   g_return_val_if_fail (GST_IS_PLAY (self), NULL);
 
-  g_object_get (self->playbin, "n-video", &video_tracks, NULL);
-  if (video_tracks == 0) {
-    GST_DEBUG_OBJECT (self, "total video track num is 0");
-    return NULL;
+  if (self->use_playbin3) {
+    video_info = gst_play_get_current_video_track (self);
+    if (video_info == NULL) {
+      GST_DEBUG_OBJECT (self, "no current video track");
+      return NULL;
+    } else {
+      g_object_unref (video_info);
+    }
+  } else {
+    g_object_get (self->playbin, "n-video", &video_tracks, NULL);
+    if (video_tracks == 0) {
+      GST_DEBUG_OBJECT (self, "total video track num is 0");
+      return NULL;
+    }
   }
 
   switch (format) {
@@ -4563,7 +4680,7 @@ gst_play_get_video_snapshot (GstPlay * self,
  * gst_play_is_play_message:
  * @msg: A #GstMessage
  *
- * Returns: A #gboolean indicating wheter the passes message represents a #GstPlay message or not.
+ * Returns: A #gboolean indicating whether the passed message represents a #GstPlay message or not.
  *
  * Since: 1.20
  */
@@ -4683,8 +4800,8 @@ gst_play_message_parse_error (GstMessage * msg, GError ** error,
     GstStructure ** details)
 {
   PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_ERROR, G_TYPE_ERROR, error);
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_ERROR, GST_TYPE_STRUCTURE,
-      details);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_ERROR_DETAILS,
+      GST_TYPE_STRUCTURE, details);
 }
 
 /**

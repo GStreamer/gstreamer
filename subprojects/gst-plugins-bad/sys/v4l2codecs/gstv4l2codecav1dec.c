@@ -52,10 +52,20 @@ GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
     GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-av1, alignment=frame"));
 
+#define SRC_CAPS \
+    GST_VIDEO_DMA_DRM_CAPS_MAKE " ; " \
+    GST_VIDEO_CAPS_MAKE (GST_V4L2_DEFAULT_VIDEO_FORMATS)
+
+#define SRC_CAPS_NO_DRM \
+    GST_VIDEO_CAPS_MAKE (GST_V4L2_DEFAULT_VIDEO_FORMATS)
+
+static GstStaticCaps static_src_caps = GST_STATIC_CAPS (SRC_CAPS);
+static GstStaticCaps static_src_caps_no_drm = GST_STATIC_CAPS (SRC_CAPS_NO_DRM);
+
 static GstStaticPadTemplate src_template =
 GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SRC_NAME,
     GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_V4L2_DEFAULT_VIDEO_FORMATS)));
+    GST_STATIC_CAPS (SRC_CAPS));
 
 struct _GstV4l2CodecAV1Dec
 {
@@ -63,13 +73,14 @@ struct _GstV4l2CodecAV1Dec
   GstV4l2Decoder *decoder;
   GstVideoCodecState *output_state;
   GstVideoInfo vinfo;
+  GstVideoInfoDmaDrm vinfo_drm;
 
   GstV4l2CodecAllocator *sink_allocator;
   GstV4l2CodecAllocator *src_allocator;
   GstV4l2CodecPool *src_pool;
   gint min_pool_size;
   gboolean has_videometa;
-  gboolean need_negotiation;
+  gboolean streaming;
   gboolean copy_frames;
 
   gint frame_width;
@@ -221,6 +232,16 @@ gst_v4l2_codec_av1_dec_close (GstVideoDecoder * decoder)
 }
 
 static void
+gst_v4l2_codec_av1_dec_streamoff (GstV4l2CodecAV1Dec * self)
+{
+  if (self->streaming) {
+    gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SINK);
+    gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
+    self->streaming = FALSE;
+  }
+}
+
+static void
 gst_v4l2_codec_av1_dec_reset_allocation (GstV4l2CodecAV1Dec * self)
 {
   if (self->sink_allocator) {
@@ -268,16 +289,14 @@ gst_v4l2_codec_av1_dec_negotiate (GstVideoDecoder * decoder)
   };
   /* *INDENT-ON* */
 
-  GstCaps *filter, *caps;
+  GstCaps *peer_caps, *filter, *caps;
+  GstStaticCaps *static_filter;
+
   /* Ignore downstream renegotiation request. */
-  if (!self->need_negotiation)
-    return TRUE;
-  self->need_negotiation = FALSE;
+  if (self->streaming)
+    goto done;
 
   GST_DEBUG_OBJECT (self, "Negotiate");
-
-  gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SINK);
-  gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
 
   gst_v4l2_codec_av1_dec_reset_allocation (self);
 
@@ -297,7 +316,13 @@ gst_v4l2_codec_av1_dec_negotiate (GstVideoDecoder * decoder)
     return FALSE;
   }
 
-  filter = gst_v4l2_decoder_enum_src_formats (self->decoder);
+  /* If the peer has ANY caps only advertise system memory caps */
+  peer_caps = gst_pad_peer_query_caps (decoder->srcpad, NULL);
+  static_filter =
+      gst_caps_is_any (peer_caps) ? &static_src_caps_no_drm : &static_src_caps;
+  gst_caps_unref (peer_caps);
+
+  filter = gst_v4l2_decoder_enum_src_formats (self->decoder, static_filter);
   if (!filter) {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("No supported decoder output formats"), (NULL));
@@ -309,7 +334,8 @@ gst_v4l2_codec_av1_dec_negotiate (GstVideoDecoder * decoder)
   gst_caps_unref (filter);
   GST_DEBUG_OBJECT (self, "Peer supported formats: %" GST_PTR_FORMAT, caps);
 
-  if (!gst_v4l2_decoder_select_src_format (self->decoder, caps, &self->vinfo)) {
+  if (!gst_v4l2_decoder_select_src_format (self->decoder, caps, &self->vinfo,
+          &self->vinfo_drm)) {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("Unsupported pixel format"),
         ("No support for %ux%u", self->frame_width, self->frame_height));
@@ -318,17 +344,19 @@ gst_v4l2_codec_av1_dec_negotiate (GstVideoDecoder * decoder)
   }
   gst_caps_unref (caps);
 
+done:
   if (self->output_state)
     gst_video_codec_state_unref (self->output_state);
 
   self->output_state =
-      gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-      self->vinfo.finfo->format, self->render_width,
-      self->render_height, av1dec->input_state);
-
-  self->output_state->caps = gst_video_info_to_caps (&self->output_state->info);
+      gst_v4l2_decoder_set_output_state (GST_VIDEO_DECODER (self), &self->vinfo,
+      &self->vinfo_drm, self->render_width, self->render_height,
+      av1dec->input_state);
 
   if (GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder)) {
+    if (self->streaming)
+      return TRUE;
+
     if (!gst_v4l2_decoder_streamon (self->decoder, GST_PAD_SINK)) {
       GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
           ("Could not enable the decoder driver."),
@@ -343,6 +371,8 @@ gst_v4l2_codec_av1_dec_negotiate (GstVideoDecoder * decoder)
       return FALSE;
     }
 
+    self->streaming = TRUE;
+
     return TRUE;
   }
 
@@ -354,13 +384,31 @@ gst_v4l2_codec_av1_dec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query)
 {
   GstV4l2CodecAV1Dec *self = GST_V4L2_CODEC_AV1_DEC (decoder);
+  GstCaps *caps = NULL;
   guint min = 0, num_bitstream;
+
+  /* If we are streaming here, then it means there is nothing allocation
+   * related in the new state and allocation can be ignored */
+  if (self->streaming)
+    goto no_internal_changes;
+
+  g_clear_object (&self->src_pool);
+  g_clear_object (&self->src_allocator);
 
   self->has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
 
-  g_clear_object (&self->src_pool);
-  g_clear_object (&self->src_allocator);
+  gst_query_parse_allocation (query, &caps, NULL);
+  if (!caps) {
+    GST_ERROR_OBJECT (self, "No valid caps");
+    return FALSE;
+  }
+
+  if (gst_video_is_dma_drm_caps (caps) && !self->has_videometa) {
+    GST_ERROR_OBJECT (self,
+        "DMABuf caps negotiated without the mandatory support of VideoMeta");
+    return FALSE;
+  }
 
   if (gst_query_get_n_allocation_pools (query) > 0)
     gst_query_parse_nth_allocation_pool (query, 0, NULL, NULL, &min, NULL);
@@ -389,6 +437,7 @@ gst_v4l2_codec_av1_dec_decide_allocation (GstVideoDecoder * decoder,
 
   self->src_pool = gst_v4l2_codec_pool_new (self->src_allocator, &self->vinfo);
 
+no_internal_changes:
   /* Our buffer pool is internal, we will let the base class create a video
    * pool, and use it if we are running out of buffers or if downstream does
    * not support GstVideoMeta */
@@ -547,7 +596,7 @@ gst_v4l2_codec_av1_fill_refs (GstV4l2CodecAV1Dec * self,
 
     /* the decoder might not have filled all slots in the first few frames */
     self->v4l2_frame.reference_frame_ts[i] =
-        ref_pic ? ref_pic->system_frame_number * 1000 : 0;
+        ref_pic ? GST_CODEC_PICTURE_TS_NS (ref_pic) : 0;
   }
 
   memcpy (self->v4l2_frame.ref_frame_idx, frame_hdr->ref_frame_idx,
@@ -1010,6 +1059,7 @@ gst_v4l2_codec_av1_dec_new_picture (GstAV1Decoder * decoder,
   GstV4l2CodecAV1Dec *self = GST_V4L2_CODEC_AV1_DEC (decoder);
   GstAV1FrameHeaderOBU *frame_hdr = &picture->frame_hdr;
   struct v4l2_ctrl_av1_sequence *seq_hdr = &self->v4l2_sequence;
+  gboolean negotiation_needed = FALSE;
   gint max_width;
   gint max_height;
 
@@ -1017,7 +1067,7 @@ gst_v4l2_codec_av1_dec_new_picture (GstAV1Decoder * decoder,
   max_height = seq_hdr->max_frame_height_minus_1 + 1;
 
   if (self->vinfo.finfo->format == GST_VIDEO_FORMAT_UNKNOWN)
-    self->need_negotiation = TRUE;
+    negotiation_needed = TRUE;
 
   /* FIXME the base class could signal this, but let's assume that when we
    * have spatial layers, that smaller resolution will never be shown, and
@@ -1027,7 +1077,7 @@ gst_v4l2_codec_av1_dec_new_picture (GstAV1Decoder * decoder,
       self->frame_width = self->render_width = max_width;
       self->frame_height = self->render_height = max_height;
 
-      self->need_negotiation = TRUE;
+      negotiation_needed = TRUE;
 
       GST_INFO_OBJECT (self, "max {width|height} changed to %dx%d",
           self->frame_width, self->frame_height);
@@ -1052,7 +1102,7 @@ gst_v4l2_codec_av1_dec_new_picture (GstAV1Decoder * decoder,
     self->render_width = frame_hdr->render_width;
     self->render_height = frame_hdr->render_height;
 
-    self->need_negotiation = TRUE;
+    negotiation_needed = TRUE;
 
     GST_INFO_OBJECT (self, "frame {width|height} changed to %dx%d",
         self->frame_width, self->frame_height);
@@ -1064,7 +1114,7 @@ gst_v4l2_codec_av1_dec_new_picture (GstAV1Decoder * decoder,
     GST_DEBUG_OBJECT (self, "bit-depth changed from %d to %d", self->bit_depth,
         seq_hdr->bit_depth);
     self->bit_depth = seq_hdr->bit_depth;
-    self->need_negotiation = TRUE;
+    negotiation_needed = TRUE;
   }
 
   if (self->profile != GST_AV1_PROFILE_UNDEFINED &&
@@ -1072,23 +1122,24 @@ gst_v4l2_codec_av1_dec_new_picture (GstAV1Decoder * decoder,
     GST_DEBUG_OBJECT (self, "profile changed from %d to %d", self->profile,
         seq_hdr->seq_profile);
     self->profile = seq_hdr->seq_profile;
-    self->need_negotiation = TRUE;
+    negotiation_needed = TRUE;
   }
 
   if (seq_hdr->bit_depth != self->bit_depth) {
     GST_DEBUG_OBJECT (self, "bit-depth changed from %d to %d",
         self->bit_depth, seq_hdr->bit_depth);
     self->bit_depth = seq_hdr->bit_depth;
-    self->need_negotiation = TRUE;
+    negotiation_needed = TRUE;
   }
 
-  if (self->need_negotiation) {
+  if (negotiation_needed) {
     if (frame_hdr->frame_type != GST_AV1_KEY_FRAME) {
       GST_ERROR_OBJECT (self,
           "Inter-frame resolution changes are not yet supported in v4l2");
       return GST_FLOW_ERROR;
     }
 
+    gst_v4l2_codec_av1_dec_streamoff (self);
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return GST_FLOW_ERROR;
@@ -1133,11 +1184,11 @@ gst_v4l2_codec_av1_dec_duplicate_picture (GstAV1Decoder * decoder,
   GstAV1Picture *new_picture;
 
   GST_DEBUG_OBJECT (decoder, "Duplicate picture %u",
-      picture->system_frame_number);
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture));
 
   new_picture = gst_av1_picture_new ();
   new_picture->frame_hdr = picture->frame_hdr;
-  new_picture->system_frame_number = picture->system_frame_number;
+  GST_CODEC_PICTURE_COPY_FRAME_NUMBER (new_picture, picture);
 
   if (GST_MINI_OBJECT_FLAG_IS_SET (picture, FLAG_PICTURE_HOLDS_BUFFER)) {
     GstBuffer *output_buffer = gst_av1_picture_get_user_data (picture);
@@ -1286,7 +1337,7 @@ gst_v4l2_codec_av1_dec_end_picture (GstAV1Decoder * decoder,
   gst_memory_resize (self->bitstream, 0, bytesused);
 
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      picture->system_frame_number);
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture));
   g_return_val_if_fail (frame, FALSE);
 
   flow_ret = gst_buffer_pool_acquire_buffer (GST_BUFFER_POOL (self->src_pool),
@@ -1301,7 +1352,8 @@ gst_v4l2_codec_av1_dec_end_picture (GstAV1Decoder * decoder,
   }
 
   request = gst_v4l2_decoder_alloc_request (self->decoder,
-      picture->system_frame_number, self->bitstream, frame->output_buffer);
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture), self->bitstream,
+      frame->output_buffer);
 
   gst_video_codec_frame_unref (frame);
 
@@ -1389,9 +1441,18 @@ gst_v4l2_codec_av1_dec_output_picture (GstAV1Decoder * decoder,
   GstV4l2CodecAV1Dec *self = GST_V4L2_CODEC_AV1_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstV4l2Request *request = NULL;
+  GstCodecPicture *codec_picture = GST_CODEC_PICTURE (picture);
   gint ret;
 
-  GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
+  if (codec_picture->discont_state) {
+    if (!gst_video_decoder_negotiate (vdec)) {
+      GST_ERROR_OBJECT (vdec, "Could not re-negotiate with updated state");
+      return FALSE;
+    }
+  }
+
+  GST_DEBUG_OBJECT (self, "Output picture %u",
+      codec_picture->system_frame_number);
 
   if (!GST_MINI_OBJECT_FLAG_IS_SET (picture, FLAG_PICTURE_HOLDS_BUFFER))
     request = gst_av1_picture_get_user_data (picture);
@@ -1410,7 +1471,8 @@ gst_v4l2_codec_av1_dec_output_picture (GstAV1Decoder * decoder,
 
     if (gst_v4l2_request_failed (request)) {
       GST_ELEMENT_ERROR (self, STREAM, DECODE,
-          ("Failed to decode frame %u", picture->system_frame_number), (NULL));
+          ("Failed to decode frame %u", codec_picture->system_frame_number),
+          (NULL));
       goto error;
     }
 
@@ -1425,7 +1487,8 @@ gst_v4l2_codec_av1_dec_output_picture (GstAV1Decoder * decoder,
   /* This may happen if we duplicate a picture witch failed to decode */
   if (!frame->output_buffer) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE,
-        ("Failed to decode frame %u", picture->system_frame_number), (NULL));
+        ("Failed to decode frame %u", codec_picture->system_frame_number),
+        (NULL));
     goto error;
   }
 
@@ -1517,6 +1580,7 @@ gst_v4l2_codec_av1_dec_subinit (GstV4l2CodecAV1Dec * self,
 {
   self->decoder = gst_v4l2_decoder_new (klass->device);
   gst_video_info_init (&self->vinfo);
+  gst_video_info_dma_drm_init (&self->vinfo_drm);
   self->tile_group_entries =
       g_array_new (FALSE, TRUE, sizeof (struct v4l2_ctrl_av1_tile_group_entry));
 }
@@ -1544,7 +1608,7 @@ gst_v4l2_codec_av1_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
           320, 240, 8))
     return;
 
-  src_caps = gst_v4l2_decoder_enum_src_formats (decoder);
+  src_caps = gst_v4l2_decoder_enum_src_formats (decoder, &static_src_caps);
 
   if (gst_caps_is_empty (src_caps)) {
     GST_WARNING ("Not registering AV1 decoder since it produces no "
@@ -1562,7 +1626,7 @@ gst_v4l2_codec_av1_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
 #endif
 
   if (!gst_v4l2_decoder_av1_api_check (decoder)) {
-    GST_WARNING ("Not registering H264 decoder as it failed ABI check.");
+    GST_WARNING ("Not registering AV1 decoder as it failed ABI check.");
     goto done;
   }
 

@@ -142,7 +142,7 @@ on_draw (GstElement * overlay, GstD3D11Device * device,
   do {
     d2d_target->DrawTextLayout (D2D1::Point2F (position, context->origin_y),
         context->layout, text_brush.Get (),
-        D2D1_DRAW_TEXT_OPTIONS_CLIP | D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+        static_cast<D2D1_DRAW_TEXT_OPTIONS>(D2D1_DRAW_TEXT_OPTIONS_CLIP | D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT));
     position = position + context->text_width;
   } while (position < context->width);
 

@@ -97,6 +97,8 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_alac, "alac", 0,},
   {FOURCC_fLaC, "fLaC", 0, qtdemux_dump_fLaC},
   {FOURCC_dfLa, "dfLa", 0, qtdemux_dump_dfLa},
+  {FOURCC_opus, "opus", 0, qtdemux_dump_opus},
+  {FOURCC_dops, "dOps", 0, qtdemux_dump_dops},
   {FOURCC_wave, "wave", QT_FLAG_CONTAINER},
   {FOURCC_appl, "appl", QT_FLAG_CONTAINER},
   {FOURCC_cfhd, "cfhd", QT_FLAG_CONTAINER},
@@ -263,7 +265,7 @@ qtdemux_type_get (guint32 fourcc)
       return qt_node_types + i;
   }
 
-  GST_WARNING ("unknown QuickTime node type %" GST_FOURCC_FORMAT,
+  GST_FIXME ("unknown QuickTime node type %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (fourcc));
 
   return qt_node_types + n_qt_node_types - 1;

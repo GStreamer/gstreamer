@@ -104,6 +104,151 @@ typedef enum {
 } GstVideoAncillaryDID16;
 
 /**
+ * GstAncillaryMetaField:
+ * @GST_ANCILLARY_META_FIELD_PROGRESSIVE: Progressive or no field specified (default)
+ * @GST_ANCILLARY_META_FIELD_INTERLACED_FIRST: Interlaced first field
+ * @GST_ANCILLARY_META_FIELD_INTERLACED_SECOND: Interlaced second field
+ *
+ * Location of a @GstAncillaryMeta.
+ *
+ * Since: 1.24
+ */
+
+typedef enum {
+  GST_ANCILLARY_META_FIELD_PROGRESSIVE          = 0x00,
+  GST_ANCILLARY_META_FIELD_INTERLACED_FIRST     = 0x10,
+  GST_ANCILLARY_META_FIELD_INTERLACED_SECOND    = 0x11,
+} GstAncillaryMetaField;
+
+/**
+ * GstAncillaryMeta:
+ * @meta: Parent #GstMeta
+ * @field: The field where the ancillary data is located
+ * @c_not_y_channel: Which channel (luminance or chrominance) the ancillary
+ *    data is located. 0 if content is SD or stored in the luminance channel
+ *    (default). 1 if HD and stored in the chrominance channel.
+ * @line: The line on which the ancillary data is located (max 11bit). There
+ *    are two special values: 0x7ff if no line is specified (default), 0x7fe
+ *    to specify the ancillary data is on any valid line before active video
+ * @offset: The location of the ancillary data packet in a SDI raster relative
+ *    to the start of active video (max 12bits). A value of 0 means the ADF of
+ *    the ancillary packet starts immediately following SAV. There are 3
+ *    special values: 0xfff: No specified location (default), 0xffe: within
+ *    HANC data space, 0xffd: within the ancillary data space located between
+ *    SAV and EAV
+ * @DID: Data Identified
+ * @SDID_block_number: Secondary Data identification (if type 2) or Data block
+ *    number (if type 1)
+ * @data_count: The amount of user data
+ * @data: The User data
+ * @checksum: The checksum of the ADF
+ *
+ * #GstMeta for carrying SMPTE-291M Ancillary data. Note that all the ADF fields
+ *    (@DID to @checksum) are 10bit values with parity/non-parity high-bits set.
+ *
+ * Since: 1.24
+ */
+
+typedef struct {
+  GstMeta meta;
+
+  GstAncillaryMetaField field; 	/* Field location */
+
+  gboolean c_not_y_channel;	/* 1 if content is HD and the ANC data is stored
+				   in the chrominance channel. 0 if content is
+				   SD or the ANC data is stored in the luminance
+				   channel (default) */
+
+  guint16 line;			/* The line on which this ANC data is located.
+				 *
+				 * 11bit value
+				 *
+				 * Special values:
+				 * * 0x7ff : No line specified (default)
+				 * * 0x7fe : Any valid line before active video */
+
+  guint16 offset;		/* Location of the ANC data packet in a SDI
+				 * raster relative to SAV. A value of 0 means
+				 * the ADF of the ANC data packet beings
+				 * immediately following SAV.
+				 *
+				 * 12bits value
+				 *
+				 * The unit is 10-bit words of the indicated
+				 * data stream and data channel
+				 *
+				 * Special values:
+				 * * 0xfff: No specified horizontal location (default)
+				 * * 0xffe: Within HANC data space
+				 * * 0xffd: Within the ancillary data space located
+				 *     between SAV and EAV
+				 */
+
+  /* EXCLUDED from ANC RTP are the multi-stream properties (ex: stereoscopic
+   * video). That information should be conveyed by having separate VANC
+   * streams */
+
+  /* What follows are all the fields making up a ST 291 ADF packet. All of the
+   * fields are stored as 10bit, including the parity/non-parity high-bits set.
+   *
+   * To access the 8bit content, just cast the value */
+  guint16 DID;			/* Data Identifier (10 bit) */
+  guint16 SDID_block_number;	/* Secondary data identification (If type 2) or
+				 * Data Block number (if type 1). Value is
+				 * 10bit */
+  guint16 data_count;		/* The amount of User Data. Only the low 8 bits are to be used */
+  guint16 *data;		/* The User Data (10bit) */
+  guint16 checksum;		/* The checksum (10bit) */
+  
+} GstAncillaryMeta;
+
+GST_VIDEO_API GType gst_ancillary_meta_api_get_type(void);
+#define GST_ANCILLARY_META_API_TYPE (gst_ancillary_meta_api_get_type())
+
+GST_VIDEO_API const GstMetaInfo *gst_ancillary_meta_get_info(void);
+#define GST_ANCILLARY_META_INFO (gst_ancillary_meta_get_info())
+
+GST_VIDEO_API GstAncillaryMeta *
+gst_buffer_add_ancillary_meta(GstBuffer *buffer);
+
+/**
+ * gst_buffer_get_ancillary_meta:
+ * @b: A #GstBuffer
+ *
+ * Gets the #GstAncillaryMeta that might be present on @b.
+ *
+ * Note: It is quite likely that there might be more than one ancillary meta on
+ * a given buffer. This function will only return the first one. See gst_buffer_iterate_ancillary_meta() for a way to iterate over all ancillary metas of the buffer.
+ *
+ * Since: 1.24
+ *
+ * Returns: The first #GstAncillaryMeta present on @b, or %NULL if none are
+ * present.
+ */
+#define gst_buffer_get_ancillary_meta(b) \
+  ((GstAncillaryMeta*)gst_buffer_get_meta((b), GST_ANCILLARY_META_API_TYPE)
+
+
+/**
+ * gst_buffer_iterate_ancillary_meta:
+ * @b: A #GstBuffer
+ * @s: (out caller-allocates): An opaque state pointer
+ *
+ * Retrieves the next #GstAncillaryMeta after the current one according to
+ * @s. If @s points to %NULL, the first #GstAncillaryMeta will be returned (if
+ * any).
+ *
+ * @s will be updated with an opaque state pointer.
+ *
+ * Since: 1.24
+ *
+ * Returns: (transfer none) (nullable): The next #GstAncillaryMeta present on @b
+ * or %NULL when there are no more items.
+ */
+#define gst_buffer_iterate_ancillary_meta(b, s) \
+  ((GstAncillaryMeta*)gst_buffer_iterate_meta_filtered((b), (s), GST_ANCILLARY_META_API_TYPE))
+
+/**
  * GstVideoAFDValue:
  * @GST_VIDEO_AFD_UNAVAILABLE: Unavailable (see note 0 below).
  * @GST_VIDEO_AFD_16_9_TOP_ALIGNED: For 4:3 coded frame, letterbox 16:9 image,

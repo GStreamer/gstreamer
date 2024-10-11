@@ -194,6 +194,7 @@ struct _GstBaseTextOverlay {
     GstBaseTextOverlayScaleMode  scale_mode;
     gint                     scale_par_n;
     gint                     scale_par_d;
+    gboolean                 alt_render;
 
     /* text pad format */
     gboolean                 have_pango_markup;

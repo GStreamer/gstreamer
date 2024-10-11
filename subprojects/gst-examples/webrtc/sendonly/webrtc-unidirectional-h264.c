@@ -249,7 +249,7 @@ create_receiver_entry (SoupWebsocketConnection * connection)
       "application/x-rtp,media=video,encoding-name=H264,payload="
       RTP_PAYLOAD_TYPE " ! webrtcbin. "
       "autoaudiosrc ! queue max-size-buffers=1 leaky=downstream"
-      " ! audioconvert ! audioresample ! opusenc  ! rtpopuspay pt="
+      " ! audioconvert ! audioresample ! opusenc perfect-timestamp=true ! rtpopuspay pt="
       RTP_AUDIO_PAYLOAD_TYPE " ! application/x-rtp, encoding-name=OPUS !"
       " webrtcbin. ", &error);
   if (error != NULL) {

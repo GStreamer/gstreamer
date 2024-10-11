@@ -80,6 +80,14 @@ GType gst_gl_display_get_type (void);
  *
  * Since: 1.20
  */
+/**
+ * GST_GL_DISPLAY_TYPE_EGL_SURFACELESS:
+ *
+ * Mesa3D surfaceless display using the EGL_PLATFORM_SURFACELESS_MESA
+ * extension.
+ *
+ * Since: 1.24
+ */
 typedef enum
 {
   GST_GL_DISPLAY_TYPE_NONE = 0,
@@ -95,6 +103,7 @@ typedef enum
   GST_GL_DISPLAY_TYPE_EAGL = (1 << 9),
   GST_GL_DISPLAY_TYPE_WINRT = (1 << 10),
   GST_GL_DISPLAY_TYPE_ANDROID = (1 << 11),
+  GST_GL_DISPLAY_TYPE_EGL_SURFACELESS = (1 << 12),
 
   GST_GL_DISPLAY_TYPE_ANY = G_MAXUINT32
 } GstGLDisplayType;

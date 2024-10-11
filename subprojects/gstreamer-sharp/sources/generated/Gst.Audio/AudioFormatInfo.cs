@@ -45,6 +45,23 @@ namespace Gst.Audio {
 			return (Gst.Audio.AudioFormatInfo) Marshal.PtrToStructure (raw, typeof (Gst.Audio.AudioFormatInfo));
 		}
 
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_audio_format_info_fill_silence(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]IntPtr[] dest, UIntPtr length);
+
+		public void FillSilence(IntPtr[] dest) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			ulong length = (ulong)(dest == null ? 0 : dest.Length);
+			gst_audio_format_info_fill_silence(this_as_native, dest, new UIntPtr ((uint)length));
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+		}
+
+		static void ReadNative (IntPtr native, ref Gst.Audio.AudioFormatInfo target)
+		{
+			target = New (native);
+		}
+
 		public bool Equals (AudioFormatInfo other)
 		{
 			return true && Format.Equals (other.Format) && Name.Equals (other.Name) && Description.Equals (other.Description) && Flags.Equals (other.Flags) && Endianness.Equals (other.Endianness) && Width.Equals (other.Width) && Depth.Equals (other.Depth) && Silence.Equals (other.Silence) && UnpackFormat.Equals (other.UnpackFormat) && UnpackFunc.Equals (other.UnpackFunc) && PackFunc.Equals (other.PackFunc);

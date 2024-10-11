@@ -49,8 +49,8 @@ G_STMT_START {                                                                 \
 } G_STMT_END
 
 #if SRT_VERSION_VALUE > 0x10402
-#define REASON_FORMAT "s"
-#define REASON_ARGS(reason) srt_rejectreason_str (reason)
+#define REASON_FORMAT "s (%d)"
+#define REASON_ARGS(reason) srt_rejectreason_str (reason), (reason)
 #else
 /* srt_rejectreason_str() is unavailable in libsrt 1.4.2 and prior due to
  * unexported symbol. See https://github.com/Haivision/srt/pull/1728. */
@@ -139,6 +139,7 @@ struct srt_constant_params
 
 static const bool bool_false = false;
 static const bool bool_true = true;
+static const int32_t int32_zero = 0;
 static const struct linger no_linger = { 0, 0 };
 
 /* *INDENT-OFF* */
@@ -147,6 +148,7 @@ static const struct srt_constant_params srt_params[] = {
   {"SRTO_RCVSYN",    SRTO_RCVSYN,    &bool_false, sizeof bool_false}, /* non-blocking */
   {"SRTO_LINGER",    SRTO_LINGER,    &no_linger,  sizeof no_linger},  /* no linger time */
   {"SRTO_TSBPDMODE", SRTO_TSBPDMODE, &bool_true,  sizeof bool_true},  /* Timestamp-based Packet Delivery mode must be enabled */
+  {"SRTO_IPV6ONLY",  SRTO_IPV6ONLY,  &int32_zero, sizeof int32_zero}, /* must be either 0 or 1 before binding to :: */
   {NULL, -1, NULL, 0},
 };
 /* *INDENT-ON* */
@@ -445,6 +447,7 @@ gst_srt_object_set_property_helper (GstSRTObject * srtobject,
       break;
     case PROP_AUTHENTICATION:
       srtobject->authentication = g_value_get_boolean (value);
+      break;
     case PROP_AUTO_RECONNECT:
       srtobject->auto_reconnect = g_value_get_boolean (value);
       break;
@@ -553,7 +556,10 @@ gst_srt_object_get_property_helper (GstSRTObject * srtobject,
       GST_OBJECT_UNLOCK (srtobject->element);
       break;
     case PROP_AUTHENTICATION:
+      GST_OBJECT_LOCK (srtobject->element);
       g_value_set_boolean (value, srtobject->authentication);
+      GST_OBJECT_UNLOCK (srtobject->element);
+      break;
     case PROP_AUTO_RECONNECT:
       GST_OBJECT_LOCK (srtobject->element);
       g_value_set_boolean (value, srtobject->auto_reconnect);
@@ -2048,6 +2054,10 @@ get_stats_for_srtsock (GstSRTObject * srtobject, SRTSOCKET srtsock)
       "negotiated-latency-ms", G_TYPE_INT, stats.msSndTsbPdDelay,
       "packets-received", G_TYPE_INT64, stats.pktRecvTotal,
       "packets-received-lost", G_TYPE_INT, stats.pktRcvLossTotal,
+      /* number of retransmitted packets registered at receiver side */
+      "packets-received-retransmitted", G_TYPE_INT, stats.pktRcvRetrans,
+      /* number of dropped packets by the receiver */
+      "packets-received-dropped", G_TYPE_INT, stats.pktRcvDropTotal,
       /* number of sent ACK packets */
       "packet-ack-sent", G_TYPE_INT, stats.pktSentACK,
       /* number of sent NAK packets */

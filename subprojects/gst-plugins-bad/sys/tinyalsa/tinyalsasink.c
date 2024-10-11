@@ -126,7 +126,7 @@ gst_tinyalsa_sink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   GValue formats = { 0, };
   GValue format = { 0, };
   struct pcm_params *params = NULL;
-  struct pcm_mask *mask;
+  const struct pcm_mask *mask = NULL;
   int rate_min, rate_max, channels_min, channels_max;
   guint16 m;
 
@@ -384,11 +384,13 @@ gst_tinyalsa_sink_write (GstAudioSink * asink, gpointer data, guint length)
 {
   GstTinyalsaSink *sink = GST_TINYALSA_SINK (asink);
   int ret;
+  unsigned int requested_frames;
 
 again:
   GST_DEBUG_OBJECT (sink, "Starting write");
 
-  ret = pcm_write (sink->pcm, data, length);
+  requested_frames = pcm_bytes_to_frames (sink->pcm, length);
+  ret = pcm_writei (sink->pcm, data, requested_frames);
   if (ret == -EPIPE) {
     GST_WARNING_OBJECT (sink, "Got an underrun");
 

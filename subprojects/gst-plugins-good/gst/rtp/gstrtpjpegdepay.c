@@ -119,6 +119,9 @@ gst_rtp_jpeg_depay_class_init (GstRtpJPEGDepayClass * klass)
 static void
 gst_rtp_jpeg_depay_init (GstRtpJPEGDepay * rtpjpegdepay)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (rtpjpegdepay), TRUE);
+
   rtpjpegdepay->adapter = gst_adapter_new ();
 }
 
@@ -737,17 +740,20 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpjpegdepay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 invalid_dimension:
   {
     GST_ELEMENT_WARNING (rtpjpegdepay, STREAM, FORMAT,
         ("Invalid Dimension %dx%d.", width, height), (NULL));
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 no_qtable:
   {
     GST_WARNING_OBJECT (rtpjpegdepay, "no qtable");
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 invalid_packet:
@@ -755,12 +761,14 @@ invalid_packet:
     GST_WARNING_OBJECT (rtpjpegdepay, "invalid packet");
     gst_adapter_flush (rtpjpegdepay->adapter,
         gst_adapter_available (rtpjpegdepay->adapter));
+    gst_rtp_base_depayload_flush (depayload, TRUE);
     return NULL;
   }
 no_header_packet:
   {
     GST_WARNING_OBJECT (rtpjpegdepay,
         "discarding data packets received when we have no header");
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 }

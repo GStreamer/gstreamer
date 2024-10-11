@@ -25,6 +25,7 @@ if taglib_dep.found() and add_languages('cpp', native: false, required: get_opti
     dependencies : [gsttag_dep, taglib_dep],
     install : true,
     install_dir : plugins_install_dir,
+    override_options : ['cpp_std=c++17'],
   )
   plugins += [gsttaglib]
 endif

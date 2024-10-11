@@ -506,7 +506,8 @@ gst_va_vp9_dec_output_picture (GstVp9Decoder * decoder,
 
   GST_LOG_OBJECT (self, "Outputting picture %p", picture);
 
-  ret = gst_va_base_dec_process_output (base, frame, picture->discont_state, 0);
+  ret = gst_va_base_dec_process_output (base,
+      frame, GST_CODEC_PICTURE (picture)->discont_state, 0);
   gst_vp9_picture_unref (picture);
 
   if (ret)

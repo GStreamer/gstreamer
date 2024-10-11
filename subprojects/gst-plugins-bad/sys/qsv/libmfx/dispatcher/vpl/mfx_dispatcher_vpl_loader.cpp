@@ -1695,14 +1695,14 @@ mfxStatus LoaderCtxVPL::InitDispatcherLog() {
     DWORD err;
 
     char logEnabled[MAX_VPL_SEARCH_PATH] = "";
-    err = GetEnvironmentVariable("ONEVPL_DISPATCHER_LOG", logEnabled, MAX_VPL_SEARCH_PATH);
+    err = GetEnvironmentVariableA("ONEVPL_DISPATCHER_LOG", logEnabled, MAX_VPL_SEARCH_PATH);
     if (err == 0 || err >= MAX_VPL_SEARCH_PATH)
         return MFX_ERR_UNSUPPORTED; // environment variable not defined or string too long
 
     strLogEnabled = logEnabled;
 
     char logFile[MAX_VPL_SEARCH_PATH] = "";
-    err = GetEnvironmentVariable("ONEVPL_DISPATCHER_LOG_FILE", logFile, MAX_VPL_SEARCH_PATH);
+    err = GetEnvironmentVariableA("ONEVPL_DISPATCHER_LOG_FILE", logFile, MAX_VPL_SEARCH_PATH);
     if (err == 0 || err >= MAX_VPL_SEARCH_PATH) {
         // nothing to do - strLogFile is an empty string
     }

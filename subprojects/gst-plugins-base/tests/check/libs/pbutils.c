@@ -199,6 +199,7 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   msg = gst_missing_decoder_message_new (pipeline, caps);
   fail_unless (msg != NULL);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
+  gst_missing_plugin_message_set_stream_id (msg, "teststreamid");
   fail_unless (gst_message_get_structure (msg) != NULL);
   s = gst_message_get_structure (msg);
   fail_unless (gst_structure_has_name (s, "missing-plugin"));
@@ -207,6 +208,8 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   fail_unless (gst_structure_has_field_typed (s, "detail", GST_TYPE_CAPS));
   fail_unless (gst_structure_has_field_typed (s, "name", G_TYPE_STRING));
   fail_unless (gst_structure_get_string (s, "name") != NULL);
+  fail_unless_equals_string (gst_missing_plugin_message_get_stream_id (msg),
+      "teststreamid");
   missing_msg_check_getters (msg);
   gst_message_unref (msg);
 
@@ -453,9 +456,35 @@ static const gchar *caps_strings[] = {
   /* raw video */
   "video/x-raw, format=(string)RGB16, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1",
   "video/x-raw, format=(string)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1",
+  "video/x-raw, format=(string)I420, width=(int)320, height=(int)240, framerate=(fraction)30/1",
+  "video/x-raw, format=(string)AYUV, width=(int)320, height=(int)240, framerate=(fraction)30/1",
   /* and a made-up format */
   "video/x-tpm"
 };
+
+static gboolean
+validate_video_subsampling (GstCaps * caps, gchar * desc)
+{
+  GstStructure *st;
+  const gchar *format;
+
+  st = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_has_name (st, "video/x-raw"))
+    return TRUE;
+
+  format = gst_structure_get_string (st, "format");
+  if (!format)
+    return TRUE;
+
+  if (g_strcmp0 (format, "YUY2") == 0)
+    return g_str_has_suffix (desc, "4:2:2");
+  if (g_strcmp0 (format, "I420") == 0)
+    return g_str_has_suffix (desc, "4:2:0");
+  if (g_strcmp0 (format, "AYUV") == 0)
+    return g_str_has_suffix (desc, "4:4:4");
+
+  return TRUE;
+}
 
 GST_START_TEST (test_pb_utils_get_codec_description)
 {
@@ -475,6 +504,7 @@ GST_START_TEST (test_pb_utils_get_codec_description)
     fail_unless (desc != NULL);
     GST_LOG (" - codec   : %s", desc);
     fail_unless (g_utf8_validate (desc, -1, NULL));
+    fail_unless (validate_video_subsampling (caps, desc));
     g_free (desc);
     desc = gst_pb_utils_get_decoder_description (caps);
     fail_unless (desc != NULL);
@@ -1475,6 +1505,50 @@ GST_START_TEST (test_pb_utils_caps_mime_codec)
   g_free (mime_codec);
   gst_caps_unref (caps);
 
+  /* av1 with default chroma subsampling, color primaries, color transfer,
+   * color matrix and luma/chroma encoded*/
+  caps =
+      gst_caps_from_string
+      ("video/x-av1, stream-format=(string)obu-stream, alignment=(string)tu, profile=(string)main, width=(int)640, height=(int)480, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, colorimetry=(string)bt709");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "av01.0.01M.08");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
+  /* av1 with non-default chroma subsampling */
+  caps =
+      gst_caps_from_string
+      ("video/x-av1, stream-format=(string)obu-stream, alignment=(string)tu, profile=(string)main, width=(int)640, height=(int)480, "
+      "pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, chroma-format=(string)4:2:2, bit-depth-luma=(uint)8, "
+      "colorimetry=(string)bt709");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "av01.0.01M.08.0.100.01.01.01.0");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
+  /* av1 with non-default level and tier */
+  caps =
+      gst_caps_from_string
+      ("video/x-av1, stream-format=(string)obu-stream, alignment=(string)tu, profile=(string)main, width=(int)640, height=(int)480, "
+      "pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, chroma-format=(string)4:2:2, bit-depth-luma=(uint)8, "
+      "colorimetry=(string)bt709, tier=(string)high, level=(string)3.0");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "av01.0.04H.08.0.100.01.01.01.0");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
+  /* av1 with missing colorimetry */
+  caps =
+      gst_caps_from_string
+      ("video/x-av1, stream-format=(string)obu-stream, alignment=(string)tu, profile=(string)main, width=(int)640, height=(int)480, "
+      "pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, "
+      "chroma-format=(string)4:2:2, bit-depth-luma=(uint)8, "
+      "bit-depth-chroma=(uint)8, tier=(string)main, level=(string)5.0");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "av01.0.12M.08");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
   /* vp8 */
   caps = gst_caps_new_empty_simple ("video/x-vp8");
   mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
@@ -1492,6 +1566,28 @@ GST_START_TEST (test_pb_utils_caps_mime_codec)
   caps2 = gst_codec_utils_caps_from_mime_codec (mime_codec);
   fail_unless (gst_caps_is_equal_fixed (caps, caps2));
   gst_caps_unref (caps2);
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
+  /* vp9 with default chroma subsampling, color primaries, color transfer, color
+   * matrix and luma/chroma encoded in the "legal" range*/
+  caps =
+      gst_caps_from_string
+      ("video/x-vp9, width=(int)640, height=(int)480, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, chroma-format=(string)4:2:0, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, colorimetry=(string)bt709, alignment=(string)super-frame, profile=(string)0, codec-alpha=(boolean)false");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "vp09.00.10.08");
+  g_free (mime_codec);
+  gst_caps_unref (caps);
+
+  /* vp9 with non-default chroma subsampling */
+  caps = gst_caps_from_string ("video/x-vp9, width=(int)640, height=(int)480, "
+      "pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, "
+      "chroma-format=(string)4:2:2, bit-depth-luma=(uint)8, "
+      "bit-depth-chroma=(uint)8, colorimetry=(string)bt709, "
+      "alignment=(string)super-frame, profile=(string)0, "
+      "codec-alpha=(boolean)false");
+  mime_codec = gst_codec_utils_caps_get_mime_codec (caps);
+  fail_unless_equals_string (mime_codec, "vp09.00.10.08.02.01.01.01.00");
   g_free (mime_codec);
   gst_caps_unref (caps);
 
@@ -1559,6 +1655,40 @@ GST_START_TEST (test_pb_utils_caps_mime_codec)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pb_utils_caps_from_mime_codec)
+{
+  GstCaps *caps = NULL;
+  gchar *caps_str = NULL;
+
+  /* AV1 minimal caps */
+  caps = gst_codec_utils_caps_from_mime_codec ("av01");
+  caps_str = gst_caps_to_string (caps);
+  fail_unless_equals_string (caps_str, "video/x-av1");
+  gst_caps_unref (caps);
+  g_free (caps_str);
+
+  /* AV1 with default chroma subsampling, color primaries, color transfer,
+   * color matrix and luma/chroma encoded */
+  caps = gst_codec_utils_caps_from_mime_codec ("av01.0.01M.08");
+  caps_str = gst_caps_to_string (caps);
+  fail_unless_equals_string (caps_str,
+      "video/x-av1, profile=(string)main, tier=(string)main, level=(string)2.1, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, chroma-format=(string)4:2:0, colorimetry=(string)bt709");
+  gst_caps_unref (caps);
+  g_free (caps_str);
+
+  /* av1 with non-default chroma subsampling */
+  caps =
+      gst_codec_utils_caps_from_mime_codec ("av01.0.01M.08.0.100.01.01.01.0");
+  caps_str = gst_caps_to_string (caps);
+  fail_unless_equals_string (caps_str,
+      ("video/x-av1, profile=(string)main, tier=(string)main, level=(string)2.1, bit-depth-luma=(uint)8, bit-depth-chroma=(uint)8, chroma-format=(string)4:2:2, colorimetry=(string)bt709"));
+  gst_caps_unref (caps);
+  g_free (caps_str);
+
+};
+
+GST_END_TEST;
+
 static Suite *
 libgstpbutils_suite (void)
 {
@@ -1581,6 +1711,7 @@ libgstpbutils_suite (void)
   tcase_add_test (tc_chain, test_pb_utils_h264_get_profile_flags_level);
   tcase_add_test (tc_chain, test_pb_utils_h265_profiles);
   tcase_add_test (tc_chain, test_pb_utils_caps_mime_codec);
+  tcase_add_test (tc_chain, test_pb_utils_caps_from_mime_codec);
   return s;
 }
 

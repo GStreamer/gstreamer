@@ -52,6 +52,15 @@ static LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
 static LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
 
+/* windowsx.h */
+#ifndef GET_X_LPARAM
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#endif
+
+#ifndef GET_Y_LPARAM
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
+#endif
+
 typedef enum
 {
   GST_D3D11_WINDOW_WIN32_OVERLAY_STATE_NONE = 0,
@@ -78,6 +87,7 @@ struct _GstD3D11WindowWin32
 
   GThread *internal_hwnd_thread;
 
+  GRecMutex hwnds_lock;
   HWND internal_hwnd;
   HWND external_hwnd;
   GstD3D11WindowWin32OverlayState overlay_state;
@@ -89,8 +99,8 @@ struct _GstD3D11WindowWin32
   gint pending_move_window;
 
   /* fullscreen related */
-  RECT restore_rect;
   LONG restore_style;
+  WINDOWPLACEMENT restore_placement;
 
   /* Handle set_render_rectangle */
   GstVideoRectangle render_rect;
@@ -104,7 +114,7 @@ G_DEFINE_TYPE (GstD3D11WindowWin32, gst_d3d11_window_win32,
     GST_TYPE_D3D11_WINDOW);
 
 static void gst_d3d11_window_win32_constructed (GObject * object);
-static void gst_d3d11_window_win32_dispose (GObject * object);
+static void gst_d3d11_window_win32_finalize (GObject * object);
 
 static void gst_d3d11_window_win32_show (GstD3D11Window * window);
 static void gst_d3d11_window_win32_update_swap_chain (GstD3D11Window * window);
@@ -148,7 +158,7 @@ gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
   GstD3D11WindowClass *window_class = GST_D3D11_WINDOW_CLASS (klass);
 
   gobject_class->constructed = gst_d3d11_window_win32_constructed;
-  gobject_class->dispose = gst_d3d11_window_win32_dispose;
+  gobject_class->finalize = gst_d3d11_window_win32_finalize;
 
   window_class->show = GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_show);
   window_class->update_swap_chain =
@@ -176,6 +186,8 @@ static void
 gst_d3d11_window_win32_init (GstD3D11WindowWin32 * self)
 {
   self->main_context = g_main_context_new ();
+  self->restore_placement.length = sizeof (WINDOWPLACEMENT);
+  g_rec_mutex_init (&self->hwnds_lock);
 }
 
 static void
@@ -204,11 +216,14 @@ done:
 }
 
 static void
-gst_d3d11_window_win32_dispose (GObject * object)
+gst_d3d11_window_win32_finalize (GObject * object)
 {
-  GST_DEBUG_OBJECT (object, "dispose");
+  GstD3D11WindowWin32 *self = (GstD3D11WindowWin32 *) object;
+
+  GST_DEBUG_OBJECT (object, "finalize");
   gst_d3d11_window_win32_unprepare (GST_D3D11_WINDOW (object));
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  g_rec_mutex_clear (&self->hwnds_lock);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstFlowReturn
@@ -286,9 +301,13 @@ gst_d3d11_window_win32_unprepare (GstD3D11Window * window)
           0, 0);
     }
 
+    /* Hold hwnds lock to allow the window thread finish processing what it could
+     * already have in the queue at this moment, before we reset the handlers to null */
+    g_rec_mutex_lock (&self->hwnds_lock);
     self->external_hwnd = NULL;
     self->internal_hwnd = NULL;
     self->internal_hwnd_thread = NULL;
+    g_rec_mutex_unlock (&self->hwnds_lock);
   }
 
   if (self->loop) {
@@ -645,37 +664,30 @@ gst_d3d11_window_win32_change_fullscreen_mode_internal (GstD3D11WindowWin32 *
     /* Restore the window's attributes and size */
     SetWindowLongA (hwnd, GWL_STYLE, self->restore_style);
 
-    SetWindowPos (hwnd, HWND_NOTOPMOST,
-        self->restore_rect.left,
-        self->restore_rect.top,
-        self->restore_rect.right - self->restore_rect.left,
-        self->restore_rect.bottom - self->restore_rect.top,
-        SWP_FRAMECHANGED | SWP_NOACTIVATE);
-
-    ShowWindow (hwnd, SW_NORMAL);
+    SetWindowPlacement (hwnd, &self->restore_placement);
   } else {
     ComPtr < IDXGIOutput > output;
     DXGI_OUTPUT_DESC output_desc;
     IDXGISwapChain *swap_chain = window->swap_chain;
 
+    /* remember current placement to restore window later */
+    GetWindowPlacement (hwnd, &self->restore_placement);
+
     /* show window before change style */
     ShowWindow (hwnd, SW_SHOW);
 
-    /* Save the old window rect so we can restore it when exiting
-     * fullscreen mode */
-    GetWindowRect (hwnd, &self->restore_rect);
     self->restore_style = GetWindowLong (hwnd, GWL_STYLE);
 
     /* Make the window borderless so that the client area can fill the screen */
     SetWindowLongA (hwnd, GWL_STYLE,
         self->restore_style &
         ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU |
-            WS_THICKFRAME));
+            WS_THICKFRAME | WS_MAXIMIZE));
 
     swap_chain->GetContainingOutput (&output);
     output->GetDesc (&output_desc);
 
-    SetWindowPos (hwnd, HWND_TOPMOST,
+    SetWindowPos (hwnd, HWND_TOP,
         output_desc.DesktopCoordinates.left,
         output_desc.DesktopCoordinates.top,
         output_desc.DesktopCoordinates.right,
@@ -719,7 +731,8 @@ gst_d3d11_window_win32_on_mouse_event (GstD3D11WindowWin32 * self,
 {
   GstD3D11Window *window = GST_D3D11_WINDOW (self);
   gint button;
-  const gchar *event = NULL;
+  const gchar *event = nullptr;
+  guint modifier = 0;
 
   if (!window->enable_navigation_events)
     return;
@@ -737,6 +750,10 @@ gst_d3d11_window_win32_on_mouse_event (GstD3D11WindowWin32 * self,
       button = 1;
       event = "mouse-button-release";
       break;
+    case WM_LBUTTONDBLCLK:
+      button = 1;
+      event = "mouse-double-click";
+      break;
     case WM_RBUTTONDOWN:
       button = 2;
       event = "mouse-button-press";
@@ -744,6 +761,10 @@ gst_d3d11_window_win32_on_mouse_event (GstD3D11WindowWin32 * self,
     case WM_RBUTTONUP:
       button = 2;
       event = "mouse-button-release";
+      break;
+    case WM_RBUTTONDBLCLK:
+      button = 2;
+      event = "mouse-double-click";
       break;
     case WM_MBUTTONDOWN:
       button = 3;
@@ -753,13 +774,28 @@ gst_d3d11_window_win32_on_mouse_event (GstD3D11WindowWin32 * self,
       button = 3;
       event = "mouse-button-release";
       break;
-    default:
+    case WM_MBUTTONDBLCLK:
+      button = 3;
+      event = "mouse-double-click";
       break;
+    default:
+      return;
   }
 
-  if (event)
-    gst_d3d11_window_on_mouse_event (window,
-        event, button, (gdouble) LOWORD (lParam), (gdouble) HIWORD (lParam));
+  if ((wParam & MK_CONTROL) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_CONTROL_MASK;
+  if ((wParam & MK_LBUTTON) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_BUTTON1_MASK;
+  if ((wParam & MK_RBUTTON) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_BUTTON2_MASK;
+  if ((wParam & MK_MBUTTON) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_BUTTON3_MASK;
+  if ((wParam & MK_SHIFT) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_SHIFT_MASK;
+
+  gst_d3d11_window_on_mouse_event (window,
+      event, button, (gdouble) GET_X_LPARAM (lParam),
+      (gdouble) GET_Y_LPARAM (lParam), modifier);
 }
 
 static void
@@ -792,6 +828,9 @@ gst_d3d11_window_win32_handle_window_proc (GstD3D11WindowWin32 * self,
     case WM_MBUTTONDOWN:
     case WM_MBUTTONUP:
     case WM_MOUSEMOVE:
+    case WM_LBUTTONDBLCLK:
+    case WM_RBUTTONDBLCLK:
+    case WM_MBUTTONDBLCLK:
       gst_d3d11_window_win32_on_mouse_event (self, hWnd, uMsg, wParam, lParam);
       break;
     case WM_SYSKEYDOWN:
@@ -865,10 +904,19 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     SetPropA (hWnd, D3D11_WINDOW_PROP_NAME, self);
   } else if ((self = gst_d3d11_window_win32_hwnd_get_instance (hWnd))) {
-    g_assert (self->internal_hwnd == hWnd);
+    g_rec_mutex_lock (&self->hwnds_lock);
+    if (self->internal_hwnd != hWnd) {
+      g_warn_if_fail (self->internal_hwnd == NULL);
+      /* Most likely the instance is already in the destruction proccess,
+       * just let it process WM_GST_D3D11_DESTROY_INTERNAL_WINDOW */
+      g_rec_mutex_unlock (&self->hwnds_lock);
+      gst_object_unref (self);
+      return DefWindowProcA (hWnd, uMsg, wParam, lParam);
+    }
 
     gst_d3d11_window_win32_handle_window_proc (self, hWnd, uMsg, wParam,
         lParam);
+    g_rec_mutex_unlock (&self->hwnds_lock);
 
     switch (uMsg) {
       case WM_SIZE:
@@ -1216,6 +1264,9 @@ gst_d3d11_window_win32_show (GstD3D11Window * window)
       PostMessageA (self->internal_hwnd, WM_GST_D3D11_SHOW_WINDOW, 0, 0);
     }
 
+    if (g_atomic_int_get (&self->pending_fullscreen_count) > 0)
+      PostMessageA (self->internal_hwnd, WM_GST_D3D11_FULLSCREEN, 0, 0);
+
     self->visible = TRUE;
   }
 }
@@ -1283,8 +1334,16 @@ gst_d3d11_window_win32_change_fullscreen_mode (GstD3D11Window * window)
 
   if (self->internal_hwnd) {
     g_atomic_int_add (&self->pending_fullscreen_count, 1);
-    PostMessageA (self->internal_hwnd, WM_GST_D3D11_FULLSCREEN, 0, 0);
+    if (self->visible)
+      PostMessageA (self->internal_hwnd, WM_GST_D3D11_FULLSCREEN, 0, 0);
   }
+}
+
+HWND
+gst_d3d11_window_win32_get_internal_hwnd (GstD3D11Window * window)
+{
+  GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
+  return self->internal_hwnd;
 }
 
 GstD3D11Window *

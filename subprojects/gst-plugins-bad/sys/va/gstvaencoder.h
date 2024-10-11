@@ -119,5 +119,7 @@ GstVaEncodePicture *  gst_va_encode_picture_new           (GstVaEncoder * self,
 void                  gst_va_encode_picture_free          (GstVaEncodePicture * pic);
 VASurfaceID           gst_va_encode_picture_get_raw_surface (GstVaEncodePicture * pic);
 VASurfaceID           gst_va_encode_picture_get_reconstruct_surface (GstVaEncodePicture * pic);
-
+guint                 gst_va_encoder_get_surface_alignment (GstVaDisplay *display,
+                                                            VAProfile profile,
+                                                            VAEntrypoint entrypoint);
 G_END_DECLS

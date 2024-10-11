@@ -148,6 +148,8 @@ struct _GstV4l2Object {
   GstVideoInfo info;
   GstVideoAlignment align;
   GstVideoTransferFunction transfer;
+  gsize plane_size[GST_VIDEO_MAX_PLANES];
+  GstVideoColorMatrix matrix;
 
   /* Features */
   gboolean need_video_meta;
@@ -227,6 +229,9 @@ struct _GstV4l2Object {
    * on slow USB firmwares. When this is set, gst_v4l2_set_format() will modify
    * the caps to reflect what was negotiated during fixation */
   gboolean skip_try_fmt_probes;
+  
+  guint max_width;
+  guint max_height;
 };
 
 struct _GstV4l2ObjectClassHelper {
@@ -291,6 +296,9 @@ GstCaps*     gst_v4l2_object_get_raw_caps (void);
 
 GstCaps*     gst_v4l2_object_get_codec_caps (void);
 
+GstCaps*     gst_v4l2_object_probe_template_caps (const gchar * device, gint video_fd,
+                                                  enum v4l2_buf_type type);
+
 gboolean     gst_v4l2_object_set_format  (GstV4l2Object * v4l2object, GstCaps * caps, GstV4l2Error * error);
 gboolean     gst_v4l2_object_try_format  (GstV4l2Object * v4l2object, GstCaps * caps, GstV4l2Error * error);
 gboolean     gst_v4l2_object_try_import  (GstV4l2Object * v4l2object, GstBuffer * buffer);
@@ -318,6 +326,8 @@ gboolean     gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery *
 GstBufferPool * gst_v4l2_object_get_buffer_pool (GstV4l2Object * v4l2object);
 
 GstStructure * gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
+
+GstVideoFormat gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc);
 
 GstFlowReturn  gst_v4l2_object_poll (GstV4l2Object * v4l2object, GstClockTime timeout);
 gboolean       gst_v4l2_object_subscribe_event (GstV4l2Object * v4l2object, guint32 event);

@@ -95,6 +95,7 @@ sanitize_timeline_description (gchar ** args, GESLauncherParsedOptions * opts)
   gchar *prev_arg = NULL;
   GString *track_def;
   GString *timeline_str;
+  gboolean adds_tracks = FALSE;
 
   gchar *string = g_strdup (" ");
 
@@ -103,6 +104,8 @@ sanitize_timeline_description (gchar ** args, GESLauncherParsedOptions * opts)
     gchar *sanitized = _sanitize_argument (args[i], prev_arg);
 
     new_string = g_strconcat (string, " ", sanitized, NULL);
+
+    adds_tracks |= (g_strcmp0 (args[i], "+track") == 0);
 
     g_free (sanitized);
     g_free (string);
@@ -116,7 +119,7 @@ sanitize_timeline_description (gchar ** args, GESLauncherParsedOptions * opts)
     return NULL;
   }
 
-  if (strstr (string, "+track")) {
+  if (adds_tracks) {
     gchar *res = g_strconcat ("ges:", string, NULL);
     g_free (string);
 
@@ -178,26 +181,6 @@ ensure_uri (const gchar * location)
     return g_strdup (location);
   else
     return gst_filename_to_uri (location, NULL);
-}
-
-GstEncodingProfile *
-parse_encoding_profile (const gchar * format)
-{
-  GstEncodingProfile *profile;
-  GValue value = G_VALUE_INIT;
-
-  g_value_init (&value, GST_TYPE_ENCODING_PROFILE);
-
-  if (!gst_value_deserialize (&value, format)) {
-    g_value_reset (&value);
-
-    return NULL;
-  }
-
-  profile = g_value_dup_object (&value);
-  g_value_reset (&value);
-
-  return profile;
 }
 
 void

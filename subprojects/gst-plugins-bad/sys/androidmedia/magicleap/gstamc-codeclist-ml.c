@@ -38,12 +38,6 @@ struct _GstAmcCodecCapabilitiesHandle
 };
 
 gboolean
-gst_amc_codeclist_static_init (void)
-{
-  return TRUE;
-}
-
-gboolean
 gst_amc_codeclist_get_count (gint * count, GError ** err)
 {
   MLResult result;

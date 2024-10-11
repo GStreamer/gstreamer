@@ -3468,6 +3468,22 @@ data flow is inconsistent.</doc>
         </parameter>
       </parameters>
     </function>
+    <docsection name="gstcheck">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/check/gstcheck.c">These macros and functions are for internal use of the unit tests found
+inside the 'check' directories of various GStreamer packages.
+
+One notable feature is that one can use the environment variables GST_CHECKS
+and GST_CHECKS_IGNORE to select which tests to run or skip. Both variables
+can contain a comma separated list of test name globs (e.g. test_*).</doc>
+    </docsection>
+    <docsection name="gstcheckbufferstraw">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/check/gstbufferstraw.c">These macros and functions are for internal use of the unit tests found
+inside the 'check' directories of various GStreamer packages.</doc>
+    </docsection>
+    <docsection name="gstcheckconsistencychecker">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/check/gstconsistencychecker.c">These macros and functions are for internal use of the unit tests found
+inside the 'check' directories of various GStreamer packages.</doc>
+    </docsection>
     <function name="harness_new" c:identifier="gst_harness_new" moved-to="Harness.new" version="1.6" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/check/gstharness.c">Creates a new harness. Works like gst_harness_new_with_padnames(), except it
 assumes the #GstElement sinkpad is named "sink" and srcpad is named "src"

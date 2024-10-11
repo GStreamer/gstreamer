@@ -90,6 +90,7 @@ GType gst_d3d11_converter_backend_get_type (void);
   * @D3D11_FILTER_MIN_MAG_MIP_POINT
   * @D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT
   * @D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT
+  * @D3D11_FILTER_ANISOTROPIC
   *
   * Default is #D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT.
   *
@@ -121,6 +122,26 @@ typedef enum
 GST_D3D11_API
 GType gst_d3d11_converter_alpha_mode_get_type (void);
 #define GST_TYPE_D3D11_CONVERTER_ALPHA_MODE (gst_d3d11_converter_alpha_mode_get_type())
+
+/**
+ * GST_D3D11_CONVERTER_OPT_SRC_ALPHA_MODE:
+ *
+ * Set the source alpha mode.
+ * Default is #GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED.
+ *
+ * Since: 1.24
+ */
+#define GST_D3D11_CONVERTER_OPT_SRC_ALPHA_MODE "GstD3D11Converter.src-alpha-mode"
+
+/**
+ * GST_D3D11_CONVERTER_OPT_DEST_ALPHA_MODE:
+ *
+ * Set the source alpha mode.
+ * Default is #GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED.
+ *
+ * Since: 1.24
+ */
+#define GST_D3D11_CONVERTER_OPT_DEST_ALPHA_MODE "GstD3D11Converter.dest-alpha-mode"
 
 /**
  * GstD3D11Converter:
@@ -173,5 +194,9 @@ GST_D3D11_API
 gboolean            gst_d3d11_converter_convert_buffer_unlocked (GstD3D11Converter * converter,
                                                                  GstBuffer * in_buf,
                                                                  GstBuffer * out_buf);
+
+GST_D3D11_API
+gboolean            gst_d3d11_converter_set_transform_matrix (GstD3D11Converter * converter,
+                                                              const gfloat matrix[16]);
 
 G_END_DECLS

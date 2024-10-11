@@ -3767,6 +3767,34 @@ g_object_unref() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_ensure_keyunit_on_start" c:identifier="gst_rtsp_media_get_ensure_keyunit_on_start" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get ensure-keyunit-on-start flag.</doc>
+        <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">The ensure-keyunit-on-start flag.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="media" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">a #GstRTSPMedia</doc>
+            <type name="RTSPMedia" c:type="GstRTSPMedia*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_ensure_keyunit_on_start_timeout" c:identifier="gst_rtsp_media_get_ensure_keyunit_on_start_timeout" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get ensure-keyunit-on-start-timeout time.</doc>
+        <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">The ensure-keyunit-on-start-timeout time.</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="media" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">a #GstRTSPMedia</doc>
+            <type name="RTSPMedia" c:type="GstRTSPMedia*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="get_latency" c:identifier="gst_rtsp_media_get_latency">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get the latency that is used for receiving media.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
@@ -4415,6 +4443,48 @@ INADDR_ANY.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="set_ensure_keyunit_on_start" c:identifier="gst_rtsp_media_set_ensure_keyunit_on_start" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Set whether or not a keyunit should be ensured when a client connects. It
+will also configure the streams to drop delta units to ensure that they start
+on a keyunit.
+
+Note that this will only affect non-shared medias for now.</doc>
+        <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="media" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">a #GstRTSPMedia</doc>
+            <type name="RTSPMedia" c:type="GstRTSPMedia*"/>
+          </instance-parameter>
+          <parameter name="ensure_keyunit_on_start" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">the new value</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_ensure_keyunit_on_start_timeout" c:identifier="gst_rtsp_media_set_ensure_keyunit_on_start_timeout" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Sets the maximum allowed time before the first keyunit is considered
+expired.
+
+Note that this will only have an effect when ensure-keyunit-on-start is
+enabled.</doc>
+        <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="media" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">a #GstRTSPMedia</doc>
+            <type name="RTSPMedia" c:type="GstRTSPMedia*"/>
+          </instance-parameter>
+          <parameter name="timeout" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">the new value</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="set_eos_shutdown" c:identifier="gst_rtsp_media_set_eos_shutdown">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Set or unset if an EOS event will be sent to the pipeline for @media before
 it is unprepared.</doc>
@@ -4856,6 +4926,22 @@ when the media was not in the suspended state.</doc>
       </property>
       <property name="element" writable="1" construct-only="1" transfer-ownership="none">
         <type name="Gst.Element"/>
+      </property>
+      <property name="ensure-keyunit-on-start" version="1.24" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Whether or not a keyunit should be ensured when a client connects. It
+will also configure the streams to drop delta units to ensure that they start
+on a keyunit.
+
+Note that this will only affect non-shared medias for now.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="ensure-keyunit-on-start-timeout" version="1.24" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">The maximum allowed time before the first keyunit is considered
+expired.
+
+Note that this will only have an effect when ensure-keyunit-on-start is
+enabled.</doc>
+        <type name="guint" c:type="guint"/>
       </property>
       <property name="eos-shutdown" writable="1" transfer-ownership="none">
         <type name="gboolean" c:type="gboolean"/>
@@ -5568,6 +5654,34 @@ of all medias created from this factory.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_ensure_keyunit_on_start" c:identifier="gst_rtsp_media_factory_get_ensure_keyunit_on_start" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get ensure-keyunit-on-start flag.</doc>
+        <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">The ensure-keyunit-on-start flag.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="factory" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">a #GstRTSPMediaFactory</doc>
+            <type name="RTSPMediaFactory" c:type="GstRTSPMediaFactory*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_ensure_keyunit_on_start_timeout" c:identifier="gst_rtsp_media_factory_get_ensure_keyunit_on_start_timeout" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get ensure-keyunit-on-start-timeout time.</doc>
+        <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">The ensure-keyunit-on-start-timeout time.</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="factory" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">a #GstRTSPMediaFactory</doc>
+            <type name="RTSPMediaFactory" c:type="GstRTSPMediaFactory*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="get_latency" c:identifier="gst_rtsp_media_factory_get_latency">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get the latency that is used for receiving media</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
@@ -5928,6 +6042,41 @@ receiving media</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="set_ensure_keyunit_on_start" c:identifier="gst_rtsp_media_factory_set_ensure_keyunit_on_start" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">If media from this factory should ensure a key unit when a client connects.</doc>
+        <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="factory" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">a #GstRTSPMediaFactory</doc>
+            <type name="RTSPMediaFactory" c:type="GstRTSPMediaFactory*"/>
+          </instance-parameter>
+          <parameter name="ensure_keyunit_on_start" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">the new value</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_ensure_keyunit_on_start_timeout" c:identifier="gst_rtsp_media_factory_set_ensure_keyunit_on_start_timeout" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Configures medias from this factory to consider keyunits older than timeout
+to be expired. Expired keyunits will be discarded.</doc>
+        <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="factory" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">a #GstRTSPMediaFactory</doc>
+            <type name="RTSPMediaFactory" c:type="GstRTSPMediaFactory*"/>
+          </instance-parameter>
+          <parameter name="timeout" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">the new value</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="set_eos_shutdown" c:identifier="gst_rtsp_media_factory_set_eos_shutdown">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Configure if media created from this factory will have an EOS sent to the
 pipeline before shutdown.</doc>
@@ -6211,6 +6360,25 @@ when a client disconnects without sending TEARDOWN.</doc>
       <property name="enable-rtcp" version="1.20" writable="1" transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Whether the created media should send and receive RTCP</doc>
         <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="ensure-keyunit-on-start" version="1.24" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">If media from this factory should ensure a key unit when a client connects.
+
+This property will ensure that the stream always starts on a key unit
+instead of a delta unit which the client would not be able to decode.
+
+Note that this will only affect non-shared medias for now.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="ensure-keyunit-on-start-timeout" version="1.24" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Timeout in milliseconds used to determine if a keyunit should be discarded
+when a client connects.
+
+If the timeout has been reached a new keyframe will be forced, otherwise
+the currently blocking keyframe will be used.
+
+This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
+        <type name="guint" c:type="guint"/>
       </property>
       <property name="eos-shutdown" writable="1" transfer-ownership="none">
         <type name="gboolean" c:type="gboolean"/>
@@ -12277,6 +12445,386 @@ the media factory and retrieve the role with the same name.</doc>
         <type name="utf8" c:type="const gchar*"/>
       </field>
     </record>
+    <docsection name="rtsp-address-pool">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-address-pool.c">The #GstRTSPAddressPool is an object that maintains a collection of network
+addresses. It is used to allocate server ports and server multicast addresses
+but also to reserve client provided destination addresses.
+
+A range of addresses can be added with gst_rtsp_address_pool_add_range().
+Both multicast and unicast addresses can be added.
+
+With gst_rtsp_address_pool_acquire_address() an unused address and port range
+can be acquired from the pool. With gst_rtsp_address_pool_reserve_address() a
+specific address can be retrieved. Both methods return a boxed
+#GstRTSPAddress that should be freed with gst_rtsp_address_free() after
+usage, which brings the address back into the pool.
+
+Last reviewed on 2013-07-16 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-auth">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-auth.c">The #GstRTSPAuth object is responsible for checking if the current user is
+allowed to perform requested actions. The default implementation has some
+reasonable checks but subclasses can implement custom security policies.
+
+A new auth object is made with gst_rtsp_auth_new(). It is usually configured
+on the #GstRTSPServer object.
+
+The RTSP server will call gst_rtsp_auth_check() with a string describing the
+check to perform. The possible checks are prefixed with
+GST_RTSP_AUTH_CHECK_*. Depending on the check, the default implementation
+will use the current #GstRTSPToken, #GstRTSPContext and
+#GstRTSPPermissions on the object to check if an operation is allowed.
+
+The default #GstRTSPAuth object has support for basic authentication. With
+gst_rtsp_auth_add_basic() you can add a basic authentication string together
+with the #GstRTSPToken that will become active when successfully
+authenticated.
+
+When a TLS certificate has been set with gst_rtsp_auth_set_tls_certificate(),
+the default auth object will require the client to connect with a TLS
+connection.
+
+Last reviewed on 2013-07-16 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-client">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.c">The client object handles the connection with a client for as long as a TCP
+connection is open.
+
+A #GstRTSPClient is created by #GstRTSPServer when a new connection is
+accepted and it inherits the #GstRTSPMountPoints, #GstRTSPSessionPool,
+#GstRTSPAuth and #GstRTSPThreadPool from the server.
+
+The client connection should be configured with the #GstRTSPConnection using
+gst_rtsp_client_set_connection() before it can be attached to a #GMainContext
+using gst_rtsp_client_attach(). From then on the client will handle requests
+on the connection.
+
+Use gst_rtsp_client_session_filter() to iterate or modify all the
+#GstRTSPSession objects managed by the client object.
+
+Last reviewed on 2013-07-11 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-context">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-context.c">Last reviewed on 2013-07-11 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-media">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">a #GstRTSPMedia contains the complete GStreamer pipeline to manage the
+streaming to the clients. The actual data transfer is done by the
+#GstRTSPStream objects that are created and exposed by the #GstRTSPMedia.
+
+The #GstRTSPMedia is usually created from a #GstRTSPMediaFactory when the
+client does a DESCRIBE or SETUP of a resource.
+
+A media is created with gst_rtsp_media_new() that takes the element that will
+provide the streaming elements. For each of the streams, a new #GstRTSPStream
+object needs to be made with the gst_rtsp_media_create_stream() which takes
+the payloader element and the source pad that produces the RTP stream.
+
+The pipeline of the media is set to PAUSED with gst_rtsp_media_prepare(). The
+prepare method will add rtpbin and sinks and sources to send and receive RTP
+and RTCP packets from the clients. Each stream srcpad is connected to an
+input into the internal rtpbin.
+
+It is also possible to dynamically create #GstRTSPStream objects during the
+prepare phase. With gst_rtsp_media_get_status() you can check the status of
+the prepare phase.
+
+After the media is prepared, it is ready for streaming. It will usually be
+managed in a session with gst_rtsp_session_manage_media(). See
+#GstRTSPSession and #GstRTSPSessionMedia.
+
+The state of the media can be controlled with gst_rtsp_media_set_state ().
+Seeking can be done with gst_rtsp_media_seek(), or gst_rtsp_media_seek_full()
+or gst_rtsp_media_seek_trickmode() for finer control of the seek.
+
+With gst_rtsp_media_unprepare() the pipeline is stopped and shut down. When
+gst_rtsp_media_set_eos_shutdown() an EOS will be sent to the pipeline to
+cleanly shut down.
+
+With gst_rtsp_media_set_shared(), the media can be shared between multiple
+clients. With gst_rtsp_media_set_reusable() you can control if the pipeline
+can be prepared again after an unprepare.
+
+Last reviewed on 2013-07-11 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-media-factory">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">The #GstRTSPMediaFactory is responsible for creating or recycling
+#GstRTSPMedia objects based on the passed URL.
+
+The default implementation of the object can create #GstRTSPMedia objects
+containing a pipeline created from a launch description set with
+gst_rtsp_media_factory_set_launch().
+
+Media from a factory can be shared by setting the shared flag with
+gst_rtsp_media_factory_set_shared(). When a factory is shared,
+gst_rtsp_media_factory_construct() will return the same #GstRTSPMedia when
+the url matches.
+
+Last reviewed on 2013-07-11 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-media-factory-uri">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory-uri.c">This specialized #GstRTSPMediaFactory constructs media pipelines from a URI,
+given with gst_rtsp_media_factory_uri_set_uri().
+
+It will automatically demux and payload the different streams found in the
+media at URL.
+
+Last reviewed on 2013-07-11 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-mount-points">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-mount-points.c">A #GstRTSPMountPoints object maintains a relation between paths
+and #GstRTSPMediaFactory objects. This object is usually given to
+#GstRTSPClient and used to find the media attached to a path.
+
+With gst_rtsp_mount_points_add_factory () and
+gst_rtsp_mount_points_remove_factory(), factories can be added and
+removed.
+
+With gst_rtsp_mount_points_match() you can find the #GstRTSPMediaFactory
+object that completely matches the given path.
+
+Last reviewed on 2013-07-11 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-onvif-media">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-onvif-media.c">a #GstRTSPOnvifMedia contains the complete GStreamer pipeline to manage the
+streaming to the clients. The actual data transfer is done by the
+#GstRTSPStream objects that are created and exposed by the #GstRTSPMedia.
+
+On top of #GstRTSPMedia this subclass adds special ONVIF features.
+Special ONVIF features that are currently supported is a backchannel for
+the client to send back media to the server in a normal PLAY media. To
+handle the ONVIF backchannel, a #GstRTSPOnvifMediaFactory and
+#GstRTSPOnvifServer has to be used.</doc>
+    </docsection>
+    <docsection name="rtsp-onvif-media-factory">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-onvif-media-factory.c">The #GstRTSPOnvifMediaFactory is responsible for creating or recycling
+#GstRTSPMedia objects based on the passed URL. Different to
+#GstRTSPMediaFactory, this supports special ONVIF features and can create
+#GstRTSPOnvifMedia in addition to normal #GstRTSPMedia.
+
+Special ONVIF features that are currently supported is a backchannel for
+the client to send back media to the server in a normal PLAY media, see
+gst_rtsp_onvif_media_factory_set_backchannel_launch() and
+gst_rtsp_onvif_media_factory_set_backchannel_bandwidth().</doc>
+    </docsection>
+    <docsection name="rtsp-onvif-server">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-onvif-server.c">The server object is the object listening for connections on a port and
+creating #GstRTSPOnvifClient objects to handle those connections.
+
+The only different to #GstRTSPServer is that #GstRTSPOnvifServer creates
+#GstRTSPOnvifClient that have special handling for ONVIF specific features,
+like a backchannel that allows clients to send back media to the server.</doc>
+    </docsection>
+    <docsection name="rtsp-params">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-params.c">Last reviewed on 2013-07-11 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-permissions">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-permissions.c">The #GstRTSPPermissions object contains an array of roles and associated
+permissions. The roles are represented with a string and the permissions with
+a generic #GstStructure.
+
+The permissions are deliberately kept generic. The possible values of the
+roles and #GstStructure keys and values are only determined by the #GstRTSPAuth
+object that performs the checks on the permissions and the current
+#GstRTSPToken.
+
+As a convenience function, gst_rtsp_permissions_is_allowed() can be used to
+check if the permissions contains a role that contains the boolean value
+%TRUE for the the given key.
+
+Last reviewed on 2013-07-15 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-sdp">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-sdp.c">Last reviewed on 2013-07-11 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-server">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server.c">The server object is the object listening for connections on a port and
+creating #GstRTSPClient objects to handle those connections.
+
+The server will listen on the address set with gst_rtsp_server_set_address()
+and the port or service configured with gst_rtsp_server_set_service().
+Use gst_rtsp_server_set_backlog() to configure the amount of pending requests
+that the server will keep. By default the server listens on the current
+network (0.0.0.0) and port 8554.
+
+The server will require an SSL connection when a TLS certificate has been
+set in the auth object with gst_rtsp_auth_set_tls_certificate().
+
+To start the server, use gst_rtsp_server_attach() to attach it to a
+#GMainContext. For more control, gst_rtsp_server_create_source() and
+gst_rtsp_server_create_socket() can be used to get a #GSource and #GSocket
+respectively.
+
+gst_rtsp_server_transfer_connection() can be used to transfer an existing
+socket to the RTSP server, for example from an HTTP server.
+
+Once the server socket is attached to a mainloop, it will start accepting
+connections. When a new connection is received, a new #GstRTSPClient object
+is created to handle the connection. The new client will be configured with
+the server #GstRTSPAuth, #GstRTSPMountPoints, #GstRTSPSessionPool and
+#GstRTSPThreadPool.
+
+The server uses the configured #GstRTSPThreadPool object to handle the
+remainder of the communication with this client.
+
+Last reviewed on 2013-07-11 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-session">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session.c">The #GstRTSPSession is identified by an id, unique in the
+#GstRTSPSessionPool that created the session and manages media and its
+configuration.
+
+A #GstRTSPSession has a timeout that can be retrieved with
+gst_rtsp_session_get_timeout(). You can check if the sessions is expired with
+gst_rtsp_session_is_expired(). gst_rtsp_session_touch() will reset the
+expiration counter of the session.
+
+When a client configures a media with SETUP, a session will be created to
+keep track of the configuration of that media. With
+gst_rtsp_session_manage_media(), the media is added to the managed media
+in the session. With gst_rtsp_session_release_media() the media can be
+released again from the session. Managed media is identified in the sessions
+with a url. Use gst_rtsp_session_get_media() to get the media that matches
+(part of) the given url.
+
+The media in a session can be iterated with gst_rtsp_session_filter().
+
+Last reviewed on 2013-07-11 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-session-media">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-media.c">The #GstRTSPSessionMedia object manages a #GstRTSPMedia with a given path.
+
+With gst_rtsp_session_media_get_transport() and
+gst_rtsp_session_media_set_transport() the transports of a #GstRTSPStream of
+the managed #GstRTSPMedia can be retrieved and configured.
+
+Use gst_rtsp_session_media_set_state() to control the media state and
+transports.
+
+Last reviewed on 2013-07-16 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-session-pool">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.c">The #GstRTSPSessionPool object manages a list of #GstRTSPSession objects.
+
+The maximum number of sessions can be configured with
+gst_rtsp_session_pool_set_max_sessions(). The current number of sessions can
+be retrieved with gst_rtsp_session_pool_get_n_sessions().
+
+Use gst_rtsp_session_pool_create() to create a new #GstRTSPSession object.
+The session object can be found again with its id and
+gst_rtsp_session_pool_find().
+
+All sessions can be iterated with gst_rtsp_session_pool_filter().
+
+Run gst_rtsp_session_pool_cleanup() periodically to remove timed out sessions
+or use gst_rtsp_session_pool_create_watch() to be notified when session
+cleanup should be performed.
+
+Last reviewed on 2013-07-11 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-stream">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream.c">The #GstRTSPStream object manages the data transport for one stream. It
+is created from a payloader element and a source pad that produce the RTP
+packets for the stream.
+
+With gst_rtsp_stream_join_bin() the streaming elements are added to the bin
+and rtpbin. gst_rtsp_stream_leave_bin() removes the elements again.
+
+The #GstRTSPStream will use the configured addresspool, as set with
+gst_rtsp_stream_set_address_pool(), to allocate multicast addresses for the
+stream. With gst_rtsp_stream_get_multicast_address() you can get the
+configured address.
+
+With gst_rtsp_stream_get_server_port () you can get the port that the server
+will use to receive RTCP. This is the part that the clients will use to send
+RTCP to.
+
+With gst_rtsp_stream_add_transport() destinations can be added where the
+stream should be sent to. Use gst_rtsp_stream_remove_transport() to remove
+the destination again.
+
+Each #GstRTSPStreamTransport spawns one queue that will serve as a backlog of a
+controllable maximum size when the reflux from the TCP connection's backpressure
+starts spilling all over.
+
+Unlike the backlog in rtspconnection, which we have decided should only contain
+at most one RTP and one RTCP data message in order to allow control messages to
+go through unobstructed, this backlog only consists of data messages, allowing
+us to fill it up without concern.
+
+When multiple TCP transports exist, for example in the context of a shared media,
+we only pop samples from our appsinks when at least one of the transports doesn't
+experience back pressure: this allows us to pace our sample popping to the speed
+of the fastest client.
+
+When a sample is popped, it is either sent directly on transports that don't
+experience backpressure, or queued on the transport's backlog otherwise. Samples
+are then popped from that backlog when the transport reports it has sent the message.
+
+Once the backlog reaches an overly large duration, the transport is dropped as
+the client was deemed too slow.</doc>
+    </docsection>
+    <docsection name="rtsp-stream-transport">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream-transport.c">The #GstRTSPStreamTransport configures the transport used by a
+#GstRTSPStream. It is usually manages by a #GstRTSPSessionMedia object.
+
+With gst_rtsp_stream_transport_set_callbacks(), callbacks can be configured
+to handle the RTP and RTCP packets from the stream, for example when they
+need to be sent over TCP.
+
+With gst_rtsp_stream_transport_set_active() the transports are added and
+removed from the stream.
+
+A #GstRTSPStream will call gst_rtsp_stream_transport_keep_alive() when RTCP
+is received from the client. It will also call
+gst_rtsp_stream_transport_set_timed_out() when a receiver has timed out.
+
+A #GstRTSPClient will call gst_rtsp_stream_transport_message_sent() when it
+has sent a data message for the transport.
+
+Last reviewed on 2013-07-16 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-thread-pool">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.c">A #GstRTSPThreadPool manages reusable threads for various server tasks.
+Currently the defined thread types can be found in #GstRTSPThreadType.
+
+Threads of type #GST_RTSP_THREAD_TYPE_CLIENT are used to handle requests from
+a connected client. With gst_rtsp_thread_pool_get_max_threads() a maximum
+number of threads can be set after which the pool will start to reuse the
+same thread for multiple clients.
+
+Threads of type #GST_RTSP_THREAD_TYPE_MEDIA will be used to perform the state
+changes of the media pipelines and handle its bus messages.
+
+gst_rtsp_thread_pool_get_thread() can be used to create a #GstRTSPThread
+object of the right type. The thread object contains a mainloop and context
+that run in a seperate thread and can be used to attached sources to.
+
+gst_rtsp_thread_reuse() can be used to reuse a thread for multiple purposes.
+If all gst_rtsp_thread_reuse() calls are matched with a
+gst_rtsp_thread_stop() call, the mainloop will be quit and the thread will
+stop.
+
+To configure the threads, a subclass of this object should be made and the
+virtual methods should be overriden to implement the desired functionality.
+
+Last reviewed on 2013-07-11 (1.0.0)</doc>
+    </docsection>
+    <docsection name="rtsp-token">
+      <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-token.c">A #GstRTSPToken contains the permissions and roles of the user
+performing the current request. A token is usually created when a user is
+authenticated by the #GstRTSPAuth object and is then placed as the current
+token for the current request.
+
+#GstRTSPAuth can use the token and its contents to check authorization for
+various operations by comparing the token to the #GstRTSPPermissions of the
+object.
+
+The accepted values of the token are entirely defined by the #GstRTSPAuth
+object that implements the security policy.
+
+Last reviewed on 2013-07-15 (1.0.0)</doc>
+    </docsection>
     <function name="rtsp_context_get_current" c:identifier="gst_rtsp_context_get_current" moved-to="RTSPContext.get_current" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-context.c">Get the current #GstRTSPContext. This object is retrieved from the
 current thread that is handling the request for a client.</doc>

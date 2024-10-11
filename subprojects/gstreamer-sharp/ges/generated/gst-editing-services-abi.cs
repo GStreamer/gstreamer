@@ -149,6 +149,8 @@ namespace AbiTester {
 			Console.WriteLine("\"sizeof(GESProject)\": \"" + GES.Project.abi_info.Size + "\"");
 			Console.WriteLine("\"GESProject.priv\": \"" + GES.Project.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"sizeof(GESSourceClass)\": \"" + GES.Source.class_abi.Size + "\"");
+			Console.WriteLine("\"GESSourceClass.select_pad\": \"" + GES.Source.class_abi.GetFieldOffset("select_pad") + "\"");
+			Console.WriteLine("\"GESSourceClass.create_source\": \"" + GES.Source.class_abi.GetFieldOffset("create_source") + "\"");
 			Console.WriteLine("\"sizeof(GESSource)\": \"" + GES.Source.abi_info.Size + "\"");
 			Console.WriteLine("\"GESSource.priv\": \"" + GES.Source.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"sizeof(GESSourceClipClass)\": \"" + GES.SourceClip.class_abi.Size + "\"");

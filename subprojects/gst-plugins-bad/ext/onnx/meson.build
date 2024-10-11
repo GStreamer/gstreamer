@@ -3,27 +3,28 @@ if get_option('onnx').disabled()
 endif
 
 
-onnxrt_dep = dependency('libonnxruntime', version : '>= 1.13.1', required : get_option('onnx'))
+onnxrt_dep = dependency('libonnxruntime', version : '>= 1.16.1', required : get_option('onnx'))
+
+extra_args = []
+extra_deps = []
+if gstcuda_dep.found()
+    extra_args += ['-DHAVE_CUDA']
+    extra_deps += [gstcuda_dep]
+endif
 
 if onnxrt_dep.found()
-	onnxrt_include_root = onnxrt_dep.get_variable('includedir')
-	onnxrt_includes = [onnxrt_include_root / 'core/session', onnxrt_include_root / 'core']
-	onnxrt_dep_args = []
-	
-	compiler = meson.get_compiler('cpp')
-	if compiler.has_header(onnxrt_include_root / 'core/providers/cuda/cuda_provider_factory.h')
-	  onnxrt_dep_args = ['-DGST_ML_ONNX_RUNTIME_HAVE_CUDA']
-	endif
     gstonnx = library('gstonnx',
     'gstonnx.c',
-    'gstonnxelement.c',
-    'gstonnxobjectdetector.cpp',
+    'decoders/gstssdobjectdetector.c',
+    'gstonnxinference.cpp',
     'gstonnxclient.cpp',
-    c_args : gst_plugins_bad_args,
-    cpp_args: onnxrt_dep_args,
+    'tensor/gsttensormeta.c',
+    c_args : gst_plugins_bad_args + extra_args,
+    cpp_args : gst_plugins_bad_args + extra_args,
     link_args : noseh_link_args,
-    include_directories : [configinc, libsinc, onnxrt_includes],
-    dependencies : [gstbase_dep, gstvideo_dep, onnxrt_dep, libm],
+    include_directories : [configinc, libsinc, cuda_stubinc],
+    dependencies : [gstbase_dep, gstvideo_dep, gstanalytics_dep, onnxrt_dep,
+        libm, gio_dep] + extra_deps,
     install : true,
     install_dir : plugins_install_dir,
   )

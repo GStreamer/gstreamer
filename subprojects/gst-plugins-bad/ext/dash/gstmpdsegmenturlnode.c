@@ -139,7 +139,11 @@ gst_mpd_segment_url_node_init (GstMPDSegmentURLNode * self)
 GstMPDSegmentURLNode *
 gst_mpd_segment_url_node_new (void)
 {
-  return g_object_new (GST_TYPE_MPD_SEGMENT_URL_NODE, NULL);
+  GstMPDSegmentURLNode *ret;
+
+  ret = g_object_new (GST_TYPE_MPD_SEGMENT_URL_NODE, NULL);
+  gst_object_ref_sink (ret);
+  return ret;
 }
 
 void

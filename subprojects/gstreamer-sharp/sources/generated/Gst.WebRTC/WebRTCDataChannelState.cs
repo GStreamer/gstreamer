@@ -10,7 +10,6 @@ namespace Gst.WebRTC {
 	[GLib.GType (typeof (Gst.WebRTC.WebRTCDataChannelStateGType))]
 	public enum WebRTCDataChannelState {
 
-		New = 0,
 		Connecting = 1,
 		Open = 2,
 		Closing = 3,

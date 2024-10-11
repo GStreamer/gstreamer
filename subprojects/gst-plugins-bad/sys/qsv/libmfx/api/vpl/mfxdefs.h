@@ -8,7 +8,7 @@
 #define __MFXDEFS_H__
 
 #define MFX_VERSION_MAJOR 2
-#define MFX_VERSION_MINOR 7
+#define MFX_VERSION_MINOR 9
 
 // MFX_VERSION - version of API that 'assumed' by build may be provided externally
 // if it omitted then latest stable API derived from Major.Minor is assumed
@@ -68,7 +68,7 @@ extern "C"
     #define MFX_PACK_BEGIN_STRUCT_W_PTR()    MFX_PACK_BEGIN_X(4)
     #define MFX_PACK_BEGIN_STRUCT_W_L_TYPE() MFX_PACK_BEGIN_X(8)
 /* 32-bit ILP32 data model Linux* */
-#elif defined(__ILP32__)
+#elif defined(__ILP32__) || defined(__arm__)
     #define MFX_PACK_BEGIN_STRUCT_W_PTR()    MFX_PACK_BEGIN_X(4)
     #define MFX_PACK_BEGIN_STRUCT_W_L_TYPE() MFX_PACK_BEGIN_X(4)
 #else
@@ -148,6 +148,9 @@ typedef void*               mfxHDL;        /*!< Handle type. */
 typedef mfxHDL              mfxMemId;      /*!< Memory ID type. */
 typedef void*               mfxThreadTask; /*!< Thread task type. */
 typedef char                mfxChar;       /*!< UTF-8 byte. */
+#ifdef ONEVPL_EXPERIMENTAL
+typedef unsigned short      mfxFP16;       /*!< Half precision floating point, 16 bit type. */
+#endif
 
 /* MFX structures version info */
 MFX_PACK_BEGIN_USUAL_STRUCT()
@@ -189,6 +192,10 @@ typedef enum {
     MFX_DATA_TYPE_I64,                    /*!< 64-bit signed integer. */
     MFX_DATA_TYPE_F32,                    /*!< 32-bit single precision floating point. */
     MFX_DATA_TYPE_F64,                    /*!< 64-bit double precision floating point. */
+    MFX_DATA_TYPE_PTR,                    /*!< Generic type pointer. */
+#ifdef ONEVPL_EXPERIMENTAL
+    MFX_DATA_TYPE_FP16,                   /*!< 16-bit half precision floating point. */
+#endif
 }mfxDataType;
 
 /*! The mfxVariantType enumerator data types for mfxVariantType. */
@@ -204,7 +211,10 @@ typedef enum {
     MFX_VARIANT_TYPE_I64   = MFX_DATA_TYPE_I64,                          /*!< 64-bit signed integer. */
     MFX_VARIANT_TYPE_F32   = MFX_DATA_TYPE_F32,                          /*!< 32-bit single precision floating point. */
     MFX_VARIANT_TYPE_F64   = MFX_DATA_TYPE_F64,                          /*!< 64-bit double precision floating point. */
-    MFX_VARIANT_TYPE_PTR,                                                /*!< Generic type pointer. */
+    MFX_VARIANT_TYPE_PTR   = MFX_DATA_TYPE_PTR,                          /*!< Generic type pointer. */
+#ifdef ONEVPL_EXPERIMENTAL
+    MFX_VARIANT_TYPE_FP16  = MFX_DATA_TYPE_FP16,                         /*!< 16-bit half precision floating point. */
+#endif
 } mfxVariantType;
 
 MFX_PACK_BEGIN_STRUCT_W_PTR()
@@ -224,6 +234,9 @@ typedef struct {
         mfxI64 I64; /*!< mfxI64 data. */
         mfxF32 F32; /*!< mfxF32 data. */
         mfxF64 F64; /*!< mfxF64 data. */
+#ifdef ONEVPL_EXPERIMENTAL
+        mfxFP16 FP16; /*!< mfxFP16 data. */
+#endif
         mfxHDL Ptr; /*!< Pointer. When this points to a string the string must be null terminated. */
     } Data;         /*!< Value data member. */
 } mfxVariant;

@@ -37,11 +37,43 @@
 #define GST_IS_RTP_BIN_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_BIN))
 
+/**
+ * GstRTCPSync:
+ * @GST_RTP_BIN_RTCP_SYNC_ALWAYS: Always do inter-stream synchronization based
+ *     on RTP-Info or RTCP SR or inband NTP-64 header extension.
+ * @GST_RTP_BIN_RTCP_SYNC_INITIAL: Only do inter-stream synchronization once based
+ *     on RTP-Info or RTCP SR or inband NTP-64 header extension.
+ * @GST_RTP_BIN_RTCP_SYNC_RTP_INFO: Only do inter-stream synchronization based
+ *     on RTP-Info.
+ * @GST_RTP_BIN_RTCP_SYNC_NTP: Only do inter-stream synchronization based on
+ *     RTCP SR or inband NTP-64 header extension. (Since 1.26)
+ * @GST_RTP_BIN_RTCP_SYNC_NEVER: Never do inter-stream synchronization. (Since 1.26)
+ */
 typedef enum
 {
   GST_RTP_BIN_RTCP_SYNC_ALWAYS,
   GST_RTP_BIN_RTCP_SYNC_INITIAL,
-  GST_RTP_BIN_RTCP_SYNC_RTP
+  GST_RTP_BIN_RTCP_SYNC_RTP_INFO,
+
+  /**
+   * GstRTCPSync::ntp:
+   *
+   * Only do inter-stream synchronization based on RTCP SR or inband NTP-64
+   * header extension.
+   *
+   * Since: 1.26
+   */
+  GST_RTP_BIN_RTCP_SYNC_NTP,
+
+  /**
+   * GstRTCPSync::never:
+   *
+   * Never do inter-stream synchronization.
+   *
+   * Since: 1.26
+   */
+
+  GST_RTP_BIN_RTCP_SYNC_NEVER
 } GstRTCPSync;
 
 typedef struct _GstRtpBin GstRtpBin;
@@ -99,6 +131,8 @@ struct _GstRtpBin {
   GstStructure   *fec_encoders;
 
   gboolean       update_ntp64_header_ext;
+
+  gboolean       timeout_inactive_sources;
 
   /*< private >*/
   GstRtpBinPrivate *priv;

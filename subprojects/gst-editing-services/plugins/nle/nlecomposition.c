@@ -214,6 +214,39 @@ struct _NleCompositionPrivate
 
 #define ACTION_CALLBACK(__action) (((GCClosure*) (__action))->callback)
 
+#define QUERY_NEEDS_INITIALIZATION_SEEK_MESSAGE_STRUCT_NAME "nlecomposition-query-needs-initialization-seek"
+typedef struct
+{
+  GMutex lock;
+  gboolean needs_initialization_seek;
+  gboolean answered;
+} NleCompositionQueryNeedsInitializationSeek;
+
+/* *INDENT-OFF* */
+#define NLE_TYPE_COMPOSITION_QUERY_NEEDS_INITIALIZATION_SEEK nle_composition_query_needs_initialization_seek_get_type ()
+GType nle_composition_query_needs_initialization_seek_get_type (void) G_GNUC_CONST;
+G_DEFINE_BOXED_TYPE (NleCompositionQueryNeedsInitializationSeek,
+    nle_composition_query_needs_initialization_seek,
+    g_atomic_rc_box_acquire, g_atomic_rc_box_release);
+/* *INDENT-ON* */
+
+#define QUERY_PIPELINE_POSITION_STRUCT_NAME "nlecomposition-query-pipeline-position"
+typedef struct
+{
+  GMutex lock;
+
+  GstClockTime position;
+  gboolean answered;
+} NleCompositionQueryPipelinePosition;
+
+/* *INDENT-OFF* */
+#define NLE_TYPE_COMPOSITION_QUERY_PIPELINE_POSITION nle_composition_query_pipeline_position_get_type ()
+GType nle_composition_query_pipeline_position_get_type (void) G_GNUC_CONST;
+G_DEFINE_BOXED_TYPE (NleCompositionQueryPipelinePosition,
+    nle_composition_query_pipeline_position,
+    g_atomic_rc_box_acquire, g_atomic_rc_box_release);
+/* *INDENT-ON* */
+
 static guint _signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *nleobject_properties[NLEOBJECT_PROP_LAST];
@@ -1022,6 +1055,61 @@ nle_composition_handle_message (GstBin * bin, GstMessage * message)
     GST_DEBUG_OBJECT (comp, "Dropping message %" GST_PTR_FORMAT " from "
         "object being teared down to READY!", message);
     goto drop;
+  } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT) {
+    const GstStructure *structure = gst_message_get_structure (message);
+
+    if (gst_structure_has_name (structure,
+            QUERY_NEEDS_INITIALIZATION_SEEK_MESSAGE_STRUCT_NAME)
+        && GST_MESSAGE_SRC (message) != GST_OBJECT_CAST (comp)) {
+      NleCompositionQueryNeedsInitializationSeek *q;
+
+      gst_structure_get (structure, "query",
+          NLE_TYPE_COMPOSITION_QUERY_NEEDS_INITIALIZATION_SEEK, &q, NULL);
+      g_assert (q);
+
+      g_mutex_lock (&q->lock);
+      if (!q->answered || q->needs_initialization_seek) {
+        q->answered = TRUE;
+        q->needs_initialization_seek = priv->stack_initialization_seek == NULL;
+      }
+      g_mutex_unlock (&q->lock);
+
+      g_atomic_rc_box_release (q);
+
+      goto drop;
+    } else if (gst_structure_has_name (structure,
+            QUERY_PIPELINE_POSITION_STRUCT_NAME)) {
+      NleCompositionQueryPipelinePosition *q;
+
+      /* First let parents answer */
+      GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+
+      gst_structure_get (structure, "query",
+          NLE_TYPE_COMPOSITION_QUERY_PIPELINE_POSITION, &q, NULL);
+      g_assert (q);
+
+      g_mutex_lock (&q->lock);
+      if (!q->answered) {
+        GstClockTime position = get_current_position (comp);
+
+        if (position > NLE_OBJECT_STOP (GST_MESSAGE_SRC (message))
+            || position < NLE_OBJECT_START (GST_MESSAGE_SRC (message))) {
+          GST_INFO_OBJECT (comp,
+              "Global position outside of querying subcomposition, returning TIME_NONE");
+
+          position = GST_CLOCK_TIME_NONE;
+        }
+
+        q->answered = TRUE;
+        q->position = position;
+      }
+      g_mutex_unlock (&q->lock);
+
+      g_atomic_rc_box_release (q);
+
+      /* We recursed up already */
+      return;
+    }
   }
 
   GST_BIN_CLASS (parent_class)->handle_message (bin, message);
@@ -1080,6 +1168,17 @@ nle_composition_set_property (GObject * object, guint property_id,
 }
 
 static void
+nle_composition_constructed (GObject * obj)
+{
+  NleCompositionPrivate *priv = NLE_COMPOSITION (obj)->priv;
+
+  priv->id = gst_pad_create_stream_id (NLE_OBJECT_SRC (obj),
+      GST_ELEMENT (obj), NULL);
+
+  ((GObjectClass *) parent_class)->constructed (obj);
+}
+
+static void
 nle_composition_class_init (NleCompositionClass * klass)
 {
   GObjectClass *gobject_class;
@@ -1098,6 +1197,8 @@ nle_composition_class_init (NleCompositionClass * klass)
       " Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>,"
       " Thibault Saunier <tsaunier@gnome.org>");
 
+
+  gobject_class->constructed = GST_DEBUG_FUNCPTR (nle_composition_constructed);
   gobject_class->dispose = GST_DEBUG_FUNCPTR (nle_composition_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (nle_composition_finalize);
   gobject_class->get_property =
@@ -1178,6 +1279,8 @@ nle_composition_init (NleComposition * comp)
   priv->segment = gst_segment_new ();
   priv->seek_segment = gst_segment_new ();
 
+  priv->send_stream_start = TRUE;
+
   g_rec_mutex_init (&comp->task_rec_lock);
 
   priv->objects_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
@@ -1195,8 +1298,6 @@ nle_composition_init (NleComposition * comp)
 
   nle_composition_reset (comp);
 
-  priv->id = gst_pad_create_stream_id (NLE_OBJECT_SRC (comp),
-      GST_ELEMENT (comp), NULL);
   priv->drop_tags = DEFAULT_DROP_TAGS;
   priv->nle_event_pad_func = GST_PAD_EVENTFUNC (NLE_OBJECT_SRC (comp));
   gst_pad_set_event_function (NLE_OBJECT_SRC (comp),
@@ -1335,6 +1436,7 @@ nle_composition_reset (NleComposition * comp)
   priv->current_stack_start = GST_CLOCK_TIME_NONE;
   priv->current_stack_stop = GST_CLOCK_TIME_NONE;
   priv->next_base_time = 0;
+  priv->send_stream_start = TRUE;
 
   gst_segment_init (priv->segment, GST_FORMAT_TIME);
   gst_segment_init (priv->seek_segment, GST_FORMAT_TIME);
@@ -1379,9 +1481,6 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
         if (comp->task)
           gst_task_start (comp->task);
         GST_OBJECT_UNLOCK (comp);
-
-        priv->send_stream_start =
-            priv->updating_reason == COMP_UPDATE_STACK_INITIALIZE;
       }
 
       GST_DEBUG_OBJECT (comp,
@@ -1677,26 +1776,33 @@ get_new_seek_event (NleComposition * comp, gboolean initial,
 }
 
 static gboolean
-nle_composition_needs_topelevel_initializing_seek (NleComposition * comp)
+nle_composition_query_needs_topelevel_initializing_seek (NleComposition * comp)
 {
-  GstObject *parent;
+  NleCompositionQueryNeedsInitializationSeek *q =
+      g_atomic_rc_box_new0 (NleCompositionQueryNeedsInitializationSeek);
 
-  parent = gst_object_get_parent (GST_OBJECT (comp));
-  while (parent) {
-    if (NLE_IS_COMPOSITION (parent)
-        && NLE_COMPOSITION (parent)->priv->stack_initialization_seek) {
-      gst_object_unref (parent);
-      GST_INFO_OBJECT (comp,
-          "Not sending an initializing seek as %" GST_PTR_FORMAT
-          "is gonna seek anyway!", parent);
-      return FALSE;
-    }
+  GstMessage *m = gst_message_new_element (GST_OBJECT_CAST (comp),
+      gst_structure_new (QUERY_NEEDS_INITIALIZATION_SEEK_MESSAGE_STRUCT_NAME,
+          "query", NLE_TYPE_COMPOSITION_QUERY_NEEDS_INITIALIZATION_SEEK, q,
+          NULL)
+      );
 
-    gst_object_unref (parent);
-    parent = gst_object_get_parent (parent);
+  if (!gst_element_post_message (GST_ELEMENT (comp), m)) {
+    GST_WARNING_OBJECT (comp, "Querying needs_initialization_seek failed");
   }
 
-  return TRUE;
+  gboolean res = TRUE;
+  g_mutex_lock (&q->lock);
+  if (q->answered) {
+    res = q->needs_initialization_seek;
+    if (!res) {
+      GST_INFO_OBJECT (comp, "Parent composition is going to seek us");
+    }
+  }
+  g_mutex_unlock (&q->lock);
+  g_atomic_rc_box_release (q);
+
+  return res;
 }
 
 static GstClockTime
@@ -1713,22 +1819,6 @@ get_current_position (NleComposition * comp)
 
   parent = gst_object_get_parent (GST_OBJECT (comp));
   while ((tmp = parent)) {
-    if (NLE_IS_COMPOSITION (parent)) {
-      GstClockTime parent_position =
-          get_current_position (NLE_COMPOSITION (parent));
-
-      if (parent_position > NLE_OBJECT_STOP (comp)
-          || parent_position < NLE_OBJECT_START (comp)) {
-        GST_INFO_OBJECT (comp,
-            "Global position outside of subcomposition, returning TIME_NONE");
-
-        return GST_CLOCK_TIME_NONE;
-      }
-
-      value =
-          parent_position - NLE_OBJECT_START (comp) + NLE_OBJECT_INPOINT (comp);
-    }
-
     if (GST_IS_PIPELINE (parent)) {
       if (gst_element_query_position (GST_ELEMENT (parent), GST_FORMAT_TIME,
               &value)) {
@@ -1737,7 +1827,6 @@ get_current_position (NleComposition * comp)
         return value;
       }
     }
-
 
     parent = gst_object_get_parent (GST_OBJECT (parent));
     gst_object_unref (tmp);
@@ -1794,6 +1883,38 @@ beach:
   }
 
   return (guint64) value;
+}
+
+static GstClockTime
+query_ancestors_position (NleComposition * comp)
+{
+  GstClockTime res;
+  NleCompositionQueryPipelinePosition *q =
+      g_atomic_rc_box_new0 (NleCompositionQueryPipelinePosition);
+  GstStructure *structure =
+      gst_structure_new (QUERY_PIPELINE_POSITION_STRUCT_NAME,
+      "query", NLE_TYPE_COMPOSITION_QUERY_PIPELINE_POSITION,
+      g_atomic_rc_box_acquire (q), NULL);
+  GstMessage *message = gst_message_new_element (GST_OBJECT (comp), structure);
+
+  if (!gst_element_post_message (GST_ELEMENT (comp), message)) {
+    GST_ERROR_OBJECT (comp, "Querying ancestor position failed");
+  }
+
+  g_mutex_lock (&q->lock);
+  if (q->answered) {
+    res = q->position;
+  } else {
+    res = get_current_position (comp);
+  }
+  g_mutex_unlock (&q->lock);
+
+  /* Double release. One for the creation. One for the extra we gave to the
+   * structure */
+  g_atomic_rc_box_release (q);
+  g_atomic_rc_box_release (q);
+
+  return res;
 }
 
 /* WITH OBJECTS LOCK TAKEN */
@@ -1947,6 +2068,14 @@ nle_composition_event_handler (GstPad * ghostpad, GstObject * parent,
        *
        */
 
+      if (comp->priv->stack_initialization_seek
+          || comp->priv->waiting_serialized_query_or_buffer) {
+        GST_INFO_OBJECT (comp,
+            "QoS event while setting up new stack... discarding");
+        gst_event_unref (event);
+        goto beach;
+      }
+
       if (GST_CLOCK_TIME_IS_VALID (priv->seek_segment->start)) {
         GstClockTimeDiff curdiff;
 
@@ -1957,7 +2086,8 @@ nle_composition_event_handler (GstPad * ghostpad, GstObject * parent,
           curdiff = priv->seek_segment->stop - priv->current_stack_stop;
         else
           curdiff = priv->current_stack_start - priv->seek_segment->start;
-        GST_DEBUG ("curdiff %" GST_TIME_FORMAT, GST_TIME_ARGS (curdiff));
+        GST_DEBUG_OBJECT (comp, "curdiff %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (curdiff));
         if ((curdiff != 0) && ((timestamp < curdiff)
                 || (curdiff > timestamp + diff))) {
           GST_DEBUG_OBJECT (comp,
@@ -1968,10 +2098,11 @@ nle_composition_event_handler (GstPad * ghostpad, GstObject * parent,
 
         /* Substract the amount of running time we've already outputted
          * until the currently configured pipeline from the QoS timestamp.*/
+        GstClockTime oldtimestamp = timestamp;
         timestamp -= curdiff;
         GST_DEBUG_OBJECT (comp,
-            "Creating new QoS event with timestamp %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (timestamp));
+            "Creating new QoS event with timestamp %" GST_TIMEP_FORMAT " new: %"
+            GST_TIME_FORMAT, &oldtimestamp, GST_TIME_ARGS (timestamp));
         event = gst_event_new_qos (qostype, prop, diff, timestamp);
       }
       break;
@@ -2135,8 +2266,8 @@ refine_start_stop_in_region_above_priority (NleComposition * composition,
  */
 
 static GNode *
-convert_list_to_tree (GList ** stack, GstClockTime * start,
-    GstClockTime * stop, guint32 * highprio)
+convert_list_to_tree (NleComposition * comp, GList ** stack,
+    GstClockTime * start, GstClockTime * stop, guint32 * highprio)
 {
   GNode *ret;
   guint nbsinks;
@@ -2192,7 +2323,8 @@ convert_list_to_tree (GList ** stack, GstClockTime * start,
 
     /* FIXME : if num_sinks == -1 : request the proper number of pads */
     for (tmp = g_list_next (*stack); tmp && (!limit || nbsinks);) {
-      g_node_append (ret, convert_list_to_tree (&tmp, start, stop, highprio));
+      g_node_append (ret, convert_list_to_tree (comp, &tmp, start, stop,
+              highprio));
       if (limit)
         nbsinks--;
     }
@@ -2308,7 +2440,7 @@ get_stack_list (NleComposition * comp, GstClockTime timestamp,
 
   /* convert that list to a stack */
   tmp = stack;
-  ret = convert_list_to_tree (&tmp, &nstart, &nstop, &highest);
+  ret = convert_list_to_tree (comp, &tmp, &nstart, &nstop, &highest);
   if (GST_CLOCK_TIME_IS_VALID (first_out_of_stack)) {
     if (reverse && nstart < first_out_of_stack)
       nstart = first_out_of_stack;
@@ -2552,7 +2684,7 @@ _commit_func (NleComposition * comp, UpdateCompositionData * ucompo)
 
   /* Get current so that it represent the duration it was
    * before commiting children */
-  curpos = get_current_position (comp);
+  curpos = query_ancestors_position (comp);
 
   if (!_commit_all_values (comp, ucompo->reason)) {
     GST_DEBUG_OBJECT (comp, "Nothing to commit, leaving");
@@ -3124,7 +3256,6 @@ _activate_new_stack (NleComposition * comp, GstEvent * toplevel_seek)
   if (!toplevel_seek) {
     GST_INFO_OBJECT (comp,
         "This is a sub composition, not seeking to initialize stack");
-    g_atomic_int_set (&priv->send_stream_start, TRUE);
   } else {
     GST_INFO_OBJECT (comp, "Needs seeking to initialize stack");
     comp->priv->stack_initialization_seek = toplevel_seek;
@@ -3146,7 +3277,7 @@ resync_state:
     g_atomic_int_set (&priv->stack_initialization_seek_sent, FALSE);
   gst_element_set_locked_state (priv->current_bin, FALSE);
 
-  GST_DEBUG ("going back to parent state");
+  GST_DEBUG_OBJECT (comp, "going back to parent state");
   priv->suppress_child_error = TRUE;
   if (!gst_element_sync_state_with_parent (priv->current_bin)) {
     gst_element_set_locked_state (priv->current_bin, TRUE);
@@ -3160,7 +3291,7 @@ resync_state:
   }
 
   priv->suppress_child_error = FALSE;
-  GST_DEBUG ("gone back to parent state");
+  GST_DEBUG_OBJECT (comp, "gone back to parent state");
 
   return TRUE;
 }
@@ -3412,7 +3543,8 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
      * per level of nesting)
      */
 
-    if (tear_down && !nle_composition_needs_topelevel_initializing_seek (comp))
+    if (tear_down
+        && !nle_composition_query_needs_topelevel_initializing_seek (comp))
       gst_clear_event (&toplevel_seek);
 
     if (toplevel_seek) {

@@ -61,7 +61,7 @@ static GstStaticPadTemplate gst_atsc_mux_sink_factory =
 
 static void
 gst_atsc_mux_stream_get_es_descrs (TsMuxStream * stream,
-    GstMpegtsPMTStream * pmt_stream, GstBaseTsMux * mpegtsmux)
+    GstMpegtsPMTStream * pmt_stream, gpointer user_data)
 {
   GstMpegtsDescriptor *descriptor;
 
@@ -291,23 +291,23 @@ gst_atsc_mux_stream_get_es_descrs (TsMuxStream * stream,
 }
 
 static TsMuxStream *
-gst_atsc_mux_create_new_stream (guint16 new_pid,
-    TsMuxStreamType stream_type, guint stream_number, GstBaseTsMux * mpegtsmux)
+gst_atsc_mux_create_new_stream (guint16 new_pid, TsMuxStreamType stream_type,
+    guint stream_number, gpointer user_data)
 {
   TsMuxStream *ret = tsmux_stream_new (new_pid, stream_type, stream_number);
 
   if (stream_type == ATSCMUX_ST_PS_AUDIO_EAC3) {
     ret->id = 0xBD;
     ret->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
-    ret->is_audio = TRUE;
+    ret->gst_stream_type = GST_STREAM_TYPE_AUDIO;
   } else if (stream_type == TSMUX_ST_PS_AUDIO_AC3) {
     ret->id = 0xBD;
     ret->id_extended = 0;
+    ret->gst_stream_type = GST_STREAM_TYPE_AUDIO;
   }
 
   tsmux_stream_set_get_es_descriptors_func (ret,
-      (TsMuxStreamGetESDescriptorsFunc) gst_atsc_mux_stream_get_es_descrs,
-      mpegtsmux);
+      gst_atsc_mux_stream_get_es_descrs, user_data);
 
   return ret;
 }
@@ -335,8 +335,7 @@ gst_atsc_mux_create_ts_mux (GstBaseTsMux * mpegtsmux)
   section = gst_mpegts_section_from_atsc_rrt (rrt);
   tsmux_add_mpegts_si_section (ret, section);
 
-  tsmux_set_new_stream_func (ret,
-      (TsMuxNewStreamFunc) gst_atsc_mux_create_new_stream, mpegtsmux);
+  tsmux_set_new_stream_func (ret, gst_atsc_mux_create_new_stream, mpegtsmux);
 
   return ret;
 }

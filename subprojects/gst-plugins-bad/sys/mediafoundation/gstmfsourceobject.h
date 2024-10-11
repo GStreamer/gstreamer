@@ -41,6 +41,13 @@ typedef enum
   GST_MF_SOURCE_TYPE_VIDEO,
 } GstMFSourceType;
 
+typedef enum
+{
+  GST_MF_OK,
+  GST_MF_DEVICE_NOT_FOUND,
+  GST_MF_ACTIVATION_FAILED,
+} GstMFSourceResult;
+
 #define GST_TYPE_MF_SOURCE_TYPE (gst_mf_source_type_get_type())
 GType gst_mf_source_type_get_type (void);
 
@@ -48,7 +55,7 @@ struct _GstMFSourceObject
 {
   GstObject parent;
 
-  gboolean opened;
+  GstMFSourceResult source_state;
 
   GstMFSourceType source_type;
   gchar *device_path;
@@ -122,6 +129,9 @@ GstMFSourceObject * gst_mf_source_object_new      (GstMFSourceType type,
                                                    const gchar * device_name,
                                                    const gchar * device_path,
                                                    gpointer dispatcher);
+
+GstMFSourceResult   gst_mf_source_object_enumerate (gint device_index,
+                                                    GstMFSourceObject ** object);
 
 /* Utility methods */
 gint            gst_mf_source_object_caps_compare (GstCaps * caps1,

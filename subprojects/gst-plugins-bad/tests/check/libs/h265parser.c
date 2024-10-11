@@ -123,6 +123,16 @@ static guint8 h265_sei_user_data_registered[] = {
   0xa6, 0xae, 0x5c, 0x83, 0x50, 0xdd, 0xf9, 0x8e, 0xc7, 0xbd, 0x00, 0x80
 };
 
+static guint8 h265_sei_user_data_unregistered[] = {
+  0x00, 0x00, 0x00, 0x01, 0x4e, 0x01,
+  0x05,                         // Payload type.
+  0x18,                         // Payload size.
+  0x4D, 0x49, 0x53, 0x50, 0x6D, 0x69, 0x63, 0x72, 0x6F, 0x73, 0x65, 0x63,
+  0x74, 0x69, 0x6D, 0x65,       // UUID.
+  0x70, 0x69, 0x67, 0x73, 0x20, 0x66, 0x6c, 0x79,       // Payload data
+  0x80
+};
+
 static guint8 h265_sei_time_code[] = {
   0x00, 0x00, 0x00, 0x01, 0x4e, 0x01, 0x88, 0x06, 0x60, 0x40, 0x00, 0x00, 0x03,
   0x00, 0x10, 0x80
@@ -973,6 +983,15 @@ check_sei_user_data_registered (const GstH265RegisteredUserData * a,
 }
 
 static gboolean
+check_sei_user_data_unregistered (const GstH265UserDataUnregistered * a,
+    const GstH265UserDataUnregistered * b)
+{
+  return a->size == b->size &&
+      !memcmp (a->uuid, b->uuid, sizeof (a->uuid)) &&
+      !memcmp (a->data, b->data, a->size);
+}
+
+static gboolean
 check_sei_time_code (const GstH265TimeCode * a, const GstH265TimeCode * b)
 {
   gint i;
@@ -1076,6 +1095,9 @@ GST_START_TEST (test_h265_create_sei)
     {h265_sei_user_data_registered, G_N_ELEMENTS (h265_sei_user_data_registered),
         GST_H265_SEI_REGISTERED_USER_DATA, {0,},
         (SEICheckFunc) check_sei_user_data_registered},
+    {h265_sei_user_data_unregistered, G_N_ELEMENTS (h265_sei_user_data_unregistered),
+        GST_H265_SEI_USER_DATA_UNREGISTERED, {0,},
+        (SEICheckFunc) check_sei_user_data_unregistered},
     {h265_sei_time_code, G_N_ELEMENTS (h265_sei_time_code),
         GST_H265_SEI_TIME_CODE, {0,}, (
         SEICheckFunc) check_sei_time_code},

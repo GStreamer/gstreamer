@@ -1633,50 +1633,46 @@ gst_mxf_mux_handle_eos (GstMXFMux * mux)
 
     /* Rewrite header partition with updated values */
     gst_segment_init (&segment, GST_FORMAT_BYTES);
-    if (gst_pad_push_event (GST_AGGREGATOR_SRC_PAD (mux),
-            gst_event_new_segment (&segment))) {
-      mux->offset = 0;
-      mux->partition.type = MXF_PARTITION_PACK_HEADER;
-      mux->partition.closed = TRUE;
-      mux->partition.complete = TRUE;
-      mux->partition.this_partition = 0;
-      mux->partition.prev_partition = 0;
-      mux->partition.footer_partition = footer_partition;
-      mux->partition.header_byte_count = 0;
-      mux->partition.index_byte_count = 0;
-      mux->partition.index_sid = 0;
-      mux->partition.body_offset = 0;
-      mux->partition.body_sid = 0;
+    gst_aggregator_update_segment (GST_AGGREGATOR (mux), &segment);
+    mux->offset = 0;
+    mux->partition.type = MXF_PARTITION_PACK_HEADER;
+    mux->partition.closed = TRUE;
+    mux->partition.complete = TRUE;
+    mux->partition.this_partition = 0;
+    mux->partition.prev_partition = 0;
+    mux->partition.footer_partition = footer_partition;
+    mux->partition.header_byte_count = 0;
+    mux->partition.index_byte_count = 0;
+    mux->partition.index_sid = 0;
+    mux->partition.body_offset = 0;
+    mux->partition.body_sid = 0;
 
-      ret = gst_mxf_mux_write_header_metadata (mux);
-      if (ret != GST_FLOW_OK) {
-        GST_ERROR_OBJECT (mux, "Rewriting header partition failed");
-        return ret;
-      }
+    ret = gst_mxf_mux_write_header_metadata (mux);
+    if (ret != GST_FLOW_OK) {
+      GST_ERROR_OBJECT (mux, "Rewriting header partition failed");
+      return ret;
+    }
 
-      g_assert (mux->offset == body_partition);
+    g_assert (mux->offset == body_partition);
 
-      mux->partition.type = MXF_PARTITION_PACK_BODY;
-      mux->partition.closed = TRUE;
-      mux->partition.complete = TRUE;
-      mux->partition.this_partition = mux->offset;
-      mux->partition.prev_partition = 0;
-      mux->partition.footer_partition = footer_partition;
-      mux->partition.header_byte_count = 0;
-      mux->partition.index_byte_count = 0;
-      mux->partition.index_sid = 0;
-      mux->partition.body_offset = 0;
-      mux->partition.body_sid =
-          mux->preface->content_storage->essence_container_data[0]->body_sid;
+    mux->partition.type = MXF_PARTITION_PACK_BODY;
+    mux->partition.closed = TRUE;
+    mux->partition.complete = TRUE;
+    mux->partition.this_partition = mux->offset;
+    mux->partition.prev_partition = 0;
+    mux->partition.footer_partition = footer_partition;
+    mux->partition.header_byte_count = 0;
+    mux->partition.index_byte_count = 0;
+    mux->partition.index_sid = 0;
+    mux->partition.body_offset = 0;
+    mux->partition.body_sid =
+        mux->preface->content_storage->essence_container_data[0]->body_sid;
 
-      buf = mxf_partition_pack_to_buffer (&mux->partition);
-      ret = gst_mxf_mux_push (mux, buf);
-      if (ret != GST_FLOW_OK) {
-        GST_ERROR_OBJECT (mux, "Rewriting body partition failed");
-        return ret;
-      }
-    } else {
-      GST_WARNING_OBJECT (mux, "Can't rewrite header partition");
+    buf = mxf_partition_pack_to_buffer (&mux->partition);
+    ret = gst_mxf_mux_push (mux, buf);
+    if (ret != GST_FLOW_OK) {
+      GST_ERROR_OBJECT (mux, "Rewriting body partition failed");
+      return ret;
     }
   }
 

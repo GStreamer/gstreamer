@@ -66,7 +66,11 @@ gst_mpd_s_node_init (GstMPDSNode * self)
 GstMPDSNode *
 gst_mpd_s_node_new (void)
 {
-  return g_object_new (GST_TYPE_MPD_S_NODE, NULL);
+  GstMPDSNode *ret;
+
+  ret = g_object_new (GST_TYPE_MPD_S_NODE, NULL);
+  gst_object_ref_sink (ret);
+  return ret;
 }
 
 void

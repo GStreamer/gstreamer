@@ -92,6 +92,62 @@ GST_START_TEST (test_free_active_allocator)
 
 GST_END_TEST;
 
+GST_START_TEST (test_free_buffer_after_deactivate)
+{
+  GstVideoInfo info;
+  gboolean ret;
+  GstFlowReturn flow_ret;
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstCaps *caps;
+  GstBuffer *buffers[2];
+  gboolean alloc_finalized = FALSE;
+
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_NV12, 320, 240);
+
+  caps = gst_video_info_to_caps (&info);
+  fail_unless (caps);
+
+  pool = gst_cuda_buffer_pool_new (context);
+  fail_unless (pool);
+
+  g_object_set_qdata_full (G_OBJECT (pool), memory_tester_quark,
+      &alloc_finalized, (GDestroyNotify) allocator_finalize_cb);
+
+  config = gst_buffer_pool_get_config (pool);
+  fail_unless (config);
+
+  gst_buffer_pool_config_set_params (config, caps, info.size, 0, 0);
+  gst_caps_unref (caps);
+
+  ret = gst_buffer_pool_set_config (pool, config);
+  fail_unless (ret);
+
+  ret = gst_buffer_pool_set_active (pool, TRUE);
+  fail_unless (ret);
+
+  flow_ret = gst_buffer_pool_acquire_buffer (pool, &buffers[0], NULL);
+  fail_unless (flow_ret == GST_FLOW_OK);
+
+  flow_ret = gst_buffer_pool_acquire_buffer (pool, &buffers[1], NULL);
+  fail_unless (flow_ret == GST_FLOW_OK);
+
+  ret = gst_buffer_pool_set_active (pool, FALSE);
+  fail_unless (ret);
+  fail_if (alloc_finalized);
+
+  gst_object_unref (pool);
+  fail_if (alloc_finalized);
+
+  gst_buffer_unref (buffers[0]);
+  fail_if (alloc_finalized);
+
+  gst_buffer_unref (buffers[1]);
+  fail_unless (alloc_finalized);
+}
+
+GST_END_TEST;
+
 static gboolean
 check_cuda_device (void)
 {
@@ -128,6 +184,7 @@ cudamemory_suite (void)
     return s;
 
   tcase_add_test (tc_chain, test_free_active_allocator);
+  tcase_add_test (tc_chain, test_free_buffer_after_deactivate);
 
   return s;
 }

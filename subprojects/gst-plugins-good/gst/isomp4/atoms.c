@@ -3352,10 +3352,15 @@ atom_trak_update_duration (AtomTRAK * trak, guint64 moov_timescale)
 {
   trak->mdia.mdhd.time_info.duration =
       atom_stts_get_total_duration (&trak->mdia.minf.stbl.stts);
+  if (trak->mdia.mdhd.time_info.duration > G_MAXUINT32)
+    trak->mdia.mdhd.header.version = 1;
+
   if (trak->mdia.mdhd.time_info.timescale != 0) {
     trak->tkhd.duration =
         gst_util_uint64_scale_round (trak->mdia.mdhd.time_info.duration,
         moov_timescale, trak->mdia.mdhd.time_info.timescale);
+    if (trak->tkhd.duration > G_MAXUINT32)
+      trak->tkhd.header.version = 1;
   } else {
     trak->tkhd.duration = 0;
   }
@@ -3434,6 +3439,10 @@ atom_moov_update_duration (AtomMOOV * moov)
   }
   moov->mvhd.time_info.duration = duration;
   moov->mvex.mehd.fragment_duration = duration;
+  if (duration > G_MAXUINT32) {
+    moov->mvhd.header.version = 1;
+    moov->mvex.mehd.header.version = 1;
+  }
 }
 
 void
@@ -5706,9 +5715,9 @@ build_opus_extension (guint32 rate, guint8 channels, guint8 mapping_family,
   gst_byte_writer_init (&bw);
   hdl &= gst_byte_writer_put_uint8 (&bw, 0x00); /* version number */
   hdl &= gst_byte_writer_put_uint8 (&bw, channels);
-  hdl &= gst_byte_writer_put_uint16_le (&bw, pre_skip);
-  hdl &= gst_byte_writer_put_uint32_le (&bw, rate);
-  hdl &= gst_byte_writer_put_uint16_le (&bw, output_gain);
+  hdl &= gst_byte_writer_put_uint16_be (&bw, pre_skip);
+  hdl &= gst_byte_writer_put_uint32_be (&bw, rate);
+  hdl &= gst_byte_writer_put_uint16_be (&bw, output_gain);
   hdl &= gst_byte_writer_put_uint8 (&bw, mapping_family);
   if (mapping_family > 0) {
     hdl &= gst_byte_writer_put_uint8 (&bw, stream_count);

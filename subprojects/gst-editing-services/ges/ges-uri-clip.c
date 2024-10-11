@@ -192,11 +192,13 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
 }
 
 static gchar *
-extractable_check_id (GType type, const gchar * id)
+extractable_check_id (GType type, const gchar * id, GError ** error)
 {
   if (gst_uri_is_valid (id))
     return g_strdup (id);
 
+  g_set_error (error, GES_ERROR, GES_ERROR_ASSET_WRONG_ID, "URI %s is invalid",
+      id);
   return NULL;
 }
 
@@ -442,7 +444,7 @@ static void
 ges_extractable_interface_init (GESExtractableInterface * iface)
 {
   iface->asset_type = GES_TYPE_URI_CLIP_ASSET;
-  iface->check_id = (GESExtractableCheckId) extractable_check_id;
+  iface->check_id = extractable_check_id;
   iface->get_parameters_from_id = extractable_get_parameters_from_id;
   iface->get_id = extractable_get_id;
   iface->can_update_asset = TRUE;

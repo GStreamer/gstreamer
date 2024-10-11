@@ -16,7 +16,7 @@ option('bash-completion', type : 'feature', value : 'auto',
 option('pygi-overrides-dir', type : 'string', value : '',
         description: 'Path to pygobject overrides directory')
 option('xptv', type : 'feature', value : 'auto',
-       description : 'Build the deprecated xptv formater')
+       description : 'Build the deprecated xptv formatter')
 option('python', type : 'feature', value : 'auto', yield: true,
        description: 'Enable python formatters.')
 option('libpython-dir', type : 'string', value : '',

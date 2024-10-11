@@ -21,10 +21,10 @@
 
 #include "config.h"
 
+#include "gstsvtav1enc.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideoencoder.h>
-#include "gstsvtav1enc.h"
 
 #if !SVT_AV1_CHECK_VERSION(1,2,1)
 #define SVT_AV1_RC_MODE_CQP_OR_CRF 0
@@ -838,6 +838,8 @@ gst_svtav1enc_send_eos (GstSvtAv1Enc * svtav1enc)
   input_buffer.p_buffer = NULL;
   input_buffer.metadata = NULL;
 
+  GST_DEBUG_OBJECT (svtav1enc, "send eos");
+
   ret = svt_av1_enc_send_picture (svtav1enc->svt_encoder, &input_buffer);
 
   if (ret != EB_ErrorNone) {
@@ -867,6 +869,8 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
   EbErrorType res = EB_ErrorNone;
   gboolean encode_at_eos = FALSE;
 
+  GST_DEBUG_OBJECT (svtav1enc, "dequeue encoded frames");
+
   do {
     GstVideoCodecFrame *frame = NULL;
     EbBufferHeaderType *output_buf = NULL;
@@ -884,8 +888,13 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
       return GST_FLOW_ERROR;
     } else if (res != EB_NoErrorEmptyQueue && output_frames && output_buf) {
       // AV1 has no frame re-ordering so always get the oldest frame
-      frame =
-          gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (svtav1enc));
+      if (!(frame =
+              gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER
+                  (svtav1enc)))) {
+        svt_av1_enc_release_out_buffer (&output_buf);
+        break;
+      }
+
       if (output_buf->pic_type == EB_AV1_KEY_PICTURE
           || output_buf->pic_type == EB_AV1_INTRA_ONLY_PICTURE) {
         GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
@@ -1049,13 +1058,17 @@ gst_svtav1enc_handle_frame (GstVideoEncoder * encoder,
 static GstFlowReturn
 gst_svtav1enc_finish (GstVideoEncoder * encoder)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
   GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC (encoder);
 
   GST_DEBUG_OBJECT (svtav1enc, "finish");
 
-  gst_svtav1enc_send_eos (svtav1enc);
+  if (svtav1enc->state) {
+    gst_svtav1enc_send_eos (svtav1enc);
+    ret = gst_svtav1enc_dequeue_encoded_frames (svtav1enc, TRUE, TRUE);
+  }
 
-  return gst_svtav1enc_dequeue_encoded_frames (svtav1enc, TRUE, TRUE);
+  return ret;
 }
 
 static gboolean
@@ -1107,6 +1120,12 @@ gst_svtav1enc_parse_parameters_string (GstSvtAv1Enc * svtav1enc)
 
   g_strfreev (key_values);
 }
+
+/**
+ * plugin-svtav1:
+ *
+ * Since: 1.24
+ */
 
 static gboolean
 plugin_init (GstPlugin * plugin)

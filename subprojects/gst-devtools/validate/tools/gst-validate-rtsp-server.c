@@ -62,8 +62,8 @@ remove_map (GstRTSPServer * server)
 }
 #endif
 
-int
-main (int argc, gchar * argv[])
+static int
+real_main (int argc, gchar * argv[])
 {
   GMainLoop *loop;
   GstRTSPServer *server;
@@ -156,4 +156,26 @@ failed:
     g_print ("failed to attach the server\n");
     return -1;
   }
+}
+
+int
+main (int argc, char *argv[])
+{
+  int ret;
+
+#ifdef G_OS_WIN32
+  argv = g_win32_get_command_line ();
+#endif
+
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  ret = gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
+#else
+  ret = real_main (argc, argv);
+#endif
+
+#ifdef G_OS_WIN32
+  g_strfreev (argv);
+#endif
+
+  return ret;
 }

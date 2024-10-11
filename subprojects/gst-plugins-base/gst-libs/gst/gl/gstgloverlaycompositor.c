@@ -665,6 +665,7 @@ gst_gl_overlay_compositor_upload_overlays (GstGLOverlayCompositor * compositor,
     GstVideoOverlayComposition *composition = NULL;
     guint num_overlays, i;
     GList *l = compositor->overlays;
+    GstGLSyncMeta *sync_meta;
 
     GST_DEBUG ("GstVideoOverlayCompositionMeta found.");
 
@@ -687,6 +688,11 @@ gst_gl_overlay_compositor_upload_overlays (GstGLOverlayCompositor * compositor,
 
         compositor->overlays = g_list_append (compositor->overlays, overlay);
       }
+    }
+
+    sync_meta = gst_buffer_get_gl_sync_meta (buf);
+    if (sync_meta) {
+      gst_gl_sync_meta_set_sync_point (sync_meta, compositor->context);
     }
 
     /* remove old overlays from list */

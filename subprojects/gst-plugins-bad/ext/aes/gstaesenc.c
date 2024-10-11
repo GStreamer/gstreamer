@@ -498,7 +498,9 @@ gst_aes_enc_transform (GstBaseTransform * base,
   gst_buffer_unmap (inbuf, &inmap);
   gst_buffer_unmap (outbuf, &outmap);
 
-  out_len = ciphertext_len + (filter->serialize_iv ? GST_AES_BLOCK_SIZE : 0);
+  out_len = ciphertext_len + ((filter->serialize_iv
+          && filter->awaiting_first_buffer)
+      ? GST_AES_BLOCK_SIZE : 0);
   gst_buffer_set_size (outbuf, out_len);
   GST_LOG_OBJECT (filter,
       "plaintext len: %d, ciphertext len: %d, padding: %d, output buffer length: %d",

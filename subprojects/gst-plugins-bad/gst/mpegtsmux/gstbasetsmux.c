@@ -85,6 +85,7 @@
 #include "gstbasetsmuxttxt.h"
 #include "gstbasetsmuxopus.h"
 #include "gstbasetsmuxjpeg2000.h"
+#include "gstbasetsmuxjpegxs.h"
 
 GST_DEBUG_CATEGORY (gst_base_ts_mux_debug);
 #define GST_CAT_DEFAULT gst_base_ts_mux_debug
@@ -440,6 +441,140 @@ release_buffer_cb (guint8 * data, void *user_data)
   stream_data_free ((StreamData *) user_data);
 }
 
+static GstMpegtsJpegXsDescriptor *
+gst_base_ts_mux_jpegxs_descriptor (GstBaseTsMux * mux,
+    GstBaseTsMuxPad * ts_pad, GstCaps * caps)
+{
+  GstStructure *s = gst_caps_get_structure (caps, 0);
+  gint codestream_length, depth;
+  GstMpegtsJpegXsDescriptor *jpegxs_descriptor;
+  GstVideoInfo video_info;
+  const gchar *sampling;
+
+  if (!gst_video_info_from_caps (&video_info, caps))
+    return NULL;
+
+  /* Get (and calculate) all fields from the caps information */
+  sampling = gst_structure_get_string (s, "sampling");
+  if (!gst_structure_get_int (s, "codestream-length", &codestream_length)
+      || !sampling || !gst_structure_get_int (s, "depth", &depth) || !depth) {
+    GST_ERROR_OBJECT (ts_pad,
+        "JPEG-XS caps doesn't contain all required fields");
+    return NULL;
+  }
+
+  jpegxs_descriptor = g_new0 (GstMpegtsJpegXsDescriptor, 1);
+
+  jpegxs_descriptor->horizontal_size = GST_VIDEO_INFO_WIDTH (&video_info);
+  jpegxs_descriptor->vertical_size = GST_VIDEO_INFO_HEIGHT (&video_info);
+
+  {
+    /* FIXME : Cap according to limit defined by profile/level */
+    guint32 brat = G_MAXUINT32;
+    if (GST_VIDEO_INFO_FPS_N (&video_info) > 0
+        && GST_VIDEO_INFO_FPS_D (&video_info) > 0) {
+      // 125000 = * 8 / 1000000 (convert to bits, divide to Mbps)
+      guint64 v =
+          gst_util_uint64_scale_ceil (GST_VIDEO_INFO_FPS_N (&video_info),
+          codestream_length,
+          GST_VIDEO_INFO_FPS_D (&video_info) * 125000);
+      if (v < G_MAXUINT32)
+        brat = v & 0xffffffff;
+    }
+    jpegxs_descriptor->brat = brat;
+  }
+
+  {
+    guint32 frat = 0;
+    gint fps_n = GST_VIDEO_INFO_FPS_N (&video_info);
+    gint fps_d = GST_VIDEO_INFO_FPS_D (&video_info);
+    gint denom_value = 1;
+
+    /* Only framerate divisible by 1 or 1.001 are allowed */
+    if (fps_d == 1001) {
+      fps_n /= 1000;
+      denom_value = 2;
+    } else if (fps_d != 1) {
+      GST_ERROR_OBJECT (ts_pad, "framerate %d/%d is not allowed for JPEG-XS",
+          fps_n, fps_d);
+      goto free_return;
+    }
+    if (fps_n > G_MAXUINT16) {
+      GST_ERROR_OBJECT (ts_pad, "framerate %d/%d exceeds limits for JPEG-XS",
+          fps_n, fps_d);
+      goto free_return;
+    }
+
+    if (GST_VIDEO_INFO_IS_INTERLACED (&video_info)) {
+      if (GST_VIDEO_INFO_FIELD_ORDER (&video_info) ==
+          GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST) {
+        frat |= 1 << 30;
+      } else if (GST_VIDEO_INFO_FIELD_ORDER (&video_info) ==
+          GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST) {
+        frat |= 1 << 31;
+      } else {
+        GST_ERROR_OBJECT (ts_pad, "Unknown interlace mode");
+        goto free_return;
+      }
+    }
+
+    frat |= denom_value << 24;
+    frat |= fps_n;
+
+    jpegxs_descriptor->frat = frat;
+  }
+
+  {
+    guint16 schar = (depth & 0xf) << 4;
+    /* FIXME : Support all other variants */
+    if (!g_strcmp0 (sampling, "YCbCr-4:2:2")) {
+      schar |= 0;
+    } else if (!g_strcmp0 (sampling, "YCbCr-4:4:4")) {
+      schar |= 1;
+    } else {
+      GST_ERROR_OBJECT (ts_pad, "Unsupported sampling %s", sampling);
+      goto free_return;
+    }
+
+    /* schar is valid */
+    schar |= 1 << 15;
+
+    jpegxs_descriptor->schar = schar;
+  }
+
+  /* FIXME : Handle profile/level/sublevel once provided by caps. For now we are unrestricted */
+  jpegxs_descriptor->Ppih = 0;
+  jpegxs_descriptor->Plev = 0;
+
+  /* FIXME : Calculate max_buffer_size based on profile/level if specified */
+  jpegxs_descriptor->max_buffer_size = jpegxs_descriptor->brat / 160;
+
+  /* Hardcoded buffer_model_type of 2 accordingly to H.222.0 specification */
+  jpegxs_descriptor->buffer_model_type = 2;
+
+  jpegxs_descriptor->colour_primaries =
+      gst_video_color_primaries_to_iso (video_info.colorimetry.primaries);
+  jpegxs_descriptor->transfer_characteristics =
+      gst_video_transfer_function_to_iso (video_info.colorimetry.transfer);
+  jpegxs_descriptor->matrix_coefficients =
+      gst_video_color_matrix_to_iso (video_info.colorimetry.matrix);
+  jpegxs_descriptor->video_full_range_flag =
+      video_info.colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255;
+
+  /* We don't accept still pictures */
+  jpegxs_descriptor->still_mode = FALSE;
+
+  /* FIXME : Add support for Mastering Display Metadata parsing */
+
+  return jpegxs_descriptor;
+
+free_return:
+  {
+    g_free (jpegxs_descriptor);
+    return NULL;
+  }
+}
+
 /* Must be called with mux->lock held */
 static GstFlowReturn
 gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
@@ -459,6 +594,7 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
   const gchar *stream_format = NULL;
   const char *interlace_mode = NULL;
   gchar *pmt_name;
+  GstMpegtsDescriptor *pmt_descriptor = NULL;
 
   GST_DEBUG_OBJECT (ts_pad,
       "%s stream with PID 0x%04x for caps %" GST_PTR_FORMAT,
@@ -674,6 +810,26 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     ts_pad->prepare_func = gst_base_ts_mux_prepare_opus;
   } else if (strcmp (mt, "meta/x-klv") == 0) {
     st = TSMUX_ST_PS_KLV;
+  } else if (strcmp (mt, "meta/x-st-2038") == 0) {
+    st = TSMUX_ST_PS_ST_2038;
+  } else if (strcmp (mt, "meta/x-id3") == 0) {
+    st = TSMUX_ST_PS_ID3;
+  } else if (strcmp (mt, "image/x-jxsc") == 0) {
+    /* FIXME: Get actual values from caps */
+    GstMpegtsJpegXsDescriptor *jpegxs_descriptor =
+        gst_base_ts_mux_jpegxs_descriptor (mux, ts_pad, caps);
+    if (!jpegxs_descriptor)
+      goto not_negotiated;
+
+    pmt_descriptor = gst_mpegts_descriptor_from_jpeg_xs (jpegxs_descriptor);
+    if (!pmt_descriptor) {
+      g_free (jpegxs_descriptor);
+      goto not_negotiated;
+    }
+    st = TSMUX_ST_VIDEO_JPEG_XS;
+    ts_pad->prepare_func = gst_base_ts_mux_prepare_jpegxs;
+    ts_pad->prepare_data = jpegxs_descriptor;
+    ts_pad->free_func = gst_base_ts_mux_free_jpegxs;
   } else if (strcmp (mt, "image/x-jpc") == 0) {
     /*
      * See this document for more details on standard:
@@ -800,6 +956,10 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
       goto error;
   }
 
+  if (pmt_descriptor) {
+    ts_pad->stream->pmt_descriptor = pmt_descriptor;
+  }
+
   pmt_name = g_strdup_printf ("PMT_%d", ts_pad->pid);
   if (mux->prog_map && gst_structure_has_field (mux->prog_map, pmt_name)) {
     gst_structure_get_int (mux->prog_map, pmt_name, &ts_pad->stream->pmt_index);
@@ -840,9 +1000,13 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
 
   /* ERRORS */
 not_negotiated:
+  if (pmt_descriptor)
+    gst_mpegts_descriptor_free (pmt_descriptor);
   return GST_FLOW_NOT_NEGOTIATED;
 
 error:
+  if (pmt_descriptor)
+    gst_mpegts_descriptor_free (pmt_descriptor);
   return GST_FLOW_ERROR;
 }
 
@@ -856,18 +1020,12 @@ is_valid_pmt_pid (guint16 pmt_pid)
 
 /* Must be called with mux->lock held */
 static GstFlowReturn
-gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
+gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad,
+    GstCaps * caps)
 {
-  GstCaps *caps = gst_pad_get_current_caps (GST_PAD (ts_pad));
   GstFlowReturn ret;
 
-  if (caps == NULL) {
-    GST_DEBUG_OBJECT (ts_pad, "Sink pad caps were not set before pushing");
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-
   ret = gst_base_ts_mux_create_or_update_stream (mux, ts_pad, caps);
-  gst_caps_unref (caps);
 
   if (ret == GST_FLOW_OK) {
     tsmux_program_add_stream (ts_pad->prog, ts_pad->stream);
@@ -876,14 +1034,50 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
   return ret;
 }
 
+static guint16
+get_pmt_pcr_pid (GstBaseTsMux * mux, const gchar * prop_name)
+{
+  if (mux->prog_map == NULL)
+    return 0;
+  gint pcr_pid = 0;
+  if (!gst_structure_get (mux->prog_map, prop_name, G_TYPE_INT, &pcr_pid, NULL))
+    return 0;
+  if (pcr_pid < 1 || pcr_pid > G_MAXUINT16)
+    return 0;
+  return (guint16) pcr_pid;
+}
+
+static gchar *
+get_pmt_pcr_sink (GstBaseTsMux * mux, const gchar * prop_name)
+{
+  if (mux->prog_map == NULL)
+    return 0;
+  gchar *pcr_sink = NULL;
+  if (!gst_structure_get (mux->prog_map, prop_name, G_TYPE_STRING, &pcr_sink,
+          NULL)) {
+    return NULL;
+  }
+  return pcr_sink;
+}
+
 /* Must be called with mux->lock held */
 static GstFlowReturn
-gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
+gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad,
+    gboolean allow_no_caps)
 {
   GstBaseTsMuxPad *ts_pad = GST_BASE_TS_MUX_PAD (pad);
   gchar *name = NULL;
   gchar *prop_name;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstCaps *caps = gst_pad_get_current_caps (pad);
+
+  if (caps == NULL) {
+    GST_DEBUG_OBJECT (ts_pad, "Sink pad caps were not set yet");
+    /* Try again later once the first buffer is pushed */
+    if (allow_no_caps)
+      return GST_FLOW_OK;
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 
   if (ts_pad->prog_id == -1) {
     name = GST_PAD_NAME (pad);
@@ -941,10 +1135,11 @@ gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
   }
 
   if (ts_pad->stream == NULL) {
-    ret = gst_base_ts_mux_create_stream (mux, ts_pad);
+    ret = gst_base_ts_mux_create_stream (mux, ts_pad, caps);
     if (ret != GST_FLOW_OK)
       goto no_stream;
   }
+  ts_pad->stream->program = ts_pad->prog;
 
   if (ts_pad->prog->pcr_stream == NULL) {
     /* Take the first stream of the program for the PCR */
@@ -957,17 +1152,25 @@ gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
 
   /* Check for user-specified PCR PID */
   prop_name = g_strdup_printf ("PCR_%d", ts_pad->prog->pgm_number);
-  if (mux->prog_map && gst_structure_has_field (mux->prog_map, prop_name)) {
-    const gchar *sink_name =
-        gst_structure_get_string (mux->prog_map, prop_name);
-
-    if (!g_strcmp0 (name, sink_name)) {
-      GST_DEBUG_OBJECT (mux, "User specified stream (pid=%d) as PCR for "
-          "program (prog_id = %d)", ts_pad->pid, ts_pad->prog->pgm_number);
-      tsmux_program_set_pcr_stream (ts_pad->prog, ts_pad->stream);
-    }
+  guint16 pcr_pid = get_pmt_pcr_pid (mux, prop_name);
+  if (pcr_pid) {
+    GST_DEBUG_OBJECT (mux, "User specified PID %d as PCR for "
+        "program (prog_id = %d)", pcr_pid, ts_pad->prog->pgm_number);
+    tsmux_program_set_pcr_pid (ts_pad->prog, pcr_pid);
+    goto have_pcr_pid;
   }
-  g_free (prop_name);
+
+  gchar *pcr_sink_name = get_pmt_pcr_sink (mux, prop_name);
+  if (!g_strcmp0 (GST_PAD_NAME (pad), pcr_sink_name)) {
+    GST_DEBUG_OBJECT (mux, "User specified stream (pid=%d) as PCR for "
+        "program (prog_id = %d)", ts_pad->pid, ts_pad->prog->pgm_number);
+    tsmux_program_set_pcr_stream (ts_pad->prog, ts_pad->stream);
+  }
+  g_clear_pointer (&pcr_sink_name, g_free);
+
+have_pcr_pid:
+  g_clear_pointer (&prop_name, g_free);
+  gst_clear_caps (&caps);
 
   return ret;
 
@@ -976,12 +1179,14 @@ no_program:
   {
     GST_ELEMENT_ERROR (mux, STREAM, MUX,
         ("Could not create new program"), (NULL));
+    gst_clear_caps (&caps);
     return GST_FLOW_ERROR;
   }
 no_stream:
   {
     GST_ELEMENT_ERROR (mux, STREAM, MUX,
         ("Could not create handler for stream"), (NULL));
+    gst_clear_caps (&caps);
     return ret;
   }
 }
@@ -993,7 +1198,8 @@ gst_base_ts_mux_create_pad_stream_func (GstElement * element, GstPad * pad,
 {
   GstFlowReturn *ret = user_data;
 
-  *ret = gst_base_ts_mux_create_pad_stream (GST_BASE_TS_MUX (element), pad);
+  *ret =
+      gst_base_ts_mux_create_pad_stream (GST_BASE_TS_MUX (element), pad, TRUE);
 
   return *ret == GST_FLOW_OK;
 }
@@ -1057,9 +1263,13 @@ new_packet_common_init (GstBaseTsMux * mux, GstBuffer * buf, guint8 * data,
 static GstFlowReturn
 gst_base_ts_mux_push_packets (GstBaseTsMux * mux, gboolean force)
 {
+  GstSegment *segment =
+      &GST_AGGREGATOR_PAD (GST_AGGREGATOR_SRC_PAD (mux))->segment;
   GstBufferList *buffer_list;
   gint align = mux->alignment;
   gint av, packet_size;
+  GstFlowReturn flow_ret;
+  GstClockTime pts;
 
   packet_size = mux->packet_size;
 
@@ -1075,8 +1285,16 @@ gst_base_ts_mux_push_packets (GstBaseTsMux * mux, gboolean force)
   /* no alignment, just push all available data */
   if (align == 0) {
     buffer_list = gst_adapter_take_buffer_list (mux->out_adapter, av);
-    return gst_aggregator_finish_buffer_list (GST_AGGREGATOR (mux),
+    flow_ret = gst_aggregator_finish_buffer_list (GST_AGGREGATOR (mux),
         buffer_list);
+
+    pts = gst_adapter_prev_pts (mux->out_adapter, NULL);
+    if (GST_CLOCK_TIME_IS_VALID (pts)
+        && (!GST_CLOCK_TIME_IS_VALID (segment->position)
+            || segment->position < pts))
+      segment->position = pts;
+
+    return flow_ret;
   }
 
   align *= packet_size;
@@ -1089,7 +1307,6 @@ gst_base_ts_mux_push_packets (GstBaseTsMux * mux, gboolean force)
   GST_LOG_OBJECT (mux, "aligning to %d bytes", align);
   while (align <= av) {
     GstBuffer *buf;
-    GstClockTime pts;
 
     pts = gst_adapter_prev_pts (mux->out_adapter, NULL);
     buf = gst_adapter_take_buffer (mux->out_adapter, align);
@@ -1102,7 +1319,6 @@ gst_base_ts_mux_push_packets (GstBaseTsMux * mux, gboolean force)
 
   if (av > 0 && force) {
     GstBuffer *buf;
-    GstClockTime pts;
     guint8 *data;
     guint32 header;
     gint dummy;
@@ -1152,7 +1368,16 @@ gst_base_ts_mux_push_packets (GstBaseTsMux * mux, gboolean force)
     gst_buffer_list_add (buffer_list, buf);
   }
 
-  return gst_aggregator_finish_buffer_list (GST_AGGREGATOR (mux), buffer_list);
+  flow_ret =
+      gst_aggregator_finish_buffer_list (GST_AGGREGATOR (mux), buffer_list);
+
+  pts = gst_adapter_prev_pts (mux->out_adapter, NULL);
+  if (GST_CLOCK_TIME_IS_VALID (pts)
+      && (!GST_CLOCK_TIME_IS_VALID (segment->position)
+          || segment->position < pts))
+    segment->position = pts;
+
+  return flow_ret;
 }
 
 static GstFlowReturn
@@ -1319,7 +1544,13 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
   if (prog == NULL) {
     GList *cur;
 
-    gst_base_ts_mux_create_pad_stream (mux, GST_PAD (best));
+    ret = gst_base_ts_mux_create_pad_stream (mux, GST_PAD (best), FALSE);
+    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+      if (buf)
+        gst_buffer_unref (buf);
+      g_mutex_unlock (&mux->lock);
+      return ret;
+    }
     tsmux_resend_pat (mux->tsmux);
     tsmux_resend_si (mux->tsmux);
     prog = best->prog;
@@ -1344,7 +1575,8 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
     buf = tmp;
   }
 
-  if (mux->force_key_unit_event != NULL && best->stream->is_video_stream) {
+  if (mux->force_key_unit_event != NULL
+      && best->stream->gst_stream_type == GST_STREAM_TYPE_VIDEO) {
     GstEvent *event;
 
     g_mutex_unlock (&mux->lock);
@@ -1365,7 +1597,7 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
       GST_INFO_OBJECT (mux, "pushing downstream force-key-unit event %d "
           "%" GST_TIME_FORMAT " count %d", gst_event_get_seqnum (event),
           GST_TIME_ARGS (running_time), count);
-      gst_pad_push_event (GST_AGGREGATOR_SRC_PAD (mux), event);
+      gst_aggregator_push_src_event (GST_AGGREGATOR (mux), event);
 
       g_mutex_lock (&mux->lock);
       /* output PAT, SI tables */
@@ -1383,7 +1615,7 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
     }
   }
 
-  if (G_UNLIKELY (prog->pcr_stream == NULL)) {
+  if (!prog->pcr_pid && G_UNLIKELY (prog->pcr_stream == NULL)) {
     /* Take the first data stream for the PCR */
     GST_DEBUG_OBJECT (best,
         "Use stream (pid=%d) from pad as PCR for program (prog_id = %d)",
@@ -1425,12 +1657,13 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
     pts = dts;
   }
 
-  if (best->stream->is_video_stream) {
+  if (best->stream->gst_stream_type == GST_STREAM_TYPE_VIDEO) {
     delta = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
     header = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_HEADER);
   }
 
-  if (best->stream->is_meta && gst_buffer_get_size (buf) > (G_MAXUINT16 - 3)) {
+  if (best->stream->internal_stream_type == TSMUX_ST_PS_KLV &&
+      gst_buffer_get_size (buf) > (G_MAXUINT16 - 3)) {
     GST_WARNING_OBJECT (mux, "KLV meta unit too big, splitting not supported");
 
     gst_buffer_unref (buf);
@@ -2382,7 +2615,7 @@ beach:
 }
 
 static GstBaseTsMuxPad *
-gst_base_ts_mux_find_best_pad (GstAggregator * aggregator)
+gst_base_ts_mux_find_best_pad (GstAggregator * aggregator, gboolean timeout)
 {
   GstBaseTsMuxPad *best = NULL;
   GstClockTime best_ts = GST_CLOCK_TIME_NONE;
@@ -2396,8 +2629,14 @@ gst_base_ts_mux_find_best_pad (GstAggregator * aggregator)
     GstBuffer *buffer;
 
     buffer = gst_aggregator_pad_peek_buffer (apad);
-    if (!buffer)
+    if (!buffer) {
+      if (!timeout && !GST_PAD_IS_EOS (apad)) {
+        best = NULL;
+        best_ts = GST_CLOCK_TIME_NONE;
+        break;
+      }
       continue;
+    }
     if (best_ts == GST_CLOCK_TIME_NONE) {
       best = tpad;
       best_ts = GST_BUFFER_DTS_OR_PTS (buffer);
@@ -2451,7 +2690,7 @@ gst_base_ts_mux_aggregate (GstAggregator * agg, gboolean timeout)
 {
   GstBaseTsMux *mux = GST_BASE_TS_MUX (agg);
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBaseTsMuxPad *best = gst_base_ts_mux_find_best_pad (agg);
+  GstBaseTsMuxPad *best = gst_base_ts_mux_find_best_pad (agg, timeout);
   GstCaps *caps;
 
   /* set caps on the srcpad if no caps were set yet */
@@ -2769,6 +3008,7 @@ gst_base_ts_mux_class_init (GstBaseTsMuxClass * klass)
   gstagg_class->src_event = gst_base_ts_mux_src_event;
   gstagg_class->start = gst_base_ts_mux_start;
   gstagg_class->stop = gst_base_ts_mux_stop;
+  gstagg_class->get_next_time = gst_aggregator_simple_get_next_time;
 
   klass->create_ts_mux = gst_base_ts_mux_default_create_ts_mux;
   klass->allocate_packet = gst_base_ts_mux_default_allocate_packet;
@@ -2827,8 +3067,8 @@ gst_base_ts_mux_class_init (GstBaseTsMuxClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_SCTE_35_NULL_INTERVAL, g_param_spec_uint ("scte-35-null-interval",
           "SCTE-35 NULL packet interval",
-          "Set the interval (in ticks of the 90kHz clock) for writing SCTE-35 NULL (heartbeat) packets."
-          " (only valid if scte-35-pid is different from 0)", 1, G_MAXUINT,
+          "Set the interval (in ticks of the 90kHz clock) for writing SCTE-35 NULL (heartbeat) packets. 0=disable"
+          " (only valid if scte-35-pid is different from 0)", 0, G_MAXUINT,
           TSMUX_DEFAULT_SCTE_35_NULL_INTERVAL,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 

@@ -27,6 +27,7 @@ gst_sources = files(
   'gstformat.c',
   'gstghostpad.c',
   'gstdevicemonitor.c',
+  'gstidstr.c',
   'gstinfo.c',
   'gstiterator.c',
   'gstatomicqueue.c',
@@ -43,7 +44,6 @@ gst_sources = files(
   'gstpoll.c',
   'gstpreset.c',
   'gstprotection.c',
-  'gstquark.c',
   'gstquery.c',
   'gstregistry.c',
   'gstregistrychunks.c',
@@ -69,6 +69,7 @@ gst_sources = files(
   'gsturi.c',
   'gstutils.c',
   'gstvalue.c',
+  'gstvecdeque.c',
   'gstparse.c',
 )
 
@@ -82,6 +83,7 @@ gst_headers = files(
   'gstbufferlist.h',
   'gstbufferpool.h',
   'gstbus.h',
+  'gstbytearrayinterface.h',
   'gstcaps.h',
   'gstcapsfeatures.h',
   'gstchildproxy.h',
@@ -104,6 +106,7 @@ gst_headers = files(
   'gstformat.h',
   'gstghostpad.h',
   'gstdevicemonitor.h',
+  'gstidstr.h',
   'gstinfo.h',
   'gstiterator.h',
   'gstatomicqueue.h',
@@ -143,6 +146,7 @@ gst_headers = files(
   'gsturi.h',
   'gstutils.h',
   'gstvalue.h',
+  'gstvecdeque.h',
   'gstregistry.h',
   'gstparse.h',
   'math-compat.h',
@@ -200,9 +204,9 @@ else
   gst_cdata.set('GST_DISABLE_PARSE_DEFINE', '#define GST_DISABLE_PARSE 1')
 endif
 
-gst_cdata.set10('GST_DISABLE_CAST_CHECKS_DEFINE', cast_checks.disabled())
-gst_cdata.set10('GST_DISABLE_GLIB_ASSERTS_DEFINE', glib_asserts.disabled())
-gst_cdata.set10('GST_DISABLE_GLIB_CHECKS_DEFINE', glib_checks.disabled())
+gst_cdata.set10('GST_DISABLE_CAST_CHECKS_DEFINE', disable_cast_checks)
+gst_cdata.set10('GST_DISABLE_GLIB_ASSERTS_DEFINE', disable_glib_asserts)
+gst_cdata.set10('GST_DISABLE_GLIB_CHECKS_DEFINE', disable_glib_checks)
 
 # FIXME: add --disable-plugin option?
 gst_cdata.set('GST_DISABLE_PLUGIN_DEFINE', '#undef GST_DISABLE_PLUGIN')
@@ -252,8 +256,8 @@ if not tracer_hooks
   libgst_c_args += ['-DGST_DISABLE_GST_TRACER_HOOKS']
 endif
 
-if get_option('gstreamer-full').enabled()
-  libgst_c_args += ['-DGST_FULL_COMPILATION']
+if get_option('gstreamer-static-full')
+  libgst_c_args += ['-DGST_FULL_STATIC_COMPILATION']
 endif
 
 # Make sure that subproject building gir files work
@@ -271,7 +275,7 @@ libgst = library('gstreamer-1.0', gst_sources,
   link_with : printf_lib,
   install : true,
   dependencies : [gobject_dep, gmodule_dep, glib_dep, mathlib, dl_dep,
-                  backtrace_deps, platform_deps, extra_deps],
+                  backtrace_deps, platform_deps, network_deps, extra_deps],
 )
 
 gst_compile_args = []

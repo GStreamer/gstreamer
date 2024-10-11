@@ -58,7 +58,7 @@ G_BEGIN_DECLS
 #define GST_TYPE_DRM_DUMB_ALLOCATOR gst_drm_dumb_allocator_get_type ()
 GST_ALLOCATORS_API
 G_DECLARE_FINAL_TYPE (GstDRMDumbAllocator, gst_drm_dumb_allocator,
-    GST, DRM_DUMB_ALLOCATOR, GstAllocator);
+    GST, DRM_DUMB_ALLOCATOR, GstAllocator)
 
 GST_ALLOCATORS_API
 gboolean       gst_is_drm_dumb_memory (GstMemory * mem);

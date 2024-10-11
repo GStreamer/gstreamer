@@ -1703,9 +1703,9 @@ gst_mf_video_encoder_enum_internal (GstMFTransform * transform, GUID & subtype,
   gst_value_set_int_range_step (&res_val, 64, 8192, 2);
 
   gst_caps_set_value (sink_caps, "width", &res_val);
-  gst_caps_set_value (sink_caps, "heigh", &res_val);
+  gst_caps_set_value (sink_caps, "height", &res_val);
   gst_caps_set_value (src_caps, "width", &res_val);
-  gst_caps_set_value (src_caps, "heigh", &res_val);
+  gst_caps_set_value (src_caps, "height", &res_val);
 
   g_value_unset (&res_val);
 
@@ -1742,7 +1742,8 @@ gst_mf_video_encoder_enum_internal (GstMFTransform * transform, GUID & subtype,
     gst_caps_set_value (d3d11_caps, "format", &d3d11_formats);
     g_value_unset (&d3d11_formats);
     gst_caps_set_features_simple (d3d11_caps,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
     device_caps->d3d11_aware = TRUE;
     device_caps->adapter_luid = adapter_luid;
   }

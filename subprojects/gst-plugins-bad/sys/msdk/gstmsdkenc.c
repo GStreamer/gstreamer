@@ -48,8 +48,10 @@
 #include "gstmsdkcontextutil.h"
 #include "gstmsdkallocator.h"
 #include "mfxjpeg.h"
+#include "gstmsdkcaps.h"
 
 #ifndef _WIN32
+#include <drm_fourcc.h>
 #include "gstmsdkallocator_libva.h"
 #include <gst/va/gstvaallocator.h>
 #else
@@ -131,17 +133,15 @@ gst_msdkenc_set_context (GstElement * element, GstContext * context)
     gst_object_unref (msdk_context);
   } else
 #ifndef _WIN32
-    if (gst_msdk_context_from_external_va_display (context,
-          thiz->hardware, 0 /* GST_MSDK_JOB_ENCODER will be set later */ ,
-          &msdk_context)) {
+  if (gst_msdk_context_from_external_va_display (context,
+          thiz->hardware, GST_MSDK_JOB_ENCODER, &msdk_context)) {
     gst_object_replace ((GstObject **) & thiz->context,
         (GstObject *) msdk_context);
     gst_object_unref (msdk_context);
   }
 #else
-    if (gst_msdk_context_from_external_d3d11_device (context,
-          thiz->hardware, 0 /* GST_MSDK_JOB_ENCODER will be set later */ ,
-          &msdk_context)) {
+  if (gst_msdk_context_from_external_d3d11_device (context,
+          thiz->hardware, GST_MSDK_JOB_ENCODER, &msdk_context)) {
     gst_object_replace ((GstObject **) & thiz->context,
         (GstObject *) msdk_context);
     gst_object_unref (msdk_context);
@@ -493,17 +493,12 @@ static gboolean
 gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
 {
   GstMsdkEncClass *klass = GST_MSDKENC_GET_CLASS (thiz);
-  GstVideoInfo *info;
+  GstVideoInfo info;
   mfxSession session;
   mfxStatus status;
   mfxFrameAllocRequest request;
   guint i;
   mfxExtVideoSignalInfo ext_vsi;
-
-  if (thiz->initialized) {
-    GST_DEBUG_OBJECT (thiz, "Already initialized");
-    return TRUE;
-  }
 
   if (!thiz->context) {
     GST_WARNING_OBJECT (thiz, "No MSDK Context");
@@ -514,9 +509,20 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
     GST_DEBUG_OBJECT (thiz, "Have no input state yet");
     return FALSE;
   }
-  info = &thiz->input_state->info;
+
+  if (!gst_msdkcaps_video_info_from_caps (thiz->input_state->caps, &info,
+          &thiz->modifier)) {
+    GST_WARNING_OBJECT (thiz, "Failed to get video info from input caps");
+    return FALSE;
+  }
 
   GST_OBJECT_LOCK (thiz);
+  if (thiz->initialized) {
+    GST_DEBUG_OBJECT (thiz, "Already initialized");
+    GST_OBJECT_UNLOCK (thiz);
+    return TRUE;
+  }
+
   session = gst_msdk_context_get_session (thiz->context);
   thiz->codename = msdk_get_platform_codename (session);
 
@@ -525,7 +531,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
 
 #if (MFX_VERSION < 2000)
   /* check the format for MSDK path */
-  if (!klass->is_format_supported (thiz, GST_VIDEO_INFO_FORMAT (info))) {
+  if (!klass->is_format_supported (thiz, GST_VIDEO_INFO_FORMAT (&info))) {
     GST_ERROR_OBJECT (thiz,
         "internal vpp is no longer supported, "
         "please use msdkvpp plugin to do conversion first");
@@ -547,14 +553,14 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   thiz->param.mfx.NumRefFrame = thiz->ref_frames;
   thiz->param.mfx.EncodedOrder = 0;     /* Take input frames in display order */
 
-  thiz->param.mfx.FrameInfo.Width = GST_ROUND_UP_16 (info->width);
-  thiz->param.mfx.FrameInfo.Height = GST_ROUND_UP_32 (info->height);
-  thiz->param.mfx.FrameInfo.CropW = info->width;
-  thiz->param.mfx.FrameInfo.CropH = info->height;
-  thiz->param.mfx.FrameInfo.FrameRateExtN = info->fps_n;
-  thiz->param.mfx.FrameInfo.FrameRateExtD = info->fps_d;
-  thiz->param.mfx.FrameInfo.AspectRatioW = info->par_n;
-  thiz->param.mfx.FrameInfo.AspectRatioH = info->par_d;
+  thiz->param.mfx.FrameInfo.Width = GST_ROUND_UP_16 (info.width);
+  thiz->param.mfx.FrameInfo.Height = GST_ROUND_UP_32 (info.height);
+  thiz->param.mfx.FrameInfo.CropW = info.width;
+  thiz->param.mfx.FrameInfo.CropH = info.height;
+  thiz->param.mfx.FrameInfo.FrameRateExtN = info.fps_n;
+  thiz->param.mfx.FrameInfo.FrameRateExtD = info.fps_d;
+  thiz->param.mfx.FrameInfo.AspectRatioW = info.par_n;
+  thiz->param.mfx.FrameInfo.AspectRatioH = info.par_d;
   thiz->param.mfx.FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
   thiz->param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
 
@@ -567,7 +573,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
       thiz->param.mfx.FrameInfo.FrameRateExtD,
       thiz->param.mfx.FrameInfo.FrameRateExtN);
 
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
+  switch (GST_VIDEO_INFO_FORMAT (&info)) {
     case GST_VIDEO_FORMAT_P010_10LE:
       thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_P010;
       thiz->param.mfx.FrameInfo.BitDepthLuma = 10;
@@ -596,6 +602,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
       break;
 #endif
     case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
       thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_RGB4;
       thiz->param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV444;
       thiz->param.mfx.FrameInfo.BitDepthLuma = 8;
@@ -617,6 +624,13 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
     case GST_VIDEO_FORMAT_P012_LE:
       thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_P016;
       thiz->param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+      thiz->param.mfx.FrameInfo.BitDepthLuma = 12;
+      thiz->param.mfx.FrameInfo.BitDepthChroma = 12;
+      thiz->param.mfx.FrameInfo.Shift = 1;
+      break;
+    case GST_VIDEO_FORMAT_Y212_LE:
+      thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_Y216;
+      thiz->param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
       thiz->param.mfx.FrameInfo.BitDepthLuma = 12;
       thiz->param.mfx.FrameInfo.BitDepthChroma = 12;
       thiz->param.mfx.FrameInfo.Shift = 1;
@@ -647,18 +661,20 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
    */
   if (thiz->param.mfx.CodecId != MFX_CODEC_JPEG &&
       thiz->param.mfx.CodecId != MFX_CODEC_VP9 &&
-      (info->colorimetry.primaries || info->colorimetry.transfer
-          || info->colorimetry.matrix)) {
+      (info.colorimetry.primaries || info.colorimetry.transfer
+          || info.colorimetry.matrix)) {
     memset (&ext_vsi, 0, sizeof (ext_vsi));
     ext_vsi.Header.BufferId = MFX_EXTBUFF_VIDEO_SIGNAL_INFO;
     ext_vsi.Header.BufferSz = sizeof (ext_vsi);
     ext_vsi.ColourDescriptionPresent = 1;
     ext_vsi.ColourPrimaries =
-        gst_video_color_primaries_to_iso (info->colorimetry.primaries);
+        gst_video_color_primaries_to_iso (info.colorimetry.primaries);
     ext_vsi.TransferCharacteristics =
-        gst_video_transfer_function_to_iso (info->colorimetry.transfer);
+        gst_video_transfer_function_to_iso (info.colorimetry.transfer);
     ext_vsi.MatrixCoefficients =
-        gst_video_color_matrix_to_iso (info->colorimetry.matrix);
+        gst_video_color_matrix_to_iso (info.colorimetry.matrix);
+    ext_vsi.VideoFullRange =
+        (info.colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255);
     gst_msdkenc_add_extra_param (thiz, (mfxExtBuffer *) & ext_vsi);
   }
 
@@ -1159,14 +1175,15 @@ gst_msdkenc_set_src_caps (GstMsdkEnc * thiz)
 
 #ifndef _WIN32
 static GstBufferPool *
-gst_msdk_create_va_pool (GstMsdkEnc * thiz, GstCaps * caps, guint num_buffers)
+gst_msdk_create_va_pool (GstMsdkEnc * thiz, GstVideoInfo * info,
+    guint num_buffers)
 {
   GstBufferPool *pool = NULL;
   GstAllocator *allocator;
   GArray *formats = NULL;
   GstAllocationParams alloc_params = { 0, 31, 0, 0 };
   GstVaDisplay *display = NULL;
-  GstVideoInfo info = thiz->input_state->info;
+  GstCaps *aligned_caps = NULL;
 
   display = (GstVaDisplay *) gst_msdk_context_get_va_display (thiz->context);
 
@@ -1174,9 +1191,11 @@ gst_msdk_create_va_pool (GstMsdkEnc * thiz, GstCaps * caps, guint num_buffers)
     allocator = gst_va_dmabuf_allocator_new (display);
   } else {
     formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
-    g_array_append_val (formats, GST_VIDEO_INFO_FORMAT (&info));
+    g_array_append_val (formats, GST_VIDEO_INFO_FORMAT (info));
     allocator = gst_va_allocator_new (display, formats);
   }
+
+  gst_object_unref (display);
 
   if (!allocator) {
     GST_ERROR_OBJECT (thiz, "failed to create allocator");
@@ -1185,12 +1204,20 @@ gst_msdk_create_va_pool (GstMsdkEnc * thiz, GstCaps * caps, guint num_buffers)
     return NULL;
   }
 
-  pool =
-      gst_va_pool_new_with_config (caps, GST_VIDEO_INFO_SIZE (&info),
-      num_buffers, 0, VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC, GST_VA_FEATURE_AUTO,
+  if (thiz->use_dmabuf && thiz->modifier != DRM_FORMAT_MOD_INVALID) {
+    aligned_caps = gst_msdkcaps_video_info_to_drm_caps (info, thiz->modifier);
+    gst_caps_set_features (aligned_caps, 0,
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_DMABUF,
+            NULL));
+  } else
+    aligned_caps = gst_video_info_to_caps (info);
+
+  pool = gst_va_pool_new_with_config (aligned_caps, num_buffers, 0,
+      VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC, GST_VA_FEATURE_AUTO,
       allocator, &alloc_params);
 
   gst_object_unref (allocator);
+  gst_caps_unref (aligned_caps);
 
   GST_LOG_OBJECT (thiz, "Creating va pool");
   return pool;
@@ -1261,7 +1288,7 @@ gst_msdkenc_create_buffer_pool (GstMsdkEnc * thiz, GstCaps * caps,
   GstVideoInfo info;
   GstVideoAlignment align;
 
-  if (!gst_video_info_from_caps (&info, caps)) {
+  if (!gst_msdkcaps_video_info_from_caps (caps, &info, NULL)) {
     GST_INFO_OBJECT (thiz, "failed to get video info");
     return FALSE;
   }
@@ -1269,7 +1296,7 @@ gst_msdkenc_create_buffer_pool (GstMsdkEnc * thiz, GstCaps * caps,
   gst_msdk_set_video_alignment (&info, 0, 0, &align);
   gst_video_info_align (&info, &align);
 #ifndef _WIN32
-  pool = gst_msdk_create_va_pool (thiz, caps, num_buffers);
+  pool = gst_msdk_create_va_pool (thiz, &info, num_buffers);
 #else
   pool = gst_msdk_create_d3d11_pool (thiz, num_buffers);
 #endif
@@ -1396,13 +1423,17 @@ gst_msdkenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
    * based pipeline usage. Ideally we should have dmabuf support even with
    * raw-caps negotiation, but we don't have dmabuf-import support in msdk
    * plugin yet */
+#ifndef _WIN32
   /* If VA is set, we do not fallback to DMA. */
   if (!thiz->use_va && sinkpad_can_dmabuf (thiz)) {
     thiz->input_state->caps = gst_caps_make_writable (thiz->input_state->caps);
     gst_caps_set_features (thiz->input_state->caps, 0,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_DMABUF,
+            NULL));
     thiz->use_dmabuf = TRUE;
+    thiz->modifier = get_msdkcaps_get_modifier (state->caps);
   }
+#endif
 
   if (!gst_msdkenc_init_encoder (thiz))
     return FALSE;
@@ -1517,7 +1548,7 @@ gst_msdkenc_get_surface_from_frame (GstMsdkEnc * thiz,
   inbuf = frame->input_buffer;
 
   msdk_surface = gst_msdk_import_to_msdk_surface (inbuf, thiz->context,
-      &thiz->input_state->info, GST_MAP_READ);
+      &thiz->aligned_info, GST_MAP_READ);
   if (msdk_surface) {
     msdk_surface->buf = gst_buffer_ref (inbuf);
     return msdk_surface;
@@ -1742,7 +1773,7 @@ gst_msdkenc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
     return FALSE;
   }
 
-  if (!gst_video_info_from_caps (&info, caps)) {
+  if (!gst_msdkcaps_video_info_from_caps (caps, &info, NULL)) {
     GST_INFO_OBJECT (encoder, "failed to get video info");
     return FALSE;
   }
@@ -1770,9 +1801,8 @@ gst_msdkenc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
     if (gst_buffer_pool_config_get_allocator (config, &allocator, NULL))
       gst_query_add_allocation_param (query, allocator, &params);
     gst_structure_free (config);
+    gst_object_unref (pool);
   }
-
-  gst_object_unref (pool);
 
   return GST_VIDEO_ENCODER_CLASS (parent_class)->propose_allocation (encoder,
       query);
@@ -2001,10 +2031,46 @@ gst_msdkenc_init (GstMsdkEnc * thiz)
   thiz->lowdelay_brc = PROP_LOWDELAY_BRC_DEFAULT;
   thiz->adaptive_i = PROP_ADAPTIVE_I_DEFAULT;
   thiz->adaptive_b = PROP_ADAPTIVE_B_DEFAULT;
+#ifndef _WIN32
+  thiz->modifier = DRM_FORMAT_MOD_INVALID;
+#endif
 
   thiz->ext_coding_props = gst_structure_new (EC_PROPS_STRUCT_NAME,
       EC_PROPS_EXTBRC, G_TYPE_STRING, "off", NULL);
 }
+
+/* *INDENT-OFF* */
+#define UPDATE_PROPERTY                         \
+  if (*old_val == new_val) {                    \
+    return FALSE;                               \
+  }                                             \
+  *old_val = new_val;                                                   \
+  thiz->reconfig = TRUE;                                                \
+  return TRUE;                                                          \
+
+gboolean
+gst_msdkenc_check_update_property_uint (GstMsdkEnc * thiz, guint * old_val,
+    guint new_val)
+{
+  UPDATE_PROPERTY
+}
+
+gboolean
+gst_msdkenc_check_update_property_int (GstMsdkEnc * thiz, gint * old_val,
+    gint new_val)
+{
+  UPDATE_PROPERTY
+}
+
+gboolean
+gst_msdkenc_check_update_property_bool (GstMsdkEnc * thiz, gboolean * old_val,
+    gboolean new_val)
+{
+  UPDATE_PROPERTY
+}
+
+#undef UPDATE_PROPERTY
+/* *INDENT-ON* */
 
 /* gst_msdkenc_set_common_property:
  *
@@ -2016,17 +2082,9 @@ gst_msdkenc_set_common_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstMsdkEnc *thiz = GST_MSDKENC (object);
-  GstState state;
   gboolean ret = TRUE;
 
   GST_OBJECT_LOCK (thiz);
-
-  state = GST_STATE (thiz);
-  if ((state != GST_STATE_READY && state != GST_STATE_NULL) &&
-      !(pspec->flags & GST_PARAM_MUTABLE_PLAYING)) {
-    ret = FALSE;
-    goto wrong_state;
-  }
 
   switch (prop_id) {
     case GST_MSDKENC_PROP_HARDWARE:
@@ -2043,23 +2101,32 @@ gst_msdkenc_set_common_property (GObject * object, guint prop_id,
       break;
     case GST_MSDKENC_PROP_BITRATE:
     {
-      guint bitrate = g_value_get_uint (value);
-      /* Ensure that bitrate changed before triggering a reconfig */
-      if (bitrate != thiz->bitrate) {
-        thiz->bitrate = bitrate;
-        thiz->reconfig = TRUE;
-        GST_DEBUG_OBJECT (thiz, "changed bitrate to %u", bitrate);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->bitrate,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed bitrate to %u", thiz->bitrate);
       }
       break;
     }
     case GST_MSDKENC_PROP_MAX_FRAME_SIZE:
-      thiz->max_frame_size = g_value_get_uint (value);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->max_frame_size,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-frame-size to %u",
+            thiz->max_frame_size);
+      }
       break;
     case GST_MSDKENC_PROP_MAX_FRAME_SIZE_I:
-      thiz->max_frame_size_i = g_value_get_uint (value);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->max_frame_size_i,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-frame-size-i to %u",
+            thiz->max_frame_size_i);
+      }
       break;
     case GST_MSDKENC_PROP_MAX_FRAME_SIZE_P:
-      thiz->max_frame_size_p = g_value_get_uint (value);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->max_frame_size_p,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-frame-size-p to %u",
+            thiz->max_frame_size_p);
+      }
       break;
     case GST_MSDKENC_PROP_MAX_VBV_BITRATE:
       thiz->max_vbv_bitrate = g_value_get_uint (value);
@@ -2074,16 +2141,28 @@ gst_msdkenc_set_common_property (GObject * object, guint prop_id,
       thiz->lookahead_depth = g_value_get_uint (value);
       break;
     case GST_MSDKENC_PROP_QPI:
-      thiz->qpi = g_value_get_uint (value);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->qpi,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed qpi to %u", thiz->qpi);
+      }
       break;
     case GST_MSDKENC_PROP_QPP:
-      thiz->qpp = g_value_get_uint (value);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->qpp,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed qpp to %u", thiz->qpp);
+      }
       break;
     case GST_MSDKENC_PROP_QPB:
-      thiz->qpb = g_value_get_uint (value);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->qpb,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed qpb to %u", thiz->qpb);
+      }
       break;
     case GST_MSDKENC_PROP_GOP_SIZE:
-      thiz->gop_size = g_value_get_uint (value);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->gop_size,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed gop-size to %u", thiz->gop_size);
+      }
       break;
     case GST_MSDKENC_PROP_REF_FRAMES:
       thiz->ref_frames = g_value_get_uint (value);
@@ -2125,14 +2204,6 @@ gst_msdkenc_set_common_property (GObject * object, guint prop_id,
   }
   GST_OBJECT_UNLOCK (thiz);
   return ret;
-
-  /* ERROR */
-wrong_state:
-  {
-    GST_WARNING_OBJECT (thiz, "setting property in wrong state");
-    GST_OBJECT_UNLOCK (thiz);
-    return ret;
-  }
 }
 
 /* gst_msdkenc_get_common_property:

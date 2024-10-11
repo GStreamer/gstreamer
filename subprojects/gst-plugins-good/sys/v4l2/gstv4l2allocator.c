@@ -272,6 +272,13 @@ gst_v4l2_memory_group_new (GstV4l2Allocator * allocator, guint32 index)
     return NULL;
   }
 
+  if (IS_QUEUED (group->buffer)) {
+    GST_WARNING_OBJECT (allocator,
+        "Driver pretends buffer %d is queued even if freshly created, "
+        "this indicates a bug in the driver.", group->buffer.index);
+    UNSET_QUEUED (group->buffer);
+  }
+
   /* Check that provided size matches the format we have negotiation. Failing
    * there usually means a driver of libv4l bug. */
   if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
@@ -357,7 +364,6 @@ gst_v4l2_allocator_release (GstV4l2Allocator * allocator, GstV4l2Memory * mem)
 
   switch (allocator->memory) {
     case V4L2_MEMORY_DMABUF:
-      close (mem->dmafd);
       mem->dmafd = -1;
       break;
     case V4L2_MEMORY_USERPTR:
@@ -375,7 +381,7 @@ gst_v4l2_allocator_release (GstV4l2Allocator * allocator, GstV4l2Memory * mem)
   }
 
   /* Keep last, allocator may be freed after this call */
-  g_object_unref (allocator);
+  gst_object_unref (allocator);
 }
 
 static void
@@ -396,8 +402,7 @@ gst_v4l2_allocator_free (GstAllocator * gallocator, GstMemory * gmem)
         obj->munmap (mem->data, group->planes[mem->plane].length);
     }
 
-    /* This apply for both mmap with expbuf, and dmabuf imported memory */
-    if (mem->dmafd >= 0)
+    if (allocator->memory == V4L2_MEMORY_MMAP && mem->dmafd >= 0)
       close (mem->dmafd);
   }
 

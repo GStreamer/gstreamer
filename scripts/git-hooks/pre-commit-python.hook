@@ -11,12 +11,12 @@ NOT_PYCODESTYLE_COMPLIANT_MESSAGE_PRE = \
 NOT_PYCODESTYLE_COMPLIANT_MESSAGE_POST = \
     "Please fix these errors and commit again, you can do so "\
     "from the root directory automatically like this, assuming the whole "\
-    "file is to be commited:"
+    "file is to be committed:"
 
 NO_PYCODESTYLE_MESSAGE = \
     "You should install the pycodestyle style checker to be able"\
-    " to commit in this repo.\nIt allows us to garantee that "\
-    "anything that is commited respects the pycodestyle coding style "\
+    " to commit in this repo.\nIt allows us to guarantee that "\
+    "anything that is committed respects the pycodestyle coding style "\
     "standard.\nYou can install it:\n"\
     "  * on ubuntu, debian: $sudo apt-get install pycodestyle \n"\
     "  * on fedora: #yum install python3-pycodestyle \n"\
@@ -40,7 +40,7 @@ def copy_files_to_tmp_dir(files):
         filepath = os.path.dirname(filename)
         if not os.path.exists(filepath):
             os.makedirs(filepath)
-        with open(filename, 'w') as f:
+        with open(filename, 'w', encoding="utf-8") as f:
             system('git', 'show', ':' + name, stdout=f)
 
     return tempdir

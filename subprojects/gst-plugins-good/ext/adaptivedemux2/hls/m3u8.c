@@ -174,7 +174,7 @@ gst_m3u8_preload_hint_equal (GstM3U8PreloadHint * hint1,
   if (hint1->hint_type != hint2->hint_type)
     return FALSE;
 
-  if (!g_str_equal (hint1->uri, hint2->uri))
+  if (g_strcmp0 (hint1->uri, hint2->uri))
     return FALSE;
 
   if (hint1->offset != hint2->offset)
@@ -235,7 +235,7 @@ gst_m3u8_init_file_equal (const GstM3U8InitFile * ifile1,
   if (ifile1 != NULL && ifile2 == NULL)
     return FALSE;
 
-  if (!g_str_equal (ifile1->uri, ifile2->uri))
+  if (g_strcmp0 (ifile1->uri, ifile2->uri))
     return FALSE;
   if (ifile1->offset != ifile2->offset)
     return FALSE;
@@ -417,7 +417,7 @@ gst_hls_media_playlist_new (const gchar * uri, const gchar * base_uri)
   m3u8->targetduration = GST_CLOCK_TIME_NONE;
   m3u8->partial_targetduration = GST_CLOCK_TIME_NONE;
   m3u8->media_sequence = 0;
-  m3u8->discont_sequence = 0;
+  m3u8->discont_sequence = -1;
   m3u8->endlist = FALSE;
   m3u8->i_frame = FALSE;
   m3u8->allowcache = TRUE;
@@ -1243,6 +1243,9 @@ gst_hls_media_playlist_parse (gchar * data,
     return NULL;
   }
 
+  if (!self->has_ext_x_dsn)
+    self->discont_sequence = 0;
+
   /* Now go over the parsed data to ensure MSN and/or PDT are set */
   if (self->ext_x_pdt_present)
     gst_hls_media_playlist_postprocess_pdt (self);
@@ -1377,7 +1380,7 @@ gst_hls_media_playlist_seek (GstHLSMediaPlaylist * playlist, gboolean forward,
               }
             }
           } else if (part->stream_time <= ts
-              && ts < part->stream_time + part->duration) {
+              && ts < (GstClockTimeDiff) (part->stream_time + part->duration)) {
             res = cand;
             if (!want_keyunit || part->independent)
               res_part_idx = part_idx;
@@ -1413,7 +1416,7 @@ gst_hls_media_playlist_seek (GstHLSMediaPlaylist * playlist, gboolean forward,
         goto out;
       }
     } else if ((cand->stream_time <= ts || idx == 0)
-        && ts < cand->stream_time + cand->duration) {
+        && ts < (GstClockTimeDiff) (cand->stream_time + cand->duration)) {
       res = cand;
       goto out;
     }
@@ -1477,8 +1480,8 @@ gst_hls_media_playlist_find_partial_position (GstHLSMediaPlaylist * playlist,
 
     /* If the target timestamp is before this partial segment, or in the first half, this
      * is the partial segment to land in */
-    if (cand->stream_time + (cand->duration / 2) >= ts &&
-        cand->stream_time <= ts + (cand->duration / 2)) {
+    if ((GstClockTimeDiff) (cand->stream_time + (cand->duration / 2)) >= ts &&
+        cand->stream_time <= (GstClockTimeDiff) (ts + (cand->duration / 2))) {
       GST_DEBUG ("choosing partial segment %d", part_idx);
       seek_result->segment = gst_m3u8_media_segment_ref (seg);
       seek_result->found_partial_segment = TRUE;
@@ -1537,7 +1540,7 @@ gst_hls_media_playlist_find_position (GstHLSMediaPlaylist * playlist,
     /* If the target stream time is definitely past the end
      * of this segment, no earlier segment (with lower stream time)
      * could match, so we fail */
-    if (ts >= cand->stream_time + (3 * cand->duration / 2)) {
+    if (ts >= (GstClockTimeDiff) (cand->stream_time + (3 * cand->duration / 2))) {
       break;
     }
 
@@ -1873,15 +1876,24 @@ find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
         }
       }
 
-      if (cand->datetime
-          && g_date_time_difference (cand->datetime, segment->datetime) >= 0) {
+      /* The reported PDT might not be 100% identical for matching segments
+       * across playlists, we therefore need to take into account a certain
+       * tolerance otherwise we would fail to match candidates with a PDT which
+       * is slightly before. We therefore check whether the segment starts
+       * within the first third of the candidate segment.
+       */
+      if (cand->datetime) {
+        GstClockTimeDiff pdtdiff = g_date_time_difference (cand->datetime,
+            segment->datetime) * GST_USECOND + cand->duration / 3;
+        if (pdtdiff >= 0) {
 #ifndef GST_DISABLE_GST_DEBUG
-        gchar *pdtstring = g_date_time_format_iso8601 (cand->datetime);
-        GST_DEBUG ("Picking segment with datetime %s", pdtstring);
-        g_free (pdtstring);
+          gchar *pdtstring = g_date_time_format_iso8601 (cand->datetime);
+          GST_DEBUG ("Picking segment with datetime %s", pdtstring);
+          g_free (pdtstring);
 #endif
-        *matched_pdt = TRUE;
-        return cand;
+          *matched_pdt = TRUE;
+          return cand;
+        }
       }
     }
   }
@@ -2098,6 +2110,10 @@ gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self,
     res = g_ptr_array_index (self->segments, 0);
   } else {
     GstClockTime hold_back = GST_CLOCK_TIME_NONE;
+    GstM3U8MediaSegment *last_seg;
+    g_assert (self->segments->len);
+    last_seg = g_ptr_array_index (self->segments, self->segments->len - 1);
+
     /* Live playlist. If low-latency, use the PART-HOLD-BACK specified distance
      * from the end, otherwise HOLD-BACK distance */
     if (GST_CLOCK_TIME_IS_VALID (self->part_hold_back))
@@ -2123,12 +2139,11 @@ gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self,
       hold_back = GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE * self->targetduration;
     }
 
-    if (GST_CLOCK_TIME_IS_VALID (hold_back)) {
+    if (GST_CLOCK_TIME_IS_VALID (hold_back)
+        && GST_CLOCK_STIME_IS_VALID (last_seg->stream_time)) {
       GstSeekFlags flags =
           GST_SEEK_FLAG_SNAP_BEFORE | GST_SEEK_FLAG_KEY_UNIT |
           GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL;
-      GstM3U8MediaSegment *last_seg =
-          g_ptr_array_index (self->segments, self->segments->len - 1);
       GstClockTime playlist_duration =
           last_seg->stream_time + last_seg->duration;
       GstClockTime target_ts;
@@ -2186,16 +2201,24 @@ gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self,
  * This should be used when a reference media segment couldn't be matched in the
  * playlist, but we still want to carry over the information from a reference
  * playlist to an updated one. This can happen with live playlists where the
- * reference media segment is no longer present but the playlists intersect */
+ * reference media segment is no longer present but the playlists intersect
+ *
+ * If the sync is sucessfull, discont will be set to TRUE if it was a perfect
+ * URI fragment match, else it will be FALSE (ex: match was done on PDT or
+ * SN/DSN).
+ **/
 gboolean
 gst_hls_media_playlist_sync_to_playlist (GstHLSMediaPlaylist * playlist,
-    GstHLSMediaPlaylist * reference)
+    GstHLSMediaPlaylist * reference, gboolean * discont)
 {
   GstM3U8MediaSegment *res = NULL;
   GstM3U8MediaSegment *cand = NULL;
   guint idx;
   gboolean is_before;
   gboolean matched_pdt = FALSE;
+
+  if (discont)
+    *discont = FALSE;
 
   g_return_val_if_fail (playlist && reference, FALSE);
 
@@ -2224,6 +2247,13 @@ retry_without_dsn:
     }
     GST_WARNING ("Could not synchronize media playlists");
     return FALSE;
+  }
+
+  if (discont) {
+    /* If not a perfect match, mark as such */
+    GST_DEBUG ("Checking match uri cand: %s", cand->uri);
+    GST_DEBUG ("Checking match uri res : %s", res->uri);
+    *discont = g_strcmp0 (res->uri, cand->uri) != 0;
   }
 
   /* Carry over reference stream time */
@@ -2567,7 +2597,7 @@ gst_hls_media_playlist_recommended_buffering_threshold (GstHLSMediaPlaylist *
       3 * (playlist->duration / playlist->segments->len) / 2;
 
   if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist)) {
-    /* For live playlists, reduce the recommended buffering threshold 
+    /* For live playlists, reduce the recommended buffering threshold
      * to match the starting hold back distance if needed, otherwise
      * we'll hit the live edge and have to wait before we hit 100% */
     if (GST_CLOCK_TIME_IS_VALID (playlist->hold_back)
@@ -2620,7 +2650,7 @@ gst_m3u8_get_hls_media_type_from_string (const gchar * type_name)
     return GST_HLS_RENDITION_STREAM_TYPE_VIDEO;
   if (strcmp (type_name, "SUBTITLES") == 0)
     return GST_HLS_RENDITION_STREAM_TYPE_SUBTITLES;
-  if (strcmp (type_name, "CLOSED_CAPTIONS") == 0)
+  if (strcmp (type_name, "CLOSED-CAPTIONS") == 0)
     return GST_HLS_RENDITION_STREAM_TYPE_CLOSED_CAPTIONS;
 
   return GST_HLS_RENDITION_STREAM_TYPE_INVALID;
@@ -2706,7 +2736,8 @@ gst_m3u8_parse_media (gchar * desc, const gchar * base_uri)
   if (media->group_id == NULL || media->name == NULL)
     goto required_attributes_missing;
 
-  if (media->mtype == GST_HLS_RENDITION_STREAM_TYPE_CLOSED_CAPTIONS)
+  if (media->mtype == GST_HLS_RENDITION_STREAM_TYPE_CLOSED_CAPTIONS
+      && media->uri != NULL)
     goto uri_with_cc;
 
   GST_DEBUG ("media: %s, group '%s', name '%s', uri '%s', %s %s %s, lang=%s",
@@ -2832,8 +2863,12 @@ gst_hls_variant_parse (gchar * data, const gchar * base_uri)
       g_free (stream->codecs);
       stream->codecs = g_strdup (v);
       stream->caps = gst_codec_utils_caps_from_mime_codec (stream->codecs);
-      stream->codecs_stream_type =
-          gst_hls_get_stream_type_from_caps (stream->caps);
+      if (stream->caps != NULL) {
+        stream->codecs_stream_type =
+            gst_hls_get_stream_type_from_caps (stream->caps);
+      } else {
+        GST_WARNING ("Unhandled codec in CODECS tags: %s", v);
+      }
     } else if (g_str_equal (a, "RESOLUTION")) {
       if (!int_from_string (v, &v, &stream->width))
         GST_WARNING ("Error while reading RESOLUTION width");
@@ -3340,12 +3375,12 @@ hls_master_playlist_get_variant_for_bitrate (GstHLSMasterPlaylist *
 }
 
 static gboolean
-remove_uncommon (GQuark field_id, GValue * value, GstStructure * st2)
+remove_uncommon (const GstIdStr * fieldname, GValue * value, GstStructure * st2)
 {
   const GValue *other;
   GValue dest = G_VALUE_INIT;
 
-  other = gst_structure_id_get_value (st2, field_id);
+  other = gst_structure_id_str_get_value (st2, fieldname);
 
   if (other == NULL || (G_VALUE_TYPE (value) != G_VALUE_TYPE (other)))
     return FALSE;
@@ -3379,8 +3414,8 @@ gst_caps_merge_common (GstCaps * caps1, GstCaps * caps2)
       if (gst_structure_has_name (st2, name1)) {
         if (merged == NULL)
           merged = gst_structure_copy (st1);
-        gst_structure_filter_and_map_in_place (merged,
-            (GstStructureFilterMapFunc) remove_uncommon, st2);
+        gst_structure_filter_and_map_in_place_id_str (merged,
+            (GstStructureFilterMapIdStrFunc) remove_uncommon, st2);
       }
     }
 

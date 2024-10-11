@@ -1499,7 +1499,7 @@ do_time_effect_change (GESClip * clip)
   children = ges_container_get_children (GES_CONTAINER (clip), FALSE);
 
   for (tmp = children; tmp; tmp = tmp-&gt;next)
-    ges_track_element_set_auto_clamp_control_source (tmp-&gt;data, FALSE);
+    ges_track_element_set_auto_clamp_control_sources (tmp-&gt;data, FALSE);
 
   // add time effect, or set their children properties, or move them around
   ...
@@ -1520,7 +1520,7 @@ do_time_effect_change (GESClip * clip)
     // handle error
 
   for (tmp = children; tmp; tmp = tmp-&gt;next)
-    ges_track_element_set_auto_clamp_control_source (tmp-&gt;data, TRUE);
+    ges_track_element_set_auto_clamp_control_sources (tmp-&gt;data, TRUE);
 
   g_list_free_full (children, gst_object_unref);
   gst_object_unref (source);
@@ -1664,7 +1664,8 @@ would not be able to adapt itself once the effect is added.</doc>
             <type name="BaseEffect" c:type="GESBaseEffect*"/>
           </parameter>
           <parameter name="index" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">The index to add @effect at, or -1 to add at the highest</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">The index to add @effect at, or -1 to add at the highest,
+        see #ges_clip_get_top_effect_index for more information</doc>
             <type name="gint" c:type="gint"/>
           </parameter>
         </parameters>
@@ -3234,6 +3235,18 @@ discovery.</doc>
           </parameter>
         </parameters>
       </glib:signal>
+      <glib:signal name="source-setup" when="last" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">Allows to setup the source element before the discoverer runs.</doc>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="source" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The source #GstElement to setup</doc>
+            <type name="Gst.Element"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
     </class>
     <record name="DiscovererManagerClass" c:type="GESDiscovererManagerClass" glib:is-gtype-struct-for="DiscovererManager">
       <source-position filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.h"/>
@@ -3524,10 +3537,23 @@ and [clip management](http://pitivi.org/manual/usingclips.html).</doc>
       </function>
     </enumeration>
     <class name="Effect" c:symbol-prefix="effect" c:type="GESEffect" parent="BaseEffect" glib:type-name="GESEffect" glib:get-type="ges_effect_get_type" glib:type-struct="EffectClass">
-      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-effect.c">Currently we only support effects with N sinkpads and one single srcpad.
-Apart from `gesaudiomixer` and `gescompositor` which can be used as effects
-and where sinkpads will be requested as needed based on the timeline topology
-GES will always request at most one sinkpad per effect (when required).
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-effect.c">Any GStreamer filter can be used as effects in GES. The only restriction we
+have is that effects element should have a single [sinkpad](GST_PAD_SINK)
+(which will be requested if necessary) and a single [srcpad](GST_PAD_SRC).
+
+Note that `gesaudiomixer` and `gescompositor` can be used as effects even
+though they can have several sinkpads.
+
+## GES specific effects:
+
+* **`gesvideoscale`**: GES implements a specific scaling bin that allows
+  specifying where scaling will happen inside the chain of effects. By
+  default scaling can happen either in the source (if the source doesn't have
+  a specific size, like `videotestsrc` or [mixing](ges_track_set_mixing) has
+  been disabled) or in the mixing element otherwise, when adding that element
+  as an effect, GES guarantees that the scaling will happen in it. This can
+  be useful for example if you want to crop the video before scaling or apply
+  rounding corners to the video after scaling, etc...
 
 &gt; Note: GES always adds converters (`audioconvert ! audioresample !
 &gt; audioconvert` for audio effects and `videoconvert` for video effects) to
@@ -4447,6 +4473,45 @@ else FALSE.</doc>
         </parameter>
       </parameters>
     </callback>
+    <record name="FrameCompositionMeta" c:type="GESFrameCompositionMeta" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">Metadata type that holds information about the positioning, size,
+transparency and composition operator of a video frame in the timeline
+composition.</doc>
+      <source-position filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h"/>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">the parent #GstMeta.</doc>
+        <type name="Gst.Meta" c:type="GstMeta"/>
+      </field>
+      <field name="alpha" writable="1">
+        <type name="gdouble" c:type="gdouble"/>
+      </field>
+      <field name="posx" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The desired x position.</doc>
+        <type name="gdouble" c:type="gdouble"/>
+      </field>
+      <field name="posy" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The desired y position.</doc>
+        <type name="gdouble" c:type="gdouble"/>
+      </field>
+      <field name="height" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The desired height of the video. -1 means that no scaling should be
+applied.</doc>
+        <type name="gdouble" c:type="gdouble"/>
+      </field>
+      <field name="width" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The desired width of the video. -1 means that no scaling should beapplied
+applied.</doc>
+        <type name="gdouble" c:type="gdouble"/>
+      </field>
+      <field name="zorder" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The desired z order.</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="operator" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The blending operator for the source.</doc>
+        <type name="gint" c:type="gint"/>
+      </field>
+    </record>
     <class name="Group" c:symbol-prefix="group" c:type="GESGroup" parent="Container" glib:type-name="GESGroup" glib:get-type="ges_group_get_type" glib:type-struct="GroupClass">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-group.c">A #GESGroup controls one or more #GESContainer-s (usually #GESClip-s,
 but it can also control other #GESGroup-s). Its children must share
@@ -7138,18 +7203,18 @@ is really not in good shape and is deprecated.</doc>
 #GESAsset with `GES_TYPE_TIMELINE` as @extractable_type itself. That
 means that you can extract #GESTimeline from a project as followed:
 
-|[
- GESProject *project;
- GESTimeline *timeline;
+```c
+GESProject *project;
+GESTimeline *timeline;
 
- project = ges_project_new ("file:///path/to/a/valid/project/uri");
+project = ges_project_new ("file:///path/to/a/valid/project/uri");
 
- // Here you can connect to the various signal to get more infos about
- // what is happening and recover from errors if possible
- ...
+// Here you can connect to the various signal to get more infos about
+// what is happening and recover from errors if possible
+...
 
- timeline = ges_asset_extract (GES_ASSET (project));
-]|
+timeline = ges_asset_extract (GES_ASSET (project));
+```
 
 The #GESProject class offers a higher level API to handle #GESAsset-s.
 It lets you request new asset, and it informs you about new assets through
@@ -7185,7 +7250,9 @@ other locations, it will never be updated again and the first valid URI is
 the URI it will keep refering to.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">A newly created #GESProject</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">A newly created #GESProject
+
+MT safe.</doc>
           <type name="Project" c:type="GESProject*"/>
         </return-value>
         <parameters>
@@ -7310,7 +7377,9 @@ the URI it will keep refering to.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the asset could be added %FALSE it was already
-in the project</doc>
+in the project.
+
+MT safe.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -7326,11 +7395,13 @@ in the project</doc>
       </method>
       <method name="add_encoding_profile" c:identifier="ges_project_add_encoding_profile">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">Adds @profile to the project. It lets you save in what format
-the project has been renders and keep a reference to those formats.
-Also, those formats will be saves to the project file when possible.</doc>
+the project will be rendered and keep a reference to those formats.
+Also, those formats will be saved to the project file when possible.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if @profile could be added, %FALSE otherwize</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if @profile could be added, %FALSE otherwise
+
+MT safe.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -7340,13 +7411,16 @@ Also, those formats will be saves to the project file when possible.</doc>
           </instance-parameter>
           <parameter name="profile" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">A #GstEncodingProfile to add to the project. If a profile with
-the same name already exists, it will be replaced</doc>
+the same name already exists, it will be replaced.</doc>
             <type name="GstPbutils.EncodingProfile" c:type="GstEncodingProfile*"/>
           </parameter>
         </parameters>
       </method>
       <method name="add_formatter" c:identifier="ges_project_add_formatter" version="1.18">
-        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">Adds a formatter as used to load @project</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">Adds a formatter to be used to load @project</doc>
+        <doc-version xml:space="preserve">
+
+MT safe.</doc-version>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -7368,8 +7442,10 @@ the same name already exists, it will be replaced</doc>
 @project</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the asset started to be added %FALSE it was already
-in the project</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the asset was added and started loading, %FALSE it was
+already in the project.
+
+MT safe.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -7393,7 +7469,9 @@ in the project</doc>
 @project</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="full" nullable="1">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">The newly created #GESAsset or %NULL.</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">The newly created #GESAsset or %NULL.
+
+MT safe.</doc>
           <type name="Asset" c:type="GESAsset*"/>
         </return-value>
         <parameters>
@@ -7415,7 +7493,9 @@ in the project</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">The #GESAsset with
-@id or %NULL if no asset with @id as an ID</doc>
+@id or %NULL if no asset with @id as an ID
+
+MT safe.</doc>
           <type name="Asset" c:type="GESAsset*"/>
         </return-value>
         <parameters>
@@ -7440,7 +7520,9 @@ to retrieve from @object</doc>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">A set of loading asset
 that will be added to @project. Note that those Asset are *not* loaded yet,
-and thus can not be used</doc>
+and thus can not be used.
+
+MT safe.</doc>
           <type name="GLib.List" c:type="GList*">
             <type name="Asset"/>
           </type>
@@ -7456,7 +7538,9 @@ and thus can not be used</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">Retrieve the uri that is currently set on @project</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="full" nullable="1">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">a newly allocated string representing uri.</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">a newly allocated string representing uri.
+
+MT safe.</doc>
           <type name="utf8" c:type="gchar*"/>
         </return-value>
         <parameters>
@@ -7473,7 +7557,9 @@ in time.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">The list of
-#GESAsset the object contains</doc>
+#GESAsset the object contains
+
+MT safe.</doc>
           <type name="GLib.List" c:type="GList*">
             <type name="Asset"/>
           </type>
@@ -7512,7 +7598,9 @@ list of #GstEncodingProfile used in @project</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">Loads @project into @timeline</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the project could be loaded %FALSE otherwize.</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the project could be loaded %FALSE otherwise.
+
+MT safe.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -7527,10 +7615,12 @@ list of #GstEncodingProfile used in @project</doc>
         </parameters>
       </method>
       <method name="remove_asset" c:identifier="ges_project_remove_asset">
-        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">remove a @asset to from @project.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">Remove @asset from @project.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the asset could be removed %FALSE otherwise</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the asset could be removed %FALSE otherwise
+
+MT safe.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -7550,7 +7640,9 @@ is one of the timelines that have been extracted from @project
 (using ges_asset_extract (@project);)</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the project could be save, %FALSE otherwize</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the project could be save, %FALSE otherwise
+
+MT safe.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -7687,7 +7779,7 @@ failed loading</doc>
         </parameters>
       </glib:signal>
       <glib:signal name="missing-uri" when="last">
-        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">|[
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">```c
 static gchar
 source_moved_cb (GESProject *project, GError *error, GESAsset *asset_with_error)
 {
@@ -7703,7 +7795,7 @@ main (int argc, gchar ** argv)
   g_signal_connect (project, "missing-uri", source_moved_cb, NULL);
   timeline = ges_asset_extract (GES_ASSET (project));
 }
-]|</doc>
+```</doc>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">The new URI of @wrong_asset</doc>
           <type name="utf8" c:type="gchar*"/>
@@ -15370,7 +15462,7 @@ contains one frame)</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-version.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
-    <constant name="VERSION_MINOR" value="23" c:type="GES_VERSION_MINOR">
+    <constant name="VERSION_MINOR" value="25" c:type="GES_VERSION_MINOR">
       <source-position filename="../subprojects/gst-editing-services/ges/ges-version.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
@@ -15729,8 +15821,9 @@ account.</doc>
       <member name="crossfade" value="512" c:identifier="GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE" glib:nick="crossfade">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-enums.h">Crossfade</doc>
       </member>
-      <member name="fade_in" value="513" c:identifier="GES_VIDEO_STANDARD_TRANSITION_TYPE_FADE_IN" glib:nick="fade-in">
-        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-enums.h">Similar to crossfade, but fade in the front video without fading out the background one (Since: 1.22)</doc>
+      <member name="fade_in" value="513" c:identifier="GES_VIDEO_STANDARD_TRANSITION_TYPE_FADE_IN" version="1.22" glib:nick="fade-in">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-enums.h">Similar to crossfade, but fade in the front video without fading out
+the background one</doc>
       </member>
     </enumeration>
     <enumeration name="VideoTestPattern" glib:type-name="GESVideoTestPattern" glib:get-type="ges_video_test_pattern_get_type" c:type="GESVideoTestPattern">
@@ -16157,6 +16250,20 @@ for later use.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="buffer_add_frame_composition_meta" c:identifier="ges_buffer_add_frame_composition_meta" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.c">Attaches positioning metadata to a #GstBuffer.</doc>
+      <source-position filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.c">a pointer to the added #GESFrameCompositionMeta.</doc>
+        <type name="FrameCompositionMeta" c:type="GESFrameCompositionMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.c">#GstBuffer to which protection metadata should be added.</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="deinit" c:identifier="ges_deinit">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges.c">Clean up any resources created by GES in ges_init().
 
@@ -16213,6 +16320,44 @@ formatter asset.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="frame_composition_meta_api_get_type" c:identifier="ges_frame_composition_meta_api_get_type">
+      <attribute name="doc.skip" value="true"/>
+      <source-position filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h"/>
+      <return-value transfer-ownership="none">
+        <type name="GType" c:type="GType"/>
+      </return-value>
+    </function>
+    <docsection name="ges.h">
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges.c">GES needs to be initialized after GStreamer itself. This section
+contains the various functions to do so.</doc>
+    </docsection>
+    <docsection name="gestimeoverlayclip">
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-time-overlay-clip.c">A #GESSourceClip that overlays timing information on top.
+
+## Asset
+
+The default asset ID is "time-overlay" (of type #GES_TYPE_SOURCE_CLIP),
+but the framerate and video size can be overridden using an ID of the form:
+
+```
+time-overlay, framerate=60/1, width=1920, height=1080, max-duration=5.0
+```
+
+## Children properties
+
+{{ libs/GESTimeOverlayClip-children-props.md }}
+
+## Symbols</doc>
+    </docsection>
+    <docsection name="gestypes">
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-types.h">GStreamer Editing Services data types</doc>
+    </docsection>
+    <docsection name="gesuriasset">
+      <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-asset.c">The #GESUriClipAsset is a special #GESAsset that lets you handle
+the media file to use inside the GStreamer Editing Services. It has APIs that
+let you get information about the medias. Also, the tags found in the media file are
+set as Metadata of the Asset.</doc>
+    </docsection>
     <function name="init" c:identifier="ges_init">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges.c">Initialize the GStreamer Editing Service. Call this before any usage of
 GES. You should take care of initilizing GStreamer before calling this

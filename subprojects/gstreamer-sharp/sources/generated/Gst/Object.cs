@@ -228,19 +228,12 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_object_default_deep_notify(IntPtr _object, IntPtr orig, IntPtr pspec, IntPtr[] excluded_props);
+		static extern void gst_object_default_deep_notify(IntPtr _object, IntPtr orig, IntPtr pspec, IntPtr excluded_props);
 
 		public static void DefaultDeepNotify(GLib.Object _object, Gst.Object orig, IntPtr pspec, string[] excluded_props) {
-			int cnt_excluded_props = excluded_props == null ? 0 : excluded_props.Length;
-			IntPtr[] native_excluded_props = new IntPtr [cnt_excluded_props + 1];
-			for (int i = 0; i < cnt_excluded_props; i++)
-				native_excluded_props [i] = GLib.Marshaller.StringToPtrGStrdup (excluded_props[i]);
-			native_excluded_props [cnt_excluded_props] = IntPtr.Zero;
+			IntPtr native_excluded_props = GLib.Marshaller.StringArrayToStrvPtr(excluded_props, true);
 			gst_object_default_deep_notify(_object == null ? IntPtr.Zero : _object.Handle, orig == null ? IntPtr.Zero : orig.Handle, pspec, native_excluded_props);
-			for (int i = 0; i < native_excluded_props.Length - 1; i++) {
-				excluded_props [i] = GLib.Marshaller.Utf8PtrToString (native_excluded_props[i]);
-				GLib.Marshaller.Free (native_excluded_props[i]);
-			}
+			GLib.Marshaller.StrFreeV (native_excluded_props);
 		}
 
 		public static void DefaultDeepNotify(GLib.Object _object, Gst.Object orig, IntPtr pspec) {
@@ -294,19 +287,18 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_object_get_g_value_array(IntPtr raw, IntPtr property_name, ulong timestamp, ulong interval, uint n_values, IntPtr[] values);
+		static extern bool gst_object_get_g_value_array(IntPtr raw, IntPtr property_name, ulong timestamp, ulong interval, uint n_values, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=4)]IntPtr[] values);
 
 		public bool GetGValueArray(string property_name, ulong timestamp, ulong interval, GLib.Value[] values) {
 			IntPtr native_property_name = GLib.Marshaller.StringToPtrGStrdup (property_name);
-			int cnt_values = values == null ? 0 : values.Length;
-			IntPtr[] native_values = new IntPtr [cnt_values];
-			for (int i = 0; i < cnt_values; i++)
+			uint n_values = (uint)(values == null ? 0 : values.Length);
+			IntPtr[] native_values = new IntPtr [n_values];
+			for (int i = 0; i < n_values; i++)
 				native_values [i] = GLib.Marshaller.StructureToPtrAlloc (values[i]);
-			bool raw_ret = gst_object_get_g_value_array(Handle, native_property_name, timestamp, interval, (uint) (values == null ? 0 : values.Length), native_values);
+			bool raw_ret = gst_object_get_g_value_array(Handle, native_property_name, timestamp, interval, n_values, native_values);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_property_name);
 			for (int i = 0; i < native_values.Length; i++) {
-				values [i] = (GLib.Value) Marshal.PtrToStructure (native_values[i], typeof (GLib.Value));
 				Marshal.FreeHGlobal (native_values[i]);
 			}
 			return ret;

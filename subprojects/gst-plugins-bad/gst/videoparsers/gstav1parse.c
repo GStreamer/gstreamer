@@ -106,9 +106,18 @@ struct _GstAV1Parse
   gint subsampling_x;
   gint subsampling_y;
   gboolean mono_chrome;
+  guint8 seq_level_idx;
+  guint8 seq_tier;
+  guint8 max_seq_level_idx;
+  guint8 max_seq_tier;
   guint8 bit_depth;
   gchar *colorimetry;
   GstAV1Profile profile;
+
+  gint fps_n;
+  gint fps_d;
+  /* incaps framerate overwrites the AV1 time info */
+  gboolean has_input_fps;
 
   GstAV1ParseAligment in_align;
   gboolean detect_annex_b;
@@ -306,6 +315,10 @@ gst_av1_parse_reset (GstAV1Parse * self)
   self->subsampling_y = -1;
   self->mono_chrome = FALSE;
   self->profile = GST_AV1_PROFILE_UNDEFINED;
+  self->seq_level_idx = GST_AV1_SEQ_LEVEL_MAX;
+  self->seq_tier = 0;
+  self->max_seq_level_idx = GST_AV1_SEQ_LEVEL_MAX;
+  self->max_seq_tier = 0;
   self->bit_depth = 0;
   self->align = GST_AV1_PARSE_ALIGN_NONE;
   self->in_align = GST_AV1_PARSE_ALIGN_NONE;
@@ -414,6 +427,80 @@ gst_av1_parse_profile_to_string (GstAV1Profile profile)
       return "professional";
     default:
       break;
+  }
+
+  return NULL;
+}
+
+static const gchar *
+gst_av1_parse_seq_level_idx_to_string (GstAV1SeqLevels seq_level_idx)
+{
+  switch (seq_level_idx) {
+    case GST_AV1_SEQ_LEVEL_2_0:
+      return "2.0";
+    case GST_AV1_SEQ_LEVEL_2_1:
+      return "2.1";
+    case GST_AV1_SEQ_LEVEL_2_2:
+      return "2.2";
+    case GST_AV1_SEQ_LEVEL_2_3:
+      return "2.3";
+    case GST_AV1_SEQ_LEVEL_3_0:
+      return "3.0";
+    case GST_AV1_SEQ_LEVEL_3_1:
+      return "3.1";
+    case GST_AV1_SEQ_LEVEL_3_2:
+      return "3.2";
+    case GST_AV1_SEQ_LEVEL_3_3:
+      return "3.3";
+    case GST_AV1_SEQ_LEVEL_4_0:
+      return "4.0";
+    case GST_AV1_SEQ_LEVEL_4_1:
+      return "4.1";
+    case GST_AV1_SEQ_LEVEL_4_2:
+      return "4.2";
+    case GST_AV1_SEQ_LEVEL_4_3:
+      return "4.3";
+    case GST_AV1_SEQ_LEVEL_5_0:
+      return "5.0";
+    case GST_AV1_SEQ_LEVEL_5_1:
+      return "5.1";
+    case GST_AV1_SEQ_LEVEL_5_2:
+      return "5.2";
+    case GST_AV1_SEQ_LEVEL_5_3:
+      return "5.3";
+    case GST_AV1_SEQ_LEVEL_6_0:
+      return "6.0";
+    case GST_AV1_SEQ_LEVEL_6_1:
+      return "6.1";
+    case GST_AV1_SEQ_LEVEL_6_2:
+      return "6.2";
+    case GST_AV1_SEQ_LEVEL_6_3:
+      return "6.3";
+    case GST_AV1_SEQ_LEVEL_7_0:
+      return "7.0";
+    case GST_AV1_SEQ_LEVEL_7_1:
+      return "7.1";
+    case GST_AV1_SEQ_LEVEL_7_2:
+      return "7.2";
+    case GST_AV1_SEQ_LEVEL_7_3:
+      return "7.3";
+    case GST_AV1_SEQ_LEVEL_MAX:
+    case GST_AV1_SEQ_LEVELS:
+      /* not valid */
+      return NULL;
+  }
+
+  return NULL;
+}
+
+static const gchar *
+gst_av1_parse_tier_to_string (guint8 seq_tier)
+{
+  switch (seq_tier) {
+    case 0:
+      return "main";
+    case 1:
+      return "high";
   }
 
   return NULL;
@@ -641,8 +728,9 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
   GstStructure *s = NULL;
   gint width, height;
   gint par_n = 0, par_d = 0;
-  gint fps_n = 0, fps_d = 0;
   const gchar *profile = NULL;
+  const gchar *level = NULL;
+  const gchar *tier = NULL;
 
   if (G_UNLIKELY (!gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (self))))
     self->update_caps = TRUE;
@@ -685,14 +773,11 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
     }
   }
 
-  if (s && gst_structure_has_field (s, "framerate")) {
-    gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d);
-  }
-
-  if (fps_n > 0 && fps_d > 0) {
+  if (self->fps_n > 0 && self->fps_d > 0) {
     gst_caps_set_simple (final_caps, "framerate",
-        GST_TYPE_FRACTION, fps_n, fps_d, NULL);
-    gst_base_parse_set_frame_rate (GST_BASE_PARSE (self), fps_n, fps_d, 0, 0);
+        GST_TYPE_FRACTION, self->fps_n, self->fps_d, NULL);
+    gst_base_parse_set_frame_rate (GST_BASE_PARSE (self),
+        self->fps_n, self->fps_d, 0, 0);
   }
 
   /* When not RGB, the chroma format is needed. */
@@ -736,6 +821,33 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
   profile = gst_av1_parse_profile_to_string (self->profile);
   if (profile)
     gst_caps_set_simple (final_caps, "profile", G_TYPE_STRING, profile, NULL);
+
+  level = gst_av1_parse_seq_level_idx_to_string (self->seq_level_idx);
+  if (level)
+    gst_caps_set_simple (final_caps, "level", G_TYPE_STRING, level, NULL);
+
+  tier = gst_av1_parse_tier_to_string (self->seq_tier);
+  if (tier)
+    gst_caps_set_simple (final_caps, "tier", G_TYPE_STRING, tier, NULL);
+
+  if ((self->max_seq_tier != self->seq_tier)
+      || (self->max_seq_level_idx != self->seq_level_idx)) {
+
+    tier = gst_av1_parse_tier_to_string (self->max_seq_tier);
+    if (tier) {
+      gst_caps_set_simple (final_caps, "max-tier", G_TYPE_STRING, tier, NULL);
+    } else {
+      GST_WARNING_OBJECT (self, "Invalid max seq tier %d", self->max_seq_tier);
+    }
+
+    level = gst_av1_parse_seq_level_idx_to_string (self->max_seq_level_idx);
+    if (level) {
+      gst_caps_set_simple (final_caps, "max-level", G_TYPE_STRING, level, NULL);
+    } else {
+      GST_WARNING_OBJECT (self, "Invalid max level idx %d",
+          self->max_seq_level_idx);
+    }
+  }
 
   src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (self));
 
@@ -878,6 +990,15 @@ gst_av1_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
   if (profile)
     self->profile = gst_av1_parse_profile_from_string (profile);
 
+  if (gst_structure_has_field (str, "framerate")) {
+    gst_structure_get_fraction (str, "framerate", &self->fps_n, &self->fps_d);
+    self->has_input_fps = TRUE;
+  } else {
+    self->fps_n = 0;
+    self->fps_d = 1;
+    self->has_input_fps = FALSE;
+  }
+
   /* get upstream align from caps */
   align = gst_av1_parse_alignment_from_caps (caps);
   if (align == GST_AV1_PARSE_ALIGN_ERROR) {
@@ -996,20 +1117,26 @@ gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
     }
 
-    if (frame_finished) {
-      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_MARKER);
-    } else {
-      GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_MARKER);
-    }
-
-    if (self->align == GST_AV1_PARSE_ALIGN_FRAME) {
+    if (self->align == GST_AV1_PARSE_ALIGN_FRAME
+        || self->align == GST_AV1_PARSE_ALIGN_OBU) {
       if (!self->show_frame) {
         GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DECODE_ONLY);
       } else {
         GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DECODE_ONLY);
+        if (frame_finished) {
+          GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_MARKER);
+        } else {
+          GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_MARKER);
+        }
       }
     } else {
+      /* Aligning to TUs which must contain a display frame. */
       GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DECODE_ONLY);
+      if (frame_finished) {
+        GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_MARKER);
+      } else {
+        GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_MARKER);
+      }
     }
 
     gst_buffer_replace (&frame->out_buffer, buf);
@@ -1195,6 +1322,34 @@ gst_av1_parse_cache_one_obu (GstAV1Parse * self, GstBuffer * buffer,
   }
 }
 
+static void
+gst_av1_parse_calculate_framerate (GstAV1TimingInfo * ti,
+    gint * fps_n, gint * fps_d)
+{
+  /* To calculate framerate, we use this formula:
+   *
+   *              time_scale                             1
+   * fps = -------------------------  x  ---------------------------------
+   *       num_units_in_display_tick     num_ticks_per_picture_minus_1 + 1
+   */
+  if (ti->equal_picture_interval) {
+    gint gcd;
+
+    *fps_n = ti->time_scale;
+    *fps_d = ti->num_units_in_display_tick *
+        (ti->num_ticks_per_picture_minus_1 + 1);
+
+    gcd = gst_util_greatest_common_divisor (*fps_n, *fps_d);
+    if (gcd) {
+      *fps_n /= gcd;
+      *fps_d /= gcd;
+    }
+  } else {
+    *fps_n = 0;
+    *fps_d = 1;
+  }
+}
+
 static GstAV1ParserResult
 gst_av1_parse_handle_sequence_obu (GstAV1Parse * self, GstAV1OBU * obu)
 {
@@ -1260,6 +1415,22 @@ gst_av1_parse_handle_sequence_obu (GstAV1Parse * self, GstAV1OBU * obu)
     self->update_caps = TRUE;
   }
 
+  if (seq_header.operating_points_cnt_minus_1 + 1) {
+    /* Search for the actual max level and tier */
+    self->seq_level_idx = self->max_seq_level_idx =
+        seq_header.operating_points[0].seq_level_idx;
+    self->seq_tier = self->max_seq_tier =
+        seq_header.operating_points[0].seq_tier;
+
+    for (i = 1; i < seq_header.operating_points_cnt_minus_1 + 1; i++) {
+      if (self->max_seq_level_idx <
+          seq_header.operating_points[i].seq_level_idx) {
+        self->max_seq_level_idx = seq_header.operating_points[i].seq_level_idx;
+        self->max_seq_tier = seq_header.operating_points[i].seq_tier;
+      }
+    }
+  }
+
   if (self->bit_depth != seq_header.bit_depth) {
     self->bit_depth = seq_header.bit_depth;
     self->update_caps = TRUE;
@@ -1270,8 +1441,20 @@ gst_av1_parse_handle_sequence_obu (GstAV1Parse * self, GstAV1OBU * obu)
     self->update_caps = TRUE;
   }
 
+  if (!self->has_input_fps) {
+    gint fps_n, fps_d;
+
+    gst_av1_parse_calculate_framerate (&seq_header.timing_info, &fps_n, &fps_d);
+
+    if (self->fps_n != fps_n || self->fps_d != fps_d) {
+      self->fps_n = fps_n;
+      self->fps_d = fps_d;
+      self->update_caps = TRUE;
+    }
+  }
+
   val = (self->parser->state.operating_point_idc >> 8) & 0x0f;
-  for (i = 0; i < (1 << GST_AV1_MAX_SPATIAL_LAYERS); i++) {
+  for (i = 0; i < GST_AV1_MAX_NUM_SPATIAL_LAYERS; i++) {
     if (val & (1 << i))
       self->highest_spatial_id = i;
   }
@@ -1322,6 +1505,7 @@ new_tu:
           "Start a new temporal unit with incompleted frame.");
 
     gst_av1_parse_reset_obu_data_state (self);
+    gst_av1_parse_reset_tu_timestamp (self);
   }
 
   return ret;
@@ -1405,6 +1589,7 @@ gst_av1_parse_handle_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
      start a TU. We only check TD here. */
   if (obu->obu_type == GST_AV1_OBU_TEMPORAL_DELIMITER) {
     gst_av1_parse_reset_obu_data_state (self);
+    gst_av1_parse_reset_tu_timestamp (self);
 
     if (check_new_tu) {
       *check_new_tu = TRUE;
@@ -1427,11 +1612,13 @@ gst_av1_parse_handle_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
     self->show_frame = fh->show_frame || fh->show_existing_frame;
     if (self->show_frame) {
       /* Check whether a new temporal starts, and return early. */
-      if (check_new_tu && obu->obu_type != GST_AV1_OBU_REDUNDANT_FRAME_HEADER
+      if (obu->obu_type != GST_AV1_OBU_REDUNDANT_FRAME_HEADER
           && gst_av1_parse_frame_start_new_temporal_unit (self, obu)) {
-        *check_new_tu = TRUE;
-        res = GST_AV1_PARSER_OK;
-        goto out;
+        if (check_new_tu) {
+          *check_new_tu = TRUE;
+          res = GST_AV1_PARSER_OK;
+          goto out;
+        }
       }
 
       self->last_shown_frame_temporal_id = obu->header.obu_temporal_id;
@@ -1759,6 +1946,10 @@ again:
     if (res != GST_AV1_PARSER_OK)
       break;
 
+    /* Take the DTS from the first OBU of the TU */
+    if (!GST_CLOCK_TIME_IS_VALID (self->buffer_dts))
+      self->buffer_dts = GST_BUFFER_DTS (buffer);
+
     check_new_tu = FALSE;
     if (self->align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT
         || self->align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
@@ -1799,13 +1990,16 @@ again:
   if (complete || GST_BASE_PARSE_DRAINING (parse)) {
     *skipsize = 0;
 
+    /* Save the oldest valid PTS as the TU PTS */
+    if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buffer)))
+      self->buffer_pts = GST_BUFFER_PTS (buffer);
+
     /* push the left anyway if no error */
     if (res == GST_AV1_PARSER_OK)
       ret = gst_av1_parse_push_data (self, frame,
           self->last_parsed_offset, TRUE);
 
     self->last_parsed_offset = 0;
-
     goto out;
   }
 
@@ -1973,8 +2167,10 @@ gst_av1_parse_handle_frame (GstBaseParse * parse,
   if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_DISCONT)) {
     self->discont = TRUE;
 
-    if (frame->flags & GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME)
+    if (frame->flags & GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME) {
       gst_av1_parse_reset_obu_data_state (self);
+      gst_av1_parse_reset_tu_timestamp (self);
+    }
   } else {
     self->discont = FALSE;
   }
@@ -2091,28 +2287,20 @@ gst_av1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     return GST_FLOW_OK;
 
   if (self->align == GST_AV1_PARSE_ALIGN_FRAME) {
-    /* When the input align to TU, it may may contain more than one frames
-       inside its buffer. When splitting a TU into frames, the base parse
-       class only assign the PTS to the first frame and leave the others'
-       PTS invalid. But in fact, all decode only frames should have invalid
-       PTS while showable frames should have correct PTS setting. */
-    if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT
-        || self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
-      if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_DECODE_ONLY)) {
-        GST_BUFFER_PTS (frame->buffer) = GST_CLOCK_TIME_NONE;
-        GST_BUFFER_DURATION (frame->buffer) = GST_CLOCK_TIME_NONE;
-      } else {
-        GST_BUFFER_PTS (frame->buffer) = self->buffer_pts;
-        GST_BUFFER_DURATION (frame->buffer) = self->buffer_duration;
-      }
-
-      GST_BUFFER_DTS (frame->buffer) = self->buffer_dts;
+    /* Input buffers may may contain more than one frames inside its buffer.
+       When splitting a TU into frames, the base parse class only assign the
+       PTS to the first frame and leave the others PTS invalid. But in fact,
+       all decode only frames should have invalid PTS while showable frames
+       should have correct PTS setting. */
+    if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_DECODE_ONLY)) {
+      GST_BUFFER_PTS (frame->buffer) = GST_CLOCK_TIME_NONE;
+      GST_BUFFER_DURATION (frame->buffer) = GST_CLOCK_TIME_NONE;
     } else {
-      if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_DECODE_ONLY)) {
-        GST_BUFFER_PTS (frame->buffer) = GST_CLOCK_TIME_NONE;
-        GST_BUFFER_DURATION (frame->buffer) = GST_CLOCK_TIME_NONE;
-      }
+      GST_BUFFER_PTS (frame->buffer) = self->buffer_pts;
+      GST_BUFFER_DURATION (frame->buffer) = self->buffer_duration;
     }
+
+    GST_BUFFER_DTS (frame->buffer) = self->buffer_dts;
   } else if (self->align == GST_AV1_PARSE_ALIGN_OBU) {
     /* When we split a big frame or TU into OBUs, all OBUs should have the
        same PTS and DTS of the input buffer, and should not have duration. */

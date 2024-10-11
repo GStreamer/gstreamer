@@ -1111,7 +1111,7 @@ gst_base_parse_convert (GstBaseParse * parse,
 }
 
 static gboolean
-update_upstream_provided (GQuark field_id, const GValue * value,
+update_upstream_provided (const GstIdStr * field, const GValue * value,
     gpointer user_data)
 {
   GstCaps *default_caps = user_data;
@@ -1121,8 +1121,8 @@ update_upstream_provided (GQuark field_id, const GValue * value,
   caps_size = gst_caps_get_size (default_caps);
   for (i = 0; i < caps_size; i++) {
     GstStructure *structure = gst_caps_get_structure (default_caps, i);
-    if (!gst_structure_id_has_field (structure, field_id)) {
-      gst_structure_id_set_value (structure, field_id, value);
+    if (!gst_structure_has_field (structure, gst_id_str_as_str (field))) {
+      gst_structure_id_str_set_value (structure, field, value);
     }
     /* XXX: maybe try to fixate better than gst_caps_fixate() the
      * downstream caps based on upstream values if possible */
@@ -1162,7 +1162,8 @@ gst_base_parse_negotiate_default_caps (GstBaseParse * parse)
 
   if (sinkcaps) {
     structure = gst_caps_get_structure (sinkcaps, 0);
-    gst_structure_foreach (structure, update_upstream_provided, default_caps);
+    gst_structure_foreach_id_str (structure, update_upstream_provided,
+        default_caps);
   }
 
   default_caps = gst_caps_fixate (default_caps);
@@ -2289,6 +2290,10 @@ gst_base_parse_handle_buffer (GstBaseParse * parse, GstBuffer * buffer,
       outbuf = gst_buffer_make_writable (outbuf);
       GST_BUFFER_PTS (outbuf) = pts;
       GST_BUFFER_DTS (outbuf) = dts;
+      GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
+      GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
+      GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
+      GST_BUFFER_FLAGS (outbuf) = 0;
       parse->priv->buffers_head =
           g_slist_prepend (parse->priv->buffers_head, outbuf);
       outbuf = NULL;
@@ -2678,10 +2683,13 @@ no_caps:
  * @frame: a #GstBaseParseFrame
  * @size: consumed input data represented by frame
  *
- * Collects parsed data and pushes this downstream.
+ * Collects parsed data and pushes it downstream.
  * Source pad caps must be set when this is called.
  *
- * If @frame's out_buffer is set, that will be used as subsequent frame data.
+ * If @frame's out_buffer is set, that will be used as subsequent frame data,
+ * and @size amount will be flushed from the input data. The output_buffer size
+ * can differ from the consumed size indicated by @size.
+ *
  * Otherwise, @size samples will be taken from the input and used for output,
  * and the output's metadata (timestamps etc) will be taken as (optionally)
  * set by the subclass on @frame's (input) buffer (which is otherwise
@@ -2728,6 +2736,7 @@ gst_base_parse_finish_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     GstBuffer *src, *dest;
 
     frame->out_buffer = gst_adapter_take_buffer (parse->priv->adapter, size);
+    frame->out_buffer = gst_buffer_make_writable (frame->out_buffer);
     dest = frame->out_buffer;
     src = frame->buffer;
     GST_BUFFER_PTS (dest) = GST_BUFFER_PTS (src);
@@ -2735,7 +2744,7 @@ gst_base_parse_finish_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     GST_BUFFER_OFFSET (dest) = GST_BUFFER_OFFSET (src);
     GST_BUFFER_DURATION (dest) = GST_BUFFER_DURATION (src);
     GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_END (src);
-    GST_MINI_OBJECT_FLAGS (dest) = GST_MINI_OBJECT_FLAGS (src);
+    GST_BUFFER_FLAGS (dest) = GST_BUFFER_FLAGS (src);
   } else {
     gst_adapter_flush (parse->priv->adapter, size);
   }

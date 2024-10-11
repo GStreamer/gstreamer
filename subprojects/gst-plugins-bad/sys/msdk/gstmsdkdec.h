@@ -67,8 +67,9 @@ struct _GstMsdkDec
 {
   GstVideoDecoder element;
 
-  /* input description */
+  /* input/output description */
   GstVideoCodecState *input_state;
+  GstVideoCodecState *output_state;
   /* aligned msdk pool info */
   GstBufferPool *pool;
   GstBufferPool *alloc_pool;
@@ -81,6 +82,7 @@ struct _GstMsdkDec
   gboolean initialized;
   gboolean sfc;
   gboolean ds_has_known_allocator;
+  guint64 modifier;
 
   /* for packetization */
   GstAdapter *adapter;

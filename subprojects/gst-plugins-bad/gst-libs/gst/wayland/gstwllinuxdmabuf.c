@@ -83,42 +83,55 @@ static const struct zwp_linux_buffer_params_v1_listener params_listener = {
 
 struct wl_buffer *
 gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
-    GstWlDisplay * display, const GstVideoInfo * info)
+    GstWlDisplay * display, const GstVideoInfoDmaDrm * drm_info)
 {
   GstMemory *mem;
-  int format;
-  guint i, width, height;
-  const gsize *offsets = info->offset;
-  const gint *strides = info->stride;
+  guint fourcc;
+  guint64 modifier;
+  guint i, width = 0, height = 0;
+  GstVideoInfo info;
+  const gsize *offsets = NULL;
+  const gint *strides = NULL;
   GstVideoMeta *vmeta;
-  guint nplanes, flags = 0;
+  guint nplanes = 0, flags = 0;
   struct zwp_linux_buffer_params_v1 *params;
   gint64 timeout;
   ConstructBufferData data;
 
   g_return_val_if_fail (gst_wl_display_check_format_for_dmabuf (display,
-          GST_VIDEO_INFO_FORMAT (info)), NULL);
+          drm_info), NULL);
 
   mem = gst_buffer_peek_memory (buf, 0);
-  format = gst_video_format_to_wl_dmabuf_format (GST_VIDEO_INFO_FORMAT (info));
+  fourcc = drm_info->drm_fourcc;
+  modifier = drm_info->drm_modifier;
 
   g_cond_init (&data.cond);
   g_mutex_init (&data.lock);
   g_mutex_lock (&data.lock);
 
-  width = GST_VIDEO_INFO_WIDTH (info);
-  height = GST_VIDEO_INFO_HEIGHT (info);
-  nplanes = GST_VIDEO_INFO_N_PLANES (info);
-
   vmeta = gst_buffer_get_video_meta (buf);
   if (vmeta) {
+    width = vmeta->width;
+    height = vmeta->height;
+    nplanes = vmeta->n_planes;
     offsets = vmeta->offset;
     strides = vmeta->stride;
+  } else if (gst_video_info_dma_drm_to_video_info (drm_info, &info)) {
+    nplanes = GST_VIDEO_INFO_N_PLANES (&info);
+    width = info.width;
+    height = info.height;
+    offsets = info.offset;
+    strides = info.stride;
+  } else {
+    GST_ERROR_OBJECT (display, "GstVideoMeta is needed to carry DMABuf using "
+        "'memory:DMABuf' caps feature.");
+    goto out;
   }
 
-  GST_DEBUG_OBJECT (display, "Creating wl_buffer from DMABuf of size %"
-      G_GSSIZE_FORMAT " (%d x %d), format %s", info->size, width, height,
-      gst_wl_dmabuf_format_to_string (format));
+  GST_DEBUG_OBJECT (display,
+      "Creating wl_buffer from DMABuf of size %" G_GSSIZE_FORMAT
+      " (%d x %d), DRM fourcc %" GST_FOURCC_FORMAT, gst_buffer_get_size (buf),
+      width, height, GST_FOURCC_ARGS (fourcc));
 
   /* Creation and configuration of planes  */
   params = zwp_linux_dmabuf_v1_create_params (gst_wl_display_get_dmabuf_v1
@@ -134,7 +147,7 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
       GstMemory *m = gst_buffer_peek_memory (buf, mem_idx);
       gint fd = gst_dmabuf_memory_get_fd (m);
       zwp_linux_buffer_params_v1_add (params, fd, i, m->offset + skip,
-          stride, 0, 0);
+          stride, modifier >> 32, modifier & G_GUINT64_CONSTANT (0x0ffffffff));
     } else {
       GST_ERROR_OBJECT (mem->allocator, "memory does not seem to contain "
           "enough data for the specified format");
@@ -156,7 +169,7 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
 
   /* Request buffer creation */
   zwp_linux_buffer_params_v1_add_listener (params, &params_listener, &data);
-  zwp_linux_buffer_params_v1_create (params, width, height, format, flags);
+  zwp_linux_buffer_params_v1_create (params, width, height, fourcc, flags);
 
   /* Wait for the request answer */
   wl_display_flush (gst_wl_display_get_display (display));
@@ -176,7 +189,7 @@ out:
   } else {
     GST_DEBUG_OBJECT (mem->allocator, "created linux_dmabuf wl_buffer (%p):"
         "%dx%d, fmt=%" GST_FOURCC_FORMAT ", %d planes",
-        data.wbuf, width, height, GST_FOURCC_ARGS (format), nplanes);
+        data.wbuf, width, height, GST_FOURCC_ARGS (fourcc), nplanes);
   }
 
   g_mutex_unlock (&data.lock);

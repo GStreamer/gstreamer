@@ -65,6 +65,16 @@ enum
   PROP_PRIMARIES_MODE,
   PROP_DISPLAY_FORMAT,
   PROP_EMIT_PRESENT,
+  PROP_FOV,
+  PROP_ORTHO,
+  PROP_ROTATION_X,
+  PROP_ROTATION_Y,
+  PROP_ROTATION_Z,
+  PROP_SCALE_X,
+  PROP_SCALE_Y,
+  PROP_MSAA,
+  PROP_SAMPLING_METHOD,
+  PROP_REDRAW_ON_UPDATE,
   PROP_RENDER_RECTANGE,
 };
 
@@ -78,6 +88,13 @@ enum
 #define DEFAULT_PRIMARIES_MODE            GST_VIDEO_PRIMARIES_MODE_NONE
 #define DEFAULT_DISPLAY_FORMAT            DXGI_FORMAT_UNKNOWN
 #define DEFAULT_EMIT_PRESENT              FALSE
+#define DEFAULT_ROTATION                  0.0f
+#define DEFAULT_SCALE                     1.0f
+#define DEFAULT_FOV                       90.0f
+#define DEFAULT_ORTHO                     FALSE
+#define DEFAULT_MSAA                      GST_D3D11_MSAA_DISABLED
+#define DEFAULT_SAMPLING_METHOD           GST_D3D11_SAMPLING_METHOD_BILINEAR
+#define DEFAULT_REDROW_ON_UPDATE          TRUE
 
 /**
  * GstD3D11VideoSinkDisplayFormat:
@@ -188,6 +205,16 @@ struct _GstD3D11VideoSink
   GstVideoPrimariesMode primaries_mode;
   DXGI_FORMAT display_format;
   gboolean emit_present;
+  gfloat fov;
+  gboolean ortho;
+  gfloat rotation_x;
+  gfloat rotation_y;
+  gfloat rotation_z;
+  gfloat scale_x;
+  gfloat scale_y;
+  GstD3D11MSAAMode msaa;
+  GstD3D11SamplingMethod sampling_method;
+  gboolean redraw_on_update;
 
   /* saved render rectangle until we have a window */
   GstVideoRectangle render_rect;
@@ -319,6 +346,8 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
    * - DXGI_FORMAT_R10G10B10A2_UNORM
    *
    * Since: 1.20
+   *
+   * Deprecated, Use appsink to access GStreamer produced D3D11 texture
    */
   g_object_class_install_property (gobject_class, PROP_DRAW_ON_SHARED_TEXTURE,
       g_param_spec_boolean ("draw-on-shared-texture",
@@ -400,6 +429,137 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
               G_PARAM_STATIC_STRINGS)));
 
   /**
+   * GstD3D11VideoSink:fov:
+   *
+   * Field of view angle in degrees
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_FOV,
+      g_param_spec_float ("fov", "Fov",
+          "Field of view angle in degrees",
+          0, G_MAXFLOAT, DEFAULT_FOV,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:ortho:
+   *
+   * Use orthographic projection
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_ORTHO,
+      g_param_spec_boolean ("ortho", "Orthographic",
+          "Use orthographic projection", DEFAULT_ORTHO,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:rotation-x:
+   *
+   * x-axis rotation angle to be applied prior to "rotate-method"
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_ROTATION_X,
+      g_param_spec_float ("rotation-x", "Rotation X",
+          "x-axis rotation angle in degrees",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_ROTATION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:rotation-y:
+   *
+   * y-axis rotation angle to be applied prior to "rotate-method"
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_ROTATION_Y,
+      g_param_spec_float ("rotation-y", "Rotation Y",
+          "y-axis rotation angle in degrees",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_ROTATION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:rotation-z:
+   *
+   * z-axis rotation angle to be applied prior to "rotate-method"
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_ROTATION_Z,
+      g_param_spec_float ("rotation-z", "Rotation Z",
+          "z-axis rotation angle in degrees",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_ROTATION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:scale-x:
+   *
+   * Scale multiplier for x-axis
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_SCALE_X,
+      g_param_spec_float ("scale-x", "Scale X",
+          "Scale multiplier for x-axis",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_SCALE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:scale-y:
+   *
+   * Scale multiplier for y-axis
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_SCALE_Y,
+      g_param_spec_float ("scale-y", "Scale Y",
+          "Scale multiplier for y-axis",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_SCALE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:msaa:
+   *
+   * MSAA (Multi-Sampling Anti-Aliasing) level
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_MSAA,
+      g_param_spec_enum ("msaa", "MSAA",
+          "MSAA (Multi-Sampling Anti-Aliasing) level",
+          GST_TYPE_D3D11_MSAA_MODE, DEFAULT_MSAA,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:sampling-method:
+   *
+   * Sampling method
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_SAMPLING_METHOD,
+      g_param_spec_enum ("sampling-method", "Sampling method",
+          "Sampler filter type to use", GST_TYPE_D3D11_SAMPLING_METHOD,
+          DEFAULT_SAMPLING_METHOD, (GParamFlags) (GST_PARAM_MUTABLE_READY |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:redraw-on-update:
+   *
+   * Immediately apply updated geometry related properties and redraw
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_REDRAW_ON_UPDATE,
+      g_param_spec_boolean ("redraw-on-update",
+          "redraw-on-update",
+          "Immediately apply updated geometry related properties and redraw. "
+          "If disabled, properties will be applied on the next frame or "
+          "window resize", DEFAULT_REDROW_ON_UPDATE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
    * GstD3D11VideoSink:render-rectangle:
    *
    * Since: 1.24
@@ -415,6 +575,8 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
    * #d3d11videosink::begin-draw signal handler.
    *
    * Since: 1.20
+   *
+   * Deprecated, Use appsink to access GStreamer produced D3D11 texture
    */
   gst_d3d11_video_sink_signals[SIGNAL_BEGIN_DRAW] =
       g_signal_new ("begin-draw", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -439,6 +601,11 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
    * @acquire_key and @release_key will be ignored.
    *
    * Since: 1.20
+   *
+   * As of 1.24, @acquire_key and @release_key must be zero. Other values are
+   * not supported.
+   *
+   * Deprecated, Use appsink to access GStreamer produced D3D11 texture
    */
   gst_d3d11_video_sink_signals[SIGNAL_DRAW] =
       g_signal_new ("draw", G_TYPE_FROM_CLASS (klass),
@@ -503,6 +670,7 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
       (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_D3D11_VIDEO_SINK_DISPLAY_FORMAT,
       (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_MSAA_MODE, (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -518,6 +686,16 @@ gst_d3d11_video_sink_init (GstD3D11VideoSink * self)
   self->primaries_mode = DEFAULT_PRIMARIES_MODE;
   self->display_format = DEFAULT_DISPLAY_FORMAT;
   self->emit_present = DEFAULT_EMIT_PRESENT;
+  self->fov = DEFAULT_FOV;
+  self->ortho = DEFAULT_ORTHO;
+  self->rotation_x = DEFAULT_ROTATION;
+  self->rotation_y = DEFAULT_ROTATION;
+  self->rotation_z = DEFAULT_ROTATION;
+  self->scale_x = DEFAULT_SCALE;
+  self->scale_y = DEFAULT_SCALE;
+  self->msaa = DEFAULT_MSAA;
+  self->sampling_method = DEFAULT_SAMPLING_METHOD;
+  self->redraw_on_update = DEFAULT_REDROW_ON_UPDATE;
 
   InitializeCriticalSection (&self->lock);
 }
@@ -579,6 +757,45 @@ gst_d3d11_videosink_set_property (GObject * object, guint prop_id,
     case PROP_EMIT_PRESENT:
       self->emit_present = g_value_get_boolean (value);
       break;
+    case PROP_FOV:
+      self->fov = g_value_get_float (value);
+      gst_d3d11_video_sink_set_orientation (self, self->method, FALSE);
+      break;
+    case PROP_ORTHO:
+      self->ortho = g_value_get_boolean (value);
+      gst_d3d11_video_sink_set_orientation (self, self->method, FALSE);
+      break;
+    case PROP_ROTATION_X:
+      self->rotation_x = g_value_get_float (value);
+      gst_d3d11_video_sink_set_orientation (self, self->method, FALSE);
+      break;
+    case PROP_ROTATION_Y:
+      self->rotation_y = g_value_get_float (value);
+      gst_d3d11_video_sink_set_orientation (self, self->method, FALSE);
+      break;
+    case PROP_ROTATION_Z:
+      self->rotation_z = g_value_get_float (value);
+      gst_d3d11_video_sink_set_orientation (self, self->method, FALSE);
+      break;
+    case PROP_SCALE_X:
+      self->scale_x = g_value_get_float (value);
+      gst_d3d11_video_sink_set_orientation (self, self->method, FALSE);
+      break;
+    case PROP_SCALE_Y:
+      self->scale_y = g_value_get_float (value);
+      gst_d3d11_video_sink_set_orientation (self, self->method, FALSE);
+      break;
+    case PROP_MSAA:
+      self->msaa = (GstD3D11MSAAMode) g_value_get_enum (value);
+      if (self->window)
+        gst_d3d11_window_set_msaa_mode (self->window, self->msaa);
+      break;
+    case PROP_SAMPLING_METHOD:
+      self->sampling_method = (GstD3D11SamplingMethod) g_value_get_enum (value);
+      break;
+    case PROP_REDRAW_ON_UPDATE:
+      self->redraw_on_update = g_value_get_boolean (value);
+      break;
     case PROP_RENDER_RECTANGE:
       gst_video_overlay_set_property (object, PROP_RENDER_RECTANGE,
           PROP_RENDER_RECTANGE, value);
@@ -633,6 +850,36 @@ gst_d3d11_videosink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_EMIT_PRESENT:
       g_value_set_boolean (value, self->emit_present);
+      break;
+    case PROP_FOV:
+      g_value_set_float (value, self->fov);
+      break;
+    case PROP_ORTHO:
+      g_value_set_boolean (value, self->ortho);
+      break;
+    case PROP_ROTATION_X:
+      g_value_set_float (value, self->rotation_x);
+      break;
+    case PROP_ROTATION_Y:
+      g_value_set_float (value, self->rotation_x);
+      break;
+    case PROP_ROTATION_Z:
+      g_value_set_float (value, self->rotation_z);
+      break;
+    case PROP_SCALE_X:
+      g_value_set_float (value, self->scale_x);
+      break;
+    case PROP_SCALE_Y:
+      g_value_set_float (value, self->scale_y);
+      break;
+    case PROP_MSAA:
+      g_value_set_enum (value, self->msaa);
+      break;
+    case PROP_SAMPLING_METHOD:
+      g_value_set_enum (value, self->sampling_method);
+      break;
+    case PROP_REDRAW_ON_UPDATE:
+      g_value_set_boolean (value, self->redraw_on_update);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -718,6 +965,17 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   self->caps_updated = TRUE;
 
   return TRUE;
+}
+
+static void
+gst_d3d11_video_sink_release_window (GstD3D11VideoSink * self)
+{
+  if (self->window == NULL)
+    return;
+
+  g_signal_handlers_disconnect_by_data (self->window, self);
+  gst_d3d11_window_unprepare (self->window);
+  gst_clear_object (&self->window);
 }
 
 static GstFlowReturn
@@ -833,7 +1091,10 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
       GST_D3D11_CONVERTER_OPT_GAMMA_MODE,
       GST_TYPE_VIDEO_GAMMA_MODE, self->gamma_mode,
       GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE,
-      GST_TYPE_VIDEO_PRIMARIES_MODE, self->primaries_mode, nullptr);
+      GST_TYPE_VIDEO_PRIMARIES_MODE, self->primaries_mode,
+      GST_D3D11_CONVERTER_OPT_SAMPLER_FILTER,
+      GST_TYPE_D3D11_CONVERTER_SAMPLER_FILTER,
+      gst_d3d11_sampling_method_to_native (self->sampling_method), nullptr);
 
   window = (GstD3D11Window *) gst_object_ref (self->window);
   LeaveCriticalSection (&self->lock);
@@ -846,8 +1107,7 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
     if (ret == GST_FLOW_FLUSHING) {
       GstD3D11CSLockGuard lk (&self->lock);
       GST_WARNING_OBJECT (self, "Couldn't prepare window but we are flushing");
-      gst_d3d11_window_unprepare (self->window);
-      gst_clear_object (&self->window);
+      gst_d3d11_video_sink_release_window (self);
       gst_object_unref (window);
 
       return GST_FLOW_FLUSHING;
@@ -923,8 +1183,8 @@ gst_d3d11_video_sink_key_event (GstD3D11Window * window, const gchar * event,
 }
 
 static void
-gst_d3d11_video_mouse_key_event (GstD3D11Window * window, const gchar * event,
-    gint button, gdouble x, gdouble y, GstD3D11VideoSink * self)
+gst_d3d11_video_sink_mouse_event (GstD3D11Window * window, const gchar * event,
+    gint button, gdouble x, gdouble y, guint modifier, GstD3D11VideoSink * self)
 {
   GstEvent *mouse_event;
 
@@ -935,13 +1195,16 @@ gst_d3d11_video_mouse_key_event (GstD3D11Window * window, const gchar * event,
       "send mouse event %s, button %d (%.1f, %.1f)", event, button, x, y);
   if (g_strcmp0 ("mouse-button-press", event) == 0) {
     mouse_event = gst_navigation_event_new_mouse_button_press (button, x, y,
-        GST_NAVIGATION_MODIFIER_NONE);
+        (GstNavigationModifierType) modifier);
   } else if (g_strcmp0 ("mouse-button-release", event) == 0) {
     mouse_event = gst_navigation_event_new_mouse_button_release (button, x, y,
-        GST_NAVIGATION_MODIFIER_NONE);
+        (GstNavigationModifierType) modifier);
   } else if (g_strcmp0 ("mouse-move", event) == 0) {
     mouse_event = gst_navigation_event_new_mouse_move (x, y,
-        GST_NAVIGATION_MODIFIER_NONE);
+        (GstNavigationModifierType) modifier);
+  } else if (g_strcmp0 ("mouse-double-click", event) == 0) {
+    mouse_event = gst_navigation_event_new_mouse_double_click (button, x, y,
+        (GstNavigationModifierType) modifier);
   } else {
     return;
   }
@@ -1019,6 +1282,14 @@ gst_d3d11_video_sink_prepare_window (GstD3D11VideoSink * self)
 #if (!GST_D3D11_WINAPI_ONLY_APP)
     case GST_D3D11_WINDOW_NATIVE_TYPE_HWND:
       self->window = gst_d3d11_window_win32_new (self->device, self->window_id);
+      if (!self->window_id) {
+        HWND internal_hwnd =
+            gst_d3d11_window_win32_get_internal_hwnd (self->window);
+        GST_DEBUG_OBJECT (self, "Have window handle %" G_GUINTPTR_FORMAT,
+            (guintptr) internal_hwnd);
+        gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (self),
+            (guintptr) internal_hwnd);
+      }
       break;
 #endif
 #if GST_D3D11_WINAPI_APP
@@ -1048,12 +1319,16 @@ done:
       "enable-navigation-events", self->enable_navigation_events,
       "emit-present", self->emit_present, nullptr);
 
-  gst_d3d11_window_set_orientation (self->window, self->selected_method);
+  gst_d3d11_window_set_orientation (self->window, self->redraw_on_update,
+      self->selected_method,
+      self->fov, self->ortho, self->rotation_x, self->rotation_y,
+      self->rotation_z, self->scale_x, self->scale_y);
+  gst_d3d11_window_set_msaa_mode (self->window, self->msaa);
 
   g_signal_connect (self->window, "key-event",
       G_CALLBACK (gst_d3d11_video_sink_key_event), self);
   g_signal_connect (self->window, "mouse-event",
-      G_CALLBACK (gst_d3d11_video_mouse_key_event), self);
+      G_CALLBACK (gst_d3d11_video_sink_mouse_event), self);
   g_signal_connect (self->window, "present",
       G_CALLBACK (gst_d3d11_video_sink_present), self);
 
@@ -1077,10 +1352,8 @@ gst_d3d11_video_sink_stop (GstBaseSink * sink)
     gst_clear_object (&self->pool);
   }
 
-  if (self->window)
-    gst_d3d11_window_unprepare (self->window);
+  gst_d3d11_video_sink_release_window (self);
 
-  gst_clear_object (&self->window);
   gst_clear_object (&self->device);
   g_clear_pointer (&self->title, g_free);
 
@@ -1312,8 +1585,12 @@ gst_d3d11_video_sink_set_orientation (GstD3D11VideoSink * self,
     self->selected_method = self->method;
   }
 
-  if (self->window)
-    gst_d3d11_window_set_orientation (self->window, self->selected_method);
+  if (self->window) {
+    gst_d3d11_window_set_orientation (self->window, self->redraw_on_update,
+        self->selected_method,
+        self->fov, self->ortho, self->rotation_x, self->rotation_y,
+        self->rotation_z, self->scale_x, self->scale_y);
+  }
 }
 
 static void
@@ -1576,6 +1853,11 @@ gst_d3d11_video_sink_draw_action (GstD3D11VideoSink * self,
 
   if (!shared_handle) {
     GST_ERROR_OBJECT (self, "Invalid handle");
+    return FALSE;
+  }
+
+  if (acquire_key != 0 || release_key != 0) {
+    GST_ERROR_OBJECT (self, "Non zero mutex key value is not supported");
     return FALSE;
   }
 

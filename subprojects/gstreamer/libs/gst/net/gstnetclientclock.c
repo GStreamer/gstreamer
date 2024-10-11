@@ -63,6 +63,8 @@
 #include "gstnetclientclock.h"
 #include "gstnetutils.h"
 
+#include "gst/glib-compat-private.h"
+
 #include <gio/gio.h>
 
 #include <string.h>
@@ -427,7 +429,7 @@ gst_net_client_internal_clock_observe_times (GstNetClientInternalClock * self,
     self->last_rtts_missing--;
   } else {
     memcpy (&last_rtts, &self->last_rtts, sizeof (last_rtts));
-    g_qsort_with_data (&last_rtts,
+    g_sort_array (&last_rtts,
         MEDIAN_PRE_FILTERING_WINDOW, sizeof (GstClockTime),
         (GCompareDataFunc) compare_clock_time, NULL);
 

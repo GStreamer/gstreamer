@@ -1330,7 +1330,7 @@ namespace Gst.Audio {
 		public Gst.Audio.AudioInfo AudioInfo { 
 			get {
 				IntPtr raw_ret = gst_audio_encoder_get_audio_info(Handle);
-				Gst.Audio.AudioInfo ret = raw_ret == IntPtr.Zero ? null : (Gst.Audio.AudioInfo) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Audio.AudioInfo), true);
+				Gst.Audio.AudioInfo ret = raw_ret == IntPtr.Zero ? null : (Gst.Audio.AudioInfo) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Audio.AudioInfo), false);
 				return ret;
 			}
 		}

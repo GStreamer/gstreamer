@@ -73,7 +73,11 @@ gst_mpd_location_node_init (GstMPDLocationNode * self)
 GstMPDLocationNode *
 gst_mpd_location_node_new (void)
 {
-  return g_object_new (GST_TYPE_MPD_LOCATION_NODE, NULL);
+  GstMPDLocationNode *ret;
+
+  ret = g_object_new (GST_TYPE_MPD_LOCATION_NODE, NULL);
+  gst_object_ref_sink (ret);
+  return ret;
 }
 
 void

@@ -12,7 +12,7 @@ option('gl_platform', type : 'array',
        choices : ['glx', 'egl', 'cgl', 'wgl', 'eagl', 'auto'], value : ['auto'],
        description : 'A comma separated list of opengl platforms to enable building against')
 option('gl_winsys', type : 'array',
-       choices : ['x11', 'wayland', 'win32', 'winrt', 'cocoa', 'dispmanx', 'egl', 'viv-fb', 'gbm', 'android', 'auto'], value : ['auto'],
+       choices : ['x11', 'wayland', 'win32', 'winrt', 'cocoa', 'dispmanx', 'egl', 'surfaceless', 'viv-fb', 'gbm', 'android', 'auto'], value : ['auto'],
        description : 'A comma separated list of opengl windows systems to enable building against. Supported values are x11, wayland, win32, winrt, cocoa, dispmanx, egl, viv-fb, gbm, and android')
 option('egl_module_name', type : 'string', value : '',
        description : 'The file to pass to g_module_open to open the libEGL library (default: libEGL)')
@@ -36,7 +36,9 @@ option('audiorate', type : 'feature', value : 'auto')
 option('audioresample', type : 'feature', value : 'auto')
 option('audiotestsrc', type : 'feature', value : 'auto')
 option('compositor', type : 'feature', value : 'auto')
+option('debugutils', type : 'feature', value : 'auto')
 option('drm', type : 'feature', value : 'auto')
+option('dsd', type : 'feature', value : 'auto')
 option('encoding', type : 'feature', value : 'auto')
 option('gio', type : 'feature', value : 'auto')
 option('gio-typefinder', type : 'feature', value : 'auto')
@@ -74,12 +76,6 @@ option('tools', type : 'feature', value : 'auto', yield : true)
 option('introspection', type : 'feature', value : 'auto', yield : true, description : 'Generate gobject-introspection bindings')
 option('nls', type : 'feature', value : 'auto', yield: true, description : 'Enable native language support (translations)')
 option('orc', type : 'feature', value : 'auto', yield : true)
-option('gobject-cast-checks', type : 'feature', value : 'auto', yield : true,
-       description: 'Enable run-time GObject cast checks (auto = enabled for development, disabled for stable releases)')
-option('glib-asserts', type : 'feature', value : 'enabled', yield : true,
-       description: 'Enable GLib assertion (auto = enabled for development, disabled for stable releases)')
-option('glib-checks', type : 'feature', value : 'enabled', yield : true,
-       description: 'Enable GLib checks such as API guards (auto = enabled for development, disabled for stable releases)')
 option('qt5', type : 'feature', value : 'auto', yield : true, description : 'Qt5 QML examples')
 
 # Common options
@@ -89,3 +85,21 @@ option('package-origin', type : 'string', value : 'Unknown package origin', yiel
        description : 'package origin URL to use in plugins')
 option('doc', type : 'feature', value : 'auto', yield: true,
        description: 'Enable documentation.')
+option('glib_debug', type : 'feature', value : 'auto', yield : true, description : 'Enable GLib debug infrastructure (see docs/macros.txt)')
+option('glib_assert', type : 'boolean', value : true, yield : true, description : 'Enable GLib assertion (see docs/macros.txt)',
+  deprecated: {'enabled' : 'true', 'disabled' : 'false', 'auto' : 'false'},
+)
+option('glib_checks', type : 'boolean', value : true, yield : true, description : 'Enable GLib checks such as API guards (see docs/macros.txt)',
+  deprecated: {'enabled' : 'true', 'disabled' : 'false', 'auto' : 'false'},
+)
+
+# Deprecated, kept for backward compat
+option('gobject-cast-checks', type : 'feature', value : 'auto', yield : true,
+       description: 'Enable run-time GObject cast checks (auto = enabled for development, disabled for stable releases)',
+       deprecated: 'glib_debug')
+option('glib-asserts', type : 'feature', value : 'enabled', yield : true,
+       description: 'Enable GLib assertion (auto = enabled for development, disabled for stable releases)',
+       deprecated: 'glib_assert')
+option('glib-checks', type : 'feature', value : 'enabled', yield : true,
+       description: 'Enable GLib checks such as API guards (auto = enabled for development, disabled for stable releases)',
+       deprecated: 'glib_checks')

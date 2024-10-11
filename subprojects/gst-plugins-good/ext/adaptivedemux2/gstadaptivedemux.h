@@ -150,7 +150,7 @@ struct _GstAdaptiveDemuxTrack
   GstPad *pending_srcpad;
 
   /* Data storage */
-  GstQueueArray *queue;
+  GstVecDeque *queue;
 
   /* Sticky event storage for this track */
   GstEventStore sticky_events;

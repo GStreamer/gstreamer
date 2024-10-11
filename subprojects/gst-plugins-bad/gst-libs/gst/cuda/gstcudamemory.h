@@ -25,6 +25,7 @@
 #include <gst/cuda/cuda-prelude.h>
 #include <gst/cuda/gstcudacontext.h>
 #include <gst/cuda/gstcudastream.h>
+#include <gst/cuda/gstcudamemorypool.h>
 
 G_BEGIN_DECLS
 
@@ -136,6 +137,72 @@ typedef enum
 } GstCudaMemoryTransfer;
 
 /**
+ * GstCudaMemoryAllocMethod:
+ *
+ * CUDA memory allocation method
+ *
+ * Since: 1.24
+ */
+typedef enum
+{
+  /**
+   * GST_CUDA_MEMORY_ALLOC_UNKNOWN:
+   *
+   * Since: 1.24
+   */
+  GST_CUDA_MEMORY_ALLOC_UNKNOWN,
+
+  /**
+   * GST_CUDA_MEMORY_ALLOC_MALLOC:
+   *
+   * Memory allocated via cuMemAlloc or cuMemAllocPitch
+   *
+   * Since: 1.24
+   */
+  GST_CUDA_MEMORY_ALLOC_MALLOC,
+
+  /**
+   * GST_CUDA_MEMORY_ALLOC_MMAP:
+   *
+   * Memory allocated via cuMemCreate and cuMemMap
+   *
+   * Since: 1.24
+   */
+  GST_CUDA_MEMORY_ALLOC_MMAP,
+} GstCudaMemoryAllocMethod;
+
+#define GST_TYPE_CUDA_MEMORY_ALLOC_METHOD (gst_cuda_memory_alloc_method_get_type())
+GST_CUDA_API
+GType gst_cuda_memory_alloc_method_get_type (void);
+
+/**
+ * GST_CUDA_ALLOCATOR_OPT_STREAM_ORDERED:
+ *
+ * #G_TYPE_BOOLEAN Allows stream ordered allocation. Default is %FALSE
+ *
+ * Since: 1.26
+ */
+#define GST_CUDA_ALLOCATOR_OPT_STREAM_ORDERED "GstCudaAllocator.stream-ordered"
+
+/**
+ * GstCudaMemoryAllocatorNeedPoolCallback: (skip)
+ * @allocator: a #GstCudaAllocator
+ * @context: a #GstCudaContext
+ * @user_data: the user data
+ *
+ * Called to request cuda memory pool object. If callee returns a memory pool,
+ * @allocator will allocate memory via cuMemAllocFromPoolAsync.
+ * Otherwise device default memory pool will be used with cuMemAllocAsync method
+ *
+ * Returns: (transfer full) (nullable): Configured #GstCudaMemoryPool object
+ *
+ * Since: 1.26
+ */
+typedef GstCudaMemoryPool * (*GstCudaMemoryAllocatorNeedPoolCallback) (GstCudaAllocator * allocator,
+                                                                       GstCudaContext * context,
+                                                                       gpointer user_data);
+
+/**
  * GstCudaMemory:
  *
  * Since: 1.22
@@ -183,6 +250,13 @@ void            gst_cuda_memory_set_token_data (GstCudaMemory * mem,
 GST_CUDA_API
 gpointer        gst_cuda_memory_get_token_data (GstCudaMemory * mem,
                                                 gint64 token);
+
+GST_CUDA_API
+GstCudaMemoryAllocMethod gst_cuda_memory_get_alloc_method (GstCudaMemory * mem);
+
+GST_CUDA_API
+gboolean        gst_cuda_memory_export (GstCudaMemory * mem,
+                                        gpointer os_handle);
 
 /**
  * GstCudaAllocator:
@@ -240,6 +314,14 @@ GstMemory *     gst_cuda_allocator_alloc_wrapped (GstCudaAllocator * allocator,
                                                   gpointer user_data,
                                                   GDestroyNotify notify);
 
+GST_CUDA_API
+GstMemory *     gst_cuda_allocator_virtual_alloc (GstCudaAllocator * allocator,
+                                                  GstCudaContext * context,
+                                                  GstCudaStream * stream,
+                                                  const GstVideoInfo * info,
+                                                  const CUmemAllocationProp * prop,
+                                                  CUmemAllocationGranularity_flags granularity_flags);
+
 /**
  * GstCudaPoolAllocator:
  *
@@ -278,8 +360,25 @@ GstCudaPoolAllocator * gst_cuda_pool_allocator_new (GstCudaContext * context,
                                                     const GstVideoInfo * info);
 
 GST_CUDA_API
+GstCudaPoolAllocator * gst_cuda_pool_allocator_new_for_virtual_memory (GstCudaContext * context,
+                                                                       GstCudaStream * stream,
+                                                                       const GstVideoInfo * info,
+                                                                       const CUmemAllocationProp * prop,
+                                                                       CUmemAllocationGranularity_flags granularity_flags);
+
+GST_CUDA_API
+GstCudaPoolAllocator * gst_cuda_pool_allocator_new_full (GstCudaContext * context,
+                                                         GstCudaStream * stream,
+                                                         const GstVideoInfo * info,
+                                                         GstStructure * config);
+GST_CUDA_API
 GstFlowReturn          gst_cuda_pool_allocator_acquire_memory (GstCudaPoolAllocator * allocator,
                                                                GstMemory ** memory);
+
+GST_CUDA_API
+void                   gst_cuda_register_allocator_need_pool_callback (GstCudaMemoryAllocatorNeedPoolCallback callback,
+                                                                       gpointer user_data,
+                                                                       GDestroyNotify notify);
 
 G_END_DECLS
 

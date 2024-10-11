@@ -39,6 +39,10 @@
 #include <gst/gl/wayland/gstgldisplay_wayland.h>
 #endif
 
+#if GST_GL_HAVE_WINDOW_WIN32 && defined (GDK_WINDOWING_WIN32)
+#include <gdk/gdkwin32.h>
+#endif
+
 /**
  * SECTION:gtkgstglwidget
  * @title: GtkGstGlWidget
@@ -65,10 +69,10 @@ struct _GtkGstGLWidgetPrivate
   GLint attr_position;
   GLint attr_texture;
   GLuint current_tex;
-  GstGLOverlayCompositor *overlay_compositor;
   GstVideoOrientationMethod rotate_method;
   GstVideoOrientationMethod current_rotate_method;
   const gfloat *transform_matrix;
+  gboolean is_wgl;
 };
 
 static const GLfloat vertices[] = {
@@ -159,9 +163,6 @@ gtk_gst_gl_widget_init_redisplay (GtkGstGLWidget * gst_widget)
   }
 
   gl->BindBuffer (GL_ARRAY_BUFFER, 0);
-
-  priv->overlay_compositor =
-      gst_gl_overlay_compositor_new (priv->other_context);
 
   priv->initted = TRUE;
 }
@@ -325,6 +326,7 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
 {
   GtkGstGLWidgetPrivate *priv = GTK_GST_GL_WIDGET (widget)->priv;
   GtkGstBaseWidget *base_widget = GTK_GST_BASE_WIDGET (widget);
+  GstGLOverlayCompositor *overlay_compositor = NULL;
 
   GTK_GST_BASE_WIDGET_LOCK (widget);
 
@@ -340,6 +342,8 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
     _draw_black (priv->other_context);
     goto done;
   }
+
+  overlay_compositor = gst_gl_overlay_compositor_new (priv->other_context);
 
   /* Upload latest buffer */
   if (base_widget->pending_buffer) {
@@ -357,8 +361,7 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
     gst_gl_insert_debug_marker (priv->other_context, "redrawing texture %u",
         priv->current_tex);
 
-    gst_gl_overlay_compositor_upload_overlays (priv->overlay_compositor,
-        buffer);
+    gst_gl_overlay_compositor_upload_overlays (overlay_compositor, buffer);
 
     sync_meta = gst_buffer_get_gl_sync_meta (buffer);
     if (sync_meta) {
@@ -381,12 +384,15 @@ gtk_gst_gl_widget_render (GtkGLArea * widget, GdkGLContext * context)
       base_widget->buffer, context);
 
   _redraw_texture (GTK_GST_GL_WIDGET (widget), priv->current_tex);
-  gst_gl_overlay_compositor_draw_overlays (priv->overlay_compositor);
+  gst_gl_overlay_compositor_draw_overlays (overlay_compositor);
 
   gst_gl_insert_debug_marker (priv->other_context, "texture %u redrawn",
       priv->current_tex);
 
 done:
+  if (overlay_compositor)
+    gst_object_unref (overlay_compositor);
+
   if (priv->other_context)
     gst_gl_context_activate (priv->other_context, FALSE);
 
@@ -428,9 +434,6 @@ _reset_gl (GtkGstGLWidget * gst_widget)
     gst_object_unref (priv->shader);
     priv->shader = NULL;
   }
-
-  if (priv->overlay_compositor)
-    gst_object_unref (priv->overlay_compositor);
 
   gst_gl_context_activate (priv->other_context, FALSE);
 
@@ -500,6 +503,12 @@ gtk_gst_gl_widget_init (GtkGstGLWidget * gst_widget)
         gdk_wayland_display_get_wl_display (display);
     priv->display = (GstGLDisplay *)
         gst_gl_display_wayland_new_with_display (wayland_display);
+  }
+#endif
+#if GST_GL_HAVE_WINDOW_WIN32 && defined (GDK_WINDOWING_WIN32)
+  if (GDK_IS_WIN32_DISPLAY (display)) {
+    priv->display = (GstGLDisplay *)
+        gst_gl_display_new_with_type (GST_GL_DISPLAY_TYPE_WIN32);
   }
 #endif
 
@@ -579,6 +588,26 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
           platform, gl_api);
   }
 #endif
+#if GST_GL_HAVE_WINDOW_WIN32 && (GST_GL_HAVE_PLATFORM_WGL || GST_GL_HAVE_PLATFORM_EGL) && defined (GDK_WINDOWING_WIN32)
+  if (GDK_IS_WIN32_DISPLAY (gdk_gl_context_get_display (priv->gdk_context))) {
+    gboolean is_gles = gdk_gl_context_get_use_es (priv->gdk_context);
+
+    /* for WGL, we need the updates in GdkWin32GLContext for this to work safely */
+    if (is_gles || GTK_CHECK_VERSION (3, 24, 43)) {
+      platform = is_gles ? GST_GL_PLATFORM_EGL : GST_GL_PLATFORM_WGL;
+      gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);
+      gl_handle = gst_gl_context_get_current_gl_context (platform);
+
+      if (gl_handle)
+        priv->other_context =
+            gst_gl_context_new_wrapped (priv->display, gl_handle,
+            platform, gl_api);
+
+      if (priv->other_context && !is_gles)
+        priv->is_wgl = TRUE;
+    }
+  }
+#endif
 
   (void) platform;
   (void) gl_api;
@@ -639,6 +668,21 @@ gtk_gst_gl_widget_init_winsys (GtkGstGLWidget * gst_widget)
   }
 
   GST_OBJECT_LOCK (priv->display);
+
+  /* If there's no wglCreateContextAttribsARB() support, then we would fallback to
+   * wglShareLists() which will fail with ERROR_BUSY (0xaa) if either of the GL
+   * contexts are current in any other thread.
+   *
+   * The workaround here is to temporarily disable GDK's GL context while we
+   * set up our own, and then make the GDK GL Context current again after we are done
+   *
+   * Sometimes wglCreateContextAttribsARB()
+   * exists, but isn't functional (some Intel drivers), so it's easiest to do this
+   * unconditionally.
+   */
+  if (priv->gdk_context && priv->is_wgl)
+    gdk_gl_context_clear_current ();
+
   if (!gst_gl_display_create_context (priv->display, priv->other_context,
           &priv->context, &error)) {
     GST_WARNING ("Could not create OpenGL context: %s",
@@ -648,6 +692,10 @@ gtk_gst_gl_widget_init_winsys (GtkGstGLWidget * gst_widget)
     GTK_GST_BASE_WIDGET_UNLOCK (gst_widget);
     return FALSE;
   }
+
+  if (priv->gdk_context && priv->is_wgl)
+    gdk_gl_context_make_current (priv->gdk_context);
+
   gst_gl_display_add_context (priv->display, priv->context);
   GST_OBJECT_UNLOCK (priv->display);
 

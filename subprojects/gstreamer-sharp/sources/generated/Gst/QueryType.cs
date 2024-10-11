@@ -30,6 +30,7 @@ namespace Gst {
 		Drain = 46086,
 		Context = 48643,
 		Bitrate = 51202,
+		Selectable = 53763,
 	}
 
 	internal class QueryTypeGType {

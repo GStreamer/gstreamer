@@ -448,6 +448,8 @@ gst_matroska_parse_protection_meta (gpointer * data_out, gsize * size_out,
 
   /* Unencrypted buffer */
   if (!(signal_byte & GST_MATROSKA_BLOCK_ENCRYPTED)) {
+    *size_out = gst_byte_reader_get_remaining (&reader);
+    gst_byte_reader_get_data (&reader, *size_out, (const guint8 **) data_out);
     return TRUE;
   }
 
@@ -757,7 +759,7 @@ gst_matroska_read_common_parse_skip (GstMatroskaReadCommon * common,
   } else if (id == GST_EBML_ID_CRC32) {
     GST_DEBUG_OBJECT (common->sinkpad, "Skipping EBML CRC32 element");
   } else {
-    GST_WARNING_OBJECT (common->sinkpad,
+    GST_FIXME_OBJECT (common->sinkpad,
         "Unknown %s subelement 0x%x - ignoring", parent_name, id);
   }
 

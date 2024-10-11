@@ -26,6 +26,7 @@
 #include "gstvaencoder.h"
 
 #include <gst/va/gstvavideoformat.h>
+#include <gst/va/vasurfaceimage.h>
 
 #include "gstvacaps.h"
 #include "gstvaprofile.h"
@@ -261,6 +262,51 @@ gst_va_encoder_close (GstVaEncoder * self)
   return TRUE;
 }
 
+/* for querying the customized surface alignment */
+guint
+gst_va_encoder_get_surface_alignment (GstVaDisplay * display,
+    VAProfile profile, VAEntrypoint entrypoint)
+{
+  guint alignment = 0;
+#if VA_CHECK_VERSION(1, 21, 0)
+  VAConfigAttrib *attrib = NULL;
+  VASurfaceAttrib *attr_list;
+  guint i, count;
+  VAConfigID config;
+  VADisplay dpy;
+  VAStatus status;
+
+  dpy = gst_va_display_get_va_dpy (display);
+  status = vaCreateConfig (dpy, profile, entrypoint, attrib, 0, &config);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (display, "vaCreateConfig: %s", vaErrorStr (status));
+    return alignment;
+  }
+  attr_list = gst_va_get_surface_attribs (display, config, &count);
+  if (!attr_list)
+    goto bail;
+
+  for (i = 0; i < count; i++) {
+    if (attr_list[i].type == VASurfaceAttribAlignmentSize) {
+      alignment = attr_list[i].value.value.i;
+      GST_INFO_OBJECT (display,
+          "Using customized surface alignment [%dx%d]\n",
+          1 << (alignment & 0xf), 1 << ((alignment & 0xf0) >> 4));
+      break;
+    }
+  }
+  g_free (attr_list);
+
+bail:
+  status = vaDestroyConfig (dpy, config);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (display, "vaDestroyConfig: %s", vaErrorStr (status));
+    return alignment;
+  }
+#endif
+  return alignment;
+}
+
 static GArray *
 _get_surface_formats (GstVaDisplay * display, VAConfigID config)
 {
@@ -305,26 +351,24 @@ _create_reconstruct_pool (GstVaDisplay * display, GArray * surface_formats,
     guint max_buffers)
 {
   GstAllocator *allocator = NULL;
-  guint usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER;
+  guint usage_hint;
   GstVideoInfo info;
   GstAllocationParams params = { 0, };
   GstBufferPool *pool;
-  guint size;
   GstCaps *caps = NULL;
 
   gst_video_info_set_format (&info, format, coded_width, coded_height);
 
-  size = GST_VIDEO_INFO_SIZE (&info);
+  usage_hint = va_get_surface_usage_hint (display,
+      VAEntrypointEncSlice, GST_PAD_SINK, FALSE);
 
   caps = gst_video_info_to_caps (&info);
   gst_caps_set_features_simple (caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
+      gst_caps_features_new_single_static_str (GST_CAPS_FEATURE_MEMORY_VA));
 
   allocator = gst_va_allocator_new (display, surface_formats);
 
-  gst_allocation_params_init (&params);
-
-  pool = gst_va_pool_new_with_config (caps, size, 0, max_buffers, usage_hint,
+  pool = gst_va_pool_new_with_config (caps, 0, max_buffers, usage_hint,
       GST_VA_FEATURE_AUTO, allocator, &params);
 
   gst_clear_object (&allocator);
@@ -532,6 +576,8 @@ gst_va_encoder_new (GstVaDisplay * display, guint32 codec,
 
   self = g_object_new (GST_TYPE_VA_ENCODER, "display", display,
       "va-entrypoint", entrypoint, NULL);
+  gst_object_ref_sink (self);
+
   if (!gst_va_encoder_initialize (self, codec))
     gst_clear_object (&self);
 
@@ -1242,11 +1288,11 @@ static const GEnumValue rate_control_map[] = {
   {VA_RC_CQP, "Constant Quantizer", "cqp"},
   /* {VA_RC_VBR_CONSTRAINED, "VBR with peak rate higher than average bitrate", */
   /*  "vbr-constrained"}, */
-  /* {VA_RC_ICQ, "Intelligent Constant Quality", "icq"}, */
+  {VA_RC_ICQ, "Intelligent Constant Quality", "icq"},
   /* {VA_RC_MB, "Macroblock based rate control", "mb"}, */
   /* {VA_RC_CFS, "Constant Frame Size", "cfs"}, */
   /* {VA_RC_PARALLEL, "Parallel BRC", "parallel"}, */
-  /* {VA_RC_QVBR, "Quality defined VBR", "qvbr"}, */
+  {VA_RC_QVBR, "Quality defined VBR", "qvbr"},
   /* {VA_RC_AVBR, "Average VBR", "avbr"}, */
 };
 

@@ -476,6 +476,19 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_meta_container_get_date(IntPtr raw, IntPtr meta_item, out IntPtr dest);
+
+		public bool GetDate(string meta_item, out GLib.Date dest) {
+			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
+			IntPtr native_dest;
+			bool raw_ret = ges_meta_container_get_date(Handle, native_meta_item, out native_dest);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_meta_item);
+			dest = new GLib.Date(native_dest);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_meta_container_get_date_time(IntPtr raw, IntPtr meta_item, out IntPtr dest);
 
 		public bool GetDateTime(string meta_item, out Gst.DateTime dest) {
@@ -621,6 +634,17 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_meta_container_register_meta_date(IntPtr raw, int flags, IntPtr meta_item, IntPtr value);
+
+		public bool RegisterMetaDate(GES.MetaFlag flags, string meta_item, GLib.Date value) {
+			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
+			bool raw_ret = ges_meta_container_register_meta_date(Handle, (int) flags, native_meta_item, value == null ? IntPtr.Zero : value.Handle);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_meta_container_register_meta_date_time(IntPtr raw, int flags, IntPtr meta_item, IntPtr value);
 
 		public bool RegisterMetaDateTime(GES.MetaFlag flags, string meta_item, Gst.DateTime value) {
@@ -727,6 +751,17 @@ namespace GES {
 		public bool SetBoolean(string meta_item, bool value) {
 			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
 			bool raw_ret = ges_meta_container_set_boolean(Handle, native_meta_item, value);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_meta_container_set_date(IntPtr raw, IntPtr meta_item, IntPtr value);
+
+		public bool SetDate(string meta_item, GLib.Date value) {
+			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
+			bool raw_ret = ges_meta_container_set_date(Handle, native_meta_item, value == null ? IntPtr.Zero : value.Handle);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_meta_item);
 			return ret;

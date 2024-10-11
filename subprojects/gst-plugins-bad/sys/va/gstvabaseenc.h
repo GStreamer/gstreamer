@@ -35,9 +35,15 @@ G_BEGIN_DECLS
 
 #define GST_VA_BASE_ENC_ENTRYPOINT(obj) (GST_VA_BASE_ENC_GET_CLASS(obj)->entrypoint)
 
+typedef struct _GstVaEncFrame GstVaEncFrame;
 typedef struct _GstVaBaseEnc GstVaBaseEnc;
 typedef struct _GstVaBaseEncClass GstVaBaseEncClass;
 typedef struct _GstVaBaseEncPrivate GstVaBaseEncPrivate;
+
+struct _GstVaEncFrame
+{
+  GstVaEncodePicture *picture;
+};
 
 struct _GstVaBaseEnc
 {
@@ -48,23 +54,30 @@ struct _GstVaBaseEnc
 
   gboolean reconf;
 
+  gboolean is_live;
+
   VAProfile profile;
   gint width;
   gint height;
   guint rt_format;
   guint codedbuf_size;
+  /* The min buffer number required for reorder and output delay. */
+  guint min_buffers;
 
   GstClockTime start_pts;
   GstClockTime frame_duration;
-  /* Total frames we handled since reconfig. */
-  guint input_frame_count;
-  guint output_frame_count;
 
   GQueue reorder_list;
   GQueue ref_list;
   GQueue output_list;
+  GstVecDeque *dts_queue;
+  guint preferred_output_delay;
 
   GstVideoCodecState *input_state;
+  union {
+    GstVideoInfo in_info;
+    GstVideoInfoDmaDrm in_drm_info;
+  };
 
   /*< private >*/
   GstVaBaseEncPrivate *priv;
@@ -87,8 +100,9 @@ struct _GstVaBaseEncClass
   GstFlowReturn (*encode_frame) (GstVaBaseEnc * encoder,
                                  GstVideoCodecFrame * frame,
                                  gboolean is_last);
-  void     (*prepare_output) (GstVaBaseEnc * encoder,
-                              GstVideoCodecFrame * frame);
+  gboolean (*prepare_output) (GstVaBaseEnc * encoder,
+                              GstVideoCodecFrame * frame,
+                              gboolean * complete);
 
   GstVaCodecs codec;
   VAEntrypoint entrypoint;
@@ -132,7 +146,18 @@ gboolean              gst_va_base_enc_add_trellis_parameter (GstVaBaseEnc * base
 void                  gst_va_base_enc_add_codec_tag       (GstVaBaseEnc * base,
                                                            const gchar * codec_name);
 void                  gst_va_base_enc_reset_state         (GstVaBaseEnc * base);
-
+GstBuffer *           gst_va_base_enc_create_output_buffer (GstVaBaseEnc * base,
+                                                            GstVaEncodePicture * picture,
+                                                            const guint8 * prefix_data,
+                                                            guint prefix_data_len);
+gint                  gst_va_base_enc_copy_output_data    (GstVaBaseEnc * base,
+                                                           GstVaEncodePicture * picture,
+                                                           guint8 * data,
+                                                           gint size);
+void                  gst_va_base_enc_push_dts            (GstVaBaseEnc * base,
+                                                           GstVideoCodecFrame * frame,
+                                                           guint max_reorder_num);
+GstClockTime          gst_va_base_enc_pop_dts             (GstVaBaseEnc * base);
 void                  gst_va_base_enc_update_property_uint (GstVaBaseEnc * base,
                                                             guint32 * old_val,
                                                             guint32 new_val,
@@ -141,6 +166,22 @@ void                  gst_va_base_enc_update_property_bool (GstVaBaseEnc * base,
                                                             gboolean * old_val,
                                                             gboolean new_val,
                                                             GParamSpec * pspec);
+
+static inline gpointer
+gst_va_get_enc_frame (GstVideoCodecFrame * frame)
+{
+  GstVaEncFrame *enc_frame = gst_video_codec_frame_get_user_data (frame);
+  g_assert (enc_frame);
+
+  return enc_frame;
+}
+
+static inline void
+gst_va_set_enc_frame (GstVideoCodecFrame * frame,
+    GstVaEncFrame * frame_in, GDestroyNotify notify)
+{
+  gst_video_codec_frame_set_user_data (frame, frame_in, notify);
+}
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaBaseEnc, gst_object_unref)
 

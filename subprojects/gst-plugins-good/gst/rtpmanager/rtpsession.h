@@ -276,7 +276,6 @@ struct _RTPSession {
   GstClockTime  last_rtcp_interval;   /* T_rr */
   GstClockTime  start_time;
   gboolean      first_rtcp;
-  gboolean      allow_early;
 
   GstClockTime  next_early_rtcp_time;
 
@@ -314,6 +313,8 @@ struct _RTPSession {
   guint8 send_ntp64_ext_id;
 
   gboolean update_ntp64_header_ext;
+
+  gboolean timeout_inactive_sources;
 
   /* Transport-wide cc-extension */
   RTPTWCCManager *twcc;

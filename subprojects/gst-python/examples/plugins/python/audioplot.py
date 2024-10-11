@@ -15,7 +15,6 @@ gi.require_version('Gst', '1.0')
 gi.require_version('GstBase', '1.0')
 gi.require_version('GstAudio', '1.0')
 gi.require_version('GstVideo', '1.0')
-
 from gi.repository import Gst, GLib, GObject, GstBase, GstAudio, GstVideo
 
 try:
@@ -37,8 +36,8 @@ AUDIO_FORMATS = [f.strip() for f in
 ICAPS = Gst.Caps(Gst.Structure('audio/x-raw',
                                format=Gst.ValueList(AUDIO_FORMATS),
                                layout='interleaved',
-                               rate = Gst.IntRange(range(1, GLib.MAXINT)),
-                               channels = Gst.IntRange(range(1, GLib.MAXINT))))
+                               rate=Gst.IntRange(range(1, GLib.MAXINT)),
+                               channels=Gst.IntRange(range(1, GLib.MAXINT))))
 
 OCAPS = Gst.Caps(Gst.Structure('video/x-raw',
                                format='ARGB',
@@ -55,8 +54,8 @@ DEFAULT_FRAMERATE_DENOM = 1
 
 
 class AudioPlotFilter(GstBase.BaseTransform):
-    __gstmetadata__ = ('AudioPlotFilter','Filter', \
-                      'Plot audio waveforms', 'Mathieu Duponchelle')
+    __gstmetadata__ = ('AudioPlotFilter', 'Filter',
+                       'Plot audio waveforms', 'Mathieu Duponchelle')
 
     __gsttemplates__ = (Gst.PadTemplate.new("src",
                                             Gst.PadDirection.SRC,
@@ -68,13 +67,13 @@ class AudioPlotFilter(GstBase.BaseTransform):
                                             ICAPS))
     __gproperties__ = {
         "window-duration": (float,
-                   "Window Duration",
-                   "Duration of the sliding window, in seconds",
-                   0.01,
-                   100.0,
-                   DEFAULT_WINDOW_DURATION,
-                   GObject.ParamFlags.READWRITE
-                  )
+                            "Window Duration",
+                            "Duration of the sliding window, in seconds",
+                            0.01,
+                            100.0,
+                            DEFAULT_WINDOW_DURATION,
+                            GObject.ParamFlags.READWRITE
+                            )
     }
 
     def __init__(self):
@@ -128,7 +127,7 @@ class AudioPlotFilter(GstBase.BaseTransform):
         inbuf = self.queued_buf
         _, info = inbuf.map(Gst.MapFlags.READ)
         res, data = self.converter.convert(GstAudio.AudioConverterFlags.NONE,
-                                            info.data)
+                                           info.data)
         data = memoryview(data).cast('i')
 
         nsamples = len(data) - self.buf_offset
@@ -187,10 +186,8 @@ class AudioPlotFilter(GstBase.BaseTransform):
             return ret.fixate()
 
     def do_set_caps(self, icaps, ocaps):
-        in_info = GstAudio.AudioInfo()
-        in_info.from_caps(icaps)
-        out_info = GstVideo.VideoInfo()
-        out_info.from_caps(ocaps)
+        in_info = GstAudio.AudioInfo.new_from_caps(icaps)
+        out_info = GstVideo.VideoInfo().new_from_caps(ocaps)
 
         self.convert_info = GstAudio.AudioInfo()
         self.convert_info.set_format(GstAudio.AudioFormat.S32,
@@ -237,6 +234,7 @@ class AudioPlotFilter(GstBase.BaseTransform):
         self.buf_offset = 0
 
         return True
+
 
 GObject.type_register(AudioPlotFilter)
 __gstelementfactory__ = ("audioplot", Gst.Rank.NONE, AudioPlotFilter)

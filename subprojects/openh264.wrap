@@ -1,9 +1,10 @@
 [wrap-file]
-directory = openh264-2.3.1
-source_url = https://github.com/cisco/openh264/archive/refs/tags/v2.3.1.tar.gz
-source_filename = openh264-2.3.1.tar.gz
-source_hash = 453afa66dacb560bc5fd0468aabee90c483741571bca820a39a1c07f0362dc32
-wrapdb_version = 2.3.1-1
+directory = openh264-2.4.1
+source_url = https://github.com/cisco/openh264/archive/refs/tags/v2.4.1.tar.gz
+source_filename = openh264-2.4.1.tar.gz
+source_hash = 8ffbe944e74043d0d3fb53d4a2a14c94de71f58dbea6a06d0dc92369542958ea
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/openh264_2.4.1-1/openh264-2.4.1.tar.gz
+wrapdb_version = 2.4.1-1
 
 [provide]
 openh264 = openh264_dep

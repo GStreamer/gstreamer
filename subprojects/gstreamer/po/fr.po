@@ -5,14 +5,15 @@
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 # Claude Paroz <claude@2xlibre.net>, 2008-2012.
 # Stéphane Aulery <lkppo@free.fr>, 2015-2022.
+# Christian Wiatr <w9204-fs@yahoo.com>, 2023.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.19.2\n"
+"Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2022-07-05 00:47+0200\n"
-"Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
+"POT-Creation-Date: 2023-01-13 19:09+0000\n"
+"PO-Revision-Date: 2023-06-04 11:11+0200\n"
+"Last-Translator: Christian Wiatr <w9204-fs@yahoo.com>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
@@ -20,6 +21,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=n>1;\n"
+"X-Generator: Poedit 2.4.2\n"
 
 msgid "Print the GStreamer version"
 msgstr "Affiche la version de GStreamer"
@@ -853,7 +855,7 @@ msgstr "Aucun gestionnaire d’URI trouvé pour le protocole %s"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr "schéma URI « %s » non pris en charge"
+msgstr "URI de schéma « %s » non prise en charge"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -879,7 +881,7 @@ msgid "link has no sink [source=%s@%p]"
 msgstr "lien sans sink [source=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "Propriété non trouvée."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -901,9 +903,11 @@ msgstr "pas d’élément « %s »"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "impossible de définir la propriété « %s » de l’élément « %s » à « %s »"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
-msgstr "impossible de définir la propriété « %s » de l’élément « %s » à « %s »"
+msgstr ""
+"impossible de définir la propriété « %s » du fils de l'élément « %s » à "
+"« %s »"
 
 msgid "Delayed linking failed."
 msgstr "Échec du chargement dynamique différé."
@@ -1179,7 +1183,8 @@ msgstr ""
 "GST_INSPECT_NO_COLORS."
 
 msgid "Color output, even when not sending to a tty."
-msgstr "Couleur de la sortie, même quand vers un autre périphérique qu'un tty"
+msgstr ""
+"Couleur de la sortie, même quand le périphérique est différent d'un tty."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"

@@ -46,13 +46,14 @@ struct _GstSplitMuxSrc
   GMutex lock;
   GMutex msg_lock;
   gboolean     running;
+  gboolean     did_initial_measuring;
 
   gchar       *location;  /* OBJECT_LOCK */
 
   GstSplitMuxPartReader **parts;
   guint        num_parts;
-  guint        num_prepared_parts;
-  guint        num_created_parts;
+  guint        num_parts_alloced;
+  guint        num_measured_parts;
   guint        cur_part;
 
   gboolean async_pending;
@@ -67,6 +68,12 @@ struct _GstSplitMuxSrc
   GstClockTime end_offset;
   GstSegment play_segment;
   guint32 segment_seqnum;
+
+  guint   target_max_readers; /* Maximum number of readers we try to keep open */
+  GQueue *active_parts;
+
+  guint num_lookahead;
+  gboolean lookahead_check_pending;
 };
 
 struct _GstSplitMuxSrcClass

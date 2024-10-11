@@ -132,6 +132,9 @@ gst_rtp_j2k_depay_class_init (GstRtpJ2KDepayClass * klass)
 static void
 gst_rtp_j2k_depay_init (GstRtpJ2KDepay * rtpj2kdepay)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (rtpj2kdepay), TRUE);
+
   rtpj2kdepay->pu_adapter = gst_adapter_new ();
   rtpj2kdepay->t_adapter = gst_adapter_new ();
   rtpj2kdepay->f_adapter = gst_adapter_new ();
@@ -440,6 +443,7 @@ gst_rtp_j2k_depay_flush_frame (GstRTPBaseDepayload * depayload)
   } else {
     GST_WARNING_OBJECT (rtpj2kdepay, "empty packet");
     gst_adapter_clear (rtpj2kdepay->f_adapter);
+    gst_rtp_base_depayload_flush (depayload, TRUE);
   }
 
   /* we accept any mh_id now */
@@ -597,6 +601,7 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpj2kdepay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 wrong_mh_id:
@@ -604,6 +609,7 @@ wrong_mh_id:
     GST_ELEMENT_WARNING (rtpj2kdepay, STREAM, DECODE,
         ("Invalid mh_id %u, expected %u", mh_id, rtpj2kdepay->last_mh_id),
         (NULL));
+    gst_rtp_base_depayload_dropped (depayload);
     gst_rtp_j2k_depay_clear_pu (rtpj2kdepay);
     return NULL;
   }

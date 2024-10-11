@@ -1,0 +1,31 @@
+From 8bf85c9cc67073be10ba4bf83d0a1875907da9b6 Mon Sep 17 00:00:00 2001
+From: Detlev Casanova <detlev.casanova@collabora.com>
+Date: Mon, 2 Oct 2023 14:38:40 -0400
+Subject: [PATCH 1/5] media: visl: Fix params permissions/defaults mismatch
+
+`false` was used as the keep_bitstream_buffers parameter permissions.
+This looks more like a default value for the parameter, so change it to
+0 to avoid confusion.
+
+Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
+Signed-off-by: Detlev Casanova <detlev.casanova@collabora.com>
+---
+ drivers/media/test-drivers/visl/visl-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/test-drivers/visl/visl-core.c b/drivers/media/test-drivers/visl/visl-core.c
+index 9970dc739ca5..df6515530fbf 100644
+--- a/drivers/media/test-drivers/visl/visl-core.c
++++ b/drivers/media/test-drivers/visl/visl-core.c
+@@ -74,7 +74,7 @@ MODULE_PARM_DESC(visl_dprintk_nframes,
+ 		 " the number of frames to trace with dprintk");
+ 
+ bool keep_bitstream_buffers;
+-module_param(keep_bitstream_buffers, bool, false);
++module_param(keep_bitstream_buffers, bool, 0);
+ MODULE_PARM_DESC(keep_bitstream_buffers,
+ 		 " keep bitstream buffers in debugfs after streaming is stopped");
+ 
+-- 
+2.41.0
+

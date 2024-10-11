@@ -402,9 +402,8 @@ gst_vp8_enc_preflight_buffer (GstVPXEnc * enc,
     gboolean layer_sync, guint layer_id, guint8 tl0picidx)
 {
   GstCustomMeta *meta = gst_buffer_add_custom_meta (buffer, "GstVP8Meta");
-  GstStructure *s = gst_custom_meta_get_structure (meta);
 
-  gst_structure_set (s,
+  gst_structure_set (meta->structure,
       "use-temporal-scaling", G_TYPE_BOOLEAN, (enc->cfg.ts_periodicity != 0),
       "layer-sync", G_TYPE_BOOLEAN, layer_sync,
       "layer-id", G_TYPE_UINT, layer_id,

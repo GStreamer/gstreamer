@@ -14,7 +14,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_get_type();
 
-		public static GLib.GType GType { 
+		public static new GLib.GType GType { 
 			get {
 				IntPtr raw_ret = gst_caps_get_type();
 				GLib.GType ret = new GLib.GType(raw_ret);
@@ -318,6 +318,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_caps_serialize(IntPtr raw, int flags);
+
+		public string Serialize(Gst.SerializeFlags flags) {
+			IntPtr raw_ret = gst_caps_serialize(Handle, (int) flags);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_caps_set_features(IntPtr raw, uint index, IntPtr features);
 
 		public void SetFeatures(uint index, Gst.CapsFeatures features) {
@@ -413,7 +422,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_new_empty();
 
-		public Caps () 
+		public Caps () : base (IntPtr.Zero)
 		{
 			Raw = gst_caps_new_empty();
 		}
@@ -421,7 +430,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_new_empty_simple(IntPtr media_type);
 
-		public Caps (string media_type) 
+		public Caps (string media_type) : base (IntPtr.Zero)
 		{
 			IntPtr native_media_type = GLib.Marshaller.StringToPtrGStrdup (media_type);
 			Raw = gst_caps_new_empty_simple(native_media_type);
@@ -435,34 +444,6 @@ namespace Gst {
 		{
 			Caps result = new Caps (gst_caps_new_any());
 			return result;
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_caps_ref(IntPtr raw);
-
-		protected override void Ref (IntPtr raw)
-		{
-			if (!Owned) {
-				gst_caps_ref (raw);
-				Owned = true;
-			}
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_caps_unref(IntPtr raw);
-
-		protected override void Unref (IntPtr raw)
-		{
-			if (Owned) {
-				gst_caps_unref (raw);
-				Owned = false;
-			}
-		}
-
-		protected override Action<IntPtr> DisposeUnmanagedFunc {
-			get {
-				return gst_caps_unref;
-			}
 		}
 
 

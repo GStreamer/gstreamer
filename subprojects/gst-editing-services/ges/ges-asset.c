@@ -129,9 +129,24 @@
 
 #include <gst/gst.h>
 
-GST_DEBUG_CATEGORY_STATIC (ges_asset_debug);
 #undef GST_CAT_DEFAULT
-#define GST_CAT_DEFAULT ges_asset_debug
+
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT ensure_debug_category()
+static GstDebugCategory *
+ensure_debug_category (void)
+{
+  static gsize cat_gonce = 0;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    gsize cat_done = (gsize) _gst_debug_category_new ("ges-asset",
+        GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GES Asset");
+    g_once_init_leave (&cat_gonce, cat_done);
+  }
+
+  return (GstDebugCategory *) cat_gonce;
+}
+#endif /* GST_DISABLE_GST_DEBUG */
 
 enum
 {
@@ -538,9 +553,6 @@ ges_asset_class_init (GESAssetClass * klass)
   klass->extract = ges_asset_extract_default;
   klass->request_id_update = ges_asset_request_id_update_default;
   klass->inform_proxy = NULL;
-
-  GST_DEBUG_CATEGORY_INIT (ges_asset_debug, "ges-asset",
-      GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GES Asset");
 }
 
 void
@@ -1116,7 +1128,7 @@ ges_asset_set_id (GESAsset * asset, const gchar * id)
   priv = asset->priv;
 
   if (priv->state != ASSET_INITIALIZED) {
-    GST_WARNING_OBJECT (asset, "Trying to rest ID on an object that is"
+    GST_WARNING_OBJECT (asset, "Trying to set ID on an object that is"
         " not properly loaded");
     return;
   }
@@ -1253,7 +1265,11 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
   if (lerr)
     g_error_free (lerr);
 
+  GST_DEBUG ("Requesting %s with real id %s and id %s",
+      g_type_name (extractable_type), real_id, id);
+
   /* asset owned by cache */
+  LOCK_CACHE;
   asset = ges_asset_cache_lookup (extractable_type, real_id);
   if (asset) {
     while (proxied) {
@@ -1307,17 +1323,16 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
     iface = g_type_interface_peek (klass, G_TYPE_INITABLE);
 
     if (iface->init) {
-      /* FIXME: allow the error to be set, which GInitable is designed
-       * for! */
       asset = g_initable_new (asset_type,
-          NULL, NULL, "id", real_id, "extractable-type",
+          NULL, error, "id", real_id, "extractable-type",
           extractable_type, NULL);
     } else {
-      GST_WARNING ("Tried to create an Asset for type %s but no ->init method",
+      GST_INFO ("Tried to create an Asset for type %s but no ->init method",
           g_type_name (extractable_type));
     }
     g_type_class_unref (klass);
   }
+  UNLOCK_CACHE;
 
   if (real_id)
     g_free (real_id);
@@ -1403,7 +1418,11 @@ ges_asset_request_async (GType extractable_type,
   }
 
   /* Check if we already have an asset for this ID */
+  LOCK_CACHE;
   asset = ges_asset_cache_lookup (extractable_type, real_id);
+  GESAssetCacheEntry *entry = _lookup_entry (extractable_type, id);
+  if (entry)
+    asset = entry->asset;
   if (asset) {
     task = g_task_new (asset, NULL, callback, user_data);
 
@@ -1420,7 +1439,7 @@ ges_asset_request_async (GType extractable_type,
 
           goto done;
         case ASSET_INITIALIZING:
-          GST_DEBUG_OBJECT (asset, "Asset in cache and but not "
+          GST_DEBUG_OBJECT (asset, "Asset in cache but not "
               "initialized, setting a new callback");
           ges_asset_cache_append_task (extractable_type, real_id, task);
           task = NULL;
@@ -1455,6 +1474,7 @@ ges_asset_request_async (GType extractable_type,
           goto done;
         default:
           GST_WARNING ("Case %i not handle, returning", asset->priv->state);
+          UNLOCK_CACHE;
           return;
       }
     }
@@ -1463,7 +1483,9 @@ ges_asset_request_async (GType extractable_type,
   g_async_initable_new_async (ges_extractable_type_get_asset_type
       (extractable_type), G_PRIORITY_DEFAULT, cancellable, callback, user_data,
       "id", real_id, "extractable-type", extractable_type, NULL);
+
 done:
+  UNLOCK_CACHE;
   if (task)
     gst_object_unref (task);
   if (real_id)

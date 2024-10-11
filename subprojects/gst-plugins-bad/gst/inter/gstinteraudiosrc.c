@@ -412,6 +412,12 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
   }
   n = period_samples;
 
+  /* audioconvert expects an audio meta for planar layout audio inputs. */
+  if (GST_AUDIO_INFO_LAYOUT (&interaudiosrc->info) ==
+      GST_AUDIO_LAYOUT_NON_INTERLEAVED) {
+    gst_buffer_add_audio_meta (buffer, &interaudiosrc->info, n, NULL);
+  }
+
   GST_BUFFER_OFFSET (buffer) = interaudiosrc->n_samples;
   GST_BUFFER_OFFSET_END (buffer) = interaudiosrc->n_samples + n;
   GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;

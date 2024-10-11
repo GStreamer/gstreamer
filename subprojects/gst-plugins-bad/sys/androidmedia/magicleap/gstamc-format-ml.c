@@ -32,15 +32,9 @@ struct _GstAmcFormat
   MLHandle handle;
 };
 
-gboolean
-gst_amc_format_static_init (void)
-{
-  return TRUE;
-}
-
-GstAmcFormat *
-gst_amc_format_new_audio (const gchar * mime, gint sample_rate, gint channels,
-    GError ** err)
+static GstAmcFormat *
+gst_amc_format_ml_new_audio (const gchar * mime, gint sample_rate,
+    gint channels, GError ** err)
 {
   GstAmcFormat *format = g_slice_new0 (GstAmcFormat);
   MLResult result;
@@ -57,8 +51,8 @@ gst_amc_format_new_audio (const gchar * mime, gint sample_rate, gint channels,
   return format;
 }
 
-GstAmcFormat *
-gst_amc_format_new_video (const gchar * mime, gint width, gint height,
+static GstAmcFormat *
+gst_amc_format_ml_new_video (const gchar * mime, gint width, gint height,
     GError ** err)
 {
   GstAmcFormat *format = g_slice_new0 (GstAmcFormat);
@@ -76,7 +70,7 @@ gst_amc_format_new_video (const gchar * mime, gint width, gint height,
 }
 
 GstAmcFormat *
-gst_amc_format_new_handle (MLHandle handle)
+gst_amc_format_ml_new_handle (MLHandle handle)
 {
   GstAmcFormat *format = g_slice_new0 (GstAmcFormat);
   format->handle = handle;
@@ -84,20 +78,20 @@ gst_amc_format_new_handle (MLHandle handle)
 }
 
 MLHandle
-gst_amc_format_get_handle (GstAmcFormat * format)
+gst_amc_format_ml_get_handle (GstAmcFormat * format)
 {
   return format->handle;
 }
 
-void
-gst_amc_format_free (GstAmcFormat * format)
+static void
+gst_amc_format_ml_free (GstAmcFormat * format)
 {
   g_return_if_fail (format != NULL);
   g_slice_free (GstAmcFormat, format);
 }
 
-gchar *
-gst_amc_format_to_string (GstAmcFormat * format, GError ** err)
+static gchar *
+gst_amc_format_ml_to_string (GstAmcFormat * format, GError ** err)
 {
   MLResult result;
   gchar *str;
@@ -114,8 +108,8 @@ gst_amc_format_to_string (GstAmcFormat * format, GError ** err)
   return str;
 }
 
-gboolean
-gst_amc_format_get_float (GstAmcFormat * format, const gchar * key,
+static gboolean
+gst_amc_format_ml_get_float (GstAmcFormat * format, const gchar * key,
     gfloat * value, GError ** err)
 {
   MLResult result;
@@ -134,8 +128,8 @@ gst_amc_format_get_float (GstAmcFormat * format, const gchar * key,
   return TRUE;
 }
 
-gboolean
-gst_amc_format_set_float (GstAmcFormat * format, const gchar * key,
+static gboolean
+gst_amc_format_ml_set_float (GstAmcFormat * format, const gchar * key,
     gfloat value, GError ** err)
 {
   MLResult result;
@@ -153,9 +147,9 @@ gst_amc_format_set_float (GstAmcFormat * format, const gchar * key,
   return TRUE;
 }
 
-gboolean
-gst_amc_format_get_int (GstAmcFormat * format, const gchar * key, gint * value,
-    GError ** err)
+static gboolean
+gst_amc_format_ml_get_int (GstAmcFormat * format, const gchar * key,
+    gint * value, GError ** err)
 {
   MLResult result;
 
@@ -173,8 +167,8 @@ gst_amc_format_get_int (GstAmcFormat * format, const gchar * key, gint * value,
   return TRUE;
 }
 
-gboolean
-gst_amc_format_set_int (GstAmcFormat * format, const gchar * key, gint value,
+static gboolean
+gst_amc_format_ml_set_int (GstAmcFormat * format, const gchar * key, gint value,
     GError ** err)
 {
   MLResult result;
@@ -191,8 +185,8 @@ gst_amc_format_set_int (GstAmcFormat * format, const gchar * key, gint value,
   return TRUE;
 }
 
-gboolean
-gst_amc_format_get_string (GstAmcFormat * format, const gchar * key,
+static gboolean
+gst_amc_format_ml_get_string (GstAmcFormat * format, const gchar * key,
     gchar ** value, GError ** err)
 {
   MLResult result;
@@ -213,8 +207,8 @@ gst_amc_format_get_string (GstAmcFormat * format, const gchar * key,
   return TRUE;
 }
 
-gboolean
-gst_amc_format_set_string (GstAmcFormat * format, const gchar * key,
+static gboolean
+gst_amc_format_ml_set_string (GstAmcFormat * format, const gchar * key,
     const gchar * value, GError ** err)
 {
   MLResult result;
@@ -231,8 +225,8 @@ gst_amc_format_set_string (GstAmcFormat * format, const gchar * key,
   return TRUE;
 }
 
-gboolean
-gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
+static gboolean
+gst_amc_format_ml_get_buffer (GstAmcFormat * format, const gchar * key,
     guint8 ** data, gsize * size, GError ** err)
 {
   MLResult result;
@@ -257,8 +251,8 @@ gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
   return TRUE;
 }
 
-gboolean
-gst_amc_format_set_buffer (GstAmcFormat * format, const gchar * key,
+static gboolean
+gst_amc_format_ml_set_buffer (GstAmcFormat * format, const gchar * key,
     guint8 * data, gsize size, GError ** err)
 {
   MLResult result;
@@ -278,3 +272,20 @@ gst_amc_format_set_buffer (GstAmcFormat * format, const gchar * key,
   }
   return TRUE;
 }
+
+GstAmcFormatVTable gst_amc_format_ml_vtable = {
+  .new_audio = gst_amc_format_ml_new_audio,
+  .new_video = gst_amc_format_ml_new_video,
+  .free = gst_amc_format_ml_free,
+
+  .to_string = gst_amc_format_ml_to_string,
+
+  .get_float = gst_amc_format_ml_get_float,
+  .set_float = gst_amc_format_ml_set_float,
+  .get_int = gst_amc_format_ml_get_int,
+  .set_int = gst_amc_format_ml_set_int,
+  .get_string = gst_amc_format_ml_get_string,
+  .set_string = gst_amc_format_ml_set_string,
+  .get_buffer = gst_amc_format_ml_get_buffer,
+  .set_buffer = gst_amc_format_ml_set_buffer,
+};

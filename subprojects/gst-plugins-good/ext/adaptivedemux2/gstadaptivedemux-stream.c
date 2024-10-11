@@ -151,7 +151,7 @@ gst_adaptive_demux2_stream_finalize (GObject * object)
     gst_caps_unref (stream->pending_caps);
 
   gst_clear_tag_list (&stream->pending_tags);
-  g_clear_pointer (&stream->stream_collection, gst_object_unref);
+  gst_clear_object (&stream->stream_collection);
 
   g_mutex_clear (&stream->prepare_lock);
   g_cond_clear (&stream->prepare_cond);
@@ -648,14 +648,14 @@ gst_adaptive_demux2_stream_push_buffer (GstAdaptiveDemux2Stream * stream,
       if (demux->have_group_id)
         gst_event_set_group_id (stream_start, demux->group_id);
     }
+    stream->first_fragment_buffer = FALSE;
+
+    if (stream->discont) {
+      discont = TRUE;
+      stream->discont = FALSE;
+    }
   } else {
     GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
-  }
-  stream->first_fragment_buffer = FALSE;
-
-  if (stream->discont) {
-    discont = TRUE;
-    stream->discont = FALSE;
   }
 
   if (discont) {
@@ -1154,6 +1154,9 @@ gst_adaptive_demux2_stream_create_parser (GstAdaptiveDemux2Stream * stream)
     }
 
     stream->parsebin = gst_element_factory_make ("parsebin", NULL);
+    if (stream->parsebin == NULL) {
+      return FALSE;
+    }
     if (tsdemux_type)
       g_signal_connect (stream->parsebin, "deep-element-added",
           (GCallback) parsebin_deep_element_added_cb, demux);
@@ -1969,6 +1972,9 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
       if (gst_adaptive_demux2_stream_download_fragment (stream) != GST_FLOW_OK) {
         GST_ERROR_OBJECT (demux,
             "Failed to begin fragment download for stream %p", stream);
+        GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
+            (_("Failed to initiate fragment download.")),
+            ("An error happened when getting fragment URL"));
         return FALSE;
       }
       break;
@@ -2223,6 +2229,20 @@ gst_adaptive_demux2_stream_is_selected_locked (GstAdaptiveDemux2Stream * stream)
   for (tmp = stream->tracks; tmp; tmp = tmp->next) {
     GstAdaptiveDemuxTrack *track = tmp->data;
     if (track->selected)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+gboolean
+gst_adaptive_demux2_stream_is_default_locked (GstAdaptiveDemux2Stream * stream)
+{
+  GList *tmp;
+
+  for (tmp = stream->tracks; tmp; tmp = tmp->next) {
+    GstAdaptiveDemuxTrack *track = tmp->data;
+    if (track->flags & GST_STREAM_FLAG_SELECT)
       return TRUE;
   }
 

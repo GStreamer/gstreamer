@@ -73,3 +73,29 @@ gst_va_create_feature_name (GstVaDevice * device,
   if (*rank > 0)
     *rank -= 1;
 }
+
+GstBufferPool *
+gst_va_create_other_pool (GstAllocator * allocator,
+    GstAllocationParams * params, GstCaps * caps, guint size)
+{
+  GstBufferPool *pool = NULL;
+  GstStructure *config;
+
+  if (size == 0) {
+    GstVideoInfo info;
+
+    if (!gst_video_info_from_caps (&info, caps))
+      return NULL;
+    size = GST_VIDEO_INFO_SIZE (&info);
+  }
+
+  pool = gst_video_buffer_pool_new ();
+  config = gst_buffer_pool_get_config (pool);
+
+  gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+  gst_buffer_pool_config_set_allocator (config, allocator, params);
+  if (!gst_buffer_pool_set_config (pool, config))
+    gst_clear_object (&pool);
+
+  return pool;
+}

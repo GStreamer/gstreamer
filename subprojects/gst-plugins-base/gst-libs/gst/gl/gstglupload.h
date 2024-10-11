@@ -119,6 +119,12 @@ GstGLUploadReturn gst_gl_upload_perform_with_buffer (GstGLUpload * upload,
                                                     GstBuffer * buffer,
                                                     GstBuffer ** outbuf_ptr);
 
+GST_GL_API
+GstCaps *     gst_gl_upload_fixate_caps            (GstGLUpload * upload,
+                                                    GstPadDirection direction,
+                                                    GstCaps * caps,
+                                                    GstCaps * othercaps);
+
 G_END_DECLS
 
 #endif /* __GST_GL_UPLOAD_H__ */

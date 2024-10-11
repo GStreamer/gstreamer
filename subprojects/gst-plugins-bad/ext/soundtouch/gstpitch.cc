@@ -31,13 +31,12 @@
 #undef PACKAGE_BUGREPORT
 #undef PACKAGE
 
-#include <soundtouch/SoundTouch.h>
+#include <SoundTouch.h>
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 
 #include "gstpitch.hh"
-#include <math.h>
 
 GST_DEBUG_CATEGORY_STATIC (pitch_debug);
 #define GST_CAT_DEFAULT pitch_debug
@@ -55,7 +54,7 @@ struct _GstPitchPrivate
 enum
 {
   ARG_0,
-  ARG_OUT_RATE,
+  ARG_OUTPUT_RATE,
   ARG_RATE,
   ARG_TEMPO,
   ARG_PITCH
@@ -69,14 +68,14 @@ enum
 #endif
 
 #if defined(SOUNDTOUCH_FLOAT_SAMPLES)
-  #define SUPPORTED_CAPS \
+#define SUPPORTED_CAPS \
     "audio/x-raw, " \
       "format = (string) " GST_AUDIO_NE (F32) ", " \
       "rate = (int) [ 8000, MAX ], " \
       "channels = (int) [ 1, MAX ], " \
       "layout = (string) interleaved"
 #elif defined(SOUNDTOUCH_INTEGER_SAMPLES)
-  #define SUPPORTED_CAPS \
+#define SUPPORTED_CAPS \
     "audio/x-raw, " \
       "format = (string) " GST_AUDIO_NE (S16) ", " \
       "rate = (int) [ 8000, MAX ], " \
@@ -99,6 +98,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (SUPPORTED_CAPS));
 
 static void gst_pitch_dispose (GObject * object);
+static void gst_pitch_finalize (GObject * object);
 static void gst_pitch_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_pitch_get_property (GObject * object,
@@ -120,8 +120,7 @@ static gboolean gst_pitch_src_query (GstPad * pad, GstObject * parent,
 
 #define gst_pitch_parent_class parent_class
 G_DEFINE_TYPE_WITH_PRIVATE (GstPitch, gst_pitch, GST_TYPE_ELEMENT);
-GST_ELEMENT_REGISTER_DEFINE (pitch, "pitch", GST_RANK_NONE,
-    GST_TYPE_PITCH);
+GST_ELEMENT_REGISTER_DEFINE (pitch, "pitch", GST_RANK_NONE, GST_TYPE_PITCH);
 
 static void
 gst_pitch_class_init (GstPitchClass * klass)
@@ -138,6 +137,7 @@ gst_pitch_class_init (GstPitchClass * klass)
   gobject_class->set_property = gst_pitch_set_property;
   gobject_class->get_property = gst_pitch_get_property;
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pitch_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pitch_finalize);
 
   g_object_class_install_property (gobject_class, ARG_PITCH,
       g_param_spec_float ("pitch", "Pitch",
@@ -157,7 +157,7 @@ gst_pitch_class_init (GstPitchClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
               G_PARAM_STATIC_STRINGS)));
 
-  g_object_class_install_property (gobject_class, ARG_OUT_RATE,
+  g_object_class_install_property (gobject_class, ARG_OUTPUT_RATE,
       g_param_spec_float ("output-rate", "Output Rate",
           "Output rate on downstream segment events", 0.1, 10.0, 1.0,
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
@@ -165,8 +165,10 @@ gst_pitch_class_init (GstPitchClass * klass)
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_pitch_change_state);
 
-  gst_element_class_add_static_pad_template (element_class, &gst_pitch_src_template);
-  gst_element_class_add_static_pad_template (element_class, &gst_pitch_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_pitch_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_pitch_sink_template);
 
   gst_element_class_set_static_metadata (element_class, "Pitch controller",
       "Filter/Effect/Audio", "Control the pitch of an audio stream",
@@ -176,7 +178,9 @@ gst_pitch_class_init (GstPitchClass * klass)
 static void
 gst_pitch_init (GstPitch * pitch)
 {
-  pitch->priv = (GstPitchPrivate *) gst_pitch_get_instance_private (pitch);
+  GstPitchPrivate *priv =
+      (GstPitchPrivate *) gst_pitch_get_instance_private (pitch);
+  GST_PITCH_GET_PRIVATE (pitch) = priv;
 
   pitch->sinkpad =
       gst_pad_new_from_static_template (&gst_pitch_sink_template, "sink");
@@ -196,21 +200,21 @@ gst_pitch_init (GstPitch * pitch)
   GST_PAD_SET_PROXY_CAPS (pitch->sinkpad);
   gst_element_add_pad (GST_ELEMENT (pitch), pitch->srcpad);
 
-  pitch->priv->st = new soundtouch::SoundTouch ();
+  priv->st = new soundtouch::SoundTouch ();
 
   pitch->tempo = 1.0;
   pitch->rate = 1.0;
-  pitch->out_seg_rate = 1.0;
-  pitch->seg_arate = 1.0;
+  pitch->output_rate = 1.0;
+  pitch->segment_applied_rate = 1.0;
   pitch->pitch = 1.0;
   pitch->next_buffer_time = GST_CLOCK_TIME_NONE;
   pitch->next_buffer_offset = 0;
 
-  pitch->priv->st->setRate (pitch->rate);
-  pitch->priv->st->setTempo (pitch->tempo * pitch->seg_arate);
-  pitch->priv->st->setPitch (pitch->pitch);
+  priv->st->setRate (pitch->rate);
+  priv->st->setTempo (pitch->tempo * pitch->segment_applied_rate);
+  priv->st->setPitch (pitch->pitch);
 
-  pitch->priv->stream_time_ratio = 1.0;
+  priv->stream_time_ratio = 1.0;
   pitch->min_latency = pitch->max_latency = 0;
 }
 
@@ -219,14 +223,25 @@ static void
 gst_pitch_dispose (GObject * object)
 {
   GstPitch *pitch = GST_PITCH (object);
+  GstPitchPrivate *priv = GST_PITCH_GET_PRIVATE (pitch);
 
-  if (pitch->priv->st) {
-    delete pitch->priv->st;
-
-    pitch->priv->st = NULL;
-  }
+  gst_clear_event (&priv->pending_segment);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_pitch_finalize (GObject * object)
+{
+  GstPitch *pitch = GST_PITCH (object);
+  GstPitchPrivate *priv = GST_PITCH_GET_PRIVATE (pitch);
+
+  if (priv->st) {
+    delete priv->st;
+    priv->st = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -243,38 +258,41 @@ gst_pitch_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstPitch *pitch = GST_PITCH (object);
+  GstPitchPrivate *priv = GST_PITCH_GET_PRIVATE (pitch);
 
-  GST_OBJECT_LOCK (pitch);
   switch (prop_id) {
     case ARG_TEMPO:
+      GST_OBJECT_LOCK (pitch);
       pitch->tempo = g_value_get_float (value);
-      pitch->priv->stream_time_ratio =
-          pitch->tempo * pitch->rate * pitch->seg_arate;
-      pitch->priv->st->setTempo (pitch->tempo * pitch->seg_arate);
+      priv->stream_time_ratio =
+          pitch->tempo * pitch->rate * ABS (pitch->segment_applied_rate);
+      priv->st->setTempo (pitch->tempo * ABS (pitch->segment_applied_rate));
       GST_OBJECT_UNLOCK (pitch);
       gst_pitch_update_duration (pitch);
       break;
     case ARG_RATE:
+      GST_OBJECT_LOCK (pitch);
       pitch->rate = g_value_get_float (value);
-      pitch->priv->stream_time_ratio =
-          pitch->tempo * pitch->rate * pitch->seg_arate;
-      pitch->priv->st->setRate (pitch->rate);
+      priv->stream_time_ratio =
+          pitch->tempo * pitch->rate * ABS (pitch->segment_applied_rate);
+      priv->st->setRate (pitch->rate);
       GST_OBJECT_UNLOCK (pitch);
       gst_pitch_update_duration (pitch);
       break;
-    case ARG_OUT_RATE:
+    case ARG_OUTPUT_RATE:
       /* Has no effect until the next input segment */
-      pitch->out_seg_rate = g_value_get_float (value);
+      GST_OBJECT_LOCK (pitch);
+      pitch->output_rate = g_value_get_float (value);
       GST_OBJECT_UNLOCK (pitch);
       break;
     case ARG_PITCH:
+      GST_OBJECT_LOCK (pitch);
       pitch->pitch = g_value_get_float (value);
-      pitch->priv->st->setPitch (pitch->pitch);
+      priv->st->setPitch (pitch->pitch);
       GST_OBJECT_UNLOCK (pitch);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      GST_OBJECT_UNLOCK (pitch);
       break;
   }
 }
@@ -285,43 +303,47 @@ gst_pitch_get_property (GObject * object, guint prop_id,
 {
   GstPitch *pitch = GST_PITCH (object);
 
-  GST_OBJECT_LOCK (pitch);
   switch (prop_id) {
     case ARG_TEMPO:
+      GST_OBJECT_LOCK (pitch);
       g_value_set_float (value, pitch->tempo);
+      GST_OBJECT_UNLOCK (pitch);
       break;
     case ARG_RATE:
+      GST_OBJECT_LOCK (pitch);
       g_value_set_float (value, pitch->rate);
+      GST_OBJECT_UNLOCK (pitch);
       break;
-    case ARG_OUT_RATE:
-      g_value_set_float (value, pitch->out_seg_rate);
+    case ARG_OUTPUT_RATE:
+      GST_OBJECT_LOCK (pitch);
+      g_value_set_float (value, pitch->output_rate);
+      GST_OBJECT_UNLOCK (pitch);
       break;
     case ARG_PITCH:
+      GST_OBJECT_LOCK (pitch);
       g_value_set_float (value, pitch->pitch);
+      GST_OBJECT_UNLOCK (pitch);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_OBJECT_UNLOCK (pitch);
 }
 
 static gboolean
 gst_pitch_setcaps (GstPitch * pitch, GstCaps * caps)
 {
-  GstPitchPrivate *priv;
-
-  priv = GST_PITCH_GET_PRIVATE (pitch);
-
-  if (!gst_audio_info_from_caps (&pitch->info, caps))
+  GstAudioInfo info;
+  if (!gst_audio_info_from_caps (&info, caps))
     return FALSE;
 
   GST_OBJECT_LOCK (pitch);
+  pitch->info = info;
 
   /* notify the soundtouch instance of this change */
+  GstPitchPrivate *priv = GST_PITCH_GET_PRIVATE (pitch);
   priv->st->setSampleRate (pitch->info.rate);
   priv->st->setChannels (pitch->info.channels);
-
   GST_OBJECT_UNLOCK (pitch);
 
   return TRUE;
@@ -331,19 +353,37 @@ gst_pitch_setcaps (GstPitch * pitch, GstCaps * caps)
 static GstFlowReturn
 gst_pitch_forward_buffer (GstPitch * pitch, GstBuffer * buffer)
 {
-  gint samples;
+  guint64 samples = GST_BUFFER_OFFSET (buffer);
 
-  GST_BUFFER_TIMESTAMP (buffer) = pitch->next_buffer_time;
-  pitch->next_buffer_time += GST_BUFFER_DURATION (buffer);
+  GST_OBJECT_LOCK (pitch);
 
-  samples = GST_BUFFER_OFFSET (buffer);
-  GST_BUFFER_OFFSET (buffer) = pitch->next_buffer_offset;
-  pitch->next_buffer_offset += samples;
-  GST_BUFFER_OFFSET_END (buffer) = pitch->next_buffer_offset;
+  if (pitch->segment_applied_rate >= 0) {
+    GST_BUFFER_PTS (buffer) = pitch->next_buffer_time;
+    pitch->next_buffer_time += GST_BUFFER_DURATION (buffer);
 
-  GST_LOG ("pushing buffer [%" GST_TIME_FORMAT "]-[%" GST_TIME_FORMAT
-      "] (%d samples)", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
-      GST_TIME_ARGS (pitch->next_buffer_time), samples);
+    GST_BUFFER_OFFSET (buffer) = pitch->next_buffer_offset;
+    pitch->next_buffer_offset += samples;
+    GST_BUFFER_OFFSET_END (buffer) = pitch->next_buffer_offset;
+  } else {
+    if (pitch->next_buffer_time > GST_BUFFER_DURATION (buffer))
+      pitch->next_buffer_time -= GST_BUFFER_DURATION (buffer);
+    else
+      pitch->next_buffer_time = 0;
+    GST_BUFFER_PTS (buffer) = pitch->next_buffer_time;
+
+    GST_BUFFER_OFFSET_END (buffer) = pitch->next_buffer_offset;
+    if (pitch->next_buffer_offset > samples)
+      pitch->next_buffer_offset -= samples;
+    else
+      pitch->next_buffer_offset = 0;
+    GST_BUFFER_OFFSET (buffer) = pitch->next_buffer_offset;
+  }
+
+  GST_OBJECT_UNLOCK (pitch);
+
+  GST_LOG ("pushing buffer pts: %" GST_TIME_FORMAT ", duration: %"
+      GST_TIME_FORMAT ", samples: %" G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)), samples);
 
   return gst_pad_push (pitch->srcpad, buffer);
 }
@@ -352,34 +392,58 @@ gst_pitch_forward_buffer (GstPitch * pitch, GstBuffer * buffer)
 static GstBuffer *
 gst_pitch_prepare_buffer (GstPitch * pitch)
 {
-  GstPitchPrivate *priv;
-  guint samples;
-  GstBuffer *buffer;
   GstMapInfo info;
-
-  priv = GST_PITCH_GET_PRIVATE (pitch);
-
+  GstBuffer *buffer = NULL;
   GST_LOG_OBJECT (pitch, "preparing buffer");
 
-  samples = pitch->priv->st->numSamples ();
-  if (samples == 0)
-    return NULL;
+  GST_OBJECT_LOCK (pitch);
+  gboolean reverse_playback = (pitch->segment_applied_rate < 0);
+  gint rate = pitch->info.rate;
+  gint bytes_per_frame = pitch->info.bpf;
 
-  buffer = gst_buffer_new_and_alloc (samples * pitch->info.bpf);
+  GstPitchPrivate *priv = GST_PITCH_GET_PRIVATE (pitch);
+  guint samples = priv->st->numSamples ();
+  if (samples > 0) {
+    buffer = gst_buffer_new_and_alloc (samples * bytes_per_frame);
+    gst_buffer_map (buffer, &info, (GstMapFlags) GST_MAP_READWRITE);
 
-  gst_buffer_map (buffer, &info, (GstMapFlags) GST_MAP_READWRITE);
-  samples = priv->st->receiveSamples ((soundtouch::SAMPLETYPE *) info.data, samples);
-  gst_buffer_unmap (buffer, &info);
+    samples =
+        priv->st->receiveSamples ((soundtouch::SAMPLETYPE *) info.data,
+        samples);
 
-  if (samples <= 0) {
-    gst_buffer_unref (buffer);
-    return NULL;
+    if (samples <= 0) {
+      gst_buffer_unmap (buffer, &info);
+      gst_buffer_unref (buffer);
+      buffer = NULL;
+    }
   }
+  GST_OBJECT_UNLOCK (pitch);
 
-  GST_BUFFER_DURATION (buffer) =
-      gst_util_uint64_scale (samples, GST_SECOND, pitch->info.rate);
-  /* temporary store samples here, to avoid having to recalculate this */
-  GST_BUFFER_OFFSET (buffer) = (gint64) samples;
+  if (buffer) {
+    if (reverse_playback && samples > 1) {
+      // If playing backwards, we need to inverse the order of all received samples
+      guint8 *dest = info.data;
+      guint8 val = 0;
+      guint half_samples = samples >> 1;
+      for (guint i = samples - 1; i >= half_samples; --i) {
+        guint8 *src = info.data + i * bytes_per_frame;
+        if (src == dest)
+          break;
+
+        for (gint j = 0; j < bytes_per_frame; ++j) {
+          val = *dest;
+          *dest++ = *src;
+          *src++ = val;
+        }
+      }
+    }
+    gst_buffer_unmap (buffer, &info);
+
+    GST_BUFFER_DURATION (buffer) =
+        gst_util_uint64_scale (samples, GST_SECOND, rate);
+    /* temporary store samples here, to avoid having to recalculate this */
+    GST_BUFFER_OFFSET (buffer) = (gint64) samples;
+  }
 
   return buffer;
 }
@@ -391,11 +455,14 @@ static GstFlowReturn
 gst_pitch_flush_buffer (GstPitch * pitch, gboolean send)
 {
   GstBuffer *buffer;
+  GstPitchPrivate *priv = GST_PITCH_GET_PRIVATE (pitch);
 
-  if (pitch->priv->st->numUnprocessedSamples() != 0) {
-    GST_DEBUG_OBJECT (pitch, "flushing buffer");
-    pitch->priv->st->flush ();
+  GST_OBJECT_LOCK (pitch);
+  if (priv->st->numUnprocessedSamples () != 0) {
+    GST_DEBUG_OBJECT (pitch, "flushing SoundTouch buffer");
+    priv->st->flush ();
   }
+  GST_OBJECT_UNLOCK (pitch);
 
   if (!send)
     return GST_FLOW_OK;
@@ -429,8 +496,10 @@ gst_pitch_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gfloat stream_time_ratio;
       guint32 seqnum;
 
+      GstPitchPrivate *priv = GST_PITCH_GET_PRIVATE (pitch);
+
       GST_OBJECT_LOCK (pitch);
-      stream_time_ratio = pitch->priv->stream_time_ratio;
+      stream_time_ratio = priv->stream_time_ratio;
       GST_OBJECT_UNLOCK (pitch);
 
       gst_event_parse_seek (event, &rate, &format, &flags,
@@ -551,17 +620,21 @@ gst_pitch_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   GstPitch *pitch;
   gboolean res = FALSE;
   gfloat stream_time_ratio;
-  gint64 next_buffer_offset;
+  guint64 next_buffer_offset;
   GstClockTime next_buffer_time;
+  GstClockTimeDiff min_latency, max_latency;
 
   pitch = GST_PITCH (parent);
+  GstPitchPrivate *priv = GST_PITCH_GET_PRIVATE (pitch);
 
   GST_LOG ("%s query", GST_QUERY_TYPE_NAME (query));
 
   GST_OBJECT_LOCK (pitch);
-  stream_time_ratio = pitch->priv->stream_time_ratio;
+  stream_time_ratio = priv->stream_time_ratio;
   next_buffer_time = pitch->next_buffer_time;
   next_buffer_offset = pitch->next_buffer_offset;
+  min_latency = pitch->min_latency;
+  max_latency = pitch->max_latency;
   GST_OBJECT_UNLOCK (pitch);
 
   switch (GST_QUERY_TYPE (query)) {
@@ -646,12 +719,11 @@ gst_pitch_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
           GST_DEBUG ("Our latency: min %" GST_TIME_FORMAT
               ", max %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (pitch->min_latency),
-              GST_TIME_ARGS (pitch->max_latency));
+              GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
 
-          min += pitch->min_latency;
+          min += min_latency;
           if (max != GST_CLOCK_TIME_NONE)
-            max += pitch->max_latency;
+            max += max_latency;
 
           GST_DEBUG ("Calculated total latency : min %"
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
@@ -680,15 +752,18 @@ static gboolean
 gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
 {
   gint seqnum;
-  gdouble out_seg_rate, our_arate;
+  gdouble output_rate, segment_applied_rate;
   gfloat stream_time_ratio;
   GstSegment seg;
 
   g_return_val_if_fail (event, FALSE);
+  g_return_val_if_fail (*event, FALSE);
+
+  GstPitchPrivate *priv = GST_PITCH_GET_PRIVATE (pitch);
 
   GST_OBJECT_LOCK (pitch);
-  stream_time_ratio = pitch->priv->stream_time_ratio;
-  out_seg_rate = pitch->out_seg_rate;
+  stream_time_ratio = priv->stream_time_ratio;
+  output_rate = pitch->output_rate;
   GST_OBJECT_UNLOCK (pitch);
 
   gst_event_copy_segment (*event, &seg);
@@ -701,17 +776,19 @@ gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
     seg.start = 0;
     seg.stop = -1;
     seg.time = 0;
+    seg.position = 0;
+    seg.duration = -1;
   }
 
   /* Figure out how much of the incoming 'rate' we'll apply ourselves */
-  our_arate = seg.rate / out_seg_rate;
+  segment_applied_rate = seg.rate / output_rate;
   /* update the output rate variables */
-  seg.rate = out_seg_rate;
-  seg.applied_rate *= our_arate;
+  seg.rate = (segment_applied_rate < 0.0) ? -output_rate : output_rate;
+  seg.applied_rate *= ABS (segment_applied_rate);
 
   GST_LOG_OBJECT (pitch->sinkpad, "in segment %" GST_SEGMENT_FORMAT, &seg);
 
-  stream_time_ratio = pitch->tempo * pitch->rate * pitch->seg_arate;
+  stream_time_ratio = pitch->tempo * pitch->rate * ABS (segment_applied_rate);
 
   if (stream_time_ratio == 0) {
     GST_LOG_OBJECT (pitch->sinkpad, "stream_time_ratio is zero");
@@ -720,16 +797,18 @@ gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
 
   /* Update the playback rate */
   GST_OBJECT_LOCK (pitch);
-  pitch->seg_arate = our_arate;
-  pitch->priv->stream_time_ratio = stream_time_ratio;
-  pitch->priv->st->setTempo (pitch->tempo * pitch->seg_arate);
+  pitch->segment_applied_rate = segment_applied_rate;
+  priv->stream_time_ratio = stream_time_ratio;
+  priv->st->setTempo (pitch->tempo * ABS (pitch->segment_applied_rate));
   GST_OBJECT_UNLOCK (pitch);
 
   seg.start = (gint64) (seg.start / stream_time_ratio);
-  seg.position = (gint64) (seg.position / stream_time_ratio);
   if (seg.stop != (guint64) - 1)
     seg.stop = (gint64) (seg.stop / stream_time_ratio);
   seg.time = (gint64) (seg.time / stream_time_ratio);
+  seg.position = (gint64) (seg.position / stream_time_ratio);
+  if (seg.duration != (guint64) - 1)
+    seg.duration = (gint64) (seg.duration / stream_time_ratio);
 
   GST_LOG_OBJECT (pitch->sinkpad, "out segment %" GST_SEGMENT_FORMAT, &seg);
 
@@ -748,32 +827,44 @@ gst_pitch_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GstPitch *pitch;
 
   pitch = GST_PITCH (parent);
+  GstPitchPrivate *priv = GST_PITCH_GET_PRIVATE (pitch);
 
   GST_LOG_OBJECT (pad, "received %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       gst_pitch_flush_buffer (pitch, FALSE);
-      pitch->priv->st->clear ();
+      GST_OBJECT_LOCK (pitch);
+      priv->st->clear ();
       pitch->next_buffer_offset = 0;
       pitch->next_buffer_time = GST_CLOCK_TIME_NONE;
       pitch->min_latency = pitch->max_latency = 0;
+      GST_OBJECT_UNLOCK (pitch);
       break;
     case GST_EVENT_EOS:
       gst_pitch_flush_buffer (pitch, TRUE);
-      pitch->priv->st->clear ();
+      GST_OBJECT_LOCK (pitch);
+      priv->st->clear ();
       pitch->min_latency = pitch->max_latency = 0;
+      GST_OBJECT_UNLOCK (pitch);
       break;
     case GST_EVENT_SEGMENT:
       if (!gst_pitch_process_segment (pitch, &event)) {
         GST_LOG_OBJECT (pad, "not enough data known, stalling segment");
-        if (GST_PITCH_GET_PRIVATE (pitch)->pending_segment)
-          gst_event_unref (GST_PITCH_GET_PRIVATE (pitch)->pending_segment);
-        GST_PITCH_GET_PRIVATE (pitch)->pending_segment = event;
+
+        GST_OBJECT_LOCK (pitch);
+        if (priv->pending_segment)
+          gst_event_unref (priv->pending_segment);
+        priv->pending_segment = event;
+        GST_OBJECT_UNLOCK (pitch);
+
         event = NULL;
       }
-      pitch->priv->st->clear ();
+
+      GST_OBJECT_LOCK (pitch);
+      priv->st->clear ();
       pitch->min_latency = pitch->max_latency = 0;
+      GST_OBJECT_UNLOCK (pitch);
       break;
     case GST_EVENT_CAPS:
     {
@@ -802,23 +893,29 @@ static void
 gst_pitch_update_latency (GstPitch * pitch, GstClockTime timestamp)
 {
   GstClockTimeDiff current_latency, min_latency, max_latency;
+  GstPitchPrivate *priv = GST_PITCH_GET_PRIVATE (pitch);
+  gboolean post_new_latency_message = FALSE;
 
+  GST_OBJECT_LOCK (pitch);
   current_latency =
-      (GstClockTimeDiff) (timestamp / pitch->priv->stream_time_ratio) -
+      (GstClockTimeDiff) (timestamp / priv->stream_time_ratio) -
       pitch->next_buffer_time;
 
-  min_latency = MIN (pitch->min_latency, current_latency);
-  max_latency = MAX (pitch->max_latency, current_latency);
+  min_latency = MIN (pitch->min_latency, ABS (current_latency));
+  max_latency = MAX (pitch->max_latency, ABS (current_latency));
 
   if (pitch->min_latency != min_latency || pitch->max_latency != max_latency) {
     pitch->min_latency = min_latency;
     pitch->max_latency = max_latency;
+    post_new_latency_message = TRUE;
+  }
+  GST_OBJECT_UNLOCK (pitch);
 
+  if (post_new_latency_message) {
     /* FIXME: what about the LATENCY event? It only has
      * one latency value, should it be current, min or max?
      * Should it include upstream latencies?
      */
-
     gst_element_post_message (GST_ELEMENT (pitch),
         gst_message_new_latency (GST_OBJECT (pitch)));
   }
@@ -827,73 +924,96 @@ gst_pitch_update_latency (GstPitch * pitch, GstClockTime timestamp)
 static GstFlowReturn
 gst_pitch_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstPitch *pitch;
-  GstPitchPrivate *priv;
-  GstClockTime timestamp;
-  GstMapInfo info;
+  GstPitch *pitch = GST_PITCH (parent);
+  GstPitchPrivate *priv = GST_PITCH_GET_PRIVATE (pitch);
 
-  pitch = GST_PITCH (parent);
-  priv = GST_PITCH_GET_PRIVATE (pitch);
+  GstClockTime timestamp = GST_BUFFER_PTS (buffer);
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  GST_OBJECT_LOCK (pitch);
 
-  // Remember the first time and corresponding offset
-  if (!GST_CLOCK_TIME_IS_VALID (pitch->next_buffer_time)) {
-    gfloat stream_time_ratio;
-    GstFormat out_format = GST_FORMAT_DEFAULT;
-
-    GST_OBJECT_LOCK (pitch);
-    stream_time_ratio = priv->stream_time_ratio;
-    GST_OBJECT_UNLOCK (pitch);
-
-    pitch->next_buffer_time = timestamp / stream_time_ratio;
-    gst_pitch_convert (pitch, GST_FORMAT_TIME, timestamp, &out_format,
-        &pitch->next_buffer_offset);
-  }
-
-  gst_object_sync_values (GST_OBJECT (pitch), pitch->next_buffer_time);
-
-  /* push the received samples on the soundtouch buffer */
+  gint bytes_per_frame = pitch->info.bpf;
   GST_LOG_OBJECT (pitch, "incoming buffer (%d samples) %" GST_TIME_FORMAT,
-      (gint) (gst_buffer_get_size (buffer) / pitch->info.bpf),
+      (gint) (gst_buffer_get_size (buffer) / bytes_per_frame),
       GST_TIME_ARGS (timestamp));
 
-  if (GST_PITCH_GET_PRIVATE (pitch)->pending_segment) {
-    GstEvent *event =
-        gst_event_copy (GST_PITCH_GET_PRIVATE (pitch)->pending_segment);
-
-    GST_LOG_OBJECT (pitch, "processing stalled segment");
-    if (!gst_pitch_process_segment (pitch, &event)) {
-      gst_buffer_unref (buffer);
-      gst_event_unref (event);
-      return GST_FLOW_ERROR;
-    }
-
-    if (!gst_pad_event_default (pitch->sinkpad, parent, event)) {
-      gst_buffer_unref (buffer);
-      gst_event_unref (event);
-      return GST_FLOW_ERROR;
-    }
-
-    gst_event_unref (GST_PITCH_GET_PRIVATE (pitch)->pending_segment);
-    GST_PITCH_GET_PRIVATE (pitch)->pending_segment = NULL;
+  gboolean reverse_playback = (pitch->segment_applied_rate < 0);
+  if (reverse_playback) {
+    // In reverse playback we need to take the end of the buffer as the
+    // reference timestamp as the output buffer produced by libsoundtouch may
+    // have a duration different from this current input buffer.
+    timestamp += GST_BUFFER_DURATION (buffer);
   }
 
-  gst_buffer_map (buffer, &info, GST_MAP_READ);
-  GST_OBJECT_LOCK (pitch);
-  priv->st->putSamples ((soundtouch::SAMPLETYPE *) info.data, info.size / pitch->info.bpf);
+  gfloat stream_time_ratio = priv->stream_time_ratio;
+  GstClockTime next_buffer_time = pitch->next_buffer_time;
+
+  if (!GST_CLOCK_TIME_IS_VALID (next_buffer_time)) {
+    next_buffer_time = timestamp / stream_time_ratio;
+    pitch->next_buffer_time = next_buffer_time;
+    pitch->next_buffer_offset =
+        gst_util_uint64_scale_int (next_buffer_time, pitch->info.rate,
+        GST_SECOND);
+  }
+
+  GstEvent *pending_segment = priv->pending_segment;
+  priv->pending_segment = NULL;
+
   GST_OBJECT_UNLOCK (pitch);
+
+  gst_object_sync_values (GST_OBJECT (pitch), next_buffer_time);
+
+  /* push the received samples on the soundtouch buffer */
+  if (pending_segment) {
+    GST_LOG_OBJECT (pitch, "processing stalled segment");
+
+    if (!gst_pitch_process_segment (pitch, &pending_segment)) {
+      gst_buffer_unref (buffer);
+      gst_event_unref (pending_segment);
+      return GST_FLOW_ERROR;
+    }
+
+    if (!gst_pad_event_default (pitch->sinkpad, parent, pending_segment)) {
+      gst_buffer_unref (buffer);
+      return GST_FLOW_ERROR;
+    }
+  }
+
+  GstMapInfo info;
+  gst_buffer_map (buffer, &info, GST_MAP_READ);
+  guint8 *data = info.data;
+
+  gboolean free_data = FALSE;
+  if (reverse_playback && (gint) info.size > bytes_per_frame) {
+    // If playing backwards, we need to inverse the order of all samples before
+    // sending them to the libsoundtouch library.
+    data = (guint8 *) g_malloc (info.size);
+    free_data = TRUE;
+
+    guint8 *p = data;
+    for (gint i = info.size - bytes_per_frame; i >= 0; i -= bytes_per_frame) {
+      memcpy (p, info.data + i, bytes_per_frame);
+      p += bytes_per_frame;
+    }
+  }
+
+  GST_OBJECT_LOCK (pitch);
+  priv->st->putSamples ((soundtouch::SAMPLETYPE *) data,
+      info.size / bytes_per_frame);
+  gboolean has_output_samples_available = !priv->st->isEmpty ();
+  GST_OBJECT_UNLOCK (pitch);
+
+  if (free_data)
+    g_free (data);
+
   gst_buffer_unmap (buffer, &info);
   gst_buffer_unref (buffer);
 
   /* Calculate latency */
-
   gst_pitch_update_latency (pitch, timestamp);
-  /* and try to extract some samples from the soundtouch buffer */
-  if (!priv->st->isEmpty ()) {
-    GstBuffer *out_buffer;
 
-    out_buffer = gst_pitch_prepare_buffer (pitch);
+  /* and try to extract some samples from the soundtouch buffer */
+  if (has_output_samples_available) {
+    GstBuffer *out_buffer = gst_pitch_prepare_buffer (pitch);
     if (out_buffer)
       return gst_pitch_forward_buffer (pitch, out_buffer);
   }
@@ -906,17 +1026,16 @@ gst_pitch_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
   GstPitch *pitch = GST_PITCH (element);
+  GstPitchPrivate *priv = GST_PITCH_GET_PRIVATE (pitch);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_OBJECT_LOCK (pitch);
       pitch->next_buffer_time = GST_CLOCK_TIME_NONE;
       pitch->next_buffer_offset = 0;
-      pitch->priv->st->clear ();
+      priv->st->clear ();
       pitch->min_latency = pitch->max_latency = 0;
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      GST_OBJECT_UNLOCK (pitch);
       break;
     default:
       break;
@@ -927,15 +1046,14 @@ gst_pitch_change_state (GstElement * element, GstStateChange transition)
     return ret;
 
   switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (GST_PITCH_GET_PRIVATE (pitch)->pending_segment) {
-        gst_event_unref (GST_PITCH_GET_PRIVATE (pitch)->pending_segment);
-        GST_PITCH_GET_PRIVATE (pitch)->pending_segment = NULL;
+      GST_OBJECT_LOCK (pitch);
+      if (priv->pending_segment) {
+        gst_event_unref (priv->pending_segment);
+        priv->pending_segment = NULL;
       }
+      GST_OBJECT_UNLOCK (pitch);
       break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
     default:
       break;
   }

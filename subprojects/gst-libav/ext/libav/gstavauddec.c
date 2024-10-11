@@ -145,16 +145,6 @@ gst_ffmpegauddec_class_init (GstFFMpegAudDecClass * klass)
 static void
 gst_ffmpegauddec_init (GstFFMpegAudDec * ffmpegdec)
 {
-  GstFFMpegAudDecClass *klass =
-      (GstFFMpegAudDecClass *) G_OBJECT_GET_CLASS (ffmpegdec);
-
-  /* some ffmpeg data */
-  ffmpegdec->context = avcodec_alloc_context3 (klass->in_plugin);
-  ffmpegdec->context->opaque = ffmpegdec;
-  ffmpegdec->opened = FALSE;
-
-  ffmpegdec->frame = av_frame_alloc ();
-
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_AUDIO_DECODER_SINK_PAD (ffmpegdec));
   gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
       (ffmpegdec), TRUE);
@@ -175,60 +165,23 @@ gst_ffmpegauddec_finalize (GObject * object)
 }
 
 /* With LOCK */
-static gboolean
-gst_ffmpegauddec_close (GstFFMpegAudDec * ffmpegdec, gboolean reset)
+static void
+gst_ffmpegauddec_close (GstFFMpegAudDec * ffmpegdec)
 {
-  GstFFMpegAudDecClass *oclass;
-
-  oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
-
   GST_LOG_OBJECT (ffmpegdec, "closing libav codec");
 
   gst_caps_replace (&ffmpegdec->last_caps, NULL);
-
-  gst_ffmpeg_avcodec_close (ffmpegdec->context);
-  ffmpegdec->opened = FALSE;
-
-  av_freep (&ffmpegdec->context->extradata);
-
-  if (reset) {
-    avcodec_free_context (&ffmpegdec->context);
-    ffmpegdec->context = avcodec_alloc_context3 (oclass->in_plugin);
-    if (ffmpegdec->context == NULL) {
-      GST_DEBUG_OBJECT (ffmpegdec, "Failed to set context defaults");
-      return FALSE;
-    }
-    ffmpegdec->context->opaque = ffmpegdec;
-  }
-
-  return TRUE;
+  avcodec_free_context (&ffmpegdec->context);
 }
 
 static gboolean
 gst_ffmpegauddec_start (GstAudioDecoder * decoder)
 {
   GstFFMpegAudDec *ffmpegdec = (GstFFMpegAudDec *) decoder;
-  GstFFMpegAudDecClass *oclass;
-
-  oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   GST_OBJECT_LOCK (ffmpegdec);
+  ffmpegdec->frame = av_frame_alloc ();
   avcodec_free_context (&ffmpegdec->context);
-  ffmpegdec->context = avcodec_alloc_context3 (oclass->in_plugin);
-  if (ffmpegdec->context == NULL) {
-    GST_DEBUG_OBJECT (ffmpegdec, "Failed to set context defaults");
-    GST_OBJECT_UNLOCK (ffmpegdec);
-    return FALSE;
-  }
-  ffmpegdec->context->opaque = ffmpegdec;
-
-  /* FIXME: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1474 */
-  if ((oclass->in_plugin->capabilities & AV_CODEC_CAP_DELAY) != 0
-      && (oclass->in_plugin->id == AV_CODEC_ID_WMAV1
-          || oclass->in_plugin->id == AV_CODEC_ID_WMAV2)) {
-    ffmpegdec->context->flags2 |= AV_CODEC_FLAG2_SKIP_MANUAL;
-  }
-
   GST_OBJECT_UNLOCK (ffmpegdec);
 
   return TRUE;
@@ -240,8 +193,9 @@ gst_ffmpegauddec_stop (GstAudioDecoder * decoder)
   GstFFMpegAudDec *ffmpegdec = (GstFFMpegAudDec *) decoder;
 
   GST_OBJECT_LOCK (ffmpegdec);
-  gst_ffmpegauddec_close (ffmpegdec, FALSE);
+  av_frame_free (&ffmpegdec->frame);
   g_free (ffmpegdec->padded);
+  gst_ffmpegauddec_close (ffmpegdec);
   ffmpegdec->padded = NULL;
   ffmpegdec->padded_size = 0;
   GST_OBJECT_UNLOCK (ffmpegdec);
@@ -262,8 +216,6 @@ gst_ffmpegauddec_open (GstFFMpegAudDec * ffmpegdec)
   if (gst_ffmpeg_avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0)
     goto could_not_open;
 
-  ffmpegdec->opened = TRUE;
-
   GST_LOG_OBJECT (ffmpegdec, "Opened libav codec %s, id %d",
       oclass->in_plugin->name, oclass->in_plugin->id);
 
@@ -274,7 +226,7 @@ gst_ffmpegauddec_open (GstFFMpegAudDec * ffmpegdec)
   /* ERRORS */
 could_not_open:
   {
-    gst_ffmpegauddec_close (ffmpegdec, TRUE);
+    gst_ffmpegauddec_close (ffmpegdec);
     GST_DEBUG_OBJECT (ffmpegdec, "avdec_%s: Failed to open libav codec",
         oclass->in_plugin->name);
     return FALSE;
@@ -321,14 +273,26 @@ gst_ffmpegauddec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   gst_caps_replace (&ffmpegdec->last_caps, caps);
 
   /* close old session */
-  if (ffmpegdec->opened) {
+  if (ffmpegdec->context) {
     GST_OBJECT_UNLOCK (ffmpegdec);
     gst_ffmpegauddec_drain (ffmpegdec, FALSE);
     GST_OBJECT_LOCK (ffmpegdec);
-    if (!gst_ffmpegauddec_close (ffmpegdec, TRUE)) {
-      GST_OBJECT_UNLOCK (ffmpegdec);
-      return FALSE;
-    }
+    gst_ffmpegauddec_close (ffmpegdec);
+  }
+
+  ffmpegdec->context = avcodec_alloc_context3 (oclass->in_plugin);
+  if (ffmpegdec->context == NULL) {
+    GST_DEBUG_OBJECT (ffmpegdec, "Failed to allocate context");
+    GST_OBJECT_UNLOCK (ffmpegdec);
+    return FALSE;
+  }
+  ffmpegdec->context->opaque = ffmpegdec;
+
+  /* FIXME: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1474 */
+  if ((oclass->in_plugin->capabilities & AV_CODEC_CAP_DELAY) != 0
+      && (oclass->in_plugin->id == AV_CODEC_ID_WMAV1
+          || oclass->in_plugin->id == AV_CODEC_ID_WMAV2)) {
+    ffmpegdec->context->flags2 |= AV_CODEC_FLAG2_SKIP_MANUAL;
   }
 
   /* get size and so */
@@ -364,10 +328,14 @@ settings_changed (GstFFMpegAudDec * ffmpegdec, AVFrame * frame)
 {
   GstAudioFormat format;
   GstAudioLayout layout;
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+  const gint channels = frame->ch_layout.nb_channels;
+#else
   gint channels = av_get_channel_layout_nb_channels (frame->channel_layout);
 
   if (channels == 0)
     channels = frame->channels;
+#endif
 
   format = gst_ffmpeg_smpfmt_to_audioformat (frame->format, &layout);
   if (format == GST_AUDIO_FORMAT_UNKNOWN)
@@ -394,9 +362,13 @@ gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec,
   format = gst_ffmpeg_smpfmt_to_audioformat (frame->format, &layout);
   if (format == GST_AUDIO_FORMAT_UNKNOWN)
     goto no_caps;
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+  channels = frame->ch_layout.nb_channels;
+#else
   channels = av_get_channel_layout_nb_channels (frame->channel_layout);
   if (channels == 0)
     channels = frame->channels;
+#endif
   if (channels == 0)
     goto no_caps;
 
@@ -412,7 +384,11 @@ gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec,
       frame->sample_rate, channels, format,
       layout == GST_AUDIO_LAYOUT_INTERLEAVED);
 
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+  gst_ffmpeg_channel_layout_to_gst (&frame->ch_layout, channels, pos);
+#else
   gst_ffmpeg_channel_layout_to_gst (frame->channel_layout, channels, pos);
+#endif
   memcpy (ffmpegdec->ffmpeg_layout, pos,
       sizeof (GstAudioChannelPosition) * channels);
 
@@ -574,11 +550,15 @@ gst_ffmpegauddec_frame (GstFFMpegAudDec * ffmpegdec, GstFlowReturn * ret,
   GstBuffer *outbuf = NULL;
   gboolean got_frame = FALSE;
 
-  if (G_UNLIKELY (ffmpegdec->context->codec == NULL))
+  if (G_UNLIKELY (!ffmpegdec->context))
     goto no_codec;
 
   *ret = GST_FLOW_OK;
+#if LIBAVCODEC_VERSION_MAJOR >= 60
+  ffmpegdec->context->frame_num++;
+#else
   ffmpegdec->context->frame_number++;
+#endif
 
   oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
@@ -613,6 +593,9 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec, gboolean force)
   gboolean got_any_frames = FALSE;
   gboolean need_more_data = FALSE;
   gboolean got_frame;
+
+  if (!ffmpegdec->context)
+    return GST_FLOW_OK;
 
   if (avcodec_send_packet (ffmpegdec->context, NULL))
     goto send_packet_failed;
@@ -656,7 +639,7 @@ gst_ffmpegauddec_flush (GstAudioDecoder * decoder, gboolean hard)
 {
   GstFFMpegAudDec *ffmpegdec = (GstFFMpegAudDec *) decoder;
 
-  if (ffmpegdec->opened) {
+  if (ffmpegdec->context) {
     avcodec_flush_buffers (ffmpegdec->context);
   }
 }
@@ -681,7 +664,7 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
 
   ffmpegdec = (GstFFMpegAudDec *) decoder;
 
-  if (G_UNLIKELY (!ffmpegdec->opened))
+  if (G_UNLIKELY (!ffmpegdec->context))
     goto not_negotiated;
 
   if (inbuf == NULL) {
@@ -881,6 +864,11 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
       continue;
     }
 
+    /* Skip formats we don't handle */
+    if (!gst_ffmpeg_codecid_is_known (in_plugin->id)) {
+      continue;
+    }
+
     /* no quasi codecs, please */
     if (in_plugin->id == AV_CODEC_ID_PCM_S16LE_PLANAR ||
         (in_plugin->id >= AV_CODEC_ID_PCM_S16LE &&
@@ -943,6 +931,8 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
       case AV_CODEC_ID_RA_288:
       case AV_CODEC_ID_COOK:
       case AV_CODEC_ID_AAC:
+      case AV_CODEC_ID_MUSEPACK7:
+      case AV_CODEC_ID_MUSEPACK8:
         rank = GST_RANK_PRIMARY;
         break;
         /* SIPR: decoder should have a higher rank than realaudiodec.

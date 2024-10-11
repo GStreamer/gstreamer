@@ -99,6 +99,7 @@ struct _GstQueue {
 
   /* position of src/sink */
   GstClockTimeDiff sinktime, srctime;
+  GstClockTimeDiff sink_start_time;
   /* TRUE if either position needs to be recalculated */
   gboolean sink_tainted, src_tainted;
 
@@ -108,7 +109,7 @@ struct _GstQueue {
   gboolean      eos;
 
   /* the queue of data we're keeping our grubby hands on */
-  GstQueueArray *queue;
+  GstVecDeque *queue;
 
   GstQueueSize
     cur_level,          /* currently in the queue */

@@ -556,13 +556,12 @@ gst_rtp_vp8_create_header_buffer (GstRtpVP8Pay * self, guint8 partid,
       gboolean use_temporal_scaling = FALSE;
 
       if (meta) {
-        GstStructure *s = gst_custom_meta_get_structure (meta);
-        gst_structure_get_boolean (s, "use-temporal-scaling",
+        gst_structure_get_boolean (meta->structure, "use-temporal-scaling",
             &use_temporal_scaling);
 
         if (use_temporal_scaling)
-          gst_structure_get (s, "layer-id", G_TYPE_UINT, &temporal_layer,
-              "layer-sync", G_TYPE_BOOLEAN, &layer_sync, NULL);
+          gst_structure_get (meta->structure, "layer-id", G_TYPE_UINT,
+              &temporal_layer, "layer-sync", G_TYPE_BOOLEAN, &layer_sync, NULL);
       }
 
       /* FIXME: Support a prediction structure where higher layers don't
@@ -611,7 +610,7 @@ gst_rtp_vp8_drop_vp8_meta (gpointer element, GstBuffer * buf)
 static guint
 gst_rtp_vp8_payload_next (GstRtpVP8Pay * self, GstBufferList * list,
     guint offset, GstBuffer * buffer, gsize buffer_size, gsize max_payload_len,
-    GstCustomMeta * meta)
+    GstCustomMeta * meta, gboolean delta_unit)
 {
   guint partition;
   GstBuffer *header;
@@ -627,7 +626,7 @@ gst_rtp_vp8_payload_next (GstRtpVP8Pay * self, GstBufferList * list,
   if (available > remaining)
     available = remaining;
 
-  if (meta) {
+  if (self->temporal_scalability_fields_present && meta) {
     /* If meta is present, then we have no partition offset information,
      * so always emit PID 0 and set the start bit for the first packet
      * of a frame only (c.f. RFC7741 $4.4)
@@ -651,6 +650,9 @@ gst_rtp_vp8_payload_next (GstRtpVP8Pay * self, GstBufferList * list,
 
   out = gst_buffer_append (header, sub);
 
+  if (delta_unit)
+    GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DELTA_UNIT);
+
   gst_buffer_list_insert (list, -1, out);
 
   return available;
@@ -666,9 +668,12 @@ gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   GstCustomMeta *meta;
   gsize size, max_paylen;
   guint offset, mtu, vp8_hdr_len;
+  gboolean delta_unit;
 
   size = gst_buffer_get_size (buffer);
   meta = gst_buffer_get_custom_meta (buffer, "GstVP8Meta");
+  delta_unit = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
   if (G_UNLIKELY (!gst_rtp_vp8_pay_parse_frame (self, buffer, size))) {
     GST_ELEMENT_ERROR (self, STREAM, ENCODE, (NULL),
         ("Failed to parse VP8 frame"));
@@ -676,13 +681,12 @@ gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   }
 
   if (meta) {
-    GstStructure *s = gst_custom_meta_get_structure (meta);
     gboolean use_temporal_scaling;
     /* For interop it's most likely better to keep the temporal scalability
      * fields present if the stream previously had them present. Alternating
      * whether these fields are present or not may confuse the receiver. */
 
-    gst_structure_get_boolean (s, "use-temporal-scaling",
+    gst_structure_get_boolean (meta->structure, "use-temporal-scaling",
         &use_temporal_scaling);
     if (use_temporal_scaling)
       self->temporal_scalability_fields_present = TRUE;
@@ -699,7 +703,11 @@ gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   while (offset < size) {
     offset +=
         gst_rtp_vp8_payload_next (self, list, offset, buffer, size,
-        max_paylen, meta);
+        max_paylen, meta, delta_unit);
+
+    /* only the first outgoing packet should not have the DELTA_UNIT flag */
+    if (!delta_unit)
+      delta_unit = TRUE;
   }
 
   ret = gst_rtp_base_payload_push_list (payload, list);

@@ -328,7 +328,7 @@ main (int argc, char *argv[])
   guint deinterlace_flags = 0;
   guint filter_flags = 0;
   guint surface_flags = 0;
-  gdouble denoise_level, sharpen_level;
+  gdouble denoise_level = 0, sharpen_level = 0;
   GError *error = NULL;
 
   static const guint src_width = 320;

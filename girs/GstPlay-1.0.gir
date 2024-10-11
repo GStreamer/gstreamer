@@ -306,13 +306,49 @@ and/or use gtk-doc annotations.  -->
       </parameters>
     </function-macro>
     <class name="Play" c:symbol-prefix="play" c:type="GstPlay" version="1.20" parent="Gst.Object" glib:type-name="GstPlay" glib:get-type="gst_play_get_type" glib:type-struct="PlayClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The goal of the GstPlay library is to ease the integration of multimedia
+playback features in applications. Thus, if you need to build a media player
+from the ground-up, GstPlay provides the features you will most likely need.
+
+An example player is available in gst-examples/playback/player/gst-play/.
+
+Internally the GstPlay makes use of the `playbin3` element. The legacy
+`playbin2` can be selected if the `GST_PLAY_USE_PLAYBIN3=0` environment
+variable has been set.
+
+**Important note**: If your application relies on the GstBus to get
+notifications from GstPlay, you need to add some explicit clean-up code in
+order to prevent the GstPlay object from leaking. See below for the details.
+If you use the GstPlaySignalAdapter, no special clean-up is required.
+
+When the GstPlaySignalAdapter is not used, the GstBus owned by GstPlay should
+be set to flushing state before any attempt to drop the last reference of the
+GstPlay object. An example in C:
+
+```c
+...
+GstBus *bus = gst_play_get_message_bus (player);
+gst_bus_set_flushing (bus, TRUE);
+gst_object_unref (bus);
+gst_object_unref (player);
+```
+
+The messages managed by the player contain a reference to itself, and if the
+bus watch is just removed together with dropping the player then the bus will
+simply keep them around forever (and the bus never goes away because the
+player has a strong reference to it, so there's a reference cycle as long as
+there are messages). Setting the bus to flushing state forces it to get rid
+of its queued messages, thus breaking any possible reference cycle.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-types.h"/>
       <constructor name="new" c:identifier="gst_play_new" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Creates a new #GstPlay instance.
 
 Video is going to be rendered by @video_renderer, or if %NULL is provided
 no special video set up will be done and some default handling will be
-performed.</doc>
+performed.
+
+This also initializes GStreamer via `gst_init()` on the first call if this
+didn't happen before.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a new #GstPlay instance</doc>
@@ -325,6 +361,20 @@ performed.</doc>
           </parameter>
         </parameters>
       </constructor>
+      <function name="config_get_pipeline_dump_in_error_details" c:identifier="gst_play_config_get_pipeline_dump_in_error_details" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE if pipeline dumps are included in #GstPlay error message
+details.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlay configuration</doc>
+            <type name="Gst.Structure" c:type="const GstStructure*"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="config_get_position_update_interval" c:identifier="gst_play_config_get_position_update_interval" version="1.20">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
         <return-value transfer-ownership="none">
@@ -366,9 +416,30 @@ gst_play_config_set_user_agent() if any.</doc>
           </parameter>
         </parameters>
       </function>
+      <function name="config_set_pipeline_dump_in_error_details" c:identifier="gst_play_config_set_pipeline_dump_in_error_details" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">When enabled, the error message emitted by #GstPlay will include a pipeline
+dump (in Graphviz DOT format) in the error details #GstStructure. The field
+name is `pipeline-dump`.
+
+This option is disabled by default.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlay configuration</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Include pipeline dumps in error details, or not.</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="config_set_position_update_interval" c:identifier="gst_play_config_set_position_update_interval" version="1.20">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">set desired interval in milliseconds between two position-updated messages.
-pass 0 to stop updating the position.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Set desired interval in milliseconds between two position-updated messages.
+Pass 0 to stop updating the position.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -479,7 +550,7 @@ matching #GstPlayVideoInfo.</doc>
       <function name="is_play_message" c:identifier="gst_play_is_play_message" version="1.20">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #gboolean indicating wheter the passes message represents a #GstPlay message or not.</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #gboolean indicating whether the passed message represents a #GstPlay message or not.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -767,7 +838,7 @@ currently-playing stream.</doc>
         </parameters>
       </method>
       <method name="get_subtitle_uri" c:identifier="gst_play_get_subtitle_uri" version="1.20">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">current subtitle URI</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Current subtitle URI</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">URI of the current external subtitle.
@@ -812,7 +883,7 @@ currently-playing stream. g_free() after usage.</doc>
       </method>
       <method name="get_video_snapshot" c:identifier="gst_play_get_video_snapshot" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Get a snapshot of the currently selected video stream, if any. The format can be
-selected with @format and optional configuration is possible with @config
+selected with @format and optional configuration is possible with @config.
 Currently supported settings are:
 - width, height of type G_TYPE_INT
 - pixel-aspect-ratio of type GST_TYPE_FRACTION
@@ -987,7 +1058,7 @@ value.</doc>
       </method>
       <method name="set_config" c:identifier="gst_play_set_config" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Set the configuration of the play. If the play is already configured, and
-the configuration haven't change, this function will return %TRUE. If the
+the configuration hasn't changed, this function will return %TRUE. If the
 play is not in the GST_PLAY_STATE_STOPPED, this method will return %FALSE
 and active configuration will remain.
 
@@ -1209,7 +1280,7 @@ Sets the video track @stream_index.</doc>
       <method name="set_visualization" c:identifier="gst_play_set_visualization" version="1.20">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE if the visualizations was set correctly. Otherwise,
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE if the visualization was set correctly. Otherwise,
 %FALSE.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>

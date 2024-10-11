@@ -971,7 +971,7 @@ mfxStatus MFX_CDECL MFXVideoVPP_RunFrameVPPAsync(mfxSession session, mfxFrameSur
    @return
    MFX_ERR_NONE The output frame is ready after synchronization. \n
    MFX_ERR_MORE_DATA Need more input frames before VPP can produce an output. \n
-   MFX_ERR_MEMORY_ALLOC The function failed to allocate output videoframe. \n
+   MFX_ERR_MEMORY_ALLOC The function failed to allocate output video frame. \n
 
    MFX_ERR_DEVICE_LOST  Hardware device was lost.
    \verbatim embed:rst
@@ -991,7 +991,7 @@ mfxStatus MFX_CDECL MFXVideoVPP_ProcessFrameAsync(mfxSession session, mfxFrameSu
    but application has to provide array of pointers to mfxVideoChannelParam and num_channel_param - number of channels. Application is responsible for    
    memory allocation for mfxVideoChannelParam parameters and for each channel it should specify channel IDs:    
    mfxVideoChannelParam::mfxFrameInfo::ChannelId. ChannelId should be unique value within one session. ChannelID equals to the 0
-   is reserved for the orginal decoded frame.
+   is reserved for the original decoded frame.
    The application can attach mfxExtInCrops to mfxVideoChannelParam::ExtParam to annotate input video frame if it wants to enable 
    letterboxing operation.
    @param[in] session SDK session handle.

@@ -20,7 +20,9 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include "gstframepositioner.h"
+#include "ges-frame-composition-meta.h"
 #include "ges-types.h"
 #include "ges-internal.h"
 #include "ges-smart-video-mixer.h"
@@ -37,6 +39,11 @@ struct _GESSmartMixerPad
 
   gdouble alpha;
   GstSegment segment;
+
+  GParamSpec *width_pspec;
+  GParamSpec *height_pspec;
+  GParamSpec *xpos_pspec;
+  GParamSpec *ypos_pspec;
 };
 
 struct _GESSmartMixerPadClass
@@ -51,6 +58,18 @@ enum
 };
 
 G_DEFINE_TYPE (GESSmartMixerPad, ges_smart_mixer_pad, GST_TYPE_GHOST_PAD);
+
+static void
+ges_smart_mixer_notify_wrapped_pad (GESSmartMixerPad * self,
+    GstPad * real_mixer_pad)
+{
+  GObjectClass *klass = G_OBJECT_GET_CLASS (real_mixer_pad);
+
+  self->width_pspec = g_object_class_find_property (klass, "width");
+  self->height_pspec = g_object_class_find_property (klass, "height");
+  self->xpos_pspec = g_object_class_find_property (klass, "xpos");
+  self->ypos_pspec = g_object_class_find_property (klass, "ypos");
+}
 
 static void
 ges_smart_mixer_pad_get_property (GObject * object, guint prop_id,
@@ -204,19 +223,19 @@ ges_smart_mixer_get_mixer_pad (GESSmartMixer * self, GstPad ** mixerpad)
 }
 
 static void
-set_pad_properties_from_positioner_meta (GstPad * mixer_pad, GstSample * sample,
-    GESSmartMixerPad * ghost)
+set_pad_properties_from_composition_meta (GstPad * mixer_pad,
+    GstSample * sample, GESSmartMixerPad * ghost)
 {
-  GstFramePositionerMeta *meta;
+  GESFrameCompositionMeta *meta;
   GstBuffer *buf = gst_sample_get_buffer (sample);
   GESSmartMixer *self = GES_SMART_MIXER (GST_OBJECT_PARENT (ghost));
 
   meta =
-      (GstFramePositionerMeta *) gst_buffer_get_meta (buf,
-      gst_frame_positioner_meta_api_get_type ());
+      (GESFrameCompositionMeta *) gst_buffer_get_meta (buf,
+      GES_TYPE_META_FRAME_COMPOSITION);
 
   if (!meta) {
-    GST_WARNING ("The current source should use a framepositioner");
+    GST_WARNING ("The current source should use a framecomposition");
     return;
   }
 
@@ -239,8 +258,35 @@ set_pad_properties_from_positioner_meta (GstPad * mixer_pad, GstSample * sample,
     g_object_set (mixer_pad, "alpha", meta->alpha * transalpha, NULL);
   }
 
-  g_object_set (mixer_pad, "xpos", meta->posx, "ypos",
-      meta->posy, "width", meta->width, "height", meta->height, NULL);
+  if (G_PARAM_SPEC_VALUE_TYPE (ghost->xpos_pspec) == G_TYPE_INT) {
+    g_object_set (mixer_pad, "xpos", (gint) round (meta->posx), "ypos",
+        (gint) round (meta->posy), NULL);
+  } else if (G_PARAM_SPEC_VALUE_TYPE (ghost->xpos_pspec) == G_TYPE_FLOAT) {
+    g_object_set (mixer_pad, "xpos", (gfloat) meta->posx, "ypos",
+        (gfloat) meta->posy, NULL);
+  } else {
+    g_object_set (mixer_pad, "xpos", meta->posx, "ypos", meta->posy, NULL);
+  }
+
+  if (meta->width >= 0) {
+    if (G_PARAM_SPEC_VALUE_TYPE (ghost->width_pspec) == G_TYPE_INT) {
+      g_object_set (mixer_pad, "width", (gint) round (meta->width), NULL);
+    } else if (G_PARAM_SPEC_VALUE_TYPE (ghost->width_pspec) == G_TYPE_FLOAT) {
+      g_object_set (mixer_pad, "width", (gfloat) meta->width, NULL);
+    } else {
+      g_object_set (mixer_pad, "width", meta->width, NULL);
+    }
+  }
+
+  if (meta->height >= 0) {
+    if (G_PARAM_SPEC_VALUE_TYPE (ghost->height_pspec) == G_TYPE_INT) {
+      g_object_set (mixer_pad, "height", (gint) round (meta->height), NULL);
+    } else if (G_PARAM_SPEC_VALUE_TYPE (ghost->height_pspec) == G_TYPE_FLOAT) {
+      g_object_set (mixer_pad, "height", (gfloat) meta->height, NULL);
+    } else {
+      g_object_set (mixer_pad, "height", meta->height, NULL);
+    }
+  }
 
   if (self->ABI.abi.has_operator)
     g_object_set (mixer_pad, "operator", meta->operator, NULL);
@@ -288,6 +334,8 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
       "direction", GST_PAD_DIRECTION (infos->mixer_pad), NULL);
   infos->ghostpad = ghost;
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (ghost), infos->mixer_pad);
+  ges_smart_mixer_notify_wrapped_pad (GES_SMART_MIXER_PAD (ghost),
+      infos->real_mixer_pad);
   gst_pad_set_active (ghost, TRUE);
   if (!gst_element_add_pad (GST_ELEMENT (self), ghost))
     goto could_not_add;
@@ -373,7 +421,7 @@ compositor_sync_properties_with_meta (GstElement * compositor,
       GST_AGGREGATOR_PAD (sinkpad));
 
   if (sample) {
-    set_pad_properties_from_positioner_meta (sinkpad,
+    set_pad_properties_from_composition_meta (sinkpad,
         sample, GES_SMART_MIXER_PAD (info->ghostpad));
     gst_sample_unref (sample);
   } else {

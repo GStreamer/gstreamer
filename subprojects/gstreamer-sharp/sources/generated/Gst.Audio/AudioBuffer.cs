@@ -55,19 +55,6 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_buffer_map(IntPtr raw, IntPtr info, IntPtr gstbuffer, int flags);
-
-		public bool Map(Gst.Audio.AudioInfo info, Gst.Buffer gstbuffer, Gst.MapFlags flags) {
-			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
-			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			bool raw_ret = gst_audio_buffer_map(this_as_native, info == null ? IntPtr.Zero : info.Handle, gstbuffer == null ? IntPtr.Zero : gstbuffer.Handle, (int) flags);
-			bool ret = raw_ret;
-			ReadNative (this_as_native, ref this);
-			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
-			return ret;
-		}
-
-		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_buffer_unmap(IntPtr raw);
 
 		public void Unmap() {
@@ -91,16 +78,27 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_buffer_reorder_channels(IntPtr buffer, int format, int channels, int[] from, int[] to);
+		static extern bool gst_audio_buffer_map(IntPtr buffer, IntPtr info, IntPtr gstbuffer, int flags);
 
-		public static bool ReorderChannels(Gst.Buffer buffer, Gst.Audio.AudioFormat format, int channels, Gst.Audio.AudioChannelPosition[] from, Gst.Audio.AudioChannelPosition[] to) {
-			int cnt_from = from == null ? 0 : from.Length;
-			int[] native_from = new int [cnt_from];
-			for (int i = 0; i < cnt_from; i++)
+		public static bool Map(out Gst.Audio.AudioBuffer buffer, Gst.Audio.AudioInfo info, Gst.Buffer gstbuffer, Gst.MapFlags flags) {
+			IntPtr native_buffer = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Audio.AudioBuffer)));
+			bool raw_ret = gst_audio_buffer_map(native_buffer, info == null ? IntPtr.Zero : info.Handle, gstbuffer == null ? IntPtr.Zero : gstbuffer.Handle, (int) flags);
+			bool ret = raw_ret;
+			buffer = Gst.Audio.AudioBuffer.New (native_buffer);
+			Marshal.FreeHGlobal (native_buffer);
+			return ret;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_audio_buffer_reorder_channels(IntPtr buffer, int format, int channels, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]int[] from, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]int[] to);
+
+		public static bool ReorderChannels(Gst.Buffer buffer, Gst.Audio.AudioFormat format, Gst.Audio.AudioChannelPosition[] from, Gst.Audio.AudioChannelPosition[] to) {
+			int channels = (from == null ? 0 : from.Length);
+			int[] native_from = new int [channels];
+			for (int i = 0; i < channels; i++)
 				native_from [i] = (int) from[i];
-			int cnt_to = to == null ? 0 : to.Length;
-			int[] native_to = new int [cnt_to];
-			for (int i = 0; i < cnt_to; i++)
+			int[] native_to = new int [channels];
+			for (int i = 0; i < channels; i++)
 				native_to [i] = (int) to[i];
 			bool raw_ret = gst_audio_buffer_reorder_channels(buffer == null ? IntPtr.Zero : buffer.Handle, (int) format, channels, native_from, native_to);
 			bool ret = raw_ret;

@@ -416,7 +416,7 @@ _cleanup_fields (const Property * field_names, GstStructure * structure,
       exists = TRUE;
 
       if (gst_structure_has_field (structure, field_names[i].long_name)) {
-        gchar *str_info = gst_structure_serialize (structure, 0);
+        gchar *str_info = gst_structure_serialize_full (structure, 0);
 
         *error =
             g_error_new (GES_ERROR, 0,
@@ -1134,6 +1134,9 @@ ges_command_line_formatter_get_timeline_uri (GESTimeline * timeline)
         g_string_append (res, " +clip ");
 
         _sanitize_argument (ges_uri_clip_get_uri (GES_URI_CLIP (clip)), res);
+        option = &options[CLIP];
+      } else if (GES_IS_TRANSITION_CLIP (clip)) {
+        g_string_append (res, " +transition");
         option = &options[CLIP];
       } else {
         g_warning ("Unhandled clip type: %s", G_OBJECT_TYPE_NAME (clip));

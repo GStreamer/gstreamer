@@ -28,7 +28,6 @@
 #include <functional>
 #include <vector>
 #include <mutex>
-#include <iasiodrv.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_asio_object_debug);
 #define GST_CAT_DEFAULT gst_asio_object_debug
@@ -43,6 +42,38 @@ std::mutex global_lock;
 /* Protect callback slots */
 std::mutex slot_lock;
 /* *INDENT-ON* */
+
+/* ASIO COM interface */
+struct IASIO : public IUnknown
+{
+  virtual ASIOBool init (gpointer sysHandle) = 0;
+  virtual void getDriverName (gchar *name) = 0;
+  virtual glong getDriverVersion () = 0;
+  virtual void getErrorMessage (gchar * string) = 0;
+  virtual ASIOError start () = 0;
+  virtual ASIOError stop () = 0;
+  virtual ASIOError getChannels (glong * numInputChannels,
+      glong * numOutputChannels) = 0;
+  virtual ASIOError getLatencies (glong * inputLatency,
+      glong * outputLatency) = 0;
+  virtual ASIOError getBufferSize (glong *minSize, glong *maxSize,
+      glong * preferredSize, glong *granularity) = 0;
+  virtual ASIOError canSampleRate (ASIOSampleRate sampleRate) = 0;
+  virtual ASIOError getSampleRate (ASIOSampleRate * sampleRate) = 0;
+  virtual ASIOError setSampleRate (ASIOSampleRate sampleRate) = 0;
+  virtual ASIOError getClockSources (ASIOClockSource *clocks,
+      glong *numSources) = 0;
+  virtual ASIOError setClockSource (glong reference) = 0;
+  virtual ASIOError getSamplePosition (ASIOSamples * sPos,
+      ASIOTimeStamp *tStamp) = 0;
+  virtual ASIOError getChannelInfo (ASIOChannelInfo * info) = 0;
+  virtual ASIOError createBuffers (ASIOBufferInfo * bufferInfos,
+      glong numChannels, glong bufferSize, ASIOCallbacks * callbacks) = 0;
+  virtual ASIOError disposeBuffers () = 0;
+  virtual ASIOError controlPanel () = 0;
+  virtual ASIOError future (glong selector,gpointer opt) = 0;
+  virtual ASIOError outputReady () = 0;
+};
 
 static void gst_asio_object_buffer_switch (GstAsioObject * self,
     glong index, ASIOBool process_now);
@@ -734,7 +765,7 @@ gst_asio_object_thread_func (GstAsioObject * self)
     }
 
     self->output_channel_requested =
-        g_new0 (gboolean, self->max_num_input_channels);
+        g_new0 (gboolean, self->max_num_output_channels);
   }
 
   asio_rst = asio_handle->getSampleRate (&self->sample_rate);
@@ -928,7 +959,7 @@ gst_asio_object_get_caps (GstAsioObject * obj, GstAsioDeviceClassType type,
 
     /* max_num_channels == 0 means [1, max-allowed-channles] */
     if (max_num_channels > 0) {
-      if (max_num_channels > obj->max_num_input_channels) {
+      if (max_num_channels > (guint) obj->max_num_input_channels) {
         GST_WARNING_OBJECT (obj, "Too many max channels");
         return nullptr;
       }
@@ -937,7 +968,7 @@ gst_asio_object_get_caps (GstAsioObject * obj, GstAsioDeviceClassType type,
     }
 
     if (min_num_channels > 0) {
-      if (min_num_channels > obj->max_num_input_channels) {
+      if (min_num_channels > (guint) obj->max_num_input_channels) {
         GST_WARNING_OBJECT (obj, "Too many min channels");
         return nullptr;
       }
@@ -954,7 +985,7 @@ gst_asio_object_get_caps (GstAsioObject * obj, GstAsioDeviceClassType type,
 
     /* max_num_channels == 0 means [1, max-allowed-channles] */
     if (max_num_channels > 0) {
-      if (max_num_channels > obj->max_num_output_channels) {
+      if (max_num_channels > (guint) obj->max_num_output_channels) {
         GST_WARNING_OBJECT (obj, "Too many max channels");
         return nullptr;
       }
@@ -963,7 +994,7 @@ gst_asio_object_get_caps (GstAsioObject * obj, GstAsioDeviceClassType type,
     }
 
     if (min_num_channels > 0) {
-      if (min_num_channels > obj->max_num_output_channels) {
+      if (min_num_channels > (guint) obj->max_num_output_channels) {
         GST_WARNING_OBJECT (obj, "Too many min channels");
         return nullptr;
       }
@@ -1063,7 +1094,7 @@ gst_asio_object_validate_channels (GstAsioObject * self, gboolean is_input,
     guint * channel_indices, guint num_channels)
 {
   if (is_input) {
-    if (self->max_num_input_channels < num_channels) {
+    if ((guint) self->max_num_input_channels < num_channels) {
       GST_WARNING_OBJECT (self, "%d exceeds max input channels %ld",
           num_channels, self->max_num_input_channels);
       return FALSE;
@@ -1071,7 +1102,7 @@ gst_asio_object_validate_channels (GstAsioObject * self, gboolean is_input,
 
     for (guint i = 0; i < num_channels; i++) {
       guint ch = channel_indices[i];
-      if (self->max_num_input_channels <= ch) {
+      if ((guint) self->max_num_input_channels <= ch) {
         GST_WARNING_OBJECT (self, "%d exceeds max input channels %ld",
             ch, self->max_num_input_channels);
 
@@ -1079,7 +1110,7 @@ gst_asio_object_validate_channels (GstAsioObject * self, gboolean is_input,
       }
     }
   } else {
-    if (self->max_num_output_channels < num_channels) {
+    if ((guint) self->max_num_output_channels < num_channels) {
       GST_WARNING_OBJECT (self, "%d exceeds max output channels %ld",
           num_channels, self->max_num_output_channels);
 
@@ -1088,7 +1119,7 @@ gst_asio_object_validate_channels (GstAsioObject * self, gboolean is_input,
 
     for (guint i = 0; i < num_channels; i++) {
       guint ch = channel_indices[i];
-      if (self->max_num_output_channels <= ch) {
+      if ((guint) self->max_num_output_channels <= ch) {
         GST_WARNING_OBJECT (self, "%d exceeds max output channels %ld",
             ch, self->max_num_output_channels);
 
@@ -1116,7 +1147,7 @@ gst_asio_object_check_buffer_reuse (GstAsioObject * self, ASIOBool is_input,
       continue;
 
     for (guint j = 0; j < num_channels; j++) {
-      if (info->channelNum == channel_indices[j]) {
+      if ((guint) info->channelNum == channel_indices[j]) {
         num_found++;
 
         break;
@@ -1316,7 +1347,7 @@ gst_asio_object_create_buffers (GstAsioObject * obj,
       }
 
       obj->num_requested_input_channels = 0;
-      for (guint i = 0; i < obj->max_num_input_channels; i++) {
+      for (guint i = 0; i < (guint) obj->max_num_input_channels; i++) {
         if (obj->input_channel_requested[i])
           obj->num_requested_input_channels++;
       }
@@ -1328,7 +1359,7 @@ gst_asio_object_create_buffers (GstAsioObject * obj,
       }
 
       obj->num_requested_output_channels = 0;
-      for (guint i = 0; i < obj->max_num_output_channels; i++) {
+      for (guint i = 0; i < (guint) obj->max_num_output_channels; i++) {
         if (obj->output_channel_requested[i])
           obj->num_requested_output_channels++;
       }
@@ -1339,7 +1370,7 @@ gst_asio_object_create_buffers (GstAsioObject * obj,
       obj->num_requested_output_channels;
 
   obj->buffer_infos = g_new0 (ASIOBufferInfo, obj->num_allocated_buffers);
-  for (i = 0, j = 0; i < obj->num_requested_input_channels; i++) {
+  for (i = 0, j = 0; i < (guint) obj->num_requested_input_channels; i++) {
     ASIOBufferInfo *info = &obj->buffer_infos[i];
 
     info->isInput = TRUE;
@@ -1351,7 +1382,7 @@ gst_asio_object_create_buffers (GstAsioObject * obj,
   }
 
   for (i = obj->num_requested_input_channels, j = 0;
-      i <
+      i < (guint)
       obj->num_requested_input_channels + obj->num_requested_output_channels;
       i++) {
     ASIOBufferInfo *info = &obj->buffer_infos[i];

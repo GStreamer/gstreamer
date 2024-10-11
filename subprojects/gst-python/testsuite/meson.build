@@ -4,15 +4,8 @@ tests = [
     ['Test gst', 'test_gst.py'],
     ['Test fundamentals', 'test_types.py'],
     ['Test plugins', 'test_plugin.py'],
+    ['Test analytics', 'test_analytics.py'],
 ]
-
-pluginsdirs = []
-if not meson.is_subproject()
-  pkgconfig = find_program('pkg-config')
-  runcmd = run_command(pkgconfig, '--variable=pluginsdir',
-      'gstreamer-' + api_version, check: true)
-  pluginsdirs = runcmd.stdout().split()
-endif
 
 runcmd = run_command(python, '-c', '''with open("@0@/mesonconfig.py", "w") as f:
     f.write("path='@1@'")'''.format(

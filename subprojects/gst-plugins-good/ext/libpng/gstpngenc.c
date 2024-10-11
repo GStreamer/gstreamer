@@ -86,6 +86,8 @@ static GstFlowReturn gst_pngenc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_pngenc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state);
+static gboolean gst_pngenc_flush (GstVideoEncoder * encoder);
+static gboolean gst_pngenc_start (GstVideoEncoder * encoder);
 static gboolean gst_pngenc_propose_allocation (GstVideoEncoder * encoder,
     GstQuery * query);
 
@@ -143,6 +145,8 @@ gst_pngenc_class_init (GstPngEncClass * klass)
   venc_class->set_format = gst_pngenc_set_format;
   venc_class->handle_frame = gst_pngenc_handle_frame;
   venc_class->propose_allocation = gst_pngenc_propose_allocation;
+  venc_class->flush = gst_pngenc_flush;
+  venc_class->start = gst_pngenc_start;
   gobject_class->finalize = gst_pngenc_finalize;
 
   GST_DEBUG_CATEGORY_INIT (pngenc_debug, "pngenc", 0, "PNG image encoder");
@@ -228,38 +232,106 @@ user_flush_data (png_structp png_ptr G_GNUC_UNUSED)
 {
 }
 
+/* Copied from glib/gutilsprivate.h
+ *
+ * Returns the smallest power of 2 greater than or equal to n,
+ * or 0 if such power does not fit in a gsize
+ */
+static inline gsize
+gst_pngenc_g_nearest_pow (gsize num)
+{
+  gsize n = num - 1;
+
+  g_assert (num > 0 && num <= G_MAXSIZE / 2);
+
+  n |= n >> 1;
+  n |= n >> 2;
+  n |= n >> 4;
+  n |= n >> 8;
+  n |= n >> 16;
+#if GLIB_SIZEOF_SIZE_T == 8
+  n |= n >> 32;
+#endif
+
+  return n + 1;
+}
+
+static void
+ensure_memory_is_enough (GstPngEnc * pngenc, unsigned int extra_length)
+{
+  GstMemory *new_memory;
+  GstMapInfo map;
+  gsize old_size, desired_size;
+  guint8 *new_data;
+
+  old_size = pngenc->output_map.size;
+  desired_size = gst_pngenc_g_nearest_pow (old_size + extra_length);
+  g_assert (desired_size != 0);
+
+  /* Our output memory wasn't big enough.
+   * Make a new memory that's twice the size, */
+  new_memory = gst_allocator_alloc (NULL, desired_size, NULL);
+  gst_memory_map (new_memory, &map, GST_MAP_READWRITE);
+  new_data = map.data;
+
+  /* copy previous data  */
+  memcpy (new_data, pngenc->output_map.data, old_size);
+  gst_memory_unmap (pngenc->output_mem, &pngenc->output_map);
+  gst_memory_unref (pngenc->output_mem);
+
+  /* drop it into place, */
+  pngenc->output_mem = new_memory;
+  pngenc->output_map = map;
+}
+
 static void
 user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
 {
   GstPngEnc *pngenc;
-  GstMemory *mem;
-  GstMapInfo minfo;
 
   pngenc = (GstPngEnc *) png_get_io_ptr (png_ptr);
 
-  mem = gst_allocator_alloc (NULL, length, NULL);
-  if (!mem) {
-    GST_ERROR_OBJECT (pngenc, "Failed to allocate memory");
-    png_error (png_ptr, "Failed to allocate memory");
+  GST_TRACE_OBJECT (pngenc,
+      "Memory size: %" G_GSIZE_FORMAT "\nLength to be written: %u",
+      pngenc->output_map.size, length);
+
+  if (pngenc->output_map.size > G_MAXSIZE - length) {
+    GST_ERROR_OBJECT (pngenc,
+        "Memory buffer would overflow after the png write, aborting.");
+    png_error (png_ptr, "Buffer would overflow, aborting the write.");
 
     /* never reached */
+    /* libpng will longjmp and we will catch it later on */
     return;
   }
 
-  if (!gst_memory_map (mem, &minfo, GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (pngenc, "Failed to map memory");
-    gst_memory_unref (mem);
-
-    png_error (png_ptr, "Failed to map memory");
-
-    /* never reached */
-    return;
+  if ((pngenc->output_mem_pos + length) > pngenc->output_map.size) {
+    GST_INFO_OBJECT (pngenc, "Memory not enough, Allocating more.");
+    ensure_memory_is_enough (pngenc, length);
   }
 
-  memcpy (minfo.data, data, length);
-  gst_memory_unmap (mem, &minfo);
+  memcpy (&pngenc->output_map.data[pngenc->output_mem_pos], data, length);
+  pngenc->output_mem_pos += length;
+}
 
-  gst_buffer_append_memory (pngenc->buffer_out, mem);
+static gboolean
+gst_pngenc_flush (GstVideoEncoder * encoder)
+{
+  GstPngEnc *pngenc = GST_PNGENC (encoder);
+
+  pngenc->frame_count = 0;
+
+  return TRUE;
+}
+
+static gboolean
+gst_pngenc_start (GstVideoEncoder * encoder)
+{
+  GstPngEnc *pngenc = GST_PNGENC (encoder);
+
+  pngenc->frame_count = 0;
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -269,10 +341,16 @@ gst_pngenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   gint row_index;
   png_byte **row_pointers;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstVideoInfo *info;
+  const GstVideoInfo *info;
   GstVideoFrame vframe;
+  gsize memory_size;
+  GstBuffer *outbuf;
 
   pngenc = GST_PNGENC (encoder);
+
+  if (pngenc->snapshot && pngenc->frame_count > 0)
+    return GST_FLOW_EOS;
+
   info = &pngenc->input_state->info;
 
   GST_DEBUG_OBJECT (pngenc, "BEGINNING");
@@ -323,7 +401,15 @@ gst_pngenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   }
 
   /* allocate the output buffer */
-  pngenc->buffer_out = gst_buffer_new ();
+  pngenc->output_mem_pos = 0;
+  pngenc->output_mem =
+      gst_allocator_alloc (NULL, MAX (4096, GST_VIDEO_INFO_SIZE (info)), NULL);
+  if (!pngenc->output_mem) {
+    GST_ERROR_OBJECT (pngenc, "Failed to allocate memory");
+    return GST_FLOW_ERROR;
+  }
+
+  gst_memory_map (pngenc->output_mem, &pngenc->output_map, GST_MAP_READWRITE);
 
   png_write_info (pngenc->png_struct_ptr, pngenc->png_info_ptr);
   png_write_image (pngenc->png_struct_ptr, row_pointers);
@@ -336,12 +422,23 @@ gst_pngenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   png_destroy_write_struct (&pngenc->png_struct_ptr, (png_infopp) NULL);
 
   /* Set final size and store */
-  frame->output_buffer = pngenc->buffer_out;
+  gst_memory_unmap (pngenc->output_mem, &pngenc->output_map);
+  /* Trim the buffer size */
+  memory_size = pngenc->output_mem_pos;
+  gst_memory_resize (pngenc->output_mem, 0, memory_size);
+  pngenc->output_mem_pos = 0;
 
-  pngenc->buffer_out = NULL;
+  outbuf = gst_buffer_new ();
+  gst_buffer_append_memory (outbuf, pngenc->output_mem);
+  pngenc->output_mem = NULL;
+  frame->output_buffer = outbuf;
+
+  GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
 
   if ((ret = gst_video_encoder_finish_frame (encoder, frame)) != GST_FLOW_OK)
     goto done;
+
+  ++pngenc->frame_count;
 
   if (pngenc->snapshot)
     ret = GST_FLOW_EOS;

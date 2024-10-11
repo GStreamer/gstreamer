@@ -69,7 +69,6 @@ option('osxvideo', type : 'feature', value : 'auto', description : 'macOS Cocoa 
 option('png', type : 'feature', value : 'auto', description : 'PNG image codec plugin')
 option('pulse', type : 'feature', value : 'auto', description : 'Pulseaudio audio source/sink plugin')
 option('shout2', type : 'feature', value : 'auto', description : 'Shout-casting network sink plugin based on libshout2')
-option('soup', type : 'feature', value : 'auto', description : 'libsoup HTTP client source/sink plugin')
 option('speex', type : 'feature', value : 'auto', description : 'Speex audio codec plugin')
 option('taglib', type : 'feature', value : 'auto', description : 'Tag-writing plugin based on taglib')
 option('twolame', type : 'feature', value : 'auto', description : 'twolame mp2 audio encoder plugin')
@@ -86,12 +85,19 @@ option('rpicamsrc', type : 'feature', value : 'auto', description : 'Raspberry P
 option('rpi-header-dir', type : 'string', value : '/opt/vc/include', description : 'Directory where VideoCore/MMAL headers and bcm_host.h can be found')
 option('rpi-lib-dir', type : 'string', value : '/opt/vc/lib', description : 'Directory where VideoCore/MMAL libraries can be found')
 
+# soup plugin options
+option('soup', type : 'feature', value : 'auto', description : 'libsoup HTTP client source/sink plugin')
+option('soup-lookup-dep', type : 'boolean', value : false,
+       description : 'Lookup libsoup dep at build time even when building a shared plugin')
+option('soup-version', type : 'combo', value : 'auto', choices : ['auto', '2', '3'],
+       description: 'Force a specific libsoup version if linking to it (N/A for shared builds on Linux)')
+
 # Qt plugin options
 option('qt-method', type: 'combo', value: 'auto', choices: ['auto', 'pkg-config', 'qmake'],
        description: 'Method to use to find Qt')
 option('qt-egl', type: 'feature', value: 'auto', description: 'EGLFS support in the Qt plugins')
 option('qt-wayland', type: 'feature', value: 'auto', description: 'Wayland support in the Qt plugins')
-option('qt-x11', type: 'feature', value: 'auto', description: 'Wayland support in the Qt plugins')
+option('qt-x11', type: 'feature', value: 'auto', description: 'X11 support in the Qt plugins')
 option('qt5', type : 'feature', value : 'auto', yield : true, description : 'Qt5 QML video sink plugin')
 option('qt6', type : 'feature', value : 'auto', yield : true, description : 'Qt6 QML video sink plugin')
 
@@ -100,6 +106,7 @@ option('ximagesrc', type : 'feature', value : 'auto', description : 'X11 ximages
 option('ximagesrc-xshm', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (XSHM support)')
 option('ximagesrc-xfixes', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (XFixes support)')
 option('ximagesrc-xdamage', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (XDamage support)')
+option('ximagesrc-navigation', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (Navigation support)')
 
 # v4l2 plugin options
 option('v4l2', type : 'feature', value : 'auto', description : 'Build video4linux2 source/sink plugin')
@@ -112,12 +119,6 @@ option('examples', type : 'feature', value : 'auto', yield : true)
 option('tests', type : 'feature', value : 'auto', yield : true)
 option('nls', type : 'feature', value : 'auto', yield: true, description : 'Enable native language support (translations)')
 option('orc', type : 'feature', value : 'auto', yield : true)
-option('gobject-cast-checks', type : 'feature', value : 'auto', yield : true,
-       description: 'Enable run-time GObject cast checks (auto = enabled for development, disabled for stable releases)')
-option('glib-asserts', type : 'feature', value : 'enabled', yield : true,
-       description: 'Enable GLib assertion (auto = enabled for development, disabled for stable releases)')
-option('glib-checks', type : 'feature', value : 'enabled', yield : true,
-       description: 'Enable GLib checks such as API guards (auto = enabled for development, disabled for stable releases)')
 option('asm', type : 'feature', value : 'auto', yield : true)
 
 # Common options
@@ -127,3 +128,21 @@ option('package-origin', type : 'string', value : 'Unknown package origin', yiel
        description : 'package origin URL to use in plugins')
 option('doc', type : 'feature', value : 'auto', yield: true,
        description: 'Enable documentation.')
+option('glib_debug', type : 'feature', value : 'auto', yield : true, description : 'Enable GLib debug infrastructure (see docs/macros.txt)')
+option('glib_assert', type : 'boolean', value : true, yield : true, description : 'Enable GLib assertion (see docs/macros.txt)',
+  deprecated: {'enabled' : 'true', 'disabled' : 'false', 'auto' : 'false'},
+)
+option('glib_checks', type : 'boolean', value : true, yield : true, description : 'Enable GLib checks such as API guards (see docs/macros.txt)',
+  deprecated: {'enabled' : 'true', 'disabled' : 'false', 'auto' : 'false'},
+)
+
+# Deprecated, kept for backward compat
+option('gobject-cast-checks', type : 'feature', value : 'auto', yield : true,
+       description: 'Enable run-time GObject cast checks (auto = enabled for development, disabled for stable releases)',
+       deprecated: 'glib_debug')
+option('glib-asserts', type : 'feature', value : 'enabled', yield : true,
+       description: 'Enable GLib assertion (auto = enabled for development, disabled for stable releases)',
+       deprecated: 'glib_assert')
+option('glib-checks', type : 'feature', value : 'enabled', yield : true,
+       description: 'Enable GLib checks such as API guards (auto = enabled for development, disabled for stable releases)',
+       deprecated: 'glib_checks')

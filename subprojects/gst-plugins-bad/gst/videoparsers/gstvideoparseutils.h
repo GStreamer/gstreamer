@@ -32,6 +32,8 @@
 #define A53_USER_DATA_ID_GA94 0x47413934
 #define A53_USER_DATA_ID_DTG1 0x44544731
 
+/* custom id for LCEVC */
+#define USER_DATA_ID_LCEVC_ENHANCEMENT 0xFFFFFFFD
 /* custom id for SCTE 20 608 */
 #define USER_DATA_ID_SCTE_20_CC 0xFFFFFFFE
 /* custom id for DirecTV */
@@ -49,11 +51,13 @@
 #define CEA_708_PROCESS_EM_DATA_FLAG 0x80
 
 /* country codes */
+#define ITU_T_T35_COUNTRY_CODE_UK			0xB4
 #define ITU_T_T35_COUNTRY_CODE_US			0xB5
 
 /* provider codes */
 #define ITU_T_T35_MANUFACTURER_US_ATSC     	0x31
 #define ITU_T_T35_MANUFACTURER_US_DIRECTV  	0x2F
+#define ITU_T_T35_MANUFACTURER_UK_LCEVC  	0x50
 
 /*
  * GstVideoAFDAspectRatio:
@@ -144,7 +148,7 @@ typedef struct {
 /*
  * GstVideoParseUserData
  *
- * Holds unparsed and parsed user data for closed captions, AFD and Bar data.
+ * Holds unparsed and parsed user data for closed captions, LCEVC, AFD and Bar data.
  */
 typedef struct
 {
@@ -158,49 +162,67 @@ typedef struct
   /* pending bar data */
   guint8 bar_data[GST_VIDEO_BAR_MAX_BYTES];
   guint bar_data_size;
-  gboolean has_bar_data;
-
-  /* parsed bar data */
-  GstVideoBarData bar_parsed;
 
   /* pending AFD data */
   guint8 afd;
   gboolean active_format_flag;
   GstVideoAFDSpec afd_spec;
-  gboolean has_afd;
 
-  /* parsed afd data */
-  GstVideoAFD afd_parsed;
+  /* pending LCEVC data */
+  GstBuffer *lcevc_enhancement_data;
 
 } GstVideoParseUserData;
 
 /*
  * GstVideoParseUserDataUnregistered
  *
- * Holds unparsed User Data Unregistered.
+ * Holds unparsed, unregistered user data.
  */
 typedef struct
 {
+  /* item type: GstVideoUnregisteredMessage */
+  GArray *messages;
+} GstVideoParseUserDataUnregistered;
+
+/*
+ * GstVideoUnregisteredMessage
+ *
+ * Item type for the unregistered user data.
+ */
+typedef struct {
   guint8 uuid[16];
   guint8 *data;
   gsize size;
-} GstVideoParseUserDataUnregistered;
+} GstVideoUnregisteredMessage;
 
 G_BEGIN_DECLS
 
-void gst_video_parse_user_data(GstElement * elt, GstVideoParseUserData * user_data,
-			GstByteReader * br, guint8 field, guint16 provider_code);
+void gst_video_parse_user_data (GstElement            * elt,
+                                GstVideoParseUserData * user_data,
+                                GstByteReader         * br,
+                                guint8                  field,
+                                guint16                 provider_code);
 
-void gst_video_parse_user_data_unregistered(GstElement * elt, GstVideoParseUserDataUnregistered * user_data,
-			GstByteReader * br, guint8 uuid[16]);
+void gst_video_push_user_data (GstElement            * elt,
+                               GstVideoParseUserData * user_data,
+                               GstBuffer             * buf);
 
-void gst_video_user_data_unregistered_clear(GstVideoParseUserDataUnregistered * user_data);
+void gst_video_clear_user_data (GstVideoParseUserData * user_data,
+                                gboolean                free);
 
-void gst_video_push_user_data(GstElement * elt, GstVideoParseUserData * user_data,
-			 GstBuffer * buf);
 
-void gst_video_push_user_data_unregistered(GstElement * elt, GstVideoParseUserDataUnregistered * user_data,
-			 GstBuffer * buf);
+void gst_video_parse_user_data_unregistered (GstElement                        * elt,
+                                             GstVideoParseUserDataUnregistered * user_data,
+                                             GstByteReader                     * br,
+                                             guint8                              uuid[16]);
+
+void gst_video_push_user_data_unregistered (GstElement                        * elt,
+                                            GstVideoParseUserDataUnregistered * user_data,
+                                            GstBuffer                         * buf);
+
+void gst_video_clear_user_data_unregistered (GstVideoParseUserDataUnregistered * user_data,
+                                             gboolean                            free);
+
 
 G_END_DECLS
 #endif /* __VIDEO_PARSE_UTILS_H__ */

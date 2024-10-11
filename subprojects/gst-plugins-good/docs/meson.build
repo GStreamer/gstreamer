@@ -104,6 +104,7 @@ gst_plugins_doc = run_command(
         cdir / '../ext/*/*.[ch]',
         cdir / '../ext/*/*/*.[ch]',
         cdir / '../gst/*/*.[ch]',
+        cdir / '../ext/*/*.cc',
     '--gst_c_source_filters', excludes,
     '--gst_cache_file', plugins_cache,
     '--include_paths', cdir / '..',

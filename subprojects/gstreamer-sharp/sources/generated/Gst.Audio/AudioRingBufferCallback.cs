@@ -5,6 +5,6 @@ namespace Gst.Audio {
 
 	using System;
 
-	public delegate void AudioRingBufferCallback(Gst.Audio.AudioRingBuffer rbuf, byte[] data, uint len);
+	public delegate void AudioRingBufferCallback(Gst.Audio.AudioRingBuffer rbuf, byte[] data, IntPtr user_data);
 
 }

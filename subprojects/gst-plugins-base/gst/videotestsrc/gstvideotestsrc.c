@@ -131,6 +131,8 @@ G_DEFINE_TYPE (GstVideoTestSrc, gst_video_test_src, GST_TYPE_PUSH_SRC);
 GST_ELEMENT_REGISTER_DEFINE (videotestsrc, "videotestsrc",
     GST_RANK_NONE, GST_TYPE_VIDEO_TEST_SRC);
 
+static void gst_video_test_src_finalize (GObject * object);
+
 static void gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
     int pattern_type);
 static void gst_video_test_src_set_property (GObject * object, guint prop_id,
@@ -265,6 +267,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
 
   gobject_class->set_property = gst_video_test_src_set_property;
   gobject_class->get_property = gst_video_test_src_get_property;
+  gobject_class->finalize = gst_video_test_src_finalize;
 
   g_object_class_install_property (gobject_class, PROP_PATTERN,
       g_param_spec_enum ("pattern", "Pattern",
@@ -291,8 +294,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_TIMESTAMP_OFFSET,
       g_param_spec_int64 ("timestamp-offset", "Timestamp offset",
           "An offset added to timestamps set on buffers (in ns)", 0,
-          (G_MAXLONG == G_MAXINT64) ? G_MAXINT64 : (G_MAXLONG * GST_SECOND - 1),
-          0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_MAXINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_IS_LIVE,
       g_param_spec_boolean ("is-live", "Is Live",
           "Whether to act as a live source", DEFAULT_IS_LIVE,
@@ -424,6 +426,15 @@ gst_video_test_src_init (GstVideoTestSrc * src)
   src->motion_type = DEFAULT_MOTION_TYPE;
   src->flip = DEFAULT_FLIP;
 
+  g_mutex_init (&src->cache_lock);
+}
+
+static void
+gst_video_test_src_finalize (GObject * object)
+{
+  GstVideoTestSrc *src = GST_VIDEO_TEST_SRC (object);
+  g_mutex_clear (&src->cache_lock);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstCaps *
@@ -763,9 +774,11 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
   }
 
   if (invalidate) {
+    g_mutex_lock (&src->cache_lock);
     /* Property change invalidated the current pattern - check if it's static now or not */
     src->have_static_pattern = gst_video_test_src_is_static_pattern (src);
     gst_clear_buffer (&src->cached);
+    g_mutex_unlock (&src->cache_lock);
   }
 }
 
@@ -1069,7 +1082,9 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   videotestsrc->running_time = 0;
   videotestsrc->n_frames = 0;
 
+  g_mutex_lock (&videotestsrc->cache_lock);
   gst_clear_buffer (&videotestsrc->cached);
+  g_mutex_unlock (&videotestsrc->cache_lock);
 
   GST_OBJECT_UNLOCK (videotestsrc);
 
@@ -1305,12 +1320,15 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   if (src->have_static_pattern) {
     GstVideoFrame sframe, dframe;
 
+    g_mutex_lock (&src->cache_lock);
     if (src->cached == NULL) {
       src->cached = gst_buffer_new_allocate (NULL, src->info.size, NULL);
 
       ret = fill_image (GST_PUSH_SRC (src), src->cached);
-      if (G_UNLIKELY (ret != GST_FLOW_OK))
+      if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+        g_mutex_unlock (&src->cache_lock);
         goto fill_failed;
+      }
     } else {
       GST_LOG_OBJECT (src, "Reusing cached pattern buffer");
     }
@@ -1322,11 +1340,14 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
     gst_video_frame_map (&sframe, &src->info, src->cached, GST_MAP_READ);
     gst_video_frame_map (&dframe, &src->info, buffer, GST_MAP_WRITE);
 
-    if (!gst_video_frame_copy (&dframe, &sframe))
+    if (!gst_video_frame_copy (&dframe, &sframe)) {
+      g_mutex_unlock (&src->cache_lock);
       goto copy_failed;
+    }
 
     gst_video_frame_unmap (&sframe);
     gst_video_frame_unmap (&dframe);
+    g_mutex_unlock (&src->cache_lock);
   } else {
     ret = fill_image (GST_PUSH_SRC (src), buffer);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
@@ -1426,7 +1447,9 @@ gst_video_test_src_stop (GstBaseSrc * basesrc)
   src->n_lines = 0;
   src->lines = NULL;
 
+  g_mutex_lock (&src->cache_lock);
   gst_clear_buffer (&src->cached);
+  g_mutex_unlock (&src->cache_lock);
 
   return TRUE;
 }

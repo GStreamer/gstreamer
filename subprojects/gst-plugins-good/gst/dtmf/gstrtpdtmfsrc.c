@@ -352,9 +352,7 @@ gst_rtp_dtmf_src_handle_custom_upstream (GstRTPDTMFSrc * dtmfsrc,
     GstEvent * event)
 {
   gboolean result = FALSE;
-  gchar *struct_str;
   const GstStructure *structure;
-
   GstState state;
   GstStateChangeReturn ret;
 
@@ -364,11 +362,10 @@ gst_rtp_dtmf_src_handle_custom_upstream (GstRTPDTMFSrc * dtmfsrc,
     goto ret;
   }
 
-  GST_DEBUG_OBJECT (dtmfsrc, "Received event is of our interest");
   structure = gst_event_get_structure (event);
-  struct_str = gst_structure_to_string (structure);
-  GST_DEBUG_OBJECT (dtmfsrc, "Event has structure %s", struct_str);
-  g_free (struct_str);
+
+  GST_DEBUG_OBJECT (dtmfsrc, "Received event: %" GST_PTR_FORMAT, structure);
+
   if (structure && gst_structure_has_name (structure, "dtmf-event"))
     result = gst_rtp_dtmf_src_handle_dtmf_event (dtmfsrc, structure);
 
@@ -384,7 +381,9 @@ gst_rtp_dtmf_src_handle_event (GstBaseSrc * basesrc, GstEvent * event)
 
   dtmfsrc = GST_RTP_DTMF_SRC (basesrc);
 
-  GST_DEBUG_OBJECT (dtmfsrc, "Received an event on the src pad");
+  GST_DEBUG_OBJECT (dtmfsrc, "Received %s event on the src pad",
+      GST_EVENT_TYPE_NAME (event));
+
   if (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_UPSTREAM) {
     result = gst_rtp_dtmf_src_handle_custom_upstream (dtmfsrc, event);
   }
@@ -1083,6 +1082,9 @@ gst_rtp_dtmf_src_change_state (GstElement * element, GstStateChange transition)
         gst_rtp_dtmf_src_event_free (event);
       }
       dtmfsrc->last_event_was_start = FALSE;
+
+      // Clear out any unfinished events
+      g_clear_pointer (&dtmfsrc->payload, g_free);
 
       /* Indicate that we don't do PRE_ROLL */
       break;

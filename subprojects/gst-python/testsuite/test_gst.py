@@ -21,8 +21,8 @@ import sys
 import overrides_hack
 overrides_hack
 from common import TestCase, unittest
-
 from gi.repository import Gst
+
 
 class TimeArgsTest(TestCase):
     def testNoneTime(self):
@@ -32,10 +32,11 @@ class TimeArgsTest(TestCase):
         self.assertRaises(TypeError, Gst.TIME_ARGS, "String")
 
     def testClockTimeNone(self):
-        self.assertEquals(Gst.TIME_ARGS(Gst.CLOCK_TIME_NONE), 'CLOCK_TIME_NONE')
+        self.assertEqual(Gst.TIME_ARGS(Gst.CLOCK_TIME_NONE), 'CLOCK_TIME_NONE')
 
     def testOneSecond(self):
-        self.assertEquals(Gst.TIME_ARGS(Gst.SECOND), '0:00:01.000000000')
+        self.assertEqual(Gst.TIME_ARGS(Gst.SECOND), '0:00:01.000000000')
+
 
 class TestNotInitialized(TestCase):
     def testNotInitialized(self):
@@ -93,6 +94,7 @@ class TestBin(TestCase):
         Gst.init(None)
         self.assertEqual(Gst.ElementFactory.make("bin", None).sinkpads, [])
 
+
 class TestBufferMap(TestCase):
 
     def test_map_unmap_manual(self):
@@ -111,6 +113,7 @@ class TestBufferMap(TestCase):
             self.assertEqual(info.data[0], 42)
         with self.assertRaises(ValueError):
             info.data[0]
+
 
 if __name__ == "__main__":
     unittest.main()

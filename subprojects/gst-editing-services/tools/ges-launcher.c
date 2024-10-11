@@ -312,9 +312,12 @@ static gboolean
 _parse_track_type (const gchar * option_name, const gchar * value,
     GESLauncherParsedOptions * opts, GError ** error)
 {
-  if (!get_flags_from_string (GES_TYPE_TRACK_TYPE, value, &opts->track_types))
+  guint flags = 0;
+
+  if (!get_flags_from_string (GES_TYPE_TRACK_TYPE, value, &flags))
     return FALSE;
 
+  opts->track_types = (GESTrackType) flags;
   return TRUE;
 }
 
@@ -615,10 +618,10 @@ _set_rendering_details (GESLauncher * self)
           smart_profile = TRUE;
         else {
           opts->format = get_file_extension (opts->outputuri);
-          prof = parse_encoding_profile (opts->format);
+          prof = gst_encoding_profile_from_string (opts->format);
         }
       } else {
-        prof = parse_encoding_profile (opts->format);
+        prof = gst_encoding_profile_from_string (opts->format);
         if (!prof) {
           ges_printerr ("Invalid format specified: %s", opts->format);
           goto done;
@@ -633,7 +636,7 @@ _set_rendering_details (GESLauncher * self)
 
         opts->format =
             g_strdup ("application/ogg:video/x-theora:audio/x-vorbis");
-        prof = parse_encoding_profile (opts->format);
+        prof = gst_encoding_profile_from_string (opts->format);
       }
 
       if (!prof) {
@@ -646,7 +649,8 @@ _set_rendering_details (GESLauncher * self)
         GstEncodingProfile *new_prof;
         GList *tmp;
 
-        if (!(new_prof = parse_encoding_profile (opts->container_profile))) {
+        if (!(new_prof =
+                gst_encoding_profile_from_string (opts->container_profile))) {
           ges_printerr ("Failed to parse container profile %s",
               opts->container_profile);
           gst_object_unref (prof);
@@ -668,12 +672,20 @@ _set_rendering_details (GESLauncher * self)
           goto done;
         }
 
-        for (tmp = (GList *)
-            gst_encoding_container_profile_get_profiles
-            (GST_ENCODING_CONTAINER_PROFILE (prof)); tmp; tmp = tmp->next) {
+        /* Existing profile is a single-elementary-stream profile, put it in the
+         * new target container profile */
+        if (!GST_IS_ENCODING_CONTAINER_PROFILE (prof)) {
           gst_encoding_container_profile_add_profile
               (GST_ENCODING_CONTAINER_PROFILE (new_prof),
-              GST_ENCODING_PROFILE (gst_encoding_profile_ref (tmp->data)));
+              GST_ENCODING_PROFILE (gst_encoding_profile_ref (prof)));
+        } else {
+          for (tmp = (GList *)
+              gst_encoding_container_profile_get_profiles
+              (GST_ENCODING_CONTAINER_PROFILE (prof)); tmp; tmp = tmp->next) {
+            gst_encoding_container_profile_add_profile
+                (GST_ENCODING_CONTAINER_PROFILE (new_prof),
+                GST_ENCODING_PROFILE (gst_encoding_profile_ref (tmp->data)));
+          }
         }
 
         gst_encoding_profile_unref (prof);
@@ -896,14 +908,25 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
       g_error ("Failed to setup rendering details\n");
   }
 
-  print_timeline (self->priv->timeline);
 
   g_free (project_uri);
 
-  if (!self->priv->seenerrors && opts->needs_set_state &&
-      gst_element_set_state (GST_ELEMENT (self->priv->pipeline),
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-    g_error ("Failed to start the pipeline\n");
+  if (!self->priv->seenerrors && opts->needs_set_state) {
+    ges_timeline_commit (self->priv->timeline);
+    if (gst_element_set_state (GST_ELEMENT (self->priv->pipeline),
+            GST_STATE_READY) == GST_STATE_CHANGE_FAILURE) {
+      g_error ("Failed to start the pipeline\n");
+    }
+
+    /* Printing the pipeline only in READY state as there might be elements
+     * tweaking it in while going to READY */
+    print_timeline (self->priv->timeline);
+    if (gst_element_set_state (GST_ELEMENT (self->priv->pipeline),
+            GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+      g_error ("Failed to start the pipeline\n");
+    }
+  } else {
+    print_timeline (self->priv->timeline);
   }
 }
 
@@ -1548,7 +1571,7 @@ _local_command_line (GApplication * application, gchar ** arguments[],
 
   if (opts->inspect_action_type) {
     ges_validate_print_action_types ((const gchar **) &((*arguments)[1]),
-        argc - 1);
+        g_strv_length (*arguments) - 1);
     goto done;
   }
 

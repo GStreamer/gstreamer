@@ -917,6 +917,34 @@ gst_hls_time_map_free (GstHLSTimeMap * map)
 }
 
 void
+gst_time_map_set_values (GstHLSTimeMap * map, GstClockTimeDiff stream_time,
+    GstClockTime internal_time, GDateTime * pdt)
+{
+  GstClockTime offset = 0;
+
+  if (stream_time < 0) {
+    offset = -stream_time;
+    stream_time = 0;
+    /* Handle negative stream times. This can happen for example when the server
+     * returns an older playlist.
+     *
+     * Shift the values accordingly to end up with non-negative reference stream
+     * time */
+    GST_DEBUG ("Shifting values before storage (offset : %" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (offset));
+  }
+
+  map->stream_time = stream_time;
+  map->internal_time = internal_time;
+  if (pdt) {
+    if (offset)
+      map->pdt = g_date_time_add (pdt, offset / GST_USECOND);
+    else
+      map->pdt = g_date_time_ref (pdt);
+  }
+}
+
+void
 gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
     GstClockTimeDiff stream_time, GDateTime * pdt)
 {
@@ -925,7 +953,6 @@ gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
 #endif
   GstHLSTimeMap *map;
   GList *tmp;
-  GstClockTime offset = 0;
 
   /* Check if we don't already have a mapping for the given dsn */
   for (tmp = demux->mappings; tmp; tmp = tmp->next) {
@@ -955,28 +982,9 @@ gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
   g_free (datestring);
 #endif
 
-  if (stream_time < 0) {
-    offset = -stream_time;
-    stream_time = 0;
-    /* Handle negative stream times. This can happen for example when the server
-     * returns an older playlist.
-     *
-     * Shift the values accordingly to end up with non-negative reference stream
-     * time */
-    GST_DEBUG_OBJECT (demux,
-        "Shifting values before storage (offset : %" GST_TIME_FORMAT ")",
-        GST_TIME_ARGS (offset));
-  }
-
   map = gst_hls_time_map_new ();
   map->dsn = dsn;
-  map->stream_time = stream_time;
-  if (pdt) {
-    if (offset)
-      map->pdt = g_date_time_add (pdt, offset / GST_USECOND);
-    else
-      map->pdt = g_date_time_ref (pdt);
-  }
+  gst_time_map_set_values (map, stream_time, GST_CLOCK_TIME_NONE, pdt);
 
   demux->mappings = g_list_append (demux->mappings, map);
 }
@@ -1085,7 +1093,7 @@ gst_hls_demux_handle_variant_playlist_update (GstHLSDemux * demux,
   if (demux->pending_variant) {
     /* The pending variant must always match the one that just got updated:
      * The loader should only do a callback for the most recently set URI */
-    g_assert (g_str_equal (demux->pending_variant->uri, playlist_uri));
+    g_assert (!g_strcmp0 (demux->pending_variant->uri, playlist_uri));
 
     gboolean changed = (demux->pending_variant != demux->current_variant);
 
@@ -1108,8 +1116,7 @@ gst_hls_demux_handle_variant_playlist_update (GstHLSDemux * demux,
                   main_uri, "uri", G_TYPE_STRING,
                   uri, "bitrate", G_TYPE_INT, new_bandwidth, NULL)));
 
-      /* Mark discont on the next packet after switching variant */
-      GST_ADAPTIVE_DEMUX2_STREAM (demux->main_stream)->discont = TRUE;
+      GST_DEBUG_OBJECT (demux, "Changed variant");
     }
   }
 
@@ -1162,7 +1169,7 @@ gst_hls_demux_handle_variant_playlist_update_error (GstHLSDemux * demux,
 
   /* The variant must always match the one that just got updated:
    * The loader should only do a callback for the most recently set URI */
-  g_assert (g_str_equal (variant->uri, playlist_uri));
+  g_assert (!g_strcmp0 (variant->uri, playlist_uri));
 
   /* If we didn't already add this playlist to the failed variants list
    * do so now. It's possible we get an update error again if we failed
@@ -1295,6 +1302,10 @@ gst_hls_demux_check_variant_playlist_loaded (GstHLSDemux * demux)
   GstHLSVariantStream *target_variant =
       demux->pending_variant ? demux->pending_variant : demux->current_variant;
   GstHLSDemuxStream *stream = demux->main_stream;
+
+  /* The demuxer has been resetted in the meantime */
+  if (target_variant == NULL)
+    return GST_FLOW_FLUSHING;
 
   return gst_hls_demux_stream_check_current_playlist_uri (stream,
       target_variant->uri);

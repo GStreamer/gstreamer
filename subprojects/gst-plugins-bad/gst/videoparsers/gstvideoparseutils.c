@@ -28,16 +28,20 @@
 #include <gst/video/video.h>
 #include <gst/video/video-sei.h>
 #include <gst/base/gstbitreader.h>
+#include <gst/codecparsers/gstlcevcmeta.h>
 #include <gstvideoparseutils.h>
 
 GST_DEBUG_CATEGORY_EXTERN (videoparseutils_debug);
 #define GST_CAT_DEFAULT videoparseutils_debug
 
 static gboolean gst_video_parse_utils_parse_bar (const guint8 * data,
-    gsize size, guint field, GstVideoBarData * bar);
+    gsize size, GstVideoParseUtilsField field, GstVideoBarData * bar);
 
 static gboolean gst_video_parse_utils_parse_afd (const guint8 data,
-    GstVideoAFD * afd, GstVideoAFDSpec spec);
+    GstVideoAFDSpec spec, GstVideoParseUtilsField field, GstVideoAFD * afd);
+
+static void gst_video_clear_unregistered_message
+    (GstVideoUnregisteredMessage * msg);
 
 
 /*
@@ -95,6 +99,9 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
     case ITU_T_T35_MANUFACTURER_US_DIRECTV:
       user_data_id = USER_DATA_ID_DIRECTV_CC;
       break;
+    case ITU_T_T35_MANUFACTURER_UK_LCEVC:
+      user_data_id = USER_DATA_ID_LCEVC_ENHANCEMENT;
+      break;
     default:
       GST_LOG_OBJECT (elt, "Unsupported provider code %d", provider_code);
       return;
@@ -123,10 +130,7 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
         user_data->afd_spec = GST_VIDEO_AFD_SPEC_ATSC_A53;
         user_data->afd = temp;
         user_data->active_format_flag = TRUE;
-      } else {
-        user_data->active_format_flag = FALSE;
       }
-      user_data->has_afd = TRUE;
       user_data->field = field;
       break;
     case USER_DATA_ID_DIRECTV_CC:
@@ -161,13 +165,13 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
           a53_process_708_cc_data =
               (cc_count & CEA_708_PROCESS_CC_DATA_FLAG) != 0;
           if (!a53_process_708_cc_data) {
-            GST_WARNING_OBJECT (elt,
+            GST_DEBUG_OBJECT (elt,
                 "ignoring closed captions as CEA_708_PROCESS_CC_DATA_FLAG is not set");
           }
 
           process_708_em_data = (cc_count & CEA_708_PROCESS_EM_DATA_FLAG) != 0;
           if (!process_708_em_data) {
-            GST_WARNING_OBJECT (elt,
+            GST_DEBUG_OBJECT (elt,
                 "CEA_708_PROCESS_EM_DATA_FLAG flag is not set");
           }
           if (!gst_byte_reader_get_uint8 (br, &temp)) {
@@ -175,7 +179,7 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
             break;
           }
           if (temp != 0xff) {
-            GST_WARNING_OBJECT (elt, "em data does not equal 0xFF");
+            GST_DEBUG_OBJECT (elt, "em data does not equal 0xFF");
           }
           process_708_em_data = process_708_em_data && (temp == 0xff);
           /* ignore process_708_em_data as there is content that doesn't follow spec for this field */
@@ -223,7 +227,6 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
             break;
           memcpy (user_data->bar_data, data, bar_size);
           user_data->bar_data_size = bar_size;
-          user_data->has_bar_data = TRUE;
           user_data->field = field;
           GST_DEBUG_OBJECT (elt, "Bar data, %u bytes", bar_size);
           break;
@@ -233,6 +236,22 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
               user_data_type_code, gst_byte_reader_get_remaining (br));
           break;
       }
+      break;
+    case USER_DATA_ID_LCEVC_ENHANCEMENT:
+      if (!gst_byte_reader_get_uint8 (br, &user_data_type_code)) {
+        GST_WARNING_OBJECT (elt, "Missing user data type code, ignoring");
+        break;
+      }
+      bar_size = gst_byte_reader_get_remaining (br);
+      if (bar_size == 0) {
+        GST_WARNING_OBJECT (elt, "Bar data packet too short, ignoring");
+        break;
+      }
+      if (!gst_byte_reader_get_data (br, bar_size, &data))
+        break;
+      g_clear_pointer (&user_data->lcevc_enhancement_data, gst_buffer_unref);
+      user_data->lcevc_enhancement_data =
+          gst_buffer_new_memdup (data, bar_size);
       break;
     default:
       GST_DEBUG_OBJECT (elt,
@@ -254,66 +273,60 @@ void
 gst_video_push_user_data (GstElement * elt, GstVideoParseUserData * user_data,
     GstBuffer * buf)
 {
+  GstVideoAFD afd;
+  GstVideoBarData bar;
 
-  /* 1. handle closed captions */
-  if (user_data->closedcaptions_size > 0) {
-    if (!gst_buffer_get_meta (buf, GST_VIDEO_CAPTION_META_API_TYPE)) {
-      gst_buffer_add_video_caption_meta (buf,
-          user_data->closedcaptions_type, user_data->closedcaptions,
-          user_data->closedcaptions_size);
+  if (user_data->closedcaptions_size == 0) {
+    GST_TRACE_OBJECT (elt, "No closed caption data to attach");
+  } else if (gst_buffer_get_meta (buf, GST_VIDEO_CAPTION_META_API_TYPE)) {
+    GST_DEBUG_OBJECT (elt, "Buffer already has closed caption meta");
+  } else {
+    gst_buffer_add_video_caption_meta (buf,
+        user_data->closedcaptions_type, user_data->closedcaptions,
+        user_data->closedcaptions_size);
+  }
+
+  if (!user_data->active_format_flag) {
+    GST_TRACE_OBJECT (elt, "No AFD to attach");
+  } else if (gst_buffer_get_meta (buf, GST_VIDEO_AFD_META_API_TYPE)) {
+    GST_DEBUG_OBJECT (elt, "Buffer already has AFD meta");
+  } else if (!gst_video_parse_utils_parse_afd (user_data->afd,
+          user_data->afd_spec, user_data->field, &afd)) {
+    GST_WARNING_OBJECT (elt, "Invalid AFD value %d", user_data->afd);
+  } else {
+    gst_buffer_add_video_afd_meta (buf, afd.field, afd.spec, afd.afd);
+  }
+
+  if (!user_data->bar_data_size) {
+    GST_TRACE_OBJECT (elt, "No Bar data to attach");
+  } else if (gst_buffer_get_meta (buf, GST_VIDEO_BAR_META_API_TYPE)) {
+    GST_DEBUG_OBJECT (elt, "Buffer already has Bar meta");
+  } else if (!gst_video_parse_utils_parse_bar (user_data->bar_data,
+          user_data->bar_data_size, user_data->field, &bar)) {
+    GST_WARNING_OBJECT (elt, "Invalid Bar data");
+  } else {
+    gst_buffer_add_video_bar_meta (buf, bar.field, bar.is_letterbox,
+        bar.bar_data[0], bar.bar_data[1]);
+  }
+
+  /* 4. handle LCEVC */
+  if (user_data->lcevc_enhancement_data) {
+    if (!gst_buffer_get_meta (buf, GST_LCEVC_META_API_TYPE)) {
+      gst_buffer_add_lcevc_meta (buf, user_data->lcevc_enhancement_data);
     } else {
-      GST_DEBUG_OBJECT (elt, "Closed caption data already found on buffer, "
+      GST_DEBUG_OBJECT (elt, "LCEVC data already found on buffer, "
           "discarding to avoid duplication");
     }
 
-    user_data->closedcaptions_type = GST_VIDEO_CAPTION_TYPE_UNKNOWN;
-    user_data->closedcaptions_size = 0;
+    g_clear_pointer (&user_data->lcevc_enhancement_data, gst_buffer_unref);
   }
-
-  /* 2. handle AFD */
-  if (user_data->has_afd) {
-    GstVideoAFD afd;
-    afd.field = 0;
-    afd.aspect_ratio = GST_VIDEO_AFD_ASPECT_RATIO_UNDEFINED;
-    afd.spec = GST_VIDEO_AFD_SPEC_ATSC_A53;
-    afd.afd = GST_VIDEO_AFD_UNAVAILABLE;
-    if (gst_video_parse_utils_parse_afd (user_data->afd, &afd, afd.spec)) {
-      gst_buffer_add_video_afd_meta (buf, afd.field, afd.spec, afd.afd);
-    } else {
-      GST_WARNING_OBJECT (elt, "Invalid AFD value %d", user_data->afd);
-    }
-  } else if (user_data->active_format_flag) {
-    /* AFD was present, but now it is no longer present */
-    GST_DEBUG_OBJECT (elt,
-        "AFD was present in previous frame, now no longer present");
-    user_data->active_format_flag = 0;
-  }
-  user_data->has_afd = FALSE;
-
-  /* 3. handle Bar data */
-  if (user_data->has_bar_data) {
-    GstVideoBarData data;
-    if (gst_video_parse_utils_parse_bar (user_data->bar_data,
-            user_data->bar_data_size, user_data->field, &data)) {
-      gst_buffer_add_video_bar_meta (buf, data.field, data.is_letterbox,
-          data.bar_data[0], data.bar_data[1]);
-    } else {
-      GST_WARNING_OBJECT (elt, "Invalid Bar data");
-    }
-  } else if (user_data->bar_data_size) {
-    /* bar data was present, but now it is no longer present */
-    GST_DEBUG_OBJECT (elt,
-        "Bar data was present in previous frame, now no longer present");
-    user_data->bar_data_size = 0;
-  }
-  user_data->has_bar_data = FALSE;
 }
-
 
 /*
  * gst_video_parse_utils_parse_bar:
  * @data: bar data array
- * @size:size of bar data array
+ * @size: size of bar data array
+ * @field: #GstVideoParseUtilsField we're parsing for
  * @bar: #GstVideoBarData structure
  *
  * Parse bar data bytes into #GstVideoBarData structure
@@ -324,7 +337,7 @@ gst_video_push_user_data (GstElement * elt, GstVideoParseUserData * user_data,
  */
 static gboolean
 gst_video_parse_utils_parse_bar (const guint8 * data, gsize size,
-    guint field, GstVideoBarData * bar)
+    GstVideoParseUtilsField field, GstVideoBarData * bar)
 {
   guint8 temp;
   int i = 0;
@@ -332,12 +345,12 @@ gst_video_parse_utils_parse_bar (const guint8 * data, gsize size,
   guint16 bar_vals[4] = { 0, 0, 0, 0 };
   GstBitReader bar_tender;
 
-  /* there must be at least one byte, and not more than GST_VIDEO_BAR_MAX_BYTES bytes */
-  if (!bar || size == 0 || size > GST_VIDEO_BAR_MAX_BYTES)
+  g_return_val_if_fail (bar != NULL, FALSE);
+
+  if (size == 0 || size > GST_VIDEO_BAR_MAX_BYTES)
     return FALSE;
 
   gst_bit_reader_init (&bar_tender, data, size);
-
 
   /* parse bar flags */
   for (i = 0; i < 4; ++i) {
@@ -367,6 +380,7 @@ gst_video_parse_utils_parse_bar (const guint8 * data, gsize size,
   if (bar_flags[0] && bar_flags[2])
     return FALSE;
 
+  bar->field = field;
   bar->is_letterbox = bar_flags[0];
   if (bar->is_letterbox) {
     bar->bar_data[0] = bar_vals[0];
@@ -375,16 +389,15 @@ gst_video_parse_utils_parse_bar (const guint8 * data, gsize size,
     bar->bar_data[0] = bar_vals[2];
     bar->bar_data[1] = bar_vals[3];
   }
-  bar->field = field;
-
   return TRUE;
 }
 
 /*
  * gst_video_parse_utils_parse_afd:
  * @data: bar byte
+ * @spec: #GstVideoAFDSpec indicating specification that applies to AFD byte
+ * @field: #GstVideoParseUtilsField
  * @afd: pointer to #GstVideoAFD struct
- * @spec : #GstVideoAFDSpec indicating specification that applies to AFD byte
  *
  * Parse afd byte into #GstVideoAFD struct
  *
@@ -401,94 +414,175 @@ gst_video_parse_utils_parse_bar (const guint8 * data, gsize size,
  * Returns: TRUE if parsing was successful, otherwise FALSE
  */
 static gboolean
-gst_video_parse_utils_parse_afd (const guint8 data, GstVideoAFD * afd,
-    GstVideoAFDSpec spec)
+gst_video_parse_utils_parse_afd (const guint8 data, GstVideoAFDSpec spec,
+    GstVideoParseUtilsField field, GstVideoAFD * afd)
 {
-  guint8 afd_data;
+  GstVideoAFDAspectRatio aspect_ratio = GST_VIDEO_AFD_ASPECT_RATIO_UNDEFINED;
+  GstVideoAFDValue afd_data;
+
   g_return_val_if_fail (afd != NULL, FALSE);
-  g_return_val_if_fail ((guint8) spec <= 2, FALSE);
+
   switch (spec) {
     case GST_VIDEO_AFD_SPEC_DVB_ETSI:
     case GST_VIDEO_AFD_SPEC_ATSC_A53:
       if ((data & 0x40) == 0)
         return FALSE;
+
       afd_data = data & 0xF;
       break;
     case GST_VIDEO_AFD_SPEC_SMPTE_ST2016_1:
       if ((data & 0x80) || (data & 0x3))
         return FALSE;
-      afd_data = data >> 3;
-      afd->aspect_ratio = (GstVideoAFDAspectRatio) (((data >> 2) & 1) + 1);
+
+      afd_data = (data >> 3) & 0xF;
+      aspect_ratio = (GstVideoAFDAspectRatio) (((data >> 2) & 1) + 1);
       break;
+    default:
+      g_return_val_if_reached (FALSE);
+  }
+
+  switch (afd_data) {
+    case GST_VIDEO_AFD_UNAVAILABLE:
+      if (spec == GST_VIDEO_AFD_SPEC_DVB_ETSI) {
+        /* reserved for DVB/ETSI */
+        return FALSE;
+      }
+      break;
+
+    case GST_VIDEO_AFD_16_9_TOP_ALIGNED:
+    case GST_VIDEO_AFD_14_9_TOP_ALIGNED:
+    case GST_VIDEO_AFD_GREATER_THAN_16_9:
+    case GST_VIDEO_AFD_4_3_FULL_16_9_FULL:
+    case GST_VIDEO_AFD_4_3_FULL_4_3_PILLAR:
+    case GST_VIDEO_AFD_16_9_LETTER_16_9_FULL:
+    case GST_VIDEO_AFD_14_9_LETTER_14_9_PILLAR:
+    case GST_VIDEO_AFD_4_3_FULL_14_9_CENTER:
+    case GST_VIDEO_AFD_16_9_LETTER_14_9_CENTER:
+    case GST_VIDEO_AFD_16_9_LETTER_4_3_CENTER:
+      break;
+
     default:
       return FALSE;
   }
 
-  /* AFD is stored in a nybble */
-  g_return_val_if_fail (afd_data <= 0xF, FALSE);
-  /* reserved values for all specifications */
-  g_return_val_if_fail (afd_data != 1 && (afd_data < 5 || afd_data > 7)
-      && afd_data != 12, FALSE);
-  /* reserved for DVB/ETSI */
-  g_return_val_if_fail ((spec != GST_VIDEO_AFD_SPEC_DVB_ETSI)
-      || (afd_data != 0), FALSE);
-
+  afd->field = field;
+  afd->aspect_ratio = aspect_ratio;
   afd->spec = spec;
-  afd->afd = (GstVideoAFDValue) afd_data;
+  afd->afd = afd_data;
   return TRUE;
+}
+
+/*
+ * gst_video_clear_user_data:
+ * @user_data: #GstVideoParseUserData struct to hold parsed closed caption, bar and AFD data
+ *
+ * Clears the user data, resetting it for the next frame
+ */
+void
+gst_video_clear_user_data (GstVideoParseUserData * user_data, gboolean free)
+{
+  user_data->closedcaptions_size = 0;
+  user_data->bar_data_size = 0;
+  user_data->active_format_flag = 0;
+  if (free)
+    g_clear_pointer (&user_data->lcevc_enhancement_data, gst_buffer_unref);
 }
 
 /*
  * gst_video_parse_user_data_unregistered:
  * @elt: #GstElement that is parsing user data
- * @user_data: #GstVideoParseUserDataUnregistered struct to hold parsed data
+ * @user_data: #GstVideoParseUserDataUnregistered to hold SEI User Data Unregistered
  * @br: #GstByteReader attached to buffer of user data
  * @uuid: User Data Unregistered UUID
  *
- * Parse user data and store in @user_data
+ * Copy remaining bytes in @br and store in @user_data
  */
 void
 gst_video_parse_user_data_unregistered (GstElement * elt,
     GstVideoParseUserDataUnregistered * user_data,
     GstByteReader * br, guint8 uuid[16])
 {
-  gst_video_user_data_unregistered_clear (user_data);
+  GstVideoUnregisteredMessage msg;
 
-  memcpy (&user_data->uuid, uuid, 16);
-  user_data->size = gst_byte_reader_get_size (br);
-  gst_byte_reader_dup_data (br, user_data->size, &user_data->data);
-}
+  memcpy (&msg.uuid, uuid, 16);
 
-/*
- * gst_video_user_data_unregistered_clear:
- * @user_data: #GstVideoParseUserDataUnregistered holding SEI User Data Unregistered
- *
- * Clears the user data unregistered
- */
-void
-gst_video_user_data_unregistered_clear (GstVideoParseUserDataUnregistered *
-    user_data)
-{
-  g_free (user_data->data);
-  user_data->data = NULL;
-  user_data->size = 0;
+  msg.size = gst_byte_reader_get_size (br);
+  if (!gst_byte_reader_dup_data (br, msg.size, &msg.data)) {
+    g_return_if_reached ();
+  }
+
+  if (user_data->messages == NULL) {
+    user_data->messages = g_array_sized_new (FALSE, TRUE,
+        sizeof (GstVideoUnregisteredMessage), 3);
+    g_array_set_clear_func (user_data->messages,
+        (GDestroyNotify) gst_video_clear_unregistered_message);
+  }
+
+  g_array_append_val (user_data->messages, msg);
 }
 
 /*
  * gst_video_push_user_data_unregistered:
  * @elt: #GstElement that is pushing user data
  * @user_data: #GstVideoParseUserDataUnregistered holding SEI User Data Unregistered
- * @buf: #GstBuffer that receives the parsed data
+ * @buf: (transfer none): #GstBuffer that receives the unregistered data
  *
- * After user data has been parsed, add the data to @buf
+ * Attach unregistered messages from @user_data to @buf as
+ * GstVideoSEIUserDataUnregisteredMeta
  */
 void
 gst_video_push_user_data_unregistered (GstElement * elt,
     GstVideoParseUserDataUnregistered * user_data, GstBuffer * buf)
 {
-  if (user_data->data != NULL) {
-    gst_buffer_add_video_sei_user_data_unregistered_meta (buf, user_data->uuid,
-        user_data->data, user_data->size);
-    gst_video_user_data_unregistered_clear (user_data);
+  GArray *messages = user_data->messages;
+  guint i;
+
+  if (messages == NULL || messages->len == 0) {
+    GST_TRACE_OBJECT (elt, "No unregistered user data to attach");
+    return;
   }
+
+  if (gst_buffer_get_meta (buf,
+          GST_VIDEO_SEI_USER_DATA_UNREGISTERED_META_API_TYPE)) {
+    GST_DEBUG_OBJECT (elt, "Buffer already has unregistered meta");
+    return;
+  }
+
+  for (i = 0; i < messages->len; i++) {
+    GstVideoUnregisteredMessage *msg =
+        &g_array_index (messages, GstVideoUnregisteredMessage, i);
+
+    gst_buffer_add_video_sei_user_data_unregistered_meta (buf, msg->uuid,
+        msg->data, msg->size);
+  }
+}
+
+/*
+ * gst_video_clear_user_data_unregistered:
+ * @user_data: #GstVideoParseUserDataUnregistered holding SEI User Data Unregistered
+ * @free: Whether to deallocate memory resources
+ *
+ * Clears the user data unregistered, resetting it for the next frame
+ */
+void gst_video_clear_user_data_unregistered
+    (GstVideoParseUserDataUnregistered * user_data, gboolean free)
+{
+  if (free)
+    g_clear_pointer (&user_data->messages, g_array_unref);
+  else if (user_data->messages != NULL)
+    g_array_set_size (user_data->messages, 0);
+}
+
+/*
+ * gst_video_clear_unregistered_message:
+ * @msg: #GstVideoUnregisteredMessage holding a single SEI User Data Unregistered
+ *
+ * Clears the message, freeing the data
+ */
+static void
+gst_video_clear_unregistered_message (GstVideoUnregisteredMessage * msg)
+{
+  memset (&msg->uuid, 0, sizeof msg->uuid);
+  g_clear_pointer (&msg->data, g_free);
+  msg->size = 0;
 }

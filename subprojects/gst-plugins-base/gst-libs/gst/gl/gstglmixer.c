@@ -122,20 +122,15 @@ gst_gl_mixer_pad_prepare_frame (GstVideoAggregatorPad * vpad,
 {
   GstGLMixerPad *pad = GST_GL_MIXER_PAD (vpad);
   GstGLMixer *mix = GST_GL_MIXER (vagg);
-  GstVideoInfo gl_info;
   GstGLSyncMeta *sync_meta;
 
   pad->current_texture = 0;
-
-  gst_video_info_set_format (&gl_info,
-      GST_VIDEO_FORMAT_RGBA,
-      GST_VIDEO_INFO_WIDTH (&vpad->info), GST_VIDEO_INFO_HEIGHT (&vpad->info));
 
   sync_meta = gst_buffer_get_gl_sync_meta (buffer);
   if (sync_meta)
     gst_gl_sync_meta_wait (sync_meta, GST_GL_BASE_MIXER (mix)->context);
 
-  if (!gst_video_frame_map (prepared_frame, &gl_info, buffer,
+  if (!gst_video_frame_map (prepared_frame, &vpad->info, buffer,
           GST_MAP_READ | GST_MAP_GL)) {
     GST_ERROR_OBJECT (pad, "Failed to map input frame");
     return FALSE;
@@ -244,7 +239,7 @@ gst_gl_mixer_propose_allocation (GstAggregator * agg,
 
   /* we also support various metadata */
   if (context->gl_vtable->FenceSync)
-    gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);
+    gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, NULL);
 
   return TRUE;
 
@@ -649,6 +644,9 @@ gst_gl_mixer_decide_allocation (GstAggregator * agg, GstQuery * query)
 
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  if (gst_query_find_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, NULL))
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_GL_SYNC_META);
 
   gst_buffer_pool_set_config (pool, config);
 

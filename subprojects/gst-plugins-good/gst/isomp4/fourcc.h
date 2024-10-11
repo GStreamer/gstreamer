@@ -54,6 +54,7 @@ G_BEGIN_DECLS
 #define FOURCC_FMP4     GST_MAKE_FOURCC('F','M','P','4')
 #define FOURCC_H264     GST_MAKE_FOURCC('H','2','6','4')
 #define FOURCC_H265     GST_MAKE_FOURCC('H','2','6','5')
+#define FOURCC_LAGS     GST_MAKE_FOURCC('L','A','G','S')
 #define FOURCC_MAC3     GST_MAKE_FOURCC('M','A','C','3')
 #define FOURCC_MAC6     GST_MAKE_FOURCC('M','A','C','6')
 #define FOURCC_MP4V     GST_MAKE_FOURCC('M','P','4','V')

@@ -1,7 +1,7 @@
 sources = [
   'gstplugin.cc',
   'gstqt6element.cc',
-  'gstqsg6glnode.cc',
+  'gstqsg6material.cc',
   'gstqt6glutility.cc',
   'gstqml6glsink.cc',
   'gstqml6glsrc.cc',
@@ -14,9 +14,15 @@ sources = [
 
 moc_headers = [
   'qt6glitem.h',
-  'gstqsg6glnode.h',
   'qt6glwindow.h',
   'qt6glrenderer.h',
+]
+
+shader_sources = [
+  { 'glsl': 'vertex.vert' },
+  { 'glsl': 'RGBA.frag', '100es': 'RGBA_gles.frag'},
+  { 'glsl': 'YUV_BIPLANAR.frag' },
+  { 'glsl': 'YUV_TRIPLANAR.frag' },
 ]
 
 qt6qml_dep = dependency('', required: false)
@@ -42,7 +48,7 @@ if not add_languages('cpp', native: false, required: qt6_option)
 endif
 
 qt6_mod = import('qt6')
-if not qt6_mod.has_tools()
+if not qt6_mod.has_tools(method: qt6_method)
   if qt6_option.enabled()
     error('qt6 qmlglsink plugin is enabled, but qt specific tools were not found')
   endif
@@ -50,10 +56,17 @@ if not qt6_mod.has_tools()
 endif
 
 qt6qml_dep = dependency('qt6', modules : ['Core', 'Gui', 'Qml', 'Quick'],
-                        method: qt6_method, required: qt6_option, static: host_system == 'ios')
+                        method: qt6_method, required: qt6_option, static: host_system == 'ios', private_headers: true)
 if not qt6qml_dep.found()
   subdir_done()
 endif
+
+qt6_bindir = qt6qml_dep.get_variable('bindir', configtool: 'QT_HOST_BINS')
+qsb = find_program('qsb-qt6', 'qsb', dirs: [qt6_bindir], required: qt6_option)
+if not qsb.found()
+  subdir_done()
+endif
+qsb_wrapper = find_program('qsb-wrapper.py')
 
 optional_deps = []
 qt_defines = []
@@ -150,10 +163,39 @@ if host_system == 'ios'
   endif
 endif
 
-if qt6_option.require(have_qt_windowing).allowed()
+if qt6_option.require(have_qt_windowing, error_message: 'No windowing, enable one of the qt-* windowing options').allowed()
   # Build it!
-  moc_files = qt6_mod.preprocess(moc_headers : moc_headers)
-  gstqml6gl = library('gstqml6', sources, moc_files,
+  moc_files = qt6_mod.preprocess(moc_headers : moc_headers, method: qt6_method)
+  # TODO: dist backup qsb shaders?
+  shaders = []
+  foreach shader_source: shader_sources
+    shader = shader_source['glsl']
+    qsb_shader = shader + '.qsb'
+    dist_shader = shader + '-dist.qsb'
+
+    compiled_shader = custom_target(qsb_shader,
+      input: shader,
+      output: qsb_shader,
+      command: [qsb, '--glsl=100 es,120,330', '--batchable', '--output', '@OUTPUT@', '@INPUT@']
+    )
+    shaders += [compiled_shader]
+
+    if '100es' in shader_source
+      qsb_shader_external = shader + '.qsb.external'
+
+      compiled_shader_external = custom_target(qsb_shader_external,
+        input: [compiled_shader, shader_source['100es']],
+        output: qsb_shader_external,
+        command: [qsb_wrapper, qsb, '@OUTPUT@', '@INPUT1@', '@INPUT0@'],
+      )
+
+      shaders += [compiled_shader_external]
+    endif
+  endforeach
+  resource_file = configure_file(input: 'resources.qrc', output: 'resources.qrc', copy: true)
+  qresources = qt6_mod.compile_resources(sources: resource_file, method: qt6_method)
+
+  gstqml6gl = library('gstqml6', sources, moc_files, qresources,
     cpp_args : gst_plugins_good_args + qt_defines,
     link_args : noseh_link_args,
     include_directories: [configinc, libsinc],

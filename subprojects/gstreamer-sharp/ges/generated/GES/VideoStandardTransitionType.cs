@@ -82,6 +82,7 @@ namespace GES {
 		WindshieldV = 263,
 		WindshieldH = 264,
 		Crossfade = 512,
+		FadeIn = 513,
 	}
 
 	internal class VideoStandardTransitionTypeGType {

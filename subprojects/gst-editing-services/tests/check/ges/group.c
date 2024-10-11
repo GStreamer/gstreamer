@@ -635,7 +635,6 @@ static void
 project_loaded_cb (GESProject * project, GESTimeline * timeline,
     GMainLoop * mainloop)
 {
-  GST_ERROR ("LOADED!");
   g_main_loop_quit (mainloop);
 }
 
@@ -728,7 +727,7 @@ GST_START_TEST (test_children_properties_contain)
   GESTimeline *timeline;
   GESLayer *layer;
   GESAsset *asset;
-  GESTimelineElement *c1, *c2, *c3, *g1, *g2;
+  GESTimelineElement *audioc0, *videoc, *audioc1, *g1, *g2;
   GParamSpec **child_props1, **child_props2;
   guint num_props1, num_props2;
 
@@ -739,99 +738,92 @@ GST_START_TEST (test_children_properties_contain)
 
   asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   /* choose one audio and one video to give them different properties */
-  c1 = GES_TIMELINE_ELEMENT (ges_layer_add_asset (layer, asset, 0, 0, 10,
+  audioc0 = GES_TIMELINE_ELEMENT (ges_layer_add_asset (layer, asset, 0, 0, 10,
           GES_TRACK_TYPE_AUDIO));
-  c2 = GES_TIMELINE_ELEMENT (ges_layer_add_asset (layer, asset, 20, 0, 10,
+  videoc = GES_TIMELINE_ELEMENT (ges_layer_add_asset (layer, asset, 20, 0, 10,
           GES_TRACK_TYPE_VIDEO));
-  /* but c3 will have the same child properties as c1! */
-  c3 = GES_TIMELINE_ELEMENT (ges_layer_add_asset (layer, asset, 40, 0, 10,
+  /* but audioc1 will have the same child properties as audioc0! */
+  audioc1 = GES_TIMELINE_ELEMENT (ges_layer_add_asset (layer, asset, 40, 0, 10,
           GES_TRACK_TYPE_AUDIO));
 
-  fail_unless (c1);
-  fail_unless (c2);
+  fail_unless (audioc0);
+  fail_unless (videoc);
 
   g1 = GES_TIMELINE_ELEMENT (ges_group_new ());
   g2 = GES_TIMELINE_ELEMENT (ges_group_new ());
 
   /* group should have the same as its children */
-  fail_unless (ges_container_add (GES_CONTAINER (g1), c1));
+  fail_unless (ges_container_add (GES_CONTAINER (g1), audioc0));
 
   num_props1 = 0;
-  child_props1 = append_children_properties (NULL, c1, &num_props1);
+  child_props1 = append_children_properties (NULL, audioc0, &num_props1);
   num_props2 = 0;
   child_props2 = append_children_properties (NULL, g1, &num_props2);
 
+  /* audioc0 VS g1 */
   assert_property_list_match (child_props1, num_props1,
       child_props2, num_props2);
 
   /* add next child and gain its children properties as well */
-  fail_unless (ges_container_add (GES_CONTAINER (g1), c2));
+  fail_unless (ges_container_add (GES_CONTAINER (g1), videoc));
 
-  /* add the child properties of c2 to the existing list for c1 */
-  child_props1 = append_children_properties (child_props1, c2, &num_props1);
-
-  free_children_properties (child_props2, num_props2);
-  num_props2 = 0;
-  child_props2 = append_children_properties (NULL, g1, &num_props2);
-
-  assert_property_list_match (child_props1, num_props1,
-      child_props2, num_props2);
-
-  /* FIXME: if c1 and c3 have the same child properties (they use the
-   * same GParamSpec) then ges_timeline_element_add_child_property_full
-   * will fail, even though the corresponding GObject child is not the
-   * same instance */
-
-  fail_unless (ges_container_add (GES_CONTAINER (g1), c3));
-
-  /* FIXME: regarding the above comment, ideally we would append the
-   * children properties for c3 to child_props1, so that its children
-   * properties appear twice in the list:
-   * child_props1 =
-   * append_children_properties (child_props1, c3, &num_props1); */
+  /* add the child properties of videoc to the existing list for audioc0 */
+  child_props1 = append_children_properties (child_props1, videoc, &num_props1);
 
   free_children_properties (child_props2, num_props2);
   num_props2 = 0;
   child_props2 = append_children_properties (NULL, g1, &num_props2);
 
+  /* audioc0+videoc VS g1 */
   assert_property_list_match (child_props1, num_props1,
       child_props2, num_props2);
 
-  /* remove c3 */
-  fail_unless (ges_container_remove (GES_CONTAINER (g1), c3));
+  fail_unless (ges_container_add (GES_CONTAINER (g1), audioc1));
 
-  /* FIXME: regarding the above comment, ideally we would reset
-   * child_props1 to only contain the child properties for c1 and c2
-   * Currently, we at least want to make sure that the child properties
-   * for c1 remain.
-   * Currently, if we removed c1 first, all its children properties would
-   * be removed from g1, and this would *not* automatically register the
-   * children properties for c3. */
-
+  child_props1 =
+      append_children_properties (child_props1, audioc1, &num_props1);
   free_children_properties (child_props2, num_props2);
   num_props2 = 0;
   child_props2 = append_children_properties (NULL, g1, &num_props2);
 
+  /* audioc0+videoc+audioc1 VS g1 */
   assert_property_list_match (child_props1, num_props1,
       child_props2, num_props2);
 
-  /* remove c1 */
-  fail_unless (ges_container_remove (GES_CONTAINER (g1), c1));
+  /* remove audioc1 */
+  fail_unless (ges_container_remove (GES_CONTAINER (g1), audioc1));
 
   free_children_properties (child_props1, num_props1);
   num_props1 = 0;
-  child_props1 = append_children_properties (NULL, c2, &num_props1);
+  child_props1 = append_children_properties (NULL, audioc0, &num_props1);
+  child_props1 = append_children_properties (child_props1, videoc, &num_props1);
 
   free_children_properties (child_props2, num_props2);
   num_props2 = 0;
   child_props2 = append_children_properties (NULL, g1, &num_props2);
 
+  /* audioc0+videoc VS g1 */
   assert_property_list_match (child_props1, num_props1,
       child_props2, num_props2);
 
-  /* add g1 and c1 to g2 */
+  /* remove audioc0 */
+  fail_unless (ges_container_remove (GES_CONTAINER (g1), audioc0));
+
+  free_children_properties (child_props1, num_props1);
+  num_props1 = 0;
+  child_props1 = append_children_properties (NULL, videoc, &num_props1);
+
+  free_children_properties (child_props2, num_props2);
+  num_props2 = 0;
+  child_props2 = append_children_properties (NULL, g1, &num_props2);
+
+  /* videoc VS g1 */
+  assert_property_list_match (child_props1, num_props1,
+      child_props2, num_props2);
+
+  /* add g1 and audioc0 to g2 */
   fail_unless (ges_container_add (GES_CONTAINER (g2), g1));
-  fail_unless (ges_container_add (GES_CONTAINER (g2), c1));
+  fail_unless (ges_container_add (GES_CONTAINER (g2), audioc0));
 
   free_children_properties (child_props1, num_props1);
   num_props1 = 0;
@@ -839,9 +831,10 @@ GST_START_TEST (test_children_properties_contain)
 
   free_children_properties (child_props2, num_props2);
   num_props2 = 0;
-  child_props2 = append_children_properties (NULL, c1, &num_props2);
+  child_props2 = append_children_properties (NULL, audioc0, &num_props2);
   child_props2 = append_children_properties (child_props2, g1, &num_props2);
 
+  /* g2+audioc0 VS g2 */
   assert_property_list_match (child_props1, num_props1,
       child_props2, num_props2);
 

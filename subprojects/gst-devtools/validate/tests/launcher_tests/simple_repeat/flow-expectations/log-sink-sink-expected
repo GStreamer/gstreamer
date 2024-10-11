@@ -1,88 +1,88 @@
 event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
 event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
-event caps: video/x-raw, format=(string)ABGR64_LE, framerate=(fraction)10/1, height=(int)240, interlace-mode=(string)progressive, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, width=(int)320;
-event caps: video/x-raw, format=(string)ABGR64_LE, framerate=(fraction)10/1, height=(int)240, interlace-mode=(string)progressive, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, width=(int)320;
+event caps: video/x-raw, format=(string)A444_16LE, framerate=(fraction)10/1, height=(int)240, interlace-mode=(string)progressive, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, width=(int)320;
+event caps: video/x-raw, format=(string)A444_16LE, framerate=(fraction)10/1, height=(int)240, interlace-mode=(string)progressive, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, width=(int)320;
 event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
 event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
-buffer: checksum=c2c3ac5edd6cd9060ffce7e1fc012b390ac135d7, pts=0:00:00.000000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=c2c3ac5edd6cd9060ffce7e1fc012b390ac135d7, pts=0:00:00.000000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=1e9de0a4f9c447cbd5531fd70082a2e54eff59da, pts=0:00:00.000000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=1e9de0a4f9c447cbd5531fd70082a2e54eff59da, pts=0:00:00.000000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
 event flush-start: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event segment: format=TIME, start=0:00:00.100000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.100000000, base=0:00:00.000000000, position=0:00:00.100000000
 event segment: format=TIME, start=0:00:00.100000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.100000000, base=0:00:00.000000000, position=0:00:00.100000000
-buffer: checksum=eb34fe4e12ed160eee179fe802b0a876a8df7489, pts=0:00:00.100000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=eb34fe4e12ed160eee179fe802b0a876a8df7489, pts=0:00:00.100000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=60f9313dc0e59408e889535bbcb91ad1267de6d3, pts=0:00:00.100000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=60f9313dc0e59408e889535bbcb91ad1267de6d3, pts=0:00:00.100000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
 event flush-start: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event segment: format=TIME, start=0:00:00.200000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.200000000, base=0:00:00.000000000, position=0:00:00.200000000
 event segment: format=TIME, start=0:00:00.200000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.200000000, base=0:00:00.000000000, position=0:00:00.200000000
-buffer: checksum=5ece74f070b26a2d2f81818ea0c788de8afb684c, pts=0:00:00.200000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=5ece74f070b26a2d2f81818ea0c788de8afb684c, pts=0:00:00.200000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=7ad0ef34432f9041747a90fe924d7c0143975003, pts=0:00:00.200000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=7ad0ef34432f9041747a90fe924d7c0143975003, pts=0:00:00.200000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
 event flush-start: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event segment: format=TIME, start=0:00:00.300000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.300000000, base=0:00:00.000000000, position=0:00:00.300000000
 event segment: format=TIME, start=0:00:00.300000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.300000000, base=0:00:00.000000000, position=0:00:00.300000000
-buffer: checksum=ddc4a73eb29e68413708e87409041161f0f5aed1, pts=0:00:00.300000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=ddc4a73eb29e68413708e87409041161f0f5aed1, pts=0:00:00.300000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=cef4a60320cdbc60627cfef88fca84a0f2d24ce1, pts=0:00:00.300000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=cef4a60320cdbc60627cfef88fca84a0f2d24ce1, pts=0:00:00.300000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
 event flush-start: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event segment: format=TIME, start=0:00:00.400000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.400000000, base=0:00:00.000000000, position=0:00:00.400000000
 event segment: format=TIME, start=0:00:00.400000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.400000000, base=0:00:00.000000000, position=0:00:00.400000000
-buffer: checksum=d6cd6db21d62bbcff2b8dbf959eb6db7bbf94862, pts=0:00:00.400000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=d6cd6db21d62bbcff2b8dbf959eb6db7bbf94862, pts=0:00:00.400000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=b55eea96d13c01d3bac1deadb98fc53a69e6ef0c, pts=0:00:00.400000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=b55eea96d13c01d3bac1deadb98fc53a69e6ef0c, pts=0:00:00.400000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
 event flush-start: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event segment: format=TIME, start=0:00:00.500000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.500000000, base=0:00:00.000000000, position=0:00:00.500000000
 event segment: format=TIME, start=0:00:00.500000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.500000000, base=0:00:00.000000000, position=0:00:00.500000000
-buffer: checksum=e6ea9c1f26d0867e6383e0c2bbac708555302599, pts=0:00:00.500000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=e6ea9c1f26d0867e6383e0c2bbac708555302599, pts=0:00:00.500000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=5d488b683fa2a02bb9c9d48292a3b5fb94941329, pts=0:00:00.500000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=5d488b683fa2a02bb9c9d48292a3b5fb94941329, pts=0:00:00.500000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
 event flush-start: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event segment: format=TIME, start=0:00:00.600000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.600000000, base=0:00:00.000000000, position=0:00:00.600000000
 event segment: format=TIME, start=0:00:00.600000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.600000000, base=0:00:00.000000000, position=0:00:00.600000000
-buffer: checksum=bf60199f505343f0477c4e0322e4a0c43222c773, pts=0:00:00.600000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=bf60199f505343f0477c4e0322e4a0c43222c773, pts=0:00:00.600000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=19b715adf2eebfe663b66f2544c19601301c58ee, pts=0:00:00.600000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=19b715adf2eebfe663b66f2544c19601301c58ee, pts=0:00:00.600000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
 event flush-start: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event segment: format=TIME, start=0:00:00.700000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.700000000, base=0:00:00.000000000, position=0:00:00.700000000
 event segment: format=TIME, start=0:00:00.700000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.700000000, base=0:00:00.000000000, position=0:00:00.700000000
-buffer: checksum=fdb66ab2ff08bcf781ec9847e0a88699924d8d9d, pts=0:00:00.700000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=fdb66ab2ff08bcf781ec9847e0a88699924d8d9d, pts=0:00:00.700000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=e2605ace20788c0750c8efcedb069b5c32af1ada, pts=0:00:00.700000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=e2605ace20788c0750c8efcedb069b5c32af1ada, pts=0:00:00.700000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
 event flush-start: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event segment: format=TIME, start=0:00:00.800000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.800000000, base=0:00:00.000000000, position=0:00:00.800000000
 event segment: format=TIME, start=0:00:00.800000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.800000000, base=0:00:00.000000000, position=0:00:00.800000000
-buffer: checksum=d64e8211923d80c6d63c8eef3c10c46ebcd5f7f2, pts=0:00:00.800000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=d64e8211923d80c6d63c8eef3c10c46ebcd5f7f2, pts=0:00:00.800000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=46d08b5dbae397afdd2e219a80f0217445e4bc5c, pts=0:00:00.800000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=46d08b5dbae397afdd2e219a80f0217445e4bc5c, pts=0:00:00.800000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
 event flush-start: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event segment: format=TIME, start=0:00:00.900000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.900000000, base=0:00:00.000000000, position=0:00:00.900000000
 event segment: format=TIME, start=0:00:00.900000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:00.900000000, base=0:00:00.000000000, position=0:00:00.900000000
-buffer: checksum=03a7dbed3959d21121dc658a6c372b3a88a73612, pts=0:00:00.900000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=03a7dbed3959d21121dc658a6c372b3a88a73612, pts=0:00:00.900000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=951c0433be9cdc630e8c730f64f9c132b15945fd, pts=0:00:00.900000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=951c0433be9cdc630e8c730f64f9c132b15945fd, pts=0:00:00.900000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
 event flush-start: (no structure)
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event segment: format=TIME, start=0:00:01.000000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:01.000000000, base=0:00:00.000000000, position=0:00:01.000000000
 event segment: format=TIME, start=0:00:01.000000000, offset=0:00:00.000000000, stop=none, flags=0x01, time=0:00:01.000000000, base=0:00:00.000000000, position=0:00:01.000000000
-buffer: checksum=df0a7326f04e5b6620275fc47bd78f33fbbc380b, pts=0:00:01.000000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
-buffer: checksum=df0a7326f04e5b6620275fc47bd78f33fbbc380b, pts=0:00:01.000000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=63d149f33b3a1d1f916d289009a0fe5c4903e74e, pts=0:00:01.000000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta
+buffer: checksum=63d149f33b3a1d1f916d289009a0fe5c4903e74e, pts=0:00:01.000000000, dur=0:00:00.100000000, flags=discont, meta=GstVideoMeta

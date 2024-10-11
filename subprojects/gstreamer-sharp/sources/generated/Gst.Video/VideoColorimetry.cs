@@ -56,6 +56,21 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_colorimetry_is_equivalent(IntPtr raw, uint bitdepth, IntPtr other, uint other_bitdepth);
+
+		public bool IsEquivalent(uint bitdepth, Gst.Video.VideoColorimetry other, uint other_bitdepth) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr native_other = GLib.Marshaller.StructureToPtrAlloc (other);
+			bool raw_ret = gst_video_colorimetry_is_equivalent(this_as_native, bitdepth, native_other, other_bitdepth);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			Marshal.FreeHGlobal (native_other);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_colorimetry_matches(IntPtr raw, IntPtr color);
 
 		public bool Matches(string color) {

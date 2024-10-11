@@ -52,11 +52,16 @@ enum {
   GST_VA_FILTER_PROP_AUTO_CONTRAST,
   GST_VA_FILTER_PROP_DEINTERLACE_METHOD,
   GST_VA_FILTER_PROP_HDR,
+  GST_VA_FILTER_PROP_SCALE_METHOD,
+  GST_VA_FILTER_PROP_INTERPOLATION_METHOD,
   GST_VA_FILTER_PROP_LAST
 };
 
 #define GST_TYPE_VA_SCALE_METHOD gst_va_scale_method_get_type()
 GType gst_va_scale_method_get_type (void) G_GNUC_CONST;
+
+#define GST_TYPE_VA_INTERPOLATION_METHOD gst_va_interpolation_method_get_type()
+GType gst_va_interpolation_method_get_type (void) G_GNUC_CONST;
 
 typedef struct _GstVaSample GstVaSample;
 struct _GstVaSample
@@ -116,6 +121,9 @@ gboolean              gst_va_filter_install_deinterlace_properties
                                                           (GstVaFilter * self,
                                                            GObjectClass * klass);
 gboolean              gst_va_filter_set_scale_method      (GstVaFilter * self,
+                                                           guint32 method);
+gboolean              gst_va_filter_set_interpolation_method
+                                                          (GstVaFilter * self,
                                                            guint32 method);
 gboolean              gst_va_filter_set_orientation       (GstVaFilter * self,
                                                            GstVideoOrientationMethod orientation);

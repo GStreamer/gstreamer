@@ -18,6 +18,16 @@ namespace Gst.Video {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[GLib.Property ("force-live")]
+		public bool ForceLive {
+			get {
+				GLib.Value val = GetProperty ("force-live");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+		}
+
 		public Gst.Video.VideoInfo Info {
 			get {
 				unsafe {
@@ -224,34 +234,36 @@ namespace Gst.Video {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void FindBestFormatNativeDelegate (IntPtr inst, IntPtr downstream_caps, IntPtr best_info, bool at_least_one_alpha);
+		delegate void FindBestFormatNativeDelegate (IntPtr inst, IntPtr downstream_caps, IntPtr best_info, out bool at_least_one_alpha);
 
-		static void FindBestFormat_cb (IntPtr inst, IntPtr downstream_caps, IntPtr best_info, bool at_least_one_alpha)
+		static void FindBestFormat_cb (IntPtr inst, IntPtr downstream_caps, IntPtr best_info, out bool at_least_one_alpha)
 		{
 			try {
 				VideoAggregator __obj = GLib.Object.GetObject (inst, false) as VideoAggregator;
-				__obj.OnFindBestFormat (downstream_caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (downstream_caps, typeof (Gst.Caps), false), best_info == IntPtr.Zero ? null : (Gst.Video.VideoInfo) GLib.Opaque.GetOpaque (best_info, typeof (Gst.Video.VideoInfo), false), at_least_one_alpha);
+				__obj.OnFindBestFormat (downstream_caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (downstream_caps, typeof (Gst.Caps), false), best_info == IntPtr.Zero ? null : (Gst.Video.VideoInfo) GLib.Opaque.GetOpaque (best_info, typeof (Gst.Video.VideoInfo), false), out at_least_one_alpha);
 			} catch (Exception e) {
-				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
 			}
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Video.VideoAggregator), ConnectionMethod="OverrideFindBestFormat")]
-		protected virtual void OnFindBestFormat (Gst.Caps downstream_caps, Gst.Video.VideoInfo best_info, bool at_least_one_alpha)
+		protected virtual void OnFindBestFormat (Gst.Caps downstream_caps, Gst.Video.VideoInfo best_info, out bool at_least_one_alpha)
 		{
-			InternalFindBestFormat (downstream_caps, best_info, at_least_one_alpha);
+			InternalFindBestFormat (downstream_caps, best_info, out at_least_one_alpha);
 		}
 
-		private void InternalFindBestFormat (Gst.Caps downstream_caps, Gst.Video.VideoInfo best_info, bool at_least_one_alpha)
+		private void InternalFindBestFormat (Gst.Caps downstream_caps, Gst.Video.VideoInfo best_info, out bool at_least_one_alpha)
 		{
 			FindBestFormatNativeDelegate unmanaged = null;
 			unsafe {
 				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("find_best_format"));
 				unmanaged = (FindBestFormatNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(FindBestFormatNativeDelegate));
 			}
-			if (unmanaged == null) return;
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
 
-			unmanaged (this.Handle, downstream_caps == null ? IntPtr.Zero : downstream_caps.Handle, best_info == null ? IntPtr.Zero : best_info.Handle, at_least_one_alpha);
+			unmanaged (this.Handle, downstream_caps == null ? IntPtr.Zero : downstream_caps.Handle, best_info == null ? IntPtr.Zero : best_info.Handle, out at_least_one_alpha);
 		}
 
 
@@ -317,6 +329,17 @@ namespace Gst.Video {
 			get {
 				IntPtr raw_ret = gst_video_aggregator_get_type();
 				GLib.GType ret = new GLib.GType(raw_ret);
+				return ret;
+			}
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_aggregator_get_execution_task_pool(IntPtr raw);
+
+		public Gst.TaskPool ExecutionTaskPool { 
+			get {
+				IntPtr raw_ret = gst_video_aggregator_get_execution_task_pool(Handle);
+				Gst.TaskPool ret = GLib.Object.GetObject(raw_ret, true) as Gst.TaskPool;
 				return ret;
 			}
 		}

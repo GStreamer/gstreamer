@@ -88,14 +88,6 @@ GST_DEBUG_CATEGORY_STATIC (ts_demux_debug);
 
 #define ABSDIFF(a,b) (((a) > (b)) ? ((a) - (b)) : ((b) - (a)))
 
-static GQuark QUARK_TSDEMUX;
-static GQuark QUARK_PID;
-static GQuark QUARK_PCR;
-static GQuark QUARK_OPCR;
-static GQuark QUARK_PTS;
-static GQuark QUARK_DTS;
-static GQuark QUARK_OFFSET;
-
 typedef enum
 {
   PENDING_PACKET_EMPTY = 0,     /* No pending packet/buffer
@@ -243,6 +235,7 @@ struct _TSDemuxStream
       "wmvversion = (int) 3, " \
       "format = (string) WVC1;" \
       "image/x-jpc;" \
+      "image/x-jxsc;" \
 )
 
 #define AUDIO_CAPS \
@@ -348,21 +341,8 @@ static void gst_ts_demux_check_and_sync_streams (GstTSDemux * demux,
     GstClockTime time);
 static void handle_psi (MpegTSBase * base, GstMpegtsSection * section);
 
-static void
-_extra_init (void)
-{
-  QUARK_TSDEMUX = g_quark_from_string ("tsdemux");
-  QUARK_PID = g_quark_from_string ("pid");
-  QUARK_PCR = g_quark_from_string ("pcr");
-  QUARK_OPCR = g_quark_from_string ("opcr");
-  QUARK_PTS = g_quark_from_string ("pts");
-  QUARK_DTS = g_quark_from_string ("dts");
-  QUARK_OFFSET = g_quark_from_string ("offset");
-}
-
 #define gst_ts_demux_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstTSDemux, gst_ts_demux, GST_TYPE_MPEGTS_BASE,
-    _extra_init ());
+G_DEFINE_TYPE (GstTSDemux, gst_ts_demux, GST_TYPE_MPEGTS_BASE);
 #define _do_element_init \
   GST_DEBUG_CATEGORY_INIT (ts_demux_debug, "tsdemux", 0, \
       "MPEG transport stream demuxer");\
@@ -943,12 +923,6 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
     goto done;
   }
 
-  if (flags & (GST_SEEK_FLAG_SEGMENT)) {
-    GST_WARNING_OBJECT (demux, "seek flags 0x%x are not supported",
-        (int) flags);
-    goto done;
-  }
-
   /* configure the segment with the seek variables */
   memcpy (&seeksegment, &base->out_segment, sizeof (GstSegment));
   GST_LOG_OBJECT (demux, "Before seek, output segment %" GST_SEGMENT_FORMAT,
@@ -1020,6 +994,8 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
 
   /* Commit the new segment */
   memcpy (&base->out_segment, &seeksegment, sizeof (GstSegment));
+  /* And prepare to restart */
+  gst_flow_combiner_reset (demux->flowcombiner);
   res = GST_FLOW_OK;
 
 done:
@@ -1112,10 +1088,12 @@ push_event (MpegTSBase * base, GstEvent * event)
   for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
     TSDemuxStream *stream = (TSDemuxStream *) tmp->data;
     if (stream->pad) {
-      /* If we are pushing out EOS, flush out pending data first */
-      if (GST_EVENT_TYPE (event) == GST_EVENT_EOS &&
-          gst_pad_is_active (stream->pad))
+      /* If we are pushing out EOS or segment-done, flush out pending data first */
+      if ((GST_EVENT_TYPE (event) == GST_EVENT_EOS ||
+              GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT_DONE) &&
+          gst_pad_is_active (stream->pad)) {
         gst_ts_demux_push_pending_data (demux, stream, NULL);
+      }
 
       gst_event_ref (event);
       gst_pad_push_event (stream->pad, event);
@@ -1160,7 +1138,7 @@ handle_psi (MpegTSBase * base, GstMpegtsSection * section)
       GstMpegtsSCTESIT *sit =
           (GstMpegtsSCTESIT *) gst_mpegts_section_get_scte_sit (new_section);
 
-      rtime_map = gst_structure_new_empty ("running-time-map");
+      rtime_map = gst_structure_new_static_str_empty ("running-time-map");
 
       if (sit->fully_parsed) {
         if (sit->splice_time_specified) {
@@ -1696,6 +1674,12 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
           is_audio = TRUE;
           caps = gst_caps_new_empty_simple ("audio/x-ac4");
           break;
+        case DRF_ID_VANC:
+          is_private = TRUE;
+          caps =
+              gst_caps_new_simple ("meta/x-st-2038", "alignment", G_TYPE_STRING,
+              "line", NULL);
+          break;
       }
       if (caps)
         break;
@@ -1850,6 +1834,53 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
             "colorspace", G_TYPE_STRING, colorspace, NULL);
       }
       break;
+    case GST_MPEGTS_STREAM_TYPE_VIDEO_JPEG_XS:
+    {
+      GstMpegtsJpegXsDescriptor jpegxs;
+      desc =
+          mpegts_get_descriptor_from_stream_with_extension (bstream,
+          GST_MTS_DESC_EXTENSION, GST_MTS_DESC_EXT_JXS_VIDEO);
+      if (!desc) {
+        GST_WARNING_OBJECT (demux,
+            "image/x-jxsc stream does not have mandatory descriptor");
+        break;
+      }
+      if (!gst_mpegts_descriptor_parse_jpeg_xs (desc, &jpegxs)) {
+        GST_WARNING_OBJECT (demux, "Invalid JPEG XS descriptor");
+        break;
+      }
+      if (jpegxs.frat >> 30) {
+        GST_WARNING_OBJECT (demux, "Interlaced JPEG-XS not supported yet");
+        break;
+      }
+      if ((jpegxs.schar >> 15) == 0) {
+        GST_WARNING_OBJECT (demux, "JPEG-XS sampling properties are required");
+        break;
+      }
+      is_video = TRUE;
+      caps =
+          gst_caps_from_string
+          ("image/x-jxsc, alignment=(string)frame, interlace-mode=(string)progressive");
+
+      /* interlace-mode, sampling, depth */
+      gst_caps_set_simple (caps, "width", G_TYPE_INT, jpegxs.horizontal_size,
+          "height", G_TYPE_INT, jpegxs.vertical_size, "depth", G_TYPE_INT,
+          (jpegxs.schar >> 4) & 0xf, NULL);
+      switch (jpegxs.schar & 0xf) {
+        case 0:
+          gst_caps_set_simple (caps, "sampling", G_TYPE_STRING, "YCbCr-4:2:2",
+              NULL);
+          break;
+        case 1:
+          gst_caps_set_simple (caps, "sampling", G_TYPE_STRING, "YCbCr-4:4:4",
+              NULL);
+          break;
+        default:
+          GST_WARNING_OBJECT (demux, "Unsupported JPEG-XS sampling format");
+          break;
+      }
+      break;
+    }
     case ST_VIDEO_DIRAC:
       if (bstream->registration_id == 0x64726163) {
         GST_LOG_OBJECT (demux, "dirac");
@@ -2413,11 +2444,9 @@ gst_ts_demux_record_pts (GstTSDemux * demux, TSDemuxStream * stream,
 
   if (G_UNLIKELY (demux->emit_statistics)) {
     GstStructure *st;
-    st = gst_structure_new_id_empty (QUARK_TSDEMUX);
-    gst_structure_id_set (st,
-        QUARK_PID, G_TYPE_UINT, bs->pid,
-        QUARK_OFFSET, G_TYPE_UINT64, offset, QUARK_PTS, G_TYPE_UINT64, pts,
-        NULL);
+    st = gst_structure_new_static_str ("tsdemux",
+        "pid", G_TYPE_UINT, bs->pid,
+        "offset", G_TYPE_UINT64, offset, "pts", G_TYPE_UINT64, pts, NULL);
     gst_element_post_message (GST_ELEMENT_CAST (demux),
         gst_message_new_element (GST_OBJECT (demux), st));
   }
@@ -2447,11 +2476,9 @@ gst_ts_demux_record_dts (GstTSDemux * demux, TSDemuxStream * stream,
 
   if (G_UNLIKELY (demux->emit_statistics)) {
     GstStructure *st;
-    st = gst_structure_new_id_empty (QUARK_TSDEMUX);
-    gst_structure_id_set (st,
-        QUARK_PID, G_TYPE_UINT, bs->pid,
-        QUARK_OFFSET, G_TYPE_UINT64, offset, QUARK_DTS, G_TYPE_UINT64, dts,
-        NULL);
+    st = gst_structure_new_static_str ("tsdemux",
+        "pid", G_TYPE_UINT, bs->pid,
+        "offset", G_TYPE_UINT64, offset, "dts", G_TYPE_UINT64, dts, NULL);
     gst_element_post_message (GST_ELEMENT_CAST (demux),
         gst_message_new_element (GST_OBJECT (demux), st));
   }
@@ -3010,6 +3037,13 @@ gst_ts_demux_check_and_sync_streams (GstTSDemux * demux, GstClockTime time)
 
       /* Now send gap event */
       gst_pad_push_event (ps->pad, gst_event_new_gap (time, 0));
+
+      /* And do an EOS check */
+      MpegTSBase *base = GST_MPEGTS_BASE (demux);
+      if (base->out_segment.stop != -1 && time >= base->out_segment.stop) {
+        gst_flow_combiner_update_pad_flow (demux->flowcombiner, ps->pad,
+            GST_FLOW_EOS);
+      }
     }
 
     /* Update GAP tracking vars so we don't re-check this stream for a while */
@@ -3112,6 +3146,50 @@ error:
       gst_buffer_list_unref (buffer_list);
     return NULL;
   }
+}
+
+static GstBuffer *
+parse_jpegxs_access_unit (TSDemuxStream * stream)
+{
+  GstByteReader br;
+  guint32 header_tag;
+  guint32 header_size;
+  GstBuffer *retbuf;
+
+  if (stream->current_size < 30) {
+    GST_ERROR_OBJECT (stream->pad, "Not enough data for header");
+    goto error;
+  }
+
+  gst_byte_reader_init (&br, stream->data, stream->current_size);
+
+  /* Should start with `jxes` box header */
+  header_size = gst_byte_reader_get_uint32_be_unchecked (&br);
+  header_tag = gst_byte_reader_get_uint32_be_unchecked (&br);
+  if (header_size != 30 || header_tag != 0x6a786573) {
+    GST_ERROR_OBJECT (stream->pad,
+        "Invalid 'jxes' header (size:%u, tag:%" GST_FOURCC_FORMAT ")",
+        header_size, GST_FOURCC_ARGS (header_tag));
+    return NULL;
+  }
+
+  /* FIXME : Parse/extract timecode */
+
+  /* Ignore the rest of that box */
+  retbuf =
+      gst_buffer_new_wrapped_full (0, stream->data, stream->current_size,
+      header_size, stream->current_size - header_size, stream->data, g_free);
+  stream->data = NULL;
+  stream->current_size = 0;
+  return retbuf;
+
+error:
+  GST_ERROR ("Failed to parse JPEG-XS access unit");
+  g_free (stream->data);
+  stream->data = NULL;
+  stream->current_size = 0;
+  return NULL;
+
 }
 
 /* interlaced mode is disabled at the moment */
@@ -3467,6 +3545,8 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
       } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_METADATA_PES_PACKETS
           && bs->registration_id == DRF_ID_KLVA) {
         buffer_list = parse_pes_metadata_frame (stream);
+      } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JPEG_XS) {
+        buffer = parse_jpegxs_access_unit (stream);
       } else {
         buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
       }
@@ -3517,6 +3597,8 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
     } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_METADATA_PES_PACKETS
         && bs->registration_id == DRF_ID_KLVA) {
       buffer_list = parse_pes_metadata_frame (stream);
+    } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JPEG_XS) {
+      buffer = parse_jpegxs_access_unit (stream);
     } else {
       buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
     }
@@ -3646,8 +3728,26 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
     /* Record that a buffer was pushed */
     stream->nb_out_buffers += n;
   }
+
+  /* If this proceeded past the end of the configured segment, mark it as EOS */
+  if (res == GST_FLOW_OK) {
+    /* If the pad returned anything other than GST_FLOW_OK, the flow combiner
+     * will already handle that, we only need to check for EOS */
+    GstClockTime ts = stream->dts;
+    if (!GST_CLOCK_TIME_IS_VALID (ts))
+      ts = stream->pts;
+
+    if (base->out_segment.stop != -1 &&
+        GST_CLOCK_TIME_IS_VALID (ts) && ts >= base->out_segment.stop) {
+      GST_DEBUG_OBJECT (stream->pad, "DTS %" GST_TIMEP_FORMAT
+          " is past the segment stop %" GST_TIMEP_FORMAT ". Marking pad as EOS",
+          &ts, &base->out_segment.stop);
+      res = GST_FLOW_EOS;
+    }
+  }
   GST_DEBUG_OBJECT (stream->pad, "Returned %s", gst_flow_get_name (res));
-  res = gst_flow_combiner_update_flow (demux->flowcombiner, res);
+  res =
+      gst_flow_combiner_update_pad_flow (demux->flowcombiner, stream->pad, res);
   GST_DEBUG_OBJECT (stream->pad, "combined %s", gst_flow_get_name (res));
 
   /* GAP / sparse stream tracking */

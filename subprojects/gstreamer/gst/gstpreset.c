@@ -90,6 +90,8 @@
 extern HMODULE _priv_gst_dll_handle;
 #endif
 
+#include "glib-compat-private.h"
+
 #define GST_CAT_DEFAULT preset_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -546,7 +548,7 @@ gst_preset_default_get_preset_names (GstPreset * preset)
   }
 
   /* sort the array now */
-  g_qsort_with_data (groups, num_groups, sizeof (gchar *),
+  g_sort_array (groups, num_groups, sizeof (gchar *),
       (GCompareDataFunc) compare_strings, NULL);
 
   return groups;

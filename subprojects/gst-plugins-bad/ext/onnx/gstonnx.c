@@ -1,3 +1,4 @@
+
 /*
  * GStreamer gstreamer-onnx
  * Copyright (C) 2021 Collabora Ltd
@@ -23,14 +24,17 @@
 #include "config.h"
 #endif
 
-#include "gstonnxobjectdetector.h"
+#include "decoders/gstssdobjectdetector.h"
+#include "gstonnxinference.h"
+#include "tensor/gsttensormeta.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_ELEMENT_REGISTER (onnx_object_detector, plugin);
+  gboolean success = GST_ELEMENT_REGISTER (ssd_object_detector, plugin);
+  success |= GST_ELEMENT_REGISTER (onnx_inference, plugin);
 
-  return TRUE;
+  return success;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

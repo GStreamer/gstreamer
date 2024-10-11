@@ -188,6 +188,12 @@ ges_timeline_set_smart_rendering (GESTimeline * timeline, gboolean rendering_sma
 G_GNUC_INTERNAL gboolean
 ges_timeline_get_smart_rendering (GESTimeline *timeline);
 
+G_GNUC_INTERNAL GstStreamCollection*
+ges_timeline_get_stream_collection (GESTimeline *timeline);
+
+G_GNUC_INTERNAL gboolean
+ges_timeline_in_current_thread (GESTimeline *timeline);
+
 G_GNUC_INTERNAL void
 ges_auto_transition_set_source (GESAutoTransition * self, GESTrackElement * source, GESEdge edge);
 
@@ -395,7 +401,7 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_end_current_clip       (GESBaseXmlFo
 
 G_GNUC_INTERNAL void ges_xml_formatter_deinit                      (void);
 
-G_GNUC_INTERNAL gboolean set_property_foreach                   (GQuark field_id,
+G_GNUC_INTERNAL gboolean set_property_foreach                   (const GstIdStr *fieldname,
                                                                  const GValue * value,
                                                                  GObject * object);
 
@@ -417,6 +423,8 @@ ges_get_compositor_factory                                (void);
 
 G_GNUC_INTERNAL void
 ges_idle_add (GSourceFunc func, gpointer udata, GDestroyNotify notify);
+G_GNUC_INTERNAL void
+ges_timeout_add (guint interval, GSourceFunc func, gpointer udata, GDestroyNotify notify);
 
 G_GNUC_INTERNAL gboolean
 ges_util_structure_get_clocktime (GstStructure *structure, const gchar *name,
@@ -454,6 +462,7 @@ G_GNUC_INTERNAL void              ges_clip_set_add_error          (GESClip * cli
 G_GNUC_INTERNAL void              ges_clip_take_add_error         (GESClip * clip, GError ** error);
 G_GNUC_INTERNAL void              ges_clip_set_remove_error       (GESClip * clip, GError * error);
 G_GNUC_INTERNAL void              ges_clip_take_remove_error      (GESClip * clip, GError ** error);
+G_GNUC_INTERNAL gboolean          ges_clip_has_scale_effect       (GESClip * clip);
 
 /****************************************************
  *              GESLayer                            *
@@ -497,6 +506,7 @@ ges_source_get_rendering_smartly                      (GESSource *source);
 
 G_GNUC_INTERNAL void ges_track_set_smart_rendering     (GESTrack* track, gboolean rendering_smartly);
 G_GNUC_INTERNAL GstElement * ges_track_get_composition (GESTrack *track);
+G_GNUC_INTERNAL void ges_track_select_subtimeline_streams (GESTrack *track, GstStreamCollection *collection, GstElement *subtimeline);
 
 
 /*********************************************
@@ -541,18 +551,32 @@ typedef enum
 } GESTimelineElementFlags;
 
 G_GNUC_INTERNAL GESTimelineElement * ges_timeline_element_peak_toplevel (GESTimelineElement * self);
+
+typedef enum
+{
+  GES_TIMELINE_ELEMENT_CHILD_PROP_FLAG_NONE = (1 << 0),
+  /* Inherit flags from the owner child property registration */
+  GES_TIMELINE_ELEMENT_CHILD_PROP_FLAG_INHERIT = (1 << 1),
+  /* When setting child property, ensure to set value on every registered instances */
+  GES_TIMELINE_ELEMENT_CHILD_PROP_FLAG_SET_ON_ALL_INSTANCES = (1 << 2),
+} GESTimelineElementChildPropertyFlags;
+
 G_GNUC_INTERNAL GESTimelineElement * ges_timeline_element_get_copied_from (GESTimelineElement *self);
 G_GNUC_INTERNAL GESTimelineElementFlags ges_timeline_element_flags (GESTimelineElement *self);
 G_GNUC_INTERNAL void                ges_timeline_element_set_flags (GESTimelineElement *self, GESTimelineElementFlags flags);
 G_GNUC_INTERNAL gboolean            ges_timeline_element_add_child_property_full (GESTimelineElement *self,
                                                                                   GESTimelineElement *owner,
                                                                                   GParamSpec *pspec,
-                                                                                  GObject *child);
+                                                                                  GObject *child,
+                                                                                  GESTimelineElementChildPropertyFlags flags);
 
-G_GNUC_INTERNAL GObject *           ges_timeline_element_get_child_from_child_property (GESTimelineElement * self,
-                                                                                        GParamSpec * pspec);
+G_GNUC_INTERNAL GList *           ges_timeline_element_get_children_from_child_property (GESTimelineElement * self,
+                                                                                         GParamSpec * pspec);
 G_GNUC_INTERNAL GParamSpec **       ges_timeline_element_get_children_properties (GESTimelineElement * self,
                                                                                   guint * n_properties);
+G_GNUC_INTERNAL gboolean            ges_timeline_element_remove_child_property_full  (GESTimelineElement * self,
+                                                                                      GParamSpec * pspec,
+                                                                                      GObject *child);
 
 #define ELEMENT_FLAGS(obj)             (ges_timeline_element_flags (GES_TIMELINE_ELEMENT(obj)))
 #define ELEMENT_SET_FLAG(obj,flag)     (ges_timeline_element_set_flags(GES_TIMELINE_ELEMENT(obj), (ELEMENT_FLAGS(obj) | (flag))))

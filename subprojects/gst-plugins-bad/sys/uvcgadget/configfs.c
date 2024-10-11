@@ -7,7 +7,7 @@
  * Contact: Kieran Bingham <kieran.bingham@ideasonboard.com>
  */
 
-/* To provide basename and asprintf from the GNU library. */
+/* To provide asprintf from the GNU library. */
 #define _GNU_SOURCE
 
 #include <dirent.h>
@@ -259,9 +259,10 @@ udc_find_video_device (const char *udc, const char *function)
   }
 
   if (i < globbuf.gl_pathc) {
-    const char *v = basename (globbuf.gl_pathv[i]);
+    gchar *v = g_path_get_basename (globbuf.gl_pathv[i]);
 
     video = path_join ("/dev", v);
+    g_free (v);
   }
 
   globfree (&globbuf);
@@ -894,6 +895,7 @@ configfs_parse_uvc_function (const char *function)
 {
   struct uvc_function_config *fc;
   char *fpath;
+  gchar *bname;
   int ret = 0;
 
   fc = malloc (sizeof *fc);
@@ -923,11 +925,10 @@ configfs_parse_uvc_function (const char *function)
    * Parse the function configuration. Remove the gadget name qualifier
    * from the function name, if any.
    */
-  if (function)
-    function = basename (function);
+  bname = g_path_get_basename (function);
 
   fc->udc = attribute_read_str (fpath, "../../UDC");
-  fc->video = udc_find_video_device (fc->udc, function);
+  fc->video = udc_find_video_device (fc->udc, bname);
   if (!fc->video) {
     ret = -ENODEV;
     goto done;
@@ -942,6 +943,7 @@ done:
   }
 
   free (fpath);
+  g_free (bname);
 
   return fc;
 }
@@ -979,12 +981,16 @@ configfs_parse_uvc_videodev (int fd, const char *video)
   char *function = NULL;
   char rpath[PATH_MAX];
   char *res;
+  gchar *bname;
 
   res = realpath (video, rpath);
   if (!res)
     return NULL;
 
-  function = video_find_config_name (basename (rpath));
+  bname = g_path_get_basename (rpath);
+  function = video_find_config_name (bname);
+  g_free (bname);
+
   if (!function)
     return NULL;
 

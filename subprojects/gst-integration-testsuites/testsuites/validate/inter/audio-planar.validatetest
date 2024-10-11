@@ -1,0 +1,4 @@
+meta,
+  args = {
+       "audiotestsrc num-buffers=10 ! audio/x-raw,format=S16LE,channels=2,layout=non-interleaved ! interaudiosink interaudiosrc num-buffers=10 ! audioconvert ! audio/x-raw,layout=interleaved,format=S16LE,channels=2 ! queue ! fakeaudiosink",
+  }

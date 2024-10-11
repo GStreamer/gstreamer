@@ -159,7 +159,12 @@ gst_openh264dec_start (GstVideoDecoder * decoder)
     WelsDestroyDecoder (openh264dec->decoder);
     openh264dec->decoder = NULL;
   }
-  WelsCreateDecoder (&(openh264dec->decoder));
+
+  if (WelsCreateDecoder (&(openh264dec->decoder)) != 0) {
+    GST_ELEMENT_ERROR (openh264dec, LIBRARY, INIT, (NULL),
+        ("Failed to create OpenH264 decoder."));
+    return FALSE;
+  }
 
 #ifndef GST_DISABLE_GST_DEBUG
   {
@@ -454,10 +459,7 @@ openh264dec_element_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_openh264dec_debug_category, "openh264dec", 0,
       "debug category for openh264dec element");
-  if (openh264_element_init (plugin))
-    return gst_element_register (plugin, "openh264dec", GST_RANK_MARGINAL,
-        GST_TYPE_OPENH264DEC);
 
-  GST_ERROR ("Incorrect library version loaded, expecting %s", g_strCodecVer);
-  return FALSE;
+  return gst_element_register (plugin, "openh264dec", GST_RANK_MARGINAL,
+      GST_TYPE_OPENH264DEC);
 }

@@ -325,7 +325,7 @@ the encoding does not look like UTF-8.
 **GST_GL_WINDOW.**
 
 Influences the window system to use by the GStreamer OpenGL library.
-Common values are 'x11', 'wayland', 'win32' or 'cocoa'.
+Common values are 'x11', 'wayland', 'surfaceless', 'win32' or 'cocoa'.
 
 **GST_GL_PLATFORM.**
 

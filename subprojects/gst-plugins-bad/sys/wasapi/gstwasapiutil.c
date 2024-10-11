@@ -27,29 +27,18 @@
  * initguid.h must be included in the C file before mmdeviceapi.h
  * which is included in gstwasapiutil.h.
  */
-#ifdef _MSC_VER
 #include <initguid.h>
-#endif
 #include "gstwasapiutil.h"
 #include "gstwasapidevice.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_wasapi_debug);
 #define GST_CAT_DEFAULT gst_wasapi_debug
 
-/* This was only added to MinGW in ~2015 and our Cerbero toolchain is too old */
-#if defined(_MSC_VER)
 #include <functiondiscoverykeys_devpkey.h>
-#elif !defined(PKEY_Device_FriendlyName)
-#include <initguid.h>
-#include <propkey.h>
-DEFINE_PROPERTYKEY (PKEY_Device_FriendlyName, 0xa45c254e, 0xdf1c, 0x4efd, 0x80,
-    0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0, 14);
-DEFINE_PROPERTYKEY (PKEY_AudioEngine_DeviceFormat, 0xf19f064d, 0x82c, 0x4e27,
-    0xbc, 0x73, 0x68, 0x82, 0xa1, 0xbb, 0x8e, 0x4c, 0);
-#endif
 
 /* __uuidof is only available in C++, so we hard-code the GUID values for all
- * these. This is ok because these are ABI. */
+ * these. This is ok because these are ABI. MSYS2 provides these in C. */
+#ifndef HAVE_AUDCLNT_GUIDS
 const CLSID CLSID_MMDeviceEnumerator = { 0xbcde0395, 0xe52f, 0x467c,
   {0x8e, 0x3d, 0xc4, 0x57, 0x92, 0x91, 0x69, 0x2e}
 };
@@ -66,10 +55,6 @@ const IID IID_IAudioClient = { 0x1cb9ad4c, 0xdbfa, 0x4c32,
   {0xb1, 0x78, 0xc2, 0xf5, 0x68, 0xa7, 0x03, 0xb2}
 };
 
-const IID IID_IAudioClient3 = { 0x7ed4ee07, 0x8e67, 0x4cd4,
-  {0x8c, 0x1a, 0x2b, 0x7a, 0x59, 0x87, 0xad, 0x42}
-};
-
 const IID IID_IAudioClock = { 0xcd63314f, 0x3fba, 0x4a1b,
   {0x81, 0x2c, 0xef, 0x96, 0x35, 0x87, 0x28, 0xe7}
 };
@@ -81,6 +66,13 @@ const IID IID_IAudioCaptureClient = { 0xc8adbd64, 0xe71e, 0x48a0,
 const IID IID_IAudioRenderClient = { 0xf294acfc, 0x3146, 0x4483,
   {0xa7, 0xbf, 0xad, 0xdc, 0xa7, 0xc2, 0x60, 0xe2}
 };
+#endif
+
+#ifndef HAVE_AUDCLNT3_GUID
+const IID IID_IAudioClient3 = { 0x7ed4ee07, 0x8e67, 0x4cd4,
+  {0x8c, 0x1a, 0x2b, 0x7a, 0x59, 0x87, 0xad, 0x42}
+};
+#endif
 
 /* Desktop only defines */
 #ifndef KSAUDIO_SPEAKER_MONO
@@ -415,6 +407,7 @@ gst_wasapi_util_get_devices (GstMMDeviceEnumerator * self,
     GstDevice *device;
     GstStructure *props;
     GstCaps *caps;
+    gboolean parse_ret;
 
     hr = IMMDeviceCollection_Item (device_collection, ii, &item);
     if (hr != S_OK)
@@ -477,8 +470,12 @@ gst_wasapi_util_get_devices (GstMMDeviceEnumerator * self,
       goto next;
     }
 
-    if (!gst_wasapi_util_parse_waveformatex ((WAVEFORMATEXTENSIBLE *) format,
-            gst_static_caps_get (&scaps), &caps, NULL))
+    parse_ret =
+        gst_wasapi_util_parse_waveformatex ((WAVEFORMATEXTENSIBLE *) format,
+        gst_static_caps_get (&scaps), &caps, NULL);
+    CoTaskMemFree (format);
+
+    if (!parse_ret)
       goto next;
 
     /* Set some useful properties */
@@ -564,7 +561,7 @@ gst_wasapi_util_get_device_format (GstElement * self,
       return FALSE;
     }
 
-    format = malloc (var.blob.cbSize);
+    format = CoTaskMemAlloc (var.blob.cbSize);
     memcpy (format, var.blob.pBlobData, var.blob.cbSize);
 
     PropVariantClear (&var);
@@ -578,7 +575,7 @@ gst_wasapi_util_get_device_format (GstElement * self,
     goto out;
 
   GST_ERROR_OBJECT (self, "AudioEngine DeviceFormat not supported");
-  free (format);
+  CoTaskMemFree (format);
   return FALSE;
 
 out:

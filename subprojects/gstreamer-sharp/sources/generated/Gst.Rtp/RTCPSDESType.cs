@@ -20,6 +20,13 @@ namespace Gst.Rtp {
 		Tool = 6,
 		Note = 7,
 		Priv = 8,
+		H323Caddr = 9,
+		Apsi = 10,
+		Rgrp = 11,
+		RtpStreamId = 12,
+		RepairedRtpStreamId = 13,
+		Ccid = 14,
+		Mid = 15,
 	}
 
 	internal class RTCPSDESTypeGType {

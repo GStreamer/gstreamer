@@ -29,6 +29,7 @@ void gst_qsv_av1_enc_register (GstPlugin * plugin,
                                guint rank,
                                guint impl_index,
                                GstObject * device,
-                               mfxSession session);
+                               mfxSession session,
+                               gboolean d3d12_interop);
 
 G_END_DECLS

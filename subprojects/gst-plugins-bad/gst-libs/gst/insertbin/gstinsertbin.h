@@ -62,6 +62,8 @@ typedef struct _GstInsertBinPrivate GstInsertBinPrivate;
  * This is the prototype of callbacks to be called when the operation completes.
  * It could be called at any time, including as a re-entrant call while the
  * operation is requested.
+ *
+ * Since: 1.2
  */
 
 typedef void (*GstInsertBinCallback) (GstInsertBin *insertbin,
@@ -73,6 +75,8 @@ typedef void (*GstInsertBinCallback) (GstInsertBin *insertbin,
  * GstInsertBin:
  *
  * The object structure.
+ *
+ * Since: 1.2
  */
 struct _GstInsertBin
 {
@@ -86,6 +90,8 @@ struct _GstInsertBin
  * GstInsertBinClass:
  *
  * The object class structure.
+ *
+ * Since: 1.2
  */
 struct _GstInsertBinClass
 {

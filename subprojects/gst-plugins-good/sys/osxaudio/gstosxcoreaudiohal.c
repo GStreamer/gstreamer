@@ -1162,7 +1162,7 @@ gst_core_audio_initialize_impl (GstCoreAudio * core_audio,
     _monitorize_spdif (core_audio);
   } else {
     OSStatus status;
-    UInt32 propertySize;
+    UInt32 propertySize = sizeof (*frame_size);
 
     core_audio->stream_idx = 0;
     if (!gst_core_audio_set_format (core_audio, format))
@@ -1172,16 +1172,30 @@ gst_core_audio_initialize_impl (GstCoreAudio * core_audio,
             format.mChannelsPerFrame, caps))
       goto done;
 
-    if (core_audio->is_src) {
-      propertySize = sizeof (*frame_size);
+    // Attempt to configure the requested frame size if smaller than the device's
+    // This will apparently modify the size for all audio devices in the current process so should
+    // be done conservatively
+    if (frame_size != 0) {
+      guint32 cur_frame_size;
       status = AudioUnitGetProperty (core_audio->audiounit, kAudioDevicePropertyBufferFrameSize, kAudioUnitScope_Global, 0,     /* N/A for global */
-          frame_size, &propertySize);
-
-      if (status) {
-        GST_WARNING_OBJECT (core_audio->osxbuf, "Failed to get frame size: %d",
-            (int) status);
-        goto done;
+          &cur_frame_size, &propertySize);
+      if (!status && *frame_size < cur_frame_size) {
+        status = AudioUnitSetProperty (core_audio->audiounit, kAudioDevicePropertyBufferFrameSize, kAudioUnitScope_Global, 0,   /* N/A for global */
+            frame_size, propertySize);
+        if (status) {
+          GST_WARNING_OBJECT (core_audio->osxbuf,
+              "Failed to set desired frame size of %u: %d", *frame_size,
+              (int) status);
+        }
       }
+    }
+    status = AudioUnitGetProperty (core_audio->audiounit, kAudioDevicePropertyBufferFrameSize, kAudioUnitScope_Global, 0,       /* N/A for global */
+        frame_size, &propertySize);
+
+    if (status) {
+      GST_WARNING_OBJECT (core_audio->osxbuf, "Failed to get frame size: %d",
+          (int) status);
+      goto done;
     }
   }
 
@@ -1210,13 +1224,12 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
   gboolean output = !core_audio->is_src;
   gboolean res = FALSE;
 
+  /* Find the ID of the default output device */
+  AudioDeviceID default_device_id = _audio_system_get_default_device (output);
+
   /* Here we decide if selected device is valid or autoselect
    * the default one when required */
   if (device_id == kAudioDeviceUnknown) {
-    AudioDeviceID default_device_id;
-
-    /* Find the ID of the default output device */
-    default_device_id = _audio_system_get_default_device (output);
 
     if (default_device_id != kAudioDeviceUnknown) {
       device_id = default_device_id;
@@ -1290,8 +1303,10 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
     }
   }
 
-  if (res)
+  if (res) {
     core_audio->device_id = device_id;
+    core_audio->is_default = (device_id == default_device_id);
+  }
 
   return res;
 }

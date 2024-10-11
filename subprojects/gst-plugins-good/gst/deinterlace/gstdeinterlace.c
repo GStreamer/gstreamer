@@ -297,7 +297,7 @@ gst_deinterlace_locking_get_type (void)
 #define DEINTERLACE_CAPS GST_VIDEO_CAPS_MAKE(DEINTERLACE_VIDEO_FORMATS)
 
 #define DEINTERLACE_ALL_CAPS DEINTERLACE_CAPS ";" \
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS_ALL)
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS_ANY)
 
 static GstStaticCaps progressive_caps =
 GST_STATIC_CAPS ("video/x-raw(ANY),interlace-mode=(string)progressive");
@@ -1288,7 +1288,7 @@ gst_deinterlace_update_qos (GstDeinterlace * self, gdouble proportion,
   if (G_LIKELY (timestamp != GST_CLOCK_TIME_NONE)) {
     if (G_UNLIKELY (diff > 0))
       self->earliest_time =
-          timestamp + 2 * diff + ((self->fields ==
+          timestamp + MIN (2 * diff, GST_SECOND) + ((self->fields ==
               GST_DEINTERLACE_ALL) ? self->field_duration : 2 *
           self->field_duration);
     else
@@ -2472,7 +2472,9 @@ dup_caps_with_alternate (GstCaps * caps)
   GstCapsFeatures *features;
 
   with_alternate = gst_caps_copy (caps);
-  features = gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL);
+  features =
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_FORMAT_INTERLACED,
+      NULL);
   gst_caps_set_features_simple (with_alternate, features);
 
   gst_caps_set_simple (with_alternate, "interlace-mode", G_TYPE_STRING,

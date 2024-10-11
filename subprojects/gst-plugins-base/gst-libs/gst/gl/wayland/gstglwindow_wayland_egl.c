@@ -305,6 +305,11 @@ create_xdg_surface_and_toplevel (GstGLWindowWaylandEGL * window_egl)
 
   /* Then the XDG top-level */
   xdg_toplevel = xdg_surface_get_toplevel (xdg_surface);
+  if (g_get_prgname ()) {
+    xdg_toplevel_set_app_id (xdg_toplevel, g_get_prgname ());
+  } else {
+    xdg_toplevel_set_app_id (xdg_toplevel, "org.gstreamer.wayland");
+  }
   xdg_toplevel_set_title (xdg_toplevel, "OpenGL Renderer");
   xdg_toplevel_add_listener (xdg_toplevel, &xdg_toplevel_listener, window_egl);
 
@@ -477,6 +482,24 @@ gst_gl_window_wayland_egl_close (GstGLWindow * gl_window)
   g_source_destroy (window_egl->wl_source);
   g_source_unref (window_egl->wl_source);
   window_egl->wl_source = NULL;
+
+  if (window_egl->display.registry)
+    wl_registry_destroy (window_egl->display.registry);
+
+  if (window_egl->display.compositor)
+    wl_compositor_destroy (window_egl->display.compositor);
+
+  if (window_egl->display.subcompositor)
+    wl_subcompositor_destroy (window_egl->display.subcompositor);
+
+  if (window_egl->display.xdg_wm_base)
+    xdg_wm_base_destroy (window_egl->display.xdg_wm_base);
+
+  if (window_egl->display.shell)
+    wl_shell_destroy (window_egl->display.shell);
+
+  if (window_egl->display.seat)
+    wl_seat_destroy (window_egl->display.seat);
 
   wl_proxy_wrapper_destroy (window_egl->display.display);
   wl_event_queue_destroy (window_egl->window.queue);

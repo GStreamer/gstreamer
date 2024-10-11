@@ -33,17 +33,6 @@
 
 #ifndef VSCALE_TEST_GROUP
 
-static guint
-get_num_formats (void)
-{
-  guint i = 2;
-
-  while (gst_video_format_to_string ((GstVideoFormat) i) != NULL)
-    ++i;
-
-  return i;
-}
-
 static void
 check_pad_template (GstPadTemplate * tmpl)
 {
@@ -51,10 +40,9 @@ check_pad_template (GstPadTemplate * tmpl)
   GstStructure *s;
   gboolean *formats_supported;
   GstCaps *caps;
-  guint i, num_formats;
+  guint i;
 
-  num_formats = get_num_formats ();
-  formats_supported = g_new0 (gboolean, num_formats);
+  formats_supported = g_new0 (gboolean, GST_VIDEO_FORMAT_LAST);
 
   caps = gst_pad_template_get_caps (tmpl);
 
@@ -87,7 +75,7 @@ check_pad_template (GstPadTemplate * tmpl)
 
   gst_caps_unref (caps);
 
-  for (i = 2; i < num_formats; ++i) {
+  for (i = 2; i < GST_VIDEO_FORMAT_LAST; ++i) {
     if (!formats_supported[i]) {
       const gchar *fmt_str = gst_video_format_to_string ((GstVideoFormat) i);
 
@@ -131,6 +119,9 @@ check_pad_template (GstPadTemplate * tmpl)
         case GST_VIDEO_FORMAT_NV12_8L128:
         case GST_VIDEO_FORMAT_NV12_10BE_8L128:
         case GST_VIDEO_FORMAT_NV12_10LE40_4L4:
+        case GST_VIDEO_FORMAT_DMA_DRM:
+        case GST_VIDEO_FORMAT_MT2110T:
+        case GST_VIDEO_FORMAT_MT2110R:
           GST_LOG ("Ignoring lack of support for format %s", fmt_str);
           break;
         default:
@@ -190,6 +181,9 @@ videoscale_get_allowed_caps_for_method (int method)
   ret = g_new0 (GstCaps *, n + 1);
 
   for (i = 0; i < n; i++) {
+    /* Skip passthrough caps */
+    if (gst_caps_features_is_any (gst_caps_get_features (caps, i)))
+      continue;
     s = gst_caps_get_structure (caps, i);
     ret[i] = gst_caps_new_empty ();
     gst_caps_append_structure (ret[i], gst_structure_copy (s));

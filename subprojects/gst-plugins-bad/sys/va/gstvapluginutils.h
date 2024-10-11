@@ -45,4 +45,9 @@ void gst_va_create_feature_name (GstVaDevice * device,
                                  gchar ** desc,
                                  guint * rank);
 
+GstBufferPool * gst_va_create_other_pool (GstAllocator * allocator,
+                                          GstAllocationParams * params,
+                                          GstCaps * caps,
+                                          guint size);
+
 G_END_DECLS

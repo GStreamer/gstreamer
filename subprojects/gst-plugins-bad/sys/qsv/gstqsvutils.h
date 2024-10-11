@@ -20,6 +20,7 @@
 #pragma once
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <mfx.h>
 
 G_BEGIN_DECLS
@@ -74,6 +75,12 @@ static const GstQsvResolution gst_qsv_resolutions[] = {
   {1920, 1088}, {2560, 1440}, {3840, 2160}, {4096, 2160},
   {7680, 4320}, {8192, 4320}, {15360, 8640}, {16384, 8640}
 };
+
+GstVideoFormat gst_qsv_frame_info_format_to_gst (const mfxFrameInfo * info,
+                                                 gboolean is_gbr);
+
+gboolean       gst_qsv_frame_info_set_format (mfxFrameInfo * info,
+                                              GstVideoFormat format);
 
 G_END_DECLS
 

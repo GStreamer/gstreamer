@@ -100,6 +100,11 @@ gst_msdkvpp_mirroring_get_type (void);
 GType
 gst_msdkvpp_scaling_mode_get_type (void);
 
+#if (MFX_VERSION >= 1033) 
+GType
+gst_msdkvpp_interpolation_method_get_type (void);
+#endif
+
 #define _MFX_FRC_ALGORITHM_NONE 0
 GType
 gst_msdkvpp_frc_algorithm_get_type (void);

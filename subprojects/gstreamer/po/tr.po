@@ -3,20 +3,21 @@
 # This file is distributed under the same license as the gstreamer package.
 # Baris Cicek <baris@teamforce.name.tr>, 2004, 2015.
 # Mehmet Kececi <mkececi@mehmetkececi.com>, 2017, 2019, 2021.
+# Emin Tufan Çetin <etcetin@gmail.com>, 2023.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.19.2\n"
+"Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2021-10-04 13:42+0300\n"
-"Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
+"POT-Creation-Date: 2023-01-13 19:09+0000\n"
+"PO-Revision-Date: 2023-05-11 21:37+0300\n"
+"Last-Translator: Emin Tufan Çetin <etcetin@gmail.com>\n"
 "Language-Team: Turkish <gnome-turk@gnome.org>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.0\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.2.2\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Project-Style: gnome\n"
 
@@ -36,7 +37,7 @@ msgstr ""
 "çıktı olmaması için 0"
 
 msgid "LEVEL"
-msgstr "SEVİYE"
+msgstr "DÜZEY"
 
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
@@ -213,14 +214,14 @@ msgstr "GStreamer genel bir akış hatası ile karşılaştı."
 
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
-"Öğe bu akımın işlemesini gerçekleştiremiyor. Lütfen hata bildiriminde "
+"Öge bu akımın işlemesini gerçekleştiremiyor. Lütfen hata bildiriminde "
 "bulunun."
 
 msgid "Could not determine type of stream."
 msgstr "Akım türü belirlenemedi."
 
 msgid "The stream is of a different type than handled by this element."
-msgstr "Akım bu öğe tarafından işlenen türden farklı bir türde."
+msgstr "Akım bu öge tarafından işlenen türden farklı bir türde."
 
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Akım türünü işleyebilecek kodek bulunmuyor."
@@ -831,7 +832,7 @@ msgstr "Geçersiz URI: %s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr "%s protokolü için URI işleyicisi bulunamadı"
+msgstr "%s iletişim kuralı için URI işleyicisi bulunamadı"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
@@ -839,7 +840,7 @@ msgstr "URI şema '%s' desteklenmez"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
-msgstr "HATA: %s öğesinden: %s\n"
+msgstr "HATA: %s ögesinden: %s\n"
 
 #, c-format
 msgid ""
@@ -861,31 +862,31 @@ msgid "link has no sink [source=%s@%p]"
 msgstr "bağlantı alış noktası yok [kaynak=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "Böyle bir özellik yok."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr "\"%s\" öğesinde \"%s\" özelliği yok"
+msgstr "\"%2$s\" ögesinde \"%1$s\" özelliği yok"
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
-msgstr "\"%s\" öğesi bir GstPreset değildir"
+msgstr "\"%s\" ögesi bir GstPreset değildir"
 
 #, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
-msgstr "\"%s\" öğesinde kurulu ayar \"%s\" ayarlanamadı"
+msgstr "\"%2$s\" ögesinde kurulu ayar \"%1$s\" ayarlanamadı"
 
 #, c-format
 msgid "no element \"%s\""
-msgstr "\"%s\" öğesi yok"
+msgstr "\"%s\" ögesi yok"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "\"%s\" öğesindeki \"%s\" özelliğine \"%s\" değeri atanamadı"
+msgstr "\"%2$s\" ögesindeki \"%1$s\" özelliğine \"%3$s\" değeri atanamadı"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
-msgstr "\"%s\" öğesindeki \"%s\" özelliğine \"%s\" değeri atanamadı"
+msgstr "\"%2$s\" alt ögesindeki \"%1$s\" özelliğine \"%3$s\" değeri atanamadı"
 
 msgid "Delayed linking failed."
 msgstr "Gecikmeli bağlama başarısız oldu."
@@ -896,7 +897,7 @@ msgstr "%s i %s e bağlanamadı, %s başlıklar işlenemiyor %s"
 
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr "%s i %s e bağlanamadı, hiçbir başlık öğesi işlenemiyor %s"
+msgstr "%s i %s e bağlanamadı, hiçbir başlık ögesi işlenemiyor %s"
 
 #, c-format
 msgid "could not link %s to %s with caps %s"
@@ -920,11 +921,11 @@ msgstr "\"%s\" kabiliyetleri ayrıştırılamadı"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
-msgstr "\"%s\" URI'si için sink öğesi yok"
+msgstr "\"%s\" URI'si için sink ögesi yok"
 
 #, c-format
 msgid "no source element for URI \"%s\""
-msgstr "\"%s\" URI'si için kaynak öğesi yok"
+msgstr "\"%s\" URI'si için kaynak ögesi yok"
 
 msgid "syntax error"
 msgstr "söz dizim hatası"
@@ -1088,25 +1089,21 @@ msgstr "%sToplam sayı%s: %s"
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
 msgstr[0] "%d kara listeye alınan dosya"
-msgstr[1] "%d kara listeye alınan dosya"
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d eklentisi"
-msgstr[1] "%d eklentisi"
 
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
 msgstr[0] "%d kara liste girdisi"
-msgstr[1] "%d kara liste girdisi"
 
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d özelliği"
-msgstr[1] "%d özelliği"
 
 msgid "Print all elements"
 msgstr "Bütün ögeleri yazdır"
@@ -1132,7 +1129,7 @@ msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
-"Bir eğik çizgi ('/') öğelernin türlerini listelemek için (klass olarak da "
+"Bir eğik çizgi ('/') ögelerinin türlerini listelemek için (klass olarak da "
 "bilinen) listelerine ayrılmış. (sıralı değil)"
 
 msgid "Check if the specified element or plugin exists"
@@ -1200,7 +1197,7 @@ msgstr "EOS alındı - boru hattı durduruluyor...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "ETİKET BULUNDU      : \"%s\" öğesi tarafından bulundu.\n"
+msgstr "ETİKET BULUNDU      : \"%s\" ögesi tarafından bulundu.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
@@ -1363,7 +1360,7 @@ msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "UYARI: hatalı boruhattı: %s\n"
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr "HATA: 'pipeline' öğesi bulunamadı.\n"
+msgstr "HATA: 'pipeline' ögesi bulunamadı.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "DURDURULDU durumu için ardışık düzen ayarlamaları ...\n"

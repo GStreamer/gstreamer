@@ -13,17 +13,21 @@ var ws_port;
 // Set this to use a specific peer id instead of a random one
 var default_peer_id;
 // Override with your own STUN servers if you want
-var rtc_configuration = {iceServers: [{urls: "stun:stun.services.mozilla.com"},
-                                      {urls: "stun:stun.l.google.com:19302"}]};
+var rtc_configuration = {iceServers: [{urls: "stun:stun.l.google.com:19302"}]};
 // The default constraints that will be attempted. Can be overriden by the user.
 var default_constraints = {video: true, audio: true};
 
 var connect_attempts = 0;
-var peer_connection;
+var peer_connection = new RTCPeerConnection(rtc_configuration);
 var send_channel;
 var ws_conn;
-// Promise for local stream after constraints are approved by the user
-var local_stream_promise;
+// Local stream after constraints are approved by the user
+var local_stream = null;
+
+// keep track of some negotiation state to prevent races and errors
+var callCreateTriggered = false;
+var makingOffer = false;
+var isSettingRemoteAnswerPending = false;
 
 function setConnectButtonState(value) {
     document.getElementById("peer-connect-button").value = value;
@@ -47,6 +51,15 @@ function onConnectClicked() {
 
     ws_conn.send("SESSION " + id);
     setConnectButtonState("Disconnect");
+}
+
+function onTextKeyPress(e) {
+    e = e ? e : window.event;
+    if (e.code == "Enter") {
+        onConnectClicked();
+        return false;
+    }
+    return true;
 }
 
 function getOurId() {
@@ -90,44 +103,68 @@ function setError(text) {
 
 function resetVideo() {
     // Release the webcam and mic
-    if (local_stream_promise)
-        local_stream_promise.then(stream => {
+    if (local_stream) {
+        local_stream.then(stream => {
             if (stream) {
                 stream.getTracks().forEach(function (track) { track.stop(); });
             }
         });
+        local_stream = null;
+    }
 
     // Remove all video players
     document.getElementById("video").innerHTML = "";
 }
 
-// SDP offer received from peer, set remote description and create an answer
 function onIncomingSDP(sdp) {
-    peer_connection.setRemoteDescription(sdp).then(() => {
-        setStatus("Remote SDP set");
-        if (sdp.type != "offer")
+    try {
+        // An offer may come in while we are busy processing SRD(answer).
+        // In this case, we will be in "stable" by the time the offer is processed
+        // so it is safe to chain it on our Operations Chain now.
+        const readyForOffer =
+            !makingOffer &&
+            (peer_connection.signalingState == "stable" || isSettingRemoteAnswerPending);
+        const offerCollision = sdp.type == "offer" && !readyForOffer;
+
+        if (offerCollision) {
             return;
-        setStatus("Got SDP offer");
-        local_stream_promise.then((stream) => {
-            setStatus("Got local stream, creating answer");
-            peer_connection.createAnswer()
-            .then(onLocalDescription).catch(setError);
-        }).catch(setError);
-    }).catch(setError);
+        }
+        isSettingRemoteAnswerPending = sdp.type == "answer";
+        peer_connection.setRemoteDescription(sdp).then(() => {
+            setStatus("Remote SDP set");
+            isSettingRemoteAnswerPending = false;
+            if (sdp.type == "offer") {
+                setStatus("Got SDP offer, waiting for getUserMedia to complete");
+                local_stream.then((stream) => {
+                    setStatus("getUserMedia to completed, setting local description");
+                    peer_connection.setLocalDescription().then(() => {
+                        let desc = peer_connection.localDescription;
+                        console.log("Got local description: " + JSON.stringify(desc));
+                        setStatus("Sending SDP " + desc.type);
+                        ws_conn.send(JSON.stringify({'sdp': desc}));
+                        if (peer_connection.iceConnectionState == "connected") {
+                            setStatus("SDP " + desc.type + " sent, ICE connected, all looks OK");
+                        }
+                    });
+                });
+            }
+        });
+    } catch (err) {
+        handleIncomingError(err);
+    }
 }
 
-// Local description was set, send it to peer
+// Local description was set by incoming SDP offer, send answer to peer
 function onLocalDescription(desc) {
+    if (desc.type != "answer") {
+        console.warn("Expected SDP answer, received: " + desc.type);
+    }
     console.log("Got local description: " + JSON.stringify(desc));
-    peer_connection.setLocalDescription(desc).then(function() {
+    peer_connection.setLocalDescription(desc).then(() => {
+        var dsc = peer_connection.localDescription;
         setStatus("Sending SDP " + desc.type);
-        sdp = {'sdp': peer_connection.localDescription}
-        ws_conn.send(JSON.stringify(sdp));
+        ws_conn.send(JSON.stringify({'sdp': desc}));
     });
-}
-
-function generateOffer() {
-    peer_connection.createOffer().then(onLocalDescription).catch(setError);
 }
 
 // ICE candidate received from peer, add it to the peer connection
@@ -149,13 +186,15 @@ function onServerMessage(event) {
                 setStatus("Sent OFFER_REQUEST, waiting for offer");
                 return;
             }
-            if (!peer_connection)
-                createCall(null).then (generateOffer);
+            if (!callCreateTriggered) {
+                createCall();
+                setStatus("Created peer connection for call, waiting for SDP");
+            }
             return;
         case "OFFER_REQUEST":
             // The peer wants us to set up and then send an offer
-            if (!peer_connection)
-                createCall(null).then (generateOffer);
+            if (!callCreateTriggered)
+                createCall();
             return;
         default:
             if (event.data.startsWith("ERROR")) {
@@ -175,7 +214,7 @@ function onServerMessage(event) {
             }
 
             // Incoming JSON signals the beginning of a call
-            if (!peer_connection)
+            if (!callCreateTriggered)
                 createCall(msg);
 
             if (msg.sdp != null) {
@@ -194,8 +233,9 @@ function onServerClose(event) {
 
     if (peer_connection) {
         peer_connection.close();
-        peer_connection = null;
+        peer_connection = new RTCPeerConnection(rtc_configuration);
     }
+    callCreateTriggered = false;
 
     // Reset after a second
     window.setTimeout(websocketServerConnect, 1000);
@@ -260,17 +300,12 @@ function websocketServerConnect() {
         ws_conn.send('HELLO ' + peer_id);
         setStatus("Registering with server");
         setConnectButtonState("Connect");
+        // Reset connection attempts because we connected successfully
+        connect_attempts = 0;
     });
     ws_conn.addEventListener('error', onServerError);
     ws_conn.addEventListener('message', onServerMessage);
     ws_conn.addEventListener('close', onServerClose);
-}
-
-function onRemoteTrack(event) {
-    var videoElem = getVideoElement();
-    if (event.track.kind === 'audio')
-        videoElem.style = 'display: none;';
-    videoElem.srcObject = new MediaStream([event.track]);
 }
 
 function errorUserMediaHandler() {
@@ -312,30 +347,36 @@ function onDataChannel(event) {
     receiveChannel.onclose = handleDataChannelClose;
 }
 
-function createCall(msg) {
-    // Reset connection attempts because we connected successfully
-    connect_attempts = 0;
-
-    console.log('Creating RTCPeerConnection');
-
-    peer_connection = new RTCPeerConnection(rtc_configuration);
+function createCall() {
+    callCreateTriggered = true;
+    console.log('Configuring RTCPeerConnection');
     send_channel = peer_connection.createDataChannel('label', null);
     send_channel.onopen = handleDataChannelOpen;
     send_channel.onmessage = handleDataChannelMessageReceived;
     send_channel.onerror = handleDataChannelError;
     send_channel.onclose = handleDataChannelClose;
     peer_connection.ondatachannel = onDataChannel;
-    peer_connection.ontrack = onRemoteTrack;
-    /* Send our video/audio to the other peer */
-    local_stream_promise = getLocalStream().then((stream) => {
-        console.log('Adding local stream');
-        peer_connection.addStream(stream);
-        return stream;
-    }).catch(setError);
 
-    if (msg != null && !msg.sdp) {
-        console.log("WARNING: First message wasn't an SDP message!?");
-    }
+    peer_connection.ontrack = ({track, streams}) => {
+        console.log("ontrack triggered");
+        var videoElem = getVideoElement();
+        if (track.kind === 'audio')
+            videoElem.style.display = 'none';
+
+        videoElem.srcObject = streams[0];
+        videoElem.srcObject.addEventListener('mute', (e) => {
+            console.log("track muted, hiding video element");
+            videoElem.style.display = 'none';
+        });
+        videoElem.srcObject.addEventListener('unmute', (e) => {
+            console.log("track unmuted, showing video element");
+            videoElem.style.display = 'block';
+        });
+        videoElem.srcObject.addEventListener('removetrack', (e) => {
+            console.log("track removed, removing video element");
+            videoElem.remove();
+        });
+    };
 
     peer_connection.onicecandidate = (event) => {
         // We have a candidate, send it to the remote party with the
@@ -346,10 +387,38 @@ function createCall(msg) {
         }
         ws_conn.send(JSON.stringify({'ice': event.candidate}));
     };
+    peer_connection.oniceconnectionstatechange = (event) => {
+        if (peer_connection.iceConnectionState == "connected") {
+            setStatus("ICE gathering complete");
+        }
+    };
 
-    if (msg != null)
-        setStatus("Created peer connection for call, waiting for SDP");
+    // let the "negotiationneeded" event trigger offer generation
+    peer_connection.onnegotiationneeded = async () => {
+        setStatus("Negotiation needed");
+        if (wantRemoteOfferer())
+            return;
+        try {
+            makingOffer = true;
+            await peer_connection.setLocalDescription();
+            let desc = peer_connection.localDescription;
+            setStatus("Sending SDP " + desc.type);
+            ws_conn.send(JSON.stringify({'sdp': desc}));
+        } catch (err) {
+            handleIncomingError(err);
+        } finally {
+            makingOffer = false;
+        }
+    };
+
+    /* Send our video/audio to the other peer */
+    local_stream = getLocalStream().then((stream) => {
+        console.log('Adding local stream');
+        for (const track of stream.getTracks()) {
+            peer_connection.addTrack(track, stream);
+        }
+        return stream;
+    }).catch(setError);
 
     setConnectButtonState("Disconnect");
-    return local_stream_promise;
 }

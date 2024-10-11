@@ -119,7 +119,7 @@
 #endif
 #endif
 
-#ifdef GST_FULL_COMPILATION
+#ifdef GST_FULL_STATIC_COMPILATION
 void gst_init_static_plugins ();
 #endif
 
@@ -197,18 +197,12 @@ enum
  * val ::= [0-5]
  */
 
-#ifdef G_OS_WIN32
+#if defined(G_OS_WIN32) && !defined(GST_STATIC_COMPILATION)
 /* Note: DllMain is only called when DLLs are loaded or unloaded, so this will
  * never be called if libgstreamer-1.0 is linked statically. Do not add any code
  * here to, say, initialize variables or set things up since that will only
  * happen for dynamically-built GStreamer.
- *
- * Also, ideally this should not be defined when GStreamer is built statically.
- * i.e., it should be conditional on #ifdef DLL_EXPORT. It will be ignored, but
- * if other libraries make the same mistake of defining it when building
- * statically, there will be a symbol collision during linking. Fixing this
- * requires one to build two object files: one for static linking and another
- * for dynamic linking. */
+ */
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
 BOOL WINAPI
 DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
@@ -628,7 +622,7 @@ gst_register_core_elements (GstPlugin * plugin)
 static void
 init_static_plugins (void)
 {
-#ifdef GST_FULL_COMPILATION
+#ifdef GST_FULL_STATIC_COMPILATION
   gst_init_static_plugins ();
 #else
   GModule *module;
@@ -668,7 +662,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   }
 
   _priv_gst_mini_object_initialize ();
-  _priv_gst_quarks_initialize ();
   _priv_gst_allocator_initialize ();
   _priv_gst_memory_initialize ();
   _priv_gst_format_initialize ();

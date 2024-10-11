@@ -13,7 +13,6 @@ release_modules = [
   'gst-devtools',
   'gst-python',
   'gstreamer-vaapi',
-  'gst-omx',
   'gst-docs',
   'gstreamer-sharp',
 ]

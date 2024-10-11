@@ -18,7 +18,7 @@ vpx_features = [
 ]
 
 vpx_option = get_option('vpx')
-vpx_dep = dependency('vpx', version : '>=1.7.0', required : vpx_option)
+vpx_dep = dependency('vpx', version : '>=1.7.0', required : vpx_option, allow_fallback: true)
 
 if vpx_dep.found()
   vpx_args = []
@@ -31,13 +31,27 @@ if vpx_dep.found()
                      const vpx_codec_iface_t *c = &@1@;
                      return c != 0;
                    }'''.format(header,codec_iface)
-    if cc.links(link_code, dependencies : vpx_dep)
-      vpx_args += extra_define
-      message('libvpx provides @0@ interface (@1@)'.format(f.get(3),f.get(1)))
-      have_vpx_feature = true
+    # Link-time checks are only compatible with externally supplied libraries 
+    if vpx_dep.type_name() == 'internal'
+      vpx_codec = vpx_dep.get_variable(f.get(3).split(' ')[0].to_lower())
+      vpx_feature = vpx_dep.get_variable(f.get(3).to_lower().underscorify())
+      if vpx_feature == 'true' and vpx_codec == 'true'
+        vpx_args += extra_define
+        message('libvpx provides @0@ interface (@1@)'.format(f.get(3),f.get(1)))
+        have_vpx_feature = true
+      else
+        message('libvpx does not provide @0@ interface (@1@)'.format(f.get(3),f.get(1)))
+        have_vpx_feature = false
+      endif
     else
-      message('libvpx does not provide @0@ interface (@1@)'.format(f.get(3),f.get(1)))
-      have_vpx_feature = false
+      if cc.links(link_code, dependencies : vpx_dep)
+        vpx_args += extra_define
+        message('libvpx provides @0@ interface (@1@)'.format(f.get(3),f.get(1)))
+        have_vpx_feature = true
+      else
+        message('libvpx does not provide @0@ interface (@1@)'.format(f.get(3),f.get(1)))
+        have_vpx_feature = false
+      endif
     endif
     set_variable('have_' + f.get(3).to_lower().underscorify(), have_vpx_feature)
   endforeach

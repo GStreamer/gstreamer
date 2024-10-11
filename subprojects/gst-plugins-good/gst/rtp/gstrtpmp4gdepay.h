@@ -73,6 +73,7 @@ struct _GstRtpMP4GDepay
   GQueue *packets;
   
   GstAdapter *adapter;
+  GstBufferList *outbufs;
 };
 
 struct _GstRtpMP4GDepayClass

@@ -314,7 +314,6 @@ def _init_locale(gettext_domain=None):
         else:
             gettext.bindtextdomain(gettext_domain, Paths.locale_dir)
             gettext.textdomain(gettext_domain)
-            gettext.bind_textdomain_codeset(gettext_domain, "UTF-8")
 
 
 def _init_logging(level):

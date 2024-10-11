@@ -1,0 +1,96 @@
+From b4c454a75108bc31934d2d0be0141a2220bded84 Mon Sep 17 00:00:00 2001
+From: Andoni Morales Alastruey <ylatuya@gmail.com>
+Date: Tue, 18 Oct 2022 11:18:06 +0200
+Subject: [PATCH] Fix gir build when using subprojects' dependencies
+
+https://github.com/mesonbuild/meson/pull/10275 introduced
+support in meson to use uninstalled .pc files in the meson-uninstalled
+directory to resolve dependencies built with subprojects.
+Replicate the same solution while all the custom_target
+are migrated to gnome.generate_dir
+---
+ gir/meson.build   |  5 +++++
+ meson.build       | 10 ++++++++++
+ tests/meson.build |  1 +
+ 3 files changed, 16 insertions(+)
+
+diff --git a/gir/meson.build b/gir/meson.build
+index da23e422..09714cc1 100644
+--- a/gir/meson.build
++++ b/gir/meson.build
+@@ -239,6 +239,7 @@ glib_gir = custom_target('gir-glib',
+   depend_files: gir_giscanner_built_files,
+   install: true,
+   install_dir: girdir,
++  env: g_ir_scanner_env,
+   command: glib_command + [
+     '--cflags-begin'] + glib_includes + extra_giscanner_cflags + [
+     '-DGLIB_COMPILATION',
+@@ -307,6 +308,7 @@ gobject_gir = custom_target('gir-gobject',
+   depend_files: gir_giscanner_built_files,
+   install: true,
+   install_dir: girdir,
++  env: g_ir_scanner_env,
+   command: gobject_command + [
+     '--include-uninstalled=' + glib_gir.full_path(),
+     '--cflags-begin'] + glib_includes + extra_giscanner_cflags + [
+@@ -360,6 +362,7 @@ gir_files += custom_target('gir-gmodule',
+   depend_files: gir_giscanner_built_files,
+   install: true,
+   install_dir: girdir,
++  env: g_ir_scanner_env,
+   command: gmodule_command + [
+     '--include-uninstalled=' + glib_gir.full_path(),
+     '--cflags-begin'] + glib_includes + extra_giscanner_cflags + [
+@@ -456,6 +459,7 @@ gio_gir = custom_target('gir-gio',
+   depend_files: gir_giscanner_built_files,
+   install: true,
+   install_dir: girdir,
++  env: g_ir_scanner_env,
+   command: gio_command + [
+     '--include-uninstalled=' + gobject_gir.full_path(),
+     '--cflags-begin'] + glib_includes + extra_giscanner_cflags + [
+@@ -493,6 +497,7 @@ gir_files += custom_target('gir-girepository',
+   depend_files: gir_giscanner_built_files,
+   install: true,
+   install_dir: girdir,
++  env: g_ir_scanner_env,
+   command: girepository_command + [
+     '--include-uninstalled=' + gobject_gir.full_path(),
+     '--cflags-begin'] + glib_includes + extra_giscanner_cflags + [
+diff --git a/meson.build b/meson.build
+index ca9c2b22..28fbf7fe 100644
+--- a/meson.build
++++ b/meson.build
+@@ -151,6 +151,16 @@ if not (host_system == 'darwin' and host_arch == 'aarch64' or
+   config.set('LEGACY_GIRFFI_FREE', 1)
+ endif
+ 
++# Replicate https://github.com/mesonbuild/meson/pull/10275 setting
++# the correct env in the custom_target
++pkg_config = find_program('pkg-config')
++g_ir_scanner_env = environment()
++dep_type = glib_dep.type_name()
++if dep_type == 'internal'
++  g_ir_scanner_env.append('PKG_CONFIG_PATH', meson.global_build_root() + '/meson-uninstalled')
++  g_ir_scanner_env.set('PKG_CONFIG', pkg_config.full_path())
++endif
++
+ configure_file(
+   configuration: config,
+   output: 'config.h'
+diff --git a/tests/meson.build b/tests/meson.build
+index abb51f58..22b402b0 100644
+--- a/tests/meson.build
++++ b/tests/meson.build
+@@ -56,6 +56,7 @@ test_gircompiler = find_program('g-ir-compiler', native: false, required : false
+ test_everything_files = custom_target('everything',
+   output: ['everything.h', 'everything.c'],
+   depends: typelibs,
++  env: g_ir_scanner_env,
+   command: [
+     test_girscanner,
+     '--quiet',
+-- 
+2.39.2
+

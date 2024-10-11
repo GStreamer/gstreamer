@@ -31,6 +31,7 @@ onevpl_extra_args = []
 
 extra_args = [
   '-DGST_USE_UNSTABLE_API',
+  '-DMFX_DEPRECATED_OFF'
 ]
 
 msdk_option = get_option('msdk')
@@ -183,7 +184,6 @@ if host_machine.system() == 'windows'
 else
   libdl_dep = cc.find_library('dl', required: get_option('msdk'))
   libgudev_dep = dependency('gudev-1.0', required: get_option('msdk'), allow_fallback: true)
-  libdrm_dep = dependency('libdrm', required: get_option('msdk'))
   msdk_deps = declare_dependency(dependencies: [gstva_dep, libdl_dep, libgudev_dep, libdrm_dep])
   msdk_deps_found = gstva_dep.found() and libdl_dep.found() and libgudev_dep.found() and libdrm_dep.found()
 endif

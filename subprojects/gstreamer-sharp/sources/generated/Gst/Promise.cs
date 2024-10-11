@@ -14,7 +14,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_promise_get_type();
 
-		public static GLib.GType GType { 
+		public static new GLib.GType GType { 
 			get {
 				IntPtr raw_ret = gst_promise_get_type();
 				GLib.GType ret = new GLib.GType(raw_ret);
@@ -71,7 +71,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_promise_new();
 
-		public Promise () 
+		public Promise () : base (IntPtr.Zero)
 		{
 			Raw = gst_promise_new();
 		}
@@ -79,7 +79,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_promise_new_with_change_func(GstSharp.PromiseChangeFuncNative func, IntPtr user_data, GLib.DestroyNotify notify);
 
-		public Promise (Gst.PromiseChangeFunc func) 
+		public Promise (Gst.PromiseChangeFunc func) : base (IntPtr.Zero)
 		{
 			GstSharp.PromiseChangeFuncWrapper func_wrapper = new GstSharp.PromiseChangeFuncWrapper (func);
 			IntPtr user_data;
@@ -92,6 +92,34 @@ namespace Gst {
 				notify = GLib.DestroyHelper.NotifyHandler;
 			}
 			Raw = gst_promise_new_with_change_func(func_wrapper.NativeDelegate, user_data, notify);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_promise_ref(IntPtr raw);
+
+		protected override void Ref (IntPtr raw)
+		{
+			if (!Owned) {
+				gst_promise_ref (raw);
+				Owned = true;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_promise_unref(IntPtr raw);
+
+		protected override void Unref (IntPtr raw)
+		{
+			if (Owned) {
+				gst_promise_unref (raw);
+				Owned = false;
+			}
+		}
+
+		protected override Action<IntPtr> DisposeUnmanagedFunc {
+			get {
+				return gst_promise_unref;
+			}
 		}
 
 

@@ -22,7 +22,7 @@
 #include "mfxvp8.h"
 #include "mfxjpeg.h"
 
-#include "mfxsurfacepool.h" 
+#include "mfxsurfacepool.h"
 
 #ifdef ONEVPL_EXPERIMENTAL
 #include "mfxencodestats.h"

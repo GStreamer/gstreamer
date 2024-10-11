@@ -35,6 +35,9 @@ GstMFSourceObject * gst_mf_capture_winrt_new (GstMFSourceType type,
                                               const gchar * device_path,
                                               gpointer dispatcher);
 
+GstMFSourceResult   gst_mf_capture_winrt_enumerate (gint device_index,
+                                                    GstMFSourceObject ** object);
+
 G_END_DECLS
 
 #endif /* __GST_MF_CAPTURE_WINRT_H__ */

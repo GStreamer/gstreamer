@@ -54,10 +54,20 @@ GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
     GST_STATIC_CAPS ("video/x-vp8, codec-alpha = (boolean) true")
     );
 
+#define SRC_CAPS \
+    GST_VIDEO_DMA_DRM_CAPS_MAKE " ; " \
+    GST_VIDEO_CAPS_MAKE (GST_V4L2_DEFAULT_VIDEO_FORMATS)
+
+#define SRC_CAPS_NO_DRM \
+    GST_VIDEO_CAPS_MAKE (GST_V4L2_DEFAULT_VIDEO_FORMATS)
+
+static GstStaticCaps static_src_caps = GST_STATIC_CAPS (SRC_CAPS);
+static GstStaticCaps static_src_caps_no_drm = GST_STATIC_CAPS (SRC_CAPS_NO_DRM);
+
 static GstStaticPadTemplate src_template =
 GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SRC_NAME,
     GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_V4L2_DEFAULT_VIDEO_FORMATS)));
+    GST_STATIC_CAPS (SRC_CAPS));
 
 struct _GstV4l2CodecVp8Dec
 {
@@ -65,6 +75,7 @@ struct _GstV4l2CodecVp8Dec
   GstV4l2Decoder *decoder;
   GstVideoCodecState *output_state;
   GstVideoInfo vinfo;
+  GstVideoInfoDmaDrm vinfo_drm;
   gint width;
   gint height;
 
@@ -190,7 +201,8 @@ gst_v4l2_codec_vp8_dec_negotiate (GstVideoDecoder * decoder)
     },
   };
   /* *INDENT-ON* */
-  GstCaps *filter, *caps;
+  GstCaps *peer_caps, *filter, *caps;
+  GstStaticCaps *static_filter;
 
   /* Ignore downstream renegotiation request. */
   if (self->streaming)
@@ -216,7 +228,13 @@ gst_v4l2_codec_vp8_dec_negotiate (GstVideoDecoder * decoder)
     return FALSE;
   }
 
-  filter = gst_v4l2_decoder_enum_src_formats (self->decoder);
+  /* If the peer has ANY caps only advertise system memory caps */
+  peer_caps = gst_pad_peer_query_caps (decoder->srcpad, NULL);
+  static_filter =
+      gst_caps_is_any (peer_caps) ? &static_src_caps_no_drm : &static_src_caps;
+  gst_caps_unref (peer_caps);
+
+  filter = gst_v4l2_decoder_enum_src_formats (self->decoder, static_filter);
   if (!filter) {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("No supported decoder output formats"), (NULL));
@@ -228,7 +246,8 @@ gst_v4l2_codec_vp8_dec_negotiate (GstVideoDecoder * decoder)
   gst_caps_unref (filter);
   GST_DEBUG_OBJECT (self, "Peer supported formats: %" GST_PTR_FORMAT, caps);
 
-  if (!gst_v4l2_decoder_select_src_format (self->decoder, caps, &self->vinfo)) {
+  if (!gst_v4l2_decoder_select_src_format (self->decoder, caps, &self->vinfo,
+          &self->vinfo_drm)) {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("Unsupported pixel format"),
         ("No support for %ux%u format %s", self->width, self->height,
@@ -243,11 +262,8 @@ done:
     gst_video_codec_state_unref (self->output_state);
 
   self->output_state =
-      gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-      self->vinfo.finfo->format, self->width,
-      self->height, vp8dec->input_state);
-
-  self->output_state->caps = gst_video_info_to_caps (&self->output_state->info);
+      gst_v4l2_decoder_set_output_state (GST_VIDEO_DECODER (self), &self->vinfo,
+      &self->vinfo_drm, self->width, self->height, vp8dec->input_state);
 
   if (GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder)) {
     if (self->streaming)
@@ -280,17 +296,30 @@ gst_v4l2_codec_vp8_dec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query)
 {
   GstV4l2CodecVp8Dec *self = GST_V4L2_CODEC_VP8_DEC (decoder);
+  GstCaps *caps = NULL;
   guint min = 0;
   guint num_bitstream;
 
   if (self->streaming)
     goto no_internal_changes;
 
+  g_clear_object (&self->src_pool);
+  g_clear_object (&self->src_allocator);
+
   self->has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
 
-  g_clear_object (&self->src_pool);
-  g_clear_object (&self->src_allocator);
+  gst_query_parse_allocation (query, &caps, NULL);
+  if (!caps) {
+    GST_ERROR_OBJECT (self, "No valid caps");
+    return FALSE;
+  }
+
+  if (gst_video_is_dma_drm_caps (caps) && !self->has_videometa) {
+    GST_ERROR_OBJECT (self,
+        "DMABuf caps negotiated without the mandatory support of VideoMeta");
+    return FALSE;
+  }
 
   if (gst_query_get_n_allocation_pools (query) > 0)
     gst_query_parse_nth_allocation_pool (query, 0, NULL, NULL, &min, NULL);
@@ -444,17 +473,20 @@ gst_v4l2_codec_vp8_dec_fill_references (GstV4l2CodecVp8Dec * self)
 {
   GstVp8Decoder *decoder = &self->parent;
 
-  if (decoder->last_picture)
+  if (decoder->last_picture) {
     self->frame_header.last_frame_ts =
-        decoder->last_picture->system_frame_number * 1000;
+        GST_CODEC_PICTURE_TS_NS (decoder->last_picture);
+  }
 
-  if (decoder->golden_ref_picture)
+  if (decoder->golden_ref_picture) {
     self->frame_header.golden_frame_ts =
-        decoder->golden_ref_picture->system_frame_number * 1000;
+        GST_CODEC_PICTURE_TS_NS (decoder->golden_ref_picture);
+  }
 
-  if (decoder->alt_ref_picture)
+  if (decoder->alt_ref_picture) {
     self->frame_header.alt_frame_ts =
-        decoder->alt_ref_picture->system_frame_number * 1000;
+        GST_CODEC_PICTURE_TS_NS (decoder->alt_ref_picture);
+  }
 
   GST_DEBUG_OBJECT (self, "Passing references: last %u, golden %u, alt %u",
       (guint32) self->frame_header.last_frame_ts / 1000,
@@ -624,14 +656,14 @@ gst_v4l2_codec_vp8_dec_end_picture (GstVp8Decoder * decoder,
   }
 
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      picture->system_frame_number);
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture));
   g_return_val_if_fail (frame, GST_FLOW_ERROR);
   g_warn_if_fail (frame->output_buffer == NULL);
   frame->output_buffer = buffer;
   gst_video_codec_frame_unref (frame);
 
   request = gst_v4l2_decoder_alloc_request (self->decoder,
-      picture->system_frame_number, self->bitstream, buffer);
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture), self->bitstream, buffer);
   if (!request) {
     GST_ELEMENT_ERROR (decoder, RESOURCE, NO_SPACE_LEFT,
         ("Failed to allocate a media request object."), (NULL));
@@ -722,16 +754,18 @@ gst_v4l2_codec_vp8_dec_output_picture (GstVp8Decoder * decoder,
   GstV4l2CodecVp8Dec *self = GST_V4L2_CODEC_VP8_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstV4l2Request *request = gst_vp8_picture_get_user_data (picture);
+  GstCodecPicture *codec_picture = GST_CODEC_PICTURE (picture);
   gint ret;
 
-  if (picture->discont_state) {
+  if (codec_picture->discont_state) {
     if (!gst_video_decoder_negotiate (vdec)) {
       GST_ERROR_OBJECT (vdec, "Could not re-negotiate with updated state");
       return FALSE;
     }
   }
 
-  GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
+  GST_DEBUG_OBJECT (self, "Output picture %u",
+      codec_picture->system_frame_number);
 
   ret = gst_v4l2_request_set_done (request);
   if (ret == 0) {
@@ -748,7 +782,8 @@ gst_v4l2_codec_vp8_dec_output_picture (GstVp8Decoder * decoder,
 
   if (gst_v4l2_request_failed (request)) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE,
-        ("Failed to decode frame %u", picture->system_frame_number), (NULL));
+        ("Failed to decode frame %u", codec_picture->system_frame_number),
+        (NULL));
     goto error;
   }
 
@@ -861,6 +896,7 @@ gst_v4l2_codec_vp8_dec_subinit (GstV4l2CodecVp8Dec * self,
 {
   self->decoder = gst_v4l2_decoder_new (klass->device);
   gst_video_info_init (&self->vinfo);
+  gst_video_info_dma_drm_init (&self->vinfo_drm);
 }
 
 static void
@@ -959,7 +995,7 @@ gst_v4l2_codec_vp8_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
   if (!gst_v4l2_decoder_set_sink_fmt (decoder, V4L2_PIX_FMT_VP8_FRAME,
           320, 240, 8))
     return;
-  src_caps = gst_v4l2_decoder_enum_src_formats (decoder);
+  src_caps = gst_v4l2_decoder_enum_src_formats (decoder, &static_src_caps);
 
   if (gst_caps_is_empty (src_caps)) {
     GST_WARNING ("Not registering VP8 decoder since it produces no "

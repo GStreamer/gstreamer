@@ -23,6 +23,7 @@
 #endif
 
 #include <gst/gl/gl.h>
+#include <gst/gl/gstglfuncs.h>
 #if GST_GL_HAVE_PLATFORM_EGL && GST_GL_HAVE_DMABUF
 #include <gst/gl/egl/gsteglimage.h>
 #include <gst/allocators/gstdmabuf.h>
@@ -947,7 +948,7 @@ _set_caps_features (const GstCaps * caps, const gchar * feature_name)
 
   for (i = 0; i < n; i++)
     gst_caps_set_features (tmp, i,
-        gst_caps_features_from_string (feature_name));
+        gst_caps_features_new_single_static_str (feature_name));
 
   return tmp;
 }
@@ -1239,7 +1240,7 @@ gst_gl_download_element_prepare_output_buffer (GstBaseTransform * bt,
   in_sync_meta = gst_buffer_get_gl_sync_meta (inbuf);
   if (in_sync_meta) {
     if (context) {
-      gst_gl_sync_meta_wait (in_sync_meta, context);
+      gst_gl_sync_meta_wait_cpu (in_sync_meta, context);
     } else if (dl->mode != GST_GL_DOWNLOAD_MODE_PASSTHROUGH) {
       GST_WARNING_OBJECT (dl, "No configured GL context in non-passthrough "
           "mode. Cannot wait on incoming `GstGLSyncMeta`");
@@ -1453,13 +1454,16 @@ gst_gl_download_element_propose_allocation (GstBaseTransform * bt,
   /* the normal size of a frame */
   size = info.size;
   gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-  gst_buffer_pool_config_add_option (config,
-      GST_BUFFER_POOL_OPTION_GL_SYNC_META);
+  gst_buffer_pool_config_set_gl_min_free_queue_size (config, 1);
 
   if (!gst_buffer_pool_set_config (pool, config)) {
     gst_object_unref (pool);
     goto config_failed;
   }
+
+  if (context->gl_vtable->FenceSync)
+    gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, NULL);
+
   gst_query_add_allocation_pool (query, pool, size, 1, 0);
 
   gst_object_unref (pool);

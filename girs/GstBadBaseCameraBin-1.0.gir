@@ -565,5 +565,50 @@ on the bus</doc>
         </parameter>
       </parameters>
     </function>
+    <docsection name="camerabingeneral">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">Common helper functions for #GstCameraBin.</doc>
+    </docsection>
+    <docsection name="element-basecamerasrc">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">Base class for the camera source bin used by camerabin for capture.
+Sophisticated camera hardware can derive from this baseclass and map the
+features to this interface.
+
+The design mandates that the subclasses implement the following features and
+behaviour:
+
+* 3 pads: viewfinder, image capture, video capture
+
+During `construct_pipeline()` vmethod a subclass can add several elements into
+the bin and expose 3 srcs pads as ghostpads implementing the 3 pad templates.
+
+However the subclass is responsible for adding the pad templates for the
+source pads and they must be named "vidsrc", "imgsrc" and "vfsrc". The pad
+templates should be installed in the subclass' class_init function, like so:
+|[
+static void
+my_element_class_init (GstMyElementClass *klass)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  // pad templates should be a #GstStaticPadTemplate with direction
+  // #GST_PAD_SRC and name "vidsrc", "imgsrc" and "vfsrc"
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &amp;vidsrc_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &amp;imgsrc_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &amp;vfsrc_template);
+  // see #GstElementDetails
+  gst_element_class_set_details (gstelement_class, &amp;details);
+}
+]|
+
+It is also possible to add regular pads from the subclass and implement the
+dataflow methods on these pads. This way all functionality can be implemented
+directly in the subclass without extra elements.
+
+The src will receive the capture mode from `GstCameraBin2` on the
+#GstBaseCameraSrc:mode property. Possible capture modes are defined in
+#GstCameraBinMode.</doc>
+    </docsection>
   </namespace>
 </repository>

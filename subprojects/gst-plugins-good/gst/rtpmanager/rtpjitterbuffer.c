@@ -21,6 +21,7 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/rtp/gstrtcpbuffer.h>
+#include <gst/net/net.h>
 
 #include "rtpjitterbuffer.h"
 
@@ -215,6 +216,50 @@ rtp_jitter_buffer_get_clock_rate (RTPJitterBuffer * jbuf)
   return jbuf->clock_rate;
 }
 
+static gboolean
+same_clock (GstClock * a, GstClock * b)
+{
+  if (a == b)
+    return TRUE;
+
+  if (GST_IS_NTP_CLOCK (a) && GST_IS_NTP_CLOCK (b)) {
+    gchar *a_addr, *b_addr;
+    gint a_port, b_port;
+    gboolean same;
+
+    g_object_get (a, "address", &a_addr, "port", &a_port, NULL);
+    g_object_get (b, "address", &b_addr, "port", &b_port, NULL);
+
+    same = (g_strcmp0 (a_addr, b_addr) == 0 && a_port == b_port);
+    g_free (a_addr);
+    g_free (b_addr);
+
+    if (same)
+      return TRUE;
+  } else if (GST_IS_PTP_CLOCK (a) && GST_IS_PTP_CLOCK (b)) {
+    guint a_domain, b_domain;
+
+    g_object_get (a, "domain", &a_domain, NULL);
+    g_object_get (b, "domain", &b_domain, NULL);
+
+    if (a_domain == b_domain)
+      return TRUE;
+    /* need to check the exact type because almost every clock is a subclass
+     * of GstSystemClock but would have a completely different behaviour */
+  } else if (G_OBJECT_TYPE (a) == G_OBJECT_TYPE (b)
+      && G_OBJECT_TYPE (a) == GST_TYPE_SYSTEM_CLOCK) {
+    GstClockType a_type, b_type;
+
+    g_object_get (a, "clock-type", &a_type, NULL);
+    g_object_get (b, "clock-type", &b_type, NULL);
+
+    if (a_type == b_type)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 static void
 media_clock_synced_cb (GstClock * clock, gboolean synced,
     RTPJitterBuffer * jbuf)
@@ -222,7 +267,8 @@ media_clock_synced_cb (GstClock * clock, gboolean synced,
   GstClockTime internal, external;
 
   g_mutex_lock (&jbuf->clock_lock);
-  if (jbuf->pipeline_clock) {
+  if (jbuf->pipeline_clock
+      && !same_clock (jbuf->pipeline_clock, jbuf->media_clock)) {
     internal = gst_clock_get_internal_time (jbuf->media_clock);
     external = gst_clock_get_time (jbuf->pipeline_clock);
 
@@ -242,7 +288,8 @@ media_clock_synced_cb (GstClock * clock, gboolean synced,
  */
 void
 rtp_jitter_buffer_set_media_clock (RTPJitterBuffer * jbuf, GstClock * clock,
-    guint64 clock_offset)
+    guint64 clock_offset, gint64 clock_correction,
+    gboolean reference_timestamp_meta_only)
 {
   g_mutex_lock (&jbuf->clock_lock);
   if (jbuf->media_clock) {
@@ -254,22 +301,29 @@ rtp_jitter_buffer_set_media_clock (RTPJitterBuffer * jbuf, GstClock * clock,
   }
   jbuf->media_clock = clock;
   jbuf->media_clock_offset = clock_offset;
+  jbuf->media_clock_correction = clock_correction;
+  jbuf->media_clock_reference_timestamp_meta_only =
+      reference_timestamp_meta_only;
 
-  if (jbuf->pipeline_clock && jbuf->media_clock &&
-      jbuf->pipeline_clock != jbuf->media_clock) {
-    jbuf->media_clock_synced_id =
-        g_signal_connect (jbuf->media_clock, "synced",
-        G_CALLBACK (media_clock_synced_cb), jbuf);
-    if (gst_clock_is_synced (jbuf->media_clock)) {
-      GstClockTime internal, external;
+  if (jbuf->pipeline_clock && jbuf->media_clock) {
+    if (same_clock (jbuf->pipeline_clock, jbuf->media_clock)) {
+      gst_clock_set_master (jbuf->media_clock, NULL);
+      gst_clock_set_calibration (jbuf->media_clock, 0, 0, 1, 1);
+    } else {
+      jbuf->media_clock_synced_id =
+          g_signal_connect (jbuf->media_clock, "synced",
+          G_CALLBACK (media_clock_synced_cb), jbuf);
+      if (gst_clock_is_synced (jbuf->media_clock)) {
+        GstClockTime internal, external;
 
-      internal = gst_clock_get_internal_time (jbuf->media_clock);
-      external = gst_clock_get_time (jbuf->pipeline_clock);
+        internal = gst_clock_get_internal_time (jbuf->media_clock);
+        external = gst_clock_get_time (jbuf->pipeline_clock);
 
-      gst_clock_set_calibration (jbuf->media_clock, internal, external, 1, 1);
+        gst_clock_set_calibration (jbuf->media_clock, internal, external, 1, 1);
+      }
+
+      gst_clock_set_master (jbuf->media_clock, jbuf->pipeline_clock);
     }
-
-    gst_clock_set_master (jbuf->media_clock, jbuf->pipeline_clock);
   }
   g_mutex_unlock (&jbuf->clock_lock);
 }
@@ -290,19 +344,26 @@ rtp_jitter_buffer_set_pipeline_clock (RTPJitterBuffer * jbuf, GstClock * clock)
     gst_object_unref (jbuf->pipeline_clock);
   jbuf->pipeline_clock = clock ? gst_object_ref (clock) : NULL;
 
-  if (jbuf->pipeline_clock && jbuf->media_clock &&
-      jbuf->pipeline_clock != jbuf->media_clock) {
-    if (gst_clock_is_synced (jbuf->media_clock)) {
-      GstClockTime internal, external;
+  if (jbuf->pipeline_clock && jbuf->media_clock) {
+    if (same_clock (jbuf->pipeline_clock, jbuf->media_clock)) {
+      gst_clock_set_master (jbuf->media_clock, NULL);
+      gst_clock_set_calibration (jbuf->media_clock, 0, 0, 1, 1);
+    } else {
+      if (gst_clock_is_synced (jbuf->media_clock)) {
+        GstClockTime internal, external;
 
-      internal = gst_clock_get_internal_time (jbuf->media_clock);
-      external = gst_clock_get_time (jbuf->pipeline_clock);
+        internal = gst_clock_get_internal_time (jbuf->media_clock);
+        external = gst_clock_get_time (jbuf->pipeline_clock);
 
-      gst_clock_set_calibration (jbuf->media_clock, internal, external, 1, 1);
+        gst_clock_set_calibration (jbuf->media_clock, internal, external, 1, 1);
+      }
+
+      gst_clock_set_master (jbuf->media_clock, jbuf->pipeline_clock);
     }
-
-    gst_clock_set_master (jbuf->media_clock, jbuf->pipeline_clock);
+  } else if (!jbuf->pipeline_clock && jbuf->media_clock) {
+    gst_clock_set_master (jbuf->media_clock, NULL);
   }
+
   g_mutex_unlock (&jbuf->clock_lock);
 }
 
@@ -706,6 +767,8 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
   GstClockTime gstrtptime, pts;
   GstClock *media_clock, *pipeline_clock;
   guint64 media_clock_offset;
+  gint64 media_clock_correction;
+  gboolean media_clock_reference_timestamp_meta_only;
   gboolean rfc7273_mode;
 
   *p_ntp_time = GST_CLOCK_TIME_NONE;
@@ -752,6 +815,9 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
   pipeline_clock =
       jbuf->pipeline_clock ? gst_object_ref (jbuf->pipeline_clock) : NULL;
   media_clock_offset = jbuf->media_clock_offset;
+  media_clock_correction = jbuf->media_clock_correction;
+  media_clock_reference_timestamp_meta_only =
+      jbuf->media_clock_reference_timestamp_meta_only;
   g_mutex_unlock (&jbuf->clock_lock);
 
   gstrtptime =
@@ -887,6 +953,7 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
 
     /* Current NTP clock estimation */
     ntptime = gst_clock_get_internal_time (media_clock);
+    ntptime += media_clock_correction;
 
     /* Current RTP time based on the estimated NTP clock and the corresponding
      * RTP time period start */
@@ -981,22 +1048,33 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
 
     *p_ntp_time = ntptime;
 
-    /* Packet timestamp converted to the pipeline clock.
-     * Note that this includes again inaccuracy caused by the estimation of
-     * the NTP vs. pipeline clock. */
-    rtpsystime =
-        gst_clock_adjust_with_calibration (media_clock, ntptime, internal,
-        external, rate_num, rate_denom);
+    if (media_clock_reference_timestamp_meta_only) {
+      /* do skew calculation by measuring the difference between rtptime and the
+       * receive dts, this function will return the skew corrected rtptime. */
+      pts = calculate_skew (jbuf, ext_rtptime, gstrtptime, dts, gap, is_rtx);
+    } else {
+      if (media_clock_correction < 0 || ntptime >= media_clock_correction)
+        ntptime -= media_clock_correction;
+      else
+        ntptime = 0;
 
-    /* All this assumes that the pipeline has enough additional
-     * latency to cover for the network delay */
-    if (rtpsystime > base_time)
-      pts = rtpsystime - base_time;
-    else
-      pts = 0;
+      /* Packet timestamp converted to the pipeline clock.
+       * Note that this includes again inaccuracy caused by the estimation of
+       * the NTP vs. pipeline clock. */
+      rtpsystime =
+          gst_clock_adjust_with_calibration (media_clock, ntptime, internal,
+          external, rate_num, rate_denom);
 
-    GST_DEBUG ("Packet pipeline clock time %" GST_TIME_FORMAT ", PTS %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (rtpsystime), GST_TIME_ARGS (pts));
+      /* All this assumes that the pipeline has enough additional
+       * latency to cover for the network delay */
+      if (rtpsystime > base_time)
+        pts = rtpsystime - base_time;
+      else
+        pts = 0;
+
+      GST_DEBUG ("Packet pipeline clock time %" GST_TIME_FORMAT ", PTS %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (rtpsystime), GST_TIME_ARGS (pts));
+    }
   } else {
     /* If we used the RFC7273 clock before and not anymore,
      * we need to resync it later again */
@@ -1004,7 +1082,9 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
 
     /* do skew calculation by measuring the difference between rtptime and the
      * receive dts, this function will return the skew corrected rtptime. */
-    pts = calculate_skew (jbuf, ext_rtptime, gstrtptime, dts, gap, is_rtx);
+    pts =
+        calculate_skew (jbuf, ext_rtptime, gstrtptime, estimated_dts ? -1 : dts,
+        gap, is_rtx);
   }
 
   /* check if timestamps are not going backwards, we can only check this if we
@@ -1234,7 +1314,7 @@ rtp_jitter_buffer_append_query (RTPJitterBuffer * jbuf, GstQuery * query)
   RTPJitterBufferItem *item =
       rtp_jitter_buffer_alloc_item (query, ITEM_TYPE_QUERY, -1, -1, -1, 0, -1,
       NULL);
-  gboolean head;
+  gboolean head = FALSE;
   rtp_jitter_buffer_insert (jbuf, item, &head, NULL);
   return head;
 }

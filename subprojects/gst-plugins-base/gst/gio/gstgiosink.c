@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
  * Copyright (C) 2007-2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -144,12 +144,15 @@ gst_gio_sink_class_init (GstGioSinkClass * klass)
 
   gstgiobasesink_class->get_stream =
       GST_DEBUG_FUNCPTR (gst_gio_sink_get_stream);
-  gstgiobasesink_class->close_on_stop = TRUE;
 }
 
 static void
 gst_gio_sink_init (GstGioSink * sink)
 {
+  GstGioBaseSink *bsink = GST_GIO_BASE_SINK (sink);
+
+  // TRUE is the historical default for this element
+  bsink->close_on_stop = TRUE;
 }
 
 static void

@@ -170,8 +170,11 @@ gst_gl_format_from_video_info (GstGLContext * context,
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_VUYA:
+    case GST_VIDEO_FORMAT_RBGA:
       n_plane_components = 4;
       break;
+    case GST_VIDEO_FORMAT_RGBA64_LE:
+    case GST_VIDEO_FORMAT_RGBA64_BE:
     case GST_VIDEO_FORMAT_ARGB64:
       return GST_GL_RGBA16;
     case GST_VIDEO_FORMAT_RGB:
@@ -206,11 +209,14 @@ gst_gl_format_from_video_info (GstGLContext * context,
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_A422:
+    case GST_VIDEO_FORMAT_A444:
       n_plane_components = 1;
       break;
     case GST_VIDEO_FORMAT_BGR10A2_LE:
     case GST_VIDEO_FORMAT_RGB10A2_LE:
     case GST_VIDEO_FORMAT_Y410:
+    case GST_VIDEO_FORMAT_v210:
       return GST_GL_RGB10_A2;
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_P010_10BE:
@@ -231,6 +237,29 @@ gst_gl_format_from_video_info (GstGLContext * context,
     case GST_VIDEO_FORMAT_BGRP:
     case GST_VIDEO_FORMAT_GBRA:
       return GST_GL_R8;
+    case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I420_10BE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_I420_12BE:
+    case GST_VIDEO_FORMAT_A420_10LE:
+    case GST_VIDEO_FORMAT_A420_10BE:
+    case GST_VIDEO_FORMAT_A420_12LE:
+    case GST_VIDEO_FORMAT_A420_12BE:
+    case GST_VIDEO_FORMAT_A420_16LE:
+    case GST_VIDEO_FORMAT_A420_16BE:
+    case GST_VIDEO_FORMAT_A422_10LE:
+    case GST_VIDEO_FORMAT_A422_10BE:
+    case GST_VIDEO_FORMAT_A422_12LE:
+    case GST_VIDEO_FORMAT_A422_12BE:
+    case GST_VIDEO_FORMAT_A422_16LE:
+    case GST_VIDEO_FORMAT_A422_16BE:
+    case GST_VIDEO_FORMAT_A444_10LE:
+    case GST_VIDEO_FORMAT_A444_10BE:
+    case GST_VIDEO_FORMAT_A444_12LE:
+    case GST_VIDEO_FORMAT_A444_12BE:
+    case GST_VIDEO_FORMAT_A444_16LE:
+    case GST_VIDEO_FORMAT_A444_16BE:
+      return GST_GL_R16;
     default:
       n_plane_components = 4;
       g_assert_not_reached ();
@@ -412,6 +441,227 @@ gst_gl_format_type_from_sized_gl_format (GstGLFormat format,
       *unsized_format = format;
       *gl_type = GL_UNSIGNED_BYTE;
       return;
+  }
+}
+
+/**
+ * gst_gl_format_n_components:
+ * @gl_format: the #GstGLFormat
+ *
+ * Returns: the number of components in a #GstGLFormat
+ *
+ * Since: 1.24
+ */
+guint
+gst_gl_format_n_components (GstGLFormat gl_format)
+{
+  switch (gl_format) {
+    case GST_GL_LUMINANCE:
+    case GST_GL_ALPHA:
+    case GST_GL_RED:
+    case GST_GL_R8:
+    case GST_GL_DEPTH_COMPONENT16:
+    case GST_GL_R16:
+      return 1;
+    case GST_GL_LUMINANCE_ALPHA:
+    case GST_GL_RG:
+    case GST_GL_RG8:
+    case GST_GL_DEPTH24_STENCIL8:
+    case GST_GL_RG16:
+      return 2;
+    case GST_GL_RGB:
+    case GST_GL_RGB8:
+    case GST_GL_RGB565:
+    case GST_GL_RGB16:
+      return 3;
+    case GST_GL_RGBA:
+    case GST_GL_RGBA8:
+    case GST_GL_RGBA16:
+    case GST_GL_RGB10_A2:
+      return 4;
+    default:
+      g_warn_if_reached ();
+      return 0;
+  }
+}
+
+static void
+get_single_planar_format_gl_swizzle_order (GstVideoFormat format,
+    gint swizzle[GST_VIDEO_MAX_COMPONENTS])
+{
+  const GstVideoFormatInfo *finfo = gst_video_format_get_info (format);
+  int c_i = 0, i;
+
+  g_return_if_fail (finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB
+      || format == GST_VIDEO_FORMAT_AYUV || format == GST_VIDEO_FORMAT_VUYA);
+
+  if (format == GST_VIDEO_FORMAT_BGR10A2_LE) {
+    swizzle[0] = 2;
+    swizzle[1] = 1;
+    swizzle[2] = 0;
+    swizzle[3] = 3;
+    return;
+  }
+  if (format == GST_VIDEO_FORMAT_RGB10A2_LE) {
+    swizzle[0] = 0;
+    swizzle[1] = 1;
+    swizzle[2] = 2;
+    swizzle[3] = 3;
+    return;
+  }
+
+  for (i = 0; i < finfo->n_components; i++) {
+    swizzle[c_i++] = finfo->poffset[i] / (GST_ROUND_UP_8 (finfo->bits) / 8);
+  }
+
+  /* special case spaced RGB formats as the space does not contain a poffset
+   * value and we need all four components to be valid in order to swizzle
+   * correctly */
+  if (format == GST_VIDEO_FORMAT_xRGB || format == GST_VIDEO_FORMAT_xBGR) {
+    swizzle[c_i++] = 0;
+  } else if (format == GST_VIDEO_FORMAT_RGBx || format == GST_VIDEO_FORMAT_BGRx
+      || format == GST_VIDEO_FORMAT_RGB || format == GST_VIDEO_FORMAT_BGR) {
+    swizzle[c_i++] = 3;
+  } else {
+    for (i = finfo->n_components; i < GST_VIDEO_MAX_COMPONENTS; i++) {
+      swizzle[c_i++] = -1;
+    }
+  }
+}
+
+/**
+ * gst_gl_video_format_swizzle:
+ * @video_format: the #GstVideoFormat in use
+ * @swizzle: (out) (array fixed-size=4): the returned swizzle indices
+ *
+ * Calculates the swizzle indices for @video_format and @gl_format in order to
+ * access a texture such that accessing a texel from a texture through the swizzle
+ * index produces values in the order (R, G, B, A) or (Y, U, V, A).
+ *
+ * For multi-planer formats, the swizzle index uses the same component order (RGBA/YUVA)
+ * and should be applied after combining multiple planes into a single rgba/yuva value.
+ * e.g. sampling from a NV12 format would have Y from one texture and UV from
+ * another texture into a (Y, U, V) value.  Add an Aplha component and then
+ * perform swizzling.  Sampling from NV21 would produce (Y, V, U) which is then
+ * swizzled to (Y, U, V).
+ *
+ * Returns: whether valid swizzle indices could be found
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_gl_video_format_swizzle (GstVideoFormat video_format, int *swizzle)
+{
+  const GstVideoFormatInfo *finfo = gst_video_format_get_info (video_format);
+
+  if (finfo->n_planes == 1 &&
+      (finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB ||
+          video_format == GST_VIDEO_FORMAT_AYUV ||
+          video_format == GST_VIDEO_FORMAT_VUYA)) {
+    get_single_planar_format_gl_swizzle_order (video_format, swizzle);
+    return TRUE;
+  }
+
+  switch (video_format) {
+    case GST_VIDEO_FORMAT_BGRP:
+      get_single_planar_format_gl_swizzle_order (GST_VIDEO_FORMAT_BGR, swizzle);
+      return TRUE;
+    case GST_VIDEO_FORMAT_RGBP:
+      get_single_planar_format_gl_swizzle_order (GST_VIDEO_FORMAT_RGB, swizzle);
+      return TRUE;
+    case GST_VIDEO_FORMAT_AV12:
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV16:
+    case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P010_10BE:
+    case GST_VIDEO_FORMAT_P012_LE:
+    case GST_VIDEO_FORMAT_P012_BE:
+    case GST_VIDEO_FORMAT_P016_LE:
+    case GST_VIDEO_FORMAT_P016_BE:
+    case GST_VIDEO_FORMAT_NV12_16L32S:
+    case GST_VIDEO_FORMAT_NV12_4L4:
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I420_10BE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_I420_12BE:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y41B:
+    case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_A420_10LE:
+    case GST_VIDEO_FORMAT_A420_10BE:
+    case GST_VIDEO_FORMAT_A420_12LE:
+    case GST_VIDEO_FORMAT_A420_12BE:
+    case GST_VIDEO_FORMAT_A420_16LE:
+    case GST_VIDEO_FORMAT_A420_16BE:
+    case GST_VIDEO_FORMAT_A422:
+    case GST_VIDEO_FORMAT_A422_10LE:
+    case GST_VIDEO_FORMAT_A422_10BE:
+    case GST_VIDEO_FORMAT_A422_12LE:
+    case GST_VIDEO_FORMAT_A422_12BE:
+    case GST_VIDEO_FORMAT_A422_16LE:
+    case GST_VIDEO_FORMAT_A422_16BE:
+    case GST_VIDEO_FORMAT_A444:
+    case GST_VIDEO_FORMAT_A444_10LE:
+    case GST_VIDEO_FORMAT_A444_10BE:
+    case GST_VIDEO_FORMAT_A444_12LE:
+    case GST_VIDEO_FORMAT_A444_12BE:
+    case GST_VIDEO_FORMAT_A444_16LE:
+    case GST_VIDEO_FORMAT_A444_16BE:
+      swizzle[0] = 0;
+      swizzle[1] = 1;
+      swizzle[2] = 2;
+      swizzle[3] = 3;
+      return TRUE;
+    case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_NV61:
+    case GST_VIDEO_FORMAT_YV12:
+      swizzle[0] = 0;
+      swizzle[1] = 2;
+      swizzle[2] = 1;
+      swizzle[3] = 3;
+      return TRUE;
+    case GST_VIDEO_FORMAT_Y410:
+    case GST_VIDEO_FORMAT_Y412_LE:
+    case GST_VIDEO_FORMAT_Y412_BE:
+      swizzle[0] = 1;
+      swizzle[1] = 0;
+      swizzle[2] = 2;
+      swizzle[3] = 3;
+      return TRUE;
+      /* TODO: deal with YUY2 variants */
+    default:
+      return FALSE;
+  }
+}
+
+/**
+ * gst_gl_swizzle_invert:
+ * @swizzle: (array fixed-size=4): input swizzle
+ * @inversion: (out) (array fixed-size=4): resulting inversion
+ *
+ * Given @swizzle, produce @inversion such that:
+ *
+ * @swizzle[@inversion[i]] == identity[i] where:
+ * - identity = {0, 1, 2,...}
+ * - unset fields are marked by -1
+ *
+ * Since: 1.24
+ */
+void
+gst_gl_swizzle_invert (gint * swizzle, gint * inversion)
+{
+  int i;
+
+  for (i = 0; i < GST_VIDEO_MAX_COMPONENTS; i++) {
+    inversion[i] = -1;
+  }
+
+  for (i = 0; i < GST_VIDEO_MAX_COMPONENTS; i++) {
+    if (swizzle[i] >= 0 && swizzle[i] < 4 && inversion[swizzle[i]] == -1) {
+      inversion[swizzle[i]] = i;
+    }
   }
 }
 

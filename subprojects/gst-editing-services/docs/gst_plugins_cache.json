@@ -265,7 +265,20 @@
                         "presence": "always"
                     }
                 },
-                "properties": {},
+                "properties": {
+                    "reverse": {
+                        "blurb": "Whether to playback the source reverse or not",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                },
                 "rank": "none",
                 "signals": {}
             },

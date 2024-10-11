@@ -320,19 +320,6 @@ namespace Gst.Sdp {
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_sdp_media_init(IntPtr raw);
-
-		public Gst.Sdp.SDPResult Init() {
-			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
-			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			int raw_ret = gst_sdp_media_init(this_as_native);
-			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
-			ReadNative (this_as_native, ref this);
-			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
-			return ret;
-		}
-
-		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_media_insert_attribute(IntPtr raw, int idx, IntPtr attr);
 
 		public Gst.Sdp.SDPResult InsertAttribute(int idx, Gst.Sdp.SDPAttribute attr) {
@@ -608,6 +595,18 @@ namespace Gst.Sdp {
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_sdp_media_init(IntPtr media);
+
+		public static Gst.Sdp.SDPResult Init(out Gst.Sdp.SDPMedia media) {
+			IntPtr native_media = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Sdp.SDPMedia)));
+			int raw_ret = gst_sdp_media_init(native_media);
+			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
+			media = Gst.Sdp.SDPMedia.New (native_media);
+			Marshal.FreeHGlobal (native_media);
+			return ret;
+		}
+
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_media_new(IntPtr media);
 
 		public static Gst.Sdp.SDPResult New(out Gst.Sdp.SDPMedia media) {
@@ -622,10 +621,11 @@ namespace Gst.Sdp {
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_media_set_media_from_caps(IntPtr caps, IntPtr media);
 
-		public static Gst.Sdp.SDPResult SetMediaFromCaps(Gst.Caps caps, Gst.Sdp.SDPMedia media) {
-			IntPtr native_media = GLib.Marshaller.StructureToPtrAlloc (media);
+		public static Gst.Sdp.SDPResult SetMediaFromCaps(Gst.Caps caps, out Gst.Sdp.SDPMedia media) {
+			IntPtr native_media = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Sdp.SDPMedia)));
 			int raw_ret = gst_sdp_media_set_media_from_caps(caps == null ? IntPtr.Zero : caps.Handle, native_media);
 			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
+			media = Gst.Sdp.SDPMedia.New (native_media);
 			Marshal.FreeHGlobal (native_media);
 			return ret;
 		}

@@ -452,7 +452,7 @@ namespace Gst {
 		{
 			try {
 				Bin __obj = GLib.Object.GetObject (inst, false) as Bin;
-				__obj.OnHandleMessage (message == IntPtr.Zero ? null : (Gst.Message) GLib.Opaque.GetOpaque (message, typeof (Gst.Message), false));
+				__obj.OnHandleMessage (message == IntPtr.Zero ? null : (Gst.Message) GLib.Opaque.GetOpaque (message, typeof (Gst.Message), true));
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, false);
 			}
@@ -473,6 +473,7 @@ namespace Gst {
 			}
 			if (unmanaged == null) return;
 
+			message.Owned = false;
 			unmanaged (this.Handle, message == null ? IntPtr.Zero : message.Handle);
 		}
 
@@ -938,6 +939,17 @@ namespace Gst {
 		public GLib.Object GetChildByName(string name) {
 			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
 			IntPtr raw_ret = gst_child_proxy_get_child_by_name(Handle, native_name);
+			GLib.Object ret = GLib.Object.GetObject (raw_ret);
+			GLib.Marshaller.Free (native_name);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_child_proxy_get_child_by_name_recurse(IntPtr raw, IntPtr name);
+
+		public GLib.Object GetChildByNameRecurse(string name) {
+			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr raw_ret = gst_child_proxy_get_child_by_name_recurse(Handle, native_name);
 			GLib.Object ret = GLib.Object.GetObject (raw_ret);
 			GLib.Marshaller.Free (native_name);
 			return ret;

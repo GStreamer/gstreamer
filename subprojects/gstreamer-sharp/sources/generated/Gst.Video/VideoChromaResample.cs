@@ -12,10 +12,10 @@ namespace Gst.Video {
 	public partial class VideoChromaResample : GLib.Opaque {
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_video_chroma_resample_get_info(IntPtr raw, uint n_lines, int offset);
+		static extern void gst_video_chroma_resample_get_info(IntPtr raw, out uint n_lines, out int offset);
 
-		public void GetInfo(uint n_lines, int offset) {
-			gst_video_chroma_resample_get_info(Handle, n_lines, offset);
+		public void GetInfo(out uint n_lines, out int offset) {
+			gst_video_chroma_resample_get_info(Handle, out n_lines, out offset);
 		}
 
 		public VideoChromaResample(IntPtr raw) : base(raw) {}

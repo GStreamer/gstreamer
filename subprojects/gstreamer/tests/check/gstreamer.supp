@@ -2574,6 +2574,17 @@
    fun:getaddrinfo
 }
 
+## Fedora 34 getaddrinfo context tls leak (probably some thread teardown race)
+## https://codebrowser.dev/glibc/glibc/resolv/resolv_context.c.html#current
+{
+   <Context Leaked>
+   Memcheck:Leak
+   ...
+   fun:maybe_init
+   ...
+   fun:getaddrinfo
+}
+
 ## Dynamic pad templates in mxfmux
 {
    <Dynamic pad templates in mxfmux>
@@ -4074,3 +4085,24 @@
   fun:generate_unwind_trace
   fun:gst_debug_get_stack_trace
 }
+
+# since glib 2.65 https://gitlab.gnome.org/GNOME/glib/-/merge_requests/1400
+{
+  glib 2.65+: program may exit before all cancellable sources are freed
+  Memcheck:Leak
+  ...
+  fun:g_cancellable_source_new
+  ...
+  fun:g_socket_create_source
+}
+
+{
+   And more dlopen work leaks
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:dl_open_worker_begin
+   ...
+   fun:dl_open_worker
+}
+

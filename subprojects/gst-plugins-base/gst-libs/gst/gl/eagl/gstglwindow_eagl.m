@@ -22,6 +22,11 @@
 #include "config.h"
 #endif
 
+#include <gst/gst.h>
+
+/* The entirety of OpenGL is deprecated starting from ios 12.0 */
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+
 #import <OpenGLES/EAGL.h>
 #import <QuartzCore/QuartzCore.h>
 #import <UIKit/UIKit.h>
@@ -388,3 +393,5 @@ _gl_invoke_on_main (GstGLWindowEaglFunc func, gpointer data, GDestroyNotify noti
     });
   }
 }
+
+G_GNUC_END_IGNORE_DEPRECATIONS

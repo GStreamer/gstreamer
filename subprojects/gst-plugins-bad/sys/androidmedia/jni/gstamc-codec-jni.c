@@ -26,6 +26,7 @@
 #include "../gstjniutils.h"
 #include "../gstamc-codec.h"
 #include "../gstamc-constants.h"
+#include "gstamc-jni.h"
 #include "gstamc-internal-jni.h"
 #include "gstamcsurfacetexture-jni.h"
 #include "gstamcsurface.h"
@@ -90,7 +91,7 @@ static struct
 } java_nio_buffer;
 
 gboolean
-gst_amc_codec_static_init (void)
+gst_amc_codec_jni_static_init (void)
 {
   gboolean ret = TRUE;
   JNIEnv *env;
@@ -412,8 +413,8 @@ error:
   return FALSE;
 }
 
-void
-gst_amc_buffer_free (GstAmcBuffer * buffer_)
+static void
+gst_amc_buffer_jni_free (GstAmcBuffer * buffer_)
 {
   RealBuffer *buffer = (RealBuffer *) buffer_;
   JNIEnv *env;
@@ -469,9 +470,9 @@ gst_amc_buffer_get_position_and_limit (RealBuffer * buffer_, GError ** err,
   return TRUE;
 }
 
-gboolean
-gst_amc_buffer_set_position_and_limit (GstAmcBuffer * buffer_, GError ** err,
-    gint position, gint limit)
+static gboolean
+gst_amc_buffer_jni_set_position_and_limit (GstAmcBuffer * buffer_,
+    GError ** err, gint position, gint limit)
 {
   RealBuffer *buffer = (RealBuffer *) buffer_;
   JNIEnv *env;
@@ -497,8 +498,8 @@ gst_amc_buffer_set_position_and_limit (GstAmcBuffer * buffer_, GError ** err,
   return TRUE;
 }
 
-GstAmcCodec *
-gst_amc_codec_new (const gchar * name, gboolean is_encoder, GError ** err)
+static GstAmcCodec *
+gst_amc_codec_jni_new (const gchar * name, gboolean is_encoder, GError ** err)
 {
   JNIEnv *env;
   GstAmcCodec *codec = NULL;
@@ -544,8 +545,8 @@ error:
   goto done;
 }
 
-void
-gst_amc_codec_free (GstAmcCodec * codec)
+static void
+gst_amc_codec_jni_free (GstAmcCodec * codec)
 {
   JNIEnv *env;
 
@@ -571,8 +572,8 @@ gst_amc_codec_free (GstAmcCodec * codec)
   g_slice_free (GstAmcCodec, codec);
 }
 
-gboolean
-gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format,
+static gboolean
+gst_amc_codec_jni_configure (GstAmcCodec * codec, GstAmcFormat * format,
     GstAmcSurfaceTexture * surface, GError ** err)
 {
   JNIEnv *env;
@@ -601,8 +602,8 @@ gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format,
       codec->surface ? codec->surface->jobject : NULL, NULL, flags);
 }
 
-GstAmcFormat *
-gst_amc_codec_get_output_format (GstAmcCodec * codec, GError ** err)
+static GstAmcFormat *
+gst_amc_codec_jni_get_output_format (GstAmcCodec * codec, GError ** err)
 {
   JNIEnv *env;
   GstAmcFormat *ret = NULL;
@@ -632,8 +633,8 @@ done:
 }
 
 static RealBuffer *
-gst_amc_codec_get_input_buffers (GstAmcCodec * codec, gsize * n_buffers,
-    GError ** err)
+gst_amc_codec_jni_get_input_buffers (GstAmcCodec * codec,
+    gsize * n_buffers, GError ** err)
 {
   JNIEnv *env;
   jobject input_buffers = NULL;
@@ -659,8 +660,8 @@ done:
 }
 
 static RealBuffer *
-gst_amc_codec_get_output_buffers (GstAmcCodec * codec, gsize * n_buffers,
-    GError ** err)
+gst_amc_codec_jni_get_output_buffers (GstAmcCodec * codec,
+    gsize * n_buffers, GError ** err)
 {
   JNIEnv *env;
   jobject output_buffers = NULL;
@@ -685,8 +686,8 @@ done:
   return ret;
 }
 
-gboolean
-gst_amc_codec_start (GstAmcCodec * codec, GError ** err)
+static gboolean
+gst_amc_codec_jni_start (GstAmcCodec * codec, GError ** err)
 {
   JNIEnv *env;
   gboolean ret;
@@ -704,7 +705,8 @@ gst_amc_codec_start (GstAmcCodec * codec, GError ** err)
       gst_amc_jni_free_buffer_array (env, codec->input_buffers,
           codec->n_input_buffers);
     codec->input_buffers =
-        gst_amc_codec_get_input_buffers (codec, &codec->n_input_buffers, err);
+        gst_amc_codec_jni_get_input_buffers (codec, &codec->n_input_buffers,
+        err);
     if (!codec->input_buffers) {
       gst_amc_codec_stop (codec, NULL);
       return FALSE;
@@ -714,8 +716,8 @@ gst_amc_codec_start (GstAmcCodec * codec, GError ** err)
   return ret;
 }
 
-gboolean
-gst_amc_codec_stop (GstAmcCodec * codec, GError ** err)
+static gboolean
+gst_amc_codec_jni_stop (GstAmcCodec * codec, GError ** err)
 {
   JNIEnv *env;
 
@@ -739,8 +741,8 @@ gst_amc_codec_stop (GstAmcCodec * codec, GError ** err)
       media_codec.stop);
 }
 
-gboolean
-gst_amc_codec_flush (GstAmcCodec * codec, GError ** err)
+static gboolean
+gst_amc_codec_jni_flush (GstAmcCodec * codec, GError ** err)
 {
   JNIEnv *env;
 
@@ -752,7 +754,7 @@ gst_amc_codec_flush (GstAmcCodec * codec, GError ** err)
 }
 
 static gboolean
-gst_amc_codec_set_parameter (GstAmcCodec * codec, JNIEnv * env,
+gst_amc_codec_jni_set_parameter (GstAmcCodec * codec, JNIEnv * env,
     GError ** err, const gchar * key, int value)
 {
   gboolean ret = FALSE;
@@ -785,28 +787,28 @@ done:
   return ret;
 }
 
-gboolean
-gst_amc_codec_request_key_frame (GstAmcCodec * codec, GError ** err)
+static gboolean
+gst_amc_codec_jni_request_key_frame (GstAmcCodec * codec, GError ** err)
 {
   JNIEnv *env;
 
   g_return_val_if_fail (codec != NULL, FALSE);
 
   env = gst_amc_jni_get_env ();
-  return gst_amc_codec_set_parameter (codec, env, err,
+  return gst_amc_codec_jni_set_parameter (codec, env, err,
       PARAMETER_KEY_REQUEST_SYNC_FRAME, 0);
 }
 
-gboolean
-gst_amc_codec_have_dynamic_bitrate ()
+static gboolean
+gst_amc_codec_jni_have_dynamic_bitrate ()
 {
   /* Dynamic bitrate scaling is supported on Android >= 19,
    * where the setParameters() call is available */
   return (media_codec.setParameters != NULL);
 }
 
-gboolean
-gst_amc_codec_set_dynamic_bitrate (GstAmcCodec * codec, GError ** err,
+static gboolean
+gst_amc_codec_jni_set_dynamic_bitrate (GstAmcCodec * codec, GError ** err,
     gint bitrate)
 {
   JNIEnv *env;
@@ -814,12 +816,12 @@ gst_amc_codec_set_dynamic_bitrate (GstAmcCodec * codec, GError ** err,
   g_return_val_if_fail (codec != NULL, FALSE);
 
   env = gst_amc_jni_get_env ();
-  return gst_amc_codec_set_parameter (codec, env, err,
+  return gst_amc_codec_jni_set_parameter (codec, env, err,
       PARAMETER_KEY_VIDEO_BITRATE, bitrate);
 }
 
-gboolean
-gst_amc_codec_release (GstAmcCodec * codec, GError ** err)
+static gboolean
+gst_amc_codec_jni_release (GstAmcCodec * codec, GError ** err)
 {
   JNIEnv *env;
 
@@ -843,8 +845,9 @@ gst_amc_codec_release (GstAmcCodec * codec, GError ** err)
       media_codec.release);
 }
 
-GstAmcBuffer *
-gst_amc_codec_get_output_buffer (GstAmcCodec * codec, gint index, GError ** err)
+static GstAmcBuffer *
+gst_amc_codec_jni_get_output_buffer (GstAmcCodec * codec, gint index,
+    GError ** err)
 {
   JNIEnv *env;
   jobject buffer = NULL;
@@ -897,8 +900,9 @@ error:
   return NULL;
 }
 
-GstAmcBuffer *
-gst_amc_codec_get_input_buffer (GstAmcCodec * codec, gint index, GError ** err)
+static GstAmcBuffer *
+gst_amc_codec_jni_get_input_buffer (GstAmcCodec * codec, gint index,
+    GError ** err)
 {
   JNIEnv *env;
   jobject buffer = NULL;
@@ -951,8 +955,8 @@ error:
   return NULL;
 }
 
-gint
-gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs,
+static gint
+gst_amc_codec_jni_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs,
     GError ** err)
 {
   JNIEnv *env;
@@ -969,8 +973,8 @@ gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs,
 }
 
 static gboolean
-gst_amc_codec_fill_buffer_info (JNIEnv * env, jobject buffer_info,
-    GstAmcBufferInfo * info, GError ** err)
+gst_amc_codec_jni_fill_buffer_info (JNIEnv * env,
+    jobject buffer_info, GstAmcBufferInfo * info, GError ** err)
 {
   g_return_val_if_fail (buffer_info != NULL, FALSE);
 
@@ -994,8 +998,8 @@ gst_amc_codec_fill_buffer_info (JNIEnv * env, jobject buffer_info,
   return TRUE;
 }
 
-gint
-gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec,
+static gint
+gst_amc_codec_jni_dequeue_output_buffer (GstAmcCodec * codec,
     GstAmcBufferInfo * info, gint64 timeoutUs, GError ** err)
 {
   JNIEnv *env;
@@ -1026,8 +1030,8 @@ gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec,
         gst_amc_jni_free_buffer_array (env, codec->output_buffers,
             codec->n_output_buffers);
       codec->output_buffers =
-          gst_amc_codec_get_output_buffers (codec,
-          &codec->n_output_buffers, err);
+          gst_amc_codec_jni_get_output_buffers (codec, &codec->n_output_buffers,
+          err);
       if (!codec->output_buffers) {
         ret = G_MININT;
         goto done;
@@ -1041,7 +1045,7 @@ gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec,
     goto done;
   }
 
-  if (ret >= 0 && !gst_amc_codec_fill_buffer_info (env, info_o, info, err)) {
+  if (ret >= 0 && !gst_amc_codec_jni_fill_buffer_info (env, info_o, info, err)) {
     ret = G_MININT;
     goto done;
   }
@@ -1054,8 +1058,8 @@ done:
   return ret;
 }
 
-gboolean
-gst_amc_codec_queue_input_buffer (GstAmcCodec * codec, gint index,
+static gboolean
+gst_amc_codec_jni_queue_input_buffer (GstAmcCodec * codec, gint index,
     const GstAmcBufferInfo * info, GError ** err)
 {
   JNIEnv *env;
@@ -1069,8 +1073,8 @@ gst_amc_codec_queue_input_buffer (GstAmcCodec * codec, gint index,
       info->presentation_time_us, info->flags);
 }
 
-gboolean
-gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index,
+static gboolean
+gst_amc_codec_jni_release_output_buffer (GstAmcCodec * codec, gint index,
     gboolean render, GError ** err)
 {
   JNIEnv *env;
@@ -1082,8 +1086,40 @@ gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index,
       media_codec.release_output_buffer, index, render);
 }
 
-GstAmcSurfaceTexture *
-gst_amc_codec_new_surface_texture (GError ** err)
+static GstAmcSurfaceTexture *
+gst_amc_codec_jni_new_surface_texture (GError ** err)
 {
   return (GstAmcSurfaceTexture *) gst_amc_surface_texture_jni_new (err);
 }
+
+GstAmcCodecVTable gst_amc_codec_jni_vtable = {
+  .buffer_free = gst_amc_buffer_jni_free,
+  .buffer_set_position_and_limit = gst_amc_buffer_jni_set_position_and_limit,
+
+  .create = gst_amc_codec_jni_new,
+  .free = gst_amc_codec_jni_free,
+
+  .configure = gst_amc_codec_jni_configure,
+  .get_output_format = gst_amc_codec_jni_get_output_format,
+
+  .start = gst_amc_codec_jni_start,
+  .stop = gst_amc_codec_jni_stop,
+  .flush = gst_amc_codec_jni_flush,
+  .request_key_frame = gst_amc_codec_jni_request_key_frame,
+
+  .have_dynamic_bitrate = gst_amc_codec_jni_have_dynamic_bitrate,
+  .set_dynamic_bitrate = gst_amc_codec_jni_set_dynamic_bitrate,
+
+  .release = gst_amc_codec_jni_release,
+
+  .get_output_buffer = gst_amc_codec_jni_get_output_buffer,
+  .get_input_buffer = gst_amc_codec_jni_get_input_buffer,
+
+  .dequeue_input_buffer = gst_amc_codec_jni_dequeue_input_buffer,
+  .dequeue_output_buffer = gst_amc_codec_jni_dequeue_output_buffer,
+
+  .queue_input_buffer = gst_amc_codec_jni_queue_input_buffer,
+  .release_output_buffer = gst_amc_codec_jni_release_output_buffer,
+
+  .new_surface_texture = gst_amc_codec_jni_new_surface_texture,
+};

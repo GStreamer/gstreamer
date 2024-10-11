@@ -38,11 +38,16 @@ G_DECLARE_FINAL_TYPE (GstCACASink, gst_cacasink, GST, CACASINK, GstBaseSink)
 struct _GstCACASink {
   GstBaseSink parent;
 
+  caca_canvas_t *cv;
+  caca_display_t *dp;
+
   GstVideoInfo info;
   gint screen_width, screen_height;
 
   guint dither;
   gboolean antialiasing;
+
+  guint driver;
 
   struct caca_bitmap *bitmap;
 };

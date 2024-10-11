@@ -14,7 +14,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_tag_list_get_type();
 
-		public static GLib.GType GType { 
+		public static new GLib.GType GType { 
 			get {
 				IntPtr raw_ret = gst_tag_list_get_type();
 				GLib.GType ret = new GLib.GType(raw_ret);
@@ -472,12 +472,43 @@ namespace Gst {
 			return ret;
 		}
 
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_tag_list_replace(ref IntPtr old_taglist, IntPtr new_taglist);
+
+		public static bool Replace(ref Gst.TagList old_taglist, Gst.TagList new_taglist) {
+			IntPtr native_old_taglist = old_taglist == null ? IntPtr.Zero : old_taglist.Handle ;
+			bool raw_ret = gst_tag_list_replace(ref native_old_taglist, new_taglist == null ? IntPtr.Zero : new_taglist.Handle);
+			bool ret = raw_ret;
+			old_taglist = native_old_taglist == IntPtr.Zero ? null : (Gst.TagList) GLib.Opaque.GetOpaque (native_old_taglist, typeof (Gst.TagList), true);
+			return ret;
+		}
+
+		public static bool Replace(ref Gst.TagList old_taglist) {
+			return Replace (ref old_taglist, null);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_tag_list_take(ref IntPtr old_taglist, IntPtr new_taglist);
+
+		public static bool Take(ref Gst.TagList old_taglist, Gst.TagList new_taglist) {
+			IntPtr native_old_taglist = old_taglist == null ? IntPtr.Zero : old_taglist.Handle ;
+			new_taglist.Owned = false;
+			bool raw_ret = gst_tag_list_take(ref native_old_taglist, new_taglist == null ? IntPtr.Zero : new_taglist.Handle);
+			bool ret = raw_ret;
+			old_taglist = native_old_taglist == IntPtr.Zero ? null : (Gst.TagList) GLib.Opaque.GetOpaque (native_old_taglist, typeof (Gst.TagList), true);
+			return ret;
+		}
+
+		public static bool Take(ref Gst.TagList old_taglist) {
+			return Take (ref old_taglist, null);
+		}
+
 		public TagList(IntPtr raw) : base(raw) {}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_tag_list_new_empty();
 
-		public TagList () 
+		public TagList () : base (IntPtr.Zero)
 		{
 			Raw = gst_tag_list_new_empty();
 		}
@@ -485,39 +516,11 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_tag_list_new_from_string(IntPtr str);
 
-		public TagList (string str) 
+		public TagList (string str) : base (IntPtr.Zero)
 		{
 			IntPtr native_str = GLib.Marshaller.StringToPtrGStrdup (str);
 			Raw = gst_tag_list_new_from_string(native_str);
 			GLib.Marshaller.Free (native_str);
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_list_ref(IntPtr raw);
-
-		protected override void Ref (IntPtr raw)
-		{
-			if (!Owned) {
-				gst_tag_list_ref (raw);
-				Owned = true;
-			}
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_tag_list_unref(IntPtr raw);
-
-		protected override void Unref (IntPtr raw)
-		{
-			if (Owned) {
-				gst_tag_list_unref (raw);
-				Owned = false;
-			}
-		}
-
-		protected override Action<IntPtr> DisposeUnmanagedFunc {
-			get {
-				return gst_tag_list_unref;
-			}
 		}
 
 

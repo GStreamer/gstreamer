@@ -21,6 +21,10 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#endif
+
 #include <stdio.h>
 
 #include "gstsubparseelements.h"
@@ -42,11 +46,20 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
 {
   gpointer result = NULL;
   GError *gerr = NULL;
+  GRegexCompileFlags jit_flags = G_REGEX_OPTIMIZE | G_REGEX_RAW;
+
+#ifdef HAVE_VALGRIND
+  if (RUNNING_ON_VALGRIND) {
+    /* jitted regex confuse valgrind */
+    jit_flags &= ~G_REGEX_OPTIMIZE;
+  }
+#endif
+
   switch (regtype) {
     case GST_SUB_PARSE_REGEX_MDVDSUB:
       result =
           (gpointer) g_regex_new ("^\\{[0-9]+\\}\\{[0-9]+\\}",
-          G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, &gerr);
+          jit_flags, 0, &gerr);
       if (result == NULL) {
         g_warning ("Compilation of mdvd regex failed: %s", gerr->message);
         g_clear_error (&gerr);
@@ -57,7 +70,7 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
           g_regex_new ("^[\\s\\n]*[\\n]? {0,3}[ 0-9]{1,4}\\s*(\x0d)?\x0a"
           " ?[0-9]{1,2}: ?[0-9]{1,2}: ?[0-9]{1,2}[,.] {0,2}[0-9]{1,3}"
           " +--> +[0-9]{1,2}: ?[0-9]{1,2}: ?[0-9]{1,2}[,.] {0,2}[0-9]{1,2}",
-          G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, &gerr);
+          jit_flags, 0, &gerr);
       if (result == NULL) {
         g_warning ("Compilation of subrip regex failed: %s", gerr->message);
         g_clear_error (&gerr);
@@ -65,7 +78,7 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
       break;
     case GST_SUB_PARSE_REGEX_DKS:
       result = (gpointer) g_regex_new ("^\\[[0-9]+:[0-9]+:[0-9]+\\].*",
-          G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, &gerr);
+          jit_flags, 0, &gerr);
       if (result == NULL) {
         g_warning ("Compilation of dks regex failed: %s", gerr->message);
         g_clear_error (&gerr);
@@ -261,14 +274,14 @@ gst_sub_parse_detect_encoding (const gchar * str, gsize len)
  * also, give different  subtitle formats really different types */
 static GstStaticCaps mpl2_caps =
 GST_STATIC_CAPS ("application/x-subtitle-mpl2");
-#define SUB_CAPS (gst_static_caps_get (&sub_caps))
+#define MPL2_CAPS (gst_static_caps_get (&mpl2_caps))
 
 static GstStaticCaps tmp_caps =
 GST_STATIC_CAPS ("application/x-subtitle-tmplayer");
 #define TMP_CAPS (gst_static_caps_get (&tmp_caps))
 
 static GstStaticCaps sub_caps = GST_STATIC_CAPS ("application/x-subtitle");
-#define MPL2_CAPS (gst_static_caps_get (&mpl2_caps))
+#define SUB_CAPS (gst_static_caps_get (&sub_caps))
 
 static GstStaticCaps smi_caps = GST_STATIC_CAPS ("application/x-subtitle-sami");
 #define SAMI_CAPS (gst_static_caps_get (&smi_caps))
@@ -291,25 +304,36 @@ gst_sub_parse_type_find (GstTypeFind * tf, gpointer private)
 {
   GstSubParseFormat format;
   const guint8 *data;
+  guint64 data_len = 128, checked_len;
   GstCaps *caps;
   gchar *str;
   gchar *encoding = NULL;
   const gchar *end;
 
-  if (!(data = gst_type_find_peek (tf, 0, 129)))
-    return;
+  /* use the first 128 bytes for detection, if available */
+  data = gst_type_find_peek (tf, 0, data_len);
+  if (!data) {
+    /* less that 128 bytes are available, try to detect using whatever is available */
+    data_len = gst_type_find_get_length (tf);
+    if (data_len == 0)
+      return;
+
+    data = gst_type_find_peek (tf, 0, data_len);
+    if (!data)
+      return;
+  }
 
   /* make sure string passed to _autodetect() is NUL-terminated */
-  str = g_malloc0 (129);
-  memcpy (str, data, 128);
+  str = g_malloc0 (data_len + 1);
+  memcpy (str, data, data_len);
 
-  if ((encoding = gst_sub_parse_detect_encoding (str, 128)) != NULL) {
+  if ((encoding = gst_sub_parse_detect_encoding (str, data_len)) != NULL) {
     gchar *converted_str;
     GError *err = NULL;
     gsize tmp;
 
     converted_str =
-        gst_sub_parse_gst_convert_to_utf8 (str, 128, encoding, &tmp, &err);
+        gst_sub_parse_gst_convert_to_utf8 (str, data_len, encoding, &tmp, &err);
     if (converted_str == NULL) {
       GST_DEBUG ("Encoding '%s' detected but conversion failed: %s", encoding,
           err->message);
@@ -321,9 +345,15 @@ gst_sub_parse_type_find (GstTypeFind * tf, gpointer private)
     g_free (encoding);
   }
 
-  /* Check if at least the first 120 chars are valid UTF8,
-   * otherwise convert as always */
-  if (!g_utf8_validate (str, 128, &end) && (end - str) < 120) {
+  /* Check if content is valid UTF-8 but allow for the 8 last bytes to not be in
+   * case of incomplete unicode sequence. */
+  if (data_len > 8)
+    checked_len = data_len - 8;
+  else
+    checked_len = data_len;
+
+  if (!g_utf8_validate (str, data_len, &end) && (end - str) < checked_len) {
+    /* Invalid UTF-8, try converting */
     gchar *converted_str;
     gsize tmp;
     const gchar *enc;
@@ -337,7 +367,7 @@ gst_sub_parse_type_find (GstTypeFind * tf, gpointer private)
       }
     }
     converted_str =
-        gst_sub_parse_gst_convert_to_utf8 (str, 128, enc, &tmp, NULL);
+        gst_sub_parse_gst_convert_to_utf8 (str, data_len, enc, &tmp, NULL);
     if (converted_str != NULL) {
       g_free (str);
       str = converted_str;

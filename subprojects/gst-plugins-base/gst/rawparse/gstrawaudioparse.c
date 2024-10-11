@@ -51,7 +51,7 @@
  * ## Example pipelines
  * |[
  * gst-launch-1.0 souphttpsrc http://my-dlna-server/track.l16 \
- *     rawaudioparse ! audioconvert ! audioresample ! autoaudiosink
+ *     ! rawaudioparse ! audioconvert ! audioresample ! autoaudiosink
  * ]|
  *  Receive L16 data from a DLNA server, parse and timestamp it with
  * rawaudioparse, and play it. use-sink-caps is set to true since souphttpsrc
@@ -59,7 +59,7 @@
  * |[
  * gst-launch-1.0 filesrc location=audio.raw ! rawaudioparse use-sink-caps=false \
  *         format=pcm pcm-format=s16le sample-rate=48000 num-channels=2 \
- *         audioconvert ! audioresample ! autoaudiosink
+ *         ! audioconvert ! audioresample ! autoaudiosink
  * ]|
  *  Read raw data from a local file and parse it as PCM data with 48000 Hz sample
  * rate, signed 16 bit integer samples, and 2 channels. use-sink-caps is set to

@@ -462,6 +462,16 @@ GstStructure *  gst_message_writable_structure  (GstMessage *message);
 GST_API
 gboolean        gst_message_has_name            (GstMessage *message, const gchar *name);
 
+GST_API
+void            gst_message_set_details         (GstMessage *message, GstStructure *details);
+
+GST_API
+const GstStructure *
+                gst_message_get_details         (GstMessage *message);
+
+GST_API
+GstStructure *  gst_message_writable_details    (GstMessage *message);
+
 /* identifiers for events and messages */
 
 GST_API
@@ -489,6 +499,9 @@ void            gst_message_parse_error         (GstMessage *message, GError **g
 GST_API
 void            gst_message_parse_error_details (GstMessage *message, const GstStructure **structure);
 
+GST_API
+void            gst_message_parse_error_writable_details (GstMessage *message, GstStructure **structure);
+
 /* WARNING */
 
 GST_API
@@ -503,6 +516,9 @@ void            gst_message_parse_warning       (GstMessage *message, GError **g
 GST_API
 void            gst_message_parse_warning_details (GstMessage *message, const GstStructure **structure);
 
+GST_API
+void            gst_message_parse_warning_writable_details (GstMessage *message, GstStructure **structure);
+
 /* INFO */
 
 GST_API
@@ -516,6 +532,9 @@ void            gst_message_parse_info          (GstMessage *message, GError **g
 
 GST_API
 void            gst_message_parse_info_details  (GstMessage *message, const GstStructure **structure);
+
+GST_API
+void            gst_message_parse_info_writable_details  (GstMessage *message, GstStructure **structure);
 
 /* TAG */
 

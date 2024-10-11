@@ -374,7 +374,7 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_mpeg_video_descriptor_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (MPEG_VIDEO_DESCRIPTOR);
+  metadata_base_class->name = "mpeg-video-descriptor";
   metadata_base_class->to_structure =
       mxf_metadata_mpeg_video_descriptor_to_structure;
   metadata_base_class->write_tags =

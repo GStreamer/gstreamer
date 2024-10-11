@@ -68,6 +68,18 @@ static TestFrame test_rgba_reorder[] = {
   {1, 1, GST_VIDEO_FORMAT_BGR, {(gchar *) & bgr_reorder_data}},
 };
 
+#ifndef GST_CAPS_FEATURE_MEMORY_DMABUF
+#define GST_CAPS_FEATURE_MEMORY_DMABUF "memory:DMABuf"
+#endif
+
+static GstVideoFormat test_passthrough_formats[] = {
+  GST_VIDEO_FORMAT_DMA_DRM,
+};
+
+static const gchar *test_passthrough_features[] = {
+  GST_CAPS_FEATURE_MEMORY_DMABUF,
+};
+
 static void
 setup (void)
 {
@@ -144,7 +156,8 @@ check_conversion (TestFrame * frames, guint size)
     gst_video_info_set_format (&in_info, in_v_format, in_width, in_height);
     in_caps = gst_video_info_to_caps (&in_info);
     gst_caps_set_features (in_caps, 0,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
 
     /* create GL buffer */
     inbuf = gst_buffer_new ();
@@ -171,7 +184,8 @@ check_conversion (TestFrame * frames, guint size)
 
     /* sanity check that the correct values were wrapped */
     for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&in_info); j++) {
-      for (k = 0; k < _video_info_plane_size (&in_info, j); k++) {
+      int plane_size = _video_info_plane_size (&in_info, j);
+      for (k = 0; k < plane_size; k++) {
         if (frames[i].data[j][k] != IGNORE_MAGIC)
           fail_unless (((gchar *) in_frame.data[j])[k] == frames[i].data[j][k]);
       }
@@ -191,7 +205,8 @@ check_conversion (TestFrame * frames, guint size)
           out_height);
       out_caps = gst_video_info_to_caps (&out_info);
       gst_caps_set_features (out_caps, 0,
-          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
 
       for (k = 0; k < GST_VIDEO_INFO_N_PLANES (&out_info); k++) {
         out_data[k] = frames[j].data[k];
@@ -212,7 +227,10 @@ check_conversion (TestFrame * frames, guint size)
 
       /* check that the converted values are correct */
       for (k = 0; k < GST_VIDEO_INFO_N_PLANES (&out_info); k++) {
-        for (l = 0; l < _video_info_plane_size (&out_info, k); l++) {
+        int plane_size = _video_info_plane_size (&out_info, k);
+        GST_MEMDUMP ("expected plane", (guint8 *) out_data[k], plane_size);
+        GST_MEMDUMP ("produced plane", out_frame.data[k], plane_size);
+        for (l = 0; l < plane_size; l++) {
           gchar out_pixel = ((gchar *) out_frame.data[k])[l];
           if (out_data[k][l] != IGNORE_MAGIC && out_pixel != IGNORE_MAGIC)
             fail_unless (out_pixel == out_data[k][l]);
@@ -248,6 +266,65 @@ GST_START_TEST (test_reorder_buffer)
 
 GST_END_TEST;
 
+GST_START_TEST (test_passthrough)
+{
+  guint formats_size = G_N_ELEMENTS (test_passthrough_formats);
+  guint features_size = G_N_ELEMENTS (test_passthrough_features);
+  gint i, j, k, l;
+
+  for (i = 0; i < formats_size; i++) {
+    GstVideoFormat in_format = test_passthrough_formats[i];
+
+    for (j = 0; j < formats_size; j++) {
+      GstVideoFormat out_format = test_passthrough_formats[j];
+
+      for (k = 0; k < features_size; k++) {
+        const gchar *in_feature = test_passthrough_features[k];
+        GstCaps *in_caps;
+
+        in_caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
+            gst_video_format_to_string (in_format), NULL);
+        gst_caps_set_features_simple (in_caps,
+            gst_caps_features_new_single_static_str (in_feature));
+
+
+        for (l = 0; l < features_size; l++) {
+          const gchar *out_feature = test_passthrough_features[l];
+          GstCaps *out_caps;
+
+          out_caps = gst_caps_new_simple ("video/x-raw", "format",
+              G_TYPE_STRING, gst_video_format_to_string (out_format), NULL);
+          gst_caps_set_features_simple (out_caps,
+              gst_caps_features_new_single_static_str (out_feature));
+
+          if (gst_caps_is_equal (in_caps, out_caps)) {
+            GstCaps *tmp_caps, *tmp_caps2, *tmp_caps3;
+
+            tmp_caps = gst_gl_color_convert_transform_caps (context,
+                GST_PAD_SINK, in_caps, NULL);
+            tmp_caps2 = gst_gl_color_convert_transform_caps (context,
+                GST_PAD_SRC, out_caps, NULL);
+
+            tmp_caps3 = gst_caps_intersect (tmp_caps, tmp_caps2);
+
+            fail_unless (!gst_caps_is_empty (tmp_caps3));
+
+            gst_caps_unref (tmp_caps);
+            gst_caps_unref (tmp_caps2);
+            gst_caps_unref (tmp_caps3);
+          }
+
+          gst_caps_unref (out_caps);
+        }
+
+        gst_caps_unref (in_caps);
+      }
+    }
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_gl_color_convert_suite (void)
 {
@@ -257,6 +334,7 @@ gst_gl_color_convert_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_checked_fixture (tc_chain, setup, teardown);
   tcase_add_test (tc_chain, test_reorder_buffer);
+  tcase_add_test (tc_chain, test_passthrough);
   /* FIXME add YUV <--> RGB conversion tests */
 
   return s;

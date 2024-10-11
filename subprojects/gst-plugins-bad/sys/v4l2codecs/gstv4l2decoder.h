@@ -26,6 +26,17 @@
 #include "gstv4l2codecdevice.h"
 #include "linux/videodev2.h"
 
+/**
+ * GST_CODEC_PICTURE_TS_NS:
+ * @picture: a #GstCodecPicture
+ *
+ * Returns system_frame_number field of @picture converted to nanosecond.
+ *
+ * Since: 1.24
+ */
+#define GST_CODEC_PICTURE_TS_NS(picture)	\
+	gst_util_uint64_scale_int (GST_CODEC_PICTURE_FRAME_NUMBER(picture), 1000, 1)
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_V4L2_DECODER gst_v4l2_decoder_get_type ()
@@ -56,11 +67,20 @@ gboolean          gst_v4l2_decoder_set_sink_fmt (GstV4l2Decoder * self, guint32 
                                                  gint width, gint height,
                                                  gint pixel_bitdepth);
 
-GstCaps *         gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self);
+GstCaps *         gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self,
+                                                     GstStaticCaps * static_filter);
 
 gboolean          gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self,
                                                       GstCaps * caps,
-                                                      GstVideoInfo * info);
+                                                      GstVideoInfo * vinfo,
+                                                      GstVideoInfoDmaDrm * vinfo_drm);
+
+GstVideoCodecState * gst_v4l2_decoder_set_output_state (GstVideoDecoder * decoder,
+                                                        GstVideoInfo * vinfo,
+                                                        GstVideoInfoDmaDrm * drm_info,
+                                                        guint width,
+                                                        guint height,
+                                                        GstVideoCodecState * reference);
 
 gint              gst_v4l2_decoder_request_buffers (GstV4l2Decoder * self,
                                                     GstPadDirection direction,

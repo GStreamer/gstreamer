@@ -27,4 +27,6 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GstDWriteTextOverlay,
     gst_dwrite_text_overlay, GST, DWRITE_TEXT_OVERLAY, GstDWriteBaseOverlay);
 
+void gst_dwrite_text_overlay_build_param_specs (std::vector<GParamSpec *> & pspec);
+
 G_END_DECLS

@@ -38,9 +38,10 @@ GST_DEBUG_CATEGORY_EXTERN (adaptivedemux2_debug);
 void
 gst_adaptive_demux_track_flush (GstAdaptiveDemuxTrack * track)
 {
-  GST_DEBUG_ID (track->id, "Flushing track with %u queued items",
-      gst_queue_array_get_length (track->queue));
-  gst_queue_array_clear (track->queue);
+  GST_DEBUG_ID (track->id,
+      "Flushing track with %" G_GSIZE_FORMAT " queued items",
+      gst_vec_deque_get_length (track->queue));
+  gst_vec_deque_clear (track->queue);
 
   gst_event_store_flush (&track->sticky_events);
 
@@ -94,13 +95,13 @@ static gboolean
 track_dequeue_item_locked (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxTrack * track, TrackQueueItem * out_item)
 {
-  TrackQueueItem *item = gst_queue_array_peek_head_struct (track->queue);
+  TrackQueueItem *item = gst_vec_deque_peek_head_struct (track->queue);
 
   if (item == NULL)
     return FALSE;
 
   *out_item = *item;
-  gst_queue_array_pop_head (track->queue);
+  gst_vec_deque_pop_head (track->queue);
 
   GST_LOG_ID (track->id,
       "item running_time %" GST_STIME_FORMAT " end %"
@@ -268,6 +269,24 @@ handle_event:
           /* Replace the stored sticky event with this one */
           is_pending_sticky = FALSE;
         }
+
+        if (demux->priv->base_offset != 0) {
+          GstSegment ev_segment;
+          GstEvent *new_event;
+          GST_DEBUG_ID (track->id,
+              "Offsetting segment base by %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (demux->priv->base_offset));
+          gst_event_copy_segment (event, &ev_segment);
+          ev_segment.base += demux->priv->base_offset;
+          new_event = gst_event_new_segment (&ev_segment);
+          gst_event_set_seqnum (new_event, gst_event_get_seqnum (event));
+          gst_mini_object_unref (res);
+          event = new_event;
+          res = (GstMiniObject *) event;
+          /* Replace the stored sticky event with this one */
+          is_pending_sticky = FALSE;
+        }
+
         break;
       default:
         break;
@@ -340,7 +359,7 @@ gst_adaptive_demux_track_drain_to (GstAdaptiveDemuxTrack * track,
     }
 
     /* Otherwise check what's enqueued */
-    item = gst_queue_array_peek_head_struct (track->queue);
+    item = gst_vec_deque_peek_head_struct (track->queue);
     /* track is empty, we're done */
     if (item == NULL) {
       GST_DEBUG_ID (track->id, "Track completely drained");
@@ -483,7 +502,7 @@ track_queue_data_locked (GstAdaptiveDemux * demux,
       GST_STIME_ARGS (item.runningtime_end));
 
   track->level_bytes += size;
-  gst_queue_array_push_tail_struct (track->queue, &item);
+  gst_vec_deque_push_tail_struct (track->queue, &item);
 
   /* If we were waiting for this track to add something, notify output thread */
   /* FIXME: This should be in adaptive demux */
@@ -503,6 +522,18 @@ _track_sink_chain_function (GstPad * pad, GstObject * parent,
   GST_DEBUG_ID (track->id, "buffer %" GST_PTR_FORMAT, buffer);
 
   TRACKS_LOCK (demux);
+
+  /* Discard buffers that are received outside of a valid segment. This can
+   * happen if a flushing seek (which resets the track segment seqnums) was
+   * received but the stream is still providing buffers before returning.
+   */
+  if (track->input_segment_seqnum == GST_SEQNUM_INVALID) {
+    GST_DEBUG_OBJECT (pad,
+        "Dropping buffer because we do not have a valid input segment");
+    gst_buffer_unref (buffer);
+    TRACKS_UNLOCK (demux);
+    return GST_FLOW_OK;
+  }
 
   ts = GST_BUFFER_DTS_OR_PTS (buffer);
 
@@ -591,16 +622,16 @@ _track_sink_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
       if (track->eos) {
         gint i, len;
         /* Find and drop latest EOS if present */
-        len = gst_queue_array_get_length (track->queue);
+        len = gst_vec_deque_get_length (track->queue);
         for (i = len - 1; i >= 0; i--) {
           TrackQueueItem *item =
-              gst_queue_array_peek_nth_struct (track->queue, i);
+              gst_vec_deque_peek_nth_struct (track->queue, i);
           if (GST_IS_EVENT (item->item)
               && GST_EVENT_TYPE (item->item) == GST_EVENT_EOS) {
             TrackQueueItem sub;
             GST_DEBUG_ID (track->id,
                 "Removing previously received EOS (pos:%d)", i);
-            if (gst_queue_array_drop_struct (track->queue, i, &sub))
+            if (gst_vec_deque_drop_struct (track->queue, i, &sub))
               gst_mini_object_unref (sub.item);
             break;
           }
@@ -647,6 +678,14 @@ _track_sink_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
 
       if (track->input_segment_seqnum == seg_seqnum) {
         GST_DEBUG_ID (track->id, "Ignoring duplicate segment");
+        gst_event_unref (event);
+        TRACKS_UNLOCK (demux);
+
+        return TRUE;
+      }
+
+      if (seg_seqnum != demux->priv->segment_seqnum) {
+        GST_DEBUG_OBJECT (pad, "Ignoring non-current segment");
         gst_event_unref (event);
         TRACKS_UNLOCK (demux);
 
@@ -735,9 +774,9 @@ gst_adaptive_demux_track_update_next_position (GstAdaptiveDemuxTrack * track)
     return;
   }
 
-  len = gst_queue_array_get_length (track->queue);
+  len = gst_vec_deque_get_length (track->queue);
   for (i = 0; i < len; i++) {
-    TrackQueueItem *item = gst_queue_array_peek_nth_struct (track->queue, i);
+    TrackQueueItem *item = gst_vec_deque_peek_nth_struct (track->queue, i);
 
     if (item->runningtime != GST_CLOCK_STIME_NONE) {
       GST_DEBUG_ID (track->id,
@@ -793,7 +832,7 @@ _demux_track_free (GstAdaptiveDemuxTrack * track)
   gst_object_unref (track->stream_object);
   if (track->tags)
     gst_tag_list_unref (track->tags);
-  gst_queue_array_free (track->queue);
+  gst_vec_deque_free (track->queue);
 
   gst_event_store_deinit (&track->sticky_events);
 
@@ -921,8 +960,8 @@ gst_adaptive_demux_track_new (GstAdaptiveDemux * demux,
   track->active = FALSE;
   track->draining = FALSE;
 
-  track->queue = gst_queue_array_new_for_struct (sizeof (TrackQueueItem), 50);
-  gst_queue_array_set_clear_func (track->queue,
+  track->queue = gst_vec_deque_new_for_struct (sizeof (TrackQueueItem), 50);
+  gst_vec_deque_set_clear_func (track->queue,
       (GDestroyNotify) _track_queue_item_clear);
 
   gst_event_store_init (&track->sticky_events);

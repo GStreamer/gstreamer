@@ -521,7 +521,7 @@ gst_hls_demux_preloader_provide_request (GstHLSDemuxPreloader * preloader,
         g_ptr_array_index (preloader->active_preloads, idx);
     GstM3U8PreloadHint *hint = preload_req->hint;
 
-    if (!g_str_equal (hint->uri, target_req->uri))
+    if (g_strcmp0 (hint->uri, target_req->uri))
       continue;
 
     GST_LOG ("Possible matching preload type %d uri: %s, range start:%"

@@ -146,7 +146,7 @@ gst_va_display_has_vpp (GstVaDisplay * self)
 
   status = vaQueryConfigEntrypoints (dpy, VAProfileNone, entrypoints, &num);
   if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR ("vaQueryImageFormats: %s", vaErrorStr (status));
+    GST_ERROR ("vaQueryConfigEntrypoints: %s", vaErrorStr (status));
     goto bail;
   }
 

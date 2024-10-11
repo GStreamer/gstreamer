@@ -224,6 +224,7 @@ enum
 #define DEFAULT_NTP_TIME_SOURCE      GST_RTP_NTP_TIME_SOURCE_NTP
 #define DEFAULT_RTCP_SYNC_SEND_TIME  TRUE
 #define DEFAULT_UPDATE_NTP64_HEADER_EXT  TRUE
+#define DEFAULT_TIMEOUT_INACTIVE_SOURCES TRUE
 
 enum
 {
@@ -246,7 +247,8 @@ enum
   PROP_RTP_PROFILE,
   PROP_NTP_TIME_SOURCE,
   PROP_RTCP_SYNC_SEND_TIME,
-  PROP_UPDATE_NTP64_HEADER_EXT
+  PROP_UPDATE_NTP64_HEADER_EXT,
+  PROP_TIMEOUT_INACTIVE_SOURCES,
 };
 
 #define GST_RTP_SESSION_LOCK(sess)   g_mutex_lock (&(sess)->priv->lock)
@@ -274,6 +276,9 @@ struct _GstRtpSessionPrivate
   GHashTable *ptmap;
 
   GstClockTime send_latency;
+  /* Set if we warned once already that no latency is configured yet but we
+   * need it to calculate correct send running time of the packets */
+  gboolean warned_latency_once;
 
   gboolean use_pipeline_clock;
   GstRtpNtpTimeSource ntp_time_source;
@@ -830,6 +835,22 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           DEFAULT_UPDATE_NTP64_HEADER_EXT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpSession:timeout-inactive-sources:
+   *
+   * Whether inactive sources should be timed out
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_TIMEOUT_INACTIVE_SOURCES,
+      g_param_spec_boolean ("timeout-inactive-sources",
+          "Time out inactive sources",
+          "Whether sources that don't receive RTP or RTCP packets for longer "
+          "than 5x RTCP interval should be removed",
+          DEFAULT_TIMEOUT_INACTIVE_SOURCES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_session_change_state);
   gstelement_class->request_new_pad =
@@ -1008,6 +1029,10 @@ gst_rtp_session_set_property (GObject * object, guint prop_id,
       g_object_set_property (G_OBJECT (priv->session),
           "update-ntp64-header-ext", value);
       break;
+    case PROP_TIMEOUT_INACTIVE_SOURCES:
+      g_object_set_property (G_OBJECT (priv->session),
+          "timeout-inactive-sources", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1090,6 +1115,10 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
     case PROP_UPDATE_NTP64_HEADER_EXT:
       g_object_get_property (G_OBJECT (priv->session),
           "update-ntp64-header-ext", value);
+      break;
+    case PROP_TIMEOUT_INACTIVE_SOURCES:
+      g_object_get_property (G_OBJECT (priv->session),
+          "timeout-inactive-sources", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1341,6 +1370,7 @@ gst_rtp_session_change_state (GstElement * element, GstStateChange transition)
       GST_RTP_SESSION_LOCK (rtpsession);
       rtpsession->priv->wait_send = TRUE;
       rtpsession->priv->send_latency = GST_CLOCK_TIME_NONE;
+      rtpsession->priv->warned_latency_once = FALSE;
       GST_RTP_SESSION_UNLOCK (rtpsession);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -2449,8 +2479,14 @@ gst_rtp_session_chain_send_rtp_common (GstRtpSession * rtpsession,
       if (priv->send_latency != GST_CLOCK_TIME_NONE) {
         running_time += priv->send_latency;
       } else {
-        GST_WARNING_OBJECT (rtpsession,
-            "Can't determine running time for this packet without knowing configured latency");
+        if (!priv->warned_latency_once) {
+          priv->warned_latency_once = TRUE;
+          GST_WARNING_OBJECT (rtpsession,
+              "Can't determine running time for this packet without knowing configured latency");
+        } else {
+          GST_LOG_OBJECT (rtpsession,
+              "Can't determine running time for this packet without knowing configured latency");
+        }
         running_time = -1;
       }
     }

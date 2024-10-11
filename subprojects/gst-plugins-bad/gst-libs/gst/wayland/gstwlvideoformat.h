@@ -29,6 +29,23 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GST_WL_VIDEO_FORMATS:
+ *
+ * A list of supported video formats for use in cap templates.
+ *
+ * Since: 1.24
+ */
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#define GST_WL_VIDEO_FORMATS "{ AYUV, RGBA, ARGB, BGRA, ABGR, P010_10LE, v308, " \
+    "RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, " \
+    "I420, YV12, NV12, NV21, Y41B, YUV9, YVU9, BGR16, RGB16 }"
+#elif G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define GST_WL_VIDEO_FORMATS "{ AYUV, RGBA, ARGB, BGRA, ABGR, P010_10LE, v308, " \
+    "RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, " \
+    "I420, YV12, NV12, NV21, Y41B, YUV9, YVU9, BGR16, RGB16 }"
+#endif
+
 GST_WL_API
 void gst_wl_videoformat_init_once (void);
 
@@ -48,6 +65,6 @@ GST_WL_API
 const gchar *gst_wl_shm_format_to_string (enum wl_shm_format wl_format);
 
 GST_WL_API
-const gchar *gst_wl_dmabuf_format_to_string (guint wl_format);
+gchar * gst_wl_dmabuf_format_to_string (guint wl_format, guint64 modifier);
 
 G_END_DECLS

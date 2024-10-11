@@ -669,15 +669,17 @@ gst_nvdec_negotiate (GstVideoDecoder * decoder)
     case GST_NVDEC_MEM_TYPE_CUDA:
       GST_DEBUG_OBJECT (nvdec, "use cuda memory");
       gst_caps_set_features (state->caps, 0,
-          gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, NULL));
+          gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY,
+              NULL));
       break;
 #ifdef HAVE_CUDA_GST_GL
     case GST_NVDEC_MEM_TYPE_GL:
       GST_DEBUG_OBJECT (nvdec, "use gl memory");
       gst_caps_set_features (state->caps, 0,
-          gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
-      gst_caps_set_simple (state->caps, "texture-target", G_TYPE_STRING,
-          "2D", NULL);
+          gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+              NULL));
+      gst_caps_set_simple (state->caps, "texture-target", G_TYPE_STRING, "2D",
+          NULL);
       break;
 #endif
     default:
@@ -805,10 +807,14 @@ parser_display_callback (GstNvDec * nvdec, CUVIDPARSERDISPINFO * dispinfo)
     GST_BUFFER_PTS (output_buffer) = dispinfo->timestamp;
     GST_BUFFER_DTS (output_buffer) = GST_CLOCK_TIME_NONE;
     /* assume buffer duration from framerate */
-    GST_BUFFER_DURATION (output_buffer) =
-        gst_util_uint64_scale (GST_SECOND,
-        GST_VIDEO_INFO_FPS_D (&nvdec->out_info),
-        GST_VIDEO_INFO_FPS_N (&nvdec->out_info));
+    if (nvdec->out_info.fps_n > 0 && nvdec->out_info.fps_d > 0) {
+      GST_BUFFER_DURATION (output_buffer) =
+          gst_util_uint64_scale (GST_SECOND,
+          GST_VIDEO_INFO_FPS_D (&nvdec->out_info),
+          GST_VIDEO_INFO_FPS_N (&nvdec->out_info));
+    } else {
+      GST_BUFFER_DURATION (output_buffer) = GST_CLOCK_TIME_NONE;
+    }
   } else {
     ret = gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (nvdec),
         frame);

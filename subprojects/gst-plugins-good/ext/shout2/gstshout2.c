@@ -45,6 +45,8 @@
 
 #include <glib/gi18n-lib.h>
 
+#include <gst/glib-compat-private.h>
+
 #ifndef HAVE_SHOUT_2_4_6_OR_NEWER
 #define shout_set_metadata_utf8 shout_set_metadata
 #endif
@@ -88,7 +90,7 @@ enum
 #define DEFAULT_PUBLIC       FALSE
 #define DEFAULT_STREAMNAME   ""
 #define DEFAULT_DESCRIPTION  ""
-#define DEFAULT_USERAGENT    "GStreamer " PACKAGE_VERSION
+#define DEFAULT_USERAGENT    "GStreamer {VERSION}"
 #define DEFAULT_GENRE        ""
 #define DEFAULT_MOUNT        ""
 #define DEFAULT_URL          ""
@@ -234,6 +236,9 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
    * GstShout2send:user-agent
    *
    * User agent of the source
+   *
+   * If the string contains `{VERSION}` that will be replaced with the
+   * GStreamer version at runtime (since GStreamer 1.24).
    *
    * Since: 1.22
    **/
@@ -574,10 +579,14 @@ gst_shout2send_start (GstBaseSink * basesink)
     goto set_failed;
 
   cur_prop = "agent";
-  GST_DEBUG_OBJECT (sink, "setting %s: %s", cur_prop, sink->user_agent);
-  if (shout_set_agent (sink->conn, sink->user_agent) != SHOUTERR_SUCCESS) {
+  GString *user_agent = g_string_new (sink->user_agent);
+  g_string_replace (user_agent, "{VERSION}", PACKAGE_VERSION, 0);
+  GST_DEBUG_OBJECT (sink, "setting %s: %s", cur_prop, user_agent->str);
+  if (shout_set_agent (sink->conn, user_agent->str) != SHOUTERR_SUCCESS) {
+    g_string_free (user_agent, TRUE);
     goto set_failed;
   }
+  g_string_free (user_agent, TRUE);
 
   return TRUE;
 

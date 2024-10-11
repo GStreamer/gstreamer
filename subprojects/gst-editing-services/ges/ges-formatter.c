@@ -43,7 +43,34 @@
 #ifdef HAS_PYTHON
 #include <Python.h>
 #include "ges-resources.h"
+
+/*
+ * We need to call dlopen() directly on macOS to workaround a macOS runtime
+ * linker bug. When there are nested dlopen() calls and the second dlopen() is
+ * called from another library (such as gmodule), @loader_path is resolved as
+ * @executable_path and RPATHs are read from the executable (gst-plugin-scanner)
+ * instead of the library itself (libgstges.dylib). This doesn't happen if the
+ * second dlopen() call is directly in the source code of the library.
+ * Previously seen at:
+ * https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1171#note_2290789
+ */
+#ifdef G_OS_WIN32
+#include <gmodule.h>
+#define ges_module_open(fname) g_module_open(fname,0)
+#define ges_module_error g_module_error
+#define ges_module_symbol(module,name,symbol) g_module_symbol(module,name,symbol)
+#else
+#include <dlfcn.h>
+#define ges_module_open(fname) dlopen(fname,RTLD_NOW | RTLD_GLOBAL)
+#define ges_module_error dlerror
+static inline gboolean
+ges_module_symbol (gpointer handle, const char *name, gpointer * symbol)
+{
+  *symbol = dlsym (handle, name);
+  return *symbol != NULL;
+}
 #endif
+#endif /* HAS_PYTHON */
 
 GST_DEBUG_CATEGORY_STATIC (ges_formatter_debug);
 #undef GST_CAT_DEFAULT
@@ -558,27 +585,22 @@ load_python_formatters (void)
       G_RESOURCE_LOOKUP_FLAGS_NONE, &err);
   PyObject *code = NULL, *res = NULL;
   gboolean we_initialized = FALSE;
-  GModule *libpython;
   gpointer has_python = NULL;
 
   GST_LOG ("Checking to see if libpython is already loaded");
-  if (g_module_symbol (g_module_open (NULL, G_MODULE_BIND_LOCAL),
+  if (ges_module_symbol (ges_module_open (NULL),
           "_Py_NoneStruct", &has_python) && has_python) {
     GST_LOG ("libpython is already loaded");
   } else {
-    const gchar *libpython_path =
-        PY_LIB_LOC "/libpython" PYTHON_VERSION PY_ABI_FLAGS "." PY_LIB_SUFFIX;
-    GST_LOG ("loading libpython from '%s'", libpython_path);
-    libpython = g_module_open (libpython_path, 0);
-    if (!libpython) {
-      GST_ERROR ("Couldn't g_module_open libpython. Reason: %s",
-          g_module_error ());
+    GST_LOG ("loading libpython by name: %s", PY_LIB_FNAME);
+    if (!ges_module_open (PY_LIB_FNAME)) {
+      GST_ERROR ("Couldn't load libpython. Reason: %s", ges_module_error ());
       return;
     }
   }
 
   if (!Py_IsInitialized ()) {
-    GST_LOG ("python wasn't initialized");
+    GST_LOG ("python wasn't already initialized");
     /* set the correct plugin for registering stuff */
     Py_Initialize ();
     we_initialized = TRUE;

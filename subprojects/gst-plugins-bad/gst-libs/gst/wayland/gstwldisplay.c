@@ -26,10 +26,12 @@
 
 #include "fullscreen-shell-unstable-v1-client-protocol.h"
 #include "linux-dmabuf-unstable-v1-client-protocol.h"
+#include "single-pixel-buffer-v1-client-protocol.h"
 #include "viewporter-client-protocol.h"
 #include "xdg-shell-client-protocol.h"
 
 #include <errno.h>
+#include <drm_fourcc.h>
 
 #define GST_CAT_DEFAULT gst_wl_display_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -47,16 +49,20 @@ typedef struct _GstWlDisplayPrivate
   struct wl_subcompositor *subcompositor;
   struct xdg_wm_base *xdg_wm_base;
   struct zwp_fullscreen_shell_v1 *fullscreen_shell;
+  struct wp_single_pixel_buffer_manager_v1 *single_pixel_buffer;
   struct wl_shm *shm;
   struct wp_viewporter *viewporter;
   struct zwp_linux_dmabuf_v1 *dmabuf;
   GArray *shm_formats;
   GArray *dmabuf_formats;
+  GArray *dmabuf_modifiers;
 
   /* private */
   gboolean own_display;
   GThread *thread;
   GstPoll *wl_fd_poll;
+
+  GRecMutex sync_mutex;
 
   GMutex buffers_mutex;
   GHashTable *buffers;
@@ -85,12 +91,15 @@ gst_wl_display_init (GstWlDisplay * self)
 
   priv->shm_formats = g_array_new (FALSE, FALSE, sizeof (uint32_t));
   priv->dmabuf_formats = g_array_new (FALSE, FALSE, sizeof (uint32_t));
+  priv->dmabuf_modifiers = g_array_new (FALSE, FALSE, sizeof (guint64));
   priv->wl_fd_poll = gst_poll_new (TRUE);
   priv->buffers = g_hash_table_new (g_direct_hash, g_direct_equal);
   g_mutex_init (&priv->buffers_mutex);
+  g_rec_mutex_init (&priv->sync_mutex);
 
   gst_wl_linux_dmabuf_init_once ();
-  gst_wl_shm_allocator_init_once ();
+  gst_wl_shm_init_once ();
+  gst_shm_allocator_init_once ();
   gst_wl_videoformat_init_once ();
 }
 
@@ -123,9 +132,11 @@ gst_wl_display_finalize (GObject * gobject)
 
   g_array_unref (priv->shm_formats);
   g_array_unref (priv->dmabuf_formats);
+  g_array_unref (priv->dmabuf_modifiers);
   gst_poll_free (priv->wl_fd_poll);
   g_hash_table_unref (priv->buffers);
   g_mutex_clear (&priv->buffers_mutex);
+  g_rec_mutex_clear (&priv->sync_mutex);
 
   if (priv->viewporter)
     wp_viewporter_destroy (priv->viewporter);
@@ -141,6 +152,9 @@ gst_wl_display_finalize (GObject * gobject)
 
   if (priv->fullscreen_shell)
     zwp_fullscreen_shell_v1_release (priv->fullscreen_shell);
+
+  if (priv->single_pixel_buffer)
+    wp_single_pixel_buffer_manager_v1_destroy (priv->single_pixel_buffer);
 
   if (priv->compositor)
     wl_compositor_destroy (priv->compositor);
@@ -182,21 +196,59 @@ static void
 dmabuf_format (void *data, struct zwp_linux_dmabuf_v1 *zwp_linux_dmabuf,
     uint32_t format)
 {
+}
+
+static void
+dmabuf_modifier (void *data, struct zwp_linux_dmabuf_v1 *zwp_linux_dmabuf,
+    uint32_t format, uint32_t modifier_hi, uint32_t modifier_lo)
+{
   GstWlDisplay *self = data;
+  guint64 modifier = (guint64) modifier_hi << 32 | modifier_lo;
+  static gboolean table_header = TRUE;
+
   GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
 
-  if (gst_wl_dmabuf_format_to_video_format (format) != GST_VIDEO_FORMAT_UNKNOWN)
+  if (gst_wl_dmabuf_format_to_video_format (format) != GST_VIDEO_FORMAT_UNKNOWN) {
+    GstVideoFormat gst_format = gst_wl_dmabuf_format_to_video_format (format);
+    const guint32 fourcc = gst_video_dma_drm_fourcc_from_format (gst_format);
+
+    /*
+     * Ignore unsupported formats along with implicit modifiers. Implicit
+     * modifiers have been source of garbled output for many many years and it
+     * was decided that we prefer disabling zero-copy over risking a bad output.
+     */
+    if (fourcc == DRM_FORMAT_INVALID || modifier == DRM_FORMAT_MOD_INVALID)
+      return;
+
+    if (table_header == TRUE) {
+      GST_INFO ("===== All DMA Formats With Modifiers =====");
+      GST_INFO ("| Gst Format   | DRM Format              |");
+      table_header = FALSE;
+    }
+
+    if (modifier == 0)
+      GST_INFO ("|-----------------------------------------");
+
+    GST_INFO ("| %-12s | %-23s |",
+        (modifier == 0) ? gst_video_format_to_string (gst_format) : "",
+        gst_video_dma_drm_fourcc_to_string (fourcc, modifier));
+
     g_array_append_val (priv->dmabuf_formats, format);
+    g_array_append_val (priv->dmabuf_modifiers, modifier);
+  }
 }
 
 static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
   dmabuf_format,
+  dmabuf_modifier,
 };
 
 gboolean
-gst_wl_display_check_format_for_shm (GstWlDisplay * self, GstVideoFormat format)
+gst_wl_display_check_format_for_shm (GstWlDisplay * self,
+    const GstVideoInfo * video_info)
 {
   GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+  GstVideoFormat format = GST_VIDEO_INFO_FORMAT (video_info);
   enum wl_shm_format shm_fmt;
   GArray *formats;
   guint i;
@@ -216,23 +268,25 @@ gst_wl_display_check_format_for_shm (GstWlDisplay * self, GstVideoFormat format)
 
 gboolean
 gst_wl_display_check_format_for_dmabuf (GstWlDisplay * self,
-    GstVideoFormat format)
+    const GstVideoInfoDmaDrm * drm_info)
 {
   GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
-  GArray *formats;
-  guint i, dmabuf_fmt;
+  guint64 modifier = drm_info->drm_modifier;
+  guint fourcc = drm_info->drm_fourcc;
+  GArray *formats, *modifiers;
+  guint i;
 
   if (!priv->dmabuf)
     return FALSE;
 
-  dmabuf_fmt = gst_video_format_to_wl_dmabuf_format (format);
-  if (!dmabuf_fmt)
-    return FALSE;
-
   formats = priv->dmabuf_formats;
+  modifiers = priv->dmabuf_modifiers;
   for (i = 0; i < formats->len; i++) {
-    if (g_array_index (formats, uint32_t, i) == dmabuf_fmt)
-      return TRUE;
+    if (g_array_index (formats, uint32_t, i) == fourcc) {
+      if (g_array_index (modifiers, guint64, i) == modifier) {
+        return TRUE;
+      }
+    }
   }
 
   return FALSE;
@@ -277,8 +331,12 @@ registry_handle_global (void *data, struct wl_registry *registry,
         wl_registry_bind (registry, id, &wp_viewporter_interface, 1);
   } else if (g_strcmp0 (interface, "zwp_linux_dmabuf_v1") == 0) {
     priv->dmabuf =
-        wl_registry_bind (registry, id, &zwp_linux_dmabuf_v1_interface, 1);
+        wl_registry_bind (registry, id, &zwp_linux_dmabuf_v1_interface, 3);
     zwp_linux_dmabuf_v1_add_listener (priv->dmabuf, &dmabuf_listener, self);
+  } else if (g_strcmp0 (interface, "wp_single_pixel_buffer_manager_v1") == 0) {
+    priv->single_pixel_buffer =
+        wl_registry_bind (registry, id,
+        &wp_single_pixel_buffer_manager_v1_interface, 1);
   }
 }
 
@@ -307,8 +365,10 @@ gst_wl_display_thread_run (gpointer data)
 
   /* main loop */
   while (1) {
+    g_rec_mutex_lock (&priv->sync_mutex);
     while (wl_display_prepare_read_queue (priv->display, priv->queue) != 0)
       wl_display_dispatch_queue_pending (priv->display, priv->queue);
+    g_rec_mutex_unlock (&priv->sync_mutex);
     wl_display_flush (priv->display);
 
     if (gst_poll_wait (priv->wl_fd_poll, GST_CLOCK_TIME_NONE) < 0) {
@@ -321,7 +381,10 @@ gst_wl_display_thread_run (gpointer data)
     }
     if (wl_display_read_events (priv->display) == -1)
       goto error;
+
+    g_rec_mutex_lock (&priv->sync_mutex);
     wl_display_dispatch_queue_pending (priv->display, priv->queue);
+    g_rec_mutex_unlock (&priv->sync_mutex);
   }
 
   return NULL;
@@ -365,7 +428,12 @@ gst_wl_display_new_existing (struct wl_display *display,
   priv->display_wrapper = wl_proxy_create_wrapper (display);
   priv->own_display = take_ownership;
 
+#ifdef HAVE_WL_EVENT_QUEUE_NAME
+  priv->queue = wl_display_create_queue_with_name (priv->display,
+      "GStreamer display queue");
+#else
   priv->queue = wl_display_create_queue (priv->display);
+#endif
   wl_proxy_set_queue ((struct wl_proxy *) priv->display_wrapper, priv->queue);
   priv->registry = wl_display_get_registry (priv->display_wrapper);
   wl_registry_add_listener (priv->registry, &registry_listener, self);
@@ -470,6 +538,51 @@ gst_wl_display_unregister_buffer (GstWlDisplay * self, gpointer gstmem)
   g_mutex_unlock (&priv->buffers_mutex);
 }
 
+/* gst_wl_display_sync
+ *
+ * A syncronized version of `wl_display_sink` that ensures that the
+ * callback will not be dispatched before the listener has been attached.
+ */
+struct wl_callback *
+gst_wl_display_sync (GstWlDisplay * self,
+    const struct wl_callback_listener *listener, gpointer data)
+{
+  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+  struct wl_callback *callback;
+
+  g_rec_mutex_lock (&priv->sync_mutex);
+
+  callback = wl_display_sync (priv->display_wrapper);
+  if (callback && listener)
+    wl_callback_add_listener (callback, listener, data);
+
+  g_rec_mutex_unlock (&priv->sync_mutex);
+
+  return callback;
+}
+
+/* gst_wl_display_callback_destroy
+ *
+ * A syncronized version of `wl_callback_destroy` that ensures that the
+ * once this function returns, the callback will either have already completed,
+ * or will never be called.
+ */
+void
+gst_wl_display_callback_destroy (GstWlDisplay * self,
+    struct wl_callback **callback)
+{
+  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+
+  g_rec_mutex_lock (&priv->sync_mutex);
+
+  if (*callback) {
+    wl_callback_destroy (*callback);
+    *callback = NULL;
+  }
+
+  g_rec_mutex_unlock (&priv->sync_mutex);
+}
+
 struct wl_display *
 gst_wl_display_get_display (GstWlDisplay * self)
 {
@@ -551,11 +664,27 @@ gst_wl_display_get_dmabuf_v1 (GstWlDisplay * self)
 }
 
 GArray *
+gst_wl_display_get_dmabuf_modifiers (GstWlDisplay * self)
+{
+  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+
+  return priv->dmabuf_modifiers;
+}
+
+GArray *
 gst_wl_display_get_dmabuf_formats (GstWlDisplay * self)
 {
   GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
 
   return priv->dmabuf_formats;
+}
+
+struct wp_single_pixel_buffer_manager_v1 *
+gst_wl_display_get_single_pixel_buffer_manager_v1 (GstWlDisplay * self)
+{
+  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+
+  return priv->single_pixel_buffer;
 }
 
 gboolean

@@ -30,9 +30,10 @@ GST_DEBUG_CATEGORY_STATIC (gst_cuda_base_convert_debug);
 #define GST_CAT_DEFAULT gst_cuda_base_convert_debug
 
 #define GST_CUDA_CONVET_FORMATS \
-    "{ I420, YV12, NV12, NV21, P010_10LE, P016_LE, I420_10LE, Y444, Y444_16LE, " \
-    "BGRA, RGBA, RGBx, BGRx, ARGB, ABGR, RGB, BGR, BGR10A2_LE, RGB10A2_LE, " \
-    "Y42B, I422_10LE, I422_12LE, RGBP, BGRP, GBR, GBRA }"
+    "{ I420, YV12, NV12, NV21, P010_10LE, P012_LE, P016_LE, I420_10LE, I420_12LE, Y444, " \
+    "Y444_10LE, Y444_12LE, Y444_16LE, BGRA, RGBA, RGBx, BGRx, ARGB, ABGR, RGB, " \
+    "BGR, BGR10A2_LE, RGB10A2_LE, Y42B, I422_10LE, I422_12LE, RGBP, BGRP, GBR, " \
+    "GBRA, GBR_10LE, GBR_12LE, GBR_16LE, VUYA }"
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -176,7 +177,8 @@ gst_cuda_base_convert_caps_remove_format_info (GstCaps * caps)
   gint i, n;
   GstCaps *res;
   GstCapsFeatures *feature =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY);
 
   res = gst_caps_new_empty ();
 
@@ -213,7 +215,8 @@ gst_cuda_base_convert_caps_rangify_size_info (GstCaps * caps)
   gint i, n;
   GstCaps *res;
   GstCapsFeatures *feature =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY);
 
   res = gst_caps_new_empty ();
 
@@ -256,7 +259,8 @@ gst_cuda_base_convert_caps_remove_format_and_rangify_size_info (GstCaps * caps)
   gint i, n;
   GstCaps *res;
   GstCapsFeatures *feature =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY);
 
   res = gst_caps_new_empty ();
 
@@ -1395,7 +1399,7 @@ gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
         GST_WARNING_OBJECT (self, "Can't calculate borders");
       }
     } else {
-      GST_WARNING_OBJECT (self, "Can't keep DAR!");
+      GST_DEBUG_OBJECT (self, "Can't keep DAR!");
     }
   }
 

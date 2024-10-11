@@ -1718,6 +1718,40 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_aggregator_get_force_live(IntPtr raw);
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_aggregator_set_force_live(IntPtr raw, bool force_live);
+
+		public bool ForceLive { 
+			get {
+				bool raw_ret = gst_aggregator_get_force_live(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+			set {
+				gst_aggregator_set_force_live(Handle, value);
+			}
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_aggregator_get_ignore_inactive_pads(IntPtr raw);
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_aggregator_set_ignore_inactive_pads(IntPtr raw, bool ignore);
+
+		public bool IgnoreInactivePads { 
+			get {
+				bool raw_ret = gst_aggregator_get_ignore_inactive_pads(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+			set {
+				gst_aggregator_set_ignore_inactive_pads(Handle, value);
+			}
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_aggregator_negotiate(IntPtr raw);
 
 		public bool Negotiate() {

@@ -24,7 +24,6 @@
 #include "gstasiodeviceprovider.h"
 #include "gstasioutils.h"
 #include "gstasioobject.h"
-#include <atlconv.h>
 
 enum
 {
@@ -165,8 +164,6 @@ gst_asio_device_provider_probe_internal (GstAsioDeviceProvider * self,
   const gchar *device_class, *factory_name;
   GList *iter;
 
-  USES_CONVERSION;
-
   if (is_src) {
     device_class = "Audio/Source";
     factory_name = "asiosrc";
@@ -189,6 +186,7 @@ gst_asio_device_provider_probe_internal (GstAsioDeviceProvider * self,
     glong max_buf_size = 0;
     glong preferred_buf_size = 0;
     glong buf_size_granularity = 0;
+    gchar *clsid_str_utf8;
 
     obj = gst_asio_object_new (info, FALSE);
     if (!obj)
@@ -220,9 +218,12 @@ gst_asio_device_provider_probe_internal (GstAsioDeviceProvider * self,
             &preferred_buf_size, &buf_size_granularity))
       goto done;
 
+    clsid_str_utf8 = g_utf16_to_utf8 ((const gunichar2 *) clsid_str, -1,
+        nullptr, nullptr, nullptr);
+
     props = gst_structure_new ("asio-proplist",
         "device.api", G_TYPE_STRING, "asio",
-        "device.clsid", G_TYPE_STRING, OLE2A (clsid_str),
+        "device.clsid", G_TYPE_STRING, clsid_str_utf8,
         "asio.device.description", G_TYPE_STRING, info->driver_desc,
         "asio.device.min-buf-size", G_TYPE_LONG, min_buf_size,
         "asio.device.max-buf-size", G_TYPE_LONG, max_buf_size,
@@ -231,14 +232,18 @@ gst_asio_device_provider_probe_internal (GstAsioDeviceProvider * self,
         nullptr);
 
     device = (GstDevice *) g_object_new (GST_TYPE_ASIO_DEVICE,
-        "device-clsid", OLE2A (clsid_str),
+        "device-clsid", clsid_str_utf8,
         "display-name", info->driver_desc, "caps", caps,
         "device-class", device_class, "properties", props, nullptr);
     GST_ASIO_DEVICE (device)->factory_name = factory_name;
 
+    g_free (clsid_str_utf8);
+
     *devices = g_list_append (*devices, device);
 
   done:
+    if (clsid_str)
+      CoTaskMemFree (clsid_str);
     gst_clear_caps (&caps);
     gst_clear_object (&obj);
     if (props)

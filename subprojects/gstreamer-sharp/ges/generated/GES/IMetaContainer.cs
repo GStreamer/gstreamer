@@ -13,6 +13,7 @@ namespace GES {
 		bool CheckMetaRegistered(string meta_item, out GES.MetaFlag flags, out GLib.GType type);
 		void Foreach(GES.MetaForeachFunc func);
 		bool GetBoolean(string meta_item, out bool dest);
+		bool GetDate(string meta_item, out GLib.Date dest);
 		bool GetDateTime(string meta_item, out Gst.DateTime dest);
 		bool GetDouble(string meta_item, out double dest);
 		bool GetFloat(string meta_item, out float dest);
@@ -26,6 +27,7 @@ namespace GES {
 		string MetasToString();
 		bool RegisterMeta(GES.MetaFlag flags, string meta_item, GLib.Value value);
 		bool RegisterMetaBoolean(GES.MetaFlag flags, string meta_item, bool value);
+		bool RegisterMetaDate(GES.MetaFlag flags, string meta_item, GLib.Date value);
 		bool RegisterMetaDateTime(GES.MetaFlag flags, string meta_item, Gst.DateTime value);
 		bool RegisterMetaDouble(GES.MetaFlag flags, string meta_item, double value);
 		bool RegisterMetaFloat(GES.MetaFlag flags, string meta_item, float value);
@@ -36,6 +38,7 @@ namespace GES {
 		bool RegisterMetaUint64(GES.MetaFlag flags, string meta_item, ulong value);
 		bool RegisterStaticMeta(GES.MetaFlag flags, string meta_item, GLib.GType type);
 		bool SetBoolean(string meta_item, bool value);
+		bool SetDate(string meta_item, GLib.Date value);
 		bool SetDateTime(string meta_item, Gst.DateTime value);
 		bool SetDouble(string meta_item, double value);
 		bool SetFloat(string meta_item, float value);

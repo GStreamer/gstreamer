@@ -18,6 +18,36 @@ namespace Gst.Video {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[GLib.Property ("automatic-request-sync-point-flags")]
+		public Gst.Video.VideoDecoderRequestSyncPointFlags AutomaticRequestSyncPointFlags {
+			get {
+				GLib.Value val = GetProperty ("automatic-request-sync-point-flags");
+				Gst.Video.VideoDecoderRequestSyncPointFlags ret = (Gst.Video.VideoDecoderRequestSyncPointFlags) (Enum) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value((Enum) value);
+				SetProperty("automatic-request-sync-point-flags", val);
+				val.Dispose ();
+			}
+		}
+
+		[GLib.Property ("automatic-request-sync-points")]
+		public bool AutomaticRequestSyncPoints {
+			get {
+				GLib.Value val = GetProperty ("automatic-request-sync-points");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("automatic-request-sync-points", val);
+				val.Dispose ();
+			}
+		}
+
 		[GLib.Property ("discard-corrupted-frames")]
 		public bool DiscardCorruptedFrames {
 			get {
@@ -1251,6 +1281,64 @@ namespace Gst.Video {
 			return __result;
 		}
 
+		static HandleMissingDataNativeDelegate HandleMissingData_cb_delegate;
+		static HandleMissingDataNativeDelegate HandleMissingDataVMCallback {
+			get {
+				if (HandleMissingData_cb_delegate == null)
+					HandleMissingData_cb_delegate = new HandleMissingDataNativeDelegate (HandleMissingData_cb);
+				return HandleMissingData_cb_delegate;
+			}
+		}
+
+		static void OverrideHandleMissingData (GLib.GType gtype)
+		{
+			OverrideHandleMissingData (gtype, HandleMissingDataVMCallback);
+		}
+
+		static void OverrideHandleMissingData (GLib.GType gtype, HandleMissingDataNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("handle_missing_data"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool HandleMissingDataNativeDelegate (IntPtr inst, ulong timestamp, ulong duration);
+
+		static bool HandleMissingData_cb (IntPtr inst, ulong timestamp, ulong duration)
+		{
+			try {
+				VideoDecoder __obj = GLib.Object.GetObject (inst, false) as VideoDecoder;
+				bool __result;
+				__result = __obj.OnHandleMissingData (timestamp, duration);
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Video.VideoDecoder), ConnectionMethod="OverrideHandleMissingData")]
+		protected virtual bool OnHandleMissingData (ulong timestamp, ulong duration)
+		{
+			return InternalHandleMissingData (timestamp, duration);
+		}
+
+		private bool InternalHandleMissingData (ulong timestamp, ulong duration)
+		{
+			HandleMissingDataNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("handle_missing_data"));
+				unmanaged = (HandleMissingDataNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(HandleMissingDataNativeDelegate));
+			}
+			if (unmanaged == null) return false;
+
+			bool __result = unmanaged (this.Handle, timestamp, duration);
+			return __result;
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -1414,14 +1502,22 @@ namespace Gst.Video {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // transform_meta
 							, "drain"
+							, "handle_missing_data"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("handle_missing_data"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // handle_missing_data
+							, "transform_meta"
 							, "padding"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("padding"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 14 // padding
-							, "transform_meta"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 13 // padding
+							, "handle_missing_data"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -1498,11 +1594,33 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_video_decoder_drop_subframe(IntPtr raw, IntPtr frame);
+
+		public Gst.FlowReturn DropSubframe(Gst.Video.VideoCodecFrame frame) {
+			IntPtr native_frame = GLib.Marshaller.StructureToPtrAlloc (frame);
+			int raw_ret = gst_video_decoder_drop_subframe(Handle, native_frame);
+			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
+			Marshal.FreeHGlobal (native_frame);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_video_decoder_finish_frame(IntPtr raw, IntPtr frame);
 
 		public Gst.FlowReturn FinishFrame(Gst.Video.VideoCodecFrame frame) {
 			IntPtr native_frame = GLib.Marshaller.StructureToPtrAlloc (frame);
 			int raw_ret = gst_video_decoder_finish_frame(Handle, native_frame);
+			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
+			Marshal.FreeHGlobal (native_frame);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_video_decoder_finish_subframe(IntPtr raw, IntPtr frame);
+
+		public Gst.FlowReturn FinishSubframe(Gst.Video.VideoCodecFrame frame) {
+			IntPtr native_frame = GLib.Marshaller.StructureToPtrAlloc (frame);
+			int raw_ret = gst_video_decoder_finish_subframe(Handle, native_frame);
 			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
 			Marshal.FreeHGlobal (native_frame);
 			return ret;
@@ -1560,6 +1678,17 @@ namespace Gst.Video {
 				GLib.List[] ret = (GLib.List[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), true, true, typeof(GLib.List));
 				return ret;
 			}
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint gst_video_decoder_get_input_subframe_index(IntPtr raw, IntPtr frame);
+
+		public uint GetInputSubframeIndex(Gst.Video.VideoCodecFrame frame) {
+			IntPtr native_frame = GLib.Marshaller.StructureToPtrAlloc (frame);
+			uint raw_ret = gst_video_decoder_get_input_subframe_index(Handle, native_frame);
+			uint ret = raw_ret;
+			Marshal.FreeHGlobal (native_frame);
+			return ret;
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -1665,6 +1794,17 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint gst_video_decoder_get_processed_subframe_index(IntPtr raw, IntPtr frame);
+
+		public uint GetProcessedSubframeIndex(Gst.Video.VideoCodecFrame frame) {
+			IntPtr native_frame = GLib.Marshaller.StructureToPtrAlloc (frame);
+			uint raw_ret = gst_video_decoder_get_processed_subframe_index(Handle, native_frame);
+			uint ret = raw_ret;
+			Marshal.FreeHGlobal (native_frame);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern double gst_video_decoder_get_qos_proportion(IntPtr raw);
 
 		public double QosProportion { 
@@ -1676,11 +1816,39 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_decoder_get_subframe_mode(IntPtr raw);
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_video_decoder_set_subframe_mode(IntPtr raw, bool subframe_mode);
+
+		public bool SubframeMode { 
+			get {
+				bool raw_ret = gst_video_decoder_get_subframe_mode(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+			set {
+				gst_video_decoder_set_subframe_mode(Handle, value);
+			}
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_video_decoder_have_frame(IntPtr raw);
 
 		public Gst.FlowReturn HaveFrame() {
 			int raw_ret = gst_video_decoder_have_frame(Handle);
 			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_video_decoder_have_last_subframe(IntPtr raw, IntPtr frame);
+
+		public Gst.FlowReturn HaveLastSubframe(Gst.Video.VideoCodecFrame frame) {
+			IntPtr native_frame = GLib.Marshaller.StructureToPtrAlloc (frame);
+			int raw_ret = gst_video_decoder_have_last_subframe(Handle, native_frame);
+			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
+			Marshal.FreeHGlobal (native_frame);
 			return ret;
 		}
 

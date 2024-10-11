@@ -1117,7 +1117,8 @@ gst_vaapi_build_caps_from_formats (GArray * formats, gint min_width,
 
   va_caps = gst_caps_copy (raw_caps);
   gst_caps_set_features_simple (va_caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE,
+          NULL));
 
   if (gst_vaapi_mem_type_supports (mem_types,
           GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF) ||
@@ -1125,7 +1126,8 @@ gst_vaapi_build_caps_from_formats (GArray * formats, gint min_width,
           GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF2)) {
     dma_caps = gst_caps_copy (raw_caps);
     gst_caps_set_features_simple (dma_caps,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_DMABUF,
+            NULL));
   }
 
   out_caps = va_caps;

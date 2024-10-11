@@ -67,6 +67,9 @@ GST_GL_API
 GstGLDisplayEGL *gst_gl_display_egl_new (void);
 
 GST_GL_API
+GstGLDisplayEGL *gst_gl_display_egl_new_surfaceless (void);
+
+GST_GL_API
 GstGLDisplayEGL *gst_gl_display_egl_new_with_egl_display (gpointer display);
 
 GST_GL_API

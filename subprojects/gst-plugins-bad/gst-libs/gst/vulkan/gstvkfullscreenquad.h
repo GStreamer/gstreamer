@@ -105,7 +105,7 @@ GST_VULKAN_API
 GstVulkanFullScreenQuad *   gst_vulkan_full_screen_quad_new         (GstVulkanQueue * queue);
 
 GST_VULKAN_API
-gboolean            gst_vulkan_full_screen_quad_set_info            (GstVulkanFullScreenQuad * self, GstVideoInfo *in_info, GstVideoInfo * out_info);
+gboolean            gst_vulkan_full_screen_quad_set_info            (GstVulkanFullScreenQuad * self, const GstVideoInfo *in_info, const GstVideoInfo * out_info);
 GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_set_shaders         (GstVulkanFullScreenQuad * self, GstVulkanHandle * vert, GstVulkanHandle * frag);
 GST_VULKAN_API
@@ -147,6 +147,9 @@ gboolean            gst_vulkan_full_screen_quad_draw                (GstVulkanFu
 
 GST_VULKAN_API
 GstVulkanFence *    gst_vulkan_full_screen_quad_get_last_fence      (GstVulkanFullScreenQuad * self);
+
+GST_VULKAN_API
+GstVulkanQueue *    gst_vulkan_full_screen_quad_get_queue           (GstVulkanFullScreenQuad * self);
 
 G_END_DECLS
 #endif /* __GST_VULKAN_FULL_SCREEN_QUAD_H__ */

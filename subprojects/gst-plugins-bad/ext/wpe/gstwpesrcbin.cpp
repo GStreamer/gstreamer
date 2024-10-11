@@ -41,7 +41,7 @@
  * ### Save the first 50 video frames generated for the GStreamer website as PNG files in /tmp
  *
  * ```
- * LIBGL_ALWAYS_SOFTWARE=true gst-launch-1.0 -v wpesrc num-buffers=50 location="https://gstreamer.freedesktop.org" ! videoconvert ! pngenc ! multifilesink location=/tmp/snapshot-%05d.png
+ * LIBGL_ALWAYS_SOFTWARE=true gst-launch-1.0 -v wpevideosrc num-buffers=50 location="https://gstreamer.freedesktop.org" ! videoconvert ! pngenc ! multifilesink location=/tmp/snapshot-%05d.png
  * ```
  *
  *
@@ -92,7 +92,7 @@
 #include "gstwpesrcbin.h"
 #include "gstwpevideosrc.h"
 #include "gstwpe.h"
-#include "WPEThreadedView.h"
+#include "gstwpethreadedview.h"
 
 #include <gst/allocators/allocators.h>
 #include <gst/base/gstflowcombiner.h>
@@ -284,7 +284,9 @@ gst_wpe_src_push_audio_buffer (GstWpeSrc* src, guint32 id, guint64 size)
   gpointer data = mmap (0, size, PROT_READ, MAP_PRIVATE, audio_pad->fd, 0);
   buffer = gst_buffer_new_memdup (data, size);
   munmap (data, size);
-  gst_buffer_add_audio_meta (buffer, &audio_pad->info, size, NULL);
+  gst_buffer_add_audio_meta(
+      buffer, &audio_pad->info,
+      size / GST_AUDIO_INFO_BPF(&audio_pad->info), NULL);
 
   audio_pad->buffer_time = gst_element_get_current_running_time (GST_ELEMENT (src));
   GST_BUFFER_DTS (buffer) = audio_pad->buffer_time;

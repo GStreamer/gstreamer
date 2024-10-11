@@ -134,7 +134,7 @@ gst_level_class_init (GstLevelClass * klass)
   gobject_class->finalize = gst_level_finalize;
 
   /**
-   * GstLevel:post-messages
+   * GstLevel:post-messages:
    *
    * Post messages on the bus with level information.
    *
@@ -146,7 +146,7 @@ gst_level_class_init (GstLevelClass * klass)
           "passed interval", TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* FIXME(2.0): remove this property */
   /**
-   * GstLevel:post-messages
+   * GstLevel:message:
    *
    * Post messages on the bus with level information.
    *
@@ -746,6 +746,9 @@ gst_level_post_message (GstLevel * filter)
   guint i;
   gint channels, rate, frames = filter->num_frames;
   GstClockTime duration;
+
+  if (!GST_AUDIO_INFO_IS_VALID (&filter->info))
+    return;
 
   channels = GST_AUDIO_INFO_CHANNELS (&filter->info);
   rate = GST_AUDIO_INFO_RATE (&filter->info);

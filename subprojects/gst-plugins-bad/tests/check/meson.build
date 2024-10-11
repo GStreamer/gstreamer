@@ -25,6 +25,7 @@ base_tests = [
   [['elements/aesdec.c'], not aes_dep.found(), [aes_dep]],
   [['elements/aiffparse.c'], get_option('aiff').disabled()],
   [['elements/asfmux.c'], get_option('asfmux').disabled()],
+  [['elements/audiovisualizer.c'], get_option('audiovisualizers').disabled()],
   [['elements/autoconvert.c'], get_option('autoconvert').disabled()],
   [['elements/autovideoconvert.c'], get_option('autoconvert').disabled()],
   [['elements/avwait.c'], get_option('timecode').disabled()],
@@ -69,6 +70,7 @@ base_tests = [
   [['elements/rtpsrc.c'], get_option('rtp').disabled()],
   [['elements/rtpsink.c'], get_option('rtp').disabled()],
   [['elements/sdpdemux.c'], get_option('sdp').disabled(), [gstsdp_dep]],
+  [['elements/srt.c'], not srt_dep.found(), [srt_dep]],
   [['elements/srtp.c'], not srtp_dep.found(), [srtp_dep]],
   [['elements/switchbin.c'], get_option('switchbin').disabled()],
   [['elements/videoframe-audiolevel.c'], get_option('videoframe_audiolevel').disabled()],
@@ -85,6 +87,7 @@ base_tests = [
   [['libs/nalutils.c', '../../gst-libs/gst/codecparsers/nalutils.c'], false, [nalutils_dep]],
   [['libs/mpegts.c'], false, [gstmpegts_dep]],
   [['libs/mpegvideoparser.c'], false, [gstcodecparsers_dep]],
+  [['libs/mse.c'], false, [gstmse_private_test_dep]],
   [['libs/planaraudioadapter.c'], false, [gstbadaudio_dep]],
   [['libs/play.c'], not enable_gst_play_tests, [gstplay_dep, libsoup_dep]],
   [['libs/vc1parser.c'], false, [gstcodecparsers_dep]],
@@ -94,7 +97,11 @@ base_tests = [
   [['libs/h264bitwriter.c'], false, [gstcodecparsers_dep]],
   [['libs/h265bitwriter.c'], false, [gstcodecparsers_dep]],
   [['libs/vkformat.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
+  [['libs/av1bitwriter.c'], false, [gstcodecparsers_dep]],
+  [['libs/vp9bitwriter.c'], false, [gstcodecparsers_dep]],
+  [['libs/jpegbitwriter.c'], false, [gstcodecparsers_dep]],
   [['libs/vkmemory.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
+  [['libs/analyticsmeta.c'], false, [gstanalytics_dep]],
   [['elements/vkcolorconvert.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkwindow.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkdevice.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
@@ -103,9 +110,21 @@ base_tests = [
   [['libs/vkimage.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkinstance.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkimagebufferpool.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
+  [['libs/vkvideodecode.c'], not gstvulkan_dep.found() or vulkan_conf.get('GST_VULKAN_HAVE_VIDEO_EXTENSIONS') != 1, [gstvulkan_dep]],
+  [['libs/vkvideoencodeh264.c'], not gstvulkan_dep.found() or vulkan_conf.get('GST_VULKAN_HAVE_VIDEO_EXTENSIONS') != 1, [gstvulkan_dep, gstcodecparsers_dep]],
+  [['libs/vkvideoencodeh265.c'], not gstvulkan_dep.found() or vulkan_conf.get('GST_VULKAN_HAVE_VIDEO_EXTENSIONS') != 1, [gstvulkan_dep, gstcodecparsers_dep]],
   [['libs/d3d11device.cpp'], not gstd3d11_dep.found(), [gstd3d11_dep]],
+  [['libs/d3d11memory.c'], not gstd3d11_dep.found(), [gstd3d11_dep]],
   [['libs/cudamemory.c'], not gstcuda_dep.found(), [gstcuda_dep, gstcuda_stub_dep]],
+  [['libs/d3d12device.cpp'], not gstd3d12_dep.found(), [gstd3d12_dep]],
 ]
+
+# Make sure our headers are C++ clean
+if add_languages('cpp', native: false, required: false)
+  base_tests += [
+    [['libs/gstlibscpp.cc'], false ],
+  ]
+endif
 
 # FIXME: unistd dependency, unstable or not tested yet on windows
 if host_machine.system() != 'windows'
@@ -139,16 +158,16 @@ if host_machine.system() != 'windows'
     [['elements/jifmux.c'],
         not exif_dep.found() or not cdata.has('HAVE_UNISTD_H'), [exif_dep]],
     [['elements/jpegparse.c'], not cdata.has('HAVE_UNISTD_H')],
-    [['elements/kate.c'],
-        not kate_dep.found() or not cdata.has('HAVE_UNISTD_H'), [kate_dep]],
     [['elements/netsim.c']],
     [['elements/shm.c'], not shm_enabled, shm_deps],
+    [['elements/unixfd.c'], not gio_unix_dep.found()],
     [['elements/voaacenc.c'],
         not voaac_dep.found() or not cdata.has('HAVE_UNISTD_H'), [voaac_dep]],
     [['elements/webrtcbin.c'], not libnice_dep.found(), [gstwebrtc_dep]],
     [['elements/x265enc.c'], not x265_dep.found(), [x265_dep]],
     [['elements/zbar.c'], not zbar_dep.found(), [zbar_dep]],
     [['elements/zxing.c'], not zxing_dep.found(), [zxing_dep]],
+    [['elements/lc3.c'], not lc3_dep.found(), [lc3_dep]],
   ]
 endif
 
@@ -160,18 +179,21 @@ if host_machine.system() == 'linux'
   ]
 endif
 
+fsmod = import('fs')
 test_defines = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
   '-DGST_CHECK_TEST_ENVIRONMENT_BEACON="GST_STATE_IGNORE_ELEMENTS"',
-  '-DGST_TEST_FILES_PATH="' + meson.current_source_dir() + '/../files"',
-  '-DTEST_PATH="' + meson.current_build_dir() + '/media"',
-  '-DDASH_MPD_DATADIR=' + meson.current_source_dir() + '/elements/dash_mpd_data',
+  '-DGST_TEST_FILES_PATH="' + fsmod.as_posix(meson.current_source_dir()) + '/../files"',
+  '-DTEST_PATH="' + fsmod.as_posix(meson.current_build_dir()) + '/media"',
+  '-DDASH_MPD_DATADIR=' + fsmod.as_posix(meson.current_source_dir()) + '/elements/dash_mpd_data',
   '-DGST_USE_UNSTABLE_API',
 ]
 
-test_deps = [gst_dep, gstapp_dep, gstbase_dep,
-             gstbasecamerabin_dep, gstphotography_dep,
+test_deps = [gst_dep, gstapp_dep, gstbase_dep, gstbadaudio_dep,
+             gstbasecamerabin_dep, gstphotography_dep, gstwebrtc_dep,
+             gstmpegts_dep, gstmse_dep, gstplay_dep, gstplayer_dep,
+             gstanalytics_dep, gstinsertbin_dep, gst_transcoder_dep,
              gstpbutils_dep, gstcontroller_dep, gstaudio_dep,
              gstvideo_dep, gstrtp_dep, gsturidownloader_dep,
              gstcheck_dep, gio_dep, gsttag_dep]

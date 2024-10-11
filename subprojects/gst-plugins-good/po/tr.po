@@ -1,24 +1,23 @@
 # translation of gst-plugins-good-1.12.0.po to Turkish
 # This file is put in the public domain.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Server Acim <serveracim@gmail.com>, 2010.
-# Server Acim <serveracim@gmail.com>, 2011.
-# Server Acim <serveracim@gmail.com>, 2013, 2015.
+# Server Acim <serveracim@gmail.com>, 2010, 2011, 2013, 2015.
 # Mehmet Kececi <mkececi@mehmetkececi.com>, 2017, 2019, 2021.
+# Emin Tufan Çetin <etcetin@gmail.com>, 2023.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Project-Id-Version: gst-plugins-good 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2021-10-04 14:15+0300\n"
-"Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
+"POT-Creation-Date: 2023-01-13 19:10+0000\n"
+"PO-Revision-Date: 2023-05-11 21:46+0300\n"
+"Last-Translator: Emin Tufan Çetin <etcetin@gmail.com>\n"
 "Language-Team: Turkish <gnome-turk@gnome.org>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 3.0\n"
+"X-Generator: Poedit 3.2.2\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Project-Style: gnome\n"
 
@@ -46,13 +45,13 @@ msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
+"'%2$s' özelliği için istenen %1$d kbit/s bit oranına izin verilmiyor. Bit "
+"oranı %3$d kbit/s olarak değiştirildi."
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
-msgstr "'%s' tarafından '%s'"
+msgstr "'%2$s' - '%1$s'"
 
 msgid "Could not connect to server"
 msgstr "Sunucuya bağlanamıyor"
@@ -71,8 +70,7 @@ msgstr "Güvenli bağlantı ayarı yapılamadı."
 
 msgid ""
 "A network error occurred, or the server closed the connection unexpectedly."
-msgstr ""
-"Bir ağ hatası oluştu veya sunucu beklenmedik şekilde bağlantıyı kapattı."
+msgstr "Ağ hatası oluştu ya da sunucu beklenmedik biçimde bağlantıyı kapattı."
 
 msgid "Server sent bad data."
 msgstr "Sunucu yetersiz veri gönderdi."
@@ -82,7 +80,7 @@ msgstr "Sunucu aramayı desteklemiyor."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
-"TwoLAME kodlayıcı yapılandırılamadı. Kodlama parametrelerini kontrol edin."
+"TwoLAME kodlayıcı yapılandırılamadı. Kodlama parametrelerini gözden geçirin."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Geçerli bir ses girişi bulunamadı. AVI akışı kesilecek."
@@ -102,39 +100,33 @@ msgstr "Bu dosya bozuk ve oynatılamaz."
 msgid "Invalid atom size."
 msgstr "Geçersiz atom boyutu."
 
-msgid "Cannot query file size"
-msgstr ""
-
-msgid "Cannot demux file"
-msgstr ""
-
 msgid "This file is incomplete and cannot be played."
 msgstr "Dosya eksik ve oynatılamaz."
 
 msgid "The video in this file might not play correctly."
-msgstr "Bu dosyadaki vidyo doğru oynatılamıyabilir."
+msgstr "Bu dosyadaki video doğru oynatılamıyabilir."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
-"Desteklenen bir akış bulunamadı. Real Media akışları için bir GStreamer RTSP "
-"uzantı eklentisi kurmalısınız."
+"Desteklenen akış bulunamadı. Real Media akışları için GStreamer RTSP uzantı "
+"eklentisi kurmalısınız."
 
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Desteklenen akış bulunamadı. Daha fazla aktarım protokolüne izin vermeniz "
-"veya doğru GStreamer RTSP uzantı eklentisine onay vermeniz gerekebilir."
+"Desteklenen akış bulunamadı. Daha çok aktarım iletişim kuralına izin "
+"vermeniz ya da doğru GStreamer RTSP uzantı eklentisine onay vermeniz "
+"gerekebilir."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
-"Çalmak için ses aygıtı açılamıyor. Aygıt başka bir uygulama tarafından "
-"kullanılıyor."
+"Çalmak için ses aygıtı açılamıyor. Aygıt başka uygulamaca kullanılıyor."
 
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
@@ -148,7 +140,7 @@ msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"Çalma için ses aygıtı açılamıyor. Açık Ses Sistemi'nin bu sürümü, bu öğeyi "
+"Çalma için ses aygıtı açılamıyor. Açık Ses Sistemi'nin bu sürümü, bu ögeyi "
 "desteklemiyor."
 
 msgid "Playback is not supported by this audio device."
@@ -186,7 +178,7 @@ msgstr "%d bayt bilgili '%s' aygıtından okumada hata."
 
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr "Aygıtın '%s' birlikte çalışabileceği vidyo kiplerini sıralamada hata"
+msgstr "Aygıtın '%s' birlikte çalışabileceği video kiplerini sıralamada hata"
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
@@ -219,7 +211,7 @@ msgstr "Aygıt '%s' meşgul"
 
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Aygıt '%s' görüntü yakalayamadı%dx%d"
+msgstr "Aygıt '%s' görüntü yakalayamadı %dx%d"
 
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
@@ -242,7 +234,7 @@ msgid "Could not get parameters on device '%s'"
 msgstr "Değiştirgeler aygıttan '%s' alınamıyor"
 
 msgid "Video device did not accept new frame rate setting."
-msgstr "Vidyo aygıtı yeni çerçeve oranı ayarlarını kabul etmedi."
+msgstr "Video aygıtı yeni çerçeve oranı ayarlarını kabul etmedi."
 
 msgid "Video device did not provide output format."
 msgstr "Video aygıtı çıktı biçimini sağlamadı."

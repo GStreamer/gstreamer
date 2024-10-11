@@ -225,14 +225,13 @@ gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstObject * parent,
   ctx->pix_fmt = AV_PIX_FMT_NB;
   gst_ffmpeg_caps_with_codectype (AVMEDIA_TYPE_VIDEO, caps, ctx);
   if (ctx->pix_fmt == AV_PIX_FMT_NB) {
-    gst_ffmpeg_avcodec_close (ctx);
-    av_free (ctx);
+    avcodec_free_context (&ctx);
     return FALSE;
   }
 
   deinterlace->pixfmt = ctx->pix_fmt;
 
-  av_free (ctx);
+  avcodec_free_context (&ctx);
 
   deinterlace->to_size =
       av_image_get_buffer_size (deinterlace->pixfmt, deinterlace->width,

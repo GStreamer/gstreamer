@@ -41,6 +41,15 @@ static void create_stream_done (const gchar * command_name, GPtrArray * args,
 static void on_publish_or_play_status (const gchar * command_name,
     GPtrArray * args, gpointer user_data);
 
+GQuark
+gst_rtmp_conn_parsing_error_quark (void)
+{
+  static GQuark quark = 0;
+  if (!quark)
+    quark = g_quark_from_static_string ("gst-rtmp-conn-parsing-error-quark");
+  return quark;
+}
+
 static void
 init_debug (void)
 {
@@ -144,9 +153,16 @@ gst_rtmp_authmod_get_type (void)
 {
   static gsize authmod_type = 0;
   static const GEnumValue authmod[] = {
-    {GST_RTMP_AUTHMOD_NONE, "GST_RTMP_AUTHMOD_NONE", "none"},
-    {GST_RTMP_AUTHMOD_AUTO, "GST_RTMP_AUTHMOD_AUTO", "auto"},
-    {GST_RTMP_AUTHMOD_ADOBE, "GST_RTMP_AUTHMOD_ADOBE", "adobe"},
+    {GST_RTMP_AUTHMOD_NONE, "Attempt no authentication", "none"},
+    {GST_RTMP_AUTHMOD_AUTO, "Automatically switch to server-suggested method",
+        "auto"},
+    {GST_RTMP_AUTHMOD_ADOBE, "Adobe-style authentication", "adobe"},
+    /**
+     * GstRtmpAuthmod::llnw:
+     *
+     * Since: 1.26
+    */
+    {GST_RTMP_AUTHMOD_LLNW, "Limelight Networks authentication", "llnw"},
     {0, NULL, NULL},
   };
 
@@ -200,6 +216,7 @@ gst_rtmp_location_copy (GstRtmpLocation * dest, const GstRtmpLocation * src)
   dest->username = g_strdup (src->username);
   dest->password = g_strdup (src->password);
   dest->secure_token = g_strdup (src->secure_token);
+  dest->extra_connect_args = g_strdup (src->extra_connect_args);
   dest->authmod = src->authmod;
   dest->timeout = src->timeout;
   dest->tls_flags = src->tls_flags;
@@ -219,6 +236,7 @@ gst_rtmp_location_clear (GstRtmpLocation * location)
   g_clear_pointer (&location->username, g_free);
   g_clear_pointer (&location->password, g_free);
   g_clear_pointer (&location->secure_token, g_free);
+  g_clear_pointer (&location->extra_connect_args, g_free);
   g_clear_pointer (&location->flash_ver, g_free);
   location->publish = FALSE;
 }
@@ -580,10 +598,213 @@ do_adobe_auth (const gchar * username, const gchar * password,
   return auth_query;
 }
 
+static gchar *
+do_llnw_auth (const gchar * username, const gchar * password,
+    const gchar * nonce, const gchar * app)
+{
+  const gchar *nc = "00000001";
+  gchar cnonce[10];
+  gchar *auth_query;
+  GChecksum *md5_1, *md5_2, *md5_3;
+
+  /* FIXME: Handle case were nonce is NULL */
+
+  g_return_val_if_fail (username, NULL);
+  g_return_val_if_fail (password, NULL);
+  g_return_val_if_fail (app, NULL);
+
+  md5_1 = g_checksum_new (G_CHECKSUM_MD5);
+  g_checksum_update (md5_1, (guchar *) username, -1);
+  g_checksum_update (md5_1, (guchar *) ":live:", -1);   /* realm */
+  g_checksum_update (md5_1, (guchar *) password, -1);
+
+  md5_2 = g_checksum_new (G_CHECKSUM_MD5);
+  /* FIXME: Might be possible to use play method in rtmp2src */
+  g_checksum_update (md5_2, (guchar *) "publish:/", -1);        /* method */
+  g_checksum_update (md5_2, (guchar *) app, -1);
+
+  /*
+   *   When streaming to limelight, the app name is either a full
+   *   "appname/subaccount" or "appname/_definst_". In the latter case, the app
+   *   name can be simplified into simply "appname", but the authentication
+   *   hashing assumes the /_definst_ still to be present.
+   */
+  if (!strchr (app, '/'))
+    g_checksum_update (md5_2, (guchar *) "/_definst_", -1);
+
+  md5_3 = g_checksum_new (G_CHECKSUM_MD5);
+  g_checksum_update (md5_3, (guchar *) g_checksum_get_string (md5_1), -1);
+
+  g_checksum_update (md5_3, (guchar *) ":", 1);
+  if (nonce)
+    g_checksum_update (md5_3, (guchar *) nonce, -1);
+
+  g_checksum_update (md5_3, (guchar *) ":", -1);
+  g_checksum_update (md5_3, (guchar *) nc, -1);
+  g_checksum_update (md5_3, (guchar *) ":", -1);
+  g_snprintf (cnonce, sizeof (cnonce), "%08x", g_random_int ());
+  g_checksum_update (md5_3, (guchar *) cnonce, -1);
+  g_checksum_update (md5_3, (guchar *) ":auth:", -1);
+  g_checksum_update (md5_3, (guchar *) g_checksum_get_string (md5_2), -1);
+
+  auth_query =
+      g_strdup_printf
+      ("authmod=llnw&user=%s&nonce=%s&cnonce=%s&nc=%s&response=%s",
+      username, nonce ? nonce : "(null)", cnonce, nc,
+      g_checksum_get_string (md5_3));
+
+  g_checksum_free (md5_1);
+  g_checksum_free (md5_2);
+  g_checksum_free (md5_3);
+
+  return auth_query;
+}
+
+static GstAmfNode *
+parse_conn_token (gchar type, const gchar * value, GError ** error)
+{
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+  // Function called without a type
+  g_assert (type);
+
+  gchar *end_ptr;
+  gboolean bool_;
+
+  GST_TRACE ("Parsing Connection token of Type: %c and Value: %s", type, value);
+
+  switch (type) {
+    case 'N':
+      // Empty value
+      if (value[0] == '\0') {
+        g_set_error (error,
+            GST_RTMP_CONN_PARSING_ERROR,
+            GST_RTMP_CONN_PARSING_ERROR_INVALID_VALUE,
+            "Found Numeric type, but the value is an empty string");
+        return NULL;
+      }
+
+      gdouble num = g_ascii_strtod (value, &end_ptr);
+      if (end_ptr[0] != '\0') {
+        g_set_error (error,
+            GST_RTMP_CONN_PARSING_ERROR,
+            GST_RTMP_CONN_PARSING_ERROR_FAILED_PARSING_DOUBLE,
+            "Failed to convert %s to double", value);
+        return NULL;
+      }
+
+      return gst_amf_node_new_number (num);
+    case 'S':
+      return gst_amf_node_new_string (value, -1);
+    case 'B':
+      // We are mimicking the behavior of librtmp here, which
+      // is using atoi and thus every invalid string is false
+      // https://salsa.debian.org/multimedia-team/rtmpdump/-/blob/a56abc82a99e8c4497a421d9dbc06e4544ade200/librtmp/rtmp.c#L632-634
+      bool_ = g_ascii_strtoull (value, &end_ptr, 10);
+      if (end_ptr[0] != '\0') {
+        return gst_amf_node_new_boolean (FALSE);
+      }
+
+      return gst_amf_node_new_boolean (bool_);
+    case 'Z':
+      return gst_amf_node_new_null ();
+    case 'O':
+      // Unimplemented for now
+      // Error: Unsupported
+      // O:1 Starts the object, then we parse the other conn= until O:0
+      // Then finish the object and serialize it
+      g_set_error (error,
+          GST_RTMP_CONN_PARSING_ERROR,
+          GST_RTMP_CONN_PARSING_ERROR_UNSUPPORTED,
+          "Objects are not yet supported");
+      return NULL;
+    default:
+      g_set_error (error,
+          GST_RTMP_CONN_PARSING_ERROR,
+          GST_RTMP_CONN_PARSING_ERROR_INVALID_TYPE,
+          "Invalid data type passed: %c", type);
+      return NULL;
+  }
+}
+
+// LIBRTMP(3) can append arbitrary data to the connection packet of RTMP.
+// It does so using a "connection" parameter appended after the url.
+// For a description of the format, see LIBRTMP(3) Connection Parameters
+//
+// Here we parse the conn= options and replicate the behavior for librtmp
+static gboolean
+parse_librtmp_style_conn_props (const gchar * connect_string, GPtrArray * array,
+    GError ** error)
+{
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+  gchar **params;
+
+  // Split the string "conn=S:Foo conn=B:Bar"
+  params = g_strsplit (connect_string, "conn=", -1);
+
+  for (gsize i = 0; params[i]; i++) {
+    const gchar *param = g_strstrip (params[i]);
+
+    // Continue on empty string
+    if (param[0] == '\0') {
+      continue;
+    }
+    // Check for Named field of an object
+    // Example token: 'NS:Foo:Bar'
+    // The [0] byte will always be 'N' and the [2] must be the colon, which
+    // only occurs on named fields
+    if (param[0] == 'N' && param[1] != ':' && param[1] != '\0'
+        && param[2] == ':') {
+      // TODO: Error out if we had not found an object before
+
+      // TODO: split the value and create the AMF node
+      // then append it to the amf object, with the name
+      g_set_error (error,
+          GST_RTMP_CONN_PARSING_ERROR,
+          GST_RTMP_CONN_PARSING_ERROR_UNSUPPORTED,
+          "Objects are not yet supported");
+      g_strfreev (params);
+      return FALSE;
+    }
+
+    if (param[1] != ':') {
+      g_set_error (error,
+          GST_RTMP_CONN_PARSING_ERROR,
+          GST_RTMP_CONN_PARSING_ERROR_INVALID_VALUE,
+          "Parameter values are not separated by colon (:): %s",
+          connect_string);
+      g_strfreev (params);
+      return FALSE;
+    }
+    // Example token: 'S:Bar'
+    // [0] is the type prefix: 'S', 'B', etc
+    // [1] should always be a ':' separator
+    // [2] and is our arbitrary data value
+    const gchar type_ = param[0];
+    const gchar *value = &param[2];
+
+    GError *parse_error = NULL;
+    GstAmfNode *node = parse_conn_token (type_, value, &parse_error);
+    if (!node) {
+      g_strfreev (params);
+      g_propagate_error (error, parse_error);
+      return FALSE;
+    }
+
+    g_ptr_array_add (array, node);
+  };
+
+  g_strfreev (params);
+
+  return TRUE;
+}
+
 static void
 send_connect (GTask * task)
 {
   ConnectTaskData *data = g_task_get_task_data (task);
+  GPtrArray *arguments = g_ptr_array_new_with_free_func (gst_amf_node_free);
   GstAmfNode *node;
   const gchar *app, *flash_ver;
   gchar *uri, *appstr = NULL, *uristr = NULL;
@@ -602,31 +823,24 @@ send_connect (GTask * task)
     goto out;
   }
 
-  if (!flash_ver) {
-    g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED,
-        "Flash version is not set");
-    g_object_unref (task);
-    goto out;
-  }
-
   if (data->auth_query) {
     const gchar *query = data->auth_query;
     appstr = g_strdup_printf ("%s?%s", app, query);
     uristr = g_strdup_printf ("%s?%s", uri, query);
-  } else if (data->location.authmod == GST_RTMP_AUTHMOD_ADOBE) {
+  } else if (data->location.authmod > GST_RTMP_AUTHMOD_AUTO) {
     const gchar *user = data->location.username;
-    const gchar *authmod = "adobe";
+    const gchar *authmod = gst_rtmp_authmod_get_nick (data->location.authmod);
 
     if (!user) {
       g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
-          "no username for adobe authentication");
+          "no username for %s authentication", authmod);
       g_object_unref (task);
       goto out;
     }
 
     if (!data->location.password) {
       g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
-          "no password for adobe authentication");
+          "no password for %s authentication", authmod);
       g_object_unref (task);
       goto out;
     }
@@ -649,9 +863,11 @@ send_connect (GTask * task)
     gst_amf_node_append_field_string (node, "type", "nonprivate", -1);
   }
 
-  /* "Flash Player version. It is the same string as returned by the
-   * ApplicationScript getversion () function." */
-  gst_amf_node_append_field_string (node, "flashVer", flash_ver, -1);
+  if (flash_ver) {
+    /* "Flash Player version. It is the same string as returned by the
+     * ApplicationScript getversion () function." */
+    gst_amf_node_append_field_string (node, "flashVer", flash_ver, -1);
+  }
 
   /* "URL of the source SWF file making the connection."
    * XXX: libavformat sends "swfUrl" here, if provided. */
@@ -684,11 +900,32 @@ send_connect (GTask * task)
      * XXX: libavformat sends "pageUrl" here, if provided. */
   }
 
-  gst_rtmp_connection_send_command (data->connection, send_connect_done,
-      task, 0, "connect", node, NULL);
+  g_ptr_array_add (arguments, node);
+
+  /* Parse librtmp style connect parameters */
+  if (data->location.extra_connect_args
+      && data->location.extra_connect_args[0] != '\0') {
+    GError *error = NULL;
+    gboolean conn_result =
+        parse_librtmp_style_conn_props (data->location.extra_connect_args,
+        arguments,
+        &error);
+
+    // Failed to parse the connect-args prop
+    if (!conn_result) {
+      g_task_return_new_error (task, error->domain, error->code,
+          "Failed to parse extra connection args: %s", error->message);
+      g_clear_error (&error);
+      goto out;
+    }
+  }
+
+  gst_rtmp_connection_send_command_with_args (data->connection,
+      send_connect_done, task, 0, "connect", arguments->len,
+      (const GstAmfNode **) arguments->pdata);
 
 out:
-  gst_amf_node_free (node);
+  g_ptr_array_free (arguments, TRUE);
   g_free (uri);
 }
 
@@ -765,6 +1002,13 @@ send_connect_done (const gchar * command_name, GPtrArray * args,
         return;
       }
 
+      if (strstr (desc, "authmod=llnw")) {
+        GST_INFO ("Reconnecting with authmod=llnw");
+        data->location.authmod = GST_RTMP_AUTHMOD_LLNW;
+        socket_connect (task);
+        return;
+      }
+
       g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
           "'connect' cmd returned unhandled authmod: %s", desc);
       g_object_unref (task);
@@ -790,6 +1034,10 @@ send_connect_done (const gchar * command_name, GPtrArray * args,
       switch (authmod) {
         case GST_RTMP_AUTHMOD_ADOBE:
           matches = g_str_equal (authmod_str, "adobe");
+          break;
+
+        case GST_RTMP_AUTHMOD_LLNW:
+          matches = g_str_equal (authmod_str, "llnw");
           break;
 
         default:
@@ -848,12 +1096,13 @@ send_connect_done (const gchar * command_name, GPtrArray * args,
       }
     }
 
-    {
+    if (authmod == GST_RTMP_AUTHMOD_ADOBE) {
       const gchar *salt, *opaque, *challenge;
 
       salt = gst_uri_get_query_value (query, "salt");
       if (!salt) {
-        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+        g_task_return_new_error (task, G_IO_ERROR,
+            G_IO_ERROR_PERMISSION_DENIED,
             "salt missing from auth request: %s", desc);
         g_object_unref (task);
         gst_uri_unref (query);
@@ -866,19 +1115,39 @@ send_connect_done (const gchar * command_name, GPtrArray * args,
       g_warn_if_fail (!data->auth_query);
       data->auth_query = do_adobe_auth (data->location.username,
           data->location.password, salt, opaque, challenge);
-    }
 
-    gst_uri_unref (query);
+      gst_uri_unref (query);
 
-    if (!data->auth_query) {
-      /* do_adobe_auth should not fail; send_connect tests if username
-       * and password are provided */
-      g_warn_if_reached ();
-      g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
-          "internal error: failed to generate adobe auth query");
-      g_object_unref (task);
-      return;
-    }
+      if (!data->auth_query) {
+        /* do_adobe_auth should not fail; send_connect tests if username
+         * and password are provided */
+        g_warn_if_reached ();
+        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
+            "internal error: failed to generate adobe auth query");
+        g_object_unref (task);
+        return;
+      }
+    } else if (authmod == GST_RTMP_AUTHMOD_LLNW) {
+      const gchar *nonce;
+      nonce = gst_uri_get_query_value (query, "nonce");
+
+      g_warn_if_fail (!data->auth_query);
+      data->auth_query = do_llnw_auth (data->location.username,
+          data->location.password, nonce, data->location.application);
+
+      gst_uri_unref (query);
+
+      if (!data->auth_query) {
+        /* do_llnw_auth should not fail; send_connect tests if username
+         * and password are provided */
+        g_warn_if_reached ();
+        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
+            "internal error: failed to generate llnw auth query");
+        g_object_unref (task);
+        return;
+      }
+    } else
+      g_return_if_reached ();
 
     socket_connect (task);
     return;

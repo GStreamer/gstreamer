@@ -48,58 +48,17 @@ static GstStaticCaps src_template_caps =
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
         GST_D3D11_SRC_FORMATS));
 
-typedef enum
-{
-  GST_D3D11_SAMPLING_METHOD_NEAREST,
-  GST_D3D11_SAMPLING_METHOD_BILINEAR,
-  GST_D3D11_SAMPLING_METHOD_LINEAR_MINIFICATION,
-} GstD3D11SamplingMethod;
-
-static const GEnumValue gst_d3d11_sampling_methods[] = {
-  {GST_D3D11_SAMPLING_METHOD_NEAREST,
-      "Nearest Neighbour", "nearest-neighbour"},
-  {GST_D3D11_SAMPLING_METHOD_BILINEAR,
-      "Bilinear", "bilinear"},
-  {GST_D3D11_SAMPLING_METHOD_LINEAR_MINIFICATION,
-      "Linear minification, point magnification", "linear-minification"},
-  {0, nullptr, nullptr},
-};
-
-#define GST_TYPE_D3D11_SAMPLING_METHOD gst_d3d11_sampling_method_get_type()
-static GType
-gst_d3d11_sampling_method_get_type (void)
-{
-  static GType type = 0;
-
-  GST_D3D11_CALL_ONCE_BEGIN {
-    type = g_enum_register_static ("GstD3D11SamplingMethod",
-        gst_d3d11_sampling_methods);
-  } GST_D3D11_CALL_ONCE_END;
-
-  return type;
-}
-
-static D3D11_FILTER
-gst_d3d11_base_convert_sampling_method_to_filter (GstD3D11SamplingMethod method)
-{
-  static const D3D11_FILTER filters[] = {
-    D3D11_FILTER_MIN_MAG_MIP_POINT,     // GST_D3D11_SAMPLING_METHOD_NEAREST
-    D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT,      // GST_D3D11_SAMPLING_METHOD_BILINEAR
-    D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT,      // GST_D3D11_SAMPLING_METHOD_LINEAR_MINIFICATION
-  };
-
-  G_STATIC_ASSERT_EXPR (G_N_ELEMENTS (filters) ==
-      G_N_ELEMENTS (gst_d3d11_sampling_methods) - 1);
-
-  return filters[method];
-}
-
 #define DEFAULT_ADD_BORDERS TRUE
 #define DEFAULT_BORDER_COLOR G_GUINT64_CONSTANT(0xffff000000000000)
 #define DEFAULT_GAMMA_MODE GST_VIDEO_GAMMA_MODE_NONE
 #define DEFAULT_PRIMARIES_MODE GST_VIDEO_PRIMARIES_MODE_NONE
 #define DEFAULT_SAMPLING_METHOD GST_D3D11_SAMPLING_METHOD_BILINEAR
-#define DEFAULT_ALPHA_MODE GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED
+#define DEFAULT_ALPHA_MODE GST_D3D11_ALPHA_MODE_UNSPECIFIED
+#define DEFAULT_ROTATION 0.0f
+#define DEFAULT_SCALE 1.0f
+#define DEFAULT_FOV 90.0f
+#define DEFAULT_ORTHO FALSE
+#define DEFAULT_MSAA GST_D3D11_MSAA_DISABLED
 
 struct _GstD3D11BaseConvert
 {
@@ -116,6 +75,9 @@ struct _GstD3D11BaseConvert
 
   gint borders_h;
   gint borders_w;
+
+  GstBuffer *msaa_buf;
+  GstBufferPool *msaa_pool;
 
   /* Updated by subclass */
   gboolean add_borders;
@@ -143,8 +105,21 @@ struct _GstD3D11BaseConvert
   /* method previously selected and used for negotiation */
   GstVideoOrientationMethod active_method;
 
-  GstD3D11ConverterAlphaMode src_alpha_mode;
-  GstD3D11ConverterAlphaMode dst_alpha_mode;
+  GstD3D11AlphaMode src_alpha_mode;
+  GstD3D11AlphaMode dst_alpha_mode;
+
+  /* transform */
+  gfloat fov;
+  gboolean ortho;
+  gfloat rotation_x;
+  gfloat rotation_y;
+  gfloat rotation_z;
+  gfloat scale_x;
+  gfloat scale_y;
+  gboolean transform_updated;
+
+  GstD3D11MSAAMode msaa;
+  gboolean msaa_updated;
 
   SRWLOCK lock;
 };
@@ -210,7 +185,8 @@ gst_d3d11_base_convert_caps_remove_format_info (GstCaps * caps)
   gint i, n;
   GstCaps *res;
   GstCapsFeatures *feature =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
 
   res = gst_caps_new_empty ();
 
@@ -247,7 +223,8 @@ gst_d3d11_base_convert_caps_rangify_size_info (GstCaps * caps)
   gint i, n;
   GstCaps *res;
   GstCapsFeatures *feature =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
 
   res = gst_caps_new_empty ();
 
@@ -290,7 +267,8 @@ gst_d3d11_base_convert_caps_remove_format_and_rangify_size_info (GstCaps * caps)
   gint i, n;
   GstCaps *res;
   GstCapsFeatures *feature =
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
 
   res = gst_caps_new_empty ();
 
@@ -386,6 +364,11 @@ gst_d3d11_base_convert_class_init (GstD3D11BaseConvertClass * klass)
 
   gst_type_mark_as_plugin_api (GST_TYPE_D3D11_BASE_CONVERT,
       (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_SAMPLING_METHOD,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_ALPHA_MODE,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_MSAA_MODE, (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -398,6 +381,14 @@ gst_d3d11_base_convert_init (GstD3D11BaseConvert * self)
   self->sampling_method = self->active_sampling_method =
       DEFAULT_SAMPLING_METHOD;
   self->src_alpha_mode = self->dst_alpha_mode = DEFAULT_ALPHA_MODE;
+  self->fov = DEFAULT_FOV;
+  self->ortho = DEFAULT_ORTHO;
+  self->rotation_x = DEFAULT_ROTATION;
+  self->rotation_y = DEFAULT_ROTATION;
+  self->rotation_z = DEFAULT_ROTATION;
+  self->scale_x = DEFAULT_SCALE;
+  self->scale_y = DEFAULT_SCALE;
+  self->msaa = DEFAULT_MSAA;
 }
 
 static void
@@ -406,6 +397,11 @@ gst_d3d11_base_convert_dispose (GObject * object)
   GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (object);
 
   gst_clear_object (&self->converter);
+  gst_clear_buffer (&self->msaa_buf);
+  if (self->msaa_pool) {
+    gst_buffer_pool_set_active (self->msaa_pool, FALSE);
+    gst_clear_object (&self->msaa_pool);
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1312,6 +1308,7 @@ static gboolean
 gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
+  GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (trans);
   GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
   GstVideoInfo info;
   GstBufferPool *pool = NULL;
@@ -1328,8 +1325,18 @@ gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
   ID3D11Device *device_handle;
 
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
-          decide_query, query))
+          decide_query, query)) {
     return FALSE;
+  }
+
+  if (self->same_caps) {
+    if (!gst_pad_peer_query (trans->srcpad, query))
+      return FALSE;
+
+    gst_query_add_allocation_meta (query,
+        GST_VIDEO_CROP_META_API_TYPE, nullptr);
+    return TRUE;
+  }
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -1386,10 +1393,7 @@ gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
     d3d11_params = gst_d3d11_allocation_params_new (filter->device, &info,
         GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
   } else {
-    /* Set bind flag */
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
-      d3d11_params->desc[i].BindFlags |= bind_flags;
-    }
+    gst_d3d11_allocation_params_set_bind_flags (d3d11_params, bind_flags);
   }
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
@@ -1440,9 +1444,8 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
   GstD3D11AllocationParams *d3d11_params;
   gboolean update_pool = FALSE;
   GstVideoInfo info;
-  guint i;
   GstD3D11Format d3d11_format;
-  guint bind_flags = D3D11_BIND_RENDER_TARGET;
+  guint bind_flags = 0;
   DXGI_FORMAT dxgi_format = DXGI_FORMAT_UNKNOWN;
   UINT supported = 0;
   HRESULT hr;
@@ -1477,11 +1480,29 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
 
   device_handle = gst_d3d11_device_get_device_handle (filter->device);
   hr = device_handle->CheckFormatSupport (dxgi_format, &supported);
-  if (gst_d3d11_result (hr, filter->device) &&
-      (supported & D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) ==
-      D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) {
-    bind_flags |= D3D11_BIND_SHADER_RESOURCE;
+  if (!gst_d3d11_result (hr, filter->device)) {
+    GST_ERROR_OBJECT (self, "CheckFormatSupport failed");
+    return FALSE;
   }
+
+  if ((supported & D3D11_FORMAT_SUPPORT_RENDER_TARGET) != 0) {
+    bind_flags |= D3D11_BIND_RENDER_TARGET;
+    if (d3d11_format.dxgi_format == DXGI_FORMAT_UNKNOWN &&
+        (supported & D3D11_FORMAT_SUPPORT_TYPED_UNORDERED_ACCESS_VIEW) != 0) {
+      bind_flags |= D3D11_BIND_UNORDERED_ACCESS;
+    }
+  } else {
+    if (d3d11_format.dxgi_format != DXGI_FORMAT_UNKNOWN &&
+        (supported & D3D11_FORMAT_SUPPORT_VIDEO_PROCESSOR_OUTPUT) != 0) {
+      bind_flags |= D3D11_BIND_RENDER_TARGET;
+    }
+
+    if ((supported & D3D11_FORMAT_SUPPORT_TYPED_UNORDERED_ACCESS_VIEW) != 0)
+      bind_flags |= D3D11_BIND_UNORDERED_ACCESS;
+  }
+
+  if ((supported & D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) != 0)
+    bind_flags |= D3D11_BIND_SHADER_RESOURCE;
 
   size = GST_VIDEO_INFO_SIZE (&info);
 
@@ -1511,10 +1532,7 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
     d3d11_params = gst_d3d11_allocation_params_new (filter->device, &info,
         GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
   } else {
-    /* Set bind flag */
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
-      d3d11_params->desc[i].BindFlags |= bind_flags;
-    }
+    gst_d3d11_allocation_params_set_bind_flags (d3d11_params, bind_flags);
   }
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
@@ -1568,6 +1586,106 @@ gst_d3d11_base_convert_needs_color_convert (GstD3D11BaseConvert * self,
   return FALSE;
 }
 
+static void
+gst_d3d11_base_convert_setup_msaa_texture (GstD3D11BaseConvert * self,
+    GstD3D11Device * device, const GstVideoInfo * info, GstCaps * caps)
+{
+  ID3D11Device *device_handle;
+  UINT quality_levels = 0;
+  UINT sample_count = 1;
+  GstD3D11Format device_format;
+  DXGI_FORMAT dxgi_format;
+  GstD3D11AllocationParams *params;
+  GstStructure *config;
+  HRESULT hr;
+
+  gst_clear_buffer (&self->msaa_buf);
+  if (self->msaa_pool) {
+    gst_buffer_pool_set_active (self->msaa_pool, FALSE);
+    gst_clear_object (&self->msaa_pool);
+  }
+
+  switch (self->msaa) {
+    case GST_D3D11_MSAA_2X:
+      sample_count = 2;
+      break;
+    case GST_D3D11_MSAA_4X:
+      sample_count = 4;
+      break;
+    case GST_D3D11_MSAA_8X:
+      sample_count = 8;
+      break;
+    default:
+      return;
+  }
+
+  if (!gst_d3d11_device_get_format (device, GST_VIDEO_INFO_FORMAT (info),
+          &device_format)) {
+    GST_WARNING_OBJECT (self, "Couldn't get device format");
+    return;
+  }
+
+  if (device_format.dxgi_format == DXGI_FORMAT_UNKNOWN ||
+      (device_format.format_support[0] &
+          D3D11_FORMAT_SUPPORT_RENDER_TARGET) == 0) {
+    GST_DEBUG_OBJECT (self,
+        "MSAA supported only for native and RTV available formats");;
+    return;
+  } else {
+    dxgi_format = device_format.dxgi_format;
+  }
+
+  device_handle = gst_d3d11_device_get_device_handle (device);
+  while (sample_count > 1) {
+    hr = device_handle->CheckMultisampleQualityLevels (dxgi_format,
+        sample_count, &quality_levels);
+    if (gst_d3d11_result (hr, device) && quality_levels > 0)
+      break;
+
+    sample_count = sample_count / 2;
+  };
+
+  if (sample_count <= 1 || quality_levels == 0) {
+    GST_DEBUG_OBJECT (self, "Device does not support MSAA for DXGI format %d",
+        dxgi_format);
+    return;
+  }
+
+  self->msaa_pool = gst_d3d11_buffer_pool_new (device);
+  config = gst_buffer_pool_get_config (self->msaa_pool);
+
+  params = gst_d3d11_allocation_params_new (device, info,
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_RENDER_TARGET, 0);
+  gst_d3d11_allocation_params_set_sample_desc (params,
+      sample_count, quality_levels - 1);
+
+  gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
+  gst_d3d11_allocation_params_free (params);
+
+  gst_buffer_pool_config_set_params (config, caps, info->size, 0, 0);
+  if (!gst_buffer_pool_set_config (self->msaa_pool, config)) {
+    GST_ERROR_OBJECT (self, "Couldn't set pool config");
+    gst_clear_object (&self->msaa_pool);
+    return;
+  }
+
+  if (!gst_buffer_pool_set_active (self->msaa_pool, TRUE)) {
+    GST_ERROR_OBJECT (self, "Pool active failed");
+    gst_clear_object (&self->msaa_pool);
+    return;
+  }
+
+  gst_buffer_pool_acquire_buffer (self->msaa_pool, &self->msaa_buf, nullptr);
+  if (!self->msaa_buf) {
+    GST_ERROR_OBJECT (self, "Couldn't acquire MSAA buffer");
+    gst_buffer_pool_set_active (self->msaa_pool, FALSE);
+    gst_clear_object (&self->msaa_pool);
+    return;
+  }
+
+  GST_DEBUG_OBJECT (self, "MSAA %dx buffer is configured", sample_count);
+}
+
 static gboolean
 gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
@@ -1578,7 +1696,9 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   gint border_offset_x = 0;
   gint border_offset_y = 0;
   gboolean need_flip = FALSE;
+  gboolean need_transform = FALSE;
   gint in_width, in_height, in_par_n, in_par_d;
+  gint out_width, out_height;
   GstStructure *config;
 
   GstD3D11SRWLockGuard lk (&self->lock);
@@ -1588,6 +1708,9 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   self->active_primaries_mode = self->primaries_mode;
   self->active_sampling_method = self->sampling_method;
 
+  self->transform_updated = FALSE;
+  self->msaa_updated = FALSE;
+
   GST_DEBUG_OBJECT (self, "method %d, add-borders %d, gamma-mode %d, "
       "primaries-mode %d, sampling %d", self->active_method,
       self->active_add_borders, self->active_gamma_mode,
@@ -1596,7 +1719,10 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   if (self->active_method != GST_VIDEO_ORIENTATION_IDENTITY)
     need_flip = TRUE;
 
-  if (!need_flip && gst_caps_is_equal (incaps, outcaps)) {
+  need_transform = gst_d3d11_need_transform (self->rotation_x, self->rotation_y,
+      self->rotation_z, self->scale_x, self->scale_y);
+
+  if (!need_flip && !need_transform && gst_caps_is_equal (incaps, outcaps)) {
     self->same_caps = TRUE;
   } else {
     self->same_caps = FALSE;
@@ -1672,7 +1798,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
 
   if (in_width == out_info->width && in_height == out_info->height
       && in_info->finfo == out_info->finfo && self->borders_w == 0 &&
-      self->borders_h == 0 && !need_flip &&
+      self->borders_h == 0 && !need_flip && !need_transform &&
       !gst_d3d11_base_convert_needs_color_convert (self, in_info, out_info)) {
     self->same_caps = TRUE;
   }
@@ -1684,8 +1810,13 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       GST_TYPE_VIDEO_PRIMARIES_MODE, self->active_primaries_mode,
       GST_D3D11_CONVERTER_OPT_SAMPLER_FILTER,
       GST_TYPE_D3D11_CONVERTER_SAMPLER_FILTER,
-      gst_d3d11_base_convert_sampling_method_to_filter
-      (self->active_sampling_method), nullptr);
+      gst_d3d11_sampling_method_to_native
+      (self->active_sampling_method),
+      GST_D3D11_CONVERTER_OPT_SRC_ALPHA_MODE,
+      GST_TYPE_D3D11_CONVERTER_ALPHA_MODE,
+      self->src_alpha_mode,
+      GST_D3D11_CONVERTER_OPT_DEST_ALPHA_MODE,
+      GST_TYPE_D3D11_CONVERTER_ALPHA_MODE, self->dst_alpha_mode, nullptr);
 
   self->converter = gst_d3d11_converter_new (filter->device, in_info, out_info,
       config);
@@ -1726,18 +1857,32 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     self->out_rect.bottom = GST_VIDEO_INFO_HEIGHT (out_info);
   }
 
+  out_width = self->out_rect.right - self->out_rect.left;
+  out_height = self->out_rect.bottom - self->out_rect.top;
+
   g_object_set (self->converter, "dest-x", (gint) self->out_rect.left,
       "dest-y", (gint) self->out_rect.top,
-      "dest-width", (gint) (self->out_rect.right - self->out_rect.left),
-      "dest-height", (gint) (self->out_rect.bottom - self->out_rect.top),
-      "video-direction", self->active_method,
-      "src-alpha-mode", self->src_alpha_mode,
-      "dest-alpha-mode", self->dst_alpha_mode, nullptr);
+      "dest-width", out_width, "dest-height", out_height, nullptr);
 
-  if (self->borders_w > 0 || self->borders_h > 0) {
+  if (need_transform) {
+    GST_DEBUG_OBJECT (self, "Applying custom transform");
+
+    gst_d3d11_converter_apply_transform (self->converter, self->active_method,
+        (gfloat) out_width, (gfloat) out_height, self->fov,
+        self->ortho, self->rotation_x, self->rotation_y,
+        self->rotation_z, self->scale_x, self->scale_y);
+  } else {
+    g_object_set (self->converter,
+        "video-direction", self->active_method, nullptr);
+  }
+
+  if (self->borders_w > 0 || self->borders_h > 0 || need_transform) {
     g_object_set (self->converter, "fill-border", TRUE, "border-color",
         self->border_color, nullptr);
   }
+
+  gst_d3d11_base_convert_setup_msaa_texture (self, filter->device,
+      out_info, outcaps);
 
   return TRUE;
 }
@@ -1919,8 +2064,8 @@ gst_d3d11_base_convert_need_convert (GstD3D11BaseConvert * self)
   if (!self->same_caps)
     return TRUE;
 
-  if (self->src_alpha_mode == GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED ||
-      self->dst_alpha_mode == GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED) {
+  if (self->src_alpha_mode == GST_D3D11_ALPHA_MODE_PREMULTIPLIED ||
+      self->dst_alpha_mode == GST_D3D11_ALPHA_MODE_PREMULTIPLIED) {
     return TRUE;
   }
 
@@ -2021,7 +2166,8 @@ gst_d3d11_base_convert_before_transform (GstBaseTransform * trans,
       self->add_borders != self->active_add_borders ||
       self->gamma_mode != self->active_gamma_mode ||
       self->primaries_mode != self->active_primaries_mode ||
-      self->sampling_method != self->active_sampling_method) {
+      self->sampling_method != self->active_sampling_method ||
+      self->transform_updated || self->msaa_updated) {
     update = TRUE;
   }
   ReleaseSRWLockExclusive (&self->lock);
@@ -2057,8 +2203,12 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
   GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (trans);
+  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
   RECT in_rect;
   GstVideoCropMeta *crop_meta;
+  GstD3D11Device *device = filter->device;
+  GstBuffer *target_buf;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   crop_meta = gst_buffer_get_video_crop_meta (inbuf);
   if (crop_meta) {
@@ -2084,13 +2234,64 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
         "src-height", (gint) in_rect.bottom - in_rect.top, nullptr);
   }
 
-  if (!gst_d3d11_converter_convert_buffer (self->converter, inbuf, outbuf)) {
-    GST_ELEMENT_ERROR (self, CORE, FAILED, (nullptr),
-        ("Couldn't convert texture"));
-    return GST_FLOW_ERROR;
+  target_buf = self->msaa_buf ? self->msaa_buf : outbuf;
+
+  gst_d3d11_device_lock (device);
+  if (!gst_d3d11_converter_convert_buffer_unlocked (self->converter,
+          inbuf, target_buf)) {
+    ret = GST_FLOW_ERROR;
   }
 
-  return GST_FLOW_OK;
+  if (ret == GST_FLOW_OK && target_buf == self->msaa_buf) {
+    guint num_memory = gst_buffer_n_memory (self->msaa_buf);
+    ID3D11DeviceContext *context =
+        gst_d3d11_device_get_device_context_handle (device);
+
+    for (guint i = 0; i < num_memory; i++) {
+      GstMemory *src_mem;
+      GstMemory *dst_mem;
+      GstD3D11Memory *dst_dmem;
+      GstMapInfo src_map, dst_map;
+      guint subresource_idx;
+      D3D11_TEXTURE2D_DESC desc;
+
+      src_mem = gst_buffer_peek_memory (self->msaa_buf, i);
+      dst_mem = gst_buffer_peek_memory (outbuf, i);
+      dst_dmem = GST_D3D11_MEMORY_CAST (dst_mem);
+
+      subresource_idx = gst_d3d11_memory_get_subresource_index (dst_dmem);
+      gst_d3d11_memory_get_texture_desc (dst_dmem, &desc);
+
+      if (!gst_memory_map (src_mem, &src_map,
+              (GstMapFlags) (GST_MAP_D3D11 | GST_MAP_READ))) {
+        GST_ERROR_OBJECT (self, "Couldn't map src mem");
+        ret = GST_FLOW_ERROR;
+        break;
+      }
+
+      if (!gst_memory_map (dst_mem, &dst_map,
+              (GstMapFlags) (GST_MAP_D3D11 | GST_MAP_WRITE))) {
+        GST_ERROR_OBJECT (self, "Couldn't map dst mem");
+        gst_memory_unmap (src_mem, &src_map);
+        ret = GST_FLOW_ERROR;
+        break;
+      }
+
+      context->ResolveSubresource ((ID3D11Resource *) dst_map.data,
+          subresource_idx, (ID3D11Resource *) src_map.data, 0, desc.Format);
+
+      gst_memory_unmap (dst_mem, &dst_map);
+      gst_memory_unmap (src_mem, &src_map);
+    }
+  }
+  gst_d3d11_device_unlock (device);
+
+  if (ret != GST_FLOW_OK) {
+    GST_ELEMENT_ERROR (self, CORE, FAILED, (nullptr),
+        ("Couldn't convert texture"));
+  }
+
+  return ret;
 }
 
 static void
@@ -2191,9 +2392,8 @@ gst_d3d11_base_convert_set_sampling_method (GstD3D11BaseConvert * self,
 {
   GstD3D11SRWLockGuard lk (&self->lock);
 
-  GST_DEBUG_OBJECT (self, "Sampling method %s -> %s",
-      gst_d3d11_sampling_methods[self->sampling_method].value_nick,
-      gst_d3d11_sampling_methods[method].value_nick);
+  GST_DEBUG_OBJECT (self,
+      "Sampling method %d -> %d", self->sampling_method, method);
 
   self->sampling_method = method;
   if (self->sampling_method != self->active_sampling_method)
@@ -2202,24 +2402,126 @@ gst_d3d11_base_convert_set_sampling_method (GstD3D11BaseConvert * self,
 
 static void
 gst_d3d11_base_convert_set_src_alpha_mode (GstD3D11BaseConvert * self,
-    GstD3D11ConverterAlphaMode mode)
+    GstD3D11AlphaMode mode)
 {
   GstD3D11SRWLockGuard lk (&self->lock);
 
-  self->src_alpha_mode = mode;
-  if (self->converter)
-    g_object_set (self->converter, "src-alpha-mode", mode, nullptr);
+  if (self->src_alpha_mode != mode) {
+    self->src_alpha_mode = mode;
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+  }
 }
 
 static void
 gst_d3d11_base_convert_set_dst_alpha_mode (GstD3D11BaseConvert * self,
-    GstD3D11ConverterAlphaMode mode)
+    GstD3D11AlphaMode mode)
 {
   GstD3D11SRWLockGuard lk (&self->lock);
 
-  self->dst_alpha_mode = mode;
-  if (self->converter)
-    g_object_set (self->converter, "dest-alpha-mode", mode, nullptr);
+  if (self->dst_alpha_mode != mode) {
+    self->dst_alpha_mode = mode;
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+  }
+}
+
+static void
+gst_d3d11_base_convert_set_fov (GstD3D11BaseConvert * self, gfloat fov)
+{
+  GstD3D11SRWLockGuard lk (&self->lock);
+
+  if (self->fov != fov) {
+    self->fov = fov;
+    self->transform_updated = TRUE;
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+  }
+}
+
+static void
+gst_d3d11_base_convert_set_ortho (GstD3D11BaseConvert * self, gboolean ortho)
+{
+  GstD3D11SRWLockGuard lk (&self->lock);
+
+  if (self->ortho != ortho) {
+    self->ortho = ortho;
+    self->transform_updated = TRUE;
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+  }
+}
+
+static void
+gst_d3d11_base_convert_set_rotation_x (GstD3D11BaseConvert * self,
+    gfloat rotation_x)
+{
+  GstD3D11SRWLockGuard lk (&self->lock);
+
+  if (self->rotation_x != rotation_x) {
+    self->rotation_x = rotation_x;
+    self->transform_updated = TRUE;
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+  }
+}
+
+static void
+gst_d3d11_base_convert_set_rotation_y (GstD3D11BaseConvert * self,
+    gfloat rotation_y)
+{
+  GstD3D11SRWLockGuard lk (&self->lock);
+
+  if (self->rotation_y != rotation_y) {
+    self->rotation_y = rotation_y;
+    self->transform_updated = TRUE;
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+  }
+}
+
+static void
+gst_d3d11_base_convert_set_rotation_z (GstD3D11BaseConvert * self,
+    gfloat rotation_z)
+{
+  GstD3D11SRWLockGuard lk (&self->lock);
+
+  if (self->rotation_z != rotation_z) {
+    self->rotation_z = rotation_z;
+    self->transform_updated = TRUE;
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+  }
+}
+
+static void
+gst_d3d11_base_convert_set_scale_x (GstD3D11BaseConvert * self, gfloat scale_x)
+{
+  GstD3D11SRWLockGuard lk (&self->lock);
+
+  if (self->scale_x != scale_x) {
+    self->scale_x = scale_x;
+    self->transform_updated = TRUE;
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+  }
+}
+
+static void
+gst_d3d11_base_convert_set_scale_y (GstD3D11BaseConvert * self, gfloat scale_y)
+{
+  GstD3D11SRWLockGuard lk (&self->lock);
+
+  if (self->scale_y != scale_y) {
+    self->scale_y = scale_y;
+    self->transform_updated = TRUE;
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+  }
+}
+
+static void
+gst_d3d11_base_convert_set_msaa (GstD3D11BaseConvert * self,
+    GstD3D11MSAAMode msaa)
+{
+  GstD3D11SRWLockGuard lk (&self->lock);
+
+  if (self->msaa != msaa) {
+    self->msaa = msaa;
+    self->msaa_updated = TRUE;
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+  }
 }
 
 /**
@@ -2256,6 +2558,14 @@ enum
   PROP_CONVERT_PRIMARIES_MODE,
   PROP_CONVERT_SRC_ALPHA_MODE,
   PROP_CONVERT_DEST_ALPHA_MODE,
+  PROP_CONVERT_FOV,
+  PROP_CONVERT_ORTHO,
+  PROP_CONVERT_ROTATION_X,
+  PROP_CONVERT_ROTATION_Y,
+  PROP_CONVERT_ROTATION_Z,
+  PROP_CONVERT_SCALE_X,
+  PROP_CONVERT_SCALE_Y,
+  PROP_CONVERT_MSAA,
 };
 
 struct _GstD3D11Convert
@@ -2364,7 +2674,7 @@ gst_d3d11_convert_class_init (GstD3D11ConvertClass * klass)
   g_object_class_install_property (gobject_class, PROP_CONVERT_SRC_ALPHA_MODE,
       g_param_spec_enum ("src-alpha-mode", "Src Alpha Mode",
           "Applied input alpha mode",
-          GST_TYPE_D3D11_CONVERTER_ALPHA_MODE, DEFAULT_ALPHA_MODE,
+          GST_TYPE_D3D11_ALPHA_MODE, DEFAULT_ALPHA_MODE,
           (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -2379,7 +2689,120 @@ gst_d3d11_convert_class_init (GstD3D11ConvertClass * klass)
   g_object_class_install_property (gobject_class, PROP_CONVERT_DEST_ALPHA_MODE,
       g_param_spec_enum ("dest-alpha-mode", "Dest Alpha Mode",
           "Output alpha mode to be applied",
-          GST_TYPE_D3D11_CONVERTER_ALPHA_MODE, DEFAULT_ALPHA_MODE,
+          GST_TYPE_D3D11_ALPHA_MODE, DEFAULT_ALPHA_MODE,
+          (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11Convert:fov:
+   *
+   * Field of view angle in degrees
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_CONVERT_FOV,
+      g_param_spec_float ("fov", "Fov",
+          "Field of view angle in degrees",
+          0, G_MAXFLOAT, DEFAULT_FOV,
+          (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11Convert:ortho:
+   *
+   * Use orthographic projection
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_CONVERT_ORTHO,
+      g_param_spec_boolean ("ortho", "Orthographic",
+          "Use orthographic projection", DEFAULT_ORTHO,
+          (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11Convert:rotation-x:
+   *
+   * x-axis rotation angle to be applied prior to "video-direction"
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_CONVERT_ROTATION_X,
+      g_param_spec_float ("rotation-x", "Rotation X",
+          "x-axis rotation angle in degrees",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_ROTATION,
+          (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11Convert:rotation-y:
+   *
+   * y-axis rotation angle to be applied prior to "video-direction"
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_CONVERT_ROTATION_Y,
+      g_param_spec_float ("rotation-y", "Rotation Y",
+          "y-axis rotation angle in degrees",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_ROTATION,
+          (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11Convert:rotation-z:
+   *
+   * z-axis rotation angle to be applied prior to "video-direction"
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_CONVERT_ROTATION_Z,
+      g_param_spec_float ("rotation-z", "Rotation Z",
+          "z-axis rotation angle in degrees",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_ROTATION,
+          (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11Convert:scale-x:
+   *
+   * Scale multiplier for x-axis
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_CONVERT_SCALE_X,
+      g_param_spec_float ("scale-x", "Scale X",
+          "Scale multiplier for x-axis",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_SCALE,
+          (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11Convert:scale-y:
+   *
+   * Scale multiplier for y-axis
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_CONVERT_SCALE_Y,
+      g_param_spec_float ("scale-y", "Scale Y",
+          "Scale multiplier for y-axis",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_SCALE,
+          (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11Convert:msaa:
+   *
+   * MSAA (Multi-Sampling Anti-Aliasing) level
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_CONVERT_MSAA,
+      g_param_spec_enum ("msaa", "MSAA",
+          "MSAA (Multi-Sampling Anti-Aliasing) level. "
+          "This value will be ignored if device does not support the specified "
+          "level for negotiated output format",
+          GST_TYPE_D3D11_MSAA_MODE, DEFAULT_MSAA,
           (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -2426,11 +2849,36 @@ gst_d3d11_convert_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CONVERT_SRC_ALPHA_MODE:
       gst_d3d11_base_convert_set_src_alpha_mode (base,
-          (GstD3D11ConverterAlphaMode) g_value_get_enum (value));
+          (GstD3D11AlphaMode) g_value_get_enum (value));
       break;
     case PROP_CONVERT_DEST_ALPHA_MODE:
       gst_d3d11_base_convert_set_dst_alpha_mode (base,
-          (GstD3D11ConverterAlphaMode) g_value_get_enum (value));
+          (GstD3D11AlphaMode) g_value_get_enum (value));
+      break;
+    case PROP_CONVERT_FOV:
+      gst_d3d11_base_convert_set_fov (base, g_value_get_float (value));
+      break;
+    case PROP_CONVERT_ORTHO:
+      gst_d3d11_base_convert_set_ortho (base, g_value_get_boolean (value));
+      break;
+    case PROP_CONVERT_ROTATION_X:
+      gst_d3d11_base_convert_set_rotation_x (base, g_value_get_float (value));
+      break;
+    case PROP_CONVERT_ROTATION_Y:
+      gst_d3d11_base_convert_set_rotation_y (base, g_value_get_float (value));
+      break;
+    case PROP_CONVERT_ROTATION_Z:
+      gst_d3d11_base_convert_set_rotation_z (base, g_value_get_float (value));
+      break;
+    case PROP_CONVERT_SCALE_X:
+      gst_d3d11_base_convert_set_scale_x (base, g_value_get_float (value));
+      break;
+    case PROP_CONVERT_SCALE_Y:
+      gst_d3d11_base_convert_set_scale_y (base, g_value_get_float (value));
+      break;
+    case PROP_CONVERT_MSAA:
+      gst_d3d11_base_convert_set_msaa (base,
+          (GstD3D11MSAAMode) g_value_get_enum (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2465,6 +2913,30 @@ gst_d3d11_convert_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CONVERT_DEST_ALPHA_MODE:
       g_value_set_enum (value, base->dst_alpha_mode);
+      break;
+    case PROP_CONVERT_FOV:
+      g_value_set_float (value, base->fov);
+      break;
+    case PROP_CONVERT_ORTHO:
+      g_value_set_boolean (value, base->ortho);
+      break;
+    case PROP_CONVERT_ROTATION_X:
+      g_value_set_float (value, base->rotation_x);
+      break;
+    case PROP_CONVERT_ROTATION_Y:
+      g_value_set_float (value, base->rotation_y);
+      break;
+    case PROP_CONVERT_ROTATION_Z:
+      g_value_set_float (value, base->rotation_z);
+      break;
+    case PROP_CONVERT_SCALE_X:
+      g_value_set_float (value, base->scale_x);
+      break;
+    case PROP_CONVERT_SCALE_Y:
+      g_value_set_float (value, base->scale_y);
+      break;
+    case PROP_CONVERT_MSAA:
+      g_value_set_enum (value, base->msaa);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2588,7 +3060,7 @@ gst_d3d11_color_convert_class_init (GstD3D11ColorConvertClass * klass)
       PROP_COLOR_CONVERT_SRC_ALPHA_MODE,
       g_param_spec_enum ("src-alpha-mode", "Src Alpha Mode",
           "Applied input alpha mode",
-          GST_TYPE_D3D11_CONVERTER_ALPHA_MODE, DEFAULT_ALPHA_MODE,
+          GST_TYPE_D3D11_ALPHA_MODE, DEFAULT_ALPHA_MODE,
           (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -2604,7 +3076,7 @@ gst_d3d11_color_convert_class_init (GstD3D11ColorConvertClass * klass)
       PROP_COLOR_CONVERT_DEST_ALPHA_MODE,
       g_param_spec_enum ("dest-alpha-mode", "Dest Alpha Mode",
           "Output alpha mode to be applied",
-          GST_TYPE_D3D11_CONVERTER_ALPHA_MODE, DEFAULT_ALPHA_MODE,
+          GST_TYPE_D3D11_ALPHA_MODE, DEFAULT_ALPHA_MODE,
           (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -2642,11 +3114,11 @@ gst_d3d11_color_convert_set_property (GObject * object, guint prop_id,
       break;
     case PROP_COLOR_CONVERT_SRC_ALPHA_MODE:
       gst_d3d11_base_convert_set_src_alpha_mode (base,
-          (GstD3D11ConverterAlphaMode) g_value_get_enum (value));
+          (GstD3D11AlphaMode) g_value_get_enum (value));
       break;
     case PROP_COLOR_CONVERT_DEST_ALPHA_MODE:
       gst_d3d11_base_convert_set_dst_alpha_mode (base,
-          (GstD3D11ConverterAlphaMode) g_value_get_enum (value));
+          (GstD3D11AlphaMode) g_value_get_enum (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

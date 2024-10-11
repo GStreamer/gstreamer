@@ -521,7 +521,6 @@ static GstBuffer *gst_audio_aggregator_do_clip (GstAggregator * agg,
     GstAggregatorPad * bpad, GstBuffer * buffer);
 static GstFlowReturn gst_audio_aggregator_aggregate (GstAggregator * agg,
     gboolean timeout);
-static gboolean sync_pad_values (GstElement * aagg, GstPad * pad, gpointer ud);
 static gboolean gst_audio_aggregator_negotiated_src_caps (GstAggregator * agg,
     GstCaps * caps);
 static GstFlowReturn
@@ -638,12 +637,24 @@ gst_audio_aggregator_recalculate_latency (GstAudioAggregator * aagg)
   GST_OBJECT_UNLOCK (aagg);
 }
 
+
+static void
+gst_audio_aggregator_constructed (GObject * object)
+{
+  GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (object);
+
+  gst_audio_aggregator_translate_output_buffer_duration (aagg,
+      DEFAULT_OUTPUT_BUFFER_DURATION);
+  gst_audio_aggregator_recalculate_latency (aagg);
+}
+
 static void
 gst_audio_aggregator_class_init (GstAudioAggregatorClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstAggregatorClass *gstaggregator_class = (GstAggregatorClass *) klass;
 
+  gobject_class->constructed = gst_audio_aggregator_constructed;
   gobject_class->set_property = gst_audio_aggregator_set_property;
   gobject_class->get_property = gst_audio_aggregator_get_property;
   gobject_class->dispose = gst_audio_aggregator_dispose;
@@ -759,14 +770,11 @@ gst_audio_aggregator_init (GstAudioAggregator * aagg)
   aagg->priv->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
   aagg->priv->discont_wait = DEFAULT_DISCONT_WAIT;
 
-  gst_audio_aggregator_translate_output_buffer_duration (aagg,
-      DEFAULT_OUTPUT_BUFFER_DURATION);
-  gst_audio_aggregator_recalculate_latency (aagg);
-
   aagg->current_caps = NULL;
 
   aagg->priv->selected_samples_info =
-      gst_structure_new_empty ("GstAudioAggregatorSelectedSamplesInfo");
+      gst_structure_new_static_str_empty
+      ("GstAudioAggregatorSelectedSamplesInfo");
 
   g_queue_init (&aagg->priv->messages);
 }
@@ -972,7 +980,7 @@ gst_audio_aggregator_convert_sink_getcaps (GstPad * pad, GstAggregator * agg,
     GST_INFO_OBJECT (pad, "first configured pad has sample rate %d",
         first_configured_pad->info.rate);
     sink_template_caps = gst_caps_make_writable (sink_template_caps);
-    gst_caps_set_simple (sink_template_caps, "rate", G_TYPE_INT,
+    gst_caps_set_simple_static_str (sink_template_caps, "rate", G_TYPE_INT,
         first_configured_pad->info.rate, NULL);
     gst_object_unref (first_configured_pad);
   }
@@ -998,9 +1006,9 @@ gst_audio_aggregator_convert_sink_getcaps (GstPad * pad, GstAggregator * agg,
     for (i = 0; i < n; i++) {
       GstStructure *s = gst_caps_get_structure (tmp, i);
       GstStructure *new_s =
-          gst_structure_new_empty (gst_structure_get_name (s));
-      gst_structure_set_value (new_s, "rate", gst_structure_get_value (s,
-              "rate"));
+          gst_structure_new_id_str_empty (gst_structure_get_name_id_str (s));
+      gst_structure_set_value_static_str (new_s, "rate",
+          gst_structure_get_value (s, "rate"));
       sink_caps = gst_caps_merge_structure (sink_caps, new_s);
     }
     gst_caps_unref (tmp);
@@ -1062,7 +1070,8 @@ gst_audio_aggregator_sink_setcaps (GstAudioAggregatorPad * aaggpad,
     /* Returns NULL if there is no downstream peer */
     if (downstream_caps) {
       GstCaps *rate_caps =
-          gst_caps_new_simple ("audio/x-raw", "rate", G_TYPE_INT, info.rate,
+          gst_caps_new_simple_static_str ("audio/x-raw", "rate", G_TYPE_INT,
+          info.rate,
           NULL);
 
       gst_caps_set_features_simple (rate_caps,
@@ -1164,7 +1173,8 @@ gst_audio_aggregator_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
               NULL)) {
         mask = gst_audio_channel_get_fallback_mask (channels);
       }
-      gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK, mask, NULL);
+      gst_structure_set_static_str (s, "channel-mask", GST_TYPE_BITMASK, mask,
+          NULL);
     }
 
     gst_caps_unref (first_configured_caps);
@@ -1182,7 +1192,8 @@ gst_audio_aggregator_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
 
     if (gst_structure_get_int (s, "channels", &channels) && channels > 2) {
       if (!gst_structure_has_field_typed (s, "channel-mask", GST_TYPE_BITMASK))
-        gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK, 0ULL, NULL);
+        gst_structure_set_static_str (s, "channel-mask", GST_TYPE_BITMASK, 0ULL,
+            NULL);
     }
   }
 
@@ -1784,7 +1795,7 @@ gst_audio_aggregator_post_messages (GstAudioAggregator * aagg)
     while ((msg = g_queue_pop_head (&aagg->priv->messages))) {
       if (is_live) {
         GstStructure *s = gst_message_writable_structure (msg);
-        gst_structure_set (s, "live", G_TYPE_BOOLEAN, TRUE, NULL);
+        gst_structure_set_static_str (s, "live", G_TYPE_BOOLEAN, TRUE, NULL);
       }
 
       gst_element_post_message (e, msg);
@@ -1798,6 +1809,7 @@ gst_audio_aggregator_post_messages (GstAudioAggregator * aagg)
  * Replace the current buffer with input and update GstAudioAggregatorPadPrivate
  * values.
  */
+#define ABSDIFF(a, b) ((a) > (b) ? (a) - (b) : (b) - (a))
 static gboolean
 gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
     GstAudioAggregatorPad * pad)
@@ -1865,12 +1877,13 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
     pad->priv->new_segment = FALSE;
   } else {
     guint64 diff, max_sample_diff;
+    GstClockTime expected_time;
 
     /* Check discont, based on audiobasesink */
-    if (start_offset <= pad->priv->next_offset)
-      diff = pad->priv->next_offset - start_offset;
-    else
-      diff = start_offset - pad->priv->next_offset;
+    diff = ABSDIFF (pad->priv->next_offset, start_offset);
+
+    expected_time =
+        gst_util_uint64_scale (pad->priv->next_offset, GST_SECOND, rate);
 
     max_sample_diff =
         gst_util_uint64_scale_int (aagg->priv->alignment_threshold, rate,
@@ -1880,8 +1893,11 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
     if (G_UNLIKELY (diff >= max_sample_diff)) {
       if (aagg->priv->discont_wait > 0) {
         if (pad->priv->discont_time == GST_CLOCK_TIME_NONE) {
-          pad->priv->discont_time = start_time;
-        } else if (start_time - pad->priv->discont_time >=
+          if (ABSDIFF (expected_time, start_time) >= aagg->priv->discont_wait)
+            discont = TRUE;
+          else
+            pad->priv->discont_time = expected_time;
+        } else if (ABSDIFF (start_time, pad->priv->discont_time) >=
             aagg->priv->discont_wait) {
           discont = TRUE;
           pad->priv->discont_time = GST_CLOCK_TIME_NONE;
@@ -2038,6 +2054,8 @@ done:
   return TRUE;
 }
 
+#undef ABSDIFF
+
 /* Called with pad object lock held */
 
 static gboolean
@@ -2135,30 +2153,6 @@ gst_audio_aggregator_create_output_buffer (GstAudioAggregator * aagg,
   return outbuf;
 }
 
-static gboolean
-sync_pad_values (GstElement * aagg, GstPad * pad, gpointer user_data)
-{
-  GstAudioAggregatorPad *aapad = GST_AUDIO_AGGREGATOR_PAD (pad);
-  GstAggregatorPad *bpad = GST_AGGREGATOR_PAD_CAST (pad);
-  GstClockTime timestamp, stream_time;
-
-  if (aapad->priv->buffer == NULL)
-    return TRUE;
-
-  timestamp = GST_BUFFER_PTS (aapad->priv->buffer);
-  GST_OBJECT_LOCK (bpad);
-  stream_time = gst_segment_to_stream_time (&bpad->segment, GST_FORMAT_TIME,
-      timestamp);
-  GST_OBJECT_UNLOCK (bpad);
-
-  /* sync object properties on stream time */
-  /* TODO: Ideally we would want to do that on every sample */
-  if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (GST_OBJECT_CAST (pad), stream_time);
-
-  return TRUE;
-}
-
 static GstSample *
 gst_audio_aggregator_peek_next_sample (GstAggregator * agg,
     GstAggregatorPad * aggpad)
@@ -2172,7 +2166,7 @@ gst_audio_aggregator_peek_next_sample (GstAggregator * agg,
       aagg->priv->offset + aagg->priv->samples_per_buffer) {
     GstCaps *caps = gst_pad_get_current_caps (GST_PAD (aggpad));
     GstStructure *info =
-        gst_structure_new ("GstAudioAggregatorPadNextSampleInfo",
+        gst_structure_new_static_str ("GstAudioAggregatorPadNextSampleInfo",
         "output-offset", G_TYPE_UINT64, pad->priv->output_offset,
         "position", G_TYPE_UINT, pad->priv->position,
         "size", G_TYPE_UINT, pad->priv->size,
@@ -2184,6 +2178,18 @@ gst_audio_aggregator_peek_next_sample (GstAggregator * agg,
   }
 
   return sample;
+}
+
+static gboolean
+sync_pad_values (GstElement * aagg, GstPad * pad, gpointer user_data)
+{
+  gint64 *outbuf_stream_time = user_data;
+
+  /* sync object properties on stream time */
+  if (GST_CLOCK_TIME_IS_VALID (*outbuf_stream_time))
+    gst_object_sync_values (GST_OBJECT_CAST (pad), *outbuf_stream_time);
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -2216,6 +2222,8 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   GstElement *element;
   GstAudioAggregator *aagg;
   GList *iter;
+  GstPad **sinkpads;
+  guint n_sinkpads, i;
   GstFlowReturn ret;
   GstBuffer *outbuf = NULL;
   gint64 next_offset;
@@ -2227,12 +2235,10 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   guint blocksize;
   GstAudioAggregatorPad *srcpad = GST_AUDIO_AGGREGATOR_PAD (agg->srcpad);
   GstSegment *agg_segment = &GST_AGGREGATOR_PAD (agg->srcpad)->segment;
+  GstClockTime outbuf_stream_time;
 
   element = GST_ELEMENT (agg);
   aagg = GST_AUDIO_AGGREGATOR (agg);
-
-  /* Sync pad properties to the stream time */
-  gst_element_foreach_sink_pad (element, sync_pad_values, NULL);
 
   GST_AUDIO_AGGREGATOR_LOCK (aagg);
   GST_OBJECT_LOCK (agg);
@@ -2454,7 +2460,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   gst_audio_aggregator_post_messages (aagg);
 
   {
-    gst_structure_set (aagg->priv->selected_samples_info, "offset",
+    gst_structure_set_static_str (aagg->priv->selected_samples_info, "offset",
         G_TYPE_UINT64, aagg->priv->offset, "frames", G_TYPE_UINT, blocksize,
         NULL);
     gst_aggregator_selected_samples (agg, agg_segment->position,
@@ -2462,10 +2468,30 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
         aagg->priv->selected_samples_info);
   }
 
+  /* Calculate the stream time of the output buffer using its PTS. See below
+   * near gst_aggregator_finish_buffer() for the calculation for that. */
+  if (agg_segment->rate > 0.0) {
+    outbuf_stream_time = gst_segment_to_stream_time (agg_segment,
+        GST_FORMAT_TIME, agg_segment->position);
+  } else {
+    outbuf_stream_time = gst_segment_to_stream_time (agg_segment,
+        GST_FORMAT_TIME, next_timestamp);
+  }
+
+  /* Sync pad properties to the stream time */
+  gst_element_foreach_sink_pad (element, sync_pad_values, &outbuf_stream_time);
+
   GST_OBJECT_LOCK (agg);
-  for (iter = element->sinkpads; iter; iter = iter->next) {
-    GstAudioAggregatorPad *pad = (GstAudioAggregatorPad *) iter->data;
-    GstAggregatorPad *aggpad = (GstAggregatorPad *) iter->data;
+  // mix_buffer() will shortly release the object lock so we need to
+  // ensure that the pad list stays valid.
+  n_sinkpads = element->numsinkpads;
+  sinkpads = g_newa (GstPad *, n_sinkpads + 1);
+  for (i = 0, iter = element->sinkpads; iter; i++, iter = iter->next)
+    sinkpads[i] = gst_object_ref (iter->data);
+
+  for (i = 0; i < n_sinkpads; i++) {
+    GstAudioAggregatorPad *pad = (GstAudioAggregatorPad *) sinkpads[i];
+    GstAggregatorPad *aggpad = (GstAggregatorPad *) sinkpads[i];
 
     if (gst_aggregator_pad_is_inactive (aggpad))
       continue;
@@ -2496,6 +2522,9 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     GST_OBJECT_UNLOCK (pad);
   }
   GST_OBJECT_UNLOCK (agg);
+
+  for (i = 0; i < n_sinkpads; i++)
+    gst_object_unref (sinkpads[i]);
 
   if (dropped) {
     /* We dropped a buffer, retry */

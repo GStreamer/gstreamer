@@ -27,9 +27,15 @@
  * objects and prints a list of leaks to the debug log under `GST_TRACER:7` when
  * gst_deinit() is called, and also prints a g_warning().
  *
- * Starting with GStreamer 1.18, you can also use action signals on the tracer
+ * Starting with GStreamer 1.18, you can also use GObject action signals on the tracer
  * object to fetch leak information. Use gst_tracing_get_active_tracers() to
  * get a list of all active tracers and find the right one by name.
+ *
+ * If the `GST_LEAKS_TRACER_SIG` env variable is defined, you can use the
+ * following POSIX signals to interact with the leaks tracer:
+ * - SIGUSR1: log alive objects
+ * - SIGUSR2: create a checkpoint and print a list of objects created and
+ *   destroyed since the previous checkpoint.
  *
  * You can activate this tracer in the usual way by adding the string 'leaks'
  * to the environment variable `GST_TRACERS`. Such as: `GST_TRACERS=leaks`

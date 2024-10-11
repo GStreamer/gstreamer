@@ -25,6 +25,7 @@
 #include <string>
 #include "gstdwrite-utils.h"
 #include "gstdwrite-enums.h"
+#include <vector>
 
 G_BEGIN_DECLS
 
@@ -57,14 +58,17 @@ struct _GstDWriteBaseOverlayClass
   gboolean     (*sink_event) (GstDWriteBaseOverlay * overlay,
                               GstEvent * event);
 
-  gboolean     (*start)      (GstDWriteBaseOverlay * overlay);
-
   WString      (*get_text)   (GstDWriteBaseOverlay * overlay,
                               const std::wstring & default_text,
                               GstBuffer * buffer);
+
+  void         (*after_transform) (GstDWriteBaseOverlay * overlay,
+                                   GstBuffer * buffer);
 };
 
 GType gst_dwrite_base_overlay_get_type (void);
+
+void gst_dwrite_base_overlay_build_param_specs (std::vector<GParamSpec *> & pspec);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDWriteBaseOverlay, gst_object_unref)
 

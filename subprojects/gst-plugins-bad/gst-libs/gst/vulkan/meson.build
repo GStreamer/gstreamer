@@ -1,7 +1,9 @@
 gstvulkan_dep = dependency('', required: false)
 gstvulkanxcb_dep = dependency('', required: false)
 gstvulkanwyland_dep = dependency('', required: false)
-if get_option('vulkan').disabled()
+vulkan_windowing_opt = get_option('vulkan-windowing')
+vulkan_opt = get_option('vulkan')
+if vulkan_opt.disabled()
   subdir_done()
 endif
 
@@ -27,6 +29,7 @@ vulkan_sources = files(
   'gstvkimageview.c',
   'gstvkinstance.c',
   'gstvkmemory.c',
+  'gstvkoperation.c',
   'gstvkphysicaldevice.c',
   'gstvkqueue.c',
   'gstvkswapper.c',
@@ -61,6 +64,7 @@ vulkan_headers = files(
   'gstvkimageview.h',
   'gstvkinstance.h',
   'gstvkmemory.h',
+  'gstvkoperation.h',
   'gstvkphysicaldevice.h',
   'gstvkqueue.h',
   'gstvkswapper.h',
@@ -105,13 +109,17 @@ foreach option : vulkan_conf_options
 endforeach
 
 if ['ios', 'darwin'].contains(host_system)
-  # - ios does not support the loader/validation layers
-  # - We need to link directly to MoltenVK to be able to use
-  #   MoltenVK-specific functions that use dispatchable handles (like
-  #   retrieving the metal device from the VkDevice) which is currently waiting
-  #   on implementing a proper Metal extension for Vulkan
-  #   https://github.com/KhronosGroup/MoltenVK/issues/492
-  vulkan_dep = cc.find_library('MoltenVK', required : get_option('vulkan'))
+  vulkan_dep = dependency('vulkan', method: 'pkg-config', required : false)
+  if not vulkan_dep.found()
+    # - ios does not support the loader/validation layers
+    # - We need to link directly to MoltenVK to be able to use
+    #   MoltenVK-specific functions that use dispatchable handles (like
+    #   retrieving the metal device from the VkDevice) which is currently waiting
+    #   on implementing a proper Metal extension for Vulkan
+    #   https://github.com/KhronosGroup/MoltenVK/issues/492
+    objcpp = meson.get_compiler('objcpp')
+    vulkan_dep = objcpp.find_library('MoltenVK', required : vulkan_opt)
+  endif
 elif host_system == 'windows'
   vulkan_root = run_command(python3, '-c', 'import os; print(os.environ.get("VK_SDK_PATH"))', check: false).stdout().strip()
   if vulkan_root != '' and vulkan_root != 'None'
@@ -123,11 +131,12 @@ elif host_system == 'windows'
     endif
 
     vulkan_lib = cc.find_library('vulkan-1', dirs: vulkan_lib_dir,
-                                 required : get_option('vulkan'))
+                                 required : vulkan_opt)
 
     vulkan_inc_dir = join_paths(vulkan_root, 'Include')
     has_vulkan_header = cc.has_header('vulkan/vulkan_core.h',
-                                      args: '-I' + vulkan_inc_dir)
+                                      args: '-I' + vulkan_inc_dir,
+                                      required: vulkan_opt)
 
     if vulkan_lib.found() and has_vulkan_header
       vulkan_dep = declare_dependency(include_directories: include_directories(vulkan_inc_dir),
@@ -135,85 +144,87 @@ elif host_system == 'windows'
     endif
   endif
 else
-  vulkan_dep = dependency('vulkan', method: 'pkg-config', required : false)
+  vulkan_dep = dependency('vulkan', method: 'pkg-config', required: false)
   if not vulkan_dep.found()
-    vulkan_dep = cc.find_library('vulkan', required : false)
+    vulkan_dep = cc.find_library('vulkan', required: vulkan_opt)
   endif
 endif
 
 if host_system != 'windows'
-  has_vulkan_header = cc.has_header('vulkan/vulkan_core.h')
+  has_vulkan_header = cc.has_header('vulkan/vulkan_core.h', dependencies: vulkan_dep, required: vulkan_opt)
 endif
 
-if not has_vulkan_header and get_option('vulkan').enabled()
-  error('vulkan plugin enabled, but vulkan.h not found')
-endif
-if not vulkan_dep.found() and get_option('vulkan').enabled()
-  error('vulkan plugin enabled, but could not find vulkan library')
-endif
+if 'x11' in vulkan_windowing_opt or 'auto' in vulkan_windowing_opt
+  vulkan_xcb_required = vulkan_opt.enabled() and 'x11' in vulkan_windowing_opt
+  xcb_dep = dependency('xcb', version : '>=1.10', required: vulkan_xcb_required)
+  xkbcommon_dep = dependency('xkbcommon', required: vulkan_xcb_required)
+  xkbcommon_x11_dep = dependency('xkbcommon-x11', required: vulkan_xcb_required)
 
-xcb_dep = dependency('xcb', version : '>=1.10', required : get_option('x11'))
-xkbcommon_dep = dependency('xkbcommon', required : get_option('x11'))
-xkbcommon_x11_dep = dependency('xkbcommon-x11', required : get_option('x11'))
+  if xcb_dep.found() and xkbcommon_dep.found() and xkbcommon_x11_dep.found() and \
+     cc.has_header('vulkan/vulkan_xcb.h', dependencies : vulkan_dep, required: vulkan_xcb_required)
+    vulkan_priv_sources += files(
+      'xcb/gstvkwindow_xcb.c',
+      'xcb/xcb_event_source.c',
+    )
+    vulkan_xcb_sources += files(
+      'xcb/gstvkdisplay_xcb.c',
+    )
+    vulkan_xcb_headers += files(
+      'xcb/xcb.h',
+      'xcb/gstvkdisplay_xcb.h'
+    )
 
-if xcb_dep.found() and xkbcommon_dep.found() and xkbcommon_x11_dep.found() and cc.has_header('vulkan/vulkan_xcb.h', dependencies : vulkan_dep)
-  vulkan_priv_sources += files(
-    'xcb/gstvkwindow_xcb.c',
-    'xcb/xcb_event_source.c',
-  )
-  vulkan_xcb_sources += files(
-    'xcb/gstvkdisplay_xcb.c',
-  )
-  vulkan_xcb_headers += files(
-    'xcb/xcb.h',
-    'xcb/gstvkdisplay_xcb.h'
-  )
-
-  optional_deps += [xcb_dep, xkbcommon_dep, xkbcommon_x11_dep]
-  vulkan_windowing = true
-  vulkan_conf.set('GST_VULKAN_HAVE_WINDOW_XCB', 1)
-  enabled_vulkan_winsys += ['xcb']
+    optional_deps += [xcb_dep, xkbcommon_dep, xkbcommon_x11_dep]
+    vulkan_windowing = true
+    vulkan_conf.set('GST_VULKAN_HAVE_WINDOW_XCB', 1)
+    enabled_vulkan_winsys += ['xcb']
+  endif
 endif
 
-wayland_client_dep = dependency('wayland-client', version : '>=1.4', required : get_option('wayland'))
-wayland_protocols_dep = dependency('wayland-protocols', version : '>= 1.15', required : get_option('wayland'))
-wayland_scanner = find_program('wayland-scanner', required: get_option('wayland'))
-if wayland_client_dep.found() and wayland_protocols_dep.found() and wayland_scanner.found() and cc.has_header('vulkan/vulkan_wayland.h', dependencies : vulkan_dep)
-  # Generate the XDG shell interface
-  wayland_protocols_basedir = wayland_protocols_dep.get_variable('pkgdatadir')
-  xdg_shell_xml_spec = join_paths(wayland_protocols_basedir, 'stable', 'xdg-shell', 'xdg-shell.xml')
-  xdg_shell_header = custom_target('xdg-shell-client-header',
-    command: [ wayland_scanner, 'client-header', '@INPUT@', '@OUTPUT@' ],
-    input: xdg_shell_xml_spec,
-    output: 'xdg-shell-client-protocol.h',
-  )
-  xdg_shell_code = custom_target('xdg-shell-client-code',
-    command: [ wayland_scanner, 'private-code', '@INPUT@', '@OUTPUT@' ],
-    input: xdg_shell_xml_spec,
-    output: 'xdg-shell-client-protocol.c',
-  )
+if 'wayland' in vulkan_windowing_opt or 'auto' in vulkan_windowing_opt
+  vulkan_wayland_required = vulkan_opt.enabled() and 'wayland' in vulkan_windowing_opt
+  wayland_client_dep = dependency('wayland-client', version : '>=1.4', required: vulkan_wayland_required)
+  wayland_protocols_dep = dependency('wayland-protocols', version : '>= 1.15', required: vulkan_wayland_required)
+  wayland_scanner = find_program('wayland-scanner', required: vulkan_wayland_required)
 
-  vulkan_priv_sources += files(
-    'wayland/gstvkdisplay_wayland.c',
-    'wayland/gstvkwindow_wayland.c',
-    'wayland/wayland_event_source.c',
-  )
-  vulkan_priv_sources += [
-    xdg_shell_header,
-    xdg_shell_code,
-  ]
-  vulkan_wayland_sources += files(
-    'wayland/gstvkdisplay_wayland.c',
-  )
-  vulkan_wayland_headers += files(
-    'wayland/wayland.h',
-    'wayland/gstvkdisplay_wayland.h'
-  )
+  if wayland_client_dep.found() and wayland_protocols_dep.found() and wayland_scanner.found() and \
+     cc.has_header('vulkan/vulkan_wayland.h', dependencies: vulkan_dep, required: vulkan_wayland_required)
+    # Generate the XDG shell interface
+    wayland_protocols_basedir = wayland_protocols_dep.get_variable('pkgdatadir')
+    xdg_shell_xml_spec = join_paths(wayland_protocols_basedir, 'stable', 'xdg-shell', 'xdg-shell.xml')
+    xdg_shell_header = custom_target('xdg-shell-client-header',
+      command: [ wayland_scanner, 'client-header', '@INPUT@', '@OUTPUT@' ],
+      input: xdg_shell_xml_spec,
+      output: 'xdg-shell-client-protocol.h',
+    )
+    xdg_shell_code = custom_target('xdg-shell-client-code',
+      command: [ wayland_scanner, 'private-code', '@INPUT@', '@OUTPUT@' ],
+      input: xdg_shell_xml_spec,
+      output: 'xdg-shell-client-protocol.c',
+    )
 
-  optional_deps += wayland_client_dep
-  vulkan_windowing = true
-  vulkan_conf.set('GST_VULKAN_HAVE_WINDOW_WAYLAND', 1)
-  enabled_vulkan_winsys += ['wayland']
+    vulkan_priv_sources += files(
+      'wayland/gstvkdisplay_wayland.c',
+      'wayland/gstvkwindow_wayland.c',
+      'wayland/wayland_event_source.c',
+    )
+    vulkan_priv_sources += [
+      xdg_shell_header,
+      xdg_shell_code,
+    ]
+    vulkan_wayland_sources += files(
+      'wayland/gstvkdisplay_wayland.c',
+    )
+    vulkan_wayland_headers += files(
+      'wayland/wayland.h',
+      'wayland/gstvkdisplay_wayland.h'
+    )
+
+    optional_deps += wayland_client_dep
+    vulkan_windowing = true
+    vulkan_conf.set('GST_VULKAN_HAVE_WINDOW_WAYLAND', 1)
+    enabled_vulkan_winsys += ['wayland']
+  endif
 endif
 
 if ['darwin', 'ios'].contains(host_system)
@@ -224,18 +235,18 @@ if ['darwin', 'ios'].contains(host_system)
 
   vulkan_objc_args += ['-fobjc-arc']
 
-  foundation_dep = dependency('appleframeworks', modules : ['Foundation'], required : get_option('vulkan'))
-  quartzcore_dep = dependency('appleframeworks', modules : ['QuartzCore'], required : get_option('vulkan'))
-  corefoundation_dep = dependency('appleframeworks', modules : ['CoreFoundation'], required : get_option('vulkan'))
+  foundation_dep = dependency('appleframeworks', modules : ['Foundation'], required : vulkan_opt)
+  quartzcore_dep = dependency('appleframeworks', modules : ['QuartzCore'], required : vulkan_opt)
+  corefoundation_dep = dependency('appleframeworks', modules : ['CoreFoundation'], required : vulkan_opt)
   if foundation_dep.found() and quartzcore_dep.found() and corefoundation_dep.found()
     optional_deps += [foundation_dep, corefoundation_dep, quartzcore_dep]
   endif
 endif
 
 if host_system == 'darwin'
-  cocoa_dep = dependency('appleframeworks', modules : ['Cocoa'], required : get_option('vulkan'))
+  cocoa_dep = dependency('appleframeworks', modules : ['Cocoa'], required : vulkan_opt)
 
-  if cocoa_dep.found() and cc.has_header('vulkan/vulkan_macos.h', dependencies : vulkan_dep)
+  if cocoa_dep.found() and cc.has_header('vulkan/vulkan_macos.h', dependencies: vulkan_dep, required: vulkan_opt)
     vulkan_priv_sources += files(
       'cocoa/gstvkdisplay_cocoa.m',
       'cocoa/gstvkwindow_cocoa.m',
@@ -248,9 +259,9 @@ if host_system == 'darwin'
 endif
 
 if host_system == 'ios'
-  uikit_dep = dependency('appleframeworks', modules : ['UIKit'], required : get_option('vulkan'))
+  uikit_dep = dependency('appleframeworks', modules : ['UIKit', 'IOSurface', 'CoreGraphics', 'Metal'], required : vulkan_opt)
 
-  if uikit_dep.found() and cc.has_header('vulkan/vulkan_ios.h', dependencies : vulkan_dep)
+  if uikit_dep.found() and cc.has_header('vulkan/vulkan_ios.h', dependencies : vulkan_dep, required: vulkan_opt)
     vulkan_priv_sources += files(
       'ios/gstvkdisplay_ios.m',
       'ios/gstvkwindow_ios.m',
@@ -263,10 +274,10 @@ if host_system == 'ios'
 endif
 
 if host_system == 'windows'
-  gdi_dep = cc.find_library('gdi32', required : get_option('vulkan'))
+  gdi_dep = cc.find_library('gdi32', required : vulkan_opt)
 
   # Cannot use internal dependency object with cc.has_header()
-  if gdi_dep.found() and cc.has_header('vulkan/vulkan_win32.h', args: '-I' + vulkan_inc_dir)
+  if gdi_dep.found() and cc.has_header('vulkan/vulkan_win32.h', args: '-I' + vulkan_inc_dir, required: vulkan_opt)
     vulkan_priv_sources += ['win32/gstvkwindow_win32.c']
     optional_deps += [gdi_dep]
     vulkan_windowing = true
@@ -276,7 +287,7 @@ if host_system == 'windows'
 endif
 
 if host_system == 'android'
-  if cc.has_header('vulkan/vulkan_android.h', dependencies : vulkan_dep)
+  if cc.has_header('vulkan/vulkan_android.h', dependencies : vulkan_dep, required: vulkan_opt)
     vulkan_priv_sources += files(
       'android/gstvkdisplay_android.c',
       'android/gstvkwindow_android.c',
@@ -288,31 +299,23 @@ if host_system == 'android'
 endif
 
 if not vulkan_windowing
-  if get_option('vulkan').enabled()
+  if vulkan_opt.enabled()
     error('No Windowing system found. vulkansink will not work')
   else
     message('No Windowing system found. vulkansink will not work')
   endif
 endif
 
-# Only needed for the vulkan plugin, but doesn't make sense to build
-# anything else vulkan related if we are not going to build the plugin
-glslc = find_program('glslc', required: get_option('vulkan'))
-
-if not vulkan_dep.found() or not has_vulkan_header or not glslc.found()
-  if get_option('vulkan').enabled()
-    error('GStreamer Vulkan integration required via options, but needed dependencies not found.')
-  else
-    subdir_done()
-  endif
+if not vulkan_dep.found() or not has_vulkan_header
+  subdir_done()
 endif
 
 if get_option('vulkan-video').allowed()
   video_test = '''
 #include <vulkan/vulkan.h>
 
-#if !(defined(VK_VERSION_1_4) || (defined(VK_VERSION_1_3) && VK_HEADER_VERSION >= 238))
-#error "Need at least Vulkan 1.3.238"
+#if !(defined(VK_VERSION_1_4) || (defined(VK_VERSION_1_3) && VK_HEADER_VERSION >= 275))
+#error "Need at least Vulkan 1.3.275"
 #endif
 
 /* vk_video/vulkan_video_codec_h264std.h */
@@ -322,6 +325,9 @@ static StdVideoH264PictureParameterSet h264_pps;
 /* vk_video/vulkan_video_codec_h265std.h */
 static StdVideoH265SequenceParameterSet h265_sps;
 static StdVideoH265PictureParameterSet h265_pps;
+
+static VkVideoEncodeH264ProfileInfoKHR h264_profile;
+static VkVideoEncodeH265ProfileInfoKHR h265_profile;
 '''
 
   if vulkan_inc_dir != ''
@@ -331,6 +337,11 @@ static StdVideoH265PictureParameterSet h265_pps;
   endif
   if have_vk_video
     vulkan_conf.set('GST_VULKAN_HAVE_VIDEO_EXTENSIONS', 1)
+    vulkan_priv_sources += files(
+      'gstvkvideo-private.c',
+      'gstvkdecoder-private.c',
+      'gstvkencoder-private.c',
+    )
   elif get_option('vulkan-video').enabled()
     error('Vulkan Video extensions headers not found')
   endif
@@ -342,7 +353,7 @@ install_headers(vulkan_headers, subdir : 'gstreamer-1.0/gst/vulkan')
 
 configure_file(input : 'gstvkconfig.h.meson',
   output : 'gstvkconfig.h',
-  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/vulkan'),
+  install_dir : get_option('includedir') / 'gstreamer-1.0/gst/vulkan',
   configuration : vulkan_conf)
 
 glib_mkenums = find_program('glib-mkenums')
@@ -351,7 +362,7 @@ vulkan_enumtypes_h = custom_target('gstvulkanenum_h',
   output : 'vulkan-enumtypes.h',
   input : vulkan_headers,
   install : true,
-  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/vulkan/'),
+  install_dir : get_option('includedir') / 'gstreamer-1.0/gst/vulkan',
   command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
 
 vulkan_enumtypes_c = custom_target('gstvulkanenum_c',
@@ -492,4 +503,3 @@ if enabled_vulkan_winsys.contains('wayland')
       sources : vulkan_wayland_gir)
   meson.override_dependency('gstreamer-vulkan-wayland-1.0', gstvulkanwayland_dep)
 endif
-

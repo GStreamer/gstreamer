@@ -372,8 +372,8 @@ gst_svthevc_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
   filter_caps = gst_caps_new_empty ();
 
   for (i = 0; i < gst_caps_get_size (supported_incaps); i++) {
-    GQuark q_name =
-        gst_structure_get_name_id (gst_caps_get_structure (supported_incaps,
+    const GstIdStr *name =
+        gst_structure_get_name_id_str (gst_caps_get_structure (supported_incaps,
             i));
 
     for (j = 0; j < gst_caps_get_size (allowed_caps); j++) {
@@ -381,7 +381,7 @@ gst_svthevc_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
       const GValue *val;
       GstStructure *s;
 
-      s = gst_structure_new_id_empty (q_name);
+      s = gst_structure_new_id_str_empty (name);
       if ((val = gst_structure_get_value (allowed_s, "width")))
         gst_structure_set_value (s, "width", val);
       if ((val = gst_structure_get_value (allowed_s, "height")))
@@ -1501,7 +1501,7 @@ gst_svthevc_enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   GstCaps *caps;
   GstVideoInfo info;
   GstVideoAlignment video_align;
-  GstBufferPool *pool;
+  GstBufferPool *pool = NULL;
   GstStructure *config;
   guint i, size, min, max;
 
@@ -2255,6 +2255,12 @@ gst_svthevc_enc_get_property (GObject * object, guint prop_id,
   }
   GST_OBJECT_UNLOCK (encoder);
 }
+
+/**
+ * plugin-svthevcenc:
+ *
+ * Since: 1.18
+ */
 
 static gboolean
 plugin_init (GstPlugin * plugin)

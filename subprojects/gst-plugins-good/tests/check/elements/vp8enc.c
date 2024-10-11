@@ -219,10 +219,8 @@ GST_END_TEST;
     guint temporal_layer_id, tl0picidx;                                  \
     GstCustomMeta *meta = gst_buffer_get_custom_meta (buffer,            \
         "GstVP8Meta");                                                   \
-    GstStructure *s;                                                     \
     fail_unless (meta != NULL);                                          \
-    s = gst_custom_meta_get_structure (meta);                            \
-    fail_unless (gst_structure_get (s,                                   \
+    fail_unless (gst_structure_get (meta->structure,                     \
           "use-temporal-scaling", G_TYPE_BOOLEAN, &use_temporal_scaling, \
           "layer-sync", G_TYPE_BOOLEAN, &layer_sync,                     \
           "layer-id", G_TYPE_UINT, &temporal_layer_id,                   \
@@ -386,7 +384,6 @@ GST_START_TEST (test_encode_fresh_meta)
   GstBuffer *buffer;
   GstHarness *h = gst_harness_new ("vp8enc");
   GstCustomMeta *meta;
-  GstStructure *s;
   gst_harness_set_src_caps (h, gst_caps_new_i420_full (320, 240, 25, 1, 1, 1));
 
   buffer = gst_harness_create_video_buffer_full (h, 0x0,
@@ -395,8 +392,7 @@ GST_START_TEST (test_encode_fresh_meta)
 
   /* Attach bogus meta to input buffer */
   meta = gst_buffer_add_custom_meta (buffer, "GstVP8Meta");
-  s = gst_custom_meta_get_structure (meta);
-  gst_structure_set (s,
+  gst_structure_set (meta->structure,
       "use-temporal-scaling", G_TYPE_BOOLEAN, FALSE,
       "layer-sync", G_TYPE_BOOLEAN, FALSE,
       "layer-id", G_TYPE_UINT, 0, "tl0picidx", G_TYPE_UINT, 0, NULL);

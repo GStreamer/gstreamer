@@ -815,7 +815,7 @@ get_featured_caps (void)
   GstCaps *caps;
   GstCapsFeatures *features;
 
-  features = gst_caps_features_new ("memory:DMABuf", NULL);
+  features = gst_caps_features_new_static_str ("memory:DMABuf", NULL);
   caps = gst_caps_new_simple ("video/x-raw",
       "format", G_TYPE_STRING, "NV12",
       "framerate", GST_TYPE_FRACTION, 1, 1,

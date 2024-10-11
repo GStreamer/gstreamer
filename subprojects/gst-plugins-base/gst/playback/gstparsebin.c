@@ -1765,9 +1765,40 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
 {
   gboolean res = FALSE;
   GString *error_details = NULL;
+  GstFormat segment_format = GST_FORMAT_TIME;
+  GstPbUtilsCapsDescriptionFlags caps_flags =
+      gst_pb_utils_get_caps_description_flags (caps);
 
   g_return_val_if_fail (factories != NULL, FALSE);
   g_return_val_if_fail (factories->n_values > 0, FALSE);
+
+  /* For subtitles, which can come from standalone files, we need to ensure we
+   * output a timed/parsed stream. But not all formats have a parser, so we also
+   * want to try plugging in subtitle "decoders" like `subparse`.
+   *
+   * In order to ensure that, if the caps are subtitles, we query the stream
+   * format to check if it's in time or not. If it's not in time format, we will
+   * attempt to plugin in a "decoder" (if present). */
+  if (caps_flags == GST_PBUTILS_CAPS_DESCRIPTION_FLAG_SUBTITLE) {
+    GstEvent *segment_event =
+        gst_pad_get_sticky_event (pad, GST_EVENT_SEGMENT, 0);
+    const GstSegment *segment = NULL;
+
+    segment_format = GST_FORMAT_UNDEFINED;
+    if (segment_event) {
+      gst_event_parse_segment (segment_event, &segment);
+      if (segment)
+        segment_format = segment->format;
+    }
+    if (segment_format == GST_FORMAT_UNDEFINED) {
+      GstQuery *segment_query = gst_query_new_segment (GST_FORMAT_TIME);
+      if (gst_pad_query (pad, segment_query)) {
+        gst_query_parse_segment (segment_query, NULL, &segment_format, NULL,
+            NULL);
+      }
+      gst_query_unref (segment_query);
+    }
+  }
 
   GST_DEBUG_OBJECT (parsebin,
       "pad %s:%s , chain:%p, %d factories, caps %" GST_PTR_FORMAT,
@@ -1888,9 +1919,11 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
 
     }
 
-    /* Expose pads if the next factory is a decoder */
+    /* Expose pads if the next factory is a decoder. segment_format might be not
+     * time for subtitle streams */
     if (gst_element_factory_list_is_type (factory,
-            GST_ELEMENT_FACTORY_TYPE_DECODER)) {
+            GST_ELEMENT_FACTORY_TYPE_DECODER)
+        && segment_format == GST_FORMAT_TIME) {
       ret = GST_AUTOPLUG_SELECT_EXPOSE;
     } else {
       /* emit autoplug-select to see what we should do with it. */
@@ -3157,9 +3190,28 @@ gst_parse_chain_accept_caps (GstParseChain * chain, GstCaps * caps)
       GST_ELEMENT_NAME (initial_element->element), caps);
 
   sink = gst_element_get_static_pad (initial_element->element, "sink");
-  ret = gst_pad_query_accept_caps (sink, caps);
-  gst_object_unref (sink);
-
+  if (sink) {
+    ret = gst_pad_query_accept_caps (sink, caps);
+    gst_object_unref (sink);
+  } else {
+    GST_OBJECT_LOCK (initial_element->element);
+    if (G_UNLIKELY (!initial_element->element->numsinkpads)) {
+      GST_ERROR_OBJECT (chain->parsebin,
+          "element %" GST_PTR_FORMAT " has no sink pad",
+          initial_element->element);
+      GST_OBJECT_UNLOCK (initial_element->element);
+      return FALSE;
+    }
+    GstPad *pad =
+        GST_PAD_CAST (gst_object_ref (initial_element->element->sinkpads));
+    GST_OBJECT_UNLOCK (initial_element->element);
+    GST_DEBUG_OBJECT (chain->parsebin,
+        "element %" GST_PTR_FORMAT
+        " doesn't have a 'sink' pad, sending accept-caps query to "
+        "%" GST_PTR_FORMAT, initial_element->element, pad);
+    ret = gst_pad_query_accept_caps (pad, caps);
+    gst_object_unref (pad);
+  }
   GST_DEBUG_OBJECT (chain->parsebin, "Chain can%s handle caps",
       ret ? "" : " NOT");
 
@@ -3637,6 +3689,8 @@ retry:
     GST_WARNING_OBJECT (parsebin,
         "Currently, shutting down, aborting exposing");
     DYN_UNLOCK (parsebin);
+    if (fallback_collection)
+      gst_object_unref (fallback_collection);
     return FALSE;
   }
 
@@ -3969,12 +4023,18 @@ guess_stream_type_from_caps (GstCaps * caps)
 {
   GstStructure *s;
   const gchar *name;
+  GstPbUtilsCapsDescriptionFlags desc;
 
   if (gst_caps_get_size (caps) < 1)
     return GST_STREAM_TYPE_UNKNOWN;
 
   s = gst_caps_get_structure (caps, 0);
   name = gst_structure_get_name (s);
+
+  if (gst_structure_has_field (s, "original-media-type")) {
+    /* Caps describe an encrypted payload, use original-media-type to determine stream type. */
+    name = gst_structure_get_string (s, "original-media-type");
+  }
 
   if (g_str_has_prefix (name, "video/") || g_str_has_prefix (name, "image/"))
     return GST_STREAM_TYPE_VIDEO;
@@ -3986,7 +4046,19 @@ guess_stream_type_from_caps (GstCaps * caps)
       g_str_has_prefix (name, "closedcaption/"))
     return GST_STREAM_TYPE_TEXT;
 
-  return GST_STREAM_TYPE_UNKNOWN;
+  /* Use information from pbutils. Note that we only care about elementary
+   * streams which is why we check flag equality */
+  desc = gst_pb_utils_get_caps_description_flags (caps);
+  switch (desc) {
+    case GST_PBUTILS_CAPS_DESCRIPTION_FLAG_AUDIO:
+      return GST_STREAM_TYPE_AUDIO;
+    case GST_PBUTILS_CAPS_DESCRIPTION_FLAG_VIDEO:
+      return GST_STREAM_TYPE_VIDEO;
+    case GST_PBUTILS_CAPS_DESCRIPTION_FLAG_SUBTITLE:
+      return GST_STREAM_TYPE_TEXT;
+    default:
+      return GST_STREAM_TYPE_UNKNOWN;
+  }
 }
 
 static void

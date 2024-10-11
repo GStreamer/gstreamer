@@ -65,6 +65,7 @@
 #include <gst/va/gstva.h>
 #include <gst/video/video.h>
 #include <va/va_drmcommon.h>
+#include <gst/va/gstvavideoformat.h>
 
 #include "gstvabasetransform.h"
 #include "gstvacaps.h"
@@ -119,10 +120,13 @@ struct _GstVaVpp
   gint borders_h;
   gint borders_w;
   guint32 scale_method;
+  guint32 interpolation_method;
 
   gboolean hdr_mapping;
   gboolean has_hdr_meta;
   VAHdrMetaDataHDR10 hdr_meta;
+
+  gboolean pseudo_passthrough;
 
   GList *channels;
 };
@@ -139,7 +143,6 @@ enum
 {
   PROP_DISABLE_PASSTHROUGH = GST_VA_FILTER_PROP_LAST + 1,
   PROP_ADD_BORDERS,
-  PROP_SCALE_METHOD,
   N_PROPERTIES
 };
 
@@ -251,6 +254,9 @@ _update_properties_unlocked (GstVaVpp * self)
 
   if (!gst_va_filter_set_scale_method (btrans->filter, self->scale_method))
     GST_WARNING_OBJECT (self, "could not set the filter scale method.");
+  if (!gst_va_filter_set_interpolation_method (btrans->filter,
+          self->interpolation_method))
+    GST_WARNING_OBJECT (self, "could not set the filter interpolation method.");
 }
 
 static void
@@ -326,8 +332,11 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
     case PROP_ADD_BORDERS:
       self->add_borders = g_value_get_boolean (value);
       break;
-    case PROP_SCALE_METHOD:
+    case GST_VA_FILTER_PROP_SCALE_METHOD:
       self->scale_method = g_value_get_enum (value);
+      break;
+    case GST_VA_FILTER_PROP_INTERPOLATION_METHOD:
+      self->interpolation_method = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -393,8 +402,11 @@ gst_va_vpp_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_ADD_BORDERS:
       g_value_set_boolean (value, self->add_borders);
       break;
-    case PROP_SCALE_METHOD:
+    case GST_VA_FILTER_PROP_SCALE_METHOD:
       g_value_set_enum (value, self->scale_method);
+      break;
+    case GST_VA_FILTER_PROP_INTERPOLATION_METHOD:
+      g_value_set_enum (value, self->interpolation_method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -527,7 +539,7 @@ gst_va_vpp_set_info (GstVaBaseTransform * btrans, GstCaps * incaps,
           GST_WARNING_OBJECT (self, "Can't calculate borders");
         }
       } else {
-        GST_WARNING_OBJECT (self, "Can't keep DAR!");
+        GST_DEBUG_OBJECT (self, "Can't keep DAR!");
       }
     }
   }
@@ -813,8 +825,28 @@ gst_va_vpp_before_transform (GstBaseTransform * trans, GstBuffer * inbuf)
     self->op_flags &= ~VPP_CONVERT_CROP;
   }
   gst_va_filter_enable_cropping (btrans->filter,
-      (self->op_flags & VPP_CONVERT_CROP));
+      (self->op_flags & VPP_CONVERT_CROP) == VPP_CONVERT_CROP);
   GST_OBJECT_UNLOCK (self);
+}
+
+static GstFlowReturn
+gst_va_vpp_prepare_output_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
+    GstBuffer ** outbuf)
+{
+  GstVaVpp *self = GST_VA_VPP (trans);
+  GstVaBaseTransform *btrans = GST_VA_BASE_TRANSFORM (self);
+
+  if (((self->op_flags & VPP_CONVERT_FEATURE) == self->op_flags)
+      && gst_caps_is_vamemory (btrans->in_caps)
+      && gst_caps_is_raw (btrans->out_caps)) {
+    self->pseudo_passthrough = TRUE;
+    *outbuf = inbuf;
+    return GST_FLOW_OK;
+  }
+
+  self->pseudo_passthrough = FALSE;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->prepare_output_buffer (trans,
+      inbuf, outbuf);
 }
 
 static GstFlowReturn
@@ -833,6 +865,9 @@ gst_va_vpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   res = gst_va_base_transform_import_buffer (btrans, inbuf, &buf);
   if (res != GST_FLOW_OK)
     return res;
+
+  if (self->pseudo_passthrough && (inbuf == buf))
+    goto bail;
 
   /* *INDENT-OFF* */
   src = (GstVaSample) {
@@ -853,6 +888,7 @@ gst_va_vpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     res = GST_BASE_TRANSFORM_FLOW_DROPPED;
   }
 
+bail:
   gst_buffer_unref (buf);
 
   return res;
@@ -879,13 +915,13 @@ gst_va_vpp_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
     return TRUE;
 
   /* don't copy colorspace/size/orientation specific metadata */
-  if ((self->op_flags & VPP_CONVERT_FORMAT)
+  if ((self->op_flags & VPP_CONVERT_FORMAT) == VPP_CONVERT_FORMAT
       && gst_meta_api_type_has_tag (info->api, META_TAG_COLORSPACE))
     return FALSE;
-  else if ((self->op_flags & (VPP_CONVERT_SIZE | VPP_CONVERT_CROP))
+  else if ((self->op_flags & (VPP_CONVERT_SIZE | VPP_CONVERT_CROP)) != 0
       && gst_meta_api_type_has_tag (info->api, META_TAG_SIZE))
     return FALSE;
-  else if ((self->op_flags & VPP_CONVERT_DIRECTION)
+  else if ((self->op_flags & VPP_CONVERT_DIRECTION) == VPP_CONVERT_DIRECTION
       && gst_meta_api_type_has_tag (info->api, META_TAG_ORIENTATION))
     return FALSE;
   else if (gst_meta_api_type_has_tag (info->api, META_TAG_VIDEO))
@@ -907,7 +943,13 @@ gst_va_vpp_caps_remove_fields (GstCaps * caps)
   GstCaps *ret;
   GstStructure *structure;
   GstCapsFeatures *features;
-  gint i, j, n, m;
+  gint i, n;
+  GstIdStr sysmem = GST_ID_STR_INIT, dmabuf = GST_ID_STR_INIT, va =
+      GST_ID_STR_INIT;
+
+  gst_id_str_set_static_str (&sysmem, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+  gst_id_str_set_static_str (&dmabuf, GST_CAPS_FEATURE_MEMORY_DMABUF);
+  gst_id_str_set_static_str (&va, GST_CAPS_FEATURE_MEMORY_VA);
 
   ret = gst_caps_new_empty ();
 
@@ -923,30 +965,22 @@ gst_va_vpp_caps_remove_fields (GstCaps * caps)
 
     structure = gst_structure_copy (structure);
 
-    m = gst_caps_features_get_size (features);
-    for (j = 0; j < m; j++) {
-      const gchar *feature = gst_caps_features_get_nth (features, j);
+    if (gst_caps_features_contains_id_str (features, &sysmem)
+        || gst_caps_features_contains_id_str (features, &dmabuf)
+        || gst_caps_features_contains_id_str (features, &va)) {
+      /* rangify frame size */
+      gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
-      if (g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY) == 0
-          || g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_DMABUF) == 0
-          || g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_VA) == 0) {
-
-        /* rangify frame size */
-        gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-
-        /* if pixel aspect ratio, make a range of it */
-        if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
-          gst_structure_set (structure, "pixel-aspect-ratio",
-              GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
-        }
-
-        /* remove format-related fields */
-        gst_structure_remove_fields (structure, "format", "colorimetry",
-            "chroma-site", NULL);
-
-        break;
+      /* if pixel aspect ratio, make a range of it */
+      if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
+        gst_structure_set (structure, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
       }
+
+      /* remove format-related fields */
+      gst_structure_remove_fields (structure, "format", "drm-format",
+          "colorimetry", "chroma-site", NULL);
     }
 
     gst_caps_append_structure_full (ret, structure,
@@ -962,7 +996,7 @@ static GstCaps *
 gst_va_vpp_complete_caps_features (const GstCaps * caps,
     const gchar * feature_name)
 {
-  guint i, j, m, n;
+  guint i, n;
   GstCaps *tmp;
 
   tmp = gst_caps_new_empty ();
@@ -970,24 +1004,19 @@ gst_va_vpp_complete_caps_features (const GstCaps * caps,
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
     GstCapsFeatures *features, *orig_features;
-    GstStructure *s = gst_caps_get_structure (caps, i);
-    gboolean contained = FALSE;
+    GstStructure *s;
 
+    s = gst_caps_get_structure (caps, i);
     orig_features = gst_caps_get_features (caps, i);
-    features = gst_caps_features_new (feature_name, NULL);
 
-    m = gst_caps_features_get_size (orig_features);
-    for (j = 0; j < m; j++) {
-      const gchar *feature = gst_caps_features_get_nth (orig_features, j);
-
-      /* if we already have the features */
-      if (gst_caps_features_contains (features, feature)) {
-        contained = TRUE;
-        break;
-      }
+    if (gst_caps_features_contains (orig_features, feature_name)) {
+      gst_caps_append_structure_full (tmp, gst_structure_copy (s),
+          gst_caps_features_copy (orig_features));
+      continue;
     }
 
-    if (!contained && !gst_caps_is_subset_structure_full (tmp, s, features))
+    features = gst_caps_features_new_static_str (feature_name, NULL);
+    if (!gst_caps_is_subset_structure_full (tmp, s, features))
       gst_caps_append_structure_full (tmp, gst_structure_copy (s), features);
     else
       gst_caps_features_free (features);
@@ -1001,41 +1030,34 @@ gst_va_vpp_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
     GstCaps * caps, GstCaps * filter)
 {
   GstVaVpp *self = GST_VA_VPP (trans);
-  GstVaBaseTransform *btrans = GST_VA_BASE_TRANSFORM (trans);
-  GstCaps *ret, *tmp, *filter_caps;
+  GstCaps *ret;
+  GstPadTemplate *pad_tmpl;
+  static const gchar *caps_features[] = { GST_CAPS_FEATURE_MEMORY_VA,
+    GST_CAPS_FEATURE_MEMORY_DMABUF, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY
+  };
+  guint i;
 
   GST_DEBUG_OBJECT (self,
       "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
-  filter_caps = gst_va_base_transform_get_filter_caps (btrans);
-  if (filter_caps && !gst_caps_can_intersect (caps, filter_caps)) {
+  pad_tmpl = gst_element_get_pad_template (GST_ELEMENT (self),
+      (direction == GST_PAD_SINK) ? "sink" : "src");
+  if (pad_tmpl->caps == caps) {
     ret = gst_caps_ref (caps);
     goto bail;
   }
 
   ret = gst_va_vpp_caps_remove_fields (caps);
 
-  tmp = gst_va_vpp_complete_caps_features (ret, GST_CAPS_FEATURE_MEMORY_VA);
-  if (!gst_caps_is_subset (tmp, ret)) {
-    gst_caps_append (ret, tmp);
-  } else {
-    gst_caps_unref (tmp);
-  }
+  for (i = 0; i < G_N_ELEMENTS (caps_features); i++) {
+    GstCaps *tmp;
 
-  tmp = gst_va_vpp_complete_caps_features (ret, GST_CAPS_FEATURE_MEMORY_DMABUF);
-  if (!gst_caps_is_subset (tmp, ret)) {
-    gst_caps_append (ret, tmp);
-  } else {
-    gst_caps_unref (tmp);
-  }
-
-  tmp = gst_va_vpp_complete_caps_features (ret,
-      GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
-  if (!gst_caps_is_subset (tmp, ret)) {
-    gst_caps_append (ret, tmp);
-  } else {
-    gst_caps_unref (tmp);
+    tmp = gst_va_vpp_complete_caps_features (ret, caps_features[i]);
+    if (!gst_caps_is_subset (tmp, ret))
+      gst_caps_append (ret, tmp);
+    else
+      gst_caps_unref (tmp);
   }
 
 bail:
@@ -1190,33 +1212,62 @@ gst_va_vpp_fixate_format (GstVaVpp * self, GstCaps * caps, GstCaps * result)
   GstVideoFormat fmt;
   gint min_loss = G_MAXINT;
   guint i, best_i, capslen;
+  guint64 best_modifier;
 
   ins = gst_caps_get_structure (caps, 0);
-  in_format = gst_structure_get_string (ins, "format");
-  if (!in_format)
+
+  if (gst_video_is_dma_drm_caps (caps)) {
+    guint32 fourcc;
+    GstVideoFormat video_format;
+
+    in_format = gst_structure_get_string (ins, "drm-format");
+    if (!in_format)
+      return NULL;
+
+    fourcc = gst_video_dma_drm_fourcc_from_string (in_format, NULL);
+    video_format = gst_va_video_format_from_drm_fourcc (fourcc);
+    if (video_format == GST_VIDEO_FORMAT_UNKNOWN)
+      return NULL;
+
+    in_info = gst_video_format_get_info (video_format);
+  } else {
+    in_format = gst_structure_get_string (ins, "format");
+    if (!in_format)
+      return NULL;
+
+    in_info =
+        gst_video_format_get_info (gst_video_format_from_string (in_format));
+  }
+
+  if (!in_info)
     return NULL;
 
   GST_DEBUG_OBJECT (self, "source format %s", in_format);
 
-  in_info =
-      gst_video_format_get_info (gst_video_format_from_string (in_format));
-  if (!in_info)
-    return NULL;
-
   best_i = 0;
+  best_modifier = DRM_FORMAT_MOD_INVALID;
   capslen = gst_caps_get_size (result);
   GST_DEBUG_OBJECT (self, "iterate %d structures", capslen);
   for (i = 0; i < capslen; i++) {
+    gboolean is_dma;
     GstStructure *tests;
     const GValue *format;
+    guint64 modifier;
+    guint32 fourcc;
 
+    features = gst_caps_get_features (result, i);
     tests = gst_caps_get_structure (result, i);
-    format = gst_structure_get_value (tests, "format");
+
+    if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+      format = gst_structure_get_value (tests, "drm-format");
+      is_dma = TRUE;
+    } else {
+      format = gst_structure_get_value (tests, "format");
+      is_dma = FALSE;
+    }
     /* should not happen */
     if (format == NULL)
       continue;
-
-    features = gst_caps_get_features (result, i);
 
     if (GST_VALUE_HOLDS_LIST (format)) {
       gint j, len;
@@ -1226,23 +1277,52 @@ gst_va_vpp_fixate_format (GstVaVpp * self, GstCaps * caps, GstCaps * result)
       for (j = 0; j < len; j++) {
         const GValue *val;
 
+        modifier = DRM_FORMAT_MOD_INVALID;
+
         val = gst_value_list_get_value (format, j);
         if (G_VALUE_HOLDS_STRING (val)) {
-          fmt = gst_video_format_from_string (g_value_get_string (val));
+          if (is_dma) {
+            fourcc = gst_video_dma_drm_fourcc_from_string
+                (g_value_get_string (val), &modifier);
+            fmt = gst_va_video_format_from_drm_fourcc (fourcc);
+          } else {
+            fmt = gst_video_format_from_string (g_value_get_string (val));
+          }
+          if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+            continue;
+
           if (!gst_va_filter_has_video_format (btrans->filter, fmt, features))
             continue;
-          if (score_value (self, in_info, fmt, &min_loss, &out_info))
+
+          if (score_value (self, in_info, fmt, &min_loss, &out_info)) {
             best_i = i;
+            best_modifier = modifier;
+          }
+
           if (min_loss == 0)
             break;
         }
       }
     } else if (G_VALUE_HOLDS_STRING (format)) {
-      fmt = gst_video_format_from_string (g_value_get_string (format));
+      modifier = DRM_FORMAT_MOD_INVALID;
+
+      if (is_dma) {
+        fourcc = gst_video_dma_drm_fourcc_from_string
+            (g_value_get_string (format), &modifier);
+        fmt = gst_va_video_format_from_drm_fourcc (fourcc);
+      } else {
+        fmt = gst_video_format_from_string (g_value_get_string (format));
+      }
+      if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+        continue;
+
       if (!gst_va_filter_has_video_format (btrans->filter, fmt, features))
         continue;
-      if (score_value (self, in_info, fmt, &min_loss, &out_info))
+
+      if (score_value (self, in_info, fmt, &min_loss, &out_info)) {
         best_i = i;
+        best_modifier = modifier;
+      }
     }
 
     if (min_loss == 0)
@@ -1255,8 +1335,21 @@ gst_va_vpp_fixate_format (GstVaVpp * self, GstCaps * caps, GstCaps * result)
 
     features = gst_caps_features_copy (gst_caps_get_features (result, best_i));
     out = gst_structure_copy (gst_caps_get_structure (result, best_i));
-    gst_structure_set (out, "format", G_TYPE_STRING,
-        GST_VIDEO_FORMAT_INFO_NAME (out_info), NULL);
+
+    if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+      gchar *drm_fmt_name;
+
+      g_assert (best_modifier != DRM_FORMAT_MOD_INVALID);
+
+      drm_fmt_name = gst_video_dma_drm_fourcc_to_string
+          (gst_va_drm_fourcc_from_video_format (out_info->format),
+          best_modifier);
+      gst_structure_set (out, "drm-format", G_TYPE_STRING, drm_fmt_name, NULL);
+      g_free (drm_fmt_name);
+    } else {
+      gst_structure_set (out, "format", G_TYPE_STRING,
+          GST_VIDEO_FORMAT_INFO_NAME (out_info), NULL);
+    }
     ret = gst_caps_new_full (out, NULL);
     gst_caps_set_features_simple (ret, features);
     return ret;
@@ -1757,12 +1850,13 @@ transfer_colorimetry_from_input (GstVaVpp * self, GstCaps * in_caps,
     const GValue *in_colorimetry =
         gst_structure_get_value (in_caps_s, "colorimetry");
 
-    if (!gst_video_info_from_caps (&in_info, in_caps)) {
+    if (!gst_va_video_info_from_caps (&in_info, NULL, in_caps)) {
       GST_WARNING_OBJECT (self,
           "Failed to convert sink pad caps to video info");
       return;
     }
-    if (!gst_video_info_from_caps (&out_info, out_caps)) {
+
+    if (!gst_va_video_info_from_caps (&out_info, NULL, out_caps)) {
       GST_WARNING_OBJECT (self, "Failed to convert src pad caps to video info");
       return;
     }
@@ -1844,7 +1938,7 @@ update_hdr_fields (GstVaVpp * self, GstCaps * result)
 
   have_colorimetry = gst_structure_has_field (s, "colorimetry");
   if (!have_colorimetry) {
-    if (gst_video_info_from_caps (&out_info, result)) {
+    if (gst_va_video_info_from_caps (&out_info, NULL, result)) {
       gchar *colorimetry_str =
           gst_video_colorimetry_to_string (&out_info.colorimetry);
       gst_caps_set_simple (result, "colorimetry", G_TYPE_STRING,
@@ -2072,19 +2166,6 @@ _install_static_properties (GObjectClass * klass)
   g_object_class_install_property (klass, PROP_ADD_BORDERS,
       PROPERTIES (PROP_ADD_BORDERS));
 
-  /**
-   * GstVaPostProc:scale-method
-   *
-   * Sets the scale method algorithm to use when resizing.
-   *
-   * Since: 1.22
-   */
-  PROPERTIES (PROP_SCALE_METHOD) = g_param_spec_enum ("scale-method",
-      "Scale Method", "Scale method to use", GST_TYPE_VA_SCALE_METHOD,
-      VA_FILTER_SCALING_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
-      | GST_PARAM_MUTABLE_PLAYING);
-  g_object_class_install_property (klass, PROP_SCALE_METHOD,
-      PROPERTIES (PROP_SCALE_METHOD));
 }
 
 static void
@@ -2120,13 +2201,6 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
 
   if (gst_va_filter_open (filter)) {
     caps = gst_va_filter_get_caps (filter);
-
-    /* adds any to enable passthrough */
-    {
-      GstCaps *any_caps = gst_caps_new_empty_simple ("video/x-raw");
-      gst_caps_set_features_simple (any_caps, gst_caps_features_new_any ());
-      caps = gst_caps_merge (caps, any_caps);
-    }
 
     /* add converter klass */
     {
@@ -2184,6 +2258,8 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
   trans_class->transform_meta = GST_DEBUG_FUNCPTR (gst_va_vpp_transform_meta);
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_va_vpp_src_event);
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_va_vpp_sink_event);
+  trans_class->prepare_output_buffer =
+      GST_DEBUG_FUNCPTR (gst_va_vpp_prepare_output_buffer);
 
   trans_class->transform_ip_on_passthrough = FALSE;
 

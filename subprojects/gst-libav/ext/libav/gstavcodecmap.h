@@ -32,6 +32,10 @@
 gboolean
 gst_ffmpeg_codecid_is_image (enum AVCodecID codec_id);
 
+/* Returns TRUE if codec_id has a known mapping */
+gboolean
+gst_ffmpeg_codecid_is_known(enum AVCodecID codec_id);
+
 /*
  * _codecid_to_caps () gets the GstCaps that belongs to
  * a certain CodecID for a pad with compressed data.
@@ -123,11 +127,16 @@ gboolean
 gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
                                   enum AVCodecID ** video_codec_list,
                                   enum AVCodecID ** audio_codec_list,
-				  AVOutputFormat * plugin);
+                                  const AVOutputFormat * plugin);
 
-
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+gboolean
+gst_ffmpeg_channel_layout_to_gst (const AVChannelLayout * channel_layout, gint channels,
+    GstAudioChannelPosition * pos);
+#else
 gboolean
 gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
     GstAudioChannelPosition * pos);
+#endif
 
 #endif /* __GST_FFMPEG_CODECMAP_H__ */

@@ -47,11 +47,21 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_command_line_formatter_get_help(int nargs, IntPtr commands);
 
-		public static string GetHelp(int nargs, string commands) {
-			IntPtr native_commands = GLib.Marshaller.StringToPtrGStrdup (commands);
+		public static string GetHelp(string[] commands) {
+			int nargs = (commands == null ? 0 : commands.Length);
+			IntPtr native_commands = GLib.Marshaller.StringArrayToStrvPtr(commands, false);
 			IntPtr raw_ret = ges_command_line_formatter_get_help(nargs, native_commands);
 			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
-			GLib.Marshaller.Free (native_commands);
+			GLib.Marshaller.StringArrayPtrFree (native_commands, nargs);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_command_line_formatter_get_timeline_uri(IntPtr timeline);
+
+		public static string GetTimelineUri(GES.Timeline timeline) {
+			IntPtr raw_ret = ges_command_line_formatter_get_timeline_uri(timeline == null ? IntPtr.Zero : timeline.Handle);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
 			return ret;
 		}
 

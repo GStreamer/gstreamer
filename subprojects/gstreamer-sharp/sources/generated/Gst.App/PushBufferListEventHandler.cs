@@ -8,7 +8,7 @@ namespace Gst.App {
 	public delegate void PushBufferListEventHandler(object o, PushBufferListEventArgs args);
 
 	public class PushBufferListEventArgs : GLib.SignalArgs {
-		public Gst.BufferList Object{
+		public Gst.BufferList BufferList{
 			get {
 				return (Gst.BufferList) Args [0];
 			}

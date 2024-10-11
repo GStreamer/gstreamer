@@ -44,7 +44,6 @@
 #include "gstinfo.h"
 #include "gstparse.h"
 #include "gstvalue.h"
-#include "gstquark.h"
 #include <glib/gi18n-lib.h>
 #include "glib-compat-private.h"
 #include <math.h>
@@ -1218,7 +1217,8 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
           }
         } else {
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-              "already linked or cannot be linked (peer = %p)", peer);
+              "already linked or cannot be linked (peer = %" GST_PTR_FORMAT ")",
+              peer);
         }
         GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "unreffing pads");
 
@@ -4453,10 +4453,15 @@ gst_util_group_id_next (void)
   return ret;
 }
 
-/* Compute log2 of the passed 64-bit number by finding the highest set bit */
+/* Compute the number of bits needed at least to store `in` */
 static guint
-gst_log2 (GstClockTime in)
+gst_bit_storage_uint64 (guint64 in)
 {
+#if defined(__GNUC__) && __GNUC__ >= 4
+  return in ? 64 - __builtin_clzll (in) : 1;
+#else
+  /* integer log2(v) from:
+     <http://graphics.stanford.edu/~seander/bithacks.html#IntegerLog> */
   const guint64 b[] =
       { 0x2, 0xC, 0xF0, 0xFF00, 0xFFFF0000, 0xFFFFFFFF00000000LL };
   const guint64 S[] = { 1, 2, 4, 8, 16, 32 };
@@ -4470,7 +4475,42 @@ gst_log2 (GstClockTime in)
     }
   }
 
-  return count;
+  return count + 1;             // + 1 to get the number of storage bits needed
+#endif
+}
+
+/**
+ * gst_util_ceil_log2:
+ * @v: a #guint32 value.
+ *
+ * Return a max num of log2.
+ *
+ * Returns: a computed #guint val.
+ *
+ * Since: 1.24
+ */
+guint
+gst_util_ceil_log2 (guint32 v)
+{
+  /* Compute Ceil(Log2(v)) */
+  /* Derived from branchless code for integer log2(v) from:
+     <http://graphics.stanford.edu/~seander/bithacks.html#IntegerLog> */
+  guint r, shift;
+
+  v--;
+  r = (v > 0xFFFF) << 4;
+  v >>= r;
+  shift = (v > 0xFF) << 3;
+  v >>= shift;
+  r |= shift;
+  shift = (v > 0xF) << 2;
+  v >>= shift;
+  r |= shift;
+  shift = (v > 0x3) << 1;
+  v >>= shift;
+  r |= shift;
+  r |= (v >> 1);
+  return r + 1;
 }
 
 /**
@@ -4603,10 +4643,20 @@ gst_calculate_linear_regression (const GstClockTime * xy,
    */
 
   /* Guess how many bits we might need for the usual distribution of input,
-   * with a fallback loop that drops precision if things go pear-shaped */
-  max_bits = gst_log2 (MAX (xmax - xmin, ymax - ymin)) * 7 / 8 + gst_log2 (n);
-  if (max_bits > 64)
-    pshift = max_bits - 64;
+   * with a fallback loop that drops precision if things go pear-shaped.
+   *
+   * Each calculation of tmp during the iteration is multiplying two numbers and
+   * then adding them together, or adding them together and then multiplying
+   * them. The second case is worse and means we need at least twice
+   * (multiplication) as many bits as the biggest number needs, plus another bit
+   * (addition). At most 63 bits (signed 64 bit integer) are available.
+   *
+   * That means that each number must require at most (63 - 1) / 2 bits = 31
+   * bits of storage.
+   */
+  max_bits = gst_bit_storage_uint64 (MAX (1, MAX (xmax - xmin, ymax - ymin)));
+  if (max_bits > 31)
+    pshift = max_bits - 31;
 
   i = 0;
   do {
@@ -4716,6 +4766,10 @@ invalid:
   }
 }
 
+/* Initialized in _priv_gst_plugin_initialize(). */
+GQuark _priv_gst_plugin_api_quark;
+GQuark _priv_gst_plugin_api_flags_quark;
+
 /**
  * gst_type_mark_as_plugin_api:
  * @type: a GType
@@ -4737,8 +4791,8 @@ invalid:
 void
 gst_type_mark_as_plugin_api (GType type, GstPluginAPIFlags flags)
 {
-  g_type_set_qdata (type, GST_QUARK (PLUGIN_API), GINT_TO_POINTER (TRUE));
-  g_type_set_qdata (type, GST_QUARK (PLUGIN_API_FLAGS),
+  g_type_set_qdata (type, _priv_gst_plugin_api_quark, GINT_TO_POINTER (TRUE));
+  g_type_set_qdata (type, _priv_gst_plugin_api_flags_quark,
       GINT_TO_POINTER (flags));
 }
 
@@ -4758,12 +4812,49 @@ gboolean
 gst_type_is_plugin_api (GType type, GstPluginAPIFlags * flags)
 {
   gboolean ret =
-      !!GPOINTER_TO_INT (g_type_get_qdata (type, GST_QUARK (PLUGIN_API)));
+      !!GPOINTER_TO_INT (g_type_get_qdata (type, _priv_gst_plugin_api_quark));
 
   if (ret && flags) {
     *flags =
-        GPOINTER_TO_INT (g_type_get_qdata (type, GST_QUARK (PLUGIN_API_FLAGS)));
+        GPOINTER_TO_INT (g_type_get_qdata (type,
+            _priv_gst_plugin_api_flags_quark));
   }
+
+  return ret;
+}
+
+/**
+ * gst_util_filename_compare:
+ * @a: (type filename): a filename to compare with @b
+ * @b: (type filename): a filename to compare with @a
+ *
+ * Compares the given filenames using natural ordering.
+ *
+ * Since: 1.24
+ */
+gint
+gst_util_filename_compare (const gchar * a, const gchar * b)
+{
+  gchar *a_utf8, *b_utf8;
+  gchar *a1, *b1;
+  gint ret;
+
+  /* Filenames in GLib are only guaranteed to be UTF-8 on Windows */
+  a_utf8 = g_filename_to_utf8 (a, -1, NULL, NULL, NULL);
+  b_utf8 = g_filename_to_utf8 (b, -1, NULL, NULL, NULL);
+
+  if (a_utf8 == NULL || b_utf8 == NULL) {
+    return strcmp (a, b);
+  }
+
+  a1 = g_utf8_collate_key_for_filename (a_utf8, -1);
+  b1 = g_utf8_collate_key_for_filename (b_utf8, -1);
+  ret = strcmp (a1, b1);
+  g_free (a1);
+  g_free (b1);
+
+  g_free (a_utf8);
+  g_free (b_utf8);
 
   return ret;
 }

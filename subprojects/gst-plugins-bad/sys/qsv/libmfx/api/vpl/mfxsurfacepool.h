@@ -37,7 +37,7 @@ typedef struct {
     */
     mfxU32                    DeltaToAllocateOnTheFly;  
     union {
-        mfxVPPPoolType            VPPPoolType; /*!< Defines what VPP pool is targeted - input or ouput. Ignored for other components. */
+        mfxVPPPoolType            VPPPoolType; /*!< Defines what VPP pool is targeted - input or output. Ignored for other components. */
         mfxU32                    reserved;
     };
     mfxU32                    Wait; /*!< Time in milliseconds for GetSurfaceForXXX() and DecodeFrameAsync functions to wait until surface will be available. */

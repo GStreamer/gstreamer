@@ -352,10 +352,11 @@ gst_gl_filtershader_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
 }
 
 static gboolean
-_set_uniform (GQuark field_id, const GValue * value, gpointer user_data)
+_set_uniform (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
 {
   GstGLShader *shader = user_data;
-  const gchar *field_name = g_quark_to_string (field_id);
+  const gchar *field_name = gst_id_str_as_str (fieldname);
 
   if (G_TYPE_CHECK_VALUE_TYPE ((value), G_TYPE_INT)) {
     gst_gl_shader_set_uniform_1i (shader, field_name, g_value_get_int (value));
@@ -404,8 +405,8 @@ _update_uniforms (GstGLFilterShader * filtershader)
   if (filtershader->new_uniforms && filtershader->uniforms) {
     gst_gl_shader_use (filtershader->shader);
 
-    gst_structure_foreach (filtershader->uniforms,
-        (GstStructureForeachFunc) _set_uniform, filtershader->shader);
+    gst_structure_foreach_id_str (filtershader->uniforms,
+        (GstStructureForeachIdStrFunc) _set_uniform, filtershader->shader);
     filtershader->new_uniforms = FALSE;
   }
 }

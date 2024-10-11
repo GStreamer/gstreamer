@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_VP9_DEC_H__
-#define __GST_D3D11_VP9_DEC_H__
+#pragma once
 
 #include "gstd3d11decoder.h"
 
@@ -30,4 +29,3 @@ void  gst_d3d11_vp9_dec_register (GstPlugin * plugin,
 
 G_END_DECLS
 
-#endif /* __GST_D3D11_VP9_DEC_H__ */

@@ -34,6 +34,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/object[@name='Layer']/field[@cname='parent']" name="access">private</attr>
 	<attr path="/api/namespace/object[@name='Formatter']/field[@cname='parent']" name="access">private</attr>
 	<attr path="/api/namespace/object/class_struct[@cname='GESBaseXmlFormatterClass']/field[@cname='content_parser']" name="type">GMarkupParser</attr>
+	<attr path="/api/namespace/object[@name='BaseEffect']/method[@cname='ges_base_effect_set_time_translation_funcs']" name="hidden">true</attr>
 
 	<attr path="/api/namespace/object/class_struct[@cname='GESEffectAssetClass']" name="private">true</attr>
 	<add-node path="/api/namespace/object/class_struct[@cname='GESVideoSourceClass']">

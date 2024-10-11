@@ -37,6 +37,8 @@ using namespace Microsoft::WRL;
 #include "gstqsvallocator_va.h"
 #endif /* G_OS_WIN32 */
 
+#include <queue>
+
 GST_DEBUG_CATEGORY_STATIC (gst_qsv_decoder_debug);
 #define GST_CAT_DEFAULT gst_qsv_decoder_debug
 
@@ -81,6 +83,8 @@ struct _GstQsvDecoderPrivate
 
   mfxSession session;
   mfxVideoParam video_param;
+  mfxExtVideoSignalInfo signal_info;
+  mfxExtBuffer *video_param_ext[1];
 
   /* holding allocated GstQsvFrame, should be cleared via
    * mfxFrameAllocator::Free() */
@@ -522,6 +526,7 @@ gst_qsv_decoder_get_next_task (GstQsvDecoder * self)
 static GstVideoCodecFrame *
 gst_qsv_decoder_find_output_frame (GstQsvDecoder * self, GstClockTime pts)
 {
+  auto videodec = GST_VIDEO_DECODER (self);
   GList *frames, *iter;
   GstVideoCodecFrame *ret = nullptr;
   GstVideoCodecFrame *closest = nullptr;
@@ -529,9 +534,9 @@ gst_qsv_decoder_find_output_frame (GstQsvDecoder * self, GstClockTime pts)
 
   /* give up, just returns the oldest frame */
   if (!GST_CLOCK_TIME_IS_VALID (pts))
-    return gst_video_decoder_get_oldest_frame (GST_VIDEO_DECODER (self));
+    return gst_video_decoder_get_oldest_frame (videodec);
 
-  frames = gst_video_decoder_get_frames (GST_VIDEO_DECODER (self));
+  frames = gst_video_decoder_get_frames (videodec);
 
   for (iter = frames; iter; iter = g_list_next (iter)) {
     GstVideoCodecFrame *frame = (GstVideoCodecFrame *) iter->data;
@@ -562,21 +567,33 @@ gst_qsv_decoder_find_output_frame (GstQsvDecoder * self, GstClockTime pts)
   if (ret) {
     gst_video_codec_frame_ref (ret);
 
+    /* Do garbage collection */
+    std::queue < GstVideoCodecFrame * >old_frames;
+
     /* Release older frames, it can happen if input buffer holds only single
-     * field in case of H264 */
+     * field in case of H264 or incomplete AU */
     for (iter = frames; iter; iter = g_list_next (iter)) {
       GstVideoCodecFrame *frame = (GstVideoCodecFrame *) iter->data;
 
       if (frame == ret)
-        continue;
+        break;
 
-      if (!GST_CLOCK_TIME_IS_VALID (frame->pts))
-        continue;
+      old_frames.push (gst_video_codec_frame_ref (frame));
+    }
 
-      if (frame->pts < ret->pts) {
-        gst_video_decoder_release_frame (GST_VIDEO_DECODER (self),
-            gst_video_codec_frame_ref (frame));
-      }
+    GST_LOG_OBJECT (self, "%u frames are queued before the current output",
+        (guint) old_frames.size ());
+
+    while (old_frames.size () > 16) {
+      auto front = old_frames.front ();
+      old_frames.pop ();
+      gst_video_decoder_release_frame (videodec, front);
+    }
+
+    while (!old_frames.empty ()) {
+      auto front = old_frames.front ();
+      old_frames.pop ();
+      gst_video_codec_frame_unref (front);
     }
   } else {
     ret = gst_video_decoder_get_oldest_frame (GST_VIDEO_DECODER (self));
@@ -888,6 +905,10 @@ gst_qsv_decoder_set_format (GstVideoDecoder * decoder,
 
   memset (&priv->video_param, 0, sizeof (mfxVideoParam));
   priv->video_param.mfx.CodecId = klass->codec_id;
+  priv->signal_info.Header.BufferId = MFX_EXTBUFF_VIDEO_SIGNAL_INFO;
+  priv->signal_info.Header.BufferSz = sizeof (mfxExtVideoSignalInfo);
+  priv->video_param_ext[0] = (mfxExtBuffer *) & priv->signal_info;
+  priv->video_param.ExtParam = priv->video_param_ext;
 
   /* If upstream is live, we will use single async-depth for low-latency
    * decoding */
@@ -1176,7 +1197,8 @@ gst_qsv_decoder_negotiate_internal (GstVideoDecoder * decoder,
   if (priv->use_video_memory) {
     GST_DEBUG_OBJECT (self, "Downstream supports D3D11 memory");
     gst_caps_set_features (priv->output_state->caps, 0,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr));
+        gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+            nullptr));
   }
 #endif
 
@@ -1199,6 +1221,7 @@ gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
   mfxFrameInfo *frame_info = &param->mfx.FrameInfo;
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
   GstVideoInterlaceMode interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+  gboolean is_gbr = FALSE;
 
   width = coded_width = frame_info->Width;
   height = coded_height = frame_info->Height;
@@ -1208,22 +1231,15 @@ gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
     height = frame_info->CropH;
   }
 
-  switch (frame_info->FourCC) {
-    case MFX_FOURCC_NV12:
-      format = GST_VIDEO_FORMAT_NV12;
-      break;
-    case MFX_FOURCC_P010:
-      format = GST_VIDEO_FORMAT_P010_10LE;
-      break;
-    case MFX_FOURCC_P016:
-      format = GST_VIDEO_FORMAT_P016_LE;
-      break;
-    case MFX_FOURCC_RGB4:
-      format = GST_VIDEO_FORMAT_BGRA;
-      break;
-    default:
-      break;
+  if (klass->codec_id == MFX_CODEC_HEVC &&
+      priv->signal_info.ColourDescriptionPresent &&
+      gst_video_color_matrix_from_iso (priv->signal_info.MatrixCoefficients) ==
+      GST_VIDEO_COLOR_MATRIX_RGB) {
+    is_gbr = TRUE;
   }
+
+  if (priv->allocator)
+    priv->allocator->is_gbr = is_gbr;
 
   if (klass->codec_id == MFX_CODEC_JPEG) {
     if (param->mfx.JPEGChromaFormat == MFX_CHROMAFORMAT_YUV422) {
@@ -1235,6 +1251,8 @@ gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
       frame_info->FourCC = MFX_FOURCC_RGB4;
       frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
     }
+  } else {
+    format = gst_qsv_frame_info_format_to_gst (frame_info, is_gbr);
   }
 
   if (format == GST_VIDEO_FORMAT_UNKNOWN) {
@@ -1352,7 +1370,7 @@ gst_qsv_decoder_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
             D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) != 0)
       bind_flags |= D3D11_BIND_SHADER_RESOURCE;
 
-    d3d11_params->desc[0].BindFlags |= bind_flags;
+    gst_d3d11_allocation_params_set_bind_flags (d3d11_params, bind_flags);
     gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
     gst_d3d11_allocation_params_free (d3d11_params);
   }
@@ -1467,8 +1485,11 @@ gst_qsv_decoder_handle_frame (GstVideoDecoder * decoder,
 
 new_sequence:
   if (!priv->decoder) {
+    if (klass->codec_id == MFX_CODEC_HEVC)
+      priv->video_param.NumExtParam = 1;
     status = MFXVideoDECODE_DecodeHeader (priv->session,
         &bs, &priv->video_param);
+    priv->video_param.NumExtParam = 0;
 
     if (status != MFX_ERR_NONE) {
       if (status == MFX_ERR_MORE_DATA) {

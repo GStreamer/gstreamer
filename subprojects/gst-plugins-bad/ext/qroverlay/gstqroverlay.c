@@ -88,15 +88,13 @@ get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
   GstCustomMeta *meta = gst_buffer_get_custom_meta (buf, "GstQROverlayMeta");
   if (meta) {
     gchar *data;
-    GstStructure *structure =
-        gst_custom_meta_get_structure ((GstCustomMeta *) meta);
 
-    if (gst_structure_get (structure, "data", G_TYPE_STRING, &data, NULL)) {
+    if (gst_structure_get (meta->structure, "data", G_TYPE_STRING, &data, NULL)) {
       gboolean keep_data;
 
       GST_OBJECT_LOCK (self);
       self->data_changed = TRUE;
-      if (gst_structure_get_boolean (structure, "keep_data", &keep_data)
+      if (gst_structure_get_boolean (meta->structure, "keep_data", &keep_data)
           && keep_data) {
         g_free (self->data);
         self->data = g_strdup (self->data);
@@ -115,7 +113,7 @@ get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
 
   GST_OBJECT_LOCK (self);
   content = g_strdup (self->data);
-  *reuse_prev = self->data_changed;
+  *reuse_prev = !self->data_changed;
   self->data_changed = FALSE;
   GST_OBJECT_UNLOCK (self);
 
@@ -162,7 +160,6 @@ gst_qr_overlay_class_init (GstQROverlayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  static const gchar *tags[] = { NULL };
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -177,7 +174,7 @@ gst_qr_overlay_class_init (GstQROverlayClass * klass)
       "Overlay Qrcodes over each buffer with data passed in",
       "Thibault Saunier <tsaunier@igalia.com>");
 
-  gst_meta_register_custom ("GstQROverlayMeta", tags, NULL, NULL, NULL);
+  gst_meta_register_custom_simple ("GstQROverlayMeta");
 
   g_object_class_install_property (gobject_class,
       PROP_DATA, g_param_spec_string ("data",

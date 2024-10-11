@@ -122,7 +122,7 @@ gst_kms_allocator_memory_create (GstKMSAllocator * allocator,
     /* Overwrite the video info's stride and offset using the pitch calculcated
      * by the kms driver. */
     stride = gst_video_format_info_extrapolate_stride (vinfo->finfo, i, pitch);
-    GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i) = pitch;
+    GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i) = stride;
     GST_VIDEO_INFO_PLANE_OFFSET (vinfo, i) = offs;
 
     /* Note that we cannot negotiate special padding betweem each planes,
@@ -427,7 +427,7 @@ gst_kms_allocator_dmabuf_import (GstAllocator * allocator, gint * prime_fds,
   GstKMSAllocator *alloc;
   GstKMSMemory *kmsmem;
   GstMemory *mem;
-  gint i, ret;
+  gint i, j, ret;
   guint32 gem_handle[4] = { 0, };
 
   g_return_val_if_fail (n_planes <= GST_VIDEO_MAX_PLANES, FALSE);
@@ -454,6 +454,14 @@ done:
     gint err;
 
     if (!gem_handle[i])
+      continue;
+
+    /* Do not close the same handle twice. */
+    for (j = 0; j < i; j++) {
+      if (gem_handle[j] == gem_handle[i])
+        break;
+    }
+    if (j < i)
       continue;
 
     err = drmIoctl (alloc->priv->fd, DRM_IOCTL_GEM_CLOSE, &arg);

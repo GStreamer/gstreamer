@@ -247,26 +247,7 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
           res = gst_caps_merge (res, gst_static_caps_get (&cdp_caps_framerate));
 
           /* Or anything else with a CDP framerate */
-          if (framerate) {
-            GstCaps *tmp;
-            GstStructure *t;
-            const GValue *cdp_framerate;
-
-            /* Create caps that contain the intersection of all framerates with
-             * the CDP allowed framerates */
-            tmp =
-                gst_caps_make_writable (gst_static_caps_get
-                (&cdp_caps_framerate));
-            t = gst_caps_get_structure (tmp, 0);
-
-            /* There's an intersection between the framerates so we can convert
-             * into CDP with exactly those framerates from anything else */
-            cdp_framerate = gst_structure_get_value (t, "framerate");
-            tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
-            tmp = gst_caps_merge (tmp, gst_static_caps_get (&raw_608_caps));
-            gst_caps_set_value (tmp, "framerate", cdp_framerate);
-            res = gst_caps_merge (res, tmp);
-          } else {
+          {
             GstCaps *tmp, *cdp_caps;
             const GValue *cdp_framerate;
 
@@ -497,6 +478,14 @@ gst_cc_converter_set_caps (GstBaseTransform * base, GstCaps * incaps,
   GST_DEBUG_OBJECT (self,
       "Got caps %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT " (passthrough %d)",
       incaps, outcaps, passthrough);
+
+  if (self->output_caption_type == GST_VIDEO_CAPTION_TYPE_CEA708_RAW
+      || self->output_caption_type == GST_VIDEO_CAPTION_TYPE_CEA708_CDP) {
+    cc_buffer_set_cea608_padding_strategy (self->cc_buffer, 0);
+  } else {
+    cc_buffer_set_cea608_padding_strategy (self->cc_buffer,
+        CC_BUFFER_CEA608_PADDING_STRATEGY_VALID);
+  }
 
   return TRUE;
 
@@ -901,7 +890,7 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
           tc_meta ? &tc_meta->tc : NULL, &self->current_output_timecode))
     goto drop;
 
-  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, TRUE, cc_data,
+  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, cc_data,
       &cc_data_len);
 
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
@@ -1062,7 +1051,7 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
           tc_meta ? &tc_meta->tc : NULL, &self->current_output_timecode))
     goto drop;
 
-  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, TRUE, cc_data,
+  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, cc_data,
       &cc_data_len);
 
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
@@ -1202,7 +1191,7 @@ convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
           tc_meta ? &tc_meta->tc : NULL, &self->current_output_timecode))
     goto drop;
 
-  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, TRUE, cc_data,
+  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, cc_data,
       &cc_data_len);
 
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
@@ -1247,11 +1236,15 @@ convert_cea708_cdp_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
   cea608_len = out.size;
   if (self->out_field == 0) {
+    guint8 unused_field[MAX_CEA608_LEN];
+    guint unused_len = MAX_CEA608_LEN;
     cc_buffer_take_separated (self->cc_buffer, out_fps_entry, out.data,
-        &cea608_len, NULL, 0, NULL, 0);
+        &cea608_len, unused_field, &unused_len, NULL, 0);
   } else {
-    cc_buffer_take_separated (self->cc_buffer, out_fps_entry, NULL, 0, out.data,
-        &cea608_len, NULL, 0);
+    guint8 unused_field[MAX_CEA608_LEN];
+    guint unused_len = MAX_CEA608_LEN;
+    cc_buffer_take_separated (self->cc_buffer, out_fps_entry, unused_field,
+        &unused_len, out.data, &cea608_len, NULL, 0);
   }
   gst_buffer_unmap (outbuf, &out);
   self->output_frames++;
@@ -1296,8 +1289,8 @@ convert_cea708_cdp_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
   gst_buffer_map (outbuf, &out, GST_MAP_READWRITE);
 
   cc_data_len = out.size;
-  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, FALSE,
-      out.data, &cc_data_len);
+  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, out.data,
+      &cc_data_len);
   s334_len = drop_ccp_from_cc_data (out.data, cc_data_len);
   if (s334_len < 0)
     goto drop;
@@ -1348,8 +1341,7 @@ convert_cea708_cdp_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
 
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
   out_len = (guint) out.size;
-  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, TRUE, out.data,
-      &out_len);
+  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, out.data, &out_len);
 
   gst_buffer_unmap (outbuf, &out);
   self->output_frames++;
@@ -1388,7 +1380,7 @@ convert_cea708_cdp_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
           &self->current_output_timecode))
     goto out;
 
-  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, TRUE, cc_data,
+  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, cc_data,
       &cc_data_len);
 
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
@@ -1703,6 +1695,25 @@ gst_cc_converter_generate_output (GstBaseTransform * base, GstBuffer ** outbuf)
     if (gst_buffer_get_size (*outbuf) <= 0) {
       gst_buffer_unref (*outbuf);
       *outbuf = NULL;
+
+      if (inbuf && GST_BUFFER_PTS_IS_VALID (inbuf)) {
+        GstClockTime dur = 0;
+        GstEvent *gap;
+
+        GST_TRACE_OBJECT (self, "Empty generated output for input %"
+            GST_PTR_FORMAT, inbuf);
+
+        if (GST_BUFFER_DURATION_IS_VALID (inbuf)) {
+          dur = GST_BUFFER_DURATION (inbuf);
+        } else if (self->in_fps_n > 0 && self->in_fps_d > 0) {
+          dur = gst_util_uint64_scale (GST_SECOND,
+              self->in_fps_d, self->in_fps_n);
+        }
+
+        gap = gst_event_new_gap (GST_BUFFER_PTS (inbuf), dur);
+        gst_pad_push_event (GST_BASE_TRANSFORM_SRC_PAD (self), gap);
+      }
+
       ret = GST_FLOW_OK;
     }
 
@@ -1872,6 +1883,7 @@ gst_cc_converter_class_init (GstCCConverterClass * klass)
       0, "Closed Caption converter");
 
   gst_type_mark_as_plugin_api (GST_TYPE_CC_CONVERTER_CDP_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_CC_BUFFER_CEA608_PADDING_STRATEGY, 0);
 }
 
 static void
@@ -1881,4 +1893,6 @@ gst_cc_converter_init (GstCCConverter * self)
   self->in_field = 0;
   self->out_field = 0;
   self->cc_buffer = cc_buffer_new ();
+  cc_buffer_set_output_padding (self->cc_buffer, TRUE, FALSE);
+  cc_buffer_set_cea608_padding_strategy (self->cc_buffer, 0);
 }

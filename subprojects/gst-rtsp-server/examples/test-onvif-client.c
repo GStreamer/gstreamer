@@ -128,7 +128,7 @@ setup (Context * ctx)
   MAKE_AND_ADD (toverlay, ctx->pipe, "timeoverlay", done, NULL);
   MAKE_AND_ADD (tee, ctx->pipe, "tee", done, NULL);
   MAKE_AND_ADD (vqueue, ctx->pipe, "queue", done, NULL);
-  MAKE_AND_ADD (ctx->sink, ctx->pipe, "xvimagesink", done, NULL);
+  MAKE_AND_ADD (ctx->sink, ctx->pipe, "autovideosink", done, NULL);
 
   g_object_set (ctx->src, "location", rtsp_address, NULL);
   g_object_set (ctx->src, "onvif-mode", TRUE, NULL);

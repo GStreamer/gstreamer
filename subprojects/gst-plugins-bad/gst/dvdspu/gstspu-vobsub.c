@@ -485,11 +485,41 @@ gstspu_vobsub_handle_dvd_event (GstDVDSpu * dvdspu, GstEvent * event)
       if (was_forced != forced_only)
         hl_change = TRUE;
     }
+  } else if (strcmp (event_type, "dvd-set-frame-size") == 0) {
+    gst_structure_get_int (structure, "width", &state->vobsub.frame_w);
+    gst_structure_get_int (structure, "height", &state->vobsub.frame_h);
+    GST_INFO_OBJECT (dvdspu, "Frame size is now %dx%d",
+        state->vobsub.frame_w, state->vobsub.frame_h);
   }
 
   gst_event_unref (event);
 
   return hl_change;
+}
+
+void
+gstspu_vobsub_get_render_geometry (GstDVDSpu * dvdspu,
+    gint * display_width, gint * display_height,
+    GstVideoRectangle * window_rect)
+{
+  SpuState *state = &dvdspu->spu_state;
+
+  if (window_rect) {
+    window_rect->x = state->vobsub.disp_rect.left;
+    window_rect->y = state->vobsub.disp_rect.top;
+    window_rect->w = state->vobsub.disp_rect.right -
+        state->vobsub.disp_rect.left + 1;
+    window_rect->h = state->vobsub.disp_rect.bottom -
+        state->vobsub.disp_rect.top + 1;
+  }
+
+  if (display_width)
+    *display_width = state->vobsub.frame_w > 0 ?
+        state->vobsub.frame_w : state->info.width;
+
+  if (display_height)
+    *display_height = state->vobsub.frame_h > 0 ?
+        state->vobsub.frame_h : state->info.height;
 }
 
 void

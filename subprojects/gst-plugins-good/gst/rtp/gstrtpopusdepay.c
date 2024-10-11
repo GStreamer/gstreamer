@@ -257,6 +257,9 @@ gst_rtp_opus_depay_process (GstRTPBaseDepayload * depayload,
 
   outbuf = gst_rtp_buffer_get_payload_buffer (rtp_buffer);
 
+  if (gst_rtp_buffer_get_marker (rtp_buffer))
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_RESYNC);
+
   gst_rtp_drop_non_audio_meta (depayload, outbuf);
 
   return outbuf;

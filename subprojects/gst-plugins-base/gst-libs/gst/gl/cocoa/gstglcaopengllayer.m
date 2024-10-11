@@ -51,9 +51,9 @@ _init_debug (void)
 - (void)dealloc {
   if (self->draw_notify)
     self->draw_notify (self->draw_data);
+  self->draw_notify = NULL;
 
-  if (self->draw_context)
-    gst_object_unref (self->draw_context);
+  gst_clear_object (&self->draw_context);
 
   g_weak_ref_clear (&self->gst_gl_window_ref);
   self->gst_gl_context_ref = NULL;
@@ -125,7 +125,7 @@ _context_ready (gpointer data)
 
   if (gst_gl_context) {
     fmt = gst_gl_context_cocoa_get_pixel_format (GST_GL_CONTEXT_COCOA (gst_gl_context));
-    gst_object_unref (gst_gl_context);
+    gst_clear_object (&gst_gl_context);
   }
 
   if (!fmt) {
@@ -159,7 +159,6 @@ _context_ready (gpointer data)
 
   if (!gst_gl_context) {
     GST_ERROR ("failed to retrieve GStreamer GL context in CAOpenGLLayer");
-    gst_clear_object (&gst_gl_context);
     return NULL;
   }
   external_context = (CGLContextObj) gst_gl_context_get_gl_context (gst_gl_context);
@@ -174,8 +173,7 @@ _context_ready (gpointer data)
     return NULL;
   }
 
-  if (self->draw_context)
-    gst_object_unref (self->draw_context);
+  gst_clear_object (&self->draw_context);
 
   if (kCGLNoError != CGLSetCurrentContext (self->gl_context)) {
     GST_ERROR ("failed set cgl context %p current", self->gl_context);

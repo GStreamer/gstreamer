@@ -152,19 +152,21 @@ typedef struct
 } MetadataForeachData;
 
 static gboolean
-structure_foreach_wrapper (GQuark field_id, const GValue * value,
+structure_foreach_wrapper (const GstIdStr * fieldname, const GValue * value,
     gpointer user_data)
 {
   MetadataForeachData *data = (MetadataForeachData *) user_data;
 
-  data->func (data->container, g_quark_to_string (field_id), value, data->data);
+  data->func (data->container, gst_id_str_as_str (fieldname), value,
+      data->data);
   return TRUE;
 }
 
 static gboolean
-_append_foreach (GQuark field_id, const GValue * value, GESMetaContainer * self)
+_append_foreach (const GstIdStr * fieldname, const GValue * value,
+    GESMetaContainer * self)
 {
-  ges_meta_container_set_meta (self, g_quark_to_string (field_id), value);
+  ges_meta_container_set_meta (self, gst_id_str_as_str (fieldname), value);
 
   return TRUE;
 }
@@ -195,8 +197,8 @@ ges_meta_container_foreach (GESMetaContainer * container,
   foreach_data.container = container;
   foreach_data.data = user_data;
 
-  gst_structure_foreach (structure,
-      (GstStructureForeachFunc) structure_foreach_wrapper, &foreach_data);
+  gst_structure_foreach_id_str (structure,
+      (GstStructureForeachIdStrFunc) structure_foreach_wrapper, &foreach_data);
 }
 
 static gboolean
@@ -563,8 +565,8 @@ ges_meta_container_add_metas_from_string (GESMetaContainer * container,
     return FALSE;
   }
 
-  gst_structure_foreach (n_structure, (GstStructureForeachFunc) _append_foreach,
-      container);
+  gst_structure_foreach_id_str (n_structure,
+      (GstStructureForeachIdStrFunc) _append_foreach, container);
 
   gst_structure_free (n_structure);
   return TRUE;

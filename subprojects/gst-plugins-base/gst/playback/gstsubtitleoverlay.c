@@ -55,6 +55,10 @@ GST_DEBUG_CATEGORY_STATIC (subtitle_overlay_debug);
 #define IS_VIDEO_CHAIN_IGNORE_ERROR(flow) \
   G_UNLIKELY (flow == GST_FLOW_ERROR)
 
+/* We have colorspace conversions so we can accept any known video formats */
+#define SUBTITLE_OVERLAY_CAPS GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL)
+static GstStaticCaps sw_template_caps = GST_STATIC_CAPS (SUBTITLE_OVERLAY_CAPS);
+
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -84,12 +88,11 @@ enum
 #define gst_subtitle_overlay_parent_class parent_class
 G_DEFINE_TYPE (GstSubtitleOverlay, gst_subtitle_overlay, GST_TYPE_BIN);
 
-static GQuark _subtitle_overlay_event_marker_id = 0;
+#define SUBTITLE_OVERLAY_EVENT_MARKER "gst-subtitle-overlay-event-marker"
 
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (subtitle_overlay_debug, "subtitleoverlay", 0, "Subtitle Overlay"); \
-    playback_element_init (plugin); \
-    _subtitle_overlay_event_marker_id = g_quark_from_static_string ("gst-subtitle-overlay-event-marker")
+    playback_element_init (plugin);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (subtitleoverlay, "subtitleoverlay",
     GST_RANK_NONE, GST_TYPE_SUBTITLE_OVERLAY, _do_init);
 
@@ -226,15 +229,19 @@ _is_renderer (GstElementFactory * factory)
   return FALSE;
 }
 
+/* Note : Historically subtitle "decoders" (which convert subtitle formats to
+ * raw text) were classified as "Parser/Subtitle". Most were fixed in February
+ * 2024 to use the proper classification of "Decoder/Subtitle" */
 static gboolean
-_is_parser (GstElementFactory * factory)
+_is_parser_decoder (GstElementFactory * factory)
 {
   const gchar *klass;
 
   klass =
       gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
 
-  if (klass != NULL && strstr (klass, "Parser/Subtitle") != NULL)
+  if (klass != NULL && (strstr (klass, "Parser/Subtitle") != NULL ||
+          strstr (klass, "Decoder/Subtitle") != NULL))
     return TRUE;
   return FALSE;
 }
@@ -292,7 +299,7 @@ _get_sub_caps (GstElementFactory * factory)
 {
   const GList *templates;
   GList *walk;
-  gboolean is_parser = _is_parser (factory);
+  gboolean is_parser_decoder = _is_parser_decoder (factory);
 
   templates = gst_element_factory_get_static_pad_templates (factory);
   for (walk = (GList *) templates; walk; walk = g_list_next (walk)) {
@@ -301,7 +308,7 @@ _get_sub_caps (GstElementFactory * factory)
     if (templ->direction == GST_PAD_SINK && templ->presence == GST_PAD_ALWAYS) {
       gboolean found = FALSE;
 
-      if (is_parser) {
+      if (is_parser_decoder) {
         found = TRUE;
       } else {
         guint i;
@@ -344,10 +351,10 @@ _factory_filter (GstPluginFeature * feature, GstCaps ** subcaps)
   if (strcmp ("textoverlay", name) != 0 && rank < GST_RANK_MARGINAL)
     return FALSE;
 
-  /* Check if it's a renderer or a parser */
+  /* Check if it's a renderer or a parser/decoder */
   if (_is_renderer (factory)) {
     is_renderer = TRUE;
-  } else if (_is_parser (factory)) {
+  } else if (_is_parser_decoder (factory)) {
     is_renderer = FALSE;
   } else {
     return FALSE;
@@ -378,8 +385,8 @@ _factory_filter (GstPluginFeature * feature, GstCaps ** subcaps)
     *subcaps = gst_caps_merge (*subcaps, templ_caps);
     return TRUE;
   } else if (!is_renderer && !have_video_sink && templ_caps) {
-    GST_DEBUG ("Found parser element %s (%s) with caps %" GST_PTR_FORMAT,
-        gst_element_factory_get_metadata (factory,
+    GST_DEBUG ("Found parser/decoder element %s (%s) with caps %"
+        GST_PTR_FORMAT, gst_element_factory_get_metadata (factory,
             GST_ELEMENT_METADATA_LONGNAME),
         gst_plugin_feature_get_name (feature), templ_caps);
     *subcaps = gst_caps_merge (*subcaps, templ_caps);
@@ -1702,7 +1709,7 @@ gst_subtitle_overlay_src_proxy_event (GstPad * proxypad, GstObject * parent,
     goto out;
 
   s = gst_event_get_structure (event);
-  if (s && gst_structure_id_has_field (s, _subtitle_overlay_event_marker_id)) {
+  if (s && gst_structure_has_field (s, SUBTITLE_OVERLAY_EVENT_MARKER)) {
     GST_DEBUG_OBJECT (ghostpad,
         "Dropping event with marker: %" GST_PTR_FORMAT,
         gst_event_get_structure (event));
@@ -1736,7 +1743,6 @@ gst_subtitle_overlay_video_sink_setcaps (GstSubtitleOverlay * self,
   if (!gst_video_info_from_caps (&info, caps)) {
     GST_ERROR_OBJECT (self, "Failed to parse caps");
     ret = FALSE;
-    GST_SUBTITLE_OVERLAY_UNLOCK (self);
     goto out;
   }
 
@@ -1795,6 +1801,186 @@ done:
   gst_event_unref (event);
 
   return ret;
+}
+
+/**
+ * gst_subtitle_overlay_add_feature_and_intersect:
+ *
+ * Creates a new #GstCaps containing the (given caps +
+ * given caps feature) + (given caps intersected by the
+ * given filter).
+ *
+ * Returns: the new #GstCaps
+ */
+static GstCaps *
+gst_subtitle_overlay_add_feature_and_intersect (GstCaps * caps,
+    const gchar * feature, GstCaps * filter)
+{
+  int i, caps_size;
+  GstCaps *new_caps;
+
+  new_caps = gst_caps_copy (caps);
+
+  caps_size = gst_caps_get_size (new_caps);
+  for (i = 0; i < caps_size; i++) {
+    GstCapsFeatures *features = gst_caps_get_features (new_caps, i);
+    if (!gst_caps_features_is_any (features)) {
+      gst_caps_features_add (features, feature);
+    }
+  }
+
+  gst_caps_append (new_caps, gst_caps_intersect_full (caps,
+          filter, GST_CAPS_INTERSECT_FIRST));
+
+  return new_caps;
+}
+
+/**
+ * gst_subtitle_overlay_intersect_by_feature:
+ *
+ * Creates a new #GstCaps based on the following filtering rule.
+ *
+ * For each individual caps contained in given caps, if the
+ * caps uses the given caps feature, keep a version of the caps
+ * with the feature and an another one without. Otherwise, intersect
+ * the caps with the given filter.
+ *
+ * Returns: the new #GstCaps
+ */
+static GstCaps *
+gst_subtitle_overlay_intersect_by_feature (GstCaps * caps,
+    const gchar * feature, GstCaps * filter)
+{
+  int i, caps_size;
+  GstCaps *new_caps;
+
+  new_caps = gst_caps_new_empty ();
+
+  caps_size = gst_caps_get_size (caps);
+  for (i = 0; i < caps_size; i++) {
+    GstStructure *caps_structure = gst_caps_get_structure (caps, i);
+    GstCapsFeatures *caps_features =
+        gst_caps_features_copy (gst_caps_get_features (caps, i));
+    GstCaps *filtered_caps;
+    GstCaps *simple_caps =
+        gst_caps_new_full (gst_structure_copy (caps_structure), NULL);
+    gst_caps_set_features (simple_caps, 0, caps_features);
+
+    if (gst_caps_features_contains (caps_features, feature)) {
+      gst_caps_append (new_caps, gst_caps_copy (simple_caps));
+
+      gst_caps_features_remove (caps_features, feature);
+      filtered_caps = gst_caps_ref (simple_caps);
+    } else {
+      filtered_caps = gst_caps_intersect_full (simple_caps, filter,
+          GST_CAPS_INTERSECT_FIRST);
+    }
+
+    gst_caps_unref (simple_caps);
+    gst_caps_append (new_caps, filtered_caps);
+  }
+
+  return new_caps;
+}
+
+static GstCaps *
+gst_subtitle_overlay_get_videosink_caps (GstSubtitleOverlay * overlay,
+    GstPad * pad, GstCaps * filter)
+{
+  GstPad *srcpad = overlay->srcpad;
+  GstCaps *peer_caps = NULL, *caps = NULL, *overlay_filter = NULL;
+
+  if (filter) {
+    /* filter caps + composition feature + filter caps
+     * filtered by the software caps. */
+    GstCaps *sw_caps = gst_static_caps_get (&sw_template_caps);
+    overlay_filter = gst_subtitle_overlay_add_feature_and_intersect (filter,
+        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, sw_caps);
+    gst_caps_unref (sw_caps);
+
+    GST_DEBUG_OBJECT (overlay, "overlay filter %" GST_PTR_FORMAT,
+        overlay_filter);
+  }
+
+  peer_caps = gst_pad_peer_query_caps (srcpad, overlay_filter);
+
+  if (overlay_filter)
+    gst_caps_unref (overlay_filter);
+
+  if (peer_caps) {
+
+    GST_DEBUG_OBJECT (pad, "peer caps  %" GST_PTR_FORMAT, peer_caps);
+
+    if (gst_caps_is_any (peer_caps)) {
+
+      /* if peer returns ANY caps, return filtered src pad template caps */
+      caps = gst_caps_copy (gst_pad_get_pad_template_caps (srcpad));
+    } else {
+
+      /* duplicate caps which contains the composition into one version with
+       * the meta and one without. Filter the other caps by the software caps */
+      GstCaps *sw_caps = gst_static_caps_get (&sw_template_caps);
+      caps = gst_subtitle_overlay_intersect_by_feature (peer_caps,
+          GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, sw_caps);
+      gst_caps_unref (sw_caps);
+    }
+
+    gst_caps_unref (peer_caps);
+
+  } else {
+    /* no peer, our padtemplate is enough then */
+    caps = gst_pad_get_pad_template_caps (pad);
+  }
+
+  if (filter) {
+    GstCaps *intersection = gst_caps_intersect_full (filter, caps,
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = intersection;
+  }
+
+  GST_DEBUG_OBJECT (overlay, "returning  %" GST_PTR_FORMAT, caps);
+
+  return caps;
+}
+
+
+
+static gboolean
+gst_subtitle_overlay_video_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
+{
+  GstSubtitleOverlay *overlay = (GstSubtitleOverlay *) parent;
+  gboolean res = FALSE;
+
+  GST_DEBUG_OBJECT (pad, "query %" GST_PTR_FORMAT, query);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (pad));
+
+      if (target) {
+        /* If we have a peer, we let the default handler take care of it  */
+        res = gst_pad_query_default (pad, parent, query);
+        gst_object_unref (target);
+      } else {
+        GstCaps *filter, *caps;
+        /* We haven't instantiated the internal elements yet, we handle it ourselves */
+        gst_query_parse_caps (query, &filter);
+        caps = gst_subtitle_overlay_get_videosink_caps (overlay, pad, filter);
+        gst_query_set_caps_result (query, caps);
+        gst_caps_unref (caps);
+        res = TRUE;
+      }
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, parent, query);
+      break;
+  }
+
+  return res;
 }
 
 static GstFlowReturn
@@ -2002,7 +2188,7 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstObject * parent,
       event = GST_EVENT_CAST (gst_event_make_writable (event));
       structure = gst_event_writable_structure (event);
 
-      gst_structure_id_set (structure, _subtitle_overlay_event_marker_id,
+      gst_structure_set_static_str (structure, SUBTITLE_OVERLAY_EVENT_MARKER,
           G_TYPE_BOOLEAN, TRUE, NULL);
       break;
     }
@@ -2023,6 +2209,8 @@ gst_subtitle_overlay_subtitle_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query)
 {
   gboolean ret;
+
+  GST_DEBUG_OBJECT (pad, "got query %" GST_PTR_FORMAT, query);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ACCEPT_CAPS:
@@ -2079,6 +2267,8 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self)
   gst_object_unref (templ);
   gst_pad_set_event_function (self->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_video_sink_event));
+  gst_pad_set_query_function (self->video_sinkpad,
+      GST_DEBUG_FUNCPTR (gst_subtitle_overlay_video_sink_query));
   gst_pad_set_chain_function (self->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_video_sink_chain));
 

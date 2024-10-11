@@ -6,4 +6,10 @@ if host_system == 'darwin'
     include_directories: [configinc],
     dependencies : [gstgl_dep, corefoundation_dep, appkit_dep],
     install: false)
+
+  executable('multiple-glsinks-start-stop', 'multiple-glsinks-start-stop.m',
+    objc_args : [gst_plugins_base_args],
+    include_directories: [configinc],
+    dependencies : [gstgl_dep, corefoundation_dep, appkit_dep],
+    install: false)
 endif

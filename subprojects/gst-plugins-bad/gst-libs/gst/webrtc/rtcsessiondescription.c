@@ -75,7 +75,9 @@ gst_webrtc_session_description_copy (const GstWebRTCSessionDescription * src)
   ret = g_new0 (GstWebRTCSessionDescription, 1);
 
   ret->type = src->type;
-  gst_sdp_message_copy (src->sdp, &ret->sdp);
+  if (src->sdp != NULL) {
+    gst_sdp_message_copy (src->sdp, &ret->sdp);
+  }
 
   return ret;
 }
@@ -91,7 +93,9 @@ gst_webrtc_session_description_free (GstWebRTCSessionDescription * desc)
 {
   g_return_if_fail (desc != NULL);
 
-  gst_sdp_message_free (desc->sdp);
+  if (desc->sdp != NULL) {
+    gst_sdp_message_free (desc->sdp);
+  }
   g_free (desc);
 }
 

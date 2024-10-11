@@ -104,16 +104,58 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_context_ref(IntPtr raw);
+
+		public Gst.Context Ref() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr raw_ret = gst_context_ref(this_as_native);
+			Gst.Context ret = Gst.Context.New (raw_ret);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_context_unref(IntPtr raw);
+
+		public void Unref() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			gst_context_unref(this_as_native);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_context_writable_structure(IntPtr raw);
 
 		public Gst.Structure WritableStructure() {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
 			IntPtr raw_ret = gst_context_writable_structure(this_as_native);
-			Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), true);
+			Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), false);
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_context_replace(IntPtr old_context, IntPtr new_context);
+
+		public static bool Replace(ref Gst.Context old_context, Gst.Context new_context) {
+			IntPtr native_old_context = GLib.Marshaller.StructureToPtrAlloc (old_context);
+			IntPtr native_new_context = GLib.Marshaller.StructureToPtrAlloc (new_context);
+			bool raw_ret = gst_context_replace(native_old_context, native_new_context);
+			bool ret = raw_ret;
+			old_context = Gst.Context.New (native_old_context);
+			Marshal.FreeHGlobal (native_old_context);
+			Marshal.FreeHGlobal (native_new_context);
+			return ret;
+		}
+
+		public static bool Replace(ref Gst.Context old_context) {
+			return Replace (ref old_context, Gst.Context.Zero);
 		}
 
 		static void ReadNative (IntPtr native, ref Gst.Context target)

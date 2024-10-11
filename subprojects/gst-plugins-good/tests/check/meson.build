@@ -92,6 +92,7 @@ if not get_option('rtp').disabled() and not get_option('rtpmanager').disabled()
     [ 'elements/rtph264' ],
     [ 'elements/rtph265' ],
     [ 'elements/rtpopus' ],
+    [ 'elements/rtppassthrough' ],
     [ 'elements/rtpvp8' ],
     [ 'elements/rtpvp9' ],
     [ 'elements/rtpbin' ],
@@ -127,12 +128,6 @@ endif
 # FIXME: valgrind elements/rtp-payloading - needs fixing
 # elements/videocrop should be disabled since it takes way too long in valgrind
 
-libsoup2_dep = dependency('libsoup-2.4', version : '>=2.48',
-                          required : false, fallback : ['libsoup', 'libsoup_dep'],
-                          default_options: ['sysprof=disabled'])
-libsoup3_dep = dependency('libsoup-3.0', required : false,
-                           fallback : ['libsoup3', 'libsoup_dep'])
-
 # FIXME: unistd dependency or not tested yet on windows
 if host_machine.system() != 'windows'
   good_tests += [
@@ -144,8 +139,6 @@ if host_machine.system() != 'windows'
     [ 'elements/jpegdec', not jpeglib.found() ],
     [ 'elements/jpegenc', not jpeglib.found() ],
     [ 'elements/mpg123audiodec', not mpg123_dep.found(), [gstfft_dep]],
-    [ 'elements/souphttpsrc', not libsoup2_dep.found(), [libsoup2_dep], [], 'elements/souphttpsrc2'],
-    [ 'elements/souphttpsrc', not libsoup3_dep.found(), [libsoup3_dep], [], 'elements/souphttpsrc3'],
     [ 'elements/id3v2mux', not taglib_dep.found() ],
     [ 'elements/apev2mux', not taglib_dep.found() ],
     [ 'elements/vp8enc', not vpx_dep.found() or not have_vp8_encoder ],
@@ -158,11 +151,20 @@ if host_machine.system() != 'windows'
   ]
 endif
 
+if get_option('soup').allowed()
+  if libsoup3_dep.found()
+    good_tests += [['elements/souphttpsrc', false, [libsoup3_dep], []]]
+  elif libsoup2_dep.found()
+    good_tests += [['elements/souphttpsrc', false, [libsoup2_dep], []]]
+  endif
+endif
+
+fsmod = import('fs')
 test_defines = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
   '-DGST_CHECK_TEST_ENVIRONMENT_BEACON="GST_PLUGIN_LOADING_WHITELIST"',
-  '-DGST_TEST_FILES_PATH="' + meson.current_source_dir() + '/../files"',
+  '-DGST_TEST_FILES_PATH="' + fsmod.as_posix(meson.current_source_dir()) + '/../files"',
   '-DGST_USE_UNSTABLE_API',
 ]
 
@@ -202,7 +204,7 @@ test_deps = [gst_dep, gstbase_dep, gstnet_dep, gstcheck_dep, gstaudio_dep,
 # FIXME: add valgrind suppression common/gst.supp gst-plugins-good.supp
 foreach t : good_tests
   fname = '@0@.c'.format(t.get(0))
-  test_name = t.get(4, t.get(0)).underscorify()
+  test_name = t.get(0).underscorify()
   extra_sources = t.get(3, [ ])
   extra_deps = t.get(2, [ ])
   skip_test = t.get(1, false)

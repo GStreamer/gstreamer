@@ -25,6 +25,14 @@
 #include "gstcudaloader.h"
 #include <gmodule.h>
 #include "gstcuda-private.h"
+#include "gstcudaloader-private.h"
+
+#ifdef HAVE_CUDA_GST_GL
+#include <gst/gl/gstglconfig.h>
+#if GST_GL_HAVE_PLATFORM_EGL
+#include <gst/gl/egl/egl.h>
+#endif /* GST_GL_HAVE_PLATFORM_EGL */
+#endif /* HAVE_CUDA_GST_GL */
 
 GST_DEBUG_CATEGORY (gst_cudaloader_debug);
 #define GST_CAT_DEFAULT gst_cudaloader_debug
@@ -43,10 +51,20 @@ GST_DEBUG_CATEGORY (gst_cudaloader_debug);
   } \
 } G_STMT_END;
 
+#define LOAD_OPTIONAL_SYMBOL(name,func) G_STMT_START { \
+  if (!g_module_symbol (module, G_STRINGIFY (name), (gpointer *) &vtable->func)) { \
+    GST_WARNING ("Failed to load '%s', %s", G_STRINGIFY (name), g_module_error()); \
+    return; \
+  } \
+} G_STMT_END;
+
 /* *INDENT-OFF* */
 typedef struct _GstNvCodecCudaVTable
 {
   gboolean loaded;
+  gboolean have_virtual_alloc;
+  gboolean have_stream_ordered_alloc;
+  gboolean have_ext_interop;
 
   CUresult (CUDAAPI * CuInit) (unsigned int Flags);
   CUresult (CUDAAPI * CuGetErrorName) (CUresult error, const char **pStr);
@@ -57,6 +75,7 @@ typedef struct _GstNvCodecCudaVTable
   CUresult (CUDAAPI * CuCtxDestroy) (CUcontext ctx);
   CUresult (CUDAAPI * CuCtxPopCurrent) (CUcontext * pctx);
   CUresult (CUDAAPI * CuCtxPushCurrent) (CUcontext ctx);
+  CUresult (CUDAAPI * CuCtxSynchronize) (void);
 
   CUresult (CUDAAPI * CuCtxEnablePeerAccess) (CUcontext peerContext,
       unsigned int Flags);
@@ -83,6 +102,18 @@ typedef struct _GstNvCodecCudaVTable
   CUresult (CUDAAPI * CuMemcpy2D) (const CUDA_MEMCPY2D * pCopy);
   CUresult (CUDAAPI * CuMemcpy2DAsync) (const CUDA_MEMCPY2D * pCopy,
       CUstream hStream);
+  CUresult (CUDAAPI *CuMemcpyDtoD) (CUdeviceptr dstDevice,
+      CUdeviceptr srcDevice, size_t ByteCount);
+  CUresult (CUDAAPI *CuMemcpyDtoDAsync) (CUdeviceptr dstDevice,
+      CUdeviceptr srcDevice, size_t ByteCount, CUstream hStream);
+  CUresult (CUDAAPI *CuMemcpyDtoH) (void *dstHost, CUdeviceptr srcDevice,
+      size_t ByteCount);
+  CUresult (CUDAAPI *CuMemcpyDtoHAsync) (void *dstHost, CUdeviceptr srcDevice,
+      size_t ByteCount, CUstream hStream);
+  CUresult (CUDAAPI *CuMemcpyHtoD) (CUdeviceptr dstDevice, const void *srcHost,
+      size_t ByteCount);
+  CUresult (CUDAAPI *CuMemcpyHtoDAsync) (CUdeviceptr dstDevice,
+      const void *srcHost, size_t ByteCount, CUstream hStream);
 
   CUresult (CUDAAPI * CuMemFree) (CUdeviceptr dptr);
   CUresult (CUDAAPI * CuMemFreeHost) (void *p);
@@ -115,7 +146,6 @@ typedef struct _GstNvCodecCudaVTable
       unsigned int blockDimX, unsigned int blockDimY, unsigned int blockDimZ,
       unsigned int sharedMemBytes, CUstream hStream, void **kernelParams,
       void **extra);
-
   CUresult (CUDAAPI * CuGraphicsGLRegisterImage) (CUgraphicsResource *
       pCudaResource, unsigned int image, unsigned int target,
       unsigned int Flags);
@@ -124,6 +154,30 @@ typedef struct _GstNvCodecCudaVTable
   CUresult (CUDAAPI * CuGLGetDevices) (unsigned int *pCudaDeviceCount,
       CUdevice * pCudaDevices, unsigned int cudaDeviceCount,
       CUGLDeviceList deviceList);
+
+#if defined(HAVE_CUDA_NVMM_JETSON) && GST_GL_HAVE_PLATFORM_EGL
+  CUresult (CUDAAPI* CuGraphicsEGLRegisterImage) (CUgraphicsResource *
+      pCudaResource, EGLImageKHR image, unsigned int flags);
+  CUresult (CUDAAPI* CuGraphicsResourceGetMappedEglFrame)
+      (CUeglFrame* eglFrame, CUgraphicsResource resource, unsigned int index,
+      unsigned int mipLevel);
+#endif
+
+  CUresult (CUDAAPI * CuEventCreate) (CUevent *phEvent, unsigned int Flags);
+  CUresult (CUDAAPI * CuEventDestroy) (CUevent hEvent);
+  CUresult (CUDAAPI * CuEventRecord) (CUevent hEvent, CUstream hStream);
+  CUresult (CUDAAPI * CuEventSynchronize) (CUevent hEvent);
+
+  CUresult (CUDAAPI * CuIpcGetEventHandle) (CUipcEventHandle *pHandle,
+      CUevent event);
+  CUresult (CUDAAPI * CuIpcOpenEventHandle) (CUevent* phEvent,
+      CUipcEventHandle handle);
+
+  CUresult (CUDAAPI * CuIpcGetMemHandle) (CUipcMemHandle *pHandle,
+      CUdeviceptr dptr);
+  CUresult (CUDAAPI * CuIpcOpenMemHandle) (CUdeviceptr *pdptr,
+      CUipcMemHandle handle, unsigned int Flags);
+  CUresult (CUDAAPI * CuIpcCloseMemHandle) (CUdeviceptr dptr);
 
 #ifdef G_OS_WIN32
   CUresult (CUDAAPI * CuGraphicsD3D11RegisterResource) (CUgraphicsResource *
@@ -134,10 +188,142 @@ typedef struct _GstNvCodecCudaVTable
       CUdevice * pCudaDevices, unsigned int cudaDeviceCount,
       ID3D11Device * pD3D11Device, CUd3d11DeviceList deviceList);
 #endif
+
+  CUresult (CUDAAPI * CuMemAddressReserve) (CUdeviceptr *ptr, size_t size,
+      size_t alignment, CUdeviceptr addr, unsigned long long flags);
+  CUresult (CUDAAPI * CuMemAddressFree) (CUdeviceptr ptr, size_t size);
+  CUresult (CUDAAPI * CuMemCreate) (CUmemGenericAllocationHandle *handle,
+      size_t size, const CUmemAllocationProp *prop, unsigned long long flags);
+  CUresult (CUDAAPI * CuMemRelease) (CUmemGenericAllocationHandle handle);
+  CUresult (CUDAAPI * CuMemExportToShareableHandle) (void *shareableHandle,
+      CUmemGenericAllocationHandle handle, CUmemAllocationHandleType handleType,
+      unsigned long long flags);
+  CUresult (CUDAAPI * CuMemImportFromShareableHandle)
+      (CUmemGenericAllocationHandle *handle, void *osHandle,
+       CUmemAllocationHandleType shHandleType);
+  CUresult (CUDAAPI * CuMemSetAccess) (CUdeviceptr ptr, size_t size,
+      const CUmemAccessDesc *desc, size_t count);
+  CUresult (CUDAAPI * CuMemGetAccess) (unsigned long long *flags,
+      const CUmemLocation *location, CUdeviceptr ptr);
+  CUresult (CUDAAPI * CuMemGetAllocationGranularity) (size_t *granularity,
+      const CUmemAllocationProp *prop, CUmemAllocationGranularity_flags option);
+  CUresult (CUDAAPI * CuMemGetAllocationPropertiesFromHandle)
+      (CUmemAllocationProp *prop, CUmemGenericAllocationHandle handle);
+  CUresult (CUDAAPI * CuMemMap) (CUdeviceptr ptr, size_t size, size_t offset,
+       CUmemGenericAllocationHandle handle, unsigned long long flags);
+  CUresult (CUDAAPI * CuMemUnmap) (CUdeviceptr ptr, size_t size);
+  CUresult (CUDAAPI * CuMemRetainAllocationHandle)
+      (CUmemGenericAllocationHandle *handle, void *addr);
+
+  CUresult (CUDAAPI * CuMemAllocAsync) (CUdeviceptr *dptr, size_t bytesize,
+      CUstream hStream);
+  CUresult (CUDAAPI * CuMemAllocFromPoolAsync) (CUdeviceptr *dptr,
+      size_t bytesize, CUmemoryPool pool, CUstream hStream);
+  CUresult (CUDAAPI * CuMemFreeAsync) (CUdeviceptr dptr, CUstream hStream);
+  CUresult (CUDAAPI * CuMemPoolCreate) (CUmemoryPool *pool,
+      const CUmemPoolProps *poolProps);
+  CUresult (CUDAAPI * CuMemPoolDestroy) (CUmemoryPool pool);
+  CUresult (CUDAAPI * CuMemPoolSetAttribute) (CUmemoryPool pool,
+      CUmemPool_attribute attr, void *value);
+  CUresult (CUDAAPI * CuMemPoolGetAttribute) (CUmemoryPool pool,
+      CUmemPool_attribute attr, void *value);
+
+  CUresult (CUDAAPI * CuDestroyExternalMemory) (CUexternalMemory extMem);
+  CUresult (CUDAAPI * CuDestroyExternalSemaphore) (CUexternalSemaphore extSem);
+  CUresult (CUDAAPI * CuExternalMemoryGetMappedBuffer) (CUdeviceptr *devPtr,
+      CUexternalMemory extMem,
+      const CUDA_EXTERNAL_MEMORY_BUFFER_DESC *bufferDesc);
+  CUresult (CUDAAPI * CuExternalMemoryGetMappedMipmappedArray)
+      (CUmipmappedArray *mipmap, CUexternalMemory extMem,
+      const CUDA_EXTERNAL_MEMORY_MIPMAPPED_ARRAY_DESC *mipmapDesc);
+
+  CUresult (CUDAAPI * CuImportExternalMemory) (CUexternalMemory *extMem_out,
+      const CUDA_EXTERNAL_MEMORY_HANDLE_DESC *memHandleDesc);
+  CUresult (CUDAAPI * CuImportExternalSemaphore)
+      (CUexternalSemaphore *extSem_out,
+      const CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC *semHandleDesc);
+  CUresult (CUDAAPI * CuSignalExternalSemaphoresAsync)
+      (const CUexternalSemaphore *extSemArray,
+      const CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS *paramsArray,
+      unsigned int numExtSems, CUstream stream);
+  CUresult (CUDAAPI * CuWaitExternalSemaphoresAsync)
+      (const CUexternalSemaphore *extSemArray,
+      const CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS *paramsArray,
+      unsigned int numExtSems, CUstream stream);
 } GstNvCodecCudaVTable;
 /* *INDENT-ON* */
 
 static GstNvCodecCudaVTable gst_cuda_vtable = { 0, };
+
+static void
+gst_cuda_load_optional_symbols (GModule * module)
+{
+  GstNvCodecCudaVTable *vtable = &gst_cuda_vtable;
+
+  LOAD_OPTIONAL_SYMBOL (cuMemAddressReserve, CuMemAddressReserve);
+  LOAD_OPTIONAL_SYMBOL (cuMemAddressFree, CuMemAddressFree);
+  LOAD_OPTIONAL_SYMBOL (cuMemCreate, CuMemCreate);
+  LOAD_OPTIONAL_SYMBOL (cuMemRelease, CuMemRelease);
+  LOAD_OPTIONAL_SYMBOL (cuMemExportToShareableHandle,
+      CuMemExportToShareableHandle);
+  LOAD_OPTIONAL_SYMBOL (cuMemImportFromShareableHandle,
+      CuMemImportFromShareableHandle);
+  LOAD_OPTIONAL_SYMBOL (cuMemSetAccess, CuMemSetAccess);
+  LOAD_OPTIONAL_SYMBOL (cuMemGetAccess, CuMemGetAccess);
+  LOAD_OPTIONAL_SYMBOL (cuMemGetAllocationGranularity,
+      CuMemGetAllocationGranularity);
+  LOAD_OPTIONAL_SYMBOL (cuMemGetAllocationPropertiesFromHandle,
+      CuMemGetAllocationPropertiesFromHandle);
+  LOAD_OPTIONAL_SYMBOL (cuMemMap, CuMemMap);
+  LOAD_OPTIONAL_SYMBOL (cuMemUnmap, CuMemUnmap);
+  LOAD_OPTIONAL_SYMBOL (cuMemRetainAllocationHandle,
+      CuMemRetainAllocationHandle);
+
+  GST_INFO ("Virtual alloc symbols are loaded");
+
+  vtable->have_virtual_alloc = TRUE;
+}
+
+static void
+gst_cuda_load_stream_ordered_alloc_symbols (GModule * module)
+{
+  GstNvCodecCudaVTable *vtable = &gst_cuda_vtable;
+
+  LOAD_OPTIONAL_SYMBOL (cuMemAllocAsync, CuMemAllocAsync);
+  LOAD_OPTIONAL_SYMBOL (cuMemAllocFromPoolAsync, CuMemAllocFromPoolAsync);
+  LOAD_OPTIONAL_SYMBOL (cuMemFreeAsync, CuMemFreeAsync);
+  LOAD_OPTIONAL_SYMBOL (cuMemPoolCreate, CuMemPoolCreate);
+  LOAD_OPTIONAL_SYMBOL (cuMemPoolDestroy, CuMemPoolDestroy);
+  LOAD_OPTIONAL_SYMBOL (cuMemPoolSetAttribute, CuMemPoolSetAttribute);
+  LOAD_OPTIONAL_SYMBOL (cuMemPoolGetAttribute, CuMemPoolGetAttribute);
+
+  GST_INFO ("Stream ordered alloc symbols are loaded");
+
+  vtable->have_stream_ordered_alloc = TRUE;
+}
+
+static void
+gst_cuda_load_ext_interop_symbols (GModule * module)
+{
+  GstNvCodecCudaVTable *vtable = &gst_cuda_vtable;
+
+  LOAD_OPTIONAL_SYMBOL (cuDestroyExternalMemory, CuDestroyExternalMemory);
+  LOAD_OPTIONAL_SYMBOL (cuDestroyExternalSemaphore, CuDestroyExternalSemaphore);
+  LOAD_OPTIONAL_SYMBOL (cuExternalMemoryGetMappedBuffer,
+      CuExternalMemoryGetMappedBuffer);
+  LOAD_OPTIONAL_SYMBOL (cuExternalMemoryGetMappedMipmappedArray,
+      CuExternalMemoryGetMappedMipmappedArray);
+  LOAD_OPTIONAL_SYMBOL (cuImportExternalMemory, CuImportExternalMemory);
+  LOAD_OPTIONAL_SYMBOL (cuImportExternalSemaphore, CuImportExternalSemaphore);
+  LOAD_OPTIONAL_SYMBOL (cuSignalExternalSemaphoresAsync,
+      CuSignalExternalSemaphoresAsync);
+  LOAD_OPTIONAL_SYMBOL (cuWaitExternalSemaphoresAsync,
+      CuWaitExternalSemaphoresAsync);
+
+  GST_INFO ("External resource interop symbols are loaded");
+
+  vtable->have_ext_interop = TRUE;
+}
 
 static void
 gst_cuda_load_library_once_func (void)
@@ -164,6 +350,7 @@ gst_cuda_load_library_once_func (void)
   LOAD_SYMBOL (cuCtxCreate, CuCtxCreate);
   LOAD_SYMBOL (cuCtxDestroy, CuCtxDestroy);
   LOAD_SYMBOL (cuCtxPopCurrent, CuCtxPopCurrent);
+  LOAD_SYMBOL (cuCtxSynchronize, CuCtxSynchronize);
   LOAD_SYMBOL (cuCtxPushCurrent, CuCtxPushCurrent);
   LOAD_SYMBOL (cuCtxEnablePeerAccess, CuCtxEnablePeerAccess);
   LOAD_SYMBOL (cuCtxDisablePeerAccess, CuCtxDisablePeerAccess);
@@ -182,6 +369,12 @@ gst_cuda_load_library_once_func (void)
   LOAD_SYMBOL (cuMemAllocHost, CuMemAllocHost);
   LOAD_SYMBOL (cuMemcpy2D, CuMemcpy2D);
   LOAD_SYMBOL (cuMemcpy2DAsync, CuMemcpy2DAsync);
+  LOAD_SYMBOL (cuMemcpyDtoD, CuMemcpyDtoD);
+  LOAD_SYMBOL (cuMemcpyDtoDAsync, CuMemcpyDtoDAsync);
+  LOAD_SYMBOL (cuMemcpyDtoH, CuMemcpyDtoH);
+  LOAD_SYMBOL (cuMemcpyDtoHAsync, CuMemcpyDtoHAsync);
+  LOAD_SYMBOL (cuMemcpyHtoD, CuMemcpyHtoD);
+  LOAD_SYMBOL (cuMemcpyHtoDAsync, CuMemcpyHtoDAsync);
 
   LOAD_SYMBOL (cuMemFree, CuMemFree);
   LOAD_SYMBOL (cuMemFreeHost, CuMemFreeHost);
@@ -205,10 +398,29 @@ gst_cuda_load_library_once_func (void)
   LOAD_SYMBOL (cuTexObjectDestroy, CuTexObjectDestroy);
   LOAD_SYMBOL (cuLaunchKernel, CuLaunchKernel);
 
+  LOAD_SYMBOL (cuEventCreate, CuEventCreate);
+  LOAD_SYMBOL (cuEventDestroy, CuEventDestroy);
+  LOAD_SYMBOL (cuEventRecord, CuEventRecord);
+  LOAD_SYMBOL (cuEventSynchronize, CuEventSynchronize);
+
+  LOAD_SYMBOL (cuIpcGetEventHandle, CuIpcGetEventHandle);
+  LOAD_SYMBOL (cuIpcOpenEventHandle, CuIpcOpenEventHandle);
+
+  LOAD_SYMBOL (cuIpcGetMemHandle, CuIpcGetMemHandle);
+  LOAD_SYMBOL (cuIpcOpenMemHandle, CuIpcOpenMemHandle);
+  LOAD_SYMBOL (cuIpcCloseMemHandle, CuIpcCloseMemHandle);
+
   /* cudaGL.h */
   LOAD_SYMBOL (cuGraphicsGLRegisterImage, CuGraphicsGLRegisterImage);
   LOAD_SYMBOL (cuGraphicsGLRegisterBuffer, CuGraphicsGLRegisterBuffer);
   LOAD_SYMBOL (cuGLGetDevices, CuGLGetDevices);
+
+  /* cudaEGL.h */
+#if defined(HAVE_CUDA_NVMM_JETSON) && GST_GL_HAVE_PLATFORM_EGL
+  LOAD_SYMBOL (cuGraphicsEGLRegisterImage, CuGraphicsEGLRegisterImage);
+  LOAD_SYMBOL (cuGraphicsResourceGetMappedEglFrame,
+      CuGraphicsResourceGetMappedEglFrame);
+#endif
 
 #ifdef G_OS_WIN32
   /* cudaD3D11.h */
@@ -219,6 +431,10 @@ gst_cuda_load_library_once_func (void)
 #endif
 
   vtable->loaded = TRUE;
+
+  gst_cuda_load_optional_symbols (module);
+  gst_cuda_load_stream_ordered_alloc_symbols (module);
+  gst_cuda_load_ext_interop_symbols (module);
 }
 
 /**
@@ -238,6 +454,30 @@ gst_cuda_load_library (void)
   } GST_CUDA_CALL_ONCE_END;
 
   return gst_cuda_vtable.loaded;
+}
+
+gboolean
+gst_cuda_virtual_memory_symbol_loaded (void)
+{
+  gst_cuda_load_library ();
+
+  return gst_cuda_vtable.have_virtual_alloc;
+}
+
+gboolean
+gst_cuda_stream_ordered_symbol_loaded (void)
+{
+  gst_cuda_load_library ();
+
+  return gst_cuda_vtable.have_stream_ordered_alloc;
+}
+
+gboolean
+gst_cuda_external_resource_interop_symbol_loaded (void)
+{
+  gst_cuda_load_library ();
+
+  return gst_cuda_vtable.have_ext_interop;
 }
 
 CUresult CUDAAPI
@@ -294,6 +534,14 @@ CuCtxPushCurrent (CUcontext ctx)
   g_assert (gst_cuda_vtable.CuCtxPushCurrent != nullptr);
 
   return gst_cuda_vtable.CuCtxPushCurrent (ctx);
+}
+
+CUresult CUDAAPI
+CuCtxSynchronize (void)
+{
+  g_assert (gst_cuda_vtable.CuCtxSynchronize != nullptr);
+
+  return gst_cuda_vtable.CuCtxSynchronize ();
 }
 
 CUresult CUDAAPI
@@ -410,6 +658,60 @@ CuMemcpy2DAsync (const CUDA_MEMCPY2D * pCopy, CUstream hStream)
   g_assert (gst_cuda_vtable.CuMemcpy2DAsync != nullptr);
 
   return gst_cuda_vtable.CuMemcpy2DAsync (pCopy, hStream);
+}
+
+CUresult CUDAAPI
+CuMemcpyDtoD (CUdeviceptr dstDevice, CUdeviceptr srcDevice, size_t ByteCount)
+{
+  g_assert (gst_cuda_vtable.CuMemcpyDtoD != nullptr);
+
+  return gst_cuda_vtable.CuMemcpyDtoD (dstDevice, srcDevice, ByteCount);
+}
+
+CUresult CUDAAPI
+CuMemcpyDtoDAsync (CUdeviceptr dstDevice, CUdeviceptr srcDevice,
+    size_t ByteCount, CUstream hStream)
+{
+  g_assert (gst_cuda_vtable.CuMemcpyDtoDAsync != nullptr);
+
+  return gst_cuda_vtable.CuMemcpyDtoDAsync (dstDevice, srcDevice, ByteCount,
+      hStream);
+}
+
+CUresult CUDAAPI
+CuMemcpyDtoH (void *dstHost, CUdeviceptr srcDevice, size_t ByteCount)
+{
+  g_assert (gst_cuda_vtable.CuMemcpyDtoH != nullptr);
+
+  return gst_cuda_vtable.CuMemcpyDtoH (dstHost, srcDevice, ByteCount);
+}
+
+CUresult CUDAAPI
+CuMemcpyDtoHAsync (void *dstHost, CUdeviceptr srcDevice, size_t ByteCount,
+    CUstream hStream)
+{
+  g_assert (gst_cuda_vtable.CuMemcpyDtoHAsync != nullptr);
+
+  return gst_cuda_vtable.CuMemcpyDtoHAsync (dstHost, srcDevice, ByteCount,
+      hStream);
+}
+
+CUresult CUDAAPI
+CuMemcpyHtoD (CUdeviceptr dstDevice, const void *srcHost, size_t ByteCount)
+{
+  g_assert (gst_cuda_vtable.CuMemcpyHtoD != nullptr);
+
+  return gst_cuda_vtable.CuMemcpyHtoD (dstDevice, srcHost, ByteCount);
+}
+
+CUresult CUDAAPI
+CuMemcpyHtoDAsync (CUdeviceptr dstDevice, const void *srcHost,
+    size_t ByteCount, CUstream hStream)
+{
+  g_assert (gst_cuda_vtable.CuMemcpyHtoD != nullptr);
+
+  return gst_cuda_vtable.CuMemcpyHtoDAsync (dstDevice, srcHost, ByteCount,
+      hStream);
 }
 
 CUresult CUDAAPI
@@ -557,6 +859,361 @@ CuLaunchKernel (CUfunction f, unsigned int gridDimX,
       extra);
 }
 
+CUresult CUDAAPI
+CuEventCreate (CUevent * phEvent, unsigned int Flags)
+{
+  g_assert (gst_cuda_vtable.CuEventCreate);
+
+  return gst_cuda_vtable.CuEventCreate (phEvent, Flags);
+}
+
+CUresult CUDAAPI
+CuEventDestroy (CUevent hEvent)
+{
+  g_assert (gst_cuda_vtable.CuEventDestroy);
+
+  return gst_cuda_vtable.CuEventDestroy (hEvent);
+}
+
+CUresult CUDAAPI
+CuEventRecord (CUevent hEvent, CUstream hStream)
+{
+  g_assert (gst_cuda_vtable.CuEventRecord);
+
+  return gst_cuda_vtable.CuEventRecord (hEvent, hStream);
+}
+
+CUresult CUDAAPI
+CuEventSynchronize (CUevent hEvent)
+{
+  g_assert (gst_cuda_vtable.CuEventSynchronize);
+
+  return gst_cuda_vtable.CuEventSynchronize (hEvent);
+}
+
+CUresult CUDAAPI
+CuIpcGetEventHandle (CUipcEventHandle * pHandle, CUevent event)
+{
+  g_assert (gst_cuda_vtable.CuIpcGetEventHandle);
+
+  return gst_cuda_vtable.CuIpcGetEventHandle (pHandle, event);
+}
+
+CUresult CUDAAPI
+CuIpcOpenEventHandle (CUevent * phEvent, CUipcEventHandle handle)
+{
+  g_assert (gst_cuda_vtable.CuIpcOpenEventHandle);
+
+  return gst_cuda_vtable.CuIpcOpenEventHandle (phEvent, handle);
+}
+
+CUresult CUDAAPI
+CuIpcGetMemHandle (CUipcMemHandle * pHandle, CUdeviceptr dptr)
+{
+  g_assert (gst_cuda_vtable.CuIpcGetMemHandle);
+
+  return gst_cuda_vtable.CuIpcGetMemHandle (pHandle, dptr);
+}
+
+CUresult CUDAAPI
+CuIpcOpenMemHandle (CUdeviceptr * pdptr, CUipcMemHandle handle,
+    unsigned int Flags)
+{
+  g_assert (gst_cuda_vtable.CuIpcOpenMemHandle);
+
+  return gst_cuda_vtable.CuIpcOpenMemHandle (pdptr, handle, Flags);
+}
+
+CUresult CUDAAPI
+CuIpcCloseMemHandle (CUdeviceptr dptr)
+{
+  g_assert (gst_cuda_vtable.CuIpcCloseMemHandle);
+
+  return gst_cuda_vtable.CuIpcCloseMemHandle (dptr);
+}
+
+CUresult CUDAAPI
+CuMemAddressReserve (CUdeviceptr * ptr, size_t size, size_t alignment,
+    CUdeviceptr addr, unsigned long long flags)
+{
+  if (!gst_cuda_vtable.CuMemAddressReserve)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemAddressReserve (ptr,
+      size, alignment, addr, flags);
+}
+
+CUresult CUDAAPI
+CuMemAddressFree (CUdeviceptr ptr, size_t size)
+{
+  if (!gst_cuda_vtable.CuMemAddressFree)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemAddressFree (ptr, size);
+}
+
+CUresult CUDAAPI
+CuMemCreate (CUmemGenericAllocationHandle * handle, size_t size,
+    const CUmemAllocationProp * prop, unsigned long long flags)
+{
+  if (!gst_cuda_vtable.CuMemCreate)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemCreate (handle, size, prop, flags);
+}
+
+CUresult CUDAAPI
+CuMemRelease (CUmemGenericAllocationHandle handle)
+{
+  if (!gst_cuda_vtable.CuMemRelease)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemRelease (handle);
+}
+
+CUresult CUDAAPI
+CuMemExportToShareableHandle (void *shareableHandle,
+    CUmemGenericAllocationHandle handle, CUmemAllocationHandleType handleType,
+    unsigned long long flags)
+{
+  if (!gst_cuda_vtable.CuMemExportToShareableHandle)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemExportToShareableHandle (shareableHandle,
+      handle, handleType, flags);
+}
+
+CUresult CUDAAPI
+CuMemImportFromShareableHandle (CUmemGenericAllocationHandle * handle,
+    void *osHandle, CUmemAllocationHandleType shHandleType)
+{
+  if (!gst_cuda_vtable.CuMemImportFromShareableHandle)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemImportFromShareableHandle (handle,
+      osHandle, shHandleType);
+}
+
+CUresult CUDAAPI
+CuMemSetAccess (CUdeviceptr ptr, size_t size, const CUmemAccessDesc * desc,
+    size_t count)
+{
+  if (!gst_cuda_vtable.CuMemSetAccess)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemSetAccess (ptr, size, desc, count);
+}
+
+CUresult CUDAAPI
+CuMemGetAccess (unsigned long long *flags, const CUmemLocation * location,
+    CUdeviceptr ptr)
+{
+  if (!gst_cuda_vtable.CuMemGetAccess)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemGetAccess (flags, location, ptr);
+}
+
+CUresult CUDAAPI
+CuMemGetAllocationGranularity (size_t *granularity,
+    const CUmemAllocationProp * prop, CUmemAllocationGranularity_flags option)
+{
+  if (!gst_cuda_vtable.CuMemGetAllocationGranularity)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemGetAllocationGranularity (granularity,
+      prop, option);
+}
+
+CUresult CUDAAPI
+CuMemGetAllocationPropertiesFromHandle (CUmemAllocationProp * prop,
+    CUmemGenericAllocationHandle handle)
+{
+  if (!gst_cuda_vtable.CuMemGetAllocationPropertiesFromHandle)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemGetAllocationPropertiesFromHandle (prop, handle);
+}
+
+
+CUresult CUDAAPI
+CuMemMap (CUdeviceptr ptr, size_t size, size_t offset,
+    CUmemGenericAllocationHandle handle, unsigned long long flags)
+{
+  if (!gst_cuda_vtable.CuMemMap)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemMap (ptr, size, offset, handle, flags);
+}
+
+CUresult CUDAAPI
+CuMemUnmap (CUdeviceptr ptr, size_t size)
+{
+  if (!gst_cuda_vtable.CuMemUnmap)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemUnmap (ptr, size);
+}
+
+CUresult CUDAAPI
+CuMemRetainAllocationHandle (CUmemGenericAllocationHandle * handle, void *addr)
+{
+  if (!gst_cuda_vtable.CuMemRetainAllocationHandle)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemRetainAllocationHandle (handle, addr);
+}
+
+CUresult CUDAAPI
+CuMemAllocAsync (CUdeviceptr * dptr, size_t bytesize, CUstream hStream)
+{
+  if (!gst_cuda_vtable.CuMemAllocAsync)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemAllocAsync (dptr, bytesize, hStream);
+}
+
+CUresult CUDAAPI
+CuMemAllocFromPoolAsync (CUdeviceptr * dptr, size_t bytesize, CUmemoryPool pool,
+    CUstream hStream)
+{
+  if (!gst_cuda_vtable.CuMemAllocFromPoolAsync)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemAllocFromPoolAsync (dptr,
+      bytesize, pool, hStream);
+}
+
+CUresult CUDAAPI
+CuMemFreeAsync (CUdeviceptr dptr, CUstream hStream)
+{
+  if (!gst_cuda_vtable.CuMemFreeAsync)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemFreeAsync (dptr, hStream);
+}
+
+CUresult CUDAAPI
+CuMemPoolCreate (CUmemoryPool * pool, const CUmemPoolProps * poolProps)
+{
+  if (!gst_cuda_vtable.CuMemPoolCreate)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemPoolCreate (pool, poolProps);
+}
+
+CUresult CUDAAPI
+CuMemPoolDestroy (CUmemoryPool pool)
+{
+  if (!gst_cuda_vtable.CuMemPoolDestroy)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemPoolDestroy (pool);
+}
+
+CUresult CUDAAPI
+CuMemPoolSetAttribute (CUmemoryPool pool, CUmemPool_attribute attr, void *value)
+{
+  if (!gst_cuda_vtable.CuMemPoolSetAttribute)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemPoolSetAttribute (pool, attr, value);
+}
+
+CUresult CUDAAPI
+CuMemPoolGetAttribute (CUmemoryPool pool, CUmemPool_attribute attr, void *value)
+{
+  if (!gst_cuda_vtable.CuMemPoolGetAttribute)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemPoolGetAttribute (pool, attr, value);
+}
+
+CUresult CUDAAPI
+CuDestroyExternalMemory (CUexternalMemory extMem)
+{
+  if (!gst_cuda_vtable.CuDestroyExternalMemory)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuDestroyExternalMemory (extMem);
+}
+
+CUresult CUDAAPI
+CuDestroyExternalSemaphore (CUexternalSemaphore extSem)
+{
+  if (!gst_cuda_vtable.CuDestroyExternalSemaphore)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuDestroyExternalSemaphore (extSem);
+}
+
+CUresult CUDAAPI
+CuExternalMemoryGetMappedBuffer (CUdeviceptr * devPtr, CUexternalMemory extMem,
+    const CUDA_EXTERNAL_MEMORY_BUFFER_DESC * bufferDesc)
+{
+  if (!gst_cuda_vtable.CuExternalMemoryGetMappedBuffer)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuExternalMemoryGetMappedBuffer (devPtr, extMem,
+      bufferDesc);
+}
+
+CUresult CUDAAPI
+CuExternalMemoryGetMappedMipmappedArray (CUmipmappedArray * mipmap,
+    CUexternalMemory extMem,
+    const CUDA_EXTERNAL_MEMORY_MIPMAPPED_ARRAY_DESC * mipmapDesc)
+{
+  if (!gst_cuda_vtable.CuExternalMemoryGetMappedMipmappedArray)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuExternalMemoryGetMappedMipmappedArray (mipmap,
+      extMem, mipmapDesc);
+}
+
+CUresult CUDAAPI
+CuImportExternalMemory (CUexternalMemory * extMem_out,
+    const CUDA_EXTERNAL_MEMORY_HANDLE_DESC * memHandleDesc)
+{
+  if (!gst_cuda_vtable.CuImportExternalMemory)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuImportExternalMemory (extMem_out, memHandleDesc);
+}
+
+CUresult CUDAAPI
+CuImportExternalSemaphore (CUexternalSemaphore * extSem_out,
+    const CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC * semHandleDesc)
+{
+  if (!gst_cuda_vtable.CuImportExternalSemaphore)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuImportExternalSemaphore (extSem_out, semHandleDesc);
+}
+
+CUresult CUDAAPI
+CuSignalExternalSemaphoresAsync (const CUexternalSemaphore * extSemArray,
+    const CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS * paramsArray,
+    unsigned int numExtSems, CUstream stream)
+{
+  if (!gst_cuda_vtable.CuSignalExternalSemaphoresAsync)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuSignalExternalSemaphoresAsync (extSemArray,
+      paramsArray, numExtSems, stream);
+}
+
+CUresult CUDAAPI
+CuWaitExternalSemaphoresAsync (const CUexternalSemaphore * extSemArray,
+    const CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS * paramsArray,
+    unsigned int numExtSems, CUstream stream)
+{
+  if (!gst_cuda_vtable.CuWaitExternalSemaphoresAsync)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuWaitExternalSemaphoresAsync (extSemArray,
+      paramsArray, numExtSems, stream);
+}
+
 /* cudaGL.h */
 CUresult CUDAAPI
 CuGraphicsGLRegisterImage (CUgraphicsResource * pCudaResource,
@@ -587,6 +1244,29 @@ CuGLGetDevices (unsigned int *pCudaDeviceCount, CUdevice * pCudaDevices,
   return gst_cuda_vtable.CuGLGetDevices (pCudaDeviceCount, pCudaDevices,
       cudaDeviceCount, deviceList);
 }
+
+/* cudaEGL.h */
+#if defined(HAVE_CUDA_NVMM_JETSON) && GST_GL_HAVE_PLATFORM_EGL
+CUresult CUDAAPI
+CuGraphicsEGLRegisterImage (CUgraphicsResource * pCudaResource,
+    EGLImageKHR image, unsigned int Flags)
+{
+  g_assert (gst_cuda_vtable.CuGraphicsEGLRegisterImage != nullptr);
+
+  return gst_cuda_vtable.CuGraphicsEGLRegisterImage (pCudaResource, image,
+      Flags);
+}
+
+CUresult CUDAAPI
+CuGraphicsResourceGetMappedEglFrame (CUeglFrame * eglFrame,
+    CUgraphicsResource resource, unsigned int index, unsigned int mipLevel)
+{
+  g_assert (gst_cuda_vtable.CuGraphicsResourceGetMappedEglFrame != nullptr);
+
+  return gst_cuda_vtable.CuGraphicsResourceGetMappedEglFrame (eglFrame,
+      resource, index, mipLevel);
+}
+#endif
 
 /* cudaD3D11.h */
 #ifdef G_OS_WIN32

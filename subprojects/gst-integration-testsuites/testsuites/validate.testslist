@@ -929,6 +929,7 @@ validate.test.clock_sync.video_1fps
 validate.test.clock_sync.video_30fps
 validate.test.dash.seek_with_stop_between_fragments
 validate.test.decryptor.cenc_audio_esds_property_overrides
+validate.test.encodebin.encode_no_muxer
 validate.test.flow.simple_test
 validate.test.flvdemux.audio_only.play_15s
 validate.test.flvdemux.seek_with_stop
@@ -936,10 +937,13 @@ validate.test.h264.parse.trickmode_predicted.seek_trickmode_predicted
 validate.test.h264.x264enc_youtube_bitrate.fullhd_lowframerate
 validate.test.h265parse.alternate
 validate.test.h265parse.trickmode_predicted.seek_trickmode_predicted
+validate.test.inter.audio-planar
 validate.test.interlace.interlace_deinterlace
 validate.test.interlace.interlace_deinterlace_alternate
 validate.test.matroska.demux_flush_within_cluster.default
 validate.test.mp4.qtdemux_change_edit_list.default
+validate.test.mp4.qtdemux_ibpibp_non_frag_pull.default
+validate.test.mp4.qtdemux_ibpibp_non_frag_push.default
 validate.test.mp4.qtdemux_reverse_playback_full_gop.reverse_playback_full_gop
 validate.test.mp4.redirect.play_15s
 validate.test.mse.segment_future_past_mse
@@ -948,6 +952,7 @@ validate.test.mse.segment_future_past_nomse
 validate.test.nle.urisource.play
 validate.test.playbin.check_active_stream
 validate.test.playbin3.ignore_raw_audio_from_demuxer
+validate.test.playbin3.intensive_state_change_selecting_stream
 validate.test.playbin3.ogv_vp8
 validate.test.playbin3.sourcebin_check_mixed_static_and_dyanmic_pads
 validate.test.rtp.h264.payloader_fail_nego_force_profile
@@ -955,3 +960,4 @@ validate.test.rtp.h264.payloader_nego_profile
 validate.test.rtp.rtpsession_recv_simple
 validate.test.rtp.rtpsession_send_simple
 validate.test.scaletempo.playbin_audio_filter.fast_forward
+validate.test.uridecodebin.uridecodebin_source_with_several_srcpads

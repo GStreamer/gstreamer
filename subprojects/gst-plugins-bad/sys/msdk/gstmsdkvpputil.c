@@ -27,6 +27,14 @@
 
 #include "gstmsdkvpputil.h"
 #include "msdk-enums.h"
+#include "gstmsdkcaps.h"
+
+#ifndef _WIN32
+#include <drm_fourcc.h>
+#include <gst/va/gstvavideoformat.h>
+#else
+#include <gst/d3d11/gstd3d11.h>
+#endif
 
 #define SWAP_GINT(a, b) do {      \
         const gint t = a; a = b; b = t; \
@@ -49,6 +57,158 @@ gst_msdkvpp_is_deinterlace_enabled (GstMsdkVPP * msdkvpp, GstVideoInfo * vip)
       break;
   }
   return deinterlace;
+}
+
+/* This help function is to fixate output format for vpp src caps,
+ * when downstream element does not set a specific format, i.e. queried
+ * caps contains a list of formats, vpp src caps will loop the format
+ * list and find one format that matches the vpp sink caps format (in vinfo);
+ * if downstream has set a specific format, we use this format for vpp src caps.
+ */
+static GstCaps *
+fixate_output_format (GstMsdkVPP * thiz, GstVideoInfo * vinfo, GstCaps * caps)
+{
+  GstVideoFormat fmt = GST_VIDEO_FORMAT_UNKNOWN;
+  guint i, size, fixated_idx = 0;
+  GstStructure *s, *out = NULL;
+  GstCapsFeatures *features;
+  GstCaps *ret;
+  const GValue *format;
+  gboolean is_va = FALSE, is_dma = FALSE, is_d3d = FALSE;
+  gboolean fixate = FALSE;
+#ifndef _WIN32
+  guint64 modifier = DRM_FORMAT_MOD_INVALID;
+  guint32 fourcc;
+#endif
+
+  if (!caps)
+    return NULL;
+  size = gst_caps_get_size (caps);
+
+  for (i = 0; i < size; i++) {
+    s = gst_caps_get_structure (caps, i);
+    features = gst_caps_get_features (caps, i);
+    is_va = is_dma = is_d3d = FALSE;
+
+    if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+      format = gst_structure_get_value (s, "drm-format");
+      is_dma = TRUE;
+    } else {
+      format = gst_structure_get_value (s, "format");
+#ifndef _WIN32
+      if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_VA))
+        is_va = TRUE;
+#else
+      if (gst_caps_features_contains (features,
+              GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY))
+        is_d3d = TRUE;
+#endif
+    }
+
+    if (format == NULL)
+      continue;
+
+    if (GST_VALUE_HOLDS_LIST (format)) {
+      gint j, len;
+
+      len = gst_value_list_get_size (format);
+      GST_DEBUG_OBJECT (thiz, "have %d formats", len);
+      for (j = 0; j < len; j++) {
+        const GValue *val;
+
+        val = gst_value_list_get_value (format, j);
+        if (G_VALUE_HOLDS_STRING (val)) {
+#ifndef _WIN32
+          if (is_dma) {
+            fourcc = gst_video_dma_drm_fourcc_from_string
+                (g_value_get_string (val), &modifier);
+            fmt = gst_va_video_format_from_drm_fourcc (fourcc);
+          } else {
+            fmt = gst_video_format_from_string (g_value_get_string (val));
+          }
+#else
+          fmt = gst_video_format_from_string (g_value_get_string (val));
+#endif
+          if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+            continue;
+          if (fmt == GST_VIDEO_INFO_FORMAT (vinfo)) {
+            fixate = TRUE;
+            fixated_idx = i;
+            break;
+          }
+        }
+      }
+    } else if (G_VALUE_HOLDS_STRING (format)) {
+#ifndef _WIN32
+      if (is_dma) {
+        fourcc = gst_video_dma_drm_fourcc_from_string
+            (g_value_get_string (format), &modifier);
+        fmt = gst_va_video_format_from_drm_fourcc (fourcc);
+      } else {
+        fmt = gst_video_format_from_string (g_value_get_string (format));
+      }
+#else
+      fmt = gst_video_format_from_string (g_value_get_string (format));
+#endif
+      if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+        continue;
+
+      /* size > 1 means downstream doesn't specify the caps directly, so we
+       * still need to compare fmt with the one in vpp sinkcaps */
+      if (size > 1 && fmt != GST_VIDEO_INFO_FORMAT (vinfo))
+        continue;
+
+      fixate = TRUE;
+      break;
+    }
+    if (fixate)
+      break;
+  }
+
+  if (!fixate)
+    fmt = GST_VIDEO_FORMAT_NV12;
+
+  out = gst_structure_copy (gst_caps_get_structure (caps, fixated_idx));
+  features = gst_caps_features_copy (gst_caps_get_features (caps, fixated_idx));
+
+#ifndef _WIN32
+  if (is_dma) {
+    gchar *drm_fmt_name;
+
+    g_assert (modifier != DRM_FORMAT_MOD_INVALID);
+
+    drm_fmt_name = gst_video_dma_drm_fourcc_to_string
+        (gst_va_drm_fourcc_from_video_format (fmt), modifier);
+
+    gst_structure_set (out, "drm-format", G_TYPE_STRING, drm_fmt_name, NULL);
+    g_free (drm_fmt_name);
+  } else {
+    gst_structure_set (out, "format", G_TYPE_STRING,
+        gst_video_format_to_string (fmt), NULL);
+  }
+#else
+  gst_structure_set (out, "format", G_TYPE_STRING,
+      gst_video_format_to_string (fmt), NULL);
+#endif
+
+  ret = gst_caps_new_full (out, NULL);
+  gst_caps_set_features_simple (ret, features);
+#ifndef _WIN32
+  if (is_va)
+    gst_caps_set_features (ret, 0,
+        gst_caps_features_new_single_static_str (GST_CAPS_FEATURE_MEMORY_VA));
+#else
+  if (is_d3d)
+    gst_caps_set_features (ret, 0,
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
+#endif
+  else if (is_dma)
+    gst_caps_set_features (ret, 0,
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_DMABUF));
+
+  return ret;
 }
 
 static gboolean
@@ -528,21 +688,27 @@ static GstCaps *
 _get_preferred_src_caps (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
     GstCaps * srccaps)
 {
-  GstStructure *structure;
-  GstCaps *outcaps;
+  GstStructure *structure = NULL;
+  GstCaps *outcaps, *fixate_caps;
+  GstCapsFeatures *features;
+  gchar *colorimetry = NULL;
 
-  structure = gst_caps_get_structure (srccaps, 0);
+  /* Fixate the format */
+  fixate_caps = fixate_output_format (thiz, vinfo, srccaps);
+  if (!fixate_caps)
+    goto fixate_failed;
 
+  structure = gst_caps_get_structure (fixate_caps, 0);
+  features = gst_caps_get_features (fixate_caps, 0);
   /* make a copy */
   structure = gst_structure_copy (structure);
+  features = gst_caps_features_copy (features);
+
+  gst_caps_unref (fixate_caps);
 
   if (thiz->keep_aspect)
     gst_structure_set (structure, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1,
         1, NULL);
-
-  /* Fixate the format */
-  if (!gst_structure_fixate_field (structure, "format"))
-    goto fixate_failed;
 
   /* Fixate the frame size */
   if (!fixate_output_frame_size (thiz, vinfo, structure))
@@ -556,7 +722,12 @@ _get_preferred_src_caps (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
   if (!set_multiview_mode (thiz, vinfo, structure))
     goto fixate_failed;
 
-  /*Fixme: Set colorimetry */
+  /* set colorimetry based on input info */
+  if ((colorimetry = gst_video_colorimetry_to_string (&vinfo->colorimetry))) {
+    gst_structure_set (structure, "colorimetry", G_TYPE_STRING, colorimetry,
+        NULL);
+    g_free (colorimetry);
+  }
 
   /* set interlace mode */
   if (!set_interlace_mode (thiz, vinfo, structure))
@@ -564,6 +735,7 @@ _get_preferred_src_caps (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
 
   outcaps = gst_caps_new_empty ();
   gst_caps_append_structure (outcaps, structure);
+  gst_caps_set_features (outcaps, 0, features);
 
   return outcaps;
 
@@ -571,7 +743,8 @@ _get_preferred_src_caps (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
 fixate_failed:
   {
     GST_WARNING_OBJECT (thiz, "Could not fixate src caps");
-    gst_structure_free (structure);
+    if (structure)
+      gst_structure_free (structure);
     return NULL;
   }
 interlace_mode_failed:
@@ -597,7 +770,9 @@ gst_msdkvpp_fixate_srccaps (GstMsdkVPP * msdkvpp,
     GstCaps * sinkcaps, GstCaps * srccaps)
 {
   GstVideoInfo vi;
-  if (!gst_video_info_from_caps (&vi, sinkcaps))
-    return NULL;
+
+  if (!gst_msdkcaps_video_info_from_caps (sinkcaps, &vi, NULL))
+    return FALSE;
+
   return _get_preferred_src_caps (msdkvpp, &vi, srccaps);
 }

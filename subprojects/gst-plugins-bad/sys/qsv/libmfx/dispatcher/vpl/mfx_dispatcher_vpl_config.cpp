@@ -107,6 +107,7 @@ enum PropIdx {
     ePropExtDev_LUIDDeviceNodeMask,
     ePropExtDev_DRMRenderNodeNum,
     ePropExtDev_DRMPrimaryNodeNum,
+    ePropExtDev_RevisionID,
     ePropExtDev_DeviceName,
 
     // special properties not part of description struct
@@ -182,6 +183,7 @@ static const PropVariant PropIdxTab[] = {
     { "ePropExtDev_LUIDDeviceNodeMask",     MFX_VARIANT_TYPE_U32 },
     { "ePropExtDev_DRMRenderNodeNum",       MFX_VARIANT_TYPE_U32 },
     { "ePropExtDev_DRMPrimaryNodeNum",      MFX_VARIANT_TYPE_U32 },
+    { "ePropExtDev_RevisionID",             MFX_VARIANT_TYPE_U16 },
     { "ePropExtDev_DeviceName",             MFX_VARIANT_TYPE_PTR },
 
     { "ePropSpecial_HandleType",            MFX_VARIANT_TYPE_U32 },
@@ -553,6 +555,9 @@ mfxStatus ConfigCtxVPL::SetFilterProperty(const mfxU8 *name, mfxVariant value) {
         }
         else if (nextProp == "DRMPrimaryNodeNum") {
             return ValidateAndSetProp(ePropExtDev_DRMPrimaryNodeNum, value);
+        }
+        else if (nextProp == "RevisionID") {
+            return ValidateAndSetProp(ePropExtDev_RevisionID, value);
         }
         else if (nextProp == "DeviceName") {
             return ValidateAndSetProp(ePropExtDev_DeviceName, value);
@@ -1123,6 +1128,8 @@ mfxStatus ConfigCtxVPL::CheckPropsExtDevID(const mfxVariant cfgPropsAll[],
             isCompatible = false;
         }
     }
+
+    CHECK_PROP(ePropExtDev_RevisionID, U16, libImplExtDevID->RevisionID);
 
     // check string: DeviceName (string match)
     if (cfgPropsAll[ePropExtDev_DeviceName].Type != MFX_VARIANT_TYPE_UNSET) {

@@ -1,0 +1,95 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE;
+event caps: video/x-raw, format=(string)I420, framerate=(fraction)30/1, height=(int)720, interlace-mode=(string)progressive, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, width=(int)1280;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:01.000000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.000000000, dur=0:00:00.033333333, flags=discont, meta=GstVideoMeta, GESFrameCompositionMeta
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:00.500000000, rate=-1.000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.500000000
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.466666667, dur=0:00:00.033333333, flags=discont, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.433333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.400000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.366666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.333333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.300000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.266666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.233333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.200000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.166666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.133333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.100000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.066666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.033333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.000000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+event eos: (no structure)
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:00.500000000, rate=-1.000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.500000000
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.466666667, dur=0:00:00.033333333, flags=discont, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.433333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.400000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.366666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.333333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.300000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.266666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.233333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.200000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.166666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.133333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.100000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.066666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.033333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.000000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+event eos: (no structure)
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:01.000000000, rate=-1.000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:01.000000000
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.966666667, dur=0:00:00.033333333, flags=discont, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.933333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.900000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.866666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.833333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.800000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.766666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.733333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.700000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.666666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.633333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.600000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.566666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.533333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.500000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.466666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.433333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.400000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.366666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.333333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.300000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.266666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.233333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.200000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.166666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.133333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.100000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.066666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.033333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=3568d63c95a3de452fcea83a9c55560c44bb8f1e, pts=0:00:00.000000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+event eos: (no structure)
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:00.500000000, rate=-1.000000, flags=0x01, time=0:00:01.000000000, base=0:00:00.000000000, position=0:00:00.500000000
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.466666667, dur=0:00:00.033333333, flags=discont, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.433333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.400000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.366666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.333333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.300000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.266666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.233333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.200000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.166666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.133333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.100000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.066666667, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.033333334, dur=0:00:00.033333333, meta=GstVideoMeta, GESFrameCompositionMeta
+buffer: checksum=f4ac50f63869dcb2da348734f6bf66f37216b484, pts=0:00:00.000000000, dur=0:00:00.033333334, meta=GstVideoMeta, GESFrameCompositionMeta
+event eos: (no structure)

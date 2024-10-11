@@ -84,6 +84,7 @@ class GstCheckTest(MesonTest):
     def get_valgrind_suppressions(self):
         result = super().get_valgrind_suppressions()
         result.extend(get_gst_build_valgrind_suppressions())
+        result.append("/usr/share/glib-2.0/valgrind/glib.supp")
 
         return result
 
@@ -351,7 +352,7 @@ class GstCheckTestsManager(MesonTestsManager):
         arggroup.add_argument("--gst-check-leak-trace-testnames",
                               default=None,
                               help="A regex to specifying testsnames of the test"
-                              "to run with the leak tracer activated, if 'known-not-leaky'"
+                              " to run with the leak tracer activated, if 'known-not-leaky'"
                               " is specified, the testsuite will automatically activate"
                               " leak tracers on tests known to be not leaky.")
         arggroup.add_argument("--gst-check-leak-options",

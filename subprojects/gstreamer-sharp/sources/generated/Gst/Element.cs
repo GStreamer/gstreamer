@@ -1433,6 +1433,13 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_element_type_set_skip_documentation(IntPtr type);
+
+		public static void TypeSetSkipDocumentation(GLib.GType type) {
+			gst_element_type_set_skip_documentation(type.Val);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_element_abort_state(IntPtr raw);
 
 		public void AbortState() {
@@ -1518,6 +1525,17 @@ namespace Gst {
 
 		public void CreateAllPads() {
 			gst_element_create_all_pads(Handle);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_element_decorate_stream_id(IntPtr raw, IntPtr stream_id);
+
+		public string DecorateStreamId(string stream_id) {
+			IntPtr native_stream_id = GLib.Marshaller.StringToPtrGStrdup (stream_id);
+			IntPtr raw_ret = gst_element_decorate_stream_id(Handle, native_stream_id);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			GLib.Marshaller.Free (native_stream_id);
+			return ret;
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -1663,6 +1681,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_element_get_request_pad(IntPtr raw, IntPtr name);
 
+		[Obsolete]
 		public Gst.Pad GetRequestPad(string name) {
 			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
 			IntPtr raw_ret = gst_element_get_request_pad(Handle, native_name);
@@ -1942,6 +1961,17 @@ namespace Gst {
 
 		public Gst.Pad RequestPad(Gst.PadTemplate templ) {
 			return RequestPad (templ, null, null);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_element_request_pad_simple(IntPtr raw, IntPtr name);
+
+		public Gst.Pad RequestPadSimple(string name) {
+			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr raw_ret = gst_element_request_pad_simple(Handle, native_name);
+			Gst.Pad ret = GLib.Object.GetObject(raw_ret, true) as Gst.Pad;
+			GLib.Marshaller.Free (native_name);
+			return ret;
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

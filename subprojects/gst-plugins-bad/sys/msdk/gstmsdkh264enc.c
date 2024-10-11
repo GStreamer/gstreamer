@@ -301,22 +301,20 @@ gst_msdkh264enc_set_format (GstMsdkEnc * encoder)
       return FALSE;
     }
 
-    allowed_caps = gst_caps_make_writable (allowed_caps);
-    allowed_caps = gst_caps_fixate (allowed_caps);
     s = gst_caps_get_structure (allowed_caps, 0);
 
     profile = gst_structure_get_string (s, "profile");
     if (profile) {
-      if (!strcmp (profile, "high")) {
+      if (!g_strcmp0 (profile, "high")) {
         thiz->profile = MFX_PROFILE_AVC_HIGH;
-      } else if (!strcmp (profile, "main")) {
+      } else if (!g_strcmp0 (profile, "main")) {
         thiz->profile = MFX_PROFILE_AVC_MAIN;
-      } else if (!strcmp (profile, "baseline")) {
+      } else if (!g_strcmp0 (profile, "baseline")) {
         thiz->profile = MFX_PROFILE_AVC_BASELINE;
-      } else if (!strcmp (profile, "constrained-baseline")) {
+      } else if (!g_strcmp0 (profile, "constrained-baseline")) {
         thiz->profile = MFX_PROFILE_AVC_CONSTRAINED_BASELINE;
       } else {
-        g_assert_not_reached ();
+        thiz->profile = MFX_PROFILE_UNKNOWN;
       }
     }
 
@@ -596,6 +594,7 @@ static void
 gst_msdkh264enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GstMsdkEnc *enc = GST_MSDKENC (object);
   GstMsdkH264Enc *thiz = GST_MSDKH264ENC (object);
 
   if (gst_msdkenc_set_common_property (object, prop_id, value, pspec))
@@ -646,44 +645,82 @@ gst_msdkh264enc_set_property (GObject * object, guint prop_id,
       thiz->min_qp_i = thiz->min_qp_p = thiz->min_qp_b = thiz->min_qp;
       break;
     case PROP_MIN_QP_I:
-      thiz->min_qp_i = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->min_qp_i,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed min-qp-i to %u", thiz->min_qp_i);
+      }
       break;
     case PROP_MIN_QP_P:
-      thiz->min_qp_p = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->min_qp_p,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed min-qp-p to %u", thiz->min_qp_p);
+      }
       break;
     case PROP_MIN_QP_B:
-      thiz->min_qp_b = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->min_qp_b,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed min-qp-b to %u", thiz->min_qp_b);
+      }
       break;
     case PROP_MAX_QP:
       thiz->max_qp = g_value_get_uint (value);
       thiz->max_qp_i = thiz->max_qp_p = thiz->max_qp_b = thiz->max_qp;
       break;
     case PROP_MAX_QP_I:
-      thiz->max_qp_i = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->max_qp_i,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-qp-i to %u", thiz->max_qp_i);
+      }
       break;
     case PROP_MAX_QP_P:
-      thiz->max_qp_p = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->max_qp_p,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-qp-p to %u", thiz->max_qp_p);
+      }
       break;
     case PROP_MAX_QP_B:
-      thiz->max_qp_b = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->max_qp_b,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-qp-b to %u", thiz->max_qp_b);
+      }
       break;
     case PROP_INTRA_REFRESH_TYPE:
-      thiz->intra_refresh_type = g_value_get_enum (value);
+      if (check_update_property_uint (enc, &thiz->intra_refresh_type,
+              g_value_get_enum (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed intra-refresh-type to %u",
+            thiz->intra_refresh_type);
+      }
       break;
     case PROP_INTRA_REFRESH_CYCLE_SIZE:
-      thiz->intra_refresh_cycle_size = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->intra_refresh_cycle_size,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed intra-refresh-cycle-size to %u",
+            thiz->intra_refresh_cycle_size);
+      }
       break;
     case PROP_INTRA_REFRESH_QP_DELTA:
-      thiz->intra_refresh_qp_delta = g_value_get_int (value);
+      if (check_update_property_int (enc, &thiz->intra_refresh_qp_delta,
+              g_value_get_int (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed intra-refresh-qp-delta to %d",
+            thiz->intra_refresh_qp_delta);
+      }
       break;
     case PROP_INTRA_REFRESH_CYCLE_DIST:
-      thiz->intra_refresh_cycle_dist = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->intra_refresh_cycle_dist,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed intra-refresh-cycle-dist to %u",
+            thiz->intra_refresh_cycle_dist);
+      }
       break;
     case PROP_DBLK_IDC:
       thiz->dblk_idc = g_value_get_uint (value);
       break;
     case PROP_PIC_TIMING_SEI:
-      thiz->pic_timing_sei = g_value_get_boolean (value);
+      if (check_update_property_bool (enc, &thiz->pic_timing_sei,
+              g_value_get_boolean (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed pic-timimg-sei to %d",
+            thiz->pic_timing_sei);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

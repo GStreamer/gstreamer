@@ -1,9 +1,8 @@
 [wrap-file]
-directory = harfbuzz-5.2.0
-source_url = https://github.com/harfbuzz/harfbuzz/releases/download/5.2.0/harfbuzz-5.2.0.tar.xz
-source_filename = harfbuzz-5.2.0.tar.xz
-source_hash = 735a94917b47936575acb4d4fa7e7986522f8a89527e4635721474dee2bc942c
-wrapdb_version = 5.2.0-1
+directory = harfbuzz-8.0.0
+source_url = https://github.com/harfbuzz/harfbuzz/releases/download/8.0.0/harfbuzz-8.0.0.tar.xz
+source_filename = harfbuzz-8.0.0.tar.xz
+source_hash = 1f98b5e3d06a344fe667d7e8210094ced458791499839bddde98c167ce6a7c79
 
 [provide]
 harfbuzz = libharfbuzz_dep

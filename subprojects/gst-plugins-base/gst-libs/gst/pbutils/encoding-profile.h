@@ -267,6 +267,12 @@ GST_PBUTILS_API
 GstEncodingProfile * gst_encoding_profile_copy            (GstEncodingProfile *self);
 
 GST_PBUTILS_API
+GstEncodingProfile * gst_encoding_profile_from_string     (const gchar *string);
+
+GST_PBUTILS_API
+gchar * gst_encoding_profile_to_string     (GstEncodingProfile *profile);
+
+GST_PBUTILS_API
 void gst_encoding_profile_set_element_properties          (GstEncodingProfile *self,
                                                            GstStructure *element_properties);
 

@@ -1,7 +1,7 @@
 /*
  * This copyright notice applies to this header file only:
  *
- * Copyright (c) 2010-2021 NVIDIA Corporation
+ * Copyright (c) 2010-2022 NVIDIA Corporation
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -1106,7 +1106,6 @@ extern CUresult CUDAAPI cuvidMapVideoFrame(CUvideodecoder hDecoder, int nPicIdx,
 extern CUresult CUDAAPI cuvidUnmapVideoFrame(CUvideodecoder hDecoder, unsigned int DevPtr);
 #endif
 
-#if defined(_WIN64) || defined(__LP64__) || defined(__x86_64) || defined(AMD64) || defined(_M_AMD64)
 /****************************************************************************************************************************/
 //! \fn CUresult CUDAAPI cuvidMapVideoFrame64(CUvideodecoder hDecoder, int nPicIdx, unsigned long long *pDevPtr, 
 //!                                           unsigned int * pPitch, CUVIDPROCPARAMS *pVPP);
@@ -1125,7 +1124,6 @@ extern CUresult CUDAAPI cuvidUnmapVideoFrame64(CUvideodecoder hDecoder, unsigned
 #if defined(__CUVID_DEVPTR64) && !defined(__CUVID_INTERNAL)
 #define cuvidMapVideoFrame      cuvidMapVideoFrame64
 #define cuvidUnmapVideoFrame    cuvidUnmapVideoFrame64
-#endif
 #endif
 
 

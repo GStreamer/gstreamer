@@ -31,7 +31,7 @@
 #undef PACKAGE_BUGREPORT
 #undef PACKAGE
 
-#include <soundtouch/BPMDetect.h>
+#include <BPMDetect.h>
 
 #include <gst/audio/audio.h>
 #include <gst/audio/gstaudiofilter.h>

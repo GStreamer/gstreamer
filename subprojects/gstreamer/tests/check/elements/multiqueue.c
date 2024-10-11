@@ -1661,6 +1661,80 @@ GST_START_TEST (test_stream_status_messages)
 
 GST_END_TEST;
 
+static void
+queue_overrun_cb (GstElement * mq, guint * overrun_count)
+{
+  *overrun_count += 1;
+  g_object_set (mq, "max-size-time", (guint64) 0, NULL);
+}
+
+GST_START_TEST (test_time_level_before_output)
+{
+  GstElement *mq;
+  GstPad *sinkpad;
+  GstPad *srcpad;
+  GstBuffer *buffer;
+  GstSegment segment;
+  GstCaps *caps;
+  guint overrun_count = 0;
+
+  mq = gst_element_factory_make ("multiqueue", NULL);
+  g_object_set (mq, "max-size-time", 5 * GST_SECOND, NULL);
+  g_signal_connect (mq, "overrun",
+      G_CALLBACK (queue_overrun_cb), &overrun_count);
+
+  sinkpad = gst_element_request_pad_simple (mq, "sink_%u");
+  srcpad = gst_element_get_static_pad (mq, "src_0");
+
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+      NULL, NULL, NULL);
+
+  fail_unless (gst_element_set_state (mq,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
+  caps = gst_caps_new_empty_simple ("foo/x-bar");
+  gst_pad_send_event (sinkpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  gst_pad_send_event (sinkpad, gst_event_new_segment (&segment));
+
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 25 * GST_SECOND;
+  GST_BUFFER_DURATION (buffer) = GST_SECOND;
+  gst_pad_chain (sinkpad, buffer);
+
+  /* Pushed 1 second duration buffer, should not cause overrun */
+  fail_unless_equals_int (overrun_count, 0);
+
+  /* 10 seconds duration will make queue full but multiqueue will notify
+   * of overrun on the next push */
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 26 * GST_SECOND;
+  GST_BUFFER_DURATION (buffer) = 10 * GST_SECOND;
+  gst_pad_chain (sinkpad, buffer);
+  fail_unless_equals_int (overrun_count, 0);
+
+  /* Already filled, overrun is expected */
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 36 * GST_SECOND;
+  gst_pad_chain (sinkpad, buffer);
+
+  fail_unless_equals_int (overrun_count, 1);
+
+  fail_unless (gst_element_set_state (mq,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+
+  gst_element_release_request_pad (mq, sinkpad);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+  gst_object_unref (mq);
+}
+
+GST_END_TEST;
+
 static Suite *
 multiqueue_suite (void)
 {
@@ -1692,6 +1766,7 @@ multiqueue_suite (void)
   tcase_add_test (tc_chain, test_initial_events_nodelay);
 
   tcase_add_test (tc_chain, test_stream_status_messages);
+  tcase_add_test (tc_chain, test_time_level_before_output);
 
   return s;
 }

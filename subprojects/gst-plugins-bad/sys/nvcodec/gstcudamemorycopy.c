@@ -42,8 +42,9 @@
 #include "gstcudamemorycopy.h"
 #include "gstcudaformat.h"
 #include <gst/cuda/gstcuda-private.h>
-#ifdef HAVE_NVCODEC_NVMM
-#include "gstcudanvmm.h"
+#ifdef HAVE_CUDA_NVMM
+#include <gst/cuda/gstcudanvmm-private.h>
+#include <nvbufsurface.h>
 #endif
 
 #ifdef HAVE_CUDA_GST_GL
@@ -245,7 +246,7 @@ _set_caps_features (const GstCaps * caps, const gchar * feature_name)
 
   for (i = 0; i < n; i++)
     gst_caps_set_features (tmp, i,
-        gst_caps_features_from_string (feature_name));
+        gst_caps_features_new_single_static_str (feature_name));
 
   return tmp;
 }
@@ -272,7 +273,7 @@ create_transform_caps (GstCaps * caps, gboolean to_cuda)
     /* SRC -> SINK of cudadownload or SINK -> SRC of cudaupload */
     ret = gst_caps_copy (caps);
 
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
     if (gst_cuda_nvmm_init_once ()) {
       new_caps = _set_caps_features (caps,
           GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY);
@@ -289,7 +290,7 @@ create_transform_caps (GstCaps * caps, gboolean to_cuda)
     /* SINK -> SRC of cudadownload or SRC -> SINK of cudaupload */
     ret = gst_caps_ref (caps);
 
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
     if (gst_cuda_nvmm_init_once ()) {
       new_caps = _set_caps_features (caps,
           GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY);
@@ -529,7 +530,7 @@ gst_cuda_memory_copy_propose_allocation (GstBaseTransform * trans,
 
       pool = gst_d3d11_buffer_pool_new (self->d3d11_device);
 #endif
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
     } else if (features && gst_caps_features_contains (features,
             GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY) &&
         gst_cuda_nvmm_init_once ()) {
@@ -618,7 +619,7 @@ gst_cuda_memory_copy_decide_allocation (GstBaseTransform * trans,
 #ifdef G_OS_WIN32
   gboolean need_d3d11 = FALSE;
 #endif
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
   gboolean need_nvmm = FALSE;
 #endif
 
@@ -652,7 +653,7 @@ gst_cuda_memory_copy_decide_allocation (GstBaseTransform * trans,
     need_d3d11 = TRUE;
   }
 #endif
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
   else if (features && gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY) &&
       gst_cuda_nvmm_init_once ()) {
@@ -673,7 +674,7 @@ gst_cuda_memory_copy_decide_allocation (GstBaseTransform * trans,
         }
       }
     }
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
     if (need_nvmm) {
       /* XXX: Always create new pool to set config option */
       gst_clear_object (&pool);
@@ -705,7 +706,7 @@ gst_cuda_memory_copy_decide_allocation (GstBaseTransform * trans,
       pool = gst_d3d11_buffer_pool_new (self->d3d11_device);
     }
 #endif
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
     else if (need_nvmm) {
       guint gpu_id = 0;
       GST_DEBUG_OBJECT (self, "create nvmm pool");
@@ -859,7 +860,7 @@ gst_cuda_memory_copy_set_info (GstCudaBaseTransform * btrans,
   gst_clear_object (&self->d3d11_device);
 #endif
 
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
   if (gst_cuda_nvmm_init_once ()) {
     if (in_features && gst_caps_features_contains (in_features,
             GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY)) {
@@ -1160,7 +1161,7 @@ gst_cuda_memory_copy_register (GstPlugin * plugin, guint rank)
   };
   GstCaps *sys_caps;
   GstCaps *cuda_caps;
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
   GstCaps *nvmm_caps = NULL;
 #endif
 #ifdef HAVE_CUDA_GST_GL
@@ -1183,7 +1184,7 @@ gst_cuda_memory_copy_register (GstPlugin * plugin, guint rank)
   cuda_caps =
       gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
       (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, GST_CUDA_FORMATS));
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
   if (gst_cuda_nvmm_init_once ()) {
     nvmm_caps =
         gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
@@ -1209,7 +1210,7 @@ gst_cuda_memory_copy_register (GstPlugin * plugin, guint rank)
   upload_sink_caps =
       gst_caps_merge (upload_sink_caps, gst_caps_copy (d3d11_caps));
 #endif
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
   if (nvmm_caps) {
     upload_sink_caps = gst_caps_merge (upload_sink_caps,
         gst_caps_copy (nvmm_caps));
@@ -1219,7 +1220,7 @@ gst_cuda_memory_copy_register (GstPlugin * plugin, guint rank)
       gst_caps_merge (upload_sink_caps, gst_caps_copy (cuda_caps));
 
   upload_src_caps = gst_caps_copy (cuda_caps);
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
   if (nvmm_caps) {
     upload_src_caps = gst_caps_merge (upload_src_caps,
         gst_caps_copy (nvmm_caps));
@@ -1228,7 +1229,7 @@ gst_cuda_memory_copy_register (GstPlugin * plugin, guint rank)
   upload_src_caps = gst_caps_merge (upload_src_caps, gst_caps_copy (sys_caps));
 
   download_sink_caps = gst_caps_copy (cuda_caps);
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
   if (nvmm_caps) {
     download_sink_caps = gst_caps_merge (download_sink_caps,
         gst_caps_copy (nvmm_caps));
@@ -1244,7 +1245,7 @@ gst_cuda_memory_copy_register (GstPlugin * plugin, guint rank)
 #ifdef G_OS_WIN32
   download_src_caps = gst_caps_merge (download_src_caps, d3d11_caps);
 #endif
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
   if (nvmm_caps) {
     download_src_caps = gst_caps_merge (download_src_caps, nvmm_caps);
   }

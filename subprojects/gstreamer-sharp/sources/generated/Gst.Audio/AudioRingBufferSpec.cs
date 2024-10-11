@@ -200,16 +200,40 @@ namespace Gst.Audio {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(int)) // seglatency
 							, "segtotal"
-							, "_gst_reserved"
+							, "ABI"
 							, (long) Marshal.OffsetOf(typeof(GstAudioRingBufferSpec_seglatencyAlign), "seglatency")
 							, 0
 							),
-						new GLib.AbiField("_gst_reserved"
+						// union struct ABI.abi
+							new GLib.AbiField("ABI.abi.dsd_format"
+								, -1
+								, (uint) Marshal.SizeOf(System.Enum.GetUnderlyingType(typeof(Gst.Audio.DsdFormat))) // ABI.abi.dsd_format
+								, "seglatency"
+								, null
+								, (long) Marshal.OffsetOf(typeof(GstAudioRingBufferSpec_ABI_abi_dsd_formatAlign), "ABI_abi_dsd_format")
+								, 0
+								),
+						// End ABI.abi
+
+						// union struct ABI
+							new GLib.AbiField("ABI._gst_reserved"
+								, -1
+								, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // ABI._gst_reserved
+								, "seglatency"
+								, null
+								, (uint) Marshal.SizeOf(typeof(IntPtr))
+								, 0
+								),
+						// End ABI
+
+						new GLib.AbiField("ABI"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _gst_reserved
+							, new List<List<string>>() {  // union ABI
+						new List<string>() {"ABI.abi.dsd_format"},
+						new List<string>() {"ABI._gst_reserved"}
+					  }
 							, "seglatency"
 							, null
-							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 					});
@@ -258,6 +282,13 @@ namespace Gst.Audio {
 		{
 			sbyte f1;
 			private int seglatency;
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct GstAudioRingBufferSpec_ABI_abi_dsd_formatAlign
+		{
+			sbyte f1;
+			private Gst.Audio.DsdFormat ABI_abi_dsd_format;
 		}
 
 

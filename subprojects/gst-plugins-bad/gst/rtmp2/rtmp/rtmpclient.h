@@ -45,11 +45,19 @@ guint gst_rtmp_scheme_get_default_port (GstRtmpScheme scheme);
 
 #define GST_TYPE_RTMP_AUTHMOD (gst_rtmp_authmod_get_type ())
 
+/**
+ * GstRtmpAuthmod:
+ * @GST_RTMP_AUTHMOD_NONE: Attempt no authentication.
+ * @GST_RTMP_AUTHMOD_AUTO: Automatically switch to server-suggested method.
+ * @GST_RTMP_AUTHMOD_ADOBE: Adobe-style authentication.
+ * @GST_RTMP_AUTHMOD_LLNW: Limelight Networks authentication. (Since 1.26)
+ */
 typedef enum
 {
   GST_RTMP_AUTHMOD_NONE = 0,
   GST_RTMP_AUTHMOD_AUTO,
   GST_RTMP_AUTHMOD_ADOBE,
+  GST_RTMP_AUTHMOD_LLNW,
 } GstRtmpAuthmod;
 
 GType gst_rtmp_authmod_get_type (void);
@@ -91,6 +99,7 @@ typedef struct _GstRtmpLocation
   gchar *username;
   gchar *password;
   gchar *secure_token;
+  gchar *extra_connect_args;
   GstRtmpAuthmod authmod;
   gint timeout;
   GTlsCertificateFlags tls_flags;
@@ -125,6 +134,18 @@ gboolean gst_rtmp_client_start_play_finish (GstRtmpConnection * connection,
 
 void gst_rtmp_client_stop_publish (GstRtmpConnection * connection,
     const gchar * stream, const GstRtmpStopCommands stop_commands);
+
+typedef enum
+{
+  GST_RTMP_CONN_PARSING_ERROR_INVALID_TYPE,
+  GST_RTMP_CONN_PARSING_ERROR_INVALID_VALUE,
+  GST_RTMP_CONN_PARSING_ERROR_FAILED_PARSING_DOUBLE,
+  GST_RTMP_CONN_PARSING_ERROR_UNSUPPORTED,
+} GstRtmpConnParsingError;
+
+GQuark gst_rtmp_conn_parsing_error_quark (void);
+
+#define GST_RTMP_CONN_PARSING_ERROR gst_rtmp_conn_parsing_error_quark ()
 
 G_END_DECLS
 #endif

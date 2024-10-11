@@ -12,9 +12,8 @@ describe the validate [scenario](gst-validate-scenarios.md).
 
 # The file format
 
-A validate test file requires a `meta` structure which contains the same
-information as the [scenario](gst-validate-scenarios.md) `meta` with some
-additional fields described below. The `meta` structure should be either the
+A validate test file requires a [`meta`](gst-validate-action-types.md?#meta) structure  describing
+the test and configuring it. The `meta` structure should be either the
 first or the one following the `set-globals` structure. The `set-globals`
 structures allows you to set global variables for the rest of the
 `.validatetest` file and is a free form variables setter. For example you can
@@ -40,58 +39,7 @@ args = {
 }
 ```
 
-## configs
-
-The `configs` field is an array of structures containing the same content as
-usual [configs](gst-validate-config.md) files.
-
-For example:
-
-``` yaml
-configs = {
-    # Set videotestsrc0 pattern value to `blue`
-    "core, action=set-property, target-element-name=videotestsrc0, property-name=pattern, property-value=blue",
-    "$(validateflow), pad=sink1:sink, caps-properties={ width, height };",
-}
-```
-
-Note: Since this is GstStructure synthax, we need to have the structures in the
-array as strings/within quotes.
-
-## expected-issues
-
-The `expected-issues` field is an array of `expected-issue` structures containing
-information about issues to expect (which can be known bugs or not).
-
-Use `gst-validate-1.0 --print-issue-types` to print information about all issue types.
-
-For example:
-
-``` yaml
-expected-issues = {
-    "expected-issue, issue-id=scenario::not-ended",
-}
-```
-
-Note: Since this is GstStructure synthax, we need to have the structures in the
-array as strings/within quotes.
-
-### Fields:
-
-* `issue-id`: (string): Issue ID - Mandatory if `summary` is not provided.
-* `summary`: (string): Summary - Mandatory if `issue-id` is not provided.
-* `details`: Regex string to match the issue details `detected-on`: (string):
-             The name of the element the issue happened on `level`: (string):
-             Issue level
-* `sometimes`: (boolean): Default: `false` -  Wheteher the issue happens only
-               sometimes if `false` and the issue doesn't happen, an error will
-               be issued.
-* `issue-url`: (string): The url of the issue in the bug tracker if the issue is
-               a bug.
-
-### Variables
-
-The same way
+## Variables
 
 Validate testfile will define some variables to make those files relocable:
 

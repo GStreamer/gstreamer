@@ -111,7 +111,15 @@ typedef enum {
   GST_H264_PROFILE_MULTIVIEW_HIGH       = 118,
   GST_H264_PROFILE_STEREO_HIGH          = 128,
   GST_H264_PROFILE_SCALABLE_BASELINE    = 83,
-  GST_H264_PROFILE_SCALABLE_HIGH        = 86
+  GST_H264_PROFILE_SCALABLE_HIGH        = 86,
+  /**
+   * GST_H264_PROFILE_INVALID:
+   *
+   * Invalid H264 profile
+   *
+   * Since: 1.24
+   */
+  GST_H264_PROFILE_INVALID              = -1
 } GstH264Profile;
 
 /**
@@ -133,6 +141,8 @@ typedef enum {
  * @GST_H264_NAL_PREFIX_UNIT: Prefix NAL unit
  * @GST_H264_NAL_SUBSET_SPS: Subset sequence parameter set (SSPS) NAL unit
  * @GST_H264_NAL_DEPTH_SPS: Depth parameter set (DPS) NAL unit
+ * @GST_H264_NAL_RSV_1: First reserved parameter
+ * @GST_H264_NAL_RSV_2: Second reserved parameter
  * @GST_H264_NAL_SLICE_AUX: Auxiliary coded picture without partitioning NAL unit
  * @GST_H264_NAL_SLICE_EXT: Coded slice extension NAL unit
  * @GST_H264_NAL_SLICE_DEPTH: Coded slice extension for depth or 3D-AVC texture view
@@ -158,6 +168,24 @@ typedef enum
   GST_H264_NAL_PREFIX_UNIT  = 14,
   GST_H264_NAL_SUBSET_SPS   = 15,
   GST_H264_NAL_DEPTH_SPS    = 16,
+
+  /**
+   * GST_H264_NAL_RSV_1:
+   *
+   * First reserved parameter
+   *
+   * Since: 1.24
+   */
+  GST_H264_NAL_RSV_1        = 17,
+
+  /**
+   * GST_H264_NAL_RSV_2:
+   *
+   * Second reserved parameter
+   *
+   * Since: 1.24
+   */
+  GST_H264_NAL_RSV_2        = 18,
   GST_H264_NAL_SLICE_AUX    = 19,
   GST_H264_NAL_SLICE_EXT    = 20,
   GST_H264_NAL_SLICE_DEPTH  = 21
@@ -354,6 +382,26 @@ typedef enum
 
 /**
  * GstH264Level:
+ * @GST_H264_LEVEL_L1: Level 1
+ * @GST_H264_LEVEL_L1B: Level 1b
+ * @GST_H264_LEVEL_L1_1: Level 1.1
+ * @GST_H264_LEVEL_L1_2: Level 1.2
+ * @GST_H264_LEVEL_L1_3: Level 1.3
+ * @GST_H264_LEVEL_L2: Level 2
+ * @GST_H264_LEVEL_L2_1: Level 2.1
+ * @GST_H264_LEVEL_L2_2: Level 2.2
+ * @GST_H264_LEVEL_L3: Level 3
+ * @GST_H264_LEVEL_L3_1: Level 3.1
+ * @GST_H264_LEVEL_L3_2: Level 3.2
+ * @GST_H264_LEVEL_L4: Level 4
+ * @GST_H264_LEVEL_L4_1: Level 4.1
+ * @GST_H264_LEVEL_L4_2: Level 4.2
+ * @GST_H264_LEVEL_L5: Level 5
+ * @GST_H264_LEVEL_L5_1: Level 5.1
+ * @GST_H264_LEVEL_L5_2: Level 5.2
+ * @GST_H264_LEVEL_L6: Level 6
+ * @GST_H264_LEVEL_L6_1: Level 6.1
+ * @GST_H264_LEVEL_L6_2: Level 6.2
  *
  * H.264 level
  *
@@ -366,7 +414,7 @@ typedef enum
   GST_H264_LEVEL_L1_1 = 11,
   GST_H264_LEVEL_L1_2 = 12,
   GST_H264_LEVEL_L1_3 = 13,
-  GST_H264_LEVEL_L2_0 = 20,
+  GST_H264_LEVEL_L2 = 20,
   GST_H264_LEVEL_L2_1 = 21,
   GST_H264_LEVEL_L2_2 = 22,
   GST_H264_LEVEL_L3 = 30,
@@ -1413,6 +1461,15 @@ GstH264ParserResult gst_h264_parser_identify_nalu_avc (GstH264NalParser *nalpars
                                                        GstH264NalUnit *nalu);
 
 GST_CODEC_PARSERS_API
+GstH264ParserResult gst_h264_parser_identify_and_split_nalu_avc (GstH264NalParser *nalparser,
+                                                                 const guint8 *data,
+                                                                 guint offset,
+                                                                 gsize size,
+                                                                 guint8 nal_length_size,
+                                                                 GArray * nalus,
+                                                                 gsize * consumed);
+
+GST_CODEC_PARSERS_API
 GstH264ParserResult gst_h264_parser_parse_nal         (GstH264NalParser *nalparser,
                                                        GstH264NalUnit *nalu);
 
@@ -1516,6 +1573,11 @@ GstH264ParserResult gst_h264_parser_parse_decoder_config_record (GstH264NalParse
                                                                  const guint8 * data,
                                                                  gsize size,
                                                                  GstH264DecoderConfigRecord ** config);
+GST_CODEC_PARSERS_API
+GstH264Profile gst_h264_profile_from_string (const gchar * profile);
+
+GST_CODEC_PARSERS_API
+const gchar *   gst_h264_slice_type_to_string      (GstH264SliceType slice_type);
 
 G_END_DECLS
 

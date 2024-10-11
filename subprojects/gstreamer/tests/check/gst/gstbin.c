@@ -1919,7 +1919,7 @@ G_STMT_START { \
   gst_bin_set_suppressed_flags (bin, suppressed_flags); \
   gst_bin_add (bin, element); \
   fail_unless ((natural_flags | GST_OBJECT_FLAGS (bin)) \
-      == expected_flags); \
+      == (expected_flags | GST_OBJECT_FLAG_CONSTRUCTED)); \
   gst_object_unref (bin); \
 } G_STMT_END
 

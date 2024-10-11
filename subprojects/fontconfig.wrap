@@ -1,6 +1,9 @@
-[wrap-git]
-directory=fontconfig
-url=https://gitlab.freedesktop.org/fontconfig/fontconfig
-push-url=git@gitlab.freedesktop.org:fontconfig/fontconfig.git
-depth=1
-revision=2.14.0
+[wrap-file]
+directory = fontconfig-2.14.2
+source_url = https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.14.2.tar.xz
+source_filename = fontconfig-2.14.2.tar.xz
+source_hash = dba695b57bce15023d2ceedef82062c2b925e51f5d4cc4aef736cf13f60a468b
+diff_files = fontconfig-2.14.2/0001-meson-Always-use-posix-path-even-on-Windows.patch, fontconfig-2.14.2/0001-meson-Always-write-utf-8-files-with-LF-newlines.patch
+
+[provide]
+fontconfig = fontconfig_dep

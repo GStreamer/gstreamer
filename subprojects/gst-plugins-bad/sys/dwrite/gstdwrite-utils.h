@@ -21,19 +21,31 @@
 
 #include <gst/gst.h>
 
-#define GST_DWRITE_TEXT_META_NAME "GstDWriteTextMeta"
-
-#define GST_DWRITE_CAPS \
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "," \
-        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, \
-        GST_D3D11_ALL_FORMATS) "; " \
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, \
-        GST_D3D11_ALL_FORMATS) "; " \
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY "," \
-        GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, GST_VIDEO_FORMATS_ALL) ";" \
-    GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL)
-
 G_BEGIN_DECLS
+
+typedef struct
+{
+  GstMeta meta;
+
+  GstStream *stream;
+  GstBuffer *subtitle;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+} GstDWriteSubtitleMeta;
+
+GType gst_dwrite_subtitle_meta_api_get_type (void);
+#define GST_DWRITE_SUBTITLE_META_API_TYPE (gst_dwrite_subtitle_meta_api_get_type())
+
+const GstMetaInfo * gst_dwrite_subtitle_meta_get_info (void);
+#define GST_DWRITE_SUBTITLE_META_INFO (gst_dwrite_subtitle_meta_get_info())
+
+#define gst_buffer_get_dwrite_subtitle_meta(b) \
+    ((GstDWriteSubtitleMeta *) gst_buffer_get_meta((b), GST_DWRITE_SUBTITLE_META_API_TYPE))
+
+GstDWriteSubtitleMeta * gst_buffer_add_dwrite_subtitle_meta (GstBuffer * buffer,
+                                                             GstStream * stream,
+                                                             GstBuffer * subtitle);
 
 gboolean gst_dwrite_is_windows_10_or_greater (void);
 

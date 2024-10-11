@@ -101,7 +101,6 @@ typedef struct _GstNvH264Dec
 {
   GstH264Decoder parent;
 
-  GstCudaContext *context;
   GstNvDecoder *decoder;
   CUVIDPICPARAMS params;
 
@@ -129,12 +128,14 @@ typedef struct _GstNvH264Dec
   guint num_output_surfaces;
   guint init_max_width;
   guint init_max_height;
+  gint max_display_delay;
 } GstNvH264Dec;
 
 typedef struct _GstNvH264DecClass
 {
   GstH264DecoderClass parent_class;
   guint cuda_device_id;
+  gint64 adapter_luid;
   guint max_width;
   guint max_height;
 } GstNvH264DecClass;
@@ -146,9 +147,11 @@ enum
   PROP_NUM_OUTPUT_SURFACES,
   PROP_INIT_MAX_WIDTH,
   PROP_INIT_MAX_HEIGHT,
+  PROP_MAX_DISPLAY_DELAY,
 };
 
-#define DEFAULT_NUM_OUTPUT_SURFACES 0
+#define DEFAULT_NUM_OUTPUT_SURFACES 1
+#define DEFAULT_MAX_DISPLAY_DELAY -1
 
 static GTypeClass *parent_class = nullptr;
 
@@ -156,7 +159,7 @@ static GTypeClass *parent_class = nullptr;
 #define GST_NV_H264_DEC_GET_CLASS(object) \
     (G_TYPE_INSTANCE_GET_CLASS ((object),G_TYPE_FROM_INSTANCE (object),GstNvH264DecClass))
 
-static void gst_nv_h264_decoder_dispose (GObject * object);
+static void gst_nv_h264_decoder_finalize (GObject * object);
 static void gst_nv_h264_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_nv_h264_dec_get_property (GObject * object, guint prop_id,
@@ -170,6 +173,8 @@ static gboolean gst_nv_h264_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_nv_h264_dec_negotiate (GstVideoDecoder * decoder);
 static gboolean gst_nv_h264_dec_decide_allocation (GstVideoDecoder *
     decoder, GstQuery * query);
+static gboolean gst_nv_h264_dec_sink_query (GstVideoDecoder * decoder,
+    GstQuery * query);
 static gboolean gst_nv_h264_dec_src_query (GstVideoDecoder * decoder,
     GstQuery * query);
 static gboolean gst_nv_h264_dec_sink_event (GstVideoDecoder * decoder,
@@ -205,12 +210,12 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstH264DecoderClass *h264decoder_class = GST_H264_DECODER_CLASS (klass);
 
-  object_class->dispose = gst_nv_h264_decoder_dispose;
+  object_class->finalize = gst_nv_h264_decoder_finalize;
   object_class->set_property = gst_nv_h264_dec_set_property;
   object_class->get_property = gst_nv_h264_dec_get_property;
 
   /**
-   * GstNvH264SLDec:cuda-device-id:
+   * GstNvH264Dec:cuda-device-id:
    *
    * Assigned CUDA device id
    *
@@ -222,24 +227,25 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
           (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   /**
-   * GstNvH264SLDec:num-output-surfaces:
+   * GstNvH264Dec:num-output-surfaces:
    *
-   * The number of output surfaces (0 = auto). This property will be used to
-   * calculate the CUVIDDECODECREATEINFO.ulNumOutputSurfaces parameter
-   * in case of CUDA output mode
+   * The number of output surfaces (0 = auto, 1 = always copy).
+   * This property will be used to calculate
+   * the CUVIDDECODECREATEINFO.ulNumOutputSurfaces parameter in case of
+   * CUDA output mode.
    *
    * Since: 1.24
    */
   g_object_class_install_property (object_class, PROP_NUM_OUTPUT_SURFACES,
       g_param_spec_uint ("num-output-surfaces", "Num Output Surfaces",
           "Maximum number of output surfaces simultaneously mapped in CUDA "
-          "output mode (0 = auto)",
+          "output mode (0 = auto, 1 = always copy)",
           0, 64, DEFAULT_NUM_OUTPUT_SURFACES,
           (GParamFlags) (GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS)));
 
   /**
-   * GstNvH264SLDec:init-max-width:
+   * GstNvH264Dec:init-max-width:
    *
    * Initial CUVIDDECODECREATEINFO.ulMaxWidth value
    *
@@ -255,7 +261,7 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
               G_PARAM_STATIC_STRINGS)));
 
   /**
-   * GstNvH264SLDec:init-max-height:
+   * GstNvH264Dec:init-max-height:
    *
    * Initial CUVIDDECODECREATEINFO.ulMaxHeight value
    *
@@ -269,6 +275,19 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
           0, cdata->max_height, 0,
           (GParamFlags) (GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstNvH264Dec:max-display-delay:
+   *
+   * Maximum display delay
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (object_class, PROP_MAX_DISPLAY_DELAY,
+      g_param_spec_int ("max-display-delay", "Max Display Delay",
+          "Improves pipelining of decode with display, 0 means no delay "
+          "(auto = -1)", -1, 16, DEFAULT_MAX_DISPLAY_DELAY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_h264_dec_set_context);
 
@@ -291,6 +310,7 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
   decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_nv_h264_dec_negotiate);
   decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_nv_h264_dec_decide_allocation);
+  decoder_class->sink_query = GST_DEBUG_FUNCPTR (gst_nv_h264_dec_sink_query);
   decoder_class->src_query = GST_DEBUG_FUNCPTR (gst_nv_h264_dec_src_query);
   decoder_class->sink_event = GST_DEBUG_FUNCPTR (gst_nv_h264_dec_sink_event);
 
@@ -312,6 +332,7 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
       GST_DEBUG_FUNCPTR (gst_nv_h264_dec_get_preferred_output_delay);
 
   klass->cuda_device_id = cdata->cuda_device_id;
+  klass->adapter_luid = cdata->adapter_luid;
   klass->max_width = cdata->max_width;
   klass->max_height = cdata->max_height;
 
@@ -323,22 +344,28 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
 static void
 gst_nv_h264_dec_init (GstNvH264Dec * self)
 {
+  GstNvH264DecClass *klass = GST_NV_H264_DEC_GET_CLASS (self);
+
+  self->decoder =
+      gst_nv_decoder_new (klass->cuda_device_id, klass->adapter_luid);
   self->ref_list = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 16);
   g_array_set_clear_func (self->ref_list,
       (GDestroyNotify) gst_clear_h264_picture);
 
   self->num_output_surfaces = DEFAULT_NUM_OUTPUT_SURFACES;
+  self->max_display_delay = DEFAULT_MAX_DISPLAY_DELAY;
 }
 
 static void
-gst_nv_h264_decoder_dispose (GObject * object)
+gst_nv_h264_decoder_finalize (GObject * object)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (object);
 
-  g_clear_pointer (&self->ref_list, g_array_unref);
+  g_array_unref (self->ref_list);
+  gst_object_unref (self->decoder);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -356,6 +383,9 @@ gst_nv_h264_dec_set_property (GObject * object, guint prop_id,
       break;
     case PROP_INIT_MAX_HEIGHT:
       self->init_max_height = g_value_get_uint (value);
+      break;
+    case PROP_MAX_DISPLAY_DELAY:
+      self->max_display_delay = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -383,6 +413,9 @@ gst_nv_h264_dec_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_INIT_MAX_HEIGHT:
       g_value_set_uint (value, self->init_max_height);
       break;
+    case PROP_MAX_DISPLAY_DELAY:
+      g_value_set_int (value, self->max_display_delay);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -393,20 +426,9 @@ static void
 gst_nv_h264_dec_set_context (GstElement * element, GstContext * context)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (element);
-  GstNvH264DecClass *klass = GST_NV_H264_DEC_GET_CLASS (self);
 
-  GST_DEBUG_OBJECT (self, "set context %s",
-      gst_context_get_context_type (context));
+  gst_nv_decoder_handle_set_context (self->decoder, element, context);
 
-  if (gst_cuda_handle_set_context (element, context, klass->cuda_device_id,
-          &self->context)) {
-    goto done;
-  }
-
-  if (self->decoder)
-    gst_nv_decoder_handle_set_context (self->decoder, element, context);
-
-done:
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
@@ -428,25 +450,10 @@ static gboolean
 gst_nv_h264_dec_open (GstVideoDecoder * decoder)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
-  GstNvH264DecClass *klass = GST_NV_H264_DEC_GET_CLASS (self);
-
-  if (!gst_cuda_ensure_element_context (GST_ELEMENT (self),
-          klass->cuda_device_id, &self->context)) {
-    GST_ERROR_OBJECT (self, "Required element data is unavailable");
-    return FALSE;
-  }
-
-  self->decoder = gst_nv_decoder_new (self->context);
-  if (!self->decoder) {
-    GST_ERROR_OBJECT (self, "Failed to create decoder object");
-    gst_clear_object (&self->context);
-
-    return FALSE;
-  }
 
   gst_d3d11_h264_dec_reset (self);
 
-  return TRUE;
+  return gst_nv_decoder_open (self->decoder, GST_ELEMENT (decoder));
 }
 
 static gboolean
@@ -454,16 +461,13 @@ gst_nv_h264_dec_close (GstVideoDecoder * decoder)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
 
-  gst_clear_object (&self->decoder);
-  gst_clear_object (&self->context);
-
   g_clear_pointer (&self->bitstream_buffer, g_free);
   g_clear_pointer (&self->slice_offsets, g_free);
 
   self->bitstream_buffer_alloc_size = 0;
   self->slice_offsets_alloc_len = 0;
 
-  return TRUE;
+  return gst_nv_decoder_close (self->decoder);
 }
 
 static gboolean
@@ -474,8 +478,7 @@ gst_nv_h264_dec_stop (GstVideoDecoder * decoder)
 
   ret = GST_VIDEO_DECODER_CLASS (parent_class)->stop (decoder);
 
-  if (self->decoder)
-    gst_nv_decoder_reset (self->decoder);
+  gst_nv_decoder_reset (self->decoder);
 
   return ret;
 }
@@ -488,9 +491,8 @@ gst_nv_h264_dec_negotiate (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "negotiate");
 
-  gst_nv_decoder_negotiate (self->decoder, decoder, h264dec->input_state);
-
-  /* TODO: add support D3D11 memory */
+  if (!gst_nv_decoder_negotiate (self->decoder, decoder, h264dec->input_state))
+    return FALSE;
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
@@ -510,23 +512,23 @@ gst_nv_h264_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 }
 
 static gboolean
+gst_nv_h264_dec_sink_query (GstVideoDecoder * decoder, GstQuery * query)
+{
+  GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
+
+  if (gst_nv_decoder_handle_query (self->decoder, GST_ELEMENT (decoder), query))
+    return TRUE;
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->sink_query (decoder, query);
+}
+
+static gboolean
 gst_nv_h264_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
 
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CONTEXT:
-      if (gst_cuda_handle_context_query (GST_ELEMENT (decoder), query,
-              self->context)) {
-        return TRUE;
-      } else if (self->decoder &&
-          gst_nv_decoder_handle_context_query (self->decoder, decoder, query)) {
-        return TRUE;
-      }
-      break;
-    default:
-      break;
-  }
+  if (gst_nv_decoder_handle_query (self->decoder, GST_ELEMENT (decoder), query))
+    return TRUE;
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->src_query (decoder, query);
 }
@@ -535,9 +537,6 @@ static gboolean
 gst_nv_h264_dec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
-
-  if (!self->decoder)
-    goto done;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -550,7 +549,6 @@ gst_nv_h264_dec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
       break;
   }
 
-done:
   return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (decoder, event);
 }
 
@@ -635,8 +633,7 @@ gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
       return GST_FLOW_NOT_NEGOTIATED;
     }
 
-    gst_video_info_set_format (&info, out_format, GST_ROUND_UP_2 (self->width),
-        GST_ROUND_UP_2 (self->height));
+    gst_video_info_set_format (&info, out_format, self->width, self->height);
     if (self->interlaced)
       GST_VIDEO_INFO_INTERLACE_MODE (&info) = GST_VIDEO_INTERLACE_MODE_MIXED;
 
@@ -671,20 +668,9 @@ gst_nv_h264_dec_new_picture (GstH264Decoder * decoder,
     GstVideoCodecFrame * frame, GstH264Picture * picture)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
-  GstNvDecSurface *surface;
-  GstFlowReturn ret;
 
-  ret = gst_nv_decoder_acquire_surface (self->decoder, &surface);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
-  GST_LOG_OBJECT (self,
-      "New decoder surface %p (index %d)", surface, surface->index);
-
-  gst_h264_picture_set_user_data (picture,
-      surface, (GDestroyNotify) gst_nv_dec_surface_unref);
-
-  return GST_FLOW_OK;
+  return gst_nv_decoder_new_picture (self->decoder,
+      GST_CODEC_PICTURE (picture));
 }
 
 static GstFlowReturn
@@ -713,44 +699,10 @@ gst_nv_h264_dec_output_picture (GstH264Decoder * decoder,
     GstVideoCodecFrame * frame, GstH264Picture * picture)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
-  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
-  GstNvDecSurface *surface;
-  GstFlowReturn ret = GST_FLOW_ERROR;
 
-  GST_LOG_OBJECT (self,
-      "Outputting picture %p (poc %d)", picture, picture->pic_order_cnt);
-
-  surface = (GstNvDecSurface *) gst_h264_picture_get_user_data (picture);
-  if (!surface) {
-    GST_ERROR_OBJECT (self, "No decoder surface in picture %p", picture);
-    goto error;
-  }
-
-  ret = gst_nv_decoder_finish_surface (self->decoder,
-      vdec, picture->discont_state, surface, &frame->output_buffer);
-  if (ret != GST_FLOW_OK)
-    goto error;
-
-  if (picture->buffer_flags != 0) {
-    gboolean interlaced =
-        (picture->buffer_flags & GST_VIDEO_BUFFER_FLAG_INTERLACED) != 0;
-    gboolean tff = (picture->buffer_flags & GST_VIDEO_BUFFER_FLAG_TFF) != 0;
-
-    GST_TRACE_OBJECT (self,
-        "apply buffer flags 0x%x (interlaced %d, top-field-first %d)",
-        picture->buffer_flags, interlaced, tff);
-    GST_BUFFER_FLAG_SET (frame->output_buffer, picture->buffer_flags);
-  }
-
-  gst_h264_picture_unref (picture);
-
-  return gst_video_decoder_finish_frame (vdec, frame);
-
-error:
-  gst_h264_picture_unref (picture);
-  gst_video_decoder_release_frame (vdec, frame);
-
-  return ret;
+  return gst_nv_decoder_output_picture (self->decoder,
+      GST_VIDEO_DECODER (decoder), frame, GST_CODEC_PICTURE (picture),
+      picture->buffer_flags);
 }
 
 static GstNvDecSurface *
@@ -1082,6 +1034,11 @@ static guint
 gst_nv_h264_dec_get_preferred_output_delay (GstH264Decoder * decoder,
     gboolean live)
 {
+  GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
+
+  if (self->max_display_delay >= 0)
+    return self->max_display_delay;
+
   /* Prefer to zero latency for live pipeline */
   if (live)
     return 0;
@@ -1090,8 +1047,8 @@ gst_nv_h264_dec_get_preferred_output_delay (GstH264Decoder * decoder,
 }
 
 void
-gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id, guint rank,
-    GstCaps * sink_caps, GstCaps * src_caps)
+gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id,
+    gint64 adapter_luid, guint rank, GstCaps * sink_caps, GstCaps * src_caps)
 {
   GType type;
   gchar *type_name;
@@ -1118,7 +1075,7 @@ gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   cdata->sink_caps = gst_caps_from_string ("video/x-h264, "
       "stream-format= (string) { avc, avc3, byte-stream }, "
       "alignment= (string) au, "
-      "profile = (string) { high, main, constrained-high, constrained-baseline, baseline }, "
+      "profile = (string) { high, main, constrained-high, constrained-baseline, baseline, progressive-high }, "
       "framerate = " GST_VIDEO_FPS_RANGE);
 
   s = gst_caps_get_structure (sink_caps, 0);
@@ -1134,6 +1091,7 @@ gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id, guint rank,
       GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
   cdata->src_caps = gst_caps_ref (src_caps);
   cdata->cuda_device_id = device_id;
+  cdata->adapter_luid = adapter_luid;
 
   type_name = g_strdup ("GstNvH264Dec");
   feature_name = g_strdup ("nvh264dec");

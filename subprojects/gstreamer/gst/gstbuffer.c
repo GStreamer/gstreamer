@@ -35,7 +35,7 @@
  * The following example creates a buffer that can hold a given video frame
  * with a given width, height and bits per plane.
  *
- * ``` C 
+ * ``` C
  *   GstBuffer *buffer;
  *   GstMemory *memory;
  *   gint size, width, height, bpp;
@@ -172,7 +172,14 @@ typedef struct
 static gint64 meta_seq;         /* 0 *//* ATOMIC */
 
 /* TODO: use GLib's once https://gitlab.gnome.org/GNOME/glib/issues/1076 lands */
-#if defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_8)
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__)
+#include <stdatomic.h>
+static inline gint64
+gst_atomic_int64_inc (gint64 * atomic)
+{
+  return atomic_fetch_add ((_Atomic gint64 *) atomic, 1);
+}
+#elif defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_8)
 static inline gint64
 gst_atomic_int64_inc (gint64 * atomic)
 {
@@ -2860,6 +2867,49 @@ gst_reference_timestamp_meta_api_get_type (void)
   return type;
 }
 
+static gboolean
+timestamp_meta_serialize (const GstMeta * meta, GstByteArrayInterface * data,
+    guint8 * version)
+{
+  const GstReferenceTimestampMeta *rtmeta =
+      (const GstReferenceTimestampMeta *) meta;
+  gchar *caps_str = gst_caps_to_string (rtmeta->reference);
+  gsize caps_str_len = strlen (caps_str);
+
+  gsize size = 16 + caps_str_len + 1;
+  guint8 *ptr = gst_byte_array_interface_append (data, size);
+  if (ptr == NULL) {
+    g_free (caps_str);
+    return FALSE;
+  }
+
+  GST_WRITE_UINT64_LE (ptr, rtmeta->timestamp);
+  GST_WRITE_UINT64_LE (ptr + 8, rtmeta->duration);
+  memcpy (ptr + 16, caps_str, caps_str_len + 1);
+  g_free (caps_str);
+
+  return TRUE;
+}
+
+static GstMeta *
+timestamp_meta_deserialize (const GstMetaInfo * info, GstBuffer * buffer,
+    const guint8 * data, gsize size, guint8 version)
+{
+  /* Sanity check: caps_str must be 0-terminated. */
+  if (version != 0 || size < 2 * sizeof (guint64) + 1 || data[size - 1] != '\0')
+    return NULL;
+
+  guint64 timestamp = GST_READ_UINT64_LE (data);
+  guint64 duration = GST_READ_UINT64_LE (data + 8);
+  const gchar *caps_str = (const gchar *) data + 16;
+  GstCaps *reference = gst_caps_from_string (caps_str);
+  GstMeta *meta = (GstMeta *) gst_buffer_add_reference_timestamp_meta (buffer,
+      reference, timestamp, duration);
+  gst_caps_unref (reference);
+
+  return meta;
+}
+
 /**
  * gst_reference_timestamp_meta_get_info:
  *
@@ -2875,13 +2925,17 @@ gst_reference_timestamp_meta_get_info (void)
   static const GstMetaInfo *meta_info = NULL;
 
   if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
-    const GstMetaInfo *meta =
-        gst_meta_register (gst_reference_timestamp_meta_api_get_type (),
+    const GstMetaInfo *meta = NULL;
+    GstMetaInfo *info =
+        gst_meta_info_new (gst_reference_timestamp_meta_api_get_type (),
         "GstReferenceTimestampMeta",
-        sizeof (GstReferenceTimestampMeta),
-        (GstMetaInitFunction) _gst_reference_timestamp_meta_init,
-        (GstMetaFreeFunction) _gst_reference_timestamp_meta_free,
-        _gst_reference_timestamp_meta_transform);
+        sizeof (GstReferenceTimestampMeta));
+    info->init_func = (GstMetaInitFunction) _gst_reference_timestamp_meta_init;
+    info->free_func = (GstMetaFreeFunction) _gst_reference_timestamp_meta_free;
+    info->transform_func = _gst_reference_timestamp_meta_transform;
+    info->serialize_func = timestamp_meta_serialize;
+    info->deserialize_func = timestamp_meta_deserialize;
+    meta = gst_meta_info_register (info);
     g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) meta);
   }
 

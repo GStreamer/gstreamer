@@ -4,7 +4,8 @@ This document is an attempt to describe the basics of the DTLS element.
 It hasn't been written by the author(s) and so, besides being incomplete,
 *IT MIGHT ALSO BE INCORRECT*. So take it with a pinch of salt.
 
-As always, if in doubt ask the #gstreamer IRC channel.
+As always, if in doubt ask on the GStreamer Matrix room:
+https://matrix.to/#/#gstreamer:gstreamer.org.
 
 THE INTERNALS
 =============

@@ -26,6 +26,7 @@ rtp_sources = [
   'gstrtpmpvpay.c',
   'gstrtpopuspay.c',
   'gstrtpopusdepay.c',
+  'gstrtppassthroughpay.c',
   'gstrtppcmadepay.c',
   'gstrtppcmudepay.c',
   'gstrtppcmupay.c',

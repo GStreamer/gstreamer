@@ -42,6 +42,8 @@
 #include "gstaudiomixerelements.h"
 #include "gstaudiointerleave.h"
 
+#include "gst/glib-compat-private.h"
+
 #define GST_CAT_DEFAULT gst_audio_interleave_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -187,9 +189,10 @@ __set_channels (GstCaps * caps, gint channels)
   for (i = 0; i < size; i++) {
     s = gst_caps_get_structure (caps, i);
     if (channels > 0)
-      gst_structure_set (s, "channels", G_TYPE_INT, channels, NULL);
+      gst_structure_set_static_str (s, "channels", G_TYPE_INT, channels, NULL);
     else
-      gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+      gst_structure_set_static_str (s, "channels", GST_TYPE_INT_RANGE, 1,
+          G_MAXINT, NULL);
   }
 }
 
@@ -313,7 +316,7 @@ gst_audio_interleave_channel_positions_to_mask (GValueArray * positions,
   for (i = 0; i < channels; i++) {
     default_ordering_map[i] = i;
   }
-  g_qsort_with_data (default_ordering_map, channels,
+  g_sort_array (default_ordering_map, channels,
       sizeof (*default_ordering_map), compare_positions, pos);
 
   ret = gst_audio_channel_positions_to_mask (pos, channels, FALSE, mask);
@@ -522,8 +525,8 @@ gst_audio_interleave_update_src_caps (GstAggregator * agg, GstCaps * caps,
   *ret = gst_caps_copy (self->sinkcaps);
   s = gst_caps_get_structure (*ret, 0);
 
-  gst_structure_set (s, "channels", G_TYPE_INT, self->channels, "layout",
-      G_TYPE_STRING, "interleaved", "channel-mask", GST_TYPE_BITMASK,
+  gst_structure_set_static_str (s, "channels", G_TYPE_INT, self->channels,
+      "layout", G_TYPE_STRING, "interleaved", "channel-mask", GST_TYPE_BITMASK,
       gst_audio_interleave_get_channel_mask (self), NULL);
 
   GST_OBJECT_UNLOCK (self);

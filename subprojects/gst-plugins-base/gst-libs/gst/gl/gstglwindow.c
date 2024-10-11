@@ -334,6 +334,9 @@ gst_gl_window_new (GstGLDisplay * display)
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "winrt")))
     window = GST_GL_WINDOW (gst_gl_window_winrt_egl_new (display));
 #endif
+  if (!window && (!user_choice
+          || g_strstr_len (user_choice, 11, "surfaceless")))
+    window = GST_GL_WINDOW (gst_gl_dummy_window_new ());
 
   if (!window) {
     /* subclass returned a NULL window */

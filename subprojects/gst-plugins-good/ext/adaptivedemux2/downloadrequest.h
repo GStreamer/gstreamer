@@ -41,6 +41,7 @@ enum _DownloadRequestState {
   DOWNLOAD_REQUEST_STATE_LOADING,  /* Content loading in progress */
   DOWNLOAD_REQUEST_STATE_COMPLETE, /* Request processing finished successfully - check status_code for completion 200-399 codes */
   DOWNLOAD_REQUEST_STATE_ERROR,    /* Request generated an http error - check status_code */
+  DOWNLOAD_REQUEST_STATE_CANCELLED, /* Request has been cancelled by the user */
 };
 
 struct _DownloadRequest

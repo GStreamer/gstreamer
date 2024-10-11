@@ -79,6 +79,63 @@ EXITING_SIGNALS.update({(v, k) for k, v in EXITING_SIGNALS.items()})
 
 
 CI_ARTIFACTS_URL = os.environ.get('CI_ARTIFACTS_URL')
+DEBUGGER = None
+
+
+def get_debugger():
+    global DEBUGGER
+    if DEBUGGER is not None:
+        return DEBUGGER
+
+    gdb = shutil.which('gdb')
+    if gdb:
+        DEBUGGER = GDBDebugger(gdb)
+    else:
+        lldb = shutil.which('lldb')
+        DEBUGGER = LLDBDebugger(lldb)
+
+    return DEBUGGER
+
+
+class Debugger:
+    def __init__(self, executable):
+        self.executable = executable
+
+    def get_args(self, args, non_stop) -> list:
+        raise NotImplementedError
+
+    def get_attach_args(self, pid):
+        raise NotImplementedError
+
+
+class GDBDebugger(Debugger):
+    def get_args(self, args, non_stop) -> list:
+        if non_stop:
+            return [
+                self.executable,
+                "-ex",
+                "run",
+                "-ex",
+                "bt",
+                "-ex",
+                "quit",
+                "--args",
+            ] + args
+        else:
+            return [self.executable, "--args"] + args
+
+    def get_attach_args(self, pid):
+        return [self.executable, "-p", str(pid)]
+
+
+class LLDBDebugger(Debugger):
+    def get_args(self, args, non_stop) -> list:
+        if non_stop:
+            return [self.executable, "-o", "run", "-o", "bt", "-o", "quit", "--"] + args
+        return [self.executable, "--"] + args
+
+    def get_attach_args(self, pid):
+        return [self.executable, "-p", str(pid)]
 
 
 class Test(Loggable):
@@ -282,11 +339,8 @@ class Test(Loggable):
         self.out = None
 
     def _get_file_content(self, file_name):
-        f = open(file_name, 'r+')
-        value = f.read()
-        f.close()
-
-        return value
+        with open(file_name, 'r', encoding='utf-8', errors='replace') as f:
+            return f.read()
 
     def get_log_content(self):
         return self._get_file_content(self.logfile)
@@ -368,6 +422,7 @@ class Test(Loggable):
                                                                     message, error))
 
         if result is Result.TIMEOUT:
+            self.add_stack_trace_to_logfile()
             if self.options.debug is True:
                 if self.options.gdb:
                     printc("Timeout, you should process <ctrl>c to get into gdb",
@@ -376,11 +431,21 @@ class Test(Loggable):
                     self.process.communicate()
                 else:
                     pname = self.command[0]
-                    input("%sTimeout happened  on %s you can attach gdb doing:\n $gdb %s %d%s\n"
-                          "Press enter to continue" % (Colors.FAIL, self.classname,
-                          pname, self.process.pid, Colors.ENDC))
-            else:
-                self.add_stack_trace_to_logfile()
+                    while True:
+                        debugger = get_debugger()
+                        if not debugger:
+                            res = input(f"{Colors.FAIL}Timeout happened on {self.classname} no known debugger found but the process PID is {self.process.pid}\n"
+                                f"You can find log file at {self.logfile}\n"
+                                f"Press 'ok(o)' enter to continue\n\n")
+                        else:
+                            res = input(f"{Colors.FAIL}Timeout happened on {self.classname} you can attach the debugger doing:\n"
+                                    f"   $ {' '.join([shlex.quote(a) for a in debugger.get_attach_args(self.process.pid)])}\n"
+                                    f"You can find log file at {self.logfile}\n"
+                                    f"**Press ok(o) to continue**{Colors.ENDC}\n\n")
+
+                        if res.lower() in ['o', 'ok']:
+                            print("Continuing...\n")
+                            break
 
         self.result = result
         self.message = message
@@ -547,10 +612,8 @@ class Test(Loggable):
             self.timeout = sys.maxsize
             self.hard_timeout = sys.maxsize
 
-        args = ["gdb"]
-        if self.options.gdb_non_stop:
-            args += ["-ex", "run", "-ex", "backtrace", "-ex", "quit"]
-        args += ["--args"] + command
+        assert DEBUGGER is not None
+        args = DEBUGGER.get_args(command, self.options.gdb_non_stop)
         return args
 
     def use_rr(self, command, subenv):
@@ -683,7 +746,7 @@ class Test(Loggable):
             self.out.write("# `%s`\n\n"
                            "## Command\n\n``` bash\n%s\n```\n\n" % (
                                self.classname, self.get_command_repr()))
-            self.out.write("## %s output\n\n``` \n\n" % os.path.basename(self.application))
+            self.out.write("## %s output\n\n``` log \n\n" % os.path.basename(self.application))
             self.out.flush()
         else:
             message = "Launching: %s%s\n" \
@@ -741,10 +804,6 @@ class Test(Loggable):
         for n in self.__env_variable:
             clean_env[n] = self.proc_env.get(n, None)
         self.proc_env = clean_env
-
-        # Don't keep around JSON report objects, they were processed
-        # in check_results already
-        self.reports = []
 
         return self.result
 
@@ -955,12 +1014,14 @@ class GstValidateTest(Test):
         subproc_env["GST_VALIDATE_UUID"] = self.get_uuid()
         subproc_env["GST_VALIDATE_LOGSDIR"] = self.options.logsdir
 
-        if 'GST_DEBUG' in os.environ and not self.options.redirect_logs:
+        no_color = True
+        if 'GST_DEBUG' in os.environ and not self.options.redirect_logs and not self.options.debug:
             gstlogsfile = os.path.splitext(self.logfile)[0] + '.gstdebug'
             self.extra_logfiles.add(gstlogsfile)
             subproc_env["GST_DEBUG_FILE"] = gstlogsfile
+            no_color = self.options.no_color
 
-        if self.options.no_color:
+        if no_color:
             subproc_env["GST_DEBUG_NO_COLOR"] = '1'
 
         # Ensure XInitThreads is called, see bgo#731525
@@ -999,6 +1060,11 @@ class GstValidateTest(Test):
         self.media_duration = -1
         self.speed = 1.0
         self.actions_infos = []
+
+    def copy(self, nth=None):
+        new_test = super().copy(nth=nth)
+        new_test.reports = copy.deepcopy(self.reports)
+        return new_test
 
     def build_arguments(self):
         super(GstValidateTest, self).build_arguments()
@@ -1144,7 +1210,7 @@ class GstValidateTest(Test):
         msg = ""
         result = Result.PASSED
         if self.result == Result.TIMEOUT:
-            with open(self.logfile) as f:
+            with open(self.logfile, errors="surrogateescape") as f:
                 signal_fault_info = self.fault_sig_regex.findall(f.read())
                 if signal_fault_info:
                     result = Result.FAILED
@@ -1231,6 +1297,15 @@ class GstValidateTest(Test):
         result = super(GstValidateTest, self).get_valgrind_suppressions()
         result.extend(utils.get_gst_build_valgrind_suppressions())
         return result
+
+    def test_end(self, retry_on_failures=False):
+        ret = super().test_end(retry_on_failures=retry_on_failures)
+
+        # Don't keep around JSON report objects, they were processed
+        # in check_results already
+        self.reports = []
+
+        return ret
 
 
 class VariableFramerateMode(Enum):
@@ -1611,6 +1686,10 @@ class TestsManager(Loggable):
         if options.blacklisted_tests:
             for patterns in options.blacklisted_tests:
                 self._add_blacklist(patterns)
+
+        if options.gdb:
+            if get_debugger() is None:
+                raise RuntimeError("No debugger found, can't run tests with --gdb")
 
     def check_blacklists(self):
         if self.options.check_bugs_status:
@@ -2386,7 +2465,7 @@ class ScenarioManager(Loggable):
         mfile_bname = os.path.basename(mfile)
 
         for f in os.listdir(os.path.dirname(mfile)):
-            if re.findall("%s\..*\.%s$" % (re.escape(mfile_bname), self.FILE_EXTENSION), f):
+            if re.findall(r'%s\..*\.%s$' % (re.escape(mfile_bname), self.FILE_EXTENSION), f):
                 scenarios.append(os.path.join(os.path.dirname(mfile), f))
 
         if scenarios:
@@ -2416,7 +2495,7 @@ class ScenarioManager(Loggable):
 
         config = configparser.RawConfigParser()
         f = open(scenario_defs)
-        config.readfp(f)
+        config.read_file(f)
 
         for section in config.sections():
             name = None
@@ -2619,7 +2698,7 @@ class MediaDescriptor(Loggable):
     def can_play_reverse(self):
         raise NotImplemented
 
-    def prerrols(self):
+    def prerolls(self):
         return True
 
     def is_compatible(self, scenario):
@@ -2637,6 +2716,8 @@ class MediaDescriptor(Loggable):
             return False
 
         if not self.can_play_reverse() and scenario.does_reverse_playback():
+            self.debug("Do not run %s as %s can not play reverse ",
+                       scenario, self.get_uri())
             return False
 
         if not self.is_live() and scenario.needs_live_content():
@@ -2649,7 +2730,9 @@ class MediaDescriptor(Loggable):
                        scenario, self.get_uri())
             return False
 
-        if not self.prerrols() and getattr(scenario, 'needs_preroll', False):
+        if not self.prerolls() and getattr(scenario, 'needs_preroll', False):
+            self.debug("Do not run %s as %s does not support preroll",
+                       scenario, self.get_uri())
             return False
 
         if self.get_duration() and self.get_duration() / GST_SECOND < scenario.get_min_media_duration():
@@ -2662,7 +2745,7 @@ class MediaDescriptor(Loggable):
 
         for track_type in ['audio', 'subtitle', 'video']:
             if self.get_num_tracks(track_type) < scenario.get_min_tracks(track_type):
-                self.debug("%s -- %s | At least %s %s track needed  < %s"
+                self.debug("Do not run %s -- %s | At least %s %s track needed  < %s"
                            % (scenario, self.get_uri(), track_type,
                               scenario.get_min_tracks(track_type),
                               self.get_num_tracks(track_type)))

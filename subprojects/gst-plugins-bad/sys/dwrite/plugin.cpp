@@ -27,9 +27,11 @@
 #include "config.h"
 #endif
 
+#include "gstdwritesubtitlemux.h"
 #include "gstdwriteclockoverlay.h"
 #include "gstdwritetextoverlay.h"
 #include "gstdwritetimeoverlay.h"
+#include "gstdwritesubtitleoverlay.h"
 
 GST_DEBUG_CATEGORY (gst_dwrite_debug);
 
@@ -38,12 +40,16 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_dwrite_debug, "dwrite", 0, "dwrite");
 
+  gst_element_register (plugin, "dwritesubtitlemux", GST_RANK_NONE,
+      GST_TYPE_DWRITE_SUBTITLE_MUX);
   gst_element_register (plugin, "dwriteclockoverlay", GST_RANK_NONE,
       GST_TYPE_DWRITE_CLOCK_OVERLAY);
   gst_element_register (plugin, "dwritetextoverlay", GST_RANK_NONE,
       GST_TYPE_DWRITE_TEXT_OVERLAY);
   gst_element_register (plugin, "dwritetimeoverlay", GST_RANK_NONE,
       GST_TYPE_DWRITE_TIME_OVERLAY);
+  gst_element_register (plugin, "dwritesubtitleoverlay", GST_RANK_NONE,
+      GST_TYPE_DWRITE_SUBTITLE_OVERLAY);
 
   return TRUE;
 }

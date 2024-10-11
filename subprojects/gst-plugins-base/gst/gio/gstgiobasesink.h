@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
  * Copyright (C) 2007-2009 Sebastian Dröge <slomo@circular-chaos.org>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -55,14 +55,14 @@ struct _GstGioBaseSink
 
   /* < private > */
   GOutputStream *stream;
+  gboolean close_on_stop;
 };
 
-struct _GstGioBaseSinkClass 
+struct _GstGioBaseSinkClass
 {
   GstBaseSinkClass parent_class;
 
   GOutputStream * (*get_stream) (GstGioBaseSink *bsink);
-  gboolean close_on_stop;
 };
 
 GType gst_gio_base_sink_get_type (void);

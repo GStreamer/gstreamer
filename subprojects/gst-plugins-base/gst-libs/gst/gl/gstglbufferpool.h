@@ -77,6 +77,11 @@ GstGLAllocationParams * gst_buffer_pool_config_get_gl_allocation_params    (GstS
 GST_GL_API
 void                    gst_buffer_pool_config_set_gl_allocation_params    (GstStructure * config,
                                                                             const GstGLAllocationParams * params);
+GST_GL_API
+guint                   gst_buffer_pool_config_get_gl_min_free_queue_size  (GstStructure * config);
+GST_GL_API
+void                    gst_buffer_pool_config_set_gl_min_free_queue_size  (GstStructure * config,
+                                                                            guint queue_size);
 
 G_END_DECLS
 

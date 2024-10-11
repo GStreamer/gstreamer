@@ -121,10 +121,9 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
-      "Video scaler", "Filter/Converter/Video/Scaler",
+      "Video scaler", "Filter/Video/Scaler",
       "Resizes video", "Wim Taymans <wim.taymans@gmail.com>");
 
-  convertscale_class->any_memory = TRUE;
   convertscale_class->converts = FALSE;
   convertscale_class->scales = TRUE;
 }

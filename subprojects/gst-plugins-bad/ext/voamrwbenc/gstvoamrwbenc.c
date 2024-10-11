@@ -45,13 +45,13 @@
 #define MR660  0
 #define MR885  1
 #define MR1265 2
-#define MR1425 2
-#define MR1585 3
-#define MR1825 4
-#define MR1985 5
-#define MR2305 6
-#define MR2385 7
-#define MRDTX  8
+#define MR1425 3
+#define MR1585 4
+#define MR1825 5
+#define MR1985 6
+#define MR2305 7
+#define MR2385 8
+#define MRDTX  9
 
 #define L_FRAME16k      320     /* Frame size at 16kHz  */
 

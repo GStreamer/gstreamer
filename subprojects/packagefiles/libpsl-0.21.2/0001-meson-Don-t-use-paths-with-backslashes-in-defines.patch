@@ -1,0 +1,55 @@
+From 1a683724fab377d47f85ffb98d93d8b650a1cbec Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Thu, 13 Jul 2023 00:24:30 +0530
+Subject: [PATCH] meson: Don't use paths with backslashes in defines
+
+Breaks the build on MSYS2 when building inside a directory with
+a component starting with `U`, like `C:\Users`:
+
+```
+FAILED: tests/test-is-public-all.exe.p/test-is-public-all.c.obj
+"cc"  "-Itests\test-is-public-all.exe.p" "-Itests" "-I..\tests" "-I." "-I.." "-Iinclude" "-I..\include" "-fdiagnostics-color=always" "-D_FILE_OFFSET_BITS=64" "-Wall" "-Winvalid-pch" "-O0" "-g" "-DHAVE_CONFIG_H" "-DSRCDIR=\"C:\\Users\\nirbheek\\tmp\\gstreamer\\subprojects\\libpsl\\tests\"" "-DPSL_FILE=\"C:/Users/nirbheek/tmp/gstreamer/subprojects/libpsl/list/public_suffix_list.dat\"" "-DPSL_TESTFILE=\"C:/Users/nirbheek/tmp/gstreamer/subprojects/libpsl/list/tests/tests.txt\"" "-DPSL_DAFSA=\"C:\\Users\\nirbheek\\tmp\\gstreamer\\subprojects\\libpsl\\builddir\\tests\\psl.dafsa\"" "-DPSL_ASCII_DAFSA=\"C:\\Users\\nirbheek\\tmp\\gstreamer\\subprojects\\libpsl\\builddir\\tests\\psl_ascii.dafsa\"" -MD -MQ tests/test-is-public-all.exe.p/test-is-public-all.c.obj -MF "tests\test-is-public-all.exe.p\test-is-public-all.c.obj.d" -o tests/test-is-public-all.exe.p/test-is-public-all.c.obj "-c" ../tests/test-is-public-all.c
+../tests/test-is-public-all.c: In function 'test_psl':
+../tests/test-is-public-all.c:149:45: error: incomplete universal character name \U
+  149 |         if (!(psl3 = psl_load_file(PSL_DAFSA))) {
+      |                                             ^
+../tests/test-is-public-all.c:149:45: warning: unknown escape sequence: '\g'
+../tests/test-is-public-all.c:149:45: warning: unknown escape sequence: '\s'
+../tests/test-is-public-all.c:149:45: warning: unknown escape sequence: '\l'
+../tests/test-is-public-all.c:149:45: warning: unknown escape sequence: '\p'
+../tests/test-is-public-all.c:154:51: error: incomplete universal character name \U
+  154 |         if (!(psl4 = psl_load_file(PSL_ASCII_DAFSA))) {
+      |                                                   ^
+../tests/test-is-public-all.c:154:51: warning: unknown escape sequence: '\g'
+../tests/test-is-public-all.c:154:51: warning: unknown escape sequence: '\s'
+../tests/test-is-public-all.c:154:51: warning: unknown escape sequence: '\l'
+../tests/test-is-public-all.c:154:51: warning: unknown escape sequence: '\p'
+```
+---
+ tests/meson.build | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/tests/meson.build b/tests/meson.build
+index c2381af..d8c266d 100644
+--- a/tests/meson.build
++++ b/tests/meson.build
+@@ -10,13 +10,14 @@ psl_ascii_dafsa = custom_target('psl_ascii.dafsa',
+   output : 'psl_ascii.dafsa',
+   command : [python, psl_make_dafsa, '--output-format=binary', '--encoding=ascii', '@INPUT@', '@OUTPUT@'])
+ 
++fsmod = import('fs')
+ tests_cargs = [
+   '-DHAVE_CONFIG_H',
+   '-DSRCDIR="@0@"'.format(meson.current_source_dir()),
+   '-DPSL_FILE="@0@"'.format(psl_file),
+   '-DPSL_TESTFILE="@0@"'.format(psl_test_file),
+-  '-DPSL_DAFSA="@0@"'.format(psl_dafsa.full_path()),
+-  '-DPSL_ASCII_DAFSA="@0@"'.format(psl_ascii_dafsa.full_path()),
++  '-DPSL_DAFSA="@0@"'.format(fsmod.as_posix(psl_dafsa.full_path())),
++  '-DPSL_ASCII_DAFSA="@0@"'.format(fsmod.as_posix(psl_ascii_dafsa.full_path())),
+ ]
+ 
+ tests = [
+-- 
+2.41.0.windows.2
+

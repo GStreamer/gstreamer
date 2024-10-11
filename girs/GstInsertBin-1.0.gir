@@ -52,7 +52,31 @@ Each operation (addition or removal) can take a callback, this callback
 is guaranteed to be called. Unlike GIO, there is no guarantee about where
 this callback will be called from, it could be called before the action
 returns or it could be called later from another thread. The signature of
-this callback GstInsertBinCallback().</doc>
+this callback GstInsertBinCallback().
+
+Apart from the library API, since 1.24 insertbin can also be found in the
+registry:
+
+``` C
+  GstElement *pipeline, *insertbin, *videoflip;
+
+  gst_init (NULL, NULL);
+  pipeline =
+      gst_parse_launch ("videotestsrc ! insertbin name=i ! autovideosink",
+      NULL);
+
+  ...
+
+  insertbin = gst_bin_get_by_name (GST_BIN (pipeline), "i");
+  videoflip = gst_element_factory_make ("videoflip", NULL);
+
+  ...
+
+  g_object_set (videoflip, "method", 1, NULL);
+  g_signal_emit_by_name (insertbin, "append", videoflip, NULL, NULL);
+
+  ...
+```</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/insertbin/gstinsertbin.h"/>
       <implements name="Gst.ChildProxy"/>
       <constructor name="new" c:identifier="gst_insert_bin_new" version="1.2">
@@ -222,7 +246,7 @@ Same as the #GstInsertBin::remove signal.</doc>
       <field name="priv" readable="0" private="1">
         <type name="InsertBinPrivate" c:type="GstInsertBinPrivate*"/>
       </field>
-      <glib:signal name="append" when="last" action="1">
+      <glib:signal name="append" when="last" action="1" version="1.2">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/insertbin/gstinsertbin.c">This action signal adds the filter like element after any other element
 in the bin.
 
@@ -246,7 +270,7 @@ Same as gst_insert_bin_append()</doc>
           </parameter>
         </parameters>
       </glib:signal>
-      <glib:signal name="insert-after" when="last" action="1">
+      <glib:signal name="insert-after" when="last" action="1" version="1.2">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/insertbin/gstinsertbin.c">This action signal adds the filter like element after the @sibling
 element in the bin.
 element in the bin.
@@ -275,7 +299,7 @@ Same as gst_insert_bin_insert_after()</doc>
           </parameter>
         </parameters>
       </glib:signal>
-      <glib:signal name="insert-before" when="last" action="1">
+      <glib:signal name="insert-before" when="last" action="1" version="1.2">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/insertbin/gstinsertbin.c">This action signal adds the filter like element before the @sibling
 element in the bin.
 
@@ -303,7 +327,7 @@ Same as gst_insert_bin_insert_before()</doc>
           </parameter>
         </parameters>
       </glib:signal>
-      <glib:signal name="prepend" when="last" action="1">
+      <glib:signal name="prepend" when="last" action="1" version="1.2">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/insertbin/gstinsertbin.c">This action signal adds the filter like element before any other element
 in the bin.
 
@@ -327,7 +351,7 @@ Same as gst_insert_bin_prepend()</doc>
           </parameter>
         </parameters>
       </glib:signal>
-      <glib:signal name="remove" when="last" action="1">
+      <glib:signal name="remove" when="last" action="1" version="1.2">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/insertbin/gstinsertbin.c">This action signal removed the filter like element from the bin.
 
 Same as gst_insert_bin_remove()</doc>
@@ -351,7 +375,7 @@ or %NULL</doc>
         </parameters>
       </glib:signal>
     </class>
-    <callback name="InsertBinCallback" c:type="GstInsertBinCallback">
+    <callback name="InsertBinCallback" c:type="GstInsertBinCallback" version="1.2">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/insertbin/gstinsertbin.h">This is the prototype of callbacks to be called when the operation completes.
 It could be called at any time, including as a re-entrant call while the
 operation is requested.</doc>
@@ -378,7 +402,7 @@ operation is requested.</doc>
         </parameter>
       </parameters>
     </callback>
-    <record name="InsertBinClass" c:type="GstInsertBinClass" glib:is-gtype-struct-for="InsertBin">
+    <record name="InsertBinClass" c:type="GstInsertBinClass" glib:is-gtype-struct-for="InsertBin" version="1.2">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/insertbin/gstinsertbin.h">The object class structure.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/insertbin/gstinsertbin.h"/>
       <field name="parent_class">

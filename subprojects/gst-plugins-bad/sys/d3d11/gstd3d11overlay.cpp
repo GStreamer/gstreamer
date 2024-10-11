@@ -225,8 +225,8 @@ gst_d3d11_overlay_propose_allocation (GstBaseTransform * trans,
 
   params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
   if (params) {
-    params->desc[0].BindFlags |=
-        (D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+    gst_d3d11_allocation_params_set_bind_flags (params,
+        D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
   } else {
     params = gst_d3d11_allocation_params_new (filter->device, &info,
         GST_D3D11_ALLOCATION_FLAG_DEFAULT,

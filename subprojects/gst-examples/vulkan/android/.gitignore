@@ -4,7 +4,7 @@
 .idea/
 assets/
 build/
-gst-build-*/
+gst-android-build/
 local.properties
 src/org/freedesktop/gstreamer/GStreamer.java
 *.iml

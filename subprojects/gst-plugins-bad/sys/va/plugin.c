@@ -28,6 +28,7 @@
 #endif
 
 #include "gstvaav1dec.h"
+#include "gstvaav1enc.h"
 #include "gstvacaps.h"
 #include "gstvacompositor.h"
 #include "gstvadeinterlace.h"
@@ -38,24 +39,29 @@
 #include "gstvah265dec.h"
 #include "gstvah265enc.h"
 #include "gstvajpegdec.h"
+#include "gstvajpegenc.h"
 #include "gstvampeg2dec.h"
 #include "gstvaprofile.h"
 #include "gstvavp8dec.h"
 #include "gstvavp9dec.h"
+#include "gstvavp9enc.h"
 #include "gstvavpp.h"
 
 #define GST_CAT_DEFAULT gstva_debug
 GST_DEBUG_CATEGORY (gstva_debug);
 
-/* big bad mutex to exclusive access to shared stream buffers, such as
- * DMABuf after a tee */
-GRecMutex GST_VA_SHARED_LOCK = { 0, };
+#ifdef G_OS_WIN32
+/* Windows support is still experimental */
+#define GST_VA_RANK_PRIMARY GST_RANK_NONE
+#else
+#define GST_VA_RANK_PRIMARY (GST_RANK_PRIMARY + 1)
+#endif
 
 static void
 plugin_add_dependencies (GstPlugin * plugin)
 {
 #ifndef G_OS_WIN32
-  const gchar *env_vars[] = { "LIBVA_DRIVER_NAME", NULL };
+  const gchar *env_vars[] = { "LIBVA_DRIVER_NAME", "GST_VA_ALL_DRIVERS", NULL };
   const gchar *kernel_paths[] = { "/dev/dri", NULL };
   const gchar *kernel_names[] = { "renderD", NULL };
 
@@ -63,7 +69,8 @@ plugin_add_dependencies (GstPlugin * plugin)
   gst_plugin_add_dependency (plugin, NULL, kernel_paths, kernel_names,
       GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_PREFIX);
 
-  /* features get updated upon changes on LIBVA_DRIVER_NAME envvar */
+  /* features get updated upon changes on LIBVA_DRIVER_NAME and
+   * GST_VA_ALL_DRIVERS envvar */
   gst_plugin_add_dependency (plugin, env_vars, NULL, NULL,
       GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 
@@ -104,42 +111,42 @@ plugin_register_decoders (GstPlugin * plugin, GstVaDevice * device,
     switch (codec) {
       case H264:
         if (!gst_va_h264_dec_register (plugin, device, sinkcaps, srccaps,
-                GST_RANK_NONE)) {
+                GST_VA_RANK_PRIMARY)) {
           GST_WARNING ("Failed to register H264 decoder: %s",
               device->render_device_path);
         }
         break;
       case HEVC:
         if (!gst_va_h265_dec_register (plugin, device, sinkcaps, srccaps,
-                GST_RANK_NONE)) {
+                GST_VA_RANK_PRIMARY)) {
           GST_WARNING ("Failed to register H265 decoder: %s",
               device->render_device_path);
         }
         break;
       case VP8:
         if (!gst_va_vp8_dec_register (plugin, device, sinkcaps, srccaps,
-                GST_RANK_NONE)) {
+                GST_VA_RANK_PRIMARY)) {
           GST_WARNING ("Failed to register VP8 decoder: %s",
               device->render_device_path);
         }
         break;
       case VP9:
         if (!gst_va_vp9_dec_register (plugin, device, sinkcaps, srccaps,
-                GST_RANK_NONE)) {
+                GST_VA_RANK_PRIMARY)) {
           GST_WARNING ("Failed to register VP9 decoder: %s",
               device->render_device_path);
         }
         break;
       case MPEG2:
         if (!gst_va_mpeg2_dec_register (plugin, device, sinkcaps, srccaps,
-                GST_RANK_NONE)) {
+                GST_VA_RANK_PRIMARY)) {
           GST_WARNING ("Failed to register Mpeg2 decoder: %s",
               device->render_device_path);
         }
         break;
       case AV1:
         if (!gst_va_av1_dec_register (plugin, device, sinkcaps, srccaps,
-                GST_RANK_NONE)) {
+                GST_VA_RANK_PRIMARY)) {
           GST_WARNING ("Failed to register AV1 decoder: %s",
               device->render_device_path);
         }
@@ -168,6 +175,13 @@ plugin_register_encoders (GstPlugin * plugin, GstVaDevice * device,
 {
   GHashTableIter iter;
   gpointer key, value;
+
+  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (device->display, INTEL_I965)
+      && g_getenv ("GST_VA_ALL_DRIVERS") == NULL) {
+    gst_plugin_add_status_warning (plugin,
+        "The Intel i965 VA driver is blocklisted for encoding, use GST_VA_ALL_DRIVERS to overwrite.");
+    return;
+  }
 
   g_hash_table_iter_init (&iter, encoders);
   while (g_hash_table_iter_next (&iter, &key, &value)) {
@@ -203,6 +217,29 @@ plugin_register_encoders (GstPlugin * plugin, GstVaDevice * device,
               device->render_device_path);
         }
         break;
+      case VP9:
+        if (!gst_va_vp9_enc_register (plugin, device, sinkcaps, srccaps,
+                GST_RANK_NONE, entrypoint)) {
+          GST_WARNING ("Failed to register VP9 encoder: %s",
+              device->render_device_path);
+        }
+        break;
+      case JPEG:
+        if (!gst_va_jpeg_enc_register (plugin, device, sinkcaps, srccaps,
+                GST_RANK_NONE, entrypoint)) {
+          GST_WARNING ("Failed to register JPEG encoder: %s",
+              device->render_device_path);
+        }
+        break;
+#if VA_CHECK_VERSION(1, 15, 0)
+      case AV1:
+        if (!gst_va_av1_enc_register (plugin, device, sinkcaps, srccaps,
+                GST_RANK_NONE, entrypoint)) {
+          GST_WARNING ("Failed to register AV1 encoder: %s",
+              device->render_device_path);
+        }
+        break;
+#endif
       default:
         GST_DEBUG ("No encoder implementation for %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (codec));

@@ -148,6 +148,11 @@ check_caps (GstCaps * caps, const gchar * profile, gint profile_id)
   fail_unless (!strcmp (caps_profile, profile));
 }
 
+static const GstVideoFormat formats_420_8_and_400_8[] =
+    { GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_NV12,
+  GST_VIDEO_FORMAT_GRAY8, GST_VIDEO_FORMAT_UNKNOWN
+};
+
 static const GstVideoFormat formats_420_8[] =
     { GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_YV12, GST_VIDEO_FORMAT_NV12,
   GST_VIDEO_FORMAT_UNKNOWN
@@ -358,8 +363,8 @@ GST_START_TEST (test_video_high)
 {
   gint i;
 
-  for (i = 0; formats_420_8[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
-    test_video_profile ("high", 0x64, formats_420_8, i);
+  for (i = 0; formats_420_8_and_400_8[i] != GST_VIDEO_FORMAT_UNKNOWN; i++)
+    test_video_profile ("high", 0x64, formats_420_8_and_400_8, i);
 }
 
 GST_END_TEST;

@@ -12,7 +12,6 @@ for m in \
   gst-python gstreamer-sharp \
   gnonlin \
   gst-rtsp-server \
-  gst-omx \
   gst-devtools \
   ; do
   if test -d $m; then

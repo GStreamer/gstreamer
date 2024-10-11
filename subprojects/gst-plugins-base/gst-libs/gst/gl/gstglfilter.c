@@ -804,7 +804,12 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
   GstGLFilter *filter = GST_GL_FILTER (trans);
-  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
+  GstGLContext *context =
+      gst_gl_base_filter_get_gl_context (GST_GL_BASE_FILTER (filter));
+  if (context == NULL) {
+    return FALSE;
+  }
+
   GstCaps *caps;
   GstVideoInfo info;
   guint size;
@@ -844,22 +849,26 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
   if (context->gl_vtable->FenceSync)
     gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);
 
+  gst_object_unref (context);
   return TRUE;
 
   /* ERRORS */
 no_caps:
   {
     GST_DEBUG_OBJECT (trans, "no caps specified");
+    gst_object_unref (context);
     return FALSE;
   }
 invalid_caps:
   {
     GST_DEBUG_OBJECT (trans, "invalid caps specified");
+    gst_object_unref (context);
     return FALSE;
   }
 config_failed:
   {
     GST_DEBUG_OBJECT (trans, "failed setting config");
+    gst_object_unref (context);
     return FALSE;
   }
 }
@@ -867,7 +876,6 @@ config_failed:
 static gboolean
 gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 {
-  GstGLContext *context;
   GstBufferPool *pool = NULL;
   GstStructure *config;
   GstCaps *caps;
@@ -883,7 +891,11 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
           query))
     return FALSE;
 
-  context = GST_GL_BASE_FILTER (trans)->context;
+  GstGLContext *context =
+      gst_gl_base_filter_get_gl_context (GST_GL_BASE_FILTER (trans));
+  if (context == NULL) {
+    return FALSE;
+  }
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
@@ -921,6 +933,7 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
   gst_object_unref (pool);
+  gst_object_unref (context);
 
   return TRUE;
 }
@@ -1039,7 +1052,8 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
    * buffer meta to hold one reference of inbuf, this can avoid this
    * buffer sync problem.
    */
-  gst_buffer_add_parent_buffer_meta (outbuf, inbuf);
+  if (inbuf != outbuf)
+    gst_buffer_add_parent_buffer_meta (outbuf, inbuf);
 
   return ret ? GST_FLOW_OK : GST_FLOW_ERROR;
 }

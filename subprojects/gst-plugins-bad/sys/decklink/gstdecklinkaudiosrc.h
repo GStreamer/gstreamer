@@ -63,7 +63,7 @@ struct _GstDecklinkAudioSrc
   GCond cond;
   GMutex lock;
   gboolean flushing;
-  GstQueueArray *current_packets;
+  GstVecDeque *current_packets;
 
   /* properties for handling jittery timestamps */
   GstClockTime alignment_threshold;

@@ -156,18 +156,17 @@ enum_from_str (GType type, const gchar * str_enum, guint * enum_value)
 }
 
 static gboolean
-_check_field (GQuark field_id, const GValue * value, FieldsError * fields_error)
+_check_field (const GstIdStr * fieldname, const GValue * value,
+    FieldsError * fields_error)
 {
-  guint i;
-  const gchar *field = g_quark_to_string (field_id);
+  const gchar *field = gst_id_str_as_str (fieldname);
 
-  for (i = 0; fields_error->fields[i]; i++) {
-    if (g_strcmp0 (fields_error->fields[i], field) == 0) {
+  if (g_strv_contains (fields_error->fields, gst_id_str_as_str (fieldname)))
+    return TRUE;
 
-      return TRUE;
-    }
-  }
-
+  // The pointers to the field names are only valid for as long as the structure
+  // is, but they're only used in the direct caller while the structure lives
+  // longer.
   fields_error->invalid_fields =
       g_list_append (fields_error->invalid_fields, (gpointer) field);
 
@@ -178,8 +177,8 @@ static gboolean
 _check_fields (GstStructure * structure, FieldsError fields_error,
     GError ** error)
 {
-  gst_structure_foreach (structure,
-      (GstStructureForeachFunc) _check_field, &fields_error);
+  gst_structure_foreach_id_str (structure,
+      (GstStructureForeachIdStrFunc) _check_field, &fields_error);
 
   if (fields_error.invalid_fields) {
     GList *tmp;
@@ -197,7 +196,9 @@ _check_fields (GstStructure * structure, FieldsError fields_error,
     if (error)
       *error = g_error_new_literal (GES_ERROR, 0, msg->str);
 
+    g_list_free (fields_error.invalid_fields);
     g_string_free (msg, TRUE);
+    g_list_free (fields_error.invalid_fields);
 
     return FALSE;
   }
@@ -301,26 +302,70 @@ typedef struct
   gboolean res;
 } SetKeyframesData;
 
+
+typedef struct
+{
+  gboolean ok;
+  union
+  {
+    struct
+    {
+      gdouble v;
+    } Ok;
+
+    struct
+    {
+      const gchar *err;
+    } Err;
+  };
+} ValueToDoubleRes;
+
+static ValueToDoubleRes
+value_to_double (const GValue * v)
+{
+  GValue v2 = G_VALUE_INIT;
+  ValueToDoubleRes res = { 0, };
+
+  if (G_VALUE_HOLDS_STRING (v)) {
+    errno = 0;
+    res.Ok.v = g_ascii_strtod (g_value_get_string (v), NULL);
+
+    if (errno)
+      res.Err.err = g_strerror (errno);
+    else
+      res.ok = TRUE;
+
+    return res;
+  }
+
+  g_value_init (&v2, G_TYPE_DOUBLE);
+  res.ok = g_value_transform (v, &v2);
+  if (res.ok) {
+    res.Ok.v = g_value_get_double (&v2);
+  } else {
+    res.Err.err = "unsupported conversion";
+  }
+  g_value_reset (&v2);
+
+  return res;
+}
+
 static gboolean
-un_set_keyframes_foreach (GQuark field_id, const GValue * value,
+un_set_keyframes_foreach (const GstIdStr * fieldname, const GValue * value,
     SetKeyframesData * d)
 {
-  GValue v = G_VALUE_INIT;
   GError **error = &d->error;
   gchar *tmp;
-  gint i;
   const gchar *valid_fields[] = {
     "element-name", "property-name", "value", "timestamp", "project-uri",
     "binding-type", "source-type", "interpolation-mode", "interpolation-mode",
     NULL
   };
-  const gchar *field = g_quark_to_string (field_id);
+  const gchar *field = gst_id_str_as_str (fieldname);
   gdouble ts;
 
-  for (i = 0; valid_fields[i]; i++) {
-    if (g_quark_from_string (valid_fields[i]) == field_id)
-      return TRUE;
-  }
+  if (g_strv_contains (valid_fields, gst_id_str_as_str (fieldname)))
+    return TRUE;
 
   errno = 0;
   ts = g_strtod (field, &tmp);
@@ -335,21 +380,17 @@ un_set_keyframes_foreach (GQuark field_id, const GValue * value,
     return TRUE;
   }
 
-  g_value_init (&v, G_TYPE_DOUBLE);
-  REPORT_UNLESS (g_value_transform (value, &v), err,
-      "Could not convert keyframe %f value %s to double", ts,
-      gst_value_serialize (value));
+  ValueToDoubleRes res = value_to_double (value);
+  REPORT_UNLESS (res.ok, err,
+      "Could not convert keyframe %f value (%s)%s to double (%s)", ts,
+      G_VALUE_TYPE_NAME (value), gst_value_serialize (value), res.Err.err);
 
   REPORT_UNLESS (gst_timed_value_control_source_set (d->source, ts * GST_SECOND,
-          g_value_get_double (&v)), err, "Could not set keyframe %f=%f", ts,
-      g_value_get_double (&v));
+          res.Ok.v), err, "Could not set keyframe %f=%f", ts, res.Ok.v);
 
-  g_value_reset (&v);
   return TRUE;
 
 err:
-  if (v.g_type)
-    g_value_reset (&v);
   d->res = FALSE;
   return FALSE;
 }
@@ -412,8 +453,8 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
     SetKeyframesData d = {
       source, structure, NULL, property_name, TRUE,
     };
-    gst_structure_foreach (structure,
-        (GstStructureForeachFunc) un_set_keyframes_foreach, &d);
+    gst_structure_foreach_id_str (structure,
+        (GstStructureForeachIdStrFunc) un_set_keyframes_foreach, &d);
     if (!d.res)
       g_propagate_error (error, d.error);
 
@@ -424,7 +465,6 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
   if (absolute) {
     GParamSpec *pspec;
     const GValue *v;
-    GValue v2 = G_VALUE_INIT;
 
     if (!ges_timeline_element_lookup_child (element, property_name, NULL,
             &pspec)) {
@@ -446,8 +486,8 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
       goto done;
     }
 
-    g_value_init (&v2, G_TYPE_DOUBLE);
-    if (!g_value_transform (v, &v2)) {
+    ValueToDoubleRes res = value_to_double (v);
+    if (!res.ok) {
       gchar *struct_str = gst_structure_to_string (structure);
 
       *error = g_error_new (GES_ERROR, 0,
@@ -457,10 +497,11 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
       g_free (struct_str);
       goto done;
     }
-    value = g_value_get_double (&v2);
-    g_value_reset (&v2);
-  } else
+
+    value = res.Ok.v;
+  } else {
     GET_AND_CHECK ("value", G_TYPE_DOUBLE, &value, done);
+  }
 
   setting_value =
       !g_strcmp0 (gst_structure_get_name (structure), "add-keyframe");
@@ -944,9 +985,23 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
 
   }
 
-  res = ges_container_add (container, child);
+  if (GES_IS_CLIP (container) && GES_IS_BASE_EFFECT (child)) {
+    GList *effects = ges_clip_get_top_effects (GES_CLIP (container));
+
+    res =
+        ges_clip_add_top_effect (GES_CLIP (container), GES_BASE_EFFECT (child),
+        0, error);
+
+    g_list_free_full (effects, gst_object_unref);
+  } else {
+    res = ges_container_add (container, child);
+  }
+
   if (res == FALSE) {
-    g_error_new (GES_ERROR, 0, "Could not add child to container");
+    if (!*error)
+      *error = g_error_new (GES_ERROR, 0, "Could not add child to container");
+
+    goto beach;
   } else {
     g_object_set_qdata (G_OBJECT (timeline), LAST_CHILD_QDATA, child);
   }

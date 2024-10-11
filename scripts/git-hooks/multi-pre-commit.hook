@@ -15,7 +15,7 @@
 # commit. They are executed in the order in which they are listed.
 ###########################################################
 
-HOOKS="scripts/git-hooks/pre-commit.hook scripts/git-hooks/pre-commit-python.hook"
+HOOKS="scripts/git-hooks/pre-commit.hook scripts/git-hooks/pre-commit-invoke-python.hook"
 
 # exit on error
 set -e

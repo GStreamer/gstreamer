@@ -424,7 +424,7 @@ GST_START_TEST (test_structure_new)
   GstStructure *s;
   GError *e;
   GQuark domain;
-  gboolean bool;
+  gboolean get_bool;
   gint num, den;
   GstClockTime clocktime;
   guint64 uint64;
@@ -448,8 +448,8 @@ GST_START_TEST (test_structure_new)
   fail_if (gst_structure_has_field (s, "key"));
   fail_unless_equals_int (gst_structure_n_fields (s), 4);
 
-  fail_unless (gst_structure_get_boolean (s, "bool", &bool));
-  fail_unless (bool);
+  fail_unless (gst_structure_get_boolean (s, "bool", &get_bool));
+  fail_unless (get_bool);
 
   fail_unless (gst_structure_get_fraction (s, "fraction", &num, &den));
   fail_unless_equals_int (num, 1);
@@ -792,7 +792,7 @@ GST_START_TEST (test_serialize_nested_structures)
   fail_unless (gst_structure_has_field_typed (s, "main-sub1",
           GST_TYPE_STRUCTURE));
 
-  str2 = gst_structure_serialize (s, GST_SERIALIZE_FLAG_NONE);
+  str2 = gst_structure_serialize_full (s, GST_SERIALIZE_FLAG_NONE);
   fail_unless (str2 != NULL);
 
   fail_unless_equals_string (str1, str2);
@@ -864,6 +864,8 @@ GST_START_TEST (test_vararg_getters)
   gst_buffer_unref (buf2);
   buf2 = NULL;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   /* and now the _id variant */
   ret = gst_structure_id_get (s, g_quark_from_static_string ("double"),
       G_TYPE_DOUBLE, &d, g_quark_from_static_string ("string"), G_TYPE_STRING,
@@ -892,6 +894,58 @@ GST_START_TEST (test_vararg_getters)
   g_free (c);
   gst_caps_unref (caps2);
   gst_buffer_unref (buf2);
+#pragma GCC diagnostic pop
+
+  /* and now the _id_str variant */
+  GstIdStr string_fieldname = GST_ID_STR_INIT;
+  GstIdStr caps_fieldname = GST_ID_STR_INIT;
+  GstIdStr buf_fieldname = GST_ID_STR_INIT;
+  GstIdStr int_fieldname = GST_ID_STR_INIT;
+  GstIdStr int64_fieldname = GST_ID_STR_INIT;
+  GstIdStr double_fieldname = GST_ID_STR_INIT;
+  GstIdStr dooble_fieldname = GST_ID_STR_INIT;
+
+  gst_id_str_set_static_str (&string_fieldname, "string");
+  gst_id_str_set_static_str (&caps_fieldname, "caps");
+  gst_id_str_set_static_str (&buf_fieldname, "buf");
+  gst_id_str_set_static_str (&int_fieldname, "int");
+  gst_id_str_set_static_str (&int64_fieldname, "int64");
+  gst_id_str_set_static_str (&double_fieldname, "double");
+  gst_id_str_set_static_str (&dooble_fieldname, "dooble");
+
+  ret = gst_structure_id_str_get (s, &double_fieldname,
+      G_TYPE_DOUBLE, &d, &string_fieldname, G_TYPE_STRING,
+      &c, &caps_fieldname, GST_TYPE_CAPS, &caps2,
+      &buf_fieldname, GST_TYPE_BUFFER, &buf2,
+      &int_fieldname, G_TYPE_INT, &i,
+      &int64_fieldname, G_TYPE_INT64, &i64, NULL);
+
+  fail_unless (ret);
+  fail_unless_equals_string (c, "Hello World!");
+  fail_unless_equals_int (i, 12345678);
+  fail_unless_equals_float (d, G_MAXDOUBLE);
+  fail_unless (i64 == -99);
+  fail_unless (caps == caps2);
+  fail_unless (buf == buf2);
+
+  /* expected failures */
+  ASSERT_CRITICAL (gst_structure_get (s, 0, G_TYPE_INT, &i, NULL));
+  fail_if (gst_structure_id_str_get (s, &int_fieldname,
+          G_TYPE_INT, &i, &double_fieldname, G_TYPE_FLOAT, &d, NULL));
+  fail_if (gst_structure_id_str_get (s, &int_fieldname,
+          G_TYPE_INT, &i, &dooble_fieldname, G_TYPE_DOUBLE, &d, NULL));
+
+  g_free (c);
+  gst_caps_unref (caps2);
+  gst_buffer_unref (buf2);
+
+  gst_id_str_clear (&string_fieldname);
+  gst_id_str_clear (&caps_fieldname);
+  gst_id_str_clear (&buf_fieldname);
+  gst_id_str_clear (&int_fieldname);
+  gst_id_str_clear (&int64_fieldname);
+  gst_id_str_clear (&double_fieldname);
+  gst_id_str_clear (&dooble_fieldname);
 
   /* finally make sure NULL as return location is handled gracefully */
   ret = gst_structure_get (s, "double", G_TYPE_DOUBLE, NULL, "string",
@@ -925,6 +979,21 @@ foreach_func (GQuark field_id, const GValue * value, gpointer user_data)
   return TRUE;
 }
 
+static gboolean
+foreach_id_str_func (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
+{
+  gint *sum = user_data;
+  gint v = 0;
+
+  if (G_VALUE_HOLDS_INT (value))
+    v = g_value_get_int (value);
+  *sum += v;
+
+  return TRUE;
+}
+
+
 GST_START_TEST (test_foreach)
 {
   GstStructure *s;
@@ -932,16 +1001,31 @@ GST_START_TEST (test_foreach)
 
   s = gst_structure_new ("foo/bar", "baz", G_TYPE_INT, 1, "bla", G_TYPE_INT, 3,
       NULL);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   fail_unless (gst_structure_foreach (s, foreach_func, &sum));
+#pragma GCC diagnostic pop
+  fail_unless_equals_int (sum, 4);
+
+  sum = 0;
+  fail_unless (gst_structure_foreach_id_str (s, foreach_id_str_func, &sum));
   fail_unless_equals_int (sum, 4);
   gst_structure_free (s);
-
 }
 
 GST_END_TEST;
 
 static gboolean
 map_func (GQuark field_id, GValue * value, gpointer user_data)
+{
+  if (G_VALUE_HOLDS_INT (value))
+    g_value_set_int (value, 123);
+
+  return TRUE;
+}
+
+static gboolean
+map_id_str_func (const GstIdStr * fieldname, GValue * value, gpointer user_data)
 {
   if (G_VALUE_HOLDS_INT (value))
     g_value_set_int (value, 123);
@@ -957,11 +1041,20 @@ GST_START_TEST (test_map_in_place)
       NULL);
   s2 = gst_structure_new ("foo/bar", "baz", G_TYPE_INT, 123, "bla", G_TYPE_INT,
       123, NULL);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   fail_unless (gst_structure_map_in_place (s, map_func, NULL));
+#pragma GCC diagnostic pop
   fail_unless (gst_structure_is_equal (s, s2));
+
+  gst_structure_free (s);
+  s = gst_structure_new ("foo/bar", "baz", G_TYPE_INT, 1, "bla", G_TYPE_INT, 3,
+      NULL);
+  fail_unless (gst_structure_map_in_place_id_str (s, map_id_str_func, NULL));
+  fail_unless (gst_structure_is_equal (s, s2));
+
   gst_structure_free (s);
   gst_structure_free (s2);
-
 }
 
 GST_END_TEST;
@@ -978,6 +1071,19 @@ filter_map_func (GQuark field_id, GValue * value, gpointer user_data)
   return TRUE;
 }
 
+static gboolean
+filter_map_id_str_func (const GstIdStr * fieldname, GValue * value,
+    gpointer user_data)
+{
+  if (gst_id_str_is_equal_to_str (fieldname, "bla"))
+    return FALSE;
+
+  if (G_VALUE_HOLDS_INT (value))
+    g_value_set_int (value, 2);
+
+  return TRUE;
+}
+
 GST_START_TEST (test_filter_and_map_in_place)
 {
   GstStructure *s, *s2;
@@ -985,7 +1091,17 @@ GST_START_TEST (test_filter_and_map_in_place)
   s = gst_structure_new ("foo/bar", "baz", G_TYPE_INT, 1, "bla", G_TYPE_INT, 3,
       NULL);
   s2 = gst_structure_new ("foo/bar", "baz", G_TYPE_INT, 2, NULL);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   gst_structure_filter_and_map_in_place (s, filter_map_func, NULL);
+#pragma GCC diagnostic pop
+  fail_unless (gst_structure_is_equal (s, s2));
+
+  gst_structure_free (s);
+  s = gst_structure_new ("foo/bar", "baz", G_TYPE_INT, 1, "bla", G_TYPE_INT, 3,
+      NULL);
+  gst_structure_filter_and_map_in_place_id_str (s, filter_map_id_str_func,
+      NULL);
   fail_unless (gst_structure_is_equal (s, s2));
   gst_structure_free (s);
   gst_structure_free (s2);
@@ -1034,6 +1150,25 @@ GST_START_TEST (test_flags)
 
 GST_END_TEST;
 
+GST_START_TEST (test_strict)
+{
+  GstStructure *s;
+
+  GstElement *bin = gst_bin_new ("mybin");
+  s = gst_structure_new ("test-struct", "obj", GST_TYPE_BIN, bin, NULL);
+  fail_unless (s);
+  fail_if (gst_structure_serialize_full (s, GST_SERIALIZE_FLAG_STRICT));
+  gst_structure_free (s);
+  gst_object_unref (bin);
+
+  s = gst_structure_new ("test-struct", "ptr", G_TYPE_POINTER, NULL, NULL);
+  fail_unless (s);
+  fail_if (gst_structure_serialize_full (s, GST_SERIALIZE_FLAG_STRICT));
+  gst_structure_free (s);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_structure_suite (void)
 {
@@ -1067,6 +1202,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_filter_and_map_in_place);
   tcase_add_test (tc_chain, test_flagset);
   tcase_add_test (tc_chain, test_flags);
+  tcase_add_test (tc_chain, test_strict);
   return s;
 }
 

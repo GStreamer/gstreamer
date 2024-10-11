@@ -346,12 +346,12 @@ _add_properties (GESTimeline * timeline)
             gst_object_unref (source);
           } else if (GES_IS_VIDEO_SOURCE (element)) {
             /* Adding children properties */
-            gint64 posx = 42;
+            gint posx = 42;
             ges_timeline_element_set_child_properties (GES_TIMELINE_ELEMENT
                 (element), "posx", posx, NULL);
             ges_timeline_element_get_child_properties (GES_TIMELINE_ELEMENT
                 (element), "posx", &posx, NULL);
-            fail_unless_equals_int64 (posx, 42);
+            fail_unless_equals_int (posx, 42);
           }
 
         }
@@ -419,10 +419,10 @@ _check_properties (GESTimeline * timeline)
           /* Checking children properties */
           else if (GES_IS_VIDEO_SOURCE (element)) {
             /* Init 'posx' with a wrong value */
-            gint64 posx = 27;
+            gint posx = 27;
             ges_timeline_element_get_child_properties (GES_TIMELINE_ELEMENT
                 (element), "posx", &posx, NULL);
-            fail_unless_equals_int64 (posx, 42);
+            fail_unless_equals_int (posx, 42);
           }
         }
         g_list_free_full (track_elements, g_object_unref);

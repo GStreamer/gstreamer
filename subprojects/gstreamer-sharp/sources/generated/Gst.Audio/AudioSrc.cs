@@ -273,14 +273,14 @@ namespace Gst.Audio {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate uint ReadNativeDelegate (IntPtr inst, IntPtr data, uint length, ulong timestamp);
+		delegate uint ReadNativeDelegate (IntPtr inst, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]IntPtr[] data, uint length, out ulong timestamp);
 
-		static uint Read_cb (IntPtr inst, IntPtr data, uint length, ulong timestamp)
+		static uint Read_cb (IntPtr inst, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]IntPtr[] data, uint length, out ulong timestamp)
 		{
 			try {
 				AudioSrc __obj = GLib.Object.GetObject (inst, false) as AudioSrc;
 				uint __result;
-				__result = __obj.OnRead (data, length, timestamp);
+				__result = __obj.OnRead (data, out timestamp);
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -290,21 +290,22 @@ namespace Gst.Audio {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Audio.AudioSrc), ConnectionMethod="OverrideRead")]
-		protected virtual uint OnRead (IntPtr data, uint length, ulong timestamp)
+		protected virtual uint OnRead (IntPtr[] data, out ulong timestamp)
 		{
-			return InternalRead (data, length, timestamp);
+			return InternalRead (data, out timestamp);
 		}
 
-		private uint InternalRead (IntPtr data, uint length, ulong timestamp)
+		private uint InternalRead (IntPtr[] data, out ulong timestamp)
 		{
 			ReadNativeDelegate unmanaged = null;
 			unsafe {
 				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("read"));
 				unmanaged = (ReadNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(ReadNativeDelegate));
 			}
-			if (unmanaged == null) return 0;
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
 
-			uint __result = unmanaged (this.Handle, data, length, timestamp);
+			uint length = (uint)(data == null ? 0 : data.Length);
+			uint __result = unmanaged (this.Handle, data, length, out timestamp);
 			return __result;
 		}
 

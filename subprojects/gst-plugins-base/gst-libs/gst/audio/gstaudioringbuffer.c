@@ -40,10 +40,129 @@
 #include <string.h>
 
 #include <gst/audio/audio.h>
+#include <gst/audio/gstdsd.h>
 #include "gstaudioringbuffer.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_audio_ring_buffer_debug);
 #define GST_CAT_DEFAULT gst_audio_ring_buffer_debug
+
+/* TODO: use GLib's once https://gitlab.gnome.org/GNOME/glib/issues/1076 lands, or
+ * use C11 atomics once MS arrives in this century.
+ *
+ * We also assume that signed overflow just wraps around because unfortunately
+ * there are no unsigned versions in MSVC. */
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__)
+#include <stdatomic.h>
+
+static inline guint64
+gst_atomic_uint64_add (guint64 * atomic, guint64 n)
+{
+  return atomic_fetch_add ((_Atomic guint64 *) atomic, n);
+}
+
+static inline void
+gst_atomic_uint64_set (guint64 * atomic, guint64 n)
+{
+  atomic_store ((_Atomic guint64 *) atomic, n);
+}
+
+static inline guint64
+gst_atomic_uint64_get (guint64 * atomic)
+{
+  gint64 ret = atomic_load ((_Atomic guint64 *) atomic);
+  return ret;
+}
+#elif defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_8)
+static inline guint64
+gst_atomic_uint64_add (guint64 * atomic, guint64 n)
+{
+  return __sync_fetch_and_add (atomic, n);
+}
+
+static inline void
+gst_atomic_uint64_set (guint64 * atomic, guint64 n)
+{
+  __sync_synchronize ();
+  __asm__ __volatile__ ("":::"memory");
+  *atomic = n;
+}
+
+static inline guint64
+gst_atomic_uint64_get (guint64 * atomic)
+{
+  gint64 ret = *atomic;
+  __sync_synchronize ();
+  __asm__ __volatile__ ("":::"memory");
+  return ret;
+}
+#elif defined (G_PLATFORM_WIN32)
+#include <windows.h>
+static inline guint64
+gst_atomic_uint64_add (guint64 * atomic, guint64 n)
+{
+  return InterlockedExchangeAdd64 ((gint64 *) atomic, (gint64) n);
+}
+
+static inline void
+gst_atomic_uint64_set (guint64 * atomic, guint64 n)
+{
+  *atomic = n;
+  MemoryBarrier ();
+}
+
+static inline guint64
+gst_atomic_uint64_get (guint64 * atomic)
+{
+  MemoryBarrier ();
+  return *atomic;
+}
+#else
+#define STR_TOKEN(s) #s
+#define STR(s) STR_TOKEN(s)
+#pragma message "No 64-bit atomic int defined for this " STR(TARGET_CPU) " platform/toolchain!"
+
+#define NO_64BIT_ATOMIC_INT_FOR_PLATFORM
+G_LOCK_DEFINE_STATIC (atomic_lock);
+static inline guint64
+gst_atomic_uint64_add (guint64 * atomic, guint64 n)
+{
+  guint64 ret;
+
+  G_LOCK (atomic_lock);
+  *atomic += n;
+  ret = *atomic;
+  G_UNLOCK (atomic_lock);
+
+  return ret;
+}
+
+static inline void
+gst_atomic_uint64_set (guint64 * atomic, guint64 n)
+{
+  G_LOCK (atomic_lock);
+  *atomic = n;
+  G_UNLOCK (atomic_lock);
+}
+
+static inline guint64
+gst_atomic_uint64_get (gint64 * atomic)
+{
+  guint64 ret;
+
+  G_LOCK (atomic_lock);
+  ret = *atomic;
+  G_UNLOCK (atomic_lock);
+
+  return ret;
+}
+#endif
+
+struct _GstAudioRingBufferPrivate
+{
+  /* ATOMIC */
+  guint64 segdone;
+  guint64 segbase;
+};
 
 static void gst_audio_ring_buffer_dispose (GObject * object);
 static void gst_audio_ring_buffer_finalize (GObject * object);
@@ -54,7 +173,7 @@ static guint default_commit (GstAudioRingBuffer * buf, guint64 * sample,
     guint8 * data, gint in_samples, gint out_samples, gint * accum);
 
 /* ringbuffer abstract base class */
-G_DEFINE_ABSTRACT_TYPE (GstAudioRingBuffer, gst_audio_ring_buffer,
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstAudioRingBuffer, gst_audio_ring_buffer,
     GST_TYPE_OBJECT);
 
 static void
@@ -79,15 +198,18 @@ gst_audio_ring_buffer_class_init (GstAudioRingBufferClass * klass)
 static void
 gst_audio_ring_buffer_init (GstAudioRingBuffer * ringbuffer)
 {
+  ringbuffer->priv = gst_audio_ring_buffer_get_instance_private (ringbuffer);
   ringbuffer->open = FALSE;
   ringbuffer->acquired = FALSE;
-  ringbuffer->state = GST_AUDIO_RING_BUFFER_STATE_STOPPED;
+  g_atomic_int_set (&ringbuffer->state, GST_AUDIO_RING_BUFFER_STATE_STOPPED);
   g_cond_init (&ringbuffer->cond);
   ringbuffer->waiting = 0;
   ringbuffer->empty_seg = NULL;
   ringbuffer->flushing = TRUE;
   ringbuffer->segbase = 0;
   ringbuffer->segdone = 0;
+  ringbuffer->priv->segbase = 0;
+  ringbuffer->priv->segdone = 0;
 }
 
 static void
@@ -313,6 +435,60 @@ gst_audio_ring_buffer_parse_caps (GstAudioRingBufferSpec * spec, GstCaps * caps)
     gst_structure_get_int (structure, "channels", &info.channels);
     spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_FLAC;
     info.bpf = 1;
+  } else if (g_str_equal (mimetype, GST_DSD_MEDIA_TYPE)) {
+
+    /* Notes about what the "rate" means in DSD:
+     *
+     * In DSD, "sample formats" don't actually exist. There is only the DSD bit;
+     * this is what could be considered the closest equivalent to a "sample format".
+     * But since it is impractical to deal with individual bits in software, the
+     * bits are typically grouped into words (8/16/32 bit words). These are the
+     * DSDU8, DSDU16LE etc. "grouping formats".
+     *
+     * The "rate" in DSD information refers to the number of DSD _bytes_ per second
+     * (not bits per second, because, as said, per-bit handling in software does
+     * not usually make sense). The way the GstAudioRingBuffer works however requires
+     * the rate to be interpreted as the number of DSD _words_ per minute. This is
+     * in part because that's how ALSA uses the rate.
+     *
+     * If the word format is DSDU8, then there's no difference to just using the
+     * original byte rate. But if for example it is DSDU16LE, then the ringbuffer's
+     * rate needs to be half of the rate from GstDsdInfo. For this reason, it is
+     * essential to divide the rate from the DSD info by the word length (in bytes).
+     *
+     * Furthermore, the BPF is set to the stride (= format width * num channels).
+     * The GstAudioRingBuffer can only handle interleaved DSD. This means that
+     * there is a "stride", that is, the DSD word of channel #1 is stored first,
+     * followed by the DSD word of channel #2 etc. and then again we get a DSD
+     * word from channel #1, and so forth. This is similar to how interleaved
+     * PCM works. The stride is then the size (in bytes) of the DSD words for
+     * each channel that are played at the same time. Using this as the BPF is
+     * very important. Otherweise, timestamp and duration figures can be off,
+     * the segment sizes may not be an integer multiple of the DSD stride, etc.
+     */
+
+    GstDsdInfo dsd_info;
+    guint format_width;
+
+    if (!gst_dsd_info_from_caps (&dsd_info, caps))
+      goto parse_error;
+
+    format_width = gst_dsd_format_get_width (dsd_info.format);
+
+    info.rate = dsd_info.rate / format_width;
+    info.channels = dsd_info.channels;
+    info.bpf = format_width * dsd_info.channels;
+
+    GST_INFO ("using DSD word rate %d instead of DSD byte rate %d "
+        "for ringbuffer", info.rate, dsd_info.rate);
+
+    memcpy (info.position, dsd_info.positions,
+        sizeof (GstAudioChannelPosition) * dsd_info.channels);
+
+    GST_AUDIO_RING_BUFFER_SPEC_DSD_FORMAT (spec) =
+        GST_DSD_INFO_FORMAT (&dsd_info);
+
+    spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DSD;
   } else {
     goto parse_error;
   }
@@ -655,13 +831,19 @@ gst_audio_ring_buffer_acquire (GstAudioRingBuffer * buf,
   g_free (buf->empty_seg);
   buf->empty_seg = g_malloc (segsize);
 
-  if (buf->spec.type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW) {
-    gst_audio_format_info_fill_silence (buf->spec.info.finfo, buf->empty_seg,
-        segsize);
-  } else {
-    /* FIXME, non-raw formats get 0 as the empty sample */
-    memset (buf->empty_seg, 0, segsize);
+  switch (buf->spec.type) {
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW:
+      gst_audio_format_info_fill_silence (buf->spec.info.finfo, buf->empty_seg,
+          segsize);
+      break;
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DSD:
+      memset (buf->empty_seg, GST_DSD_SILENCE_PATTERN_BYTE, segsize);
+      break;
+    default:
+      /* FIXME, non-raw formats get 0 as the empty sample */
+      memset (buf->empty_seg, 0, segsize);
   }
+
   GST_DEBUG_OBJECT (buf, "acquired device");
 
 done:
@@ -744,13 +926,17 @@ gst_audio_ring_buffer_release (GstAudioRingBuffer * buf)
     res = rclass->release (buf);
 
   /* signal any waiters */
-  GST_DEBUG_OBJECT (buf, "signal waiter");
-  GST_AUDIO_RING_BUFFER_SIGNAL (buf);
+  if (g_atomic_int_compare_and_exchange (&buf->waiting, 1, 0)) {
+    GST_DEBUG_OBJECT (buf, "signal waiter");
+    GST_AUDIO_RING_BUFFER_SIGNAL (buf);
+  }
 
   if (G_UNLIKELY (!res))
     goto release_failed;
 
+  gst_atomic_uint64_set (&buf->priv->segdone, 0);
   g_atomic_int_set (&buf->segdone, 0);
+  buf->priv->segbase = 0;
   buf->segbase = 0;
   g_free (buf->empty_seg);
   buf->empty_seg = NULL;
@@ -1005,7 +1191,7 @@ gst_audio_ring_buffer_start (GstAudioRingBuffer * buf)
   }
 
   if (G_UNLIKELY (!res)) {
-    buf->state = GST_AUDIO_RING_BUFFER_STATE_PAUSED;
+    g_atomic_int_set (&buf->state, GST_AUDIO_RING_BUFFER_STATE_PAUSED);
     GST_DEBUG_OBJECT (buf, "failed to start");
   } else {
     GST_DEBUG_OBJECT (buf, "started");
@@ -1036,6 +1222,38 @@ may_not_start:
   }
 }
 
+/**
+ * gst_audio_ring_buffer_set_errored:
+ * @buf: the #GstAudioRingBuffer that has encountered an error
+ *
+ * Mark the ringbuffer as errored after it has started.
+ *
+ * MT safe.
+
+ * Since: 1.24
+ */
+void
+gst_audio_ring_buffer_set_errored (GstAudioRingBuffer * buf)
+{
+  gboolean res;
+
+  /* If started set to errored */
+  res = g_atomic_int_compare_and_exchange (&buf->state,
+      GST_AUDIO_RING_BUFFER_STATE_STARTED, GST_AUDIO_RING_BUFFER_STATE_ERROR);
+  if (!res) {
+    GST_DEBUG_OBJECT (buf, "ringbuffer was not started, checking paused");
+    res = g_atomic_int_compare_and_exchange (&buf->state,
+        GST_AUDIO_RING_BUFFER_STATE_PAUSED, GST_AUDIO_RING_BUFFER_STATE_ERROR);
+  }
+  if (res) {
+    GST_DEBUG_OBJECT (buf, "ringbuffer is errored");
+  } else {
+    GST_DEBUG_OBJECT (buf,
+        "Could not mark ringbuffer as errored. It must have been stopped or already errored (was state %d)",
+        g_atomic_int_get (&buf->state));
+  }
+}
+
 static gboolean
 gst_audio_ring_buffer_pause_unlocked (GstAudioRingBuffer * buf)
 {
@@ -1052,15 +1270,18 @@ gst_audio_ring_buffer_pause_unlocked (GstAudioRingBuffer * buf)
     goto not_started;
 
   /* signal any waiters */
-  GST_DEBUG_OBJECT (buf, "signal waiter");
-  GST_AUDIO_RING_BUFFER_SIGNAL (buf);
+  if (g_atomic_int_compare_and_exchange (&buf->waiting, 1, 0)) {
+    GST_DEBUG_OBJECT (buf, "signal waiter");
+    GST_AUDIO_RING_BUFFER_SIGNAL (buf);
+  }
 
   rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->pause))
     res = rclass->pause (buf);
 
   if (G_UNLIKELY (!res)) {
-    buf->state = GST_AUDIO_RING_BUFFER_STATE_STARTED;
+    /* Restore started state */
+    g_atomic_int_set (&buf->state, GST_AUDIO_RING_BUFFER_STATE_STARTED);
     GST_DEBUG_OBJECT (buf, "failed to pause");
   } else {
     GST_DEBUG_OBJECT (buf, "paused");
@@ -1071,7 +1292,7 @@ gst_audio_ring_buffer_pause_unlocked (GstAudioRingBuffer * buf)
 not_started:
   {
     /* was not started */
-    GST_DEBUG_OBJECT (buf, "was not started");
+    GST_DEBUG_OBJECT (buf, "was not started (state %d)", buf->state);
     return TRUE;
   }
 }
@@ -1153,23 +1374,32 @@ gst_audio_ring_buffer_stop (GstAudioRingBuffer * buf)
         GST_AUDIO_RING_BUFFER_STATE_PAUSED,
         GST_AUDIO_RING_BUFFER_STATE_STOPPED);
     if (!res) {
-      /* was not paused either, must have been stopped then */
+      GST_DEBUG_OBJECT (buf, "was not paused, try errored");
+      res = g_atomic_int_compare_and_exchange (&buf->state,
+          GST_AUDIO_RING_BUFFER_STATE_ERROR,
+          GST_AUDIO_RING_BUFFER_STATE_STOPPED);
+    }
+    if (!res) {
+      /* was not paused or stopped either, must have been stopped then */
       res = TRUE;
-      GST_DEBUG_OBJECT (buf, "was not paused, must have been stopped");
+      GST_DEBUG_OBJECT (buf,
+          "was not paused or errored, must have been stopped");
       goto done;
     }
   }
 
   /* signal any waiters */
-  GST_DEBUG_OBJECT (buf, "signal waiter");
-  GST_AUDIO_RING_BUFFER_SIGNAL (buf);
+  if (g_atomic_int_compare_and_exchange (&buf->waiting, 1, 0)) {
+    GST_DEBUG_OBJECT (buf, "signal waiter");
+    GST_AUDIO_RING_BUFFER_SIGNAL (buf);
+  }
 
   rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->stop))
     res = rclass->stop (buf);
 
   if (G_UNLIKELY (!res)) {
-    buf->state = GST_AUDIO_RING_BUFFER_STATE_STARTED;
+    g_atomic_int_set (&buf->state, GST_AUDIO_RING_BUFFER_STATE_STARTED);
     GST_DEBUG_OBJECT (buf, "failed to stop");
   } else {
     GST_DEBUG_OBJECT (buf, "stopped");
@@ -1241,16 +1471,16 @@ not_acquired:
 guint64
 gst_audio_ring_buffer_samples_done (GstAudioRingBuffer * buf)
 {
-  gint segdone;
+  guint64 segdone;
   guint64 samples;
 
   g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), 0);
 
   /* get the amount of segments we processed */
-  segdone = g_atomic_int_get (&buf->segdone);
+  segdone = gst_atomic_uint64_get (&buf->priv->segdone);
 
   /* convert to samples */
-  samples = ((guint64) segdone) * buf->samples_per_seg;
+  samples = segdone * buf->samples_per_seg;
 
   return samples;
 }
@@ -1272,6 +1502,8 @@ gst_audio_ring_buffer_samples_done (GstAudioRingBuffer * buf)
 void
 gst_audio_ring_buffer_set_sample (GstAudioRingBuffer * buf, guint64 sample)
 {
+  guint64 segdone;
+
   g_return_if_fail (GST_IS_AUDIO_RING_BUFFER (buf));
 
   if (sample == -1)
@@ -1283,12 +1515,69 @@ gst_audio_ring_buffer_set_sample (GstAudioRingBuffer * buf, guint64 sample)
   /* FIXME, we assume the ringbuffer can restart at a random
    * position, round down to the beginning and keep track of
    * offset when calculating the processed samples. */
-  buf->segbase = buf->segdone - sample / buf->samples_per_seg;
+  segdone = gst_atomic_uint64_get (&buf->priv->segdone);
+  buf->priv->segbase = segdone - sample / buf->samples_per_seg;
+  buf->segbase = buf->priv->segbase;
 
   gst_audio_ring_buffer_clear_all (buf);
 
-  GST_DEBUG_OBJECT (buf, "set sample to %" G_GUINT64_FORMAT ", segbase %d",
-      sample, buf->segbase);
+  GST_DEBUG_OBJECT (buf,
+      "set sample to %" G_GUINT64_FORMAT ", segbase %" G_GUINT64_FORMAT, sample,
+      buf->priv->segbase);
+}
+
+/**
+ * gst_audio_ring_buffer_set_segdone:
+ * @buf: the #GstAudioRingBuffer to use
+ * @segdone: the segment number to set
+ *
+ * Sets the current segment number of the ringbuffer.
+ *
+ * MT safe.
+ *
+ * Since: 1.26
+ */
+void
+gst_audio_ring_buffer_set_segdone (GstAudioRingBuffer * buf, guint64 segdone)
+{
+  gst_atomic_uint64_set (&buf->priv->segdone, segdone);
+  g_atomic_int_set (&buf->segdone, segdone);
+}
+
+/**
+ * gst_audio_ring_buffer_get_segdone:
+ * @buf: the #GstAudioRingBuffer to use
+ *
+ * Gets the current segment number of the ringbuffer.
+ *
+ * MT safe.
+ *
+ * Returns: Current segment number of the ringbuffer.
+ *
+ * Since: 1.26
+ */
+guint64
+gst_audio_ring_buffer_get_segdone (GstAudioRingBuffer * buf)
+{
+  return gst_atomic_uint64_get (&buf->priv->segdone);
+}
+
+/**
+ * gst_audio_ring_buffer_get_segbase:
+ * @buf: the #GstAudioRingBuffer to use
+ *
+ * Gets the current segment base number of the ringbuffer.
+ *
+ * MT safe.
+ *
+ * Returns: Current segment base number of the ringbuffer.
+ *
+ * Since: 1.26
+ */
+guint64
+gst_audio_ring_buffer_get_segbase (GstAudioRingBuffer * buf)
+{
+  return gst_atomic_uint64_get (&buf->priv->segbase);
 }
 
 /**
@@ -1338,7 +1627,7 @@ gst_audio_ring_buffer_clear_all (GstAudioRingBuffer * buf)
 static gboolean
 wait_segment (GstAudioRingBuffer * buf)
 {
-  gint segments;
+  guint64 segments;
   gboolean wait = TRUE;
 
   /* buffer must be started now or we deadlock since nobody is reading */
@@ -1349,12 +1638,12 @@ wait_segment (GstAudioRingBuffer * buf)
       goto no_start;
 
     GST_DEBUG_OBJECT (buf, "start!");
-    segments = g_atomic_int_get (&buf->segdone);
+    segments = gst_atomic_uint64_get (&buf->priv->segdone);
     gst_audio_ring_buffer_start (buf);
 
     /* After starting, the writer may have wrote segments already and then we
      * don't need to wait anymore */
-    if (G_LIKELY (g_atomic_int_get (&buf->segdone) != segments))
+    if (G_LIKELY (gst_atomic_uint64_get (&buf->priv->segdone) != segments))
       wait = FALSE;
   }
 
@@ -1518,10 +1807,10 @@ static guint
 default_commit (GstAudioRingBuffer * buf, guint64 * sample,
     guint8 * data, gint in_samples, gint out_samples, gint * accum)
 {
-  gint segdone;
+  guint64 segdone;
   gint segsize, segtotal, channels, bps, bpf, sps;
   guint8 *dest, *data_end;
-  gint writeseg, sampleoff;
+  guint64 writeseg, sampleoff;
   gint *toprocess;
   gint inr, outr;
   gboolean reverse;
@@ -1570,17 +1859,20 @@ default_commit (GstAudioRingBuffer * buf, guint64 * sample,
     gboolean skip;
 
     while (TRUE) {
-      gint diff;
+      gint64 diff;
 
       /* get the currently processed segment */
-      segdone = g_atomic_int_get (&buf->segdone) - buf->segbase;
+      segdone =
+          gst_atomic_uint64_get (&buf->priv->segdone) - buf->priv->segbase;
 
       /* see how far away it is from the write segment */
       diff = writeseg - segdone;
 
       GST_DEBUG_OBJECT (buf,
-          "pointer at %d, write to %d-%d, diff %d, segtotal %d, segsize %d, base %d",
-          segdone, writeseg, sampleoff, diff, segtotal, segsize, buf->segbase);
+          "pointer at %" G_GUINT64_FORMAT ", write to %" G_GUINT64_FORMAT "-%"
+          G_GUINT64_FORMAT ", diff %" G_GINT64_FORMAT
+          ", segtotal %d, segsize %d, base %" G_GUINT64_FORMAT, segdone,
+          writeseg, sampleoff, diff, segtotal, segsize, buf->priv->segbase);
 
       /* segment too far ahead, writer too slow, we need to drop, hopefully UNLIKELY */
       if (G_UNLIKELY (diff < 0)) {
@@ -1609,7 +1901,8 @@ default_commit (GstAudioRingBuffer * buf, guint64 * sample,
     d_end = d + avail;
     *sample += avail / bpf;
 
-    GST_DEBUG_OBJECT (buf, "write @%p seg %d, sps %d, off %d, avail %d",
+    GST_DEBUG_OBJECT (buf,
+        "write @%p seg %d, sps %d, off %" G_GUINT64_FORMAT ", avail %d",
         dest + ws * segsize, ws, sps, sampleoff, avail);
 
     if (need_reorder) {
@@ -1752,8 +2045,8 @@ guint
 gst_audio_ring_buffer_read (GstAudioRingBuffer * buf, guint64 sample,
     guint8 * data, guint len, GstClockTime * timestamp)
 {
-  gint segdone;
-  gint segsize, segtotal, channels, bps, bpf, sps, readseg = 0;
+  guint64 segdone, readseg = 0;
+  gint segsize, segtotal, channels, bps, bpf, sps;
   guint8 *dest;
   guint to_read;
   gboolean need_reorder;
@@ -1783,10 +2076,11 @@ gst_audio_ring_buffer_read (GstAudioRingBuffer * buf, guint64 sample,
     sampleoff = (sample % sps);
 
     while (TRUE) {
-      gint diff;
+      gint64 diff;
 
       /* get the currently processed segment */
-      segdone = g_atomic_int_get (&buf->segdone) - buf->segbase;
+      segdone =
+          gst_atomic_uint64_get (&buf->priv->segdone) - buf->priv->segbase;
 
       /* see how far away it is from the read segment, normally segdone (where
        * the hardware is writing) is bigger than readseg (where software is
@@ -1794,10 +2088,10 @@ gst_audio_ring_buffer_read (GstAudioRingBuffer * buf, guint64 sample,
       diff = segdone - readseg;
 
       GST_DEBUG_OBJECT
-          (buf, "pointer at %d, sample %" G_GUINT64_FORMAT
-          ", read from %d-%d, to_read %d, diff %d, segtotal %d, segsize %d",
-          segdone, sample, readseg, sampleoff, to_read, diff, segtotal,
-          segsize);
+          (buf, "pointer at %" G_GUINT64_FORMAT ", sample %" G_GUINT64_FORMAT
+          ", read from %" G_GUINT64_FORMAT "-%d, to_read %d, diff %"
+          G_GINT64_FORMAT ", segtotal %d, segsize %d", segdone, sample, readseg,
+          sampleoff, to_read, diff, segtotal, segsize);
 
       /* segment too far ahead, reader too slow */
       if (G_UNLIKELY (diff >= segtotal)) {
@@ -1821,7 +2115,8 @@ gst_audio_ring_buffer_read (GstAudioRingBuffer * buf, guint64 sample,
     readseg = readseg % segtotal;
     sampleslen = MIN (sps - sampleoff, to_read);
 
-    GST_DEBUG_OBJECT (buf, "read @%p seg %d, off %d, sampleslen %d",
+    GST_DEBUG_OBJECT (buf,
+        "read @%p seg %" G_GUINT64_FORMAT ", off %d, sampleslen %d",
         dest + readseg * segsize, readseg, sampleoff, sampleslen);
 
     if (need_reorder) {
@@ -1850,7 +2145,8 @@ gst_audio_ring_buffer_read (GstAudioRingBuffer * buf, guint64 sample,
   if (buf->timestamps && timestamp) {
     *timestamp = buf->timestamps[readseg % segtotal];
     GST_DEBUG_OBJECT (buf, "Retrieved timestamp %" GST_TIME_FORMAT
-        " @ %d", GST_TIME_ARGS (*timestamp), readseg % segtotal);
+        " @ %" G_GUINT64_FORMAT, GST_TIME_ARGS (*timestamp),
+        readseg % segtotal);
   }
 
   return len - to_read;
@@ -1883,7 +2179,7 @@ gst_audio_ring_buffer_prepare_read (GstAudioRingBuffer * buf, gint * segment,
     guint8 ** readptr, gint * len)
 {
   guint8 *data;
-  gint segdone;
+  guint64 segdone;
 
   g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), FALSE);
 
@@ -1901,14 +2197,15 @@ gst_audio_ring_buffer_prepare_read (GstAudioRingBuffer * buf, gint * segment,
   data = buf->memory;
 
   /* get the position of the pointer */
-  segdone = g_atomic_int_get (&buf->segdone);
+  segdone = gst_atomic_uint64_get (&buf->priv->segdone);
 
   *segment = segdone % buf->spec.segtotal;
   *len = buf->spec.segsize;
   *readptr = data + *segment * *len;
 
-  GST_LOG_OBJECT (buf, "prepare read from segment %d (real %d) @%p",
-      *segment, segdone, *readptr);
+  GST_LOG_OBJECT (buf,
+      "prepare read from segment %d (real %" G_GUINT64_FORMAT ") @%p", *segment,
+      segdone, *readptr);
 
   /* callback to fill the memory with data, for pull based
    * scheduling. */
@@ -1934,6 +2231,7 @@ gst_audio_ring_buffer_advance (GstAudioRingBuffer * buf, guint advance)
   g_return_if_fail (GST_IS_AUDIO_RING_BUFFER (buf));
 
   /* update counter */
+  gst_atomic_uint64_add (&buf->priv->segdone, advance);
   g_atomic_int_add (&buf->segdone, advance);
 
   /* the lock is already taken when the waiting flag is set,
@@ -2044,6 +2342,11 @@ gst_audio_ring_buffer_set_channel_positions (GstAudioRingBuffer * buf,
   if (memcmp (position, to, channels * sizeof (to[0])) == 0)
     return;
 
+  if (channels == 1) {
+    GST_LOG_OBJECT (buf, "single channel, no need to reorder");
+    return;
+  }
+
   if (position_less_channels (position, channels)) {
     GST_LOG_OBJECT (buf, "position-less channels, no need to reorder");
     return;
@@ -2080,7 +2383,13 @@ gst_audio_ring_buffer_set_channel_positions (GstAudioRingBuffer * buf,
  * @readseg: the current data segment
  * @timestamp: The new timestamp of the buffer.
  *
- * Set a new timestamp on the buffer.
+ * Set a new timestamp on the buffer representing the time of the first sample
+ * in the ringbuffer segment. The timestamp is used by the #GstAudioSrc base
+ * class to set the timestamps on output buffers. Timestamps are
+ * expected to be taken directly from the pipeline clock and are
+ * actual clock timestamps. #GstAudioSrc will convert to running time
+ * by subtracting the base time, but otherwise does not adjust the
+ * outgoing timestamps if provided.
  *
  * MT safe.
  */

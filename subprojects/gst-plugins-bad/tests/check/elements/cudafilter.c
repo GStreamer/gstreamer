@@ -130,7 +130,7 @@ check_cuda_available (void)
   }
   gst_object_unref (elem);
 
-  elem = gst_element_factory_make ("cudadownload", NULL);
+  elem = gst_element_factory_make ("cudascale", NULL);
   if (!elem) {
     GST_WARNING ("cudascale is not available, possibly driver load failure");
     return FALSE;

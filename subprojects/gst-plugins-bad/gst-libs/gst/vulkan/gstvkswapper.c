@@ -178,8 +178,18 @@ _get_function_table (GstVulkanSwapper * swapper)
 }
 
 static VkColorSpaceKHR
-_vk_color_space_from_video_info (GstVideoInfo * v_info)
+_vk_color_space_from_vk_format (GstVulkanSwapper * swapper, VkFormat format)
 {
+  GstVulkanSwapperPrivate *priv = GET_PRIV (swapper);
+  int i;
+
+  for (i = 0; i < priv->n_surf_formats; i++) {
+    if (format != priv->surf_formats[i].format)
+      continue;
+    return priv->surf_formats[i].colorSpace;
+  }
+
+  GST_WARNING_OBJECT (swapper, "unsupported format for swapper's colospaces");
   return VK_COLORSPACE_SRGB_NONLINEAR_KHR;
 }
 
@@ -280,10 +290,10 @@ _choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
   return TRUE;
 }
 
-/*
+/**
  * gst_vulkan_swapper_choose_queue:
  * @swapper: a #GstVulkanSwapper
- * @available_queue: (transfer none): a #GstVulkanQueue chosen elsewhere
+ * @available_queue: (transfer none) (nullable): a #GstVulkanQueue chosen elsewhere
  * @error: a #GError
  */
 gboolean
@@ -660,7 +670,8 @@ gst_vulkan_swapper_get_supported_caps (GstVulkanSwapper * swapper,
 
   caps = gst_caps_new_empty_simple ("video/x-raw");
   gst_caps_set_features (caps, 0,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE));
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE));
   s = gst_caps_get_structure (caps, 0);
 
   {
@@ -790,7 +801,7 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
   }
 
   format = gst_vulkan_format_from_video_info (&priv->v_info, 0);
-  color_space = _vk_color_space_from_video_info (&priv->v_info);
+  color_space = _vk_color_space_from_vk_format (swapper, format);
 
   if ((priv->surf_props.supportedCompositeAlpha &
           VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR) != 0) {

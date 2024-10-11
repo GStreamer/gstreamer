@@ -1,0 +1,46 @@
+From 3dfe19d4578c361f800738c9c974d9c405801209 Mon Sep 17 00:00:00 2001
+From: Chun-wei Fan <fanchunwei@src.gnome.org>
+Date: Mon, 16 Jan 2023 11:17:04 +0800
+Subject: [PATCH 1/7] tools/psl.c: Fix logic fallout and warning
+
+In the previous update to tools/psl.c, I neglected to see the return type of
+localtime_s() and the difference in what value to expect for a successful call.
+
+Use macros instead to remedy this.
+
+Thanks to vtorri for pointing this out in issue #201.
+
+Fixes: #201.
+---
+ tools/psl.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/tools/psl.c b/tools/psl.c
+index 054d0b6..ed94d5c 100644
+--- a/tools/psl.c
++++ b/tools/psl.c
+@@ -41,7 +41,11 @@
+ 
+ // Windows does not have localtime_r but has localtime_s, which is more or less
+ // the same except that the arguments are reversed
+-# define localtime_r(t_sec,t_now) localtime_s(t_now,t_sec)
++# define LOCALTIME_R_SUCCESSFUL(t_sec,t_now)	\
++	(localtime_s(t_now, t_sec) == 0)
++#else
++# define LOCALTIME_R_SUCCESSFUL(t_sec,t_now)	\
++	(localtime_r(t_sec, t_now) != NULL)
+ #endif
+ 
+ #include <stdlib.h>
+@@ -94,7 +98,7 @@ static const char *time2str(time_t t)
+ 	static char buf[64];
+ 	struct tm tm;
+ 
+-	if (localtime_r(&t, &tm) != NULL)
++	if (LOCALTIME_R_SUCCESSFUL(&t, &tm))
+ 		strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tm);
+ 	else
+ 		strcpy(buf, "--notime--");
+-- 
+2.34.1
+

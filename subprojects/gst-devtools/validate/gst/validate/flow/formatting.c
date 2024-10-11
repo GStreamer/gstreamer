@@ -31,6 +31,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/audio/gstaudiometa.h>
 #include <string.h>
 #include <stdio.h>
 #include <glib/gprintf.h>
@@ -147,9 +148,10 @@ typedef struct
 } StructureValues;
 
 static gboolean
-structure_set_fields (GQuark field_id, GValue * value, StructureValues * data)
+structure_set_fields (const GstIdStr * fieldname, GValue * value,
+    StructureValues * data)
 {
-  const gchar *field = g_quark_to_string (field_id);
+  const gchar *field = gst_id_str_as_str (fieldname);
 
   if (data->ignored_fields
       && g_strv_contains ((const gchar **) data->ignored_fields, field))
@@ -175,8 +177,8 @@ validate_flow_structure_cleanup (const GstStructure * structure,
     .ignored_fields = ignored_fields,
   };
 
-  gst_structure_foreach (structure,
-      (GstStructureForeachFunc) structure_set_fields, &d);
+  gst_structure_foreach_id_str (structure,
+      (GstStructureForeachIdStrFunc) structure_set_fields, &d);
   d.fields = g_list_sort (d.fields, (GCompareFunc) g_ascii_strcasecmp);
   nstructure = gst_structure_new_empty (gst_structure_get_name (structure));
   for (GList * tmp = d.fields; tmp; tmp = tmp->next) {
@@ -216,30 +218,55 @@ validate_flow_format_caps (const GstCaps * caps, gchar ** wanted_fields,
   return caps_str;
 }
 
-
+/* Returns a newly-allocated string for the provided enum nickname, or NULL */
 static gchar *
-buffer_get_flags_string (GstBuffer * buffer)
+validate_flow_get_enum_nickname (GType enum_type, gint enum_value)
 {
-  GFlagsClass *flags_class =
-      G_FLAGS_CLASS (g_type_class_ref (gst_buffer_flags_get_type ()));
-  GstBufferFlags flags = GST_BUFFER_FLAGS (buffer);
-  GString *string = NULL;
+  gchar *nickname = NULL;
 
-  while (1) {
-    GFlagsValue *value = g_flags_get_first_value (flags_class, flags);
-    if (!value)
-      break;
+  GEnumClass *enum_class = G_ENUM_CLASS (g_type_class_ref (enum_type));
+  if (enum_class) {
+    GEnumValue *value = g_enum_get_value (enum_class, enum_value);
+    if (value)
+      nickname = g_strdup (value->value_nick);
 
-    if (string == NULL)
-      string = g_string_new (NULL);
-    else
-      g_string_append (string, " ");
-
-    g_string_append (string, value->value_nick);
-    flags &= ~value->value;
+    g_type_class_unref (enum_class);
   }
 
-  return (string != NULL) ? g_string_free (string, FALSE) : NULL;
+  return nickname;
+}
+
+/* Returns a newly-allocated string with the space-separated list of nicknames of the provided flags, or NULL */
+static gchar *
+validate_flow_get_flags_nicknames (GType flags_type, guint flags_value)
+{
+  GString *nicknames = NULL;
+
+  GFlagsClass *flags_class = G_FLAGS_CLASS (g_type_class_ref (flags_type));
+  if (flags_class) {
+    guint flags = flags_value;
+
+    for (;;) {
+      GFlagsValue *value = g_flags_get_first_value (flags_class, flags);
+      if (!value)
+        break;
+
+      if (nicknames)
+        g_string_append (nicknames, " ");
+      else
+        nicknames = g_string_new (NULL);
+
+      g_string_append (nicknames, value->value_nick);
+      flags &= ~value->value;
+
+      if (flags == 0)
+        break;
+    }
+
+    g_type_class_unref (flags_class);
+  }
+
+  return nicknames ? g_string_free (nicknames, FALSE) : NULL;
 }
 
 /* Returns a newly-allocated string describing the metas on this buffer, or NULL */
@@ -270,6 +297,40 @@ buffer_get_meta_string (GstBuffer * buffer)
           "GstVideoRegionOfInterestMeta[x=%" G_GUINT32_FORMAT ", y=%"
           G_GUINT32_FORMAT ", width=%" G_GUINT32_FORMAT ", height=%"
           G_GUINT32_FORMAT "]", roi->x, roi->y, roi->w, roi->h);
+
+    } else if (meta->info->api == GST_AUDIO_META_API_TYPE) {
+      GstAudioMeta *audio_meta = (GstAudioMeta *) meta;
+
+      gint channels = GST_AUDIO_INFO_CHANNELS (&audio_meta->info);
+      gchar *layout = validate_flow_get_enum_nickname (GST_TYPE_AUDIO_LAYOUT,
+          GST_AUDIO_INFO_LAYOUT (&audio_meta->info));
+      gchar *flags = validate_flow_get_flags_nicknames (GST_TYPE_AUDIO_FLAGS,
+          GST_AUDIO_INFO_FLAGS (&audio_meta->info));
+
+      g_string_append_printf (s,
+          "GstAudioMeta[format=%s, layout=%s, rate=%d, bpf=%d, flags=%s, channels=%d, position=[",
+          GST_AUDIO_INFO_NAME (&audio_meta->info), layout,
+          GST_AUDIO_INFO_RATE (&audio_meta->info),
+          GST_AUDIO_INFO_BPF (&audio_meta->info), flags, channels);
+
+      if (!GST_AUDIO_INFO_IS_UNPOSITIONED (&audio_meta->info)) {
+        for (gint i = 0; i < channels; ++i) {
+          if (i > 0)
+            g_string_append (s, ", ");
+
+          gchar *position =
+              validate_flow_get_enum_nickname (GST_TYPE_AUDIO_CHANNEL_POSITION,
+              GST_AUDIO_INFO_POSITION (&audio_meta->info, i));
+          g_string_append (s, position);
+          g_free (position);
+        }
+      }
+
+      g_string_append (s, "]]");
+
+      g_free (layout);
+      g_free (flags);
+
     } else {
       g_string_append (s, desc);
     }
@@ -358,7 +419,9 @@ validate_flow_format_buffer (GstBuffer * buffer, gint checksum_type,
     buffer_parts[buffer_parts_index++] = g_strdup_printf ("dur=%s", time_str);
   }
 
-  flags_str = buffer_get_flags_string (buffer);
+  flags_str =
+      validate_flow_get_flags_nicknames (GST_TYPE_BUFFER_FLAGS,
+      GST_BUFFER_FLAGS (buffer));
   if (flags_str && use_field ("flags", logged_fields, ignored_fields)) {
     buffer_parts[buffer_parts_index++] =
         g_strdup_printf ("flags=%s", flags_str);
@@ -373,6 +436,7 @@ validate_flow_format_buffer (GstBuffer * buffer, gint checksum_type,
       buffer_parts_index > 0 ? g_strjoinv (", ",
       buffer_parts) : g_strdup ("(empty)");
 
+  g_strfreev (ignored_fields);
   g_free (meta_str);
   g_free (flags_str);
   while (buffer_parts_index > 0)
@@ -387,7 +451,8 @@ validate_flow_format_event (GstEvent * event,
     GstStructure * logged_fields_struct,
     GstStructure * ignored_fields_struct,
     const gchar * const *ignored_event_types,
-    const gchar * const *logged_event_types)
+    const gchar * const *logged_event_types,
+    const gchar * const *logged_upstream_event_types)
 {
   const gchar *event_type;
   gchar *structure_string;
@@ -396,6 +461,16 @@ validate_flow_format_event (GstEvent * event,
   gchar **logged_fields;
 
   event_type = gst_event_type_get_name (GST_EVENT_TYPE (event));
+
+  if (GST_EVENT_IS_UPSTREAM (event) && !GST_EVENT_IS_DOWNSTREAM (event)) {
+    /* For backward compatibility reason, only logged requested upstream event
+     * types */
+    if (!logged_upstream_event_types)
+      return NULL;
+
+    if (!g_strv_contains (logged_upstream_event_types, event_type))
+      return NULL;
+  }
 
   if (logged_event_types && !g_strv_contains (logged_event_types, event_type))
     return NULL;

@@ -77,6 +77,8 @@
 #include <gst/sdp/gstmikey.h>
 #include <gst/rtp/gstrtppayloads.h>
 
+#include <gst/video/video-event.h>
+
 #define AES_128_KEY_LEN 16
 #define AES_256_KEY_LEN 32
 
@@ -107,6 +109,10 @@ struct _GstRTSPMediaPrivate
   gboolean reused;
   gboolean eos_shutdown;
   guint buffer_size;
+  gboolean ensure_keyunit_on_start;
+  guint ensure_keyunit_on_start_timeout;
+  gboolean keyunit_is_expired;  /* if the blocking keyunit has expired */
+  GSource *keyunit_expiration_source;
   gint dscp_qos;
   GstRTSPAddressPool *pool;
   gchar *multicast_iface;
@@ -172,6 +178,8 @@ struct _GstRTSPMediaPrivate
                                         GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_EOS_SHUTDOWN    FALSE
 #define DEFAULT_BUFFER_SIZE     0x80000
+#define DEFAULT_ENSURE_KEYUNIT_ON_START FALSE
+#define DEFAULT_ENSURE_KEYUNIT_ON_START_TIMEOUT 100
 #define DEFAULT_DSCP_QOS        (-1)
 #define DEFAULT_TIME_PROVIDER   FALSE
 #define DEFAULT_LATENCY         200
@@ -197,6 +205,8 @@ enum
   PROP_PROTOCOLS,
   PROP_EOS_SHUTDOWN,
   PROP_BUFFER_SIZE,
+  PROP_ENSURE_KEYUNIT_ON_START,
+  PROP_ENSURE_KEYUNIT_ON_START_TIMEOUT,
   PROP_ELEMENT,
   PROP_TIME_PROVIDER,
   PROP_LATENCY,
@@ -371,6 +381,44 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           "The kernel UDP buffer size to use", 0, G_MAXUINT,
           DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+/**
+ * GstRTSPMedia:ensure-keyunit-on-start:
+ *
+ * Whether or not a keyunit should be ensured when a client connects. It
+ * will also configure the streams to drop delta units to ensure that they start
+ * on a keyunit.
+ *
+ * Note that this will only affect non-shared medias for now.
+ *
+ * Since: 1.24
+ */
+  g_object_class_install_property (gobject_class, PROP_ENSURE_KEYUNIT_ON_START,
+      g_param_spec_boolean ("ensure-keyunit-on-start",
+          "Ensure keyunit on start",
+          "Whether the stream will ensure a keyunit when a client connects.",
+          DEFAULT_ENSURE_KEYUNIT_ON_START,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+/**
+ * GstRTSPMedia:ensure-keyunit-on-start-timeout:
+ *
+ * The maximum allowed time before the first keyunit is considered
+ * expired.
+ *
+ * Note that this will only have an effect when ensure-keyunit-on-start is
+ * enabled.
+ *
+ * Since: 1.24
+ */
+  g_object_class_install_property (gobject_class,
+      PROP_ENSURE_KEYUNIT_ON_START_TIMEOUT,
+      g_param_spec_uint ("ensure-keyunit-on-start-timeout",
+          "Timeout for discarding old keyunit on start",
+          "Timeout in milliseconds used to determine if a keyunit should be "
+          "discarded when a client connects.", 0, G_MAXUINT,
+          DEFAULT_ENSURE_KEYUNIT_ON_START_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_ELEMENT,
       g_param_spec_object ("element", "The Element",
           "The GstBin to use for streaming the media", GST_TYPE_ELEMENT,
@@ -504,6 +552,11 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   priv->protocols = DEFAULT_PROTOCOLS;
   priv->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
   priv->buffer_size = DEFAULT_BUFFER_SIZE;
+  priv->ensure_keyunit_on_start = DEFAULT_ENSURE_KEYUNIT_ON_START;
+  priv->ensure_keyunit_on_start_timeout =
+      DEFAULT_ENSURE_KEYUNIT_ON_START_TIMEOUT;
+  priv->keyunit_is_expired = FALSE;
+  priv->keyunit_expiration_source = NULL;
   priv->time_provider = DEFAULT_TIME_PROVIDER;
   priv->transport_mode = DEFAULT_TRANSPORT_MODE;
   priv->stop_on_disconnect = DEFAULT_STOP_ON_DISCONNECT;
@@ -554,6 +607,12 @@ gst_rtsp_media_finalize (GObject * obj)
   g_cond_clear (&priv->cond);
   g_rec_mutex_clear (&priv->state_lock);
 
+  if (priv->keyunit_expiration_source != NULL) {
+    g_source_destroy (priv->keyunit_expiration_source);
+    g_source_unref (priv->keyunit_expiration_source);
+    priv->keyunit_expiration_source = NULL;
+  }
+
   G_OBJECT_CLASS (gst_rtsp_media_parent_class)->finalize (obj);
 }
 
@@ -587,6 +646,14 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
       break;
     case PROP_BUFFER_SIZE:
       g_value_set_uint (value, gst_rtsp_media_get_buffer_size (media));
+      break;
+    case PROP_ENSURE_KEYUNIT_ON_START:
+      g_value_set_boolean (value,
+          gst_rtsp_media_get_ensure_keyunit_on_start (media));
+      break;
+    case PROP_ENSURE_KEYUNIT_ON_START_TIMEOUT:
+      g_value_set_uint (value,
+          gst_rtsp_media_get_ensure_keyunit_on_start_timeout (media));
       break;
     case PROP_TIME_PROVIDER:
       g_value_set_boolean (value, gst_rtsp_media_is_time_provider (media));
@@ -648,6 +715,14 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_BUFFER_SIZE:
       gst_rtsp_media_set_buffer_size (media, g_value_get_uint (value));
+      break;
+    case PROP_ENSURE_KEYUNIT_ON_START:
+      gst_rtsp_media_set_ensure_keyunit_on_start (media,
+          g_value_get_boolean (value));
+      break;
+    case PROP_ENSURE_KEYUNIT_ON_START_TIMEOUT:
+      gst_rtsp_media_set_ensure_keyunit_on_start_timeout (media,
+          g_value_get_uint (value));
       break;
     case PROP_TIME_PROVIDER:
       gst_rtsp_media_use_time_provider (media, g_value_get_boolean (value));
@@ -1485,6 +1560,116 @@ gst_rtsp_media_get_buffer_size (GstRTSPMedia * media)
   g_mutex_unlock (&priv->lock);
 
   return res;
+}
+
+/**
+ * gst_rtsp_media_set_ensure_keyunit_on_start:
+ * @media: a #GstRTSPMedia
+ * @ensure_keyunit_on_start: the new value
+ *
+ * Set whether or not a keyunit should be ensured when a client connects. It
+ * will also configure the streams to drop delta units to ensure that they start
+ * on a keyunit.
+ *
+ * Note that this will only affect non-shared medias for now.
+ *
+ * Since: 1.24
+ */
+void
+gst_rtsp_media_set_ensure_keyunit_on_start (GstRTSPMedia * media,
+    gboolean ensure_keyunit_on_start)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->ensure_keyunit_on_start = ensure_keyunit_on_start;
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_get_ensure_keyunit_on_start:
+ * @media: a #GstRTSPMedia
+ *
+ * Get ensure-keyunit-on-start flag.
+ *
+ * Returns: The ensure-keyunit-on-start flag.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_rtsp_media_get_ensure_keyunit_on_start (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  result = priv->ensure_keyunit_on_start;
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_media_set_ensure_keyunit_on_start_timeout:
+ * @media: a #GstRTSPMedia
+ * @timeout: the new value
+ *
+ * Sets the maximum allowed time before the first keyunit is considered
+ * expired.
+ *
+ * Note that this will only have an effect when ensure-keyunit-on-start is
+ * enabled.
+ *
+ * Since: 1.24
+ */
+void
+gst_rtsp_media_set_ensure_keyunit_on_start_timeout (GstRTSPMedia * media,
+    guint timeout)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->ensure_keyunit_on_start_timeout = timeout;
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_get_ensure_keyunit_on_start_timeout
+ * @media: a #GstRTSPMedia
+ *
+ * Get ensure-keyunit-on-start-timeout time.
+ *
+ * Returns: The ensure-keyunit-on-start-timeout time.
+ *
+ * Since: 1.24
+ */
+guint
+gst_rtsp_media_get_ensure_keyunit_on_start_timeout (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  guint result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  result = priv->ensure_keyunit_on_start_timeout;
+  g_mutex_unlock (&priv->lock);
+
+  return result;
 }
 
 static void
@@ -2502,6 +2687,7 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
   gst_rtsp_stream_set_protocols (stream, priv->protocols);
   gst_rtsp_stream_set_retransmission_time (stream, priv->rtx_time);
   gst_rtsp_stream_set_buffer_size (stream, priv->buffer_size);
+  gst_rtsp_stream_set_drop_delta_units (stream, priv->ensure_keyunit_on_start);
   gst_rtsp_stream_set_publish_clock_mode (stream, priv->publish_clock_mode);
   gst_rtsp_stream_set_rate_control (stream, priv->do_rate_control);
 
@@ -2821,6 +3007,12 @@ gst_rtsp_media_get_rates (GstRTSPMedia * media, gdouble * rate,
 static void
 stream_update_blocked (GstRTSPStream * stream, GstRTSPMedia * media)
 {
+  /* only unblock complete live streams when media is prepared */
+  if (media->priv->is_live &&
+      media->priv->status == GST_RTSP_MEDIA_STATUS_PREPARED &&
+      !media->priv->blocked && !gst_rtsp_stream_is_complete (stream))
+    return;
+
   gst_rtsp_stream_set_blocked (stream, media->priv->blocked);
 }
 
@@ -2835,6 +3027,23 @@ media_streams_set_blocked (GstRTSPMedia * media, gboolean blocked)
 
   if (!blocked)
     priv->blocking_msg_received = 0;
+}
+
+static void
+stream_install_drop_probe (GstRTSPStream * stream, gpointer user_data)
+{
+  if (!gst_rtsp_stream_is_complete (stream))
+    return;
+
+  gst_rtsp_stream_install_drop_probe (stream);
+}
+
+static void
+media_streams_install_drop_probe (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+
+  g_ptr_array_foreach (priv->streams, (GFunc) stream_install_drop_probe, NULL);
 }
 
 static void
@@ -4590,6 +4799,15 @@ do_set_seqnum (GstRTSPStream * stream)
   }
 }
 
+static gboolean
+enable_keyunit_expired (GstRTSPMedia * media)
+{
+  GST_DEBUG_OBJECT (media, "keyunit has expired");
+  media->priv->keyunit_is_expired = TRUE;
+
+  return G_SOURCE_REMOVE;
+}
+
 /* call with state_lock */
 static gboolean
 default_suspend (GstRTSPMedia * media)
@@ -4628,6 +4846,20 @@ default_suspend (GstRTSPMedia * media)
    * change anymore. */
   if (ret != GST_STATE_CHANGE_FAILURE && ret != GST_STATE_CHANGE_ASYNC)
     priv->expected_async_done = FALSE;
+
+  /* set expiration date on buffer in case of delayed PLAY request */
+  if (priv->ensure_keyunit_on_start) {
+    /* no need to install the timer if configured to trigger immediately */
+    if (priv->ensure_keyunit_on_start_timeout == 0) {
+      enable_keyunit_expired (media);
+    } else {
+      priv->keyunit_expiration_source =
+          g_timeout_source_new (priv->ensure_keyunit_on_start_timeout);
+      g_source_set_callback (priv->keyunit_expiration_source,
+          G_SOURCE_FUNC (enable_keyunit_expired), (gpointer) media, NULL);
+      g_source_attach (priv->keyunit_expiration_source, priv->thread->context);
+    }
+  }
 
   return TRUE;
 
@@ -4684,6 +4916,7 @@ gst_rtsp_media_suspend (GstRTSPMedia * media)
   }
 
   gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_SUSPENDED);
+
 done:
   g_rec_mutex_unlock (&priv->state_lock);
 
@@ -4706,6 +4939,79 @@ suspend_failed:
     g_rec_mutex_unlock (&priv->state_lock);
     gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_ERROR);
     GST_WARNING ("failed to suspend media %p", media);
+    return FALSE;
+  }
+}
+
+/* Call with state_lock */
+static gboolean
+ensure_new_keyunit (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  gboolean preroll_ok;
+  gboolean is_blocking = FALSE;
+
+  /* nothing to be done without complete senders */
+  if (get_num_complete_sender_streams (media) == 0) {
+    GST_DEBUG_OBJECT (media, "no complete senders, skipping force keyunit");
+    return TRUE;
+  }
+
+  is_blocking = media_streams_blocking (media);
+
+  /* if we unsuspend before the keyunit is expired remove the timer so that
+   * no future buffer is marked as expired */
+  if (is_blocking && !priv->keyunit_is_expired) {
+    GST_DEBUG_OBJECT (media, "using currently blocking keyunit");
+    g_source_destroy (priv->keyunit_expiration_source);
+    g_source_unref (priv->keyunit_expiration_source);
+    priv->keyunit_expiration_source = NULL;
+
+    return TRUE;
+  }
+
+  /* set the media to preparing, thus requiring a successful preroll before
+   * completing unsuspend. */
+  gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
+  GST_DEBUG_OBJECT (media, "ensuring new keyunit, doing preroll");
+  if (!start_preroll (media))
+    goto start_failed;
+
+  if (is_blocking) {
+    /* if we end up here then the keyunit has expired and the timer callback
+     * has been removed so reset the flag */
+    priv->keyunit_is_expired = FALSE;
+
+    /* install a probe that will drop the currently blocking keyunit on all
+     * complete streams. */
+    GST_DEBUG_OBJECT (media, "media is blocking. Installing drop probe");
+    media_streams_install_drop_probe (media);
+  }
+
+  /* force the keyunit from src */
+  GST_DEBUG_OBJECT (media, "sending force keyunit event");
+  gst_element_send_event (priv->element,
+      gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
+          TRUE, 0));
+
+  /* wait preroll */
+  g_rec_mutex_unlock (&priv->state_lock);
+  preroll_ok = wait_preroll (media);
+  g_rec_mutex_lock (&priv->state_lock);
+
+  if (!preroll_ok)
+    goto preroll_failed;
+
+  return TRUE;
+
+start_failed:
+  {
+    GST_WARNING ("failed to preroll pipeline");
+    return FALSE;
+  }
+preroll_failed:
+  {
+    GST_WARNING ("failed while waiting to preroll pipeline");
     return FALSE;
   }
 }
@@ -4749,14 +5055,19 @@ default_unsuspend (GstRTSPMedia * media)
 
       if (!preroll_ok)
         goto preroll_failed;
+      break;
     }
     default:
       break;
   }
 
+  if (gst_rtsp_media_get_ensure_keyunit_on_start (media)) {
+    return ensure_new_keyunit (media);
+  }
+
   return TRUE;
 
-  /* ERRORS */
+/* ERRORS */
 start_failed:
   {
     GST_WARNING ("failed to preroll pipeline");
@@ -4764,7 +5075,7 @@ start_failed:
   }
 preroll_failed:
   {
-    GST_WARNING ("failed to preroll pipeline");
+    GST_WARNING ("failed while waiting to preroll pipeline");
     return FALSE;
   }
 }
@@ -4916,10 +5227,11 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
     gst_rtsp_media_get_status (media);
     g_rec_mutex_lock (&priv->state_lock);
   }
-  if (priv->status == GST_RTSP_MEDIA_STATUS_ERROR)
+  if (priv->status == GST_RTSP_MEDIA_STATUS_ERROR && state > GST_STATE_READY)
     goto error_status;
   if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED &&
-      priv->status != GST_RTSP_MEDIA_STATUS_SUSPENDED)
+      priv->status != GST_RTSP_MEDIA_STATUS_SUSPENDED &&
+      priv->status != GST_RTSP_MEDIA_STATUS_ERROR)
     goto not_prepared;
 
   /* NULL and READY are the same */
@@ -5018,19 +5330,6 @@ error_status:
   {
     GST_WARNING ("media %p in error status while changing to state %d",
         media, state);
-    if (state == GST_STATE_NULL) {
-      for (i = 0; i < transports->len; i++) {
-        GstRTSPStreamTransport *trans;
-
-        /* we need a non-NULL entry in the array */
-        trans = g_ptr_array_index (transports, i);
-        if (trans == NULL)
-          continue;
-
-        gst_rtsp_stream_transport_set_active (trans, FALSE);
-      }
-      priv->n_active = 0;
-    }
     g_rec_mutex_unlock (&priv->state_lock);
     return FALSE;
   }

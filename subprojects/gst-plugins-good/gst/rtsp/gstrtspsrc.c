@@ -117,6 +117,8 @@
 #include "gstrtspelements.h"
 #include "gstrtspsrc.h"
 
+#include <gst/glib-compat-private.h>
+
 GST_DEBUG_CATEGORY_STATIC (rtspsrc_debug);
 #define GST_CAT_DEFAULT (rtspsrc_debug)
 
@@ -299,8 +301,8 @@ gst_rtsp_backchannel_get_type (void)
 #define DEFAULT_TLS_INTERACTION     NULL
 #define DEFAULT_DO_RETRANSMISSION        TRUE
 #define DEFAULT_NTP_TIME_SOURCE  NTP_TIME_SOURCE_NTP
-#define DEFAULT_USER_AGENT       "GStreamer/" PACKAGE_VERSION
-#define DEFAULT_MAX_RTCP_RTP_TIME_DIFF 1000
+#define DEFAULT_USER_AGENT       "GStreamer/{VERSION}"
+#define DEFAULT_MAX_RTCP_RTP_TIME_DIFF -1
 #define DEFAULT_RFC7273_SYNC         FALSE
 #define DEFAULT_ADD_REFERENCE_TIMESTAMP_META FALSE
 #define DEFAULT_MAX_TS_OFFSET_ADJUSTMENT   G_GUINT64_CONSTANT(0)
@@ -312,6 +314,8 @@ gst_rtsp_backchannel_get_type (void)
 #define DEFAULT_ONVIF_RATE_CONTROL TRUE
 #define DEFAULT_IS_LIVE TRUE
 #define DEFAULT_IGNORE_X_SERVER_REPLY FALSE
+#define DEFAULT_TCP_TIMESTAMP FALSE
+#define DEFAULT_FORCE_NON_COMPLIANT_URL FALSE
 
 enum
 {
@@ -361,7 +365,10 @@ enum
   PROP_ONVIF_MODE,
   PROP_ONVIF_RATE_CONTROL,
   PROP_IS_LIVE,
-  PROP_IGNORE_X_SERVER_REPLY
+  PROP_IGNORE_X_SERVER_REPLY,
+  PROP_EXTRA_HTTP_REQUEST_HEADERS,
+  PROP_TCP_TIMESTAMP,
+  PROP_FORCE_NON_COMPLIANT_URL,
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -471,6 +478,8 @@ static GstFlowReturn gst_rtspsrc_push_backchannel_buffer (GstRTSPSrc * src,
 static GstFlowReturn gst_rtspsrc_push_backchannel_sample (GstRTSPSrc * src,
     guint id, GstSample * sample);
 
+static void gst_rtspsrc_reset_flows (GstRTSPSrc * src);
+
 typedef struct
 {
   guint8 pt;
@@ -505,7 +514,7 @@ static guint gst_rtspsrc_signals[LAST_SIGNAL] = { 0 };
 #define gst_rtspsrc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstRTSPSrc, gst_rtspsrc, GST_TYPE_BIN,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, gst_rtspsrc_uri_handler_init));
-GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtspsrc, "rtspsrc", GST_RANK_NONE,
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (rtspsrc, "rtspsrc", GST_RANK_PRIMARY,
     GST_TYPE_RTSPSRC, rtsp_element_init (plugin));
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -895,6 +904,9 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    *
    * The string to set in the User-Agent header.
    *
+   * If the string contains `{VERSION}` that will be replaced with the
+   * GStreamer version at runtime (since GStreamer 1.24).
+   *
    * Since: 1.6
    */
   g_object_class_install_property (gobject_class, PROP_USER_AGENT,
@@ -1093,6 +1105,73 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           DEFAULT_IGNORE_X_SERVER_REPLY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+   /**
+   * GstRTSPSrc:extra-http-request-headers
+   *
+   * When in tunneled mode append provided headers to any HTTP requests
+   * made by rtspsrc.
+   *
+   * Only applicable for RTSP over HTTP.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_EXTRA_HTTP_REQUEST_HEADERS,
+      g_param_spec_boxed ("extra-http-request-headers", "Extra Headers",
+          "Extra headers to append to HTTP requests when in tunneled mode",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+   /**
+   * GstRTSPSrc:tcp-timestamp
+   *
+   * Timestamp all buffers with their receive time when receiving RTP packets
+   * over TCP or HTTP.
+   *
+   * When dealing with TCP based connections, setting timestamps for every
+   * packet is not done by default because a server typically bursts data, for
+   * which we don't want to compensate by speeding up the media. The other
+   * timestamps will be interpollated from this one using the RTP timestamps.
+   *
+   * This has the side effect that no drift compensation between the server
+   * and client is done, and over time the RTP timestamps will drift against
+   * the client's clock. This can lead to buffers (and observed end-to-end
+   * latency) to grow over time, or all packets arriving too late once a
+   * threshold is reached.
+   *
+   * Enabling this property will timestamp all RTP packets with their receive
+   * times, which gets around the drift problem but can cause other problems
+   * if the server is sending data not smoothly in real-time.
+   *
+   * Only applicable for RTSP over TCP or HTTP.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_TCP_TIMESTAMP,
+      g_param_spec_boolean ("tcp-timestamp", "TCP Timestamp",
+          "Timestamp RTP packets with receive times in TCP/HTTP mode",
+          DEFAULT_TCP_TIMESTAMP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+   /**
+   * GstRTSPSrc:force-non-compliant-url
+   *
+   * There are various non-compliant servers that don't require control URLs
+   * that are not resolved correctly but instead are just appended.
+   *
+   * As some of these servers will nevertheless reply OK to SETUP requests
+   * even if they didn't handle URIs correctly, this property can be set to
+   * revert to the old non-compliant method for constructing URLs.
+   *
+   * Since: 1.24.7
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_FORCE_NON_COMPLIANT_URL,
+      g_param_spec_boolean ("force-non-compliant-url",
+          "Force non-compliant URL",
+          "Revert to old non-compliant method of constructing URLs",
+          DEFAULT_FORCE_NON_COMPLIANT_URL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
@@ -1234,7 +1313,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    * @sample: RTP sample to send back
    *
    * Deprecated: 1.22: Use action signal GstRTSPSrc::push-backchannel-sample instead.
-   * IMPORTANT: Please note that this signal decrements the reference count 
+   * IMPORTANT: Please note that this signal decrements the reference count
    *            of sample internally! So it cannot be used from other
    *            language bindings in general.
    *
@@ -1255,9 +1334,9 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    */
   gst_rtspsrc_signals[SIGNAL_PUSH_BACKCHANNEL_SAMPLE] =
       g_signal_new ("push-backchannel-sample", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION | G_SIGNAL_DEPRECATED,
-      G_STRUCT_OFFSET (GstRTSPSrcClass, push_backchannel_sample), NULL, NULL,
-      NULL, GST_TYPE_FLOW_RETURN, 2, G_TYPE_UINT, GST_TYPE_SAMPLE);
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
+          push_backchannel_sample), NULL, NULL, NULL,
+      GST_TYPE_FLOW_RETURN, 2, G_TYPE_UINT, GST_TYPE_SAMPLE);
 
   /**
    * GstRTSPSrc::get-parameter:
@@ -1522,6 +1601,10 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->is_live = DEFAULT_IS_LIVE;
   src->seek_seqnum = GST_SEQNUM_INVALID;
   src->group_id = GST_GROUP_ID_INVALID;
+  src->prop_extra_http_request_headers =
+      gst_structure_new_empty ("extra-http-request-headers");
+  src->tcp_timestamp = DEFAULT_TCP_TIMESTAMP;
+  src->force_non_compliant_url = DEFAULT_FORCE_NON_COMPLIANT_URL;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -1596,6 +1679,11 @@ gst_rtspsrc_finalize (GObject * object)
 
   if (rtspsrc->initial_seek)
     gst_event_unref (rtspsrc->initial_seek);
+
+  if (rtspsrc->prop_extra_http_request_headers) {
+    gst_structure_free (rtspsrc->prop_extra_http_request_headers);
+    rtspsrc->prop_extra_http_request_headers = NULL;
+  }
 
   /* free locks */
   g_rec_mutex_clear (&rtspsrc->stream_rec_lock);
@@ -1867,6 +1955,22 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_IGNORE_X_SERVER_REPLY:
       rtspsrc->ignore_x_server_reply = g_value_get_boolean (value);
       break;
+    case PROP_EXTRA_HTTP_REQUEST_HEADERS:{
+      const GstStructure *s = gst_value_get_structure (value);
+      if (rtspsrc->prop_extra_http_request_headers) {
+        gst_structure_free (rtspsrc->prop_extra_http_request_headers);
+      }
+      rtspsrc->prop_extra_http_request_headers =
+          s ? gst_structure_copy (s) :
+          gst_structure_new_empty ("extra-http-request-headers");
+    }
+      break;
+    case PROP_TCP_TIMESTAMP:
+      rtspsrc->tcp_timestamp = g_value_get_boolean (value);
+      break;
+    case PROP_FORCE_NON_COMPLIANT_URL:
+      rtspsrc->force_non_compliant_url = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2039,6 +2143,15 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_IGNORE_X_SERVER_REPLY:
       g_value_set_boolean (value, rtspsrc->ignore_x_server_reply);
+      break;
+    case PROP_EXTRA_HTTP_REQUEST_HEADERS:
+      gst_value_set_structure (value, rtspsrc->prop_extra_http_request_headers);
+      break;
+    case PROP_TCP_TIMESTAMP:
+      g_value_set_boolean (value, rtspsrc->tcp_timestamp);
+      break;
+    case PROP_FORCE_NON_COMPLIANT_URL:
+      g_value_set_boolean (value, rtspsrc->force_non_compliant_url);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2442,7 +2555,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx,
      * If the control_path starts with a non rtsp: protocol we will most
      * likely build a URL that the server will fail to understand, this is ok,
      * we will fail then. */
-    if (g_str_has_prefix (control_path, "rtsp://"))
+    if (gst_uri_is_valid (control_path))
       stream->conninfo.location = g_strdup (control_path);
     else {
       const gchar *base;
@@ -2810,6 +2923,7 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing)
       state = GST_STATE_PAUSED;
   }
   gst_rtspsrc_push_event (src, event);
+  gst_rtspsrc_reset_flows (src);
   gst_rtspsrc_loop_send_cmd (src, cmd, CMD_LOOP);
   gst_rtspsrc_set_state (src, state);
 }
@@ -3156,11 +3270,10 @@ gst_rtspsrc_handle_src_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
   GstRTSPStream *stream;
-  GstRTSPSrc *self = GST_RTSPSRC (GST_OBJECT_PARENT (parent));
 
   stream = gst_pad_get_element_private (pad);
 
-  event = gst_rtspsrc_update_src_event (self, stream, event);
+  event = gst_rtspsrc_update_src_event (stream->parent, stream, event);
 
   return gst_pad_push_event (stream->srcpad, event);
 }
@@ -4360,7 +4473,13 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     /* create a new pad we will use to stream to */
     name = g_strdup_printf ("stream_%u", stream->id);
     template = gst_static_pad_template_get (&rtptemplate);
-    stream->channelpad[0] = gst_pad_new_from_template (template, name);
+    pad0 = gst_pad_new_from_template (template, name);
+    stream->channelpad[0] = pad0;
+
+    gst_pad_set_event_function (pad0, gst_rtspsrc_handle_internal_src_event);
+    gst_pad_set_query_function (pad0, gst_rtspsrc_handle_internal_src_query);
+    gst_pad_set_element_private (pad0, src);
+
     gst_object_unref (template);
     g_free (name);
 
@@ -4735,6 +4854,9 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     /* no sync or async state changes needed */
     g_object_set (G_OBJECT (stream->udpsink[0]), "auto-multicast", FALSE,
         "loop", FALSE, "sync", FALSE, "async", FALSE, NULL);
+    if (src->multi_iface != NULL)
+      g_object_set (G_OBJECT (stream->udpsink[0]), "multicast-iface",
+          src->multi_iface, NULL);
     if (ttl > 0)
       g_object_set (G_OBJECT (stream->udpsink[0]), "ttl", ttl, NULL);
 
@@ -4798,8 +4920,11 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     /* no sync or async state changes needed */
     g_object_set (G_OBJECT (stream->udpsink[1]), "auto-multicast", FALSE,
         "loop", FALSE, "sync", FALSE, "async", FALSE, NULL);
+    if (src->multi_iface != NULL)
+      g_object_set (G_OBJECT (stream->udpsink[1]), "multicast-iface",
+          src->multi_iface, NULL);
     if (ttl > 0)
-      g_object_set (G_OBJECT (stream->udpsink[0]), "ttl", ttl, NULL);
+      g_object_set (G_OBJECT (stream->udpsink[1]), "ttl", ttl, NULL);
 
     if (stream->udpsrc[1]) {
       /* configure socket, we give it the same UDP socket as the udpsrc for RTCP
@@ -5182,6 +5307,15 @@ done:
   return ret;
 }
 
+static void
+gst_rtspsrc_reset_flows (GstRTSPSrc * src)
+{
+  for (GList * streams = src->streams; streams; streams = g_list_next (streams)) {
+    GstRTSPStream *ostream = (GstRTSPStream *) streams->data;
+    ostream->last_ret = GST_FLOW_OK;
+  }
+}
+
 static gboolean
 gst_rtspsrc_stream_push_event (GstRTSPSrc * src, GstRTSPStream * stream,
     GstEvent * event)
@@ -5285,6 +5419,19 @@ accept_certificate_cb (GTlsConnection * conn, GTlsCertificate * peer_cert,
   return accept;
 }
 
+static gboolean
+_add_header_to_conn (const GstIdStr * fieldname, const GValue * value,
+    gpointer user_data)
+{
+  const gchar *key_str = gst_id_str_as_str (fieldname);
+  const gchar *value_str = g_value_get_string (value);
+
+  GstRTSPConnection *conn = (GstRTSPConnection *) user_data;
+  gst_rtsp_connection_add_extra_http_request_header (conn, key_str, value_str);
+
+  return TRUE;
+}
+
 static GstRTSPResult
 gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
     gboolean async)
@@ -5292,6 +5439,8 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
   GstRTSPResult res;
   GstRTSPMessage response;
   gboolean retry = FALSE;
+  GstRTSPUrl *url;
+  gchar *new_url;
   memset (&response, 0, sizeof (response));
   gst_rtsp_message_init (&response);
   do {
@@ -5343,6 +5492,11 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
         gst_rtsp_connection_set_proxy (info->connection, src->proxy_host,
             src->proxy_port);
       }
+
+      if (src->prop_extra_http_request_headers != NULL) {
+        gst_structure_foreach_id_str (src->prop_extra_http_request_headers,
+            _add_header_to_conn, info->connection);
+      }
     }
 
     if (!info->connected) {
@@ -5367,7 +5521,19 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
 
       if (res == GST_RTSP_OK)
         info->connected = TRUE;
-      else if (!retry)
+      else if (res == GST_RTSP_OK_REDIRECT) {
+        url = gst_rtsp_connection_get_url (info->connection);
+
+        if (url == NULL || info->url_str == NULL)
+          goto could_not_connect;
+
+        new_url = gst_rtsp_url_get_request_uri (url);
+        GST_DEBUG_OBJECT (src, "redirected from %s to %s", info->url_str,
+            new_url);
+        g_free (info->url_str);
+        info->url_str = new_url;
+        info->connected = TRUE;
+      } else if (!retry)
         goto could_not_connect;
     }
   } while (!info->connected && retry);
@@ -5468,8 +5634,13 @@ gst_rtspsrc_init_request (GstRTSPSrc * src, GstRTSPMessage * msg,
     return res;
 
   /* set user-agent */
-  if (src->user_agent)
-    gst_rtsp_message_add_header (msg, GST_RTSP_HDR_USER_AGENT, src->user_agent);
+  if (src->user_agent) {
+    GString *user_agent = g_string_new (src->user_agent);
+
+    g_string_replace (user_agent, "{VERSION}", PACKAGE_VERSION, 0);
+    gst_rtsp_message_add_header (msg, GST_RTSP_HDR_USER_AGENT, user_agent->str);
+    g_string_free (user_agent, TRUE);
+  }
 
   return res;
 }
@@ -5717,30 +5888,6 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
     src->need_segment = TRUE;
   }
 
-  if (src->base_time == -1) {
-    /* Take current running_time. This timestamp will be put on
-     * the first buffer of each stream because we are a live source and so we
-     * timestamp with the running_time. When we are dealing with TCP, we also
-     * only timestamp the first buffer (using the DISCONT flag) because a server
-     * typically bursts data, for which we don't want to compensate by speeding
-     * up the media. The other timestamps will be interpollated from this one
-     * using the RTP timestamps. */
-    GST_OBJECT_LOCK (src);
-    if (GST_ELEMENT_CLOCK (src)) {
-      GstClockTime now;
-      GstClockTime base_time;
-
-      now = gst_clock_get_time (GST_ELEMENT_CLOCK (src));
-      base_time = GST_ELEMENT_CAST (src)->base_time;
-
-      src->base_time = now - base_time;
-
-      GST_DEBUG_OBJECT (src, "first buffer at time %" GST_TIME_FORMAT ", base %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (now), GST_TIME_ARGS (base_time));
-    }
-    GST_OBJECT_UNLOCK (src);
-  }
-
   /* If needed send a new segment, don't forget we are live and buffer are
    * timestamped with running time */
   if (src->need_segment) {
@@ -5777,16 +5924,28 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
     stream->need_caps = FALSE;
   }
 
+  if (!is_rtcp && (stream->discont || src->tcp_timestamp)) {
+    GstClockTime timestamp = GST_CLOCK_TIME_NONE;
+
+    GST_OBJECT_LOCK (src);
+    if (GST_ELEMENT_CLOCK (src)) {
+      GstClockTime now;
+
+      now = gst_clock_get_time (GST_ELEMENT_CLOCK (src));
+      timestamp = now - GST_ELEMENT_CAST (src)->base_time;
+    }
+    GST_OBJECT_UNLOCK (src);
+
+    GST_TRACE_OBJECT (src, "setting timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
+
+    GST_BUFFER_DTS (buf) = timestamp;
+  }
+
   if (stream->discont && !is_rtcp) {
     /* mark first RTP buffer as discont */
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
     stream->discont = FALSE;
-    /* first buffer gets the timestamp, other buffers are not timestamped and
-     * their presentation time will be interpollated from the rtp timestamps. */
-    GST_DEBUG_OBJECT (src, "setting timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (src->base_time));
-
-    GST_BUFFER_TIMESTAMP (buf) = src->base_time;
   }
 
   /* chain to the peer pad */
@@ -6604,7 +6763,8 @@ propagate_error:
 
 static GstRTSPResult
 gst_rtsp_src_receive_response (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
-    GstRTSPMessage * response, GstRTSPStatusCode * code)
+    GstRTSPMessage * response, GstRTSPStatusCode * code,
+    gboolean update_content_base)
 {
   GstRTSPStatusCode thecode;
   gchar *content_base = NULL;
@@ -6665,12 +6825,14 @@ next:
   if (thecode != GST_RTSP_STS_OK)
     return GST_RTSP_OK;
 
-  /* store new content base if any */
-  gst_rtsp_message_get_header (response, GST_RTSP_HDR_CONTENT_BASE,
-      &content_base, 0);
-  if (content_base) {
-    g_free (src->content_base);
-    src->content_base = g_strdup (content_base);
+  if (update_content_base) {
+    /* store new content base if any */
+    gst_rtsp_message_get_header (response, GST_RTSP_HDR_CONTENT_BASE,
+        &content_base, 0);
+    if (content_base) {
+      g_free (src->content_base);
+      src->content_base = g_strdup (content_base);
+    }
   }
 
   return GST_RTSP_OK;
@@ -6717,7 +6879,7 @@ server_eof:
 static GstRTSPResult
 gst_rtspsrc_try_send (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
     GstRTSPMessage * request, GstRTSPMessage * response,
-    GstRTSPStatusCode * code)
+    GstRTSPStatusCode * code, gboolean update_content_base)
 {
   GstRTSPResult res;
   gint try = 0;
@@ -6746,7 +6908,9 @@ again:
   if (!response)
     return res;
 
-  res = gst_rtsp_src_receive_response (src, conninfo, response, code);
+  res =
+      gst_rtsp_src_receive_response (src, conninfo, response, code,
+      update_content_base);
   if (res == GST_RTSP_EEOF) {
     GST_WARNING_OBJECT (src, "server closed connection");
     /* only try once after reconnect, then fallthrough and error out */
@@ -6822,7 +6986,8 @@ receive_error:
 static GstRTSPResult
 gst_rtspsrc_send (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
     GstRTSPMessage * request, GstRTSPMessage * response,
-    GstRTSPStatusCode * code, GstRTSPVersion * versions)
+    GstRTSPStatusCode * code, GstRTSPVersion * versions,
+    gboolean update_content_base)
 {
   GstRTSPStatusCode int_code = GST_RTSP_STS_OK;
   GstRTSPResult res = GST_RTSP_ERROR;
@@ -6847,7 +7012,7 @@ gst_rtspsrc_send (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
 
     if ((res =
             gst_rtspsrc_try_send (src, conninfo, request, response,
-                &int_code)) < 0)
+                &int_code, update_content_base)) < 0)
       goto error;
 
     switch (int_code) {
@@ -6974,7 +7139,8 @@ static GstRTSPResult
 gst_rtspsrc_send_cb (GstRTSPExtension * ext, GstRTSPMessage * request,
     GstRTSPMessage * response, GstRTSPSrc * src)
 {
-  return gst_rtspsrc_send (src, &src->conninfo, request, response, NULL, NULL);
+  return gst_rtspsrc_send (src, &src->conninfo, request, response, NULL, NULL,
+      FALSE);
 }
 
 
@@ -7460,13 +7626,38 @@ gst_rtspsrc_setup_streams_end (GstRTSPSrc * src, gboolean async)
     if (!src->conninfo.connection)
       conninfo = &((GstRTSPStream *) tmp->data)->conninfo;
 
-    gst_rtsp_src_receive_response (src, conninfo, &response, NULL);
+    gst_rtsp_src_receive_response (src, conninfo, &response, NULL, FALSE);
 
     gst_rtsp_src_setup_stream_from_response (src, stream,
         &response, NULL, 0, NULL, NULL);
   }
 
   return GST_RTSP_OK;
+}
+
+static void
+try_non_compliant_url (GstRTSPSrc * src, GstRTSPStream * stream)
+{
+  const gchar *base;
+
+  base = get_aggregate_control (src);
+
+  g_free (stream->conninfo.location);
+
+  /* Make sure to not accumulate too many `/` */
+  if ((g_str_has_suffix (base, "/")
+          && !g_str_has_suffix (stream->control_url, "/"))
+      || (!g_str_has_suffix (base, "/")
+          && g_str_has_suffix (stream->control_url, "/"))
+      )
+    stream->conninfo.location = g_strconcat (base, stream->control_url, NULL);
+  else if (g_str_has_suffix (base, "/")
+      && g_str_has_suffix (stream->control_url, "/"))
+    stream->conninfo.location =
+        g_strconcat (base, stream->control_url + 1, NULL);
+  else
+    stream->conninfo.location =
+        g_strconcat (base, "/", stream->control_url, NULL);
 }
 
 /* Perform the SETUP request for all the streams.
@@ -7532,7 +7723,7 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
     GstRTSPConnInfo *conninfo;
     gchar *transports;
     gint retry = 0;
-    gboolean tried_non_compliant_url = FALSE;
+    gboolean tried_non_compliant_url;
     guint mask = 0;
     gboolean selected;
     GstCaps *caps;
@@ -7614,6 +7805,14 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
     if (!protocol_masks[mask])
       goto no_protocols;
 
+    if (src->force_non_compliant_url) {
+      try_non_compliant_url (src, stream);
+
+      tried_non_compliant_url = TRUE;
+    } else {
+      tried_non_compliant_url = FALSE;
+    }
+
   retry:
     GST_DEBUG_OBJECT (src, "protocols = 0x%x, protocol mask = 0x%x", protocols,
         protocol_masks[mask]);
@@ -7691,7 +7890,7 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
     /* handle the code ourselves */
     res =
         gst_rtspsrc_send (src, conninfo, &request,
-        pipelined_request_id ? NULL : &response, &code, NULL);
+        pipelined_request_id ? NULL : &response, &code, NULL, FALSE);
     if (res < 0)
       goto send_error;
 
@@ -7729,6 +7928,7 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
       case GST_RTSP_STS_NOT_FOUND:
       case GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE:
       case GST_RTSP_STS_PARAMETER_NOT_UNDERSTOOD:
+      case GST_RTSP_STS_SERVICE_UNAVAILABLE:
         /* There are various non-compliant servers that don't require control
          * URLs that are not resolved correctly but instead are just appended.
          * See e.g.
@@ -7736,31 +7936,12 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
          *   https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1447
          */
         if (!tried_non_compliant_url && stream->control_url
-            && !g_str_has_prefix (stream->control_url, "rtsp://")) {
-          const gchar *base;
-
+            && !gst_uri_is_valid (stream->control_url)) {
           gst_rtsp_message_unset (&request);
           gst_rtsp_message_unset (&response);
           gst_rtspsrc_stream_free_udp (stream);
 
-          g_free (stream->conninfo.location);
-          base = get_aggregate_control (src);
-
-          /* Make sure to not accumulate too many `/` */
-          if ((g_str_has_suffix (base, "/")
-                  && !g_str_has_suffix (stream->control_url, "/"))
-              || (!g_str_has_suffix (base, "/")
-                  && g_str_has_suffix (stream->control_url, "/"))
-              )
-            stream->conninfo.location =
-                g_strconcat (base, stream->control_url, NULL);
-          else if (g_str_has_suffix (base, "/")
-              && g_str_has_suffix (stream->control_url, "/"))
-            stream->conninfo.location =
-                g_strconcat (base, stream->control_url + 1, NULL);
-          else
-            stream->conninfo.location =
-                g_strconcat (base, "/", stream->control_url, NULL);
+          try_non_compliant_url (src, stream);
 
           tried_non_compliant_url = TRUE;
 
@@ -8130,23 +8311,29 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
       if (control == NULL)
         break;
 
+      if (g_strcmp0 (control, "*") == 0)
+        break;
+
       /* only take fully qualified urls */
-      if (g_str_has_prefix (control, "rtsp://"))
+      if (gst_uri_is_valid (control))
         break;
     }
-    if (control) {
-      g_free (src->conninfo.location);
-      src->conninfo.location = g_strdup (control);
-      /* make a connection for this, if there was a connection already, nothing
-       * happens. */
-      if (gst_rtsp_conninfo_connect (src, &src->conninfo, async) < 0) {
-        GST_ERROR_OBJECT (src, "could not connect");
+
+    if (g_strcmp0 (control, "*") != 0) {
+      if (control) {
+        g_free (src->conninfo.location);
+        src->conninfo.location = g_strdup (control);
+        /* make a connection for this, if there was a connection already, nothing
+         * happens. */
+        if (gst_rtsp_conninfo_connect (src, &src->conninfo, async) < 0) {
+          GST_ERROR_OBJECT (src, "could not connect");
+        }
       }
+      /* we need to keep the control url separate from the connection url because
+       * the rules for constructing the media control url need it */
+      g_free (src->control);
+      src->control = g_strdup (control);
     }
-    /* we need to keep the control url separate from the connection url because
-     * the rules for constructing the media control url need it */
-    g_free (src->control);
-    src->control = g_strdup (control);
   }
 
   /* create streams */
@@ -8227,7 +8414,7 @@ restart:
 
   if ((res =
           gst_rtspsrc_send (src, &src->conninfo, &request, &response,
-              NULL, versions)) < 0) {
+              NULL, versions, TRUE)) < 0) {
     goto send_error;
   }
 
@@ -8264,7 +8451,7 @@ restart:
 
   if ((res =
           gst_rtspsrc_send (src, &src->conninfo, &request, &response,
-              NULL, NULL)) < 0)
+              NULL, NULL, TRUE)) < 0)
     goto send_error;
 
   /* we only perform redirect for describe and play, currently */
@@ -8505,7 +8692,8 @@ gst_rtspsrc_close (GstRTSPSrc * src, gboolean async, gboolean only_close)
       GST_ELEMENT_PROGRESS (src, CONTINUE, "close", ("Closing stream"));
 
     if ((res =
-            gst_rtspsrc_send (src, info, &request, &response, NULL, NULL)) < 0)
+            gst_rtspsrc_send (src, info, &request, &response, NULL, NULL,
+                FALSE)) < 0)
       goto send_error;
 
     /* FIXME, parse result? */
@@ -8528,9 +8716,8 @@ close:
   }
 
   /* cleanup */
-  gst_rtspsrc_cleanup (src);
-
   src->state = GST_RTSP_STATE_INVALID;
+  gst_rtspsrc_cleanup (src);
 
   if (async)
     gst_rtspsrc_loop_end_cmd (src, CMD_CLOSE, res);
@@ -8953,7 +9140,8 @@ restart:
       GST_ELEMENT_PROGRESS (src, CONTINUE, "request", ("Sending PLAY request"));
 
     if ((res =
-            gst_rtspsrc_send (src, conninfo, &request, &response, NULL, NULL))
+            gst_rtspsrc_send (src, conninfo, &request, &response, NULL, NULL,
+                FALSE))
         < 0)
       goto send_error;
 
@@ -8998,12 +9186,6 @@ restart:
 
     gst_rtsp_message_unset (&request);
 
-    /* parse RTP npt field. This is the current position in the stream (Normal
-     * Play Time) and should be put in the NEWSEGMENT position field. */
-    if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RANGE, &hval,
-            0) == GST_RTSP_OK)
-      gst_rtspsrc_parse_range (src, hval, segment, FALSE);
-
     /* assume 1.0 rate now, overwrite when the SCALE or SPEED headers are present. */
     segment->rate = 1.0;
 
@@ -9016,6 +9198,12 @@ restart:
             &hval, 0) == GST_RTSP_OK) {
       segment->rate = gst_rtspsrc_get_float (hval);
     }
+
+    /* parse RTP npt field. This is the current position in the stream (Normal
+     * Play Time) and should be put in the NEWSEGMENT position field. */
+    if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RANGE, &hval,
+            0) == GST_RTSP_OK)
+      gst_rtspsrc_parse_range (src, hval, segment, FALSE);
 
     /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
      * for the RTP packets. If this is not present, we assume all starts from 0...
@@ -9065,7 +9253,6 @@ restart:
   src->need_range = FALSE;
 
   src->running = TRUE;
-  src->base_time = -1;
   src->state = GST_RTSP_STATE_PLAYING;
 
   /* mark discont */
@@ -9187,7 +9374,7 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean async)
 
     if ((res =
             gst_rtspsrc_send (src, conninfo, &request, &response, NULL,
-                NULL)) < 0)
+                NULL, FALSE)) < 0)
       goto send_error;
 
     gst_rtsp_message_unset (&request);
@@ -9454,8 +9641,10 @@ gst_rtspsrc_stop (GstRTSPSrc * src)
 
   GST_DEBUG_OBJECT (src, "stopping");
 
-  /* also cancels pending task */
-  gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, CMD_ALL);
+  /* If we've already started cleanup, we only need to stop the task */
+  if (src->state != GST_RTSP_STATE_INVALID)
+    /* also cancels pending task */
+    gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, CMD_ALL);
 
   GST_OBJECT_LOCK (src);
   if ((task = src->task)) {
@@ -9478,8 +9667,10 @@ gst_rtspsrc_stop (GstRTSPSrc * src)
   }
   GST_OBJECT_UNLOCK (src);
 
-  /* ensure synchronously all is closed and clean */
-  gst_rtspsrc_close (src, FALSE, TRUE);
+  /* ensure synchronously all is closed and clean if we haven't started
+   * cleanup yet */
+  if (src->state != GST_RTSP_STATE_INVALID)
+    gst_rtspsrc_close (src, FALSE, TRUE);
 
   return TRUE;
 }
@@ -9552,11 +9743,12 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       if (rtspsrc->is_live) {
         /* send pause request and keep the idle task around */
         gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_PAUSE, CMD_LOOP);
+        ret = GST_STATE_CHANGE_NO_PREROLL;
+      } else {
+        ret = GST_STATE_CHANGE_SUCCESS;
       }
-      ret = GST_STATE_CHANGE_SUCCESS;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      rtspsrc->seek_seqnum = GST_SEQNUM_INVALID;
       gst_rtspsrc_loop_send_cmd_and_wait (rtspsrc, CMD_CLOSE, CMD_ALL,
           rtspsrc->teardown_timeout);
       ret = GST_STATE_CHANGE_SUCCESS;
@@ -9791,7 +9983,7 @@ gst_rtspsrc_get_parameter (GstRTSPSrc * src, ParameterRequest * req)
   }
 
   if ((res = gst_rtspsrc_send (src, &src->conninfo,
-              &request, &response, &code, NULL)) < 0)
+              &request, &response, &code, NULL, FALSE)) < 0)
     goto send_error;
 
   res = gst_rtsp_message_get_body (&response, (guint8 **) & recv_body,
@@ -9911,7 +10103,7 @@ gst_rtspsrc_set_parameter (GstRTSPSrc * src, ParameterRequest * req)
   }
 
   if ((res = gst_rtspsrc_send (src, &src->conninfo,
-              &request, &response, &code, NULL)) < 0)
+              &request, &response, &code, NULL, FALSE)) < 0)
     goto send_error;
 
 done:

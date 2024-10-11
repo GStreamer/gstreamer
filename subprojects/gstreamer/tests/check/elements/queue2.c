@@ -715,6 +715,213 @@ GST_START_TEST (test_ready_paused_buffering_message)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GstBuffer *buffer;
+  GMutex lock;
+  GCond cond;
+  gboolean blocked;
+} FlushOnErrorData;
+
+static GstPadProbeReturn
+flush_on_error_block_probe (GstPad * pad, GstPadProbeInfo * info,
+    FlushOnErrorData * data)
+{
+  g_mutex_lock (&data->lock);
+  data->blocked = TRUE;
+  g_cond_signal (&data->cond);
+  g_mutex_unlock (&data->lock);
+
+  return GST_PAD_PROBE_OK;
+}
+
+static GstPadProbeReturn
+flush_on_error_probe (GstPad * pad, GstPadProbeInfo * info,
+    FlushOnErrorData * data)
+{
+  if (GST_IS_EVENT (GST_PAD_PROBE_INFO_DATA (info)))
+    return GST_PAD_PROBE_DROP;
+
+  g_mutex_lock (&data->lock);
+  data->buffer = GST_PAD_PROBE_INFO_BUFFER (info);
+  g_cond_signal (&data->cond);
+  g_mutex_unlock (&data->lock);
+
+  GST_PAD_PROBE_INFO_FLOW_RETURN (info) = GST_FLOW_ERROR;
+
+  return GST_PAD_PROBE_HANDLED;
+}
+
+static gpointer
+alloc_thread (GstBufferPool * pool)
+{
+  GstFlowReturn ret;
+  GstBuffer *buf;
+
+  /* This call will be blocked */
+  ret = gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
+  fail_unless (ret == GST_FLOW_OK);
+
+  gst_buffer_unref (buf);
+
+  return NULL;
+}
+
+GST_START_TEST (test_flush_on_error)
+{
+  GstElement *elem;
+  GstPad *sinkpad;
+  GstPad *srcpad;
+  GstSegment segment;
+  GstCaps *caps;
+  gboolean ret;
+  gulong block_id;
+  FlushOnErrorData data;
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstBuffer *buf;
+  GstFlowReturn flow_ret;
+  GThread *thread;
+
+  data.buffer = NULL;
+  data.blocked = FALSE;
+  g_mutex_init (&data.lock);
+  g_cond_init (&data.cond);
+
+  /* Setup bufferpool with max-buffers 2 */
+  caps = gst_caps_new_empty_simple ("foo/x-bar");
+  pool = gst_buffer_pool_new ();
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, 4, 0, 2);
+  gst_buffer_pool_set_config (pool, config);
+  gst_buffer_pool_set_active (pool, TRUE);
+
+  elem = gst_element_factory_make ("queue2", NULL);
+  gst_object_ref_sink (elem);
+  sinkpad = gst_element_get_static_pad (elem, "sink");
+  srcpad = gst_element_get_static_pad (elem, "src");
+
+  block_id = gst_pad_add_probe (srcpad,
+      GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) flush_on_error_block_probe, &data, NULL);
+  gst_pad_add_probe (srcpad,
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) flush_on_error_probe, &data, NULL);
+
+  fail_unless (gst_element_set_state (elem,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  ret = gst_pad_send_event (sinkpad,
+      gst_event_new_stream_start ("test-stream-start"));
+  fail_unless (ret);
+
+  ret = gst_pad_send_event (sinkpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+  fail_unless (ret);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  ret = gst_pad_send_event (sinkpad, gst_event_new_segment (&segment));
+  fail_unless (ret);
+
+  flow_ret = gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
+  fail_unless (flow_ret == GST_FLOW_OK);
+  GST_BUFFER_PTS (buf) = 0;
+  flow_ret = gst_pad_chain (sinkpad, buf);
+  fail_unless (flow_ret == GST_FLOW_OK);
+
+  flow_ret = gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
+  fail_unless (flow_ret == GST_FLOW_OK);
+  GST_BUFFER_PTS (buf) = GST_SECOND;
+  flow_ret = gst_pad_chain (sinkpad, buf);
+  fail_unless (flow_ret == GST_FLOW_OK);
+
+  /* Acquire buffer from other thread. The acquire_buffer() will be blocked
+   * due to max-buffers 2 */
+  thread = g_thread_new (NULL, (GThreadFunc) alloc_thread, pool);
+
+  g_mutex_lock (&data.lock);
+  while (!data.blocked)
+    g_cond_wait (&data.cond, &data.lock);
+  g_mutex_unlock (&data.lock);
+
+  gst_pad_remove_probe (srcpad, block_id);
+
+  /* Then now acquire thread can be unblocked since queue will flush
+   * internal queue on flow error */
+  g_thread_join (thread);
+
+  gst_element_set_state (elem, GST_STATE_NULL);
+  gst_clear_buffer (&data.buffer);
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_object_unref (pool);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+  gst_object_unref (elem);
+  g_mutex_clear (&data.lock);
+  g_cond_clear (&data.cond);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_time_level_before_output)
+{
+  GstElement *queue2;
+  GstPad *sinkpad;
+  GstPad *srcpad;
+  GstBuffer *buffer1;
+  GstBuffer *buffer2;
+  GstSegment segment;
+  GstClockTime time;
+  GstCaps *caps;
+
+  queue2 = gst_element_factory_make ("queue2", NULL);
+  g_object_set (queue2, "max-size-time", 5 * GST_SECOND, NULL);
+
+  sinkpad = gst_element_get_static_pad (queue2, "sink");
+  srcpad = gst_element_get_static_pad (queue2, "src");
+
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+      NULL, NULL, NULL);
+
+  fail_unless (gst_element_set_state (queue2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
+  caps = gst_caps_new_empty_simple ("foo/x-bar");
+  gst_pad_send_event (sinkpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_send_event (sinkpad, gst_event_new_segment (&segment));
+
+  buffer1 = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer1) = 25 * GST_SECOND;
+  GST_BUFFER_DURATION (buffer1) = GST_SECOND;
+  gst_pad_chain (sinkpad, buffer1);
+
+  /* Pushed 1 second duration buffer, should report 1 seconds */
+  g_object_get (queue2, "current-level-time", &time, NULL);
+  fail_unless_equals_int64 (time, GST_SECOND);
+
+  buffer2 = gst_buffer_new_and_alloc (4);
+  gst_pad_chain (sinkpad, buffer2);
+
+  /* Pushed with unknown duration, timelevel should not be changed */
+  g_object_get (queue2, "current-level-time", &time, NULL);
+  fail_unless_equals_int64 (time, GST_SECOND);
+
+  fail_unless (gst_element_set_state (queue2,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+  gst_object_unref (queue2);
+}
+
+GST_END_TEST;
+
 static Suite *
 queue2_suite (void)
 {
@@ -733,6 +940,8 @@ queue2_suite (void)
   tcase_add_test (tc_chain, test_small_ring_buffer);
   tcase_add_test (tc_chain, test_bitrate_query);
   tcase_add_test (tc_chain, test_ready_paused_buffering_message);
+  tcase_add_test (tc_chain, test_flush_on_error);
+  tcase_add_test (tc_chain, test_time_level_before_output);
 
   return s;
 }

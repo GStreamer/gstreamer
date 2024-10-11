@@ -39,12 +39,6 @@ struct _GstAmcSurfaceTextureML
 G_DEFINE_TYPE (GstAmcSurfaceTextureML, gst_amc_surface_texture_ml,
     GST_TYPE_AMC_SURFACE_TEXTURE);
 
-gboolean
-gst_amc_surface_texture_static_init (void)
-{
-  return TRUE;
-}
-
 static gboolean
 gst_amc_surface_texture_ml_update_tex_image (GstAmcSurfaceTexture * base,
     GError ** err)

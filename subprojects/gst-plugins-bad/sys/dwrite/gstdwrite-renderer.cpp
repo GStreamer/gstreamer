@@ -31,16 +31,23 @@ GST_DEBUG_CATEGORY_EXTERN (gst_dwrite_debug);
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 
+enum class RenderPath
+{
+  BACKGROUND,
+  TEXT,
+};
+
 struct RenderContext
 {
-  gboolean collect_geometry;
-  std::vector<ComPtr<ID2D1Geometry>> backgrounds;
-  D2D1_RECT_F background_padding = D2D1::RectF ();
+  RenderPath render_path;
   ID2D1Factory *factory;
   ID2D1RenderTarget *target;
   RECT client_rect;
-  D2D1_SIZE_F scale;
-  gboolean enable_color_font;
+  std::vector<DWRITE_LINE_METRICS> line_metrics;
+  UINT line_index = 0;
+  UINT char_index = 0;
+  ComPtr<ID2D1Geometry> bg_rect;
+  D2D1_COLOR_F bg_color = D2D1::ColorF (D2D1::ColorF::Black, 0.0);
 };
 /* *INDENT-ON* */
 
@@ -80,38 +87,6 @@ CombineTwoGeometries (ID2D1Factory * factory, ID2D1Geometry * a,
   *result = geometry.Detach ();
 
   return S_OK;
-}
-
-static void
-CombineGeometries (ID2D1Factory * factory,
-    std::vector < ComPtr < ID2D1Geometry >> &geometries,
-    ID2D1Geometry ** result)
-{
-  ComPtr < ID2D1Geometry > combined;
-  HRESULT hr;
-
-  if (geometries.empty ())
-    return;
-
-  /* *INDENT-OFF* */
-  for (const auto & it: geometries) {
-    if (!combined) {
-      combined = it;
-    } else {
-      ComPtr <ID2D1Geometry> tmp;
-      hr = CombineTwoGeometries (factory, it.Get (), combined.Get (), &tmp);
-      if (FAILED (hr))
-        return;
-
-      combined = tmp;
-    }
-  }
-  /* *INDENT-ON* */
-
-  if (!combined)
-    return;
-
-  *result = combined.Detach ();
 }
 
 STDMETHODIMP
@@ -227,6 +202,7 @@ STDMETHODIMP
   HRESULT hr;
   RECT client_rect;
   D2D1_COLOR_F fg_color = D2D1::ColorF (D2D1::ColorF::Black);
+  BOOL enable_color_font = FALSE;
 
   g_assert (context != nullptr);
 
@@ -234,6 +210,94 @@ STDMETHODIMP
   client_rect = render_ctx->client_rect;
   target = render_ctx->target;
   factory = render_ctx->factory;
+
+  if (client_effect)
+    client_effect->QueryInterface (IID_IGstDWriteTextEffect, &effect);
+
+  if (render_ctx->render_path == RenderPath::BACKGROUND) {
+    D2D1_COLOR_F color;
+    BOOL enabled;
+    DWRITE_FONT_METRICS font_metrics;
+    FLOAT run_width = 0;
+    FLOAT adjust, ascent, descent;
+    D2D1_RECT_F bg_rect;
+    ComPtr < ID2D1SolidColorBrush > bg_brush;
+    DWRITE_LINE_METRICS line_metrics =
+        render_ctx->line_metrics.at (render_ctx->line_index);
+
+    if (effect &&
+        render_ctx->char_index + line_metrics.trailingWhitespaceLength <
+        line_metrics.length) {
+      effect->GetBrushColor (GST_DWRITE_BRUSH_BACKGROUND, &color, &enabled);
+      if (enabled) {
+        ComPtr < ID2D1RectangleGeometry > rect_geometry;
+        ComPtr < ID2D1PathGeometry > path_geometry;
+        ComPtr < ID2D1GeometrySink > path_sink;
+
+        for (UINT32 i = 0; i < glyph_run->glyphCount; i++)
+          run_width += glyph_run->glyphAdvances[i];
+
+        glyph_run->fontFace->GetMetrics (&font_metrics);
+        adjust = glyph_run->fontEmSize / font_metrics.designUnitsPerEm;
+        ascent = adjust * font_metrics.ascent;
+        descent = adjust * font_metrics.descent;
+
+        bg_rect =
+            D2D1::RectF (origin_x, origin_y - ascent, origin_x + run_width,
+            origin_y + descent);
+
+        hr = factory->CreateRectangleGeometry (bg_rect, &rect_geometry);
+        if (FAILED (hr))
+          return hr;
+
+        hr = factory->CreatePathGeometry (&path_geometry);
+        if (FAILED (hr))
+          return hr;
+
+        hr = path_geometry->Open (&path_sink);
+        if (FAILED (hr))
+          return hr;
+
+        hr = rect_geometry->Outline (nullptr, path_sink.Get ());
+        if (FAILED (hr))
+          return hr;
+
+        path_sink->Close ();
+
+        if (render_ctx->bg_rect) {
+          if (render_ctx->bg_color.r == color.r &&
+              render_ctx->bg_color.g == color.g &&
+              render_ctx->bg_color.b == color.b &&
+              render_ctx->bg_color.a == color.a) {
+            ComPtr < ID2D1Geometry > combined;
+            hr = CombineTwoGeometries (factory,
+                render_ctx->bg_rect.Get (), path_geometry.Get (), &combined);
+            if (FAILED (hr))
+              return hr;
+
+            render_ctx->bg_rect = combined;
+          } else {
+            target->CreateSolidColorBrush (render_ctx->bg_color, &bg_brush);
+            target->FillGeometry (render_ctx->bg_rect.Get (), bg_brush.Get ());
+            render_ctx->bg_rect = nullptr;
+          }
+        }
+
+        if (!render_ctx->bg_rect) {
+          render_ctx->bg_rect = path_geometry;
+          render_ctx->bg_color = color;
+        }
+      }
+    }
+
+    render_ctx->char_index += glyph_run_desc->stringLength;
+    if (render_ctx->char_index >= line_metrics.length) {
+      render_ctx->line_index++;
+      render_ctx->char_index = 0;
+    }
+
+    return S_OK;
+  }
 
   hr = factory->CreatePathGeometry (&geometry);
   if (FAILED (hr))
@@ -254,93 +318,46 @@ STDMETHODIMP
   sink->Close ();
 
   hr = factory->CreateTransformedGeometry (geometry.Get (),
-      D2D1::Matrix3x2F::Translation (origin_x, origin_y) *
-      D2D1::Matrix3x2F::Scale (render_ctx->scale), &transformed);
+      D2D1::Matrix3x2F::Translation (origin_x, origin_y), &transformed);
 
   if (FAILED (hr))
     return hr;
-
-  /* Create new path geometry from the bound rect.
-   * Note that rect geometry cannot be used since the combined background
-   * geometry might not be represented as a single rectangle */
-  if (render_ctx->collect_geometry) {
-    D2D1_RECT_F bounds;
-    ComPtr < ID2D1RectangleGeometry > rect_geometry;
-    ComPtr < ID2D1PathGeometry > path_geometry;
-    ComPtr < ID2D1GeometrySink > path_sink;
-
-    hr = transformed->GetBounds (nullptr, &bounds);
-    if (FAILED (hr))
-      return hr;
-
-    bounds.left += render_ctx->background_padding.left;
-    bounds.right += render_ctx->background_padding.right;
-    bounds.top += render_ctx->background_padding.top;
-    bounds.bottom += render_ctx->background_padding.bottom;
-
-    bounds.left = MAX (bounds.left, (FLOAT) client_rect.left);
-    bounds.right = MIN (bounds.right, (FLOAT) client_rect.right);
-    bounds.top = MAX (bounds.top, (FLOAT) client_rect.top);
-    bounds.bottom = MIN (bounds.bottom, (FLOAT) client_rect.bottom);
-
-    hr = factory->CreateRectangleGeometry (bounds, &rect_geometry);
-    if (FAILED (hr))
-      return hr;
-
-    hr = factory->CreatePathGeometry (&path_geometry);
-    if (FAILED (hr))
-      return hr;
-
-    hr = path_geometry->Open (&path_sink);
-    if (FAILED (hr))
-      return hr;
-
-    hr = rect_geometry->Outline (nullptr, path_sink.Get ());
-    if (FAILED (hr))
-      return hr;
-
-    path_sink->Close ();
-    render_ctx->backgrounds.push_back (path_geometry);
-
-    return S_OK;
-  }
-
-  if (client_effect)
-    client_effect->QueryInterface (IID_IGstDWriteTextEffect, &effect);
 
   if (effect) {
     D2D1_COLOR_F color;
     BOOL enabled;
 
-    effect->GetBrushColor (GST_DWRITE_BRUSH_TEXT, &color, &enabled);
+    effect->GetBrushColor (GST_DWRITE_BRUSH_FORGROUND, &color, &enabled);
     if (enabled) {
       target->CreateSolidColorBrush (color, &brush);
       fg_color = color;
     }
 
-    effect->GetBrushColor (GST_DWRITE_BRUSH_TEXT_OUTLINE, &color, &enabled);
+    effect->GetBrushColor (GST_DWRITE_BRUSH_OUTLINE, &color, &enabled);
     if (enabled)
       target->CreateSolidColorBrush (color, &outline_brush);
 
     effect->GetBrushColor (GST_DWRITE_BRUSH_SHADOW, &color, &enabled);
     if (enabled)
       target->CreateSolidColorBrush (color, &shadow_brush);
+
+    effect->GetEnableColorFont (&enable_color_font);
   } else {
     target->CreateSolidColorBrush (D2D1::ColorF (D2D1::ColorF::Black), &brush);
     outline_brush = brush;
   }
 
 #ifdef HAVE_DWRITE_COLOR_FONT
-  if (render_ctx->enable_color_font) {
+  if (enable_color_font) {
     const DWRITE_GLYPH_IMAGE_FORMATS supported_formats =
-        DWRITE_GLYPH_IMAGE_FORMATS_TRUETYPE |
+        (DWRITE_GLYPH_IMAGE_FORMATS) (DWRITE_GLYPH_IMAGE_FORMATS_TRUETYPE |
         DWRITE_GLYPH_IMAGE_FORMATS_CFF |
         DWRITE_GLYPH_IMAGE_FORMATS_COLR |
         DWRITE_GLYPH_IMAGE_FORMATS_SVG |
         DWRITE_GLYPH_IMAGE_FORMATS_PNG |
         DWRITE_GLYPH_IMAGE_FORMATS_JPEG |
         DWRITE_GLYPH_IMAGE_FORMATS_TIFF |
-        DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8;
+        DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8);
 
     ComPtr < IDWriteColorGlyphRunEnumerator1 > glyph_run_enum;
     ComPtr < IDWriteFactory4 > factory4;
@@ -422,10 +439,10 @@ STDMETHODIMP
 #endif /* HAVE_DWRITE_COLOR_FONT */
 
   if (shadow_brush) {
-    /* TODO: do we want to make this shadow configurable ? */
+    FLOAT adjust = glyph_run->fontEmSize * 0.06;
     hr = factory->CreateTransformedGeometry (geometry.Get (),
-        D2D1::Matrix3x2F::Translation (origin_x + 1.5, origin_y + 1.5) *
-        D2D1::Matrix3x2F::Scale (render_ctx->scale), &shadow_transformed);
+        D2D1::Matrix3x2F::Translation (origin_x + adjust, origin_y + adjust),
+        &shadow_transformed);
 
     if (FAILED (hr))
       return hr;
@@ -451,7 +468,6 @@ STDMETHODIMP
   ComPtr < ID2D1TransformedGeometry > transformed;
   ComPtr < IGstDWriteTextEffect > effect;
   ComPtr < ID2D1SolidColorBrush > brush;
-  ComPtr < ID2D1SolidColorBrush > outline_brush;
   RenderContext *render_ctx;
   ID2D1RenderTarget *target;
   ID2D1Factory *factory;
@@ -460,7 +476,7 @@ STDMETHODIMP
   g_assert (context != nullptr);
 
   render_ctx = (RenderContext *) context;
-  if (render_ctx->collect_geometry)
+  if (render_ctx->render_path == RenderPath::BACKGROUND)
     return S_OK;
 
   target = render_ctx->target;
@@ -475,8 +491,7 @@ STDMETHODIMP
   }
 
   hr = factory->CreateTransformedGeometry (geometry.Get (),
-      D2D1::Matrix3x2F::Translation (origin_x, origin_y) *
-      D2D1::Matrix3x2F::Scale (render_ctx->scale), &transformed);
+      D2D1::Matrix3x2F::Translation (origin_x, origin_y), &transformed);
   if (FAILED (hr)) {
     GST_WARNING ("Couldn't create transformed geometry, 0x%x", (guint) hr);
     return hr;
@@ -492,18 +507,9 @@ STDMETHODIMP
     effect->GetBrushColor (GST_DWRITE_BRUSH_UNDERLINE, &color, &enabled);
     if (enabled)
       target->CreateSolidColorBrush (color, &brush);
-
-    effect->GetBrushColor (GST_DWRITE_BRUSH_UNDERLINE_OUTLINE, &color,
-        &enabled);
-    if (enabled)
-      target->CreateSolidColorBrush (color, &outline_brush);
   } else {
     target->CreateSolidColorBrush (D2D1::ColorF (D2D1::ColorF::Black), &brush);
-    outline_brush = brush;
   }
-
-  if (outline_brush)
-    target->DrawGeometry (transformed.Get (), outline_brush.Get ());
 
   if (brush)
     target->FillGeometry (transformed.Get (), brush.Get ());
@@ -520,7 +526,6 @@ STDMETHODIMP
   ComPtr < ID2D1TransformedGeometry > transformed;
   ComPtr < IGstDWriteTextEffect > effect;
   ComPtr < ID2D1SolidColorBrush > brush;
-  ComPtr < ID2D1SolidColorBrush > outline_brush;
   RenderContext *render_ctx;
   ID2D1RenderTarget *target;
   ID2D1Factory *factory;
@@ -529,7 +534,7 @@ STDMETHODIMP
   g_assert (context != nullptr);
 
   render_ctx = (RenderContext *) context;
-  if (render_ctx->collect_geometry)
+  if (render_ctx->render_path == RenderPath::BACKGROUND)
     return S_OK;
 
   target = render_ctx->target;
@@ -545,8 +550,7 @@ STDMETHODIMP
   }
 
   hr = factory->CreateTransformedGeometry (geometry.Get (),
-      D2D1::Matrix3x2F::Translation (origin_x, origin_y) *
-      D2D1::Matrix3x2F::Scale (render_ctx->scale), &transformed);
+      D2D1::Matrix3x2F::Translation (origin_x, origin_y), &transformed);
 
   if (FAILED (hr)) {
     GST_WARNING ("Couldn't create transformed geometry, 0x%x", (guint) hr);
@@ -563,18 +567,9 @@ STDMETHODIMP
     effect->GetBrushColor (GST_DWRITE_BRUSH_STRIKETHROUGH, &color, &enabled);
     if (enabled)
       target->CreateSolidColorBrush (color, &brush);
-
-    effect->GetBrushColor (GST_DWRITE_BRUSH_STRIKETHROUGH_OUTLINE, &color,
-        &enabled);
-    if (enabled)
-      target->CreateSolidColorBrush (color, &outline_brush);
   } else {
     target->CreateSolidColorBrush (D2D1::ColorF (D2D1::ColorF::Black), &brush);
-    outline_brush = brush;
   }
-
-  if (outline_brush)
-    target->DrawGeometry (transformed.Get (), outline_brush.Get ());
 
   if (brush)
     target->FillGeometry (transformed.Get (), brush.Get ());
@@ -602,54 +597,48 @@ IGstDWriteTextRenderer::~IGstDWriteTextRenderer (void)
 
 STDMETHODIMP
     IGstDWriteTextRenderer::Draw (const D2D1_POINT_2F & origin,
-    const D2D1_SIZE_F & scale, const RECT & client_rect,
-    const D2D1_COLOR_F & background_color,
-    const D2D1_RECT_F & background_padding,
-    gboolean enable_color_font,
-    IDWriteTextLayout * layout, ID2D1RenderTarget * target)
+    const RECT & client_rect, IDWriteTextLayout * layout,
+    ID2D1RenderTarget * target)
 {
   HRESULT hr;
   RenderContext context;
   ComPtr < ID2D1Factory > d2d_factory;
+  UINT32 num_lines = 0;
 
   g_return_val_if_fail (layout != nullptr, E_INVALIDARG);
   g_return_val_if_fail (target != nullptr, E_INVALIDARG);
 
+  hr = layout->GetLineMetrics (nullptr, 0, &num_lines);
+  if (hr != E_NOT_SUFFICIENT_BUFFER)
+    return hr;
+
+  context.line_metrics.resize (num_lines);
+  hr = layout->GetLineMetrics (&context.line_metrics[0],
+      context.line_metrics.size (), &num_lines);
+  if (FAILED (hr))
+    return hr;
+
   target->GetFactory (&d2d_factory);
+  context.render_path = RenderPath::BACKGROUND;
   context.client_rect = client_rect;
   context.target = target;
   context.factory = d2d_factory.Get ();
-  context.scale = scale;
-  context.enable_color_font = enable_color_font;
 
-  if (IGstDWriteTextEffect::IsEnabledColor (background_color)) {
-    ComPtr < ID2D1Geometry > geometry;
+  hr = layout->Draw (&context, this, origin.x, origin.y);
 
-    context.collect_geometry = TRUE;
-    context.background_padding = background_padding;
-
-    hr = layout->Draw (&context, this, origin.x, origin.y);
-    if (FAILED (hr)) {
-      GST_WARNING ("Couldn't draw layout for collecting geometry, 0x%x",
-          (guint) hr);
-      return hr;
-    }
-
-    CombineGeometries (d2d_factory.Get (), context.backgrounds, &geometry);
-    if (geometry) {
-      ComPtr < ID2D1SolidColorBrush > brush;
-      hr = target->CreateSolidColorBrush (background_color, &brush);
-      if (FAILED (hr)) {
-        GST_WARNING ("Couldn't create solid brush, 0x%x", (guint) hr);
-        return hr;
-      }
-
-      target->FillGeometry (geometry.Get (), brush.Get ());
-    }
+  if (FAILED (hr)) {
+    GST_WARNING ("Background Draw failed with 0x%x", (guint) hr);
+    return hr;
   }
 
-  context.collect_geometry = FALSE;
+  if (context.bg_rect) {
+    ComPtr < ID2D1SolidColorBrush > bg_brush;
+    target->CreateSolidColorBrush (context.bg_color, &bg_brush);
+    target->FillGeometry (context.bg_rect.Get (), bg_brush.Get ());
+    context.bg_rect = nullptr;
+  }
 
+  context.render_path = RenderPath::TEXT;
   hr = layout->Draw (&context, this, origin.x, origin.y);
 
   if (FAILED (hr)) {

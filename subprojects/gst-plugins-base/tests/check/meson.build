@@ -10,6 +10,7 @@ base_tests = [
   [ 'libs/audiosink.c' ],
   [ 'libs/baseaudiovisualizer.c' ],
   [ 'libs/discoverer.c' ],
+  [ 'libs/dsd.c' ],
   [ 'libs/fft.c' ],
   [ 'libs/libsabi.c', false, [ gstgl_dep, gstglx11_dep, gstglwayland_dep, gstglegl_dep ] ],
   [ 'libs/mikey.c' ],
@@ -73,7 +74,7 @@ if host_machine.system() != 'windows'
     [ 'elements/multisocketsink.c', not core_conf.has('HAVE_SYS_SOCKET_H') or not core_conf.has('HAVE_UNISTD_H') ],
     [ 'elements/playbin-complex.c', not ogg_dep.found() ],
     [ 'elements/textoverlay.c', not pango_dep.found() ],
-    [ 'elements/theoradec.c', not ogg_dep.found() and theoradec_dep.found() ],
+    [ 'elements/theoradec.c', not ogg_dep.found() or not theoradec_dep.found() ],
     [ 'elements/vorbisdec.c', not vorbis_dep.found(), [ vorbis_dep, vorbisenc_dep ] ],
     [ 'elements/vorbistag.c', not vorbisenc_dep.found(), [ vorbis_dep, vorbisenc_dep ] ],
     [ 'pipelines/oggmux.c', not ogg_dep.found(), [ ogg_dep, ] ],
@@ -118,19 +119,15 @@ if have_cxx
   ]
 endif
 
+fsmod = import('fs')
 test_defines = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
   '-DGST_CHECK_TEST_ENVIRONMENT_BEACON="GST_PLUGIN_LOADING_WHITELIST"',
-  '-DGST_TEST_FILES_PATH="' + meson.current_source_dir() + '/../files"',
-  '-DGST_TEST_FILE="' + meson.current_source_dir() + '/../files/partialframe.mjpeg"', # for libs/discoverer
+  '-DGST_TEST_FILES_PATH="' + fsmod.as_posix(meson.current_source_dir()) + '/../files"',
+  '-DGST_TEST_FILE="' + fsmod.as_posix(meson.current_source_dir()) + '/../files/partialframe.mjpeg"', # for libs/discoverer
   '-DGST_USE_UNSTABLE_API',
 ]
-
-valgrind_dep = dependency('valgrind', required: false)
-if valgrind_dep.found()
-  test_defines += ['-DHAVE_VALGRIND']
-endif
 
 if build_gstgl
   test_defines += ['-DTEST_GST_GL_ABI_CHECK']

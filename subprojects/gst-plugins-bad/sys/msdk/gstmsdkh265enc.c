@@ -234,118 +234,12 @@ gst_msdkh265enc_add_cc (GstMsdkH265Enc * thiz, GstVideoCodecFrame * frame)
   gst_memory_unref (mem);
 }
 
-static void
-gst_msdkh265enc_add_mdcv_sei (GstMsdkEnc * encoder, GstVideoCodecFrame * frame)
-{
-  GstMsdkH265Enc *thiz = GST_MSDKH265ENC (encoder);
-  GstVideoMasteringDisplayInfo *mastering_display_info
-      = encoder->input_state->mastering_display_info;
-  GstH265SEIMessage sei;
-  GstH265MasteringDisplayColourVolume *mdcv;
-  GstMemory *mem = NULL;
-  guint i = 0;
-
-  memset (&sei, 0, sizeof (GstH265SEIMessage));
-  sei.payloadType = GST_H265_SEI_MASTERING_DISPLAY_COLOUR_VOLUME;
-  mdcv = &sei.payload.mastering_display_colour_volume;
-
-  for (i = 0; i < 3; i++) {
-    mdcv->display_primaries_x[i] =
-        mastering_display_info->display_primaries[i].x;
-    mdcv->display_primaries_y[i] =
-        mastering_display_info->display_primaries[i].y;
-  }
-
-  mdcv->white_point_x = mastering_display_info->white_point.x;
-  mdcv->white_point_y = mastering_display_info->white_point.y;
-  mdcv->max_display_mastering_luminance =
-      mastering_display_info->max_display_mastering_luminance;
-  mdcv->min_display_mastering_luminance =
-      mastering_display_info->min_display_mastering_luminance;
-
-  if (!thiz->cc_sei_array)
-    thiz->cc_sei_array = g_array_new (FALSE, FALSE, sizeof (GstH265SEIMessage));
-  else
-    g_array_set_size (thiz->cc_sei_array, 0);
-
-  g_array_append_val (thiz->cc_sei_array, sei);
-
-  if (!thiz->cc_sei_array || !thiz->cc_sei_array->len)
-    return;
-
-  /* layer_id and temporal_id will be updated by parser later */
-  mem = gst_h265_create_sei_memory (0, 1, 4, thiz->cc_sei_array);
-
-  if (!mem) {
-    GST_WARNING_OBJECT (thiz, "Cannot create SEI nal unit");
-    return;
-  }
-
-  GST_DEBUG_OBJECT (thiz,
-      "Inserting %d mastering display colout volume SEI message(s)",
-      thiz->cc_sei_array->len);
-
-  gst_msdkh265enc_insert_sei (thiz, frame, mem);
-  gst_memory_unref (mem);
-}
-
-static void
-gst_msdkh265enc_add_cll_sei (GstMsdkEnc * encoder, GstVideoCodecFrame * frame)
-{
-  GstMsdkH265Enc *thiz = GST_MSDKH265ENC (encoder);
-  GstVideoContentLightLevel *content_light_level
-      = encoder->input_state->content_light_level;
-  GstH265ContentLightLevel *cll;
-  GstH265SEIMessage sei;
-  GstMemory *mem = NULL;
-
-  memset (&sei, 0, sizeof (GstH265SEIMessage));
-  sei.payloadType = GST_H265_SEI_CONTENT_LIGHT_LEVEL;
-  cll = &sei.payload.content_light_level;
-
-  cll->max_content_light_level = content_light_level->max_content_light_level;
-  cll->max_pic_average_light_level =
-      content_light_level->max_frame_average_light_level;
-
-  if (!thiz->cc_sei_array)
-    thiz->cc_sei_array = g_array_new (FALSE, FALSE, sizeof (GstH265SEIMessage));
-  else
-    g_array_set_size (thiz->cc_sei_array, 0);
-
-  g_array_append_val (thiz->cc_sei_array, sei);
-
-  if (!thiz->cc_sei_array || !thiz->cc_sei_array->len)
-    return;
-
-  /* layer_id and temporal_id will be updated by parser later */
-  mem = gst_h265_create_sei_memory (0, 1, 4, thiz->cc_sei_array);
-
-  if (!mem) {
-    GST_WARNING_OBJECT (thiz, "Cannot create SEI nal unit");
-    return;
-  }
-
-  GST_DEBUG_OBJECT (thiz,
-      "Inserting %d content light level SEI message(s)",
-      thiz->cc_sei_array->len);
-
-  gst_msdkh265enc_insert_sei (thiz, frame, mem);
-  gst_memory_unref (mem);
-}
-
 static GstFlowReturn
 gst_msdkh265enc_pre_push (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
 {
   GstMsdkH265Enc *thiz = GST_MSDKH265ENC (encoder);
-  GstMsdkEnc *msdk_encoder = GST_MSDKENC (encoder);
 
   gst_msdkh265enc_add_cc (thiz, frame);
-
-  if (msdk_encoder->input_state->mastering_display_info)
-    gst_msdkh265enc_add_mdcv_sei (msdk_encoder, frame);
-
-  if (msdk_encoder->input_state->content_light_level)
-    gst_msdkh265enc_add_cll_sei (msdk_encoder, frame);
 
   return GST_FLOW_OK;
 }
@@ -394,6 +288,67 @@ gst_msdkh265enc_set_format (GstMsdkEnc * encoder)
   return TRUE;
 }
 
+static void
+_get_hdr_sei (GstMsdkEnc * encoder)
+{
+  GstVideoCodecState *state;
+  GstVideoMasteringDisplayInfo mdcv_info;
+  GstVideoContentLightLevel cll_info;
+  GstMsdkH265Enc *h265enc = GST_MSDKH265ENC (encoder);
+  const guint chroma_den = 50000;
+  const guint luma_den = 10000;
+
+  h265enc->have_mdcv = h265enc->have_cll = FALSE;
+  state = encoder->input_state;
+  if (gst_video_mastering_display_info_from_caps (&mdcv_info, state->caps)) {
+    memset (&h265enc->mdcv, 0, sizeof (mfxExtMasteringDisplayColourVolume));
+    h265enc->mdcv.Header.BufferId = MFX_EXTBUFF_MASTERING_DISPLAY_COLOUR_VOLUME;
+    h265enc->mdcv.Header.BufferSz = sizeof (mfxExtMasteringDisplayColourVolume);
+    h265enc->mdcv.InsertPayloadToggle = MFX_PAYLOAD_IDR;
+
+    /* According to HEVC spec, display primaries order is G,B,R */
+    h265enc->mdcv.DisplayPrimariesX[0] =
+        MIN ((mdcv_info.display_primaries[1].x * chroma_den), chroma_den);
+    h265enc->mdcv.DisplayPrimariesY[0] =
+        MIN ((mdcv_info.display_primaries[1].y * chroma_den), chroma_den);
+    h265enc->mdcv.DisplayPrimariesX[1] =
+        MIN ((mdcv_info.display_primaries[2].x * chroma_den), chroma_den);
+    h265enc->mdcv.DisplayPrimariesY[1] =
+        MIN ((mdcv_info.display_primaries[2].y * chroma_den), chroma_den);
+    h265enc->mdcv.DisplayPrimariesX[2] =
+        MIN ((mdcv_info.display_primaries[0].x * chroma_den), chroma_den);
+    h265enc->mdcv.DisplayPrimariesY[2] =
+        MIN ((mdcv_info.display_primaries[0].y * chroma_den), chroma_den);
+
+    h265enc->mdcv.WhitePointX =
+        MIN ((mdcv_info.white_point.x * chroma_den), chroma_den);
+    h265enc->mdcv.WhitePointY =
+        MIN ((mdcv_info.white_point.y * chroma_den), chroma_den);
+
+    h265enc->mdcv.MaxDisplayMasteringLuminance =
+        mdcv_info.max_display_mastering_luminance * luma_den;
+    h265enc->mdcv.MinDisplayMasteringLuminance =
+        MIN ((mdcv_info.min_display_mastering_luminance * luma_den),
+        h265enc->mdcv.MaxDisplayMasteringLuminance);
+    h265enc->have_mdcv = TRUE;
+  }
+
+  if (gst_video_content_light_level_from_caps (&cll_info, state->caps)) {
+    memset (&h265enc->cll, 0, sizeof (mfxExtContentLightLevelInfo));
+    h265enc->cll.Header.BufferId = MFX_EXTBUFF_CONTENT_LIGHT_LEVEL_INFO;
+    h265enc->cll.Header.BufferSz = sizeof (mfxExtContentLightLevelInfo);
+    h265enc->cll.InsertPayloadToggle = MFX_PAYLOAD_IDR;
+
+    h265enc->cll.MaxContentLightLevel =
+        MIN (cll_info.max_content_light_level, 65535);
+    h265enc->cll.MaxPicAverageLightLevel =
+        MIN (cll_info.max_frame_average_light_level, 65535);
+    h265enc->have_cll = TRUE;
+  }
+
+  return;
+}
+
 static gboolean
 gst_msdkh265enc_configure (GstMsdkEnc * encoder)
 {
@@ -416,11 +371,11 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
   if (h265enc->profile_name) {
     encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN;
 
-    if (!strcmp (h265enc->profile_name, "main-10"))
+    if (!g_strcmp0 (h265enc->profile_name, "main-10"))
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN10;
-    else if (!strcmp (h265enc->profile_name, "main-still-picture"))
+    else if (!g_strcmp0 (h265enc->profile_name, "main-still-picture"))
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAINSP;
-    else if (!strcmp (h265enc->profile_name, "main-10-still-picture")) {
+    else if (!g_strcmp0 (h265enc->profile_name, "main-10-still-picture")) {
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN10;
       h265enc->ext_param.Header.BufferId = MFX_EXTBUFF_HEVC_PARAM;
       h265enc->ext_param.Header.BufferSz = sizeof (h265enc->ext_param);
@@ -428,17 +383,18 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
           MFX_HEVC_CONSTR_REXT_ONE_PICTURE_ONLY;
       gst_msdkenc_add_extra_param (encoder,
           (mfxExtBuffer *) & h265enc->ext_param);
-    } else if (!strcmp (h265enc->profile_name, "main-444") ||
-        !strcmp (h265enc->profile_name, "main-422-10") ||
-        !strcmp (h265enc->profile_name, "main-444-10") ||
-        !strcmp (h265enc->profile_name, "main-12"))
+    } else if (!g_strcmp0 (h265enc->profile_name, "main-444") ||
+        !g_strcmp0 (h265enc->profile_name, "main-422-10") ||
+        !g_strcmp0 (h265enc->profile_name, "main-444-10") ||
+        !g_strcmp0 (h265enc->profile_name, "main-12") ||
+        !g_strcmp0 (h265enc->profile_name, "main-422-12"))
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;
 
 #if (MFX_VERSION >= 1032)
-    else if (!strcmp (h265enc->profile_name, "screen-extended-main") ||
-        !strcmp (h265enc->profile_name, "screen-extended-main-10") ||
-        !strcmp (h265enc->profile_name, "screen-extended-main-444") ||
-        !strcmp (h265enc->profile_name, "screen-extended-main-444-10"))
+    else if (!g_strcmp0 (h265enc->profile_name, "screen-extended-main") ||
+        !g_strcmp0 (h265enc->profile_name, "screen-extended-main-10") ||
+        !g_strcmp0 (h265enc->profile_name, "screen-extended-main-444") ||
+        !g_strcmp0 (h265enc->profile_name, "screen-extended-main-444-10"))
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_SCC;
 #endif
   } else {
@@ -455,6 +411,7 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
 #endif
 #if (MFX_VERSION >= 1031)
       case MFX_FOURCC_P016:
+      case MFX_FOURCC_Y216:
 #endif
         encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;
         break;
@@ -542,6 +499,13 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
   }
 
   encoder->param.mfx.LowPower = h265enc->tune_mode;
+
+  /* Set HDR SEI */
+  _get_hdr_sei (encoder);
+  if (h265enc->have_mdcv)
+    gst_msdkenc_add_extra_param (encoder, (mfxExtBuffer *) & h265enc->mdcv);
+  if (h265enc->have_cll)
+    gst_msdkenc_add_extra_param (encoder, (mfxExtBuffer *) & h265enc->cll);
 
   return TRUE;
 }
@@ -636,6 +600,10 @@ gst_msdkh265enc_set_src_caps (GstMsdkEnc * encoder)
         gst_structure_set (structure, "profile", G_TYPE_STRING, "main-12",
             NULL);
         break;
+      case MFX_FOURCC_Y216:
+        gst_structure_set (structure, "profile", G_TYPE_STRING, "main-422-12",
+            NULL);
+        break;
 #endif
       default:
         gst_structure_set (structure, "profile", G_TYPE_STRING, "main", NULL);
@@ -669,6 +637,7 @@ static void
 gst_msdkh265enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GstMsdkEnc *enc = GST_MSDKENC (object);
   GstMsdkH265Enc *thiz = GST_MSDKH265ENC (object);
 
   if (gst_msdkenc_set_common_property (object, prop_id, value, pspec))
@@ -725,15 +694,24 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
       break;
 
     case PROP_MIN_QP_I:
-      thiz->min_qp_i = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->min_qp_i,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed min-qp-i to %u", thiz->min_qp_i);
+      }
       break;
 
     case PROP_MIN_QP_P:
-      thiz->min_qp_p = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->min_qp_p,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed min-qp-p to %u", thiz->min_qp_p);
+      }
       break;
 
     case PROP_MIN_QP_B:
-      thiz->min_qp_b = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->min_qp_b,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed min-qp-b to %u", thiz->min_qp_b);
+      }
       break;
 
     case PROP_MAX_QP:
@@ -742,31 +720,56 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
       break;
 
     case PROP_MAX_QP_I:
-      thiz->max_qp_i = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->max_qp_i,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-qp-i to %u", thiz->max_qp_i);
+      }
       break;
 
     case PROP_MAX_QP_P:
-      thiz->max_qp_p = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->max_qp_p,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-qp-p to %u", thiz->max_qp_p);
+      }
       break;
 
     case PROP_MAX_QP_B:
-      thiz->max_qp_b = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->max_qp_b,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-qp-b to %u", thiz->max_qp_b);
+      }
       break;
 
     case PROP_INTRA_REFRESH_TYPE:
-      thiz->intra_refresh_type = g_value_get_enum (value);
+      if (check_update_property_uint (enc, &thiz->intra_refresh_type,
+              g_value_get_enum (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed intra-refresh-type to %u",
+            thiz->intra_refresh_type);
+      }
       break;
 
     case PROP_INTRA_REFRESH_CYCLE_SIZE:
-      thiz->intra_refresh_cycle_size = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->intra_refresh_cycle_size,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed intra-refresh-cycle-size to %u",
+            thiz->intra_refresh_cycle_size);
+      }
       break;
 
     case PROP_INTRA_REFRESH_QP_DELTA:
-      thiz->intra_refresh_qp_delta = g_value_get_int (value);
+      if (check_update_property_int (enc, &thiz->intra_refresh_qp_delta,
+              g_value_get_int (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed intra-refresh-qp-delta to %d",
+            thiz->intra_refresh_qp_delta);
+      }
       break;
 
     case PROP_INTRA_REFRESH_CYCLE_DIST:
-      thiz->intra_refresh_cycle_dist = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->intra_refresh_cycle_dist,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed intra-refresh-cycle-dist to %u",
+            thiz->intra_refresh_cycle_dist);
+      }
       break;
 
     case PROP_DBLK_IDC:
@@ -774,7 +777,11 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
       break;
 
     case PROP_PIC_TIMING_SEI:
-      thiz->pic_timing_sei = g_value_get_boolean (value);
+      if (check_update_property_bool (enc, &thiz->pic_timing_sei,
+              g_value_get_boolean (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed pic-timimg-sei to %d",
+            thiz->pic_timing_sei);
+      }
       break;
 
     default:

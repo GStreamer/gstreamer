@@ -62,6 +62,7 @@
 #include "gstpad.h"
 #include "gstutils.h"
 #include "gstvalue.h"
+#include "gstidstr-private.h"
 
 /*** PIPELINE GRAPHS **********************************************************/
 
@@ -375,14 +376,14 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
 }
 
 static gboolean
-string_append_field (GQuark field, const GValue * value, gpointer ptr)
+string_append_field (const GstIdStr * field, const GValue * value, gpointer ptr)
 {
   GString *str = (GString *) ptr;
   gchar *value_str = gst_value_serialize (value);
   gchar *esc_value_str;
 
   if (value_str == NULL) {
-    g_string_append_printf (str, "  %18s: NULL\\l", g_quark_to_string (field));
+    g_string_append_printf (str, "  %18s: NULL\\l", gst_id_str_as_str (field));
     return TRUE;
   }
 
@@ -413,7 +414,7 @@ string_append_field (GQuark field, const GValue * value, gpointer ptr)
   }
   esc_value_str = g_strescape (value_str, NULL);
 
-  g_string_append_printf (str, "  %18s: %s\\l", g_quark_to_string (field),
+  g_string_append_printf (str, "  %18s: %s\\l", gst_id_str_as_str (field),
       esc_value_str);
 
   g_free (value_str);
@@ -457,7 +458,8 @@ debug_dump_describe_caps (GstCaps * caps, GstDebugGraphDetails details)
         }
         g_string_append (str, "\\l");
 
-        gst_structure_foreach (structure, string_append_field, (gpointer) str);
+        gst_structure_foreach_id_str (structure, string_append_field,
+            (gpointer) str);
       }
 
       media = g_string_free (str, FALSE);
@@ -922,6 +924,13 @@ gst_debug_bin_to_dot_file_with_ts (GstBin * bin,
 }
 #else /* !GST_DISABLE_GST_DEBUG */
 #ifndef GST_REMOVE_DISABLED
+
+gchar *
+gst_debug_bin_to_dot_data (GstBin * bin, GstDebugGraphDetails details)
+{
+  return g_strdup ("");
+}
+
 void
 gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
     const gchar * file_name)

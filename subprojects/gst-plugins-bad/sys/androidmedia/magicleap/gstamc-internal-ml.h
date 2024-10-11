@@ -21,13 +21,17 @@
 #ifndef __GST_AMC_INTERNAL_ML_H__
 #define __GST_AMC_INTERNAL_ML_H__
 
+#include "../gstamc-codec.h"
 #include "../gstamc-format.h"
 #include <ml_api.h>
 
 G_BEGIN_DECLS
 
-GstAmcFormat *gst_amc_format_new_handle (MLHandle handle);
-MLHandle gst_amc_format_get_handle (GstAmcFormat * format);
+extern GstAmcFormatVTable gst_amc_format_ml_vtable;
+extern GstAmcCodecVTable gst_amc_codec_ml_vtable;
+
+GstAmcFormat *gst_amc_format_ml_new_handle (MLHandle handle);
+MLHandle gst_amc_format_ml_get_handle (GstAmcFormat * format);
 
 G_END_DECLS
 

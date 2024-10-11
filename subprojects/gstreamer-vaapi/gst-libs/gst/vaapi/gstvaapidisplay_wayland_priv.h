@@ -77,6 +77,7 @@ struct _GstVaapiDisplayWaylandPrivate
   struct zwp_linux_dmabuf_v1 *dmabuf;
   struct wl_registry *registry;
   GArray *dmabuf_formats;
+  GMutex dmabuf_formats_lock;
   guint width;
   guint height;
   guint phys_width;

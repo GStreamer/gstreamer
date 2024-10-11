@@ -587,7 +587,7 @@ ges_uri_clip_asset_is_image (GESUriClipAsset * self)
 }
 
 /**
- * ges_uri_clip_asset_new:
+ * ges_uri_clip_asset_new: (sync-func request_sync) (finish-func finish):
  * @uri: The URI of the file for which to create a #GESUriClipAsset
  * @cancellable: optional %GCancellable object, %NULL to ignore.
  * @callback: (scope async): a #GAsyncReadyCallback to call when the initialization is finished
@@ -657,7 +657,7 @@ ges_uri_clip_asset_finish (GAsyncResult * res, GError ** error)
 }
 
 /**
- * ges_uri_clip_asset_request_sync:
+ * ges_uri_clip_asset_request_sync: (async-func new):
  * @uri: The URI of the file for which to create a #GESUriClipAsset.
  * You can also use multi file uris for #GESMultiFileSource.
  * @error: An error to be set in case something wrong happens or %NULL
@@ -712,10 +712,13 @@ void
 ges_uri_clip_asset_class_set_timeout (GESUriClipAssetClass * klass,
     GstClockTime timeout)
 {
+  GESDiscovererManager *manager;
+
   g_return_if_fail (GES_IS_URI_CLIP_ASSET_CLASS (klass));
 
-  ges_discoverer_manager_set_timeout (ges_discoverer_manager_get_default (),
-      timeout);
+  manager = ges_discoverer_manager_get_default ();
+  ges_discoverer_manager_set_timeout (manager, timeout);
+  gst_object_unref (manager);
 }
 
 /**
@@ -749,7 +752,7 @@ _extract (GESAsset * asset, GError ** error)
   GESUriSourceAssetPrivate *priv = GES_URI_SOURCE_ASSET (asset)->priv;
 
   if (GST_IS_DISCOVERER_STREAM_INFO (priv->sinfo) == FALSE) {
-    GST_WARNING_OBJECT (asset, "Can not extract as no strean info set");
+    GST_WARNING_OBJECT (asset, "Can not extract as no stream info set");
 
     return NULL;
   }
@@ -920,6 +923,8 @@ _ges_uri_asset_ensure_setup (gpointer uriasset_class)
     ges_discoverer_manager_set_timeout (manager, timeout);
     g_signal_connect (manager, "discovered",
         G_CALLBACK (discoverer_discovered_cb), NULL);
+
+    gst_object_unref (manager);
 
     discoverer = gst_discoverer_new (timeout, &err);
     if (!discoverer) {

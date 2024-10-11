@@ -110,6 +110,7 @@ gst_rtp_h261_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   if (payload_len < header_len + 1) {
     /* Must have at least one byte payload */
     GST_WARNING_OBJECT (depay, "Dropping packet with invalid payload length");
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 
@@ -286,4 +287,7 @@ gst_rtp_h261_depay_init (GstRtpH261Depay * depay)
 {
   depay->adapter = gst_adapter_new ();
   depay->leftover = NO_LEFTOVER;
+
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (depay), TRUE);
 }

@@ -140,7 +140,7 @@ get_launch_line (GstDevice * device)
 
 
 static gboolean
-print_structure_field (GQuark field_id, const GValue * value,
+print_structure_field (const GstIdStr * fieldname, const GValue * value,
     gpointer user_data)
 {
   gchar *val;
@@ -155,10 +155,10 @@ print_structure_field (GQuark field_id, const GValue * value,
   }
 
   if (val != NULL)
-    g_print ("\n\t\t%s = %s", g_quark_to_string (field_id), val);
+    g_print ("\n\t\t%s = %s", gst_id_str_as_str (fieldname), val);
   else
     g_print ("\n\t\t%s - could not serialise field of type %s",
-        g_quark_to_string (field_id), G_VALUE_TYPE_NAME (value));
+        gst_id_str_as_str (fieldname), G_VALUE_TYPE_NAME (value));
 
   g_free (val);
 
@@ -166,11 +166,11 @@ print_structure_field (GQuark field_id, const GValue * value,
 }
 
 static gboolean
-print_field (GQuark field, const GValue * value, gpointer unused)
+print_field (const GstIdStr * fieldname, const GValue * value, gpointer unused)
 {
   gchar *str = gst_value_serialize (value);
 
-  g_print (", %s=%s", g_quark_to_string (field), str);
+  g_print (", %s=%s", gst_id_str_as_str (fieldname), str);
   g_free (str);
   return TRUE;
 }
@@ -208,12 +208,12 @@ print_device (GstDevice * device, gboolean modified)
       g_print ("(%s)", features_string);
       g_free (features_string);
     }
-    gst_structure_foreach (s, print_field, NULL);
+    gst_structure_foreach_id_str (s, print_field, NULL);
     g_print ("\n");
   }
   if (props) {
     g_print ("\tproperties:");
-    gst_structure_foreach (props, print_structure_field, NULL);
+    gst_structure_foreach_id_str (props, print_structure_field, NULL);
     gst_structure_free (props);
     g_print ("\n");
   }

@@ -176,7 +176,7 @@
  *   children = ges_container_get_children (GES_CONTAINER (clip), FALSE);
  *
  *   for (tmp = children; tmp; tmp = tmp->next)
- *     ges_track_element_set_auto_clamp_control_source (tmp->data, FALSE);
+ *     ges_track_element_set_auto_clamp_control_sources (tmp->data, FALSE);
  *
  *   // add time effect, or set their children properties, or move them around
  *   ...
@@ -197,7 +197,7 @@
  *     // handle error
  *
  *   for (tmp = children; tmp; tmp = tmp->next)
- *     ges_track_element_set_auto_clamp_control_source (tmp->data, TRUE);
+ *     ges_track_element_set_auto_clamp_control_sources (tmp->data, TRUE);
  *
  *   g_list_free_full (children, gst_object_unref);
  *   gst_object_unref (source);
@@ -250,6 +250,7 @@ struct _GESClipPrivate
 
   gboolean allow_any_remove;
 
+  gint nb_scale_effects;
   gboolean use_effect_priority;
   guint32 effect_priority;
   GError *add_error;
@@ -1638,6 +1639,7 @@ _add_child (GESContainer * container, GESTimelineElement * element)
   GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (container);
   GESClipPrivate *priv = self->priv;
   GESAsset *asset, *creator_asset;
+  gboolean adding_scale_effect = FALSE;
   gboolean prev_prevent = priv->prevent_duration_limit_update;
   gboolean prev_prevent_outpoint = priv->prevent_children_outpoint_update;
   GList *tmp;
@@ -1775,6 +1777,14 @@ _add_child (GESContainer * container, GESTimelineElement * element)
           new_prio = MAX (new_prio, _PRIORITY (tmp->data) + 1);
       }
     }
+
+    if (GES_IS_EFFECT (element)) {
+      GESAsset *asset = ges_extractable_get_asset (GES_EXTRACTABLE (element));
+      const gchar *bindesc = ges_asset_get_id (asset);
+
+      adding_scale_effect = !strstr (bindesc, "gesvideoscale");
+    }
+
     /* make sure higher than core */
     for (tmp = container->children; tmp; tmp = tmp->next) {
       if (_IS_CORE_CHILD (tmp->data))
@@ -1817,8 +1827,15 @@ _add_child (GESContainer * container, GESTimelineElement * element)
     _update_active_for_track (self, track_el);
 
     priv->nb_effects++;
+
     GST_DEBUG_OBJECT (self, "Adding %ith effect: %" GES_FORMAT
         " Priority %i", priv->nb_effects, GES_ARGS (element), new_prio);
+
+    if (adding_scale_effect) {
+      GST_DEBUG_OBJECT (self, "Adding scaling effect to clip "
+          "%" GES_FORMAT, GES_ARGS (self));
+      priv->nb_scale_effects += 1;
+    }
 
     /* changing priorities, and updating their offset */
     priv->prevent_resort = TRUE;
@@ -1900,6 +1917,12 @@ ges_clip_set_remove_error (GESClip * clip, GError * error)
   priv->remove_error = error;
 }
 
+gboolean
+ges_clip_has_scale_effect (GESClip * clip)
+{
+  return clip->priv->nb_scale_effects > 0;
+}
+
 static gboolean
 _remove_child (GESContainer * container, GESTimelineElement * element)
 {
@@ -1961,6 +1984,17 @@ _remove_child (GESContainer * container, GESTimelineElement * element)
      * relative priorities */
     /* height may have changed */
     _compute_height (container);
+
+    if (GES_IS_EFFECT (element)) {
+      GESAsset *asset = ges_extractable_get_asset (GES_EXTRACTABLE (element));
+      const gchar *bindesc = ges_asset_get_id (asset);
+
+      if (bindesc && !strstr (bindesc, "gesvideoscale")) {
+        GST_DEBUG_OBJECT (self, "Removing scaling effect to clip "
+            "%" GES_FORMAT, GES_ARGS (self));
+        priv->nb_scale_effects -= 1;
+      }
+    }
   }
   /* duration-limit updated in _child_removed */
   return TRUE;
@@ -3000,7 +3034,8 @@ _cmp_children_by_priority (gconstpointer a_p, gconstpointer b_p)
  * ges_clip_add_top_effect:
  * @clip: A #GESClip
  * @effect: A top effect to add
- * @index: The index to add @effect at, or -1 to add at the highest
+ * @index: The index to add @effect at, or -1 to add at the highest,
+ *         see #ges_clip_get_top_effect_index for more information
  * @error: (nullable): Return location for an error
  *
  * Add a top effect to a clip at the given index.

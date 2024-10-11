@@ -31,6 +31,8 @@
 #endif
 
 #include "gstav12json.h"
+#include "gsth2642json.h"
+#include "gsth2652json.h"
 #include "gstvp82json.h"
 
 static gboolean
@@ -42,6 +44,14 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "av12json", GST_RANK_NONE,
           GST_TYPE_AV1_2_JSON))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "h2642json", GST_RANK_NONE,
+          GST_TYPE_H264_2_JSON))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "h2652json", GST_RANK_NONE,
+          GST_TYPE_H265_2_JSON))
     return FALSE;
 
   return TRUE;

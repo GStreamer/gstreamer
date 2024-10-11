@@ -504,7 +504,7 @@ static const GstH265SliceHdr slice_hdr = {
 GST_START_TEST (test_h265_bitwriter_vps_sps_pps_slice_hdr)
 {
   GstH265ParserResult res;
-  gboolean ret;
+  GstH265BitWriterResult ret;
   GstH265NalUnit nalu;
   GstH265Parser *const parser = gst_h265_parser_new ();
   GstH265VPS vps_parsed;

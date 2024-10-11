@@ -166,5 +166,5 @@ customice_agent_init (CustomICEAgent * ice)
 CustomICEAgent *
 customice_agent_new (const gchar * name)
 {
-  return g_object_new (GST_TYPE_WEBRTC_NICE, "name", name, NULL);
+  return g_object_new (CUSTOMICE_TYPE_AGENT, "name", name, NULL);
 }

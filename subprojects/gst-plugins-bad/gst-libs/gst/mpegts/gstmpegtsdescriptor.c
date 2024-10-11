@@ -29,6 +29,7 @@
 
 #include "mpegts.h"
 #include "gstmpegts-private.h"
+#include <gst/base/gstbytewriter.h>
 
 #define DEFINE_STATIC_COPY_FUNCTION(type, name) \
 static type * _##name##_copy (type * source) \
@@ -695,8 +696,18 @@ _new_descriptor_with_extension (guint8 tag, guint8 tag_extension, guint8 length)
   return descriptor;
 }
 
-static GstMpegtsDescriptor *
-_copy_descriptor (GstMpegtsDescriptor * desc)
+/**
+ * gst_mpegts_descriptor_copy:
+ * @desc: (transfer none): A #GstMpegtsDescriptor:
+ *
+ * Copy the given descriptor.
+ *
+ * Returns: (transfer full): A copy of @desc.
+ *
+ * Since: 1.26
+ */
+GstMpegtsDescriptor *
+gst_mpegts_descriptor_copy (GstMpegtsDescriptor * desc)
 {
   GstMpegtsDescriptor *copy;
 
@@ -720,7 +731,7 @@ gst_mpegts_descriptor_free (GstMpegtsDescriptor * desc)
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsDescriptor, gst_mpegts_descriptor,
-    (GBoxedCopyFunc) _copy_descriptor,
+    (GBoxedCopyFunc) gst_mpegts_descriptor_copy,
     (GBoxedFreeFunc) gst_mpegts_descriptor_free);
 
 /**
@@ -793,7 +804,8 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
     GST_LOG ("descriptor 0x%02x length:%d", desc->tag, desc->length);
     GST_MEMDUMP ("descriptor", desc->data + 2, desc->length);
     /* extended descriptors */
-    if (G_UNLIKELY (desc->tag == 0x7f))
+    if (G_UNLIKELY (desc->tag == GST_MTS_DESC_DVB_EXTENSION
+            || desc->tag == GST_MTS_DESC_EXTENSION))
       desc->tag_extension = *data;
 
     data += desc->length;
@@ -1244,6 +1256,465 @@ gst_mpegts_descriptor_from_custom_with_extension (guint8 tag,
 
   if (data && (length > 0))
     memcpy (descriptor->data + 3, data, length);
+
+  return descriptor;
+}
+
+static GstMpegtsMetadataDescriptor *
+_gst_mpegts_metadata_descriptor_copy (GstMpegtsMetadataDescriptor * source)
+{
+  GstMpegtsMetadataDescriptor *copy =
+      g_memdup2 (source, sizeof (GstMpegtsMetadataDescriptor));
+  return copy;
+}
+
+static void
+_gst_mpegts_metadata_descriptor_free (GstMpegtsMetadataDescriptor * desc)
+{
+  g_free (desc);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegtsMetadataDescriptor,
+    gst_mpegts_metadata_descriptor,
+    (GBoxedCopyFunc) _gst_mpegts_metadata_descriptor_copy,
+    (GFreeFunc) _gst_mpegts_metadata_descriptor_free);
+
+GstMpegtsDescriptor *
+gst_mpegts_descriptor_from_metadata (const GstMpegtsMetadataDescriptor *
+    metadata_descriptor)
+{
+  g_return_val_if_fail (metadata_descriptor != NULL, NULL);
+
+  int wr_size = 0;
+  guint8 *add_info = NULL;
+  GstByteWriter writer;
+
+  // metadata_descriptor
+  gst_byte_writer_init_with_size (&writer, 32, FALSE);
+
+  gst_byte_writer_put_uint16_be (&writer,
+      metadata_descriptor->metadata_application_format);
+  if (metadata_descriptor->metadata_application_format ==
+      GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD) {
+    gst_byte_writer_put_uint32_be (&writer, metadata_descriptor->metadata_format_identifier);   // metadata_application_format_identifier
+  }
+
+  gst_byte_writer_put_uint8 (&writer, metadata_descriptor->metadata_format);
+  if (metadata_descriptor->metadata_format ==
+      GST_MPEGTS_METADATA_FORMAT_IDENTIFIER_FIELD) {
+    gst_byte_writer_put_uint32_be (&writer, metadata_descriptor->metadata_format_identifier);   // metadata_format_identifier
+  }
+
+  gst_byte_writer_put_uint8 (&writer, metadata_descriptor->metadata_service_id);
+  gst_byte_writer_put_uint8 (&writer, 0x0F);    // decoder_config_flags = 000, DSM_CC_flag = 0, reserved = 1111
+
+  wr_size = gst_byte_writer_get_size (&writer);
+  add_info = gst_byte_writer_reset_and_get_data (&writer);
+
+  GstMpegtsDescriptor *descriptor =
+      _new_descriptor (GST_MTS_DESC_METADATA, wr_size);
+  memcpy (descriptor->data + 2, add_info, wr_size);
+  g_free (add_info);
+
+  return descriptor;
+}
+
+/**
+ * gst_mpegts_descriptor_parse_metadata:
+ * @descriptor: a %GST_TYPE_MPEGTS_METADATA_DESCRIPTOR #GstMpegtsDescriptor
+ * @res: (out) (transfer full): #GstMpegtsMetadataDescriptor
+ *
+ * Parses out the metadata descriptor from the @descriptor.
+ *
+ * See ISO/IEC 13818-1:2018 Section 2.6.60 and 2.6.61 for details.
+ * metadata_application_format is provided in Table 2-82. metadata_format is
+ * provided in Table 2-85.
+ *
+ * Returns: %TRUE if the parsing worked correctly, else %FALSE.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_mpegts_descriptor_parse_metadata (const GstMpegtsDescriptor * descriptor,
+    GstMpegtsMetadataDescriptor ** desc)
+{
+  guint8 *data;
+  guint8 flag;
+  GstMpegtsMetadataDescriptor *res;
+
+  g_return_val_if_fail (descriptor != NULL && desc != NULL, FALSE);
+  __common_desc_checks (descriptor, GST_MTS_DESC_METADATA, 5, FALSE);
+
+  data = (guint8 *) descriptor->data + 2;
+
+  res = g_new0 (GstMpegtsMetadataDescriptor, 1);
+
+  res->metadata_application_format = GST_READ_UINT16_BE (data);
+  data += 2;
+  if (res->metadata_application_format ==
+      GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD) {
+    // skip over metadata_application_format_identifier if it is provided
+    data += 4;
+  }
+  res->metadata_format = *data;
+  data += 1;
+  if (res->metadata_format == GST_MPEGTS_METADATA_FORMAT_IDENTIFIER_FIELD) {
+    res->metadata_format_identifier = GST_READ_UINT32_BE (data);
+    data += 4;
+  }
+  res->metadata_service_id = *data;
+  data += 1;
+  flag = *data;
+  res->decoder_config_flags = flag >> 5;
+  res->dsm_cc_flag = (flag & 0x10);
+
+  // There are more values if the dsm_cc_flag or decoder flags are set.
+
+  *desc = res;
+
+  return TRUE;
+}
+
+/**
+ * gst_mpegts_descriptor_parse_metadata_std:
+ * @descriptor: a %GST_MTS_DESC_METADATA_STD #GstMpegtsDescriptor
+ * @metadata_input_leak_rate (out): the input leak rate in units of 400bits/sec.
+ * @metadata_buffer_size (out): the buffer size in units of 1024 bytes
+ * @metadata_output_leak_rate (out): the output leak rate in units of 400bits/sec.
+ *
+ * Extracts the metadata STD descriptor from @descriptor.
+ *
+ * See ISO/IEC 13818-1:2018 Section 2.6.62 and 2.6.63 for details.
+ *
+ * Returns: %TRUE if parsing succeeded, else %FALSE.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_mpegts_descriptor_parse_metadata_std (const GstMpegtsDescriptor *
+    descriptor,
+    guint32 * metadata_input_leak_rate,
+    guint32 * metadata_buffer_size, guint32 * metadata_output_leak_rate)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (descriptor != NULL && metadata_input_leak_rate != NULL
+      && metadata_buffer_size != NULL
+      && metadata_output_leak_rate != NULL, FALSE);
+  __common_desc_checks (descriptor, GST_MTS_DESC_METADATA_STD, 9, FALSE);
+  data = (guint8 *) descriptor->data + 2;
+  *metadata_input_leak_rate = GST_READ_UINT24_BE (data) & 0x3FFFFF;
+  data += 3;
+  *metadata_buffer_size = GST_READ_UINT24_BE (data) & 0x3FFFFF;
+  data += 3;
+  *metadata_output_leak_rate = GST_READ_UINT24_BE (data) & 0x3FFFFF;
+  return TRUE;
+}
+
+static gboolean
+gst_mpegts_pes_metadata_meta_init (GstMpegtsPESMetadataMeta * meta,
+    gpointer params, GstBuffer * buffer)
+{
+  return TRUE;
+}
+
+static void
+gst_mpegts_pes_metadata_meta_free (GstMpegtsPESMetadataMeta * meta,
+    GstBuffer * buffer)
+{
+}
+
+static gboolean
+gst_mpegts_pes_metadata_meta_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  GstMpegtsPESMetadataMeta *source_meta, *dest_meta;
+
+  source_meta = (GstMpegtsPESMetadataMeta *) meta;
+
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    GstMetaTransformCopy *copy = data;
+    if (!copy->region) {
+      dest_meta = gst_buffer_add_mpegts_pes_metadata_meta (dest);
+      if (!dest_meta)
+        return FALSE;
+      dest_meta->metadata_service_id = source_meta->metadata_service_id;
+      dest_meta->flags = source_meta->flags;
+    }
+  } else {
+    /* return FALSE, if transform type is not supported */
+    return FALSE;
+  }
+  return TRUE;
+}
+
+GType
+gst_mpegts_pes_metadata_meta_api_get_type (void)
+{
+  static GType type;
+  static const gchar *tags[] = { NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type =
+        gst_meta_api_type_register ("GstMpegtsPESMetadataMetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
+const GstMetaInfo *
+gst_mpegts_pes_metadata_meta_get_info (void)
+{
+  static const GstMetaInfo *mpegts_pes_metadata_meta_info = NULL;
+
+  if (g_once_init_enter ((GstMetaInfo **) & mpegts_pes_metadata_meta_info)) {
+    const GstMetaInfo *meta =
+        gst_meta_register (GST_MPEGTS_PES_METADATA_META_API_TYPE,
+        "GstMpegtsPESMetadataMeta", sizeof (GstMpegtsPESMetadataMeta),
+        (GstMetaInitFunction) gst_mpegts_pes_metadata_meta_init,
+        (GstMetaFreeFunction) gst_mpegts_pes_metadata_meta_free,
+        (GstMetaTransformFunction) gst_mpegts_pes_metadata_meta_transform);
+    g_once_init_leave ((GstMetaInfo **) & mpegts_pes_metadata_meta_info,
+        (GstMetaInfo *) meta);
+  }
+
+  return mpegts_pes_metadata_meta_info;
+}
+
+GstMpegtsPESMetadataMeta *
+gst_buffer_add_mpegts_pes_metadata_meta (GstBuffer * buffer)
+{
+  GstMpegtsPESMetadataMeta *meta;
+  meta =
+      (GstMpegtsPESMetadataMeta *) gst_buffer_add_meta (buffer,
+      GST_MPEGTS_PES_METADATA_META_INFO, NULL);
+  return meta;
+}
+
+static GstMpegtsMetadataPointerDescriptor *
+_gst_mpegts_metadata_pointer_descriptor_copy (GstMpegtsMetadataPointerDescriptor
+    * source)
+{
+  GstMpegtsMetadataPointerDescriptor *copy =
+      g_memdup2 (source, sizeof (GstMpegtsMetadataPointerDescriptor));
+  return copy;
+}
+
+static void
+_gst_mpegts_metadata_pointer_descriptor_free (GstMpegtsMetadataPointerDescriptor
+    * desc)
+{
+  g_free (desc);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegtsMetadataPointerDescriptor,
+    gst_mpegts_metadata_pointer_descriptor,
+    (GBoxedCopyFunc) _gst_mpegts_metadata_pointer_descriptor_copy,
+    (GFreeFunc) _gst_mpegts_metadata_pointer_descriptor_free);
+
+GstMpegtsDescriptor *
+gst_mpegts_descriptor_from_metadata_pointer (const
+    GstMpegtsMetadataPointerDescriptor * metadata_pointer_descriptor)
+{
+  g_return_val_if_fail (metadata_pointer_descriptor != NULL, NULL);
+
+  int wr_size = 0;
+  guint8 *add_info = NULL;
+  GstByteWriter writer;
+
+  // metadata_pointer_descriptor
+  gst_byte_writer_init_with_size (&writer, 32, FALSE);
+
+  gst_byte_writer_put_uint16_be (&writer,
+      metadata_pointer_descriptor->metadata_application_format);
+  if (metadata_pointer_descriptor->metadata_application_format ==
+      GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD) {
+    gst_byte_writer_put_uint32_be (&writer, metadata_pointer_descriptor->metadata_format_identifier);   // metadata_application_format_identifier
+  }
+
+  gst_byte_writer_put_uint8 (&writer,
+      metadata_pointer_descriptor->metadata_format);
+  if (metadata_pointer_descriptor->metadata_format ==
+      GST_MPEGTS_METADATA_FORMAT_IDENTIFIER_FIELD) {
+    gst_byte_writer_put_uint32_be (&writer, metadata_pointer_descriptor->metadata_format_identifier);   // metadata_format_identifier
+  }
+
+  gst_byte_writer_put_uint8 (&writer,
+      metadata_pointer_descriptor->metadata_service_id);
+  gst_byte_writer_put_uint8 (&writer, 0x1F);    // metadata_locator_record_flag = 0, MPEG_carriage_flag = 00, reserved = 11111
+  gst_byte_writer_put_uint16_be (&writer, metadata_pointer_descriptor->program_number); // program_number
+
+  wr_size = gst_byte_writer_get_size (&writer);
+  add_info = gst_byte_writer_reset_and_get_data (&writer);
+
+  GstMpegtsDescriptor *descriptor =
+      _new_descriptor (GST_MTS_DESC_METADATA_POINTER, wr_size);
+  memcpy (descriptor->data + 2, add_info, wr_size);
+  g_free (add_info);
+
+  return descriptor;
+}
+
+DEFINE_STATIC_COPY_FUNCTION (GstMpegtsJpegXsDescriptor,
+    gst_mpegts_jpeg_xs_descriptor);
+DEFINE_STATIC_FREE_FUNCTION (GstMpegtsJpegXsDescriptor,
+    gst_mpegts_jpeg_xs_descriptor);
+
+G_DEFINE_BOXED_TYPE (GstMpegtsJpegXsDescriptor, gst_mpegts_jpeg_xs_descriptor,
+    (GBoxedCopyFunc) _gst_mpegts_jpeg_xs_descriptor_copy,
+    (GFreeFunc) _gst_mpegts_jpeg_xs_descriptor_free);
+
+/**
+ * gst_mpegts_descriptor_parse_jpeg_xs:
+ * @descriptor: A #GstMpegtsDescriptor
+ * @res: (out): A parsed #GstMpegtsJpegXsDescriptor
+ *
+ * Parses the JPEG-XS descriptor information from @descriptor:
+ *
+ * Returns: TRUE if the information could be parsed, else FALSE.
+ *
+ * Since: 1.26
+ */
+
+gboolean
+gst_mpegts_descriptor_parse_jpeg_xs (const GstMpegtsDescriptor * descriptor,
+    GstMpegtsJpegXsDescriptor * res)
+{
+  GstByteReader br;
+  guint8 flags;
+  g_return_val_if_fail (descriptor != NULL && res != NULL, FALSE);
+
+  /* The smallest jpegxs descriptor doesn't contain the MDM, but is an H.222.0 extension (so additional one byte) */
+  __common_desc_ext_checks (descriptor, GST_MTS_DESC_EXT_JXS_VIDEO, 32, FALSE);
+
+  /* Skip tag/length/extension/tag/length */
+  gst_byte_reader_init (&br, descriptor->data + 5, descriptor->length - 3);
+  memset (res, 0, sizeof (*res));
+
+  /* First part can be scanned out with unchecked reader */
+  res->descriptor_version = gst_byte_reader_get_uint8_unchecked (&br);
+  if (res->descriptor_version != 0) {
+    GST_WARNING ("Unsupported JPEG-XS descriptor version (%d != 0)",
+        res->descriptor_version);
+    return FALSE;
+  }
+  res->horizontal_size = gst_byte_reader_get_uint16_be_unchecked (&br);
+  res->vertical_size = gst_byte_reader_get_uint16_be_unchecked (&br);
+  res->brat = gst_byte_reader_get_uint32_be_unchecked (&br);
+  res->frat = gst_byte_reader_get_uint32_be_unchecked (&br);
+  res->schar = gst_byte_reader_get_uint16_be_unchecked (&br);
+  res->Ppih = gst_byte_reader_get_uint16_be_unchecked (&br);
+  res->Plev = gst_byte_reader_get_uint16_be_unchecked (&br);
+  res->max_buffer_size = gst_byte_reader_get_uint32_be_unchecked (&br);
+  res->buffer_model_type = gst_byte_reader_get_uint8_unchecked (&br);
+  res->colour_primaries = gst_byte_reader_get_uint8_unchecked (&br);
+  res->transfer_characteristics = gst_byte_reader_get_uint8_unchecked (&br);
+  res->matrix_coefficients = gst_byte_reader_get_uint8_unchecked (&br);
+
+  res->video_full_range_flag =
+      (gst_byte_reader_get_uint8_unchecked (&br) & 0x80) == 0x80;
+  flags = gst_byte_reader_get_uint8_unchecked (&br);
+  res->still_mode = flags >> 7;
+  if ((flags & 0x40) == 0x40) {
+    if (gst_byte_reader_get_remaining (&br) < 28) {
+      GST_ERROR ("MDM present on JPEG-XS descriptor but not enough bytes");
+      return FALSE;
+    }
+    res->X_c0 = gst_byte_reader_get_uint16_be_unchecked (&br);
+    res->Y_c0 = gst_byte_reader_get_uint16_be_unchecked (&br);
+    res->X_c1 = gst_byte_reader_get_uint16_be_unchecked (&br);
+    res->Y_c1 = gst_byte_reader_get_uint16_be_unchecked (&br);
+    res->X_c2 = gst_byte_reader_get_uint16_be_unchecked (&br);
+    res->Y_c2 = gst_byte_reader_get_uint16_be_unchecked (&br);
+    res->X_wp = gst_byte_reader_get_uint16_be_unchecked (&br);
+    res->Y_wp = gst_byte_reader_get_uint16_be_unchecked (&br);
+    res->L_max = gst_byte_reader_get_uint32_be_unchecked (&br);
+    res->L_min = gst_byte_reader_get_uint32_be_unchecked (&br);
+    res->MaxCLL = gst_byte_reader_get_uint16_be_unchecked (&br);
+    res->MaxFALL = gst_byte_reader_get_uint16_be_unchecked (&br);
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_mpegts_descriptor_from_jpeg_xs:
+ * @jpegxs: A #GstMpegtsJpegXsDescriptor
+ *
+ * Create a new #GstMpegtsDescriptor based on the information in @jpegxs
+ *
+ * Returns: (transfer full): The #GstMpegtsDescriptor
+ *
+ * Since: 1.26
+ */
+GstMpegtsDescriptor *
+gst_mpegts_descriptor_from_jpeg_xs (const GstMpegtsJpegXsDescriptor * jpegxs)
+{
+  gsize desc_size = 30;
+  GstByteWriter writer;
+  guint8 *desc_data;
+  GstMpegtsDescriptor *descriptor;
+
+  /* Extension descriptor
+   * tag/length are take care of by gst_mpegts_descriptor_from_custom
+   * The size of the "internal" descriptor (in the extension) is 1 (for the extension_descriptor_tag) and 29 for JXS_video_descriptor
+   */
+
+  gst_byte_writer_init_with_size (&writer, desc_size, FALSE);
+
+  /* extension tag */
+  gst_byte_writer_put_uint8 (&writer, GST_MTS_DESC_EXT_JXS_VIDEO);
+  /* tag/length again */
+  gst_byte_writer_put_uint8 (&writer, GST_MTS_DESC_EXT_JXS_VIDEO);
+  /* Size is 27 (29 minus 2 initial bytes for tag/length */
+  gst_byte_writer_put_uint8 (&writer, 27);
+  /* descriptor version:  0 */
+  gst_byte_writer_put_uint8 (&writer, 0);
+  /* horizontal/vertical size */
+  gst_byte_writer_put_uint16_be (&writer, jpegxs->horizontal_size);
+  gst_byte_writer_put_uint16_be (&writer, jpegxs->vertical_size);
+  /* brat/frat */
+  gst_byte_writer_put_uint32_be (&writer, jpegxs->brat);
+  gst_byte_writer_put_uint32_be (&writer, jpegxs->frat);
+
+  /* schar, Ppih, Plev */
+  gst_byte_writer_put_uint16_be (&writer, jpegxs->schar);
+  gst_byte_writer_put_uint16_be (&writer, jpegxs->Ppih);
+  gst_byte_writer_put_uint16_be (&writer, jpegxs->Plev);
+
+  gst_byte_writer_put_uint32_be (&writer, jpegxs->max_buffer_size);
+
+  /* Buffer model type */
+  gst_byte_writer_put_uint8 (&writer, jpegxs->buffer_model_type);
+
+  /* color_primaries */
+  gst_byte_writer_put_uint8 (&writer, jpegxs->colour_primaries);
+
+  /* transfer_characteristics */
+  gst_byte_writer_put_uint8 (&writer, jpegxs->transfer_characteristics);
+
+  /* matrix_coefficients */
+  gst_byte_writer_put_uint8 (&writer, jpegxs->matrix_coefficients);
+
+  /* video_full_range_flag */
+  gst_byte_writer_put_uint8 (&writer,
+      jpegxs->video_full_range_flag ? 1 << 7 : 0);
+
+  /* still_mode_flag : off
+   * mdm_flag : off */
+  gst_byte_writer_put_uint8 (&writer, jpegxs->still_mode ? 1 : 0);
+
+  if (jpegxs->mdm_flag) {
+    GST_ERROR ("Mastering Display Metadata not supported yet !");
+  }
+
+  desc_size = gst_byte_writer_get_size (&writer);
+  desc_data = gst_byte_writer_reset_and_get_data (&writer);
+
+  descriptor =
+      gst_mpegts_descriptor_from_custom (GST_MTS_DESC_EXTENSION, desc_data,
+      desc_size);
+  g_free (desc_data);
 
   return descriptor;
 }

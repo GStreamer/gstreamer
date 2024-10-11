@@ -123,6 +123,27 @@ done:
   return res;
 }
 
+static void
+source_setup_cb (GstElement * decodebin, GstElement * source,
+    GESUriSource * self)
+{
+  GstElementFactory *factory = gst_element_get_factory (source);
+
+  if (!factory || g_strcmp0 (GST_OBJECT_NAME (factory), "gessrc")) {
+    return;
+  }
+
+  GESTrack *track = ges_track_element_get_track (self->element);
+  GESTimeline *subtimeline;
+
+  g_object_get (source, "timeline", &subtimeline, NULL);
+  GstStreamCollection *subtimeline_collection =
+      ges_timeline_get_stream_collection (subtimeline);
+
+  ges_track_select_subtimeline_streams (track, subtimeline_collection,
+      GST_ELEMENT (subtimeline));
+}
+
 GstElement *
 ges_uri_source_create_source (GESUriSource * self)
 {
@@ -139,13 +160,15 @@ ges_uri_source_create_source (GESUriSource * self)
   if (track)
     caps = ges_track_get_caps (track);
 
+  g_signal_connect (decodebin, "source-setup",
+      G_CALLBACK (source_setup_cb), self);
+
   g_object_set (decodebin, "caps", caps,
       "expose-all-streams", FALSE, "uri", self->uri, NULL);
   g_signal_connect (decodebin, "autoplug-select",
       G_CALLBACK (autoplug_select_cb), self);
 
   return decodebin;
-
 }
 
 static void

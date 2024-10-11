@@ -76,8 +76,13 @@ gboolean       _gst_d3d11_result                    (HRESULT hr,
  *
  * Since: 1.22
  */
+#ifndef GST_DISABLE_GST_DEBUG
 #define gst_d3d11_result(result,device) \
     _gst_d3d11_result (result, device, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__)
+#else
+#define gst_d3d11_result(result,device) \
+    _gst_d3d11_result (result, device, NULL, __FILE__, GST_FUNCTION, __LINE__)
+#endif /* GST_DISABLE_GST_DEBUG */
 
 G_END_DECLS
 

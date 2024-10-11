@@ -83,60 +83,6 @@ gst_mpd_helper_get_SAP_type (xmlNode * a_node,
 }
 
 const gchar *
-gst_mpd_helper_get_audio_codec_from_mime (GstCaps * caps)
-{
-  GstStructure *s;
-  const gchar *name = "";
-  const gchar *codec_name = NULL;
-
-  if (!caps)
-    return NULL;
-  s = gst_caps_get_structure (caps, 0);
-  if (!s)
-    goto done;
-  name = gst_structure_get_name (s);
-  if (!g_strcmp0 (name, "audio/mpeg")) {
-    gint mpeg_version;
-    if (gst_structure_get_int (s, "mpegversion", &mpeg_version)) {
-      if (mpeg_version == 4)
-        return "mp4a";
-    }
-
-  } else {
-    GST_DEBUG ("No codecs for this caps name %s", name);
-  }
-
-done:
-  return codec_name;
-}
-
-const gchar *
-gst_mpd_helper_get_video_codec_from_mime (GstCaps * caps)
-{
-  GstStructure *s;
-  const gchar *name = "";
-  const gchar *codec_name = NULL;
-
-  if (!caps)
-    return NULL;
-
-  s = gst_caps_get_structure (caps, 0);
-  if (!s)
-    goto done;
-  name = gst_structure_get_name (s);
-  if (!g_strcmp0 (name, "video/x-h264")) {
-    return "avc1";
-  } else if (!g_strcmp0 (name, "video/x-h265")) {
-    return "hvc1";
-  } else {
-    GST_DEBUG ("No codecs for this caps name %s", name);
-  }
-
-done:
-  return codec_name;
-}
-
-const gchar *
 gst_mpd_helper_mimetype_to_caps (const gchar * mimeType)
 {
   if (mimeType == NULL)

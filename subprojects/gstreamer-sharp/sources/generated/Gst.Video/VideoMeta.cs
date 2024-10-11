@@ -45,9 +45,9 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_video_meta_get_plane_height(IntPtr raw, out uint plane_height);
+		static extern bool gst_video_meta_get_plane_height(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeConst=4)]out uint[] plane_height);
 
-		public bool GetPlaneHeight(out uint plane_height) {
+		public bool GetPlaneHeight(out uint[] plane_height) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
 			bool raw_ret = gst_video_meta_get_plane_height(this_as_native, out plane_height);
@@ -58,17 +58,21 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_video_meta_get_plane_size(IntPtr raw, out UIntPtr plane_size);
+		static extern bool gst_video_meta_get_plane_size(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeConst=4)]out UIntPtr[] plane_size);
 
-		public bool GetPlaneSize(out ulong plane_size) {
+		public bool GetPlaneSize(out ulong[] plane_size) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			UIntPtr native_plane_size;
+			UIntPtr[] native_plane_size;
 			bool raw_ret = gst_video_meta_get_plane_size(this_as_native, out native_plane_size);
 			bool ret = raw_ret;
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
-			plane_size = (ulong) native_plane_size;
+			int cnt_plane_size = 4;
+			plane_size = new ulong[cnt_plane_size];
+			for (int i = 0; i < native_plane_size.Length; i++) {
+				plane_size [i] = (ulong) native_plane_size[i];
+			}
 			return ret;
 		}
 

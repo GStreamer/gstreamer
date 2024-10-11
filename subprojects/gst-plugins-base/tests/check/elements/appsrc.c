@@ -1075,6 +1075,7 @@ GST_START_TEST (test_appsrc_limits)
   GstBuffer *buffer;
   gulong probe_id;
   guint64 current_level;
+  GstFlowReturn ret;
 
   /* Test if the bytes limit works correctly with both leaky types */
   h = gst_harness_new ("appsrc");
@@ -1096,7 +1097,8 @@ GST_START_TEST (test_appsrc_limits)
 
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 0 * GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
 
   /* wait until the appsrc is blocked downstream */
   while (!gst_pad_is_blocking (srcpad))
@@ -1104,10 +1106,12 @@ GST_START_TEST (test_appsrc_limits)
 
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 1 * GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 2 * GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
 
   /* The first buffer is not queued anymore but inside the pad probe */
   g_object_get (h->element, "current-level-bytes", &current_level, NULL);
@@ -1119,7 +1123,8 @@ GST_START_TEST (test_appsrc_limits)
 
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 4 * GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
 
   /* The new buffer was dropped now, otherwise we would have 2 seconds queued */
   g_object_get (h->element, "current-level-bytes", &current_level, NULL);
@@ -1133,7 +1138,8 @@ GST_START_TEST (test_appsrc_limits)
 
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 4 * GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
 
   /* The oldest buffer was dropped now, otherwise we would have only 1 second queued */
   g_object_get (h->element, "current-level-bytes", &current_level, NULL);
@@ -1191,7 +1197,8 @@ GST_START_TEST (test_appsrc_limits)
 
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 0 * GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
 
   /* wait until the appsrc is blocked downstream */
   while (!gst_pad_is_blocking (srcpad))
@@ -1199,10 +1206,12 @@ GST_START_TEST (test_appsrc_limits)
 
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 1 * GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 2 * GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
 
   /* The first buffer is not queued anymore but inside the pad probe */
   g_object_get (h->element, "current-level-bytes", &current_level, NULL);
@@ -1214,7 +1223,8 @@ GST_START_TEST (test_appsrc_limits)
 
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 4 * GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
 
   /* The new buffer was dropped now, otherwise we would have 2 seconds queued */
   g_object_get (h->element, "current-level-bytes", &current_level, NULL);
@@ -1228,7 +1238,8 @@ GST_START_TEST (test_appsrc_limits)
 
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 4 * GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
 
   /* The oldest buffer was dropped now, otherwise we would have only 1 second queued */
   g_object_get (h->element, "current-level-bytes", &current_level, NULL);
@@ -1287,7 +1298,8 @@ GST_START_TEST (test_appsrc_limits)
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 0 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
 
   /* wait until the appsrc is blocked downstream */
   while (!gst_pad_is_blocking (srcpad))
@@ -1296,11 +1308,13 @@ GST_START_TEST (test_appsrc_limits)
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 1 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
 
   /* The first buffer is not queued anymore but inside the pad probe */
   g_object_get (h->element, "current-level-bytes", &current_level, NULL);
@@ -1313,7 +1327,8 @@ GST_START_TEST (test_appsrc_limits)
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 4 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
 
   /* The new buffer was dropped now, otherwise we would have more than 2 seconds queued */
   g_object_get (h->element, "current-level-bytes", &current_level, NULL);
@@ -1328,7 +1343,8 @@ GST_START_TEST (test_appsrc_limits)
   buffer = gst_buffer_new_and_alloc (100);
   GST_BUFFER_PTS (buffer) = 4 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = GST_SECOND;
-  gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  ret = gst_app_src_push_buffer (GST_APP_SRC (h->element), buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
 
   /* The oldest buffer was dropped now, otherwise we would have only 1 second queued */
   g_object_get (h->element, "current-level-bytes", &current_level, NULL);
@@ -1412,11 +1428,12 @@ GST_START_TEST (test_appsrc_send_custom_event)
 
   src = setup_appsrc ();
 
-  ASSERT_SET_STATE (src, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
-
   expect_offset = 0;
+  done = FALSE;
   gst_pad_set_chain_function (mysinkpad, send_event_chain_func);
   gst_pad_set_event_function (mysinkpad, send_event_event_func);
+
+  ASSERT_SET_STATE (src, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
 
   /* send a buffer, a custom event and a second buffer */
   buf = gst_buffer_new_and_alloc (1);
@@ -1510,12 +1527,13 @@ GST_START_TEST (test_appsrc_send_event_before_buffer)
   src = setup_appsrc ();
   g_object_set (src, "format", GST_FORMAT_TIME, NULL);
 
-  ASSERT_SET_STATE (src, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+  expected_obj = EXPECTED_STREAM_START;
+  done = FALSE;
 
   gst_pad_set_event_function (mysinkpad, send_event_before_buffer_event_func);
   gst_pad_set_chain_function (mysinkpad, send_event_before_buffer_chain_func);
 
-  expected_obj = EXPECTED_STREAM_START;
+  ASSERT_SET_STATE (src, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
 
   /* send a custom event and then the first buffer */
   gst_element_send_event (src,
@@ -1554,12 +1572,13 @@ GST_START_TEST (test_appsrc_send_event_before_sample)
   src = setup_appsrc ();
   g_object_set (src, "format", GST_FORMAT_TIME, NULL);
 
-  ASSERT_SET_STATE (src, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+  expected_obj = EXPECTED_STREAM_START;
+  done = FALSE;
 
   gst_pad_set_event_function (mysinkpad, send_event_before_buffer_event_func);
   gst_pad_set_chain_function (mysinkpad, send_event_before_buffer_chain_func);
 
-  expected_obj = EXPECTED_STREAM_START;
+  ASSERT_SET_STATE (src, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
 
   /* send a custom event and then the first sample */
   gst_element_send_event (src,
@@ -1600,12 +1619,13 @@ GST_START_TEST (test_appsrc_send_event_between_caps_buffer)
   src = setup_appsrc ();
   g_object_set (src, "format", GST_FORMAT_TIME, NULL);
 
-  ASSERT_SET_STATE (src, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+  expected_obj = EXPECTED_STREAM_START;
+  done = FALSE;
 
   gst_pad_set_event_function (mysinkpad, send_event_before_buffer_event_func);
   gst_pad_set_chain_function (mysinkpad, send_event_before_buffer_chain_func);
 
-  expected_obj = EXPECTED_STREAM_START;
+  ASSERT_SET_STATE (src, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
 
   caps = gst_caps_from_string ("video/x-raw");
   gst_app_src_set_caps (GST_APP_SRC_CAST (src), caps);

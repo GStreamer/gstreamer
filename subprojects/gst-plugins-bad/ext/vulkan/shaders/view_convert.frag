@@ -19,6 +19,8 @@
 
 #version 450 core
 
+#extension GL_GOOGLE_include_directive : enable
+
 #include "view_defines.h"
 #include "swizzle.glsl"
 

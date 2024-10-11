@@ -155,7 +155,7 @@ GstMemory *     gst_vulkan_buffer_memory_alloc           (GstVulkanDevice * devi
 GST_VULKAN_API
 GstMemory *    gst_vulkan_buffer_memory_alloc_with_buffer_info
                                                          (GstVulkanDevice * device,
-                                                          VkBufferCreateInfo * buffer_info,
+                                                          const VkBufferCreateInfo * buffer_info,
                                                           VkMemoryPropertyFlags mem_prop_flags);
 
 GST_VULKAN_API

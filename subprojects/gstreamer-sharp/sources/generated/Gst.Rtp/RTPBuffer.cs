@@ -38,12 +38,13 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtp_buffer_add_extension_onebyte_header(IntPtr raw, byte id, byte[] data, uint n_length);
+		static extern bool gst_rtp_buffer_add_extension_onebyte_header(IntPtr raw, byte id, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]byte[] data, uint n_length);
 
 		public bool AddExtensionOnebyteHeader(byte id, byte[] data) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			bool raw_ret = gst_rtp_buffer_add_extension_onebyte_header(this_as_native, id, data, (uint) (data == null ? 0 : data.Length));
+			uint n_length = (uint)(data == null ? 0 : data.Length);
+			bool raw_ret = gst_rtp_buffer_add_extension_onebyte_header(this_as_native, id, data, n_length);
 			bool ret = raw_ret;
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
@@ -51,12 +52,13 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtp_buffer_add_extension_twobytes_header(IntPtr raw, byte appbits, byte id, byte[] data, uint n_length);
+		static extern bool gst_rtp_buffer_add_extension_twobytes_header(IntPtr raw, byte appbits, byte id, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=4)]byte[] data, uint n_length);
 
 		public bool AddExtensionTwobytesHeader(byte appbits, byte id, byte[] data) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			bool raw_ret = gst_rtp_buffer_add_extension_twobytes_header(this_as_native, appbits, id, data, (uint) (data == null ? 0 : data.Length));
+			uint n_length = (uint)(data == null ? 0 : data.Length);
+			bool raw_ret = gst_rtp_buffer_add_extension_twobytes_header(this_as_native, appbits, id, data, n_length);
 			bool ret = raw_ret;
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
@@ -414,6 +416,17 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_rtp_buffer_remove_extension_data(IntPtr raw);
+
+		public void RemoveExtensionData() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			gst_rtp_buffer_remove_extension_data(this_as_native);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+		}
+
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtp_buffer_set_csrc(IntPtr raw, byte idx, uint csrc);
 
 		public void SetCsrc(byte idx, uint csrc) {
@@ -510,6 +523,15 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtp_buffer_get_extension_onebyte_header_from_bytes(IntPtr bytes, ushort bit_pattern, byte id, uint nth, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=5)]out IntPtr[] data, out uint size);
+
+		public static bool GetExtensionOnebyteHeaderFromBytes(GLib.Bytes bytes, ushort bit_pattern, byte id, uint nth, out IntPtr[] data) {
+			bool raw_ret = gst_rtp_buffer_get_extension_onebyte_header_from_bytes(bytes == null ? IntPtr.Zero : bytes.Handle, bit_pattern, id, nth, out data, out uint size);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtp_buffer_map(IntPtr buffer, int flags, IntPtr rtp);
 
 		public static bool Map(Gst.Buffer buffer, Gst.MapFlags flags, out Gst.Rtp.RTPBuffer rtp) {
@@ -540,19 +562,21 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_rtp_buffer_new_copy_data(byte[] data, UIntPtr n_length);
+		static extern IntPtr gst_rtp_buffer_new_copy_data([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, UIntPtr n_length);
 
 		public static Gst.Buffer NewCopyData(byte[] data) {
-			IntPtr raw_ret = gst_rtp_buffer_new_copy_data(data, new UIntPtr ((ulong) (data == null ? 0 : data.Length)));
+			ulong n_length = (ulong)(data == null ? 0 : data.Length);
+			IntPtr raw_ret = gst_rtp_buffer_new_copy_data(data, new UIntPtr ((uint)n_length));
 			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
 			return ret;
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_rtp_buffer_new_take_data(byte[] data, UIntPtr n_length);
+		static extern IntPtr gst_rtp_buffer_new_take_data([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, UIntPtr n_length);
 
 		public static Gst.Buffer NewTakeData(byte[] data) {
-			IntPtr raw_ret = gst_rtp_buffer_new_take_data(data, new UIntPtr ((ulong) (data == null ? 0 : data.Length)));
+			ulong n_length = (ulong)(data == null ? 0 : data.Length);
+			IntPtr raw_ret = gst_rtp_buffer_new_take_data(data, new UIntPtr ((uint)n_length));
 			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
 			return ret;
 		}

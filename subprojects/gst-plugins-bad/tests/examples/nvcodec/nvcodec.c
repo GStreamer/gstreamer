@@ -439,7 +439,7 @@ main (gint argc, gchar ** argv)
 
   if (use_gl) {
     gst_caps_set_features_simple (caps,
-        gst_caps_features_from_string ("memory:GLMemory"));
+        gst_caps_features_new_single_static_str ("memory:GLMemory"));
   }
 
   g_object_set (G_OBJECT (capsfilter), "caps", caps, NULL);

@@ -1,4 +1,4 @@
-app_sources = files(['gstappsrc.c', 'gstappsink.c'])
+app_sources = files(['gstappsrc.c', 'gstappsink.c', 'gstapputils.c'])
 
 app_mkenum_headers = files([
   'gstappsrc.h',

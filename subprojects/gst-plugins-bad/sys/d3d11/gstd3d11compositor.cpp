@@ -134,7 +134,7 @@ gst_d3d11_compositor_sizing_policy_get_type (void)
           "padding or keeping the aspect ratio", "none"},
     {GST_D3D11_COMPOSITOR_SIZING_POLICY_KEEP_ASPECT_RATIO,
           "Keep Aspect Ratio: Image is scaled to fit destination rectangle "
-          "specified by GstCompositorPad:{xpos, ypos, width, height} "
+          "specified by GstD3D11CompositorPad:{xpos, ypos, width, height} "
           "with preserved aspect ratio. Resulting image will be centered in "
           "the destination rectangle with padding if necessary",
         "keep-aspect-ratio"},
@@ -150,109 +150,6 @@ gst_d3d11_compositor_sizing_policy_get_type (void)
 }
 
 /* *INDENT-OFF* */
-static const gchar checker_vs_src[] =
-    "struct VS_INPUT\n"
-    "{\n"
-    "  float4 Position : POSITION;\n"
-    "};\n"
-    "\n"
-    "struct VS_OUTPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "};\n"
-    "\n"
-    "VS_OUTPUT main(VS_INPUT input)\n"
-    "{\n"
-    "  return input;\n"
-    "}\n";
-
-static const gchar checker_ps_src_rgb[] =
-    "static const float blocksize = 8.0;\n"
-    "static const float4 high = float4(0.667, 0.667, 0.667, 1.0);\n"
-    "static const float4 low = float4(0.333, 0.333, 0.333, 1.0);\n"
-    "struct PS_INPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "};\n"
-    "struct PS_OUTPUT\n"
-    "{\n"
-    "  float4 Plane: SV_TARGET;\n"
-    "};\n"
-    "PS_OUTPUT main(PS_INPUT input)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  if ((input.Position.x % (blocksize * 2.0)) >= blocksize) {\n"
-    "    if ((input.Position.y % (blocksize * 2.0)) >= blocksize)\n"
-    "      output.Plane = low;\n"
-    "    else\n"
-    "      output.Plane = high;\n"
-    "  } else {\n"
-    "    if ((input.Position.y % (blocksize * 2.0)) < blocksize)\n"
-    "      output.Plane = low;\n"
-    "    else\n"
-    "      output.Plane = high;\n"
-    "  }\n"
-    "  return output;\n"
-    "}\n";
-
-static const gchar checker_ps_src_vuya[] =
-    "static const float blocksize = 8.0;\n"
-    "static const float4 high = float4(0.5, 0.5, 0.667, 1.0);\n"
-    "static const float4 low = float4(0.5, 0.5, 0.333, 1.0);\n"
-    "struct PS_INPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "};\n"
-    "struct PS_OUTPUT\n"
-    "{\n"
-    "  float4 Plane: SV_TARGET;\n"
-    "};\n"
-    "PS_OUTPUT main(PS_INPUT input)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  if ((input.Position.x % (blocksize * 2.0)) >= blocksize) {\n"
-    "    if ((input.Position.y % (blocksize * 2.0)) >= blocksize)\n"
-    "      output.Plane = low;\n"
-    "    else\n"
-    "      output.Plane = high;\n"
-    "  } else {\n"
-    "    if ((input.Position.y % (blocksize * 2.0)) < blocksize)\n"
-    "      output.Plane = low;\n"
-    "    else\n"
-    "      output.Plane = high;\n"
-    "  }\n"
-    "  return output;\n"
-    "}\n";
-
-static const gchar checker_ps_src_luma[] =
-    "static const float blocksize = 8.0;\n"
-    "static const float4 high = float4(0.667, 0.0, 0.0, 1.0);\n"
-    "static const float4 low = float4(0.333, 0.0, 0.0, 1.0);\n"
-    "struct PS_INPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "};\n"
-    "struct PS_OUTPUT\n"
-    "{\n"
-    "  float4 Plane: SV_TARGET;\n"
-    "};\n"
-    "PS_OUTPUT main(PS_INPUT input)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  if ((input.Position.x % (blocksize * 2.0)) >= blocksize) {\n"
-    "    if ((input.Position.y % (blocksize * 2.0)) >= blocksize)\n"
-    "      output.Plane = low;\n"
-    "    else\n"
-    "      output.Plane = high;\n"
-    "  } else {\n"
-    "    if ((input.Position.y % (blocksize * 2.0)) < blocksize)\n"
-    "      output.Plane = low;\n"
-    "    else\n"
-    "      output.Plane = high;\n"
-    "  }\n"
-    "  return output;\n"
-    "}\n";
-
 static D3D11_RENDER_TARGET_BLEND_DESC blend_templ[] = {
   /* SOURCE */
   {
@@ -302,6 +199,7 @@ typedef struct
   ID3D11PixelShader *ps;
   ID3D11VertexShader *vs;
   ID3D11InputLayout *layout;
+  ID3D11RasterizerState *rs;
   ID3D11Buffer *vertex_buffer;
   ID3D11Buffer *index_buffer;
   D3D11_VIEWPORT viewport;
@@ -1646,6 +1544,9 @@ gst_d3d11_compositor_calculate_background_color (GstD3D11Compositor * self,
       }
     }
   }
+
+  self->clear_color[2] = self->clear_color[0];
+  self->clear_color[2].color[0][3] = 0.0;
 }
 
 static gboolean
@@ -1878,14 +1779,11 @@ gst_d3d11_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params) {
       d3d11_params = gst_d3d11_allocation_params_new (self->device,
-          &info, GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_RENDER_TARGET,
-          0);
+          &info, GST_D3D11_ALLOCATION_FLAG_DEFAULT,
+          D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0);
     } else {
-      guint i;
-
-      for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
-        d3d11_params->desc[i].BindFlags |= D3D11_BIND_RENDER_TARGET;
-      }
+      gst_d3d11_allocation_params_set_bind_flags (d3d11_params,
+          D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
     }
 
     gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
@@ -1929,76 +1827,46 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self,
     const GstVideoInfo * info)
 {
   GstD3D11CompositorQuad *quad = nullptr;
-  VertexData *vertex_data;
-  WORD *indices;
+  VertexData vertex_data[4];
+  const WORD indices[6] = { 0, 1, 2, 3, 0, 2 };
   ID3D11Device *device_handle;
-  ID3D11DeviceContext *context_handle;
-  D3D11_MAPPED_SUBRESOURCE map;
-  D3D11_INPUT_ELEMENT_DESC input_desc;
   D3D11_BUFFER_DESC buffer_desc;
+  D3D11_SUBRESOURCE_DATA subresource;
   ComPtr < ID3D11Buffer > vertex_buffer;
   ComPtr < ID3D11Buffer > index_buffer;
   ComPtr < ID3D11PixelShader > ps;
   ComPtr < ID3D11VertexShader > vs;
   ComPtr < ID3D11InputLayout > layout;
+  ComPtr < ID3D11RasterizerState > rs;
   HRESULT hr;
-  const gchar *ps_src;
 
   device_handle = gst_d3d11_device_get_device_handle (self->device);
-  context_handle = gst_d3d11_device_get_device_context_handle (self->device);
 
   if (GST_VIDEO_INFO_IS_RGB (info)) {
-    ps_src = checker_ps_src_rgb;
+    hr = gst_d3d11_get_pixel_shader_checker_rgb (self->device, &ps);
   } else if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_VUYA) {
-    ps_src = checker_ps_src_vuya;
+    hr = gst_d3d11_get_pixel_shader_checker_vuya (self->device, &ps);
   } else {
-    ps_src = checker_ps_src_luma;
+    hr = gst_d3d11_get_pixel_shader_checker_luma (self->device, &ps);
   }
 
-  hr = gst_d3d11_create_pixel_shader_simple (self->device, ps_src, "main", &ps);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't setup pixel shader");
     return nullptr;
   }
 
-  memset (&input_desc, 0, sizeof (D3D11_INPUT_ELEMENT_DESC));
-  input_desc.SemanticName = "POSITION";
-  input_desc.SemanticIndex = 0;
-  input_desc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
-  input_desc.InputSlot = 0;
-  input_desc.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-  input_desc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-  input_desc.InstanceDataStepRate = 0;
-
-  hr = gst_d3d11_create_vertex_shader_simple (self->device, checker_vs_src,
-      "main", &input_desc, 1, &vs, &layout);
+  hr = gst_d3d11_get_vertex_shader_pos (self->device, &vs, &layout);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't setup vertex shader");
     return nullptr;
   }
 
-  memset (&buffer_desc, 0, sizeof (D3D11_BUFFER_DESC));
-  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (VertexData) * 4;
-  buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &vertex_buffer);
+  hr = gst_d3d11_device_get_rasterizer (self->device, &rs);
   if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self,
-        "Couldn't create vertex buffer, hr: 0x%x", (guint) hr);
+    GST_ERROR_OBJECT (self, "Couldn't setup rasterizer state");
     return nullptr;
   }
 
-  hr = context_handle->Map (vertex_buffer.Get (),
-      0, D3D11_MAP_WRITE_DISCARD, 0, &map);
-
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
-    return nullptr;
-  }
-
-  vertex_data = (VertexData *) map.pData;
   /* bottom left */
   vertex_data[0].position.x = -1.0f;
   vertex_data[0].position.y = -1.0f;
@@ -2027,44 +1895,45 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self,
   vertex_data[3].texture.u = 1.0f;
   vertex_data[3].texture.v = 1.0f;
 
-  context_handle->Unmap (vertex_buffer.Get (), 0);
+  memset (&subresource, 0, sizeof (D3D11_SUBRESOURCE_DATA));
+  memset (&buffer_desc, 0, sizeof (D3D11_BUFFER_DESC));
+
+  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+  buffer_desc.ByteWidth = sizeof (VertexData) * 4;
+  buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+  subresource.pSysMem = vertex_data;
+  subresource.SysMemPitch = sizeof (VertexData) * 4;
+
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &vertex_buffer);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self,
+        "Couldn't create vertex buffer, hr: 0x%x", (guint) hr);
+    return nullptr;
+  }
 
   buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
   buffer_desc.ByteWidth = sizeof (WORD) * 6;
   buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
   buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &index_buffer);
+  subresource.pSysMem = indices;
+  subresource.SysMemPitch = sizeof (WORD) * 6;
+
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &index_buffer);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self,
         "Couldn't create index buffer, hr: 0x%x", (guint) hr);
     return nullptr;
   }
 
-  hr = context_handle->Map (index_buffer.Get (),
-      0, D3D11_MAP_WRITE_DISCARD, 0, &map);
-
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't map index buffer, hr: 0x%x", (guint) hr);
-    return nullptr;
-  }
-
-  indices = (WORD *) map.pData;
-
-  /* clockwise indexing */
-  indices[0] = 0;               /* bottom left */
-  indices[1] = 1;               /* top left */
-  indices[2] = 2;               /* top right */
-
-  indices[3] = 3;               /* bottom right */
-  indices[4] = 0;               /* bottom left  */
-  indices[5] = 2;               /* top right */
-
-  context_handle->Unmap (index_buffer.Get (), 0);
   quad = g_new0 (GstD3D11CompositorQuad, 1);
   quad->ps = ps.Detach ();
   quad->vs = vs.Detach ();
+  quad->rs = rs.Detach ();
   quad->layout = layout.Detach ();
+
   quad->vertex_buffer = vertex_buffer.Detach ();
   quad->index_buffer = index_buffer.Detach ();
 
@@ -2087,6 +1956,7 @@ gst_d3d11_compositor_quad_free (GstD3D11CompositorQuad * quad)
   GST_D3D11_CLEAR_COM (quad->ps);
   GST_D3D11_CLEAR_COM (quad->vs);
   GST_D3D11_CLEAR_COM (quad->layout);
+  GST_D3D11_CLEAR_COM (quad->rs);
   GST_D3D11_CLEAR_COM (quad->vertex_buffer);
   GST_D3D11_CLEAR_COM (quad->index_buffer);
 
@@ -2120,6 +1990,7 @@ gst_d3d11_compositor_draw_background_checker (GstD3D11Compositor * self,
   context->VSSetShader (quad->vs, nullptr, 0);
   context->PSSetShader (quad->ps, nullptr, 0);
   context->RSSetViewports (1, &quad->viewport);
+  context->RSSetState (quad->rs);
   context->OMSetRenderTargets (1, &rtv, nullptr);
   context->OMSetBlendState (nullptr, nullptr, 0xffffffff);
   context->DrawIndexed (6, 0, 0);

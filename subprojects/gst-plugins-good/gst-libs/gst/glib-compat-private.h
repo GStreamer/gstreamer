@@ -29,7 +29,74 @@ G_BEGIN_DECLS
 
 /* copies */
 
+#if !GLIB_CHECK_VERSION(2,68,0)
+#ifndef g_string_replace
+#define g_string_replace gst_g_string_replace
+#endif
+
+static inline guint
+gst_g_string_replace (GString     *string,
+                      const gchar *find,
+                      const gchar *replace,
+                      guint        limit)
+{
+  gsize f_len, r_len, pos;
+  gchar *cur, *next;
+  guint n = 0;
+
+  g_return_val_if_fail (string != NULL, 0);
+  g_return_val_if_fail (find != NULL, 0);
+  g_return_val_if_fail (replace != NULL, 0);
+
+  f_len = strlen (find);
+  r_len = strlen (replace);
+  cur = string->str;
+
+  while ((next = strstr (cur, find)) != NULL)
+    {
+      pos = next - string->str;
+      g_string_erase (string, pos, f_len);
+      g_string_insert (string, pos, replace);
+      cur = string->str + pos + r_len;
+      n++;
+      /* Only match the empty string once at any given position, to
+       * avoid infinite loops */
+      if (f_len == 0)
+        {
+          if (cur[0] == '\0')
+            break;
+          else
+            cur++;
+        }
+      if (n == limit)
+        break;
+    }
+
+  return n;
+}
+#endif /* GLIB_CHECK_VERSION */
+
 /* adaptations */
+
+#if !GLIB_CHECK_VERSION(2, 81, 1)
+#define g_sort_array(a,n,s,f,udata) gst_g_sort_array(a,n,s,f,udata)
+
+// Don't need to maintain ABI compat here (n_elements), since we never pass
+// the function as pointer but always call it directly ourselves.
+static inline void
+gst_g_sort_array (const void       *array,
+                  gssize            n_elements,
+                  size_t            element_size,
+                  GCompareDataFunc  compare_func,
+                  void             *user_data)
+{
+  if (n_elements >= 0 && n_elements <= G_MAXINT) {
+    g_qsort_with_data (array, n_elements, element_size, compare_func, user_data);
+  } else {
+    g_abort ();
+  }
+}
+#endif
 
 G_END_DECLS
 

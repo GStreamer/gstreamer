@@ -213,8 +213,43 @@ msdk_release_impl_description (const mfxLoader * loader, gpointer impl_desc)
   return TRUE;
 }
 
+static mfxStatus
+_set_pci_id (mfxHDL handle, mfxConfig cfg)
+{
+#ifndef _WIN32
+  VAStatus va_status;
+  mfxStatus mfx_status;
+  VADisplay dpy = handle;
+  mfxVariant impl_value = {
+    .Type = MFX_VARIANT_TYPE_U16,
+  };
+  VADisplayAttribute attr = {
+    .type = VADisplayPCIID,
+  };
+
+  va_status = vaGetDisplayAttributes (dpy, &attr, 1);
+  if (va_status != VA_STATUS_SUCCESS ||
+      attr.flags == VA_DISPLAY_ATTRIB_NOT_SUPPORTED)
+    return MFX_ERR_UNSUPPORTED;
+
+  impl_value.Data.U16 = (attr.value & 0xFFFF);
+  mfx_status = MFXSetConfigFilterProperty (cfg,
+      (const mfxU8 *) "mfxImplDescription.mfxDeviceDescription.DeviceID",
+      impl_value);
+
+  if (mfx_status != MFX_ERR_NONE) {
+    GST_ERROR ("Failed to add an additional MFX configuration (%s)",
+        msdk_status_to_string (mfx_status));
+  }
+
+  return mfx_status;
+#else
+  return MFX_ERR_NONE;
+#endif
+}
+
 mfxStatus
-msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
+msdk_init_msdk_session (mfxHDL handle, mfxIMPL impl, mfxVersion * pver,
     MsdkSession * msdk_session)
 {
   mfxStatus sts = MFX_ERR_NONE;
@@ -269,6 +304,13 @@ msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
     if (sts != MFX_ERR_NONE) {
       GST_ERROR ("Failed to add an additional MFX configuration (%s)",
           msdk_status_to_string (sts));
+      MFXUnload (loader);
+      return sts;
+    }
+
+    sts = _set_pci_id (handle, cfg);
+
+    if (sts != MFX_ERR_NONE) {
       MFXUnload (loader);
       return sts;
     }
@@ -330,8 +372,9 @@ msdk_release_impl_description (const mfxLoader * loader, gpointer impl_desc)
   return TRUE;
 }
 
+/* handle is not used here */
 mfxStatus
-msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
+msdk_init_msdk_session (mfxHDL handle, mfxIMPL impl, mfxVersion * pver,
     MsdkSession * msdk_session)
 {
   mfxStatus status;
@@ -388,7 +431,7 @@ msdk_close_session (MsdkSession * msdk_session)
 }
 
 MsdkSession
-msdk_open_session (mfxIMPL impl)
+msdk_open_session (mfxHDL handle, mfxIMPL impl)
 {
   mfxSession session = NULL;
   mfxVersion version = { {1, 1}
@@ -405,7 +448,7 @@ msdk_open_session (mfxIMPL impl)
   msdk_session.session = NULL;
   msdk_session.loader = NULL;
   msdk_session.impl_idx = 0;
-  status = msdk_init_msdk_session (impl, &version, &msdk_session);
+  status = msdk_init_msdk_session (handle, impl, &version, &msdk_session);
 
   if (status != MFX_ERR_NONE)
     return msdk_session;

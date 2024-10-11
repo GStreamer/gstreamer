@@ -62,6 +62,7 @@ struct _Qt6GLWindowPrivate
   GstVideoFrame mapped_frame;
   GstGLBaseMemoryAllocator *gl_allocator;
   GstGLAllocationParams *gl_params;
+  GLenum internal_format;
 
   gboolean initted;
   gboolean updated;
@@ -99,9 +100,10 @@ Qt6GLWindow::Qt6GLWindow (QWindow * parent, QQuickWindow *src)
 
   this->priv->display = gst_qml6_get_gl_display(FALSE);
   this->priv->result = TRUE;
+  this->priv->internal_format = GL_RGBA;
 
   connect (source, SIGNAL(beforeRendering()), this, SLOT(beforeRendering()), Qt::DirectConnection);
-  connect (source, SIGNAL(afterRendering()), this, SLOT(afterRendering()), Qt::DirectConnection);
+  connect (source, SIGNAL(afterFrameEnd()), this, SLOT(afterFrameEnd()), Qt::DirectConnection);
   if (source->isSceneGraphInitialized())
     source->scheduleRenderJob(new RenderJob(std::bind(&Qt6GLWindow::onSceneGraphInitialized, this)), QQuickWindow::BeforeSynchronizingStage);
   else
@@ -199,12 +201,13 @@ Qt6GLWindow::beforeRendering()
 }
 
 void
-Qt6GLWindow::afterRendering()
+Qt6GLWindow::afterFrameEnd()
 {
   gboolean ret;
   guint width, height;
   const GstGLFuncs *gl;
   GstGLSyncMeta *sync_meta;
+  GLenum fbo_target;
 
   g_mutex_lock (&this->priv->lock);
 
@@ -220,13 +223,15 @@ Qt6GLWindow::afterRendering()
   gst_gl_context_activate (this->priv->other_context, TRUE);
   gl = this->priv->other_context->gl_vtable;
 
+  fbo_target = gl->BlitFramebuffer ? GL_READ_FRAMEBUFFER : GL_FRAMEBUFFER;
+
   if (!this->priv->useDefaultFbo) {
-      gst_video_frame_unmap (&this->priv->mapped_frame);
     ret = TRUE;
   } else {
-    gl->BindFramebuffer (GL_READ_FRAMEBUFFER, 0);
 
-    ret = gst_gl_context_check_framebuffer_status (this->priv->other_context, GL_READ_FRAMEBUFFER);
+    gl->BindFramebuffer (fbo_target, 0);
+
+    ret = gst_gl_context_check_framebuffer_status (this->priv->other_context, fbo_target);
     if (!ret) {
       GST_ERROR ("FBO errors");
       goto errors;
@@ -249,12 +254,29 @@ Qt6GLWindow::afterRendering()
           0, 0, width, height,
           GL_COLOR_BUFFER_BIT, GL_LINEAR);
     } else {
-      gl->CopyTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, width, height, 0);
+      gl->CopyTexImage2D (GL_TEXTURE_2D, 0, this->priv->internal_format, 0, 0, width, height, 0);
+
+      GLenum err = gl->GetError ();
+      if (err && this->priv->internal_format == GL_RGBA) {
+        this->priv->internal_format = GL_RGB;
+        GST_WARNING ("Falling back to GL_RGB (opaque) when copying QML texture.");
+        gl->CopyTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, 0, 0, width, height, 0);
+        err = gl->GetError ();
+      }
+
+      if (err) {
+        GST_ERROR ("CopyTexImage2D() failed with error: 0x%X", err);
+        ret = FALSE;
+        goto errors;
+      }
     }
   }
 
   gst_video_frame_unmap (&this->priv->mapped_frame);
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
+  gl->BindFramebuffer (fbo_target, 0);
+
+  if (gl->BlitFramebuffer)
+      gl->BindFramebuffer (GL_DRAW_FRAMEBUFFER, 0);
 
   if (this->priv->context) {
     sync_meta = gst_buffer_get_gl_sync_meta (this->priv->buffer);
@@ -270,6 +292,7 @@ done:
   gst_gl_context_activate (this->priv->other_context, FALSE);
 
   this->priv->result = ret;
+  gst_clear_buffer (&this->priv->produced_buffer);
   this->priv->produced_buffer = this->priv->buffer;
   this->priv->buffer = NULL;
   this->priv->updated = TRUE;
@@ -297,6 +320,7 @@ Qt6GLWindow::onSceneGraphInitialized()
 
   this->priv->initted = gst_qml6_get_gl_wrapcontext (this->priv->display,
       &this->priv->other_context, &this->priv->context);
+  this->priv->internal_format = GL_RGBA;
 
   if (this->priv->initted && this->priv->other_context) {
     const GstGLFuncs *gl;
@@ -423,7 +447,8 @@ qt6_gl_window_take_buffer (Qt6GLWindow * qt6_gl_window, GstCaps ** updated_caps)
   if (qt6_gl_window->priv->new_caps) {
     *updated_caps = gst_video_info_to_caps (&qt6_gl_window->priv->v_info);
     gst_caps_set_features (*updated_caps, 0,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
     qt6_gl_window->priv->new_caps = FALSE;
   }
 

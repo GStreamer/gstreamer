@@ -575,7 +575,7 @@ add_templates (gpointer gclass, PyObject * templates)
             PyString_AsString (repr));
 #else
         PyErr_Format (PyExc_TypeError, "expected GObject but got %s",
-            _PyUnicode_AsString (repr));
+            PyUnicode_AsUTF8 (repr));
 #endif
         Py_DECREF (repr);
 
@@ -1131,11 +1131,11 @@ py_uri_handler_get_protocols_from_pyobject (PyObject * protocols)
     len = PyTuple_Size (protocols);
     if (len == 0) {
       PyErr_Format (PyExc_TypeError,
-          "Empty tuple for GstUriHandler.__protocols");
+          "Empty tuple for GstUriHandler.__protocols__");
       goto err;
     }
 
-    res = g_malloc (len * sizeof (gchar *));
+    res = g_malloc0 ((len + 1) * sizeof (gchar *));
     for (i = 0; i < len; i++) {
       PyObject *protocol = (PyObject *) PyTuple_GetItem (protocols, i);
 
@@ -1147,8 +1147,8 @@ py_uri_handler_get_protocols_from_pyobject (PyObject * protocols)
       res[i] = g_strdup (PyUnicode_AsUTF8 (protocol));
     }
   } else {
-    PyErr_Format (PyExc_TypeError, "invalid type for GstUriHandler.__protocols."
-        " Should be a tuple");
+    PyErr_Format (PyExc_TypeError,
+        "invalid type for GstUriHandler.__protocols__" " Should be a tuple");
     goto err;
   }
 

@@ -1,0 +1,30 @@
+From c563c097286b2183f2d00f8f60ad96b6331d7692 Mon Sep 17 00:00:00 2001
+From: Detlev Casanova <detlev.casanova@collabora.com>
+Date: Mon, 23 Oct 2023 10:47:41 -0400
+Subject: [PATCH 5/5] doc: visl: Document codec_variability parameter
+
+Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
+Signed-off-by: Detlev Casanova <detlev.casanova@collabora.com>
+---
+ Documentation/admin-guide/media/visl.rst | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/Documentation/admin-guide/media/visl.rst b/Documentation/admin-guide/media/visl.rst
+index 5b26fd943571..56d2e9ab72cc 100644
+--- a/Documentation/admin-guide/media/visl.rst
++++ b/Documentation/admin-guide/media/visl.rst
+@@ -53,6 +53,11 @@ Module parameters
+   sure that, for a given input, the output frames are always exactly the same.
+   This is useful for automated tests to check that output frames are correct.
+ 
++- codec_variability: Add codec specific variability in the ouput frames. It
++  adds a text line on the ouptut frames containing parameters that is specific
++  to the format of the input stream to ensure that different inputs do not give
++  the same output.
++
+ What is the default use case for this driver?
+ ---------------------------------------------
+ 
+-- 
+2.41.0
+

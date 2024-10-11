@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:gstqml6glsink
+ * SECTION:element-qml6glsink
  *
  * qml6glsink provides a way to render a video stream as a Qml object inside
  * the Qml scene graph.  This is achieved by providing the incoming OpenGL
@@ -67,6 +67,8 @@
  * return the exact same #GstGLDisplay object while the pipeline is running
  * regardless of whether any `qml6glsink` or `qml6gloverlay` elements are
  * added or removed from the pipeline.
+ *
+ * Since: 1.22
  */
 
 #ifdef HAVE_CONFIG_H
@@ -109,11 +111,12 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY "), "
-    "format = (string) { RGB, RGBA }, "
+    "format = (string) { RGBA, BGRA, RGB, YV12, NV12 }, "
     "width = " GST_VIDEO_SIZE_RANGE ", "
     "height = " GST_VIDEO_SIZE_RANGE ", "
     "framerate = " GST_VIDEO_FPS_RANGE ", "
-    "texture-target = (string) 2D"));
+    "texture-target = (string) { " GST_GL_TEXTURE_TARGET_2D_STR ", "
+                                   GST_GL_TEXTURE_TARGET_EXTERNAL_OES_STR " } "));
 
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
 #define DEFAULT_PAR_N               0

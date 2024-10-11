@@ -227,7 +227,9 @@ gst_audiolatency_init (GstAudioLatency * self)
 
   templ = gst_static_pad_template_get (&src_template);
   srcpad = gst_element_get_static_pad (self->audiosrc, "src");
-  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BUFFER,
+  gst_pad_add_probe (srcpad,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_QUERY_UPSTREAM |
+      GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
       (GstPadProbeCallback) gst_audiolatency_src_probe, self, NULL);
 
   self->srcpad = gst_ghost_pad_new_from_template ("src", srcpad, templ);
@@ -383,7 +385,7 @@ buffer_has_wave (GstBuffer * buffer, GstPad * pad)
 }
 
 static GstPadProbeReturn
-gst_audiolatency_src_probe (GstPad * pad, GstPadProbeInfo * info,
+gst_audiolatency_src_probe_buffer (GstPad * pad, GstPadProbeInfo * info,
     gpointer user_data)
 {
   GstAudioLatency *self = user_data;
@@ -422,6 +424,46 @@ gst_audiolatency_src_probe (GstPad * pad, GstPadProbeInfo * info,
   self->send_pts = pts + offset;
 
 out:
+  return GST_PAD_PROBE_OK;
+}
+
+static GstPadProbeReturn
+gst_audiolatency_src_probe (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  GstAudioLatency *self = user_data;
+
+  if (info->type & GST_PAD_PROBE_TYPE_BUFFER) {
+    return gst_audiolatency_src_probe_buffer (pad, info, user_data);
+  } else if (info->type & GST_PAD_PROBE_TYPE_QUERY_UPSTREAM) {
+    GstQuery *query = gst_pad_probe_info_get_query (info);
+
+    /* Forward latency query to the upstream sinkpad */
+    if (GST_QUERY_TYPE (query) == GST_QUERY_LATENCY) {
+      gboolean res = gst_pad_peer_query (self->sinkpad, query);
+      GST_LOG_OBJECT (self,
+          "Forwarded latency query to sinkpad. Result %d %" GST_PTR_FORMAT, res,
+          query);
+      return res ? GST_PAD_PROBE_HANDLED : GST_PAD_PROBE_DROP;
+    }
+  } else if (info->type & GST_PAD_PROBE_TYPE_EVENT_UPSTREAM) {
+    GstEvent *event = gst_pad_probe_info_get_event (info);
+
+    if (GST_EVENT_TYPE (event) == GST_EVENT_LATENCY) {
+      gboolean res = gst_pad_push_event (self->sinkpad, event);
+
+      GST_LOG_OBJECT (self,
+          "Forwarded latency event to sinkpad. Result %d %" GST_PTR_FORMAT, res,
+          event);
+      if (!res) {
+        /* This doesn't actually do anything - pad probe handling ignores
+         * it, but maybe one day */
+        GST_PAD_PROBE_INFO_FLOW_RETURN (info) = GST_FLOW_ERROR;
+      }
+      return GST_PAD_PROBE_HANDLED;
+    }
+  }
+
   return GST_PAD_PROBE_OK;
 }
 

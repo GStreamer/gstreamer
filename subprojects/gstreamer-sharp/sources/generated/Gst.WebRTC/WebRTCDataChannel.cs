@@ -660,6 +660,21 @@ namespace Gst.WebRTC {
 		}
 
 		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe bool gst_webrtc_data_channel_send_data_full(IntPtr raw, IntPtr data, out IntPtr error);
+
+		public unsafe bool SendDataFull(GLib.Bytes data) {
+			IntPtr error = IntPtr.Zero;
+			bool raw_ret = gst_webrtc_data_channel_send_data_full(Handle, data == null ? IntPtr.Zero : data.Handle, out error);
+			bool ret = raw_ret;
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
+		}
+
+		public bool SendDataFull() {
+			return SendDataFull (null);
+		}
+
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_webrtc_data_channel_send_string(IntPtr raw, IntPtr str);
 
 		public void SendString(string str) {
@@ -670,6 +685,23 @@ namespace Gst.WebRTC {
 
 		public void SendString() {
 			SendString (null);
+		}
+
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe bool gst_webrtc_data_channel_send_string_full(IntPtr raw, IntPtr str, out IntPtr error);
+
+		public unsafe bool SendStringFull(string str) {
+			IntPtr native_str = GLib.Marshaller.StringToPtrGStrdup (str);
+			IntPtr error = IntPtr.Zero;
+			bool raw_ret = gst_webrtc_data_channel_send_string_full(Handle, native_str, out error);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_str);
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
+		}
+
+		public bool SendStringFull() {
+			return SendStringFull (null);
 		}
 
 

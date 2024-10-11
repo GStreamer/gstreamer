@@ -861,6 +861,14 @@ test_play_response_200_and_check_data (GstRTSPClient * client,
         gst_event_unref (outevent);
       }
 
+
+      fail_unless (gst_rtp_buffer_get_extension_data (&rtp, &bits,
+              (gpointer) & data, &wordlen));
+
+      fail_unless (bits == EXTENSION_ID && wordlen == EXTENSION_SIZE);
+
+      flags = GST_READ_UINT8 (data + 8);
+
       if (expected_interval) {
         if (check->previous_ts) {
           fail_unless_equals_int (gst_rtp_buffer_get_timestamp (&rtp) -
@@ -870,32 +878,22 @@ test_play_response_200_and_check_data (GstRTSPClient * client,
         check->previous_ts = gst_rtp_buffer_get_timestamp (&rtp);
         check->n_buffers += 1;
 
-        fail_unless (gst_rtp_buffer_get_extension_data (&rtp, &bits,
-                (gpointer) & data, &wordlen));
-
-        fail_unless (bits == EXTENSION_ID && wordlen == EXTENSION_SIZE);
-
-        flags = GST_READ_UINT8 (data + 8);
-
         if (flags & (1 << 7)) {
           check->n_clean_points += 1;
         }
+      }
 
-        /* T flag is set, we are done */
-        if (flags & (1 << 4)) {
-          fail_unless_equals_int (check->expected_n_buffers, check->n_buffers);
-          fail_unless_equals_int (check->expected_n_i_frames,
-              check->n_i_frames);
-          fail_unless_equals_int (check->expected_n_p_frames,
-              check->n_p_frames);
-          fail_unless_equals_int (check->expected_n_b_frames,
-              check->n_b_frames);
-          fail_unless_equals_int (check->expected_n_clean_points,
-              check->n_clean_points);
+      /* T flag is set, we are done */
+      if (flags & (1 << 4)) {
+        fail_unless_equals_int (check->expected_n_buffers, check->n_buffers);
+        fail_unless_equals_int (check->expected_n_i_frames, check->n_i_frames);
+        fail_unless_equals_int (check->expected_n_p_frames, check->n_p_frames);
+        fail_unless_equals_int (check->expected_n_b_frames, check->n_b_frames);
+        fail_unless_equals_int (check->expected_n_clean_points,
+            check->n_clean_points);
 
-          terminal_frame = TRUE;
+        terminal_frame = TRUE;
 
-        }
       }
 
       gst_rtp_buffer_unmap (&rtp);

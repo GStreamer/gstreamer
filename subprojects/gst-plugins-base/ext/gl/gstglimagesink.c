@@ -72,7 +72,7 @@
  * No special opengl extension is used in this pipeline, that's why it should work
  * with OpenGL >= 1.1. That's the case if you are using the MESA3D driver v1.3.
  * |[
- * gst-plugins-bas/tests/examples/gl/generic/cube
+ * gst-plugins-base/tests/examples/gl/generic/cube
  * ]| The graphic FPS scene can be greater than the input video FPS.
  * The graphic scene can be written from a client code through the
  * two glfilterapp properties.
@@ -814,6 +814,7 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink)
   glimage_sink->handle_events = TRUE;
   glimage_sink->ignore_alpha = TRUE;
   glimage_sink->overlay_compositor = NULL;
+  glimage_sink->need_resize_window = FALSE;
 
   glimage_sink->mview_output_mode = DEFAULT_MULTIVIEW_MODE;
   glimage_sink->mview_output_flags = DEFAULT_MULTIVIEW_FLAGS;
@@ -1004,12 +1005,17 @@ gst_glimage_sink_mouse_scroll_event_cb (GstGLWindow * window,
 static void
 _set_context (GstGLImageSink * gl_sink, GstGLContext * context)
 {
-  GST_GLIMAGE_SINK_LOCK (gl_sink);
-  if (gl_sink->context)
-    gst_object_unref (gl_sink->context);
+  GstGLContext *old_context;
 
+  GST_GLIMAGE_SINK_LOCK (gl_sink);
+
+  old_context = gl_sink->context;
   gl_sink->context = context;
+
   GST_GLIMAGE_SINK_UNLOCK (gl_sink);
+
+  if (old_context)
+    gst_object_unref (old_context);
 }
 
 static void
@@ -1522,10 +1528,18 @@ update_output_format (GstGLImageSink * glimage_sink)
   GstVideoMultiviewMode mv_mode;
   GstGLWindow *window = NULL;
   GstGLTextureTarget previous_target;
+  gint pre_width = 0, pre_height = 0;
+  gint cur_width = 0, cur_height = 0;
   GstStructure *s;
   const gchar *target_str;
   GstCaps *out_caps;
   gboolean ret;
+
+  pre_width = GST_VIDEO_INFO_WIDTH (out_info);
+  pre_height = GST_VIDEO_INFO_HEIGHT (out_info);
+
+  cur_width = GST_VIDEO_INFO_WIDTH (&glimage_sink->in_info);
+  cur_height = GST_VIDEO_INFO_HEIGHT (&glimage_sink->in_info);
 
   *out_info = glimage_sink->in_info;
   previous_target = glimage_sink->texture_target;
@@ -1598,9 +1612,10 @@ update_output_format (GstGLImageSink * glimage_sink)
 
   out_caps = gst_video_info_to_caps (out_info);
   gst_caps_set_features (out_caps, 0,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
-  gst_caps_set_simple (out_caps, "texture-target", G_TYPE_STRING,
-      target_str, NULL);
+      gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+  gst_caps_set_simple (out_caps, "texture-target", G_TYPE_STRING, target_str,
+      NULL);
 
   if (glimage_sink->convert_views) {
     gst_caps_set_simple (out_caps, "texture-target", G_TYPE_STRING,
@@ -1619,6 +1634,10 @@ update_output_format (GstGLImageSink * glimage_sink)
   if (glimage_sink->out_caps)
     gst_caps_unref (glimage_sink->out_caps);
   glimage_sink->out_caps = out_caps;
+
+  if ((pre_width != 0 && pre_width != cur_width) ||
+      (pre_height != 0 && pre_height != cur_height))
+    glimage_sink->need_resize_window = TRUE;
 
   if (previous_target != GST_GL_TEXTURE_TARGET_NONE &&
       glimage_sink->texture_target != previous_target) {
@@ -2480,25 +2499,30 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 static void
 gst_glimage_sink_on_close (GstGLImageSink * gl_sink)
 {
-  GstGLWindow *window;
+  GstGLWindow *window = NULL;
 
   GST_WARNING_OBJECT (gl_sink, "Output window was closed");
 
-  window = gst_gl_context_get_window (gl_sink->context);
+  GST_GLIMAGE_SINK_LOCK (gl_sink);
+  if (gl_sink->context)
+    window = gst_gl_context_get_window (gl_sink->context);
+  GST_GLIMAGE_SINK_UNLOCK (gl_sink);
 
-  if (gl_sink->key_sig_id)
-    g_signal_handler_disconnect (window, gl_sink->key_sig_id);
-  gl_sink->key_sig_id = 0;
-  if (gl_sink->mouse_sig_id)
-    g_signal_handler_disconnect (window, gl_sink->mouse_sig_id);
-  gl_sink->mouse_sig_id = 0;
-  if (gl_sink->mouse_scroll_sig_id)
-    g_signal_handler_disconnect (window, gl_sink->mouse_scroll_sig_id);
-  gl_sink->mouse_scroll_sig_id = 0;
+  if (window) {
+    if (gl_sink->key_sig_id)
+      g_signal_handler_disconnect (window, gl_sink->key_sig_id);
+    gl_sink->key_sig_id = 0;
+    if (gl_sink->mouse_sig_id)
+      g_signal_handler_disconnect (window, gl_sink->mouse_sig_id);
+    gl_sink->mouse_sig_id = 0;
+    if (gl_sink->mouse_scroll_sig_id)
+      g_signal_handler_disconnect (window, gl_sink->mouse_scroll_sig_id);
+    gl_sink->mouse_scroll_sig_id = 0;
+
+    gst_object_unref (window);
+  }
 
   g_atomic_int_set (&gl_sink->to_quit, 1);
-
-  gst_object_unref (window);
 }
 
 static gboolean
@@ -2507,6 +2531,7 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
   GstGLWindow *window;
   GstBuffer *old_stored_buffer[2], *old_sync;
   gulong handler_id;
+  gboolean resize_window = gl_sink->need_resize_window;
 
   window = gst_gl_context_get_window (gl_sink->context);
   if (!window)
@@ -2527,6 +2552,12 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
       gst_object_unref (window);
       return FALSE;
     }
+
+    resize_window = TRUE;
+  }
+
+  if (resize_window) {
+    gl_sink->need_resize_window = FALSE;
 
     gst_gl_window_set_preferred_size (window, GST_VIDEO_SINK_WIDTH (gl_sink),
         GST_VIDEO_SINK_HEIGHT (gl_sink));

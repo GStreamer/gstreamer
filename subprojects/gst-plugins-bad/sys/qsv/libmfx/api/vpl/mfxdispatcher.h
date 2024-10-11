@@ -81,11 +81,13 @@ mfxStatus MFX_CDECL MFXSetConfigFilterProperty(mfxConfig config, const mfxU8* na
 
 /*!
    @brief Iterates over filtered out implementations to gather their details. This function allocates memory to store
-          mfxImplDescription structure instance. Use the MFXDispReleaseImplDescription function to free memory allocated to the mfxImplDescription structure.
+          a structure or string corresponding to the type specified by format. For example, if format is set to
+          MFX_IMPLCAPS_IMPLDESCSTRUCTURE, then idesc will return a pointer to a structure of type mfxImplDescription.
+          Use the MFXDispReleaseImplDescription function to free memory allocated to this structure or string.
    @param[in] loader Loader handle.
    @param[in] i Index of the implementation.
    @param[in] format Format in which capabilities need to be delivered. See the mfxImplCapsDeliveryFormat enumerator for more details.
-   @param[out] idesc Pointer to the mfxImplDescription structure.
+   @param[out] idesc Pointer to the structure or string corresponding to the requested format.
    @return
       MFX_ERR_NONE        The function completed successfully. The idesc contains valid information.\n
       MFX_ERR_NULL_PTR    If loader is NULL. \n
@@ -146,6 +148,32 @@ mfxStatus MFX_CDECL MFXCreateSession(mfxLoader loader, mfxU32 i, mfxSession* ses
    @since This function is available since API version 2.0.
 */
 mfxStatus MFX_CDECL MFXDispReleaseImplDescription(mfxLoader loader, mfxHDL hdl);
+
+#ifdef ONEVPL_EXPERIMENTAL
+/*!
+   @brief
+      Macro help to return UUID in the common oneAPI format. 
+
+   @param[in]  devinfo Handle to mfxExtendedDeviceId.
+   @param[in]  sub_device_id SubDevice number. Can be obtained from mfxDeviceDescription::SubDevices::Index. Set to zero if no SubDevices.
+   @param[out] uuid    Pointer to UUID.
+
+*/
+#define MFX_UUID_COMPUTE_DEVICE_ID(devinfo, sub_device_id, uuid)              \
+{                                                                             \
+   extDeviceUUID t_uuid = { 0 };                                              \
+   extDeviceUUID* shared_uuid = (extDeviceUUID*)uuid;                         \
+   t_uuid.vendor_id   = devinfo->VendorID;                                    \
+   t_uuid.device_id   = devinfo->DeviceID;                                    \
+   t_uuid.revision_id = devinfo->RevisionID;                                  \
+   t_uuid.pci_domain  = devinfo->PCIDomain;                                   \
+   t_uuid.pci_bus     = (mfxU8)devinfo->PCIBus;                               \
+   t_uuid.pci_dev     = (mfxU8)devinfo->PCIDevice;                            \
+   t_uuid.pci_func    = (mfxU8)devinfo->PCIFunction;                          \
+   t_uuid.sub_device_id = (mfxU8)sub_device_id;                               \
+   *shared_uuid = t_uuid;                                                     \
+}                                                                             
+#endif
 
 /* Helper macro definitions to add config filter properties. */
 

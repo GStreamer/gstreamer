@@ -353,6 +353,7 @@ static const gchar *log_domains[] = {
   "GStreamer-GL",
   "GStreamer-InsertBin",
   "GStreamer-ISOFF",
+  "GStreamer-MSE",
   "GStreamer-MpegTS",
   "GStreamer-Net",
   "GStreamer-OpenCV",

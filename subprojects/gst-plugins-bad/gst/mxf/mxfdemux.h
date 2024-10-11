@@ -266,7 +266,7 @@ struct _GstMXFDemux
   GList *partitions;
   GstMXFDemuxPartition *current_partition;
 
-  GArray *essence_tracks;
+  GPtrArray *essence_tracks;
 
   GList *pending_index_table_segments;
   GList *index_tables; /* one per BodySID / IndexSID */

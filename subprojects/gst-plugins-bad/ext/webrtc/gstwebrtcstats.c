@@ -106,10 +106,10 @@ _gst_structure_take_structure (GstStructure * s, const char *fieldname,
 
 /* https://www.w3.org/TR/webrtc-stats/#remoteinboundrtpstats-dict* */
 static gboolean
-_get_stats_from_remote_rtp_source_stats (GstWebRTCBin * webrtc,
-    TransportStream * stream, const GstStructure * source_stats,
-    guint ssrc, guint clock_rate, const gchar * codec_id, const gchar * kind,
-    const gchar * transport_id, GstStructure * s)
+_get_stats_from_remote_rtp_source_stats (TransportStream * stream,
+    const GstStructure * source_stats, guint ssrc, guint clock_rate,
+    const gchar * codec_id, const gchar * kind, const gchar * transport_id,
+    GstStructure * s)
 {
   gboolean have_rb = FALSE, internal = FALSE;
   int lost;
@@ -207,10 +207,9 @@ _get_stats_from_remote_rtp_source_stats (GstWebRTCBin * webrtc,
 /* https://www.w3.org/TR/webrtc-stats/#inboundrtpstats-dict*
    https://www.w3.org/TR/webrtc-stats/#outboundrtpstats-dict* */
 static void
-_get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
-    TransportStream * stream, const GstStructure * source_stats,
-    const gchar * codec_id, const gchar * kind, const gchar * transport_id,
-    GstStructure * s)
+_get_stats_from_rtp_source_stats (TransportStream * stream,
+    const GstStructure * source_stats, const gchar * codec_id,
+    const gchar * kind, const gchar * transport_id, GstStructure * s)
 {
   guint ssrc, fir, pli, nack, jitter;
   int clock_rate;
@@ -339,12 +338,6 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
       }
     }
 
-    if (jb_stats)
-      gst_structure_get (jb_stats, "num-lost", G_TYPE_UINT64, &jb_lost,
-          "num-duplicates", G_TYPE_UINT64, &duplicates, "num-late",
-          G_TYPE_UINT64, &late, "rtx-success-count", G_TYPE_UINT64,
-          &rtx_success, NULL);
-
     in_id = g_strdup_printf ("rtp-inbound-stream-stats_%u", ssrc);
     r_out_id = g_strdup_printf ("rtp-remote-outbound-stream-stats_%u", ssrc);
 
@@ -360,20 +353,39 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
 
     /* RTCReceivedRtpStreamStats */
 
-    if (gst_structure_get_uint64 (source_stats, "packets-received", &packets))
+    if (gst_structure_get_uint64 (source_stats, "packets-received", &packets)) {
       gst_structure_set (in, "packets-received", G_TYPE_UINT64, packets, NULL);
+    } else {
+      gst_structure_set (in, "packets-received", G_TYPE_UINT64,
+          G_GUINT64_CONSTANT (0), NULL);
+    }
+
     if (jb_stats) {
+      gst_structure_get (jb_stats, "num-lost", G_TYPE_UINT64, &jb_lost,
+          "num-duplicates", G_TYPE_UINT64, &duplicates, "num-late",
+          G_TYPE_UINT64, &late, "rtx-success-count", G_TYPE_UINT64,
+          &rtx_success, NULL);
+
       gint64 packets_lost = jb_lost > G_MAXINT64 ?
           G_MAXINT64 : (gint64) jb_lost;
       gst_structure_set (in, "packets-lost", G_TYPE_INT64, packets_lost, NULL);
-    }
-    if (gst_structure_get_uint (source_stats, "jitter", &jitter))
-      gst_structure_set (in, "jitter", G_TYPE_DOUBLE,
-          CLOCK_RATE_VALUE_TO_SECONDS (jitter, clock_rate), NULL);
 
-    if (jb_stats)
       gst_structure_set (in, "packets-discarded", G_TYPE_UINT64, late,
           "packets-repaired", G_TYPE_UINT64, rtx_success, NULL);
+    } else {
+      gst_structure_set (in, "packets-lost", G_TYPE_INT64,
+          G_GINT64_CONSTANT (0), NULL);
+      gst_structure_set (in, "packets-discarded", G_TYPE_UINT64,
+          G_GUINT64_CONSTANT (0), "packets-repaired", G_TYPE_UINT64,
+          G_GUINT64_CONSTANT (0), NULL);
+    }
+
+    if (gst_structure_get_uint (source_stats, "jitter", &jitter)) {
+      gst_structure_set (in, "jitter", G_TYPE_DOUBLE,
+          CLOCK_RATE_VALUE_TO_SECONDS (jitter, clock_rate), NULL);
+    } else {
+      gst_structure_set (in, "jitter", G_TYPE_DOUBLE, 0.0, NULL);
+    }
 
     /*
        RTCReceivedRtpStreamStats
@@ -469,19 +481,20 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     gst_structure_set (r_out, "codec-id", G_TYPE_STRING, codec_id, NULL);
     gst_structure_set (r_out, "transport-id", G_TYPE_STRING, transport_id,
         NULL);
+    if (kind)
+      gst_structure_set (r_out, "kind", G_TYPE_STRING, kind, NULL);
+
     /* XXX: mediaType, trackId */
 
     /* RTCSentRtpStreamStats */
 
+    guint sr_bytes = 0, sr_packets = 0;
     if (have_sr) {
-      guint sr_bytes, sr_packets;
-
-      if (gst_structure_get_uint (source_stats, "sr-octet-count", &sr_bytes))
-        gst_structure_set (r_out, "bytes-sent", G_TYPE_UINT, sr_bytes, NULL);
-      if (gst_structure_get_uint (source_stats, "sr-packet-count", &sr_packets))
-        gst_structure_set (r_out, "packets-sent", G_TYPE_UINT, sr_packets,
-            NULL);
+      gst_structure_get_uint (source_stats, "sr-octet-count", &sr_bytes);
+      gst_structure_get_uint (source_stats, "sr-packet-count", &sr_packets);
     }
+    gst_structure_set (r_out, "bytes-sent", G_TYPE_UINT, sr_bytes, NULL);
+    gst_structure_set (r_out, "packets-sent", G_TYPE_UINT, sr_packets, NULL);
 
     /* RTCSentRtpStreamStats:
 
@@ -584,9 +597,9 @@ _get_stats_from_ice_candidates (GstWebRTCBin * webrtc,
       can->stream_id, can->ipaddr, can->port);
   stats = gst_structure_new_empty (id);
 
-  if (strcmp (candidate_tag, "local")) {
+  if (g_str_equal (candidate_tag, "local")) {
     type = GST_WEBRTC_STATS_LOCAL_CANDIDATE;
-  } else if (strcmp (candidate_tag, "remote")) {
+  } else if (g_str_equal (candidate_tag, "remote")) {
     type = GST_WEBRTC_STATS_REMOTE_CANDIDATE;
   } else {
     GST_WARNING_OBJECT (webrtc, "Invalid ice candidate tag: %s", candidate_tag);
@@ -875,45 +888,54 @@ _get_codec_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad,
 
 struct transport_stream_stats
 {
-  GstWebRTCBin *webrtc;
   TransportStream *stream;
   char *transport_id;
   char *codec_id;
+  guint ssrc;
   const char *kind;
   guint clock_rate;
   GValueArray *source_stats;
-  GstStructure *s;
+
+  GstStructure *s;              /* Return value stats accumulator */
 };
 
 static gboolean
-webrtc_stats_get_from_transport (SsrcMapItem * entry,
+webrtc_stats_get_from_transport_for_one_ssrc (SsrcMapItem * entry,
     struct transport_stream_stats *ts_stats)
 {
   double ts;
   int i;
 
+  /* We're only interested in the map entry for the ssrc for the
+   * pad under inspection */
+  if (ts_stats->ssrc != entry->ssrc)
+    return FALSE;               /* Continue iterating */
+
   gst_structure_get_double (ts_stats->s, "timestamp", &ts);
 
   /* construct stats objects */
   for (i = 0; i < ts_stats->source_stats->n_values; i++) {
-    const GstStructure *stats;
     const GValue *val = g_value_array_get_nth (ts_stats->source_stats, i);
-    guint stats_ssrc = 0;
+    const GstStructure *stats = gst_value_get_structure (val);
 
-    stats = gst_value_get_structure (val);
+    guint stats_ssrc = 0;
 
     /* skip foreign sources */
     if (gst_structure_get_uint (stats, "ssrc", &stats_ssrc) &&
-        entry->ssrc == stats_ssrc)
-      _get_stats_from_rtp_source_stats (ts_stats->webrtc, ts_stats->stream,
-          stats, ts_stats->codec_id, ts_stats->kind, ts_stats->transport_id,
-          ts_stats->s);
-    else if (gst_structure_get_uint (stats, "rb-ssrc", &stats_ssrc)
-        && entry->ssrc == stats_ssrc)
-      _get_stats_from_remote_rtp_source_stats (ts_stats->webrtc,
-          ts_stats->stream, stats, entry->ssrc, ts_stats->clock_rate,
+        entry->ssrc == stats_ssrc) {
+      GST_TRACE ("Found source stats for ssrc %u: %" GST_PTR_FORMAT, stats_ssrc,
+          stats);
+      _get_stats_from_rtp_source_stats (ts_stats->stream, stats,
           ts_stats->codec_id, ts_stats->kind, ts_stats->transport_id,
           ts_stats->s);
+    } else if (gst_structure_get_uint (stats, "rb-ssrc", &stats_ssrc)
+        && entry->ssrc == stats_ssrc) {
+      GST_TRACE ("Found remote source stats for ssrc %u: %" GST_PTR_FORMAT,
+          stats_ssrc, stats);
+      _get_stats_from_remote_rtp_source_stats (ts_stats->stream, stats,
+          entry->ssrc, ts_stats->clock_rate, ts_stats->codec_id, ts_stats->kind,
+          ts_stats->transport_id, ts_stats->s);
+    }
   }
 
   /* we want to look at all the entries */
@@ -925,14 +947,14 @@ _get_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad, GstStructure * s)
 {
   GstWebRTCBinPad *wpad = GST_WEBRTC_BIN_PAD (pad);
   struct transport_stream_stats ts_stats = { NULL, };
-  guint ssrc, clock_rate;
+  guint clock_rate;
   GObject *rtp_session;
   GObject *gst_rtp_session;
   GstStructure *rtp_stats, *twcc_stats;
   GstWebRTCKind kind;
 
-  _get_codec_stats_from_pad (webrtc, pad, s, &ts_stats.codec_id, &ssrc,
-      &clock_rate);
+  _get_codec_stats_from_pad (webrtc, pad, s, &ts_stats.codec_id,
+      &ts_stats.ssrc, &clock_rate);
 
   if (!wpad->trans)
     goto out;
@@ -983,7 +1005,7 @@ _get_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad, GstStructure * s)
   ts_stats.clock_rate = clock_rate;
 
   transport_stream_find_ssrc_map_item (ts_stats.stream, &ts_stats,
-      (FindSsrcMapFunc) webrtc_stats_get_from_transport);
+      (FindSsrcMapFunc) webrtc_stats_get_from_transport_for_one_ssrc);
 
   g_clear_object (&rtp_session);
   g_clear_object (&gst_rtp_session);

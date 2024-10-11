@@ -39,7 +39,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d11_ipc_client_debug);
 
 static GThreadPool *gc_thread_pool = nullptr;
 /* *INDENT-OFF* */
-std::mutex gc_pool_lock;
+static std::mutex gc_pool_lock;
 /* *INDENT-ON* */
 
 void
@@ -52,13 +52,35 @@ gst_d3d11_ipc_client_deinit (void)
   }
 }
 
+/**
+ * GstD3D11IpcIOMode:
+ *
+ * Texture import mode
+ *
+ * Since: 1.24
+ */
 GType
 gst_d3d11_ipc_io_mode_get_type (void)
 {
   static GType type = 0;
   static const GEnumValue io_modes[] = {
-    {GST_D3D11_IPC_IO_COPY, "Copy remote memory", "copy"},
-    {GST_D3D11_IPC_IO_IMPORT, "Import remote memory", "import"},
+    /**
+     * GstD3D11IpcIOMode::copy:
+     *
+     * Copy remote texture to newly allocated texture
+     *
+     * Since: 1.24
+     */
+    {GST_D3D11_IPC_IO_COPY, "Copy remote texture", "copy"},
+
+    /**
+     * GstD3D11IpcIOMode::import:
+     *
+     * Import remote texture to without any allocation/copy
+     *
+     * Since: 1.24
+     */
+    {GST_D3D11_IPC_IO_IMPORT, "Import remote texture", "import"},
     {0, nullptr, nullptr}
   };
 

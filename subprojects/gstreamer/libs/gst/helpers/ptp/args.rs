@@ -21,6 +21,7 @@ pub struct Args {
     pub interfaces: Vec<String>,
     pub verbose: bool,
     pub clock_id: u64,
+    pub ttl: u32,
 }
 
 /// Parse the command-line arguments.
@@ -28,6 +29,7 @@ pub fn parse_args() -> Result<Args, Error> {
     let mut interfaces = Vec::new();
     let mut verbose = false;
     let mut clock_id = 0;
+    let mut ttl = 1;
 
     let mut args = env::args();
     // Skip executable name
@@ -50,6 +52,11 @@ pub fn parse_args() -> Result<Args, Error> {
                 clock_id =
                     u64::from_str_radix(&clock_id_arg[2..], 16).context("Invalid clock ID")?;
             }
+            "--ttl" => {
+                let ttl_arg = args.next().context("No TTL following --ttl")?;
+                ttl = ttl_arg.parse::<u32>().context("Invalid TTL value")?;
+            }
+
             arg => {
                 bail!("Unknown command-line argument {}", arg);
             }
@@ -60,6 +67,7 @@ pub fn parse_args() -> Result<Args, Error> {
         interfaces,
         verbose,
         clock_id,
+        ttl,
     };
 
     info!("Running with arguments {:#?}", args);

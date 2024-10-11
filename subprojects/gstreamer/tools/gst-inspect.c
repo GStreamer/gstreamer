@@ -50,6 +50,8 @@
 #include <TargetConditionals.h>
 #endif
 
+#include "gst/glib-compat-private.h"
+
 /* "R" : support color
  * "X" : do not clear the screen when leaving the pager
  * "F" : skip the pager if content fit into the screen
@@ -78,6 +80,7 @@ GMainLoop *loop = NULL;
 /* Console colors */
 
 /* Escape values for colors */
+#define RED       "\033[31m"
 #define BLUE      "\033[34m"
 #define BRBLUE    "\033[94m"
 #define BRCYAN    "\033[96m"
@@ -179,13 +182,13 @@ n_print (const char *format, ...)
 }
 
 static gboolean
-print_field (GQuark field, const GValue * value, gpointer pfx)
+print_field (const GstIdStr * fieldname, const GValue * value, gpointer pfx)
 {
   gchar *str = gst_value_serialize (value);
 
   n_print ("%s  %s%15s%s: %s%s%s\n",
-      (gchar *) pfx, FIELD_NAME_COLOR, g_quark_to_string (field), RESET_COLOR,
-      FIELD_VALUE_COLOR, str, RESET_COLOR);
+      (gchar *) pfx, FIELD_NAME_COLOR, gst_id_str_as_str (fieldname),
+      RESET_COLOR, FIELD_VALUE_COLOR, str, RESET_COLOR);
   g_free (str);
   return TRUE;
 }
@@ -223,7 +226,7 @@ print_caps (const GstCaps * caps, const gchar * pfx)
       n_print ("%s%s%s%s\n", pfx, STRUCT_NAME_COLOR,
           gst_structure_get_name (structure), RESET_COLOR);
     }
-    gst_structure_foreach (structure, print_field, (gpointer) pfx);
+    gst_structure_foreach_id_str (structure, print_field, (gpointer) pfx);
   }
 }
 
@@ -428,7 +431,7 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
   gboolean first_flag;
 
   property_specs = g_object_class_list_properties (obj_class, &num_properties);
-  g_qsort_with_data (property_specs, num_properties, sizeof (gpointer),
+  g_sort_array (property_specs, num_properties, sizeof (gpointer),
       (GCompareDataFunc) sort_gparamspecs, NULL);
 
   n_print ("%s%s%s:\n", HEADING_COLOR, desc, RESET_COLOR);
@@ -490,7 +493,10 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
           RESET_COLOR);
       first_flag = FALSE;
     }
-    if (param->flags & GST_PARAM_MUTABLE_PLAYING) {
+    if (param->flags & G_PARAM_CONSTRUCT_ONLY) {
+      g_print (", %s%s%s", PROP_ATTR_VALUE_COLOR,
+          _("can be set only at object construction time"), RESET_COLOR);
+    } else if (param->flags & GST_PARAM_MUTABLE_PLAYING) {
       g_print (", %s%s%s", PROP_ATTR_VALUE_COLOR,
           _("changeable in NULL, READY, PAUSED or PLAYING state"), RESET_COLOR);
     } else if (param->flags & GST_PARAM_MUTABLE_PAUSED) {
@@ -713,7 +719,7 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
             const GstStructure *s = gst_value_get_structure (&value);
             if (s) {
               g_print ("\n");
-              gst_structure_foreach (s, print_field,
+              gst_structure_foreach_id_str (s, print_field,
                   (gpointer) "                           ");
             }
           }
@@ -924,17 +930,9 @@ print_clocking_info (GstElement * element)
     n_print ("%selement requires a clock%s\n", PROP_VALUE_COLOR, RESET_COLOR);
   }
 
-  if (provides_clock) {
-    GstClock *clock;
 
-    clock = gst_element_get_clock (element);
-    if (clock) {
-      n_print ("%selement provides a clock%s: %s%s%s\n", PROP_VALUE_COLOR,
-          RESET_COLOR, DATATYPE_COLOR, GST_OBJECT_NAME (clock), RESET_COLOR);
-      gst_object_unref (clock);
-    } else
-      n_print ("%selement is supposed to provide a clock but returned NULL%s\n",
-          PROP_VALUE_COLOR, RESET_COLOR);
+  if (provides_clock) {
+    n_print ("%selement provides a clock%s\n", PROP_VALUE_COLOR, RESET_COLOR);
   }
 
   pop_indent ();
@@ -1002,7 +1000,6 @@ print_pad_info (GstElement * element)
   pads = element->pads;
   while (pads) {
     gchar *name;
-    GstCaps *caps;
 
     pad = GST_PAD (pads->data);
     pads = g_list_next (pads);
@@ -1025,15 +1022,6 @@ print_pad_info (GstElement * element)
       n_print ("%sPad Template%s: %s'%s'%s\n", PROP_NAME_COLOR, RESET_COLOR,
           PROP_VALUE_COLOR, pad->padtemplate->name_template, RESET_COLOR);
       pop_indent ();
-    }
-
-    caps = gst_pad_get_current_caps (pad);
-    if (caps) {
-      n_print ("%sCapabilities:%s\n", PROP_NAME_COLOR, RESET_COLOR);
-      push_indent ();
-      print_caps (caps, "");    // FIXME
-      pop_indent ();
-      gst_caps_unref (caps);
     }
   }
 
@@ -1336,7 +1324,8 @@ print_element_list (gboolean print_all, gchar * ftypes)
 
   orig_plugins = plugins = gst_registry_get_plugin_list (gst_registry_get ());
   if (sort_output == SORT_TYPE_NAME)
-    plugins = g_list_sort (plugins, gst_plugin_name_compare_func);
+    orig_plugins = plugins =
+        g_list_sort (plugins, gst_plugin_name_compare_func);
   while (plugins) {
     GList *features, *orig_features;
     GstPlugin *plugin;
@@ -1354,7 +1343,8 @@ print_element_list (gboolean print_all, gchar * ftypes)
         gst_registry_get_feature_list_by_plugin (gst_registry_get (),
         gst_plugin_get_name (plugin));
     if (sort_output == SORT_TYPE_NAME)
-      features = g_list_sort (features, gst_plugin_feature_name_compare_func);
+      orig_features = features =
+          g_list_sort (features, gst_plugin_feature_name_compare_func);
     while (features) {
       GstPluginFeature *feature;
 
@@ -1690,6 +1680,50 @@ print_plugin_features (GstPlugin * plugin)
         PLUGIN_FEATURE_COLOR, num_other, RESET_COLOR);
 
   n_print ("\n");
+}
+
+static void
+print_plugin_status_message (const gchar * label, const gchar * msg,
+    const gchar * color)
+{
+  if (msg != NULL) {
+    /* TODO: do something fancy with multi-line strings to preserve indentation */
+    n_print ("%s%s:%s %s\n\n", color, label, RESET_COLOR, msg);
+  }
+}
+
+static void
+print_plugin_status (GstPlugin * plugin)
+{
+  gchar **msgs, **s;
+
+  push_indent ();
+
+  msgs = gst_plugin_get_status_infos (plugin);
+  for (s = msgs; s != NULL && *s != NULL; ++s) {
+    const gchar *info_msg = *s;
+
+    print_plugin_status_message ("Info", info_msg, GREEN);
+  }
+  g_strfreev (msgs);
+
+  msgs = gst_plugin_get_status_warnings (plugin);
+  for (s = msgs; s != NULL && *s != NULL; ++s) {
+    const gchar *warning_msg = *s;
+
+    print_plugin_status_message ("Warning", warning_msg, YELLOW);
+  }
+  g_strfreev (msgs);
+
+  msgs = gst_plugin_get_status_errors (plugin);
+  for (s = msgs; s != NULL && *s != NULL; ++s) {
+    const gchar *err_msg = *s;
+
+    print_plugin_status_message ("Error", err_msg, RED);
+  }
+  g_strfreev (msgs);
+
+  pop_indent ();
 }
 
 static int
@@ -2141,6 +2175,7 @@ real_main (int argc, char *argv[])
   gboolean print_aii = FALSE;
   gboolean uri_handlers = FALSE;
   gboolean check_exists = FALSE;
+  gboolean check_version = FALSE;
   gboolean color_always = FALSE;
   gchar *min_version = NULL;
   guint minver_maj = GST_VERSION_MAJOR;
@@ -2255,6 +2290,7 @@ real_main (int argc, char *argv[])
     }
     g_free (min_version);
     check_exists = TRUE;
+    check_version = TRUE;
   }
 
   if (check_exists) {
@@ -2266,9 +2302,13 @@ real_main (int argc, char *argv[])
         GstPluginFeature *feature;
 
         feature = gst_registry_lookup_feature (gst_registry_get (), argv[1]);
-        if (feature != NULL && gst_plugin_feature_check_version (feature,
-                minver_maj, minver_min, minver_micro)) {
-          exit_code = 0;
+        if (feature != NULL) {
+          if (check_version && !gst_plugin_feature_check_version (feature,
+                  minver_maj, minver_min, minver_micro)) {
+            exit_code = 2;
+          } else {
+            exit_code = 0;
+          }
         } else {
           exit_code = 1;
         }
@@ -2337,6 +2377,7 @@ real_main (int argc, char *argv[])
           print_plugin_automatic_install_info (plugin);
         } else {
           print_plugin_info (plugin);
+          print_plugin_status (plugin);
           print_plugin_features (plugin);
         }
       } else {
@@ -2350,6 +2391,7 @@ real_main (int argc, char *argv[])
               print_plugin_automatic_install_info (plugin);
             } else {
               print_plugin_info (plugin);
+              print_plugin_status (plugin);
               print_plugin_features (plugin);
             }
           } else {

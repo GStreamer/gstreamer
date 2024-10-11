@@ -1,5 +1,6 @@
-[wrap-git]
-directory=libpsl
-url=https://github.com/rockdaboot/libpsl.git
-revision=0.21.1
-clone-recursive=true
+[wrap-file]
+directory = libpsl-0.21.2
+source_url = https://github.com/rockdaboot/libpsl/releases/download/0.21.2/libpsl-0.21.2.tar.gz
+source_filename = libpsl-0.21.2.tar.gz
+source_hash = e35991b6e17001afa2c0ca3b10c357650602b92596209b7492802f3768a6285f
+diff_files = libpsl-0.21.2/0001-tools-psl.c-Fix-build-on-Windows.patch, libpsl-0.21.2/0002-tools-psl.c-Fix-logic-fallout-and-warning.patch, libpsl-0.21.2/0001-meson-Don-t-use-paths-with-backslashes-in-defines.patch

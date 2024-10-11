@@ -105,7 +105,7 @@ struct _GstParallelizedTaskRunner
   gboolean own_pool;
   guint n_threads;
 
-  GstQueueArray *tasks;
+  GstVecDeque *tasks;
 
   GstParallelizedTaskFunc func;
   gpointer *task_data;

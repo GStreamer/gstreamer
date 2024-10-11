@@ -110,7 +110,7 @@ def get_target_install_filename(target, filename):
 
 def get_pkgconfig_variable_from_pcfile(pcfile, varname):
     variables = {}
-    substre = re.compile('\$\{[^${}]+\}')
+    substre = re.compile(r'\$\{[^${}]+\}')
     with pcfile.open('r', encoding='utf-8') as f:
         for line in f:
             if '=' not in line:
@@ -452,10 +452,6 @@ def get_subprocess_env(options, gst_version):
             elif path.endswith('.gep'):
                 encoding_targets.add(
                     os.path.abspath(os.path.join(os.path.dirname(path), '..')))
-
-            if path.endswith('gstomx.conf'):
-                prepend_env_var(env, 'GST_OMX_CONFIG_DIR', os.path.dirname(path),
-                                options.sysroot)
 
         for p in sorted(presets):
             prepend_env_var(env, 'GST_PRESET_PATH', p, options.sysroot)

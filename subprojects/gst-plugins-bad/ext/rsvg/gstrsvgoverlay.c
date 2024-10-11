@@ -85,6 +85,9 @@ enum
   PROP_HEIGHT_RELATIVE
 };
 
+GST_DEBUG_CATEGORY_STATIC (rsvg_overlay_debug);
+#define GST_CAT_DEFAULT rsvg_overlay_debug
+
 #define GST_RSVG_LOCK(overlay) G_STMT_START { \
   GST_LOG_OBJECT (overlay, "Locking rsvgoverlay from thread %p", g_thread_self ()); \
   g_mutex_lock (&overlay->rsvg_lock); \
@@ -122,7 +125,12 @@ static GstStaticPadTemplate data_sink_template =
     GST_STATIC_CAPS ("image/svg+xml; image/svg; text/plain"));
 
 #define gst_rsv_overlay_parent_class parent_class
-G_DEFINE_TYPE (GstRsvgOverlay, gst_rsvg_overlay, GST_TYPE_VIDEO_FILTER);
+
+#define _do_init \
+    GST_DEBUG_CATEGORY_INIT (rsvg_overlay_debug, "rsvgoverlay", 0, "SVG Overlay");
+
+G_DEFINE_TYPE_WITH_CODE (GstRsvgOverlay, gst_rsvg_overlay,
+    GST_TYPE_VIDEO_FILTER, _do_init);
 GST_ELEMENT_REGISTER_DEFINE (rsvgoverlay, "rsvgoverlay", GST_RANK_NONE,
     GST_TYPE_RSVG_OVERLAY);
 
@@ -163,7 +171,9 @@ gst_rsvg_overlay_set_svg_data (GstRsvgOverlay * overlay, const gchar * data,
       } else {
         /* Get SVG dimension. */
         RsvgDimensionData svg_dimension;
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
         rsvg_handle_get_dimensions (overlay->handle, &svg_dimension);
+        G_GNUC_END_IGNORE_DEPRECATIONS;
         overlay->svg_width = svg_dimension.width;
         overlay->svg_height = svg_dimension.height;
         gst_base_transform_set_passthrough (btrans, FALSE);
@@ -421,7 +431,9 @@ gst_rsvg_overlay_transform_frame_ip (GstVideoFilter * vfilter,
     cairo_scale (cr, (double) applied_width / overlay->svg_width,
         (double) applied_height / overlay->svg_height);
   }
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
   rsvg_handle_render_cairo (overlay->handle, cr);
+  G_GNUC_END_IGNORE_DEPRECATIONS;
   GST_RSVG_UNLOCK (overlay);
 
   cairo_destroy (cr);

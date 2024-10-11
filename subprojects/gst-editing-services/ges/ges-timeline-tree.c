@@ -2484,7 +2484,7 @@ create_transitions (GNode * node,
   if (!ges_layer_get_auto_transition (layer))
     return FALSE;
 
-  GST_LOG (node->data, "Checking for overlaps");
+  GST_LOG_OBJECT (node->data, "Checking for overlaps");
   data.root = g_node_get_root (node);
   check_all_overlaps_with_element (node, &data);
 

@@ -78,17 +78,12 @@ G_BEGIN_DECLS
 /**
  * GstD3D11AllocationFlags:
  * @GST_D3D11_ALLOCATION_FLAG_DEFAULT: Default allocation behavior
- * @GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY: Indicates each allocated texture
- *                                           should be array type. This type of
- *                                           is used for D3D11/DXVA decoders
- *                                           in general.
  *
  * Since: 1.22
  */
 typedef enum
 {
   GST_D3D11_ALLOCATION_FLAG_DEFAULT = 0,
-  GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY = (1 << 0),
 } GstD3D11AllocationFlags;
 
 GST_D3D11_API
@@ -140,18 +135,6 @@ GType gst_d3d11_memory_native_type_get_type (void);
  *
  * Since: 1.22
  */
-struct _GstD3D11AllocationParams
-{
-  /* Texture description per plane */
-  D3D11_TEXTURE2D_DESC desc[GST_VIDEO_MAX_PLANES];
-  GstVideoInfo info;
-  GstVideoInfo aligned_info;
-  GstD3D11Format d3d11_format;
-  GstD3D11AllocationFlags flags;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
-};
 
 GST_D3D11_API
 GType                      gst_d3d11_allocation_params_get_type (void);
@@ -172,6 +155,19 @@ void                       gst_d3d11_allocation_params_free     (GstD3D11Allocat
 GST_D3D11_API
 gboolean                   gst_d3d11_allocation_params_alignment (GstD3D11AllocationParams * parms,
                                                                   const GstVideoAlignment * align);
+
+GST_D3D11_API
+gboolean                   gst_d3d11_allocation_params_set_bind_flags (GstD3D11AllocationParams * params,
+                                                                       guint bind_flags);
+
+GST_D3D11_API
+gboolean                   gst_d3d11_allocation_params_set_array_size (GstD3D11AllocationParams * params,
+                                                                       guint size);
+
+GST_D3D11_API
+gboolean                   gst_d3d11_allocation_params_set_sample_desc (GstD3D11AllocationParams * params,
+                                                                        guint sample_count,
+                                                                        guint sample_quality);
 
 /**
  * GstD3D11Memory:

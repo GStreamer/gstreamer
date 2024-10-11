@@ -5,13 +5,38 @@ gst_allocators_headers = files([
   'gstphysmemory.h',
   'gstdmabuf.h',
   'gstdrmdumb.h',
+  'gstshmallocator.h',
 ])
 install_headers(gst_allocators_headers, subdir : 'gstreamer-1.0/gst/allocators/')
 
-gst_allocators_sources = files([ 'gstdrmdumb.c', 'gstdmabuf.c', 'gstfdmemory.c', 'gstphysmemory.c'])
+gst_allocators_sources = files([
+  'gstdrmdumb.c',
+  'gstdmabuf.c',
+  'gstfdmemory.c',
+  'gstphysmemory.c',
+  'gstshmallocator.c',
+])
+
+gst_allocators_cargs = [
+  gst_plugins_base_args,
+  '-DBUILDING_GST_ALLOCATORS',
+  '-DG_LOG_DOMAIN="GStreamer-Allocators"',
+]
+
+if cc.has_function('memfd_create')
+  gst_allocators_cargs += [
+    '-DHAVE_MEMFD_CREATE',
+    '-D_GNU_SOURCE',
+  ]
+elif cc.has_function('shm_open')
+  gst_allocators_cargs += [
+    '-DHAVE_SHM_OPEN',
+  ]
+endif
+
 gstallocators = library('gstallocators-@0@'.format(api_version),
   gst_allocators_sources,
-  c_args : gst_plugins_base_args + ['-DBUILDING_GST_ALLOCATORS', '-DG_LOG_DOMAIN="GStreamer-Allocators"'],
+  c_args : gst_allocators_cargs,
   include_directories: [configinc, libsinc],
   version : libversion,
   soversion : soversion,

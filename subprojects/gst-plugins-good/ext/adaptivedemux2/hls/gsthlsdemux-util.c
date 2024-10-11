@@ -539,7 +539,7 @@ gst_hlsdemux_handle_content_id3 (GstHLSDemux * demux,
   if (!gst_tag_list_get_sample (taglist, GST_TAG_PRIVATE_DATA, &priv_data))
     goto out;
 
-  if (!g_str_equal ("com.apple.streaming.transportStreamTimestamp",
+  if (g_strcmp0 ("com.apple.streaming.transportStreamTimestamp",
           gst_structure_get_string (gst_sample_get_info (priv_data), "owner")))
     goto out;
 
@@ -944,6 +944,10 @@ gst_hlsdemux_handle_content_webvtt (GstHLSDemux * demux,
 out:
   if (ret) {
     gchar *newfile;
+
+    /* Ensure file always ends with an empty newline by adding an empty
+     * line. This helps downstream parsers properly detect entries */
+    g_ptr_array_add (builder, g_strdup ("\n"));
     /* Add NULL-terminator to string list */
     g_ptr_array_add (builder, NULL);
     newfile = g_strjoinv ("\n", (gchar **) builder->pdata);

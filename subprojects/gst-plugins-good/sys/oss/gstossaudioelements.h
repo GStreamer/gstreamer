@@ -34,6 +34,8 @@ G_GNUC_INTERNAL void oss_element_init (GstPlugin * plugin);
 GST_ELEMENT_REGISTER_DECLARE (osssink);
 GST_ELEMENT_REGISTER_DECLARE (osssrc);
 
+GST_DEVICE_PROVIDER_REGISTER_DECLARE(ossdeviceprovider);
+
 G_END_DECLS
 
 #endif /* __GST_OSS_ELEMENTS_H__ */

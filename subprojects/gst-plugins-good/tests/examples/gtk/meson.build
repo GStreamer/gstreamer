@@ -1,3 +1,9 @@
+executable('gtkhttpsrc', 'gtkhttpsrc.c',
+  dependencies: [gst_dep, gtk_dep, optional_deps],
+  c_args: gst_plugins_good_args,
+  include_directories: [configinc],
+  install: false)
+
 executable('gtksink', 'gtksink.c',
   dependencies: [gst_dep, gtk_dep, optional_deps],
   c_args: gst_plugins_good_args,

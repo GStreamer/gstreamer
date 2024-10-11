@@ -13,11 +13,12 @@ else
 endif
 gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner')
 
+fsmod = import('fs')
 test_c_args = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
   '-DGST_CHECK_TEST_ENVIRONMENT_BEACON="GST_PLUGIN_LOADING_WHITELIST"',
-  '-DGST_TEST_FILES_PATH="' + meson.current_source_dir() + '/../files"',
+  '-DGST_TEST_FILES_PATH="' + fsmod.as_posix(meson.current_source_dir()) + '/../files"',
 ]
 
 rtsp_server_tests = [
@@ -56,7 +57,8 @@ foreach test_name : rtsp_server_tests
   exe = executable(test_name, fname,
     include_directories : rtspserver_incs,
     c_args : rtspserver_args + test_c_args,
-    dependencies : [gstcheck_dep, gstrtsp_dep, gstrtp_dep, gst_rtsp_server_dep]
+    dependencies : [gstcheck_dep, gstrtsp_dep, gstrtp_dep, gst_rtsp_server_dep,
+      gstvideo_dep]
   )
   test(test_name, exe,
     env : env,

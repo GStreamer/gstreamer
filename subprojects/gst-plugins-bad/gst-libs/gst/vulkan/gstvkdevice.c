@@ -180,7 +180,10 @@ gst_vulkan_device_constructed (GObject * object)
   const char *optional_extensions[] = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME,
-#if (defined(VK_VERSION_1_3) || (defined(VK_VERSION_1_2) && VK_HEADER_VERSION >= 170))
+#if defined(VK_KHR_timeline_semaphore)
+    VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME,
+#endif
+#if defined(VK_KHR_synchronization2)
     VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
 #endif
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
@@ -188,11 +191,9 @@ gst_vulkan_device_constructed (GObject * object)
     VK_KHR_VIDEO_DECODE_QUEUE_EXTENSION_NAME,
     VK_KHR_VIDEO_DECODE_H264_EXTENSION_NAME,
     VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME,
-#ifdef VK_ENABLE_BETA_EXTENSION
     VK_KHR_VIDEO_ENCODE_QUEUE_EXTENSION_NAME,
-    VK_EXT_VIDEO_ENCODE_H264_EXTENSION_NAME,
-    VK_EXT_VIDEO_ENCODE_H265_EXTENSION_NAME,
-#endif
+    VK_KHR_VIDEO_ENCODE_H264_EXTENSION_NAME,
+    VK_KHR_VIDEO_ENCODE_H265_EXTENSION_NAME,
 #endif
   };
   int i;
@@ -372,9 +373,7 @@ gst_vulkan_device_choose_queues (GstVulkanDevice * device)
   int graph_index, comp_index, tx_index;
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   int dec_index = -1;
-#ifdef VK_ENABLE_BETA_EXTENSIONS
   int enc_index = -1;
-#endif
 #endif
 
   n_queue_families = device->physical_device->n_queue_families;
@@ -398,11 +397,9 @@ gst_vulkan_device_choose_queues (GstVulkanDevice * device)
   dec_index = _pick_queue_family (queue_family_props, n_queue_families,
       VK_QUEUE_VIDEO_DECODE_BIT_KHR, family_scores);
   array = _append_queue_create_info (array, dec_index, queue_family_props);
-#ifdef VK_ENABLE_BETA_EXTENSIONS
   enc_index = _pick_queue_family (queue_family_props, n_queue_families,
       VK_QUEUE_VIDEO_ENCODE_BIT_KHR, family_scores);
   array = _append_queue_create_info (array, enc_index, queue_family_props);
-#endif
 #endif
 
   g_free (family_scores);
@@ -689,7 +686,7 @@ gst_vulkan_device_get_physical_device (GstVulkanDevice * device)
 /**
  * gst_context_set_vulkan_device:
  * @context: a #GstContext
- * @device: a #GstVulkanDevice
+ * @device: (transfer none) (nullable): a #GstVulkanDevice
  *
  * Sets @device on @context
  *
@@ -716,7 +713,7 @@ gst_context_set_vulkan_device (GstContext * context, GstVulkanDevice * device)
 /**
  * gst_context_get_vulkan_device:
  * @context: a #GstContext
- * @device: resulting #GstVulkanDevice
+ * @device: (out) (optional) (nullable) (transfer full): resulting #GstVulkanDevice
  *
  * Returns: Whether @device was in @context
  *
@@ -1066,4 +1063,59 @@ gst_vulkan_device_enable_layer (GstVulkanDevice * device, const gchar * name)
   GST_OBJECT_UNLOCK (device);
 
   return ret;
+}
+
+struct choose_queue
+{
+  guint expected_flags;
+  GstVulkanQueue *queue;
+};
+
+static gboolean
+_choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
+    struct choose_queue *data)
+{
+  guint flags =
+      device->physical_device->queue_family_props[queue->family].queueFlags;
+
+  if ((flags & data->expected_flags) != 0) {
+    if (data->queue)
+      gst_object_unref (data->queue);
+    data->queue = gst_object_ref (queue);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_vulkan_device_select_queue
+ * @device: a #GstVulkanDevice
+ * @expected_flags: a VkQueueFlagBits
+ *
+ * Select a compatible queue from the @device supporting the @expected_flags.
+ *
+ * Returns: (transfer full) (nullable): a #GstVulkanQueue for @queue matching
+ *                                      the @expected_flags
+ *
+ * Since: 1.24
+ */
+GstVulkanQueue *
+gst_vulkan_device_select_queue (GstVulkanDevice * device,
+    VkQueueFlagBits expected_flags)
+{
+  struct choose_queue data;
+
+  data.expected_flags = expected_flags;
+  data.queue = NULL;
+
+  if (!gst_vulkan_device_open (device, NULL)) {
+    gst_object_unref (device);
+    goto beach;
+  }
+  gst_vulkan_device_foreach_queue (device,
+      (GstVulkanDeviceForEachQueueFunc) _choose_queue, &data);
+
+beach:
+  return data.queue;
 }

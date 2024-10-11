@@ -925,7 +925,55 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 
   gst_gl_context_egl_dump_all_configs (egl);
 
-  if (gl_api & (GST_GL_API_OPENGL | GST_GL_API_OPENGL3)) {
+  if (gl_api & GST_GL_API_GLES2) {
+    gint i;
+
+  try_gles2:
+    if (!eglBindAPI (EGL_OPENGL_ES_API)) {
+      g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
+          "Failed to bind OpenGL|ES API: %s",
+          gst_egl_get_error_string (eglGetError ()));
+      goto failure;
+    }
+
+    GST_INFO ("Bound OpenGL|ES");
+
+    for (i = 0; i < G_N_ELEMENTS (gles2_versions); i++) {
+      gint profileMask = 0;
+      gint contextFlags = 0;
+      guint maj = gles2_versions[i].major;
+      guint min = gles2_versions[i].minor;
+
+      if (!gst_gl_context_egl_choose_config (egl, GST_GL_API_GLES2, maj, error)) {
+        GST_DEBUG_OBJECT (context, "Failed to choose a GLES%d config: %s",
+            maj, error && *error ? (*error)->message : "Unknown");
+        g_clear_error (error);
+        continue;
+      }
+#if defined(EGL_KHR_create_context)
+      /* try a debug context */
+      contextFlags |= EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
+
+      egl->egl_context =
+          _create_context_with_flags (egl, (EGLContext) external_gl_context,
+          GST_GL_API_GLES2, maj, min, contextFlags, profileMask);
+
+      if (egl->egl_context)
+        break;
+
+      /* try without a debug context */
+      contextFlags &= ~EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
+#endif
+
+      egl->egl_context =
+          _create_context_with_flags (egl, (EGLContext) external_gl_context,
+          GST_GL_API_GLES2, maj, min, contextFlags, profileMask);
+
+      if (egl->egl_context)
+        break;
+    }
+    egl->gl_api = GST_GL_API_GLES2;
+  } else if (gl_api & (GST_GL_API_OPENGL | GST_GL_API_OPENGL3)) {
     GstGLAPI chosen_gl_api = 0;
     gint i;
 
@@ -1015,54 +1063,6 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     }
 
     egl->gl_api = chosen_gl_api;
-  } else if (gl_api & GST_GL_API_GLES2) {
-    gint i;
-
-  try_gles2:
-    if (!eglBindAPI (EGL_OPENGL_ES_API)) {
-      g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
-          "Failed to bind OpenGL|ES API: %s",
-          gst_egl_get_error_string (eglGetError ()));
-      goto failure;
-    }
-
-    GST_INFO ("Bound OpenGL|ES");
-
-    for (i = 0; i < G_N_ELEMENTS (gles2_versions); i++) {
-      gint profileMask = 0;
-      gint contextFlags = 0;
-      guint maj = gles2_versions[i].major;
-      guint min = gles2_versions[i].minor;
-
-      if (!gst_gl_context_egl_choose_config (egl, GST_GL_API_GLES2, maj, error)) {
-        GST_DEBUG_OBJECT (context, "Failed to choose a GLES%d config: %s",
-            maj, error && *error ? (*error)->message : "Unknown");
-        g_clear_error (error);
-        continue;
-      }
-#if defined(EGL_KHR_create_context)
-      /* try a debug context */
-      contextFlags |= EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
-
-      egl->egl_context =
-          _create_context_with_flags (egl, (EGLContext) external_gl_context,
-          GST_GL_API_GLES2, maj, min, contextFlags, profileMask);
-
-      if (egl->egl_context)
-        break;
-
-      /* try without a debug context */
-      contextFlags &= ~EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
-#endif
-
-      egl->egl_context =
-          _create_context_with_flags (egl, (EGLContext) external_gl_context,
-          GST_GL_API_GLES2, maj, min, contextFlags, profileMask);
-
-      if (egl->egl_context)
-        break;
-    }
-    egl->gl_api = GST_GL_API_GLES2;
   }
 
   if (egl->egl_context != EGL_NO_CONTEXT) {
@@ -1523,6 +1523,68 @@ failure:
 }
 
 #if GST_GL_HAVE_DMABUF
+static void
+_print_all_dma_formats (GstGLContext * context, GArray * dma_formats)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  GstGLDmaFormat *dma_fmt;
+  GstGLDmaModifier *dma_modifier;
+  const gchar *fmt_str, *gst_fmt_str;
+  GString *str;
+  guint i, j;
+
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) < GST_LEVEL_INFO)
+    return;
+
+  str = g_string_new (NULL);
+  g_string_append_printf (str, "\n============= All DMA Formats With"
+      " Modifiers =============");
+  g_string_append_printf (str, "\n| Gst Format   | DRM Format      "
+      "        | External Flag |");
+  g_string_append_printf (str, "\n|================================"
+      "========================|");
+
+  for (i = 0; i < dma_formats->len; i++) {
+    dma_fmt = &g_array_index (dma_formats, GstGLDmaFormat, i);
+
+    gst_fmt_str = gst_video_format_to_string
+        (gst_video_dma_drm_fourcc_to_format (dma_fmt->fourcc));
+
+    g_string_append_printf (str, "\n| %-12s |", gst_fmt_str);
+
+    if (!dma_fmt->modifiers) {
+      fmt_str = gst_video_dma_drm_fourcc_to_string (dma_fmt->fourcc, 0);
+      g_string_append_printf (str, " %-23s |", fmt_str);
+      g_string_append_printf (str, " %-13s |\n", "external only");
+    } else {
+      for (j = 0; j < dma_fmt->modifiers->len; j++) {
+        dma_modifier = &g_array_index (dma_fmt->modifiers, GstGLDmaModifier, j);
+
+        fmt_str = gst_video_dma_drm_fourcc_to_string (dma_fmt->fourcc,
+            dma_modifier->modifier);
+
+        if (j > 0)
+          g_string_append_printf (str, "|              |");
+
+        g_string_append_printf (str, " %-23s |", fmt_str);
+        g_string_append_printf (str, " %-13s |\n", dma_modifier->external_only ?
+            "external only" : "");
+      }
+    }
+
+    if (i < dma_formats->len - 1)
+      g_string_append_printf (str, "|--------------------------------"
+          "------------------------|");
+  }
+
+  g_string_append_printf (str, "================================="
+      "=========================");
+
+  GST_INFO_OBJECT (context, "%s", str->str);
+  g_string_free (str, TRUE);
+#endif
+}
+
 static int
 _compare_dma_formats (gconstpointer a, gconstpointer b)
 {
@@ -1692,6 +1754,8 @@ gst_gl_context_egl_fetch_dma_formats (GstGLContext * context)
 
   g_array_sort (dma_formats, _compare_dma_formats);
 
+  _print_all_dma_formats (context, dma_formats);
+
   GST_OBJECT_LOCK (context);
   egl->dma_formats = dma_formats;
   GST_OBJECT_UNLOCK (context);
@@ -1705,7 +1769,6 @@ gst_gl_context_egl_fetch_dma_formats (GstGLContext * context)
 failed:
   {
     g_free (formats);
-    GST_OBJECT_UNLOCK (context);
     return FALSE;
   }
 }
@@ -1761,4 +1824,24 @@ beach:
   return ret;
 #endif
   return FALSE;
+}
+
+/**
+ * gst_gl_context_egl_supports_modifier: (skip)
+ * @context: an EGL #GStGLContext
+ *
+ * Returns: %TRUE if the @context supports the modifiers.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_gl_context_egl_supports_modifier (GstGLContext * context)
+{
+#if GST_GL_HAVE_DMABUF
+  g_return_val_if_fail (GST_IS_GL_CONTEXT_EGL (context), FALSE);
+
+  return gst_gl_context_egl_fetch_dma_formats (context);
+#else
+  return FALSE;
+#endif
 }

@@ -33,15 +33,15 @@
  * Capturing 1080p25 video from the SDI-In of Card 0. Devices are numbered
  * starting with 0.
  *
- * # Duplex-Mode:
- * Certain DechLink Cards like the Duo2 or the Quad2 contain two or four
+ * ## Duplex-Mode
+ * Certain DeckLink Cards like the Duo2 or the Quad2 contain two or four
  * independent SDI units with two connectors each. These units can operate either
  * in half- or in full-duplex mode.
  *
  * The Duplex-Mode of a Card can be configured using the `duplex-mode`-Property.
  * Cards that to not support Duplex-Modes are not influenced by the property.
  *
- * ## Half-Duplex-Mode (default):
+ * ### Half-Duplex-Mode (default)
  * By default decklinkvideosrc will configure them into half-duplex mode, so that
  * each connector acts as if it were an independent DeckLink Card which can either
  * be used as an Input or as an Output. In this mode the Duo2 can be used as as 4 SDI
@@ -75,7 +75,7 @@
  * Playout a Test-Screen with colored Snow on the first and fourth unit
  * (ie. the Connectors 1-4 of a Duo2 unit).
  *
- * ## Device-Number-Mapping in Half-Duplex-Mode
+ * ### Device-Number-Mapping in Half-Duplex-Mode
  * The device-number to connector-mapping in half-duplex-mode is as follows for the Duo2
  * - `device-number=0` SDI1
  * - `device-number=1` SDI3
@@ -92,7 +92,7 @@
  * - `device-number=6` SDI6
  * - `device-number=7` SDI8
  *
- * ## Full-Duplex-Mode:
+ * ### Full-Duplex-Mode
  * When operating in full-duplex mode, two connectors of a unit are combined to
  * a single device, performing extra processing with the second connection.
  *
@@ -119,7 +119,7 @@
  * Capturing Video on the primary port of device 0, output flipped version of the
  * video on secondary port of the same device.
  *
- * ## Device-Number-Mapping in Full-Duplex-Mode
+ * ### Device-Number-Mapping in Full-Duplex-Mode
  * The device-number to connector-mapping in full-duplex-mode is as follows for the Duo2
  * - `device-number=0` SDI1 primary, SDI2 secondary
  * - `device-number=1` SDI3 primaty, SDI4 secondary
@@ -188,6 +188,11 @@ typedef struct
   GstDecklinkModeEnum mode;
   BMDPixelFormat format;
   GstVideoTimeCode *tc;
+  GstVideoColorimetry colorimetry;
+  gboolean have_light_level;
+  GstVideoContentLightLevel light_level;
+  gboolean have_mastering_info;
+  GstVideoMasteringDisplayInfo mastering_info;
   gboolean no_signal;
 } CaptureFrame;
 
@@ -448,7 +453,7 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
   g_cond_init (&self->cond);
 
   self->current_frames =
-      gst_queue_array_new_for_struct (sizeof (CaptureFrame),
+      gst_vec_deque_new_for_struct (sizeof (CaptureFrame),
       DEFAULT_BUFFER_SIZE);
 }
 
@@ -601,12 +606,12 @@ gst_decklink_video_src_finalize (GObject * object)
   g_cond_clear (&self->cond);
 
   if (self->current_frames) {
-    while (gst_queue_array_get_length (self->current_frames) > 0) {
+    while (gst_vec_deque_get_length (self->current_frames) > 0) {
       CaptureFrame *tmp = (CaptureFrame *)
-          gst_queue_array_pop_head_struct (self->current_frames);
+          gst_vec_deque_pop_head_struct (self->current_frames);
       capture_frame_clear (tmp);
     }
-    gst_queue_array_free (self->current_frames);
+    gst_vec_deque_free (self->current_frames);
     self->current_frames = NULL;
   }
 
@@ -828,6 +833,33 @@ gst_decklink_video_src_update_time_mapping (GstDecklinkVideoSrc * self,
   }
 }
 
+static BMDDisplayModeFlags
+display_mode_flags (GstDecklinkVideoSrc * self, const GstDecklinkMode * gst_mode,
+    gboolean fixed)
+{
+  BMDDisplayModeFlags display_flags =
+      bmdDisplayModeColorspaceRec601 | bmdDisplayModeColorspaceRec709 |
+      bmdDisplayModeColorspaceRec2020;
+
+  if (self->input && self->input->input) {
+    IDeckLinkDisplayMode *display_mode = nullptr;
+    bool supports_colorspace = false;
+
+    self->input->attributes->GetFlag (BMDDeckLinkSupportsColorspaceMetadata,
+        &supports_colorspace);
+
+    if (!supports_colorspace || fixed) {
+      self->input->input->GetDisplayMode (gst_mode->mode, &display_mode);
+      if (display_mode) {
+        display_flags = display_mode->GetFlags ();
+        display_mode->Release();
+      }
+    }
+  }
+
+  return display_flags;
+}
+
 static void
 gst_decklink_video_src_got_frame (GstElement * element,
     IDeckLinkVideoInputFrame * frame, GstDecklinkModeEnum mode,
@@ -865,7 +897,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
     memset (&f, 0, sizeof (f));
 
     /* Notify the streaming thread about the signal loss */
-    gst_queue_array_push_tail_struct (self->current_frames, &f);
+    gst_vec_deque_push_tail_struct (self->current_frames, &f);
     g_cond_signal (&self->cond);
     g_mutex_unlock (&self->lock);
 
@@ -903,11 +935,13 @@ gst_decklink_video_src_got_frame (GstElement * element,
     GstVideoTimeCodeFlags flags = GST_VIDEO_TIME_CODE_FLAGS_NONE;
     guint field_count = 0;
     guint skipped_frames = 0;
+    IDeckLinkVideoFrameMetadataExtensions *frame_metadata = nullptr;
+    HRESULT dk_ret;
 
-    while (gst_queue_array_get_length (self->current_frames) >=
+    while (gst_vec_deque_get_length (self->current_frames) >=
         self->buffer_size) {
       CaptureFrame *tmp = (CaptureFrame *)
-          gst_queue_array_pop_head_struct (self->current_frames);
+          gst_vec_deque_pop_head_struct (self->current_frames);
       if (tmp->frame) {
         if (skipped_frames == 0 && self->skipped_last == 0)
           self->skip_from_timestamp = tmp->timestamp;
@@ -948,6 +982,155 @@ gst_decklink_video_src_got_frame (GstElement * element,
     f.mode = mode;
     f.format = frame->GetPixelFormat ();
     f.no_signal = no_signal;
+
+    bmode = gst_decklink_get_mode (mode);
+    /* these are defaults for the display mode, metadata may override these */
+    BMDDisplayModeFlags mode_flags = display_mode_flags (self, bmode, FALSE);
+    if (mode_flags & bmdDisplayModeColorspaceRec601) {
+      gst_video_colorimetry_from_string (&f.colorimetry, "bt601");
+    }
+    if (mode_flags & bmdDisplayModeColorspaceRec709) {
+      gst_video_colorimetry_from_string (&f.colorimetry, "bt709");
+    }
+    if (mode_flags & bmdDisplayModeColorspaceRec2020) {
+      gst_video_colorimetry_from_string (&f.colorimetry, "bt2020");
+    }
+    f.colorimetry.range = gst_decklink_pixel_format_to_range (f.format);
+
+    dk_ret =
+        frame->QueryInterface (IID_IDeckLinkVideoFrameMetadataExtensions,
+        (LPVOID *) &frame_metadata);
+    if (frame_metadata && dk_ret == S_OK) {
+      gint64 colorspace;
+      dk_ret =
+          frame_metadata->GetInt (bmdDeckLinkFrameMetadataColorspace,
+          &colorspace);
+      GST_LOG_OBJECT (self, "ret %x colorspace 0x%" G_GINT64_FORMAT,
+          (gint) dk_ret, colorspace);
+
+      if (dk_ret == S_OK) {
+        switch (colorspace) {
+          case bmdColorspaceRec601:
+            f.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+            f.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
+            f.colorimetry.transfer = GST_VIDEO_TRANSFER_BT601;
+            break;
+          case bmdColorspaceRec709:
+            f.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+            f.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+            f.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
+            break;
+          case bmdColorspaceRec2020:
+            f.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+            f.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+            f.colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_12;
+            break;
+          default:
+            break;
+        }
+      }
+
+      if (frame->GetFlags () & bmdFrameContainsHDRMetadata) {
+        double max_cll, max_fll, x, y;
+        gint64 tf;
+
+        f.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+        f.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+        f.colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_12;
+
+        dk_ret =
+            frame_metadata->GetFloat (
+            bmdDeckLinkFrameMetadataHDRMaximumContentLightLevel, &max_cll);
+        dk_ret |=
+            frame_metadata->GetFloat (
+            bmdDeckLinkFrameMetadataHDRMaximumFrameAverageLightLevel, &max_fll);
+        GST_LOG_OBJECT (self, "ret %x maxcll %f maxfll %f", (gint) dk_ret, max_cll,
+            max_fll);
+        if (dk_ret == S_OK) {
+          f.have_light_level = TRUE;
+          f.light_level.max_content_light_level = (guint16) max_cll;
+          f.light_level.max_frame_average_light_level = (guint16) max_fll;
+        }
+
+        dk_ret =
+            frame_metadata->GetFloat (
+            bmdDeckLinkFrameMetadataHDRDisplayPrimariesRedX, &x);
+        dk_ret |=
+            frame_metadata->GetFloat (
+            bmdDeckLinkFrameMetadataHDRDisplayPrimariesRedY, &y);
+        f.mastering_info.display_primaries[0].x = (guint16) (x * 50000.0);
+        f.mastering_info.display_primaries[0].y = (guint16) (y * 50000.0);
+        dk_ret |=
+            frame_metadata->GetFloat (
+            bmdDeckLinkFrameMetadataHDRDisplayPrimariesGreenX, &x);
+        dk_ret |=
+            frame_metadata->GetFloat (
+            bmdDeckLinkFrameMetadataHDRDisplayPrimariesGreenY, &y);
+        f.mastering_info.display_primaries[1].x = (guint16) (x * 50000.0);
+        f.mastering_info.display_primaries[1].y = (guint16) (y * 50000.0);
+        dk_ret |=
+            frame_metadata->GetFloat (
+            bmdDeckLinkFrameMetadataHDRDisplayPrimariesBlueX, &x);
+        dk_ret |=
+            frame_metadata->GetFloat (
+            bmdDeckLinkFrameMetadataHDRDisplayPrimariesBlueY, &y);
+        f.mastering_info.display_primaries[2].x = (guint16) (x * 50000.0);
+        f.mastering_info.display_primaries[2].y = (guint16) (y * 50000.0);
+        dk_ret |=
+            frame_metadata->GetFloat (bmdDeckLinkFrameMetadataHDRWhitePointX, &x);
+        dk_ret |=
+            frame_metadata->GetFloat (bmdDeckLinkFrameMetadataHDRWhitePointY, &y);
+        f.mastering_info.white_point.x = (guint16) (x * 50000.0);
+        f.mastering_info.white_point.y = (guint16) (y * 50000.0);
+        dk_ret |=
+            frame_metadata->GetFloat (
+            bmdDeckLinkFrameMetadataHDRMaxDisplayMasteringLuminance, &x);
+        dk_ret |=
+            frame_metadata->GetFloat (
+            bmdDeckLinkFrameMetadataHDRMinDisplayMasteringLuminance, &y);
+        f.mastering_info.max_display_mastering_luminance = (guint32) (x * 10000.0 / 65535.0);
+        f.mastering_info.min_display_mastering_luminance = (guint32) (y * 10000.0 / 6.5535);
+        GST_LOG_OBJECT (self, "ret 0x%x mastering_info "
+            "R:%u,%u G:%u,%u B:%u,%u W:%u,%u", (gint) dk_ret,
+            f.mastering_info.display_primaries[0].x,
+            f.mastering_info.display_primaries[0].y,
+            f.mastering_info.display_primaries[1].x,
+            f.mastering_info.display_primaries[1].y,
+            f.mastering_info.display_primaries[2].x,
+            f.mastering_info.display_primaries[2].y,
+            f.mastering_info.white_point.x, f.mastering_info.white_point.y);
+        if (dk_ret == S_OK)
+          f.have_mastering_info = TRUE;
+
+        dk_ret =
+            frame_metadata->GetInt (
+            bmdDeckLinkFrameMetadataHDRElectroOpticalTransferFunc, &tf);
+        GST_LOG_OBJECT (self, "ret %x transfer func 0x%" G_GINT64_FORMAT,
+            (gint) dk_ret, tf);
+
+        if (dk_ret == S_OK) {
+          /* as specified in CTA 861.3-A */
+          switch (tf) {
+            case 0x0: /* traditional gamma, SDR luminance range */
+            case 0x1: /* traditional gamma, HDR luminance range */
+              f.colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_12;
+              break;
+            case 0x2: /* PQ */
+              f.colorimetry.transfer = GST_VIDEO_TRANSFER_SMPTE2084;
+              break;
+            case 0x3: /* HLG */
+              f.colorimetry.transfer = GST_VIDEO_TRANSFER_ARIB_STD_B67;
+              break;
+            default:
+              f.colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;
+              break;
+          }
+        }
+      }
+      frame_metadata->Release ();
+    }
+    frame_metadata = nullptr;
+
     if (dtc != NULL) {
       uint8_t hours, minutes, seconds, frames;
       HRESULT res;
@@ -960,7 +1143,6 @@ gst_decklink_video_src_got_frame (GstElement * element,
       } else {
         GST_DEBUG_OBJECT (self, "Got timecode %02d:%02d:%02d:%02d",
             hours, minutes, seconds, frames);
-        bmode = gst_decklink_get_mode (mode);
         if (bmode->interlaced)
           flags =
               (GstVideoTimeCodeFlags) (flags |
@@ -991,7 +1173,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
     }
 
     frame->AddRef ();
-    gst_queue_array_push_tail_struct (self->current_frames, &f);
+    gst_vec_deque_push_tail_struct (self->current_frames, &f);
     g_cond_signal (&self->cond);
   }
   g_mutex_unlock (&self->lock);
@@ -1262,7 +1444,7 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
 
   g_mutex_lock (&self->lock);
 retry:
-  while (gst_queue_array_is_empty (self->current_frames) && !self->flushing) {
+  while (gst_vec_deque_is_empty (self->current_frames) && !self->flushing) {
     g_cond_wait (&self->cond, &self->lock);
   }
 
@@ -1272,7 +1454,7 @@ retry:
     return GST_FLOW_FLUSHING;
   }
 
-  f = *(CaptureFrame *) gst_queue_array_pop_head_struct (self->current_frames);
+  f = *(CaptureFrame *) gst_vec_deque_pop_head_struct (self->current_frames);
 
   // We will have no frame if frames without signal are dropped immediately
   // but we still have to signal that it's lost here.
@@ -1406,6 +1588,37 @@ retry:
     }
   }
 
+  if (!gst_video_colorimetry_is_equal (&f.colorimetry,
+        &self->caps_colorimetry)) {
+    caps_changed = TRUE;
+    self->caps_colorimetry = f.colorimetry;
+  }
+
+  if (f.have_light_level != self->caps_have_light_level ||
+      !gst_video_content_light_level_is_equal (&f.light_level,
+          &self->caps_light_level)) {
+    caps_changed = TRUE;
+    self->caps_have_light_level = f.have_light_level;
+    if (f.have_light_level) {
+      self->caps_light_level = f.light_level;
+    } else {
+      memset (&self->caps_light_level, 0, sizeof (self->caps_light_level));
+    }
+  }
+
+  if (f.have_mastering_info != self->caps_have_light_level ||
+      !gst_video_mastering_display_info_is_equal (&f.mastering_info,
+          &self->caps_mastering_info)) {
+    caps_changed = TRUE;
+    self->caps_have_light_level = f.have_mastering_info;
+    if (f.have_mastering_info) {
+      memcpy (&self->caps_mastering_info, &f.mastering_info,
+          sizeof (f.mastering_info));
+    } else {
+      memset (&self->caps_mastering_info, 0, sizeof (self->caps_mastering_info));
+    }
+  }
+
   /* 1 ns error can be just a rounding error, so that's OK. The Decklink
    * drivers give us a really steady stream time, so anything above 1 ns can't
    * be a rounding error and is therefore something to worry about */
@@ -1433,11 +1646,27 @@ retry:
 
   g_mutex_unlock (&self->lock);
   if (caps_changed) {
+    char *colorimetry;
+    const GstDecklinkMode *gst_mode = gst_decklink_get_mode (f.mode);
+
     self->last_cc_vbi_line = -1;
     self->last_afd_bar_vbi_line = -1;
     self->last_cc_vbi_line_field2 = -1;
     self->last_afd_bar_vbi_line_field2 = -1;
-    caps = gst_decklink_mode_get_caps (f.mode, f.format, TRUE);
+    GST_LOG_OBJECT (self, "mode flags 0x%x",
+        display_mode_flags (self, gst_mode, TRUE));
+    caps = gst_decklink_mode_get_caps (f.mode,
+        display_mode_flags (self, gst_mode, TRUE), f.format,
+        bmdDynamicRangeSDR, TRUE);
+    colorimetry = gst_video_colorimetry_to_string (&self->caps_colorimetry);
+    if (colorimetry)
+      gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, colorimetry,
+          NULL);
+    g_free (colorimetry);
+    if (f.have_light_level)
+      gst_video_content_light_level_add_to_caps (&f.light_level, caps);
+    if (f.have_mastering_info)
+      gst_video_mastering_display_info_add_to_caps (&f.mastering_info, caps);
     gst_video_info_from_caps (&self->info, caps);
     gst_base_src_set_caps (GST_BASE_SRC_CAST (bsrc), caps);
     gst_element_post_message (GST_ELEMENT_CAST (self),
@@ -1481,6 +1710,21 @@ retry:
   return flow_ret;
 }
 
+static BMDDynamicRange
+device_dynamic_range (GstDecklinkVideoSrc * self)
+{
+  BMDDynamicRange range = bmdDynamicRangeSDR;
+
+  if (self->input && self->input->attributes) {
+    gint64 tmp_int = 0;
+    HRESULT ret = self->input->attributes->GetInt (BMDDeckLinkSupportedDynamicRange, &tmp_int);
+    if (ret == S_OK)
+      range = (BMDDynamicRange) tmp_int;
+  }
+
+  return range;
+}
+
 static GstCaps *
 gst_decklink_video_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 {
@@ -1488,10 +1732,19 @@ gst_decklink_video_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   GstCaps *caps;
 
   if (self->mode != GST_DECKLINK_MODE_AUTO) {
-    caps = gst_decklink_mode_get_caps (self->mode, self->caps_format, TRUE);
-  } else if (self->caps_mode != GST_DECKLINK_MODE_AUTO) {
+    const GstDecklinkMode *gst_mode = gst_decklink_get_mode (self->mode);
+    BMDDynamicRange dynamic_range = device_dynamic_range (self);
     caps =
-        gst_decklink_mode_get_caps (self->caps_mode, self->caps_format, TRUE);
+        gst_decklink_mode_get_caps (self->mode,
+        display_mode_flags (self, gst_mode, FALSE), self->caps_format,
+        dynamic_range, TRUE);
+  } else if (self->caps_mode != GST_DECKLINK_MODE_AUTO) {
+    const GstDecklinkMode *gst_mode = gst_decklink_get_mode (self->caps_mode);
+    BMDDynamicRange dynamic_range = device_dynamic_range (self);
+    caps =
+        gst_decklink_mode_get_caps (self->caps_mode,
+        display_mode_flags (self, gst_mode, FALSE), self->caps_format,
+        dynamic_range, TRUE);
   } else {
     caps = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
   }
@@ -1561,9 +1814,9 @@ gst_decklink_video_src_unlock_stop (GstBaseSrc * bsrc)
 
   g_mutex_lock (&self->lock);
   self->flushing = FALSE;
-  while (gst_queue_array_get_length (self->current_frames) > 0) {
+  while (gst_vec_deque_get_length (self->current_frames) > 0) {
     CaptureFrame *tmp =
-        (CaptureFrame *) gst_queue_array_pop_head_struct (self->current_frames);
+        (CaptureFrame *) gst_vec_deque_pop_head_struct (self->current_frames);
     capture_frame_clear (tmp);
   }
   g_mutex_unlock (&self->lock);
@@ -1628,9 +1881,9 @@ gst_decklink_video_src_stop (GstDecklinkVideoSrc * self)
 {
   GST_DEBUG_OBJECT (self, "Stopping");
 
-  while (gst_queue_array_get_length (self->current_frames) > 0) {
+  while (gst_vec_deque_get_length (self->current_frames) > 0) {
     CaptureFrame *tmp =
-        (CaptureFrame *) gst_queue_array_pop_head_struct (self->current_frames);
+        (CaptureFrame *) gst_vec_deque_pop_head_struct (self->current_frames);
     capture_frame_clear (tmp);
   }
   self->caps_mode = GST_DECKLINK_MODE_AUTO;

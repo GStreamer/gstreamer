@@ -1044,6 +1044,8 @@ gst_gl_context_glx_fill_info (GstGLContext * context, GError ** error)
       GST_GL_CONTEXT_WRAPPED_GL_CONFIG_NAME, config,
       (GDestroyNotify) gst_structure_free);
 
+  XFree (fbconfigs);
+
   return TRUE;
 
 failure:

@@ -10,6 +10,8 @@ GST_START_TEST (test_simple_videotestsrc)
   gboolean carry_on = TRUE;
   GstPad *sinkpad;
 
+  ges_init ();
+
   pipeline = gst_pipeline_new ("test_pipeline");
 
   /*
@@ -26,6 +28,7 @@ GST_START_TEST (test_simple_videotestsrc)
 
   sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
   fail_if (sink == NULL);
+  g_object_set (sink, "sync", FALSE, NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), nlesource, sink, NULL);
 
@@ -97,6 +100,8 @@ GST_START_TEST (test_simple_videotestsrc)
   gst_object_unref (bus);
 
   g_free (collect);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -110,6 +115,8 @@ GST_START_TEST (test_videotestsrc_in_bin)
   GstMessage *message;
   gboolean carry_on = TRUE;
   GstPad *sinkpad;
+
+  ges_init ();
 
   pipeline = gst_pipeline_new ("test_pipeline");
 
@@ -126,6 +133,7 @@ GST_START_TEST (test_videotestsrc_in_bin)
 
   sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
   fail_if (sink == NULL);
+  g_object_set (sink, "sync", FALSE, NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), nlesource, sink, NULL);
 
@@ -196,6 +204,8 @@ GST_START_TEST (test_videotestsrc_in_bin)
   gst_object_unref (bus);
 
   g_free (collect);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -206,7 +216,6 @@ gnonlin_suite (void)
   Suite *s = suite_create ("nlesource");
   TCase *tc_chain = tcase_create ("nlesource");
 
-  ges_init ();
   suite_add_tcase (s, tc_chain);
 
   if (0)

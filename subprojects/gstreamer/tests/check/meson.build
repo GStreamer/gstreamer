@@ -20,6 +20,8 @@ core_tests = [
   [ 'gst/gstelement.c', not gst_registry or not gst_parse],
   [ 'gst/gstelementfactory.c', not gst_registry ],
   [ 'gst/gstghostpad.c', not gst_registry ],
+  [ 'gst/gstidstr.c' ],
+  [ 'gst/gstidstr-noinline.c' ],
   [ 'gst/gstinfo.c' ],
   [ 'gst/gstiterator.c' ],
   [ 'gst/gstmessage.c' ],
@@ -51,6 +53,7 @@ core_tests = [
   [ 'gst/gsturi.c' ],
   [ 'gst/gstutils.c', not gst_registry ],
   [ 'gst/gstvalue.c' ],
+  [ 'gst/gstvecdeque.c' ],
   [ 'generic/states.c', not gst_registry ],
   [ 'libs/adapter.c' ],
   [ 'libs/aggregator.c' ],
@@ -120,11 +123,12 @@ if add_languages('cpp', native: false, required: false)
   ]
 endif
 
+fsmod = import('fs')
 test_defines = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
   '-DGST_CHECK_TEST_ENVIRONMENT_BEACON="GST_STATE_IGNORE_ELEMENTS"',
-  '-DTESTFILE="' + meson.current_source_dir() + '/meson.build"',
+  '-DTESTFILE="' + fsmod.as_posix(meson.current_source_dir()) + '/meson.build"',
   '-DGST_DISABLE_DEPRECATED',
 ]
 
@@ -135,7 +139,7 @@ if get_option('check').disabled()
   endif
 endif
 
-gst_deps = [gst_dep, gst_base_dep, gst_check_dep, gst_net_dep, gst_controller_dep, gio_dep, gmodule_dep]
+gst_deps = [gst_dep, gst_base_dep, gst_check_dep, gst_net_dep, gst_controller_dep, gio_dep, gmodule_dep, network_deps]
 
 foreach t : core_tests
   fname = t[0]

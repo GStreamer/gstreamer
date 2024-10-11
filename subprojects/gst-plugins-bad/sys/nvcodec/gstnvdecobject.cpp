@@ -459,6 +459,7 @@ gst_nv_dec_object_export_surface (GstNvDecObject * object,
   switch (GST_VIDEO_INFO_FORMAT (&info)) {
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P012_LE:
     case GST_VIDEO_FORMAT_P016_LE:
       info.stride[0] = surface->pitch;
       info.stride[1] = surface->pitch;
@@ -468,6 +469,8 @@ gst_nv_dec_object_export_surface (GstNvDecObject * object,
       break;
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_GBR:
+    case GST_VIDEO_FORMAT_GBR_16LE:
       info.stride[0] = surface->pitch;
       info.stride[1] = surface->pitch;
       info.stride[2] = surface->pitch;
@@ -545,6 +548,18 @@ gst_nv_dec_object_export_surface (GstNvDecObject * object,
   *memory = mem;
 
   return GST_FLOW_OK;
+}
+
+guint
+gst_nv_dec_object_get_num_free_surfaces (GstNvDecObject * object)
+{
+  GstNvDecObjectPrivate *priv = object->priv;
+  std::lock_guard < std::mutex > lk (priv->lock);
+
+  if (object->num_mapped >= object->create_info.ulNumOutputSurfaces)
+    return 0;
+
+  return object->create_info.ulNumOutputSurfaces - object->num_mapped;
 }
 
 static gboolean

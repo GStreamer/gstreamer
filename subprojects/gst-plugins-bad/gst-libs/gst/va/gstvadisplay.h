@@ -127,6 +127,10 @@ GST_VA_API
 gpointer              gst_va_display_get_va_dpy           (GstVaDisplay * self);
 GST_VA_API
 GstVaImplementation   gst_va_display_get_implementation   (GstVaDisplay * self);
+GST_VA_API
+gboolean              gst_va_display_check_version        (GstVaDisplay * self,
+                                                           guint major,
+                                                           guint minor);
 
 /**
  * gst_va_display_is_implementation:

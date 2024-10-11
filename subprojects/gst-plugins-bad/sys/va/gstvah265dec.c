@@ -237,8 +237,8 @@ gst_va_h265_dec_output_picture (GstH265Decoder * decoder,
 
   gst_buffer_replace (&frame->output_buffer, va_pic->gstbuffer);
 
-  ret = gst_va_base_dec_process_output (base, frame, picture->discont_state,
-      picture->buffer_flags);
+  ret = gst_va_base_dec_process_output (base, frame,
+      GST_CODEC_PICTURE (picture)->discont_state, picture->buffer_flags);
   gst_h265_picture_unref (picture);
 
   if (ret)
@@ -932,8 +932,8 @@ static const struct
 #define P(idc, va) { G_PASTE (GST_H265_PROFILE_, idc), G_PASTE (VAProfileHEVC, va) }
   P (MAIN, Main),
   P (MAIN_10, Main10),
-  /*P (MAIN_STILL_PICTURE, ),
-  P (MONOCHROME, ),
+  P (MAIN_STILL_PICTURE, Main),
+  /*P (MONOCHROME, ),
   P (MONOCHROME_12, ),
   P (MONOCHROME_16, ),*/
   P (MAIN_12, Main12),
@@ -942,9 +942,9 @@ static const struct
   P (MAIN_444, Main444),
   P (MAIN_444_10, Main444_10),
   P (MAIN_444_12, Main444_12),
-  /*P (MAIN_INTRA, ),
-  P (MAIN_10_INTRA, ),
-  P (MAIN_12_INTRA, ),
+  P (MAIN_INTRA, Main),
+  P (MAIN_10_INTRA, Main10),
+  /*P (MAIN_12_INTRA, ),
   P (MAIN_422_10_INTRA, ),
   P (MAIN_422_12_INTRA, ),
   P (MAIN_444_INTRA, ),

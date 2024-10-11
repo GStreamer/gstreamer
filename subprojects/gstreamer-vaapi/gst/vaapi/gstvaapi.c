@@ -51,7 +51,7 @@ static void
 plugin_add_dependencies (GstPlugin * plugin)
 {
   const gchar *envvars[] = { "GST_VAAPI_ALL_DRIVERS", "LIBVA_DRIVER_NAME",
-    "DISPLAY", "WAYLAND_DISPLAY", NULL
+    "DISPLAY", "WAYLAND_DISPLAY", "GST_VAAPI_DRM_DEVICE", NULL
   };
   const gchar *kernel_paths[] = { "/dev/dri", NULL };
   const gchar *kernel_names[] = { "card", "render", NULL };
@@ -201,7 +201,7 @@ plugin_init (GstPlugin * plugin)
   if (decoders) {
     gst_vaapidecode_register (plugin, decoders);
     gst_element_register (plugin, "vaapidecodebin",
-        GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
+        GST_RANK_NONE, GST_TYPE_VAAPI_DECODE_BIN);
     g_array_unref (decoders);
   }
 
@@ -212,9 +212,7 @@ plugin_init (GstPlugin * plugin)
         GST_RANK_NONE, GST_TYPE_VAAPIPOSTPROC);
   }
 
-  rank = GST_RANK_SECONDARY;
-  if (g_getenv ("WAYLAND_DISPLAY"))
-    rank = GST_RANK_MARGINAL;
+  rank = GST_RANK_NONE;
   gst_element_register (plugin, "vaapisink", rank, GST_TYPE_VAAPISINK);
 
 #if GST_VAAPI_USE_ENCODERS

@@ -93,6 +93,7 @@ struct _GstVaDeinterlace
   VAProcDeinterlacingType method;
 
   guint num_backward_references;
+  guint num_forward_references;
 
   GstBuffer *history[8];
   gint hcount;
@@ -126,8 +127,10 @@ _reset_history (GstVaDeinterlace * self)
   gint i;
 
   for (i = 0; i < self->hcount; i++)
-    gst_buffer_unref (self->history[i]);
+    gst_clear_buffer (&self->history[i]);
+
   self->hcount = 0;
+  self->hcurr = -1;
 }
 
 static void
@@ -215,6 +218,8 @@ gst_va_deinterlace_submit_input_buffer (GstBaseTransform * trans,
 
   gst_buffer_unref (buf);
 
+  self->hcurr = MIN (self->hcount, self->num_forward_references);
+
   if (self->hcount < self->hdepth) {
     self->history[self->hcount++] = inbuf;
   } else {
@@ -224,8 +229,8 @@ gst_va_deinterlace_submit_input_buffer (GstBaseTransform * trans,
     self->history[i] = inbuf;
   }
 
-  if (self->history[self->hcurr])
-    self->curr_field = FIRST_FIELD;
+  g_assert (self->history[self->hcurr]);
+  self->curr_field = FIRST_FIELD;
 
   return ret;
 }
@@ -236,7 +241,6 @@ _build_filter (GstVaDeinterlace * self)
   GstVaBaseTransform *btrans = GST_VA_BASE_TRANSFORM (self);
   guint i, num_caps;
   VAProcFilterCapDeinterlacing *caps;
-  guint32 num_forward_references;
 
   caps = gst_va_filter_get_filter_caps (btrans->filter,
       VAProcFilterDeinterlacing, &num_caps);
@@ -248,16 +252,31 @@ _build_filter (GstVaDeinterlace * self)
       continue;
 
     if (gst_va_filter_add_deinterlace_buffer (btrans->filter, self->method,
-            &num_forward_references, &self->num_backward_references)) {
-      self->hdepth = num_forward_references + self->num_backward_references + 1;
+            &self->num_forward_references, &self->num_backward_references)) {
+      self->hdepth =
+          self->num_forward_references + self->num_backward_references + 1;
       if (self->hdepth > 8) {
         GST_ELEMENT_ERROR (self, STREAM, FAILED,
             ("Pipeline requires too many references: (%u forward, %u backward)",
-                num_forward_references, self->num_backward_references), (NULL));
+                self->num_forward_references, self->num_backward_references),
+            (NULL));
       }
       GST_INFO_OBJECT (self, "References for method: %u forward / %u backward",
-          num_forward_references, self->num_backward_references);
-      self->hcurr = num_forward_references;
+          self->num_forward_references, self->num_backward_references);
+
+      /* num_backward_references > 0 means we need to cache several frames
+         after the current frame. But the basetransform class does not
+         provide any _drain() kind function, so we do not have the chance
+         to push out our cached frames when EOS or set caps event comes.
+         Rather than losing the last several frames, we should just give up
+         the backward reference here. */
+      if (self->num_backward_references > 0) {
+        GST_INFO_OBJECT (self, "num_backward_references should only be set "
+            "to 0 now because of the implementation limitation.");
+        self->num_backward_references = 0;
+      }
+
+      self->hcurr = -1;
       return;
     }
   }
@@ -454,6 +473,8 @@ gst_va_deinterlace_generate_output (GstBaseTransform * trans,
 
   *outbuf = NULL;
 
+  g_assert (self->hcurr >= 0 && self->hcurr <= self->num_forward_references);
+
   if (self->curr_field == FINISHED)
     return GST_FLOW_OK;
 
@@ -461,7 +482,8 @@ gst_va_deinterlace_generate_output (GstBaseTransform * trans,
   if (!inbuf)
     return GST_FLOW_OK;
 
-  if (!self->history[self->hdepth - 1])
+  g_assert (self->hcurr + self->num_backward_references <= self->hdepth - 1);
+  if (!self->history[self->hcurr + self->num_backward_references])
     return GST_FLOW_OK;
 
   ret = GST_BASE_TRANSFORM_CLASS (parent_class)->prepare_output_buffer (trans,
@@ -724,12 +746,6 @@ gst_va_deinterlace_class_init (gpointer g_class, gpointer class_data)
 
   if (gst_va_filter_open (filter)) {
     src_caps = gst_va_filter_get_caps (filter);
-    /* adds any to enable passthrough */
-    {
-      GstCaps *any_caps = gst_caps_new_empty_simple ("video/x-raw");
-      gst_caps_set_features_simple (any_caps, gst_caps_features_new_any ());
-      src_caps = gst_caps_merge (src_caps, any_caps);
-    }
   } else {
     src_caps = gst_caps_from_string (caps_str);
   }

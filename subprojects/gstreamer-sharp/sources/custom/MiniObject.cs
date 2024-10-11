@@ -1,5 +1,5 @@
 // Copyright (C) 2014  Stephan Sundermann <stephansundermann@gmail.com>
-// 
+//
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
@@ -21,7 +21,6 @@ namespace Gst {
 	using System.Runtime.InteropServices;
 
 	partial class MiniObject {
-		protected MiniObject() { }
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_mini_object_replace(IntPtr olddata, IntPtr newdata);

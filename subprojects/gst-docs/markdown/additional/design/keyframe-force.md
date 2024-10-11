@@ -22,7 +22,7 @@ decoding the file immediately.
 2)  We need to inform the video encoder that it should start encoding a
     keyframe starting from exactly the frame with the pattern.
 
-3)  We need to inform the demuxer that it should flush out any pending
+3)  We need to inform the muxer that it should flush out any pending
     data and start creating the start of a new file with the keyframe as
     a first video frame.
 

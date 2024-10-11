@@ -59,7 +59,6 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
       "Converts video from one colorspace to another",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  convertscale_class->any_memory = TRUE;
   convertscale_class->converts = TRUE;
   convertscale_class->scales = FALSE;
 }

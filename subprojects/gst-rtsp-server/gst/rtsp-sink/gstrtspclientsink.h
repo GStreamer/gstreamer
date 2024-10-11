@@ -189,16 +189,17 @@ struct _GstRTSPClientSink {
   GstRTSPPublishClockMode publish_clock_mode;
 
   /* state */
-  GstRTSPState       state;
-  gchar             *content_base;
-  GstRTSPLowerTrans  cur_protocols;
-  gboolean           tried_url_auth;
-  gchar             *addr;
-  gboolean           need_redirect;
-  GstRTSPTimeRange  *range;
-  gchar             *control;
-  guint              next_port_num;
-  GstClock          *provided_clock;
+  GstRTSPState        state;
+  gchar              *content_base;
+  GstRTSPLowerTrans   cur_protocols;
+  gboolean            tried_url_auth;
+  gchar              *addr;
+  GstRTSPAddressPool *pool;
+  gboolean            need_redirect;
+  GstRTSPTimeRange   *range;
+  gchar              *control;
+  guint               next_port_num;
+  GstClock           *provided_clock;
 
   /* supported methods */
   gint               methods;

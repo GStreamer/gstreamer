@@ -600,8 +600,7 @@ gst_vpx_dec_open_codec (GstVPXDec * dec, GstVideoCodecFrame * frame)
   gst_buffer_unmap (frame->input_buffer, &minfo);
 
   if (status != VPX_CODEC_OK) {
-    GST_INFO_OBJECT (dec, "VPX preprocessing error: %s",
-        gst_vpx_error_name (status));
+    GST_VPX_DEC_WARN (dec, "VPX preprocessing error", status);
     return GST_FLOW_CUSTOM_SUCCESS_1;
   }
 
@@ -639,9 +638,12 @@ gst_vpx_dec_open_codec (GstVPXDec * dec, GstVideoCodecFrame * frame)
   status =
       vpx_codec_dec_init (&dec->decoder, vpxclass->codec_algo, &cfg, flags);
   if (status != VPX_CODEC_OK) {
-    GST_ELEMENT_ERROR (dec, LIBRARY, INIT,
-        ("Failed to initialize VP8 decoder"), ("%s",
-            gst_vpx_error_name (status)));
+    GST_ELEMENT_ERROR_WITH_DETAILS (dec, LIBRARY, INIT,
+        ("Failed to initialize VP8 decoder"), ("%s (details: %s)",
+            gst_vpx_error_name (status),
+            GST_STR_NULL (dec->decoder.err_detail)), ("error", G_TYPE_STRING,
+            gst_vpx_error_name (status), "details", G_TYPE_STRING,
+            GST_STR_NULL (dec->decoder.err_detail), NULL));
     return GST_FLOW_ERROR;
   }
 
@@ -654,8 +656,7 @@ gst_vpx_dec_open_codec (GstVPXDec * dec, GstVideoCodecFrame * frame)
 
     status = vpx_codec_control (&dec->decoder, VP8_SET_POSTPROC, &pp_cfg);
     if (status != VPX_CODEC_OK) {
-      GST_WARNING_OBJECT (dec, "Couldn't set postprocessing settings: %s",
-          gst_vpx_error_name (status));
+      GST_VPX_DEC_WARN (dec, "Couldn't set postprocessing settings", status);
     }
   }
   vpx_codec_set_frame_buffer_functions (&dec->decoder,
@@ -725,8 +726,10 @@ gst_vpx_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   if (status) {
     GstVideoDecoderRequestSyncPointFlags flags = 0;
 
-    GST_VIDEO_DECODER_ERROR (decoder, 1, LIBRARY, ENCODE,
-        ("Failed to decode frame"), ("%s", gst_vpx_error_name (status)), ret);
+    GST_VIDEO_DECODER_ERROR (decoder, 1, STREAM, DECODE,
+        ("Failed to decode frame"), ("%s (details: %s)",
+            gst_vpx_error_name (status),
+            GST_STR_NULL (dec->decoder.err_detail)), ret);
 
     if (gst_video_decoder_get_needs_sync_point (decoder))
       flags |= GST_VIDEO_DECODER_REQUEST_SYNC_POINT_DISCARD_INPUT;
@@ -740,7 +743,7 @@ gst_vpx_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   if (img) {
     if (vpxclass->get_frame_format (dec, img, &fmt) == FALSE) {
       vpx_img_free (img);
-      GST_ELEMENT_ERROR (decoder, LIBRARY, ENCODE,
+      GST_ELEMENT_ERROR (decoder, STREAM, DECODE,
           ("Failed to decode frame"), ("Unsupported color format %d",
               img->fmt));
       gst_video_codec_frame_unref (frame);

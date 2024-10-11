@@ -84,7 +84,11 @@ gst_mpd_segment_list_node_init (GstMPDSegmentListNode * self)
 GstMPDSegmentListNode *
 gst_mpd_segment_list_node_new (void)
 {
-  return g_object_new (GST_TYPE_MPD_SEGMENT_LIST_NODE, NULL);
+  GstMPDSegmentListNode *ret;
+
+  ret = g_object_new (GST_TYPE_MPD_SEGMENT_LIST_NODE, NULL);
+  gst_object_ref_sink (ret);
+  return ret;
 }
 
 void

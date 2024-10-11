@@ -187,7 +187,11 @@ gst_mpd_representation_node_init (GstMPDRepresentationNode * self)
 GstMPDRepresentationNode *
 gst_mpd_representation_node_new (void)
 {
-  return g_object_new (GST_TYPE_MPD_REPRESENTATION_NODE, NULL);
+  GstMPDRepresentationNode *ret;
+
+  ret = g_object_new (GST_TYPE_MPD_REPRESENTATION_NODE, NULL);
+  gst_object_ref_sink (ret);
+  return ret;
 }
 
 void

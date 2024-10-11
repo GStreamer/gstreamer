@@ -1,6 +1,9 @@
 [wrap-file]
-directory=dav1d-1.1.0
-source_url = https://download.videolan.org/pub/videolan/dav1d/1.1.0/dav1d-1.1.0.tar.xz
-source_filename = dav1d-1.1.0.tar.xz
-source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/dav1d-1.1.0.tar.xz
-source_hash = fb57aae7875f28c30fb3dbae4a3683d27e2f91dde09ce5c60c22cef9bc58dfd1
+directory=dav1d-1.4.1
+source_url = https://download.videolan.org/pub/videolan/dav1d/1.4.1/dav1d-1.4.1.tar.xz
+source_filename = dav1d-1.4.1.tar.xz
+source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/dav1d-1.4.1.tar.xz
+source_hash = 8d407dd5fe7986413c937b14e67f36aebd06e1fa5cfec679d10e548476f2d5f8
+
+[provide]
+dav1d = dav1d_dep

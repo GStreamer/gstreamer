@@ -1,4 +1,7 @@
 #include <gst/gst.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 
 void
@@ -14,10 +17,14 @@ assert_feature_names (gchar * names, GType feature_type, gboolean spook)
     for (i = 0; split[i]; i++) {
       feature = gst_registry_find_feature (gst_registry_get (),
           split[i], feature_type);
-      if (spook)
+      if (spook) {
         g_assert_null (feature);
-      else
+      } else {
         g_assert_nonnull (feature);
+        g_assert_cmpstr (gst_plugin_feature_get_plugin_name (feature), ==,
+            GST_PLUGIN_FULL_FEATURES_NAME);
+      }
+
       if (feature)
         gst_object_unref (feature);
     }

@@ -91,6 +91,30 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_element_factory_make_with_properties(IntPtr factoryname, uint n, IntPtr names, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]IntPtr[] values);
+
+		public static Gst.Element MakeWithProperties(string factoryname, string[] names, GLib.Value[] values) {
+			IntPtr native_factoryname = GLib.Marshaller.StringToPtrGStrdup (factoryname);
+			uint n = (uint)(names == null ? 0 : names.Length);
+			IntPtr native_names = GLib.Marshaller.StringArrayToStrvPtr(names, false);
+			IntPtr[] native_values = new IntPtr [n];
+			for (int i = 0; i < n; i++)
+				native_values [i] = GLib.Marshaller.StructureToPtrAlloc (values[i]);
+			IntPtr raw_ret = gst_element_factory_make_with_properties(native_factoryname, n, native_names, native_values);
+			Gst.Element ret = GLib.Object.GetObject(raw_ret) as Gst.Element;
+			GLib.Marshaller.Free (native_factoryname);
+			GLib.Marshaller.StringArrayPtrFree (native_names, (int)n);
+			for (int i = 0; i < native_values.Length; i++) {
+				Marshal.FreeHGlobal (native_values[i]);
+			}
+			return ret;
+		}
+
+		public static Gst.Element MakeWithProperties(string factoryname) {
+			return MakeWithProperties (factoryname, null, null);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_element_factory_can_sink_all_caps(IntPtr raw, IntPtr caps);
 
 		public bool CanSinkAllCaps(Gst.Caps caps) {
@@ -142,6 +166,28 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_element_factory_create_with_properties(IntPtr raw, uint n, IntPtr names, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]IntPtr[] values);
+
+		public Gst.Element CreateWithProperties(string[] names, GLib.Value[] values) {
+			uint n = (uint)(names == null ? 0 : names.Length);
+			IntPtr native_names = GLib.Marshaller.StringArrayToStrvPtr(names, false);
+			IntPtr[] native_values = new IntPtr [n];
+			for (int i = 0; i < n; i++)
+				native_values [i] = GLib.Marshaller.StructureToPtrAlloc (values[i]);
+			IntPtr raw_ret = gst_element_factory_create_with_properties(Handle, n, native_names, native_values);
+			Gst.Element ret = GLib.Object.GetObject(raw_ret) as Gst.Element;
+			GLib.Marshaller.StringArrayPtrFree (native_names, (int)n);
+			for (int i = 0; i < native_values.Length; i++) {
+				Marshal.FreeHGlobal (native_values[i]);
+			}
+			return ret;
+		}
+
+		public Gst.Element CreateWithProperties() {
+			return CreateWithProperties (null, null);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_element_factory_get_element_type(IntPtr raw);
 
 		public GLib.GType ElementType { 
@@ -181,6 +227,17 @@ namespace Gst {
 			get {
 				uint raw_ret = gst_element_factory_get_num_pad_templates(Handle);
 				uint ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_element_factory_get_skip_documentation(IntPtr raw);
+
+		public bool SkipDocumentation { 
+			get {
+				bool raw_ret = gst_element_factory_get_skip_documentation(Handle);
+				bool ret = raw_ret;
 				return ret;
 			}
 		}

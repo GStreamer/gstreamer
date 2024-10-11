@@ -249,17 +249,16 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_control_binding_get_g_value_array(IntPtr raw, ulong timestamp, ulong interval, uint n_values, IntPtr[] values);
+		static extern bool gst_control_binding_get_g_value_array(IntPtr raw, ulong timestamp, ulong interval, uint n_values, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]IntPtr[] values);
 
 		public bool GetGValueArray(ulong timestamp, ulong interval, GLib.Value[] values) {
-			int cnt_values = values == null ? 0 : values.Length;
-			IntPtr[] native_values = new IntPtr [cnt_values];
-			for (int i = 0; i < cnt_values; i++)
+			uint n_values = (uint)(values == null ? 0 : values.Length);
+			IntPtr[] native_values = new IntPtr [n_values];
+			for (int i = 0; i < n_values; i++)
 				native_values [i] = GLib.Marshaller.StructureToPtrAlloc (values[i]);
-			bool raw_ret = gst_control_binding_get_g_value_array(Handle, timestamp, interval, (uint) (values == null ? 0 : values.Length), native_values);
+			bool raw_ret = gst_control_binding_get_g_value_array(Handle, timestamp, interval, n_values, native_values);
 			bool ret = raw_ret;
 			for (int i = 0; i < native_values.Length; i++) {
-				values [i] = (GLib.Value) Marshal.PtrToStructure (native_values[i], typeof (GLib.Value));
 				Marshal.FreeHGlobal (native_values[i]);
 			}
 			return ret;

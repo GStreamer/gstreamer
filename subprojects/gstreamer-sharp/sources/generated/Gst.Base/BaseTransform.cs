@@ -166,7 +166,7 @@ namespace Gst.Base {
 			try {
 				BaseTransform __obj = GLib.Object.GetObject (inst, false) as BaseTransform;
 				Gst.Caps __result;
-				__result = __obj.OnFixateCaps ((Gst.PadDirection) direction, caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), false), othercaps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (othercaps, typeof (Gst.Caps), false));
+				__result = __obj.OnFixateCaps ((Gst.PadDirection) direction, caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), false), othercaps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (othercaps, typeof (Gst.Caps), true));
 				return __result == null ? IntPtr.Zero : __result.OwnedCopy;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -190,6 +190,7 @@ namespace Gst.Base {
 			}
 			if (unmanaged == null) return null;
 
+			othercaps.Owned = false;
 			IntPtr __result = unmanaged (this.Handle, (int) direction, caps == null ? IntPtr.Zero : caps.Handle, othercaps == null ? IntPtr.Zero : othercaps.Handle);
 			return __result == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (__result, typeof (Gst.Caps), true);
 		}
@@ -812,7 +813,7 @@ namespace Gst.Base {
 			try {
 				BaseTransform __obj = GLib.Object.GetObject (inst, false) as BaseTransform;
 				bool __result;
-				__result = __obj.OnSinkEvent (evnt == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (evnt, typeof (Gst.Event), false));
+				__result = __obj.OnSinkEvent (evnt == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (evnt, typeof (Gst.Event), true));
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -836,6 +837,7 @@ namespace Gst.Base {
 			}
 			if (unmanaged == null) return false;
 
+			evnt.Owned = false;
 			bool __result = unmanaged (this.Handle, evnt == null ? IntPtr.Zero : evnt.Handle);
 			return __result;
 		}
@@ -870,7 +872,7 @@ namespace Gst.Base {
 			try {
 				BaseTransform __obj = GLib.Object.GetObject (inst, false) as BaseTransform;
 				bool __result;
-				__result = __obj.OnSrcEvent (evnt == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (evnt, typeof (Gst.Event), false));
+				__result = __obj.OnSrcEvent (evnt == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (evnt, typeof (Gst.Event), true));
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -894,6 +896,7 @@ namespace Gst.Base {
 			}
 			if (unmanaged == null) return false;
 
+			evnt.Owned = false;
 			bool __result = unmanaged (this.Handle, evnt == null ? IntPtr.Zero : evnt.Handle);
 			return __result;
 		}

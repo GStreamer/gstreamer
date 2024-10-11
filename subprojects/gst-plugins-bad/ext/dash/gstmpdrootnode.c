@@ -101,6 +101,9 @@ gst_mpd_root_node_set_property (GObject * object, guint prop_id,
     case PROP_MPD_ROOT_MINIMUM_UPDATE_PERIOD:
       self->minimumUpdatePeriod = g_value_get_uint64 (value);
       break;
+    case PROP_MPD_ROOT_SUGGESTED_PRESENTATION_DELAY:
+      self->suggestedPresentationDelay = g_value_get_uint64 (value);
+      break;
     case PROP_MPD_ROOT_MIN_BUFFER_TIME:
       self->minBufferTime = g_value_get_uint64 (value);
       break;
@@ -151,6 +154,9 @@ gst_mpd_root_node_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MPD_ROOT_MINIMUM_UPDATE_PERIOD:
       g_value_set_uint64 (value, self->minimumUpdatePeriod);
+      break;
+    case PROP_MPD_ROOT_SUGGESTED_PRESENTATION_DELAY:
+      g_value_set_uint64 (value, self->suggestedPresentationDelay);
       break;
     case PROP_MPD_ROOT_MIN_BUFFER_TIME:
       g_value_set_uint64 (value, self->minBufferTime);
@@ -351,6 +357,11 @@ gst_mpd_root_node_class_init (GstMPDRootNodeClass * klass)
           "minimum update period", "minimum update period", 0,
           G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class,
+      PROP_MPD_ROOT_SUGGESTED_PRESENTATION_DELAY,
+      g_param_spec_uint64 ("suggested-presentation-delay",
+          "suggested presentation delay", "suggested presentation delay", 0,
+          G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
       PROP_MPD_ROOT_MIN_BUFFER_TIME,
       g_param_spec_uint64 ("min-buffer-time", "mininim buffer time",
           "mininim buffer time", 0,
@@ -394,7 +405,11 @@ gst_mpd_root_node_init (GstMPDRootNode * self)
 GstMPDRootNode *
 gst_mpd_root_node_new (void)
 {
-  return g_object_new (GST_TYPE_MPD_ROOT_NODE, NULL);
+  GstMPDRootNode *ret;
+
+  ret = g_object_new (GST_TYPE_MPD_ROOT_NODE, NULL);
+  gst_object_ref_sink (ret);
+  return ret;
 }
 
 void

@@ -49,18 +49,6 @@ typedef struct
   VppTestCoordinate expect;
 } VppTestCoordinateParams;
 
-GST_START_TEST (test_make)
-{
-  GstElement *vaapipostproc;
-
-  vaapipostproc = gst_element_factory_make ("vaapipostproc", "vaapipostproc");
-  fail_unless (vaapipostproc != NULL, "Failed to create vaapipostproc element");
-
-  gst_object_unref (vaapipostproc);
-}
-
-GST_END_TEST;
-
 static void
 vpp_test_init_context (VppTestContext * ctx)
 {
@@ -390,11 +378,24 @@ vaapipostproc_suite (void)
 {
   Suite *s = suite_create ("vaapipostproc");
   TCase *tc_chain = tcase_create ("general");
+  gboolean has_vaapipostproc = FALSE;
+
+  {
+    GstElement *vaapipostproc;
+
+    vaapipostproc = gst_element_factory_make ("vaapipostproc", NULL);
+    if (vaapipostproc) {
+      has_vaapipostproc = TRUE;
+      gst_object_unref (vaapipostproc);
+    }
+  }
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_make);
-  tcase_add_test (tc_chain, test_crop_mouse_events);
-  tcase_add_test (tc_chain, test_orientation_mouse_events);
+
+  if (has_vaapipostproc) {
+    tcase_add_test (tc_chain, test_crop_mouse_events);
+    tcase_add_test (tc_chain, test_orientation_mouse_events);
+  }
 
   return s;
 }

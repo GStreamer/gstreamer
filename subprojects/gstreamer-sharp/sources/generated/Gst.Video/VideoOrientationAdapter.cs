@@ -266,6 +266,17 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_orientation_from_tag(IntPtr taglist, out int method);
+
+		public static bool FromTag(Gst.TagList taglist, out Gst.Video.VideoOrientationMethod method) {
+			int native_method;
+			bool raw_ret = gst_video_orientation_from_tag(taglist == null ? IntPtr.Zero : taglist.Handle, out native_method);
+			bool ret = raw_ret;
+			method = (Gst.Video.VideoOrientationMethod) native_method;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_orientation_get_hcenter(IntPtr raw, out int center);
 
 		public bool GetHcenter(out int center) {

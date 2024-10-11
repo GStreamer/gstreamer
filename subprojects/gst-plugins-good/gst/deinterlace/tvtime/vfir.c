@@ -81,10 +81,10 @@ deinterlace_c_16bits (guint16 * dst, const guint16 * lum_m4,
     const guint16 * lum, gint size)
 {
   if (lum_m2 == NULL) {
-    deinterlace_line_linear_16bits (dst, lum_m1, lum_m3, size);
+    deinterlace_line_linear_16bits (dst, lum_m1, lum_m3, size / 2);
   } else {
     deinterlace_line_vfir_16bits (dst, lum_m4, lum_m3, lum_m2, lum_m1,
-        lum, size);
+        lum, size / 2);
   }
 }
 

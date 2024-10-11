@@ -56,7 +56,7 @@
 
 extern volatile gboolean glib_on_error_halt;
 
-#ifdef G_OS_UNIX
+#if defined (G_OS_UNIX) && !defined (__APPLE__)
 static void fault_restore (void);
 static void fault_spin (void);
 #endif
@@ -80,6 +80,7 @@ static gboolean toc = FALSE;
 static gboolean messages = FALSE;
 static gboolean eos_on_shutdown = FALSE;
 static gchar **exclude_args = NULL;
+static gchar *prog_name = NULL;
 
 /* pipeline status */
 static gboolean is_live = FALSE;
@@ -95,7 +96,7 @@ static gboolean waiting_eos = FALSE;
 /* convenience macro so we don't have to litter the code with if(!quiet) */
 #define PRINT if(!quiet)gst_print
 
-#ifdef G_OS_UNIX
+#if defined (G_OS_UNIX) && !defined (__APPLE__)
 static void
 fault_handler_sighandler (int signum)
 {
@@ -161,7 +162,7 @@ fault_setup (void)
   sigaction (SIGSEGV, &action, NULL);
   sigaction (SIGQUIT, &action, NULL);
 }
-#endif /* G_OS_UNIX */
+#endif /* G_OS_UNIX && !__APPLE__ */
 
 #if 0
 typedef struct _GstIndexStats
@@ -1102,6 +1103,9 @@ real_main (int argc, char *argv[])
           N_("Do not output status information for the specified property "
               "if verbose output is enabled (can be used multiple times)"),
         N_("PROPERTY-NAME")},
+    {"prog-name", 'p', 0, G_OPTION_ARG_STRING, &prog_name,
+          N_("Set the name of the program"),
+        N_("PROGRAM-NAME")},
     {"no-fault", 'f', 0, G_OPTION_ARG_NONE, &no_fault,
         N_("Do not install a fault handler"), NULL},
     {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
@@ -1178,13 +1182,19 @@ real_main (int argc, char *argv[])
   gst_init (&argc, &argv);
 #endif
 
+  if (prog_name) {
+    g_set_prgname (prog_name);
+  } else if (!g_get_prgname ()) {
+    g_set_prgname ((const gchar *) argv[0]);
+  }
+
 #ifdef G_OS_WIN32
   argc = g_strv_length (argv);
 #endif
 
   gst_tools_print_version ();
 
-#ifdef G_OS_UNIX
+#if defined (G_OS_UNIX) && !defined (__APPLE__)
   if (!no_fault)
     fault_setup ();
 #endif

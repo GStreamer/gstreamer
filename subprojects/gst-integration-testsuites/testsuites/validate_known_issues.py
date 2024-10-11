@@ -209,26 +209,6 @@ KNOWN_ISSUES = {
             },
         ]
     },
-    "https://gitlab.freedesktop.org/gstreamer/gst-libav/issues/45": {
-        "tests": [
-            "validate.file.playback.reverse_playback.rawaudioS32LE_prores_mov"
-        ],
-        "issues": [
-            {
-                "issue-id": "runtime::error-on-bus",
-                "summary": "We got an ERROR message on the bus",
-                "level": "critical",
-                "detected-on": "playbin0",
-                "details": ".*No valid frames decoded before end of stream.*",
-            },
-            {
-                "issue-id": "scenario::not-ended",
-                "summary": "The program stopped before some actions were executed",
-                "level": "critical",
-                "detected-on": "reverse_playback",
-            },
-        ],
-    },
     "Our asf file is basically broken": {
         "tests": [
             "validate.file.transcode.*.samples_multimedia_cx_asf_wmv_elephant_asf",

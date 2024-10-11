@@ -25,10 +25,70 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstAmcFormatVTable GstAmcFormatVTable;
 typedef struct _GstAmcFormat GstAmcFormat;
 typedef struct _GstAmcColorFormatInfo GstAmcColorFormatInfo;
 
-gboolean gst_amc_format_static_init (void);
+struct _GstAmcFormatVTable {
+  GstAmcFormat * (* new_audio)  (const gchar *mime,
+                                 gint sample_rate,
+                                 gint channels,
+                                 GError **err);
+
+  GstAmcFormat * (* new_video)  (const gchar *mime,
+                                 gint width,
+                                 gint height,
+                                 GError **err);
+
+  void           (* free)       (GstAmcFormat * format);
+
+  gchar *        (* to_string)  (GstAmcFormat * format,
+                                 GError **err);
+
+  gboolean       (* get_float)  (GstAmcFormat *format,
+                                 const gchar *key,
+                                 gfloat *value,
+                                 GError **err);
+
+  gboolean       (* set_float)  (GstAmcFormat *format,
+                                 const gchar *key,
+                                 gfloat value,
+                                 GError **err);
+
+  gboolean       (* get_int)    (GstAmcFormat *format,
+                                 const gchar *key,
+                                 gint *value,
+                                 GError **err);
+
+  gboolean       (* set_int)    (GstAmcFormat *format,
+                                 const gchar *key,
+                                 gint value,
+                                 GError **err);
+
+  gboolean       (* get_string) (GstAmcFormat *format,
+                                 const gchar *key,
+                                 gchar **value,
+                                 GError **err);
+
+  gboolean       (* set_string) (GstAmcFormat *format,
+                                 const gchar *key,
+                                 const gchar *value,
+                                GError **err);
+
+  gboolean       (* get_buffer) (GstAmcFormat *format,
+                                 const gchar *key,
+                                 guint8 **data,
+                                 gsize *size,
+                                 GError **err);
+
+  gboolean       (* set_buffer) (GstAmcFormat *format,
+                                 const gchar *key,
+                                 guint8 *data,
+                                 gsize size,
+                                 GError **err);
+};
+
+extern GstAmcFormatVTable *gst_amc_format_vtable;
 
 GstAmcFormat * gst_amc_format_new_audio (const gchar *mime, gint sample_rate, gint channels, GError **err);
 GstAmcFormat * gst_amc_format_new_video (const gchar *mime, gint width, gint height, GError **err);

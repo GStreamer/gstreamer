@@ -1,0 +1,19 @@
+set-globals,
+    media_dir="$(test_dir)/../../../medias",
+    file="file://$(media_dir)/defaults/matroska/flac_jpeg.1.mkv"
+
+
+meta,
+    handles-states=true,
+    ignore-eos=true,
+    args = {
+        "playbin3 uri=$(file) name=p video-sink=\"$(videosink)\" audio-sink=\"$(audiosink)\"",
+    }
+
+foreach, i=[0, 40],
+    actions = {
+        "select-streams, indexes=0",
+        "play",
+        "set-state, state=null",
+    }
+stop;

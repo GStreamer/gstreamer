@@ -48,7 +48,7 @@ struct _GstCodecTimestamperPrivate
   GstSegment in_segment;
 
   GList *current_frame_events;
-  GstQueueArray *queue;
+  GstVecDeque *queue;
   GArray *timestamp_queue;
 
   gint fps_n;
@@ -194,8 +194,8 @@ gst_codec_timestamper_init (GstCodecTimestamper * self,
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   priv->queue =
-      gst_queue_array_new_for_struct (sizeof (GstCodecTimestamperFrame), 16);
-  gst_queue_array_set_clear_func (priv->queue,
+      gst_vec_deque_new_for_struct (sizeof (GstCodecTimestamperFrame), 16);
+  gst_vec_deque_set_clear_func (priv->queue,
       (GDestroyNotify) gst_codec_timestamper_clear_frame);
   priv->timestamp_queue =
       g_array_sized_new (FALSE, FALSE, sizeof (GstClockTime), 16);
@@ -210,7 +210,7 @@ gst_codec_timestamper_finalize (GObject * object)
   GstCodecTimestamper *self = GST_CODEC_TIMESTAMPER (object);
   GstCodecTimestamperPrivate *priv = self->priv;
 
-  gst_queue_array_free (priv->queue);
+  gst_vec_deque_free (priv->queue);
   g_array_unref (priv->timestamp_queue);
   g_rec_mutex_clear (&priv->lock);
 
@@ -301,9 +301,9 @@ gst_codec_timestamper_flush (GstCodecTimestamper * self)
 {
   GstCodecTimestamperPrivate *priv = self->priv;
 
-  while (gst_queue_array_get_length (priv->queue) > 0) {
+  while (gst_vec_deque_get_length (priv->queue) > 0) {
     GstCodecTimestamperFrame *frame = (GstCodecTimestamperFrame *)
-        gst_queue_array_pop_head_struct (priv->queue);
+        gst_vec_deque_pop_head_struct (priv->queue);
 
     gst_codec_timestamper_flush_events (self, &frame->events);
     gst_codec_timestamper_clear_frame (frame);
@@ -444,8 +444,11 @@ gst_codec_timestamper_output_frame (GstCodecTimestamper * self,
       if (dts > frame->pts) {
         if (frame->pts >= priv->last_dts)
           dts = frame->pts;
-        else
-          dts = GST_CLOCK_TIME_NONE;
+        else {
+          GST_WARNING_OBJECT (self,
+              "Setting DTS to last DTS to avoid PTS < DTS and backward DTS");
+          dts = priv->last_dts;
+        }
       }
 
       if (GST_CLOCK_TIME_IS_VALID (dts))
@@ -471,7 +474,7 @@ gst_codec_timestamper_process_output_frame (GstCodecTimestamper * self)
   guint len;
   GstCodecTimestamperFrame *frame;
 
-  len = gst_queue_array_get_length (priv->queue);
+  len = gst_vec_deque_get_length (priv->queue);
   if (len < priv->window_size) {
     GST_TRACE_OBJECT (self, "Need more data, queued %d/%d", len,
         priv->window_size);
@@ -479,7 +482,7 @@ gst_codec_timestamper_process_output_frame (GstCodecTimestamper * self)
   }
 
   frame = (GstCodecTimestamperFrame *)
-      gst_queue_array_pop_head_struct (priv->queue);
+      gst_vec_deque_pop_head_struct (priv->queue);
 
   return gst_codec_timestamper_output_frame (self, frame);
 }
@@ -491,9 +494,9 @@ gst_codec_timestamper_drain (GstCodecTimestamper * self)
 
   GST_DEBUG_OBJECT (self, "Draining");
 
-  while (gst_queue_array_get_length (priv->queue) > 0) {
+  while (gst_vec_deque_get_length (priv->queue) > 0) {
     GstCodecTimestamperFrame *frame = (GstCodecTimestamperFrame *)
-        gst_queue_array_pop_head_struct (priv->queue);
+        gst_vec_deque_pop_head_struct (priv->queue);
     gst_codec_timestamper_output_frame (self, frame);
   }
 
@@ -582,7 +585,7 @@ gst_codec_timestamper_chain (GstPad * pad, GstObject * parent,
       ", adjusted pts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_PTS (buffer)), GST_TIME_ARGS (pts));
 
-  gst_queue_array_push_tail_struct (priv->queue, &frame);
+  gst_vec_deque_push_tail_struct (priv->queue, &frame);
   if (GST_CLOCK_TIME_IS_VALID (frame.pts)) {
     g_array_append_val (priv->timestamp_queue, frame.pts);
     g_array_sort (priv->timestamp_queue, (GCompareFunc) pts_compare_func);
@@ -701,7 +704,7 @@ gst_codec_timestamper_reset (GstCodecTimestamper * self)
 {
   GstCodecTimestamperPrivate *priv = self->priv;
 
-  gst_queue_array_clear (priv->queue);
+  gst_vec_deque_clear (priv->queue);
   g_array_set_size (priv->timestamp_queue, 0);
   priv->fps_n = 0;
   priv->fps_d = 1;

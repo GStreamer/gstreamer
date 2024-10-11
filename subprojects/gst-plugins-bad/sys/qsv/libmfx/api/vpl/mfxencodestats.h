@@ -335,7 +335,7 @@ typedef struct {
         mfxU32  NumCTU; /*!< number of CTUs per frame for H.265. */
     };
 
-    mfxBlockSize   BlockSize; /*! For H.264 it is always 16x16 coresponding to MB size. 
+    mfxBlockSize   BlockSize; /*! For H.264 it is always 16x16 corresponding to MB size. 
                                In H.265 it's normalized to 4x4, so for each CU we calculate number of 4x4 which belongs to the block. */
     
     mfxU32  NumIntraBlock;   /*! Number of intra blocks in the frame. The size of block is defined by BlockSize. 
@@ -377,7 +377,7 @@ typedef mfxEncodeSliceStats mfxEncodeTileStats;
 
 
 MFX_PACK_BEGIN_STRUCT_W_PTR()
-/*! The structure respresnts reference counted container for output after encoding operation which includes statistics
+/*! The structure represents reference counted container for output after encoding operation which includes statistics
     and synchronization primitive for compressed bitstream. 
     The memory is allocated and released by the library.
 */
@@ -442,7 +442,7 @@ MFX_PACK_BEGIN_STRUCT_W_PTR()
 typedef struct {
     mfxExtBuffer Header; /*!< Extension buffer header. Header.BufferId must be equal to MFX_EXTBUFF_ENCODESTATS_BLK. */
     mfxU16                       EncodeStatsFlags;       /*! What statistics is required: block/slice/tile/frame level or any combinations. 
-                                                             In case of slice or tile output statistics for one slice or tile will be availbale only.*/
+                                                             In case of slice or tile output statistics for one slice or tile will be available only.*/
     mfxEncodeStatsMode           Mode;                   /*!< What encoding mode should be used to gather statistics. */
     mfxEncodeStatsContainer     *EncodeStatsContainer; /*!< encode output, filled by the implementation. */ 
     mfxU32       reserved[8];

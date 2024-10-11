@@ -4,6 +4,6 @@ meta,
         "change-issue-severity, issue-id=event::eos-has-wrong-seqnum, new-severity=critical",
     },
     args = {
-        "playbin uri=file://$(media_dir)/defaults/flv/819290236.flv",
+        "playbin uri=file://$(media_dir)/defaults/flv/819290236.flv audio-sink=\"$(audiosink)\" video-sink=\"$(videosink)\"",
     },
     scenario=seek_with_stop

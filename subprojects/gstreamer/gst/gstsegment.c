@@ -770,8 +770,8 @@ gst_segment_to_running_time_full (const GstSegment * segment, GstFormat format,
       stop = segment->start + segment->duration;
 
     /* cannot continue if no stop position set or invalid offset */
-    g_return_val_if_fail (stop != -1, 0);
-    g_return_val_if_fail (stop >= offset, 0);
+    if (stop == -1 || stop < offset)
+      return 0;
 
     stop -= offset;
 

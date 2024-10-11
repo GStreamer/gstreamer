@@ -40,6 +40,8 @@ static struct FormatEntry format_map[] = {
   {V4L2_PIX_FMT_YUV420M, 3, GST_VIDEO_FORMAT_I420, 8, 420},
   {V4L2_PIX_FMT_P010, 1, GST_VIDEO_FORMAT_P010_10LE, 16, 420},
   {V4L2_PIX_FMT_NV15_4L4, 1, GST_VIDEO_FORMAT_NV12_10LE40_4L4, 10, 420},
+  {V4L2_PIX_FMT_MT2110T, 2, GST_VIDEO_FORMAT_MT2110T, 10, 420},
+  {V4L2_PIX_FMT_MT2110R, 2, GST_VIDEO_FORMAT_MT2110R, 10, 420},
   {0,}
 };
 
@@ -87,10 +89,9 @@ set_stride (GstVideoInfo * info, gint plane, gint stride)
 
     padded_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, plane,
         info->height);
-    padded_height = (padded_height + tile_height - 1) / tile_height;
 
     x_tiles = stride / GST_VIDEO_FORMAT_INFO_TILE_STRIDE (finfo, plane);
-    y_tiles = padded_height / tile_height;
+    y_tiles = (padded_height + tile_height - 1) / tile_height;
     info->stride[plane] = GST_VIDEO_TILE_MAKE_STRIDE (x_tiles, y_tiles);
   } else {
     info->stride[plane] = stride;

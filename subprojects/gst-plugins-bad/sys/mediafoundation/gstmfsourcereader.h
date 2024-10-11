@@ -35,6 +35,9 @@ GstMFSourceObject * gst_mf_source_reader_new (GstMFSourceType type,
                                               const gchar * device_name,
                                               const gchar * device_path);
 
+GstMFSourceResult   gst_mf_source_reader_enumerate (gint device_index,
+                                                    GstMFSourceObject ** object);
+
 G_END_DECLS
 
 #endif /* __GST_MF_SOURCE_READER_H__ */

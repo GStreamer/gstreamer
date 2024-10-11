@@ -381,6 +381,10 @@ gst_riff_create_video_caps (guint32 codec_fcc,
     case GST_MAKE_FOURCC ('h', '2', '6', '5'):
     case GST_MAKE_FOURCC ('h', 'v', 'c', '1'):
     case GST_MAKE_FOURCC ('H', 'V', 'C', '1'):
+    case GST_MAKE_FOURCC ('h', 'e', 'v', 'c'):
+    case GST_MAKE_FOURCC ('H', 'E', 'V', 'C'):
+    case GST_MAKE_FOURCC ('h', 'e', 'v', '1'):
+    case GST_MAKE_FOURCC ('H', 'E', 'V', '1'):
       caps = gst_caps_new_empty_simple ("video/x-h265");
       if (codec_name)
         *codec_name = g_strdup ("H.265");
@@ -963,6 +967,12 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       if (codec_name)
         *codec_name = g_strdup ("XSUB subpicture stream");
 
+      break;
+
+    case GST_MAKE_FOURCC ('L', 'A', 'G', 'S'):
+      caps = gst_caps_new_empty_simple ("video/x-lagarith");
+      if (codec_name)
+        *codec_name = g_strdup ("Lagarith lossless video codec");
       break;
 
     default:

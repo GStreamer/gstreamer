@@ -97,6 +97,9 @@ struct _GstXImageSrc
   /* whether to use remote friendly calls */
   gboolean remote;
 
+  /* enable navigation events */
+  gboolean enable_navigation_events;
+
 #ifdef HAVE_XFIXES
   int fixes_event_base;
   XFixesCursorImage *cursor_image;

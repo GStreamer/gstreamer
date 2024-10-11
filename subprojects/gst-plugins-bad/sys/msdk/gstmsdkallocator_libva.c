@@ -32,6 +32,7 @@
 
 #include <va/va.h>
 #include <va/va_drmcommon.h>
+#include <drm_fourcc.h>
 #include <unistd.h>
 #include "gstmsdkallocator.h"
 #include "gstmsdkallocator_libva.h"
@@ -40,6 +41,13 @@
 #include <gst/va/gstvaallocator.h>
 
 #define GST_MSDK_FRAME_SURFACE gst_msdk_frame_surface_quark_get ()
+
+static void
+gst_msdk_surface_list_free (GstMsdkSurface * surface)
+{
+  gst_buffer_unref (surface->buf);
+  g_slice_free (GstMsdkSurface, surface);
+}
 
 mfxStatus
 gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
@@ -54,8 +62,6 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
   mfxU32 fourcc = req->Info.FourCC;
   mfxU16 surfaces_num = req->NumFrameSuggested;
   GList *tmp_list = NULL;
-  GList *l;
-  GstMsdkSurface *tmp_surface = NULL;
   VAStatus va_status;
 
   /* MFX_MAKEFOURCC('V','P','8','S') is used for MFX_FOURCC_VP9_SEGMAP surface
@@ -100,6 +106,7 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
     GstVideoInfo info;
     GstCaps *caps;
     GstVideoAlignment align;
+    guint min_buffers, max_buffers;
 
     format = gst_msdk_get_video_format_from_mfx_fourcc (fourcc);
     gst_video_info_set_format (&info, format, req->Info.CropW, req->Info.CropH);
@@ -109,16 +116,22 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
         (&info, req->Info.Width, req->Info.Height, &align);
     gst_video_info_align (&info, &align);
 
-    caps = gst_video_info_to_caps (&info);
-
     pool = gst_msdk_context_get_alloc_pool (context);
     if (!pool) {
+      status = MFX_ERR_MEMORY_ALLOC;
       goto error_alloc;
     }
 
     config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
+    if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
+            &max_buffers)) {
+      status = MFX_ERR_MEMORY_ALLOC;
+      goto error_alloc;
+    }
+
+    max_buffers = MAX (max_buffers, surfaces_num);
     gst_buffer_pool_config_set_params (config, caps,
-        GST_VIDEO_INFO_SIZE (&info), surfaces_num, surfaces_num);
+        GST_VIDEO_INFO_SIZE (&info), min_buffers, max_buffers);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
     gst_buffer_pool_config_add_option (config,
@@ -128,12 +141,14 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
     if (!gst_buffer_pool_set_config (pool, config)) {
       GST_ERROR ("Failed to set pool config");
       gst_object_unref (pool);
+      status = MFX_ERR_MEMORY_ALLOC;
       goto error_alloc;
     }
 
     if (!gst_buffer_pool_set_active (pool, TRUE)) {
       GST_ERROR ("Failed to activate pool");
       gst_object_unref (pool);
+      status = MFX_ERR_MEMORY_ALLOC;
       goto error_alloc;
     }
 
@@ -144,6 +159,7 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
         GST_ERROR ("Failed to allocate buffer");
         gst_buffer_pool_set_active (pool, FALSE);
         gst_object_unref (pool);
+        status = MFX_ERR_MEMORY_ALLOC;
         goto error_alloc;
       }
 
@@ -153,6 +169,7 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
         GST_ERROR ("Failed to get GstMsdkSurface");
         gst_buffer_pool_set_active (pool, FALSE);
         gst_object_unref (pool);
+        status = MFX_ERR_MEMORY_ALLOC;
         goto error_alloc;
       }
 
@@ -182,7 +199,7 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
       status = gst_msdk_get_mfx_status_from_va_status (va_status);
       if (status < MFX_ERR_NONE) {
         GST_ERROR ("failed to create buffer");
-        return status;
+        goto error_alloc;
       }
 
       msdk_mid.surface = coded_buf;
@@ -205,18 +222,16 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
 
   gst_msdk_context_add_alloc_response (context, msdk_resp);
 
-  /* We need to put all the buffers back to the pool */
-  for (l = tmp_list; l; l = l->next) {
-    tmp_surface = (GstMsdkSurface *) l->data;
-    gst_buffer_unref (tmp_surface->buf);
-  }
+  g_list_free_full (tmp_list, (GDestroyNotify) gst_msdk_surface_list_free);
 
   return status;
 
 error_alloc:
   g_slice_free1 (surfaces_num * sizeof (mfxMemId), mids);
   g_slice_free (GstMsdkAllocResponse, msdk_resp);
-  return MFX_ERR_MEMORY_ALLOC;
+  if (tmp_list)
+    g_list_free_full (tmp_list, (GDestroyNotify) gst_msdk_surface_list_free);
+  return status;
 }
 
 mfxStatus
@@ -309,6 +324,7 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
         data->V = data->U + 2;
         break;
       case VA_FOURCC_ARGB:
+      case VA_FOURCC_XRGB:
         data->Pitch = mem_id->image.pitches[0];
         data->B = buf + mem_id->image.offsets[0];
         data->G = data->B + 1;
@@ -617,49 +633,17 @@ error_create_surface:
   }
 }
 
-static VASurfaceID
-_get_va_surface (GstBuffer * buf, GstVideoInfo * info,
-    GstMsdkContext * msdk_context)
+static void
+gst_msdk_qdata_free (gpointer data)
 {
-  VASurfaceID va_surface = VA_INVALID_ID;
+  mfxFrameSurface1 *mfx_surface = data;
 
-  if (!info) {
-    va_surface = gst_va_buffer_get_surface (buf);
-  } else {
-    /* Update offset/stride/size if there is VideoMeta attached to
-     * the dma buffer, which is then used to get vasurface */
-    GstMemory *mem;
-    gint i, fd;
-    GstVideoMeta *vmeta;
+  if (mfx_surface->Data.Locked == 0) {
+    GstMsdkMemoryID *msdk_mid = (GstMsdkMemoryID *) mfx_surface->Data.MemId;
 
-    vmeta = gst_buffer_get_video_meta (buf);
-    if (vmeta) {
-      if (GST_VIDEO_INFO_FORMAT (info) != vmeta->format ||
-          GST_VIDEO_INFO_WIDTH (info) != vmeta->width ||
-          GST_VIDEO_INFO_HEIGHT (info) != vmeta->height ||
-          GST_VIDEO_INFO_N_PLANES (info) != vmeta->n_planes) {
-        GST_ERROR ("VideoMeta attached to buffer is not matching"
-            "the negotiated width/height/format");
-        return va_surface;
-      }
-      for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); ++i) {
-        GST_VIDEO_INFO_PLANE_OFFSET (info, i) = vmeta->offset[i];
-        GST_VIDEO_INFO_PLANE_STRIDE (info, i) = vmeta->stride[i];
-      }
-      GST_VIDEO_INFO_SIZE (info) = gst_buffer_get_size (buf);
-    }
-
-    mem = gst_buffer_peek_memory (buf, 0);
-    fd = gst_dmabuf_memory_get_fd (mem);
-    if (fd < 0)
-      return va_surface;
-    /* export dmabuf to vasurface */
-    if (!gst_msdk_export_dmabuf_to_vasurface (msdk_context, info, fd,
-            &va_surface))
-      return VA_INVALID_ID;
+    g_slice_free (GstMsdkMemoryID, msdk_mid);
+    g_slice_free (mfxFrameSurface1, mfx_surface);
   }
-
-  return va_surface;
 }
 
 /* Currently parameter map_flag is not useful on Linux */
@@ -673,6 +657,7 @@ gst_msdk_import_to_msdk_surface (GstBuffer * buf, GstMsdkContext * msdk_context,
   GstMsdkSurface *msdk_surface = NULL;
   mfxFrameSurface1 *mfx_surface = NULL;
   GstMsdkMemoryID *msdk_mid = NULL;
+  GDestroyNotify qdata_destroy = NULL;
 
   mem = gst_buffer_peek_memory (buf, 0);
   msdk_surface = g_slice_new0 (GstMsdkSurface);
@@ -685,13 +670,7 @@ gst_msdk_import_to_msdk_surface (GstBuffer * buf, GstMsdkContext * msdk_context,
     return msdk_surface;
   }
 
-  if (gst_msdk_is_va_mem (mem)) {
-    va_surface = _get_va_surface (buf, NULL, NULL);
-  } else if (gst_is_dmabuf_memory (mem)) {
-    /* For dma memory, videoinfo is used with dma fd to create va surface. */
-    GstVideoInfo info = *vinfo;
-    va_surface = _get_va_surface (buf, &info, msdk_context);
-  }
+  va_surface = gst_va_buffer_get_surface (buf);
 
   if (va_surface == VA_INVALID_ID) {
     g_slice_free (GstMsdkSurface, msdk_surface);
@@ -708,9 +687,10 @@ gst_msdk_import_to_msdk_surface (GstBuffer * buf, GstMsdkContext * msdk_context,
   gst_msdk_set_mfx_frame_info_from_video_info (&frame_info, vinfo);
   mfx_surface->Info = frame_info;
 
+  qdata_destroy = gst_msdk_qdata_free;
   /* Set mfxFrameSurface1 as qdata in buffer */
   gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (mem),
-      GST_MSDK_FRAME_SURFACE, mfx_surface, NULL);
+      GST_MSDK_FRAME_SURFACE, mfx_surface, qdata_destroy);
 
   msdk_surface->surface = mfx_surface;
 
@@ -775,4 +755,72 @@ error_destroy_va_surface:
     GST_ERROR ("Failed to Destroy the VASurfaceID %x", old_surface_id);
     return FALSE;
   }
+}
+
+static guint
+_get_usage_hint (GstMsdkContextJobType job_type)
+{
+  guint hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
+
+  switch (job_type) {
+    case GST_MSDK_JOB_DECODER:
+      hint |= VA_SURFACE_ATTRIB_USAGE_HINT_DECODER;
+      break;
+    case GST_MSDK_JOB_ENCODER:
+      hint |= VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER;
+      break;
+    case GST_MSDK_JOB_VPP:
+      hint |= VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ |
+          VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
+      break;
+    default:
+      GST_WARNING ("Unsupported job type %d", job_type);
+      break;
+  }
+
+  return hint;
+}
+
+void
+gst_msdk_get_supported_modifiers (GstMsdkContext * context,
+    GstMsdkContextJobType job_type, GstVideoFormat format, GValue * modifiers)
+{
+  guint64 mod = DRM_FORMAT_MOD_INVALID;
+  guint64 mod_gen = DRM_FORMAT_MOD_INVALID;
+  GValue gmod = G_VALUE_INIT;
+  guint usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
+  GstVaDisplay *display =
+      (GstVaDisplay *) gst_msdk_context_get_va_display (context);
+
+  g_value_init (&gmod, G_TYPE_UINT64);
+
+  mod = gst_va_dmabuf_get_modifier_for_format (display, format, usage_hint);
+  if (mod != DRM_FORMAT_MOD_INVALID && mod != DRM_FORMAT_MOD_LINEAR) {
+    g_value_set_uint64 (&gmod, mod);
+    gst_value_list_append_value (modifiers, &gmod);
+  }
+
+  usage_hint = _get_usage_hint (job_type);
+  if (usage_hint != VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC) {
+    mod_gen =
+        gst_va_dmabuf_get_modifier_for_format (display, format, usage_hint);
+    if (mod_gen != mod && mod_gen != DRM_FORMAT_MOD_INVALID &&
+        mod_gen != DRM_FORMAT_MOD_LINEAR) {
+      g_value_set_uint64 (&gmod, mod_gen);
+      gst_value_list_append_value (modifiers, &gmod);
+    }
+  }
+
+  if (mod == DRM_FORMAT_MOD_LINEAR || mod_gen == DRM_FORMAT_MOD_LINEAR) {
+    g_value_set_uint64 (&gmod, DRM_FORMAT_MOD_LINEAR);
+    gst_value_list_append_value (modifiers, &gmod);
+  }
+
+  if (mod == DRM_FORMAT_MOD_INVALID && mod_gen == DRM_FORMAT_MOD_INVALID) {
+    GST_WARNING ("Failed to get modifier %s:0x%016llx",
+        gst_video_format_to_string (format), DRM_FORMAT_MOD_INVALID);
+  }
+
+  gst_object_unref (display);
+  g_value_unset (&gmod);
 }

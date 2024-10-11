@@ -53,11 +53,29 @@ typedef enum _SplitMuxOutputState
   SPLITMUX_OUTPUT_STATE_START_NEXT_FILE /* Restarting after ENDING_FILE */
 } SplitMuxOutputState;
 
+typedef enum _SplitMuxOutputCommandType
+{
+  SPLITMUX_OUTPUT_COMMAND_FINISH_FRAGMENT,
+  SPLITMUX_OUTPUT_COMMAND_RELEASE_GOP,
+} SplitMuxOutputCommandType;
+
 typedef struct _SplitMuxOutputCommand
 {
-  gboolean start_new_fragment;  /* Whether to start a new fragment before advancing output ts */
-  GstClockTimeDiff max_output_ts;       /* Set the limit to stop GOP output */
+  SplitMuxOutputCommandType cmd_type;
+  struct
+  {
+    GstClockTimeDiff max_output_ts;   /* Set the limit to stop GOP output */
+  } release_gop;
 } SplitMuxOutputCommand;
+
+typedef struct
+{
+  guint fragment_id;
+  GstClockTime last_running_time;
+
+  GstClockTime fragment_offset;
+  GstClockTime fragment_duration;
+} OutputFragmentInfo;
 
 typedef struct _MqStreamBuf
 {
@@ -90,6 +108,7 @@ typedef struct {
 typedef struct _MqStreamCtx
 {
   GstSplitMuxSink *splitmux;
+  guint ctx_id;
 
   guint q_overrun_id;
   guint sink_pad_block_id;
@@ -107,9 +126,12 @@ typedef struct _MqStreamCtx
 
   GstSegment in_segment;
   GstSegment out_segment;
+  GstClockTimeDiff out_fragment_start_runts;
 
   GstClockTimeDiff in_running_time;
+
   GstClockTimeDiff out_running_time;
+  GstClockTimeDiff out_running_time_end; /* max run ts + durations */
 
   GstElement *q;
   GQueue queued_bufs;
@@ -119,6 +141,7 @@ typedef struct _MqStreamCtx
 
   GstBuffer *cur_out_buffer;
   GstEvent *pending_gap;
+
 } MqStreamCtx;
 
 struct _GstSplitMuxSink
@@ -159,7 +182,9 @@ struct _GstSplitMuxSink
   gboolean ready_for_output;
 
   gchar *location;
-  guint fragment_id;
+  guint cur_fragment_id;
+
+  guint next_fragment_id;
   guint start_index;
   GList *contexts;
 
@@ -174,11 +199,11 @@ struct _GstSplitMuxSink
    * stream in this fragment */
   guint64 fragment_reference_bytes;
 
-  /* Minimum start time (PTS or DTS) of the current fragment */
+  /* Minimum start time (PTS or DTS) of the current fragment (reference stream, input side) */
   GstClockTimeDiff fragment_start_time;
-  /* Start time (PTS) of the current fragment */
+  /* Start time (PTS) of the current fragment (reference stream, input side) */
   GstClockTimeDiff fragment_start_time_pts;
-  /* Minimum start timecode of the current fragment */
+  /* Minimum start timecode of the current fragment (reference stream, input side) */
   GstVideoTimeCode *fragment_start_tc;
 
   /* Oldest GOP at head, newest GOP at tail */
@@ -191,6 +216,12 @@ struct _GstSplitMuxSink
 
   SplitMuxOutputState output_state;
   GstClockTimeDiff max_out_running_time;
+  OutputFragmentInfo out_fragment_info;
+
+  /* Track the earliest running time (across all inputs) for the first fragment */
+  GstClockTimeDiff out_start_runts;
+  /* Track the earliest running time (across all inputs) for the *current* fragment */
+  GstClockTimeDiff out_fragment_start_runts;
 
   guint64 muxed_out_bytes;
 
@@ -210,7 +241,7 @@ struct _GstSplitMuxSink
 
   gboolean split_requested;
   gboolean do_split_next_gop;
-  GstQueueArray *times_to_split;
+  GstVecDeque *times_to_split;
 
   /* Async finalize options */
   gboolean async_finalize;

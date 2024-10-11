@@ -241,6 +241,9 @@ void               gst_rtsp_connection_set_ignore_x_server_reply (GstRTSPConnect
 GST_RTSP_API
 gboolean           gst_rtsp_connection_get_ignore_x_server_reply (const GstRTSPConnection *conn);
 
+GST_RTSP_API
+void               gst_rtsp_connection_add_extra_http_request_header (GstRTSPConnection *conn, const gchar *key, const gchar *value);
+
 /* async IO */
 
 /**

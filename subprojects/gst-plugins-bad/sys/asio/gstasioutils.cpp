@@ -24,7 +24,6 @@
 #include "gstasioutils.h"
 #include <windows.h>
 #include <string.h>
-#include <atlconv.h>
 
 static gboolean
 gst_asio_enum_check_class_root (GstAsioDeviceInfo * info, LPCWSTR clsid)
@@ -93,8 +92,6 @@ gst_asio_enum_new_device_info_from_reg (HKEY reg_key, LPWSTR key_name)
   CLSID id;
   HRESULT hr;
 
-  USES_CONVERSION;
-
   status = RegOpenKeyExW (reg_key, key_name, 0, KEY_READ, &sub_key);
   if (status != ERROR_SUCCESS)
     return nullptr;
@@ -105,7 +102,7 @@ gst_asio_enum_new_device_info_from_reg (HKEY reg_key, LPWSTR key_name)
   if (status != ERROR_SUCCESS)
     goto done;
 
-  hr = CLSIDFromString (W2COLE (clsid_data), &id);
+  hr = CLSIDFromString (clsid_data, &id);
   if (FAILED (hr))
     goto done;
 

@@ -2081,7 +2081,7 @@ GST_START_TEST (test_pad_z_order)
 
 GST_END_TEST;
 
-/* 
+/*
  * Test that the pad numbering assigned by aggregator behaves as follows:
  * 1. If a pad number is requested, it must be assigned if it is available
  * 2. When numbering automatically, the largest available pad number is used
@@ -2627,12 +2627,12 @@ GST_START_TEST (test_stream_start_after_eos)
   while (!test_data.buf)
     g_cond_wait (&test_data.cond, &test_data.lock);
   g_mutex_unlock (&test_data.lock);
-  gst_buffer_unref (test_data.buf);
 
   state_res = gst_element_set_state (bin, GST_STATE_NULL);
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
   /* cleanup */
+  gst_buffer_unref (test_data.buf);
   g_main_loop_unref (main_loop);
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
@@ -2728,12 +2728,12 @@ GST_START_TEST (test_new_pad_after_eos)
   while (!test_data.buf)
     g_cond_wait (&test_data.cond, &test_data.lock);
   g_mutex_unlock (&test_data.lock);
-  gst_buffer_unref (test_data.buf);
 
   state_res = gst_element_set_state (bin, GST_STATE_NULL);
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
   /* cleanup */
+  gst_buffer_unref (test_data.buf);
   g_main_loop_unref (main_loop);
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);

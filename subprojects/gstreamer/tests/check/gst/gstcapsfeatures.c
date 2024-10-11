@@ -30,7 +30,7 @@ GST_START_TEST (test_basic_operations)
 {
   GstCapsFeatures *a, *b;
 
-  a = gst_caps_features_new ("m:abc", "m:def", "m:ghi", NULL);
+  a = gst_caps_features_new_static_str ("m:abc", "m:def", "m:ghi", NULL);
   fail_unless (a != NULL);
   b = gst_caps_features_copy (a);
   fail_unless (b != NULL);

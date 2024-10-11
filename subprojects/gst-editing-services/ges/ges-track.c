@@ -239,7 +239,7 @@ update_gaps (GESTrack * track)
       if (layer_prio != GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY) {
         GESLayer *layer = g_list_nth_data (priv->timeline->layers, layer_prio);
 
-        if (!ges_layer_get_active_for_track (layer, track))
+        if (!layer || !ges_layer_get_active_for_track (layer, track))
           continue;
       }
     }
@@ -305,9 +305,10 @@ track_resort_and_fill_gaps (GESTrack * track)
 }
 
 static gboolean
-update_field (GQuark field_id, const GValue * value, GstStructure * original)
+update_field (const GstIdStr * fieldname, const GValue * value,
+    GstStructure * original)
 {
-  gst_structure_id_set_value (original, field_id, value);
+  gst_structure_id_str_set_value (original, fieldname, value);
   return TRUE;
 }
 
@@ -454,41 +455,71 @@ ges_track_change_state (GstElement * element, GstStateChange transition)
       transition);
 }
 
+void
+ges_track_select_subtimeline_streams (GESTrack * track,
+    GstStreamCollection * collection, GstElement * subtimeline)
+{
+  GList *selected_streams = NULL;
+
+  for (gint i = 0; i < gst_stream_collection_get_size (collection); i++) {
+    GstStream *stream = gst_stream_collection_get_stream (collection, i);
+    GstStreamType stype = gst_stream_get_stream_type (stream);
+
+    if ((track->type == GES_TRACK_TYPE_VIDEO && stype == GST_STREAM_TYPE_VIDEO)
+        || (track->type == GES_TRACK_TYPE_AUDIO
+            && stype == GST_STREAM_TYPE_AUDIO)
+        || (stype == GST_STREAM_TYPE_UNKNOWN)) {
+
+      selected_streams =
+          g_list_append (selected_streams,
+          g_strdup (gst_stream_get_stream_id (stream)));
+    }
+  }
+
+  if (selected_streams) {
+    gst_element_send_event (subtimeline,
+        gst_event_new_select_streams (selected_streams));
+
+    g_list_free_full (selected_streams, g_free);
+  }
+}
+
 static void
 ges_track_handle_message (GstBin * bin, GstMessage * message)
 {
   GESTrack *track = GES_TRACK (bin);
 
-  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STREAM_COLLECTION) {
-    gint i;
-    GList *selected_streams = NULL;
-    GstStreamCollection *collection;
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_STREAM_COLLECTION:
+      g_error ("Internal stream collection messages should be kept internal");
+      break;
+    case GST_MESSAGE_ELEMENT:
+    {
+      const GstStructure *s = gst_message_get_structure (message);
 
-    gst_message_parse_stream_collection (message, &collection);
+      if (gst_structure_has_name (s, "ges-timeline-collection")) {
+        GstStreamCollection *collection;
 
-    for (i = 0; i < gst_stream_collection_get_size (collection); i++) {
-      GstStream *stream = gst_stream_collection_get_stream (collection, i);
-      GstStreamType stype = gst_stream_get_stream_type (stream);
+        gst_structure_get (s, "collection", GST_TYPE_STREAM_COLLECTION,
+            &collection, NULL);
 
-      if ((track->type == GES_TRACK_TYPE_VIDEO
-              && stype == GST_STREAM_TYPE_VIDEO)
-          || (track->type == GES_TRACK_TYPE_AUDIO
-              && stype == GST_STREAM_TYPE_AUDIO)
-          || (stype == GST_STREAM_TYPE_UNKNOWN)) {
+        ges_track_select_subtimeline_streams (track, collection,
+            GST_ELEMENT (GST_MESSAGE_SRC (message)));
 
-        selected_streams =
-            g_list_append (selected_streams,
-            (gchar *) gst_stream_get_stream_id (stream));
+        GST_INFO_OBJECT (bin,
+            "Handled ges-timeline-collection message, dropping");
+
+        gst_message_unref (message);
+        return;
       }
-    }
 
-    if (selected_streams) {
-      gst_element_send_event (GST_ELEMENT (GST_MESSAGE_SRC (message)),
-          gst_event_new_select_streams (selected_streams));
-      g_list_free (selected_streams);
+      break;
     }
+    default:
+      break;
   }
-  gst_element_post_message (GST_ELEMENT_CAST (bin), message);
+
+  GST_BIN_CLASS (ges_track_parent_class)->handle_message (bin, message);
 }
 
 /* GObject virtual methods */
@@ -1064,8 +1095,8 @@ ges_track_update_restriction_caps (GESTrack * self, const GstCaps * caps)
 
     if (gst_caps_get_size (new_restriction_caps) > i) {
       GstStructure *original = gst_caps_get_structure (new_restriction_caps, i);
-      gst_structure_foreach (new, (GstStructureForeachFunc) update_field,
-          original);
+      gst_structure_foreach_id_str (new,
+          (GstStructureForeachIdStrFunc) update_field, original);
     } else
       gst_caps_append_structure (new_restriction_caps,
           gst_structure_copy (new));

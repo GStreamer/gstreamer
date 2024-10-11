@@ -54,6 +54,7 @@ GST_DEBUG_CATEGORY_STATIC (cutter_debug);
 #define CUTTER_DEFAULT_THRESHOLD_LEVEL    0.1
 #define CUTTER_DEFAULT_THRESHOLD_LENGTH  (500 * GST_MSECOND)
 #define CUTTER_DEFAULT_PRE_LENGTH        (200 * GST_MSECOND)
+#define EPSILON 1e-35f
 
 static GstStaticPadTemplate cutter_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -81,7 +82,8 @@ enum
   PROP_THRESHOLD_DB,
   PROP_RUN_LENGTH,
   PROP_PRE_LENGTH,
-  PROP_LEAKY
+  PROP_LEAKY,
+  PROP_AUDIO_LEVEL_META,
 };
 
 #define gst_cutter_parent_class parent_class
@@ -135,6 +137,17 @@ gst_cutter_class_init (GstCutterClass * klass)
       g_param_spec_boolean ("leaky", "Leaky",
           "do we leak buffers when below threshold ?",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstCutter:audio-level-meta:
+   *
+   * If %TRUE, generate or update GstAudioLevelMeta on output buffers.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_AUDIO_LEVEL_META,
+      g_param_spec_boolean ("audio-level-meta", "Audio Level Meta",
+          "Set GstAudioLevelMeta on buffers", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (cutter_debug, "cutter", 0, "Audio cutting");
 
@@ -175,6 +188,7 @@ gst_cutter_init (GstCutter * filter)
   filter->pre_run_length = 0 * GST_SECOND;
   filter->pre_buffer = NULL;
   filter->leaky = FALSE;
+  filter->audio_level_meta = FALSE;
 }
 
 static GstMessage *
@@ -293,6 +307,23 @@ gst_cutter_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return ret;
 }
 
+static void
+set_audio_level_meta (GstBuffer * buffer, guint8 level)
+{
+  GstAudioLevelMeta *meta;
+
+  /* Update the existing meta, if any, so we can have an upstream element
+   * filling the voice activity part of the meta. */
+  meta = gst_buffer_get_audio_level_meta (buffer);
+  if (meta) {
+    meta->level = level;
+  } else {
+    /* Assume audio does not contain voice, it can be detected by another
+     * downstream element. */
+    gst_buffer_add_audio_level_meta (buffer, level, FALSE);
+  }
+}
+
 static GstFlowReturn
 gst_cutter_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
@@ -354,6 +385,13 @@ gst_cutter_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
    */
   GST_LOG_OBJECT (filter, "buffer stats: NMS %f, RMS %f, audio length %f", NMS,
       RMS, gst_guint64_to_gdouble (duration));
+
+  if (filter->audio_level_meta) {
+    gdouble RMSdB = 20 * log10 (RMS + EPSILON);
+
+    buf = gst_buffer_make_writable (buf);
+    set_audio_level_meta (buf, -RMSdB);
+  }
 
   if (RMS < filter->threshold_level)
     filter->silent_run_length += gst_guint64_to_gdouble (duration);
@@ -469,6 +507,9 @@ gst_cutter_set_property (GObject * object, guint prop_id,
       /* set if the pre-record buffer is leaky or not */
       filter->leaky = g_value_get_boolean (value);
       break;
+    case PROP_AUDIO_LEVEL_META:
+      filter->audio_level_meta = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -499,6 +540,9 @@ gst_cutter_get_property (GObject * object, guint prop_id,
       break;
     case PROP_LEAKY:
       g_value_set_boolean (value, filter->leaky);
+      break;
+    case PROP_AUDIO_LEVEL_META:
+      g_value_set_boolean (value, filter->audio_level_meta);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

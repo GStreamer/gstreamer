@@ -65,6 +65,11 @@ static const char MFX_PLUGINID_VP9D_HW;
 #define MFX_API_SDK  "Intel(R) Media SDK"
 #endif
 
+
+#define MFX_RUNTIME_VERSION_ATLEAST(MFX_VERSION, MAJOR, MINOR) \
+    ((MFX_VERSION.Major > (MAJOR)) ||                           \
+    (MFX_VERSION.Major == (MAJOR) && MFX_VERSION.Minor >= (MINOR)))
+
 G_BEGIN_DECLS
 
 #define GST_MSDK_CAPS_MAKE(format) \
@@ -111,7 +116,7 @@ struct _MsdkSession
   mfxLoader loader;
 };
 
-MsdkSession msdk_open_session (mfxIMPL impl);
+MsdkSession msdk_open_session (mfxHDL handle, mfxIMPL impl);
 void msdk_close_mfx_session (mfxSession session);
 void msdk_close_session (MsdkSession * session);
 
@@ -155,7 +160,7 @@ mfxU16
 msdk_get_platform_codename (mfxSession session);
 
 mfxStatus
-msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
+msdk_init_msdk_session (mfxHDL handle, mfxIMPL impl, mfxVersion * pver,
     MsdkSession * msdk_session);
 
 gpointer

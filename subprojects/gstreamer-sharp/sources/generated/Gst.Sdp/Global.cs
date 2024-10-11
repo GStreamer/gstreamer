@@ -40,6 +40,18 @@ namespace Gst.Sdp {
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_sdp_media_init(IntPtr media);
+
+		public static Gst.Sdp.SDPResult SdpMediaInit(out Gst.Sdp.SDPMedia media) {
+			IntPtr native_media = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Sdp.SDPMedia)));
+			int raw_ret = gst_sdp_media_init(native_media);
+			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
+			media = Gst.Sdp.SDPMedia.New (native_media);
+			Marshal.FreeHGlobal (native_media);
+			return ret;
+		}
+
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_media_new(IntPtr media);
 
 		public static Gst.Sdp.SDPResult SdpMediaNew(out Gst.Sdp.SDPMedia media) {
@@ -54,10 +66,11 @@ namespace Gst.Sdp {
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_media_set_media_from_caps(IntPtr caps, IntPtr media);
 
-		public static Gst.Sdp.SDPResult SdpMediaSetMediaFromCaps(Gst.Caps caps, Gst.Sdp.SDPMedia media) {
-			IntPtr native_media = GLib.Marshaller.StructureToPtrAlloc (media);
+		public static Gst.Sdp.SDPResult SdpMediaSetMediaFromCaps(Gst.Caps caps, out Gst.Sdp.SDPMedia media) {
+			IntPtr native_media = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Sdp.SDPMedia)));
 			int raw_ret = gst_sdp_media_set_media_from_caps(caps == null ? IntPtr.Zero : caps.Handle, native_media);
 			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
+			media = Gst.Sdp.SDPMedia.New (native_media);
 			Marshal.FreeHGlobal (native_media);
 			return ret;
 		}
@@ -70,6 +83,17 @@ namespace Gst.Sdp {
 			IntPtr raw_ret = gst_sdp_message_as_uri(native_scheme, msg == null ? IntPtr.Zero : msg.Handle);
 			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
 			GLib.Marshaller.Free (native_scheme);
+			return ret;
+		}
+
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_sdp_message_init(out IntPtr msg);
+
+		public static Gst.Sdp.SDPResult SdpMessageInit(out Gst.Sdp.SDPMessage msg) {
+			IntPtr native_msg;
+			int raw_ret = gst_sdp_message_init(out native_msg);
+			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
+			msg = native_msg == IntPtr.Zero ? null : (Gst.Sdp.SDPMessage) GLib.Opaque.GetOpaque (native_msg, typeof (Gst.Sdp.SDPMessage), false);
 			return ret;
 		}
 
@@ -98,9 +122,10 @@ namespace Gst.Sdp {
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_sdp_message_parse_buffer(byte[] data, uint size, IntPtr msg);
+		static extern int gst_sdp_message_parse_buffer([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, uint size, IntPtr msg);
 
-		public static Gst.Sdp.SDPResult SdpMessageParseBuffer(byte[] data, uint size, Gst.Sdp.SDPMessage msg) {
+		public static Gst.Sdp.SDPResult SdpMessageParseBuffer(byte[] data, Gst.Sdp.SDPMessage msg) {
+			uint size = (uint)(data == null ? 0 : data.Length);
 			int raw_ret = gst_sdp_message_parse_buffer(data, size, msg == null ? IntPtr.Zero : msg.Handle);
 			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
 			return ret;

@@ -12,17 +12,17 @@ Our documentation, including tutorials, API reference and FAQ can be found at
 
   https://gstreamer.freedesktop.org/documentation/
 
-You can subscribe to our mailing lists:
+You can ask questions on the GStreamer Discourse at
 
-  https://lists.freedesktop.org/mailman/listinfo/gstreamer-announce
-
-  https://lists.freedesktop.org/mailman/listinfo/gstreamer-devel
+  https://discourse.gstreamer.org/
 
 We track bugs, feature requests and merge requests (patches) in GitLab at
 
   https://gitlab.freedesktop.org/gstreamer/
 
-You can join us on IRC - #gstreamer on irc.oftc.net
+You can join us on our Matrix room at
+
+  https://matrix.to/#/#gstreamer:gstreamer.org
 
 This repository contains all official modules supported by the GStreamer
 community which can be found in the `subprojects/` directory.
@@ -39,11 +39,11 @@ You can find [instructions for Windows below](#windows-prerequisites-setup).
 
 ### Install meson and ninja
 
-Meson 0.62 or newer is required.
+Meson 1.1 or newer is required.
 
 On Linux and macOS you can get meson through your package manager or using:
 
-```  
+```
 $ pip3 install --user meson
 ```
 
@@ -179,60 +179,107 @@ List of plugins with (A)GPL-licensed dependencies (non-exhaustive) in gst-plugin
 
 ### Static build
 
-Since *1.18.0* when doing a static build using `--default-library=static`, a
-shared library `gstreamer-full-1.0` will be produced and includes all enabled
-GStreamer plugins and libraries. A list of libraries that needs to be exposed in
-`gstreamer-full-1.0` ABI can be set using `gst-full-libraries` option. glib-2.0,
-gobject-2.0 and gstreamer-1.0 are always included.
+Since *1.18.0*, when doing a static build using `--default-library=static`,
+a shared library `gstreamer-full-1.0`, in addition to a package config file,
+will be produced and includes all enabled GStreamer plugins and libraries.
+A list of libraries that needs to be exposed in `gstreamer-full-1.0`
+ABI can be set using `gst-full-libraries` option.
+glib-2.0, gobject-2.0 and gstreamer-1.0 are always included.
 
 ```
-meson --default-library=static -Dgst-full-libraries=app,video builddir
+meson setup --default-library=static -Dgst-full-libraries=gstreamer-app-1.0,gstreamer-video-1.0 builddir
 ```
 
 GStreamer *1.18* requires applications using gstreamer-full-1.0 to initialize
 static plugins by calling `gst_init_static_plugins()` after `gst_init()`. That
 function is defined in `gst/gstinitstaticplugins.h` header file.
 
-Since *1.20.0* `gst_init_static_plugins()` is called automatically by
-`gst_init()` and applications must not call it manually any more. The header
-file has been removed from public API.
+Since *1.20.0*, `gst_init_static_plugins()` is called automatically by
+`gst_init()` and applications don't have to call it manually any more.
+The header file has been removed from public API.
 
 One can use the `gst-full-version-script` option to pass a
 [version script](https://www.gnu.org/software/gnulib/manual/html_node/LD-Version-Scripts.html)
 to the linker. This can be used to control the exact symbols that are exported by
-the gstreamer-full library, allowing the linker to garbage collect unused code
-and so reduce the total library size. A default script `gstreamer-full-default.map`
-declares only glib/gstreamer symbols as public.
+the `gstreamer-full` library, allowing the linker to garbage collect unused code
+and so, reduce the total library size. A default script
+`gstreamer-full-default.map` declares only glib/gstreamer symbols as public.
 
-One can use the `gst-full-plugins` option to pass a list of plugins to be registered
-in the gstreamer-full library. The default value is '*' which means that all the plugins selected
-during the build process will be registered statically. An empty value will prevent any plugins to
-be registered.
+One can use the `gst-full-plugins` option to pass a list of plugins to be
+registered in the `gstreamer-full` library. The default value is '*'
+which means that all the plugins selected during the build process will be
+registered statically.
+An empty value will prevent any plugins to be registered.
 
-One can select a specific set of features with `gst-full-elements`, `gst-full-typefind-functions`, `gst-full-device-providers` or `gst-full-dynamic-types` to select specific feature from a plugin.
-When a feature has been listed in one of those options, the other features from its plugin will no longer be automatically included, even if the plugin is listed in `gst-full-plugins`.
+One can select a specific set of features with `gst-full-elements`,
+`gst-full-typefind-functions`, `gst-full-device-providers`
+or `gst-full-dynamic-types` to select specific feature from a plugin.
+When a feature has been listed in one of those options, the other features from
+its plugin will no longer be automatically included, even if the plugin
+is listed in `gst-full-plugins`.
 
-The user must insure that all selected plugins and features (element, typefind, etc.) have been
-enabled during the build configuration.
+The user must insure that all selected plugins and features (element,
+typefind, etc.) have been enabled during the build configuration.
 
 To register features, the syntax is the following:
-plugins are separated by ';' and features from a plugin starts after ':' and are ',' separated.
+plugins are separated by ';' and features from a plugin starts after ':'
+and are ',' separated.
 
 As an example:
- * `-Dgst-full-plugins=coreelements;playback;typefindfunctions;alsa;pbtypes`: enable only `coreelements`, `playback`, `typefindfunctions`, `alsa`, `pbtypes` plugins.
- * `-Dgst-full-elements=coreelements:filesrc,fakesink,identity;alsa:alsasrc`: enable only `filesrc`, `identity` and `fakesink` elements from `coreelements` and `alsasrc` element from `alsa` plugin.
- * `-Dgst-full-typefind-functions=typefindfunctions:wav,flv`: enable only typefind func `wav` and `flv` from `typefindfunctions`
- * `-Dgst-full-device-providers=alsa:alsadeviceprovider`: enable `alsadeviceprovider` from `alsa`.
- * `-Dgst-full-dynamic-types=pbtypes:video_multiview_flagset`:  enable `video_multiview_flagset` from `pbtypes
 
-All features from the `playback` plugin will be enabled and the other plugins will be restricted to the specific features requested.
+ * `-Dgst-full-plugins=coreelements;typefindfunctions;alsa;pbtypes`:
+ Enable only `coreelements`, `typefindfunctions`, `alsa`, `pbtypes` plugins.
+ * `-Dgst-full-elements=coreelements:filesrc,fakesink,identity;alsa:alsasrc`:
+ Enable only `filesrc`, `identity` and `fakesink` elements from `coreelements`
+ plugin and `alsasrc` element from `alsa` plugin.
+ * `-Dgst-full-typefind-functions=typefindfunctions:wav,flv`:
+ Enable only typefind func `wav` and `flv` from `typefindfunctions`
+ * `-Dgst-full-device-providers=alsa:alsadeviceprovider`:
+ Enable `alsadeviceprovider` from `alsa` plugin.
+ * `-Dgst-full-dynamic-types=pbtypes:video_multiview_flagset`:
+ Enable `video_multiview_flagset` from `pbtypes`.
 
-All the selected features will be registered into a dedicated `NULL` plugin name.
+All features from the `playback` plugin will be enabled and the other plugins
+will be restricted to the specific features requested.
 
-This will cause the features/plugins that are not registered to not be included in the final gstreamer-full library.
+All the selected features will be registered into a dedicated `NULL`
+plugin name.
+
+This will cause the features/plugins that are not registered to not be included
+in the final gstreamer-full library.
 
 This is an experimental feature, backward incompatible changes could still be
 made in the future.
+Only linux-like platforms are currently well supported when Windows, MSVC
+and MinGW, should be considered as *experimental* as the symbols export
+is still under discussion.
+
+Since 1.24.7, it is possible to disable the `gstreamer-full` library by passing
+`-Dgst-full=disabled`. This can be useful in cases where you want a static
+build of gstreamer, but you do not want to use gst-full, since linking the
+static executables associated with it can be quite CPU/RAM intensive.
+
+
+#### Full-static build
+
+Since *1.24.0*, it is also possible to link an application with GStreamer
+statically. It means that all the gstreamer libraries will be linked within
+your library or application. However, it is important to note that even though
+the `gstreamer-full` library can be statically built into the application,
+it does not contain all of the code (core libraries and plugins).
+Instead, it relies on all the other static libraries. Hence, while the
+`gstreamer-full` library provides a cohesive access point, the actual
+functionality is distributed across various static libraries.
+You can enable this option using `-Dgst-full-target-type=static_library` which
+is by default set to `shared_library`. The buildsystem will produce a set of
+archives depending on your `gstreamer-full` configuration as explained above.
+Your application can now check the `gstreamer-full` dependency within meson or
+with the package config file.
+In both case, the application can rely on the `gstreamer-full-1.0.pc` file
+generated during the build process to retrieve all its dependencies.
+In that configuration, the *features* selected during the build configuration
+will be automatically registered during the call of `gst_init()`.
+
 
 ### Building documentation
 

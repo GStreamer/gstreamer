@@ -56,6 +56,7 @@
 #endif
 
 #include "ges-internal.h"
+#include "gstframepositioner.h"
 #include "ges-extractable.h"
 #include "ges-track-element.h"
 #include "ges-clip.h"
@@ -278,9 +279,9 @@ ges_track_element_dispose (GObject * object)
 static void
 ges_track_element_set_asset (GESExtractable * extractable, GESAsset * asset)
 {
+  gchar *tmp;
   GESTrackElementClass *class;
   GstElement *nleobject;
-  gchar *tmp;
   GESTrackElement *object = GES_TRACK_ELEMENT (extractable);
 
   if (ges_track_element_get_track_type (object) == GES_TRACK_TYPE_UNKNOWN) {
@@ -299,14 +300,15 @@ ges_track_element_set_asset (GESExtractable * extractable, GESAsset * asset)
     return;
   }
 
-  tmp = g_strdup_printf ("%s:%s", G_OBJECT_TYPE_NAME (object),
-      GST_OBJECT_NAME (nleobject));
+  tmp = g_strdup_printf ("nleges%s", GES_TIMELINE_ELEMENT_NAME (object));
   gst_object_set_name (GST_OBJECT (nleobject), tmp);
   g_free (tmp);
 
-  object->priv->nleobject = gst_object_ref (nleobject);
-  g_object_set_qdata (G_OBJECT (nleobject), NLE_OBJECT_TRACK_ELEMENT_QUARK,
-      object);
+  if (!object->priv->nleobject) {
+    object->priv->nleobject = gst_object_ref (nleobject);
+    g_object_set_qdata (G_OBJECT (nleobject), NLE_OBJECT_TRACK_ELEMENT_QUARK,
+        object);
+  }
 
   /* Set some properties on the NleObject */
   g_object_set (object->priv->nleobject,
@@ -1009,6 +1011,10 @@ ges_track_element_create_gnl_object_func (GESTrackElement * self)
   if (G_UNLIKELY (nleobject == NULL))
     goto no_nleobject;
 
+  self->priv->nleobject = gst_object_ref (nleobject);
+  g_object_set_qdata (G_OBJECT (nleobject), NLE_OBJECT_TRACK_ELEMENT_QUARK,
+      self);
+
   if (klass->create_element) {
     GST_DEBUG ("Calling subclass 'create_element' vmethod");
     child = klass->create_element (self);
@@ -1078,11 +1084,10 @@ ges_track_element_add_child_props (GESTrackElement * self,
   guint i;
 
   factory = gst_element_get_factory (child);
-  /* FIXME: handle NULL factory */
-  klass = gst_element_factory_get_metadata (factory,
+  klass = gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (child),
       GST_ELEMENT_METADATA_KLASS);
 
-  if (strv_find_str (blacklist, GST_OBJECT_NAME (factory))) {
+  if (factory && strv_find_str (blacklist, GST_OBJECT_NAME (factory))) {
     GST_DEBUG_OBJECT (self, "%s blacklisted", GST_OBJECT_NAME (factory));
     return;
   }
@@ -1908,10 +1913,12 @@ ges_track_element_set_control_source (GESTrackElement * object,
     goto done;
   }
 
-  /* First remove existing binding */
-  if (ges_track_element_remove_control_binding (object, property_name))
-    GST_LOG_OBJECT (object, "Removed old binding for property %s",
-        property_name);
+  if (GST_IS_FRAME_POSITIONNER (element)) {
+    if (!gst_frame_positioner_check_can_add_binding (GST_FRAME_POSITIONNER
+            (element), property_name)) {
+      goto done;
+    }
+  }
 
   if (direct_absolute)
     binding = gst_direct_control_binding_new_absolute (GST_OBJECT (element),

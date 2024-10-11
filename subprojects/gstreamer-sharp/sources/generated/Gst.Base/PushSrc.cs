@@ -41,14 +41,16 @@ namespace Gst.Base {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate int CreateNativeDelegate (IntPtr inst, IntPtr buf);
+		delegate int CreateNativeDelegate (IntPtr inst, ref IntPtr buf);
 
-		static int Create_cb (IntPtr inst, IntPtr buf)
+		static int Create_cb (IntPtr inst, ref IntPtr buf)
 		{
 			try {
 				PushSrc __obj = GLib.Object.GetObject (inst, false) as PushSrc;
 				Gst.FlowReturn __result;
-				__result = __obj.OnCreate (buf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (buf, typeof (Gst.Buffer), false));
+				Gst.Buffer mybuf = buf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (buf, typeof (Gst.Buffer), true);
+				__result = __obj.OnCreate (ref mybuf);
+				buf = mybuf == null ? IntPtr.Zero : mybuf.Handle;
 				return (int) __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -58,12 +60,12 @@ namespace Gst.Base {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.PushSrc), ConnectionMethod="OverrideCreate")]
-		protected virtual Gst.FlowReturn OnCreate (Gst.Buffer buf)
+		protected virtual Gst.FlowReturn OnCreate (ref Gst.Buffer buf)
 		{
-			return InternalCreate (buf);
+			return InternalCreate (ref buf);
 		}
 
-		private Gst.FlowReturn InternalCreate (Gst.Buffer buf)
+		private Gst.FlowReturn InternalCreate (ref Gst.Buffer buf)
 		{
 			CreateNativeDelegate unmanaged = null;
 			unsafe {
@@ -72,7 +74,9 @@ namespace Gst.Base {
 			}
 			if (unmanaged == null) return (Gst.FlowReturn) 0;
 
-			int __result = unmanaged (this.Handle, buf == null ? IntPtr.Zero : buf.Handle);
+			IntPtr native_buf = buf == null ? IntPtr.Zero : buf.Handle ;
+			int __result = unmanaged (this.Handle, ref native_buf);
+			buf = native_buf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_buf, typeof (Gst.Buffer), true);
 			return (Gst.FlowReturn) __result;
 		}
 
@@ -99,14 +103,16 @@ namespace Gst.Base {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate int AllocNativeDelegate (IntPtr inst, IntPtr buf);
+		delegate int AllocNativeDelegate (IntPtr inst, out IntPtr buf);
 
-		static int Alloc_cb (IntPtr inst, IntPtr buf)
+		static int Alloc_cb (IntPtr inst, out IntPtr buf)
 		{
 			try {
 				PushSrc __obj = GLib.Object.GetObject (inst, false) as PushSrc;
 				Gst.FlowReturn __result;
-				__result = __obj.OnAlloc (buf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (buf, typeof (Gst.Buffer), false));
+				Gst.Buffer mybuf;
+				__result = __obj.OnAlloc (out mybuf);
+				buf = mybuf == null ? IntPtr.Zero : mybuf.Handle;
 				return (int) __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -116,21 +122,23 @@ namespace Gst.Base {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.PushSrc), ConnectionMethod="OverrideAlloc")]
-		protected virtual Gst.FlowReturn OnAlloc (Gst.Buffer buf)
+		protected virtual Gst.FlowReturn OnAlloc (out Gst.Buffer buf)
 		{
-			return InternalAlloc (buf);
+			return InternalAlloc (out buf);
 		}
 
-		private Gst.FlowReturn InternalAlloc (Gst.Buffer buf)
+		private Gst.FlowReturn InternalAlloc (out Gst.Buffer buf)
 		{
 			AllocNativeDelegate unmanaged = null;
 			unsafe {
 				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("alloc"));
 				unmanaged = (AllocNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(AllocNativeDelegate));
 			}
-			if (unmanaged == null) return (Gst.FlowReturn) 0;
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
 
-			int __result = unmanaged (this.Handle, buf == null ? IntPtr.Zero : buf.Handle);
+			IntPtr native_buf;
+			int __result = unmanaged (this.Handle, out native_buf);
+			buf = native_buf == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_buf, typeof (Gst.Buffer), true);
 			return (Gst.FlowReturn) __result;
 		}
 

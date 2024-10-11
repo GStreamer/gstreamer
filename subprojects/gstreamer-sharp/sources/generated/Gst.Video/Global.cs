@@ -39,11 +39,22 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_buffer_add_video_caption_meta(IntPtr buffer, int caption_type, byte[] data, UIntPtr size);
+		static extern IntPtr gst_buffer_add_video_caption_meta(IntPtr buffer, int caption_type, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]byte[] data, UIntPtr size);
 
-		public static Gst.Video.VideoCaptionMeta BufferAddVideoCaptionMeta(Gst.Buffer buffer, Gst.Video.VideoCaptionType caption_type, byte[] data, ulong size) {
-			IntPtr raw_ret = gst_buffer_add_video_caption_meta(buffer == null ? IntPtr.Zero : buffer.Handle, (int) caption_type, data, new UIntPtr (size));
+		public static Gst.Video.VideoCaptionMeta BufferAddVideoCaptionMeta(Gst.Buffer buffer, Gst.Video.VideoCaptionType caption_type, byte[] data) {
+			ulong size = (ulong)(data == null ? 0 : data.Length);
+			IntPtr raw_ret = gst_buffer_add_video_caption_meta(buffer == null ? IntPtr.Zero : buffer.Handle, (int) caption_type, data, new UIntPtr ((uint)size));
 			Gst.Video.VideoCaptionMeta ret = Gst.Video.VideoCaptionMeta.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_add_video_codec_alpha_meta(IntPtr buffer, IntPtr alpha_buffer);
+
+		public static Gst.Video.VideoCodecAlphaMeta BufferAddVideoCodecAlphaMeta(Gst.Buffer buffer, Gst.Buffer alpha_buffer) {
+			alpha_buffer.Owned = false;
+			IntPtr raw_ret = gst_buffer_add_video_codec_alpha_meta(buffer == null ? IntPtr.Zero : buffer.Handle, alpha_buffer == null ? IntPtr.Zero : alpha_buffer.Handle);
+			Gst.Video.VideoCodecAlphaMeta ret = Gst.Video.VideoCodecAlphaMeta.New (raw_ret);
 			return ret;
 		}
 
@@ -96,6 +107,15 @@ namespace Gst.Video {
 		public static Gst.Video.VideoRegionOfInterestMeta BufferAddVideoRegionOfInterestMetaId(Gst.Buffer buffer, uint roi_type, uint x, uint y, uint w, uint h) {
 			IntPtr raw_ret = gst_buffer_add_video_region_of_interest_meta_id(buffer == null ? IntPtr.Zero : buffer.Handle, roi_type, x, y, w, h);
 			Gst.Video.VideoRegionOfInterestMeta ret = Gst.Video.VideoRegionOfInterestMeta.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_add_video_sei_user_data_unregistered_meta(IntPtr buffer, byte uuid, byte data, UIntPtr size);
+
+		public static Gst.Video.VideoSEIUserDataUnregisteredMeta BufferAddVideoSeiUserDataUnregisteredMeta(Gst.Buffer buffer, byte uuid, byte data, ulong size) {
+			IntPtr raw_ret = gst_buffer_add_video_sei_user_data_unregistered_meta(buffer == null ? IntPtr.Zero : buffer.Handle, uuid, data, new UIntPtr (size));
+			Gst.Video.VideoSEIUserDataUnregisteredMeta ret = Gst.Video.VideoSEIUserDataUnregisteredMeta.New (raw_ret);
 			return ret;
 		}
 
@@ -176,11 +196,132 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_navigation_event_get_coordinates(IntPtr evnt, out double x, out double y);
+
+		public static bool NavigationEventGetCoordinates(Gst.Event evnt, out double x, out double y) {
+			bool raw_ret = gst_navigation_event_get_coordinates(evnt == null ? IntPtr.Zero : evnt.Handle, out x, out y);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_navigation_event_get_type(IntPtr evnt);
 
 		public static Gst.Video.NavigationEventType NavigationEventGetType(Gst.Event evnt) {
 			int raw_ret = gst_navigation_event_get_type(evnt == null ? IntPtr.Zero : evnt.Handle);
 			Gst.Video.NavigationEventType ret = (Gst.Video.NavigationEventType) raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_command(int command);
+
+		public static Gst.Event NavigationEventNewCommand(Gst.Video.NavigationCommand command) {
+			IntPtr raw_ret = gst_navigation_event_new_command((int) command);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_key_press(IntPtr key, int state);
+
+		public static Gst.Event NavigationEventNewKeyPress(string key, Gst.Video.NavigationModifierType state) {
+			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup (key);
+			IntPtr raw_ret = gst_navigation_event_new_key_press(native_key, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			GLib.Marshaller.Free (native_key);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_key_release(IntPtr key, int state);
+
+		public static Gst.Event NavigationEventNewKeyRelease(string key, Gst.Video.NavigationModifierType state) {
+			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup (key);
+			IntPtr raw_ret = gst_navigation_event_new_key_release(native_key, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			GLib.Marshaller.Free (native_key);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_mouse_button_press(int button, double x, double y, int state);
+
+		public static Gst.Event NavigationEventNewMouseButtonPress(int button, double x, double y, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_mouse_button_press(button, x, y, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_mouse_button_release(int button, double x, double y, int state);
+
+		public static Gst.Event NavigationEventNewMouseButtonRelease(int button, double x, double y, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_mouse_button_release(button, x, y, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_mouse_move(double x, double y, int state);
+
+		public static Gst.Event NavigationEventNewMouseMove(double x, double y, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_mouse_move(x, y, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_mouse_scroll(double x, double y, double delta_x, double delta_y, int state);
+
+		public static Gst.Event NavigationEventNewMouseScroll(double x, double y, double delta_x, double delta_y, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_mouse_scroll(x, y, delta_x, delta_y, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_touch_cancel(int state);
+
+		public static Gst.Event NavigationEventNewTouchCancel(Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_touch_cancel((int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_touch_down(uint identifier, double x, double y, double pressure, int state);
+
+		public static Gst.Event NavigationEventNewTouchDown(uint identifier, double x, double y, double pressure, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_touch_down(identifier, x, y, pressure, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_touch_frame(int state);
+
+		public static Gst.Event NavigationEventNewTouchFrame(Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_touch_frame((int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_touch_motion(uint identifier, double x, double y, double pressure, int state);
+
+		public static Gst.Event NavigationEventNewTouchMotion(uint identifier, double x, double y, double pressure, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_touch_motion(identifier, x, y, pressure, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_touch_up(uint identifier, double x, double y, int state);
+
+		public static Gst.Event NavigationEventNewTouchUp(uint identifier, double x, double y, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_touch_up(identifier, x, y, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
 			return ret;
 		}
 
@@ -207,6 +348,15 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_navigation_event_parse_modifier_state(IntPtr evnt, int state);
+
+		public static bool NavigationEventParseModifierState(Gst.Event evnt, Gst.Video.NavigationModifierType state) {
+			bool raw_ret = gst_navigation_event_parse_modifier_state(evnt == null ? IntPtr.Zero : evnt.Handle, (int) state);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_navigation_event_parse_mouse_button_event(IntPtr evnt, out int button, out double x, out double y);
 
 		public static bool NavigationEventParseMouseButtonEvent(Gst.Event evnt, out int button, out double x, out double y) {
@@ -229,6 +379,33 @@ namespace Gst.Video {
 
 		public static bool NavigationEventParseMouseScrollEvent(Gst.Event evnt, out double x, out double y, out double delta_x, out double delta_y) {
 			bool raw_ret = gst_navigation_event_parse_mouse_scroll_event(evnt == null ? IntPtr.Zero : evnt.Handle, out x, out y, out delta_x, out delta_y);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_navigation_event_parse_touch_event(IntPtr evnt, out uint identifier, out double x, out double y, out double pressure);
+
+		public static bool NavigationEventParseTouchEvent(Gst.Event evnt, out uint identifier, out double x, out double y, out double pressure) {
+			bool raw_ret = gst_navigation_event_parse_touch_event(evnt == null ? IntPtr.Zero : evnt.Handle, out identifier, out x, out y, out pressure);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_navigation_event_parse_touch_up_event(IntPtr evnt, out uint identifier, out double x, out double y);
+
+		public static bool NavigationEventParseTouchUpEvent(Gst.Event evnt, out uint identifier, out double x, out double y) {
+			bool raw_ret = gst_navigation_event_parse_touch_up_event(evnt == null ? IntPtr.Zero : evnt.Handle, out identifier, out x, out y);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_navigation_event_set_coordinates(IntPtr evnt, double x, double y);
+
+		public static bool NavigationEventSetCoordinates(Gst.Event evnt, double x, double y) {
+			bool raw_ret = gst_navigation_event_set_coordinates(evnt == null ? IntPtr.Zero : evnt.Handle, x, y);
 			bool ret = raw_ret;
 			return ret;
 		}
@@ -371,14 +548,14 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_navigation_query_set_commandsv(IntPtr query, int n_cmds, int[] cmds);
+		static extern void gst_navigation_query_set_commandsv(IntPtr query, int n_cmds, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]int[] cmds);
 
 		public static void NavigationQuerySetCommandsv(Gst.Query query, Gst.Video.NavigationCommand[] cmds) {
-			int cnt_cmds = cmds == null ? 0 : cmds.Length;
-			int[] native_cmds = new int [cnt_cmds];
-			for (int i = 0; i < cnt_cmds; i++)
+			int n_cmds = (cmds == null ? 0 : cmds.Length);
+			int[] native_cmds = new int [n_cmds];
+			for (int i = 0; i < n_cmds; i++)
 				native_cmds [i] = (int) cmds[i];
-			gst_navigation_query_set_commandsv(query == null ? IntPtr.Zero : query.Handle, (cmds == null ? 0 : cmds.Length), native_cmds);
+			gst_navigation_query_set_commandsv(query == null ? IntPtr.Zero : query.Handle, n_cmds, native_cmds);
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -505,8 +682,25 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_video_center_rect(IntPtr src, IntPtr dst, IntPtr _result, bool scaling);
+
+		public static Gst.Video.VideoRectangle VideoCenterRect(Gst.Video.VideoRectangle src, Gst.Video.VideoRectangle dst, bool scaling) {
+			Gst.Video.VideoRectangle _result;
+			IntPtr native_src = GLib.Marshaller.StructureToPtrAlloc (src);
+			IntPtr native_dst = GLib.Marshaller.StructureToPtrAlloc (dst);
+			IntPtr native__result = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.VideoRectangle)));
+			gst_video_center_rect(native_src, native_dst, native__result, scaling);
+			Marshal.FreeHGlobal (native_src);
+			Marshal.FreeHGlobal (native_dst);
+			_result = Gst.Video.VideoRectangle.New (native__result);
+			Marshal.FreeHGlobal (native__result);
+			return _result;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_video_chroma_from_string(IntPtr s);
 
+		[Obsolete]
 		public static Gst.Video.VideoChromaSite VideoChromaFromString(string s) {
 			IntPtr native_s = GLib.Marshaller.StringToPtrGStrdup (s);
 			int raw_ret = gst_video_chroma_from_string(native_s);
@@ -527,11 +721,50 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_video_chroma_site_from_string(IntPtr s);
+
+		public static Gst.Video.VideoChromaSite VideoChromaSiteFromString(string s) {
+			IntPtr native_s = GLib.Marshaller.StringToPtrGStrdup (s);
+			int raw_ret = gst_video_chroma_site_from_string(native_s);
+			Gst.Video.VideoChromaSite ret = (Gst.Video.VideoChromaSite) raw_ret;
+			GLib.Marshaller.Free (native_s);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_chroma_site_to_string(int site);
+
+		public static string VideoChromaSiteToString(Gst.Video.VideoChromaSite site) {
+			IntPtr raw_ret = gst_video_chroma_site_to_string((int) site);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_chroma_to_string(int site);
 
+		[Obsolete]
 		public static string VideoChromaToString(Gst.Video.VideoChromaSite site) {
 			IntPtr raw_ret = gst_video_chroma_to_string((int) site);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_codec_alpha_meta_api_get_type();
+
+		public static GLib.GType VideoCodecAlphaMetaApiGetType() {
+			IntPtr raw_ret = gst_video_codec_alpha_meta_api_get_type();
+			GLib.GType ret = new GLib.GType(raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_codec_alpha_meta_get_info();
+
+		public static Gst.MetaInfo VideoCodecAlphaMetaGetInfo() {
+			IntPtr raw_ret = gst_video_codec_alpha_meta_get_info();
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
 			return ret;
 		}
 
@@ -581,6 +814,15 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_color_primaries_is_equivalent(int primaries, int other);
+
+		public static bool VideoColorPrimariesIsEquivalent(Gst.Video.VideoColorPrimaries primaries, Gst.Video.VideoColorPrimaries other) {
+			bool raw_ret = gst_video_color_primaries_is_equivalent((int) primaries, (int) other);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_video_color_primaries_to_iso(int primaries);
 
 		public static uint VideoColorPrimariesToIso(Gst.Video.VideoColorPrimaries primaries) {
@@ -590,12 +832,10 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_video_color_range_offsets(int range, IntPtr info, out int[] offset, out int[] scale);
+		static extern void gst_video_color_range_offsets(int range, IntPtr info, [MarshalAs(UnmanagedType.LPArray, SizeConst=4)]out int[] offset, [MarshalAs(UnmanagedType.LPArray, SizeConst=4)]out int[] scale);
 
 		public static void VideoColorRangeOffsets(Gst.Video.VideoColorRange range, Gst.Video.VideoFormatInfo info, out int[] offset, out int[] scale) {
 			IntPtr native_info = GLib.Marshaller.StructureToPtrAlloc (info);
-			offset = new int[4];
-			scale = new int[4];
 			gst_video_color_range_offsets((int) range, native_info, out offset, out scale);
 			Marshal.FreeHGlobal (native_info);
 		}
@@ -663,6 +903,44 @@ namespace Gst.Video {
 		public static Gst.MetaInfo VideoCropMetaGetInfo() {
 			IntPtr raw_ret = gst_video_crop_meta_get_info();
 			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint gst_video_dma_drm_fourcc_from_format(int format);
+
+		public static uint VideoDmaDrmFourccFromFormat(Gst.Video.VideoFormat format) {
+			uint raw_ret = gst_video_dma_drm_fourcc_from_format((int) format);
+			uint ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint gst_video_dma_drm_fourcc_from_string(IntPtr format_str, out ulong modifier);
+
+		public static uint VideoDmaDrmFourccFromString(string format_str, out ulong modifier) {
+			IntPtr native_format_str = GLib.Marshaller.StringToPtrGStrdup (format_str);
+			uint raw_ret = gst_video_dma_drm_fourcc_from_string(native_format_str, out modifier);
+			uint ret = raw_ret;
+			GLib.Marshaller.Free (native_format_str);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_video_dma_drm_fourcc_to_format(uint fourcc);
+
+		public static Gst.Video.VideoFormat VideoDmaDrmFourccToFormat(uint fourcc) {
+			int raw_ret = gst_video_dma_drm_fourcc_to_format(fourcc);
+			Gst.Video.VideoFormat ret = (Gst.Video.VideoFormat) raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_dma_drm_fourcc_to_string(uint fourcc, ulong modifier);
+
+		public static string VideoDmaDrmFourccToString(uint fourcc, ulong modifier) {
+			IntPtr raw_ret = gst_video_dma_drm_fourcc_to_string(fourcc, modifier);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
 			return ret;
 		}
 
@@ -817,6 +1095,30 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_frame_map(IntPtr frame, IntPtr info, IntPtr buffer, int flags);
+
+		public static bool VideoFrameMap(out Gst.Video.VideoFrame frame, Gst.Video.VideoInfo info, Gst.Buffer buffer, Gst.MapFlags flags) {
+			IntPtr native_frame = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.VideoFrame)));
+			bool raw_ret = gst_video_frame_map(native_frame, info == null ? IntPtr.Zero : info.Handle, buffer == null ? IntPtr.Zero : buffer.Handle, (int) flags);
+			bool ret = raw_ret;
+			frame = Gst.Video.VideoFrame.New (native_frame);
+			Marshal.FreeHGlobal (native_frame);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_frame_map_id(IntPtr frame, IntPtr info, IntPtr buffer, int id, int flags);
+
+		public static bool VideoFrameMapId(out Gst.Video.VideoFrame frame, Gst.Video.VideoInfo info, Gst.Buffer buffer, int id, Gst.MapFlags flags) {
+			IntPtr native_frame = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.VideoFrame)));
+			bool raw_ret = gst_video_frame_map_id(native_frame, info == null ? IntPtr.Zero : info.Handle, buffer == null ? IntPtr.Zero : buffer.Handle, id, (int) flags);
+			bool ret = raw_ret;
+			frame = Gst.Video.VideoFrame.New (native_frame);
+			Marshal.FreeHGlobal (native_frame);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_gl_texture_upload_meta_api_get_type();
 
 		public static GLib.GType VideoGlTextureUploadMetaApiGetType() {
@@ -844,6 +1146,64 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_info_dma_drm_from_caps(IntPtr drm_info, IntPtr caps);
+
+		public static bool VideoInfoDmaDrmFromCaps(out Gst.Video.VideoInfoDmaDrm drm_info, Gst.Caps caps) {
+			IntPtr native_drm_info = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.VideoInfoDmaDrm)));
+			bool raw_ret = gst_video_info_dma_drm_from_caps(native_drm_info, caps == null ? IntPtr.Zero : caps.Handle);
+			bool ret = raw_ret;
+			drm_info = Gst.Video.VideoInfoDmaDrm.New (native_drm_info);
+			Marshal.FreeHGlobal (native_drm_info);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_info_dma_drm_from_video_info(IntPtr drm_info, IntPtr info, ulong modifier);
+
+		public static bool VideoInfoDmaDrmFromVideoInfo(out Gst.Video.VideoInfoDmaDrm drm_info, Gst.Video.VideoInfo info, ulong modifier) {
+			IntPtr native_drm_info = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.VideoInfoDmaDrm)));
+			bool raw_ret = gst_video_info_dma_drm_from_video_info(native_drm_info, info == null ? IntPtr.Zero : info.Handle, modifier);
+			bool ret = raw_ret;
+			drm_info = Gst.Video.VideoInfoDmaDrm.New (native_drm_info);
+			Marshal.FreeHGlobal (native_drm_info);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_video_info_dma_drm_init(IntPtr drm_info);
+
+		public static Gst.Video.VideoInfoDmaDrm VideoInfoDmaDrmInit() {
+			Gst.Video.VideoInfoDmaDrm drm_info;
+			IntPtr native_drm_info = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.VideoInfoDmaDrm)));
+			gst_video_info_dma_drm_init(native_drm_info);
+			drm_info = Gst.Video.VideoInfoDmaDrm.New (native_drm_info);
+			Marshal.FreeHGlobal (native_drm_info);
+			return drm_info;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_info_from_caps(out IntPtr info, IntPtr caps);
+
+		public static bool VideoInfoFromCaps(out Gst.Video.VideoInfo info, Gst.Caps caps) {
+			IntPtr native_info;
+			bool raw_ret = gst_video_info_from_caps(out native_info, caps == null ? IntPtr.Zero : caps.Handle);
+			bool ret = raw_ret;
+			info = native_info == IntPtr.Zero ? null : (Gst.Video.VideoInfo) GLib.Opaque.GetOpaque (native_info, typeof (Gst.Video.VideoInfo), false);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_video_info_init(out IntPtr info);
+
+		public static Gst.Video.VideoInfo VideoInfoInit() {
+			Gst.Video.VideoInfo info;
+			IntPtr native_info;
+			gst_video_info_init(out native_info);
+			info = native_info == IntPtr.Zero ? null : (Gst.Video.VideoInfo) GLib.Opaque.GetOpaque (native_info, typeof (Gst.Video.VideoInfo), false);
+			return info;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_video_interlace_mode_from_string(IntPtr mode);
 
 		public static Gst.Video.VideoInterlaceMode VideoInterlaceModeFromString(string mode) {
@@ -864,29 +1224,47 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_video_make_raw_caps(int[] formats, uint len);
+		static extern bool gst_video_is_common_aspect_ratio(int width, int height, int par_n, int par_d);
 
-		public static Gst.Caps VideoMakeRawCaps(Gst.Video.VideoFormat[] formats, uint len) {
-			int cnt_formats = formats == null ? 0 : formats.Length;
-			int[] native_formats = new int [cnt_formats];
-			for (int i = 0; i < cnt_formats; i++)
+		public static bool VideoIsCommonAspectRatio(int width, int height, int par_n, int par_d) {
+			bool raw_ret = gst_video_is_common_aspect_ratio(width, height, par_n, par_d);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_is_dma_drm_caps(IntPtr caps);
+
+		public static bool VideoIsDmaDrmCaps(Gst.Caps caps) {
+			bool raw_ret = gst_video_is_dma_drm_caps(caps == null ? IntPtr.Zero : caps.Handle);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_make_raw_caps([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]int[] formats, uint len);
+
+		public static Gst.Caps VideoMakeRawCaps(Gst.Video.VideoFormat[] formats) {
+			uint len = (uint)(formats == null ? 0 : formats.Length);
+			int[] native_formats = new int [len];
+			for (int i = 0; i < len; i++)
 				native_formats [i] = (int) formats[i];
 			IntPtr raw_ret = gst_video_make_raw_caps(native_formats, len);
 			Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
 			return ret;
 		}
 
-		public static Gst.Caps VideoMakeRawCaps(uint len) {
-			return VideoMakeRawCaps (null, len);
+		public static Gst.Caps VideoMakeRawCaps() {
+			return VideoMakeRawCaps (null);
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_video_make_raw_caps_with_features(int[] formats, uint len, IntPtr features);
+		static extern IntPtr gst_video_make_raw_caps_with_features([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]int[] formats, uint len, IntPtr features);
 
-		public static Gst.Caps VideoMakeRawCapsWithFeatures(Gst.Video.VideoFormat[] formats, uint len, Gst.CapsFeatures features) {
-			int cnt_formats = formats == null ? 0 : formats.Length;
-			int[] native_formats = new int [cnt_formats];
-			for (int i = 0; i < cnt_formats; i++)
+		public static Gst.Caps VideoMakeRawCapsWithFeatures(Gst.Video.VideoFormat[] formats, Gst.CapsFeatures features) {
+			uint len = (uint)(formats == null ? 0 : formats.Length);
+			int[] native_formats = new int [len];
+			for (int i = 0; i < len; i++)
 				native_formats [i] = (int) formats[i];
 			IntPtr native_features = GLib.Marshaller.StructureToPtrAlloc (features);
 			IntPtr raw_ret = gst_video_make_raw_caps_with_features(native_formats, len, native_features);
@@ -895,8 +1273,8 @@ namespace Gst.Video {
 			return ret;
 		}
 
-		public static Gst.Caps VideoMakeRawCapsWithFeatures(uint len) {
-			return VideoMakeRawCapsWithFeatures (null, len, Gst.CapsFeatures.Zero);
+		public static Gst.Caps VideoMakeRawCapsWithFeatures() {
+			return VideoMakeRawCapsWithFeatures (null, Gst.CapsFeatures.Zero);
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -1022,6 +1400,17 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_orientation_from_tag(IntPtr taglist, out int method);
+
+		public static bool VideoOrientationFromTag(Gst.TagList taglist, out Gst.Video.VideoOrientationMethod method) {
+			int native_method;
+			bool raw_ret = gst_video_orientation_from_tag(taglist == null ? IntPtr.Zero : taglist.Handle, out native_method);
+			bool ret = raw_ret;
+			method = (Gst.Video.VideoOrientationMethod) native_method;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_overlay_composition_meta_api_get_type();
 
 		public static GLib.GType VideoOverlayCompositionMetaApiGetType() {
@@ -1065,6 +1454,35 @@ namespace Gst.Video {
 		public static Gst.MetaInfo VideoRegionOfInterestMetaGetInfo() {
 			IntPtr raw_ret = gst_video_region_of_interest_meta_get_info();
 			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_sei_user_data_unregistered_meta_api_get_type();
+
+		public static GLib.GType VideoSeiUserDataUnregisteredMetaApiGetType() {
+			IntPtr raw_ret = gst_video_sei_user_data_unregistered_meta_api_get_type();
+			GLib.GType ret = new GLib.GType(raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_sei_user_data_unregistered_meta_get_info();
+
+		public static Gst.MetaInfo VideoSeiUserDataUnregisteredMetaGetInfo() {
+			IntPtr raw_ret = gst_video_sei_user_data_unregistered_meta_get_info();
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_sei_user_data_unregistered_parse_precision_time_stamp(IntPtr user_data, out byte status, out ulong precision_time_stamp);
+
+		public static bool VideoSeiUserDataUnregisteredParsePrecisionTimeStamp(Gst.Video.VideoSEIUserDataUnregisteredMeta user_data, out byte status, out ulong precision_time_stamp) {
+			IntPtr native_user_data = GLib.Marshaller.StructureToPtrAlloc (user_data);
+			bool raw_ret = gst_video_sei_user_data_unregistered_parse_precision_time_stamp(native_user_data, out status, out precision_time_stamp);
+			bool ret = raw_ret;
+			Marshal.FreeHGlobal (native_user_data);
 			return ret;
 		}
 

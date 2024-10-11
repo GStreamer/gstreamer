@@ -262,6 +262,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_structure_get_flags(IntPtr raw, IntPtr fieldname, IntPtr flags_type, out uint value);
+
+		public bool GetFlags(string fieldname, GLib.GType flags_type, out uint value) {
+			IntPtr native_fieldname = GLib.Marshaller.StringToPtrGStrdup (fieldname);
+			bool raw_ret = gst_structure_get_flags(Handle, native_fieldname, flags_type.Val, out value);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_fieldname);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_structure_get_flagset(IntPtr raw, IntPtr fieldname, out uint value_flags, out uint value_mask);
 
 		public bool GetFlagset(string fieldname, out uint value_flags, out uint value_mask) {
@@ -520,6 +531,15 @@ namespace Gst {
 			IntPtr native_fieldname = GLib.Marshaller.StringToPtrGStrdup (fieldname);
 			gst_structure_remove_field(Handle, native_fieldname);
 			GLib.Marshaller.Free (native_fieldname);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_structure_serialize(IntPtr raw, int flags);
+
+		public string Serialize(Gst.SerializeFlags flags) {
+			IntPtr raw_ret = gst_structure_serialize(Handle, (int) flags);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			return ret;
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

@@ -5,7 +5,7 @@ if ptp_helper_option.disabled()
   subdir_done()
 endif
 
-if host_system not in ['linux', 'freebsd', 'openbsd', 'netbsd', 'dragonfly', 'darwin', 'sunos', 'solaris', 'illumos', 'windows']
+if host_system not in ['linux', 'freebsd', 'openbsd', 'netbsd', 'dragonfly', 'darwin', 'sunos', 'solaris', 'illumos', 'windows', 'gnu']
   if ptp_helper_option.enabled()
     error('PTP not supported on this OS')
   endif
@@ -112,9 +112,7 @@ exe_test = executable('gst-ptp-helper-test', 'main.rs',
   override_options : ['rust_std=2018'],
   rust_args : ['--test', rust_args],
   dependencies : [cap_dep],
-  link_with : conf,
-  install_dir : helpers_install_dir,
-  install : true)
+  link_with : conf)
 
 test('gst-ptp-helper-test', exe_test, protocol : 'rust')
 

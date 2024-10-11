@@ -564,8 +564,12 @@ search_by_entry (GstPluginFeature * feature, gpointer search_entry)
 static gint
 sort_by_rank (GstPluginFeature * first, GstPluginFeature * second)
 {
-  return gst_plugin_feature_get_rank (second) -
+  int diff = gst_plugin_feature_get_rank (second) -
       gst_plugin_feature_get_rank (first);
+  if (diff == 0)
+    diff = g_strcmp0 (gst_plugin_feature_get_name (first),
+        gst_plugin_feature_get_name (second));
+  return diff;
 }
 
 static GList *
@@ -2024,8 +2028,9 @@ gst_uri_to_string_with_keys (const GstUri * uri, const GList * keys)
     g_string_append_printf (uri_str, "%s:", uri->scheme);
 
   if (uri->userinfo != NULL || uri->host != NULL ||
-      uri->port != GST_URI_NO_PORT)
+      uri->port != GST_URI_NO_PORT || !g_strcmp0 (uri->scheme, "file")) {
     g_string_append (uri_str, "//");
+  }
 
   if (uri->userinfo != NULL) {
     escaped = _gst_uri_escape_userinfo (uri->userinfo);

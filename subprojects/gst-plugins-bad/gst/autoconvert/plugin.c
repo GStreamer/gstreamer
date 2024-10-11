@@ -1,7 +1,7 @@
 /* GStreamer
- * Copyright 2010 ST-Ericsson SA 
+ * Copyright 2010 ST-Ericsson SA
  *  @author: Benjamin Gaignard <benjamin.gaignard@stericsson.com>
- *  
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -24,6 +24,8 @@
 
 #include "gstautoconvert.h"
 #include "gstautovideoconvert.h"
+#include "gstautovideoflip.h"
+#include "gstautodeinterlace.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -32,6 +34,9 @@ plugin_init (GstPlugin * plugin)
 
   ret |= GST_ELEMENT_REGISTER (autoconvert, plugin);
   ret |= GST_ELEMENT_REGISTER (autovideoconvert, plugin);
+  ret |= GST_ELEMENT_REGISTER (autodeinterlace, plugin);
+  ret |= GST_ELEMENT_REGISTER (autovideoflip, plugin);
+  gst_type_mark_as_plugin_api (GST_TYPE_BASE_AUTO_CONVERT, 0);
 
   return ret;
 }

@@ -1,0 +1,13 @@
+[wrap-file]
+directory = DirectXMath-feb2024
+source_url = https://github.com/microsoft/DirectXMath/archive/refs/tags/feb2024.tar.gz
+source_filename = feb2024.tar.gz
+source_hash = f78bb400dcbedd987f2876b2fb6fe12199d795cd6a912f965ef3a2141c78303d
+patch_filename = directxmath_3.1.9-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/directxmath_3.1.9-1/get_patch
+patch_hash = d2475b7de8deb6c801139b96ad91904b9062c9ea6432d62c1cb490a3d449ad12
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/directxmath_3.1.9-1/feb2024.tar.gz
+wrapdb_version = 3.1.9-1
+
+[provide]
+directxmath = directxmath_dep

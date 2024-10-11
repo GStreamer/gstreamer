@@ -1,5 +1,7 @@
+subdir('aja')
 subdir('amfcodec')
 subdir('d3d11')
+subdir('d3d12')
 subdir('d3dvideosink')
 subdir('mediafoundation')
 subdir('msdk')

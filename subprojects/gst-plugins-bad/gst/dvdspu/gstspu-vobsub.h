@@ -55,8 +55,8 @@ struct SpuVobsubState {
   GstMapInfo pix_buf_map; /* Mapped buffer info */
   
   SpuRect disp_rect;
-  SpuRect clip_rect;
   SpuRect hl_rect;
+  gint frame_w, frame_h;
 
   guint32 current_clut[16]; /* Colour lookup table from incoming events */
 
@@ -81,31 +81,25 @@ struct SpuVobsubState {
                                    * need recalculating */
 
   /* Rendering state vars below */
-  gint16 comp_last_x[2]; /* Maximum X values we rendered into the comp buffer (odd & even) */
-  gint16 *comp_last_x_ptr; /* Ptr to the current comp_last_x value to be updated by the render */
 
   /* Current Y Position */
   gint16 cur_Y;
 
   /* Current offset in nibbles into the pix_data */
-  guint16 cur_offsets[2];
   guint16 max_offset;
 
   /* current ChgColCon Line Info */
   SpuVobsubLineCtrlI *cur_chg_col;
   SpuVobsubLineCtrlI *cur_chg_col_end;
-
-  /* Output position tracking */
-  guint8  *out_Y;
-  guint32 *out_U;
-  guint32 *out_V;
-  guint32 *out_A;
 };
 
 void gstspu_vobsub_handle_new_buf (GstDVDSpu * dvdspu, GstClockTime event_ts, GstBuffer *buf);
 gboolean gstspu_vobsub_execute_event (GstDVDSpu *dvdspu);
 void gstspu_vobsub_render (GstDVDSpu *dvdspu, GstVideoFrame *frame);
 gboolean gstspu_vobsub_handle_dvd_event (GstDVDSpu *dvdspu, GstEvent *event);
+void gstspu_vobsub_get_render_geometry (GstDVDSpu *dvdspu,
+    gint *display_width, gint *display_height,
+    GstVideoRectangle *window_rect);
 void gstspu_vobsub_flush (GstDVDSpu *dvdspu);
 
 #endif

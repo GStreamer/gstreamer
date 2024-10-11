@@ -56,6 +56,11 @@ void          gst_cuda_memory_set_from_fixed_pool (GstMemory * mem);
 GST_CUDA_API
 gboolean      gst_cuda_memory_is_from_fixed_pool (GstMemory * mem);
 
+GST_CUDA_API
+gboolean      gst_cuda_memory_is_stream_ordered (GstMemory * mem);
+
+gpointer      gst_cuda_get_win32_handle_metadata (void);
+
 G_END_DECLS
 
 #ifdef __cplusplus
@@ -66,6 +71,25 @@ G_END_DECLS
     std::call_once (__once_flag, [&]()
 
 #define GST_CUDA_CALL_ONCE_END )
+
+/* cudaEGL.h */
+#if defined(HAVE_CUDA_NVMM_JETSON) && defined(HAVE_CUDA_GST_GL)
+#include <gst/gl/gstglconfig.h>
+#if GST_GL_HAVE_PLATFORM_EGL
+#include <cudaEGL.h>
+#include <gst/gl/egl/egl.h>
+GST_CUDA_API
+CUresult CUDAAPI CuGraphicsEGLRegisterImage (CUgraphicsResource *pCudaResource,
+                                             EGLImageKHR image,
+                                             unsigned int flags);
+
+GST_CUDA_API
+CUresult CUDAAPI CuGraphicsResourceGetMappedEglFrame(CUeglFrame* eglFrame,
+                                                     CUgraphicsResource resource,
+                                                     unsigned int index,
+                                                     unsigned int mipLevel);
+#endif /* HAVE_CUDA_GST_GL */
+#endif /* HAVE_CUDA_NVMM_JETSON */
 
 #endif /* __cplusplus */
 

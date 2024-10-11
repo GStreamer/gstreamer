@@ -93,6 +93,17 @@ namespace Gst.PbUtils {
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_discoverer_stream_info_get_stream_number(IntPtr raw);
+
+		public int StreamNumber { 
+			get {
+				int raw_ret = gst_discoverer_stream_info_get_stream_number(Handle);
+				int ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_stream_info_get_stream_type_nick(IntPtr raw);
 
 		public string StreamTypeNick { 

@@ -55,7 +55,7 @@ rtsp_server_headers = files(
 
 install_headers(rtsp_server_headers, subdir : 'gstreamer-1.0/gst/rtsp-server')
 
-gst_rtsp_server_deps = [gstrtsp_dep, gstrtp_dep, gstsdp_dep, gstnet_dep, gstapp_dep, gst_dep]
+gst_rtsp_server_deps = [gstrtsp_dep, gstrtp_dep, gstsdp_dep, gstnet_dep, gstapp_dep, gst_dep, gstvideo_dep]
 gst_rtsp_server = library('gstrtspserver-@0@'.format(api_version),
   rtsp_server_sources,
   include_directories : rtspserver_incs,
@@ -104,6 +104,6 @@ gst_libraries += [[pkg_name, library_def]]
 gst_rtsp_server_dep = declare_dependency(link_with : gst_rtsp_server,
   include_directories : rtspserver_incs,
   sources : rtsp_server_gen_sources,
-  dependencies : [gstrtsp_dep, gstrtp_dep, gstsdp_dep, gstnet_dep, gstapp_dep])
+  dependencies : [gstrtsp_dep, gstrtp_dep, gstsdp_dep, gstnet_dep, gstapp_dep, gstvideo_dep])
 
 meson.override_dependency(pkg_name, gst_rtsp_server_dep)

@@ -26,6 +26,8 @@
 #include "../gstjniutils.h"
 #include "../gstamc-codeclist.h"
 
+#include "gstamc-jni.h"
+
 struct _GstAmcCodecInfoHandle
 {
   jobject object;
@@ -67,7 +69,7 @@ static struct
 } media_codecprofilelevel;
 
 gboolean
-gst_amc_codeclist_static_init (void)
+gst_amc_codeclist_jni_static_init (void)
 {
   JNIEnv *env;
   GError *err = NULL;

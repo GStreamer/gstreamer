@@ -1096,13 +1096,16 @@ is available and is not available within this element.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.c">The #GstGLContext in use by this #GstGLBaseMixer</doc>
         <type name="GLContext"/>
       </property>
-      <field name="parent">
+      <field name="parent" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">parent #GstVideoAggregator</doc>
         <type name="GstVideo.VideoAggregator" c:type="GstVideoAggregator"/>
       </field>
-      <field name="display">
+      <field name="display" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">the currently configured #GstGLDisplay</doc>
         <type name="GLDisplay" c:type="GstGLDisplay*"/>
       </field>
-      <field name="context">
+      <field name="context" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">the currently configured #GstGLContext</doc>
         <type name="GLContext" c:type="GstGLContext*"/>
       </field>
       <field name="_padding" readable="0" private="1">
@@ -1116,10 +1119,12 @@ is available and is not available within this element.</doc>
     </class>
     <record name="GLBaseMixerClass" c:type="GstGLBaseMixerClass" glib:is-gtype-struct-for="GLBaseMixer" version="1.24">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
-      <field name="parent_class">
+      <field name="parent_class" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">the parent #GstVideoAggregatorClass</doc>
         <type name="GstVideo.VideoAggregatorClass" c:type="GstVideoAggregatorClass"/>
       </field>
-      <field name="supported_gl_api">
+      <field name="supported_gl_api" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">the logical-OR of #GstGLAPI's supported by this element</doc>
         <type name="GLAPI" c:type="GstGLAPI"/>
       </field>
       <field name="gl_start">
@@ -1157,7 +1162,8 @@ is available and is not available within this element.</doc>
     </record>
     <class name="GLBaseMixerPad" c:symbol-prefix="gl_base_mixer_pad" c:type="GstGLBaseMixerPad" version="1.24" parent="GstVideo.VideoAggregatorPad" glib:type-name="GstGLBaseMixerPad" glib:get-type="gst_gl_base_mixer_pad_get_type" glib:type-struct="GLBaseMixerPadClass">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
-      <field name="parent">
+      <field name="parent" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">parent #GstVideoAggregatorPad</doc>
         <type name="GstVideo.VideoAggregatorPad" c:type="GstVideoAggregatorPad"/>
       </field>
       <field name="_padding" readable="0" private="1">
@@ -1168,7 +1174,8 @@ is available and is not available within this element.</doc>
     </class>
     <record name="GLBaseMixerPadClass" c:type="GstGLBaseMixerPadClass" glib:is-gtype-struct-for="GLBaseMixerPad" version="1.24">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
-      <field name="parent_class">
+      <field name="parent_class" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">parent #GstVideoAggregatorPadClass</doc>
         <type name="GstVideo.VideoAggregatorPadClass" c:type="GstVideoAggregatorPadClass"/>
       </field>
       <field name="_padding" readable="0" private="1">
@@ -1543,6 +1550,20 @@ The glcolorconvertelement provides a GStreamer element that uses
           </parameter>
         </parameters>
       </function>
+      <function name="swizzle_shader_string" c:identifier="gst_gl_color_convert_swizzle_shader_string" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.c">a shader string that can be used to swizzle vec
+components in a GLSL shader.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.c">a #GstGLContext</doc>
+            <type name="GLContext" c:type="GstGLContext*"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="transform_caps" c:identifier="gst_gl_color_convert_transform_caps" version="1.6">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.c">Provides an implementation of #GstBaseTransformClass.transform_caps()</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.h"/>
@@ -1566,6 +1587,27 @@ The glcolorconvertelement provides a GStreamer element that uses
           <parameter name="filter" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.c">a set of filter #GstCaps</doc>
             <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="yuv_to_rgb_shader_string" c:identifier="gst_gl_color_convert_yuv_to_rgb_shader_string" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.c">The returned glsl function has declaration:
+
+`vec3 yuv_to_rgb (vec3 rgb, vec3 offset, vec3 ycoeff, vec3 ucoeff, vec3 vcoeff);`
+
+The Y component is placed in the 0th index of the returned value, The U component in the
+1st, and the V component in the 2nd.  offset, ycoeff, ucoeff, and vcoeff are the
+specific coefficients and offset used for the conversion.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.c">a glsl function that can be used to convert from
+yuv to rgb</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.c">a #GstGLContext</doc>
+            <type name="GLContext" c:type="GstGLContext*"/>
           </parameter>
         </parameters>
       </function>
@@ -2981,7 +3023,7 @@ a #GstGLDisplay.
 There are a number of environment variables that influence the choice of
 platform and window system specific functionality.
 - GST_GL_WINDOW influences the window system to use.  Common values are
-  'x11', 'wayland', 'win32' or 'cocoa'.
+  'x11', 'wayland', 'surfaceless', 'win32' or 'cocoa'.
 - GST_GL_PLATFORM influences the OpenGL platform to use.  Common values are
   'egl', 'glx', 'wgl' or 'cgl'.
 - GST_GL_API influences the OpenGL API requested by the OpenGL platform.
@@ -3410,13 +3452,21 @@ display's object lock held.</doc>
       <member name="gbm" value="128" c:identifier="GST_GL_DISPLAY_TYPE_GBM" glib:nick="gbm">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">Mesa3D GBM display</doc>
       </member>
-      <member name="egl_device" value="256" c:identifier="GST_GL_DISPLAY_TYPE_EGL_DEVICE" glib:nick="egl-device">
+      <member name="egl_device" value="256" c:identifier="GST_GL_DISPLAY_TYPE_EGL_DEVICE" version="1.18" glib:nick="egl-device">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">EGLDevice display.</doc>
       </member>
-      <member name="eagl" value="512" c:identifier="GST_GL_DISPLAY_TYPE_EAGL" glib:nick="eagl">
+      <member name="eagl" value="512" c:identifier="GST_GL_DISPLAY_TYPE_EAGL" version="1.20" glib:nick="eagl">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">EAGL display.</doc>
       </member>
-      <member name="winrt" value="1024" c:identifier="GST_GL_DISPLAY_TYPE_WINRT" glib:nick="winrt">
+      <member name="winrt" value="1024" c:identifier="GST_GL_DISPLAY_TYPE_WINRT" version="1.20" glib:nick="winrt">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">WinRT display.</doc>
       </member>
-      <member name="android" value="2048" c:identifier="GST_GL_DISPLAY_TYPE_ANDROID" glib:nick="android">
+      <member name="android" value="2048" c:identifier="GST_GL_DISPLAY_TYPE_ANDROID" version="1.20" glib:nick="android">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">Android display.</doc>
+      </member>
+      <member name="egl_surfaceless" value="4096" c:identifier="GST_GL_DISPLAY_TYPE_EGL_SURFACELESS" version="1.24" glib:nick="egl-surfaceless">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">Mesa3D surfaceless display using the EGL_PLATFORM_SURFACELESS_MESA
+extension.</doc>
       </member>
       <member name="any" value="4294967295" c:identifier="GST_GL_DISPLAY_TYPE_ANY" glib:nick="any">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">any display type</doc>
@@ -3910,6 +3960,19 @@ See also: gst_gl_filter_render_to_target()</doc>
           </parameter>
           <parameter name="format" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the #GstGLFormat to check is supported by @context</doc>
+            <type name="GLFormat" c:type="GstGLFormat"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="n_components" c:identifier="gst_gl_format_n_components" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the number of components in a #GstGLFormat</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <parameter name="gl_format" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the #GstGLFormat</doc>
             <type name="GLFormat" c:type="GstGLFormat"/>
           </parameter>
         </parameters>
@@ -4765,10 +4828,11 @@ Intended for use within implementations of
           </parameter>
         </parameters>
       </method>
-      <field name="parent">
+      <field name="parent" version="1.24">
         <type name="GLBaseMixer" c:type="GstGLBaseMixer"/>
       </field>
-      <field name="out_caps">
+      <field name="out_caps" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h">the configured output #GstCaps</doc>
         <type name="Gst.Caps" c:type="GstCaps*"/>
       </field>
       <field name="priv" readable="0" private="1">
@@ -4782,7 +4846,7 @@ Intended for use within implementations of
     </class>
     <record name="GLMixerClass" c:type="GstGLMixerClass" glib:is-gtype-struct-for="GLMixer" version="1.24">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
-      <field name="parent_class">
+      <field name="parent_class" version="1.24">
         <type name="GLBaseMixerClass" c:type="GstGLBaseMixerClass"/>
       </field>
       <field name="process_buffers">
@@ -4843,10 +4907,12 @@ manually.</doc>
     </record>
     <class name="GLMixerPad" c:symbol-prefix="gl_mixer_pad" c:type="GstGLMixerPad" version="1.24" parent="GLBaseMixerPad" glib:type-name="GstGLMixerPad" glib:get-type="gst_gl_mixer_pad_get_type" glib:type-struct="GLMixerPadClass">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
-      <field name="parent">
+      <field name="parent" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h">parent #GstGLBaseMixerPad</doc>
         <type name="GLBaseMixerPad" c:type="GstGLBaseMixerPad"/>
       </field>
-      <field name="current_texture">
+      <field name="current_texture" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h">the current input texture for this pad</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="_padding" readable="0" private="1">
@@ -4857,7 +4923,8 @@ manually.</doc>
     </class>
     <record name="GLMixerPadClass" c:type="GstGLMixerPadClass" glib:is-gtype-struct-for="GLMixerPad" version="1.24">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
-      <field name="parent_class">
+      <field name="parent_class" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h">parent #GstGLBaseMixerPadClass</doc>
         <type name="GLBaseMixerPadClass" c:type="GstGLBaseMixerPadClass"/>
       </field>
       <field name="_padding" readable="0" private="1">
@@ -7337,6 +7404,32 @@ A #GstGLUpload can be created with gst_gl_upload_new()</doc>
           <type name="Gst.Caps" c:type="GstCaps*"/>
         </return-value>
       </function>
+      <method name="fixate_caps" c:identifier="gst_gl_upload_fixate_caps" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.c">Fixate the @othercaps based on the information of the @caps.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.c">the fixated caps</doc>
+          <type name="Gst.Caps" c:type="GstCaps*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="upload" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.c">a #GstGLUpload</doc>
+            <type name="GLUpload" c:type="GstGLUpload*"/>
+          </instance-parameter>
+          <parameter name="direction" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.c">the pad #GstPadDirection</doc>
+            <type name="Gst.PadDirection" c:type="GstPadDirection"/>
+          </parameter>
+          <parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.c">a #GstCaps as the reference</doc>
+            <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+          <parameter name="othercaps" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.c">a #GstCaps to fixate</doc>
+            <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_caps" c:identifier="gst_gl_upload_get_caps">
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.h"/>
         <return-value transfer-ownership="none">
@@ -9599,11 +9692,11 @@ user-defined purposes.</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <constant name="GL_COLOR_CONVERT_EXT_FORMATS" value=", BGR10A2_LE, RGB10A2_LE, P010_10LE, P012_LE, P016_LE, Y212_LE, Y412_LE" c:type="GST_GL_COLOR_CONVERT_EXT_FORMATS" introspectable="0">
+    <constant name="GL_COLOR_CONVERT_EXT_FORMATS" value=", RGBA64_LE, BGR10A2_LE, RGB10A2_LE, P010_10LE, P012_LE, P016_LE, Y212_LE, Y412_LE, A444_16LE, A422_16LE, A420_16LE, A444_12LE, A422_12LE, A420_12LE, A420_10LE, A422_10LE, A444_10LE, I420_12LE, I420_10LE" c:type="GST_GL_COLOR_CONVERT_EXT_FORMATS" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
-    <constant name="GL_COLOR_CONVERT_FORMATS" value="{ RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, xBGR, ARGB, ABGR, GBRA, GBR, RGBP, BGRP, Y444, I420, YV12, Y42B, Y41B, NV12, NV21, NV16, NV61, YUY2, UYVY, Y210, AYUV, VUYA, Y410, GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64, A420, AV12, NV12_16L32S, NV12_4L4" c:type="GST_GL_COLOR_CONVERT_FORMATS">
+    <constant name="GL_COLOR_CONVERT_FORMATS" value="{ RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, xBGR, ARGB, ABGR, GBRA, GBR, RGBP, BGRP, Y444, I420, YV12, Y42B, Y41B, NV12, NV21, NV16, NV61, YUY2, UYVY, Y210, AYUV, VUYA, Y410, A444, A422, GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64, A420, AV12, NV12_16L32S, NV12_4L4, RBGA, v210" c:type="GST_GL_COLOR_CONVERT_FORMATS">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.h">The currently supported formats that can be converted</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.h"/>
       <type name="utf8" c:type="gchar*"/>
@@ -9846,11 +9939,11 @@ e.g. for `CONFIG_ID`: `GST_GL_CONFIG_ATTRIB_NAME (CONFIG_ID)`</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmemorypbo.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
-    <constant name="GL_MEMORY_VIDEO_EXT_FORMATS" value=", BGR10A2_LE, RGB10A2_LE, P010_10LE, P012_LE, P016_LE, Y212_LE, Y412_LE" c:type="GST_GL_MEMORY_VIDEO_EXT_FORMATS" introspectable="0">
+    <constant name="GL_MEMORY_VIDEO_EXT_FORMATS" value=", RGBA64_LE, BGR10A2_LE, RGB10A2_LE, P010_10LE, P012_LE, P016_LE, Y212_LE, Y412_LE, A444_16LE, A422_16LE, A420_16LE, A444_12LE, A422_12LE, A420_12LE, A420_10LE, A422_10LE, A444_10LE, I420_12LE, I420_10LE" c:type="GST_GL_MEMORY_VIDEO_EXT_FORMATS" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmemory.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
-    <constant name="GL_MEMORY_VIDEO_FORMATS_STR" value="{ RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, GBRA, GBR, RGBP, BGRP, RGB, BGR, RGB16, BGR16, AYUV, VUYA, Y410, I420, YV12, NV12, NV21, NV16, NV61, YUY2, UYVY, Y210, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64, A420, AV12, NV12_16L32S, NV12_4L4" c:type="GST_GL_MEMORY_VIDEO_FORMATS_STR">
+    <constant name="GL_MEMORY_VIDEO_FORMATS_STR" value="{ RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, GBRA, GBR, RGBP, BGRP, RGB, BGR, RGB16, BGR16, AYUV, VUYA, A444, A422, Y410, I420, YV12, NV12, NV21, NV16, NV61, YUY2, UYVY, Y210, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64, A420, AV12, NV12_16L32S, NV12_4L4, RBGA, v210" c:type="GST_GL_MEMORY_VIDEO_FORMATS_STR">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmemory.h">List of video formats that are supported by #GstGLMemory</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmemory.h"/>
       <type name="utf8" c:type="gchar*"/>
@@ -10478,6 +10571,20 @@ you are writing to OpenGL. Conversely, combining #GST_MAP_GL with
         </parameter>
       </parameters>
     </function>
+    <function name="buffer_pool_config_get_gl_min_free_queue_size" c:identifier="gst_buffer_pool_config_get_gl_min_free_queue_size" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">See gst_buffer_pool_config_set_gl_min_free_queue_size().</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">then number of buffers configured the free queue</doc>
+        <type name="guint" c:type="guint"/>
+      </return-value>
+      <parameters>
+        <parameter name="config" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">a buffer pool config</doc>
+          <type name="Gst.Structure" c:type="GstStructure*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="buffer_pool_config_set_gl_allocation_params" c:identifier="gst_buffer_pool_config_set_gl_allocation_params">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">Sets @params on @config</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.h"/>
@@ -10492,6 +10599,33 @@ you are writing to OpenGL. Conversely, combining #GST_MAP_GL with
         <parameter name="params" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">a #GstGLAllocationParams</doc>
           <type name="GLAllocationParams" c:type="const GstGLAllocationParams*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="buffer_pool_config_set_gl_min_free_queue_size" c:identifier="gst_buffer_pool_config_set_gl_min_free_queue_size" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">Instructs the #GstGLBufferPool to keep @queue_size amount of buffers around
+before allowing them for reuse.
+
+This is helpful to allow GPU processing to complete before the CPU
+operations on the same buffer could start.  Particularly useful when
+uploading or downloading data to/from the GPU.
+
+A value of 0 disabled this functionality.
+
+This value must be less than the configured maximum amount of buffers for
+this @config.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="config" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">a buffer pool config</doc>
+          <type name="Gst.Structure" c:type="GstStructure*"/>
+        </parameter>
+        <parameter name="queue_size" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">the number of buffers</doc>
+          <type name="guint" c:type="guint"/>
         </parameter>
       </parameters>
     </function>
@@ -10753,6 +10887,19 @@ The returned #GstGLContext will be shared with a GStreamer created OpenGL contex
         </parameter>
         <parameter name="format" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the #GstGLFormat to check is supported by @context</doc>
+          <type name="GLFormat" c:type="GstGLFormat"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="gl_format_n_components" c:identifier="gst_gl_format_n_components" moved-to="GLFormat.n_components" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the number of components in a #GstGLFormat</doc>
+        <type name="guint" c:type="guint"/>
+      </return-value>
+      <parameters>
+        <parameter name="gl_format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the #GstGLFormat</doc>
           <type name="GLFormat" c:type="GstGLFormat"/>
         </parameter>
       </parameters>
@@ -11187,6 +11334,31 @@ NDC coordinates in @matrix.</doc>
         <type name="GType" c:type="GType"/>
       </return-value>
     </function>
+    <function name="gl_swizzle_invert" c:identifier="gst_gl_swizzle_invert" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">Given @swizzle, produce @inversion such that:
+
+@swizzle[@inversion[i]] == identity[i] where:
+- identity = {0, 1, 2,...}
+- unset fields are marked by -1</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="swizzle" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">input swizzle</doc>
+          <array zero-terminated="0" c:type="gint*" fixed-size="4">
+            <type name="gint" c:type="gint"/>
+          </array>
+        </parameter>
+        <parameter name="inversion" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">resulting inversion</doc>
+          <array zero-terminated="0" c:type="gint*" fixed-size="4">
+            <type name="gint" c:type="gint"/>
+          </array>
+        </parameter>
+      </parameters>
+    </function>
     <function name="gl_sync_meta_api_get_type" c:identifier="gst_gl_sync_meta_api_get_type">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglsyncmeta.h"/>
       <return-value transfer-ownership="none">
@@ -11339,6 +11511,35 @@ NDC coordinates in @matrix.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="gl_video_format_swizzle" c:identifier="gst_gl_video_format_swizzle" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">Calculates the swizzle indices for @video_format and @gl_format in order to
+access a texture such that accessing a texel from a texture through the swizzle
+index produces values in the order (R, G, B, A) or (Y, U, V, A).
+
+For multi-planer formats, the swizzle index uses the same component order (RGBA/YUVA)
+and should be applied after combining multiple planes into a single rgba/yuva value.
+e.g. sampling from a NV12 format would have Y from one texture and UV from
+another texture into a (Y, U, V) value.  Add an Aplha component and then
+perform swizzling.  Sampling from NV21 would produce (Y, V, U) which is then
+swizzled to (Y, U, V).</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">whether valid swizzle indices could be found</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="video_format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the #GstVideoFormat in use</doc>
+          <type name="GstVideo.VideoFormat" c:type="GstVideoFormat"/>
+        </parameter>
+        <parameter name="swizzle" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the returned swizzle indices</doc>
+          <array zero-terminated="0" c:type="int*" fixed-size="4">
+            <type name="gint" c:type="int"/>
+          </array>
+        </parameter>
+      </parameters>
+    </function>
     <function name="gl_window_error_quark" c:identifier="gst_gl_window_error_quark" moved-to="GLWindowError.quark">
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglwindow.c">the quark used for #GstGLWindow in #GError's</doc>
@@ -11466,6 +11667,17 @@ or a valid GLSL version and/or profile.</doc>
         </parameter>
       </parameters>
     </function>
+    <docsection name="gstglapi">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglapi.c">Provides some helper API for dealing with OpenGL API's and platforms</doc>
+    </docsection>
+    <docsection name="gstglcontextconfig">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcontextconfig.c">A common list of well-known values for what a config retrievable from or set
+on a `GstGLContext` may contain.</doc>
+    </docsection>
+    <docsection name="gstglformat">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">Some useful utilities for converting between various formats and OpenGL
+formats.</doc>
+    </docsection>
     <function name="is_gl_base_memory" c:identifier="gst_is_gl_base_memory" version="1.8">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasememory.h"/>
       <return-value transfer-ownership="none">

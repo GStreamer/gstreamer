@@ -223,9 +223,10 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_util_dump_mem(byte[] mem, uint size);
+		static extern void gst_util_dump_mem([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] mem, uint size);
 
-		public static void DumpMem(byte[] mem, uint size) {
+		public static void DumpMem(byte[] mem) {
+			uint size = (uint)(mem == null ? 0 : mem.Length);
 			gst_util_dump_mem(mem, size);
 		}
 
@@ -384,6 +385,13 @@ namespace Gst {
 			Marshal.FreeHGlobal (native_value);
 			GLib.Marshaller.Free (native_value_str);
 			return value;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_util_simplify_fraction(int numerator, int denominator, uint n_terms, uint threshold);
+
+		public static void SimplifyFraction(int numerator, int denominator, uint n_terms, uint threshold) {
+			gst_util_simplify_fraction(numerator, denominator, n_terms, threshold);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

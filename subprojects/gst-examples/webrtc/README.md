@@ -35,9 +35,9 @@ sudo apt-get install -y gstreamer1.0-tools gstreamer1.0-nice gstreamer1.0-plugin
 
 ## Filing bugs
 
-Please only file bugs about the demos here. Bugs about GStreamer's WebRTC implementation should be filed on the [GStreamer gitlab](https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/new).
+Please only file bugs about the demos here. Bugs about GStreamer's WebRTC implementation should be filed on the [GStreamer gitlab](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/new).
 
-You can also find us on IRC by joining #gstreamer @ FreeNode.
+You can also find us on [Matrix](https://matrix.to/#/#gstreamer:gstreamer.org).
 
 ## Documentation
 

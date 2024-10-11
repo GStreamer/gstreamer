@@ -348,7 +348,7 @@ create_pipelne (AppData * app_data)
   /* Set d3d11 caps feature so that d3d11testsrc can output GPU memory
    * instead of system memory */
   gst_caps_set_features (caps, 0,
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr));
 
   g_object_set (sink, "caps", caps, nullptr);
   gst_caps_unref (caps);

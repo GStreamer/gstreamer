@@ -47,58 +47,6 @@ typedef struct
   } texture;
 } VertexData;
 
-static const gchar templ_pixel_shader[] =
-    "Texture2D shaderTexture;\n"
-    "SamplerState samplerState;\n"
-    "struct PS_INPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "  float2 Texture: TEXCOORD;\n"
-    "};\n"
-    "float4 main(PS_INPUT input): SV_TARGET\n"
-    "{\n"
-    "  return shaderTexture.Sample(samplerState, input.Texture);\n"
-    "}\n";
-
-static const gchar templ_premul_pixel_shader[] =
-    "Texture2D shaderTexture;\n"
-    "SamplerState samplerState;\n"
-    "struct PS_INPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "  float2 Texture: TEXCOORD;\n"
-    "};\n"
-    "float4 main(PS_INPUT input): SV_TARGET\n"
-    "{\n"
-    "  float4 sample = shaderTexture.Sample(samplerState, input.Texture);\n"
-    "  float4 unpremul_sample;\n"
-    "  if (sample.a == 0 || sample.a == 1)\n"
-    "    return sample;\n"
-    "  unpremul_sample.r = saturate (sample.r / sample.a);\n"
-    "  unpremul_sample.g = saturate (sample.g / sample.a);\n"
-    "  unpremul_sample.b = saturate (sample.b / sample.a);\n"
-    "  unpremul_sample.a = sample.a;\n"
-    "  return unpremul_sample;\n"
-    "}\n";
-
-static const gchar templ_vertex_shader[] =
-    "struct VS_INPUT\n"
-    "{\n"
-    "  float4 Position : POSITION;\n"
-    "  float2 Texture : TEXCOORD;\n"
-    "};\n"
-    "\n"
-    "struct VS_OUTPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "  float2 Texture: TEXCOORD;\n"
-    "};\n"
-    "\n"
-    "VS_OUTPUT main(VS_INPUT input)\n"
-    "{\n"
-    "  return input;\n"
-    "}\n";
-
 struct GstD3D11CompositionOverlay
 {
   ~GstD3D11CompositionOverlay ()
@@ -132,6 +80,8 @@ struct _GstD3D11OverlayCompositorPrivate
   ComPtr<ID3D11SamplerState> sampler;
   ComPtr<ID3D11BlendState> blend;
   ComPtr<ID3D11Buffer> index_buffer;
+  ComPtr<ID3D11RasterizerState> rs;
+  std::vector<GstVideoOverlayRectangle *> rects_to_upload;
 
   std::vector<GstD3D11CompositionOverlayPtr> overlays;
 };
@@ -176,12 +126,11 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   GstD3D11OverlayCompositorPrivate *priv = self->priv;
   gint x, y;
   guint width, height;
-  D3D11_SUBRESOURCE_DATA subresource_data;
+  D3D11_SUBRESOURCE_DATA subresource;
   D3D11_TEXTURE2D_DESC texture_desc;
   D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc;
   D3D11_BUFFER_DESC buffer_desc;
-  D3D11_MAPPED_SUBRESOURCE map;
-  VertexData *vertex_data;
+  VertexData vertex_data[4];
   GstBuffer *buf;
   GstVideoMeta *vmeta;
   GstMapInfo info;
@@ -189,7 +138,6 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   gint stride;
   HRESULT hr;
   ID3D11Device *device_handle;
-  ID3D11DeviceContext *context_handle;
   GstD3D11Device *device = self->device;
   FLOAT x1, y1, x2, y2;
   gdouble val;
@@ -201,13 +149,12 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   GstMemory *mem;
   gboolean is_d3d11 = FALSE;
 
-  memset (&subresource_data, 0, sizeof (subresource_data));
+  memset (&subresource, 0, sizeof (subresource));
   memset (&texture_desc, 0, sizeof (texture_desc));
   memset (&srv_desc, 0, sizeof (srv_desc));
   memset (&buffer_desc, 0, sizeof (buffer_desc));
 
   device_handle = gst_d3d11_device_get_device_handle (device);
-  context_handle = gst_d3d11_device_get_device_context_handle (device);
 
   if (!gst_video_overlay_rectangle_get_render_rectangle (overlay_rect, &x, &y,
           &width, &height)) {
@@ -257,9 +204,8 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
     }
 
     /* Do create texture and upload data at once, for create immutable texture */
-    subresource_data.pSysMem = data;
-    subresource_data.SysMemPitch = stride;
-    subresource_data.SysMemSlicePitch = 0;
+    subresource.pSysMem = data;
+    subresource.SysMemPitch = stride;
 
     texture_desc.Width = vmeta->width;
     texture_desc.Height = vmeta->height;
@@ -272,8 +218,7 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
     texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
     texture_desc.CPUAccessFlags = 0;
 
-    hr = device_handle->CreateTexture2D (&texture_desc,
-        &subresource_data, &texture);
+    hr = device_handle->CreateTexture2D (&texture_desc, &subresource, &texture);
     gst_video_meta_unmap (vmeta, 0, &info);
 
     if (!gst_d3d11_result (hr, device)) {
@@ -292,28 +237,6 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
     }
   }
 
-  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (VertexData) * 4;
-  buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &vertex_buffer);
-  if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (self,
-        "Couldn't create vertex buffer, hr: 0x%x", (guint) hr);
-    return nullptr;
-  }
-
-  GstD3D11DeviceLockGuard lk (device);
-  hr = context_handle->Map (vertex_buffer.Get (),
-      0, D3D11_MAP_WRITE_DISCARD, 0, &map);
-
-  if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (self, "Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
-    return nullptr;
-  }
-
-  vertex_data = (VertexData *) map.pData;
   /* bottom left */
   gst_util_fraction_to_double (x, GST_VIDEO_INFO_WIDTH (&priv->info), &val);
   x1 = (val * 2.0f) - 1.0f;
@@ -358,7 +281,20 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   vertex_data[3].texture.u = 1.0f;
   vertex_data[3].texture.v = 1.0f;
 
-  context_handle->Unmap (vertex_buffer.Get (), 0);
+  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+  buffer_desc.ByteWidth = sizeof (VertexData) * 4;
+  buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+  subresource.pSysMem = vertex_data;
+  subresource.SysMemPitch = sizeof (VertexData) * 4;
+
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &vertex_buffer);
+  if (!gst_d3d11_result (hr, device)) {
+    GST_ERROR_OBJECT (self,
+        "Couldn't create vertex buffer, hr: 0x%x", (guint) hr);
+    return nullptr;
+  }
 
   auto overlay = std::make_shared < GstD3D11CompositionOverlay > ();
   overlay->overlay_rect = gst_video_overlay_rectangle_ref (overlay_rect);
@@ -379,14 +315,11 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   GstVideoInfo *info = &priv->info;
   GstD3D11Device *device = self->device;
   HRESULT hr;
-  D3D11_SAMPLER_DESC sampler_desc;
-  D3D11_INPUT_ELEMENT_DESC input_desc[2];
   D3D11_BUFFER_DESC buffer_desc;
   D3D11_BLEND_DESC blend_desc;
-  D3D11_MAPPED_SUBRESOURCE map;
-  WORD *indices;
+  D3D11_SUBRESOURCE_DATA subresource;
+  const WORD indices[6] = { 0, 1, 2, 3, 0, 2 };
   ID3D11Device *device_handle;
-  ID3D11DeviceContext *context_handle;
   ComPtr < ID3D11PixelShader > ps;
   ComPtr < ID3D11PixelShader > premul_ps;
   ComPtr < ID3D11VertexShader > vs;
@@ -394,76 +327,54 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   ComPtr < ID3D11SamplerState > sampler;
   ComPtr < ID3D11BlendState > blend;
   ComPtr < ID3D11Buffer > index_buffer;
+  ComPtr < ID3D11RasterizerState > rs;
 
-  memset (&sampler_desc, 0, sizeof (sampler_desc));
-  memset (input_desc, 0, sizeof (input_desc));
   memset (&buffer_desc, 0, sizeof (buffer_desc));
   memset (&blend_desc, 0, sizeof (blend_desc));
+  memset (&subresource, 0, sizeof (subresource));
 
   device_handle = gst_d3d11_device_get_device_handle (device);
-  context_handle = gst_d3d11_device_get_device_context_handle (device);
 
-  /* bilinear filtering */
-  sampler_desc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-  sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-  sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-  sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-  sampler_desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-  sampler_desc.MinLOD = 0;
-  sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
-
-  hr = device_handle->CreateSamplerState (&sampler_desc, &sampler);
+  hr = gst_d3d11_device_get_sampler (device,
+      D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT, &sampler);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create sampler state, hr: 0x%x",
         (guint) hr);
     return FALSE;
   }
 
-  hr = gst_d3d11_create_pixel_shader_simple (device,
-      templ_pixel_shader, "main", &ps);
+  hr = gst_d3d11_get_pixel_shader_sample (device, &ps);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create pixel shader");
     return FALSE;
   }
 
-  hr = gst_d3d11_create_pixel_shader_simple (device,
-      templ_premul_pixel_shader, "main", &premul_ps);
+  hr = gst_d3d11_get_pixel_shader_sample_premul (device, &premul_ps);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create premul pixel shader");
     return FALSE;
   }
 
-  input_desc[0].SemanticName = "POSITION";
-  input_desc[0].SemanticIndex = 0;
-  input_desc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-  input_desc[0].InputSlot = 0;
-  input_desc[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-  input_desc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-  input_desc[0].InstanceDataStepRate = 0;
-
-  input_desc[1].SemanticName = "TEXCOORD";
-  input_desc[1].SemanticIndex = 0;
-  input_desc[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-  input_desc[1].InputSlot = 0;
-  input_desc[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-  input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-  input_desc[1].InstanceDataStepRate = 0;
-
-  hr = gst_d3d11_create_vertex_shader_simple (device, templ_vertex_shader,
-      "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
+  hr = gst_d3d11_get_vertex_shader_coord (device, &vs, &layout);
   if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (self, "Couldn't vertex pixel shader");
+    GST_ERROR_OBJECT (self, "Couldn't create vertex pixel shader");
+    return FALSE;
+  }
+
+  hr = gst_d3d11_device_get_rasterizer (device, &rs);
+  if (!gst_d3d11_result (hr, device)) {
+    GST_ERROR_OBJECT (self, "Couldn't get rasterizer state");
     return FALSE;
   }
 
   blend_desc.AlphaToCoverageEnable = FALSE;
   blend_desc.IndependentBlendEnable = FALSE;
   blend_desc.RenderTarget[0].BlendEnable = TRUE;
-  blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+  blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
   blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
   blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
   blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-  blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+  blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
   blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
   blend_desc.RenderTarget[0].RenderTargetWriteMask =
       D3D11_COLOR_WRITE_ENABLE_ALL;
@@ -480,42 +391,24 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
   buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &index_buffer);
+  subresource.pSysMem = indices;
+  subresource.SysMemPitch = sizeof (WORD) * 6;
+
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &index_buffer);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self,
         "Couldn't create index buffer, hr: 0x%x", (guint) hr);
     return FALSE;
   }
 
-  GstD3D11DeviceLockGuard lk (device);
-  hr = context_handle->Map (index_buffer.Get (),
-      0, D3D11_MAP_WRITE_DISCARD, 0, &map);
-
-  if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (self, "Couldn't map index buffer, hr: 0x%x", (guint) hr);
-    return FALSE;
-  }
-
-  indices = (WORD *) map.pData;
-
-  /* clockwise indexing */
-  indices[0] = 0;               /* bottom left */
-  indices[1] = 1;               /* top left */
-  indices[2] = 2;               /* top right */
-
-  indices[3] = 3;               /* bottom right */
-  indices[4] = 0;               /* bottom left  */
-  indices[5] = 2;               /* top right */
-
-  context_handle->Unmap (index_buffer.Get (), 0);
-
-  priv->ps = ps.Detach ();
-  priv->premul_ps = premul_ps.Detach ();
-  priv->vs = vs.Detach ();
-  priv->layout = layout.Detach ();
-  priv->sampler = sampler.Detach ();
-  priv->blend = blend.Detach ();
-  priv->index_buffer = index_buffer.Detach ();
+  priv->ps = ps;
+  priv->premul_ps = premul_ps;
+  priv->vs = vs;
+  priv->layout = layout;
+  priv->sampler = sampler;
+  priv->blend = blend;
+  priv->index_buffer = index_buffer;
+  priv->rs = rs;
 
   priv->viewport.TopLeftX = 0;
   priv->viewport.TopLeftY = 0;
@@ -555,8 +448,9 @@ gst_d3d11_overlay_compositor_new (GstD3D11Device * device,
 
 static gboolean
 gst_d3d11_overlay_compositor_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
-    std::vector < GstVideoOverlayRectangle * >*overlay_rect)
+    GstD3D11OverlayCompositor * self)
 {
+  GstD3D11OverlayCompositorPrivate *priv = self->priv;
   GstVideoOverlayCompositionMeta *cmeta;
   guint num_rect;
 
@@ -570,7 +464,7 @@ gst_d3d11_overlay_compositor_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
   num_rect = gst_video_overlay_composition_n_rectangles (cmeta->overlay);
   for (guint i = 0; i < num_rect; i++) {
     auto rect = gst_video_overlay_composition_get_rectangle (cmeta->overlay, i);
-    overlay_rect->push_back (rect);
+    priv->rects_to_upload.push_back (rect);
   }
 
   return TRUE;
@@ -581,28 +475,28 @@ gst_d3d11_overlay_compositor_upload (GstD3D11OverlayCompositor * compositor,
     GstBuffer * buf)
 {
   GstD3D11OverlayCompositorPrivate *priv;
-  std::vector < GstVideoOverlayRectangle * >new_overlay_rect;
 
   g_return_val_if_fail (compositor != nullptr, FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buf), FALSE);
 
   priv = compositor->priv;
+  priv->rects_to_upload.clear ();
 
   gst_buffer_foreach_meta (buf,
       (GstBufferForeachMetaFunc) gst_d3d11_overlay_compositor_foreach_meta,
-      &new_overlay_rect);
+      compositor);
 
-  if (new_overlay_rect.empty ()) {
+  if (priv->rects_to_upload.empty ()) {
     priv->overlays.clear ();
     return TRUE;
   }
 
   GST_LOG_OBJECT (compositor, "Found %" G_GSIZE_FORMAT
       " overlay rectangles, %" G_GSIZE_FORMAT " in current queue",
-      new_overlay_rect.size (), priv->overlays.size ());
+      priv->rects_to_upload.size (), priv->overlays.size ());
 
   /* *INDENT-OFF* */
-  for (auto it : new_overlay_rect) {
+  for (auto it : priv->rects_to_upload) {
     if (std::find_if (priv->overlays.begin (), priv->overlays.end (),
           [&] (const auto & overlay) -> bool {
             return overlay->overlay_rect == it;
@@ -624,10 +518,10 @@ gst_d3d11_overlay_compositor_upload (GstD3D11OverlayCompositor * compositor,
   auto it = priv->overlays.begin ();
   while (it != priv->overlays.end ()) {
     auto old_overlay = *it;
-    if (std::find_if (new_overlay_rect.begin (), new_overlay_rect.end (),
-          [&] (const auto & overlay) -> bool {
+    if (std::find_if (priv->rects_to_upload.begin (),
+          priv->rects_to_upload.end (), [&] (const auto & overlay) -> bool {
             return overlay == old_overlay->overlay_rect;
-          }) == new_overlay_rect.end ()) {
+          }) == priv->rects_to_upload.end ()) {
       GST_LOG_OBJECT (compositor, "Removing %p from queue",
           old_overlay->overlay_rect);
       it = priv->overlays.erase (it);
@@ -695,6 +589,7 @@ gst_d3d11_overlay_compositor_draw_unlocked (GstD3D11OverlayCompositor *
   context->PSSetSamplers (0, 1, samplers);
   context->VSSetShader (priv->vs.Get (), nullptr, 0);
   context->RSSetViewports (1, &priv->viewport);
+  context->RSSetState (priv->rs.Get ());
   context->OMSetRenderTargets (1, rtv, nullptr);
   context->OMSetBlendState (priv->blend.Get (), nullptr, 0xffffffff);
 
@@ -710,7 +605,7 @@ gst_d3d11_overlay_compositor_draw_unlocked (GstD3D11OverlayCompositor *
       gst_memory_map (mem, &info, (GstMapFlags) (GST_MAP_D3D11 | GST_MAP_READ));
     }
 
-    if (overlay->premul_alpha)
+    if (!overlay->premul_alpha)
       context->PSSetShader (priv->premul_ps.Get (), nullptr, 0);
     else
       context->PSSetShader (priv->ps.Get (), nullptr, 0);

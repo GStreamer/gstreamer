@@ -74,7 +74,7 @@ if __name__ == "__main__":
     for _f in expected_files:
         dirs.add(os.path.dirname(_f))
 
-    generated = set(glob.glob(os.path.join('*/*.cs')))
+    generated = set(glob.glob(os.path.join('*/*.cs'), root_dir=opts.out))
     rcode = 0
     not_listed = generated - expected_files
     if not_listed:
@@ -85,15 +85,15 @@ if __name__ == "__main__":
 
     not_generated = expected_files - generated
     if not_generated:
-        print("Following files were generated but not listed:\n    %s" %
+        print("Following files were listed but not generated:\n    %s" %
               '\n    '.join(["'%s/%s'," % (m.split(os.path.sep)[-2], m.split(os.path.sep)[-1])
-                             for m in not_generated]))
+                             for m in sorted(not_generated)]))
         rcode = 1
 
     if rcode == 1:
         generated = sorted(list(generated))
         print("List of files to use in `meson.build`:\n    %s" %
               '\n    '.join(["'%s/%s'," % (m.split(os.path.sep)[-2], m.split(os.path.sep)[-1])
-                             for m in generated]))
+                             for m in sorted(generated)]))
 
     exit(rcode)

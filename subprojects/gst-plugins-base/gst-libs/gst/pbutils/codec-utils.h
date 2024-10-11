@@ -96,6 +96,15 @@ GST_PBUTILS_API
 gboolean      gst_codec_utils_h265_caps_set_level_tier_and_profile (GstCaps      * caps,
                                                                     const guint8 * profile_tier_level,
                                                                     guint          len);
+
+/* AV1 */
+
+GST_PBUTILS_API
+guint8        gst_codec_utils_av1_get_seq_level_idx                (const gchar  * level);
+
+GST_PBUTILS_API
+const gchar * gst_codec_utils_av1_get_level                        (guint8 seq_level_idx);
+
 /* MPEG-4 part 2 */
 
 GST_PBUTILS_API

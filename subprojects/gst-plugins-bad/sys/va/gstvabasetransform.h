@@ -47,7 +47,10 @@ struct _GstVaBaseTransform
 
   GstCaps *in_caps;
   GstCaps *out_caps;
-  GstVideoInfo in_info;
+  union {
+    GstVideoInfo in_info;
+    GstVideoInfoDmaDrm in_drm_info;
+  };
   GstVideoInfo out_info;
 
   gboolean negotiated;

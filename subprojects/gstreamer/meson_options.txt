@@ -24,7 +24,7 @@ option('libdw', type : 'feature', value : 'auto', description : 'Use libdw to ge
 option('dbghelp', type : 'feature', value : 'auto', description : 'Use dbghelp to generate backtraces')
 option('bash-completion', type : 'feature', value : 'auto', description : 'Install bash completion files')
 option('coretracers', type : 'feature', value : 'auto', description : 'Build coretracers plugin')
-option('gstreamer-full', type : 'feature', value : 'disabled', description : 'Build with gstreamer-full')
+option('gstreamer-static-full', type : 'boolean', value : false, description : 'Enable static support of gstreamer-full.')
 
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)
@@ -33,12 +33,6 @@ option('benchmarks', type : 'feature', value : 'auto', yield : true)
 option('tools', type : 'feature', value : 'auto', yield : true)
 option('introspection', type : 'feature', value : 'auto', yield : true, description : 'Generate gobject-introspection bindings')
 option('nls', type : 'feature', value : 'auto', yield: true, description : 'Enable native language support (translations)')
-option('gobject-cast-checks', type : 'feature', value : 'auto', yield : true,
-       description: 'Enable run-time GObject cast checks (auto = enabled for development, disabled for stable releases)')
-option('glib-asserts', type : 'feature', value : 'enabled', yield : true,
-       description: 'Enable GLib assertion (auto = enabled for development, disabled for stable releases)')
-option('glib-checks', type : 'feature', value : 'enabled', yield : true,
-       description: 'Enable GLib checks such as API guards (auto = enabled for development, disabled for stable releases)')
 option('extra-checks', type : 'feature', value : 'enabled', yield : true, description : 'Enable extra runtime checks')
 
 # Common options
@@ -48,3 +42,21 @@ option('package-origin', type : 'string', value : 'Unknown package origin', yiel
        description : 'package origin URL to use in plugins')
 option('doc', type : 'feature', value : 'auto', yield: true,
        description: 'Enable documentation.')
+option('glib_debug', type : 'feature', value : 'auto', yield : true, description : 'Enable GLib debug infrastructure (see docs/macros.txt)')
+option('glib_assert', type : 'boolean', value : true, yield : true, description : 'Enable GLib assertion (see docs/macros.txt)',
+  deprecated: {'enabled' : 'true', 'disabled' : 'false', 'auto' : 'false'},
+)
+option('glib_checks', type : 'boolean', value : true, yield : true, description : 'Enable GLib checks such as API guards (see docs/macros.txt)',
+  deprecated: {'enabled' : 'true', 'disabled' : 'false', 'auto' : 'false'},
+)
+
+# Deprecated, kept for backward compat
+option('gobject-cast-checks', type : 'feature', value : 'auto', yield : true,
+       description: 'Enable run-time GObject cast checks (auto = enabled for development, disabled for stable releases)',
+       deprecated: 'glib_debug')
+option('glib-asserts', type : 'feature', value : 'enabled', yield : true,
+       description: 'Enable GLib assertion (auto = enabled for development, disabled for stable releases)',
+       deprecated: 'glib_assert')
+option('glib-checks', type : 'feature', value : 'enabled', yield : true,
+       description: 'Enable GLib checks such as API guards (auto = enabled for development, disabled for stable releases)',
+       deprecated: 'glib_checks')

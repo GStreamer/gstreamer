@@ -14,6 +14,7 @@ namespace Gst {
 		void ChildRemoved(GLib.Object child, string name);
 		GLib.Object GetChildByIndex(uint index);
 		GLib.Object GetChildByName(string name);
+		GLib.Object GetChildByNameRecurse(string name);
 		uint ChildrenCount { 
 			get;
 		}

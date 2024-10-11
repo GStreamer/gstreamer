@@ -105,6 +105,9 @@ typedef struct
 
   GstVideoConverter *convert;
 
+  GstStructure *converter_config;
+  gboolean converter_config_changed;
+
   gint borders_h;
   gint borders_w;
 } GstVideoConvertScalePrivate;
@@ -158,6 +161,7 @@ enum
   PROP_MATRIX_MODE,
   PROP_GAMMA_MODE,
   PROP_PRIMARIES_MODE,
+  PROP_CONVERTER_CONFIG,
 };
 
 #undef GST_VIDEO_SIZE_RANGE
@@ -177,7 +181,7 @@ enum
 
 static GstStaticCaps gst_video_convert_scale_format_caps =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS) ";"
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS));
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS_ANY));
 
 static GQuark _size_quark;
 static GQuark _scale_quark;
@@ -290,7 +294,8 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
   GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
 
   features_format_interlaced =
-      gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL);
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_FORMAT_INTERLACED,
+      NULL);
   features_format_interlaced_sysmem =
       gst_caps_features_copy (features_format_interlaced);
   gst_caps_features_add (features_format_interlaced_sysmem,
@@ -375,6 +380,23 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
           DEFAULT_PROP_PRIMARIES_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstVideoConvertScale:converter-config:
+   *
+   * A #GstStructure describing the configuration that should be used. This
+   * configuration, if set, takes precedence over the other similar conversion
+   * properties.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_CONVERTER_CONFIG, g_param_spec_boxed ("converter-config",
+          "Converter configuration",
+          "A GstStructure describing the configuration that should be used."
+          " This configuration, if set, takes precedence over the other similar conversion properties.",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+
   gst_element_class_set_static_metadata (element_class,
       "Video colorspace converter and scaler",
       "Filter/Converter/Video/Scaler/Colorspace",
@@ -405,7 +427,6 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
   filter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_video_convert_scale_transform_frame);
 
-  klass->any_memory = FALSE;
   klass->converts = TRUE;
   klass->scales = TRUE;
 
@@ -432,6 +453,9 @@ gst_video_convert_scale_init (GstVideoConvertScale * self)
   priv->matrix_mode = DEFAULT_PROP_MATRIX_MODE;
   priv->gamma_mode = DEFAULT_PROP_GAMMA_MODE;
   priv->primaries_mode = DEFAULT_PROP_PRIMARIES_MODE;
+
+  priv->converter_config = NULL;
+  priv->converter_config_changed = FALSE;
 }
 
 static void
@@ -441,6 +465,10 @@ gst_video_convert_scale_finalize (GstVideoConvertScale * self)
 
   if (priv->convert)
     gst_video_converter_free (priv->convert);
+
+  if (priv->converter_config)
+    gst_structure_free (priv->converter_config);
+  priv->converter_config = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (self));
 }
@@ -503,6 +531,12 @@ gst_video_convert_scale_set_property (GObject * object, guint prop_id,
       break;
     case PROP_DITHER_QUANTIZATION:
       priv->dither_quantization = g_value_get_uint (value);
+      break;
+    case PROP_CONVERTER_CONFIG:
+      if (priv->converter_config)
+        gst_structure_free (priv->converter_config);
+      priv->converter_config = g_value_dup_boxed (value);
+      priv->converter_config_changed = TRUE;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -567,6 +601,9 @@ gst_video_convert_scale_get_property (GObject * object, guint prop_id,
     case PROP_DITHER_QUANTIZATION:
       g_value_set_uint (value, priv->dither_quantization);
       break;
+    case PROP_CONVERTER_CONFIG:
+      g_value_set_boxed (value, priv->converter_config);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -605,11 +642,11 @@ gst_video_convert_caps_remove_format_and_rangify_size_info (GstVideoConvertScale
             || gst_caps_features_is_equal (features,
                 features_format_interlaced_sysmem))) {
       if (klass->scales) {
-        gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+        gst_structure_set_static_str (structure, "width", GST_TYPE_INT_RANGE, 1,
+            G_MAXINT, "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
         /* if pixel aspect ratio, make a range of it */
         if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
-          gst_structure_set (structure, "pixel-aspect-ratio",
+          gst_structure_set_static_str (structure, "pixel-aspect-ratio",
               GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
         }
       }
@@ -631,7 +668,6 @@ gst_video_convert_scale_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   GstVideoConvertScale *self = GST_VIDEO_CONVERT_SCALE (trans);
-  gint i;
   GstCaps *ret;
 
   GST_DEBUG_OBJECT (trans,
@@ -647,30 +683,6 @@ gst_video_convert_scale_transform_caps (GstBaseTransform * trans,
     gst_caps_unref (ret);
     ret = intersection;
   }
-
-  if (GST_VIDEO_CONVERT_SCALE_GET_CLASS (trans)->any_memory)
-    return ret;
-
-  for (i = 0; i < gst_caps_get_size (ret); i++) {
-    gint j;
-    GstCapsFeatures *f = gst_caps_get_features (ret, i);
-
-    if (!f || gst_caps_features_is_any (f) ||
-        gst_caps_features_is_equal (f, GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
-      continue;
-
-    for (j = 0; j < gst_caps_features_get_size (f); j++) {
-      const gchar *feature = gst_caps_features_get_nth (f, j);
-
-      if (g_str_has_prefix (feature, "memory:")) {
-        GST_DEBUG_OBJECT (trans, "Can not work with memory `%s`", feature);
-        gst_caps_remove_structure (ret, i);
-        break;
-      }
-    }
-  }
-
-  GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, ret);
 
   return ret;
 }
@@ -735,6 +747,14 @@ gst_video_convert_scale_transform_meta (GstBaseTransform * trans,
   return TRUE;
 }
 
+static GstStructure *
+gst_video_convert_scale_get_converter_config (GstVideoConvertScale * self,
+    GstVideoInfo * out_info)
+{
+  GstVideoConvertScalePrivate *priv = PRIV (self);
+  return gst_structure_copy (priv->converter_config);
+}
+
 static gboolean
 gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
     GstVideoInfo * in_info, GstCaps * out, GstVideoInfo * out_info)
@@ -743,6 +763,7 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
   GstVideoConvertScalePrivate *priv = PRIV (self);
   gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
   GstVideoInfo tmp_info;
+  GstStructure *options;
 
   if (priv->convert) {
     gst_video_converter_free (priv->convert);
@@ -783,7 +804,7 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
         GST_WARNING_OBJECT (self, "Can't calculate borders");
       }
     } else {
-      GST_WARNING_OBJECT (self, "Can't keep DAR!");
+      GST_DEBUG_OBJECT (self, "Can't keep DAR!");
     }
   }
 
@@ -791,61 +812,76 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
   if (in_info->interlace_mode != out_info->interlace_mode)
     goto format_mismatch;
 
+  if (priv->converter_config) {
+    options = gst_video_convert_scale_get_converter_config (self, out_info);
+    GST_DEBUG_OBJECT (self,
+        "Using user-provided converter-config: %" GST_PTR_FORMAT, options);
+    goto build_converter;
+  }
+
   /* if the only thing different in the caps is the transfer function, and
-   * we're converting between equivalent transfer functions, do passthrough */
+   * we're converting between equivalent transfer functions and not
+   * quantizing/dithering or adjusting alpha, then do passthrough */
   tmp_info = *in_info;
   tmp_info.colorimetry.transfer = out_info->colorimetry.transfer;
+
+  gboolean need_dither = (priv->dither_quantization > 1)
+      && (priv->dither != GST_VIDEO_DITHER_NONE);
+  gboolean need_alpha = GST_VIDEO_INFO_HAS_ALPHA (out_info)
+      && ((priv->alpha_mode == GST_VIDEO_ALPHA_MODE_SET) ||
+      (priv->alpha_mode == GST_VIDEO_ALPHA_MODE_MULT
+          && priv->alpha_value != 1.0));
+
   if (gst_video_info_is_equal (&tmp_info, out_info) &&
       gst_video_transfer_function_is_equivalent (in_info->colorimetry.transfer,
           in_info->finfo->bits, out_info->colorimetry.transfer,
-          out_info->finfo->bits)) {
+          out_info->finfo->bits) && !need_dither && !need_alpha) {
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
   } else {
-    GstStructure *options;
     GST_CAT_DEBUG_OBJECT (CAT_PERFORMANCE, filter, "setup videoscaling");
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), FALSE);
 
-    options = gst_structure_new_empty ("videoconvertscale");
+    options = gst_structure_new_static_str_empty ("videoconvertscale");
 
     switch (priv->method) {
       case GST_VIDEO_SCALE_NEAREST:
-        gst_structure_set (options,
+        gst_structure_set_static_str (options,
             GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
             GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_NEAREST,
             NULL);
         break;
       case GST_VIDEO_SCALE_BILINEAR:
-        gst_structure_set (options,
+        gst_structure_set_static_str (options,
             GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
             GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_LINEAR,
             GST_VIDEO_RESAMPLER_OPT_MAX_TAPS, G_TYPE_INT, 2, NULL);
         break;
       case GST_VIDEO_SCALE_4TAP:
-        gst_structure_set (options,
+        gst_structure_set_static_str (options,
             GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
             GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_SINC,
             GST_VIDEO_RESAMPLER_OPT_MAX_TAPS, G_TYPE_INT, 4, NULL);
         break;
       case GST_VIDEO_SCALE_LANCZOS:
-        gst_structure_set (options,
+        gst_structure_set_static_str (options,
             GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
             GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_LANCZOS,
             NULL);
         break;
       case GST_VIDEO_SCALE_BILINEAR2:
-        gst_structure_set (options,
+        gst_structure_set_static_str (options,
             GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
             GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_LINEAR,
             NULL);
         break;
       case GST_VIDEO_SCALE_SINC:
-        gst_structure_set (options,
+        gst_structure_set_static_str (options,
             GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
             GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_SINC,
             NULL);
         break;
       case GST_VIDEO_SCALE_HERMITE:
-        gst_structure_set (options,
+        gst_structure_set_static_str (options,
             GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
             GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_CUBIC,
             GST_VIDEO_RESAMPLER_OPT_CUBIC_B, G_TYPE_DOUBLE, (gdouble) 0.0,
@@ -853,7 +889,7 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
             NULL);
         break;
       case GST_VIDEO_SCALE_SPLINE:
-        gst_structure_set (options,
+        gst_structure_set_static_str (options,
             GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
             GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_CUBIC,
             GST_VIDEO_RESAMPLER_OPT_CUBIC_B, G_TYPE_DOUBLE, (gdouble) 1.0,
@@ -861,7 +897,7 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
             NULL);
         break;
       case GST_VIDEO_SCALE_CATROM:
-        gst_structure_set (options,
+        gst_structure_set_static_str (options,
             GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
             GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_CUBIC,
             GST_VIDEO_RESAMPLER_OPT_CUBIC_B, G_TYPE_DOUBLE, (gdouble) 0.0,
@@ -869,7 +905,7 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
             NULL);
         break;
       case GST_VIDEO_SCALE_MITCHELL:
-        gst_structure_set (options,
+        gst_structure_set_static_str (options,
             GST_VIDEO_CONVERTER_OPT_RESAMPLER_METHOD,
             GST_TYPE_VIDEO_RESAMPLER_METHOD, GST_VIDEO_RESAMPLER_METHOD_CUBIC,
             GST_VIDEO_RESAMPLER_OPT_CUBIC_B, G_TYPE_DOUBLE, (gdouble) 1.0 / 3.0,
@@ -877,7 +913,7 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
             NULL);
         break;
     }
-    gst_structure_set (options,
+    gst_structure_set_static_str (options,
         GST_VIDEO_RESAMPLER_OPT_ENVELOPE, G_TYPE_DOUBLE, priv->envelope,
         GST_VIDEO_RESAMPLER_OPT_SHARPNESS, G_TYPE_DOUBLE, priv->sharpness,
         GST_VIDEO_RESAMPLER_OPT_SHARPEN, G_TYPE_DOUBLE, priv->sharpen,
@@ -902,6 +938,7 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
         priv->primaries_mode, GST_VIDEO_CONVERTER_OPT_THREADS, G_TYPE_UINT,
         priv->n_threads, NULL);
 
+  build_converter:
     priv->convert = gst_video_converter_new (in_info, out_info, options);
     if (priv->convert == NULL)
       goto no_convert;
@@ -1115,7 +1152,7 @@ gst_video_convert_scale_fixate_format (GstBaseTransform * base, GstCaps * caps,
     }
   }
   if (out_info)
-    gst_structure_set (outs, "format", G_TYPE_STRING,
+    gst_structure_set_static_str (outs, "format", G_TYPE_STRING,
         GST_VIDEO_FORMAT_INFO_NAME (out_info), NULL);
 }
 
@@ -1179,10 +1216,10 @@ transfer_colorimetry_from_input (GstBaseTransform * trans, GstCaps * in_caps,
     tmp_caps = gst_caps_fixate (tmp_caps);
     tmp_caps_s = gst_caps_get_structure (tmp_caps, 0);
     if (!gst_structure_has_field (tmp_caps_s, "width"))
-      gst_structure_set_value (tmp_caps_s, "width",
+      gst_structure_set_value_static_str (tmp_caps_s, "width",
           gst_structure_get_value (in_caps_s, "width"));
     if (!gst_structure_has_field (tmp_caps_s, "height"))
-      gst_structure_set_value (tmp_caps_s, "height",
+      gst_structure_set_value_static_str (tmp_caps_s, "height",
           gst_structure_get_value (in_caps_s, "height"));
 
     if (!gst_video_info_from_caps (&out_info, tmp_caps)) {
@@ -1201,7 +1238,8 @@ transfer_colorimetry_from_input (GstBaseTransform * trans, GstCaps * in_caps,
           || (GST_VIDEO_INFO_IS_GRAY (&out_info)
               && GST_VIDEO_INFO_IS_GRAY (&in_info))) {
         /* Can transfer the colorimetry intact from the input if it has it */
-        gst_structure_set_value (out_caps_s, "colorimetry", in_colorimetry);
+        gst_structure_set_value_static_str (out_caps_s, "colorimetry",
+            in_colorimetry);
       } else {
         gchar *colorimetry_str;
 
@@ -1215,7 +1253,7 @@ transfer_colorimetry_from_input (GstBaseTransform * trans, GstCaps * in_caps,
 
         colorimetry_str =
             gst_video_colorimetry_to_string (&out_info.colorimetry);
-        gst_caps_set_simple (out_caps, "colorimetry", G_TYPE_STRING,
+        gst_caps_set_simple_static_str (out_caps, "colorimetry", G_TYPE_STRING,
             colorimetry_str, NULL);
         g_free (colorimetry_str);
       }
@@ -1230,7 +1268,8 @@ transfer_colorimetry_from_input (GstBaseTransform * trans, GstCaps * in_caps,
             gst_structure_get_value (in_caps_s, "chroma-site");
         if (in_chroma_site != NULL
             && subsampling_unchanged (&in_info, &out_info))
-          gst_structure_set_value (out_caps_s, "chroma-site", in_chroma_site);
+          gst_structure_set_value_static_str (out_caps_s, "chroma-site",
+              in_chroma_site);
       }
     }
   }
@@ -1305,8 +1344,8 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       gst_value_set_fraction (&tpar, 1, 1);
       to_par = &tpar;
 
-      gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
-          NULL);
+      gst_structure_set_static_str (outs, "pixel-aspect-ratio",
+          GST_TYPE_FRACTION, 1, 1, NULL);
     }
     if (!from_par) {
       g_value_init (&fpar, GST_TYPE_FRACTION);
@@ -1349,8 +1388,8 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
             gst_structure_fixate_field_nearest_fraction (outs,
                 "pixel-aspect-ratio", n, d);
           else if (n != d)
-            gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-                n, d, NULL);
+            gst_structure_set_static_str (outs, "pixel-aspect-ratio",
+                GST_TYPE_FRACTION, n, d, NULL);
         }
       }
       goto done;
@@ -1417,7 +1456,7 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       }
 
       if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
-        gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
+        gst_structure_set_value_static_str (tmp, "pixel-aspect-ratio", to_par);
       gst_structure_fixate_field_nearest_fraction (tmp, "pixel-aspect-ratio",
           to_par_n, to_par_d);
       gst_structure_get_fraction (tmp, "pixel-aspect-ratio", &set_par_n,
@@ -1428,7 +1467,7 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       if (set_par_n == to_par_n && set_par_d == to_par_d) {
         if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
             set_par_n != set_par_d)
-          gst_structure_set (outs, "width", G_TYPE_INT, set_w,
+          gst_structure_set_static_str (outs, "width", G_TYPE_INT, set_w,
               "pixel-aspect-ratio", GST_TYPE_FRACTION, set_par_n, set_par_d,
               NULL);
         goto done;
@@ -1448,8 +1487,8 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       gst_structure_fixate_field_nearest_int (outs, "width", w);
       if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
           set_par_n != set_par_d)
-        gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-            set_par_n, set_par_d, NULL);
+        gst_structure_set_static_str (outs, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION, set_par_n, set_par_d, NULL);
 
       goto done;
     } else if (w) {
@@ -1498,7 +1537,7 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
         goto done;
       }
       if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
-        gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
+        gst_structure_set_value_static_str (tmp, "pixel-aspect-ratio", to_par);
       gst_structure_fixate_field_nearest_fraction (tmp, "pixel-aspect-ratio",
           to_par_n, to_par_d);
       gst_structure_get_fraction (tmp, "pixel-aspect-ratio", &set_par_n,
@@ -1509,7 +1548,7 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       if (set_par_n == to_par_n && set_par_d == to_par_d) {
         if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
             set_par_n != set_par_d)
-          gst_structure_set (outs, "height", G_TYPE_INT, set_h,
+          gst_structure_set_static_str (outs, "height", G_TYPE_INT, set_h,
               "pixel-aspect-ratio", GST_TYPE_FRACTION, set_par_n, set_par_d,
               NULL);
         goto done;
@@ -1529,8 +1568,8 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       gst_structure_fixate_field_nearest_int (outs, "height", h);
       if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
           set_par_n != set_par_d)
-        gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-            set_par_n, set_par_d, NULL);
+        gst_structure_set_static_str (outs, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION, set_par_n, set_par_d, NULL);
 
       goto done;
     } else if (gst_value_is_fixed (to_par)) {
@@ -1562,8 +1601,8 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
 
       /* We kept the DAR and the height is nearest to the original height */
       if (set_w == w) {
-        gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
-            G_TYPE_INT, set_h, NULL);
+        gst_structure_set_static_str (outs, "width", G_TYPE_INT, set_w,
+            "height", G_TYPE_INT, set_h, NULL);
         goto done;
       }
 
@@ -1584,8 +1623,8 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
 
       /* We kept the DAR and the width is nearest to the original width */
       if (set_h == h) {
-        gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
-            G_TYPE_INT, set_h, NULL);
+        gst_structure_set_static_str (outs, "width", G_TYPE_INT, set_w,
+            "height", G_TYPE_INT, set_h, NULL);
         goto done;
       }
 
@@ -1597,8 +1636,8 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
         f_h = set_h;
         f_w = set_w;
       }
-      gst_structure_set (outs, "width", G_TYPE_INT, f_w, "height", G_TYPE_INT,
-          f_h, NULL);
+      gst_structure_set_static_str (outs, "width", G_TYPE_INT, f_w, "height",
+          G_TYPE_INT, f_h, NULL);
       goto done;
     } else {
       GstStructure *tmp;
@@ -1623,7 +1662,7 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       }
 
       if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
-        gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
+        gst_structure_set_value_static_str (tmp, "pixel-aspect-ratio", to_par);
       gst_structure_fixate_field_nearest_fraction (tmp, "pixel-aspect-ratio",
           to_par_n, to_par_d);
       gst_structure_get_fraction (tmp, "pixel-aspect-ratio", &set_par_n,
@@ -1631,13 +1670,13 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       gst_structure_free (tmp);
 
       if (set_par_n == to_par_n && set_par_d == to_par_d) {
-        gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
-            G_TYPE_INT, set_h, NULL);
+        gst_structure_set_static_str (outs, "width", G_TYPE_INT, set_w,
+            "height", G_TYPE_INT, set_h, NULL);
 
         if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
             set_par_n != set_par_d)
-          gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-              set_par_n, set_par_d, NULL);
+          gst_structure_set_static_str (outs, "pixel-aspect-ratio",
+              GST_TYPE_FRACTION, set_par_n, set_par_d, NULL);
         goto done;
       }
 
@@ -1657,12 +1696,12 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       gst_structure_free (tmp);
 
       if (tmp2 == w) {
-        gst_structure_set (outs, "width", G_TYPE_INT, tmp2, "height",
+        gst_structure_set_static_str (outs, "width", G_TYPE_INT, tmp2, "height",
             G_TYPE_INT, set_h, NULL);
         if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
             set_par_n != set_par_d)
-          gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-              set_par_n, set_par_d, NULL);
+          gst_structure_set_static_str (outs, "pixel-aspect-ratio",
+              GST_TYPE_FRACTION, set_par_n, set_par_d, NULL);
         goto done;
       }
 
@@ -1674,23 +1713,23 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       gst_structure_free (tmp);
 
       if (tmp2 == h) {
-        gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
-            G_TYPE_INT, tmp2, NULL);
-        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
-            set_par_n != set_par_d)
-          gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-              set_par_n, set_par_d, NULL);
+        gst_structure_set_static_str (outs, "width", G_TYPE_INT, set_w,
+            "height", G_TYPE_INT, tmp2, NULL);
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio")
+            || set_par_n != set_par_d)
+          gst_structure_set_static_str (outs, "pixel-aspect-ratio",
+              GST_TYPE_FRACTION, set_par_n, set_par_d, NULL);
         goto done;
       }
 
       /* If all fails we can't keep the DAR and take the nearest values
        * for everything from the first try */
-      gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
+      gst_structure_set_static_str (outs, "width", G_TYPE_INT, set_w, "height",
           G_TYPE_INT, set_h, NULL);
       if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
           set_par_n != set_par_d)
-        gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-            set_par_n, set_par_d, NULL);
+        gst_structure_set_static_str (outs, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION, set_par_n, set_par_d, NULL);
     }
   }
 
@@ -1738,8 +1777,9 @@ gst_video_convert_scale_fixate_caps (GstBaseTransform * base,
 
     for (i = 0; i < G_N_ELEMENTS (format_fields); i++) {
       if (gst_structure_has_field (format_struct, format_fields[i])) {
-        gst_structure_set (fixated_struct, format_fields[i], G_TYPE_STRING,
-            gst_structure_get_string (format_struct, format_fields[i]), NULL);
+        gst_structure_set_static_str (fixated_struct, format_fields[i],
+            G_TYPE_STRING, gst_structure_get_string (format_struct,
+                format_fields[i]), NULL);
       } else {
         gst_structure_remove_field (fixated_struct, format_fields[i]);
       }
@@ -1764,6 +1804,18 @@ gst_video_convert_scale_transform_frame (GstVideoFilter * filter,
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_CAT_DEBUG_OBJECT (CAT_PERFORMANCE, filter, "doing video scaling");
+
+  if (priv->converter_config_changed) {
+    GstStructure *options =
+        gst_video_convert_scale_get_converter_config (GST_VIDEO_CONVERT_SCALE
+        (filter), &filter->out_info);
+
+    gst_video_converter_free (priv->convert);
+    priv->convert =
+        gst_video_converter_new (&filter->in_info, &filter->out_info, options);
+
+    priv->converter_config_changed = FALSE;
+  }
 
   gst_video_converter_frame (priv->convert, in_frame, out_frame);
 

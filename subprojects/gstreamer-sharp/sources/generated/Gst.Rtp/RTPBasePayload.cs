@@ -18,6 +18,21 @@ namespace Gst.Rtp {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[GLib.Property ("auto-header-extension")]
+		public bool AutoHeaderExtension {
+			get {
+				GLib.Value val = GetProperty ("auto-header-extension");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("auto-header-extension", val);
+				val.Dispose ();
+			}
+		}
+
 		[GLib.Property ("max-ptime")]
 		public long MaxPtime {
 			get {
@@ -226,6 +241,196 @@ namespace Gst.Rtp {
 				SetProperty("timestamp-offset", val);
 				val.Dispose ();
 			}
+		}
+
+		[GLib.Signal("clear-extensions")]
+		public event System.EventHandler ClearExtensions {
+			add {
+				this.AddSignalHandler ("clear-extensions", value);
+			}
+			remove {
+				this.RemoveSignalHandler ("clear-extensions", value);
+			}
+		}
+
+		[GLib.Signal("add-extension")]
+		public event Gst.Rtp.AddExtensionHandler AddExtension {
+			add {
+				this.AddSignalHandler ("add-extension", value, typeof (Gst.Rtp.AddExtensionArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("add-extension", value);
+			}
+		}
+
+		[GLib.Signal("request-extension")]
+		public event Gst.Rtp.RequestExtensionHandler RequestExtension {
+			add {
+				this.AddSignalHandler ("request-extension", value, typeof (Gst.Rtp.RequestExtensionArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("request-extension", value);
+			}
+		}
+
+		static AddExtensionNativeDelegate AddExtension_cb_delegate;
+		static AddExtensionNativeDelegate AddExtensionVMCallback {
+			get {
+				if (AddExtension_cb_delegate == null)
+					AddExtension_cb_delegate = new AddExtensionNativeDelegate (AddExtension_cb);
+				return AddExtension_cb_delegate;
+			}
+		}
+
+		static void OverrideAddExtension (GLib.GType gtype)
+		{
+			OverrideAddExtension (gtype, AddExtensionVMCallback);
+		}
+
+		static void OverrideAddExtension (GLib.GType gtype, AddExtensionNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "add-extension", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void AddExtensionNativeDelegate (IntPtr inst, IntPtr ext);
+
+		static void AddExtension_cb (IntPtr inst, IntPtr ext)
+		{
+			try {
+				RTPBasePayload __obj = GLib.Object.GetObject (inst, false) as RTPBasePayload;
+				__obj.OnAddExtension (GLib.Object.GetObject(ext, true) as Gst.Rtp.RTPHeaderExtension);
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Rtp.RTPBasePayload), ConnectionMethod="OverrideAddExtension")]
+		protected virtual void OnAddExtension (Gst.Rtp.RTPHeaderExtension ext)
+		{
+			InternalAddExtension (ext);
+		}
+
+		private void InternalAddExtension (Gst.Rtp.RTPHeaderExtension ext)
+		{
+			GLib.Value ret = GLib.Value.Empty;
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (2);
+			GLib.Value[] vals = new GLib.Value [2];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			vals [1] = new GLib.Value (ext);
+			inst_and_params.Append (vals [1]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
+		}
+
+		static ClearExtensionsNativeDelegate ClearExtensions_cb_delegate;
+		static ClearExtensionsNativeDelegate ClearExtensionsVMCallback {
+			get {
+				if (ClearExtensions_cb_delegate == null)
+					ClearExtensions_cb_delegate = new ClearExtensionsNativeDelegate (ClearExtensions_cb);
+				return ClearExtensions_cb_delegate;
+			}
+		}
+
+		static void OverrideClearExtensions (GLib.GType gtype)
+		{
+			OverrideClearExtensions (gtype, ClearExtensionsVMCallback);
+		}
+
+		static void OverrideClearExtensions (GLib.GType gtype, ClearExtensionsNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "clear-extensions", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void ClearExtensionsNativeDelegate (IntPtr inst);
+
+		static void ClearExtensions_cb (IntPtr inst)
+		{
+			try {
+				RTPBasePayload __obj = GLib.Object.GetObject (inst, false) as RTPBasePayload;
+				__obj.OnClearExtensions ();
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Rtp.RTPBasePayload), ConnectionMethod="OverrideClearExtensions")]
+		protected virtual void OnClearExtensions ()
+		{
+			InternalClearExtensions ();
+		}
+
+		private void InternalClearExtensions ()
+		{
+			GLib.Value ret = GLib.Value.Empty;
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (1);
+			GLib.Value[] vals = new GLib.Value [1];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
+		}
+
+		static RequestExtensionNativeDelegate RequestExtension_cb_delegate;
+		static RequestExtensionNativeDelegate RequestExtensionVMCallback {
+			get {
+				if (RequestExtension_cb_delegate == null)
+					RequestExtension_cb_delegate = new RequestExtensionNativeDelegate (RequestExtension_cb);
+				return RequestExtension_cb_delegate;
+			}
+		}
+
+		static void OverrideRequestExtension (GLib.GType gtype)
+		{
+			OverrideRequestExtension (gtype, RequestExtensionVMCallback);
+		}
+
+		static void OverrideRequestExtension (GLib.GType gtype, RequestExtensionNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "request-extension", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr RequestExtensionNativeDelegate (IntPtr inst, uint ext_id, IntPtr ext_uri);
+
+		static IntPtr RequestExtension_cb (IntPtr inst, uint ext_id, IntPtr ext_uri)
+		{
+			try {
+				RTPBasePayload __obj = GLib.Object.GetObject (inst, false) as RTPBasePayload;
+				Gst.Rtp.RTPHeaderExtension __result;
+				__result = __obj.OnRequestExtension (ext_id, GLib.Marshaller.Utf8PtrToString (ext_uri));
+				return __result == null ? IntPtr.Zero : __result.OwnedHandle;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Rtp.RTPBasePayload), ConnectionMethod="OverrideRequestExtension")]
+		protected virtual Gst.Rtp.RTPHeaderExtension OnRequestExtension (uint ext_id, string ext_uri)
+		{
+			return InternalRequestExtension (ext_id, ext_uri);
+		}
+
+		private Gst.Rtp.RTPHeaderExtension InternalRequestExtension (uint ext_id, string ext_uri)
+		{
+			GLib.Value ret = new GLib.Value (GLib.GType.Object);
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (3);
+			GLib.Value[] vals = new GLib.Value [3];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			vals [1] = new GLib.Value (ext_id);
+			inst_and_params.Append (vals [1]);
+			vals [2] = new GLib.Value (ext_uri);
+			inst_and_params.Append (vals [2]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
+			Gst.Rtp.RTPHeaderExtension result = (Gst.Rtp.RTPHeaderExtension) ret;
+			ret.Dispose ();
+			return result;
 		}
 
 		static GetCapsNativeDelegate GetCaps_cb_delegate;
@@ -701,6 +906,7 @@ namespace Gst.Rtp {
 		static extern int gst_rtp_base_payload_push(IntPtr raw, IntPtr buffer);
 
 		public Gst.FlowReturn Push(Gst.Buffer buffer) {
+			buffer.Owned = false;
 			int raw_ret = gst_rtp_base_payload_push(Handle, buffer == null ? IntPtr.Zero : buffer.Handle);
 			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
 			return ret;
@@ -710,6 +916,7 @@ namespace Gst.Rtp {
 		static extern int gst_rtp_base_payload_push_list(IntPtr raw, IntPtr list);
 
 		public Gst.FlowReturn PushList(Gst.BufferList list) {
+			list.Owned = false;
 			int raw_ret = gst_rtp_base_payload_push_list(Handle, list == null ? IntPtr.Zero : list.Handle);
 			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
 			return ret;
@@ -724,6 +931,19 @@ namespace Gst.Rtp {
 			gst_rtp_base_payload_set_options(Handle, native_media, dynamic, native_encoding_name, clock_rate);
 			GLib.Marshaller.Free (native_media);
 			GLib.Marshaller.Free (native_encoding_name);
+		}
+
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtp_base_payload_set_outcaps_structure(IntPtr raw, IntPtr s);
+
+		public bool SetOutcapsStructure(Gst.Structure s) {
+			bool raw_ret = gst_rtp_base_payload_set_outcaps_structure(Handle, s == null ? IntPtr.Zero : s.Handle);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		public bool SetOutcapsStructure() {
+			return SetOutcapsStructure (null);
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

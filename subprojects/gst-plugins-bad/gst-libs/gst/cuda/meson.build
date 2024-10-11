@@ -3,6 +3,8 @@ cuda_sources = files([
   'gstcudacontext.cpp',
   'gstcudaloader.cpp',
   'gstcudamemory.cpp',
+  'gstcudamemorypool.cpp',
+  'gstcudanvmm.cpp',
   'gstcudanvrtc.cpp',
   'gstcudastream.cpp',
   'gstcudautils.cpp',
@@ -15,16 +17,22 @@ cuda_headers = files([
   'gstcudacontext.h',
   'gstcudaloader.h',
   'gstcudamemory.h',
+  'gstcudamemorypool.h',
   'gstcudanvrtc.h',
   'gstcudastream.h',
   'gstcudautils.h',
 ])
 
+extra_deps = []
 gstcuda_dep = dependency('', required : false)
 cuda_stubinc = include_directories('./stub')
 gstcuda_stub_dep = declare_dependency(
   include_directories: cuda_stubinc
 )
+
+have_nvbufsurface_h = false
+gstcuda_nvmm_inc = []
+nvbuf_dep = dependency('', required: false)
 
 gstcuda_platform_dep = []
 if host_system not in ['windows', 'linux']
@@ -66,11 +74,57 @@ if host_system == 'windows'
     subdir_done()
   endif
 
+  # ConvertStringSecurityDescriptorToSecurityDescriptorA
+  advapi32_lib = cxx.find_library('advapi32', required: false)
+  if not advapi32_lib.found()
+    subdir_done()
+  endif
+
+  gstcuda_platform_dep += [advapi32_lib]
+
   # MinGW 32bits build workaround
   if cc.get_id() != 'msvc'
     extra_args += cc.get_supported_arguments([
       '-Wno-redundant-decls',
     ])
+  endif
+else
+  nvmm_opt = get_option('cuda-nvmm')
+  if not nvmm_opt.disabled()
+    nvmm_inc_opt = get_option('cuda-nvmm-include-path')
+    if nvmm_inc_opt != ''
+      gstcuda_nvmm_inc = [include_directories(nvmm_inc_opt)]
+    endif
+
+    if cc.has_header('nvbufsurface.h',
+                     include_directories: gstcuda_nvmm_inc,
+                     required: false)
+      have_nvbufsurface_h = true
+    # try some other default locations
+    elif cc.has_header('/usr/src/jetson_multimedia_api/include/nvbufsurface.h',
+	               required: false)
+      have_nvbufsurface_h = true
+      gstcuda_nvmm_inc = [include_directories('/usr/src/jetson_multimedia_api/include')]
+    elif cc.has_header('/opt/nvidia/deepstream/deepstream/sources/includes/nvbufsurface.h',
+                       required: false)
+      have_nvbufsurface_h = true
+      gstcuda_nvmm_inc = [include_directories('/opt/nvidia/deepstream/deepstream/sources/includes')]
+    endif
+    if nvmm_opt.enabled() and not have_nvbufsurface_h
+      error('Could not find required header: "nvbufsurface.h"')
+      subdir_done()
+    endif
+  endif
+
+  if have_nvbufsurface_h
+    extra_args += ['-DHAVE_CUDA_NVMM']
+
+    # check if we have a tegra based system (jetson)
+    nvbuf_dep = cc.find_library('nvbufsurface', dirs: '/usr/lib/aarch64-linux-gnu/tegra/', required: false)
+    if nvbuf_dep.found()
+      extra_deps += [nvbuf_dep]
+      extra_args += ['-DHAVE_CUDA_NVMM_JETSON']
+    endif
   endif
 endif
 
@@ -79,11 +133,11 @@ gstcuda= library('gstcuda-' + api_version,
   cuda_sources,
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args : gst_plugins_bad_args + extra_args,
-  include_directories : [configinc, libsinc, cuda_stubinc],
+  include_directories : [configinc, libsinc, cuda_stubinc] + gstcuda_nvmm_inc,
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gstbase_dep, gmodule_dep, gstvideo_dep, gstglproto_dep, gstd3d11_dep, gstcuda_platform_dep]
+  dependencies : [gstbase_dep, gmodule_dep, gstvideo_dep, gstglproto_dep, gstd3d11_dep, gstcuda_platform_dep, extra_deps]
 )
 
 gen_sources = []

@@ -71,7 +71,6 @@ char *gst_vaapidecode_sink_caps_str = NULL;
 
 static const char gst_vaapidecode_src_caps_str[] =
     GST_VAAPI_MAKE_SURFACE_CAPS "; "
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_DMABUF, GST_VAAPI_FORMATS_ALL) " ;"
 #if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
     GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS "; "
 #endif
@@ -97,21 +96,21 @@ struct _GstVaapiDecoderMap
 };
 
 static const GstVaapiDecoderMap vaapi_decode_map[] = {
-  {GST_VAAPI_CODEC_JPEG, GST_RANK_MARGINAL, "jpeg", "image/jpeg", NULL},
-  {GST_VAAPI_CODEC_MPEG2, GST_RANK_PRIMARY, "mpeg2",
+  {GST_VAAPI_CODEC_JPEG, GST_RANK_NONE, "jpeg", "image/jpeg", NULL},
+  {GST_VAAPI_CODEC_MPEG2, GST_RANK_NONE, "mpeg2",
       "video/mpeg, mpegversion=2, systemstream=(boolean)false", NULL},
-  {GST_VAAPI_CODEC_MPEG4, GST_RANK_PRIMARY, "mpeg4",
+  {GST_VAAPI_CODEC_MPEG4, GST_RANK_NONE, "mpeg4",
       "video/mpeg, mpegversion=4", NULL},
-  {GST_VAAPI_CODEC_H263, GST_RANK_PRIMARY, "h263", "video/x-h263", NULL},
-  {GST_VAAPI_CODEC_H264, GST_RANK_PRIMARY, "h264", "video/x-h264",
+  {GST_VAAPI_CODEC_H263, GST_RANK_NONE, "h263", "video/x-h263", NULL},
+  {GST_VAAPI_CODEC_H264, GST_RANK_NONE, "h264", "video/x-h264",
       gst_vaapi_decode_h264_install_properties},
-  {GST_VAAPI_CODEC_VC1, GST_RANK_PRIMARY, "vc1",
+  {GST_VAAPI_CODEC_VC1, GST_RANK_NONE, "vc1",
       "video/x-wmv, wmvversion=3, format={WMV3,WVC1}", NULL},
-  {GST_VAAPI_CODEC_VP8, GST_RANK_PRIMARY, "vp8", "video/x-vp8", NULL},
-  {GST_VAAPI_CODEC_VP9, GST_RANK_PRIMARY, "vp9", "video/x-vp9", NULL},
-  {GST_VAAPI_CODEC_H265, GST_RANK_PRIMARY, "h265", "video/x-h265", NULL},
-  {GST_VAAPI_CODEC_AV1, GST_RANK_PRIMARY, "av1", "video/x-av1", NULL},
-  {0 /* the rest */ , GST_RANK_PRIMARY + 1, NULL, NULL, NULL},
+  {GST_VAAPI_CODEC_VP8, GST_RANK_NONE, "vp8", "video/x-vp8", NULL},
+  {GST_VAAPI_CODEC_VP9, GST_RANK_NONE, "vp9", "video/x-vp9", NULL},
+  {GST_VAAPI_CODEC_H265, GST_RANK_NONE, "h265", "video/x-h265", NULL},
+  {GST_VAAPI_CODEC_AV1, GST_RANK_NONE, "av1", "video/x-av1", NULL},
+  {0 /* the rest */ , GST_RANK_NONE, NULL, NULL, NULL},
 };
 
 static GstElementClass *parent_class = NULL;
@@ -193,7 +192,7 @@ static gboolean
 gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
 {
   GstVaapiDisplay *const display = GST_VAAPI_PLUGIN_BASE_DISPLAY (decode);
-  GstCaps *out_caps, *raw_caps, *va_caps, *dma_caps, *gltexup_caps, *base_caps;
+  GstCaps *out_caps, *raw_caps, *va_caps, *gltexup_caps, *base_caps;
   GArray *formats;
   gint min_width, min_height, max_width, max_height;
   guint mem_types;
@@ -208,7 +207,7 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
   if (!decode->decoder)
     return FALSE;
 
-  dma_caps = gltexup_caps = NULL;
+  gltexup_caps = NULL;
 
   formats = gst_vaapi_decoder_get_surface_attributes (decode->decoder,
       &min_width, &min_height, &max_width, &max_height, &mem_types);
@@ -259,16 +258,9 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
 
   va_caps = gst_caps_copy (base_caps);
   gst_caps_set_features_simple (va_caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE,
+          NULL));
 
-  if (gst_vaapi_mem_type_supports (mem_types,
-          GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF) ||
-      gst_vaapi_mem_type_supports (mem_types,
-          GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF2)) {
-    dma_caps = gst_caps_copy (base_caps);
-    gst_caps_set_features_simple (dma_caps,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
-  }
 #if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
   if (!GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF (decode)
       && gst_vaapi_display_has_opengl (GST_VAAPI_PLUGIN_BASE_DISPLAY (decode))) {
@@ -281,8 +273,6 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
 #endif
 
   out_caps = va_caps;
-  if (dma_caps)
-    gst_caps_append (out_caps, dma_caps);
   if (gltexup_caps)
     gst_caps_append (out_caps, gltexup_caps);
   gst_caps_append (out_caps, raw_caps);
@@ -385,7 +375,7 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
       if (!structure)
         break;
       feature_str = gst_vaapi_caps_feature_to_string (feature);
-      features = gst_caps_features_new (feature_str, NULL);
+      features = gst_caps_features_new_static_str (feature_str, NULL);
       gst_caps_set_features (state->caps, 0, features);
       break;
     }

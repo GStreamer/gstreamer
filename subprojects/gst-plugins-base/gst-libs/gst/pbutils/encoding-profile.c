@@ -109,6 +109,7 @@
  *  * `|single-segment=true` (See #gst_encoding_profile_set_single_segment)
  *  * `|single-segment=true` (See
  *    #gst_encoding_video_profile_set_variableframerate)
+ *  * `|factory-name=element-factory-name` (See #gst_encoding_profile_set_preset_name)
  *
  * for example:
  *
@@ -470,6 +471,8 @@ gst_encoding_profile_finalize (GObject * object)
   if (prof->restriction)
     gst_caps_unref (prof->restriction);
   g_free (prof->preset_name);
+
+  G_OBJECT_CLASS (gst_encoding_profile_parent_class)->finalize (object);
 }
 
 static void
@@ -765,9 +768,26 @@ gst_encoding_profile_set_single_segment (GstEncodingProfile * profile,
  * @profile: a #GstEncodingProfile
  * @preset: (nullable): the element preset to use
  *
- * Sets the name of the #GstElement that implements the #GstPreset interface
- * to use for the profile.
+ * Sets the name of the preset to be used in the profile.
  * This is the name that has been set when saving the preset.
+ * You can list the available presets for a specific element factory
+ * using  `$ gst-inspect-1.0 element-factory-name`, for example for
+ * `x264enc`:
+ *
+ * ``` bash
+ * $ gst-inspect-1.0 x264enc
+ * ...
+ * Presets:
+ *  "Profile Baseline": Baseline Profile
+ *  "Profile High": High Profile
+ *  "Profile Main": Main Profile
+ *  "Profile YouTube": YouTube recommended settings (https://support.google.com/youtube/answer/1722171)
+ *  "Quality High": High quality
+ *  "Quality Low": Low quality
+ *  "Quality Normal": Normal quality
+ *  "Zero Latency"
+ * ```
+ }
  */
 void
 gst_encoding_profile_set_preset (GstEncodingProfile * profile,
@@ -782,9 +802,11 @@ gst_encoding_profile_set_preset (GstEncodingProfile * profile,
 /**
  * gst_encoding_profile_set_preset_name:
  * @profile: a #GstEncodingProfile
- * @preset_name: (nullable): The name of the preset to use in this @profile.
+ * @preset_name: (nullable): The name of the element factory to use in this @profile.
  *
- * Sets the name of the #GstPreset's factory to be used in the profile.
+ * Sets the name of the #GstPreset's factory to be used in the profile. This
+ * is the name of the **element factory** that implements the #GstPreset interface not
+ * the name of the preset itself (see #gst_encoding_profile_set_preset).
  */
 void
 gst_encoding_profile_set_preset_name (GstEncodingProfile * profile,
@@ -1391,7 +1413,7 @@ gst_encoding_profile_get_input_caps (GstEncodingProfile * profile)
   GstCaps *out, *tmp;
   GList *ltmp;
   GstStructure *st, *outst;
-  GQuark out_name;
+  const gchar *out_name;
   guint i, len;
   GstCaps *fcaps;
 
@@ -1416,13 +1438,13 @@ gst_encoding_profile_get_input_caps (GstEncodingProfile * profile)
 
   /* Combine the format with the restriction caps */
   outst = gst_caps_get_structure (fcaps, 0);
-  out_name = gst_structure_get_name_id (outst);
+  out_name = gst_structure_get_name (outst);
   tmp = gst_caps_new_empty ();
   len = gst_caps_get_size (profile->restriction);
 
   for (i = 0; i < len; i++) {
     st = gst_structure_copy (gst_caps_get_structure (profile->restriction, i));
-    st->name = out_name;
+    gst_structure_set_name (st, out_name);
     gst_caps_append_structure (tmp, st);
   }
 
@@ -1908,6 +1930,14 @@ create_encoding_stream_profile (gchar * serialized_profile,
 
         single_segment = g_value_get_boolean (&v);
         g_value_reset (&v);
+      } else if (!g_strcmp0 (propv[0], "factory-name")) {
+        if (factory_name) {
+          g_warning ("Multiple factory names specified");
+          g_strfreev (propv);
+          goto cleanup;
+        }
+
+        factory_name = g_strdup (propv[1]);
       } else {
         g_warning ("Unsupported property: %s", propv[0]);
         g_strfreev (propv);
@@ -2068,8 +2098,21 @@ error:
   goto done;
 }
 
-static GstEncodingProfile *
-profile_from_string (const gchar * string)
+/**
+ * gst_encoding_profile_from_string:
+ * @string: The string to convert into a GstEncodingProfile.
+ *
+ * Converts a string in the "encoding profile serialization format" into a
+ * GstEncodingProfile. Refer to the encoding-profile documentation for details
+ * on the format.
+ *
+ * Since: 1.26
+ *
+ * Returns: (transfer full) (nullable): A newly created GstEncodingProfile or NULL if the
+ * input string is not a valid encoding profile serialization format.
+ */
+GstEncodingProfile *
+gst_encoding_profile_from_string (const gchar * string)
 {
   GstEncodingProfile *profile;
   gchar *filename_end;
@@ -2117,7 +2160,7 @@ string_to_profile_transform (const GValue * src_value, GValue * dest_value)
 
   profilename = g_value_get_string (src_value);
 
-  profile = profile_from_string (profilename);
+  profile = gst_encoding_profile_from_string (profilename);
 
   if (profile)
     g_value_take_object (dest_value, (GObject *) profile);
@@ -2156,15 +2199,36 @@ serialize_profile (GString * res, GstEncodingProfile * profile)
   }
 }
 
-static gchar *
-gst_encoding_profile_serialize_valfunc (GValue * value)
+/**
+ * gst_encoding_profile_to_string:
+ * @profile: (transfer none): The GstEncodingProfile to convert.
+ *
+ * Converts a GstEncodingProfile to a string in the "Encoding Profile
+ * serialization format".
+ *
+ * Since: 1.26
+ *
+ * Returns: (transfer full): A string representation of the GstEncodingProfile.
+ */
+gchar *
+gst_encoding_profile_to_string (GstEncodingProfile * profile)
 {
-  GString *res = g_string_new (NULL);
-  GstEncodingProfile *profile = g_value_get_object (value);
+  GString *res;
+
+  g_return_val_if_fail (profile != NULL, NULL);
+
+  res = g_string_new (NULL);
 
   serialize_profile (res, profile);
 
   return g_string_free (res, FALSE);
+}
+
+static gchar *
+gst_encoding_profile_serialize_valfunc (GValue * value)
+{
+  GstEncodingProfile *profile = g_value_get_object (value);
+  return gst_encoding_profile_to_string (profile);
 }
 
 static gboolean
@@ -2172,7 +2236,7 @@ gst_encoding_profile_deserialize_valfunc (GValue * value, const gchar * s)
 {
   GstEncodingProfile *profile;
 
-  profile = profile_from_string (s);
+  profile = gst_encoding_profile_from_string (s);
 
   if (profile) {
     g_value_take_object (value, (GObject *) profile);

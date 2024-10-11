@@ -262,16 +262,24 @@ gst_avdtp_sink_start (GstBaseSink * basesink)
   self->mp3_using_crc = -1;
   self->channel_mode = -1;
 
-  if (self->conn.transport == NULL)
+  if (self->conn.transport == NULL) {
+    GST_ERROR_OBJECT (self, "'transport' property not set");
+    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS,
+        ("'transport' property not set"), (NULL));
     return FALSE;
+  }
 
   if (!gst_avdtp_connection_acquire (&self->conn, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to acquire connection");
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, ("Failed to acquire connection"),
+        (NULL));
     return FALSE;
   }
 
   if (!gst_avdtp_connection_get_properties (&self->conn)) {
     GST_ERROR_OBJECT (self, "Failed to get transport properties");
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED,
+        ("Failed to get transport properties"), (NULL));
     return FALSE;
   }
 
@@ -282,6 +290,8 @@ gst_avdtp_sink_start (GstBaseSink * basesink)
 
   if (!self->dev_caps) {
     GST_ERROR_OBJECT (self, "Failed to get device caps");
+    GST_ELEMENT_ERROR (self, LIBRARY, FAILED, ("Failed to get device caps"),
+        (NULL));
     return FALSE;
   }
 

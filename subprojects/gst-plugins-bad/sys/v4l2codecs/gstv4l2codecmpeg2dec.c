@@ -53,10 +53,20 @@ GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
         "systemstream=(boolean) false, "
         "mpegversion=(int) 2, " "profile=(string) {main, simple} "));
 
+#define SRC_CAPS \
+    GST_VIDEO_DMA_DRM_CAPS_MAKE " ; " \
+    GST_VIDEO_CAPS_MAKE (GST_V4L2_DEFAULT_VIDEO_FORMATS)
+
+#define SRC_CAPS_NO_DRM \
+    GST_VIDEO_CAPS_MAKE (GST_V4L2_DEFAULT_VIDEO_FORMATS)
+
+static GstStaticCaps static_src_caps = GST_STATIC_CAPS (SRC_CAPS);
+static GstStaticCaps static_src_caps_no_drm = GST_STATIC_CAPS (SRC_CAPS_NO_DRM);
+
 static GstStaticPadTemplate src_template =
 GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SRC_NAME,
     GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_V4L2_DEFAULT_VIDEO_FORMATS)));
+    GST_STATIC_CAPS (SRC_CAPS));
 
 struct _GstV4l2CodecMpeg2Dec
 {
@@ -65,6 +75,7 @@ struct _GstV4l2CodecMpeg2Dec
   GstV4l2Decoder *decoder;
   GstVideoCodecState *output_state;
   GstVideoInfo vinfo;
+  GstVideoInfoDmaDrm vinfo_drm;
 
   guint16 width;
   guint16 height;
@@ -241,7 +252,8 @@ gst_v4l2_codec_mpeg2_dec_negotiate (GstVideoDecoder * decoder)
   };
 
   /* *INDENT-ON* */
-  GstCaps *filter, *caps;
+  GstCaps *peer_caps, *filter, *caps;
+  GstStaticCaps *static_filter;
 
   /* Ignore downstream renegotiation request. */
   if (self->streaming)
@@ -267,7 +279,13 @@ gst_v4l2_codec_mpeg2_dec_negotiate (GstVideoDecoder * decoder)
     return FALSE;
   }
 
-  filter = gst_v4l2_decoder_enum_src_formats (self->decoder);
+  /* If the peer has ANY caps only advertise system memory caps */
+  peer_caps = gst_pad_peer_query_caps (decoder->srcpad, NULL);
+  static_filter =
+      gst_caps_is_any (peer_caps) ? &static_src_caps_no_drm : &static_src_caps;
+  gst_caps_unref (peer_caps);
+
+  filter = gst_v4l2_decoder_enum_src_formats (self->decoder, static_filter);
   if (!filter) {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("No supported decoder output formats"), (NULL));
@@ -279,7 +297,8 @@ gst_v4l2_codec_mpeg2_dec_negotiate (GstVideoDecoder * decoder)
   gst_caps_unref (filter);
   GST_DEBUG_OBJECT (self, "Peer supported formats: %" GST_PTR_FORMAT, caps);
 
-  if (!gst_v4l2_decoder_select_src_format (self->decoder, caps, &self->vinfo)) {
+  if (!gst_v4l2_decoder_select_src_format (self->decoder, caps, &self->vinfo,
+          &self->vinfo_drm)) {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("Unsupported bitdepth/chroma format"),
         ("No support for %ux%u chroma IDC %i", self->width,
@@ -294,15 +313,12 @@ done:
     gst_video_codec_state_unref (self->output_state);
 
   self->output_state =
-      gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-      self->vinfo.finfo->format, self->width,
-      self->height, mpeg2dec->input_state);
+      gst_v4l2_decoder_set_output_state (GST_VIDEO_DECODER (self), &self->vinfo,
+      &self->vinfo_drm, self->width, self->height, mpeg2dec->input_state);
 
   if (self->interlaced)
     self->output_state->info.interlace_mode =
         GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
-
-  self->output_state->caps = gst_video_info_to_caps (&self->output_state->info);
 
   if (GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder)) {
     if (self->streaming)
@@ -335,13 +351,31 @@ gst_v4l2_codec_mpeg2_dec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query)
 {
   GstV4l2CodecMpeg2Dec *self = GST_V4L2_CODEC_MPEG2_DEC (decoder);
+  GstCaps *caps = NULL;
   guint min = 0, num_bitstream;
+
+  /* If we are streaming here, then it means there is nothing allocation
+   * related in the new state and allocation can be ignored */
+  if (self->streaming)
+    goto no_internal_changes;
+
+  g_clear_object (&self->src_pool);
+  g_clear_object (&self->src_allocator);
 
   self->has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
 
-  g_clear_object (&self->src_pool);
-  g_clear_object (&self->src_allocator);
+  gst_query_parse_allocation (query, &caps, NULL);
+  if (!caps) {
+    GST_ERROR_OBJECT (self, "No valid caps");
+    return FALSE;
+  }
+
+  if (gst_video_is_dma_drm_caps (caps) && !self->has_videometa) {
+    GST_ERROR_OBJECT (self,
+        "DMABuf caps negotiated without the mandatory support of VideoMeta");
+    return FALSE;
+  }
 
   if (gst_query_get_n_allocation_pools (query) > 0)
     gst_query_parse_nth_allocation_pool (query, 0, NULL, NULL, &min, NULL);
@@ -357,6 +391,7 @@ gst_v4l2_codec_mpeg2_dec_decide_allocation (GstVideoDecoder * decoder,
       GST_PAD_SRC, self->min_pool_size + min + 4);
   self->src_pool = gst_v4l2_codec_pool_new (self->src_allocator, &self->vinfo);
 
+no_internal_changes:
   /* Our buffer pool is internal, we will let the base class create a video
    * pool, and use it if we are running out of buffers or if downstream does
    * not support GstVideoMeta */
@@ -577,8 +612,10 @@ gst_v4l2_codec_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
 
   /* *INDENT-OFF* */
   self->v4l2_picture = (struct v4l2_ctrl_mpeg2_picture) {
-    .backward_ref_ts = next_picture ? next_picture->system_frame_number * 1000 : GST_CLOCK_TIME_NONE,
-    .forward_ref_ts = prev_picture ? prev_picture->system_frame_number * 1000 : GST_CLOCK_TIME_NONE,
+    .backward_ref_ts = next_picture ?
+        GST_CODEC_PICTURE_TS_NS (next_picture) : GST_CLOCK_TIME_NONE,
+    .forward_ref_ts = prev_picture ?
+        GST_CODEC_PICTURE_TS_NS (prev_picture) : GST_CLOCK_TIME_NONE,
     .intra_dc_precision = slice->pic_ext ? slice->pic_ext->intra_dc_precision : 0,
     .flags = (slice->pic_ext && slice->pic_ext->top_field_first ? V4L2_MPEG2_PIC_FLAG_TOP_FIELD_FIRST : 0) |
              (slice->pic_ext && slice->pic_ext->frame_pred_frame_dct ? V4L2_MPEG2_PIC_FLAG_FRAME_PRED_DCT : 0 ) |
@@ -680,21 +717,23 @@ gst_v4l2_codec_mpeg2_dec_output_picture (GstMpeg2Decoder * decoder,
   GstV4l2CodecMpeg2Dec *self = GST_V4L2_CODEC_MPEG2_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstV4l2Request *request = gst_mpeg2_picture_get_user_data (picture);
+  GstCodecPicture *codec_picture = GST_CODEC_PICTURE (picture);
   gint ret;
 
-  if (picture->discont_state) {
+  if (codec_picture->discont_state) {
     if (!gst_video_decoder_negotiate (vdec)) {
       GST_ERROR_OBJECT (vdec, "Could not re-negotiate with updated state");
       return FALSE;
     }
   }
 
-  GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
+  GST_DEBUG_OBJECT (self, "Output picture %u",
+      codec_picture->system_frame_number);
 
   ret = gst_v4l2_request_set_done (request);
   if (ret == 0) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE,
-        ("Decoding frame %u took too long", picture->system_frame_number),
+        ("Decoding frame %u took too long", codec_picture->system_frame_number),
         (NULL));
     goto error;
   } else if (ret < 0) {
@@ -706,7 +745,8 @@ gst_v4l2_codec_mpeg2_dec_output_picture (GstMpeg2Decoder * decoder,
 
   if (gst_v4l2_request_failed (request)) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE,
-        ("Failed to decode frame %u", picture->system_frame_number), (NULL));
+        ("Failed to decode frame %u", codec_picture->system_frame_number),
+        (NULL));
     goto error;
   }
 
@@ -801,16 +841,17 @@ gst_v4l2_codec_mpeg2_dec_submit_bitstream (GstV4l2CodecMpeg2Dec * self,
         self->bitstream);
   } else {
     GstVideoCodecFrame *frame;
+    guint32 system_frame_number = GST_CODEC_PICTURE_FRAME_NUMBER (picture);
 
     frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-        picture->system_frame_number);
+        system_frame_number);
     g_return_val_if_fail (frame, FALSE);
 
     if (!gst_v4l2_codec_mpeg2_dec_ensure_output_buffer (self, frame))
       goto done;
 
     request = gst_v4l2_decoder_alloc_request (self->decoder,
-        picture->system_frame_number, self->bitstream, frame->output_buffer);
+        system_frame_number, self->bitstream, frame->output_buffer);
 
     gst_video_codec_frame_unref (frame);
   }
@@ -995,6 +1036,7 @@ gst_v4l2_codec_mpeg2_dec_subinit (GstV4l2CodecMpeg2Dec * self,
 {
   self->decoder = gst_v4l2_decoder_new (klass->device);
   gst_video_info_init (&self->vinfo);
+  gst_video_info_dma_drm_init (&self->vinfo_drm);
 }
 
 static void
@@ -1076,7 +1118,7 @@ gst_v4l2_codec_mpeg2_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
   if (!gst_v4l2_decoder_set_sink_fmt (decoder, V4L2_PIX_FMT_MPEG2_SLICE,
           320, 240, 8))
     return;
-  src_caps = gst_v4l2_decoder_enum_src_formats (decoder);
+  src_caps = gst_v4l2_decoder_enum_src_formats (decoder, &static_src_caps);
 
   if (gst_caps_is_empty (src_caps)) {
     GST_WARNING ("Not registering MPEG2 decoder since it produces no "

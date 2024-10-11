@@ -31,4 +31,7 @@ G_DECLARE_FINAL_TYPE (GstQsvD3D11Allocator, gst_qsv_d3d11_allocator,
 
 GstQsvAllocator * gst_qsv_d3d11_allocator_new (GstD3D11Device * device);
 
+void gst_qsv_d3d11_allocator_set_d3d12_import_allowed (GstQsvAllocator * allocator,
+                                                       gboolean allowed);
+
 G_END_DECLS

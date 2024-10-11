@@ -30,7 +30,7 @@
 static int
 gst_split_util_array_sortfunc (gchar ** a, gchar ** b)
 {
-  return strcmp (*a, *b);
+  return gst_util_filename_compare (*a, *b);
 }
 
 gchar **

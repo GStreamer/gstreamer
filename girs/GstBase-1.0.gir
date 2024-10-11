@@ -629,7 +629,7 @@ position is returned.
 
 The dts is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
 the adapter is first created or when it is cleared. This also means that before
-the first byte with a dts is removed from the adapter, the dts
+the first byte with a dts is added to the adapter, the dts
 and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstadapter.h"/>
         <return-value transfer-ownership="none">
@@ -654,7 +654,7 @@ position is returned.
 
 The dts is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
 the adapter is first created or when it is cleared. This also means that before
-the first byte with a dts is removed from the adapter, the dts
+the first byte with a dts is added to the adapter, the dts
 and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstadapter.h"/>
         <return-value transfer-ownership="none">
@@ -683,7 +683,7 @@ position is returned.
 
 The offset is reset to GST_BUFFER_OFFSET_NONE and the distance is set to 0
 when the adapter is first created or when it is cleared. This also means that
-before the first byte with an offset is removed from the adapter, the offset
+before the first byte with an offset is added to the adapter, the offset
 and distance returned are GST_BUFFER_OFFSET_NONE and 0 respectively.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstadapter.h"/>
         <return-value transfer-ownership="none">
@@ -708,7 +708,7 @@ position is returned.
 
 The pts is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
 the adapter is first created or when it is cleared. This also means that before
-the first byte with a pts is removed from the adapter, the pts
+the first byte with a pts is added to the adapter, the pts
 and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstadapter.h"/>
         <return-value transfer-ownership="none">
@@ -733,7 +733,7 @@ position is returned.
 
 The pts is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
 the adapter is first created or when it is cleared. This also means that before
-the first byte with a pts is removed from the adapter, the pts
+the first byte with a pts is added to the adapter, the pts
 and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstadapter.h"/>
         <return-value transfer-ownership="none">
@@ -1548,6 +1548,28 @@ control aggregating parameters for a given set of input samples.</doc>
           </instance-parameter>
           <parameter name="pad" transfer-ownership="none">
             <type name="AggregatorPad" c:type="GstAggregatorPad*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="push_src_event" c:identifier="gst_aggregator_push_src_event" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">This method will push the provided event downstream. If needed, mandatory
+events such as stream-start, caps, and segment events will be sent before
+pushing the event.
+
+This API does not allow pushing stream-start, caps, segment and EOS events.
+Specific API like gst_aggregator_set_src_caps() should be used for these.</doc>
+        <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="aggregator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">The #GstAggregator</doc>
+            <type name="Aggregator" c:type="GstAggregator*"/>
+          </instance-parameter>
+          <parameter name="event" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">the #GstEvent to push.</doc>
+            <type name="Gst.Event" c:type="GstEvent*"/>
           </parameter>
         </parameters>
       </method>
@@ -2407,6 +2429,20 @@ the first buffer that is received.</doc>
 selected by the `start-time` property.</doc>
       </member>
     </enumeration>
+    <function-macro name="BASE_DEPRECATED_FOR" c:identifier="GST_BASE_DEPRECATED_FOR" introspectable="0">
+      <source-position filename="../subprojects/gstreamer/libs/gst/base/base-prelude.h"/>
+      <parameters>
+        <parameter name="f">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="BASE_DEPRECATED_TYPE_FOR" c:identifier="GST_BASE_DEPRECATED_TYPE_FOR" introspectable="0">
+      <source-position filename="../subprojects/gstreamer/libs/gst/base/base-prelude.h"/>
+      <parameters>
+        <parameter name="f">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="BASE_PARSE" c:identifier="GST_BASE_PARSE" introspectable="0">
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
       <parameters>
@@ -3161,10 +3197,13 @@ is emptied or chain returns with error.</doc>
         </parameters>
       </method>
       <method name="finish_frame" c:identifier="gst_base_parse_finish_frame">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.c">Collects parsed data and pushes this downstream.
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.c">Collects parsed data and pushes it downstream.
 Source pad caps must be set when this is called.
 
-If @frame's out_buffer is set, that will be used as subsequent frame data.
+If @frame's out_buffer is set, that will be used as subsequent frame data,
+and @size amount will be flushed from the input data. The output_buffer size
+can differ from the consumed size indicated by @size.
+
 Otherwise, @size samples will be taken from the input and used for output,
 and the output's metadata (timestamps etc) will be taken as (optionally)
 set by the subclass on @frame's (input) buffer (which is otherwise
@@ -6243,6 +6282,10 @@ continue. Any other return value should be returned from the create vmethod.</do
           </instance-parameter>
         </parameters>
       </method>
+      <property name="automatic-eos" version="1.24" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.c">See gst_base_src_set_automatic_eos()</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
       <property name="blocksize" writable="1" transfer-ownership="none">
         <type name="guint" c:type="guint"/>
       </property>
@@ -13045,13 +13088,15 @@ buffers.</doc>
         </array>
       </field>
     </record>
-    <record name="QueueArray" c:type="GstQueueArray" disguised="1" introspectable="0">
+    <record name="QueueArray" c:type="GstQueueArray" disguised="1" introspectable="0" deprecated="1" deprecated-version="1.26">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">#GstQueueArray is an object that provides standard queue functionality
 based on an array instead of linked lists. This reduces the overhead
 caused by memory management by a large factor.</doc>
+      <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
-      <method name="clear" c:identifier="gst_queue_array_clear" version="1.16" introspectable="0">
+      <method name="clear" c:identifier="gst_queue_array_clear" version="1.16" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Clears queue @array and frees all memory associated to it.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -13063,8 +13108,9 @@ caused by memory management by a large factor.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="drop_element" c:identifier="gst_queue_array_drop_element" version="1.2" introspectable="0">
+      <method name="drop_element" c:identifier="gst_queue_array_drop_element" version="1.2" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Drops the queue element at position @idx from queue @array.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">the dropped element</doc>
@@ -13081,10 +13127,11 @@ caused by memory management by a large factor.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="drop_struct" c:identifier="gst_queue_array_drop_struct" version="1.6" introspectable="0">
+      <method name="drop_struct" c:identifier="gst_queue_array_drop_struct" version="1.6" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Drops the queue element at position @idx from queue @array and copies the
 data of the element or structure that was removed into @p_struct if
 @p_struct is set (not NULL).</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">TRUE on success, or FALSE on error</doc>
@@ -13105,10 +13152,11 @@ data of the element or structure that was removed into @p_struct if
           </parameter>
         </parameters>
       </method>
-      <method name="find" c:identifier="gst_queue_array_find" version="1.2" introspectable="0">
+      <method name="find" c:identifier="gst_queue_array_find" version="1.2" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Finds an element in the queue @array, either by comparing every element
 with @func or by looking up @data if no compare function @func is provided,
 and returning the index of the found element.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Index of the found element or -1 if nothing was found.</doc>
@@ -13129,8 +13177,9 @@ and returning the index of the found element.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="free" c:identifier="gst_queue_array_free" version="1.2" introspectable="0">
+      <method name="free" c:identifier="gst_queue_array_free" version="1.2" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Frees queue @array and all memory associated to it.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -13142,8 +13191,9 @@ and returning the index of the found element.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_length" c:identifier="gst_queue_array_get_length" version="1.2" introspectable="0">
+      <method name="get_length" c:identifier="gst_queue_array_get_length" version="1.2" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Returns the length of the queue @array</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">the length of the queue @array.</doc>
@@ -13156,8 +13206,9 @@ and returning the index of the found element.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_empty" c:identifier="gst_queue_array_is_empty" version="1.2" introspectable="0">
+      <method name="is_empty" c:identifier="gst_queue_array_is_empty" version="1.2" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Checks if the queue @array is empty.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">%TRUE if the queue @array is empty</doc>
@@ -13170,9 +13221,10 @@ and returning the index of the found element.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="peek_head" c:identifier="gst_queue_array_peek_head" version="1.2" introspectable="0">
+      <method name="peek_head" c:identifier="gst_queue_array_peek_head" version="1.2" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Returns the head of the queue @array and does not
 remove it from the queue.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">The head of the queue</doc>
@@ -13185,8 +13237,9 @@ remove it from the queue.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="peek_head_struct" c:identifier="gst_queue_array_peek_head_struct" version="1.6" introspectable="0">
+      <method name="peek_head_struct" c:identifier="gst_queue_array_peek_head_struct" version="1.6" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Returns the head of the queue @array without removing it from the queue.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">pointer to element or struct, or NULL if @array was empty. The
@@ -13201,8 +13254,9 @@ remove it from the queue.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="peek_nth" c:identifier="gst_queue_array_peek_nth" version="1.16" introspectable="0">
+      <method name="peek_nth" c:identifier="gst_queue_array_peek_nth" version="1.16" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Returns the item at @idx in @array, but does not remove it from the queue.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">The item, or %NULL if @idx was out of bounds</doc>
@@ -13217,8 +13271,9 @@ remove it from the queue.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="peek_nth_struct" c:identifier="gst_queue_array_peek_nth_struct" version="1.16" introspectable="0">
+      <method name="peek_nth_struct" c:identifier="gst_queue_array_peek_nth_struct" version="1.16" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Returns the item at @idx in @array, but does not remove it from the queue.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">The item, or %NULL if @idx was out of bounds</doc>
@@ -13233,8 +13288,9 @@ remove it from the queue.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="peek_tail" c:identifier="gst_queue_array_peek_tail" version="1.14" introspectable="0">
+      <method name="peek_tail" c:identifier="gst_queue_array_peek_tail" version="1.14" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Returns the tail of the queue @array, but does not remove it from the queue.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">The tail of the queue</doc>
@@ -13247,8 +13303,9 @@ remove it from the queue.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="peek_tail_struct" c:identifier="gst_queue_array_peek_tail_struct" version="1.14" introspectable="0">
+      <method name="peek_tail_struct" c:identifier="gst_queue_array_peek_tail_struct" version="1.14" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Returns the tail of the queue @array, but does not remove it from the queue.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">The tail of the queue</doc>
@@ -13261,9 +13318,10 @@ remove it from the queue.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="pop_head" c:identifier="gst_queue_array_pop_head" version="1.2" introspectable="0">
+      <method name="pop_head" c:identifier="gst_queue_array_pop_head" version="1.2" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Returns and head of the queue @array and removes
 it from the queue.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">The head of the queue</doc>
@@ -13276,8 +13334,9 @@ it from the queue.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="pop_head_struct" c:identifier="gst_queue_array_pop_head_struct" version="1.6" introspectable="0">
+      <method name="pop_head_struct" c:identifier="gst_queue_array_pop_head_struct" version="1.6" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Returns the head of the queue @array and removes it from the queue.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">pointer to element or struct, or NULL if @array was empty. The
@@ -13292,9 +13351,10 @@ it from the queue.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="pop_tail" c:identifier="gst_queue_array_pop_tail" version="1.14" introspectable="0">
+      <method name="pop_tail" c:identifier="gst_queue_array_pop_tail" version="1.14" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Returns the tail of the queue @array and removes
 it from the queue.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">The tail of the queue</doc>
@@ -13307,9 +13367,10 @@ it from the queue.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="pop_tail_struct" c:identifier="gst_queue_array_pop_tail_struct" version="1.14" introspectable="0">
+      <method name="pop_tail_struct" c:identifier="gst_queue_array_pop_tail_struct" version="1.14" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Returns the tail of the queue @array and removes
 it from the queue.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">The tail of the queue</doc>
@@ -13322,8 +13383,77 @@ it from the queue.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="push_tail" c:identifier="gst_queue_array_push_tail" version="1.2" introspectable="0">
+      <method name="push_sorted" c:identifier="gst_queue_array_push_sorted" version="1.24" introspectable="0" deprecated="1" deprecated-version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Pushes @data to the queue @array, finding the correct position
+by comparing @data with each array element using @func.
+
+This has a time complexity of O(n), so depending on the size of the queue
+and expected access patterns, a different data structure might be better.
+
+Assumes that the array is already sorted. If it is not, make sure
+to call gst_queue_array_sort() first.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
+        <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="array" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">a #GstQueueArray object</doc>
+            <type name="QueueArray" c:type="GstQueueArray*"/>
+          </instance-parameter>
+          <parameter name="data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">object to push</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="func" transfer-ownership="none" closure="2">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">comparison function</doc>
+            <type name="GLib.CompareDataFunc" c:type="GCompareDataFunc"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">data for comparison function</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="push_sorted_struct" c:identifier="gst_queue_array_push_sorted_struct" version="1.24" introspectable="0" deprecated="1" deprecated-version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Pushes the element at address @p_struct into the queue @array
+(copying the contents of a structure of the struct_size specified
+when creating the queue into the array), finding the correct position
+by comparing the element at @p_struct with each element in the array using @func.
+
+This has a time complexity of O(n), so depending on the size of the queue
+and expected access patterns, a different data structure might be better.
+
+Assumes that the array is already sorted. If it is not, make sure
+to call gst_queue_array_sort() first.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
+        <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="array" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">a #GstQueueArray object</doc>
+            <type name="QueueArray" c:type="GstQueueArray*"/>
+          </instance-parameter>
+          <parameter name="p_struct" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">address of element or structure to push into the queue</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="func" transfer-ownership="none" closure="2">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">comparison function</doc>
+            <type name="GLib.CompareDataFunc" c:type="GCompareDataFunc"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">data for comparison function</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="push_tail" c:identifier="gst_queue_array_push_tail" version="1.2" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Pushes @data to the tail of the queue @array.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -13353,7 +13483,7 @@ it from the queue.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_clear_func" c:identifier="gst_queue_array_set_clear_func" version="1.16" introspectable="0">
+      <method name="set_clear_func" c:identifier="gst_queue_array_set_clear_func" version="1.16" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Sets a function to clear an element of @array.
 
 The @clear_func will be called when an element in the array
@@ -13364,6 +13494,7 @@ pointer to the element to clear, rather than the element itself.
 Note that in contrast with other uses of #GDestroyNotify
 functions, @clear_func is expected to clear the contents of
 the array element it is given, but not free the element itself.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -13376,6 +13507,29 @@ the array element it is given, but not free the element itself.</doc>
           <parameter name="clear_func" transfer-ownership="none" scope="async">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">a function to clear an element of @array</doc>
             <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="sort" c:identifier="gst_queue_array_sort" version="1.24" introspectable="0" deprecated="1" deprecated-version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Sorts the queue @array by comparing elements against each other using
+the provided @compare_func.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
+        <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="array" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">a #GstQueueArray object</doc>
+            <type name="QueueArray" c:type="GstQueueArray*"/>
+          </instance-parameter>
+          <parameter name="compare_func" transfer-ownership="none" closure="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">comparison function</doc>
+            <type name="GLib.CompareDataFunc" c:type="GCompareDataFunc"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">data for comparison function</doc>
+            <type name="gpointer" c:type="gpointer"/>
           </parameter>
         </parameters>
       </method>
@@ -13394,9 +13548,10 @@ queue size of @initial_size.</doc>
           </parameter>
         </parameters>
       </function>
-      <function name="new_for_struct" c:identifier="gst_queue_array_new_for_struct" version="1.6" introspectable="0">
+      <function name="new_for_struct" c:identifier="gst_queue_array_new_for_struct" version="1.6" introspectable="0" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Allocates a new #GstQueueArray object for elements (e.g. structures)
 of size @struct_size, with an initial queue size of @initial_size.</doc>
+        <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
         <return-value>
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">a new #GstQueueArray object</doc>
@@ -13759,6 +13914,12 @@ ISO-8859-1).</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <docsection name="gsttypefindhelper">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gsttypefindhelper.c">Utility functions for elements doing typefinding:
+gst_type_find_helper() does typefinding in pull mode, while
+gst_type_find_helper_for_buffer() is useful for elements needing to do
+typefinding in push mode from a chain function.</doc>
+    </docsection>
     <function name="queue_array_new" c:identifier="gst_queue_array_new" moved-to="QueueArray.new" version="1.2" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Allocates a new #GstQueueArray object with an initial
 queue size of @initial_size.</doc>
@@ -13774,9 +13935,10 @@ queue size of @initial_size.</doc>
         </parameter>
       </parameters>
     </function>
-    <function name="queue_array_new_for_struct" c:identifier="gst_queue_array_new_for_struct" moved-to="QueueArray.new_for_struct" version="1.6" introspectable="0">
+    <function name="queue_array_new_for_struct" c:identifier="gst_queue_array_new_for_struct" moved-to="QueueArray.new_for_struct" version="1.6" introspectable="0" deprecated="1" deprecated-version="1.26">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Allocates a new #GstQueueArray object for elements (e.g. structures)
 of size @struct_size, with an initial queue size of @initial_size.</doc>
+      <doc-deprecated xml:space="preserve">Use #GstVecDeque instead.</doc-deprecated>
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
       <return-value>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">a new #GstQueueArray object</doc>

@@ -25,6 +25,7 @@ namespace Gst.Audio {
 		Mpeg2AacRaw = 12,
 		Mpeg4AacRaw = 13,
 		Flac = 14,
+		Dsd = 15,
 	}
 
 	internal class AudioRingBufferFormatTypeGType {

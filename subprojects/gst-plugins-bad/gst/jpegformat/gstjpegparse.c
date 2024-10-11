@@ -61,7 +61,6 @@
 #include <gst/base/gstbytereader.h>
 #include <gst/codecparsers/gstjpegparser.h>
 #include <gst/tag/tag.h>
-#include <gst/video/video.h>
 
 #include "gstjpegparse.h"
 
@@ -107,7 +106,7 @@ static gboolean gst_jpeg_parse_stop (GstBaseParse * parse);
 
 #define gst_jpeg_parse_parent_class parent_class
 G_DEFINE_TYPE (GstJpegParse, gst_jpeg_parse, GST_TYPE_BASE_PARSE);
-GST_ELEMENT_REGISTER_DEFINE (jpegparse, "jpegparse", GST_RANK_NONE,
+GST_ELEMENT_REGISTER_DEFINE (jpegparse, "jpegparse", GST_RANK_PRIMARY,
     GST_TYPE_JPEG_PARSE);
 
 enum GstJPEGColorspace
@@ -191,16 +190,65 @@ gst_jpeg_parse_init (GstJpegParse * parse)
   parse->sof = -1;
 }
 
+static void
+parse_avid (GstJpegParse * parse, const guint8 * data, guint16 len)
+{
+  parse->avid = 1;
+  if (len > 14 && data[12] == 1)        /* 1 - NTSC */
+    parse->field_order = GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST;
+  if (len > 14 && data[12] == 2)        /* 2 - PAL */
+    parse->field_order = GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
+  GST_INFO_OBJECT (parse, "AVID: %s",
+      gst_video_field_order_to_string (parse->field_order));
+}
+
 static gboolean
 gst_jpeg_parse_set_sink_caps (GstBaseParse * bparse, GstCaps * caps)
 {
   GstJpegParse *parse = GST_JPEG_PARSE_CAST (bparse);
   GstStructure *s = gst_caps_get_structure (caps, 0);
+  const GValue *codec_data;
+  const char *interlace_mode, *field_order;
 
   GST_DEBUG_OBJECT (parse, "get sink caps %" GST_PTR_FORMAT, caps);
 
   gst_structure_get_fraction (s, "framerate",
       &parse->framerate_numerator, &parse->framerate_denominator);
+
+  gst_structure_get_int (s, "height", &parse->orig_height);
+  gst_structure_get_int (s, "width", &parse->orig_width);
+
+  gst_structure_get_fraction (s, "pixel-aspect-ration", &parse->par_num,
+      &parse->par_den);
+
+  codec_data = gst_structure_get_value (s, "codec_data");
+  if (codec_data && G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
+    GstMapInfo map;
+
+    gst_clear_buffer (&parse->codec_data);
+
+    parse->codec_data = GST_BUFFER (g_value_dup_boxed (codec_data));
+    if (gst_buffer_map (parse->codec_data, &map, GST_MAP_READ)) {
+      if (map.size > 8 && map.data[0] == 0x2c && map.data[4] == 0x18)
+        parse_avid (parse, map.data, map.size);
+      gst_buffer_unmap (parse->codec_data, &map);
+    }
+  }
+
+  interlace_mode = gst_structure_get_string (s, "interlace-mode");
+  if (interlace_mode) {
+    parse->interlace_mode =
+        gst_video_interlace_mode_from_string (interlace_mode);
+  }
+
+  if (parse->interlace_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE) {
+    field_order = gst_structure_get_string (s, "field-order");
+    if (field_order)
+      parse->field_order = gst_video_field_order_from_string (field_order);
+  }
+
+  g_clear_pointer (&parse->colorimetry, g_free);
+  parse->colorimetry = g_strdup (gst_structure_get_string (s, "colorimetry"));
 
   return TRUE;
 }
@@ -273,38 +321,37 @@ static gboolean
 gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
 {
   GstJpegFrameHdr hdr = { 0, };
+  guint colorspace;
+  guint sampling;
 
   if (!gst_jpeg_segment_parse_frame_header (seg, &hdr)) {
     return FALSE;
   }
 
-  parse->width = hdr.width;
-  parse->height = hdr.height;
-
-  parse->colorspace = GST_JPEG_COLORSPACE_NONE;
-  parse->sampling = GST_JPEG_SAMPLING_NONE;
+  colorspace = GST_JPEG_COLORSPACE_NONE;
+  sampling = GST_JPEG_SAMPLING_NONE;
 
   switch (hdr.num_components) {
     case 1:
-      parse->colorspace = GST_JPEG_COLORSPACE_GRAY;
-      parse->sampling = GST_JPEG_SAMPLING_GRAYSCALE;
+      colorspace = GST_JPEG_COLORSPACE_GRAY;
+      sampling = GST_JPEG_SAMPLING_GRAYSCALE;
       break;
     case 3:
       if (valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_JFIF)) {
-        parse->colorspace = GST_JPEG_COLORSPACE_YUV;
-        parse->sampling = yuv_sampling (&hdr);
+        colorspace = GST_JPEG_COLORSPACE_YUV;
+        sampling = yuv_sampling (&hdr);
       } else {
         if (valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_ADOBE)) {
           if (parse->adobe_transform == 0) {
-            parse->colorspace = GST_JPEG_COLORSPACE_RGB;
-            parse->sampling = GST_JPEG_SAMPLING_RGB;
+            colorspace = GST_JPEG_COLORSPACE_RGB;
+            sampling = GST_JPEG_SAMPLING_RGB;
           } else if (parse->adobe_transform == 1) {
-            parse->colorspace = GST_JPEG_COLORSPACE_YUV;;
-            parse->sampling = yuv_sampling (&hdr);
+            colorspace = GST_JPEG_COLORSPACE_YUV;;
+            sampling = yuv_sampling (&hdr);
           } else {
             GST_DEBUG_OBJECT (parse, "Unknown Adobe color transform code");
-            parse->colorspace = GST_JPEG_COLORSPACE_YUV;;
-            parse->sampling = yuv_sampling (&hdr);
+            colorspace = GST_JPEG_COLORSPACE_YUV;;
+            sampling = yuv_sampling (&hdr);
           }
         } else {
           int cid0, cid1, cid2;
@@ -314,15 +361,15 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
           cid2 = hdr.components[2].identifier;
 
           if (cid0 == 1 && cid1 == 2 && cid2 == 3) {
-            parse->colorspace = GST_JPEG_COLORSPACE_YUV;
-            parse->sampling = yuv_sampling (&hdr);
+            colorspace = GST_JPEG_COLORSPACE_YUV;
+            sampling = yuv_sampling (&hdr);
           } else if (cid0 == 'R' && cid1 == 'G' && cid2 == 'B') {
-            parse->colorspace = GST_JPEG_COLORSPACE_RGB;
-            parse->sampling = GST_JPEG_SAMPLING_RGB;
+            colorspace = GST_JPEG_COLORSPACE_RGB;
+            sampling = GST_JPEG_SAMPLING_RGB;
           } else {
             GST_DEBUG_OBJECT (parse, "Unrecognized component IDs");
-            parse->colorspace = GST_JPEG_COLORSPACE_YUV;
-            parse->sampling = yuv_sampling (&hdr);
+            colorspace = GST_JPEG_COLORSPACE_YUV;
+            sampling = yuv_sampling (&hdr);
           }
         }
       }
@@ -330,20 +377,43 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
     case 4:
       if (valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_ADOBE)) {
         if (parse->adobe_transform == 0) {
-          parse->colorspace = GST_JPEG_COLORSPACE_CMYK;
+          colorspace = GST_JPEG_COLORSPACE_CMYK;
         } else if (parse->adobe_transform == 2) {
-          parse->colorspace = GST_JPEG_COLORSPACE_YCCK;
+          colorspace = GST_JPEG_COLORSPACE_YCCK;
         } else {
           GST_DEBUG_OBJECT (parse, "Unknown Adobe color transform code");
-          parse->colorspace = GST_JPEG_COLORSPACE_YCCK;
+          colorspace = GST_JPEG_COLORSPACE_YCCK;
         }
       } else {
-        parse->colorspace = GST_JPEG_COLORSPACE_CMYK;
+        colorspace = GST_JPEG_COLORSPACE_CMYK;
       }
       break;
     default:
       GST_WARNING_OBJECT (parse, "Unknown color space");
       break;
+  }
+
+  if (hdr.width != parse->width || hdr.height != parse->height
+      || colorspace != parse->colorspace || sampling != parse->sampling) {
+    parse->width = hdr.width;
+    parse->height = hdr.height;
+    parse->colorspace = colorspace;
+    parse->sampling = sampling;
+
+    if (parse->first_picture && !parse->multiscope) {
+      if (parse->orig_height > 0
+          && parse->height < ((parse->orig_height * 3) / 4)) {
+        parse->interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
+      } else if (parse->avid) {
+        /* if no container info, let's suppose it doubles its height */
+        if (parse->orig_height == 0)
+          parse->orig_height = 2 * hdr.height;
+        parse->interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
+      }
+    }
+
+    parse->first_picture = FALSE;
+    parse->renegotiate = TRUE;
   }
 
   GST_INFO_OBJECT (parse, "SOF [%dx%d] %d comp - %s", parse->width,
@@ -364,9 +434,9 @@ static gboolean
 gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
 {
   GstByteReader reader;
-  const gchar *id_str;
   guint16 xd, yd;
   guint8 unit, xt, yt;
+  guint32 id;
 
   if (seg->size < 6)            /* less than 6 means no id string */
     return FALSE;
@@ -374,13 +444,21 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
   gst_byte_reader_init (&reader, seg->data + seg->offset, seg->size);
   gst_byte_reader_skip_unchecked (&reader, 2);
 
-  if (!gst_byte_reader_get_string_utf8 (&reader, &id_str))
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  if (!gst_byte_reader_get_uint32_le (&reader, &id))
     return FALSE;
+#else
+  if (!gst_byte_reader_get_uint32_be (&reader, &id))
+    return FALSE;
+#endif
 
   if (!valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_JFIF)
-      && g_strcmp0 (id_str, "JFIF") == 0) {
+      && GST_MAKE_FOURCC ('J', 'F', 'I', 'F') == id) {
 
     parse->state |= GST_JPEG_PARSER_STATE_GOT_JFIF;
+
+    /* trailing zero-byte */
+    gst_byte_reader_skip_unchecked (&reader, 1);
 
     /* version */
     gst_byte_reader_skip_unchecked (&reader, 2);
@@ -390,11 +468,19 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
       return FALSE;
 
     /* x density */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    if (!gst_byte_reader_get_uint16_le (&reader, &xd))
+      return FALSE;
+    /* y density */
+    if (!gst_byte_reader_get_uint16_le (&reader, &yd))
+      return FALSE;
+#else
     if (!gst_byte_reader_get_uint16_be (&reader, &xd))
       return FALSE;
     /* y density */
     if (!gst_byte_reader_get_uint16_be (&reader, &yd))
       return FALSE;
+#endif
 
     /* x thumbnail */
     if (!gst_byte_reader_get_uint8 (&reader, &xt))
@@ -405,8 +491,11 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
 
     if (unit == 0) {
       /* no units, X and Y specify the pixel aspect ratio */
-      parse->x_density = xd;
-      parse->y_density = yd;
+      if (parse->par_num != xd || parse->par_den != yd) {
+        parse->renegotiate = TRUE;
+        parse->par_num = xd;
+        parse->par_den = yd;
+      }
     } else if (unit == 1 || unit == 2) {
       /* tag pixel per inches */
       double hppi = xd, vppi = yd;
@@ -430,7 +519,7 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
   }
 
   /* JFIF  Extension  */
-  if (g_strcmp0 (id_str, "JFXX") == 0) {
+  if (GST_MAKE_FOURCC ('J', 'F', 'X', 'X') == id) {
     if (!valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_JFIF))
       return FALSE;
 
@@ -438,18 +527,22 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
   }
 
   /* https://exiftool.org/TagNames/JPEG.html#AVI1 */
-  if (g_strcmp0 (id_str, "AVI1") == 0) {
+  if (GST_MAKE_FOURCC ('A', 'V', 'I', '1') == id) {
     /* polarity */
     if (!gst_byte_reader_get_uint8 (&reader, &unit))
       return FALSE;
 
+    parse->avid = (unit > 0);   /* otherwise is not interleaved */
+
     /* TODO: update caps for interlaced MJPEG */
-    GST_DEBUG_OBJECT (parse, "MJPEG interleaved field: %d", unit);
+    GST_DEBUG_OBJECT (parse, "MJPEG interleaved field: %s", unit == 0 ?
+        "not interleaved" : unit % 2 ? "Odd" : "Even");
 
     return TRUE;
   }
 
-  GST_DEBUG_OBJECT (parse, "Unhandled app0: %s", id_str);
+  GST_MEMDUMP_OBJECT (parse, "Unhandled app0", seg->data + seg->offset,
+      seg->size);
 
   return TRUE;
 }
@@ -522,7 +615,8 @@ gst_jpeg_parse_app1 (GstJpegParse * parse, GstJpegSegment * seg)
     return TRUE;
   }
 
-  GST_DEBUG_OBJECT (parse, "Unhandled app1: %s", id_str);
+  GST_MEMDUMP_OBJECT (parse, "Unhandled app1", seg->data + seg->offset,
+      seg->size);
 
   return TRUE;
 }
@@ -531,8 +625,11 @@ static gboolean
 gst_jpeg_parse_app14 (GstJpegParse * parse, GstJpegSegment * seg)
 {
   GstByteReader reader;
-  const gchar *id_str;
   guint8 transform;
+  const guint8 *id = NULL;
+  const guint8 adobe_tag[] = {
+    'A', 'd', 'o', 'b', 'e'
+  };
 
   if (seg->size < 6)            /* less than 6 means no id string */
     return FALSE;
@@ -540,11 +637,14 @@ gst_jpeg_parse_app14 (GstJpegParse * parse, GstJpegSegment * seg)
   gst_byte_reader_init (&reader, seg->data + seg->offset, seg->size);
   gst_byte_reader_skip_unchecked (&reader, 2);
 
-  if (!gst_byte_reader_get_string_utf8 (&reader, &id_str))
+  if (!gst_byte_reader_peek_data (&reader, 5, &id))
     return FALSE;
 
-  if (!g_str_has_prefix (id_str, "Adobe")) {
-    GST_DEBUG_OBJECT (parse, "Unhandled app14: %s", id_str);
+  if (G_LIKELY (!memcmp (id, adobe_tag, 5))) {
+    if (!gst_byte_reader_skip (&reader, 5))
+      return FALSE;
+  } else {
+    GST_DEBUG_OBJECT (parse, "Unhandled app14");
     return TRUE;
   }
 
@@ -569,8 +669,13 @@ get_utf8_from_data (const guint8 * data, guint16 size)
     "GST_TAG_ENCODING", NULL
   };
   const char *str = (gchar *) data;
+  char *ret;
 
-  return gst_tag_freeform_string_to_utf8 (str, size, env_vars);
+  ret = gst_tag_freeform_string_to_utf8 (str, size, env_vars);
+  if (!ret)
+    GST_MEMDUMP ("non-parsed marker data", data, size);
+
+  return ret;
 }
 
 /* read comment and post as tag */
@@ -580,39 +685,47 @@ gst_jpeg_parse_com (GstJpegParse * parse, GstJpegSegment * seg)
   GstByteReader reader;
   const guint8 *data = NULL;
   guint16 size;
-  gchar *comment;
+  const gchar *buf;
 
   gst_byte_reader_init (&reader, seg->data + seg->offset, seg->size);
   gst_byte_reader_skip_unchecked (&reader, 2);
 
   size = gst_byte_reader_get_remaining (&reader);
-
   if (!gst_byte_reader_get_data (&reader, size, &data))
     return FALSE;
 
-  comment = get_utf8_from_data (data, size);
-  if (!comment)
-    return FALSE;
+  buf = (const gchar *) data;
+  /* buggy avid, it puts EOI only at every 10th frame */
+  if (g_str_has_prefix (buf, "AVID")) {
+    parse_avid (parse, data, size);
+  } else if (g_str_has_prefix (buf, "MULTISCOPE II")) {
+    parse->par_num = 1;
+    parse->par_den = 2;
+    parse->multiscope = TRUE;
+  } else {
+    gchar *comment;
 
-  GST_INFO_OBJECT (parse, "comment found: %s", comment);
-  gst_tag_list_add (get_tag_list (parse), GST_TAG_MERGE_REPLACE,
-      GST_TAG_COMMENT, comment, NULL);
-  g_free (comment);
+    comment = get_utf8_from_data (data, size);
+    if (!comment)
+      return FALSE;
+
+    GST_INFO_OBJECT (parse, "comment found: %s", comment);
+    gst_tag_list_add (get_tag_list (parse), GST_TAG_MERGE_REPLACE,
+        GST_TAG_COMMENT, comment, NULL);
+    g_free (comment);
+  }
 
   return TRUE;
 }
 
+/* reset per image */
 static void
 gst_jpeg_parse_reset (GstJpegParse * parse)
 {
-  parse->width = 0;
-  parse->height = 0;
   parse->last_offset = 0;
   parse->state = 0;
-  parse->sof = -1;
   parse->adobe_transform = 0;
-  parse->x_density = 0;
-  parse->y_density = 0;
+  parse->field = 0;
 
   if (parse->tags) {
     gst_tag_list_unref (parse->tags);
@@ -630,14 +743,20 @@ static gboolean
 gst_jpeg_parse_set_new_caps (GstJpegParse * parse)
 {
   GstCaps *caps;
+  GstEvent *event;
   gboolean res;
+
+  if (!parse->renegotiate)
+    return TRUE;
 
   caps = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
       NULL);
 
   if (parse->width > 0)
     gst_caps_set_simple (caps, "width", G_TYPE_INT, parse->width, NULL);
-  if (parse->width > 0)
+  if (parse->orig_height > 0 && parse->orig_height > parse->height)
+    gst_caps_set_simple (caps, "height", G_TYPE_INT, parse->orig_height, NULL);
+  else if (parse->height > 0)
     gst_caps_set_simple (caps, "height", G_TYPE_INT, parse->height, NULL);
   if (parse->sof >= 0)
     gst_caps_set_simple (caps, "sof-marker", G_TYPE_INT, parse->sof, NULL);
@@ -650,29 +769,43 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse)
         sampling_to_string (parse->sampling), NULL);
   }
 
+  if (parse->colorimetry) {
+    gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, parse->colorimetry,
+        NULL);
+  }
+
+  gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING,
+      gst_video_interlace_mode_to_string (parse->interlace_mode), NULL);
+
+  if (parse->interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED) {
+    gst_caps_set_simple (caps, "field-order", G_TYPE_STRING,
+        gst_video_field_order_to_string (parse->field_order), NULL);
+  }
+
   gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION,
       parse->framerate_numerator, parse->framerate_denominator, NULL);
 
-  if (parse->x_density > 0 && parse->y_density > 0) {
+  if (parse->par_num > 0 && parse->par_den > 0) {
     gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-        parse->x_density, parse->y_density, NULL);
+        parse->par_num, parse->par_den, NULL);
   }
 
-  if (parse->prev_caps && gst_caps_is_equal_fixed (caps, parse->prev_caps)) {
-    gst_caps_unref (caps);
-    return TRUE;
+  if (parse->codec_data) {
+    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, parse->codec_data,
+        NULL);
   }
+
+  parse->renegotiate = FALSE;
 
   GST_DEBUG_OBJECT (parse,
       "setting downstream caps on %s:%s to %" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (GST_BASE_PARSE_SRC_PAD (parse)), caps);
-  res = gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
 
-  gst_caps_replace (&parse->prev_caps, caps);
+  event = gst_event_new_caps (caps);
+  res = gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (parse), event);
   gst_caps_unref (caps);
 
   return res;
-
 }
 
 static GstFlowReturn
@@ -694,6 +827,7 @@ gst_jpeg_parse_finish_frame (GstJpegParse * parse, GstBaseParseFrame * frame,
     GST_WARNING_OBJECT (parse, "Potentially invalid picture");
   }
 
+  GST_TRACE_OBJECT (parse, "Finish frame %" GST_PTR_FORMAT, frame->buffer);
   ret = gst_base_parse_finish_frame (bparse, frame, size);
 
   gst_jpeg_parse_reset (parse);
@@ -710,6 +844,8 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
   GstJpegMarker marker;
   GstJpegSegment seg;
   guint offset;
+
+  GST_TRACE_OBJECT (parse, "frame %" GST_PTR_FORMAT, frame->buffer);
 
   if (!gst_buffer_map (frame->buffer, &mapinfo, GST_MAP_READ))
     return GST_FLOW_ERROR;
@@ -754,7 +890,9 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
     switch (marker) {
       case GST_JPEG_MARKER_SOI:
         /* This means that new SOI comes without an previous EOI. */
-        if (offset > 2) {
+        if (offset > 2
+            && (parse->interlace_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE
+                || parse->field == 0)) {
           /* If already some data segment parsed, push it as a frame. */
           if (valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_SOS)) {
             gst_buffer_unmap (frame->buffer, &mapinfo);
@@ -785,8 +923,15 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
         parse->state |= GST_JPEG_PARSER_STATE_GOT_SOI;
         break;
       case GST_JPEG_MARKER_EOI:
-        gst_buffer_unmap (frame->buffer, &mapinfo);
-        return gst_jpeg_parse_finish_frame (parse, frame, seg.offset);
+        if (parse->interlace_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE
+            || parse->field == 1) {
+          gst_buffer_unmap (frame->buffer, &mapinfo);
+          return gst_jpeg_parse_finish_frame (parse, frame, seg.offset);
+        } else if (parse->interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED
+            && parse->field == 0) {
+          parse->field = 1;
+          parse->state = 0;
+        }
         break;
       case GST_JPEG_MARKER_SOS:
         if (!valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_SOF))
@@ -794,28 +939,20 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
         parse->state |= GST_JPEG_PARSER_STATE_GOT_SOS;
         break;
       case GST_JPEG_MARKER_COM:
-        if (!gst_jpeg_parse_com (parse, &seg)) {
-          GST_ELEMENT_WARNING (parse, STREAM, FORMAT,
-              ("Invalid data"), ("Failed to parse com segment"));
-        }
+        if (!gst_jpeg_parse_com (parse, &seg))
+          GST_WARNING_OBJECT (parse, "Failed to parse com segment");
         break;
       case GST_JPEG_MARKER_APP0:
-        if (!gst_jpeg_parse_app0 (parse, &seg)) {
-          GST_ELEMENT_WARNING (parse, STREAM, FORMAT,
-              ("Invalid data"), ("Failed to parse app0 segment"));
-        }
+        if (!gst_jpeg_parse_app0 (parse, &seg))
+          GST_WARNING_OBJECT (parse, "Failed to parse app0 segment");
         break;
       case GST_JPEG_MARKER_APP1:
-        if (!gst_jpeg_parse_app1 (parse, &seg)) {
-          GST_ELEMENT_WARNING (parse, STREAM, FORMAT,
-              ("Invalid data"), ("Failed to parse app1 segment"));
-        }
+        if (!gst_jpeg_parse_app1 (parse, &seg))
+          GST_WARNING_OBJECT (parse, "Failed to parse app1 segment");
         break;
       case GST_JPEG_MARKER_APP14:
-        if (!gst_jpeg_parse_app14 (parse, &seg)) {
-          GST_ELEMENT_WARNING (parse, STREAM, FORMAT,
-              ("Invalid data"), ("Failed to parse app14 segment"));
-        }
+        if (!gst_jpeg_parse_app14 (parse, &seg))
+          GST_WARNING_OBJECT (parse, "Failed to parse app14 segment");
         break;
       case GST_JPEG_MARKER_DHT:
       case GST_JPEG_MARKER_DAC:
@@ -827,8 +964,14 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
             marker <= GST_JPEG_MARKER_SOF_MAX) {
           if (!valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_SOF)
               && gst_jpeg_parse_sof (parse, &seg)) {
+            gint8 sof;
+
             parse->state |= GST_JPEG_PARSER_STATE_GOT_SOF;
-            parse->sof = marker - 0xc0;
+            sof = marker - 0xc0;
+            if (parse->sof != sof) {
+              parse->sof = sof;
+              parse->renegotiate = TRUE;
+            }
           } else {
             GST_ELEMENT_ERROR (parse, STREAM, FORMAT,
                 ("Invalid data"), ("Duplicated or bad SOF marker"));
@@ -874,6 +1017,14 @@ gst_jpeg_parse_start (GstBaseParse * bparse)
   parse->framerate_numerator = 0;
   parse->framerate_denominator = 1;
 
+  parse->first_picture = TRUE;
+  parse->renegotiate = TRUE;
+
+  parse->par_num = parse->par_den = 1;
+
+  parse->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+  parse->field_order = GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
+
   gst_jpeg_parse_reset (parse);
 
   gst_base_parse_set_min_frame_size (bparse, 2);
@@ -890,7 +1041,9 @@ gst_jpeg_parse_stop (GstBaseParse * bparse)
     gst_tag_list_unref (parse->tags);
     parse->tags = NULL;
   }
+  gst_clear_buffer (&parse->codec_data);
   gst_clear_caps (&parse->prev_caps);
+  g_clear_pointer (&parse->colorimetry, g_free);
 
   return TRUE;
 }

@@ -41,6 +41,7 @@
 #include <gst/base/gstbitreader.h>
 #include <gst/tag/tag.h>
 
+#include <stdio.h>
 #include <string.h>
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -1544,6 +1545,142 @@ gst_codec_utils_h265_caps_set_level_tier_and_profile (GstCaps * caps,
 }
 
 /**
+ * gst_codec_utils_av1_get_seq_level_idx:
+ * @level: A level string from caps
+ *
+ * Transform a level string from the caps into the seq_level_idx
+ *
+ * Returns: the seq_level_idx or 31 (max-level) if the level is unknown
+ *
+ * Since: 1.26
+ */
+guint8
+gst_codec_utils_av1_get_seq_level_idx (const gchar * level)
+{
+  g_return_val_if_fail (level != NULL, 0);
+
+  if (!strcmp (level, "2.0"))
+    return 0;
+  else if (!strcmp (level, "2.1"))
+    return 1;
+  else if (!strcmp (level, "2.2"))
+    return 2;
+  else if (!strcmp (level, "2.3"))
+    return 3;
+  else if (!strcmp (level, "3.0"))
+    return 4;
+  else if (!strcmp (level, "3.1"))
+    return 5;
+  else if (!strcmp (level, "3.2"))
+    return 6;
+  else if (!strcmp (level, "3.3"))
+    return 7;
+  else if (!strcmp (level, "4.0"))
+    return 8;
+  else if (!strcmp (level, "4.1"))
+    return 9;
+  else if (!strcmp (level, "4.2"))
+    return 10;
+  else if (!strcmp (level, "4.3"))
+    return 11;
+  else if (!strcmp (level, "5.0"))
+    return 12;
+  else if (!strcmp (level, "5.1"))
+    return 13;
+  else if (!strcmp (level, "5.2"))
+    return 14;
+  else if (!strcmp (level, "5.3"))
+    return 15;
+  else if (!strcmp (level, "6.0"))
+    return 16;
+  else if (!strcmp (level, "6.1"))
+    return 17;
+  else if (!strcmp (level, "6.2"))
+    return 18;
+  else if (!strcmp (level, "6.3"))
+    return 19;
+  else if (!strcmp (level, "7.0"))
+    return 20;
+  else if (!strcmp (level, "7.1"))
+    return 21;
+  else if (!strcmp (level, "7.2"))
+    return 22;
+  else if (!strcmp (level, "7.3"))
+    return 23;
+
+  GST_WARNING ("Invalid level %s", level);
+  return 31;
+}
+
+/**
+ * gst_codec_utils_av1_get_level:
+ * @seq_level_idx: A seq_level_idx
+ *
+ * Transform a seq_level_idx into the level string
+ *
+ * Returns: (nullable): the level string or %NULL if the seq_level_idx is unknown
+ *
+ * Since: 1.26
+ */
+const gchar *
+gst_codec_utils_av1_get_level (guint8 seq_level_idx)
+{
+  switch (seq_level_idx) {
+    case 0:
+      return "2.0";
+    case 1:
+      return "2.1";
+    case 2:
+      return "2.2";
+    case 3:
+      return "2.3";
+    case 4:
+      return "3.0";
+    case 5:
+      return "3.1";
+    case 6:
+      return "3.2";
+    case 7:
+      return "3.3";
+    case 8:
+      return "4.0";
+    case 9:
+      return "4.1";
+    case 10:
+      return "4.2";
+    case 11:
+      return "4.3";
+    case 12:
+      return "5.0";
+    case 13:
+      return "5.1";
+    case 14:
+      return "5.2";
+    case 15:
+      return "5.3";
+    case 16:
+      return "6.0";
+    case 17:
+      return "6.1";
+    case 18:
+      return "6.2";
+    case 19:
+      return "6.3";
+    case 20:
+      return "7.0";
+    case 21:
+      return "7.1";
+    case 22:
+      return "7.2";
+    case 23:
+      return "7.3";
+    default:
+      return NULL;
+  }
+}
+
+
+/**
  * gst_codec_utils_mpeg4video_get_profile:
  * @vis_obj_seq: (array length=len): Pointer to the visual object
  *   sequence for the stream.
@@ -2471,7 +2608,8 @@ vp9_caps_get_mime_codec (GstCaps * caps)
   GstStructure *caps_st;
   const char *profile_str, *chroma_format_str, *colorimetry_str;
   guint bitdepth_luma, bitdepth_chroma;
-  guint8 profile = -1, chroma_format = -1, level = -1;
+  guint8 profile = -1, chroma_format = -1, level = -1, color_primaries =
+      -1, color_transfer = -1, color_matrix = -1;
   gboolean video_full_range;
   GstVideoColorimetry cinfo = { 0, };
   GString *codec_string;
@@ -2539,15 +2677,270 @@ vp9_caps_get_mime_codec (GstCaps * caps)
     goto done;
   }
 
-  /* optional but all or nothing */
-  g_string_append_printf (codec_string, ".%02u.%02u.%02u.%02u.%02u",
-      chroma_format, gst_video_color_primaries_to_iso (cinfo.primaries),
-      gst_video_transfer_function_to_iso (cinfo.transfer),
-      gst_video_color_matrix_to_iso (cinfo.matrix), video_full_range);
+  /* optional but all or nothing. Include them if any parameter differs from the default value */
+  color_primaries = gst_video_color_primaries_to_iso (cinfo.primaries);
+  color_transfer = gst_video_transfer_function_to_iso (cinfo.transfer);
+  color_matrix = gst_video_color_matrix_to_iso (cinfo.matrix);
+  if (chroma_format != 1 || color_primaries != 1 || color_transfer != 1
+      || color_matrix != 1 || video_full_range) {
+    g_string_append_printf (codec_string, ".%02u.%02u.%02u.%02u.%02u",
+        chroma_format, color_primaries, color_transfer, color_matrix,
+        video_full_range);
+  }
 
 done:
   return g_string_free (codec_string, FALSE);
 }
+
+static GstCaps *
+av1_caps_from_mime_codec (gchar ** subcodec)
+{
+  GstCaps *caps = NULL;
+  gchar tier;
+  guint seq_level_idx_0;
+  guint bit_depth, seq_profile, chroma_sample_position,
+      monochrome, chroma_subsampling_x, chroma_subsampling_y, primaries,
+      transfer, matrix, full_range, chroma_sampling;
+  const gchar *level_str;
+  const gchar *tier_str;
+  const gchar *profile_str;
+  const gchar *chroma_format_str;
+  gchar *colorimetry_str;
+  GstVideoColorimetry cinfo = { 0, };
+
+  caps = gst_caps_new_empty_simple ("video/x-av1");
+
+  if (!subcodec[1])
+    goto done;
+
+  seq_profile = g_ascii_strtoull (subcodec[1], NULL, 10);
+  if (seq_profile == 0) {
+    profile_str = "main";
+  } else if (seq_profile == 1) {
+    profile_str = "high";
+  } else if (seq_profile == 2) {
+    profile_str = "professional";
+  } else {
+    GST_WARNING ("Unknown AV1 profile %d", seq_profile);
+    goto done;
+  }
+  gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile_str, NULL);
+
+  if (subcodec[2]) {
+    if (sscanf (subcodec[2], "%02u%c", &seq_level_idx_0, &tier) != 2) {
+      GST_WARNING ("Failed to parse level and tier from %s", subcodec[2]);
+      goto done;
+    }
+  } else {
+    seq_level_idx_0 = 1;
+    tier = 'M';
+  }
+
+  if (tier == 'H') {
+    tier_str = "high";
+  } else if (tier == 'M') {
+    tier_str = "main";
+  } else {
+    GST_WARNING ("Unknown AV1 tier %c", tier);
+    goto done;
+  }
+  gst_caps_set_simple (caps, "tier", G_TYPE_STRING, tier_str, NULL);
+
+  level_str = gst_codec_utils_av1_get_level (seq_level_idx_0);
+  if (level_str) {
+    gst_caps_set_simple (caps, "level", G_TYPE_STRING, level_str, NULL);
+  } else {
+    GST_WARNING ("Unknown AV1 level %d", seq_level_idx_0);
+    goto done;
+  }
+
+  if (subcodec[3]) {
+    bit_depth = g_ascii_strtoull (subcodec[3], NULL, 10);
+    gst_caps_set_simple (caps, "bit-depth-luma", G_TYPE_UINT, bit_depth,
+        "bit-depth-chroma", G_TYPE_UINT, bit_depth, NULL);
+  } else {
+    GST_WARNING ("Failed to parse bit-depth from %s", subcodec[3]);
+    goto done;
+  }
+
+  /* Verify if all values necessary to continue are present in the subcodec */
+  if (subcodec[4] && subcodec[5] && subcodec[6]
+      && subcodec[7] && subcodec[8] && subcodec[9]) {
+
+    monochrome = g_ascii_strtoull (subcodec[4], NULL, 10);
+    chroma_sampling = g_ascii_strtoull (subcodec[5], NULL, 10);
+    chroma_subsampling_x = chroma_sampling / 100;
+    chroma_subsampling_y = (chroma_sampling % 100) / 10;
+    chroma_sample_position = chroma_sampling % 10;
+    if (monochrome) {
+      chroma_format_str = "4:0:0";
+    } else if (chroma_subsampling_x == 1 && chroma_subsampling_y == 1) {
+      chroma_format_str = "4:2:0";
+    } else if (chroma_subsampling_x == 1 && chroma_subsampling_y == 0) {
+      chroma_format_str = "4:2:2";
+    } else if (chroma_subsampling_x == 0 && chroma_subsampling_y == 0) {
+      chroma_format_str = "4:4:4";
+    } else {
+      GST_WARNING ("Unknown chroma subsampling %d:%d:%d", chroma_subsampling_x,
+          chroma_subsampling_y, monochrome);
+      goto done;
+    }
+
+    primaries = g_ascii_strtoull (subcodec[6], NULL, 10);
+    transfer = g_ascii_strtoull (subcodec[7], NULL, 10);
+    matrix = g_ascii_strtoull (subcodec[8], NULL, 10);
+    full_range = g_ascii_strtoull (subcodec[9], NULL, 10);
+  } else {
+    GST_DEBUG
+        ("Using default values for chroma_format, chroma_sample_position, "
+        "primaries, transfer, matrix, and full_range");
+
+    chroma_format_str = "4:2:0";
+    chroma_sample_position = 0;
+    primaries = 1;
+    transfer = 1;
+    matrix = 1;
+    full_range = 0;
+  }
+
+  gst_caps_set_simple (caps, "chroma-format", G_TYPE_STRING, chroma_format_str,
+      NULL);
+  if (chroma_sample_position == 1) {
+    gst_caps_set_simple (caps, "chroma-site", G_TYPE_STRING, "v-cosited", NULL);
+  } else if (chroma_sample_position == 2) {
+    gst_caps_set_simple (caps, "chroma-site", G_TYPE_STRING,
+        "v-cosited+h-cosited", NULL);
+  }
+
+  cinfo.range =
+      full_range ? GST_VIDEO_COLOR_RANGE_0_255 : GST_VIDEO_COLOR_RANGE_16_235;
+  cinfo.primaries = gst_video_color_primaries_from_iso (primaries);
+  cinfo.transfer = gst_video_transfer_function_from_iso (transfer);
+  cinfo.matrix = gst_video_color_matrix_from_iso (matrix);
+  colorimetry_str = gst_video_colorimetry_to_string (&cinfo);
+  if (colorimetry_str) {
+    gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, colorimetry_str,
+        NULL);
+  } else {
+    GST_WARNING ("Failed to parse colorimetry from %u %u %u %u", full_range,
+        matrix, transfer, primaries);
+  }
+  g_free (colorimetry_str);
+
+done:
+  return caps;
+}
+
+/* https://aomediacodec.github.io/av1-isobmff/#codecsparam */
+static char *
+av1_caps_get_mime_codec (GstCaps * caps)
+{
+  gchar tier_mime;
+  guint8 seq_level_idx_0;
+  guint bit_depth, seq_profile, chroma_sample_position,
+      monochrome, chroma_subsampling_x, chroma_subsampling_y, primaries,
+      transfer, matrix, full_range;
+  GstStructure *caps_st;
+  GString *codec_string;
+  const gchar *level_str;
+  const gchar *tier_str;
+  const gchar *profile_str;
+  const gchar *chroma_format_str;
+  const gchar *chroma_site_str;
+  const gchar *colorimetry_str;
+  GstVideoColorimetry cinfo = { 0, };
+
+  caps_st = gst_caps_get_structure (caps, 0);
+  codec_string = g_string_new ("av01");
+
+  tier_str = gst_structure_get_string (caps_st, "tier");
+  if (g_strcmp0 (tier_str, "main") == 0) {
+    tier_mime = 'M';
+  } else if (g_strcmp0 (tier_str, "high") == 0) {
+    tier_mime = 'H';
+  } else {
+    GST_WARNING ("Unknown AV1 tier %s, using default 'M'", tier_str);
+    tier_mime = 'M';
+  }
+
+  level_str = gst_structure_get_string (caps_st, "level");
+  if (level_str) {
+    seq_level_idx_0 = gst_codec_utils_av1_get_seq_level_idx (level_str);
+  } else {
+    seq_level_idx_0 = 1;
+  }
+
+  profile_str = gst_structure_get_string (caps_st, "profile");
+  if (g_strcmp0 (profile_str, "main") == 0) {
+    seq_profile = 0;
+  } else if (g_strcmp0 (profile_str, "high") == 0) {
+    seq_profile = 1;
+  } else if (g_strcmp0 (profile_str, "professional") == 0) {
+    seq_profile = 2;
+  } else {
+    goto done;
+  }
+
+  if (!gst_structure_get_uint (caps_st, "bit-depth-luma", &bit_depth))
+    goto done;
+
+  /* We have all information to compute a minimal mime */
+  g_string_append_printf (codec_string, ".%d.%02u%c.%02u",
+      seq_profile, seq_level_idx_0, tier_mime, bit_depth);
+
+  chroma_format_str = gst_structure_get_string (caps_st, "chroma-format");
+  if (g_strcmp0 (chroma_format_str, "4:0:0") == 0) {
+    monochrome = 1;
+    chroma_subsampling_x = 1;
+    chroma_subsampling_y = 1;
+  } else if (g_strcmp0 (chroma_format_str, "4:2:0") == 0) {
+    monochrome = 0;
+    chroma_subsampling_x = 1;
+    chroma_subsampling_y = 1;
+  } else if (g_strcmp0 (chroma_format_str, "4:2:2") == 0) {
+    monochrome = 0;
+    chroma_subsampling_x = 1;
+    chroma_subsampling_y = 0;
+  } else if (g_strcmp0 (chroma_format_str, "4:4:4") == 0) {
+    monochrome = 0;
+    chroma_subsampling_x = 0;
+    chroma_subsampling_y = 0;
+  } else {
+    goto done;
+  }
+
+  chroma_sample_position = 0;
+  chroma_site_str = gst_structure_get_string (caps_st, "chroma-site");
+  if (g_strcmp0 (chroma_site_str, "v-cosited") == 0) {
+    chroma_sample_position = 1;
+  } else if (g_strcmp0 (chroma_site_str, "v-cosited+h-cosited") == 0) {
+    chroma_sample_position = 2;
+  }
+
+  colorimetry_str = gst_structure_get_string (caps_st, "colorimetry");
+  if (!colorimetry_str)
+    goto done;
+  if (!gst_video_colorimetry_from_string (&cinfo, colorimetry_str))
+    goto done;
+  full_range = cinfo.range == GST_VIDEO_COLOR_RANGE_0_255;
+
+  primaries = gst_video_color_primaries_to_iso (cinfo.primaries);
+  transfer = gst_video_transfer_function_to_iso (cinfo.transfer);
+  matrix = gst_video_color_matrix_to_iso (cinfo.matrix);
+
+  if (chroma_subsampling_x != 1 || chroma_subsampling_y != 1
+      || chroma_sample_position != 0 || primaries != 1 || transfer != 1
+      || matrix != 1 || full_range != 0) {
+    g_string_append_printf (codec_string,
+        ".%u.%u%u%u.%02u.%02u.%02u.%u", monochrome, chroma_subsampling_x,
+        chroma_subsampling_y, chroma_sample_position, primaries, transfer,
+        matrix, full_range);
+  }
+
+done:
+  return g_string_free (codec_string, FALSE);
+}
+
 
 /**
  * gst_codec_utils_caps_get_mime_codec:
@@ -2606,10 +2999,7 @@ gst_codec_utils_caps_get_mime_codec (GstCaps * caps)
       mime_codec = g_strdup ("hev1");
     }
   } else if (g_strcmp0 (media_type, "video/x-av1") == 0) {
-    /* TODO: Some browsers won't play the video unless more codec information is
-     * available in the mime codec for av1. This is documented in
-     * https://aomediacodec.github.io/av1-isobmff/#codecsparam */
-    mime_codec = g_strdup ("av01");
+    mime_codec = av1_caps_get_mime_codec (caps);
   } else if (g_strcmp0 (media_type, "video/x-vp8") == 0) {
     /* TODO: most browsers won't play the video unless more codec information is
      * available in the mime codec for vp8. */
@@ -2806,9 +3196,11 @@ gst_codec_utils_caps_from_mime_codec_single (const gchar * codec)
       caps = gst_caps_new_empty_simple ("video/x-vp9");
       break;
     case GST_MAKE_FOURCC ('a', 'v', '0', '1'):
+    {
       /* AV1 */
-      caps = gst_caps_new_empty_simple ("video/x-av1");
+      caps = av1_caps_from_mime_codec (subcodec);
       break;
+    }
     case GST_MAKE_FOURCC ('o', 'p', 'u', 's'):
       /* Opus */
       caps = gst_caps_new_empty_simple ("audio/x-opus");
@@ -2822,6 +3214,9 @@ gst_codec_utils_caps_from_mime_codec_single (const gchar * codec)
       caps =
           gst_caps_new_simple ("audio/x-adpcm", "layout", G_TYPE_STRING, "g726",
           NULL);
+      break;
+    case GST_MAKE_FOURCC ('m', 'j', 'p', 'g'):
+      caps = gst_caps_new_empty_simple ("image/jpeg");
       break;
     default:
       GST_WARNING ("Unknown codec '%s' please file a bug", codec);

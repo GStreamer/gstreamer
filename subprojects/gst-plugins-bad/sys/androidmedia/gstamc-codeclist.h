@@ -35,8 +35,6 @@ struct _GstAmcCodecProfileLevel
   gint level;
 };
 
-gboolean gst_amc_codeclist_static_init (void);
-
 gboolean gst_amc_codeclist_get_count (gint * count, GError **err);
 GstAmcCodecInfoHandle * gst_amc_codeclist_get_codec_info_at (gint index,
     GError **err);

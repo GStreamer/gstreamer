@@ -19,6 +19,8 @@
 
 #version 450 core
 
+#extension GL_GOOGLE_include_directive : enable
+
 #include "color_convert_generic.glsl"
 #include "upsample_ayuv.glsl"
 #include "swizzle.glsl"

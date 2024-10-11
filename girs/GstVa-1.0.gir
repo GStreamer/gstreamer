@@ -322,9 +322,9 @@ otherwise.</doc>
             <type name="guint" c:type="guint*"/>
           </parameter>
           <parameter name="use_derived" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVaFeature if derived images
-    are used for buffer mapping.</doc>
-            <type name="VaFeature" c:type="GstVaFeature*"/>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">whether derived images are used for buffer
+    mapping.</doc>
+            <type name="gboolean" c:type="gboolean*"/>
           </parameter>
         </parameters>
       </function>
@@ -389,7 +389,7 @@ configuration is not valid or not updated.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">VA usage hint</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
-          <parameter name="use_derived" transfer-ownership="none">
+          <parameter name="feat_use_derived" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVaFeature</doc>
             <type name="VaFeature" c:type="GstVaFeature"/>
           </parameter>
@@ -457,6 +457,27 @@ VADisplay.</doc>
           </instance-parameter>
         </parameters>
       </virtual-method>
+      <method name="check_version" c:identifier="gst_va_display_check_version" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">whether driver version is equal or greater than @major.@minor</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">a #GstVaDisplay</doc>
+            <type name="VaDisplay" c:type="GstVaDisplay*"/>
+          </instance-parameter>
+          <parameter name="major" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">major version to check</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="minor" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">minor version to check</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_implementation" c:identifier="gst_va_display_get_implementation" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">Get the the #GstVaImplementation type of @self.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
@@ -642,8 +663,8 @@ otherwise.</doc>
             <type name="Gst.Allocator" c:type="GstAllocator*"/>
           </parameter>
           <parameter name="info" direction="out" caller-allocates="1" transfer-ownership="none" optional="1" allow-none="1">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfo</doc>
-            <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfoDmaDrm</doc>
+            <type name="GstVideo.VideoInfoDmaDrm" c:type="GstVideoInfoDmaDrm*"/>
           </parameter>
           <parameter name="usage_hint" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">VA usage hint</doc>
@@ -676,9 +697,9 @@ otherwise.</doc>
 @allocator, and it tries the configuration, if @allocator has not
 allocated memories yet.
 
-If @allocator has memory allocated already, and frame size and
-format in @info are the same as currently configured in @allocator,
-the rest of @info parameters are updated internally.</doc>
+If @allocator has memory allocated already, and frame size, format
+and modifier in @info are the same as currently configured in
+@allocator, the rest of @info parameters are updated internally.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if the configuration is valid or updated; %FALSE if
@@ -691,8 +712,8 @@ configuration is not valid or not updated.</doc>
             <type name="Gst.Allocator" c:type="GstAllocator*"/>
           </parameter>
           <parameter name="info" direction="out" caller-allocates="1" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfo</doc>
-            <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfoDmaDrm</doc>
+            <type name="GstVideo.VideoInfoDmaDrm" c:type="GstVideoInfoDmaDrm*"/>
           </parameter>
           <parameter name="usage_hint" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">VA usage hint</doc>
@@ -773,10 +794,6 @@ the most widely used VA drivers.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">the #GstCaps of the buffers handled by the new pool.</doc>
             <type name="Gst.Caps" c:type="GstCaps*"/>
           </parameter>
-          <parameter name="size" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">the size of the frames to hold.</doc>
-            <type name="guint" c:type="guint"/>
-          </parameter>
           <parameter name="min_buffers" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">minimum number of frames to create.</doc>
             <type name="guint" c:type="guint"/>
@@ -804,6 +821,24 @@ the most widely used VA drivers.</doc>
           </parameter>
         </parameters>
       </constructor>
+      <function name="get_buffer_size" c:identifier="gst_va_pool_get_buffer_size" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">Helper function to retrieve the VA surface size provided by @pool.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">whether the surface size was retrieved.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="pool" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">a #GstBufferPool</doc>
+            <type name="Gst.BufferPool" c:type="GstBufferPool*"/>
+          </parameter>
+          <parameter name="size" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">the declared surface size</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="requires_video_meta" c:identifier="gst_va_pool_requires_video_meta" version="1.22">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">Retuns: %TRUE if @pool always add #GstVideoMeta to its
     buffers. Otherwise, %FALSE.</doc>
@@ -1016,13 +1051,9 @@ VASurfaceID and it's attached into every @mem.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVaDisplay</doc>
           <type name="VaDisplay" c:type="GstVaDisplay*"/>
         </parameter>
-        <parameter name="info" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfo</doc>
-          <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
-        </parameter>
-        <parameter name="n_planes" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">number of planes</doc>
-          <type name="guint" c:type="guint"/>
+        <parameter name="drm_info" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfoDmaDrm</doc>
+          <type name="GstVideo.VideoInfoDmaDrm" c:type="GstVideoInfoDmaDrm*"/>
         </parameter>
         <parameter name="mem" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Memories. One
@@ -1034,7 +1065,7 @@ VASurfaceID and it's attached into every @mem.</doc>
         <parameter name="fds" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">array of
     DMABuf file descriptors.</doc>
-          <array length="2" zero-terminated="0" c:type="uintptr_t*">
+          <array zero-terminated="0" c:type="uintptr_t*" fixed-size="4">
             <type c:type="uintptr_t"/>
           </array>
         </parameter>

@@ -56,6 +56,7 @@ namespace Gst {
 		public const string LICENSE_UNKNOWN = @"unknown";
 		public const int LOCK_FLAG_READWRITE = 3;
 		public const int MAP_READWRITE = 3;
+		public const string META_TAG_MEMORY_REFERENCE_STR = @"memory-reference";
 		public const string META_TAG_MEMORY_STR = @"memory";
 		public const long MSECOND = 1000000;
 		public const int PARAM_CONDITIONALLY_AVAILABLE = 16384;
@@ -171,7 +172,7 @@ namespace Gst {
 		public const int VALUE_UNORDERED = 2;
 		public const int VERSION_MAJOR = 1;
 		public const int VERSION_MICRO = 0;
-		public const int VERSION_MINOR = 23;
+		public const int VERSION_MINOR = 25;
 		public const int VERSION_NANO = 1;
 #endregion
 	}

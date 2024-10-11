@@ -57,7 +57,11 @@ if host_system == 'windows'
 
   qsv_sources += qsv_d3d11_sources
   qsv_platform_deps += [gstd3d11_dep]
-elif host_system == 'linux' and host_machine.cpu_family() == 'x86_64'
+  if gstd3d12_dep.found()
+    qsv_platform_deps += [gstd3d12_dep]
+    extra_args += ['-DHAVE_GST_D3D12']
+  endif
+elif host_system == 'linux'
   if not gstva_dep.found()
     if qsv_option.enabled()
       error('The qsv was enabled explicitly, but required va was not found')

@@ -70,6 +70,12 @@
  * ```
  * Composite WPE with a video stream, sink_0 pad properties have to match the video dimensions.
  *
+ * ```shell
+ * weston -S $HOME/weston-sock -B headless-backend.so --use-gl &
+ * WAYLAND_DISPLAY=$HOME/weston-sock gst-launch-1.0 wpevideosrc location=https://google.com ! queue ! fakevideosink
+ * ```
+ * Render Google.com with WPE in a headless Weston compositor. This can be useful for server-side WPE video processing.
+ *
  * Since: 1.16
  */
 
@@ -92,7 +98,7 @@
 #include <gst/video/video.h>
 #include <xkbcommon/xkbcommon.h>
 
-#include "WPEThreadedView.h"
+#include "gstwpethreadedview.h"
 
 #define DEFAULT_WIDTH 1920
 #define DEFAULT_HEIGHT 1080
@@ -129,7 +135,7 @@ struct _GstWpeVideoSrc
 
   gint64 n_frames;              /* total frames sent */
 
-  WPEView *view;
+  GstWPEThreadedView *view;
 
   GArray *touch_points;
   struct wpe_input_touch_event_raw *last_touch;
@@ -289,7 +295,7 @@ gst_wpe_video_src_start (GstWpeVideoSrc * src)
   GST_DEBUG_OBJECT (src, "Will %sfill GLMemories",
       src->gl_enabled ? "" : "NOT ");
 
-  auto & thread = WPEContextThread::singleton ();
+  auto & thread = GstWPEContextThread::singleton ();
 
   if (!src->view) {
     src->view = thread.createWPEView (src, context, display,

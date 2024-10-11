@@ -95,44 +95,166 @@ gst_uvc_sink_get_property (GObject * object, guint prop_id,
   }
 }
 
+static GstVideoFormat
+gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
+{
+  GstVideoFormat format;
+
+  switch (fourcc) {
+    case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
+      format = GST_VIDEO_FORMAT_GRAY8;
+      break;
+    case V4L2_PIX_FMT_Y16:
+      format = GST_VIDEO_FORMAT_GRAY16_LE;
+      break;
+    case V4L2_PIX_FMT_Y16_BE:
+      format = GST_VIDEO_FORMAT_GRAY16_BE;
+      break;
+    case V4L2_PIX_FMT_XRGB555:
+    case V4L2_PIX_FMT_RGB555:
+      format = GST_VIDEO_FORMAT_RGB15;
+      break;
+    case V4L2_PIX_FMT_XRGB555X:
+    case V4L2_PIX_FMT_RGB555X:
+      format = GST_VIDEO_FORMAT_BGR15;
+      break;
+    case V4L2_PIX_FMT_RGB565:
+      format = GST_VIDEO_FORMAT_RGB16;
+      break;
+    case V4L2_PIX_FMT_RGB24:
+      format = GST_VIDEO_FORMAT_RGB;
+      break;
+    case V4L2_PIX_FMT_BGR24:
+      format = GST_VIDEO_FORMAT_BGR;
+      break;
+    case V4L2_PIX_FMT_XRGB32:
+    case V4L2_PIX_FMT_RGB32:
+      format = GST_VIDEO_FORMAT_xRGB;
+      break;
+    case V4L2_PIX_FMT_RGBX32:
+      format = GST_VIDEO_FORMAT_RGBx;
+      break;
+    case V4L2_PIX_FMT_XBGR32:
+    case V4L2_PIX_FMT_BGR32:
+      format = GST_VIDEO_FORMAT_BGRx;
+      break;
+    case V4L2_PIX_FMT_BGRX32:
+      format = GST_VIDEO_FORMAT_xBGR;
+      break;
+    case V4L2_PIX_FMT_ABGR32:
+      format = GST_VIDEO_FORMAT_BGRA;
+      break;
+    case V4L2_PIX_FMT_BGRA32:
+      format = GST_VIDEO_FORMAT_ABGR;
+      break;
+    case V4L2_PIX_FMT_RGBA32:
+      format = GST_VIDEO_FORMAT_RGBA;
+      break;
+    case V4L2_PIX_FMT_ARGB32:
+      format = GST_VIDEO_FORMAT_ARGB;
+      break;
+    case V4L2_PIX_FMT_NV12:
+    case V4L2_PIX_FMT_NV12M:
+      format = GST_VIDEO_FORMAT_NV12;
+      break;
+    case V4L2_PIX_FMT_NV12MT:
+      format = GST_VIDEO_FORMAT_NV12_64Z32;
+      break;
+    case V4L2_PIX_FMT_MM21:
+      format = GST_VIDEO_FORMAT_NV12_16L32S;
+      break;
+    case V4L2_PIX_FMT_NV12M_8L128:
+      format = GST_VIDEO_FORMAT_NV12_8L128;
+      break;
+    case V4L2_PIX_FMT_NV12M_10BE_8L128:
+      format = GST_VIDEO_FORMAT_NV12_10BE_8L128;
+      break;
+    case V4L2_PIX_FMT_NV21:
+    case V4L2_PIX_FMT_NV21M:
+      format = GST_VIDEO_FORMAT_NV21;
+      break;
+    case V4L2_PIX_FMT_YVU410:
+      format = GST_VIDEO_FORMAT_YVU9;
+      break;
+    case V4L2_PIX_FMT_YUV410:
+      format = GST_VIDEO_FORMAT_YUV9;
+      break;
+    case V4L2_PIX_FMT_YUV420:
+    case V4L2_PIX_FMT_YUV420M:
+      format = GST_VIDEO_FORMAT_I420;
+      break;
+    case V4L2_PIX_FMT_YUYV:
+      format = GST_VIDEO_FORMAT_YUY2;
+      break;
+    case V4L2_PIX_FMT_YVU420:
+    case V4L2_PIX_FMT_YVU420M:
+      format = GST_VIDEO_FORMAT_YV12;
+      break;
+    case V4L2_PIX_FMT_UYVY:
+      format = GST_VIDEO_FORMAT_UYVY;
+      break;
+    case V4L2_PIX_FMT_YUV411P:
+      format = GST_VIDEO_FORMAT_Y41B;
+      break;
+    case V4L2_PIX_FMT_YUV422P:
+      format = GST_VIDEO_FORMAT_Y42B;
+      break;
+    case V4L2_PIX_FMT_YVYU:
+      format = GST_VIDEO_FORMAT_YVYU;
+      break;
+    case V4L2_PIX_FMT_NV16:
+    case V4L2_PIX_FMT_NV16M:
+      format = GST_VIDEO_FORMAT_NV16;
+      break;
+    case V4L2_PIX_FMT_NV61:
+    case V4L2_PIX_FMT_NV61M:
+      format = GST_VIDEO_FORMAT_NV61;
+      break;
+    case V4L2_PIX_FMT_NV24:
+      format = GST_VIDEO_FORMAT_NV24;
+      break;
+    default:
+      format = GST_VIDEO_FORMAT_UNKNOWN;
+      break;
+  }
+
+  return format;
+}
+
 static GstStructure *
 gst_v4l2uvc_fourcc_to_bare_struct (guint32 fourcc)
 {
   GstStructure *structure = NULL;
+  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
 
-  /* Since MJPEG and YUY2 are currently the only one supported
-   * we limit the function to parse only these fourccs
-   */
   switch (fourcc) {
     case V4L2_PIX_FMT_MJPEG:   /* Motion-JPEG */
     case V4L2_PIX_FMT_JPEG:    /* JFIF JPEG */
       structure = gst_structure_new_empty ("image/jpeg");
       break;
-    case V4L2_PIX_FMT_YUYV:{
-      GstVideoFormat format = GST_VIDEO_FORMAT_YUY2;
-      if (format != GST_VIDEO_FORMAT_UNKNOWN)
-        structure = gst_structure_new ("video/x-raw",
-            "format", G_TYPE_STRING, gst_video_format_to_string (format), NULL);
-      break;
-    }
-      break;
     default:
-      GST_DEBUG ("Unsupported fourcc 0x%08x %" GST_FOURCC_FORMAT,
-          fourcc, GST_FOURCC_ARGS (fourcc));
+      format = gst_v4l2_object_v4l2fourcc_to_video_format (fourcc);
+      if (format == GST_VIDEO_FORMAT_UNKNOWN) {
+        GST_DEBUG ("Unsupported fourcc 0x%08x %" GST_FOURCC_FORMAT,
+            fourcc, GST_FOURCC_ARGS (fourcc));
+        break;
+      }
+      structure = gst_structure_new ("video/x-raw",
+          "format", G_TYPE_STRING, gst_video_format_to_string (format), NULL);
       break;
   }
 
   return structure;
 }
 
-/* The UVC EVENT_DATA from the host, which is commiting the currently
+/* The UVC EVENT_DATA from the host, which is committing the currently
  * selected configuration (format+resolution+framerate) is only selected
  * by some index values (except the framerate). We have to transform
  * those values to an valid caps string that we can return on the caps
  * query.
  */
-static gboolean
-gst_uvc_sink_parse_cur_caps (GstUvcSink * self)
+static GstCaps *
+gst_uvc_sink_get_configured_caps (GstUvcSink * self)
 {
   struct v4l2_fmtdesc format;
   struct v4l2_frmsizeenum size;
@@ -151,10 +273,12 @@ gst_uvc_sink_parse_cur_caps (GstUvcSink * self)
   if (ioctl (device_fd, VIDIOC_ENUM_FMT, &format) < 0) {
     GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Linux kernel error"),
         ("VIDIOC_ENUM_FMT failed: %s (%d)", g_strerror (errno), errno));
-    return FALSE;
+    return NULL;
   }
 
   s = gst_v4l2uvc_fourcc_to_bare_struct (format.pixelformat);
+  if (!s)
+    return NULL;
 
   memset (&size, 0, sizeof (struct v4l2_frmsizeenum));
   size.index = self->cur.bFrameIndex - 1;
@@ -163,7 +287,7 @@ gst_uvc_sink_parse_cur_caps (GstUvcSink * self)
   if (ioctl (device_fd, VIDIOC_ENUM_FRAMESIZES, &size) < 0) {
     GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Linux kernel error"),
         ("VIDIOC_ENUM_FRAMESIZES failed: %s (%d)", g_strerror (errno), errno));
-    return FALSE;
+    return NULL;
   }
 
   GST_LOG_OBJECT (self, "got discrete frame size %dx%d",
@@ -173,7 +297,7 @@ gst_uvc_sink_parse_cur_caps (GstUvcSink * self)
   height = MIN (size.discrete.height, G_MAXINT);
 
   if (!width || !height)
-    return FALSE;
+    return NULL;
 
   g_value_init (&framerate, GST_TYPE_FRACTION);
 
@@ -196,7 +320,7 @@ gst_uvc_sink_parse_cur_caps (GstUvcSink * self)
     GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Linux kernel error"),
         ("VIDIOC_ENUM_FRAMEINTERVALS failed: %s (%d)",
             g_strerror (errno), errno));
-    return FALSE;
+    return NULL;
   }
 
   do {
@@ -218,19 +342,68 @@ gst_uvc_sink_parse_cur_caps (GstUvcSink * self)
 
   gst_structure_take_value (s, "framerate", &framerate);
 
-  gst_clear_caps (&self->cur_caps);
-  self->cur_caps = gst_caps_new_full (s, NULL);
-
-  return TRUE;
+  return gst_caps_new_full (s, NULL);
 }
-
-static void gst_uvc_sink_create_buffer_peer_probe (GstUvcSink * self);
 
 static gboolean gst_uvc_sink_to_fakesink (GstUvcSink * self);
 static gboolean gst_uvc_sink_to_v4l2sink (GstUvcSink * self);
 
-static GstPadProbeReturn gst_uvc_sink_sinkpad_event_peer_probe (GstPad * pad,
-    GstPadProbeInfo * info, GstUvcSink * self);
+static void
+gst_uvc_sink_update_streaming (GstUvcSink * self)
+{
+  if (self->streamon && !self->streaming)
+    GST_ERROR_OBJECT (self, "Unexpected STREAMON");
+  if (self->streamoff && self->streaming)
+    GST_ERROR_OBJECT (self, "Unexpected STREAMOFF");
+
+  if (self->streamon)
+    gst_uvc_sink_to_v4l2sink (self);
+
+  g_atomic_int_set (&self->streamon, FALSE);
+  g_atomic_int_set (&self->streamoff, FALSE);
+}
+
+static gboolean
+gst_uvc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GstUvcSink *self = GST_UVCSINK (parent);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+      GST_DEBUG_OBJECT (self, "Handling %" GST_PTR_FORMAT, event);
+
+      /* If the UVC host did not yet commit a format, the cur_caps may contain
+       * all probed caps. In this case, the element is not able to detect, if
+       * the caps have changed when the stream is enabled. Take the caps from
+       * upstream to be able to detect a change.
+       */
+      if (!GST_CAPS_IS_SIMPLE (self->cur_caps)) {
+        GstCaps *caps;
+
+        gst_event_parse_caps (event, &caps);
+        gst_caps_replace (&self->cur_caps, caps);
+
+        GST_DEBUG_OBJECT (self,
+            "UVC host didn't select a format, yet. Using upstream %"
+            GST_PTR_FORMAT, self->cur_caps);
+      }
+
+      /* EVENT CAPS signals that the buffers after the event will use new caps.
+       * If the UVC host requested a new format, we now must start the stream.
+       */
+      if (self->caps_changed) {
+        if (self->streamon || self->streamoff)
+          g_atomic_int_set (&self->caps_changed, FALSE);
+
+        gst_uvc_sink_update_streaming (self);
+      }
+      break;
+    default:
+      break;
+  }
+
+  return gst_pad_event_default (pad, parent, event);
+}
 
 static gboolean
 gst_uvc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
@@ -246,27 +419,9 @@ gst_uvc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GST_DEBUG_OBJECT (self, "caps %" GST_PTR_FORMAT, self->cur_caps);
       gst_query_set_caps_result (query, self->cur_caps);
 
-      if (self->caps_changed) {
-        gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK |
-            GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-            (GstPadProbeCallback) gst_uvc_sink_sinkpad_event_peer_probe,
-            self, NULL);
-      } else {
-        if (self->streamon) {
-          g_atomic_int_set (&self->streamon, FALSE);
-          gst_uvc_sink_to_v4l2sink (self);
+      if (!self->caps_changed)
+        gst_uvc_sink_update_streaming (self);
 
-          if (!self->streaming)
-            GST_DEBUG_OBJECT (self, "something went wrong!");
-        }
-
-        if (self->streamoff) {
-          g_atomic_int_set (&self->streamoff, FALSE);
-
-          if (self->streaming)
-            GST_DEBUG_OBJECT (self, "something went wrong!");
-        }
-      }
       return TRUE;
     }
     case GST_QUERY_ALLOCATION:
@@ -358,54 +513,11 @@ gst_uvc_sink_to_v4l2sink (GstUvcSink * self)
 }
 
 static GstPadProbeReturn
-gst_uvc_sink_sinkpad_event_peer_probe (GstPad * pad,
-    GstPadProbeInfo * info, GstUvcSink * self)
-{
-  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
-
-  GST_DEBUG_OBJECT (self, "pad is blocked now!");
-
-  if (GST_EVENT_TYPE (GST_PAD_PROBE_INFO_DATA (info)) != GST_EVENT_CAPS)
-    return GST_PAD_PROBE_OK;
-
-  gst_pad_remove_probe (pad, GST_PAD_PROBE_INFO_ID (info));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GST_DEBUG_OBJECT (self, "caps %p", event);
-
-      if (self->streamon) {
-        g_atomic_int_set (&self->streamon, FALSE);
-        g_atomic_int_set (&self->caps_changed, FALSE);
-        gst_uvc_sink_to_v4l2sink (self);
-
-        if (!self->streaming)
-          GST_DEBUG_OBJECT (self, "something went wrong!");
-      }
-
-      if (self->streamoff) {
-        g_atomic_int_set (&self->streamoff, FALSE);
-        g_atomic_int_set (&self->caps_changed, FALSE);
-
-        if (self->streaming)
-          GST_DEBUG_OBJECT (self, "something went wrong!");
-      }
-
-      GST_DEBUG_OBJECT (self, "pad is unblocked now");
-      return GST_PAD_PROBE_REMOVE;
-    }
-    default:
-      return GST_PAD_PROBE_PASS;
-  }
-
-  return GST_PAD_PROBE_PASS;
-}
-
-static GstPadProbeReturn
 gst_uvc_sink_sinkpad_buffer_peer_probe (GstPad * pad,
-    GstPadProbeInfo * info, GstUvcSink * self)
+    GstPadProbeInfo * info, gpointer user_data)
 {
+  GstUvcSink *self = user_data;
+
   if (self->streamon || self->streamoff)
     return GST_PAD_PROBE_DROP;
 
@@ -416,33 +528,24 @@ gst_uvc_sink_sinkpad_buffer_peer_probe (GstPad * pad,
 
 static GstPadProbeReturn
 gst_uvc_sink_sinkpad_idle_probe (GstPad * pad,
-    GstPadProbeInfo * info, GstUvcSink * self)
+    GstPadProbeInfo * info, gpointer user_data)
 {
-  if (self->streamon) {
-    gst_uvc_sink_create_buffer_peer_probe (self);
+  GstUvcSink *self = user_data;
+
+  if (self->streamon || self->streamoff) {
+    /* Drop all incoming buffers until the streamoff or streamon is done. */
+    self->buffer_peer_probe_id =
+        gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
+        gst_uvc_sink_sinkpad_buffer_peer_probe, self, NULL);
+
+    GST_DEBUG_OBJECT (self, "Send reconfigure");
     gst_pad_push_event (self->sinkpad, gst_event_new_reconfigure ());
   }
 
-  if (self->streamoff) {
-    gst_uvc_sink_create_buffer_peer_probe (self);
-    gst_pad_push_event (self->sinkpad, gst_event_new_reconfigure ());
+  if (self->streamoff)
     gst_uvc_sink_to_fakesink (self);
-  }
 
   return GST_PAD_PROBE_PASS;
-}
-
-static void
-gst_uvc_sink_create_buffer_peer_probe (GstUvcSink * self)
-{
-  GstPad *peerpad = gst_pad_get_peer (self->sinkpad);
-  if (peerpad) {
-    self->buffer_peer_probe_id =
-        gst_pad_add_probe (peerpad, GST_PAD_PROBE_TYPE_BUFFER,
-        (GstPadProbeCallback) gst_uvc_sink_sinkpad_buffer_peer_probe, self,
-        NULL);
-    gst_object_unref (peerpad);
-  }
 }
 
 static void
@@ -463,7 +566,7 @@ gst_uvc_sink_create_idle_probe (GstUvcSink * self)
   if (peerpad) {
     self->idle_probe_id =
         gst_pad_add_probe (peerpad, GST_PAD_PROBE_TYPE_IDLE,
-        (GstPadProbeCallback) gst_uvc_sink_sinkpad_idle_probe, self, NULL);
+        gst_uvc_sink_sinkpad_idle_probe, self, NULL);
     gst_object_unref (peerpad);
   }
 }
@@ -535,6 +638,7 @@ gst_uvc_sink_init (GstUvcSink * self)
   g_atomic_int_set (&self->streamoff, FALSE);
 
   gst_pad_set_query_function (self->sinkpad, gst_uvc_sink_query);
+  gst_pad_set_event_function (self->sinkpad, gst_uvc_sink_event);
 
   self->cur_caps = gst_caps_new_empty ();
 }
@@ -644,19 +748,39 @@ gst_uvc_sink_task (gpointer data)
         GST_DEBUG_OBJECT (self, "UVC_EVENT_DATA");
         uvc_events_process_data (self, &uvc_event->data);
         if (self->control == UVC_VS_COMMIT_CONTROL) {
-          GstCaps *caps, *prev_caps;
+          GstCaps *configured_caps;
+          GstCaps *prev_caps;
 
-          prev_caps = gst_caps_copy (self->cur_caps);
-          gst_uvc_sink_parse_cur_caps (self);
-          caps = gst_caps_copy (self->cur_caps);
+          /* The configured caps are not sufficient for negotiation. Select caps
+           * from the probed caps that match the configured caps.
+           */
+          configured_caps = gst_uvc_sink_get_configured_caps (self);
+          if (!configured_caps) {
+            GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
+                ("gst_uvc_sink_get_configured_caps failed"),
+                ("gst_uvc_sink_get_configured_caps on current format failed"));
+            gst_uvc_sink_unwatch (self);
+            gst_element_set_state (GST_ELEMENT (self), GST_STATE_NULL);
+            return;
+          }
+
           gst_clear_caps (&self->cur_caps);
           self->cur_caps =
-              gst_caps_intersect_full (self->probed_caps, caps,
+              gst_caps_intersect_full (self->probed_caps, configured_caps,
               GST_CAPS_INTERSECT_FIRST);
-          if (!gst_caps_is_equal (self->probed_caps, prev_caps))
-            self->caps_changed = !gst_caps_is_equal (self->cur_caps, prev_caps);
-          gst_caps_unref (prev_caps);
-          gst_caps_unref (caps);
+          GST_INFO_OBJECT (self, "UVC host selected %" GST_PTR_FORMAT,
+              self->cur_caps);
+          gst_caps_unref (configured_caps);
+
+          prev_caps = gst_pad_get_current_caps (self->sinkpad);
+          if (prev_caps) {
+            if (!gst_caps_is_subset (prev_caps, self->cur_caps)) {
+              self->caps_changed = TRUE;
+              GST_DEBUG_OBJECT (self,
+                  "caps changed from %" GST_PTR_FORMAT, prev_caps);
+            }
+            gst_caps_unref (prev_caps);
+          }
         }
         break;
       default:

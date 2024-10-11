@@ -54,20 +54,18 @@ struct _GstWaylandSink
 
   gboolean video_info_changed;
   GstVideoInfo video_info;
+  GstVideoInfoDmaDrm drm_info;
   gboolean fullscreen;
   GstCaps *caps;
 
   gchar *display_name;
 
-  gboolean redraw_pending;
   GMutex render_lock;
   GstBuffer *last_buffer;
 
   GstVideoOrientationMethod sink_rotate_method;
   GstVideoOrientationMethod tag_rotate_method;
   GstVideoOrientationMethod current_rotate_method;
-
-  struct wl_callback *callback;
 
   gchar *drm_device;
   gboolean skip_dumb_buffer_copy;

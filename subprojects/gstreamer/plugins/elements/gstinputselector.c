@@ -839,6 +839,13 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
       GstClockTimeDiff jitter;
       GstClockID clock_id;
 
+      if (!sel->playing) {
+        GST_DEBUG_OBJECT (selpad, "Waiting for playing");
+        GST_INPUT_SELECTOR_WAIT (sel);
+        GST_DEBUG_OBJECT (selpad, "Done waiting");
+        continue;
+      }
+
       base_time = gst_element_get_base_time (GST_ELEMENT_CAST (sel));
       if (!GST_CLOCK_TIME_IS_VALID (base_time)) {
         GST_DEBUG_OBJECT (selpad, "sync-mode=clock but no base time. Blocking");
@@ -850,13 +857,6 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
       if (!clock) {
         GST_DEBUG_OBJECT (selpad, "sync-mode=clock but no clock. Blocking");
         GST_INPUT_SELECTOR_WAIT (sel);
-        continue;
-      }
-
-      if (!sel->playing) {
-        GST_DEBUG_OBJECT (selpad, "Waiting for playing");
-        GST_INPUT_SELECTOR_WAIT (sel);
-        GST_DEBUG_OBJECT (selpad, "Done waiting");
         continue;
       }
 
@@ -2041,6 +2041,7 @@ gst_input_selector_change_state (GstElement * element,
       self->playing = TRUE;
       GST_INPUT_SELECTOR_BROADCAST (self);
       GST_INPUT_SELECTOR_UNLOCK (self);
+      break;
     }
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:{
       GList *walk;

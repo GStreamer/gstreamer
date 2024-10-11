@@ -123,6 +123,8 @@ static GstVideoFormat
 gst_core_media_buffer_get_video_format (OSType format)
 {
   switch (format) {
+    case kCVPixelFormatType_420YpCbCr8Planar:
+      return GST_VIDEO_FORMAT_I420;
     case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
       return GST_VIDEO_FORMAT_NV12;
     case kCVPixelFormatType_422YpCbCr8_yuvs:

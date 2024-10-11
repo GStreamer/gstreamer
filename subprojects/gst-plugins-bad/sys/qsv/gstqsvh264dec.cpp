@@ -302,7 +302,7 @@ gst_qsv_h264_dec_set_format (GstQsvDecoder * decoder,
 
   s = gst_caps_get_structure (state->caps, 0);
   str = gst_structure_get_string (s, "stream-format");
-  if ((g_strcmp0 (str, "avc") == 0 || g_strcmp0 (str, "avc3")) &&
+  if ((g_strcmp0 (str, "avc") == 0 || g_strcmp0 (str, "avc3") == 0) &&
       state->codec_data) {
     self->packetized = TRUE;
     /* Will be updated */
@@ -403,7 +403,7 @@ gst_qsv_h264_dec_process_input (GstQsvDecoder * decoder,
     memcpy (data + sizeof (start_code), nalu.data + nalu.offset, nalu.size);
 
     mem = gst_memory_new_wrapped ((GstMemoryFlags) 0, data, size, 0, size,
-        nullptr, (GDestroyNotify) g_free);
+        data, (GDestroyNotify) g_free);
     gst_buffer_append_memory (new_buf, mem);
   } while (pres == GST_H264_PARSER_OK);
 
@@ -460,12 +460,9 @@ gst_qsv_h264_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   mfx->FrameInfo.FrameRateExtD = 1;
   mfx->FrameInfo.AspectRatioW = 1;
   mfx->FrameInfo.AspectRatioH = 1;
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  mfx->FrameInfo.FourCC = MFX_FOURCC_NV12;
-  mfx->FrameInfo.BitDepthLuma = 8;
-  mfx->FrameInfo.BitDepthChroma = 8;
   mfx->FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
   mfx->CodecProfile = MFX_PROFILE_AVC_MAIN;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_NV12);
 
   /* Check max-resolution */
   for (guint i = 0; i < G_N_ELEMENTS (gst_qsv_resolutions); i++) {
@@ -501,7 +498,8 @@ gst_qsv_h264_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
 #ifdef G_OS_WIN32
   GstCaps *d3d11_caps = gst_caps_copy (src_caps);
   GstCapsFeatures *caps_features =
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr);
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+      nullptr);
   gst_caps_set_features_simple (d3d11_caps, caps_features);
   gst_caps_append (d3d11_caps, src_caps);
   src_caps = d3d11_caps;

@@ -380,8 +380,8 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_bus_sync_signal_handler(IntPtr raw, IntPtr message, IntPtr data);
 
-		public Gst.BusSyncReply SyncSignalHandler(Gst.Message message) {
-			int raw_ret = gst_bus_sync_signal_handler(Handle, message == null ? IntPtr.Zero : message.Handle, IntPtr.Zero);
+		public Gst.BusSyncReply SyncSignalHandler(Gst.Message message, IntPtr data) {
+			int raw_ret = gst_bus_sync_signal_handler(Handle, message == null ? IntPtr.Zero : message.Handle, data);
 			Gst.BusSyncReply ret = (Gst.BusSyncReply) raw_ret;
 			return ret;
 		}

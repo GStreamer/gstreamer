@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:gstqml6gmixer
+ * SECTION:element-qml6glmixer
  *
  * `qml6glmixer` provides a way to render an almost-arbitrary QML scene within
  * GStreamer pipeline using the same OpenGL context that GStreamer uses
@@ -72,6 +72,8 @@
  *
  * The Qml scene will run at configured output framerate.  The timestamps on the
  * output buffers are used to drive the animation time.
+ *
+ * Since: 1.24
  */
 
 #ifdef HAVE_CONFIG_H
@@ -121,8 +123,10 @@ gst_qml6_gl_mixer_pad_prepare_frame (GstVideoAggregatorPad *vagg_pad, GstVideoAg
     GstCaps *in_caps;
     GstGLContext *context;
 
-    in_caps = gst_video_info_to_caps (&vagg->info);
-    gst_caps_set_features_simple (in_caps, gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+    in_caps = gst_video_info_to_caps (&vagg_pad->info);
+    gst_caps_set_features_simple (in_caps,
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
     pad->widget->setCaps (in_caps);
     gst_clear_caps (&in_caps);
 
@@ -273,7 +277,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-            "RGBA"))
+            "{ RGBA, BGRA, YV12 }"))
     );
 
 struct _GstQml6GLMixer {
@@ -361,6 +365,8 @@ gst_qml6_gl_mixer_class_init (GstQml6GLMixerClass * klass)
       &src_factory, GST_TYPE_AGGREGATOR_PAD);
   gst_element_class_add_static_pad_template_with_gtype (element_class,
       &sink_factory, GST_TYPE_QML6_GL_MIXER_PAD);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_QML6_GL_MIXER_PAD, (GstPluginAPIFlags) 0);
 }
 
 static void

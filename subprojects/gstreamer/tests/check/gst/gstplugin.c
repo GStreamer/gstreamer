@@ -296,6 +296,70 @@ GST_START_TEST (test_version_checks)
 
 GST_END_TEST;
 
+static gboolean
+register_check_status_messages (GstPlugin * plugin)
+{
+  gst_plugin_add_status_info (plugin, "Hello World!");
+  gst_plugin_add_status_warning (plugin, "This not so good");
+  gst_plugin_add_status_warning (plugin, "Not good either!");
+  gst_plugin_add_status_error (plugin, "Oh no!");
+  return TRUE;
+}
+
+GST_START_TEST (test_status_messages)
+{
+  GstPlugin *plugin;
+
+  fail_unless (gst_plugin_register_static (GST_VERSION_MAJOR,
+          GST_VERSION_MINOR, "status-messages", "status-messages",
+          register_check_status_messages, VERSION, GST_LICENSE, PACKAGE,
+          GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN));
+
+  fail_unless (gst_plugin_register_static (GST_VERSION_MAJOR,
+          GST_VERSION_MINOR, "no-status-messages", "no-status-messages",
+          register_check_elements, VERSION, GST_LICENSE, PACKAGE,
+          GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN));
+
+  plugin = gst_registry_find_plugin (gst_registry_get (), "status-messages");
+  fail_unless (plugin != NULL);
+
+  {
+    gchar **info_msgs = gst_plugin_get_status_infos (plugin);
+
+    fail_unless_equals_int (g_strv_length (info_msgs), 1);
+    fail_unless_equals_string (info_msgs[0], "Hello World!");
+    g_strfreev (info_msgs);
+  }
+
+  {
+    gchar **warn_msgs = gst_plugin_get_status_warnings (plugin);
+
+    fail_unless_equals_int (g_strv_length (warn_msgs), 2);
+    fail_unless_equals_string (warn_msgs[0], "This not so good");
+    fail_unless_equals_string (warn_msgs[1], "Not good either!");
+    g_strfreev (warn_msgs);
+  }
+
+  {
+    gchar **err_msgs = gst_plugin_get_status_errors (plugin);
+
+    fail_unless_equals_int (g_strv_length (err_msgs), 1);
+    fail_unless_equals_string (err_msgs[0], "Oh no!");
+    g_strfreev (err_msgs);
+  }
+
+  gst_object_unref (plugin);
+
+  plugin = gst_registry_find_plugin (gst_registry_get (), "no-status-messages");
+  fail_unless (plugin != NULL);
+  fail_unless (gst_plugin_get_status_infos (plugin) == NULL);
+  fail_unless (gst_plugin_get_status_warnings (plugin) == NULL);
+  fail_unless (gst_plugin_get_status_errors (plugin) == NULL);
+  gst_object_unref (plugin);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_plugin_suite (void)
 {
@@ -317,6 +381,7 @@ gst_plugin_suite (void)
   tcase_add_test (tc_chain, test_find_feature);
   tcase_add_test (tc_chain, test_find_element);
   tcase_add_test (tc_chain, test_version_checks);
+  tcase_add_test (tc_chain, test_status_messages);
   //tcase_add_test (tc_chain, test_typefind);
 
   return s;

@@ -5,13 +5,13 @@
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 # Taco Witte <tcwitte@cs.uu.nl>, 2006.
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2022.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2022, 2023.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.19.2\n"
+"Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2022-02-08 13:38+0100\n"
+"POT-Creation-Date: 2023-01-13 19:09+0000\n"
+"PO-Revision-Date: 2023-04-28 12:39+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Lokalize 21.12.2\n"
+"X-Generator: Lokalize 23.04.0\n"
 
 msgid "Print the GStreamer version"
 msgstr "Toon de GStreamer versie"
@@ -881,7 +881,7 @@ msgid "link has no sink [source=%s@%p]"
 msgstr "link heeft geen sink [bron=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "Geen zo'n eigenschap."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -903,9 +903,10 @@ msgstr "geen element \"%s\""
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kon eigenschap \"%s\" in element \"%s\" niet op \"%s\" instellen"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
-msgstr "kon eigenschap \"%s\" in element \"%s\" niet op \"%s\" instellen"
+msgstr ""
+"kon eigenschap \"%s\" in kind van element \"%s\" niet op \"%s\" instellen"
 
 msgid "Delayed linking failed."
 msgstr "Vertraagd koppelen is mislukt."

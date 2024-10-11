@@ -1,0 +1,41 @@
+include, location="pitch-test.meta"
+pause
+
+checkpoint, text="Play normally"
+seek, start=10.0, stop=12.0, flags=accurate+flush, rate=-1.0
+play
+wait, message-type=eos
+
+checkpoint, text="Play one octave higher"
+set-property, playback-time=position, target-element-name=pitch, property-name=pitch, property-value=2.0
+seek, start=10.0, stop=12.0, flags=accurate+flush, rate=-1.0
+wait, message-type=eos
+
+checkpoint, text="Play one octave lower"
+set-property, playback-time=position, target-element-name=pitch, property-name=pitch, property-value=0.5
+seek, start=10.0, stop=12.0, flags=accurate+flush, rate=-1.0
+wait, message-type=eos
+
+checkpoint, text="Play twice faster same pitch"
+set-property, playback-time=position, target-element-name=pitch, property-name=pitch, property-value=1.0
+set-property, playback-time=position, target-element-name=pitch, property-name=tempo, property-value=2.0
+seek, start=5.0, stop=6.0, flags=accurate+flush, rate=-1.0
+wait, message-type=eos
+
+checkpoint, text="Play twice slower same pitch"
+set-property, playback-time=position, target-element-name=pitch, property-name=tempo, property-value=0.5
+seek, start=20.0, stop=24.0, flags=accurate+flush, rate=-1.0
+wait, message-type=eos
+
+checkpoint, text="Play twice faster one octave higher"
+set-property, playback-time=position, target-element-name=pitch, property-name=tempo, property-value=1.0
+set-property, playback-time=position, target-element-name=pitch, property-name=rate, property-value=2.0
+seek, start=5.0, stop=6.0, flags=accurate+flush, rate=-1.0
+wait, message-type=eos
+
+checkpoint, text="Play twice slower one octave lower"
+set-property, playback-time=position, target-element-name=pitch, property-name=rate, property-value=0.5
+seek, start=20.0, stop=24.0, flags=accurate+flush, rate=-1.0
+wait, message-type=eos
+
+stop

@@ -266,12 +266,6 @@ class LauncherConfig(Loggable):
             self.logsdir = "stdout"
             self.debug = True
             self.num_jobs = 1
-            try:
-                subprocess.check_output("gdb --help", shell=True)
-            except subprocess.CalledProcessError:
-                printc("Want to use gdb, but not available on the system",
-                       Colors.FAIL)
-                return False
 
         # other output directories
         if self.logsdir in ['stdout', 'stderr']:

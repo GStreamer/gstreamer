@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for execname in gnuindent gindent indent; do
+for execname in gst-indent-1.0 gnuindent gindent indent; do
   version=`$execname --version 2>/dev/null`
   if test "x$version" != "x"; then
     INDENT=$execname

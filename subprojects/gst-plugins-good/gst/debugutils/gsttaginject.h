@@ -54,6 +54,7 @@ struct _GstTagInject
   GstTagList *tags;
   gboolean tags_sent;
   GstTagScope tags_scope;
+  GstTagMergeMode merge_mode;
 };
 
 struct _GstTagInjectClass

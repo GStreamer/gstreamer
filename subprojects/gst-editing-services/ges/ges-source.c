@@ -266,6 +266,36 @@ ges_source_get_rendering_smartly (GESSource * source)
   return source->priv->is_rendering_smartly;
 }
 
+static GstElement *
+ges_source_create_nle_object (GESTrackElement * self)
+{
+  GParamSpec *pspec;
+  GstElement *nleobject;
+
+  nleobject =
+      GES_TRACK_ELEMENT_CLASS (ges_source_parent_class)->create_gnl_object
+      (self);
+
+  if (!nleobject)
+    return NULL;
+
+  pspec =
+      g_object_class_find_property (G_OBJECT_GET_CLASS (nleobject), "reverse");
+  g_assert (pspec);
+
+
+  if (!ges_timeline_element_add_child_property_full (GES_TIMELINE_ELEMENT
+          (self), NULL, pspec, G_OBJECT (nleobject),
+          GES_TIMELINE_ELEMENT_CHILD_PROP_FLAG_SET_ON_ALL_INSTANCES))
+    GST_ERROR_OBJECT (self,
+        "Could not register the child property 'reverse' for %" GST_PTR_FORMAT,
+        nleobject);
+
+  g_param_spec_unref (pspec);
+
+  return nleobject;
+}
+
 static void
 ges_source_dispose (GObject * object)
 {
@@ -290,6 +320,7 @@ ges_source_class_init (GESSourceClass * klass)
 
   track_class->nleobject_factorytype = "nlesource";
   track_class->create_element = NULL;
+  track_class->create_gnl_object = ges_source_create_nle_object;
   object_class->dispose = ges_source_dispose;
 
   GES_TRACK_ELEMENT_CLASS_DEFAULT_HAS_INTERNAL_SOURCE (klass) = TRUE;

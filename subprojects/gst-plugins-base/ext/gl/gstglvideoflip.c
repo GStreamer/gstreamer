@@ -106,6 +106,9 @@ static void gst_gl_video_flip_set_property (GObject * object, guint prop_id,
 static void gst_gl_video_flip_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static void gst_gl_video_flip_set_method (GstGLVideoFlip * vf,
+    GstVideoOrientationMethod method, gboolean from_tag);
+
 static GstPadProbeReturn _input_sink_probe (GstPad * pad,
     GstPadProbeInfo * info, gpointer user_data);
 static GstPadProbeReturn _trans_src_probe (GstPad * pad, GstPadProbeInfo * info,
@@ -132,6 +135,17 @@ gst_gl_video_flip_video_direction_interface_init (GstVideoDirectionInterface
 }
 
 static void
+gst_gl_video_flip_constructed (GObject * object)
+{
+  GstGLVideoFlip *self = GST_GL_VIDEO_FLIP (object);
+
+  if (self->method == (GstVideoOrientationMethod) DEFAULT_METHOD) {
+    gst_gl_video_flip_set_method (self,
+        (GstVideoOrientationMethod) DEFAULT_METHOD, FALSE);
+  }
+}
+
+static void
 gst_gl_video_flip_class_init (GstGLVideoFlipClass * klass)
 {
   GObjectClass *gobject_class;
@@ -143,13 +157,13 @@ gst_gl_video_flip_class_init (GstGLVideoFlipClass * klass)
   gobject_class->finalize = gst_gl_video_flip_finalize;
   gobject_class->set_property = gst_gl_video_flip_set_property;
   gobject_class->get_property = gst_gl_video_flip_get_property;
+  gobject_class->constructed = gst_gl_video_flip_constructed;
 
   g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_enum ("method", "method",
           "method (deprecated, use video-direction instead)",
           GST_TYPE_GL_VIDEO_FLIP_METHOD, DEFAULT_METHOD,
-          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
-          G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_override_property (gobject_class, PROP_VIDEO_DIRECTION,
       "video-direction");
 
@@ -168,6 +182,12 @@ gst_gl_video_flip_init (GstGLVideoFlip * flip)
 {
   gboolean res = TRUE;
   GstPad *pad;
+
+  /* We initialize to the default and call set_method() from constructed
+   * if the value hasn't changed, this ensures set_method() does get called
+   * even if the non-construct method / direction properties aren't set
+   */
+  flip->method = (GstVideoOrientationMethod) DEFAULT_METHOD;
 
   flip->aspect = 1.0;
 

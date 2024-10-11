@@ -149,6 +149,8 @@ gst_encoding_target_finalize (GObject * object)
 
   g_list_foreach (target->profiles, (GFunc) g_object_unref, NULL);
   g_list_free (target->profiles);
+
+  G_OBJECT_CLASS (gst_encoding_target_parent_class)->finalize (object);
 }
 
 static void
@@ -640,6 +642,8 @@ parse_encoding_profile (GKeyFile * in, gchar * parentprofilename,
   proftype = g_key_file_get_value (in, profilename, "type", NULL);
   if (!proftype) {
     GST_WARNING ("Missing 'type' field for streamprofile %s", profilename);
+    g_free (pname);
+    g_free (description);
     return NULL;
   }
 

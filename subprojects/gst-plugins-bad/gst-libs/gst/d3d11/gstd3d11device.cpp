@@ -23,15 +23,24 @@
 #endif
 
 #include "gstd3d11device.h"
+#include "gstd3d11device-private.h"
 #include "gstd3d11utils.h"
 #include "gstd3d11format.h"
 #include "gstd3d11-private.h"
 #include "gstd3d11memory.h"
+#include "gstd3d11compile.h"
+#include "gstd3d11shadercache.h"
 #include <gmodule.h>
 #include <wrl.h>
 
 #include <windows.h>
 #include <versionhelpers.h>
+#include <map>
+#include <utility>
+#include <atomic>
+#include <mutex>
+#include <string.h>
+#include <unordered_map>
 
 /**
  * SECTION:gstd3d11device
@@ -87,47 +96,82 @@ enum
   PROP_DESCRIPTION,
   PROP_CREATE_FLAGS,
   PROP_ADAPTER_LUID,
+  PROP_DEVICE_REMOVED_REASON,
 };
+
+static GParamSpec *pspec_removed_reason = nullptr;
 
 #define DEFAULT_ADAPTER 0
 #define DEFAULT_CREATE_FLAGS 0
 
+/* *INDENT-OFF* */
 struct _GstD3D11DevicePrivate
 {
-  guint adapter;
-  guint device_id;
-  guint vendor_id;
-  gboolean hardware;
-  gchar *description;
-  guint create_flags;
-  gint64 adapter_luid;
+  _GstD3D11DevicePrivate ()
+  {
+    device_removed_event =
+        CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+    cancallable =
+        CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+  }
 
-  ID3D11Device *device;
-  ID3D11Device5 *device5;
-  ID3D11DeviceContext *device_context;
-  ID3D11DeviceContext4 *device_context4;
+  ~_GstD3D11DevicePrivate ()
+  {
+    CloseHandle (device_removed_event);
+    CloseHandle (cancallable);
+  }
 
-  ID3D11VideoDevice *video_device;
-  ID3D11VideoContext *video_context;
+  guint adapter = 0;
+  guint device_id = 0;
+  guint vendor_id = 0;
+  gboolean hardware = 0;
+  gchar *description = nullptr;
+  guint create_flags = 0;
+  gint64 adapter_luid = 0;
 
-  IDXGIFactory1 *factory;
-  GArray *format_table;
+  ID3D11Device *device = nullptr;
+  ID3D11Device4 *device4 = nullptr;
+  ID3D11Device5 *device5 = nullptr;
+  ID3D11DeviceContext *device_context = nullptr;
+  ID3D11DeviceContext4 *device_context4 = nullptr;
 
-  CRITICAL_SECTION extern_lock;
-  SRWLOCK resource_lock;
+  ID3D11VideoDevice *video_device = nullptr;
+  ID3D11VideoContext *video_context = nullptr;
+
+  IDXGIFactory1 *factory = nullptr;
+  std::unordered_map<GstVideoFormat, GstD3D11Format> format_table;
+
+  std::recursive_mutex extern_lock;
+  std::mutex resource_lock;
 
   LARGE_INTEGER frequency;
 
+  D3D_FEATURE_LEVEL feature_level;
+  std::map <gint64, ComPtr<ID3D11PixelShader>> ps_cache;
+  std::map <gint64,
+      std::pair<ComPtr<ID3D11VertexShader>, ComPtr<ID3D11InputLayout>>> vs_cache;
+  std::map <D3D11_FILTER, ComPtr<ID3D11SamplerState>> sampler_cache;
+
+  ID3D11RasterizerState *rs = nullptr;
+  ID3D11RasterizerState *rs_msaa = nullptr;
+
 #if HAVE_D3D11SDKLAYERS_H
-  ID3D11Debug *d3d11_debug;
-  ID3D11InfoQueue *d3d11_info_queue;
+  ID3D11Debug *d3d11_debug = nullptr;
+  ID3D11InfoQueue *d3d11_info_queue = nullptr;
 #endif
 
 #if HAVE_DXGIDEBUG_H
-  IDXGIDebug *dxgi_debug;
-  IDXGIInfoQueue *dxgi_info_queue;
+  IDXGIDebug *dxgi_debug = nullptr;
+  IDXGIInfoQueue *dxgi_info_queue = nullptr;
 #endif
+
+  DWORD device_removed_cookie = 0;
+  GThread *device_removed_monitor_thread = nullptr;
+  HANDLE device_removed_event;
+  HANDLE cancallable;
+  std::atomic<HRESULT> removed_reason = { S_OK };
 };
+/* *INDENT-ON* */
 
 static void
 debug_init_once (void)
@@ -144,7 +188,7 @@ debug_init_once (void)
 
 #define gst_d3d11_device_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstD3D11Device, gst_d3d11_device, GST_TYPE_OBJECT,
-    G_ADD_PRIVATE (GstD3D11Device); debug_init_once ());
+    debug_init_once ());
 
 static void gst_d3d11_device_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -397,23 +441,27 @@ gst_d3d11_device_class_init (GstD3D11DeviceClass * klass)
           "DXGI Adapter LUID (Locally Unique Identifier) of created device",
           G_MININT64, G_MAXINT64, 0, readable_flags));
 
+  /**
+   * GstD3D11Device:device-removed-reason:
+   *
+   * Device removed reason HRESULT code
+   *
+   * Since: 1.26
+   */
+  pspec_removed_reason =
+      g_param_spec_int ("device-removed-reason", "Device Removed Reason",
+      "HRESULT code returned from ID3D11Device::GetDeviceRemovedReason",
+      G_MININT32, G_MAXINT32, 0, readable_flags);
+  g_object_class_install_property (gobject_class, PROP_DEVICE_REMOVED_REASON,
+      pspec_removed_reason);
+
   gst_d3d11_memory_init_once ();
 }
 
 static void
 gst_d3d11_device_init (GstD3D11Device * self)
 {
-  GstD3D11DevicePrivate *priv;
-
-  priv = (GstD3D11DevicePrivate *)
-      gst_d3d11_device_get_instance_private (self);
-  priv->adapter = DEFAULT_ADAPTER;
-  priv->format_table = g_array_sized_new (FALSE, FALSE,
-      sizeof (GstD3D11Format), GST_D3D11_N_FORMATS);
-
-  InitializeCriticalSection (&priv->extern_lock);
-
-  self->priv = priv;
+  self->priv = new GstD3D11DevicePrivate ();
 }
 
 static gboolean
@@ -511,6 +559,14 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       case GST_VIDEO_FORMAT_P012_LE:
       case GST_VIDEO_FORMAT_P016_LE:
       case GST_VIDEO_FORMAT_YUY2:
+      case GST_VIDEO_FORMAT_Y210:
+      case GST_VIDEO_FORMAT_Y212_LE:
+      case GST_VIDEO_FORMAT_Y216_LE:
+      case GST_VIDEO_FORMAT_Y412_LE:
+      case GST_VIDEO_FORMAT_Y416_LE:
+      case GST_VIDEO_FORMAT_BGRA64_LE:
+      case GST_VIDEO_FORMAT_BGR10A2_LE:
+      case GST_VIDEO_FORMAT_RBGA:
       {
         gboolean supported = TRUE;
 
@@ -560,12 +616,31 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       case GST_VIDEO_FORMAT_Y444_16LE:
       case GST_VIDEO_FORMAT_AYUV:
       case GST_VIDEO_FORMAT_AYUV64:
+      case GST_VIDEO_FORMAT_UYVY:
+      case GST_VIDEO_FORMAT_VYUY:
+      case GST_VIDEO_FORMAT_YVYU:
+      case GST_VIDEO_FORMAT_ARGB:
+      case GST_VIDEO_FORMAT_xRGB:
+      case GST_VIDEO_FORMAT_ABGR:
+      case GST_VIDEO_FORMAT_xBGR:
+      case GST_VIDEO_FORMAT_RGB:
+      case GST_VIDEO_FORMAT_BGR:
+      case GST_VIDEO_FORMAT_v210:
+      case GST_VIDEO_FORMAT_v216:
+      case GST_VIDEO_FORMAT_v308:
+      case GST_VIDEO_FORMAT_IYU2:
+      case GST_VIDEO_FORMAT_RGB16:
+      case GST_VIDEO_FORMAT_BGR16:
+      case GST_VIDEO_FORMAT_RGB15:
+      case GST_VIDEO_FORMAT_BGR15:
+      case GST_VIDEO_FORMAT_r210:
         /* RGB planar formats */
       case GST_VIDEO_FORMAT_RGBP:
       case GST_VIDEO_FORMAT_BGRP:
       case GST_VIDEO_FORMAT_GBR:
       case GST_VIDEO_FORMAT_GBR_10LE:
       case GST_VIDEO_FORMAT_GBR_12LE:
+      case GST_VIDEO_FORMAT_GBR_16LE:
       case GST_VIDEO_FORMAT_GBRA:
       case GST_VIDEO_FORMAT_GBRA_10LE:
       case GST_VIDEO_FORMAT_GBRA_12LE:
@@ -604,66 +679,13 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
     for (guint j = 0; j < GST_VIDEO_MAX_PLANES; j++)
       format.format_support[j] = support[j];
 
+#ifndef GST_DISABLE_GST_DEBUG
     if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_LOG)
       dump_format (self, &format);
-
-    g_array_append_val (priv->format_table, format);
-  }
-
-  /* FIXME: d3d11 sampler doesn't support packed-and-subsampled formats
-   * very well (and it's really poorly documented).
-   * As per observation, d3d11 samplers seems to be dropping the second
-   * Y componet from "Y0-U0-Y1-V0" pair which results in bad visual quality
-   * than 4:2:0 subsampled formats. We should revisit this later */
-
-  /* TODO: The best would be using d3d11 compute shader to handle this kinds of
-   * samples but comute shader is not implemented yet by us.
-   *
-   * Another simple approach is using d3d11 video processor,
-   * but capability will be very device dependent because it depends on
-   * GPU vendor's driver implementation, moreover, software fallback does
-   * not support d3d11 video processor. So it's not reliable in this case */
-#if 0
-  /* NOTE: packted yuv 4:2:2 YUY2, UYVY, and VYUY formats are not natively
-   * supported render target view formats
-   * (i.e., cannot be output format of shader pipeline) */
-  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_YUY2;
-  if (can_support_format (self, DXGI_FORMAT_YUY2,
-          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE)) {
-    priv->format_table[n_formats].resource_format[0] =
-        DXGI_FORMAT_R8G8B8A8_UNORM;
-    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_YUY2;
-  } else {
-    /* If DXGI_FORMAT_YUY2 format is not supported, use this format,
-     * it's analogous to YUY2 */
-    priv->format_table[n_formats].resource_format[0] =
-        DXGI_FORMAT_G8R8_G8B8_UNORM;
-  }
-  n_formats++;
-
-  /* No native DXGI format available for UYVY */
-  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_UYVY;
-  priv->format_table[n_formats].resource_format[0] =
-      DXGI_FORMAT_R8G8_B8G8_UNORM;
-  n_formats++;
-
-  /* No native DXGI format available for VYUY */
-  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_VYUY;
-  priv->format_table[n_formats].resource_format[0] =
-      DXGI_FORMAT_R8G8_B8G8_UNORM;
-  n_formats++;
-
-  /* Y210 and Y410 formats cannot support rtv */
-  priv->format_table[n_formats].format = GST_VIDEO_FORMAT_Y210;
-  priv->format_table[n_formats].resource_format[0] =
-      DXGI_FORMAT_R16G16B16A16_UNORM;
-  if (can_support_format (self, DXGI_FORMAT_Y210,
-          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE))
-    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_Y210;
-  else
-    priv->format_table[n_formats].dxgi_format = DXGI_FORMAT_UNKNOWN;
-  n_formats++;
 #endif
+
+    priv->format_table[format.format] = format;
+  }
 }
 
 static void
@@ -691,6 +713,9 @@ gst_d3d11_device_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ADAPTER_LUID:
       g_value_set_int64 (value, priv->adapter_luid);
+      break;
+    case PROP_DEVICE_REMOVED_REASON:
+      g_value_set_int (value, priv->removed_reason);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -731,7 +756,20 @@ gst_d3d11_device_dispose (GObject * object)
 
   GST_LOG_OBJECT (self, "dispose");
 
+  if (priv->device4 && priv->device_removed_monitor_thread) {
+    priv->device4->UnregisterDeviceRemoved (priv->device_removed_cookie);
+    SetEvent (priv->cancallable);
+    g_clear_pointer (&priv->device_removed_monitor_thread, g_thread_join);
+  }
+
+  priv->ps_cache.clear ();
+  priv->vs_cache.clear ();
+  priv->sampler_cache.clear ();
+
+  GST_D3D11_CLEAR_COM (priv->rs);
+  GST_D3D11_CLEAR_COM (priv->rs_msaa);
   GST_D3D11_CLEAR_COM (priv->device5);
+  GST_D3D11_CLEAR_COM (priv->device4);
   GST_D3D11_CLEAR_COM (priv->device_context4);
   GST_D3D11_CLEAR_COM (priv->video_device);
   GST_D3D11_CLEAR_COM (priv->video_context);
@@ -761,9 +799,9 @@ gst_d3d11_device_finalize (GObject * object)
 
   GST_LOG_OBJECT (self, "finalize");
 
-  g_array_unref (priv->format_table);
-  DeleteCriticalSection (&priv->extern_lock);
   g_free (priv->description);
+
+  delete priv;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -846,7 +884,6 @@ _gst_d3d11_device_get_adapter (const GstD3D11DeviceConstructData * data,
       ComPtr < IDXGIDevice > dxgi_device;
       ComPtr < IDXGIAdapter > adapter;
       ID3D11Device *device = data->data.device;
-      guint luid;
 
       hr = device->QueryInterface (IID_PPV_ARGS (&dxgi_device));
       if (FAILED (hr))
@@ -864,7 +901,7 @@ _gst_d3d11_device_get_adapter (const GstD3D11DeviceConstructData * data,
       if (FAILED (hr))
         return hr;
 
-      luid = gst_d3d11_luid_to_int64 (&desc.AdapterLuid);
+      auto luid = gst_d3d11_luid_to_int64 (&desc.AdapterLuid);
 
       for (guint i = 0;; i++) {
         DXGI_ADAPTER_DESC tmp_desc;
@@ -960,12 +997,47 @@ gst_d3d11_device_setup_debug_layer (GstD3D11Device * self)
 #endif
 }
 
+void
+gst_d3d11_device_check_device_removed (GstD3D11Device * self)
+{
+  auto priv = self->priv;
+  auto removed_reason = priv->device->GetDeviceRemovedReason ();
+
+  if (removed_reason == S_OK)
+    return;
+
+  HRESULT expected = S_OK;
+  if (std::atomic_compare_exchange_strong (&priv->removed_reason,
+          &expected, removed_reason)) {
+    auto error_text = g_win32_error_message ((guint) priv->removed_reason);
+    GST_ERROR_OBJECT (self, "DeviceRemovedReason: 0x%x, %s",
+        (guint) priv->removed_reason, GST_STR_NULL (error_text));
+    g_free (error_text);
+
+    g_object_notify_by_pspec (G_OBJECT (self), pspec_removed_reason);
+  }
+}
+
+static gpointer
+gst_d3d11_device_removed_monitor_thread (GstD3D11Device * self)
+{
+  auto priv = self->priv;
+  HANDLE waitables[] = { priv->device_removed_event, priv->cancallable };
+
+  auto ret = WaitForMultipleObjects (2, waitables, FALSE, INFINITE);
+  if (ret == WAIT_OBJECT_0)
+    gst_d3d11_device_check_device_removed (self);
+
+  return nullptr;
+}
+
 static GstD3D11Device *
 gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
 {
   ComPtr < IDXGIAdapter1 > adapter;
   ComPtr < IDXGIFactory1 > factory;
   ComPtr < ID3D11Device > device;
+  ComPtr < ID3D11Device4 > device4;
   ComPtr < ID3D11Device5 > device5;
   ComPtr < ID3D11DeviceContext > device_context;
   ComPtr < ID3D11DeviceContext4 > device_context4;
@@ -978,9 +1050,6 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
     D3D_FEATURE_LEVEL_11_0,
     D3D_FEATURE_LEVEL_10_1,
     D3D_FEATURE_LEVEL_10_0,
-    D3D_FEATURE_LEVEL_9_3,
-    D3D_FEATURE_LEVEL_9_2,
-    D3D_FEATURE_LEVEL_9_1
   };
   D3D_FEATURE_LEVEL selected_level;
 
@@ -1018,6 +1087,12 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
     hr = external_device->QueryInterface (IID_PPV_ARGS (&device));
     if (FAILED (hr)) {
       GST_WARNING ("Not a valid external ID3D11Device handle");
+      return nullptr;
+    }
+
+    selected_level = device->GetFeatureLevel ();
+    if (selected_level < D3D_FEATURE_LEVEL_10_0) {
+      GST_ERROR ("Feature level 0x%x is not supported", (guint) selected_level);
       return nullptr;
     }
 
@@ -1094,6 +1169,18 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
 
   priv = self->priv;
 
+  hr = device.As (&device4);
+  if (SUCCEEDED (hr)) {
+    hr = device4->RegisterDeviceRemovedEvent (priv->device_removed_event,
+        &priv->device_removed_cookie);
+    if (SUCCEEDED (hr)) {
+      priv->device4 = device4.Detach ();
+      priv->device_removed_monitor_thread =
+          g_thread_new ("d3d11-removed-monitor",
+          (GThreadFunc) gst_d3d11_device_removed_monitor_thread, self);
+    }
+  }
+
   hr = device.As (&device5);
   if (SUCCEEDED (hr))
     hr = device_context.As (&device_context4);
@@ -1112,6 +1199,7 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
   priv->description = g_utf16_to_utf8 ((gunichar2 *) adapter_desc.Description,
       -1, nullptr, nullptr, nullptr);
   priv->adapter_luid = gst_d3d11_luid_to_int64 (&adapter_desc.AdapterLuid);
+  priv->feature_level = priv->device->GetFeatureLevel ();
 
   DXGI_ADAPTER_DESC1 desc1;
   hr = adapter->GetDesc1 (&desc1);
@@ -1275,7 +1363,7 @@ gst_d3d11_device_get_video_device_handle (GstD3D11Device * device)
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
   priv = device->priv;
-  GstD3D11SRWLockGuard lk (&priv->resource_lock);
+  std::lock_guard < std::mutex > lk (priv->resource_lock);
   if (!priv->video_device) {
     HRESULT hr;
     ID3D11VideoDevice *video_device = NULL;
@@ -1308,7 +1396,7 @@ gst_d3d11_device_get_video_context_handle (GstD3D11Device * device)
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
   priv = device->priv;
-  GstD3D11SRWLockGuard lk (&priv->resource_lock);
+  std::lock_guard < std::mutex > lk (priv->resource_lock);
   if (!priv->video_context) {
     HRESULT hr;
     ID3D11VideoContext *video_context = NULL;
@@ -1341,7 +1429,7 @@ gst_d3d11_device_lock (GstD3D11Device * device)
   priv = device->priv;
 
   GST_TRACE_OBJECT (device, "device locking");
-  EnterCriticalSection (&priv->extern_lock);
+  priv->extern_lock.lock ();
   GST_TRACE_OBJECT (device, "device locked");
 }
 
@@ -1363,7 +1451,7 @@ gst_d3d11_device_unlock (GstD3D11Device * device)
 
   priv = device->priv;
 
-  LeaveCriticalSection (&priv->extern_lock);
+  priv->extern_lock.unlock ();
   GST_TRACE_OBJECT (device, "device unlocked");
 }
 
@@ -1390,23 +1478,18 @@ gst_d3d11_device_get_format (GstD3D11Device * device, GstVideoFormat format,
 
   priv = device->priv;
 
-  for (guint i = 0; i < priv->format_table->len; i++) {
-    const GstD3D11Format *d3d11_fmt =
-        &g_array_index (priv->format_table, GstD3D11Format, i);
-
-    if (d3d11_fmt->format != format)
-      continue;
-
+  const auto & target = priv->format_table.find (format);
+  if (target == priv->format_table.end ()) {
     if (device_format)
-      *device_format = *d3d11_fmt;
+      gst_d3d11_format_init (device_format);
 
-    return TRUE;
+    return FALSE;
   }
 
   if (device_format)
-    gst_d3d11_format_init (device_format);
+    *device_format = target->second;
 
-  return FALSE;
+  return TRUE;
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstD3D11Fence, gst_d3d11_fence);
@@ -1662,4 +1745,251 @@ gst_d3d11_fence_wait (GstD3D11Fence * fence)
   priv->synced = TRUE;
 
   return TRUE;
+}
+
+gint64
+gst_d3d11_pixel_shader_token_new (void)
+{
+  /* *INDENT-OFF* */
+  static std::atomic < gint64 > token_ { 0 };
+  /* *INDENT-ON* */
+
+  return token_.fetch_add (1);
+}
+
+gint64
+gst_d3d11_vertex_shader_token_new (void)
+{
+  /* *INDENT-OFF* */
+  static std::atomic < gint64 > token_ { 0 };
+  /* *INDENT-ON* */
+
+  return token_.fetch_add (1);
+}
+
+gint64
+gst_d3d11_compute_shader_token_new (void)
+{
+  /* *INDENT-OFF* */
+  static std::atomic < gint64 > token_ { 0 };
+  /* *INDENT-ON* */
+
+  return token_.fetch_add (1);
+}
+
+HRESULT
+gst_d3d11_device_get_pixel_shader (GstD3D11Device * device, gint64 token,
+    const gchar * entry_point, const GstD3DShaderByteCode * bytecode,
+    ID3D11PixelShader ** ps)
+{
+  GstD3D11DevicePrivate *priv = device->priv;
+  HRESULT hr;
+  ComPtr < ID3D11PixelShader > shader;
+
+  GST_DEBUG_OBJECT (device, "Getting pixel shader \"%s\" for token %"
+      G_GINT64_FORMAT, GST_STR_NULL (entry_point), token);
+
+  std::lock_guard < std::mutex > lk (priv->resource_lock);
+  auto cached = priv->ps_cache.find (token);
+  if (cached != priv->ps_cache.end ()) {
+    GST_DEBUG_OBJECT (device,
+        "Found cached pixel shader \"%s for token %" G_GINT64_FORMAT,
+        GST_STR_NULL (entry_point), token);
+    *ps = cached->second.Get ();
+    (*ps)->AddRef ();
+    return S_OK;
+  }
+
+  hr = priv->device->CreatePixelShader (bytecode->byte_code,
+      bytecode->byte_code_len, nullptr, &shader);
+  if (!gst_d3d11_result (hr, device))
+    return hr;
+
+  priv->ps_cache[token] = shader;
+  *ps = shader.Detach ();
+
+  return S_OK;
+}
+
+HRESULT
+gst_d3d11_device_get_vertex_shader (GstD3D11Device * device, gint64 token,
+    const gchar * entry_point, const GstD3DShaderByteCode * bytecode,
+    const D3D11_INPUT_ELEMENT_DESC * input_desc, guint desc_len,
+    ID3D11VertexShader ** vs, ID3D11InputLayout ** layout)
+{
+  GstD3D11DevicePrivate *priv = device->priv;
+  HRESULT hr;
+  ComPtr < ID3D11VertexShader > shader;
+  ComPtr < ID3D11InputLayout > input_layout;
+
+  GST_DEBUG_OBJECT (device, "Getting vertext shader \"%s\" for token %"
+      G_GINT64_FORMAT, GST_STR_NULL (entry_point), token);
+
+  std::lock_guard < std::mutex > lk (priv->resource_lock);
+  auto cached = priv->vs_cache.find (token);
+  if (cached != priv->vs_cache.end ()) {
+    GST_DEBUG_OBJECT (device,
+        "Found cached vertex shader \"%s\" for token %" G_GINT64_FORMAT,
+        GST_STR_NULL (entry_point), token);
+    *vs = cached->second.first.Get ();
+    *layout = cached->second.second.Get ();
+    (*vs)->AddRef ();
+    (*layout)->AddRef ();
+    return S_OK;
+  }
+
+  hr = priv->device->CreateVertexShader (bytecode->byte_code,
+      bytecode->byte_code_len, nullptr, &shader);
+  if (!gst_d3d11_result (hr, device))
+    return hr;
+
+  hr = priv->device->CreateInputLayout (input_desc, desc_len,
+      bytecode->byte_code, bytecode->byte_code_len, &input_layout);
+  if (!gst_d3d11_result (hr, device))
+    return hr;
+
+  GST_DEBUG_OBJECT (device, "Created vertex shader \"%s\" for token %"
+      G_GINT64_FORMAT, GST_STR_NULL (entry_point), token);
+  priv->vs_cache[token] = std::make_pair (shader, input_layout);
+
+  *vs = shader.Detach ();
+  *layout = input_layout.Detach ();
+
+  return S_OK;
+}
+
+HRESULT
+gst_d3d11_device_get_sampler (GstD3D11Device * device, D3D11_FILTER filter,
+    ID3D11SamplerState ** sampler)
+{
+  GstD3D11DevicePrivate *priv = device->priv;
+  ComPtr < ID3D11SamplerState > state;
+  D3D11_SAMPLER_DESC desc;
+  HRESULT hr;
+
+  std::lock_guard < std::mutex > lk (priv->resource_lock);
+  auto cached = priv->sampler_cache.find (filter);
+  if (cached != priv->sampler_cache.end ()) {
+    *sampler = cached->second.Get ();
+    (*sampler)->AddRef ();
+    return S_OK;
+  }
+
+  memset (&desc, 0, sizeof (D3D11_SAMPLER_DESC));
+
+  desc.Filter = filter;
+  desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+  desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+  desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+  desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+  desc.MaxLOD = D3D11_FLOAT32_MAX;
+
+  if (filter == D3D11_FILTER_ANISOTROPIC) {
+    if (priv->feature_level > D3D_FEATURE_LEVEL_9_1)
+      desc.MaxAnisotropy = 16;
+    else
+      desc.MaxAnisotropy = 2;
+  }
+
+  hr = priv->device->CreateSamplerState (&desc, &state);
+  if (!gst_d3d11_result (hr, device))
+    return hr;
+
+  priv->sampler_cache[filter] = state;
+  *sampler = state.Detach ();
+
+  return S_OK;
+}
+
+HRESULT
+gst_d3d11_device_get_rasterizer (GstD3D11Device * device,
+    ID3D11RasterizerState ** rasterizer)
+{
+  GstD3D11DevicePrivate *priv = device->priv;
+  D3D11_RASTERIZER_DESC desc;
+  HRESULT hr;
+
+  std::lock_guard < std::mutex > lk (priv->resource_lock);
+  if (priv->rs) {
+    *rasterizer = priv->rs;
+    priv->rs->AddRef ();
+    return S_OK;
+  }
+
+  memset (&desc, 0, sizeof (D3D11_RASTERIZER_DESC));
+  desc.FillMode = D3D11_FILL_SOLID;
+  desc.CullMode = D3D11_CULL_NONE;
+  desc.DepthClipEnable = TRUE;
+
+  hr = priv->device->CreateRasterizerState (&desc, rasterizer);
+  if (!gst_d3d11_result (hr, device))
+    return hr;
+
+  priv->rs = *rasterizer;
+  priv->rs->AddRef ();
+
+  return S_OK;
+}
+
+HRESULT
+gst_d3d11_device_get_rasterizer_msaa (GstD3D11Device * device,
+    ID3D11RasterizerState ** rasterizer)
+{
+  GstD3D11DevicePrivate *priv = device->priv;
+  D3D11_RASTERIZER_DESC desc;
+  HRESULT hr;
+
+  std::lock_guard < std::mutex > lk (priv->resource_lock);
+  if (priv->rs_msaa) {
+    *rasterizer = priv->rs_msaa;
+    priv->rs_msaa->AddRef ();
+    return S_OK;
+  }
+
+  memset (&desc, 0, sizeof (D3D11_RASTERIZER_DESC));
+  desc.FillMode = D3D11_FILL_SOLID;
+  desc.CullMode = D3D11_CULL_NONE;
+  desc.DepthClipEnable = TRUE;
+  desc.MultisampleEnable = TRUE;
+  desc.AntialiasedLineEnable = TRUE;
+
+  hr = priv->device->CreateRasterizerState (&desc, rasterizer);
+  if (!gst_d3d11_result (hr, device))
+    return hr;
+
+  priv->rs_msaa = *rasterizer;
+  priv->rs_msaa->AddRef ();
+
+  return S_OK;
+}
+
+gboolean
+gst_d3d11_device_d3d12_import_supported (GstD3D11Device * device)
+{
+#ifdef HAVE_D3D11_FEATURE_DATA_D3D11_OPTIONS5
+  auto priv = device->priv;
+  auto dev = priv->device;
+
+  D3D11_FEATURE_DATA_D3D11_OPTIONS options = { };
+  D3D11_FEATURE_DATA_D3D11_OPTIONS4 options4 = { };
+  D3D11_FEATURE_DATA_D3D11_OPTIONS5 options5 = { };
+  auto hr = dev->CheckFeatureSupport (D3D11_FEATURE_D3D11_OPTIONS5,
+      &options5, sizeof (options5));
+  if (FAILED (hr) || options5.SharedResourceTier < D3D11_SHARED_RESOURCE_TIER_2)
+    return FALSE;
+
+  hr = dev->CheckFeatureSupport (D3D11_FEATURE_D3D11_OPTIONS,
+      &options, sizeof (options));
+  if (FAILED (hr) || !options.ExtendedResourceSharing)
+    return FALSE;
+
+  hr = dev->CheckFeatureSupport (D3D11_FEATURE_D3D11_OPTIONS4,
+      &options4, sizeof (options4));
+  if (FAILED (hr) || !options4.ExtendedNV12SharedTextureSupported)
+    return FALSE;
+
+  return TRUE;
+#else
+  return FALSE;
+#endif
 }

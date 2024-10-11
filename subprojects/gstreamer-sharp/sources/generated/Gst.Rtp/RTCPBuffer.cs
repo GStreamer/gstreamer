@@ -110,19 +110,21 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_rtcp_buffer_new_copy_data(byte[] data, uint n_length);
+		static extern IntPtr gst_rtcp_buffer_new_copy_data([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, uint n_length);
 
 		public static Gst.Buffer NewCopyData(byte[] data) {
-			IntPtr raw_ret = gst_rtcp_buffer_new_copy_data(data, (uint) (data == null ? 0 : data.Length));
+			uint n_length = (uint)(data == null ? 0 : data.Length);
+			IntPtr raw_ret = gst_rtcp_buffer_new_copy_data(data, n_length);
 			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
 			return ret;
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_rtcp_buffer_new_take_data(byte[] data, uint n_length);
+		static extern IntPtr gst_rtcp_buffer_new_take_data([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, uint n_length);
 
 		public static Gst.Buffer NewTakeData(byte[] data) {
-			IntPtr raw_ret = gst_rtcp_buffer_new_take_data(data, (uint) (data == null ? 0 : data.Length));
+			uint n_length = (uint)(data == null ? 0 : data.Length);
+			IntPtr raw_ret = gst_rtcp_buffer_new_take_data(data, n_length);
 			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
 			return ret;
 		}
@@ -137,18 +139,20 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtcp_buffer_validate_data(byte[] data, uint len);
+		static extern bool gst_rtcp_buffer_validate_data([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, uint len);
 
-		public static bool ValidateData(byte[] data, uint len) {
+		public static bool ValidateData(byte[] data) {
+			uint len = (uint)(data == null ? 0 : data.Length);
 			bool raw_ret = gst_rtcp_buffer_validate_data(data, len);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtcp_buffer_validate_data_reduced(byte[] data, uint len);
+		static extern bool gst_rtcp_buffer_validate_data_reduced([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, uint len);
 
-		public static bool ValidateDataReduced(byte[] data, uint len) {
+		public static bool ValidateDataReduced(byte[] data) {
+			uint len = (uint)(data == null ? 0 : data.Length);
 			bool raw_ret = gst_rtcp_buffer_validate_data_reduced(data, len);
 			bool ret = raw_ret;
 			return ret;

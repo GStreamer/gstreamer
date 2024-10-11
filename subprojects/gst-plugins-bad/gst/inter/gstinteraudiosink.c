@@ -293,6 +293,7 @@ gst_inter_audio_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   guint n, bpf;
   guint64 period_time, buffer_time;
   guint64 period_samples, buffer_samples;
+  GstBuffer *tmp;
 
   GST_DEBUG_OBJECT (interaudiosink, "render %" G_GSIZE_FORMAT,
       gst_buffer_get_size (buffer));
@@ -330,16 +331,26 @@ gst_inter_audio_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
   n = gst_adapter_available (interaudiosink->input_adapter);
   if (period_samples * bpf > gst_buffer_get_size (buffer) + n) {
-    gst_adapter_push (interaudiosink->input_adapter, gst_buffer_ref (buffer));
+    GstAudioMeta *audio_meta = NULL;
+
+    tmp = gst_buffer_copy_deep (buffer);
+    audio_meta = gst_buffer_get_audio_meta (tmp);
+    if (audio_meta != NULL)
+      gst_buffer_remove_meta (tmp, GST_META_CAST (audio_meta));
+
+    gst_adapter_push (interaudiosink->input_adapter, tmp);
   } else {
-    GstBuffer *tmp;
+    GstAudioMeta *audio_meta = NULL;
 
     if (n > 0) {
       tmp = gst_adapter_take_buffer (interaudiosink->input_adapter, n);
       gst_adapter_push (interaudiosink->surface->audio_adapter, tmp);
     }
-    gst_adapter_push (interaudiosink->surface->audio_adapter,
-        gst_buffer_ref (buffer));
+    tmp = gst_buffer_copy_deep (buffer);
+    audio_meta = gst_buffer_get_audio_meta (tmp);
+    if (audio_meta != NULL)
+      gst_buffer_remove_meta (tmp, GST_META_CAST (audio_meta));
+    gst_adapter_push (interaudiosink->surface->audio_adapter, tmp);
   }
   g_mutex_unlock (&interaudiosink->surface->mutex);
 

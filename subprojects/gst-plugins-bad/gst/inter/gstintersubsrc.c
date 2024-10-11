@@ -26,7 +26,7 @@
  *
  * ## Example launch line
  * |[
- * gst-launch-1.0 -v intersubsrc ! kateenc ! oggmux ! filesink location=out.ogv
+ * gst-launch-1.0 -v intersubsrc ! srtenc ! filesink location=subtitles.srt
  * ]|
  *
  * The intersubsrc element cannot be used effectively with gst-launch-1.0,

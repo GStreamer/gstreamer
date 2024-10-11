@@ -1,6 +1,6 @@
 project('gst-devtools', 'c',
-  version : '1.23.0.1',
-  meson_version : '>= 0.62',
+  version : '1.25.0.1',
+  meson_version : '>= 1.1',
   default_options : [ 'warning_level=1',
                       'c_std=gnu99',
                       'buildtype=debugoptimized' ])
@@ -28,7 +28,7 @@ osxversion = curversion + 1
 
 prefix = get_option('prefix')
 
-glib_req = '>= 2.62.0'
+glib_req = '>= 2.64.0'
 
 if gst_version_is_stable
   gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
@@ -83,6 +83,8 @@ gst_dep = dependency('gstreamer-' + apiversion, version : gst_req,
     fallback : ['gstreamer', 'gst_dep'])
 gstbase_dep = dependency('gstreamer-base-' + apiversion, version : gst_req,
     fallback : ['gstreamer', 'gst_base_dep'])
+gstapp_dep = dependency('gstreamer-app-' + apiversion, version : gst_req,
+    fallback : ['gst-plugins-base', 'app_dep'])
 gst_pbutils_dep = dependency('gstreamer-pbutils-' + apiversion, version : gst_req,
     fallback : ['gst-plugins-base', 'pbutils_dep'])
 gst_video_dep = dependency('gstreamer-video-' + apiversion, version : gst_req,
@@ -174,7 +176,7 @@ if not get_option('debug_viewer').disabled()
 endif
 subdir('docs')
 
-meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.22.0', meson.project_version())
 
 plugin_names = []
 gst_plugins = []

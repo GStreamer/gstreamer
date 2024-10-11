@@ -1,6 +1,6 @@
 project('gstreamer-vaapi', 'c',
-  version : '1.23.0.1',
-  meson_version : '>= 0.62',
+  version : '1.25.0.1',
+  meson_version : '>= 1.1',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -79,14 +79,10 @@ else
   message('GStreamer debug system is enabled')
 endif
 
-libva_dep = dependency('libva', version: libva_req,
-  fallback : ['libva', 'libva_dep'])
-libva_drm_dep = dependency('libva-drm', version: libva_req,
-  required: get_option('drm'), fallback : ['libva', 'libva_drm_dep'])
-libva_wayland_dep = dependency('libva-wayland', version: libva_req,
-  required: get_option('wayland'), fallback : ['libva', 'libva_wayland_dep'])
-libva_x11_dep = dependency('libva-x11', version: libva_req,
-  required: get_option('x11'), fallback : ['libva', 'libva_x11_dep'])
+libva_dep = dependency('libva', version: libva_req)
+libva_drm_dep = dependency('libva-drm', required: get_option('drm'), version: libva_req)
+libva_wayland_dep = dependency('libva-wayland', required: get_option('wayland'), version: libva_req)
+libva_x11_dep = dependency('libva-x11', required: get_option('x11'), version: libva_req)
 
 libdrm_dep = dependency('libdrm', version: libdrm_req, required: get_option('drm'))
 libudev_dep = dependency('libudev', required: get_option('drm'))
@@ -236,7 +232,7 @@ endif
 
 configure_file(output: 'config.h', configuration: cdata)
 
-meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.22.0', meson.project_version())
 
 pkgconfig = import('pkgconfig')
 plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')

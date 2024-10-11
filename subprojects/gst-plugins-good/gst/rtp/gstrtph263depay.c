@@ -126,6 +126,9 @@ gst_rtp_h263_depay_init (GstRtpH263Depay * rtph263depay)
 
   rtph263depay->offset = 0;
   rtph263depay->leftover = 0;
+
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (rtph263depay), TRUE);
 }
 
 static void
@@ -407,6 +410,7 @@ too_small:
   {
     GST_ELEMENT_WARNING (rtph263depay, STREAM, DECODE,
         ("Packet payload was too small"), (NULL));
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 }

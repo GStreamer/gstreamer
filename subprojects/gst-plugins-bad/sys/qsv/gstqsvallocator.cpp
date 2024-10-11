@@ -149,6 +149,8 @@ gst_qsv_allocator_init (GstQsvAllocator * self)
 {
   GstQsvAllocatorPrivate *priv;
 
+  self->is_gbr = FALSE;
+
   priv = self->priv = (GstQsvAllocatorPrivate *)
       gst_qsv_allocator_get_instance_private (self);
 
@@ -199,33 +201,7 @@ gst_qsv_allocator_alloc_default (GstQsvAllocator * self, gboolean dummy_alloc,
     return MFX_ERR_UNSUPPORTED;
   }
 
-  switch (request->Info.FourCC) {
-    case MFX_FOURCC_NV12:
-      format = GST_VIDEO_FORMAT_NV12;
-      break;
-    case MFX_FOURCC_P010:
-      format = GST_VIDEO_FORMAT_P010_10LE;
-      break;
-    case MFX_FOURCC_P016:
-      format = GST_VIDEO_FORMAT_P016_LE;
-      break;
-    case MFX_FOURCC_AYUV:
-      format = GST_VIDEO_FORMAT_VUYA;
-      break;
-    case MFX_FOURCC_Y410:
-      format = GST_VIDEO_FORMAT_Y410;
-      break;
-    case MFX_FOURCC_YUY2:
-      format = GST_VIDEO_FORMAT_YUY2;
-      break;
-    case MFX_FOURCC_RGB4:
-      format = GST_VIDEO_FORMAT_BGRA;
-      break;
-    default:
-      /* TODO: add more formats */
-      break;
-  }
-
+  format = gst_qsv_frame_info_format_to_gst (&request->Info, self->is_gbr);
   if (format == GST_VIDEO_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (self, "Unknown MFX format fourcc %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (request->Info.FourCC));
@@ -408,48 +384,58 @@ gst_qsv_allocator_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * ptr)
 
   frame->map_count++;
   stride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame->frame, 0);
+  ptr->PitchHigh = (mfxU16) (stride / (1 << 16));
+  ptr->PitchLow = (mfxU16) (stride % (1 << 16));
 
   /* FIXME: check and handle other formats */
   switch (GST_VIDEO_INFO_FORMAT (&frame->info)) {
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P012_LE:
     case GST_VIDEO_FORMAT_P016_LE:
-      ptr->Pitch = (mfxU16) stride;
       ptr->Y = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
       ptr->UV = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 1);
       break;
+    case GST_VIDEO_FORMAT_YUY2:
+      ptr->Y = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
+      ptr->U = ptr->Y + 1;
+      ptr->V = ptr->Y + 3;
+      break;
+    case GST_VIDEO_FORMAT_Y210:
+    case GST_VIDEO_FORMAT_Y212_LE:
+      ptr->Y16 = (mfxU16 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
+      ptr->U16 = ptr->Y16 + 1;
+      ptr->V16 = ptr->Y16 + 3;
+      break;
     case GST_VIDEO_FORMAT_VUYA:
-      ptr->PitchHigh = (mfxU16) (stride / (1 << 16));
-      ptr->PitchLow = (mfxU16) (stride % (1 << 16));
+    case GST_VIDEO_FORMAT_RBGA:
       ptr->V = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
       ptr->U = ptr->V + 1;
       ptr->Y = ptr->V + 2;
       ptr->A = ptr->V + 3;
       break;
     case GST_VIDEO_FORMAT_Y410:
-      ptr->PitchHigh = (mfxU16) (stride / (1 << 16));
-      ptr->PitchLow = (mfxU16) (stride % (1 << 16));
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
       ptr->Y410 = (mfxY410 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
       break;
+    case GST_VIDEO_FORMAT_Y412_LE:
+    case GST_VIDEO_FORMAT_BGRA64_LE:
+      ptr->U = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
+      ptr->Y = ptr->Y + 2;
+      ptr->V = ptr->Y + 4;
+      ptr->A = ptr->Y + 6;
+      break;
     case GST_VIDEO_FORMAT_BGRA:
-      ptr->Pitch = (mfxU16) stride;
       ptr->B = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
       ptr->G = ptr->B + 1;
       ptr->R = ptr->B + 2;
       ptr->A = ptr->B + 3;
       break;
     case GST_VIDEO_FORMAT_RGBA:
-      ptr->Pitch = (mfxU16) stride;
       ptr->R = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
       ptr->G = ptr->R + 1;
       ptr->B = ptr->R + 2;
       ptr->A = ptr->R + 3;
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-      ptr->Pitch = (mfxU16) stride;
-      ptr->Y = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
-      ptr->U = ptr->Y + 1;
-      ptr->V = ptr->Y + 3;
       break;
     default:
       break;

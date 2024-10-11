@@ -99,6 +99,10 @@ static const GstRTSPTransMap transports[] = {
   {"srtpf", GST_RTSP_TRANS_RTP, GST_RTSP_PROFILE_SAVPF,
         GST_RTSP_LOWER_TRANS_UDP_MCAST, "application/x-srtp",
       {"rtpbin", "rtpdec"}},
+  /* FIXME: these two are no longer supported (the rdtmanager element and
+   * related code has been removed from the realmedia plugin), but let's keep
+   * this around for now so it can still be added back via plugins if needed.
+   * FIXME 2.0: remove */
   {"x-real-rdt", GST_RTSP_TRANS_RDT, GST_RTSP_PROFILE_AVP,
         GST_RTSP_LOWER_TRANS_UNKNOWN, "application/x-rdt",
       {"rdtmanager", NULL}},

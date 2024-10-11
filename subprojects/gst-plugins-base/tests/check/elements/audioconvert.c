@@ -26,6 +26,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/audio/audio.h>
+#include <gst/audioconvert/gstaudioconvert.h>
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
@@ -46,7 +47,8 @@ static GstPad *mysrcpad, *mysinkpad;
 
 /* takes over reference for outcaps */
 static GstElement *
-setup_audioconvert (GstCaps * outcaps)
+setup_audioconvert (GstCaps * outcaps, gboolean use_mix_matrix,
+    GValue * mix_matrix)
 {
   GstPadTemplate *sinktemplate;
   static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
@@ -63,6 +65,9 @@ setup_audioconvert (GstCaps * outcaps)
   audioconvert = gst_check_setup_element ("audioconvert");
   g_object_set (G_OBJECT (audioconvert), "dithering", 0, NULL);
   g_object_set (G_OBJECT (audioconvert), "noise-shaping", 0, NULL);
+  if (use_mix_matrix) {
+    g_object_set_property (G_OBJECT (audioconvert), "mix-matrix", mix_matrix);
+  }
   mysrcpad = gst_check_setup_src_pad (audioconvert, &srctemplate);
   mysinkpad =
       gst_check_setup_sink_pad_from_template (audioconvert, sinktemplate);
@@ -78,6 +83,46 @@ setup_audioconvert (GstCaps * outcaps)
   return audioconvert;
 }
 
+static GstElement *
+setup_audioconvert_with_input_channels_reorder (GstCaps * outcaps,
+    GstAudioConvertInputChannelsReorder reorder)
+{
+  GstPadTemplate *sinktemplate;
+  static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+      GST_PAD_SRC,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (CONVERT_CAPS_TEMPLATE_STRING)
+      );
+  GstElement *audioconvert;
+
+  ASSERT_CAPS_REFCOUNT (outcaps, "outcaps", 1);
+  sinktemplate =
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, outcaps);
+
+  GST_DEBUG ("setup_audioconvert with caps %" GST_PTR_FORMAT, outcaps);
+  audioconvert = gst_check_setup_element ("audioconvert");
+  g_object_set (G_OBJECT (audioconvert), "dithering", 0, NULL);
+  g_object_set (G_OBJECT (audioconvert), "noise-shaping", 0, NULL);
+  g_object_set (G_OBJECT (audioconvert), "input-channels-reorder",
+      reorder, "input-channels-reorder-mode",
+      GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_MODE_UNPOSITIONED, NULL);
+
+  mysrcpad = gst_check_setup_src_pad (audioconvert, &srctemplate);
+  mysinkpad =
+      gst_check_setup_sink_pad_from_template (audioconvert, sinktemplate);
+  /* this installs a getcaps func that will always return the caps we set
+   * later */
+  gst_pad_use_fixed_caps (mysinkpad);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  gst_object_unref (sinktemplate);
+
+  ASSERT_CAPS_REFCOUNT (outcaps, "outcaps", 2);
+  return audioconvert;
+}
+
 static void
 cleanup_audioconvert (GstElement * audioconvert)
 {
@@ -88,6 +133,41 @@ cleanup_audioconvert (GstElement * audioconvert)
   gst_check_teardown_src_pad (audioconvert);
   gst_check_teardown_sink_pad (audioconvert);
   gst_check_teardown_element (audioconvert);
+}
+
+static gchar *
+format_input_channels_reorder_test_name (const gchar * test_name,
+    GstAudioConvertInputChannelsReorder reorder)
+{
+  const gchar *reorder_name = "unknown";
+  switch (reorder) {
+    case GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_GST:
+      reorder_name = "gst";
+      break;
+    case GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_SMPTE:
+      reorder_name = "smpte";
+      break;
+    case GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_CINE:
+      reorder_name = "cine";
+      break;
+    case GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_AC3:
+      reorder_name = "ac3";
+      break;
+    case GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_AAC:
+      reorder_name = "aac";
+      break;
+    case GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_MONO:
+      reorder_name = "mono";
+      break;
+    case GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_ALTERNATE:
+      reorder_name = "alternate";
+      break;
+    default:
+      break;
+  }
+
+  return g_strdup_printf ("%s with input channels %s reorder", test_name,
+      reorder_name);
 }
 
 /* returns a newly allocated caps */
@@ -147,6 +227,29 @@ get_float_caps (guint channels, gint endianness, guint width,
   gst_audio_info_set_format (&info, get_float_format (endianness, width),
       GST_AUDIO_DEF_RATE, channels, NULL);
   info.layout = layout;
+
+  caps = gst_audio_info_to_caps (&info);
+  fail_unless (caps != NULL);
+  GST_DEBUG ("returning caps %" GST_PTR_FORMAT, caps);
+
+  return caps;
+}
+
+static GstCaps *
+get_unpositioned_input_caps (guint channels)
+{
+  GstCaps *caps;
+  GstAudioInfo info;
+
+  gst_audio_info_init (&info);
+  gst_audio_info_set_format (&info,
+      gst_audio_format_build_integer (TRUE, G_BYTE_ORDER, 16, 16),
+      GST_AUDIO_DEF_RATE, channels, NULL);
+  info.layout = GST_AUDIO_LAYOUT_INTERLEAVED;
+
+  info.flags = GST_AUDIO_FLAG_UNPOSITIONED;
+  for (guint i = 0; i < MIN (64, channels); ++i)
+    info.position[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
 
   caps = gst_audio_info_to_caps (&info);
   fail_unless (caps != NULL);
@@ -408,7 +511,9 @@ get_int_mc_caps (guint channels, gint endianness, guint width,
 static void
 verify_convert (const gchar * which, void *in, int inlength,
     GstCaps * incaps, void *out, int outlength, GstCaps * outcaps,
-    GstFlowReturn expected_flow, gboolean in_place_allowed)
+    GstFlowReturn expected_flow, gboolean in_place_allowed,
+    gboolean use_mix_matrix, GValue * mix_matrix,
+    GstElement * custom_audioconvert)
 {
   GstBuffer *inbuffer, *outbuffer;
   GstElement *audioconvert;
@@ -418,8 +523,13 @@ verify_convert (const gchar * which, void *in, int inlength,
   GST_DEBUG ("incaps: %" GST_PTR_FORMAT, incaps);
   GST_DEBUG ("outcaps: %" GST_PTR_FORMAT, outcaps);
   ASSERT_CAPS_REFCOUNT (incaps, "incaps", 1);
-  ASSERT_CAPS_REFCOUNT (outcaps, "outcaps", 1);
-  audioconvert = setup_audioconvert (outcaps);
+
+  if (custom_audioconvert) {
+    audioconvert = custom_audioconvert;
+  } else {
+    ASSERT_CAPS_REFCOUNT (outcaps, "outcaps", 1);
+    audioconvert = setup_audioconvert (outcaps, use_mix_matrix, mix_matrix);
+  }
   ASSERT_CAPS_REFCOUNT (outcaps, "outcaps", 2);
 
   fail_unless (gst_element_set_state (audioconvert,
@@ -505,17 +615,36 @@ done:
 #define RUN_CONVERSION(which, inarray, in_get_caps, outarray, out_get_caps)    \
   verify_convert (which, inarray, sizeof (inarray),                            \
         in_get_caps, outarray, sizeof (outarray), out_get_caps, GST_FLOW_OK,   \
-        TRUE)
+        TRUE, FALSE, &(GValue) G_VALUE_INIT, NULL);
+
+#define RUN_CONVERSION_WITH_MATRIX(which, inarray, in_get_caps, outarray, out_get_caps, mix_matrix) \
+  verify_convert (which, inarray, sizeof (inarray),                            \
+        in_get_caps, outarray, sizeof (outarray), out_get_caps, GST_FLOW_OK,   \
+        TRUE, TRUE, mix_matrix, NULL);
+
+#define RUN_CONVERSION_WITH_INPUT_CHANNELS_REORDER(which, inarray,             \
+                                 in_channels, reorder, outarray, out_channels) \
+  {                                                                            \
+    GstCaps *in_get_caps = get_unpositioned_input_caps (in_channels);          \
+    GstCaps *out_get_caps = get_int_mc_caps (out_channels, G_BYTE_ORDER, 16,   \
+        16, TRUE, GST_AUDIO_LAYOUT_INTERLEAVED, NULL);                         \
+    verify_convert (                                                           \
+        which, inarray, sizeof (inarray), in_get_caps, outarray,               \
+        sizeof (outarray), out_get_caps, GST_FLOW_OK, TRUE, FALSE,             \
+        &(GValue) G_VALUE_INIT,                                                \
+        setup_audioconvert_with_input_channels_reorder (out_get_caps,          \
+            reorder));                                                         \
+  }
 
 #define RUN_CONVERSION_TO_FAIL(which, inarray, in_caps, outarray, out_caps)    \
   verify_convert (which, inarray, sizeof (inarray),                            \
         in_caps, outarray, sizeof (outarray), out_caps,                        \
-        GST_FLOW_NOT_NEGOTIATED, TRUE)
+        GST_FLOW_NOT_NEGOTIATED, TRUE, FALSE, &(GValue) G_VALUE_INIT, NULL);
 
-#define RUN_CONVERSION_NOT_INPLACE(which, inarray, in_get_caps, outarray, out_get_caps)    \
+#define RUN_CONVERSION_NOT_INPLACE(which, inarray, in_get_caps, outarray, out_get_caps) \
   verify_convert (which, inarray, sizeof (inarray),                            \
         in_get_caps, outarray, sizeof (outarray), out_get_caps, GST_FLOW_OK,   \
-        FALSE)
+        FALSE, FALSE, &(GValue) G_VALUE_INIT, NULL);
 
 #define INTERLEAVED GST_AUDIO_LAYOUT_INTERLEAVED
 #define PLANAR GST_AUDIO_LAYOUT_NON_INTERLEAVED
@@ -1084,6 +1213,245 @@ GST_START_TEST (test_multichannel_conversion)
 
 GST_END_TEST;
 
+GST_START_TEST (test_multichannel_crossmixing_with_input_channels_reorder)
+{
+  {
+    gint16 in[] = { 12400, -120 };
+    gint16 out[] = { 12400, -120 };
+
+    for (gint reorder = GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_GST;
+        reorder <= GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_ALTERNATE;
+        ++reorder) {
+      gchar *test_name =
+          format_input_channels_reorder_test_name ("1 channel to 1", reorder);
+      RUN_CONVERSION_WITH_INPUT_CHANNELS_REORDER (test_name, in, 1, reorder,
+          out, 1);
+      g_free (test_name);
+    }
+  }
+
+  {
+    gint16 in[] = { 12400, -120 };
+    gint16 out[] = { 12400, 12400, -120, -120 };
+
+    for (gint reorder = GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_GST;
+        reorder <= GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_ALTERNATE;
+        ++reorder) {
+      gchar *test_name =
+          format_input_channels_reorder_test_name ("1 channel to 2", reorder);
+      RUN_CONVERSION_WITH_INPUT_CHANNELS_REORDER (test_name, in, 1, reorder,
+          out, 2);
+      g_free (test_name);
+    }
+  }
+
+  {
+    gint16 in[] = { 12400, -120 };
+    gint16 out[] = { 12400, 12400, 8767, -120, -120, -85 };
+
+    for (gint reorder = GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_GST;
+        reorder <= GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_ALTERNATE;
+        ++reorder) {
+      gchar *test_name =
+          format_input_channels_reorder_test_name ("1 channel to 3", reorder);
+      RUN_CONVERSION_WITH_INPUT_CHANNELS_REORDER (test_name, in, 1, reorder,
+          out, 3);
+      g_free (test_name);
+    }
+  }
+
+  {
+    gint16 in[] = { 12400, -120, -10844, 5842 };
+    gint16 out[] = { 6140, -2501 };
+
+    for (gint reorder = GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_GST;
+        reorder <= GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_ALTERNATE;
+        ++reorder) {
+      gchar *test_name =
+          format_input_channels_reorder_test_name ("2 channels to 1", reorder);
+      RUN_CONVERSION_WITH_INPUT_CHANNELS_REORDER (test_name, in, 2, reorder,
+          out, 1);
+      g_free (test_name);
+    }
+  }
+
+  {
+    gint16 in[] = { 12400, -120, -10844, 5842 };
+    gint16 out[][4] = {
+      {12400, -120, -10844, 5842},
+      {12400, -120, -10844, 5842},
+      {12400, -120, -10844, 5842},
+      {12400, -120, -10844, 5842},
+      {12400, -120, -10844, 5842},
+      {6140, 6140, -2501, -2501},
+      {12400, -120, -10844, 5842}
+    };
+
+    for (gint reorder = GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_GST;
+        reorder <= GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_ALTERNATE;
+        ++reorder) {
+      gchar *test_name =
+          format_input_channels_reorder_test_name ("2 channels to 2", reorder);
+      RUN_CONVERSION_WITH_INPUT_CHANNELS_REORDER (test_name, in, 2, reorder,
+          out[reorder], 2);
+      g_free (test_name);
+    }
+  }
+
+  {
+    gint16 in[] = { 12400, -120, -10844, 5842 };
+    gint16 out[][6] = {
+      {8767, -85, 6140, -7667, 4130, -2501},
+      {8767, -85, 6140, -7667, 4130, -2501},
+      {8767, -85, 6140, -7667, 4130, -2501},
+      {8767, -85, 6140, -7667, 4130, -2501},
+      {8767, -85, 6140, -7667, 4130, -2501},
+      {6140, 6140, 4341, -2501, -2501, -1768},
+      {8767, -85, 6140, -7667, 4130, -2501}
+    };
+
+    for (gint reorder = GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_GST;
+        reorder <= GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_ALTERNATE;
+        ++reorder) {
+      gchar *test_name =
+          format_input_channels_reorder_test_name ("2 channels to 3", reorder);
+      RUN_CONVERSION_WITH_INPUT_CHANNELS_REORDER (test_name, in, 2, reorder,
+          out[reorder], 3);
+      g_free (test_name);
+    }
+  }
+
+  {
+    gint16 in[] = { 12400, -120, 1120, -10844, 5842, -48 };
+    gint16 out[][2] = {
+      {4825, -1859},
+      {4825, -1859},
+      {4462, -1682},
+      {4462, -1682},
+      {4462, -1682},
+      {4462, -1682},
+      {3320, 198}
+    };
+
+    for (gint reorder = GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_GST;
+        reorder <= GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_ALTERNATE;
+        ++reorder) {
+      gchar *test_name =
+          format_input_channels_reorder_test_name ("3 channels to 1", reorder);
+      RUN_CONVERSION_WITH_INPUT_CHANNELS_REORDER (test_name, in, 3, reorder,
+          out[reorder], 1);
+      g_free (test_name);
+    }
+  }
+
+  {
+    gint16 in[] = { 12400, -120, 1120, -10844, 5842, -48 };
+    gint16 out[][4] = {
+      {7717, 394, -6363, 3397},
+      {7717, 394, -6363, 3397},
+      {6760, 500, -5446, 2897},
+      {6760, 500, -5446, 2897},
+      {6760, 500, -5446, 2897},
+      {4462, 4462, -1682, -1682},
+      {6760, -120, -5446, 5842}
+    };
+
+    for (gint reorder = GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_GST;
+        reorder <= GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_ALTERNATE;
+        ++reorder) {
+      gchar *test_name =
+          format_input_channels_reorder_test_name ("3 channels to 2", reorder);
+      RUN_CONVERSION_WITH_INPUT_CHANNELS_REORDER (test_name, in, 3, reorder,
+          out[reorder], 2);
+      g_free (test_name);
+    }
+  }
+
+  {
+    gint16 in[] = { 12400, -120, 1120, -10844, 5842, -48 };
+    gint16 out[][6] = {
+      {12400, -120, 1120, -10844, 5842, -48},
+      {12400, -120, 1120, -10844, 5842, -48},
+      {6364, 471, 4462, -5127, 2727, -1682},
+      {6364, 471, 4462, -5127, 2727, -1682},
+      {6364, 471, 4462, -5127, 2727, -1682},
+      {4462, 4462, 3154, -1682, -1682, -1189},
+      {4780, -85, 3320, -3850, 4130, 198}
+    };
+
+    for (gint reorder = GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_GST;
+        reorder <= GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_ALTERNATE;
+        ++reorder) {
+      gchar *test_name =
+          format_input_channels_reorder_test_name ("3 channels to 3", reorder);
+      RUN_CONVERSION_WITH_INPUT_CHANNELS_REORDER (test_name, in, 3, reorder,
+          out[reorder], 3);
+      g_free (test_name);
+    }
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST
+    (test_multichannel_downmixing_to_stereo_with_input_channels_reorder) {
+  {
+    gint16 in[] =
+        { 12400, -120, 1248, 10140, 368, -32124, 8145, 7411, -212, -5489, 18523,
+      10003
+    };
+    gint16 out[][4] = {
+      {7353, -1592, 3657, 2105},
+      {7353, -1592, 3657, 2105},
+      {-4296, -9713, 4755, 8254},
+      {-4596, -9588, 6430, 7555},
+      {-5746, -6837, 6362, 7716},
+      {-1343, -1343, 6372, 6372},
+      {4667, -7361, 8810, 3971}
+    };
+
+    for (gint reorder = GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_GST;
+        reorder <= GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_ALTERNATE;
+        ++reorder) {
+      gchar *test_name =
+          format_input_channels_reorder_test_name ("5.1 channels to stereo",
+          reorder);
+      RUN_CONVERSION_WITH_INPUT_CHANNELS_REORDER (test_name, in, 6, reorder,
+          out[reorder], 2);
+      g_free (test_name);
+    }
+  }
+
+  {
+    gint16 in[] =
+        { 12400, -120, 1248, 10140, 368, -32124, 1247, -458, 8145, 7411, -212,
+      -5489, 18523, 10003, 789, -5557
+    };
+    gint16 out[][4] = {
+      {6739, -1645, 3467, 813},
+      {6739, -1645, 3467, 813},
+      {-1482, 260, 1921, 3242},
+      {-1617, 508, 2673, 1857},
+      {-3891, 1743, 2539, 1930},
+      {-912, -912, 4202, 4202},
+      {3816, -5640, 6811, 1592}
+    };
+
+    for (gint reorder = GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_GST;
+        reorder <= GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_ALTERNATE;
+        ++reorder) {
+      gchar *test_name =
+          format_input_channels_reorder_test_name ("7.1 channels to stereo",
+          reorder);
+      RUN_CONVERSION_WITH_INPUT_CHANNELS_REORDER (test_name, in, 8, reorder,
+          out[reorder], 2);
+      g_free (test_name);
+    }
+  }
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_passthrough)
 {
   /* int 8 bit */
@@ -1559,6 +1927,53 @@ GST_START_TEST (test_convert_undefined_multichannel)
     RUN_CONVERSION ("8 channels with layout => 2 channels",
         in, in_caps, out, out_caps);
   }
+
+  /* 9 channels, NONE positions => 2 channels, with empty mix-matrix */
+  {
+    guint16 in[] =
+        { 0, 0, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000 };
+    gfloat out[] = { -1.0, -1.0 };
+    GstCaps *in_caps = get_int_mc_caps (9, G_BYTE_ORDER, 16, 16, FALSE,
+        INTERLEAVED, undefined_positions[9 - 1]);
+    GstCaps *out_caps = get_float_mc_caps (2, G_BYTE_ORDER, 32, INTERLEAVED,
+        NULL);
+    GValue empty_mix_matrix = G_VALUE_INIT;
+    g_value_init (&empty_mix_matrix, GST_TYPE_ARRAY);
+
+    RUN_CONVERSION_WITH_MATRIX ("9 channels, undefined layout => 2 channels",
+        in, in_caps, out, out_caps, &empty_mix_matrix);
+    g_value_unset (&empty_mix_matrix);
+  }
+
+  /* 9 channels, NONE positions => 2 channels, with specified mix-matrix */
+  {
+    guint16 in[] =
+        { 0, 0, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000 };
+    gfloat out[] = { -1.0, -1.0 };
+    GstCaps *in_caps = get_int_mc_caps (9, G_BYTE_ORDER, 16, 16, FALSE,
+        INTERLEAVED, undefined_positions[9 - 1]);
+    GstCaps *out_caps = get_float_mc_caps (2, G_BYTE_ORDER, 32, INTERLEAVED,
+        NULL);
+    GValue mix_matrix = G_VALUE_INIT;
+    GValue row = G_VALUE_INIT;
+    GValue value = G_VALUE_INIT;
+    g_value_init (&mix_matrix, GST_TYPE_ARRAY);
+    for (int j = 0; j < 2; j++) {
+      g_value_init (&row, GST_TYPE_ARRAY);
+      for (int i = 0; i < 9; i++) {
+        g_value_init (&value, G_TYPE_FLOAT);
+        g_value_set_float (&value, i == j && i < 2 ? 1 : 0);
+        gst_value_array_append_value (&row, &value);
+        g_value_unset (&value);
+      }
+      gst_value_array_append_value (&mix_matrix, &row);
+      g_value_unset (&row);
+    }
+
+    RUN_CONVERSION_WITH_MATRIX ("9 channels, undefined layout => 2 channels",
+        in, in_caps, out, out_caps, &mix_matrix);
+    g_value_unset (&mix_matrix);
+  }
 }
 
 GST_END_TEST;
@@ -1637,7 +2052,7 @@ GST_START_TEST (test_gap_buffers)
   gsize data_len = sizeof (data);
   gint i;
 
-  audioconvert = setup_audioconvert (caps);
+  audioconvert = setup_audioconvert (caps, FALSE, &(GValue) G_VALUE_INIT);
 
   fail_unless (gst_element_set_state (audioconvert,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
@@ -1797,7 +2212,7 @@ GST_START_TEST (test_layout_conv_fixate_caps)
       "layout = (string) non-interleaved, "
       "rate = (int) [ 1, MAX ], " "channels = (int) [1, 8]");
 
-  audioconvert = setup_audioconvert (outcaps);
+  audioconvert = setup_audioconvert (outcaps, FALSE, &(GValue) G_VALUE_INIT);
 
   fail_unless (gst_element_set_state (audioconvert,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
@@ -1824,6 +2239,49 @@ GST_START_TEST (test_layout_conv_fixate_caps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_96_channels_conversion)
+{
+  GstCaps *incaps, *outcaps;
+  GstElement *audioconvert;
+  GstCaps *caps;
+  GstStructure *s;
+
+  incaps = gst_caps_from_string ("audio/x-raw, "
+      "format = (string) F32LE, "
+      "layout = (string) interleaved, "
+      "rate = (int) 44100, "
+      "channels = (int) 96, " "channel-mask = (bitmask) 0");
+  outcaps = gst_caps_from_string ("audio/x-raw, "
+      "format = (string) F64LE, " "layout = (string) non-interleaved");
+
+  audioconvert = setup_audioconvert (outcaps, FALSE, &(GValue) G_VALUE_INIT);
+
+  fail_unless (gst_element_set_state (audioconvert,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  gst_check_setup_events (mysrcpad, audioconvert, incaps, GST_FORMAT_TIME);
+
+  caps = gst_pad_get_current_caps (mysinkpad);
+  s = gst_caps_get_structure (caps, 0);
+  assert_equals_string (gst_structure_get_string (s, "format"), "F64LE");
+  assert_equals_string (gst_structure_get_string (s, "layout"),
+      "non-interleaved");
+  gst_clear_caps (&caps);
+
+  fail_unless (gst_element_set_state (audioconvert,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+  /* cleanup */
+  GST_DEBUG ("cleanup audioconvert");
+  cleanup_audioconvert (audioconvert);
+  GST_DEBUG ("cleanup, unref incaps");
+  gst_caps_unref (incaps);
+  gst_caps_unref (outcaps);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 audioconvert_suite (void)
 {
@@ -1837,6 +2295,10 @@ audioconvert_suite (void)
   tcase_add_test (tc_chain, test_float_conversion);
   tcase_add_test (tc_chain, test_int_float_conversion);
   tcase_add_test (tc_chain, test_multichannel_conversion);
+  tcase_add_test (tc_chain,
+      test_multichannel_crossmixing_with_input_channels_reorder);
+  tcase_add_test (tc_chain,
+      test_multichannel_downmixing_to_stereo_with_input_channels_reorder);
   tcase_add_test (tc_chain, test_passthrough);
   tcase_add_test (tc_chain, test_caps_negotiation);
   tcase_add_test (tc_chain, test_convert_undefined_multichannel);
@@ -1844,6 +2306,7 @@ audioconvert_suite (void)
   tcase_add_test (tc_chain, test_gap_buffers);
   tcase_add_test (tc_chain, test_layout_conversion);
   tcase_add_test (tc_chain, test_layout_conv_fixate_caps);
+  tcase_add_test (tc_chain, test_96_channels_conversion);
 
   return s;
 }

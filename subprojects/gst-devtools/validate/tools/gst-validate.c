@@ -333,8 +333,8 @@ run_test_from_file (gchar * testfile, gboolean use_fakesinks)
   return ret;
 }
 
-int
-main (int argc, gchar ** argv)
+static int
+real_main (int argc, gchar ** argv)
 {
   GError *err = NULL;
   gchar *scenario = NULL, *configs = NULL, *media_info = NULL,
@@ -632,5 +632,27 @@ exit:
 
   gst_validate_deinit ();
   gst_deinit ();
+  return ret;
+}
+
+int
+main (int argc, char *argv[])
+{
+  int ret;
+
+#ifdef G_OS_WIN32
+  argv = g_win32_get_command_line ();
+#endif
+
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  ret = gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
+#else
+  ret = real_main (argc, argv);
+#endif
+
+#ifdef G_OS_WIN32
+  g_strfreev (argv);
+#endif
+
   return ret;
 }

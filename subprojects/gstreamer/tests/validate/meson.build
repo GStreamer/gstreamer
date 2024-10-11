@@ -18,7 +18,7 @@ env.set('GST_PLUGIN_PATH_1_0', meson.global_build_root())
 env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
 env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), 'validate'))
 env.set('GST_PLUGIN_SCANNER_1_0', gst_scanner_dir + '/gst-plugin-scanner')
-env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer', 'gst-validate')
+env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer', 'gst-validate', 'debugutilsbad')
 
 foreach t: tests
     test_dir_name = t.split('/')

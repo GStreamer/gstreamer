@@ -153,7 +153,7 @@ impl App {
         anyhow::Error,
     > {
         // Create the GStreamer pipeline
-        let pipeline = gst::parse_launch(
+        let pipeline = gst::parse::launch(
             &format!(
                 "videotestsrc is-live=true ! vp8enc deadline=1 keyframe-max-dist=2000 ! rtpvp8pay pt=96 picture-id-mode=15-bit ! tee name=video-tee ! \
                  queue ! fakesink sync=true \
@@ -302,7 +302,7 @@ impl App {
             bail!("Peer {peer_id} already called");
         }
 
-        let peer_bin = gst::parse_bin_from_description(
+        let peer_bin = gst::parse::bin_from_description(
             "queue name=video-queue ! webrtcbin. \
              queue name=audio-queue ! webrtcbin. \
              webrtcbin name=webrtcbin",
@@ -321,21 +321,21 @@ impl App {
         let audio_queue = peer_bin
             .by_name("audio-queue")
             .expect("can't find audio-queue");
-        let audio_sink_pad = gst::GhostPad::with_target(
-            Some("audio_sink"),
-            &audio_queue.static_pad("sink").unwrap(),
-        )
-        .unwrap();
+        let audio_sink_pad =
+            gst::GhostPad::builder_with_target(&audio_queue.static_pad("sink").unwrap())
+                .unwrap()
+                .name("audio_sink")
+                .build();
         peer_bin.add_pad(&audio_sink_pad).unwrap();
 
         let video_queue = peer_bin
             .by_name("video-queue")
             .expect("can't find video-queue");
-        let video_sink_pad = gst::GhostPad::with_target(
-            Some("video_sink"),
-            &video_queue.static_pad("sink").unwrap(),
-        )
-        .unwrap();
+        let video_sink_pad =
+            gst::GhostPad::builder_with_target(&video_queue.static_pad("sink").unwrap())
+                .unwrap()
+                .name("video_sink")
+                .build();
         peer_bin.add_pad(&video_sink_pad).unwrap();
 
         let peer = Peer(Arc::new(PeerInner {
@@ -819,14 +819,14 @@ impl Peer {
             .ok_or_else(|| anyhow!("no media type in caps {caps:?}"))?;
 
         let conv = if media_type == "video" {
-            gst::parse_bin_from_description(
+            gst::parse::bin_from_description(
                 &format!(
                     "decodebin name=dbin ! queue ! videoconvert ! videoscale ! capsfilter name=src caps=video/x-raw,width={VIDEO_WIDTH},height={VIDEO_HEIGHT},pixel-aspect-ratio=1/1"
                 ),
                 false,
             )?
         } else if media_type == "audio" {
-            gst::parse_bin_from_description(
+            gst::parse::bin_from_description(
                 "decodebin name=dbin ! queue ! audioconvert ! audioresample name=src",
                 false,
             )?
@@ -837,14 +837,12 @@ impl Peer {
 
         // Add a ghost pad on our conv bin that proxies the sink pad of the decodebin
         let dbin = conv.by_name("dbin").unwrap();
-        let sinkpad =
-            gst::GhostPad::with_target(Some("sink"), &dbin.static_pad("sink").unwrap()).unwrap();
+        let sinkpad = gst::GhostPad::with_target(&dbin.static_pad("sink").unwrap()).unwrap();
         conv.add_pad(&sinkpad).unwrap();
 
         // And another one that proxies the source pad of the last element
         let src = conv.by_name("src").unwrap();
-        let srcpad =
-            gst::GhostPad::with_target(Some("src"), &src.static_pad("src").unwrap()).unwrap();
+        let srcpad = gst::GhostPad::with_target(&src.static_pad("src").unwrap()).unwrap();
         conv.add_pad(&srcpad).unwrap();
 
         self.bin.add(&conv).unwrap();
@@ -856,11 +854,17 @@ impl Peer {
 
         // And then add a new ghost pad to the peer bin that proxies the source pad we added above
         if media_type == "video" {
-            let srcpad = gst::GhostPad::with_target(Some("video_src"), &srcpad).unwrap();
+            let srcpad = gst::GhostPad::builder_with_target(&srcpad)
+                .unwrap()
+                .name("video_src")
+                .build();
             srcpad.set_active(true).unwrap();
             self.bin.add_pad(&srcpad).unwrap();
         } else if media_type == "audio" {
-            let srcpad = gst::GhostPad::with_target(Some("audio_src"), &srcpad).unwrap();
+            let srcpad = gst::GhostPad::builder_with_target(&srcpad)
+                .unwrap()
+                .name("audio_src")
+                .build();
             srcpad.set_active(true).unwrap();
             self.bin.add_pad(&srcpad).unwrap();
         }

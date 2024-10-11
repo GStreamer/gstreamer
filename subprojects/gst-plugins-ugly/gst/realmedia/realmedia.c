@@ -23,10 +23,6 @@
 
 #include "rmdemux.h"
 #include "rademux.h"
-#include "rdtdepay.h"
-#include "rdtmanager.h"
-#include "rtspreal.h"
-#include "pnmsrc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -35,10 +31,6 @@ plugin_init (GstPlugin * plugin)
 
   ret |= GST_ELEMENT_REGISTER (rmdemux, plugin);
   ret |= GST_ELEMENT_REGISTER (rademux, plugin);
-  ret |= GST_ELEMENT_REGISTER (rdtdepay, plugin);
-  ret |= GST_ELEMENT_REGISTER (rdtmanager, plugin);
-  ret |= GST_ELEMENT_REGISTER (rtspreal, plugin);
-  ret |= GST_ELEMENT_REGISTER (pnmsrc, plugin);
 
   return ret;
 }

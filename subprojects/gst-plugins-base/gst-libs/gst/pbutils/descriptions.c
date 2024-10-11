@@ -153,6 +153,7 @@ static const FormatInfo formats[] = {
   {"audio/x-mod", "Module Music Format (MOD)", FLAG_AUDIO, "mod"},
   {"audio/x-mulaw", "Mu-Law", FLAG_AUDIO, ""},
   {"audio/x-musepack", "Musepack (MPC)", FLAG_AUDIO, "mpc"},
+  {"audio/x-ffmpeg-parsed-musepack", "Musepack (MPC)", FLAG_AUDIO, "mpc"},
   {"audio/x-nellymoser", "Nellymoser Asao", FLAG_AUDIO, ""},
   {"audio/x-nist", "Sphere NIST", FLAG_AUDIO, ""},
   {"audio/x-nsf", "Nintendo NSF", FLAG_AUDIO, ""},
@@ -472,8 +473,8 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
       const gchar *subs;
       gint w_sub, h_sub, n_semi;
 
-      w_sub = GST_VIDEO_FORMAT_INFO_W_SUB (finfo, 1);
-      h_sub = GST_VIDEO_FORMAT_INFO_H_SUB (finfo, 1);
+      w_sub = 1 << GST_VIDEO_FORMAT_INFO_W_SUB (finfo, 1);
+      h_sub = 1 << GST_VIDEO_FORMAT_INFO_H_SUB (finfo, 1);
 
       if (w_sub == 1 && h_sub == 1) {
         subs = "4:4:4";
@@ -541,6 +542,8 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
   } else if (strcmp (info->type, "video/x-h264") == 0) {
     const gchar *variant, *ret;
     const gchar *profile;
+    gboolean lcevc = FALSE;
+    const gchar *lcevc_str = "";
 
     variant = gst_structure_get_string (s, "variant");
     if (variant == NULL)
@@ -559,9 +562,13 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
     profile = gst_structure_get_string (s, "profile");
     if (profile != NULL)
       profile = pbutils_desc_get_h264_profile_name_from_nick (profile);
+    gst_structure_get_boolean (s, "lcevc", &lcevc);
+    if (lcevc)
+      lcevc_str = " (LCEVC)";
     if (profile == NULL)
-      return g_strdup (ret);
-    return g_strdup_printf ("%s (%s Profile)", ret, profile);
+      return g_strdup_printf ("%s%s", ret, lcevc_str);
+    else
+      return g_strdup_printf ("%s (%s Profile)%s", ret, profile, lcevc_str);
   } else if (strcmp (info->type, "video/x-h265") == 0) {
     const gchar *profile = gst_structure_get_string (s, "profile");
 
@@ -741,16 +748,17 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
 
     switch (ver) {
       case 1:
-        gst_structure_get_int (s, "layer", &layer);
-        switch (layer) {
-          case 1:
-          case 2:
-          case 3:
-            return g_strdup_printf ("MPEG-1 Layer %d (MP%d)", layer, layer);
-          default:
-            break;
+        if (gst_structure_get_int (s, "layer", &layer)) {
+          switch (layer) {
+            case 1:
+            case 2:
+            case 3:
+              return g_strdup_printf ("MPEG-1 Layer %d (MP%d)", layer, layer);
+            default:
+              break;
+          }
+          GST_WARNING ("Unexpected MPEG-1 layer in %" GST_PTR_FORMAT, caps);
         }
-        GST_WARNING ("Unexpected MPEG-1 layer in %" GST_PTR_FORMAT, caps);
         return g_strdup ("MPEG-1 Audio");
       case 2:
         return g_strdup ("MPEG-2 AAC");

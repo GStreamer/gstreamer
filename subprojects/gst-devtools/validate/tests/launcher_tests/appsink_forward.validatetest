@@ -1,0 +1,53 @@
+set-globals,
+  appsrc_props="handle-segment-change=true \
+                automatic-eos=false \
+                min-latency=0 \
+                max-latency=-1 \
+                format=time \
+                is-live=true \
+                max-buffers=0 \
+                max-bytes=0 \
+                max-time=5000000000 \
+                leaky-type=downstream"
+
+meta,
+    args = {
+      "appsrc name=src $(appsrc_props) ! videoconvert ! $(videosink) name=sink",
+    },
+    configs = {
+       "$(validateflow), pad=source-sink:sink, buffers-checksum=as-id, ignored-event-types={ tag, stream-start }",
+       "$(validateflow), pad=selector-sink:sink, buffers-checksum=as-id, ignored-event-types={ tag, stream-start }",
+    },
+    handles-states=true,
+    ignore-eos=true
+
+# Source pipeline
+create-sub-pipeline,
+  name=source,
+  desc="videotestsrc num-buffers=5 name=src ! video/x-raw,framerate=30/1,format=I420,width=320,height=240 ! timeoverlay ! appsink name=source-sink sync=true max-buffers=10 drop=true",
+  scenario={
+      [meta],
+    }
+
+# "selector" pipeline
+create-sub-pipeline,
+  name=selector,
+  desc="appsrc name=selector-src1 $(appsrc_props) ! input-selector ! appsink name=selector-sink sync=true max-buffers=10 drop=true",
+  scenario={
+      [meta],
+    }
+
+appsink-forward-to-appsrc,
+  sink=source/source-sink,
+  src=selector/selector-src1
+
+appsink-forward-to-appsrc,
+  sink=selector/selector-sink,
+  src=src
+
+play
+
+wait, subpipeline-done=source
+wait, subpipeline-done=selector
+
+stop

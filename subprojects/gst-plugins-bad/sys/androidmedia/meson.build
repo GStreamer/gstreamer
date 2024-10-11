@@ -1,6 +1,8 @@
 androidmedia_sources = [
   'gstamcaudiodec.c',
   'gstamc.c',
+  'gstamc-codec.c',
+  'gstamc-format.c',
   'gstamcsurfacetexture.c',
   'gstamcvideodec.c',
   'gstamcvideoenc.c',
@@ -39,6 +41,7 @@ extra_deps = []
 extra_cargs = []
 if have_mlsdk
   androidmedia_sources += [
+    'magicleap/gstamc-ml.c',
     'magicleap/gstamc-codec-ml.c',
     'magicleap/gstamc-codeclist-ml.c',
     'magicleap/gstamc-format-ml.c',
@@ -65,12 +68,26 @@ else
     'gst-android-hardware-camera.c',
     'gst-android-hardware-sensor.c',
     'gstjniutils.c',
+    'jni/gstamc-jni.c',
     'jni/gstamc-codec-jni.c',
     'jni/gstamc-codeclist-jni.c',
     'jni/gstamc-format-jni.c',
     'jni/gstamcsurface.c',
     'jni/gstamcsurfacetexture-jni.c',
   ]
+
+  # Build an Ndk support if its headers exists. We don't actually link into it
+  # but use only type definations (and then rely on dlopen and dlsym), so this
+  # doesn't affect compatibility with older Android versions.
+  if cc.check_header('media/NdkMediaCodec.h')
+    androidmedia_sources += [
+      'ndk/gstamc-codec-ndk.c',
+      'ndk/gstamc-format-ndk.c',
+    ]
+    extra_cargs += [ '-DHAVE_NDKMEDIA' ]
+    extra_deps += [ cc.find_library('android', required : true) ]
+  endif
+
   plugin_name = 'gstandroidmedia'
 endif
 

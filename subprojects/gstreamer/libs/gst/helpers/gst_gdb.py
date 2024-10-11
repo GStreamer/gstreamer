@@ -23,7 +23,7 @@ import sys
 import re
 
 from glib_gobject_helper import g_type_to_name, g_type_name_from_instance, \
-    g_type_to_typenode, g_quark_to_string
+    g_type_to_typenode, g_quark_to_string, g_type_fundamental_name
 
 if sys.version_info[0] >= 3:
     long = int
@@ -92,8 +92,8 @@ class GstObjectPrettyPrinter:
 
 
 GST_SECOND = 1000000000
-GST_CLOCK_TIME_NONE = 2**64-1
-GST_CLOCK_STIME_NONE = -2**63
+GST_CLOCK_TIME_NONE = (2 ** 64) - 1
+GST_CLOCK_STIME_NONE = -(2 ** 63)
 
 
 def format_time(n, signed=False):
@@ -214,11 +214,8 @@ def _g_array_iter(array, element_type):
 
 
 def _g_value_get_value(val):
-    typenode = g_type_to_typenode(val["g_type"])
-    if not typenode:
-        return None
-    tname = g_quark_to_string(typenode["qname"])
-    fname = g_type_to_name(typenode["supers"][int(typenode["n_supers"])])
+    tname = g_type_to_name(val["g_type"])
+    fname = g_type_fundamental_name(val["g_type"])
     if fname in ("gchar", "guchar", "gboolean", "gint", "guint", "glong",
                  "gulong", "gint64", "guint64", "gfloat", "gdouble",
                  "gpointer", "GFlags"):
@@ -283,7 +280,7 @@ def gst_object_pipeline(obj):
         pass
 
     if not g_inherits_type(obj, "GstElement"):
-        raise Exception("Toplevel parent is not a GstElement")
+        raise Exception("Toplevel %s parent is not a GstElement" % obj)
     return obj.cast(gdb.lookup_type("GstElement").pointer())
 
 
@@ -361,8 +358,8 @@ class GdbGstCaps:
     def items(self):
         gdb_type = gdb.lookup_type("GstCapsArrayElement")
         for f in _g_array_iter(self.val["array"], gdb_type):
-            yield(GdbCapsFeatures(f["features"]),
-                  GdbGstStructure(f["structure"]))
+            yield (GdbCapsFeatures(f["features"]),
+                   GdbGstStructure(f["structure"]))
 
     def __eq__(self, other):
         if self.size() != other.size():
@@ -394,6 +391,7 @@ class GdbGstCaps:
         if len(items) != 1:
             _gdb_write(indent, prefix)
             prefix = ""
+        s = ""
         for (features, structure) in items:
             s = "%s %s" % (prefix, structure.name())
             tmp = str(features)
@@ -401,7 +399,7 @@ class GdbGstCaps:
                 s += "(" + tmp + ")"
             _gdb_write(indent, s)
             for val in structure.value_strings("%s: %s", False):
-                _gdb_write(indent+1, val)
+                _gdb_write(indent + 1, val)
         return s
 
 
@@ -438,7 +436,7 @@ class GdbGValue:
                 if step == 1:
                     v = "[ %d, %d ]" % (rmin, rmax)
                 else:
-                    v = "[ %d, %d, %d ]" % (rmin*step, rmax*step, step)
+                    v = "[ %d, %d, %d ]" % (rmin * step, rmax * step, step)
             elif tname == "GstFractionRange":
                 v = "[ %s, %s ]" % (GdbGValue(value[0]), GdbGValue(value[1]))
             elif tname in ("GstValueList", "GstValueArray"):
@@ -446,9 +444,9 @@ class GdbGValue:
                     gdb_type = gdb.lookup_type("GArray").pointer()
                     value = value[0]["v_pointer"].cast(gdb_type)
                 v = "<"
-                for l in _g_array_iter(value, gvalue_type):
+                for array_val in _g_array_iter(value, gvalue_type):
                     v += " " if v == "<" else ", "
-                    v += str(GdbGValue(l))
+                    v += str(GdbGValue(array_val))
                 v += " >"
             elif tname in ("GEnum"):
                 v = "%s(%s)" % (
@@ -490,7 +488,7 @@ class GdbGstStructure:
             f = item[i]
             key = g_quark_to_string(f["name"])
             value = GdbGValue(f["value"])
-            yield(key, value)
+            yield (key, value)
 
     def value(self, key):
         for (k, value) in self.values():
@@ -532,7 +530,8 @@ class GdbGstStructure:
 
 class GdbGstSegment:
     def __init__(self, val):
-        self.val = val
+        t = gdb.lookup_type("GstSegment").pointer().pointer()
+        self.val = val.cast(t).dereference()
         self.fmt = str(self.val["format"]).split("_")[-1].lower()
 
     def format_value(self, n):
@@ -545,7 +544,7 @@ class GdbGstSegment:
         value = int(self.val[key])
         if skip is None or value != skip:
             _gdb_write(indent, "%s:%s %s" %
-                       (key, (8-len(key))*" ", self.format_value(value)))
+                       (key, (8 - len(key)) * " ", self.format_value(value)))
 
     def print(self, indent, seqnum=None):
         s = "segment:"
@@ -558,14 +557,14 @@ class GdbGstSegment:
             applied = "(applied rate: %g)" % applied_rate
         else:
             applied = ""
-        _gdb_write(indent+1, "rate: %g%s" % (rate, applied))
-        self.print_optional(indent+1, "base", 0)
-        self.print_optional(indent+1, "offset", 0)
-        self.print_optional(indent+1, "start")
-        self.print_optional(indent+1, "stop", GST_CLOCK_TIME_NONE)
-        self.print_optional(indent+1, "time")
-        self.print_optional(indent+1, "position")
-        self.print_optional(indent+1, "duration", GST_CLOCK_TIME_NONE)
+        _gdb_write(indent + 1, "rate: %g%s" % (rate, applied))
+        self.print_optional(indent + 1, "base", 0)
+        self.print_optional(indent + 1, "offset", 0)
+        self.print_optional(indent + 1, "start")
+        self.print_optional(indent + 1, "stop", GST_CLOCK_TIME_NONE)
+        self.print_optional(indent + 1, "time")
+        self.print_optional(indent + 1, "position")
+        self.print_optional(indent + 1, "duration", GST_CLOCK_TIME_NONE)
 
 
 class GdbGstEvent:
@@ -596,7 +595,7 @@ class GdbGstEvent:
             caps.print(indent, "caps (seqnum: %s):" % seqnum)
         elif typestr == "stream-start":
             stream_id = self.structure().value("stream-id").value()
-            _gdb_write(indent, "stream-start: (seqnum %s)"  % seqnum)
+            _gdb_write(indent, "stream-start: (seqnum %s)" % seqnum)
             _gdb_write(indent + 1, "stream-id: %s" % stream_id.string())
         elif typestr == "segment":
             segment = self.structure().value("segment").value()
@@ -610,7 +609,7 @@ class GdbGstEvent:
             structure = GdbGstStructure(s)
             _gdb_write(indent, "tag: %s (seqnum: %s)" % (name, seqnum))
             for (key, value) in structure.values():
-                _gdb_write(indent+1, "%s: %s" % (key, str(value)))
+                _gdb_write(indent + 1, "%s: %s" % (key, str(value)))
         else:
             self.structure().print(indent, "%s (seqnum: %s)" % (typestr, seqnum))
 
@@ -623,7 +622,7 @@ class GdbGstBuffer:
         value = int(self.val[key])
         if skip is None or value != skip:
             _gdb_write(indent, "%s:%s %s" %
-                       (key, (8-len(key))*" ", format_func(value)))
+                       (key, (8 - len(key)) * " ", format_func(value)))
 
     @save_memory_access_print("<inaccessible memory>")
     def print(self, indent):
@@ -647,8 +646,8 @@ class GdbGstBuffer:
                 _gdb_write(indent, "%s:" % meta_type_name)
                 indent += 1
                 meta_info = str(meta.cast(gdb.lookup_type(meta_type_name)))
-                for l in meta_info.split('\n'):
-                    _gdb_write(indent, l)
+                for info in meta_info.split('\n'):
+                    _gdb_write(indent, info)
                 indent -= 1
                 meta_item = meta_item['next']
         else:
@@ -770,30 +769,30 @@ class GdbGstPad(GdbGstObject):
         first = True
         for ev in self.events():
             if first:
-                _gdb_write(indent+1, "events:")
+                _gdb_write(indent + 1, "events:")
                 first = False
-            ev.print(indent+2)
+            ev.print(indent + 2)
 
         if self.is_linked():
             real = self.peer().parent_pad()
-            _gdb_write(indent+1, "peer: %s" %
+            _gdb_write(indent + 1, "peer: %s" %
                        (real.full_name() if real else self.peer().full_name()))
 
         if g_inherits_type(self.val, "GstGhostPad"):
             t = gdb.lookup_type("GstProxyPad").pointer()
             internal = GdbGstPad(self.val.cast(t)["priv"]["internal"])
             if internal and internal.peer():
-                _gdb_write(indent+1, "inner peer: %s" %
+                _gdb_write(indent + 1, "inner peer: %s" %
                            internal.peer().full_name())
 
         task = self.val["task"]
         if long(task) != 0:
-            _gdb_write(indent+1, "task: %s" %
+            _gdb_write(indent + 1, "task: %s" %
                        task_state_to_name(int(task["state"])))
 
         offset = long(self.val["offset"])
         if offset != 0:
-            _gdb_write(indent+1, "offset: %d [%s]" %
+            _gdb_write(indent + 1, "offset: %d [%s]" %
                        (offset, format_time(offset, True)))
 
         _gdb_write(indent, "}")
@@ -852,10 +851,10 @@ class GdbGstPad(GdbGstObject):
                 other_pname = other.dot_name()
                 if direction == "GST_PAD_SRC":
                     s += "%s%s_%s -> %s_%s [style=dashed, minlen=0]\n" % \
-                       (spc, other_ename, other_pname, ename, pname)
+                        (spc, other_ename, other_pname, ename, pname)
                 else:
                     s += "%s%s_%s -> %s_%s [style=dashed, minlen=0]\n" % \
-                       (spc, ename, pname, other_ename, other_pname)
+                        (spc, ename, pname, other_ename, other_pname)
         else:
             if direction == "GST_PAD_SRC":
                 color = "#ffaaaa"
@@ -887,11 +886,11 @@ class GdbGstPad(GdbGstObject):
 
         if caps and peer_caps and caps == peer_caps:
             s = "%s%s_%s -> %s_%s [label=\"%s\"]\n" % \
-               (spc, ename, pname, peer_ename, peer_pname, caps.dot())
+                (spc, ename, pname, peer_ename, peer_pname, caps.dot())
         elif caps and peer_caps and caps != peer_caps:
             s = "%s%s_%s -> %s_%s [labeldistance=\"10\", labelangle=\"0\", " \
                 % (spc, ename, pname, peer_ename, peer_pname)
-            s += "label=\"" + " "*50 + "\", "
+            s += "label=\"" + " " * 50 + "\", "
             if self.direction() == "GST_PAD_SRC":
                 media_src = caps.dot()
                 media_dst = peer_caps.dot()
@@ -948,14 +947,14 @@ class GdbGstElement(GdbGstObject):
         _gdb_write(indent, "%s(%s) {" %
                    (g_type_name_from_instance(self.val), self.name()))
         for p in self.pads():
-            p.print(indent+2)
+            p.print(indent + 2)
 
         first = True
         for child in self.children():
             if first:
-                _gdb_write(indent+2, "children:")
+                _gdb_write(indent + 2, "children:")
                 first = False
-            _gdb_write(indent+3, child.name())
+            _gdb_write(indent + 3, child.name())
 
         current_state = self.val["current_state"]
         s = "state: %s" % element_state_to_name(current_state)
@@ -963,11 +962,11 @@ class GdbGstElement(GdbGstObject):
             state = self.val[var + "_state"]
             if state > 0 and state != current_state:
                 s += ", %s: %s" % (var, element_state_to_name(state))
-        _gdb_write(indent+2, s)
+        _gdb_write(indent + 2, s)
 
-        _gdb_write(indent+2, "base_time: %s" %
+        _gdb_write(indent + 2, "base_time: %s" %
                    format_time_value(self.val["base_time"]))
-        _gdb_write(indent+2, "start_time: %s" %
+        _gdb_write(indent + 2, "start_time: %s" %
                    format_time_value(self.val["start_time"]))
 
         _gdb_write(indent, "}")
@@ -976,7 +975,7 @@ class GdbGstElement(GdbGstObject):
     def print_tree(self, indent):
         _gdb_write(indent, "%s(%s)" % (self.name(), self.val))
         for child in self.children():
-            child.print_tree(indent+1)
+            child.print_tree(indent + 1)
 
     def _dot(self, indent=0):
         spc = "  " * indent
@@ -992,12 +991,12 @@ class GdbGstElement(GdbGstObject):
 
         sink_name = None
         if self.has_pads("sinkpads"):
-            (ss, sink_name) = self._dot_pads(indent+1, "sinkpads",
+            (ss, sink_name) = self._dot_pads(indent + 1, "sinkpads",
                                              self.dot_name() + "_sink")
             s += ss
         src_name = None
         if self.has_pads("srcpads"):
-            (ss, src_name) = self._dot_pads(indent+1, "srcpads",
+            (ss, src_name) = self._dot_pads(indent + 1, "srcpads",
                                             self.dot_name() + "_src")
             s += ss
         if sink_name and src_name:
@@ -1007,7 +1006,7 @@ class GdbGstElement(GdbGstObject):
 
         if gst_is_bin(self.val):
             s += "%s  fillcolor=\"#ffffff\";\n" % spc
-            s += self.dot(indent+1)
+            s += self.dot(indent + 1)
         else:
             if src_name and not sink_name:
                 s += "%s  fillcolor=\"#ffaaaa\";\n" % spc
@@ -1042,7 +1041,7 @@ class GdbGstElement(GdbGstObject):
             if not name:
                 name = p.dot_name()
         s += "%s}\n\n" % spc
-        return(s, name)
+        return (s, name)
 
     def dot(self, indent):
         s = ""
@@ -1097,6 +1096,7 @@ GST_DEBUG_BIN_TO_DOT_FILE. This command will find the top-level parent
 for the given gstreamer object and create the dot for that element.
 
 Usage: gst-dot <gst-object> <file-name>"""
+
     def __init__(self):
         super(GstDot, self).__init__("gst-dot", gdb.COMMAND_DATA)
 
@@ -1120,7 +1120,7 @@ Usage: gst-dot <gst-object> <file-name>"""
 
     def complete(self, text, word):
         cmd = gdb.string_to_argv(text)
-        if len(cmd) == 0 or(len(cmd) == 1 and len(word) > 0):
+        if len(cmd) == 0 or (len(cmd) == 1 and len(word) > 0):
             return gdb.COMPLETE_SYMBOL
         return gdb.COMPLETE_FILENAME
 
@@ -1130,6 +1130,7 @@ class GstPrint(gdb.Command):
 Print high-level information for GStreamer objects
 
 Usage gst-print <gstreamer-object>"""
+
     def __init__(self):
         super(GstPrint, self).__init__("gst-print", gdb.COMMAND_DATA,
                                        gdb.COMPLETE_SYMBOL)
@@ -1165,6 +1166,7 @@ Usage gst-print <gstreamer-object>"""
 class GstPipelineTree(gdb.Command):
     """\
 Usage: gst-pipeline-tree <gst-object>"""
+
     def __init__(self):
         super(GstPipelineTree, self).__init__("gst-pipeline-tree",
                                               gdb.COMPLETE_SYMBOL)

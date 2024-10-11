@@ -48,6 +48,8 @@ gst_avf_device_provider_class_init (GstAVFDeviceProviderClass * klass)
   // https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/886
   dm_class->probe = gst_avf_device_provider_probe;
 
+  gst_avf_video_src_debug_init ();
+
   gst_device_provider_class_set_static_metadata (dm_class,
                                                  "AVF Device Provider", "Source/Video",
                                                  "List and provide AVF source devices",
@@ -97,8 +99,9 @@ gst_avf_device_provider_probe (GstDeviceProvider * provider)
   GList *result;
 
   result = NULL;
-
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
   NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+G_GNUC_END_IGNORE_DEPRECATIONS
   AVCaptureVideoDataOutput *output = [[AVCaptureVideoDataOutput alloc] init];
   for (int i = 0; i < [devices count]; i++) {
     AVCaptureDevice *device = [devices objectAtIndex:i];
@@ -112,6 +115,7 @@ gst_avf_device_provider_probe (GstDeviceProvider * provider)
     result = g_list_prepend (result, gst_object_ref_sink (gst_device));
 
     gst_structure_free (props);
+    gst_caps_unref (caps);
   }
 
   result = g_list_reverse (result);

@@ -30,49 +30,36 @@ static GstVulkanInstance *instance;
 static GstVulkanDevice *device;
 static GstVulkanQueue *queue = NULL;
 
-static gboolean
-_choose_queue (GstVulkanDevice * device, GstVulkanQueue * _queue, gpointer data)
-{
-  guint flags =
-      device->physical_device->queue_family_props[_queue->family].queueFlags;
-  guint expected_flags = VK_QUEUE_COMPUTE_BIT;
-
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-  if (data)
-    expected_flags = VK_QUEUE_VIDEO_DECODE_BIT_KHR;
-#endif
-
-  if ((flags & expected_flags) != 0) {
-    gst_object_replace ((GstObject **) & queue, GST_OBJECT_CAST (_queue));
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
 static void
 setup (void)
 {
   instance = gst_vulkan_instance_new ();
   fail_unless (gst_vulkan_instance_open (instance, NULL));
+
   device = gst_vulkan_device_new_with_index (instance, 0);
   fail_unless (gst_vulkan_device_open (device, NULL));
 
-  gst_vulkan_device_foreach_queue (device, _choose_queue, NULL);
-  fail_unless (GST_IS_VULKAN_QUEUE (queue));
 }
 
 static void
 teardown (void)
 {
   gst_clear_object (&queue);
-  gst_object_unref (device);
+  gst_clear_object (&device);
   gst_object_unref (instance);
+}
+
+static void
+setup_queue (guint expected_flags)
+{
+  queue = gst_vulkan_device_select_queue (device, VK_QUEUE_COMPUTE_BIT);
+
+  fail_unless (GST_IS_VULKAN_QUEUE (queue));
 }
 
 static GstBufferPool *
 create_buffer_pool (const char *format, VkImageUsageFlags usage,
-    GstCaps * dec_caps)
+    VkImageLayout initial_layout, guint64 initial_access, GstCaps * dec_caps)
 {
   GstCaps *caps;
   GstBufferPool *pool;
@@ -81,7 +68,8 @@ create_buffer_pool (const char *format, VkImageUsageFlags usage,
   caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, format,
       "width", G_TYPE_INT, 1024, "height", G_TYPE_INT, 780, NULL);
   gst_caps_set_features_simple (caps,
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, NULL));
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
+          NULL));
 
   pool = gst_vulkan_image_buffer_pool_new (device);
 
@@ -91,7 +79,8 @@ create_buffer_pool (const char *format, VkImageUsageFlags usage,
   gst_caps_unref (caps);
 
   gst_vulkan_image_buffer_pool_config_set_allocation_params (config,
-      usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, initial_layout,
+      initial_access);
 
   if (dec_caps)
     gst_vulkan_image_buffer_pool_config_set_decode_caps (config, dec_caps);
@@ -108,7 +97,8 @@ GST_START_TEST (test_image)
   GstFlowReturn ret;
   GstBuffer *buffer = NULL;
 
-  pool = create_buffer_pool ("NV12", 0, NULL);
+  setup_queue (VK_QUEUE_COMPUTE_BIT);
+  pool = create_buffer_pool ("NV12", 0, VK_IMAGE_LAYOUT_UNDEFINED, 0, NULL);
 
   ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
   fail_unless (ret == GST_FLOW_OK);
@@ -134,7 +124,7 @@ GST_START_TEST (test_vulkan_profiles)
       .chromaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_10_BIT_KHR,
       .lumaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_10_BIT_KHR,
     },
-    .codec.h265 = {
+    .codec.h265dec = {
       .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PROFILE_INFO_KHR,
       .stdProfileIdc = STD_VIDEO_H265_PROFILE_IDC_MAIN_10,
     }
@@ -144,13 +134,15 @@ GST_START_TEST (test_vulkan_profiles)
   caps = gst_vulkan_video_profile_to_caps (&profile);
   fail_unless (caps);
 
-  fail_unless (gst_vulkan_video_profile_from_caps (&profile2, caps));
+  fail_unless (gst_vulkan_video_profile_from_caps (&profile2, caps,
+          GST_VULKAN_VIDEO_OPERATION_DECODE));
+  gst_caps_unref (caps);
   fail_unless (profile2.profile.sType
       == VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR);
   fail_unless (profile2.profile.videoCodecOperation
       == profile.profile.videoCodecOperation);
-  fail_unless (profile2.codec.h265.stdProfileIdc
-      == profile.codec.h265.stdProfileIdc);
+  fail_unless (profile2.codec.h265dec.stdProfileIdc
+      == profile.codec.h265dec.stdProfileIdc);
 }
 
 GST_END_TEST;
@@ -171,7 +163,7 @@ GST_START_TEST (test_decoding_image)
       .chromaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
       .lumaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
     },
-    .codec.h264 = {
+    .codec.h264dec = {
       .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PROFILE_INFO_KHR,
       .stdProfileIdc = STD_VIDEO_H264_PROFILE_IDC_MAIN,
       .pictureLayout = VK_VIDEO_DECODE_H264_PICTURE_LAYOUT_PROGRESSIVE_KHR,
@@ -185,8 +177,8 @@ GST_START_TEST (test_decoding_image)
     gst_clear_object (&queue);
 
   if (!queue) {
-    gst_vulkan_device_foreach_queue (device, _choose_queue,
-        GUINT_TO_POINTER (1));
+    queue =
+        gst_vulkan_device_select_queue (device, VK_QUEUE_VIDEO_DECODE_BIT_KHR);
   }
 
   if (!queue)
@@ -200,6 +192,7 @@ GST_START_TEST (test_decoding_image)
   fail_unless (dec_caps);
 
   pool = create_buffer_pool ("NV12", VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR,
+      VK_IMAGE_LAYOUT_VIDEO_DECODE_DST_KHR, VK_ACCESS_TRANSFER_WRITE_BIT,
       dec_caps);
 
   gst_caps_unref (dec_caps);

@@ -168,4 +168,14 @@ Levels being:
 Setting the reporting level allows to control the way issues are
 reported when calling [gst_validate_runner_printf()](gst_validate_runner_printf).
 
+**GST_VALIDATE_LAUNCHER_DEBUG.**
+
+You can activate debug logs setting the environment variable GST_VALIDATE_LAUNCHER_DEBUG.
+Examples:
+```
+$GST_VALIDATE_LAUNCHER_DEBUG=6 gst-validate-launcher
+```
+It uses the same syntax as PITIVI_DEBUG
+(more information at: https://developer.pitivi.org/Bug_reporting.html#debug-logs).
+
   [XDG standard]: http://www.freedesktop.org/wiki/Software/xdg-user-dirs/

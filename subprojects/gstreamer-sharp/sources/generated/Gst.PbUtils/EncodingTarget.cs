@@ -124,7 +124,7 @@ namespace Gst.PbUtils {
 		public string Path { 
 			get {
 				IntPtr raw_ret = gst_encoding_target_get_path(Handle);
-				string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+				string ret = GLib.Marshaller.FilenamePtrToString (raw_ret);
 				return ret;
 			}
 		}

@@ -51,11 +51,12 @@ g_value_to_string (const GValue * val)
 }
 
 static gboolean
-insert_field (GQuark field_id, const GValue * val, gpointer user_data)
+insert_field (const GstIdStr * fieldname, const GValue * val,
+    gpointer user_data)
 {
   GtkTreeIter *parent_iter = user_data;
   GtkTreeIter iter;
-  const gchar *f = g_quark_to_string (field_id);
+  const gchar *f = gst_id_str_as_str (fieldname);
 
   gtk_tree_store_append (treestore, &iter, parent_iter);
 
@@ -77,7 +78,7 @@ insert_field (GQuark field_id, const GValue * val, gpointer user_data)
         gtk_tree_store_set (treestore, &child_iter, 0,
             gst_structure_get_name (s), -1);
 
-        gst_structure_foreach (s, insert_field, &child_iter);
+        gst_structure_foreach_id_str (s, insert_field, &child_iter);
       } else {
         gchar *v = g_value_to_string (ve);
 
@@ -94,7 +95,7 @@ insert_field (GQuark field_id, const GValue * val, gpointer user_data)
 
     g_free (entry);
 
-    gst_structure_foreach (s, insert_field, &iter);
+    gst_structure_foreach_id_str (s, insert_field, &iter);
   } else {
     gchar *v = g_value_to_string (val);
     gchar *entry = g_strdup_printf ("%s: %s", f, v);
@@ -115,7 +116,7 @@ insert_structure (const GstStructure * s, GtkTreeIter * iter)
 
   gtk_tree_store_set (treestore, iter, 0, name, -1);
 
-  gst_structure_foreach (s, insert_field, iter);
+  gst_structure_foreach_id_str (s, insert_field, iter);
 }
 
 static gboolean

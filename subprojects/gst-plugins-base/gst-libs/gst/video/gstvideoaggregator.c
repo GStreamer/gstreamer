@@ -800,10 +800,11 @@ static void
       if (pad->priv->converter_config) {
         conv_config = gst_structure_copy (pad->priv->converter_config);
       } else {
-        conv_config = gst_structure_new_empty ("GstVideoConverterConfig");
+        conv_config =
+            gst_structure_new_static_str_empty ("GstVideoConverterConfig");
       }
-      gst_structure_set (conv_config, GST_VIDEO_CONVERTER_OPT_ASYNC_TASKS,
-          G_TYPE_BOOLEAN, TRUE, NULL);
+      gst_structure_set_static_str (conv_config,
+          GST_VIDEO_CONVERTER_OPT_ASYNC_TASKS, G_TYPE_BOOLEAN, TRUE, NULL);
 
       pad->priv->convert =
           gst_video_converter_new_with_pool (&vpad->info,
@@ -1252,15 +1253,24 @@ gst_video_aggregator_default_update_caps (GstVideoAggregator * vagg,
       GST_STR_NULL (chroma_site), GST_STR_NULL (color_name));
 
   best_format_caps = gst_caps_copy (caps);
-  gst_caps_set_simple (best_format_caps, "format", G_TYPE_STRING,
+  gst_caps_set_simple_static_str (best_format_caps, "format", G_TYPE_STRING,
       gst_video_format_to_string (best_format), NULL);
+  /*
+   * set_simple() will likely create some invalid combination, as it may as an
+   * example set format to NV12 with memory:DMABuf caps feature where DMA_DRM
+   * format might be the only supported formats. Simply intersect with the
+   * original to fix this.
+   */
+  ret = gst_caps_intersect (best_format_caps, caps);
+  gst_caps_replace (&best_format_caps, ret);
+  gst_clear_caps (&ret);
 
   if (chroma_site != NULL)
-    gst_caps_set_simple (best_format_caps, "chroma-site", G_TYPE_STRING,
-        chroma_site, NULL);
+    gst_caps_set_simple_static_str (best_format_caps, "chroma-site",
+        G_TYPE_STRING, chroma_site, NULL);
   if (color_name != NULL)
-    gst_caps_set_simple (best_format_caps, "colorimetry", G_TYPE_STRING,
-        color_name, NULL);
+    gst_caps_set_simple_static_str (best_format_caps, "colorimetry",
+        G_TYPE_STRING, color_name, NULL);
 
   g_free (color_name);
   g_free (chroma_site);
@@ -1553,8 +1563,9 @@ _get_non_alpha_caps (GstCaps * caps)
 
       if (has_format) {
         s = gst_structure_copy (s);
-        gst_structure_take_value (s, "format", &new_formats);
-        gst_caps_append_structure (result, s);
+        gst_structure_take_value_static_str (s, "format", &new_formats);
+        gst_caps_append_structure_full (result, s,
+            gst_caps_features_copy (gst_caps_get_features (caps, i)));
       }
 
     }
@@ -1593,18 +1604,18 @@ gst_video_aggregator_pad_sink_getcaps (GstPad * pad, GstVideoAggregator * vagg,
   n = gst_caps_get_size (srccaps);
   for (i = 0; i < n; i++) {
     s = gst_caps_get_structure (srccaps, i);
-    gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT,
-        1, NULL);
+    gst_structure_set_static_str (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
+        G_MAXINT, 1, NULL);
 
     if (GST_IS_VIDEO_AGGREGATOR_CONVERT_PAD (pad)) {
-      gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      gst_structure_set_static_str (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
       gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
           "pixel-aspect-ratio", NULL);
     }
 
     if (has_interlace_mode)
-      gst_structure_set (s, "interlace-mode", G_TYPE_STRING,
+      gst_structure_set_static_str (s, "interlace-mode", G_TYPE_STRING,
           gst_video_interlace_mode_to_string (interlace_mode), NULL);
   }
 
@@ -1657,7 +1668,8 @@ gst_video_aggregator_update_qos (GstVideoAggregator * vagg, gdouble proportion,
   if (G_LIKELY (timestamp != GST_CLOCK_TIME_NONE)) {
     if (!live && G_UNLIKELY (diff > 0))
       vagg->priv->earliest_time =
-          timestamp + 2 * diff + gst_util_uint64_scale_int_round (GST_SECOND,
+          timestamp + MIN (2 * diff,
+          GST_SECOND) + gst_util_uint64_scale_int_round (GST_SECOND,
           GST_VIDEO_INFO_FPS_D (&vagg->info),
           GST_VIDEO_INFO_FPS_N (&vagg->info));
     else
@@ -2843,6 +2855,7 @@ gst_video_aggregator_create_output_buffer (GstVideoAggregator * videoaggregator,
         GST_ELEMENT_ERROR (videoaggregator, RESOURCE, SETTINGS,
             ("failed to activate bufferpool"),
             ("failed to activate bufferpool"));
+        gst_object_unref (pool);
         return GST_FLOW_ERROR;
       }
     }
@@ -2895,11 +2908,11 @@ gst_video_aggregator_pad_sink_acceptcaps (GstPad * pad,
   n = gst_caps_get_size (accepted_caps);
   for (i = 0; i < n; i++) {
     s = gst_caps_get_structure (accepted_caps, i);
-    gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT,
-        1, NULL);
+    gst_structure_set_static_str (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
+        G_MAXINT, 1, NULL);
 
     if (GST_IS_VIDEO_AGGREGATOR_CONVERT_PAD (pad)) {
-      gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      gst_structure_set_static_str (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
       gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
           "pixel-aspect-ratio", NULL);

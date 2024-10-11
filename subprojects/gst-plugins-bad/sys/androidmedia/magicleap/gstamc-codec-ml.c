@@ -35,20 +35,14 @@ struct _GstAmcCodec
   GstAmcSurfaceTexture *surface_texture;
 };
 
-gboolean
-gst_amc_codec_static_init (void)
-{
-  return TRUE;
-}
-
-void
-gst_amc_buffer_free (GstAmcBuffer * buffer)
+static void
+gst_amc_buffer_ml_free (GstAmcBuffer * buffer)
 {
   g_free (buffer);
 }
 
-gboolean
-gst_amc_buffer_set_position_and_limit (GstAmcBuffer * buffer, GError ** err,
+static gboolean
+gst_amc_buffer_ml_set_position_and_limit (GstAmcBuffer * buffer, GError ** err,
     gint position, gint limit)
 {
 /* FIXME: Do we need to do something?
@@ -58,8 +52,8 @@ gst_amc_buffer_set_position_and_limit (GstAmcBuffer * buffer, GError ** err,
   return TRUE;
 }
 
-GstAmcCodec *
-gst_amc_codec_new (const gchar * name, gboolean is_encoder, GError ** err)
+static GstAmcCodec *
+gst_amc_codec_ml_new (const gchar * name, gboolean is_encoder, GError ** err)
 {
   GstAmcCodec *codec = NULL;
   MLResult result;
@@ -83,8 +77,8 @@ gst_amc_codec_new (const gchar * name, gboolean is_encoder, GError ** err)
   return codec;
 }
 
-void
-gst_amc_codec_free (GstAmcCodec * codec)
+static void
+gst_amc_codec_ml_free (GstAmcCodec * codec)
 {
   g_return_if_fail (codec != NULL);
 
@@ -94,8 +88,8 @@ gst_amc_codec_free (GstAmcCodec * codec)
   g_slice_free (GstAmcCodec, codec);
 }
 
-gboolean
-gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format,
+static gboolean
+gst_amc_codec_ml_configure (GstAmcCodec * codec, GstAmcFormat * format,
     GstAmcSurfaceTexture * surface_texture, GError ** err)
 {
   MLResult result;
@@ -113,7 +107,7 @@ gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format,
         surface_texture);
 
   result = MLMediaCodecConfigureWithSurface (codec->handle,
-      gst_amc_format_get_handle (format), surface_handle, 0);
+      gst_amc_format_ml_get_handle (format), surface_handle, 0);
   if (result != MLResult_Ok) {
     g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
         "Failed to configure codec %d", result);
@@ -123,8 +117,8 @@ gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format,
   return TRUE;
 }
 
-GstAmcFormat *
-gst_amc_codec_get_output_format (GstAmcCodec * codec, GError ** err)
+static GstAmcFormat *
+gst_amc_codec_ml_get_output_format (GstAmcCodec * codec, GError ** err)
 {
   MLHandle format_handle;
   MLResult result;
@@ -138,11 +132,11 @@ gst_amc_codec_get_output_format (GstAmcCodec * codec, GError ** err)
     return NULL;
   }
 
-  return gst_amc_format_new_handle (format_handle);
+  return gst_amc_format_ml_new_handle (format_handle);
 }
 
-gboolean
-gst_amc_codec_start (GstAmcCodec * codec, GError ** err)
+static gboolean
+gst_amc_codec_ml_start (GstAmcCodec * codec, GError ** err)
 {
   MLResult result;
 
@@ -158,8 +152,8 @@ gst_amc_codec_start (GstAmcCodec * codec, GError ** err)
   return TRUE;
 }
 
-gboolean
-gst_amc_codec_stop (GstAmcCodec * codec, GError ** err)
+static gboolean
+gst_amc_codec_ml_stop (GstAmcCodec * codec, GError ** err)
 {
   MLResult result;
 
@@ -175,8 +169,8 @@ gst_amc_codec_stop (GstAmcCodec * codec, GError ** err)
   return TRUE;
 }
 
-gboolean
-gst_amc_codec_flush (GstAmcCodec * codec, GError ** err)
+static gboolean
+gst_amc_codec_ml_flush (GstAmcCodec * codec, GError ** err)
 {
   MLResult result;
 
@@ -192,8 +186,8 @@ gst_amc_codec_flush (GstAmcCodec * codec, GError ** err)
   return TRUE;
 }
 
-gboolean
-gst_amc_codec_request_key_frame (GstAmcCodec * codec, GError ** err)
+static gboolean
+gst_amc_codec_ml_request_key_frame (GstAmcCodec * codec, GError ** err)
 {
   /* If MagicLeap adds an API for requesting a keyframe, call it here */
   g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
@@ -201,8 +195,8 @@ gst_amc_codec_request_key_frame (GstAmcCodec * codec, GError ** err)
   return FALSE;
 }
 
-gboolean
-gst_amc_codec_set_dynamic_bitrate (GstAmcCodec * codec, GError ** err,
+static gboolean
+gst_amc_codec_ml_set_dynamic_bitrate (GstAmcCodec * codec, GError ** err,
     gint bitrate)
 {
   g_set_error (err, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED,
@@ -210,22 +204,23 @@ gst_amc_codec_set_dynamic_bitrate (GstAmcCodec * codec, GError ** err,
   return FALSE;
 }
 
-gboolean
-gst_amc_codec_have_dynamic_bitrate ()
+static gboolean
+gst_amc_codec_ml_have_dynamic_bitrate ()
 {
   /* If MagicLeap ever provides an API for scaling bitrate, change this to TRUE */
   return FALSE;
 }
 
-gboolean
-gst_amc_codec_release (GstAmcCodec * codec, GError ** err)
+static gboolean
+gst_amc_codec_ml_release (GstAmcCodec * codec, GError ** err)
 {
   g_return_val_if_fail (codec != NULL, FALSE);
   return TRUE;
 }
 
-GstAmcBuffer *
-gst_amc_codec_get_output_buffer (GstAmcCodec * codec, gint index, GError ** err)
+static GstAmcBuffer *
+gst_amc_codec_ml_get_output_buffer (GstAmcCodec * codec, gint index,
+    GError ** err)
 {
   MLResult result;
   GstAmcBuffer *ret;
@@ -255,8 +250,9 @@ gst_amc_codec_get_output_buffer (GstAmcCodec * codec, gint index, GError ** err)
   return ret;
 }
 
-GstAmcBuffer *
-gst_amc_codec_get_input_buffer (GstAmcCodec * codec, gint index, GError ** err)
+static GstAmcBuffer *
+gst_amc_codec_ml_get_input_buffer (GstAmcCodec * codec, gint index,
+    GError ** err)
 {
   MLResult result;
   GstAmcBuffer *ret;
@@ -279,8 +275,8 @@ gst_amc_codec_get_input_buffer (GstAmcCodec * codec, gint index, GError ** err)
   return ret;
 }
 
-gint
-gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs,
+static gint
+gst_amc_codec_ml_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs,
     GError ** err)
 {
   MLResult result;
@@ -301,8 +297,8 @@ gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs,
   return index;
 }
 
-gint
-gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec,
+static gint
+gst_amc_codec_ml_dequeue_output_buffer (GstAmcCodec * codec,
     GstAmcBufferInfo * info, gint64 timeoutUs, GError ** err)
 {
   MLMediaCodecBufferInfo info_;
@@ -337,8 +333,8 @@ gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec,
   return index;
 }
 
-gboolean
-gst_amc_codec_queue_input_buffer (GstAmcCodec * codec, gint index,
+static gboolean
+gst_amc_codec_ml_queue_input_buffer (GstAmcCodec * codec, gint index,
     const GstAmcBufferInfo * info, GError ** err)
 {
   MLResult result;
@@ -357,8 +353,8 @@ gst_amc_codec_queue_input_buffer (GstAmcCodec * codec, gint index,
   return TRUE;
 }
 
-gboolean
-gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index,
+static gboolean
+gst_amc_codec_ml_release_output_buffer (GstAmcCodec * codec, gint index,
     gboolean render, GError ** err)
 {
   MLResult result;
@@ -375,8 +371,40 @@ gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index,
   return TRUE;
 }
 
-GstAmcSurfaceTexture *
-gst_amc_codec_new_surface_texture (GError ** err)
+static GstAmcSurfaceTexture *
+gst_amc_codec_ml_new_surface_texture (GError ** err)
 {
   return (GstAmcSurfaceTexture *) gst_amc_surface_texture_ml_new (err);
 }
+
+GstAmcCodecVTable gst_amc_codec_ml_vtable = {
+  .buffer_free = gst_amc_buffer_ml_free,
+  .buffer_set_position_and_limit = gst_amc_buffer_ml_set_position_and_limit,
+
+  .create = gst_amc_codec_ml_new,
+  .free = gst_amc_codec_ml_free,
+
+  .configure = gst_amc_codec_ml_configure,
+  .get_output_format = gst_amc_codec_ml_get_output_format,
+
+  .start = gst_amc_codec_ml_start,
+  .stop = gst_amc_codec_ml_stop,
+  .flush = gst_amc_codec_ml_flush,
+  .request_key_frame = gst_amc_codec_ml_request_key_frame,
+
+  .have_dynamic_bitrate = gst_amc_codec_ml_have_dynamic_bitrate,
+  .set_dynamic_bitrate = gst_amc_codec_ml_set_dynamic_bitrate,
+
+  .release = gst_amc_codec_ml_release,
+
+  .get_output_buffer = gst_amc_codec_ml_get_output_buffer,
+  .get_input_buffer = gst_amc_codec_ml_get_input_buffer,
+
+  .dequeue_input_buffer = gst_amc_codec_ml_dequeue_input_buffer,
+  .dequeue_output_buffer = gst_amc_codec_ml_dequeue_output_buffer,
+
+  .queue_input_buffer = gst_amc_codec_ml_queue_input_buffer,
+  .release_output_buffer = gst_amc_codec_ml_release_output_buffer,
+
+  .new_surface_texture = gst_amc_codec_ml_new_surface_texture,
+};

@@ -39,18 +39,13 @@ struct SpuRect {
   gint16 bottom;
 };
 
-/* Store a pre-multiplied colour value. The YUV fields hold the YUV values
- * multiplied by the 8-bit alpha, to save computing it while rendering */
+/* Store a pre-multiplied ARGB colour value */
 struct SpuColour {
-  guint16 Y;
-  guint16 U;
-  guint16 V;
+  guint8 B;
+  guint8 G;
+  guint8 R;
   guint8 A;
 };
-
-void gstspu_clear_comp_buffers (SpuState * state);
-void gstspu_blend_comp_buffers (SpuState * state, guint8 * planes[3]);
-
 
 G_END_DECLS
 

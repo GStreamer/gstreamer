@@ -101,14 +101,11 @@
 
 #include "gst_private.h"
 #include "gstutils.h"
-#include "gstquark.h"
 #include "gstsegment.h"
 #include "gstvalue.h"
+#include "gstvecdeque.h"
 #include "gstcapsfeatures.h"
 
-#ifdef HAVE_VALGRIND_VALGRIND_H
-#  include <valgrind/valgrind.h>
-#endif
 #endif /* GST_DISABLE_GST_DEBUG */
 
 #include <glib/gprintf.h>       /* g_sprintf */
@@ -905,7 +902,7 @@ gst_info_structure_to_string (const GstStructure * s)
 {
   if (G_LIKELY (s)) {
     gchar *str = gst_structure_to_string (s);
-    if (G_UNLIKELY (pretty_tags && s->name == GST_QUARK (TAGLIST)))
+    if (G_UNLIKELY (pretty_tags && gst_structure_has_name (s, "taglist")))
       return prettify_structure_string (str);
     else
       return str;
@@ -1064,8 +1061,27 @@ gst_info_describe_stream_collection (GstStreamCollection * collection)
   return ret;
 }
 
-static gchar *
-gst_debug_print_object (gpointer ptr)
+/**
+ * gst_debug_print_object:
+ * @ptr: (nullable): the object
+ *
+ * Returns a string that represents @ptr. This is safe to call with
+ * %GstStructure, %GstCapsFeatures, %GstMiniObject s (e.g. %GstCaps,
+ * %GstBuffer or %GstMessage), and %GObjects (e.g. %GstElement or %GstPad).
+ *
+ * The string representation is meant to be used for debugging purposes and
+ * might change between GStreamer versions.
+ *
+ * Passing other kind of pointers might or might not work and is generally
+ * unsafe to do.
+ *
+ * Returns: (transfer full) (type gchar*): a string containing a string
+ *     representation of the object
+ *
+ * Since: 1.26
+ */
+gchar *
+gst_debug_print_object (gconstpointer ptr)
 {
   GObject *object = (GObject *) ptr;
 
@@ -1161,11 +1177,23 @@ gst_debug_print_object (gpointer ptr)
   return g_strdup_printf ("%p", ptr);
 }
 
-static gchar *
-gst_debug_print_segment (gpointer ptr)
+/**
+ * gst_debug_print_segment:
+ * @segment: (nullable): the %GstSegment
+ *
+ * Returns a string that represents @segments.
+ *
+ * The string representation is meant to be used for debugging purposes and
+ * might change between GStreamer versions.
+ *
+ * Returns: (transfer full) (type gchar*): a string containing a string
+ *     representation of the segment
+ *
+ * Since: 1.26
+ */
+gchar *
+gst_debug_print_segment (const GstSegment * segment)
 {
-  GstSegment *segment = (GstSegment *) ptr;
-
   /* nicely printed segment */
   if (segment == NULL) {
     return g_strdup ("(NULL)");
@@ -2687,6 +2715,13 @@ gst_debug_log_literal (GstDebugCategory * category, GstDebugLevel level,
 {
 }
 
+void
+gst_debug_log_id_literal (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line,
+    const gchar * id, const gchar * message_string)
+{
+}
+
 const gchar *
 gst_debug_message_get (GstDebugMessage * message)
 {
@@ -3517,7 +3552,7 @@ typedef struct
   gint64 last_use;
   GThread *thread;
 
-  GQueue log;
+  GstVecDeque *log;
   gsize log_size;
 } GstRingBufferLog;
 
@@ -3588,8 +3623,9 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
         break;
 
       g_hash_table_remove (logger->thread_index, log->thread);
-      while ((buf = g_queue_pop_head (&log->log)))
+      while ((buf = gst_vec_deque_pop_head (log->log)))
         g_free (buf);
+      gst_vec_deque_free (log->log);
       g_free (log);
       g_queue_pop_tail (&logger->threads);
     }
@@ -3600,7 +3636,7 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
   log = g_hash_table_lookup (logger->thread_index, thread);
   if (!log) {
     log = g_new0 (GstRingBufferLog, 1);
-    g_queue_init (&log->log);
+    log->log = gst_vec_deque_new (2048);
     log->log_size = 0;
     g_queue_push_head (&logger->threads, log);
     log->link = logger->threads.head;
@@ -3615,20 +3651,12 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
   if (output_len < logger->max_size_per_thread) {
     gchar *buf;
 
-    /* While using a GQueue here is not the most efficient thing to do, we
-     * have to allocate a string for every output anyway and could just store
-     * that instead of copying it to an actual ringbuffer.
-     * Better than GQueue would be GstQueueArray, but that one is in
-     * libgstbase and we can't use it here. That one allocation will not make
-     * much of a difference anymore, considering the number of allocations
-     * needed to get to this point...
-     */
     while (log->log_size + output_len > logger->max_size_per_thread) {
-      buf = g_queue_pop_head (&log->log);
+      buf = gst_vec_deque_pop_head (log->log);
       log->log_size -= strlen (buf);
       g_free (buf);
     }
-    g_queue_push_tail (&log->log, output);
+    gst_vec_deque_push_tail (log->log, output);
     log->log_size += output_len;
   } else {
     gchar *buf;
@@ -3636,7 +3664,7 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
     /* Can't really write anything as the line is bigger than the maximum
      * allowed log size already, so just remove everything */
 
-    while ((buf = g_queue_pop_head (&log->log)))
+    while ((buf = gst_vec_deque_pop_head (log->log)))
       g_free (buf);
     g_free (output);
     log->log_size = 0;
@@ -3669,16 +3697,17 @@ gst_debug_ring_buffer_logger_get_logs (void)
   tmp = logs = g_new0 (gchar *, ring_buffer_logger->threads.length + 1);
   for (l = ring_buffer_logger->threads.head; l; l = l->next) {
     GstRingBufferLog *log = l->data;
-    GList *l;
     gchar *p;
-    gsize len;
+    gsize n_lines, line_len;
 
     *tmp = p = g_new0 (gchar, log->log_size + 1);
 
-    for (l = log->log.head; l; l = l->next) {
-      len = strlen (l->data);
-      memcpy (p, l->data, len);
-      p += len;
+    n_lines = gst_vec_deque_get_length (log->log);
+    for (gsize i = 0; i < n_lines; i++) {
+      const gchar *line = gst_vec_deque_peek_nth (log->log, i);
+      line_len = strlen (line);
+      memcpy (p, line, line_len);
+      p += line_len;
     }
 
     tmp++;
@@ -3698,7 +3727,7 @@ gst_ring_buffer_logger_free (GstRingBufferLogger * logger)
 
     while ((log = g_queue_pop_head (&logger->threads))) {
       gchar *buf;
-      while ((buf = g_queue_pop_head (&log->log)))
+      while ((buf = gst_vec_deque_pop_head (log->log)))
         g_free (buf);
       g_free (log);
     }

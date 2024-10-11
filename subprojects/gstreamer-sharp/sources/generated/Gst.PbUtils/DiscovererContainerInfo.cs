@@ -40,6 +40,17 @@ namespace Gst.PbUtils {
 			}
 		}
 
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_discoverer_container_info_get_tags(IntPtr raw);
+
+		public new Gst.TagList Tags { 
+			get {
+				IntPtr raw_ret = gst_discoverer_container_info_get_tags(Handle);
+				Gst.TagList ret = raw_ret == IntPtr.Zero ? null : (Gst.TagList) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.TagList), false);
+				return ret;
+			}
+		}
+
 
 		static DiscovererContainerInfo ()
 		{

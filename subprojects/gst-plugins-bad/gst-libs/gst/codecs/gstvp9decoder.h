@@ -89,7 +89,7 @@ struct _GstVp9DecoderClass
    *
    * Optional. Called whenever new #GstVp9Picture is created.
    * Subclass can set implementation specific user data on the #GstVp9Picture
-   * via gst_vp9_picture_set_user_data()
+   * via gst_vp9_picture_set_user_data
    *
    * Since: 1.18
    */

@@ -323,7 +323,8 @@ _fit_stream_to_allocated_size (GtkGstBaseWidget * base_widget,
     dst.w = allocation->width;
     dst.h = allocation->height;
 
-    gst_video_sink_center_rect (src, dst, result, TRUE);
+    if (base_widget->display_width > 0 && base_widget->display_height > 0)
+      gst_video_sink_center_rect (src, dst, result, TRUE);
   } else {
     result->x = 0;
     result->y = 0;

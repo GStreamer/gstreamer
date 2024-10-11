@@ -89,7 +89,7 @@ struct _GstAV1DecoderClass
    *
    * Optional. Called whenever new #GstAV1Picture is created.
    * Subclass can set implementation specific user data
-   * on the #GstAV1Picture via gst_av1_picture_set_user_data()
+   * on the #GstAV1Picture via gst_av1_picture_set_user_data
    *
    * Since: 1.20
    */

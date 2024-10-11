@@ -22,6 +22,7 @@
 #endif
 
 #include "gsth264picture-private.h"
+#include "gstcodecpicture-private.h"
 
 #include <stdlib.h>
 
@@ -29,18 +30,6 @@ GST_DEBUG_CATEGORY_EXTERN (gst_h264_decoder_debug);
 #define GST_CAT_DEFAULT gst_h264_decoder_debug
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstH264Picture, gst_h264_picture);
-
-static void
-_gst_h264_picture_free (GstH264Picture * picture)
-{
-  if (picture->notify)
-    picture->notify (picture->user_data);
-
-  if (picture->discont_state)
-    gst_video_codec_state_unref (picture->discont_state);
-
-  g_free (picture);
-}
 
 /**
  * gst_h264_picture_new:
@@ -62,49 +51,9 @@ gst_h264_picture_new (void)
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (pic), 0,
       GST_TYPE_H264_PICTURE, NULL, NULL,
-      (GstMiniObjectFreeFunction) _gst_h264_picture_free);
+      (GstMiniObjectFreeFunction) gst_codec_picture_free);
 
   return pic;
-}
-
-/**
- * gst_h264_picture_set_user_data:
- * @picture: a #GstH264Picture
- * @user_data: (nullable): private data
- * @notify: (closure user_data): a #GDestroyNotify
- *
- * Sets @user_data on the picture and the #GDestroyNotify that will be called when
- * the picture is freed.
- *
- * If a @user_data was previously set, then the previous set @notify will be called
- * before the @user_data is replaced.
- */
-void
-gst_h264_picture_set_user_data (GstH264Picture * picture, gpointer user_data,
-    GDestroyNotify notify)
-{
-  g_return_if_fail (GST_IS_H264_PICTURE (picture));
-
-  if (picture->notify)
-    picture->notify (picture->user_data);
-
-  picture->user_data = user_data;
-  picture->notify = notify;
-}
-
-/**
- * gst_h264_picture_get_user_data:
- * @picture: a #GstH264Picture
- *
- * Gets private data set on the picture via
- * gst_h264_picture_set_user_data() previously.
- *
- * Returns: (transfer none) (nullable): The previously set user_data
- */
-gpointer
-gst_h264_picture_get_user_data (GstH264Picture * picture)
-{
-  return picture->user_data;
 }
 
 struct _GstH264Dpb
@@ -646,7 +595,7 @@ gst_h264_dpb_get_picture (GstH264Dpb * dpb, guint32 system_frame_number)
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    if (picture->system_frame_number == system_frame_number) {
+    if (GST_CODEC_PICTURE_FRAME_NUMBER (picture) == system_frame_number) {
       gst_h264_picture_ref (picture);
       return picture;
     }

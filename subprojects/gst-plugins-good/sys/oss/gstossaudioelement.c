@@ -25,9 +25,13 @@
 
 #include "common.h"
 #include "gstossaudioelements.h"
+#include "gstossdeviceprovider.h"
 
 GST_DEBUG_CATEGORY (oss_debug);
 #define GST_CAT_DEFAULT oss_debug
+
+GST_DEVICE_PROVIDER_REGISTER_DEFINE (ossdeviceprovider, "ossdeviceprovider",
+    GST_RANK_SECONDARY, GST_TYPE_OSS_DEVICE_PROVIDER);
 
 void
 oss_element_init (GstPlugin * plugin)

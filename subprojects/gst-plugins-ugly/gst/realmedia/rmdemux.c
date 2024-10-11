@@ -2007,14 +2007,20 @@ gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   guint packet_size = stream->packet_size;
   guint height = stream->subpackets->len;
   guint leaf_size = stream->leaf_size;
+  guint size;
   guint p, x;
 
   g_assert (stream->height == height);
 
-  GST_LOG ("packet_size = %u, leaf_size = %u, height= %u", packet_size,
-      leaf_size, height);
+  GST_LOG_OBJECT (rmdemux, "packet_size = %u, leaf_size = %u, height= %u",
+      packet_size, leaf_size, height);
 
-  outbuf = gst_buffer_new_and_alloc (height * packet_size);
+  if (!g_uint_checked_mul (&size, height, packet_size)) {
+    GST_ERROR_OBJECT (rmdemux, "overflowing audio packet size");
+    return GST_FLOW_ERROR;
+  }
+
+  outbuf = gst_buffer_new_and_alloc (size);
   gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
 
   for (p = 0; p < height; ++p) {
@@ -2144,14 +2150,20 @@ gst_rmdemux_descramble_sipr_audio (GstRMDemux * rmdemux,
   GstMapInfo outmap;
   guint packet_size = stream->packet_size;
   guint height = stream->subpackets->len;
+  guint size;
   guint p;
 
   g_assert (stream->height == height);
 
-  GST_LOG ("packet_size = %u, leaf_size = %u, height= %u", packet_size,
-      stream->leaf_size, height);
+  GST_LOG_OBJECT (rmdemux, "packet_size = %u, leaf_size = %u, height= %u",
+      packet_size, stream->leaf_size, height);
 
-  outbuf = gst_buffer_new_and_alloc (height * packet_size);
+  if (!g_uint_checked_mul (&size, height, packet_size)) {
+    GST_ERROR_OBJECT (rmdemux, "overflowing SIPR audio packet size");
+    return GST_FLOW_ERROR;
+  }
+
+  outbuf = gst_buffer_new_and_alloc (size);
   gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
 
   for (p = 0; p < height; ++p) {
@@ -2162,7 +2174,13 @@ gst_rmdemux_descramble_sipr_audio (GstRMDemux * rmdemux,
       GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (b);
     }
 
-    gst_buffer_extract (b, 0, outmap.data + packet_size * p, packet_size);
+    if (gst_buffer_extract (b, 0, outmap.data + packet_size * p,
+            packet_size) != packet_size) {
+      GST_ERROR_OBJECT (rmdemux, "not enough SIPR audio data available");
+      gst_buffer_unmap (outbuf, &outmap);
+      gst_buffer_unref (outbuf);
+      return GST_FLOW_ERROR;
+    }
   }
   gst_buffer_unmap (outbuf, &outmap);
 

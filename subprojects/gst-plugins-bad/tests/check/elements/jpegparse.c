@@ -192,7 +192,8 @@ GST_START_TEST (test_parse_single_byte)
   caps_in = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, FALSE,
       NULL);
   caps_out = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
-      "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
+      "framerate", GST_TYPE_FRACTION, 0, 1, "interlace-mode", G_TYPE_STRING,
+      "progressive", "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
 
   /* Push the data byte by byte, injecting some garbage. */
   buffer_in = make_buffers_in (buffer_in, test_data_garbage);
@@ -262,7 +263,8 @@ GST_START_TEST (test_parse_all_in_one_buf)
   buffer_in = g_list_append (buffer_in, buffer);
 
   caps_out = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
-      "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
+      "framerate", GST_TYPE_FRACTION, 0, 1, "interlace-mode", G_TYPE_STRING,
+      "progressive", "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
   buffer_out = make_buffers_out (buffer_out, test_data_short_frame);
   buffer_out = make_buffers_out (buffer_out, test_data_normal_frame);
   buffer_out = make_buffers_out (buffer_out, test_data_entropy);
@@ -328,7 +330,9 @@ GST_START_TEST (test_parse_app1_exif)
   caps_out = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
       "framerate", GST_TYPE_FRACTION, 0, 1, "width", G_TYPE_INT, 80, "height",
       G_TYPE_INT, 60, "sof-marker", G_TYPE_INT, 0, "colorspace", G_TYPE_STRING,
-      "sYUV", "sampling", G_TYPE_STRING, "YCbCr-4:2:0", NULL);
+      "sYUV", "sampling", G_TYPE_STRING, "YCbCr-4:2:0", "interlace-mode",
+      G_TYPE_STRING, "progressive", "pixel-aspect-ratio", GST_TYPE_FRACTION, 1,
+      1, NULL);
 
   buffer_in = make_my_input_buffer (test_data_app1_exif,
       sizeof (test_data_app1_exif));
@@ -354,7 +358,9 @@ GST_START_TEST (test_parse_comment)
   caps_out = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
       "framerate", GST_TYPE_FRACTION, 0, 1, "width", G_TYPE_INT, 80, "height",
       G_TYPE_INT, 60, "sof-marker", G_TYPE_INT, 0, "colorspace", G_TYPE_STRING,
-      "sYUV", "sampling", G_TYPE_STRING, "YCbCr-4:2:0", NULL);
+      "sYUV", "sampling", G_TYPE_STRING, "YCbCr-4:2:0", "interlace-mode",
+      G_TYPE_STRING, "progressive", "pixel-aspect-ratio", GST_TYPE_FRACTION, 1,
+      1, NULL);
 
   buffer_in = make_my_input_buffer (test_data_comment,
       sizeof (test_data_comment));

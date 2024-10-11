@@ -79,5 +79,20 @@ GST_CUDA_API
 void            gst_buffer_pool_config_set_cuda_stream (GstStructure * config,
                                                         GstCudaStream * stream);
 
+GST_CUDA_API
+GstCudaMemoryAllocMethod gst_buffer_pool_config_get_cuda_alloc_method (GstStructure * config);
+
+GST_CUDA_API
+void                     gst_buffer_pool_config_set_cuda_alloc_method (GstStructure * config,
+                                                                       GstCudaMemoryAllocMethod method);
+
+GST_CUDA_API
+gboolean        gst_buffer_pool_config_get_cuda_stream_ordered_alloc (GstStructure * config,
+                                                                      gboolean * enabled);
+
+GST_CUDA_API
+void            gst_buffer_pool_config_set_cuda_stream_ordered_alloc (GstStructure * config,
+                                                                      gboolean stream_ordered);
+
 G_END_DECLS
 

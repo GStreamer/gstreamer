@@ -46,6 +46,7 @@
 
 #include <gst/va/gstvavideoformat.h>
 
+#include "gstvacaps.h"
 #include "gstvabasedec.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_jpegdec_debug);
@@ -356,6 +357,7 @@ gst_va_jpeg_dec_negotiate (GstVideoDecoder * decoder)
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaJpegDec *self = GST_VA_JPEG_DEC (decoder);
   GstVideoFormat format;
+  guint64 modifier;
   GstCapsFeatures *capsfeatures = NULL;
 
   /* Ignore downstream renegotiation request. */
@@ -386,7 +388,7 @@ gst_va_jpeg_dec_negotiate (GstVideoDecoder * decoder)
     base->rt_format = VA_RT_FORMAT_RGBP;
 
   gst_va_base_dec_get_preferred_format_and_caps_features (base, &format,
-      &capsfeatures);
+      &capsfeatures, &modifier);
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
     return FALSE;
 
@@ -402,7 +404,16 @@ gst_va_jpeg_dec_negotiate (GstVideoDecoder * decoder)
       gst_video_decoder_set_output_state (decoder, format,
       base->width, base->height, base->input_state);
 
-  base->output_state->caps = gst_video_info_to_caps (&base->output_state->info);
+  /* set caps feature */
+  if (capsfeatures && gst_caps_features_contains (capsfeatures,
+          GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+    base->output_state->caps =
+        gst_va_video_info_to_dma_caps (&base->output_state->info, modifier);
+  } else {
+    base->output_state->caps =
+        gst_video_info_to_caps (&base->output_state->info);
+  }
+
   if (capsfeatures)
     gst_caps_set_features_simple (base->output_state->caps, capsfeatures);
 
@@ -524,6 +535,10 @@ _fixup_sink_caps (GstVaDisplay * display, GstCaps * caps)
     g_value_unset (&sampling);
     return ret;
   }
+
+  /* TODO: support interleaved mjpeg */
+  gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING, "progressive",
+      NULL);
   return gst_caps_ref (caps);
 }
 
@@ -531,6 +546,42 @@ static GstCaps *
 _fixup_src_caps (GstVaDisplay * display, GstCaps * caps)
 {
   if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_IHD)) {
+    GstCaps *ret;
+    guint i, len;
+
+    ret = gst_caps_copy (caps);
+
+    len = gst_caps_get_size (ret);
+    for (i = 0; i < len; i++) {
+      guint j, size;
+      GValue out = G_VALUE_INIT;
+      const GValue *in;
+      GstStructure *s;
+      GstCapsFeatures *f;
+
+      f = gst_caps_get_features (ret, i);
+      if (!gst_caps_features_is_equal (f,
+              GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
+        continue;
+
+      s = gst_caps_get_structure (ret, i);
+
+      in = gst_structure_get_value (s, "format");
+
+      size = gst_value_list_get_size (in);
+      gst_value_list_init (&out, size);
+      for (j = 0; j < size; j++) {
+        const GValue *fmt = gst_value_list_get_value (in, j);
+
+        /* rgbp is not correctly mapped into memory */
+        if (g_strcmp0 (g_value_get_string (fmt), "RGBP") != 0)
+          gst_value_list_append_value (&out, fmt);
+      }
+      gst_structure_take_value (s, "format", &out);
+    }
+
+    return ret;
+  } else if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_I965)) {
     GstCaps *ret;
     GstStructure *s;
     GstCapsFeatures *f;
@@ -542,39 +593,11 @@ _fixup_src_caps (GstVaDisplay * display, GstCaps * caps)
     for (i = 0; i < len; i++) {
       s = gst_caps_get_structure (ret, i);
       f = gst_caps_get_features (ret, i);
-      if (gst_caps_features_is_equal (f,
-              GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
-        /* rgbp is not correctly mapped into memory */
-        guint i, size;
-        GValue out = G_VALUE_INIT;
-        const GValue *in = gst_structure_get_value (s, "format");
 
-        size = gst_value_list_get_size (in);
-        gst_value_list_init (&out, size);
-        for (i = 0; i < size; i++) {
-          const GValue *fmt = gst_value_list_get_value (in, i);
-          if (g_strcmp0 (g_value_get_string (fmt), "RGBP") != 0)
-            gst_value_list_append_value (&out, fmt);
-        }
-        gst_structure_set_value (s, "format", &out);
-        g_value_unset (&out);
-      } else if (gst_caps_features_contains (f, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
-        /* dmabuf exportation only handles NV12 */
-        gst_structure_set (s, "format", G_TYPE_STRING, "NV12", NULL);
-      }
-    }
+      /* DMA kind formats have modifiers, we should not change */
+      if (gst_caps_features_contains (f, GST_CAPS_FEATURE_MEMORY_DMABUF))
+        continue;
 
-    return ret;
-  } else if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_I965)) {
-    GstCaps *ret;
-    GstStructure *s;
-    guint i, len;
-
-    ret = gst_caps_copy (caps);
-
-    len = gst_caps_get_size (ret);
-    for (i = 0; i < len; i++) {
-      s = gst_caps_get_structure (ret, i);
       /* only NV12 works in this nigthmare */
       gst_structure_set (s, "format", G_TYPE_STRING, "NV12", NULL);
     }

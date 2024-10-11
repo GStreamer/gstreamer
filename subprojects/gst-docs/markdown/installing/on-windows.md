@@ -6,55 +6,33 @@
 * Windows 8
 * Windows 8.1
 * Windows 10
+* Windows 11 and newer
 
 ## Prerequisites
 
-To develop applications using GStreamer for Windows we recommend using
-[Windows 7](http://windows.microsoft.com/en-us/windows7/products/home)
-or later. Windows Vista may also work but it is not supported.
+To develop applications using GStreamer for Windows we recommend using Windows
+10 or newer with Microsoft Visual Studio 2019 or newer. Older versions of each
+may also work, but they are not recommended.
 
-GStreamer package includes C headers (`.h`) and library files (`.lib`)
-valid for any version of [Microsoft Visual
-Studio](http://www.microsoft.com/visualstudio). For convenience,
-property pages (`.props`) are also included which extremely simplify
-creating new projects. These property pages, though, only work with
-[Microsoft Visual
-Studio 2010](http://www.microsoft.com/visualstudio/en-us/products/2010-editions)
-and newer (including the free [Visual C++ Express
-edition](http://www.microsoft.com/visualstudio/en-us/products/2010-editions/visual-cpp-express)).
-
-The recommended system is
-[Windows 7](http://windows.microsoft.com/en-us/windows7/products/home) or newer
-with [Microsoft Visual
-Studio 2010](http://www.microsoft.com/visualstudio/en-us/products/2010-editions)
-or newer. Take a look at its [system
-requirements](http://www.microsoft.com/visualstudio/en-us/products/2010-editions/visual-cpp-express)).
-
-Installing GStreamer for 32-bit platforms requires approximately 286MB of
-free disk space for the runtime and 207MB for the development files (as of some older version).
-
-Installing GStreamer for 64-bits platforms requires up to approximately 350MB of
-free disk space for the runtime and 400MB for the development files (as of version 1.15.1).
+GStreamer package includes C headers (`.h`) and library files (`.lib`) valid
+for any version of [Microsoft Visual Studio](http://www.microsoft.com/visualstudio).
+For convenience, property pages (`.props`) are also included which extremely
+simplify creating new projects.
 
 ## Download and install GStreamer binaries
 
 There are 3 sets of files in GStreamer binaries:
 
-  - The runtime files are needed to run GStreamer applications. You
-    probably want to distribute these files with your application (or
-    the installer below).
-  - The development files are **additional** files you need to create
-    GStreamer applications.
-  - The [Merge
-    Modules](http://msdn.microsoft.com/en-us/library/windows/desktop/aa369820%28v=vs.85%29.aspx)
-    files are **additional** files you can use to deploy GStreamer binaries
-    alongside your application (see [Windows
-    deployment](deploying/windows.md)).
+- The runtime files are needed to run GStreamer applications. You probably want
+  to distribute these files with your application (or the installer below).
+- The development files are **additional** files you need at build-time to
+  create GStreamer applications.
+- The [Merge Modules](http://msdn.microsoft.com/en-us/library/windows/desktop/aa369820%28v=vs.85%29.aspx)
+  files are **additional** files you can use to deploy GStreamer binaries
+  alongside your application (see [Windows deployment](deploying/windows.md)).
 
 Get both **the Runtime and Development** installers appropriate for
-your architecture from here:
-
-[GStreamer download page](https://gstreamer.freedesktop.org/download/)
+your architecture from the [GStreamer download page](https://gstreamer.freedesktop.org/download/).
 
 If in doubt, download the 64-bit MSVC packages:
 - Runtime installer: e.g. `gstreamer-1.0-msvc-x86_64-{VERSION}.msi`
@@ -83,10 +61,10 @@ At runtime, GStreamer will look for its plugins in the following folders:
 
   - `%HOMEDRIVE%%HOMEFOLDER%/.gstreamer-1.0/plugins`
   - `C:\gstreamer\1.0\x86\lib\gstreamer-1.0`
-  - `<location of libgstreamer-1.0-0.dll>\..\lib\gstreamer-1.0`
+  - `<location of gstreamer-1.0-0.dll>\..\lib\gstreamer-1.0`
   - `%GST_PLUGIN_PATH%`
 
-So, typically, if your application can find `libgstreamer-1.0-0.dll`,
+So, typically, if your application can find `gstreamer-1.0-0.dll`,
 it will find the GStreamer plugins, as long as the installation folder
 structure is unmodified. If you do change this structure in your
 application, then you can use the `GST_PLUGIN_PATH` environment
@@ -98,6 +76,8 @@ default folders listed above, you can set the `GST_PLUGIN_SYSTEM_PATH`
 environment variable to point where the plugins are located.
 
 ## Configure your development environment
+
+**NOTE: these instructions are out of date, exercise caution while following them**
 
 ### Building the tutorials
 

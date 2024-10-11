@@ -399,7 +399,7 @@ struct _MXFMetadataBaseClass {
   GstStructure * (*to_structure) (MXFMetadataBase *self);
   GList * (*write_tags) (MXFMetadataBase *self, MXFPrimerPack *primer);
 
-  GQuark name_quark;
+  const gchar *name;
 };
 
 struct _MXFMetadata {
@@ -448,7 +448,7 @@ struct _MXFMetadataIdentification {
 
   gchar *product_name;
   MXFProductVersion product_version;
-  
+
   gchar *version_string;
 
   MXFUUID product_uid;
@@ -614,7 +614,7 @@ struct _MXFMetadataDMSegment {
 
   guint32 n_track_ids;
   guint32 *track_ids;
-      
+
   MXFUUID dm_framework_uid;
   MXFDescriptiveMetadataFramework *dm_framework;
 };
@@ -734,7 +734,7 @@ struct _MXFMetadataGenericDataEssenceDescriptor {
 
 struct _MXFMetadataMultipleDescriptor {
   MXFMetadataFileDescriptor parent;
-  
+
   MXFUUID *sub_descriptors_uids;
   guint32 n_sub_descriptors;
   MXFMetadataGenericDescriptor **sub_descriptors;

@@ -615,6 +615,20 @@
    ...
    fun:_test_query_start_free_gl
 }
+{
+   <Leak in X on the CI which doesn't exist with newer version (on F39 for example)>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   ...
+   fun:glXGetFBConfigs
+   fun:gst_gl_context_glx_dump_all_fb_configs
+   fun:gst_gl_context_glx_choose_format
+   fun:gst_gl_context_create_thread
+   fun:g_thread_proxy
+   fun:start_thread
+   fun:clone
+}
+
 
 # FIXME: how does this even happen ? reproduce with make elements/textoverlay.valgrind
 {

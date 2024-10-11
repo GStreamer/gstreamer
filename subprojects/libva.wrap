@@ -1,4 +1,13 @@
-[wrap-git]
-directory=libva
-url=https://github.com/intel/libva.git
-revision=1c58941b93ba5013c68e8370a408efd630275c9c
+[wrap-file]
+directory = libva-2.21.0
+source_url = https://github.com/intel/libva/archive/2.21.0.tar.gz
+source_filename = libva-2.21.0.tar.gz
+source_hash = f7c3fffef3f04eb146e036dad2587d852bfb70e4926d014bf437244915ef7425
+
+[provide]
+libva = libva_dep
+libva-drm = libva_drm_dep
+libva-glx = libva_glx_dep
+libva-wayland = libva_wayland_dep
+libva-win32 = libva_win32_dep
+libva-x11 = libva_x11_dep

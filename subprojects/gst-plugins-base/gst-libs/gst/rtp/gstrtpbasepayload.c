@@ -114,7 +114,7 @@ static guint gst_rtp_base_payload_signals[LAST_SIGNAL] = { 0 };
 #define DEFAULT_AUTO_HEADER_EXTENSION   TRUE
 
 #define RTP_HEADER_EXT_ONE_BYTE_MAX_SIZE 16
-#define RTP_HEADER_EXT_TWO_BYTE_MAX_SIZE 256
+#define RTP_HEADER_EXT_TWO_BYTE_MAX_SIZE 255
 #define RTP_HEADER_EXT_ONE_BYTE_MAX_ID 14
 #define RTP_HEADER_EXT_TWO_BYTE_MAX_ID 255
 
@@ -137,8 +137,11 @@ enum
   PROP_ONVIF_NO_RATE_CONTROL,
   PROP_SCALE_RTPTIME,
   PROP_AUTO_HEADER_EXTENSION,
+  PROP_EXTENSIONS,
   PROP_LAST
 };
+
+static GParamSpec *gst_rtp_base_payload_extensions_pspec;
 
 static void gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass);
 static void gst_rtp_base_payload_init (GstRTPBasePayload * rtpbasepayload,
@@ -176,6 +179,8 @@ static gboolean gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload);
 static void gst_rtp_base_payload_add_extension (GstRTPBasePayload * payload,
     GstRTPHeaderExtension * ext);
 static void gst_rtp_base_payload_clear_extensions (GstRTPBasePayload * payload);
+static void gst_rtp_base_payload_get_extensions (GstRTPBasePayload * payload,
+    GValue * out_value);
 
 static GstElementClass *parent_class = NULL;
 static gint private_offset = 0;
@@ -412,12 +417,12 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
    * Make the RTP packets' timestamps be scaled with the segment's rate
    * (corresponding to RTSP speed parameter). Disabling this property means
    * the timestamps will not be affected by the set delivery speed (RTSP speed).
-   * 
-   * Example: A server wants to allow streaming a recorded video in double 
-   * speed but still have the timestamps correspond to the position in the 
-   * video. This is achieved by the client setting RTSP Speed to 2 while the 
+   *
+   * Example: A server wants to allow streaming a recorded video in double
+   * speed but still have the timestamps correspond to the position in the
+   * video. This is achieved by the client setting RTSP Speed to 2 while the
    * server has this property disabled.
-   * 
+   *
    * Since: 1.18
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SCALE_RTPTIME,
@@ -441,6 +446,33 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
           "Whether RTP header extensions should be automatically enabled, if an implementation is available",
           DEFAULT_AUTO_HEADER_EXTENSION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_rtp_base_payload_extensions_pspec = gst_param_spec_array ("extensions",
+      "RTP header extensions",
+      "A list of already enabled RTP header extensions",
+      g_param_spec_object ("extension", "RTP header extension",
+          "An already enabled RTP extension", GST_TYPE_RTP_HEADER_EXTENSION,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS),
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstRTPBasePayload:extensions:
+   *
+   * A list of already enabled RTP header extensions. This may be useful for finding
+   * out which extensions are already enabled (with add-extension signal) and picking a non-conflicting
+   * ID for a new extension that needs to be added on top of the existing ones.
+   *
+   * Note that the value returned by reading this property is not dynamically updated when the set of
+   * enabled extensions changes by any of existing action signals. Rather, it represents the current state
+   * at the time the property is read.
+   *
+   * Dynamic updates of this property can be received by subscribing to its corresponding "notify" signal, i.e.
+   * "notify::extensions".
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_EXTENSIONS, gst_rtp_base_payload_extensions_pspec);
 
   /**
    * GstRTPBasePayload::add-extension:
@@ -933,10 +965,11 @@ gst_rtp_base_payload_set_options (GstRTPBasePayload * payload,
 }
 
 static gboolean
-copy_fixed (GQuark field_id, const GValue * value, GstStructure * dest)
+copy_fixed (const GstIdStr * fieldname, const GValue * value,
+    GstStructure * dest)
 {
   if (gst_value_is_fixed (value)) {
-    gst_structure_id_set_value (dest, field_id, value);
+    gst_structure_id_str_set_value (dest, fieldname, value);
   }
   return TRUE;
 }
@@ -957,9 +990,9 @@ update_max_ptime (GstRTPBasePayload * rtpbasepayload)
 }
 
 static gboolean
-_set_caps (GQuark field_id, const GValue * value, GstCaps * caps)
+_set_caps (const GstIdStr * fieldname, const GValue * value, GstCaps * caps)
 {
-  gst_caps_set_value (caps, g_quark_to_string (field_id), value);
+  gst_caps_set_value (caps, gst_id_str_as_str (fieldname), value);
 
   return TRUE;
 }
@@ -990,7 +1023,8 @@ gst_rtp_base_payload_set_outcaps_structure (GstRTPBasePayload * payload,
   GST_DEBUG_OBJECT (payload, "defaults: %" GST_PTR_FORMAT, srccaps);
 
   if (s && gst_structure_n_fields (s) > 0) {
-    gst_structure_foreach (s, (GstStructureForeachFunc) _set_caps, srccaps);
+    gst_structure_foreach_id_str (s, (GstStructureForeachIdStrFunc) _set_caps,
+        srccaps);
 
     GST_DEBUG_OBJECT (payload, "custom added: %" GST_PTR_FORMAT, srccaps);
   }
@@ -1317,7 +1351,8 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
     srccaps = gst_caps_new_empty_simple (gst_structure_get_name (s));
     d = gst_caps_get_structure (srccaps, 0);
 
-    gst_structure_foreach (s, (GstStructureForeachFunc) copy_fixed, d);
+    gst_structure_foreach_id_str (s, (GstStructureForeachIdStrFunc) copy_fixed,
+        d);
 
     gst_caps_unref (temp);
 
@@ -1502,6 +1537,9 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
         (GFunc) add_header_ext_to_caps, srccaps);
     GST_OBJECT_UNLOCK (payload);
 
+    g_object_notify_by_pspec (G_OBJECT (payload),
+        gst_rtp_base_payload_extensions_pspec);
+
   ext_out:
     g_ptr_array_unref (to_add);
     g_ptr_array_unref (to_remove);
@@ -1589,6 +1627,9 @@ gst_rtp_base_payload_add_extension (GstRTPBasePayload * payload,
   g_ptr_array_add (payload->priv->header_exts, gst_object_ref (ext));
   gst_pad_mark_reconfigure (GST_RTP_BASE_PAYLOAD_SRCPAD (payload));
   GST_OBJECT_UNLOCK (payload);
+
+  g_object_notify_by_pspec (G_OBJECT (payload),
+      gst_rtp_base_payload_extensions_pspec);
 }
 
 static void
@@ -1596,6 +1637,31 @@ gst_rtp_base_payload_clear_extensions (GstRTPBasePayload * payload)
 {
   GST_OBJECT_LOCK (payload);
   g_ptr_array_set_size (payload->priv->header_exts, 0);
+  GST_OBJECT_UNLOCK (payload);
+
+  g_object_notify_by_pspec (G_OBJECT (payload),
+      gst_rtp_base_payload_extensions_pspec);
+}
+
+static void
+gst_rtp_base_payload_get_extensions (GstRTPBasePayload * payload,
+    GValue * out_value)
+{
+  GPtrArray *extensions;
+  guint i;
+
+  GST_OBJECT_LOCK (payload);
+  extensions = payload->priv->header_exts;
+
+  for (i = 0; i < extensions->len; ++i) {
+    GValue value = G_VALUE_INIT;
+    g_value_init (&value, GST_TYPE_RTP_HEADER_EXTENSION);
+
+    g_value_set_object (&value, g_ptr_array_index (extensions, i));
+
+    gst_value_array_append_and_take_value (out_value, &value);
+  }
+
   GST_OBJECT_UNLOCK (payload);
 }
 
@@ -2247,6 +2313,9 @@ gst_rtp_base_payload_get_property (GObject * object, guint prop_id,
       break;
     case PROP_AUTO_HEADER_EXTENSION:
       g_value_set_boolean (value, priv->auto_hdr_ext);
+      break;
+    case PROP_EXTENSIONS:
+      gst_rtp_base_payload_get_extensions (rtpbasepayload, value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

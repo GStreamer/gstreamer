@@ -52,7 +52,7 @@ static GstStaticPadTemplate gst_rtp_ac3_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/ac3")
+    GST_STATIC_CAPS ("audio/x-ac3")
     );
 
 static GstStaticPadTemplate gst_rtp_ac3_depay_sink_template =
@@ -120,7 +120,7 @@ gst_rtp_ac3_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     clock_rate = 90000;         /* default */
   depayload->clock_rate = clock_rate;
 
-  srccaps = gst_caps_new_empty_simple ("audio/ac3");
+  srccaps = gst_caps_new_empty_simple ("audio/x-ac3");
   res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 

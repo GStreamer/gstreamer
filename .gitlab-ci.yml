@@ -1,9 +1,9 @@
 include:
   - project: 'freedesktop/ci-templates'
-    ref: 9f0eb526291fe74651fe1430cbd2397f4c0a819b
+    ref: "801093be0b88f23c8dbabe9cfce7134548f7ccdc"
     file: '/templates/fedora.yml'
   - project: 'freedesktop/ci-templates'
-    ref: 9f0eb526291fe74651fe1430cbd2397f4c0a819b
+    ref: "801093be0b88f23c8dbabe9cfce7134548f7ccdc"
     file: '/templates/debian.yml'
   ###
   # IMPORTANT
@@ -33,6 +33,7 @@ variables:
     value: ""
 
   FEDORA_AMD64_SUFFIX: 'amd64/fedora'
+  DEBIAN_AMD64_SUFFIX: 'amd64/debian'
   INDENT_AMD64_SUFFIX: 'amd64/gst-indent'
   COMMITLINT_AMD64_SUFFIX: 'amd64/commitlint'
   WINDOWS_AMD64_SUFFIX: 'amd64/windows'
@@ -40,11 +41,14 @@ variables:
   WINDOWS_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
   WINDOWS_UPSTREAM_IMAGE: "$CI_REGISTRY/$FDO_UPSTREAM_REPO/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
 
-  DEFAULT_MESON_ARGS: >
+  DEFAULT_MESON_ARGS: >-
     -Dlibnice:tests=disabled
     -Dlibnice:examples=disabled
     -Dlibnice:gupnp=disabled
     -Dopenh264:tests=disabled
+    -Dgst-plugins-base:opus=enabled
+    -Dgst-plugins-good:soup-lookup-dep=true
+    -Dgst-plugins-good:vpx=enabled
     -Dpygobject:tests=false
     -Dpython=enabled
     -Dlibav=enabled
@@ -57,17 +61,23 @@ variables:
     -Dsharp=disabled
     -Drs=disabled
     -Dgpl=enabled
+    -Dintrospection=enabled
+    --force-fallback-for=soundtouch
 
-  SIMPLE_BUILD: >
+  SIMPLE_BUILD: >-
     ${DEFAULT_MESON_ARGS}
     -Dsharp=enabled
-    -Domx=enabled
-    -Dgst-omx:target=generic
+    -Dgstreamer-sharp:werror=false
     -Ddoc=disabled
+
+  FF_TIMESTAMPS: true
 
 workflow:
   # https://docs.gitlab.com/ee/ci/yaml/index.html#switch-between-branch-pipelines-and-merge-request-pipelines
   rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      variables:
+        GIT_FETCH_EXTRA_FLAGS: '--no-tags'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       variables:
         GIT_FETCH_EXTRA_FLAGS: '--no-tags'
@@ -103,6 +113,8 @@ trigger:
   script:
     - echo "Trigger job done, now running the pipeline."
   rules:
+    # If this pipeline is triggered by a schedule, run automatically
+    - if: $CI_PIPELINE_SOURCE == "schedule"
     # If the MR is assigned to the Merge bot, trigger the pipeline automatically
     - if: '$CI_MERGE_REQUEST_ASSIGNEES == "gstreamer-merge-bot"'
     # Require explicit action to trigger tests post merge, but we want to
@@ -117,7 +129,9 @@ trigger:
 
 .fedora image:
   variables:
-    FDO_DISTRIBUTION_VERSION: '31'
+    CCACHE_DIR: '/cache/gstreamer/gstreamer/ccache/'
+    FDO_BASE_IMAGE: 'registry.fedoraproject.org/fedora-toolbox:34'
+    FDO_DISTRIBUTION_VERSION: '34'
     FDO_REPO_SUFFIX: "$FEDORA_AMD64_SUFFIX"
     FDO_DISTRIBUTION_TAG: "$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
     FDO_DISTRIBUTION_EXEC: 'GIT_BRANCH=$CI_COMMIT_REF_NAME GIT_URL=$CI_REPOSITORY_URL bash ci/docker/fedora/prepare.sh'
@@ -128,8 +142,28 @@ fedora amd64 docker:
     - '.fdo.container-build@fedora'
   stage: 'preparation'
   needs: []
-  tags:
-    - 'packet.net'
+  # Note: assumption is that placeholder jobs run on a packet runner
+  # (which has faster network connectivity to the registry).
+  tags: [ 'placeholder-job' ]
+
+.debian image:
+  variables:
+    CCACHE_DIR: '/cache/gstreamer/gstreamer/ccache_debian/'
+    FDO_BASE_IMAGE: "quay.io/toolbx-images/debian-toolbox:12"
+    FDO_DISTRIBUTION_VERSION: '12'
+    FDO_REPO_SUFFIX: "$DEBIAN_AMD64_SUFFIX"
+    FDO_DISTRIBUTION_TAG: "$DEBIAN_TAG-$GST_UPSTREAM_BRANCH"
+    FDO_DISTRIBUTION_EXEC: 'GIT_BRANCH=$CI_COMMIT_REF_NAME GIT_URL=$CI_REPOSITORY_URL bash ci/docker/debian/prepare.sh'
+
+debian amd64 docker:
+  extends:
+    - '.debian image'
+    - '.fdo.container-build@debian'
+  stage: 'preparation'
+  needs: []
+  # Note: assumption is that placeholder jobs run on a packet runner
+  # (which has faster network connectivity to the registry).
+  tags: [ 'placeholder-job' ]
 
 .gst-indent image:
   tags: [ 'placeholder-job' ]
@@ -137,7 +171,7 @@ fedora amd64 docker:
     FDO_DISTRIBUTION_VERSION: 'bookworm'
     FDO_REPO_SUFFIX: "$INDENT_AMD64_SUFFIX"
     FDO_DISTRIBUTION_TAG: "$INDENT_TAG-$GST_UPSTREAM_BRANCH"
-    FDO_DISTRIBUTION_PACKAGES: 'curl indent git findutils'
+    FDO_DISTRIBUTION_PACKAGES: 'curl indent git findutils ca-certificates'
     FDO_DISTRIBUTION_EXEC: 'ci/docker/indent/prepare.sh'
 
 gst-indent amd64 docker:
@@ -156,6 +190,7 @@ gst-indent amd64 docker:
     FDO_DISTRIBUTION_TAG: "$LINT_TAG-$GST_UPSTREAM_BRANCH"
     FDO_DISTRIBUTION_PACKAGES: 'python3-pip git'
     FDO_DISTRIBUTION_EXEC: 'ci/docker/lint/prepare.sh'
+    FDO_USER: "ciuser"
 
 commitlint docker:
   extends:
@@ -182,15 +217,17 @@ windows amd64 docker:
     - "2022"
   script:
     # We need to pass an array and to resolve the env vars, so we can't use a variable:
-    - $DOCKER_BUILD_ARGS = @("--build-arg", "DEFAULT_BRANCH=$GST_UPSTREAM_BRANCH")
+    - $DOCKER_BUILD_ARGS = @(`
+        "--build-arg", "DEFAULT_BRANCH=$GST_UPSTREAM_BRANCH", `
+        "--build-arg", "CI_PROJECT_NAMESPACE=$CI_PROJECT_NAMESPACE", `
+        "--build-arg", "CI_COMMIT_REF_NAME=$CI_COMMIT_REF_NAME" `
+      )
+    - ci/docker/windows/container.ps1 $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD $WINDOWS_IMAGE $WINDOWS_UPSTREAM_IMAGE $DOCKERFILE
 
-    - "& ci/docker/windows/container.ps1 $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD $WINDOWS_IMAGE $WINDOWS_UPSTREAM_IMAGE $DOCKERFILE"
-    - |
-      if (!($?)) {
-        echo "Failed to build the image"
-        Exit 1
-      }
-
+.macos image:
+  image: "registry.freedesktop.org/gstreamer/gstreamer/macos-arm64/14-sonoma:2023-10-25.0"
+  tags:
+    - gst-mac-arm
 
 # ---- Preparation ----- #
 #
@@ -207,12 +244,34 @@ gst indent:
   script:
     - ./scripts/check-format-c
     - ./scripts/format-csharp --check
+    # We want both wraps to use the same version, overkill to create a separate job for this
+    - cmp subprojects/gtk-sharp.wrap subprojects/gstreamer-sharp/subprojects/gtk-sharp.wrap
   rules:
-    # Don't check indentation on post merge pipelines
-    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
-      when: 'manual'
+    - !reference [.upstream-branch-rules, rules]
     - if: '$CI_PROJECT_NAMESPACE != "gstreamer" || $CI_COMMIT_BRANCH != $GST_UPSTREAM_BRANCH'
       when: 'always'
+
+rustfmt:
+  extends:
+    - '.fedora image'
+    - '.fdo.suffixed-image@fedora'
+  stage: 'preparation'
+  needs:
+    - "fedora amd64 docker"
+  script:
+    - export RUSTUP_HOME="/usr/local/rustup"
+    - export PATH="/usr/local/cargo/bin:$PATH"
+    - ./scripts/format-rust --check
+  rules:
+    - changes:
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - .gitlab-ci.yml
+          - .gitlab-image-tags.yml
+          - subprojects/gstreamer/**/*.rs
+          - subprojects/gst-examples/**/*.rs
+          - ci/**/*
+          - ./scripts/format-rust
 
 commitlint:
   extends:
@@ -225,6 +284,8 @@ commitlint:
   needs:
     - job: 'commitlint docker'
       artifacts: false
+  before_script:
+    - git config --global --add safe.directory $CI_PROJECT_DIR
   script:
     - echo $CI_MERGE_REQUEST_DIFF_BASE_SHA
     - gitlint --commits $CI_MERGE_REQUEST_DIFF_BASE_SHA..HEAD
@@ -233,61 +294,26 @@ commitlint:
     # what commits to check
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
-#
-# build setup templates
-#
-# Expects:
-# BUILD_TYPE: Dynamic or shared library
-#   must be 'shared' or 'static' or 'both'
-#   corresponds to --default-library meson arg
-# BUILD_GST_DEBUG: Build with gst debug symbols or not
-#   must be a string of a boolean, "true" or "false". Not yaml bool.
-#   corresponds to -Dgstreamer:gst_debug meson arg
-# GST_WERROR: make warning fatal or not
-#   must be a string of a boolean, "true" or "false". Not yaml bool.
-#
-.build_template: &build
-  - export RUSTUP_HOME="/usr/local/rustup"
-  - export CARGO_HOME="/usr/local/cargo"
-  - export PATH="/usr/local/cargo/bin:$PATH"
-  - date -R
-  - ci/scripts/handle-subprojects-cache.py subprojects/
-  - date -R
-  - export ARGS="--default-library=${BUILD_TYPE:-both} -Dgstreamer:gst_debug=${BUILD_GST_DEBUG:-true} ${MESON_ARGS}"
-  - |-
-    if [ $GST_WERROR == "true" ]; then
-      export ARGS="$ARGS --native-file ./ci/meson/gst-werror.ini"
-    fi
-  - echo $ARGS
-  - date -R
-  - meson build/ $ARGS
-  - date -R
-  - ninja -C build/
-  - date -R
-  - ccache --show-stats
-
 .build_ccache_vars:
   variables:
     CCACHE_COMPILERCHECK: 'content'
     CCACHE_COMPRESS: 'true'
     CCACHE_BASEDIR: '/cache/gstreamer/gstreamer'
-    CCACHE_DIR: '/cache/gstreamer/gstreamer/ccache/'
     # shared across everything really
     CCACHE_MAXSIZE: '10G'
-    CARGO_HOME: '/cache/gstreamer/cargo'
 
 .base_modules_changes: &modules_changes
   - .gitlab-ci.yml
   - .gitlab-image-tags.yml
   - gst-env.py
   - ci/gitlab/*.py
+  - ci/scripts/**/*
   - meson.build
   - subprojects/*.wrap
   - subprojects/gst-devtools/**/*
   - subprojects/gst-editing-services/**/*
   - subprojects/gst-integration-testsuites/**/*
   - subprojects/gst-libav/**/*
-  - subprojects/gst-omx/**/*
   - subprojects/gst-plugins-bad/**/*
   - subprojects/gst-plugins-base/**/*
   - subprojects/gst-plugins-good/**/*
@@ -295,24 +321,44 @@ commitlint:
   - subprojects/gst-python/**/*
   - subprojects/gstreamer/**/*
   - subprojects/gstreamer-sharp/**/*
-  - subprojects/gstreamer-vaapi/**/*
   - subprojects/gst-rtsp-server/**/*
+
+.upstream-branch-rules:
+  rules:
+    # If this matches, it means the pipeline is running against either the main
+    # or a stable branch, so make it manual
+    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
+      when: manual
+
+# Check whether the gtk wrap had any changes, and if so, build it
+.gtk-build-rules:
+  rules:
+    - changes:
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - ".gitlab-ci.yml"
+          - "meson.build"
+          - "subprojects/*.wrap"
+      variables:
+        GTK_ARGS: "-Dgtk=enabled"
 
 .build:
   stage: 'build'
-  extends:
-    - '.build_ccache_vars'
   needs:
     - "trigger"
   # Taking into account the slowest shared runner + time needed to upload the binaries to artifacts
   # Also need to take into account I/O of pulling docker images and uploading artifacts
   timeout: '45min'
   variables:
-    BUILD_GST_DEBUG: "true"
+    BUILD_GST_DEBUG: "-Dgstreamer:gst_debug=true"
     GST_WERROR: "true"
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
+    # Avoid weird issue about cross-device links
+    # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3197
+    GI_SCANNER_DISABLE_CACHE: "1"
   script:
-    - *build
+    - $CI_PROJECT_DIR/ci/scripts/build.sh build/
     - ./gst-env.py gst-inspect-1.0 --version
     - ./gst-env.py gst-inspect-1.0
   after_script:
@@ -323,31 +369,40 @@ commitlint:
     paths:
       - 'meson-logs/'
   rules:
-    # If this matches, it means the pipeline is running against either the main
-    # or a stable branch, so make it manual
-    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
-      when: manual
+    - !reference [.upstream-branch-rules, rules]
     - changes:
-        *modules_changes
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          *modules_changes
+    - changes:
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - "subprojects/gstreamer-vaapi/**/*"
+
+.build simple:
+  extends:
+    - '.build'
+    - '.build_ccache_vars'
+  variables:
+    GST_WERROR: "true"
+    MESON_ARGS: "${SIMPLE_BUILD}"
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
+  script:
+    - $CI_PROJECT_DIR/ci/scripts/build.sh build/
+    - ./gst-env.py gst-inspect-1.0 --version
+    - ./gst-env.py gst-inspect-1.0
+    - G_DEBUG=fatal_criticals ./gst-env.py gst-inspect-1.0 --print-all --gst-disable-registry-fork > /dev/null
+    - meson install --destdir $CI_PROJECT_DIR/destdir -C build
+    - rm -rf $CI_PROJECT_DIR/destdir
 
 .build fedora x86_64:
   extends:
     - '.fedora image'
     - '.fdo.suffixed-image@fedora'
-    - '.build'
+    - '.build simple'
   needs:
     - "trigger"
     - "fedora amd64 docker"
-  variables:
-    GST_WERROR: "true"
-    MESON_ARGS: "${SIMPLE_BUILD}"
-
-  script:
-    - *build
-    - ./gst-env.py gst-inspect-1.0 --version
-    - ./gst-env.py gst-inspect-1.0
-    - meson install --destdir $CI_PROJECT_DIR/destdir -C build
-    - rm -rf $CI_PROJECT_DIR/destdir
 
 build fedora gcc:
   extends: '.build fedora x86_64'
@@ -356,11 +411,11 @@ build fedora gcc:
     CXX: 'ccache g++'
   parallel:
     matrix:
-      - BUILD_TYPE: ['shared', 'both']
-        BUILD_GST_DEBUG: ["true", "false", ]
+      - BUILD_TYPE: [ "--default-library=shared", "--default-library=both"]
+        BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
 
-      - BUILD_TYPE: ['static']
-        BUILD_GST_DEBUG: ["true", "false"]
+      - BUILD_TYPE: ["--default-library=static"]
+        BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
         # Passing Dpython=enabled prohibits us from -Dgst-editing-services:python=disabled which we
         # currently need to statically build ges.
         #
@@ -370,7 +425,10 @@ build fedora gcc:
         #
         # VAAPI can't be build statically yet
         # subprojects/gstreamer-vaapi/meson.build:8:2: ERROR: Problem encountered: GStreamer-VAAPI plugin not supported with `static` builds yet.
-        MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dvaapi=disabled -Dpython=auto -Dgst-editing-services:python=disabled -Dintrospection=disabled -Ddoc=disabled"
+        #
+        # Disabling gstreamer-sharp tests because they download things as part of configure with
+        # nuget which frequently fails on the CI (possibly because we're hammering the site)
+        MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dvaapi=disabled -Dpython=auto -Dgst-editing-services:python=disabled -Dintrospection=disabled -Ddoc=disabled -Dgstreamer-sharp:tests=disabled"
 
 build fedora clang:
   extends: '.build fedora x86_64'
@@ -379,33 +437,39 @@ build fedora clang:
     CXX: 'ccache clang++'
   parallel:
     matrix:
-      - BUILD_TYPE: ['shared', 'both']
-        BUILD_GST_DEBUG: ["true"]
+      - BUILD_TYPE: [ "--default-library=shared", "--default-library=both"]
+        BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
+        MESON_ARGS: >-
+          ${SIMPLE_BUILD}
+          --force-fallback-for=glib
 
-      - BUILD_TYPE: ['shared', 'both']
-        BUILD_GST_DEBUG: ["false"]
-        # FIXME:
-        # clang complains about the gir files when gst_debug is false:
-        # We can merge the two parallel: matrix after
-        #
-        # [1352/5496] Generating subprojects/gstreamer/gst/Gst-1.0.gir with a custom command
-        # ../subprojects/gstreamer/gst/gstchildproxy.h:57: Error: Gst: identifier not found on the first line:
-        #   * GstChildProxyInterface.get_child_by_name:
-        #     ^
-        MESON_ARGS: "${SIMPLE_BUILD} -Dintrospection=disabled"
-
-      - BUILD_TYPE: ['static']
-        BUILD_GST_DEBUG: ["true", "false"]
-        # Passing Dpython=enabled prohibits us from -Dgst-editing-services:python=disabled which we
-        # currently need to statically build ges.
-        #
-        # subprojects/gst-editing-services/meson.build:153:4: ERROR: Problem encountered: Want to build python based modules but it is not supported while static building
-        # https://github.com/mesonbuild/meson/issues/5214
-        # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4281?commit_id=d1a687b61d8fbc5ae35b4bb62aa7fd1d091818f2#note_1875699
-        #
+      - BUILD_TYPE: ["--default-library=static"]
+        BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
         # VAAPI can't be build statically yet
         # subprojects/gstreamer-vaapi/meson.build:8:2: ERROR: Problem encountered: GStreamer-VAAPI plugin not supported with `static` builds yet.
-        MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dvaapi=disabled -Dpython=auto -Dgst-editing-services:python=disabled -Dintrospection=disabled -Ddoc=disabled"
+        #
+        # Disabling gstreamer-sharp tests because they download things as part of configure with
+        # nuget which frequently fails on the CI (possibly because we're hammering the site)
+        MESON_ARGS: >-
+          ${DEFAULT_MESON_ARGS}
+          -Dvaapi=disabled
+          -Dintrospection=disabled
+          -Dpython=disabled
+          -Ddoc=disabled
+          -Dgstreamer-sharp:tests=disabled
+          --force-fallback-for=glib
+
+build debian x86_64:
+  extends:
+    - '.debian image'
+    - '.fdo.suffixed-image@debian'
+    - '.build simple'
+  needs:
+    - "trigger"
+    - "debian amd64 docker"
+  variables:
+    BUILD_TYPE: "--default-library=shared"
+    BUILD_GST_DEBUG: "-Dgstreamer:gst_debug=true"
 
 .build windows:
   image: $WINDOWS_IMAGE
@@ -417,27 +481,27 @@ build fedora clang:
   needs:
     - "trigger"
     - "windows amd64 docker"
-  timeout: '45min'
+  timeout: '90m'
   variables:
-    MESON_ARGS: >
+    MESON_ARGS: >-
       ${DEFAULT_MESON_ARGS}
-      -Dpython=disabled
       -Dlibav=disabled
       -Dvaapi=disabled
       -Dgst-plugins-base:pango=enabled
       -Dgst-plugins-good:cairo=enabled
-    # Needs to not be empty otherwise the newline -> space replace command in
-    # `script:` will fail
-    MESON_CROSS_ARGS: ' '
+      -Dgst-plugins-good:soup=enabled
+      -Dgst-plugins-bad:d3d11-wgc=enabled
   rules:
-    # If this matches, it means the pipeline is running against either the main
-    # or a stable branch, so make it manual
-    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
-      when: manual
+    - !reference [.gtk-build-rules, rules]
+    - !reference [.upstream-branch-rules, rules]
     - changes:
-        *modules_changes
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          *modules_changes
     - changes:
-        - subprojects/win-*/*
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - "subprojects/win-*/*"
   script:
     # Make sure powershell exits on errors
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
@@ -446,79 +510,139 @@ build fedora clang:
     # Set the code page to UTF-8
     - chcp 65001
     # Renormalize line endings
-    - git add --renormalize .
-    - ci/scripts/handle-subprojects-cache.py subprojects/
-    # For some reason, options are separated by newline instead of space, so we
-    # have to replace them first.
-    - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
-    - $env:MESON_CROSS_ARGS = $env:MESON_CROSS_ARGS.replace("`n"," ")
-    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
-        meson build $env:MESON_ARGS $env:MESON_CROSS_ARGS &&
-        meson compile -C build"
+    - git add --renormalize subprojects/packagefiles
+    - $env:PYTHONUNBUFFERED = '1'
+    - ci/scripts/handle-subprojects-cache.py --cache-dir /subprojects subprojects/
+    - $env:PYTHONUNBUFFERED = ''
+    - echo $env:MESON_ARGS $env:GTK_ARGS
+    # We do not pick up any deps with cmake, so speed up dependency checks
+    - $env:CMAKE = 'false'
   artifacts:
    expire_in: "7 days"
    when: "always"
    paths:
      - 'build/meson-logs/'
 
-build vs2019 amd64:
+build vs2022 amd64:
   extends: '.build windows'
-  variables:
-    ARCH: 'amd64'
   script:
-    - !reference [".build windows", "script",]
-    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
-        .\gst-env.py gst-inspect-1.0.exe --version &&
-        .\gst-env.py gst-inspect-1.0.exe &&
-        mkdir .\destdir &&
-        meson install --destdir=$env:CI_PROJECT_DIR\destdir -C build &&
-        rmdir /s /q  $env:CI_PROJECT_DIR\destdir"
+    - !reference [".build windows", "script"]
+    - meson setup --vsenv build $env:MESON_ARGS $env:GTK_ARGS
+    - meson compile -C build --jobs $env:FDO_CI_CONCURRENT
+    - .\gst-env.py gst-inspect-1.0.exe --version
+    - .\gst-env.py gst-inspect-1.0.exe
+    - mkdir destdir
+    - meson install -C build --destdir installdir
+    - Remove-Item -Recurse -Force build\installdir
+  variables:
+    # FIXME: https://github.com/mesonbuild/meson/pull/11007
+    PKG_CONFIG: ${CI_PROJECT_DIR}/subprojects/win-pkgconfig/pkg-config.exe
 
-build vs2019 x86:
+build vs2022 amd64 full-static:
+  extends: ".build windows"
+  script:
+    - !reference [".build windows", "script"]
+    - cmd.exe /C "meson setup --vsenv build --default-library=static $env:MESON_ARGS"
+    - meson compile -C build --jobs $env:FDO_CI_CONCURRENT
+    - .\gst-env.py gst-inspect-1.0.exe --version
+    - .\gst-env.py gst-inspect-1.0.exe
+  variables:
+    MESON_ARGS: >-
+      -Dintrospection=disabled
+      -Dpython=disabled
+      -Dlibav=disabled
+      -Ddoc=disabled
+      -Dgst-full-target-type=static_library
+
+.build windows cross:
   extends: '.build windows'
+  script:
+    - !reference [".build windows", "script"]
+      # Setting up a cross build with MSVC is still non-trivial because
+      # the --vsenv argument cannot be used to set it up
+    - echo $env:MESON_CROSS_ARGS
+    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH && meson setup build $env:MESON_ARGS $env:GTK_ARGS $env:MESON_CROSS_ARGS"
+    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH && meson compile -C build --jobs $env:FDO_CI_CONCURRENT"
+
+build vs2022 x86:
+  extends: '.build windows cross'
   variables:
     ARCH: 'x86'
+    # Installed python is 64 bits instead of 32 bits
+    MESON_CROSS_ARGS: >
+      -Dpython=disabled
+      -Dintrospection=disabled
 
-build vs2019 arm64 uwp:
-  extends: '.build windows'
+build vs2022 arm64:
+  extends: '.build windows cross'
+  rules:
+    - when: 'manual'
+      allow_failure: true
   variables:
     ARCH: 'arm64'
     # pango pulls in cairo which pulls in pixman which doesn't build because of
     # https://github.com/mesonbuild/meson/issues/9889
-    MESON_CROSS_ARGS: >
+    # libsoup requires glib-compile-resources, which isn't available in a cross
+    # build
+    MESON_CROSS_ARGS: >-
       -Dgst-plugins-base:pango=disabled
       -Dgst-plugins-good:cairo=disabled
       -Dgst-devtools:cairo=disabled
-      --cross-file ci/meson/vs2019-arm64-cross-file.txt
-      --native-file ci/meson/vs2019-x64-native-file.txt
+      -Dpython=disabled
+      -Dintrospection=disabled
+      --cross-file ci/meson/vs2022-paths.ini
+      --cross-file ci/meson/vs2022-arm64-cross.ini
+      --native-file ci/meson/vs2022-paths.ini
+      --native-file ci/meson/vs2022-x64-native.ini
 
-build msys2 :
+build msys2:
   extends: '.build windows'
-  timeout: '60min'
-  rules:
-    - changes:
-        *modules_changes
-      allow_failure: true
-      when: 'manual'
   script:
-    # Make sure powershell exits on errors
-    # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
-    - $ErrorActionPreference = "Stop"
-
-    # Set the code page to UTF-8
-    - chcp 65001
-
+    - !reference [".build windows", "script"]
+    # Replace backslashes with forward so bash doesn't complain
+    - $env:CI_PROJECT_DIR = $env:CI_PROJECT_DIR.replace('\','/')
+    # Windows Graphics Capture currently requires Visual Studio
+    - $env:MESON_ARGS = $env:MESON_ARGS.replace('-Dgst-plugins-bad:d3d11-wgc=enabled','') + ' -Dpython=disabled -Dintrospection=disabled'
     # Configure MSYS2 to use the UCRT64 environment, start in the same directory
     # and inherit PATH
-    - $env:MSYSTEM = "UCRT64"
-    - $env:CHERE_INVOKING = "1"
-    - $env:MSYS2_PATH_TYPE = "inherit"
-    # For some reason, options are separated by newline instead of space, so we
-    # have to replace them first.
-    - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
-    # Replace forward slashes with backwards so bash doesn't complain
-    - $env:_PROJECT_DIR = $env:CI_PROJECT_DIR.replace('\','/')
-    - C:\msys64\usr\bin\bash -lc "meson build $env:MESON_ARGS && ninja -C build"
+    - C:\msys64\msys2_shell.cmd -ucrt64 -defterm -no-start -here -use-full-path -lc "meson setup build $env:MESON_ARGS $env:GTK_ARGS && meson compile -C build --jobs $env:FDO_CI_CONCURRENT"
+
+build macos:
+  extends:
+   - '.build'
+   - '.macos image'
+  variables:
+    # gst-libav/ffmpeg throws Wundef errors
+    GST_WERROR: "false"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS}"
+    SUBPROJECTS_CACHE_DIR: "/Users/gst-ci/subprojects"
+  rules:
+    - !reference [.gtk-build-rules, rules]
+    - !reference [.upstream-branch-rules, rules]
+    - changes:
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          *modules_changes
+    - changes:
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - "subprojects/macos-*/*"
+  parallel:
+    matrix:
+      - BUILD_TYPE: ["--default-library=both"]
+        BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true"]
+        # FIXME: We currently don't have pkg-config required by gobject-introspection/pygobject/sharp
+        # macos doesn't support vaapi
+        MESON_ARGS: >-
+          ${SIMPLE_BUILD}
+          -Dintrospection=disabled
+          -Dvaapi=disabled
+          -Dsharp=disabled
+          -Dpython=disabled
+          -Ddoc=disabled
+          -Dgst-plugins-base:pango=enabled
+          -Dgst-plugins-good:cairo=enabled
+          -Dgst-plugins-good:soup=enabled
 
 # ---- Tests ----- #
 
@@ -531,38 +655,33 @@ build msys2 :
   variables:
     GST_WERROR: "true"
     MESON_ARGS: "${SIMPLE_BUILD}"
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
+
+    # Avoid weird issue about cross-device links
+    # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3197
+    GI_SCANNER_DISABLE_CACHE: "1"
 
     # Disable colored output to avoid weird rendering issues
     GST_DEBUG_NO_COLOR: "true"
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/validate-logs/"
     GST_VALIDATE_LAUNCHER_FORCE_COLORS: "true"
     TIMEOUT_FACTOR: "2"
-    CARGO_HOME: "/cache/gstreamer/cargo"
     # Enable the fault handler so we get backtraces on segfaults.
     # any non-empty string will do
     PYTHONFAULTHANDLER: "enabled"
   rules:
     - changes:
-        *modules_changes
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          *modules_changes
   script:
-    - *build
+    # Disable gdb debugdir safeload
+    # The CI will execute any code submitted to it anyway
+    - mkdir -p ~/.config/gdb
+    - echo "set auto-load safe-path /" >> ~/.config/gdb/gdbinit
 
-    - export XDG_RUNTIME_DIR="$(mktemp -p $(pwd) -d xdg-runtime-XXXXXX)"
-    - echo "-> Running ${TEST_SUITE}"
-    - >
-      ./gst-env.py
-      gst-validate-launcher ${TEST_SUITE}
-      --check-bugs
-      --dump-on-failure
-      --mute
-      --shuffle
-      --no-display
-      --meson-no-rebuild
-      --timeout-factor "${TIMEOUT_FACTOR}"
-      --fail-on-testlist-change
-      -l "${CI_PROJECT_DIR}/validate-logs/"
-      --xunit-file "${CI_PROJECT_DIR}/validate-logs/xunit.xml"
-      ${EXTRA_VALIDATE_ARGS}
+    - $CI_PROJECT_DIR/ci/scripts/build.sh build/
+    - $CI_PROJECT_DIR/ci/scripts/test.sh build/ $TEST_SUITE
   after_script:
     - mv build/meson-logs/ meson-logs
   artifacts:
@@ -570,10 +689,10 @@ build msys2 :
     when: always
     paths:
       - 'meson-logs/'
-      - 'validate-logs'
+      - "$CI_PROJECT_DIR/validate-logs"
     reports:
       junit:
-        - "validate-logs/*.xml"
+        - "$CI_PROJECT_DIR/validate-logs/*.xml"
 
 .test fedora x86_64:
   extends:
@@ -589,14 +708,22 @@ check fedora:
   extends: '.test fedora x86_64'
   variables:
     TEST_SUITE: "check.gst*"
+  rules:
+    - changes:
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          *modules_changes
+    - changes:
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - "subprojects/gstreamer-vaapi/**/*"
 
 integration testsuites fedora:
   extends: '.test fedora x86_64'
   parallel: 8
   variables:
-    MESON_ARGS: >
+    MESON_ARGS: >-
       ${SIMPLE_BUILD}
-      -Domx=disabled
       -Dsharp=disabled
       -Dvaapi=disabled
       -Dexamples=disabled
@@ -613,6 +740,35 @@ integration testsuites fedora:
     EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX} --sync"
     TEST_SUITE: "validate ges"
 
+check video formats:
+  stage: 'test'
+  extends:
+    - '.fedora image'
+    - '.fdo.suffixed-image@fedora'
+    - '.build_ccache_vars'
+  needs:
+    - "trigger"
+    - "fedora amd64 docker"
+  tags: ['gstreamer']
+  variables:
+    MESON_ARGS: "${SIMPLE_BUILD}"
+    BUILD_GST_DEBUG: "-Dgstreamer:gst_debug=true"
+    GST_WERROR: "true"
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
+    VIDEO_TOKEN: "GST_VIDEO_FORMATS_ALL_STR"
+    VIDEO_HEADER: "subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"
+    WL_TOKEN: "GST_WL_VIDEO_FORMATS"
+    WL_HEADER: "subprojects/gst-plugins-bad/gst-libs/gst/wayland/gstwlvideoformat.h"
+  script:
+    - $CI_PROJECT_DIR/ci/scripts/build.sh build/
+    - $CI_PROJECT_DIR/ci/scripts/check-video-formats.sh
+  rules:
+    - changes:
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - "${VIDEO_HEADER}"
+          - "${WL_HEADER}"
+
 playbin3 integration:
   extends: 'integration testsuites fedora'
   variables:
@@ -625,24 +781,25 @@ gstreamer-full static build:
   extends: '.build fedora x86_64'
   stage: 'build'
   variables:
-    BUILD_TYPE: "static"
-    MESON_ARGS: >
+    BUILD_TYPE: "--default-library=static"
+    MESON_ARGS: >-
       -Ddoc=disabled
-
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
   script:
-  - *build
+  - $CI_PROJECT_DIR/ci/scripts/build.sh build/
   - meson test -C build -v test-gst-full
 
 gstreamer-full-minimal static build:
   extends: 'gstreamer-full static build'
   stage: 'build'
   variables:
-    BUILD_GST_DEBUG: 'false'
+    BUILD_GST_DEBUG: "-Dgstreamer:gst_debug=false"
     GST_WERROR: "true"
-    BUILD_TYPE: "static"
-    MESON_ARGS: >
+    BUILD_TYPE: "--default-library=static"
+    MESON_ARGS: >-
       -Ddoc=disabled
       -Dauto_features=disabled
+      -Dgst-full=enabled
       -Dgstreamer:check=enabled
       -Dtests=enabled
       -Dgst-plugins-base:alsa=enabled
@@ -652,13 +809,66 @@ gstreamer-full-minimal static build:
       -Dgst-full-typefind-functions=typefindfunctions:wav,flv
       -Dgst-full-device-providers=alsa:alsadeviceprovider
       -Dgst-full-dynamic-types=pbtypes:video_multiview_flagset
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
 
   script:
-  - *build
+  - $CI_PROJECT_DIR/ci/scripts/build.sh build/
   - meson test -C build -v test-gst-full
   - meson test -C build test-gst-full-features --test-args "-e filesrc,identity,fakesink -E filesink,capsfilter -t audio/x-wav -T video/vivo -d alsadeviceprovider -D v4l2deviceprovider -l GstVideoMultiviewFlagsSet"
   - strip build/libgstreamer-full-1.0.so
   - ls -l build/libgstreamer-full-1.0.so
+
+# v4l2-stateless-decoders tests
+fluster v4l2-stateless on visl:
+  extends: 'gstreamer-full static build'
+  stage: 'test'
+  variables:
+    BUILD_GST_DEBUG: '-Dgstreamer:gst_debug=false'
+    GST_WERROR: "true"
+    BUILD_TYPE: "--default-library=static"
+    MESON_ARGS: >-
+      -Dvirtme_kernel_image=/opt/linux/bzImage
+      -Dauto_features=disabled
+      -Dgst-full=enabled
+      -Dgstreamer:check=enabled
+      -Ddoc=disabled
+      -Dtests=enabled
+      -Dtools=enabled
+      -Dbase=enabled
+      -Dbad=enabled
+      -Dugly=disabled
+      -Dlibav=disabled
+      -Drtsp_server=disabled
+      -Dges=disabled
+      -Dgst-plugins-bad:debugutils=enabled
+      -Dgst-plugins-bad:ivfparse=enabled
+      -Dgst-plugins-bad:v4l2codecs=enabled
+      -Dgst-plugins-bad:videoparsers=enabled
+      -Dgst-plugins-base:app=enabled
+      -Dgst-plugins-base:videoconvertscale=enabled
+      -Dgst-plugins-base:typefind=enabled
+      -Dgst-plugins-base:playback=enabled
+      -Dgst-plugins-good:matroska=enabled
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
+  script:
+  - $CI_PROJECT_DIR/ci/scripts/build.sh build/
+  - meson test -C build -v --suite v4l2-stateless-decoders
+  artifacts:
+    reports:
+      junit: build/fluster-results-*.xml
+  rules:
+    - changes:
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - ".gitlab-ci.yml"
+          - ".gitlab-image-tags.yml"
+          - "subprojects/gst-plugins-bad/sys/v4l2codecs/*"
+          - "subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/*"
+          - "subprojects/gst-plugins-bad/gst-libs/gst/codecs/*"
+          - "subprojects/gst-plugins-bad/gst/videoparsers/*"
+          - "tests/virtme/*"
+          - "ci/scripts/build-linux.sh"
+          - "ci/docker/fedora/*"
 
 # Valgrind
 .valgrind fedora x86_64:
@@ -666,6 +876,16 @@ gstreamer-full-minimal static build:
   stage: 'test'
   variables:
     EXTRA_VALIDATE_ARGS: "--valgrind"
+  timeout: "1h30m"
+  rules:
+    - changes:
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          *modules_changes
+    - changes:
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - "subprojects/gstreamer-vaapi/**/*"
 
 valgrind core:
   extends: '.valgrind fedora x86_64'
@@ -673,11 +893,13 @@ valgrind core:
     TEST_SUITE: "check.gstreamer\\..*"
   rules:
     - changes:
-      - "*"
-      - scripts/*
-      - ci/**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gstreamer/**/*
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - "*"
+          - "scripts/*"
+          - "ci/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gstreamer/**/*"
 
 valgrind base:
   extends: '.valgrind fedora x86_64'
@@ -685,12 +907,14 @@ valgrind base:
     TEST_SUITE: "check.gst-plugins-base\\..*"
   rules:
     - changes:
-      - "*"
-      - scripts/*
-      - ci//**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gst-plugins-base/**/*
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - "*"
+          - "scripts/*"
+          - "ci/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gst-plugins-base/**/*"
 
 valgrind good:
   extends: '.valgrind fedora x86_64'
@@ -700,13 +924,15 @@ valgrind good:
     TIMEOUT_FACTOR: "4"
   rules:
     - changes:
-      - "*"
-      - scripts/*
-      - ci/**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gst-plugins-base/**/*
-      - subprojects/gst-plugins-good/**/*
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - "*"
+          - "scripts/*"
+          - "ci/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gst-plugins-base/**/*"
+          - "subprojects/gst-plugins-good/**/*"
 
 valgrind ugly:
   extends: '.valgrind fedora x86_64'
@@ -714,14 +940,16 @@ valgrind ugly:
     TEST_SUITE: "check.gst-plugins-ugly\\..*"
   rules:
     - changes:
-      - "*"
-      - scripts/*
-      - ci/**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gst-plugins-base/**/*
-      - subprojects/gst-plugins-good/**/*
-      - subprojects/gst-plugins-ugly/**/*
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - "*"
+          - "scripts/*"
+          - "ci/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gst-plugins-base/**/*"
+          - "subprojects/gst-plugins-good/**/*"
+          - "subprojects/gst-plugins-ugly/**/*"
 
 valgrind bad:
   extends: '.valgrind fedora x86_64'
@@ -729,14 +957,16 @@ valgrind bad:
     TEST_SUITE: "check.gst-plugins-bad\\..*"
   rules:
     - changes:
-      - "*"
-      - scripts/*
-      - ci/**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gst-plugins-base/**/*
-      - subprojects/gst-plugins-good/**/*
-      - subprojects/gst-plugins-bad/**/*
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - "*"
+          - "scripts/*"
+          - "ci/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gst-plugins-base/**/*"
+          - "subprojects/gst-plugins-good/**/*"
+          - "subprojects/gst-plugins-bad/**/*"
 
 valgrind ges:
   extends: '.valgrind fedora x86_64'
@@ -744,16 +974,18 @@ valgrind ges:
     TEST_SUITE: "check.gst-editing-services\\..*"
   rules:
     - changes:
-      - "*"
-      - scripts/*
-      - ci/**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gst-plugins-base/**/*
-      - subprojects/gst-plugins-good/**/*
-      - subprojects/gst-plugins-bad/**/*
-      - subprojects/gst-editing-services/**/*
-      - subprojects/gst-python/**/*
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - "*"
+          - "scripts/*"
+          - "ci/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gst-plugins-base/**/*"
+          - "subprojects/gst-plugins-good/**/*"
+          - "subprojects/gst-plugins-bad/**/*"
+          - "subprojects/gst-editing-services/**/*"
+          - "subprojects/gst-python/**/*"
   # valgrind ges jobs are racy across the board and simply fail too often.
   # Someone needs to go through job logs and figure out which jobs to mark
   # as flaky. Until then, just ignore failures.
@@ -764,38 +996,20 @@ valgrind ges:
 .documentation:
   extends: '.build fedora x86_64'
   variables:
-    MESON_ARGS: >
+    # Disable svthevcenc until the following MR is merged
+    # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5447
+    MESON_ARGS: >-
       ${SIMPLE_BUILD}
       -Ddoc=enabled
       -Drs=enabled
       -Dgst-docs:fatal_warnings=true
+      -Dgst-plugins-bad:svthevcenc=disabled
     # Disable werror for the docs build, we don't need it
     GST_WERROR: 'false'
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
   script:
-  - export PATH=/usr/local/cargo/bin/:/usr/local/bin/:$PATH
-  - export RUSTUP_HOME='/usr/local/rustup'
-
-  - ci/scripts/handle-subprojects-cache.py subprojects/
-  - echo $MESON_ARGS
-  - meson build/ $MESON_ARGS
-  - ccache --show-stats
-
-  - ninja -C build/ update_girs
-  # Ignore modifications to wrap files made by meson
-  - git checkout subprojects/*.wrap
-  - ./ci/scripts/check-diff.py "gir files"
-
-  - ./gst-env.py ninja -C build/ plugins_doc_caches
-  # Ignore modifications to wrap files made by meson
-  - git checkout subprojects/*.wrap
-  - ./ci/scripts/check-diff.py
-
-  - export GI_TYPELIB_PATH=$PWD/girs
-  - hotdoc run --conf-file build/subprojects/gst-docs/GStreamer-doc.json
-
-  - mv build/subprojects/gst-docs/GStreamer-doc/html documentation/
-
+    - $CI_PROJECT_DIR/ci/scripts/build-docs.sh build/
   artifacts:
     when: always
     expire_in: "7 days"
@@ -832,21 +1046,23 @@ build documentation:
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: never
     - changes:
-      - .gitlab-ci.yml
-      - ci/gitlab/*.py
-      - subprojects/*.wrap
-      - subprojects/gst-docs/**/*
-      - subprojects/gst-devtools/**/*
-      - subprojects/gst-editing-services/**/*
-      - subprojects/gst-libav/**/*
-      - subprojects/gst-omx/**/*
-      - subprojects/gst-plugins-bad/**/*
-      - subprojects/gst-plugins-base/**/*
-      - subprojects/gst-plugins-good/**/*
-      - subprojects/gst-plugins-ugly/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gstreamer-vaapi/**/*
-      - subprojects/gst-rtsp-server/**/*
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - ".gitlab-ci.yml"
+          - ".gitlab-image-tags.yml"
+          - "ci/gitlab/*.py"
+          - "subprojects/*.wrap"
+          - "subprojects/gst-docs/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gst-editing-services/**/*"
+          - "subprojects/gst-libav/**/*"
+          - "subprojects/gst-plugins-bad/**/*"
+          - "subprojects/gst-plugins-base/**/*"
+          - "subprojects/gst-plugins-good/**/*"
+          - "subprojects/gst-plugins-ugly/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gstreamer-vaapi/**/*"
+          - "subprojects/gst-rtsp-server/**/*"
 
 # FIXME: Using trigger: causes permission issues, workaround using old REST API.
 # https://gitlab.com/gitlab-org/gitlab/-/issues/341737
@@ -870,16 +1086,18 @@ cerbero trigger:
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: never
     - changes:
-      - .gitlab-ci.yml
-      - ci/gitlab/*.py
-      - subprojects/gst-devtools/**/*
-      - subprojects/gst-editing-services/**/*
-      - subprojects/gst-libav/**/*
-      - subprojects/gst-plugins-bad/**/*
-      - subprojects/gst-plugins-base/**/*
-      - subprojects/gst-plugins-good/**/*
-      - subprojects/gst-plugins-ugly/**/*
-      - subprojects/gst-python/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gst-rtsp-server/**/*
-      - subprojects/gst-examples/**/*
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - ".gitlab-ci.yml"
+          - "ci/gitlab/*.py"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gst-editing-services/**/*"
+          - "subprojects/gst-libav/**/*"
+          - "subprojects/gst-plugins-bad/**/*"
+          - "subprojects/gst-plugins-base/**/*"
+          - "subprojects/gst-plugins-good/**/*"
+          - "subprojects/gst-plugins-ugly/**/*"
+          - "subprojects/gst-python/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gst-rtsp-server/**/*"
+          - "subprojects/gst-examples/**/*"

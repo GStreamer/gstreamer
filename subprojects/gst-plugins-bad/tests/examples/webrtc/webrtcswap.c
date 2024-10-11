@@ -172,11 +172,11 @@ main (int argc, char *argv[])
       gst_parse_launch ("webrtcbin name=smpte webrtcbin name=ball "
       "videotestsrc pattern=smpte ! queue ! vp8enc ! rtpvp8pay ! queue ! "
       "application/x-rtp,media=video,payload=96,encoding-name=VP8 ! smpte.sink_0 "
-      "audiotestsrc ! opusenc ! rtpopuspay ! queue ! "
+      "audiotestsrc ! opusenc perfect-timestamp=true ! rtpopuspay ! queue ! "
       "application/x-rtp,media=audio,payload=97,encoding-name=OPUS ! smpte.sink_1 "
       "videotestsrc pattern=ball ! queue ! vp8enc ! rtpvp8pay ! queue ! "
       "application/x-rtp,media=video,payload=96,encoding-name=VP8 ! ball.sink_1 "
-      "audiotestsrc wave=saw ! opusenc ! rtpopuspay ! queue ! "
+      "audiotestsrc wave=saw ! opusenc perfect-timestamp=true ! rtpopuspay ! queue ! "
       "application/x-rtp,media=audio,payload=97,encoding-name=OPUS ! ball.sink_0 ",
       NULL);
   bus1 = gst_pipeline_get_bus (GST_PIPELINE (pipe1));

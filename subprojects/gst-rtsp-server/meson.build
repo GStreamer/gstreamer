@@ -1,6 +1,6 @@
 project('gst-rtsp-server', 'c',
-  version : '1.23.0.1',
-  meson_version : '>= 0.62',
+  version : '1.25.0.1',
+  meson_version : '>= 1.1',
   default_options : ['warning_level=1', 'buildtype=debugoptimized'])
 
 gst_version = meson.project_version()
@@ -16,7 +16,7 @@ endif
 gst_version_is_stable = gst_version_minor.is_even()
 gst_version_is_dev = gst_version_minor.is_odd() and gst_version_micro < 90
 
-glib_req = '>= 2.62.0'
+glib_req = '>= 2.64.0'
 
 if gst_version_is_stable
   gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
@@ -64,20 +64,20 @@ if gst_version_is_dev
   add_project_arguments('-DG_DISABLE_DEPRECATED', language: 'c')
 endif
 
-cast_checks = get_option('gobject-cast-checks')
-if cast_checks.disabled() or (cast_checks.auto() and not gst_version_is_dev)
+# Same logic as in GLib.
+glib_debug = get_option('glib_debug')
+if glib_debug.disabled() or (
+   glib_debug.auto() and (not get_option('debug') or get_option('optimization') not in [ '0', 'g' ]))
   message('Disabling GLib cast checks')
   add_project_arguments('-DG_DISABLE_CAST_CHECKS', language: 'c')
 endif
 
-glib_asserts = get_option('glib-asserts')
-if glib_asserts.disabled() or (glib_asserts.auto() and not gst_version_is_dev)
+if not get_option('glib_assert')
   message('Disabling GLib asserts')
   add_project_arguments('-DG_DISABLE_ASSERT', language: 'c')
 endif
 
-glib_checks = get_option('glib-checks')
-if glib_checks.disabled() or (glib_checks.auto() and not gst_version_is_dev)
+if not get_option('glib_checks')
   message('Disabling GLib checks')
   add_project_arguments('-DG_DISABLE_CHECKS', language: 'c')
 endif
@@ -146,6 +146,8 @@ gstsdp_dep = dependency('gstreamer-sdp-1.0', version : gst_req,
   fallback : ['gst-plugins-base', 'sdp_dep'])
 gstapp_dep = dependency('gstreamer-app-1.0', version : gst_req,
   fallback : ['gst-plugins-base', 'app_dep'])
+gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
+  fallback : ['gst-plugins-base', 'video_dep'])
 gstnet_dep = dependency('gstreamer-net-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_net_dep'])
 if host_machine.system() != 'windows'
@@ -214,7 +216,7 @@ endif
 
 configure_file(output: 'config.h', configuration: cdata)
 
-meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.22.0', meson.project_version())
 
 plugin_names = []
 gst_plugins = []

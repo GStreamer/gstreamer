@@ -12,6 +12,7 @@ codecs_sources = files(
   'gstav1decoder.c',
   'gstav1picture.c',
   'gstvp9statefulparser.c',
+  'gstcodecpicture.c',
 )
 
 codecs_headers = files(
@@ -28,6 +29,7 @@ codecs_headers = files(
   'gstav1decoder.h',
   'gstav1picture.h',
   'gstvp9statefulparser.h',
+  'gstcodecpicture.h',
 )
 
 cp_args = [

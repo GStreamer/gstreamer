@@ -37,8 +37,17 @@ static GstStaticPadTemplate audio_src_template =
 
 typedef struct
 {
+  GstPad *ghost_pad;
+  GstElement *queue;
+} TrackInfo;
+
+typedef struct
+{
   GESTimeline *timeline;
   GstFlowCombiner *flow_combiner;
+
+  GHashTable *tracks;
+  gulong track_removed_sigid;
 } GESBaseBinPrivate;
 
 enum
@@ -61,8 +70,23 @@ ges_base_bin_dispose (GObject * object)
   GESBaseBin *self = GES_BASE_BIN (object);
   GESBaseBinPrivate *priv = ges_base_bin_get_instance_private (self);
 
-  if (priv->timeline)
+  GST_OBJECT_LOCK (self);
+  if (priv->tracks) {
+    g_clear_pointer (&priv->tracks, g_hash_table_unref);
+  }
+
+  if (priv->timeline) {
+    g_signal_handler_disconnect (priv->timeline, priv->track_removed_sigid);
+    priv->track_removed_sigid = 0;
+    GST_OBJECT_UNLOCK (self);
+
+    gst_bin_remove (GST_BIN (self), GST_ELEMENT (priv->timeline));
+
+    GST_OBJECT_LOCK (self);
     gst_clear_object (&priv->timeline);
+  }
+
+  GST_OBJECT_UNLOCK (self);
 }
 
 static void
@@ -150,6 +174,8 @@ ges_base_bin_init (GESBaseBin * self)
   ges_init ();
 
   priv->flow_combiner = gst_flow_combiner_new ();
+  priv->tracks = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
+      (GDestroyNotify) g_free);
 }
 
 static gboolean
@@ -208,6 +234,33 @@ ges_base_bin_src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   return result;
 }
 
+static void
+ges_base_bin_track_removed_cb (GESTimeline * timeline, GESTrack * track,
+    GESBaseBin * self)
+{
+  GESBaseBinPrivate *priv = ges_base_bin_get_instance_private (self);
+
+  GST_OBJECT_LOCK (self);
+  TrackInfo *info = g_hash_table_lookup (priv->tracks, track);
+  if (!info) {
+    GST_OBJECT_UNLOCK (self);
+
+    return;
+  }
+  GstPad *ghost = gst_object_ref (info->ghost_pad);
+  GstElement *queue = gst_object_ref (info->queue);
+
+  g_hash_table_remove (priv->tracks, track);
+  GST_OBJECT_UNLOCK (self);
+
+  gst_element_remove_pad (GST_ELEMENT (self), ghost);
+  gst_element_set_state (queue, GST_STATE_NULL);
+  gst_bin_remove (GST_BIN (self), queue);
+
+  gst_object_unref (queue);
+  gst_object_unref (ghost);
+}
+
 
 gboolean
 ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
@@ -226,6 +279,9 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
   }
 
   priv->timeline = gst_object_ref (timeline);
+  /* FIXME Handle track-added */
+  priv->track_removed_sigid = g_signal_connect (timeline, "track-removed",
+      G_CALLBACK (ges_base_bin_track_removed_cb), self);
   GST_INFO_OBJECT (sbin, "Setting timeline: %" GST_PTR_FORMAT, timeline);
   gst_element_set_locked_state (GST_ELEMENT (timeline), TRUE);
   if (!gst_bin_add (sbin, GST_ELEMENT (timeline))) {
@@ -265,7 +321,12 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
     /* Add queues the same way as in GESPipeline */
     g_object_set (G_OBJECT (queue), "max-size-buffers", 0,
         "max-size-bytes", 0, "max-size-time", (gint64) 2 * GST_SECOND, NULL);
-    gst_bin_add (sbin, queue);
+    if (!gst_bin_add (sbin, queue)) {
+      g_free (name);
+      gst_object_unref (queue);
+      continue;
+    }
+
     gst_element_sync_state_with_parent (GST_ELEMENT (queue));
 
     tmppad = gst_element_get_static_pad (queue, "sink");
@@ -273,24 +334,39 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
       GST_ERROR_OBJECT (sbin, "Could not link %s:%s and %s:%s",
           GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (tmppad));
 
+      g_free (name);
       gst_object_unref (tmppad);
-      gst_object_unref (queue);
+      gst_bin_remove (sbin, queue);
       continue;
     }
 
+    gst_object_unref (tmppad);
     tmppad = gst_element_get_static_pad (queue, "src");
     gpad = gst_ghost_pad_new_from_template (name, tmppad,
         gst_static_pad_template_get (template));
+    gst_object_unref (tmppad);
+    g_free (name);
 
     gst_pad_set_active (gpad, TRUE);
     gst_element_add_pad (GST_ELEMENT (sbin), gpad);
+
+    TrackInfo *info = g_new0 (TrackInfo, 1);
+    info->queue = queue;
+    info->ghost_pad = gpad;
+
+    GST_OBJECT_LOCK (self);
+    g_hash_table_insert (priv->tracks, track, info);
+    GST_OBJECT_UNLOCK (self);
 
     proxy_pad = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (gpad)));
     gst_flow_combiner_add_pad (priv->flow_combiner, proxy_pad);
     gst_pad_set_chain_function (proxy_pad, ges_base_bin_src_chain);
     gst_pad_set_event_function (proxy_pad, ges_base_bin_event);
     gst_object_unref (proxy_pad);
-    GST_DEBUG_OBJECT (sbin, "Adding pad: %" GST_PTR_FORMAT, gpad);
+
+    GST_DEBUG_OBJECT (sbin,
+        "Added pad: %" GST_PTR_FORMAT " for track %" GST_PTR_FORMAT, gpad,
+        track);
   }
 
   gst_element_set_locked_state (GST_ELEMENT (timeline), FALSE);

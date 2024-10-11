@@ -378,6 +378,13 @@ void           gst_play_config_set_seek_accurate (GstStructure * config, gboolea
 GST_PLAY_API
 gboolean       gst_play_config_get_seek_accurate (const GstStructure * config);
 
+GST_PLAY_API
+void           gst_play_config_set_pipeline_dump_in_error_details (GstStructure * config,
+                                                                   gboolean       value);
+
+GST_PLAY_API
+gboolean       gst_play_config_get_pipeline_dump_in_error_details (const GstStructure * config);
+
 /**
  * GstPlaySnapshotFormat:
  * @GST_PLAY_THUMBNAIL_RAW_NATIVE: raw native format.

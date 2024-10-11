@@ -69,6 +69,7 @@ struct _GstVideoRate
   gdouble new_pref;
   gboolean skip_to_first;
   gboolean drop_only;
+  gboolean drop_out_of_segment;
   guint64 average_period_set;
 
   int max_rate;

@@ -587,12 +587,12 @@ GstPtpClock::internal-clock property will become non-NULL. You can
 check this with gst_clock_wait_for_sync(), the GstClock::synced signal and
 gst_clock_is_synced().</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/net/gstptpclock.h"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/net/gstptpclock.c">A new #GstClock</doc>
           <type name="Gst.Clock" c:type="GstClock*"/>
         </return-value>
         <parameters>
-          <parameter name="name" transfer-ownership="none">
+          <parameter name="name" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/net/gstptpclock.c">Name of the clock</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
@@ -756,6 +756,10 @@ is no such metadata on @buffer.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <docsection name="gstnetutils">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/net/gstnetutils.c">GstNetUtils gathers network utility functions, enabling use for all
+gstreamer plugins.</doc>
+    </docsection>
     <function name="net_address_meta_api_get_type" c:identifier="gst_net_address_meta_api_get_type">
       <source-position filename="../subprojects/gstreamer/libs/gst/net/gstnetaddressmeta.h"/>
       <return-value transfer-ownership="none">
@@ -852,6 +856,34 @@ parameters if it wasn't called before.</doc>
           <array c:type="gchar**">
             <type name="utf8" c:type="gchar*"/>
           </array>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="ptp_init_full" c:identifier="gst_ptp_init_full" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/net/gstptpclock.c">Initialize the GStreamer PTP subsystem and create a PTP ordinary clock in
+slave-only mode according to the @config.
+
+@config is a #GstStructure with the following optional fields:
+* #guint64 `clock-id`: The clock ID to use for the local clock. If the
+    clock-id is not provided or %GST_PTP_CLOCK_ID_NONE is provided, a clock
+    id is automatically generated from the MAC address of the first network
+    interface.
+* #GStrv `interfaces`: The interface names to listen on for PTP packets. If
+    none are provided then all compatible interfaces will be used.
+* #guint `ttl`: The TTL to use for multicast packets sent out by GStreamer.
+    This defaults to 1, i.e. packets will not leave the local network.
+
+This function is automatically called by gst_ptp_clock_new() with default
+parameters if it wasn't called before.</doc>
+      <source-position filename="../subprojects/gstreamer/libs/gst/net/gstptpclock.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/net/gstptpclock.c">%TRUE if the GStreamer PTP clock subsystem could be initialized.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="config" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/net/gstptpclock.c">Configuration for initializing the GStreamer PTP subsystem</doc>
+          <type name="Gst.Structure" c:type="const GstStructure*"/>
         </parameter>
       </parameters>
     </function>

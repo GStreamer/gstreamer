@@ -72,6 +72,12 @@ nle_object_translate_incoming_seek (NleObject * object, GstEvent * event)
   if (G_UNLIKELY (format != GST_FORMAT_TIME))
     goto invalid_format;
 
+
+  if (NLE_IS_SOURCE (object) && NLE_SOURCE (object)->reverse) {
+    GST_DEBUG_OBJECT (object, "Reverse playback! %d", seqnum);
+    rate = -rate;
+  }
+
   /* convert cur */
   ncurtype = GST_SEEK_TYPE_SET;
   if (G_LIKELY ((curtype == GST_SEEK_TYPE_SET)

@@ -75,7 +75,7 @@ See how [Basic tutorial 12: Streaming] solves this issue.
 Let's review these lines of code and see what they do:
 
 {{ C+JS_FALLBACK.md }}
- {{ tutorials/basic-tutorial-1.c[9:11] }}
+ {{ tutorials/basic-tutorial-1.c[13:15] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -98,7 +98,7 @@ benefit from the GStreamer standard command-line options (more on this
 in [Basic tutorial 10: GStreamer tools])
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-1.c[13:17] }}
+  {{ tutorials/basic-tutorial-1.c[16:21] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -155,7 +155,7 @@ only thing we are doing in this example is exiting on error, so do not
 expect much feedback.
 
 {{ C+JS_FALLBACK.md }}
- {{ tutorials/basic-tutorial-1.c[18:20] }}
+ {{ tutorials/basic-tutorial-1.c[22:24] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -172,7 +172,7 @@ In this line, [gst_element_set_state]\() is setting `pipeline` (our only
 element, remember) to the `PLAYING` state, thus initiating playback.
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-1.c[21:26] }}
+  {{ tutorials/basic-tutorial-1.c[25:30] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -198,7 +198,7 @@ Before terminating the application, though, there is a couple of things
 we need to do to tidy up correctly after ourselves.
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-1.c[27:33] }}
+  {{ tutorials/basic-tutorial-1.c[37:43] }}
 
   Always read the documentation of the functions you use, to know if you
   should free the objects they return after using them.

@@ -57,6 +57,9 @@
 /* Prevent stat.h from defining the stat* functions as
  * _stat*, since we're explicitly overriding that */
 #undef _INC_STAT_INL
+#ifdef HAVE__SET_THREAD_LOCAL_INVALID_PARAMETER_HANDLER
+#include <stdlib.h>
+#endif
 #endif
 
 #include <fcntl.h>
@@ -403,6 +406,35 @@ gst_file_src_is_seekable (GstBaseSrc * basesrc)
   return src->seekable;
 }
 
+#ifdef G_OS_WIN32
+#ifdef HAVE__SET_THREAD_LOCAL_INVALID_PARAMETER_HANDLER
+static void __cdecl
+gst_file_src_win32_iph (wchar_t const *exp, wchar_t const *func,
+    wchar_t const *file, unsigned int line, uintptr_t reserved)
+{
+  /* Do nothing */
+}
+
+static HANDLE
+gst_file_src_win32_get_osfhandle (int fd)
+{
+  HANDLE handle;
+  _invalid_parameter_handler old_iph =
+      _set_thread_local_invalid_parameter_handler (gst_file_src_win32_iph);
+  handle = (HANDLE) _get_osfhandle (fd);
+  _set_thread_local_invalid_parameter_handler (old_iph);
+
+  return handle;
+}
+#else /* HAVE__SET_THREAD_LOCAL_INVALID_PARAMETER_HANDLER */
+static HANDLE
+gst_file_src_win32_get_osfhandle (int fd)
+{
+  return (HANDLE) _get_osfhandle (fd);
+}
+#endif /* HAVE__SET_THREAD_LOCAL_INVALID_PARAMETER_HANDLER */
+#endif /* G_OS_WIN32 */
+
 static gboolean
 gst_file_src_get_size (GstBaseSrc * basesrc, guint64 * size)
 {
@@ -417,7 +449,7 @@ gst_file_src_get_size (GstBaseSrc * basesrc, guint64 * size)
   }
 #ifdef G_OS_WIN32
   {
-    HANDLE h = (HANDLE) _get_osfhandle (src->fd);
+    HANDLE h = gst_file_src_win32_get_osfhandle (src->fd);
     LARGE_INTEGER file_size;
 
     if (h == INVALID_HANDLE_VALUE)
@@ -472,7 +504,7 @@ gst_file_src_start (GstBaseSrc * basesrc)
 
 #ifdef G_OS_WIN32
   {
-    HANDLE h = (HANDLE) _get_osfhandle (src->fd);
+    HANDLE h = gst_file_src_win32_get_osfhandle (src->fd);
     FILE_STANDARD_INFO file_info;
 
     if (h == INVALID_HANDLE_VALUE)

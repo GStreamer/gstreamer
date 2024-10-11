@@ -21,6 +21,7 @@
 #define __GST_H264_PICTURE_H__
 
 #include <gst/codecs/codecs-prelude.h>
+#include <gst/codecs/gstcodecpicture.h>
 #include <gst/codecparsers/gsth264parser.h>
 #include <gst/video/video.h>
 
@@ -114,12 +115,9 @@ typedef enum
 struct _GstH264Picture
 {
   /*< private >*/
-  GstMiniObject parent;
+  GstCodecPicture parent;
 
   GstH264SliceType type;
-
-  /* From GstVideoCodecFrame */
-  guint32 system_frame_number;
 
   guint8 pic_order_cnt_type;  /* SPS */
   gint32 top_field_order_cnt;
@@ -155,17 +153,14 @@ struct _GstH264Picture
 
   GstH264DecRefPicMarking dec_ref_pic_marking;
 
+  /* Set by decoder to trace the number of delayed output pictures */
+  guint32 reorder_frame_number;
+
   /* For interlaced decoding */
   gboolean second_field;
   GstH264Picture * other_field;
 
   GstVideoBufferFlags buffer_flags;
-
-  /* decoder input state if this picture is discont point */
-  GstVideoCodecState *discont_state;
-
-  gpointer user_data;
-  GDestroyNotify notify;
 };
 
 /**
@@ -218,13 +213,27 @@ gst_clear_h264_picture (GstH264Picture ** picture)
   }
 }
 
-GST_CODECS_API
-void gst_h264_picture_set_user_data (GstH264Picture * picture,
-                                     gpointer user_data,
-                                     GDestroyNotify notify);
+static inline void
+gst_h264_picture_set_user_data (GstH264Picture * picture, gpointer user_data,
+    GDestroyNotify notify)
+{
+  gst_codec_picture_set_user_data (GST_CODEC_PICTURE (picture),
+      user_data, notify);
+}
 
-GST_CODECS_API
-gpointer gst_h264_picture_get_user_data (GstH264Picture * picture);
+static inline gpointer
+gst_h264_picture_get_user_data (GstH264Picture * picture)
+{
+  return gst_codec_picture_get_user_data (GST_CODEC_PICTURE (picture));
+}
+
+static inline void
+gst_h264_picture_set_discont_state (GstH264Picture * picture,
+    GstVideoCodecState * discont_state)
+{
+  gst_codec_picture_set_discont_state (GST_CODEC_PICTURE (picture),
+      discont_state);
+}
 
 /*******************
  * GstH264Dpb *

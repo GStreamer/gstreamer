@@ -348,11 +348,19 @@ typedef enum
  *
  * The type of SEI message.
  */
+/**
+ * GST_H265_SEI_USER_DATA_UNREGISTERED
+ *
+ * User data unregistered (D.2.7)
+ *
+ * Since: 1.24
+ */
 typedef enum
 {
   GST_H265_SEI_BUF_PERIOD = 0,
   GST_H265_SEI_PIC_TIMING = 1,
   GST_H265_SEI_REGISTERED_USER_DATA = 4,
+  GST_H265_SEI_USER_DATA_UNREGISTERED = 5,
   GST_H265_SEI_RECOVERY_POINT = 6,
   GST_H265_SEI_TIME_CODE = 136,
   GST_H265_SEI_MASTERING_DISPLAY_COLOUR_VOLUME = 137,
@@ -422,6 +430,44 @@ typedef enum
   GST_H265_QUANT_MATIX_32X32 = 3
 } GstH265QuantMatrixSize;
 
+
+/**
+ * GstH265Level:
+ * @GST_H265_LEVEL_L1: Level 1
+ * @GST_H265_LEVEL_L2: Level 2
+ * @GST_H265_LEVEL_L2_1: Level 2.1
+ * @GST_H265_LEVEL_L3: Level 3
+ * @GST_H265_LEVEL_L3_1: Level 3.1
+ * @GST_H265_LEVEL_L4: Level 4
+ * @GST_H265_LEVEL_L4_1: Level 4.1
+ * @GST_H265_LEVEL_L5: Level 5
+ * @GST_H265_LEVEL_L5_1: Level 5.1
+ * @GST_H265_LEVEL_L5_2: Level 5.2
+ * @GST_H265_LEVEL_L6: Level 6
+ * @GST_H265_LEVEL_L6_1: Level 6.1
+ * @GST_H265_LEVEL_L6_2: Level 6.2
+ *
+ * H.265 level
+ *
+ * Since: 1.24
+ */
+typedef enum
+{
+  GST_H265_LEVEL_L1 = 30,
+  GST_H265_LEVEL_L2 = 60,
+  GST_H265_LEVEL_L2_1 = 63,
+  GST_H265_LEVEL_L3 = 90,
+  GST_H265_LEVEL_L3_1 = 93,
+  GST_H265_LEVEL_L4 = 120,
+  GST_H265_LEVEL_L4_1 = 123,
+  GST_H265_LEVEL_L5 = 150,
+  GST_H265_LEVEL_L5_1 = 153,
+  GST_H265_LEVEL_L5_2 = 156,
+  GST_H265_LEVEL_L6 = 180,
+  GST_H265_LEVEL_L6_1 = 183,
+  GST_H265_LEVEL_L6_2 = 186,
+} GstH265Level;
+
 typedef struct _GstH265Parser                   GstH265Parser;
 
 typedef struct _GstH265NalUnit                  GstH265NalUnit;
@@ -446,6 +492,7 @@ typedef struct _GstH265SliceHdr                 GstH265SliceHdr;
 
 typedef struct _GstH265PicTiming                GstH265PicTiming;
 typedef struct _GstH265RegisteredUserData     	GstH265RegisteredUserData;
+typedef struct _GstH265UserDataUnregistered     GstH265UserDataUnregistered;
 typedef struct _GstH265BufferingPeriod          GstH265BufferingPeriod;
 typedef struct _GstH265RecoveryPoint            GstH265RecoveryPoint;
 typedef struct _GstH265TimeCode                 GstH265TimeCode;
@@ -1577,6 +1624,22 @@ struct _GstH265RegisteredUserData
   guint size;
 };
 
+/**
+ * GstH265UserDataUnregistered:
+ * @uuid: an uuid_iso_iec_11578.
+ * @data: the data of user_data_payload_byte
+ * @size: the size of @data in bytes
+ *
+ * The User data unregistered SEI message syntax.
+ *
+ * Since: 1.24
+ */
+struct _GstH265UserDataUnregistered
+{
+  guint8 uuid[16];
+  const guint8 *data;
+  guint size;
+};
 
 /**
  * GstH265TimeCode:
@@ -1642,6 +1705,13 @@ struct _GstH265ContentLightLevel
   guint16 max_pic_average_light_level;
 };
 
+/**
+ * _GstH265SEIMessage.payload.user_data_unregistered:
+ *
+ * User Data Unregistered
+ *
+ * Since: 1.24
+ */
 struct _GstH265SEIMessage
 {
   GstH265SEIPayloadType payloadType;
@@ -1654,6 +1724,7 @@ struct _GstH265SEIMessage
     GstH265TimeCode time_code;
     GstH265MasteringDisplayColourVolume mastering_display_colour_volume;
     GstH265ContentLightLevel content_light_level;
+    GstH265UserDataUnregistered user_data_unregistered;
     /* ... could implement more */
   } payload;
 };
@@ -2137,6 +2208,9 @@ const gchar * gst_h265_profile_to_string (GstH265Profile profile);
 
 GST_CODEC_PARSERS_API
 GstH265Profile gst_h265_profile_from_string (const gchar * string);
+
+GST_CODEC_PARSERS_API
+const gchar * gst_h265_slice_type_to_string (GstH265SliceType slice_type);
 
 GST_CODEC_PARSERS_API
 GstMemory * gst_h265_create_sei_memory (guint8 layer_id,

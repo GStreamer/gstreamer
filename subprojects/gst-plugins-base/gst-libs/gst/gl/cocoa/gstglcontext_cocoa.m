@@ -170,7 +170,9 @@ gst_gl_context_cocoa_dump_pixel_format (CGLPixelFormatObj fmt)
 CGLPixelFormatObj
 gst_gl_context_cocoa_get_pixel_format (GstGLContextCocoa *context)
 {
-  return context->priv->pixel_format;
+  if (context->priv->pixel_format)
+    return CGLRetainPixelFormat (context->priv->pixel_format);
+  return NULL;
 }
 
 static GstStructure *
@@ -262,6 +264,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
     gint profile;
 
     fmt = CGLGetPixelFormat (priv->external_gl_context);
+    CGLRetainPixelFormat (fmt);
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
     /* core profile is only available in >= 10.7 */
@@ -307,6 +310,7 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   if (ret != kCGLNoError) {
     g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
         "failed to create context: %s", CGLErrorString (ret));
+    CGLReleasePixelFormat (fmt);
     goto error;
   }
 
@@ -357,6 +361,11 @@ gst_gl_context_cocoa_destroy_context (GstGLContext *context)
   if (context_cocoa->priv->gl_context != NULL) {
     CGLDestroyContext(context_cocoa->priv->gl_context);
     context_cocoa->priv->gl_context = NULL;
+  }
+
+  if (context_cocoa->priv->pixel_format) {
+    CGLReleasePixelFormat(context_cocoa->priv->pixel_format);
+    context_cocoa->priv->pixel_format = NULL;
   }
 }
 

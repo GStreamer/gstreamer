@@ -24,6 +24,102 @@
 #include <gst/d3d11/gstd3d11.h>
 #include "gstdwrite-utils.h"
 
+GType
+gst_dwrite_subtitle_meta_api_get_type (void)
+{
+  static GType type = 0;
+  static const gchar *tags[] = { NULL, };
+
+  GST_DWRITE_CALL_ONCE_BEGIN {
+    type = gst_meta_api_type_register ("GstDWriteSubtitleMetaAPI", tags);
+  } GST_DWRITE_CALL_ONCE_END;
+
+  return type;
+}
+
+static gboolean
+gst_dwrite_subtitle_meta_init (GstMeta * meta, gpointer params,
+    GstBuffer * buffer)
+{
+  GstDWriteSubtitleMeta *m = (GstDWriteSubtitleMeta *) meta;
+
+  m->stream = NULL;
+  m->subtitle = NULL;
+
+  return TRUE;
+}
+
+static void
+gst_dwrite_subtitle_meta_free (GstMeta * meta, GstBuffer * buffer)
+{
+  GstDWriteSubtitleMeta *m = (GstDWriteSubtitleMeta *) meta;
+
+  if (m->stream)
+    gst_object_unref (m->stream);
+
+  if (m->subtitle)
+    gst_buffer_unref (m->subtitle);
+}
+
+static gboolean
+gst_dwrite_subtitle_meta_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  GstDWriteSubtitleMeta *dmeta, *smeta;
+
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    smeta = (GstDWriteSubtitleMeta *) meta;
+
+    dmeta = gst_buffer_add_dwrite_subtitle_meta (dest,
+        smeta->stream, smeta->subtitle);
+    if (!dmeta)
+      return FALSE;
+  } else {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+const GstMetaInfo *
+gst_dwrite_subtitle_meta_get_info (void)
+{
+  static const GstMetaInfo *info = NULL;
+
+  GST_DWRITE_CALL_ONCE_BEGIN {
+    info = gst_meta_register (GST_DWRITE_SUBTITLE_META_API_TYPE,
+        "GstDWriteSubtitleMeta",
+        sizeof (GstDWriteSubtitleMeta),
+        gst_dwrite_subtitle_meta_init,
+        gst_dwrite_subtitle_meta_free, gst_dwrite_subtitle_meta_transform);
+  }
+  GST_DWRITE_CALL_ONCE_END;
+
+  return info;
+}
+
+GstDWriteSubtitleMeta *
+gst_buffer_add_dwrite_subtitle_meta (GstBuffer * buffer, GstStream * stream,
+    GstBuffer * subtitle)
+{
+  GstDWriteSubtitleMeta *meta;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+  g_return_val_if_fail (GST_IS_STREAM (stream), NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (subtitle), NULL);
+
+  meta = (GstDWriteSubtitleMeta *) gst_buffer_add_meta (buffer,
+      GST_DWRITE_SUBTITLE_META_INFO, NULL);
+
+  if (!meta)
+    return NULL;
+
+  meta->stream = (GstStream *) gst_object_ref (stream);
+  meta->subtitle = gst_buffer_ref (subtitle);
+
+  return meta;
+}
+
 gboolean
 gst_dwrite_is_windows_10_or_greater (void)
 {

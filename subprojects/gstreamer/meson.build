@@ -1,6 +1,6 @@
 project('gstreamer', 'c',
-  version : '1.23.0.1',
-  meson_version : '>= 0.62',
+  version : '1.25.0.1',
+  meson_version : '>= 1.1',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -76,8 +76,6 @@ if cc.get_id() == 'msvc'
       '/we4053', # one void operand for '?:'
       '/we4062', # enumerator 'identifier' in switch of enum 'enumeration' is not handled
       '/we4098', # 'function' : void function returning a value
-      '/we4101', # 'identifier' : unreferenced local variable
-      '/we4189', # 'identifier' : local variable is initialized but not referenced
     ])
   endif
   add_project_arguments(msvc_args, language: 'c')
@@ -110,20 +108,24 @@ if gst_version_is_dev
   add_project_arguments('-DG_DISABLE_DEPRECATED', language: 'c')
 endif
 
-cast_checks = get_option('gobject-cast-checks')
-if cast_checks.disabled() or (cast_checks.auto() and not gst_version_is_dev)
+# Same logic as in GLib.
+glib_debug = get_option('glib_debug')
+disable_cast_checks = glib_debug.disabled() or (
+  glib_debug.auto() and (not get_option('debug') or get_option('optimization') not in [ '0', 'g' ]))
+if disable_cast_checks
   message('Disabling GLib cast checks')
   add_project_arguments('-DG_DISABLE_CAST_CHECKS', language: 'c')
+  disable_cast_checks = true
 endif
 
-glib_asserts = get_option('glib-asserts')
-if glib_asserts.disabled() or (glib_asserts.auto() and not gst_version_is_dev)
+disable_glib_asserts = not get_option('glib_assert')
+if disable_glib_asserts
   message('Disabling GLib asserts')
   add_project_arguments('-DG_DISABLE_ASSERT', language: 'c')
 endif
 
-glib_checks = get_option('glib-checks')
-if glib_checks.disabled() or (glib_checks.auto() and not gst_version_is_dev)
+disable_glib_checks = not get_option('glib_checks')
+if disable_glib_checks
   message('Disabling GLib checks')
   add_project_arguments('-DG_DISABLE_CHECKS', language: 'c')
 endif
@@ -279,6 +281,12 @@ foreach f : check_functions
   endif
 endforeach
 
+if host_system == 'windows'
+  if cc.has_function('_set_thread_local_invalid_parameter_handler', prefix : '#include <stdlib.h>')
+    cdata.set('HAVE__SET_THREAD_LOCAL_INVALID_PARAMETER_HANDLER', 1)
+  endif
+endif
+
 if cc.has_function('localtime_r', prefix : '#include<time.h>')
   cdata.set('HAVE_LOCALTIME_R', 1)
   # Needed by libcheck
@@ -315,7 +323,7 @@ if cc.compiles('''#include <linux/futex.h>
                int main (int argc, char ** argv) {
                  syscall (__NR_futex_time64, NULL, FUTEX_WAKE, FUTEX_WAIT);
                  return 0;
-               }''', name : 'futex(2) system call')
+               }''', name : 'futex_time64(2) system call')
   cdata.set('HAVE_FUTEX_TIME64', 1)
 endif
 
@@ -488,7 +496,23 @@ endif
 
 gst_debug = get_option('gst_debug')
 if not gst_debug
-  add_project_arguments(['-Wno-unused'], language: 'c')
+  if cc.get_argument_syntax() == 'msvc'
+    msvc_args = cc.get_supported_arguments([
+      '/wd4101', # 'identifier' : unreferenced local variable
+      '/wd4189', # 'identifier' : local variable is initialized but not referenced
+    ])
+    add_project_arguments(msvc_args, language: 'c')
+  elif cc.has_argument('-Wno-unused')
+    add_project_arguments(['-Wno-unused'], language: 'c')
+  endif
+else
+  if cc.get_argument_syntax() == 'msvc' and gst_version_is_dev
+    msvc_args = cc.get_supported_arguments([
+      '/we4101', # 'identifier' : unreferenced local variable
+      '/we4189', # 'identifier' : local variable is initialized but not referenced
+    ])
+    add_project_arguments(msvc_args, language: 'c')
+  endif
 endif
 
 warning_flags = [
@@ -534,7 +558,7 @@ configinc = include_directories('.')
 libsinc = include_directories('libs')
 privinc = include_directories('gst')
 
-glib_req = '>= 2.62.0'
+glib_req = '>= 2.64.0'
 
 # Find dependencies
 glib_dep = dependency('glib-2.0', version: glib_req,
@@ -552,6 +576,21 @@ mathlib = cc.find_library('m', required : false)
 # Needed for timer_create/settime/delete
 # Also provides clock_gettime in glibc < 2.17
 rt_lib = cc.find_library('rt', required : false)
+
+#
+# Solaris and Illumos distros split a lot of networking-related code
+# into '-lsocket -lnsl'.  Anything that calls socketpair(), getifaddr(),
+# etc. probably needs to include network_deps
+#
+socket_lib = cc.find_library('socket', required: false)
+nsl_lib    = cc.find_library('nsl',    required: false)
+network_deps = []
+if socket_lib.found()
+  network_deps += socket_lib
+endif
+if nsl_lib.found()
+  network_deps += nsl_lib
+endif
 
 gir = find_program('g-ir-scanner', required : get_option('introspection'))
 gnome = import('gnome')
@@ -666,7 +705,7 @@ endif
 configure_file(output : 'config.h', configuration : cdata)
 install_data('gst-element-check-1.0.m4', install_dir : join_paths(get_option('datadir'), 'aclocal'))
 
-meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.22.0', meson.project_version())
 
 plugin_names = []
 gst_plugins = []

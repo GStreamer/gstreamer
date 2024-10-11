@@ -25,77 +25,60 @@
 #include <gst/gst.h>
 #include <onnxruntime_cxx_api.h>
 #include <gst/video/video.h>
-#include "gstonnxelement.h"
-#include <string>
-#include <vector>
+#include "gstml.h"
+#include "tensor/gsttensormeta.h"
+
+GST_DEBUG_CATEGORY_EXTERN (onnx_inference_debug);
+
+typedef enum
+{
+  GST_ONNX_OPTIMIZATION_LEVEL_DISABLE_ALL,
+  GST_ONNX_OPTIMIZATION_LEVEL_ENABLE_BASIC,
+  GST_ONNX_OPTIMIZATION_LEVEL_ENABLE_EXTENDED,
+  GST_ONNX_OPTIMIZATION_LEVEL_ENABLE_ALL,
+} GstOnnxOptimizationLevel;
+
+typedef enum
+{
+  GST_ONNX_EXECUTION_PROVIDER_CPU,
+  GST_ONNX_EXECUTION_PROVIDER_CUDA,
+} GstOnnxExecutionProvider;
+
 
 namespace GstOnnxNamespace {
-  enum GstMlOutputNodeFunction {
-    GST_ML_OUTPUT_NODE_FUNCTION_DETECTION,
-    GST_ML_OUTPUT_NODE_FUNCTION_BOUNDING_BOX,
-    GST_ML_OUTPUT_NODE_FUNCTION_SCORE,
-    GST_ML_OUTPUT_NODE_FUNCTION_CLASS,
-    GST_ML_OUTPUT_NODE_NUMBER_OF,
-  };
-
-  const gint GST_ML_NODE_INDEX_DISABLED = -1;
-
-  struct GstMlOutputNodeInfo {
-    GstMlOutputNodeInfo(void);
-	gint index;
-    ONNXTensorElementDataType type;
-  };
-
-  struct GstMlBoundingBox {
-    GstMlBoundingBox(std::string lbl,
-                     float score,
-                     float _x0,
-                     float _y0,
-                     float _width,
-                     float _height):label(lbl),
-      score(score), x0(_x0), y0(_y0), width(_width), height(_height) {
-    }
-    GstMlBoundingBox():GstMlBoundingBox("", 0.0f, 0.0f, 0.0f, 0.0f, 0.0f) {
-    }
-    std::string label;
-    float score;
-    float x0;
-    float y0;
-    float width;
-    float height;
-  };
 
   class GstOnnxClient {
   public:
-    GstOnnxClient(void);
+    GstOnnxClient(GstElement *debug_parent);
     ~GstOnnxClient(void);
     bool createSession(std::string modelFile, GstOnnxOptimizationLevel optim,
                        GstOnnxExecutionProvider provider);
     bool hasSession(void);
-    void setInputImageFormat(GstMlModelInputImageFormat format);
-    GstMlModelInputImageFormat getInputImageFormat(void);
-    void setOutputNodeIndex(GstMlOutputNodeFunction nodeType, gint index);
-    gint getOutputNodeIndex(GstMlOutputNodeFunction nodeType);
-    void setOutputNodeType(GstMlOutputNodeFunction nodeType,
-                           ONNXTensorElementDataType type);
-    ONNXTensorElementDataType getOutputNodeType(GstMlOutputNodeFunction type);
-    std::string getOutputNodeName(GstMlOutputNodeFunction nodeType);
-    std::vector < GstMlBoundingBox > run(uint8_t * img_data,
-                                          GstVideoMeta * vmeta,
-                                          std::string labelPath,
-                                          float scoreThreshold);
-    std::vector < GstMlBoundingBox > &getBoundingBoxes(void);
-    std::vector < const char *>getOutputNodeNames(void);
+    void setInputImageFormat(GstMlInputImageFormat format);
+    GstMlInputImageFormat getInputImageFormat(void);
+    GstTensorDataType getInputImageDatatype(void);
+    void setInputImageOffset (float offset);
+    float getInputImageOffset ();
+    void setInputImageScale (float offset);
+    float getInputImageScale ();
+    std::vector < Ort::Value > run (uint8_t * img_data, GstVideoInfo vinfo);
+    std::vector < const char *> genOutputNamesRaw(void);
     bool isFixedInputImageSize(void);
     int32_t getWidth(void);
     int32_t getHeight(void);
+    int32_t getChannels (void);
+    GstTensorMeta *copy_tensors_to_meta (std::vector<Ort::Value> &outputs,
+                                         GstBuffer *buffer);
+    void parseDimensions(GstVideoInfo vinfo);
   private:
-    void parseDimensions(GstVideoMeta * vmeta);
-    template < typename T > std::vector < GstMlBoundingBox >
-    doRun(uint8_t * img_data, GstVideoMeta * vmeta, std::string labelPath,
-            float scoreThreshold);
-    std::vector < std::string > ReadLabels(const std::string & labelsFile);
-    Ort::Env & getEnv(void);
+
+    GstElement *debug_parent;
+    void setInputImageDatatype (GstTensorDataType datatype);
+    template < typename T>
+    void convert_image_remove_alpha (T *dest, GstMlInputImageFormat hwc,
+        uint8_t **srcPtr, uint32_t srcSamplesPerPixel, uint32_t stride, T offset, T div);
+    bool doRun(uint8_t * img_data, GstVideoInfo vinfo, std::vector < Ort::Value > &modelOutput);
+    Ort::Env env;
     Ort::Session * session;
     int32_t width;
     int32_t height;
@@ -104,14 +87,15 @@ namespace GstOnnxNamespace {
     GstOnnxExecutionProvider m_provider;
     std::vector < Ort::Value > modelOutput;
     std::vector < std::string > labels;
-    // !! indexed by function
-    GstMlOutputNodeInfo outputNodeInfo[GST_ML_OUTPUT_NODE_NUMBER_OF];
-    // !! indexed by array index
-	size_t outputNodeIndexToFunction[GST_ML_OUTPUT_NODE_NUMBER_OF];
     std::vector < const char *> outputNamesRaw;
     std::vector < Ort::AllocatedStringPtr > outputNames;
-    GstMlModelInputImageFormat inputImageFormat;
+    std::vector < GQuark > outputIds;
+    GstMlInputImageFormat inputImageFormat;
+    GstTensorDataType inputDatatype;
+    size_t inputDatatypeSize;
     bool fixedInputImageSize;
+    float inputTensorOffset;
+    float inputTensorScale;
   };
 }
 

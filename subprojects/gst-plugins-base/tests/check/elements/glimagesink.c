@@ -29,6 +29,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/check/gstcheck.h>
+#include <gst/gl/gl.h>
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -181,6 +182,7 @@ GST_START_TEST (test_query_drain)
   config = gst_buffer_pool_get_config (originpool);
   gst_buffer_pool_config_set_params (config, caps, size, maxbuffers,
       maxbuffers);
+  gst_buffer_pool_config_set_gl_min_free_queue_size (config, 0);
   fail_unless (gst_buffer_pool_set_config (originpool, config));
 
   /* The gl pool is setup and ready to be activated. */

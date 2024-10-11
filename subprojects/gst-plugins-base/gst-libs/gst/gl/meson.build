@@ -3,6 +3,7 @@ gstglproto_dep = dependency('', required : false)
 gstglx11_dep = dependency('', required : false)
 gstglwayland_dep = dependency('', required : false)
 gstglegl_dep = dependency('', required : false)
+gstglviv_fb_dep = dependency('', required : false)
 
 if get_option('gl').disabled()
   message('GStreamer OpenGL integration disabled via options.')
@@ -115,6 +116,8 @@ gl_wayland_sources = []
 gl_wayland_headers = []
 gl_egl_sources = []
 gl_egl_headers = []
+gl_viv_fb_sources = []
+gl_viv_fb_headers = []
 
 glconf = configuration_data()
 glconf_options = [
@@ -250,6 +253,7 @@ if gl_winsys.contains('auto')
   need_win_winrt = 'auto'
   need_win_cocoa = 'auto'
   need_win_egl = 'auto'
+  need_win_surfaceless = 'auto'
   need_win_eagl = 'auto'
   need_win_dispmanx = 'auto'
   need_win_viv_fb = 'auto'
@@ -262,6 +266,7 @@ else
   need_win_winrt = 'no'
   need_win_cocoa = 'no'
   need_win_egl = 'no'
+  need_win_surfaceless = 'no'
   need_win_eagl = 'no'
   need_win_dispmanx = 'no'
   need_win_viv_fb = 'no'
@@ -280,6 +285,8 @@ else
       need_win_cocoa = 'yes'
     elif winsys == 'egl'
       need_win_egl = 'yes'
+    elif winsys == 'surfaceless'
+      need_win_surfaceless = 'yes'
     elif winsys == 'eagl'
       need_win_eagl = 'yes'
     elif winsys == 'dispmanx'
@@ -559,8 +566,8 @@ if need_platform_egl != 'no'
     gl_platform_deps += egl_dep
     glconf.set('GST_GL_HAVE_PLATFORM_EGL', 1)
 
-    if cc.has_header('libdrm/drm_fourcc.h')
-      gl_misc_deps += allocators_dep
+    if libdrm_dep.type_name() == 'internal' or cc.has_header('drm_fourcc.h', dependencies: libdrm_dep)
+      gl_misc_deps += [allocators_dep, libdrm_dep]
       glconf.set('GST_GL_HAVE_DMABUF', 1)
     endif
 
@@ -575,13 +582,36 @@ if need_platform_egl != 'no'
 endif
 
 # winsys_egl checks
-if need_win_egl == 'yes'
+if need_win_egl != 'no'
   if need_platform_egl == 'no'
-    error('Impossible situation requested: Cannot use Winsys egl without EGL support')
+    if need_win_egl == 'yes'
+      error ('Impossible situation requested: Cannot use Winsys egl without EGL support')
+    endif
   elif not egl_dep.found()
-    error ('Could not find EGL libraries for Winsys egl')
+    if need_win_egl == 'yes'
+      error ('Could not find EGL libraries for Winsys egl')
+    else
+      message ('Could not find EGL libraries for Winsys egl')
+    endif
   else
     enabled_gl_winsys += 'egl'
+  endif
+endif
+
+# winsys_surfaceless checks
+if need_win_surfaceless != 'no'
+  if need_platform_egl == 'no'
+    if need_win_surfaceless == 'yes'
+      error ('Impossible situation requested: Cannot use Winsys surfaceless without EGL support')
+    endif
+  elif not egl_dep.found()
+    if need_win_surfaceless == 'yes'
+      error ('Could not find EGL libraries for Winsys surfaceless')
+    else
+      message ('Could not find EGL libraries for Winsys surfaceless')
+    endif
+  else
+    enabled_gl_winsys += 'surfaceless'
   endif
 endif
 
@@ -922,23 +952,27 @@ if need_win_gbm != 'no'
   endif
 endif
 
+if cc.has_function ('glTexDirectVIV', dependencies : gles2_dep)
+  glconf.set('GST_GL_HAVE_VIV_DIRECTVIV', 1)
+endif
+
 if need_platform_egl != 'no' and need_win_viv_fb != 'no'
   if egl_dep.found() and cc.has_function ('fbGetDisplay', dependencies : egl_dep)
-    if cc.has_function ('glTexDirectVIV', dependencies : gles2_dep)
-      enabled_gl_winsys += 'viv-fb'
-      glconf.set('GST_GL_HAVE_WINDOW_VIV_FB', 1)
-      glconf.set('GST_GL_HAVE_VIV_DIRECTVIV', 1)
-      gl_priv_sources += [
-        'viv-fb/gstgldisplay_viv_fb.c',
-        'viv-fb/gstglwindow_viv_fb_egl.c',
-      ]
-      gl_cpp_args += ['-DEGL_API_FB']
-      gl_viv_fb_headers = [
-        'viv-fb/gstgldisplay_viv_fb.h',
-        'viv-fb/gstglwindow_viv_fb_egl.h',
-      ]
-      install_headers(gl_viv_fb_headers, subdir : 'gstreamer-1.0/gst/gl/viv-fb')
-    endif
+    enabled_gl_winsys += 'viv-fb'
+    glconf.set('GST_GL_HAVE_WINDOW_VIV_FB', 1)
+    gl_priv_sources += files([
+      'viv-fb/gstgldisplay_viv_fb.c',
+      'viv-fb/gstglwindow_viv_fb_egl.c',
+    ])
+    gl_viv_fb_sources += files([
+      'viv-fb/gstgldisplay_viv_fb.c',
+    ])
+
+    gl_cpp_args += ['-DEGL_API_FB']
+    gl_viv_fb_headers = files([
+      'viv-fb/gstglviv-fb.h',
+      'viv-fb/gstgldisplay_viv_fb.h',
+    ])
   endif
 endif
 
@@ -1060,7 +1094,7 @@ if build_gstgl
   common_args += '-I@0@'.format(meson.current_build_dir())
 
   gstgl = library('gstgl-' + api_version,
-    gl_sources, gl_egl_sources, gl_x11_sources, gl_wayland_sources, gl_priv_sources, gl_enumtypes_c, gl_enumtypes_h,
+    gl_sources, gl_egl_sources, gl_x11_sources, gl_wayland_sources, gl_viv_fb_sources, gl_priv_sources, gl_enumtypes_c, gl_enumtypes_h,
     c_args : common_args,
     cpp_args : common_args,
     objc_args : common_args + gl_objc_args,
@@ -1069,8 +1103,8 @@ if build_gstgl
     soversion : soversion,
     darwin_versions : osxversion,
     install : true,
-    dependencies : [gst_base_dep, video_dep, allocators_dep, gmodule_dep,
-                    gl_lib_deps, gl_platform_deps, gl_winsys_deps, gl_misc_deps],
+    dependencies : [gst_base_dep, video_dep, gmodule_dep, gl_lib_deps,
+                    gl_platform_deps, gl_winsys_deps, gl_misc_deps],
     # don't confuse EGL/egl.h with gst-libs/gl/egl/egl.h on case-insensitive file systems
     implicit_include_directories : false)
 
@@ -1247,6 +1281,42 @@ if build_gstgl
     gstglegl_dep = declare_dependency(dependencies : [gstgl_dep],
       sources : gl_egl_gir)
     meson.override_dependency(pkg_name, gstglegl_dep)
+  endif
+
+  if gl_viv_fb_headers.length() > 0
+    install_headers(gl_viv_fb_headers, subdir : 'gstreamer-1.0/gst/gl/viv-fb')
+    pkg_name = 'gstreamer-gl-viv-fb-1.0'
+    pkgconfig.generate(
+      libraries : [gstgl],
+      subdirs : pkgconfig_subdirs,
+      name : pkg_name,
+      description : 'Streaming media framework, OpenGL plugins libraries (Vivante Framebuffer specifics)',
+    )
+    gl_viv_fb_gir = []
+    if build_gir
+      gir = {
+        'sources' : gl_viv_fb_sources + gl_viv_fb_headers,
+        'namespace' : 'GstGLVivFB',
+        'nsversion' : api_version,
+        'identifier_prefix' : 'Gst',
+        'symbol_prefix' : 'gst',
+        'export_packages' : pkg_name,
+        'includes' : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0'],
+        'install' : true,
+        'extra_args' : gir_init_section + ['--c-include=gst/gl/viv-fb/gstglviv-fb.h'],
+        'dependencies' : [video_dep, gst_dep, gst_base_dep]
+      }
+      gir_dict = gir + {'includes': gir['includes'] + ['GstGL-1.0']}
+      gst_libraries += [[pkg_name, {'gir': gir_dict}]]
+      if not static_build
+        gir += {'includes': gir['includes'] + [gl_gir[0]]}
+        gl_viv_fb_gir = gnome.generate_gir(gstgl, kwargs: gir)
+        library_def += {'gir_targets':  library_def.get('gir_targets', []) + [gl_viv_fb_gir]}
+      endif
+    endif
+    gstglviv_fb_dep = declare_dependency(dependencies : [gstgl_dep],
+      sources : gl_viv_fb_gir)
+    meson.override_dependency(pkg_name, gstglviv_fb_dep)
   endif
 
 elif get_option('gl').enabled()

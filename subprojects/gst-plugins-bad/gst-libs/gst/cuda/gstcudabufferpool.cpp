@@ -24,6 +24,7 @@
 #include "gstcudabufferpool.h"
 #include "gstcudacontext.h"
 #include "gstcudamemory.h"
+#include "gstcuda-private.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_buffer_pool_debug);
 #define GST_CAT_DEFAULT gst_cuda_buffer_pool_debug
@@ -33,6 +34,8 @@ struct _GstCudaBufferPoolPrivate
   GstVideoInfo info;
   GstCudaStream *stream;
   GstCudaPoolAllocator *alloc;
+  GstCudaMemoryAllocMethod alloc_method;
+  CUmemAllocationProp prop;
 };
 
 #define gst_cuda_buffer_pool_parent_class parent_class
@@ -49,6 +52,54 @@ gst_cuda_buffer_pool_get_options (GstBufferPool * pool)
 }
 
 static gboolean
+gst_cuda_buffer_pool_update_alloc_prop (GstCudaBufferPool * self)
+{
+  GstCudaBufferPoolPrivate *priv = self->priv;
+  gboolean virtual_mem_supported;
+  gboolean os_handle_supported;
+  guint device;
+
+  g_object_get (self->context, "cuda-device-id", &device,
+      "virtual-memory", &virtual_mem_supported,
+      "os-handle", &os_handle_supported, nullptr);
+
+  if (!virtual_mem_supported) {
+    GST_DEBUG_OBJECT (self, "Virtual memory management is not supported");
+    return FALSE;
+  }
+
+  if (!os_handle_supported) {
+    GST_DEBUG_OBJECT (self, "OS handle is not supported");;
+    return FALSE;
+  }
+
+  priv->prop.type = CU_MEM_ALLOCATION_TYPE_PINNED;
+  priv->prop.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
+  priv->prop.location.id = (int) device;
+#ifdef G_OS_WIN32
+  priv->prop.requestedHandleTypes = CU_MEM_HANDLE_TYPE_WIN32;
+  priv->prop.win32HandleMetaData = gst_cuda_get_win32_handle_metadata ();
+#else
+  priv->prop.requestedHandleTypes = CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR;
+#endif
+
+  return TRUE;
+}
+
+static gboolean
+default_stream_ordered_alloc_enabled (void)
+{
+  static gboolean enabled = FALSE;
+  GST_CUDA_CALL_ONCE_BEGIN {
+    if (g_getenv ("GST_CUDA_ENABLE_STREAM_ORDERED_ALLOC"))
+      enabled = TRUE;
+  }
+  GST_CUDA_CALL_ONCE_END;
+
+  return enabled;
+}
+
+static gboolean
 gst_cuda_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 {
   GstCudaBufferPool *self = GST_CUDA_BUFFER_POOL (pool);
@@ -56,7 +107,7 @@ gst_cuda_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstCaps *caps = nullptr;
   guint size, min_buffers, max_buffers;
   GstVideoInfo info;
-  GstMemory *mem;
+  GstMemory *mem = nullptr;
   GstCudaMemory *cmem;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
@@ -77,19 +128,63 @@ gst_cuda_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   if (priv->alloc) {
     gst_cuda_allocator_set_active (GST_CUDA_ALLOCATOR (priv->alloc), FALSE);
-    gst_object_unref (priv->alloc);
+    gst_clear_object (&priv->alloc);
   }
 
   gst_clear_cuda_stream (&priv->stream);
   priv->stream = gst_buffer_pool_config_get_cuda_stream (config);
-  priv->alloc = gst_cuda_pool_allocator_new (self->context, priv->stream,
-      &info);
+  priv->alloc_method = gst_buffer_pool_config_get_cuda_alloc_method (config);
+  if (priv->alloc_method == GST_CUDA_MEMORY_ALLOC_UNKNOWN)
+    priv->alloc_method = GST_CUDA_MEMORY_ALLOC_MALLOC;
+
+  if (priv->alloc_method == GST_CUDA_MEMORY_ALLOC_MMAP) {
+    if (!gst_cuda_buffer_pool_update_alloc_prop (self)) {
+      GST_ERROR_OBJECT (self, "Virtual memory management is not supported");
+      return FALSE;
+    }
+
+    priv->alloc = gst_cuda_pool_allocator_new_for_virtual_memory (self->context,
+        priv->stream, &info, &priv->prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM);
+  } else {
+    gboolean stream_ordered = FALSE;
+    if (!gst_buffer_pool_config_get_cuda_stream_ordered_alloc (config,
+            &stream_ordered)) {
+      gboolean prefer_stream_ordered = FALSE;
+      g_object_get (self->context, "prefer-stream-ordered-alloc",
+          &prefer_stream_ordered, nullptr);
+      if (prefer_stream_ordered) {
+        GST_DEBUG_OBJECT (self, "Stream ordered alloc was enabled in context");
+        stream_ordered = TRUE;
+      } else {
+        stream_ordered = default_stream_ordered_alloc_enabled ();
+        GST_DEBUG_OBJECT (self, "Use default stream ordered alloc: %d",
+            stream_ordered);
+      }
+    } else {
+      GST_DEBUG_OBJECT (self,
+          "stream ordered alloc by config: %d", stream_ordered);
+    }
+
+    GstStructure *alloc_config = gst_structure_new ("alloc-config",
+        GST_CUDA_ALLOCATOR_OPT_STREAM_ORDERED, G_TYPE_BOOLEAN, stream_ordered,
+        nullptr);
+
+    priv->alloc = gst_cuda_pool_allocator_new_full (self->context, priv->stream,
+        &info, alloc_config);
+  }
+
   if (!priv->alloc) {
     GST_ERROR_OBJECT (self, "Couldn't create allocator");
     return FALSE;
   }
 
-  mem = gst_cuda_allocator_alloc (nullptr, self->context, nullptr, &info);
+  if (!gst_cuda_allocator_set_active (GST_CUDA_ALLOCATOR (priv->alloc), TRUE)) {
+    GST_ERROR_OBJECT (self, "Couldn't set active");
+    return FALSE;
+  }
+
+  gst_cuda_pool_allocator_acquire_memory (priv->alloc, &mem);
+  gst_cuda_allocator_set_active (GST_CUDA_ALLOCATOR (priv->alloc), FALSE);
   if (!mem) {
     GST_WARNING_OBJECT (self, "Failed to allocate memory");
     return FALSE;
@@ -152,7 +247,7 @@ gst_cuda_buffer_pool_start (GstBufferPool * pool)
     return FALSE;
   }
 
-  return GST_BUFFER_POOL_CLASS (parent_class)->start (pool);
+  return TRUE;
 }
 
 static gboolean
@@ -187,6 +282,7 @@ gst_cuda_buffer_pool_new (GstCudaContext * context)
   gst_object_ref_sink (self);
 
   self->context = (GstCudaContext *) gst_object_ref (context);
+  self->priv->alloc_method = GST_CUDA_MEMORY_ALLOC_MALLOC;
 
   return GST_BUFFER_POOL_CAST (self);
 }
@@ -231,6 +327,94 @@ gst_buffer_pool_config_set_cuda_stream (GstStructure * config,
 
   gst_structure_set (config,
       "cuda-stream", GST_TYPE_CUDA_STREAM, stream, nullptr);
+}
+
+/**
+ * gst_buffer_pool_config_get_cuda_alloc_method:
+ * @config: a buffer pool config
+ *
+ * Gets configured allocation method
+ *
+ * Since: 1.24
+ */
+GstCudaMemoryAllocMethod
+gst_buffer_pool_config_get_cuda_alloc_method (GstStructure * config)
+{
+  GstCudaMemoryAllocMethod type;
+
+  g_return_val_if_fail (config, GST_CUDA_MEMORY_ALLOC_UNKNOWN);
+
+  if (gst_structure_get_enum (config, "cuda-alloc-method",
+          GST_TYPE_CUDA_MEMORY_ALLOC_METHOD, (gint *) & type)) {
+    return type;
+  }
+
+  return GST_CUDA_MEMORY_ALLOC_UNKNOWN;
+}
+
+/**
+ * gst_buffer_pool_config_set_cuda_alloc_method:
+ * @config: a buffer pool config
+ *
+ * Sets allocation method
+ *
+ * Since: 1.24
+ */
+void
+gst_buffer_pool_config_set_cuda_alloc_method (GstStructure * config,
+    GstCudaMemoryAllocMethod method)
+{
+  g_return_if_fail (config);
+
+  gst_structure_set (config, "cuda-alloc-method",
+      GST_TYPE_CUDA_MEMORY_ALLOC_METHOD, method, nullptr);
+}
+
+/**
+ * gst_buffer_pool_config_get_cuda_stream_ordered_alloc:
+ * @config: a buffer pool config
+ * @enabled: (out): whether stream ordered allocation was requested or not
+ *
+ * Returns: %TRUE stream ordered allocation option was specified
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_buffer_pool_config_get_cuda_stream_ordered_alloc (GstStructure * config,
+    gboolean * enabled)
+{
+  gboolean stream_ordered = FALSE;
+
+  g_return_val_if_fail (config, FALSE);
+
+  if (!gst_structure_get_boolean (config,
+          "cuda-stream-ordered-alloc", &stream_ordered)) {
+    return FALSE;
+  }
+
+  if (enabled)
+    *enabled = stream_ordered;
+
+  return TRUE;
+}
+
+/**
+ * gst_buffer_pool_config_set_cuda_stream_ordered_alloc:
+ * @config: a buffer pool config
+ * @stream_ordered: whether stream ordered allocation is allowed
+ *
+ * Sets stream ordered allocation option
+ *
+ * Since: 1.26
+ */
+void
+gst_buffer_pool_config_set_cuda_stream_ordered_alloc (GstStructure * config,
+    gboolean stream_ordered)
+{
+  g_return_if_fail (config);
+
+  gst_structure_set (config, "cuda-stream-ordered-alloc", G_TYPE_BOOLEAN,
+      stream_ordered, nullptr);
 }
 
 static void

@@ -103,6 +103,9 @@ gst_rtp_gst_depay_class_init (GstRtpGSTDepayClass * klass)
 static void
 gst_rtp_gst_depay_init (GstRtpGSTDepay * rtpgstdepay)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (rtpgstdepay), TRUE);
+
   rtpgstdepay->adapter = gst_adapter_new ();
 }
 
@@ -409,6 +412,7 @@ gst_rtp_gst_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   if (GST_BUFFER_IS_DISCONT (rtp->buffer)) {
     GST_WARNING_OBJECT (rtpgstdepay, "DISCONT, clear adapter");
     gst_adapter_clear (rtpgstdepay->adapter);
+    gst_rtp_base_depayload_flush (depayload, TRUE);
   }
 
   payload = gst_rtp_buffer_get_payload (rtp);
@@ -525,24 +529,28 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpgstdepay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 wrong_frag:
   {
     gst_adapter_clear (rtpgstdepay->adapter);
     GST_LOG_OBJECT (rtpgstdepay, "wrong fragment, skipping");
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 no_caps:
   {
     GST_WARNING_OBJECT (rtpgstdepay, "failed to parse caps");
     gst_buffer_unref (outbuf);
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 no_event:
   {
     GST_WARNING_OBJECT (rtpgstdepay, "failed to parse event");
     gst_buffer_unref (outbuf);
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 missing_caps:
@@ -553,6 +561,8 @@ missing_caps:
     gst_pad_push_event (GST_RTP_BASE_DEPAYLOAD_SINKPAD (rtpgstdepay),
         gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
             TRUE, 0));
+
+    gst_rtp_base_depayload_dropped (depayload);
 
     return NULL;
   }

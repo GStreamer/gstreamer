@@ -34,7 +34,7 @@ MFX_PACK_END()
 #define MFX_REFINTERFACE_VERSION MFX_STRUCT_VERSION(1, 0)
 
 MFX_PACK_BEGIN_STRUCT_W_PTR()
-/*! The structure respresents reference counted interface structure.
+/*! The structure represents reference counted interface structure.
     The memory is allocated and released by the implementation.
 */
 typedef struct mfxRefInterface {
@@ -191,7 +191,10 @@ enum {
     MFX_GPUCOPY_DEFAULT = 0, /*!< Use default mode for the legacy Intel(r) Media SDK implementation. */
     MFX_GPUCOPY_ON      = 1, /*!< The hint to enable GPU accelerated copying when it is supported by the library. 
                                   If the library doesn't support GPU accelerated copy the operation will be made by CPU. */
-    MFX_GPUCOPY_OFF     = 2  /*!< Disable GPU accelerated copying. */
+    MFX_GPUCOPY_OFF     = 2,  /*!< Disable GPU accelerated copying. */
+#ifdef ONEVPL_EXPERIMENTAL
+    MFX_GPUCOPY_SAFE    = 3  /*!< The hint to disable buffer caching for GPU accelerated copying. Actual when GPU accelerated copying is supported by the library. */
+#endif
 };
 
 MFX_PACK_BEGIN_STRUCT_W_PTR()
@@ -234,35 +237,34 @@ typedef struct {
 } mfxExtThreadsParam;
 MFX_PACK_END()
 
-/*! The PlatformCodeName enumerator itemizes product code names for platforms. 
-    For details about Intel code names, see ark.intel.com. */
+/*! Deprecated. */
 enum {
-    MFX_PLATFORM_UNKNOWN        = 0,  /*!< Unknown platform. */
-    MFX_PLATFORM_SANDYBRIDGE    = 1,  /*!< Intel(r) microarchitecture code name Sandy Bridge. */
-    MFX_PLATFORM_IVYBRIDGE      = 2,  /*!< Intel(r) microarchitecture code name Ivy Bridge. */
-    MFX_PLATFORM_HASWELL        = 3,  /*!< Code name Haswell. */
-    MFX_PLATFORM_BAYTRAIL       = 4,  /*!< Code name Bay Trail. */
-    MFX_PLATFORM_BROADWELL      = 5,  /*!< Intel(r) microarchitecture code name Broadwell. */
-    MFX_PLATFORM_CHERRYTRAIL    = 6,  /*!< Code name Cherry Trail. */
-    MFX_PLATFORM_SKYLAKE        = 7,  /*!< Intel(r) microarchitecture code name Skylake. */
-    MFX_PLATFORM_APOLLOLAKE     = 8,  /*!< Code name Apollo Lake. */
-    MFX_PLATFORM_KABYLAKE       = 9,  /*!< Code name Kaby Lake. */
-    MFX_PLATFORM_GEMINILAKE     = 10, /*!< Code name Gemini Lake. */
-    MFX_PLATFORM_COFFEELAKE     = 11, /*!< Code name Coffee Lake. */
-    MFX_PLATFORM_CANNONLAKE     = 20, /*!< Code name Cannon Lake. */
-    MFX_PLATFORM_ICELAKE        = 30, /*!< Code name Ice Lake. */
-    MFX_PLATFORM_JASPERLAKE     = 32, /*!< Code name Jasper Lake. */
-    MFX_PLATFORM_ELKHARTLAKE    = 33, /*!< Code name Elkhart Lake. */
-    MFX_PLATFORM_TIGERLAKE      = 40, /*!< Code name Tiger Lake. */
-    MFX_PLATFORM_ROCKETLAKE     = 42, /*!< Code name Rocket Lake. */
-    MFX_PLATFORM_ALDERLAKE_S    = 43, /*!< Code name Alder Lake S. */
-    MFX_PLATFORM_ALDERLAKE_P    = 44, /*!< Code name Alder Lake P. */
-    MFX_PLATFORM_ARCTICSOUND_P  = 45,
-    MFX_PLATFORM_XEHP_SDV       = 45, /*!< Code name XeHP SDV. */
-    MFX_PLATFORM_DG2            = 46, /*!< Code name DG2. */
-    MFX_PLATFORM_ATS_M          = 46, /*!< Code name ATS-M, same media functionality as DG2. */
-    MFX_PLATFORM_ALDERLAKE_N    = 55, /*!< Code name Alder Lake N. */
-    MFX_PLATFORM_KEEMBAY        = 50, /*!< Code name Keem Bay. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_UNKNOWN)        = 0,  /*!< Unknown platform. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_SANDYBRIDGE)    = 1,  /*!< Intel(r) microarchitecture code name Sandy Bridge. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_IVYBRIDGE)      = 2,  /*!< Intel(r) microarchitecture code name Ivy Bridge. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_HASWELL)        = 3,  /*!< Code name Haswell. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_BAYTRAIL)       = 4,  /*!< Code name Bay Trail. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_BROADWELL)      = 5,  /*!< Intel(r) microarchitecture code name Broadwell. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_CHERRYTRAIL)    = 6,  /*!< Code name Cherry Trail. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_SKYLAKE)        = 7,  /*!< Intel(r) microarchitecture code name Skylake. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_APOLLOLAKE)     = 8,  /*!< Code name Apollo Lake. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_KABYLAKE)       = 9,  /*!< Code name Kaby Lake. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_GEMINILAKE)     = 10, /*!< Code name Gemini Lake. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_COFFEELAKE)     = 11, /*!< Code name Coffee Lake. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_CANNONLAKE)     = 20, /*!< Code name Cannon Lake. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_ICELAKE)        = 30, /*!< Code name Ice Lake. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_JASPERLAKE)     = 32, /*!< Code name Jasper Lake. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_ELKHARTLAKE)    = 33, /*!< Code name Elkhart Lake. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_TIGERLAKE)      = 40, /*!< Code name Tiger Lake. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_ROCKETLAKE)     = 42, /*!< Code name Rocket Lake. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_ALDERLAKE_S)    = 43, /*!< Code name Alder Lake S. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_ALDERLAKE_P)    = 44, /*!< Code name Alder Lake P. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_ARCTICSOUND_P)  = 45,
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_XEHP_SDV)       = 45, /*!< Code name XeHP SDV. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_DG2)            = 46, /*!< Code name DG2. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_ATS_M)          = 46, /*!< Code name ATS-M, same media functionality as DG2. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_ALDERLAKE_N)    = 55, /*!< Code name Alder Lake N. */
+    MFX_DEPRECATED_ENUM_FIELD_INSIDE(MFX_PLATFORM_KEEMBAY)        = 50, /*!< Code name Keem Bay. */
 };
 
 /*! The mfxMediaAdapterType enumerator itemizes types of graphics adapters. */
@@ -276,7 +278,7 @@ typedef enum
 MFX_PACK_BEGIN_USUAL_STRUCT()
 /*! Contains information about hardware platform for the Legacy mode. */
 typedef struct {
-    mfxU16 CodeName;         /*!< Microarchitecture code name. See the PlatformCodeName enumerator for a list of possible values. */
+   MFX_DEPRECATED  mfxU16 CodeName;         /*!< Deprecated. */
     mfxU16 DeviceId;         /*!< Unique identifier of graphics device. */
     mfxU16 MediaAdapterType; /*!< Description of graphics adapter type. See the mfxMediaAdapterType enumerator for a list of possible values. */
     mfxU16 reserved[13];     /*!< Reserved for future use. */
@@ -534,13 +536,13 @@ MFX_PACK_END()
 #define MFX_EXTENDEDDEVICEID_VERSION MFX_STRUCT_VERSION(1, 0)
 
 MFX_PACK_BEGIN_USUAL_STRUCT()
-/*! Specifies variouse physical device properties for device matching and identification outside of oneVPL. */
+/*! Specifies various physical device properties for device matching and identification outside of oneVPL. */
 typedef struct {
     mfxStructVersion Version;                       /*!< Version of the structure. */
     mfxU16           VendorID;                      /*!< PCI vendor ID. */
     mfxU16           DeviceID;                      /*!< PCI device ID. */
     mfxU32           PCIDomain;                     /*!< PCI bus domain. Equals to '0' if OS doesn't support it or
-                                                         has sequential numbering of buses accross domains. */
+                                                         has sequential numbering of buses across domains. */
     mfxU32           PCIBus;                        /*!< The number of the bus that the physical device is located on. */
     mfxU32           PCIDevice;                     /*!< The index of the physical device on the bus. */
     mfxU32           PCIFunction;                   /*!< The function number of the device on the physical device. */
@@ -550,15 +552,31 @@ typedef struct {
     mfxU32           LUIDValid;                     /*!< Boolean value that will be 1 if DeviceLUID contains a valid LUID
                                                          and LUIDDeviceNodeMask contains a valid node mask,
                                                          and 0 if they do not. */
-    mfxU32           DRMRenderNodeNum;              /*!< Number of the DRM render node from the path /dev/dri/RenderD<num>.
+    mfxU32           DRMRenderNodeNum;              /*!< Number of the DRM render node from the path /dev/dri/RenderD\<num\>.
                                                          Value equals to 0 means that this field doesn't contain valid DRM Render
                                                          Node number.*/
-    mfxU32           DRMPrimaryNodeNum;             /*!< Number of the DRM primary node from the path /dev/dri/card<num>.
+    mfxU32           DRMPrimaryNodeNum;             /*!< Number of the DRM primary node from the path /dev/dri/card\<num\>.
                                                          Value equals to 0x7FFFFFFF means that this field doesn't contain valid DRM Primary
                                                          Node number.*/
-    mfxU8            reserved1[20];                 /*!< Reserved for future use. */
+    mfxU16           RevisionID;                    /*!< PCI revision ID. The value contains microarchitecture version. */
+    mfxU8            reserved1[18];                 /*!< Reserved for future use. */
     mfxChar          DeviceName[MFX_STRFIELD_LEN];  /*!< Null-terminated string in utf-8 with the name of the device. */
 } mfxExtendedDeviceId;
+MFX_PACK_END()
+
+MFX_PACK_BEGIN_USUAL_STRUCT()
+/*! Cross domain structure to define device UUID. It is defined here to check backward compatibility.*/
+typedef struct {
+      mfxU16 vendor_id;                             /*!< PCI vendor ID. Same as mfxExtendedDeviceId::VendorID. */
+      mfxU16 device_id;                             /*!< PCI device ID. Same as mfxExtendedDeviceId::DeviceID. */
+      mfxU16 revision_id;                           /*!< PCI revision ID. Same as mfxExtendedDeviceId::RevisionID. */
+      mfxU16 pci_domain;                            /*!< PCI bus domain. Same as mfxExtendedDeviceId::PCIDomain. */
+      mfxU8  pci_bus;                               /*!< The number of the bus that the physical device is located on. Same as mfxExtendedDeviceId::PCIBus. */
+      mfxU8  pci_dev;                               /*!< The index of the physical device on the bus. Same as mfxExtendedDeviceId::PCIDevice. */
+      mfxU8  pci_func;                              /*!< The function number of the device on the physical device.  Same as mfxExtendedDeviceId::PCIFunction. */
+      mfxU8  reserved[4];                           /*!< Reserved for future use. */
+      mfxU8  sub_device_id;                         /*!< SubDevice ID.*/  
+} extDeviceUUID;
 MFX_PACK_END()
 
 #endif
@@ -605,4 +623,3 @@ MFX_PACK_END()
 #endif /* __cplusplus */
 
 #endif
-

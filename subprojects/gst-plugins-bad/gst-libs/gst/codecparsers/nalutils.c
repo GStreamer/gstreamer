@@ -38,29 +38,6 @@
 #include "nalutils.h"
 #include <string.h>
 
-/* Compute Ceil(Log2(v)) */
-/* Derived from branchless code for integer log2(v) from:
-   <http://graphics.stanford.edu/~seander/bithacks.html#IntegerLog> */
-guint
-ceil_log2 (guint32 v)
-{
-  guint r, shift;
-
-  v--;
-  r = (v > 0xFFFF) << 4;
-  v >>= r;
-  shift = (v > 0xFF) << 3;
-  v >>= shift;
-  r |= shift;
-  shift = (v > 0xF) << 2;
-  v >>= shift;
-  r |= shift;
-  shift = (v > 0x3) << 1;
-  v >>= shift;
-  r |= shift;
-  r |= (v >> 1);
-  return r + 1;
-}
 
 /****** Nal parser ******/
 

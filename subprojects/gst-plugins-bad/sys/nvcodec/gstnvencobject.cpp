@@ -145,11 +145,14 @@ GstNvEncObject::IsSuccess (NVENCSTATUS status, GstNvEncObject * self,
 
 #ifndef GST_DISABLE_GST_DEBUG
   const gchar *status_str = nvenc_status_to_string (status);
+  const gchar *error_detail = nullptr;
+  if (self && self->session_)
+    error_detail = NvEncGetLastErrorString (self->session_);
 
   if (self) {
     gst_debug_log_id (GST_CAT_DEFAULT, GST_LEVEL_ERROR, file, function,
-        line, self->id_.c_str (), "NvEnc API call failed: 0x%x, %s",
-        (guint) status, status_str);
+        line, self->id_.c_str (), "NvEnc API call failed: 0x%x, %s (%s)",
+        (guint) status, status_str, GST_STR_NULL (error_detail));
   } else {
     gst_debug_log (GST_CAT_DEFAULT, GST_LEVEL_ERROR, file, function,
       line, nullptr, "NvEnc API call failed: 0x%x, %s",
@@ -173,6 +176,8 @@ GstNvEncObject::CreateInstance (GstElement * client, GstObject * device,
   status = NvEncOpenEncodeSessionEx (params, &session);
   if (!NVENC_IS_SUCCESS (status, nullptr)) {
     GST_ERROR_OBJECT (device, "NvEncOpenEncodeSessionEx failed");
+    /* Report error to abort if GST_CUDA_CRITICAL_ERRORS is configured */
+    gst_cuda_result (CUDA_ERROR_NO_DEVICE);
     return nullptr;
   }
 
@@ -291,8 +296,11 @@ GstNvEncObject::InitSession (NV_ENC_INITIALIZE_PARAMS * params,
 
   if (memcmp (&params->encodeGUID, &NV_ENC_CODEC_H264_GUID, sizeof (GUID)) == 0) {
     codec_ = GST_NV_ENC_CODEC_H264;
-  } else {
+  } else if (memcmp (&params->encodeGUID,
+      &NV_ENC_CODEC_HEVC_GUID, sizeof (GUID)) == 0) {
     codec_ = GST_NV_ENC_CODEC_H265;
+  } else {
+    codec_ = GST_NV_ENC_CODEC_AV1;
   }
 
   info_ = *info;
@@ -301,13 +309,29 @@ GstNvEncObject::InitSession (NV_ENC_INITIALIZE_PARAMS * params,
       buffer_format_ = NV_ENC_BUFFER_FORMAT_NV12;
       break;
     case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_GBR:
       buffer_format_ = NV_ENC_BUFFER_FORMAT_YUV444;
       break;
     case GST_VIDEO_FORMAT_P010_10LE:
       buffer_format_ = NV_ENC_BUFFER_FORMAT_YUV420_10BIT;
       break;
     case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_GBR_16LE:
       buffer_format_ = NV_ENC_BUFFER_FORMAT_YUV444_10BIT;
+      break;
+    case GST_VIDEO_FORMAT_VUYA:
+      buffer_format_ = NV_ENC_BUFFER_FORMAT_AYUV;
+      break;
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_RGBx:
+      buffer_format_ = NV_ENC_BUFFER_FORMAT_ABGR;
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
+      buffer_format_ = NV_ENC_BUFFER_FORMAT_ARGB;
+      break;
+    case GST_VIDEO_FORMAT_RGB10A2_LE:
+      buffer_format_ = NV_ENC_BUFFER_FORMAT_ABGR10;
       break;
     default:
       GST_ERROR_ID (id_.c_str (), "Unexpected format %s",

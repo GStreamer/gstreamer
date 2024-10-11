@@ -88,6 +88,10 @@ gboolean        gst_ptp_is_initialized             (void);
 GST_NET_API
 gboolean        gst_ptp_init                       (guint64 clock_id,
                                                     gchar ** interfaces);
+
+GST_NET_API
+gboolean        gst_ptp_init_full                  (const GstStructure *config);
+
 GST_NET_API
 void            gst_ptp_deinit                     (void);
 

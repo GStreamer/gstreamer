@@ -56,6 +56,8 @@ hls_dep = dependency('', required : false)
 adaptivedemux2_dep = dependency('', required : false)
 
 adaptivedemux2_opt = get_option('adaptivedemux2')
+soup_opt = get_option('soup')
+soup_ver_opt = get_option('soup-version')
 if adaptivedemux2_opt.disabled()
   message('Not building adaptivedemux2 plugin because it was disabled')
   subdir_done()
@@ -74,60 +76,71 @@ plugin_sources += dash_sources
 plugin_sources += smoothstreaming_sources
 plugin_sources += hls_sources
 
+libdl = cc.find_library('dl', required: false)
 soup_loader_args = ['-DBUILDING_ADAPTIVEDEMUX2']
+soup_link_args = []
+soup_link_deps = []
 
 default_library = get_option('default_library')
-if default_library in ['static', 'both']
-  libsoup2_dep = dependency('libsoup-2.4', version : '>=2.48',
-                            required : false, fallback : ['libsoup', 'libsoup_dep'],
-                            default_options: ['sysprof=disabled'])
-  libsoup3_dep = dependency('libsoup-3.0', required : false,
-                            fallback : ['libsoup3', 'libsoup_dep'])
-
-  if libsoup3_dep.found()
-    soup_dep = libsoup3_dep
-    static_soup_loader_args = ['-DSTATIC_SOUP=3']
-  elif libsoup2_dep.found()
-    soup_dep = libsoup2_dep
-    static_soup_loader_args = ['-DSTATIC_SOUP=2']
-  else
-    if adaptivedemux2_opt.enabled()
-      error(f'adaptivedemux2: Either libsoup2 or libsoup3 is needed for build with default_library=@default_library@')
-    endif
-
-    message(f'Not building adaptivedemux2 plugin: either libsoup2 or libsoup3 is needed for build with default_library=@default_library@')
-    subdir_done()
+if host_system != 'linux' or default_library in ['static', 'both']
+  if soup_ver_opt in ['auto', '3']
+    libsoup3_dep = dependency('libsoup-3.0', allow_fallback: true,
+                              required: soup_ver_opt == '3' and soup_opt.enabled())
+  endif
+  if soup_ver_opt in ['auto', '2']
+    libsoup2_dep = dependency('libsoup-2.4', version : '>=2.48', allow_fallback: true,
+                              default_options: ['sysprof=disabled'],
+                              required: soup_ver_opt == '2' and soup_opt.enabled())
   endif
 
-  # Static plugin links to libsoup directly at build time
-  adaptivedemux2_static = static_library('gstadaptivedemux2',
-    plugin_sources,
-    include_directories: [configinc, libsinc],
-    c_args: [gst_plugins_good_args, soup_loader_args, soup_loader_args, hls_cargs,
-             '-DGST_ISOFF_API=G_GNUC_INTERNAL'],
-    dependencies: [gst_dep, gsttag_dep, gstnet_dep, gstbase_dep,
-                   gstpbutils_dep, gstapp_dep, soup_dep,
-                   gio_dep, adaptive_xml2_dep,
-                   hls_crypto_dep, libm],
-    install: true,
-    install_dir: plugins_install_dir)
+  if libsoup3_dep.found()
+    soup_link_deps += [libsoup3_dep]
+    soup_link_args = ['-DLINK_SOUP=3']
+  elif libsoup2_dep.found()
+    soup_link_deps += [libsoup2_dep]
+    soup_link_args = ['-DLINK_SOUP=2']
+  else
+    if adaptivedemux2_opt.enabled()
+      error(f'adaptivedemux2: Either libsoup2 or libsoup3 is needed')
+    endif
+    message(f'Not building adaptivedemux2 plugin: either libsoup2 or libsoup3 is needed')
+    subdir_done()
+  endif
 endif
 
-if default_library in ['shared', 'both']
-  # Shared plugin doesn't link to libsoup but dlopen()s it at runtime
-  libdl = cc.find_library('dl', required: false)
+# Shared plugin doesn't link to libsoup but dlopen()s it at runtime
+adaptive_kwargs = {
+  'sources': plugin_sources,
+  'include_directories': [configinc, libsinc],
+  'install': true,
+  'install_dir': plugins_install_dir,
+}
+adaptive_deps = [gmodule_dep, gst_dep, gsttag_dep, gstnet_dep, gstbase_dep, gstpbutils_dep,
+    gstapp_dep, gio_dep, adaptive_xml2_dep, hls_crypto_dep, libdl, libm]
+adaptive_args = [gst_plugins_good_args, soup_loader_args, hls_cargs,
+    '-DGST_ISOFF_API=G_GNUC_INTERNAL']
 
-  adaptivedemux2_shared = shared_library('gstadaptivedemux2',
-    plugin_sources,
-    include_directories: [configinc, libsinc],
-    c_args: [gst_plugins_good_args, soup_loader_args, hls_cargs,
-             '-DGST_ISOFF_API=G_GNUC_INTERNAL'],
-    dependencies: [gsttag_dep, gstnet_dep, gstbase_dep,
-                   gstpbutils_dep, gstapp_dep, gio_dep,
-                   gmodule_dep, adaptive_xml2_dep,
-                   hls_crypto_dep, libm, libdl],
-    install: true,
-    install_dir: plugins_install_dir)
+if host_system != 'linux'
+    adaptivedemux2 = library('gstadaptivedemux2',
+      c_args: [adaptive_args, soup_link_args],
+      dependencies: [adaptive_deps, soup_link_deps],
+      kwargs: adaptive_kwargs)
+    adaptivedemux2_static = adaptivedemux2
+    adaptivedemux2_shared = adaptivedemux2
+else
+  if default_library in ['static', 'both']
+    # Static plugin links to libsoup directly at build time
+    adaptivedemux2_static = static_library('gstadaptivedemux2',
+      c_args: [adaptive_args, soup_link_args],
+      dependencies: [adaptive_deps, soup_link_deps],
+      kwargs: adaptive_kwargs)
+  endif
+  if default_library in ['shared', 'both']
+    adaptivedemux2_shared = shared_library('gstadaptivedemux2',
+      c_args: adaptive_args,
+      dependencies: adaptive_deps,
+      kwargs: adaptive_kwargs)
+  endif
 endif
 
 # Use the static library to generate the .pc file if it's available. The shared

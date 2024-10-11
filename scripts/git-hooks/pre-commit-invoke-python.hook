@@ -1,0 +1,12 @@
+#!/bin/bash
+
+PYTHON="python3"
+if [[ $OS =~ Windows ]]; then
+  if type -p py &>/dev/null; then
+    PYTHON="py -3"
+  elif type -p python &>/dev/null; then
+    PYTHON="python"
+  fi
+fi
+
+$PYTHON "`dirname $0`/pre-commit-python.hook"

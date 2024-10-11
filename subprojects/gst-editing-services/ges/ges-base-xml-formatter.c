@@ -546,7 +546,7 @@ _loading_done_cb (GESFormatter * self)
 }
 
 static gboolean
-_set_child_property (GQuark field_id, const GValue * value,
+_set_child_property (const GstIdStr * fieldname, const GValue * value,
     GESTimelineElement * tlelement)
 {
   GParamSpec *pspec;
@@ -554,11 +554,11 @@ _set_child_property (GQuark field_id, const GValue * value,
 
   /* FIXME: error handling? */
   if (!ges_timeline_element_lookup_child (tlelement,
-          g_quark_to_string (field_id), &object, &pspec)) {
+          gst_id_str_as_str (fieldname), &object, &pspec)) {
 #ifndef GST_DISABLE_GST_DEBUG
     gchar *tmp = gst_value_serialize (value);
     GST_ERROR_OBJECT (tlelement, "Could not set %s=%s",
-        g_quark_to_string (field_id), tmp);
+        gst_id_str_as_str (fieldname), tmp);
     g_free (tmp);
 #endif
     return TRUE;
@@ -571,9 +571,10 @@ _set_child_property (GQuark field_id, const GValue * value,
 }
 
 gboolean
-set_property_foreach (GQuark field_id, const GValue * value, GObject * object)
+set_property_foreach (const GstIdStr * fieldname, const GValue * value,
+    GObject * object)
 {
-  g_object_set_property (object, g_quark_to_string (field_id), value);
+  g_object_set_property (object, gst_id_str_as_str (fieldname), value);
   return TRUE;
 }
 
@@ -602,12 +603,12 @@ _add_object_to_layer (GESBaseXmlFormatterPrivate * priv, const gchar * id,
         metadatas);
 
   if (properties)
-    gst_structure_foreach (properties,
-        (GstStructureForeachFunc) set_property_foreach, clip);
+    gst_structure_foreach_id_str (properties,
+        (GstStructureForeachIdStrFunc) set_property_foreach, clip);
 
   if (children_properties)
-    gst_structure_foreach (children_properties,
-        (GstStructureForeachFunc) _set_child_property, clip);
+    gst_structure_foreach_id_str (children_properties,
+        (GstStructureForeachIdStrFunc) _set_child_property, clip);
 
   g_hash_table_insert (priv->containers, g_strdup (id), gst_object_ref (clip));
   return clip;
@@ -635,8 +636,8 @@ _add_track_element (GESFormatter * self, GESClip * clip,
           GES_TIMELINE_ELEMENT (trackelement)))
     GST_ERROR ("%" GES_FORMAT " could not add child %p while"
         " reloading, this should never happen", GES_ARGS (clip), trackelement);
-  gst_structure_foreach (children_properties,
-      (GstStructureForeachFunc) _set_child_property, trackelement);
+  gst_structure_foreach_id_str (children_properties,
+      (GstStructureForeachIdStrFunc) _set_child_property, trackelement);
 
   if (properties) {
     gboolean has_internal_source;
@@ -649,8 +650,8 @@ _add_track_element (GESFormatter * self, GESClip * clip,
             &has_internal_source) && has_internal_source)
       g_object_set (trackelement, "has-internal-source", has_internal_source,
           NULL);
-    gst_structure_foreach (properties,
-        (GstStructureForeachFunc) set_property_foreach, trackelement);
+    gst_structure_foreach_id_str (properties,
+        (GstStructureForeachIdStrFunc) set_property_foreach, trackelement);
   }
 }
 
@@ -686,8 +687,8 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
       ges_meta_container_add_metas_from_string (GES_META_CONTAINER (source),
           passet->metadatas);
     if (passet->properties)
-      gst_structure_foreach (passet->properties,
-          (GstStructureForeachFunc) set_property_foreach, source);
+      gst_structure_foreach_id_str (passet->properties,
+          (GstStructureForeachIdStrFunc) set_property_foreach, source);
 
     possible_id = ges_project_try_updating_id (GES_FORMATTER (self)->project,
         source, error);
@@ -922,8 +923,8 @@ ges_base_xml_formatter_set_timeline_properties (GESBaseXmlFormatter * self,
               &auto_transition))
         gst_structure_remove_field (props, "auto-transition");
 
-      gst_structure_foreach (props,
-          (GstStructureForeachFunc) set_property_foreach, timeline);
+      gst_structure_foreach_id_str (props,
+          (GstStructureForeachIdStrFunc) set_property_foreach, timeline);
       gst_structure_free (props);
     }
   }
@@ -977,8 +978,8 @@ ges_base_xml_formatter_add_layer (GESBaseXmlFormatter * self,
             &auto_transition))
       gst_structure_remove_field (properties, "auto-transition");
 
-    gst_structure_foreach (properties,
-        (GstStructureForeachFunc) set_property_foreach, layer);
+    gst_structure_foreach_id_str (properties,
+        (GstStructureForeachIdStrFunc) set_property_foreach, layer);
   }
 
   if (metadatas)
@@ -1047,8 +1048,8 @@ ges_base_xml_formatter_add_track (GESBaseXmlFormatter * self,
     }
     gst_structure_remove_fields (properties, "restriction-caps", "caps",
         "message-forward", NULL);
-    gst_structure_foreach (properties,
-        (GstStructureForeachFunc) set_property_foreach, track);
+    gst_structure_foreach_id_str (properties,
+        (GstStructureForeachIdStrFunc) set_property_foreach, track);
     g_free (restriction);
   }
 
@@ -1133,12 +1134,12 @@ ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
   }
 
   if (properties)
-    gst_structure_foreach (properties,
-        (GstStructureForeachFunc) set_property_foreach, element);
+    gst_structure_foreach_id_str (properties,
+        (GstStructureForeachIdStrFunc) set_property_foreach, element);
 
   if (children_properties)
-    gst_structure_foreach (children_properties,
-        (GstStructureForeachFunc) _set_child_property, element);
+    gst_structure_foreach_id_str (children_properties,
+        (GstStructureForeachIdStrFunc) _set_child_property, element);
 
   if (metadatas)
     ges_meta_container_add_metas_from_string (GES_META_CONTAINER

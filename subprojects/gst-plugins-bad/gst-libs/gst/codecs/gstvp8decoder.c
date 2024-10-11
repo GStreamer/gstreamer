@@ -45,7 +45,7 @@ struct _GstVp8DecoderPrivate
   gboolean wait_keyframe;
   guint preferred_output_delay;
   /* for delayed output */
-  GstQueueArray *output_queue;
+  GstVecDeque *output_queue;
   gboolean is_live;
 
   gboolean input_state_changed;
@@ -117,8 +117,8 @@ gst_vp8_decoder_start (GstVideoDecoder * decoder)
   priv->wait_keyframe = TRUE;
 
   priv->output_queue =
-      gst_queue_array_new_for_struct (sizeof (GstVp8DecoderOutputFrame), 1);
-  gst_queue_array_set_clear_func (priv->output_queue,
+      gst_vec_deque_new_for_struct (sizeof (GstVp8DecoderOutputFrame), 1);
+  gst_vec_deque_set_clear_func (priv->output_queue,
       (GDestroyNotify) gst_vp8_decoder_clear_output_frame);
 
   return TRUE;
@@ -134,7 +134,7 @@ gst_vp8_decoder_reset (GstVp8Decoder * self)
   gst_clear_vp8_picture (&self->alt_ref_picture);
 
   priv->wait_keyframe = TRUE;
-  gst_queue_array_clear (priv->output_queue);
+  gst_vec_deque_clear (priv->output_queue);
 }
 
 static gboolean
@@ -149,7 +149,7 @@ gst_vp8_decoder_stop (GstVideoDecoder * decoder)
   }
 
   gst_vp8_decoder_reset (self);
-  gst_queue_array_free (priv->output_queue);
+  gst_vec_deque_free (priv->output_queue);
 
   return TRUE;
 }
@@ -375,6 +375,7 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
   GstVp8ParserResult pres;
   GstVp8Picture *picture = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn output_ret = GST_FLOW_OK;
   GstVp8DecoderOutputFrame output_frame;
 
   GST_LOG_OBJECT (self,
@@ -403,7 +404,7 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
           GST_PTR_FORMAT, in_buf);
 
       gst_buffer_unmap (in_buf, &map);
-      gst_video_decoder_drop_frame (decoder, frame);
+      gst_video_decoder_release_frame (decoder, frame);
 
       return GST_FLOW_OK;
     }
@@ -421,10 +422,9 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
 
   picture = gst_vp8_picture_new ();
   picture->frame_hdr = frame_hdr;
-  picture->pts = GST_BUFFER_PTS (in_buf);
   picture->data = map.data;
   picture->size = map.size;
-  picture->system_frame_number = frame->system_frame_number;
+  GST_CODEC_PICTURE_FRAME_NUMBER (picture) = frame->system_frame_number;
 
   if (klass->new_picture) {
     ret = klass->new_picture (self, frame, picture);
@@ -473,17 +473,23 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
     /* If subclass didn't update output state at this point,
      * marking this picture as a discont and stores current input state */
     if (priv->input_state_changed) {
-      picture->discont_state = gst_video_codec_state_ref (self->input_state);
+      gst_vp8_picture_set_discont_state (picture, self->input_state);
       priv->input_state_changed = FALSE;
     }
 
     output_frame.frame = frame;
     output_frame.picture = picture;
     output_frame.self = self;
-    gst_queue_array_push_tail_struct (priv->output_queue, &output_frame);
+    gst_vec_deque_push_tail_struct (priv->output_queue, &output_frame);
   }
 
-  gst_vp8_decoder_drain_output_queue (self, priv->preferred_output_delay, &ret);
+  gst_vp8_decoder_drain_output_queue (self, priv->preferred_output_delay,
+      &output_ret);
+  if (output_ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (self,
+        "Output returned %s", gst_flow_get_name (output_ret));
+    return output_ret;
+  }
 
   if (ret == GST_FLOW_ERROR) {
     GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
@@ -509,7 +515,7 @@ error:
           ("Failed to decode data"), (NULL), ret);
     }
 
-    gst_video_decoder_drop_frame (decoder, frame);
+    gst_video_decoder_release_frame (decoder, frame);
 
     return ret;
   }
@@ -524,9 +530,9 @@ gst_vp8_decoder_drain_output_queue (GstVp8Decoder * self, guint num,
 
   g_assert (klass->output_picture);
 
-  while (gst_queue_array_get_length (priv->output_queue) > num) {
+  while (gst_vec_deque_get_length (priv->output_queue) > num) {
     GstVp8DecoderOutputFrame *output_frame = (GstVp8DecoderOutputFrame *)
-        gst_queue_array_pop_head_struct (priv->output_queue);
+        gst_vec_deque_pop_head_struct (priv->output_queue);
     /* Output queued frames whatever the return value is, in order to empty
      * the queue */
     GstFlowReturn flow_ret = klass->output_picture (self,

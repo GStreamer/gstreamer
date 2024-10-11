@@ -417,6 +417,6 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     bs2b,
-    "Improve headphone listening of stereo audio records"
+    "Improve headphone listening of stereo audio records "
     "using the bs2b library.",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

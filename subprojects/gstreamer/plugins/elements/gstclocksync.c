@@ -221,6 +221,7 @@ gst_clock_sync_init (GstClockSync * clocksync)
   gst_pad_set_chain_list_function (clocksync->sinkpad,
       GST_DEBUG_FUNCPTR (gst_clock_sync_chain_list));
   GST_PAD_SET_PROXY_CAPS (clocksync->sinkpad);
+  GST_PAD_SET_PROXY_ALLOCATION (clocksync->sinkpad);
   gst_element_add_pad (GST_ELEMENT (clocksync), clocksync->sinkpad);
 
   clocksync->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
@@ -228,6 +229,7 @@ gst_clock_sync_init (GstClockSync * clocksync)
   gst_pad_set_query_function (clocksync->srcpad, gst_clock_sync_src_query);
 
   GST_PAD_SET_PROXY_CAPS (clocksync->srcpad);
+  GST_PAD_SET_PROXY_ALLOCATION (clocksync->srcpad);
   gst_pad_set_event_function (clocksync->srcpad,
       GST_DEBUG_FUNCPTR (gst_clock_sync_src_event));
   gst_element_add_pad (GST_ELEMENT (clocksync), clocksync->srcpad);

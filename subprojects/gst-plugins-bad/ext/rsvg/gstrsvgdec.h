@@ -57,6 +57,7 @@ struct _GstRsvgDec
   guint64 frame_count;
 
   GstVideoCodecState *input_state;
+  RsvgDimensionData dimension;
 
   GstSegment segment;
   gboolean need_newsegment;

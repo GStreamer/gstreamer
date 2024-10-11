@@ -584,26 +584,65 @@ GST_START_TEST (videotimecode_interval)
 
 GST_END_TEST;
 
-GST_START_TEST (videotimecode_invalid)
+GST_START_TEST (videotimecode_validation)
 {
-  GstVideoTimeCode *tc;
+#define CHECK_TC(fps_n, fps_d, drop, hours, minutes, seconds, frames, valid)    \
+    G_STMT_START { GstVideoTimeCode *tc =                                 \
+        gst_video_time_code_new (fps_n, fps_d, /*latest_daily_jam=*/ NULL,\
+          drop ? GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME                     \
+               : GST_VIDEO_TIME_CODE_FLAGS_NONE,                          \
+          hours, minutes, seconds, frames, /*field_count=*/ 0);           \
+      if (valid)  /* not '...(tc) == valid' for nicer error messages */   \
+        fail_unless (gst_video_time_code_is_valid (tc));                  \
+      else                                                                \
+        fail_if (gst_video_time_code_is_valid (tc));                      \
+      gst_video_time_code_free (tc);                                      \
+    } G_STMT_END
 
-  tc = gst_video_time_code_new (25, 1, NULL,
-      GST_VIDEO_TIME_CODE_FLAGS_NONE, 1, 67, 4, 5, 0);
-  fail_unless (gst_video_time_code_is_valid (tc) == FALSE);
-  gst_video_time_code_free (tc);
-  tc = gst_video_time_code_new (60, 1, NULL,
-      GST_VIDEO_TIME_CODE_FLAGS_NONE, 28, 1, 2, 3, 0);
-  fail_unless (gst_video_time_code_is_valid (tc) == FALSE);
-  gst_video_time_code_free (tc);
-  tc = gst_video_time_code_new (30000, 1001, NULL,
-      GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME, 1, 23, 0, 0, 0);
-  fail_unless (gst_video_time_code_is_valid (tc) == FALSE);
-  gst_video_time_code_free (tc);
-  tc = gst_video_time_code_new (25, 1, NULL,
-      GST_VIDEO_TIME_CODE_FLAGS_NONE, 10, 11, 12, 13, 0);
-  fail_unless (gst_video_time_code_is_valid (tc) == TRUE);
-  gst_video_time_code_free (tc);
+  /* plain vanilla valid */
+  CHECK_TC (25, 1, FALSE, 10, 11, 12, 13, TRUE);
+
+  /* disallowed invalid frame rate */
+  CHECK_TC (25, 0, FALSE, 0, 0, 0, 0, FALSE);
+  /* disallowed unknown frame rate */
+  CHECK_TC (0, 1, FALSE, 0, 0, 0, 0, FALSE);
+  /* disallowed fractional frame rate */
+  CHECK_TC (90000, 1001, FALSE, 0, 0, 0, 0, FALSE);
+  /* allowed fractional frame rate */
+  CHECK_TC (24000, 1001, FALSE, 0, 0, 0, 0, TRUE);
+  /* allowed frame rate less than 1 FPS */
+  CHECK_TC (900, 1000, FALSE, 0, 0, 0, 0, TRUE);
+  /* allowed integer frame rate */
+  CHECK_TC (9000, 100, FALSE, 0, 0, 0, 0, TRUE);
+  /* TODO: CHECK_TC (60060, 1001, FALSE, 0, 0, 0, 0, TRUE);
+   * https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/2823
+   */
+
+  /* 'hours' >= 24 */
+  CHECK_TC (60, 1, FALSE, 28, 1, 2, 3, FALSE);
+  /* 'minutes' >= 60 */
+  CHECK_TC (30, 1, FALSE, 1, 67, 4, 5, FALSE);
+  /* 'seconds' >= 60 */
+  CHECK_TC (25, 1, FALSE, 0, 1, 234, 5, FALSE);
+  /* 'frames' >= FPS */
+  CHECK_TC (24, 1, FALSE, 0, 1, 2, 34, FALSE);
+  /* TODO Add tests for dis-/allowed 'seconds' when FPS<1.0 */
+
+  /* 23.976 is not a drop-frame frame rate */
+  CHECK_TC (24000, 1001, TRUE, 0, 0, 0, 11, FALSE);
+  /* non-dropped frame at 29.97 FPS */
+  CHECK_TC (30000, 1001, TRUE, 0, 20, 0, 0, TRUE);
+  /* dropped frame at 29.97 FPS */
+  CHECK_TC (30000, 1001, TRUE, 0, 25, 0, 1, FALSE);
+  /* non-dropped frame at 59.94 FPS */
+  CHECK_TC (60000, 1001, TRUE, 1, 30, 0, 2, TRUE);
+  /* dropped frame at 59.94 FPS */
+  CHECK_TC (60000, 1001, TRUE, 1, 36, 0, 3, FALSE);
+  /* non-dropped frame at 119.88 FPS */
+  CHECK_TC (120000, 1001, TRUE, 12, 40, 0, 6, TRUE);
+  /* dropped frame at 119.88 FPS */
+  CHECK_TC (120000, 1001, TRUE, 12, 49, 0, 7, FALSE);
+#undef CHECK_TC
 }
 
 GST_END_TEST;
@@ -797,7 +836,7 @@ gst_videotimecode_suite (void)
   tcase_add_test (tc, videotimecode_dailyjam_distance);
   tcase_add_test (tc, videotimecode_serialize_deserialize);
   tcase_add_test (tc, videotimecode_interval);
-  tcase_add_test (tc, videotimecode_invalid);
+  tcase_add_test (tc, videotimecode_validation);
 
   tcase_add_test (tc, videotimecode_from_date_time_1s);
   tcase_add_test (tc, videotimecode_from_date_time_halfsecond);

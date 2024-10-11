@@ -744,8 +744,8 @@ gst_pulsering_stream_latency_cb (pa_stream * s, void *userdata)
      * less. One concern here is that latency updates happen every 100ms, which
      * means segdone is not updated very often, but increasing the update
      * frequency would mean more communication overhead. */
-    g_atomic_int_set (&ringbuf->segdone,
-        (int) gst_util_uint64_scale_ceil (info->read_index, 1,
+    gst_audio_ring_buffer_set_segdone (ringbuf,
+        gst_util_uint64_scale_ceil (info->read_index, 1,
             ringbuf->spec.segsize));
   }
 
@@ -1187,10 +1187,9 @@ gst_pulseringbuffer_clear (GstAudioRingBuffer * buf)
   pa_threaded_mainloop_unlock (mainloop);
 }
 
-#if 0
-/* called from pulse thread with the mainloop lock */
+/* called from pulse thread WITHOUT the mainloop lock */
 static void
-mainloop_enter_defer_cb (pa_mainloop_api * api, void *userdata)
+mainloop_enter_defer_cb (pa_threaded_mainloop * loop, void *userdata)
 {
   GstPulseSink *pulsesink = GST_PULSESINK (userdata);
   GstMessage *message;
@@ -1206,11 +1205,10 @@ mainloop_enter_defer_cb (pa_mainloop_api * api, void *userdata)
 
   gst_element_post_message (GST_ELEMENT (pulsesink), message);
 
-  g_return_if_fail (pulsesink->defer_pending);
-  pulsesink->defer_pending--;
+  g_return_if_fail (g_atomic_int_get (&pulsesink->defer_pending));
+  g_atomic_int_dec_and_test (&pulsesink->defer_pending);
   pa_threaded_mainloop_signal (mainloop, 0);
 }
-#endif
 
 /* start/resume playback ASAP, we don't uncork here but in the commit method */
 static gboolean
@@ -1232,19 +1230,14 @@ gst_pulseringbuffer_start (GstAudioRingBuffer * buf)
       g_atomic_int_get (&GST_AUDIO_BASE_SINK (psink)->eos_rendering))
     gst_pulsering_set_corked (pbuf, FALSE, FALSE);
 
-#if 0
+#if PA_CHECK_VERSION(13, 0, 0)
   GST_DEBUG_OBJECT (psink, "scheduling stream status");
-  psink->defer_pending++;
-  pa_mainloop_api_once (pa_threaded_mainloop_get_api (mainloop),
-      mainloop_enter_defer_cb, psink);
-
-  /* Wait for the stream status message to be posted. This needs to be done
-   * synchronously because the callback will take the mainloop lock
-   * (implicitly) and then take the GST_OBJECT_LOCK. Everywhere else, we take
-   * the locks in the reverse order, so not doing this synchronously could
-   * cause a deadlock. */
-  GST_DEBUG_OBJECT (psink, "waiting for stream status (ENTER) to be posted");
-  pa_threaded_mainloop_wait (mainloop);
+  g_atomic_int_inc (&psink->defer_pending);
+  /* We'll emit this in the mainloop thread so applications have a callback in
+   * that context. We emit this without the mainloop locked -- if we did not,
+   * then the mainloop lock would be implicitly taken before the object lock
+   * (during message emission), causing a deadlock */
+  pa_threaded_mainloop_once_unlocked (mainloop, mainloop_enter_defer_cb, psink);
 #endif
 
   pa_threaded_mainloop_unlock (mainloop);
@@ -1278,10 +1271,9 @@ gst_pulseringbuffer_pause (GstAudioRingBuffer * buf)
   return res;
 }
 
-#if 0
-/* called from pulse thread with the mainloop lock */
+/* called from pulse thread WITHOUT the mainloop lock */
 static void
-mainloop_leave_defer_cb (pa_mainloop_api * api, void *userdata)
+mainloop_leave_defer_cb (pa_threaded_mainloop * loop, void *userdata)
 {
   GstPulseSink *pulsesink = GST_PULSESINK (userdata);
   GstMessage *message;
@@ -1297,11 +1289,10 @@ mainloop_leave_defer_cb (pa_mainloop_api * api, void *userdata)
 
   gst_element_post_message (GST_ELEMENT (pulsesink), message);
 
-  g_return_if_fail (pulsesink->defer_pending);
-  pulsesink->defer_pending--;
+  g_return_if_fail (g_atomic_int_get (&pulsesink->defer_pending));
+  g_atomic_int_dec_and_test (&pulsesink->defer_pending);
   pa_threaded_mainloop_signal (mainloop, 0);
 }
-#endif
 
 /* stop playback, we flush everything. */
 static gboolean
@@ -1349,19 +1340,14 @@ cleanup:
     pa_operation_cancel (o);
     pa_operation_unref (o);
   }
-#if 0
+#if PA_CHECK_VERSION(13, 0, 0)
   GST_DEBUG_OBJECT (psink, "scheduling stream status");
-  psink->defer_pending++;
-  pa_mainloop_api_once (pa_threaded_mainloop_get_api (mainloop),
-      mainloop_leave_defer_cb, psink);
-
-  /* Wait for the stream status message to be posted. This needs to be done
-   * synchronously because the callback will take the mainloop lock
-   * (implicitly) and then take the GST_OBJECT_LOCK. Everywhere else, we take
-   * the locks in the reverse order, so not doing this synchronously could
-   * cause a deadlock. */
-  GST_DEBUG_OBJECT (psink, "waiting for stream status (LEAVE) to be posted");
-  pa_threaded_mainloop_wait (mainloop);
+  g_atomic_int_inc (&psink->defer_pending);
+  /* We'll emit this in the mainloop thread so applications have a callback in
+   * that context. We emit this without the mainloop locked -- if we did not,
+   * then the mainloop lock would be implicitly taken before the object lock
+   * (during message emission), causing a deadlock */
+  pa_threaded_mainloop_once_unlocked (mainloop, mainloop_leave_defer_cb, psink);
 #endif
 
   pa_threaded_mainloop_unlock (mainloop);
@@ -3214,7 +3200,7 @@ gst_pulsesink_release_mainloop (GstPulseSink * psink)
     return;
 
   pa_threaded_mainloop_lock (mainloop);
-  while (psink->defer_pending) {
+  while (g_atomic_int_get (&psink->defer_pending)) {
     GST_DEBUG_OBJECT (psink, "waiting for stream status message emission");
     pa_threaded_mainloop_wait (mainloop);
   }

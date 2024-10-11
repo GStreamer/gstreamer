@@ -245,7 +245,10 @@ class FindBarFeature (FeatureBase):
 
         path = Gtk.TreePath((line_index,))
 
-        start_path, end_path = view.get_visible_range()
+        visible_range = view.get_visible_range()
+        if visible_range is None:
+            return
+        start_path, end_path = visible_range
 
         if path >= start_path and path <= end_path:
             self.logger.debug(
@@ -330,7 +333,10 @@ class FindBarFeature (FeatureBase):
         self.scroll_view_to_line(self.prev_match)
         self.prev_match = None
 
-        start_path = self.log_view.get_visible_range()[0]
+        visible_range = self.log_view.get_visible_range()
+        if visible_range is None:
+            return
+        start_path = visible_range[0]
         new_position = start_path[0] - 1
         self.start_search_operation(start_position=new_position,
                                     forward=False)
@@ -346,7 +352,10 @@ class FindBarFeature (FeatureBase):
         self.scroll_view_to_line(self.next_match)
         self.next_match = None
 
-        end_path = self.log_view.get_visible_range()[1]
+        visible_range = self.log_view.get_visible_range()
+        if visible_range is None:
+            return
+        end_path = visible_range[1]
         new_position = end_path[0] + 1
         self.start_search_operation(start_position=new_position,
                                     forward=True)
@@ -354,7 +363,10 @@ class FindBarFeature (FeatureBase):
 
         # model = self.log_view.get_model ()
 
-        # start_path, end_path = self.log_view.get_visible_range ()
+        # visible_range = self.log_view.get_visible_range()
+        # if visible_range is None:
+        #     return
+        # start_path, end_path = visible_range
         # start_index, end_index = start_path[0], end_path[0]
 
         # for line_index in self.matches:
@@ -392,7 +404,10 @@ class FindBarFeature (FeatureBase):
             self.update_sensitivity()
             self.scroll_match = True
 
-            start_path = self.log_view.get_visible_range()[0]
+            visible_range = self.log_view.get_visible_range()
+            if visible_range is None:
+                return
+            start_path = visible_range[0]
             self.start_search_operation(
                 search_text, start_position=start_path[0])
             self.bar.status_searching()

@@ -50,10 +50,10 @@ namespace Gst.PbUtils {
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_info_get_audio_streams(IntPtr raw);
 
-		public Gst.PbUtils.DiscovererStreamInfo[] AudioStreams { 
+		public Gst.PbUtils.DiscovererAudioInfo[] AudioStreams { 
 			get {
 				IntPtr raw_ret = gst_discoverer_info_get_audio_streams(Handle);
-				Gst.PbUtils.DiscovererStreamInfo[] ret = (Gst.PbUtils.DiscovererStreamInfo[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), true, true, typeof(Gst.PbUtils.DiscovererStreamInfo));
+				Gst.PbUtils.DiscovererAudioInfo[] ret = (Gst.PbUtils.DiscovererAudioInfo[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), true, true, typeof(Gst.PbUtils.DiscovererAudioInfo));
 				return ret;
 			}
 		}
@@ -61,10 +61,10 @@ namespace Gst.PbUtils {
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_info_get_container_streams(IntPtr raw);
 
-		public Gst.PbUtils.DiscovererStreamInfo[] ContainerStreams { 
+		public Gst.PbUtils.DiscovererContainerInfo[] ContainerStreams { 
 			get {
 				IntPtr raw_ret = gst_discoverer_info_get_container_streams(Handle);
-				Gst.PbUtils.DiscovererStreamInfo[] ret = (Gst.PbUtils.DiscovererStreamInfo[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), true, true, typeof(Gst.PbUtils.DiscovererStreamInfo));
+				Gst.PbUtils.DiscovererContainerInfo[] ret = (Gst.PbUtils.DiscovererContainerInfo[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), true, true, typeof(Gst.PbUtils.DiscovererContainerInfo));
 				return ret;
 			}
 		}
@@ -170,10 +170,10 @@ namespace Gst.PbUtils {
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_info_get_subtitle_streams(IntPtr raw);
 
-		public Gst.PbUtils.DiscovererStreamInfo[] SubtitleStreams { 
+		public Gst.PbUtils.DiscovererSubtitleInfo[] SubtitleStreams { 
 			get {
 				IntPtr raw_ret = gst_discoverer_info_get_subtitle_streams(Handle);
-				Gst.PbUtils.DiscovererStreamInfo[] ret = (Gst.PbUtils.DiscovererStreamInfo[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), true, true, typeof(Gst.PbUtils.DiscovererStreamInfo));
+				Gst.PbUtils.DiscovererSubtitleInfo[] ret = (Gst.PbUtils.DiscovererSubtitleInfo[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), true, true, typeof(Gst.PbUtils.DiscovererSubtitleInfo));
 				return ret;
 			}
 		}
@@ -181,6 +181,7 @@ namespace Gst.PbUtils {
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_info_get_tags(IntPtr raw);
 
+		[Obsolete]
 		public Gst.TagList Tags { 
 			get {
 				IntPtr raw_ret = gst_discoverer_info_get_tags(Handle);
@@ -214,10 +215,10 @@ namespace Gst.PbUtils {
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_discoverer_info_get_video_streams(IntPtr raw);
 
-		public Gst.PbUtils.DiscovererStreamInfo[] VideoStreams { 
+		public Gst.PbUtils.DiscovererVideoInfo[] VideoStreams { 
 			get {
 				IntPtr raw_ret = gst_discoverer_info_get_video_streams(Handle);
-				Gst.PbUtils.DiscovererStreamInfo[] ret = (Gst.PbUtils.DiscovererStreamInfo[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), true, true, typeof(Gst.PbUtils.DiscovererStreamInfo));
+				Gst.PbUtils.DiscovererVideoInfo[] ret = (Gst.PbUtils.DiscovererVideoInfo[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), true, true, typeof(Gst.PbUtils.DiscovererVideoInfo));
 				return ret;
 			}
 		}

@@ -74,11 +74,7 @@ public:
 
   /* Entry point for drawing text */
   STDMETHODIMP Draw (const D2D1_POINT_2F & origin,
-                     const D2D1_SIZE_F & scale,
                      const RECT & client_rect,
-                     const D2D1_COLOR_F & background_color,
-                     const D2D1_RECT_F & background_padding,
-                     gboolean enable_color_font,
                      IDWriteTextLayout * layout,
                      ID2D1RenderTarget * target);
 

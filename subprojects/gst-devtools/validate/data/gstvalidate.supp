@@ -27,6 +27,17 @@
 }
 
 {
+   This use of uninitialized memory is fixed in latest GLib
+   Memcheck:Value8
+   fun:UnknownInlinedFun
+   fun:UnknownInlinedFun
+   fun:UnknownInlinedFun
+   fun:g_checksum_get_string
+   fun:g_compute_checksum_for_data
+   ...
+}
+
+{
    Leak in mesa fixed with http://lists.freedesktop.org/archives/mesa-dev/2015-April/082100.html
    Memcheck:Leak
    ...

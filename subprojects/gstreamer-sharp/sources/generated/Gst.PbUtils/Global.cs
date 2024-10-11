@@ -12,18 +12,20 @@ namespace Gst.PbUtils {
 	public partial class Global {
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_codec_utils_aac_caps_set_level_and_profile(IntPtr caps, byte[] audio_config, uint len);
+		static extern bool gst_codec_utils_aac_caps_set_level_and_profile(IntPtr caps, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] audio_config, uint len);
 
-		public static bool CodecUtilsAacCapsSetLevelAndProfile(Gst.Caps caps, byte[] audio_config, uint len) {
+		public static bool CodecUtilsAacCapsSetLevelAndProfile(Gst.Caps caps, byte[] audio_config) {
+			uint len = (uint)(audio_config == null ? 0 : audio_config.Length);
 			bool raw_ret = gst_codec_utils_aac_caps_set_level_and_profile(caps == null ? IntPtr.Zero : caps.Handle, audio_config, len);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern uint gst_codec_utils_aac_get_channels(byte[] audio_config, uint len);
+		static extern uint gst_codec_utils_aac_get_channels([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] audio_config, uint len);
 
-		public static uint CodecUtilsAacGetChannels(byte[] audio_config, uint len) {
+		public static uint CodecUtilsAacGetChannels(byte[] audio_config) {
+			uint len = (uint)(audio_config == null ? 0 : audio_config.Length);
 			uint raw_ret = gst_codec_utils_aac_get_channels(audio_config, len);
 			uint ret = raw_ret;
 			return ret;
@@ -39,27 +41,30 @@ namespace Gst.PbUtils {
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_codec_utils_aac_get_level(byte[] audio_config, uint len);
+		static extern IntPtr gst_codec_utils_aac_get_level([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] audio_config, uint len);
 
-		public static string CodecUtilsAacGetLevel(byte[] audio_config, uint len) {
+		public static string CodecUtilsAacGetLevel(byte[] audio_config) {
+			uint len = (uint)(audio_config == null ? 0 : audio_config.Length);
 			IntPtr raw_ret = gst_codec_utils_aac_get_level(audio_config, len);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
 			return ret;
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_codec_utils_aac_get_profile(byte[] audio_config, uint len);
+		static extern IntPtr gst_codec_utils_aac_get_profile([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] audio_config, uint len);
 
-		public static string CodecUtilsAacGetProfile(byte[] audio_config, uint len) {
+		public static string CodecUtilsAacGetProfile(byte[] audio_config) {
+			uint len = (uint)(audio_config == null ? 0 : audio_config.Length);
 			IntPtr raw_ret = gst_codec_utils_aac_get_profile(audio_config, len);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
 			return ret;
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern uint gst_codec_utils_aac_get_sample_rate(byte[] audio_config, uint len);
+		static extern uint gst_codec_utils_aac_get_sample_rate([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] audio_config, uint len);
 
-		public static uint CodecUtilsAacGetSampleRate(byte[] audio_config, uint len) {
+		public static uint CodecUtilsAacGetSampleRate(byte[] audio_config) {
+			uint len = (uint)(audio_config == null ? 0 : audio_config.Length);
 			uint raw_ret = gst_codec_utils_aac_get_sample_rate(audio_config, len);
 			uint ret = raw_ret;
 			return ret;
@@ -75,18 +80,40 @@ namespace Gst.PbUtils {
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_codec_utils_h264_caps_set_level_and_profile(IntPtr caps, byte[] sps, uint len);
+		static extern IntPtr gst_codec_utils_caps_from_mime_codec(IntPtr codecs_field);
 
-		public static bool CodecUtilsH264CapsSetLevelAndProfile(Gst.Caps caps, byte[] sps, uint len) {
+		public static Gst.Caps CodecUtilsCapsFromMimeCodec(string codecs_field) {
+			IntPtr native_codecs_field = GLib.Marshaller.StringToPtrGStrdup (codecs_field);
+			IntPtr raw_ret = gst_codec_utils_caps_from_mime_codec(native_codecs_field);
+			Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
+			GLib.Marshaller.Free (native_codecs_field);
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_codec_utils_caps_get_mime_codec(IntPtr caps);
+
+		public static string CodecUtilsCapsGetMimeCodec(Gst.Caps caps) {
+			IntPtr raw_ret = gst_codec_utils_caps_get_mime_codec(caps == null ? IntPtr.Zero : caps.Handle);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_codec_utils_h264_caps_set_level_and_profile(IntPtr caps, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] sps, uint len);
+
+		public static bool CodecUtilsH264CapsSetLevelAndProfile(Gst.Caps caps, byte[] sps) {
+			uint len = (uint)(sps == null ? 0 : sps.Length);
 			bool raw_ret = gst_codec_utils_h264_caps_set_level_and_profile(caps == null ? IntPtr.Zero : caps.Handle, sps, len);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_codec_utils_h264_get_level(byte[] sps, uint len);
+		static extern IntPtr gst_codec_utils_h264_get_level([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] sps, uint len);
 
-		public static string CodecUtilsH264GetLevel(byte[] sps, uint len) {
+		public static string CodecUtilsH264GetLevel(byte[] sps) {
+			uint len = (uint)(sps == null ? 0 : sps.Length);
 			IntPtr raw_ret = gst_codec_utils_h264_get_level(sps, len);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
 			return ret;
@@ -104,27 +131,40 @@ namespace Gst.PbUtils {
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_codec_utils_h264_get_profile(byte[] sps, uint len);
+		static extern IntPtr gst_codec_utils_h264_get_profile([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] sps, uint len);
 
-		public static string CodecUtilsH264GetProfile(byte[] sps, uint len) {
+		public static string CodecUtilsH264GetProfile(byte[] sps) {
+			uint len = (uint)(sps == null ? 0 : sps.Length);
 			IntPtr raw_ret = gst_codec_utils_h264_get_profile(sps, len);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
 			return ret;
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_codec_utils_h265_caps_set_level_tier_and_profile(IntPtr caps, byte[] profile_tier_level, uint len);
+		static extern bool gst_codec_utils_h264_get_profile_flags_level([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] codec_data, uint len, out byte profile, out byte flags, out byte level);
 
-		public static bool CodecUtilsH265CapsSetLevelTierAndProfile(Gst.Caps caps, byte[] profile_tier_level, uint len) {
+		public static bool CodecUtilsH264GetProfileFlagsLevel(byte[] codec_data, out byte profile, out byte flags, out byte level) {
+			uint len = (uint)(codec_data == null ? 0 : codec_data.Length);
+			bool raw_ret = gst_codec_utils_h264_get_profile_flags_level(codec_data, len, out profile, out flags, out level);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_codec_utils_h265_caps_set_level_tier_and_profile(IntPtr caps, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] profile_tier_level, uint len);
+
+		public static bool CodecUtilsH265CapsSetLevelTierAndProfile(Gst.Caps caps, byte[] profile_tier_level) {
+			uint len = (uint)(profile_tier_level == null ? 0 : profile_tier_level.Length);
 			bool raw_ret = gst_codec_utils_h265_caps_set_level_tier_and_profile(caps == null ? IntPtr.Zero : caps.Handle, profile_tier_level, len);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_codec_utils_h265_get_level(byte[] profile_tier_level, uint len);
+		static extern IntPtr gst_codec_utils_h265_get_level([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] profile_tier_level, uint len);
 
-		public static string CodecUtilsH265GetLevel(byte[] profile_tier_level, uint len) {
+		public static string CodecUtilsH265GetLevel(byte[] profile_tier_level) {
+			uint len = (uint)(profile_tier_level == null ? 0 : profile_tier_level.Length);
 			IntPtr raw_ret = gst_codec_utils_h265_get_level(profile_tier_level, len);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
 			return ret;
@@ -142,45 +182,50 @@ namespace Gst.PbUtils {
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_codec_utils_h265_get_profile(byte[] profile_tier_level, uint len);
+		static extern IntPtr gst_codec_utils_h265_get_profile([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] profile_tier_level, uint len);
 
-		public static string CodecUtilsH265GetProfile(byte[] profile_tier_level, uint len) {
+		public static string CodecUtilsH265GetProfile(byte[] profile_tier_level) {
+			uint len = (uint)(profile_tier_level == null ? 0 : profile_tier_level.Length);
 			IntPtr raw_ret = gst_codec_utils_h265_get_profile(profile_tier_level, len);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
 			return ret;
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_codec_utils_h265_get_tier(byte[] profile_tier_level, uint len);
+		static extern IntPtr gst_codec_utils_h265_get_tier([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] profile_tier_level, uint len);
 
-		public static string CodecUtilsH265GetTier(byte[] profile_tier_level, uint len) {
+		public static string CodecUtilsH265GetTier(byte[] profile_tier_level) {
+			uint len = (uint)(profile_tier_level == null ? 0 : profile_tier_level.Length);
 			IntPtr raw_ret = gst_codec_utils_h265_get_tier(profile_tier_level, len);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
 			return ret;
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_codec_utils_mpeg4video_caps_set_level_and_profile(IntPtr caps, byte[] vis_obj_seq, uint len);
+		static extern bool gst_codec_utils_mpeg4video_caps_set_level_and_profile(IntPtr caps, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] vis_obj_seq, uint len);
 
-		public static bool CodecUtilsMpeg4videoCapsSetLevelAndProfile(Gst.Caps caps, byte[] vis_obj_seq, uint len) {
+		public static bool CodecUtilsMpeg4videoCapsSetLevelAndProfile(Gst.Caps caps, byte[] vis_obj_seq) {
+			uint len = (uint)(vis_obj_seq == null ? 0 : vis_obj_seq.Length);
 			bool raw_ret = gst_codec_utils_mpeg4video_caps_set_level_and_profile(caps == null ? IntPtr.Zero : caps.Handle, vis_obj_seq, len);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_codec_utils_mpeg4video_get_level(byte[] vis_obj_seq, uint len);
+		static extern IntPtr gst_codec_utils_mpeg4video_get_level([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] vis_obj_seq, uint len);
 
-		public static string CodecUtilsMpeg4videoGetLevel(byte[] vis_obj_seq, uint len) {
+		public static string CodecUtilsMpeg4videoGetLevel(byte[] vis_obj_seq) {
+			uint len = (uint)(vis_obj_seq == null ? 0 : vis_obj_seq.Length);
 			IntPtr raw_ret = gst_codec_utils_mpeg4video_get_level(vis_obj_seq, len);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
 			return ret;
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_codec_utils_mpeg4video_get_profile(byte[] vis_obj_seq, uint len);
+		static extern IntPtr gst_codec_utils_mpeg4video_get_profile([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] vis_obj_seq, uint len);
 
-		public static string CodecUtilsMpeg4videoGetProfile(byte[] vis_obj_seq, uint len) {
+		public static string CodecUtilsMpeg4videoGetProfile(byte[] vis_obj_seq) {
+			uint len = (uint)(vis_obj_seq == null ? 0 : vis_obj_seq.Length);
 			IntPtr raw_ret = gst_codec_utils_mpeg4video_get_profile(vis_obj_seq, len);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
 			return ret;
@@ -223,6 +268,24 @@ namespace Gst.PbUtils {
 
 		public static Gst.Buffer CodecUtilsOpusCreateHeader(uint rate, byte channels, byte channel_mapping_family, byte stream_count, byte coupled_count, ushort pre_skip, short output_gain) {
 			return CodecUtilsOpusCreateHeader (rate, channels, channel_mapping_family, stream_count, coupled_count, null, pre_skip, output_gain);
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_codec_utils_opus_parse_caps(IntPtr caps, out uint rate, out byte channels, out byte channel_mapping_family, out byte stream_count, out byte coupled_count, [MarshalAs(UnmanagedType.LPArray, SizeConst=256)]out byte[] channel_mapping);
+
+		public static bool CodecUtilsOpusParseCaps(Gst.Caps caps, out uint rate, out byte channels, out byte channel_mapping_family, out byte stream_count, out byte coupled_count, out byte[] channel_mapping) {
+			bool raw_ret = gst_codec_utils_opus_parse_caps(caps == null ? IntPtr.Zero : caps.Handle, out rate, out channels, out channel_mapping_family, out stream_count, out coupled_count, out channel_mapping);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_codec_utils_opus_parse_header(IntPtr header, out uint rate, out byte channels, out byte channel_mapping_family, out byte stream_count, out byte coupled_count, [MarshalAs(UnmanagedType.LPArray, SizeConst=256)]out byte[] channel_mapping, out ushort pre_skip, out short output_gain);
+
+		public static bool CodecUtilsOpusParseHeader(Gst.Buffer header, out uint rate, out byte channels, out byte channel_mapping_family, out byte stream_count, out byte coupled_count, out byte[] channel_mapping, out ushort pre_skip, out short output_gain) {
+			bool raw_ret = gst_codec_utils_opus_parse_header(header == null ? IntPtr.Zero : header.Handle, out rate, out channels, out channel_mapping_family, out stream_count, out coupled_count, out channel_mapping, out pre_skip, out output_gain);
+			bool ret = raw_ret;
+			return ret;
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -421,6 +484,15 @@ namespace Gst.PbUtils {
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_pb_utils_get_caps_description_flags(IntPtr caps);
+
+		public static Gst.PbUtils.PbUtilsCapsDescriptionFlags PbUtilsGetCapsDescriptionFlags(Gst.Caps caps) {
+			int raw_ret = gst_pb_utils_get_caps_description_flags(caps == null ? IntPtr.Zero : caps.Handle);
+			Gst.PbUtils.PbUtilsCapsDescriptionFlags ret = (Gst.PbUtils.PbUtilsCapsDescriptionFlags) raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pb_utils_get_codec_description(IntPtr caps);
 
 		public static string PbUtilsGetCodecDescription(Gst.Caps caps) {
@@ -454,6 +526,15 @@ namespace Gst.PbUtils {
 
 		public static string PbUtilsGetEncoderDescription(Gst.Caps caps) {
 			IntPtr raw_ret = gst_pb_utils_get_encoder_description(caps == null ? IntPtr.Zero : caps.Handle);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_pb_utils_get_file_extension_from_caps(IntPtr caps);
+
+		public static string PbUtilsGetFileExtensionFromCaps(Gst.Caps caps) {
+			IntPtr raw_ret = gst_pb_utils_get_file_extension_from_caps(caps == null ? IntPtr.Zero : caps.Handle);
 			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
 			return ret;
 		}

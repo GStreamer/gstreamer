@@ -37,6 +37,30 @@
  * returns or it could be called later from another thread. The signature of
  * this callback GstInsertBinCallback().
  *
+ * Apart from the library API, since 1.24 insertbin can also be found in the
+ * registry:
+ *
+ * ``` C
+ *   GstElement *pipeline, *insertbin, *videoflip;
+ *
+ *   gst_init (NULL, NULL);
+ *   pipeline =
+ *       gst_parse_launch ("videotestsrc ! insertbin name=i ! autovideosink",
+ *       NULL);
+ *
+ *   ...
+ *
+ *   insertbin = gst_bin_get_by_name (GST_BIN (pipeline), "i");
+ *   videoflip = gst_element_factory_make ("videoflip", NULL);
+ *
+ *   ...
+ *
+ *   g_object_set (videoflip, "method", 1, NULL);
+ *   g_signal_emit_by_name (insertbin, "append", videoflip, NULL, NULL);
+ *
+ *   ...
+ * ```
+ *
  * Since: 1.2
  */
 
@@ -152,6 +176,8 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * in the bin.
    *
    * Same as gst_insert_bin_prepend()
+   *
+   * Since: 1.2
    */
   signals[SIG_PREPEND] = g_signal_new_class_handler ("prepend",
       G_TYPE_FROM_CLASS (klass),
@@ -172,6 +198,8 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * in the bin.
    *
    * Same as gst_insert_bin_append()
+   *
+   * Since: 1.2
    */
   signals[SIG_APPEND] = g_signal_new_class_handler ("append",
       G_TYPE_FROM_CLASS (klass),
@@ -193,6 +221,8 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * element in the bin.
    *
    * Same as gst_insert_bin_insert_before()
+   *
+   * Since: 1.2
    */
   signals[SIG_INSERT_BEFORE] = g_signal_new_class_handler ("insert-before",
       G_TYPE_FROM_CLASS (klass),
@@ -216,6 +246,8 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * element in the bin.
    *
    * Same as gst_insert_bin_insert_after()
+   *
+   * Since: 1.2
    */
   signals[SIG_INSERT_AFTER] = g_signal_new_class_handler ("insert-after",
       G_TYPE_FROM_CLASS (klass),
@@ -224,7 +256,6 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
       NULL, NULL, NULL,
       G_TYPE_NONE, 4, GST_TYPE_ELEMENT, GST_TYPE_ELEMENT,
       G_TYPE_POINTER, G_TYPE_POINTER);
-
 
   /**
    * GstInsertBin::remove:
@@ -237,6 +268,8 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * This action signal removed the filter like element from the bin.
    *
    * Same as gst_insert_bin_remove()
+   *
+   * Since: 1.2
    */
   signals[SIG_REMOVE] = g_signal_new_class_handler ("remove",
       G_TYPE_FROM_CLASS (klass),

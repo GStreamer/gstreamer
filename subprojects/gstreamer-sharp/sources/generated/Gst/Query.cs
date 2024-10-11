@@ -29,7 +29,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_get_type();
 
-		public static GLib.GType GType { 
+		public static new GLib.GType GType { 
 			get {
 				IntPtr raw_ret = gst_query_get_type();
 				GLib.GType ret = new GLib.GType(raw_ret);
@@ -423,6 +423,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_query_parse_selectable(IntPtr raw, out bool selectable);
+
+		public bool ParseSelectable() {
+			bool selectable;
+			gst_query_parse_selectable(Handle, out selectable);
+			return selectable;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_uri(IntPtr raw, out IntPtr uri);
 
 		public string ParseUri() {
@@ -548,15 +557,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_query_set_formatsv(IntPtr raw, int n_formats, int[] formats);
+		static extern void gst_query_set_formatsv(IntPtr raw, int n_formats, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]int[] formats);
 
 		public Gst.Format[] Formatsv { 
 			set {
-				int cnt_value = value == null ? 0 : value.Length;
-				int[] native_value = new int [cnt_value];
-				for (int i = 0; i < cnt_value; i++)
+				int n_formats = (value == null ? 0 : value.Length);
+				int[] native_value = new int [n_formats];
+				for (int i = 0; i < n_formats; i++)
 					native_value [i] = (int) value[i];
-				gst_query_set_formatsv(Handle, (value == null ? 0 : value.Length), native_value);
+				gst_query_set_formatsv(Handle, n_formats, native_value);
 			}
 		}
 
@@ -620,6 +629,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_query_set_selectable(IntPtr raw, bool selectable);
+
+		public bool Selectable { 
+			set {
+				gst_query_set_selectable(Handle, value);
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_uri(IntPtr raw, IntPtr uri);
 
 		public string Uri { 
@@ -659,12 +677,28 @@ namespace Gst {
 			return ret;
 		}
 
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_query_take(ref IntPtr old_query, IntPtr new_query);
+
+		public static bool Take(ref Gst.Query old_query, Gst.Query new_query) {
+			IntPtr native_old_query = old_query == null ? IntPtr.Zero : old_query.Handle ;
+			new_query.Owned = false;
+			bool raw_ret = gst_query_take(ref native_old_query, new_query == null ? IntPtr.Zero : new_query.Handle);
+			bool ret = raw_ret;
+			old_query = native_old_query == IntPtr.Zero ? null : (Gst.Query) GLib.Opaque.GetOpaque (native_old_query, typeof (Gst.Query), true);
+			return ret;
+		}
+
+		public static bool Take(ref Gst.Query old_query) {
+			return Take (ref old_query, null);
+		}
+
 		public Query(IntPtr raw) : base(raw) {}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_accept_caps(IntPtr caps);
 
-		public Query (Gst.Caps caps) 
+		public Query (Gst.Caps caps) : base (IntPtr.Zero)
 		{
 			Raw = gst_query_new_accept_caps(caps == null ? IntPtr.Zero : caps.Handle);
 		}
@@ -672,7 +706,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_allocation(IntPtr caps, bool need_pool);
 
-		public Query (Gst.Caps caps, bool need_pool) 
+		public Query (Gst.Caps caps, bool need_pool) : base (IntPtr.Zero)
 		{
 			Raw = gst_query_new_allocation(caps == null ? IntPtr.Zero : caps.Handle, need_pool);
 		}
@@ -680,7 +714,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_bitrate();
 
-		public Query () 
+		public Query () : base (IntPtr.Zero)
 		{
 			Raw = gst_query_new_bitrate();
 		}
@@ -688,7 +722,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_buffering(int format);
 
-		public Query (Gst.Format format) 
+		public Query (Gst.Format format) : base (IntPtr.Zero)
 		{
 			Raw = gst_query_new_buffering((int) format);
 		}
@@ -705,7 +739,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_context(IntPtr context_type);
 
-		public Query (string context_type) 
+		public Query (string context_type) : base (IntPtr.Zero)
 		{
 			IntPtr native_context_type = GLib.Marshaller.StringToPtrGStrdup (context_type);
 			Raw = gst_query_new_context(native_context_type);
@@ -715,7 +749,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_convert(int src_format, long value, int dest_format);
 
-		public Query (Gst.Format src_format, long value, Gst.Format dest_format) 
+		public Query (Gst.Format src_format, long value, Gst.Format dest_format) : base (IntPtr.Zero)
 		{
 			Raw = gst_query_new_convert((int) src_format, value, (int) dest_format);
 		}
@@ -723,7 +757,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_custom(int type, IntPtr structure);
 
-		public Query (Gst.QueryType type, Gst.Structure structure) 
+		public Query (Gst.QueryType type, Gst.Structure structure) : base (IntPtr.Zero)
 		{
 			structure.Owned = false;
 			Raw = gst_query_new_custom((int) type, structure == null ? IntPtr.Zero : structure.Handle);
@@ -802,6 +836,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_query_new_selectable();
+
+		public static Query NewSelectable()
+		{
+			Query result = new Query (gst_query_new_selectable());
+			return result;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_uri();
 
 		public static Query NewUri()
@@ -811,19 +854,13 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_query_unref(IntPtr raw);
+		static extern IntPtr gst_query_ref(IntPtr raw);
 
-		protected override void Unref (IntPtr raw)
+		protected override void Ref (IntPtr raw)
 		{
-			if (Owned) {
-				gst_query_unref (raw);
-				Owned = false;
-			}
-		}
-
-		protected override Action<IntPtr> DisposeUnmanagedFunc {
-			get {
-				return gst_query_unref;
+			if (!Owned) {
+				gst_query_ref (raw);
+				Owned = true;
 			}
 		}
 

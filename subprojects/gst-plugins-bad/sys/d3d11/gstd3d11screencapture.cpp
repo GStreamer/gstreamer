@@ -79,21 +79,6 @@ gst_d3d11_screen_capture_get_size (GstD3D11ScreenCapture * capture,
 }
 
 gboolean
-gst_d3d11_screen_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
-    GstVideoColorimetry * colorimetry)
-{
-  GstD3D11ScreenCaptureClass *klass;
-
-  g_return_val_if_fail (GST_IS_D3D11_SCREEN_CAPTURE (capture), FALSE);
-  g_return_val_if_fail (colorimetry != nullptr, FALSE);
-
-  klass = GST_D3D11_SCREEN_CAPTURE_GET_CLASS (capture);
-  g_assert (klass->get_colorimetry);
-
-  return klass->get_colorimetry (capture, colorimetry);
-}
-
-gboolean
 gst_d3d11_screen_capture_unlock (GstD3D11ScreenCapture * capture)
 {
   GstD3D11ScreenCaptureClass *klass;
@@ -137,9 +122,7 @@ gst_d3d11_screen_capture_show_border (GstD3D11ScreenCapture * capture,
 GstFlowReturn
 gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
     GstD3D11Device * device, ID3D11Texture2D * texture,
-    ID3D11RenderTargetView * rtv, ID3D11VertexShader * vs,
-    ID3D11PixelShader * ps, ID3D11InputLayout * layout,
-    ID3D11SamplerState * sampler, ID3D11BlendState * blend,
+    ID3D11RenderTargetView * rtv, ShaderResource * resource,
     D3D11_BOX * crop_box, gboolean draw_mouse)
 {
   GstD3D11ScreenCaptureClass *klass;
@@ -151,7 +134,7 @@ gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
   g_assert (klass->do_capture);
 
   return klass->do_capture (capture, device, texture, rtv,
-      vs, ps, layout, sampler, blend, crop_box, draw_mouse);
+      resource, crop_box, draw_mouse);
 }
 
 HRESULT

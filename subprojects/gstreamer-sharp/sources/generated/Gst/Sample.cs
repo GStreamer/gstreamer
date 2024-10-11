@@ -14,7 +14,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_sample_get_type();
 
-		public static GLib.GType GType { 
+		public static new GLib.GType GType { 
 			get {
 				IntPtr raw_ret = gst_sample_get_type();
 				GLib.GType ret = new GLib.GType(raw_ret);
@@ -118,40 +118,12 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_sample_new(IntPtr buffer, IntPtr caps, IntPtr segment, IntPtr info);
 
-		public Sample (Gst.Buffer buffer, Gst.Caps caps, Gst.Segment segment, Gst.Structure info) 
+		public Sample (Gst.Buffer buffer, Gst.Caps caps, Gst.Segment segment, Gst.Structure info) : base (IntPtr.Zero)
 		{
 			IntPtr native_segment = GLib.Marshaller.StructureToPtrAlloc (segment);
 			info.Owned = false;
 			Raw = gst_sample_new(buffer == null ? IntPtr.Zero : buffer.Handle, caps == null ? IntPtr.Zero : caps.Handle, native_segment, info == null ? IntPtr.Zero : info.Handle);
 			Marshal.FreeHGlobal (native_segment);
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_sample_ref(IntPtr raw);
-
-		protected override void Ref (IntPtr raw)
-		{
-			if (!Owned) {
-				gst_sample_ref (raw);
-				Owned = true;
-			}
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_sample_unref(IntPtr raw);
-
-		protected override void Unref (IntPtr raw)
-		{
-			if (Owned) {
-				gst_sample_unref (raw);
-				Owned = false;
-			}
-		}
-
-		protected override Action<IntPtr> DisposeUnmanagedFunc {
-			get {
-				return gst_sample_unref;
-			}
 		}
 
 

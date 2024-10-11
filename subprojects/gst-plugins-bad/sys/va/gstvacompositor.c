@@ -47,9 +47,13 @@
 #include "gstvacompositor.h"
 
 #include <gst/va/gstva.h>
+#include <gst/va/gstvavideoformat.h>
+#include <gst/va/vasurfaceimage.h>
+#include <gst/va/gstvavideoformat.h>
 #include <gst/video/video.h>
 #include <va/va_drmcommon.h>
 
+#include "gstvabase.h"
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
 #include "gstvafilter.h"
@@ -77,6 +81,14 @@ struct _GstVaCompositorPad
   gint width;
   gint height;
   gdouble alpha;
+
+  GstCaps *sinkpad_caps;
+  GstVideoInfo sinkpad_info;
+  union
+  {
+    GstVideoInfo in_info;
+    GstVideoInfoDmaDrm in_drm_info;
+  };
 };
 
 enum
@@ -166,6 +178,8 @@ gst_va_compositor_pad_finalize (GObject * object)
     gst_clear_object (&self->pool);
   }
 
+  gst_clear_caps (&self->sinkpad_caps);
+
   G_OBJECT_CLASS (gst_va_compositor_pad_parent_class)->finalize (object);
 }
 
@@ -178,6 +192,8 @@ gst_va_compositor_pad_init (GstVaCompositorPad * self)
   self->width = DEFAULT_PAD_WIDTH;
   self->height = DEFAULT_PAD_HEIGHT;
   self->alpha = DEFAULT_PAD_ALPHA;
+
+  self->sinkpad_caps = NULL;
 }
 
 static void
@@ -246,6 +262,7 @@ struct _GstVaCompositor
   GstBufferPool *other_pool;    /* downstream pool */
 
   guint32 scale_method;
+  guint32 interpolation_method;
 };
 
 struct CData
@@ -258,6 +275,7 @@ enum
 {
   PROP_DEVICE_PATH = 1,
   PROP_SCALE_METHOD,
+  PROP_INTERPOLATION_METHOD,
   N_PROPERTIES
 };
 
@@ -275,6 +293,13 @@ gst_va_compositor_set_property (GObject * object, guint prop_id,
     {
       GST_OBJECT_LOCK (object);
       self->scale_method = g_value_get_enum (value);
+      GST_OBJECT_UNLOCK (object);
+      break;
+    }
+    case PROP_INTERPOLATION_METHOD:
+    {
+      GST_OBJECT_LOCK (object);
+      self->interpolation_method = g_value_get_enum (value);
       GST_OBJECT_UNLOCK (object);
       break;
     }
@@ -306,6 +331,13 @@ gst_va_compositor_get_property (GObject * object, guint prop_id,
     {
       GST_OBJECT_LOCK (object);
       g_value_set_enum (value, self->scale_method);
+      GST_OBJECT_UNLOCK (object);
+      break;
+    }
+    case PROP_INTERPOLATION_METHOD:
+    {
+      GST_OBJECT_LOCK (object);
+      g_value_set_enum (value, self->interpolation_method);
       GST_OBJECT_UNLOCK (object);
       break;
     }
@@ -404,8 +436,7 @@ gst_va_compositor_set_context (GstElement * element, GstContext * context)
   if (!ret
       || (old_display && new_display && old_display != new_display
           && self->filter)) {
-    GST_ELEMENT_WARNING (element, RESOURCE, BUSY,
-        ("Can't replace VA display while operating"), (NULL));
+    GST_WARNING_OBJECT (element, "Can't replace VA display while operating");
   }
 
   gst_clear_object (&old_display);
@@ -562,7 +593,7 @@ gst_va_compositor_propose_allocation (GstAggregator * agg,
   GstCaps *caps;
   GstVideoInfo info;
   gboolean update_allocator = FALSE;
-  guint size, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
+  guint size, usage_hint;
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -575,7 +606,8 @@ gst_va_compositor_propose_allocation (GstAggregator * agg,
   if (gst_query_get_n_allocation_pools (query) > 0)
     return TRUE;
 
-  size = GST_VIDEO_INFO_SIZE (&info);
+  usage_hint = va_get_surface_usage_hint (self->display,
+      VAEntrypointVideoProc, GST_PAD_SINK, gst_video_is_dma_drm_caps (caps));
 
   if (gst_query_get_n_allocation_params (query) > 0) {
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
@@ -594,12 +626,15 @@ gst_va_compositor_propose_allocation (GstAggregator * agg,
 
   /* Now we have a VA-based allocator */
 
-  pool = gst_va_pool_new_with_config (caps, size, 1, 0, usage_hint,
+  pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
       GST_VA_FEATURE_AUTO, allocator, &params);
   if (!pool) {
     gst_object_unref (allocator);
     goto config_failed;
   }
+
+  if (!gst_va_pool_get_buffer_size (pool, &size))
+    goto config_failed;
 
   if (update_allocator)
     gst_query_set_nth_allocation_param (query, 0, allocator, &params);
@@ -626,25 +661,6 @@ config_failed:
   }
 }
 
-static GstBufferPool *
-_create_other_pool (GstAllocator * allocator, GstAllocationParams * params,
-    GstCaps * caps, guint size)
-{
-  GstBufferPool *pool = NULL;
-  GstStructure *config;
-
-  pool = gst_video_buffer_pool_new ();
-  config = gst_buffer_pool_get_config (pool);
-
-  gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-  gst_buffer_pool_config_set_allocator (config, allocator, params);
-  if (!gst_buffer_pool_set_config (pool, config)) {
-    gst_clear_object (&pool);
-  }
-
-  return pool;
-}
-
 /* configure the allocation query that was answered downstream */
 static gboolean
 gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
@@ -653,22 +669,23 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
 
   GstAllocator *allocator = NULL, *other_allocator = NULL;
-  GstAllocationParams params, other_params;
+  GstAllocationParams params = { 0, }, other_params = { 0, };
   GstBufferPool *pool = NULL, *other_pool = NULL;
   GstCaps *caps = NULL;
   GstStructure *config;
-  GstVideoInfo info;
-  guint min, max, size = 0, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
+  guint min, max, other_size = 0, size = 0, usage_hint;
   gboolean update_pool, update_allocator, has_videometa, copy_frames;
-  gboolean dont_use_other_pool = FALSE;
+  gboolean dont_use_other_pool = FALSE, ret = FALSE;;
 
   gst_query_parse_allocation (query, &caps, NULL);
+  if (!caps)
+    return FALSE;
 
-  gst_allocation_params_init (&other_params);
-  gst_allocation_params_init (&params);
-
-  if (!gst_video_info_from_caps (&info, caps)) {
-    GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
+  has_videometa = gst_query_find_allocation_meta (query,
+      GST_VIDEO_META_API_TYPE, NULL);
+  if (gst_video_is_dma_drm_caps (caps) && !has_videometa) {
+    GST_ERROR_OBJECT (self,
+        "DMABuf caps negotiated without the mandatory support of VideoMeta ");
     return FALSE;
   }
 
@@ -701,6 +718,7 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
             "may need other pool for copy frames %" GST_PTR_FORMAT, pool);
         other_pool = pool;
         pool = NULL;
+        other_size = size;
       } else if (dont_use_other_pool) {
         gst_clear_object (&pool);
       }
@@ -708,36 +726,51 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
 
     update_pool = TRUE;
   } else {
-    size = GST_VIDEO_INFO_SIZE (&info);
     min = 1;
     max = 0;
     update_pool = FALSE;
   }
 
   if (!allocator) {
-    if (gst_caps_is_dmabuf (caps) && GST_VIDEO_INFO_IS_RGB (&info))
-      usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
     if (!(allocator = gst_va_compositor_allocator_from_caps (self, caps)))
-      return FALSE;
+      goto bail;
   }
 
   if (!pool)
     pool = gst_va_pool_new ();
 
+  {
+    GstVideoInfo info;
+
+    if (!gst_va_video_info_from_caps (&info, NULL, caps)) {
+      GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
+      goto bail;
+    }
+
+    if (gst_caps_is_dmabuf (caps) && GST_VIDEO_INFO_IS_RGB (&info)) {
+      usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
+    } else {
+      usage_hint = va_get_surface_usage_hint (self->display,
+          VAEntrypointVideoProc, GST_PAD_SRC, gst_video_is_dma_drm_caps (caps));
+    }
+  }
+
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_allocator (config, allocator, &params);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_config_set_params (config, caps, 0, min, max);
   gst_buffer_pool_config_set_va_allocation_params (config, usage_hint,
       GST_VA_FEATURE_AUTO);
-  if (!gst_buffer_pool_set_config (pool, config)) {
-    gst_object_unref (allocator);
-    gst_object_unref (pool);
-    return FALSE;
-  }
+  if (!gst_buffer_pool_set_config (pool, config))
+    goto bail;
+  if (!gst_va_pool_get_buffer_size (pool, &size))
+    goto bail;
 
   if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
-    gst_va_dmabuf_allocator_get_format (allocator, &vagg->info, NULL);
+    GstVideoInfoDmaDrm dma_info;
+
+    gst_va_dmabuf_allocator_get_format (allocator, &dma_info, NULL);
+    vagg->info = dma_info.vinfo;
   } else if (GST_IS_VA_ALLOCATOR (allocator)) {
     gst_va_allocator_get_format (allocator, &vagg->info, NULL, NULL);
   }
@@ -752,9 +785,6 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
-  has_videometa = gst_query_find_allocation_meta (query,
-      GST_VIDEO_META_API_TYPE, NULL);
-
   copy_frames = (!has_videometa && gst_va_pool_requires_video_meta (pool)
       && gst_caps_is_raw (caps));
   if (copy_frames) {
@@ -762,54 +792,64 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
       gst_object_replace ((GstObject **) & self->other_pool,
           (GstObject *) other_pool);
     } else {
+      gst_clear_object (&self->other_pool);
       self->other_pool =
-          _create_other_pool (other_allocator, &other_params, caps, size);
+          gst_va_create_other_pool (other_allocator, &other_params, caps,
+          other_size);
     }
+    if (!self->other_pool)
+      goto bail;
     GST_DEBUG_OBJECT (self, "Use the other pool for copy %" GST_PTR_FORMAT,
         self->other_pool);
   } else {
     gst_clear_object (&self->other_pool);
   }
 
+  ret = TRUE;
+
   GST_DEBUG_OBJECT (self,
       "decided pool %" GST_PTR_FORMAT " with allocator %" GST_PTR_FORMAT,
       pool, allocator);
 
+bail:
   gst_object_unref (allocator);
   gst_object_unref (pool);
   gst_clear_object (&other_allocator);
   gst_clear_object (&other_pool);
 
-  return TRUE;
+  return ret;
 }
 
 static GstBufferPool *
-_get_sinkpad_pool (GstVaCompositor * self, GstVaCompositorPad * pad)
+_get_sinkpad_pool (GstElement * element, gpointer data)
 {
+  GstVaCompositor *self = GST_VA_COMPOSITOR (element);
+  GstVaCompositorPad *pad = GST_VA_COMPOSITOR_PAD (data);
   GstAllocator *allocator;
   GstAllocationParams params = { 0, };
   GstCaps *caps;
-  GstVideoInfo info;
-  guint size, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ;
+  guint usage_hint;
 
   if (pad->pool)
     return pad->pool;
 
   gst_allocation_params_init (&params);
 
-  caps = gst_pad_get_current_caps (GST_PAD (pad));
+  caps = gst_caps_copy (pad->sinkpad_caps);
   if (!caps)
     return NULL;
-  if (!gst_video_info_from_caps (&info, caps)) {
-    GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
+
+  if (!gst_va_base_convert_caps_to_va (caps)) {
+    GST_ERROR_OBJECT (self, "Invalid caps %" GST_PTR_FORMAT, caps);
     gst_caps_unref (caps);
     return NULL;
   }
 
-  size = GST_VIDEO_INFO_SIZE (&info);
+  usage_hint = va_get_surface_usage_hint (self->display,
+      VAEntrypointVideoProc, GST_PAD_SINK, FALSE);
 
   allocator = gst_va_compositor_allocator_from_caps (self, caps);
-  pad->pool = gst_va_pool_new_with_config (caps, size, 1, 0, usage_hint,
+  pad->pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
       GST_VA_FEATURE_AUTO, allocator, &params);
   gst_caps_unref (caps);
 
@@ -818,11 +858,7 @@ _get_sinkpad_pool (GstVaCompositor * self, GstVaCompositorPad * pad)
     return NULL;
   }
 
-  if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
-    gst_va_dmabuf_allocator_get_format (allocator, &info, NULL);
-  } else if (GST_IS_VA_ALLOCATOR (allocator)) {
-    gst_va_allocator_get_format (allocator, &info, NULL, NULL);
-  }
+  gst_va_allocator_get_format (allocator, &pad->sinkpad_info, NULL, NULL);
 
   gst_object_unref (allocator);
 
@@ -835,175 +871,25 @@ _get_sinkpad_pool (GstVaCompositor * self, GstVaCompositorPad * pad)
   return pad->pool;
 }
 
-static inline gsize
-_get_plane_data_size (GstVideoInfo * info, guint plane)
-{
-  gint comp[GST_VIDEO_MAX_COMPONENTS];
-  gint height, padded_height;
-
-  gst_video_format_info_component (info->finfo, plane, comp);
-
-  height = GST_VIDEO_INFO_HEIGHT (info);
-  padded_height =
-      GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo, comp[0], height);
-
-  return GST_VIDEO_INFO_PLANE_STRIDE (info, plane) * padded_height;
-}
-
-static gboolean
-_try_import_dmabuf_unlocked (GstVaCompositor * self, GstVideoInfo * info,
-    GstBuffer * inbuf)
-{
-  GstVideoMeta *meta;
-  GstMemory *mems[GST_VIDEO_MAX_PLANES];
-  guint i, n_mem, n_planes;
-  gsize offset[GST_VIDEO_MAX_PLANES];
-  uintptr_t fd[GST_VIDEO_MAX_PLANES];
-
-  n_planes = GST_VIDEO_INFO_N_PLANES (info);
-  n_mem = gst_buffer_n_memory (inbuf);
-  meta = gst_buffer_get_video_meta (inbuf);
-
-  /* This will eliminate most non-dmabuf out there */
-  if (!gst_is_dmabuf_memory (gst_buffer_peek_memory (inbuf, 0)))
-    return FALSE;
-
-  /* We cannot have multiple dmabuf per plane */
-  if (n_mem > n_planes)
-    return FALSE;
-
-  /* Update video info based on video meta */
-  if (meta) {
-    GST_VIDEO_INFO_WIDTH (info) = meta->width;
-    GST_VIDEO_INFO_HEIGHT (info) = meta->height;
-
-    for (i = 0; i < meta->n_planes; i++) {
-      GST_VIDEO_INFO_PLANE_OFFSET (info, i) = meta->offset[i];
-      GST_VIDEO_INFO_PLANE_STRIDE (info, i) = meta->stride[i];
-    }
-  }
-
-  /* Find and validate all memories */
-  for (i = 0; i < n_planes; i++) {
-    guint plane_size;
-    guint length;
-    guint mem_idx;
-    gsize mem_skip;
-
-    plane_size = _get_plane_data_size (info, i);
-
-    if (!gst_buffer_find_memory (inbuf, info->offset[i], plane_size,
-            &mem_idx, &length, &mem_skip))
-      return FALSE;
-
-    /* We can't have more then one dmabuf per plane */
-    if (length != 1)
-      return FALSE;
-
-    mems[i] = gst_buffer_peek_memory (inbuf, mem_idx);
-
-    /* And all memory found must be dmabuf */
-    if (!gst_is_dmabuf_memory (mems[i]))
-      return FALSE;
-
-    offset[i] = mems[i]->offset + mem_skip;
-    fd[i] = gst_dmabuf_memory_get_fd (mems[i]);
-  }
-
-  /* Now create a VASurfaceID for the buffer */
-  return gst_va_dmabuf_memories_setup (self->display, info, n_planes,
-      mems, fd, offset, VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ);
-}
-
-extern GRecMutex GST_VA_SHARED_LOCK;
-
-static gboolean
-_try_import_buffer (GstVaCompositor * self, GstVideoInfo * info,
-    GstBuffer * inbuf)
-{
-  VASurfaceID surface;
-  gboolean ret;
-
-  surface = gst_va_buffer_get_surface (inbuf);
-  if (surface != VA_INVALID_ID &&
-      (gst_va_buffer_peek_display (inbuf) == self->display))
-    return TRUE;
-
-  g_rec_mutex_lock (&GST_VA_SHARED_LOCK);
-  ret = _try_import_dmabuf_unlocked (self, info, inbuf);
-  g_rec_mutex_unlock (&GST_VA_SHARED_LOCK);
-
-  return ret;
-}
-
 static GstFlowReturn
 gst_va_compositor_import_buffer (GstVaCompositor * self,
     GstVaCompositorPad * pad, GstBuffer * inbuf, GstBuffer ** buf)
 {
-  GstBuffer *buffer = NULL;
-  GstBufferPool *pool;
-  GstFlowReturn ret;
-  GstCaps *caps;
-  GstVideoInfo info;
-  GstVideoFrame in_frame, out_frame;
-  gboolean imported, copied;
+  /* Already hold GST_OBJECT_LOCK */
+  GstVaBufferImporter importer = {
+    .element = GST_ELEMENT_CAST (self),
+#ifndef GST_DISABLE_GST_DEBUG
+    .debug_category = GST_CAT_DEFAULT,
+#endif
+    .display = self->display,
+    .entrypoint = VAEntrypointVideoProc,
+    .get_sinkpad_pool = _get_sinkpad_pool,
+    .pool_data = pad,
+    .in_drm_info = &pad->in_drm_info,
+    .sinkpad_info = &pad->sinkpad_info,
+  };
 
-  caps = gst_pad_get_current_caps (GST_PAD (pad));
-  if (!caps)
-    return GST_FLOW_ERROR;
-  if (!gst_video_info_from_caps (&info, caps)) {
-    GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
-    gst_caps_unref (caps);
-    return GST_FLOW_ERROR;
-  }
-  gst_caps_unref (caps);
-
-  imported = _try_import_buffer (self, &info, inbuf);
-  if (imported) {
-    *buf = gst_buffer_ref (inbuf);
-    return GST_FLOW_OK;
-  }
-
-  GST_LOG_OBJECT (self, "copying input frame");
-
-  /* input buffer doesn't come from a vapool, thus it is required to
-   * have a pool, grab from it a new buffer and copy the input
-   * buffer to the new one */
-  if (!(pool = _get_sinkpad_pool (self, pad)))
-    return GST_FLOW_ERROR;
-
-  ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
-  if (!gst_video_frame_map (&in_frame, &info, inbuf, GST_MAP_READ))
-    goto invalid_buffer;
-
-  if (!gst_video_frame_map (&out_frame, &info, buffer, GST_MAP_WRITE)) {
-    gst_video_frame_unmap (&in_frame);
-    goto invalid_buffer;
-  }
-
-  copied = gst_video_frame_copy (&out_frame, &in_frame);
-
-  gst_video_frame_unmap (&out_frame);
-  gst_video_frame_unmap (&in_frame);
-
-  if (!copied)
-    goto invalid_buffer;
-
-  *buf = buffer;
-
-  return GST_FLOW_OK;
-
-invalid_buffer:
-  {
-    GST_ELEMENT_WARNING (self, CORE, NOT_IMPLEMENTED, (NULL),
-        ("invalid video buffer received"));
-    if (buffer)
-      gst_buffer_unref (buffer);
-    return GST_FLOW_OK;
-  }
+  return gst_va_buffer_importer_import (&importer, inbuf, buf);
 }
 
 typedef struct _GstVaCompositorSampleGenerator GstVaCompositorSampleGenerator;
@@ -1158,6 +1044,10 @@ gst_va_compositor_aggregate_frames (GstVideoAggregator * vagg,
   if (!gst_va_filter_set_scale_method (self->filter, self->scale_method))
     GST_WARNING_OBJECT (self, "couldn't set filter scale method");
 
+  if (!gst_va_filter_set_interpolation_method (self->filter,
+          self->interpolation_method))
+    GST_WARNING_OBJECT (self, "couldn't set filter interpolation method");
+
   if (!gst_va_filter_compose (self->filter, &tx)) {
     GST_ERROR_OBJECT (self, "couldn't apply filter");
     ret = GST_FLOW_ERROR;
@@ -1216,7 +1106,7 @@ gst_va_compositor_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
 {
   GstVaCompositor *self = GST_VA_COMPOSITOR (agg);
 
-  if (!gst_video_info_from_caps (&self->other_info, caps)) {
+  if (!gst_va_video_info_from_caps (&self->other_info, NULL, caps)) {
     GST_ERROR_OBJECT (self, "invalid caps");
     return FALSE;
   }
@@ -1305,6 +1195,354 @@ gst_va_compositor_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
   }
 
   return gst_caps_fixate (ret);
+}
+
+static GstCaps *
+_caps_from_format_and_feature (GstVideoFormat format,
+    guint64 modifier, const gchar * feature)
+{
+  GstCaps *caps;
+  gboolean is_dma = g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_DMABUF) == 0;
+
+  caps = gst_caps_new_empty_simple ("video/x-raw");
+
+  if (is_dma) {
+    gchar *dma_str;
+    guint32 fourcc = gst_va_drm_fourcc_from_video_format (format);
+
+    dma_str = gst_video_dma_drm_fourcc_to_string (fourcc, modifier);
+
+    gst_caps_set_simple (caps, "format", G_TYPE_STRING, "DMA_DRM",
+        "drm-format", G_TYPE_STRING, dma_str, NULL);
+    g_free (dma_str);
+  } else {
+    gst_caps_set_simple (caps, "format", G_TYPE_STRING,
+        gst_video_format_to_string (format), NULL);
+  }
+
+  if (g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_DMABUF) == 0 ||
+      g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_VA) == 0)
+    gst_caps_set_features_simple (caps,
+        gst_caps_features_new_single_static_str (feature));
+
+  return caps;
+}
+
+static GArray *
+_collect_formats_in_caps_by_feature (GstCaps * caps,
+    const gchar * feature, GArray ** ret_modifiers)
+{
+  guint i, j, len, capslen;
+  GstCapsFeatures *features;
+  GstStructure *structure;
+  gboolean is_dma;
+  GstVideoFormat fmt;
+  guint64 modifier;
+  GArray *formats, *modifiers = NULL;
+  const GValue *format;
+  guint32 fourcc;
+
+  is_dma = (g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_DMABUF) == 0);
+
+  formats = g_array_new (FALSE, TRUE, sizeof (GstVideoFormat));
+  if (is_dma)
+    modifiers = g_array_new (FALSE, TRUE, sizeof (guint64));
+
+  capslen = gst_caps_get_size (caps);
+  for (i = 0; i < capslen; i++) {
+    features = gst_caps_get_features (caps, i);
+    if (!gst_caps_features_contains (features, feature))
+      continue;
+
+    structure = gst_caps_get_structure (caps, i);
+
+    format = (is_dma) ? gst_structure_get_value (structure, "drm-format")
+        : gst_structure_get_value (structure, "format");
+    if (!format)
+      continue;
+
+    if (GST_VALUE_HOLDS_LIST (format)) {
+      len = gst_value_list_get_size (format);
+
+      for (j = 0; j < len; j++) {
+        const GValue *val;
+
+        val = gst_value_list_get_value (format, j);
+        if (!G_VALUE_HOLDS_STRING (val))
+          continue;
+
+        if (is_dma) {
+          fourcc = gst_video_dma_drm_fourcc_from_string
+              (g_value_get_string (val), &modifier);
+          fmt = gst_va_video_format_from_drm_fourcc (fourcc);
+        } else {
+          fmt = gst_video_format_from_string (g_value_get_string (val));
+        }
+        if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+          continue;
+
+        g_array_append_val (formats, fmt);
+
+        if (is_dma)
+          g_array_append_val (modifiers, modifier);
+      }
+    } else if (G_VALUE_HOLDS_STRING (format)) {
+      if (is_dma) {
+        fourcc = gst_video_dma_drm_fourcc_from_string
+            (g_value_get_string (format), &modifier);
+        fmt = gst_va_video_format_from_drm_fourcc (fourcc);
+      } else {
+        fmt = gst_video_format_from_string (g_value_get_string (format));
+      }
+      if (fmt != GST_VIDEO_FORMAT_UNKNOWN) {
+        g_array_append_val (formats, fmt);
+        if (is_dma)
+          g_array_append_val (modifiers, modifier);
+      }
+    }
+  }
+
+  if (formats->len == 0)
+    g_clear_pointer (&formats, g_array_unref);
+
+  if (modifiers && modifiers->len == 0)
+    g_clear_pointer (&modifiers, g_array_unref);
+
+  if (ret_modifiers)
+    *ret_modifiers = modifiers;
+  else if (modifiers)
+    g_array_unref (modifiers);
+
+  return formats;
+}
+
+static GstVideoFormat
+_choose_format (GstVideoFormat fmt1, GstVideoFormat fmt2)
+{
+  const GstVideoFormatInfo *info1 = gst_video_format_get_info (fmt1);
+  const GstVideoFormatInfo *info2 = gst_video_format_get_info (fmt2);
+
+
+#define IS_KNONWN(info) (GST_VIDEO_FORMAT_INFO_FORMAT(info) != GST_VIDEO_FORMAT_UNKNOWN)
+#define IS_8_BITS(info) (GST_VIDEO_FORMAT_INFO_BITS (info) == 8)
+#define IS_RGB_PLANAR(info) (GST_VIDEO_FORMAT_INFO_N_PLANES (info) == 1)
+#define IS_YUV_420(info) ((GST_VIDEO_FORMAT_INFO_W_SUB (info, 1) == 1)  \
+                          && (GST_VIDEO_FORMAT_INFO_H_SUB (info, 1) == 1))
+#define CHOOSE_FORMAT(cmp)                        \
+    G_STMT_START {                                \
+      if (cmp (info1) && !cmp (info2)) return fmt1; \
+      if (!cmp (info1) && cmp (info2)) return fmt2; \
+    } G_STMT_END;
+
+  /* prefer the other if one is unknown */
+  CHOOSE_FORMAT (IS_KNONWN);
+
+  /* Prefer non-complex format */
+  CHOOSE_FORMAT (!GST_VIDEO_FORMAT_INFO_IS_COMPLEX);
+
+  /* Prefer the depth of 8 */
+  CHOOSE_FORMAT (IS_8_BITS);
+
+  /* Prefer RGB */
+  CHOOSE_FORMAT (GST_VIDEO_FORMAT_INFO_IS_RGB);
+
+  if (GST_VIDEO_FORMAT_INFO_IS_RGB (info1)
+      && GST_VIDEO_FORMAT_INFO_IS_RGB (info2)) {
+    /* Prefer packed RGB than planar. */
+    CHOOSE_FORMAT (IS_RGB_PLANAR);
+
+    /* Prefer RGB with alpha channel. */
+    CHOOSE_FORMAT (GST_VIDEO_FORMAT_INFO_HAS_ALPHA);
+  }
+
+  if (GST_VIDEO_FORMAT_INFO_IS_YUV (info1)
+      && GST_VIDEO_FORMAT_INFO_IS_YUV (info2)) {
+    /* Prefer YUV 4:2:0. */
+    CHOOSE_FORMAT (IS_YUV_420);
+  }
+
+  /* Fallback */
+  return fmt1;
+
+#undef IS_8_BITS
+#undef IS_RGB_PLANAR
+#undef IS_YUV_420
+#undef CHOOSE_FORMAT
+}
+
+static GstCaps *
+gst_va_compositor_update_caps (GstVideoAggregator * vagg, GstCaps * src_caps)
+{
+  GList *tmp;
+  GstVideoFormat fmt, best_va, best_dma, best_sys;
+  GstVideoAggregatorPad *pad;
+  GstVaCompositorPad *va_pad;
+  GArray *va_formats, *dma_formats, *modifiers, *sys_formats;
+  GstCaps *ret_caps = NULL, *clip_caps = NULL;
+  guint i;
+
+  /* We only decide caps feature and video format here. Other fields are
+     fixated in fixate_src_caps() later.
+     We consider the features first, in the order of "memory:VAMemory",
+     "memory:DMABuf" and "memory:SystemMemory". Then within that feature,
+     we iterate each input pad's format and find the best matched one. */
+  va_formats = _collect_formats_in_caps_by_feature (src_caps,
+      GST_CAPS_FEATURE_MEMORY_VA, NULL);
+  dma_formats = _collect_formats_in_caps_by_feature (src_caps,
+      GST_CAPS_FEATURE_MEMORY_DMABUF, &modifiers);
+  sys_formats = _collect_formats_in_caps_by_feature (src_caps,
+      GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, NULL);
+
+  best_va = GST_VIDEO_FORMAT_UNKNOWN;
+  best_dma = GST_VIDEO_FORMAT_UNKNOWN;
+  best_sys = GST_VIDEO_FORMAT_UNKNOWN;
+
+  GST_OBJECT_LOCK (vagg);
+
+  for (tmp = GST_ELEMENT (vagg)->sinkpads; tmp; tmp = tmp->next) {
+    pad = tmp->data;
+    va_pad = GST_VA_COMPOSITOR_PAD (pad);
+
+    g_assert (!GST_IS_VIDEO_AGGREGATOR_CONVERT_PAD (pad));
+
+    if (!pad->info.finfo)
+      continue;
+
+    if (!va_pad->sinkpad_caps)
+      continue;
+
+    fmt = GST_VIDEO_INFO_FORMAT (&va_pad->in_info);
+    if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+      continue;
+
+    if (va_formats) {
+      for (i = 0; i < va_formats->len; i++) {
+        if (fmt == g_array_index (va_formats, GstVideoFormat, i))
+          break;
+      }
+
+      if (i < va_formats->len)
+        best_va = _choose_format (best_va, fmt);
+    }
+
+    if (dma_formats) {
+      for (i = 0; i < dma_formats->len; i++) {
+        if (fmt == g_array_index (dma_formats, GstVideoFormat, i))
+          break;
+      }
+
+      if (i < dma_formats->len)
+        best_dma = _choose_format (best_dma, fmt);
+    }
+
+    if (sys_formats) {
+      for (i = 0; i < sys_formats->len; i++) {
+        if (fmt == g_array_index (sys_formats, GstVideoFormat, i))
+          break;
+      }
+
+      if (i < sys_formats->len)
+        best_sys = _choose_format (best_sys, fmt);
+    }
+  }
+
+  GST_OBJECT_UNLOCK (vagg);
+
+  if (va_formats) {
+    if (best_va != GST_VIDEO_FORMAT_UNKNOWN) {
+      clip_caps = _caps_from_format_and_feature (best_va,
+          DRM_FORMAT_MOD_INVALID, GST_CAPS_FEATURE_MEMORY_VA);
+    } else {
+      clip_caps = gst_caps_new_empty_simple ("video/x-raw");
+      gst_caps_set_features_simple (clip_caps,
+          gst_caps_features_new_single_static_str (GST_CAPS_FEATURE_MEMORY_VA));
+    }
+  } else if (dma_formats) {
+    g_assert (dma_formats->len == modifiers->len);
+
+    if (best_dma != GST_VIDEO_FORMAT_UNKNOWN) {
+      for (i = 0; i < dma_formats->len; i++) {
+        if (best_dma == g_array_index (dma_formats, GstVideoFormat, i))
+          break;
+      }
+
+      g_assert (i < dma_formats->len);
+      g_assert (i < modifiers->len);
+      clip_caps = _caps_from_format_and_feature (best_dma,
+          g_array_index (modifiers, guint64, i),
+          GST_CAPS_FEATURE_MEMORY_DMABUF);
+    } else {
+      clip_caps = gst_caps_new_empty_simple ("video/x-raw");
+      gst_caps_set_features_simple (clip_caps,
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_DMABUF));
+    }
+  } else if (sys_formats) {
+    if (best_sys != GST_VIDEO_FORMAT_UNKNOWN) {
+      clip_caps = _caps_from_format_and_feature (best_sys,
+          DRM_FORMAT_MOD_INVALID, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+    } else {
+      clip_caps = gst_caps_new_empty_simple ("video/x-raw");
+    }
+  }
+
+  if (clip_caps)
+    ret_caps = gst_caps_intersect (src_caps, clip_caps);
+
+  if (clip_caps)
+    gst_caps_unref (clip_caps);
+  if (va_formats)
+    g_array_unref (va_formats);
+  if (dma_formats)
+    g_array_unref (dma_formats);
+  if (modifiers)
+    g_array_unref (modifiers);
+  if (sys_formats)
+    g_array_unref (sys_formats);
+
+  GST_DEBUG_OBJECT (vagg, "update src caps: %" GST_PTR_FORMAT
+      "get result caps: %" GST_PTR_FORMAT, src_caps, ret_caps);
+
+  return ret_caps;
+}
+
+static gboolean
+gst_va_compositor_pad_set_info_unlocked (GstVaCompositorPad * pad,
+    GstCaps * caps)
+{
+  if (!gst_video_is_dma_drm_caps (caps)) {
+    gst_video_info_dma_drm_init (&pad->in_drm_info);
+    return gst_video_info_from_caps (&pad->in_info, caps);
+  }
+
+  if (!gst_video_info_dma_drm_from_caps (&pad->in_drm_info, caps))
+    return FALSE;
+  if (!gst_va_dma_drm_info_to_video_info (&pad->in_drm_info, &pad->in_info))
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_va_compositor_sink_event (GstAggregator * agg, GstAggregatorPad * bpad,
+    GstEvent * event)
+{
+  GstVaCompositorPad *va_pad = GST_VA_COMPOSITOR_PAD (bpad);
+  GstCaps *caps;
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
+    gst_event_parse_caps (event, &caps);
+
+    GST_OBJECT_LOCK (agg);
+    if (!gst_va_compositor_pad_set_info_unlocked (va_pad, caps)) {
+      GST_OBJECT_UNLOCK (agg);
+      return FALSE;
+    }
+    gst_caps_replace (&va_pad->sinkpad_caps, caps);
+    GST_OBJECT_UNLOCK (agg);
+  }
+
+  return GST_AGGREGATOR_CLASS (parent_class)->sink_event (agg, bpad, event);
 }
 
 /* *INDENT-OFF* */
@@ -1398,11 +1636,13 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
       GST_DEBUG_FUNCPTR (gst_va_compositor_negotiated_src_caps);
   agg_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_va_compositor_decide_allocation);
+  agg_class->sink_event = GST_DEBUG_FUNCPTR (gst_va_compositor_sink_event);
 
   vagg_class->aggregate_frames =
       GST_DEBUG_FUNCPTR (gst_va_compositor_aggregate_frames);
   vagg_class->create_output_buffer =
       GST_DEBUG_FUNCPTR (gst_va_compositor_create_output_buffer);
+  vagg_class->update_caps = GST_DEBUG_FUNCPTR (gst_va_compositor_update_caps);
 
   /**
    * GstVaCompositor:device-path:
@@ -1413,18 +1653,39 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
       "Device Path", GST_VA_DEVICE_PATH_PROP_DESC, NULL,
       GST_PARAM_DOC_SHOW_DEFAULT | G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
+  g_object_class_install_property (object_class, PROP_DEVICE_PATH,
+      properties[PROP_DEVICE_PATH]);
+
   /**
    * GstVaCompositor:scale-method:
    *
    * Sets the scale method algorithm to use when resizing.
    */
-  properties[PROP_SCALE_METHOD] = g_param_spec_enum ("scale-method",
-      "Scale Method", "Scale method to use", GST_TYPE_VA_SCALE_METHOD,
-      VA_FILTER_SCALING_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_IHD)) {
+    g_object_class_install_property (object_class,
+        GST_VA_FILTER_PROP_SCALE_METHOD,
+        g_param_spec_enum ("scale-method", "Scale Method",
+            "Scale method to use", GST_TYPE_VA_SCALE_METHOD,
+            VA_FILTER_SCALING_DEFAULT,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+    gst_type_mark_as_plugin_api (GST_TYPE_VA_SCALE_METHOD, 0);
+  }
 
-  gst_type_mark_as_plugin_api (GST_TYPE_VA_SCALE_METHOD, 0);
+  /**
+   * GstVaCompositor:interpolation-method:
+   *
+   * Sets the interpolation method algorithm to use when resizing.
+   */
+  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_IHD)) {
+    g_object_class_install_property (object_class,
+        PROP_INTERPOLATION_METHOD,
+        g_param_spec_enum ("interpolation-method", "Interpolation Method",
+            "Interpolation method to use for scaling",
+            GST_TYPE_VA_INTERPOLATION_METHOD, VA_FILTER_INTERPOLATION_DEFAULT,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+    gst_type_mark_as_plugin_api (GST_TYPE_VA_INTERPOLATION_METHOD, 0);
+  }
 
-  g_object_class_install_properties (object_class, N_PROPERTIES, properties);
 
   g_free (long_name);
   g_free (cdata->description);

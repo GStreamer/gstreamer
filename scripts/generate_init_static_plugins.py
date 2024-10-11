@@ -6,6 +6,9 @@ from string import Template
 
 TEMPLATE = Template('''
 #include <gst/gst.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 $elements_declaration
 $typefind_funcs_declaration
@@ -14,15 +17,28 @@ $dynamic_types_declaration
 $plugins_declaration
 $giomodules_declaration
 
+ static
+gboolean register_features_full (GstPlugin* plugin)
+{
+    $elements_registration
+    $typefind_funcs_registration
+    $device_providers_registration
+    $dynamic_types_registration
+
+    return TRUE;
+}
+
+_GST_EXPORT
 void
 gst_init_static_plugins (void)
 {
   static gsize initialization_value = 0;
   if (g_once_init_enter (&initialization_value)) {
-    $elements_registration
-    $typefind_funcs_registration
-    $device_providers_registration
-    $dynamic_types_registration
+
+    gst_plugin_register_static (GST_VERSION_MAJOR, GST_VERSION_MINOR,
+        GST_PLUGIN_FULL_FEATURES_NAME, "features linked into the gstreamer-full library", register_features_full, PACKAGE_VERSION, GST_FULL_LICENSE,
+        "gstreamer-full", GETTEXT_PACKAGE, GST_PACKAGE_ORIGIN);
+
     $plugins_registration
     $giomodules_registration
 
@@ -56,7 +72,7 @@ def process_features(features_list, plugins, feature_prefix):
                 for feature in features:
                     feature = feature.replace("-", "_")
                     feature_declaration += ['%s_REGISTER_DECLARE(%s);' % (feature_prefix, feature)]
-                    feature_registration += ['%s_REGISTER(%s, NULL);' % (feature_prefix, feature)]
+                    feature_registration += ['%s_REGISTER(%s, plugin);' % (feature_prefix, feature)]
     return (plugins_list, feature_declaration, feature_registration)
 
 
@@ -119,6 +135,8 @@ if __name__ == "__main__":
         filename = os.path.basename(plugin).strip()
         if filename.startswith('libgst') and filename.endswith('.a'):
             plugin_name = filename[len('libgst'):-len('.a')]
+        elif filename.startswith('libgst') and filename.endswith('.lib'):
+            plugin_name = filename[len('libgst'):-len('.lib')]
         plugins_registration += ['GST_PLUGIN_STATIC_REGISTER(%s);' % (plugin_name)]
         plugins_declaration += ['GST_PLUGIN_STATIC_DECLARE(%s);' % (plugin_name)]
 

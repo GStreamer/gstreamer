@@ -131,22 +131,6 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_info_from_caps(IntPtr raw, IntPtr caps);
-
-		public bool FromCaps(Gst.Caps caps) {
-			bool raw_ret = gst_audio_info_from_caps(Handle, caps == null ? IntPtr.Zero : caps.Handle);
-			bool ret = raw_ret;
-			return ret;
-		}
-
-		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_audio_info_init(IntPtr raw);
-
-		public void Init() {
-			gst_audio_info_init(Handle);
-		}
-
-		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_info_is_equal(IntPtr raw, IntPtr other);
 
 		public bool IsEqual(Gst.Audio.AudioInfo other) {
@@ -179,6 +163,28 @@ namespace Gst.Audio {
 			return ret;
 		}
 
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_audio_info_from_caps(out IntPtr info, IntPtr caps);
+
+		public static bool FromCaps(out Gst.Audio.AudioInfo info, Gst.Caps caps) {
+			IntPtr native_info;
+			bool raw_ret = gst_audio_info_from_caps(out native_info, caps == null ? IntPtr.Zero : caps.Handle);
+			bool ret = raw_ret;
+			info = native_info == IntPtr.Zero ? null : (Gst.Audio.AudioInfo) GLib.Opaque.GetOpaque (native_info, typeof (Gst.Audio.AudioInfo), false);
+			return ret;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_audio_info_init(out IntPtr info);
+
+		public static Gst.Audio.AudioInfo Init() {
+			Gst.Audio.AudioInfo info;
+			IntPtr native_info;
+			gst_audio_info_init(out native_info);
+			info = native_info == IntPtr.Zero ? null : (Gst.Audio.AudioInfo) GLib.Opaque.GetOpaque (native_info, typeof (Gst.Audio.AudioInfo), false);
+			return info;
+		}
+
 		public AudioInfo(IntPtr raw) : base(raw) {}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -187,6 +193,14 @@ namespace Gst.Audio {
 		public AudioInfo () 
 		{
 			Raw = gst_audio_info_new();
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_audio_info_new_from_caps(IntPtr caps);
+
+		public AudioInfo (Gst.Caps caps) 
+		{
+			Raw = gst_audio_info_new_from_caps(caps == null ? IntPtr.Zero : caps.Handle);
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

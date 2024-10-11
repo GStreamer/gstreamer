@@ -883,10 +883,11 @@ beach:
 }
 
 static gboolean
-_set_properties (GQuark property_id, const GValue * value, GObject * element)
+_set_properties (const GstIdStr * property, const GValue * value,
+    GObject * element)
 {
-  GST_DEBUG_OBJECT (element, "Setting %s", g_quark_to_string (property_id));
-  g_object_set_property (element, g_quark_to_string (property_id), value);
+  GST_DEBUG_OBJECT (element, "Setting %s", gst_id_str_as_str (property));
+  g_object_set_property (element, gst_id_str_as_str (property), value);
 
   return TRUE;
 }
@@ -905,8 +906,8 @@ set_element_properties_from_encoding_profile (GstEncodingProfile * profile,
     return;
 
   if (!gst_structure_has_name (properties, "element-properties-map")) {
-    gst_structure_foreach (properties,
-        (GstStructureForeachFunc) _set_properties, element);
+    gst_structure_foreach_id_str (properties,
+        (GstStructureForeachIdStrFunc) _set_properties, element);
     goto done;
   }
 
@@ -938,8 +939,8 @@ set_element_properties_from_encoding_profile (GstEncodingProfile * profile,
     GST_DEBUG_OBJECT (GST_OBJECT_PARENT (element),
         "Setting %" GST_PTR_FORMAT " on %" GST_PTR_FORMAT, tmp_properties,
         element);
-    gst_structure_foreach (tmp_properties,
-        (GstStructureForeachFunc) _set_properties, element);
+    gst_structure_foreach_id_str (tmp_properties,
+        (GstStructureForeachIdStrFunc) _set_properties, element);
     goto done;
   }
 
@@ -1452,6 +1453,29 @@ err:
   goto done;
 }
 
+static gboolean
+gst_encode_base_bin_create_src_pad (GstEncodeBaseBin * ebin, GstPad * target)
+{
+  GstPadTemplate *template =
+      gst_element_get_pad_template (GST_ELEMENT (ebin), "src_%u");
+  gchar *name;
+  GstPad *pad;
+
+  GST_OBJECT_LOCK (ebin);
+  name = g_strdup_printf ("src_%u", GST_ELEMENT (ebin)->numsrcpads);
+  GST_OBJECT_UNLOCK (ebin);
+
+  pad = gst_ghost_pad_new_from_template (name, target, template);
+  g_free (name);
+  if (!pad)
+    return FALSE;
+
+  gst_element_add_pad (GST_ELEMENT (ebin), pad);
+
+  return TRUE;
+}
+
+
 /* FIXME : Add handling of streams that don't require conversion elements */
 /*
  * Create the elements, StreamGroup, add the sink pad, link it to the muxer
@@ -1538,7 +1562,16 @@ _create_stream_group (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
     }
     gst_object_unref (muxerpad);
   } else {
-    gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), srcpad);
+    if (ebin->srcpad) {
+      /* encodebin static source pad */
+      gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), srcpad);
+    } else {
+      if (!gst_encode_base_bin_create_src_pad (ebin, srcpad)) {
+        gst_object_unref (srcpad);
+
+        goto cant_add_src_pad;
+      }
+    }
   }
   gst_object_unref (srcpad);
   srcpad = NULL;
@@ -1602,6 +1635,7 @@ _create_stream_group (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
               (sgroup->parser)), NULL);
 
       gst_bin_add (GST_BIN (ebin), p1);
+      tosync = g_list_append (tosync, p1);
       if (G_UNLIKELY (!gst_element_link (p1, last)))
         goto parser_link_failure;
 
@@ -1915,6 +1949,10 @@ splitter_encoding_failure:
   GST_ERROR_OBJECT (ebin, "Error linking splitter to encoding stream");
   goto cleanup;
 
+cant_add_src_pad:
+  GST_ERROR_OBJECT (ebin, "Couldn't add srcpad to encodebin");
+  goto cleanup;
+
 no_muxer_pad:
   GST_ERROR_OBJECT (ebin,
       "Couldn't find a compatible muxer pad to link encoder to");
@@ -1992,10 +2030,12 @@ cleanup:
 }
 
 static gboolean
-_gst_caps_match_foreach (GQuark field_id, const GValue * value, gpointer data)
+_gst_caps_match_foreach (const GstIdStr * fieldname, const GValue * value,
+    gpointer data)
 {
   GstStructure *structure = data;
-  const GValue *other_value = gst_structure_id_get_value (structure, field_id);
+  const GValue *other_value =
+      gst_structure_id_str_get_value (structure, fieldname);
 
   if (G_UNLIKELY (other_value == NULL))
     return FALSE;
@@ -2021,7 +2061,7 @@ _gst_caps_match (const GstCaps * caps_a, const GstCaps * caps_b)
     for (j = 0; j < gst_caps_get_size (caps_b); j++) {
       GstStructure *structure_b = gst_caps_get_structure (caps_b, j);
 
-      res = gst_structure_foreach (structure_a, _gst_caps_match_foreach,
+      res = gst_structure_foreach_id_str (structure_a, _gst_caps_match_foreach,
           structure_b);
       if (res)
         goto end;
@@ -2236,6 +2276,7 @@ create_elements_and_pads (GstEncodeBaseBin * ebin)
      * but for the time being let's assume it's a static pad :) */
     muxerpad = gst_element_get_static_pad (muxer, "src");
     if (ebin->srcpad) {
+      /* encodebin static source pad */
       if (G_UNLIKELY (muxerpad == NULL))
         goto no_muxer_pad;
       if (!gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), muxerpad))
@@ -2243,22 +2284,10 @@ create_elements_and_pads (GstEncodeBaseBin * ebin)
 
       gst_object_unref (muxerpad);
     } else if (muxerpad) {
-      GstPadTemplate *template =
-          gst_element_get_pad_template (GST_ELEMENT (ebin), "src_%u");
-      gchar *name;
-      GstPad *pad;
-
-      GST_OBJECT_LOCK (ebin);
-      name = g_strdup_printf ("src_%u", GST_ELEMENT (ebin)->numsrcpads);
-      GST_OBJECT_UNLOCK (ebin);
-
-      pad = gst_ghost_pad_new_from_template (name, muxerpad, template);
-      g_free (name);
-      if (!pad)
+      if (!gst_encode_base_bin_create_src_pad (ebin, muxerpad)) {
         goto no_muxer_ghost_pad;
-
+      }
       gst_object_unref (muxerpad);
-      gst_element_add_pad (GST_ELEMENT (ebin), pad);
     }
 
     /* Activate fixed presence streams */
@@ -2527,7 +2556,7 @@ gst_encode_base_bin_tear_down_profile (GstEncodeBaseBin * ebin)
     stream_group_remove (ebin, (StreamGroup *) ebin->streams->data);
 
   if (ebin->srcpad) {
-    /* Set ghostpad target to NULL */
+    /* encodebin static source pad, set ghostpad target to NULL */
     gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), NULL);
   }
 
@@ -2540,7 +2569,8 @@ gst_encode_base_bin_tear_down_profile (GstEncodeBaseBin * ebin)
     ebin->muxer = NULL;
   }
 
-  if (!element->srcpads) {
+  if (!ebin->srcpad) {
+    /* encodebin2 dynamic source pads */
     while (element->srcpads)
       gst_element_remove_pad (element, element->srcpads->data);
   }

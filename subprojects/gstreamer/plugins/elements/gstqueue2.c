@@ -201,7 +201,7 @@ static GParamSpec *obj_props[PROP_LAST] = { NULL, };
                       queue->max_level.time, \
                       (guint64) (!QUEUE_IS_USING_QUEUE(queue) ? \
                         queue->current->writing_pos - queue->current->max_reading_pos : \
-                        gst_queue_array_get_length(queue->queue)))
+                        gst_vec_deque_get_length(queue->queue)))
 
 #define GST_QUEUE2_MUTEX_LOCK(q) G_STMT_START {                          \
   g_mutex_lock (&q->qlock);                                              \
@@ -264,7 +264,6 @@ static GParamSpec *obj_props[PROP_LAST] = { NULL, };
 #define SET_PERCENT(q, perc) G_STMT_START {                              \
   if (perc != q->buffering_percent) {                                    \
     q->buffering_percent = perc;                                         \
-    q->percent_changed = TRUE;                                           \
     GST_DEBUG_OBJECT (q, "buffering %d percent", perc);                  \
     get_buffering_stats (q, perc, &q->mode, &q->avg_in, &q->avg_out,     \
         &q->buffering_left);                                             \
@@ -320,8 +319,6 @@ static gboolean gst_queue2_is_filled (GstQueue2 * queue);
 
 static void update_cur_level (GstQueue2 * queue, GstQueue2Range * range);
 static void update_in_rates (GstQueue2 * queue, gboolean force);
-static GstMessage *gst_queue2_get_buffering_message (GstQueue2 * queue,
-    gint * percent);
 static void update_buffering (GstQueue2 * queue);
 static void gst_queue2_post_buffering (GstQueue2 * queue);
 
@@ -538,8 +535,9 @@ gst_queue2_init (GstQueue2 * queue)
 
   queue->sinktime = GST_CLOCK_TIME_NONE;
   queue->srctime = GST_CLOCK_TIME_NONE;
-  queue->sink_tainted = TRUE;
-  queue->src_tainted = TRUE;
+  queue->sink_start_time = GST_CLOCK_TIME_NONE;
+  queue->sink_tainted = FALSE;
+  queue->src_tainted = FALSE;
 
   queue->srcresult = GST_FLOW_FLUSHING;
   queue->sinkresult = GST_FLOW_FLUSHING;
@@ -552,7 +550,7 @@ gst_queue2_init (GstQueue2 * queue)
   g_cond_init (&queue->item_add);
   queue->waiting_del = FALSE;
   g_cond_init (&queue->item_del);
-  queue->queue = gst_queue_array_new_for_struct (sizeof (GstQueue2Item), 32);
+  queue->queue = gst_vec_deque_new_for_struct (sizeof (GstQueue2Item), 32);
 
   g_cond_init (&queue->query_handled);
   queue->last_query = FALSE;
@@ -584,11 +582,11 @@ gst_queue2_finalize (GObject * object)
 
   GST_DEBUG_OBJECT (queue, "finalizing queue");
 
-  while ((qitem = gst_queue_array_pop_head_struct (queue->queue))) {
+  while ((qitem = gst_vec_deque_pop_head_struct (queue->queue))) {
     if (qitem->type != GST_QUEUE2_ITEM_TYPE_QUERY)
       gst_mini_object_unref (qitem->item);
   }
-  gst_queue_array_free (queue->queue);
+  gst_vec_deque_free (queue->queue);
 
   queue->last_query = FALSE;
   g_mutex_clear (&queue->qlock);
@@ -769,19 +767,29 @@ update_time_level (GstQueue2 * queue)
     queue->src_tainted = FALSE;
   }
 
-  GST_DEBUG_OBJECT (queue, "sink %" GST_TIME_FORMAT ", src %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (queue->sinktime), GST_TIME_ARGS (queue->srctime));
+  GST_DEBUG_OBJECT (queue, "sink %" GST_TIME_FORMAT ", src %" GST_TIME_FORMAT
+      ", sink-start-time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (queue->sinktime), GST_TIME_ARGS (queue->srctime),
+      GST_TIME_ARGS (queue->sink_start_time));
 
-  if (queue->sinktime != GST_CLOCK_TIME_NONE
-      && queue->srctime != GST_CLOCK_TIME_NONE
-      && queue->sinktime >= queue->srctime)
-    queue->cur_level.time = queue->sinktime - queue->srctime;
-  else
+  if (GST_CLOCK_TIME_IS_VALID (queue->sinktime)) {
+    if (!GST_CLOCK_TIME_IS_VALID (queue->srctime) &&
+        GST_CLOCK_TIME_IS_VALID (queue->sink_start_time) &&
+        queue->sinktime >= queue->sink_start_time) {
+      /* If we got input buffers but output thread didn't push any buffer yet */
+      queue->cur_level.time = queue->sinktime - queue->sink_start_time;
+    } else if (GST_CLOCK_TIME_IS_VALID (queue->srctime) &&
+        queue->sinktime >= queue->srctime) {
+      queue->cur_level.time = queue->sinktime - queue->srctime;
+    } else {
+      queue->cur_level.time = 0;
+    }
+  } else {
     queue->cur_level.time = 0;
+  }
 }
 
-/* take a SEGMENT event and apply the values to segment, updating the time
- * level of queue. */
+/* take a SEGMENT event and apply the values to segment */
 static void
 apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
     gboolean is_sink)
@@ -808,13 +816,11 @@ apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
 
   GST_DEBUG_OBJECT (queue, "configured SEGMENT %" GST_SEGMENT_FORMAT, segment);
 
+  /* Will be updated on buffer flows */
   if (is_sink)
-    queue->sink_tainted = TRUE;
+    queue->sink_tainted = FALSE;
   else
-    queue->src_tainted = TRUE;
-
-  /* segment can update the time level of the queue */
-  update_time_level (queue);
+    queue->src_tainted = FALSE;
 }
 
 static void
@@ -826,22 +832,28 @@ apply_gap (GstQueue2 * queue, GstEvent * event,
 
   gst_event_parse_gap (event, &timestamp, &duration);
 
-  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp));
 
-    if (GST_CLOCK_TIME_IS_VALID (duration)) {
-      timestamp += duration;
-    }
-
-    segment->position = timestamp;
-
-    if (is_sink)
-      queue->sink_tainted = TRUE;
-    else
-      queue->src_tainted = TRUE;
-
-    /* calc diff with other end */
-    update_time_level (queue);
+  if (is_sink && !GST_CLOCK_TIME_IS_VALID (queue->sink_start_time)) {
+    queue->sink_start_time = gst_segment_to_running_time (segment,
+        GST_FORMAT_TIME, timestamp);
+    GST_DEBUG_OBJECT (queue, "Start time updated to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (queue->sink_start_time));
   }
+
+  if (GST_CLOCK_TIME_IS_VALID (duration)) {
+    timestamp += duration;
+  }
+
+  segment->position = timestamp;
+
+  if (is_sink)
+    queue->sink_tainted = TRUE;
+  else
+    queue->src_tainted = TRUE;
+
+  /* calc diff with other end */
+  update_time_level (queue);
 }
 
 static void
@@ -863,14 +875,15 @@ query_downstream_bitrate (GstQueue2 * queue)
 
   GST_QUEUE2_MUTEX_LOCK (queue);
   changed = queue->downstream_bitrate != downstream_bitrate;
-  queue->downstream_bitrate = downstream_bitrate;
+  if (changed) {
+    queue->downstream_bitrate = downstream_bitrate;
+    if (queue->use_buffering)
+      update_buffering (queue);
+  }
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
   if (changed) {
-    if (queue->use_buffering)
-      update_buffering (queue);
     gst_queue2_post_buffering (queue);
-
     g_object_notify_by_pspec (G_OBJECT (queue), obj_props[PROP_BITRATE]);
   }
 }
@@ -883,6 +896,12 @@ apply_buffer (GstQueue2 * queue, GstBuffer * buffer, GstSegment * segment,
   GstClockTime duration, timestamp;
 
   timestamp = GST_BUFFER_DTS_OR_PTS (buffer);
+
+  /* if no timestamp is set, assume it didn't change compared to the previous
+   * buffer and simply return here */
+  if (timestamp == GST_CLOCK_TIME_NONE)
+    return;
+
   duration = GST_BUFFER_DURATION (buffer);
 
   /* If we have no duration, pick one from the bitrate if we can */
@@ -906,10 +925,13 @@ apply_buffer (GstQueue2 * queue, GstBuffer * buffer, GstSegment * segment,
     }
   }
 
-  /* if no timestamp is set, assume it's continuous with the previous
-   * time */
-  if (timestamp == GST_CLOCK_TIME_NONE)
-    timestamp = segment->position;
+  if (is_sink && !GST_CLOCK_TIME_IS_VALID (queue->sink_start_time) &&
+      GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    queue->sink_start_time = gst_segment_to_running_time (segment,
+        GST_FORMAT_TIME, timestamp);
+    GST_DEBUG_OBJECT (queue, "Start time updated to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (queue->sink_start_time));
+  }
 
   /* add duration */
   if (duration != GST_CLOCK_TIME_NONE)
@@ -931,6 +953,7 @@ apply_buffer (GstQueue2 * queue, GstBuffer * buffer, GstSegment * segment,
 
 struct BufListData
 {
+  GstClockTime first_timestamp;
   GstClockTime timestamp;
   guint bitrate;
 };
@@ -949,18 +972,22 @@ buffer_list_apply_time (GstBuffer ** buf, guint idx, gpointer data)
       GST_TIME_ARGS (GST_BUFFER_DURATION (*buf)));
 
   btime = GST_BUFFER_DTS_OR_PTS (*buf);
-  if (GST_CLOCK_TIME_IS_VALID (btime))
-    *timestamp = btime;
+  if (GST_CLOCK_TIME_IS_VALID (btime)) {
+    if (!GST_CLOCK_TIME_IS_VALID (bld->first_timestamp))
+      bld->first_timestamp = btime;
 
-  if (GST_BUFFER_DURATION_IS_VALID (*buf))
+    *timestamp = btime;
+  }
+
+  if (GST_BUFFER_DURATION_IS_VALID (*buf)
+      && GST_CLOCK_TIME_IS_VALID (*timestamp)) {
     *timestamp += GST_BUFFER_DURATION (*buf);
-  else if (bld->bitrate != 0) {
+  } else if (bld->bitrate != 0 && GST_CLOCK_TIME_IS_VALID (*timestamp)) {
     guint64 size = gst_buffer_get_size (*buf);
 
     /* If we have no duration, pick one from the bitrate if we can */
     *timestamp += gst_util_uint64_scale (bld->bitrate, 8 * GST_SECOND, size);
   }
-
 
   GST_TRACE ("ts now %" GST_TIME_FORMAT, GST_TIME_ARGS (*timestamp));
   return TRUE;
@@ -973,8 +1000,11 @@ apply_buffer_list (GstQueue2 * queue, GstBufferList * buffer_list,
 {
   struct BufListData bld;
 
-  /* if no timestamp is set, assume it's continuous with the previous time */
-  bld.timestamp = segment->position;
+  bld.first_timestamp = GST_CLOCK_TIME_NONE;
+
+  /* if no timestamp is set, assume it didn't change compared to the previous
+   * buffer and simply return here without updating */
+  bld.timestamp = GST_CLOCK_TIME_NONE;
 
   bld.bitrate = 0;
   if (queue->use_tags_bitrate) {
@@ -988,6 +1018,17 @@ apply_buffer_list (GstQueue2 * queue, GstBufferList * buffer_list,
   }
 
   gst_buffer_list_foreach (buffer_list, buffer_list_apply_time, &bld);
+
+  if (!GST_CLOCK_TIME_IS_VALID (bld.timestamp))
+    return;
+
+  if (is_sink && !GST_CLOCK_TIME_IS_VALID (queue->sink_start_time) &&
+      GST_CLOCK_TIME_IS_VALID (bld.first_timestamp)) {
+    queue->sink_start_time = gst_segment_to_running_time (segment,
+        GST_FORMAT_TIME, bld.first_timestamp);
+    GST_DEBUG_OBJECT (queue, "Start time updated to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (queue->sink_start_time));
+  }
 
   GST_DEBUG_OBJECT (queue, "last_stop updated to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (bld.timestamp));
@@ -1137,38 +1178,6 @@ get_buffering_stats (GstQueue2 * queue, gint percent, GstBufferingMode * mode,
   }
 }
 
-/* Called with the lock taken */
-static GstMessage *
-gst_queue2_get_buffering_message (GstQueue2 * queue, gint * percent)
-{
-  GstMessage *msg = NULL;
-  if (queue->percent_changed) {
-    /* Don't change the buffering level if the sinkpad is waiting for
-     * space to become available.  This prevents the situation where,
-     * upstream is pushing buffers larger than our limits so only 1 buffer
-     * is ever in the queue at a time.
-     * Changing the level causes a buffering message to be posted saying that
-     * we are buffering which the application may pause to wait for another
-     * 100% buffering message which would be posted very soon after the
-     * waiting sink thread adds it's buffer to the queue */
-    /* FIXME: This situation above can still occur later if
-     * the sink pad is waiting to push a serialized event into the queue and
-     * the queue becomes empty for a short period of time. */
-    if (!queue->waiting_del
-        && queue->last_posted_buffering_percent != queue->buffering_percent) {
-      *percent = queue->buffering_percent;
-
-      GST_DEBUG_OBJECT (queue, "Going to post buffering: %d%%", *percent);
-      msg = gst_message_new_buffering (GST_OBJECT_CAST (queue), *percent);
-
-      gst_message_set_buffering_stats (msg, queue->mode, queue->avg_in,
-          queue->avg_out, queue->buffering_left);
-    }
-  }
-
-  return msg;
-}
-
 static void
 gst_queue2_post_buffering (GstQueue2 * queue)
 {
@@ -1176,21 +1185,34 @@ gst_queue2_post_buffering (GstQueue2 * queue)
   gint percent = -1;
 
   g_mutex_lock (&queue->buffering_post_lock);
+
   GST_QUEUE2_MUTEX_LOCK (queue);
-  msg = gst_queue2_get_buffering_message (queue, &percent);
+  /* Don't change the buffering level if the sinkpad is waiting for
+   * space to become available.  This prevents the situation where,
+   * upstream is pushing buffers larger than our limits so only 1 buffer
+   * is ever in the queue at a time.
+   * Changing the level causes a buffering message to be posted saying that
+   * we are buffering which the application may pause to wait for another
+   * 100% buffering message which would be posted very soon after the
+   * waiting sink thread adds it's buffer to the queue */
+  /* FIXME: This situation above can still occur later if
+   * the sink pad is waiting to push a serialized event into the queue and
+   * the queue becomes empty for a short period of time. */
+  if ((!queue->waiting_del || queue->buffering_percent == 100)
+      && queue->last_posted_buffering_percent != queue->buffering_percent) {
+    percent = queue->buffering_percent;
+
+    GST_DEBUG_OBJECT (queue, "Going to post buffering: %d%%", percent);
+    msg = gst_message_new_buffering (GST_OBJECT_CAST (queue), percent);
+
+    gst_message_set_buffering_stats (msg, queue->mode, queue->avg_in,
+        queue->avg_out, queue->buffering_left);
+  }
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
   if (msg != NULL) {
     if (gst_element_post_message (GST_ELEMENT_CAST (queue), msg)) {
-      GST_QUEUE2_MUTEX_LOCK (queue);
-      /* Set these states only if posting the message succeeded. Otherwise,
-       * this post attempt failed, and the next one won't be done, because
-       * gst_queue2_get_buffering_message() checks these states and decides
-       * based on their values that it won't produce a message. */
       queue->last_posted_buffering_percent = percent;
-      if (percent == queue->buffering_percent)
-        queue->percent_changed = FALSE;
-      GST_QUEUE2_MUTEX_UNLOCK (queue);
       GST_DEBUG_OBJECT (queue, "successfully posted %d%% buffering message",
           percent);
     } else
@@ -1888,7 +1910,7 @@ gst_queue2_locked_flush (GstQueue2 * queue, gboolean full, gboolean clear_temp)
   } else {
     GstQueue2Item *qitem;
 
-    while ((qitem = gst_queue_array_pop_head_struct (queue->queue))) {
+    while ((qitem = gst_vec_deque_pop_head_struct (queue->queue))) {
       if (!full && qitem->type == GST_QUEUE2_ITEM_TYPE_EVENT
           && GST_EVENT_IS_STICKY (qitem->item)
           && GST_EVENT_TYPE (qitem->item) != GST_EVENT_SEGMENT
@@ -1909,7 +1931,8 @@ gst_queue2_locked_flush (GstQueue2 * queue, gboolean full, gboolean clear_temp)
   gst_segment_init (&queue->sink_segment, GST_FORMAT_TIME);
   gst_segment_init (&queue->src_segment, GST_FORMAT_TIME);
   queue->sinktime = queue->srctime = GST_CLOCK_TIME_NONE;
-  queue->sink_tainted = queue->src_tainted = TRUE;
+  queue->sink_start_time = GST_CLOCK_TIME_NONE;
+  queue->sink_tainted = queue->src_tainted = FALSE;
   if (queue->starting_segment != NULL)
     gst_event_unref (queue->starting_segment);
   queue->starting_segment = NULL;
@@ -2209,37 +2232,12 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
     update_cur_level (queue, queue->current);
 
     /* update the buffering status */
-    if (queue->use_buffering) {
-      GstMessage *msg;
-      gint percent = -1;
+    if (queue->use_buffering)
       update_buffering (queue);
-      msg = gst_queue2_get_buffering_message (queue, &percent);
-      if (msg) {
-        gboolean post_ok;
 
-        GST_QUEUE2_MUTEX_UNLOCK (queue);
-
-        g_mutex_lock (&queue->buffering_post_lock);
-        post_ok = gst_element_post_message (GST_ELEMENT_CAST (queue), msg);
-
-        GST_QUEUE2_MUTEX_LOCK (queue);
-
-        if (post_ok) {
-          /* Set these states only if posting the message succeeded. Otherwise,
-           * this post attempt failed, and the next one won't be done, because
-           * gst_queue2_get_buffering_message() checks these states and decides
-           * based on their values that it won't produce a message. */
-          queue->last_posted_buffering_percent = percent;
-          if (percent == queue->buffering_percent)
-            queue->percent_changed = FALSE;
-          GST_DEBUG_OBJECT (queue, "successfully posted %d%% buffering message",
-              percent);
-        } else {
-          GST_DEBUG_OBJECT (queue, "could not post buffering message");
-        }
-        g_mutex_unlock (&queue->buffering_post_lock);
-      }
-    }
+    GST_QUEUE2_MUTEX_UNLOCK (queue);
+    gst_queue2_post_buffering (queue);
+    GST_QUEUE2_MUTEX_LOCK (queue);
 
     GST_INFO_OBJECT (queue, "cur_level.bytes %u (max %" G_GUINT64_FORMAT ")",
         queue->cur_level.bytes, QUEUE_MAX_BYTES (queue));
@@ -2439,7 +2437,7 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item,
 
       qitem.type = item_type;
       qitem.item = item;
-      gst_queue_array_push_tail_struct (queue->queue, &qitem);
+      gst_vec_deque_push_tail_struct (queue->queue, &qitem);
     } else {
       gst_mini_object_unref (GST_MINI_OBJECT_CAST (item));
     }
@@ -2471,7 +2469,7 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, GstQueue2ItemType * item_type)
   if (!QUEUE_IS_USING_QUEUE (queue)) {
     item = gst_queue2_read_item_from_file (queue);
   } else {
-    GstQueue2Item *qitem = gst_queue_array_pop_head_struct (queue->queue);
+    GstQueue2Item *qitem = gst_vec_deque_pop_head_struct (queue->queue);
 
     if (qitem == NULL)
       goto no_item;
@@ -2858,7 +2856,7 @@ gst_queue2_is_empty (GstQueue2 * queue)
   if (!QUEUE_IS_USING_QUEUE (queue) && queue->current) {
     return queue->current->writing_pos <= queue->current->max_reading_pos;
   } else {
-    if (gst_queue_array_get_length (queue->queue) == 0)
+    if (gst_vec_deque_get_length (queue->queue) == 0)
       return TRUE;
   }
 
@@ -3235,22 +3233,26 @@ out_flushing:
     GstFlowReturn ret = queue->srcresult;
 
     gst_pad_pause_task (queue->srcpad);
-    if (ret == GST_FLOW_FLUSHING) {
+
+    /* flush internal queue except for not-linked and eos
+     * not-linked: reconfigure event will start srcpad task
+     * eos: stream-start can clear eos and will start srcpad task again */
+    if (ret != GST_FLOW_NOT_LINKED && ret != GST_FLOW_EOS) {
       gst_queue2_locked_flush (queue, FALSE, FALSE);
     } else {
       GST_QUEUE2_SIGNAL_DEL (queue);
       queue->last_query = FALSE;
       g_cond_signal (&queue->query_handled);
     }
-    GST_QUEUE2_MUTEX_UNLOCK (queue);
-    GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-        "pause task, reason:  %s", gst_flow_get_name (queue->srcresult));
     /* Recalculate buffering levels before stopping since the source flow
      * might cause a different buffering level (like NOT_LINKED making
      * the queue appear as full) */
     if (queue->use_buffering)
       update_buffering (queue);
+    GST_QUEUE2_MUTEX_UNLOCK (queue);
     gst_queue2_post_buffering (queue);
+    GST_CAT_LOG_OBJECT (queue_dataflow, queue,
+        "pause task, reason:  %s", gst_flow_get_name (queue->srcresult));
     /* let app know about us giving up if upstream is not expected to do so */
     /* EOS is already taken care of elsewhere */
     if (eos && (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS)) {

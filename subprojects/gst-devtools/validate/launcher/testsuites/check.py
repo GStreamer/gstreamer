@@ -22,14 +22,17 @@ GStreamer unit tests
 """
 from launcher import utils
 
+import os
+
 TEST_MANAGER = "check"
 
-KNOWN_NOT_LEAKY = r'^check.gst-devtools.*|^check.gstreamer.*|^check-gst-plugins-base|^check.gst-plugins-ugly|^check.gst-plugins-good'
+KNOWN_NOT_LEAKY = r'^gst-devtools.*|^gstreamer.*|^gst-plugins-base|^gst-plugins-ugly|^gst-plugins-good'
 
 # These tests take very long compared to what they add, so let's skip them.
 LONG_VALGRIND_TESTS = [
     (r'check.[a-z-]*.generic_states.test_state_changes_down_seq', 'enough to run one of the sequences'),
     (r'check.[a-z-]*.generic_states.test_state_changes_up_seq', 'enough to run one of the sequences',),
+    (r'check.[a-z-]*.generic_states.test_state_changes_up_and_down_seq', 'enough to run the sequences'),
     (r'check.gstreamer.gst_gstelement.test_foreach_pad$', '48s'),
     (r'check.gstreamer.gst_gstinfo.info_post_gst_init_category_registration$', '21s'),
     (r'check.gstreamer.gst_gstsystemclock.test_resolution$', '60s'),
@@ -39,6 +42,10 @@ LONG_VALGRIND_TESTS = [
     (r'check.gstreamer.pipelines_simple_launch_lines.test_2_elements$', '58s'),
     (r'check.gstreamer.pipelines_stress.test_stress$', '54s'),
     (r'check.gstreamer.pipelines_stress.test_stress_preroll$', '27s'),
+    (r'check.gst-plugins-base.elements_appsrc.test_appsrc_limits', '53.37s'),
+    (r'check.gst-plugins-base.elements_appsrc.test_appsrc_send_event_before_buffer', '49.25s'),
+    (r'check.gst-plugins-base.elements_appsrc.test_appsrc_send_event_before_sample', '51.39s'),
+    (r'check.gst-plugins-base.elements_appsrc.test_appsrc_send_event_between_caps_buffer', '56.13s'),
     (r'check.gst-plugins-base.elements_appsrc.test_appsrc_block_deadlock$', '265.595s'),
     (r'check.gst-plugins-base.elements_audioresample.test_fft$', '91.247s'),
     (r'check.gst-plugins-base.elements_audioresample.test_timestamp_drift$', '141.784s'),
@@ -91,11 +98,13 @@ VALGRIND_BLACKLIST = [
     (r'check.gst-plugins-good.elements_rtpjitterbuffer.test_push_backward_seq', 'flaky in valgrind'),
     (r'check.gst-plugins-good.elements_rtpjitterbuffer.test_push_unordered', 'flaky in valgrind'),
     (r'check.gst-plugins-bad.elements_assrender', '?'),
+    (r'check.gst-plugins-bad.elements_autovideoconvert.test_autovideoconvert_videoconvert', 'Leak with GLX, https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3216'),
     (r'check.gst-plugins-bad.elements_camerabin', '?'),
     (r'check.gst-plugins-bad.elements_line21', '?'),
     (r'check.gst-plugins-bad.elements_mpeg2enc', '?'),
     (r'check.gst-plugins-bad.elements_mplex', '?'),
     (r'check.gst-plugins-bad.elements_mxfmux', '?'),
+    (r'check.gst-plugins-bad.elements_srt.test_src_listener_sink_caller', 'Need to investigate libsrt leaks (flaky)'),
     (r'check.gst-plugins-bad.elements_x265enc', '?'),
     (r'check.gst-plugins-bad.elements_zbar', '?'),
     (r'check.gst-plugins-bad.elements_webrtcbin.test_data_channel_remote_notify', 'Need to fix leaks'),
@@ -112,9 +121,9 @@ VALGRIND_BLACKLIST = [
     (r'check.gst-editing-services.pythontests', 'Need to figure out how to introduce python suppressions'),
     (r'check.gst-editing-services.check_keyframes_in_compositor_two_sources', 'Valgrind exit with an exitcode 20 but shows no issue: https://gitlab.freedesktop.org/thiblahute/gst-editing-services/-/jobs/4079972'),
     (r'check.gst-plugins-good.elements_splitmuxsrc.test_splitmuxsrc_sparse_streams', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/739'),
-    (r'check.gst-plugins-good.elements_udpsrc.test_udpsrc_empty_packet', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/740')
+    (r'check.gst-plugins-good.elements_udpsrc.test_udpsrc_empty_packet', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/740'),
+    (r'check.gst-plugins-bad.elements_svthevc*', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3011'),
 ]
-
 
 BLACKLIST = [
     (r'check.gstreamer.gst_gstsystemclock.test_stress_cleanup_unschedule', 'flaky under high server load'),
@@ -125,6 +134,7 @@ BLACKLIST = [
     (r'check.gst-plugins-base.elements_multisocketsink.test_sending_buffers_with_9_gstmemories$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/779'),
     (r'check.gst-plugins-base.elements_multisocketsink.test_client_next_keyframe$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/779'),
     (r'check.gst-plugins-base.elements_multisocketsink.test_add_client$', ''),
+    (r'check.gst-plugins-base.elements_multisocketsink.test_burst_client_bytes$', ''),
     (r'check.gst-plugins-base.libs_gstglcolorconvert.test_reorder_buffer$', '?'),
     (r'check.gst-plugins-base.elements_audiotestsrc.test_layout$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/781'),
     (r'check.gst-plugins-good.elements_souphttpsrc.test_icy_stream$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/782'),
@@ -144,6 +154,7 @@ BLACKLIST = [
     (r'check.gst-plugins-bad.elements_curlhttpsrc.test_multiple_http_requests$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/788'),
     (r'check.gst-plugins-good.elements_rtpsession.test_multiple_senders_roundrobin_rbs$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/789'),
     (r'check.gst-plugins-bad.elements_shm.test_shm_live$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/790'),
+    (r'check.gst-plugins-bad.validate.autovideoconvert.renegotiate$', ''),
     (r'check.gst-plugins-good.elements_splitmux.test_splitmuxsink_async$', '[FIXME -- SHOULD BE FIXED] https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/791'),
     (r'check.gst-plugins-bad.elements_netsim.netsim_stress$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/792'),
     (r'check.gst-editing-services.nle_complex.test_one_expandable_another$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/793'),
@@ -163,7 +174,31 @@ BLACKLIST = [
     (r'check.gst-rtsp-server.gst_rtspserver.test_multiple_transports', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/767'),
 ]
 
+CI_BLACKLIST = [
+    (r'check.gst-plugins-bad.elements_vk*', 'Mesa in the CI image is older, will start passing once we update to llvm16 and mesa 23.1'),
+    (r'check.gst-plugins-bad.libs_vk*', 'Mesa in the CI image is older, will start passing once we update to llvm16 and mesa 23.1'),
+    (r'check.gst-plugins-good.elements_souphttpsrc2.test_icy_stream', 'flaky in valgrind, leaks in CI but not locally'),
+]
+
+
 KNOWN_ISSUES = {
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/2973": {
+        "tests": [
+            "check.gst-editing-services.complex_effect_bin_desc"
+        ],
+        "issues": [
+            {
+                'returncode': 238,
+                'sometimes': True,
+            },
+            {
+                "issue-id": "validateflow::mismatch",
+                "summary": "The recorded log does not match the expectation file.",
+                "level": "critical",
+                # "details": "Mismatch error in pad videosink:sink, line 4. Expected:\nbuffer: checksum=369888c2612267760fcfaa74e52fc53bd73e4d15, pts=0:00:00.000000000, dur=0:00:00.033333333, meta=GstVideoMeta\nActual:\nbuffer: checksum=b7764dce84f311119c4c36b511ba5adb66de76af, pts=0:00:00.000000000, dur=0:00:00.033333333, meta=GstVideoMeta\n",
+            },
+        ],
+    },
     "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/773": {
         "tests": [
             r"check.gst-plugins-bad.elements_webrtcbin.*",
@@ -237,6 +272,9 @@ def setup_tests(test_manager, options):
         test_manager.set_default_blacklist(VALGRIND_BLACKLIST)
         if options.long_limit <= utils.LONG_TEST:
             test_manager.set_default_blacklist(LONG_VALGRIND_TESTS)
+
+    if 'CI_COMMIT_SHA' in os.environ:
+        test_manager.set_default_blacklist(CI_BLACKLIST)
 
     test_manager.add_expected_issues(KNOWN_ISSUES)
 

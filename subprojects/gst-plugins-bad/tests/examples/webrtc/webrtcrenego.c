@@ -8,15 +8,16 @@ static GMainLoop *loop;
 static GstElement *pipe1, *webrtc1, *webrtc2, *extra_src;
 static GstBus *bus1;
 
-#define SEND_SRC(pattern) "videotestsrc is-live=true pattern=" pattern " ! timeoverlay ! queue ! vp8enc ! rtpvp8pay ! queue ! " \
-    "capsfilter caps=application/x-rtp,media=video,payload=96,encoding-name=VP8"
+#define SEND_SRC(pattern, pt) "videotestsrc is-live=true pattern=" pattern \
+    " ! timeoverlay ! queue ! vp8enc ! rtpvp8pay ! queue ! capsfilter " \
+    " caps=application/x-rtp,media=video,payload=" pt ",encoding-name=VP8"
 
 static void
 _element_message (GstElement * parent, GstMessage * msg)
 {
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_EOS:{
-      GstElement *receive, *webrtc;
+      GstElement *receive;
       GstPad *pad, *peer;
 
       g_print ("Got element EOS message from %s parent %s\n",
@@ -27,11 +28,9 @@ _element_message (GstElement * parent, GstMessage * msg)
       pad = gst_element_get_static_pad (receive, "sink");
       peer = gst_pad_get_peer (pad);
 
-      webrtc = GST_ELEMENT (gst_pad_get_parent (peer));
       gst_bin_remove (GST_BIN (pipe1), receive);
 
       gst_pad_unlink (peer, pad);
-      gst_element_release_request_pad (webrtc, peer);
 
       gst_object_unref (pad);
       gst_object_unref (peer);
@@ -201,8 +200,8 @@ stream_change (gpointer data)
 {
   if (!extra_src) {
     g_print ("Adding extra stream\n");
-    extra_src =
-        gst_parse_bin_from_description (SEND_SRC ("circular"), TRUE, NULL);
+    extra_src = gst_parse_bin_from_description (SEND_SRC ("circular", "97"),
+        TRUE, NULL);
 
     gst_element_set_locked_state (extra_src, TRUE);
     gst_bin_add (GST_BIN (pipe1), extra_src);
@@ -218,9 +217,12 @@ stream_change (gpointer data)
     g_print ("Removing extra stream\n");
     pad = gst_element_get_static_pad (extra_src, "src");
     peer = gst_pad_get_peer (pad);
-    gst_element_send_event (extra_src, gst_event_new_eos ());
 
     g_object_get (peer, "transceiver", &transceiver, NULL);
+    /* Instead of removing the source, you can add a pad probe to block data
+     * flow, and you can set this to SENDONLY later to switch this track from
+     * inactive to sendonly, but this only works with non-gstreamer receivers
+     * at present. */
     g_object_set (transceiver, "direction",
         GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE, NULL);
 
@@ -248,8 +250,9 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 
   loop = g_main_loop_new (NULL, FALSE);
-  pipe1 = gst_parse_launch (SEND_SRC ("smpte")
-      " ! webrtcbin name=smpte bundle-policy=max-bundle " SEND_SRC ("ball")
+  pipe1 = gst_parse_launch (SEND_SRC ("smpte", "96")
+      " ! webrtcbin name=smpte bundle-policy=max-bundle "
+      SEND_SRC ("ball", "96")
       " ! webrtcbin name=ball bundle-policy=max-bundle", NULL);
   g_object_set (pipe1, "message-forward", TRUE, NULL);
   bus1 = gst_pipeline_get_bus (GST_PIPELINE (pipe1));

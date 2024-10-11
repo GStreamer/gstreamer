@@ -308,7 +308,7 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
 
   /* need to dig metadata blocks for some more */
   while (gst_byte_reader_get_remaining (&br)) {
-    gint size = 0;
+    guint32 size = 0;
     guint16 size2 = 0;
     guint8 c, id;
     const guint8 *data;
@@ -322,8 +322,11 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
     size <<= 8;
     size += c;
     size <<= 1;
-    if (id & ID_ODD_SIZE)
+    if (id & ID_ODD_SIZE) {
+      if (size == 0)
+        goto read_failed;
       size--;
+    }
 
     CHECK (gst_byte_reader_get_data (&br, size + (size & 1), &data));
     gst_byte_reader_init (&mbr, data, size);
@@ -337,6 +340,7 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
         break;
       case ID_WV_BITSTREAM:
       case ID_WVX_BITSTREAM:
+      case ID_WVX_NEW_BITSTREAM:
         break;
       case ID_SAMPLE_RATE:
         if (size == 3) {

@@ -1,7 +1,7 @@
 event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1, stream=(GstStream)"\(GstStream\)\ ecf1ea12b198caea123f05f4fcb08daa35ee5045577d2be98f3424c0ce90757a/video-0";
 event caps: video/x-raw, colorimetry=(string)2:4:0:0, format=(string)I420, framerate=(fraction)0/1, height=(int)446, interlace-mode=(string)progressive, multiview-flags=(GstVideoMultiviewFlagsSet)0:ffffffff:/right-view-first/left-flipped/left-flopped/right-flipped/right-flopped/half-aspect/mixed-mono, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, width=(int)928;
-event segment: format=TIME, start=0:00:00.014000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
-event stream-collection: stream-collection, collection=(GstStreamCollection)"\(GstStreamCollection\)\ streamcollection0";
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+event stream-collection: stream-collection, collection=(GstStreamCollection)"\(GstStreamCollection\)\ adaptivedemux";
 buffer: content-id=0, pts=0:00:00.014000000, flags=discont, meta=GstVideoMeta
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;

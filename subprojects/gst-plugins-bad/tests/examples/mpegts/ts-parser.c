@@ -87,7 +87,11 @@ descriptor_name (GstMpegtsDescriptor * desc)
   gint val = desc->tag;
 
   /* Treat extended descriptors */
-  if (val == 0x7f) {
+  if (val == 0x3f) {
+    en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+            (GST_TYPE_MPEGTS_EXTENDED_DESCRIPTOR_TYPE)), desc->tag_extension);
+  }
+  if (en == NULL && val == 0x7f) {
     en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
             (GST_TYPE_MPEGTS_DVB_EXTENDED_DESCRIPTOR_TYPE)),
         desc->tag_extension);

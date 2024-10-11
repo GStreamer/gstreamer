@@ -25,6 +25,23 @@
 #include <gst/video/video.h>
 #include <va/va.h>
 
+#ifdef HAVE_LIBDRM
+#include <drm_fourcc.h>
+#else
+/**
+ * DRM_FORMAT_INVALID: (skip) (attributes doc.skip=true)
+ */
+#define DRM_FORMAT_INVALID     0
+/**
+ * DRM_FORMAT_MOD_LINEAR: (skip) (attributes doc.skip=true)
+ */
+#define DRM_FORMAT_MOD_LINEAR  0ULL
+/**
+ * DRM_FORMAT_MOD_INVALID: (skip) (attributes doc.skip=true)
+ */
+#define DRM_FORMAT_MOD_INVALID 0xffffffffffffff
+#endif
+
 G_BEGIN_DECLS
 
 GST_VA_API
@@ -56,8 +73,8 @@ GstVideoFormat        gst_va_video_surface_format_from_image_format (GstVideoFor
                                                                      GArray * surface_formats);
 
 GST_VA_API
-gboolean              gst_va_video_info_from_dma_info     (GstVideoInfo * info,
-                                                           const GstVideoInfoDmaDrm * drm_info);
+gboolean              gst_va_dma_drm_info_to_video_info   (const GstVideoInfoDmaDrm * drm_info,
+                                                           GstVideoInfo * info);
 
 GST_VA_API
 void                  gst_va_video_format_fix_map         (VAImageFormat * image_formats,

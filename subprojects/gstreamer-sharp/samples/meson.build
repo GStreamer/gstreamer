@@ -20,6 +20,7 @@ examples = [
     ['playback-tutorial-5' , 'PlaybackTutorial5.cs',],
     ['playback-tutorial-6' , 'PlaybackTutorial6.cs',],
     ['playback-tutorial-7' , 'PlaybackTutorial7.cs',],
+    ['rtsp-server-example', 'RTSPServerExample.cs',],
 ]
 
 foreach example: examples

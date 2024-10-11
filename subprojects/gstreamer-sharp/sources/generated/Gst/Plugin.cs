@@ -124,25 +124,16 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_plugin_add_dependency(IntPtr raw, IntPtr[] env_vars, IntPtr[] paths, IntPtr[] names, int flags);
+		static extern void gst_plugin_add_dependency(IntPtr raw, IntPtr env_vars, IntPtr paths, IntPtr names, int flags);
 
 		public void AddDependency(string[] env_vars, string[] paths, string[] names, Gst.PluginDependencyFlags flags) {
-			int cnt_env_vars = env_vars == null ? 0 : env_vars.Length;
-			IntPtr[] native_env_vars = new IntPtr [cnt_env_vars + 1];
-			for (int i = 0; i < cnt_env_vars; i++)
-				native_env_vars [i] = GLib.Marshaller.StringToPtrGStrdup(env_vars[i]);
-			native_env_vars [cnt_env_vars] = IntPtr.Zero;
-			int cnt_paths = paths == null ? 0 : paths.Length;
-			IntPtr[] native_paths = new IntPtr [cnt_paths + 1];
-			for (int i = 0; i < cnt_paths; i++)
-				native_paths [i] = GLib.Marshaller.StringToPtrGStrdup(paths[i]);
-			native_paths [cnt_paths] = IntPtr.Zero;
-			int cnt_names = names == null ? 0 : names.Length;
-			IntPtr[] native_names = new IntPtr [cnt_names + 1];
-			for (int i = 0; i < cnt_names; i++)
-				native_names [i] = GLib.Marshaller.StringToPtrGStrdup(names[i]);
-			native_names [cnt_names] = IntPtr.Zero;
+			IntPtr native_env_vars = GLib.Marshaller.StringArrayToStrvPtr(env_vars, true);
+			IntPtr native_paths = GLib.Marshaller.StringArrayToStrvPtr(paths, true);
+			IntPtr native_names = GLib.Marshaller.StringArrayToStrvPtr(names, true);
 			gst_plugin_add_dependency(Handle, native_env_vars, native_paths, native_names, (int) flags);
+			GLib.Marshaller.StrFreeV (native_env_vars);
+			GLib.Marshaller.StrFreeV (native_paths);
+			GLib.Marshaller.StrFreeV (native_names);
 		}
 
 		public void AddDependency(Gst.PluginDependencyFlags flags) {

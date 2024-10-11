@@ -6,18 +6,17 @@ Copies current subproject git repository to create a cache
 
 import shutil
 import os
-import sys
 import argparse
 import subprocess
 
-DEST = "/subprojects"
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument('subprojects_dir')
 PARSER.add_argument('--build', action="store_true", default=False)
+PARSER.add_argument('--cache-dir', default="/subprojects")
 
 
 def create_cache_in_image(options):
-    os.makedirs(DEST, exist_ok=True)
+    os.makedirs(options.cache_dir, exist_ok=True)
     print("Creating cache from %s" % options.subprojects_dir)
     for project_name in os.listdir(options.subprojects_dir):
         project_path = os.path.join(options.subprojects_dir, project_name)
@@ -25,27 +24,26 @@ def create_cache_in_image(options):
         if project_name != "packagecache" and not os.path.exists(os.path.join(project_path, '.git')):
             continue
 
-        if os.path.exists(os.path.join(DEST, project_name)):
+        if os.path.exists(os.path.join(options.cache_dir, project_name)):
             continue
 
         print("Copying %s" % project_name)
-        shutil.copytree(project_path, os.path.join(DEST, project_name))
+        shutil.copytree(project_path, os.path.join(options.cache_dir, project_name))
 
     media_path = os.path.join(options.subprojects_dir, '..', '.git',
         'modules', 'subprojects', 'gst-integration-testsuites', 'medias')
-    if os.path.exists(os.path.join(DEST, 'medias.git')):
+    if os.path.exists(os.path.join(options.cache_dir, 'medias.git')):
         return
 
     if os.path.exists(media_path):
         print("Creating media cache")
-        shutil.copytree(media_path, os.path.join(DEST, 'medias.git'))
+        shutil.copytree(media_path, os.path.join(options.cache_dir, 'medias.git'))
     else:
         print("Did not find medias in %s" % media_path)
 
 
 def copy_cache(options):
-    # FIXME Remove when not needed anymore.
-    for path in [DEST, "/gst-build/subprojects", r"C:\gst-build\subprojects"]:
+    for path in [options.cache_dir]:
         if not os.path.exists(path):
             print("%s doesn't exist." % path)
             continue

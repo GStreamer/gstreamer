@@ -55,9 +55,8 @@ struct _GstSwitchBin
 	guint num_paths;
 
 	GstElement *input_identity;
-	GstEvent *last_stream_start;
 	GstPad *sinkpad, *srcpad;
-	gulong blocking_probe_id, drop_probe_id;
+	gulong blocking_probe_id;
 
 	GstCaps *last_caps;
 };

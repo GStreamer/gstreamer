@@ -74,7 +74,7 @@ deinterlace_greedy_interpolate_scanline_orc (GstDeinterlaceSimpleMethod * self,
 {
   guint max_comb = GST_DEINTERLACE_METHOD_GREEDY_L (self)->max_comb;
 
-  if (scanlines->m1 == NULL || scanlines->mp == NULL) {
+  if (scanlines->m1 == NULL) {
     deinterlace_line_linear (out, scanlines->t0, scanlines->b0, size);
   } else {
     deinterlace_line_greedy (out, scanlines->m1, scanlines->t0, scanlines->b0,
@@ -89,7 +89,7 @@ deinterlace_greedy_interpolate_scanline_orc_planar_u (GstDeinterlaceSimpleMethod
 {
   guint max_comb = GST_DEINTERLACE_METHOD_GREEDY_L (self)->max_comb;
 
-  if (scanlines->m1 == NULL || scanlines->mp == NULL) {
+  if (scanlines->m1 == NULL) {
     deinterlace_line_linear (out, scanlines->t0, scanlines->b0, size);
   } else {
     deinterlace_line_greedy (out, scanlines->m1, scanlines->t0, scanlines->b0,
@@ -104,7 +104,7 @@ deinterlace_greedy_interpolate_scanline_orc_planar_v (GstDeinterlaceSimpleMethod
 {
   guint max_comb = GST_DEINTERLACE_METHOD_GREEDY_L (self)->max_comb;
 
-  if (scanlines->m1 == NULL || scanlines->mp == NULL) {
+  if (scanlines->m1 == NULL) {
     deinterlace_line_linear (out, scanlines->t0, scanlines->b0, size);
   } else {
     deinterlace_line_greedy (out, scanlines->m1, scanlines->t0, scanlines->b0,

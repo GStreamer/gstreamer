@@ -1,21 +1,16 @@
-project('win-flex-bison-binary', version : '3.7.6')
+project('macos-bison-binary', version : '3.8.2')
+
+arch = host_machine.cpu_family()
+
+message('Downloading and extracting bison for macOS @0@...'.format(arch))
+
+checksum = {
+  'x86_64': '325e78de481fa044f0f2177d4da332a1b580bda23fdaf37e7918c5fd55240254',
+  'aarch64': '932f9ec3da7a9f6c9f596094f889038340a45e84dc03082cb10ffee84b5d7af0',
+}
 
 py3 = import('python3').find_python()
-
-message('Downloading and extracting bison for macOS x64...')
-
-arch = 'x86_64' # run under emulation on arm64
-tar_hash = '932f91d7c7fa0121abc3e5f8e54a7234b03d3de468c254ab8063ff8e6eb92a09'
-
-ret = run_command(py3, files('download-binary.py'), meson.project_version(), arch, tar_hash,
+ret = run_command(py3, files('download-binary.py'), meson.project_version(), arch, checksum[arch],
     check: true)
 
-conf = configuration_data()
-conf.set('SRCDIR', meson.project_source_root())
-conf.set('EXTRACTDIR', ret.stdout())
-bison_py = configure_file(
-    input: 'bison.py.in',
-    output: 'bison.py',
-    configuration: conf)
-
-meson.override_find_program('bison', find_program(bison_py))
+meson.override_find_program('bison', find_program(meson.project_source_root() / ret.stdout() / 'bin/bison'))

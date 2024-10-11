@@ -10,6 +10,7 @@ namespace Gst.Video {
 
 		void SendCommand(Gst.Video.NavigationCommand command);
 		void SendEvent(Gst.Structure structure);
+		void SendEventSimple(Gst.Event evnt);
 		void SendKeyEvent(string evnt, string key);
 		void SendMouseEvent(string evnt, int button, double x, double y);
 		void SendMouseScrollEvent(double x, double y, double delta_x, double delta_y);
@@ -19,6 +20,7 @@ namespace Gst.Video {
 	public partial interface INavigationImplementor : GLib.IWrapper {
 
 		void SendEvent (Gst.Structure structure);
+		void SendEventSimple (Gst.Event evnt);
 	}
 #endregion
 }

@@ -1,0 +1,6 @@
+meta,
+    args = {
+        "videotestsrc num-buffers=1 ! encodebin2 profile=jpegenc ! filesink location=\"$(TMPDIR)/test.jpg\"",
+    }
+
+

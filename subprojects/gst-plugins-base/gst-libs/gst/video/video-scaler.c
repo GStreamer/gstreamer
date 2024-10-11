@@ -382,7 +382,7 @@ resampler_convert_coeff (const gdouble * src,
   }
 
   if (!exact)
-    GST_WARNING ("can't find exact taps");
+    GST_DEBUG ("can't find exact taps");
 
   return exact;
 }

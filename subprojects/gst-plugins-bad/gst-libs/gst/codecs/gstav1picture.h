@@ -21,6 +21,7 @@
 #define __GST_AV1_PICTURE_H__
 
 #include <gst/codecs/codecs-prelude.h>
+#include <gst/codecs/gstcodecpicture.h>
 #include <gst/codecparsers/gstav1parser.h>
 #include <gst/video/video.h>
 
@@ -68,10 +69,7 @@ struct _GstAV1Tile
 struct _GstAV1Picture
 {
   /*< private >*/
-  GstMiniObject parent;
-
-  /* From GstVideoCodecFrame */
-  guint32 system_frame_number;
+  GstCodecPicture parent;
 
   GstAV1FrameHeaderOBU frame_hdr;
 
@@ -84,12 +82,6 @@ struct _GstAV1Picture
   gboolean show_frame;
   gboolean showable_frame;
   gboolean apply_grain;
-
-  /* decoder input state if this picture is discont point */
-  GstVideoCodecState *discont_state;
-
-  gpointer user_data;
-  GDestroyNotify notify;
 };
 
 GST_CODECS_API
@@ -127,13 +119,27 @@ gst_clear_av1_picture (GstAV1Picture ** picture)
   }
 }
 
-GST_CODECS_API
-void gst_av1_picture_set_user_data (GstAV1Picture * picture,
-                                    gpointer user_data,
-                                    GDestroyNotify notify);
+static inline void
+gst_av1_picture_set_user_data (GstAV1Picture * picture, gpointer user_data,
+    GDestroyNotify notify)
+{
+  gst_codec_picture_set_user_data (GST_CODEC_PICTURE (picture),
+      user_data, notify);
+}
 
-GST_CODECS_API
-gpointer gst_av1_picture_get_user_data (GstAV1Picture * picture);
+static inline gpointer
+gst_av1_picture_get_user_data (GstAV1Picture * picture)
+{
+  return gst_codec_picture_get_user_data (GST_CODEC_PICTURE (picture));
+}
+
+static inline void
+gst_av1_picture_set_discont_state (GstAV1Picture * picture,
+    GstVideoCodecState * discont_state)
+{
+  gst_codec_picture_set_discont_state (GST_CODEC_PICTURE (picture),
+      discont_state);
+}
 
 /*******************
  * GstAV1Dpb *

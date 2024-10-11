@@ -201,6 +201,8 @@ jobject
 gst_amc_jni_object_make_global (JNIEnv * env, jobject object)
 {
   jobject ret;
+  g_return_val_if_fail (env != NULL, NULL);
+  g_return_val_if_fail (object != NULL, NULL);
 
   ret = (*env)->NewGlobalRef (env, object);
   if (!ret) {
@@ -215,6 +217,8 @@ jobject
 gst_amc_jni_object_ref (JNIEnv * env, jobject object)
 {
   jobject ret;
+  g_return_val_if_fail (env != NULL, NULL);
+  g_return_val_if_fail (object != NULL, NULL);
 
   ret = (*env)->NewGlobalRef (env, object);
   if (!ret) {
@@ -226,6 +230,7 @@ gst_amc_jni_object_ref (JNIEnv * env, jobject object)
 void
 gst_amc_jni_object_unref (JNIEnv * env, jobject object)
 {
+  g_return_if_fail (env != NULL);
   g_return_if_fail (object != NULL);
 
   (*env)->DeleteGlobalRef (env, object);
@@ -234,6 +239,7 @@ gst_amc_jni_object_unref (JNIEnv * env, jobject object)
 void
 gst_amc_jni_object_local_unref (JNIEnv * env, jobject object)
 {
+  g_return_if_fail (env != NULL);
   g_return_if_fail (object != NULL);
 
   (*env)->DeleteLocalRef (env, object);

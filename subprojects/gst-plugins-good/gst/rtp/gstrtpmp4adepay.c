@@ -111,6 +111,9 @@ gst_rtp_mp4a_depay_class_init (GstRtpMP4ADepayClass * klass)
 static void
 gst_rtp_mp4a_depay_init (GstRtpMP4ADepay * rtpmp4adepay)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (rtpmp4adepay), TRUE);
+
   rtpmp4adepay->adapter = gst_adapter_new ();
   rtpmp4adepay->framed = FALSE;
 }
@@ -306,6 +309,7 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
   GstRtpMP4ADepay *rtpmp4adepay;
   GstBuffer *outbuf;
   GstMapInfo map;
+  GstBufferList *outbufs = NULL;
 
   rtpmp4adepay = GST_RTP_MP4A_DEPAY (depayload);
 
@@ -347,9 +351,11 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     guint8 *data;
     guint pos;
     GstClockTime timestamp;
+    guint64 samples_consumed;
 
     avail = gst_adapter_available (rtpmp4adepay->adapter);
     timestamp = gst_adapter_prev_pts (rtpmp4adepay->adapter, NULL);
+    samples_consumed = 0;
 
     GST_LOG_OBJECT (rtpmp4adepay, "have marker and %u available", avail);
 
@@ -359,6 +365,7 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     /* position in data we are at */
     pos = 0;
 
+    outbufs = gst_buffer_list_new_sized (rtpmp4adepay->numSubFrames);
     /* looping through the number of sub-frames in the audio payload */
     for (i = 0; i <= rtpmp4adepay->numSubFrames; i++) {
       /* determine payload length and set buffer data pointer accordingly */
@@ -397,17 +404,29 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       avail -= skip;
 
       GST_BUFFER_PTS (tmp) = timestamp;
-      gst_rtp_drop_non_audio_meta (depayload, tmp);
-      gst_rtp_base_depayload_push (depayload, tmp);
 
-      /* shift ts for next buffers */
-      if (rtpmp4adepay->frame_len && timestamp != -1
-          && depayload->clock_rate != 0) {
-        timestamp +=
-            gst_util_uint64_scale_int (rtpmp4adepay->frame_len, GST_SECOND,
+      if (timestamp != -1 && depayload->clock_rate != 0) {
+        GST_BUFFER_PTS (tmp) +=
+            gst_util_uint64_scale_int (samples_consumed, GST_SECOND,
             depayload->clock_rate);
+
+        /* shift ts for next buffers */
+        if (rtpmp4adepay->frame_len) {
+          samples_consumed += rtpmp4adepay->frame_len;
+
+          GstClockTime next_timestamp =
+              timestamp + gst_util_uint64_scale_int (samples_consumed,
+              GST_SECOND, depayload->clock_rate);
+          GST_BUFFER_DURATION (tmp) = next_timestamp - GST_BUFFER_PTS (tmp);
+        }
       }
+
+      gst_rtp_drop_non_audio_meta (depayload, tmp);
+      gst_buffer_list_add (outbufs, tmp);
     }
+
+    /* now push all sub-frames we found */
+    gst_rtp_base_depayload_push_list (depayload, outbufs);
 
     /* just a check that lengths match */
     if (avail) {
@@ -416,9 +435,9 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
               "possible wrongly encoded packet."));
     }
 
-    gst_buffer_unmap (outbuf, &map);
-    gst_buffer_unref (outbuf);
+    goto out;
   }
+
   return NULL;
 
   /* ERRORS */
@@ -426,6 +445,15 @@ wrong_size:
   {
     GST_ELEMENT_WARNING (rtpmp4adepay, STREAM, DECODE,
         ("Packet did not validate"), ("wrong packet size"));
+    /* push what we have so far */
+    gst_rtp_base_depayload_push_list (depayload, outbufs);
+  }
+
+out:
+  {
+    /* we may not have sent anything but we consumed all data from the
+       adapter so let's clear the hdrext cache */
+    gst_rtp_base_depayload_flush (depayload, FALSE);
     gst_buffer_unmap (outbuf, &map);
     gst_buffer_unref (outbuf);
     return NULL;

@@ -1,0 +1,37 @@
+set-globals, media_file="$(test_dir)/../../medias/defaults/matroska/timed_frames_video_only_1fps.mkv"
+meta,
+    tool = "ges-launch-$(gst_api_version)",
+    handles-states=true,
+    seek=true,
+    needs_preroll=true,
+    args = {
+        --track-types, video,
+        --video-caps, "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1",
+        --videosink, "$(videosink) name=videosink",
+    }
+
+# Add a clip and check that the first frame is displayed
+add-clip, name=clip, asset-id="file://$(media_file)", layer-priority=0, type=GESUriClip, name=(string)theclip
+set-child-properties, width=100, height=100, posx=10, posy=10, element-name=theclip
+container-add-child, container-name=theclip, asset-id="videocrop name=videocrop", child-type=(string)GESEffect, child-name=crop;
+set-child-properties, bottom=200, element-name=crop
+container-add-child, container-name=theclip, asset-id="gesvideoscale name=videoscale", child-type=(string)GESEffect;
+
+pause
+
+# Checking that the 'framepositioner' is forcing caps to the clip "natual size"
+check-properties, gesvideourisource0-capsfilter::caps=(GstCaps)"video/x-raw(ANY),framerate=(fraction)1/1,width=(int)1080,height=(int)720"
+check-properties, videoscale::parent::parent::priority=3
+check-properties, videocrop::parent::parent::priority=4
+check-current-pad-caps, target-element-name=videocrop, pad=sink, expected-caps=[video/x-raw,width=1080,height=720]
+check-current-pad-caps, target-element-name=videocrop, pad=src, expected-caps=[video/x-raw,width=1080,height=520]
+check-current-pad-caps, target-element-name=videoscale, pad=sink, expected-caps=[video/x-raw,width=1080,height=520]
+check-current-pad-caps, target-element-name=videoscale, pad=src, expected-caps=[video/x-raw,width=100,height=100]
+
+check-properties,
+    gessmartmixer0-compositor.sink_0::xpos=10,
+    gessmartmixer0-compositor.sink_0::ypos=10,
+    gessmartmixer0-compositor.sink_0::width=-1,
+    gessmartmixer0-compositor.sink_0::height=-1
+
+stop

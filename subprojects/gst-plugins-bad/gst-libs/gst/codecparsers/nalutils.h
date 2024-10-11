@@ -40,8 +40,6 @@
 #include <gst/base/gstbitwriter.h>
 #include <string.h>
 
-guint ceil_log2 (guint32 v);
-
 typedef struct
 {
   const guint8 *data;

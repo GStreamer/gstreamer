@@ -31,8 +31,8 @@ tutorial_main (int argc, char *argv[])
 
   /* See next tutorial for proper error message handling/parsing */
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
-    g_error ("An error occurred! Re-run with the GST_DEBUG=*:WARN environment "
-        "variable set for more details.");
+    g_printerr ("An error occurred! Re-run with the GST_DEBUG=*:WARN "
+        "environment variable set for more details.\n");
   }
 
   /* Free resources */
@@ -47,7 +47,7 @@ int
 main (int argc, char *argv[])
 {
 #if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
-  return gst_macos_main (tutorial_main, argc, argv, NULL);
+  return gst_macos_main ((GstMainFunc) tutorial_main, argc, argv, NULL);
 #else
   return tutorial_main (argc, argv);
 #endif

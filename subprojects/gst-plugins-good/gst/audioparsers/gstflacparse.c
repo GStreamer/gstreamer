@@ -652,13 +652,15 @@ static gboolean
 gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
     const guint8 * data, gsize size, guint * ret)
 {
-  guint max, remaining;
+  guint max;
   guint i, search_start, search_end;
   FrameHeaderCheckReturn header_ret;
   guint16 block_size;
   gboolean suspect_start = FALSE, suspect_end = FALSE;
 
-  if (size < flacparse->min_framesize)
+  /* minimum frame header size is 5 bytes and we read that much
+   * without checking the size below */
+  if (size < MAX (flacparse->min_framesize, 5))
     goto need_more;
 
   header_ret =
@@ -673,15 +675,14 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
 
   /* mind unknown framesize */
   search_start = MAX (2, flacparse->min_framesize);
+
+  /* at minimum 5 bytes are read below so stop 5 bytes before the end.
+   * we also checked above that at least 5 bytes are available. */
+  search_end = size - 5;
   if (flacparse->max_framesize)
-    search_end = MIN (size, flacparse->max_framesize + 9 + 2);
-  else
-    search_end = size;
-  search_end -= 2;
+    search_end = MIN (search_end, flacparse->max_framesize + 9 + 2);
 
-  remaining = size;
-
-  for (i = search_start; i < search_end; i++, remaining--) {
+  for (i = search_start; i < search_end; i++) {
 
     if ((GST_READ_UINT16_BE (data + i) & 0xfffe) != 0xfff8)
       continue;
@@ -690,7 +691,7 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
     suspect_end = FALSE;
     header_ret =
         gst_flac_parse_frame_header_is_valid (flacparse, data + i,
-        remaining, FALSE, NULL, &suspect_end);
+        size - i, FALSE, NULL, &suspect_end);
     if (header_ret == FRAME_HEADER_VALID) {
       if (flacparse->check_frame_checksums || suspect_start || suspect_end) {
         guint16 actual_crc = gst_flac_calculate_crc16 (data, i - 2);
@@ -1111,6 +1112,7 @@ gst_flac_parse_handle_picture (GstFlacParse * flacparse, GstBuffer * buffer)
   GstMapInfo map;
   guint32 img_len = 0, img_type = 0;
   guint32 img_mimetype_len = 0, img_description_len = 0;
+  const guint8 *img_data;
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   gst_byte_reader_init (&reader, map.data, map.size);
@@ -1137,7 +1139,7 @@ gst_flac_parse_handle_picture (GstFlacParse * flacparse, GstBuffer * buffer)
   if (!gst_byte_reader_get_uint32_be (&reader, &img_len))
     goto error;
 
-  if (gst_byte_reader_get_pos (&reader) + img_len > map.size)
+  if (!gst_byte_reader_get_data (&reader, img_len, &img_data))
     goto error;
 
   GST_INFO_OBJECT (flacparse, "Got image of %d bytes", img_len);
@@ -1146,8 +1148,7 @@ gst_flac_parse_handle_picture (GstFlacParse * flacparse, GstBuffer * buffer)
     if (flacparse->tags == NULL)
       flacparse->tags = gst_tag_list_new_empty ();
 
-    gst_tag_list_add_id3_image (flacparse->tags,
-        map.data + gst_byte_reader_get_pos (&reader), img_len, img_type);
+    gst_tag_list_add_id3_image (flacparse->tags, img_data, img_len, img_type);
   }
 
   gst_buffer_unmap (buffer, &map);

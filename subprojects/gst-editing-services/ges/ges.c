@@ -54,6 +54,7 @@ G_LOCK_DEFINE_STATIC (init_lock);
  * between init/deinit
  */
 static GThread *initialized_thread = NULL;
+extern GType ges_video_scale_get_type (void);
 
 #ifndef GST_DISABLE_GST_DEBUG
 static gpointer
@@ -96,9 +97,10 @@ ges_init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
   return TRUE;
 }
 
+
 static gboolean
-ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
-    GError ** error)
+ges_init_post (GOptionContext * context, GOptionGroup * group,
+    gpointer data, GError ** error)
 {
   GESUriClipAssetClass *uriasset_klass = NULL;
   GstElementFactory *nlecomposition_factory = NULL;
@@ -154,6 +156,7 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   ges_asset_cache_init ();
 
+  gst_element_register (NULL, "gesvideoscale", 0, ges_video_scale_get_type ());
   gst_element_register (NULL, "gesaudiomixer", 0, GES_TYPE_SMART_ADDER);
   gst_element_register (NULL, "gescompositor", 0, GES_TYPE_SMART_MIXER);
   gst_element_register (NULL, "framepositioner", 0, GST_TYPE_FRAME_POSITIONNER);

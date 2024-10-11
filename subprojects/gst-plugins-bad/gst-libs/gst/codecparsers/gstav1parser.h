@@ -71,9 +71,8 @@ G_BEGIN_DECLS
 #define GST_AV1_MAX_TILE_COUNT                 512
 #define GST_AV1_MAX_OPERATING_POINTS    \
   (GST_AV1_MAX_NUM_TEMPORAL_LAYERS * GST_AV1_MAX_NUM_SPATIAL_LAYERS)
-#define GST_AV1_MAX_SPATIAL_LAYERS             2  /* correct? */
-#define GST_AV1_MAX_TEMPORAL_GROUP_SIZE        8  /* correct? */
-#define GST_AV1_MAX_TEMPORAL_GROUP_REFERENCES  8  /* correct? */
+#define GST_AV1_MAX_TEMPORAL_GROUP_SIZE        255
+#define GST_AV1_MAX_TEMPORAL_GROUP_REFERENCES  7
 #define GST_AV1_MAX_NUM_Y_POINTS               16
 #define GST_AV1_MAX_NUM_CB_POINTS              16
 #define GST_AV1_MAX_NUM_CR_POINTS              16
@@ -968,9 +967,9 @@ struct _GstAV1MetadataScalability {
   gboolean spatial_layer_dimensions_present_flag;
   gboolean spatial_layer_description_present_flag;
   gboolean temporal_group_description_present_flag;
-  guint16 spatial_layer_max_width[GST_AV1_MAX_SPATIAL_LAYERS];
-  guint16 spatial_layer_max_height[GST_AV1_MAX_SPATIAL_LAYERS];
-  guint8 spatial_layer_ref_id[GST_AV1_MAX_SPATIAL_LAYERS];
+  guint16 spatial_layer_max_width[GST_AV1_MAX_NUM_SPATIAL_LAYERS];
+  guint16 spatial_layer_max_height[GST_AV1_MAX_NUM_SPATIAL_LAYERS];
+  guint8 spatial_layer_ref_id[GST_AV1_MAX_NUM_SPATIAL_LAYERS];
   guint8 temporal_group_size;
 
   guint8 temporal_group_temporal_id[GST_AV1_MAX_TEMPORAL_GROUP_SIZE];
@@ -1536,6 +1535,8 @@ struct _GstAV1FilmGrainParams {
  * @render_height: the frame height to be rendered.
  * @tx_mode: specifies how the transform size is determined.
  * @skip_mode_frame: specifies the frames to use for compound prediction when @skip_mode is 1.
+ * @expected_frame_id: specifies the frame id for each frame used for reference. (Since: 1.24)
+ * @ref_global_motion_params: specifies the global motion parameters of the reference. (Since: 1.24)
  */
 struct _GstAV1FrameHeaderOBU {
   gboolean show_existing_frame;
@@ -1605,6 +1606,24 @@ struct _GstAV1FrameHeaderOBU {
   GstAV1TXModes tx_mode; /* TxMode */
 
   guint8 skip_mode_frame[2]; /* SkipModeFrame */
+
+  /**
+   * _GstAV1FrameHeaderOBU.expected_frame_id:
+   *
+   * Specifies the frames to use for compound prediction.
+   *
+   * Since: 1.24
+   */
+  gint32 expected_frame_id[GST_AV1_REFS_PER_FRAME];
+
+  /**
+   * _GstAV1FrameHeaderOBU.ref_global_motion_params:
+   *
+   * Specifies the global motion parameters of the reference.
+   *
+   * Since: 1.24
+   */
+  GstAV1GlobalMotionParams ref_global_motion_params;
 };
 
 /**

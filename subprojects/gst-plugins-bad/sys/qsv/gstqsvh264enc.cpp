@@ -49,6 +49,10 @@
 #include <gst/va/gstva.h>
 #endif
 
+#ifdef HAVE_GST_D3D12
+#include <gst/d3d12/gstd3d12.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_qsv_h264_enc_debug);
 #define GST_CAT_DEFAULT gst_qsv_h264_enc_debug
 
@@ -368,6 +372,7 @@ enum
 
 #define DOC_SINK_CAPS \
     "video/x-raw(memory:D3D11Memory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw(memory:D3D12Memory), " DOC_SINK_CAPS_COMM "; " \
     "video/x-raw(memory:VAMemory), " DOC_SINK_CAPS_COMM "; " \
     "video/x-raw, " DOC_SINK_CAPS_COMM
 
@@ -385,6 +390,7 @@ typedef struct _GstQsvH264EncClassData
   gint64 adapter_luid;
   gchar *display_path;
   gchar *description;
+  gboolean d3d12_interop;
 } GstQsvH264EncClassData;
 
 typedef struct _GstQsvH264Enc
@@ -494,6 +500,7 @@ gst_qsv_h264_enc_class_init (GstQsvH264EncClass * klass, gpointer data)
   qsvenc_class->impl_index = cdata->impl_index;
   qsvenc_class->adapter_luid = cdata->adapter_luid;
   qsvenc_class->display_path = cdata->display_path;
+  qsvenc_class->d3d12_interop = cdata->d3d12_interop;
 
   object_class->finalize = gst_qsv_h264_enc_finalize;
   object_class->set_property = gst_qsv_h264_enc_set_property;
@@ -1425,6 +1432,7 @@ gst_qsv_h264_enc_set_format (GstQsvEncoder * encoder,
   GstStructure *s;
   const gchar *stream_format;
   mfxFrameInfo *frame_info;
+  GstVideoFormat format;
 
   frame_info = &param->mfx.FrameInfo;
 
@@ -1434,16 +1442,11 @@ gst_qsv_h264_enc_set_format (GstQsvEncoder * encoder,
   frame_info->Width = GST_ROUND_UP_16 (info->width);
   if (GST_VIDEO_INFO_IS_INTERLACED (info)) {
     frame_info->Height = GST_ROUND_UP_32 (info->height);
-    switch (GST_VIDEO_INFO_FIELD_ORDER (info)) {
-      case GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST:
-        frame_info->PicStruct = MFX_PICSTRUCT_FIELD_TFF;
-        break;
-      case GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST:
-        frame_info->PicStruct = MFX_PICSTRUCT_FIELD_BFF;
-        break;
-      default:
-        frame_info->PicStruct = MFX_PICSTRUCT_UNKNOWN;
-        break;
+    if (GST_VIDEO_INFO_FIELD_ORDER (info) ==
+        GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST) {
+      frame_info->PicStruct = MFX_PICSTRUCT_FIELD_TFF;
+    } else {
+      frame_info->PicStruct = MFX_PICSTRUCT_FIELD_BFF;
     }
   } else {
     frame_info->Height = GST_ROUND_UP_16 (info->height);
@@ -1472,16 +1475,14 @@ gst_qsv_h264_enc_set_format (GstQsvEncoder * encoder,
   frame_info->AspectRatioH = GST_VIDEO_INFO_PAR_D (info);
 
   /* TODO: update for non 4:2:0 formats. Currently NV12 only */
-  frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
+  format = GST_VIDEO_INFO_FORMAT (info);
+  switch (format) {
     case GST_VIDEO_FORMAT_NV12:
-      frame_info->FourCC = MFX_FOURCC_NV12;
-      frame_info->BitDepthLuma = 8;
-      frame_info->BitDepthChroma = 8;
+      gst_qsv_frame_info_set_format (frame_info, format);
       break;
     default:
       GST_ERROR_OBJECT (self, "Unexpected format %s",
-          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+          gst_video_format_to_string (format));
       return FALSE;
   }
 
@@ -2117,7 +2118,7 @@ done:
 
 void
 gst_qsv_h264_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
-    GstObject * device, mfxSession session)
+    GstObject * device, mfxSession session, gboolean d3d12_interop)
 {
   mfxStatus status;
   mfxVideoParam param;
@@ -2146,11 +2147,8 @@ gst_qsv_h264_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   mfx->FrameInfo.FrameRateExtD = 1;
   mfx->FrameInfo.AspectRatioW = 1;
   mfx->FrameInfo.AspectRatioH = 1;
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  mfx->FrameInfo.FourCC = MFX_FOURCC_NV12;
-  mfx->FrameInfo.BitDepthLuma = 8;
-  mfx->FrameInfo.BitDepthChroma = 8;
   mfx->FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_NV12);
 
   /* Check supported profiles */
   for (guint i = 0; i < G_N_ELEMENTS (profile_map); i++) {
@@ -2182,6 +2180,9 @@ gst_qsv_h264_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
     max_resolution.width = gst_qsv_resolutions[i].width;
     max_resolution.height = gst_qsv_resolutions[i].height;
   }
+
+  if (max_resolution.width == 0 || max_resolution.height == 0)
+    return;
 
   GST_INFO ("Maximum supported resolution: %dx%d",
       max_resolution.width, max_resolution.height);
@@ -2240,14 +2241,23 @@ gst_qsv_h264_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
 #ifdef G_OS_WIN32
   GstCaps *d3d11_caps = gst_caps_copy (sink_caps);
   GstCapsFeatures *caps_features =
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr);
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+      nullptr);
   gst_caps_set_features_simple (d3d11_caps, caps_features);
+#ifdef HAVE_GST_D3D12
+  auto d3d12_caps = gst_caps_copy (sink_caps);
+  auto d3d12_feature =
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY,
+      nullptr);
+  gst_caps_set_features_simple (d3d12_caps, d3d12_feature);
+  gst_caps_append (d3d11_caps, d3d12_caps);
+#endif
   gst_caps_append (d3d11_caps, sink_caps);
   sink_caps = d3d11_caps;
 #else
   GstCaps *va_caps = gst_caps_copy (sink_caps);
   GstCapsFeatures *caps_features =
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VA, nullptr);
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VA, nullptr);
   gst_caps_set_features_simple (va_caps, caps_features);
   gst_caps_append (va_caps, sink_caps);
   sink_caps = va_caps;
@@ -2287,6 +2297,7 @@ gst_qsv_h264_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   cdata->sink_caps = sink_caps;
   cdata->src_caps = src_caps;
   cdata->impl_index = impl_index;
+  cdata->d3d12_interop = d3d12_interop;
 
 #ifdef G_OS_WIN32
   g_object_get (device, "adapter-luid", &cdata->adapter_luid,

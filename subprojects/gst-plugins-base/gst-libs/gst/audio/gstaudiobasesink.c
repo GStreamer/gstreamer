@@ -1199,8 +1199,8 @@ static guint64
 gst_audio_base_sink_get_offset (GstAudioBaseSink * sink)
 {
   guint64 sample, sps;
-  gint writeseg, segdone;
-  gint diff;
+  guint64 writeseg, segdone;
+  gint64 diff;
 
   /* assume we can append to the previous sample */
   sample = sink->next_sample;
@@ -1215,8 +1215,8 @@ gst_audio_base_sink_get_offset (GstAudioBaseSink * sink)
   writeseg = sample / sps;
 
   /* get the currently processed segment */
-  segdone = g_atomic_int_get (&sink->ringbuffer->segdone)
-      - sink->ringbuffer->segbase;
+  segdone = gst_audio_ring_buffer_get_segdone (sink->ringbuffer)
+      - gst_audio_ring_buffer_get_segbase (sink->ringbuffer);
 
   /* see how far away it is from the write segment */
   diff = writeseg - segdone;
@@ -1719,6 +1719,7 @@ flushing:
   }
 }
 
+#define ABSDIFF(a, b) ((a) > (b) ? (a) - (b) : (b) - (a))
 static gint64
 gst_audio_base_sink_get_alignment (GstAudioBaseSink * sink,
     GstClockTime sample_offset)
@@ -1727,7 +1728,8 @@ gst_audio_base_sink_get_alignment (GstAudioBaseSink * sink,
   gint64 align;
   gint64 sample_diff;
   gint64 max_sample_diff;
-  gint segdone = g_atomic_int_get (&ringbuf->segdone) - ringbuf->segbase;
+  guint64 segdone = gst_audio_ring_buffer_get_segdone (sink->ringbuffer)
+      - gst_audio_ring_buffer_get_segbase (sink->ringbuffer);
   gint64 samples_done = segdone * (gint64) ringbuf->samples_per_seg;
   gint64 headroom = sample_offset - samples_done;
   gboolean allow_align = TRUE;
@@ -1755,10 +1757,16 @@ gst_audio_base_sink_get_alignment (GstAudioBaseSink * sink,
     if (sink->priv->discont_wait > 0) {
       GstClockTime time = gst_util_uint64_scale_int (sample_offset,
           GST_SECOND, rate);
+      GstClockTime expected_time = gst_util_uint64_scale_int (sink->next_sample,
+          GST_SECOND, rate);
+
       if (sink->priv->discont_time == -1) {
-        /* discont candidate */
-        sink->priv->discont_time = time;
-      } else if (time - sink->priv->discont_time >= sink->priv->discont_wait) {
+        if (ABSDIFF (expected_time, time) >= sink->priv->discont_wait)
+          discont = TRUE;
+        else
+          sink->priv->discont_time = expected_time;
+      } else if (ABSDIFF (time,
+              sink->priv->discont_time) >= sink->priv->discont_wait) {
         /* discont_wait expired, discontinuity detected */
         discont = TRUE;
         sink->priv->discont_time = -1;
@@ -1795,6 +1803,8 @@ gst_audio_base_sink_get_alignment (GstAudioBaseSink * sink,
 
   return align;
 }
+
+#undef ABSDIFF
 
 static GstFlowReturn
 gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)

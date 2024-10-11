@@ -1,7 +1,7 @@
 sources = [
   'gstplugin.cc',
   'gstqtelement.cc',
-  'gstqsgtexture.cc',
+  'gstqsgmaterial.cc',
   'gstqtglutility.cc',
   'gstqtoverlay.cc',
   'gstqtsink.cc',
@@ -14,7 +14,6 @@ sources = [
 moc_headers = [
   'qtitem.h',
   'qtwindow.h',
-  'gstqsgtexture.h',
   'qtglrenderer.h',
 ]
 
@@ -43,23 +42,16 @@ if not add_languages('cpp', native: false, required: qt5_option)
 endif
 
 qt5_mod = import('qt5')
-qt5qml_dep = dependency('qt5', modules : ['Core', 'Gui', 'Qml', 'Quick'],
-                        method: qt5_method, required: qt5_option, static: host_system == 'ios')
-
-# On Linux, distros often have the Qt5 pkg-config files and moc in separate
-# packages, so the user may not have both installed. Check for moc and ensure
-# that it's installed.
-# We don't do this check on other OSes because they need to be able to simply
-# point the `QMAKE` env var to `qmake` to build against a particular Qt5.
-if host_system == 'linux' and not meson.is_cross_build()
-  moc = find_program('moc-qt5', 'moc', required : qt5_option)
-else
-  # We only check if `moc` was found, and then discard it, so we can fake it.
-  # This is also a good unit test of the fact that we *don't* use it.
-  moc = declare_dependency()
+if not qt5_mod.has_tools(method: qt5_method)
+  if qt5_option.enabled()
+    error('qt5 qmlglsink plugin is enabled, but qt specific tools were not found')
+  endif
+  subdir_done()
 endif
 
-if not qt5qml_dep.found() or not moc.found()
+qt5qml_dep = dependency('qt5', modules : ['Core', 'Gui', 'Qml', 'Quick'],
+                        method: qt5_method, required: qt5_option, static: host_system == 'ios')
+if not qt5qml_dep.found()
   subdir_done()
 endif
 
@@ -120,6 +112,12 @@ if qt5_egl.allowed()
   qt_defines += ['-DHAVE_QT_EGLFS']
   optional_deps += gstglegl_dep
   have_qt_windowing = true
+
+  # EGL windowing for Vivante Framebuffer (e.g. i.MX6)
+  if gstglviv_fb_dep.found()
+    qt_defines += ['-DHAVE_QT_VIV_FB']
+    optional_deps += gstglviv_fb_dep
+  endif
 endif
 
 # Android windowing
@@ -181,7 +179,7 @@ if host_system == 'ios'
   endif
 endif
 
-if qt5_option.require(have_qt_windowing).allowed()
+if qt5_option.require(have_qt_windowing, error_message: 'No windowing, enable one of the qt-* windowing options').allowed()
   # rpath is needed to be able to load the plugin on macOS inside the devenv
   qmlgl_kwargs = {}
   if host_system == 'darwin'
@@ -192,7 +190,7 @@ if qt5_option.require(have_qt_windowing).allowed()
   endif
 
   # Build it!
-  moc_files = qt5_mod.preprocess(moc_headers : moc_headers)
+  moc_files = qt5_mod.preprocess(moc_headers : moc_headers, method: qt5_method)
   gstqmlgl = library('gstqmlgl', sources, moc_files,
     cpp_args : gst_plugins_good_args + qt_defines,
     link_args : noseh_link_args,

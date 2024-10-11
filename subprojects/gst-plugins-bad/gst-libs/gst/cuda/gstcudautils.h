@@ -27,41 +27,14 @@
 
 G_BEGIN_DECLS
 
+GST_CUDA_API
+gboolean _gst_cuda_debug (CUresult result,
+                          GstDebugCategory * cat,
+                          const gchar * file,
+                          const gchar * function,
+                          gint line);
+
 #ifndef GST_DISABLE_GST_DEBUG
-static inline gboolean
-_gst_cuda_debug(CUresult result, GstDebugCategory * category,
-    const gchar * file, const gchar * function, gint line)
-{
-  const gchar *_error_name, *_error_text;
-  if (result != CUDA_SUCCESS) {
-    CuGetErrorName (result, &_error_name);
-    CuGetErrorString (result, &_error_text);
-    gst_debug_log (category, GST_LEVEL_WARNING, file, function, line,
-        NULL, "CUDA call failed: %s, %s", _error_name, _error_text);
-
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-/**
- * gst_cuda_result:
- * @result: CUDA device API return code `CUresult`
- *
- * Returns: %TRUE if CUDA device API call result is CUDA_SUCCESS
- */
-#define gst_cuda_result(result) \
-  _gst_cuda_debug(result, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__)
-#else
-
-static inline gboolean
-_gst_cuda_debug(CUresult result, GstDebugCategory * category,
-    const gchar * file, const gchar * function, gint line)
-{
-  return result == CUDA_SUCCESS;
-}
-
 /**
  * gst_cuda_result:
  * @result: CUDA device API return code `CUresult`
@@ -71,8 +44,11 @@ _gst_cuda_debug(CUresult result, GstDebugCategory * category,
  * Since: 1.22
  */
 #define gst_cuda_result(result) \
+  _gst_cuda_debug(result, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__)
+#else
+#define gst_cuda_result(result) \
   _gst_cuda_debug(result, NULL, __FILE__, GST_FUNCTION, __LINE__)
-#endif
+#endif /* GST_DISABLE_GST_DEBUG */
 
 /**
  * GstCudaQuarkId:
@@ -93,14 +69,23 @@ typedef enum
  * @GST_CUDA_GRAPHICS_RESSOURCE_NONE: Ressource represents a CUDA buffer.
  * @GST_CUDA_GRAPHICS_RESSOURCE_GL_BUFFER: Ressource represents a GL buffer.
  * @GST_CUDA_GRAPHICS_RESSOURCE_D3D11_RESOURCE: Ressource represents a D3D resource.
+ * @GST_CUDA_GRAPHICS_RESSOURCE_EGL_RESOURCE: Ressource represents a EGL resource.
  *
  * Since: 1.22
+ */
+/**
+ * GST_CUDA_GRAPHICS_RESOURCE_EGL_RESOURCE:
+ *
+ * Resource represents a EGL resource.
+ *
+ * Since: 1.26
  */
 typedef enum
 {
   GST_CUDA_GRAPHICS_RESOURCE_NONE = 0,
   GST_CUDA_GRAPHICS_RESOURCE_GL_BUFFER = 1,
   GST_CUDA_GRAPHICS_RESOURCE_D3D11_RESOURCE = 2,
+  GST_CUDA_GRAPHICS_RESOURCE_EGL_RESOURCE = 3,
 } GstCudaGraphicsResourceType;
 
 /**

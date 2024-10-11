@@ -865,7 +865,8 @@ unknown_tag:
     namestr_dbg = g_strndup (namestr, namesize);
 
     GST_WARNING_OBJECT (demux, "This tag %s:%s type:%u is not mapped, "
-        "file a bug at bugzilla.gnome.org", meanstr_dbg, namestr_dbg, datatype);
+        "file a bug at %s", meanstr_dbg, namestr_dbg, datatype,
+        PACKAGE_BUGREPORT);
 
     g_free (namestr_dbg);
     g_free (meanstr_dbg);

@@ -26,18 +26,18 @@
  * #GESAsset with `GES_TYPE_TIMELINE` as @extractable_type itself. That
  * means that you can extract #GESTimeline from a project as followed:
  *
- * |[
- *  GESProject *project;
- *  GESTimeline *timeline;
+ * ```c
+ * GESProject *project;
+ * GESTimeline *timeline;
  *
- *  project = ges_project_new ("file:///path/to/a/valid/project/uri");
+ * project = ges_project_new ("file:///path/to/a/valid/project/uri");
  *
- *  // Here you can connect to the various signal to get more infos about
- *  // what is happening and recover from errors if possible
- *  ...
+ * // Here you can connect to the various signal to get more infos about
+ * // what is happening and recover from errors if possible
+ * ...
  *
- *  timeline = ges_asset_extract (GES_ASSET (project));
- * ]|
+ * timeline = ges_asset_extract (GES_ASSET (project));
+ * ```
  *
  * The #GESProject class offers a higher level API to handle #GESAsset-s.
  * It lets you request new asset, and it informs you about new assets through
@@ -72,6 +72,10 @@
 static GPtrArray *new_paths = NULL;
 static GHashTable *tried_uris = NULL;
 
+#define GES_PROJECT_LOCK(project) (g_mutex_lock (&project->priv->lock))
+#define GES_PROJECT_UNLOCK(project) (g_mutex_unlock (&project->priv->lock))
+
+/* Fields are protected by GES_PROJECT_LOCK */
 struct _GESProjectPrivate
 {
   GHashTable *assets;
@@ -85,6 +89,8 @@ struct _GESProjectPrivate
   gchar *uri;
 
   GList *encoding_profiles;
+
+  GMutex lock;
 };
 
 typedef struct EmitLoadedInIdle
@@ -150,9 +156,11 @@ _emit_loaded_in_idle (EmitLoadedInIdle * data)
  * @project: The project to add a formatter to
  * @formatter: A formatter used by @project
  *
- * Adds a formatter as used to load @project
+ * Adds a formatter to be used to load @project
  *
  * Since: 1.18
+ *
+ * MT safe.
  */
 void
 ges_project_add_formatter (GESProject * project, GESFormatter * formatter)
@@ -160,27 +168,35 @@ ges_project_add_formatter (GESProject * project, GESFormatter * formatter)
   GESProjectPrivate *priv = GES_PROJECT (project)->priv;
 
   ges_formatter_set_project (formatter, project);
+  GES_PROJECT_LOCK (project);
   priv->formatters = g_list_append (priv->formatters, formatter);
+  GES_PROJECT_UNLOCK (project);
 
   gst_object_ref_sink (formatter);
 }
 
+/* Internally takes project mutex */
 static void
 ges_project_remove_formatter (GESProject * project, GESFormatter * formatter)
 {
   GList *tmp;
   GESProjectPrivate *priv = GES_PROJECT (project)->priv;
 
+  GES_PROJECT_LOCK (project);
   for (tmp = priv->formatters; tmp; tmp = tmp->next) {
     if (tmp->data == formatter) {
       gst_object_unref (formatter);
       priv->formatters = g_list_delete_link (priv->formatters, tmp);
 
-      return;
+      goto done;
     }
   }
+
+done:
+  GES_PROJECT_UNLOCK (project);
 }
 
+/* Internally takes project mutex */
 static void
 ges_project_set_uri (GESProject * project, const gchar * uri)
 {
@@ -188,17 +204,19 @@ ges_project_set_uri (GESProject * project, const gchar * uri)
 
   g_return_if_fail (GES_IS_PROJECT (project));
 
+  GES_PROJECT_LOCK (project);
+
   priv = project->priv;
   if (priv->uri) {
     if (g_strcmp0 (priv->uri, uri))
       GST_WARNING_OBJECT (project, "Trying to reset URI, this is prohibited");
 
-    return;
+    goto done;
   }
 
   if (uri == NULL) {
     GST_LOG_OBJECT (project, "Uri should not be NULL");
-    return;
+    goto done;
   }
 
   priv->uri = g_strdup (uri);
@@ -206,20 +224,29 @@ ges_project_set_uri (GESProject * project, const gchar * uri)
   /* We use that URI as ID */
   ges_asset_set_id (GES_ASSET (project), uri);
 
-  return;
+done:
+  GES_PROJECT_UNLOCK (project);
 }
 
+/* Internally takes project mutex */
 static gboolean
 _load_project (GESProject * project, GESTimeline * timeline, GError ** error)
 {
   GError *lerr = NULL;
   GESProjectPrivate *priv;
   GESFormatter *formatter;
+  gboolean has_uri = FALSE;
+  gchar *uri = NULL;
 
   priv = GES_PROJECT (project)->priv;
 
   g_signal_emit (project, _signals[LOADING_SIGNAL], 0, timeline);
-  if (priv->uri == NULL) {
+
+  GES_PROJECT_LOCK (project);
+  has_uri = priv->uri != NULL;
+  GES_PROJECT_UNLOCK (project);
+
+  if (!has_uri) {
     const gchar *id = ges_asset_get_id (GES_ASSET (project));
 
     if (id && gst_uri_is_valid (id)) {
@@ -241,6 +268,8 @@ _load_project (GESProject * project, GESTimeline * timeline, GError ** error)
     }
   }
 
+  GES_PROJECT_LOCK (project);
+
   if (priv->formatter_asset == NULL)
     priv->formatter_asset = _find_formatter_asset_for_id (priv->uri);
 
@@ -257,17 +286,29 @@ _load_project (GESProject * project, GESTimeline * timeline, GError ** error)
     goto failed;
   }
 
+  uri = g_strdup (priv->uri);
+
+  GES_PROJECT_UNLOCK (project);
   ges_project_add_formatter (GES_PROJECT (project), formatter);
-  ges_formatter_load_from_uri (formatter, timeline, priv->uri, &lerr);
+  /* ges_formatter_load_from_uri() might indirectly lead to a
+     ges_project_add_asset() call, so do the loading unlocked. */
+  ges_formatter_load_from_uri (formatter, timeline, uri, &lerr);
+  GES_PROJECT_LOCK (project);
+
+  g_free (uri);
+
   if (lerr) {
     GST_WARNING_OBJECT (project, "Could not load the timeline,"
         " returning: %s", lerr->message);
     goto failed;
   }
 
+  GES_PROJECT_UNLOCK (project);
   return TRUE;
 
 failed:
+  GES_PROJECT_UNLOCK (project);
+
   if (lerr)
     g_propagate_error (error, lerr);
   return FALSE;
@@ -454,7 +495,9 @@ _get_property (GESProject * project, guint property_id,
 
   switch (property_id) {
     case PROP_URI:
+      GES_PROJECT_LOCK (project);
       g_value_set_string (value, priv->uri);
+      GES_PROJECT_UNLOCK (project);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (project, property_id, pspec);
@@ -467,7 +510,9 @@ _set_property (GESProject * project, guint property_id,
 {
   switch (property_id) {
     case PROP_URI:
+      GES_PROJECT_LOCK (project);
       project->priv->uri = g_value_dup_string (value);
+      GES_PROJECT_UNLOCK (project);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (project, property_id, pspec);
@@ -557,7 +602,7 @@ ges_project_class_init (GESProjectClass * klass)
    * @wrong_asset: The asset with the wrong ID, you should us it and its content
    * only to find out what the new location is.
    *
-   * |[
+   * ```c
    * static gchar
    * source_moved_cb (GESProject *project, GError *error, GESAsset *asset_with_error)
    * {
@@ -573,7 +618,7 @@ ges_project_class_init (GESProjectClass * klass)
    *   g_signal_connect (project, "missing-uri", source_moved_cb, NULL);
    *   timeline = ges_asset_extract (GES_ASSET (project));
    * }
-   * ]|
+   * ```
    *
    * Returns: (transfer full) (nullable): The new URI of @wrong_asset
    */
@@ -654,6 +699,7 @@ ges_project_internal_asset_id (GESAsset * asset)
       (asset), ges_asset_get_id (asset));
 }
 
+/* Internally takes project mutex */
 static void
 _send_error_loading_asset (GESProject * project, GESAsset * asset,
     GError * error)
@@ -662,12 +708,15 @@ _send_error_loading_asset (GESProject * project, GESAsset * asset,
   const gchar *id = ges_asset_get_id (asset);
 
   GST_DEBUG_OBJECT (project, "Sending error loading asset for %s", id);
+  GES_PROJECT_LOCK (project);
   g_hash_table_remove (project->priv->loading_assets, internal_id);
   g_hash_table_add (project->priv->loaded_with_error, internal_id);
+  GES_PROJECT_UNLOCK (project);
   g_signal_emit (project, _signals[ERROR_LOADING_ASSET], 0, error,
       id, ges_asset_get_extractable_type (asset));
 }
 
+/* Internally takes project mutex */
 gchar *
 ges_project_try_updating_id (GESProject * project, GESAsset * asset,
     GError * error)
@@ -707,7 +756,9 @@ ges_project_try_updating_id (GESProject * project, GESAsset * asset,
   }
 
   internal_id = ges_project_internal_asset_id (asset);
+  GES_PROJECT_LOCK (project);
   g_hash_table_remove (project->priv->loading_assets, internal_id);
+  GES_PROJECT_UNLOCK (project);
   g_free (internal_id);
 
   if (new_id == NULL)
@@ -752,7 +803,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, GESProject * project)
  * Emits the "loaded" signal. This method should be called by sublasses when
  * the project is fully loaded.
  *
- * Returns: %TRUE if the signale could be emitted %FALSE otherwize
+ * Returns: %TRUE if the signale could be emitted %FALSE otherwise
  */
 gboolean
 ges_project_set_loaded (GESProject * project, GESFormatter * formatter,
@@ -764,13 +815,16 @@ ges_project_set_loaded (GESProject * project, GESFormatter * formatter,
         error);
   }
 
-  GST_INFO_OBJECT (project, "Emit project loaded");
-  if (GST_STATE (formatter->timeline) < GST_STATE_PAUSED) {
+  if (!ges_timeline_in_current_thread (formatter->timeline)) {
+    GST_INFO_OBJECT (project, "Loaded in a different thread, "
+        "not committing timeline");
+  } else if (GST_STATE (formatter->timeline) < GST_STATE_PAUSED) {
     timeline_fill_gaps (formatter->timeline);
   } else {
     ges_timeline_commit (formatter->timeline);
   }
 
+  GST_INFO_OBJECT (project, "Emit project loaded");
   g_signal_emit (project, _signals[LOADED_SIGNAL], 0, formatter->timeline);
 
   /* We are now done with that formatter */
@@ -778,6 +832,7 @@ ges_project_set_loaded (GESProject * project, GESFormatter * formatter,
   return TRUE;
 }
 
+/* Internally takes project mutex */
 void
 ges_project_add_loading_asset (GESProject * project, GType extractable_type,
     const gchar * id)
@@ -785,9 +840,14 @@ ges_project_add_loading_asset (GESProject * project, GType extractable_type,
   GESAsset *asset;
 
   if ((asset = ges_asset_cache_lookup (extractable_type, id))) {
+    GES_PROJECT_LOCK (project);
     if (g_hash_table_insert (project->priv->loading_assets,
-            ges_project_internal_asset_id (asset), gst_object_ref (asset)))
+            ges_project_internal_asset_id (asset), gst_object_ref (asset))) {
+      GES_PROJECT_UNLOCK (project);
       g_signal_emit (project, _signals[ASSET_LOADING_SIGNAL], 0, asset);
+    } else {
+      GES_PROJECT_UNLOCK (project);
+    }
   }
 }
 
@@ -807,8 +867,10 @@ ges_project_add_loading_asset (GESProject * project, GType extractable_type,
  * "asset-added" signal to get the asset when it finally gets added to
  * @project
  *
- * Returns: %TRUE if the asset started to be added %FALSE it was already
- * in the project
+ * Returns: %TRUE if the asset was added and started loading, %FALSE it was
+ * already in the project.
+ *
+ * MT safe.
  */
 gboolean
 ges_project_create_asset (GESProject * project, const gchar * id,
@@ -823,13 +885,16 @@ ges_project_create_asset (GESProject * project, const gchar * id,
     id = g_type_name (extractable_type);
   internal_id = ges_project_internal_extractable_type_id (extractable_type, id);
 
+  GES_PROJECT_LOCK (project);
   if (g_hash_table_lookup (project->priv->assets, internal_id) ||
       g_hash_table_lookup (project->priv->loading_assets, internal_id) ||
       g_hash_table_lookup (project->priv->loaded_with_error, internal_id)) {
 
+    GES_PROJECT_UNLOCK (project);
     g_free (internal_id);
     return FALSE;
   }
+  GES_PROJECT_UNLOCK (project);
   g_free (internal_id);
 
   /* TODO Add a GCancellable somewhere in our API */
@@ -852,6 +917,8 @@ ges_project_create_asset (GESProject * project, const gchar * id,
  * @project
  *
  * Returns: (transfer full) (nullable): The newly created #GESAsset or %NULL.
+ *
+ * MT safe.
  */
 GESAsset *
 ges_project_create_asset_sync (GESProject * project, const gchar * id,
@@ -869,16 +936,20 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
     id = g_type_name (extractable_type);
 
   internal_id = ges_project_internal_extractable_type_id (extractable_type, id);
+  GES_PROJECT_LOCK (project);
   if ((asset = g_hash_table_lookup (project->priv->assets, internal_id))) {
+    GES_PROJECT_UNLOCK (project);
     g_free (internal_id);
 
     return gst_object_ref (asset);
   } else if (g_hash_table_lookup (project->priv->loading_assets, internal_id) ||
       g_hash_table_lookup (project->priv->loaded_with_error, internal_id)) {
+    GES_PROJECT_UNLOCK (project);
     g_free (internal_id);
 
     return NULL;
   }
+  GES_PROJECT_UNLOCK (project);
   g_free (internal_id);
 
   /* TODO Add a GCancellable somewhere in our API */
@@ -894,8 +965,14 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
       retry = FALSE;
       internal_id =
           ges_project_internal_extractable_type_id (extractable_type, id);
-      if ((!g_hash_table_lookup (project->priv->assets, internal_id)))
+      GES_PROJECT_LOCK (project);
+      if ((!g_hash_table_lookup (project->priv->assets, internal_id))) {
+        GES_PROJECT_UNLOCK (project);
         g_signal_emit (project, _signals[ASSET_LOADING_SIGNAL], 0, asset);
+      } else {
+        GES_PROJECT_UNLOCK (project);
+      }
+
       g_free (internal_id);
 
       if (possible_id) {
@@ -941,7 +1018,9 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
  * @asset.
  *
  * Returns: %TRUE if the asset could be added %FALSE it was already
- * in the project
+ * in the project.
+ *
+ * MT safe.
  */
 gboolean
 ges_project_add_asset (GESProject * project, GESAsset * asset)
@@ -949,15 +1028,18 @@ ges_project_add_asset (GESProject * project, GESAsset * asset)
   gchar *internal_id;
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
 
+  GES_PROJECT_LOCK (project);
   internal_id = ges_project_internal_asset_id (asset);
   if (g_hash_table_lookup (project->priv->assets, internal_id)) {
     g_free (internal_id);
+    GES_PROJECT_UNLOCK (project);
     return TRUE;
   }
 
   g_hash_table_insert (project->priv->assets, internal_id,
       gst_object_ref (asset));
   g_hash_table_remove (project->priv->loading_assets, internal_id);
+  GES_PROJECT_UNLOCK (project);
   GST_DEBUG_OBJECT (project, "Asset added: %s", ges_asset_get_id (asset));
   g_signal_emit (project, _signals[ASSET_ADDED_SIGNAL], 0, asset);
 
@@ -969,9 +1051,11 @@ ges_project_add_asset (GESProject * project, GESAsset * asset)
  * @project: A #GESProject
  * @asset: (transfer none): A #GESAsset to remove from @project
  *
- * remove a @asset to from @project.
+ * Remove @asset from @project.
  *
  * Returns: %TRUE if the asset could be removed %FALSE otherwise
+ *
+ * MT safe.
  */
 gboolean
 ges_project_remove_asset (GESProject * project, GESAsset * asset)
@@ -982,7 +1066,9 @@ ges_project_remove_asset (GESProject * project, GESAsset * asset)
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
 
   internal_id = ges_project_internal_asset_id (asset);
+  GES_PROJECT_LOCK (project);
   ret = g_hash_table_remove (project->priv->assets, internal_id);
+  GES_PROJECT_UNLOCK (project);
   g_free (internal_id);
   g_signal_emit (project, _signals[ASSET_REMOVED_SIGNAL], 0, asset);
 
@@ -998,6 +1084,8 @@ ges_project_remove_asset (GESProject * project, GESAsset * asset)
  *
  * Returns: (transfer full) (nullable): The #GESAsset with
  * @id or %NULL if no asset with @id as an ID
+ *
+ * MT safe.
  */
 GESAsset *
 ges_project_get_asset (GESProject * project, const gchar * id,
@@ -1011,7 +1099,9 @@ ges_project_get_asset (GESProject * project, const gchar * id,
       NULL);
 
   internal_id = ges_project_internal_extractable_type_id (extractable_type, id);
+  GES_PROJECT_LOCK (project);
   asset = g_hash_table_lookup (project->priv->assets, internal_id);
+  GES_PROJECT_UNLOCK (project);
   g_free (internal_id);
 
   if (asset)
@@ -1032,6 +1122,8 @@ ges_project_get_asset (GESProject * project, const gchar * id,
  *
  * Returns: (transfer full) (element-type GESAsset): The list of
  * #GESAsset the object contains
+ *
+ * MT safe.
  */
 GList *
 ges_project_list_assets (GESProject * project, GType filter)
@@ -1044,12 +1136,14 @@ ges_project_list_assets (GESProject * project, GType filter)
   g_return_val_if_fail (filter == G_TYPE_NONE
       || g_type_is_a (filter, GES_TYPE_EXTRACTABLE), NULL);
 
+  GES_PROJECT_LOCK (project);
   g_hash_table_iter_init (&iter, project->priv->assets);
   while (g_hash_table_iter_next (&iter, &key, &value)) {
     if (g_type_is_a (ges_asset_get_extractable_type (GES_ASSET (value)),
             filter))
       ret = g_list_append (ret, gst_object_ref (value));
   }
+  GES_PROJECT_UNLOCK (project);
 
   return ret;
 }
@@ -1070,7 +1164,9 @@ ges_project_list_assets (GESProject * project, GType filter)
  * is one of the timelines that have been extracted from @project
  * (using ges_asset_extract (@project);)
  *
- * Returns: %TRUE if the project could be save, %FALSE otherwize
+ * Returns: %TRUE if the project could be save, %FALSE otherwise
+ *
+ * MT safe.
  */
 gboolean
 ges_project_save (GESProject * project, GESTimeline * timeline,
@@ -1086,6 +1182,8 @@ ges_project_save (GESProject * project, GESTimeline * timeline,
       g_type_is_a (ges_asset_get_extractable_type (formatter_asset),
           GES_TYPE_FORMATTER), FALSE);
   g_return_val_if_fail ((error == NULL || *error == NULL), FALSE);
+
+  GES_PROJECT_LOCK (project);
 
   tl_asset = ges_extractable_get_asset (GES_EXTRACTABLE (timeline));
   if (tl_asset == NULL && project->priv->uri == NULL) {
@@ -1123,12 +1221,17 @@ ges_project_save (GESProject * project, GESTimeline * timeline,
     goto out;
   }
 
+  GES_PROJECT_UNLOCK (project);
   ges_project_add_formatter (project, formatter);
   ret = ges_formatter_save_to_uri (formatter, timeline, uri, overwrite, error);
   if (ret && project->priv->uri == NULL)
     ges_project_set_uri (project, uri);
 
+  GES_PROJECT_LOCK (project);
+
 out:
+  GES_PROJECT_UNLOCK (project);
+
   if (formatter_asset)
     gst_object_unref (formatter_asset);
   ges_project_remove_formatter (project, formatter);
@@ -1147,6 +1250,8 @@ out:
  * the URI it will keep refering to.
  *
  * Returns: A newly created #GESProject
+ *
+ * MT safe.
  */
 GESProject *
 ges_project_new (const gchar * uri)
@@ -1176,7 +1281,9 @@ ges_project_new (const gchar * uri)
  *
  * Loads @project into @timeline
  *
- * Returns: %TRUE if the project could be loaded %FALSE otherwize.
+ * Returns: %TRUE if the project could be loaded %FALSE otherwise.
+ *
+ * MT safe.
  */
 gboolean
 ges_project_load (GESProject * project, GESTimeline * timeline, GError ** error)
@@ -1201,31 +1308,37 @@ ges_project_load (GESProject * project, GESTimeline * timeline, GError ** error)
  * Retrieve the uri that is currently set on @project
  *
  * Returns: (transfer full) (nullable): a newly allocated string representing uri.
+ *
+ * MT safe.
  */
 gchar *
 ges_project_get_uri (GESProject * project)
 {
-  GESProjectPrivate *priv;
+  gchar *uri = NULL;
 
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
 
-  priv = project->priv;
-  if (priv->uri)
-    return g_strdup (priv->uri);
-  return NULL;
+  GES_PROJECT_LOCK (project);
+  if (project->priv->uri)
+    uri = g_strdup (project->priv->uri);
+  GES_PROJECT_UNLOCK (project);
+
+  return uri;
 }
 
 /**
  * ges_project_add_encoding_profile:
  * @project: A #GESProject
  * @profile: A #GstEncodingProfile to add to the project. If a profile with
- * the same name already exists, it will be replaced
+ * the same name already exists, it will be replaced.
  *
  * Adds @profile to the project. It lets you save in what format
- * the project has been renders and keep a reference to those formats.
- * Also, those formats will be saves to the project file when possible.
+ * the project will be rendered and keep a reference to those formats.
+ * Also, those formats will be saved to the project file when possible.
  *
- * Returns: %TRUE if @profile could be added, %FALSE otherwize
+ * Returns: %TRUE if @profile could be added, %FALSE otherwise
+ *
+ * MT safe.
  */
 gboolean
 ges_project_add_encoding_profile (GESProject * project,
@@ -1237,6 +1350,7 @@ ges_project_add_encoding_profile (GESProject * project,
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
   g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), FALSE);
 
+  GES_PROJECT_LOCK (project);
   priv = project->priv;
   for (tmp = priv->encoding_profiles; tmp; tmp = tmp->next) {
     GstEncodingProfile *tmpprofile = GST_ENCODING_PROFILE (tmp->data);
@@ -1248,13 +1362,14 @@ ges_project_add_encoding_profile (GESProject * project,
 
       gst_object_unref (tmp->data);
       tmp->data = gst_object_ref (profile);
+      GES_PROJECT_UNLOCK (project);
       return TRUE;
     }
   }
 
   priv->encoding_profiles = g_list_prepend (priv->encoding_profiles,
       gst_object_ref (profile));
-
+  GES_PROJECT_UNLOCK (project);
   return TRUE;
 }
 
@@ -1284,7 +1399,9 @@ ges_project_list_encoding_profiles (GESProject * project)
  *
  * Returns: (transfer full) (element-type GES.Asset): A set of loading asset
  * that will be added to @project. Note that those Asset are *not* loaded yet,
- * and thus can not be used
+ * and thus can not be used.
+ *
+ * MT safe.
  */
 GList *
 ges_project_get_loading_assets (GESProject * project)
@@ -1296,9 +1413,11 @@ ges_project_get_loading_assets (GESProject * project)
 
   g_return_val_if_fail (GES_IS_PROJECT (project), NULL);
 
+  GES_PROJECT_LOCK (project);
   g_hash_table_iter_init (&iter, project->priv->loading_assets);
   while (g_hash_table_iter_next (&iter, &key, &value))
     ret = g_list_prepend (ret, gst_object_ref (value));
 
+  GES_PROJECT_UNLOCK (project);
   return ret;
 }

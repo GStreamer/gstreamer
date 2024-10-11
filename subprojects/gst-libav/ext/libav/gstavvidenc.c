@@ -208,10 +208,7 @@ gst_ffmpegvidenc_init (GstFFMpegVidEnc * ffmpegenc)
 
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_ENCODER_SINK_PAD (ffmpegenc));
 
-  ffmpegenc->context = avcodec_alloc_context3 (klass->in_plugin);
   ffmpegenc->refcontext = avcodec_alloc_context3 (klass->in_plugin);
-  ffmpegenc->picture = av_frame_alloc ();
-  ffmpegenc->opened = FALSE;
   ffmpegenc->file = NULL;
 }
 
@@ -222,10 +219,8 @@ gst_ffmpegvidenc_finalize (GObject * object)
 
   /* clean up remaining allocated data */
   av_frame_free (&ffmpegenc->picture);
-  gst_ffmpeg_avcodec_close (ffmpegenc->context);
-  gst_ffmpeg_avcodec_close (ffmpegenc->refcontext);
-  av_freep (&ffmpegenc->context);
-  av_freep (&ffmpegenc->refcontext);
+  avcodec_free_context (&ffmpegenc->context);
+  avcodec_free_context (&ffmpegenc->refcontext);
   g_free (ffmpegenc->filename);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -247,15 +242,13 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   ffmpegenc->need_reopen = FALSE;
 
   /* close old session */
-  if (ffmpegenc->opened) {
-    avcodec_free_context (&ffmpegenc->context);
-    ffmpegenc->opened = FALSE;
-    ffmpegenc->context = avcodec_alloc_context3 (oclass->in_plugin);
-    if (ffmpegenc->context == NULL) {
-      GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
-      return FALSE;
-    }
+  avcodec_free_context (&ffmpegenc->context);
+  ffmpegenc->context = avcodec_alloc_context3 (oclass->in_plugin);
+  if (ffmpegenc->context == NULL) {
+    GST_DEBUG_OBJECT (ffmpegenc, "Failed to allocate context");
+    return FALSE;
   }
+  ffmpegenc->last_pts_ff = G_MININT64;
 
   /* additional avcodec settings */
   gst_ffmpeg_cfg_fill_context (G_OBJECT (ffmpegenc), ffmpegenc->context);
@@ -402,7 +395,6 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
 
   /* success! */
   ffmpegenc->pts_offset = GST_CLOCK_TIME_NONE;
-  ffmpegenc->opened = TRUE;
 
   return TRUE;
 
@@ -412,6 +404,7 @@ open_file_err:
     GST_ELEMENT_ERROR (ffmpegenc, RESOURCE, OPEN_WRITE,
         (("Could not open file \"%s\" for writing."), ffmpegenc->filename),
         GST_ERROR_SYSTEM);
+    avcodec_free_context (&ffmpegenc->context);
     return FALSE;
   }
 file_read_err:
@@ -419,6 +412,7 @@ file_read_err:
     GST_ELEMENT_ERROR (ffmpegenc, RESOURCE, READ,
         (("Could not get contents of file \"%s\"."), ffmpegenc->filename),
         GST_ERROR_SYSTEM);
+    avcodec_free_context (&ffmpegenc->context);
     return FALSE;
   }
 
@@ -426,12 +420,12 @@ insane_timebase:
   {
     GST_ERROR_OBJECT (ffmpegenc, "Rejecting time base %d/%d",
         ffmpegenc->context->time_base.den, ffmpegenc->context->time_base.num);
-    goto cleanup_stats_in;
+    goto close_codec;
   }
 unsupported_codec:
   {
     GST_DEBUG ("Unsupported codec - no caps found");
-    goto cleanup_stats_in;
+    goto close_codec;
   }
 open_codec_fail:
   {
@@ -456,15 +450,13 @@ bad_input_fmt:
   }
 close_codec:
   {
+    if (ffmpegenc->context)
+      g_free (ffmpegenc->context->stats_in);
+    if (ffmpegenc->file) {
+      fclose (ffmpegenc->file);
+      ffmpegenc->file = NULL;
+    }
     avcodec_free_context (&ffmpegenc->context);
-    ffmpegenc->context = avcodec_alloc_context3 (oclass->in_plugin);
-    if (ffmpegenc->context == NULL)
-      GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
-    goto cleanup_stats_in;
-  }
-cleanup_stats_in:
-  {
-    g_free (ffmpegenc->context->stats_in);
     return FALSE;
   }
 }
@@ -483,8 +475,7 @@ gst_ffmpegvidenc_propose_allocation (GstVideoEncoder * encoder,
 static void
 gst_ffmpegvidenc_free_avpacket (gpointer pkt)
 {
-  av_packet_unref ((AVPacket *) pkt);
-  g_free (pkt);
+  av_packet_free ((AVPacket **) & pkt);
 }
 
 typedef struct
@@ -560,6 +551,7 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
   gint res;
   GstFlowReturn ret = GST_FLOW_ERROR;
   AVFrame *picture = NULL;
+  GstClockTime pts, pts_running_time;
 
   if (!frame)
     goto send_frame;
@@ -569,11 +561,19 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
   gst_ffmpegvidenc_add_cc (frame->input_buffer, picture);
 
   if (GST_VIDEO_INFO_IS_INTERLACED (&ffmpegenc->input_state->info)) {
-    picture->interlaced_frame = TRUE;
-    picture->top_field_first =
+    const gboolean top_field_first =
         GST_BUFFER_FLAG_IS_SET (frame->input_buffer, GST_VIDEO_BUFFER_FLAG_TFF)
         || GST_VIDEO_INFO_FIELD_ORDER (&ffmpegenc->input_state->info) ==
         GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+    picture->flags |= AV_FRAME_FLAG_INTERLACED;
+    if (top_field_first) {
+      picture->flags |= AV_FRAME_FLAG_TOP_FIELD_FIRST;
+    }
+#else
+    picture->interlaced_frame = TRUE;
+    picture->top_field_first = top_field_first;
+#endif
     picture->repeat_pict =
         GST_BUFFER_FLAG_IS_SET (frame->input_buffer, GST_VIDEO_BUFFER_FLAG_RFF);
   }
@@ -621,19 +621,46 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
   picture->width = GST_VIDEO_FRAME_WIDTH (&buffer_info->vframe);
   picture->height = GST_VIDEO_FRAME_HEIGHT (&buffer_info->vframe);
 
+  // Use the running time to calculate a PTS that is passed to the encoder.
+  // This ensures that it is increasing even if there are segment changes and
+  // makes it unnecessary to drain the encoder on every segment change.
+  pts = frame->pts;
+  pts_running_time =
+      gst_segment_to_running_time (&GST_VIDEO_ENCODER
+      (ffmpegenc)->input_segment, GST_FORMAT_TIME, pts);
+
   if (ffmpegenc->pts_offset == GST_CLOCK_TIME_NONE) {
-    ffmpegenc->pts_offset = frame->pts;
+    ffmpegenc->pts_offset = pts_running_time;
   }
 
-  if (frame->pts == GST_CLOCK_TIME_NONE) {
+  if (pts_running_time == GST_CLOCK_TIME_NONE) {
     picture->pts = AV_NOPTS_VALUE;
-  } else if (frame->pts < ffmpegenc->pts_offset) {
+  } else if (pts_running_time < ffmpegenc->pts_offset) {
     GST_ERROR_OBJECT (ffmpegenc, "PTS is going backwards");
     picture->pts = AV_NOPTS_VALUE;
   } else {
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+    const gint ticks_per_frame =
+        (GST_VIDEO_INFO_IS_INTERLACED (&ffmpegenc->input_state->info)
+        && ffmpegenc->context->codec_descriptor
+        && ffmpegenc->context->
+        codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
+#else
+    const gint ticks_per_frame = ffmpegenc->context->ticks_per_frame;
+#endif
     picture->pts =
-        gst_ffmpeg_time_gst_to_ff ((frame->pts - ffmpegenc->pts_offset) /
-        ffmpegenc->context->ticks_per_frame, ffmpegenc->context->time_base);
+        gst_ffmpeg_time_gst_to_ff ((pts_running_time - ffmpegenc->pts_offset) /
+        ticks_per_frame, ffmpegenc->context->time_base);
+
+    // Certain codecs require always increasing PTS to work correctly. This
+    // affects at least all MPEG1/2/4 based encoders.
+    if (ffmpegenc->last_pts_ff == G_MININT64
+        || picture->pts > ffmpegenc->last_pts_ff) {
+      ffmpegenc->last_pts_ff = picture->pts;
+    } else {
+      ffmpegenc->last_pts_ff += 1;
+      picture->pts = ffmpegenc->last_pts_ff;
+    }
   }
 
 send_frame:
@@ -677,18 +704,18 @@ gst_ffmpegvidenc_receive_packet (GstFFMpegVidEnc * ffmpegenc,
 
   *got_packet = FALSE;
 
-  pkt = g_new0 (AVPacket, 1);
-
+  pkt = av_packet_alloc ();
   res = avcodec_receive_packet (ffmpegenc->context, pkt);
 
   if (res == AVERROR (EAGAIN)) {
-    g_free (pkt);
+    av_packet_free (&pkt);
     goto done;
   } else if (res == AVERROR_EOF) {
-    g_free (pkt);
+    av_packet_free (&pkt);
     ret = GST_FLOW_EOS;
     goto done;
   } else if (res < 0) {
+    av_packet_free (&pkt);
     ret = GST_FLOW_ERROR;
     goto done;
   }
@@ -728,7 +755,7 @@ gst_ffmpegvidenc_receive_packet (GstFFMpegVidEnc * ffmpegenc,
           ffmpegenc->context->time_base);
 
       if (gst_pts_dts_diff > frame->pts)
-        frame->pts = 0;
+        frame->dts = 0;
       else
         frame->dts = frame->pts - gst_pts_dts_diff;
     } else {
@@ -752,7 +779,7 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
   GstFlowReturn ret;
   gboolean got_packet;
 
-  /* endoder was drained or flushed, and ffmpeg encoder doesn't support
+  /* encoder was drained or flushed, and ffmpeg encoder doesn't support
    * flushing. We need to re-open encoder then */
   if (ffmpegenc->need_reopen) {
     gboolean reopen_ret;
@@ -763,6 +790,7 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
     if (!ffmpegenc->input_state) {
       GST_ERROR_OBJECT (ffmpegenc,
           "Cannot re-open encoder without input state");
+      gst_video_codec_frame_unref (frame);
       return GST_FLOW_NOT_NEGOTIATED;
     }
 
@@ -772,6 +800,7 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
 
     if (!reopen_ret) {
       GST_ERROR_OBJECT (ffmpegenc, "Couldn't re-open encoder");
+      gst_video_codec_frame_unref (frame);
       return GST_FLOW_NOT_NEGOTIATED;
     }
   }
@@ -816,7 +845,7 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
   GST_DEBUG_OBJECT (ffmpegenc, "flushing buffers with sending %d", send);
 
   /* no need to empty codec if there is none */
-  if (!ffmpegenc->opened)
+  if (!ffmpegenc->context)
     goto done;
 
   ret = gst_ffmpegvidenc_send_frame (ffmpegenc, NULL);
@@ -852,7 +881,7 @@ gst_ffmpegvidenc_set_property (GObject * object,
 
   ffmpegenc = (GstFFMpegVidEnc *) (object);
 
-  if (ffmpegenc->opened) {
+  if (ffmpegenc->context) {
     GST_WARNING_OBJECT (ffmpegenc,
         "Can't change properties once decoder is setup !");
     return;
@@ -906,7 +935,7 @@ gst_ffmpegvidenc_flush (GstVideoEncoder * encoder)
 {
   GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) encoder;
 
-  if (ffmpegenc->opened) {
+  if (ffmpegenc->context) {
     avcodec_flush_buffers (ffmpegenc->context);
     ffmpegenc->pts_offset = GST_CLOCK_TIME_NONE;
   }
@@ -918,20 +947,19 @@ static gboolean
 gst_ffmpegvidenc_start (GstVideoEncoder * encoder)
 {
   GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) encoder;
-  GstFFMpegVidEncClass *oclass =
-      (GstFFMpegVidEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
-
-  ffmpegenc->opened = FALSE;
-  ffmpegenc->need_reopen = FALSE;
 
   /* close old session */
-  avcodec_free_context (&ffmpegenc->context);
-  ffmpegenc->context = avcodec_alloc_context3 (oclass->in_plugin);
-  if (ffmpegenc->context == NULL) {
-    GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
-    return FALSE;
+  if (ffmpegenc->file) {
+    fclose (ffmpegenc->file);
+    ffmpegenc->file = NULL;
   }
+  if (ffmpegenc->context)
+    g_free (ffmpegenc->context->stats_in);
+  avcodec_free_context (&ffmpegenc->context);
+  av_frame_free (&ffmpegenc->picture);
+  ffmpegenc->need_reopen = FALSE;
 
+  ffmpegenc->picture = av_frame_alloc ();
   gst_video_encoder_set_min_pts (encoder, GST_SECOND * 60 * 60 * 1000);
 
   return TRUE;
@@ -943,8 +971,14 @@ gst_ffmpegvidenc_stop (GstVideoEncoder * encoder)
   GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) encoder;
 
   gst_ffmpegvidenc_flush_buffers (ffmpegenc, FALSE);
-  gst_ffmpeg_avcodec_close (ffmpegenc->context);
-  ffmpegenc->opened = FALSE;
+  if (ffmpegenc->context)
+    g_free (ffmpegenc->context->stats_in);
+  if (ffmpegenc->file) {
+    fclose (ffmpegenc->file);
+    ffmpegenc->file = NULL;
+  }
+  avcodec_free_context (&ffmpegenc->context);
+  av_frame_free (&ffmpegenc->picture);
   ffmpegenc->need_reopen = FALSE;
 
   if (ffmpegenc->input_state) {
@@ -990,15 +1024,21 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
     if (in_plugin->type != AVMEDIA_TYPE_VIDEO)
       continue;
 
+    /* Skip formats we don't handle */
+    if (!gst_ffmpeg_codecid_is_known (in_plugin->id)) {
+      continue;
+    }
+
     /* no quasi codecs, please */
     if (in_plugin->id == AV_CODEC_ID_RAWVIDEO ||
         in_plugin->id == AV_CODEC_ID_V210 ||
         in_plugin->id == AV_CODEC_ID_V210X ||
         in_plugin->id == AV_CODEC_ID_V308 ||
         in_plugin->id == AV_CODEC_ID_V408 ||
-        in_plugin->id == AV_CODEC_ID_V410 ||
-        in_plugin->id == AV_CODEC_ID_R210
+        in_plugin->id == AV_CODEC_ID_V410 || in_plugin->id == AV_CODEC_ID_R210
+#if LIBAVCODEC_VERSION_MAJOR < 61
         || in_plugin->id == AV_CODEC_ID_AYUV
+#endif
         || in_plugin->id == AV_CODEC_ID_Y41P
         || in_plugin->id == AV_CODEC_ID_012V
         || in_plugin->id == AV_CODEC_ID_YUV4

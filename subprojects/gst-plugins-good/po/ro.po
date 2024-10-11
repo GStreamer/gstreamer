@@ -3,7 +3,7 @@
 #
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
 # Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
-# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022 - 2023.
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 2022 - 2023.
 #
 # Cronologia traducerii fișierului „gst-plugins-good”:
 # Traducerea inițială, făcută de LAG, pentru versiunea gst-plugins-good 0.10.23.2
@@ -12,14 +12,15 @@
 # Eliminare a mesajelor ce-au dispărut în ultima versiune.
 # Actualizare a traducerii pentru versiunea 1.19.2, făcută de R-GC, ian-2022.
 # Actualizare a traducerii pentru versiunea 1.21.90, făcută de R-GC, ian-2023
+# Revizuire și corectare a traducerii pentru versiunea 1.21.90, făcută de R-GC, noi-2023
 # Actualizare a traducerii pentru versiunea Y, făcută de X, Z(anul).
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2023-01-15 20:09+0100\n"
+"POT-Creation-Date: 2023-01-13 19:10+0000\n"
+"PO-Revision-Date: 2023-11-17 16:55+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
@@ -27,7 +28,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
-"20)) ? 1 : 2);;\n"
+"20)) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: Poedit 3.2.2\n"
 "X-Launchpad-Export-Date: 2010-08-16 00:08+0000\n"
@@ -113,12 +114,6 @@ msgstr "Acest fișier este corupt și nu poate fi redat."
 
 msgid "Invalid atom size."
 msgstr "Dimensiune de atom nevalidă."
-
-msgid "Cannot query file size"
-msgstr ""
-
-msgid "Cannot demux file"
-msgstr ""
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Acest fișier nu este complet și nu poate fi redat."
@@ -232,14 +227,15 @@ msgstr "Nu s-a putut cartografia memoria tampon din dispozitivul „%s”"
 
 #, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr "Driverul dispozitivului „%s” nu suportă metoda IO %d"
+msgstr "Controlorul dispozitivului „%s” nu suportă metoda de In/Ieș %d"
 
 # R-Gc, scrie:
 # s-a modificat de la:
 # „Driverul dispozitivului „%s” nu suportă orice metodă IO cunoscută.”
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr "Driverul dispozitivului „%s” nu suportă nicio metodă IO cunoscută."
+msgstr ""
+"Controlorul dispozitivului „%s” nu suportă nicio metodă de In/Ieș cunoscută."
 
 # DȘ, spune:
 # „→ aici cred că „caps” vine de la „capitals” care
@@ -315,10 +311,11 @@ msgid "Video device uses an unsupported pixel format."
 msgstr "Dispozitivul video utilizează un format de pixel neacceptat."
 
 msgid "Failed to configure internal buffer pool."
-msgstr "Nu s-a putut configura rezerva internă de preîncărcare."
+msgstr "Nu s-a putut configura rezerva internă de memorie tampon."
 
 msgid "Video device did not suggest any buffer size."
-msgstr "Dispozitivul video nu a sugerat nicio dimensiune de preîncărcare."
+msgstr ""
+"Dispozitivul video nu a sugerat nicio dimensiune pentru memoria tampon."
 
 msgid "No downstream pool to import from."
 msgstr "Nu există o rezervă în aval din care să se importe."
@@ -406,8 +403,9 @@ msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
-"Eroare la obținerea caracteristicilor pentru dispozitivul „%s”: Nu este un "
-"driver v4l2. Verificați dacă este un driver v4l1."
+"Eroare la obținerea caracteristicilor pentru dispozitivul „%s”: Controlorul "
+"dispozitivului nu este un contolor v4l2. Verificați dacă este un controlor "
+"v4l1."
 
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"

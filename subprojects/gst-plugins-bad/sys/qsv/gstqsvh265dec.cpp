@@ -53,10 +53,12 @@ GST_DEBUG_CATEGORY_STATIC (gst_qsv_h265_dec_debug);
 #define DOC_SINK_CAPS \
     "video/x-h265, width = (int) [ 1, 16384 ], height = (int) [ 1, 16384 ], " \
     "stream-format = (string) { byte-stream, hev1, hvc1 }, " \
-    "alignment = (string) au, profile = (string) { main, main-10 }"
+    "alignment = (string) au, profile = (string) { main, main-10, main-12, " \
+    "main-422-10, main-422-12, main-444, main-444-10, main-444-12 }"
 
 #define DOC_SRC_CAPS_COMM \
-    "format = (string) NV12, " \
+    "format = (string) { NV12, P010_10LE, P012_LE, YUY2, Y210, Y212_LE, " \
+    "VUYA, RBGA, Y410, BGR10A2_LE, Y412_LE, BGRA64_LE }, " \
     "width = (int) [ 1, 16384 ], height = (int) [ 1, 16384 ]"
 
 #define DOC_SRC_CAPS \
@@ -319,7 +321,7 @@ gst_qsv_h265_dec_set_format (GstQsvDecoder * decoder,
 
   s = gst_caps_get_structure (state->caps, 0);
   str = gst_structure_get_string (s, "stream-format");
-  if ((g_strcmp0 (str, "avc") == 0 || g_strcmp0 (str, "avc3")) &&
+  if ((g_strcmp0 (str, "hev1") == 0 || g_strcmp0 (str, "hvc1") == 0) &&
       state->codec_data) {
     self->packetized = TRUE;
     /* Will be updated */
@@ -419,7 +421,7 @@ gst_qsv_h265_dec_process_input (GstQsvDecoder * decoder,
     memcpy (data + sizeof (start_code), nalu.data + nalu.offset, nalu.size);
 
     mem = gst_memory_new_wrapped ((GstMemoryFlags) 0, data, size, 0, size,
-        nullptr, (GDestroyNotify) g_free);
+        data, (GDestroyNotify) g_free);
     gst_buffer_append_memory (new_buf, mem);
   } while (pres == GST_H265_PARSER_OK);
 
@@ -487,11 +489,8 @@ gst_qsv_h265_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   mfx->FrameInfo.FrameRateExtD = 1;
   mfx->FrameInfo.AspectRatioW = 1;
   mfx->FrameInfo.AspectRatioH = 1;
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  mfx->FrameInfo.FourCC = MFX_FOURCC_NV12;
-  mfx->FrameInfo.BitDepthLuma = 8;
-  mfx->FrameInfo.BitDepthChroma = 8;
   mfx->FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_NV12);
   mfx->CodecProfile = MFX_PROFILE_HEVC_MAIN;
 
   /* Check max-resolution */
@@ -517,14 +516,8 @@ gst_qsv_h265_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   supported_profiles.push_back ("main");
   supported_formats.push_back ("NV12");
 
-  /* Check other profile/formats */
-  /* TODO: check other profiles too */
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  mfx->FrameInfo.FourCC = MFX_FOURCC_P010;
-  mfx->FrameInfo.BitDepthLuma = 10;
-  mfx->FrameInfo.BitDepthChroma = 10;
-  mfx->FrameInfo.Shift = 1;
-  mfx->FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+  /* main-10 */
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_P010_10LE);
   mfx->CodecProfile = MFX_PROFILE_HEVC_MAIN10;
   mfx->FrameInfo.Width = GST_ROUND_UP_16 (gst_qsv_resolutions[0].width);
   mfx->FrameInfo.Height = GST_ROUND_UP_16 (gst_qsv_resolutions[0].height);
@@ -533,6 +526,59 @@ gst_qsv_h265_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
     supported_profiles.push_back ("main-10");
     supported_formats.push_back ("P010_10LE");
+  }
+
+  /* main-12 */
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_P012_LE);
+  mfx->CodecProfile = MFX_PROFILE_HEVC_REXT;
+  if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+    supported_profiles.push_back ("main-12");
+    supported_formats.push_back ("P012_LE");
+  }
+
+  /* main-422-{10,12} */
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_YUY2);
+  mfx->CodecProfile = MFX_PROFILE_HEVC_REXT;
+  if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+    gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_Y210);
+    if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+      supported_profiles.push_back ("main-422-10");
+      supported_formats.push_back ("YUY2");
+      supported_formats.push_back ("Y210");
+
+      gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_Y212_LE);
+      if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+        supported_profiles.push_back ("main-422-12");
+        supported_formats.push_back ("Y212_LE");
+      }
+    }
+  }
+
+  /* main-444 */
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_VUYA);
+  mfx->CodecProfile = MFX_PROFILE_HEVC_REXT;
+  if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+    supported_profiles.push_back ("main-444");
+    supported_formats.push_back ("VUYA");
+    supported_formats.push_back ("RBGA");
+  }
+
+  /* main-444-10 */
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_Y410);
+  mfx->CodecProfile = MFX_PROFILE_HEVC_REXT;
+  if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+    supported_profiles.push_back ("main-444-10");
+    supported_formats.push_back ("Y410");
+    supported_formats.push_back ("BGR10A2_LE");
+  }
+
+  /* main-444-12 */
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_Y412_LE);
+  mfx->CodecProfile = MFX_PROFILE_HEVC_REXT;
+  if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+    supported_profiles.push_back ("main-444-12");
+    supported_formats.push_back ("Y412_LE");
+    supported_formats.push_back ("BGRA64_LE");
   }
 
   /* To cover both landscape and portrait,
@@ -567,7 +613,8 @@ gst_qsv_h265_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
 #ifdef G_OS_WIN32
   GstCaps *d3d11_caps = gst_caps_copy (src_caps);
   GstCapsFeatures *caps_features =
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr);
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+      nullptr);
   gst_caps_set_features_simple (d3d11_caps, caps_features);
   gst_caps_append (d3d11_caps, src_caps);
   src_caps = d3d11_caps;

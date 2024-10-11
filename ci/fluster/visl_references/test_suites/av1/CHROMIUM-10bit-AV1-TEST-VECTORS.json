@@ -1,0 +1,191 @@
+{
+    "name": "CHROMIUM-10bit-AV1-TEST-VECTORS",
+    "codec": "AV1",
+    "description": "AV1 Test Vector Catalogue from https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/local/bundles/cros/video/data/test_vectors/av1/",
+    "test_vectors": [
+        {
+            "name": "00000671.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000671_20210310.ivf",
+            "source_checksum": "fef65e57ddfd1f8aa096e01e86a986ef",
+            "input_file": "00000671_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "827a458a97061dfcdb8b05039ca1e531"
+        },
+        {
+            "name": "00000672.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000672_20210310.ivf",
+            "source_checksum": "b8ef4785aeaf2e4cda4881e979fed867",
+            "input_file": "00000672_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "c26f65fd2594013867d137cd6faa6bd0"
+        },
+        {
+            "name": "00000673.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000673_20210310.ivf",
+            "source_checksum": "f65839199495672f9bf57ba308f0e9b0",
+            "input_file": "00000673_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "6232de3d00e39a0f82f06e2d82d9b8fd"
+        },
+        {
+            "name": "00000674.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000674_20210310.ivf",
+            "source_checksum": "6a12ca5eaab678f6f75cfb60d359a888",
+            "input_file": "00000674_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "6f36fa164297da4aacff0446841d15bb"
+        },
+        {
+            "name": "00000675.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000675_20210310.ivf",
+            "source_checksum": "d331dd8791c792ae30ce12135b1cfd04",
+            "input_file": "00000675_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "38774361479384b1be2ca0b0aef6fc46"
+        },
+        {
+            "name": "00000716.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000716_20210310.ivf",
+            "source_checksum": "4b63322255d315fb342131fc7f5c8c98",
+            "input_file": "00000716_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "73be89ae15e0f938d7d3d7f1f6d3dd0d"
+        },
+        {
+            "name": "00000717.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000717_20210310.ivf",
+            "source_checksum": "09b7dd56b743e7c78c99bab40b619bdd",
+            "input_file": "00000717_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "945acb0ad0ce802934875eafd3bc16af"
+        },
+        {
+            "name": "00000718.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000718_20210310.ivf",
+            "source_checksum": "bf916a3dae66620916251ca7c321d4be",
+            "input_file": "00000718_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "0ebf288b3b12ff700eb552488b14f0bb"
+        },
+        {
+            "name": "00000719.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000719_20210310.ivf",
+            "source_checksum": "0ea38d3c871a8ea364c0fa50b9e81ebb",
+            "input_file": "00000719_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "706c707518ccda41667fc2f0720a7eda"
+        },
+        {
+            "name": "00000720.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000720_20210310.ivf",
+            "source_checksum": "1c2edf09bf33fb5a86dac93f39894cb1",
+            "input_file": "00000720_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "d82139ca06b166042bfc2ac02500627e"
+        },
+        {
+            "name": "00000761.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000761_20210310.ivf",
+            "source_checksum": "ec8661e8dd70ca85ec8d5b7455d4d136",
+            "input_file": "00000761_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "46e8814869adc3a37feb78225b3ae292"
+        },
+        {
+            "name": "00000762.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000762_20210310.ivf",
+            "source_checksum": "fb2c63ddd2cdf1cdb81472326cc6f7a3",
+            "input_file": "00000762_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "ada31fb4a7468319df33d49162b22cd2"
+        },
+        {
+            "name": "00000763.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000763_20210310.ivf",
+            "source_checksum": "19504b6f7b2c821eec6656766de4de21",
+            "input_file": "00000763_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "d317ca74657573b751c51e184ed24468"
+        },
+        {
+            "name": "00000764.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000764_20210310.ivf",
+            "source_checksum": "479020edbcc03a68931b7c38beadfd30",
+            "input_file": "00000764_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "717f35ae37363e45f51d9ef7f529b689"
+        },
+        {
+            "name": "00000765.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/00000765_20210310.ivf",
+            "source_checksum": "7a6b2e8cd8574ddd8533b23f7079941c",
+            "input_file": "00000765_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "73c58d4cc54981a9b8a7f2a96e3a7c45"
+        },
+        {
+            "name": "av1-1-b10-00-quantizer-00.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/av1-1-b10-00-quantizer-00_20210310.ivf",
+            "source_checksum": "e40cef2a8632d9f6bab45a3d168bebe2",
+            "input_file": "av1-1-b10-00-quantizer-00_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "8b834b72fe9c5dbd24c0869370f38157"
+        },
+        {
+            "name": "av1-1-b10-00-quantizer-10.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/av1-1-b10-00-quantizer-10_20210310.ivf",
+            "source_checksum": "a125d67cb1ab59e69fbe938fee3e7c69",
+            "input_file": "av1-1-b10-00-quantizer-10_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "2387e415ebed841a1a6a3c3c070ebdcb"
+        },
+        {
+            "name": "av1-1-b10-00-quantizer-20.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/av1-1-b10-00-quantizer-20_20210310.ivf",
+            "source_checksum": "245a5f5fce994016c3431d9073ab825a",
+            "input_file": "av1-1-b10-00-quantizer-20_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "2e7b859b62088c09c753828949b9ef1b"
+        },
+        {
+            "name": "av1-1-b10-00-quantizer-30.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/av1-1-b10-00-quantizer-30_20210310.ivf",
+            "source_checksum": "a89fb25a0e4d78ab44d918fe4a401488",
+            "input_file": "av1-1-b10-00-quantizer-30_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "aa68b016e1c4151b49a6e7ec8865ec92"
+        },
+        {
+            "name": "av1-1-b10-00-quantizer-40.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/av1-1-b10-00-quantizer-40_20210310.ivf",
+            "source_checksum": "ab0c82f604e8aac3ff3a8b08fb96cd68",
+            "input_file": "av1-1-b10-00-quantizer-40_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "6854e82b96b1e16ee4b072fa5669b0e1"
+        },
+        {
+            "name": "av1-1-b10-00-quantizer-50.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/av1-1-b10-00-quantizer-50_20210310.ivf",
+            "source_checksum": "46d2716c719d0569007ff8e80c52509d",
+            "input_file": "av1-1-b10-00-quantizer-50_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "77258f68bb746a04bebf57fd23582b49"
+        },
+        {
+            "name": "av1-1-b10-00-quantizer-60.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/av1-1-b10-00-quantizer-60_20210310.ivf",
+            "source_checksum": "8c535798a1505c9851fa0dc335ecfac9",
+            "input_file": "av1-1-b10-00-quantizer-60_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "30b16f739a40fea2b0f035acd27ea16f"
+        },
+        {
+            "name": "av1-1-b10-23-filmgrain-50.ivf",
+            "source": "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/av1-1-b10-23-film_grain-50_20210310.ivf",
+            "source_checksum": "aaddbf87bdf9b5ac4b1ab4fe802c410b",
+            "input_file": "av1-1-b10-23-film_grain-50_20210310.ivf",
+            "output_format": "yuv420p10le",
+            "result": "be596f5921854b9a9a5be81c302a5327"
+        }
+    ]
+}

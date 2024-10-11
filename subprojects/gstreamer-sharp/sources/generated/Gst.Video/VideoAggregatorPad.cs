@@ -240,6 +240,116 @@ namespace Gst.Video {
 			Marshal.FreeHGlobal (native_prepared_frame);
 		}
 
+		static PrepareFrameStartNativeDelegate PrepareFrameStart_cb_delegate;
+		static PrepareFrameStartNativeDelegate PrepareFrameStartVMCallback {
+			get {
+				if (PrepareFrameStart_cb_delegate == null)
+					PrepareFrameStart_cb_delegate = new PrepareFrameStartNativeDelegate (PrepareFrameStart_cb);
+				return PrepareFrameStart_cb_delegate;
+			}
+		}
+
+		static void OverridePrepareFrameStart (GLib.GType gtype)
+		{
+			OverridePrepareFrameStart (gtype, PrepareFrameStartVMCallback);
+		}
+
+		static void OverridePrepareFrameStart (GLib.GType gtype, PrepareFrameStartNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("prepare_frame_start"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void PrepareFrameStartNativeDelegate (IntPtr inst, IntPtr videoaggregator, IntPtr buffer, IntPtr prepared_frame);
+
+		static void PrepareFrameStart_cb (IntPtr inst, IntPtr videoaggregator, IntPtr buffer, IntPtr prepared_frame)
+		{
+			try {
+				VideoAggregatorPad __obj = GLib.Object.GetObject (inst, false) as VideoAggregatorPad;
+				__obj.OnPrepareFrameStart (GLib.Object.GetObject(videoaggregator) as Gst.Video.VideoAggregator, buffer == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (buffer, typeof (Gst.Buffer), false), Gst.Video.VideoFrame.New (prepared_frame));
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Video.VideoAggregatorPad), ConnectionMethod="OverridePrepareFrameStart")]
+		protected virtual void OnPrepareFrameStart (Gst.Video.VideoAggregator videoaggregator, Gst.Buffer buffer, Gst.Video.VideoFrame prepared_frame)
+		{
+			InternalPrepareFrameStart (videoaggregator, buffer, prepared_frame);
+		}
+
+		private void InternalPrepareFrameStart (Gst.Video.VideoAggregator videoaggregator, Gst.Buffer buffer, Gst.Video.VideoFrame prepared_frame)
+		{
+			PrepareFrameStartNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("prepare_frame_start"));
+				unmanaged = (PrepareFrameStartNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(PrepareFrameStartNativeDelegate));
+			}
+			if (unmanaged == null) return;
+
+			IntPtr native_prepared_frame = GLib.Marshaller.StructureToPtrAlloc (prepared_frame);
+			unmanaged (this.Handle, videoaggregator == null ? IntPtr.Zero : videoaggregator.Handle, buffer == null ? IntPtr.Zero : buffer.Handle, native_prepared_frame);
+			Marshal.FreeHGlobal (native_prepared_frame);
+		}
+
+		static PrepareFrameFinishNativeDelegate PrepareFrameFinish_cb_delegate;
+		static PrepareFrameFinishNativeDelegate PrepareFrameFinishVMCallback {
+			get {
+				if (PrepareFrameFinish_cb_delegate == null)
+					PrepareFrameFinish_cb_delegate = new PrepareFrameFinishNativeDelegate (PrepareFrameFinish_cb);
+				return PrepareFrameFinish_cb_delegate;
+			}
+		}
+
+		static void OverridePrepareFrameFinish (GLib.GType gtype)
+		{
+			OverridePrepareFrameFinish (gtype, PrepareFrameFinishVMCallback);
+		}
+
+		static void OverridePrepareFrameFinish (GLib.GType gtype, PrepareFrameFinishNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("prepare_frame_finish"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void PrepareFrameFinishNativeDelegate (IntPtr inst, IntPtr videoaggregator, IntPtr prepared_frame);
+
+		static void PrepareFrameFinish_cb (IntPtr inst, IntPtr videoaggregator, IntPtr prepared_frame)
+		{
+			try {
+				VideoAggregatorPad __obj = GLib.Object.GetObject (inst, false) as VideoAggregatorPad;
+				__obj.OnPrepareFrameFinish (GLib.Object.GetObject(videoaggregator) as Gst.Video.VideoAggregator, Gst.Video.VideoFrame.New (prepared_frame));
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Video.VideoAggregatorPad), ConnectionMethod="OverridePrepareFrameFinish")]
+		protected virtual void OnPrepareFrameFinish (Gst.Video.VideoAggregator videoaggregator, Gst.Video.VideoFrame prepared_frame)
+		{
+			InternalPrepareFrameFinish (videoaggregator, prepared_frame);
+		}
+
+		private void InternalPrepareFrameFinish (Gst.Video.VideoAggregator videoaggregator, Gst.Video.VideoFrame prepared_frame)
+		{
+			PrepareFrameFinishNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("prepare_frame_finish"));
+				unmanaged = (PrepareFrameFinishNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(PrepareFrameFinishNativeDelegate));
+			}
+			if (unmanaged == null) return;
+
+			IntPtr native_prepared_frame = GLib.Marshaller.StructureToPtrAlloc (prepared_frame);
+			unmanaged (this.Handle, videoaggregator == null ? IntPtr.Zero : videoaggregator.Handle, native_prepared_frame);
+			Marshal.FreeHGlobal (native_prepared_frame);
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -267,14 +377,30 @@ namespace Gst.Video {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // clean_frame
 							, "prepare_frame"
+							, "prepare_frame_start"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("prepare_frame_start"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // prepare_frame_start
+							, "clean_frame"
+							, "prepare_frame_finish"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("prepare_frame_finish"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // prepare_frame_finish
+							, "prepare_frame_start"
 							, "_gst_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_gst_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 20 // _gst_reserved
-							, "clean_frame"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 18 // _gst_reserved
+							, "prepare_frame_finish"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0

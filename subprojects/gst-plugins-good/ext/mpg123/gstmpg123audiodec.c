@@ -99,7 +99,7 @@ static guint gst_mpg123_audio_dec_get_info_queue_size (GstMpg123AudioDec *
 
 G_DEFINE_TYPE (GstMpg123AudioDec, gst_mpg123_audio_dec, GST_TYPE_AUDIO_DECODER);
 GST_ELEMENT_REGISTER_DEFINE (mpg123audiodec, "mpg123audiodec",
-    GST_RANK_MARGINAL, GST_TYPE_MPG123_AUDIO_DEC);
+    GST_RANK_PRIMARY, GST_TYPE_MPG123_AUDIO_DEC);
 
 static void
 gst_mpg123_audio_dec_class_init (GstMpg123AudioDecClass * klass)
@@ -217,7 +217,7 @@ gst_mpg123_audio_dec_init (GstMpg123AudioDec * mpg123_decoder)
 {
   mpg123_decoder->handle = NULL;
   mpg123_decoder->audio_clip_info_queue =
-      gst_queue_array_new_for_struct (sizeof (GstMpg123AudioDecClipInfo), 16);
+      gst_vec_deque_new_for_struct (sizeof (GstMpg123AudioDecClipInfo), 16);
 
   gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (mpg123_decoder), TRUE);
   gst_audio_decoder_set_use_default_pad_acceptcaps (GST_AUDIO_DECODER_CAST
@@ -232,7 +232,7 @@ gst_mpg123_audio_dec_dispose (GObject * object)
   GstMpg123AudioDec *mpg123_decoder = GST_MPG123_AUDIO_DEC (object);
 
   if (mpg123_decoder->audio_clip_info_queue != NULL) {
-    gst_queue_array_free (mpg123_decoder->audio_clip_info_queue);
+    gst_vec_deque_free (mpg123_decoder->audio_clip_info_queue);
     mpg123_decoder->audio_clip_info_queue = NULL;
   }
 
@@ -321,6 +321,7 @@ gst_mpg123_audio_dec_push_decoded_bytes (GstMpg123AudioDec * mpg123_decoder,
 {
   GstBuffer *output_buffer;
   GstAudioDecoder *dec;
+  GstMapInfo info;
 
   output_buffer = NULL;
   dec = GST_AUDIO_DECODER (mpg123_decoder);
@@ -336,7 +337,7 @@ gst_mpg123_audio_dec_push_decoded_bytes (GstMpg123AudioDec * mpg123_decoder,
     return GST_FLOW_OK;
   }
 
-  if (G_UNLIKELY (clip_end >= num_decoded_bytes)) {
+  if (G_UNLIKELY (clip_start + clip_end >= num_decoded_bytes)) {
     /* Fully-clipped frames still need to be finished, since they got
      * decoded properly, they are just made of padding samples. */
     GST_LOG_OBJECT (mpg123_decoder, "frame is fully clipped; "
@@ -351,24 +352,16 @@ gst_mpg123_audio_dec_push_decoded_bytes (GstMpg123AudioDec * mpg123_decoder,
   output_buffer = gst_audio_decoder_allocate_output_buffer (dec,
       num_decoded_bytes);
 
-  if (output_buffer == NULL) {
-    /* This is necessary to advance playback in time,
-     * even when nothing was decoded. */
-    return gst_audio_decoder_finish_frame (dec, NULL, 1);
+  if (gst_buffer_map (output_buffer, &info, GST_MAP_WRITE)) {
+    memcpy (info.data, decoded_bytes, num_decoded_bytes);
+    gst_buffer_unmap (output_buffer, &info);
   } else {
-    GstMapInfo info;
-
-    if (gst_buffer_map (output_buffer, &info, GST_MAP_WRITE)) {
-      memcpy (info.data, decoded_bytes, num_decoded_bytes);
-      gst_buffer_unmap (output_buffer, &info);
-    } else {
-      GST_ERROR_OBJECT (mpg123_decoder, "gst_buffer_map() returned NULL");
-      gst_buffer_unref (output_buffer);
-      output_buffer = NULL;
-    }
-
-    return gst_audio_decoder_finish_frame (dec, output_buffer, 1);
+    GST_ERROR_OBJECT (mpg123_decoder, "gst_buffer_map() returned NULL");
+    gst_buffer_unref (output_buffer);
+    output_buffer = NULL;
   }
+
+  return gst_audio_decoder_finish_frame (dec, output_buffer, 1);
 }
 
 
@@ -761,7 +754,7 @@ static void gst_mpg123_audio_dec_push_clip_info
     (GstMpg123AudioDec * mpg123_decoder, guint64 clip_start, guint64 clip_end)
 {
   GstMpg123AudioDecClipInfo clip_info = { clip_start, clip_end };
-  gst_queue_array_push_tail_struct (mpg123_decoder->audio_clip_info_queue,
+  gst_vec_deque_push_tail_struct (mpg123_decoder->audio_clip_info_queue,
       &clip_info);
 }
 
@@ -778,7 +771,7 @@ gst_mpg123_audio_dec_pop_oldest_clip_info (GstMpg123AudioDec *
     return;
 
   clip_info =
-      gst_queue_array_pop_head_struct (mpg123_decoder->audio_clip_info_queue);
+      gst_vec_deque_pop_head_struct (mpg123_decoder->audio_clip_info_queue);
 
   *clip_start = clip_info->clip_start;
   *clip_end = clip_info->clip_end;
@@ -787,14 +780,14 @@ gst_mpg123_audio_dec_pop_oldest_clip_info (GstMpg123AudioDec *
 static void
 gst_mpg123_audio_dec_clear_clip_info_queue (GstMpg123AudioDec * mpg123_decoder)
 {
-  gst_queue_array_clear (mpg123_decoder->audio_clip_info_queue);
+  gst_vec_deque_clear (mpg123_decoder->audio_clip_info_queue);
 }
 
 
 static guint
 gst_mpg123_audio_dec_get_info_queue_size (GstMpg123AudioDec * mpg123_decoder)
 {
-  return gst_queue_array_get_length (mpg123_decoder->audio_clip_info_queue);
+  return gst_vec_deque_get_length (mpg123_decoder->audio_clip_info_queue);
 }
 
 static gboolean

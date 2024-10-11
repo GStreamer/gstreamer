@@ -266,14 +266,14 @@ namespace Gst.Base {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate int HandleFrameNativeDelegate (IntPtr inst, IntPtr frame, int skipsize);
+		delegate int HandleFrameNativeDelegate (IntPtr inst, IntPtr frame, out int skipsize);
 
-		static int HandleFrame_cb (IntPtr inst, IntPtr frame, int skipsize)
+		static int HandleFrame_cb (IntPtr inst, IntPtr frame, out int skipsize)
 		{
 			try {
 				BaseParse __obj = GLib.Object.GetObject (inst, false) as BaseParse;
 				Gst.FlowReturn __result;
-				__result = __obj.OnHandleFrame (Gst.Base.BaseParseFrame.New (frame), skipsize);
+				__result = __obj.OnHandleFrame (Gst.Base.BaseParseFrame.New (frame), out skipsize);
 				return (int) __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -283,22 +283,22 @@ namespace Gst.Base {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.BaseParse), ConnectionMethod="OverrideHandleFrame")]
-		protected virtual Gst.FlowReturn OnHandleFrame (Gst.Base.BaseParseFrame frame, int skipsize)
+		protected virtual Gst.FlowReturn OnHandleFrame (Gst.Base.BaseParseFrame frame, out int skipsize)
 		{
-			return InternalHandleFrame (frame, skipsize);
+			return InternalHandleFrame (frame, out skipsize);
 		}
 
-		private Gst.FlowReturn InternalHandleFrame (Gst.Base.BaseParseFrame frame, int skipsize)
+		private Gst.FlowReturn InternalHandleFrame (Gst.Base.BaseParseFrame frame, out int skipsize)
 		{
 			HandleFrameNativeDelegate unmanaged = null;
 			unsafe {
 				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("handle_frame"));
 				unmanaged = (HandleFrameNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(HandleFrameNativeDelegate));
 			}
-			if (unmanaged == null) return (Gst.FlowReturn) 0;
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
 
 			IntPtr native_frame = GLib.Marshaller.StructureToPtrAlloc (frame);
-			int __result = unmanaged (this.Handle, native_frame, skipsize);
+			int __result = unmanaged (this.Handle, native_frame, out skipsize);
 			Marshal.FreeHGlobal (native_frame);
 			return (Gst.FlowReturn) __result;
 		}

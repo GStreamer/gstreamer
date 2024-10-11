@@ -24,6 +24,7 @@
 
 #include <string.h>
 #include "nle.h"
+#include "../shared/nlegesplugin.h"
 
 /**
  * SECTION:nleobject
@@ -33,6 +34,22 @@
  * properties provided by all the GNonLin elements.
  */
 
+static void
+nle_query_parent_nle_object_free (NleQueryParentNleObject * query)
+{
+  gst_clear_object (&query->nle_object);
+}
+
+void
+nle_query_parent_nle_object_release (NleQueryParentNleObject * query)
+{
+  g_atomic_rc_box_release_full (query,
+      (GDestroyNotify) nle_query_parent_nle_object_free);
+}
+
+G_DEFINE_BOXED_TYPE (NleQueryParentNleObject,
+    nle_query_parent_nle_object,
+    g_atomic_rc_box_acquire, nle_query_parent_nle_object_release);
 
 GST_DEBUG_CATEGORY_STATIC (nleobject_debug);
 #define GST_CAT_DEFAULT nleobject_debug
@@ -104,18 +121,54 @@ static gboolean nle_object_commit_func (NleObject * object, gboolean recurse);
 static GstStateChangeReturn nle_object_prepare (NleObject * object);
 
 static void
+nle_bin_handle_message (GstBin * bin, GstMessage * message)
+{
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT) {
+    const GstStructure *s = gst_message_get_structure (message);
+
+    if (gst_structure_has_name (s, NLE_QUERY_PARENT_NLE_OBJECT)) {
+      NleQueryParentNleObject *query;
+
+      gst_structure_get (s, "query", NLE_TYPE_QUERY_PARENT_NLE_OBJECT, &query,
+          NULL);
+      g_assert (query);
+
+      g_mutex_lock (&query->lock);
+      query->nle_object = gst_object_ref (GST_ELEMENT (bin));
+      g_mutex_unlock (&query->lock);
+      nle_query_parent_nle_object_release (query);
+
+      return;
+    }
+  } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STREAM_COLLECTION) {
+    GST_INFO_OBJECT (bin, "Dropping stream collection message, "
+        " those are internal to and should be kept as such");
+
+    return;
+  }
+
+  return GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+}
+
+static void
 nle_object_class_init (NleObjectClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBinClass *gstbin_class;
   NleObjectClass *nleobject_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbin_class = (GstBinClass *) klass;
   nleobject_class = (NleObjectClass *) klass;
   GST_DEBUG_CATEGORY_INIT (nleobject_debug, "nleobject",
       GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "GNonLin object");
   parent_class = g_type_class_ref (GST_TYPE_BIN);
+
+  /* Ensure the NleQueryParentObject GType is registered */
+  GType t = NLE_TYPE_QUERY_PARENT_NLE_OBJECT;
+  g_assert (t);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (nle_object_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (nle_object_get_property);
@@ -123,6 +176,7 @@ nle_object_class_init (NleObjectClass * klass)
   gobject_class->dispose = GST_DEBUG_FUNCPTR (nle_object_dispose);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (nle_object_change_state);
+  gstbin_class->handle_message = GST_DEBUG_FUNCPTR (nle_bin_handle_message);
 
   nleobject_class->prepare = GST_DEBUG_FUNCPTR (nle_object_prepare_func);
   nleobject_class->cleanup = GST_DEBUG_FUNCPTR (nle_object_cleanup_func);

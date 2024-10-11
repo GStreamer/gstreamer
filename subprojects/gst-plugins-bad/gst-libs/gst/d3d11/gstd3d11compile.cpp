@@ -25,7 +25,7 @@
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
 #include "gstd3d11-private.h"
-#include <gmodule.h>
+#include <gst/d3dshader/gstd3dshader.h>
 #include <wrl.h>
 #include <string.h>
 
@@ -60,9 +60,6 @@ ensure_debug_category (void)
 #define ensure_debug_category() /* NOOP */
 #endif /* GST_DISABLE_GST_DEBUG */
 
-static GModule *d3d_compiler_module = nullptr;
-static pD3DCompile GstD3DCompileFunc = nullptr;
-
 /**
  * gst_d3d11_compile_init:
  *
@@ -75,47 +72,7 @@ static pD3DCompile GstD3DCompileFunc = nullptr;
 gboolean
 gst_d3d11_compile_init (void)
 {
-  GST_D3D11_CALL_ONCE_BEGIN {
-#if GST_D3D11_WINAPI_ONLY_APP
-    /* Assuming that d3d compiler library is available */
-    GstD3DCompileFunc = D3DCompile;
-#else
-    static const gchar *d3d_compiler_names[] = {
-      "d3dcompiler_47.dll",
-      "d3dcompiler_46.dll",
-      "d3dcompiler_45.dll",
-      "d3dcompiler_44.dll",
-      "d3dcompiler_43.dll",
-    };
-    for (guint i = 0; i < G_N_ELEMENTS (d3d_compiler_names); i++) {
-      d3d_compiler_module =
-          g_module_open (d3d_compiler_names[i], G_MODULE_BIND_LAZY);
-
-      if (d3d_compiler_module) {
-        GST_INFO ("D3D compiler %s is available", d3d_compiler_names[i]);
-        if (!g_module_symbol (d3d_compiler_module, "D3DCompile",
-                (gpointer *) & GstD3DCompileFunc)) {
-          GST_ERROR ("Cannot load D3DCompile symbol from %s",
-              d3d_compiler_names[i]);
-          g_module_close (d3d_compiler_module);
-          d3d_compiler_module = nullptr;
-          GstD3DCompileFunc = nullptr;
-        } else {
-          break;
-        }
-      }
-    }
-
-    if (!GstD3DCompileFunc)
-      GST_WARNING ("D3D11 compiler library is unavailable");
-#endif
-  }
-  GST_D3D11_CALL_ONCE_END;
-
-  if (!GstD3DCompileFunc)
-    return FALSE;
-
-  return TRUE;
+  return gst_d3d_compile_init ();
 }
 
 /**
@@ -147,7 +104,7 @@ gst_d3d11_compile (LPCVOID src_data, SIZE_T src_data_size, LPCSTR source_name,
   if (!gst_d3d11_compile_init ())
     return E_FAIL;
 
-  return GstD3DCompileFunc (src_data, src_data_size, source_name, defines,
+  return gst_d3d_compile (src_data, src_data_size, source_name, defines,
       include, entry_point, target, flags1, flags2, code, error_msgs);
 }
 

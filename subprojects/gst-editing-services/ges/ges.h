@@ -82,8 +82,10 @@
 #include <ges/ges-gerror.h>
 #include <ges/ges-audio-track.h>
 #include <ges/ges-video-track.h>
+#include <ges/ges-frame-composition-meta.h>
 #include <ges/ges-version.h>
 #include <ges/ges-marker-list.h>
+#include <ges/ges-discoverer-manager.h>
 
 G_BEGIN_DECLS
 

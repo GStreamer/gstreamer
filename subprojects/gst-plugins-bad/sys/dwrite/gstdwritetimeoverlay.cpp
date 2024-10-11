@@ -129,7 +129,7 @@ static void gst_dwrite_time_overlay_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 static gboolean gst_dwrite_time_overlay_sink_event (GstBaseTransform * trans,
     GstEvent * event);
-static gboolean gst_dwrite_time_overlay_start (GstDWriteBaseOverlay * overlay);
+static gboolean gst_dwrite_time_overlay_start (GstBaseTransform * overlay);
 static WString gst_dwrite_time_overlay_get_text (GstDWriteBaseOverlay * overlay,
     const WString & default_text, GstBuffer * buffer);
 
@@ -185,12 +185,12 @@ gst_dwrite_time_overlay_class_init (GstDWriteTimeOverlayClass * klass)
   trans_class->sink_event =
       GST_DEBUG_FUNCPTR (gst_dwrite_time_overlay_sink_event);
 
-  overlay_class->start = GST_DEBUG_FUNCPTR (gst_dwrite_time_overlay_start);
+  trans_class->start = GST_DEBUG_FUNCPTR (gst_dwrite_time_overlay_start);
   overlay_class->get_text =
       GST_DEBUG_FUNCPTR (gst_dwrite_time_overlay_get_text);
 
   GST_DEBUG_CATEGORY_INIT (dwrite_time_overlay_debug,
-      "d3d11timeoverlay", 0, "d3d11timeoverlay");
+      "dwritetimeoverlay", 0, "dwritetimeoverlay");
 
   gst_type_mark_as_plugin_api (GST_TYPE_DWrite_TIME_OVERLAY_TIME_LINE,
       (GstPluginAPIFlags) 0);
@@ -284,15 +284,15 @@ gst_dwrite_time_overlay_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_dwrite_time_overlay_start (GstDWriteBaseOverlay * overlay)
+gst_dwrite_time_overlay_start (GstBaseTransform * trans)
 {
-  GstDWriteTimeOverlay *self = GST_DWRITE_TIME_OVERLAY (overlay);
+  GstDWriteTimeOverlay *self = GST_DWRITE_TIME_OVERLAY (trans);
   GstDWriteTimeOverlayPrivate *priv = self->priv;
 
   priv->first_running_time = GST_CLOCK_TIME_NONE;
   priv->buffer_count = 0;
 
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->start (trans);
 }
 
 static gboolean

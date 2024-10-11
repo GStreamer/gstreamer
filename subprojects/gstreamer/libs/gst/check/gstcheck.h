@@ -453,6 +453,37 @@ G_STMT_START {                                                      \
 #define assert_equals_string(a, b) fail_unless_equals_string(a, b)
 
 /**
+ * fail_unless_matches_string:
+ * @a: a string literal or expression
+ * @b: a regular expression pattern string literal or expression
+ *
+ * This macro checks that @a matches the regular expression in @b aborts if
+ * this is not the case, printing both expressions and the values they
+ * evaluated to. This macro is for use in unit tests.
+ *
+ * Since: 1.26
+ */
+#define fail_unless_matches_string(a, b)                            \
+G_STMT_START {                                                      \
+  const gchar * first = a;                                          \
+  const gchar * second = b;                                         \
+  fail_unless(g_regex_match_simple (second, first, 0, 0),           \
+    "'" #a "' (%s) does not match pattern '" #b"' (%s)", first, second); \
+} G_STMT_END;
+/**
+ * assert_matches_string:
+ * @a: a string literal or expression
+ * @b: a regular expression pattern string literal or expression
+ *
+ * This macro checks that @a matches the regular expression in @b aborts if
+ * this is not the case, printing both expressions and the values they
+ * evaluated to. This macro is for use in unit tests.
+ *
+ * Since: 1.26
+ */
+#define assert_matches_string(a, b) fail_unless_matches_string(a, b)
+
+/**
  * fail_unless_equals_float:
  * @a: a #gdouble or #gfloat value or expression
  * @b: a #gdouble or #gfloat value or expression

@@ -490,22 +490,20 @@ rtp_source_get_sdes_struct (RTPSource * src)
 }
 
 static gboolean
-sdes_struct_compare_func (GQuark field_id, const GValue * value,
+sdes_struct_compare_func (const GstIdStr * fieldname, const GValue * value,
     gpointer user_data)
 {
   GstStructure *old;
-  const gchar *field;
 
   old = GST_STRUCTURE (user_data);
-  field = g_quark_to_string (field_id);
 
-  if (!gst_structure_has_field (old, field))
+  if (!gst_structure_id_str_has_field (old, fieldname))
     return FALSE;
 
   g_assert (G_VALUE_HOLDS_STRING (value));
 
   return strcmp (g_value_get_string (value), gst_structure_get_string (old,
-          field)) == 0;
+          gst_id_str_as_str (fieldname))) == 0;
 }
 
 /**
@@ -529,7 +527,8 @@ rtp_source_set_sdes_struct (RTPSource * src, GstStructure * sdes)
   g_return_val_if_fail (strcmp (gst_structure_get_name (sdes),
           "application/x-rtp-source-sdes") == 0, FALSE);
 
-  changed = !gst_structure_foreach (sdes, sdes_struct_compare_func, src->sdes);
+  changed =
+      !gst_structure_foreach_id_str (sdes, sdes_struct_compare_func, src->sdes);
 
   if (changed) {
     gst_structure_free (src->sdes);
@@ -1415,7 +1414,8 @@ rtp_source_send_rtp (RTPSource * src, RTPPacketInfo * pinfo)
 
   running_time = pinfo->running_time;
 
-  do_bitrate_estimation (src, running_time, &src->bytes_sent);
+  if (GST_CLOCK_TIME_IS_VALID (running_time))
+    do_bitrate_estimation (src, running_time, &src->bytes_sent);
 
   rtptime = pinfo->rtptime;
 
@@ -1427,7 +1427,9 @@ rtp_source_send_rtp (RTPSource * src, RTPPacketInfo * pinfo)
 
   if (ext_rtptime > src->last_rtptime) {
     rtp_diff = ext_rtptime - src->last_rtptime;
-    rt_diff = running_time - src->last_rtime;
+    rt_diff =
+        GST_CLOCK_TIME_IS_VALID (running_time) ? running_time -
+        src->last_rtime : GST_CLOCK_TIME_NONE;
 
     /* calc the diff so we can detect drift at the sender. This can also be used
      * to guestimate the clock rate if the NTP time is locked to the RTP
@@ -1436,10 +1438,12 @@ rtp_source_send_rtp (RTPSource * src, RTPPacketInfo * pinfo)
         GST_TIME_FORMAT, src->ssrc, rtp_diff, GST_TIME_ARGS (rt_diff));
   }
 
-  /* we keep track of the last received RTP timestamp and the corresponding
-   * buffer running_time so that we can use this info when constructing SR reports */
-  src->last_rtime = running_time;
-  src->last_rtptime = ext_rtptime;
+  if (GST_CLOCK_TIME_IS_VALID (running_time)) {
+    /* we keep track of the last received RTP timestamp and the corresponding
+     * buffer running_time so that we can use this info when constructing SR reports */
+    src->last_rtime = running_time;
+    src->last_rtptime = ext_rtptime;
+  }
 
   /* push packet */
   if (!src->callbacks.push_rtp)

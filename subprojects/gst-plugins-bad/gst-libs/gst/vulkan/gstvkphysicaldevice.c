@@ -565,7 +565,7 @@ dump_queue_properties (GstVulkanPhysicalDevice * device, GError ** error)
         " timestamp bits and a minimum image transfer granuality of %"
         GST_VULKAN_EXTENT3D_FORMAT, i, device->queue_family_props[i].queueCount,
         device->queue_family_props[i].queueFlags, queue_flags_str,
-        device->queue_family_ops[i].video,
+        device->queue_family_ops ? device->queue_family_ops[i].video : 0,
         device->queue_family_props[i].timestampValidBits,
         GST_VULKAN_EXTENT3D_ARGS (device->
             queue_family_props[i].minImageTransferGranularity));
@@ -1046,13 +1046,14 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
         device->queue_family_ops[i].video =
             queue_family_video_props[i].videoCodecOperations;
-        device->queue_family_ops[i].query =
+        device->queue_family_ops[i].query_result_status =
             queue_family_query_props[i].queryResultStatusSupport;
 #endif
       }
       g_free (props);
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
       g_free (queue_family_video_props);
+      g_free (queue_family_query_props);
 #endif
     }
   } else

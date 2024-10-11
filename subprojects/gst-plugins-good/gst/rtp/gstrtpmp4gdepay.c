@@ -182,6 +182,8 @@ gst_rtp_mp4g_depay_class_init (GstRtpMP4GDepayClass * klass)
 static void
 gst_rtp_mp4g_depay_init (GstRtpMP4GDepay * rtpmp4gdepay)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (rtpmp4gdepay), TRUE);
   rtpmp4gdepay->adapter = gst_adapter_new ();
   rtpmp4gdepay->packets = g_queue_new ();
 }
@@ -348,7 +350,11 @@ gst_rtp_mp4g_depay_push_outbuf (GstRtpMP4GDepay * rtpmp4gdepay,
       discont ? "" : "expected ", AU_index);
 
   gst_rtp_drop_meta (GST_ELEMENT_CAST (rtpmp4gdepay), outbuf, 0);
-  gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpmp4gdepay), outbuf);
+  if (!rtpmp4gdepay->outbufs) {
+    rtpmp4gdepay->outbufs =
+        gst_buffer_list_new_sized (g_queue_get_length (rtpmp4gdepay->packets));
+  }
+  gst_buffer_list_add (rtpmp4gdepay->outbufs, outbuf);
   rtpmp4gdepay->next_AU_index = AU_index + 1;
 }
 
@@ -711,6 +717,9 @@ gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
              * in this RTP packet. */
             timestamp += (rtpmp4gdepay->constantDuration * GST_SECOND) /
                 depayload->clock_rate;
+
+            /* Set the duration for the outgoing buffer */
+            GST_BUFFER_DURATION (outbuf) = timestamp - GST_BUFFER_PTS (outbuf);
           } else {
             /* otherwise, make sure we don't use the timestamp again for other
              * AUs. */
@@ -726,6 +735,11 @@ gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
         }
         payload_AU += AU_size;
         payload_AU_size -= AU_size;
+      }
+
+      if (rtpmp4gdepay->outbufs) {
+        gst_rtp_base_depayload_push_list (depayload,
+            g_steal_pointer (&rtpmp4gdepay->outbufs));
       }
     } else {
       /* push complete buffer in adapter */
@@ -755,6 +769,7 @@ short_payload:
   {
     GST_ELEMENT_WARNING (rtpmp4gdepay, STREAM, DECODE,
         ("Packet payload was too short."), (NULL));
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 }

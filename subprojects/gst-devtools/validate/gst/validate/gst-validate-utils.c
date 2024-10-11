@@ -50,10 +50,6 @@
 static GRegex *_variables_regex = NULL;
 static GstStructure *global_vars = NULL;
 
-static GQuark debug_quark = 0;
-static GQuark lineno_quark = 0;
-static GQuark filename_quark = 0;
-
 typedef struct
 {
   const gchar *str;
@@ -563,17 +559,6 @@ skip_spaces (gchar * c)
   return c;
 }
 
-static void
-setup_quarks (void)
-{
-  if (filename_quark)
-    return;
-
-  filename_quark = g_quark_from_static_string ("__filename__");
-  lineno_quark = g_quark_from_static_string ("__lineno__");
-  debug_quark = g_quark_from_static_string ("__debug__");
-}
-
 gboolean
 gst_validate_has_colored_output (void)
 {
@@ -809,11 +794,10 @@ _file_get_structures (GFile * file, gchar ** err,
         }
         gst_structure_free (structure);
       } else {
-        setup_quarks ();
-        gst_structure_id_set (structure,
-            lineno_quark, G_TYPE_INT, current_lineno,
-            filename_quark, G_TYPE_STRING, filename,
-            debug_quark, G_TYPE_STRING, debug_line->str, NULL);
+        gst_structure_set_static_str (structure,
+            "__lineno__", G_TYPE_INT, current_lineno,
+            "__filename__", G_TYPE_STRING, filename,
+            "__debug__", G_TYPE_STRING, debug_line->str, NULL);
         structures = g_list_append (structures, structure);
       }
     }
@@ -1107,7 +1091,7 @@ gst_validate_object_set_property_full (GstValidateReporter * reporter,
   return res;
 }
 
-#ifdef G_OS_UNIX
+#if defined (G_OS_UNIX) && !defined (__APPLE__)
 static void
 fault_restore (void)
 {
@@ -1171,12 +1155,12 @@ fault_setup (void)
   sigaction (SIGSEGV, &action, NULL);
   sigaction (SIGQUIT, &action, NULL);
 }
-#endif /* G_OS_UNIX */
+#endif /* G_OS_UNIX && !__APPLE__ */
 
 void
 gst_validate_spin_on_fault_signals (void)
 {
-#ifdef G_OS_UNIX
+#if defined (G_OS_UNIX) && !defined (__APPLE__)
   fault_setup ();
 #endif
 }
@@ -1267,6 +1251,10 @@ gst_validate_replace_variables_in_string (gpointer source,
       }
 
       if (!var_value) {
+        g_free (varname);
+        g_free (pvarname);
+        g_free (string);
+        g_clear_pointer (&match_info, g_match_info_free);
         if (!(flags & GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_NO_FAILURE)) {
           gst_validate_error_structure (source,
               "Trying to use undefined variable `%s`.\n"
@@ -1276,6 +1264,7 @@ gst_validate_replace_variables_in_string (gpointer source,
               varname, gst_structure_to_string (local_vars),
               (flags & GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_LOCAL_ONLY) ?
               ": unused" : gst_structure_to_string (global_vars));
+
         }
 
         return NULL;
@@ -1351,10 +1340,17 @@ done:
 }
 
 static gboolean
-_structure_set_variables (GQuark field_id, GValue * value, ReplaceData * data)
+_structure_set_variables (const GstIdStr * fieldname, GValue * value,
+    ReplaceData * data)
 {
-  if (field_id == filename_quark || field_id == debug_quark
-      || field_id == debug_quark)
+  static const gchar *skip_fields[] = {
+    "__filename__",
+    "__lineno__",
+    "__debug__",
+    NULL,
+  };
+
+  if (fieldname && g_strv_contains (skip_fields, gst_id_str_as_str (fieldname)))
     return TRUE;
 
   if (GST_VALUE_HOLDS_LIST (value)) {
@@ -1363,6 +1359,19 @@ _structure_set_variables (GQuark field_id, GValue * value, ReplaceData * data)
     for (i = 0; i < gst_value_list_get_size (value); i++)
       _structure_set_variables (0, (GValue *) gst_value_list_get_value (value,
               i), data);
+
+    return TRUE;
+  }
+
+
+  if (GST_VALUE_HOLDS_STRUCTURE (value)) {
+    GstStructure *s = gst_structure_copy (gst_value_get_structure (value));
+
+    gst_validate_structure_resolve_variables (data->source,
+        s, data->local_vars, data->flags);
+
+    gst_value_set_structure (value, s);
+    gst_structure_free (s);
 
     return TRUE;
   }
@@ -1397,14 +1406,15 @@ gst_validate_structure_resolve_variables (gpointer source,
 {
   ReplaceData d = { source ? source : structure, local_variables, flags };
 
-  gst_structure_filter_and_map_in_place (structure,
-      (GstStructureFilterMapFunc) _structure_set_variables, &d);
+  gst_structure_filter_and_map_in_place_id_str (structure,
+      (GstStructureFilterMapIdStrFunc) _structure_set_variables, &d);
 }
 
 static gboolean
-_set_vars_func (GQuark field_id, const GValue * value, GstStructure * vars)
+_set_vars_func (const GstIdStr * fieldname, const GValue * value,
+    GstStructure * vars)
 {
-  gst_structure_id_set_value (vars, field_id, value);
+  gst_structure_id_str_set_value (vars, fieldname, value);
 
   return TRUE;
 }
@@ -1444,8 +1454,8 @@ gst_validate_set_globals (GstStructure * structure)
   if (!structure)
     return;
 
-  gst_structure_foreach (structure,
-      (GstStructureForeachFunc) _set_vars_func, global_vars);
+  gst_structure_foreach_id_str (structure,
+      (GstStructureForeachIdStrFunc) _set_vars_func, global_vars);
 }
 
 /**

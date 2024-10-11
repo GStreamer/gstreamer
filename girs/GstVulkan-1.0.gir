@@ -203,6 +203,20 @@ and/or use gtk-doc annotations.  -->
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="IS_VULKAN_OPERATION" c:identifier="GST_IS_VULKAN_OPERATION" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+      <parameters>
+        <parameter name="o">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_VULKAN_OPERATION_CLASS" c:identifier="GST_IS_VULKAN_OPERATION_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+      <parameters>
+        <parameter name="k">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="IS_VULKAN_PHYSICAL_DEVICE" c:identifier="GST_IS_VULKAN_PHYSICAL_DEVICE" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h"/>
       <parameters>
@@ -658,6 +672,27 @@ and/or use gtk-doc annotations.  -->
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
+    <function-macro name="VULKAN_OPERATION" c:identifier="GST_VULKAN_OPERATION" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+      <parameters>
+        <parameter name="o">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VULKAN_OPERATION_CLASS" c:identifier="GST_VULKAN_OPERATION_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+      <parameters>
+        <parameter name="k">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VULKAN_OPERATION_GET_CLASS" c:identifier="GST_VULKAN_OPERATION_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+      <parameters>
+        <parameter name="o">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="VULKAN_PHYSICAL_DEVICE" c:identifier="GST_VULKAN_PHYSICAL_DEVICE" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h"/>
       <parameters>
@@ -863,11 +898,19 @@ and/or use gtk-doc annotations.  -->
       </field>
       <field name="pipeline_stages" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbarrier.h">the stages in the graphics pipeline to execute the barrier</doc>
-        <type name="Vulkan.PipelineStageFlags" c:type="VkPipelineStageFlags"/>
+        <type name="guint64" c:type="guint64"/>
       </field>
       <field name="access_flags" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbarrier.h">access flags</doc>
-        <type name="Vulkan.AccessFlags" c:type="VkAccessFlags"/>
+        <type name="guint64" c:type="guint64"/>
+      </field>
+      <field name="semaphore" version="1.24" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbarrier.h">Timeline semaphore</doc>
+        <type name="Vulkan.Semaphore" c:type="VkSemaphore"/>
+      </field>
+      <field name="semaphore_value" version="1.24" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbarrier.h">Current value of the timeline semaphore</doc>
+        <type name="guint64" c:type="guint64"/>
       </field>
       <field name="_reserved" readable="0" private="1">
         <array zero-terminated="0" fixed-size="4">
@@ -970,7 +1013,7 @@ and/or use gtk-doc annotations.  -->
           </parameter>
           <parameter name="buffer_info" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.c">the VkBufferCreateInfo structure</doc>
-            <type name="Vulkan.BufferCreateInfo" c:type="VkBufferCreateInfo*"/>
+            <type name="Vulkan.BufferCreateInfo" c:type="const VkBufferCreateInfo*"/>
           </parameter>
           <parameter name="mem_prop_flags" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.c">memory properties flags for the backing memory</doc>
@@ -1059,6 +1102,26 @@ multiple times.  This must be called before any other #GstVulkanBufferMemory ope
           </parameter>
         </parameters>
       </constructor>
+      <function name="config_set_allocation_params" c:identifier="gst_vulkan_buffer_pool_config_set_allocation_params" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbufferpool.c">Sets the @usage of the buffers to setup.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbufferpool.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbufferpool.c">the #GstStructure with the pool's configuration.</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+          <parameter name="usage" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbufferpool.c">The Vulkan buffer usage flags.</doc>
+            <type name="Vulkan.BufferUsageFlags" c:type="VkBufferUsageFlags"/>
+          </parameter>
+          <parameter name="mem_properties" transfer-ownership="none">
+            <type name="Vulkan.MemoryPropertyFlags" c:type="VkMemoryPropertyFlags"/>
+          </parameter>
+        </parameters>
+      </function>
       <field name="bufferpool">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbufferpool.h">the parent #GstBufferPool</doc>
         <type name="Gst.BufferPool" c:type="GstBufferPool"/>
@@ -1808,6 +1871,25 @@ only have an effect before the call to gst_vulkan_device_open().</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="select_queue" c:identifier="gst_vulkan_device_select_queue" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">Select a compatible queue from the @device supporting the @expected_flags.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstVulkanQueue for @queue matching
+                                     the @expected_flags</doc>
+          <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstVulkanDevice</doc>
+            <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
+          </instance-parameter>
+          <parameter name="expected_flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a VkQueueFlagBits</doc>
+            <type name="Vulkan.QueueFlagBits" c:type="VkQueueFlagBits"/>
+          </parameter>
+        </parameters>
+      </method>
       <property name="instance" transfer-ownership="none">
         <type name="VulkanInstance"/>
       </property>
@@ -2187,6 +2269,22 @@ second argument is @data.</doc>
         </parameters>
       </function>
     </bitfield>
+    <record name="VulkanEncodeQueryResult" c:type="GstVulkanEncodeQueryResult" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h">Encoder query result. Expected to be used in gst_vulkan_operation_get_query()</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+      <field name="offset" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h">buffer offset</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="data_size" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h">data size</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="status" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h">status</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+    </record>
     <enumeration name="VulkanError" version="1.18" glib:type-name="GstVulkanError" glib:get-type="gst_vulkan_error_get_type" c:type="GstVulkanError" glib:error-domain="gst-vulkan-error">
       <member name="failed" value="0" c:identifier="GST_VULKAN_FAILED" glib:nick="failed">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkerror.h">undetermined error</doc>
@@ -2428,8 +2526,26 @@ the error</doc>
           <type name="guint8" c:type="guint8"/>
         </array>
       </field>
-      <field name="aspect" writable="1">
+      <field name="aspect" version="1.24" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">image aspect of this format</doc>
         <type name="Vulkan.ImageAspectFlags" c:type="VkImageAspectFlags"/>
+      </field>
+    </record>
+    <record name="VulkanFormatMap" c:type="GstVulkanFormatMap" version="1.26">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h"/>
+      <field name="format" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">the GStreamer video format</doc>
+        <type name="GstVideo.VideoFormat" c:type="GstVideoFormat"/>
+      </field>
+      <field name="vkfrmt" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">the Vulkan format with a single memory</doc>
+        <type name="Vulkan.Format" c:type="VkFormat"/>
+      </field>
+      <field name="vkfrmts" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">Vulkan formats for multiple memories</doc>
+        <array zero-terminated="0" fixed-size="4">
+          <type name="Vulkan.Format" c:type="VkFormat"/>
+        </array>
       </field>
     </record>
     <enumeration name="VulkanFormatScaling" version="1.18" glib:type-name="GstVulkanFormatScaling" glib:get-type="gst_vulkan_format_scaling_get_type" c:type="GstVulkanFormatScaling">
@@ -2556,6 +2672,20 @@ gst_vulkan_full_screen_quad_set_blend_factors().</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_queue" c:identifier="gst_vulkan_full_screen_quad_get_queue" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">The currently configured
+    #GstVulkanQueue</doc>
+          <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">a #GstVulkanFullScreenQuad</doc>
+            <type name="VulkanFullScreenQuad" c:type="GstVulkanFullScreenQuad*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="prepare_draw" c:identifier="gst_vulkan_full_screen_quad_prepare_draw" version="1.18" throws="1">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.h"/>
         <return-value transfer-ownership="none">
@@ -2667,11 +2797,11 @@ See also: gst_vulkan_full_screen_quad_set_blend_factors().</doc>
           </instance-parameter>
           <parameter name="in_info" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the input #GstVideoInfo to set</doc>
-            <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
           </parameter>
           <parameter name="out_info" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the output #GstVideoInfo to set</doc>
-            <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
           </parameter>
         </parameters>
       </method>
@@ -2686,7 +2816,7 @@ See also: gst_vulkan_full_screen_quad_set_blend_factors().</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the #GstVulkanFullScreenQuad</doc>
             <type name="VulkanFullScreenQuad" c:type="GstVulkanFullScreenQuad*"/>
           </instance-parameter>
-          <parameter name="buffer" transfer-ownership="none">
+          <parameter name="buffer" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the input #GstBuffer to set</doc>
             <type name="Gst.Buffer" c:type="GstBuffer*"/>
           </parameter>
@@ -2703,7 +2833,7 @@ See also: gst_vulkan_full_screen_quad_set_blend_factors().</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the #GstVulkanFullScreenQuad</doc>
             <type name="VulkanFullScreenQuad" c:type="GstVulkanFullScreenQuad*"/>
           </instance-parameter>
-          <parameter name="buffer" transfer-ownership="none">
+          <parameter name="buffer" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the output #GstBuffer to set</doc>
             <type name="Gst.Buffer" c:type="GstBuffer*"/>
           </parameter>
@@ -3359,6 +3489,15 @@ inside @handle.</doc>
       <member name="shader" value="7" c:identifier="GST_VULKAN_HANDLE_TYPE_SHADER" glib:nick="shader">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">shader</doc>
       </member>
+      <member name="video_session" value="8" c:identifier="GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION" version="1.24" glib:nick="video-session">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">video session</doc>
+      </member>
+      <member name="video_session_parameters" value="9" c:identifier="GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION_PARAMETERS" version="1.24" glib:nick="video-session-parameters">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">video session parameters</doc>
+      </member>
+      <member name="sampler_ycbcr_conversion" value="10" c:identifier="GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION" version="1.24" glib:nick="sampler-ycbcr-conversion">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">sampler with YCBCR conversion</doc>
+      </member>
     </enumeration>
     <class name="VulkanImageBufferPool" c:symbol-prefix="vulkan_image_buffer_pool" c:type="GstVulkanImageBufferPool" version="1.18" parent="Gst.BufferPool" glib:type-name="GstVulkanImageBufferPool" glib:get-type="gst_vulkan_image_buffer_pool_get_type" glib:type-struct="VulkanImageBufferPoolClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h"/>
@@ -3375,8 +3514,42 @@ inside @handle.</doc>
           </parameter>
         </parameters>
       </constructor>
+      <function name="config_get_allocation_params" c:identifier="gst_vulkan_image_buffer_pool_config_get_allocation_params" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Gets the configuration of the Vulkan image buffer pool.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">the #GstStructure with the pool's configuration.</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+          <parameter name="usage" direction="out" caller-allocates="1" transfer-ownership="none" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">The Vulkan image usage flags.</doc>
+            <type name="Vulkan.ImageUsageFlags" c:type="VkImageUsageFlags*"/>
+          </parameter>
+          <parameter name="mem_props" direction="out" caller-allocates="1" transfer-ownership="none" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Vulkan memory property flags.</doc>
+            <type name="Vulkan.MemoryPropertyFlags" c:type="VkMemoryPropertyFlags*"/>
+          </parameter>
+          <parameter name="initial_layout" direction="out" caller-allocates="1" transfer-ownership="none" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Initial Vulkan image layout.</doc>
+            <type name="Vulkan.ImageLayout" c:type="VkImageLayout*"/>
+          </parameter>
+          <parameter name="initial_access" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Initial Vulkan access flags.</doc>
+            <type name="guint64" c:type="guint64*"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="config_set_allocation_params" c:identifier="gst_vulkan_image_buffer_pool_config_set_allocation_params" version="1.24">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Sets the @usage and @mem_properties of the images to setup.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Sets the @usage and @mem_properties, @initial_layout and @initial_access of
+the images to setup.
+
+If @initial_access is VK_IMAGE_LAYOUT_UNDEFINED or
+VK_IMAGE_LAYOUT_PREINITIALIZED, the image crated by this pool has not been
+initialized to a particular layout</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -3394,6 +3567,15 @@ inside @handle.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Vulkan memory property flags.</doc>
             <type name="Vulkan.MemoryPropertyFlags" c:type="VkMemoryPropertyFlags"/>
           </parameter>
+          <parameter name="initial_layout" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Initial Vulkan image layout.</doc>
+            <type name="Vulkan.ImageLayout" c:type="VkImageLayout"/>
+          </parameter>
+          <parameter name="initial_access" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Access flags for the layout transition if @initial_layout is
+not VK_IMAGE_LAYOUT_UNDEFINED or VK_IMAGE_LAYOUT_PREINITIALIZED.</doc>
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
         </parameters>
       </function>
       <function name="config_set_decode_caps" c:identifier="gst_vulkan_image_buffer_pool_config_set_decode_caps" version="1.24">
@@ -3410,6 +3592,24 @@ dest or DPB images.</doc>
           </parameter>
           <parameter name="caps" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Upstream decode caps.</doc>
+            <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="config_set_encode_caps" c:identifier="gst_vulkan_image_buffer_pool_config_set_encode_caps" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Encode @caps are used when the buffers are going to be used either as encoded
+src or DPB images.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">the #GstStructure with the pool's configuration.</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+          <parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Upstream encode caps.</doc>
             <type name="Gst.Caps" c:type="GstCaps*"/>
           </parameter>
         </parameters>
@@ -3596,6 +3796,9 @@ dest or DPB images.</doc>
           </parameter>
           <parameter name="usage" transfer-ownership="none">
             <type name="Vulkan.ImageUsageFlags" c:type="VkImageUsageFlags"/>
+          </parameter>
+          <parameter name="initial_layout" transfer-ownership="none">
+            <type name="Vulkan.ImageLayout" c:type="VkImageLayout"/>
           </parameter>
           <parameter name="params" transfer-ownership="none">
             <type name="Gst.AllocationParams" c:type="GstAllocationParams*"/>
@@ -4234,6 +4437,10 @@ It can be called from any thread.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.h">number of times this memory is mapped</doc>
         <type name="guint" c:type="guint"/>
       </field>
+      <field name="mapping" version="1.24" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.h">internal pointer to already mapped memory</doc>
+        <type name="gpointer" c:type="gpointer"/>
+      </field>
       <field name="notify" readable="0" private="1">
         <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
       </field>
@@ -4299,7 +4506,7 @@ It can be called from any thread.</doc>
           </parameter>
           <parameter name="req" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">memory requirements to look for</doc>
-            <type name="Vulkan.MemoryRequirements" c:type="VkMemoryRequirements*"/>
+            <type name="Vulkan.MemoryRequirements" c:type="const VkMemoryRequirements*"/>
           </parameter>
           <parameter name="properties" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">memory properties to search for</doc>
@@ -4367,6 +4574,448 @@ multiple times.  This must be called before any other #GstVulkanMemory operation
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
+    </record>
+    <class name="VulkanOperation" c:symbol-prefix="vulkan_operation" c:type="GstVulkanOperation" version="1.24" parent="Gst.Object" glib:type-name="GstVulkanOperation" glib:get-type="gst_vulkan_operation_get_type" glib:type-struct="VulkanOperationClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h">When using the operation @cmd_buf, you should lock it using
+gst_vulkan_command_buffer_lock(), but you have to unlock it, with
+gst_vulkan_command_buffer_unlock(), when calling any of #GstVulkanOperation
+methods.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+      <constructor name="new" c:identifier="gst_vulkan_operation_new">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a newly allocated #GstVulkanOperation</doc>
+          <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+        </return-value>
+        <parameters>
+          <parameter name="cmd_pool" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanCommandPool</doc>
+            <type name="VulkanCommandPool" c:type="GstVulkanCommandPool*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="add_dependency_frame" c:identifier="gst_vulkan_operation_add_dependency_frame">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Add @frame as an operation dependency by adding the timeline semaphores in
+each memory of @frame into either the wait semaphore array. The signal array
+hold the same semaphores but increasing their current value.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">whether the @frame was added as dependency.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+          <parameter name="frame" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a Vulkan Image #GstBuffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+          <parameter name="wait_stage" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">pipeline stage to wait (VkPipelineStageFlags or
+  VkPipelineStageFlags2)</doc>
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
+          <parameter name="signal_stage" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">pipeline stage to signal (VkPipelineStageFlags or
+  VkPipelineStageFlags2)</doc>
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_extra_image_barriers" c:identifier="gst_vulkan_operation_add_extra_image_barriers" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">See also: gst_vulkan_operation_use_sync2(),
+    gst_vulkan_operation_new_extra_image_barriers() and
+    gst_vulkan_operation_update_frame()
+
+Any non-repeated image barrier in @extra_barriers is appended to the internal
+barrier list.
+
+Remember to call gst_vulkan_operation_update_frame() on those frames with
+images in @extra_barriers.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+          <parameter name="extra_barriers" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GArray of extra image memory barriers to handle, either
+VkImageMemoryBarrier or VkImageMemoryBarrier2KHR, depending whether
+synchronization2 extension is used.</doc>
+            <array name="GLib.Array" c:type="GArray*">
+              <type name="gpointer" c:type="gpointer"/>
+            </array>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_frame_barrier" c:identifier="gst_vulkan_operation_add_frame_barrier">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">See also: gst_vulkan_operation_update_frame()
+
+Adds an image memory barrier per memory in @frame with its future state. And
+it updates the @frame barrier state by calling internally
+gst_vulkan_operation_update_frame().</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">whether the @frame barriers were appended</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+          <parameter name="frame" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a Vulkan Image #GstBuffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+          <parameter name="src_stage" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">source pipeline stage (VkPipelineStageFlags or
+  VkPipelineStageFlags2)</doc>
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
+          <parameter name="dst_stage" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">destination pipeline stage (VkPipelineStageFlags or
+  VkPipelineStageFlags2)</doc>
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
+          <parameter name="new_access" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">the new access flags (VkAccessFlags2 or VkAccessFlags)</doc>
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
+          <parameter name="new_layout" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">the new VkImageLayout</doc>
+            <type name="Vulkan.ImageLayout" c:type="VkImageLayout"/>
+          </parameter>
+          <parameter name="new_queue" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">destination #GstVulkanQueue for a transfer of @frame
+  ownership</doc>
+            <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="begin" c:identifier="gst_vulkan_operation_begin" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">See also: gst_vulkan_operation_end() and gst_vulkan_operation_reset()
+
+Attempts to set the operation ready to work. It instantiates the common
+command buffer in @self and calls vkBeginCommandBuffer.
+
+After calling this function you can register commands in the command buffer,
+and finally call gst_vulkan_operation_end(). gst_vulkan_operation_reset() is
+called internally if something failed.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">whether the operation started. It might fill @error.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="begin_query" c:identifier="gst_vulkan_operation_begin_query">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Begins a query operation with @id in the current command buffer.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">whether the begin command was set</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+          <parameter name="id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">query id</doc>
+            <type name="guint32" c:type="guint32"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="discard_dependencies" c:identifier="gst_vulkan_operation_discard_dependencies">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Discards barriers, and all the semaphore arrays populated by
+gst_vulkan_operation_add_dependency_frame().</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="enable_query" c:identifier="gst_vulkan_operation_enable_query" version="1.24" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Tries to enable the query pool for the current operation.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">whether the query pool was enabled. It might populate @error in case
+   of error.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+          <parameter name="query_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">the VkQueryType to enable</doc>
+            <type name="guint32" c:type="VkQueryType"/>
+          </parameter>
+          <parameter name="n_queries" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">number of queries to enable</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="pnext" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">the structure pointer to use as pNext</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="end" c:identifier="gst_vulkan_operation_end" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">See also: gst_vulkan_operation_begin() and gst_vulkan_operation_reset()
+
+It calls vkEndCommandBuffer, and later either vkQueueSubmit or
+vkQueueSubmit2KHR filling up the semaphores from images declared as
+dependencies.
+
+You have called gst_vulkan_operation_begin() before.
+gst_vulkan_operation_reset() is called internally if something fails</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">whether the operation failed. It might fill @error.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="end_query" c:identifier="gst_vulkan_operation_end_query">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Ends a query operation with @id in the current command buffer. A query with
+@id has had started with gst_vulkan_operation_begin_query()</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">whether the end command was set</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+          <parameter name="id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">query id</doc>
+            <type name="guint32" c:type="guint32"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_query" c:identifier="gst_vulkan_operation_get_query" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Gets the latest operation results of all the queries in @data. API users have
+to parse the binary array of @data according of their needs (usually is a
+guint32 array of size of n_query).
+
+Don't free @data.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">whether a status was fetched. If not, it might populate @error</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+          <parameter name="data" direction="out" caller-allocates="0" transfer-ownership="none" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">result of all queries</doc>
+            <type name="gpointer" c:type="gpointer*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="new_extra_image_barriers" c:identifier="gst_vulkan_operation_new_extra_image_barriers" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">See also: gst_vulkan_operation_use_sync2(),
+    gst_vulkan_operation_add_extra_image_barriers() and
+    gst_vulkan_operation_update_frame()
+
+If it's required to add custom image memory barriers this function will
+allocate a new array to append in it the extra image memory barriers to
+handle.
+
+Remember to call gst_vulkan_operation_update_frame() after adding the barrier
+related with that frame.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">A new allocated array of barriers, either
+    VkImageMemoryBarrier or VkImageMemoryBarrier2KHR, depending whether
+    synchronization2 extension is used.</doc>
+          <array name="GLib.Array" c:type="GArray*">
+            <type name="gpointer" c:type="gpointer"/>
+          </array>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="pipeline_barrier2" c:identifier="gst_vulkan_operation_pipeline_barrier2">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">It's a wrapper to vkCmdPipelineBarrier2{KHR} if it's available.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">%TRUE if vkCmdPipelineBarrier2{KHR} it's available. %FALSE,
+  otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+          <parameter name="dependency_info" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a pointer to VkDependencyInfo</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="reset" c:identifier="gst_vulkan_operation_reset">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Resets the operation to a clean state.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="retrieve_image_barriers" c:identifier="gst_vulkan_operation_retrieve_image_barriers" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Retrieves a copy of the current defined barriers internally, which will be
+used by vkCmdPipelineBarrier or vkCmdPipelineBarrier2KHR by the API user.
+
+The element type of the array might be, depending on if synchronization2
+extension is used, either VkImageMemoryBarrier or VkImageMemoryBarrier2KHR.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Current barriers array. Call g_array_unref() after
+   the operation is using.</doc>
+          <array name="GLib.Array" c:type="GArray*">
+            <type name="gpointer" c:type="gpointer"/>
+          </array>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="update_frame" c:identifier="gst_vulkan_operation_update_frame">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Add or update the internal list of the future state of @frame. This state
+will be set after gst_vulkan_operation_end().
+
+This method is useful when new barriers are added to the array without using
+gst_vulkan_operation_add_frame_barrier().</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+          <parameter name="frame" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstBuffer to update after submit</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+          <parameter name="dst_stage" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">destination pipeline stage (VkPipelineStageFlags or
+  VkPipelineStageFlags2)</doc>
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
+          <parameter name="new_access" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">the new access flags (VkAccessFlags2 or VkAccessFlags)</doc>
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
+          <parameter name="new_layout" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">the new VkImageLayout</doc>
+            <type name="Vulkan.ImageLayout" c:type="VkImageLayout"/>
+          </parameter>
+          <parameter name="new_queue" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">destination #GstVulkanQueue for a transfer of @frame
+  ownership</doc>
+            <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="use_sync2" c:identifier="gst_vulkan_operation_use_sync2">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">whether the operations are using synchronization2 extension.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="wait" c:identifier="gst_vulkan_operation_wait">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Waits for the operation's fence to signal.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">whether the operation succeed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
+            <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <property name="command-pool" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="VulkanCommandPool"/>
+      </property>
+      <field name="parent">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h">the parent #GstObject</doc>
+        <type name="Gst.Object" c:type="GstObject"/>
+      </field>
+      <field name="cmd_buf">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h">the current #GstVulkanCommandBuffer</doc>
+        <type name="VulkanCommandBuffer" c:type="GstVulkanCommandBuffer*"/>
+      </field>
+      <field name="_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="VulkanOperationClass" c:type="GstVulkanOperationClass" glib:is-gtype-struct-for="VulkanOperation">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+      <field name="parent_class">
+        <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
+      </field>
+      <field name="_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="VulkanOperationPrivate" c:type="GstVulkanOperationPrivate" disguised="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
     <class name="VulkanPhysicalDevice" c:symbol-prefix="vulkan_physical_device" c:type="GstVulkanPhysicalDevice" version="1.18" parent="Gst.Object" glib:type-name="GstVulkanPhysicalDevice" glib:get-type="gst_vulkan_physical_device_get_type" glib:type-struct="VulkanPhysicalDeviceClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h"/>
@@ -4528,7 +5177,8 @@ called.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h">number of elements in @queue_family_props</doc>
         <type name="guint32" c:type="guint32"/>
       </field>
-      <field name="queue_family_ops">
+      <field name="queue_family_ops" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h">vulkan operations allowed per queue family</doc>
         <type name="VulkanQueueFamilyOps" c:type="GstVulkanQueueFamilyOps*"/>
       </field>
       <field name="_reserved" readable="0" private="1">
@@ -4708,8 +5358,8 @@ See gst_vulkan_queue_submit_lock() for details on when this call is needed.</doc
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h">video operation supported by queue family</doc>
         <type name="guint32" c:type="guint32"/>
       </field>
-      <field name="query" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h">if queue family supports queries</doc>
+      <field name="query_result_status" version="1.26" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h">query status result support</doc>
         <type name="gboolean" c:type="gboolean"/>
       </field>
     </record>
@@ -4739,9 +5389,11 @@ See gst_vulkan_queue_submit_lock() for details on when this call is needed.</doc
         </return-value>
         <parameters>
           <instance-parameter name="swapper" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkswapper.c">a #GstVulkanSwapper</doc>
             <type name="VulkanSwapper" c:type="GstVulkanSwapper*"/>
           </instance-parameter>
-          <parameter name="available_queue" transfer-ownership="none">
+          <parameter name="available_queue" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkswapper.c">a #GstVulkanQueue chosen elsewhere</doc>
             <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
           </parameter>
         </parameters>
@@ -5226,8 +5878,58 @@ signalled and freed.</doc>
         </parameter>
       </parameters>
     </callback>
+    <record name="VulkanVideoCapabilities" c:type="GstVulkanVideoCapabilities" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
+      <field name="_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
     <class name="VulkanVideoFilter" c:symbol-prefix="vulkan_video_filter" c:type="GstVulkanVideoFilter" version="1.18" parent="GstBase.BaseTransform" glib:type-name="GstVulkanVideoFilter" glib:get-type="gst_vulkan_video_filter_get_type" glib:type-struct="VulkanVideoFilterClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.h"/>
+      <method name="get_device" c:identifier="gst_vulkan_video_filter_get_device" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.c">The currently configured
+    #GstVulkanDevice</doc>
+          <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="filter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.c">a #GstVulkanVideoFilter</doc>
+            <type name="VulkanVideoFilter" c:type="GstVulkanVideoFilter*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_instance" c:identifier="gst_vulkan_video_filter_get_instance" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.c">The currently configured
+    #GstVulkanInstance</doc>
+          <type name="VulkanInstance" c:type="GstVulkanInstance*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="filter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.c">a #GstVulkanVideoFilter</doc>
+            <type name="VulkanVideoFilter" c:type="GstVulkanVideoFilter*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_queue" c:identifier="gst_vulkan_video_filter_get_queue" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.c">The currently configured
+    #GstVulkanQueue</doc>
+          <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="filter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.c">a #GstVulkanVideoFilter</doc>
+            <type name="VulkanVideoFilter" c:type="GstVulkanVideoFilter*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <field name="parent">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.h">the parent #GstBaseTransform</doc>
         <type name="GstBase.BaseTransform" c:type="GstBaseTransform"/>
@@ -5278,6 +5980,18 @@ signalled and freed.</doc>
         </array>
       </field>
     </record>
+    <enumeration name="VulkanVideoOperation" version="1.24" glib:type-name="GstVulkanVideoOperation" glib:get-type="gst_vulkan_video_operation_get_type" c:type="GstVulkanVideoOperation">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h">The type of video operation.</doc>
+      <member name="decode" value="0" c:identifier="GST_VULKAN_VIDEO_OPERATION_DECODE" glib:nick="decode">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h">decode operation</doc>
+      </member>
+      <member name="encode" value="1" c:identifier="GST_VULKAN_VIDEO_OPERATION_ENCODE" glib:nick="encode">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h">encode operation</doc>
+      </member>
+      <member name="unknown" value="2" c:identifier="GST_VULKAN_VIDEO_OPERATION_UNKNOWN" glib:nick="unknown">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h">unknown</doc>
+      </member>
+    </enumeration>
     <record name="VulkanVideoProfile" c:type="GstVulkanVideoProfile" version="1.24">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
       <field name="_reserved" readable="0" private="1">
@@ -5285,6 +5999,40 @@ signalled and freed.</doc>
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
+      <method name="is_equal" c:identifier="gst_vulkan_video_profile_is_equal">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">whether @a and @b contains the same information.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="a" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">a #GstVulkanVideoProfile</doc>
+            <type name="VulkanVideoProfile" c:type="const GstVulkanVideoProfile*"/>
+          </instance-parameter>
+          <parameter name="b" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">another #GstVulkanVideoProfile</doc>
+            <type name="VulkanVideoProfile" c:type="const GstVulkanVideoProfile*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="is_valid" c:identifier="gst_vulkan_video_profile_is_valid" version="1.24" introspectable="0">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">%TRUE if @profile is correct and matches with @codec</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="profile" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">the output profile</doc>
+            <type name="VulkanVideoProfile" c:type="GstVulkanVideoProfile*"/>
+          </instance-parameter>
+          <parameter name="codec" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">VkVideoCodecOperationFlagBitsKHR described by @profile</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="to_caps" c:identifier="gst_vulkan_video_profile_to_caps" version="1.24" introspectable="0">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
         <return-value transfer-ownership="full">
@@ -5312,6 +6060,10 @@ signalled and freed.</doc>
           <parameter name="caps" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">a #GstCaps to parse</doc>
             <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+          <parameter name="video_operation" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">a supported video operation</doc>
+            <type name="VulkanVideoOperation" c:type="GstVulkanVideoOperation"/>
           </parameter>
         </parameters>
       </function>
@@ -5901,7 +6653,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="device" transfer-ownership="none">
+        <parameter name="device" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">resulting #GstVulkanDevice</doc>
           <type name="VulkanDevice" c:type="GstVulkanDevice**"/>
         </parameter>
@@ -5918,7 +6670,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="display" transfer-ownership="none">
+        <parameter name="display" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.c">resulting #GstVulkanDisplay</doc>
           <type name="VulkanDisplay" c:type="GstVulkanDisplay**"/>
         </parameter>
@@ -5935,7 +6687,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="instance" transfer-ownership="none">
+        <parameter name="instance" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">resulting #GstVulkanInstance</doc>
           <type name="VulkanInstance" c:type="GstVulkanInstance**"/>
         </parameter>
@@ -5952,7 +6704,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="queue" transfer-ownership="none">
+        <parameter name="queue" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">resulting #GstVulkanQueue</doc>
           <type name="VulkanQueue" c:type="GstVulkanQueue**"/>
         </parameter>
@@ -5969,7 +6721,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="device" transfer-ownership="none">
+        <parameter name="device" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstVulkanDevice</doc>
           <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
         </parameter>
@@ -5986,7 +6738,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="display" transfer-ownership="none">
+        <parameter name="display" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.c">a #GstVulkanDisplay</doc>
           <type name="VulkanDisplay" c:type="GstVulkanDisplay*"/>
         </parameter>
@@ -6003,7 +6755,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="instance" transfer-ownership="none">
+        <parameter name="instance" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">a #GstVulkanInstance</doc>
           <type name="VulkanInstance" c:type="GstVulkanInstance*"/>
         </parameter>
@@ -6020,7 +6772,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="queue" transfer-ownership="none">
+        <parameter name="queue" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">a #GstVulkanQueue</doc>
           <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
         </parameter>
@@ -6065,6 +6817,87 @@ Currently intended for subclasses to update internal state.</doc>
         </parameter>
       </parameters>
     </function>
+    <docsection name="vkbuffermemory">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.c">#GstVulkanBufferMemory is a #GstMemory subclass providing support for the
+mapping of Vulkan device memory.</doc>
+    </docsection>
+    <docsection name="vkbufferpool">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbufferpool.c">a #GstVulkanBufferPool is an object that allocates buffers with #GstVulkanBufferMemory
+
+A #GstVulkanBufferPool is created with gst_vulkan_buffer_pool_new()
+
+#GstVulkanBufferPool implements the VideoMeta buffer pool option
+#GST_BUFFER_POOL_OPTION_VIDEO_META</doc>
+    </docsection>
+    <docsection name="vkdescriptorset">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdescriptorset.c">vulkandescriptorset holds information about a descriptor set.</doc>
+    </docsection>
+    <docsection name="vkdevice">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">A #GstVulkanDevice encapsulates a VkDevice</doc>
+    </docsection>
+    <docsection name="vkdisplay">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.c">A #GstVulkanDisplay represents a connection to a display server on the platform</doc>
+    </docsection>
+    <docsection name="vkfence">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfence.c">A #GstVulkanFence encapsulates a VkFence</doc>
+    </docsection>
+    <docsection name="vkfullscreenquad">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">A #GstVulkanFullScreenQuad is a helper object for rendering a single input
+image to an output #GstBuffer</doc>
+    </docsection>
+    <docsection name="vkhandle">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.c">#GstVulkanHandle holds information about a vulkan handle.</doc>
+    </docsection>
+    <docsection name="vkimagebufferpool">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">a #GstVulkanImageBufferPool is an object that allocates buffers with #GstVulkanImageMemory
+
+A #GstVulkanImageBufferPool is created with gst_vulkan_image_buffer_pool_new()</doc>
+    </docsection>
+    <docsection name="vkimagememory">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagememory.c">GstVulkanImageMemory is a #GstMemory subclass providing support for the
+mapping of Vulkan device memory.</doc>
+    </docsection>
+    <docsection name="vkimageview">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimageview.c">#GstVulkanImageView is a wrapper around a `VkImageView` mostly for
+usage across element boundaries with #GstVulkanImageMemory</doc>
+    </docsection>
+    <docsection name="vkinstance">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">#GstVulkanInstance encapsulates the necessary information for the toplevel
+Vulkan instance object.
+
+If GStreamer is built with debugging support, the default Vulkan API chosen
+can be selected with the environment variable
+`GST_VULKAN_INSTANCE_API_VERSION=1.0`.  Any subsequent setting of the
+requested Vulkan API version through the available properties will override
+the environment variable.</doc>
+    </docsection>
+    <docsection name="vkmemory">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">GstVulkanMemory is a #GstMemory subclass providing support for the mapping of
+Vulkan device memory.</doc>
+    </docsection>
+    <docsection name="vkoperation">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">A #GstVulkanOperation abstract a queue operation for images adding
+automatically semaphores and barriers. It uses Synchronization2 extension if
+available. Also it enables a VkQueryPool if it's possible and it's requested.</doc>
+    </docsection>
+    <docsection name="vkphysicaldevice">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">A #GstVulkanPhysicalDevice encapsulates a VkPhysicalDevice</doc>
+    </docsection>
+    <docsection name="vkqueue">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">GstVulkanQueue encapsulates the vulkan command queue.</doc>
+    </docsection>
+    <docsection name="vkswapper">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkswapper.c">#GstVulkanSwapper is a helper object for rendering to a surface exposed by
+#GstVulkanWindow.</doc>
+    </docsection>
+    <docsection name="vktrash">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.c">#GstVulkanTrash is a helper object for freeing resources after a
+#GstVulkanFence is signalled.</doc>
+    </docsection>
+    <docsection name="vkwindow">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.c">GstVulkanWindow represents a window that elements can render into.  A window can
+either be a user visible window (onscreen) or hidden (offscreen).</doc>
+    </docsection>
     <function name="vulkan_buffer_memory_alloc" c:identifier="gst_vulkan_buffer_memory_alloc" moved-to="VulkanBufferMemory.alloc" version="1.18">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.c">Allocate a new #GstVulkanBufferMemory.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.h"/>
@@ -6107,7 +6940,7 @@ Currently intended for subclasses to update internal state.</doc>
         </parameter>
         <parameter name="buffer_info" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.c">the VkBufferCreateInfo structure</doc>
-          <type name="Vulkan.BufferCreateInfo" c:type="VkBufferCreateInfo*"/>
+          <type name="Vulkan.BufferCreateInfo" c:type="const VkBufferCreateInfo*"/>
         </parameter>
         <parameter name="mem_prop_flags" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.c">memory properties flags for the backing memory</doc>
@@ -6324,6 +7157,9 @@ properties.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.c">query for vulkan formats without multiple images</doc>
           <type name="gboolean" c:type="gboolean"/>
         </parameter>
+        <parameter name="requested_usage" transfer-ownership="none">
+          <type name="Vulkan.ImageUsageFlags" c:type="VkImageUsageFlags"/>
+        </parameter>
         <parameter name="fmts" direction="out" caller-allocates="1" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.c">Vulkan formats per image/plane</doc>
           <array zero-terminated="0" c:type="VkFormat*" fixed-size="4">
@@ -6363,6 +7199,19 @@ properties.</doc>
         <parameter name="format" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.c">a valid `VkFormat`</doc>
           <type name="Vulkan.Format" c:type="VkFormat"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_format_get_map" c:identifier="gst_vulkan_format_get_map" version="1.26" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h"/>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.c">the #GstVulkanFormatMap matching with @format</doc>
+        <type name="VulkanFormatMap" c:type="const GstVulkanFormatMap*"/>
+      </return-value>
+      <parameters>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.c">the #GstVideoFormat to get</doc>
+          <type name="GstVideo.VideoFormat" c:type="GstVideoFormat"/>
         </parameter>
       </parameters>
     </function>
@@ -6408,7 +7257,7 @@ properties.</doc>
         </parameter>
         <parameter name="create_info" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">a VkImageViewCreateInfo</doc>
-          <type name="Vulkan.ImageViewCreateInfo" c:type="VkImageViewCreateInfo*"/>
+          <type name="Vulkan.ImageViewCreateInfo" c:type="const VkImageViewCreateInfo*"/>
         </parameter>
       </parameters>
     </function>
@@ -6662,7 +7511,7 @@ other elements in the pipeline</doc>
         </parameter>
         <parameter name="req" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">memory requirements to look for</doc>
-          <type name="Vulkan.MemoryRequirements" c:type="VkMemoryRequirements*"/>
+          <type name="Vulkan.MemoryRequirements" c:type="const VkMemoryRequirements*"/>
         </parameter>
         <parameter name="properties" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">memory properties to search for</doc>
@@ -6813,6 +7662,10 @@ associated #GstVulkanFence is signalled</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">a #GstCaps to parse</doc>
           <type name="Gst.Caps" c:type="GstCaps*"/>
         </parameter>
+        <parameter name="video_operation" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.c">a supported video operation</doc>
+          <type name="VulkanVideoOperation" c:type="GstVulkanVideoOperation"/>
+        </parameter>
       </parameters>
     </function>
     <function name="vulkan_window_error_quark" c:identifier="gst_vulkan_window_error_quark" moved-to="VulkanWindowError.quark" version="1.18">
@@ -6820,5 +7673,15 @@ associated #GstVulkanFence is signalled</doc>
         <type name="GLib.Quark" c:type="GQuark"/>
       </return-value>
     </function>
+    <docsection name="vulkancommandbuffer">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkcommandbuffer.c">vulkancommandbuffer holds information about a command buffer.</doc>
+    </docsection>
+    <docsection name="vulkanhandlepool">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.c">#GstVulkanHandlePool holds a number of handles that are pooled together.</doc>
+    </docsection>
+    <docsection name="vulkanvideofilter">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.c">#GstVulkanVideoFilter is a helper base class for retrieving and holding the
+#GstVulkanInstance, #GstVulkanDevice and #GstVulkanQueue used by an element.</doc>
+    </docsection>
   </namespace>
 </repository>

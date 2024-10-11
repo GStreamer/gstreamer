@@ -68,6 +68,8 @@ struct _GstQsvEncoderClass
   /* VA display device path, for Linux */
   gchar *display_path;
 
+  gboolean d3d12_interop;
+
   gboolean (*set_format)       (GstQsvEncoder * encoder,
                                 GstVideoCodecState * state,
                                 mfxVideoParam * param,

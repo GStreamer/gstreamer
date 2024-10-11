@@ -449,7 +449,7 @@ gst_dtls_connection_check_timeout_locked (GstDtlsConnection * self)
   priv = self->priv;
 
   if (DTLSv1_get_timeout (priv->ssl, &timeout)) {
-    wait_time = timeout.tv_sec * G_USEC_PER_SEC + timeout.tv_usec;
+    wait_time = ((gint64) timeout.tv_sec) * G_USEC_PER_SEC + timeout.tv_usec;
 
     GST_DEBUG_OBJECT (self, "waiting for %" G_GINT64_FORMAT " usec", wait_time);
     if (wait_time) {

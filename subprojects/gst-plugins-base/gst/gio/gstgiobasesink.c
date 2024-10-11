@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
  * Copyright (C) 2007-2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -29,6 +29,14 @@
 GST_DEBUG_CATEGORY_STATIC (gst_gio_base_sink_debug);
 #define GST_CAT_DEFAULT gst_gio_base_sink_debug
 
+#define DEFAULT_CLOSE_ON_STOP FALSE
+
+enum
+{
+  PROP_0,
+  PROP_CLOSE_ON_STOP,
+};
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -38,6 +46,10 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 G_DEFINE_TYPE (GstGioBaseSink, gst_gio_base_sink, GST_TYPE_BASE_SINK);
 
 static void gst_gio_base_sink_finalize (GObject * object);
+static void gst_gio_base_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_gio_base_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
 static gboolean gst_gio_base_sink_start (GstBaseSink * base_sink);
 static gboolean gst_gio_base_sink_stop (GstBaseSink * base_sink);
 static gboolean gst_gio_base_sink_unlock (GstBaseSink * base_sink);
@@ -59,8 +71,26 @@ gst_gio_base_sink_class_init (GstGioBaseSinkClass * klass)
       "GIO base sink");
 
   gobject_class->finalize = gst_gio_base_sink_finalize;
+  gobject_class->get_property = gst_gio_base_sink_get_property;
+  gobject_class->set_property = gst_gio_base_sink_set_property;
 
   gst_element_class_add_static_pad_template (gstelement_class, &sink_factory);
+
+  /**
+   * GstGioBaseSink:close-on-stop:
+   *
+   * Determines whether the stream is closed with the element "stops" (i.e. goes
+   * from the READY to NULL state), or when the element is disposed. Which of
+   * these behaviours is desirable depends on the lifecycle of the underlying
+   * stream that the element works with.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_CLOSE_ON_STOP,
+      g_param_spec_boolean ("close-on-stop", "Close stream on stop",
+          "Close the stream when the element stops (i.e. goes from READY to "
+          "NULL) rather than when the element is disposed)",
+          DEFAULT_CLOSE_ON_STOP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_gio_base_sink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_gio_base_sink_stop);
@@ -80,6 +110,8 @@ gst_gio_base_sink_init (GstGioBaseSink * sink)
   gst_base_sink_set_sync (GST_BASE_SINK (sink), FALSE);
 
   sink->cancel = g_cancellable_new ();
+  // FALSE is the historical default for this class
+  sink->close_on_stop = DEFAULT_CLOSE_ON_STOP;
 }
 
 static void
@@ -98,6 +130,38 @@ gst_gio_base_sink_finalize (GObject * object)
   }
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
+}
+
+static void
+gst_gio_base_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstGioBaseSink *sink = GST_GIO_BASE_SINK (object);
+
+  switch (prop_id) {
+    case PROP_CLOSE_ON_STOP:
+      g_value_set_boolean (value, sink->close_on_stop);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_gio_base_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstGioBaseSink *sink = GST_GIO_BASE_SINK (object);
+
+  switch (prop_id) {
+    case PROP_CLOSE_ON_STOP:
+      sink->close_on_stop = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static gboolean
@@ -129,11 +193,10 @@ static gboolean
 gst_gio_base_sink_stop (GstBaseSink * base_sink)
 {
   GstGioBaseSink *sink = GST_GIO_BASE_SINK (base_sink);
-  GstGioBaseSinkClass *klass = GST_GIO_BASE_SINK_GET_CLASS (sink);
   gboolean success;
   GError *err = NULL;
 
-  if (klass->close_on_stop && G_IS_OUTPUT_STREAM (sink->stream)) {
+  if (sink->close_on_stop && G_IS_OUTPUT_STREAM (sink->stream)) {
     GST_DEBUG_OBJECT (sink, "closing stream");
 
     /* FIXME: can block but unfortunately we can't use async operations

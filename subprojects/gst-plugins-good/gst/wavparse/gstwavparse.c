@@ -213,8 +213,9 @@ gst_wavparse_labls_free (GstWavParseLabl * labl)
   g_free (labl);
 }
 
+/* reset seek event and destroy adapter if @hard is TRUE */
 static void
-gst_wavparse_reset (GstWavParse * wav)
+gst_wavparse_reset (GstWavParse * wav, gboolean hard)
 {
   wav->state = GST_WAVPARSE_START;
 
@@ -236,13 +237,13 @@ gst_wavparse_reset (GstWavParse * wav)
   wav->got_fmt = FALSE;
   wav->first = TRUE;
 
-  if (wav->seek_event)
-    gst_event_unref (wav->seek_event);
+  if (hard)
+    g_clear_pointer (&wav->seek_event, gst_event_unref);
   wav->seek_event = NULL;
   if (wav->adapter) {
     gst_adapter_clear (wav->adapter);
-    g_object_unref (wav->adapter);
-    wav->adapter = NULL;
+    if (hard)
+      g_clear_object (&wav->adapter);
   }
   if (wav->tags)
     gst_tag_list_unref (wav->tags);
@@ -273,7 +274,7 @@ gst_wavparse_dispose (GObject * object)
   GstWavParse *wav = GST_WAVPARSE (object);
 
   GST_DEBUG_OBJECT (wav, "WAV: Dispose");
-  gst_wavparse_reset (wav);
+  gst_wavparse_reset (wav, TRUE);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -281,7 +282,7 @@ gst_wavparse_dispose (GObject * object)
 static void
 gst_wavparse_init (GstWavParse * wavparse)
 {
-  gst_wavparse_reset (wavparse);
+  gst_wavparse_reset (wavparse, TRUE);
 
   /* sink */
   wavparse->sinkpad =
@@ -1559,6 +1560,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
               gst_wavparse_adtl_chunk (wav, (const guint8 *) map.data,
                   data_size);
               gst_buffer_unmap (buf, &map);
+              gst_buffer_unref (buf);
             }
             wav->offset += GST_ROUND_UP_2 (data_size);
             break;
@@ -2410,6 +2412,13 @@ gst_wavparse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GST_LOG_OBJECT (wav, "handling %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:
+    {
+      gst_wavparse_reset (wav, FALSE);
+
+      ret = gst_pad_event_default (wav->sinkpad, parent, event);
+      break;
+    }
     case GST_EVENT_CAPS:
     {
       /* discard, we'll come up with proper src caps */
@@ -2973,7 +2982,7 @@ gst_wavparse_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_wavparse_reset (wav);
+      gst_wavparse_reset (wav, TRUE);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

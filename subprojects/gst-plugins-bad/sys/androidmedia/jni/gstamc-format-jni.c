@@ -25,6 +25,7 @@
 
 #include "../gstjniutils.h"
 #include "../gstamc-format.h"
+#include "gstamc-jni.h"
 #include "gstamc-internal-jni.h"
 
 static struct
@@ -44,7 +45,7 @@ static struct
 } media_format;
 
 gboolean
-gst_amc_format_static_init (void)
+gst_amc_format_jni_static_init (void)
 {
   gboolean ret = TRUE;
   JNIEnv *env;
@@ -130,9 +131,9 @@ done:
   return ret;
 }
 
-GstAmcFormat *
-gst_amc_format_new_audio (const gchar * mime, gint sample_rate, gint channels,
-    GError ** err)
+static GstAmcFormat *
+gst_amc_format_jni_new_audio (const gchar * mime, gint sample_rate,
+    gint channels, GError ** err)
 {
   JNIEnv *env;
   GstAmcFormat *format = NULL;
@@ -167,8 +168,8 @@ error:
   goto done;
 }
 
-GstAmcFormat *
-gst_amc_format_new_video (const gchar * mime, gint width, gint height,
+static GstAmcFormat *
+gst_amc_format_jni_new_video (const gchar * mime, gint width, gint height,
     GError ** err)
 {
   JNIEnv *env;
@@ -204,8 +205,8 @@ error:
   goto done;
 }
 
-void
-gst_amc_format_free (GstAmcFormat * format)
+static void
+gst_amc_format_jni_free (GstAmcFormat * format)
 {
   JNIEnv *env;
 
@@ -216,8 +217,8 @@ gst_amc_format_free (GstAmcFormat * format)
   g_slice_free (GstAmcFormat, format);
 }
 
-gchar *
-gst_amc_format_to_string (GstAmcFormat * format, GError ** err)
+static gchar *
+gst_amc_format_jni_to_string (GstAmcFormat * format, GError ** err)
 {
   JNIEnv *env;
   jstring v_str = NULL;
@@ -237,8 +238,8 @@ done:
   return ret;
 }
 
-gboolean
-gst_amc_format_get_float (GstAmcFormat * format, const gchar * key,
+static gboolean
+gst_amc_format_jni_get_float (GstAmcFormat * format, const gchar * key,
     gfloat * value, GError ** err)
 {
   JNIEnv *env;
@@ -268,8 +269,8 @@ done:
   return ret;
 }
 
-gboolean
-gst_amc_format_set_float (GstAmcFormat * format, const gchar * key,
+static gboolean
+gst_amc_format_jni_set_float (GstAmcFormat * format, const gchar * key,
     gfloat value, GError ** err)
 {
   JNIEnv *env;
@@ -298,9 +299,9 @@ done:
   return ret;
 }
 
-gboolean
-gst_amc_format_get_int (GstAmcFormat * format, const gchar * key, gint * value,
-    GError ** err)
+static gboolean
+gst_amc_format_jni_get_int (GstAmcFormat * format, const gchar * key,
+    gint * value, GError ** err)
 {
   JNIEnv *env;
   gboolean ret = FALSE;
@@ -330,9 +331,9 @@ done:
 
 }
 
-gboolean
-gst_amc_format_set_int (GstAmcFormat * format, const gchar * key, gint value,
-    GError ** err)
+static gboolean
+gst_amc_format_jni_set_int (GstAmcFormat * format, const gchar * key,
+    gint value, GError ** err)
 {
   JNIEnv *env;
   jstring key_str = NULL;
@@ -360,8 +361,8 @@ done:
   return ret;
 }
 
-gboolean
-gst_amc_format_get_string (GstAmcFormat * format, const gchar * key,
+static gboolean
+gst_amc_format_jni_get_string (GstAmcFormat * format, const gchar * key,
     gchar ** value, GError ** err)
 {
   JNIEnv *env;
@@ -395,8 +396,8 @@ done:
   return ret;
 }
 
-gboolean
-gst_amc_format_set_string (GstAmcFormat * format, const gchar * key,
+static gboolean
+gst_amc_format_jni_set_string (GstAmcFormat * format, const gchar * key,
     const gchar * value, GError ** err)
 {
   JNIEnv *env;
@@ -433,8 +434,8 @@ done:
   return ret;
 }
 
-gboolean
-gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
+static gboolean
+gst_amc_format_jni_get_buffer (GstAmcFormat * format, const gchar * key,
     guint8 ** data, gsize * size, GError ** err)
 {
   JNIEnv *env;
@@ -488,8 +489,8 @@ done:
   return ret;
 }
 
-gboolean
-gst_amc_format_set_buffer (GstAmcFormat * format, const gchar * key,
+static gboolean
+gst_amc_format_jni_set_buffer (GstAmcFormat * format, const gchar * key,
     guint8 * data, gsize size, GError ** err)
 {
   JNIEnv *env;
@@ -536,3 +537,20 @@ done:
 
   return ret;
 }
+
+GstAmcFormatVTable gst_amc_format_jni_vtable = {
+  .new_audio = gst_amc_format_jni_new_audio,
+  .new_video = gst_amc_format_jni_new_video,
+  .free = gst_amc_format_jni_free,
+
+  .to_string = gst_amc_format_jni_to_string,
+
+  .get_float = gst_amc_format_jni_get_float,
+  .set_float = gst_amc_format_jni_set_float,
+  .get_int = gst_amc_format_jni_get_int,
+  .set_int = gst_amc_format_jni_set_int,
+  .get_string = gst_amc_format_jni_get_string,
+  .set_string = gst_amc_format_jni_set_string,
+  .get_buffer = gst_amc_format_jni_get_buffer,
+  .set_buffer = gst_amc_format_jni_set_buffer,
+};

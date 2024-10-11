@@ -1,4 +1,5 @@
 subprojects/gst-plugins-bad/ext/sctp/usrsctp/usrsctplib/
+subprojects/gst-plugins-bad/sys/dwrite/libcaption/
 subprojects/gstreamer-rs/
 subprojects/gstreamer-rs-sys/
 subprojects/gst-plugins-rs/

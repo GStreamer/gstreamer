@@ -195,11 +195,19 @@ namespace GES {
 			ges_pipeline_preview_set_audio_sink(Handle, sink == null ? IntPtr.Zero : sink.Handle);
 		}
 
+		public void PreviewSetAudioSink() {
+			PreviewSetAudioSink (null);
+		}
+
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern void ges_pipeline_preview_set_video_sink(IntPtr raw, IntPtr sink);
 
 		public void PreviewSetVideoSink(Gst.Element sink) {
 			ges_pipeline_preview_set_video_sink(Handle, sink == null ? IntPtr.Zero : sink.Handle);
+		}
+
+		public void PreviewSetVideoSink() {
+			PreviewSetVideoSink (null);
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
@@ -241,7 +249,7 @@ namespace GES {
 		static extern bool ges_pipeline_set_timeline(IntPtr raw, IntPtr timeline);
 
 		public bool SetTimeline(GES.Timeline timeline) {
-			bool raw_ret = ges_pipeline_set_timeline(Handle, timeline == null ? IntPtr.Zero : timeline.OwnedHandle);
+			bool raw_ret = ges_pipeline_set_timeline(Handle, timeline == null ? IntPtr.Zero : timeline.Handle);
 			bool ret = raw_ret;
 			return ret;
 		}

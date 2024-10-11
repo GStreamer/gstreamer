@@ -168,6 +168,12 @@ typedef struct {
   guint32 n_index_entries;
   MXFIndexEntry *index_entries;
 
+  guint64 ext_start_offset;
+  guint64 vbe_byte_count;
+  gboolean single_index_location;
+  gboolean single_essence_location;
+  gboolean forward_index_direction;
+
   /* Computed fields (i.e. not present in file) */
 
   /* Initial essence offset covered by this segment */

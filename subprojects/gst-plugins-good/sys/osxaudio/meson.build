@@ -5,7 +5,9 @@ osxaudio_sources = [
   'gstosxaudiosrc.c',
   'gstosxcoreaudiocommon.c',
   'gstosxcoreaudio.c',
-  'gstosxaudio.c'
+  'gstosxaudio.c',
+  'gstatdec.c',
+  'gstatenc.c',
 ]
 
 have_osxaudio = false
@@ -16,14 +18,10 @@ endif
 
 if host_system == 'darwin'
   # TODO: https://github.com/mesonbuild/meson/issues/3940
-  have_osxaudio = cc.has_header('CoreAudio/CoreAudio.h')
+  have_osxaudio = cc.has_header('CoreAudio/CoreAudio.h', required: osxaudio_option)
   osxaudio_sources += ['gstosxaudiodeviceprovider.c']
 elif host_system == 'ios'
-  have_osxaudio = cc.has_header('CoreAudio/CoreAudioTypes.h')
-endif
-
-if not have_osxaudio and osxaudio_option.enabled()
-  error('osxaudio plugin was enabled but CoreAudio headers not found')
+  have_osxaudio = cc.has_header('CoreAudio/CoreAudioTypes.h', required: osxaudio_option)
 endif
 
 if have_osxaudio
@@ -37,7 +35,7 @@ if have_osxaudio
     osxaudio_sources,
     c_args : gst_plugins_good_args,
     include_directories : [configinc, libsinc],
-    dependencies : [gstaudio_dep, osxaudio_dep],
+    dependencies : [gstaudio_dep, gstpbutils_dep, osxaudio_dep],
     install : true,
     install_dir : plugins_install_dir)
   plugins += [gstosxaudio]

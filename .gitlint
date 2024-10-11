@@ -3,6 +3,7 @@ line-length=100
 
 [general]
 ignore=body-is-missing
+regex-style-search=True
 
 [body-max-line-length]
 line-length=120
@@ -12,4 +13,11 @@ min-length=10
 
 # Ensure every title starts with a prefix
 [title-match-regex]
-regex=^[\w]+[\w, -\\/]*[\w]+: .*
+regex=^[\w]+[\w, -\\/{}]*[\w]+: .*
+
+# Ignore GDB backtraces
+[ignore-body-lines]
+regex=^ \#\d(.*):\d+$
+
+[ignore-by-title]
+regex=^(Release|Back to development)

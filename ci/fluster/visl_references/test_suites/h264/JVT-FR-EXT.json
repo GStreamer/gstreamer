@@ -1,0 +1,559 @@
+{
+    "name": "JVT-FR-EXT",
+    "codec": "H.264",
+    "description": "JVT Fidelity Range Extensions",
+    "test_vectors": [
+        {
+            "name": "alphaconformanceG",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/alphaconformanceG.zip",
+            "source_checksum": "db4b2cf836e932bf726501a5040793dc",
+            "input_file": "alphaconformanceG/alphaconformanceG.264",
+            "output_format": "yuv420p",
+            "result": "844a9ff0eef42c402bf6a848bb957e8b"
+        },
+        {
+            "name": "brcm_freh10",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/brcm_freh10.zip",
+            "source_checksum": "fea884e5bc2741e598604fa54004278e",
+            "input_file": "freh10.264",
+            "output_format": "yuv420p",
+            "result": "0765e5a504da0439e4ba92e78ac52cd2"
+        },
+        {
+            "name": "brcm_freh11",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/brcm_freh11.zip",
+            "source_checksum": "d37886ccdf88ecfa67fce8945f2aef63",
+            "input_file": "freh11.264",
+            "output_format": "yuv420p",
+            "result": "0765e5a504da0439e4ba92e78ac52cd2"
+        },
+        {
+            "name": "brcm_freh3",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/brcm_freh3.zip",
+            "source_checksum": "d39ebac565200d8c26be848a79d8182b",
+            "input_file": "freh3.264",
+            "output_format": "yuv420p",
+            "result": "ece6e090f83756af6f404cb547b32825"
+        },
+        {
+            "name": "brcm_freh4",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/brcm_freh4.zip",
+            "source_checksum": "112ab888f8bbc535d7cfe575f4c35b7f",
+            "input_file": "freh4.264",
+            "output_format": "yuv420p",
+            "result": "0765e5a504da0439e4ba92e78ac52cd2"
+        },
+        {
+            "name": "brcm_freh5",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/brcm_freh5.zip",
+            "source_checksum": "9d8f71b35509dd0b642c57c8cc6df109",
+            "input_file": "freh5.264",
+            "output_format": "yuv420p",
+            "result": "ece6e090f83756af6f404cb547b32825"
+        },
+        {
+            "name": "brcm_freh6",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/brcm_freh6.zip",
+            "source_checksum": "d7e7d749f05d0f7ca0f3cb3d5e51bba5",
+            "input_file": "freh6.264",
+            "output_format": "yuv420p",
+            "result": "0765e5a504da0439e4ba92e78ac52cd2"
+        },
+        {
+            "name": "brcm_freh8",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/brcm_freh8.zip",
+            "source_checksum": "376974326730a628668551cea1c2dd31",
+            "input_file": "freh8.264",
+            "output_format": "yuv420p",
+            "result": "ece6e090f83756af6f404cb547b32825"
+        },
+        {
+            "name": "brcm_freh9",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/brcm_freh9.zip",
+            "source_checksum": "5e7cd84c3d4f7e666085b99616ad929d",
+            "input_file": "freh9.264",
+            "output_format": "yuv420p",
+            "result": "ece6e090f83756af6f404cb547b32825"
+        },
+        {
+            "name": "FREH10-1",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/FREH10-1.zip",
+            "source_checksum": "2216788546b1c66062b4aed9c0405da2",
+            "input_file": "WB_10bit_QP21_I-Only_1920x1088.264",
+            "output_format": "yuv420p10le",
+            "result": "ef4485f6b17838f2dbd4b1cbc9fc1e19"
+        },
+        {
+            "name": "FREH10-2",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/FREH10-2.zip",
+            "source_checksum": "46ea2bbd9e78155d539b5015cdb9eda2",
+            "input_file": "WB_10bit_QP21_1920x1088.264",
+            "output_format": "yuv420p10le",
+            "result": "d14783e822f8e09b716e877e04d781c5"
+        },
+        {
+            "name": "freh12_b",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/freh12_b.zip",
+            "source_checksum": "19e28ddea2a85771a7cde1460924bc99",
+            "input_file": "Freh12_B.264",
+            "output_format": "yuv420p",
+            "result": "ece6e090f83756af6f404cb547b32825"
+        },
+        {
+            "name": "freh1_b",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/freh1_b.zip",
+            "source_checksum": "1bad163b28652c23d974e04a49265690",
+            "input_file": "Freh1_B.264",
+            "output_format": "yuv420p",
+            "result": "ece6e090f83756af6f404cb547b32825"
+        },
+        {
+            "name": "freh2_b",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/freh2_b.zip",
+            "source_checksum": "9ba4e087b2c6198eece358c6e2de6828",
+            "input_file": "Freh2_B.264",
+            "output_format": "yuv420p",
+            "result": "ece6e090f83756af6f404cb547b32825"
+        },
+        {
+            "name": "freh7_b",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/freh7_b.zip",
+            "source_checksum": "34fdd38ca2b81d2375c6286a5fe637de",
+            "input_file": "Freh7_B.264",
+            "output_format": "yuv420p",
+            "result": "0765e5a504da0439e4ba92e78ac52cd2"
+        },
+        {
+            "name": "FREXT01_JVC_D",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/FREXT01_JVC_D.zip",
+            "source_checksum": "25fd78f5f725364d7788b80fbf00ef9c",
+            "input_file": "FREXT01_JVC_D.264",
+            "output_format": "yuv420p",
+            "result": "c8a49de7723e64c8adce14e4051813e5"
+        },
+        {
+            "name": "FREXT02_JVC_C",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/FREXT02_JVC_C.zip",
+            "source_checksum": "56260619c634d85bb93f08f86a87a563",
+            "input_file": "FREXT02_JVC_C.264",
+            "output_format": "yuv420p",
+            "result": "c8a49de7723e64c8adce14e4051813e5"
+        },
+        {
+            "name": "FRExt1_Panasonic_D",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/FRExt1_Panasonic_D.zip",
+            "source_checksum": "aa935847d26e353076b4c9e743177afc",
+            "input_file": "FRExt1_Panasonic.avc",
+            "output_format": "yuv420p",
+            "result": "59a66bdabc1d781cfbeb867495bd4b4e"
+        },
+        {
+            "name": "FREXT1_TANDBERG_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/FREXT1_TANDBERG_A.zip",
+            "source_checksum": "5e27cba9d714ad1d8422abb64a66b0b2",
+            "input_file": "FREXT1_TANDBERG_A.264",
+            "output_format": "yuv422p",
+            "result": "8edf48ce32a1e0892ae4a3d39684e16b"
+        },
+        {
+            "name": "FRExt2_Panasonic_C",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/FRExt2_Panasonic_C.zip",
+            "source_checksum": "1bba9bb62c787fa771c833097c0153c5",
+            "input_file": "FRExt2_Panasonic.avc",
+            "output_format": "yuv422p",
+            "result": "2c16439b9121d295c0dcf457c65f39ee"
+        },
+        {
+            "name": "FREXT2_TANDBERG_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/FREXT2_TANDBERG_A.zip",
+            "source_checksum": "a97d2780a7df8dd9a4e1132abab8e44a",
+            "input_file": "FREXT2_TANDBERG_A.264",
+            "output_format": "yuv422p",
+            "result": "8edf48ce32a1e0892ae4a3d39684e16b"
+        },
+        {
+            "name": "FRExt3_Panasonic_E",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/FRExt3_Panasonic_E.zip",
+            "source_checksum": "b23df9f8789a595d40233f51015a5ba0",
+            "input_file": "FRExt3_Panasonic.avc",
+            "output_format": "yuv420p",
+            "result": "3c917223f247d6c7d456a6c4d6bac07e"
+        },
+        {
+            "name": "FREXT3_TANDBERG_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/FREXT3_TANDBERG_A.zip",
+            "source_checksum": "35d6d81400fa097af48135b25b7d5714",
+            "input_file": "FREXT3_TANDBERG_A.264",
+            "output_format": "yuv422p",
+            "result": "7242a6a5961f5ffd63244f4070f1822c"
+        },
+        {
+            "name": "FRExt4_Panasonic_B",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/FRExt4_Panasonic_B.zip",
+            "source_checksum": "efc8de0c18b5bac9f7457dfd87f13ef6",
+            "input_file": "FRExt4_Panasonic.avc",
+            "output_format": "yuv420p",
+            "result": "b9eca9377ba7290390eeca625507e4ee"
+        },
+        {
+            "name": "FRExt_MMCO4_Sony_B",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/FRExt_MMCO4_Sony_B.zip",
+            "source_checksum": "bf69866785cf61553ec28bcf6b485c24",
+            "input_file": "FRExt_MMCO4_Sony_B/FRExt_MMCO4_Sony_B.264",
+            "output_format": "yuv420p",
+            "result": "e891eda5709d2d6c9eb243aeebeb8a5a"
+        },
+        {
+            "name": "HCAFF1_HHI_B",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HCAFF1_HHI_B.zip",
+            "source_checksum": "f99c99a1317df8c3790fcc19a5d93ee3",
+            "input_file": "HCAFF1_HHI.264",
+            "output_format": "yuv420p",
+            "result": "dc61ced52712e7a316efacb8296eed2b"
+        },
+        {
+            "name": "HCAFR1_HHI_C",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HCAFR1_HHI_C.zip",
+            "source_checksum": "c2b11a347b299befc10f35839ee1464c",
+            "input_file": "HCAFR1_HHI.264",
+            "output_format": "yuv420p",
+            "result": "6c38b9cb1d17fc3e02eb3c1a7c9cb1e7"
+        },
+        {
+            "name": "HCAFR2_HHI_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HCAFR2_HHI_A.zip",
+            "source_checksum": "dc8f7d0b4de2a60a63bdb0696e7bc67d",
+            "input_file": "HCAFR2_HHI.264",
+            "output_format": "yuv420p",
+            "result": "6c38b9cb1d17fc3e02eb3c1a7c9cb1e7"
+        },
+        {
+            "name": "HCAFR3_HHI_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HCAFR3_HHI_A.zip",
+            "source_checksum": "019f440f1b28386ff7fa217ee36873ae",
+            "input_file": "HCAFR3_HHI.264",
+            "output_format": "yuv420p",
+            "result": "6c38b9cb1d17fc3e02eb3c1a7c9cb1e7"
+        },
+        {
+            "name": "HCAFR4_HHI_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HCAFR4_HHI_A.zip",
+            "source_checksum": "b5d08607b49b965a595d411da8e16395",
+            "input_file": "HCAFR4_HHI.264",
+            "output_format": "yuv420p",
+            "result": "6c38b9cb1d17fc3e02eb3c1a7c9cb1e7"
+        },
+        {
+            "name": "HCAMFF1_HHI_B",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HCAMFF1_HHI_B.zip",
+            "source_checksum": "e35ddf1346edbdbd8cd828ce0bab4d8a",
+            "input_file": "HCAMFF1_HHI.264",
+            "output_format": "yuv420p",
+            "result": "6c38b9cb1d17fc3e02eb3c1a7c9cb1e7"
+        },
+        {
+            "name": "HCHP1_HHI_B",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HCHP1_HHI_B.zip",
+            "source_checksum": "d8a92846c70631a70d87e7c922a38665",
+            "input_file": "HCHP1_HHI_B.264",
+            "output_format": "yuv420p",
+            "result": "5bf67f6e13c6c2e74f648011a971f9d9"
+        },
+        {
+            "name": "HCHP2_HHI_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HCHP2_HHI_A.zip",
+            "source_checksum": "63620ffcd8711fff593acf23fbae2ffa",
+            "input_file": "HCHP2_HHI_A.264",
+            "output_format": "yuv420p",
+            "result": "e2316ce9ee6d5ac3d9d87f7b076006ee"
+        },
+        {
+            "name": "HCHP3_HHI_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HCHP3_HHI_A.zip",
+            "source_checksum": "e0ad0426fe7ddce04b321d8a3a61a373",
+            "input_file": "HCHP3_HHI_A.264",
+            "output_format": "yuv420p",
+            "result": "7d01c333b449c2120ad6c7f25db4f0e9"
+        },
+        {
+            "name": "Hi422FR10_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FR10_SONY_A.zip",
+            "source_checksum": "e72ef0d917f5d9681f7facb708f5e95f",
+            "input_file": "Hi422FR10_SONY_B.264",
+            "output_format": "yuv422p",
+            "result": "8edf48ce32a1e0892ae4a3d39684e16b"
+        },
+        {
+            "name": "Hi422FR11_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FR11_SONY_A.zip",
+            "source_checksum": "bcb56252362ff098b307c7cbe8d6cb27",
+            "input_file": "Hi422FR11_SONY_B.264",
+            "output_format": "yuv422p",
+            "result": "8edf48ce32a1e0892ae4a3d39684e16b"
+        },
+        {
+            "name": "Hi422FR12_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FR12_SONY_A.zip",
+            "source_checksum": "22f0a38c21f6be11f56ad59e36a32794",
+            "input_file": "Hi422FR12_SONY_B.264",
+            "output_format": "yuv422p",
+            "result": "7242a6a5961f5ffd63244f4070f1822c"
+        },
+        {
+            "name": "Hi422FR13_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FR13_SONY_A.zip",
+            "source_checksum": "e4fa8a110f484becac208431ca2238b6",
+            "input_file": "Hi422FR13_SONY_B.264",
+            "output_format": "yuv422p10le",
+            "result": "760625e939e80640c007e49743cd412c"
+        },
+        {
+            "name": "Hi422FR14_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FR14_SONY_A.zip",
+            "source_checksum": "ca30629e2daed96b48e76a46a3773e79",
+            "input_file": "Hi422FR14_SONY_B.264",
+            "output_format": "yuv422p10le",
+            "result": "760625e939e80640c007e49743cd412c"
+        },
+        {
+            "name": "Hi422FR15_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FR15_SONY_A.zip",
+            "source_checksum": "05f4473650aefa857d88188df793733c",
+            "input_file": "Hi422FR15_SONY_B.264",
+            "output_format": "yuv422p10le",
+            "result": "fc8825c01edd1c90939c3f6c5fea3559"
+        },
+        {
+            "name": "Hi422FR1_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FR1_SONY_A.zip",
+            "source_checksum": "40b4b5af6846fcd73a0b9ff28392263e",
+            "input_file": "Hi422FR1_SONY_A.jsv",
+            "output_format": "yuv422p",
+            "result": "8edf48ce32a1e0892ae4a3d39684e16b"
+        },
+        {
+            "name": "Hi422FR2_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FR2_SONY_A.zip",
+            "source_checksum": "c03cc00f35613c35da84e19c66bcfd5c",
+            "input_file": "Hi422FR2_SONY_A.jsv",
+            "output_format": "yuv422p",
+            "result": "8edf48ce32a1e0892ae4a3d39684e16b"
+        },
+        {
+            "name": "Hi422FR3_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FR3_SONY_A.zip",
+            "source_checksum": "1785867ad840137c690ef480985f981f",
+            "input_file": "Hi422FR3_SONY_A/Hi422FR3_SONY_A.jsv",
+            "output_format": "yuv422p",
+            "result": "7242a6a5961f5ffd63244f4070f1822c"
+        },
+        {
+            "name": "Hi422FR4_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FR4_SONY_A.zip",
+            "source_checksum": "a2c6436f515119209da9787e1a5aa038",
+            "input_file": "Hi422FR4_SONY_A.jsv",
+            "output_format": "yuv422p",
+            "result": "8edf48ce32a1e0892ae4a3d39684e16b"
+        },
+        {
+            "name": "Hi422FR6_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FR6_SONY_A.zip",
+            "source_checksum": "b43a18a54e661aac1cf42871c1430d4f",
+            "input_file": "Hi422FR6_SONY_A.jsv",
+            "output_format": "yuv422p10le",
+            "result": "760625e939e80640c007e49743cd412c"
+        },
+        {
+            "name": "Hi422FR7_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FR7_SONY_A.zip",
+            "source_checksum": "42132542bd2e4dea2648daadf370c413",
+            "input_file": "Hi422FR7_SONY_A.jsv",
+            "output_format": "yuv422p10le",
+            "result": "760625e939e80640c007e49743cd412c"
+        },
+        {
+            "name": "Hi422FR8_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FR8_SONY_A.zip",
+            "source_checksum": "c762f93fffe662e496e9fc35e8252343",
+            "input_file": "Hi422FR8_SONY_A/Hi422FR8_SONY_A.jsv",
+            "output_format": "yuv422p10le",
+            "result": "fc8825c01edd1c90939c3f6c5fea3559"
+        },
+        {
+            "name": "Hi422FR9_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FR9_SONY_A.zip",
+            "source_checksum": "6926ed0a9dec9e07c46bf4657cc902fd",
+            "input_file": "Hi422FR9_SONY_A.jsv",
+            "output_format": "yuv422p10le",
+            "result": "760625e939e80640c007e49743cd412c"
+        },
+        {
+            "name": "Hi422FREXT16_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FREXT16_SONY_A.zip",
+            "source_checksum": "67fab279d404b17e28adfb643c842b34",
+            "input_file": "Hi422FREXT16_SONY_A.264",
+            "output_format": "yuv422p10le",
+            "result": "937375395744d15d87cba18aabc8509e"
+        },
+        {
+            "name": "Hi422FREXT17_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FREXT17_SONY_A.zip",
+            "source_checksum": "85d69360c274b8a75e1009d1c237d50d",
+            "input_file": "Hi422FREXT17_SONY_A.264",
+            "output_format": "yuv422p10le",
+            "result": "5763ebb186644452d027db95a1530e2a"
+        },
+        {
+            "name": "Hi422FREXT18_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FREXT18_SONY_A.zip",
+            "source_checksum": "fc8cf974a6b7c144199960ebbab52539",
+            "input_file": "Hi422FREXT18_SONY_A.264",
+            "output_format": "yuv422p10le",
+            "result": "161946f5cbbaf92d8753cdf1c232278e"
+        },
+        {
+            "name": "Hi422FREXT19_SONY_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/Hi422FREXT19_SONY_A.zip",
+            "source_checksum": "da3ffd7f22348dfbafc6406d6af0d57d",
+            "input_file": "Hi422FREXT19_SONY_A.264",
+            "output_format": "yuv422p10le",
+            "result": "d63483567d11af0a60618c8e303394c4"
+        },
+        {
+            "name": "HPCA_BRCM_C",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HPCA_BRCM_C.zip",
+            "source_checksum": "e6b9f05dc21a3777c0b555f8732b2740",
+            "input_file": "HPCA_BRCM_C.264",
+            "output_format": "yuv420p",
+            "result": "887a287dfc223691c273619fd93e95ad"
+        },
+        {
+            "name": "HPCADQ_BRCM_B",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HPCADQ_BRCM_B.zip",
+            "source_checksum": "d2e0d64b46e3652e3d2175290c3c8b2b",
+            "input_file": "HPCADQ_BRCM_B.264",
+            "output_format": "yuv420p",
+            "result": "887a287dfc223691c273619fd93e95ad"
+        },
+        {
+            "name": "HPCAFL_BRCM_C",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HPCAFL_BRCM_C.zip",
+            "source_checksum": "a9af0295ffe26b90525ddd647cfef1fa",
+            "input_file": "HPCAFL_BRCM_C.264",
+            "output_format": "yuv420p",
+            "result": "6c8099358bfdcc6e235fa69549cbb33f"
+        },
+        {
+            "name": "HPCAFLNL_BRCM_C",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HPCAFLNL_BRCM_C.zip",
+            "source_checksum": "dbdfc5e59f42854e56224dc490248f69",
+            "input_file": "HPCAFLNL_BRCM_C.264",
+            "output_format": "yuv420p",
+            "result": "6c8099358bfdcc6e235fa69549cbb33f"
+        },
+        {
+            "name": "HPCALQ_BRCM_B",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HPCALQ_BRCM_B.zip",
+            "source_checksum": "e5b3f8ffeef1597aabc7fb02b5687a6b",
+            "input_file": "HPCALQ_BRCM_B.264",
+            "output_format": "yuv420p",
+            "result": "887a287dfc223691c273619fd93e95ad"
+        },
+        {
+            "name": "HPCAMAPALQ_BRCM_B",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HPCAMAPALQ_BRCM_B.zip",
+            "source_checksum": "4dba39fb76815ae65829fff58ea9aaa2",
+            "input_file": "HPCAMAPALQ_BRCM_B.264",
+            "output_format": "yuv420p",
+            "result": "ad129f8ace37b1632ff63d079da67668"
+        },
+        {
+            "name": "HPCAMOLQ_BRCM_B",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HPCAMOLQ_BRCM_B.zip",
+            "source_checksum": "bf0379c8fbf9fc82e493bbe0d2b94678",
+            "input_file": "HPCAMOLQ_BRCM_B.264",
+            "output_format": "yuv420p",
+            "result": "ece6e090f83756af6f404cb547b32825"
+        },
+        {
+            "name": "HPCANL_BRCM_C",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HPCANL_BRCM_C.zip",
+            "source_checksum": "b84ff76a7b492d4ad0af624741e7547f",
+            "input_file": "HPCANL_BRCM_C.264",
+            "output_format": "yuv420p",
+            "result": "887a287dfc223691c273619fd93e95ad"
+        },
+        {
+            "name": "HPCAQ2LQ_BRCM_B",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HPCAQ2LQ_BRCM_B.zip",
+            "source_checksum": "df77c3d3fab18a8465c9eb6308c3e39e",
+            "input_file": "HPCAQ2LQ_BRCM_B.264",
+            "output_format": "yuv420p",
+            "result": "ece6e090f83756af6f404cb547b32825"
+        },
+        {
+            "name": "HPCV_BRCM_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HPCV_BRCM_A.zip",
+            "source_checksum": "a4dbf84589bfb30f4275f99c55786f65",
+            "input_file": "HPCV_BRCM_A.264",
+            "output_format": "yuv420p",
+            "result": "887a287dfc223691c273619fd93e95ad"
+        },
+        {
+            "name": "HPCVFL_BRCM_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HPCVFL_BRCM_A.zip",
+            "source_checksum": "8b1988e28c48ca73bd26436ed4986a3d",
+            "input_file": "HPCVFL_BRCM_A.264",
+            "output_format": "yuv420p",
+            "result": "6c8099358bfdcc6e235fa69549cbb33f"
+        },
+        {
+            "name": "HPCVFLNL_BRCM_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HPCVFLNL_BRCM_A.zip",
+            "source_checksum": "0ed8ec204c19de67bb38675a7cb02d24",
+            "input_file": "HPCVFLNL_BRCM_A.264",
+            "output_format": "yuv420p",
+            "result": "6c8099358bfdcc6e235fa69549cbb33f"
+        },
+        {
+            "name": "HPCVMOLQ_BRCM_B",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HPCVMOLQ_BRCM_B.zip",
+            "source_checksum": "54e7273846368f30e4b18b493ae40177",
+            "input_file": "HPCVMOLQ_BRCM_B.264",
+            "output_format": "yuv420p",
+            "result": "ece6e090f83756af6f404cb547b32825"
+        },
+        {
+            "name": "HPCVNL_BRCM_A",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HPCVNL_BRCM_A.zip",
+            "source_checksum": "b74a2b333a8ab62b36103ec0a89a2a61",
+            "input_file": "HPCVNL_BRCM_A.264",
+            "output_format": "yuv420p",
+            "result": "887a287dfc223691c273619fd93e95ad"
+        },
+        {
+            "name": "HVLCFI0_Sony_B",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HVLCFI0_Sony_B.zip",
+            "source_checksum": "f806e5e8d533448a774981a9e05a3a31",
+            "input_file": "HVLCFI0_Sony_B/HVLCFI0_Sony_B.264",
+            "output_format": "yuv420p",
+            "result": "3c5cb8b534b52f00f735f031b3b77b8b"
+        },
+        {
+            "name": "HVLCMFF0_Sony_B",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HVLCMFF0_Sony_B.zip",
+            "source_checksum": "6befebe07103031d430cde2f1aac70c3",
+            "input_file": "HVLCMFF0_Sony_B/HVLCMFF0_Sony_B.264",
+            "output_format": "yuv420p",
+            "result": "6557e2615e206c2973e24c4056baef06"
+        },
+        {
+            "name": "HVLCPFF0_Sony_B",
+            "source": "https://www.itu.int/wftp3/av-arch/jvt-site/draft_conformance/FRExt/HVLCPFF0_Sony_B.zip",
+            "source_checksum": "a30d355a0066d2c969a24fa49a5d46a2",
+            "input_file": "HVLCPFF0_Sony_B/HVLCPFF0_Sony_B.264",
+            "output_format": "yuv420p",
+            "result": "6557e2615e206c2973e24c4056baef06"
+        }
+    ]
+}

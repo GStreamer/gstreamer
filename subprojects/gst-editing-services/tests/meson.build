@@ -3,7 +3,7 @@ if get_option('tests').disabled() or static_build
 endif
 
 # FIXME: make check work on windows
-if host_machine.system() != 'windows' and gstcheck_dep.found()
+if host_system != 'windows' and gstcheck_dep.found()
   subdir('check')
 endif
 

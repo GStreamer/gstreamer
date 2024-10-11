@@ -90,7 +90,8 @@ static void
 plugin_add_dependencies (GstPlugin * plugin)
 {
 #ifndef _WIN32
-  const gchar *env_vars[] = { "LIBVA_DRIVER_NAME", NULL };
+  const gchar *env_vars[] =
+      { "LIBVA_DRIVER_NAME", "GST_MSDK_DRM_DEVICE", NULL };
   const gchar *kernel_paths[] = { "/dev/dri", NULL };
   const gchar *kernel_names[] = { "card", "render", NULL };
 

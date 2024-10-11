@@ -816,8 +816,8 @@ gst_amf_encoder_prepare_internal_pool (GstAmfEncoder * self)
       GST_VIDEO_INFO_SIZE (info), 0, 0);
 
   params = gst_d3d11_allocation_params_new (priv->device, info,
-      GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0);
-  params->desc[0].MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_SHADER_RESOURCE,
+      D3D11_RESOURCE_MISC_SHARED);
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
   gst_d3d11_allocation_params_free (params);

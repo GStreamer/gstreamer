@@ -146,6 +146,10 @@ gst_rtsp_onvif_media_factory_construct (GstRTSPMediaFactory * factory,
       g_object_new (media_gtype, "element", element,
       "transport-mode", GST_RTSP_TRANSPORT_MODE_PLAY, NULL);
 
+  /* we need to call this prior to collecting streams */
+  gst_rtsp_media_set_ensure_keyunit_on_start (media,
+      gst_rtsp_media_factory_get_ensure_keyunit_on_start (factory));
+
   /* this adds the non-backchannel streams */
   gst_rtsp_media_collect_streams (media);
 

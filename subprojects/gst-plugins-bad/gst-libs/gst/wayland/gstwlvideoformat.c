@@ -29,6 +29,14 @@
 
 #include <drm_fourcc.h>
 
+/* This can be removed once we can bump the required wl_client_dep,
+ * which again is blocked by a CI image update, see
+ * https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5275
+ */
+#ifndef WL_SHM_FORMAT_P010
+#define WL_SHM_FORMAT_P010 DRM_FORMAT_P010
+#endif
+
 #define GST_CAT_DEFAULT gst_wl_videoformat_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -61,8 +69,8 @@ static const wl_VideoFormat wl_formats[] = {
   {WL_SHM_FORMAT_ABGR8888, DRM_FORMAT_ABGR8888, GST_VIDEO_FORMAT_RGBA},
   {WL_SHM_FORMAT_RGBA8888, DRM_FORMAT_RGBA8888, GST_VIDEO_FORMAT_ABGR},
   {WL_SHM_FORMAT_BGRA8888, DRM_FORMAT_BGRA8888, GST_VIDEO_FORMAT_ARGB},
-  {WL_SHM_FORMAT_RGB888, DRM_FORMAT_RGB888, GST_VIDEO_FORMAT_RGB},
-  {WL_SHM_FORMAT_BGR888, DRM_FORMAT_BGR888, GST_VIDEO_FORMAT_BGR},
+  {WL_SHM_FORMAT_RGB888, DRM_FORMAT_RGB888, GST_VIDEO_FORMAT_BGR},
+  {WL_SHM_FORMAT_BGR888, DRM_FORMAT_BGR888, GST_VIDEO_FORMAT_RGB},
   {WL_SHM_FORMAT_RGB565, DRM_FORMAT_RGB565, GST_VIDEO_FORMAT_RGB16},
   {WL_SHM_FORMAT_BGR565, DRM_FORMAT_BGR565, GST_VIDEO_FORMAT_BGR16},
 
@@ -74,6 +82,7 @@ static const wl_VideoFormat wl_formats[] = {
   {WL_SHM_FORMAT_NV21, DRM_FORMAT_NV21, GST_VIDEO_FORMAT_NV21},
   {WL_SHM_FORMAT_NV16, DRM_FORMAT_NV16, GST_VIDEO_FORMAT_NV16},
   {WL_SHM_FORMAT_NV61, DRM_FORMAT_NV61, GST_VIDEO_FORMAT_NV61},
+  {WL_SHM_FORMAT_P010, DRM_FORMAT_P010, GST_VIDEO_FORMAT_P010_10LE},
   {WL_SHM_FORMAT_YUV410, DRM_FORMAT_YUV410, GST_VIDEO_FORMAT_YUV9},
   {WL_SHM_FORMAT_YVU410, DRM_FORMAT_YVU410, GST_VIDEO_FORMAT_YVU9},
   {WL_SHM_FORMAT_YUV411, DRM_FORMAT_YUV411, GST_VIDEO_FORMAT_Y41B},
@@ -140,9 +149,11 @@ gst_wl_shm_format_to_string (enum wl_shm_format wl_format)
       (gst_wl_shm_format_to_video_format (wl_format));
 }
 
-const gchar *
-gst_wl_dmabuf_format_to_string (guint wl_format)
+gchar *
+gst_wl_dmabuf_format_to_string (guint wl_format, guint64 modifier)
 {
-  return gst_video_format_to_string
-      (gst_wl_dmabuf_format_to_video_format (wl_format));
+  GstVideoFormat gst_format = gst_wl_dmabuf_format_to_video_format (wl_format);
+  const guint32 fourcc = gst_video_dma_drm_fourcc_from_format (gst_format);
+
+  return gst_video_dma_drm_fourcc_to_string (fourcc, modifier);
 }

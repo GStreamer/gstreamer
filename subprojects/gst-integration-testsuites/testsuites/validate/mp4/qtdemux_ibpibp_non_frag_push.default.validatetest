@@ -1,0 +1,15 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    seek=false,
+    handles-states=false,
+    args = {
+         "appsrc ! qtdemux ! fakesink async=false",
+    },
+    configs = {
+       "$(validateflow), pad=fakesink0:sink, record-buffers=true, logged-event-types={segment, eos}",
+        "change-issue-severity, issue-id=event::eos-has-wrong-seqnum, new-severity=ignore",
+    }
+
+# Note that sending the file this way ensures qtdemux doesn't receive an EOS
+# from appsrc, so we can test that the EOS comes from qtdemux.
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/edit-lists/simple/ibpibp-non-frag.mp4"

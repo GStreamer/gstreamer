@@ -82,6 +82,30 @@ and/or use gtk-doc annotations.  -->
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">This object manages the RTSP connection to the server. It provides function
 to receive and send bytes and messages.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
+      <method name="add_extra_http_request_header" c:identifier="gst_rtsp_connection_add_extra_http_request_header" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">Add header to be appended to any HTTP request made by connection.
+If the header already exists then the old header is replaced by the new header.
+
+Only applicable in HTTP tunnel mode.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="conn" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">a #GstRTSPConnection</doc>
+            <type name="RTSPConnection" c:type="GstRTSPConnection*"/>
+          </instance-parameter>
+          <parameter name="key" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">HTTP header name</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">HTTP header value</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="clear_auth_params" c:identifier="gst_rtsp_connection_clear_auth_params">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">Clear the list of authentication directives stored in @conn.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
@@ -2973,6 +2997,9 @@ UTC times will be converted to nanoseconds since 1900.</doc>
       <member name="ok" value="0" c:identifier="GST_RTSP_OK" glib:nick="ok">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">no error</doc>
       </member>
+      <member name="ok_redirect" value="1" c:identifier="GST_RTSP_OK_REDIRECT" version="1.24" glib:nick="ok-redirect">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">RTSP request is successful, but was redirected.</doc>
+      </member>
       <member name="error" value="-1" c:identifier="GST_RTSP_ERROR" glib:nick="error">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">some unspecified error occurred</doc>
       </member>
@@ -3069,6 +3096,12 @@ UTC times will be converted to nanoseconds since 1900.</doc>
       <member name="not_modified" value="304" c:identifier="GST_RTSP_STS_NOT_MODIFIED" glib:nick="not-modified">
       </member>
       <member name="use_proxy" value="305" c:identifier="GST_RTSP_STS_USE_PROXY" glib:nick="use-proxy">
+      </member>
+      <member name="redirect_temporarily" value="307" c:identifier="GST_RTSP_STS_REDIRECT_TEMPORARILY" version="1.24" glib:nick="redirect-temporarily">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">RTSP request is temporarily redirected</doc>
+      </member>
+      <member name="redirect_permanently" value="308" c:identifier="GST_RTSP_STS_REDIRECT_PERMANENTLY" version="1.24" glib:nick="redirect-permanently">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">RTSP request is permanently redirected</doc>
       </member>
       <member name="bad_request" value="400" c:identifier="GST_RTSP_STS_BAD_REQUEST" glib:nick="bad-request">
       </member>
@@ -4197,6 +4230,9 @@ not equal #GST_RTSP_OK.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <docsection name="gstrtspdefs">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.c">Provides common defines for the RTSP library.</doc>
+    </docsection>
     <function name="rtsp_auth_credentials_free" c:identifier="gst_rtsp_auth_credentials_free" version="1.12">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspmessage.c">Free a %NULL-terminated array of credentials returned from
 gst_rtsp_message_parse_auth_credentials().</doc>

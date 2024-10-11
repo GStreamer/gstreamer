@@ -49,7 +49,17 @@ namespace Gst.Video {
 				_allocation_caps = value == null ? IntPtr.Zero : value.Handle;
 			}
 		}
-		[MarshalAs (UnmanagedType.ByValArray, SizeConst=19)]
+		private IntPtr _mastering_display_info;
+
+		public Gst.Video.VideoMasteringDisplayInfo mastering_display_info {
+			get { return Gst.Video.VideoMasteringDisplayInfo.New (_mastering_display_info); }
+		}
+		private IntPtr _content_light_level;
+
+		public Gst.Video.VideoContentLightLevel content_light_level {
+			get { return Gst.Video.VideoContentLightLevel.New (_content_light_level); }
+		}
+		[MarshalAs (UnmanagedType.ByValArray, SizeConst=17)]
 		private IntPtr[] Padding;
 
 		public static Gst.Video.VideoCodecState Zero = new Gst.Video.VideoCodecState ();
@@ -102,7 +112,7 @@ namespace Gst.Video {
 
 		public bool Equals (VideoCodecState other)
 		{
-			return true && ref_count.Equals (other.ref_count) && Info.Equals (other.Info) && Caps.Equals (other.Caps) && CodecData.Equals (other.CodecData) && AllocationCaps.Equals (other.AllocationCaps);
+			return true && ref_count.Equals (other.ref_count) && Info.Equals (other.Info) && Caps.Equals (other.Caps) && CodecData.Equals (other.CodecData) && AllocationCaps.Equals (other.AllocationCaps) && mastering_display_info.Equals (other.mastering_display_info) && content_light_level.Equals (other.content_light_level);
 		}
 
 		public override bool Equals (object other)
@@ -112,7 +122,7 @@ namespace Gst.Video {
 
 		public override int GetHashCode ()
 		{
-			return this.GetType ().FullName.GetHashCode () ^ ref_count.GetHashCode () ^ Info.GetHashCode () ^ Caps.GetHashCode () ^ CodecData.GetHashCode () ^ AllocationCaps.GetHashCode ();
+			return this.GetType ().FullName.GetHashCode () ^ ref_count.GetHashCode () ^ Info.GetHashCode () ^ Caps.GetHashCode () ^ CodecData.GetHashCode () ^ AllocationCaps.GetHashCode () ^ mastering_display_info.GetHashCode () ^ content_light_level.GetHashCode ();
 		}
 
 		public static explicit operator GLib.Value (Gst.Video.VideoCodecState boxed)

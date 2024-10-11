@@ -48,6 +48,10 @@
 #include <gst/va/gstva.h>
 #endif
 
+#ifdef HAVE_GST_D3D12
+#include <gst/d3d12/gstd3d12.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_qsv_h265_enc_debug);
 #define GST_CAT_DEFAULT gst_qsv_h265_enc_debug
 
@@ -209,6 +213,7 @@ enum
 
 #define DOC_SINK_CAPS \
     "video/x-raw(memory:D3D11Memory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw(memory:D3D12Memory), " DOC_SINK_CAPS_COMM "; " \
     "video/x-raw(memory:VAMemory), " DOC_SINK_CAPS_COMM "; " \
     "video/x-raw, " DOC_SINK_CAPS_COMM
 
@@ -226,6 +231,7 @@ typedef struct _GstQsvH265EncClassData
   gchar *display_path;
   gchar *description;
   gboolean hdr10_aware;
+  gboolean d3d12_interop;
 } GstQsvH265EncClassData;
 
 typedef struct _GstQsvH265Enc
@@ -322,6 +328,7 @@ gst_qsv_h265_enc_class_init (GstQsvH265EncClass * klass, gpointer data)
   qsvenc_class->impl_index = cdata->impl_index;
   qsvenc_class->adapter_luid = cdata->adapter_luid;
   qsvenc_class->display_path = cdata->display_path;
+  qsvenc_class->d3d12_interop = cdata->d3d12_interop;
 
   object_class->finalize = gst_qsv_h265_enc_finalize;
   object_class->set_property = gst_qsv_h265_enc_set_property;
@@ -1422,7 +1429,7 @@ done:
 
 void
 gst_qsv_h265_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
-    GstObject * device, mfxSession session)
+    GstObject * device, mfxSession session, gboolean d3d12_interop)
 {
   mfxVideoParam param;
   mfxInfoMFX *mfx;
@@ -1460,29 +1467,23 @@ gst_qsv_h265_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
 
   /* Check supported profiles */
   for (guint i = 0; i < G_N_ELEMENTS (profile_map); i++) {
+    GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
     mfx->CodecProfile = profile_map[i].profile;
     mfx->CodecLevel = MFX_LEVEL_UNKNOWN;
 
     switch (mfx->CodecProfile) {
       case MFX_PROFILE_HEVC_MAIN:
-        mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-        mfx->FrameInfo.FourCC = MFX_FOURCC_NV12;
-        mfx->FrameInfo.BitDepthLuma = 8;
-        mfx->FrameInfo.BitDepthChroma = 8;
-        mfx->FrameInfo.Shift = 0;
+        format = GST_VIDEO_FORMAT_NV12;
         break;
       case MFX_PROFILE_HEVC_MAIN10:
-        mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-        mfx->FrameInfo.FourCC = MFX_FOURCC_P010;
-        mfx->FrameInfo.BitDepthLuma = 10;
-        mfx->FrameInfo.BitDepthChroma = 10;
-        mfx->FrameInfo.Shift = 1;
+        format = GST_VIDEO_FORMAT_P010_10LE;
         break;
       default:
         g_assert_not_reached ();
         return;
     }
 
+    gst_qsv_frame_info_set_format (&mfx->FrameInfo, format);
     if (MFXVideoENCODE_Query (session, &param, &param) != MFX_ERR_NONE)
       continue;
 
@@ -1495,11 +1496,7 @@ gst_qsv_h265_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
     return;
   }
 
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  mfx->FrameInfo.FourCC = MFX_FOURCC_NV12;
-  mfx->FrameInfo.BitDepthLuma = 8;
-  mfx->FrameInfo.BitDepthChroma = 8;
-  mfx->FrameInfo.Shift = 0;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_NV12);
   mfx->CodecProfile = MFX_PROFILE_HEVC_MAIN;
 
   /* check hdr10 metadata SEI support */
@@ -1542,6 +1539,9 @@ gst_qsv_h265_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
     max_resolution.height = gst_qsv_resolutions[i].height;
   }
 
+  if (max_resolution.width == 0 || max_resolution.height == 0)
+    return;
+
   GST_INFO ("Maximum supported resolution: %dx%d",
       max_resolution.width, max_resolution.height);
 
@@ -1580,14 +1580,23 @@ gst_qsv_h265_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
 #ifdef G_OS_WIN32
   GstCaps *d3d11_caps = gst_caps_copy (sink_caps);
   GstCapsFeatures *caps_features =
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr);
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+      nullptr);
   gst_caps_set_features_simple (d3d11_caps, caps_features);
+#ifdef HAVE_GST_D3D12
+  auto d3d12_caps = gst_caps_copy (sink_caps);
+  auto d3d12_feature =
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY,
+      nullptr);
+  gst_caps_set_features_simple (d3d12_caps, d3d12_feature);
+  gst_caps_append (d3d11_caps, d3d12_caps);
+#endif
   gst_caps_append (d3d11_caps, sink_caps);
   sink_caps = d3d11_caps;
 #else
   GstCaps *va_caps = gst_caps_copy (sink_caps);
   GstCapsFeatures *caps_features =
-      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VA, nullptr);
+      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VA, nullptr);
   gst_caps_set_features_simple (va_caps, caps_features);
   gst_caps_append (va_caps, sink_caps);
   sink_caps = va_caps;
@@ -1628,6 +1637,7 @@ gst_qsv_h265_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   cdata->src_caps = src_caps;
   cdata->impl_index = impl_index;
   cdata->hdr10_aware = hdr10_aware;
+  cdata->d3d12_interop = d3d12_interop;
 
 #ifdef G_OS_WIN32
   g_object_get (device, "adapter-luid", &cdata->adapter_luid,

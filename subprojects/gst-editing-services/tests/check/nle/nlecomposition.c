@@ -54,6 +54,7 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
   gst_element_set_state (comp, GST_STATE_READY);
 
   sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
+  g_object_set (sink, "sync", FALSE, NULL);
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
 
   gst_element_link (comp, sink);
@@ -218,6 +219,7 @@ GST_START_TEST (test_remove_last_object)
   gst_element_set_state (GST_ELEMENT (composition), GST_STATE_READY);
 
   fakesink = gst_element_factory_make ("fakeaudiosink", NULL);
+  g_object_set (fakesink, "sync", FALSE, NULL);
   gst_bin_add_many (GST_BIN (pipeline), GST_ELEMENT (composition), fakesink,
       NULL);
   gst_element_link (GST_ELEMENT (composition), fakesink);
@@ -226,7 +228,8 @@ GST_START_TEST (test_remove_last_object)
   audiotestsrc = gst_element_factory_make ("audiotestsrc", "audiotestsrc1");
   gst_bin_add (GST_BIN (source1), audiotestsrc);
   g_object_set (source1, "start", (guint64) 0 * GST_SECOND,
-      "duration", 10 * GST_SECOND, "inpoint", (guint64) 0, "priority", 1, NULL);
+      "duration", (gint64) 10 * GST_SECOND, "inpoint", (guint64) 0, "priority",
+      1, NULL);
 
   nle_composition_add (composition, source1);
 
@@ -234,7 +237,8 @@ GST_START_TEST (test_remove_last_object)
   audiotestsrc2 = gst_element_factory_make ("audiotestsrc", "audiotestsrc1");
   gst_bin_add (GST_BIN (source2), audiotestsrc2);
   g_object_set (source2, "start", (guint64) 10 * GST_SECOND,
-      "duration", 10 * GST_SECOND, "inpoint", (guint64) 0, "priority", 1, NULL);
+      "duration", (gint64) 10 * GST_SECOND, "inpoint", (guint64) 0, "priority",
+      1, NULL);
 
   nle_composition_add (composition, source2);
 
@@ -309,12 +313,14 @@ GST_START_TEST (test_dispose_on_commit)
   composition = gst_element_factory_make ("nlecomposition", "composition");
   pipeline = GST_ELEMENT (gst_pipeline_new (NULL));
   fakesink = gst_element_factory_make ("fakevideosink", NULL);
+  g_object_set (fakesink, "sync", FALSE, NULL);
 
   nlesource = gst_element_factory_make ("nlesource", "nlesource1");
   audiotestsrc = gst_element_factory_make ("audiotestsrc", "audiotestsrc1");
   gst_bin_add (GST_BIN (nlesource), audiotestsrc);
   g_object_set (nlesource, "start", (guint64) 0 * GST_SECOND,
-      "duration", 10 * GST_SECOND, "inpoint", (guint64) 0, "priority", 1, NULL);
+      "duration", (gint64) 10 * GST_SECOND, "inpoint", (guint64) 0, "priority",
+      1, NULL);
   fail_unless (nle_composition_add (GST_BIN (composition), nlesource));
 
   gst_bin_add_many (GST_BIN (pipeline), composition, fakesink, NULL);
@@ -353,6 +359,7 @@ GST_START_TEST (test_simple_audiomixer)
   composition = gst_element_factory_make ("nlecomposition", "composition");
   gst_element_set_state (composition, GST_STATE_READY);
   fakesink = gst_element_factory_make ("fakeaudiosink", NULL);
+  g_object_set (fakesink, "sync", FALSE, NULL);
 
   /* nle_audiomixer */
   nle_audiomixer = gst_element_factory_make ("nleoperation", "nle_audiomixer");
@@ -369,7 +376,8 @@ GST_START_TEST (test_simple_audiomixer)
   audiotestsrc1 = gst_element_factory_make ("audiotestsrc", "audiotestsrc1");
   gst_bin_add (GST_BIN (nlesource1), audiotestsrc1);
   g_object_set (nlesource1, "start", (guint64) 0 * GST_SECOND,
-      "duration", total_time / 2, "inpoint", (guint64) 0, "priority", 1, NULL);
+      "duration", (gint64) total_time / 2, "inpoint", (guint64) 0, "priority",
+      1, NULL);
   fail_unless (nle_composition_add (GST_BIN (composition), nlesource1));
 
   /* nlesource2 */
@@ -459,7 +467,8 @@ create_nested_source (gint nesting_depth)
     name = g_strdup_printf ("nested_src%d", i);
     source = gst_element_factory_make_or_warn ("nlesource", name);
     g_free (name);
-    g_object_set (source, "start", 0, "duration", 2 * GST_SECOND, NULL);
+    g_object_set (source, "start", (guint64) 0, "duration",
+        (gint64) 2 * GST_SECOND, NULL);
     gst_bin_add (GST_BIN (source), bin);
   }
 
@@ -483,6 +492,7 @@ GST_START_TEST (test_seek_on_nested)
 
   gst_element_set_state (comp, GST_STATE_READY);
   sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
+  g_object_set (sink, "sync", FALSE, NULL);
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
 
   gst_element_link (comp, sink);
@@ -578,6 +588,7 @@ GST_START_TEST (test_error_in_nested_timeline)
 
   gst_element_set_state (comp, GST_STATE_READY);
   sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
+  g_object_set (sink, "sync", FALSE, NULL);
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
 
   gst_element_link (comp, sink);
@@ -664,6 +675,7 @@ GST_START_TEST (test_nest_deep)
 
   gst_element_set_state (comp, GST_STATE_READY);
   sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
+  g_object_set (sink, "sync", FALSE, NULL);
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
 
   gst_element_link (comp, sink);

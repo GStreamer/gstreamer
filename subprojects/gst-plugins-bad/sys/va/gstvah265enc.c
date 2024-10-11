@@ -58,6 +58,8 @@
 #include "gstvadisplay_priv.h"
 #include "gstvapluginutils.h"
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (gst_va_h265enc_debug);
 #define GST_CAT_DEFAULT gst_va_h265enc_debug
 
@@ -88,11 +90,11 @@ enum
   PROP_BITRATE,
   PROP_TARGET_PERCENTAGE,
   PROP_TARGET_USAGE,
-  PROP_RATE_CONTROL,
   PROP_CPB_SIZE,
   PROP_AUD,
   PROP_NUM_TILE_COLS,
   PROP_NUM_TILE_ROWS,
+  PROP_RATE_CONTROL,
   N_PROPERTIES
 };
 
@@ -191,6 +193,7 @@ struct _GstVaH265Enc
 
   gboolean aud;
   guint32 packed_headers;
+  gboolean support_trellis;
 
   struct
   {
@@ -307,6 +310,8 @@ struct _GstVaH265Enc
 
     guint num_reorder_frames;
     guint max_dpb_size;
+
+    GstVideoCodecFrame *last_keyframe;
   } gop;
 
   struct
@@ -339,7 +344,7 @@ struct _GstVaH265Enc
 
 struct _GstVaH265EncFrame
 {
-  GstVaEncodePicture *picture;
+  GstVaEncFrame base;
   GstH265SliceType type;
   gboolean is_ref;
   guint pyramid_level;
@@ -349,8 +354,6 @@ struct _GstVaH265EncFrame
 
   gint poc;
   gboolean last_frame;
-  /* The total frame count we handled. */
-  guint total_frame_count;
 };
 
 /**
@@ -408,23 +411,6 @@ static const GstVaH265LevelLimits _va_h265_level_limits[] = {
 
 #ifndef GST_DISABLE_GST_DEBUG
 static const gchar *
-_h265_slice_type_name (GstH265SliceType type)
-{
-  switch (type) {
-    case GST_H265_P_SLICE:
-      return "P";
-    case GST_H265_B_SLICE:
-      return "B";
-    case GST_H265_I_SLICE:
-      return "I";
-    default:
-      g_assert_not_reached ();
-  }
-
-  return NULL;
-}
-
-static const gchar *
 _rate_control_get_name (guint32 rc_mode)
 {
   GParamSpecEnum *spec;
@@ -451,8 +437,7 @@ gst_va_h265_enc_frame_new (void)
 
   frame = g_new (GstVaH265EncFrame, 1);
   frame->last_frame = FALSE;
-  frame->picture = NULL;
-  frame->total_frame_count = 0;
+  frame->base.picture = NULL;
 
   return frame;
 }
@@ -461,16 +446,14 @@ static void
 gst_va_h265_enc_frame_free (gpointer pframe)
 {
   GstVaH265EncFrame *frame = pframe;
-  g_clear_pointer (&frame->picture, gst_va_encode_picture_free);
+  g_clear_pointer (&frame->base.picture, gst_va_encode_picture_free);
   g_free (frame);
 }
 
 static inline GstVaH265EncFrame *
 _enc_frame (GstVideoCodecFrame * frame)
 {
-  GstVaH265EncFrame *enc_frame = gst_video_codec_frame_get_user_data (frame);
-  g_assert (enc_frame);
-  return enc_frame;
+  return gst_va_get_enc_frame (frame);
 }
 
 static inline gboolean
@@ -715,9 +698,7 @@ static gboolean
 _h265_fill_vps (GstVaH265Enc * self,
     const VAEncSequenceParameterBufferHEVC * seq_param)
 {
-  guint max_dec_pic_buffering =
-      self->gop.num_ref_frames + 1 < self->gop.max_dpb_size ?
-      self->gop.num_ref_frames + 1 : self->gop.max_dpb_size;
+  guint max_dec_pic_buffering = self->gop.max_dpb_size;
 
   /* *INDENT-OFF* */
   self->vps_hdr = (GstH265VPS) {
@@ -749,9 +730,7 @@ static gboolean
 _h265_fill_sps (GstVaH265Enc * self,
     const VAEncSequenceParameterBufferHEVC * seq_param)
 {
-  guint max_dec_pic_buffering =
-      self->gop.num_ref_frames + 1 < self->gop.max_dpb_size ?
-      self->gop.num_ref_frames + 1 : self->gop.max_dpb_size;
+  guint max_dec_pic_buffering = self->gop.max_dpb_size;
 
   g_assert (self->gop.log2_max_pic_order_cnt >= 4);
   /* *INDENT-OFF* */
@@ -1160,7 +1139,7 @@ _h265_add_vps_header (GstVaH265Enc * self, GstVaH265EncFrame * frame)
 
   /* VPS does not have its own packed header define, just reuse
      VAEncPackedHeaderSequence */
-  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->base.picture,
           VAEncPackedHeaderSequence, packed_vps, size * 8, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add packed VPS header.");
     return FALSE;
@@ -1187,7 +1166,7 @@ _h265_add_sps_header (GstVaH265Enc * self, GstVaH265EncFrame * frame)
     return FALSE;
   }
 
-  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->base.picture,
           VAEncPackedHeaderSequence, packed_sps, size * 8, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add packed SPS header.");
     return FALSE;
@@ -1213,7 +1192,7 @@ _h265_add_pps_header (GstVaH265Enc * self, GstVaH265EncFrame * frame,
     return FALSE;
   }
 
-  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->base.picture,
           VAEncPackedHeaderPicture, packed_pps, size * 8, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the packed picture header");
     return FALSE;
@@ -1240,7 +1219,7 @@ _h265_add_slice_header (GstVaH265Enc * self, GstVaH265EncFrame * frame,
     return FALSE;
   }
 
-  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->base.picture,
           VAEncPackedHeaderSlice, packed_slice_hdr, size * 8, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the packed slice header");
     return FALSE;
@@ -1279,7 +1258,7 @@ _h265_add_aud (GstVaH265Enc * self, GstVaH265EncFrame * frame)
     return FALSE;
   }
 
-  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->base.picture,
           VAEncPackedHeaderRawData, aud_data, size * 8, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the AUD");
     return FALSE;
@@ -1415,11 +1394,11 @@ _h265_fill_sequence_parameter (GstVaH265Enc * self,
     },
     /* if (vui_fields.bits.aspect_ratio_info_present_flag) */
     .aspect_ratio_idc = 0xff,
-    .sar_width = GST_VIDEO_INFO_PAR_N (&base->input_state->info),
-    .sar_height = GST_VIDEO_INFO_PAR_D (&base->input_state->info),
+    .sar_width = GST_VIDEO_INFO_PAR_N (&base->in_info),
+    .sar_height = GST_VIDEO_INFO_PAR_D (&base->in_info),
     /* if (vui_fields.bits.vui_timing_info_present_flag) */
-    .vui_num_units_in_tick = GST_VIDEO_INFO_FPS_D (&base->input_state->info),
-    .vui_time_scale = GST_VIDEO_INFO_FPS_N (&base->input_state->info),
+    .vui_num_units_in_tick = GST_VIDEO_INFO_FPS_D (&base->in_info),
+    .vui_time_scale = GST_VIDEO_INFO_FPS_N (&base->in_info),
     .scc_fields.bits.palette_mode_enabled_flag = _is_scc_enabled (self),
   };
   /* *INDENT-ON* */
@@ -1474,6 +1453,8 @@ _h265_fill_picture_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
     if (frame->type == GST_H265_B_SLICE) {
       hierarchical_level_plus1 += 1;
       hierarchical_level_plus1 += frame->pyramid_level;
+      /* So far only 3 level hint is supported in driver. */
+      hierarchical_level_plus1 = MIN (hierarchical_level_plus1, 4);
     }
   }
 
@@ -1488,11 +1469,11 @@ _h265_fill_picture_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
 
   *pic_param = (VAEncPictureParameterBufferHEVC) {
     .decoded_curr_pic.picture_id =
-        gst_va_encode_picture_get_reconstruct_surface (frame->picture),
+        gst_va_encode_picture_get_reconstruct_surface (frame->base.picture),
     .decoded_curr_pic.pic_order_cnt = frame->poc,
     .decoded_curr_pic.flags = 0,
 
-    .coded_buf = frame->picture->coded_buffer,
+    .coded_buf = frame->base.picture->coded_buffer,
     .last_picture = frame->last_frame,
     .pic_init_qp = self->rc.qp_i,
     .diff_cu_qp_delta_depth = self->features.diff_cu_qp_delta_depth,
@@ -1551,18 +1532,18 @@ _h265_fill_picture_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
 
     if (g_queue_is_empty (&base->ref_list)) {
       GST_ERROR_OBJECT (self, "No reference found for frame type %s",
-          _h265_slice_type_name (frame->type));
+          gst_h265_slice_type_to_string (frame->type));
       return FALSE;
     }
 
-    g_assert (g_queue_get_length (&base->ref_list) <= self->gop.num_ref_frames);
+    g_assert (g_queue_get_length (&base->ref_list) <= self->gop.max_dpb_size);
 
     /* ref frames in queue are already sorted by poc. */
     for (; i < g_queue_get_length (&base->ref_list); i++) {
       f = _enc_frame (g_queue_peek_nth (&base->ref_list, i));
 
       pic_param->reference_frames[i].picture_id =
-          gst_va_encode_picture_get_reconstruct_surface (f->picture);
+          gst_va_encode_picture_get_reconstruct_surface (f->base.picture);
       pic_param->reference_frames[i].pic_order_cnt = f->poc;
       pic_param->reference_frames[i].flags = 0;
     }
@@ -1730,7 +1711,8 @@ _h265_fill_slice_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
   if (frame_type != GST_H265_I_SLICE) {
     for (; i < list0_num; i++) {
       slice->ref_pic_list0[i].picture_id =
-          gst_va_encode_picture_get_reconstruct_surface (list0[i]->picture);
+          gst_va_encode_picture_get_reconstruct_surface
+          (list0[i]->base.picture);
       slice->ref_pic_list0[i].pic_order_cnt = list0[i]->poc;
     }
   }
@@ -1743,7 +1725,8 @@ _h265_fill_slice_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
   if (frame_type == GST_H265_B_SLICE) {
     for (; i < list1_num; i++) {
       slice->ref_pic_list1[i].picture_id =
-          gst_va_encode_picture_get_reconstruct_surface (list1[i]->picture);
+          gst_va_encode_picture_get_reconstruct_surface
+          (list1[i]->base.picture);
       slice->ref_pic_list1[i].pic_order_cnt = list1[i]->poc;
     }
   }
@@ -1761,7 +1744,7 @@ _h265_add_sequence_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
 
-  if (!gst_va_encoder_add_param (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_param (base->encoder, frame->base.picture,
           VAEncSequenceParameterBufferType, sequence, sizeof (*sequence))) {
     GST_ERROR_OBJECT (self, "Failed to create the sequence parameter");
     return FALSE;
@@ -1776,7 +1759,7 @@ _h265_add_picture_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
 
-  if (!gst_va_encoder_add_param (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_param (base->encoder, frame->base.picture,
           VAEncPictureParameterBufferType, pic_param,
           sizeof (VAEncPictureParameterBufferHEVC))) {
     GST_ERROR_OBJECT (self, "Failed to create the picture parameter");
@@ -1792,7 +1775,7 @@ _h265_add_slice_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
 
-  if (!gst_va_encoder_add_param (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_param (base->encoder, frame->base.picture,
           VAEncSliceParameterBufferType, slice,
           sizeof (VAEncSliceParameterBufferHEVC))) {
     GST_ERROR_OBJECT (self, "Failed to add the slice parameter");
@@ -1880,25 +1863,25 @@ _h265_encode_one_frame (GstVaH265Enc * self, GstVideoCodecFrame * gst_frame)
   if (frame->poc == 0) {
     VAEncSequenceParameterBufferHEVC sequence;
 
-    if (!gst_va_base_enc_add_rate_control_parameter (base, frame->picture,
+    if (!gst_va_base_enc_add_rate_control_parameter (base, frame->base.picture,
             self->rc.rc_ctrl_mode, self->rc.max_bitrate_bits,
             self->rc.target_percentage, self->rc.qp_i, self->rc.min_qp,
             self->rc.max_qp, self->rc.mbbrc))
       return FALSE;
 
-    if (!gst_va_base_enc_add_quality_level_parameter (base, frame->picture,
+    if (!gst_va_base_enc_add_quality_level_parameter (base, frame->base.picture,
             self->rc.target_usage))
       return FALSE;
 
-    if (!gst_va_base_enc_add_frame_rate_parameter (base, frame->picture))
+    if (!gst_va_base_enc_add_frame_rate_parameter (base, frame->base.picture))
       return FALSE;
 
-    if (!gst_va_base_enc_add_hrd_parameter (base, frame->picture,
+    if (!gst_va_base_enc_add_hrd_parameter (base, frame->base.picture,
             self->rc.rc_ctrl_mode, self->rc.cpb_length_bits))
       return FALSE;
 
-    if (!gst_va_base_enc_add_trellis_parameter (base, frame->picture,
-            self->features.use_trellis))
+    if (self->support_trellis && !gst_va_base_enc_add_trellis_parameter (base,
+            frame->base.picture, self->features.use_trellis))
       return FALSE;
 
     _h265_fill_sequence_parameter (self, &sequence);
@@ -1931,12 +1914,13 @@ _h265_encode_one_frame (GstVaH265Enc * self, GstVideoCodecFrame * gst_frame)
       if (vaf->poc > frame->poc)
         continue;
 
+      g_assert (vaf->is_ref);
       list_forward[list_forward_num] = vaf;
       list_forward_num++;
     }
 
     /* reorder to select the most nearest forward frames. */
-    g_qsort_with_data (list_forward, list_forward_num, sizeof (gpointer),
+    g_sort_array (list_forward, list_forward_num, sizeof (gpointer),
         (GCompareDataFunc) _poc_des_compare, NULL);
 
     num_negative_pics = list_forward_num;
@@ -1968,12 +1952,13 @@ _h265_encode_one_frame (GstVaH265Enc * self, GstVideoCodecFrame * gst_frame)
       if (vaf->poc < frame->poc)
         continue;
 
+      g_assert (vaf->is_ref);
       list_backward[list_backward_num] = vaf;
       list_backward_num++;
     }
 
     /* reorder to select the most nearest backward frames. */
-    g_qsort_with_data (list_backward, list_backward_num, sizeof (gpointer),
+    g_sort_array (list_backward, list_backward_num, sizeof (gpointer),
         (GCompareDataFunc) _poc_asc_compare, NULL);
 
     num_positive_pics = list_backward_num;
@@ -1995,7 +1980,7 @@ _h265_encode_one_frame (GstVaH265Enc * self, GstVideoCodecFrame * gst_frame)
     }
   }
 
-  g_assert (list_forward_num + list_backward_num <= self->gop.num_ref_frames);
+  g_assert (list_forward_num + list_backward_num <= self->gop.max_dpb_size);
 
   if (!_h265_fill_picture_parameter (self, frame, &pic_param, collocated_poc))
     return FALSE;
@@ -2014,12 +1999,24 @@ _h265_encode_one_frame (GstVaH265Enc * self, GstVideoCodecFrame * gst_frame)
           negative_pocs, num_negative_pics, positive_pocs, num_positive_pics))
     return FALSE;
 
-  if (!gst_va_encoder_encode (base->encoder, frame->picture)) {
+  if (!gst_va_encoder_encode (base->encoder, frame->base.picture)) {
     GST_ERROR_OBJECT (self, "Encode frame error");
     return FALSE;
   }
 
   return TRUE;
+}
+
+static void
+frame_setup_from_gop (GstVaH265Enc * self, GstVaH265EncFrame * frame, guint i)
+{
+  g_assert (i < 1024);
+
+  frame->type = self->gop.frame_types[i].slice_type;
+  frame->is_ref = self->gop.frame_types[i].is_ref;
+  frame->pyramid_level = self->gop.frame_types[i].pyramid_level;
+  frame->left_ref_poc_diff = self->gop.frame_types[i].left_ref_poc_diff;
+  frame->right_ref_poc_diff = self->gop.frame_types[i].right_ref_poc_diff;
 }
 
 static gboolean
@@ -2028,55 +2025,81 @@ _h265_push_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame * gst_frame,
 {
   GstVaH265Enc *self = GST_VA_H265_ENC (base);
   GstVaH265EncFrame *frame;
+  gboolean add_cached_key_frame = FALSE;
 
   g_return_val_if_fail (self->gop.cur_frame_index <= self->gop.idr_period,
       FALSE);
 
   if (gst_frame) {
-    /* Begin a new GOP, should have a empty reorder_list. */
-    if (self->gop.cur_frame_index == self->gop.idr_period) {
-      g_assert (g_queue_is_empty (&base->reorder_list));
-      self->gop.cur_frame_index = 0;
-    }
-
     frame = _enc_frame (gst_frame);
-    frame->poc = self->gop.cur_frame_index;
-    g_assert (self->gop.cur_frame_index <= self->gop.max_pic_order_cnt);
 
-    if (self->gop.cur_frame_index == 0) {
-      g_assert (frame->poc == 0);
-      GST_LOG_OBJECT (self, "system_frame_number: %d, an IDR frame, starts"
-          " a new GOP", gst_frame->system_frame_number);
+    /* Force to insert the key frame inside a GOP, just end the current
+       GOP and start a new one. */
+    if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (gst_frame) &&
+        !(self->gop.cur_frame_index == 0 ||
+            self->gop.cur_frame_index == self->gop.idr_period)) {
+      GST_DEBUG_OBJECT (base, "system_frame_number: %u is a force key "
+          "frame(IDR), begin a new GOP.", gst_frame->system_frame_number);
 
+      frame->poc = 0;
+      frame_setup_from_gop (self, frame, 0);
+
+      /* The previous key frame should be already be poped out. */
+      g_assert (self->gop.last_keyframe == NULL);
+
+      /* An empty reorder list, start the new GOP immediately. */
+      if (g_queue_is_empty (&base->reorder_list)) {
+        self->gop.cur_frame_index = 1;
+        g_queue_clear_full (&base->ref_list,
+            (GDestroyNotify) gst_video_codec_frame_unref);
+        last = FALSE;
+      } else {
+        /* Cache the key frame and end the current GOP.
+           Next time calling this push() without frame, start the new GOP. */
+        self->gop.last_keyframe = gst_frame;
+        last = TRUE;
+      }
+
+      add_cached_key_frame = TRUE;
+    } else {
+      /* Begin a new GOP, should have a empty reorder_list. */
+      if (self->gop.cur_frame_index == self->gop.idr_period) {
+        g_assert (g_queue_is_empty (&base->reorder_list));
+        self->gop.cur_frame_index = 0;
+      }
+
+      frame->poc = self->gop.cur_frame_index;
+      g_assert (self->gop.cur_frame_index <= self->gop.max_pic_order_cnt);
+
+      if (self->gop.cur_frame_index == 0) {
+        g_assert (frame->poc == 0);
+        GST_LOG_OBJECT (self, "system_frame_number: %u, an IDR frame, starts"
+            " a new GOP", gst_frame->system_frame_number);
+
+        g_queue_clear_full (&base->ref_list,
+            (GDestroyNotify) gst_video_codec_frame_unref);
+      }
+
+      frame_setup_from_gop (self, frame, self->gop.cur_frame_index);
+
+      GST_LOG_OBJECT (self, "Push frame, system_frame_number: %u, poc %d, "
+          "frame type %s", gst_frame->system_frame_number, frame->poc,
+          gst_h265_slice_type_to_string (frame->type));
+
+      self->gop.cur_frame_index++;
+      g_queue_push_tail (&base->reorder_list,
+          gst_video_codec_frame_ref (gst_frame));
+    }
+  } else if (self->gop.last_keyframe) {
+    g_assert (self->gop.last_keyframe ==
+        g_queue_peek_tail (&base->reorder_list));
+    if (g_queue_get_length (&base->reorder_list) == 1) {
+      /* The last cached key frame begins a new GOP */
+      self->gop.cur_frame_index = 1;
+      self->gop.last_keyframe = NULL;
       g_queue_clear_full (&base->ref_list,
           (GDestroyNotify) gst_video_codec_frame_unref);
     }
-
-    frame->type = self->gop.frame_types[self->gop.cur_frame_index].slice_type;
-    frame->is_ref = self->gop.frame_types[self->gop.cur_frame_index].is_ref;
-    frame->pyramid_level =
-        self->gop.frame_types[self->gop.cur_frame_index].pyramid_level;
-    frame->left_ref_poc_diff =
-        self->gop.frame_types[self->gop.cur_frame_index].left_ref_poc_diff;
-    frame->right_ref_poc_diff =
-        self->gop.frame_types[self->gop.cur_frame_index].right_ref_poc_diff;
-
-    if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (gst_frame)) {
-      GST_DEBUG_OBJECT (self, "system_frame_number: %d, a force key frame,"
-          " promote its type from %s to %s", gst_frame->system_frame_number,
-          _h265_slice_type_name (frame->type),
-          _h265_slice_type_name (GST_H265_I_SLICE));
-      frame->type = GST_H265_I_SLICE;
-      frame->is_ref = TRUE;
-    }
-
-    GST_LOG_OBJECT (self, "Push frame, system_frame_number: %d, poc %d, "
-        "frame type %s", gst_frame->system_frame_number, frame->poc,
-        _h265_slice_type_name (frame->type));
-
-    self->gop.cur_frame_index++;
-    g_queue_push_tail (&base->reorder_list,
-        gst_video_codec_frame_ref (gst_frame));
   }
 
   /* ensure the last one a non-B and end the GOP. */
@@ -2094,6 +2117,12 @@ _h265_push_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame * gst_frame,
         frame->is_ref = TRUE;
       }
     }
+  }
+
+  /* Insert the cached next key frame after ending the current GOP. */
+  if (add_cached_key_frame) {
+    g_queue_push_tail (&base->reorder_list,
+        gst_video_codec_frame_ref (gst_frame));
   }
 
   return TRUE;
@@ -2117,7 +2146,7 @@ _count_backward_ref_num (gpointer data, gpointer user_data)
 }
 
 static GstVideoCodecFrame *
-_h265_pop_pyramid_b_frame (GstVaH265Enc * self)
+_h265_pop_pyramid_b_frame (GstVaH265Enc * self, guint gop_len)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   guint i;
@@ -2132,7 +2161,7 @@ _h265_pop_pyramid_b_frame (GstVaH265Enc * self)
   b_vaframe = NULL;
 
   /* Find the highest level with smallest poc. */
-  for (i = 0; i < g_queue_get_length (&base->reorder_list); i++) {
+  for (i = 0; i < gop_len; i++) {
     GstVaH265EncFrame *vaf;
     GstVideoCodecFrame *f;
 
@@ -2164,7 +2193,7 @@ again:
   /* Check whether its refs are already poped. */
   g_assert (b_vaframe->left_ref_poc_diff != 0);
   g_assert (b_vaframe->right_ref_poc_diff != 0);
-  for (i = 0; i < g_queue_get_length (&base->reorder_list); i++) {
+  for (i = 0; i < gop_len; i++) {
     GstVaH265EncFrame *vaf;
     GstVideoCodecFrame *f;
 
@@ -2206,6 +2235,7 @@ _h265_pop_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame ** out_frame)
   GstVaH265Enc *self = GST_VA_H265_ENC (base);
   GstVaH265EncFrame *vaframe;
   GstVideoCodecFrame *frame;
+  guint gop_len;
   struct RefFramesCount count;
 
   g_return_val_if_fail (self->gop.cur_frame_index <= self->gop.idr_period,
@@ -2216,16 +2246,21 @@ _h265_pop_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame ** out_frame)
   if (g_queue_is_empty (&base->reorder_list))
     return TRUE;
 
+  gop_len = g_queue_get_length (&base->reorder_list);
+
+  if (self->gop.last_keyframe && gop_len > 1)
+    gop_len--;
+
   /* Return the last pushed non-B immediately. */
-  frame = g_queue_peek_tail (&base->reorder_list);
+  frame = g_queue_peek_nth (&base->reorder_list, gop_len - 1);
   vaframe = _enc_frame (frame);
   if (vaframe->type != GST_H265_B_SLICE) {
-    frame = g_queue_pop_tail (&base->reorder_list);
+    frame = g_queue_pop_nth (&base->reorder_list, gop_len - 1);
     goto get_one;
   }
 
   if (self->gop.b_pyramid) {
-    frame = _h265_pop_pyramid_b_frame (self);
+    frame = _h265_pop_pyramid_b_frame (self, gop_len);
     if (frame == NULL)
       return TRUE;
 
@@ -2261,13 +2296,14 @@ get_one:
 
   if (self->gop.b_pyramid && vaframe->type == GST_H265_B_SLICE) {
     GST_LOG_OBJECT (self, "pop a pyramid B frame with system_frame_number:"
-        " %d, poc: %d, is_ref: %s, level %d",
+        " %u, poc: %d, is_ref: %s, level %d",
         frame->system_frame_number, vaframe->poc,
         vaframe->is_ref ? "true" : "false", vaframe->pyramid_level);
   } else {
-    GST_LOG_OBJECT (self, "pop a frame with system_frame_number: %d,"
+    GST_LOG_OBJECT (self, "pop a frame with system_frame_number: %u,"
         " frame type: %s, poc: %d, is_ref: %s",
-        frame->system_frame_number, _h265_slice_type_name (vaframe->type),
+        frame->system_frame_number,
+        gst_h265_slice_type_to_string (vaframe->type),
         vaframe->poc, vaframe->is_ref ? "true" : "false");
   }
 
@@ -2283,7 +2319,7 @@ gst_va_h265_enc_reorder_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame,
 {
   if (!_h265_push_one_frame (base, frame, bump_all)) {
     GST_ERROR_OBJECT (base, "Failed to push the input frame"
-        " system_frame_number: %d into the reorder list",
+        " system_frame_number: %u into the reorder list",
         frame->system_frame_number);
 
     *out_frame = NULL;
@@ -2309,7 +2345,7 @@ _h265_find_unused_reference_frame (GstVaH265Enc * self,
   guint i;
 
   /* We still have more space. */
-  if (g_queue_get_length (&base->ref_list) < self->gop.num_ref_frames)
+  if (g_queue_get_length (&base->ref_list) < self->gop.max_dpb_size - 1)
     return NULL;
 
   /* Not b_pyramid, sliding window is enough. */
@@ -2383,11 +2419,11 @@ gst_va_h265_enc_encode_frame (GstVaBaseEnc * base,
   frame = _enc_frame (gst_frame);
   frame->last_frame = is_last;
 
-  g_assert (frame->picture == NULL);
-  frame->picture = gst_va_encode_picture_new (base->encoder,
+  g_assert (frame->base.picture == NULL);
+  frame->base.picture = gst_va_encode_picture_new (base->encoder,
       gst_frame->input_buffer);
 
-  if (!frame->picture) {
+  if (!frame->base.picture) {
     GST_ERROR_OBJECT (base, "Failed to create the encode picture");
     return GST_FLOW_ERROR;
   }
@@ -2413,7 +2449,7 @@ gst_va_h265_enc_encode_frame (GstVaBaseEnc * base,
     g_queue_push_tail (&base->ref_list, gst_video_codec_frame_ref (gst_frame));
     g_queue_sort (&base->ref_list, _sort_by_poc, NULL);
 
-    g_assert (g_queue_get_length (&base->ref_list) <= self->gop.num_ref_frames);
+    g_assert (g_queue_get_length (&base->ref_list) <= self->gop.max_dpb_size);
   }
 
   return GST_FLOW_OK;
@@ -2472,6 +2508,7 @@ gst_va_h265_enc_reset_state (GstVaBaseEnc * base)
   self->bits_depth_chroma_minus8 = 0;
 
   self->packed_headers = 0;
+  self->support_trellis = FALSE;
 
   self->partition.slice_span_tiles = FALSE;
   g_clear_pointer (&self->partition.slice_segment_address, g_free);
@@ -2529,6 +2566,7 @@ gst_va_h265_enc_reset_state (GstVaBaseEnc * base)
   self->gop.backward_ref_num = 0;
   self->gop.num_reorder_frames = 0;
   self->gop.max_dpb_size = 0;
+  self->gop.last_keyframe = NULL;
 
   self->rc.max_bitrate = 0;
   self->rc.target_bitrate = 0;
@@ -2662,7 +2700,7 @@ _h265_decide_profile (GstVaH265Enc * self, VAProfile * _profile,
     goto out;
   }
 
-  in_format = GST_VIDEO_INFO_FORMAT (&base->input_state->info);
+  in_format = GST_VIDEO_INFO_FORMAT (&base->in_info);
   rt_format = _h265_get_rtformat (self, in_format, &depth, &chrome);
   if (!rt_format) {
     GST_ERROR_OBJECT (self, "unsupported video format %s",
@@ -3193,7 +3231,7 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
    * speed and quality, while the others control encoding bit rate and
    * quality. The lower value has better quality(maybe bigger MV search
    * range) but slower speed, the higher value has faster speed but lower
-   * quality.
+   * quality. It is valid for all modes.
    *
    * The possible composition to control the bit rate and quality:
    *
@@ -3228,6 +3266,17 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
    *    target bit rate, and encoder will try its best to make the QP
    *    with in the ["max-qp", "min-qp"] range. Other paramters are
    *    ignored.
+   *
+   * 5. ICQ mode: "rate-control=ICQ", which is similar to CQP mode
+   *    except that its QP may be increased or decreaed to avoid huge
+   *    bit rate fluctuation. The "qpi" specifies a quality factor
+   *    as the base quality value. Other properties are ignored.
+   *
+   * 6. QVBR mode: "rate-control=QVBR", which is similar to VBR mode
+   *    with the same usage of "bitrate", "target-percentage" and
+   *    "cpb-size" properties. Besides that, the "qpi" specifies a
+   *    quality factor as the base quality value which the driver
+   *    should try its best to meet. Other properties are ignored.
    */
 
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
@@ -3320,7 +3369,8 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
 
   /* Calculate a bitrate is not set. */
   if ((self->rc.rc_ctrl_mode == VA_RC_CBR || self->rc.rc_ctrl_mode == VA_RC_VBR
-          || self->rc.rc_ctrl_mode == VA_RC_VCM) && bitrate == 0) {
+          || self->rc.rc_ctrl_mode == VA_RC_VCM
+          || self->rc.rc_ctrl_mode == VA_RC_QVBR) && bitrate == 0) {
     /* FIXME: Provide better estimation. */
     /* Choose the max value of all levels' MinCr which is 8, and x2 for
        conservative calculation. So just using a 1/16 compression ratio,
@@ -3330,7 +3380,7 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
     guint bits_per_pix;
 
     if (!_h265_get_rtformat (self,
-            GST_VIDEO_INFO_FORMAT (&base->input_state->info), &depth, &chrome))
+            GST_VIDEO_INFO_FORMAT (&base->in_info), &depth, &chrome))
       g_assert_not_reached ();
 
     if (chrome == 3) {
@@ -3344,18 +3394,19 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
 
     factor = (guint64) self->luma_width * self->luma_height * bits_per_pix / 16;
     bitrate = gst_util_uint64_scale (factor,
-        GST_VIDEO_INFO_FPS_N (&base->input_state->info),
-        GST_VIDEO_INFO_FPS_D (&base->input_state->info)) / 1000;
-
+        GST_VIDEO_INFO_FPS_N (&base->in_info),
+        GST_VIDEO_INFO_FPS_D (&base->in_info)) / 1000;
     GST_INFO_OBJECT (self, "target bitrate computed to %u kbps", bitrate);
-
-    update_property_uint (base, &self->prop.bitrate, bitrate, PROP_BITRATE);
   }
 
   /* Adjust the setting based on RC mode. */
   switch (self->rc.rc_ctrl_mode) {
     case VA_RC_NONE:
+    case VA_RC_ICQ:
+      self->rc.qp_p = self->rc.qp_b = self->rc.qp_i;
+      /* Fall through. */
     case VA_RC_CQP:
+      bitrate = 0;
       self->rc.max_bitrate = 0;
       self->rc.target_bitrate = 0;
       self->rc.target_percentage = 0;
@@ -3368,11 +3419,14 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
       self->rc.qp_i = self->rc.qp_p = self->rc.qp_b = 26;
       break;
     case VA_RC_VBR:
-      g_assert (self->rc.target_percentage >= 10);
+      self->rc.qp_i = 26;
+      /* Fall through. */
+    case VA_RC_QVBR:
+      self->rc.qp_p = self->rc.qp_b = self->rc.qp_i;
+      self->rc.target_percentage = MAX (10, self->rc.target_percentage);
       self->rc.max_bitrate = (guint) gst_util_uint64_scale_int (bitrate,
           100, self->rc.target_percentage);
       self->rc.target_bitrate = bitrate;
-      self->rc.qp_i = self->rc.qp_p = self->rc.qp_b = 26;
       break;
     case VA_RC_VCM:
       self->rc.max_bitrate = bitrate;
@@ -3393,14 +3447,16 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
       break;
   }
 
-  GST_DEBUG_OBJECT (self, "Max bitrate: %u bits/sec, "
-      "Target bitrate: %u bits/sec", self->rc.max_bitrate,
-      self->rc.target_bitrate);
+  GST_DEBUG_OBJECT (self, "Max bitrate: %u kbps, target bitrate: %u kbps",
+      self->rc.max_bitrate, self->rc.target_bitrate);
 
-  if (self->rc.rc_ctrl_mode != VA_RC_NONE && self->rc.rc_ctrl_mode != VA_RC_CQP)
+  if (self->rc.rc_ctrl_mode == VA_RC_CBR || self->rc.rc_ctrl_mode == VA_RC_VBR
+      || self->rc.rc_ctrl_mode == VA_RC_VCM
+      || self->rc.rc_ctrl_mode == VA_RC_QVBR)
     _h265_calculate_bitrate_hrd (self);
 
-  /* notifications */
+  /* update & notifications */
+  update_property_uint (base, &self->prop.bitrate, bitrate, PROP_BITRATE);
   update_property_uint (base, &self->prop.min_qp, self->rc.min_qp, PROP_MIN_QP);
   update_property_uint (base, &self->prop.cpb_size,
       self->rc.cpb_size, PROP_CPB_SIZE);
@@ -3423,8 +3479,8 @@ _h265_calculate_tier_level (GstVaH265Enc * self)
 
   PicSizeInSamplesY = self->luma_width * self->luma_height;
   LumaSr = gst_util_uint64_scale_int_ceil (PicSizeInSamplesY,
-      GST_VIDEO_INFO_FPS_N (&base->input_state->info),
-      GST_VIDEO_INFO_FPS_D (&base->input_state->info));
+      GST_VIDEO_INFO_FPS_N (&base->in_info),
+      GST_VIDEO_INFO_FPS_D (&base->in_info));
 
   for (i = 0; i < G_N_ELEMENTS (_va_h265_level_limits); i++) {
     const GstVaH265LevelLimits *const limits = &_va_h265_level_limits[i];
@@ -3613,7 +3669,7 @@ _h265_print_gop_structure (GstVaH265Enc * self)
       g_string_append_printf (str, "%s", "LDB");
     } else {
       g_string_append_printf (str, "%s",
-          _h265_slice_type_name (self->gop.frame_types[i].slice_type));
+          gst_h265_slice_type_to_string (self->gop.frame_types[i].slice_type));
     }
 
     if (self->gop.b_pyramid
@@ -3648,7 +3704,7 @@ _h265_calculate_coded_size (GstVaH265Enc * self)
   guint chrome, depth;
 
   if (!_h265_get_rtformat (self,
-          GST_VIDEO_INFO_FORMAT (&base->input_state->info), &depth, &chrome))
+          GST_VIDEO_INFO_FORMAT (&base->in_info), &depth, &chrome))
     g_assert_not_reached ();
 
   switch (chrome) {
@@ -3734,9 +3790,9 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
 
   /* If not set, generate a idr every second */
   if (self->gop.idr_period == 0) {
-    self->gop.idr_period = (GST_VIDEO_INFO_FPS_N (&base->input_state->info)
-        + GST_VIDEO_INFO_FPS_D (&base->input_state->info) - 1) /
-        GST_VIDEO_INFO_FPS_D (&base->input_state->info);
+    self->gop.idr_period = (GST_VIDEO_INFO_FPS_N (&base->in_info)
+        + GST_VIDEO_INFO_FPS_D (&base->in_info) - 1) /
+        GST_VIDEO_INFO_FPS_D (&base->in_info);
   }
 
   /* Do not use a too huge GOP size. */
@@ -3805,6 +3861,22 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
       }
       GST_INFO_OBJECT (self, "Enable low-delay-b mode");
       self->gop.low_delay_b_mode = TRUE;
+
+      /* FIXME: In low delay B mode, the P frame is converted as B frame
+         with forward references. For example, One P frame may refers to
+         P-1, P-2 and P-3 in list0 and refers to P-3, P-2 and P-1 in list1.
+         So the num in list0 and list1 does not reflect the forward_num
+         and backward_num. The vaapi does not provide ref num for forward
+         or backward so far. In this case, we just consider the backward_num
+         to be 1 conservatively. */
+      if (list0 == list1) {
+        backward_num =
+            (prediction_direction & VA_PREDICTION_DIRECTION_FUTURE) ? 1 : 0;
+        forward_num = list0 - backward_num;
+
+        GST_INFO_OBJECT (self, "Set forward_num to %d, backward_num to %d in "
+            "low-delay-b mode.", forward_num, backward_num);
+      }
     }
   }
 
@@ -3838,7 +3910,7 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
   }
 
   /* b_pyramid needs at least 1 ref for B, besides the I/P */
-  if (self->gop.b_pyramid && self->gop.num_ref_frames <= 2) {
+  if (self->gop.b_pyramid && self->gop.num_ref_frames <= 1) {
     GST_INFO_OBJECT (self, "The number of reference frames is only %d,"
         " not enough for b_pyramid", self->gop.num_ref_frames);
     self->gop.b_pyramid = FALSE;
@@ -3882,7 +3954,6 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
     self->gop.backward_ref_num = 0;
   } else if (self->gop.b_pyramid) {
     guint b_frames = self->gop.num_bframes;
-    guint b_refs;
 
     /* set b pyramid one backward ref. */
     self->gop.backward_ref_num = 1;
@@ -3902,12 +3973,13 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
         self->gop.forward_ref_num = forward_num;
     }
 
+    self->gop.highest_pyramid_level = 0;
     b_frames = b_frames / 2;
-    b_refs = 0;
     while (b_frames) {
-      /* At least 1 B ref for each level, plus begin and end 2 P/I */
-      b_refs += 1;
-      if (b_refs + 2 > self->gop.num_ref_frames)
+      /* All the ref pictures and the current picture should be in the
+         DPB. So each B level as ref, plus the IDR or P in both ends
+         and the current picture should not exceed the max_dpb_size. */
+      if (self->gop.highest_pyramid_level + 2 + 1 == 16)
         break;
 
       self->gop.highest_pyramid_level++;
@@ -3960,16 +4032,23 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
 create_poc:
   /* init max_frame_num, max_poc */
   log2_max_frame_num = _get_log2_max_num (self->gop.idr_period);
+  /* b_pyramid makes B frames as ref and prevPicOrderCntLsb can
+     be the B frame POC which is smaller than the P frame. This
+     can cause POC diff bigger than MaxPicOrderCntLsb/2 and
+     generate wrong POC value. */
+  if (self->gop.b_pyramid &&
+      3 * (self->gop.ip_period >> 1) > 1 << (log2_max_frame_num - 1))
+    log2_max_frame_num++;
+
   self->gop.log2_max_pic_order_cnt = log2_max_frame_num;
   self->gop.max_pic_order_cnt = 1 << self->gop.log2_max_pic_order_cnt;
   self->gop.num_reorder_frames = self->gop.b_pyramid ?
-      self->gop.highest_pyramid_level * 2 + 1 /* the last P frame. */ :
+      self->gop.highest_pyramid_level + 1 /* the last P frame. */ :
       self->gop.backward_ref_num;
-  /* Should not exceed the max ref num. */
-  self->gop.num_reorder_frames =
-      MIN (self->gop.num_reorder_frames, self->gop.num_ref_frames);
   self->gop.num_reorder_frames = MIN (self->gop.num_reorder_frames, 16);
-  self->gop.max_dpb_size = self->gop.num_ref_frames + 1;
+  self->gop.max_dpb_size = self->gop.b_pyramid ?
+      self->gop.highest_pyramid_level + 2 + 1 : self->gop.num_ref_frames + 1;
+  g_assert (self->gop.max_dpb_size <= 16);
 
   _h265_create_gop_frame_types (self);
   _h265_print_gop_structure (self);
@@ -4137,9 +4216,15 @@ _h265_setup_encoding_features (GstVaH265Enc * self)
   self->features.transform_skip_enabled_flag =
       (features.bits.transform_skip != 0);
 
-  self->features.cu_qp_delta_enabled_flag =
-      (self->rc.rc_ctrl_mode != VA_RC_CQP);
-  self->features.diff_cu_qp_delta_depth = features.bits.cu_qp_delta;
+  if (self->rc.rc_ctrl_mode != VA_RC_CQP)
+    self->features.cu_qp_delta_enabled_flag = !!features.bits.cu_qp_delta;
+  else
+    self->features.cu_qp_delta_enabled_flag = 0;
+
+  if (self->features.cu_qp_delta_enabled_flag) {
+    self->features.diff_cu_qp_delta_depth =
+        self->features.log2_diff_max_min_luma_coding_block_size;
+  }
 
   /* TODO: use weighted pred */
   self->features.weighted_pred_flag = FALSE;
@@ -4241,9 +4326,9 @@ print_options:
       self->features.transquant_bypass_enabled_flag);
 
   /* Ensure trellis. */
-  if (self->features.use_trellis &&
-      !gst_va_encoder_has_trellis (base->encoder, base->profile,
-          GST_VA_BASE_ENC_ENTRYPOINT (base))) {
+  self->support_trellis = gst_va_encoder_has_trellis (base->encoder,
+      base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
+  if (self->features.use_trellis && !self->support_trellis) {
     GST_INFO_OBJECT (self, "The trellis is not supported");
     self->features.use_trellis = FALSE;
   }
@@ -4394,6 +4479,7 @@ done:
 static gboolean
 gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
 {
+  GstVaBaseEncClass *klass = GST_VA_BASE_ENC_GET_CLASS (base);
   GstVideoEncoder *venc = GST_VIDEO_ENCODER (base);
   GstVaH265Enc *self = GST_VA_H265_ENC (base);
   GstCaps *out_caps, *reconf_caps = NULL;;
@@ -4401,13 +4487,17 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
   GstVideoFormat format, reconf_format = GST_VIDEO_FORMAT_UNKNOWN;
   VAProfile profile = VAProfileNone;
   gboolean do_renegotiation = TRUE, do_reopen, need_negotiation;
-  guint max_ref_frames, max_surfaces = 0, rt_format = 0, codedbuf_size;
+  guint max_ref_frames, max_surfaces = 0, rt_format = 0,
+      codedbuf_size, latency_num;
   gint width, height;
+  guint alignment;
+  GstClockTime latency;
 
-  width = GST_VIDEO_INFO_WIDTH (&base->input_state->info);
-  height = GST_VIDEO_INFO_HEIGHT (&base->input_state->info);
-  format = GST_VIDEO_INFO_FORMAT (&base->input_state->info);
+  width = GST_VIDEO_INFO_WIDTH (&base->in_info);
+  height = GST_VIDEO_INFO_HEIGHT (&base->in_info);
+  format = GST_VIDEO_INFO_FORMAT (&base->in_info);
   codedbuf_size = base->codedbuf_size;
+  latency_num = base->preferred_output_delay + self->gop.ip_period - 1;
 
   need_negotiation =
       !gst_va_encoder_get_reconstruct_pool_config (base->encoder, &reconf_caps,
@@ -4432,21 +4522,36 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
 
   gst_va_base_enc_reset_state (base);
 
+  if (base->is_live) {
+    base->preferred_output_delay = 0;
+  } else {
+    /* FIXME: An experience value for most of the platforms. */
+    base->preferred_output_delay = 4;
+  }
+
   base->profile = profile;
   base->rt_format = rt_format;
   base->width = width;
   base->height = height;
 
-  self->luma_width = GST_ROUND_UP_16 (base->width);
-  self->luma_height = GST_ROUND_UP_16 (base->height);
+  alignment = gst_va_encoder_get_surface_alignment (base->display,
+      profile, klass->entrypoint);
+  if (alignment) {
+    self->luma_width = GST_ROUND_UP_N (base->width, 1 << (alignment & 0xf));
+    self->luma_height =
+        GST_ROUND_UP_N (base->height, 1 << ((alignment & 0xf0) >> 4));
+  } else {
+    self->luma_width = GST_ROUND_UP_16 (base->width);
+    self->luma_height = GST_ROUND_UP_16 (base->height);
+  }
 
   /* Frame Cropping */
-  if ((base->width & 15) || (base->height & 15)) {
+  if (self->luma_width != base->width || self->luma_height != base->height) {
     /* 6.1, Table 6-1 */
     static const guint SubWidthC[] = { 1, 2, 2, 1 };
     static const guint SubHeightC[] = { 1, 2, 1, 1 };
     guint index = _get_chroma_format_idc (gst_va_chroma_from_video_format
-        (GST_VIDEO_INFO_FORMAT (&base->input_state->info)));
+        (GST_VIDEO_INFO_FORMAT (&base->in_info)));
 
     self->conformance_window_flag = 1;
     self->conf_win_left_offset = 0;
@@ -4465,16 +4570,16 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
     return FALSE;
 
   self->bits_depth_luma_minus8 =
-      GST_VIDEO_FORMAT_INFO_DEPTH (base->input_state->info.finfo, 0);
+      GST_VIDEO_FORMAT_INFO_DEPTH (base->in_info.finfo, 0);
   self->bits_depth_luma_minus8 -= 8;
 
-  if (GST_VIDEO_FORMAT_INFO_N_COMPONENTS (base->input_state->info.finfo)) {
+  if (GST_VIDEO_FORMAT_INFO_N_COMPONENTS (base->in_info.finfo)) {
     self->bits_depth_chroma_minus8 =
-        GST_VIDEO_FORMAT_INFO_DEPTH (base->input_state->info.finfo, 1);
+        GST_VIDEO_FORMAT_INFO_DEPTH (base->in_info.finfo, 1);
     if (self->bits_depth_chroma_minus8 <
-        GST_VIDEO_FORMAT_INFO_DEPTH (base->input_state->info.finfo, 2))
+        GST_VIDEO_FORMAT_INFO_DEPTH (base->in_info.finfo, 2))
       self->bits_depth_chroma_minus8 =
-          GST_VIDEO_FORMAT_INFO_DEPTH (base->input_state->info.finfo, 2);
+          GST_VIDEO_FORMAT_INFO_DEPTH (base->in_info.finfo, 2);
 
     self->bits_depth_chroma_minus8 -= 8;
   } else {
@@ -4482,15 +4587,15 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
   }
 
   /* Frame rate is needed for rate control and PTS setting. */
-  if (GST_VIDEO_INFO_FPS_N (&base->input_state->info) == 0
-      || GST_VIDEO_INFO_FPS_D (&base->input_state->info) == 0) {
+  if (GST_VIDEO_INFO_FPS_N (&base->in_info) == 0
+      || GST_VIDEO_INFO_FPS_D (&base->in_info) == 0) {
     GST_INFO_OBJECT (self, "Unknown framerate, just set to 30 fps");
-    GST_VIDEO_INFO_FPS_N (&base->input_state->info) = 30;
-    GST_VIDEO_INFO_FPS_D (&base->input_state->info) = 1;
+    GST_VIDEO_INFO_FPS_N (&base->in_info) = 30;
+    GST_VIDEO_INFO_FPS_D (&base->in_info) = 1;
   }
   base->frame_duration = gst_util_uint64_scale (GST_SECOND,
-      GST_VIDEO_INFO_FPS_D (&base->input_state->info),
-      GST_VIDEO_INFO_FPS_N (&base->input_state->info));
+      GST_VIDEO_INFO_FPS_D (&base->in_info),
+      GST_VIDEO_INFO_FPS_N (&base->in_info));
 
   GST_DEBUG_OBJECT (self, "resolution:%dx%d, CTU size: %dx%d,"
       " frame duration is %" GST_TIME_FORMAT,
@@ -4519,7 +4624,23 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
   self->aud = self->aud && self->packed_headers & VA_ENC_PACKED_HEADER_RAW_DATA;
   update_property_bool (base, &self->prop.aud, self->aud, PROP_AUD);
 
-  max_ref_frames = self->gop.num_ref_frames + 3 /* scratch frames */ ;
+  /* Let the downstream know the new latency. */
+  if (latency_num != base->preferred_output_delay + self->gop.ip_period - 1) {
+    need_negotiation = TRUE;
+    latency_num = base->preferred_output_delay + self->gop.ip_period - 1;
+  }
+
+  /* Set the latency */
+  latency = gst_util_uint64_scale (latency_num,
+      GST_VIDEO_INFO_FPS_D (&base->input_state->info) * GST_SECOND,
+      GST_VIDEO_INFO_FPS_N (&base->input_state->info));
+  gst_video_encoder_set_latency (venc, latency, latency);
+
+  max_ref_frames = self->gop.b_pyramid ?
+      self->gop.highest_pyramid_level + 2 : self->gop.num_ref_frames;
+  max_ref_frames += base->preferred_output_delay;
+  base->min_buffers = max_ref_frames;
+  max_ref_frames += 3 /* scratch frames */ ;
 
   /* second check after calculations */
   do_reopen |=
@@ -4539,7 +4660,7 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
   /* Add some tags */
   gst_va_base_enc_add_codec_tag (base, "H265");
 
-  out_caps = gst_va_profile_caps (base->profile);
+  out_caps = gst_va_profile_caps (base->profile, klass->entrypoint);
   g_assert (out_caps);
   out_caps = gst_caps_fixate (out_caps);
 
@@ -4587,39 +4708,77 @@ gst_va_h265_enc_flush (GstVideoEncoder * venc)
 
   /* begin from an IDR after flush. */
   self->gop.cur_frame_index = 0;
+  self->gop.last_keyframe = NULL;
 
   return GST_VIDEO_ENCODER_CLASS (parent_class)->flush (venc);
 }
 
 static gboolean
+gst_va_h265_enc_start (GstVideoEncoder * venc)
+{
+  /* Set the minimum pts to some huge value (1000 hours). This keeps
+   * the dts at the start of the stream from needing to be negative. */
+  gst_video_encoder_set_min_pts (venc, GST_SECOND * 60 * 60 * 1000);
+
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->start (venc);
+}
+
+static gboolean
 gst_va_h265_enc_new_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
 {
+  GstVaH265Enc *self = GST_VA_H265_ENC (base);
   GstVaH265EncFrame *frame_in;
 
   frame_in = gst_va_h265_enc_frame_new ();
-  frame_in->total_frame_count = base->input_frame_count++;
-  gst_video_codec_frame_set_user_data (frame, frame_in,
+  gst_va_set_enc_frame (frame, (GstVaEncFrame *) frame_in,
       gst_va_h265_enc_frame_free);
+
+  gst_va_base_enc_push_dts (base, frame, self->gop.num_reorder_frames);
 
   return TRUE;
 }
 
-static void
-gst_va_h265_enc_prepare_output (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
+static gboolean
+gst_va_h265_enc_prepare_output (GstVaBaseEnc * base,
+    GstVideoCodecFrame * frame, gboolean * complete)
 {
-  GstVaH265Enc *self = GST_VA_H265_ENC (base);
   GstVaH265EncFrame *frame_enc;
+  GstBuffer *buf;
 
   frame_enc = _enc_frame (frame);
 
-  frame->pts =
-      base->start_pts + base->frame_duration * frame_enc->total_frame_count;
-  /* The PTS should always be later than the DTS. */
-  frame->dts = base->start_pts + base->frame_duration *
-      ((gint64) base->output_frame_count -
-      (gint64) self->gop.num_reorder_frames);
-  base->output_frame_count++;
-  frame->duration = base->frame_duration;
+  frame->dts = gst_va_base_enc_pop_dts (base);
+  if (!GST_CLOCK_TIME_IS_VALID (frame->dts)) {
+    GST_DEBUG_OBJECT (base, "Pop invalid DTS.");
+  } else if (GST_CLOCK_TIME_IS_VALID (frame->pts) && frame->dts > frame->pts) {
+    GST_WARNING_OBJECT (base, "Pop DTS: %" GST_TIME_FORMAT " > PTS: %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (frame->dts),
+        GST_TIME_ARGS (frame->pts));
+    frame->dts = frame->pts;
+  }
+
+  buf = gst_va_base_enc_create_output_buffer (base,
+      frame_enc->base.picture, NULL, 0);
+  if (!buf) {
+    GST_ERROR_OBJECT (base, "Failed to create output buffer");
+    return FALSE;
+  }
+
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_MARKER);
+  if (frame_enc->poc == 0) {
+    GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
+    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
+  } else {
+    GST_VIDEO_CODEC_FRAME_UNSET_SYNC_POINT (frame);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
+
+  gst_buffer_replace (&frame->output_buffer, buf);
+  gst_clear_buffer (&buf);
+
+  *complete = TRUE;
+  return TRUE;
 }
 
 /* *INDENT-OFF* */
@@ -4678,7 +4837,13 @@ gst_va_h265_enc_set_property (GObject * object, guint prop_id,
 {
   GstVaH265Enc *const self = GST_VA_H265_ENC (object);
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
-  gboolean already_effect = FALSE;
+  GstVaEncoder *encoder = NULL;
+  gboolean no_effect;
+
+  gst_object_replace ((GstObject **) (&encoder), (GstObject *) base->encoder);
+  no_effect = (encoder && gst_va_encoder_is_open (encoder));
+  if (encoder)
+    gst_object_unref (encoder);
 
   GST_OBJECT_LOCK (self);
 
@@ -4709,18 +4874,18 @@ gst_va_h265_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_QP_I:
       self->prop.qp_i = g_value_get_uint (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
-      already_effect = TRUE;
       break;
     case PROP_QP_P:
       self->prop.qp_p = g_value_get_uint (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
-      already_effect = TRUE;
       break;
     case PROP_QP_B:
       self->prop.qp_b = g_value_get_uint (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
-      already_effect = TRUE;
       break;
     case PROP_TRELLIS:
       self->prop.use_trellis = g_value_get_boolean (value);
@@ -4749,18 +4914,18 @@ gst_va_h265_enc_set_property (GObject * object, guint prop_id,
     }
     case PROP_BITRATE:
       self->prop.bitrate = g_value_get_uint (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
-      already_effect = TRUE;
       break;
     case PROP_TARGET_PERCENTAGE:
       self->prop.target_percentage = g_value_get_uint (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
-      already_effect = TRUE;
       break;
     case PROP_TARGET_USAGE:
       self->prop.target_usage = g_value_get_uint (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
-      already_effect = TRUE;
       break;
     case PROP_NUM_TILE_COLS:
       self->prop.num_tile_cols = g_value_get_uint (value);
@@ -4770,11 +4935,13 @@ gst_va_h265_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_RATE_CONTROL:
       self->prop.rc_ctrl = g_value_get_enum (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
-      already_effect = TRUE;
       break;
     case PROP_CPB_SIZE:
       self->prop.cpb_size = g_value_get_uint (value);
+      no_effect = FALSE;
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -4782,13 +4949,12 @@ gst_va_h265_enc_set_property (GObject * object, guint prop_id,
 
   GST_OBJECT_UNLOCK (self);
 
+  if (no_effect) {
 #ifndef GST_DISABLE_GST_DEBUG
-  if (!already_effect &&
-      base->encoder && gst_va_encoder_is_open (base->encoder)) {
-    GST_WARNING_OBJECT (self, "Property `%s` change ignored while processing.",
-        pspec->name);
-  }
+    GST_WARNING_OBJECT (self, "Property `%s` change may not take effect "
+        "until the next encoder reconfig.", pspec->name);
 #endif
+  }
 }
 
 static void
@@ -4892,6 +5058,19 @@ gst_va_h265_enc_get_property (GObject * object, guint prop_id,
 }
 
 static void
+gst_va_h265_enc_dispose (GObject * object)
+{
+  GstVaH265Enc *self = GST_VA_H265_ENC (object);
+
+  g_clear_pointer (&self->partition.slice_segment_address, g_free);
+  g_clear_pointer (&self->partition.num_ctu_in_slice, g_free);
+  g_clear_pointer (&self->partition.tile_ctu_cols, g_free);
+  g_clear_pointer (&self->partition.tile_ctu_rows, g_free);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
 gst_va_h265_enc_class_init (gpointer g_klass, gpointer class_data)
 {
   GstCaps *src_doc_caps, *sink_doc_caps;
@@ -4951,8 +5130,10 @@ gst_va_h265_enc_class_init (gpointer g_klass, gpointer class_data)
 
   object_class->set_property = gst_va_h265_enc_set_property;
   object_class->get_property = gst_va_h265_enc_get_property;
+  object_class->dispose = gst_va_h265_enc_dispose;
 
   venc_class->flush = GST_DEBUG_FUNCPTR (gst_va_h265_enc_flush);
+  venc_class->start = GST_DEBUG_FUNCPTR (gst_va_h265_enc_start);
 
   va_enc_class->reset_state = GST_DEBUG_FUNCPTR (gst_va_h265_enc_reset_state);
   va_enc_class->reconfig = GST_DEBUG_FUNCPTR (gst_va_h265_enc_reconfig);
@@ -5073,7 +5254,8 @@ gst_va_h265_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_QP_I] = g_param_spec_uint ("qpi", "I Frame QP",
       "The quantizer value for I frame. In CQP mode, it specifies the QP of I "
-      "frame, in other mode, it specifies the init QP of all frames", 0, 51, 26,
+      "frame. In ICQ and QVBR modes, it specifies a quality factor. In other "
+      "modes, it is ignored", 0, 51, 26,
       param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
@@ -5174,7 +5356,7 @@ gst_va_h265_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_CPB_SIZE] = g_param_spec_uint ("cpb-size",
       "max CPB size in Kb",
       "The desired max CPB size in Kb (0: auto-calculate)", 0, 2000 * 1024, 0,
-      param_flags);
+      param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaH265Enc:num-tile-cols:

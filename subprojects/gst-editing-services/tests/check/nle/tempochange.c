@@ -20,6 +20,8 @@
 #include "common.h"
 #include "plugins/nle/nleobject.h"
 
+static void late_ges_init (void);
+
 typedef struct _PadEventData
 {
   gchar *name;
@@ -284,6 +286,7 @@ _setup_test (GstElement * pipeline, gdouble rate)
 
   /* sink */
   sink = gst_element_factory_make_or_warn ("fakeaudiosink", "sink");
+  g_object_set (sink, "sync", FALSE, NULL);
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
 
   gst_element_link (comp, sink);
@@ -292,20 +295,20 @@ _setup_test (GstElement * pipeline, gdouble rate)
   nle_source =
       audiotest_bin_src ("nle_source", 3 * GST_SECOND, 4 * GST_SECOND, 3,
       FALSE);
-  g_object_set (nle_source, "inpoint", 7 * GST_SECOND, NULL);
+  g_object_set (nle_source, "inpoint", (guint64) 7 * GST_SECOND, NULL);
   src = _get_source (nle_source);
   g_object_set (src, "name", "middle-source", NULL);
 
   nle_prev =
       audiotest_bin_src ("nle_previous", 0 * GST_SECOND, 3 * GST_SECOND, 2,
       FALSE);
-  g_object_set (nle_prev, "inpoint", 99 * GST_SECOND, NULL);
+  g_object_set (nle_prev, "inpoint", (guint64) 99 * GST_SECOND, NULL);
   prev = _get_source (nle_prev);
   g_object_set (src, "name", "previous-source", NULL);
 
   nle_post =
       audiotest_bin_src ("post", 7 * GST_SECOND, 5 * GST_SECOND, 2, FALSE);
-  g_object_set (nle_post, "inpoint", 20 * GST_SECOND, NULL);
+  g_object_set (nle_post, "inpoint", (guint64) 20 * GST_SECOND, NULL);
   post = _get_source (nle_post);
   g_object_set (src, "name", "post-source", NULL);
 
@@ -322,7 +325,7 @@ _setup_test (GstElement * pipeline, gdouble rate)
    * duration */
   nle_identity =
       new_operation ("nle_identity", "identity", 0, 12 * GST_SECOND, 1);
-  g_object_set (nle_identity, "inpoint", 5 * GST_SECOND, NULL);
+  g_object_set (nle_identity, "inpoint", (guint64) 5 * GST_SECOND, NULL);
   fail_unless (g_list_length (GST_BIN_CHILDREN (nle_oper)) == 1);
   identity = GST_ELEMENT (GST_BIN_CHILDREN (nle_identity)->data);
 
@@ -384,6 +387,8 @@ GST_START_TEST (test_tempochange_play)
   PadEventData **data;
   gdouble rates[3] = { 0.5, 4.0, 1.0 };
   guint i, j;
+
+  late_ges_init ();
 
   for (i = 0; i < G_N_ELEMENTS (rates); i++) {
     gdouble rate = rates[i];
@@ -516,6 +521,8 @@ GST_START_TEST (test_tempochange_seek)
   guint i, j;
   GstClockTime offset = 0.1 * GST_SECOND;
 
+  late_ges_init ();
+
   for (i = 0; i < G_N_ELEMENTS (rates); i++) {
     gdouble rate = rates[i];
     GST_DEBUG ("rate = %g", rate);
@@ -628,17 +635,26 @@ GST_START_TEST (test_tempochange_seek)
 
 GST_END_TEST;
 
-static Suite *
-gnonlin_suite (void)
+static void
+late_ges_init ()
 {
-  Suite *s = suite_create ("nle");
-  TCase *tc_chain = tcase_create ("tempochange");
+  /* We need to do this inside the test cases, not during the initialization
+   * of the suite, as ges_init() will initialize thread pools, which cannot
+   * work properly after a fork. */
 
   if (atexit (ges_deinit) != 0) {
     GST_ERROR ("failed to set ges_deinit as exit function");
   }
 
   ges_init ();
+}
+
+static Suite *
+gnonlin_suite (void)
+{
+  Suite *s = suite_create ("nle");
+  TCase *tc_chain = tcase_create ("tempochange");
+
   suite_add_tcase (s, tc_chain);
 
   /* give the tests a little more time than the default

@@ -20,6 +20,7 @@ namespace Gst.Video {
 		Complex = 64,
 		Unpack = 128,
 		Tiled = 256,
+		Subtiles = 512,
 	}
 
 	internal class VideoFormatFlagsGType {

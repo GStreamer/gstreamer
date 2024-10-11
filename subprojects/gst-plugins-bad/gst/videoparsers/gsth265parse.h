@@ -115,6 +115,7 @@ struct _GstH265Parse
   gboolean picture_start;
 
   GstVideoParseUserData user_data;
+  GstVideoParseUserDataUnregistered user_data_unregistered;
 
   /* props */
   gint interval;

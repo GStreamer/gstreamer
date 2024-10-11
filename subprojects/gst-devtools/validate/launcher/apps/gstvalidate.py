@@ -466,11 +466,12 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
 
             for scenario in special_scenarios + scenarios:
                 cpipe = pipe
-                if not minfo.media_descriptor.is_compatible(scenario):
-                    continue
-
                 cpipe = self._set_sinks(minfo, cpipe, scenario)
                 fname = self._get_name(scenario, protocol, minfo)
+
+                if not minfo.media_descriptor.is_compatible(scenario):
+                    self.debug("Skipping (media descriptor is not compatible): %s", fname)
+                    continue
 
                 self.debug("Adding: %s", fname)
 
@@ -490,6 +491,7 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                     rtspminfo = NamedDic({"path": minfo.media_descriptor.get_path(),
                                           "media_descriptor": GstValidateRTSPMediaDescriptor(minfo.media_descriptor.get_path())})
                     if not rtspminfo.media_descriptor.is_compatible(scenario):
+                        self.debug("Skipping (media descriptor is not compatible for rtsp test): %s", fname)
                         continue
 
                     cpipe = self._set_sinks(rtspminfo, "%s uri=rtsp://127.0.0.1:<RTSPPORTNUMBER>/test"
@@ -554,8 +556,14 @@ class GstValidateCheckAccurateSeekingTestGenerator(GstValidatePipelineTestsGener
                     + reference_frame_dir + '", framerate=%d/%d' % (framerate.numerator, framerate.denominator)
                 ]
 
+            source = extra_data.get("source")
+            if source is None:
+                source = "uridecodebin"
+            else:
+                test_name = f"{source}.{test_name}"
+
             pipelines[test_name] = {
-                "pipeline": "uridecodebin uri=" + media_info.get_uri() + " ! deinterlace ! videoconvert ! video/x-raw,interlace-mode=progressive,format=I420 ! videoconvert name=videoconvert ! %(videosink)s",
+                "pipeline": f"{source} uri=" + media_info.get_uri() + " ! deinterlace ! videoconvert ! video/x-raw,interlace-mode=progressive,format=I420 ! videoconvert name=videoconvert ! %(videosink)s",
                 "media_info": media_info,
                 "config": config,
             }
@@ -983,7 +991,7 @@ class GstValidateRTSPMediaDescriptor(GstValidateMediaDescriptor):
     def get_protocol(self):
         return Protocols.RTSP
 
-    def prerrols(self):
+    def prerolls(self):
         return False
 
 
@@ -1351,7 +1359,7 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
             # MXF known issues"
             ("*reverse_playback.*mxf",
              "Reverse playback is not handled in MXF"),
-            ("file\.transcode.*mxf",
+            (r'file\.transcode.*mxf',
              "FIXME: Transcoding and mixing tests need to be tested"),
 
             # WMV known issues"

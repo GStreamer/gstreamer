@@ -34,7 +34,7 @@
  * There are a number of environment variables that influence the choice of
  * platform and window system specific functionality.
  * - GST_GL_WINDOW influences the window system to use.  Common values are
- *   'x11', 'wayland', 'win32' or 'cocoa'.
+ *   'x11', 'wayland', 'surfaceless', 'win32' or 'cocoa'.
  * - GST_GL_PLATFORM influences the OpenGL platform to use.  Common values are
  *   'egl', 'glx', 'wgl' or 'cgl'.
  * - GST_GL_API influences the OpenGL API requested by the OpenGL platform.
@@ -308,8 +308,10 @@ gst_gl_display_type_from_environment (void)
       return GST_GL_DISPLAY_TYPE_EAGL;
     } else if (g_strstr_len (env, 7, "android")) {
       return GST_GL_DISPLAY_TYPE_EGL;
-    } else if (g_strstr_len (env, 4, "winrt")) {
+    } else if (g_strstr_len (env, 5, "winrt")) {
       return GST_GL_DISPLAY_TYPE_EGL;
+    } else if (g_strstr_len (env, 11, "surfaceless")) {
+      return GST_GL_DISPLAY_TYPE_EGL_SURFACELESS;
     } else {
       return GST_GL_DISPLAY_TYPE_NONE;
     }
@@ -366,7 +368,7 @@ gst_gl_display_new_with_type (GstGLDisplayType type)
 #endif
   custom_new_types |= GST_GL_DISPLAY_TYPE_X11;
 #if GST_GL_HAVE_WINDOW_VIV_FB
-  if (!display && (GST_GL_DISPLAY_TYPE_VIV_FB)) {
+  if (!display && (type & GST_GL_DISPLAY_TYPE_VIV_FB)) {
     const gchar *disp_idx_str = NULL;
     gint disp_idx = 0;
     disp_idx_str = g_getenv ("GST_GL_VIV_FB");
@@ -393,9 +395,14 @@ gst_gl_display_new_with_type (GstGLDisplayType type)
   if (!display && (type & GST_GL_DISPLAY_TYPE_EGL)) {
     display = GST_GL_DISPLAY (gst_gl_display_egl_new ());
   }
+
+  if (!display && (type & GST_GL_DISPLAY_TYPE_EGL_SURFACELESS)) {
+    display = GST_GL_DISPLAY (gst_gl_display_egl_new_surfaceless ());
+  }
 #endif
   custom_new_types |= GST_GL_DISPLAY_TYPE_EGL_DEVICE;
   custom_new_types |= GST_GL_DISPLAY_TYPE_EGL;
+  custom_new_types |= GST_GL_DISPLAY_TYPE_EGL_SURFACELESS;
   custom_new_types |= GST_GL_DISPLAY_TYPE_DISPMANX;
   custom_new_types |= GST_GL_DISPLAY_TYPE_WINRT;
   custom_new_types |= GST_GL_DISPLAY_TYPE_ANDROID;

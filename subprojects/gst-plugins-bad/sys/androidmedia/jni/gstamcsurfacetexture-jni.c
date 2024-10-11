@@ -27,6 +27,7 @@
 
 #include "gstjniutils.h"
 #include "gstamcsurfacetexture-jni.h"
+#include "gstamc-jni.h"
 
 struct _GstAmcSurfaceTextureJNI
 {
@@ -58,7 +59,7 @@ G_DEFINE_TYPE (GstAmcSurfaceTextureJNI, gst_amc_surface_texture_jni,
     GST_TYPE_AMC_SURFACE_TEXTURE);
 
 gboolean
-gst_amc_surface_texture_static_init (void)
+gst_amc_surface_texture_jni_static_init (void)
 {
   JNIEnv *env;
   GError *err = NULL;

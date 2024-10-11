@@ -1,9 +1,10 @@
-[wrap-git]
-directory=cairo
-url=https://gitlab.freedesktop.org/cairo/cairo.git
-depth=1
-revision=1.17.6
+[wrap-file]
+directory = cairo-1.18.0
+source_url = https://www.cairographics.org/releases/cairo-1.18.0.tar.xz
+source_filename = cairo-1.18.0.tar.xz
+source_hash = 243a0736b978a33dee29f9cca7521733b78a65b5418206fef7bd1c3d4cf10b64
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/cairo_1.18.0-1/cairo-1.18.0.tar.xz
+wrapdb_version = 1.18.0-1
 
 [provide]
-cairo = libcairo_dep
-cairo-gobject = libcairogobject_dep
+dependency_names = cairo, cairo-gobject

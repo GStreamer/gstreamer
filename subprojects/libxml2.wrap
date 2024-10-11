@@ -4,10 +4,10 @@ source_url = https://download.gnome.org/sources/libxml2/2.10/libxml2-2.10.3.tar.
 source_fallback_url = https://ftp.acc.umu.se/pub/gnome/sources/libxml2/2.10/libxml2-2.10.3.tar.xz
 source_filename = libxml2-2.10.3.tar.xz
 source_hash = 5d2cc3d78bec3dbe212a9d7fa629ada25a7da928af432c93060ff5c17ee28a9c
-patch_filename = libxml2_2.10.3-2_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/libxml2_2.10.3-2/get_patch
-patch_hash = 6acc11c930a51b4d0c7cb9622b3dec57768e1eadc2000da0eae130800e999bf3
-wrapdb_version = 2.10.3-2
+patch_filename = libxml2_2.10.3-4_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/libxml2_2.10.3-4/get_patch
+patch_hash = cc83c79d53cd7204311d14a4468831089cfbd1f309ddbdfec119a61116eb7d6b
+wrapdb_version = 2.10.3-4
 
 [provide]
 libxml-2.0 = libxml2_dep
