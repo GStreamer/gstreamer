@@ -1535,6 +1535,7 @@ gst_h264_bit_writer_aud (guint8 primary_pic_type, gboolean start_code,
   /* Add trailings. */
   WRITE_BITS (&bw, 1, 1);
   if (!gst_bit_writer_align_bytes (&bw, 0)) {
+    have_space = FALSE;
     goto error;
   }
 
