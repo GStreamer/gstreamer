@@ -67,7 +67,7 @@ building_for_win10 = cxx.compiles('''#include <windows.h>
 
 if not building_for_win10
   message('Bumping target Windows version to Windows 10 for building gstwinrt library')
-  extra_comm_args += ['-DWINVER=0x0A00', '-D_WIN32_WINNT=0x0A00', '-DNTDDI_VERSION=WDK_NTDDI_VERSION']
+  extra_comm_args += ['-U_WIN32_WINNT', '-UWINVER', '-DWINVER=0x0A00', '-D_WIN32_WINNT=0x0A00', '-DNTDDI_VERSION=WDK_NTDDI_VERSION']
 endif
 
 gstwinrt = library('gstwinrt-' + api_version,

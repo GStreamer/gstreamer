@@ -49,7 +49,9 @@ endif
 
 if cc.has_header('d2d1_3.h') and cc.has_header('dwrite_3.h')
   # DWRITE_GLYPH_IMAGE_FORMATS enum requires NTDDI_WIN10_RS1
-  extra_args += ['-DWINVER=0x0A00',
+  extra_args += ['-U_WIN32_WINNT',
+                 '-UWINVER',
+                 '-DWINVER=0x0A00',
                  '-D_WIN32_WINNT=0x0A00',
                  '-DNTDDI_VERSION=0x0A000002',
                  '-DHAVE_DWRITE_COLOR_FONT']

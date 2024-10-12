@@ -439,6 +439,8 @@ if host_system == 'windows'
 
   if not building_for_win7
     add_project_arguments([
+      '-U_WIN32_WINNT',
+      '-UWINVER',
       '-D_WIN32_WINNT=_WIN32_WINNT_WIN7',
       '-DWINVER=_WIN32_WINNT_WIN7',
     ], language: ['c', 'cpp'])
