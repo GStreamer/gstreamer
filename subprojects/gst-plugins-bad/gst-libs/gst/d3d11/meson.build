@@ -176,6 +176,8 @@ endif
 if cc.get_id() != 'msvc'
   extra_args = cc.get_supported_arguments([
     '-Wno-redundant-decls',
+    # include/directxmath/DirectXMathMatrix.inl:1161:16: error: variable 'aa' set but not used
+    '-Wno-unused-but-set-variable',
   ])
 
   extra_comm_args += extra_args
