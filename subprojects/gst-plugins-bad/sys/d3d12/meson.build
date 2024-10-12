@@ -54,6 +54,8 @@ else
     # MinGW 32bits compiler seems to be complaining about redundant-decls
     # when ComPtr is in use. Let's just disable the warning
     '-Wno-redundant-decls',
+    # include/directxmath/DirectXMathMatrix.inl:1161:16: error: variable 'aa' set but not used
+    '-Wno-unused-but-set-variable',
   ])
 endif
 
