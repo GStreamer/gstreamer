@@ -38,7 +38,8 @@ gstdxva = library('gstdxva-' + api_version,
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gstvideo_dep, gstcodecs_dep]
+  dependencies : [gstvideo_dep, gstcodecs_dep],
+  override_options: ['cpp_std=c++11'],
 )
 
 library_def = {'lib': gstdxva}
