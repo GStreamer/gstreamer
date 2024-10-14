@@ -320,6 +320,7 @@ static const FormatInfo formats[] = {
   {"video/x-h263", NULL, FLAG_VIDEO, "h263"},
   {"video/x-h264", NULL, FLAG_VIDEO, "h264"},
   {"video/x-h265", NULL, FLAG_VIDEO, "h265"},
+  {"video/x-h266", NULL, FLAG_VIDEO, "h266"},
   {"video/x-indeo", NULL, FLAG_VIDEO, ""},
   {"video/x-msmpeg", NULL, FLAG_VIDEO, ""},
   {"video/x-pn-realvideo", NULL, FLAG_VIDEO, ""},
@@ -432,6 +433,27 @@ pbutils_desc_get_h265_profile_name_from_nick (const gchar * nick)
       "main-4:4:4-12\000Main 4:4:4 12\000"
       "main-4:4:4-16-intra\000Main 4:4:4 16 Intra\000"
       "main-still-picture\000Main Still Picture\000";
+
+  return pbutils_desc_get_profile_name_from_nick (map, sizeof (map), nick);
+}
+
+static const gchar *
+pbutils_desc_get_h266_profile_name_from_nick (const gchar * nick)
+{
+  static const gchar map[] =
+      "main-10\000Main 10\000"
+      "multilayer-main-10\000Multilayer Main 10\000"
+      "main-10-still-picture\000Main 10 Still Picture\000"
+      "main-4:4:4-10\000Main 4:4:4 10\000"
+      "multilayer-main-4:4:4-10\000Multilayer Main 4:4:4 10\000"
+      "main-4:4:4-10-still-picture\000Main 4:4:4 10 Still Picture\000"
+      "main-12\000Main 12\000"
+      "main-12-intra\000Main 12 Intra\000"
+      "main-12-still-picture\000Main 12 Still Picture\000"
+      "main-4:4:4-12\000Main 4:4:4 12\000"
+      "main-4:4:4-12-intra\000Main 4:4:4 12 Intra\000"
+      "main-4:4:4-12-still-picture\000Main 4:4:4 12 Still Picture\000"
+      "main-4:4:4-16\000Main 4:4:4 16\000";
 
   return pbutils_desc_get_profile_name_from_nick (map, sizeof (map), nick);
 }
@@ -578,6 +600,15 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
       return g_strdup_printf ("H.265 (%s Profile)", profile);
 
     return g_strdup ("H.265");
+  } else if (strcmp (info->type, "video/x-h266") == 0) {
+    const gchar *profile = gst_structure_get_string (s, "profile");
+
+    if (profile != NULL)
+      profile = pbutils_desc_get_h266_profile_name_from_nick (profile);
+    if (profile != NULL)
+      return g_strdup_printf ("H.266 (%s Profile)", profile);
+
+    return g_strdup ("H.266");
   } else if (strcmp (info->type, "video/x-dirac") == 0) {
     const gchar *profile = gst_structure_get_string (s, "profile");
     if (profile == NULL)
