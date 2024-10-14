@@ -60,7 +60,7 @@
  * terms of accuracy, schro's implementation has about 2-3 false positives
  * or false negatives per 100 scene changes.  This implementation has
  * about 5 per 100.  The threshold is tuned for minimum total false
- * positives or negatives, on the assumption that the badness of a 
+ * positives or negatives, on the assumption that the badness of a
  * false negative is the same as a false positive.
  *
  * This algorithm is pretty much at its limit for error rate.  I
@@ -92,6 +92,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_scene_change_debug_category);
 
 static GstFlowReturn gst_scene_change_transform_frame_ip (GstVideoFilter *
     filter, GstVideoFrame * frame);
+static gboolean gst_scenechange_stop (GstBaseTransform * base);
 
 #undef TESTING
 #ifdef TESTING
@@ -119,6 +120,7 @@ static void
 gst_scene_change_class_init (GstSceneChangeClass * klass)
 {
   GstVideoFilterClass *video_filter_class = GST_VIDEO_FILTER_CLASS (klass);
+  GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
@@ -135,13 +137,13 @@ gst_scene_change_class_init (GstSceneChangeClass * klass)
   video_filter_class->transform_frame_ip =
       GST_DEBUG_FUNCPTR (gst_scene_change_transform_frame_ip);
 
+  trans_class->stop = GST_DEBUG_FUNCPTR (gst_scenechange_stop);
 }
 
 static void
 gst_scene_change_init (GstSceneChange * scenechange)
 {
 }
-
 
 static double
 get_frame_score (GstVideoFrame * f1, GstVideoFrame * f2)
@@ -259,10 +261,15 @@ gst_scene_change_transform_frame_ip (GstVideoFilter * filter,
   return GST_FLOW_OK;
 }
 
+static gboolean
+gst_scenechange_stop (GstBaseTransform * base)
+{
+  GstSceneChange *scenechange = GST_SCENE_CHANGE (base);
 
+  gst_clear_buffer (&scenechange->oldbuf);
 
-
-
+  return TRUE;
+}
 
 #ifdef TESTING
 /* This is from ds's personal collection.  No, you can't have it. */
