@@ -1290,11 +1290,11 @@ gst_aggregator_default_negotiate (GstAggregator * self)
   GST_DEBUG_OBJECT (self, "updating caps from %" GST_PTR_FORMAT,
       downstream_caps);
   ret = agg_klass->update_src_caps (self, downstream_caps, &caps);
-  if (ret < GST_FLOW_OK) {
-    GST_WARNING_OBJECT (self, "Subclass failed to update provided caps");
-    goto done;
-  } else if (ret == GST_AGGREGATOR_FLOW_NEED_DATA) {
+  if (ret == GST_AGGREGATOR_FLOW_NEED_DATA) {
     GST_DEBUG_OBJECT (self, "Subclass needs more data to decide on caps");
+    goto done;
+  } else if (ret < GST_FLOW_OK) {
+    GST_WARNING_OBJECT (self, "Subclass failed to update provided caps");
     goto done;
   }
   if ((caps == NULL || gst_caps_is_empty (caps)) && ret >= GST_FLOW_OK) {
