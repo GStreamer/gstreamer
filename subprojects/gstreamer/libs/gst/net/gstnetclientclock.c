@@ -666,6 +666,7 @@ corrupted:
     self->marked_corrupted = TRUE;
   }
   GST_OBJECT_UNLOCK (self);
+  gst_clock_set_synced (GST_CLOCK (self), FALSE);
   return;
 }
 
