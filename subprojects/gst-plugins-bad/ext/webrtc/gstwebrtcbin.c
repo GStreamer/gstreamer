@@ -2629,8 +2629,18 @@ _on_data_channel_ready_state (WebRTCDataChannel * channel,
 
     if (found == FALSE) {
       GST_FIXME_OBJECT (webrtc, "Received close for unknown data channel");
-    } else if (found_pending == FALSE) {
-      webrtc->priv->data_channels_closed++;
+    } else {
+      gst_element_set_locked_state (channel->src_bin, TRUE);
+      gst_element_set_state (channel->src_bin, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN (webrtc), channel->src_bin);
+
+      gst_element_set_locked_state (channel->sink_bin, TRUE);
+      gst_element_set_state (channel->sink_bin, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN (webrtc), channel->sink_bin);
+
+      if (found_pending == FALSE) {
+        webrtc->priv->data_channels_closed++;
+      }
     }
     DC_UNLOCK (webrtc);
   }
