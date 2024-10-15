@@ -831,8 +831,18 @@ _create_compatible_processor (GList * all_processors,
 {
   GList *processors1, *processors, *tmp;
   GstElement *processor = NULL;
-  GstElementFactory *factory = NULL;
   GstCaps *format = NULL;
+  GstCaps *encoding_format = NULL;
+  GstStructure *s;
+  const gchar *encoding_media_type;
+
+  encoding_format = gst_encoding_profile_get_format (sprof);
+  if (G_UNLIKELY (gst_caps_is_empty (encoding_format))) {
+    return NULL;
+  }
+
+  s = gst_caps_get_structure (encoding_format, 0);
+  encoding_media_type = gst_structure_get_name (s);
 
   if (encoder) {
     GstPadTemplate *template = gst_element_get_pad_template (encoder, "src");
@@ -843,7 +853,7 @@ _create_compatible_processor (GList * all_processors,
 
   if (!format || gst_caps_is_any (format)) {
     gst_clear_caps (&format);
-    format = gst_encoding_profile_get_format (sprof);
+    format = gst_caps_ref (encoding_format);
   }
 
   GST_DEBUG ("Getting list of processors for format %" GST_PTR_FORMAT, format);
@@ -864,20 +874,42 @@ _create_compatible_processor (GList * all_processors,
   }
 
   for (tmp = processors; tmp; tmp = tmp->next) {
-    /* FIXME : We're only picking the first one so far */
-    /* FIXME : signal the user if he wants this */
-    factory = (GstElementFactory *) tmp->data;
+    GstElementFactory *candidate_factory = GST_ELEMENT_FACTORY_CAST (tmp->data);
+    GstPadTemplate *tmpl;
+    GstCaps *processor_caps;
+    gboolean is_compatible = FALSE;
+
+    processor = gst_element_factory_create (candidate_factory, NULL);
+    tmpl = gst_element_get_pad_template (processor, "sink");
+    processor_caps = gst_pad_template_get_caps (tmpl);
+
+    if (gst_caps_is_any (processor_caps)) {
+      is_compatible = TRUE;
+    } else if (!gst_caps_is_empty (processor_caps)) {
+      GstStructure *structure = gst_caps_get_structure (processor_caps, 0);
+      if (!strcmp (encoding_media_type, gst_structure_get_name (structure))) {
+        is_compatible = TRUE;
+      }
+    }
+
+    gst_clear_caps (&processor_caps);
+
+    if (!is_compatible) {
+      GST_DEBUG ("Processor %" GST_PTR_FORMAT " is not compatible with format %"
+          GST_PTR_FORMAT, processor, encoding_format);
+      gst_clear_object (&processor);
+      continue;
+    }
+
+    /* FIXME : signal the user if he wants this parser */
     break;
   }
-
-  if (factory)
-    processor = gst_element_factory_create (factory, NULL);
 
   gst_plugin_feature_list_free (processors);
 
 beach:
-  if (format)
-    gst_caps_unref (format);
+  gst_clear_caps (&format);
+  gst_clear_caps (&encoding_format);
 
   return processor;
 }
