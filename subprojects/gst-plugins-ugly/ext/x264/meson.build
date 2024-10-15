@@ -21,6 +21,10 @@ if x264_dep.found()
     extra_gmodule_dep = []
   endif
 
+  if static_build
+    x264_args += ['-DSTATIC_BUILD=1']
+  endif
+
   gstx264 = library('gstx264',
     x264_sources,
     c_args : ugly_args + x264_args,

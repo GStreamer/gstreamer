@@ -34,8 +34,10 @@
 /* The x264.h header says this isn't needed with MinGW, but sometimes the
  * compiler is unable to correctly do the pointer indirection for us, which
  * leads to a segfault when you try to dereference any const values provided
- * by x264.dll. See: https://bugzilla.gnome.org/show_bug.cgi?id=779249 */
-#if defined(_WIN32) && !defined(X264_API_IMPORTS)
+ * by x264.dll. See: https://bugzilla.gnome.org/show_bug.cgi?id=779249
+ *
+ * This problem does not occur in a static build, so ignore it. */
+#if defined(_WIN32) && !defined(X264_API_IMPORTS) && !defined(STATIC_BUILD)
 # define X264_API_IMPORTS
 #endif
 #include <x264.h>
