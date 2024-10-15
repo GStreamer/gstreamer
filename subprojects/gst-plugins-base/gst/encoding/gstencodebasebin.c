@@ -2431,7 +2431,9 @@ stream_group_free (GstEncodeBaseBin * ebin, StreamGroup * sgroup)
   if (sgroup->parser) {
     gst_element_set_state (sgroup->parser, GST_STATE_NULL);
     gst_element_unlink (sgroup->parser, sgroup->outfilter);
-    gst_element_unlink (sgroup->combiner, sgroup->parser);
+    if (sgroup->combiner) {
+      gst_element_unlink (sgroup->combiner, sgroup->parser);
+    }
     gst_bin_remove ((GstBin *) ebin, sgroup->parser);
   }
 
