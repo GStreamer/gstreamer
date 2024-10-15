@@ -2333,8 +2333,8 @@ _av1_setup_encoding_features (GstVaAV1Enc * self)
     /* not enable it now. */
     self->features.enable_warped_motion = FALSE;
     // (features.bits.support_warped_motion != 0);
-    self->features.enable_palette_mode =
-        (features.bits.support_palette_mode != 0);
+    self->features.enable_palette_mode = FALSE;
+    //  (features.bits.support_palette_mode != 0);
     self->features.enable_dual_filter =
         (features.bits.support_dual_filter != 0);
     self->features.enable_jnt_comp = (features.bits.support_jnt_comp != 0);
