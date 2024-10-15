@@ -81,7 +81,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw, format = { "
         "Y444_12LE, I422_12LE, I420_12LE,"
-        "Y444_10LE, I422_10LE, I420_10LE, Y444, Y42B, I420, NV12 }"));
+        "Y444_10LE, I422_10LE, I420_10LE,"
+        "Y444, Y42B, I420, NV12, GRAY8, GRAY10_LE16, GRAY10_LE32 }"));
 
 #define gst_video_codec_test_sink_parent_class parent_class
 G_DEFINE_TYPE (GstVideoCodecTestSink, gst_video_codec_test_sink,
@@ -211,12 +212,12 @@ gst_video_codec_test_sink_process_data (GstVideoCodecTestSink * self,
 }
 
 static GstFlowReturn
-gst_video_codec_test_sink_process_i42x (GstVideoCodecTestSink * self,
+gst_video_codec_test_sink_process_planar (GstVideoCodecTestSink * self,
     GstVideoFrame * frame)
 {
   guint plane;
 
-  for (plane = 0; plane < 3; plane++) {
+  for (plane = 0; plane < GST_VIDEO_FRAME_N_PLANES (frame); plane++) {
     gint y;
     guint stride;
     const guchar *data;
@@ -312,6 +313,9 @@ gst_video_codec_test_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
     return FALSE;
 
   switch (GST_VIDEO_INFO_FORMAT (&self->vinfo)) {
+    case GST_VIDEO_FORMAT_GRAY8:
+    case GST_VIDEO_FORMAT_GRAY10_LE16:
+    case GST_VIDEO_FORMAT_GRAY10_LE32:
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_I420_10LE:
     case GST_VIDEO_FORMAT_Y42B:
@@ -321,7 +325,7 @@ gst_video_codec_test_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y444_10LE:
     case GST_VIDEO_FORMAT_Y444_12LE:
-      self->process = gst_video_codec_test_sink_process_i42x;
+      self->process = gst_video_codec_test_sink_process_planar;
       break;
     case GST_VIDEO_FORMAT_NV12:
       self->process = gst_video_codec_test_sink_process_nv12;
