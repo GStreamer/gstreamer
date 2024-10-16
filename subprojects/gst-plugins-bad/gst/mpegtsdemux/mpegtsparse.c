@@ -610,10 +610,19 @@ mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
 static GstBuffer *
 mpegts_packet_to_buffer (MpegTSPacketizerPacket * packet)
 {
-  GstBuffer *buf =
-      gst_buffer_new_and_alloc (packet->data_end - packet->data_start);
-  gst_buffer_fill (buf, 0, packet->data_start,
-      packet->data_end - packet->data_start);
+  GstBuffer *buf;
+  if (packet->m2ts_header_start != NULL) {
+    /* Fill the buffer with all 192 bytes */
+    buf =
+        gst_buffer_new_and_alloc (packet->data_end - packet->m2ts_header_start);
+    gst_buffer_fill (buf, 0, packet->m2ts_header_start,
+        packet->data_end - packet->m2ts_header_start);
+  } else {
+    buf = gst_buffer_new_and_alloc (packet->data_end - packet->data_start);
+    gst_buffer_fill (buf, 0, packet->data_start,
+        packet->data_end - packet->data_start);
+  }
+
   return buf;
 }
 

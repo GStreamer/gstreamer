@@ -309,6 +309,7 @@ typedef struct
   guint8  scram_afc_cc;
   guint8 *payload;
 
+  guint8 *m2ts_header_start;
   guint8 *data_start;
   guint8 *data_end;
   guint8 *data;

@@ -871,6 +871,15 @@ mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
     if (!mpegts_packetizer_map (packetizer, packet_size))
       return PACKET_NEED_MORE;
 
+    /* Get M2TS header start */
+    if (packet_size == MPEGTS_M2TS_PACKETSIZE) {
+      guint8 *m2ts_header_start = &packetizer->map_data[packetizer->map_offset];
+      packet->m2ts_header_start = m2ts_header_start;
+      GST_MEMDUMP ("M2TS header start", packet->m2ts_header_start, 4);
+    } else
+      packet->m2ts_header_start = NULL;
+
+    /* Get TS packet data start */
     packet_data = &packetizer->map_data[packetizer->map_offset + sync_offset];
 
     /* Check sync byte */
