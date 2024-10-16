@@ -1525,8 +1525,10 @@ demuxer_pad_removed_cb (GstElement * element, GstPad * pad,
   slot = output_slot_for_originating_pad (info, pad);
   g_assert (slot);
 
-  gst_pad_remove_probe (pad, slot->demuxer_event_probe_id);
-  slot->demuxer_event_probe_id = 0;
+  if (slot->demuxer_event_probe_id) {
+    gst_pad_remove_probe (pad, slot->demuxer_event_probe_id);
+    slot->demuxer_event_probe_id = 0;
+  }
 
   if (slot->pending_pad) {
     /* Switch over to pending pad */
