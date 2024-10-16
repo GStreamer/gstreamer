@@ -35,7 +35,7 @@
  * compiler is unable to correctly do the pointer indirection for us, which
  * leads to a segfault when you try to dereference any const values provided
  * by x264.dll. See: https://bugzilla.gnome.org/show_bug.cgi?id=779249 */
-#if defined(_WIN32) && !defined(X264_API_IMPORTS)
+#if defined(_WIN32) && !defined(X264_API_IMPORTS) && !defined(GST_STATIC_COMPILATION)
 # define X264_API_IMPORTS
 #endif
 #include <x264.h>
