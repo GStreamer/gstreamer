@@ -24,6 +24,12 @@ echo "-> Running $tests"
 # https://github.com/openssl/openssl/blob/master/NOTES-VALGRIND.md
 export OPENSSL_ia32cap=":0"
 
+# Force Software rendering for GL and Vulkan so the tests run locally
+# like they would do in the CI.
+export LIBGL_ALWAYS_SOFTWARE="true"
+# This the hardcoded value for llvmpipe
+export MESA_VK_DEVICE_SELECT="10005:0"
+
 ./gst-env.py \
     "--builddir=$builddir" \
     gst-validate-launcher "$tests" \
