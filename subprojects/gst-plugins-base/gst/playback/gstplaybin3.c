@@ -109,11 +109,6 @@
  * using gst_element_factory_make()) and provide them to playbin3 using the
  * #GstPlayBin3:audio-sink or #GstPlayBin3:video-sink property.
  *
- * GNOME-based applications, for example, will usually want to create
- * gconfaudiosink and gconfvideosink elements and make playbin3 use those,
- * so that output happens to whatever the user has configured in the GNOME
- * Multimedia System Selector configuration dialog.
- *
  * The sink elements do not necessarily need to be ready-made sinks. It is
  * possible to create container elements that look like a sink to playbin3,
  * but in reality contain a number of custom elements linked together. This
