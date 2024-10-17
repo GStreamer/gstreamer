@@ -1,0 +1,41 @@
+From 50d78e8c788cb791138e07fec25fdf0ee091ac8e Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Fri, 18 Oct 2024 02:36:48 +0530
+Subject: [PATCH] dwrite: Fix build with MinGW 11
+
+DWRITE_GLYPH_IMAGE_FORMATS is now defined by dcommon.h
+
+In file included from C:/msys64/ucrt64/include/minwindef.h:163,
+                 from C:/msys64/ucrt64/include/windef.h:9,
+                 from C:/msys64/ucrt64/include/windows.h:69,
+                 from ..\src/cairo-mutex-impl-private.h:182,
+                 from ..\src/cairo-mutex-type-private.h:45,
+                 from ..\src/cairo-scaled-font-private.h:45,
+                 from ..\src/cairoint.h:415,
+                 from ../src/win32/cairo-dwrite-font.cpp:37:
+../src/win32/dw-extra.h:26:1: error: redefinition of 'DWRITE_GLYPH_IMAGE_FORMATS operator|(DWRITE_GLYPH_IMAGE_FORMATS, DWRITE_GLYPH_IMAGE_FORMATS)'
+   26 | DEFINE_ENUM_FLAG_OPERATORS(DWRITE_GLYPH_IMAGE_FORMATS);
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+C:/msys64/ucrt64/include/dcommon.h:67:1: note: 'DWRITE_GLYPH_IMAGE_FORMATS operator|(DWRITE_GLYPH_IMAGE_FORMATS, DWRITE_GLYPH_IMAGE_FORMATS)' previously defined here
+   67 | DEFINE_ENUM_FLAG_OPERATORS(DWRITE_GLYPH_IMAGE_FORMATS)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+---
+ src/win32/dw-extra.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/win32/dw-extra.h b/src/win32/dw-extra.h
+index 424fb606d..a9daced21 100644
+--- a/src/win32/dw-extra.h
++++ b/src/win32/dw-extra.h
+@@ -23,6 +23,8 @@ struct DWRITE_COLOR_GLYPH_RUN1_WORKAROUND : DWRITE_COLOR_GLYPH_RUN
+ typedef DWRITE_COLOR_GLYPH_RUN1 DWRITE_COLOR_GLYPH_RUN1_WORKAROUND;
+ #endif
+ 
++#if !defined(__MINGW64_VERSION_MAJOR) || __MINGW64_VERSION_MAJOR < 11
+ DEFINE_ENUM_FLAG_OPERATORS(DWRITE_GLYPH_IMAGE_FORMATS);
++#endif
+ 
+ #endif /* DWRITE_EXTRA_H */
+-- 
+2.45.2
+
