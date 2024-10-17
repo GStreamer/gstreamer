@@ -406,6 +406,8 @@ fn run() -> Result<(), Error> {
 }
 
 /// Custom panic hook so we can print them to stderr in a format the main process understands
+// `PanicHookInfo` is the new API and only stable since Rust 1.81.
+#[allow(deprecated)]
 fn panic_hook(info: &std::panic::PanicInfo) {
     error!("Panicked. {}", info);
 }
