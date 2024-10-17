@@ -12,7 +12,8 @@ analytics_headers = files(    'analytics.h',
                               'gstanalyticsobjectdetectionmtd.h',
                               'gstanalyticsobjecttrackingmtd.h',
                               'gstanalyticssegmentationmtd.h',
-                              'gsttensormeta.h')
+                              'gsttensormeta.h',
+                              'gsttensor.h')
 install_headers(analytics_headers, subdir : 'gstreamer-1.0/gst/analytics')
 
 pkg_name = 'gstreamer-analytics-1.0'
