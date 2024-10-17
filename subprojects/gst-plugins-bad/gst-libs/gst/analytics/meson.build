@@ -3,7 +3,8 @@ analytics_sources = files( 'gstanalyticsmeta.c',
                               'gstanalyticsobjectdetectionmtd.c',
                               'gstanalyticsobjecttrackingmtd.c',
                               'gstanalyticssegmentationmtd.c',
-                              'gsttensormeta.c')
+                              'gsttensormeta.c',
+                              'gsttensor.c')
 
 analytics_headers = files(    'analytics.h',
                               'gstanalyticsmeta.h',

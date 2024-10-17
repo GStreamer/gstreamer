@@ -45,7 +45,7 @@ typedef struct _GstTensorMeta
   GstMeta meta;
 
   gsize num_tensors;
-  GstTensor *tensor;
+  GstTensor **tensors;
 } GstTensorMeta;
 
 G_BEGIN_DECLS

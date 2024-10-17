@@ -115,15 +115,33 @@ typedef enum _GstTensorLayout
 typedef struct _GstTensor
 {
   GQuark id;
-  gsize num_dims;
-  gsize *dims;
   GstTensorDimOrder dims_order;
   GstTensorLayout layout;
   GstTensorDataType data_type;
   gsize batch_size;
   GstBuffer *data;
+  gsize num_dims;
+  gsize dims[];
 } GstTensor;
 
+G_BEGIN_DECLS
+
+#define GST_TYPE_TENSOR (gst_tensor_get_type())
+
+GST_ANALYTICS_META_API
+GstTensor * gst_tensor_alloc (gsize num_dims);
+
+GST_ANALYTICS_META_API
+void gst_tensor_free (GstTensor * tensor);
+
+GST_ANALYTICS_META_API
+GstTensor * gst_tensor_copy (const GstTensor * tensor);
+
+GST_ANALYTICS_META_API
+GType gst_tensor_get_type (void);
+
 #define GST_TENSOR_MISSING_ID -1
+
+G_END_DECLS
 
 #endif /* __GST_TENSOR_H__ */

@@ -442,21 +442,21 @@ DEFINE_GET_FUNC (guint32, UINT32_MAX)
     return;
   }
 
-  if (!gst_buffer_map (tmeta->tensor[numdetect_index].data, &numdetect_map,
+  if (!gst_buffer_map (tmeta->tensors[numdetect_index]->data, &numdetect_map,
           GST_MAP_READ)) {
     GST_ERROR_OBJECT (self, "Failed to map tensor memory for index %d",
         numdetect_index);
     goto cleanup;
   }
 
-  if (!gst_buffer_map (tmeta->tensor[boxes_index].data, &boxes_map,
+  if (!gst_buffer_map (tmeta->tensors[boxes_index]->data, &boxes_map,
           GST_MAP_READ)) {
     GST_ERROR_OBJECT (self, "Failed to map tensor memory for index %d",
         boxes_index);
     goto cleanup;
   }
 
-  if (!gst_buffer_map (tmeta->tensor[scores_index].data, &scores_map,
+  if (!gst_buffer_map (tmeta->tensors[scores_index]->data, &scores_map,
           GST_MAP_READ)) {
     GST_ERROR_OBJECT (self, "Failed to map tensor memory for index %d",
         scores_index);
@@ -464,14 +464,14 @@ DEFINE_GET_FUNC (guint32, UINT32_MAX)
   }
 
   if (classes_index != GST_TENSOR_MISSING_ID &&
-      !gst_buffer_map (tmeta->tensor[classes_index].data, &classes_map,
+      !gst_buffer_map (tmeta->tensors[classes_index]->data, &classes_map,
           GST_MAP_READ)) {
     GST_DEBUG_OBJECT (self, "Failed to map tensor memory for index %d",
         classes_index);
   }
 
 
-  if (!get_guint32_at_index (&tmeta->tensor[numdetect_index], &numdetect_map,
+  if (!get_guint32_at_index (tmeta->tensors[numdetect_index], &numdetect_map,
           0, &num_detections)) {
     GST_ERROR_OBJECT (self, "Failed to get the number of detections");
     goto cleanup;
@@ -488,7 +488,7 @@ DEFINE_GET_FUNC (guint32, UINT32_MAX)
     GQuark label = 0;
     GstAnalyticsODMtd odmtd;
 
-    if (!get_float_at_index (&tmeta->tensor[numdetect_index], &scores_map,
+    if (!get_float_at_index (tmeta->tensors[numdetect_index], &scores_map,
             i, &score))
       continue;
 
@@ -496,16 +496,16 @@ DEFINE_GET_FUNC (guint32, UINT32_MAX)
     if (score < self->score_threshold)
       continue;
 
-    if (!get_float_at_index (&tmeta->tensor[boxes_index], &boxes_map,
+    if (!get_float_at_index (tmeta->tensors[boxes_index], &boxes_map,
             i * 4, &y))
       continue;
-    if (!get_float_at_index (&tmeta->tensor[boxes_index], &boxes_map,
+    if (!get_float_at_index (tmeta->tensors[boxes_index], &boxes_map,
             i * 4 + 1, &x))
       continue;
-    if (!get_float_at_index (&tmeta->tensor[boxes_index], &boxes_map,
+    if (!get_float_at_index (tmeta->tensors[boxes_index], &boxes_map,
             i * 4 + 2, &bheight))
       continue;
-    if (!get_float_at_index (&tmeta->tensor[boxes_index], &boxes_map,
+    if (!get_float_at_index (tmeta->tensors[boxes_index], &boxes_map,
             i * 4 + 3, &bwidth))
       continue;
 
@@ -517,7 +517,7 @@ DEFINE_GET_FUNC (guint32, UINT32_MAX)
     }
 
     if (self->labels && classes_map.memory &&
-        get_guint32_at_index (&tmeta->tensor[classes_index], &classes_map,
+        get_guint32_at_index (tmeta->tensors[classes_index], &classes_map,
             i, &bclass)) {
       if (bclass < self->labels->len)
         label = g_array_index (self->labels, GQuark, bclass);
@@ -540,13 +540,13 @@ DEFINE_GET_FUNC (guint32, UINT32_MAX)
 cleanup:
 
   if (numdetect_map.memory)
-    gst_buffer_unmap (tmeta->tensor[numdetect_index].data, &numdetect_map);
+    gst_buffer_unmap (tmeta->tensors[numdetect_index]->data, &numdetect_map);
   if (classes_map.memory)
-    gst_buffer_unmap (tmeta->tensor[classes_index].data, &classes_map);
+    gst_buffer_unmap (tmeta->tensors[classes_index]->data, &classes_map);
   if (scores_map.memory)
-    gst_buffer_unmap (tmeta->tensor[scores_index].data, &scores_map);
+    gst_buffer_unmap (tmeta->tensors[scores_index]->data, &scores_map);
   if (boxes_map.memory)
-    gst_buffer_unmap (tmeta->tensor[boxes_index].data, &boxes_map);
+    gst_buffer_unmap (tmeta->tensors[boxes_index]->data, &boxes_map);
 }
 
 

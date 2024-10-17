@@ -28,7 +28,7 @@ gst_tensor_meta_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
   GstTensorMeta *tmeta = (GstTensorMeta *) meta;
 
   tmeta->num_tensors = 0;
-  tmeta->tensor = NULL;
+  tmeta->tensors = NULL;
 
   return TRUE;
 }
@@ -39,10 +39,9 @@ gst_tensor_meta_free (GstMeta * meta, GstBuffer * buffer)
   GstTensorMeta *tmeta = (GstTensorMeta *) meta;
 
   for (int i = 0; i < tmeta->num_tensors; i++) {
-    g_free (tmeta->tensor[i].dims);
-    gst_buffer_unref (tmeta->tensor[i].data);
+    gst_tensor_free (tmeta->tensors[i]);
   }
-  g_free (tmeta->tensor);
+  g_free (tmeta->tensors);
 }
 
 GType
@@ -81,7 +80,7 @@ gint
 gst_tensor_meta_get_index_from_id (GstTensorMeta * meta, GQuark id)
 {
   for (int i = 0; i < meta->num_tensors; ++i) {
-    if ((meta->tensor + i)->id == id)
+    if (meta->tensors[i]->id == id)
       return i;
   }
 
