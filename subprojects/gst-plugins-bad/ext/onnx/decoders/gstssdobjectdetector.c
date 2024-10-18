@@ -162,7 +162,7 @@ gst_ssd_object_detector_class_init (GstSsdObjectDetectorClass * klass)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class, "objectdetector",
-      "Filter/Effect/Video",
+      "TensorDecoder/Video",
       "Apply tensor output from inference to detect objects in video frames",
       "Aaron Boxer <aaron.boxer@collabora.com>, Marcus Edel <marcus.edel@collabora.com>");
   gst_element_class_add_pad_template (element_class,
