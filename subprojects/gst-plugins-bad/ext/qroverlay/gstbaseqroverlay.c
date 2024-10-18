@@ -334,6 +334,13 @@ gst_base_qr_overlay_class_init (GstBaseQROverlayClass * klass)
           "Y position (in percent of the height)", 0.0, 100.0, DEFAULT_PROP_Y,
           G_PARAM_READWRITE));
 
+  /**
+   * GstBaseQROverlay:size:
+   *
+   * Size of the square (in percent of the smallest of width and height)
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (gobject_class, PROP_SIZE,
       g_param_spec_float ("size",
           "Size of the square (in percent of the smallest of width and height)",
@@ -346,7 +353,7 @@ gst_base_qr_overlay_class_init (GstBaseQROverlayClass * klass)
           DEFAULT_PROP_QUALITY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstBaseQROverlay::case-sensitive:
+   * GstBaseQROverlay:case-sensitive:
    *
    * Strings to encode are case sensitive (e.g. passwords or SSIDs).
    *
