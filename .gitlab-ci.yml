@@ -527,8 +527,8 @@ build vs2022 amd64:
   extends: '.build windows'
   script:
     - !reference [".build windows", "script"]
-    - meson setup --vsenv build $env:MESON_ARGS $env:GTK_ARGS
-    - meson compile -C build --jobs $env:FDO_CI_CONCURRENT
+    - .\ci\run_retry.ps1 meson setup --vsenv build $env:MESON_ARGS $env:GTK_ARGS
+    - .\ci\run_retry.ps1 meson compile -C build --jobs $env:FDO_CI_CONCURRENT
     - .\gst-env.py gst-inspect-1.0.exe --version
     - .\gst-env.py gst-inspect-1.0.exe
     - mkdir destdir
@@ -543,7 +543,7 @@ build vs2022 amd64 full-static:
   script:
     - !reference [".build windows", "script"]
     - cmd.exe /C "meson setup --vsenv build --default-library=static $env:MESON_ARGS"
-    - meson compile -C build --jobs $env:FDO_CI_CONCURRENT
+    - .\ci\run_retry.ps1 meson compile -C build --jobs $env:FDO_CI_CONCURRENT
     - .\gst-env.py gst-inspect-1.0.exe --version
     - .\gst-env.py gst-inspect-1.0.exe
   variables:
@@ -561,8 +561,10 @@ build vs2022 amd64 full-static:
       # Setting up a cross build with MSVC is still non-trivial because
       # the --vsenv argument cannot be used to set it up
     - echo $env:MESON_CROSS_ARGS
-    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH && meson setup build $env:MESON_ARGS $env:GTK_ARGS $env:MESON_CROSS_ARGS"
-    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH && meson compile -C build --jobs $env:FDO_CI_CONCURRENT"
+    - $env:JOB="meson setup build $env:MESON_ARGS $env:GTK_ARGS $env:MESON_CROSS_ARGS"
+    - cmd.exe /C """C:\BuildTools\VC\Auxiliary\Build\vcvarsamd64_$env:ARCH.bat""  && powershell.exe -ExecutionPolicy Bypass -File .\ci\run_retry.ps1"
+    - $env:JOB="meson compile -C build --jobs $env:FDO_CI_CONCURRENT"
+    - cmd.exe /C """C:\BuildTools\VC\Auxiliary\Build\vcvarsamd64_$env:ARCH.bat"" && powershell.exe -ExecutionPolicy Bypass -File .\ci\run_retry.ps1"
 
 build vs2022 x86:
   extends: '.build windows cross'
