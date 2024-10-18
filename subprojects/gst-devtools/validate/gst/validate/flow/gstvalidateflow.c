@@ -529,12 +529,12 @@ show_mismatch_error (ValidateFlowOverride * flow, gchar ** lines_expected,
   const gchar *line_expected = _line_to_show (lines_expected, line_index);
   const gchar *line_actual = _line_to_show (lines_actual, line_index);
 
+  run_diff (flow->expectations_file_path, flow->actual_results_file_path);
   GST_VALIDATE_REPORT (flow, VALIDATE_FLOW_MISMATCH,
       "Mismatch error in pad %s, line %" G_GSIZE_FORMAT
       ". Expected:\n%s\nActual:\n%s\n", flow->pad_name, line_index + 1,
       line_expected, line_actual);
 
-  run_diff (flow->expectations_file_path, flow->actual_results_file_path);
 }
 
 static void
