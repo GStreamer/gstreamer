@@ -1699,12 +1699,7 @@ gst_gl_context_egl_fetch_dma_formats (GstGLContext * context)
 
   for (i = 0; i < num_formats; i++) {
     EGLint num_mods = 0;
-    GstVideoFormat gst_format;
     GstGLDmaFormat dma_frmt;
-
-    gst_format = gst_video_dma_drm_fourcc_to_format (formats[i]);
-    if (gst_format == GST_VIDEO_FORMAT_UNKNOWN)
-      continue;
 
     dma_frmt.fourcc = formats[i];
     dma_frmt.modifiers = NULL;
