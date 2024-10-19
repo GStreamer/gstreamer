@@ -1278,6 +1278,15 @@ gst_gl_context_egl_activate (GstGLContext * context, gboolean activate)
     }
     result = eglMakeCurrent (egl->egl_display, egl->egl_surface,
         egl->egl_surface, egl->egl_context);
+#if GST_GL_HAVE_WINDOW_WAYLAND
+    if (GST_IS_GL_WINDOW_WAYLAND_EGL (context->window)) {
+      if (eglSwapInterval (egl->egl_display, 0) == EGL_TRUE) {
+        GST_INFO ("Set EGL swap interval to 0");
+      } else {
+        GST_INFO ("Failed to set EGL swap interval to 0");
+      }
+    }
+#endif
   } else {
     result = eglMakeCurrent (egl->egl_display, EGL_NO_SURFACE,
         EGL_NO_SURFACE, EGL_NO_CONTEXT);
