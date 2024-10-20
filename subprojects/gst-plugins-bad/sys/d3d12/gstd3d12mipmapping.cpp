@@ -201,8 +201,8 @@ gst_d3d12_mip_mapping_class_init (GstD3D12MipMappingClass * klass)
   gst_type_mark_as_plugin_api (GST_TYPE_D3D12_SAMPLING_METHOD,
       (GstPluginAPIFlags) 0);
 
-  GST_DEBUG_CATEGORY_INIT (gst_d3d12_mip_mapping_debug, "d3d12convert", 0,
-      "d3d12convert");
+  GST_DEBUG_CATEGORY_INIT (gst_d3d12_mip_mapping_debug, "d3d12mipmapping", 0,
+      "d3d12mipmapping");
 }
 
 static void
