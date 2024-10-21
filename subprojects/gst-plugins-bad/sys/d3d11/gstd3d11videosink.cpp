@@ -1213,6 +1213,27 @@ gst_d3d11_video_sink_mouse_event (GstD3D11Window * window, const gchar * event,
 }
 
 static void
+gst_d3d11_video_sink_mouse_scroll_event (GstD3D11Window * window,
+    const gchar * event, gdouble x, gdouble y, gint delta_x, gint delta_y,
+    guint modifier, GstD3D11VideoSink * self)
+{
+  GstEvent *mouse_event;
+
+  if (!self->enable_navigation_events || !event)
+    return;
+
+  GST_LOG_OBJECT (self, "send mouse scroll event %s,", event);
+  if (g_strcmp0 ("mouse-scroll", event) == 0) {
+    mouse_event = gst_navigation_event_new_mouse_scroll (x, y, delta_x,
+        delta_y, (GstNavigationModifierType) modifier);
+  } else {
+    return;
+  }
+
+  gst_navigation_send_event_simple (GST_NAVIGATION (self), mouse_event);
+}
+
+static void
 gst_d3d11_video_sink_present (GstD3D11Window * window, GstD3D11Device * device,
     ID3D11RenderTargetView * rtv, GstD3D11VideoSink * self)
 {
@@ -1329,6 +1350,8 @@ done:
       G_CALLBACK (gst_d3d11_video_sink_key_event), self);
   g_signal_connect (self->window, "mouse-event",
       G_CALLBACK (gst_d3d11_video_sink_mouse_event), self);
+  g_signal_connect (self->window, "mouse-scroll-event",
+      G_CALLBACK (gst_d3d11_video_sink_mouse_scroll_event), self);
   g_signal_connect (self->window, "present",
       G_CALLBACK (gst_d3d11_video_sink_present), self);
 
