@@ -135,7 +135,7 @@ struct _GstVaapiEncoderMap
 
 #define DEF_ENC(CODEC,codec)          \
   {GST_VAAPI_CODEC_##CODEC,           \
-   GST_RANK_PRIMARY,                  \
+   GST_RANK_NONE,                     \
    "vaapi" G_STRINGIFY (codec) "enc", \
    gst_vaapiencode_##codec##_register_type}
 
