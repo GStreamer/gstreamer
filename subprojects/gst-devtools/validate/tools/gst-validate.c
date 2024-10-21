@@ -304,7 +304,7 @@ _register_playbin_actions (void)
 /* *INDENT-ON* */
 }
 
-int main (int argc, gchar ** argv);
+static int real_main (int argc, gchar ** argv);
 
 static int
 run_test_from_file (gchar * testfile, gboolean use_fakesinks)
@@ -325,7 +325,7 @@ run_test_from_file (gchar * testfile, gboolean use_fakesinks)
   argv[0] = (gchar *) "gst-validate-" GST_API_VERSION;
   memcpy (&argv[1], args, sizeof (char *) * (argc));
 
-  ret = main (argc, argv);
+  ret = real_main (argc, argv);
 
   g_strfreev (args);
   g_free (argv);
