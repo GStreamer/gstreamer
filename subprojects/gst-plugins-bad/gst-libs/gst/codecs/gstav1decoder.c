@@ -39,6 +39,8 @@ struct _GstAV1DecoderPrivate
 {
   gint max_width;
   gint max_height;
+  gint frame_width;
+  gint frame_height;
   GstAV1Profile profile;
   GstAV1Parser *parser;
   GstAV1Dpb *dpb;
@@ -149,6 +151,8 @@ gst_av1_decoder_reset (GstAV1Decoder * self)
 
   priv->max_width = 0;
   priv->max_height = 0;
+  priv->frame_width = 0;
+  priv->frame_height = 0;
   gst_clear_av1_picture (&priv->current_picture);
   priv->current_frame = NULL;
   priv->profile = GST_AV1_PROFILE_UNDEFINED;
@@ -419,6 +423,8 @@ gst_av1_decoder_process_sequence (GstAV1Decoder * self, GstAV1OBU * obu)
   priv->profile = seq_header.seq_profile;
   priv->max_width = seq_header.max_frame_width_minus_1 + 1;
   priv->max_height = seq_header.max_frame_height_minus_1 + 1;
+  priv->frame_width = seq_header.frame_width_bits_minus_1 + 1;
+  priv->frame_height = seq_header.frame_height_bits_minus_1 + 1;
 
   return GST_FLOW_OK;
 }
@@ -454,6 +460,22 @@ gst_av1_decoder_decode_tile_group (GstAV1Decoder * self,
   }
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_av1_decoder_is_format_change (GstAV1Decoder * self,
+    GstAV1FrameHeaderOBU * frame_header)
+{
+  GstAV1DecoderPrivate *priv = self->priv;
+
+  if (priv->frame_width != frame_header->upscaled_width
+      || priv->frame_height != frame_header->frame_height) {
+    GST_INFO_OBJECT (self, "frame resolution changed %dx%d",
+        frame_header->upscaled_width, frame_header->frame_height);
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 static GstFlowReturn
@@ -508,6 +530,18 @@ gst_av1_decoder_decode_frame_header (GstAV1Decoder * self,
 
     g_assert (picture->spatial_id <= self->highest_spatial_layer);
     g_assert (self->highest_spatial_layer < GST_AV1_MAX_NUM_SPATIAL_LAYERS);
+
+    if (gst_av1_decoder_is_format_change (self, frame_header)) {
+      gst_av1_decoder_drain_output_queue (self, 0, &ret);
+      if (ret != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (self, "Failed to drain pending frames, returned %s",
+            gst_flow_get_name (ret));
+        return ret;
+      }
+
+      priv->frame_width = frame_header->upscaled_width;
+      priv->frame_height = frame_header->frame_height;
+    }
 
     if (!frame_header->show_frame && !frame_header->showable_frame)
       GST_VIDEO_CODEC_FRAME_FLAG_SET (priv->current_frame,
