@@ -106,6 +106,7 @@ struct _GstV4l2CodecAV1Dec
   gboolean has_videometa;
   gboolean streaming;
   gboolean copy_frames;
+  gboolean need_negotiation;
 
   gint frame_width;
   gint frame_height;
@@ -314,8 +315,10 @@ gst_v4l2_codec_av1_dec_negotiate (GstVideoDecoder * decoder)
   GstStaticCaps *static_filter;
 
   /* Ignore downstream renegotiation request. */
-  if (self->streaming)
+  if (!self->need_negotiation)
     goto done;
+
+  self->need_negotiation = FALSE;
 
   GST_DEBUG_OBJECT (self, "Negotiate");
 
@@ -411,11 +414,6 @@ gst_v4l2_codec_av1_dec_decide_allocation (GstVideoDecoder * decoder,
   GstCaps *caps = NULL;
   guint min = 0, num_bitstream;
 
-  /* If we are streaming here, then it means there is nothing allocation
-   * related in the new state and allocation can be ignored */
-  if (self->streaming)
-    goto no_internal_changes;
-
   g_clear_object (&self->src_pool);
   g_clear_object (&self->src_allocator);
 
@@ -462,7 +460,6 @@ gst_v4l2_codec_av1_dec_decide_allocation (GstVideoDecoder * decoder,
   self->src_pool =
       gst_v4l2_codec_pool_new (self->src_allocator, &self->vinfo_drm);
 
-no_internal_changes:
   /* Our buffer pool is internal, we will let the base class create a video
    * pool, and use it if we are running out of buffers or if downstream does
    * not support GstVideoMeta */
@@ -1077,14 +1074,12 @@ gst_v4l2_codec_av1_dec_reset_picture (GstV4l2CodecAV1Dec * self)
   g_array_set_size (self->tile_group_entries, 0);
 }
 
-static GstFlowReturn
-gst_v4l2_codec_av1_dec_new_picture (GstAV1Decoder * decoder,
-    GstVideoCodecFrame * frame, GstAV1Picture * picture)
+static gboolean
+gst_v4l2_codec_av1_dec_is_format_change (GstV4l2CodecAV1Dec * self,
+    GstAV1FrameHeaderOBU * frame_hdr)
 {
-  GstV4l2CodecAV1Dec *self = GST_V4L2_CODEC_AV1_DEC (decoder);
-  GstAV1FrameHeaderOBU *frame_hdr = &picture->frame_hdr;
   struct v4l2_ctrl_av1_sequence *seq_hdr = &self->v4l2_sequence;
-  gboolean negotiation_needed = FALSE;
+  gboolean ret = FALSE;
   gint max_width;
   gint max_height;
 
@@ -1092,7 +1087,7 @@ gst_v4l2_codec_av1_dec_new_picture (GstAV1Decoder * decoder,
   max_height = seq_hdr->max_frame_height_minus_1 + 1;
 
   if (self->vinfo_drm.vinfo.finfo->format == GST_VIDEO_FORMAT_UNKNOWN)
-    negotiation_needed = TRUE;
+    ret = TRUE;
 
   /* FIXME the base class could signal this, but let's assume that when we
    * have spatial layers, that smaller resolution will never be shown, and
@@ -1102,20 +1097,10 @@ gst_v4l2_codec_av1_dec_new_picture (GstAV1Decoder * decoder,
       self->frame_width = self->render_width = max_width;
       self->frame_height = self->render_height = max_height;
 
-      negotiation_needed = TRUE;
+      ret = TRUE;
 
       GST_INFO_OBJECT (self, "max {width|height} changed to %dx%d",
           self->frame_width, self->frame_height);
-    }
-
-    if (self->frame_height < frame_hdr->frame_height || self->frame_width <
-        frame_hdr->upscaled_width) {
-      GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
-          ("SVC AV1 frame is larger then sequence max size."),
-          ("Frame have size %dx%d but the max size is %dx%d",
-              frame_hdr->upscaled_width, frame_hdr->frame_height,
-              max_width, max_height));
-      return GST_FLOW_ERROR;
     }
   } else if (self->frame_width != frame_hdr->upscaled_width ||
       self->frame_height != frame_hdr->frame_height ||
@@ -1127,7 +1112,7 @@ gst_v4l2_codec_av1_dec_new_picture (GstAV1Decoder * decoder,
     self->render_width = frame_hdr->render_width;
     self->render_height = frame_hdr->render_height;
 
-    negotiation_needed = TRUE;
+    ret = TRUE;
 
     GST_INFO_OBJECT (self, "frame {width|height} changed to %dx%d",
         self->frame_width, self->frame_height);
@@ -1139,7 +1124,7 @@ gst_v4l2_codec_av1_dec_new_picture (GstAV1Decoder * decoder,
     GST_DEBUG_OBJECT (self, "bit-depth changed from %d to %d", self->bit_depth,
         seq_hdr->bit_depth);
     self->bit_depth = seq_hdr->bit_depth;
-    negotiation_needed = TRUE;
+    ret = TRUE;
   }
 
   if (self->profile != GST_AV1_PROFILE_UNDEFINED &&
@@ -1147,24 +1132,35 @@ gst_v4l2_codec_av1_dec_new_picture (GstAV1Decoder * decoder,
     GST_DEBUG_OBJECT (self, "profile changed from %d to %d", self->profile,
         seq_hdr->seq_profile);
     self->profile = seq_hdr->seq_profile;
-    negotiation_needed = TRUE;
+    ret = TRUE;
   }
 
   if (seq_hdr->bit_depth != self->bit_depth) {
     GST_DEBUG_OBJECT (self, "bit-depth changed from %d to %d",
         self->bit_depth, seq_hdr->bit_depth);
     self->bit_depth = seq_hdr->bit_depth;
-    negotiation_needed = TRUE;
+    ret = TRUE;
   }
 
-  if (negotiation_needed) {
-    if (frame_hdr->frame_type != GST_AV1_KEY_FRAME) {
-      GST_ERROR_OBJECT (self,
-          "Inter-frame resolution changes are not yet supported in v4l2");
-      return GST_FLOW_ERROR;
+  return ret;
+}
+
+static GstFlowReturn
+gst_v4l2_codec_av1_dec_new_picture (GstAV1Decoder * decoder,
+    GstVideoCodecFrame * frame, GstAV1Picture * picture)
+{
+  GstV4l2CodecAV1Dec *self = GST_V4L2_CODEC_AV1_DEC (decoder);
+  GstAV1FrameHeaderOBU *frame_hdr = &picture->frame_hdr;
+
+  self->need_negotiation =
+      gst_v4l2_codec_av1_dec_is_format_change (self, frame_hdr);
+
+  if (self->need_negotiation) {
+    /* Call streamoff only if the resolution change on keyframe */
+    if (frame_hdr->frame_type == GST_AV1_KEY_FRAME) {
+      gst_v4l2_codec_av1_dec_streamoff (self);
     }
 
-    gst_v4l2_codec_av1_dec_streamoff (self);
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return GST_FLOW_ERROR;
@@ -1612,6 +1608,7 @@ gst_v4l2_codec_av1_dec_init (GstV4l2CodecAV1Dec * self,
   gst_video_info_dma_drm_init (&self->vinfo_drm);
   self->tile_group_entries =
       g_array_new (FALSE, TRUE, sizeof (struct v4l2_ctrl_av1_tile_group_entry));
+  self->need_negotiation = TRUE;
 }
 
 void
