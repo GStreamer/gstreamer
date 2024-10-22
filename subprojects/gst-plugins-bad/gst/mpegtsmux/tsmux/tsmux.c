@@ -821,6 +821,8 @@ tsmux_program_remove_stream (TsMuxProgram * program, TsMuxStream * stream)
     return FALSE;
   }
 
+  program->pmt_changed = TRUE;
+
   return streams->len == 0;
 }
 
