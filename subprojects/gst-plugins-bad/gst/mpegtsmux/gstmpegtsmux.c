@@ -126,6 +126,7 @@ static GstStaticPadTemplate gst_mpeg_ts_mux_sink_factory =
         "audio/x-opus, "
         "channels = (int) [1, 255];"
         "subpicture/x-dvb; application/x-teletext; meta/x-klv, parsed=true;"
+        "video/x-vp9;"
         "image/x-jpc, alignment = (string) frame, profile = (int)[0, 49151];"));
 
 static GstStaticPadTemplate gst_mpeg_ts_mux_src_factory =

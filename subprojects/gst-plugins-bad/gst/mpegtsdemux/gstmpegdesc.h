@@ -240,5 +240,6 @@
 #define DRF_ID_EAC3       0x45414333   /* defined in A/52 Annex G */
 #define DRF_ID_AC4        0x41432D34   /* defined in ETSI TS 103 190-2 Annex D */
 #define DRF_ID_AV1G       0x41563147   /* Custom AV1 GStreamer mapping */
+#define DRF_ID_VP09       0x56503039   /* Custom GStreamer vp9 */
 
 #endif /* __GST_MPEG_DESC_H__ */

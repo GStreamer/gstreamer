@@ -151,6 +151,13 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
       stream->is_video_stream = TRUE;
       break;
+    case TSMUX_ST_PS_VP9:
+      stream->id = 0xBD;        /* Private Stream 1 */
+      stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+      stream->stream_type = TSMUX_ST_PRIVATE_DATA;
+      stream->is_video_stream = TRUE;
+      stream->is_vp9 = TRUE;
+      break;
     case TSMUX_ST_AUDIO_AAC:
     case TSMUX_ST_AUDIO_MPEG1:
     case TSMUX_ST_AUDIO_MPEG2:
@@ -968,7 +975,11 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
             gst_buffer_unmap (stream->codec_data, &map);
           }
         }
-
+      }
+      if (stream->is_vp9) {
+        descriptor = gst_mpegts_descriptor_from_registration ("VP09", NULL, 0);
+        GST_DEBUG ("adding VP09 registration descriptor");
+        g_ptr_array_add (pmt_stream->descriptors, descriptor);
       }
     default:
       break;
