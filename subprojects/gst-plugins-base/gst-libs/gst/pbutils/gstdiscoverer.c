@@ -1354,7 +1354,7 @@ setup_next_uri_locked (GstDiscoverer * dc)
   }
 }
 
-static GstDiscovererInfo *
+static void
 _ensure_info_tags (GstDiscoverer * dc)
 {
   GstDiscovererInfo *info = dc->priv->current_info;
@@ -1362,16 +1362,32 @@ _ensure_info_tags (GstDiscoverer * dc)
   if (dc->priv->all_tags)
     info->tags = dc->priv->all_tags;
   dc->priv->all_tags = NULL;
-  return info;
+}
+
+static void
+serialize_info_if_required (GstDiscoverer * dc, GstDiscovererInfo * info)
+{
+
+  if (dc->priv->use_cache && info->cachefile
+      && info->result == GST_DISCOVERER_OK) {
+    GVariant *variant = gst_discoverer_info_to_variant (info,
+        GST_DISCOVERER_SERIALIZE_ALL);
+
+    g_file_set_contents (info->cachefile,
+        g_variant_get_data (variant), g_variant_get_size (variant), NULL);
+    g_variant_unref (variant);
+  }
+
 }
 
 static void
 emit_discovererd (GstDiscoverer * dc)
 {
-  GstDiscovererInfo *info = _ensure_info_tags (dc);
+  GstDiscovererInfo *info = dc->priv->current_info;
   GST_DEBUG_OBJECT (dc, "Emitting 'discoverered' %s", info->uri);
   g_signal_emit (dc, gst_discoverer_signals[SIGNAL_DISCOVERED], 0,
       info, dc->priv->current_error);
+
   /* Clients get a copy of current_info since it is a boxed type */
   gst_discoverer_info_unref (dc->priv->current_info);
   dc->priv->current_info = NULL;
@@ -1503,16 +1519,8 @@ discoverer_collect (GstDiscoverer * dc)
     }
   }
 
-  if (dc->priv->use_cache && dc->priv->current_info->cachefile &&
-      dc->priv->current_info->result == GST_DISCOVERER_OK) {
-    GVariant *variant = gst_discoverer_info_to_variant (dc->priv->current_info,
-        GST_DISCOVERER_SERIALIZE_ALL);
-
-    g_file_set_contents (dc->priv->current_info->cachefile,
-        g_variant_get_data (variant), g_variant_get_size (variant), NULL);
-    g_variant_unref (variant);
-  }
-
+  _ensure_info_tags (dc);
+  serialize_info_if_required (dc, dc->priv->current_info);
   if (dc->priv->async)
     emit_discovererd (dc);
 }
@@ -1845,7 +1853,7 @@ _get_info_from_cachefile (GstDiscoverer * dc, gchar * cachefile)
       g_free (cachefile);
     }
 
-    GST_INFO_OBJECT (dc, "Got info from cache: %p", info);
+    GST_INFO_OBJECT (dc, "Got info from cache: %p %s", info, info->cachefile);
     g_free (data);
 
     return info;
@@ -2635,8 +2643,8 @@ gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
         discoverer->priv->current_info->result);
     discoverer->priv->current_info->result = res;
   }
-  info = _ensure_info_tags (discoverer);
 
+  info = discoverer->priv->current_info;
   discoverer_cleanup (discoverer);
 
   return info;
