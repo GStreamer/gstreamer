@@ -434,7 +434,7 @@ public:
           case GST_VIDEO_TRANSFER_BT601:
           case GST_VIDEO_TRANSFER_BT709:
           case GST_VIDEO_TRANSFER_BT2020_10:
-            if (have_mastering_info && have_mastering_info)
+            if (have_mastering_info && have_light_level)
               *value = 1;
             else
               *value = 0;
