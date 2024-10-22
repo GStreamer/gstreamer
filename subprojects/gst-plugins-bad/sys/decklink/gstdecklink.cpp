@@ -1009,18 +1009,18 @@ gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDDisplayModeFlags mode_flag
       GstStructure *s = gst_structure_copy (generic);
       gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2020", NULL);
       caps = gst_caps_merge_structure (caps, s);
-    }
 
-    if (dynamic_range & bmdDynamicRangeHDRStaticPQ) {
-      GstStructure *s = gst_structure_copy (generic);
-      gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-pq", NULL);
-      caps = gst_caps_merge_structure (caps, s);
-    }
+      if (dynamic_range & bmdDynamicRangeHDRStaticPQ) {
+        GstStructure *s = gst_structure_copy (generic);
+        gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-pq", NULL);
+        caps = gst_caps_merge_structure (caps, s);
+      }
 
-    if (dynamic_range & bmdDynamicRangeHDRStaticHLG) {
-      GstStructure *s = gst_structure_copy (generic);
-      gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-hlg", NULL);
-      caps = gst_caps_merge_structure (caps, s);
+      if (dynamic_range & bmdDynamicRangeHDRStaticHLG) {
+        GstStructure *s = gst_structure_copy (generic);
+        gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-hlg", NULL);
+        caps = gst_caps_merge_structure (caps, s);
+      }
     }
   } else {
     caps = gst_caps_merge_structure (caps, generic);
@@ -1938,22 +1938,22 @@ init_devices (gpointer data)
                   NULL);
               video_input_caps =
                   gst_caps_merge_structure (video_input_caps, s);
-            }
 
-            if (dynamic_range & bmdDynamicRangeHDRStaticPQ) {
-              GstStructure *s = gst_structure_copy (generic);
-              gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-pq",
-                  NULL);
-              video_input_caps =
-                  gst_caps_merge_structure (video_input_caps, s);
-            }
+              if (dynamic_range & bmdDynamicRangeHDRStaticPQ) {
+                GstStructure *s = gst_structure_copy (generic);
+                gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-pq",
+                    NULL);
+                video_input_caps =
+                    gst_caps_merge_structure (video_input_caps, s);
+              }
 
-            if (dynamic_range & bmdDynamicRangeHDRStaticHLG) {
-              GstStructure *s = gst_structure_copy (generic);
-              gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-hlg",
-                  NULL);
-              video_input_caps =
-                  gst_caps_merge_structure (video_input_caps, s);
+              if (dynamic_range & bmdDynamicRangeHDRStaticHLG) {
+                GstStructure *s = gst_structure_copy (generic);
+                gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-hlg",
+                    NULL);
+                video_input_caps =
+                    gst_caps_merge_structure (video_input_caps, s);
+              }
             }
             gst_clear_structure (&generic);
           }
@@ -2029,23 +2029,24 @@ init_devices (gpointer data)
                   NULL);
               video_input_caps =
                   gst_caps_merge_structure (video_input_caps, s);
+
+              if (dynamic_range & bmdDynamicRangeHDRStaticPQ) {
+                GstStructure *s = gst_structure_copy (generic);
+                gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-pq",
+                    NULL);
+                video_input_caps =
+                    gst_caps_merge_structure (video_input_caps, s);
+              }
+
+              if (dynamic_range & bmdDynamicRangeHDRStaticHLG) {
+                GstStructure *s = gst_structure_copy (generic);
+                gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-hlg",
+                    NULL);
+                video_input_caps =
+                    gst_caps_merge_structure (video_input_caps, s);
+              }
             }
 
-            if (dynamic_range & bmdDynamicRangeHDRStaticPQ) {
-              GstStructure *s = gst_structure_copy (generic);
-              gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-pq",
-                  NULL);
-              video_input_caps =
-                  gst_caps_merge_structure (video_input_caps, s);
-            }
-
-            if (dynamic_range & bmdDynamicRangeHDRStaticHLG) {
-              GstStructure *s = gst_structure_copy (generic);
-              gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-hlg",
-                  NULL);
-              video_input_caps =
-                  gst_caps_merge_structure (video_input_caps, s);
-            }
             gst_clear_structure (&generic);
           }
 
