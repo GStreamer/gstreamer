@@ -531,6 +531,7 @@ struct _GstDecklinkMode {
   int par_n;
   int par_d;
   gboolean tff;
+  BMDDisplayModeFlags mode_flags;
 };
 
 const GstDecklinkMode * gst_decklink_get_mode (GstDecklinkModeEnum e);

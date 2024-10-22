@@ -837,9 +837,7 @@ static BMDDisplayModeFlags
 display_mode_flags (GstDecklinkVideoSrc * self, const GstDecklinkMode * gst_mode,
     gboolean fixed)
 {
-  BMDDisplayModeFlags display_flags =
-      bmdDisplayModeColorspaceRec601 | bmdDisplayModeColorspaceRec709 |
-      bmdDisplayModeColorspaceRec2020;
+  BMDDisplayModeFlags display_flags = gst_mode->mode_flags;
 
   if (self->input && self->input->input) {
     IDeckLinkDisplayMode *display_mode = nullptr;
@@ -851,7 +849,7 @@ display_mode_flags (GstDecklinkVideoSrc * self, const GstDecklinkMode * gst_mode
     if (!supports_colorspace || fixed) {
       self->input->input->GetDisplayMode (gst_mode->mode, &display_mode);
       if (display_mode) {
-        display_flags = display_mode->GetFlags ();
+        display_flags &= display_mode->GetFlags ();
         display_mode->Release();
       }
     }

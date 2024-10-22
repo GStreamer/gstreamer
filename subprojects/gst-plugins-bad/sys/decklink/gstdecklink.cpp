@@ -353,12 +353,14 @@ gst_decklink_audio_channels_get_type (void)
   return (GType) id;
 }
 
-#define NTSC 10, 11, false
-#define PAL 12, 11, true
-#define NTSC_WS 40, 33, false
-#define PAL_WS 16, 11, true
-#define HD 1, 1, true
-#define UHD 1, 1, true
+#define COLORSPACE_NOT_REC601 (BMDDisplayModeFlags) (bmdDisplayModeColorspaceRec709 | bmdDisplayModeColorspaceRec2020)
+
+#define NTSC 10, 11, false, bmdDisplayModeColorspaceRec601
+#define PAL 12, 11, true, bmdDisplayModeColorspaceRec601
+#define NTSC_WS 40, 33, false, bmdDisplayModeColorspaceRec601
+#define PAL_WS 16, 11, true, bmdDisplayModeColorspaceRec601
+#define HD 1, 1, true, COLORSPACE_NOT_REC601
+#define UHD 1, 1, true, COLORSPACE_NOT_REC601
 
 static const GstDecklinkMode modes[] = {
   {bmdModeNTSC, 720, 486, 30000, 1001, true, NTSC},     // default is ntsc
@@ -1053,9 +1055,6 @@ gst_decklink_pixel_format_get_caps (BMDPixelFormat f, gboolean input)
 {
   int i;
   GstCaps *caps;
-  BMDDisplayModeFlags mode_flags =
-      bmdDisplayModeColorspaceRec601 | bmdDisplayModeColorspaceRec709 |
-      bmdDisplayModeColorspaceRec2020;
   BMDDynamicRange dynamic_range =
       (BMDDynamicRange) (bmdDynamicRangeSDR | bmdDynamicRangeHDRStaticPQ |
       bmdDynamicRangeHDRStaticHLG);
@@ -1063,7 +1062,7 @@ gst_decklink_pixel_format_get_caps (BMDPixelFormat f, gboolean input)
   caps = gst_caps_new_empty ();
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
     GstCaps *format_caps =
-        gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, mode_flags, f,
+        gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, modes[i].mode_flags, f,
         dynamic_range, input);
     caps = gst_caps_merge (caps, format_caps);
   }
@@ -1081,7 +1080,7 @@ gst_decklink_mode_get_template_caps (gboolean input)
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++)
     caps =
         gst_caps_merge (caps,
-        gst_decklink_mode_get_caps_all_formats ((GstDecklinkModeEnum) i, -1,
+        gst_decklink_mode_get_caps_all_formats ((GstDecklinkModeEnum) i, modes[i].mode_flags,
             (BMDDynamicRange) -1, input));
 
   return caps;
@@ -1091,9 +1090,6 @@ const GstDecklinkMode *
 gst_decklink_find_mode_and_format_for_caps (GstCaps * caps,
     BMDPixelFormat * format)
 {
-  BMDDisplayModeFlags mode_flags =
-      bmdDisplayModeColorspaceRec601 | bmdDisplayModeColorspaceRec709 |
-      bmdDisplayModeColorspaceRec2020;
   int i;
   GstCaps *mode_caps;
 
@@ -1103,7 +1099,7 @@ gst_decklink_find_mode_and_format_for_caps (GstCaps * caps,
 
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
     mode_caps =
-        gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, mode_flags, *format,
+        gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, modes[i].mode_flags, *format,
             (BMDDynamicRange) -1, FALSE);
     if (gst_caps_can_intersect (caps, mode_caps)) {
       gst_caps_unref (mode_caps);
@@ -1912,9 +1908,9 @@ init_devices (gpointer data)
           if (mode_enum != (GstDecklinkModeEnum) - 1) {
             GstStructure *generic = gst_decklink_mode_get_generic_structure (mode_enum);
             BMDDisplayModeFlags flags = mode->GetFlags ();
+            const GstDecklinkMode *gst_mode = gst_decklink_get_mode (mode_enum);
 
-            if ((supported & SUPPORT_COLORSPACE) ||
-                  (flags & bmdDisplayModeColorspaceRec601)) {
+            if (gst_mode->mode_flags & flags & bmdDisplayModeColorspaceRec601) {
               GstStructure *s = gst_structure_copy (generic);
               gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt601",
                   NULL);
@@ -1922,8 +1918,7 @@ init_devices (gpointer data)
                   gst_caps_merge_structure (video_input_caps, s);
             }
 
-            if ((supported & SUPPORT_COLORSPACE) ||
-                  (flags & bmdDisplayModeColorspaceRec709)) {
+            if (gst_mode->mode_flags & flags & bmdDisplayModeColorspaceRec709) {
               GstStructure *s = gst_structure_copy (generic);
               gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt709",
                   NULL);
@@ -1931,8 +1926,8 @@ init_devices (gpointer data)
                   gst_caps_merge_structure (video_input_caps, s);
             }
 
-            if ((supported & SUPPORT_COLORSPACE) ||
-                (flags & bmdDisplayModeColorspaceRec2020)) {
+            if ((supported & SUPPORT_COLORSPACE) &&
+                (gst_mode->mode_flags & bmdDisplayModeColorspaceRec2020)) {
               GstStructure *s = gst_structure_copy (generic);
               gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2020",
                   NULL);
@@ -2003,9 +1998,9 @@ init_devices (gpointer data)
           if (mode_enum != (GstDecklinkModeEnum) - 1) {
             GstStructure *generic = gst_decklink_mode_get_generic_structure (mode_enum);
             BMDDisplayModeFlags flags = mode->GetFlags ();
+            const GstDecklinkMode *mode = gst_decklink_get_mode (mode_enum);
 
-            if ((supported & SUPPORT_COLORSPACE) ||
-                  (flags & bmdDisplayModeColorspaceRec601)) {
+            if (mode->mode_flags & flags & bmdDisplayModeColorspaceRec601) {
               GstStructure *s = gst_structure_copy (generic);
               gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt601",
                   NULL);
@@ -2013,8 +2008,7 @@ init_devices (gpointer data)
                   gst_caps_merge_structure (video_input_caps, s);
             }
 
-            if ((supported & SUPPORT_COLORSPACE) ||
-                  (flags & bmdDisplayModeColorspaceRec601)) {
+            if (mode->mode_flags & flags & bmdDisplayModeColorspaceRec709) {
               GstStructure *s = gst_structure_copy (generic);
               gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt709",
                   NULL);
@@ -2022,8 +2016,8 @@ init_devices (gpointer data)
                   gst_caps_merge_structure (video_input_caps, s);
             }
 
-            if ((supported & SUPPORT_COLORSPACE) ||
-                  (flags & bmdDisplayModeColorspaceRec2020)) {
+            if ((supported & SUPPORT_COLORSPACE) &&
+                  (mode->mode_flags & bmdDisplayModeColorspaceRec709)) {
               GstStructure *s = gst_structure_copy (generic);
               gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2020",
                   NULL);

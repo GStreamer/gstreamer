@@ -1239,12 +1239,10 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 static BMDDisplayModeFlags
 display_mode_flags (GstDecklinkVideoSink * self, GstDecklinkModeEnum e)
 {
-  BMDDisplayModeFlags display_flags =
-      bmdDisplayModeColorspaceRec601 | bmdDisplayModeColorspaceRec709 |
-      bmdDisplayModeColorspaceRec2020;
+  const GstDecklinkMode *gst_mode = gst_decklink_get_mode (e);
+  BMDDisplayModeFlags display_flags = gst_mode->mode_flags;
 
   if (self->output && self->output->output) {
-    const GstDecklinkMode *gst_mode = gst_decklink_get_mode (e);
     IDeckLinkDisplayMode *display_mode = nullptr;
     bool supports_colorspace = false;
 
@@ -1254,7 +1252,7 @@ display_mode_flags (GstDecklinkVideoSink * self, GstDecklinkModeEnum e)
     if (!supports_colorspace) {
       self->output->output->GetDisplayMode (gst_mode->mode, &display_mode);
       if (display_mode) {
-        display_flags = display_mode->GetFlags ();
+        display_flags &= display_mode->GetFlags ();
         display_mode->Release();
       }
     }
