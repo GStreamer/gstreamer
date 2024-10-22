@@ -256,10 +256,12 @@ enum
   PROP_BITRATE,
   PROP_PCR_INTERVAL,
   PROP_SCTE_35_PID,
-  PROP_SCTE_35_NULL_INTERVAL
+  PROP_SCTE_35_NULL_INTERVAL,
+  PROP_ENABLE_CUSTOM_MAPPINGS
 };
 
 #define DEFAULT_SCTE_35_PID 0
+#define DEFAULT_ENABLE_CUSTOM_MAPPINGS FALSE
 
 #define BASETSMUX_DEFAULT_ALIGNMENT    -1
 
@@ -624,6 +626,13 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     st = TSMUX_ST_VIDEO_H264;
   } else if (strcmp (mt, "video/x-h265") == 0) {
     st = TSMUX_ST_VIDEO_HEVC;
+  } else if (strcmp (mt, "video/x-vp9") == 0) {
+    if (mux->enable_custom_mappings) {
+      st = TSMUX_ST_PS_VP9;
+    } else {
+      GST_ERROR_OBJECT (mux,
+          "VP9 requires enabling custom mapping which does not have a public specification");
+    }
   } else if (strcmp (mt, "audio/mpeg") == 0) {
     gint mpegversion;
 
@@ -2880,6 +2889,9 @@ gst_base_ts_mux_set_property (GObject * object, guint prop_id,
     case PROP_SCTE_35_NULL_INTERVAL:
       mux->scte35_null_interval = g_value_get_uint (value);
       break;
+    case PROP_ENABLE_CUSTOM_MAPPINGS:
+      mux->enable_custom_mappings = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2919,6 +2931,9 @@ gst_base_ts_mux_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SCTE_35_NULL_INTERVAL:
       g_value_set_uint (value, mux->scte35_null_interval);
+      break;
+    case PROP_ENABLE_CUSTOM_MAPPINGS:
+      g_value_set_boolean (value, mux->enable_custom_mappings);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3074,6 +3089,20 @@ gst_base_ts_mux_class_init (GstBaseTsMuxClass * klass)
           TSMUX_DEFAULT_SCTE_35_NULL_INTERVAL,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstBaseTsMux:enable-custom-mappings:
+   *
+   * Enable custom mappings for which there are no official specifications
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_ENABLE_CUSTOM_MAPPINGS,
+      g_param_spec_boolean ("enable-custom-mappings", "Enable custom mappings",
+          "Enable custom mappings for which there are no official specifications",
+          DEFAULT_ENABLE_CUSTOM_MAPPINGS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &gst_base_ts_mux_src_factory, GST_TYPE_AGGREGATOR_PAD);
 
@@ -3095,6 +3124,7 @@ gst_base_ts_mux_init (GstBaseTsMux * mux)
   mux->bitrate = TSMUX_DEFAULT_BITRATE;
   mux->scte35_pid = DEFAULT_SCTE_35_PID;
   mux->scte35_null_interval = TSMUX_DEFAULT_SCTE_35_NULL_INTERVAL;
+  mux->enable_custom_mappings = DEFAULT_ENABLE_CUSTOM_MAPPINGS;
 
   mux->packet_size = GST_BASE_TS_MUX_NORMAL_PACKET_LENGTH;
   mux->automatic_alignment = 0;

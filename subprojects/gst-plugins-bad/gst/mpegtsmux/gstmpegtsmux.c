@@ -128,6 +128,7 @@ static GstStaticPadTemplate gst_mpeg_ts_mux_sink_factory =
         "subpicture/x-dvb; application/x-teletext; meta/x-klv, parsed=true;"
         "meta/x-id3, parsed=true;"
         "meta/x-st-2038, alignment = (string) line;"
+        "video/x-vp9;"
         "image/x-jpc, alignment = (string) frame, profile = (int)[0, 49151];"
         "image/x-jxsc, alignment = (string) frame, sampling = { YCbCr-4:2:2, YCbCr-4:4:4 };"));
 
