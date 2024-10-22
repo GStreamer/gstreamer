@@ -1031,6 +1031,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
       }
 
       if (frame->GetFlags () & bmdFrameContainsHDRMetadata) {
+        gboolean undefined_mastering_info = TRUE;
         double max_cll, max_fll, x, y;
         gint64 tf;
 
@@ -1046,7 +1047,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
             bmdDeckLinkFrameMetadataHDRMaximumFrameAverageLightLevel, &max_fll);
         GST_LOG_OBJECT (self, "ret %x maxcll %f maxfll %f", (gint) dk_ret, max_cll,
             max_fll);
-        if (dk_ret == S_OK) {
+        if (dk_ret == S_OK && ((guint16) max_cll > 0 || (guint16) max_fll > 0)) {
           f.have_light_level = TRUE;
           f.light_level.max_content_light_level = (guint16) max_cll;
           f.light_level.max_frame_average_light_level = (guint16) max_fll;
@@ -1060,6 +1061,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
             bmdDeckLinkFrameMetadataHDRDisplayPrimariesRedY, &y);
         f.mastering_info.display_primaries[0].x = (guint16) (x * 50000.0);
         f.mastering_info.display_primaries[0].y = (guint16) (y * 50000.0);
+        undefined_mastering_info &= x <= 0 && y <= 0;
         dk_ret |=
             frame_metadata->GetFloat (
             bmdDeckLinkFrameMetadataHDRDisplayPrimariesGreenX, &x);
@@ -1068,6 +1070,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
             bmdDeckLinkFrameMetadataHDRDisplayPrimariesGreenY, &y);
         f.mastering_info.display_primaries[1].x = (guint16) (x * 50000.0);
         f.mastering_info.display_primaries[1].y = (guint16) (y * 50000.0);
+        undefined_mastering_info &= x <= 0 && y <= 0;
         dk_ret |=
             frame_metadata->GetFloat (
             bmdDeckLinkFrameMetadataHDRDisplayPrimariesBlueX, &x);
@@ -1076,12 +1079,14 @@ gst_decklink_video_src_got_frame (GstElement * element,
             bmdDeckLinkFrameMetadataHDRDisplayPrimariesBlueY, &y);
         f.mastering_info.display_primaries[2].x = (guint16) (x * 50000.0);
         f.mastering_info.display_primaries[2].y = (guint16) (y * 50000.0);
+        undefined_mastering_info &= x <= 0 && y <= 0;
         dk_ret |=
             frame_metadata->GetFloat (bmdDeckLinkFrameMetadataHDRWhitePointX, &x);
         dk_ret |=
             frame_metadata->GetFloat (bmdDeckLinkFrameMetadataHDRWhitePointY, &y);
         f.mastering_info.white_point.x = (guint16) (x * 50000.0);
         f.mastering_info.white_point.y = (guint16) (y * 50000.0);
+        undefined_mastering_info &= x <= 0 && y <= 0;
         dk_ret |=
             frame_metadata->GetFloat (
             bmdDeckLinkFrameMetadataHDRMaxDisplayMasteringLuminance, &x);
@@ -1090,6 +1095,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
             bmdDeckLinkFrameMetadataHDRMinDisplayMasteringLuminance, &y);
         f.mastering_info.max_display_mastering_luminance = (guint32) (x * 10000.0 / 65535.0);
         f.mastering_info.min_display_mastering_luminance = (guint32) (y * 10000.0 / 6.5535);
+        undefined_mastering_info &= x <= 0 && y <= 0;
         GST_LOG_OBJECT (self, "ret 0x%x mastering_info "
             "R:%u,%u G:%u,%u B:%u,%u W:%u,%u", (gint) dk_ret,
             f.mastering_info.display_primaries[0].x,
@@ -1099,7 +1105,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
             f.mastering_info.display_primaries[2].x,
             f.mastering_info.display_primaries[2].y,
             f.mastering_info.white_point.x, f.mastering_info.white_point.y);
-        if (dk_ret == S_OK)
+        if (dk_ret == S_OK && !undefined_mastering_info)
           f.have_mastering_info = TRUE;
 
         dk_ret =
