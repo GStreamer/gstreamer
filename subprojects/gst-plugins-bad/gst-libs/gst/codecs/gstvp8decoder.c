@@ -115,6 +115,9 @@ gst_vp8_decoder_start (GstVideoDecoder * decoder)
 
   gst_vp8_parser_init (&priv->parser);
   priv->wait_keyframe = TRUE;
+  priv->had_sequence = FALSE;
+  priv->width = 0;
+  priv->height = 0;
 
   priv->output_queue =
       gst_vec_deque_new_for_struct (sizeof (GstVp8DecoderOutputFrame), 1);
@@ -216,9 +219,6 @@ gst_vp8_decoder_set_format (GstVideoDecoder * decoder,
     gst_video_codec_state_unref (self->input_state);
 
   self->input_state = gst_video_codec_state_ref (state);
-
-  priv->width = GST_VIDEO_INFO_WIDTH (&state->info);
-  priv->height = GST_VIDEO_INFO_HEIGHT (&state->info);
 
   query = gst_query_new_latency ();
   if (gst_pad_peer_query (GST_VIDEO_DECODER_SINK_PAD (self), query))
