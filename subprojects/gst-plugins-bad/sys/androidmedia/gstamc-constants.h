@@ -48,6 +48,11 @@ enum
 };
 
 /* Copies from MediaCodecInfo.java */
+/* From https://android.googlesource.com/platform/frameworks/base/+/master/media/java/android/media/MediaCodecInfo.java
+ * To update, cat MediaCodecInfo.java | sed -n -e 's/^.*int \(COLOR_[a-zA-Z0-9]*\)\ *\(= .*\);$/\1 \2,/p'
+ * but watch out for additional platform specific constants below,
+ * and COLOR_FormatSurface is called COLOR_FormatAndroidOpaque here for historic reasons
+ */
 enum
 {
   COLOR_FormatMonochrome = 1,
@@ -93,20 +98,31 @@ enum
   COLOR_Format18BitBGR666 = 41,
   COLOR_Format24BitARGB6666 = 42,
   COLOR_Format24BitABGR6666 = 43,
+  COLOR_FormatYUVP010 = 54,
   COLOR_FormatAndroidOpaque = 0x7F000789,
-  COLOR_TI_FormatYUV420PackedSemiPlanar = 0x7f000100,
+  COLOR_Format64bitABGRFloat = 0x7F000F16,
+  COLOR_Format32bitABGR8888 = 0x7F00A000,
+  COLOR_Format32bitABGR2101010 = 0x7F00AAA2,
+  COLOR_FormatYUV420Flexible = 0x7F420888,
+  COLOR_FormatYUV422Flexible = 0x7F422888,
+  COLOR_FormatYUV444Flexible = 0x7F444888,
+  COLOR_FormatRGBFlexible = 0x7F36B888,
+  COLOR_FormatRGBAFlexible = 0x7F36A888,
+
   COLOR_INTEL_FormatYUV420PackedSemiPlanar = 0x7fa00e00,
   COLOR_INTEL_FormatYUV420PackedSemiPlanar_Tiled = 0x7fa00f00,
-  COLOR_QCOM_FormatYUV420SemiPlanar = 0x7fa30c00,
+
+  COLOR_QCOM_FormatYUV420SemiPlanar     = 0x7fa30c00,
   COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka = 0x7fa30c03,
   /* NV12 but with stride and plane heights aligned to 32 */
   COLOR_QCOM_FormatYVU420SemiPlanar32m = 0x7fa30c04,
   /* NV12 but with stride and plane heights aligned to 32, Stores two images,
    * one after the other in top-bottom layout */
   COLOR_QCOM_FormatYVU420SemiPlanar32mMultiView = 0x7fa30c05,
+
+  COLOR_TI_FormatYUV420PackedSemiPlanar = 0x7f000100,
   /* From hardware/ti/omap4xxx/domx/omx_core/inc/OMX_TI_IVCommon.h */
   COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced = 0x7f000001,
-  COLOR_FormatYUV420Flexible = 0x7f420888,
   /* This format is Exynos specific from the OMX vendor-specific
    * numeric range, but is defined in the Android OMX headers, so
    * we shouldn't find incompatible usage and crash horribly... right?
