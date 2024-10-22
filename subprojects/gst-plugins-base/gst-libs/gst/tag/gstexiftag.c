@@ -1322,9 +1322,13 @@ parse_exif_ascii_tag (GstExifReader * reader, const GstExifTagMatch * tag,
       GstDateTime *d;
 
       d = gst_date_time_new_local_time (year, month, day, hour, minute, second);
-      gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE,
-          tag->gst_tag, d, NULL);
-      gst_date_time_unref (d);
+      if (d) {
+        gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE,
+            tag->gst_tag, d, NULL);
+        gst_date_time_unref (d);
+      } else {
+        GST_WARNING ("Failed to parse %s into a datetime tag", utfstr);
+      }
     } else {
       GST_WARNING ("Failed to parse %s into a datetime tag", utfstr);
     }
