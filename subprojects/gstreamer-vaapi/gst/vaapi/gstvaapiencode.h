@@ -56,10 +56,6 @@ struct _GstVaapiEncodeInitData
   GST_VAAPI_MAKE_SURFACE_CAPS ", "                       \
   GST_CAPS_INTERLACED_FALSE "; "                         \
   GST_VIDEO_CAPS_MAKE (GST_VAAPI_FORMATS_ALL) ", "       \
-  GST_CAPS_INTERLACED_FALSE ";"                          \
-  GST_VIDEO_CAPS_MAKE_WITH_FEATURES(                     \
-      GST_CAPS_FEATURE_MEMORY_DMABUF,                    \
-      GST_VAAPI_FORMATS_ALL) ","                         \
   GST_CAPS_INTERLACED_FALSE
 /* *INDENT-ON* */
 
