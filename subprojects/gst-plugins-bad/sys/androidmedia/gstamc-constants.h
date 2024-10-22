@@ -120,7 +120,10 @@ enum
 enum
 {
   HEVCProfileMain    = 0x01,
-  HEVCProfileMain10  = 0x02
+  HEVCProfileMain10  = 0x02,
+  HEVCProfileMain10HDR10 = 0x1000,
+  HEVCProfileMain10HDR10Plus = 0x2000,
+  HEVCProfileMainStill = 0x4
 };
 
 enum
@@ -156,6 +159,8 @@ enum
 enum
 {
   AVCProfileBaseline = 0x01,
+  AVCProfileConstrainedBaseline = 0x10000,
+  AVCProfileConstrainedHigh = 0x80000,
   AVCProfileMain = 0x02,
   AVCProfileExtended = 0x04,
   AVCProfileHigh = 0x08,
@@ -181,7 +186,10 @@ enum
   AVCLevel41 = 0x1000,
   AVCLevel42 = 0x2000,
   AVCLevel5 = 0x4000,
-  AVCLevel51 = 0x8000
+  AVCLevel51 = 0x8000,
+  AVCLevel6 = 0x20000,
+  AVCLevel61 = 0x40000,
+  AVCLevel62 = 0x80000
 };
 
 enum

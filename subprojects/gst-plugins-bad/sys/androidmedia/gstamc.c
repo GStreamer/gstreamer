@@ -1093,7 +1093,9 @@ static const struct
 } hevc_profile_mapping_table[] = {
   {
       HEVCProfileMain, "main"}, {
-      HEVCProfileMain10, "main-10"}
+      HEVCProfileMain10, "main-10"}, {
+      HEVCProfileMain10HDR10, "main-10"}, {
+      HEVCProfileMain10HDR10Plus, "main-10"}
 };
 
 const gchar *
@@ -1197,10 +1199,12 @@ static const struct
   const gchar *alt_str;
 } avc_profile_mapping_table[] = {
   {
-      AVCProfileBaseline, "baseline", "constrained-baseline"}, {
+      AVCProfileBaseline, "baseline", NULL}, {
+      AVCProfileConstrainedBaseline, "constrained-baseline", NULL}, {
       AVCProfileMain, "main", NULL}, {
       AVCProfileExtended, "extended", NULL}, {
       AVCProfileHigh, "high"}, {
+      AVCProfileConstrainedHigh, "constrained-high", NULL}, {
       AVCProfileHigh10, "high-10", "high-10-intra"}, {
       AVCProfileHigh422, "high-4:2:2", "high-4:2:2-intra"}, {
       AVCProfileHigh444, "high-4:4:4", "high-4:4:4-intra"}
