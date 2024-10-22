@@ -333,7 +333,8 @@ public:
     BMDFrameFlags flags = m_dframe ? m_dframe->GetFlags () : bmdFrameFlagDefault;
 
     if (have_mastering_info || have_light_level ||
-        colorimetry.transfer == GST_VIDEO_TRANSFER_ARIB_STD_B67) {
+        colorimetry.transfer == GST_VIDEO_TRANSFER_ARIB_STD_B67 ||
+        colorimetry.transfer == GST_VIDEO_TRANSFER_SMPTE2084) {
       flags |= bmdFrameContainsHDRMetadata;
     }
 
@@ -461,75 +462,87 @@ public:
       case bmdDeckLinkFrameMetadataHDRDisplayPrimariesRedX:
         if (have_mastering_info) {
           *value = (double) mastering_info.display_primaries[0].x / 50000.0;
-          return S_OK;
+        } else {
+          *value = 0.0;
         }
-        return E_INVALIDARG;
+        return S_OK;
       case bmdDeckLinkFrameMetadataHDRDisplayPrimariesRedY:
         if (have_mastering_info) {
           *value = (double) mastering_info.display_primaries[0].y / 50000.0;
-          return S_OK;
+        } else {
+          *value = 0.0;
         }
-        return E_INVALIDARG;
+        return S_OK;
       case bmdDeckLinkFrameMetadataHDRDisplayPrimariesGreenX:
         if (have_mastering_info) {
           *value = (double) mastering_info.display_primaries[1].x / 50000.0;
-          return S_OK;
+        } else {
+          *value = 0.0;
         }
-        return E_INVALIDARG;
+        return S_OK;
       case bmdDeckLinkFrameMetadataHDRDisplayPrimariesGreenY:
         if (have_mastering_info) {
           *value = (double) mastering_info.display_primaries[1].y / 50000.0;
-          return S_OK;
+        } else {
+          *value = 0.0;
         }
-        return E_INVALIDARG;
+        return S_OK;
       case bmdDeckLinkFrameMetadataHDRDisplayPrimariesBlueX:
         if (have_mastering_info) {
           *value = (double) mastering_info.display_primaries[2].x / 50000.0;
-          return S_OK;
+        } else {
+          *value = 0.0;
         }
-        return E_INVALIDARG;
+        return S_OK;
       case bmdDeckLinkFrameMetadataHDRDisplayPrimariesBlueY:
         if (have_mastering_info) {
           *value = (double) mastering_info.display_primaries[2].y / 50000.0;
-          return S_OK;
+        } else {
+          *value = 0.0;
         }
-        return E_INVALIDARG;
+        return S_OK;
       case bmdDeckLinkFrameMetadataHDRWhitePointX:
         if (have_mastering_info) {
           *value = (double) mastering_info.white_point.x / 50000.0;
-          return S_OK;
+        } else {
+          *value = 0.0;
         }
-        return E_INVALIDARG;
+        return S_OK;
       case bmdDeckLinkFrameMetadataHDRWhitePointY:
         if (have_mastering_info) {
           *value = (double) mastering_info.white_point.y / 50000.0;
-          return S_OK;
+        } else {
+          *value = 0.0;
         }
-        return E_INVALIDARG;
+        return S_OK;
       case bmdDeckLinkFrameMetadataHDRMaxDisplayMasteringLuminance:
         if (have_mastering_info) {
           *value = (double) mastering_info.max_display_mastering_luminance * 65535.0 / 10000.0;
-          return S_OK;
+        } else {
+          *value = 0.0;
         }
-        return E_INVALIDARG;
+        return S_OK;
       case bmdDeckLinkFrameMetadataHDRMinDisplayMasteringLuminance:
         if (have_mastering_info) {
           *value = (double) mastering_info.min_display_mastering_luminance * 6.55350 / 10000.0;
-          return S_OK;
+        } else {
+          *value = 0.0;
         }
-        return E_INVALIDARG;
+        return S_OK;
       case bmdDeckLinkFrameMetadataHDRMaximumContentLightLevel:
         if (have_light_level) {
           *value = (double) light_level.max_content_light_level;
-          return S_OK;
+        } else {
+          *value = 0.0;
         }
-        return E_INVALIDARG;
+        return S_OK;
       case bmdDeckLinkFrameMetadataHDRMaximumFrameAverageLightLevel:
         if (have_light_level) {
           *value = (double) light_level.max_frame_average_light_level;
-          return S_OK;
+        } else {
+          *value = 0.0;
         }
-        return E_INVALIDARG;
+        return S_OK;
       default:
         return E_INVALIDARG;
     }
