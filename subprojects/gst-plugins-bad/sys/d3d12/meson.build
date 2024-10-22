@@ -176,6 +176,13 @@ configure_file(
   configuration: d3d12_cdata,
 )
 
+if cc.get_argument_syntax() != 'msvc' and dx_headers_dep.type_name() != 'internal'
+  # Required for MinGW because it has old version RPC headers.
+  # DirectX-Headers subproject is doing this already,
+  # but not exposed via pkg-config. Define this for installed DirectX-Headers
+  extra_args += ['-D__REQUIRED_RPCNDR_H_VERSION__=475']
+endif
+
 gstd3d12 = library('gstd3d12',
   d3d12_sources,
   c_args : gst_plugins_bad_args + extra_args,
