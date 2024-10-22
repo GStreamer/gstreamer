@@ -71,7 +71,7 @@
  *
  * The message's structure contains one field:
  *
- * * #guint64 `timeout`: the timeout in microseconds that expired when waiting for data.
+ * * #guint64 `timeout`: the timeout in nanoseconds that expired when waiting for data.
  *
  * The message is typically used to detect that no UDP arrives in the receiver
  * because it is blocked by a firewall.
