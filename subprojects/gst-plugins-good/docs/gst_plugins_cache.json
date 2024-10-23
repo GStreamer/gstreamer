@@ -21760,6 +21760,18 @@
                         "type": "GstRTSPSrcBufferMode",
                         "writable": true
                     },
+                    "client-managed-mikey": {
+                        "blurb": "Enable client-managed MIKEY mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "connection-speed": {
                         "blurb": "Network connection speed in kbps (0 = unknown)",
                         "conditionally-available": false,
@@ -22415,6 +22427,16 @@
                         ],
                         "return-type": "void"
                     },
+                    "hard-limit": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            }
+                        ],
+                        "return-type": "void",
+                        "when": "last"
+                    },
                     "new-manager": {
                         "args": [
                             {
@@ -22464,6 +22486,17 @@
                         "return-type": "GstFlowReturn",
                         "when": "last"
                     },
+                    "remove-key": {
+                        "action": true,
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            }
+                        ],
+                        "return-type": "gboolean",
+                        "when": "last"
+                    },
                     "request-rtcp-key": {
                         "args": [
                             {
@@ -22474,6 +22507,15 @@
                         "return-type": "GstCaps",
                         "when": "last"
                     },
+                    "request-rtp-key": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            }
+                        ],
+                        "return-type": "GstCaps"
+                    },
                     "select-stream": {
                         "args": [
                             {
@@ -22483,6 +22525,25 @@
                             {
                                 "name": "arg1",
                                 "type": "GstCaps"
+                            }
+                        ],
+                        "return-type": "gboolean",
+                        "when": "last"
+                    },
+                    "set-mikey-parameter": {
+                        "action": true,
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "GstCaps"
+                            },
+                            {
+                                "name": "arg2",
+                                "type": "GstPromise"
                             }
                         ],
                         "return-type": "gboolean",
@@ -22509,6 +22570,16 @@
                             }
                         ],
                         "return-type": "gboolean",
+                        "when": "last"
+                    },
+                    "soft-limit": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            }
+                        ],
+                        "return-type": "void",
                         "when": "last"
                     }
                 }

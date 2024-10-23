@@ -93,6 +93,30 @@
  * rtspsrc does not know the difference and will send a PAUSE when you wanted
  * a TEARDOWN. The workaround is to hook into the `before-send` signal and
  * return FALSE in this case.
+ *
+ * Some servers (e.g. Axis cameras) expect the client to propose the encryption
+ * key(s) to be used for SRTP / SRTCP. This is required to allow re-keying so
+ * as to evade cryptanalysis. Note that the behaviour is not specified by the
+ * RFCs. By setting the 'client-managed-mikey-mode' property to 'true', rtspsrc
+ * acts as follows:
+ *
+ * * For a secured profile (RTP/SAVP or RTP/SAVPF), any media in the SDP
+ *   returned by the server for which MIKEY key management applies is
+ *   elligible for client managed mode. The MIKEY from the server is then
+ *   ignored.
+ * * rtspsrc sends a SETUP with a MIKEY payload proposed by the user. The
+ *   payload is formed by calling the 'request-rtp-key' signal for each
+ *   elligible stream. During initialisation, 'request-rtcp-key' is also
+ *   called as usual. The keys returned by both signals should be the same
+ *   for a single stream, but the mechanism allows a different approach.
+ * * The user can start re-keying of a stream by calling SET_PARAMETER.
+ *   The convenience signal 'set-mikey-parameter' can be used to build a
+ *   'KeyMgmt' parameter with a MIKEY payload.
+ * * After the server accepts the new parameter, the user can call
+ *   'remove-key' and prepare for the new key(s) to be served by signals
+ *   'request-rtp-key' & 'request-rtcp-key'.
+ * * The signals 'soft-limit' & 'hard-limit' are called when a key
+ *   reaches the limits of its utilisation.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -147,6 +171,9 @@ enum
   SIGNAL_SELECT_STREAM,
   SIGNAL_NEW_MANAGER,
   SIGNAL_REQUEST_RTCP_KEY,
+  SIGNAL_REQUEST_RTP_KEY,
+  SIGNAL_SOFT_LIMIT,
+  SIGNAL_HARD_LIMIT,
   SIGNAL_ACCEPT_CERTIFICATE,
   SIGNAL_BEFORE_SEND,
   SIGNAL_PUSH_BACKCHANNEL_BUFFER,
@@ -154,6 +181,8 @@ enum
   SIGNAL_GET_PARAMETERS,
   SIGNAL_SET_PARAMETER,
   SIGNAL_PUSH_BACKCHANNEL_SAMPLE,
+  SIGNAL_SET_MIKEY_PARAMETER,
+  SIGNAL_REMOVE_KEY,
   LAST_SIGNAL
 };
 
@@ -316,6 +345,7 @@ gst_rtsp_backchannel_get_type (void)
 #define DEFAULT_IGNORE_X_SERVER_REPLY FALSE
 #define DEFAULT_TCP_TIMESTAMP FALSE
 #define DEFAULT_FORCE_NON_COMPLIANT_URL FALSE
+#define DEFAULT_CLIENT_MANAGED_MIKEY FALSE
 
 enum
 {
@@ -369,6 +399,7 @@ enum
   PROP_EXTRA_HTTP_REQUEST_HEADERS,
   PROP_TCP_TIMESTAMP,
   PROP_FORCE_NON_COMPLIANT_URL,
+  PROP_CLIENT_MANAGED_MIKEY,
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -479,6 +510,17 @@ static GstFlowReturn gst_rtspsrc_push_backchannel_sample (GstRTSPSrc * src,
     guint id, GstSample * sample);
 
 static void gst_rtspsrc_reset_flows (GstRTSPSrc * src);
+
+static GstCaps *signal_get_srtcp_params (GstRTSPSrc * src,
+    GstRTSPStream * stream);
+
+static GstCaps *signal_get_srtp_params (GstRTSPSrc * src,
+    GstRTSPStream * stream);
+
+static gboolean set_mikey_parameter (GstRTSPSrc * src, const guint id,
+    GstCaps * mikey, GstPromise * promise);
+
+static gboolean remove_key (GstRTSPSrc * src, const guint id);
 
 typedef struct
 {
@@ -1172,6 +1214,36 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           DEFAULT_FORCE_NON_COMPLIANT_URL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+   /**
+   * GstRTSPSrc:client-managed-mikey
+   *
+   * Some servers (e.g. Axis Cameras) advertise a `key-mgmt:mikey` attribute in
+   * the SDP from the reply to DESCRIBE, but expect the client to provide the
+   * key for both the client (SRTCP/RR) and the server (SRTP/SRTCP SR).
+   *
+   * When this mode is enabled, for each eligible media, the server crypto
+   * policy is discarded. The crypto policy for this media is built from the
+   * key returned by the signals  'request-rtp-key' & 'request-rtcp-key'.
+   *
+   * A media is eligible for this mode if:
+   *
+   * * No session level MIKEY key-mgmt are defined and the media level key-mgmt
+   *   is MIKEY.
+   * * A session level MIKEY key-mgmt is defined and no media level key-mgmts
+   *   are defined.
+   * * A session level MIKEY key-mgmt is defined and the media level key-mgmt is
+   *   also MIKEY.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_CLIENT_MANAGED_MIKEY,
+      g_param_spec_boolean ("client-managed-mikey",
+          "Client-managed MIKEY",
+          "Enable client-managed MIKEY mode",
+          DEFAULT_CLIENT_MANAGED_MIKEY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
@@ -1262,6 +1334,58 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gst_rtspsrc_signals[SIGNAL_REQUEST_RTCP_KEY] =
       g_signal_new ("request-rtcp-key", G_TYPE_FROM_CLASS (klass),
       0, 0, NULL, NULL, NULL, GST_TYPE_CAPS, 1, G_TYPE_UINT);
+
+  /**
+   * GstRTSPSrc::request-rtp-key:
+   * @rtspsrc: a #GstRTSPSrc
+   * @num: the stream number
+   *
+   * Signal emitted to get the crypto parameters relevant to the RTP
+   * stream. User should provide the key and the RTP encryption ciphers
+   * and authentication, and return them wrapped in a GstCaps.
+   *
+   * Applications should connect to this signal when 'client-managed-mikey'
+   * mode is enabled. The crypto parameters are usually the same as those
+   * use by the 'request-rtcp-key' signal.
+   *
+   * Since: 1.26
+   */
+  gst_rtspsrc_signals[SIGNAL_REQUEST_RTP_KEY] =
+      g_signal_new ("request-rtp-key", G_TYPE_FROM_CLASS (klass),
+      0, 0, NULL, NULL, NULL, GST_TYPE_CAPS, 1, G_TYPE_UINT);
+
+  /**
+   * GstRTSPSrc::soft-limit:
+   * @rtspsrc: a #GstRTSPSrc
+   * @id: The id of the stream
+   *
+   * When the 'client-managed-mikey' mode is enabled, this signal
+   * is emitted when the stream with @id has reached the
+   * soft limit of utilisation of it's master encryption key.
+   * User should start a re-keying procedure.
+   *
+   * Since: 1.26
+   */
+  gst_rtspsrc_signals[SIGNAL_SOFT_LIMIT] =
+      g_signal_new ("soft-limit", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT);
+
+  /**
+   * GstRTSPSrc::hard-limit:
+   * @rtspsrc: a #GstRTSPSrc
+   * @id: The id of the stream
+   *
+   * When the 'client-managed-mikey' mode is enabled, this signal
+   * is emitted when the stream with @id has reached the
+   * hard limit of utilisation of it's master encryption key.
+   * User should start a re-keying procedure. Failure to do so,
+   * will lead to buffers of this stream being dropped.
+   *
+   * Since: 1.26
+   */
+  gst_rtspsrc_signals[SIGNAL_HARD_LIMIT] =
+      g_signal_new ("hard-limit", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT);
 
   /**
    * GstRTSPSrc::accept-certificate:
@@ -1384,6 +1508,12 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    *
    * Handle the SET_PARAMETER signal.
    *
+   * The #GstPromise reply consists in the following fields:
+   *
+   * * 'rtsp-result': set to 0 if the HTTP request could be processed. 
+   * * 'rtsp-code': the HTTP status code returned by the server.
+   * * 'rtsp-reason': a human-readable version of the HTTP status code.
+   *
    * Returns: %TRUE when the command could be issued, %FALSE otherwise
    *
    */
@@ -1392,6 +1522,55 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
           set_parameter), NULL, NULL, NULL, G_TYPE_BOOLEAN, 4, G_TYPE_STRING,
       G_TYPE_STRING, G_TYPE_STRING, GST_TYPE_PROMISE);
+
+  /**
+   * GstRTSPSrc::set-mikey-parameter:
+   * @rtspsrc: a #GstRTSPSrc
+   * @parameter: the id of the stream
+   * @parameter: the caps for the MIKEY payload
+   * @parameter: a pointer to #GstPromise
+   *
+   * Sends a SET_PARAMETER to the server with a MIKEY payload.
+   *
+   * This will call SET_PARAMETER with parameter 'KeyMgmt' and a MIKEY
+   * payload formed from the provided stream's ssrc and MIKEY caps.
+   *
+   * The #GstPromise reply consists in the following fields:
+   *
+   * * 'rtsp-result': set to 0 if the HTTP request could be processed. 
+   * * 'rtsp-code': the HTTP status code returned by the server.
+   * * 'rtsp-reason': a human-readable version of the HTTP status code.
+   *
+   * Returns: %TRUE when the command could be issued, %FALSE otherwise
+   *
+   * Since: 1.26
+   */
+  gst_rtspsrc_signals[SIGNAL_SET_MIKEY_PARAMETER] =
+      g_signal_new ("set-mikey-parameter", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
+          set_mikey_parameter), NULL, NULL, NULL, G_TYPE_BOOLEAN, 3,
+      G_TYPE_UINT, GST_TYPE_CAPS, GST_TYPE_PROMISE);
+
+  /**
+   * GstRTSPSrc::remove-key:
+   * @rtspsrc: a #GstRTSPSrc
+   * @parameter: the id of the stream for which to remove the key.
+   *
+   * Removes the key for a specific stream.
+   *
+   * When the 'client-managed-mikey' mode is enabled, this can be used
+   * after informing the server of the new crypto params (see signal
+   * 'set-mikey-parameter') to remove previous keys and force srtpdec
+   * to request new keys.
+   *
+   * Returns: %TRUE when the command could be issued, %FALSE otherwise
+   *
+   * Since: 1.26
+   */
+  gst_rtspsrc_signals[SIGNAL_REMOVE_KEY] =
+      g_signal_new ("remove-key", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
+          remove_key), NULL, NULL, NULL, G_TYPE_BOOLEAN, 1, G_TYPE_UINT);
 
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
@@ -1413,6 +1592,8 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   klass->get_parameter = GST_DEBUG_FUNCPTR (get_parameter);
   klass->get_parameters = GST_DEBUG_FUNCPTR (get_parameters);
   klass->set_parameter = GST_DEBUG_FUNCPTR (set_parameter);
+  klass->set_mikey_parameter = GST_DEBUG_FUNCPTR (set_mikey_parameter);
+  klass->remove_key = GST_DEBUG_FUNCPTR (remove_key);
 
   gst_rtsp_ext_list_init ();
 
@@ -1971,6 +2152,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_FORCE_NON_COMPLIANT_URL:
       rtspsrc->force_non_compliant_url = g_value_get_boolean (value);
       break;
+    case PROP_CLIENT_MANAGED_MIKEY:
+      rtspsrc->client_managed_mikey = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2152,6 +2336,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_FORCE_NON_COMPLIANT_URL:
       g_value_set_boolean (value, rtspsrc->force_non_compliant_url);
+      break;
+    case PROP_CLIENT_MANAGED_MIKEY:
+      g_value_set_boolean (value, rtspsrc->client_managed_mikey);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3753,6 +3940,25 @@ stream_get_caps_for_pt (GstRTSPStream * stream, guint pt)
   return NULL;
 }
 
+/* @caps: (transfer-full) */
+static void
+stream_set_caps_for_pt (GstRTSPStream * stream, guint pt, GstCaps * caps)
+{
+  guint i, len;
+
+  len = stream->ptmap->len;
+  for (i = 0; i < len; i++) {
+    PtMapItem *item = &g_array_index (stream->ptmap, PtMapItem, i);
+    if (item->pt == pt) {
+      if (item->caps)
+        gst_caps_unref (item->caps);
+
+      item->caps = caps;
+      return;
+    }
+  }
+}
+
 static GstCaps *
 request_pt_map (GstElement * manager, guint session, guint pt, GstRTSPSrc * src)
 {
@@ -3941,17 +4147,87 @@ set_manager_buffer_mode (GstRTSPSrc * src)
   }
 }
 
+static void
+update_srtcp_params (GstRTSPStream * stream)
+{
+  GstStructure *s = gst_caps_get_structure (stream->srtcpparams, 0);
+  if (s) {
+    GstBuffer *buf;
+    const gchar *str;
+    GType ciphertype, authtype;
+    GValue rtcp_cipher = G_VALUE_INIT, rtcp_auth = G_VALUE_INIT;
+
+    ciphertype = g_type_from_name ("GstSrtpCipherType");
+    authtype = g_type_from_name ("GstSrtpAuthType");
+    g_value_init (&rtcp_cipher, ciphertype);
+    g_value_init (&rtcp_auth, authtype);
+
+    str = gst_structure_get_string (s, "srtcp-cipher");
+    gst_value_deserialize (&rtcp_cipher, str);
+    str = gst_structure_get_string (s, "srtcp-auth");
+    gst_value_deserialize (&rtcp_auth, str);
+    gst_structure_get (s, "srtp-key", GST_TYPE_BUFFER, &buf, NULL);
+
+    g_object_set_property (G_OBJECT (stream->srtpenc), "rtp-cipher",
+        &rtcp_cipher);
+    g_object_set_property (G_OBJECT (stream->srtpenc), "rtp-auth", &rtcp_auth);
+    g_object_set_property (G_OBJECT (stream->srtpenc), "rtcp-cipher",
+        &rtcp_cipher);
+    g_object_set_property (G_OBJECT (stream->srtpenc), "rtcp-auth", &rtcp_auth);
+    g_object_set (stream->srtpenc, "key", buf, NULL);
+
+    g_value_unset (&rtcp_cipher);
+    g_value_unset (&rtcp_auth);
+    gst_buffer_unref (buf);
+  }
+}
+
 static GstCaps *
 request_key (GstElement * srtpdec, guint ssrc, GstRTSPStream * stream)
 {
   guint i;
-  GstCaps *caps;
-  GstMIKEYMessage *msg = stream->mikey;
+  GstCaps *key_caps;
+  GstMIKEYMessage *msg = NULL;
+  GstRTSPSrc *rtspsrc = GST_RTSPSRC (stream->parent);
 
-  GST_DEBUG ("request key SSRC %u", ssrc);
+  GST_DEBUG_OBJECT (rtspsrc, "request key stream with id %u SSRC %u",
+      stream->id, ssrc);
 
-  caps = gst_caps_ref (stream_get_caps_for_pt (stream, stream->default_pt));
-  caps = gst_caps_make_writable (caps);
+  if (stream->mikey) {
+    key_caps =
+        gst_caps_ref (stream_get_caps_for_pt (stream, stream->default_pt));
+  } else if (rtspsrc->client_managed_mikey) {
+    key_caps = signal_get_srtp_params (rtspsrc, stream);
+    if (key_caps == NULL) {
+      GST_ERROR_OBJECT (rtspsrc, "no key caps returned for stream with id %u",
+          stream->id);
+      return NULL;
+    }
+
+    stream->mikey = gst_mikey_message_new_from_caps (key_caps);
+    if (stream->mikey == NULL) {
+      GST_ERROR_OBJECT (rtspsrc, "failed to create MIKEY for stream with id %u",
+          stream->id);
+      gst_caps_unref (key_caps);
+
+      return NULL;
+    }
+
+    stream_set_caps_for_pt (stream, stream->default_pt,
+        gst_caps_ref (key_caps));
+
+    /* also renew RTCP crypto params in case we are re-keying */
+    if (stream->srtcpparams)
+      gst_caps_unref (stream->srtcpparams);
+
+    stream->srtcpparams = signal_get_srtcp_params (rtspsrc, stream);
+    update_srtcp_params (stream);
+  } else {
+    GST_ERROR_OBJECT (rtspsrc, "No MIKEYs for stream with id %u", stream->id);
+    return NULL;
+  }
+
+  key_caps = gst_caps_make_writable (key_caps);
 
   /* parse crypto sessions and look for the SSRC rollover counter */
   msg = stream->mikey;
@@ -3959,12 +4235,44 @@ request_key (GstElement * srtpdec, guint ssrc, GstRTSPStream * stream)
     const GstMIKEYMapSRTP *map = gst_mikey_message_get_cs_srtp (msg, i);
 
     if (ssrc == map->ssrc) {
-      gst_caps_set_simple (caps, "roc", G_TYPE_UINT, map->roc, NULL);
+      gst_caps_set_simple (key_caps, "roc", G_TYPE_UINT, map->roc, NULL);
       break;
     }
   }
 
-  return caps;
+  return key_caps;
+}
+
+static GstCaps *
+on_soft_limit (GstElement * srtpdec, guint ssrc, gpointer user_data)
+{
+  GstRTSPStream *stream = (GstRTSPStream *) user_data;
+  GstRTSPSrc *rtspsrc = GST_RTSPSRC_CAST (stream->parent);
+
+  GST_DEBUG_OBJECT (rtspsrc,
+      "Emitting 'soft-limit' for stream with id %u SSRC %u", stream->id, ssrc);
+
+  g_signal_emit (rtspsrc, gst_rtspsrc_signals[SIGNAL_SOFT_LIMIT], 0,
+      stream->id);
+
+  /* don't return CAPS, user needs to start a re-keying procedure */
+  return NULL;
+}
+
+static GstCaps *
+on_hard_limit (GstElement * srtpdec, guint ssrc, gpointer user_data)
+{
+  GstRTSPStream *stream = (GstRTSPStream *) user_data;
+  GstRTSPSrc *rtspsrc = GST_RTSPSRC_CAST (stream->parent);
+
+  GST_DEBUG_OBJECT (rtspsrc,
+      "Emitting 'hard-limit' for stream with id %u SSRC %u", stream->id, ssrc);
+
+  g_signal_emit (rtspsrc, gst_rtspsrc_signals[SIGNAL_HARD_LIMIT], 0,
+      stream->id);
+
+  /* don't return CAPS, user needs to start a re-keying procedure */
+  return NULL;
 }
 
 static GstElement *
@@ -3980,6 +4288,7 @@ request_rtp_decoder (GstElement * rtpbin, guint session, GstRTSPStream * stream)
 
   if (stream->srtpdec == NULL) {
     gchar *name;
+    GstRTSPSrc *rtspsrc;
 
     name = g_strdup_printf ("srtpdec_%u", session);
     stream->srtpdec = gst_element_factory_make ("srtpdec", name);
@@ -3992,6 +4301,15 @@ request_rtp_decoder (GstElement * rtpbin, guint session, GstRTSPStream * stream)
     }
     g_signal_connect (stream->srtpdec, "request-key",
         (GCallback) request_key, stream);
+
+    rtspsrc = GST_RTSPSRC_CAST (stream->parent);
+    if (rtspsrc->client_managed_mikey) {
+      g_signal_connect (stream->srtpdec, "soft-limit",
+          (GCallback) on_soft_limit, stream);
+
+      g_signal_connect (stream->srtpdec, "hard-limit",
+          (GCallback) on_hard_limit, stream);
+    }
   }
   return gst_object_ref (stream->srtpdec);
 }
@@ -4012,8 +4330,6 @@ request_rtcp_encoder (GstElement * rtpbin, guint session,
     return NULL;
 
   if (stream->srtpenc == NULL) {
-    GstStructure *s;
-
     name = g_strdup_printf ("srtpenc_%u", session);
     stream->srtpenc = gst_element_factory_make ("srtpenc", name);
     g_free (name);
@@ -4025,38 +4341,7 @@ request_rtcp_encoder (GstElement * rtpbin, guint session,
     }
 
     /* get RTCP crypto parameters from caps */
-    s = gst_caps_get_structure (stream->srtcpparams, 0);
-    if (s) {
-      GstBuffer *buf;
-      const gchar *str;
-      GType ciphertype, authtype;
-      GValue rtcp_cipher = G_VALUE_INIT, rtcp_auth = G_VALUE_INIT;
-
-      ciphertype = g_type_from_name ("GstSrtpCipherType");
-      authtype = g_type_from_name ("GstSrtpAuthType");
-      g_value_init (&rtcp_cipher, ciphertype);
-      g_value_init (&rtcp_auth, authtype);
-
-      str = gst_structure_get_string (s, "srtcp-cipher");
-      gst_value_deserialize (&rtcp_cipher, str);
-      str = gst_structure_get_string (s, "srtcp-auth");
-      gst_value_deserialize (&rtcp_auth, str);
-      gst_structure_get (s, "srtp-key", GST_TYPE_BUFFER, &buf, NULL);
-
-      g_object_set_property (G_OBJECT (stream->srtpenc), "rtp-cipher",
-          &rtcp_cipher);
-      g_object_set_property (G_OBJECT (stream->srtpenc), "rtp-auth",
-          &rtcp_auth);
-      g_object_set_property (G_OBJECT (stream->srtpenc), "rtcp-cipher",
-          &rtcp_cipher);
-      g_object_set_property (G_OBJECT (stream->srtpenc), "rtcp-auth",
-          &rtcp_auth);
-      g_object_set (stream->srtpenc, "key", buf, NULL);
-
-      g_value_unset (&rtcp_cipher);
-      g_value_unset (&rtcp_auth);
-      gst_buffer_unref (buf);
-    }
+    update_srtcp_params (stream);
   }
   name = g_strdup_printf ("rtcp_sink_%d", session);
   pad = gst_element_request_pad_simple (stream->srtpenc, name);
@@ -7408,6 +7693,20 @@ signal_get_srtcp_params (GstRTSPSrc * src, GstRTSPStream * stream)
       stream->id, &caps);
 
   if (caps != NULL)
+    GST_DEBUG_OBJECT (src, "SRTCP parameters received");
+
+  return caps;
+}
+
+static GstCaps *
+signal_get_srtp_params (GstRTSPSrc * src, GstRTSPStream * stream)
+{
+  GstCaps *caps = NULL;
+
+  g_signal_emit (src, gst_rtspsrc_signals[SIGNAL_REQUEST_RTP_KEY], 0,
+      stream->id, &caps);
+
+  if (caps != NULL)
     GST_DEBUG_OBJECT (src, "SRTP parameters received");
 
   return caps;
@@ -8093,6 +8392,127 @@ cleanup_error:
   }
 }
 
+static gchar *
+gst_rtspsrc_stream_make_renew_keymgmt (GstRTSPSrc * src, GstRTSPStream * stream,
+    GstCaps * mikey)
+{
+  gchar *base64, *result = NULL;
+  GstMIKEYMessage *mikey_msg;
+
+  mikey_msg = gst_mikey_message_new_from_caps (mikey);
+  if (mikey_msg == NULL)
+    return NULL;
+
+  /* add policy '0' for our SSRC */
+  gst_mikey_message_add_cs_srtp (mikey_msg, 0, stream->ssrc, 0);
+
+  base64 = gst_mikey_message_base64_encode (mikey_msg);
+  gst_mikey_message_unref (mikey_msg);
+
+  if (base64) {
+    result = gst_sdp_make_keymgmt (stream->conninfo.location, base64);
+    g_free (base64);
+  }
+
+  return result;
+}
+
+static gboolean
+set_mikey_parameter (GstRTSPSrc * src, const guint id, GstCaps * mikey_caps,
+    GstPromise * promise)
+{
+  gboolean res;
+  GstRTSPStream *stream;
+  gchar *keymgmt;
+
+  GST_LOG_OBJECT (src,
+      "setting MIKEY parameter for stream with id %u: %" GST_PTR_FORMAT, id,
+      mikey_caps);
+
+  if (mikey_caps == NULL) {
+    GST_ERROR_OBJECT (src, "invalid caps");
+    return FALSE;
+  }
+
+  if (src->state == GST_RTSP_STATE_INVALID) {
+    GST_ERROR_OBJECT (src, "invalid state");
+    return FALSE;
+  }
+
+  GST_OBJECT_LOCK (src);
+
+  stream = find_stream (src, &id, (gpointer) find_stream_by_id);
+
+  if (stream == NULL) {
+    GST_OBJECT_UNLOCK (src);
+    GST_ERROR_OBJECT (src, "no streams with id %u", id);
+    return FALSE;
+  }
+
+  if (stream->profile != GST_RTSP_PROFILE_SAVP &&
+      stream->profile != GST_RTSP_PROFILE_SAVPF) {
+    GST_OBJECT_UNLOCK (src);
+    GST_WARNING_OBJECT (src, "stream with id %u, is not encrypted", id);
+    return FALSE;
+  }
+
+  keymgmt = gst_rtspsrc_stream_make_renew_keymgmt (src, stream, mikey_caps);
+
+  GST_OBJECT_UNLOCK (src);
+
+  if (keymgmt == NULL) {
+    GST_ERROR_OBJECT (src,
+        "failed to build MIKEY for stream with id %u: %"
+        GST_PTR_FORMAT, id, mikey_caps);
+    return FALSE;
+  }
+
+  res = set_parameter (src, "KeyMgmt", keymgmt, NULL, promise);
+  g_free (keymgmt);
+
+  return res;
+}
+
+static gboolean
+remove_key (GstRTSPSrc * src, const guint id)
+{
+  GstRTSPStream *stream;
+
+  GST_LOG_OBJECT (src, "Removing key for stream with id %u", id);
+
+  if (src->state == GST_RTSP_STATE_INVALID) {
+    GST_ERROR_OBJECT (src, "invalid state");
+    return FALSE;
+  }
+
+  GST_OBJECT_LOCK (src);
+
+  stream = find_stream (src, &id, (gpointer) find_stream_by_id);
+
+  if (stream == NULL) {
+    GST_ERROR_OBJECT (src, "no streams with id %u", id);
+    GST_OBJECT_UNLOCK (src);
+    return FALSE;
+  }
+
+  if (stream->profile != GST_RTSP_PROFILE_SAVP &&
+      stream->profile != GST_RTSP_PROFILE_SAVPF) {
+    GST_OBJECT_UNLOCK (src);
+    GST_WARNING_OBJECT (src, "stream with id %u, is not encrypted", id);
+    return FALSE;
+  }
+
+  g_signal_emit_by_name (stream->srtpdec, "remove-key", stream->ssrc, NULL);
+  if (stream->mikey) {
+    gst_mikey_message_unref (stream->mikey);
+    stream->mikey = NULL;
+  }
+
+  GST_OBJECT_UNLOCK (src);
+
+  return TRUE;
+}
+
 static gboolean
 gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
     GstSegment * segment, gboolean update_duration)
@@ -8333,6 +8753,99 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
        * the rules for constructing the media control url need it */
       g_free (src->control);
       src->control = g_strdup (control);
+    }
+  }
+
+  if (src->client_managed_mikey) {
+    guint len = gst_sdp_message_attributes_len (sdp);
+
+    GST_DEBUG_OBJECT (src, "client-managed-mikey mode enabled");
+
+    /* Remove key-mgmt:mikey attributes from incoming sdp.
+     * The key parameters will be requested by srtpdec when needed.
+     */
+
+    /* RFC 4567 § 3.1:
+     *
+     * > The attribute MAY be used at session level, media level, or at both
+     * > levels.  An attribute defined at media level overrides an attribute
+     * > defined at session level.
+     *
+     * See: https://www.rfc-editor.org/rfc/rfc4567.html#section-3.1
+     */
+    for (i = 0; i < len; i++) {
+      const GstSDPAttribute *attr = gst_sdp_message_get_attribute (sdp, i);
+
+      if (g_str_equal (attr->key, "key-mgmt")) {
+        if (g_str_has_prefix (attr->value, "mikey")) {
+          GST_DEBUG_OBJECT (src,
+              "client-managed-mikey mode enabled, "
+              "removing session level key-mgmt:mikey");
+          gst_sdp_message_remove_attribute (sdp, i);
+        } else {
+          GST_DEBUG_OBJECT (src, "Keeping session level key-mgmt:%s",
+              attr->value);
+        }
+
+        /* Not expecting more than one key-mgmt attribute at the session level
+         * aternatively, we could keep iterating and error out if several are
+         * found */
+        break;
+      }
+    }
+
+    len = gst_sdp_message_medias_len (sdp);
+    for (i = 0; i < len; i++) {
+      guint32 ssrc = 0;
+      guint j, jlen, mikey_id = 0;
+      gboolean mikey_found, other_keymgmt_found, ssrc_found = FALSE;
+
+      const GstSDPMedia *media = gst_sdp_message_get_media (sdp, i);
+
+      jlen = gst_sdp_media_attributes_len (media);
+      for (j = 0; j < jlen; j++) {
+        const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, j);
+
+        if (g_str_equal (attr->key, "key-mgmt")) {
+          /* Not expecting more than one key-mgmt attribute at the media level
+           * aternatively, we could keep iterating and error out if several are
+           * found */
+
+          if (g_str_has_prefix (attr->value, "mikey")) {
+            mikey_id = j;
+            mikey_found = TRUE;
+          } else {
+            other_keymgmt_found = TRUE;
+          }
+
+          if (ssrc_found)
+            break;
+        } else if (g_str_equal (attr->key, "ssrc")) {
+          if (!sscanf (attr->value, "%u", &ssrc)) {
+            GST_ERROR_OBJECT (src, "Unexpected ssrc value: %s", attr->value);
+            res = GST_RTSP_ERROR;
+            goto setup_failed;
+          }
+
+          ssrc_found = TRUE;
+
+          if (mikey_found)
+            break;
+        }
+      }
+
+      if (ssrc_found && mikey_found) {
+        GST_DEBUG_OBJECT (src,
+            "replacing media level key-mgmt:mikey for ssrc: %"
+            G_GUINT32_FORMAT, ssrc);
+
+        gst_sdp_media_remove_attribute ((GstSDPMedia *) media, mikey_id);
+      } else if (ssrc_found && other_keymgmt_found) {
+        GST_INFO_OBJECT (src,
+            "Found non-MIKEY media level key-mgmt for ssrc: %"
+            G_GUINT32_FORMAT ", client-managed-mikey mode will not be used",
+            ssrc);
+      }
     }
   }
 
