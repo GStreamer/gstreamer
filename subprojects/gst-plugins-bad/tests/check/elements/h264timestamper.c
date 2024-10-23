@@ -128,6 +128,9 @@ GST_START_TEST (test_input_pts_none)
   GST_BUFFER_PTS (buffer) = 0;
   fail_unless_equals_int (gst_harness_push (h, buffer), GST_FLOW_OK);;
   buffer = gst_buffer_new_memdup (h264_idrframe, G_N_ELEMENTS (h264_idrframe));
+  GST_BUFFER_PTS (buffer) = 3 * GST_SECOND;
+  fail_unless_equals_int (gst_harness_push (h, buffer), GST_FLOW_OK);;
+  buffer = gst_buffer_new_memdup (h264_idrframe, G_N_ELEMENTS (h264_idrframe));
   GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
   fail_unless_equals_int (gst_harness_push (h, buffer), GST_FLOW_OK);;
   buffer = gst_buffer_new_memdup (h264_idrframe, G_N_ELEMENTS (h264_idrframe));
