@@ -2896,7 +2896,8 @@ handle_parsebin_collection (ChildSrcPadInfo * info,
   for (iter = info->outputs; iter; iter = iter->next) {
     OutputSlotInfo *output = iter->data;
 
-    if (output->stream && !g_list_find (streams, output->stream)) {
+    if (output->stream
+        && !gst_playback_utils_stream_in_list (streams, output->stream)) {
       GST_DEBUG_OBJECT (output->originating_pad,
           "No longer used in new collection");
       unused_slots = g_list_append (unused_slots, output);
@@ -2973,7 +2974,7 @@ uri_source_bin_aggregate_collection (GstURISourceBin * urisrc)
       for (i = 0; i < len; i++) {
         GstStream *stream =
             gst_stream_collection_get_stream (info->collection, i);
-        if (!g_list_find (streams, stream)) {
+        if (!gst_playback_utils_stream_in_list (streams, stream)) {
           streams = g_list_append (streams, stream);
         }
       }

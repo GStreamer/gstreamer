@@ -27,6 +27,7 @@
 #include <gst/pbutils/pbutils.h>
 
 #include "gstplaybackelements.h"
+#include "gstplaybackutils.h"
 #include "gstrawcaps.h"
 
 /**
@@ -2521,7 +2522,7 @@ get_merged_collection (GstDecodebin3 * dbin)
         GstStream *stream =
             gst_stream_collection_get_stream (input->collection, i);
         /* Only add if not already present in the list */
-        if (!g_list_find (unsorted_streams, stream))
+        if (!gst_playback_utils_stream_in_list (unsorted_streams, stream))
           unsorted_streams = g_list_append (unsorted_streams, stream);
       }
     }

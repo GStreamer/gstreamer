@@ -162,3 +162,37 @@ gst_playback_utils_compare_factories_func (gconstpointer p1, gconstpointer p2)
    * and then by factory name */
   return gst_plugin_feature_rank_compare_func (p1, p2);
 }
+
+/* gst_playback_utils_stream_in_list:
+ * @streams: A list of #GstStream
+ * @stream: A #GstStream
+ *
+ * Searchs whether the given @stream is present in @streams. This also handles
+ * the case where the actual @stream was rewritten but contains the same
+ * stream-id and type.
+ *
+ * Returns: TRUE if @stream is in @streams.
+ *
+ **/
+gboolean
+gst_playback_utils_stream_in_list (GList * streams, GstStream * stream)
+{
+  GList *iter;
+  const gchar *stream_id = gst_stream_get_stream_id (stream);
+  GstStreamType stream_type = gst_stream_get_stream_type (stream);
+
+  for (iter = streams; iter; iter = iter->next) {
+    GstStream *cand = iter->data;
+
+    if (iter->data == stream)
+      return TRUE;
+    /* Compare the stream type */
+    if (gst_stream_get_stream_type (cand) != stream_type)
+      continue;
+    /* Compare the stream-id */
+    if (!g_strcmp0 (stream_id, gst_stream_get_stream_id (cand)))
+      return TRUE;
+  }
+
+  return FALSE;
+}
