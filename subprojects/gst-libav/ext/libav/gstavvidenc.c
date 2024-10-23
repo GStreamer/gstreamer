@@ -1092,6 +1092,12 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
       continue;
     }
 
+    int rank = GST_RANK_SECONDARY;
+
+    if (!strcmp (in_plugin->name, "hap")) {
+      rank = GST_RANK_NONE;
+    }
+
     /* construct the type */
     type_name = g_strdup_printf ("avenc_%s", in_plugin->name);
 
@@ -1115,7 +1121,7 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
       }
     }
 
-    if (!gst_element_register (plugin, type_name, GST_RANK_SECONDARY, type)) {
+    if (!gst_element_register (plugin, type_name, rank, type)) {
       g_free (type_name);
       return FALSE;
     }

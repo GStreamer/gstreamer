@@ -1219,6 +1219,7 @@ gst_ffmpeg_codecid_is_known (enum AVCodecID codec_id)
     case AV_CODEC_ID_APTX_HD:
     case AV_CODEC_ID_AV1:
     case AV_CODEC_ID_M101:
+    case AV_CODEC_ID_HAP:
       return TRUE;
     default:
       return FALSE;
@@ -2892,6 +2893,11 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/x-m101",
           NULL);
       break;
+    case AV_CODEC_ID_HAP:
+      caps =
+          gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/x-hap",
+          NULL);
+      break;
     default:
       GST_DEBUG ("Unknown codec ID %d, please add mapping here", codec_id);
       break;
@@ -3971,6 +3977,20 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
       }
       break;
 
+    case AV_CODEC_ID_HAP:{
+      const gchar *variant;
+
+      if ((variant = gst_structure_get_string (str, "variant"))) {
+        if (strlen (variant) == 4) {
+          GST_INFO ("HAP video variant '%s'", variant);
+          context->codec_tag =
+              GST_MAKE_FOURCC (variant[0], variant[1], variant[2], variant[3]);
+        } else {
+          GST_ERROR ("Unexpected HAP video variant '%s'", variant);
+        }
+      }
+      break;
+    }
     case AV_CODEC_ID_MSRLE:
     case AV_CODEC_ID_QTRLE:
     case AV_CODEC_ID_TSCC:
