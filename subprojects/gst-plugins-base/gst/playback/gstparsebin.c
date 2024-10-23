@@ -4129,10 +4129,6 @@ gst_parse_pad_stream_start_event (GstParsePad * parsepad, GstEvent * event)
       caps = gst_pad_get_current_caps (peer);
       gst_object_unref (peer);
     }
-    if (caps == NULL && parsepad->chain && parsepad->chain->start_caps) {
-      /* Still no caps, use the chain start caps */
-      caps = gst_caps_ref (parsepad->chain->start_caps);
-    }
 
     GST_DEBUG_OBJECT (parsepad,
         "Saw stream_start with no GstStream. Adding one. Caps %"
