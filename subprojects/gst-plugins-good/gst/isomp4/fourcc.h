@@ -460,6 +460,15 @@ G_BEGIN_DECLS
 /* ONVIF Export File Format */
 #define FOURCC_cstb     GST_MAKE_FOURCC('c','s','t','b')
 
+/* Hap video codec */
+#define FOURCC_Hap1     GST_MAKE_FOURCC('H','a','p','1')
+#define FOURCC_Hap5     GST_MAKE_FOURCC('H','a','p','5')
+#define FOURCC_HapY     GST_MAKE_FOURCC('H','a','p','Y')
+#define FOURCC_HapM     GST_MAKE_FOURCC('H','a','p','M')
+#define FOURCC_HapA     GST_MAKE_FOURCC('H','a','p','A')
+#define FOURCC_Hap7     GST_MAKE_FOURCC('H','a','p','7')
+#define FOURCC_HapH     GST_MAKE_FOURCC('H','a','p','H')
+
 G_END_DECLS
 
 #endif /* __FOURCC_H__ */

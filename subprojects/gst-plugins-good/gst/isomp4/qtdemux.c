@@ -17153,6 +17153,46 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("Lagarith lossless video codec");
       caps = gst_caps_new_empty_simple ("video/x-lagarith");
       break;
+    case FOURCC_Hap1:
+    case FOURCC_Hap5:
+    case FOURCC_HapY:
+    case FOURCC_HapM:
+    case FOURCC_HapA:
+    case FOURCC_Hap7:
+    case FOURCC_HapH:{
+      gchar *variant =
+          g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+      caps = gst_caps_new_simple ("video/x-hap",
+          "variant", G_TYPE_STRING, variant, NULL);
+      g_free (variant);
+
+      // https://github.com/Vidvox/hap/blob/master/documentation/HapVideoDRAFT.md
+      switch (fourcc) {
+        case FOURCC_Hap5:
+          _codec ("Hap Alpha");
+          break;
+        case FOURCC_HapY:
+          _codec ("Hap Q");
+          break;
+        case FOURCC_HapM:
+          _codec ("Hap Q Alpha");
+          break;
+        case FOURCC_HapA:
+          _codec ("Hap Alpha-Only");
+          break;
+        case FOURCC_Hap7:
+          _codec ("Hap R");
+          break;
+        case FOURCC_HapH:
+          _codec ("Hap HDR");
+          break;
+        case FOURCC_Hap1:
+        default:
+          _codec ("Hap");
+          break;
+      }
+      break;
+    }
     case FOURCC_uncv:
     {
       const guint8 ENTRY_MINIMUM_SIZE = 86;     // video sample description minimum size in bytes
