@@ -506,7 +506,12 @@ gst_codec_timestamper_drain (GstCodecTimestamper * self)
 static gint
 pts_compare_func (const GstClockTime * a, const GstClockTime * b)
 {
-  return (*a) - (*b);
+  if (*a < *b)
+    return -1;
+  else if (*a > *b)
+    return 1;
+  else
+    return 0;
 }
 
 static GstFlowReturn
