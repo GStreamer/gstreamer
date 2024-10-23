@@ -51,12 +51,12 @@ SwapChainProxy::SwapChainProxy (GstD3D12Window * window, SIZE_T id)
   window_ = (GstD3D12Window *) gst_object_ref (window);
   id_ = id;
 
-  GST_DEBUG_OBJECT (window_, "Creating proxy %" G_GSIZE_FORMAT, id_);
+  GST_DEBUG_OBJECT (window_, "Creating proxy %u", (guint) id_);
 }
 
 SwapChainProxy::~SwapChainProxy ()
 {
-  GST_DEBUG_OBJECT (window_, "Destroying proxy %" G_GSIZE_FORMAT, id_);
+  GST_DEBUG_OBJECT (window_, "Destroying proxy %u", (guint) id_);
 
   swapchain_ = nullptr;
   if (window_thread_ && hwnd_ && hwnd_ != parent_hwnd_) {

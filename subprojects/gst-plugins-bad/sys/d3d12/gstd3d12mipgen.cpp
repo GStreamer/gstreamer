@@ -272,7 +272,7 @@ gst_d3d12_mip_gen_execute (GstD3D12MipGen * gen, ID3D12Resource * resource,
   srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
   srv_desc.Texture2D.MipLevels = desc.MipLevels;
 
-  for (guint srcMip = 0; srcMip < desc.MipLevels - 1;) {
+  for (UINT16 srcMip = 0; srcMip < desc.MipLevels - 1;) {
     guint64 srcWidth = desc.Width >> srcMip;
     guint srcHeight = desc.Height >> srcMip;
     guint dstWidth = static_cast < guint > (srcWidth >> 1);

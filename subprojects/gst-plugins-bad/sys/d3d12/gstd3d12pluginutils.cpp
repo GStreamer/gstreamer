@@ -32,6 +32,8 @@
 using namespace DirectX;
 /* *INDENT-ON* */
 
+/* Enable this once we use debug print in this file */
+#if 0
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
 static GstDebugCategory *
@@ -46,6 +48,7 @@ ensure_debug_category (void)
   return cat;
 }
 #endif /* GST_DISABLE_GST_DEBUG */
+#endif
 
 GType
 gst_d3d12_sampling_method_get_type (void)

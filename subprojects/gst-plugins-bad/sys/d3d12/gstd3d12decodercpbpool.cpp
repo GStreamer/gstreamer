@@ -113,12 +113,6 @@ struct _GstD3D12DecoderCpb : public GstMiniObject
   D3D12_VIDEO_DECODE_COMPRESSED_BITSTREAM bs = { };
 };
 
-bool operator<(const std::shared_ptr<DecoderBuffer> & a,
-    const std::shared_ptr<DecoderBuffer> & b)
-{
-  return a->alloc_size_ < b->alloc_size_;
-}
-
 struct GstD3D12DecoderCpbPoolPrivate
 {
   ~GstD3D12DecoderCpbPoolPrivate ()

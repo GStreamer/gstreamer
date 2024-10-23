@@ -576,12 +576,14 @@ gst_cuda_d3d12_interop_upload_async (GstCudaD3D12Interop * interop,
 
     src_box[i].left = 0;
     src_box[i].top = 0;
-    src_box[i].right = MIN (frame_12.plane_rect[i].right,
-        priv->layout[i].Footprint.Width);
-    src_box[i].bottom = MIN (frame_12.plane_rect[i].bottom,
+    src_box[i].right = MIN ((UINT) frame_12.plane_rect[i].right,
+        (UINT) priv->layout[i].Footprint.Width);
+    src_box[i].bottom = MIN ((UINT) frame_12.plane_rect[i].bottom,
         priv->layout[i].Footprint.Height);
     src_box[i].front = 0;
     src_box[i].back = 1;
+
+    args[i].src_box = &src_box[i];
 
     args[i].src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
     args[i].src.pResource = frame_12.data[i];
@@ -790,12 +792,14 @@ gst_cuda_d3d12_interop_download_async (GstCudaD3D12Interop * interop,
   for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->info); i++) {
     src_box[i].left = 0;
     src_box[i].top = 0;
-    src_box[i].right = MIN (frame_12.plane_rect[i].right,
-        priv->layout[i].Footprint.Width);
-    src_box[i].bottom = MIN (frame_12.plane_rect[i].bottom,
+    src_box[i].right = MIN ((UINT) frame_12.plane_rect[i].right,
+        (UINT) priv->layout[i].Footprint.Width);
+    src_box[i].bottom = MIN ((UINT) frame_12.plane_rect[i].bottom,
         priv->layout[i].Footprint.Height);
     src_box[i].front = 0;
     src_box[i].back = 1;
+
+    args[i].src_box = &src_box[i];
 
     args[i].src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
     args[i].src.pResource = resource->resource.Get ();

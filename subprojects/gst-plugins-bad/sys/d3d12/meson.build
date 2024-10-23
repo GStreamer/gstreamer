@@ -56,6 +56,10 @@ else
     '-Wno-redundant-decls',
     # include/directxmath/DirectXMathMatrix.inl:1161:16: error: variable 'aa' set but not used
     '-Wno-unused-but-set-variable',
+    # include/directx/d3dx12_pipeline_state_stream.h:28: error: ignoring '#pragma warning '
+    '-Wno-unknown-pragmas',
+    # Various warnings in DirectX-Headers headers
+    '-Wno-switch',
   ])
 endif
 

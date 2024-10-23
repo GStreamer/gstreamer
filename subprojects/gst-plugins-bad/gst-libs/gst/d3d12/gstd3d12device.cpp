@@ -774,20 +774,6 @@ gst_d3d12_device_get_property (GObject * object, guint prop_id,
 }
 
 static void
-make_buffer_format (GstVideoFormat format, GstD3D12Format * d3d12_format)
-{
-  d3d12_format->format = format;
-  d3d12_format->dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-  d3d12_format->dxgi_format = DXGI_FORMAT_UNKNOWN;
-  d3d12_format->support1 = D3D12_FORMAT_SUPPORT1_NONE;
-  d3d12_format->support2 = D3D12_FORMAT_SUPPORT2_NONE;
-  for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    d3d12_format->resource_format[i] = DXGI_FORMAT_UNKNOWN;
-    d3d12_format->uav_format[i] = DXGI_FORMAT_UNKNOWN;
-  }
-}
-
-static void
 gst_d3d12_device_setup_format_table (GstD3D12Device * self)
 {
   auto priv = self->priv->inner;

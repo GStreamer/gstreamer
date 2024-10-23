@@ -1188,13 +1188,6 @@ setup_d2d_render (GstD3D12TestSrc * self, RenderContext * ctx)
   auto priv = self->priv;
   HRESULT hr;
 
-  static const D3D_FEATURE_LEVEL feature_levels[] = {
-    D3D_FEATURE_LEVEL_12_1,
-    D3D_FEATURE_LEVEL_12_0,
-    D3D_FEATURE_LEVEL_11_1,
-    D3D_FEATURE_LEVEL_11_0,
-  };
-
   if (!priv->d2d_factory) {
     ComPtr < ID2D1Factory > d2d_factory;
     hr = D2D1CreateFactory (D2D1_FACTORY_TYPE_MULTI_THREADED,

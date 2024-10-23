@@ -947,8 +947,8 @@ gst_d3d12_decoder_new_picture_with_size (GstD3D12Decoder * decoder,
     return GST_FLOW_ERROR;
   }
 
-  if (priv->session->coded_width >= width &&
-      priv->session->coded_height >= height) {
+  if (priv->session->coded_width >= (gint) width &&
+      priv->session->coded_height >= (gint) height) {
     return gst_d3d12_decoder_new_picture (decoder, videodec, picture);
   }
 
