@@ -1339,6 +1339,11 @@ analyze_new_pad (GstParseBin * parsebin, GstElement * src, GstPad * pad,
   gst_pad_set_active (GST_PAD_CAST (parsepad), TRUE);
   parse_pad_set_target (parsepad, pad);
 
+  /* If we know the caps, store them in the parsepad GstStream */
+  if (gst_caps_is_fixed (caps)) {
+    gst_parse_pad_update_caps (parsepad, caps);
+  }
+
   /* 1. Emit 'autoplug-continue' the result will tell us if this pads needs
    * further autoplugging. Only do this for fixed caps, for unfixed caps
    * we will later come here again from the notify::caps handler. The
