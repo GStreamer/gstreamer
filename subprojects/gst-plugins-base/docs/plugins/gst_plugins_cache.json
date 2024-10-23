@@ -12289,17 +12289,6 @@
                         "type": "guint64",
                         "writable": true
                     },
-                    "source": {
-                        "blurb": "Source object used",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "GstElement",
-                        "writable": false
-                    },
                     "suburi": {
                         "blurb": "Optional URI of a subtitle",
                         "conditionally-available": false,

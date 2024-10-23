@@ -220,7 +220,6 @@ struct _GstURIDecodeBin3
   GstBin parent_instance;
 
   /* Properties */
-  GstElement *source;
   guint64 connection_speed;     /* In bits/sec (0 = unknown) */
   GstCaps *caps;
   guint64 buffer_duration;      /* When buffering, buffer duration (ns) */
@@ -312,7 +311,6 @@ enum
   PROP_CURRENT_URI,
   PROP_SUBURI,
   PROP_CURRENT_SUBURI,
-  PROP_SOURCE,
   PROP_CONNECTION_SPEED,
   PROP_BUFFER_SIZE,
   PROP_BUFFER_DURATION,
@@ -443,10 +441,6 @@ gst_uri_decode_bin3_class_init (GstURIDecodeBin3Class * klass)
       g_param_spec_string ("current-suburi", "Current .sub-URI",
           "The currently playing URI of a subtitle",
           NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_SOURCE,
-      g_param_spec_object ("source", "Source", "Source object used",
-          GST_TYPE_ELEMENT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
       g_param_spec_uint64 ("connection-speed", "Connection Speed",
@@ -1698,13 +1692,6 @@ gst_uri_decode_bin3_get_property (GObject * object, guint prop_id,
       } else {
         g_value_set_string (value, NULL);
       }
-      break;
-    }
-    case PROP_SOURCE:
-    {
-      GST_OBJECT_LOCK (dec);
-      g_value_set_object (value, dec->source);
-      GST_OBJECT_UNLOCK (dec);
       break;
     }
     case PROP_CONNECTION_SPEED:
