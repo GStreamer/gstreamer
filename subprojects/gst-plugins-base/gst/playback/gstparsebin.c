@@ -1597,8 +1597,6 @@ setup_caps_delay:
 
     /* connect to caps notification */
     CHAIN_MUTEX_LOCK (chain);
-    GST_LOG_OBJECT (parsebin, "Chain %p has now %d dynamic pads", chain,
-        g_list_length (chain->pending_pads));
     ppad = g_new0 (GstPendingPad, 1);
     ppad->pad = gst_object_ref (pad);
     ppad->chain = chain;
@@ -1608,6 +1606,8 @@ setup_caps_delay:
     chain->pending_pads = g_list_prepend (chain->pending_pads, ppad);
     ppad->notify_caps_id = g_signal_connect (pad, "notify::caps",
         G_CALLBACK (caps_notify_cb), chain);
+    GST_LOG_OBJECT (parsebin, "Chain %p has now %d dynamic pads", chain,
+        g_list_length (chain->pending_pads));
     CHAIN_MUTEX_UNLOCK (chain);
 
     /* If we're here because we have a Parser/Converter
@@ -4105,9 +4105,15 @@ gst_parse_pad_stream_start_event (GstParsePad * parsepad, GstEvent * event)
   gst_event_parse_stream_flags (event, &streamflags);
 
   if (parsepad->active_stream != NULL &&
-      g_str_equal (parsepad->active_stream->stream_id, stream_id))
+      g_str_equal (parsepad->active_stream->stream_id, stream_id)) {
+    GST_DEBUG_OBJECT (parsepad, "Saw repeat stream id %s", stream_id);
     repeat_event = TRUE;
-  else {
+  } else {
+    if (parsepad->active_stream)
+      GST_DEBUG_OBJECT (parsepad, "Saw a different stream id (%s vs %s)",
+          parsepad->active_stream->stream_id, stream_id);
+    else
+      GST_DEBUG_OBJECT (parsepad, "Saw a new stream_id : %s", stream_id);
     /* A new stream requires a new collection event, or else
      * we'll place it in a fallback collection later */
     gst_object_replace ((GstObject **) & parsepad->active_collection, NULL);
