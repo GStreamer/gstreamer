@@ -898,6 +898,30 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
     }
     GST_WARNING ("Unexpected version in %" GST_PTR_FORMAT, caps);
     return g_strdup ("TechSmith Screen Capture");
+  } else if (strcmp (info->type, "video/x-hap") == 0) {
+    const gchar *variant, *ret;
+
+    // https://github.com/Vidvox/hap/blob/master/documentation/HapVideoDRAFT.md
+    variant = gst_structure_get_string (s, "variant");
+    if (variant == NULL || strcmp (variant, "Hap1") == 0)
+      ret = "Hap";
+    else if (strcmp (variant, "Hap5") == 0)
+      ret = "Hap Alpha";
+    else if (strcmp (variant, "HapY") == 0)
+      ret = "Hap Q";
+    else if (strcmp (variant, "HapM") == 0)
+      ret = "Hap Q Alpha";
+    else if (strcmp (variant, "HapA") == 0)
+      ret = "Hap Alpha-Only";
+    else if (strcmp (variant, "Hap7") == 0)
+      ret = "Hap R";
+    else if (strcmp (variant, "HapH") == 0)
+      ret = "Hap HDR";
+    else {
+      GST_WARNING ("Unknown Hap video variant '%s'", variant);
+      ret = "Hap";
+    }
+    return g_strdup (ret);
   }
   return NULL;
 }
