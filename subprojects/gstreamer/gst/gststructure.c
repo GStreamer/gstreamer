@@ -2148,8 +2148,8 @@ foreach_quark_adapter (const GstIdStr * fieldname, const GValue * value,
 /**
  * gst_structure_foreach:
  * @structure: a #GstStructure
- * @func: (scope call): a function to call for each field
- * @user_data: (closure): private data
+ * @func: (scope call) (closure user_data): a function to call for each field
+ * @user_data: private data
  *
  * Calls the provided function once for each field in the #GstStructure. The
  * function must not modify the fields. Also see gst_structure_map_in_place()
@@ -2188,8 +2188,8 @@ map_in_place_quark_adapter (const GstIdStr * fieldname, GValue * value,
 /**
  * gst_structure_map_in_place:
  * @structure: a #GstStructure
- * @func: (scope call): a function to call for each field
- * @user_data: (closure): private data
+ * @func: (scope call) (closure user_data): a function to call for each field
+ * @user_data: private data
  *
  * Calls the provided function once for each field in the #GstStructure. In
  * contrast to gst_structure_foreach(), the function may modify but not delete the
@@ -2229,8 +2229,8 @@ filter_and_map_in_place_quark_adapter (const GstIdStr * fieldname,
 /**
  * gst_structure_filter_and_map_in_place:
  * @structure: a #GstStructure
- * @func: (scope call): a function to call for each field
- * @user_data: (closure): private data
+ * @func: (scope call) (closure user_data): a function to call for each field
+ * @user_data: private data
  *
  * Calls the provided function once for each field in the #GstStructure. In
  * contrast to gst_structure_foreach(), the function may modify the fields.
@@ -2255,8 +2255,8 @@ gst_structure_filter_and_map_in_place (GstStructure * structure,
 /**
  * gst_structure_foreach_id_str:
  * @structure: a #GstStructure
- * @func: (scope call): a function to call for each field
- * @user_data: (closure): private data
+ * @func: (scope call) (closure user_data): a function to call for each field
+ * @user_data: private data
  *
  * Calls the provided function once for each field in the #GstStructure. The
  * function must not modify the fields. Also see gst_structure_map_in_place_id_str()
@@ -2294,8 +2294,8 @@ gst_structure_foreach_id_str (const GstStructure * structure,
 /**
  * gst_structure_map_in_place_id_str:
  * @structure: a #GstStructure
- * @func: (scope call): a function to call for each field
- * @user_data: (closure): private data
+ * @func: (scope call) (closure user_data): a function to call for each field
+ * @user_data: private data
  *
  * Calls the provided function once for each field in the #GstStructure. In
  * contrast to gst_structure_foreach_id_str(), the function may modify but not delete the
@@ -2333,8 +2333,8 @@ gst_structure_map_in_place_id_str (GstStructure * structure,
 /**
  * gst_structure_filter_and_map_in_place_id_str:
  * @structure: a #GstStructure
- * @func: (scope call): a function to call for each field
- * @user_data: (closure): private data
+ * @func: (scope call) (closure user_data): a function to call for each field
+ * @user_data: private data
  *
  * Calls the provided function once for each field in the #GstStructure. In
  * contrast to gst_structure_foreach_id_str(), the function may modify the fields.

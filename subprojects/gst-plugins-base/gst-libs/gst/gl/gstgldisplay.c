@@ -740,8 +740,8 @@ gst_gl_display_remove_window (GstGLDisplay * display, GstGLWindow * window)
 /**
  * gst_gl_display_find_window:
  * @display: a #GstGLDisplay
- * @data: (closure): some data to pass to @compare_func
- * @compare_func: (scope call): a comparison function to run
+ * @data: some data to pass to @compare_func
+ * @compare_func: (scope call) (closure data): a comparison function to run
  *
  * Execute @compare_func over the list of windows stored by @display.  The
  * first argument to @compare_func is the #GstGLWindow being checked and the
@@ -770,8 +770,8 @@ gst_gl_display_find_window (GstGLDisplay * display, gpointer data,
 /**
  * gst_gl_display_retrieve_window:
  * @display: a #GstGLDisplay
- * @data: (closure): some data to pass to @compare_func
- * @compare_func: (scope call): a comparison function to run
+ * @data: some data to pass to @compare_func
+ * @compare_func: (scope call) (closure data): a comparison function to run
  *
  * Execute @compare_func over the list of windows stored by @display.  The
  * first argument to @compare_func is the #GstGLWindow being checked and the

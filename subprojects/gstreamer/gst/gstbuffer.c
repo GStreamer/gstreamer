@@ -2490,8 +2490,8 @@ gst_buffer_iterate_meta_filtered (GstBuffer * buffer, gpointer * state,
 /**
  * gst_buffer_foreach_meta:
  * @buffer: a #GstBuffer
- * @func: (scope call): a #GstBufferForeachMetaFunc to call
- * @user_data: (closure): user data passed to @func
+ * @func: (scope call) (closure user_data): a #GstBufferForeachMetaFunc to call
+ * @user_data: user data passed to @func
  *
  * Calls @func with @user_data for each meta in @buffer.
  *

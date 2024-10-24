@@ -3541,10 +3541,11 @@ gst_util_get_timestamp (void)
  * @array: the sorted input array
  * @num_elements: number of elements in the array
  * @element_size: size of every element in bytes
- * @search_func: (scope call): function to compare two elements, @search_data will always be passed as second argument
+ * @search_func: (scope call) (closure user_data): function to compare two
+ *    elements, @search_data will always be passed as second argument
  * @mode: search mode that should be used
  * @search_data: element that should be found
- * @user_data: (closure): data to pass to @search_func
+ * @user_data: data to pass to @search_func
  *
  * Searches inside @array for @search_data by using the comparison function
  * @search_func. @array must be sorted ascending.

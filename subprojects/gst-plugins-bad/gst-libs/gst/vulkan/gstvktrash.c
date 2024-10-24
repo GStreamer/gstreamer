@@ -118,8 +118,8 @@ gst_vulkan_trash_init (GstVulkanTrash * trash, GstVulkanFence * fence,
 /**
  * gst_vulkan_trash_new:
  * @fence: a #GstVulkanFence
- * @notify: (scope async): a #GstVulkanTrashNotify
- * @user_data: (closure notify): user data for @notify
+ * @notify: (scope async) (closure user_data): a #GstVulkanTrashNotify
+ * @user_data: user data for @notify
  *
  * Create and return a new #GstVulkanTrash object that will stores a callback
  * to call when @fence is signalled.

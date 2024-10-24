@@ -394,8 +394,8 @@ window_weak_list_to_strong (GstVulkanDisplay * display)
 /**
  * gst_vulkan_display_find_window:
  * @display: a #GstVulkanDisplay
- * @data: (closure): some data to pass to @compare_func
- * @compare_func: (scope call): a comparison function to run
+ * @data: some data to pass to @compare_func
+ * @compare_func: (scope call) (closure data): a comparison function to run
  *
  * Execute @compare_func over the list of windows stored by @display.  The
  * first argument to @compare_func is the #GstVulkanWindow being checked and the

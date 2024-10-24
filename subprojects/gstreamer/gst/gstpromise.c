@@ -381,8 +381,8 @@ gst_promise_new (void)
 
 /**
  * gst_promise_new_with_change_func:
- * @func: (scope notified): a #GstPromiseChangeFunc to call
- * @user_data: (closure): argument to call @func with
+ * @func: (scope notified) (closure user_data): a #GstPromiseChangeFunc to call
+ * @user_data: argument to call @func with
  * @notify: notification function that @user_data is no longer needed
  *
  * @func will be called exactly once when transitioning out of

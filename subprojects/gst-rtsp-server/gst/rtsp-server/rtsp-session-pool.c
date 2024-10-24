@@ -539,8 +539,8 @@ gst_rtsp_session_pool_cleanup (GstRTSPSessionPool * pool)
 /**
  * gst_rtsp_session_pool_filter:
  * @pool: a #GstRTSPSessionPool
- * @func: (scope call) (allow-none): a callback
- * @user_data: (closure): user data passed to @func
+ * @func: (scope call) (allow-none) (closure user_data): a callback
+ * @user_data: user data passed to @func
  *
  * Call @func for each session in @pool. The result value of @func determines
  * what happens to the session. @func will be called with the session pool

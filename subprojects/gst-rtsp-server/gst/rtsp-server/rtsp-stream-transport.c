@@ -225,9 +225,9 @@ gst_rtsp_stream_transport_get_stream (GstRTSPStreamTransport * trans)
 /**
  * gst_rtsp_stream_transport_set_callbacks:
  * @trans: a #GstRTSPStreamTransport
- * @send_rtp: (scope notified): a callback called when RTP should be sent
- * @send_rtcp: (scope notified): a callback called when RTCP should be sent
- * @user_data: (closure): user data passed to callbacks
+ * @send_rtp: (scope notified) (closure user_data): a callback called when RTP should be sent
+ * @send_rtcp: (scope notified) (closure user_data): a callback called when RTCP should be sent
+ * @user_data: user data passed to callbacks
  * @notify: (allow-none): called with the user_data when no longer needed.
  *
  * Install callbacks that will be called when data for a stream should be sent
@@ -255,9 +255,9 @@ gst_rtsp_stream_transport_set_callbacks (GstRTSPStreamTransport * trans,
 /**
  * gst_rtsp_stream_transport_set_list_callbacks:
  * @trans: a #GstRTSPStreamTransport
- * @send_rtp_list: (scope notified): a callback called when RTP should be sent
- * @send_rtcp_list: (scope notified): a callback called when RTCP should be sent
- * @user_data: (closure): user data passed to callbacks
+ * @send_rtp_list: (scope notified) (closure user_data): a callback called when RTP should be sent
+ * @send_rtcp_list: (scope notified) (closure user_data): a callback called when RTCP should be sent
+ * @user_data: user data passed to callbacks
  * @notify: (allow-none): called with the user_data when no longer needed.
  *
  * Install callbacks that will be called when data for a stream should be sent
@@ -326,8 +326,8 @@ gst_rtsp_stream_transport_check_back_pressure (GstRTSPStreamTransport * trans,
 /**
  * gst_rtsp_stream_transport_set_keepalive:
  * @trans: a #GstRTSPStreamTransport
- * @keep_alive: (scope notified): a callback called when the receiver is active
- * @user_data: (closure): user data passed to callback
+ * @keep_alive: (scope notified) (closure user_data): a callback called when the receiver is active
+ * @user_data: user data passed to callback
  * @notify: (allow-none): called with the user_data when no longer needed.
  *
  * Install callbacks that will be called when RTCP packets are received from the
@@ -353,8 +353,8 @@ gst_rtsp_stream_transport_set_keepalive (GstRTSPStreamTransport * trans,
 /**
  * gst_rtsp_stream_transport_set_message_sent:
  * @trans: a #GstRTSPStreamTransport
- * @message_sent: (scope notified): a callback called when a message has been sent
- * @user_data: (closure): user data passed to callback
+ * @message_sent: (scope notified) (closure user_data): a callback called when a message has been sent
+ * @user_data: user data passed to callback
  * @notify: (allow-none): called with the user_data when no longer needed
  *
  * Install a callback that will be called when a message has been sent on @trans.
@@ -380,8 +380,8 @@ gst_rtsp_stream_transport_set_message_sent (GstRTSPStreamTransport * trans,
 /**
  * gst_rtsp_stream_transport_set_message_sent_full:
  * @trans: a #GstRTSPStreamTransport
- * @message_sent: (scope notified): a callback called when a message has been sent
- * @user_data: (closure): user data passed to callback
+ * @message_sent: (scope notified) (closure user_data): a callback called when a message has been sent
+ * @user_data: user data passed to callback
  * @notify: (allow-none): called with the user_data when no longer needed
  *
  * Install a callback that will be called when a message has been sent on @trans.

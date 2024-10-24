@@ -1643,8 +1643,8 @@ _gst_gl_context_thread_run_generic (RunGenericData * data)
 /**
  * gst_gl_context_thread_add:
  * @context: a #GstGLContext
- * @func: (scope call): a #GstGLContextThreadFunc
- * @data: (closure): user data to call @func with
+ * @func: (scope call) (closure data): a #GstGLContextThreadFunc
+ * @data: user data to call @func with
  *
  * Execute @func in the OpenGL thread of @context with @data
  *

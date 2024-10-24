@@ -4506,7 +4506,8 @@ installed but no suitable video decoder and no suitable audio decoder).</doc>
           <type name="InstallPluginsContext" c:type="GstInstallPluginsContext*"/>
         </parameter>
         <parameter name="func" transfer-ownership="none" scope="async" closure="3">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.c">the function to call when the installer program returns</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.c">the function to call when the
+    installer program returns</doc>
           <type name="InstallPluginsResultFunc" c:type="GstInstallPluginsResultFunc"/>
         </parameter>
         <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">

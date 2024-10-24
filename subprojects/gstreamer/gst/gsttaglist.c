@@ -1413,8 +1413,8 @@ structure_foreach_wrapper (const GstIdStr * field, const GValue * value,
 /**
  * gst_tag_list_foreach:
  * @list: list to iterate over
- * @func: (scope call): function to be called for each tag
- * @user_data: (closure): user specified data
+ * @func: (scope call) (closure user_data): function to be called for each tag
+ * @user_data: user specified data
  *
  * Calls the given function for each tag inside the tag list. Note that if there
  * is no tag, the function won't be called at all.

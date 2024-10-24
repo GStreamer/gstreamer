@@ -22041,11 +22041,11 @@ MT safe.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstiterator.c">The #GstIterator to filter</doc>
             <type name="Iterator" c:type="GstIterator*"/>
           </instance-parameter>
-          <parameter name="func" transfer-ownership="none" scope="call">
+          <parameter name="func" transfer-ownership="none" scope="call" closure="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstiterator.c">the compare function to select elements</doc>
             <type name="GLib.CompareFunc" c:type="GCompareFunc"/>
           </parameter>
-          <parameter name="user_data" transfer-ownership="none">
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstiterator.c">user data passed to the compare function</doc>
             <type name="GObject.Value" c:type="const GValue*"/>
           </parameter>
@@ -30065,8 +30065,8 @@ MT safe.</doc>
             <type name="PadProbeType" c:type="GstPadProbeType"/>
           </parameter>
           <parameter name="callback" transfer-ownership="none" scope="notified" closure="2" destroy="3">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">#GstPadProbeCallback that will be called with notifications of
-          the pad state</doc>
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">#GstPadProbeCallback that will be called with
+          notifications of the pad state</doc>
             <type name="PadProbeCallback" c:type="GstPadProbeCallback"/>
           </parameter>
           <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
@@ -31930,8 +31930,8 @@ event. If @foreach_func returns %FALSE the iteration is immediately stopped.</do
             <type name="Pad" c:type="GstPad*"/>
           </instance-parameter>
           <parameter name="foreach_func" transfer-ownership="none" scope="call" closure="1">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">the #GstPadStickyEventsForeachFunction that
-               should be called for every event.</doc>
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">the
+   #GstPadStickyEventsForeachFunction that should be called for every event.</doc>
             <type name="PadStickyEventsForeachFunction" c:type="GstPadStickyEventsForeachFunction"/>
           </parameter>
           <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
@@ -56601,7 +56601,8 @@ element or %NULL if nothing was found</doc>
           <type name="gsize" c:type="gsize"/>
         </parameter>
         <parameter name="search_func" transfer-ownership="none" scope="call" closure="6">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">function to compare two elements, @search_data will always be passed as second argument</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">function to compare two
+   elements, @search_data will always be passed as second argument</doc>
           <type name="GLib.CompareDataFunc" c:type="GCompareDataFunc"/>
         </parameter>
         <parameter name="mode" transfer-ownership="none">

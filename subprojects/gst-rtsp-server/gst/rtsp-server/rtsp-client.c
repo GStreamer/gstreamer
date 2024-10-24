@@ -4728,8 +4728,8 @@ gst_rtsp_client_get_connection (GstRTSPClient * client)
 /**
  * gst_rtsp_client_set_send_func:
  * @client: a #GstRTSPClient
- * @func: (scope notified): a #GstRTSPClientSendFunc
- * @user_data: (closure): user data passed to @func
+ * @func: (scope notified) (closure user_data): a #GstRTSPClientSendFunc
+ * @user_data: user data passed to @func
  * @notify: (allow-none): called when @user_data is no longer in use
  *
  * Set @func as the callback that will be called when a new message needs to be
@@ -4770,8 +4770,8 @@ gst_rtsp_client_set_send_func (GstRTSPClient * client,
 /**
  * gst_rtsp_client_set_send_messages_func:
  * @client: a #GstRTSPClient
- * @func: (scope notified): a #GstRTSPClientSendMessagesFunc
- * @user_data: (closure): user data passed to @func
+ * @func: (scope notified) (closure user_data): a #GstRTSPClientSendMessagesFunc
+ * @user_data: user data passed to @func
  * @notify: (allow-none): called when @user_data is no longer in use
  *
  * Set @func as the callback that will be called when new messages needs to be

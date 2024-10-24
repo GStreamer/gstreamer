@@ -273,8 +273,8 @@ gst_custom_meta_has_name (GstCustomMeta * meta, const gchar * name)
  * gst_meta_register_custom:
  * @name: the name of the #GstMeta implementation
  * @tags: (array zero-terminated=1): tags for @api
- * @transform_func: (scope notified) (nullable): a #GstMetaTransformFunction
- * @user_data: (closure): user data passed to @transform_func
+ * @transform_func: (scope notified) (nullable) (closure user_data): a #GstMetaTransformFunction
+ * @user_data: user data passed to @transform_func
  * @destroy_data: #GDestroyNotify for user_data
  *
  * Register a new custom #GstMeta implementation, backed by an opaque

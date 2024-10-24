@@ -1423,8 +1423,8 @@ gst_element_do_foreach_pad (GstElement * element,
 /**
  * gst_element_foreach_sink_pad:
  * @element: a #GstElement to iterate sink pads of
- * @func: (scope call): function to call for each sink pad
- * @user_data: (closure): user data passed to @func
+ * @func: (scope call) (closure user_data): function to call for each sink pad
+ * @user_data: user data passed to @func
  *
  * Call @func with @user_data for each of @element's sink pads. @func will be
  * called exactly once for each sink pad that exists at the time of this call,
@@ -1449,8 +1449,8 @@ gst_element_foreach_sink_pad (GstElement * element,
 /**
  * gst_element_foreach_src_pad:
  * @element: a #GstElement to iterate source pads of
- * @func: (scope call): function to call for each source pad
- * @user_data: (closure): user data passed to @func
+ * @func: (scope call) (closure user_data): function to call for each source pad
+ * @user_data: user data passed to @func
  *
  * Call @func with @user_data for each of @element's source pads. @func will be
  * called exactly once for each source pad that exists at the time of this call,
@@ -1475,8 +1475,8 @@ gst_element_foreach_src_pad (GstElement * element,
 /**
  * gst_element_foreach_pad:
  * @element: a #GstElement to iterate pads of
- * @func: (scope call): function to call for each pad
- * @user_data: (closure): user data passed to @func
+ * @func: (scope call) (closure user_data): function to call for each pad
+ * @user_data: user data passed to @func
  *
  * Call @func with @user_data for each of @element's pads. @func will be called
  * exactly once for each pad that exists at the time of this call, unless

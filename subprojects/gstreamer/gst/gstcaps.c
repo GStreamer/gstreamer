@@ -2902,8 +2902,8 @@ gst_caps_transform_to_string (const GValue * src_value, GValue * dest_value)
 /**
  * gst_caps_foreach:
  * @caps: a #GstCaps
- * @func: (scope call): a function to call for each field
- * @user_data: (closure): private data
+ * @func: (scope call) (closure user_data): a function to call for each field
+ * @user_data: private data
  *
  * Calls the provided function once for each structure and caps feature in the
  * #GstCaps. The function must not modify the fields.
@@ -2943,8 +2943,8 @@ gst_caps_foreach (const GstCaps * caps, GstCapsForeachFunc func,
 /**
  * gst_caps_map_in_place:
  * @caps: a #GstCaps
- * @func: (scope call): a function to call for each field
- * @user_data: (closure): private data
+ * @func: (scope call) (closure user_data): a function to call for each field
+ * @user_data: private data
  *
  * Calls the provided function once for each structure and caps feature in the
  * #GstCaps. In contrast to gst_caps_foreach(), the function may modify but not
@@ -2991,8 +2991,8 @@ gst_caps_map_in_place (GstCaps * caps, GstCapsMapFunc func, gpointer user_data)
 /**
  * gst_caps_filter_and_map_in_place:
  * @caps: a #GstCaps
- * @func: (scope call): a function to call for each field
- * @user_data: (closure): private data
+ * @func: (scope call) (closure user_data): a function to call for each field
+ * @user_data: private data
  *
  * Calls the provided function once for each structure and caps feature in the
  * #GstCaps. In contrast to gst_caps_foreach(), the function may modify the

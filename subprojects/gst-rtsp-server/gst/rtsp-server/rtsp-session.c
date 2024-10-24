@@ -425,8 +425,8 @@ gst_rtsp_session_dup_media (GstRTSPSession * sess, const gchar * path,
 /**
  * gst_rtsp_session_filter:
  * @sess: a #GstRTSPSession
- * @func: (scope call) (allow-none): a callback
- * @user_data: (closure): user data passed to @func
+ * @func: (scope call) (allow-none) (closure user_data): a callback
+ * @user_data: user data passed to @func
  *
  * Call @func for each media in @sess. The result value of @func determines
  * what happens to the media. @func will be called with @sess

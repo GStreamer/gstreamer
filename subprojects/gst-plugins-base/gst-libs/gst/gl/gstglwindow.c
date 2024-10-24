@@ -669,8 +669,8 @@ gst_gl_window_default_send_message (GstGLWindow * window,
 /**
  * gst_gl_window_send_message:
  * @window: a #GstGLWindow
- * @callback: (scope async): function to invoke
- * @data: (closure): data to invoke @callback with
+ * @callback: (scope async) (closure data): function to invoke
+ * @data: data to invoke @callback with
  *
  * Invoke @callback with data on the window thread.  @callback is guaranteed to
  * have executed when this function returns.
@@ -759,8 +759,8 @@ gst_gl_window_has_output_surface (GstGLWindow * window)
 /**
  * gst_gl_window_send_message_async:
  * @window: a #GstGLWindow
- * @callback: (scope async): function to invoke
- * @data: (closure): data to invoke @callback with
+ * @callback: (scope async) (closure data): function to invoke
+ * @data: data to invoke @callback with
  * @destroy: called when @data is not needed anymore
  *
  * Invoke @callback with @data on the window thread.  The callback may not
@@ -785,8 +785,8 @@ gst_gl_window_send_message_async (GstGLWindow * window, GstGLWindowCB callback,
 /**
  * gst_gl_window_set_draw_callback:
  * @window: a #GstGLWindow
- * @callback: (scope notified): function to invoke
- * @data: (closure): data to invoke @callback with
+ * @callback: (scope notified) (closure data): function to invoke
+ * @data: data to invoke @callback with
  * @destroy_notify: called when @data is not needed any more
  *
  * Sets the draw callback called every time gst_gl_window_draw() is called
@@ -814,8 +814,8 @@ gst_gl_window_set_draw_callback (GstGLWindow * window, GstGLWindowCB callback,
 /**
  * gst_gl_window_set_resize_callback:
  * @window: a #GstGLWindow
- * @callback: (scope notified): function to invoke
- * @data: (closure): data to invoke @callback with
+ * @callback: (scope notified) (closure data): function to invoke
+ * @data: data to invoke @callback with
  * @destroy_notify: called when @data is not needed any more
  *
  * Sets the resize callback called every time a resize of the window occurs.
@@ -843,8 +843,8 @@ gst_gl_window_set_resize_callback (GstGLWindow * window,
 /**
  * gst_gl_window_set_close_callback:
  * @window: a #GstGLWindow
- * @callback: (scope notified): function to invoke
- * @data: (closure): data to invoke @callback with
+ * @callback: (scope notified) (closure data): function to invoke
+ * @data: data to invoke @callback with
  * @destroy_notify: called when @data is not needed any more
  *
  * Sets the callback called when the window is about to close.

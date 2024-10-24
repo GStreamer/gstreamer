@@ -1408,9 +1408,9 @@ cleanup_hook (GstPad * pad, GHook * hook)
  * gst_pad_add_probe:
  * @pad: the #GstPad to add the probe to
  * @mask: the probe mask
- * @callback: #GstPadProbeCallback that will be called with notifications of
- *           the pad state
- * @user_data: (closure): user data passed to the callback
+ * @callback: (closure user_data): #GstPadProbeCallback that will be called with
+ *           notifications of the pad state
+ * @user_data: user data passed to the callback
  * @destroy_data: #GDestroyNotify for user_data
  *
  * Be notified of different states of pads. The provided callback is called for
@@ -6270,9 +6270,9 @@ foreach_dispatch_function (GstPad * pad, PadEvent * ev, gpointer user_data)
 /**
  * gst_pad_sticky_events_foreach:
  * @pad: the #GstPad that should be used for iteration.
- * @foreach_func: (scope call): the #GstPadStickyEventsForeachFunction that
- *                should be called for every event.
- * @user_data: (closure): the optional user data.
+ * @foreach_func: (scope call) (closure user_data): the
+ *    #GstPadStickyEventsForeachFunction that should be called for every event.
+ * @user_data: the optional user data.
  *
  * Iterates all sticky events on @pad and calls @foreach_func for every
  * event. If @foreach_func returns %FALSE the iteration is immediately stopped.

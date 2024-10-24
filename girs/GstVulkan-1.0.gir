@@ -1732,11 +1732,12 @@ only have an effect before the call to gst_vulkan_device_open().</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstVulkanDevice</doc>
             <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
           </instance-parameter>
-          <parameter name="func" transfer-ownership="none" nullable="1" allow-none="1" scope="call" closure="1">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstVulkanDeviceForEachQueueFunc to run for each #GstVulkanQueue</doc>
+          <parameter name="func" transfer-ownership="none" scope="call" closure="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstVulkanDeviceForEachQueueFunc
+   to run for each #GstVulkanQueue</doc>
             <type name="VulkanDeviceForEachQueueFunc" c:type="GstVulkanDeviceForEachQueueFunc"/>
           </parameter>
-          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="0">
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">user data to pass to each call of @func</doc>
             <type name="gpointer" c:type="gpointer"/>
           </parameter>
@@ -2106,7 +2107,7 @@ second argument is @data.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.c">some data to pass to @compare_func</doc>
             <type name="gpointer" c:type="gpointer"/>
           </parameter>
-          <parameter name="compare_func" transfer-ownership="none" scope="call">
+          <parameter name="compare_func" transfer-ownership="none" scope="call" closure="0">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.c">a comparison function to run</doc>
             <type name="GLib.CompareFunc" c:type="GCompareFunc"/>
           </parameter>
@@ -5546,11 +5547,11 @@ to call when @fence is signalled.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.c">a #GstVulkanFence</doc>
             <type name="VulkanFence" c:type="GstVulkanFence*"/>
           </parameter>
-          <parameter name="notify" transfer-ownership="none" nullable="1" allow-none="1" scope="async" closure="2">
+          <parameter name="notify" transfer-ownership="none" scope="async" closure="2">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.c">a #GstVulkanTrashNotify</doc>
             <type name="VulkanTrashNotify" c:type="GstVulkanTrashNotify"/>
           </parameter>
-          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="1">
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.c">user data for @notify</doc>
             <type name="gpointer" c:type="gpointer"/>
           </parameter>

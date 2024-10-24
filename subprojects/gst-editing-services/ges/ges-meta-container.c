@@ -174,9 +174,9 @@ _append_foreach (const GstIdStr * fieldname, const GValue * value,
 /**
  * ges_meta_container_foreach:
  * @container: A #GESMetaContainer
- * @func: (scope call): A function to call on each of @container's set
- * metadata fields
- * @user_data: (closure): User data to send to @func
+ * @func: (scope call) (closure user_data): A function to call on each of
+ *    @container's set metadata fields
+* @user_data: User data to send to @func
  *
  * Calls the given function on each of the meta container's set metadata
  * fields.

@@ -223,8 +223,8 @@ gst_buffer_list_remove_range_internal (GstBufferList * list, guint idx,
 /**
  * gst_buffer_list_foreach:
  * @list: a #GstBufferList
- * @func: (scope call): a #GstBufferListFunc to call
- * @user_data: (closure): user data passed to @func
+ * @func: (scope call) (closure user_data): a #GstBufferListFunc to call
+ * @user_data: user data passed to @func
  *
  * Calls @func with @data for each buffer in @list.
  *

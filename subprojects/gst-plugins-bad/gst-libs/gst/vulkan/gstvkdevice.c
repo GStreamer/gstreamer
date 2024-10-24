@@ -545,8 +545,9 @@ gst_vulkan_device_get_queue (GstVulkanDevice * device, guint32 queue_family,
 /**
  * gst_vulkan_device_foreach_queue:
  * @device: a #GstVulkanDevice
- * @func: (scope call): a #GstVulkanDeviceForEachQueueFunc to run for each #GstVulkanQueue
- * @user_data: (closure func): user data to pass to each call of @func
+ * @func: (scope call) (closure user_data): a #GstVulkanDeviceForEachQueueFunc
+ *    to run for each #GstVulkanQueue
+ * @user_data: user data to pass to each call of @func
  *
  * Iterate over each queue family available on #GstVulkanDevice
  *

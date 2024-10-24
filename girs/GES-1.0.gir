@@ -1096,16 +1096,16 @@ Note that @effect must not be part of a clip, nor can it have
             <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-base-effect.c">A #GESBaseEffect</doc>
             <type name="BaseEffect" c:type="GESBaseEffect*"/>
           </instance-parameter>
-          <parameter name="source_to_sink_func" transfer-ownership="none" nullable="1" allow-none="1" scope="notified">
-            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-base-effect.c">The function to use
-for querying how a time is translated from the source coordinates to
-the sink coordinates of @effect</doc>
+          <parameter name="source_to_sink_func" transfer-ownership="none" nullable="1" allow-none="1" scope="notified" closure="2">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-base-effect.c">The
+function to use for querying how a time is translated from the source
+coordinates to the sink coordinates of @effect</doc>
             <type name="BaseEffectTimeTranslationFunc" c:type="GESBaseEffectTimeTranslationFunc"/>
           </parameter>
           <parameter name="sink_to_source_func" transfer-ownership="none" nullable="1" allow-none="1" scope="notified" closure="2" destroy="3">
-            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-base-effect.c">The function to use
-for querying how a time is translated from the sink coordinates to the
-source coordinates of @effect</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-base-effect.c">The
+function to use for querying how a time is translated from the sink
+coordinates to the source coordinates of @effect</doc>
             <type name="BaseEffectTimeTranslationFunc" c:type="GESBaseEffectTimeTranslationFunc"/>
           </parameter>
           <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" scope="notified">
@@ -5575,8 +5575,8 @@ fields.</doc>
             <type name="MetaContainer" c:type="GESMetaContainer*"/>
           </instance-parameter>
           <parameter name="func" transfer-ownership="none" scope="call" closure="1">
-            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">A function to call on each of @container's set
-metadata fields</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.c">A function to call on each of
+   @container's set metadata fields</doc>
             <type name="MetaForeachFunc" c:type="GESMetaForeachFunc"/>
           </parameter>
           <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
