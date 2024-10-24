@@ -1,0 +1,10 @@
+[wrap-file]
+directory = gdk-pixbuf-2.42.12
+source_url = https://download.gnome.org/sources/gdk-pixbuf/2.42/gdk-pixbuf-2.42.12.tar.xz
+source_filename = gdk-pixbuf-2.42.12.tar.xz
+source_hash = b9505b3445b9a7e48ced34760c3bcb73e966df3ac94c95a148cb669ab748e3c7
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/gdk-pixbuf_2.42.12-1/gdk-pixbuf-2.42.12.tar.xz
+wrapdb_version = 2.42.12-1
+
+[provide]
+gdk-pixbuf-2.0 = gdkpixbuf_dep

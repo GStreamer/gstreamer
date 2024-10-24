@@ -30,7 +30,6 @@ prefix/
 /gst-plugins-rs
 
 # Automatic meson redirect wrap files
-subprojects/gdk-pixbuf.wrap
 subprojects/gobject-introspection.wrap
 subprojects/gtest.wrap
 subprojects/gvdb.wrap
