@@ -2979,15 +2979,13 @@ gst_rtsp_media_get_rates (GstRTSPMedia * media, gdouble * rate,
           first_stream = FALSE;
         } else {
           if (save_rate != *rate || save_applied_rate != *applied_rate) {
-            /* diffrent rate or applied_rate, weird */
-            g_assert (FALSE);
+            /* different rate or applied_rate, weird */
             result = FALSE;
             break;
           }
         }
       } else {
-        /* complete stream withot rate and applied_rate, weird */
-        g_assert (FALSE);
+        /* complete stream without rate and applied_rate, weird */
         result = FALSE;
         break;
       }
