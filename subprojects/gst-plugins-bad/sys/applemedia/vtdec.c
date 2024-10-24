@@ -1391,6 +1391,10 @@ get_dpb_max_mb_s_from_level (GstVtdec * vtdec, int level)
     case 51:
     case 52:
       return 184320;
+    case 60:
+    case 61:
+    case 62:
+      return 696320;
     default:
       GST_ERROR_OBJECT (vtdec, "unknown level %d", level);
       return -1;
