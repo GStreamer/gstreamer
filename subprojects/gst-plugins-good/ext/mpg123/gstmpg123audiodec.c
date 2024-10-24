@@ -448,8 +448,13 @@ gst_mpg123_audio_dec_handle_frame (GstAudioDecoder * dec,
     /* Try to decode a frame */
     decoded_bytes = NULL;
     num_decoded_bytes = 0;
+#if MPG123_API_VERSION >= 48
+    decode_error = mpg123_decode_frame64 (mpg123_decoder->handle,
+        &mpg123_decoder->frame_offset, &decoded_bytes, &num_decoded_bytes);
+#else
     decode_error = mpg123_decode_frame (mpg123_decoder->handle,
         &mpg123_decoder->frame_offset, &decoded_bytes, &num_decoded_bytes);
+#endif
 
     if (G_LIKELY (decoded_bytes != NULL)) {
       gst_mpg123_audio_dec_pop_oldest_clip_info (mpg123_decoder, &clip_start,
