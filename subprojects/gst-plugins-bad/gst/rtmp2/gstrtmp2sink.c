@@ -567,8 +567,8 @@ gst_rtmp2_sink_start (GstBaseSink * sink)
   self->running = TRUE;
   self->cancellable = g_cancellable_new ();
   self->stream_id = 0;
-  self->last_ts = 0;
-  self->base_ts = 0;
+  self->last_ts = GST_CLOCK_TIME_NONE;
+  self->base_ts = GST_CLOCK_TIME_NONE;
 
   if (async) {
     gst_task_start (self->task);
@@ -734,27 +734,31 @@ buffer_to_message (GstRtmp2Sink * self, GstBuffer * buffer, GstBuffer ** outbuf)
 
     /* flvmux timestamps roll over after about 49 days */
     timestamp = header.timestamp;
-    if (timestamp + self->base_ts + G_MAXINT32 < self->last_ts) {
-      GST_WARNING_OBJECT (self, "Timestamp regression %" G_GUINT64_FORMAT
-          " -> %" G_GUINT64_FORMAT "; assuming overflow", self->last_ts,
-          timestamp + self->base_ts);
-      self->base_ts += G_MAXUINT32;
-      self->base_ts += 1;
-    } else if (timestamp + self->base_ts > self->last_ts + G_MAXINT32) {
-      GST_WARNING_OBJECT (self, "Timestamp jump %" G_GUINT64_FORMAT
-          " -> %" G_GUINT64_FORMAT "; assuming underflow", self->last_ts,
-          timestamp + self->base_ts);
-      if (self->base_ts > 0) {
-        self->base_ts -= G_MAXUINT32;
-        self->base_ts -= 1;
-      } else {
-        GST_WARNING_OBJECT (self, "Cannot regress further;"
-            " forcing timestamp to zero");
-        timestamp = 0;
+    if (self->base_ts == GST_CLOCK_TIME_NONE) {
+      self->last_ts = self->base_ts = timestamp;
+    } else {
+      if (timestamp + self->base_ts + G_MAXINT32 < self->last_ts) {
+        GST_WARNING_OBJECT (self, "Timestamp regression %" G_GUINT64_FORMAT
+            " -> %" G_GUINT64_FORMAT "; assuming overflow", self->last_ts,
+            timestamp + self->base_ts);
+        self->base_ts += G_MAXUINT32;
+        self->base_ts += 1;
+      } else if (timestamp + self->base_ts > self->last_ts + G_MAXINT32) {
+        GST_WARNING_OBJECT (self, "Timestamp jump %" G_GUINT64_FORMAT
+            " -> %" G_GUINT64_FORMAT "; assuming underflow", self->last_ts,
+            timestamp + self->base_ts);
+        if (self->base_ts > 0) {
+          self->base_ts -= G_MAXUINT32;
+          self->base_ts -= 1;
+        } else {
+          GST_WARNING_OBJECT (self, "Cannot regress further;"
+              " forcing timestamp to zero");
+          timestamp = 0;
+        }
       }
+      timestamp += self->base_ts;
+      self->last_ts = timestamp;
     }
-    timestamp += self->base_ts;
-    self->last_ts = timestamp;
 
     gst_buffer_unmap (buffer, &info);
   }
