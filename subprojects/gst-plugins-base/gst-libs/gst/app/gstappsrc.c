@@ -1569,6 +1569,8 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
          * instead of outputting it */
         if (priv->need_discont_downstream) {
           buffer = gst_buffer_make_writable (buffer);
+          /* In case it reallocates the buffer */
+          obj = GST_MINI_OBJECT (buffer);
           GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
           priv->need_discont_downstream = FALSE;
         }
@@ -1594,6 +1596,8 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
           GstBuffer *buffer;
 
           buffer_list = gst_buffer_list_make_writable (buffer_list);
+          /* In case it reallocates the bufferlist */
+          obj = GST_MINI_OBJECT (buffer_list);
           buffer = gst_buffer_list_get_writable (buffer_list, 0);
           GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
           priv->need_discont_downstream = FALSE;
