@@ -997,8 +997,11 @@ _find_next_slot_idx (GArray * dpb)
 
   for (i = 0; i < len; i++) {
     GstH264Picture *pic = g_array_index (dpb, GstH264Picture *, i);
-    GstVulkanH264Picture *h264_pic = gst_h264_picture_get_user_data (pic);
-    arr[h264_pic->slot_idx] = pic;
+    if (!pic->nonexisting) {
+      GstVulkanH264Picture *h264_pic = gst_h264_picture_get_user_data (pic);
+      if (h264_pic)
+        arr[h264_pic->slot_idx] = pic;
+    }
   }
 
   /* let's return the smallest available / not ref index */
@@ -1151,7 +1154,7 @@ gst_vulkan_h264_decoder_start_picture (GstH264Decoder * decoder,
   for (i = 0; i < refs->len; i++) {
     GstH264Picture *picture = g_array_index (refs, GstH264Picture *, i);
     /* XXX: shall we add second fields? */
-    if (GST_H264_PICTURE_IS_SHORT_TERM_REF (picture)) {
+    if (!picture->nonexisting && GST_H264_PICTURE_IS_SHORT_TERM_REF (picture)) {
       _fill_ref_slot (self, picture, &pic->base.slots[j],
           &pic->base.pics_res[j], &pic->vk_slots[j], &pic->std_refs[j],
           &pic->base.refs[j]);
