@@ -272,11 +272,18 @@ _is_video_pad (GstPad * pad, gboolean * hw_accelerated)
 
   for (i = 0; i < gst_caps_get_size (caps) && !ret; i++) {
     name = gst_structure_get_name (gst_caps_get_structure (caps, i));
+    GstCapsFeatures *features = gst_caps_get_features (caps, i);
+
     if (g_str_equal (name, "video/x-raw")) {
       ret = TRUE;
-      if (hw_accelerated)
-        *hw_accelerated = FALSE;
-
+      if (hw_accelerated) {
+        if (gst_caps_features_contains (features,
+                GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY)) {
+          *hw_accelerated = FALSE;
+        } else {
+          *hw_accelerated = TRUE;
+        }
+      }
     } else if (g_str_has_prefix (name, "video/x-surface")) {
       ret = TRUE;
       if (hw_accelerated)
