@@ -14780,7 +14780,7 @@ or %NULL if it does not belong to a track.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_active" c:identifier="ges_track_element_is_active">
+      <method name="is_active" c:identifier="ges_track_element_is_active" glib:get-property="active">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">Gets #GESTrackElement:active for the element.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-track-element.h"/>
         <return-value transfer-ownership="none">
@@ -15119,7 +15119,7 @@ set to %FALSE, this method will also set the
           </parameter>
         </parameters>
       </method>
-      <property name="active" writable="1" transfer-ownership="none" setter="set_active" default-value="TRUE">
+      <property name="active" writable="1" transfer-ownership="none" setter="set_active" getter="is_active" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-track-element.c">Whether the effect of the element should be applied in its
 #GESTrackElement:track. If set to %FALSE, it will not be used in
 the output of the track.</doc>

@@ -484,7 +484,7 @@ EOS is received.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_eos" c:identifier="gst_app_sink_is_eos">
+      <method name="is_eos" c:identifier="gst_app_sink_is_eos" glib:get-property="eos">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Check if @appsink is EOS, which is when no more samples can be pulled because
 an EOS event was received.
 
@@ -969,7 +969,7 @@ condition.</doc>
       <property name="emit-signals" writable="1" transfer-ownership="none" setter="set_emit_signals" getter="get_emit_signals" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="eos" transfer-ownership="none" default-value="TRUE">
+      <property name="eos" transfer-ownership="none" getter="is_eos" default-value="TRUE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="in" version="1.28" transfer-ownership="none" default-value="0">

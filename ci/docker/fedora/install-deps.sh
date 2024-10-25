@@ -15,7 +15,7 @@ sudo dnf install -y \
 
 # Enable the debuginfo repos so -debug packages are kept in sync
 sudo dnf install -y dnf-plugins-core
-sudo dnf config-manager --set-enabled '*-debuginfo'
+sudo dnf config-manager setopt '*-debuginfo.enabled=1'
 
 sudo dnf upgrade -y && sudo dnf distro-sync -y
 

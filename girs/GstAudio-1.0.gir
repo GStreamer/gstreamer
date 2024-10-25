@@ -6797,7 +6797,7 @@ versions were printing a critical warning and returned %NULL.</doc>
 #GstAudioFormatUnpack and #GstAudioFormatPack functions</doc>
       </member>
     </bitfield>
-    <record name="AudioFormatInfo" c:type="GstAudioFormatInfo">
+    <record name="AudioFormatInfo" c:type="GstAudioFormatInfo" glib:type-name="GstAudioFormatInfo" glib:get-type="gst_audio_format_info_get_type" c:symbol-prefix="audio_format_info">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h">Information for an audio format.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h"/>
       <field name="format" writable="1">
@@ -11404,12 +11404,6 @@ string is not a known format.</doc>
           <type name="AudioFormat" c:type="GstAudioFormat"/>
         </parameter>
       </parameters>
-    </function>
-    <function name="audio_format_info_get_type" c:identifier="gst_audio_format_info_get_type">
-      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h"/>
-      <return-value transfer-ownership="none">
-        <type name="GType" c:type="GType"/>
-      </return-value>
     </function>
     <function name="audio_format_to_string" c:identifier="gst_audio_format_to_string" moved-to="AudioFormat.to_string">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.c">Returns a string containing a descriptive name for the #GstAudioFormat.

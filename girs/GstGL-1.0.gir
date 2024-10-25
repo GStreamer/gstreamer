@@ -6329,7 +6329,7 @@ Note: must be called in the GL thread</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_linked" c:identifier="gst_gl_shader_is_linked" version="1.8">
+      <method name="is_linked" c:identifier="gst_gl_shader_is_linked" glib:get-property="linked" version="1.8">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglshader.c">Note: must be called in the GL thread</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglshader.h"/>
         <return-value transfer-ownership="none">
@@ -7097,7 +7097,7 @@ Note: must be called in the GL thread and @shader must have been linked.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <property name="linked" transfer-ownership="none" default-value="FALSE">
+      <property name="linked" transfer-ownership="none" getter="is_linked" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <field name="parent">

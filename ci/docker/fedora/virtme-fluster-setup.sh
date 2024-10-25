@@ -2,7 +2,7 @@
 
 set -eux
 
-sudo dnf install -y bc
+sudo dnf install -y bc openssl-devel-engine
 
 # Install virtme-ng
 pushd /tmp/

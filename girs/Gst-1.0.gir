@@ -44668,7 +44668,7 @@ gst_element_set_state(). Only @GST_STATE_CHANGE_FAILURE is a real failure.</doc>
         </parameters>
       </function>
     </enumeration>
-    <record name="StaticCaps" c:type="GstStaticCaps">
+    <record name="StaticCaps" c:type="GstStaticCaps" glib:type-name="GstStaticCaps" glib:get-type="gst_static_caps_get_type" c:symbol-prefix="static_caps">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.h">Data structure to initialize #GstCaps from a string description usually
 used in conjunction with GST_STATIC_CAPS() and gst_static_caps_get() to
 instantiate a #GstCaps.</doc>
@@ -44716,7 +44716,7 @@ instantiate a #GstCaps.</doc>
         </parameters>
       </method>
     </record>
-    <record name="StaticPadTemplate" c:type="GstStaticPadTemplate">
+    <record name="StaticPadTemplate" c:type="GstStaticPadTemplate" glib:type-name="GstStaticPadTemplate" glib:get-type="gst_static_pad_template_get_type" c:symbol-prefix="static_pad_template">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpadtemplate.h">Structure describing the #GstStaticPadTemplate.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstpadtemplate.h"/>
       <field name="name_template" writable="1">
@@ -52642,7 +52642,7 @@ events may contain values for different #GstPads.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttracerrecord.h">the value is related to a #GstPad</doc>
       </member>
     </enumeration>
-    <record name="TypeFind" c:type="GstTypeFind">
+    <record name="TypeFind" c:type="GstTypeFind" glib:type-name="GstTypeFind" glib:get-type="gst_type_find_get_type" c:symbol-prefix="type_find">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttypefind.c">The following functions allow you to detect the media type of an unknown
 stream.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gsttypefind.h"/>
@@ -60504,13 +60504,6 @@ Use %NULL for @detail to register to all hooks.</doc>
           <type name="GObject.Callback" c:type="GCallback"/>
         </parameter>
       </parameters>
-    </function>
-    <function name="type_find_get_type" c:identifier="gst_type_find_get_type">
-      <attribute name="doc.skip" value="true"/>
-      <source-position filename="../subprojects/gstreamer/gst/gsttypefind.h"/>
-      <return-value transfer-ownership="none">
-        <type name="GType" c:type="GType"/>
-      </return-value>
     </function>
     <function name="type_find_register" c:identifier="gst_type_find_register" moved-to="TypeFind.register">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttypefind.c">Registers a new typefind function to be used for typefinding. After

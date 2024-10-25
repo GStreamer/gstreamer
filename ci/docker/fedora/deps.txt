@@ -99,6 +99,7 @@ redhat-rpm-config
 soundtouch-devel
 subunit-devel
 systemd-udev
+valgrind
 vulkan-loader
 wildmidi-devel
 xorg-x11-server-Xvfb

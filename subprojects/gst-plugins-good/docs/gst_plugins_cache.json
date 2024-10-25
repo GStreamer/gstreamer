@@ -11378,7 +11378,7 @@
                 "long-name": "PulseAudio Audio Sink",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n         format: { S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, S24LE, S24BE, S24_32LE, S24_32BE, U8 }\n         layout: interleaved\n           rate: [ 1, 384000 ]\n       channels: [ 1, 32 ]\naudio/x-alaw:\n           rate: [ 1, 384000 ]\n       channels: [ 1, 32 ]\naudio/x-mulaw:\n           rate: [ 1, 384000 ]\n       channels: [ 1, 32 ]\naudio/x-ac3:\n         framed: true\naudio/x-eac3:\n         framed: true\naudio/x-dts:\n         framed: true\n     block-size: { (int)512, (int)1024, (int)2048 }\naudio/mpeg:\n    mpegversion: 1\nmpegaudioversion: [ 1, 3 ]\n         parsed: true\naudio/mpeg:\n    mpegversion: { (int)2, (int)4 }\n         framed: true\n  stream-format: adts\n",
+                        "caps": "audio/x-raw:\n         format: { S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, S24LE, S24BE, S24_32LE, S24_32BE, U8 }\n         layout: interleaved\n           rate: [ 1, 768000 ]\n       channels: [ 1, 32 ]\naudio/x-alaw:\n           rate: [ 1, 768000 ]\n       channels: [ 1, 32 ]\naudio/x-mulaw:\n           rate: [ 1, 768000 ]\n       channels: [ 1, 32 ]\naudio/x-ac3:\n         framed: true\naudio/x-eac3:\n         framed: true\naudio/x-dts:\n         framed: true\n     block-size: { (int)512, (int)1024, (int)2048 }\naudio/mpeg:\n    mpegversion: 1\nmpegaudioversion: [ 1, 3 ]\n         parsed: true\naudio/mpeg:\n    mpegversion: { (int)2, (int)4 }\n         framed: true\n  stream-format: adts\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -11505,7 +11505,7 @@
                 "long-name": "PulseAudio Audio Source",
                 "pad-templates": {
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, S24LE, S24BE, S24_32LE, S24_32BE, U8 }\n         layout: interleaved\n           rate: [ 1, 384000 ]\n       channels: [ 1, 32 ]\naudio/x-alaw:\n           rate: [ 1, 384000 ]\n       channels: [ 1, 32 ]\naudio/x-mulaw:\n           rate: [ 1, 384000 ]\n       channels: [ 1, 32 ]\n",
+                        "caps": "audio/x-raw:\n         format: { S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, S24LE, S24BE, S24_32LE, S24_32BE, U8 }\n         layout: interleaved\n           rate: [ 1, 768000 ]\n       channels: [ 1, 32 ]\naudio/x-alaw:\n           rate: [ 1, 768000 ]\n       channels: [ 1, 32 ]\naudio/x-mulaw:\n           rate: [ 1, 768000 ]\n       channels: [ 1, 32 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }

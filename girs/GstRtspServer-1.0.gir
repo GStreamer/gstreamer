@@ -3170,7 +3170,7 @@ gst_rtsp_client_session_filter().</doc>
         </parameter>
       </parameters>
     </callback>
-    <record name="RTSPContext" c:type="GstRTSPContext">
+    <record name="RTSPContext" c:type="GstRTSPContext" glib:type-name="GstRTSPContext" glib:get-type="gst_rtsp_context_get_type" c:symbol-prefix="rtsp_context">
       <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-context.h">Information passed around containing the context of a request.</doc>
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-context.h"/>
       <field name="server" writable="1">
@@ -3287,7 +3287,7 @@ context can then be received using gst_rtsp_context_get_current().</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-context.c">Get the current #GstRTSPContext. This object is retrieved from the
 current thread that is handling the request for a client.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-context.h"/>
-        <return-value>
+        <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-context.c">a #GstRTSPContext</doc>
           <type name="RTSPContext" c:type="GstRTSPContext*"/>
         </return-value>
@@ -4147,7 +4147,7 @@ will listen on @address and @port for client time requests.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_bind_mcast_address" c:identifier="gst_rtsp_media_is_bind_mcast_address" version="1.16">
+      <method name="is_bind_mcast_address" c:identifier="gst_rtsp_media_is_bind_mcast_address" glib:get-property="bind-mcast-address" version="1.16">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Check if multicast sockets are configured to be bound to multicast addresses.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -4161,7 +4161,7 @@ will listen on @address and @port for client time requests.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_eos_shutdown" c:identifier="gst_rtsp_media_is_eos_shutdown">
+      <method name="is_eos_shutdown" c:identifier="gst_rtsp_media_is_eos_shutdown" glib:get-property="eos-shutdown">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Check if the pipeline for @media will send an EOS down the pipeline before
 unpreparing.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
@@ -4188,7 +4188,7 @@ unpreparing.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_reusable" c:identifier="gst_rtsp_media_is_reusable">
+      <method name="is_reusable" c:identifier="gst_rtsp_media_is_reusable" glib:get-property="reusable">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Check if the pipeline for @media can be reused after an unprepare.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -4202,7 +4202,7 @@ unpreparing.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_shared" c:identifier="gst_rtsp_media_is_shared">
+      <method name="is_shared" c:identifier="gst_rtsp_media_is_shared" glib:get-property="shared">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Check if the pipeline for @media can be shared between multiple clients in
 theory. This simply returns the value set via gst_rtsp_media_set_shared().
 
@@ -4221,7 +4221,7 @@ gst_rtsp_media_can_be_shared().</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_stop_on_disconnect" c:identifier="gst_rtsp_media_is_stop_on_disconnect">
+      <method name="is_stop_on_disconnect" c:identifier="gst_rtsp_media_is_stop_on_disconnect" glib:get-property="stop-on-disconnect">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Check if the pipeline for @media will be stopped when a client disconnects
 without sending TEARDOWN.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
@@ -4237,7 +4237,7 @@ without sending TEARDOWN.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_time_provider" c:identifier="gst_rtsp_media_is_time_provider">
+      <method name="is_time_provider" c:identifier="gst_rtsp_media_is_time_provider" glib:get-property="time-provider">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Check if @media can provide a #GstNetTimeProvider for its pipeline clock.
 
 Use gst_rtsp_media_get_time_provider() to get the network clock.</doc>
@@ -4975,7 +4975,7 @@ when the media was not in the suspended state.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="bind-mcast-address" writable="1" transfer-ownership="none" setter="set_bind_mcast_address" default-value="FALSE">
+      <property name="bind-mcast-address" writable="1" transfer-ownership="none" setter="set_bind_mcast_address" getter="is_bind_mcast_address" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="buffer-size" writable="1" transfer-ownership="none" setter="set_buffer_size" getter="get_buffer_size" default-value="524288">
@@ -5006,7 +5006,7 @@ Note that this will only have an effect when ensure-keyunit-on-start is
 enabled.</doc>
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="eos-shutdown" writable="1" transfer-ownership="none" setter="set_eos_shutdown" default-value="FALSE">
+      <property name="eos-shutdown" writable="1" transfer-ownership="none" setter="set_eos_shutdown" getter="is_eos_shutdown" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="latency" writable="1" transfer-ownership="none" setter="set_latency" getter="get_latency" default-value="200">
@@ -5021,13 +5021,13 @@ enabled.</doc>
       <property name="protocols" writable="1" transfer-ownership="none" setter="set_protocols" getter="get_protocols" default-value="GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP">
         <type name="GstRtsp.RTSPLowerTrans"/>
       </property>
-      <property name="reusable" writable="1" transfer-ownership="none" setter="set_reusable" default-value="FALSE">
+      <property name="reusable" writable="1" transfer-ownership="none" setter="set_reusable" getter="is_reusable" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="shared" writable="1" transfer-ownership="none" setter="set_shared" default-value="FALSE">
+      <property name="shared" writable="1" transfer-ownership="none" setter="set_shared" getter="is_shared" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="stop-on-disconnect" writable="1" transfer-ownership="none" setter="set_stop_on_disconnect" default-value="TRUE">
+      <property name="stop-on-disconnect" writable="1" transfer-ownership="none" setter="set_stop_on_disconnect" getter="is_stop_on_disconnect" default-value="TRUE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="suspend-mode" writable="1" transfer-ownership="none" setter="set_suspend_mode" getter="get_suspend_mode" default-value="GST_RTSP_SUSPEND_MODE_NONE">
@@ -5941,7 +5941,7 @@ methods.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_bind_mcast_address" c:identifier="gst_rtsp_media_factory_is_bind_mcast_address" version="1.16">
+      <method name="is_bind_mcast_address" c:identifier="gst_rtsp_media_factory_is_bind_mcast_address" glib:get-property="bind-mcast-address" version="1.16">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Check if multicast sockets are configured to be bound to multicast addresses.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -5955,7 +5955,7 @@ methods.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_enable_rtcp" c:identifier="gst_rtsp_media_factory_is_enable_rtcp" version="1.20">
+      <method name="is_enable_rtcp" c:identifier="gst_rtsp_media_factory_is_enable_rtcp" glib:get-property="enable-rtcp" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Check if created media will send and receive RTCP</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -5969,7 +5969,7 @@ methods.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_eos_shutdown" c:identifier="gst_rtsp_media_factory_is_eos_shutdown">
+      <method name="is_eos_shutdown" c:identifier="gst_rtsp_media_factory_is_eos_shutdown" glib:get-property="eos-shutdown">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get if media created from this factory will have an EOS event sent to the
 pipeline before shutdown.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
@@ -5984,7 +5984,7 @@ pipeline before shutdown.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="is_shared" c:identifier="gst_rtsp_media_factory_is_shared">
+      <method name="is_shared" c:identifier="gst_rtsp_media_factory_is_shared" glib:get-property="shared">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get if media created from this factory can be shared between clients.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -6432,7 +6432,7 @@ when a client disconnects without sending TEARDOWN.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="bind-mcast-address" writable="1" transfer-ownership="none" setter="set_bind_mcast_address" default-value="FALSE">
+      <property name="bind-mcast-address" writable="1" transfer-ownership="none" setter="set_bind_mcast_address" getter="is_bind_mcast_address" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="buffer-size" writable="1" transfer-ownership="none" setter="set_buffer_size" getter="get_buffer_size" default-value="524288">
@@ -6444,7 +6444,7 @@ when a client disconnects without sending TEARDOWN.</doc>
       <property name="dscp-qos" writable="1" transfer-ownership="none" setter="set_dscp_qos" getter="get_dscp_qos" default-value="-1">
         <type name="gint" c:type="gint"/>
       </property>
-      <property name="enable-rtcp" version="1.20" writable="1" transfer-ownership="none" setter="set_enable_rtcp" default-value="TRUE">
+      <property name="enable-rtcp" version="1.20" writable="1" transfer-ownership="none" setter="set_enable_rtcp" getter="is_enable_rtcp" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Whether the created media should send and receive RTCP</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
@@ -6467,7 +6467,7 @@ the currently blocking keyframe will be used.
 This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="eos-shutdown" writable="1" transfer-ownership="none" setter="set_eos_shutdown" default-value="FALSE">
+      <property name="eos-shutdown" writable="1" transfer-ownership="none" setter="set_eos_shutdown" getter="is_eos_shutdown" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="latency" writable="1" transfer-ownership="none" setter="set_latency" getter="get_latency" default-value="200">
@@ -6485,7 +6485,7 @@ This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
       <property name="protocols" writable="1" transfer-ownership="none" setter="set_protocols" getter="get_protocols" default-value="GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP">
         <type name="GstRtsp.RTSPLowerTrans"/>
       </property>
-      <property name="shared" writable="1" transfer-ownership="none" setter="set_shared" default-value="FALSE">
+      <property name="shared" writable="1" transfer-ownership="none" setter="set_shared" getter="is_shared" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="stop-on-disconnect" writable="1" transfer-ownership="none" setter="set_stop_on_disconnect" default-value="TRUE">
@@ -13016,15 +13016,9 @@ Last reviewed on 2013-07-15 (1.0.0)</doc>
       <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-context.c">Get the current #GstRTSPContext. This object is retrieved from the
 current thread that is handling the request for a client.</doc>
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-context.h"/>
-      <return-value>
+      <return-value transfer-ownership="full">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-context.c">a #GstRTSPContext</doc>
         <type name="RTSPContext" c:type="GstRTSPContext*"/>
-      </return-value>
-    </function>
-    <function name="rtsp_context_get_type" c:identifier="gst_rtsp_context_get_type">
-      <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-context.h"/>
-      <return-value transfer-ownership="none">
-        <type name="GType" c:type="GType"/>
       </return-value>
     </function>
     <function name="rtsp_params_get" c:identifier="gst_rtsp_params_get">
