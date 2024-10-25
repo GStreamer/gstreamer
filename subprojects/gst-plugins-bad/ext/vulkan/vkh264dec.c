@@ -97,7 +97,7 @@ struct _GstVulkanH264Decoder
 static GstStaticPadTemplate gst_vulkan_h264dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, "
-        "profile = { (string) high, (string) main, (string) constrained-baseline, (string) baseline } ,"
+        "profile = { (string) high, (string) main, (string) constrained-baseline, (string) baseline, (string) extended } ,"
         "stream-format = { (string) avc, (string) byte-stream }, "
         "alignment = (string) au"));
 
@@ -452,6 +452,9 @@ _get_h264_profile (GstH264Profile profile_idc)
     case GST_H264_PROFILE_BASELINE:
       return STD_VIDEO_H264_PROFILE_IDC_BASELINE;
     case GST_H264_PROFILE_MAIN:
+      /* Similar to baseline and constrained-baseline, extended is the same as
+       * main if we ignore ASO/FMO features. */
+    case GST_H264_PROFILE_EXTENDED:
       return STD_VIDEO_H264_PROFILE_IDC_MAIN;
     case GST_H264_PROFILE_HIGH:
       return STD_VIDEO_H264_PROFILE_IDC_HIGH;
