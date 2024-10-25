@@ -638,6 +638,7 @@ class Test(Loggable):
 
         for o, v in [('trace-children', 'yes'),
                      ('tool', 'memcheck'),
+                     ('fair-sched', 'try'),
                      ('leak-check', 'full'),
                      ('leak-resolution', 'high'),
                      # TODO: errors-for-leak-kinds should be set to all instead of definite
