@@ -2804,12 +2804,28 @@ static gboolean
 _gst_reference_timestamp_meta_transform (GstBuffer * dest, GstMeta * meta,
     GstBuffer * buffer, GQuark type, gpointer data)
 {
-  GstReferenceTimestampMeta *dmeta, *smeta;
+  const GstReferenceTimestampMeta *smeta, *ometa;
+  GstReferenceTimestampMeta *dmeta;
+  gpointer iter = NULL;
 
   /* we copy over the reference timestamp meta, independent of transformation
    * that happens. If it applied to the original buffer, it still applies to
    * the new buffer as it refers to the time when the media was captured */
-  smeta = (GstReferenceTimestampMeta *) meta;
+  smeta = (const GstReferenceTimestampMeta *) meta;
+
+  while ((ometa = (const GstReferenceTimestampMeta *)
+          gst_buffer_iterate_meta_filtered (dest, &iter,
+              GST_REFERENCE_TIMESTAMP_META_API_TYPE))) {
+    if (ometa->timestamp == smeta->timestamp
+        && ometa->duration == smeta->duration
+        && gst_caps_is_equal (ometa->reference, smeta->reference)) {
+      GST_CAT_TRACE (gst_reference_timestamp_meta_debug,
+          "Not copying reference timestamp metadata from buffer %p to %p because equal meta already exists",
+          buffer, dest);
+      return TRUE;
+    }
+  }
+
   dmeta =
       gst_buffer_add_reference_timestamp_meta (dest, smeta->reference,
       smeta->timestamp, smeta->duration);
