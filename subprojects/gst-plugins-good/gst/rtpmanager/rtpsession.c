@@ -3823,7 +3823,7 @@ typedef struct
   gboolean timeout_inactive_sources;
 } ReportData;
 
-static void
+static gboolean
 session_start_rtcp (RTPSession * sess, ReportData * data)
 {
   GstRTCPPacket *packet = &data->packet;
@@ -3848,8 +3848,11 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
     gst_rtcp_buffer_add_packet (rtcp, GST_RTCP_TYPE_SR, packet);
 
     /* get latest stats */
-    rtp_source_get_new_sr (own, data->ntpnstime, data->running_time,
-        &ntptime, &rtptime, &packet_count, &octet_count);
+    if (!rtp_source_get_new_sr (own, data->ntpnstime, data->running_time,
+            &ntptime, &rtptime, &packet_count, &octet_count)) {
+      gst_rtcp_buffer_unmap (&data->rtcpbuf);
+      return FALSE;
+    }
     /* store stats */
     rtp_source_process_sr (own, data->current_time, ntptime, rtptime,
         packet_count, octet_count);
@@ -3865,6 +3868,8 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
     gst_rtcp_buffer_add_packet (rtcp, GST_RTCP_TYPE_RR, packet);
     gst_rtcp_packet_rr_set_ssrc (packet, own->ssrc);
   }
+
+  return TRUE;
 }
 
 /* construct a Sender or Receiver Report */
@@ -4545,7 +4550,10 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
   data->source = source;
 
   /* open packet */
-  session_start_rtcp (sess, data);
+  if (!session_start_rtcp (sess, data)) {
+    GST_WARNING ("source %08x can not generate RTCP", source->ssrc);
+    return;
+  }
 
   if (source->marked_bye) {
     /* send BYE */

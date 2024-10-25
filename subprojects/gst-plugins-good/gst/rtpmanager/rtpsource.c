@@ -1708,6 +1708,13 @@ rtp_source_get_new_sr (RTPSource * src, guint64 ntpnstime,
   }
 
   if (src->clock_rate != -1) {
+    /* if no running time has been set yet we wait until we get one */
+    if (src->last_rtime == -1) {
+      GST_WARNING ("running time not set, can not create SR for SSRC %u",
+          src->ssrc);
+      return FALSE;
+    }
+
     /* get the diff between the clock running_time and the buffer running_time.
      * This is the elapsed time, as measured against the pipeline clock, between
      * when the rtp timestamp was observed and the current running_time.
