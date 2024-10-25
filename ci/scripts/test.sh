@@ -17,7 +17,8 @@ timeout="${TIMEOUT_FACTOR:="2"}"
 validate="${EXTRA_VALIDATE_ARGS:=""}"
 parent="${CI_PROJECT_DIR:-$(pwd)}"
 
-export XDG_RUNTIME_DIR="$(mktemp -p $(pwd) -d xdg-runtime-XXXXXX)"
+# Put the runtime dir inside CI_PROJECT_DIR or in /tmp if we are running locally
+export XDG_RUNTIME_DIR="$(mktemp -p "${CI_PROJECT_DIR:-/tmp}" -d xdg-runtime-XXXXXX)"
 echo "-> Running $tests"
 
 # Disable all cpu extensions post AVX to match what valgrind supports
