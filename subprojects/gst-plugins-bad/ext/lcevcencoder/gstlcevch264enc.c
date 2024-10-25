@@ -23,10 +23,16 @@
 
 #include "gstlcevch264enc.h"
 
+#define GST_LCEVC_H264_ENC_CAPS              \
+    "video/x-h264, "                         \
+    "lcevc = (boolean) true, "               \
+    "stream-format = (string) byte-stream, " \
+    "alignment = (string) au"
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, lcevc = (boolean) true")
+    GST_STATIC_CAPS (GST_LCEVC_H264_ENC_CAPS)
     );
 
 struct _GstLcevcH264Enc
@@ -49,8 +55,7 @@ gst_lecevc_h264_enc_get_eil_plugin_name (GstLcevcEncoder * enc)
 static GstCaps *
 gst_lecevc_h264_enc_get_output_caps (GstLcevcEncoder * enc)
 {
-  return gst_caps_new_simple ("video/x-h264",
-      "lcevc", G_TYPE_BOOLEAN, TRUE, NULL);
+  return gst_static_caps_get (&src_template.static_caps);
 }
 
 static void
