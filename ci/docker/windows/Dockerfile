@@ -54,7 +54,7 @@ RUN C:\upgrade_msys2.ps1
 
 RUN C:\msys64\msys2_shell.cmd -ucrt64 -defterm -here -no-start -use-full-path -lc 'pacman -S --noconfirm mingw-w64-ucrt-x86_64-toolchain ninja openssh'
 
-RUN python -m pip install meson==1.1.1 python-gitlab
+RUN python -m pip install meson==1.5.2 python-gitlab
 
 RUN 'git config --global user.email "cirunner@gstreamer.freedesktop.org"; git config --global user.name "GStreamer CI system"'
 

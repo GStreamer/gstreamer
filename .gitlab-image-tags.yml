@@ -13,4 +13,4 @@ variables:
 
   LINT_TAG: '2024-02-20.0'
 
-  WINDOWS_TAG: '2024-10-17.0'
+  WINDOWS_TAG: '2024-10-26.0'
