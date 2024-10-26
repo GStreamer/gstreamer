@@ -409,7 +409,7 @@ GstSample * gst_play_get_video_snapshot (GstPlay * play,
     GstPlaySnapshotFormat format, const GstStructure * config);
 
 GST_PLAY_API
-gboolean       gst_play_is_play_message                        (GstMessage *msg);
+gboolean       gst_play_is_play_message                          (GstMessage *msg);
 
 GST_PLAY_API
 void           gst_play_message_parse_type                       (GstMessage *msg, GstPlayMessage *type);

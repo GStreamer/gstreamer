@@ -4721,9 +4721,12 @@ gst_play_is_play_message (GstMessage * msg)
   return g_str_equal (gst_structure_get_name (data), GST_PLAY_MESSAGE_DATA);
 }
 
-#define PARSE_MESSAGE_FIELD(msg, field, value_type, value) G_STMT_START { \
+#define PARSE_MESSAGE_FIELD(msg, expected_msg_type, field, value_type, value) G_STMT_START { \
     const GstStructure *data = NULL;                                      \
+    GstPlayMessage msg_type;                                              \
     g_return_if_fail (gst_play_is_play_message (msg));                    \
+    gst_play_message_parse_type (msg, &msg_type);                         \
+    g_return_if_fail (msg_type == expected_msg_type);                     \
     data = gst_message_get_structure (msg);                               \
     gst_structure_get (data, field, value_type, value, NULL);             \
 } G_STMT_END
@@ -4740,8 +4743,11 @@ gst_play_is_play_message (GstMessage * msg)
 void
 gst_play_message_parse_type (GstMessage * msg, GstPlayMessage * type)
 {
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_TYPE,
-      GST_TYPE_PLAY_MESSAGE, type);
+  const GstStructure *data = NULL;
+  g_return_if_fail (gst_play_is_play_message (msg));
+  data = gst_message_get_structure (msg);
+  gst_structure_get (data, GST_PLAY_MESSAGE_DATA_TYPE, GST_TYPE_PLAY_MESSAGE,
+      type, NULL);
 }
 
 /**
@@ -4749,7 +4755,7 @@ gst_play_message_parse_type (GstMessage * msg, GstPlayMessage * type)
  * @msg: A #GstMessage
  * @duration: (out) (optional): the resulting duration
  *
- * Parse the given duration @msg and extract the corresponding #GstClockTime
+ * Parse the given duration-changed @msg and extract the corresponding #GstClockTime
  *
  * Since: 1.20
  */
@@ -4757,8 +4763,8 @@ void
 gst_play_message_parse_duration_updated (GstMessage * msg,
     GstClockTime * duration)
 {
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_DURATION,
-      GST_TYPE_CLOCK_TIME, duration);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DURATION_CHANGED,
+      GST_PLAY_MESSAGE_DATA_DURATION, GST_TYPE_CLOCK_TIME, duration);
 }
 
 /**
@@ -4766,7 +4772,7 @@ gst_play_message_parse_duration_updated (GstMessage * msg,
  * @msg: A #GstMessage
  * @position: (out) (optional): the resulting position
  *
- * Parse the given position @msg and extract the corresponding #GstClockTime
+ * Parse the given position-updated @msg and extract the corresponding #GstClockTime
  *
  * Since: 1.20
  */
@@ -4774,8 +4780,8 @@ void
 gst_play_message_parse_position_updated (GstMessage * msg,
     GstClockTime * position)
 {
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_POSITION,
-      GST_TYPE_CLOCK_TIME, position);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_POSITION_UPDATED,
+      GST_PLAY_MESSAGE_DATA_POSITION, GST_TYPE_CLOCK_TIME, position);
 }
 
 /**
@@ -4783,15 +4789,15 @@ gst_play_message_parse_position_updated (GstMessage * msg,
  * @msg: A #GstMessage
  * @state: (out) (optional): the resulting play state
  *
- * Parse the given state @msg and extract the corresponding #GstPlayState
+ * Parse the given state-changed @msg and extract the corresponding #GstPlayState
  *
  * Since: 1.20
  */
 void
 gst_play_message_parse_state_changed (GstMessage * msg, GstPlayState * state)
 {
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_PLAY_STATE,
-      GST_TYPE_PLAY_STATE, state);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_STATE_CHANGED,
+      GST_PLAY_MESSAGE_DATA_PLAY_STATE, GST_TYPE_PLAY_STATE, state);
 }
 
 /**
@@ -4799,15 +4805,15 @@ gst_play_message_parse_state_changed (GstMessage * msg, GstPlayState * state)
  * @msg: A #GstMessage
  * @percent: (out) (optional): the resulting buffering percent
  *
- * Parse the given buffering-percent @msg and extract the corresponding value
+ * Parse the given buffering @msg and extract the corresponding value
  *
  * Since: 1.20
  */
 void
 gst_play_message_parse_buffering_percent (GstMessage * msg, guint * percent)
 {
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_BUFFERING_PERCENT,
-      G_TYPE_UINT, percent);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_BUFFERING,
+      GST_PLAY_MESSAGE_DATA_BUFFERING_PERCENT, G_TYPE_UINT, percent);
 }
 
 /**
@@ -4824,9 +4830,10 @@ void
 gst_play_message_parse_error (GstMessage * msg, GError ** error,
     GstStructure ** details)
 {
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_ERROR, G_TYPE_ERROR, error);
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_ERROR_DETAILS,
-      GST_TYPE_STRUCTURE, details);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_ERROR, GST_PLAY_MESSAGE_DATA_ERROR,
+      G_TYPE_ERROR, error);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_ERROR,
+      GST_PLAY_MESSAGE_DATA_ERROR_DETAILS, GST_TYPE_STRUCTURE, details);
 }
 
 /**
@@ -4835,7 +4842,7 @@ gst_play_message_parse_error (GstMessage * msg, GError ** error,
  * @error: (out) (optional) (transfer full): the resulting warning
  * @details: (out) (optional) (nullable) (transfer full): A #GstStructure containing additional details about the warning
  *
- * Parse the given error @msg and extract the corresponding #GError warning
+ * Parse the given warning @msg and extract the corresponding #GError
  *
  * Since: 1.20
  */
@@ -4843,9 +4850,10 @@ void
 gst_play_message_parse_warning (GstMessage * msg, GError ** error,
     GstStructure ** details)
 {
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_WARNING, G_TYPE_ERROR, error);
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_WARNING, GST_TYPE_STRUCTURE,
-      details);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_WARNING,
+      GST_PLAY_MESSAGE_DATA_WARNING, G_TYPE_ERROR, error);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_WARNING,
+      GST_PLAY_MESSAGE_DATA_WARNING_DETAILS, GST_TYPE_STRUCTURE, details);
 }
 
 /**
@@ -4854,7 +4862,7 @@ gst_play_message_parse_warning (GstMessage * msg, GError ** error,
  * @width: (out) (optional): the resulting video width
  * @height: (out) (optional): the resulting video height
  *
- * Parse the given @msg and extract the corresponding video dimensions
+ * Parse the given video-dimensions-changed @msg and extract the corresponding video dimensions
  *
  * Since: 1.20
  */
@@ -4862,10 +4870,10 @@ void
 gst_play_message_parse_video_dimensions_changed (GstMessage * msg,
     guint * width, guint * height)
 {
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_VIDEO_WIDTH,
-      G_TYPE_UINT, width);
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_VIDEO_HEIGHT,
-      G_TYPE_UINT, height);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_VIDEO_DIMENSIONS_CHANGED,
+      GST_PLAY_MESSAGE_DATA_VIDEO_WIDTH, G_TYPE_UINT, width);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_VIDEO_DIMENSIONS_CHANGED,
+      GST_PLAY_MESSAGE_DATA_VIDEO_HEIGHT, G_TYPE_UINT, height);
 }
 
 /**
@@ -4873,7 +4881,7 @@ gst_play_message_parse_video_dimensions_changed (GstMessage * msg,
  * @msg: A #GstMessage
  * @info: (out) (optional) (transfer full): the resulting media info
  *
- * Parse the given @msg and extract the corresponding media information
+ * Parse the given media-info-updated @msg and extract the corresponding media information
  *
  * Since: 1.20
  */
@@ -4881,8 +4889,8 @@ void
 gst_play_message_parse_media_info_updated (GstMessage * msg,
     GstPlayMediaInfo ** info)
 {
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_MEDIA_INFO,
-      GST_TYPE_PLAY_MEDIA_INFO, info);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_MEDIA_INFO_UPDATED,
+      GST_PLAY_MESSAGE_DATA_MEDIA_INFO, GST_TYPE_PLAY_MEDIA_INFO, info);
 }
 
 /**
@@ -4890,15 +4898,15 @@ gst_play_message_parse_media_info_updated (GstMessage * msg,
  * @msg: A #GstMessage
  * @volume: (out) (optional): the resulting audio volume
  *
- * Parse the given @msg and extract the corresponding audio volume
+ * Parse the given volume-changed @msg and extract the corresponding audio volume
  *
  * Since: 1.20
  */
 void
 gst_play_message_parse_volume_changed (GstMessage * msg, gdouble * volume)
 {
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_VOLUME, G_TYPE_DOUBLE,
-      volume);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_VOLUME_CHANGED,
+      GST_PLAY_MESSAGE_DATA_VOLUME, G_TYPE_DOUBLE, volume);
 }
 
 /**
@@ -4906,13 +4914,13 @@ gst_play_message_parse_volume_changed (GstMessage * msg, gdouble * volume)
  * @msg: A #GstMessage
  * @muted: (out) (optional): the resulting audio muted state
  *
- * Parse the given @msg and extract the corresponding audio muted state
+ * Parse the given mute-changed @msg and extract the corresponding audio muted state
  *
  * Since: 1.20
  */
 void
 gst_play_message_parse_muted_changed (GstMessage * msg, gboolean * muted)
 {
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_IS_MUTED, G_TYPE_BOOLEAN,
-      muted);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_MUTE_CHANGED,
+      GST_PLAY_MESSAGE_DATA_IS_MUTED, G_TYPE_BOOLEAN, muted);
 }
