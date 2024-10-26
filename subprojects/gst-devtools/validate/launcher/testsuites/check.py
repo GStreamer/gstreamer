@@ -123,6 +123,7 @@ VALGRIND_BLACKLIST = [
     (r'check.gst-plugins-good.elements_splitmuxsrc.test_splitmuxsrc_sparse_streams', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/739'),
     (r'check.gst-plugins-good.elements_udpsrc.test_udpsrc_empty_packet', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/740'),
     (r'check.gst-plugins-bad.elements_svthevc*', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3011'),
+    (r'check.gst-plugins-bad.elements_srtp.test_roc', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3939'),
 ]
 
 BLACKLIST = [
