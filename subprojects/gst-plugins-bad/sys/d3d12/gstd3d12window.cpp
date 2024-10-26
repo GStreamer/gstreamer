@@ -45,6 +45,7 @@ enum
 {
   SIGNAL_KEY_EVENT,
   SIGNAL_MOUSE_EVENT,
+  SIGNAL_SCROLL_EVENT,
   SIGNAL_FULLSCREEN,
   SIGNAL_OVERLAY,
   SIGNAL_LAST
@@ -184,6 +185,12 @@ gst_d3d12_window_class_init (GstD3D12WindowClass * klass)
       G_TYPE_NONE, 5, G_TYPE_STRING, G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE,
       G_TYPE_UINT);
 
+  d3d12_window_signals[SIGNAL_SCROLL_EVENT] =
+      g_signal_new_class_handler ("scroll-event", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, nullptr, nullptr, nullptr, nullptr,
+      G_TYPE_NONE, 5, G_TYPE_INT, G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE,
+      G_TYPE_UINT);
+
   d3d12_window_signals[SIGNAL_FULLSCREEN] =
       g_signal_new_class_handler ("fullscreen", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, nullptr, nullptr, nullptr, nullptr,
@@ -231,6 +238,14 @@ gst_d3d12_window_on_mouse_event (GstD3D12Window * window, const gchar * event,
 {
   g_signal_emit (window, d3d12_window_signals[SIGNAL_MOUSE_EVENT], 0,
       event, button, xpos, ypos, modifier);
+}
+
+void
+gst_d3d12_window_on_scroll_event (GstD3D12Window * window, gint delta_x,
+    gint delta_y, double xpos, double ypos, guint modifier)
+{
+  g_signal_emit (window, d3d12_window_signals[SIGNAL_SCROLL_EVENT], 0,
+      delta_x, delta_y, xpos, ypos, modifier);
 }
 
 static gboolean

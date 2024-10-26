@@ -143,6 +143,13 @@ void             gst_d3d12_window_on_mouse_event (GstD3D12Window * window,
                                                   double ypos,
                                                   guint modifier);
 
+void             gst_d3d12_window_on_scroll_event (GstD3D12Window * window,
+                                                   gint delta_x,
+                                                   gint delta_y,
+                                                   double xpos,
+                                                   double ypos,
+                                                   guint modifier);
+
 void             gst_d3d12_window_get_create_params (GstD3D12Window * window,
                                                      std::wstring & title,
                                                      GstVideoRectangle * rect,

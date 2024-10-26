@@ -262,6 +262,9 @@ static void gst_d3d12_video_sink_key_event (GstD3D12Window * window,
 static void gst_d3d12_video_sink_mouse_event (GstD3D12Window * window,
     const gchar * event, gint button, gdouble x, gdouble y, guint modifier,
     GstD3D12VideoSink * self);
+static void gst_d3d12_video_sink_scroll_event (GstD3D12Window * window,
+    gint delta_x, gint delta_y, gdouble x, gdouble y, guint modifier,
+    GstD3D12VideoSink * self);
 static void gst_d3d12_video_sink_on_fullscreen (GstD3D12Window * window,
     gboolean is_fullscreen, GstD3D12VideoSink * self);
 static void gst_d3d12_video_sink_on_overlay (GstD3D12Window * window,
@@ -575,6 +578,8 @@ gst_d3d12_video_sink_init (GstD3D12VideoSink * self)
       G_CALLBACK (gst_d3d12_video_sink_key_event), self);
   g_signal_connect (priv->window, "mouse-event",
       G_CALLBACK (gst_d3d12_video_sink_mouse_event), self);
+  g_signal_connect (priv->window, "scroll-event",
+      G_CALLBACK (gst_d3d12_video_sink_scroll_event), self);
   g_signal_connect (priv->window, "fullscreen",
       G_CALLBACK (gst_d3d12_video_sink_on_fullscreen), self);
   g_signal_connect (priv->window, "overlay",
@@ -1026,6 +1031,16 @@ gst_d3d12_video_sink_mouse_event (GstD3D12Window * window, const gchar * event,
   }
 
   gst_navigation_send_event_simple (GST_NAVIGATION (self), mouse_event);
+}
+
+static void
+gst_d3d12_video_sink_scroll_event (GstD3D12Window * window,
+    gint delta_x, gint delta_y, gdouble x, gdouble y, guint modifier,
+    GstD3D12VideoSink * self)
+{
+  gst_navigation_send_event_simple (GST_NAVIGATION (self),
+      gst_navigation_event_new_mouse_scroll (x, y, delta_x, delta_y,
+          (GstNavigationModifierType) modifier));
 }
 
 static void

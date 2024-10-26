@@ -269,11 +269,26 @@ SwapChainProxy::handle_mouse_event (UINT msg, WPARAM wparam, LPARAM lparam)
   gint button = 0;
   const gchar *event = nullptr;
   guint modifier = 0;
+  gint delta_x = 0;
+  gint delta_y = 0;
 
   auto xpos = GET_X_LPARAM (lparam);
   auto ypos = GET_Y_LPARAM (lparam);
 
-  if (parent_hwnd_ && parent_hwnd_ != hwnd_) {
+  if (msg == WM_MOUSEHWHEEL || msg == WM_MOUSEWHEEL) {
+    /* wheel events coordinates are relative to screen */
+    POINT updated_pos;
+    updated_pos.x = xpos;
+    updated_pos.y = ypos;
+
+    if (!ScreenToClient (hwnd_, &updated_pos)) {
+      GST_WARNING_OBJECT (window_, "Couldn't convert screen position to client");
+      return;
+    }
+
+    xpos = updated_pos.x;
+    ypos = updated_pos.y;
+  } else if (parent_hwnd_ && parent_hwnd_ != hwnd_) {
     POINT updated_pos;
     updated_pos.x = xpos;
     updated_pos.y = ypos;
@@ -332,6 +347,12 @@ SwapChainProxy::handle_mouse_event (UINT msg, WPARAM wparam, LPARAM lparam)
     case WM_MBUTTONDBLCLK:
       button = 3;
       event = "mouse-double-click";
+      break;
+    case WM_MOUSEHWHEEL:
+      delta_x = GET_WHEEL_DELTA_WPARAM (wparam);
+      break;
+    case WM_MOUSEWHEEL:
+      delta_y = GET_WHEEL_DELTA_WPARAM (wparam);
       break;
     default:
       return;
@@ -419,8 +440,13 @@ SwapChainProxy::handle_mouse_event (UINT msg, WPARAM wparam, LPARAM lparam)
       break;
   }
 
-  gst_d3d12_window_on_mouse_event (window_,
-      event, button, final_x, final_y, modifier);
+  if (msg == WM_MOUSEHWHEEL || msg == WM_MOUSEWHEEL) {
+    gst_d3d12_window_on_scroll_event (window_, delta_x, delta_y, final_x,
+        final_y, modifier);
+  } else {
+    gst_d3d12_window_on_mouse_event (window_,
+        event, button, final_x, final_y, modifier);
+  }
 }
 
 GstFlowReturn
@@ -671,6 +697,8 @@ parent_wnd_proc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     case WM_LBUTTONDBLCLK:
     case WM_RBUTTONDBLCLK:
     case WM_MBUTTONDBLCLK:
+    case WM_MOUSEHWHEEL:
+    case WM_MOUSEWHEEL:
     {
       auto proxy = server->get_direct_proxy (hwnd);
       if (proxy)
@@ -784,6 +812,8 @@ internal_wnd_proc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     case WM_LBUTTONDBLCLK:
     case WM_RBUTTONDBLCLK:
     case WM_MBUTTONDBLCLK:
+    case WM_MOUSEHWHEEL:
+    case WM_MOUSEWHEEL:
     {
       auto proxy = server->get_proxy (window, id);
       if (proxy)
