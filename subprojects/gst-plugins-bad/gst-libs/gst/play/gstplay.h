@@ -409,13 +409,19 @@ GstSample * gst_play_get_video_snapshot (GstPlay * play,
     GstPlaySnapshotFormat format, const GstStructure * config);
 
 GST_PLAY_API
-gboolean       gst_play_is_play_message                        (GstMessage *msg);
+gboolean       gst_play_is_play_message                          (GstMessage *msg);
 
 GST_PLAY_API
 void           gst_play_message_parse_type                       (GstMessage *msg, GstPlayMessage *type);
 
 GST_PLAY_API
+void           gst_play_message_parse_uri_loaded                 (GstMessage *msg, gchar **uri);
+
+GST_PLAY_DEPRECATED_FOR(gst_play_message_parse_duration_changed)
 void           gst_play_message_parse_duration_updated           (GstMessage *msg, GstClockTime *duration);
+
+GST_PLAY_API
+void           gst_play_message_parse_duration_changed           (GstMessage *msg, GstClockTime *duration);
 
 GST_PLAY_API
 void           gst_play_message_parse_position_updated           (GstMessage *msg, GstClockTime *position);
@@ -423,8 +429,11 @@ void           gst_play_message_parse_position_updated           (GstMessage *ms
 GST_PLAY_API
 void           gst_play_message_parse_state_changed              (GstMessage *msg, GstPlayState *state);
 
-GST_PLAY_API
+GST_PLAY_DEPRECATED_FOR(gst_play_message_parse_buffering_percent)
 void           gst_play_message_parse_buffering_percent          (GstMessage *msg, guint *percent);
+
+GST_PLAY_API
+void           gst_play_message_parse_buffering                  (GstMessage *msg, guint *percent);
 
 GST_PLAY_API
 void           gst_play_message_parse_error                      (GstMessage *msg, GError **error, GstStructure **details);
@@ -443,6 +452,9 @@ void           gst_play_message_parse_volume_changed             (GstMessage *ms
 
 GST_PLAY_API
 void           gst_play_message_parse_muted_changed              (GstMessage *msg, gboolean *muted);
+
+GST_PLAY_API
+void           gst_play_message_parse_seek_done                  (GstMessage *msg, GstClockTime *position);
 
 G_END_DECLS
 
