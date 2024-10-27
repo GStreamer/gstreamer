@@ -63,6 +63,7 @@ mesa-libGLES-devel
 mesa-libGLU-devel
 mesa-libOpenCL-devel
 mesa-libOSMesa-devel
+mesa-va-drivers
 mesa-vulkan-drivers
 nasm
 ninja-build
