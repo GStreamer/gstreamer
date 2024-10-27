@@ -19,35 +19,16 @@ dnf config-manager --set-enabled '*-debuginfo'
 dnf upgrade -y && dnf distro-sync -y
 
 # Install the dependencies of gstreamer
-dnf builddep -y --setopt=install_weak_deps=false --skip-broken --allowerasing --best \
-    gstreamer1 \
-    gstreamer1-plugins-bad-free \
-    gstreamer1-plugins-bad-free-extras \
-    gstreamer1-plugins-bad-freeworld \
-    gstreamer1-plugins-base \
-    gstreamer1-plugins-good \
-    gstreamer1-plugins-good-extras \
-    gstreamer1-plugins-ugly \
-    gstreamer1-plugins-ugly-free \
-    gstreamer1-rtsp-server
-
-dnf remove -y \
-    'ffmpeg-free*' \
-    'fdk-aac-free*'
-
 dnf install --setopt=install_weak_deps=false -y $(<./ci/docker/fedora/deps.txt)
 
-dnf remove -y meson -x ninja-build
+# Install devhelp files for hotdoc
+dnf install -y glib2-doc gdk-pixbuf2-devel gtk3-devel-docs gtk4-devel-docs libsoup-doc
+
+# Make sure we don't end up installing these from some transient dependency
+dnf remove -y "gstreamer1*-devel" rust cargo meson 'fdk-aac-free*'
+
 pip3 install meson==1.5.2 python-gitlab tomli junitparser
 pip3 install git+https://github.com/hotdoc/hotdoc.git@8c1cc997f5bc16e068710a8a8121f79ac25cbcce
-
-# Remove gst-devel packages installed by builddep above
-dnf remove -y "gstreamer1*devel"
-
-# We use rustup to install the rust toolchain, we don't need fedora's
-dnf remove -y rust cargo
-
-dnf install -y glib2-doc gdk-pixbuf2-devel gtk3-devel-docs gtk4-devel-docs libsoup-doc
 
 # Install most debug symbols, except the big ones from things we use
 debug_packages=$(rpm -qa | grep -v -i \
