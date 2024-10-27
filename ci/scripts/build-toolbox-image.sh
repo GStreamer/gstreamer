@@ -105,10 +105,22 @@ build_container() {
   buildah run $build_cntr dnf clean all
   buildah run $build_cntr rm -rf /var/lib/cache/dnf
 
+  # random uid
+  uid="10043"
+  name="containeruser"
+  buildah run $build_cntr -- groupadd $name -g $uid
+  buildah run $build_cntr -- useradd -u $uid -g $uid -ms /bin/bash $name
+
+  buildah run $build_cntr -- usermod -aG wheel $name
+  buildah run $build_cntr -- bash -c "echo $name ALL=\(ALL\) NOPASSWD:ALL > /etc/sudoers.d/$name"
+  buildah run $build_cntr -- chmod 0440 /etc/sudoers.d/$name
+
   # Remove the hardcoded HOME env var that ci-templates adds
   # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/2433#note_2243222
   # Also add the OCI labels that toolbox expects, to advertize that image is compatible
+  # Additionally add a non-root default user
   buildah config --env HOME- \
+    --user $name \
     --label com.github.containers.toolbox=true \
     --label org.opencontainers.image.base.name=$BASE_CI_IMAGE \
     $build_cntr
