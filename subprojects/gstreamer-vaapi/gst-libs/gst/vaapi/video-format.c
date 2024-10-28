@@ -504,39 +504,6 @@ gst_vaapi_video_format_get_best_native (GstVideoFormat format)
   return gst_vaapi_video_format_from_chroma (chroma_type);
 }
 
-/**
- * gst_vaapi_video_format_get_formats_by_chroma:
- * @chroma: a #GstVaapiChromaType
- *
- * Get all #GstVideoFormat which belong to #GstVaapiChromaType.
- *
- * Returns: an array of #GstVideoFormat.
- **/
-GArray *
-gst_vaapi_video_format_get_formats_by_chroma (guint chroma)
-{
-  const GstVideoFormatMap *entry;
-  GArray *formats;
-  guint i;
-
-  formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
-  if (!formats)
-    return NULL;
-
-  for (i = 0; i < gst_vaapi_video_formats_map->len; i++) {
-    entry = &g_array_index (gst_vaapi_video_formats_map, GstVideoFormatMap, i);
-    if (entry->chroma_type == chroma)
-      g_array_append_val (formats, entry->format);
-  }
-
-  if (formats->len == 0) {
-    g_array_unref (formats);
-    return NULL;
-  }
-
-  return formats;
-}
-
 struct ImageFormatsData
 {
   VAImageFormat *formats;
