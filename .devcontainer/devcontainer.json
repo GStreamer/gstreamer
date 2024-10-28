@@ -1,0 +1,35 @@
+{
+    "name": "GStreamer Dev Toolbox",
+    "image": "registry.freedesktop.org/gstreamer/gstreamer/amd64/fedora:gst-toolbox-main",
+    "containerUser": "containeruser",
+    "remoteUser": "containeruser",
+    "postCreateCommand": ["python3", "${containerWorkspaceFolder}/ci/scripts/handle-subprojects-cache.py" ,"--cache-dir", "/subprojects", "subprojects/"],
+    "privileged": false,
+    "capAdd": [ "SYS_PTRACE" ],
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "files.watcherExclude": {
+                    "**/target/**": true
+                },
+                "[python]": {
+                    "editor.defaultFormatter": "charliermarsh.ruff"
+                }
+            },
+            "extensions": [
+                "charliermarsh.ruff",
+                "GitLab.gitlab-workflow",
+                "mesonbuild.mesonbuild",
+                "ms-python.mypy-type-checker",
+                "ms-python.pylint",
+                "ms-python.python",
+                "ms-vscode.cpptools",
+                "redhat.vscode-xml",
+                "redhat.vscode-yaml",
+                "rust-lang.rust-analyzer",
+                "tamasfe.even-better-toml",
+                "vadimcn.vscode-lldb"
+            ]
+        }
+    }
+}
