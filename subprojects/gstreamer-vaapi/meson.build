@@ -217,6 +217,8 @@ subdir('gst')
 subdir('tests')
 subdir('docs')
 
+warning ('GStreamer VA-API is deprecated in favor of GstVA in gst-plugins-bad')
+
 # Set release date
 if gst_version_nano == 0
   extract_release_date = find_program('scripts/extract-release-date-from-doap-file.py')

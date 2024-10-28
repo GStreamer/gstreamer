@@ -194,6 +194,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_vaapi_driver_is_whitelisted (display))
     goto unsupported_driver;
 
+  gst_plugin_add_status_warning (plugin,
+      "GStreamer VA-API is deprecated in favor of GstVA in gst-plugins-bad");
+
   _gst_vaapi_has_video_processing =
       gst_vaapi_display_has_video_processing (display);
 
