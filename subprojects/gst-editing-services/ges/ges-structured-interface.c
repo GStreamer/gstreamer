@@ -198,7 +198,7 @@ _check_fields (GstStructure * structure, FieldsError fields_error,
 
     g_list_free (fields_error.invalid_fields);
     g_string_free (msg, TRUE);
-    g_list_free (fields_error.invalid_fields);
+    fields_error.invalid_fields = NULL;
 
     return FALSE;
   }
