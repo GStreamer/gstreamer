@@ -49,6 +49,14 @@
 GST_DEBUG_CATEGORY_STATIC (gst_cea608_mux_debug);
 #define GST_CAT_DEFAULT gst_cea608_mux_debug
 
+enum
+{
+  PROP_0,
+  PROP_FORCE_LIVE,
+};
+
+#define DEFAULT_FORCE_LIVE              FALSE
+
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -69,11 +77,6 @@ static GstStaticPadTemplate cc3_template = GST_STATIC_PAD_TEMPLATE ("cc3",
 G_DEFINE_TYPE (GstCea608Mux, gst_cea608_mux, GST_TYPE_AGGREGATOR);
 GST_ELEMENT_REGISTER_DEFINE (cea608mux, "cea608mux",
     GST_RANK_NONE, GST_TYPE_CEA608MUX);
-
-enum
-{
-  PROP_0,
-};
 
 static void
 gst_cea608_mux_finalize (GObject * object)
@@ -296,14 +299,15 @@ gst_cea608_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
 
       gst_buffer_unmap (buffer, &map);
       gst_buffer_unref (buffer);
-    } else {
-      /* We got flushed */
+    } else if (!timeout) {
+      /* We got flushed and still have time to wait before the deadline */
       flow_ret = GST_AGGREGATOR_FLOW_NEED_DATA;
     }
-  } else if (all_pads_eos (aggregator)) {
+  } else if (!gst_aggregator_get_force_live (aggregator)
+      && all_pads_eos (aggregator)) {
     GST_INFO_OBJECT (self, "EOS!");
     flow_ret = GST_FLOW_EOS;
-  } else {
+  } else if (!timeout) {
     GST_LOG_OBJECT (self, "Need more data");
     flow_ret = GST_AGGREGATOR_FLOW_NEED_DATA;
   }
@@ -396,6 +400,36 @@ gst_cea608_mux_clip (GstAggregator * aggregator, GstAggregatorPad * pad,
 }
 
 static void
+gst_cea608_mux_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
+{
+  switch (prop_id) {
+    case PROP_FORCE_LIVE:
+      g_value_set_boolean (value,
+          gst_aggregator_get_force_live (GST_AGGREGATOR (object)));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_cea608_mux_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
+{
+  switch (prop_id) {
+    case PROP_FORCE_LIVE:
+      gst_aggregator_set_force_live (GST_AGGREGATOR (object),
+          g_value_get_boolean (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_cea608_mux_class_init (GstCea608MuxClass * klass)
 {
   GObjectClass *gobject_class;
@@ -407,6 +441,8 @@ gst_cea608_mux_class_init (GstCea608MuxClass * klass)
   aggregator_class = (GstAggregatorClass *) klass;
 
   gobject_class->finalize = gst_cea608_mux_finalize;
+  gobject_class->get_property = gst_cea608_mux_get_property;
+  gobject_class->set_property = gst_cea608_mux_set_property;
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Closed Caption Muxer",
@@ -430,6 +466,23 @@ gst_cea608_mux_class_init (GstCea608MuxClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_cea608_mux_debug, "cea608mux",
       0, "Closed Caption muxer");
+
+  /**
+   * cea608mux:force-live:
+   *
+   * Causes the element to aggregate on a timeout even when no live source is
+   * connected to its sinks. See #GstAggregator:min-upstream-latency for a
+   * companion property: in the vast majority of cases where you plan to plug in
+   * live sources with a non-zero latency, you should set it to a non-zero value.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_FORCE_LIVE,
+      g_param_spec_boolean ("force-live", "Force live",
+          "Always operate in live mode and aggregate on timeout regardless of "
+          "whether any live sources are linked upstream",
+          DEFAULT_FORCE_LIVE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
