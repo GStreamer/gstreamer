@@ -2078,7 +2078,6 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
 
     if (G_UNLIKELY (*allow_drop)) {
       GST_DEBUG_ID (sq->debug_id, "Dropping EOS query %p", query);
-      gst_query_unref (query);
       res = FALSE;
     } else {
       res = gst_pad_peer_query (srcpad, query);
