@@ -2543,23 +2543,23 @@ gst_va_vp9_enc_encode_frame (GstVaBaseEnc * base,
               self->rc.rc_ctrl_mode, self->rc.max_bitrate_bits,
               self->rc.target_percentage, self->rc.base_qindex,
               self->rc.min_qindex, self->rc.max_qindex, self->rc.mbbrc))
-        return FALSE;
+        return GST_FLOW_ERROR;
 
       if (!gst_va_base_enc_add_quality_level_parameter (base,
               va_frame->base.picture, self->rc.target_usage))
-        return FALSE;
+        return GST_FLOW_ERROR;
 
       if (!gst_va_base_enc_add_frame_rate_parameter (base,
               va_frame->base.picture))
-        return FALSE;
+        return GST_FLOW_ERROR;
 
       if (!gst_va_base_enc_add_hrd_parameter (base, va_frame->base.picture,
               self->rc.rc_ctrl_mode, self->rc.cpb_length_bits))
-        return FALSE;
+        return GST_FLOW_ERROR;
 
       _vp9_fill_sequence_param (self, &seq_param);
       if (!_vp9_add_sequence_param (self, va_frame->base.picture, &seq_param))
-        return FALSE;
+        return GST_FLOW_ERROR;
     }
 
     if (!_vp9_encode_one_frame (self, va_frame)) {

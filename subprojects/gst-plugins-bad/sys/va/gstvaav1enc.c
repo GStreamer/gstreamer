@@ -3904,28 +3904,28 @@ gst_va_av1_enc_encode_frame (GstVaBaseEnc * base,
               self->rc.rc_ctrl_mode, self->rc.max_bitrate_bits,
               self->rc.target_percentage, self->rc.base_qindex,
               self->rc.min_qindex, self->rc.max_qindex, self->rc.mbbrc))
-        return FALSE;
+        return GST_FLOW_ERROR;
 
       if (!gst_va_base_enc_add_quality_level_parameter (base,
               va_frame->base.picture, self->rc.target_usage))
-        return FALSE;
+        return GST_FLOW_ERROR;
 
       if (!gst_va_base_enc_add_frame_rate_parameter (base,
               va_frame->base.picture))
-        return FALSE;
+        return GST_FLOW_ERROR;
 
       if (!gst_va_base_enc_add_hrd_parameter (base, va_frame->base.picture,
               self->rc.rc_ctrl_mode, self->rc.cpb_length_bits))
-        return FALSE;
+        return GST_FLOW_ERROR;
 
       _av1_fill_sequence_param (self, &seq_param);
       if (!_av1_add_sequence_param (self, va_frame->base.picture, &seq_param))
-        return FALSE;
+        return GST_FLOW_ERROR;
 
       _av1_fill_sequence_header (self, &seq_param);
       if ((self->packed_headers & VA_ENC_PACKED_HEADER_SEQUENCE) &&
           !_av1_add_sequence_header (self, va_frame, &size_offset))
-        return FALSE;
+        return GST_FLOW_ERROR;
     }
 
     if (!_av1_encode_one_frame (self, va_frame, size_offset)) {
