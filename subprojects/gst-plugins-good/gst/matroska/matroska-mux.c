@@ -4241,6 +4241,27 @@ gst_matroska_mux_all_pads_eos (GstMatroskaMux * mux)
   return TRUE;
 }
 
+static gboolean
+gst_matroska_mux_all_pads_have_codec_id (GstMatroskaMux * mux)
+{
+  GList *l;
+  gboolean result = TRUE;
+
+  GST_OBJECT_LOCK (mux);
+  for (l = GST_ELEMENT (mux)->sinkpads; l; l = g_list_next (l)) {
+    GstMatroskaMuxPad *pad = l->data;
+
+    if (!pad->track->codec_id) {
+      result = FALSE;
+      break;
+    }
+  }
+
+  GST_OBJECT_UNLOCK (mux);
+
+  return result;
+}
+
 static GstFlowReturn
 gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
 {
@@ -4252,18 +4273,6 @@ gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (mux, "Aggregating (timeout: %d)", timeout);
-
-  /* start with a header */
-  if (mux->state == GST_MATROSKA_MUX_STATE_START) {
-    mux->state = GST_MATROSKA_MUX_STATE_HEADER;
-    gst_ebml_start_streamheader (ebml);
-    if (!gst_matroska_mux_start_file (mux)) {
-      ret = GST_FLOW_ERROR;
-      goto exit;
-    }
-    gst_matroska_mux_stop_streamheader (mux);
-    mux->state = GST_MATROSKA_MUX_STATE_DATA;
-  }
 
   best = gst_matroska_mux_find_best_pad (mux, timeout);
 
@@ -4282,6 +4291,22 @@ gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
       ret = GST_AGGREGATOR_FLOW_NEED_DATA;
     }
     goto exit;
+  }
+
+  /* start with a header */
+  if (mux->state == GST_MATROSKA_MUX_STATE_START) {
+    if (!gst_matroska_mux_all_pads_have_codec_id (mux)) {
+      ret = GST_AGGREGATOR_FLOW_NEED_DATA;
+      goto exit;
+    }
+    mux->state = GST_MATROSKA_MUX_STATE_HEADER;
+    gst_ebml_start_streamheader (ebml);
+    if (!gst_matroska_mux_start_file (mux)) {
+      ret = GST_FLOW_ERROR;
+      goto exit;
+    }
+    gst_matroska_mux_stop_streamheader (mux);
+    mux->state = GST_MATROSKA_MUX_STATE_DATA;
   }
 
   if (best->track->codec_id == NULL) {
