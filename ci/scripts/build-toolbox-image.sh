@@ -146,15 +146,12 @@ TOOLBOX_LATEST="$CI_REGISTRY_IMAGE/$FDO_REPO_SUFFIX:gst-toolbox-${GST_UPSTREAM_B
 
 podman login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
-if check_image_base; then
-  echo Image $TOOLBOX_IMAGE exists and is up to date.
-  exit 0
+if ! check_image_base; then
+  build_container
+
+  podman push "$TOOLBOX_IMAGE"
+  podman push "$TOOLBOX_LATEST"
 fi
-
-build_container
-
-podman push "$TOOLBOX_IMAGE"
-podman push "$TOOLBOX_LATEST"
 
 echo "Create your toolbox with either of the following commands"
 echo "     $ toolbox create gst-toolbox --image $TOOLBOX_LATEST"
