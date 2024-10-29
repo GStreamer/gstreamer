@@ -732,6 +732,8 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
    * Boolean to choose whether to automatically reconnect.  If TRUE, an element
    * in caller mode will try to reconnect instead of reporting an error.
    *
+   * This will be ignored for authentication failures.
+   *
    * Since: 1.22
    *
    */
@@ -1600,6 +1602,8 @@ retry:
         g_set_error (&internal_error, GST_RESOURCE_ERROR,
             GST_RESOURCE_ERROR_NOT_AUTHORIZED,
             "Failed to authenticate: %" REASON_FORMAT, REASON_ARGS (reason));
+        /* Failure to authenticate are fatal */
+        auto_reconnect = FALSE;
       } else {
         g_set_error (&internal_error, GST_RESOURCE_ERROR,
             GST_RESOURCE_ERROR_READ,
