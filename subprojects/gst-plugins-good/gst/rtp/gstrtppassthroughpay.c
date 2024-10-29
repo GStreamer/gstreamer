@@ -555,10 +555,10 @@ gst_rtp_passthrough_pay_create_stats (GstRtpPassthroughPay * self)
   }
 
   return gst_structure_new ("application/x-rtp-payload-stats", "clock-rate",
-      G_TYPE_INT, self->clock_rate, "running-time", G_TYPE_UINT64,
+      G_TYPE_UINT, (guint) self->clock_rate, "running-time", G_TYPE_UINT64,
       running_time, "seqnum", G_TYPE_UINT, (guint) self->seqnum, "timestamp",
       G_TYPE_UINT, (guint) self->timestamp, "ssrc", G_TYPE_UINT, self->ssrc,
-      "pt", G_TYPE_INT, self->pt, "seqnum-offset", G_TYPE_UINT,
+      "pt", G_TYPE_UINT, self->pt, "seqnum-offset", G_TYPE_UINT,
       (guint) self->seqnum_offset, "timestamp-offset", G_TYPE_UINT,
       (guint) self->timestamp_offset, NULL);
 
