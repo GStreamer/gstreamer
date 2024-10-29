@@ -417,6 +417,7 @@ gssim_finalize (GObject * object)
 
   g_free (self->priv->orgmu);
   g_free (self->priv->windows);
+  g_free (self->priv->weights);
 
   chain_up (object);
 }

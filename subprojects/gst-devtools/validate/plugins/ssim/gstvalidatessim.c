@@ -173,6 +173,7 @@ runner_stopping (GstValidateRunner * runner, ValidateSsimOverride * self)
 
     ref_path = g_build_path (G_DIR_SEPARATOR_S, compared_files_dir,
         refname, NULL);
+    g_free (refname);
 
     if (!gst_validate_ssim_compare_image_files (ssim, ref_path, frame->path,
             &mssim, &lowest, &highest, self->priv->result_outdir))
@@ -190,6 +191,8 @@ runner_stopping (GstValidateRunner * runner, ValidateSsimOverride * self)
             i + 1, nfiles, mssim, lowest, npassed, nfailures));
     g_free (bname);
   }
+
+  gst_object_unref (ssim);
 
   gst_validate_printf (NULL,
       "\nAverage similarity: %f, min_avg: %f, min_min: %f\n",
@@ -410,6 +413,8 @@ _finalize (GObject * object)
 
   if (priv->config)
     gst_structure_free (priv->config);
+
+  G_OBJECT_CLASS (validate_ssim_override_parent_class)->finalize (object);
 }
 
 static void
