@@ -525,7 +525,7 @@ gst_base_ts_mux_jpegxs_descriptor (GstBaseTsMux * mux,
   }
 
   {
-    guint16 schar = (depth & 0xf) << 4;
+    guint16 schar = ((depth - 1) & 0xf) << 4;
     /* FIXME : Support all other variants */
     if (!g_strcmp0 (sampling, "YCbCr-4:2:2")) {
       schar |= 0;

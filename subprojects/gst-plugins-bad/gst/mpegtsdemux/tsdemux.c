@@ -1865,7 +1865,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       /* interlace-mode, sampling, depth */
       gst_caps_set_simple (caps, "width", G_TYPE_INT, jpegxs.horizontal_size,
           "height", G_TYPE_INT, jpegxs.vertical_size, "depth", G_TYPE_INT,
-          (jpegxs.schar >> 4) & 0xf, NULL);
+          ((jpegxs.schar >> 4) & 0xf) + 1, NULL);
       switch (jpegxs.schar & 0xf) {
         case 0:
           gst_caps_set_simple (caps, "sampling", G_TYPE_STRING, "YCbCr-4:2:2",
