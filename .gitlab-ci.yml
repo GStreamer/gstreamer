@@ -259,7 +259,7 @@ windows amd64 docker:
     - ci/docker/windows/container.ps1 $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD $WINDOWS_IMAGE $WINDOWS_UPSTREAM_IMAGE $DOCKERFILE
 
 .macos image:
-  image: "registry.freedesktop.org/gstreamer/gstreamer/macos-arm64/14-sonoma:2023-10-25.0"
+  image: "registry.freedesktop.org/gstreamer/gstreamer/macos-arm64/15-sequoia:2024-10-28.0"
   tags:
     - gst-mac-arm
 
