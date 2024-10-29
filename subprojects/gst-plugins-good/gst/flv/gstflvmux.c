@@ -180,12 +180,12 @@ gst_flv_mux_skip_buffer (GstAggregatorPad * apad, GstAggregator * aggregator,
     t = gst_flv_mux_segment_to_running_time (&apad->segment,
         GST_BUFFER_DTS_OR_PTS (buffer));
 
-    if (t < (GST_MSECOND * mux->last_dts)) {
+    if (GST_CLOCK_TIME_IS_VALID (mux->last_dts)
+        && t < (GST_MSECOND * mux->last_dts)) {
       GST_WARNING_OBJECT (fpad,
           "Timestamp %" GST_TIME_FORMAT " going backwards from last used %"
-          GST_TIME_FORMAT ", dropping %" GST_PTR_FORMAT,
-          GST_TIME_ARGS (t), GST_TIME_ARGS (GST_MSECOND * mux->last_dts),
-          buffer);
+          GST_TIME_FORMAT ", dropping %" GST_PTR_FORMAT, GST_TIME_ARGS (t),
+          GST_TIME_ARGS (GST_MSECOND * mux->last_dts), buffer);
       /* Look for non-delta buffer */
       fpad->drop_deltas = TRUE;
       return TRUE;
@@ -408,7 +408,7 @@ gst_flv_mux_reset (GstElement * element)
   mux->duration = GST_CLOCK_TIME_NONE;
   mux->new_metadata = FALSE;
   mux->first_timestamp = GST_CLOCK_TIME_NONE;
-  mux->last_dts = 0;
+  mux->last_dts = GST_CLOCK_TIME_NONE;
 
   mux->state = GST_FLV_MUX_STATE_HEADER;
   mux->sent_header = FALSE;
@@ -931,7 +931,9 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
 
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
 
-  dts = mux->last_dts;
+  dts =
+      GST_CLOCK_TIME_IS_VALID (mux->last_dts) ? mux->
+      last_dts : mux->first_timestamp / GST_MSECOND;
 
   /* Timestamp must start at zero */
   if (GST_CLOCK_TIME_IS_VALID (mux->first_timestamp)) {
@@ -1269,11 +1271,17 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
         " from rounding last pad timestamp %" GST_TIME_FORMAT,
         GST_PAD_NAME (pad), GST_TIME_ARGS (pts * GST_MSECOND),
         GST_TIME_ARGS (pad->last_timestamp));
-  } else {
+  } else if (GST_CLOCK_TIME_IS_VALID (mux->last_dts)) {
     pts = dts = mux->last_dts;
     GST_DEBUG_OBJECT (mux,
         "Pad %s: Created dts and pts %" GST_TIME_FORMAT
         " from last mux timestamp",
+        GST_PAD_NAME (pad), GST_TIME_ARGS (pts * GST_MSECOND));
+  } else {
+    pts = dts = mux->first_timestamp / GST_MSECOND;
+    GST_DEBUG_OBJECT (mux,
+        "Pad %s: Created dts and pts %" GST_TIME_FORMAT
+        " from first timestamp",
         GST_PAD_NAME (pad), GST_TIME_ARGS (pts * GST_MSECOND));
   }
 
@@ -1281,9 +1289,11 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
    * it expects timestamps to go forward not only inside one stream, but
    * also between the audio & video streams.
    */
-  if (dts < mux->last_dts && mux->enforce_increasing_timestamps) {
-    GST_WARNING_OBJECT (pad, "Got backwards dts! (%" GST_TIME_FORMAT
-        " < %" GST_TIME_FORMAT ")", GST_TIME_ARGS (dts * GST_MSECOND),
+  if (GST_CLOCK_TIME_IS_VALID (mux->last_dts) && dts < mux->last_dts
+      && mux->enforce_increasing_timestamps) {
+    GST_WARNING_OBJECT (pad,
+        "Got backwards dts! (%" GST_TIME_FORMAT " < %" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (dts * GST_MSECOND),
         GST_TIME_ARGS (mux->last_dts * GST_MSECOND));
     dts = mux->last_dts;
   }
@@ -2053,19 +2063,19 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
       goto out;
     }
 
-    ret = gst_flv_mux_write_header (mux);
-    if (ret != GST_FLOW_OK) {
-      goto out;
-    }
-
-    mux->state = GST_FLV_MUX_STATE_DATA;
-
     if (!mux->streamable || mux->first_timestamp == GST_CLOCK_TIME_NONE) {
       if (best && GST_CLOCK_TIME_IS_VALID (ts))
         mux->first_timestamp = ts;
       else
         mux->first_timestamp = 0;
     }
+
+    ret = gst_flv_mux_write_header (mux);
+    if (ret != GST_FLOW_OK) {
+      goto out;
+    }
+
+    mux->state = GST_FLV_MUX_STATE_DATA;
   } else {
     best = gst_flv_mux_find_best_pad (aggregator, &ts, timeout);
   }
