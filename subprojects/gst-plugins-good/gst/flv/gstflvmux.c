@@ -1672,9 +1672,9 @@ static GstClockTime
 gst_flv_mux_segment_to_running_time (const GstSegment * segment, GstClockTime t)
 {
   /* we can get a dts before the segment, if dts < pts and pts is inside
-   * the segment, so we consider early times as 0 */
+   * the segment, so we consider early times to map to segment start */
   if (t < segment->start)
-    return 0;
+    t = segment->start;
   return gst_segment_to_running_time (segment, GST_FORMAT_TIME, t);
 }
 
