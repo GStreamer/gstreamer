@@ -321,7 +321,7 @@
             "source_checksum": "ba633f3350d266dd54d9f31e28a56637",
             "input_file": "vp80-03-segmentation-1425.ivf",
             "output_format": "yuv420p",
-            "result": "2fec50717d8c0bb576a4fba12d10c67f"
+            "result": "809e484713aa1422f27bed017c06a7d8"
         },
         {
             "name": "vp80-03-segmentation-1426",
@@ -361,7 +361,7 @@
             "source_checksum": "9061775e2d282e947c105575a8523a6e",
             "input_file": "vp80-03-segmentation-1436.ivf",
             "output_format": "yuv420p",
-            "result": "a23f2911c7a33f3823096752d9207bc5"
+            "result": "a6265f9c33a6757e2d0d7b8ee7acf537"
         },
         {
             "name": "vp80-03-segmentation-1437",
