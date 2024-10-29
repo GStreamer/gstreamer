@@ -1584,11 +1584,12 @@ gst_mpegts_descriptor_parse_jpeg_xs (const GstMpegtsDescriptor * descriptor,
   guint8 flags;
   g_return_val_if_fail (descriptor != NULL && res != NULL, FALSE);
 
-  /* The smallest jpegxs descriptor doesn't contain the MDM, but is an H.222.0 extension (so additional one byte) */
-  __common_desc_ext_checks (descriptor, GST_MTS_DESC_EXT_JXS_VIDEO, 32, FALSE);
+  /* The smallest jpegxs descriptor doesn't contain the MDM,
+   * but is an H.222.0 extension (so additional one byte) */
+  __common_desc_ext_checks (descriptor, GST_MTS_DESC_EXT_JXS_VIDEO, 30, FALSE);
 
-  /* Skip tag/length/extension/tag/length */
-  gst_byte_reader_init (&br, descriptor->data + 5, descriptor->length - 3);
+  /* Skip tag/length/extension */
+  gst_byte_reader_init (&br, descriptor->data + 3, descriptor->length - 1);
   memset (res, 0, sizeof (*res));
 
   /* First part can be scanned out with unchecked reader */
@@ -1650,24 +1651,13 @@ gst_mpegts_descriptor_parse_jpeg_xs (const GstMpegtsDescriptor * descriptor,
 GstMpegtsDescriptor *
 gst_mpegts_descriptor_from_jpeg_xs (const GstMpegtsJpegXsDescriptor * jpegxs)
 {
-  gsize desc_size = 30;
+  gsize desc_size = 29;
   GstByteWriter writer;
   guint8 *desc_data;
   GstMpegtsDescriptor *descriptor;
 
-  /* Extension descriptor
-   * tag/length are take care of by gst_mpegts_descriptor_from_custom
-   * The size of the "internal" descriptor (in the extension) is 1 (for the extension_descriptor_tag) and 29 for JXS_video_descriptor
-   */
-
   gst_byte_writer_init_with_size (&writer, desc_size, FALSE);
 
-  /* extension tag */
-  gst_byte_writer_put_uint8 (&writer, GST_MTS_DESC_EXT_JXS_VIDEO);
-  /* tag/length again */
-  gst_byte_writer_put_uint8 (&writer, GST_MTS_DESC_EXT_JXS_VIDEO);
-  /* Size is 27 (29 minus 2 initial bytes for tag/length */
-  gst_byte_writer_put_uint8 (&writer, 27);
   /* descriptor version:  0 */
   gst_byte_writer_put_uint8 (&writer, 0);
   /* horizontal/vertical size */
@@ -1709,11 +1699,12 @@ gst_mpegts_descriptor_from_jpeg_xs (const GstMpegtsJpegXsDescriptor * jpegxs)
   }
 
   desc_size = gst_byte_writer_get_size (&writer);
+  g_assert (desc_size == 29);
   desc_data = gst_byte_writer_reset_and_get_data (&writer);
 
   descriptor =
-      gst_mpegts_descriptor_from_custom (GST_MTS_DESC_EXTENSION, desc_data,
-      desc_size);
+      gst_mpegts_descriptor_from_custom_with_extension (GST_MTS_DESC_EXTENSION,
+      GST_MTS_DESC_EXT_JXS_VIDEO, desc_data, desc_size);
   g_free (desc_data);
 
   return descriptor;
