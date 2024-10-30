@@ -95,9 +95,6 @@ build_container() {
   #   glib2
   # )
 
-  buildah run $build_cntr dnf -y swap coreutils-single coreutils-full
-  buildah run $build_cntr dnf -y swap glibc-minimal-langpack glibc-all-langpacks
-
   buildah run $build_cntr dnf install -y "${extra_packages[@]}"
   buildah run $build_cntr dnf install -y "${our_extra_packages[@]}"
   # buildah run $build_cntr dnf debuginfo-install -y "${debug_packages[@]}"

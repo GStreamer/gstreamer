@@ -6,6 +6,7 @@ set -eux
 # We need them to cleanly build our doc.
 sed -i '/tsflags=nodocs/d' /etc/dnf/dnf.conf
 dnf -y swap coreutils-single coreutils-full
+dnf -y swap glibc-minimal-langpack glibc-all-langpacks
 
 # Add rpm fusion repositories in order to access all of the gst plugins
 dnf install -y \
