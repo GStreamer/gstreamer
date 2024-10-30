@@ -69,14 +69,14 @@ if __name__ == "__main__":
     # 'gstreamer' namespace. Fetch the branch name in the same way, just in
     # case it breaks in the future.
     if 'CI_MERGE_REQUEST_SOURCE_PROJECT_URL' in os.environ:
-        project_url = os.environ['CI_MERGE_REQUEST_SOURCE_PROJECT_URL']
+        project_path = os.environ['CI_MERGE_REQUEST_SOURCE_PROJECT_PATH']
         project_branch = os.environ['CI_MERGE_REQUEST_SOURCE_BRANCH_NAME']
     else:
-        project_url = os.environ['CI_PROJECT_URL']
+        project_path = os.environ['CI_PROJECT_PATH']
         project_branch = os.environ['CI_COMMIT_REF_NAME']
 
     variables = {
-        "CI_GSTREAMER_URL": project_url,
+        "CI_GSTREAMER_PATH": project_path,
         "CI_GSTREAMER_REF_NAME": project_branch,
         # This tells cerbero CI that this is a pipeline started via the
         # trigger API, which means it can use a deps cache instead of
