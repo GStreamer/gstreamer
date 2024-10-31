@@ -112,6 +112,12 @@ build_container() {
   buildah run $build_cntr -- bash -c "echo $name ALL=\(ALL\) NOPASSWD:ALL > /etc/sudoers.d/$name"
   buildah run $build_cntr -- chmod 0440 /etc/sudoers.d/$name
 
+  buildah config \
+    --env RUSTUP_HOME="/usr/local/rustup" \
+    --env CARGO_HOME="/usr/local/cargo/" \
+    --env PATH="$PATH:/usr/local/cargo/bin/" \
+    $build_cntr
+
   # Remove the hardcoded HOME env var that ci-templates adds
   # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/2433#note_2243222
   # Also add the OCI labels that toolbox expects, to advertize that image is compatible

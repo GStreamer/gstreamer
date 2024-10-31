@@ -17,6 +17,8 @@ export PATH="/usr/local/cargo/bin:$PATH"
 chmod +x rustup-init;
 ./rustup-init -y --no-modify-path --default-toolchain $RUST_VERSION;
 rm rustup-init;
+# We are root while creating the directory, but we want it to
+# be accessible to all users
 chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
 cargo install --locked cargo-c --version 0.10.12+cargo-0.87.0
