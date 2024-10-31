@@ -16,8 +16,9 @@ $ tar xvf encoder_sdk.tar.gz
 - For example, $INSTALL_DIR for Linux can be `/usr/local`:
 
 ```
-$ cp -v include/*.h /usr/local/include
-$ cp -v *.so /usr/local/lib
+# cp -v include/*.h /usr/local/include
+# cp -v *.so /usr/local/lib
+# ldconfig
 ```
 
 - Afterwards, you need to manually create the `lcevc_eil.pc` package config file with this contents:
@@ -50,6 +51,7 @@ $ cp -v lcevc_eil.pc /usr/local/lib/pkgconfig
 $ cd GStreaner
 $ meson setup $BUILD_DIR --pkg-config-path=$INSTALL_DIR/lib/pkgconfig -Dgst-plugins-bad:lcevcencoder=enabled
 $ ninja -C $BUILD_DIR
+$ sudo ninja -C $BUILD_DIR install
 ```
 
 3. Run GStreamer LCEVC encoder pipeline:
