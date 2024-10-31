@@ -677,9 +677,18 @@ gst_rtp_h265_add_vps_sps_pps (GstElement * rtph265, GPtrArray * vps_array,
 
   gst_buffer_map (nal, &map, GST_MAP_READ);
 
+  if (map.size == 0)
+    goto drop;
+
   type = (map.data[0] >> 1) & 0x3f;
 
   if (type == GST_H265_VPS_NUT) {
+    if (map.size < 3) {
+      GST_WARNING_OBJECT (rtph265, "Invalid VPS,"
+          " can't parse seq_parameter_set_id");
+      goto drop;
+    }
+
     guint32 vps_id = (map.data[2] >> 4) & 0x0f;
 
     for (i = 0; i < vps_array->len; i++) {
@@ -855,7 +864,12 @@ gst_rtp_h265_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
      * front of the params. */
     len = 0;
     for (i = 0; params[i]; i++) {
-      len += strlen (params[i]);
+      gsize nal_len = strlen (params[i]);
+      if (nal_len == 0) {
+        GST_WARNING_OBJECT (depayload, "empty param (#%d)", i);
+        continue;
+      }
+      len += nal_len;
       len += sizeof (sync_bytes);
     }
     /* we seriously overshoot the length, but it's fine. */
@@ -867,13 +881,20 @@ gst_rtp_h265_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     for (i = 0; params[i]; i++) {
       guint save = 0;
       gint state = 0;
+      gsize nal_len = strlen (params[i]);
+
+      if (nal_len == 0)
+        continue;
 
       GST_DEBUG_OBJECT (depayload, "decoding param %d (%s)", i, params[i]);
       memcpy (ptr, sync_bytes, sizeof (sync_bytes));
       ptr += sizeof (sync_bytes);
-      len =
-          g_base64_decode_step (params[i], strlen (params[i]), ptr, &state,
-          &save);
+      len = g_base64_decode_step (params[i], nal_len, ptr, &state, &save);
+      if (len == 0) {
+        GST_WARNING_OBJECT (depayload, "failed decoding param %d", i);
+        ptr -= sizeof (sync_bytes);
+        continue;
+      }
       GST_DEBUG_OBJECT (depayload, "decoded %d bytes", len);
       total += len + sizeof (sync_bytes);
       ptr += len;
@@ -882,12 +903,16 @@ gst_rtp_h265_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     gst_buffer_resize (codec_data, 0, total);
     g_strfreev (params);
 
-    /* keep the codec_data, we need to send it as the first buffer. We cannot
-     * push it in the adapter because the adapter might be flushed on discont.
-     */
-    if (rtph265depay->codec_data)
-      gst_buffer_unref (rtph265depay->codec_data);
-    rtph265depay->codec_data = codec_data;
+    if (total > 0) {
+      /* keep the codec_data, we need to send it as the first buffer. We cannot
+       * push it in the adapter because the adapter might be flushed on discont.
+       */
+      if (rtph265depay->codec_data)
+        gst_buffer_unref (rtph265depay->codec_data);
+      rtph265depay->codec_data = codec_data;
+    } else {
+      gst_buffer_unref (codec_data);
+    }
   } else if (!rtph265depay->byte_stream) {
     gchar **params;
     gint i;
@@ -909,7 +934,7 @@ gst_rtp_h265_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 
       nal_len = strlen (params[i]);
       if (nal_len == 0) {
-        GST_WARNING_OBJECT (depayload, "empty param '%s' (#%d)", params[i], i);
+        GST_WARNING_OBJECT (depayload, "empty param (#%d)", i);
         continue;
       }
       nal = gst_buffer_new_and_alloc (nal_len);
@@ -918,15 +943,22 @@ gst_rtp_h265_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
       nal_len =
           g_base64_decode_step (params[i], nal_len, nalmap.data, &state, &save);
 
-      GST_DEBUG_OBJECT (depayload, "adding param %d as %s", i,
-          (((nalmap.data[0] >> 1) & 0x3f) ==
-              32) ? "VPS" : (((nalmap.data[0] >> 1) & 0x3f) ==
-              33) ? "SPS" : "PPS");
+      if (nal_len > 0) {
+        GST_DEBUG_OBJECT (depayload, "adding param %d as %s", i,
+            (((nalmap.data[0] >> 1) & 0x3f) ==
+                32) ? "VPS" : (((nalmap.data[0] >> 1) & 0x3f) ==
+                33) ? "SPS" : "PPS");
+      }
 
       gst_buffer_unmap (nal, &nalmap);
       gst_buffer_set_size (nal, nal_len);
 
-      gst_rtp_h265_depay_add_vps_sps_pps (rtph265depay, nal);
+      if (nal_len > 0) {
+        gst_rtp_h265_depay_add_vps_sps_pps (rtph265depay, nal);
+      } else {
+        GST_WARNING_OBJECT (depayload, "failed decoding param %d", i);
+        gst_buffer_unref (nal);
+      }
     }
     g_strfreev (params);
 
