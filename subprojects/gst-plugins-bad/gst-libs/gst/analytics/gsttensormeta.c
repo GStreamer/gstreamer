@@ -76,6 +76,48 @@ gst_tensor_meta_get_info (void)
   return tmeta_info;
 }
 
+/**
+ * gst_buffer_add_tensor_meta:
+ * @buffer: A writable #GstBuffer
+ *
+ * Adds a #GstTensorMeta to a buffer or returns the existing one
+ *
+ * Returns: (transfer none): The new #GstTensorMeta
+ *
+ * Since: 1.26
+ */
+
+GstTensorMeta *
+gst_buffer_add_tensor_meta (GstBuffer * buffer)
+{
+  GstTensorMeta *tmeta;
+
+  tmeta = gst_buffer_get_tensor_meta (buffer);
+  if (tmeta)
+    return tmeta;
+
+  return (GstTensorMeta *) gst_buffer_add_meta (buffer,
+      gst_tensor_meta_get_info (), NULL);
+}
+
+/**
+ * gst_buffer_get_tensor_meta:
+ * @buffer: A #GstBuffer
+ *
+ * Gets the #GstTensorMeta from a buffer
+ *
+ * Returns: (nullable)(transfer none): The #GstTensorMeta if there is wone
+ *
+ * Since: 1.26
+ */
+
+GstTensorMeta *
+gst_buffer_get_tensor_meta (GstBuffer * buffer)
+{
+  return (GstTensorMeta *) gst_buffer_get_meta (buffer,
+      GST_TENSOR_META_API_TYPE);
+}
+
 gint
 gst_tensor_meta_get_index_from_id (GstTensorMeta * meta, GQuark id)
 {

@@ -33,10 +33,9 @@
 
 /**
  * GstTensorMeta:
- * @meta base GstMeta
- * @num_tensors number of tensors
- * @tensor @ref GstTensor for each tensor
- * @batch_size model batch size
+ * @meta: parent
+ * @num_tensors: number of tensors
+ * @tensor: (array length=num_tensors): a #GstTensor for each tensor
  *
  * Since: 1.26
  */
@@ -64,6 +63,14 @@ const GstMetaInfo *gst_tensor_meta_get_info (void);
 
 GST_ANALYTICS_META_API
 gint gst_tensor_meta_get_index_from_id(GstTensorMeta *meta, GQuark id);
+
+GST_ANALYTICS_META_API
+GstTensorMeta *
+gst_buffer_add_tensor_meta (GstBuffer * buffer);
+
+GST_ANALYTICS_META_API
+GstTensorMeta *
+gst_buffer_get_tensor_meta (GstBuffer * buffer);
 
 G_END_DECLS
 

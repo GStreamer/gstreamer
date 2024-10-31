@@ -329,9 +329,7 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
       &outputs, GstBuffer * buffer)
   {
     size_t num_tensors = outputNamesRaw.size ();
-    GstTensorMeta *tmeta = (GstTensorMeta *) gst_buffer_add_meta (buffer,
-        gst_tensor_meta_get_info (),
-        NULL);
+    GstTensorMeta *tmeta = gst_buffer_add_tensor_meta (buffer);
     tmeta->num_tensors = num_tensors;
     tmeta->tensors = g_new (GstTensor *, num_tensors);
     bool hasIds = outputIds.size () == num_tensors;
