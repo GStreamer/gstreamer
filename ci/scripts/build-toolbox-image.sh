@@ -147,9 +147,13 @@ if ! check_image_base; then
   build_container
 
   podman push "$TOOLBOX_IMAGE"
-  podman push "$TOOLBOX_LATEST"
+  if [ "$GST_UPSTREAM_BRANCH" == "$CI_COMMIT_BRANCH" ]; then
+    podman push "$TOOLBOX_LATEST"
+  fi
 fi
 
 echo "Create your toolbox with either of the following commands"
-echo "     $ toolbox create gst-$GST_UPSTREAM_BRANCH --image $TOOLBOX_LATEST"
 echo "     $ toolbox create gst-$TOOLBOX_BRANCH --image $TOOLBOX_IMAGE"
+if [ "$GST_UPSTREAM_BRANCH" == "$CI_COMMIT_BRANCH" ]; then
+  echo "     $ toolbox create gst-$GST_UPSTREAM_BRANCH --image $TOOLBOX_LATEST"
+fi
