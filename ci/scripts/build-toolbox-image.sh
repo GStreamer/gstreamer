@@ -118,6 +118,9 @@ build_container() {
     --env PATH="$PATH:/usr/local/cargo/bin/" \
     $build_cntr
 
+  # Install rust-analyzer so it can be used with IDEs and devcontainer
+  buildah run $build_cntr rustup component add rust-analyzer rust-src
+
   # Remove the hardcoded HOME env var that ci-templates adds
   # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/2433#note_2243222
   # Also add the OCI labels that toolbox expects, to advertize that image is compatible
