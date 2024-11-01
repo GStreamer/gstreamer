@@ -151,5 +151,5 @@ if ! check_image_base; then
 fi
 
 echo "Create your toolbox with either of the following commands"
-echo "     $ toolbox create gst-toolbox --image $TOOLBOX_LATEST"
-echo "     $ toolbox create gst-toolbox-$TOOLBOX_BRANCH --image $TOOLBOX_IMAGE"
+echo "     $ toolbox create gst-$GST_UPSTREAM_BRANCH --image $TOOLBOX_LATEST"
+echo "     $ toolbox create gst-$TOOLBOX_BRANCH --image $TOOLBOX_IMAGE"
