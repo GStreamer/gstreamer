@@ -1002,6 +1002,23 @@ valgrind ges:
   # as flaky. Until then, just ignore failures.
   allow_failure: true
 
+valgrind rtsp-server:
+  extends: '.valgrind fedora x86_64'
+  variables:
+    TEST_SUITE: "check.gst-rtsp-server\\..*"
+  rules:
+    - changes:
+        paths:
+          - "*"
+          - "scripts/*"
+          - "ci/**/*"
+          - "subprojects/gst-devtools/**/*"
+          - "subprojects/gstreamer/**/*"
+          - "subprojects/gst-plugins-base/**/*"
+          - "subprojects/gst-plugins-good/**/*"
+          - "subprojects/gst-plugins-bad/**/*"
+          - "subprojects/gst-rtsp-server/**/*"
+
 # ---- Integration ----- #
 
 .documentation:
