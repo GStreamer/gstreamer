@@ -292,6 +292,7 @@ rustfmt:
   stage: 'preparation'
   needs:
     - "fedora amd64 docker"
+  tags: [ 'placeholder-job' ]
   script:
     - export RUSTUP_HOME="/usr/local/rustup"
     - export PATH="/usr/local/cargo/bin:$PATH"
