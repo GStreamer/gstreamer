@@ -1031,6 +1031,12 @@ gst_d3d_converter_shader_get_ps_blob (GstVideoFormat in_format,
     case GST_D3D_CONVERTER_PRIMARY:
       conv_type_str = "Primary";
       break;
+    case GST_D3D_CONVERTER_COLOR_BALANCE:
+      conv_type_str = "ColorBalance";
+      break;
+    case GST_D3D_CONVERTER_PRIMARY_AND_COLOR_BALANCE:
+      conv_type_str = "PrimaryAndColorBalance";
+      break;
     default:
       g_assert_not_reached ();
       return 0;

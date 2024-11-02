@@ -18,9 +18,11 @@
  */
 
 #ifdef BUILDING_HLSL
-cbuffer PsAlphaFactor : register(b1)
+cbuffer PsConstBufferDyn : register(b1)
 {
   float alphaFactor;
+  float3 padding_0;
+  float4 hsvcFactor;
 };
 
 struct PSColorSpace
@@ -671,6 +673,75 @@ class ConverterGamma : IConverter
   }
 };
 
+float3 AdjustContrast (float3 color)
+{
+  return saturate(lerp(float3(0.5, 0.5, 0.5), color, hsvcFactor.w));
+}
+
+float3 AdjustHSV (float3 color)
+{
+  color.x = frac(color.x + hsvcFactor.x / 2.0); // hue
+  color.y = saturate(color.y * hsvcFactor.y); // saturation
+  color.z = saturate(color.z * (hsvcFactor.z + 1.0)); // brightness
+  return color;
+}
+
+float3 RGB2HSV(float3 color)
+{
+  float4 K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+  float4 p = color.g < color.b ? float4(color.bg, K.wz) : float4(color.gb, K.xy);
+  float4 q = color.r < p.x ? float4(p.xyw, color.r) : float4(color.r, p.yzx);
+
+  float d = q.x - min(q.w, q.y);
+  float e = 1.0e-10;
+  return float3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+float3 HSV2RGB(float3 color)
+{
+  float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+  float3 p = abs(frac(color.xxx + K.xyz) * 6.0 - K.www);
+  return color.z * lerp(K.xxx, saturate(p - K.xxx), color.y);
+}
+
+float3 DoColorBalance(float3 color)
+{
+  color = AdjustContrast(color);
+  color = RGB2HSV(color);
+  color = AdjustHSV(color);
+  return HSV2RGB(color);
+}
+
+class ConverterColorBalance : IConverter
+{
+  float4 Execute (float4 sample)
+  {
+    float3 rgb_space;
+    float3 out_space;
+    rgb_space.x = dot (preCoeff.CoeffX, sample.xyz);
+    rgb_space.y = dot (preCoeff.CoeffY, sample.xyz);
+    rgb_space.z = dot (preCoeff.CoeffZ, sample.xyz);
+    rgb_space += preCoeff.Offset;
+    rgb_space = clamp (rgb_space, preCoeff.Min, preCoeff.Max);
+
+    rgb_space.x = gammaDecLUT.Sample (lutSamplerState, rgb_space.x);
+    rgb_space.y = gammaDecLUT.Sample (lutSamplerState, rgb_space.y);
+    rgb_space.z = gammaDecLUT.Sample (lutSamplerState, rgb_space.z);
+
+    rgb_space.xyz = DoColorBalance(rgb_space.xyz);
+
+    rgb_space.x = gammaEncLUT.Sample (lutSamplerState, rgb_space.x);
+    rgb_space.y = gammaEncLUT.Sample (lutSamplerState, rgb_space.y);
+    rgb_space.z = gammaEncLUT.Sample (lutSamplerState, rgb_space.z);
+
+    out_space.x = dot (postCoeff.CoeffX, rgb_space);
+    out_space.y = dot (postCoeff.CoeffY, rgb_space);
+    out_space.z = dot (postCoeff.CoeffZ, rgb_space);
+    out_space += postCoeff.Offset;
+    return float4 (clamp (out_space, postCoeff.Min, postCoeff.Max), sample.a);
+  }
+};
+
 class ConverterPrimary : IConverter
 {
   float4 Execute (float4 sample)
@@ -692,6 +763,42 @@ class ConverterPrimary : IConverter
     primary_converted.x = dot (primariesCoeff.CoeffX, rgb_space);
     primary_converted.y = dot (primariesCoeff.CoeffY, rgb_space);
     primary_converted.z = dot (primariesCoeff.CoeffZ, rgb_space);
+
+    rgb_space.x = gammaEncLUT.Sample (lutSamplerState, primary_converted.x);
+    rgb_space.y = gammaEncLUT.Sample (lutSamplerState, primary_converted.y);
+    rgb_space.z = gammaEncLUT.Sample (lutSamplerState, primary_converted.z);
+
+    out_space.x = dot (postCoeff.CoeffX, rgb_space);
+    out_space.y = dot (postCoeff.CoeffY, rgb_space);
+    out_space.z = dot (postCoeff.CoeffZ, rgb_space);
+    out_space += postCoeff.Offset;
+    return float4 (clamp (out_space, postCoeff.Min, postCoeff.Max), sample.a);
+  }
+};
+
+class ConverterPrimaryAndColorBalance : IConverter
+{
+  float4 Execute (float4 sample)
+  {
+    float3 rgb_space;
+    float3 primary_converted;
+    float3 out_space;
+
+    rgb_space.x = dot (preCoeff.CoeffX, sample.xyz);
+    rgb_space.y = dot (preCoeff.CoeffY, sample.xyz);
+    rgb_space.z = dot (preCoeff.CoeffZ, sample.xyz);
+    rgb_space += preCoeff.Offset;
+    rgb_space = clamp (rgb_space, preCoeff.Min, preCoeff.Max);
+
+    rgb_space.x = gammaDecLUT.Sample (lutSamplerState, rgb_space.x);
+    rgb_space.y = gammaDecLUT.Sample (lutSamplerState, rgb_space.y);
+    rgb_space.z = gammaDecLUT.Sample (lutSamplerState, rgb_space.z);
+
+    primary_converted.x = dot (primariesCoeff.CoeffX, rgb_space);
+    primary_converted.y = dot (primariesCoeff.CoeffY, rgb_space);
+    primary_converted.z = dot (primariesCoeff.CoeffZ, rgb_space);
+
+    primary_converted.xyz = DoColorBalance(primary_converted.xyz);
 
     rgb_space.x = gammaEncLUT.Sample (lutSamplerState, primary_converted.x);
     rgb_space.y = gammaEncLUT.Sample (lutSamplerState, primary_converted.y);
@@ -1357,9 +1464,11 @@ OUTPUT_TYPE ENTRY_POINT (PS_INPUT input)
 }
 #else /* BUILDING_HLSL */
 static const char str_PSMain_converter[] =
-"cbuffer PsAlphaFactor : register(b1)\n"
+"cbuffer PsConstBufferDyn : register(b1)\n"
 "{\n"
 "  float alphaFactor;\n"
+"  float3 padding_0;\n"
+"  float4 hsvcFactor;\n"
 "};\n"
 "\n"
 "struct PSColorSpace\n"
@@ -2010,6 +2119,75 @@ static const char str_PSMain_converter[] =
 "  }\n"
 "};\n"
 "\n"
+"float3 AdjustContrast (float3 color)\n"
+"{\n"
+"  return saturate(lerp(float3(0.5, 0.5, 0.5), color, hsvcFactor.w));\n"
+"}\n"
+"\n"
+"float3 AdjustHSV (float3 color)\n"
+"{\n"
+"  color.x = frac(color.x + hsvcFactor.x / 2.0); // hue\n"
+"  color.y = saturate(color.y * hsvcFactor.y); // saturation\n"
+"  color.z = saturate(color.z * (hsvcFactor.z + 1.0)); // brightness\n"
+"  return color;\n"
+"}\n"
+"\n"
+"float3 RGB2HSV(float3 color)\n"
+"{\n"
+"  float4 K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);\n"
+"  float4 p = color.g < color.b ? float4(color.bg, K.wz) : float4(color.gb, K.xy);\n"
+"  float4 q = color.r < p.x ? float4(p.xyw, color.r) : float4(color.r, p.yzx);\n"
+"\n"
+"  float d = q.x - min(q.w, q.y);\n"
+"  float e = 1.0e-10;\n"
+"  return float3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);\n"
+"}\n"
+"\n"
+"float3 HSV2RGB(float3 color)\n"
+"{\n"
+"  float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\n"
+"  float3 p = abs(frac(color.xxx + K.xyz) * 6.0 - K.www);\n"
+"  return color.z * lerp(K.xxx, saturate(p - K.xxx), color.y);\n"
+"}\n"
+"\n"
+"float3 DoColorBalance(float3 color)\n"
+"{\n"
+"  color = AdjustContrast(color);\n"
+"  color = RGB2HSV(color);\n"
+"  color = AdjustHSV(color);\n"
+"  return HSV2RGB(color);\n"
+"}\n"
+"\n"
+"class ConverterColorBalance : IConverter\n"
+"{\n"
+"  float4 Execute (float4 sample)\n"
+"  {\n"
+"    float3 rgb_space;\n"
+"    float3 out_space;\n"
+"    rgb_space.x = dot (preCoeff.CoeffX, sample.xyz);\n"
+"    rgb_space.y = dot (preCoeff.CoeffY, sample.xyz);\n"
+"    rgb_space.z = dot (preCoeff.CoeffZ, sample.xyz);\n"
+"    rgb_space += preCoeff.Offset;\n"
+"    rgb_space = clamp (rgb_space, preCoeff.Min, preCoeff.Max);\n"
+"\n"
+"    rgb_space.x = gammaDecLUT.Sample (lutSamplerState, rgb_space.x);\n"
+"    rgb_space.y = gammaDecLUT.Sample (lutSamplerState, rgb_space.y);\n"
+"    rgb_space.z = gammaDecLUT.Sample (lutSamplerState, rgb_space.z);\n"
+"\n"
+"    rgb_space.xyz = DoColorBalance(rgb_space.xyz);\n"
+"\n"
+"    rgb_space.x = gammaEncLUT.Sample (lutSamplerState, rgb_space.x);\n"
+"    rgb_space.y = gammaEncLUT.Sample (lutSamplerState, rgb_space.y);\n"
+"    rgb_space.z = gammaEncLUT.Sample (lutSamplerState, rgb_space.z);\n"
+"\n"
+"    out_space.x = dot (postCoeff.CoeffX, rgb_space);\n"
+"    out_space.y = dot (postCoeff.CoeffY, rgb_space);\n"
+"    out_space.z = dot (postCoeff.CoeffZ, rgb_space);\n"
+"    out_space += postCoeff.Offset;\n"
+"    return float4 (clamp (out_space, postCoeff.Min, postCoeff.Max), sample.a);\n"
+"  }\n"
+"};\n"
+"\n"
 "class ConverterPrimary : IConverter\n"
 "{\n"
 "  float4 Execute (float4 sample)\n"
@@ -2031,6 +2209,42 @@ static const char str_PSMain_converter[] =
 "    primary_converted.x = dot (primariesCoeff.CoeffX, rgb_space);\n"
 "    primary_converted.y = dot (primariesCoeff.CoeffY, rgb_space);\n"
 "    primary_converted.z = dot (primariesCoeff.CoeffZ, rgb_space);\n"
+"\n"
+"    rgb_space.x = gammaEncLUT.Sample (lutSamplerState, primary_converted.x);\n"
+"    rgb_space.y = gammaEncLUT.Sample (lutSamplerState, primary_converted.y);\n"
+"    rgb_space.z = gammaEncLUT.Sample (lutSamplerState, primary_converted.z);\n"
+"\n"
+"    out_space.x = dot (postCoeff.CoeffX, rgb_space);\n"
+"    out_space.y = dot (postCoeff.CoeffY, rgb_space);\n"
+"    out_space.z = dot (postCoeff.CoeffZ, rgb_space);\n"
+"    out_space += postCoeff.Offset;\n"
+"    return float4 (clamp (out_space, postCoeff.Min, postCoeff.Max), sample.a);\n"
+"  }\n"
+"};\n"
+"\n"
+"class ConverterPrimaryAndColorBalance : IConverter\n"
+"{\n"
+"  float4 Execute (float4 sample)\n"
+"  {\n"
+"    float3 rgb_space;\n"
+"    float3 primary_converted;\n"
+"    float3 out_space;\n"
+"\n"
+"    rgb_space.x = dot (preCoeff.CoeffX, sample.xyz);\n"
+"    rgb_space.y = dot (preCoeff.CoeffY, sample.xyz);\n"
+"    rgb_space.z = dot (preCoeff.CoeffZ, sample.xyz);\n"
+"    rgb_space += preCoeff.Offset;\n"
+"    rgb_space = clamp (rgb_space, preCoeff.Min, preCoeff.Max);\n"
+"\n"
+"    rgb_space.x = gammaDecLUT.Sample (lutSamplerState, rgb_space.x);\n"
+"    rgb_space.y = gammaDecLUT.Sample (lutSamplerState, rgb_space.y);\n"
+"    rgb_space.z = gammaDecLUT.Sample (lutSamplerState, rgb_space.z);\n"
+"\n"
+"    primary_converted.x = dot (primariesCoeff.CoeffX, rgb_space);\n"
+"    primary_converted.y = dot (primariesCoeff.CoeffY, rgb_space);\n"
+"    primary_converted.z = dot (primariesCoeff.CoeffZ, rgb_space);\n"
+"\n"
+"    primary_converted.xyz = DoColorBalance(primary_converted.xyz);\n"
 "\n"
 "    rgb_space.x = gammaEncLUT.Sample (lutSamplerState, primary_converted.x);\n"
 "    rgb_space.y = gammaEncLUT.Sample (lutSamplerState, primary_converted.y);\n"
@@ -2236,6 +2450,7 @@ static const char str_PSMain_converter[] =
 "    return output;\n"
 "  }\n"
 "};\n"
+"\n"
 "interface IOutputPlanar\n"
 "{\n"
 "  PS_OUTPUT_PLANAR Build (float4 sample);\n"

@@ -34,6 +34,8 @@ enum class CONVERT_TYPE
   RANGE,
   GAMMA,
   PRIMARY,
+  COLOR_BALANCE,
+  PRIMARY_AND_COLOR_BALANCE,
 };
 
 struct PixelShaderBlob

@@ -155,6 +155,7 @@ struct PSAlphaFactor
 {
   FLOAT alpha;
   FLOAT padding[3];
+  FLOAT padding_other[4];
 };
 
 struct PSConstBuffer

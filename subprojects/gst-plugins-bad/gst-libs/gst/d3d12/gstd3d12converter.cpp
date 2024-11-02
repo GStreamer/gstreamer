@@ -90,6 +90,26 @@ gst_d3d12_converter_alpha_mode_get_type (void)
   return type;
 }
 
+GType
+gst_d3d12_converter_color_balance_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue color_balance[] = {
+    {GST_D3D12_CONVERTER_COLOR_BALANCE_DISABLED,
+        "GST_D3D12_CONVERTER_COLOR_BALANCE_DISABLED", "disabled"},
+    {GST_D3D12_CONVERTER_COLOR_BALANCE_ENABLED,
+        "GST_D3D12_CONVERTER_COLOR_BALANCE_ENABLED", "enabled"},
+    {0, nullptr, nullptr},
+  };
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstD3D12ConverterColorBalance",
+        color_balance);
+  } GST_D3D12_CALL_ONCE_END;
+
+  return type;
+}
+
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -98,6 +118,12 @@ using namespace DirectX;
 #define GAMMA_LUT_SIZE 4096
 #define DEFAULT_BUFFER_COUNT 2
 #define DEFAULT_SAMPLER_FILTER D3D12_FILTER_MIN_MAG_MIP_LINEAR
+#define DEFAULT_BORDER_COLOR G_GUINT64_CONSTANT(0xffff000000000000)
+#define DEFAULT_HUE 0.0
+#define DEFAULT_SATURATION 1.0
+#define DEFAULT_BRIGHTNESS 0.0
+#define DEFAULT_CONTRAST 1.0
+
 static const WORD g_indices[6] = { 0, 1, 2, 3, 0, 2 };
 
 struct PSColorSpace
@@ -116,6 +142,13 @@ struct PSConstBuffer
   PSColorSpace preCoeff;
   PSColorSpace postCoeff;
   PSColorSpace primariesCoeff;
+};
+
+struct PSConstBufferDyn
+{
+  float alphaFactor;
+  float padding[3];
+  float hsvcFactor[4];
 };
 
 struct VertexData
@@ -210,6 +243,10 @@ enum
   PROP_BORDER_COLOR,
   PROP_VIDEO_DIRECTION,
   PROP_SAMPLER_FILTER,
+  PROP_HUE,
+  PROP_SATURATION,
+  PROP_BRIGHTNESS,
+  PROP_CONTRAST,
 };
 
 /* *INDENT-OFF* */
@@ -218,6 +255,14 @@ struct QuadData
   D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = { };
   ComPtr<ID3D12PipelineState> pso;
   guint num_rtv;
+};
+
+struct PipelineData
+{
+  PixelShaderBlobList psblob_list;
+  ConverterRootSignaturePtr crs;
+  ComPtr<ID3D12RootSignature> rs;
+  std::vector<QuadData> quad_data;
 };
 
 #define STATE_VERTEX_AND_INDEX \
@@ -235,6 +280,12 @@ struct _GstD3D12ConverterPrivate
 
     sample_desc.Count = 1;
     sample_desc.Quality = 0;
+
+    const_data_dyn.alphaFactor = 1.0;
+    const_data_dyn.hsvcFactor[0] = DEFAULT_HUE;
+    const_data_dyn.hsvcFactor[1] = DEFAULT_SATURATION;
+    const_data_dyn.hsvcFactor[2] = DEFAULT_BRIGHTNESS;
+    const_data_dyn.hsvcFactor[3] = DEFAULT_CONTRAST;
   }
 
   ~_GstD3D12ConverterPrivate ()
@@ -255,7 +306,8 @@ struct _GstD3D12ConverterPrivate
   GstVideoInfo in_info;
   GstVideoInfo out_info;
 
-  CONVERT_TYPE convert_type = CONVERT_TYPE::IDENTITY;
+  CONVERT_TYPE convert_type[2] = { CONVERT_TYPE::IDENTITY,
+      CONVERT_TYPE::COLOR_BALANCE };
 
   D3D12_VIEWPORT viewport[GST_VIDEO_MAX_PLANES];
   D3D12_RECT scissor_rect[GST_VIDEO_MAX_PLANES];
@@ -267,12 +319,12 @@ struct _GstD3D12ConverterPrivate
   gboolean update_pso = FALSE;
   gboolean update_sampler = FALSE;
 
-  ConverterRootSignaturePtr crs;
-  ComPtr<ID3D12RootSignature> rs;
+  std::vector<PipelineData> pipeline_data;
+  gboolean have_lut = FALSE;
 
   D3D12_VERTEX_BUFFER_VIEW vbv;
   D3D12_INDEX_BUFFER_VIEW idv;
-  D3D12_GPU_VIRTUAL_ADDRESS const_buf_addr;
+  D3D12_GPU_VIRTUAL_ADDRESS const_buf_addr[2];
   ComPtr<ID3D12Resource> shader_buf;
   ComPtr<ID3D12Resource> vertex_upload;
   ComPtr<ID3D12Resource> gamma_dec_lut;
@@ -280,8 +332,6 @@ struct _GstD3D12ConverterPrivate
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT gamma_lut_layout;
   ComPtr<ID3D12DescriptorHeap> gamma_lut_heap;
   ComPtr<ID3D12DescriptorHeap> sampler_heap;
-
-  std::vector<QuadData> quad_data;
 
   GstD3D12DescHeapPool *srv_heap_pool = nullptr;
 
@@ -297,13 +347,15 @@ struct _GstD3D12ConverterPrivate
   XMFLOAT4X4A transform;
   XMFLOAT4X4A custom_transform;
 
-  PSConstBuffer const_data;
+  PSConstBuffer const_data[2];
 
   gboolean clear_background = FALSE;
   FLOAT clear_color[4][4];
   GstD3D12ColorMatrix clear_color_matrix;
 
   GstVideoOrientationMethod video_direction;
+  gboolean color_balance_enabled = FALSE;
+  gboolean need_color_balance = FALSE;
 
   std::mutex prop_lock;
   guint64 fence_val = 0;
@@ -317,9 +369,9 @@ struct _GstD3D12ConverterPrivate
   gint dest_y = 0;
   gint dest_width = 0;
   gint dest_height = 0;
-  FLOAT alpha = 1.0;
+  PSConstBufferDyn const_data_dyn;
   gboolean fill_border = FALSE;
-  guint64 border_color = 0;
+  guint64 border_color = DEFAULT_BORDER_COLOR;
   GstD3D12ConverterAlphaMode src_alpha_mode =
       GST_D3D12_CONVERTER_ALPHA_MODE_UNSPECIFIED;
   GstD3D12ConverterAlphaMode dst_alpha_mode =
@@ -387,7 +439,7 @@ gst_d3d12_converter_class_init (GstD3D12ConverterClass * klass)
   g_object_class_install_property (object_class, PROP_BORDER_COLOR,
       g_param_spec_uint64 ("border-color", "Border Color",
           "ARGB representation of the border color to use",
-          0, G_MAXUINT64, 0xffff000000000000, param_flags));
+          0, G_MAXUINT64, DEFAULT_BORDER_COLOR, param_flags));
   g_object_class_install_property (object_class, PROP_VIDEO_DIRECTION,
       g_param_spec_enum ("video-direction", "Video Direction",
           "Video direction", GST_TYPE_VIDEO_ORIENTATION_METHOD,
@@ -396,6 +448,18 @@ gst_d3d12_converter_class_init (GstD3D12ConverterClass * klass)
       g_param_spec_enum ("sampler-filter", "Sampler Filter",
           "Sampler Filter", GST_TYPE_D3D12_CONVERTER_SAMPLER_FILTER,
           DEFAULT_SAMPLER_FILTER, param_flags));
+  g_object_class_install_property (object_class, PROP_HUE,
+      g_param_spec_double ("hue", "Hue", "hue", -1.0, 1.0, DEFAULT_HUE,
+          param_flags));
+  g_object_class_install_property (object_class, PROP_SATURATION,
+      g_param_spec_double ("saturation", "Saturation", "saturation", 0.0, 2.0,
+          DEFAULT_SATURATION, param_flags));
+  g_object_class_install_property (object_class, PROP_BRIGHTNESS,
+      g_param_spec_double ("brightness", "Brightness", "brightness", -1.0, 1.0,
+          DEFAULT_BRIGHTNESS, param_flags));
+  g_object_class_install_property (object_class, PROP_CONTRAST,
+      g_param_spec_double ("contrast", "Contrast", "contrast",
+          0.0, 2.0, DEFAULT_CONTRAST, param_flags));
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_converter_debug,
       "d3d12converter", 0, "d3d12converter");
@@ -447,6 +511,20 @@ update_dest_rect (GstD3D12Converter * self, gint * old_val,
 }
 
 static void
+on_color_balance_updated (GstD3D12Converter * self)
+{
+  auto priv = self->priv;
+
+  if (!priv->color_balance_enabled)
+    return;
+
+  priv->need_color_balance =
+      gst_d3d12_converter_is_color_balance_needed (priv->
+      const_data_dyn.hsvcFactor[0], priv->const_data_dyn.hsvcFactor[1],
+      priv->const_data_dyn.hsvcFactor[2], priv->const_data_dyn.hsvcFactor[3]);
+}
+
+static void
 gst_d3d12_converter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -480,7 +558,7 @@ gst_d3d12_converter_set_property (GObject * object, guint prop_id,
       update_dest_rect (self, &priv->dest_height, value);
       break;
     case PROP_ALPHA:
-      priv->alpha = g_value_get_double (value);
+      priv->const_data_dyn.alphaFactor = g_value_get_double (value);
       break;
     case PROP_FILL_BORDER:
     {
@@ -521,6 +599,30 @@ gst_d3d12_converter_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_HUE:
+      if (priv->color_balance_enabled) {
+        priv->const_data_dyn.hsvcFactor[0] = g_value_get_double (value);
+        on_color_balance_updated (self);
+      }
+      break;
+    case PROP_SATURATION:
+      if (priv->color_balance_enabled) {
+        priv->const_data_dyn.hsvcFactor[1] = g_value_get_double (value);
+        on_color_balance_updated (self);
+      }
+      break;
+    case PROP_BRIGHTNESS:
+      if (priv->color_balance_enabled) {
+        priv->const_data_dyn.hsvcFactor[2] = g_value_get_double (value);
+        on_color_balance_updated (self);
+      }
+      break;
+    case PROP_CONTRAST:
+      if (priv->color_balance_enabled) {
+        priv->const_data_dyn.hsvcFactor[3] = g_value_get_double (value);
+        on_color_balance_updated (self);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -561,7 +663,7 @@ gst_d3d12_converter_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, priv->dest_height);
       break;
     case PROP_ALPHA:
-      g_value_set_double (value, priv->alpha);
+      g_value_set_double (value, priv->const_data_dyn.alphaFactor);
       break;
     case PROP_FILL_BORDER:
       g_value_set_boolean (value, priv->fill_border);
@@ -574,6 +676,18 @@ gst_d3d12_converter_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SAMPLER_FILTER:
       g_value_set_enum (value, priv->sampler_filter);
+      break;
+    case PROP_HUE:
+      g_value_set_double (value, priv->const_data_dyn.hsvcFactor[0]);
+      break;
+    case PROP_SATURATION:
+      g_value_set_double (value, priv->const_data_dyn.hsvcFactor[1]);
+      break;
+    case PROP_BRIGHTNESS:
+      g_value_set_double (value, priv->const_data_dyn.hsvcFactor[2]);
+      break;
+    case PROP_CONTRAST:
+      g_value_set_double (value, priv->const_data_dyn.hsvcFactor[3]);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -685,53 +799,13 @@ static gboolean
 gst_d3d12_converter_create_sampler (GstD3D12Converter * self,
     D3D12_FILTER filter, ID3D12DescriptorHeap ** heap)
 {
-  auto priv = self->priv;
-
   ComPtr < ID3D12DescriptorHeap > sampler_heap;
   auto hr = gst_d3d12_device_get_sampler_state (self->device, filter,
       &sampler_heap);
   if (!gst_d3d12_result (hr, self->device))
     return FALSE;
 
-  if (priv->crs->HaveLut ()) {
-    D3D12_DESCRIPTOR_HEAP_DESC heap_desc = { };
-    heap_desc.NumDescriptors = 1;
-    heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-    heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-    ComPtr < ID3D12DescriptorHeap > new_heap;
-    auto device = gst_d3d12_device_get_device_handle (self->device);
-    hr = device->CreateDescriptorHeap (&heap_desc, IID_PPV_ARGS (&new_heap));
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't create sampler heap");
-      return FALSE;
-    }
-
-    auto dst_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
-        (GetCPUDescriptorHandleForHeapStart (new_heap));
-    device->CopyDescriptorsSimple (1, dst_handle,
-        GetCPUDescriptorHandleForHeapStart (sampler_heap),
-        D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-
-    if (filter != DEFAULT_SAMPLER_FILTER) {
-      hr = gst_d3d12_device_get_sampler_state (self->device,
-          DEFAULT_SAMPLER_FILTER, sampler_heap.ReleaseAndGetAddressOf ());
-
-      if (!gst_d3d12_result (hr, self->device)) {
-        GST_ERROR_OBJECT (self, "Couldn't create sampler heap");
-        return FALSE;
-      }
-    }
-
-    dst_handle.Offset (priv->sampler_inc_size);
-    device->CopyDescriptorsSimple (1, dst_handle,
-        GetCPUDescriptorHandleForHeapStart (sampler_heap),
-        D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-
-    *heap = new_heap.Detach ();
-  } else {
-    *heap = sampler_heap.Detach ();
-  }
+  *heap = sampler_heap.Detach ();
 
   return TRUE;
 }
@@ -758,21 +832,43 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   priv->sampler_inc_size = device->GetDescriptorHandleIncrementSize
       (D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 
-  ComPtr < ID3DBlob > rs_blob;
-  priv->crs =
-      gst_d3d12_get_converter_root_signature (self->device,
-      GST_VIDEO_INFO_FORMAT (in_info), priv->convert_type);
-  if (!priv->crs) {
-    GST_ERROR_OBJECT (self, "Couldn't get root signature blob");
-    return FALSE;
-  }
+  if (priv->color_balance_enabled)
+    priv->pipeline_data.resize (2);
+  else
+    priv->pipeline_data.resize (1);
 
-  priv->crs->GetBlob (&rs_blob);
-  hr = device->CreateRootSignature (0, rs_blob->GetBufferPointer (),
-      rs_blob->GetBufferSize (), IID_PPV_ARGS (&priv->rs));
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't create root signature");
-    return FALSE;
+  for (size_t i = 0; i < priv->pipeline_data.size (); i++) {
+    ComPtr < ID3DBlob > rs_blob;
+    priv->pipeline_data[i].crs =
+        gst_d3d12_get_converter_root_signature (self->device,
+        GST_VIDEO_INFO_FORMAT (in_info), priv->convert_type[i]);
+    if (!priv->pipeline_data[0].crs) {
+      GST_ERROR_OBJECT (self, "Couldn't get root signature blob");
+      return FALSE;
+    }
+
+    priv->pipeline_data[i].crs->GetBlob (&rs_blob);
+    hr = device->CreateRootSignature (0, rs_blob->GetBufferPointer (),
+        rs_blob->GetBufferSize (), IID_PPV_ARGS (&priv->pipeline_data[i].rs));
+    if (!gst_d3d12_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't create root signature");
+      return FALSE;
+    }
+
+    priv->pipeline_data[i].psblob_list =
+        gst_d3d12_get_converter_pixel_shader_blob (GST_VIDEO_INFO_FORMAT
+        (in_info), GST_VIDEO_INFO_FORMAT (out_info),
+        priv->src_alpha_mode == GST_D3D12_CONVERTER_ALPHA_MODE_PREMULTIPLIED,
+        priv->dst_alpha_mode == GST_D3D12_CONVERTER_ALPHA_MODE_PREMULTIPLIED,
+        priv->convert_type[i]);
+
+    auto psblob_size = priv->pipeline_data[i].psblob_list.size ();
+    if (psblob_size == 0) {
+      GST_ERROR_OBJECT (self, "Couldn't get pixel shader blob");
+      return FALSE;
+    }
+
+    priv->pipeline_data[i].quad_data.resize (psblob_size);
   }
 
   if (!gst_d3d12_converter_create_sampler (self, sampler_filter,
@@ -789,17 +885,6 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   }
 
   priv->sampler_filter = sampler_filter;
-
-  auto psblob_list =
-      gst_d3d12_get_converter_pixel_shader_blob (GST_VIDEO_INFO_FORMAT
-      (in_info), GST_VIDEO_INFO_FORMAT (out_info),
-      priv->src_alpha_mode == GST_D3D12_CONVERTER_ALPHA_MODE_PREMULTIPLIED,
-      priv->dst_alpha_mode == GST_D3D12_CONVERTER_ALPHA_MODE_PREMULTIPLIED,
-      priv->convert_type);
-  if (psblob_list.empty ()) {
-    GST_ERROR_OBJECT (self, "Couldn't get pixel shader blob");
-    return FALSE;
-  }
 
   D3D12_SHADER_BYTECODE vs_blob;
   hr = gst_d3d12_get_converter_vertex_shader_blob (&vs_blob, priv->input_desc);
@@ -819,45 +904,53 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     rtv_formats.push (format);
   }
 
-  priv->quad_data.resize (psblob_list.size ());
+  for (size_t i = 0; i < priv->pipeline_data.size (); i++) {
+    auto & pipeline_data = priv->pipeline_data[i];
+    for (size_t j = 0; j < pipeline_data.quad_data.size (); j++) {
+      auto & pso_desc = pipeline_data.quad_data[j].desc;
 
-  for (size_t i = 0; i < psblob_list.size (); i++) {
-    auto & pso_desc = priv->quad_data[i].desc;
-    pso_desc.pRootSignature = priv->rs.Get ();
-    pso_desc.VS = vs_blob;
-    pso_desc.PS = psblob_list[i].bytecode;
-    pso_desc.BlendState = priv->blend_desc;
-    pso_desc.SampleMask = UINT_MAX;
-    pso_desc.RasterizerState = CD3DX12_RASTERIZER_DESC (D3D12_DEFAULT);
-    pso_desc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-    pso_desc.DepthStencilState.DepthEnable = FALSE;
-    pso_desc.DepthStencilState.StencilEnable = FALSE;
-    pso_desc.InputLayout.pInputElementDescs = priv->input_desc;
-    pso_desc.InputLayout.NumElements = 2;
-    pso_desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    pso_desc.NumRenderTargets = psblob_list[i].num_rtv;
-    for (UINT j = 0; j < pso_desc.NumRenderTargets; j++) {
-      pso_desc.RTVFormats[j] = rtv_formats.front ();
-      rtv_formats.pop ();
+      pso_desc.pRootSignature = pipeline_data.rs.Get ();
+      pso_desc.VS = vs_blob;
+      pso_desc.PS = pipeline_data.psblob_list[j].bytecode;
+      pso_desc.BlendState = priv->blend_desc;
+      pso_desc.SampleMask = UINT_MAX;
+      pso_desc.RasterizerState = CD3DX12_RASTERIZER_DESC (D3D12_DEFAULT);
+      pso_desc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+      pso_desc.DepthStencilState.DepthEnable = FALSE;
+      pso_desc.DepthStencilState.StencilEnable = FALSE;
+      pso_desc.InputLayout.pInputElementDescs = priv->input_desc;
+      pso_desc.InputLayout.NumElements = 2;
+      pso_desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+      pso_desc.NumRenderTargets = pipeline_data.psblob_list[j].num_rtv;
+
+      for (UINT k = 0; k < pso_desc.NumRenderTargets; k++) {
+        if (i == 0) {
+          pso_desc.RTVFormats[k] = rtv_formats.front ();
+          rtv_formats.pop ();
+        } else {
+          pso_desc.RTVFormats[k] =
+              priv->pipeline_data[0].quad_data[j].desc.RTVFormats[k];
+        }
+      }
+      pso_desc.SampleDesc.Count = sample_count;
+      pso_desc.SampleDesc.Quality = sample_quality;
+
+      ComPtr < ID3D12PipelineState > pso;
+      hr = device->CreateGraphicsPipelineState (&pso_desc, IID_PPV_ARGS (&pso));
+      if (!gst_d3d12_result (hr, self->device)) {
+        GST_ERROR_OBJECT (self, "Couldn't create PSO");
+        return FALSE;
+      }
+
+      pipeline_data.quad_data[j].pso = pso;
+      pipeline_data.quad_data[j].num_rtv = pipeline_data.psblob_list[j].num_rtv;
     }
-    pso_desc.SampleDesc.Count = sample_count;
-    pso_desc.SampleDesc.Quality = sample_quality;
-
-    ComPtr < ID3D12PipelineState > pso;
-    hr = device->CreateGraphicsPipelineState (&pso_desc, IID_PPV_ARGS (&pso));
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't create PSO");
-      return FALSE;
-    }
-
-    priv->quad_data[i].pso = pso;
-    priv->quad_data[i].num_rtv = psblob_list[i].num_rtv;
   }
 
   D3D12_DESCRIPTOR_HEAP_DESC srv_heap_desc = { };
   srv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-  srv_heap_desc.NumDescriptors = priv->crs->GetNumSrv ();
-  if (priv->crs->HaveLut ())
+  srv_heap_desc.NumDescriptors = priv->pipeline_data[0].crs->GetNumSrv ();
+  if (priv->have_lut)
     srv_heap_desc.NumDescriptors += 2;
 
   srv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
@@ -907,10 +1000,17 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
         D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
     guint const_size = GST_ROUND_UP_N (g_const_buf_size,
         D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+    guint other_const_off = GST_ROUND_UP_N (vertex_index_size + const_size,
+        D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
 
     heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
-    resource_desc =
-        CD3DX12_RESOURCE_DESC::Buffer (vertex_index_size + const_size);
+    if (priv->color_balance_enabled) {
+      resource_desc =
+          CD3DX12_RESOURCE_DESC::Buffer (other_const_off + const_size);
+    } else {
+      resource_desc =
+          CD3DX12_RESOURCE_DESC::Buffer (vertex_index_size + const_size);
+    }
     hr = device->CreateCommittedResource (&heap_prop, heap_flags,
         &resource_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
         IID_PPV_ARGS (&priv->shader_buf));
@@ -927,7 +1027,8 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     priv->idv.SizeInBytes = g_index_buf_size;
     priv->idv.Format = DXGI_FORMAT_R16_UINT;
 
-    priv->const_buf_addr = priv->vbv.BufferLocation + vertex_index_size;
+    priv->const_buf_addr[0] = priv->vbv.BufferLocation + vertex_index_size;
+    priv->const_buf_addr[1] = priv->vbv.BufferLocation + other_const_off;
 
     heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
     hr = device->CreateCommittedResource (&heap_prop,
@@ -946,11 +1047,13 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
 
     memcpy (data, vertex_data, g_vertex_buf_size);
     memcpy (data + g_vertex_buf_size, g_indices, g_index_buf_size);
-    memcpy (data + vertex_index_size, &priv->const_data, g_const_buf_size);
+    memcpy (data + vertex_index_size, &priv->const_data[0], g_const_buf_size);
+    if (priv->color_balance_enabled)
+      memcpy (data + other_const_off, &priv->const_data[1], g_const_buf_size);
     upload_buf->Unmap (0, nullptr);
   }
 
-  if (priv->crs->HaveLut ()) {
+  if (priv->have_lut) {
     heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
     resource_desc = CD3DX12_RESOURCE_DESC::Tex1D (DXGI_FORMAT_R16_UNORM,
         GAMMA_LUT_SIZE, 1, 1);
@@ -995,7 +1098,12 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     }
 
     auto in_trc = in_info->colorimetry.transfer;
-    auto out_trc = out_info->colorimetry.transfer;
+    auto out_trc = in_info->colorimetry.transfer;
+
+    if (priv->convert_type[0] == CONVERT_TYPE::GAMMA ||
+        priv->convert_type[0] == CONVERT_TYPE::PRIMARY) {
+      out_trc = out_info->colorimetry.transfer;
+    }
 
     auto gamma_dec_table = gst_d3d12_converter_get_gamma_dec_table (in_trc);
     auto gamma_enc_table = gst_d3d12_converter_get_gamma_enc_table (out_trc);
@@ -1082,7 +1190,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (priv->shader_buf.
           Get (), D3D12_RESOURCE_STATE_COPY_DEST, STATE_VERTEX_AND_INDEX));
 
-  if (priv->crs->HaveLut ()) {
+  if (priv->have_lut) {
     D3D12_TEXTURE_COPY_LOCATION src;
     D3D12_TEXTURE_COPY_LOCATION dst;
     src =
@@ -1502,9 +1610,9 @@ convert_info_gray_to_yuv (const GstVideoInfo * gray, GstVideoInfo * yuv)
 
 static gboolean
 gst_d3d12_converter_calculate_matrix (GstD3D12Converter * self,
-    const GstVideoInfo * in_info, const GstVideoInfo * out_info)
+    const GstVideoInfo * in_info, const GstVideoInfo * out_info,
+    CONVERT_TYPE convert_type, PSConstBuffer * const_data)
 {
-  auto priv = self->priv;
   GstD3D12ColorMatrix pre_coeff;
   GstD3D12ColorMatrix post_coeff;
   GstD3D12ColorMatrix primaries_coeff;
@@ -1514,7 +1622,7 @@ gst_d3d12_converter_calculate_matrix (GstD3D12Converter * self,
   gst_d3d12_color_matrix_init (&post_coeff);
   gst_d3d12_color_matrix_init (&primaries_coeff);
 
-  switch (priv->convert_type) {
+  switch (convert_type) {
     case CONVERT_TYPE::RANGE:
       gst_d3d12_color_range_adjust_matrix_unorm (in_info, out_info,
           &post_coeff);
@@ -1528,6 +1636,8 @@ gst_d3d12_converter_calculate_matrix (GstD3D12Converter * self,
       break;
     case CONVERT_TYPE::GAMMA:
     case CONVERT_TYPE::PRIMARY:
+    case CONVERT_TYPE::COLOR_BALANCE:
+    case CONVERT_TYPE::PRIMARY_AND_COLOR_BALANCE:
       if (GST_VIDEO_INFO_IS_RGB (in_info)) {
         rgb_info = *in_info;
         if (in_info->colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235) {
@@ -1547,7 +1657,8 @@ gst_d3d12_converter_calculate_matrix (GstD3D12Converter * self,
         gst_d3d12_yuv_to_rgb_matrix_unorm (in_info, &rgb_info, &pre_coeff);
       }
 
-      if (priv->convert_type == CONVERT_TYPE::PRIMARY) {
+      if (convert_type == CONVERT_TYPE::PRIMARY ||
+          convert_type == CONVERT_TYPE::PRIMARY_AND_COLOR_BALANCE) {
         const GstVideoColorPrimariesInfo *in_pinfo;
         const GstVideoColorPrimariesInfo *out_pinfo;
 
@@ -1592,9 +1703,9 @@ gst_d3d12_converter_calculate_matrix (GstD3D12Converter * self,
     g_free (matrix_dump);
   }
 
-  PSColorSpace *preCoeff = &priv->const_data.preCoeff;
-  PSColorSpace *postCoeff = &priv->const_data.postCoeff;
-  PSColorSpace *primariesCoeff = &priv->const_data.primariesCoeff;
+  PSColorSpace *preCoeff = &const_data->preCoeff;
+  PSColorSpace *postCoeff = &const_data->postCoeff;
+  PSColorSpace *primariesCoeff = &const_data->primariesCoeff;
 
   for (guint i = 0; i < 3; i++) {
     preCoeff->coeffX[i] = pre_coeff.matrix[0][i];
@@ -1941,6 +2052,13 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
       allow_primaries = TRUE;
     }
 
+    if (gst_structure_get_enum (config, GST_D3D12_CONVERTER_OPT_COLOR_BALANCE,
+            GST_TYPE_D3D12_CONVERTER_COLOR_BALANCE, &value) &&
+        (GstD3D12ConverterColorBalance) value !=
+        GST_D3D12_CONVERTER_COLOR_BALANCE_DISABLED) {
+      priv->color_balance_enabled = TRUE;
+    }
+
     gst_structure_get_enum (config, GST_D3D12_CONVERTER_OPT_SAMPLER_FILTER,
         GST_TYPE_D3D12_CONVERTER_SAMPLER_FILTER, (int *) &sampler_filter);
 
@@ -1992,8 +2110,6 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
   priv->src_height = GST_VIDEO_INFO_HEIGHT (in_info);
   priv->dest_width = GST_VIDEO_INFO_WIDTH (out_info);
   priv->dest_height = GST_VIDEO_INFO_HEIGHT (out_info);
-  priv->alpha = 1.0;
-  priv->border_color = 0xffff000000000000;
 
   if (GST_VIDEO_INFO_IS_RGB (&priv->out_info)) {
     GstVideoInfo rgb_info = priv->out_info;
@@ -2020,13 +2136,14 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
 
   gst_d3d12_converter_calculate_border_color (self);
 
-  priv->convert_type = CONVERT_TYPE::IDENTITY;
+  priv->convert_type[0] = CONVERT_TYPE::IDENTITY;
+  priv->convert_type[1] = CONVERT_TYPE::COLOR_BALANCE;
   if (GST_VIDEO_INFO_IS_RGB (in_info) != GST_VIDEO_INFO_IS_RGB (out_info)) {
-    priv->convert_type = CONVERT_TYPE::SIMPLE;
+    priv->convert_type[0] = CONVERT_TYPE::SIMPLE;
   } else if (in_info->colorimetry.range != GST_VIDEO_COLOR_RANGE_UNKNOWN &&
       out_info->colorimetry.range != GST_VIDEO_COLOR_RANGE_UNKNOWN &&
       in_info->colorimetry.range != out_info->colorimetry.range) {
-    priv->convert_type = CONVERT_TYPE::RANGE;
+    priv->convert_type[0] = CONVERT_TYPE::RANGE;
   }
 
   if (allow_gamma &&
@@ -2038,7 +2155,7 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
               0))) {
     GST_DEBUG_OBJECT (self, "Different transfer function %d -> %d",
         in_info->colorimetry.transfer, out_info->colorimetry.transfer);
-    priv->convert_type = CONVERT_TYPE::GAMMA;
+    priv->convert_type[0] = CONVERT_TYPE::GAMMA;
   }
 
   if (allow_primaries &&
@@ -2050,7 +2167,8 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
           out_info->colorimetry.primaries)) {
     GST_DEBUG_OBJECT (self, "Different primaries %d -> %d",
         in_info->colorimetry.primaries, out_info->colorimetry.primaries);
-    priv->convert_type = CONVERT_TYPE::PRIMARY;
+    priv->convert_type[0] = CONVERT_TYPE::PRIMARY;
+    priv->convert_type[1] = CONVERT_TYPE::PRIMARY_AND_COLOR_BALANCE;
   }
 
   if (GST_VIDEO_INFO_IS_RGB (&priv->in_info)) {
@@ -2074,9 +2192,24 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
   }
 
   if (!gst_d3d12_converter_calculate_matrix (self,
-          &matrix_in_info, &matrix_out_info)) {
+          &matrix_in_info, &matrix_out_info, priv->convert_type[0],
+          &priv->const_data[0])) {
     gst_object_unref (self);
     return nullptr;
+  }
+
+  if (priv->color_balance_enabled &&
+      !gst_d3d12_converter_calculate_matrix (self,
+          &matrix_in_info, &matrix_out_info, priv->convert_type[1],
+          &priv->const_data[1])) {
+    gst_object_unref (self);
+    return nullptr;
+  }
+
+  if (priv->convert_type[0] == CONVERT_TYPE::GAMMA ||
+      priv->convert_type[0] == CONVERT_TYPE::PRIMARY ||
+      priv->color_balance_enabled) {
+    priv->have_lut = TRUE;
   }
 
   if (!gst_d3d12_converter_setup_resource (self, &priv->in_info,
@@ -2096,31 +2229,35 @@ gst_d3d12_converter_update_pso (GstD3D12Converter * self)
   if (!priv->update_pso)
     return TRUE;
 
-  std::vector < QuadData > quad_data;
-  quad_data.resize (priv->quad_data.size ());
-
+  priv->update_pso = FALSE;
   auto device = gst_d3d12_device_get_device_handle (self->device);
+  for (size_t i = 0; i < priv->pipeline_data.size (); i++) {
+    auto & pipeline_data = priv->pipeline_data[i];
 
-  for (size_t i = 0; i < quad_data.size (); i++) {
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC pso_desc = priv->quad_data[i].desc;
-    pso_desc.BlendState = priv->blend_desc;
-    pso_desc.SampleDesc = priv->sample_desc;
+    std::vector < QuadData > quad_data;
+    quad_data.resize (pipeline_data.quad_data.size ());
 
-    ComPtr < ID3D12PipelineState > pso;
-    auto hr =
-        device->CreateGraphicsPipelineState (&pso_desc, IID_PPV_ARGS (&pso));
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't create pso");
-      return FALSE;
+    for (size_t j = 0; j < quad_data.size (); j++) {
+      D3D12_GRAPHICS_PIPELINE_STATE_DESC pso_desc =
+          pipeline_data.quad_data[j].desc;
+      pso_desc.BlendState = priv->blend_desc;
+      pso_desc.SampleDesc = priv->sample_desc;
+
+      ComPtr < ID3D12PipelineState > pso;
+      auto hr =
+          device->CreateGraphicsPipelineState (&pso_desc, IID_PPV_ARGS (&pso));
+      if (!gst_d3d12_result (hr, self->device)) {
+        GST_ERROR_OBJECT (self, "Couldn't create pso");
+        return FALSE;
+      }
+
+      quad_data[j].desc = pso_desc;
+      quad_data[j].pso = pso;
+      quad_data[j].num_rtv = pipeline_data.quad_data[j].num_rtv;
     }
 
-    quad_data[i].desc = pso_desc;
-    quad_data[i].pso = pso;
-    quad_data[i].num_rtv = priv->quad_data[i].num_rtv;
+    pipeline_data.quad_data = quad_data;
   }
-
-  priv->update_pso = FALSE;
-  priv->quad_data = quad_data;
 
   return TRUE;
 }
@@ -2236,7 +2373,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
     cpu_handle.Offset (priv->srv_inc_size);
   }
 
-  if (priv->crs->HaveLut ()) {
+  if (priv->have_lut) {
     device->CopyDescriptorsSimple (2, cpu_handle,
         GetCPUDescriptorHandleForHeapStart (priv->gamma_lut_heap),
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -2253,30 +2390,32 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
   reorder_rtv_handles (GST_VIDEO_INFO_FORMAT (&priv->out_info),
       out_frame->rtv_desc_handle, reordered_rtv_handle);
 
-  auto pso = priv->quad_data[0].pso.Get ();
+  guint pipeline_index = priv->need_color_balance ? 1 : 0;
+  auto & pipeline_data = priv->pipeline_data[pipeline_index];
 
-  cl->SetGraphicsRootSignature (priv->rs.Get ());
+  auto pso = pipeline_data.quad_data[0].pso.Get ();
+  cl->SetGraphicsRootSignature (pipeline_data.rs.Get ());
   cl->SetPipelineState (pso);
 
   ID3D12DescriptorHeap *heaps[] = { srv_heap, priv->sampler_heap.Get () };
   cl->SetDescriptorHeaps (2, heaps);
-  cl->SetGraphicsRootDescriptorTable (priv->crs->GetPsSrvIdx (),
+  cl->SetGraphicsRootDescriptorTable (pipeline_data.crs->GetPsSrvIdx (),
       GetGPUDescriptorHandleForHeapStart (srv_heap));
-  cl->SetGraphicsRootDescriptorTable (priv->crs->GetPsSamplerIdx (),
+  cl->SetGraphicsRootDescriptorTable (pipeline_data.crs->GetPsSamplerIdx (),
       GetGPUDescriptorHandleForHeapStart (priv->sampler_heap));
-  cl->SetGraphicsRoot32BitConstants (priv->crs->GetVsRootConstIdx (),
+  cl->SetGraphicsRoot32BitConstants (pipeline_data.crs->GetVsRootConstIdx (),
       16, &priv->transform, 0);
-  cl->SetGraphicsRoot32BitConstants (priv->crs->GetPsRootConstIdx (),
-      1, &priv->alpha, 0);
-  cl->SetGraphicsRootConstantBufferView (priv->crs->GetPsCbvIdx (),
-      priv->const_buf_addr);
+  cl->SetGraphicsRoot32BitConstants (pipeline_data.crs->GetPsRootConstIdx (),
+      sizeof (priv->const_data_dyn) / 4, &priv->const_data_dyn, 0);
+  cl->SetGraphicsRootConstantBufferView (pipeline_data.crs->GetPsCbvIdx (),
+      priv->const_buf_addr[pipeline_index]);
 
   cl->IASetIndexBuffer (&priv->idv);
   cl->IASetVertexBuffers (0, 1, &priv->vbv);
   cl->IASetPrimitiveTopology (D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   cl->RSSetViewports (1, priv->viewport);
   cl->RSSetScissorRects (1, priv->scissor_rect);
-  cl->OMSetRenderTargets (priv->quad_data[0].num_rtv,
+  cl->OMSetRenderTargets (pipeline_data.quad_data[0].num_rtv,
       reordered_rtv_handle, FALSE, nullptr);
   cl->OMSetBlendFactor (priv->blend_factor);
   cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
@@ -2284,14 +2423,14 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
   pso->AddRef ();
   gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (pso));
 
-  auto offset = priv->quad_data[0].num_rtv;
-  if (priv->quad_data.size () == 2) {
-    pso = priv->quad_data[1].pso.Get ();
+  auto offset = pipeline_data.quad_data[0].num_rtv;
+  if (pipeline_data.quad_data.size () == 2) {
+    pso = pipeline_data.quad_data[1].pso.Get ();
 
     cl->SetPipelineState (pso);
     cl->RSSetViewports (1, &priv->viewport[offset]);
     cl->RSSetScissorRects (1, &priv->scissor_rect[offset]);
-    cl->OMSetRenderTargets (priv->quad_data[1].num_rtv,
+    cl->OMSetRenderTargets (pipeline_data.quad_data[1].num_rtv,
         reordered_rtv_handle + offset, FALSE, nullptr);
     cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
 
@@ -2523,4 +2662,19 @@ gst_d3d12_converter_apply_transform (GstD3D12Converter * converter,
   priv->video_direction = GST_VIDEO_ORIENTATION_CUSTOM;
 
   return TRUE;
+}
+
+gboolean
+gst_d3d12_converter_is_color_balance_needed (gfloat hue, gfloat saturation,
+    gfloat brightness, gfloat contrast)
+{
+  const float min_diff = 0.0000000001f;
+  if (fabsf (hue - DEFAULT_HUE) >= min_diff ||
+      fabsf (saturation - DEFAULT_SATURATION) >= min_diff ||
+      fabsf (brightness - DEFAULT_BRIGHTNESS) >= min_diff ||
+      fabsf (contrast - DEFAULT_CONTRAST) >= min_diff) {
+    return TRUE;
+  }
+
+  return FALSE;
 }

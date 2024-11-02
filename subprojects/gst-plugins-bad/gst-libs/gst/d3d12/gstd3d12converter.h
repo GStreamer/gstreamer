@@ -137,6 +137,32 @@ GType gst_d3d12_converter_alpha_mode_get_type (void);
 #define GST_D3D12_CONVERTER_OPT_PSO_SAMPLE_DESC_QUALITY "GstD3D12Converter.pso-sample-desc-quality"
 
 /**
+ * GstD3D12ConverterColorBalance:
+ * @GST_D3D12_CONVERTER_COLOR_BALANCE_DISABLED: Disable color-balance feature
+ * @GST_D3D12_CONVERTER_COLOR_BALANCE_ENABLED: Enable color-balance feature
+ *
+ * Since: 1.26
+ */
+typedef enum
+{
+  GST_D3D12_CONVERTER_COLOR_BALANCE_DISABLED,
+  GST_D3D12_CONVERTER_COLOR_BALANCE_ENABLED,
+} GstD3D12ConverterColorBalance;
+
+GST_D3D12_API
+GType gst_d3d12_converter_color_balance_get_type (void);
+#define GST_TYPE_D3D12_CONVERTER_COLOR_BALANCE (gst_d3d12_converter_color_balance_get_type())
+
+/**
+ * GST_D3D12_CONVERTER_OPT_COLOR_BALANCE:
+ *
+ * #GstD3D12ConverterColorBalance, an option to enable color-balance feature
+ *
+ * Since: 1.26
+ */
+#define GST_D3D12_CONVERTER_OPT_COLOR_BALANCE "GstD3D12Converter.color-balance"
+
+/**
  * GstD3D12Converter:
  *
  * Opaque GstD3D12Converter struct

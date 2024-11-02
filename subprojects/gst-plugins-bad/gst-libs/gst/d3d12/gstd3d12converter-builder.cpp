@@ -61,6 +61,12 @@ gst_d3d12_get_converter_pixel_shader_blob (GstVideoFormat in_format,
     case CONVERT_TYPE::PRIMARY:
       conv_type = GST_D3D_CONVERTER_PRIMARY;
       break;
+    case CONVERT_TYPE::COLOR_BALANCE:
+      conv_type = GST_D3D_CONVERTER_COLOR_BALANCE;
+      break;
+    case CONVERT_TYPE::PRIMARY_AND_COLOR_BALANCE:
+      conv_type = GST_D3D_CONVERTER_PRIMARY_AND_COLOR_BALANCE;
+      break;
     default:
       g_assert_not_reached ();
       return ret;
@@ -202,7 +208,7 @@ ConverterRootSignature::ConverterRootSignature (D3D_ROOT_SIGNATURE_VERSION
 
   /* PS alpha constant value, maybe updated */
   ps_root_const_ = (UINT) param_list_v1_1.size ();
-  param.InitAsConstants (1, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+  param.InitAsConstants (8, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
   param_list_v1_1.push_back (param);
 
   /* PS CBV, this is static */
@@ -247,7 +253,9 @@ gst_d3d12_get_converter_root_signature (GstD3D12Device * device,
     GST_INFO_OBJECT (device, "Device supports version 1.1 root signature");
   }
 
-  if (type == CONVERT_TYPE::GAMMA || type == CONVERT_TYPE::PRIMARY)
+  if (type == CONVERT_TYPE::GAMMA || type == CONVERT_TYPE::PRIMARY ||
+      type == CONVERT_TYPE::COLOR_BALANCE ||
+      type == CONVERT_TYPE::PRIMARY_AND_COLOR_BALANCE)
     build_lut = true;
 
   auto rs = std::make_shared < ConverterRootSignature >

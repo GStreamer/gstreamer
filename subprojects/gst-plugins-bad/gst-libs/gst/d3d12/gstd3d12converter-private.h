@@ -26,16 +26,22 @@
 G_BEGIN_DECLS
 
 GST_D3D12_API
-gboolean            gst_d3d12_converter_apply_transform (GstD3D12Converter * converter,
-                                                         GstVideoOrientationMethod orientation,
-                                                         gfloat viewport_width,
-                                                         gfloat viewport_height,
-                                                         gfloat fov,
-                                                         gboolean ortho,
-                                                         gfloat rotation_x,
-                                                         gfloat rotation_y,
-                                                         gfloat rotation_z,
-                                                         gfloat scale_x,
-                                                         gfloat scale_y);
+gboolean  gst_d3d12_converter_apply_transform (GstD3D12Converter * converter,
+                                               GstVideoOrientationMethod orientation,
+                                               gfloat viewport_width,
+                                               gfloat viewport_height,
+                                               gfloat fov,
+                                               gboolean ortho,
+                                               gfloat rotation_x,
+                                               gfloat rotation_y,
+                                               gfloat rotation_z,
+                                               gfloat scale_x,
+                                               gfloat scale_y);
+
+GST_D3D12_API
+gboolean  gst_d3d12_converter_is_color_balance_needed (gfloat hue,
+                                                       gfloat saturation,
+                                                       gfloat brightness,
+                                                       gfloat contrast);
 
 G_END_DECLS
