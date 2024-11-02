@@ -2127,7 +2127,8 @@ gst_d3d12_convert_class_init (GstD3D12ConvertClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Direct3D12 Converter",
       "Filter/Converter/Scaler/Effect/Video/Hardware",
-      "Performs resizing, colorspace conversion, cropping and flipping/rotating using Direct3D12",
+      "Performs resizing, colorspace conversion, cropping, flipping/rotating "
+      "and adjusts hue/saturation/brightness/contrast using Direct3D12",
       "Seungha Yang <seungha@centricular.com>");
 
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_d3d12_convert_sink_event);
@@ -2275,8 +2276,8 @@ gst_d3d12_color_convert_class_init (GstD3D12ColorConvertClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Direct3D12 Colorspace Converter",
       "Filter/Converter/Video/Hardware",
-      "Color conversion using Direct3D12",
-      "Seungha Yang <seungha@centricular.com>");
+      "Converts colorspace and adjusts hue/saturation/brightness/contrast "
+      "using Direct3D12", "Seungha Yang <seungha@centricular.com>");
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_d3d12_color_convert_transform_caps);

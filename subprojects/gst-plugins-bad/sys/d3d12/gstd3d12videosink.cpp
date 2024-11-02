@@ -109,6 +109,10 @@ enum
   PROP_ERROR_ON_CLOSED,
   PROP_EXTERNAL_WINDOW_ONLY,
   PROP_DIRECT_SWAPCHAIN,
+  PROP_HUE,
+  PROP_SATURATION,
+  PROP_BRIGHTNESS,
+  PROP_CONTRAST,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -131,6 +135,10 @@ enum
 #define DEFAULT_ERROR_ON_CLOSED TRUE
 #define DEFAULT_EXTERNAL_WINDOW_ONLY FALSE
 #define DEFAULT_DIRECT_SWAPCHAIN FALSE
+#define DEFAULT_HUE 0.0
+#define DEFAULT_SATURATION 1.0
+#define DEFAULT_BRIGHTNESS 0.0
+#define DEFAULT_CONTRAST 1.0
 
 enum
 {
@@ -162,8 +170,21 @@ struct GstD3D12VideoSinkPrivate
 {
   GstD3D12VideoSinkPrivate ()
   {
+    const gchar *channels[4] = { "HUE", "SATURATION",
+      "BRIGHTNESS", "CONTRAST"
+    };
     window = gst_d3d12_window_new ();
     convert_config = gst_structure_new_empty ("convert-config");
+    color_balance_channels = nullptr;
+    for (guint i = 0; i < G_N_ELEMENTS (channels); i++) {
+      auto ch = (GstColorBalanceChannel *)
+          g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, nullptr);
+      ch->label = g_strdup (channels[i]);
+      ch->min_value = -1000;
+      ch->max_value = 1000;
+
+      color_balance_channels = g_list_append (color_balance_channels, ch);
+    }
   }
 
   ~GstD3D12VideoSinkPrivate ()
@@ -175,6 +196,14 @@ struct GstD3D12VideoSinkPrivate
       gst_buffer_pool_set_active (pool, FALSE);
       gst_object_unref (pool);
     }
+
+    auto iter = color_balance_channels;
+    while (iter) {
+      g_object_unref (iter->data);
+      iter = iter->next;
+    }
+
+    g_list_free (color_balance_channels);
   }
 
   GstD3D12Window *window;
@@ -191,6 +220,9 @@ struct GstD3D12VideoSinkPrivate
 
   gboolean warn_closed_window = FALSE;
   gboolean window_open_called = FALSE;
+
+  GList *color_balance_channels = nullptr;
+  std::atomic<bool> sync_in_progress = { false };
 
   std::recursive_mutex lock;
   /* properties */
@@ -219,6 +251,10 @@ struct GstD3D12VideoSinkPrivate
   std::atomic<gboolean> error_on_closed = { DEFAULT_ERROR_ON_CLOSED };
   gboolean external_only = DEFAULT_EXTERNAL_WINDOW_ONLY;
   std::atomic<gboolean> direct_swapchain = { DEFAULT_DIRECT_SWAPCHAIN };
+  gdouble hue = DEFAULT_HUE;
+  gdouble saturation = DEFAULT_SATURATION;
+  gdouble brightness = DEFAULT_BRIGHTNESS;
+  gdouble contrast = DEFAULT_CONTRAST;
 };
 /* *INDENT-ON* */
 
@@ -276,6 +312,8 @@ static void
 gst_d3d12_video_sink_video_overlay_init (GstVideoOverlayInterface * iface);
 static void
 gst_d3d12_video_sink_navigation_init (GstNavigationInterface * iface);
+static void
+gst_d3d12_video_sink_color_balance_init (GstColorBalanceInterface * iface);
 
 #define gst_d3d12_video_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstD3D12VideoSink, gst_d3d12_video_sink,
@@ -284,6 +322,8 @@ G_DEFINE_TYPE_WITH_CODE (GstD3D12VideoSink, gst_d3d12_video_sink,
         gst_d3d12_video_sink_video_overlay_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
         gst_d3d12_video_sink_navigation_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
+        gst_d3d12_video_sink_color_balance_init);
     GST_DEBUG_CATEGORY_INIT (gst_d3d12_video_sink_debug,
         "d3d12videosink", 0, "d3d12videosink"));
 
@@ -485,6 +525,49 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
+   * GstD3D12VideoSink:hue:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_HUE,
+      g_param_spec_double ("hue", "Hue", "hue", -1.0, 1.0, DEFAULT_HUE,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12VideoSink:saturation:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_SATURATION,
+      g_param_spec_double ("saturation", "Saturation", "saturation", 0.0, 2.0,
+          DEFAULT_SATURATION,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12VideoSink:brightness:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_BRIGHTNESS,
+      g_param_spec_double ("brightness", "Brightness", "brightness", -1.0, 1.0,
+          DEFAULT_BRIGHTNESS,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12VideoSink:contrast:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_CONTRAST,
+      g_param_spec_double ("contrast", "Contrast", "contrast", 0.0, 2.0,
+          DEFAULT_CONTRAST,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
    * GstD3D12VideoSink::overlay:
    * @d3d12videosink: the d3d12videosink element that emitted the signal
    * @command_queue: ID3D12CommandQueue
@@ -615,118 +698,165 @@ gst_d3d12_video_sink_set_property (GObject * object, guint prop_id,
 {
   auto self = GST_D3D12_VIDEO_SINK (object);
   auto priv = self->priv;
+  const gchar *color_balance_label = nullptr;
 
-  std::lock_guard < std::recursive_mutex > lk (priv->lock);
-  switch (prop_id) {
-    case PROP_ADAPTER:
-      priv->adapter = g_value_get_int (value);
-      break;
-    case PROP_FORCE_ASPECT_RATIO:
-      priv->force_aspect_ratio = g_value_get_boolean (value);
-      gst_d3d12_window_set_force_aspect_ratio (priv->window,
-          priv->force_aspect_ratio);
-      break;
-    case PROP_ENABLE_NAVIGATION_EVENTS:
-      priv->enable_navigation = g_value_get_boolean (value);
-      gst_d3d12_window_set_enable_navigation_events (priv->window,
-          priv->enable_navigation);
-      break;
-    case PROP_ROTATE_METHOD:
-      gst_d3d12_video_sink_set_orientation (self,
-          (GstVideoOrientationMethod) g_value_get_enum (value), FALSE);
-      break;
-    case PROP_FULLSCREEN_ON_ALT_ENTER:
-      priv->fullscreen_on_alt_enter = g_value_get_boolean (value);
-      gst_d3d12_window_enable_fullscreen_on_alt_enter (priv->window,
-          priv->fullscreen_on_alt_enter);
-      break;
-    case PROP_FULLSCREEN:
-      priv->fullscreen = g_value_get_boolean (value);
-      gst_d3d12_window_set_fullscreen (priv->window, priv->fullscreen);
-      break;
-    case PROP_MSAA:
-      priv->msaa = (GstD3D12MSAAMode) g_value_get_enum (value);
-      gst_d3d12_window_set_msaa (priv->window, priv->msaa);
-      break;
-    case PROP_REDRAW_ON_UPDATE:
-      priv->redraw_on_update = g_value_get_boolean (value);
-      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
-      break;
-    case PROP_FOV:
-      priv->fov = g_value_get_float (value);
-      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
-      break;
-    case PROP_ORTHO:
-      priv->ortho = g_value_get_boolean (value);
-      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
-      break;
-    case PROP_ROTATION_X:
-      priv->rotation_x = g_value_get_float (value);
-      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
-      break;
-    case PROP_ROTATION_Y:
-      priv->rotation_y = g_value_get_float (value);
-      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
-      break;
-    case PROP_ROTATION_Z:
-      priv->rotation_z = g_value_get_float (value);
-      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
-      break;
-    case PROP_SCALE_X:
-      priv->scale_x = g_value_get_float (value);
-      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
-      break;
-    case PROP_SCALE_Y:
-      priv->scale_y = g_value_get_float (value);
-      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
-      break;
-    case PROP_GAMMA_MODE:
-    {
-      auto gamma_mode = (GstVideoGammaMode) g_value_get_enum (value);
-      if (priv->gamma_mode != gamma_mode) {
-        priv->gamma_mode = gamma_mode;
-        priv->update_window = TRUE;
+  {
+    std::lock_guard < std::recursive_mutex > lk (priv->lock);
+    switch (prop_id) {
+      case PROP_ADAPTER:
+        priv->adapter = g_value_get_int (value);
+        break;
+      case PROP_FORCE_ASPECT_RATIO:
+        priv->force_aspect_ratio = g_value_get_boolean (value);
+        gst_d3d12_window_set_force_aspect_ratio (priv->window,
+            priv->force_aspect_ratio);
+        break;
+      case PROP_ENABLE_NAVIGATION_EVENTS:
+        priv->enable_navigation = g_value_get_boolean (value);
+        gst_d3d12_window_set_enable_navigation_events (priv->window,
+            priv->enable_navigation);
+        break;
+      case PROP_ROTATE_METHOD:
+        gst_d3d12_video_sink_set_orientation (self,
+            (GstVideoOrientationMethod) g_value_get_enum (value), FALSE);
+        break;
+      case PROP_FULLSCREEN_ON_ALT_ENTER:
+        priv->fullscreen_on_alt_enter = g_value_get_boolean (value);
+        gst_d3d12_window_enable_fullscreen_on_alt_enter (priv->window,
+            priv->fullscreen_on_alt_enter);
+        break;
+      case PROP_FULLSCREEN:
+        priv->fullscreen = g_value_get_boolean (value);
+        gst_d3d12_window_set_fullscreen (priv->window, priv->fullscreen);
+        break;
+      case PROP_MSAA:
+        priv->msaa = (GstD3D12MSAAMode) g_value_get_enum (value);
+        gst_d3d12_window_set_msaa (priv->window, priv->msaa);
+        break;
+      case PROP_REDRAW_ON_UPDATE:
+        priv->redraw_on_update = g_value_get_boolean (value);
+        gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+        break;
+      case PROP_FOV:
+        priv->fov = g_value_get_float (value);
+        gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+        break;
+      case PROP_ORTHO:
+        priv->ortho = g_value_get_boolean (value);
+        gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+        break;
+      case PROP_ROTATION_X:
+        priv->rotation_x = g_value_get_float (value);
+        gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+        break;
+      case PROP_ROTATION_Y:
+        priv->rotation_y = g_value_get_float (value);
+        gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+        break;
+      case PROP_ROTATION_Z:
+        priv->rotation_z = g_value_get_float (value);
+        gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+        break;
+      case PROP_SCALE_X:
+        priv->scale_x = g_value_get_float (value);
+        gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+        break;
+      case PROP_SCALE_Y:
+        priv->scale_y = g_value_get_float (value);
+        gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+        break;
+      case PROP_GAMMA_MODE:
+      {
+        auto gamma_mode = (GstVideoGammaMode) g_value_get_enum (value);
+        if (priv->gamma_mode != gamma_mode) {
+          priv->gamma_mode = gamma_mode;
+          priv->update_window = TRUE;
+        }
+        break;
       }
-      break;
-    }
-    case PROP_PRIMARIES_MODE:
-    {
-      auto primaries_mode = (GstVideoPrimariesMode) g_value_get_enum (value);
-      if (priv->primaries_mode != primaries_mode) {
-        priv->primaries_mode = primaries_mode;
-        priv->update_window = TRUE;
+      case PROP_PRIMARIES_MODE:
+      {
+        auto primaries_mode = (GstVideoPrimariesMode) g_value_get_enum (value);
+        if (priv->primaries_mode != primaries_mode) {
+          priv->primaries_mode = primaries_mode;
+          priv->update_window = TRUE;
+        }
+        break;
       }
-      break;
-    }
-    case PROP_SAMPLING_METHOD:
-    {
-      auto sampling_method = (GstD3D12SamplingMethod) g_value_get_enum (value);
-      if (priv->sampling_method != sampling_method) {
-        priv->sampling_method = sampling_method;
-        priv->update_window = TRUE;
+      case PROP_SAMPLING_METHOD:
+      {
+        auto sampling_method =
+            (GstD3D12SamplingMethod) g_value_get_enum (value);
+        if (priv->sampling_method != sampling_method) {
+          priv->sampling_method = sampling_method;
+          priv->update_window = TRUE;
+        }
+        break;
       }
-      break;
+      case PROP_OVERLAY_MODE:
+        priv->overlay_mode =
+            (GstD3D12WindowOverlayMode) g_value_get_flags (value);
+        gst_d3d12_window_set_overlay_mode (priv->window, priv->overlay_mode);
+        break;
+      case PROP_DISPLAY_FORMAT:
+        priv->display_format = (DXGI_FORMAT) g_value_get_enum (value);
+        break;
+      case PROP_ERROR_ON_CLOSED:
+        priv->error_on_closed = g_value_get_boolean (value);
+        break;
+      case PROP_EXTERNAL_WINDOW_ONLY:
+        priv->external_only = g_value_get_boolean (value);
+        break;
+      case PROP_DIRECT_SWAPCHAIN:
+        priv->direct_swapchain = g_value_get_boolean (value);
+        break;
+      case PROP_HUE:
+        if (gst_d3d12_window_set_hue (priv->window,
+                priv->sync_in_progress ? FALSE : priv->redraw_on_update,
+                g_value_get_double (value))) {
+          color_balance_label = "HUE";
+        }
+        break;
+      case PROP_SATURATION:
+        if (gst_d3d12_window_set_saturation (priv->window,
+                priv->sync_in_progress ? FALSE : priv->redraw_on_update,
+                g_value_get_double (value))) {
+          color_balance_label = "SATURATION";
+        }
+        break;
+      case PROP_BRIGHTNESS:
+        if (gst_d3d12_window_set_brightness (priv->window,
+                priv->sync_in_progress ? FALSE : priv->redraw_on_update,
+                g_value_get_double (value))) {
+          color_balance_label = "BRIGHTNESS";
+        }
+        break;
+      case PROP_CONTRAST:
+        if (gst_d3d12_window_set_contrast (priv->window,
+                priv->sync_in_progress ? FALSE : priv->redraw_on_update,
+                g_value_get_double (value))) {
+          color_balance_label = "CONTRAST";
+        }
+        break;
+      default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
     }
-    case PROP_OVERLAY_MODE:
-      priv->overlay_mode =
-          (GstD3D12WindowOverlayMode) g_value_get_flags (value);
-      gst_d3d12_window_set_overlay_mode (priv->window, priv->overlay_mode);
-      break;
-    case PROP_DISPLAY_FORMAT:
-      priv->display_format = (DXGI_FORMAT) g_value_get_enum (value);
-      break;
-    case PROP_ERROR_ON_CLOSED:
-      priv->error_on_closed = g_value_get_boolean (value);
-      break;
-    case PROP_EXTERNAL_WINDOW_ONLY:
-      priv->external_only = g_value_get_boolean (value);
-      break;
-    case PROP_DIRECT_SWAPCHAIN:
-      priv->direct_swapchain = g_value_get_boolean (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+  }
+
+  if (color_balance_label) {
+    GList *iter = priv->color_balance_channels;
+    while (iter) {
+      auto ch = (GstColorBalanceChannel *) iter->data;
+      if (g_ascii_strcasecmp (ch->label, color_balance_label) == 0) {
+        auto iface = GST_COLOR_BALANCE (self);
+        gst_color_balance_value_changed (iface, ch,
+            gst_color_balance_get_value (iface, ch));
+        break;
+      }
+
+      iter = g_list_next (iter);
+    }
   }
 }
 
@@ -807,6 +937,20 @@ gst_d3d12_video_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DIRECT_SWAPCHAIN:
       g_value_set_boolean (value, priv->direct_swapchain);
+      break;
+    case PROP_HUE:
+      g_value_set_double (value, gst_d3d12_window_get_hue (priv->window));
+      break;
+    case PROP_SATURATION:
+      g_value_set_double (value,
+          gst_d3d12_window_get_saturation (priv->window));
+      break;
+    case PROP_BRIGHTNESS:
+      g_value_set_double (value,
+          gst_d3d12_window_get_brightness (priv->window));
+      break;
+    case PROP_CONTRAST:
+      g_value_set_double (value, gst_d3d12_window_get_contrast (priv->window));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1125,7 +1269,10 @@ gst_d3d12_video_sink_set_buffer (GstD3D12VideoSink * self,
         GST_TYPE_D3D12_CONVERTER_ALPHA_MODE,
         GST_VIDEO_INFO_HAS_ALPHA (&priv->info) ?
         GST_D3D12_CONVERTER_ALPHA_MODE_PREMULTIPLIED :
-        GST_D3D12_CONVERTER_ALPHA_MODE_UNSPECIFIED, nullptr);
+        GST_D3D12_CONVERTER_ALPHA_MODE_UNSPECIFIED,
+        GST_D3D12_CONVERTER_OPT_COLOR_BALANCE,
+        GST_TYPE_D3D12_CONVERTER_COLOR_BALANCE,
+        GST_D3D12_CONVERTER_COLOR_BALANCE_ENABLED, nullptr);
 
     ret = gst_d3d12_window_prepare (priv->window, self->device,
         GST_VIDEO_SINK_WIDTH (self), GST_VIDEO_SINK_HEIGHT (self), priv->caps,
@@ -1477,6 +1624,7 @@ gst_d3d12_video_sink_prepare (GstBaseSink * sink, GstBuffer * buffer)
 {
   auto self = GST_D3D12_VIDEO_SINK (sink);
   auto priv = self->priv;
+  auto pts = GST_BUFFER_PTS (buffer);
 
   auto ret = gst_d3d12_video_sink_check_device_update (self, buffer);
   if (ret != GST_FLOW_OK)
@@ -1485,6 +1633,16 @@ gst_d3d12_video_sink_prepare (GstBaseSink * sink, GstBuffer * buffer)
   ret = gst_d3d12_video_sink_open_window (self);
   if (ret != GST_FLOW_OK)
     goto out;
+
+  if (GST_CLOCK_TIME_IS_VALID (pts)) {
+    auto stream_time = gst_segment_to_stream_time (&sink->segment,
+        GST_FORMAT_TIME, pts);
+    if (GST_CLOCK_TIME_IS_VALID (stream_time)) {
+      priv->sync_in_progress = true;
+      gst_object_sync_values (GST_OBJECT (self), stream_time);
+      priv->sync_in_progress = false;
+    }
+  }
 
   ret = gst_d3d12_video_sink_set_buffer (self, buffer, TRUE);
 
@@ -1631,6 +1789,93 @@ static void
 gst_d3d12_video_sink_navigation_init (GstNavigationInterface * iface)
 {
   iface->send_event_simple = gst_d3d12_video_sink_navigation_send_event;
+}
+
+static const GList *
+gst_d3d12_video_sink_color_balance_list_channels (GstColorBalance * iface)
+{
+  auto self = GST_D3D12_VIDEO_SINK (iface);
+  auto priv = self->priv;
+
+  return priv->color_balance_channels;
+}
+
+static void
+gst_d3d12_video_sink_color_balance_set_value (GstColorBalance * iface,
+    GstColorBalanceChannel * channel, gint value)
+{
+  auto self = GST_D3D12_VIDEO_SINK (iface);
+  auto priv = self->priv;
+
+  gdouble new_val;
+  gboolean changed = FALSE;
+
+  g_return_if_fail (channel->label);
+
+  if (!g_ascii_strcasecmp (channel->label, "HUE")) {
+    new_val = (value + 1000.0) * 2.0 / 2000.0 - 1.0;
+    changed = gst_d3d12_window_set_hue (priv->window, priv->redraw_on_update,
+        new_val);
+  } else if (!g_ascii_strcasecmp (channel->label, "SATURATION")) {
+    new_val = (value + 1000.0) * 2.0 / 2000.0;
+    changed = gst_d3d12_window_set_saturation (priv->window,
+        priv->redraw_on_update, new_val);
+  } else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS")) {
+    new_val = (value + 1000.0) * 2.0 / 2000.0 - 1.0;
+    changed = gst_d3d12_window_set_brightness (priv->window,
+        priv->redraw_on_update, new_val);
+  } else if (!g_ascii_strcasecmp (channel->label, "CONTRAST")) {
+    new_val = (value + 1000.0) * 2.0 / 2000.0;
+    changed = gst_d3d12_window_set_contrast (priv->window,
+        priv->redraw_on_update, new_val);
+  }
+
+  if (changed) {
+    gst_color_balance_value_changed (iface, channel,
+        gst_color_balance_get_value (iface, channel));
+  }
+}
+
+static gint
+gst_d3d12_video_sink_color_balance_get_value (GstColorBalance * iface,
+    GstColorBalanceChannel * channel)
+{
+  auto self = GST_D3D12_VIDEO_SINK (iface);
+  auto priv = self->priv;
+  gint value = 0;
+
+  g_return_val_if_fail (channel->label, 0);
+
+  if (!g_ascii_strcasecmp (channel->label, "HUE")) {
+    auto hue = gst_d3d12_window_get_hue (priv->window);
+    value = static_cast < gint > ((hue + 1) * 2000.0 / 2.0 - 1000.0);
+  } else if (!g_ascii_strcasecmp (channel->label, "SATURATION")) {
+    auto saturation = gst_d3d12_window_get_saturation (priv->window);
+    value = static_cast < gint > (saturation * 2000.0 / 2.0 - 1000.0);
+  } else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS")) {
+    auto brightness = gst_d3d12_window_get_saturation (priv->window);
+    value = static_cast < gint > ((brightness + 1) * 2000.0 / 2.0 - 1000.0);
+  } else if (!g_ascii_strcasecmp (channel->label, "CONTRAST")) {
+    auto contrast = gst_d3d12_window_get_contrast (priv->window);
+    value = static_cast < gint > (contrast * 2000.0 / 2.0 - 1000.0);
+  }
+
+  return value;
+}
+
+static GstColorBalanceType
+gst_d3d12_video_sink_color_balance_get_balance_type (GstColorBalance * iface)
+{
+  return GST_COLOR_BALANCE_HARDWARE;
+}
+
+static void
+gst_d3d12_video_sink_color_balance_init (GstColorBalanceInterface * iface)
+{
+  iface->list_channels = gst_d3d12_video_sink_color_balance_list_channels;
+  iface->set_value = gst_d3d12_video_sink_color_balance_set_value;
+  iface->get_value = gst_d3d12_video_sink_color_balance_get_value;
+  iface->get_balance_type = gst_d3d12_video_sink_color_balance_get_balance_type;
 }
 
 static void

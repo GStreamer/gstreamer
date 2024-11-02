@@ -114,6 +114,10 @@ struct GstD3D12WindowPrivate
   gfloat rotation_z = 0;
   gfloat scale_x = 1.0f;
   gfloat scale_y = 1.0f;
+  gdouble hue = 0.0;
+  gdouble saturation = 1.0;
+  gdouble brightness = 0.0;
+  gdouble contrast = 1.0;
 
   /* fullscreen related variables */
   std::atomic<gboolean> fullscreen_on_alt_enter = { FALSE };
@@ -494,7 +498,9 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
 
       g_object_set (resource->conv, "dest-x", priv->output_rect.x,
           "dest-y", priv->output_rect.y, "dest-width", priv->output_rect.w,
-          "dest-height", priv->output_rect.h, nullptr);
+          "dest-height", priv->output_rect.h, "hue", priv->hue,
+          "saturation", priv->saturation, "brightness", priv->brightness,
+          "contrast", priv->contrast, nullptr);
 
       if (gst_d3d12_need_transform (priv->rotation_x, priv->rotation_y,
               priv->rotation_z, priv->scale_x, priv->scale_y)) {
@@ -1008,4 +1014,94 @@ gst_d3d12_window_get_mouse_pos_info (GstD3D12Window * window,
   input_width = priv->input_info.width;
   input_height = priv->input_info.height;
   orientation = priv->orientation;
+}
+
+static gboolean
+gst_d3d12_window_update_color_balance (GstD3D12Window * self,
+    gboolean immediate, gdouble * prev, gdouble value)
+{
+  auto priv = self->priv;
+  gboolean updated = FALSE;
+
+  {
+    std::lock_guard < std::recursive_mutex > lk (priv->lock);
+    if (*prev != value) {
+      *prev = value;
+      priv->output_updated = TRUE;
+      updated = TRUE;
+    }
+  }
+
+  if (updated && immediate)
+    gst_d3d12_window_set_buffer (self, nullptr);
+
+  return updated;
+}
+
+gboolean
+gst_d3d12_window_set_hue (GstD3D12Window * window, gboolean immediate,
+    gdouble value)
+{
+  auto priv = window->priv;
+  return gst_d3d12_window_update_color_balance (window,
+      immediate, &priv->hue, value);
+}
+
+gdouble
+gst_d3d12_window_get_hue (GstD3D12Window * window)
+{
+  auto priv = window->priv;
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  return priv->hue;
+}
+
+gboolean
+gst_d3d12_window_set_saturation (GstD3D12Window * window, gboolean immediate,
+    gdouble value)
+{
+  auto priv = window->priv;
+  return gst_d3d12_window_update_color_balance (window,
+      immediate, &priv->saturation, value);
+}
+
+gdouble
+gst_d3d12_window_get_saturation (GstD3D12Window * window)
+{
+  auto priv = window->priv;
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  return priv->saturation;
+}
+
+gboolean
+gst_d3d12_window_set_brightness (GstD3D12Window * window, gboolean immediate,
+    gdouble value)
+{
+  auto priv = window->priv;
+  return gst_d3d12_window_update_color_balance (window,
+      immediate, &priv->brightness, value);
+}
+
+gdouble
+gst_d3d12_window_get_brightness (GstD3D12Window * window)
+{
+  auto priv = window->priv;
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  return priv->brightness;
+}
+
+gboolean
+gst_d3d12_window_set_contrast (GstD3D12Window * window, gboolean immediate,
+    gdouble value)
+{
+  auto priv = window->priv;
+  return gst_d3d12_window_update_color_balance (window,
+      immediate, &priv->contrast, value);
+}
+
+gdouble
+gst_d3d12_window_get_contrast (GstD3D12Window * window)
+{
+  auto priv = window->priv;
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  return priv->contrast;
 }
