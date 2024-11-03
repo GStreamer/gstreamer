@@ -69,6 +69,10 @@ enum
 #define DEFAULT_PRIMARIES_MODE GST_VIDEO_PRIMARIES_MODE_NONE
 #define DEFAULT_SAMPLING_METHOD GST_D3D12_SAMPLING_METHOD_BILINEAR
 #define DEFAULT_ASYNC_DEPTH 0
+#define DEFAULT_HUE 0.0
+#define DEFAULT_SATURATION 1.0
+#define DEFAULT_BRIGHTNESS 0.0
+#define DEFAULT_CONTRAST 1.0
 
 /* *INDENT-OFF* */
 struct ConvertContext
@@ -104,11 +108,33 @@ struct GstD3D12BaseConvertPrivate
   GstD3D12BaseConvertPrivate ()
   {
     fence_data_pool = gst_d3d12_fence_data_pool_new ();
+    const gchar *channels[4] = { "HUE", "SATURATION",
+      "BRIGHTNESS", "CONTRAST"
+    };
+
+    color_balance_channels = nullptr;
+    for (guint i = 0; i < G_N_ELEMENTS (channels); i++) {
+      auto ch = (GstColorBalanceChannel *)
+          g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, nullptr);
+      ch->label = g_strdup (channels[i]);
+      ch->min_value = -1000;
+      ch->max_value = 1000;
+
+      color_balance_channels = g_list_append (color_balance_channels, ch);
+    }
   }
 
   ~GstD3D12BaseConvertPrivate ()
   {
     gst_clear_object (&fence_data_pool);
+
+    auto iter = color_balance_channels;
+    while (iter) {
+      g_object_unref (iter->data);
+      iter = iter->next;
+    }
+
+    g_list_free (color_balance_channels);
   }
 
   std::unique_ptr < ConvertContext > ctx;
@@ -147,6 +173,14 @@ struct GstD3D12BaseConvertPrivate
   GstVideoOrientationMethod selected_method = GST_VIDEO_ORIENTATION_IDENTITY;
   /* method previously selected and used for negotiation */
   GstVideoOrientationMethod active_method = GST_VIDEO_ORIENTATION_IDENTITY;
+
+  GList *color_balance_channels = nullptr;
+  gdouble hue = DEFAULT_HUE;
+  gdouble saturation = DEFAULT_SATURATION;
+  gdouble brightness = DEFAULT_BRIGHTNESS;
+  gdouble contrast = DEFAULT_CONTRAST;
+  gboolean color_balance_updated = FALSE;
+  gboolean need_color_balance = FALSE;
 
   std::atomic<guint> async_depth = { DEFAULT_ASYNC_DEPTH };
 
@@ -1667,6 +1701,7 @@ gst_d3d12_base_convert_set_info (GstD3D12BaseFilter * filter,
     GstVideoInfo * out_info)
 {
   auto self = GST_D3D12_BASE_CONVERT (filter);
+  auto klass = GST_D3D12_BASE_CONVERT_GET_CLASS (self);
   auto priv = self->priv;
   gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
   gint border_offset_x = 0;
@@ -1778,7 +1813,11 @@ gst_d3d12_base_convert_set_info (GstD3D12BaseFilter * filter,
       GST_TYPE_VIDEO_PRIMARIES_MODE, priv->active_primaries_mode,
       GST_D3D12_CONVERTER_OPT_SAMPLER_FILTER,
       GST_TYPE_D3D12_CONVERTER_SAMPLER_FILTER,
-      gst_d3d12_sampling_method_to_native (priv->sampling_method), nullptr);
+      gst_d3d12_sampling_method_to_native (priv->sampling_method),
+      GST_D3D12_CONVERTER_OPT_COLOR_BALANCE,
+      GST_TYPE_D3D12_CONVERTER_COLOR_BALANCE, klass->enable_color_balance ?
+      GST_D3D12_CONVERTER_COLOR_BALANCE_ENABLED :
+      GST_D3D12_CONVERTER_COLOR_BALANCE_DISABLED, nullptr);
 
   auto ctx = std::make_unique < ConvertContext > (filter->device);
 
@@ -1832,6 +1871,13 @@ gst_d3d12_base_convert_set_info (GstD3D12BaseFilter * filter,
         priv->border_color, nullptr);
   }
 
+  if (klass->enable_color_balance) {
+    priv->color_balance_updated = FALSE;
+    g_object_set (ctx->conv, "hue", priv->hue,
+        "saturation", priv->saturation, "brightness", priv->brightness,
+        "contrast", priv->contrast, nullptr);
+  }
+
   priv->ctx = std::move (ctx);
 
   return TRUE;
@@ -1847,6 +1893,12 @@ gst_d3d12_base_convert_generate_output (GstBaseTransform * trans,
 
   if (!trans->queued_buf)
     return GST_FLOW_OK;
+
+  {
+    std::lock_guard < std::mutex > lk (priv->lock);
+    if (priv->need_color_balance)
+      passthrough = FALSE;
+  }
 
   if (passthrough && !priv->downstream_supports_crop_meta) {
     if (gst_buffer_get_video_crop_meta (trans->queued_buf)) {
@@ -1900,6 +1952,13 @@ gst_d3d12_base_convert_before_transform (GstBaseTransform * trans,
   GstCaps *out_caps;
   GstBaseTransformClass *klass;
   gboolean update = FALSE;
+  auto pts = GST_BUFFER_PTS (buffer);
+  if (GST_CLOCK_TIME_IS_VALID (pts)) {
+    auto stream_time = gst_segment_to_stream_time (&trans->segment,
+        GST_FORMAT_TIME, pts);
+    if (GST_CLOCK_TIME_IS_VALID (stream_time))
+      gst_object_sync_values (GST_OBJECT (trans), stream_time);
+  }
 
   GST_BASE_TRANSFORM_CLASS (parent_class)->before_transform (trans, buffer);
 
@@ -1963,6 +2022,16 @@ gst_d3d12_base_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
         "src-y", (gint) in_rect.top,
         "src-width", (gint) in_rect.right - in_rect.left,
         "src-height", (gint) in_rect.bottom - in_rect.top, nullptr);
+  }
+
+  {
+    std::lock_guard < std::mutex > lk (priv->lock);
+    if (priv->color_balance_updated) {
+      priv->color_balance_updated = FALSE;
+      g_object_set (priv->ctx->conv, "hue", priv->hue,
+          "saturation", priv->saturation, "brightness", priv->brightness,
+          "contrast", priv->contrast, nullptr);
+    }
   }
 
   GstD3D12CmdAlloc *gst_ca;
@@ -2062,6 +2131,10 @@ enum
   PROP_CONVERT_VIDEO_DIRECTION,
   PROP_CONVERT_GAMMA_MODE,
   PROP_CONVERT_PRIMARIES_MODE,
+  PROP_CONVERT_HUE,
+  PROP_CONVERT_SATURATION,
+  PROP_CONVERT_BRIGHTNESS,
+  PROP_CONVERT_CONTRAST,
 };
 
 struct _GstD3D12Convert
@@ -2075,10 +2148,170 @@ gst_d3d12_convert_video_direction_interface_init (GstVideoDirectionInterface *
 {
 }
 
+static const GList *
+gst_d3d12_base_convert_color_balance_list_channels (GstColorBalance * iface)
+{
+  auto self = GST_D3D12_BASE_CONVERT (iface);
+  auto priv = self->priv;
+
+  return priv->color_balance_channels;
+}
+
+static void
+gst_d3d12_base_convert_color_balance_set_value (GstColorBalance * iface,
+    GstColorBalanceChannel * channel, gint value)
+{
+  auto self = GST_D3D12_BASE_CONVERT (iface);
+  auto priv = self->priv;
+
+  gdouble new_val;
+  gboolean changed = FALSE;
+
+  g_return_if_fail (channel->label);
+
+  {
+    std::lock_guard < std::mutex > lk (priv->lock);
+    if (!g_ascii_strcasecmp (channel->label, "HUE")) {
+      new_val = (value + 1000.0) * 2.0 / 2000.0 - 1.0;
+      changed = priv->hue != new_val;
+    } else if (!g_ascii_strcasecmp (channel->label, "SATURATION")) {
+      new_val = (value + 1000.0) * 2.0 / 2000.0;
+      changed = priv->saturation != new_val;
+    } else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS")) {
+      new_val = (value + 1000.0) * 2.0 / 2000.0 - 1.0;
+      changed = priv->brightness != new_val;
+    } else if (!g_ascii_strcasecmp (channel->label, "CONTRAST")) {
+      new_val = (value + 1000.0) * 2.0 / 2000.0;
+      changed = priv->contrast != new_val;
+    }
+  }
+
+  if (changed) {
+    gst_color_balance_value_changed (iface, channel,
+        gst_color_balance_get_value (iface, channel));
+  }
+}
+
+static gint
+gst_d3d12_base_convert_color_balance_get_value (GstColorBalance * iface,
+    GstColorBalanceChannel * channel)
+{
+  auto self = GST_D3D12_BASE_CONVERT (iface);
+  auto priv = self->priv;
+  gint value = 0;
+
+  g_return_val_if_fail (channel->label, 0);
+
+  {
+    std::lock_guard < std::mutex > lock (priv->lock);
+    if (!g_ascii_strcasecmp (channel->label, "HUE")) {
+      auto hue = priv->hue;
+      value = static_cast < gint > ((hue + 1) * 2000.0 / 2.0 - 1000.0);
+    } else if (!g_ascii_strcasecmp (channel->label, "SATURATION")) {
+      auto saturation = priv->saturation;
+      value = static_cast < gint > (saturation * 2000.0 / 2.0 - 1000.0);
+    } else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS")) {
+      auto brightness = priv->brightness;
+      value = static_cast < gint > ((brightness + 1) * 2000.0 / 2.0 - 1000.0);
+    } else if (!g_ascii_strcasecmp (channel->label, "CONTRAST")) {
+      auto contrast = priv->contrast;
+      value = static_cast < gint > (contrast * 2000.0 / 2.0 - 1000.0);
+    }
+  }
+
+  return value;
+}
+
+static GstColorBalanceType
+gst_d3d12_base_convert_color_balance_get_balance_type (GstColorBalance * iface)
+{
+  return GST_COLOR_BALANCE_HARDWARE;
+}
+
+static void
+gst_d3d12_base_convert_color_balance_init (GstColorBalanceInterface * iface)
+{
+  iface->list_channels = gst_d3d12_base_convert_color_balance_list_channels;
+  iface->set_value = gst_d3d12_base_convert_color_balance_set_value;
+  iface->get_value = gst_d3d12_base_convert_color_balance_get_value;
+  iface->get_balance_type =
+      gst_d3d12_base_convert_color_balance_get_balance_type;
+}
+
+static void
+gst_d3d12_base_convert_update_color_balance (GstD3D12BaseConvert * self,
+    const gchar * name, gdouble * prev, gdouble value)
+{
+  auto priv = self->priv;
+  gboolean updated = FALSE;
+
+  {
+    std::lock_guard < std::mutex > lk (priv->lock);
+    if (*prev != value) {
+      *prev = value;
+      priv->color_balance_updated = TRUE;
+      priv->need_color_balance =
+          gst_d3d12_converter_is_color_balance_needed (priv->hue,
+          priv->saturation, priv->brightness, priv->contrast);
+      updated = TRUE;
+    }
+  }
+
+  if (updated) {
+    GList *iter = priv->color_balance_channels;
+    while (iter) {
+      auto ch = (GstColorBalanceChannel *) iter->data;
+      if (g_ascii_strcasecmp (ch->label, name) == 0) {
+        auto iface = GST_COLOR_BALANCE (self);
+        gst_color_balance_value_changed (iface, ch,
+            gst_color_balance_get_value (iface, ch));
+        break;
+      }
+
+      iter = g_list_next (iter);
+    }
+  }
+}
+
+static void
+gst_d3d12_base_convert_set_hue (GstD3D12BaseConvert * self, gdouble value)
+{
+  auto priv = self->priv;
+  gst_d3d12_base_convert_update_color_balance (self, "HUE", &priv->hue, value);
+}
+
+static void
+gst_d3d12_base_convert_set_saturation (GstD3D12BaseConvert * self,
+    gdouble value)
+{
+  auto priv = self->priv;
+  gst_d3d12_base_convert_update_color_balance (self,
+      "SATURATION", &priv->saturation, value);
+}
+
+static void
+gst_d3d12_base_convert_set_brightness (GstD3D12BaseConvert * self,
+    gdouble value)
+{
+  auto priv = self->priv;
+  gst_d3d12_base_convert_update_color_balance (self,
+      "BRIGHTNESS", &priv->brightness, value);
+}
+
+static void
+gst_d3d12_base_convert_set_contrast (GstD3D12BaseConvert * self, gdouble value)
+{
+  auto priv = self->priv;
+  gst_d3d12_base_convert_update_color_balance (self,
+      "CONTRAST", &priv->contrast, value);
+}
+
 G_DEFINE_TYPE_WITH_CODE (GstD3D12Convert, gst_d3d12_convert,
     GST_TYPE_D3D12_BASE_CONVERT,
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_DIRECTION,
-        gst_d3d12_convert_video_direction_interface_init));
+        gst_d3d12_convert_video_direction_interface_init);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
+        gst_d3d12_base_convert_color_balance_init));
 
 static void gst_d3d12_convert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -2093,6 +2326,7 @@ gst_d3d12_convert_class_init (GstD3D12ConvertClass * klass)
   auto object_class = G_OBJECT_CLASS (klass);
   auto element_class = GST_ELEMENT_CLASS (klass);
   auto trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+  auto conv_class = GST_D3D12_BASE_CONVERT_CLASS (klass);
 
   object_class->set_property = gst_d3d12_convert_set_property;
   object_class->get_property = gst_d3d12_convert_get_property;
@@ -2124,6 +2358,49 @@ gst_d3d12_convert_class_init (GstD3D12ConvertClass * klass)
           DEFAULT_PRIMARIES_MODE, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D12Convert:hue:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_CONVERT_HUE,
+      g_param_spec_double ("hue", "Hue", "hue", -1.0, 1.0, DEFAULT_HUE,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12Convert:saturation:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_CONVERT_SATURATION,
+      g_param_spec_double ("saturation", "Saturation", "saturation", 0.0, 2.0,
+          DEFAULT_SATURATION,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12Convert:brightness:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_CONVERT_BRIGHTNESS,
+      g_param_spec_double ("brightness", "Brightness", "brightness", -1.0, 1.0,
+          DEFAULT_BRIGHTNESS,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12Convert:contrast:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_CONVERT_CONTRAST,
+      g_param_spec_double ("contrast", "Contrast", "contrast", 0.0, 2.0,
+          DEFAULT_CONTRAST,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_set_static_metadata (element_class,
       "Direct3D12 Converter",
       "Filter/Converter/Scaler/Effect/Video/Hardware",
@@ -2132,6 +2409,8 @@ gst_d3d12_convert_class_init (GstD3D12ConvertClass * klass)
       "Seungha Yang <seungha@centricular.com>");
 
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_d3d12_convert_sink_event);
+
+  conv_class->enable_color_balance = TRUE;
 }
 
 static void
@@ -2165,6 +2444,18 @@ gst_d3d12_convert_set_property (GObject * object, guint prop_id,
       gst_d3d12_base_convert_set_primaries_mode (self,
           (GstVideoPrimariesMode) g_value_get_enum (value));
       break;
+    case PROP_CONVERT_HUE:
+      gst_d3d12_base_convert_set_hue (self, g_value_get_double (value));
+      break;
+    case PROP_CONVERT_SATURATION:
+      gst_d3d12_base_convert_set_saturation (self, g_value_get_double (value));
+      break;
+    case PROP_CONVERT_BRIGHTNESS:
+      gst_d3d12_base_convert_set_brightness (self, g_value_get_double (value));
+      break;
+    case PROP_CONVERT_CONTRAST:
+      gst_d3d12_base_convert_set_contrast (self, g_value_get_double (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2194,6 +2485,18 @@ gst_d3d12_convert_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CONVERT_PRIMARIES_MODE:
       g_value_set_enum (value, priv->primaries_mode);
+      break;
+    case PROP_CONVERT_HUE:
+      g_value_set_double (value, priv->hue);
+      break;
+    case PROP_CONVERT_SATURATION:
+      g_value_set_double (value, priv->saturation);
+      break;
+    case PROP_CONVERT_BRIGHTNESS:
+      g_value_set_double (value, priv->brightness);
+      break;
+    case PROP_CONVERT_CONTRAST:
+      g_value_set_double (value, priv->contrast);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2229,8 +2532,10 @@ enum
 {
   PROP_COLOR_CONVERT_GAMMA_MODE = 1,
   PROP_COLOR_CONVERT_PRIMARIES_MODE,
-  PROP_COLOR_CONVERT_SRC_ALPHA_MODE,
-  PROP_COLOR_CONVERT_DEST_ALPHA_MODE,
+  PROP_COLOR_CONVERT_HUE,
+  PROP_COLOR_CONVERT_SATURATION,
+  PROP_COLOR_CONVERT_BRIGHTNESS,
+  PROP_COLOR_CONVERT_CONTRAST,
 };
 
 struct _GstD3D12ColorConvert
@@ -2247,8 +2552,10 @@ static GstCaps *gst_d3d12_color_convert_transform_caps (GstBaseTransform *
 static GstCaps *gst_d3d12_color_convert_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 
-G_DEFINE_TYPE (GstD3D12ColorConvert, gst_d3d12_color_convert,
-    GST_TYPE_D3D12_BASE_CONVERT);
+G_DEFINE_TYPE_WITH_CODE (GstD3D12ColorConvert, gst_d3d12_color_convert,
+    GST_TYPE_D3D12_BASE_CONVERT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
+        gst_d3d12_base_convert_color_balance_init));
 
 static void
 gst_d3d12_color_convert_class_init (GstD3D12ColorConvertClass * klass)
@@ -2256,6 +2563,7 @@ gst_d3d12_color_convert_class_init (GstD3D12ColorConvertClass * klass)
   auto object_class = G_OBJECT_CLASS (klass);
   auto element_class = GST_ELEMENT_CLASS (klass);
   auto trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+  auto conv_class = GST_D3D12_BASE_CONVERT_CLASS (klass);
 
   object_class->set_property = gst_d3d12_color_convert_set_property;
   object_class->get_property = gst_d3d12_color_convert_get_property;
@@ -2273,6 +2581,49 @@ gst_d3d12_color_convert_class_init (GstD3D12ColorConvertClass * klass)
           DEFAULT_PRIMARIES_MODE, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D12ColorConvert:hue:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_COLOR_CONVERT_HUE,
+      g_param_spec_double ("hue", "Hue", "hue", -1.0, 1.0, DEFAULT_HUE,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12ColorConvert:saturation:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_COLOR_CONVERT_SATURATION,
+      g_param_spec_double ("saturation", "Saturation", "saturation", 0.0, 2.0,
+          DEFAULT_SATURATION,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12ColorConvert:brightness:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_COLOR_CONVERT_BRIGHTNESS,
+      g_param_spec_double ("brightness", "Brightness", "brightness", -1.0, 1.0,
+          DEFAULT_BRIGHTNESS,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12ColorConvert:contrast:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_COLOR_CONVERT_CONTRAST,
+      g_param_spec_double ("contrast", "Contrast", "contrast", 0.0, 2.0,
+          DEFAULT_CONTRAST,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_set_static_metadata (element_class,
       "Direct3D12 Colorspace Converter",
       "Filter/Converter/Video/Hardware",
@@ -2283,6 +2634,8 @@ gst_d3d12_color_convert_class_init (GstD3D12ColorConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d12_color_convert_transform_caps);
   trans_class->fixate_caps =
       GST_DEBUG_FUNCPTR (gst_d3d12_color_convert_fixate_caps);
+
+  conv_class->enable_color_balance = TRUE;
 }
 
 static void
@@ -2294,16 +2647,28 @@ static void
 gst_d3d12_color_convert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  auto base = GST_D3D12_BASE_CONVERT (object);
+  auto self = GST_D3D12_BASE_CONVERT (object);
 
   switch (prop_id) {
     case PROP_COLOR_CONVERT_GAMMA_MODE:
-      gst_d3d12_base_convert_set_gamma_mode (base,
+      gst_d3d12_base_convert_set_gamma_mode (self,
           (GstVideoGammaMode) g_value_get_enum (value));
       break;
     case PROP_COLOR_CONVERT_PRIMARIES_MODE:
-      gst_d3d12_base_convert_set_primaries_mode (base,
+      gst_d3d12_base_convert_set_primaries_mode (self,
           (GstVideoPrimariesMode) g_value_get_enum (value));
+      break;
+    case PROP_COLOR_CONVERT_HUE:
+      gst_d3d12_base_convert_set_hue (self, g_value_get_double (value));
+      break;
+    case PROP_COLOR_CONVERT_SATURATION:
+      gst_d3d12_base_convert_set_saturation (self, g_value_get_double (value));
+      break;
+    case PROP_COLOR_CONVERT_BRIGHTNESS:
+      gst_d3d12_base_convert_set_brightness (self, g_value_get_double (value));
+      break;
+    case PROP_COLOR_CONVERT_CONTRAST:
+      gst_d3d12_base_convert_set_contrast (self, g_value_get_double (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2325,6 +2690,18 @@ gst_d3d12_color_convert_get_property (GObject * object, guint prop_id,
       break;
     case PROP_COLOR_CONVERT_PRIMARIES_MODE:
       g_value_set_enum (value, priv->primaries_mode);
+      break;
+    case PROP_COLOR_CONVERT_HUE:
+      g_value_set_double (value, priv->hue);
+      break;
+    case PROP_COLOR_CONVERT_SATURATION:
+      g_value_set_double (value, priv->saturation);
+      break;
+    case PROP_COLOR_CONVERT_BRIGHTNESS:
+      g_value_set_double (value, priv->brightness);
+      break;
+    case PROP_COLOR_CONVERT_CONTRAST:
+      g_value_set_double (value, priv->contrast);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
