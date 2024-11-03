@@ -1,5 +1,9 @@
 build_hotdoc = false
 
+if get_option('doc').disabled()
+  subdir_done()
+endif
+
 if static_build
     if get_option('doc').enabled()
         error('Documentation enabled but not supported when building statically.')
