@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.15.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2019-02-17 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -315,10 +315,6 @@ msgstr "Konverteringsprogram på enhed %s har ikke et understøttet uddataformat
 msgid "Decoder on device %s has no supported input format"
 msgstr "Afkoderen på enheden %s har ikke et understøttet inddataformat"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Afkoderen på enheden %s har ikke et understøttet uddataformat"
-
 msgid "Failed to start decoding thread."
 msgstr "Kunne ikke starte afkodning af tråd."
 
@@ -332,6 +328,10 @@ msgstr "Koder på enhed %s har ikke et understøttet uddataformat"
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Koder på enhed %s har ikke et understøttet inddataformat"
+
+#, fuzzy
+msgid "Failed to force keyframe."
+msgstr "Kunne ikke behandle billed."
 
 msgid "Failed to start encoding thread."
 msgstr "Kunne ikke starte kodningstråd."
@@ -437,6 +437,10 @@ msgstr "Kunne ikke sætte uddata %d for enhed %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke fungere uden et ur"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr "Afkoderen på enheden %s har ikke et understøttet uddataformat"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr "Ændring af opløsning under kørsel er endnu ikke understøttet."

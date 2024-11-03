@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2023-01-21 13:45+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -293,10 +293,6 @@ msgstr "设备 %s 上的转换器没有支持的输出格式"
 msgid "Decoder on device %s has no supported input format"
 msgstr "设备 %s 上的解码器没有支持的输入格式"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "设备 %s 上的解码器没有支持的输出格式"
-
 msgid "Failed to start decoding thread."
 msgstr "启动解码线程失败。"
 
@@ -310,6 +306,10 @@ msgstr "设备 %s 上的编码器没有支持的输出格式"
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "设备 %s 上的编码器没有支持的输入格式"
+
+#, fuzzy
+msgid "Failed to force keyframe."
+msgstr "处理帧失败。"
 
 msgid "Failed to start encoding thread."
 msgstr "启动编码线程失败。"
@@ -411,6 +411,10 @@ msgstr "将输出 %u 设置到设备 %s 上失败。"
 
 msgid "Cannot operate without a clock"
 msgstr "没有时钟的话无法操作"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr "设备 %s 上的解码器没有支持的输出格式"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr "尚不支持在运行时更改分辨率。"

@@ -1,17 +1,17 @@
 # Bulgarian translation of gst-plugins-good.
 # Copyright (C) 2007, 2008, 2009, 2010, 2011, 2016 Free Software Foundation, Inc.
 # Copyright (C) 2017 Free Software Foundation, Inc.
-# Copyright (C) 2021 Alexander Shopov.
+# Copyright (C) 2021, 2024 Alexander Shopov.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Alexander Shopov <ash@kambanaria.org>, 2007, 2008, 2009, 2010, 2011, 2016.
-# Alexander Shopov <ash@kambanaria.org>, 2017, 2021.
+# Alexander Shopov <ash@kambanaria.org>, 2017, 2021, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Project-Id-Version: gst-plugins-good 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2021-10-02 17:43+0200\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-09 11:35+0100\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
 "Language: bg\n"
@@ -100,10 +100,10 @@ msgid "Invalid atom size."
 msgstr "Неправилен размер на атом."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "Неуспешно запитване за размера на файл"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "Файлът не може да бъде разделен (демултиплексиран)"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Този файл е непълен и не може да бъде изпълнен."
@@ -306,10 +306,6 @@ msgstr "Конверторът на устройството „%s“ не по�
 msgid "Decoder on device %s has no supported input format"
 msgstr "Декодерът устройството „%s“ не поддържа познати метод за вход."
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Декодерът на устройството „%s“ не поддържа познати метод за изход."
-
 msgid "Failed to start decoding thread."
 msgstr "Неуспешно стартиране на нишката за декодиране."
 
@@ -323,6 +319,9 @@ msgstr "Кодерът на устройството „%s“ не поддър�
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Кодерът устройството „%s“ не поддържа познати метод за вход."
+
+msgid "Failed to force keyframe."
+msgstr "Неуспешно принудително задаване на кадър."
 
 msgid "Failed to start encoding thread."
 msgstr "Неуспешно стартиране на нишката за кодиране."
@@ -431,6 +430,10 @@ msgstr "Неуспешно задаване на изход %u на устрой
 
 msgid "Cannot operate without a clock"
 msgstr "Работата без часовник е невъзможна."
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr "Декодерът на устройството „%s“ не поддържа познати метод за изход."
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr ""

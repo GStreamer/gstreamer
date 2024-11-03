@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.15.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2019-01-25 14:26+0100\n"
 "Last-Translator: Milo Casagrande <milo@milo.name>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -324,11 +324,6 @@ msgid "Decoder on device %s has no supported input format"
 msgstr ""
 "Il decodificatore sul dispositivo %s non ha un formato d'ingresso supportato"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr ""
-"Il decodificatore sul dispositivo %s non ha un formato di uscita supportato"
-
 msgid "Failed to start decoding thread."
 msgstr "Avvio del thread di decodifica non riuscito."
 
@@ -344,6 +339,10 @@ msgstr ""
 msgid "Encoder on device %s has no supported input format"
 msgstr ""
 "Il codificatore sul dispositivo %s non ha un formato d'ingresso supportato"
+
+#, fuzzy
+msgid "Failed to force keyframe."
+msgstr "Elaborazione del fotogramma non riuscita."
 
 msgid "Failed to start encoding thread."
 msgstr "Avvio del thread di codifica non riuscito."
@@ -473,6 +472,12 @@ msgstr "Impostazione dell'uscita %d sul dispositivo «%s» non riuscita."
 
 msgid "Cannot operate without a clock"
 msgstr "Impossibile operare senza un clock"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr ""
+#~ "Il decodificatore sul dispositivo %s non ha un formato di uscita "
+#~ "supportato"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr ""

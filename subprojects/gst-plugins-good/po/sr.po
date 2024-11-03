@@ -2,13 +2,13 @@
 # Copyright © 2020 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Danilo Segan <dsegan@gmx.net>, 2004.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011–2021.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011-2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.19.2\n"
+"Project-Id-Version: gst-plugins-good-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2021-10-01 22:00+0200\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-05-07 07:36+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -18,7 +18,6 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Project-Style: gnome\n"
 
 msgid "Jack server not found"
 msgstr "Нисам пронашао сервер утичнице"
@@ -100,10 +99,10 @@ msgid "Invalid atom size."
 msgstr "Неисправна величина атома."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "Не могу да пропитам величину датотеке"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "Не могу да демуксујем датотеку"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Ова датотека је непотпуна и не може бити пуштена."
@@ -309,10 +308,6 @@ msgstr "Претварач на уређају „%s“ нема подржан�
 msgid "Decoder on device %s has no supported input format"
 msgstr "Декодер на уређају „%s“ нема подржани улазни запис"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Декодер на уређају „%s“ нема подржани излазни запис"
-
 msgid "Failed to start decoding thread."
 msgstr "Нисам успео да покренем нит декодирања."
 
@@ -326,6 +321,9 @@ msgstr "Кодер на уређају „%s“ нема подржани изл
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Кодер на уређају „%s“ нема подржани улазни запис"
+
+msgid "Failed to force keyframe."
+msgstr "Нисам успео да приморам кадар."
 
 msgid "Failed to start encoding thread."
 msgstr "Нисам успео да покренем нит кодирања."
@@ -433,6 +431,10 @@ msgstr "Нисам успео да подесим излаз „%u“ на ур�
 
 msgid "Cannot operate without a clock"
 msgstr "Не могу да радим без сата"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr "Декодер на уређају „%s“ нема подржани излазни запис"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr "Промена резолуције приликом извршавања још увек није подржана."

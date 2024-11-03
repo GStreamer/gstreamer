@@ -3,14 +3,14 @@
 #
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021.
+# Yuri Kozlov <yuray@komyakino.ru>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021, 2024.
 # Pavel Maryanov <acid@jack.kiev.ua>, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Project-Id-Version: gst-plugins-good 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2021-09-28 07:08+0300\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-27 05:21+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Lokalize 20.12.0\n"
+"X-Generator: Lokalize 22.12.3\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
@@ -106,10 +106,10 @@ msgid "Invalid atom size."
 msgstr "Неверный атомарный размер."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "Не удалось запросить размер файла"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "Не удалось демультиплексировать файл"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Файл не полон и не может быть воспроизведён."
@@ -317,10 +317,6 @@ msgstr "Преобразователь на устройстве %s не под�
 msgid "Decoder on device %s has no supported input format"
 msgstr "Раскодировщик на устройстве %s не поддерживает входной формат"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Раскодировщик на устройстве %s не поддерживает выходной формат"
-
 msgid "Failed to start decoding thread."
 msgstr "Не удалось запустить нить декодирования."
 
@@ -334,6 +330,9 @@ msgstr "Кодировщик на устройстве %s не поддержи�
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Кодировщик на устройстве %s не поддерживает входной формат"
+
+msgid "Failed to force keyframe."
+msgstr "Не удалось принудительно задать ключевой кадр."
 
 msgid "Failed to start encoding thread."
 msgstr "Не удалось запустить нить кодирования."
@@ -445,6 +444,10 @@ msgstr "Не удалось выбрать выход %u на устройств
 
 msgid "Cannot operate without a clock"
 msgstr "Операция невозможна без часов"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr "Раскодировщик на устройстве %s не поддерживает выходной формат"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr ""

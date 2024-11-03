@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-good.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2021.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Project-Id-Version: gst-plugins-good 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2021-09-25 08:52+0200\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-07 21:16+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -98,10 +98,10 @@ msgid "Invalid atom size."
 msgstr "Błędny rozmiar atomu."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "Nie można odczytać rozmiaru pliku"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "Nie można zdemultipleksować pliku"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Ten plik jest niekompletny i nie może być odtworzony."
@@ -308,15 +308,11 @@ msgstr "Konwerter urządzenia %s nie ma obsługiwanego formatu wyjściowego"
 msgid "Decoder on device %s has no supported input format"
 msgstr "Dekoder urządzenia %s nie ma obsługiwanego formatu wejściowego"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Dekoder urządzenia %s nie ma obsługiwanego formatu wyjściowego"
-
 msgid "Failed to start decoding thread."
 msgstr "Nie udało się uruchomić wątku dekodującego."
 
 msgid "Failed to process frame."
-msgstr "Nie udało się przetworzyć ramki."
+msgstr "Nie udało się przetworzyć klatki."
 
 #, c-format
 msgid "Encoder on device %s has no supported output format"
@@ -325,6 +321,9 @@ msgstr "Koder urządzenia %s nie ma obsługiwanego formatu wyjściowego"
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Koder urządzenia %s nie ma obsługiwanego formatu wejściowego"
+
+msgid "Failed to force keyframe."
+msgstr "Nie udało się wymusić klatki kluczowej."
 
 msgid "Failed to start encoding thread."
 msgstr "Nie udało się uruchomić wątku kodującego."
@@ -433,7 +432,3 @@ msgstr "Nie udało się ustawić wyjścia %u urządzenia %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Nie można pracować bez zegara"
-
-#~ msgid "Changing resolution at runtime is not yet supported."
-#~ msgstr ""
-#~ "Zmiana rozdzielczości w czasie działania nie jest jeszcze obsługiwana."

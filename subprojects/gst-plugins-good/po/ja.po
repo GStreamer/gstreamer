@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2012-12-22 20:13+0900\n"
 "Last-Translator: Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -316,10 +316,6 @@ msgstr "デバイス '%s' のドライバはIOメソッド%dをサポートし�
 msgid "Decoder on device %s has no supported input format"
 msgstr "デバイス '%s' のドライバはIOメソッド%dをサポートしていません"
 
-#, fuzzy, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "デバイス '%s' のドライバはIOメソッド%dをサポートしていません"
-
 #, fuzzy
 msgid "Failed to start decoding thread."
 msgstr "JPEG画像のデコードに失敗しました"
@@ -334,6 +330,9 @@ msgstr "デバイス '%s' のドライバはIOメソッド%dをサポートし�
 #, fuzzy, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "デバイス '%s' のドライバはIOメソッド%dをサポートしていません"
+
+msgid "Failed to force keyframe."
+msgstr ""
 
 msgid "Failed to start encoding thread."
 msgstr ""

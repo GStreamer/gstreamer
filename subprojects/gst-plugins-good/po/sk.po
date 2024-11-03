@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.15.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2020-06-11 10:01+0200\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -311,10 +311,6 @@ msgstr "Konvertor na zariadení %s nepodporuje žiadny výstupný formát"
 msgid "Decoder on device %s has no supported input format"
 msgstr "Dekodér na zariadení %s nemá žiadny podporovaný vstupný formát"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Dekodér na zariadení %s nemá žiadny podporovaný výstupný formát"
-
 msgid "Failed to start decoding thread."
 msgstr "Nepodarilo sa spustiť dekódovacie vlákno."
 
@@ -328,6 +324,10 @@ msgstr "Enkodér na zariadení %s nepodporuje žiadny výstupný formát"
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Enkodér na zariadení %s nepodporuje žiadny vstupný formát"
+
+#, fuzzy
+msgid "Failed to force keyframe."
+msgstr "Nepodarilo sa spracovať snímok."
 
 msgid "Failed to start encoding thread."
 msgstr "Nepodarilo sa spustiť enkódovacie vlákno."
@@ -438,6 +438,10 @@ msgstr "Nepodarilo sa nastaviť výstup %d na zariadení %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Nemôžem fungovať bez hodín"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr "Dekodér na zariadení %s nemá žiadny podporovaný výstupný formát"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."

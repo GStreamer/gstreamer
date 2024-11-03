@@ -1,13 +1,14 @@
 # translation of gst-plugins-good.nl.po to Dutch
 # This file is put in the public domain.
 #
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2022.
+# SPDX-FileCopyrightText: 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2022, 2024 Freek de Kruijf <f.de.kruijf@gmail.com>
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2024
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Project-Id-Version: gst-plugins-good 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2022-02-08 14:13+0100\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-10-14 13:59+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -15,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Lokalize 21.12.2\n"
+"X-Generator: Lokalize 24.08.2\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Jack server not found"
@@ -101,10 +102,10 @@ msgid "Invalid atom size."
 msgstr "Ongeldige \"atom\"-grootte."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "Kan bestandsgrootte niet opvragen "
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "Kan demux niet op bestand toepassen"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Dit bestand is incompleet en kan niet afgespeeld worden."
@@ -310,10 +311,6 @@ msgstr "Converter op apparaat %s heeft geen ondersteund uitvoerformaat"
 msgid "Decoder on device %s has no supported input format"
 msgstr "Decodeerder op apparaat %s heeft geen ondersteund invoerformaat"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Decodeerder op apparaat %s heeft geen ondersteund uitvoerformaat"
-
 msgid "Failed to start decoding thread."
 msgstr "Beginnen met decoderen van thread is mislukt."
 
@@ -327,6 +324,9 @@ msgstr "Codeerder op apparaat %s heeft geen ondersteund uitvoerformaat"
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Codeerder op apparaat %s heeft geen ondersteund invoerformaat"
+
+msgid "Failed to force keyframe."
+msgstr "Keyframe afdwingen is mislukt."
 
 msgid "Failed to start encoding thread."
 msgstr "Beginnen met coderen van thread is mislukt."
@@ -435,6 +435,10 @@ msgstr "Kan uitvoer %u op apparaat %s niet zetten."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan niet werken zonder een klok."
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr "Decodeerder op apparaat %s heeft geen ondersteund uitvoerformaat"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr "Tijdens het draaien kan de resolutie nog niet gewijzigd worden."

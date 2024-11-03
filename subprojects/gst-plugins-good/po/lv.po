@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-13 19:10+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2023-12-24 18:57+0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -101,6 +101,12 @@ msgstr "Šis fails ir bojāts, un to nevar atskaņot."
 
 msgid "Invalid atom size."
 msgstr "Nederīgs atoma lielums."
+
+msgid "Cannot query file size"
+msgstr ""
+
+msgid "Cannot demux file"
+msgstr ""
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Šis fails ir nepilnīgs, un to nevar atskaņot."
@@ -304,10 +310,6 @@ msgstr "Ierīces %s pārveidotājam nav atbalstītu izvada formātu"
 msgid "Decoder on device %s has no supported input format"
 msgstr "Ierīces %s dekodētājam nav atbalstītu ieejas formātu"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Ierīces %s dekodētājam nav atbalstītu izvada formātu"
-
 msgid "Failed to start decoding thread."
 msgstr "Neizdevās sākt dekodēšanas pavedienu."
 
@@ -321,6 +323,10 @@ msgstr "Ierīces %s kodētājam nav atbalstītu izvada formātu"
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Ierīces %s kodētājam nav atbalstītu ieejas formātu"
+
+#, fuzzy
+msgid "Failed to force keyframe."
+msgstr "Neizdevās apstrādāt kadru."
 
 msgid "Failed to start encoding thread."
 msgstr "Neizdevās sākt kodēšanas pavedienu."
@@ -427,3 +433,7 @@ msgstr "Neizdevās iestatīt izvadu %u ierīcē %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Nevar darboties bez pulksteņa"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr "Ierīces %s dekodētājam nav atbalstītu izvada formātu"

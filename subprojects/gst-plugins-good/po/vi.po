@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.12.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2017-05-05 06:52+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -311,10 +311,6 @@ msgstr "Bộ chuyển đổi trên thiết bị %s không có định dạng xu�
 msgid "Decoder on device %s has no supported input format"
 msgstr "Bộ mã hóa trên thiết bị “%s” không hỗ trợ định dạng đầu vào"
 
-#, fuzzy, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Bộ giải mã trên thiết bị “%s” không hỗ trợ định dạng đầu ra"
-
 msgid "Failed to start decoding thread."
 msgstr "Gặp lỗi khi bắt đầu tiến trình giải mã."
 
@@ -328,6 +324,10 @@ msgstr "Bộ giải mã trên thiết bị “%s” không hỗ trợ định d�
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Bộ mã hóa trên thiết bị “%s” không hỗ trợ định dạng đầu vào"
+
+#, fuzzy
+msgid "Failed to force keyframe."
+msgstr "Gặp lỗi khi xử lý khung."
 
 #, fuzzy
 msgid "Failed to start encoding thread."

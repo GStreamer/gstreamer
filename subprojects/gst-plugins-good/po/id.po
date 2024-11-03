@@ -2,23 +2,23 @@
 # This file is put in the public domain.
 #
 # Andhika Padmawan <andhika.padmawan@gmail.com>, 2011-2016.
-# Andika Triwidada <andika@gmail.com>, 2013, 2021.
+# Andika Triwidada <andika@gmail.com>, 2013, 2021, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Project-Id-Version: gst-plugins-good 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2021-09-24 21:55+0700\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-07 20:46+0700\n"
 "Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 2.4.2\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.4.2\n"
 
 msgid "Jack server not found"
 msgstr "Server Jack tak ditemukan"
@@ -101,10 +101,10 @@ msgid "Invalid atom size."
 msgstr "Ukuran atom tidak sah."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "Tidak bisa meng-kuiri ukuran berkas"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "Tidak bisa men-demux berkas"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Berkas ini tidak lengkap dan tak dapat diputar."
@@ -311,10 +311,6 @@ msgstr ""
 msgid "Decoder on device %s has no supported input format"
 msgstr "Dekoder pada peranti %s tidak memiliki format masukan yang didukung"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Dekoder pada peranti %s tidak mempunyai format keluaran yang didukung"
-
 msgid "Failed to start decoding thread."
 msgstr "Gagal untuk menjalankan tali awasandi."
 
@@ -328,6 +324,9 @@ msgstr "Penyandi di peranti %s tidak mempunyai format keluaran yang didukung"
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Penyandi di peranti %s tidak mempunyai format masukan yang didukung"
+
+msgid "Failed to force keyframe."
+msgstr "Gagal memaksa bingkai kunci."
 
 msgid "Failed to start encoding thread."
 msgstr "Gagal memulai pengodean thread."
@@ -433,6 +432,3 @@ msgstr "Gagal mengatur keluaran %u di peranti %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Tak dapat beroperasi tanpa jam"
-
-#~ msgid "Changing resolution at runtime is not yet supported."
-#~ msgstr "Mengubah resolusi saat waktu berjalan belum didukung."

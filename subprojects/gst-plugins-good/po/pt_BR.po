@@ -1,7 +1,8 @@
 # Brazilian Portuguese translation of gst-plugins-good.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Copyright (C) 2008-2019 Free Software Foundation, Inc.
+# Copyright (C) 2008-2024 Free Software Foundation, Inc.
 # Fabrício Godoy <skarllot@gmail.com>, 2008-2019.
+# Rafael Fontenelle <rafaelff@gnome.org>, 2024.
 #
 # data flow -> fluxo de dados
 # streaming -> fluxo contínuo
@@ -11,11 +12,11 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.19.2\n"
+"Project-Id-Version: gst-plugins-good-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2021-09-26 11:49-0300\n"
-"Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-10-09 11:06-0300\n"
+"Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
 "Language: pt_BR\n"
@@ -23,8 +24,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 3.0\n"
+"Plural-Forms: nplurals=2; plural=(n > 1)\n"
+"X-Generator: Gtranslator 47.0\n"
 
 msgid "Jack server not found"
 msgstr "Servidor Jack não encontrado"
@@ -110,10 +111,10 @@ msgid "Invalid atom size."
 msgstr "Tamanho de Atom inválido."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "Não foi possível consultar tamanho do arquivo"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "Não foi possível fazer desmultiplexar o arquivo"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Este arquivo está incompleto e não pôde ser reproduzido."
@@ -325,11 +326,6 @@ msgid "Decoder on device %s has no supported input format"
 msgstr ""
 "O decodificador no dispositivo %s não tem um formato de entrada com suporte"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr ""
-"O decodificador no dispositivo %s não tem um formato de saída com suporte"
-
 msgid "Failed to start decoding thread."
 msgstr "Falha ao iniciar o segmento de decodificação."
 
@@ -345,6 +341,9 @@ msgstr ""
 msgid "Encoder on device %s has no supported input format"
 msgstr ""
 "O codificador no dispositivo %s não tem um formato de entrada com suporte"
+
+msgid "Failed to force keyframe."
+msgstr "Falha ao forçar o quadro chave."
 
 msgid "Failed to start encoding thread."
 msgstr "Falha ao iniciar o segmento de codificação."
@@ -455,6 +454,11 @@ msgstr "Falha ao definir a saída %u no dispositivo %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Não é possível operar sem um temporizador"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr ""
+#~ "O decodificador no dispositivo %s não tem um formato de saída com suporte"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr ""

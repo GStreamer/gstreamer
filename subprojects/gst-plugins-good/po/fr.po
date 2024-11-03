@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2022-07-05 00:15+0200\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -326,11 +326,6 @@ msgid "Decoder on device %s has no supported input format"
 msgstr ""
 "Le décodeur du périphérique « %s » ne prend en charge aucun format d’entrée"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr ""
-"Le décodeur du périphérique « %s » ne prend en charge aucun format de sortie"
-
 msgid "Failed to start decoding thread."
 msgstr "Échec de démarrage du processus de décodage."
 
@@ -346,6 +341,10 @@ msgstr ""
 msgid "Encoder on device %s has no supported input format"
 msgstr ""
 "L’encodeur du périphérique « %s » ne prend en charge aucun format d’entrée"
+
+#, fuzzy
+msgid "Failed to force keyframe."
+msgstr "Échec du traitement de frame."
 
 msgid "Failed to start encoding thread."
 msgstr "Échec de démarrage du processus d'encodage."
@@ -464,6 +463,12 @@ msgstr "Impossible de définir la sortie %u du périphérique %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Impossible de fonctionner sans horloge"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr ""
+#~ "Le décodeur du périphérique « %s » ne prend en charge aucun format de "
+#~ "sortie"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr ""
