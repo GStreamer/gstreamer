@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -56,9 +56,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Skakel ontfouting af"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Aktiveer volledige diagnostiese boodskappe vir inproplaaiing"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Dubbelpunt-geskeide paaie wat inproppe bevat"
@@ -831,6 +828,12 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1064,6 +1067,10 @@ msgstr "album wat hierdie data bevat"
 msgid "%sImplemented Interfaces%s:\n"
 msgstr ""
 
+#, c-format
+msgid "%sElement Flags%s:\n"
+msgstr ""
+
 msgid "readable"
 msgstr ""
 
@@ -1077,6 +1084,9 @@ msgid "controllable"
 msgstr ""
 
 msgid "conditionally available"
+msgstr ""
+
+msgid "can be set only at object construction time"
 msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
@@ -1324,6 +1334,12 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr ""
 
+msgid "Set the name of the program"
+msgstr ""
+
+msgid "PROGRAM-NAME"
+msgstr ""
+
 msgid "Do not install a fault handler"
 msgstr "Moenie 'n fouthanteerder installeer nie"
 
@@ -1381,6 +1397,9 @@ msgstr "Pyplyn word gestel na NULL ...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Aktiveer volledige diagnostiese boodskappe vir inproplaaiing"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Interne GStreamer-fout: state change failed."

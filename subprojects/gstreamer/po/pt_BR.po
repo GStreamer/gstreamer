@@ -1,7 +1,8 @@
 # Brazilian Portuguese translation of GStreamer.
-# Copyright (C) 2008-2021 Free Software Foundation, Inc.
+# Copyright (C) 2008-2024 Free Software Foundation, Inc.
 # This file is distributed under the same license as the GStreamer package.
 # Fabrício Godoy <skarllot@gmail.com>, 2008-2021.
+# Rafael Fontenelle <rafaelff@gnome.org>, 2024.
 #
 # pipeline -> fila de processamento
 # sink -> consumidor
@@ -16,11 +17,11 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.19.2\n"
+"Project-Id-Version: gstreamer-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2021-09-25 15:17-0300\n"
-"Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-10-09 11:12-0300\n"
+"Last-Translator: Rafael Fontenelle <rafaelff@gnome.org>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
 "Language: pt_BR\n"
@@ -28,8 +29,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 3.0\n"
+"Plural-Forms: nplurals=2; plural=(n > 1)\n"
+"X-Generator: Gtranslator 47.0\n"
 
 msgid "Print the GStreamer version"
 msgstr "Exibir a versão do GStreamer"
@@ -72,9 +73,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Desabilitar depuração"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Habilitar diagnóstico detalhado do carregamento do plug-in"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Caminhos, separados por dois-pontos, de plug-ins"
@@ -832,7 +830,7 @@ msgid "Name of the label or publisher"
 msgstr "Nome da gravadora ou editora"
 
 msgid "interpreted-by"
-msgstr "interpretado por"
+msgstr "interpretado-por"
 
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
@@ -849,6 +847,12 @@ msgstr "dados-privados"
 
 msgid "Private data"
 msgstr "Dados privados"
+
+msgid "container-specific-track-id"
+msgstr "id-trilha-específica-contêiner"
+
+msgid "Container-specific Track ID"
+msgstr "ID da trilha específico do contêiner"
 
 #. separator between two strings
 msgid ", "
@@ -890,7 +894,7 @@ msgid "link has no sink [source=%s@%p]"
 msgstr "não há consumidor no link [source=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "Não existe tal propriedade."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -914,11 +918,11 @@ msgstr ""
 "não foi possível definir a propriedade \"%s\" no elemento \"%s\" para o "
 "valor \"%s\""
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr ""
-"não foi possível definir a propriedade \"%s\" no elemento \"%s\" para o "
-"valor \"%s\""
+"não foi possível definir a propriedade \"%s\" no filho do elemento \"%s\" "
+"para o valor \"%s\""
 
 msgid "Delayed linking failed."
 msgstr "Falha no vínculo postergado."
@@ -1089,6 +1093,10 @@ msgstr "O fluxo não contém dados."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sInterfaces implementadas%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sInterfaces implementadas%s:\n"
+
 msgid "readable"
 msgstr "legível"
 
@@ -1103,6 +1111,9 @@ msgstr "controlável"
 
 msgid "conditionally available"
 msgstr "condicionalmente disponível"
+
+msgid "can be set only at object construction time"
+msgstr "pode ser definido apenas em tempo de construção do objeto"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "estado alterável para NULO, PRONTO, PAUSADO ou REPRODUZINDO"
@@ -1342,16 +1353,16 @@ msgid "Use Windows high-resolution clock, precision: %u ms\n"
 msgstr "Usar o relógio de alta precisão do Windows: precisão de %u ms\n"
 
 msgid "Output tags (also known as metadata)"
-msgstr "Exibir etiquetas (metadados)"
+msgstr "Exibe etiquetas (metadados)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr "Exibir TOC (capítulos e edições)"
+msgstr "Exibe TOC (capítulos e edições)"
 
 msgid "Output status information and property notifications"
-msgstr "Exibir informações de estado e notificações de propriedade"
+msgstr "Exibe informações de status e notificações de propriedade"
 
 msgid "Do not print any progress information"
-msgstr "Não imprimir nenhuma informação de progresso"
+msgstr "Não imprime nenhuma informação de progresso"
 
 msgid "Output messages"
 msgstr "Exibir mensagens"
@@ -1360,29 +1371,35 @@ msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
-"Não exibir informações de status para a propriedade especificada se o modo "
+"Não exibe informações de status para a propriedade especificada se o modo "
 "detalhado de saída estiver ativado (pode ser usado várias vezes)"
 
 msgid "PROPERTY-NAME"
 msgstr "NOME-PROPRIEDADE"
 
+msgid "Set the name of the program"
+msgstr "Definir "
+
+msgid "PROGRAM-NAME"
+msgstr "NOME-PROGRAMA"
+
 msgid "Do not install a fault handler"
-msgstr "Não instale um manipulador de falhas"
+msgstr "Não instal um manipulador de falhas"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr ""
-"Forçar finalização do fluxo nos elementos fonte antes de desligar a fila de "
+"Força finalização do fluxo nos elementos fonte antes de desligar a fila de "
 "processamento"
 
 msgid "Gather and print index statistics"
-msgstr "Reunir e imprimir a tabela de estatísticas"
+msgstr "Reúne e imprime a tabela de estatísticas"
 
 msgid ""
 "Do not print current position of pipeline. If this option is unspecified, "
 "the position will be printed when stdout is a TTY. To enable printing "
 "position when stdout is not a TTY, use \"force-position\" option"
 msgstr ""
-"Não exibir a posição atual da fila de processamento. Se essa opção não for "
+"Não exibe a posição atual da fila de processamento. Se essa opção não for "
 "especificada, a posição será exibida quando a saída for um TTY. Para "
 "habilitar a exibição da posição quando a saída não for um TTY, utilize a "
 "opção \"force-position\""
@@ -1431,6 +1448,9 @@ msgstr "Definindo a fila de processamento para NULO...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando a fila de processamento...\n"
 
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Habilitar diagnóstico detalhado do carregamento do plug-in"
+
 #~ msgid "ERROR: Pipeline doesn't want to pause.\n"
 #~ msgstr "ERRO: A fila do processamento não quer pausar.\n"
 
@@ -1460,7 +1480,7 @@ msgstr "Liberando a fila de processamento...\n"
 #~ msgstr "Erro interno no fluxo de dados."
 
 #~ msgid "Do not output status information of TYPE"
-#~ msgstr "Não é possível obter informações do estado de saída do TIPO"
+#~ msgstr "Não é possível obter informações do status de saída do TIPO"
 
 #~ msgid "TYPE1,TYPE2,..."
 #~ msgstr "TIPO1,TIPO2,..."

@@ -5,13 +5,14 @@
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 # Taco Witte <tcwitte@cs.uu.nl>, 2006.
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2022, 2023.
+# SPDX-FileCopyrightText: 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2022, 2023, 2024
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2024
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.21.90\n"
+"Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-13 19:09+0000\n"
-"PO-Revision-Date: 2023-04-28 12:39+0200\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-10-14 13:52+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -20,7 +21,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Lokalize 23.04.0\n"
+"X-Generator: Lokalize 24.08.2\n"
 
 msgid "Print the GStreamer version"
 msgstr "Toon de GStreamer versie"
@@ -63,9 +64,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Debugging uit zetten"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Uitgebreide diagnostiek voor het laden van plugins aan zetten"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Dubbele punt-gescheiden lijst met paden met plugins"
@@ -841,6 +839,12 @@ msgstr "privégegevens"
 msgid "Private data"
 msgstr "Privégegevens"
 
+msgid "container-specific-track-id"
+msgstr "container-specifieke-track-id"
+
+msgid "Container-specific Track ID"
+msgstr "Container-specifieke-track-ID"
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1076,6 +1080,10 @@ msgstr "Stroom zonder gegevens."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sGeïmplementeerde interfaces%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sGeïmplementeerde interfaces%s:\n"
+
 msgid "readable"
 msgstr "leesbaar"
 
@@ -1090,6 +1098,9 @@ msgstr "controleerbaar"
 
 msgid "conditionally available"
 msgstr "voorwaardelijk beschikbaar"
+
+msgid "can be set only at object construction time"
+msgstr "kan alleen gezet worden bij constructiemoment van object"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "te veranderen in NUL, GEREED-, GEPAUZEERD- of SPEEL-status"
@@ -1347,6 +1358,12 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "NAAM-EIGENSCHAP"
 
+msgid "Set the name of the program"
+msgstr "Zet de naam van het programma"
+
+msgid "PROGRAM-NAME"
+msgstr "PROGRAMMA-NAAM"
+
 msgid "Do not install a fault handler"
 msgstr "Geen foutafhandelaar installeren"
 
@@ -1408,6 +1425,9 @@ msgstr "Pijplijn gezet op NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Pijplijn wordt vrijgemaakt ...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Uitgebreide diagnostiek voor het laden van plugins aan zetten"
 
 #~ msgid "ERROR: Pipeline doesn't want to pause.\n"
 #~ msgstr "FOUT: pijplijn wil niet pauzeren.\n"

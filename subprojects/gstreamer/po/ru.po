@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2023-01-15 12:54+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -62,9 +62,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Отключить отладку"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Выводить дополнительную информацию при загрузке модулей"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Список путей поиска модулей, разделённых двоеточиями"
@@ -833,6 +830,12 @@ msgstr "private-data"
 msgid "Private data"
 msgstr "Частная информация"
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1068,6 +1071,10 @@ msgstr "Поток не содержит данных."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sРеализованные интерфейсы%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sРеализованные интерфейсы%s:\n"
+
 msgid "readable"
 msgstr "считываемый"
 
@@ -1082,6 +1089,9 @@ msgstr "контролируемый"
 
 msgid "conditionally available"
 msgstr "условно доступно"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "может быть равно состоянию NULL, READY, PAUSED или PLAYING"
@@ -1341,6 +1351,13 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "ИМЯ-СВОЙСТВА"
 
+msgid "Set the name of the program"
+msgstr ""
+
+#, fuzzy
+msgid "PROGRAM-NAME"
+msgstr "ИМЯ-СВОЙСТВА"
+
 msgid "Do not install a fault handler"
 msgstr "Не устанавливать обработчик ошибок"
 
@@ -1400,6 +1417,9 @@ msgstr "Установка конвейера в состояние NULL…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Освобождение конвейера…\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Выводить дополнительную информацию при загрузке модулей"
 
 #~ msgid "Error creating pipe: %s\n"
 #~ msgstr "Ошибка создания канала: %s\n"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -58,9 +58,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Inhabilita la depuració"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Habilita els diagnòstics detallats de càrrega de connectors"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Camins separats per dos punts que contenen connectors"
@@ -842,6 +839,12 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1076,6 +1079,10 @@ msgstr "El flux no conté dades."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "Interfícies implementades:\n"
 
+#, c-format
+msgid "%sElement Flags%s:\n"
+msgstr ""
+
 msgid "readable"
 msgstr "llegible"
 
@@ -1091,6 +1098,9 @@ msgstr "controlable"
 #, fuzzy
 msgid "conditionally available"
 msgstr "controlable"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "es pot canviar als estats NUL, PREPARAT, EN PAUSA o REPRODUINT"
@@ -1350,6 +1360,12 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr ""
 
+msgid "Set the name of the program"
+msgstr ""
+
+msgid "PROGRAM-NAME"
+msgstr ""
+
 msgid "Do not install a fault handler"
 msgstr "No instal·les un gestor de fallades"
 
@@ -1405,6 +1421,9 @@ msgstr "S'està establint el conducte a NUL…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "S'està alliberant el conducte…\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Habilita els diagnòstics detallats de càrrega de connectors"
 
 #~ msgid "link without source element"
 #~ msgstr "l'enllaç no té un element font"

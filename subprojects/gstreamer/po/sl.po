@@ -3,16 +3,16 @@
 # Copyright (C) 2005 - 2014 Free Software Foundation, Inc.
 #
 # Matej Urbančič <matej.urban@gmail.com>, 2010 - 2011.
-# Martin Srebotnjak <miles@filmsi.net>, 2011.
 # Klemen Košir <klemen913@gmail.com>, 2011 - 2014.
+# Martin Srebotnjak <miles@filmsi.net>, 2011, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.2.1\n"
+"Project-Id-Version: gstreamer-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2014-04-09 22:38+0100\n"
-"Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-08-05 15:36+0200\n"
+"Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
 "MIME-Version: 1.0\n"
@@ -21,7 +21,7 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || "
 "n%100==4 ? 3 : 0);\n"
-"X-Generator: Poedit 1.6.4\n"
+"X-Generator: Poedit 2.2.1\n"
 
 msgid "Print the GStreamer version"
 msgstr "Izpiše različico programa GStreamer"
@@ -63,9 +63,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Onemogoči razhroščevanje"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Omogoči podrobno diagnostiko nalaganja vstavkov"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Z vejico ločen seznam poti do vstavkov"
@@ -205,9 +202,8 @@ msgstr "Nastavitev vira ni mogoče pridobiti ali določiti."
 msgid "No space left on the resource."
 msgstr "Na viru ni prostora."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "Na viru ni prostora."
+msgstr "Ni pooblatila za dostop do virov."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "V programu GStreamer je prišlo do splošne napake pretakanja."
@@ -458,10 +454,10 @@ msgid "person(s) who composed the recording"
 msgstr "oseba, ki je skladatelj posnetka"
 
 msgid "conductor"
-msgstr ""
+msgstr "dirigent"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "izboljšava dirigenta/izvajalca"
 
 msgid "duration"
 msgstr "trajanje"
@@ -819,16 +815,22 @@ msgid "Information about the people behind a remix and similar interpretations"
 msgstr "Podatki o avtorjih predelav in drugih različic"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "midi-osnova-nota"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Številka note midi zvočnega posnetka."
 
 msgid "private-data"
-msgstr ""
+msgstr "zasebni-podatki"
 
 msgid "Private data"
-msgstr ""
+msgstr "Zasebni podatki"
+
+msgid "container-specific-track-id"
+msgstr "ID-steze-specifične-za-vsebnik"
+
+msgid "Container-specific Track ID"
+msgstr "ID steze, specifičen za vsebnik"
 
 #. separator between two strings
 msgid ", "
@@ -836,7 +838,7 @@ msgstr ", "
 
 #, c-format
 msgid "Invalid URI: %s"
-msgstr ""
+msgstr "Neveljaven naslov URI: %s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -863,27 +865,26 @@ msgstr ""
 #. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "povezava nima vira [ponor=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "povezava nima ponora [vir=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "Takšne lastnosti ni."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "lastnost \"%s\" v predmetu \"%s\" ne obstaja"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Element \"%s\" is not a GstPreset"
-msgstr "Datoteka \"%s\" je vtič."
+msgstr "Element »%s« ni GstPreset"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
-msgstr ""
-"lastnosti \"%s\" v predmetu \"%s\" ni mogoče nastaviti na vrednost \"%s\""
+msgstr "ni možno nastaviti »%s« v predmetu »%s«"
 
 #, c-format
 msgid "no element \"%s\""
@@ -894,25 +895,27 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr ""
 "lastnosti \"%s\" v predmetu \"%s\" ni mogoče nastaviti na vrednost \"%s\""
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr ""
-"lastnosti \"%s\" v predmetu \"%s\" ni mogoče nastaviti na vrednost \"%s\""
+"lastnosti »%s« v podrejenem predmetu »%s« ni mogoče nastaviti na vrednost "
+"»%s«"
 
 msgid "Delayed linking failed."
-msgstr ""
+msgstr "Zapoznelo povezovanje ni uspelo."
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "%s in %s ni mogoče povezati"
+msgstr "%s ne morem povezati s %s, %s ne more ravnati z velikimi črkami %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr "predmeta korita za naslov URI \"%s\" ni mogoče povezati"
+msgstr ""
+"%s ni mogel povezati z %s, noben element ne more obravnavati velikih črk %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr "%s in %s ni mogoče povezati"
+msgstr "%s ni mogoče povezati z %s z velikimi črkami %s"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -920,11 +923,11 @@ msgstr "%s in %s ni mogoče povezati"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "nepričakovani sklic »%s« - prezrt bo"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "nepričakovan sklic pad »%s« - prezrt bo"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -939,21 +942,21 @@ msgid "no source element for URI \"%s\""
 msgstr "izvorni predmet za naslov URI \"%s\" ne obstaja"
 
 msgid "syntax error"
-msgstr ""
+msgstr "skladenjska napaka"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "določena je prazna dvojiška datoteka \"%s\", kar ni dovoljeno"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "dvojiška datoteka \"%s\" ne obstaja, zato bo dejanje izpuščeno"
+msgstr "dvojiška datoteka »%s« ne obstaja, sledi razpakiranje elementov"
 
 msgid "empty pipeline not allowed"
 msgstr "cevovod brez vsebine ni dovoljen"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "Gradnja cevovoda je neveljavna, dodajte čakalne vrste."
 
 msgid "A lot of buffers are being dropped."
 msgstr "Veliko medpomnilnikov se prazni."
@@ -981,10 +984,10 @@ msgstr ""
 "priloženi predmet GstCaps."
 
 msgid "Caps Change Mode"
-msgstr ""
+msgstr "Način spreminjanja velikih črk"
 
 msgid "Filter caps change behaviour"
-msgstr ""
+msgstr "Sprememba vedenja velikih črk v filtrih"
 
 msgid "No Temp directory specified."
 msgstr "Začasna mapa ni določena."
@@ -1038,7 +1041,7 @@ msgid "Failed after iterations as requested."
 msgstr "Po več ponovitvah je bilo (po zahtevi) opravilo neuspešno prekinjeno."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "eos-after in error-after ni mogoče določiti."
 
 msgid "caps"
 msgstr "velike črke"
@@ -1055,16 +1058,19 @@ msgstr "vsili velike črke"
 msgid "force caps without doing a typefind"
 msgstr "vsili velike črke brez potrjevanja pisave"
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
-msgstr "Pretok ne vsebuje podatkov."
+msgstr "Tok ne vsebuje dovolj podatkov."
 
 msgid "Stream contains no data."
 msgstr "Pretok ne vsebuje podatkov."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Vgrajeni vmesniki:\n"
+msgstr "%sVgrajeni vmesniki%s:\n"
+
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sVgrajeni vmesniki%s:\n"
 
 msgid "readable"
 msgstr "berljivo"
@@ -1073,14 +1079,16 @@ msgid "writable"
 msgstr "zapisljivo"
 
 msgid "deprecated"
-msgstr ""
+msgstr "zastarelo"
 
 msgid "controllable"
 msgstr "nadzorljivo"
 
-#, fuzzy
 msgid "conditionally available"
-msgstr "nadzorljivo"
+msgstr "pogojno na voljo"
+
+msgid "can be set only at object construction time"
+msgstr "lahko se nastavi samo v času gradnje objekta"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "spremenljivo le v stanjih NULL, READY, PAUSED in PLAYING"
@@ -1094,9 +1102,9 @@ msgstr "spremenljivo le v stanjih NULL in READY"
 msgid "Blacklisted files:"
 msgstr "Datoteke na črnem seznamu:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Skupno: "
+msgstr "%sSkupno število%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1154,6 +1162,8 @@ msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"S poševnico (»/») ločen seznam vrst elementov (znanih tudi kot klass), ki "
+"jih je treba našteti (neurejeno)."
 
 msgid "Check if the specified element or plugin exists"
 msgstr "Preveri, če podan predmet ali vstavek že obstaja"
@@ -1172,9 +1182,11 @@ msgid ""
 "Disable colors in output. You can also achieve the same by setting "
 "'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
+"Onemogoči barve v izhodu. Enako lahko dosežete tudi tako, da spremenljivko "
+"okolja »GST_INSPECT_NO_COLORS« nastavite na poljubno vrednost."
 
 msgid "Color output, even when not sending to a tty."
-msgstr ""
+msgstr "Barvni izhod, tudi če ni poslano na tty."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1315,7 +1327,7 @@ msgstr "Med čakanjem na EOS je prišlo do napake\n"
 
 #, c-format
 msgid "Use Windows high-resolution clock, precision: %u ms\n"
-msgstr ""
+msgstr "Uporabi uro visoke ločljivosti Windows, natančnost: %u ms\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Izhodne oznake (znane tudi kot metapodatki)"
@@ -1336,9 +1348,17 @@ msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
+"Ne izpisuj informacij o stanju za določeno lastnost, če je omogočen podrobni "
+"izhod (lahko se uporabi večkrat)"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "IME-LASTNOSTI"
+
+msgid "Set the name of the program"
+msgstr "Nastavite ime programa"
+
+msgid "PROGRAM-NAME"
+msgstr "IME-PROGRAMA"
 
 msgid "Do not install a fault handler"
 msgstr "Na namesti ročnika napak"
@@ -1354,11 +1374,16 @@ msgid ""
 "the position will be printed when stdout is a TTY. To enable printing "
 "position when stdout is not a TTY, use \"force-position\" option"
 msgstr ""
+"Ne tiskaj trenutnega položaja cevovoda. Če ta možnost ni določena, bo "
+"položaj natisnjen, ko je stdout TTY. Če želite omogočiti položaj tiskanja, "
+"ko stdout ni TTY, uporabite možnost »force-position«"
 
 msgid ""
 "Allow printing current position of pipeline even if stdout is not a TTY. "
 "This option has no effect if the \"no-position\" option is specified"
 msgstr ""
+"Dovoli tiskanje trenutnega položaja cevovoda, tudi če stdout ni TTY. Ta "
+"možnost nima učinka, če je določena možnost »no-position«"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1377,9 +1402,8 @@ msgstr "NAPAKA: predmeta \"cevovoda\" ni mogoče najti.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Nastavljanje cevovoda na PAUSED ...\n"
 
-#, fuzzy
 msgid "Failed to set pipeline to PAUSED.\n"
-msgstr "Nastavljanje cevovoda na PAUSED ...\n"
+msgstr "Nastavljanje cevovoda na PAUSED je spodletelo.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Cevovod je živ in ga ni potrebno pripraviti ...\n"
@@ -1395,31 +1419,3 @@ msgstr "Nastavljanje cevovoda na NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Sproščanje cevovoda ...\n"
-
-#~ msgid "link without source element"
-#~ msgstr "povezava brez predmeta vira"
-
-#~ msgid "link without sink element"
-#~ msgstr "povezava brez predmeta ponora"
-
-#, c-format
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "ni predmeta za povezovanje naslova \"%s\" na"
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Notranja napaka pretoka podatkov."
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "Ne izpiši podrobnosti stanja VRSTE"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "VRSTA1, VRSTA2 ..."
-
-#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
-#~ msgstr "NAPAKA: cevovoda ni mogoče postaviti v mirovanje.\n"
-
-#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-#~ msgstr "EOS ob izklopu je omogočen -- čakanje na EOS, ki sledi napaki\n"
-
-#~ msgid "Setting pipeline to READY ...\n"
-#~ msgstr "Nastavljanje cevovoda na READY ...\n"

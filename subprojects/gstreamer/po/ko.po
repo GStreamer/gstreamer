@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2021-10-07 17:01+0900\n"
 "Last-Translator: SooHyun Kim <soohyunkim@kw.ac.kr>\n"
 "Language-Team: Korean <translation-team-ko@googlegroups.com>\n"
@@ -56,9 +56,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "디버깅 끄기"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "상세한 플러그인 로딩 진단 활성화"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "플러그인을 포함하는 콜론(:)으로 구분된 경로"
@@ -791,6 +788,12 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1019,6 +1022,10 @@ msgstr ""
 msgid "%sImplemented Interfaces%s:\n"
 msgstr ""
 
+#, c-format
+msgid "%sElement Flags%s:\n"
+msgstr ""
+
 msgid "readable"
 msgstr ""
 
@@ -1032,6 +1039,9 @@ msgid "controllable"
 msgstr ""
 
 msgid "conditionally available"
+msgstr ""
+
+msgid "can be set only at object construction time"
 msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
@@ -1273,6 +1283,12 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr ""
 
+msgid "Set the name of the program"
+msgstr ""
+
+msgid "PROGRAM-NAME"
+msgstr ""
+
 msgid "Do not install a fault handler"
 msgstr "오류 핸들러 설치하지 않기"
 
@@ -1329,3 +1345,6 @@ msgstr "파이프라인을 NULL로 만드는 중 ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "파이프라인 비우는 중 ...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "상세한 플러그인 로딩 진단 활성화"

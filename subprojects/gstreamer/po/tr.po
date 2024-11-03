@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gstreamer package.
 # Baris Cicek <baris@teamforce.name.tr>, 2004, 2015.
 # Mehmet Kececi <mkececi@mehmetkececi.com>, 2017, 2019, 2021.
-# Emin Tufan Çetin <etcetin@gmail.com>, 2023.
+# Emin Tufan Çetin <etcetin@gmail.com>, 2023, 2024.
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-13 19:09+0000\n"
-"PO-Revision-Date: 2023-05-11 21:37+0300\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-02-25 08:00+0300\n"
 "Last-Translator: Emin Tufan Çetin <etcetin@gmail.com>\n"
 "Language-Team: Turkish <gnome-turk@gnome.org>\n"
 "Language: tr\n"
@@ -33,7 +33,7 @@ msgstr "Geçerli hata ayıklama sınıflarını yazdır ve çık"
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Öntanımlı hata ayıklama seviyesi 1'den (sadece hatalar) 9'a (her şey) ya da "
+"Öntanımlı hata ayıklama düzeyi 1'den (yalnızca hatalar) 9'a (her şey) ya da "
 "çıktı olmaması için 0"
 
 msgid "LEVEL"
@@ -43,7 +43,7 @@ msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
-"Ayrı sınıfların belirli seviyeleri için sınıf_ismi:seviye çiftlerinin virgül "
+"Ayrı sınıfların belirli düzeyleri için sınıf_adı:düzey çiftlerinin virgül "
 "ile ayrılmış listesi. Örnek: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 msgid "LIST"
@@ -56,14 +56,11 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
-"Hata ayıklama günlüklerini renklendirme kipini değiştirir. Olası kipler: "
-"kapalı, açık, devredışı, otomatik, unix"
+"Hata ayıklama günlüklerini renklendirme kipini değiştirir. Olası kipler: off "
+"(kapalı), on (açık), disable (devre dışı), auto (kendiliğinden), unix"
 
 msgid "Disable debugging"
 msgstr "Hata ayıklamayı kapat"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Ayrıntılı eklenti yükleme detaylarını etkinleştir"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Eklentileri içeren iki nokta üst üste ile ayrılmış yollar"
@@ -221,7 +218,7 @@ msgid "Could not determine type of stream."
 msgstr "Akım türü belirlenemedi."
 
 msgid "The stream is of a different type than handled by this element."
-msgstr "Akım bu öge tarafından işlenen türden farklı bir türde."
+msgstr "Akım bu ögece işlenen türden başka bir türde."
 
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Akım türünü işleyebilecek kodek bulunmuyor."
@@ -538,34 +535,34 @@ msgid "serial number of track"
 msgstr "parçanın seri numarası"
 
 msgid "replaygain track gain"
-msgstr "tekrarkazanç parça kazancı"
+msgstr "yeniden kazanç parça kazancı"
 
 msgid "track gain in db"
 msgstr "db olarak parça kazancı"
 
 msgid "replaygain track peak"
-msgstr "tekrarkazanç parça üst sınırı"
+msgstr "yeniden kazanç parça üst sınırı"
 
 msgid "peak of the track"
 msgstr "parçanın üst sınırı"
 
 msgid "replaygain album gain"
-msgstr "tekrarkazanç albüm kazancı"
+msgstr "yeniden kazanç albüm kazancı"
 
 msgid "album gain in db"
 msgstr "db olarak albüm kazancı"
 
 msgid "replaygain album peak"
-msgstr "tekrarkazanç albüm üst sınırı"
+msgstr "yeniden kazanç albüm üst sınırı"
 
 msgid "peak of the album"
 msgstr "albüm üst sınırı"
 
 msgid "replaygain reference level"
-msgstr "yeniden kazanç kaynak seviyesi"
+msgstr "yeniden kazanç kaynak düzeyi"
 
 msgid "reference level of track and album gain values"
-msgstr "şarkı ve albüm kazanç değerlerinin kaynak seviyesi"
+msgstr "şarkı ve albüm kazanç değerlerinin kaynak düzeyi"
 
 msgid "language code"
 msgstr "dil kodu"
@@ -587,10 +584,10 @@ msgstr "bu akış ile ilişkili görüntü"
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
 msgid "preview image"
-msgstr "görüntüyü önizle"
+msgstr "görüntüyü ön izle"
 
 msgid "preview image related to this stream"
-msgstr "bu akış ile ilişkili görüntüyü önizle"
+msgstr "bu akış ile ilişkili görüntüyü ön izle"
 
 msgid "attachment"
 msgstr "ek"
@@ -649,7 +646,7 @@ msgid ""
 "according to WGS84 (zero is average sea level)"
 msgstr ""
 "WGS84'e göre ortamın kaydedildiği veya metre olarak üretildiği yerin coğrafi "
-"yüksekliği (sıfır ortalama deniz seviyesidir)"
+"yüksekliği (sıfır ortalama deniz düzeyidir)"
 
 msgid "geo location country"
 msgstr "ülke coğrafi konumu"
@@ -755,8 +752,8 @@ msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
-"Grup ilgili ortam çoklu şarkılar içerir, bir konçertonun farklı parçaları "
-"gibi. Bu şarkıdan daha üst seviyedir ancak albümden alt seviyedir"
+"Grup ilgili ortam çoklu şarkılar içerir, bir konçertonun başka parçaları "
+"gibi. Bir şarkıdan daha üst düzeydir ancak albümden alt düzeydir"
 
 msgid "user rating"
 msgstr "kullanıcı değerlendirmesi"
@@ -765,8 +762,8 @@ msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
-"Kullanıcı tarafından verilmiş puanlama. En yüksek puanlama, bir çok "
-"kullanıcı bu ortamı beğenmiş"
+"Kullanıcıca verilmiş puanlama. En yüksek puanlama, bir çok kullanıcı bu "
+"ortamı beğenmiş"
 
 msgid "device manufacturer"
 msgstr "aygıt üreticisi"
@@ -808,7 +805,8 @@ msgid "interpreted-by"
 msgstr "tarafından-yorumlanmış"
 
 msgid "Information about the people behind a remix and similar interpretations"
-msgstr "Yeniden düzenleme ve benzer yorumların arkasındaki kişi hakkında bilgi"
+msgstr ""
+"Yeniden düzenleme ve benzer yorumların arkasındaki kişiyle ilgili bilgi"
 
 msgid "midi-base-note"
 msgstr "midi-base-note"
@@ -821,6 +819,12 @@ msgstr "özel-veri"
 
 msgid "Private data"
 msgstr "Özel veri"
+
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
 
 #. separator between two strings
 msgid ", "
@@ -939,7 +943,7 @@ msgid "no bin \"%s\", unpacking elements"
 msgstr "\"%s\" ikilisi yok, öge açılamıyor"
 
 msgid "empty pipeline not allowed"
-msgstr "boş boruhattına izin verilmiyor"
+msgstr "boş boru hattına izin verilmiyor"
 
 msgid "Pipeline construction is invalid, please add queues."
 msgstr "Ardışık düzen yapısı geçersiz, lütfen sıralar ekleyin."
@@ -1054,6 +1058,10 @@ msgstr "Akış hiçbir veri içermiyor."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%serçeklenmiş Arayüzler%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%serçeklenmiş Arayüzler%s:\n"
+
 msgid "readable"
 msgstr "okunabilir"
 
@@ -1068,6 +1076,9 @@ msgstr "yöneltilebilir"
 
 msgid "conditionally available"
 msgstr "koşullu olarak kullanılabilir"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "BOŞ, HAZIR, DURDURULMUŞ veya YÜRÜTÜLÜYOR durumlarına değiştirilebilir"
@@ -1106,7 +1117,7 @@ msgid_plural "%d features"
 msgstr[0] "%d özelliği"
 
 msgid "Print all elements"
-msgstr "Bütün ögeleri yazdır"
+msgstr "Tüm ögeleri yazdır"
 
 msgid "Print list of blacklisted files"
 msgstr "Kara listeye alınmış dosyaların listesini yazdır"
@@ -1117,10 +1128,10 @@ msgid ""
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
-"Belirtilen eklenti ya da sağlanan bütün eklentilerin özelliklerinin makine-"
+"Belirtilen eklenti ya da sağlanan tüm eklentilerin özelliklerinin makine-"
 "çözümlenebilir bir listesini yazdır.\n"
-"                                       Harici otomatik eklenti kurulum "
-"tekniği ile bağlantıda faydalı"
+"                                       Dış kendiliğinden eklenti kurulum "
+"tekniği ile bağlantıda yararlıdır"
 
 msgid "List the plugin contents"
 msgstr "Eklenti içeriklerini listele"
@@ -1133,14 +1144,14 @@ msgstr ""
 "bilinen) listelerine ayrılmış. (sıralı değil)"
 
 msgid "Check if the specified element or plugin exists"
-msgstr "Belirtilen öge ya da eklentinin var olup olmadığını kontrol et"
+msgstr "Belirtilen öge ya da eklentinin var olup olmadığını denetle"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
-"Bir öge ya da eklentinin var olup olmadığını kontrol ettiğinizde ayrıca "
-"onların belirtilen en son versiyonda olup olmadıklarını da kontrol edin"
+"Bir öge ya da eklentinin var olup olmadığı denetlenirken, belirtilen en son "
+"sürümde olup olmadıklarını da denetle"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Desteklenen URI şemalarını onlara uygulanan ögelerle yazdır"
@@ -1170,7 +1181,7 @@ msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Boru hattı PLAYING olarak ayarlanıyor ...\n"
 
 msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "HATA: boruhattı çalmak istemiyor.\n"
+msgstr "HATA: boru hattı çalmak istemiyor.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1197,26 +1208,26 @@ msgstr "EOS alındı - boru hattı durduruluyor...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "ETİKET BULUNDU      : \"%s\" ögesi tarafından bulundu.\n"
+msgstr "ETİKET BULUNDU      : \"%s\" ögesince bulundu.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "ETİKET BULUNDU      : \"%s:%s\" dolgusu tarafından bulundu.\n"
+msgstr "ETİKET BULUNDU      : \"%s:%s\" dolgusunca bulundu.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "ETİKET BULUNDU      : \"%s\" nesnesi tarafından bulundu.\n"
+msgstr "ETİKET BULUNDU      : \"%s\" nesnesince bulundu.\n"
 
 msgid "FOUND TAG\n"
 msgstr "ETİKET BULUNDU\n"
 
 #, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "İÇİNDEKİLER BULUNDU      : \"%s\" ögesi tarafından bulundu.\n"
+msgstr "İÇİNDEKİLER BULUNDU      : \"%s\" ögesince bulundu.\n"
 
 #, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "İÇİNDEKİLER BULUNDU      : \"%s\" nesnesi tarafından bulundu.\n"
+msgstr "İÇİNDEKİLER BULUNDU      : \"%s\" nesnesince bulundu.\n"
 
 msgid "FOUND TOC\n"
 msgstr "İÇİNDEKİLER BULUNDU\n"
@@ -1322,6 +1333,13 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "ÖZELLİK-ADI"
 
+msgid "Set the name of the program"
+msgstr ""
+
+#, fuzzy
+msgid "PROGRAM-NAME"
+msgstr "ÖZELLİK-ADI"
+
 msgid "Do not install a fault handler"
 msgstr "Hatalı işleticiyi kurma"
 
@@ -1350,14 +1368,14 @@ msgstr ""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
-msgstr "HATA: boruhattı oluşturulamadı: %s.\n"
+msgstr "HATA: boru hattı oluşturulamadı: %s.\n"
 
 msgid "ERROR: pipeline could not be constructed.\n"
-msgstr "HATA: boruhattı oluşturulamadı.\n"
+msgstr "HATA: boru hattı oluşturulamadı.\n"
 
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
-msgstr "UYARI: hatalı boruhattı: %s\n"
+msgstr "UYARI: hatalı boru hattı: %s\n"
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "HATA: 'pipeline' ögesi bulunamadı.\n"
@@ -1383,147 +1401,5 @@ msgstr "Boru hattı NULL olarak ayarlanıyor ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Boru hattı boşaltılıyor ...\n"
 
-#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
-#~ msgstr "HATA: Ardışık düzen durdurmayı istemez.\n"
-
-#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-#~ msgstr "Kapanmada EOS etkin -- Hatadan sonra EOS için bekleniyor\n"
-
-#~ msgid "Setting pipeline to READY ...\n"
-#~ msgstr "Boru hattı READY olarak ayarlanıyor ...\n"
-
-#~ msgid "Error creating pipe: %s\n"
-#~ msgstr "Pipe oluşturma hatası: %s\n"
-
-#~ msgid "Error forking: %s\n"
-#~ msgstr "Çatallama hatası: %s\n"
-
-#~ msgid "Error reading from console: %s\n"
-#~ msgstr "Uçbirimden okuma hatası: %s\n"
-
-#~ msgid "Error writing to console: %s\n"
-#~ msgstr "Uçbirime yazma hatası: %s\n"
-
-#~ msgid "bin"
-#~ msgstr "bin"
-
-#~ msgid "Internal data stream error."
-#~ msgstr "İç veri akışı hatası."
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "TÜRÜN durum bilgisini gösterme"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TÜR1,TÜR2,..."
-
-#~ msgid "Disable accelerated CPU instructions"
-#~ msgstr "Hızlandırılmış CPU işlemlerini kapat"
-
-#~ msgid "path list for loading plugins (separated by '"
-#~ msgstr "eklenti yüklemek için yol listesi (' ile ayırılmış"
-
-#~ msgid "')"
-#~ msgstr "')"
-
-#~ msgid "Scheduler to use ('"
-#~ msgstr "Kullanılacak zamanlandırıcı ('"
-
-#~ msgid "' is the default)"
-#~ msgstr "' ön tanımlı olanı)"
-
-#~ msgid "SCHEDULER"
-#~ msgstr "ZAMANLANDIRICI"
-
-#~ msgid "Registry to use"
-#~ msgstr "Kullanılacak kayıt"
-
-#~ msgid "REGISTRY"
-#~ msgstr "KAYIT"
-
-#~ msgid "Internal GStreamer error: state change failed.  File a bug."
-#~ msgstr ""
-#~ "Dahili GStreamer hatası: durum değiştirilemedi.  Hata bildiriminde "
-#~ "bulunun."
-
-#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
-#~ msgstr ""
-#~ "Dahili GStreamer hatası: zamanlandırıcı sorunu.  Hata bildiriminde "
-#~ "bulunun."
-
-#~ msgid "original location of file as a URI"
-#~ msgstr "dosyanın URI olarak özgün konumu"
-
-#~ msgid "There is no element present to handle the stream's mime type %s."
-#~ msgstr "Akımın %s mime türünü işleyebilecek hiç bir öğe yok."
-
-#~ msgid "maximum"
-#~ msgstr "azami"
-
-#~ msgid ""
-#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-#~ msgstr ""
-#~ "\"%1$s\", \"%3$s\" öğesindeki \"%2$s\" özelliğinine uyacak şekilde "
-#~ "dönüştürülemedi"
-
-#~ msgid "link without source element"
-#~ msgstr "kaynak öğesi olmayan bağ"
-
-#~ msgid "link without sink element"
-#~ msgstr "'sink' öğesi olmayan bağ"
-
-#~ msgid "no element to link URI \"%s\" to"
-#~ msgstr "\"%s\" URI'sini belirtilene bağlayacak öğe yok:"
-
-#~ msgid "Show plugin details"
-#~ msgstr "Eklenti detaylarını göster"
-
-#~ msgid "Show scheduler details"
-#~ msgstr "Zamanlandırıcı detaylarını göster"
-
-#~ msgid " iterations (sum %"
-#~ msgstr " tekrarlar (toplam %"
-
-#~ msgid " ns, average %"
-#~ msgstr " ns, ortalama %"
-
-#~ msgid " ns, min %"
-#~ msgstr " ns, dak %"
-
-#~ msgid " ns, max %"
-#~ msgstr " ns, en fazla %"
-
-#~ msgid " ns).\n"
-#~ msgstr " ns) \n"
-
-#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr "Kullanım: gst-xmllaunch <dosya.xml> [ öğe.özellik=değer ... ]\n"
-
-#~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "HATA: xml dosyası '%s' ayrıştırması başarısız.\n"
-
-#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr "HATA: '%s' dosyasında üst seviye öğesi bulunamadı.\n"
-
-#~ msgid "WARNING: only one toplevel element is supported at this time."
-#~ msgstr "UYARI: Şu anda sadece bir tane üst seviye öğesi destekleniyor."
-
-#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr "HATA: komut satırı argümanı %d ayrıştırılamadı: %s.\n"
-
-#~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "UYARI: '%s' isimli öğe bulunamadı.\n"
-
-#~ msgid "Save xml representation of pipeline to FILE and exit"
-#~ msgstr "Boruhattının xml belirtimini DOSYA'ya kaydet ve çık"
-
-#~ msgid "FILE"
-#~ msgstr "DOSYA"
-
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "'alloc' takibini yazdır (derleme sırasında etkinleştirilmişse)"
-
-#~ msgid "Number of times to iterate pipeline"
-#~ msgstr "Boruhattının kaç defa tekrarlanacağı"
-
-#~ msgid "         Trying to run anyway.\n"
-#~ msgstr "         Gene de çalıştırma deneniyor.\n"
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Ayrıntılı eklenti yükleme tanılamalarını etkinleştir"

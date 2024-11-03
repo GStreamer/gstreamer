@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2013-08-20 14:56+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -52,9 +52,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "デバッグを無効にする"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr ""
 
 msgid "Colon-separated paths containing plugins"
 msgstr "プラグインを含むコロン (:) で区切られたパス"
@@ -798,6 +795,12 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1029,6 +1032,10 @@ msgstr "ストリームでデータが含まれていません"
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "実装されているインターフェイス:\n"
 
+#, c-format
+msgid "%sElement Flags%s:\n"
+msgstr ""
+
 msgid "readable"
 msgstr "読み込み可能"
 
@@ -1044,6 +1051,9 @@ msgstr "コントロール可能"
 #, fuzzy
 msgid "conditionally available"
 msgstr "コントロール可能"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr ""
@@ -1291,6 +1301,12 @@ msgid ""
 msgstr ""
 
 msgid "PROPERTY-NAME"
+msgstr ""
+
+msgid "Set the name of the program"
+msgstr ""
+
+msgid "PROGRAM-NAME"
 msgstr ""
 
 msgid "Do not install a fault handler"

@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2010-11-17 23:10+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -62,9 +62,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Ei vianetsintää"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Käytä monisanaista liitännäisten latausdiagnostiikka"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Kaksoispistein erotellut polut liitännäisiin"
@@ -840,6 +837,12 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1074,6 +1077,10 @@ msgstr "Virta on tyhjä."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "Toteutetut rajapinnat:\n"
 
+#, c-format
+msgid "%sElement Flags%s:\n"
+msgstr ""
+
 msgid "readable"
 msgstr "luettavissa"
 
@@ -1089,6 +1096,9 @@ msgstr "ohjattavissa"
 #, fuzzy
 msgid "conditionally available"
 msgstr "ohjattavissa"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "vaihdettavissa TYHJÄ-, VALMIS-, TAUOLLA- tai SOI-tiloissa"
@@ -1342,6 +1352,12 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr ""
 
+msgid "Set the name of the program"
+msgstr ""
+
+msgid "PROGRAM-NAME"
+msgstr ""
+
 msgid "Do not install a fault handler"
 msgstr "Älä asenna virheenkäsittelintä"
 
@@ -1397,6 +1413,9 @@ msgstr "Asetetaan liukuhihna tilaan TYHJÄ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Vapautetaan liukuhihna...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Käytä monisanaista liitännäisten latausdiagnostiikka"
 
 #~ msgid "link without source element"
 #~ msgstr "linkki ilman lähde-elementtiä"

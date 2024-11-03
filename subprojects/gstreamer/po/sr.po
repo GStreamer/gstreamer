@@ -2,14 +2,13 @@
 # Copyright © 2020 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Danilo Segan <dsegan@gmx.net>, 2004-2005.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011–2023.
-#
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011-2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.21.90\n"
+"Project-Id-Version: gstreamer-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-10 13:49+0100\n"
-"PO-Revision-Date: 2023-02-26 08:09+0100\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-05-07 07:40+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -19,8 +18,6 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Project-Style: gnome\n"
-"X-Generator: Gtranslator 41.0\n"
 
 msgid "Print the GStreamer version"
 msgstr "Исписује издање Гстримера"
@@ -62,9 +59,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Искључује уклањање грешака"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Укључује опширну дијагностику учитавања прикључка"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Двотачком раздвојене путање које садрже прикључке"
@@ -835,6 +829,12 @@ msgstr "приватни подаци"
 msgid "Private data"
 msgstr "Приватни подаци"
 
+msgid "container-specific-track-id"
+msgstr "ид-нумере-контејнеру-специфичан"
+
+msgid "Container-specific Track ID"
+msgstr "ИД нумере контејнеру специфичан"
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1071,6 +1071,10 @@ msgstr "Овај ток не садржи податке."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sПримењени уређаји%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sПримењени уређаји%s:\n"
+
 msgid "readable"
 msgstr "читљив"
 
@@ -1085,6 +1089,9 @@ msgstr "управљив"
 
 msgid "conditionally available"
 msgstr "условно доступан"
+
+msgid "can be set only at object construction time"
+msgstr "може се поставити само у време конструкције објекта"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "измењив у стање НИШТА, СПРЕМАН, ПАУЗИРАН или ПУШТАМ"
@@ -1346,6 +1353,12 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "СВОЈСТВО-НАЗИВ"
 
+msgid "Set the name of the program"
+msgstr "Поставља назив програма"
+
+msgid "PROGRAM-NAME"
+msgstr "НАЗИВ-ПРОГРАМА"
+
 msgid "Do not install a fault handler"
 msgstr "Неће инсталирати руковаоца грешкама"
 
@@ -1406,6 +1419,9 @@ msgstr "Постављам спојку низа на НИШТА ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Ослобађам спојку низа...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Укључује опширну дијагностику учитавања прикључка"
 
 #~ msgid "ERROR: Pipeline doesn't want to pause.\n"
 #~ msgstr "ГРЕШКА: Спојка низа не жели да иде на паузу.\n"

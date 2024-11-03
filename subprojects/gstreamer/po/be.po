@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2006-01-18 22:26+0200\n"
 "Last-Translator: Ales Nyakhaychyk <nab@mail.by>\n"
 "Language-Team: Belarusian <i18n@mova.org>\n"
@@ -56,9 +56,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Выключае адладку"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Уключае шматслоўную дыягностыку загрузкі ўтулак"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Падзелены двукроп'ямі сьпіс шляхоў, дзе месьцяцца ўтулкі"
@@ -799,6 +796,12 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ""
@@ -1030,6 +1033,10 @@ msgstr "альбом, якія зьмяшчае гэтыя даньі"
 msgid "%sImplemented Interfaces%s:\n"
 msgstr ""
 
+#, c-format
+msgid "%sElement Flags%s:\n"
+msgstr ""
+
 msgid "readable"
 msgstr ""
 
@@ -1043,6 +1050,9 @@ msgid "controllable"
 msgstr ""
 
 msgid "conditionally available"
+msgstr ""
+
+msgid "can be set only at object construction time"
 msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
@@ -1286,6 +1296,12 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr ""
 
+msgid "Set the name of the program"
+msgstr ""
+
+msgid "PROGRAM-NAME"
+msgstr ""
+
 msgid "Do not install a fault handler"
 msgstr ""
 
@@ -1340,3 +1356,6 @@ msgstr ""
 
 msgid "Freeing pipeline ...\n"
 msgstr ""
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Уключае шматслоўную дыягностыку загрузкі ўтулак"

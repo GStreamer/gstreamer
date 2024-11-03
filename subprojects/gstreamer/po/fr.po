@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-13 19:09+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2023-06-04 11:11+0200\n"
 "Last-Translator: Christian Wiatr <w9204-fs@yahoo.com>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -64,9 +64,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Désactive le débogage"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Active le diagnostic détaillé du chargement des greffons"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Chemins contenant des greffons, séparés par des deux-points"
@@ -841,6 +838,12 @@ msgstr "données-privées"
 msgid "Private data"
 msgstr "Données privées"
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1077,6 +1080,10 @@ msgstr "Le flux ne contient aucune donnée."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sinterfaces implémentées%s :\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sinterfaces implémentées%s :\n"
+
 msgid "readable"
 msgstr "accès en lecture"
 
@@ -1091,6 +1098,9 @@ msgstr "contrôlable"
 
 msgid "conditionally available"
 msgstr "dospinibilité conditionnelle"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "modifiable en l’état NULL, READY, PAUSED ou PLAYING"
@@ -1351,6 +1361,13 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "NOM-PROPRIÉTÉ"
 
+msgid "Set the name of the program"
+msgstr ""
+
+#, fuzzy
+msgid "PROGRAM-NAME"
+msgstr "NOM-PROPRIÉTÉ"
+
 msgid "Do not install a fault handler"
 msgstr "N’installe pas de gestionnaire de dysfonctionnement"
 
@@ -1412,6 +1429,9 @@ msgstr "Définition du pipeline à NULL…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Libération du pipeline…\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Active le diagnostic détaillé du chargement des greffons"
 
 #~ msgid "ERROR: Pipeline doesn't want to pause.\n"
 #~ msgstr "ERREUR : le pipeline refuse de se mettre en pause.\n"

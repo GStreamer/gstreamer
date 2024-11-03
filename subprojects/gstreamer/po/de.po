@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.21.90\n"
+"Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
-"PO-Revision-Date: 2023-01-16 22:34+0100\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-16 23:40+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.1.1\n"
+"X-Generator: Poedit 3.4.2\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
 msgid "Print the GStreamer version"
@@ -63,9 +63,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Fehlerdiagnose deaktivieren"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Ausführliche Meldungen beim Laden von Plugins aktivieren"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Durch Doppelpunkte getrennte Pfade zu den Plugins"
@@ -858,6 +855,12 @@ msgstr "Private-Daten"
 msgid "Private data"
 msgstr "Private Daten"
 
+msgid "container-specific-track-id"
+msgstr "container-specific-track-id"
+
+msgid "Container-specific Track ID"
+msgstr "Container-spezifische Verfolgungs-KENNUNG"
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1100,6 +1103,10 @@ msgstr "Der Datenstrom enthält keine Daten."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sImplementierte Schnittstellen%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sImplementierte Schnittstellen%s:\n"
+
 msgid "readable"
 msgstr "lesbar"
 
@@ -1114,6 +1121,9 @@ msgstr "regelbar"
 
 msgid "conditionally available"
 msgstr "unter Vorbehalt verfügbar"
+
+msgid "can be set only at object construction time"
+msgstr "kann nur zum Zeitpunkt der Objekterstellung festgelegt werden"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "änderbar in den Status NULL, BEREIT, PAUSIERT oder ABSPIELEN"
@@ -1376,6 +1386,12 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "EIGENSCHAFT-NAME"
 
+msgid "Set the name of the program"
+msgstr "Den Namen des Programms festlegen"
+
+msgid "PROGRAM-NAME"
+msgstr "PROGRAMM-NAME"
+
 msgid "Do not install a fault handler"
 msgstr "Keine Routine zum Abfangen von Fehlern installieren"
 
@@ -1435,6 +1451,9 @@ msgstr "Leitung wird auf NULL gesetzt ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Leitung wird geleert ...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Ausführliche Meldungen beim Laden von Plugins aktivieren"
 
 #~ msgid "ERROR: Pipeline doesn't want to pause.\n"
 #~ msgstr "FEHLER: Leitung möchte nicht pausiert werden.\n"

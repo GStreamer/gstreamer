@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -97,10 +97,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr ""
-
-#, fuzzy
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Itangira..."
 
 msgid "Colon-separated paths containing plugins"
 msgstr ""
@@ -997,6 +993,12 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1242,6 +1244,10 @@ msgstr "iyi Ibyatanzwe"
 msgid "%sImplemented Interfaces%s:\n"
 msgstr ""
 
+#, c-format
+msgid "%sElement Flags%s:\n"
+msgstr ""
+
 msgid "readable"
 msgstr ""
 
@@ -1256,6 +1262,9 @@ msgid "controllable"
 msgstr ""
 
 msgid "conditionally available"
+msgstr ""
+
+msgid "can be set only at object construction time"
 msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
@@ -1505,6 +1514,12 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr ""
 
+msgid "Set the name of the program"
+msgstr ""
+
+msgid "PROGRAM-NAME"
+msgstr ""
+
 #, fuzzy
 msgid "Do not install a fault handler"
 msgstr "OYA Kwinjiza porogaramu a"
@@ -1562,6 +1577,10 @@ msgstr ""
 
 msgid "Freeing pipeline ...\n"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Itangira..."
 
 #, fuzzy
 #~ msgid "ERROR: Pipeline doesn't want to pause.\n"

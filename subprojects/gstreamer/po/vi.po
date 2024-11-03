@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2017-05-05 06:45+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -61,9 +61,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Tắt gỡ lỗi"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Bật chẩn đoán chi tiết việc nạp phần bổ sung"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Các đường dẫn định giới bằng dấu hai chấm mà chứa phần bổ sung"
@@ -834,6 +831,12 @@ msgstr "dữ-liệu-riêng"
 msgid "Private data"
 msgstr "Dữ liệu riêng"
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1071,6 +1074,10 @@ msgstr "Luồng không chứa dữ liệu."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "Giao diện đã thực hiện:\n"
 
+#, c-format
+msgid "%sElement Flags%s:\n"
+msgstr ""
+
 msgid "readable"
 msgstr "được đọc"
 
@@ -1086,6 +1093,9 @@ msgstr "điều khiển được"
 #, fuzzy
 msgid "conditionally available"
 msgstr "điều khiển được"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "có thể thay đổi được trong trạng thái NULL, READY, PAUSED hay PLAYING"
@@ -1338,6 +1348,13 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "TÊN-THUỘC-TÍNH"
 
+msgid "Set the name of the program"
+msgstr ""
+
+#, fuzzy
+msgid "PROGRAM-NAME"
+msgstr "TÊN-THUỘC-TÍNH"
+
 msgid "Do not install a fault handler"
 msgstr "Không cài đặt bộ quản lý lỗi"
 
@@ -1393,6 +1410,9 @@ msgstr "Đang đặt đường ống thành VÔ_GIÁ_TRỊ …\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Đang giải phóng đường ống …\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Bật chẩn đoán chi tiết việc nạp phần bổ sung"
 
 #~ msgid "ERROR: Pipeline doesn't want to pause.\n"
 #~ msgstr "LỖI: đường ống không tạm dừng được.\n"

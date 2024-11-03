@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -60,9 +60,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Išjungti derinimą"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Įjungti informatyvią įskiepių įkėlimo diagnostiką"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Dvitaškiais skiriami keliai, kur yra įskiepių"
@@ -838,6 +835,12 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1071,6 +1074,10 @@ msgstr "Sraute nėra duomenų."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "Realizuotos sąsajos:\n"
 
+#, c-format
+msgid "%sElement Flags%s:\n"
+msgstr ""
+
 msgid "readable"
 msgstr "skaitomas"
 
@@ -1086,6 +1093,9 @@ msgstr "valdomas"
 #, fuzzy
 msgid "conditionally available"
 msgstr "valdomas"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr ""
@@ -1341,6 +1351,12 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr ""
 
+msgid "Set the name of the program"
+msgstr ""
+
+msgid "PROGRAM-NAME"
+msgstr ""
+
 msgid "Do not install a fault handler"
 msgstr "Neįdiegti klaidų apdorojimo posistemės"
 
@@ -1396,6 +1412,9 @@ msgstr "Nustatomas konvejeris į NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Atlaisvinamas konvejeris...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Įjungti informatyvią įskiepių įkėlimo diagnostiką"
 
 #~ msgid "link without source element"
 #~ msgstr "saitas be šaltinio elemento"

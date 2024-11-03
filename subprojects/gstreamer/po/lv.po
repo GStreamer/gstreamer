@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-13 19:09+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2023-12-25 17:53+0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -61,9 +61,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Deaktivizēt atkļūdošanu"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Ieslēgt detalizētu spraudņa ielādes diagnostiku"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Ar kolu atdalīti spraudņu atrašanās direktoriju ceļi"
@@ -836,6 +833,12 @@ msgstr "privātie dati"
 msgid "Private data"
 msgstr "Privātie dati"
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1069,6 +1072,10 @@ msgstr "Straumē nav datu."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sĪstenotās Saskarnes%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sĪstenotās Saskarnes%s:\n"
+
 msgid "readable"
 msgstr "lasāms"
 
@@ -1083,6 +1090,9 @@ msgstr "kontrolējams"
 
 msgid "conditionally available"
 msgstr "nosacīti pieejams"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "maināms NULL, READY, PAUSED vai PLAYING stāvoklī"
@@ -1343,6 +1353,13 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "ĪPAŠĪBAS-NOSAUKUMS"
 
+msgid "Set the name of the program"
+msgstr ""
+
+#, fuzzy
+msgid "PROGRAM-NAME"
+msgstr "ĪPAŠĪBAS-NOSAUKUMS"
+
 msgid "Do not install a fault handler"
 msgstr "Neuzstādīt defektu apstrādātāju"
 
@@ -1402,3 +1419,6 @@ msgstr "Cauruļvada iestatīšana uz NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Cauruļvada atbrīvošana ...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Ieslēgt detalizētu spraudņa ielādes diagnostiku"

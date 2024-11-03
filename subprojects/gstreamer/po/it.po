@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.15.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2019-01-29 09:16+0100\n"
 "Last-Translator: Milo Casagrande <milo@milo.name>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -983,6 +983,12 @@ msgstr "dati privati"
 msgid "Private data"
 msgstr "dati privati"
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1223,6 +1229,10 @@ msgstr "Lo stream non contiene dati."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sInterfacce implementate%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sInterfacce implementate%s:\n"
+
 msgid "readable"
 msgstr "leggibile"
 
@@ -1238,6 +1248,9 @@ msgstr "controllabile"
 #, fuzzy
 msgid "conditionally available"
 msgstr "controllabile"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "può passare allo stato  NULL, READY, PAUSED o PLAYING"
@@ -1516,6 +1529,13 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "NOME-PROPRIETÀ"
 
+msgid "Set the name of the program"
+msgstr ""
+
+#, fuzzy
+msgid "PROGRAM-NAME"
+msgstr "NOME-PROPRIETÀ"
+
 # -f, --no-fault
 msgid "Do not install a fault handler"
 msgstr "Non installa un gestore di fault"
@@ -1579,6 +1599,10 @@ msgstr "Impostazione della pipeline a NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Esecuzione di free sulla pipeline...\n"
+
+# --gst-plugin-spew
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Abilita diagnostica prolissa del caricamento plugin"
 
 #, c-format
 #~ msgid "Error creating pipe: %s\n"

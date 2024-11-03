@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2022-10-18 21:55+0200\n"
 "Last-Translator: Balázs Úr <ur.balazs@fsf.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -60,9 +60,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Hibakeresés letiltása"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Részletes bővítménybetöltési diagnosztika engedélyezése"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Bővítményeket tartalmazó útvonalak vesszőkkel elválasztott listája"
@@ -829,6 +826,12 @@ msgstr "privát-adatok"
 msgid "Private data"
 msgstr "Privát adatok"
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1067,6 +1070,10 @@ msgstr "Az adatfolyam nem tartalmaz adatokat."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sMegvalósított felületek%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sMegvalósított felületek%s:\n"
+
 msgid "readable"
 msgstr "olvasható"
 
@@ -1081,6 +1088,9 @@ msgstr "vezérelhető"
 
 msgid "conditionally available"
 msgstr "feltételesen elérhető"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "módosítható a NULL, KÉSZ, SZÜNETEL vagy LEJÁTSZÁS állapotban"
@@ -1336,6 +1346,13 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "TULAJDONSÁGNÉV"
 
+msgid "Set the name of the program"
+msgstr ""
+
+#, fuzzy
+msgid "PROGRAM-NAME"
+msgstr "TULAJDONSÁGNÉV"
+
 msgid "Do not install a fault handler"
 msgstr "Ne telepítsen hibakezelőt"
 
@@ -1397,3 +1414,6 @@ msgstr "Az adatcsatorna beállítása NULL értékre…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Adatcsatorna felszabadítása…\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Részletes bővítménybetöltési diagnosztika engedélyezése"

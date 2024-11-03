@@ -1,13 +1,13 @@
 # Polish translation for gstreamer.
 # This file is distributed under the same license as the gstreamer package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2023.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.21.90\n"
+"Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
-"PO-Revision-Date: 2023-01-15 20:51+0100\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-07 20:30+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -59,9 +59,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Wyłączenie diagnostyki"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Włączenie szczegółowej diagnostyki wczytywania wtyczek"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Rozdzielone przecinkami ścieżki zawierające wtyczki"
@@ -834,6 +831,12 @@ msgstr "dane-prywatne"
 msgid "Private data"
 msgstr "Dane prywatne"
 
+msgid "container-specific-track-id"
+msgstr "id-ścieżki-zależne-od-kontenera"
+
+msgid "Container-specific Track ID"
+msgstr "Zależny od kontenera identyfikator ścieżki"
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1069,6 +1072,10 @@ msgstr "Strumień nie zawiera danych."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sZaimplementowane interfejsy%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sZaimplementowane interfejsy%s:\n"
+
 msgid "readable"
 msgstr "odczyt"
 
@@ -1083,6 +1090,9 @@ msgstr "sterowanie"
 
 msgid "conditionally available"
 msgstr "warunkowo dostępne"
+
+msgid "can be set only at object construction time"
+msgstr "można ustawić tylko w czasie tworzenia obiektu"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "możliwa zmiana w stanie NULL, GOTOWOŚĆ, PAUZOWANIE lub ODTWARZANIE"
@@ -1344,6 +1354,12 @@ msgstr ""
 
 msgid "PROPERTY-NAME"
 msgstr "NAZWA-WŁASNOŚCI"
+
+msgid "Set the name of the program"
+msgstr "Ustawienie nazwy programu"
+
+msgid "PROGRAM-NAME"
+msgstr "NAZWA-PROGRAMU"
 
 msgid "Do not install a fault handler"
 msgstr "Nie instalowanie obsługi błędów"
