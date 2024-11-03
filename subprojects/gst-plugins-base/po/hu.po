@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2022-10-19 00:10+0200\n"
 "Last-Translator: Balázs Úr <ur.balazs@fsf.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -160,6 +160,10 @@ msgstr "A forráselem érvénytelen."
 msgid "Source element is invalid."
 msgstr "A forráselem érvénytelen."
 
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr ""
+
 #, fuzzy
 msgid "Source element has no pads."
 msgstr "A forráselem érvénytelen."
@@ -174,14 +178,15 @@ msgstr "Nem lehet elég gyorsan rögzíteni a hangot"
 msgid "This CD has no audio tracks"
 msgstr "Ez a CD nem rendelkezik hangsávokkal"
 
-msgid "failed to draw pattern"
-msgstr "a minta rajzolása sikertelen"
-
-msgid "A GL error occurred"
+#, fuzzy
+msgid "An OpenGL error occurred"
 msgstr "Egy GL hiba történt"
 
-msgid "format wasn't negotiated before get function"
-msgstr "a formátum nem lett egyeztetve a függvény lekérése előtt"
+msgid "The GL API is not compatible with the current GL context"
+msgstr ""
+
+msgid "Subclass failed to initialize."
+msgstr ""
 
 msgid "ID3 tag"
 msgstr "ID3 címke"
@@ -737,11 +742,12 @@ msgid "Do not print any output (apart from errors)"
 msgstr "Ne írjon ki semmilyen kimenetet (a hibákon kívül)"
 
 #, fuzzy
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"(az alapértelmezett a „USE_PLAYBIN” környezeti változótól függően változik)"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Playbin3 csővezeték használata"
+
+#, fuzzy
+msgid "Use playbin2 pipeline"
+msgstr "Playbin3 csővezeték használata"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -767,5 +773,13 @@ msgstr ""
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "Nem sikerült létrehozni „uridecodebin3” elemet."
 
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Playbin3 csővezeték használata"
+#~ msgid "failed to draw pattern"
+#~ msgstr "a minta rajzolása sikertelen"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "a formátum nem lett egyeztetve a függvény lekérése előtt"
+
+#~ msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#~ msgstr ""
+#~ "(az alapértelmezett a „USE_PLAYBIN” környezeti változótól függően "
+#~ "változik)"

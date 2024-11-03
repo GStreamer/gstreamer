@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019, 2021, 2022, 2023.
+# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019, 2021, 2022, 2023, 2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.21.90\n"
+"Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2023-01-15 17:42+0200\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-07-21 19:49+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <trans-uk@lists.fedoraproject.org>\n"
 "Language: uk\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Lokalize 20.12.0\n"
+"X-Generator: Lokalize 23.04.3\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Не вдалося відкрити пристрій відтворення у режимі моно."
@@ -157,12 +157,15 @@ msgstr "Цей потік поки-що не може бути відтворе�
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Не реалізовано обробник URI для «%s»."
 
-#, fuzzy
 msgid "Source element can't be prepared"
-msgstr "У таких елементів немає прокладок."
+msgstr "Не вдалося приготувати елемент джерела"
 
 msgid "Source element is invalid."
 msgstr "Неправильний вхідний елемент."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "Не вдалося створити каталог отримання даних «%s»."
 
 msgid "Source element has no pads."
 msgstr "У таких елементів немає прокладок."
@@ -177,14 +180,14 @@ msgstr "Не вдалося запис аудіоданих з потрібно�
 msgid "This CD has no audio tracks"
 msgstr "На цьому компакт-диску немає звукових доріжок"
 
-msgid "failed to draw pattern"
-msgstr "не вдалося намалювати візерунок"
+msgid "An OpenGL error occurred"
+msgstr "Сталася помилка OpenGL"
 
-msgid "A GL error occurred"
-msgstr "Сталася помилка GL"
+msgid "The GL API is not compatible with the current GL context"
+msgstr "Програмний інтерфейс GL є несумісним із поточним контекстом GL"
 
-msgid "format wasn't negotiated before get function"
-msgstr "формат не було узгоджено до функції отримання"
+msgid "Subclass failed to initialize."
+msgstr "Не вдалося ініціалізувати підклас."
 
 msgid "ID3 tag"
 msgstr "Мітка ID3"
@@ -734,7 +737,7 @@ msgid "Start position in seconds."
 msgstr "Початкова позиція у секундах."
 
 msgid "Enable accurate seeking"
-msgstr ""
+msgstr "Увімкнути точне позиціювання"
 
 msgid "Playlist file containing input media files"
 msgstr "Файл списку відтворення, що містить мультимедійні файли вхідних даних"
@@ -747,12 +750,11 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Не виводити повідомлень (окрім повідомлень щодо помилок)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"Використовувати конвеєр playbin3 (типове значення залежить від змінної "
-"середовища USE_PLAYBIN)"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Використовувати конвеєр playbin3 (типово)"
+
+msgid "Use playbin2 pipeline"
+msgstr "Використовувати конвеєр playbin2"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -762,7 +764,7 @@ msgstr ""
 "відтворення (gapless буде проігноровано)"
 
 msgid "Do not print current position of pipeline"
-msgstr ""
+msgstr "Не виводити поточну позицію до конвеєра даних"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -775,11 +777,21 @@ msgstr ""
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Натисніть «k», щоб переглянути список клавіатурних скорочень.\n"
 
+#~ msgid "failed to draw pattern"
+#~ msgstr "не вдалося намалювати візерунок"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "формат не було узгоджено до функції отримання"
+
+#~ msgid ""
+#~ "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+#~ "variable)"
+#~ msgstr ""
+#~ "Використовувати конвеєр playbin3 (типове значення залежить від змінної "
+#~ "середовища USE_PLAYBIN)"
+
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "Не вдалося створити елемент \"uridecodebin3\"."
-
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Використовувати конвеєр playbin3"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Не вдалося створити елемент \"decodebin3\"."

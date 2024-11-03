@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-base.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2023.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.21.90\n"
+"Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2023-01-15 20:54+0100\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-07 21:02+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -158,12 +158,15 @@ msgstr "Tego strumienia jeszcze nie można odtworzyć."
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nie ma zaimplementowanej obsługi URI dla \"%s\"."
 
-#, fuzzy
 msgid "Source element can't be prepared"
-msgstr "Element źródłowy nie ma podkładki."
+msgstr "Nie można przygotować elementu źródłowego."
 
 msgid "Source element is invalid."
 msgstr "Element źródłowy jest niepoprawny."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "Nie udało się utworzyć katalogu pobierania '%s'."
 
 msgid "Source element has no pads."
 msgstr "Element źródłowy nie ma podkładki."
@@ -178,14 +181,14 @@ msgstr "Nie można zapisywać danych dźwiękowych wystarczająco szybko"
 msgid "This CD has no audio tracks"
 msgstr "Ta płyta CD nie ma ścieżek dźwiękowych"
 
-msgid "failed to draw pattern"
-msgstr "nie udało się narysować wzoru"
+msgid "An OpenGL error occurred"
+msgstr "Wystąpił błąd OpenGL"
 
-msgid "A GL error occurred"
-msgstr "Wystąpił błąd GL"
+msgid "The GL API is not compatible with the current GL context"
+msgstr "API GL nie jest zgodne z bieżącym kontekstem GL"
 
-msgid "format wasn't negotiated before get function"
-msgstr "format nie został wynegocjowany przed funkcją pobierającą"
+msgid "Subclass failed to initialize."
+msgstr "Nie udało się zainicjować podklasy."
 
 msgid "ID3 tag"
 msgstr "Znacznik ID3"
@@ -725,7 +728,7 @@ msgid "Start position in seconds."
 msgstr "Pozycja początkowa w sekundach."
 
 msgid "Enable accurate seeking"
-msgstr ""
+msgstr "Włączenie dokładnego przewijania"
 
 msgid "Playlist file containing input media files"
 msgstr "Plik listy odtwarzania zawierający wejściowe pliki multimedialne"
@@ -736,12 +739,11 @@ msgstr "Użycie eksperymentalnej flagi instant-rate-change przy zmianie tempa"
 msgid "Do not print any output (apart from errors)"
 msgstr "Bez wypisywania żadnego wyjścia (poza błędami)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"Użycie potoku playbin3 (wartość domyślna zależy od zmiennej środowiskowej "
-"'USE_PLAYBIN')"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Użycie potoku playbin3 (domyślne)"
+
+msgid "Use playbin2 pipeline"
+msgstr "Użycie potoku playbin2"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -751,7 +753,7 @@ msgstr ""
 "listy odtwarzania (brak przerw jest ignorowany)"
 
 msgid "Do not print current position of pipeline"
-msgstr ""
+msgstr "Bez wypisywania bieżącego położenia w potoku"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

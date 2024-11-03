@@ -1,16 +1,16 @@
 # Swedish messages for gst-plugins-base.
-# Copyright © 2004, 2005, 2007, 2008, 2009, 2014, 2015, 2016, 2017, 2019, 2022, 2023 Free Software Foundation, Inc.
+# Copyright © 2004, 2005, 2007, 2008, 2009, 2014, 2015, 2016, 2017, 2019, 2022, 2023, 2024 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009.
-# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019, 2022, 2023.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019, 2022, 2023, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.21.90\n"
+"Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-13 19:10+0000\n"
-"PO-Revision-Date: 2023-05-23 00:10+0200\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-07 18:20+0800\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.4.2\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunde inte öppna enheten för uppspelning i monoläge."
@@ -151,8 +151,15 @@ msgstr "Den här strömtypen kan inte spelas upp än."
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Ingen URI-hanterare implementerad för ”%s”."
 
+msgid "Source element can't be prepared"
+msgstr "Källelementet kan inte förberedas"
+
 msgid "Source element is invalid."
 msgstr "Källelementet är ogiltigt."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "Misslyckades med att skapa hämtningskatalog ”%s”."
 
 msgid "Source element has no pads."
 msgstr "Källelementet har inga kontakter."
@@ -167,14 +174,14 @@ msgstr "Kan inte spela in ljud tillräckligt snabbt"
 msgid "This CD has no audio tracks"
 msgstr "Den här cd-skivan saknar ljudspår"
 
-msgid "failed to draw pattern"
-msgstr "misslyckades med att rita mönster"
+msgid "An OpenGL error occurred"
+msgstr "Ett OpenGL-fel uppstod"
 
-msgid "A GL error occurred"
-msgstr "Ett GL-fel uppstod"
+msgid "The GL API is not compatible with the current GL context"
+msgstr "GL-API:t är inte kompatibelt med den aktuella GL-kontexten"
 
-msgid "format wasn't negotiated before get function"
-msgstr "formatet förhandlades inte fram innan hämtfunktionen"
+msgid "Subclass failed to initialize."
+msgstr "Underklass misslyckades med initiering."
 
 msgid "ID3 tag"
 msgstr "ID3-tagg"
@@ -711,6 +718,9 @@ msgstr "Volym"
 msgid "Start position in seconds."
 msgstr "Startposition i sekunder."
 
+msgid "Enable accurate seeking"
+msgstr "Aktivera noggrann sökning"
+
 msgid "Playlist file containing input media files"
 msgstr "Fil med spellista innehållandes inkommande mediafiler"
 
@@ -722,12 +732,11 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Mata inte ut någonting (bortsett från fel)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"Använd playbin3-rörledning (standardvärdet beror på miljövariabeln "
-"”USE_PLAYBIN”)"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Använd playbin3-rörledning (standard)"
+
+msgid "Use playbin2 pipeline"
+msgstr "Använd playbin2-rörledning"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -735,6 +744,9 @@ msgid ""
 msgstr ""
 "Fortsätt visa den sista ramen vid EOS tills avslutning eller "
 "ändringskommando för spellista (mellanrumslös hoppas över)"
+
+msgid "Do not print current position of pipeline"
+msgstr "Skriv inte ut aktuell position för rörledningen"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -746,11 +758,21 @@ msgstr "Du måste ange åtminstone ett filnamn eller en URI att spela."
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Tryck på 'k' för att se en lista över tangentbordsgenvägar.\n"
 
+#~ msgid "failed to draw pattern"
+#~ msgstr "misslyckades med att rita mönster"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "formatet förhandlades inte fram innan hämtfunktionen"
+
+#~ msgid ""
+#~ "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+#~ "variable)"
+#~ msgstr ""
+#~ "Använd playbin3-rörledning (standardvärdet beror på miljövariabeln "
+#~ "”USE_PLAYBIN”)"
+
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "Kunde inte skapa ”uridecodebin3”-element."
-
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Använd playbin3-rörledning"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Kunde inte skapa \"decodebin3\"-element."

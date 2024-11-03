@@ -4,13 +4,13 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2018, 2019, 2021, 2022, 2023.
+# Božidar Putanec <bozidarp@yahoo.com>, 0016, 2018, 2019, 2021, 2022, 2023, 2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.21.90\n"
+"Project-Id-Version: gst-plugins-base-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2023-01-15 19:31-0800\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-08 10:50-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Lokalize 23.03.70\n"
+"X-Generator: Poedit 3.4.2\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Uređaj za reprodukciju nije moguće otvoriti u mono načinu."
@@ -154,12 +154,15 @@ msgstr "Ovaj tip protoka još se ne može reproducirati."
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nijedan URI rukovatelj nije realiziran za „%s“."
 
-#, fuzzy
 msgid "Source element can't be prepared"
-msgstr "Element izvor nema sučelje."
+msgstr "Element izvor se ne može pripremiti."
 
 msgid "Source element is invalid."
 msgstr "Element izvor nije valjan."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "Nije uspjelo stvoriti direktorij za preuzimanje ‘%s’."
 
 msgid "Source element has no pads."
 msgstr "Element izvor nema sučelje."
@@ -174,14 +177,14 @@ msgstr "Audio se ne može dovoljno brzo snimati"
 msgid "This CD has no audio tracks"
 msgstr "Ovaj CD nema audio zapisa"
 
-msgid "failed to draw pattern"
-msgstr "nije uspjelo iscrtati uzorak"
+msgid "An OpenGL error occurred"
+msgstr "Dogodila se OpenGL greška"
 
-msgid "A GL error occurred"
-msgstr "Dogodila se GL greška"
+msgid "The GL API is not compatible with the current GL context"
+msgstr "GL API nije kompatibilan s trenutnim GL kontekstom"
 
-msgid "format wasn't negotiated before get function"
-msgstr "format nije dogovoren prije pozivanja funkcije"
+msgid "Subclass failed to initialize."
+msgstr "Podklasu nije uspjelo inicijalizirati."
 
 msgid "ID3 tag"
 msgstr "ID3 tag"
@@ -493,10 +496,10 @@ msgid "The overall gain adjustment applied on an image"
 msgstr "Ukupna korekcija osvjetljenja primijenjena na sliku"
 
 msgid "capturing white balance"
-msgstr "balans bijele"
+msgstr "balans bijele boje"
 
 msgid "The white balance mode set when capturing an image"
-msgstr "Primijenjeni balans bijele pri snimanju slike"
+msgstr "Primijenjeni balans bijele boje pri snimanju slike"
 
 msgid "capturing contrast"
 msgstr "kontrast"
@@ -726,7 +729,7 @@ msgid "Start position in seconds."
 msgstr "Početna pozicija u sekundama."
 
 msgid "Enable accurate seeking"
-msgstr ""
+msgstr "Omogući točno traženje"
 
 msgid "Playlist file containing input media files"
 msgstr ""
@@ -738,12 +741,11 @@ msgstr "Koristi pokusni „instant-rate-change flag“ pri promjeni brzine"
 msgid "Do not print any output (apart from errors)"
 msgstr "Ne ispisuje nikakve izlazne informacije (osim greški)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"Koristi playbin3 cjevovod (zadano varira ovisno o 'USE_PLAYBIN' varijabli "
-"okoline)"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Rabi playbin3 cjevovod (zadano)"
+
+msgid "Use playbin2 pipeline"
+msgstr "Rabi playbin2 cjevovod"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -753,7 +755,7 @@ msgstr ""
 "promijenite naredbu za promjenu popisa za reprodukciju (zanemaruje „gapless“)"
 
 msgid "Do not print current position of pipeline"
-msgstr ""
+msgstr "Ne ispiše trenutnu poziciju cjevovoda"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -765,11 +767,21 @@ msgstr "Morate navesti barem jednu datoteku ili URI adresu za reprodukciju."
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Pritisnite „k“ da pogledate listu tipkovničkih prečaca.\n"
 
+#~ msgid "failed to draw pattern"
+#~ msgstr "nije uspjelo iscrtati uzorak"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "format nije dogovoren prije pozivanja funkcije"
+
+#~ msgid ""
+#~ "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+#~ "variable)"
+#~ msgstr ""
+#~ "Koristi playbin3 cjevovod (zadano varira ovisno o 'USE_PLAYBIN' varijabli "
+#~ "okoline)"
+
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "Nije moguće stvoriti element „uridecodebin3“."
-
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Rabi playbin3 cjevovod"
 
 #~ msgid "Unknown ponor element"
 #~ msgstr "Nepoznati element-ponor"

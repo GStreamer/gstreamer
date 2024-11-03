@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-13 19:10+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2023-06-04 12:44+0200\n"
 "Last-Translator: Christian Wiatr <w9204-fs@yahoo.com>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -163,8 +163,16 @@ msgstr "Ce type de flux ne peut pas encore être lu."
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Aucun gestionnaire d’URI implémenté pour « %s »."
 
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Élément source sans connecteurs."
+
 msgid "Source element is invalid."
 msgstr "Élément source non valide."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr ""
 
 msgid "Source element has no pads."
 msgstr "Élément source sans connecteurs."
@@ -179,14 +187,15 @@ msgstr "Impossible d’enregistrer assez rapidement les données audio"
 msgid "This CD has no audio tracks"
 msgstr "Ce CD ne contient aucune piste audio"
 
-msgid "failed to draw pattern"
-msgstr "Echec dans le tracé du motif"
-
-msgid "A GL error occurred"
+#, fuzzy
+msgid "An OpenGL error occurred"
 msgstr "Erreur de rendu GL"
 
-msgid "format wasn't negotiated before get function"
-msgstr "le format n'a pas été négocié avant l'appel de fonction"
+msgid "The GL API is not compatible with the current GL context"
+msgstr ""
+
+msgid "Subclass failed to initialize."
+msgstr ""
 
 msgid "ID3 tag"
 msgstr "Étiquette ID3"
@@ -740,6 +749,9 @@ msgstr "Volume"
 msgid "Start position in seconds."
 msgstr "Position de départ en secondes."
 
+msgid "Enable accurate seeking"
+msgstr ""
+
 msgid "Playlist file containing input media files"
 msgstr "Fichier de lecture contenant des fichiers de media d’entrée"
 
@@ -751,12 +763,13 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Ne pas afficher de message en sortie (sauf les erreurs)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"Utiliser le pipeline playbin3 (la valeur par défaut dépend de la variable "
-"d'environnement « USE_PLAYBIN »)"
+#, fuzzy
+msgid "Use playbin3 pipeline (default)"
+msgstr "Utiliser un pipeline playbin3"
+
+#, fuzzy
+msgid "Use playbin2 pipeline"
+msgstr "Utiliser un pipeline playbin3"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -765,6 +778,9 @@ msgstr ""
 "Continuer à afficher la dernière trame après la fin de lecture jusqu'à la "
 "fin de programme ou une nouvelle commande de lecture (la lecture sans blanc "
 "est ignorée)"
+
+msgid "Do not print current position of pipeline"
+msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -776,8 +792,18 @@ msgstr "Vous devez fournir au moins un nom de fichier ou une URI à lire."
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Pressez k pour voir la liste des raccourcis clavier.\n"
 
+#~ msgid "failed to draw pattern"
+#~ msgstr "Echec dans le tracé du motif"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "le format n'a pas été négocié avant l'appel de fonction"
+
+#~ msgid ""
+#~ "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+#~ "variable)"
+#~ msgstr ""
+#~ "Utiliser le pipeline playbin3 (la valeur par défaut dépend de la variable "
+#~ "d'environnement « USE_PLAYBIN »)"
+
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "Impossible de créer un élément « uridecodebin3 »."
-
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Utiliser un pipeline playbin3"

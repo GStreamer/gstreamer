@@ -1,14 +1,14 @@
 # Indonesian translations for gst-plugins-base package.
 # This file is put in the public domain.
-# Andika Triwidada <andika@gmail.com>, 2013, 2021, 2023.
+# Andika Triwidada <andika@gmail.com>, 2013, 2021, 2023, 2024.
 # Andhika Padmawan <andhika.padmawan@gmail.com>, 2010-2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.21.90\n"
+"Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2023-01-16 09:20+0700\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-07 19:38+0700\n"
 "Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.4.2\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Tak dapat membuka divais untuk putar kembali dalam mode mono."
@@ -150,12 +150,15 @@ msgstr "Tipe arus ini belum dapat dimainkan."
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Tak ada penanganan URI yang diimplementasikan untuk \"%s\"."
 
-#, fuzzy
 msgid "Source element can't be prepared"
-msgstr "Elemen sumber tidak punya pad."
+msgstr "Elemen sumber tidak bisa disiapkan"
 
 msgid "Source element is invalid."
 msgstr "Elemen sumber tidak sah."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "Gagal membuat direktori unduh '%s'."
 
 msgid "Source element has no pads."
 msgstr "Elemen sumber tidak punya pad."
@@ -170,14 +173,14 @@ msgstr "Tak dapat merekam audio cukup cepat"
 msgid "This CD has no audio tracks"
 msgstr "CD ini tidak memiliki jalur audio"
 
-msgid "failed to draw pattern"
-msgstr "gagal menggambar pola"
+msgid "An OpenGL error occurred"
+msgstr "Terjadi galat OpenGL"
 
-msgid "A GL error occurred"
-msgstr "Terjadi galat GL"
+msgid "The GL API is not compatible with the current GL context"
+msgstr "API GL tidak kompatibel dengan konteks GL saat ini"
 
-msgid "format wasn't negotiated before get function"
-msgstr "format tidak dinegosiasikan sebelum mendapatkan fungsi"
+msgid "Subclass failed to initialize."
+msgstr "Sub kelas gagal inisialisasi."
 
 msgid "ID3 tag"
 msgstr "Tag ID3"
@@ -717,7 +720,7 @@ msgid "Start position in seconds."
 msgstr "Posisi memulai dalam detik."
 
 msgid "Enable accurate seeking"
-msgstr ""
+msgstr "Fungsikan seek yang akurat"
 
 msgid "Playlist file containing input media files"
 msgstr "Berkas senarai putar berisi masukan berkas media"
@@ -728,12 +731,11 @@ msgstr "Gunakan flag instant-rate-change eksperimental ketika mengubah laju"
 msgid "Do not print any output (apart from errors)"
 msgstr "Jangan cetak keluaran apapun (selain galat)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"Pakai pipeline playbin3 (baku bervariasi tergantung pada variabel lingkungan "
-"'USE_PLAYBIN')"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Gunakan pipeline playbin3 (baku)"
+
+msgid "Use playbin2 pipeline"
+msgstr "Gunakan pipeline playbin2"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -743,7 +745,7 @@ msgstr ""
 "perubahan daftar putar (tanpa celah diabaikan)"
 
 msgid "Do not print current position of pipeline"
-msgstr ""
+msgstr "Jangan cetak posisi saat ini dari pipeline"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

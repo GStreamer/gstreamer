@@ -34,7 +34,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2020-03-08 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -182,6 +182,10 @@ msgstr "Kildeelement er ugyldigt."
 msgid "Source element is invalid."
 msgstr "Kildeelement er ugyldigt."
 
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr ""
+
 #, fuzzy
 msgid "Source element has no pads."
 msgstr "Kildeelement er ugyldigt."
@@ -196,14 +200,15 @@ msgstr "Kan ikke optage lyd hurtigt nok"
 msgid "This CD has no audio tracks"
 msgstr "Denne cd har ingen lydspor"
 
-msgid "failed to draw pattern"
-msgstr "kunne ikke tegne mønster"
-
-msgid "A GL error occurred"
+#, fuzzy
+msgid "An OpenGL error occurred"
 msgstr "Der opstod en GL-fejl"
 
-msgid "format wasn't negotiated before get function"
-msgstr "format blev ikke forhandlet før get-funktion"
+msgid "The GL API is not compatible with the current GL context"
+msgstr ""
+
+msgid "Subclass failed to initialize."
+msgstr ""
 
 msgid "ID3 tag"
 msgstr "ID3-mærke"
@@ -777,10 +782,12 @@ msgid "Do not print any output (apart from errors)"
 msgstr "Udskriv ikke noget (undtagen fejl)"
 
 #, fuzzy
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr "(standard varierer afhængig af miljøvariablen »USE_PLAYBIN«"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Brug playbin3-datakanal"
+
+#, fuzzy
+msgid "Use playbin2 pipeline"
+msgstr "Brug playbin3-datakanal"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -802,11 +809,17 @@ msgstr "Du skal angive mindst et filnavn eller en adresse for at afspille."
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Tryk »k« for at se en liste over genvejstaster.\n"
 
+#~ msgid "failed to draw pattern"
+#~ msgstr "kunne ikke tegne mønster"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "format blev ikke forhandlet før get-funktion"
+
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "Kunne ikke oprette elementet »uridecodebin3«."
 
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Brug playbin3-datakanal"
+#~ msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#~ msgstr "(standard varierer afhængig af miljøvariablen »USE_PLAYBIN«"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Kunne ikke oprette elementet »decodebin3«."

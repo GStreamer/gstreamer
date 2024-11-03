@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.21.90\n"
+"Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2023-01-25 22:24+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-10-03 14:05+0000\n"
 "Last-Translator: Fabio T. <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
 "Language: fur\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Editor: HaiPO 1.4 beta\n"
+"X-Editor: HaiPO 2.0 beta\n"
 "X-Generator: Poedit 1.8.11\n"
 
 msgid "Could not open device for playback in mono mode."
@@ -155,12 +155,15 @@ msgstr "Chest gjenar di flus nol pues ancjemò jessi riprodot."
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nissun gjestôr di URI implementât par \"%s\"."
 
-#, fuzzy
 msgid "Source element can't be prepared"
-msgstr "L'element sorzint nol à sostance dentri."
+msgstr "Impussibil preparâ l'element sorzint"
 
 msgid "Source element is invalid."
 msgstr "L'element sorzint nol è valit."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "Impussibil creâ la cartele dai discjariâts '%s'."
 
 msgid "Source element has no pads."
 msgstr "L'element sorzint nol à sostance dentri."
@@ -175,14 +178,14 @@ msgstr "Impussibil regjistrâ audio a velocitât adeguade"
 msgid "This CD has no audio tracks"
 msgstr "Chest CD nol à liniis audio"
 
-msgid "failed to draw pattern"
-msgstr "impussibil dissegnâ il motîf"
+msgid "An OpenGL error occurred"
+msgstr "Al è capitât un erôr OpenGL"
 
-msgid "A GL error occurred"
-msgstr "Al è capitât un erôr GL"
+msgid "The GL API is not compatible with the current GL context"
+msgstr "La API GL no je compatibile cul contest GL corint"
 
-msgid "format wasn't negotiated before get function"
-msgstr "il formât nol è stât negoziât prime di otignî la funzion"
+msgid "Subclass failed to initialize."
+msgstr "La sot-classe no je rivade a inizializâsi."
 
 msgid "ID3 tag"
 msgstr "Etichete ID3"
@@ -735,7 +738,7 @@ msgid "Start position in seconds."
 msgstr "Posizion di inizi in seconts."
 
 msgid "Enable accurate seeking"
-msgstr ""
+msgstr "Abilite la ricercje precise"
 
 msgid "Playlist file containing input media files"
 msgstr "Il file de liste di riproduzion al conten file multimediâi di jentrade"
@@ -748,12 +751,11 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "No sta a stampâ nissun output (infûr dai erôrs)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"Dopre pipeline playbin3 (il predefinît al varie in base ae variabile di "
-"ambient 'USE_PLAYBIN')"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Dopre la pipeline playbin3 (predefinît)"
+
+msgid "Use playbin2 pipeline"
+msgstr "Dopre la pipeline playbin2"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -764,7 +766,7 @@ msgstr ""
 "ignorât)"
 
 msgid "Do not print current position of pipeline"
-msgstr ""
+msgstr "No sta stampâ la posizion atuâl de pipeline"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -775,6 +777,19 @@ msgstr "Si scugne furnî almancul un non di file o URI par riprodusi."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Fracâ 'k' par viodi un liste des scurtis di tastiere.\n"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "impussibil dissegnâ il motîf"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "il formât nol è stât negoziât prime di otignî la funzion"
+
+#~ msgid ""
+#~ "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+#~ "variable)"
+#~ msgstr ""
+#~ "Dopre pipeline playbin3 (il predefinît al varie in base ae variabile di "
+#~ "ambient 'USE_PLAYBIN')"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Impussibil creâ l'element \"decodebin3\"."

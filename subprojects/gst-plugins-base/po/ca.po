@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -163,6 +163,10 @@ msgstr "L'element font no és vàlid."
 msgid "Source element is invalid."
 msgstr "L'element font no és vàlid."
 
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr ""
+
 #, fuzzy
 msgid "Source element has no pads."
 msgstr "L'element font no és vàlid."
@@ -177,13 +181,13 @@ msgstr "No es pot enregistrar l'àudio el suficientment ràpid"
 msgid "This CD has no audio tracks"
 msgstr "Aquest CD no té pistes d'àudio"
 
-msgid "failed to draw pattern"
+msgid "An OpenGL error occurred"
 msgstr ""
 
-msgid "A GL error occurred"
+msgid "The GL API is not compatible with the current GL context"
 msgstr ""
 
-msgid "format wasn't negotiated before get function"
+msgid "Subclass failed to initialize."
 msgstr ""
 
 msgid "ID3 tag"
@@ -749,9 +753,10 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr ""
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
+msgid "Use playbin3 pipeline (default)"
+msgstr ""
+
+msgid "Use playbin2 pipeline"
 msgstr ""
 
 msgid ""

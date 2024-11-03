@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-13 19:10+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2023-12-24 19:32+0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -154,8 +154,16 @@ msgstr "Šo straumes veidu vēl nevar atskaņot."
 msgid "No URI handler implemented for \"%s\"."
 msgstr "URI apstrādātājs priekš \"%s\" nav ieviests."
 
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Avota elementam nav paliktņu."
+
 msgid "Source element is invalid."
 msgstr "Avota elements ir nederīgs."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr ""
 
 msgid "Source element has no pads."
 msgstr "Avota elementam nav paliktņu."
@@ -170,14 +178,15 @@ msgstr "Nevar ierakstīt audio pietiekami ātri"
 msgid "This CD has no audio tracks"
 msgstr "Šajā CD nav audio celiņu"
 
-msgid "failed to draw pattern"
-msgstr "neizdevās uzzīmēt šablonu"
-
-msgid "A GL error occurred"
+#, fuzzy
+msgid "An OpenGL error occurred"
 msgstr "Radās GL kļūda"
 
-msgid "format wasn't negotiated before get function"
-msgstr "formāts netika apspriests pirms get funkcijas"
+msgid "The GL API is not compatible with the current GL context"
+msgstr ""
+
+msgid "Subclass failed to initialize."
+msgstr ""
 
 msgid "ID3 tag"
 msgstr "ID3 birka"
@@ -713,6 +722,9 @@ msgstr "Skaļums"
 msgid "Start position in seconds."
 msgstr "Sākuma pozīcija sekundēs."
 
+msgid "Enable accurate seeking"
+msgstr ""
+
 msgid "Playlist file containing input media files"
 msgstr "Atskaņošanas saraksta fails, kas satur ievades multivides failus"
 
@@ -723,12 +735,11 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Nedrukāt nekādu izvades failu (izņemot kļūdas)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
+msgid "Use playbin3 pipeline (default)"
 msgstr ""
-"Izmantot playbin3 cauruļvadu (noklusējuma iestatījumi mainās atkarībā no "
-"'USE_PLAYBIN' env mainīgā)"
+
+msgid "Use playbin2 pipeline"
+msgstr ""
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -736,6 +747,9 @@ msgid ""
 msgstr ""
 "Turpināt rādīt pēdējo kadru uz EOS, līdz tiek iziets vai mainīts "
 "atskaņošanas saraksta komanda (atskaņošana bez atstarpēm tiek ignorēts)"
+
+msgid "Do not print current position of pipeline"
+msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -746,3 +760,16 @@ msgstr "Lai atskaņotu, ir jānorāda vismaz viens faila nosaukums vai URI."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Nospiediet \"k\", lai skatītu tastatūras īsceļu sarakstu.\n"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "neizdevās uzzīmēt šablonu"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "formāts netika apspriests pirms get funkcijas"
+
+#~ msgid ""
+#~ "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+#~ "variable)"
+#~ msgstr ""
+#~ "Izmantot playbin3 cauruļvadu (noklusējuma iestatījumi mainās atkarībā no "
+#~ "'USE_PLAYBIN' env mainīgā)"
