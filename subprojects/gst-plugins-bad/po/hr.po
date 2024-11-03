@@ -1,16 +1,16 @@
-# Translation of gst-plugins-bad messages to Croatian.
+# Translati of gst-plugins-bad messages to Croatian.
 # This file is put in the public domain.
 # Copyright (C) 2004-2010, 2019 GStreamer core team.
 # This file is distributed under the same license as the gst-plugins-bad package.
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2018, 2019, 2021, 2022.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2018, 2019, 2021, 2022, 2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.21.90\n"
+"Project-Id-Version: gst-plugins-bad-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:28+0000\n"
-"PO-Revision-Date: 2023-01-15 19:31-0800\n"
+"POT-Creation-Date: 2024-11-03 17:37+0000\n"
+"PO-Revision-Date: 2024-03-08 10:41-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"
@@ -171,4 +171,4 @@ msgstr "Datoteka s postavkama za kanal ne sadrži nijedan kanal"
 #~ msgstr "Interna greška u protoku podataka."
 
 #~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Ne mogu pisati u datoteku „%s”."
+#~ msgstr "ggNe mogu pisati u datoteku „%s”."

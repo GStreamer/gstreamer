@@ -1,15 +1,15 @@
-# translation of gst-plugins-bad-1.19.2.po to Español
+# translation of gst-plugins-bad-1.24.0.po to Español
 # spanish translation for gst-plugins-bad
 # This file is put in the public domain.
 # Jorge González <jorgegonz@svn.gnome.org>, 2007, 2008, 2009, 2011.
-# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022.
+# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022, 2023, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.19.2\n"
+"Project-Id-Version: gst-plugins-bad 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2022-03-07 13:53-0600\n"
+"POT-Creation-Date: 2024-11-03 17:37+0000\n"
+"PO-Revision-Date: 2024-03-07 11:36-0600\n"
 "Last-Translator: Cristian Othón Martínez Vera <cfuga@cfuga.mx>\n"
 "Language-Team: Spanish <es@tp.org.es>\n"
 "Language: es\n"
