@@ -1,9 +1,10 @@
-# Romanian translation for gst-plugins-good
+# Romanian translation for gst-plugins-good.
+# Mesajele în limba română pentru pachetul gst-plugins-good.
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
 # Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
-# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 2022 - 2023.
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 2022 - 2024.
 #
 # Cronologia traducerii fișierului „gst-plugins-good”:
 # Traducerea inițială, făcută de LAG, pentru versiunea gst-plugins-good 0.10.23.2
@@ -11,16 +12,17 @@
 # Actualizare a mesajelor, de la fișierul „gst-plugins-good-1.19.2.pot”.
 # Eliminare a mesajelor ce-au dispărut în ultima versiune.
 # Actualizare a traducerii pentru versiunea 1.19.2, făcută de R-GC, ian-2022.
-# Actualizare a traducerii pentru versiunea 1.21.90, făcută de R-GC, ian-2023
-# Revizuire și corectare a traducerii pentru versiunea 1.21.90, făcută de R-GC, noi-2023
+# Actualizare a traducerii pentru versiunea 1.21.90, făcută de R-GC, ian-2023.
+# Revizuire și corectare a traducerii pentru versiunea 1.21.90, făcută de R-GC, noi-2023.
+# Actualizare a traducerii pentru versiunea 1.24.0, făcută de R-GC, mar-2024.
 # Actualizare a traducerii pentru versiunea Y, făcută de X, Z(anul).
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.21.90\n"
+"Project-Id-Version: gst-plugins-good 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-13 19:10+0000\n"
-"PO-Revision-Date: 2023-11-17 16:55+0100\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-08 10:53+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
@@ -115,6 +117,12 @@ msgstr "Acest fișier este corupt și nu poate fi redat."
 msgid "Invalid atom size."
 msgstr "Dimensiune de atom nevalidă."
 
+msgid "Cannot query file size"
+msgstr "Nu se poate obține dimensiunea fișierului"
+
+msgid "Cannot demux file"
+msgstr "Nu se poate demultiplexa fișierul"
+
 msgid "This file is incomplete and cannot be played."
 msgstr "Acest fișier nu este complet și nu poate fi redat."
 
@@ -168,13 +176,13 @@ msgstr ""
 "OSS (Open Sound System) nu este suportată de acest element."
 
 msgid "Playback is not supported by this audio device."
-msgstr "Redarea nu este suportată de acest dispozitiv audio."
+msgstr "Redarea nu este asigurată de acest dispozitiv audio."
 
 msgid "Audio playback error."
 msgstr "Eroare redare audio."
 
 msgid "Recording is not supported by this audio device."
-msgstr "Înregistrarea nu este suportată de acest dispozitiv audio."
+msgstr "Înregistrarea nu este asigurată de acest dispozitiv audio."
 
 msgid "Error recording from audio device."
 msgstr "Eroare la înregistrarea de la dispozitivul audio."
@@ -227,7 +235,7 @@ msgstr "Nu s-a putut cartografia memoria tampon din dispozitivul „%s”"
 
 #, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr "Controlorul dispozitivului „%s” nu suportă metoda de In/Ieș %d"
+msgstr "Controlorul dispozitivului „%s” nu acceptă metoda de In/Ieș %d"
 
 # R-Gc, scrie:
 # s-a modificat de la:
@@ -235,7 +243,7 @@ msgstr "Controlorul dispozitivului „%s” nu suportă metoda de In/Ieș %d"
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
-"Controlorul dispozitivului „%s” nu suportă nicio metodă de In/Ieș cunoscută."
+"Controlorul dispozitivului „%s” nu acceptă nicio metodă de In/Ieș cunoscută."
 
 # DȘ, spune:
 # „→ aici cred că „caps” vine de la „capitals” care
@@ -261,7 +269,7 @@ msgstr "Caracteristici incorecte"
 
 #, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Dispozitivul „%s” nu are niciun format suportat"
+msgstr "Dispozitivul „%s” nu are un format compatibil"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
@@ -296,7 +304,7 @@ msgid "Could not get parameters on device '%s'"
 msgstr "Nu s-au putut obține parametrii pentru dispozitivul „%s”"
 
 msgid "Video device did not accept new frame rate setting."
-msgstr "Dispozitivul video nu a acceptat o configurare de rată de cadru nouă."
+msgstr "Dispozitivul video nu a acceptat noua valoare a frecvenței cadrelor."
 
 msgid "Video device did not provide output format."
 msgstr "Dispozitivul video nu a furnizat un format de ieșire."
@@ -327,8 +335,8 @@ msgstr "Nu există o rezervă în aval din care să se importe."
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr ""
-"Nu s-au putut obține configurările a receptorului de semnal %d pe "
-"dispozitivul „%s”."
+"Nu s-au putut obține configurările receptorului de semnal %d pe dispozitivul "
+"„%s”."
 
 # R-GC, scrie:
 # modificat de la:
@@ -351,10 +359,10 @@ msgstr "Definirea valorii %d pentru dispozitivul „%s” a eșuat."
 
 #, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Nu s-a putut modifica starea „fără sunet” pe dispozitivul „%s”."
+msgstr "Nu s-a putut modifica starea „sunet dezactivat” pe dispozitivul „%s”."
 
 msgid "Failed to allocated required memory."
-msgstr "Nu s-a putut aloca memoria necesară."
+msgstr "Nu s-a reușit să se aloce memoria necesară."
 
 msgid "Failed to allocate required memory."
 msgstr "Nu s-a putut aloca memoria necesară."
@@ -374,11 +382,6 @@ msgid "Decoder on device %s has no supported input format"
 msgstr ""
 "Decodificatorul pe dispozitivul %s nu are niciun format de intrare acceptat"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr ""
-"Decodificatorul pe dispozitivul %s nu are niciun format de ieșire acceptat"
-
 msgid "Failed to start decoding thread."
 msgstr "Nu s-a putut începe firul de decodificare."
 
@@ -395,8 +398,11 @@ msgid "Encoder on device %s has no supported input format"
 msgstr ""
 "Codificatorul pe dispozitivul %s nu are niciun format de intrare acceptat"
 
+msgid "Failed to force keyframe."
+msgstr "Nu s-a putut forța cadrul cheie."
+
 msgid "Failed to start encoding thread."
-msgstr "Nu s-a putut începe firul de codare."
+msgstr "Nu s-a putut începe firul de codificare."
 
 #, c-format
 msgid ""
@@ -404,7 +410,7 @@ msgid ""
 "it is a v4l1 driver."
 msgstr ""
 "Eroare la obținerea caracteristicilor pentru dispozitivul „%s”: Controlorul "
-"dispozitivului nu este un contolor v4l2. Verificați dacă este un controlor "
+"dispozitivului nu este un controlor v4l2. Verificați dacă este un controlor "
 "v4l1."
 
 #, c-format
@@ -516,6 +522,11 @@ msgstr "Nu s-a putut stabili ieșirea %u pe dispozitivul %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Nu se poate opera fără un ceas"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr ""
+#~ "Decodificatorul pe dispozitivul %s nu are niciun format de ieșire acceptat"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr "Schimbarea rezoluției pe durata rulării nu este încă suportată."

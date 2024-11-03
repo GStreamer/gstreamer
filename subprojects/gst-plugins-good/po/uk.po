@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021.
+# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021, 2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Project-Id-Version: gst-plugins-good 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2021-09-24 16:49+0300\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-07-21 19:45+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <trans-uk@lists.fedoraproject.org>\n"
 "Language: uk\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Lokalize 20.12.0\n"
+"X-Generator: Lokalize 23.04.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "Jack server not found"
@@ -107,10 +107,10 @@ msgid "Invalid atom size."
 msgstr "Некоректний розмір елементарного фрагмента."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "Не вдалося визначити розмір файла"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "Не вдалося демультиплексувати файл"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Файл неповний, його не можна відтворити."
@@ -328,12 +328,6 @@ msgstr ""
 "Засіб декодування на пристрої %s не може отримувати дані у підтримуваному "
 "форматі"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr ""
-"Засіб декодування на пристрої %s не може виводити дані у підтримуваному "
-"форматі"
-
 msgid "Failed to start decoding thread."
 msgstr "Не вдалося започаткувати потік декодування."
 
@@ -350,6 +344,9 @@ msgid "Encoder on device %s has no supported input format"
 msgstr ""
 "Засіб кодування на пристрої %s не може отримувати дані у підтримуваному "
 "форматі"
+
+msgid "Failed to force keyframe."
+msgstr "Не вдалося примусово встановити ключовий кадр."
 
 msgid "Failed to start encoding thread."
 msgstr "Не вдалося започаткувати потік кодування."
@@ -459,6 +456,12 @@ msgstr "Не вдалося встановити вихід %u пристрою 
 
 msgid "Cannot operate without a clock"
 msgstr "Робота без годинника неможлива"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr ""
+#~ "Засіб декодування на пристрої %s не може виводити дані у підтримуваному "
+#~ "форматі"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr "Зміна роздільної здатності при відтворенні ще не підтримується."

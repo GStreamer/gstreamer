@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.12.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2017-09-13 15:00+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -308,10 +308,6 @@ msgstr "Převodník na zařízení „%s“ nepodporuje výstupní formát"
 msgid "Decoder on device %s has no supported input format"
 msgstr "Kodér na zařízení „%s“ nepodporuje vstupní formát"
 
-#, fuzzy, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Kodér na zařízení „%s“ nepodporuje výstupní formát"
-
 msgid "Failed to start decoding thread."
 msgstr "Selhalo spuštění vlákna dekodéru."
 
@@ -325,6 +321,10 @@ msgstr "Kodér na zařízení „%s“ nepodporuje výstupní formát"
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Kodér na zařízení „%s“ nepodporuje vstupní formát"
+
+#, fuzzy
+msgid "Failed to force keyframe."
+msgstr "Selhalo zpracování snímku."
 
 #, fuzzy
 msgid "Failed to start encoding thread."

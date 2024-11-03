@@ -8,23 +8,23 @@
 # Pipeline = Weiterleitung
 # Stream = Strom
 # mixer  = Mischer
-# Christian Kirbach <christian.kirbach@gmail.com>, 2010, 2011, 2012, 2013, 2014, 2015, 2019, 2021.
+# Christian Kirbach <christian.kirbach@gmail.com>, 2010, 2011, 2012, 2013, 2014, 2015, 2019, 2021, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Project-Id-Version: gst-plugins-good 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2021-11-06 23:20+0100\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-17 00:05+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.0\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.4.2\n"
 
 msgid "Jack server not found"
 msgstr "Jack-Server nicht gefunden"
@@ -111,10 +111,10 @@ msgid "Invalid atom size."
 msgstr "Ungültige Atom-Größe."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "Die Dateigröße kann nicht erfragt werden"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "Die Datei kann nicht de-multiplext werden"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Diese Datei ist unvollständig und kann nicht wiedergegeben werden."
@@ -326,10 +326,6 @@ msgstr "Der Umwandler auf Gerät %s hat kein unterstütztes Ausgabeformat"
 msgid "Decoder on device %s has no supported input format"
 msgstr "Der Dekodierer auf Gerät %s hat kein unterstütztes Eingabeformat"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Der Dekodierer auf Gerät %s hat kein unterstütztes Ausgabeformat"
-
 msgid "Failed to start decoding thread."
 msgstr "Starten des Thread zur Dekodierung ist fehlgeschlagen."
 
@@ -343,6 +339,9 @@ msgstr "Der Kodierer auf Gerät %s hat kein unterstütztes Ausgabeformat"
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Der Kodierer auf Gerät %s hat kein unterstütztes Eingabeformat"
+
+msgid "Failed to force keyframe."
+msgstr "Erzwingen eines Schlüssel-Einzelbilds schlug fehl."
 
 msgid "Failed to start encoding thread."
 msgstr "Starten des Thread zur Dekodierung schlug fehl."
@@ -455,6 +454,10 @@ msgstr "Festlegen der Ausgabe »%u« des Geräts »%s« schlug fehl."
 # Taktgeber klingt gut.
 msgid "Cannot operate without a clock"
 msgstr "Es kann nicht ohne einen Taktgeber gearbeitet werden."
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr "Der Dekodierer auf Gerät %s hat kein unterstütztes Ausgabeformat"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr "Ein Wechsel der Auflösung zur Laufzeit wird noch nicht unterstützt."

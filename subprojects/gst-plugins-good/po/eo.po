@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2023-01-08 12:06-0300\n"
 "Last-Translator: Felipe Castro <fefcas@gmail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -307,10 +307,6 @@ msgstr "Konvertilo en la aparato %s havas neniun subtenatan eligan formon"
 msgid "Decoder on device %s has no supported input format"
 msgstr "Malkodilo en la aparato %s havas neniun subtenatan enigan formon"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Malkodilo en la aparato %s havas neniun subtenatan eligan formon"
-
 msgid "Failed to start decoding thread."
 msgstr "Malsukcesis lanĉi malkodilan fadenon."
 
@@ -324,6 +320,10 @@ msgstr "Enkodilo en la aparato %s havas neniun subtenatan eligan formon"
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Enkodilo en la aparato %s havas neniun subtenatan enigan formon"
+
+#, fuzzy
+msgid "Failed to force keyframe."
+msgstr "Malsukcesis procezi kadron."
 
 msgid "Failed to start encoding thread."
 msgstr "Malsukcesis lanĉi enkodigan fadenon."
@@ -431,6 +431,10 @@ msgstr "Malsukcesis difini eligon %u en aparato %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Ne eblas funkcii sen horloĝo"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr "Malkodilo en la aparato %s havas neniun subtenatan eligan formon"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr "Ŝanĝo de distingpovon dum plenumado ankoraŭ ne estas subtenata."

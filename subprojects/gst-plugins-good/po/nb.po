@@ -2,14 +2,14 @@
 # This file is put in the public domain.
 #
 # Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
-# Johnny A. Solbu <johnny@solbu.net>, 2012-2021
+# Johnny A. Solbu <johnny@solbu.net>, 2012-2024
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Project-Id-Version: gst-plugins-good 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2021-09-24 18:03+0200\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-09-11 12:17+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <l10n-no@lister.huftis.org>\n"
 "Language: nb_NO\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 2.2.3\n"
+"X-Generator: Poedit 2.4.2\n"
 
 msgid "Jack server not found"
 msgstr "Jack-server ikke funnet"
@@ -51,7 +51,7 @@ msgid "'%s' by '%s'"
 msgstr "«%s» av «%s»"
 
 msgid "Could not connect to server"
-msgstr "Kunne ikke koble til tjener."
+msgstr "Kunne ikke koble til tjener"
 
 msgid "No URL set."
 msgstr "Ingen URL satt."
@@ -98,10 +98,10 @@ msgid "Invalid atom size."
 msgstr "Ugyldig atomstørrelse."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "Kan ikke spørre etter filstørrelsee"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "Kan ikke demux-e fil"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Filen er ufullstendig og kan ikke spilles."
@@ -153,7 +153,7 @@ msgid "Playback is not supported by this audio device."
 msgstr "Avspilling støttes ikke av denne lydenheten."
 
 msgid "Audio playback error."
-msgstr "Lydavspillingsfeil"
+msgstr "Lydavspillingsfeil."
 
 msgid "Recording is not supported by this audio device."
 msgstr "Opptak støttes ikke av denne lydenheten."
@@ -255,7 +255,7 @@ msgid "Video device uses an unsupported pixel format."
 msgstr "Videoenhet bruker et ustøttet pikselformat."
 
 msgid "Failed to configure internal buffer pool."
-msgstr "Klarte ikke å konfigurere internt bufferområde"
+msgstr "Klarte ikke å konfigurere internt bufferområde."
 
 msgid "Video device did not suggest any buffer size."
 msgstr "Videoenhet foreslo ikke noen bufferstørrelse."
@@ -277,7 +277,7 @@ msgstr "Enheten «%s» er ikke en tuner."
 
 #, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Mislyktes i å få radio-inndata på enheten «%s»."
+msgstr "Mislyktes i å få radio-inndata på enheten «%s». "
 
 #, c-format
 msgid "Failed to set input %d on device %s."
@@ -305,10 +305,6 @@ msgstr "Konverter på enhet «%s» har ingen støttede utdataformat"
 msgid "Decoder on device %s has no supported input format"
 msgstr "Dekoder på enhet «%s» har ingen støttede inndataformat"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Dekoder på enhet «%s» har ingen støttede utdataformat"
-
 msgid "Failed to start decoding thread."
 msgstr "Klarte ikke å starte dekoding av tråden."
 
@@ -322,6 +318,9 @@ msgstr "Enkoder på enhet «%s» har ingen støttede utdataformat"
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Enkoder på enhet «%s» har ingen støttede inndataformat"
+
+msgid "Failed to force keyframe."
+msgstr "Kunne ikke tvinge nøkkelbilde."
 
 msgid "Failed to start encoding thread."
 msgstr "Klarte ikke å starte kodingstråd."
@@ -428,6 +427,10 @@ msgstr "Klarte ikke å sette utgang %u på enhet %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke operere uten en klokke"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr "Dekoder på enhet «%s» har ingen støttede utdataformat"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr "Endring av oppløsning under kjøring støttes ikke enda."

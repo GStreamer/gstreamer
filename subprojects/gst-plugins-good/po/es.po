@@ -1,15 +1,15 @@
-# translation of gst-plugins-good-1.19.2.po to Español
+# translation of gst-plugins-good-1.24.0.po to Español
 # spanish translation for gst-plugins-good
 # This file is put in the public domain.
 # Jorge González González <aloriel@gmail.com>, 2007, 2008, 2009, 2010, 2011.
-# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022
+# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022, 2023, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Project-Id-Version: gst-plugins-good 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2022-03-04 17:35-0600\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-07 11:34-0600\n"
 "Last-Translator: Cristian Othón Martínez Vera <cfuga@cfuga.mx>\n"
 "Language-Team: Spanish <es@tp.org.es>\n"
 "Language: es\n"
@@ -102,10 +102,10 @@ msgid "Invalid atom size."
 msgstr "El tamaño atom no es válido."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "No se puede obtener el tamaño del archivo"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "No se puede decodificar el archivo"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Este archivo está incompleto y no se puede reproducir."
@@ -320,11 +320,6 @@ msgstr ""
 "El decodificador en el dispositivo %s no tiene un formato de entrada "
 "soportado"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr ""
-"El decodificador en el dispositivo %s no tiene un formato de salida soportado"
-
 msgid "Failed to start decoding thread."
 msgstr "Falló al iniciar el hilo de decodificación."
 
@@ -340,6 +335,9 @@ msgstr ""
 msgid "Encoder on device %s has no supported input format"
 msgstr ""
 "El codificador en el dispositivo %s no tiene un formato de entrada soportado."
+
+msgid "Failed to force keyframe."
+msgstr "Falló al forzar el fotograma."
 
 msgid "Failed to start encoding thread."
 msgstr "Falló al iniciar el hilo de codificación."
@@ -454,6 +452,12 @@ msgstr "Falló al establecer la salida %u en el dispositivo %s."
 
 msgid "Cannot operate without a clock"
 msgstr "No se puede operar sin reloj"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr ""
+#~ "El decodificador en el dispositivo %s no tiene un formato de salida "
+#~ "soportado"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr ""

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2022-10-18 21:22+0200\n"
 "Last-Translator: Balázs Úr <ur.balazs@fsf.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -315,10 +315,6 @@ msgstr "A(z) %s eszközön lévő átalakítónak nincs támogatott kimeneti for
 msgid "Decoder on device %s has no supported input format"
 msgstr "A(z) %s eszközön lévő dekódolónak nincs támogatott bemeneti formátuma"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "A(z) %s eszközön lévő dekódolónak nincs támogatott kimeneti formátuma"
-
 msgid "Failed to start decoding thread."
 msgstr "Nem sikerült elindítani a dekódolási szálat."
 
@@ -332,6 +328,10 @@ msgstr "A(z) %s eszközön lévő kódolónak nincs támogatott kimeneti formát
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "A(z) %s eszközön lévő kódolónak nincs támogatott bemeneti formátuma"
+
+#, fuzzy
+msgid "Failed to force keyframe."
+msgstr "Nem sikerült feldolgozni a keretet."
 
 msgid "Failed to start encoding thread."
 msgstr "Nem sikerült elindítani a kódolási szálat."
@@ -446,6 +446,11 @@ msgstr "A(z) %u. kimenet beállítása meghiúsult a(z) „%s” eszközön."
 
 msgid "Cannot operate without a clock"
 msgstr "Óra nélkül lehetetlen a működés"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr ""
+#~ "A(z) %s eszközön lévő dekódolónak nincs támogatott kimeneti formátuma"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr "A felbontás módosítása futás közben még nem támogatott."

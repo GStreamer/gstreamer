@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -291,10 +291,6 @@ msgstr ""
 msgid "Decoder on device %s has no supported input format"
 msgstr ""
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr ""
-
 msgid "Failed to start decoding thread."
 msgstr ""
 
@@ -307,6 +303,9 @@ msgstr ""
 
 #, c-format
 msgid "Encoder on device %s has no supported input format"
+msgstr ""
+
+msgid "Failed to force keyframe."
 msgstr ""
 
 msgid "Failed to start encoding thread."

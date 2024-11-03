@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.21.90\n"
+"Project-Id-Version: gst-plugins-good 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2023-01-27 21:32+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-10-03 14:10+0000\n"
 "Last-Translator: Fabio T. <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
 "Language: fur\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Editor: HaiPO 1.4 beta\n"
+"X-Editor: HaiPO 2.0 beta\n"
 "X-Generator: Poedit 1.8.11\n"
 
 msgid "Jack server not found"
@@ -104,10 +104,10 @@ msgid "Invalid atom size."
 msgstr "Dimension atom no valide."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "Impussibil domandâ la dimension dal file"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "Impussibil demultiplâ il file"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Chest file nol è complet e nol pues jessi riprodot."
@@ -317,11 +317,6 @@ msgid "Decoder on device %s has no supported input format"
 msgstr ""
 "Il decodificadôr sul dispositîf %s nol à un formât di jentrade supuartât"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr ""
-"Il decodificadôr sul dispositîf %s nol à un formât di jessude supuartât"
-
 msgid "Failed to start decoding thread."
 msgstr "Nol è stât pussibil inviâ il thread di decodifiche."
 
@@ -335,6 +330,9 @@ msgstr "Il codificadôr sul dispositîf %s nol à formâts di jessude supuartât
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Il codificadôr sul dispositîf %s nol à formâts di jentrade supuartâts"
+
+msgid "Failed to force keyframe."
+msgstr "Impussibil sfuarçâ il fotogram clâf."
 
 msgid "Failed to start encoding thread."
 msgstr "Nol è stât pussibil inviâ il thread di codifiche."
@@ -449,6 +447,11 @@ msgstr "Nol è stât pussibil stabilî la jessude %u sul dispositîf %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Impussibil operâ cence un orloi"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr ""
+#~ "Il decodificadôr sul dispositîf %s nol à un formât di jessude supuartât"
 
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr "Chest file al conten masse flus. Si riprodusarà nome i prins %d"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2010-07-16 19:34+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -307,10 +307,6 @@ msgstr ""
 msgid "Decoder on device %s has no supported input format"
 msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būdų."
 
-#, fuzzy, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būdų."
-
 #, fuzzy
 msgid "Failed to start decoding thread."
 msgstr "Nepavyko dekoduoti JPEG paveikslėlio"
@@ -324,6 +320,9 @@ msgstr ""
 
 #, c-format
 msgid "Encoder on device %s has no supported input format"
+msgstr ""
+
+msgid "Failed to force keyframe."
 msgstr ""
 
 msgid "Failed to start encoding thread."

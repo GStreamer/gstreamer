@@ -1,16 +1,16 @@
 # Swedish messages for gst-plugins-good.
-# Copyright © 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2014, 2015, 2016, 2017, 2019, 2022 Free Software Foundation, Inc.
+# Copyright © 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2014, 2015, 2016, 2017, 2019, 2022, 2024 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009, 2010, 2011.
-# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019, 2022.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019, 2022, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Project-Id-Version: gst-plugins-good 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2022-10-26 21:21+0200\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-07 18:24+0800\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.1.1\n"
+"X-Generator: Poedit 3.4.2\n"
 
 msgid "Jack server not found"
 msgstr "Jack-server hittades ej"
@@ -101,10 +101,10 @@ msgid "Invalid atom size."
 msgstr "Ogiltig atomstorlek."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "Kan inte begära filstorlek"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "Kan inte avmultiplexera fil"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Den här filen är inte fullständig och kan inte spelas upp."
@@ -312,10 +312,6 @@ msgstr "Konvertorn på enheten %s har inget utgångsformat som stöds"
 msgid "Decoder on device %s has no supported input format"
 msgstr "Avkodaren på enhet %s har inget ingångsformat som stöds"
 
-#, c-format
-msgid "Decoder on device %s has no supported output format"
-msgstr "Avkodaren på enhet %s har inget utgångsformat som stöds"
-
 msgid "Failed to start decoding thread."
 msgstr "Misslyckades med att starta avkodningstråd."
 
@@ -329,6 +325,9 @@ msgstr "Kodaren på enheten %s har inget utgångsformat som stöds"
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr "Kodaren på enheten %s har inget ingångsformat som stöds"
+
+msgid "Failed to force keyframe."
+msgstr "Misslyckades att tvinga nyckelram."
 
 msgid "Failed to start encoding thread."
 msgstr "Misslyckades med att starta kodningstråd."
@@ -441,6 +440,10 @@ msgstr "Misslyckades med att ställa in utgång %u på enhet %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan inte fungera utan en klocka"
+
+#, c-format
+#~ msgid "Decoder on device %s has no supported output format"
+#~ msgstr "Avkodaren på enhet %s har inget utgångsformat som stöds"
 
 #~ msgid "Changing resolution at runtime is not yet supported."
 #~ msgstr "Ändring av upplösning vid körtid stöds inte än."
