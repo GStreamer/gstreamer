@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -54,9 +54,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Disable debugging"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Enable verbose plugin loading diagnostics"
 
 msgid "Colon-separated paths containing plugins"
 msgstr ""
@@ -835,6 +832,12 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1067,6 +1070,10 @@ msgstr "album containing this data"
 msgid "%sImplemented Interfaces%s:\n"
 msgstr ""
 
+#, c-format
+msgid "%sElement Flags%s:\n"
+msgstr ""
+
 msgid "readable"
 msgstr ""
 
@@ -1080,6 +1087,9 @@ msgid "controllable"
 msgstr ""
 
 msgid "conditionally available"
+msgstr ""
+
+msgid "can be set only at object construction time"
 msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
@@ -1326,6 +1336,13 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr ""
 
+#, fuzzy
+msgid "Set the name of the program"
+msgstr "Stream is of the wrong format."
+
+msgid "PROGRAM-NAME"
+msgstr ""
+
 msgid "Do not install a fault handler"
 msgstr "Do not install a fault handler"
 
@@ -1384,6 +1401,9 @@ msgstr "RUNNING pipeline ...\n"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Disable accelerated CPU instructions"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Enable verbose plugin loading diagnostics"
 
 #~ msgid "SCHEDULER"
 #~ msgstr "SCHEDULER"

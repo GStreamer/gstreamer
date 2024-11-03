@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.21.90\n"
+"Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:51+0000\n"
-"PO-Revision-Date: 2023-01-28 11:40+0100\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-10-03 15:38+0000\n"
 "Last-Translator: Fabio T. <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
 "Language: fur\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Editor: HaiPO 1.4 beta\n"
+"X-Editor: HaiPO 2.0 beta\n"
 "X-Generator: Poedit 3.2.2\n"
 
 msgid "Print the GStreamer version"
@@ -58,9 +58,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Disabilite il debug"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Abilite lis diagnostichis prolissis pal cjariament dai plugins"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Percors separâts di “:” che a contegnin i plugins"
@@ -463,10 +460,10 @@ msgid "person(s) who composed the recording"
 msgstr "persone(-is) che e à componût la regjistrazion"
 
 msgid "conductor"
-msgstr ""
+msgstr "diretôr"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "perfezionament diretôr/artist"
 
 msgid "duration"
 msgstr "durade"
@@ -547,31 +544,31 @@ msgid "serial number of track"
 msgstr "numar seriâl dal toc"
 
 msgid "replaygain track gain"
-msgstr ""
+msgstr "vuadagn de linie replaygain"
 
 msgid "track gain in db"
 msgstr "vuadagn toc in db"
 
 msgid "replaygain track peak"
-msgstr ""
+msgstr "Pic de linie replaygain"
 
 msgid "peak of the track"
 msgstr "pic dal toc"
 
 msgid "replaygain album gain"
-msgstr ""
+msgstr "vuadagn dal album replaygain"
 
 msgid "album gain in db"
 msgstr "vuadagn album in db"
 
 msgid "replaygain album peak"
-msgstr ""
+msgstr "pic dal album replaygain"
 
 msgid "peak of the album"
 msgstr "pic dal album"
 
 msgid "replaygain reference level"
-msgstr ""
+msgstr "nivel di riferiment replaygain"
 
 msgid "reference level of track and album gain values"
 msgstr "nivel di riferiment dai valôrs di vuadagn de linie e dal album"
@@ -680,7 +677,7 @@ msgstr ""
 "o prodot"
 
 msgid "geo location sublocation"
-msgstr ""
+msgstr "sot-posizion de posizion gjeografiche"
 
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
@@ -690,35 +687,43 @@ msgstr ""
 "prodot o creât (p.e. borc)"
 
 msgid "geo location horizontal error"
-msgstr ""
+msgstr "erôr de posizion orizontâl gjeografiche"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "erôr spietât des misuris di posizionament orizontâl (in metris)"
 
 msgid "geo location movement speed"
-msgstr ""
+msgstr "velocitât di moviment de posizion gjeografiche"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
+"velocitât di moviment dal dispositîf di acuisizion intant che al eseguìs il "
+"rilevament in m/s"
 
 msgid "geo location movement direction"
-msgstr ""
+msgstr "direzion di moviment de posizion gjeografiche"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"al indiche la direzion di moviment dal dispositîf tal eseguî la acuisizion "
+"di un contignût multimediâl. Al è rapresentât tant che grâts in virgule "
+"mobile, 0 al è il Nord gjeografic e al incrès in sens orari"
 
 msgid "geo location capture direction"
-msgstr ""
+msgstr "direzion de acuisizion de posizion gjeografiche"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"al indiche la direzion là che il dispositîf al sta pontant intant che al "
+"tire sù  un contignût multimediâl. Al è rapresentât tant che grâts in "
+"virgule mobile,  0 al è il Nord gjeografic e al incrès in sens orari"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -726,6 +731,8 @@ msgstr "mostre non"
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
+"Non di dulà che a rivin i contignûts multimediâi di tv/podcast/seriis "
+"televisivis"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 msgid "show sortname"
@@ -734,6 +741,8 @@ msgstr "mostre non ordenament"
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
+"Non di dulà che a rivin i contignûts multimediâi di tv/podcast/seriis "
+"televisivis, par finalitâts di ordenament"
 
 msgid "episode number"
 msgstr "numar episodi"
@@ -752,10 +761,10 @@ msgstr ""
 "multimediâl"
 
 msgid "lyrics"
-msgstr ""
+msgstr "tescj"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "I tescj dai contignûts multimediâi, di solit doprâts pes cjançons"
 
 msgid "composer sortname"
 msgstr "non ordenament compositôr"
@@ -804,7 +813,7 @@ msgid "application data"
 msgstr "dâts aplicazion"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "Dâts di aplicazion arbitraris di serializâ tal contignût multimediâl"
 
 msgid "image orientation"
 msgstr "orientament imagjin"
@@ -814,28 +823,35 @@ msgstr ""
 "Ce mût che la imagjin e varès di jessi voltade o ribaltade prime di mostrâle"
 
 msgid "publisher"
-msgstr ""
+msgstr "editôr"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Non de etichete o dal editôr"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "interpretât di"
 
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
+"Informazions su lis personis daûr di un remix e di interpretazions similis"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "midi-base-note"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Numar di notis midi di une linie audio."
 
 msgid "private-data"
-msgstr ""
+msgstr "dâts privâts"
 
 msgid "Private data"
+msgstr "Dâts privâts"
+
+msgid "container-specific-track-id"
 msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr "ID de linie specific dal contignidôr"
 
 #. separator between two strings
 msgid ", "
@@ -843,43 +859,45 @@ msgstr ", "
 
 #, c-format
 msgid "Invalid URI: %s"
-msgstr ""
+msgstr "URI no valit: %s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "Nissun gjestôr URI cjatât pal protocol %s"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "Scheme dal URI '%s' no supuartât"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
-msgstr ""
+msgstr "ERÔR: dal element %s: %s\n"
 
 #, c-format
 msgid ""
 "Additional debug info:\n"
 "%s\n"
 msgstr ""
+"Informazions adizionâls di debug:\n"
+"%s\n"
 
 #. ******************************************************************************************
 #. *** helpers for pipeline-setup
 #. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "il colegament nol à sorzint [destinazion=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
-msgstr ""
+msgstr "il colegament nol à destinazion [sorzint=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "Cheste proprietât no esist."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr ""
+msgstr "nissune proprietât \"%s\" tal element \"%s\""
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -891,65 +909,68 @@ msgstr "impussibil stabilî la pre-configurazion \"%s\" tal element \"%s\""
 
 #, c-format
 msgid "no element \"%s\""
-msgstr ""
+msgstr "nissun element \"%s\""
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr ""
+msgstr "impussibil meti la proprietât \"%s\" tal element \"%s\" a \"%s\""
 
 #, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr ""
+"impussibil meti la proprietât \"%s\" tal fi dal element \"%s\" a \"%s\""
 
 msgid "Delayed linking failed."
-msgstr ""
+msgstr "Nol è stât pussibil fâ il colegament intardât."
 
 #, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr ""
+msgstr "impussibil colegâ %s a %s, %s nol rive a gjestî lis capacitâts %s"
 
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
 msgstr ""
+"impussibil colegâ %s a %s, nissun dai doi elements al rive a gjestî lis "
+"capacitâts %s"
 
 #, c-format
 msgid "could not link %s to %s with caps %s"
-msgstr ""
+msgstr "impussibil colegâ %s a %s cu lis capacitâts %s"
 
 #, c-format
 msgid "could not link %s to %s"
-msgstr ""
+msgstr "impussibil colegâ %s a %s"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr ""
+msgstr "riferiment \"%s\" inspietât - si ignore"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "riferiment-pad \"%s\" inspietât - si ignore"
 
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr ""
+msgstr "impussibil analizâ lis capacitât \"%s\""
 
 #, c-format
 msgid "no sink element for URI \"%s\""
-msgstr ""
+msgstr "nissun element di destinazion pal URI \"%s\""
 
 #, c-format
 msgid "no source element for URI \"%s\""
-msgstr ""
+msgstr "nissun element sorzint pal URI \"%s\""
 
 msgid "syntax error"
 msgstr "erôr di sintassi"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr ""
+msgstr "specificât bin \"%s\" vueit, no consintût"
 
 #, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr ""
+msgstr "nissun bin \"%s\", daûr a dispacâ i elements"
 
 msgid "empty pipeline not allowed"
 msgstr "la pipeline vueide no je ametude"
@@ -958,33 +979,36 @@ msgid "Pipeline construction is invalid, please add queues."
 msgstr "La costrusion de pipeline no je valide, zonte codis di riproduzion."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "A vegnin scartâts une vore di buffers."
 
 msgid "Internal data flow problem."
-msgstr ""
+msgstr "Probleme di flus dâts interni."
 
 msgid "Internal data flow error."
-msgstr ""
+msgstr "Erôr di flus dâts interni."
 
 msgid "Internal clock error."
-msgstr ""
+msgstr "Erôr di orloi interni."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Impussibil mapâ il buffer."
 
 msgid "Filter caps"
-msgstr ""
+msgstr "Filtre capacitâts"
 
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
+"Limite lis pussibilis capacitâts consintudis (NULL al significhe DUTIS). La "
+"configurazion di cheste proprietât e cjape un riferiment al ogjet GstCaps "
+"indicât."
 
 msgid "Caps Change Mode"
-msgstr ""
+msgstr "Modalitât cambi capacitâts"
 
 msgid "Filter caps change behaviour"
-msgstr ""
+msgstr "Compuartament dal cambi dal filtri des capacitâts"
 
 msgid "No Temp directory specified."
 msgstr "Nissune cartele temporanie specificade."
@@ -998,7 +1022,7 @@ msgid "Could not open file \"%s\" for reading."
 msgstr "Impussibil vierzi il file \"%s\" pe leture."
 
 msgid "Error while writing to download file."
-msgstr ""
+msgstr "Erôr inte scriture dal file discjariât."
 
 msgid "No file name specified for writing."
 msgstr "Nissun non di file specificât pe scriture."
@@ -1024,7 +1048,7 @@ msgstr "Nissun non di file specificât pe leture."
 
 #, c-format
 msgid "Could not get info on \"%s\"."
-msgstr ""
+msgstr "Impussibil otignî informazions su \"%s\"."
 
 #, c-format
 msgid "\"%s\" is a directory."
@@ -1035,25 +1059,25 @@ msgid "File \"%s\" is a socket."
 msgstr "Il file \"%s\" al è un socket."
 
 msgid "Failed after iterations as requested."
-msgstr ""
+msgstr "Erôr dopo des iterazions come domandadis."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "nol è pussibil definî ducj i doi eos-after e error-after."
 
 msgid "caps"
-msgstr ""
+msgstr "capacitâts"
 
 msgid "detected capabilities in stream"
-msgstr ""
+msgstr "rilevadis capacitâts tal flus"
 
 msgid "minimum"
-msgstr ""
+msgstr "minim"
 
 msgid "force caps"
-msgstr ""
+msgstr "sfuarce capacitâts"
 
 msgid "force caps without doing a typefind"
-msgstr ""
+msgstr "sfuarce lis capacitâts cence fâ un typefind"
 
 msgid "Stream doesn't contain enough data."
 msgstr "Il flus nol conten vonde dâts."
@@ -1065,29 +1089,36 @@ msgstr "Il flus nol conten dâts."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sInterfacis implementadis%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sInterfacis implementadis%s:\n"
+
 msgid "readable"
-msgstr ""
+msgstr "leibil"
 
 msgid "writable"
-msgstr ""
+msgstr "scrivibil"
 
 msgid "deprecated"
-msgstr ""
+msgstr "deplorât"
 
 msgid "controllable"
-msgstr ""
+msgstr "controlabil"
 
 msgid "conditionally available"
-msgstr ""
+msgstr "disponibil in mût condizionâl"
+
+msgid "can be set only at object construction time"
+msgstr "al è pussibil stabilîlu dome tal moment de costruzion dal ogjet"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "al è pussibil cambiâlu tai stâts NULL, READY, PAUSED o PLAYING"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "al è pussibil cambiâlu nome tai stâts  NULL, READY o PAUSED"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "al è pussibil cambiâlu nome tai stâts NULL o READY"
 
 msgid "Blacklisted files:"
 msgstr "File te liste nere:"
@@ -1132,33 +1163,44 @@ msgid ""
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
+"Stampe une liste che la machine e pues analizâ di funzionalitâts di un "
+"plugin specificât o di ducj i plugins furnîts.\n"
+"                                       Util se doprât adun cun mecanisims "
+"esternis e automatics di instalazion dai plugins"
 
 msgid "List the plugin contents"
-msgstr ""
+msgstr "Liste i contignûts dal plugin"
 
 msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"Une liste separade di sbaris ('/') di gjenars di elements (cognossûts ancje "
+"come klass) di listâ. (cence ordin)"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Controle se l'element specificât o il plugin al esist"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Cuant che al ven controlât se un element o un plugin a esistin, controle "
+"ancje che la sô version e sedi almancul de version specificade"
 
 msgid "Print supported URI schemes, with the elements that implement them"
-msgstr ""
+msgstr "Stampe i schemis URI supuartâts, cui elements che ju implementin"
 
 msgid ""
 "Disable colors in output. You can also achieve the same by setting "
 "'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
+"Disative i colôrs te jessude. Tu puedis ancje rivâ al stes risultât "
+"configurant la variabile di ambient 'GST_INSPECT_NO_COLORS'  a un valôr che "
+"ti garbe."
 
 msgid "Color output, even when not sending to a tty."
-msgstr ""
+msgstr "Colore la jessude, ancje cuant che no ven mandade suntun tty."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1166,7 +1208,7 @@ msgstr "Impussibil cjariâ file di plugin: %s\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr ""
+msgstr "Nol esist un element o plugin '%s'\n"
 
 msgid "Index statistics"
 msgstr ""
@@ -1179,52 +1221,52 @@ msgstr "ERÔR: la pipeline no vûl riprodusi.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr ""
+msgstr "Ricevût messaç #%u dal element \"%s\" (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr ""
+msgstr "Ricevût messaç #%u dal pad \"%s:%s\" (%s): "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr ""
+msgstr "Ricevût messaç #%u dal ogjet \"%s\" (%s): "
 
 #, c-format
 msgid "Got message #%u (%s): "
-msgstr ""
+msgstr "Ricevût messaç #%u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr ""
+msgstr "Ricevût EOS dal element \"%s\".\n"
 
 msgid "EOS received - stopping pipeline...\n"
 msgstr "Ricevût EOS - daûr a fermâ la pipeline...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr ""
+msgstr "CJATADE ETICHETE      : cjatade dal element \"%s\".\n"
 
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr ""
+msgstr "CJATADE ETICHETE      : cjatade dal pad \"%s:%s\".\n"
 
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr ""
+msgstr "CJATADE ETICHETE      : cjatade dal ogjet \"%s\".\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "CJATADE ETICEHTE\n"
 
 #, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr ""
+msgstr "CJATÂT TOC      : cjatât dal element \"%s\".\n"
 
 #, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr ""
+msgstr "CJATÂT TOC      : cjatât dal ogjet \"%s\".\n"
 
 msgid "FOUND TOC\n"
-msgstr ""
+msgstr "CJATÂT TOC\n"
 
 #, c-format
 msgid ""
@@ -1261,7 +1303,7 @@ msgstr ""
 "Daûr a jemplâ la memorie tampon, configurazion de pipeline a IN PAUSE ...\n"
 
 msgid "Redistribute latency...\n"
-msgstr ""
+msgstr "Redistribuìs latence...\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
@@ -1291,7 +1333,7 @@ msgstr "Element mancjant: %s\n"
 
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr ""
+msgstr "Ricevût contest dal element '%s': %s=%s\n"
 
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr ""
@@ -1328,6 +1370,12 @@ msgstr ""
 
 msgid "PROPERTY-NAME"
 msgstr "NON-PROPRIETÂT"
+
+msgid "Set the name of the program"
+msgstr "Stabilìs il non dal program"
+
+msgid "PROGRAM-NAME"
+msgstr "NON-PROGRAM"
 
 msgid "Do not install a fault handler"
 msgstr "No sta instalâ un gjestôr di erôrs"
@@ -1390,3 +1438,6 @@ msgstr "Daûr a meti la pipeline a NULE ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Daûr a liberâ la pipeline ...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Abilite lis diagnostichis prolissis pal cjariament dai plugins"

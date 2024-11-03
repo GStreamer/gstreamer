@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2023-01-21 13:39+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -55,9 +55,6 @@ msgstr "改变调试日志的颜色模式。可能的模式有：off、on、disa
 
 msgid "Disable debugging"
 msgstr "禁止调试"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "开启详细的插件载入分析"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "冒号分隔的包含插件的路径"
@@ -799,6 +796,12 @@ msgstr "私有数据"
 msgid "Private data"
 msgstr "专有用途的数据"
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1031,6 +1034,10 @@ msgstr "流中不含数据"
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%s实现的接口%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%s实现的接口%s:\n"
+
 msgid "readable"
 msgstr "可读"
 
@@ -1045,6 +1052,9 @@ msgstr "可控制"
 
 msgid "conditionally available"
 msgstr "部分情况下可用"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "可以在NULL、READY、PAUSED或PLAYING状态下改变"
@@ -1290,6 +1300,13 @@ msgstr "如果启用了详细输出模式，不输出指定属性的状态信息
 msgid "PROPERTY-NAME"
 msgstr "属性名"
 
+msgid "Set the name of the program"
+msgstr ""
+
+#, fuzzy
+msgid "PROGRAM-NAME"
+msgstr "属性名"
+
 msgid "Do not install a fault handler"
 msgstr "不安装错误的处理程序"
 
@@ -1349,6 +1366,9 @@ msgstr "设置 NULL 管道 ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "释放管道资源 ...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "开启详细的插件载入分析"
 
 #~ msgid "Error creating pipe: %s\n"
 #~ msgstr "创建管道时出错：“%s\n"

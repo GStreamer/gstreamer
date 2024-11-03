@@ -2,14 +2,14 @@
 # This file is put in the public domain.
 #
 # Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
-# Johnny A. Solbu <johnny@solbu.net>, 2015-2023
+# Johnny A. Solbu <johnny@solbu.net>, 2015-2024
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.21.90\n"
+"Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
-"PO-Revision-Date: 2023-01-15 14:22+0100\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-09-11 12:09+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <l10n-no@lister.huftis.org>\n"
 "Language: nb_NO\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.2.3\n"
+"X-Generator: Poedit 2.4.2\n"
 
 msgid "Print the GStreamer version"
 msgstr "Skriv ut versjonsnummer for GStreamer"
@@ -60,9 +60,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Slå av feilsøking"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Aktiver utførlig diagnostikk ved lasting av programtillegg"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Kolon-separerte stier som inneholder programtillegg"
@@ -422,7 +419,7 @@ msgid "encoded by"
 msgstr "kodet av"
 
 msgid "name of the encoding person or organization"
-msgstr "Navnet på personen eller organisasjonen som kodet"
+msgstr "navnet på personen eller organisasjonen som kodet"
 
 msgid "contact"
 msgstr "kontakt"
@@ -787,13 +784,13 @@ msgid "Model of the device used to create this media"
 msgstr "Modell av enheten som brukes til å lage dette mediet"
 
 msgid "application name"
-msgstr "Programnavn"
+msgstr "programnavn"
 
 msgid "Application used to create the media"
 msgstr "Program brukt til å lage mediet"
 
 msgid "application data"
-msgstr "Programdata"
+msgstr "programdata"
 
 msgid "Arbitrary application data to be serialized into the media"
 msgstr "Vilkårlige programdata som skal serialiseres i mediet"
@@ -827,6 +824,12 @@ msgstr "private-data"
 
 msgid "Private data"
 msgstr "Private data"
+
+msgid "container-specific-track-id"
+msgstr "container-specific-track-id"
+
+msgid "Container-specific Track ID"
+msgstr "Beholderspesifikk Spor-ID"
 
 #. separator between two strings
 msgid ", "
@@ -876,7 +879,7 @@ msgstr "ingen egenskap «%s» i element «%s»"
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
-msgstr "Elementet «%s» er ikke en GstPreset."
+msgstr "Elementet «%s» er ikke en GstPreset"
 
 #, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
@@ -936,7 +939,7 @@ msgid "no source element for URI \"%s\""
 msgstr "ingen kilde-element for URI «%s»"
 
 msgid "syntax error"
-msgstr "Syntaksfeil"
+msgstr "syntaksfeil"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
@@ -947,7 +950,7 @@ msgid "no bin \"%s\", unpacking elements"
 msgstr "intet lager «%s», pakker ut elementer"
 
 msgid "empty pipeline not allowed"
-msgstr "Tom rørledning ikke tillatt"
+msgstr "tom rørledning ikke tillatt"
 
 msgid "Pipeline construction is invalid, please add queues."
 msgstr "Datakanal-konstruksjon er ugyldig, vennligst legg til køer."
@@ -962,7 +965,7 @@ msgid "Internal data flow error."
 msgstr "Intern feil med dataflyt."
 
 msgid "Internal clock error."
-msgstr "Feil i intern klokke"
+msgstr "Feil i intern klokke."
 
 msgid "Failed to map buffer."
 msgstr "Klarte ikke å kartlegge buffer."
@@ -1062,6 +1065,10 @@ msgstr "Strømmen inneholder ikke data."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sImplementerte grensesnitt%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sImplementerte grensesnitt%s:\n"
+
 msgid "readable"
 msgstr "lesbar"
 
@@ -1076,6 +1083,9 @@ msgstr "kontrollerbar"
 
 msgid "conditionally available"
 msgstr "betinget tilgjengelig"
+
+msgid "can be set only at object construction time"
+msgstr "kan kun settes på objektkonstruksjonstidspunktet"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "kan bare endres i NULL-, KLAR-, PAUSE- eller SPILLER-tilstand"
@@ -1308,7 +1318,7 @@ msgid "Use Windows high-resolution clock, precision: %u ms\n"
 msgstr "Bruk Windows høyoppløselig klokke, presisjon: %u ms\n"
 
 msgid "Output tags (also known as metadata)"
-msgstr "skriv ut tagger (også kjent som metadata)"
+msgstr "Skriv ut tagger (også kjent som metadata)"
 
 msgid "Output TOC (chapters and editions)"
 msgstr "Skriv ut TOC (kapitler og utgaver)"
@@ -1332,8 +1342,14 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "EGENSKAPSNAVN"
 
+msgid "Set the name of the program"
+msgstr "Angi navnet på programmet"
+
+msgid "PROGRAM-NAME"
+msgstr "PROGRAMNAVN"
+
 msgid "Do not install a fault handler"
-msgstr "ikke installer feilhåndterer"
+msgstr "Ikke installer feilhåndterer"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Tvinge EOS på kilder før rørledningen stenges"
@@ -1349,7 +1365,7 @@ msgstr ""
 "Ikke skriv ut nåværende posisjon for rørledningen. Hvis dette alternativet "
 "er uspesifisert, blir posisjonen skrevet ut når std.ut er en TTY. For å "
 "aktivere utskriftsposisjon når std.ut ikke er en TTY, bruk «force-position»-"
-"alternativet "
+"alternativet"
 
 msgid ""
 "Allow printing current position of pipeline even if stdout is not a TTY. "
@@ -1393,6 +1409,9 @@ msgstr "Setter rørledning til NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Frigjør rør ...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Aktiver utførlig diagnostikk ved lasting av programtillegg"
 
 #~ msgid "ERROR: Pipeline doesn't want to pause.\n"
 #~ msgstr "FEIL: rørledningen vil ikke pause\n"

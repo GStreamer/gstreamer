@@ -1,4 +1,4 @@
-# Translation of gstreamer messages to Croatian.
+# Translat of gstreamer messages to Croatian.
 # This file is put in the public domain.
 # Copyright (C) 2004-2010, 2019 GStreamer core team.
 # This file is distributed under the same license as the gstreamer package.
@@ -7,13 +7,13 @@
 # https://gstreamer.freedesktop.org/data/doc/gstreamer/head/manual/html/index.html
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2017, 2018, 2019, 2021, 2022.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2017, 2018, 2019, 2021, 2022, 2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.21.90\n"
+"Project-Id-Version: gstreamer-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
-"PO-Revision-Date: 2023-01-16 11:03-0800\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-08 10:47-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr_HR\n"
@@ -65,9 +65,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "onemogući debugiranje"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "omogući opširne poruke tijekom učitavanja plugina"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "popis STAZA (odvojenih dvotočkom) koje sadrže plugine"
@@ -839,6 +836,12 @@ msgstr "privatni-podaci"
 msgid "Private data"
 msgstr "Privatni podaci"
 
+msgid "container-specific-track-id"
+msgstr "kontejner-specifični-zapis-id"
+
+msgid "Container-specific Track ID"
+msgstr "Kontejner-specifični ID Zapisa"
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -947,7 +950,7 @@ msgid "no source element for URI \"%s\""
 msgstr "nema elementa-izvor za URI „%s“"
 
 msgid "syntax error"
-msgstr "sintaktična greška"
+msgstr "sintaktička greška"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
@@ -1073,6 +1076,10 @@ msgstr "Tok ne sadrži podatke."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sRealizirana sučelja%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sRealizirana sučelja%s:\n"
+
 msgid "readable"
 msgstr "čitljivo"
 
@@ -1087,6 +1094,9 @@ msgstr "upravljivo"
 
 msgid "conditionally available"
 msgstr "uvjetno dostupno"
+
+msgid "can be set only at object construction time"
+msgstr "može se postaviti samo u vrijeme izgradnje objekta"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "promjenjivo u stanje NULL, READY, PAUSED ili PLAYING"
@@ -1348,11 +1358,17 @@ msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
-"ne ispiše status za IME-SVOJSTVA iako je\n"
-"                                      aktivna opcija za opširno ispisivanje"
+"ne ispiše status za IME-SVOJSTVA iako je aktivna opcija za opširno "
+"ispisivanje"
 
 msgid "PROPERTY-NAME"
 msgstr "IME-SVOJSTVA"
+
+msgid "Set the name of the program"
+msgstr "Postavi ime programa"
+
+msgid "PROGRAM-NAME"
+msgstr "IME-PROGRAMA"
 
 msgid "Do not install a fault handler"
 msgstr "ne instalira rutinu za obradu greški"
@@ -1415,6 +1431,9 @@ msgstr "Postavljamo cjevovod na NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Cjevovod se prazni...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "omogući opširne poruke tijekom učitavanja plugina"
 
 #~ msgid "ERROR: Pipeline doesn't want to pause.\n"
 #~ msgstr "GREŠKA: Cjevovod ne želi pauzirati.\n"
@@ -1491,4 +1510,4 @@ msgstr "Cjevovod se prazni...\n"
 #~ msgstr "Nemoj instalirati rukovatelj signala za SIGUSR1 i SIGUSR2"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Ispiši alloc praćenje (ako je omogućeno pri kompajliranju)"
+#~ msgstr "xxggIspiši alloc praćenje (ako je omogućeno pri kompajliranju)"

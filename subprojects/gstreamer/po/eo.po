@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2023-01-08 11:53-0300\n"
 "Last-Translator: Felipe Castro <fefcas@gmail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -60,9 +60,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Malaktivigi sencimigon"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Aktivigi detaleman diagnozon de ŝargado je kromaĵo"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Dupunkto-apartitaj vojoj enhavantaj kromaĵojn"
@@ -822,6 +819,12 @@ msgstr "privata-datumaro"
 msgid "Private data"
 msgstr "Privata datumaro"
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1054,6 +1057,10 @@ msgstr "La fluo enhavas neniun datumaron."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sRealigitaj Interfacoj%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sRealigitaj Interfacoj%s:\n"
+
 msgid "readable"
 msgstr "legebla"
 
@@ -1068,6 +1075,9 @@ msgstr "regebla"
 
 msgid "conditionally available"
 msgstr "disponebla kondiĉe"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "ŝanĝebla nur en statoj NULA, PRETA, PAŬZITA aŭ LUDANTA"
@@ -1324,6 +1334,13 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "ATRIBUTO-NOMO"
 
+msgid "Set the name of the program"
+msgstr ""
+
+#, fuzzy
+msgid "PROGRAM-NAME"
+msgstr "ATRIBUTO-NOMO"
+
 msgid "Do not install a fault handler"
 msgstr "Ne instali traktilon de misfunkcio"
 
@@ -1383,6 +1400,9 @@ msgstr "Ni difinas ĉenstablon kiel NULA ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Ni liberigas ĉenstablon ...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Aktivigi detaleman diagnozon de ŝargado je kromaĵo"
 
 #~ msgid "ERROR: Pipeline doesn't want to pause.\n"
 #~ msgstr "ERARO: ĉenstablo ne volas paŭzi.\n"

@@ -27,7 +27,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2021-09-26 21:45+0800\n"
 "Last-Translator: Wen Liao <wen.cf83@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@lists.linux.org.tw>\n"
@@ -75,9 +75,6 @@ msgstr "更改偵錯日誌配色模式，支援配色模式為：off, on, disabl
 
 msgid "Disable debugging"
 msgstr "關閉偵錯功能"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "載入外掛時顯示詳細訊息"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "以分號分隔的路徑中有包含外掛程式"
@@ -824,6 +821,12 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ""
@@ -1059,6 +1062,10 @@ msgstr "資料串流中沒有資料"
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "實作介面：\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "實作介面：\n"
+
 msgid "readable"
 msgstr "可讀"
 
@@ -1074,6 +1081,9 @@ msgstr "可控制"
 #, fuzzy
 msgid "conditionally available"
 msgstr "可控制"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "可以切換到NULL, READY, PAUSED 或PLAYING狀態"
@@ -1320,6 +1330,12 @@ msgstr "當開啟verbose 輸出時請勿印出指定的屬性中的狀態資訊 
 msgid "PROPERTY-NAME"
 msgstr ""
 
+msgid "Set the name of the program"
+msgstr ""
+
+msgid "PROGRAM-NAME"
+msgstr ""
+
 msgid "Do not install a fault handler"
 msgstr "請勿安裝錯誤處理程式"
 
@@ -1379,6 +1395,9 @@ msgstr "將pipeline狀態設為NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "釋放pipeline ...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "載入外掛時顯示詳細訊息"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "內部資料串流錯誤"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -59,9 +59,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Απενεργοποίηση αποσφαλμάτωσης"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Ενεργοποίηση αναλυτικών διαγνωστικών φόρτωσης πρόσθετου"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Διαχωρισμένες με άνω-κάτω τελεία διαδρομές που περιέχουν πρόσθετα"
@@ -854,6 +851,12 @@ msgstr ""
 msgid "Private data"
 msgstr ""
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1088,6 +1091,10 @@ msgstr "Η ροή δεν περιέχει δεδομένα."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "Υλοποιημένες διεπαφές:\n"
 
+#, c-format
+msgid "%sElement Flags%s:\n"
+msgstr ""
+
 msgid "readable"
 msgstr "αναγνώσιμο"
 
@@ -1103,6 +1110,9 @@ msgstr "ελεγχόμενο"
 #, fuzzy
 msgid "conditionally available"
 msgstr "ελεγχόμενο"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "μπορεί να αλλάξει σε κατάσταση NULL, READY, PAUSED ή PLAYING"
@@ -1355,6 +1365,12 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr ""
 
+msgid "Set the name of the program"
+msgstr ""
+
+msgid "PROGRAM-NAME"
+msgstr ""
+
 msgid "Do not install a fault handler"
 msgstr "Να μην εγκατασταθεί χειριστής σφαλμάτων"
 
@@ -1410,6 +1426,9 @@ msgstr "Ορισμός διασωλήνωσης σε NULL …\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Αποδέσμευση της διασωλήνωσης …\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Ενεργοποίηση αναλυτικών διαγνωστικών φόρτωσης πρόσθετου"
 
 #~ msgid "link without source element"
 #~ msgstr "σύνδεση χωρίς στοιχείο προέλευσης"

@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gstreamer package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021, 2023.
+# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021, 2023, 2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.21.90\n"
+"Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
-"PO-Revision-Date: 2023-01-15 17:39+0200\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-07-21 19:42+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <trans-uk@lists.fedoraproject.org>\n"
 "Language: uk\n"
@@ -19,7 +19,7 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Lokalize 20.12.0\n"
+"X-Generator: Lokalize 23.04.3\n"
 
 msgid "Print the GStreamer version"
 msgstr "Показати дані щодо версії GStreamer"
@@ -61,9 +61,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Вимкнути діагностику"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Вимкнути докладну діагностику завантаження модулів"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Список розділених крапкою з комою шляхів, які містять модулі"
@@ -830,6 +827,12 @@ msgstr "конфіденційні-дані"
 msgid "Private data"
 msgstr "Конфіденційні дані"
 
+msgid "container-specific-track-id"
+msgstr "специфічний-для-контейнера-ід-доріжки"
+
+msgid "Container-specific Track ID"
+msgstr "Специфічний для контейнера ідентифікатор доріжки"
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1065,6 +1068,10 @@ msgstr "Потік не містить даних."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sРеалізовані інтерфейси%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sРеалізовані інтерфейси%s:\n"
+
 msgid "readable"
 msgstr "читання"
 
@@ -1079,6 +1086,9 @@ msgstr "контроль"
 
 msgid "conditionally available"
 msgstr "умовно доступний"
+
+msgid "can be set only at object construction time"
+msgstr "можна встановлювати лише під час побудови об'єкта"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "можна змінювати у станах NULL, READY, PAUSED та PLAYING"
@@ -1345,6 +1355,12 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "НАЗВА-ВЛАСТИВОСТІ"
 
+msgid "Set the name of the program"
+msgstr "Встановити назву програми"
+
+msgid "PROGRAM-NAME"
+msgstr "НАЗВА-ПРОГРАМИ"
+
 msgid "Do not install a fault handler"
 msgstr "Не встановлювати обробник збоїв"
 
@@ -1404,6 +1420,9 @@ msgstr "Канал переводиться у стан NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Спорожнення каналу...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Вимкнути докладну діагностику завантаження модулів"
 
 #~ msgid "Error creating pipe: %s\n"
 #~ msgstr "Помилка під час створення конвеєра: %s\n"

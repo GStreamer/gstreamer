@@ -1,14 +1,14 @@
 # Indonesian translations for gstreamer package.
 # This file is put in the public domain.
-# Andika Triwidada <andika@gmail.com>, 2013, 2021, 2023.
+# Andika Triwidada <andika@gmail.com>, 2013, 2021, 2023, 2024.
 # Andhika Padmawan <andhika.padmawan@gmail.com>, 2010-2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.21.90\n"
+"Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
-"PO-Revision-Date: 2023-01-16 09:15+0700\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-07 19:31+0700\n"
 "Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.4.2\n"
 
 msgid "Print the GStreamer version"
 msgstr "Cetak versi GStreamer"
@@ -60,9 +60,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Nonaktifkan awakutu"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Mengaktifkan plugin verbose ketika memuat diagnosis"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Alamat dipisahkan tanda titik dua berisi plugin"
@@ -834,6 +831,12 @@ msgstr "data-privat"
 msgid "Private data"
 msgstr "Data privat"
 
+msgid "container-specific-track-id"
+msgstr "container-specific-track-id"
+
+msgid "Container-specific Track ID"
+msgstr "ID Lacak Spesifik Kontainer"
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1077,6 +1080,10 @@ msgstr "Arus tidak berisi data."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sAntarmuka Terimplementasi%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sAntarmuka Terimplementasi%s:\n"
+
 msgid "readable"
 msgstr "dapat dibaca"
 
@@ -1091,6 +1098,9 @@ msgstr "dapat dikendalikan"
 
 msgid "conditionally available"
 msgstr "tersedia bersyarat"
+
+msgid "can be set only at object construction time"
+msgstr "dapat ditata hanya pada saat konstruksi objek"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "dapat diubah dalam kondisi NULL, READY, PAUSED atau PLAYING"
@@ -1343,6 +1353,12 @@ msgstr ""
 
 msgid "PROPERTY-NAME"
 msgstr "NAMA-PROPERTI"
+
+msgid "Set the name of the program"
+msgstr "Atur nama program"
+
+msgid "PROGRAM-NAME"
+msgstr "NAMA-PROGRAM"
 
 msgid "Do not install a fault handler"
 msgstr "Jangan instal penanganan galat"

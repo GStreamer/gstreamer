@@ -1,15 +1,15 @@
-# translation of gstreamer-1.21.90 to Español
+# translation of gstreamer-1.24.0 to Español
 # spanish translation for gstreamer
 # This file is put in the public domain.
 # Jorge González <jorgegonz@svn.gnome.org>, 2009, 2010, 2011.
-# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022, 2023
+# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022, 2023, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.21.90\n"
+"Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
-"PO-Revision-Date: 2023-01-16 11:12-0600\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-07 11:29-0600\n"
 "Last-Translator: Cristian Othón Martínez Vera <cfuga@cfuga.mx>\n"
 "Language-Team: Spanish <es@tp.org.es>\n"
 "Language: es\n"
@@ -60,9 +60,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Desactivar depuración"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Activar la salida detallada del diagnóstico de carga de complementos"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Rutas separadas por punto y coma conteniendo los complementos"
@@ -843,6 +840,12 @@ msgstr "datos-privados"
 msgid "Private data"
 msgstr "Datos privados"
 
+msgid "container-specific-track-id"
+msgstr "id-pista-específica-contenedor"
+
+msgid "Container-specific Track ID"
+msgstr "ID de Pista Específica-del-contenedor"
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1079,6 +1082,10 @@ msgstr "El flujo no contiene datos."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sInterfaces implementados%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sInterfaces implementados%s:\n"
+
 msgid "readable"
 msgstr "legible"
 
@@ -1093,6 +1100,9 @@ msgstr "controlable"
 
 msgid "conditionally available"
 msgstr "condicionalmente disponible"
+
+msgid "can be set only at object construction time"
+msgstr "solamente se puede definir en el momento de construcción del objeto"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "intercambiable entre los estados NULL, READY, PAUSED o PLAYING"
@@ -1352,6 +1362,12 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "NOMBRE-PROPIEDAD"
 
+msgid "Set the name of the program"
+msgstr "Define el nombre del programa"
+
+msgid "PROGRAM-NAME"
+msgstr "NOMBRE-PROGRAMA"
+
 msgid "Do not install a fault handler"
 msgstr "No instalar un manejador predeterminado"
 
@@ -1413,6 +1429,10 @@ msgstr "Estableciendo el conducto a NULL …\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando el conducto…\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr ""
+#~ "Activar la salida detallada del diagnóstico de carga de complementos"
 
 #~ msgid "ERROR: Pipeline doesn't want to pause.\n"
 #~ msgstr "ERROR: El conducto no quiere pausarse.\n"

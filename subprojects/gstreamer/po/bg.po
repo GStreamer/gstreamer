@@ -1,18 +1,18 @@
 # Bulgarian translation of gstreamer.
 # Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Free Software Fondation, Inc.
 # Copyright (C) 2011, 2016, 2017, 2019 Free Software Fondation, Inc.
-# Copyright (C) 2021, 2023 Alexander Shopov.
+# Copyright (C) 2021, 2023, 2024 Alexander Shopov.
 # This file is distributed under the same license as the gstreamer package.
 # Alexander Shopov <ash@kambanaria.org>, 2005, 2006, 2007, 2008, 2009, 2010.
 # Alexander Shopov <ash@kambanaria.org>, 2011, 2016, 2017, 2019, 2021, 2023.
-#
+# Alexander Shopov <ash@kambanaria.org>, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.21.90\n"
+"Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
-"PO-Revision-Date: 2023-01-15 20:23+0200\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-09 11:13+0100\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
 "Language: bg\n"
@@ -59,14 +59,11 @@ msgid ""
 "auto, unix"
 msgstr ""
 "Смяна на режима на оцветяване на съобщенията за изчистване на грешки. "
-"Възможните стойности са: „off“ (изключване), „on“ (включване), "
-"„disable“ (спиране), „auto“ (автоматично), „unix“ (стандартно за unix)"
+"Възможните стойности са: „off“ (изключване), „on“ (включване), „disable“ "
+"(спиране), „auto“ (автоматично), „unix“ (стандартно за unix)"
 
 msgid "Disable debugging"
 msgstr "Без съобщения за изчистване на грешки"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Включване на подробни съобщения при зареждане на приставка"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Пътища с приставки, разделени с двоеточие"
@@ -831,6 +828,12 @@ msgstr "собствени данни"
 msgid "Private data"
 msgstr "Собствени данни"
 
+msgid "container-specific-track-id"
+msgstr "container-specific-track-id"
+
+msgid "Container-specific Track ID"
+msgstr "Идентификатор на песен, специфичен за контейнера"
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1063,6 +1066,10 @@ msgstr "Потокът не съдържа никакви данни"
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "%sРеализирани интерфейси%s:\n"
 
+#, fuzzy, c-format
+msgid "%sElement Flags%s:\n"
+msgstr "%sРеализирани интерфейси%s:\n"
+
 msgid "readable"
 msgstr "с права за четене"
 
@@ -1077,6 +1084,9 @@ msgstr "може да се контролира"
 
 msgid "conditionally available"
 msgstr "налично под условие"
+
+msgid "can be set only at object construction time"
+msgstr "може да се зададе само при създаването на обекта"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr ""
@@ -1337,6 +1347,12 @@ msgstr ""
 
 msgid "PROPERTY-NAME"
 msgstr "ИМЕ-НА-СВОЙСТВО"
+
+msgid "Set the name of the program"
+msgstr "Задаване на име на програмата"
+
+msgid "PROGRAM-NAME"
+msgstr "ИМЕ-НА-ПРОГРАМА"
 
 msgid "Do not install a fault handler"
 msgstr "Да не се инсталира модул за обработка на грешки"

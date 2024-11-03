@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2016-05-20 11:32+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -62,9 +62,6 @@ msgstr ""
 
 msgid "Disable debugging"
 msgstr "Zakázať ladenie"
-
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Povoliť podrobnú diagnostiku načítavania zásuvných modulov"
 
 msgid "Colon-separated paths containing plugins"
 msgstr "Dvojbodkou oddelené cesty, ktoré obsahujú zásuvné moduly"
@@ -831,6 +828,12 @@ msgstr "súkromné-dáta"
 msgid "Private data"
 msgstr "Súkromné dáta"
 
+msgid "container-specific-track-id"
+msgstr ""
+
+msgid "Container-specific Track ID"
+msgstr ""
+
 #. separator between two strings
 msgid ", "
 msgstr ", "
@@ -1063,6 +1066,10 @@ msgstr "Prúd neobsahuje údaje."
 msgid "%sImplemented Interfaces%s:\n"
 msgstr "Implementované rozhrania:\n"
 
+#, c-format
+msgid "%sElement Flags%s:\n"
+msgstr ""
+
 msgid "readable"
 msgstr "čitateľné"
 
@@ -1078,6 +1085,9 @@ msgstr "ovládateľné"
 #, fuzzy
 msgid "conditionally available"
 msgstr "ovládateľné"
+
+msgid "can be set only at object construction time"
+msgstr ""
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "meniteľné v stave NULOVÝ, PRIPRAVENÝ, POZASTAVENÝ alebo HRAJÚCI"
@@ -1337,6 +1347,13 @@ msgstr ""
 msgid "PROPERTY-NAME"
 msgstr "Meno vlastníctva"
 
+msgid "Set the name of the program"
+msgstr ""
+
+#, fuzzy
+msgid "PROGRAM-NAME"
+msgstr "Meno vlastníctva"
+
 msgid "Do not install a fault handler"
 msgstr "Neinštalovať obsluhu výnimiek"
 
@@ -1392,6 +1409,9 @@ msgstr "Nastavujem rúru na NULOVÚ ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Uvoľňujem rúru ...\n"
+
+#~ msgid "Enable verbose plugin loading diagnostics"
+#~ msgstr "Povoliť podrobnú diagnostiku načítavania zásuvných modulov"
 
 #~ msgid "bin"
 #~ msgstr "zásobník"
