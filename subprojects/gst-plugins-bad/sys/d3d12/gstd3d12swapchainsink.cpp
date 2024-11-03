@@ -46,6 +46,10 @@ enum
   PROP_SWAPCHAIN,
   PROP_SAMPLING_METHOD,
   PROP_MSAA,
+  PROP_HUE,
+  PROP_SATURATION,
+  PROP_BRIGHTNESS,
+  PROP_CONTRAST,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -55,6 +59,10 @@ enum
 #define DEFAULT_BORDER_COLOR (G_GUINT64_CONSTANT(0xffff000000000000))
 #define DEFAULT_SAMPLING_METHOD GST_D3D12_SAMPLING_METHOD_BILINEAR
 #define DEFAULT_MSAA GST_D3D12_MSAA_DISABLED
+#define DEFAULT_HUE 0.0
+#define DEFAULT_SATURATION 1.0
+#define DEFAULT_BRIGHTNESS 0.0
+#define DEFAULT_CONTRAST 1.0
 
 #define BACK_BUFFER_COUNT 2
 
@@ -105,12 +113,26 @@ struct GstD3D12SwapChainSinkPrivate
 {
   GstD3D12SwapChainSinkPrivate ()
   {
+    const gchar *channels[4] = { "HUE", "SATURATION",
+      "BRIGHTNESS", "CONTRAST"
+    };
+
     convert_config = gst_structure_new_empty ("convert-config");
     fence_data_pool = gst_d3d12_fence_data_pool_new ();
     gst_video_info_init (&info);
     gst_video_info_set_format (&display_info, GST_VIDEO_FORMAT_RGBA,
         width, height);
     update_border_color ();
+    color_balance_channels = nullptr;
+    for (guint i = 0; i < G_N_ELEMENTS (channels); i++) {
+      auto ch = (GstColorBalanceChannel *)
+          g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, nullptr);
+      ch->label = g_strdup (channels[i]);
+      ch->min_value = -1000;
+      ch->max_value = 1000;
+
+      color_balance_channels = g_list_append (color_balance_channels, ch);
+    }
   }
 
   ~GstD3D12SwapChainSinkPrivate ()
@@ -121,6 +143,14 @@ struct GstD3D12SwapChainSinkPrivate
     gst_clear_object (&comp);
     gst_clear_object (&ca_pool);
     gst_clear_object (&fence_data_pool);
+
+    auto iter = color_balance_channels;
+    while (iter) {
+      g_object_unref (iter->data);
+      iter = iter->next;
+    }
+
+    g_list_free (color_balance_channels);
   }
 
   void stop ()
@@ -175,6 +205,7 @@ struct GstD3D12SwapChainSinkPrivate
   guint64 fence_val = 0;
   bool caps_updated = false;
   bool first_present = true;
+  bool output_updated = false;
   D3D12_BOX crop_rect = { };
   D3D12_BOX prev_crop_rect = { };
   FLOAT border_color_val[4];
@@ -188,6 +219,11 @@ struct GstD3D12SwapChainSinkPrivate
   guint64 border_color = DEFAULT_BORDER_COLOR;
   GstD3D12SamplingMethod sampling_method = DEFAULT_SAMPLING_METHOD;
   GstD3D12MSAAMode msaa_mode = DEFAULT_MSAA;
+  GList *color_balance_channels = nullptr;
+  gdouble hue = DEFAULT_HUE;
+  gdouble saturation = DEFAULT_SATURATION;
+  gdouble brightness = DEFAULT_BRIGHTNESS;
+  gdouble contrast = DEFAULT_CONTRAST;
 };
 /* *INDENT-ON* */
 
@@ -225,9 +261,14 @@ static void
 gst_d3d12_swapchain_sink_resize_internal (GstD3D12SwapChainSink * self,
     guint width, guint height);
 
+static void
+gst_d3d12_swapchain_sink_color_balance_init (GstColorBalanceInterface * iface);
+
 #define gst_d3d12_swapchain_sink_parent_class parent_class
-G_DEFINE_TYPE (GstD3D12SwapChainSink, gst_d3d12_swapchain_sink,
-    GST_TYPE_VIDEO_SINK);
+G_DEFINE_TYPE_WITH_CODE (GstD3D12SwapChainSink, gst_d3d12_swapchain_sink,
+    GST_TYPE_VIDEO_SINK,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
+        gst_d3d12_swapchain_sink_color_balance_init));
 
 static void
 gst_d3d12_swapchain_sink_class_init (GstD3D12SwapChainSinkClass * klass)
@@ -291,6 +332,29 @@ gst_d3d12_swapchain_sink_class_init (GstD3D12SwapChainSinkClass * klass)
           GST_TYPE_D3D12_MSAA_MODE, DEFAULT_MSAA,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (object_class, PROP_HUE,
+      g_param_spec_double ("hue", "Hue", "hue", -1.0, 1.0, DEFAULT_HUE,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_SATURATION,
+      g_param_spec_double ("saturation", "Saturation", "saturation", 0.0, 2.0,
+          DEFAULT_SATURATION,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_BRIGHTNESS,
+      g_param_spec_double ("brightness", "Brightness", "brightness", -1.0, 1.0,
+          DEFAULT_BRIGHTNESS,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_CONTRAST,
+      g_param_spec_double ("contrast", "Contrast", "contrast", 0.0, 2.0,
+          DEFAULT_CONTRAST,
+          (GParamFlags) (GST_PARAM_CONTROLLABLE |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   d3d12_swapchain_sink_signals[SIGNAL_RESIZE] =
       g_signal_new_class_handler ("resize", G_TYPE_FROM_CLASS (klass),
       (GSignalFlags) (G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
@@ -347,6 +411,31 @@ gst_d3d12_swapchain_sink_finalize (GObject * object)
 }
 
 static void
+gst_d3d12_swapchain_sink_update_color_balance (GstD3D12SwapChainSink * self,
+    const gchar * name, gdouble * prev, gdouble value)
+{
+  auto priv = self->priv;
+
+  if (*prev != value) {
+    GList *iter = priv->color_balance_channels;
+
+    *prev = value;
+    priv->output_updated = true;
+    while (iter) {
+      auto ch = (GstColorBalanceChannel *) iter->data;
+      if (g_ascii_strcasecmp (ch->label, name) == 0) {
+        auto iface = GST_COLOR_BALANCE (self);
+        gst_color_balance_value_changed (iface, ch,
+            gst_color_balance_get_value (iface, ch));
+        break;
+      }
+
+      iter = g_list_next (iter);
+    }
+  }
+}
+
+static void
 gst_d3d12_swapchain_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -395,6 +484,22 @@ gst_d3d12_swapchain_sink_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_HUE:
+      gst_d3d12_swapchain_sink_update_color_balance (self,
+          "HUE", &priv->hue, g_value_get_double (value));
+      break;
+    case PROP_SATURATION:
+      gst_d3d12_swapchain_sink_update_color_balance (self,
+          "SATURATION", &priv->saturation, g_value_get_double (value));
+      break;
+    case PROP_BRIGHTNESS:
+      gst_d3d12_swapchain_sink_update_color_balance (self,
+          "BRIGHTNESS", &priv->brightness, g_value_get_double (value));
+      break;
+    case PROP_CONTRAST:
+      gst_d3d12_swapchain_sink_update_color_balance (self,
+          "CONTRAST", &priv->contrast, g_value_get_double (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -578,6 +683,18 @@ gst_d3d12_swapchain_sink_get_property (GObject * object, guint prop_id,
     case PROP_MSAA:
       g_value_set_enum (value, priv->msaa_mode);
       break;
+    case PROP_HUE:
+      g_value_set_double (value, priv->hue);
+      break;
+    case PROP_SATURATION:
+      g_value_set_double (value, priv->saturation);
+      break;
+    case PROP_BRIGHTNESS:
+      g_value_set_double (value, priv->brightness);
+      break;
+    case PROP_CONTRAST:
+      g_value_set_double (value, priv->contrast);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -727,7 +844,8 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
     priv->prev_crop_rect = crop_rect;
   }
 
-  if (priv->first_present) {
+  priv->lock.lock ();
+  if (priv->first_present || priv->output_updated) {
     GstVideoRectangle dst_rect = { };
     dst_rect.w = priv->width;
     dst_rect.h = priv->height;
@@ -744,11 +862,15 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
 
     g_object_set (priv->conv, "dest-x", priv->viewport.x,
         "dest-y", priv->viewport.y, "dest-width", priv->viewport.w,
-        "dest-height", priv->viewport.h, nullptr);
+        "dest-height", priv->viewport.h, "hue", priv->hue,
+        "saturation", priv->saturation, "brightness", priv->brightness,
+        "contrast", priv->contrast, nullptr);
     gst_d3d12_overlay_compositor_update_viewport (priv->comp, &priv->viewport);
 
     priv->first_present = false;
+    priv->output_updated = false;
   }
+  priv->lock.unlock ();
 
   gst_d3d12_overlay_compositor_upload (priv->comp, priv->cached_buf);
 
@@ -953,7 +1075,10 @@ gst_d3d12_swapchain_sink_set_buffer (GstD3D12SwapChainSink * self,
           GST_D3D12_CONVERTER_OPT_PSO_SAMPLE_DESC_COUNT, G_TYPE_UINT,
           sample_desc.Count,
           GST_D3D12_CONVERTER_OPT_PSO_SAMPLE_DESC_QUALITY, G_TYPE_UINT,
-          sample_desc.Quality, nullptr);
+          sample_desc.Quality,
+          GST_D3D12_CONVERTER_OPT_COLOR_BALANCE,
+          GST_TYPE_D3D12_CONVERTER_COLOR_BALANCE,
+          GST_D3D12_CONVERTER_COLOR_BALANCE_ENABLED, nullptr);
 
       priv->conv = gst_d3d12_converter_new (self->device, nullptr, &priv->info,
           &priv->display_info, nullptr, nullptr,
@@ -1212,6 +1337,14 @@ gst_d3d12_swapchain_sink_prepare (GstBaseSink * sink, GstBuffer * buffer)
   auto self = GST_D3D12_SWAPCHAIN_SINK (sink);
   auto priv = self->priv;
 
+  auto pts = GST_BUFFER_PTS (buffer);
+  if (GST_CLOCK_TIME_IS_VALID (pts)) {
+    auto stream_time = gst_segment_to_stream_time (&sink->segment,
+        GST_FORMAT_TIME, pts);
+    if (GST_CLOCK_TIME_IS_VALID (stream_time))
+      gst_object_sync_values (GST_OBJECT (self), stream_time);
+  }
+
   std::lock_guard < std::recursive_mutex > lk (priv->lock);
   if (!gst_d3d12_swapchain_sink_set_buffer (self, buffer, TRUE)) {
     GST_ERROR_OBJECT (self, "Set buffer failed");
@@ -1244,4 +1377,90 @@ gst_d3d12_swapchain_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
       0, nullptr, &priv->fence_val);
 
   return GST_FLOW_OK;
+}
+
+static const GList *
+gst_d3d12_swapchain_sink_color_balance_list_channels (GstColorBalance * iface)
+{
+  auto self = GST_D3D12_SWAPCHAIN_SINK (iface);
+  auto priv = self->priv;
+
+  return priv->color_balance_channels;
+}
+
+static void
+gst_d3d12_swapchain_sink_color_balance_set_value (GstColorBalance * iface,
+    GstColorBalanceChannel * channel, gint value)
+{
+  auto self = GST_D3D12_SWAPCHAIN_SINK (iface);
+  auto priv = self->priv;
+  gdouble new_val;
+
+  g_return_if_fail (channel->label);
+
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  if (!g_ascii_strcasecmp (channel->label, "HUE")) {
+    new_val = (value + 1000.0) * 2.0 / 2000.0 - 1.0;
+    gst_d3d12_swapchain_sink_update_color_balance (self,
+        "HUE", &priv->hue, new_val);
+  } else if (!g_ascii_strcasecmp (channel->label, "SATURATION")) {
+    new_val = (value + 1000.0) * 2.0 / 2000.0;
+    gst_d3d12_swapchain_sink_update_color_balance (self,
+        "SATURATION", &priv->saturation, new_val);
+  } else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS")) {
+    new_val = (value + 1000.0) * 2.0 / 2000.0 - 1.0;
+    gst_d3d12_swapchain_sink_update_color_balance (self,
+        "BRIGHTNESS", &priv->brightness, new_val);
+  } else if (!g_ascii_strcasecmp (channel->label, "CONTRAST")) {
+    new_val = (value + 1000.0) * 2.0 / 2000.0;
+    gst_d3d12_swapchain_sink_update_color_balance (self,
+        "BRIGHTNESS", &priv->contrast, new_val);
+  }
+}
+
+static gint
+gst_d3d12_swapchain_sink_color_balance_get_value (GstColorBalance * iface,
+    GstColorBalanceChannel * channel)
+{
+  auto self = GST_D3D12_SWAPCHAIN_SINK (iface);
+  auto priv = self->priv;
+  gint value = 0;
+
+  g_return_val_if_fail (channel->label, 0);
+
+  {
+    std::lock_guard < std::recursive_mutex > lk (priv->lock);
+    if (!g_ascii_strcasecmp (channel->label, "HUE")) {
+      auto hue = priv->hue;
+      value = static_cast < gint > ((hue + 1) * 2000.0 / 2.0 - 1000.0);
+    } else if (!g_ascii_strcasecmp (channel->label, "SATURATION")) {
+      auto saturation = priv->saturation;
+      value = static_cast < gint > (saturation * 2000.0 / 2.0 - 1000.0);
+    } else if (!g_ascii_strcasecmp (channel->label, "BRIGHTNESS")) {
+      auto brightness = priv->brightness;
+      value = static_cast < gint > ((brightness + 1) * 2000.0 / 2.0 - 1000.0);
+    } else if (!g_ascii_strcasecmp (channel->label, "CONTRAST")) {
+      auto contrast = priv->contrast;
+      value = static_cast < gint > (contrast * 2000.0 / 2.0 - 1000.0);
+    }
+  }
+
+  return value;
+}
+
+static GstColorBalanceType
+gst_d3d12_swapchain_sink_color_balance_get_balance_type (GstColorBalance *
+    iface)
+{
+  return GST_COLOR_BALANCE_HARDWARE;
+}
+
+static void
+gst_d3d12_swapchain_sink_color_balance_init (GstColorBalanceInterface * iface)
+{
+  iface->list_channels = gst_d3d12_swapchain_sink_color_balance_list_channels;
+  iface->set_value = gst_d3d12_swapchain_sink_color_balance_set_value;
+  iface->get_value = gst_d3d12_swapchain_sink_color_balance_get_value;
+  iface->get_balance_type =
+      gst_d3d12_swapchain_sink_color_balance_get_balance_type;
 }
