@@ -1,13 +1,14 @@
 # translation of gst-plugins-base.po to Dutch
 # This file is put in the public domain.
 #
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2022, 2023.
+# SPDX-FileCopyrightText: 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2022, 2023, 2024
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2024
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.21.90\n"
+"Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-13 19:10+0000\n"
-"PO-Revision-Date: 2023-04-28 12:36+0200\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-10-14 13:56+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -15,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Lokalize 23.04.0\n"
+"X-Generator: Lokalize 24.08.2\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Could not open device for playback in mono mode."
@@ -151,8 +152,15 @@ msgstr "Deze stroom kan nog niet afgespeeld worden."
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Geen URI-handler geïmplementeerd voor \"%s\"."
 
+msgid "Source element can't be prepared"
+msgstr "Bronelement kan niet voorbereid worden"
+
 msgid "Source element is invalid."
 msgstr "Bronelement is ongeldig."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "Map voor downloaden '%s' aanmaken is mislukt."
 
 msgid "Source element has no pads."
 msgstr "Bronelement heeft geen opvullingen."
@@ -167,14 +175,14 @@ msgstr "Kan geluid niet snel genoeg opslaan"
 msgid "This CD has no audio tracks"
 msgstr "Deze CD heeft geen audiotracks"
 
-msgid "failed to draw pattern"
-msgstr "patroon tekenen is mislukt"
+msgid "An OpenGL error occurred"
+msgstr "Er deed zich een OpenGL fout voor"
 
-msgid "A GL error occurred"
-msgstr "Er deed zich een GL-fout voor"
+msgid "The GL API is not compatible with the current GL context"
+msgstr "De GL API is niet compatibel met de huidige GL context"
 
-msgid "format wasn't negotiated before get function"
-msgstr "formaat was niet onderhandeld vóór functie get"
+msgid "Subclass failed to initialize."
+msgstr "Subklasse initialiseren is mislukt."
 
 msgid "ID3 tag"
 msgstr "ID3-tag"
@@ -721,6 +729,9 @@ msgstr "Volume"
 msgid "Start position in seconds."
 msgstr "Startpositie in seconden."
 
+msgid "Enable accurate seeking"
+msgstr "Accuraat locatie bepalen (seek) inschakelen"
+
 msgid "Playlist file containing input media files"
 msgstr "Afspeellijstbestand met mediabestanden voor invoer"
 
@@ -731,12 +742,11 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Geen uitvoer afdrukken (los van fouten)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"Pijplijn playbin3 gebruiken (standaard varieert afhankelijk van "
-"omgevingsvariabele 'USE_PLAYBIN')"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Pijplijn playbin3 gebruiken (standaard)"
+
+msgid "Use playbin2 pipeline"
+msgstr "Pijplijn playbin2 gebruiken"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -744,6 +754,9 @@ msgid ""
 msgstr ""
 "Het laatste frame bij EOS blijven tonen tot commando afsluiten of "
 "afspeellijst wijzigen (zonder gat wordt genegeerd)"
+
+msgid "Do not print current position of pipeline"
+msgstr "Huidige position van pijplijn niet afdrukken"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -755,11 +768,21 @@ msgstr "U moet minstens één bestandsnaam of URI leveren om af te spelen."
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Druk op 'k' om een lijst met sneltoetsen te zien.\n"
 
+#~ msgid "failed to draw pattern"
+#~ msgstr "patroon tekenen is mislukt"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "formaat was niet onderhandeld vóór functie get"
+
+#~ msgid ""
+#~ "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+#~ "variable)"
+#~ msgstr ""
+#~ "Pijplijn playbin3 gebruiken (standaard varieert afhankelijk van "
+#~ "omgevingsvariabele 'USE_PLAYBIN')"
+
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "Kon element \"uridecodebin3\" niet aanmaken."
-
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Pijplijn playbin3 gebruiken"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Interne fout in gegevensstroom."

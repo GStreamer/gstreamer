@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -159,6 +159,10 @@ msgstr ""
 msgid "Source element is invalid."
 msgstr ""
 
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr ""
+
 msgid "Source element has no pads."
 msgstr ""
 
@@ -172,13 +176,13 @@ msgstr ""
 msgid "This CD has no audio tracks"
 msgstr ""
 
-msgid "failed to draw pattern"
+msgid "An OpenGL error occurred"
 msgstr ""
 
-msgid "A GL error occurred"
+msgid "The GL API is not compatible with the current GL context"
 msgstr ""
 
-msgid "format wasn't negotiated before get function"
+msgid "Subclass failed to initialize."
 msgstr ""
 
 msgid "ID3 tag"
@@ -725,9 +729,10 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr ""
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
+msgid "Use playbin3 pipeline (default)"
+msgstr ""
+
+msgid "Use playbin2 pipeline"
 msgstr ""
 
 msgid ""

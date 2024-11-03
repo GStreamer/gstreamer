@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.26.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2010-03-25 12:32+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -161,6 +161,10 @@ msgstr "Iturburuko elementua baliogabea da."
 msgid "Source element is invalid."
 msgstr "Iturburuko elementua baliogabea da."
 
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr ""
+
 #, fuzzy
 msgid "Source element has no pads."
 msgstr "Iturburuko elementua baliogabea da."
@@ -175,13 +179,13 @@ msgstr "Ezin da behar bezain bizkor grabatu audioa"
 msgid "This CD has no audio tracks"
 msgstr "CD honek ez du audio-pistarik"
 
-msgid "failed to draw pattern"
+msgid "An OpenGL error occurred"
 msgstr ""
 
-msgid "A GL error occurred"
+msgid "The GL API is not compatible with the current GL context"
 msgstr ""
 
-msgid "format wasn't negotiated before get function"
+msgid "Subclass failed to initialize."
 msgstr ""
 
 msgid "ID3 tag"
@@ -737,9 +741,10 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr ""
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
+msgid "Use playbin3 pipeline (default)"
+msgstr ""
+
+msgid "Use playbin2 pipeline"
 msgstr ""
 
 msgid ""

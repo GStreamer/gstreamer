@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.21.90\n"
+"Project-Id-Version: gst-plugins-base-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2023-01-16 22:40+0100\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-16 23:45+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.1.1\n"
+"X-Generator: Poedit 3.4.2\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Gerät konnte nicht zur Wiedergabe in Mono geöffnet werden."
@@ -154,12 +154,15 @@ msgstr "Dieser Datenstrom kann noch nicht abgespielt werden."
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Es ist kein URI-Handler für »%s« implementiert."
 
-#, fuzzy
 msgid "Source element can't be prepared"
-msgstr "Das Quellelement hat keine Auffüllung."
+msgstr "Das Quellelement kann nicht vorbereitet werden"
 
 msgid "Source element is invalid."
 msgstr "Das Quellelement ist ungültig."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "Das Anlegen des Download-Ordners »%s« ist fehlgeschlagen."
 
 msgid "Source element has no pads."
 msgstr "Das Quellelement hat keine Auffüllung."
@@ -174,14 +177,14 @@ msgstr "Der Ton kann nicht schnell genug aufgezeichnet werden"
 msgid "This CD has no audio tracks"
 msgstr "Auf dieser CD befinden sich keine Audio-Titel"
 
-msgid "failed to draw pattern"
-msgstr "Zeichnen des Musters ist gescheitert"
+msgid "An OpenGL error occurred"
+msgstr "Es ist ein OpenGL-Fehler aufgetreten"
 
-msgid "A GL error occurred"
-msgstr "Es ist ein GL-Fehler aufgetreten"
+msgid "The GL API is not compatible with the current GL context"
+msgstr "Die GL-API ist nicht mit dem aktuellen GL-Kontext kompatibel"
 
-msgid "format wasn't negotiated before get function"
-msgstr "Format wurde nicht vor der get-Funktion erkannt"
+msgid "Subclass failed to initialize."
+msgstr "Die Unterklasse konnte nicht initialisiert werden."
 
 msgid "ID3 tag"
 msgstr "ID3-Kennzeichnung"
@@ -724,7 +727,7 @@ msgid "Start position in seconds."
 msgstr "Startposition in Sekunden."
 
 msgid "Enable accurate seeking"
-msgstr ""
+msgstr "Präzisen Suchlauf einschalten"
 
 msgid "Playlist file containing input media files"
 msgstr "Datei mit Wiedergabeliste enthält Eingabe-Mediendateien"
@@ -737,12 +740,11 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Nichts ausgeben (außer Fehlermeldungen)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"Die playbin3-Weiterleitung verwenden (die Voreinstellung hängt von der "
-"Umgebungsvariablen »USE_PLABIN« ab)"
+msgid "Use playbin3 pipeline (default)"
+msgstr "playbin2-Weiterleitung verwenden (Vorgabe)"
+
+msgid "Use playbin2 pipeline"
+msgstr "playbin2-Weiterleitung verwenden"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -752,7 +754,7 @@ msgstr ""
 "Wechseln der Wiedergabeliste (lückenlose Wiedergabe wird ignoriert)"
 
 msgid "Do not print current position of pipeline"
-msgstr ""
+msgstr "Nicht die aktuelle Position der Weiterleitung ausgeben"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -766,11 +768,21 @@ msgstr ""
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Geben Sie »k« ein, um die Liste der Tastenkombinationen zu sehen.\n"
 
+#~ msgid "failed to draw pattern"
+#~ msgstr "Zeichnen des Musters ist gescheitert"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "Format wurde nicht vor der get-Funktion erkannt"
+
+#~ msgid ""
+#~ "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+#~ "variable)"
+#~ msgstr ""
+#~ "Die playbin3-Weiterleitung verwenden (die Voreinstellung hängt von der "
+#~ "Umgebungsvariablen »USE_PLABIN« ab)"
+
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "Das Element »uridecodebin3« konnte nicht erstellt werden."
-
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "playbin3-Weiterleitung verwenden"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Das Element »decodebin3« konnte nicht erstellt werden."

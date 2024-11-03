@@ -3,13 +3,13 @@
 #
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019, 2021, 2022, 2023.
+# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019, 2021, 2022, 2023, 2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.21.90\n"
+"Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2023-01-15 13:01+0300\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-27 05:18+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Lokalize 20.12.0\n"
+"X-Generator: Lokalize 22.12.3\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
@@ -154,12 +154,15 @@ msgstr "Воспроизведение этого потока в данный �
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Для «%s» не реализован обработчик URI."
 
-#, fuzzy
 msgid "Source element can't be prepared"
-msgstr "Элемент источника не имеет контактных гнёзд."
+msgstr "Невозможно подготовить элемент источника"
 
 msgid "Source element is invalid."
 msgstr "Неверный элемент источника."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "Ошибка при создании каталога загрузки «%s»."
 
 msgid "Source element has no pads."
 msgstr "Элемент источника не имеет контактных гнёзд."
@@ -174,14 +177,14 @@ msgstr "Невозможна запись аудио с достаточной �
 msgid "This CD has no audio tracks"
 msgstr "На CD нет звуковых дорожек"
 
-msgid "failed to draw pattern"
-msgstr "ошибка при рисовании шаблона"
+msgid "An OpenGL error occurred"
+msgstr "Произошла ошибка OpenGL"
 
-msgid "A GL error occurred"
-msgstr "Произошла ошибка GL"
+msgid "The GL API is not compatible with the current GL context"
+msgstr "GL API не совместим с контекстом текущего GL"
 
-msgid "format wasn't negotiated before get function"
-msgstr "перед функцией получения не был согласован формат"
+msgid "Subclass failed to initialize."
+msgstr "Сбой инициализации подкласса."
 
 msgid "ID3 tag"
 msgstr "ID3-тег"
@@ -721,7 +724,7 @@ msgid "Start position in seconds."
 msgstr "Начальная позиция в секундах."
 
 msgid "Enable accurate seeking"
-msgstr ""
+msgstr "Включить точную перемотку"
 
 msgid "Playlist file containing input media files"
 msgstr "Файл списка воспроизведения с входными медиа-файлами"
@@ -734,12 +737,11 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Не выводить ничего в поток стандартного вывода (кроме ошибок)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"Использовать конвейер playbin3 (значение по умолчанию зависит от переменной "
-"окружения «USE_PLAYBIN»)"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Использовать конвейер playbin3 (по умолчанию)"
+
+msgid "Use playbin2 pipeline"
+msgstr "Использовать конвейер playbin2"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -749,7 +751,7 @@ msgstr ""
 "списка воспроизведения (непрерывность воспроизведения игнорируется)"
 
 msgid "Do not print current position of pipeline"
-msgstr ""
+msgstr "Не выводить текущее положение конвейера"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -761,11 +763,21 @@ msgstr "Вы должны указать не менее одного имени
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Нажмите «k» для показа списка клавиатурных комбинаций.\n"
 
+#~ msgid "failed to draw pattern"
+#~ msgstr "ошибка при рисовании шаблона"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "перед функцией получения не был согласован формат"
+
+#~ msgid ""
+#~ "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+#~ "variable)"
+#~ msgstr ""
+#~ "Использовать конвейер playbin3 (значение по умолчанию зависит от "
+#~ "переменной окружения «USE_PLAYBIN»)"
+
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "Не удалось создать элемент «uridecodebin3»."
-
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Использовать конвейер playbin3"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Не удалось создать элемент «decodebin3»."

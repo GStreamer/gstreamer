@@ -2,14 +2,14 @@
 # Copyright © 2020 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Danilo Segan <dsegan@gmx.net>, 2004.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011–2023.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011-2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.21.90\n"
+"Project-Id-Version: gst-plugins-base-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-10 13:49+0100\n"
-"PO-Revision-Date: 2023-02-26 08:05+0100\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-05-05 09:56+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -19,8 +19,6 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Project-Style: gnome\n"
-"X-Generator: Gtranslator 41.0\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Не могу да отворим уређај ради пуштања у моно режиму."
@@ -153,12 +151,15 @@ msgstr "Ова врста тока још увек не може бити пуш
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Руковалац адресе није примењен за „%s“."
 
-#, fuzzy
 msgid "Source element can't be prepared"
-msgstr "Изворни елемент нема попуне."
+msgstr "Изворни елемент се не може припремити"
 
 msgid "Source element is invalid."
 msgstr "Изворни елемент је неисправан."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "Нисам успео да направим директоријум преузимања „%s“."
 
 msgid "Source element has no pads."
 msgstr "Изворни елемент нема попуне."
@@ -173,14 +174,14 @@ msgstr "Не могу да снимам звук довољно брзо"
 msgid "This CD has no audio tracks"
 msgstr "Овај ЦД нема звучних нумера"
 
-msgid "failed to draw pattern"
-msgstr "нисам успео да исцртам шаблон"
+msgid "An OpenGL error occurred"
+msgstr "Дошло је до „OpenGL“ грешке"
 
-msgid "A GL error occurred"
-msgstr "Дошло је до ГЛ грешке"
+msgid "The GL API is not compatible with the current GL context"
+msgstr "GL API није сагласан са текућим GL контекстом"
 
-msgid "format wasn't negotiated before get function"
-msgstr "запис није преговаран пре функције добављања"
+msgid "Subclass failed to initialize."
+msgstr "Покретање подкласе није успело."
 
 msgid "ID3 tag"
 msgstr "ИБ3 ознака"
@@ -718,7 +719,7 @@ msgid "Start position in seconds."
 msgstr "Положај почетка у секундама."
 
 msgid "Enable accurate seeking"
-msgstr ""
+msgstr "Укључује прецизно тражење"
 
 msgid "Playlist file containing input media files"
 msgstr "Датотека списка нумера садржи датотеке улазних медија"
@@ -730,12 +731,11 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Не исписује никакав излаз (осим грешака)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"Користи „playbin3“ спојку (основне промене зависе од „USE_PLAYBIN“ "
-"променљиве окружења)"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Користи спојку „playbin3“ (основно)"
+
+msgid "Use playbin2 pipeline"
+msgstr "Користи спојку „playbin2“"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -745,7 +745,7 @@ msgstr ""
 "промене списка нумера (безпаузно се занемарује)"
 
 msgid "Do not print current position of pipeline"
-msgstr ""
+msgstr "Не исписује тренутни положај спојке"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -759,11 +759,21 @@ msgstr ""
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Притисните „k“ да видите списак пречица тастатуре.\n"
 
+#~ msgid "failed to draw pattern"
+#~ msgstr "нисам успео да исцртам шаблон"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "запис није преговаран пре функције добављања"
+
+#~ msgid ""
+#~ "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+#~ "variable)"
+#~ msgstr ""
+#~ "Користи „playbin3“ спојку (основне промене зависе од „USE_PLAYBIN“ "
+#~ "променљиве окружења)"
+
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "Не могу да направим „uridecodebin3“ елемент."
-
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Користи спојку „playbin3“"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Не могу да направим „decodebin3“ елемент."

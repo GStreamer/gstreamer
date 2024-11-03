@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2023-01-21 13:42+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -153,6 +153,10 @@ msgstr "源组件缺少pad。"
 msgid "Source element is invalid."
 msgstr "无效的源组件。"
 
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr ""
+
 msgid "Source element has no pads."
 msgstr "源组件缺少pad。"
 
@@ -166,14 +170,15 @@ msgstr "无法足够快的录音"
 msgid "This CD has no audio tracks"
 msgstr "此 CD 无音轨"
 
-msgid "failed to draw pattern"
-msgstr "无法绘制图案"
-
-msgid "A GL error occurred"
+#, fuzzy
+msgid "An OpenGL error occurred"
 msgstr "发生了 GL 错误"
 
-msgid "format wasn't negotiated before get function"
-msgstr "在调用 get 函数之前未确定合适的格式"
+msgid "The GL API is not compatible with the current GL context"
+msgstr ""
+
+msgid "Subclass failed to initialize."
+msgstr ""
 
 msgid "ID3 tag"
 msgstr "ID3 标识"
@@ -718,10 +723,13 @@ msgstr "改变速率时使用实验性的 instant-rate-change 旗标"
 msgid "Do not print any output (apart from errors)"
 msgstr "不显示任何输出（除了错误信息）"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr "使用playbin3管道（默认配置取决于“USE_PLAYBIN”环境变量）"
+#, fuzzy
+msgid "Use playbin3 pipeline (default)"
+msgstr "使用 playbin3 管道"
+
+#, fuzzy
+msgid "Use playbin2 pipeline"
+msgstr "使用 playbin3 管道"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -743,11 +751,19 @@ msgstr "你必须提供至少一个文件名或URI来播放。"
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "按“k”键来显示键盘快捷键列表。\n"
 
+#~ msgid "failed to draw pattern"
+#~ msgstr "无法绘制图案"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "在调用 get 函数之前未确定合适的格式"
+
+#~ msgid ""
+#~ "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+#~ "variable)"
+#~ msgstr "使用playbin3管道（默认配置取决于“USE_PLAYBIN”环境变量）"
+
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "无法创建“uridecodebin3”组件。"
-
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "使用 playbin3 管道"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "无法创建“decodebin3”组件。"

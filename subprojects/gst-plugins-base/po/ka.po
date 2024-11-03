@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-10 13:49+0100\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2023-02-25 08:25+0100\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <(nothing)>\n"
@@ -157,6 +157,10 @@ msgstr "საწყისი ელემენტი არასწორი�
 msgid "Source element is invalid."
 msgstr "საწყისი ელემენტი არასწორია."
 
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr ""
+
 msgid "Source element has no pads."
 msgstr ""
 
@@ -170,14 +174,15 @@ msgstr "აუდიოს საკმარისი სისწრაფი�
 msgid "This CD has no audio tracks"
 msgstr "ამ CD-ს აუდიო ტრეკები არ აქვს"
 
-msgid "failed to draw pattern"
-msgstr "შაბლონის დახატვის შეცდომა"
-
-msgid "A GL error occurred"
+#, fuzzy
+msgid "An OpenGL error occurred"
 msgstr "GL-ის შეცდომა"
 
-msgid "format wasn't negotiated before get function"
-msgstr "ფორმატი get ფუნქციამდე შეთანხმებული არ იყო"
+msgid "The GL API is not compatible with the current GL context"
+msgstr ""
+
+msgid "Subclass failed to initialize."
+msgstr ""
 
 msgid "ID3 tag"
 msgstr "ID3 ჭდე"
@@ -722,9 +727,10 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "შეცდომების გარდა არაფერი გამოტანილი არ იქნება"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
+msgid "Use playbin3 pipeline (default)"
+msgstr ""
+
+msgid "Use playbin2 pipeline"
 msgstr ""
 
 msgid ""
@@ -745,8 +751,8 @@ msgstr "დასაკრავი ფაილის სახელის ა
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "კლავიატურების მალსახმობების სიის მისაღებად დააწექით 'k'.\n"
 
-#~ msgid "Could not create \"uridecodebin3\" element."
-#~ msgstr "\"uridecodebin3\" ელემენტის შექმნის შეცდომა."
+#~ msgid "failed to draw pattern"
+#~ msgstr "შაბლონის დახატვის შეცდომა"
 
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "გამოიყენეთ playbin3 ფაიფლაინი"
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "ფორმატი get ფუნქციამდე შეთანხმებული არ იყო"

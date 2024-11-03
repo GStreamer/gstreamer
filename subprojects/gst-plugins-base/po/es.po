@@ -1,15 +1,15 @@
-# translation of gst-plugins-base-1.21.90.po to Español
+# translation of gst-plugins-base-1.24.0.po to Español
 # spanish translation for gst-plugins-base
 # This file is put in the public domain.
 # Jorge González <jorgegonz@svn.gnome.org>, 2007, 2008, 2009, 2010, 2011.
-# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022, 2023
+# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022, 2023, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.21.90\n"
+"Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2023-01-16 11:17-0600\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-07 11:32-0600\n"
 "Last-Translator: Cristian Othón Martínez Vera <cfuga@cfuga.mx>\n"
 "Language-Team: Spanish <es@tp.org.es>\n"
 "Language: es\n"
@@ -153,12 +153,15 @@ msgstr "Este tipo de flujo no se puede reproducir aún."
 msgid "No URI handler implemented for \"%s\"."
 msgstr "No existe un manejador URI implementado para «%s»."
 
-#, fuzzy
 msgid "Source element can't be prepared"
-msgstr "El elemento fuente no tiene rellenos."
+msgstr "El elemento fuente no se puede preparar"
 
 msgid "Source element is invalid."
 msgstr "El elemento fuente no es válido."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "Falló al crear el directorio de descarga '%s'."
 
 msgid "Source element has no pads."
 msgstr "El elemento fuente no tiene rellenos."
@@ -173,14 +176,14 @@ msgstr "No se puede grabar el sonido lo suficientemente rápido"
 msgid "This CD has no audio tracks"
 msgstr "Este CD no tiene pistas de sonido"
 
-msgid "failed to draw pattern"
-msgstr "falló al dibujar el patrón"
+msgid "An OpenGL error occurred"
+msgstr "Ocurrió un error de OpenGL"
 
-msgid "A GL error occurred"
-msgstr "Ocurrió un error de GL"
+msgid "The GL API is not compatible with the current GL context"
+msgstr "La API de GL no es compatible con el contexto GL actual"
 
-msgid "format wasn't negotiated before get function"
-msgstr "el formato no se negoció antes de obtener la función"
+msgid "Subclass failed to initialize."
+msgstr "Falló al inicializar la subclase."
 
 msgid "ID3 tag"
 msgstr "Etiqueta ID3"
@@ -720,7 +723,7 @@ msgid "Start position in seconds."
 msgstr "Posición de inicio en segundos."
 
 msgid "Enable accurate seeking"
-msgstr ""
+msgstr "Activa la búsqueda precisa"
 
 msgid "Playlist file containing input media files"
 msgstr ""
@@ -732,12 +735,11 @@ msgstr "Usar la opción instant-rate-change experimental al cambiar la tasa"
 msgid "Do not print any output (apart from errors)"
 msgstr "No mostrar ninguna salida (además de los errores)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"Usar el conducto playbin3 (por defecto varía de acuerdo a la variable de "
-"ambiente 'USE_PLAYBIN')"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Usar el conducto playbin3 (por defecto)"
+
+msgid "Use playbin2 pipeline"
+msgstr "Usar el conducto playbin2"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -748,7 +750,7 @@ msgstr ""
 "espacios)"
 
 msgid "Do not print current position of pipeline"
-msgstr ""
+msgstr "No imprime la posición actual del conducto"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -760,11 +762,21 @@ msgstr "Debe proveer por lo menos un nombre de fichero o URI para reproducir."
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Pulse 'k' para ver una lista de atajos de teclado.\n"
 
+#~ msgid "failed to draw pattern"
+#~ msgstr "falló al dibujar el patrón"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "el formato no se negoció antes de obtener la función"
+
+#~ msgid ""
+#~ "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+#~ "variable)"
+#~ msgstr ""
+#~ "Usar el conducto playbin3 (por defecto varía de acuerdo a la variable de "
+#~ "ambiente 'USE_PLAYBIN')"
+
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "No se pudo crear el elemento «uridecodebin3»."
-
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Usar el conducto playbin3"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "No se pudo crear el elemento «decodebin3»."

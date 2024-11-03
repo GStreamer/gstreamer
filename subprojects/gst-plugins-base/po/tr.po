@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2021-10-04 13:55+0300\n"
 "Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
 "Language-Team: Turkish <gnome-turk@gnome.org>\n"
@@ -160,6 +160,10 @@ msgstr "Kaynak ögesi geçersiz."
 msgid "Source element is invalid."
 msgstr "Kaynak ögesi geçersiz."
 
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr ""
+
 #, fuzzy
 msgid "Source element has no pads."
 msgstr "Kaynak ögesi geçersiz."
@@ -174,14 +178,15 @@ msgstr "Sesi yeterince hızlı kaydedemiyor"
 msgid "This CD has no audio tracks"
 msgstr "Bu CD hiç ses izi içermiyor"
 
-msgid "failed to draw pattern"
-msgstr "desen çizilemedi"
-
-msgid "A GL error occurred"
+#, fuzzy
+msgid "An OpenGL error occurred"
 msgstr "Bir GL hatası oluştu"
 
-msgid "format wasn't negotiated before get function"
-msgstr "işlev alınmadan önce biçim anlaşması yapılmadı"
+msgid "The GL API is not compatible with the current GL context"
+msgstr ""
+
+msgid "Subclass failed to initialize."
+msgstr ""
 
 msgid "ID3 tag"
 msgstr "ID3 etiketi"
@@ -733,10 +738,12 @@ msgid "Do not print any output (apart from errors)"
 msgstr "Herhangi bir çıktı yazdırma (hatalar dışında)"
 
 #, fuzzy
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr "(varsayılan 'USE_PLAYBIN' env değişkenine bağlı olarak değişir)"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Playbin3 ardaşık düzenini kullan"
+
+#, fuzzy
+msgid "Use playbin2 pipeline"
+msgstr "Playbin3 ardaşık düzenini kullan"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -761,8 +768,14 @@ msgstr "Klavye kısayollarının bir listesini görmek için 'k'ye basın.\n"
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "\"uridecodebin3\" ögesi oluşturulamıyor."
 
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Playbin3 ardaşık düzenini kullan"
+#~ msgid "failed to draw pattern"
+#~ msgstr "desen çizilemedi"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "işlev alınmadan önce biçim anlaşması yapılmadı"
+
+#~ msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#~ msgstr "(varsayılan 'USE_PLAYBIN' env değişkenine bağlı olarak değişir)"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "\"decodebin3\" ögesi oluşturamıyor."

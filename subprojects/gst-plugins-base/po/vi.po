@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
 "PO-Revision-Date: 2022-02-14 09:24+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -159,6 +159,10 @@ msgstr "Phần tử nguồn không phải hợp lệ."
 msgid "Source element is invalid."
 msgstr "Phần tử nguồn không phải hợp lệ."
 
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr ""
+
 #, fuzzy
 msgid "Source element has no pads."
 msgstr "Phần tử nguồn không phải hợp lệ."
@@ -173,14 +177,15 @@ msgstr "Không thể thu âm thanh một cách đủ nhanh"
 msgid "This CD has no audio tracks"
 msgstr "Đĩa CD này không có rãnh âm thanh nào"
 
-msgid "failed to draw pattern"
-msgstr "gặp lỗi khi vẽ mẫu"
-
-msgid "A GL error occurred"
+#, fuzzy
+msgid "An OpenGL error occurred"
 msgstr "Đã nảy sinh một lỗi GL"
 
-msgid "format wasn't negotiated before get function"
-msgstr "định dạng không được dàn xếp trước hàm"
+msgid "The GL API is not compatible with the current GL context"
+msgstr ""
+
+msgid "Subclass failed to initialize."
+msgstr ""
 
 msgid "ID3 tag"
 msgstr "Thẻ ID3"
@@ -738,10 +743,12 @@ msgid "Do not print any output (apart from errors)"
 msgstr "Đừng in bất kỳ cái gì ra (ngoại trừ lỗi)"
 
 #, fuzzy
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr "(biến mặc định tùy thuộc vào biến môi trường 'USE_PLAYBIN')"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Dùng đường ống playbin3"
+
+#, fuzzy
+msgid "Use playbin2 pipeline"
+msgstr "Dùng đường ống playbin3"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -766,8 +773,14 @@ msgstr "Nhấn phím “k” để xem toàn bộ phím tắt.\n"
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "Không thể tạo phần tử “uridecodebin3”."
 
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Dùng đường ống playbin3"
+#~ msgid "failed to draw pattern"
+#~ msgstr "gặp lỗi khi vẽ mẫu"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "định dạng không được dàn xếp trước hàm"
+
+#~ msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#~ msgstr "(biến mặc định tùy thuộc vào biến môi trường 'USE_PLAYBIN')"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Không thể tạo phần tử “uridecodebin3”."

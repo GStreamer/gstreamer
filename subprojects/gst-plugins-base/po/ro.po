@@ -1,9 +1,10 @@
-# Romanian translation for gst-plugins-base
+# Romanian translation for gst-plugins-base.
+# Mesajele în limba română pentru pachetul gst-plugins-base.
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
 # Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
-# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022 - 2023.
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022 - 2024.
 #
 # Cronologia traducerii fișierului „gst-plugins-base”:
 # Traducerea inițială, făcută de LAG, pentru versiunea gst-plugins-base 0.10.29.2
@@ -11,15 +12,16 @@
 # Actualizare a mesajelor, de la fișierul „gst-plugins-base-1.19.2.pot”.
 # Eliminare a mesajelor ce-au dispărut în ultima versiune.
 # Actualizare a traducerii pentru versiunea 1.19.2, făcută de R-GC, ian-2022.
-# Actualizare a traducerii pentru versiunea 1.21.90, făcută de R-GC, ian-2023
+# Actualizare a traducerii pentru versiunea 1.21.90, făcută de R-GC, ian-2023.
+# Actualizare a traducerii pentru versiunea 1.24.0, făcută de R-GC, mar-2024.
 # Actualizare a traducerii pentru versiunea Y, făcută de X, Z(anul).
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.21.90\n"
+"Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2023-01-15 20:42+0100\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-03-08 13:44+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
@@ -99,7 +101,7 @@ msgstr "Acesta pare a fi un fișier text"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Element %s lipsă - verificați instalarea GStreamer."
+msgstr "Lipsește elementul „%s” - verificați instalarea GStreamer."
 
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Nu s-a putut crea elementul „uridecodebin”."
@@ -113,7 +115,7 @@ msgstr "Elementul autovideosink lipsește."
 
 #, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Videosink-ul configurat %s nu funcționează."
+msgstr "Elementul videosink configurat %s, nu funcționează."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -140,7 +142,7 @@ msgstr "Elementul autoaudiosink lipsește."
 
 #, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Audiosink-ul configurat %s nu funcționează."
+msgstr "Elementul audiosink configurat %s, nu funcționează."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -154,14 +156,14 @@ msgstr "Nu se poate reda un fișier text fără video sau vizualizări."
 
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr "Niciun decodor disponibil pentru tipul „%s”."
+msgstr "Niciun decodificator disponibil pentru tipul „%s”."
 
 msgid "No URI specified to play from."
-msgstr "Nu s-a specificat URI-ul pentru redare."
+msgstr "Nu s-a specificat adresa URI pentru redare."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "URI-ul „%s” este nevalid."
+msgstr "Adresa URI „%s” nu este validă."
 
 msgid "This stream type cannot be played yet."
 msgstr "Acest tip de flux nu poate fi redat încă."
@@ -171,17 +173,21 @@ msgstr "Acest tip de flux nu poate fi redat încă."
 # „Nicio rutină de tratare de URI implementată pentru „%s”.”
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr "Nu a fost implementată nicio rutină de tratare a URI-ului pentru „%s”."
+msgstr ""
+"Nu a fost implementată nicio rutină de tratare a adresei URI pentru „%s”."
 
-#, fuzzy
 msgid "Source element can't be prepared"
-msgstr "Elementul sursă nu are pini (pads)."
+msgstr "Elementul sursă nu poate fi pregătit"
 
 msgid "Source element is invalid."
 msgstr "Elementul sursă nu este valid."
 
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "Nu s-a putut crea directorul de descărcare „%s”."
+
 msgid "Source element has no pads."
-msgstr "Elementul sursă nu are pini (pads)."
+msgstr "Elementul sursă nu are pini de conectare."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -193,14 +199,14 @@ msgstr "Nu se poate înregistra sunetul destul de repede"
 msgid "This CD has no audio tracks"
 msgstr "Acest CD nu conține piste audio"
 
-msgid "failed to draw pattern"
-msgstr "nu s-a putut desena modelul"
+msgid "An OpenGL error occurred"
+msgstr "A apărut o eroare OpenGL"
 
-msgid "A GL error occurred"
-msgstr "A apărut o eroare GL"
+msgid "The GL API is not compatible with the current GL context"
+msgstr "API-ul GL nu este compatibil cu contextul GL actual."
 
-msgid "format wasn't negotiated before get function"
-msgstr "formatul nu a fost negociat înainte de funcția «get»"
+msgid "Subclass failed to initialize."
+msgstr "Nu s-a reușit să se inițializeze subclasa."
 
 msgid "ID3 tag"
 msgstr "Etichetă ID3"
@@ -215,7 +221,7 @@ msgid "Apple Lossless Audio (ALAC)"
 msgstr "Apple Audio fără pierdere (ALAC)"
 
 msgid "Free Lossless Audio Codec (FLAC)"
-msgstr "Codec audio liber fără pierdere (FLAC)"
+msgstr "Free Lossless Audio Codec (FLAC)"
 
 msgid "Lossless True Audio (TTA)"
 msgstr "Lossless True Audio (TTA)"
@@ -233,7 +239,7 @@ msgid "Lossless MSZH"
 msgstr "MSZH fără pierdere"
 
 msgid "Run-length encoding"
-msgstr "Codarea run-length"
+msgstr "Codificarea run-length"
 
 # R-GC, scrie:
 # modificat de la:
@@ -256,10 +262,10 @@ msgid "QTtext subtitle format"
 msgstr "Format de subtitrări QText"
 
 msgid "Sami subtitle format"
-msgstr "Format subtitrare Sami"
+msgstr "Format de subtitrări Sami"
 
 msgid "TMPlayer subtitle format"
-msgstr "Format subtitrare TMPlayer"
+msgstr "Format de subtitrări TMPlayer"
 
 msgid "CEA 608 Closed Caption"
 msgstr "Subtitrare pentru persoanele cu dizabilități CEA 608"
@@ -268,7 +274,7 @@ msgid "CEA 708 Closed Caption"
 msgstr "Subtitrare pentru persoanele cu dizabilități CEA 708"
 
 msgid "Kate subtitle format"
-msgstr "Format subtitrare Kate"
+msgstr "Format de subtitrări Kate"
 
 msgid "WebVTT subtitle format"
 msgstr "Format de subtitrări WebVTT"
@@ -317,41 +323,49 @@ msgstr "Audio necomprimat"
 # Software = exemple/fragmente de cod, scripturi, biblioteci, aplicații, programe
 #, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Audio %d-bit brut(neprelucrat) %s"
+msgstr "Audio %d-biți brut(neprelucrat) %s"
 
 msgid "Audio CD source"
-msgstr "Sursă CD audio"
+msgstr "Sursă: CD audio"
 
 msgid "DVD source"
-msgstr "Sursă DVD"
+msgstr "Sursă: DVD"
 
 msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr "Sursă RTSP (protocol pentru flux în timp real)"
+msgstr "Sursă: RTSP (protocol pentru flux în timp real)"
 
 msgid "Microsoft Media Server (MMS) protocol source"
-msgstr "Sursă protocol Microsoft Media Server (MMS)"
+msgstr "Sursă: protocol Microsoft Media Server (MMS)"
 
 #. TODO: find out how to add a comment for translators to the source code
 #. * (and tell them to make the first letter uppercase below if they move
 #. * the protocol to the middle or end of the string)
 #, c-format
 msgid "%s protocol source"
-msgstr "Sursă protocol %s"
+msgstr "Sursă: protocol %s"
 
 # R-GC, scrie:
 # modificare de la:
 # „depayloader RTP video %s”
+# ***
+# modificare de la:
+# „program de încărcare RTP video %s”
+# ===
+# A se vedea pagina:
+# <https://en.wikipedia.org/wiki/Payload_(computing)>,
+# pentru definiția cuvîntului „payload”;
+# „depayload” fiind inversul acestuia.
 #, c-format
 msgid "%s video RTP depayloader"
-msgstr "program de încărcare RTP video %s"
+msgstr "modul de despachetare a datelor video RTP %s"
 
 #, c-format
 msgid "%s audio RTP depayloader"
-msgstr "program de încărcare RTP audio %s"
+msgstr "modul de despachetare a datelor audio RTP %s"
 
 #, c-format
 msgid "%s RTP depayloader"
-msgstr "program de încărcare RTP %s"
+msgstr "modul de despachetare a datelo RTP %s"
 
 # R-GC, scrie:
 # modificat de la:
@@ -369,15 +383,15 @@ msgstr "decodificator %s"
 
 #, c-format
 msgid "%s video RTP payloader"
-msgstr "codificator RTP video %s"
+msgstr "modul de împachetare a datelor video RTP %s"
 
 #, c-format
 msgid "%s audio RTP payloader"
-msgstr "codificator RTP audio %s"
+msgstr "modul de împachetare a datelor audio RTP %s"
 
 #, c-format
 msgid "%s RTP payloader"
-msgstr "codificator RTP %s"
+msgstr "modul de împachetare a datelor RTP %s"
 
 #, c-format
 msgid "%s muxer"
@@ -457,7 +471,7 @@ msgid "MusicBrainz TRM ID"
 msgstr "ID TRM MusicBrainz"
 
 msgid "AcoustID ID"
-msgstr "AcoustID ID"
+msgstr "ID AcoustID"
 
 msgid "AcoustID fingerprint (chromaprint)"
 msgstr "Amprentă digitală AcoustID (chromaprint)"
@@ -497,7 +511,7 @@ msgid "Digital zoom ratio used when capturing an image"
 msgstr "Proporția de focalizare digitală de când se capturează o imagine"
 
 msgid "capturing iso speed"
-msgstr "viteză iso de capturare"
+msgstr "viteza iso de capturare"
 
 msgid "The ISO speed used when capturing an image"
 msgstr "Viteza ISO utilizată când se capturează o imagine"
@@ -558,10 +572,10 @@ msgid "The direction of sharpness processing applied when capturing an image"
 msgstr "Direcția procesării preciziei aplicată când se capturează o imagine"
 
 msgid "capturing flash fired"
-msgstr "blițul tras de capturare"
+msgstr "declanșarea blițului la capturare"
 
 msgid "If the flash fired while capturing an image"
-msgstr "Dacă blițul a fost tras când se capturează o imagine"
+msgstr "Dacă blițul a fost declanșat când se capturează o imagine"
 
 msgid "capturing flash mode"
 msgstr "mod de bliț de capturare"
@@ -613,7 +627,7 @@ msgid "musical-key"
 msgstr "cheie-muzicală"
 
 msgid "Initial key in which the sound starts"
-msgstr "Cheia inițiază în care începe sunetul"
+msgstr "Cheia inițială în care începe sunetul"
 
 msgid "Print version information and exit"
 msgstr "Imprimă informațiile de versiune și iese"
@@ -630,7 +644,7 @@ msgstr ""
 "pentru ca dispozitivele să fie adăugate/eliminate."
 
 msgid "Include devices from hidden device providers."
-msgstr "Adăugați dispozitive de la furnizorii de dispozitive ascunși."
+msgstr "Adaugă dispozitive de la furnizorii de dispozitive ascunși."
 
 #, c-format
 msgid "Volume: %.0f%%"
@@ -721,7 +735,7 @@ msgid "volume down"
 msgstr "volum mai jos"
 
 msgid "toggle audio mute on/off"
-msgstr "comută între „cu sunet/fără sunet”"
+msgstr "comută între sunet dezactivat/activat"
 
 msgid "increase playback rate"
 msgstr "crește rata vitezei de redare"
@@ -790,7 +804,7 @@ msgid "Start position in seconds."
 msgstr "Poziția de start în secunde."
 
 msgid "Enable accurate seeking"
-msgstr ""
+msgstr "Activează căutarea precisă"
 
 msgid "Playlist file containing input media files"
 msgstr "Fișierul listei de redare care conține fișierele media de intrare"
@@ -803,12 +817,11 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Nu imprimă nicio ieșire (în afară de erori)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"Utilizează linia de asamblare(pipeline) playbin3 (valoarea predefinită "
-"variază în funcție de variabila de mediu „USE_PLAYBIN”)"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Utilizează linia de conexiune playbin3 (implicită)"
+
+msgid "Use playbin2 pipeline"
+msgstr "Utilizează linia de conexiune playbin2"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -819,7 +832,7 @@ msgstr ""
 "ignorat)"
 
 msgid "Do not print current position of pipeline"
-msgstr ""
+msgstr "Nu se imprimă poziția curentă a liniei de conexiune."
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -831,8 +844,18 @@ msgstr "Trebuie să furnizați cel puțin un nume de fișier sau URI de redat."
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Apăsați „k” pentru a vedea o listă de scurtături de tastatură.\n"
 
+#~ msgid "failed to draw pattern"
+#~ msgstr "nu s-a putut desena modelul"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "formatul nu a fost negociat înainte de funcția «get»"
+
+#~ msgid ""
+#~ "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+#~ "variable)"
+#~ msgstr ""
+#~ "Utilizează linia de asamblare(pipeline) playbin3 (valoarea predefinită "
+#~ "variază în funcție de variabila de mediu „USE_PLAYBIN”)"
+
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "Nu s-a putut crea elementul „uridecodebin3”."
-
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Utilizează linia de conexiune playbin3"

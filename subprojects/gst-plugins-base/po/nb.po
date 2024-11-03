@@ -2,14 +2,14 @@
 # This file is put in the public domain.
 #
 # Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
-# Johnny A. Solbu <johnny@solbu.net>, 2012-2023
+# Johnny A. Solbu <johnny@solbu.net>, 2012-2024
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.21.90\n"
+"Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2023-01-15 14:19+0100\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-09-11 12:23+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <l10n-no@lister.huftis.org>\n"
 "Language: nb_NO\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.2.3\n"
+"X-Generator: Poedit 2.4.2\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunne ikke åpne enheten for avspilling i mono-modus."
@@ -150,12 +150,15 @@ msgstr "Dennestrømtypen kan ikke spilles ennå."
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Ingen URI-håndterer er implementert for «%s»."
 
-#, fuzzy
 msgid "Source element can't be prepared"
-msgstr "Kildeelementet har ingen utfylling."
+msgstr "Kildeelementet kan ikke klargjøres"
 
 msgid "Source element is invalid."
 msgstr "Kildeelement er ugyldig."
+
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "Kunne ikke opprette nedlastingskatalog «%s»."
 
 msgid "Source element has no pads."
 msgstr "Kildeelementet har ingen utfylling."
@@ -170,14 +173,14 @@ msgstr "Kan ikke ta opp lyd rask nok"
 msgid "This CD has no audio tracks"
 msgstr "Denne CDen har ingen lydspor"
 
-msgid "failed to draw pattern"
-msgstr "kunne ikke tegne mønster"
+msgid "An OpenGL error occurred"
+msgstr "En OpenGL-feil oppsto"
 
-msgid "A GL error occurred"
-msgstr "En GL-feil oppsto"
+msgid "The GL API is not compatible with the current GL context"
+msgstr "GL API-et er ikke kompatibel med gjeldende GL-kontekst"
 
-msgid "format wasn't negotiated before get function"
-msgstr "formatet ble ikke forhandlet før get-funksjon"
+msgid "Subclass failed to initialize."
+msgstr "Kunne ikke initialisere underklassen."
 
 msgid "ID3 tag"
 msgstr "ID3-merke"
@@ -715,7 +718,7 @@ msgid "Start position in seconds."
 msgstr "Startposisjon i sekunder."
 
 msgid "Enable accurate seeking"
-msgstr ""
+msgstr "Aktiver nøyaktig søking"
 
 msgid "Playlist file containing input media files"
 msgstr "Spillelistefil som inneholder inngangsmediefiler"
@@ -727,12 +730,11 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Ikke skriv noe utdata (bortsett fra feil)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
-"Bruk playbin3-kanal (standard varierer avhengig av miljøvariabelen "
-"«USE_PLAYBIN»)"
+msgid "Use playbin3 pipeline (default)"
+msgstr "Bruk playbin3-datakanal (standard)"
+
+msgid "Use playbin2 pipeline"
+msgstr "Bruk playbin2-datakanal"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -742,7 +744,7 @@ msgstr ""
 "kommandoen for spillelisten (gapless ignoreres)"
 
 msgid "Do not print current position of pipeline"
-msgstr ""
+msgstr "Ikke skriv ut gjeldende posisjon til datakanalen"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -754,11 +756,21 @@ msgstr "Du må ha med minst ett filnavn eller nettadresse å spille."
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Trykk «k» for å se en liste over hurtigtaster.\n"
 
+#~ msgid "failed to draw pattern"
+#~ msgstr "kunne ikke tegne mønster"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "formatet ble ikke forhandlet før get-funksjon"
+
+#~ msgid ""
+#~ "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+#~ "variable)"
+#~ msgstr ""
+#~ "Bruk playbin3-kanal (standard varierer avhengig av miljøvariabelen "
+#~ "«USE_PLAYBIN»)"
+
 #~ msgid "Could not create \"uridecodebin3\" element."
 #~ msgstr "Kunne ikke opprette elementet «uridecodebin3»."
-
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Bruk playbin3-datakanal"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Kunne ikke opprette elementet «decodebin3»"

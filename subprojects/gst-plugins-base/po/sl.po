@@ -3,16 +3,16 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Matej Urbančič <matej.urban@gmail.com>, 2010.
-# Martin Srebotnjak  <miles@filmsi.net>, 2011.
 # Klemen Košir <klemen913@gmail.com>, 2011 - 2013.
+# Martin Srebotnjak  <miles@filmsi.net>, 2011, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.0.3\n"
+"Project-Id-Version: gst-plugins-base-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2013-01-05 10:10+0100\n"
-"Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
+"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"PO-Revision-Date: 2024-08-05 15:59+0200\n"
+"Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
 "MIME-Version: 1.0\n"
@@ -21,6 +21,7 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || "
 "n%100==4 ? 3 : 0);\n"
+"X-Generator: Poedit 2.2.1\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Naprave ni mogoče odpreti za predvajanje v mono načinu."
@@ -43,7 +44,7 @@ msgid "Could not open audio device for playback."
 msgstr "Zvočne naprave ni mogoče odpreti za predvajanje."
 
 msgid "Error outputting to audio device. The device has been disconnected."
-msgstr ""
+msgstr "Napaka pri oddajanju v zvočno napravo. Naprava je bila odklopljena."
 
 msgid "Could not open device for recording in mono mode."
 msgstr "Naprave ni mogoče odpreti za snemanje v mono načinu."
@@ -65,7 +66,7 @@ msgid "Could not open audio device for recording."
 msgstr "Zvočne naprave ni mogoče odpreti za snemanje."
 
 msgid "Error recording from audio device. The device has been disconnected."
-msgstr ""
+msgstr "Napaka pri snemanju iz zvočne naprave. Naprava je bila odklopljena."
 
 msgid "Could not open CD device for reading."
 msgstr "Naprave CD ni mogoče odpreti za branje."
@@ -87,7 +88,7 @@ msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Predmet '%s' manjka - preverite namestitev paketa GStreamer."
 
 msgid "Could not create \"uridecodebin\" element."
-msgstr ""
+msgstr "Ni bilo mogoče ustvariti elementa »uridecodebin«."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -136,36 +137,38 @@ msgstr "Besedilne datoteke ni mogoče predvajati brez videa ali predočenja."
 
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr "Za vrsto \"%s\" ni ustreznega odkodirnika."
+msgstr "Za vrsto »%s« ni ustreznega odkodirnika."
 
 msgid "No URI specified to play from."
 msgstr "Ni navedenega naslova URI za predvajanje."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "Neveljaven URI \"%s\"."
+msgstr "Neveljaven URI »%s«."
 
 msgid "This stream type cannot be played yet."
 msgstr "Te vrste pretoka še ni mogoče predvajati."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr "Ni ročnika naslovov URI za \"%s\"."
+msgstr "Ni ročnika naslovov URI za »%s«."
 
-#, fuzzy
 msgid "Source element can't be prepared"
-msgstr "Izvorni predmet je neveljaven."
+msgstr "Izvornega elementa ni mogoče pripraviti"
 
 msgid "Source element is invalid."
 msgstr "Izvorni predmet je neveljaven."
 
-#, fuzzy
+#, c-format
+msgid "Failed to create download directory '%s'."
+msgstr "Ni uspelo ustvariti mape za prenos »%s«."
+
 msgid "Source element has no pads."
-msgstr "Izvorni predmet je neveljaven."
+msgstr "Izvorni element nima blazinic."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr "Napaka med pošiljanjem podatkov na \"%s:%d\"."
+msgstr "Napaka med pošiljanjem podatkov na »%s:%d«."
 
 msgid "Can't record audio fast enough"
 msgstr "Ni mogoče dovolj hitro snemati zvoka"
@@ -173,14 +176,14 @@ msgstr "Ni mogoče dovolj hitro snemati zvoka"
 msgid "This CD has no audio tracks"
 msgstr "Ta CD nima zvočnih sledi"
 
-msgid "failed to draw pattern"
-msgstr ""
+msgid "An OpenGL error occurred"
+msgstr "Prišlo je do napake OpenGL"
 
-msgid "A GL error occurred"
-msgstr ""
+msgid "The GL API is not compatible with the current GL context"
+msgstr "GL API ni združljiv s trenutnim kontekstom GL"
 
-msgid "format wasn't negotiated before get function"
-msgstr ""
+msgid "Subclass failed to initialize."
+msgstr "Podrazreda ni bilo mogoče inicializirati."
 
 msgid "ID3 tag"
 msgstr "Oznaka ID3"
@@ -217,7 +220,7 @@ msgstr "Kodiranje trajanja izvajanja"
 
 #. subtitle formats with static descriptions
 msgid "Timed Text"
-msgstr ""
+msgstr "Časovno opredeljeno besedilo"
 
 #. FIXME: add variant field to typefinder?
 msgid "Subtitle"
@@ -239,17 +242,16 @@ msgid "TMPlayer subtitle format"
 msgstr "Oblika podnapisov TMPlayer"
 
 msgid "CEA 608 Closed Caption"
-msgstr ""
+msgstr "Zaprti podnapisi CEA 608"
 
 msgid "CEA 708 Closed Caption"
-msgstr ""
+msgstr "Zaprti podnapisi CEA 708"
 
 msgid "Kate subtitle format"
 msgstr "Oblika podnapisov Kate"
 
-#, fuzzy
 msgid "WebVTT subtitle format"
-msgstr "Oblika podnapisov Kate"
+msgstr "Oblika podnapisov WebVTT"
 
 msgid "Uncompressed video"
 msgstr "Nestisnjen video"
@@ -257,25 +259,25 @@ msgstr "Nestisnjen video"
 msgid "Uncompressed gray"
 msgstr "Nestisnjen sivinski video"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Nestisnjen %s YUV %s"
+msgstr "Nestisnjeni pakirani YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Nestisnjen %s YUV %s"
+msgstr "Nestisnjeni polravninski YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Nestisnjen %s YUV %s"
+msgstr "Nestisnjeni planarni YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Nestisnjen %s%d-bitni %s"
+msgstr "Nestisnjeia paletizirani %d-bitni %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Nestisnjen %s%d-bitni %s"
+msgstr "Nestisnjeni %d-bitni %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -399,19 +401,16 @@ msgid "MusicBrainz album artist ID"
 msgstr "ID izvajalca albuma MusicBrainz"
 
 msgid "release group ID"
-msgstr ""
+msgstr "ID skupine izdaje"
 
-#, fuzzy
 msgid "MusicBrainz release group ID"
-msgstr "ID sledi MusicBrainz"
+msgstr "ID izdane sledi MusicBrainz"
 
-#, fuzzy
 msgid "release track ID"
-msgstr "ID sledi"
+msgstr "ID izdane sledi"
 
-#, fuzzy
 msgid "MusicBrainz release track ID"
-msgstr "ID sledi MusicBrainz"
+msgstr "ID izdane sledi MusicBrainz"
 
 msgid "track TRM ID"
 msgstr "TRM ID sledi"
@@ -420,10 +419,10 @@ msgid "MusicBrainz TRM ID"
 msgstr "TRM ID MusicBrainz"
 
 msgid "AcoustID ID"
-msgstr ""
+msgstr "ID AcoustID"
 
 msgid "AcoustID fingerprint (chromaprint)"
-msgstr ""
+msgstr "Prstni odtis AcoustID (chromaprint)"
 
 msgid "capturing shutter speed"
 msgstr "hitrost zaslonke"
@@ -443,14 +442,14 @@ msgstr "goriščna razdalja med zajemanjem"
 msgid "Focal length of the lens used capturing the image, in mm"
 msgstr "Goriščna razdalja leč, uporabljena med zajemanjem slike"
 
-#, fuzzy
 msgid "capturing 35 mm equivalent focal length"
-msgstr "goriščna razdalja med zajemanjem"
+msgstr "zajemanje z goriščno razdaljo, ekvivalentno 35 mm"
 
-#, fuzzy
 msgid ""
 "35 mm equivalent focal length of the lens used capturing the image, in mm"
-msgstr "Goriščna razdalja leč, uporabljena med zajemanjem slike"
+msgstr ""
+"35-milimetrski ekvivalentna goriščna razdalja uporabljenega objektiva, ki "
+"zajema sliko, v mm"
 
 msgid "capturing digital zoom ratio"
 msgstr "razmerje digitalnega približevanja med zajemanjem"
@@ -563,202 +562,203 @@ msgid "unparsed id3v2 tag frame"
 msgstr "nerazčlenjeno polje oznake id3v2"
 
 msgid "musical-key"
-msgstr ""
+msgstr "glasbeni-ključ"
 
 msgid "Initial key in which the sound starts"
-msgstr ""
+msgstr "Začetna tonaliteta, s katero se zvok začne"
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Izpiši podatke o različici in končaj"
 
 msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
 msgstr ""
+"Po prikazu začetnega seznama naprav ne zapusti programa, ampak počakaj, da "
+"se naprave dodajo/odstranijo."
 
 msgid "Include devices from hidden device providers."
-msgstr ""
+msgstr "Vključi naprave skritih ponudnikov naprav."
 
 #, c-format
 msgid "Volume: %.0f%%"
-msgstr ""
+msgstr "Glasnost: %.0f%%"
 
 msgid "Mute: on"
-msgstr ""
+msgstr "Izklopi zvok: vklopljeno"
 
 msgid "Mute: off"
-msgstr ""
+msgstr "Izklopi zvok: izklopljeno"
 
 msgid "Buffering..."
-msgstr ""
+msgstr "Medpomnjenje …"
 
 msgid "Clock lost, selecting a new one\n"
-msgstr ""
+msgstr "Ura je izgubljena, izbiranje nove\n"
 
 msgid "Reached end of play list."
-msgstr ""
+msgstr "Dosegli ste konec seznama predvajanja."
 
 msgid "Paused"
-msgstr ""
+msgstr "Prekinjeno"
 
 #, c-format
 msgid "Now playing %s\n"
-msgstr ""
+msgstr "Trenutno se predvaja %s\n"
 
 #, c-format
 msgid "About to finish, preparing next title: %s"
-msgstr ""
+msgstr "Kmalu se bo končalo, pripravljen je naslednji naslov: %s"
 
 #, c-format
 msgid "Playback rate: %.2f"
-msgstr ""
+msgstr "Hitrost predvajanja: %.2f"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr "Naprave ni mogoče odpreti za predvajanje v stereo načinu."
+msgstr "Hitrosti predvajanja ni bilo mogoče spremeniti v %.2f"
 
 msgid "space"
-msgstr ""
+msgstr "preslednica"
 
 msgid "pause/unpause"
-msgstr ""
+msgstr "preklopi premor predvajanja"
 
 msgid "q or ESC"
-msgstr ""
+msgstr "q ali ESC"
 
 msgid "quit"
-msgstr ""
+msgstr "izhod"
 
 msgid "> or n"
-msgstr ""
+msgstr "> ali n"
 
 msgid "play next"
-msgstr ""
+msgstr "predvajaj naslednje"
 
 msgid "< or b"
-msgstr ""
+msgstr "< ali b"
 
 msgid "play previous"
-msgstr ""
+msgstr "predvajaj prejšnje"
 
 msgid "seek forward"
-msgstr ""
+msgstr "išči naprej"
 
 msgid "seek backward"
-msgstr ""
+msgstr "išči nazaj"
 
 msgid "volume up"
-msgstr ""
+msgstr "povečaj glasnost"
 
 msgid "volume down"
-msgstr ""
+msgstr "zmanjšaj glasnost"
 
 msgid "toggle audio mute on/off"
-msgstr ""
+msgstr "vklop/izklop zvoka"
 
 msgid "increase playback rate"
-msgstr ""
+msgstr "povečaj hitrost predvajanja"
 
 msgid "decrease playback rate"
-msgstr ""
+msgstr "zmanjšaj hitrost predvajanja"
 
 msgid "change playback direction"
-msgstr ""
+msgstr "spremeni smer predvajanja"
 
 msgid "enable/disable trick modes"
-msgstr ""
+msgstr "omogoči/onemogoči način trikov"
 
 msgid "change to previous/next audio track"
-msgstr ""
+msgstr "spremeni na prejšnjo/naslednjo zvočno stezo"
 
 msgid "change to previous/next video track"
-msgstr ""
+msgstr "spremeni na prejšnji/naslednji videoposnetek"
 
 msgid "change to previous/next subtitle track"
-msgstr ""
+msgstr "spremeni na prejšnjo/naslednjo stezo podnaslovov"
 
 msgid "seek to beginning"
-msgstr ""
+msgstr "išči do začetka"
 
 msgid "show keyboard shortcuts"
-msgstr ""
+msgstr "pokaži tipkovne bližnjice‫"
 
 msgid "Interactive mode - keyboard controls:"
-msgstr ""
+msgstr "Interaktivni način - kontrolniki tipkovnice:"
 
 #, c-format
 msgid "Use Windows high-resolution clock, precision: %u ms\n"
-msgstr ""
+msgstr "Uporabi uro visoke ločljivosti Windows, natančnost: %u ms\n"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Izhodni podatki o stanju in obvestila o lastnostih"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr ""
+"Nadziraj vedenje predvajanja z nastavitvijo lastnosti »flags« predvajalnega "
+"koša"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Ponor videoposnetka (privzeto je autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Ponor za zvok (privzeto je autoaudiosink)"
 
 msgid "Enable gapless playback"
-msgstr ""
+msgstr "Omogoči predvajanje brez premorov"
 
 msgid "Enable instantaneous uri changes (only with playbin3)"
-msgstr ""
+msgstr "Omogoči takojšnje spremembe uri (samo s playbin3)"
 
 msgid "Shuffle playlist"
-msgstr ""
+msgstr "Premešaj seznam predvajanja"
 
 msgid "Disable interactive control via the keyboard"
-msgstr ""
+msgstr "Onemogoči interaktivni nadzor prek tipkovnice"
 
 msgid "Volume"
-msgstr ""
+msgstr "Glasnost"
 
 msgid "Start position in seconds."
-msgstr ""
+msgstr "Začetni položaj v sekundah."
 
 msgid "Enable accurate seeking"
-msgstr ""
+msgstr "Omogoči natančno iskanje"
 
 msgid "Playlist file containing input media files"
 msgstr ""
+"Datoteka seznama predvajanja, ki vsebuje vhodne predstavnostne datoteke"
 
 msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
+"Uporabi poskusno zastavico instant-rate-change pri spreminjanju hitrosti"
 
 msgid "Do not print any output (apart from errors)"
-msgstr ""
+msgstr "Ne tiskaj nobenega izhoda (razen napak)"
 
-msgid ""
-"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
-"variable)"
-msgstr ""
+msgid "Use playbin3 pipeline (default)"
+msgstr "Uporabi cevovod playbin3 (privzeto)"
+
+msgid "Use playbin2 pipeline"
+msgstr "Uporabi cevovod playbin2"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
 "(gapless is ignored)"
 msgstr ""
+"Nadaljujte s prikazovanjem zadnje sličice na modelu EOS do zaključka ali "
+"ukaza za spremembo seznama predvajanja (brez vrzeli se prezre)"
 
 msgid "Do not print current position of pipeline"
-msgstr ""
+msgstr "Ne natisni trenutnega položaja cevovoda"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Uporaba: %s DATOTEKA1|URI1 [DATOTEKA2|URI2] [DATOTEKA3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
+msgstr "Za predvajanje morate navesti vsaj eno ime datoteke ali URI."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
-msgstr ""
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Notranja napaka pretoka podatkov."
-
-#, c-format
-#~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr ""
-#~ "Za predvajanje tega pretoka je potreben vstavek %s, ki pa ni nameščen."
+msgstr "Pritisnite »k«, da si ogledate seznam tipkovnih bližnjic.\n"
