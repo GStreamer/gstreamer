@@ -1,9 +1,10 @@
-# Romanian translation for gst-plugins-ugly
+# Romanian translation for gst-plugins-ugly.
+# Mesajele în limba română pentru pachetul gst-plugins-ugly.
 # This file is distributed under the same license as the gst-plugins-ugly package.
 #
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
 # Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
-# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022 - 2023.
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022 - 2024.
 #
 # Cronologia traducerii fișierului „gst-plugins-ugly”:
 # Traducerea inițială, făcută de LAG, pentru versiunea gst-plugins-ugly 0.10.14.2
@@ -11,15 +12,16 @@
 # Actualizare a mesajelor, de la fișierul „gst-plugins-ugly-1.19.2.pot”.
 # Eliminare a mesajelor ce-au dispărut în ultima versiune.
 # Actualizare a traducerii pentru versiunea 1.19.2, făcută de R-GC, ian-2022.
-# Actualizare a traducerii pentru versiunea 1.21.90, făcută de R-GC, ian-2023
+# Actualizare a traducerii pentru versiunea 1.21.90, făcută de R-GC, ian-2023.
+# Actualizare a traducerii pentru versiunea 1.24.0, făcută de R-GC, mar-2024.
 # Actualizare a traducerii pentru versiunea Y, făcută de X, Z(anul).
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 1.21.90\n"
+"Project-Id-Version: gst-plugins-ugly 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:28+0000\n"
-"PO-Revision-Date: 2023-01-15 19:29+0100\n"
+"POT-Creation-Date: 2024-11-03 17:37+0000\n"
+"PO-Revision-Date: 2024-03-08 02:09+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
@@ -50,11 +52,11 @@ msgstr "Nu s-a putut deschide DVD-ul"
 
 #, c-format
 msgid "Could not open DVD title %d"
-msgstr "Nu s-a putut deschide titlul DVD-ului %d"
+msgstr "Nu s-a putut deschide DVD-ul intitulat %d"
 
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
-msgstr "Nu s-a putut sări la capitolul %d al titlului DVD-ului %d"
+msgstr "Nu s-a putut accesa capitolul %d al DVD-ului intitulat %d"
 
 #, c-format
 msgid ""
@@ -62,7 +64,7 @@ msgid ""
 "element"
 msgstr ""
 "Nu s-a putut deschide titlul DVD-ului %d. Titlurile interactive nu sunt "
-"suportate de acest element"
+"acceptate de acest element"
 
 # R-GC, scrie:
 # modificat de la:
