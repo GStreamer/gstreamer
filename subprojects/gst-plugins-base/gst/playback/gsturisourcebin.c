@@ -1357,6 +1357,14 @@ new_output_slot (ChildSrcPadInfo * info, GstPad * originating_pad)
 
     gst_pad_link (originating_pad, slot->queue_sinkpad);
   } else {
+    if (info->demuxer) {
+      /* Make sure we add the event probe *before* linking */
+      slot->demuxer_event_probe_id =
+          gst_pad_add_probe (originating_pad,
+          GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH,
+          (GstPadProbeCallback) demux_pad_events, slot, NULL);
+    }
+
     /* Expose pad directly */
     slot->output_pad = create_output_pad (slot, originating_pad);
   }
