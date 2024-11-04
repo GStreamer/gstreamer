@@ -435,7 +435,7 @@ gst_vulkan_handle_set_context (GstElement * element, GstContext * context,
  * @query: a #GstQuery of type %GST_QUERY_CONTEXT
  * @display: (transfer none) (nullable): a #GstVulkanDisplay
  * @instance: (transfer none) (nullable): a #GstVulkanInstance
- * @device: (transfer none) (nullable): a #GstVulkanInstance
+ * @device: (transfer none) (nullable): a #GstVulkanDevice
  *
  * Returns: Whether the @query was successfully responded to from the passed
  *          @display, @instance, and @device.
