@@ -975,6 +975,13 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Lagarith lossless video codec");
       break;
 
+    case GST_MAKE_FOURCC ('M', '1', '0', '1'):
+    case GST_MAKE_FOURCC ('M', '1', '0', '2'):
+      caps = gst_caps_new_empty_simple ("video/x-m101");
+      if (codec_name)
+        *codec_name = g_strdup ("Matrox uncompressed SD video codec");
+      break;
+
     default:
       GST_WARNING ("Unknown video fourcc %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
