@@ -1184,6 +1184,7 @@ gst_ffmpeg_codecid_is_known (enum AVCodecID codec_id)
     case AV_CODEC_ID_APTX:
     case AV_CODEC_ID_APTX_HD:
     case AV_CODEC_ID_AV1:
+    case AV_CODEC_ID_M101:
       return TRUE;
     default:
       return FALSE;
@@ -2819,6 +2820,11 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
         gst_caps_set_value (caps, "alignment", &arr);
         g_value_unset (&arr);
       }
+      break;
+    case AV_CODEC_ID_M101:
+      caps =
+          gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/x-m101",
+          NULL);
       break;
     default:
       GST_DEBUG ("Unknown codec ID %d, please add mapping here", codec_id);
