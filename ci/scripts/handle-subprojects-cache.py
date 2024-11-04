@@ -68,6 +68,15 @@ def copy_cache(options):
 
             print("Copying from %s -> %s" % (cache_dir, project_path))
             shutil.copytree(cache_dir, project_path)
+
+            # workaround `meson subprojects download` only providing a shallow
+            # clone.
+            # If we need to change refs, then the git repo will only ever be
+            # able to reference the originally cloned ref.
+            git_path = os.path.join(project_path, '.git')
+            if os.path.exists(git_path):
+                subprocess.check_call(['git', '-C', git_path, 'remote', 'set-branches', 'origin', '*'])
+
     subprocess.check_call(['meson', 'subprojects', 'update', '--reset'])
 
 
