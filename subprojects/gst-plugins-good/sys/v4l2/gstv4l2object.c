@@ -1530,7 +1530,7 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
       bayer_format = "bggr16le";
       break;
     case V4L2_PIX_FMT_SGBRG8:
-      bayer_format = "gbrgle";
+      bayer_format = "gbrg";
       break;
     case V4L2_PIX_FMT_SGBRG10:
       bayer_format = "gbrg10le";
@@ -1545,7 +1545,7 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
       bayer_format = "gbrg16le";
       break;
     case V4L2_PIX_FMT_SGRBG8:
-      bayer_format = "grbgle";
+      bayer_format = "grbg";
       break;
     case V4L2_PIX_FMT_SGRBG10:
       bayer_format = "grbg10le";
@@ -1560,7 +1560,7 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
       bayer_format = "grbg16le";
       break;
     case V4L2_PIX_FMT_SRGGB8:
-      bayer_format = "rggble";
+      bayer_format = "rggb";
       break;
     case V4L2_PIX_FMT_SRGGB10:
       bayer_format = "rggb10le";
