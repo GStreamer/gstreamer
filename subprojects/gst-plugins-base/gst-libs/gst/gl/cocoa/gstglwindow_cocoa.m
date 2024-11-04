@@ -746,6 +746,10 @@ close_window_cb (gpointer data)
     return NO;
 }
 
+- (void)viewDidChangeBackingProperties {
+    self.layer.contentsScale = [[self window] backingScaleFactor];
+}
+
 @end
 
 void
