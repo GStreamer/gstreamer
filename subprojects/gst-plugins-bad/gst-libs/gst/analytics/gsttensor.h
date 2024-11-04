@@ -32,20 +32,20 @@
 
 /**
  * GstTensorDataType:
- * @GST_TENSOR_TYPE_INT4 signed 4 bit integer tensor data
- * @GST_TENSOR_TYPE_INT8 signed 8 bit integer tensor data
- * @GST_TENSOR_TYPE_INT16 signed 16 bit integer tensor data
- * @GST_TENSOR_TYPE_INT32 signed 32 bit integer tensor data
- * @GST_TENSOR_TYPE_INT64 signed 64 bit integer tensor data
- * @GST_TENSOR_TYPE_UINT4 unsigned 4 bit integer tensor data
- * @GST_TENSOR_TYPE_UINT8 unsigned 8 bit integer tensor data
- * @GST_TENSOR_TYPE_UINT16 unsigned 16 bit integer tensor data
- * @GST_TENSOR_TYPE_UINT32 unsigned 32 bit integer tensor data
- * @GST_TENSOR_TYPE_UINT64 unsigned 64 bit integer tensor data
- * @GST_TENSOR_TYPE_FLOAT16 16 bit floating point tensor data
- * @GST_TENSOR_TYPE_FLOAT32 32 bit floating point tensor data
- * @GST_TENSOR_TYPE_FLOAT64 64 bit floating point tensor data
- * @GST_TENSOR_TYPE_BFLOAT16 "brain" 16 bit floating point tensor data
+ * @GST_TENSOR_DATA_TYPE_INT4: signed 4 bit integer tensor data
+ * @GST_TENSOR_DATA_TYPE_INT8: signed 8 bit integer tensor data
+ * @GST_TENSOR_DATA_TYPE_INT16: signed 16 bit integer tensor data
+ * @GST_TENSOR_DATA_TYPE_INT32: signed 32 bit integer tensor data
+ * @GST_TENSOR_DATA_TYPE_INT64: signed 64 bit integer tensor data
+ * @GST_TENSOR_DATA_TYPE_UINT4: unsigned 4 bit integer tensor data
+ * @GST_TENSOR_DATA_TYPE_UINT8: unsigned 8 bit integer tensor data
+ * @GST_TENSOR_DATA_TYPE_UINT16: unsigned 16 bit integer tensor data
+ * @GST_TENSOR_DATA_TYPE_UINT32: unsigned 32 bit integer tensor data
+ * @GST_TENSOR_DATA_TYPE_UINT64: unsigned 64 bit integer tensor data
+ * @GST_TENSOR_DATA_TYPE_FLOAT16: 16 bit floating point tensor data
+ * @GST_TENSOR_DATA_TYPE_FLOAT32: 32 bit floating point tensor data
+ * @GST_TENSOR_DATA_TYPE_FLOAT64: 64 bit floating point tensor data
+ * @GST_TENSOR_DATA_TYPE_BFLOAT16: "brain" 16 bit floating point tensor data
  *
  * Describe the type of data contain in the tensor.
  *
@@ -53,20 +53,20 @@
  */
 typedef enum _GstTensorDataType
 {
-  GST_TENSOR_TYPE_INT4,
-  GST_TENSOR_TYPE_INT8,
-  GST_TENSOR_TYPE_INT16,
-  GST_TENSOR_TYPE_INT32,
-  GST_TENSOR_TYPE_INT64,
-  GST_TENSOR_TYPE_UINT4,
-  GST_TENSOR_TYPE_UINT8,
-  GST_TENSOR_TYPE_UINT16,
-  GST_TENSOR_TYPE_UINT32,
-  GST_TENSOR_TYPE_UINT64,
-  GST_TENSOR_TYPE_FLOAT16,
-  GST_TENSOR_TYPE_FLOAT32,
-  GST_TENSOR_TYPE_FLOAT64,
-  GST_TENSOR_TYPE_BFLOAT16,
+  GST_TENSOR_DATA_TYPE_INT4,
+  GST_TENSOR_DATA_TYPE_INT8,
+  GST_TENSOR_DATA_TYPE_INT16,
+  GST_TENSOR_DATA_TYPE_INT32,
+  GST_TENSOR_DATA_TYPE_INT64,
+  GST_TENSOR_DATA_TYPE_UINT4,
+  GST_TENSOR_DATA_TYPE_UINT8,
+  GST_TENSOR_DATA_TYPE_UINT16,
+  GST_TENSOR_DATA_TYPE_UINT32,
+  GST_TENSOR_DATA_TYPE_UINT64,
+  GST_TENSOR_DATA_TYPE_FLOAT16,
+  GST_TENSOR_DATA_TYPE_FLOAT32,
+  GST_TENSOR_DATA_TYPE_FLOAT64,
+  GST_TENSOR_DATA_TYPE_BFLOAT16
 } GstTensorDataType;
 
 /**
