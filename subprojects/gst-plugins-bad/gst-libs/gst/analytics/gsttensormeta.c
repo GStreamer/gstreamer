@@ -58,6 +58,11 @@ gst_tensor_meta_api_get_type (void)
 }
 
 
+/**
+ * gst_tensor_meta_get_info: (skip)
+ *
+ * Since: 1.26
+ */
 const GstMetaInfo *
 gst_tensor_meta_get_info (void)
 {

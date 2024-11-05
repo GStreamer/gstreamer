@@ -154,10 +154,22 @@ GST_ANALYTICS_META_API
 GstTensor * gst_tensor_alloc (gsize num_dims);
 
 GST_ANALYTICS_META_API
+GstTensor * gst_tensor_new_simple (GQuark id,
+    GstTensorDataType data_type,
+    gsize batch_size,
+    GstBuffer * data,
+    GstTensorDimOrder dims_order,
+    gsize num_dims,
+    gsize * dims);
+
+GST_ANALYTICS_META_API
 void gst_tensor_free (GstTensor * tensor);
 
 GST_ANALYTICS_META_API
 GstTensor * gst_tensor_copy (const GstTensor * tensor);
+
+GST_ANALYTICS_META_API
+GstTensorDim * gst_tensor_get_dims (GstTensor * tensor, gsize * num_dims);
 
 GST_ANALYTICS_META_API
 GType gst_tensor_get_type (void);
