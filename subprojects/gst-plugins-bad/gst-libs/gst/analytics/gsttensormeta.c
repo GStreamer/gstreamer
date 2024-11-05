@@ -44,6 +44,11 @@ gst_tensor_meta_free (GstMeta * meta, GstBuffer * buffer)
   g_free (tmeta->tensors);
 }
 
+/**
+ * gst_tensor_meta_api_get_type: (skip)
+ *
+ * Since: 1.26
+ */
 GType
 gst_tensor_meta_api_get_type (void)
 {
@@ -123,6 +128,64 @@ gst_buffer_get_tensor_meta (GstBuffer * buffer)
       GST_TENSOR_META_API_TYPE);
 }
 
+/**
+ * gst_tensor_meta_set:
+ * @tmeta: a #GstTensorMeta
+ * @num_tensors: The number of tensors in the @tensors array
+ * @tensors: (in) (array length=num_tensors) (transfer full): An array of poiners to #GstTensor
+ *
+ * Sets tensors into the #GstTensorMeta
+ *
+ * Since: 1.26
+ */
+void
+gst_tensor_meta_set (GstTensorMeta * tmeta, guint num_tensors,
+    GstTensor ** tensors)
+{
+  guint i;
+
+  for (i = 0; i < tmeta->num_tensors; i++) {
+    gst_tensor_free (tmeta->tensors[i]);
+  }
+  g_free (tmeta->tensors);
+
+  tmeta->num_tensors = num_tensors;
+  tmeta->tensors = tensors;
+}
+
+/**
+ * gst_tensor_meta_get:
+ * @tmeta: A #GstTensorMeta
+ * @index: The number of the tensor to get
+ *
+ * Retrieves a tensor from the #GstTensorMeta, the index must be
+ * smaller than #GstTensorMeta.num_tensors
+ *
+ * Return: (transfer none): a GstTensor
+ *
+ * Since: 1.26
+ */
+const GstTensor *
+gst_tensor_meta_get (GstTensorMeta * tmeta, gsize index)
+{
+  g_return_val_if_fail (tmeta->tensors, NULL);
+  g_return_val_if_fail (index < tmeta->num_tensors, NULL);
+
+  return tmeta->tensors[index];
+}
+
+/**
+ * gst_tensor_meta_get_index_from_id:
+ * @meta: a #GstTensorMeta
+ * @id: The tensor id to look for
+ *
+ * Finds the first tensor with the requsted ID in the meta
+ *
+ * Return: The index of the tensor inthe meta, or -1 if
+ *  its not found.
+ *
+ * Since: 1.26
+ */
 gint
 gst_tensor_meta_get_index_from_id (GstTensorMeta * meta, GQuark id)
 {
@@ -131,5 +194,5 @@ gst_tensor_meta_get_index_from_id (GstTensorMeta * meta, GQuark id)
       return i;
   }
 
-  return GST_TENSOR_MISSING_ID;
+  return -1;
 }

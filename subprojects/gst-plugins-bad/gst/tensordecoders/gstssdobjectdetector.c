@@ -338,12 +338,10 @@ gst_ssd_object_detector_get_tensor_meta (GstSsdObjectDetector * object_detector,
     gint clasesIndex = gst_tensor_meta_get_index_from_id (tensor_meta,
         g_quark_from_static_string (GST_MODEL_OBJECT_DETECTOR_CLASSES));
 
-    if (boxesIndex == GST_TENSOR_MISSING_ID
-        || scoresIndex == GST_TENSOR_MISSING_ID
-        || numDetectionsIndex == GST_TENSOR_MISSING_ID)
+    if (boxesIndex == -1 || scoresIndex == -1 || numDetectionsIndex == -1)
       continue;
 
-    if (tensor_meta->num_tensors == 4 && clasesIndex == GST_TENSOR_MISSING_ID)
+    if (tensor_meta->num_tensors == 4 && clasesIndex == -1)
       continue;
 
     return tensor_meta;
@@ -435,9 +433,7 @@ DEFINE_GET_FUNC (guint32, UINT32_MAX)
   boxes_index = gst_tensor_meta_get_index_from_id (tmeta,
       g_quark_from_static_string (GST_MODEL_OBJECT_DETECTOR_BOXES));
 
-  if (numdetect_index == GST_TENSOR_MISSING_ID
-      || scores_index == GST_TENSOR_MISSING_ID
-      || numdetect_index == GST_TENSOR_MISSING_ID) {
+  if (numdetect_index == -1 || scores_index == -1 || numdetect_index == -1) {
     GST_WARNING ("Missing tensor data expected for SSD model");
     return;
   }
@@ -463,7 +459,7 @@ DEFINE_GET_FUNC (guint32, UINT32_MAX)
     goto cleanup;
   }
 
-  if (classes_index != GST_TENSOR_MISSING_ID &&
+  if (classes_index != -1 &&
       !gst_buffer_map (tmeta->tensors[classes_index]->data, &classes_map,
           GST_MAP_READ)) {
     GST_DEBUG_OBJECT (self, "Failed to map tensor memory for index %d",

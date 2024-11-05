@@ -49,9 +49,23 @@ typedef struct _GstTensorMeta
 
 G_BEGIN_DECLS
 
+/**
+ * GST_TENSOR_META_API_TYPE:
+ *
+ * The Tensor Meta API type
+ *
+ * Since: 1.26
+ */
 #define GST_TENSOR_META_API_TYPE \
   (gst_tensor_meta_api_get_type())
 
+/**
+ * GST_TENSOR_META_INFO: (skip)
+ *
+ * The Tensor Meta API Info
+ *
+ * Since: 1.26
+ */
 #define GST_TENSOR_META_INFO \
   (gst_tensor_meta_get_info())
 
@@ -60,6 +74,13 @@ GType gst_tensor_meta_api_get_type (void);
 
 GST_ANALYTICS_META_API
 const GstMetaInfo *gst_tensor_meta_get_info (void);
+
+GST_ANALYTICS_META_API
+void gst_tensor_meta_set (GstTensorMeta *tmeta, guint num_tensors,
+    GstTensor **tensors);
+
+GST_ANALYTICS_META_API
+const GstTensor *gst_tensor_meta_get (GstTensorMeta *tmeta, gsize index);
 
 GST_ANALYTICS_META_API
 gint gst_tensor_meta_get_index_from_id(GstTensorMeta *meta, GQuark id);
