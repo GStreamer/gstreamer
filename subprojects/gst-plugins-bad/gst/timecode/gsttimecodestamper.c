@@ -1037,31 +1037,27 @@ gst_timecodestamper_query (GstBaseTransform * trans,
       res =
           gst_pad_query_default (GST_BASE_TRANSFORM_SRC_PAD (trans),
           GST_OBJECT_CAST (trans), query);
+      if (!res)
+        return FALSE;
+
+      gst_query_parse_latency (query, &live, &min_latency, &max_latency);
       g_mutex_lock (&timecodestamper->mutex);
-      if (res && timecodestamper->fps_n && timecodestamper->fps_d) {
-        gst_query_parse_latency (query, &live, &min_latency, &max_latency);
-        if (live && timecodestamper->ltcpad) {
-          /* Introduce additional LTC for waiting for LTC timecodes. The
-           * LTC library introduces some as well as the encoding of the LTC
-           * signal. */
-          latency = timecodestamper->ltc_extra_latency;
-          min_latency += latency;
-          if (max_latency != GST_CLOCK_TIME_NONE)
-            max_latency += latency;
-          timecodestamper->latency = min_latency;
-          GST_DEBUG_OBJECT (timecodestamper,
-              "Reporting latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT
-              " ours %" GST_TIME_FORMAT, GST_TIME_ARGS (min_latency),
-              GST_TIME_ARGS (max_latency), GST_TIME_ARGS (latency));
-          gst_query_set_latency (query, live, min_latency, max_latency);
-        } else {
-          timecodestamper->latency = 0;
-        }
-      } else if (res) {
-        GST_ERROR_OBJECT (timecodestamper,
-            "Need a known, non-variable framerate to answer LATENCY query");
-        res = FALSE;
-        timecodestamper->latency = GST_CLOCK_TIME_NONE;
+      if (live && timecodestamper->ltcpad) {
+        /* Introduce additional LTC for waiting for LTC timecodes. The
+         * LTC library introduces some as well as the encoding of the LTC
+         * signal. */
+        latency = timecodestamper->ltc_extra_latency;
+        min_latency += latency;
+        if (max_latency != GST_CLOCK_TIME_NONE)
+          max_latency += latency;
+        timecodestamper->latency = min_latency;
+        GST_DEBUG_OBJECT (timecodestamper,
+            "Reporting latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT
+            " ours %" GST_TIME_FORMAT, GST_TIME_ARGS (min_latency),
+            GST_TIME_ARGS (max_latency), GST_TIME_ARGS (latency));
+        gst_query_set_latency (query, live, min_latency, max_latency);
+      } else {
+        timecodestamper->latency = 0;
       }
       g_mutex_unlock (&timecodestamper->mutex);
 
