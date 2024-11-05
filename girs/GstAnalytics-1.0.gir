@@ -1139,6 +1139,309 @@ pixel to a class of objects is identified.</doc>
 pixel to instance of an object is identified.</doc>
       </member>
     </enumeration>
+    <record name="Tensor" c:type="GstTensor" version="1.26" glib:type-name="GstTensor" glib:get-type="gst_tensor_get_type" c:symbol-prefix="tensor">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Hold tensor data</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+      <field name="id" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">semantically identify the contents of the tensor</doc>
+        <type name="GLib.Quark" c:type="GQuark"/>
+      </field>
+      <field name="layout" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Indicate tensor layout</doc>
+        <type name="TensorLayout" c:type="GstTensorLayout"/>
+      </field>
+      <field name="data_type" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">#GstTensorDataType of tensor data</doc>
+        <type name="TensorDataType" c:type="GstTensorDataType"/>
+      </field>
+      <field name="batch_size" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Model batch size</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="data" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">#GstBuffer holding tensor data</doc>
+        <type name="Gst.Buffer" c:type="GstBuffer*"/>
+      </field>
+      <field name="dims_order" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Indicate tensor elements layout in memory.</doc>
+        <type name="TensorDimOrder" c:type="GstTensorDimOrder"/>
+      </field>
+      <field name="num_dims" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">number of tensor dimensions</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="dims" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">number of tensor dimensions</doc>
+        <array length="6" zero-terminated="0">
+          <type name="TensorDim" c:type="GstTensorDim"/>
+        </array>
+      </field>
+      <constructor name="alloc" c:identifier="gst_tensor_alloc" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Allocate a tensor with @num_dims dimensions.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">tensor allocated</doc>
+          <type name="Tensor" c:type="GstTensor*"/>
+        </return-value>
+        <parameters>
+          <parameter name="num_dims" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Number of dimension of the tensors</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_simple" c:identifier="gst_tensor_new_simple" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Allocates a new #GstTensor of @dims_order ROW_MAJOR or COLUMN_MAJOR and
+with an interleaved layout</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">A newly allocated #GstTensor</doc>
+          <type name="Tensor" c:type="GstTensor*"/>
+        </return-value>
+        <parameters>
+          <parameter name="id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">semantically identify the contents of the tensor</doc>
+            <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+          <parameter name="data_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">#GstTensorDataType of tensor data</doc>
+            <type name="TensorDataType" c:type="GstTensorDataType"/>
+          </parameter>
+          <parameter name="batch_size" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Model batch size</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="data" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">#GstBuffer holding tensor data</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+          <parameter name="dims_order" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Indicate tensor dimension indexing order</doc>
+            <type name="TensorDimOrder" c:type="GstTensorDimOrder"/>
+          </parameter>
+          <parameter name="num_dims" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">number of tensor dimensions</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="dims" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">tensor dimensions</doc>
+            <array length="5" zero-terminated="0" c:type="gsize*">
+              <type name="gsize" c:type="gsize"/>
+            </array>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="copy" c:identifier="gst_tensor_copy" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Create a copy of @tensor.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a new #GstTensor</doc>
+          <type name="Tensor" c:type="GstTensor*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="tensor" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a #GstTensor to be copied</doc>
+            <type name="Tensor" c:type="const GstTensor*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="free" c:identifier="gst_tensor_free" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Free tensor</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="tensor" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">pointer to tensor to free</doc>
+            <type name="Tensor" c:type="GstTensor*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_dims" c:identifier="gst_tensor_get_dims" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Gets the dimensions of the tensor.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">The dims array form the tensor</doc>
+          <array length="0" zero-terminated="0" c:type="GstTensorDim*">
+            <type name="TensorDim" c:type="GstTensorDim"/>
+          </array>
+        </return-value>
+        <parameters>
+          <instance-parameter name="tensor" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a #GstTensor</doc>
+            <type name="Tensor" c:type="GstTensor*"/>
+          </instance-parameter>
+          <parameter name="num_dims" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">The number of dimensions</doc>
+            <type name="gsize" c:type="gsize*"/>
+          </parameter>
+        </parameters>
+      </method>
+    </record>
+    <enumeration name="TensorDataType" version="1.26" c:type="GstTensorDataType">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Describe the type of data contain in the tensor.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+      <member name="int4" value="0" c:identifier="GST_TENSOR_DATA_TYPE_INT4">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">signed 4 bit integer tensor data</doc>
+      </member>
+      <member name="int8" value="1" c:identifier="GST_TENSOR_DATA_TYPE_INT8">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">signed 8 bit integer tensor data</doc>
+      </member>
+      <member name="int16" value="2" c:identifier="GST_TENSOR_DATA_TYPE_INT16">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">signed 16 bit integer tensor data</doc>
+      </member>
+      <member name="int32" value="3" c:identifier="GST_TENSOR_DATA_TYPE_INT32">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">signed 32 bit integer tensor data</doc>
+      </member>
+      <member name="int64" value="4" c:identifier="GST_TENSOR_DATA_TYPE_INT64">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">signed 64 bit integer tensor data</doc>
+      </member>
+      <member name="uint4" value="5" c:identifier="GST_TENSOR_DATA_TYPE_UINT4">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">unsigned 4 bit integer tensor data</doc>
+      </member>
+      <member name="uint8" value="6" c:identifier="GST_TENSOR_DATA_TYPE_UINT8">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">unsigned 8 bit integer tensor data</doc>
+      </member>
+      <member name="uint16" value="7" c:identifier="GST_TENSOR_DATA_TYPE_UINT16">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">unsigned 16 bit integer tensor data</doc>
+      </member>
+      <member name="uint32" value="8" c:identifier="GST_TENSOR_DATA_TYPE_UINT32">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">unsigned 32 bit integer tensor data</doc>
+      </member>
+      <member name="uint64" value="9" c:identifier="GST_TENSOR_DATA_TYPE_UINT64">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">unsigned 64 bit integer tensor data</doc>
+      </member>
+      <member name="float16" value="10" c:identifier="GST_TENSOR_DATA_TYPE_FLOAT16">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">16 bit floating point tensor data</doc>
+      </member>
+      <member name="float32" value="11" c:identifier="GST_TENSOR_DATA_TYPE_FLOAT32">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">32 bit floating point tensor data</doc>
+      </member>
+      <member name="float64" value="12" c:identifier="GST_TENSOR_DATA_TYPE_FLOAT64">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">64 bit floating point tensor data</doc>
+      </member>
+      <member name="bfloat16" value="13" c:identifier="GST_TENSOR_DATA_TYPE_BFLOAT16">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">"brain" 16 bit floating point tensor data</doc>
+      </member>
+    </enumeration>
+    <record name="TensorDim" c:type="GstTensorDim" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Hold properties of the tensor's dimension</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+      <field name="size" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Size of the dimension</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="order_index" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Dimension order in memory. @see_also #GST_TENSOR_DIM_ORDER_INDEXED</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+    </record>
+    <enumeration name="TensorDimOrder" version="1.26" c:type="GstTensorDimOrder">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Indicate to read tensor from memory in row-major or column-major order.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+      <member name="row_major" value="0" c:identifier="GST_TENSOR_DIM_ORDER_ROW_MAJOR">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">elements along a row are consecutive in memory</doc>
+      </member>
+      <member name="col_major" value="1" c:identifier="GST_TENSOR_DIM_ORDER_COL_MAJOR">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">elements along a column are consecutive in memory</doc>
+      </member>
+      <member name="indexed" value="2" c:identifier="GST_TENSOR_DIM_ORDER_INDEXED">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">elements storage follow the order defined by
+   #GstTensorDim.order_index This mean that when iterating the tensor
+   the dimension with index 0 is the most nested in the loops and consecutive
+   in memory, followed by other dimensions in the order defined by
+   #GstTensorDim.order_index.</doc>
+      </member>
+    </enumeration>
+    <enumeration name="TensorLayout" version="1.26" c:type="GstTensorLayout">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Indicate tensor storage in memory.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+      <member name="tensor_layout_strided" value="0" c:identifier="GST_TENSOR_LAYOUT_STRIDED">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">indicate the tensor is stored in a dense format in memory</doc>
+      </member>
+    </enumeration>
+    <record name="TensorMeta" c:type="GstTensorMeta" version="1.26">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h">parent</doc>
+        <type name="Gst.Meta" c:type="GstMeta"/>
+      </field>
+      <field name="num_tensors" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h">number of tensors</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="tensors" writable="1">
+        <type name="Tensor" c:type="GstTensor**"/>
+      </field>
+      <method name="get" c:identifier="gst_tensor_meta_get" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">Retrieves a tensor from the #GstTensorMeta, the index must be
+smaller than #GstTensorMeta.num_tensors</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">a GstTensor</doc>
+          <type name="Tensor" c:type="const GstTensor*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="tmeta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">A #GstTensorMeta</doc>
+            <type name="TensorMeta" c:type="GstTensorMeta*"/>
+          </instance-parameter>
+          <parameter name="index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">The number of the tensor to get</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_index_from_id" c:identifier="gst_tensor_meta_get_index_from_id" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">Finds the first tensor with the requsted ID in the meta</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">The index of the tensor inthe meta, or -1 if
+ its not found.</doc>
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">a #GstTensorMeta</doc>
+            <type name="TensorMeta" c:type="GstTensorMeta*"/>
+          </instance-parameter>
+          <parameter name="id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">The tensor id to look for</doc>
+            <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set" c:identifier="gst_tensor_meta_set" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">Sets tensors into the #GstTensorMeta</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="tmeta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">a #GstTensorMeta</doc>
+            <type name="TensorMeta" c:type="GstTensorMeta*"/>
+          </instance-parameter>
+          <parameter name="num_tensors" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">The number of tensors in the @tensors array</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="tensors" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">An array of poiners to #GstTensor</doc>
+            <array length="0" zero-terminated="0" c:type="GstTensor**">
+              <type name="Tensor" c:type="GstTensor*"/>
+            </array>
+          </parameter>
+        </parameters>
+      </method>
+      <function name="get_info" c:identifier="gst_tensor_meta_get_info" version="1.26" introspectable="0">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+        </return-value>
+      </function>
+    </record>
     <record name="TrackingMtd" c:type="GstAnalyticsTrackingMtd" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Store information on results of object tracking</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
@@ -1260,6 +1563,20 @@ analysis meta.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="buffer_add_tensor_meta" c:identifier="gst_buffer_add_tensor_meta" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">Adds a #GstTensorMeta to a buffer or returns the existing one</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">The new #GstTensorMeta</doc>
+        <type name="TensorMeta" c:type="GstTensorMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">A writable #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="buffer_get_analytics_relation_meta" c:identifier="gst_buffer_get_analytics_relation_meta" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Retrives the meta or %NULL if it doesn't exist</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
@@ -1270,6 +1587,20 @@ analysis meta.</doc>
       <parameters>
         <parameter name="buffer" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="buffer_get_tensor_meta" c:identifier="gst_buffer_get_tensor_meta" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">Gets the #GstTensorMeta from a buffer</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">The #GstTensorMeta if there is wone</doc>
+        <type name="TensorMeta" c:type="GstTensorMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">A #GstBuffer</doc>
           <type name="Gst.Buffer" c:type="GstBuffer*"/>
         </parameter>
       </parameters>
@@ -1363,6 +1694,18 @@ metadata type.</doc>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">A #GstAnalyticsMtdType type</doc>
         <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+      </return-value>
+    </function>
+    <function name="tensor_meta_api_get_type" c:identifier="gst_tensor_meta_api_get_type" version="1.26" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
+      <return-value transfer-ownership="none">
+        <type name="GType" c:type="GType"/>
+      </return-value>
+    </function>
+    <function name="tensor_meta_get_info" c:identifier="gst_tensor_meta_get_info" moved-to="TensorMeta.get_info" version="1.26" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
+      <return-value transfer-ownership="none">
+        <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
       </return-value>
     </function>
     <function name="tracking_mtd_get_mtd_type" c:identifier="gst_analytics_tracking_mtd_get_mtd_type" moved-to="TrackingMtd.get_mtd_type" version="1.24">
