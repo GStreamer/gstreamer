@@ -164,3 +164,44 @@ class TestAnalyticsSegmentationMtd(TestCase):
         self.assertEqual(mtd.get_region_index(7), (True, 0))
         self.assertEqual(mtd.get_region_index(4), (True, 1))
         self.assertEqual(mtd.get_region_index(2), (True, 2))
+
+
+class TestAnalyticsTensorMeta(TestCase):
+    def test(self):
+        buf = Gst.Buffer()
+        self.assertIsNotNone(buf)
+
+        tmeta = GstAnalytics.buffer_add_tensor_meta(buf)
+        self.assertIsNotNone(tmeta)
+
+        data = Gst.Buffer.new_allocate(None, 2 * 3 * 4)
+        self.assertIsNotNone(data)
+
+        tensor = GstAnalytics.Tensor.new_simple(0, GstAnalytics.TensorDataType.UINT8,
+                                                1, data,
+                                                GstAnalytics.TensorDimOrder.ROW_MAJOR,
+                                                [2, 3, 4])
+        self.assertIsNotNone(tensor)
+        self.assertEqual(tensor.id, 0)
+        self.assertEqual(tensor.num_dims, 3)
+        self.assertEqual(tensor.batch_size, 1)
+        dims = tensor.get_dims()
+        self.assertEqual(len(dims), 3)
+        self.assertEqual(dims[0].size, 2)
+        self.assertEqual(dims[1].size, 3)
+        self.assertEqual(dims[2].size, 4)
+        self.assertEqual(tensor.data, data)
+        self.assertEqual(tensor.data_type, GstAnalytics.TensorDataType.UINT8)
+        self.assertEqual(tensor.dims_order, GstAnalytics.TensorDimOrder.ROW_MAJOR)
+
+        data2 = Gst.Buffer.new_allocate(None, 2 * 3 * 4 * 5)
+        tensor2 = GstAnalytics.Tensor.new_simple(0, GstAnalytics.TensorDataType.UINT16,
+                                                1, data2,
+                                                GstAnalytics.TensorDimOrder.ROW_MAJOR,
+                                                [3, 4, 5])
+        tmeta.set([tensor, tensor2])
+
+        tmeta2 = GstAnalytics.buffer_get_tensor_meta(buf)
+        self.assertEqual(tmeta2.num_tensors, 2)
+        self.assertEqual(tmeta2.get(0).data, data)
+        self.assertEqual(tmeta2.get(1).data, data2)
