@@ -501,6 +501,45 @@ GST_START_TEST (rtpfunnel_twcc_passthrough_then_mux)
 
 GST_END_TEST;
 
+GST_START_TEST (rtpfunnel_flush)
+{
+  GstHarness *h = gst_harness_new_with_padnames ("rtpfunnel", NULL, "src");
+  GstHarness *h0 = gst_harness_new_with_element (h->element, "sink_0", NULL);
+  GstEvent *event;
+  GstBuffer *buffer;
+
+  gst_harness_set_src_caps_str (h0, "application/x-rtp, ssrc=(uint)123");
+
+  /* Push a buffer */
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h0,
+          generate_test_buffer (0, 123, 0)));
+
+  buffer = gst_harness_try_pull (h);
+  gst_buffer_unref (buffer);
+
+  /* Flush */
+  fail_unless (gst_harness_push_event (h0, gst_event_new_flush_start ()));
+  fail_unless (gst_harness_push_event (h0, gst_event_new_flush_stop (TRUE)));
+
+  while ((event = gst_harness_try_pull_event (h)))
+    gst_event_unref (event);
+
+  /* Reset caps and segment */
+  gst_harness_set_src_caps_str (h0, "application/x-rtp, ssrc=(uint)123");
+
+  /* Push another buffer, this shouldn't generate "got data flow before segment event" criticals */
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h0,
+          generate_test_buffer (1, 123, 0)));
+
+  buffer = gst_harness_try_pull (h);
+  gst_buffer_unref (buffer);
+
+  gst_harness_teardown (h0);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpfunnel_suite (void)
 {
@@ -520,6 +559,8 @@ rtpfunnel_suite (void)
   tcase_add_test (tc_chain, rtpfunnel_twcc_passthrough);
   tcase_add_test (tc_chain, rtpfunnel_twcc_mux);
   tcase_add_test (tc_chain, rtpfunnel_twcc_passthrough_then_mux);
+
+  tcase_add_test (tc_chain, rtpfunnel_flush);
 
   return s;
 }

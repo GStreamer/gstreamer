@@ -443,6 +443,13 @@ gst_rtp_funnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       forward = FALSE;
       break;
     }
+    case GST_EVENT_FLUSH_START:
+      /* By resetting current_pad here the segment will be forwarded next time a
+         buffer is received. */
+      GST_OBJECT_LOCK (funnel);
+      funnel->current_pad = NULL;
+      GST_OBJECT_UNLOCK (funnel);
+      break;
     default:
       break;
   }
@@ -649,6 +656,7 @@ gst_rtp_funnel_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       funnel->send_sticky_events = TRUE;
+      funnel->current_pad = NULL;
       break;
     default:
       break;
@@ -672,6 +680,9 @@ gst_rtp_funnel_release_pad (GstElement * element, GstPad * pad)
   GstRtpFunnel *funnel = GST_RTP_FUNNEL_CAST (element);
 
   GST_DEBUG_OBJECT (funnel, "releasing pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+  if (pad == funnel->current_pad)
+    funnel->current_pad = NULL;
 
   g_hash_table_foreach_remove (funnel->ssrc_to_pad, _remove_pad_func, pad);
 
