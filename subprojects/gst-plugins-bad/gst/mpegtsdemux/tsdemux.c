@@ -1862,10 +1862,15 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
           gst_caps_from_string
           ("image/x-jxsc, alignment=(string)frame, interlace-mode=(string)progressive");
 
-      /* interlace-mode, sampling, depth */
+      /* interlace-mode, sampling, depth, framerate */
+      gint depth = ((jpegxs.schar >> 4) & 0xf) + 1;
+      gint framerate_num = (jpegxs.frat & 0x0000FFFFU);
+      gint framerate_den = ((jpegxs.frat >> 24) & 0x0000003FU);
       gst_caps_set_simple (caps, "width", G_TYPE_INT, jpegxs.horizontal_size,
-          "height", G_TYPE_INT, jpegxs.vertical_size, "depth", G_TYPE_INT,
-          ((jpegxs.schar >> 4) & 0xf) + 1, NULL);
+          "height", G_TYPE_INT, jpegxs.vertical_size,
+          "depth", G_TYPE_INT, depth,
+          "framerate", GST_TYPE_FRACTION, framerate_num, framerate_den, NULL);
+
       switch (jpegxs.schar & 0xf) {
         case 0:
           gst_caps_set_simple (caps, "sampling", G_TYPE_STRING, "YCbCr-4:2:2",
