@@ -5695,8 +5695,17 @@ gst_rtp_jitter_buffer_create_stats (GstRtpJitterBuffer * jbuf)
 {
   GstRtpJitterBufferPrivate *priv = jbuf->priv;
   GstStructure *s;
+  gboolean rfc7273_active;
 
   JBUF_LOCK (priv);
+
+  rfc7273_active = priv->jbuf->rfc7273_sync
+      && (priv->jbuf->mode == RTP_JITTER_BUFFER_MODE_SLAVE
+      || priv->jbuf->mode == RTP_JITTER_BUFFER_MODE_SYNCED)
+      && priv->jbuf->media_clock && (priv->jbuf->media_clock_offset != -1)
+      && priv->jbuf->pipeline_clock
+      && gst_clock_is_synced (priv->jbuf->media_clock);
+
   s = gst_structure_new ("application/x-rtp-jitterbuffer-stats",
       "num-pushed", G_TYPE_UINT64, priv->num_pushed,
       "num-lost", G_TYPE_UINT64, priv->num_lost,
@@ -5706,7 +5715,9 @@ gst_rtp_jitter_buffer_create_stats (GstRtpJitterBuffer * jbuf)
       "rtx-count", G_TYPE_UINT64, priv->num_rtx_requests,
       "rtx-success-count", G_TYPE_UINT64, priv->num_rtx_success,
       "rtx-per-packet", G_TYPE_DOUBLE, priv->avg_rtx_num,
-      "rtx-rtt", G_TYPE_UINT64, priv->avg_rtx_rtt, NULL);
+      "rtx-rtt", G_TYPE_UINT64, priv->avg_rtx_rtt,
+      "rfc7273-active", G_TYPE_BOOLEAN, rfc7273_active, NULL);
+
   JBUF_UNLOCK (priv);
 
   return s;

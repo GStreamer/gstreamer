@@ -19596,7 +19596,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "application/x-rtp-jitterbuffer-stats, num-pushed=(guint64)0, num-lost=(guint64)0, num-late=(guint64)0, num-duplicates=(guint64)0, avg-jitter=(guint64)0, rtx-count=(guint64)0, rtx-success-count=(guint64)0, rtx-per-packet=(double)0, rtx-rtt=(guint64)0;",
+                        "default": "application/x-rtp-jitterbuffer-stats, num-pushed=(guint64)0, num-lost=(guint64)0, num-late=(guint64)0, num-duplicates=(guint64)0, avg-jitter=(guint64)0, rtx-count=(guint64)0, rtx-success-count=(guint64)0, rtx-per-packet=(double)0, rtx-rtt=(guint64)0, rfc7273-active=(boolean)false;",
                         "mutable": "null",
                         "readable": true,
                         "type": "GstStructure",
