@@ -1,4 +1,4 @@
-From 50d78e8c788cb791138e07fec25fdf0ee091ac8e Mon Sep 17 00:00:00 2001
+From 0835add95c1391164e52c551569a9c46a6fcd90c Mon Sep 17 00:00:00 2001
 From: Nirbheek Chauhan <nirbheek@centricular.com>
 Date: Fri, 18 Oct 2024 02:36:48 +0530
 Subject: [PATCH] dwrite: Fix build with MinGW 11
@@ -20,9 +20,30 @@ C:/msys64/ucrt64/include/dcommon.h:67:1: note: 'DWRITE_GLYPH_IMAGE_FORMATS opera
    67 | DEFINE_ENUM_FLAG_OPERATORS(DWRITE_GLYPH_IMAGE_FORMATS)
       | ^~~~~~~~~~~~~~~~~~~~~~~~~~
 ---
- src/win32/dw-extra.h | 2 ++
- 1 file changed, 2 insertions(+)
+ src/win32/cairo-dwrite-font.cpp | 4 ++--
+ src/win32/dw-extra.h            | 2 ++
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
+diff --git a/src/win32/cairo-dwrite-font.cpp b/src/win32/cairo-dwrite-font.cpp
+index b6931b367..f7d1c4767 100644
+--- a/src/win32/cairo-dwrite-font.cpp
++++ b/src/win32/cairo-dwrite-font.cpp
+@@ -1047,13 +1047,13 @@ _cairo_dwrite_scaled_font_init_glyph_color_surface(cairo_dwrite_scaled_font_t *s
+     matrix = _cairo_dwrite_matrix_from_matrix(&scaled_font->mat);
+ 
+     /* The list of glyph image formats this renderer is prepared to support. */
+-    DWRITE_GLYPH_IMAGE_FORMATS supported_formats =
++    DWRITE_GLYPH_IMAGE_FORMATS supported_formats = static_cast<DWRITE_GLYPH_IMAGE_FORMATS>(
+         DWRITE_GLYPH_IMAGE_FORMATS_COLR |
+         DWRITE_GLYPH_IMAGE_FORMATS_SVG |
+         DWRITE_GLYPH_IMAGE_FORMATS_PNG |
+         DWRITE_GLYPH_IMAGE_FORMATS_JPEG |
+         DWRITE_GLYPH_IMAGE_FORMATS_TIFF |
+-        DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8;
++        DWRITE_GLYPH_IMAGE_FORMATS_PREMULTIPLIED_B8G8R8A8);
+ 
+     RefPtr<IDWriteFontFace2> fontFace2;
+     UINT32 palette_count = 0;
 diff --git a/src/win32/dw-extra.h b/src/win32/dw-extra.h
 index 424fb606d..a9daced21 100644
 --- a/src/win32/dw-extra.h
@@ -37,5 +58,5 @@ index 424fb606d..a9daced21 100644
  
  #endif /* DWRITE_EXTRA_H */
 -- 
-2.45.2
+GitLab
 
