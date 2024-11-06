@@ -28,7 +28,7 @@ set(GSTREAMER_PLUGINS         ${GSTREAMER_PLUGINS_CORE} ${GSTREAMER_PLUGINS_SYS}
 set(GStreamer_EXTRA_DEPS gstreamer-video-1.0 gobject-2.0)
 find_library(ANDROID_LIB android REQUIRED)
 find_library(LOG_LIB log REQUIRED)
-find_package(GStreamerMobile COMPONENTS ${GSTREAMER_PLUGINS} fonts ca_certificates REQUIRED)
+find_package(GStreamerMobile COMPONENTS ${GSTREAMER_PLUGINS} fonts REQUIRED)
 
 add_library(tutorial-3 SHARED tutorial-3.c dummy.cpp)
 target_link_libraries(tutorial-3

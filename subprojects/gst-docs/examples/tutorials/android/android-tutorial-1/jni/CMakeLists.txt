@@ -25,7 +25,7 @@ list(APPEND CMAKE_MODULE_PATH "${GSTREAMER_ROOT}/share/cmake")
 set(GSTREAMER_NDK_BUILD_PATH  "${GSTREAMER_ROOT}/share/gst-android/ndk-build/")
 set(GSTREAMER_PLUGINS         coreelements)
 find_library(LOG_LIB log REQUIRED)
-find_package(GStreamerMobile COMPONENTS ${GSTREAMER_PLUGINS} fonts ca_certificates REQUIRED)
+find_package(GStreamerMobile COMPONENTS ${GSTREAMER_PLUGINS} fonts REQUIRED)
 
 add_library(tutorial-1 SHARED tutorial-1.c dummy.cpp)
 target_link_libraries(tutorial-1
