@@ -310,6 +310,61 @@ gst_vulkan_ensure_element_data (GstElement * element,
 }
 
 /**
+ * gst_vulkan_ensure_element_device:
+ * @element: a #GstElement
+ * @instance: the #GstVulkanInstance
+ * @device_ptr: (inout) (optional): the resulting #GstVulkanDevice
+ * @device_id: The device number to use, 0 is default.
+ *
+ * Perform the steps necessary for retrieving a #GstVulkanDevice from
+ * the surrounding elements or create a new device according to the device_id.
+ *
+ * If the contents of @device_ptr is not %NULL, then no
+ * #GstContext query is necessary and no #GstVulkanDevice
+ * retrieval is performed.
+ *
+ * Returns: whether a #GstVulkanDevice exists in @device_ptr
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_vulkan_ensure_element_device (GstElement * element,
+    GstVulkanInstance * instance, GstVulkanDevice ** device_ptr,
+    guint device_id)
+{
+  g_return_val_if_fail (instance != NULL, FALSE);
+
+  if (!gst_vulkan_device_run_context_query (element, device_ptr)) {
+    GError *error = NULL;
+    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+        "No device retrieved from peer elements");
+
+    /* If no neighboor, or application not interested, use system default by device id */
+    *device_ptr =
+        gst_vulkan_instance_create_device_with_index (instance, device_id,
+        &error);
+
+    if (!*device_ptr) {
+      GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+          ("Failed to create vulkan device"),
+          ("%s", error ? error->message : ""));
+      g_clear_error (&error);
+      return FALSE;
+    }
+    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+        "Created a new device from %s",
+        (*device_ptr)->physical_device->properties.deviceName);
+  } else {
+    if ((*device_ptr)->physical_device->device_index != device_id) {
+      GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+          "A device with a different id has been selected from a peer element");
+    }
+  }
+
+  return *device_ptr != NULL;
+}
+
+/**
  * gst_vulkan_handle_set_context:
  * @element: a #GstElement
  * @context: a #GstContext

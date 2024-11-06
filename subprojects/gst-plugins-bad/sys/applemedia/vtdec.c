@@ -643,17 +643,9 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
       gst_vulkan_ensure_element_data (GST_ELEMENT (vtdec), NULL,
           &vtdec->instance);
 
-      if (!gst_vulkan_device_run_context_query (GST_ELEMENT (vtdec),
-              &vtdec->device)) {
-        GError *error = NULL;
-        GST_DEBUG_OBJECT (vtdec, "No device retrieved from peer elements");
-        if (!(vtdec->device =
-                gst_vulkan_instance_create_device (vtdec->instance, &error))) {
-          GST_ELEMENT_ERROR (vtdec, RESOURCE, NOT_FOUND,
-              ("Failed to create vulkan device"), ("%s", error->message));
-          g_clear_error (&error);
-          return FALSE;
-        }
+      if (!gst_vulkan_ensure_element_device (GST_ELEMENT (vtdec),
+              vtdec->instance, &vtdec->device, 0)) {
+        return FALSE;
       }
 
       GST_INFO_OBJECT (vtdec, "pushing vulkan images, device %" GST_PTR_FORMAT

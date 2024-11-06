@@ -569,20 +569,9 @@ gst_vulkan_download_change_state (GstElement * element,
             ("Failed to retrieve vulkan instance"), (NULL));
         return GST_STATE_CHANGE_FAILURE;
       }
-      if (!gst_vulkan_device_run_context_query (GST_ELEMENT (vk_download),
-              &vk_download->device)) {
-        GError *error = NULL;
-        GST_DEBUG_OBJECT (vk_download,
-            "No device retrieved from peer elements");
-        if (!(vk_download->device =
-                gst_vulkan_instance_create_device (vk_download->instance,
-                    &error))) {
-          GST_ELEMENT_ERROR (vk_download, RESOURCE, NOT_FOUND,
-              ("Failed to create vulkan device"), ("%s",
-                  error ? error->message : ""));
-          g_clear_error (&error);
-          return GST_STATE_CHANGE_FAILURE;
-        }
+      if (!gst_vulkan_ensure_element_device (element, vk_download->instance,
+              &vk_download->device, 0)) {
+        return GST_STATE_CHANGE_FAILURE;
       }
 
       if (gst_vulkan_queue_run_context_query (GST_ELEMENT (vk_download),

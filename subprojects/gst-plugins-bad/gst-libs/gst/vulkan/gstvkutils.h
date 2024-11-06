@@ -30,6 +30,11 @@ gboolean                gst_vulkan_ensure_element_data          (GstElement * el
                                                                  GstVulkanDisplay ** display_ptr,
                                                                  GstVulkanInstance ** instance_ptr);
 GST_VULKAN_API
+gboolean                gst_vulkan_ensure_element_device        (GstElement * element,
+                                                                 GstVulkanInstance * instance,
+                                                                 GstVulkanDevice ** device_ptr,
+                                                                 guint device_id);
+GST_VULKAN_API
 gboolean                gst_vulkan_handle_set_context           (GstElement * element,
                                                                  GstContext * context,
                                                                  GstVulkanDisplay ** display,

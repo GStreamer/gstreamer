@@ -7174,6 +7174,37 @@ retrieval is performed.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="vulkan_ensure_element_device" c:identifier="gst_vulkan_ensure_element_device" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">Perform the steps necessary for retrieving a #GstVulkanDevice from
+the surrounding elements or create a new device according to the device_id.
+
+If the contents of @device_ptr is not %NULL, then no
+#GstContext query is necessary and no #GstVulkanDevice
+retrieval is performed.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">whether a #GstVulkanDevice exists in @device_ptr</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">a #GstElement</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="instance" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">the #GstVulkanInstance</doc>
+          <type name="VulkanInstance" c:type="GstVulkanInstance*"/>
+        </parameter>
+        <parameter name="device_ptr" direction="inout" caller-allocates="0" transfer-ownership="full" optional="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">the resulting #GstVulkanDevice</doc>
+          <type name="VulkanDevice" c:type="GstVulkanDevice**"/>
+        </parameter>
+        <parameter name="device_id" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">The device number to use, 0 is default.</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="vulkan_error_quark" c:identifier="gst_vulkan_error_quark" moved-to="VulkanError.quark" version="1.18">
       <return-value transfer-ownership="none">
         <type name="GLib.Quark" c:type="GQuark"/>

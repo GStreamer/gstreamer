@@ -135,18 +135,9 @@ gst_vulkan_h264_decoder_open (GstVideoDecoder * decoder)
     return FALSE;
   }
 
-  if (!gst_vulkan_device_run_context_query (GST_ELEMENT (decoder),
-          &self->device)) {
-    GError *error = NULL;
-    GST_DEBUG_OBJECT (self, "No device retrieved from peer elements");
-    self->device = gst_vulkan_instance_create_device (self->instance, &error);
-    if (!self->device) {
-      GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-          ("Failed to create vulkan device"),
-          ("%s", error ? error->message : ""));
-      g_clear_error (&error);
-      return FALSE;
-    }
+  if (!gst_vulkan_ensure_element_device (GST_ELEMENT (decoder), self->instance,
+          &self->device, 0)) {
+    return FALSE;
   }
 
   if (!gst_vulkan_queue_run_context_query (GST_ELEMENT (self),

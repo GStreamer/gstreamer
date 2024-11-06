@@ -1151,19 +1151,9 @@ gst_vulkan_upload_change_state (GstElement * element, GstStateChange transition)
             ("Failed to retrieve vulkan instance"), (NULL));
         return GST_STATE_CHANGE_FAILURE;
       }
-      if (!gst_vulkan_device_run_context_query (GST_ELEMENT (vk_upload),
-              &vk_upload->device)) {
-        GError *error = NULL;
-        GST_DEBUG_OBJECT (vk_upload, "No device retrieved from peer elements");
-        if (!(vk_upload->device =
-                gst_vulkan_instance_create_device (vk_upload->instance,
-                    &error))) {
-          GST_ELEMENT_ERROR (vk_upload, RESOURCE, NOT_FOUND,
-              ("Failed to create vulkan device"), ("%s",
-                  error ? error->message : ""));
-          g_clear_error (&error);
-          return GST_STATE_CHANGE_FAILURE;
-        }
+      if (!gst_vulkan_ensure_element_device (element, vk_upload->instance,
+              &vk_upload->device, 0)) {
+        return GST_STATE_CHANGE_FAILURE;
       }
       // Issue with NVIDIA driver where the output gets artifacts if I select another
       // queue seen the codec one does not support VK_QUEUE_GRAPHICS_BIT but VK_QUEUE_TRANSFER_BIT.

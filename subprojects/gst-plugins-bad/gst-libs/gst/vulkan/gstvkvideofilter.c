@@ -274,17 +274,10 @@ gst_vulkan_video_filter_start (GstBaseTransform * bt)
         ("Failed to retrieve vulkan instance"), (NULL));
     return FALSE;
   }
-  if (!gst_vulkan_device_run_context_query (GST_ELEMENT (render),
-          &render->device)) {
-    GError *error = NULL;
-    GST_DEBUG_OBJECT (render, "No device retrieved from peer elements");
-    if (!(render->device =
-            gst_vulkan_instance_create_device (render->instance, &error))) {
-      GST_ELEMENT_ERROR (render, RESOURCE, NOT_FOUND,
-          ("Failed to create vulkan device"), ("%s", error->message));
-      g_clear_error (&error);
-      return FALSE;
-    }
+
+  if (!gst_vulkan_ensure_element_device (GST_ELEMENT (bt), render->instance,
+          &render->device, 0)) {
+    return FALSE;
   }
 
   if (!gst_vulkan_queue_run_context_query (GST_ELEMENT (render),
