@@ -2896,10 +2896,11 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
 
     /* FIXME: check for sanity and that min/max are multiples of the steps */
 
-    /* we only query details for the max width/height since it's likely the
-     * most restricted if there are any resolution-dependent restrictions */
+    /* we only query details for the min width/height in order to allow for
+       a big range of frameintervals.
+       The correct max framerate is tested later for the negotiated size */
     tmp = gst_v4l2_object_probe_caps_for_format_and_size (v4l2object,
-        pixelformat, maxw, maxh, template);
+        pixelformat, w, h, template);
 
     if (tmp) {
       GValue step_range = G_VALUE_INIT;
@@ -4117,6 +4118,34 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     }
   }
 
+  /* VIDIOC_ENUM_FRAMEINTERVALS for the desired size */
+  if (try_only) {
+    GstStructure *tmp =
+        gst_v4l2_object_probe_caps_for_format_and_size (v4l2object,
+        pixelformat, width, height, s);
+
+    if (tmp) {
+      gint min_fps_n, min_fps_d, max_fps_n, max_fps_d;
+      gdouble max_fps, desired_fps;
+
+      gst_structure_get (tmp, "framerate", GST_TYPE_FRACTION_RANGE,
+          &min_fps_n, &min_fps_d, &max_fps_n, &max_fps_d, NULL);
+      gst_util_fraction_to_double (max_fps_n, max_fps_d, &max_fps);
+      gst_util_fraction_to_double (fps_n, fps_d, &desired_fps);
+
+      if (desired_fps > max_fps) {
+        GST_WARNING_OBJECT (v4l2object->dbg_obj, "Max framerate: %u/%u (%f)",
+            max_fps_n, max_fps_d, max_fps);
+        GST_WARNING_OBJECT (v4l2object->dbg_obj,
+            "Desired framerate: %u/%u (%f)", fps_n, fps_d, desired_fps);
+        fps_n = max_fps_n;
+        fps_d = max_fps_d;
+        gst_structure_set (s, "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
+            NULL);
+      }
+    }
+  }
+
   if (try_only)                 /* good enough for trying only */
     return TRUE;
 
@@ -4186,6 +4215,21 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       /* just keep reporting variable framerate */
     } else if (streamparm.parm.capture.timeperframe.numerator > 0 &&
         streamparm.parm.capture.timeperframe.denominator > 0) {
+
+      if ((streamparm.parm.capture.timeperframe.numerator != fps_d) ||
+          (streamparm.parm.capture.timeperframe.denominator != fps_n)) {
+        GST_WARNING_OBJECT (v4l2object->dbg_obj,
+            "Requested framerate (%u/%u) adjusted to %u/%u",
+            fps_n, fps_d,
+            streamparm.parm.capture.timeperframe.denominator,
+            streamparm.parm.capture.timeperframe.numerator);
+
+        /* Update CAPS */
+        gst_structure_set (s, "framerate", GST_TYPE_FRACTION,
+            streamparm.parm.capture.timeperframe.denominator,
+            streamparm.parm.capture.timeperframe.numerator, NULL);
+      }
+
       /* get new values */
       fps_d = streamparm.parm.capture.timeperframe.numerator;
       fps_n = streamparm.parm.capture.timeperframe.denominator;
