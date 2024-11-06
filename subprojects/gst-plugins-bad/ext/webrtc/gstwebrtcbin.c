@@ -76,7 +76,7 @@
 
 /**
  * SECTION: element-webrtcbin
- * title: webrtcbin
+ * @title: webrtcbin
  *
  * This webrtcbin implements the majority of the W3's peerconnection API and
  * implementation guide where possible. Generating offers, answers and setting
