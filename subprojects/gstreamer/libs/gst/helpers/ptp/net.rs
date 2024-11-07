@@ -376,7 +376,7 @@ mod imp {
         addr: &Ipv4Addr,
         iface: &InterfaceInfo,
     ) -> Result<(), Error> {
-        #[cfg(not(any(target_os = "solaris", target_os = "illumos")))]
+        #[cfg(not(any(target_os = "solaris", target_os = "illumos", target_os = "macos")))]
         {
             let mreqn = ip_mreqn {
                 imr_multiaddr: in_addr {
@@ -408,12 +408,7 @@ mod imp {
                 }
             }
 
-            #[cfg(not(any(
-                target_os = "openbsd",
-                target_os = "dragonfly",
-                target_os = "netbsd",
-                target_os = "macos"
-            )))]
+            #[cfg(not(any(target_os = "openbsd", target_os = "dragonfly", target_os = "netbsd")))]
             {
                 let mreqn = ip_mreqn {
                     imr_multiaddr: in_addr {
@@ -445,7 +440,7 @@ mod imp {
                     }
                 }
             }
-            #[cfg(any(target_os = "openbsd", target_os = "dragonfly", target_os = "macos"))]
+            #[cfg(any(target_os = "openbsd", target_os = "dragonfly"))]
             {
                 let addr = in_addr {
                     s_addr: u32::from_ne_bytes(iface.ip_addr.octets()),
@@ -527,6 +522,69 @@ mod imp {
                     bail!(
                         source: io::Error::last_os_error(),
                         "Failed setting multicast interface {}",
+                        iface.name,
+                    );
+                }
+            }
+
+            Ok(())
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            let mreq = ip_mreq {
+                imr_multiaddr: in_addr {
+                    s_addr: u32::from_ne_bytes(addr.octets()),
+                },
+                imr_address: in_addr {
+                    s_addr: u32::from_ne_bytes(iface.ip_addr.octets()),
+                },
+            };
+
+            let mreqn = ip_mreqn {
+                imr_multiaddr: in_addr {
+                    s_addr: u32::from_ne_bytes(Ipv4Addr::UNSPECIFIED.octets()),
+                },
+                imr_address: in_addr {
+                    s_addr: u32::from_ne_bytes(Ipv4Addr::UNSPECIFIED.octets()),
+                },
+                imr_ifindex: iface.index as _,
+            };
+
+            // SAFETY: Requires a valid ip_mreq struct to be passed together with its size for checking
+            // validity. On errors a negative integer is returned.
+            unsafe {
+                if setsockopt(
+                    socket.as_raw_fd(),
+                    IPPROTO_IP,
+                    IP_ADD_MEMBERSHIP,
+                    &mreq as *const _ as *const _,
+                    mem::size_of_val(&mreq) as _,
+                ) < 0
+                {
+                    bail!(
+                        source: io::Error::last_os_error(),
+                        "Failed joining multicast group for interface {}",
+                        iface.name,
+                    );
+                }
+            }
+
+            // SAFETY: Requires a valid ip_mreqn struct to be passed together
+            // with its size for checking which of the two it is. On errors a negative
+            // integer is returned.
+            unsafe {
+                if setsockopt(
+                    socket.as_raw_fd(),
+                    IPPROTO_IP,
+                    IP_MULTICAST_IF,
+                    &mreqn as *const _ as *const _,
+                    mem::size_of_val(&mreqn) as _,
+                ) < 0
+                {
+                    bail!(
+                        source: io::Error::last_os_error(),
+                        "Failed joining multicast group for interface {}",
                         iface.name,
                     );
                 }

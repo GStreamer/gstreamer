@@ -376,6 +376,15 @@ pub mod unix {
         pub imr_ifindex: c_int,
     }
 
+    // macOS uses ip_mreq instead of ip_mreqn in its latest version of the MAC Kernel for IP_ADD_MEMBERSHIP
+    #[cfg(target_os = "macos")]
+    #[repr(C)]
+    #[derive(Copy, Clone)]
+    pub struct ip_mreq {
+        pub imr_multiaddr: in_addr,
+        pub imr_address: in_addr,
+    }
+
     #[cfg(any(target_os = "solaris", target_os = "illumos"))]
     #[repr(C)]
     pub struct ifaddrs {
