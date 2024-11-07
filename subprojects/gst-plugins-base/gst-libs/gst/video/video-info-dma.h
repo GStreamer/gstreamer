@@ -114,6 +114,14 @@ GST_VIDEO_API
 guint32              gst_video_dma_drm_fourcc_from_format (GstVideoFormat format);
 
 GST_VIDEO_API
+guint32              gst_video_dma_drm_format_from_gst_format (GstVideoFormat format,
+                                                               guint64 * modifier);
+
+GST_VIDEO_API
 GstVideoFormat       gst_video_dma_drm_fourcc_to_format   (guint32 fourcc);
+
+GST_VIDEO_API
+GstVideoFormat       gst_video_dma_drm_format_to_gst_format (guint32 fourcc,
+                                                             guint64 modifier);
 
 G_END_DECLS

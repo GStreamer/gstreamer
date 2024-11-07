@@ -377,10 +377,8 @@ gst_video_info_dma_drm_from_caps (GstVideoInfoDmaDrm * drm_info,
 
   /* If the modifier is linear, set the according format in video info,
    * otherwise, just let the format to be GST_VIDEO_FORMAT_DMA_DRM. */
-  /* TODO: Some well known tiled format such as NV12_4L4, NV12_16L16,
-   * NV12_64Z32, NV12_16L32S */
-  format = gst_video_dma_drm_fourcc_to_format (fourcc);
-  if (modifier == DRM_FORMAT_MOD_LINEAR && format != GST_VIDEO_FORMAT_UNKNOWN) {
+  format = gst_video_dma_drm_format_to_gst_format (fourcc, modifier);
+  if (format != GST_VIDEO_FORMAT_UNKNOWN) {
     gst_structure_set (structure, "format", G_TYPE_STRING,
         gst_video_format_to_string (format), NULL);
   }
@@ -630,44 +628,45 @@ static const struct FormatMap
 {
   GstVideoFormat format;
   guint32 fourcc;
+  guint64 modifier;
 } format_map[] = {
-  {GST_VIDEO_FORMAT_YUY2, DRM_FORMAT_YUYV},
-  {GST_VIDEO_FORMAT_YVYU, DRM_FORMAT_YVYU},
-  {GST_VIDEO_FORMAT_UYVY, DRM_FORMAT_UYVY},
-  {GST_VIDEO_FORMAT_VYUY, DRM_FORMAT_VYUY},
+  {GST_VIDEO_FORMAT_YUY2, DRM_FORMAT_YUYV, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_YVYU, DRM_FORMAT_YVYU, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_UYVY, DRM_FORMAT_UYVY, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_VYUY, DRM_FORMAT_VYUY, DRM_FORMAT_MOD_LINEAR},
   /* No VUYA fourcc define, just mapping it as AYUV. */
-  {GST_VIDEO_FORMAT_VUYA, DRM_FORMAT_AYUV},
-  {GST_VIDEO_FORMAT_NV12, DRM_FORMAT_NV12},
-  {GST_VIDEO_FORMAT_NV21, DRM_FORMAT_NV21},
-  {GST_VIDEO_FORMAT_NV16, DRM_FORMAT_NV16},
-  {GST_VIDEO_FORMAT_NV61, DRM_FORMAT_NV61},
-  {GST_VIDEO_FORMAT_NV24, DRM_FORMAT_NV24},
-  {GST_VIDEO_FORMAT_YUV9, DRM_FORMAT_YUV410},
-  {GST_VIDEO_FORMAT_YVU9, DRM_FORMAT_YVU410},
-  {GST_VIDEO_FORMAT_Y41B, DRM_FORMAT_YUV411},
-  {GST_VIDEO_FORMAT_I420, DRM_FORMAT_YUV420},
-  {GST_VIDEO_FORMAT_YV12, DRM_FORMAT_YVU420},
-  {GST_VIDEO_FORMAT_Y42B, DRM_FORMAT_YUV422},
-  {GST_VIDEO_FORMAT_Y444, DRM_FORMAT_YUV444},
-  {GST_VIDEO_FORMAT_RGB16, DRM_FORMAT_RGB565},
-  {GST_VIDEO_FORMAT_BGR16, DRM_FORMAT_BGR565},
-  {GST_VIDEO_FORMAT_RGB, DRM_FORMAT_BGR888},
-  {GST_VIDEO_FORMAT_BGR, DRM_FORMAT_RGB888},
-  {GST_VIDEO_FORMAT_RGBA, DRM_FORMAT_ABGR8888},
-  {GST_VIDEO_FORMAT_RGBx, DRM_FORMAT_XBGR8888},
-  {GST_VIDEO_FORMAT_BGRA, DRM_FORMAT_ARGB8888},
-  {GST_VIDEO_FORMAT_BGRx, DRM_FORMAT_XRGB8888},
-  {GST_VIDEO_FORMAT_ARGB, DRM_FORMAT_BGRA8888},
-  {GST_VIDEO_FORMAT_xRGB, DRM_FORMAT_BGRX8888},
-  {GST_VIDEO_FORMAT_ABGR, DRM_FORMAT_RGBA8888},
-  {GST_VIDEO_FORMAT_xBGR, DRM_FORMAT_RGBX8888},
-  {GST_VIDEO_FORMAT_Y410, DRM_FORMAT_Y410},
-  {GST_VIDEO_FORMAT_Y412_LE, DRM_FORMAT_Y412},
-  {GST_VIDEO_FORMAT_Y210, DRM_FORMAT_Y210},
-  {GST_VIDEO_FORMAT_Y212_LE, DRM_FORMAT_Y212},
-  {GST_VIDEO_FORMAT_P010_10LE, DRM_FORMAT_P010},
-  {GST_VIDEO_FORMAT_P012_LE, DRM_FORMAT_P012},
-  {GST_VIDEO_FORMAT_BGR10A2_LE, DRM_FORMAT_ARGB2101010},
+  {GST_VIDEO_FORMAT_VUYA, DRM_FORMAT_AYUV, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_NV12, DRM_FORMAT_NV12, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_NV21, DRM_FORMAT_NV21, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_NV16, DRM_FORMAT_NV16, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_NV61, DRM_FORMAT_NV61, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_NV24, DRM_FORMAT_NV24, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_YUV9, DRM_FORMAT_YUV410, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_YVU9, DRM_FORMAT_YVU410, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_Y41B, DRM_FORMAT_YUV411, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_I420, DRM_FORMAT_YUV420, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_YV12, DRM_FORMAT_YVU420, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_Y42B, DRM_FORMAT_YUV422, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_Y444, DRM_FORMAT_YUV444, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_RGB16, DRM_FORMAT_RGB565, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_BGR16, DRM_FORMAT_BGR565, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_RGB, DRM_FORMAT_BGR888, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_BGR, DRM_FORMAT_RGB888, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_RGBA, DRM_FORMAT_ABGR8888, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_RGBx, DRM_FORMAT_XBGR8888, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_BGRA, DRM_FORMAT_ARGB8888, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_BGRx, DRM_FORMAT_XRGB8888, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_ARGB, DRM_FORMAT_BGRA8888, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_xRGB, DRM_FORMAT_BGRX8888, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_ABGR, DRM_FORMAT_RGBA8888, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_xBGR, DRM_FORMAT_RGBX8888, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_Y410, DRM_FORMAT_Y410, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_Y412_LE, DRM_FORMAT_Y412, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_Y210, DRM_FORMAT_Y210, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_Y212_LE, DRM_FORMAT_Y212, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_P010_10LE, DRM_FORMAT_P010, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_P012_LE, DRM_FORMAT_P012, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_BGR10A2_LE, DRM_FORMAT_ARGB2101010, DRM_FORMAT_MOD_LINEAR},
 };
 /* *INDENT-ON* */
 
@@ -685,15 +684,51 @@ static const struct FormatMap
 guint32
 gst_video_dma_drm_fourcc_from_format (GstVideoFormat format)
 {
+  guint64 modifier;
+  guint32 fourcc;
+
+  fourcc = gst_video_dma_drm_format_from_gst_format (format, &modifier);
+
+  if (fourcc == DRM_FORMAT_INVALID)
+    return DRM_FORMAT_INVALID;
+
+  if (modifier != DRM_FORMAT_MOD_LINEAR)
+    return DRM_FORMAT_INVALID;
+
+  return fourcc;
+}
+
+/**
+ * gst_video_dma_drm_format_from_gst_format:
+ * @format: a #GstVideoFormat
+ * @modifier: (nullable): return location for the modifier
+ *
+ * Converting the video format into dma drm fourcc/modifier pair.
+ * If no matching fourcc found, then DRM_FORMAT_INVALID is returned
+ * and @modifier will be set to DRM_FORMAT_MOD_INVALID.
+ *
+ * Returns: the DRM_FORMAT_* corresponding to @format.
+ *
+ * Since: 1.26
+ */
+guint32
+gst_video_dma_drm_format_from_gst_format (GstVideoFormat format,
+    guint64 * modifier)
+{
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (format_map); i++) {
-    if (format_map[i].format == format)
+    if (format_map[i].format == format) {
+      if (modifier)
+        *modifier = format_map[i].modifier;
       return format_map[i].fourcc;
+    }
   }
 
-  GST_INFO ("No supported fourcc for video format %s",
+  GST_INFO ("No supported fourcc/modifier for video format %s",
       gst_video_format_to_string (format));
+
+  *modifier = DRM_FORMAT_MOD_INVALID;
   return DRM_FORMAT_INVALID;
 }
 
@@ -720,5 +755,35 @@ gst_video_dma_drm_fourcc_to_format (guint32 fourcc)
 
   GST_INFO ("No supported video format for fourcc %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (fourcc));
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+/**
+ * gst_video_dma_drm_format_to_gst_format:
+ * @fourcc: the dma drm fourcc value.
+ * @modifier: the dma drm modifier.
+ *
+ * Converting a dma drm fourcc and modifier pair into a #GstVideoFormat. If
+ * no matching video format is found, then GST_VIDEO_FORMAT_UNKNOWN is returned.
+ *
+ * Returns: the GST_VIDEO_FORMAT_* corresponding to the @fourcc and @modifier
+ *          pair.
+ *
+ * Since: 1.26
+ */
+GstVideoFormat
+gst_video_dma_drm_format_to_gst_format (guint32 fourcc, guint64 modifier)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (format_map); i++) {
+    if (format_map[i].fourcc == fourcc && format_map[i].modifier == modifier)
+      return format_map[i].format;
+  }
+
+  gchar *drm_format_str = gst_video_dma_drm_fourcc_to_string (fourcc, modifier);
+  GST_INFO ("No support for DRM format %s", drm_format_str);
+  g_free (drm_format_str);
+
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
