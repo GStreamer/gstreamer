@@ -901,6 +901,7 @@ gst_gl_download_element_stop (GstBaseTransform * bt)
   }
 
   gst_clear_object (&dl->foreign_dmabuf_pool);
+  gst_clear_caps (&dl->foreign_dmabuf_caps);
 
   return TRUE;
 }
@@ -952,6 +953,7 @@ _convert_dma_drm (GstGLContext * context, GstStructure * s)
     return FALSE;
   }
 
+  /* Convert from DMA_DRM to GstVideo formats */
   if (G_VALUE_HOLDS_STRING (fmtval) &&
       g_str_equal (g_value_get_string (fmtval), "DMA_DRM")) {
     const GValue *drmval = gst_structure_get_value (s, "drm-format");
@@ -965,6 +967,7 @@ _convert_dma_drm (GstGLContext * context, GstStructure * s)
     } else {
       return FALSE;
     }
+    /* Otherwise convert from GstVideo to DMA_DRM */
   } else {
     GValue drmfmtval = G_VALUE_INIT;
 
@@ -1474,6 +1477,7 @@ gst_gl_download_element_decide_allocation (GstBaseTransform * trans,
     const GstCapsFeatures *features;
 
     gst_clear_object (&download->foreign_dmabuf_pool);
+    gst_clear_caps (&download->foreign_dmabuf_caps);
 
     gst_query_parse_allocation (query, &caps, NULL);
     features = gst_caps_get_features (caps, 0);
@@ -1483,6 +1487,7 @@ gst_gl_download_element_decide_allocation (GstBaseTransform * trans,
 
       gst_query_parse_nth_allocation_pool (query, 0,
           &download->foreign_dmabuf_pool, NULL, NULL, NULL);
+      download->foreign_dmabuf_caps = gst_caps_ref (caps);
 
       gst_query_remove_nth_allocation_pool (query, 0);
     }
@@ -1565,7 +1570,8 @@ gst_gl_download_element_propose_allocation (GstBaseTransform * bt,
 #if GST_GL_HAVE_PLATFORM_EGL && GST_GL_HAVE_DMABUF
   if (!pool && GST_GL_DOWNLOAD_ELEMENT (bt)->foreign_dmabuf_pool) {
     pool = gst_gl_dmabuf_buffer_pool_new (context,
-        GST_GL_DOWNLOAD_ELEMENT (bt)->foreign_dmabuf_pool);
+        GST_GL_DOWNLOAD_ELEMENT (bt)->foreign_dmabuf_pool,
+        GST_GL_DOWNLOAD_ELEMENT (bt)->foreign_dmabuf_caps);
 
     GST_LOG_OBJECT (bt, "offering dma-buf-backed GL buffer pool");
   }

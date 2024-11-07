@@ -50,7 +50,8 @@ struct _GstGLDMABufBufferPool
   GstGLDMABufBufferPoolPrivate *priv;
 };
 
-GstBufferPool *gst_gl_dmabuf_buffer_pool_new (GstGLContext * context, GstBufferPool * dmabuf_pool);
+GstBufferPool *gst_gl_dmabuf_buffer_pool_new (GstGLContext * context, GstBufferPool * dmabuf_pool,
+                                              GstCaps * dmabuf_caps);
 
 gboolean gst_is_gl_dmabuf_buffer (GstBuffer * buffer);
 

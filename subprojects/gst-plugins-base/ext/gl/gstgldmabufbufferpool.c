@@ -36,8 +36,10 @@
 typedef struct _GstGLDMABufBufferPoolPrivate
 {
   GstBufferPool *dmabuf_pool;
+  GstCaps *dmabuf_caps;
   GstGLMemoryAllocator *allocator;
   GstGLVideoAllocationParams *glparams;
+  GstVideoInfoDmaDrm drm_info;
 
   gboolean add_glsyncmeta;
 } GstGLDMABufBufferPoolPrivate;
@@ -126,7 +128,11 @@ gst_gl_dmabuf_buffer_pool_set_config (GstBufferPool * pool,
 
   /* Now configure the dma-buf pool, and sync the config */
   dma_config = gst_buffer_pool_get_config (self->priv->dmabuf_pool);
-  gst_buffer_pool_config_set_params (dma_config, caps, size, min, max);
+  gst_buffer_pool_config_set_params (dma_config, self->priv->dmabuf_caps,
+      size, min, max);
+  /* VideoMeta should be implicit, but it costs nothing to request it */
+  gst_buffer_pool_config_add_option (dma_config,
+      GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_add_option (dma_config,
       GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
   gst_buffer_pool_config_set_video_alignment (dma_config, &video_align);
@@ -134,13 +140,13 @@ gst_gl_dmabuf_buffer_pool_set_config (GstBufferPool * pool,
   if (!gst_buffer_pool_set_config (self->priv->dmabuf_pool, dma_config)) {
     dma_config = gst_buffer_pool_get_config (self->priv->dmabuf_pool);
 
-    if (!gst_buffer_pool_config_validate_params (dma_config, caps, size, min,
-            max)) {
+    if (!gst_buffer_pool_config_validate_params (dma_config,
+            self->priv->dmabuf_caps, size, min, max)) {
       gst_structure_free (config);
       return FALSE;
     }
 
-    if (!gst_buffer_pool_config_get_params (dma_config, &caps, &size, &min,
+    if (!gst_buffer_pool_config_get_params (dma_config, NULL, &size, &min,
             &max)) {
       gst_structure_free (dma_config);
       goto wrong_config;
@@ -265,6 +271,7 @@ gst_gl_dmabuf_buffer_pool_acquire_buffer (GstBufferPool * pool,
   GstGLBufferPool *glpool = GST_GL_BUFFER_POOL (pool);
 
   GstVideoInfo *v_info = self->priv->glparams->v_info;
+  GstVideoMeta *vmeta;
   GstFlowReturn ret;
   GstBuffer *dmabuf;
   GstBuffer *buf;
@@ -276,12 +283,18 @@ gst_gl_dmabuf_buffer_pool_acquire_buffer (GstBufferPool * pool,
     goto no_buffer;
   }
 
+  vmeta = gst_buffer_get_video_meta (dmabuf);
+  g_return_val_if_fail (vmeta, GST_FLOW_ERROR);
+
   data.n_planes = GST_VIDEO_INFO_N_PLANES (v_info);
 
   for (i = 0; i < data.n_planes; ++i) {
     guint mem_idx, length;
     gsize skip;
     GstMemory *dmabufmem;
+
+    self->priv->drm_info.vinfo.stride[i] = v_info->stride[i] = vmeta->stride[i];
+    self->priv->drm_info.vinfo.offset[i] = v_info->offset[i] = vmeta->offset[i];
 
     if (!gst_buffer_find_memory (dmabuf, GST_VIDEO_INFO_PLANE_OFFSET (v_info,
                 i), 1, &mem_idx, &length, &skip)) {
@@ -293,8 +306,17 @@ gst_gl_dmabuf_buffer_pool_acquire_buffer (GstBufferPool * pool,
 
     g_assert (gst_is_dmabuf_memory (dmabufmem));
 
-    data.eglimage[i] = gst_egl_image_from_dmabuf (glpool->context,
-        gst_dmabuf_memory_get_fd (dmabufmem), v_info, i, skip);
+    /* Anything that is not using GLMemory format RGBA is using indirect
+     * dmabuf importation with linear modifiers */
+    if (GST_VIDEO_INFO_FORMAT (v_info) != GST_VIDEO_FORMAT_RGBA) {
+      data.eglimage[i] = gst_egl_image_from_dmabuf (glpool->context,
+          gst_dmabuf_memory_get_fd (dmabufmem), v_info, i, skip);
+    } else {
+      int fd = gst_dmabuf_memory_get_fd (dmabufmem);
+      data.eglimage[i] =
+          gst_egl_image_from_dmabuf_direct_target_with_dma_drm (glpool->context,
+          1, &fd, &skip, &self->priv->drm_info, GL_TEXTURE_2D);
+    }
   }
 
   gst_gl_context_thread_add (glpool->context, _wrap_dmabuf_eglimage, &data);
@@ -388,7 +410,7 @@ gst_gl_dmabuf_buffer_unwrap (GstBuffer * buffer)
 
 GstBufferPool *
 gst_gl_dmabuf_buffer_pool_new (GstGLContext * context,
-    GstBufferPool * dmabuf_pool)
+    GstBufferPool * dmabuf_pool, GstCaps * dmabuf_caps)
 {
   GstGLDMABufBufferPool *pool;
 
@@ -398,6 +420,9 @@ gst_gl_dmabuf_buffer_pool_new (GstGLContext * context,
   GST_GL_BUFFER_POOL (pool)->context = gst_object_ref (context);
 
   pool->priv->dmabuf_pool = gst_object_ref (dmabuf_pool);
+  pool->priv->dmabuf_caps = gst_caps_ref (dmabuf_caps);
+
+  gst_video_info_dma_drm_from_caps (&pool->priv->drm_info, dmabuf_caps);
 
   GST_LOG_OBJECT (pool, "new GL-DMABuf buffer pool for pool %" GST_PTR_FORMAT
       " and context %" GST_PTR_FORMAT, dmabuf_pool, context);
