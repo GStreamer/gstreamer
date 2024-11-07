@@ -18,8 +18,10 @@ For a complete description of possible PIPELINE-DESCRIPTIONS see the section
 
 Please note that \fIgst\-launch\-1.0\fP is primarily a debugging tool for
 developers and users. You should not build applications on top of it. For
-applications, use the gst_parse_launch() function of the GStreamer API as an
-easy way to construct pipelines from pipeline descriptions.
+applications, write a little python script or Rust application (or use whatever
+other programming language you prefer) and use the gst_parse_launch() function
+of the GStreamer API as an easy way to construct pipelines from pipeline
+descriptions.
 .
 .SH "OPTIONS"
 .l
@@ -43,28 +45,22 @@ Output tags (also known as metadata)
 .B  \-e, \-\-eos\-on\-shutdown
 Force an EOS event on sources before shutting the pipeline down. This is
 useful to make sure muxers create readable files when a muxing pipeline is
-shut down forcefully via Control-C.
-.TP 8
-.B  \-i, \-\-index
-Gather and print index statistics. This is mostly useful for playback or
-recording pipelines.
+shut down forcefully via Control-C (especially in case of `mp4mux` and `qtmux`
+where the created file will be unreadable if the file has not been finalised
+properly).
 .TP 8
 .B  \-f, \-\-no\-fault
-Do not install a fault handler
-.TP 8
-.B  \-T, \-\-trace
-Print memory allocation traces. The feature must be enabled at compile time to
-work.
+Do not install a segfault handler
 .TP 8
 .B  \-\-no\-position
-Do not print current position of pipeline.
+Do not print the current position of pipeline.
 If this option is unspecified, the position will be printed when stdout is a TTY.
 To enable printing position when stdout is not a TTY,
-use "force-position" option.
+use the "\-\-force-position" option.
 .TP 8
 .B  \-\-force\-position
-Allow printing current position of pipeline even if stdout is not a TTY.
-This option has no effect if the "no-position" option is specified.
+Allow printing the current position of pipeline even if stdout is not a TTY.
+This option has no effect if the "\-\-no-position" option is specified.
 .TP 8
 
 .
@@ -242,16 +238,22 @@ Lists use this format:      { VALUE \fI[, VALUE ...]\fR }
 
 The examples below assume that you have the correct plug-ins available.
 In general, "pulsesink" can be substituted with another audio output
-plug-in such as "alsasink" or "osxaudiosink"
-Likewise, "xvimagesink" can be substituted with "ximagesink", "glimagesink",
-or "osxvideosink". Keep in mind though that different sinks might
-accept different formats and even the same sink might accept different formats
-on different machines, so you might need to add converter elements like
-audioconvert and audioresample (for audio) or videoconvert (for video)
-in front of the sink to make things work.
+plug-in such as "alsasink", "osxaudiosink" or "wasapisink".
+.br
+Likewise, "xvimagesink" can be substituted with "d3dvideosink", "ximagesink",
+"glimagesink", or "osxvideosink".
+.br
+Keep in mind though that different sinks might accept different formats and
+even the same sink might accept different formats on different machines, so
+you might need to add converter elements like audioconvert and audioresample
+(for audio) or videoconvertscale (for video) in front of the sink to make
+things work.
 
 .B Audio playback
 
+Note: For audio/video playback it's best to use the playbin3 or
+uridecodebin3 elements, these are just example pipelines.
+.br
 Play the mp3 music file "music.mp3" using a libmpg123-based plug-in and
 output to an Pulseaudio device
 .br
@@ -301,17 +303,17 @@ Convert a .WAV file containing raw audio data into an Ogg Vorbis or mp3 file
         gst\-launch\-1.0 filesrc location=music.wav ! wavparse ! audioconvert ! vorbisenc ! oggmux ! filesink location=music.ogg
 .br
 .B
-        gst\-launch\-1.0 filesrc location=music.wav ! wavparse ! audioconvert ! lamemp3enc ! filesink location=music.mp3
+        gst\-launch\-1.0 filesrc location=music.wav ! wavparse ! audioconvert ! lamemp3enc ! xingmux ! id3v2mux ! filesink location=music.mp3
 
 Rips all tracks from compact disc and convert them into a single mp3 file
 .br
 .B
-        gst\-launch\-1.0 cdparanoiasrc mode=continuous ! audioconvert ! lamemp3enc ! mpegaudioparse ! id3v2mux ! filesink location=cd.mp3
+        gst\-launch\-1.0 cdparanoiasrc mode=continuous ! audioconvert ! lamemp3enc ! mpegaudioparse ! xingmux ! id3v2mux ! filesink location=cd.mp3
 
 Rips track 5 from the CD and converts it into a single mp3 file
 .br
 .B
-        gst\-launch\-1.0 cdparanoiasrc track=5 ! audioconvert ! lamemp3enc ! mpegaudioparse ! id3v2mux ! filesink location=track5.mp3
+        gst\-launch\-1.0 cdparanoiasrc track=5 ! audioconvert ! lamemp3enc ! mpegaudioparse ! xingmux ! id3v2mux ! filesink location=track5.mp3
 
 Using \fBgst\-inspect\-1.0\fR(1), it is possible to discover settings like the above
 for cdparanoiasrc that will tell it to rip the entire cd or only tracks of it.
@@ -327,38 +329,38 @@ Records sound from your audio input and encodes it into an ogg file
 
 .B Video
 
-Display only the video portion of an MPEG-1 video file, outputting to
+Note: For audio/video playback it's best to use the playbin3 or
+uridecodebin3 elements, these are just example pipelines.
+.br
+Display only the video portion of an MPEG-2 PS video file, outputting to
 an X display window
 .br
 .B
-        gst\-launch\-1.0 filesrc location=JB_FF9_TheGravityOfLove.mpg ! dvddemux ! mpegvideoparse ! mpeg2dec ! xvimagesink
+        gst\-launch\-1.0 filesrc location=JB_FF9_TheGravityOfLove.mpg ! mpegdemux ! mpegvideoparse ! mpeg2dec ! videoconvert ! xvimagesink
 
 Display the video portion of a .vob file (used on DVDs), outputting to
 an SDL window
 .br
 .B
-        gst\-launch\-1.0 filesrc location=/flflfj.vob ! dvddemux ! mpegvideoparse ! mpeg2dec ! sdlvideosink
+        gst\-launch\-1.0 filesrc location=/flflfj.vob ! dvddemux ! mpegvideoparse ! mpeg2dec ! videoconvert ! sdlvideosink
 
 Play both video and audio portions of an MPEG movie
 .br
 .B
-        gst\-launch\-1.0 filesrc location=movie.mpg ! dvddemux name=demuxer  demuxer. ! queue ! mpegvideoparse ! mpeg2dec ! sdlvideosink  demuxer. ! queue ! mpegaudioparse ! mpg123audiodec ! audioconvert ! audioresample ! pulsesink
+        gst\-launch\-1.0 filesrc location=movie.mpg ! dvddemux name=demuxer  demuxer. ! queue ! mpegvideoparse ! mpeg2dec ! videoconvert ! sdlvideosink  demuxer. ! queue ! mpegaudioparse ! mpg123audiodec ! audioconvert ! audioresample ! pulsesink
 
 Play an AVI movie with an external text subtitle stream
 .br
-.B
-        gst\-launch\-1.0 filesrc location=movie.mpg ! mpegdemux name=demuxer demuxer. ! queue ! mpegvideoparse ! mpeg2dec ! videoconvert ! sdlvideosink   demuxer. ! queue ! mpegaudioparse ! mpg123audiodec ! audioconvert ! audioresample ! pulsesink
-
 This example also shows how to refer to specific pads by name if an element
 (here: textoverlay) has multiple sink or source pads.
 .br
 .B
-        gst\-launch\-1.0 textoverlay name=overlay ! videoconvert ! videoscale !  autovideosink   filesrc location=movie.avi ! decodebin ! videoconvert ! overlay.video_sink   filesrc location=movie.srt ! subparse ! overlay.text_sink
+        gst\-launch\-1.0 textoverlay name=overlay ! videoconvert ! videoscale !  autovideosink   filesrc location=movie.avi ! decodebin3 ! videoconvert ! overlay.video_sink   filesrc location=movie.srt ! subparse ! overlay.text_sink
 
-Play an AVI movie with an external text subtitle stream using playbin
+Play an AVI movie with an external text subtitle stream using playbin3
 .br
 .B
-        gst\-launch\-1.0 playbin uri=file:///path/to/movie.avi suburi=file:///path/to/movie.srt
+        gst\-launch\-1.0 playbin3 uri=file:///path/to/movie.avi suburi=file:///path/to/movie.srt
 
 .B Network streaming
 
@@ -367,19 +369,19 @@ Stream video using RTP and network elements.
 This command would be run on the transmitter
 .br
 .B
-        gst\-launch\-1.0 v4l2src ! video/x\-raw,width=128,height=96,format=UYVY ! videoconvert ! ffenc_h263 ! video/x\-h263 ! rtph263ppay pt=96 ! udpsink host=192.168.1.1 port=5000
+        gst\-launch\-1.0 v4l2src ! queue ! videoconvert ! x264enc tune=zerolatency key-int-max=15 ! video/x\-h264,profile=main !rtph264pay pt=96 config-interval=-1 ! udpsink host=192.168.1.1 port=5000
 
 Use this command on the receiver
 .br
 .B
-        gst\-launch\-1.0 udpsrc port=5000 ! application/x\-rtp, clock\-rate=90000,payload=96 ! rtph263pdepay queue\-delay=0 ! ffdec_h263 ! xvimagesink
+        gst\-launch\-1.0 udpsrc port=5000 ! application/x\-rtp, clock\-rate=90000,payload=96 ! rtpjitterbuffer ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! xvimagesink
 
 .B Diagnostic
 
 Generate a null stream and ignore it (and print out details).
 .br
 .B
-        gst\-launch\-1.0 \-v fakesrc num\-buffers=16 ! fakesink
+        gst\-launch\-1.0 \-v fakesrc num\-buffers=16 ! fakesink silent=false
 
 Generate a pure sine tone to test the audio output
 .br
@@ -402,17 +404,19 @@ to get a working pipeline.
 Play any supported audio format
 .br
 .B
-        gst\-launch\-1.0 filesrc location=musicfile ! decodebin ! audioconvert ! audioresample ! pulsesink
+        gst\-launch\-1.0 filesrc location=musicfile ! decodebin3 ! audioconvert ! audioresample ! pulsesink
 
 Play any supported video format with video and audio output. Threads are used
 automatically. To make this even easier, you can use the playbin element:
 .br
 .B
-        gst\-launch\-1.0 filesrc location=videofile ! decodebin name=decoder decoder. ! queue ! audioconvert ! audioresample ! pulsesink   decoder. !  videoconvert ! xvimagesink
+        gst\-launch\-1.0 filesrc location=videofile ! decodebin3 name=decoder decoder. ! queue ! audioconvert ! audioresample ! pulsesink   decoder. !  videoconvert ! xvimagesink
 .br
 .B
-        gst\-launch\-1.0 playbin uri=file:///home/joe/foo.avi
-
+        gst\-launch\-1.0 playbin3 uri=file:///home/joe/foo.avi
+.br
+.B
+        gst\-launch\-1.0 playbin3 uri=https://gstreamer.freedesktop.org/data/media/sintel_trailer\-480p.webm
 
 .B Filtered connections
 
@@ -422,6 +426,9 @@ Show a test image and use the YUY2 or YV12 video format for this.
 .br
 .B
         gst\-launch\-1.0 videotestsrc ! 'video/x\-raw,format=YUY2;video/x\-raw,format=YV12' ! xvimagesink
+.br
+.B
+        gst\-launch\-1.0 v4l2src ! image/jpeg ! queue ! decodebin3 ! videoconvert ! autovideosink
 
 Record audio and write it to a .wav file. Force usage of signed 16 to 32 bit
 samples and a sample rate between 32kHz and 64KHz.
@@ -451,12 +458,13 @@ which allows you to view the .dot file directly without converting it first.
 .br
 When the pipeline changes state through NULL to PLAYING and back to NULL, a
 dot file is generated on each state change. To write a snapshot of the
-pipeline state, send a SIGHUP to the process.
+pipeline state, send a SIGHUP to the process or use the pipeline_snapshot
+tracer from the GStreamer Rust plugins.
 .TP
 \fBGST_REGISTRY\fR
 Path of the plugin registry file. Default is
 ~/.cache/gstreamer\-1.0/registry\-CPU.bin where CPU is the
-machine/cpu type GStreamer was compiled for, e.g. 'i486', 'i686', 'x86\-64', 'ppc',
+machine/cpu type GStreamer was compiled for, e.g. 'x86\_64',
 etc. (check the output of "uname \-i" and "uname \-m" for details).
 .TP
 \fBGST_REGISTRY_UPDATE\fR
@@ -477,8 +485,8 @@ user's home directory
 .TP
 \fBGST_DEBUG_FILE\fR
 Set this variable to a file path to redirect all GStreamer debug
-messages to this file. If left unset, debug messages with be output
-unto the standard error.
+messages to this file. If left unset, debug messages will be output
+to the standard error output.
 .TP
 \fBORC_CODE\fR
 Useful Orc environment variable. Set ORC_CODE=debug to enable debuggers
