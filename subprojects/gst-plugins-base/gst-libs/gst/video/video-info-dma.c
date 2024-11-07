@@ -160,6 +160,67 @@
  */
 #define DRM_FORMAT_MOD_INVALID 0xffffffffffffffULL
 
+/*
+ * Format Modifiers:
+ *
+ * Format modifiers describe, typically, a re-ordering or modification
+ * of the data in a plane of an FB.  This can be used to express tiled/
+ * swizzled formats, or compression, or a combination of the two.
+ *
+ * The upper 8 bits of the format modifier are a vendor-id as assigned
+ * below.  The lower 56 bits are assigned as vendor sees fit.
+ */
+
+/* Vendor Ids: */
+#define DRM_FORMAT_MOD_VENDOR_NONE    0
+#define DRM_FORMAT_MOD_VENDOR_INTEL   0x01
+#define DRM_FORMAT_MOD_VENDOR_AMD     0x02
+#define DRM_FORMAT_MOD_VENDOR_NVIDIA  0x03
+#define DRM_FORMAT_MOD_VENDOR_SAMSUNG 0x04
+#define DRM_FORMAT_MOD_VENDOR_QCOM    0x05
+#define DRM_FORMAT_MOD_VENDOR_VIVANTE 0x06
+#define DRM_FORMAT_MOD_VENDOR_BROADCOM 0x07
+#define DRM_FORMAT_MOD_VENDOR_ARM     0x08
+#define DRM_FORMAT_MOD_VENDOR_ALLWINNER 0x09
+#define DRM_FORMAT_MOD_VENDOR_AMLOGIC 0x0a
+
+/* add more to the end as needed */
+
+#define DRM_FORMAT_RESERVED       ((1ULL << 56) - 1)
+
+#define fourcc_mod_get_vendor(modifier) \
+  (((modifier) >> 56) & 0xff)
+
+#define fourcc_mod_is_vendor(modifier, vendor) \
+  (fourcc_mod_get_vendor(modifier) == DRM_FORMAT_MOD_VENDOR_## vendor)
+
+#define fourcc_mod_code(vendor, val) \
+  ((((guint64)DRM_FORMAT_MOD_VENDOR_## vendor) << 56) | ((val) & 0x00ffffffffffffffULL))
+
+/*
+ * Tiled, NV12MT, grouped in 64 (pixels) x 32 (lines) -sized macroblocks
+ *
+ * Macroblocks are laid in a Z-shape, and each pixel data is following the
+ * standard NV12 style.
+ * As for NV12, an image is the result of two frame buffers: one for Y,
+ * one for the interleaved Cb/Cr components (1/2 the height of the Y buffer).
+ * Alignment requirements are (for each buffer):
+ * - multiple of 128 pixels for the width
+ * - multiple of  32 pixels for the height
+ *
+ * For more information: see https://linuxtv.org/downloads/v4l-dvb-apis/re32.html
+ */
+#define DRM_FORMAT_MOD_SAMSUNG_64_32_TILE       fourcc_mod_code(SAMSUNG, 1)
+
+/* Vivante framebuffer modifiers */
+
+/*
+ * Vivante 4x4 tiling layout
+ *
+ * This is a simple tiled layout using tiles of 4x4 pixels in a row-major
+ * layout.
+ */
+#define DRM_FORMAT_MOD_VIVANTE_TILED            fourcc_mod_code(VIVANTE, 1)
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
@@ -646,6 +707,8 @@ static const struct FormatMap
   /* No VUYA fourcc define, just mapping it as AYUV. */
   {GST_VIDEO_FORMAT_VUYA, DRM_FORMAT_AYUV, DRM_FORMAT_MOD_LINEAR},
   {GST_VIDEO_FORMAT_NV12, DRM_FORMAT_NV12, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_NV12_4L4, DRM_FORMAT_NV12, DRM_FORMAT_MOD_VIVANTE_TILED},
+  {GST_VIDEO_FORMAT_NV12_64Z32, DRM_FORMAT_NV12, DRM_FORMAT_MOD_SAMSUNG_64_32_TILE},
   {GST_VIDEO_FORMAT_NV21, DRM_FORMAT_NV21, DRM_FORMAT_MOD_LINEAR},
   {GST_VIDEO_FORMAT_NV16, DRM_FORMAT_NV16, DRM_FORMAT_MOD_LINEAR},
   {GST_VIDEO_FORMAT_NV61, DRM_FORMAT_NV61, DRM_FORMAT_MOD_LINEAR},
@@ -673,6 +736,7 @@ static const struct FormatMap
   {GST_VIDEO_FORMAT_Y412_LE, DRM_FORMAT_Y412, DRM_FORMAT_MOD_LINEAR},
   {GST_VIDEO_FORMAT_Y210, DRM_FORMAT_Y210, DRM_FORMAT_MOD_LINEAR},
   {GST_VIDEO_FORMAT_Y212_LE, DRM_FORMAT_Y212, DRM_FORMAT_MOD_LINEAR},
+  {GST_VIDEO_FORMAT_NV12_10LE40_4L4, DRM_FORMAT_NV15, DRM_FORMAT_MOD_VIVANTE_TILED},
   {GST_VIDEO_FORMAT_P010_10LE, DRM_FORMAT_P010, DRM_FORMAT_MOD_LINEAR},
   {GST_VIDEO_FORMAT_P012_LE, DRM_FORMAT_P012, DRM_FORMAT_MOD_LINEAR},
   {GST_VIDEO_FORMAT_BGR10A2_LE, DRM_FORMAT_ARGB2101010, DRM_FORMAT_MOD_LINEAR},
