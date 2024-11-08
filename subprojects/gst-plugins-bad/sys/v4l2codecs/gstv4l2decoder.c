@@ -448,7 +448,9 @@ gst_v4l2_decoder_probe_caps_for_format (GstV4l2Decoder * self,
   caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
       gst_video_format_to_string (format), NULL);
 
-  size_caps = gst_caps_new_empty ();
+  size_caps = gst_caps_new_simple ("video/x-raw",
+      "width", G_TYPE_INT, unscaled_width,
+      "height", G_TYPE_INT, unscaled_height, NULL);
   while ((tmp = gst_v4l2_decoder_enum_size_for_format (self, pixelformat,
               index++, unscaled_width, unscaled_height))) {
     size_caps = gst_caps_merge (size_caps, tmp);
