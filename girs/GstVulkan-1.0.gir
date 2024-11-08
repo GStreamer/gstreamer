@@ -4150,6 +4150,23 @@ If a specific version is requested, the @patch level is ignored.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="create_device_with_index" c:identifier="gst_vulkan_instance_create_device_with_index" version="1.26" throws="1">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">a new #GstVulkanDevice</doc>
+          <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">a #GstVulkanInstance</doc>
+            <type name="VulkanInstance" c:type="GstVulkanInstance*"/>
+          </instance-parameter>
+          <parameter name="device_index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">the device index to create the new #GstVulkanDevice from</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="disable_extension" c:identifier="gst_vulkan_instance_disable_extension" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">Disable an Vulkan extension by @name.  Disabling an extension will only have
 an effect before the call to gst_vulkan_instance_open().</doc>
@@ -4404,13 +4421,19 @@ version with this function.</doc>
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
-      <glib:signal name="create-device" when="last" version="1.18">
+      <glib:signal name="create-device" when="last" version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">Overrides the #GstVulkanDevice creation mechanism.
 It can be called from any thread.</doc>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">the newly created #GstVulkanDevice.</doc>
           <type name="VulkanDevice"/>
         </return-value>
+        <parameters>
+          <parameter name="device_index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">the index of the device</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
       </glib:signal>
     </class>
     <record name="VulkanInstanceClass" c:type="GstVulkanInstanceClass" glib:is-gtype-struct-for="VulkanInstance" version="1.18">

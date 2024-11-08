@@ -253,18 +253,20 @@ gst_vulkan_instance_class_init (GstVulkanInstanceClass * klass)
 
   /**
    * GstVulkanInstance::create-device:
-   * @object: the #GstVulkanDisplay
+   * @device: the #GstVulkanDevice
+   * @device_index: the index of the device
    *
    * Overrides the #GstVulkanDevice creation mechanism.
    * It can be called from any thread.
    *
    * Returns: (transfer full): the newly created #GstVulkanDevice.
    *
-   * Since: 1.18
+   * Since: 1.26
    */
   gst_vulkan_instance_signals[SIGNAL_CREATE_DEVICE] =
       g_signal_new ("create-device", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, GST_TYPE_VULKAN_DEVICE, 0);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, GST_TYPE_VULKAN_DEVICE, 1,
+      G_TYPE_UINT);
 }
 
 static void
@@ -1103,6 +1105,39 @@ gst_vulkan_instance_get_proc_address (GstVulkanInstance * instance,
 }
 
 /**
+ * gst_vulkan_instance_create_device_with_index:
+ * @instance: a #GstVulkanInstance
+ * @device_index: the device index to create the new #GstVulkanDevice from
+ * @error: (out) (optional): a #GError
+ *
+ * Returns: (transfer full): a new #GstVulkanDevice
+ *
+ * Since: 1.26
+ */
+GstVulkanDevice *
+gst_vulkan_instance_create_device_with_index (GstVulkanInstance * instance,
+    guint device_index, GError ** error)
+{
+  GstVulkanDevice *device;
+
+  g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), NULL);
+
+  g_signal_emit (instance, gst_vulkan_instance_signals[SIGNAL_CREATE_DEVICE], 0,
+      device_index, &device);
+
+  if (!device) {
+    device = gst_vulkan_device_new_with_index (instance, device_index);
+  }
+
+  if (!gst_vulkan_device_open (device, error)) {
+    gst_object_unref (device);
+    device = NULL;
+  }
+
+  return device;
+}
+
+/**
  * gst_vulkan_instance_create_device:
  * @instance: a #GstVulkanInstance
  * @error: (out) (optional): a #GError
@@ -1115,23 +1150,7 @@ GstVulkanDevice *
 gst_vulkan_instance_create_device (GstVulkanInstance * instance,
     GError ** error)
 {
-  GstVulkanDevice *device;
-
-  g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), NULL);
-
-  g_signal_emit (instance, gst_vulkan_instance_signals[SIGNAL_CREATE_DEVICE], 0,
-      &device);
-
-  if (!device) {
-    device = gst_vulkan_device_new_with_index (instance, 0);
-  }
-
-  if (!gst_vulkan_device_open (device, error)) {
-    gst_object_unref (device);
-    device = NULL;
-  }
-
-  return device;
+  return gst_vulkan_instance_create_device_with_index (instance, 0, error);
 }
 
 /**
