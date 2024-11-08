@@ -119,6 +119,10 @@ struct _GstCoreAudio
   uint64_t anchor_hosttime_ns;
   uint32_t anchor_pend_samples;
   float rate_scalar;
+
+#ifdef HAVE_IOS
+  gboolean configure_session;
+#endif
 };
 
 struct _GstCoreAudioClass

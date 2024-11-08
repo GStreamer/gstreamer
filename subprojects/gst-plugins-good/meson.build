@@ -37,8 +37,21 @@ plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
 plugins = []
 static_build = get_option('default_library') == 'static'
 
-cc = meson.get_compiler('c')
 host_system = host_machine.system()
+
+if host_system in ['ios', 'darwin']
+  have_objc = add_languages('objc', native: false)
+  have_objcpp = add_languages('objcpp', native: false)
+
+  if not have_objc
+    error('Building on MacOS/iOS/etc requires an ObjC compiler')
+  endif
+else
+  have_objc = false
+  have_objcpp = false
+endif
+
+cc = meson.get_compiler('c')
 
 if cc.get_id() == 'msvc'
   msvc_args = [
@@ -101,6 +114,10 @@ endif
 # Symbol visibility
 if cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
+
+  if have_objc
+    add_project_arguments('-fvisibility=hidden', language: 'objc')
+  endif
 endif
 
 # Disable strict aliasing

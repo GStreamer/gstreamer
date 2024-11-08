@@ -88,6 +88,10 @@ struct _GstOsxAudioSink
   double volume;
 
   guint channels;
+
+#ifdef HAVE_IOS
+  gboolean configure_session;
+#endif
 };
 
 struct _GstOsxAudioSinkClass

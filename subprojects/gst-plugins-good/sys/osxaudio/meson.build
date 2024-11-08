@@ -22,18 +22,22 @@ if host_system == 'darwin'
   osxaudio_sources += ['gstosxaudiodeviceprovider.c']
 elif host_system == 'ios'
   have_osxaudio = cc.has_header('CoreAudio/CoreAudioTypes.h', required: osxaudio_option)
+  osxaudio_sources += ['gstiosaudiosession.m']
 endif
 
 if have_osxaudio
   modules = ['CoreAudio', 'AudioToolbox']
   if host_system == 'darwin'
     modules += ['AudioUnit', 'CoreServices']
+  elif host_system == 'ios'
+    modules += ['AVFAudio', 'Foundation']
   endif
   osxaudio_dep = dependency('appleframeworks', modules : modules)
 
   gstosxaudio = library('gstosxaudio',
     osxaudio_sources,
     c_args : gst_plugins_good_args,
+    objc_args : gst_plugins_good_args,
     include_directories : [configinc, libsinc],
     dependencies : [gstaudio_dep, gstpbutils_dep, osxaudio_dep],
     install : true,
