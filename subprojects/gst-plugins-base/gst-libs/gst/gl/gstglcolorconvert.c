@@ -1711,11 +1711,13 @@ _init_supported_formats (GstGLContext * context, gboolean output,
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
     _append_value_string_list (supported_formats, "A420_10LE", "A422_10LE",
         "A444_10LE", "A444_12LE", "A422_12LE", "A420_12LE", "A444_16LE",
-        "A422_16LE", "A420_16LE", "I420_12LE", "I420_10LE", NULL);
+        "A422_16LE", "A420_16LE", "I420_12LE", "I420_10LE", "Y444_10LE",
+        "Y444_16LE", NULL);
 #else
     _append_value_string_list (supported_formats, "A420_10BE", "A422_10BE",
         "A444_10BE", "A444_12BE", "A422_12BE", "A420_12BE", "A444_16BE",
-        "A422_16BE", "A420_16BE", "I420_12BE", "I420_10BE", NULL);
+        "A422_16BE", "A420_16BE", "I420_12BE", "I420_10BE", "Y444_10BE",
+        "Y444_16BE", NULL);
 #endif
   }
 
@@ -1752,13 +1754,13 @@ gst_gl_color_convert_caps_transform_format_info (GstGLContext * context,
       "xRGB", "BGRx", "xBGR", "RGB", "BGR", "ARGB64", "BGR10A2_LE",
       "RGB10A2_LE", "RGBA64_LE", "RGBA64_BE", "RBGA", "GBRA", "GBR",
       "RGBP", "BGRP", "RGB16", "BGR16", NULL);
-  _init_value_string_list (&planar_yuv_formats, "Y444", "I420", "Y42B", "Y41B",
-      "A420", "A444", "A422", "A420_10LE", "A422_10LE", "A444_10LE",
-      "A444_12LE", "A422_12LE", "A420_12LE", "A444_16LE", "A422_16LE",
-      "A420_16LE", "I420_12LE", "I420_10LE", "A420_10BE", "A422_10BE",
-      "A444_10BE", "A444_12BE", "A422_12BE", "A420_12BE", "A444_16BE",
-      "A422_16BE", "A420_16BE", "I420_12BE", "I420_10BE", "v210", "UYVY",
-      "YUY2", NULL);
+  _init_value_string_list (&planar_yuv_formats, "Y444", "Y444_10LE",
+      "Y444_16LE", "Y444_10BE", "Y444_16BE", "I420", "Y42B", "Y41B", "A420",
+      "A444", "A422", "A420_10LE", "A422_10LE", "A444_10LE", "A444_12LE",
+      "A422_12LE", "A420_12LE", "A444_16LE", "A422_16LE", "A420_16LE",
+      "I420_12LE", "I420_10LE", "A420_10BE", "A422_10BE", "A444_10BE",
+      "A444_12BE", "A422_12BE", "A420_12BE", "A444_16BE", "A422_16BE",
+      "A420_16BE", "I420_12BE", "I420_10BE", "v210", "UYVY", "YUY2", NULL);
   _init_supported_formats (context, output, &supported_formats);
   gst_value_intersect (&supported_rgb_formats, &rgb_formats,
       &supported_formats);
