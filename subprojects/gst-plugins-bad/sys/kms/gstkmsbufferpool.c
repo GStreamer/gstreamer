@@ -29,6 +29,8 @@
 
 #include <gst/video/gstvideometa.h>
 
+#include <drm_fourcc.h>
+
 #include "gstkmsbufferpool.h"
 #include "gstkmsallocator.h"
 
@@ -66,7 +68,7 @@ gst_kms_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstKMSBufferPool *vpool;
   GstKMSBufferPoolPrivate *priv;
   GstCaps *caps;
-  GstVideoInfo vinfo;
+  GstVideoInfoDmaDrm dma_drm;
   GstAllocator *allocator;
   GstAllocationParams params;
 
@@ -79,8 +81,17 @@ gst_kms_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (!caps)
     goto no_caps;
 
+  gst_video_info_dma_drm_init (&dma_drm);
+
   /* now parse the caps from the config */
-  if (!gst_video_info_from_caps (&vinfo, caps))
+  if (gst_video_is_dma_drm_caps (caps)) {
+    if (!gst_video_info_dma_drm_from_caps (&dma_drm, caps))
+      goto wrong_caps;
+
+    if (dma_drm.drm_modifier != DRM_FORMAT_MOD_LINEAR)
+      goto wrong_modifier;
+
+  } else if (!gst_video_info_from_caps (&dma_drm.vinfo, caps))
     goto wrong_caps;
 
   allocator = NULL;
@@ -95,7 +106,7 @@ gst_kms_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (!priv->allocator)
     goto no_allocator;
 
-  priv->vinfo = vinfo;
+  priv->vinfo = dma_drm.vinfo;
 
   /* enable metadata based on config of the pool */
   priv->add_videometa = gst_buffer_pool_config_has_option (config,
@@ -120,6 +131,18 @@ wrong_caps:
   {
     GST_WARNING_OBJECT (pool,
         "failed getting geometry from caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+wrong_modifier:
+  {
+    gchar *drmfmtstr = gst_video_dma_drm_fourcc_to_string (dma_drm.drm_fourcc,
+        dma_drm.drm_modifier);
+
+    GST_WARNING_OBJECT (pool,
+        "dumb allocator can't allocate nonlinear format %s", drmfmtstr);
+
+    g_clear_pointer (&drmfmtstr, g_free);
+
     return FALSE;
   }
 no_allocator:
