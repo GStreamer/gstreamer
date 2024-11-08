@@ -38,6 +38,21 @@ typedef union _GstVulkanEncoderParameters GstVulkanEncoderParameters;
 typedef union _GstVulkanEncoderParametersOverrides GstVulkanEncoderParametersOverrides;
 typedef union _GstVulkanEncoderParametersFeedback GstVulkanEncoderParametersFeedback;
 typedef struct _GstVulkanEncoderPicture GstVulkanEncoderPicture;
+typedef struct _GstVulkaneEncoderCallbacks GstVulkanEncoderCallbacks;
+
+/**
+ * GstVulkaneEncoderCallbacks:
+ * @setup_codec_pic: Called after VkVideoEncodeInfoKHR and
+ *     VkVideoReferenceSlotInfoKHR are filled so they can be chained with the
+ *     specific codec structures. Called in gst_vulkan_encoder_encode().
+ *
+ * See gst_vulkan_encoder_set_callbacks()
+ */
+struct _GstVulkaneEncoderCallbacks
+{
+  void (*setup_codec_pic) (GstVulkanEncoderPicture * pic,
+      VkVideoEncodeInfoKHR * info, gpointer data);
+};
 
 /**
  * GstVulkanEncoderPicture:
@@ -66,8 +81,6 @@ struct _GstVulkanEncoderPicture
   VkVideoReferenceSlotInfoKHR dpb_slot;
 
   gpointer codec_rc_info;
-  gpointer codec_pic_info;
-  gpointer codec_dpb_slot_info;
 };
 
 /**
@@ -137,6 +150,12 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanEncoder, gst_object_unref)
 GST_VULKAN_API
 GstVulkanEncoder *      gst_vulkan_encoder_create_from_queue    (GstVulkanQueue * queue,
                                                                  guint codec);
+
+GST_VULKAN_API
+void                    gst_vulkan_encoder_set_callbacks        (GstVulkanEncoder * self,
+                                                                 GstVulkanEncoderCallbacks * callbacks,
+                                                                 gpointer user_data,
+                                                                 GDestroyNotify notify);
 
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_start                (GstVulkanEncoder * self,

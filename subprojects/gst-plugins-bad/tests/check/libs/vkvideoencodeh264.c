@@ -369,9 +369,41 @@ allocate_frame (GstVulkanEncoder * enc, int width,
   return frame;
 }
 
-#define PICTURE_TYPE(slice_type, is_ref)                                \
-    (slice_type == STD_VIDEO_H264_SLICE_TYPE_I && is_ref) ?    \
-    STD_VIDEO_H264_PICTURE_TYPE_IDR : (StdVideoH264PictureType) slice_type
+#define PICTURE_TYPE(slice_type, is_ref)                                       \
+  (slice_type == STD_VIDEO_H264_SLICE_TYPE_I && is_ref)                        \
+      ? STD_VIDEO_H264_PICTURE_TYPE_IDR                                        \
+      : (StdVideoH264PictureType)slice_type
+
+static void
+setup_codec_pic (GstVulkanEncoderPicture * pic, VkVideoEncodeInfoKHR * info,
+    gpointer data)
+{
+  GstVulkanH264EncodeFrame *frame = (GstVulkanH264EncodeFrame *) pic;
+  GstVulkanVideoCapabilities *enc_caps = data;
+
+  info->pNext = &frame->enc_pic_info;
+  pic->dpb_slot.pNext = &frame->dpb_slot_info;
+
+  {
+    /* *INDENT-OFF* */
+    frame->enc_pic_info = (VkVideoEncodeH264PictureInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PICTURE_INFO_KHR,
+      .pNext = NULL,
+      .naluSliceEntryCount = 1,
+      .pNaluSliceEntries = &frame->slice_info,
+      .pStdPictureInfo = &frame->pic_info,
+      .generatePrefixNalu =
+          (enc_caps->encoder.codec.h264.flags
+           & VK_VIDEO_ENCODE_H264_CAPABILITY_GENERATE_PREFIX_NALU_BIT_KHR),
+    };
+    frame->dpb_slot_info = (VkVideoEncodeH264DpbSlotInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_DPB_SLOT_INFO_KHR,
+      .pNext = NULL,
+      .pStdReferenceInfo = &frame->ref_info,
+    };
+    /* *INDENT-ON* */
+  }
+}
 
 static void
 encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
@@ -383,10 +415,13 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
   int i, ref_pics_num = 0;
   GstVulkanEncoderPicture *ref_pics[16] = { NULL, };
   GstVulkanEncoderPicture *picture = &frame->picture;
+  GstVulkanEncoderCallbacks cb = { setup_codec_pic };
 
   GST_DEBUG ("Encoding frame num:%d", frame_num);
 
   fail_unless (gst_vulkan_encoder_caps (enc, &enc_caps));
+
+  gst_vulkan_encoder_set_callbacks (enc, &cb, &enc_caps, NULL);
 
   frame->slice_hdr = (StdVideoEncodeH264SliceHeader) {
     /* *INDENT-OFF* */
@@ -462,16 +497,6 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_INFO_KHR,
   };
 
-  frame->enc_pic_info = (VkVideoEncodeH264PictureInfoKHR) {
-    .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PICTURE_INFO_KHR,
-    .pNext = NULL,
-    .naluSliceEntryCount = 1,
-    .pNaluSliceEntries = &frame->slice_info,
-    .pStdPictureInfo = &frame->pic_info,
-    .generatePrefixNalu = (enc_caps.encoder.codec.h264.flags
-         & VK_VIDEO_ENCODE_H264_CAPABILITY_GENERATE_PREFIX_NALU_BIT_KHR),
-  };
-
   frame->ref_info = (StdVideoEncodeH264ReferenceInfo) {
     .flags = {
       .used_for_long_term_reference = 0,
@@ -483,17 +508,9 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
     .long_term_frame_idx = 0,
     .temporal_id = 0,
   };
-
-  frame->dpb_slot_info = (VkVideoEncodeH264DpbSlotInfoKHR) {
-    .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_DPB_SLOT_INFO_KHR,
-    .pNext = NULL,
-    .pStdReferenceInfo = &frame->ref_info,
-  };
   /* *INDENT-ON* */
 
-  picture->codec_pic_info = &frame->enc_pic_info;
   picture->codec_rc_info = &frame->rc_info;
-  picture->codec_dpb_slot_info = &frame->dpb_slot_info;
 
   for (i = 0; i < list0_num; i++) {
     ref_pics[i] = &list0[i]->picture;

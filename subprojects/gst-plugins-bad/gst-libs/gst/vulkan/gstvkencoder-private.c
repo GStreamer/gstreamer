@@ -37,6 +37,10 @@ struct _GstVulkanEncoderPrivate
 
   GstCaps *profile_caps;
 
+  GstVulkanEncoderCallbacks callbacks;
+  gpointer callbacks_user_data;
+  GDestroyNotify callbacks_notify;
+
   GstVulkanOperation *exec;
 
   GstVulkanVideoSession session;
@@ -106,6 +110,14 @@ static void
 gst_vulkan_encoder_finalize (GObject * object)
 {
   GstVulkanEncoder *self = GST_VULKAN_ENCODER (object);
+  GstVulkanEncoderPrivate *priv =
+      gst_vulkan_encoder_get_instance_private (self);
+
+  if (priv->callbacks_user_data && priv->callbacks_notify) {
+    priv->callbacks_notify (priv->callbacks_user_data);
+    priv->callbacks_user_data = NULL;
+    priv->callbacks_notify = NULL;
+  }
 
   gst_clear_object (&self->queue);
 
@@ -1066,7 +1078,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   };
   pic->dpb_slot = (VkVideoReferenceSlotInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_REFERENCE_SLOT_INFO_KHR,
-    .pNext = pic->codec_dpb_slot_info,
+    .pNext = NULL, /* to fill in callback */
     .slotIndex = slot_index,
     .pPictureResource = &pic->dpb,
   };
@@ -1110,7 +1122,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   /* *INDENT-OFF* */
   encode_info = (VkVideoEncodeInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_INFO_KHR,
-    .pNext = pic->codec_pic_info,
+    .pNext = NULL, /* to fill in callback */
     .flags = 0x0,
     .dstBuffer = ((GstVulkanBufferMemory *) mem)->buffer,
     .dstBufferOffset = pic->offset,
@@ -1136,6 +1148,10 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   encode_info.dstBufferRange -= encode_info.dstBufferOffset;
   encode_info.dstBufferRange = GST_ROUND_DOWN_N (encode_info.dstBufferRange,
       priv->caps.caps.minBitstreamBufferSizeAlignment);
+
+  g_assert (priv->callbacks.setup_codec_pic);
+  priv->callbacks.setup_codec_pic (pic, &encode_info,
+      priv->callbacks_user_data);
 
   gst_vulkan_operation_add_dependency_frame (priv->exec, pic->in_buffer,
       VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
@@ -1276,4 +1292,22 @@ gst_vulkan_encoder_create_from_queue (GstVulkanQueue * queue, guint codec)
   encoder->codec = codec;
 
   return encoder;
+}
+
+void
+gst_vulkan_encoder_set_callbacks (GstVulkanEncoder * self,
+    GstVulkanEncoderCallbacks * callbacks, gpointer user_data,
+    GDestroyNotify notify)
+{
+  GstVulkanEncoderPrivate *priv;
+
+  g_return_if_fail (GST_IS_VULKAN_ENCODER (self) && callbacks);
+
+  priv = gst_vulkan_encoder_get_instance_private (self);
+
+  priv->callbacks = *callbacks;
+  if (priv->callbacks_user_data && priv->callbacks_notify)
+    priv->callbacks_notify (priv->callbacks_user_data);
+  priv->callbacks_user_data = user_data;
+  priv->callbacks_notify = notify;
 }
