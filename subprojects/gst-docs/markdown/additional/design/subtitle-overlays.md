@@ -169,7 +169,7 @@ Multiple possible solutions come to mind:
     property in the sink when doing screenshots via playbin) always
     contain all the information needed.
 
-4)  create a video/x-raw-\*-delta format and use a backend-specific
+4)  create a video/x-raw-delta format and use a backend-specific
     videomixer
     
     This possibility was hinted at already in the digression in section

@@ -76,7 +76,7 @@ produces buffers with the “ANY” caps and no time-stamping information.
 After demuxing (see [](tutorials/basic/dynamic-pipelines.md))
 buffers can have some specific caps, for example “video/x-h264”. After
 decoding, each buffer will contain a single video frame with raw caps
-(for example, “video/x-raw-yuv”) and very precise time stamps indicating
+(“video/x-raw,format=...”) and very precise time stamps indicating
 when should that frame be displayed.
 
 ### This tutorial
