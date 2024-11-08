@@ -122,7 +122,11 @@ gst_core_audio_io_proc_start (GstCoreAudio * core_audio)
 
   core_audio->io_proc_needs_deactivation = FALSE;
 
+  // AudioOutputUnitStart on iOS can wait for the render callback to finish,
+  // where in our case we set the ringbuffer timestamp, which also needs the ringbuf lock.
+  GST_OBJECT_UNLOCK (core_audio->osxbuf);
   status = AudioOutputUnitStart (core_audio->audiounit);
+  GST_OBJECT_LOCK (core_audio->osxbuf);
   if (status) {
     GST_ERROR_OBJECT (core_audio->osxbuf, "AudioOutputUnitStart failed: %d",
         (int) status);
