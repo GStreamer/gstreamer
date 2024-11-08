@@ -406,6 +406,29 @@ setup_codec_pic (GstVulkanEncoderPicture * pic, VkVideoEncodeInfoKHR * info,
 }
 
 static void
+setup_rc_codec (GstVulkanEncoderPicture * pic,
+    VkVideoEncodeRateControlInfoKHR * rc_info,
+    VkVideoEncodeRateControlLayerInfoKHR * rc_layer, gpointer data)
+{
+  GstVulkanH264EncodeFrame *frame = (GstVulkanH264EncodeFrame *) pic;
+
+  /* *INDENT-OFF* */
+  frame->rc_info = (VkVideoEncodeH264RateControlInfoKHR) {
+    .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_INFO_KHR,
+    .flags = VK_VIDEO_ENCODE_H264_RATE_CONTROL_REFERENCE_PATTERN_FLAT_BIT_KHR |
+        VK_VIDEO_ENCODE_H264_RATE_CONTROL_REGULAR_GOP_BIT_KHR,
+    .pNext = NULL,
+    .gopFrameCount = 1,
+    .idrPeriod = 1,
+    .consecutiveBFrameCount = 0,
+    .temporalLayerCount = 0,
+  };
+  /* *INDENT-ON* */
+
+  rc_info->pNext = &frame->rc_info;
+}
+
+static void
 encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
     StdVideoH264SliceType slice_type, guint frame_num,
     GstVulkanH264EncodeFrame ** list0, gint list0_num,
@@ -415,7 +438,7 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
   int i, ref_pics_num = 0;
   GstVulkanEncoderPicture *ref_pics[16] = { NULL, };
   GstVulkanEncoderPicture *picture = &frame->picture;
-  GstVulkanEncoderCallbacks cb = { setup_codec_pic };
+  GstVulkanEncoderCallbacks cb = { setup_codec_pic, setup_rc_codec };
 
   GST_DEBUG ("Encoding frame num:%d", frame_num);
 

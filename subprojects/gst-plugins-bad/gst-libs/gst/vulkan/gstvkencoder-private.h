@@ -45,6 +45,10 @@ typedef struct _GstVulkaneEncoderCallbacks GstVulkanEncoderCallbacks;
  * @setup_codec_pic: Called after VkVideoEncodeInfoKHR and
  *     VkVideoReferenceSlotInfoKHR are filled so they can be chained with the
  *     specific codec structures. Called in gst_vulkan_encoder_encode().
+ * @setup_rc_pic: Called after VkVideoEncodeRateControlInfoKHR and
+ *     VkVideoEncodeRateControlLayerInfoKHR are filled so they can be chained
+ *     with the specific codec structures. Called in
+ *     gst_vulkan_encoder_encode().
  *
  * See gst_vulkan_encoder_set_callbacks()
  */
@@ -52,6 +56,9 @@ struct _GstVulkaneEncoderCallbacks
 {
   void (*setup_codec_pic) (GstVulkanEncoderPicture * pic,
       VkVideoEncodeInfoKHR * info, gpointer data);
+  void (*setup_rc_pic) (GstVulkanEncoderPicture * pic,
+      VkVideoEncodeRateControlInfoKHR * info,
+      VkVideoEncodeRateControlLayerInfoKHR * layer, gpointer data);
 };
 
 /**
@@ -156,6 +163,9 @@ void                    gst_vulkan_encoder_set_callbacks        (GstVulkanEncode
                                                                  GstVulkanEncoderCallbacks * callbacks,
                                                                  gpointer user_data,
                                                                  GDestroyNotify notify);
+GST_VULKAN_API
+void                    gst_vulkan_encoder_set_rc_mode          (GstVulkanEncoder * self,
+                                                                 VkVideoEncodeRateControlModeFlagBitsKHR rc_mode);
 
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_start                (GstVulkanEncoder * self,
