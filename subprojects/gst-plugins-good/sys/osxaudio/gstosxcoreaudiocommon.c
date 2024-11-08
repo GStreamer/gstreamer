@@ -31,14 +31,18 @@ gst_core_audio_remove_render_callback (GstCoreAudio * core_audio)
 {
   AURenderCallbackStruct input;
   OSStatus status;
+  AudioUnitPropertyID callback_type;
 
   /* Deactivate the render callback by calling SetRenderCallback
    * with a NULL inputProc.
    */
   input.inputProc = NULL;
   input.inputProcRefCon = NULL;
+  callback_type = core_audio->is_src ?
+      kAudioOutputUnitProperty_SetInputCallback :
+      kAudioUnitProperty_SetRenderCallback;
 
-  status = AudioUnitSetProperty (core_audio->audiounit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Global, 0,        /* N/A for global */
+  status = AudioUnitSetProperty (core_audio->audiounit, callback_type, kAudioUnitScope_Global, 0,       /* N/A for global */
       &input, sizeof (input));
 
   if (status) {
