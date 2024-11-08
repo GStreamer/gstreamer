@@ -121,6 +121,7 @@ struct _GstCoreAudio
   float rate_scalar;
 
 #ifdef HAVE_IOS
+  gdouble first_sample_time;
   gboolean configure_session;
 #endif
 };

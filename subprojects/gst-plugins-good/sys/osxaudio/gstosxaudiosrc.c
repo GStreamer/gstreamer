@@ -274,6 +274,13 @@ gst_osx_audio_src_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_UNLOCK (osxsrc);
       break;
     }
+#ifdef HAVE_IOS
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      ringbuffer =
+          GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SRC (osxsrc)->ringbuffer);
+      ringbuffer->core_audio->first_sample_time = -1;
+      break;
+#endif
     default:
       break;
   }
@@ -435,6 +442,17 @@ gst_osx_audio_src_io_proc (GstOsxAudioRingBuffer * buf,
 
   remaining = buf->core_audio->recBufferList->mBuffers[0].mDataByteSize;
   sample_position = inTimeStamp->mSampleTime;
+
+#ifdef HAVE_IOS
+  /* Timestamps don't always start from 0 on iOS, have to offset */
+  if (buf->core_audio->first_sample_time == -1) {
+    GST_ERROR ("Setting first CoreAudio timestamp to %f",
+        inTimeStamp->mSampleTime);
+    buf->core_audio->first_sample_time = inTimeStamp->mSampleTime;
+  }
+
+  sample_position -= buf->core_audio->first_sample_time;
+#endif
 
   while (remaining) {
     if (!gst_audio_ring_buffer_prepare_read (GST_AUDIO_RING_BUFFER (buf),
