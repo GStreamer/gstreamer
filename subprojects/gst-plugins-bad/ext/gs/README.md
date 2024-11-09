@@ -32,7 +32,7 @@ cd ..
 
 mkdir abseil-cpp
 cd abseil-cpp
-curl -sSL https://github.com/abseil/abseil-cpp/archive/20210324.2.tar.gz | \
+curl -sSL https://github.com/abseil/abseil-cpp/archive/20220623.2.tar.gz | \
     tar -xzf - --strip-components=1 && \
     sed -i 's/^#define ABSL_OPTION_USE_\(.*\) 2/#define ABSL_OPTION_USE_\1 0/' "absl/base/options.h"
 cmake -S . -B build \
@@ -52,7 +52,7 @@ curl -sSL https://github.com/nlohmann/json/archive/v3.10.4.tar.gz | \
 cmake \
       -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_SHARED_LIBS=yes \
-      -DBUILD_TESTING=OFF \
+      -DJSON_BuildTests=OFF \
       -H. -Bcmake-out/nlohmann/json && \
     cmake --build cmake-out/nlohmann/json --target install -- -j ${NCPU} && \
     ldconfig
@@ -60,7 +60,7 @@ cd ..
 
 mkdir google-cloud-cpp
 cd google-cloud-cpp
-curl -sSL https://github.com/googleapis/google-cloud-cpp/archive/v1.31.1.tar.gz | \
+curl -sSL https://github.com/googleapis/google-cloud-cpp/archive/v2.6.0.tar.gz | \
    tar --strip-components=1 -zxf -
 cmake -S . -B build \
     -GNinja \
