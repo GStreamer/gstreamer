@@ -59,7 +59,7 @@ Windows start icon > Search "environment variables" > Edit the system environmen
 
 At runtime, GStreamer will look for its plugins in the following folders:
 
-  - `%HOMEDRIVE%%HOMEFOLDER%/.gstreamer-1.0/plugins`
+  - `%HOMEDRIVE%%HOMEPATH%/.gstreamer-1.0/plugins`
   - `C:\gstreamer\1.0\x86\lib\gstreamer-1.0`
   - `<location of gstreamer-1.0-0.dll>\..\lib\gstreamer-1.0`
   - `%GST_PLUGIN_PATH%`
