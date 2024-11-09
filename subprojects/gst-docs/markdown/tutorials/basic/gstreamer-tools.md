@@ -235,11 +235,16 @@ gst-launch-1.0 souphttpsrc location=https://gstreamer.freedesktop.org/data/media
 
 A transcoding pipeline, which opens the webm container and decodes both
 streams (via uridecodebin), then re-encodes the audio and video branches
-with a different codec, and puts them back together in an Ogg container
-(just for the sake of it).
+with different codecs (H.264 + AAC), and puts them back together into an
+MP4 container (just for the sake of it). Because of the way the x264enc
+encoder behaves by default (consuming multiple seconds of video input before
+outputtingi anything), we have to increase the size of the queue in the audio
+branch to make sure the pipeline can preroll and start up. Another solution
+would be to use `x264enc tune=zerolatency` but that results in lower quality
+and is more suitable for live streaming scenarios.
 
 ```
-gst-launch-1.0 uridecodebin uri=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm name=d ! queue ! videoconvert ! theoraenc ! oggmux name=m ! filesink location=sintel.ogg d. ! queue ! audioconvert ! audioresample ! flacenc ! m.
+gst-launch-1.0 uridecodebin uri=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm name=d ! queue ! videoconvert ! x264enc ! video/x-h264,profile=high ! mp4mux name=m ! filesink location=sintel.mp4 d. ! queue max-size-time=5000000000 max-size-bytes=0 max-size-buffers=0 ! audioconvert ! audioresample ! voaacenc ! m.
 ```
 
 A rescaling pipeline. The `videoscale` element performs a rescaling
