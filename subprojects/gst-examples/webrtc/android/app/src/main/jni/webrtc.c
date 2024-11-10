@@ -288,9 +288,10 @@ send_sdp_offer (WebRTC * webrtc, GstWebRTCSessionDescription * offer)
 
 /* Offer created by our pipeline, to be sent to the peer */
 static void
-on_offer_created (GstPromise * promise, WebRTC * webrtc)
+on_offer_created (GstPromise * promise, gpointer user_data)
 {
   GstWebRTCSessionDescription *offer = NULL;
+  WebRTC *webrtc = (WebRTC *) user_data;
   const GstStructure *reply;
 
   g_assert (webrtc->app_state == PEER_CALL_NEGOTIATING);
@@ -681,18 +682,18 @@ connect_to_websocket_server_async (WebRTC * webrtc)
   SoupLogger *logger;
   SoupMessage *message;
   SoupSession *session;
-  const char *https_aliases[] = { "wss", NULL };
   const gchar *ca_certs;
+  GTlsDatabase *db;
 
   ca_certs = g_getenv ("CA_CERTIFICATES");
   g_assert (ca_certs != NULL);
   g_print ("ca-certificates %s", ca_certs);
-  session = soup_session_new_with_options (SOUP_SESSION_SSL_STRICT, FALSE,
-      //                                 SOUP_SESSION_SSL_USE_SYSTEM_CA_FILE, TRUE,
-      SOUP_SESSION_SSL_CA_FILE, ca_certs,
-      SOUP_SESSION_HTTPS_ALIASES, https_aliases, NULL);
+  session = soup_session_new_with_options (NULL);
+  db = g_tls_file_database_new (ca_certs, NULL);
+  if (db)
+    soup_session_set_tls_database (session, db);
 
-  logger = soup_logger_new (SOUP_LOGGER_LOG_BODY, -1);
+  logger = soup_logger_new (SOUP_LOGGER_LOG_BODY);
   soup_session_add_feature (session, SOUP_SESSION_FEATURE (logger));
   g_object_unref (logger);
 
@@ -701,8 +702,9 @@ connect_to_websocket_server_async (WebRTC * webrtc)
   g_print ("Connecting to server...\n");
 
   /* Once connected, we will register */
-  soup_session_websocket_connect_async (session, message, NULL, NULL, NULL,
-      (GAsyncReadyCallback) on_server_connected, webrtc);
+  soup_session_websocket_connect_async (session, message, NULL, NULL,
+      G_PRIORITY_DEFAULT, NULL, (GAsyncReadyCallback) on_server_connected,
+      webrtc);
   webrtc->app_state = SERVER_CONNECTING;
 
   return G_SOURCE_REMOVE;

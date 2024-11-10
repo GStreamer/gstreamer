@@ -39,7 +39,7 @@ GSTREAMER_PLUGINS         := $(GSTREAMER_PLUGINS_CORE_CUSTOM) $(GSTREAMER_PLUGIN
                              $(GSTREAMER_PLUGINS_SYS) \
                              $(GSTREAMER_PLUGINS_PLAYBACK)
 
-GSTREAMER_EXTRA_DEPS      := gstreamer-webrtc-1.0 gstreamer-sdp-1.0 gstreamer-video-1.0 libsoup-2.4 json-glib-1.0 glib-2.0
+GSTREAMER_EXTRA_DEPS      := gstreamer-webrtc-1.0 gstreamer-sdp-1.0 gstreamer-video-1.0 libsoup-3.0 json-glib-1.0 glib-2.0
 GSTREAMER_EXTRA_LIBS      := -liconv
 
 G_IO_MODULES = openssl
