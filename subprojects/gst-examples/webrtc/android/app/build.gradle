@@ -12,7 +12,7 @@ android {
         archivesBaseName = "$applicationId-v$versionCode"
 
         externalNativeBuild {
-            ndkBuild {
+            cmake {
                 def gstRoot
 
                 if (project.hasProperty('gstAndroidRoot'))
@@ -23,7 +23,7 @@ android {
                 if (gstRoot == null)
                     throw new GradleException('GSTREAMER_ROOT_ANDROID must be set, or "gstAndroidRoot" must be defined in your gradle.properties in the top level directory of the unpacked universal GStreamer Android binaries')
 
-                arguments "NDK_APPLICATION_MK=src/main/jni/Application.mk", "GSTREAMER_JAVA_SRC_DIR=src/main/java", "GSTREAMER_ROOT_ANDROID=$gstRoot", "GSTREAMER_ASSETS_DIR=src/main/assets", "V=1"
+                arguments "-DCMAKE_BUILD_TYPE=Release", "-DANDROID_STL=c++_shared", "-DGStreamer_JAVA_SRC_DIR=java", "-DGSTREAMER_ROOT_ANDROID=$gstRoot", "-DGStreamer_ASSETS_DIR=assets"
 
                 targets "gstwebrtc"
 
@@ -41,8 +41,8 @@ android {
     }
 
     externalNativeBuild {
-        ndkBuild {
-            path 'src/main/jni/Android.mk'
+        cmake {
+            path 'src/main/jni/CMakeLists.txt'
         }
     }
 

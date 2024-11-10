@@ -12,7 +12,7 @@ android {
         archivesBaseName = "$applicationId-v$versionCode"
 
         externalNativeBuild {
-            ndkBuild {
+            cmake {
                 def gstRoot
 
                 if (project.hasProperty('gstAndroidRoot'))
@@ -23,12 +23,12 @@ android {
                 if (gstRoot == null)
                     throw new GradleException('GSTREAMER_ROOT_ANDROID must be set, or "gstAndroidRoot" must be defined in your gradle.properties in the top level directory of the unpacked universal GStreamer Android binaries')
 
-                arguments "NDK_APPLICATION_MK=jni/Application.mk", "GSTREAMER_JAVA_SRC_DIR=src", "GSTREAMER_ROOT_ANDROID=$gstRoot", "GSTREAMER_ASSETS_DIR=src/assets"
+                arguments "-DCMAKE_BUILD_TYPE=Release", "-DANDROID_STL=c++_shared", "-DGSTREAMER_ROOT_ANDROID=$gstRoot"
 
                 targets "vulkan-1"
 
                 // All archs except MIPS and MIPS64 are supported
-                abiFilters  'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
             }
         }
     }
@@ -52,11 +52,11 @@ android {
     }
 
     externalNativeBuild {
-        ndkBuild {
-            path 'jni/Android.mk'
+        cmake {
+            path 'jni/CMakeLists.txt'
         }
     }
-  ndkVersion '25.2.9519653'
+    ndkVersion '25.2.9519653'
 }
 
 afterEvaluate {
