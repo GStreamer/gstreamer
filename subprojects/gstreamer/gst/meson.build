@@ -257,7 +257,9 @@ if not tracer_hooks
 endif
 
 if get_option('gstreamer-static-full')
-  libgst_c_args += ['-DGST_FULL_STATIC_COMPILATION']
+  libgst_static_c_args = ['-DGST_FULL_STATIC_COMPILATION']
+else
+  libgst_static_c_args = []
 endif
 
 # Make sure that subproject building gir files work
@@ -269,6 +271,7 @@ libgst = library('gstreamer-1.0', gst_sources,
   soversion : soversion,
   darwin_versions : osxversion,
   c_args : libgst_c_args + ['-DBUILDING_GST'],
+  c_static_args : libgst_static_c_args,
   include_directories : [configinc,
     # HACK, change include paths in .y and .l in final version.
     include_directories('parse')],
