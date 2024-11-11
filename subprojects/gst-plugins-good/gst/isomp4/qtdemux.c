@@ -15500,6 +15500,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
        */
     case GST_MAKE_FOURCC ('m', 'p', 'e', 'g'):
     case GST_MAKE_FOURCC ('m', 'p', 'g', '1'):
+    case GST_MAKE_FOURCC ('m', '1', 'v', ' '):
       _codec ("MPEG-1 video");
       caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
