@@ -23,7 +23,7 @@
 #endif
 
 #include "gsth264bitwriter.h"
-#include <gst/codecparsers/nalutils.h>
+#include "nalutils.h"
 #include <gst/base/gstbitwriter.h>
 
 #ifndef GST_DISABLE_GST_DEBUG

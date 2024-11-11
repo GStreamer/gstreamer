@@ -23,7 +23,7 @@
 #endif
 
 #include "gsth265bitwriter.h"
-#include <gst/codecparsers/nalutils.h>
+#include "nalutils.h"
 #include <gst/base/gstbitwriter.h>
 #include <math.h>
 
