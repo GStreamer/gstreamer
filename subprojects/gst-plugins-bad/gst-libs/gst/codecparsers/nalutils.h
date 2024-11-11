@@ -38,7 +38,6 @@
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbitreader.h>
 #include <gst/base/gstbitwriter.h>
-#include <string.h>
 
 typedef struct
 {

@@ -30,10 +30,8 @@
 #include "config.h"
 #endif
 
-#include <string.h>
-#include <stdlib.h>
-#include <gst/base/gstbytereader.h>
 #include "gstjpegparser.h"
+#include <gst/base/gstbytereader.h>
 
 #ifndef GST_DISABLE_GST_DEBUG
 

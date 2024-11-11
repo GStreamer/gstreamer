@@ -36,8 +36,6 @@
 #endif
 
 #include "nalutils.h"
-#include <string.h>
-
 
 /****** Nal parser ******/
 

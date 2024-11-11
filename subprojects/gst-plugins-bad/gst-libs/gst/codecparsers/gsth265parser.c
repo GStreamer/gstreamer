@@ -69,7 +69,6 @@
 
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbitreader.h>
-#include <string.h>
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_h265_debug_category_get()
