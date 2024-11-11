@@ -22233,7 +22233,7 @@ lifetime of the process, e.g. has to be a static string.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstidstr.c">Sets @s to the string @value of length @len. @value needs to be valid for the
 remaining lifetime of the process, e.g. has to be a static string.
 
-@value does not have to be NUL-terminated and @len should not include the
+@value must be NUL-terminated and @len should not include the
 NUL-terminator.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstidstr.h"/>
         <return-value transfer-ownership="none">

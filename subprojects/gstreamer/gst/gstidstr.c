@@ -158,7 +158,7 @@ gst_id_str_set_static_str (GstIdStr * s, const gchar * value)
  * Sets @s to the string @value of length @len. @value needs to be valid for the
  * remaining lifetime of the process, e.g. has to be a static string.
  *
- * @value does not have to be NUL-terminated and @len should not include the
+ * @value must be NUL-terminated and @len should not include the
  * NUL-terminator.
  *
  * Since: 1.26
