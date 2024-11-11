@@ -143,6 +143,8 @@ struct GstD3D12SwapChainSinkPrivate
     gst_clear_object (&comp);
     gst_clear_object (&ca_pool);
     gst_clear_object (&fence_data_pool);
+    gst_clear_buffer (&msaa_buf);
+    backbuf.clear ();
 
     auto iter = color_balance_channels;
     while (iter) {
@@ -163,9 +165,7 @@ struct GstD3D12SwapChainSinkPrivate
     }
     gst_clear_caps (&caps);
     gst_clear_buffer (&cached_buf);
-    gst_clear_buffer (&msaa_buf);
     gst_clear_object (&conv);
-    backbuf.clear ();
     convert_format = GST_VIDEO_FORMAT_UNKNOWN;
     caps_updated = false;
     first_present = true;
