@@ -25,7 +25,6 @@
 #include "gsth265bitwriter.h"
 #include "nalutils.h"
 #include <gst/base/gstbitwriter.h>
-#include <math.h>
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_h265_debug_category_get()
@@ -1566,10 +1565,8 @@ _h265_bit_writer_slice_header (const GstH265SliceHdr * slice,
     CtbLog2SizeY =
         MinCbLog2SizeY + sps->log2_diff_max_min_luma_coding_block_size;
     CtbSizeY = 1 << CtbLog2SizeY;
-    PicHeightInCtbsY =
-        ceil ((gdouble) sps->pic_height_in_luma_samples / (gdouble) CtbSizeY);
-    PicWidthInCtbsY =
-        ceil ((gdouble) sps->pic_width_in_luma_samples / (gdouble) CtbSizeY);
+    PicHeightInCtbsY = div_ceil (sps->pic_height_in_luma_samples, CtbSizeY);
+    PicWidthInCtbsY = div_ceil (sps->pic_width_in_luma_samples, CtbSizeY);
     PicSizeInCtbsY = PicWidthInCtbsY * PicHeightInCtbsY;
 
     n = gst_util_ceil_log2 (PicSizeInCtbsY);

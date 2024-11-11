@@ -58,7 +58,7 @@ gstcodecparsers = library('gstcodecparsers-' + api_version,
   soversion : soversion,
   darwin_versions : osxversion,
   install : true,
-  dependencies : [gstbase_dep, libm],
+  dependencies : [gstbase_dep],
 )
 
 pkg_name = 'gstreamer-codecparsers-1.0'

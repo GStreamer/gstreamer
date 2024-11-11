@@ -70,7 +70,6 @@
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbitreader.h>
 #include <string.h>
-#include <math.h>
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_h265_debug_category_get()
@@ -1180,7 +1179,7 @@ gst_h265_parser_parse_recovery_point (GstH265Parser * parser,
     goto error;
   }
 
-  max_pic_order_cnt_lsb = pow (2, (sps->log2_max_pic_order_cnt_lsb_minus4 + 4));
+  max_pic_order_cnt_lsb = 1 << (sps->log2_max_pic_order_cnt_lsb_minus4 + 4);
   READ_SE_ALLOWED (nr, rp->recovery_poc_cnt, -max_pic_order_cnt_lsb / 2,
       max_pic_order_cnt_lsb - 1);
   READ_UINT8 (nr, rp->exact_match_flag, 1);
@@ -2375,9 +2374,8 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
         MinCbLog2SizeY + sps->log2_diff_max_min_luma_coding_block_size;
     CtbSizeY = 1 << CtbLog2SizeY;
     pps->PicHeightInCtbsY =
-        ceil ((gdouble) sps->pic_height_in_luma_samples / (gdouble) CtbSizeY);
-    pps->PicWidthInCtbsY =
-        ceil ((gdouble) sps->pic_width_in_luma_samples / (gdouble) CtbSizeY);
+        div_ceil (sps->pic_height_in_luma_samples, CtbSizeY);
+    pps->PicWidthInCtbsY = div_ceil (sps->pic_width_in_luma_samples, CtbSizeY);
 
     READ_UE_ALLOWED (&nr,
         pps->num_tile_columns_minus1, 0, pps->PicWidthInCtbsY - 1);
@@ -2698,10 +2696,8 @@ gst_h265_parser_fill_pps (GstH265Parser * parser, GstH265PPS * pps)
   MinCbLog2SizeY = sps->log2_min_luma_coding_block_size_minus3 + 3;
   CtbLog2SizeY = MinCbLog2SizeY + sps->log2_diff_max_min_luma_coding_block_size;
   CtbSizeY = 1 << CtbLog2SizeY;
-  pps->PicHeightInCtbsY =
-      ceil ((gdouble) sps->pic_height_in_luma_samples / (gdouble) CtbSizeY);
-  pps->PicWidthInCtbsY =
-      ceil ((gdouble) sps->pic_width_in_luma_samples / (gdouble) CtbSizeY);
+  pps->PicHeightInCtbsY = div_ceil (sps->pic_height_in_luma_samples, CtbSizeY);
+  pps->PicWidthInCtbsY = div_ceil (sps->pic_width_in_luma_samples, CtbSizeY);
 
   if (pps->init_qp_minus26 < -(26 + qp_bd_offset))
     return GST_H265_PARSER_BROKEN_LINK;

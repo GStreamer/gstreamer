@@ -261,3 +261,10 @@ gboolean count_exp_golomb_bits (guint32 value, guint * leading_zeros, guint * re
     goto error; \
   } \
 }
+
+static inline guint32 div_ceil (guint32 a, guint32 b)
+{
+  /* http://blog.pkh.me/p/36-figuring-out-round%2C-floor-and-ceil-with-integer-division.html */
+  g_assert (b > 0);
+  return a / b + (a % b > 0);
+}
