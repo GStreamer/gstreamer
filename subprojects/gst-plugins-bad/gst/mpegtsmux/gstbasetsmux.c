@@ -945,7 +945,10 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
   }
 
   if (st == TSMUX_ST_RESERVED) {
-    GST_ERROR_OBJECT (ts_pad, "Failed to determine stream type");
+    GST_ELEMENT_ERROR (mux, STREAM, MUX,
+        ("Failed to determine stream type or mapping is not supported"),
+        ("If you're using an experimental or non-standard mapping you may have to "
+            "set the enable-custom-mappings property to TRUE."));
     goto error;
   }
 
