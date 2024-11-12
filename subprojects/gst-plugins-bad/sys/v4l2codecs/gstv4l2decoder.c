@@ -539,7 +539,7 @@ gst_v4l2_decoder_enum_src_formats_full (GstV4l2Decoder * self,
     ret = ioctl (self->video_fd, VIDIOC_ENUM_FMT, &fmtdesc);
     /* If the driver can't enumerate all the pixels formats
      * return empty caps */
-    if (enum_all && ret == -EINVAL) {
+    if (enum_all && ret < 0 && errno == EINVAL) {
       gst_caps_unref (caps);
       return gst_static_caps_get (&default_src_caps);
     }
