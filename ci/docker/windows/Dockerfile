@@ -42,7 +42,17 @@ RUN choco install -y 7zip
 # See https://gitlab.freedesktop.org/gstreamer/cerbero/-/issues/427
 RUN choco install -y python3 --version=3.11.2 --installargs 'AssociateFiles=1 PrependPath=1 Include_pip=1 Include_dev=1'
 RUN choco install -y msys2 --params '/NoPath /NoUpdate /InstallDir:C:\\msys64'
+
+# Install WiX v3
 RUN choco install --execution-timeout=3600 -y wixtoolset
+
+# Install Wix v5 (complete install, no NuGet) from MSI
+RUN Invoke-WebRequest -Uri https://download.visualstudio.microsoft.com/download/pr/78caa28b-2982-43ed-8b9c-20e3369f0795/c771e9fd12a67068436115cf295740f7/dotnet-runtime-6.0.16-win-x86.exe -OutFile C:\TEMP\dotnet-runtime-6.0.16-win-x86.exe
+RUN C:\TEMP\dotnet-runtime-6.0.16-win-x86.exe /quiet
+RUN Invoke-WebRequest -Uri https://download.visualstudio.microsoft.com/download/pr/456fdf02-f100-4664-916d-fd46c192efea/619bbd8426537632b7598b4c7c467cf1/dotnet-runtime-6.0.16-win-x64.exe -OutFile C:\TEMP\dotnet-runtime-6.0.16-win-x64.exe
+RUN C:\TEMP\dotnet-runtime-6.0.16-win-x64.exe /quiet
+RUN Invoke-WebRequest -Uri https://github.com/wixtoolset/wix/releases/download/v5.0.1/wix-cli-x64.msi -OutFile C:\TEMP\wix-cli-x64.msi
+RUN msiexec /i C:\TEMP\wix-cli-x64.msi
 
 # Remove MAX_PATH limit of 260 characters
 RUN New-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' `
