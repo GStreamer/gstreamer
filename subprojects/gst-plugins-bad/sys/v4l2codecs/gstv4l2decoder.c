@@ -437,6 +437,7 @@ gst_v4l2_decoder_probe_caps_for_format (GstV4l2Decoder * self,
   GstCaps *caps, *tmp, *size_caps;
   GstVideoFormat format;
   guint32 drm_fourcc;
+  guint64 modifier;
 
   GST_DEBUG_OBJECT (self, "enumerate size for %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (pixelformat));
@@ -462,13 +463,13 @@ gst_v4l2_decoder_probe_caps_for_format (GstV4l2Decoder * self,
   /* TODO: Add a V4L2 to DRM fourcc translator for formats that we don't support
    * in software.
    */
-  drm_fourcc = gst_video_dma_drm_fourcc_from_format (format);
+  drm_fourcc = gst_video_dma_drm_fourcc_from_format_full (format, &modifier);
   if (drm_fourcc /* != DRM_FORMAT_INVALID */ ) {
     GstCaps *drm_caps;
 
     drm_caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
         "DMA_DRM", "drm-format", G_TYPE_STRING,
-        gst_video_dma_drm_fourcc_to_string (drm_fourcc, 0), NULL);
+        gst_video_dma_drm_fourcc_to_string (drm_fourcc, modifier), NULL);
     gst_caps_set_features_simple (drm_caps,
         gst_caps_features_new_single_static_str
         (GST_CAPS_FEATURE_MEMORY_DMABUF));
@@ -684,15 +685,12 @@ gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
     return FALSE;
   }
 
+  gst_video_info_dma_drm_init (vinfo_drm);
   if (tmp_vinfo_drm.drm_fourcc) {
-    if (!gst_video_info_dma_drm_from_video_info (vinfo_drm, vinfo, 0)) {
-      GST_ERROR_OBJECT (self,
-          "Unsupported V4L2 pixelformat for DRM %" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (fmt.fmt.pix_mp.pixelformat));
-      return FALSE;
-    }
-  } else {
-    gst_video_info_dma_drm_init (vinfo_drm);
+    GstVideoFormat format = GST_VIDEO_INFO_FORMAT (vinfo);
+    vinfo_drm->drm_fourcc = gst_video_dma_drm_fourcc_from_format_full (format,
+        &vinfo_drm->drm_modifier);
+    vinfo_drm->vinfo = *vinfo;
   }
 
   GST_INFO_OBJECT (self, "Selected format %s %ix%i",
@@ -713,9 +711,12 @@ gst_v4l2_decoder_set_output_state (GstVideoDecoder * decoder,
       width, height, reference);
 
   if (vinfo_drm->drm_fourcc /* != DRM_FORMAT_INVALID */ ) {
-    GstVideoInfoDmaDrm tmp_vinfo_drm;
+    GstVideoInfoDmaDrm tmp_vinfo_drm = *vinfo_drm;
 
-    gst_video_info_dma_drm_from_video_info (&tmp_vinfo_drm, &state->info, 0);
+    /* Use display width/height in output caps */
+    tmp_vinfo_drm.vinfo.width = width;
+    tmp_vinfo_drm.vinfo.height = height;
+
     state->caps = gst_video_info_dma_drm_to_caps (&tmp_vinfo_drm);
   } else {
     state->caps = gst_video_info_to_caps (&state->info);
