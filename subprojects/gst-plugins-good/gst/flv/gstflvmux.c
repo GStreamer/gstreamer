@@ -2223,21 +2223,20 @@ static GstClockTime
 gst_flv_mux_get_next_time (GstAggregator * aggregator)
 {
   GstFlvMux *mux = GST_FLV_MUX (aggregator);
-  GstAggregatorPad *agg_audio_pad = GST_AGGREGATOR_PAD_CAST (mux->audio_pad);
-  GstAggregatorPad *agg_video_pad = GST_AGGREGATOR_PAD_CAST (mux->video_pad);
+  GstFlvMuxPad *best = NULL;
+  GstClockTime best_time = GST_CLOCK_TIME_NONE;
 
   GST_OBJECT_LOCK (aggregator);
   if (mux->state == GST_FLV_MUX_STATE_HEADER &&
       ((mux->audio_pad && mux->audio_pad->codec == G_MAXUINT) ||
           (mux->video_pad && mux->video_pad->codec == G_MAXUINT)))
     goto wait_for_data;
-
-  if (!((agg_audio_pad && gst_aggregator_pad_has_buffer (agg_audio_pad)) ||
-          (agg_video_pad && gst_aggregator_pad_has_buffer (agg_video_pad))))
-    goto wait_for_data;
   GST_OBJECT_UNLOCK (aggregator);
 
-  return gst_aggregator_simple_get_next_time (aggregator);
+  best = gst_flv_mux_find_best_pad (aggregator, &best_time, TRUE);
+  gst_clear_object (&best);
+
+  return best_time;
 
 wait_for_data:
   GST_OBJECT_UNLOCK (aggregator);
