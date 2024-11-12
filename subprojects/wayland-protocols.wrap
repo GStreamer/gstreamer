@@ -1,9 +1,9 @@
 [wrap-file]
-directory = wayland-protocols-1.40
-source_url = https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.40/downloads/wayland-protocols-1.40.tar.xz
-source_filename = wayland-protocols-1.40.tar.xz
-source_hash = b21711793247c2c42763914392dfa9fcb9e3728ca4b4aa110adb8d915fc00689
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/wayland-protocols_1.40-1/wayland-protocols-1.40.tar.xz
+directory = wayland-protocols-1.44
+source_url = https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.44/downloads/wayland-protocols-1.44.tar.xz
+source_filename = wayland-protocols-1.44.tar.xz
+source_hash = 3df1107ecf8bfd6ee878aeca5d3b7afd81248a48031e14caf6ae01f14eebb50e
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/wayland-protocols_1.44-1/wayland-protocols-1.44.tar.xz
 wrapdb_version = 1.40-1
 
 [provide]
