@@ -271,6 +271,10 @@ gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
 static gboolean gst_matroska_mux_tag_list_is_empty (const GstTagList * list);
 static void gst_matroska_mux_write_streams_tags (GstMatroskaMux * mux);
 static gboolean gst_matroska_mux_streams_have_tags (GstMatroskaMux * mux);
+static gboolean gst_matroska_mux_all_pads_have_codec_id (GstMatroskaMux * mux);
+
+static GstMatroskaMuxPad *gst_matroska_mux_find_best_pad (GstMatroskaMux * mux,
+    GstClockTime * best_time, gboolean timeout);
 
 /* Cannot use boilerplate macros here because we need the full init function
  * signature with the additional class argument, so we use the right template
@@ -709,14 +713,20 @@ static GstClockTime
 gst_matroska_mux_get_next_time (GstAggregator * agg)
 {
   GstMatroskaMux *mux = GST_MATROSKA_MUX (agg);
-  GstSegment segment;
-  GstClockTime next_time;
+  GstMatroskaMuxPad *best = NULL;
+  GstClockTime best_time = GST_CLOCK_TIME_NONE;
 
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  next_time =
-      gst_segment_to_running_time (&segment, GST_FORMAT_TIME, mux->last_pos);
+  if (mux->state == GST_MATROSKA_MUX_STATE_START
+      && !gst_matroska_mux_all_pads_have_codec_id (mux))
+    return GST_CLOCK_TIME_NONE;
 
-  return next_time;
+  best = gst_matroska_mux_find_best_pad (mux, &best_time, TRUE);
+  // Buffer without timestamps are muxed immediately
+  if (best && best_time == GST_CLOCK_TIME_NONE)
+    best_time = 0;
+  gst_clear_object (&best);
+
+  return best_time;
 }
 
 static void
@@ -4178,10 +4188,11 @@ gst_matroska_mux_clip (GstAggregator * agg, GstAggregatorPad * agg_pad,
 }
 
 static GstMatroskaMuxPad *
-gst_matroska_mux_find_best_pad (GstMatroskaMux * mux, gboolean timeout)
+gst_matroska_mux_find_best_pad (GstMatroskaMux * mux, GstClockTime * best_time,
+    gboolean timeout)
 {
   GstMatroskaMuxPad *best = NULL;
-  GstClockTime best_time = GST_CLOCK_TIME_NONE;
+  GstClockTime best_ts = GST_CLOCK_TIME_NONE;
   GList *l;
 
   GST_OBJECT_LOCK (mux);
@@ -4194,7 +4205,7 @@ gst_matroska_mux_find_best_pad (GstMatroskaMux * mux, gboolean timeout)
     if (!buffer) {
       if (!timeout && !GST_PAD_IS_EOS (mux_pad)) {
         best = NULL;
-        best_time = GST_CLOCK_TIME_NONE;
+        best_ts = GST_CLOCK_TIME_NONE;
         break;
       }
       continue;
@@ -4205,18 +4216,21 @@ gst_matroska_mux_find_best_pad (GstMatroskaMux * mux, gboolean timeout)
     gst_buffer_unref (buffer);
     // GST_CLOCK_TIME_NONE < any other clock time
     if (best == NULL || !GST_CLOCK_TIME_IS_VALID (timestamp) || (best != NULL
-            && GST_CLOCK_TIME_IS_VALID (best_time) && timestamp < best_time)) {
+            && GST_CLOCK_TIME_IS_VALID (best_ts) && timestamp < best_ts)) {
       best = mux_pad;
-      best_time = timestamp;
+      best_ts = timestamp;
     }
   }
 
-  if (best)
+  if (best) {
     gst_object_ref (best);
+    if (best_time)
+      *best_time = best_ts;
+  }
   GST_OBJECT_UNLOCK (mux);
 
   GST_DEBUG_OBJECT (mux, "best pad %s, best time %" GST_TIME_FORMAT,
-      best ? GST_PAD_NAME (best) : "(nil)", GST_TIME_ARGS (best_time));
+      best ? GST_PAD_NAME (best) : "(nil)", GST_TIME_ARGS (best_ts));
 
   return best;
 }
@@ -4274,7 +4288,7 @@ gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
 
   GST_DEBUG_OBJECT (mux, "Aggregating (timeout: %d)", timeout);
 
-  best = gst_matroska_mux_find_best_pad (mux, timeout);
+  best = gst_matroska_mux_find_best_pad (mux, NULL, timeout);
 
   /* if there is no best pad, we have reached EOS or timed out without any
    * buffers */
