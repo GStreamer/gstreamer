@@ -2629,7 +2629,8 @@ beach:
 }
 
 static GstBaseTsMuxPad *
-gst_base_ts_mux_find_best_pad (GstAggregator * aggregator, gboolean timeout)
+gst_base_ts_mux_find_best_pad (GstAggregator * aggregator,
+    GstClockTime * best_time, gboolean timeout)
 {
   GstBaseTsMuxPad *best = NULL;
   GstClockTime best_ts = GST_CLOCK_TIME_NONE;
@@ -2664,8 +2665,11 @@ gst_base_ts_mux_find_best_pad (GstAggregator * aggregator, gboolean timeout)
     gst_buffer_unref (buffer);
   }
 
-  if (best)
+  if (best) {
     gst_object_ref (best);
+    if (best_time)
+      *best_time = best_ts;
+  }
 
   GST_OBJECT_UNLOCK (aggregator);
 
@@ -2704,7 +2708,7 @@ gst_base_ts_mux_aggregate (GstAggregator * agg, gboolean timeout)
 {
   GstBaseTsMux *mux = GST_BASE_TS_MUX (agg);
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBaseTsMuxPad *best = gst_base_ts_mux_find_best_pad (agg, timeout);
+  GstBaseTsMuxPad *best = gst_base_ts_mux_find_best_pad (agg, NULL, timeout);
   GstCaps *caps;
 
   /* set caps on the srcpad if no caps were set yet */
@@ -2776,6 +2780,21 @@ gst_base_ts_mux_stop (GstAggregator * agg)
   g_mutex_unlock (&mux->lock);
 
   return TRUE;
+}
+
+static GstClockTime
+gst_base_ts_mux_get_next_time (GstAggregator * agg)
+{
+  GstBaseTsMuxPad *best = NULL;
+  GstClockTime next_time = GST_CLOCK_TIME_NONE;
+
+  best = gst_base_ts_mux_find_best_pad (agg, &next_time, TRUE);
+  // Buffer without timestamps are muxed immediately
+  if (best && next_time == GST_CLOCK_TIME_NONE)
+    next_time = 0;
+  gst_clear_object (&best);
+
+  return next_time;
 }
 
 /* GObject implementation */
@@ -3028,7 +3047,7 @@ gst_base_ts_mux_class_init (GstBaseTsMuxClass * klass)
   gstagg_class->src_event = gst_base_ts_mux_src_event;
   gstagg_class->start = gst_base_ts_mux_start;
   gstagg_class->stop = gst_base_ts_mux_stop;
-  gstagg_class->get_next_time = gst_aggregator_simple_get_next_time;
+  gstagg_class->get_next_time = gst_base_ts_mux_get_next_time;
 
   klass->create_ts_mux = gst_base_ts_mux_default_create_ts_mux;
   klass->allocate_packet = gst_base_ts_mux_default_allocate_packet;
