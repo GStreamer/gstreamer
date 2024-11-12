@@ -37,6 +37,7 @@ variables:
   INDENT_AMD64_SUFFIX: 'amd64/gst-indent'
   COMMITLINT_AMD64_SUFFIX: 'amd64/commitlint'
   WINDOWS_AMD64_SUFFIX: 'amd64/windows'
+  ABI_CHECK_AMD64_SUFFIX: 'amd64/abi-check'
 
   WINDOWS_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
   WINDOWS_UPSTREAM_IMAGE: "$CI_REGISTRY/$FDO_UPSTREAM_REPO/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
@@ -262,6 +263,28 @@ windows amd64 docker:
   image: "registry.freedesktop.org/gstreamer/gstreamer/macos-arm64/15-sequoia:2024-10-28.0"
   tags:
     - gst-mac-arm
+
+.abi-check image:
+  variables:
+    CCACHE_DIR: !reference [".fedora image", "variables", CCACHE_DIR]
+    FDO_DISTRIBUTION_VERSION: !reference [".fedora image", "variables", FDO_DISTRIBUTION_VERSION]
+    FDO_REPO_SUFFIX: !reference [".fedora image", "variables", FDO_REPO_SUFFIX]
+    FDO_BASE_IMAGE: '$CI_REGISTRY_IMAGE/$FDO_REPO_SUFFIX:$FEDORA_TAG-$GST_UPSTREAM_BRANCH'
+    FDO_DISTRIBUTION_TAG: "abi-check-$ABI_CHECK_TAG-$GST_UPSTREAM_BRANCH"
+    FDO_DISTRIBUTION_PACKAGES: 'libabigail'
+    FDO_DISTRIBUTION_EXEC: 'GIT_BRANCH=$CI_COMMIT_REF_NAME GIT_URL=$CI_REPOSITORY_URL bash ci/docker/abi-check/prepare.sh'
+    ABI_CHECK_CACHE: '/abi-check-cache'
+
+abi-check docker:
+  # placeholder-job has very minimal CPU available and may overrun the job
+  # timeout if an image rebuild (which builds GStreamer) needs to be performed.
+  #tags: [ 'placeholder-job' ]
+  stage: 'preparation'
+  extends:
+    - '.abi-check image'
+    - '.fdo.container-build@fedora'
+  needs:
+    - 'fedora amd64 docker'
 
 # ---- Preparation ----- #
 #
@@ -700,6 +723,26 @@ build macos:
           -Dgst-plugins-base:pango=enabled
           -Dgst-plugins-good:cairo=enabled
           -Dgst-plugins-good:soup=enabled
+
+abi-check:
+  stage: 'build'
+  extends:
+    - '.abi-check image'
+    - '.fdo.suffixed-image@fedora'
+    - '.build'
+  needs:
+    - "trigger"
+    - 'abi-check docker'
+  script:
+    - $CI_PROJECT_DIR/ci/scripts/abi-check.sh build/
+  variables:
+    ABI_CHECK_DIR: 'abi-dumps'
+  artifacts:
+    expire_in: "7 days"
+    when: "always"
+    paths:
+      - 'meson-logs/'
+      - '$ABI_CHECK_DIR'
 
 # ---- Tests ----- #
 
