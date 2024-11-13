@@ -1557,7 +1557,7 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,
 {
   GstRTSPMediaFactoryPrivate *priv;
   gchar *key;
-  GstRTSPMedia *media;
+  GstRTSPMedia *media = NULL;
   GstRTSPMediaFactoryClass *klass;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
