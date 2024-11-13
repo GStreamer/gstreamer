@@ -173,6 +173,9 @@ test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
     case FRAME_TYPE_B:
       buf_size = 5;
       break;
+    default:
+      g_assert_not_reached ();
+      return GST_FLOW_ERROR;
   }
 
   *buffer = gst_buffer_new_allocate (NULL, buf_size, NULL);
