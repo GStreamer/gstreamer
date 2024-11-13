@@ -1949,15 +1949,16 @@ gst_soup_http_src_do_request (GstSoupHTTPSrc * src, const gchar * method)
 
   GST_LOG_OBJECT (src, "Running request for method: %s", method);
 
-  if (src->msg)
+  if (src->msg) {
     request_headers = _soup_message_get_request_headers (src->msg);
 
-  /* Update the position if we are retrying */
-  if (src->msg && src->request_position > 0) {
-    gst_soup_http_src_add_range_header (src, src->request_position,
-        src->stop_position);
-  } else if (src->msg && src->request_position == 0)
-    _soup_message_headers_remove (request_headers, "Range");
+    /* Update the position if we are retrying */
+    if (src->request_position > 0) {
+      gst_soup_http_src_add_range_header (src, src->request_position,
+          src->stop_position);
+    } else if (src->request_position == 0)
+      _soup_message_headers_remove (request_headers, "Range");
+  }
 
   /* add_range_header() has the side effect of setting read_position to
    * the requested position. This *needs* to be set regardless of having
