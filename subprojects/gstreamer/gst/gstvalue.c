@@ -353,7 +353,7 @@ _priv_gst_value_serialize_any_list (const GValue * value, const gchar * begin,
   GstValueList *vlist = value->data[0].v_pointer;
   GString *s;
   GValue *v;
-  gchar *s_val;
+  gchar *s_val = NULL;
   guint alen = vlist->len;
 
   /* estimate minimum string length to minimise re-allocs in GString */
