@@ -880,14 +880,15 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
   GESLauncherParsedOptions *opts = &self->priv->parsed_options;
   GST_INFO ("Project loaded, playing it");
 
-  if (opts->save_path) {
+  if (opts->save_path || opts->save_only_path) {
     gchar *uri;
     GError *error = NULL;
+    gchar *save_path = opts->save_path ? opts->save_path : opts->save_only_path;
 
     if (g_strcmp0 (opts->save_path, "+r") == 0) {
       uri = ges_project_get_uri (project);
-    } else if (!(uri = ensure_uri (opts->save_path))) {
-      g_error ("couldn't create uri for '%s", opts->save_path);
+    } else if (!(uri = ensure_uri (save_path))) {
+      g_error ("couldn't create uri for '%s", save_path);
 
       self->priv->seenerrors = TRUE;
       g_application_quit (G_APPLICATION (self));
@@ -902,6 +903,12 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
       self->priv->seenerrors = TRUE;
       g_error_free (error);
       g_application_quit (G_APPLICATION (self));
+    }
+
+    if (opts->save_only_path) {
+      g_application_quit (G_APPLICATION (self));
+
+      return;
     }
   }
 
@@ -1715,8 +1722,12 @@ _startup (GApplication * application)
   if (!_create_pipeline (self, opts->sanitized_timeline))
     goto failure;
 
-  if (opts->save_only_path)
+  if (opts->save_only_path) {
+    if (opts->load_path) {
+      g_application_hold (G_APPLICATION (self));
+    }
     goto done;
+  }
 
   if (!_set_playback_details (self))
     goto failure;

@@ -130,6 +130,7 @@ ges_validate_activate (GstPipeline * pipeline, GESLauncher * launcher,
     g_object_set_data (G_OBJECT (pipeline), "pposition-id",
         GUINT_TO_POINTER (g_timeout_add (200,
                 (GSourceFunc) _print_position, pipeline)));
+
     return TRUE;
   }
 
@@ -214,11 +215,16 @@ ges_validate_clean (GstPipeline * pipeline)
   GstValidateRunner *runner =
       g_object_get_data (G_OBJECT (pipeline), RUNNER_ON_PIPELINE);
 
-  if (runner)
+  if (runner) {
     res = gst_validate_runner_exit (runner, TRUE);
-  else
-    g_source_remove (GPOINTER_TO_INT (g_object_get_data (G_OBJECT (pipeline),
-                "pposition-id")));
+  } else {
+    gpointer pposition =
+        g_object_get_data (G_OBJECT (pipeline), "pposition-id");
+
+    if (pposition) {
+      g_source_remove (GPOINTER_TO_INT (pposition));
+    }
+  }
 
   gst_object_unref (pipeline);
   if (runner)
