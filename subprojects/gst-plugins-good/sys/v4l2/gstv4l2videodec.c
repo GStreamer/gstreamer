@@ -631,7 +631,7 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
   pending_frames = gst_video_decoder_get_frames (decoder);
   if (pending_frames) {
     int counter = 0;
-    guint32 first, last;
+    guint32 first = 0, last = 0;
     for (GList * g = pending_frames; g; g = g->next) {
       GstVideoCodecFrame *frame = g->data;
       g->data = NULL;
