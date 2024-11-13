@@ -1,5 +1,5 @@
 KNOWN_ISSUES = {
-    'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/27': {
+    'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4021': {
         'tests': [
             'ges.playback.scrub_forward_seeking.test_mixing.*mp3.*',
             'ges.scenario.add_effect_and_split',
@@ -15,7 +15,7 @@ KNOWN_ISSUES = {
             },
         ]
     },
-    "https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/65": {
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4020" {
         "tests": [
             "ges.playback.scrub_backward_seeking.test_transition.*"
         ],
