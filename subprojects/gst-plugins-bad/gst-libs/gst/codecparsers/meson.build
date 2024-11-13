@@ -16,6 +16,7 @@ codecparser_sources = files([
   'vp8utils.c',
   'gstmpegvideometa.c',
   'gstav1parser.c',
+  'gsth266parser.c',
   'gsth264bitwriter.c',
   'gsth265bitwriter.c',
   'gstav1bitwriter.c',
