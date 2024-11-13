@@ -769,7 +769,7 @@ configfs_parse_streaming_header (const char *path,
   struct dirent **entries;
   unsigned int i;
   int n_entries;
-  int ret;
+  int ret = 0;
 
   /* Find all entries corresponding to a format and parse them. */
   n_entries = scandir (path, &entries, format_filter, alphasort);
