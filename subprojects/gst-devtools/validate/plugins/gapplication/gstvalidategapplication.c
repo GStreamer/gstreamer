@@ -47,7 +47,7 @@ static gboolean
 gst_validate_gapplication_init (GstPlugin * plugin)
 {
   GList *config, *tmp;
-  const gchar *appname;
+  const gchar *appname = NULL;
 
   config = gst_validate_plugin_get_config (plugin);
 
