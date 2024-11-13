@@ -294,7 +294,7 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   gint mpegversion = 4;
   gint aot = AOT_AAC_LC;
   const gchar *profile_str = "lc";
-  CHANNEL_MODE channel_mode;
+  CHANNEL_MODE channel_mode = MODE_INVALID;
   AACENC_InfoStruct enc_info = { 0 };
   gint bitrate, signaling_mode;
   guint bitrate_mode;
