@@ -47,22 +47,28 @@ if use_wayland
   protocols_files = []
 
   foreach protodef: protocol_defs
-    proto_name = protodef.get(0)
-    proto_stability = protodef.get(1)
-    if proto_stability == 'stable'
-      output_base = proto_name
-    elif proto_stability == 'staging'
-      proto_version = protodef.get(2)
-      output_base = f'@proto_name@-@proto_version@'
-    else
-      proto_version = protodef.get(2)
-      output_base = f'@proto_name@-@proto_stability@-@proto_version@'
-    endif
-    input = protocols_datadir / proto_stability / proto_name / f'@output_base@.xml'
+    proto_name = protodef[0]
+    proto_stability = protodef[1]
 
-    protocols_files += [custom_target(f'@output_base@ client header',
-      input: input,
-      output: f'@output_base@-client-protocol.h',
+    if proto_stability == 'internal'
+      base_file = proto_name
+      xml_path = 'protocols' / proto_name + '.xml'
+    elif proto_stability == 'stable'
+      base_file = proto_name
+      xml_path = protocols_datadir / 'stable' / proto_name / (base_file + '.xml')
+    elif proto_stability == 'unstable'
+      base_file = '@0@-unstable-@1@'.format(proto_name, protodef[2])
+      xml_path = protocols_datadir / 'unstable' / proto_name / (base_file + '.xml')
+    elif proto_stability == 'staging'
+      base_file = '@0@-@1@'.format(proto_name, protodef[2])
+      xml_path = protocols_datadir / 'staging' / proto_name / (base_file + '.xml')
+    else
+      error('Unsupported protocol stability')
+    endif
+
+    protocols_files += [custom_target(f'@base_file@ client header',
+      input: xml_path,
+      output: f'@base_file@-client-protocol.h',
       command: [
         wl_scanner,
         'client-header',
@@ -70,9 +76,9 @@ if use_wayland
       ],
     )]
 
-    protocols_files += [custom_target(f'@output_base@ source',
-      input: input,
-      output: f'@output_base@-protocol.c',
+    protocols_files += [custom_target(f'@base_file@ source',
+      input: xml_path,
+      output: f'@base_file@-protocol.c',
       command: [
         wl_scanner,
         'private-code',
