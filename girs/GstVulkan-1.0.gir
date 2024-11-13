@@ -4889,7 +4889,7 @@ Remember to call gst_vulkan_operation_update_frame() after adding the barrier
 related with that frame.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
         <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">A new allocated array of barriers, either
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">A new allocated #GArray of barriers, either
     VkImageMemoryBarrier or VkImageMemoryBarrier2KHR, depending whether
     synchronization2 extension is used.</doc>
           <array name="GLib.Array" c:type="GArray*">
@@ -4943,7 +4943,9 @@ The element type of the array might be, depending on if synchronization2
 extension is used, either VkImageMemoryBarrier or VkImageMemoryBarrier2KHR.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
         <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Current barriers array. Call g_array_unref() after
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Current barriers #GArray, either
+   VkImageMemoryBarrier or VkImageMemoryBarrier2KHR, depending whether
+   synchronization2 extension is used. Call g_array_unref() after
    the operation is using.</doc>
           <array name="GLib.Array" c:type="GArray*">
             <type name="gpointer" c:type="gpointer"/>

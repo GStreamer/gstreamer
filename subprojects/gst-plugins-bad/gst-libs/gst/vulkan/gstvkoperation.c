@@ -726,7 +726,7 @@ _get_image_barriers_unlocked (GstVulkanOperation * self)
 }
 
 /**
- * gst_vulkan_operation_retrieve_image_barriers:
+ * gst_vulkan_operation_retrieve_image_barriers: (skip)
  * @self: a #GstVulkanOperation
  *
  * Retrieves a copy of the current defined barriers internally, which will be
@@ -735,7 +735,9 @@ _get_image_barriers_unlocked (GstVulkanOperation * self)
  * The element type of the array might be, depending on if synchronization2
  * extension is used, either VkImageMemoryBarrier or VkImageMemoryBarrier2KHR.
  *
- * Returns: (transfer full): Current barriers array. Call g_array_unref() after
+ * Returns: (transfer full): Current barriers #GArray, either
+ *    VkImageMemoryBarrier or VkImageMemoryBarrier2KHR, depending whether
+ *    synchronization2 extension is used. Call g_array_unref() after
  *    the operation is using.
  */
 GArray *
@@ -751,7 +753,7 @@ gst_vulkan_operation_retrieve_image_barriers (GstVulkanOperation * self)
 }
 
 /**
- * gst_vulkan_operation_new_extra_image_barriers:
+ * gst_vulkan_operation_new_extra_image_barriers: (skip)
  * @self: a #GstVulkanOperation
  *
  * See also: gst_vulkan_operation_use_sync2(),
@@ -765,7 +767,7 @@ gst_vulkan_operation_retrieve_image_barriers (GstVulkanOperation * self)
  * Remember to call gst_vulkan_operation_update_frame() after adding the barrier
  * related with that frame.
  *
- * Returns: (transfer full): A new allocated array of barriers, either
+ * Returns: (transfer full): A new allocated #GArray of barriers, either
  *     VkImageMemoryBarrier or VkImageMemoryBarrier2KHR, depending whether
  *     synchronization2 extension is used.
  */
@@ -776,9 +778,9 @@ gst_vulkan_operation_new_extra_image_barriers (GstVulkanOperation * self)
 }
 
 /**
- * gst_vulkan_operation_add_extra_image_barriers:
+ * gst_vulkan_operation_add_extra_image_barriers: (skip)
  * @self: a #GstVulkanOperation
- * @extra_barriers: a #GArray of extra image memory barriers to handle, either
+ * @extra_barriers: (transfer none): a #GArray of extra image memory barriers to handle, either
  * VkImageMemoryBarrier or VkImageMemoryBarrier2KHR, depending whether
  * synchronization2 extension is used.
  *
