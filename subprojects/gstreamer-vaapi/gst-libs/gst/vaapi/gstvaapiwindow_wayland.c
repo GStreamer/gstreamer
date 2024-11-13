@@ -725,7 +725,7 @@ dmabuf_buffer_from_surface (GstVaapiWindow * window, GstVaapiSurface * surface,
   struct wl_buffer *buffer = NULL;
   VADRMPRIMESurfaceDescriptor desc;
   VAStatus status;
-  GstVaapiDmabufStatus ret;
+  GstVaapiDmabufStatus ret = GST_VAAPI_DMABUF_NOT_SUPPORTED;
   guint format, i, j, plane = 0;
 
   if (!priv_display->dmabuf)
