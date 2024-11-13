@@ -149,7 +149,7 @@
  * list, or to initialize a variable with an invalid modifier. It might also be
  * used to report an error back to userspace for certain APIs.
  */
-#define DRM_FORMAT_MOD_INVALID 0xffffffffffffff
+#define DRM_FORMAT_MOD_INVALID 0xffffffffffffffULL
 
 
 #ifndef GST_DISABLE_GST_DEBUG
