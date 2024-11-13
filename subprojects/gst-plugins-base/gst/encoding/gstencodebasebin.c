@@ -1133,7 +1133,7 @@ static inline GstPad *
 get_compatible_muxer_sink_pad (GstEncodeBaseBin * ebin,
     GstEncodingProfile * sprof, GstCaps * sinkcaps)
 {
-  GstPad *sinkpad;
+  GstPad *sinkpad = NULL;
   GList *padl, *compatible_templates = NULL;
 
   GST_DEBUG_OBJECT (ebin, "Finding muxer pad for caps: %" GST_PTR_FORMAT,
