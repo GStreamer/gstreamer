@@ -1175,6 +1175,8 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
 GESPipelineFlags
 ges_pipeline_get_mode (GESPipeline * pipeline)
 {
+  g_return_val_if_fail (GES_IS_PIPELINE (pipeline), GES_PIPELINE_MODE_PREVIEW);
+
   return pipeline->priv->mode;
 }
 
