@@ -588,7 +588,7 @@ process_buffer (GstRistRtxSend * rtx, GstBuffer * buffer)
   gpointer extdata;
   guint extlen;
   gboolean has_seqnum_ext = FALSE;
-  guint32 extseqnum;
+  guint32 extseqnum = -1;
 
   /* read the information we want from the buffer */
   gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
