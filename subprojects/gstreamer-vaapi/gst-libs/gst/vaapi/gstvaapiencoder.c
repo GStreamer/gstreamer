@@ -554,7 +554,7 @@ get_compatible_profile (GstVaapiEncoder * encoder)
 {
   const GstVaapiEncoderClassData *const cdata =
       GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
-  GstVaapiProfile profile;
+  GstVaapiProfile profile = GST_VAAPI_PROFILE_UNKNOWN;
   GArray *profiles;
   guint i;
 
