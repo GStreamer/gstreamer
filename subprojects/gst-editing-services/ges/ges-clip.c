@@ -2208,14 +2208,15 @@ static GESContainer *
 _group (GList * containers)
 {
   GESClip *first_clip = NULL;
-  GESTimeline *timeline;
+  GESTimeline *timeline = NULL;
   GESTrackType supported_formats;
-  GESLayer *layer;
+  GESLayer *layer = NULL;
   GList *tmp, *tmp2, *tmpclip;
-  GstClockTime start, inpoint, duration;
+  GstClockTime start = GST_CLOCK_TIME_NONE, inpoint = GST_CLOCK_TIME_NONE;
+  GstClockTime duration = GST_CLOCK_TIME_NONE;
   GESTimelineElement *element;
 
-  GESAsset *asset;
+  GESAsset *asset = NULL;
   GESContainer *ret = NULL;
 
   if (!containers)
