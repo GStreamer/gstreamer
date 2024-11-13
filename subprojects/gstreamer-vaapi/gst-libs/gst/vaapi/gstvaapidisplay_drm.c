@@ -336,7 +336,7 @@ gst_vaapi_display_drm_class_init (GstVaapiDisplayDRMClass * klass)
 GstVaapiDisplay *
 gst_vaapi_display_drm_new (const gchar * device_path)
 {
-  GstVaapiDisplay *display;
+  GstVaapiDisplay *display = NULL;
   guint types[3], i, num_types = 0;
   gpointer device_paths[3];
 
