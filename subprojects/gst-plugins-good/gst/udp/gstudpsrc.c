@@ -932,8 +932,7 @@ gst_udpsrc_free_cancellable (GstUDPSrc * src)
     g_cancellable_release_fd (src->cancellable);
     src->made_cancel_fd = FALSE;
   }
-  g_object_unref (src->cancellable);
-  src->cancellable = NULL;
+  g_clear_object (&src->cancellable);
 }
 
 static GstFlowReturn
@@ -1945,7 +1944,9 @@ gst_udpsrc_unlock (GstBaseSrc * bsrc)
   src = GST_UDPSRC (bsrc);
 
   GST_LOG_OBJECT (src, "Flushing");
+  GST_OBJECT_LOCK (src);
   g_cancellable_cancel (src->cancellable);
+  GST_OBJECT_UNLOCK (src);
 
   return TRUE;
 }
@@ -1959,8 +1960,10 @@ gst_udpsrc_unlock_stop (GstBaseSrc * bsrc)
 
   GST_LOG_OBJECT (src, "No longer flushing");
 
+  GST_OBJECT_LOCK (src);
   gst_udpsrc_free_cancellable (src);
   gst_udpsrc_create_cancellable (src);
+  GST_OBJECT_UNLOCK (src);
 
   return TRUE;
 }
