@@ -108,8 +108,9 @@ GstCaps *
 gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
 {
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-  const char *mime, *chroma_sub, *profile_str = NULL, *layout = NULL;
-  int i, luma, chroma;
+  const char *mime = NULL, *chroma_sub = NULL;
+  const char *profile_str = NULL, *layout = NULL;
+  int i, luma = 0, chroma = 0;
   GstCaps *caps;
 
   g_return_val_if_fail (profile
