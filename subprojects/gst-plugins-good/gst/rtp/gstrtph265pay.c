@@ -1488,46 +1488,18 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
   hevc = (rtph265pay->stream_format == GST_H265_STREAM_FORMAT_HEV1)
       || (rtph265pay->stream_format == GST_H265_STREAM_FORMAT_HVC1);
 
-  if (hevc) {
-    /* In hevc mode, there is no adapter, so nothing to drain */
-    if (draining)
-      return GST_FLOW_OK;
-  } else {
-    if (buffer) {
-      if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
-        if (gst_adapter_available (rtph265pay->adapter) == 0)
-          rtph265pay->delta_unit = FALSE;
-        else
-          delayed_not_delta_unit = TRUE;
-      }
-
-      discont = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT);
-      marker = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER);
-      gst_adapter_push (rtph265pay->adapter, buffer);
-      buffer = NULL;
-    }
-
-    /* We want to use the first TS used to construct the following NAL */
-    dts = gst_adapter_prev_dts (rtph265pay->adapter, NULL);
-    pts = gst_adapter_prev_pts (rtph265pay->adapter, NULL);
-
-    size = gst_adapter_available (rtph265pay->adapter);
-    /* Nothing to do here if the adapter is empty, e.g. on EOS */
-    if (size == 0)
-      return GST_FLOW_OK;
-    data = gst_adapter_map (rtph265pay->adapter, size);
-    GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
-  }
-
   ret = GST_FLOW_OK;
 
-  /* now loop over all NAL units and put them in a packet */
   if (hevc) {
     GstBufferMemoryMap memory;
     gsize remaining_buffer_size;
     guint nal_length_size;
     gsize offset = 0;
     GPtrArray *paybufs;
+
+    /* In hevc mode, there is no adapter, so nothing to drain */
+    if (draining)
+      return GST_FLOW_OK;
 
     paybufs = g_ptr_array_new ();
     nal_length_size = rtph265pay->nal_length_size;
@@ -1608,6 +1580,31 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
     guint next;
     gboolean update = FALSE;
     GPtrArray *paybufs;
+
+    if (buffer) {
+      if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
+        if (gst_adapter_available (rtph265pay->adapter) == 0)
+          rtph265pay->delta_unit = FALSE;
+        else
+          delayed_not_delta_unit = TRUE;
+      }
+
+      discont = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+      marker = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER);
+      gst_adapter_push (rtph265pay->adapter, buffer);
+      buffer = NULL;
+    }
+
+    /* We want to use the first TS used to construct the following NAL */
+    dts = gst_adapter_prev_dts (rtph265pay->adapter, NULL);
+    pts = gst_adapter_prev_pts (rtph265pay->adapter, NULL);
+
+    size = gst_adapter_available (rtph265pay->adapter);
+    /* Nothing to do here if the adapter is empty, e.g. on EOS */
+    if (size == 0)
+      return GST_FLOW_OK;
+    data = gst_adapter_map (rtph265pay->adapter, size);
+    GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
 
     /* get offset of first start code */
     next = next_start_code (data, size);

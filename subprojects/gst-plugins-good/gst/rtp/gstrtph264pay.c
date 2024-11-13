@@ -1404,57 +1404,17 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   avc = rtph264pay->stream_format == GST_H264_STREAM_FORMAT_AVC;
 
-  if (avc) {
-    /* In AVC mode, there is no adapter, so nothing to drain */
-    if (draining)
-      return GST_FLOW_OK;
-  } else {
-    if (buffer) {
-      if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
-        if (gst_adapter_available (rtph264pay->adapter) == 0)
-          rtph264pay->delta_unit = FALSE;
-        else
-          /* This buffer contains a key frame but the adapter isn't empty. So
-           * we'll purge it first by sending a first packet and then the second
-           * one won't have the DELTA_UNIT flag. */
-          delayed_not_delta_unit = TRUE;
-      }
-
-      if (GST_BUFFER_IS_DISCONT (buffer)) {
-        if (gst_adapter_available (rtph264pay->adapter) == 0)
-          rtph264pay->discont = TRUE;
-        else
-          /* This buffer has the DISCONT flag but the adapter isn't empty. So
-           * we'll purge it first by sending a first packet and then the second
-           * one will have the DISCONT flag set. */
-          delayed_discont = TRUE;
-      }
-
-      marker = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER);
-      gst_adapter_push (rtph264pay->adapter, buffer);
-      buffer = NULL;
-    }
-
-    /* We want to use the first TS used to construct the following NAL */
-    dts = gst_adapter_prev_dts (rtph264pay->adapter, NULL);
-    pts = gst_adapter_prev_pts (rtph264pay->adapter, NULL);
-
-    size = gst_adapter_available (rtph264pay->adapter);
-    /* Nothing to do here if the adapter is empty, e.g. on EOS */
-    if (size == 0)
-      return GST_FLOW_OK;
-    data = gst_adapter_map (rtph264pay->adapter, size);
-    GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
-  }
-
   ret = GST_FLOW_OK;
 
-  /* now loop over all NAL units and put them in a packet */
   if (avc) {
     GstBufferMemoryMap memory;
     gsize remaining_buffer_size;
     guint nal_length_size;
     gsize offset = 0;
+
+    /* In AVC mode, there is no adapter, so nothing to drain */
+    if (draining)
+      return GST_FLOW_OK;
 
     gst_buffer_memory_map (buffer, &memory);
     remaining_buffer_size = gst_buffer_get_size (buffer);
@@ -1533,6 +1493,43 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
   } else {
     guint next;
     gboolean update = FALSE;
+
+    if (buffer) {
+      if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
+        if (gst_adapter_available (rtph264pay->adapter) == 0)
+          rtph264pay->delta_unit = FALSE;
+        else
+          /* This buffer contains a key frame but the adapter isn't empty. So
+           * we'll purge it first by sending a first packet and then the second
+           * one won't have the DELTA_UNIT flag. */
+          delayed_not_delta_unit = TRUE;
+      }
+
+      if (GST_BUFFER_IS_DISCONT (buffer)) {
+        if (gst_adapter_available (rtph264pay->adapter) == 0)
+          rtph264pay->discont = TRUE;
+        else
+          /* This buffer has the DISCONT flag but the adapter isn't empty. So
+           * we'll purge it first by sending a first packet and then the second
+           * one will have the DISCONT flag set. */
+          delayed_discont = TRUE;
+      }
+
+      marker = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER);
+      gst_adapter_push (rtph264pay->adapter, buffer);
+      buffer = NULL;
+    }
+
+    /* We want to use the first TS used to construct the following NAL */
+    dts = gst_adapter_prev_dts (rtph264pay->adapter, NULL);
+    pts = gst_adapter_prev_pts (rtph264pay->adapter, NULL);
+
+    size = gst_adapter_available (rtph264pay->adapter);
+    /* Nothing to do here if the adapter is empty, e.g. on EOS */
+    if (size == 0)
+      return GST_FLOW_OK;
+    data = gst_adapter_map (rtph264pay->adapter, size);
+    GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
 
     /* get offset of first start code */
     next = next_start_code (data, size);
