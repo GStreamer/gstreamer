@@ -468,10 +468,13 @@ gst_v4l2_decoder_probe_caps_for_format (GstV4l2Decoder * self,
   drm_fourcc = gst_video_dma_drm_fourcc_from_format_full (format, &modifier);
   if (drm_fourcc /* != DRM_FORMAT_INVALID */ ) {
     GstCaps *drm_caps;
+    gchar *drm_format_str =
+        gst_video_dma_drm_fourcc_to_string (drm_fourcc, modifier);
 
     drm_caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
-        "DMA_DRM", "drm-format", G_TYPE_STRING,
-        gst_video_dma_drm_fourcc_to_string (drm_fourcc, modifier), NULL);
+        "DMA_DRM", "drm-format", G_TYPE_STRING, drm_format_str, NULL);
+    g_free (drm_format_str);
+
     gst_caps_set_features_simple (drm_caps,
         gst_caps_features_new_single_static_str
         (GST_CAPS_FEATURE_MEMORY_DMABUF));
