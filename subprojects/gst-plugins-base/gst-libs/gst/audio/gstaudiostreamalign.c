@@ -383,9 +383,9 @@ gst_audio_stream_align_process (GstAudioStreamAlign * align,
         gst_util_uint64_scale (align->next_offset, GST_SECOND,
         ABS (align->rate));
 
-    max_sample_diff =
+    max_sample_diff = MAX (1,
         gst_util_uint64_scale_int (align->alignment_threshold,
-        ABS (align->rate), GST_SECOND);
+            ABS (align->rate), GST_SECOND));
 
     /* Discont! */
     if (G_UNLIKELY (diff >= max_sample_diff)) {
