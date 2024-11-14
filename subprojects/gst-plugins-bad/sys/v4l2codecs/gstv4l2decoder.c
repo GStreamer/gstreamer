@@ -465,7 +465,7 @@ gst_v4l2_decoder_probe_caps_for_format (GstV4l2Decoder * self,
   /* TODO: Add a V4L2 to DRM fourcc translator for formats that we don't support
    * in software.
    */
-  drm_fourcc = gst_video_dma_drm_fourcc_from_format_full (format, &modifier);
+  drm_fourcc = gst_video_dma_drm_format_from_gst_format (format, &modifier);
   if (drm_fourcc /* != DRM_FORMAT_INVALID */ ) {
     GstCaps *drm_caps;
     gchar *drm_format_str =
@@ -693,7 +693,7 @@ gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
   gst_video_info_dma_drm_init (vinfo_drm);
   if (tmp_vinfo_drm.drm_fourcc) {
     GstVideoFormat format = GST_VIDEO_INFO_FORMAT (vinfo);
-    vinfo_drm->drm_fourcc = gst_video_dma_drm_fourcc_from_format_full (format,
+    vinfo_drm->drm_fourcc = gst_video_dma_drm_format_from_gst_format (format,
         &vinfo_drm->drm_modifier);
     vinfo_drm->vinfo = *vinfo;
   }
