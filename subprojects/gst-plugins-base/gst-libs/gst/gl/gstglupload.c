@@ -1507,7 +1507,8 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     return FALSE;
   }
 
-  if (!dmabuf->direct && in_info_drm->drm_modifier != DRM_FORMAT_MOD_LINEAR) {
+  if (!dmabuf->direct && in_info_drm->drm_modifier != DRM_FORMAT_MOD_LINEAR
+      && in_info_drm->drm_modifier != DRM_FORMAT_MOD_INVALID) {
     GST_DEBUG_OBJECT (dmabuf->upload,
         "Indirect uploads are only support for linear formats.");
     return FALSE;
