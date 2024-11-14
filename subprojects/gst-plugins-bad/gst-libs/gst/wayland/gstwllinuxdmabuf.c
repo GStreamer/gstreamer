@@ -81,6 +81,19 @@ static const struct zwp_linux_buffer_params_v1_listener params_listener = {
   create_failed
 };
 
+static gint
+get_drm_stride (const GstVideoFormatInfo * finfo, const gint * strides,
+    gint plane)
+{
+  gint stride = strides[plane];
+
+  if (!GST_VIDEO_FORMAT_INFO_IS_TILED (finfo))
+    return stride;
+
+  return GST_VIDEO_TILE_X_TILES (stride) *
+      GST_VIDEO_FORMAT_INFO_TILE_STRIDE (finfo, plane);
+}
+
 struct wl_buffer *
 gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
     GstWlDisplay * display, const GstVideoInfoDmaDrm * drm_info)
@@ -90,6 +103,7 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
   guint64 modifier;
   guint i, width = 0, height = 0;
   GstVideoInfo info;
+  const GstVideoFormatInfo *finfo;
   const gsize *offsets = NULL;
   const gint *strides = NULL;
   GstVideoMeta *vmeta;
@@ -111,12 +125,14 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
 
   vmeta = gst_buffer_get_video_meta (buf);
   if (vmeta) {
+    finfo = drm_info->vinfo.finfo;
     width = vmeta->width;
     height = vmeta->height;
     nplanes = vmeta->n_planes;
     offsets = vmeta->offset;
     strides = vmeta->stride;
   } else if (gst_video_info_dma_drm_to_video_info (drm_info, &info)) {
+    finfo = info.finfo;
     nplanes = GST_VIDEO_INFO_N_PLANES (&info);
     width = info.width;
     height = info.height;
@@ -142,7 +158,7 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
     gsize skip;
 
     offset = offsets[i];
-    stride = strides[i];
+    stride = get_drm_stride (finfo, strides, i);
     if (gst_buffer_find_memory (buf, offset, 1, &mem_idx, &length, &skip)) {
       GstMemory *m = gst_buffer_peek_memory (buf, mem_idx);
       gint fd = gst_dmabuf_memory_get_fd (m);
