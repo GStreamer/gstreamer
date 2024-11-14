@@ -37,7 +37,7 @@
  *   the .#GstZXing:attach-frame property was set to %TRUE (Since 1.18)
  *
  *   This element is based on the c++ implementation of zxing which can found
- *   at https://github.com/nu-book/zxing-cpp.
+ *   at https://github.com/zxing-cpp/zxing-cpp.
  *
  * ## Example launch lines
  * |[
@@ -46,6 +46,8 @@
  * |[
  * gst-launch-1.0 -m v4l2src ! tee name=t ! queue ! videoconvert ! zxing ! fakesink t. ! queue ! xvimagesink
  * ]| Same as above, but running the filter on a branch to keep the display in color
+ *
+ * Since: 1.18
  *
  */
 
@@ -84,7 +86,31 @@ enum
   PROP_FORMAT,
 };
 
-enum
+/**
+ * GstBarCodeFormat:
+ *
+ * @BARCODE_FORMAT_ALL all format
+ * @BARCODE_FORMAT_AZTEC aztec format
+ * @BARCODE_FORMAT_CODABAR codabar format
+ * @BARCODE_FORMAT_CODE_39 code39 format
+ * @BARCODE_FORMAT_CODE_93 code 93 format
+ * @BARCODE_FORMAT_CODE_128 code 128 format
+ * @BARCODE_FORMAT_DATA_MATRIX data matrix format
+ * @BARCODE_FORMAT_EAN_8 EAN 8 format
+ * @BARCODE_FORMAT_EAN_13 EAN 13 format
+ * @BARCODE_FORMAT_ITF ITF format
+ * @BARCODE_FORMAT_MAXICODE maxicode format
+ * @BARCODE_FORMAT_PDF_417 pdf 417 format
+ * @BARCODE_FORMAT_QR_CODE QR code format
+ * @BARCODE_FORMAT_RSS_14 RSS 14 format
+ * @BARCODE_FORMAT_RSS_EXPANDED RSS expanded format
+ * @BARCODE_FORMAT_UPC_A UPC_A format
+ * @BARCODE_FORMAT_UPC_E UPC_E format
+ * @BARCODE_FORMAT_UPC_EAN_EXTENSION UPC_EAN_EXTENSION format
+ *
+ * Since: 1.18
+ */
+typedef enum
 {
   BARCODE_FORMAT_ALL,
   BARCODE_FORMAT_AZTEC,
@@ -104,7 +130,7 @@ enum
   BARCODE_FORMAT_UPC_A,
   BARCODE_FORMAT_UPC_E,
   BARCODE_FORMAT_UPC_EAN_EXTENSION
-};
+} GstBarCodeFormat;
 
 static const GEnumValue barcode_formats[] = {
   {BARCODE_FORMAT_ALL, "ALL", "all"},
@@ -175,7 +201,7 @@ struct _GstZXing
   gboolean rotate;
   gboolean faster;
   ImageFormat image_format;
-  guint barcode_format;
+  GstBarCodeFormat barcode_format;
 };
 
 static void gst_zxing_set_property (GObject * object, guint prop_id,
@@ -208,27 +234,60 @@ gst_zxing_class_init (GstZXingClass * g_class)
   gobject_class->set_property = gst_zxing_set_property;
   gobject_class->get_property = gst_zxing_get_property;
 
+  /**
+   * GstZXing::message:
+   *
+   * Post a barcode message for each detected code.
+   *
+   * Since: 1.18
+   */
   g_object_class_install_property (gobject_class, PROP_MESSAGE,
       g_param_spec_boolean ("message",
           "message", "Post a barcode message for each detected code",
           DEFAULT_MESSAGE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
+  /**
+   * GstZXing::attach-frame:
+   *
+   * Attach a frame dump to each barcode message
+   *
+   * Since: 1.18
+   */
   g_object_class_install_property (gobject_class, PROP_ATTACH_FRAME,
       g_param_spec_boolean ("attach-frame", "Attach frame",
           "Attach a frame dump to each barcode message",
           DEFAULT_ATTACH_FRAME,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
+  /**
+   * GstZXing::try-rotate:
+   *
+   * Try to rotate the frame to detect barcode (slower)
+   *
+   * Since: 1.18
+   */
   g_object_class_install_property (gobject_class, PROP_TRY_ROTATE,
       g_param_spec_boolean ("try-rotate", "Try rotate",
           "Try to rotate the frame to detect barcode (slower)",
           DEFAULT_TRY_ROTATE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  /**
+   * GstZXing::try-faster:
+   *
+   * Try faster to analyze the frame
+   *
+   * Since: 1.18
+   */
   g_object_class_install_property (gobject_class, PROP_TRY_FASTER,
       g_param_spec_boolean ("try-faster", "Try faster",
           "Try faster to analyze the frame", DEFAULT_TRY_FASTER,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  /**
+   * GstZXing::format:
+   *
+   * Barcode image format
+   *
+   * Since: 1.18
+   */
   g_object_class_install_property (gobject_class, PROP_FORMAT,
       g_param_spec_enum ("format", "barcode format", "Barcode image format",
           GST_TYPE_BARCODE_FORMAT, BARCODE_FORMAT_ALL,
@@ -248,6 +307,8 @@ gst_zxing_class_init (GstZXingClass * g_class)
       GST_DEBUG_FUNCPTR (gst_zxing_transform_frame_ip);
   vfilter_class->set_info =
       GST_DEBUG_FUNCPTR (gst_zxing_set_info);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_BARCODE_FORMAT, (GstPluginAPIFlags)0);
 }
 
 static void
@@ -284,7 +345,7 @@ gst_zxing_set_property (GObject * object, guint prop_id, const GValue * value,
       zxing->faster = g_value_get_boolean (value);
       break;
     case PROP_FORMAT:
-      zxing->barcode_format = g_value_get_enum (value);
+      zxing->barcode_format = (GstBarCodeFormat)g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

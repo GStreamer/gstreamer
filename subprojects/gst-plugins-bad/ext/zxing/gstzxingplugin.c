@@ -18,8 +18,13 @@
  */
 
 
-/*
- * ZXing GStreamer plugin
+/**
+ * SECTION:plugin-zxing
+ *
+ * Plugin for [ZXing](https://github.com/zxing-cpp/zxing-cpp), a bar code detector.
+ *
+ * Since: 1.18
+ *
  */
 
 #ifdef HAVE_CONFIG_H
