@@ -1551,7 +1551,8 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
      * the tile dimension. This is because the shader needs to know the padded
      * size in order to correctly sample into these special buffer.
      */
-    if (meta && GST_VIDEO_FORMAT_INFO_IS_TILED (out_info->finfo)) {
+    if (!dmabuf->direct && meta &&
+        GST_VIDEO_FORMAT_INFO_IS_TILED (out_info->finfo)) {
       out_info->width = meta->width;
       out_info->height = meta->height;
 
