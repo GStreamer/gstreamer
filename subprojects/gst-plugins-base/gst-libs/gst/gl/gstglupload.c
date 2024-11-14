@@ -3525,7 +3525,7 @@ _upload_find_method (GstGLUpload * upload, gpointer last_impl)
   upload->priv->method = upload_methods[method_i];
   upload->priv->method_impl = upload->priv->upload_impl[method_i];
 
-  GST_DEBUG_OBJECT (upload, "attempting upload with uploader %s",
+  GST_INFO_OBJECT (upload, "attempting upload with uploader %s",
       upload->priv->method->name);
 
   upload->priv->method_i++;
