@@ -1005,9 +1005,7 @@ mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
         MPEGTS_BIT_SET (base->known_psi, stream->pid);
     } else {
       if (G_UNLIKELY (MPEGTS_BIT_IS_SET (base->is_pes, stream->pid)))
-        GST_FIXME
-            ("Refcounting issue. Setting twice a PID (0x%04x) as known PES",
-            stream->pid);
+        GST_DEBUG ("Setting twice a PID (0x%04x) as known PES", stream->pid);
       if (G_UNLIKELY (MPEGTS_BIT_IS_SET (base->known_psi, stream->pid))) {
         GST_FIXME
             ("Refcounting issue. Setting a known PSI PID (0x%04x) as known PES",
