@@ -1,6 +1,6 @@
 project('gst-libav', 'c',
   version : '1.25.0.1',
-  meson_version : '>= 1.1',
+  meson_version : '>= 1.3',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
