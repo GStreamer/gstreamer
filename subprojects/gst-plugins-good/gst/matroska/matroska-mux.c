@@ -4215,8 +4215,11 @@ gst_matroska_mux_find_best_pad (GstMatroskaMux * mux, GstClockTime * best_time,
         gst_matroska_track_get_buffer_timestamp (mux_pad->track, buffer);
     gst_buffer_unref (buffer);
     // GST_CLOCK_TIME_NONE < any other clock time
-    if (best == NULL || !GST_CLOCK_TIME_IS_VALID (timestamp) || (best != NULL
-            && GST_CLOCK_TIME_IS_VALID (best_ts) && timestamp < best_ts)) {
+    if (!GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      best = mux_pad;
+      best_ts = timestamp;
+      break;
+    } else if (best == NULL || timestamp < best_ts) {
       best = mux_pad;
       best_ts = timestamp;
     }
