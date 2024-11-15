@@ -195,6 +195,15 @@ static GstFlowReturn gst_pad_push_event_unchecked (GstPad * pad,
 static gboolean activate_mode_internal (GstPad * pad, GstObject * parent,
     GstPadMode mode, gboolean active);
 
+typedef struct
+{
+  GstPad *pad;
+  GstFlowReturn flow_res;
+} PadChainListData;
+
+static gboolean list_process_buffer_writable (GstBuffer ** buffer, guint idx,
+    gpointer userdata);
+
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *pspec_caps = NULL;
@@ -4656,6 +4665,16 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
       GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH, buffer);
 }
 
+static gboolean
+list_process_buffer_writable (GstBuffer ** buffer, guint idx, gpointer userdata)
+{
+  PadChainListData *data = (PadChainListData *) (userdata);
+  data->flow_res = gst_pad_chain_data_unchecked (data->pad,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH, *buffer);
+  *buffer = NULL;
+  return data->flow_res == GST_FLOW_OK;
+}
+
 static GstFlowReturn
 gst_pad_chain_list_default (GstPad * pad, GstObject * parent,
     GstBufferList * list)
@@ -4666,18 +4685,25 @@ gst_pad_chain_list_default (GstPad * pad, GstObject * parent,
 
   GST_LOG_OBJECT (pad, "chaining each buffer in list individually");
 
-  len = gst_buffer_list_length (list);
-
   ret = GST_FLOW_OK;
-  for (i = 0; i < len; i++) {
-    buffer = gst_buffer_list_get (list, i);
-    ret =
-        gst_pad_chain_data_unchecked (pad,
-        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH,
-        gst_buffer_ref (buffer));
-    if (ret != GST_FLOW_OK)
-      break;
+
+  if (gst_buffer_list_is_writable (list)) {
+    PadChainListData data = {.pad = pad,.flow_res = GST_FLOW_OK };
+    gst_buffer_list_foreach (list, list_process_buffer_writable, &data);
+    ret = data.flow_res;
+  } else {
+    len = gst_buffer_list_length (list);
+    for (i = 0; i < len; i++) {
+      buffer = gst_buffer_list_get (list, i);
+      ret =
+          gst_pad_chain_data_unchecked (pad,
+          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH,
+          gst_buffer_ref (buffer));
+      if (ret != GST_FLOW_OK)
+        break;
+    }
   }
+
   gst_buffer_list_unref (list);
 
   return ret;

@@ -3390,6 +3390,84 @@ GST_START_TEST (test_pad_offset_src)
 
 GST_END_TEST;
 
+/* Pushing a writable list should not increase refcount. */
+static GstFlowReturn
+verify_buffer_writable (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+{
+  fail_unless (gst_buffer_is_writable (buffer));
+  gst_buffer_unref (buffer);
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+verify_buffer_refcount_two (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
+{
+  fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT (buffer), 2);
+  gst_buffer_unref (buffer);
+  return GST_FLOW_OK;
+}
+
+GST_START_TEST (test_pad_chain_list_writable)
+{
+  GstPad *src, *sink;
+  GstPadLinkReturn plr;
+  GstCaps *caps;
+
+  /* setup */
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_if (sink == NULL);
+  gst_pad_set_chain_function (sink, verify_buffer_writable);
+
+  src = gst_pad_new ("src", GST_PAD_SRC);
+  fail_if (src == NULL);
+
+  caps = gst_caps_from_string ("foo/bar");
+
+  gst_pad_set_active (src, TRUE);
+
+  gst_pad_push_event (src, gst_event_new_stream_start ("test"));
+
+  gst_pad_set_active (sink, TRUE);
+
+  gst_pad_set_caps (src, caps);
+  plr = gst_pad_link (src, sink);
+
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_segment (&dummy_segment)) == TRUE);
+
+  fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
+
+  /* Create a buffer list, that moves into gst_pad_push_list */
+  GstBufferList *list = gst_buffer_list_new_sized (1);
+
+  gst_buffer_list_add (list, gst_buffer_new ());
+  gst_buffer_list_add (list, gst_buffer_new ());
+
+  fail_unless (gst_buffer_list_is_writable (list));
+  /* this takes ownership of list, and will free it */
+  gst_pad_push_list (src, list);
+
+  gst_pad_set_chain_function (sink, verify_buffer_refcount_two);
+  list = gst_buffer_list_new_sized (1);
+
+  gst_buffer_list_add (list, gst_buffer_new ());
+
+  /* ref the list one more time, so it is no longer writable */
+  gst_buffer_list_ref (list);
+
+  fail_unless (!gst_buffer_list_is_writable (list));
+  gst_pad_push_list (src, list);
+
+  gst_buffer_list_unref (list);
+
+  gst_object_unref (sink);
+  gst_object_unref (src);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_pad_suite (void)
 {
@@ -3451,6 +3529,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_proxy_accept_caps_with_proxy);
   tcase_add_test (tc_chain, test_proxy_accept_caps_with_incompatible_proxy);
   tcase_add_test (tc_chain, test_pad_offset_src);
+  tcase_add_test (tc_chain, test_pad_chain_list_writable);
 
   return s;
 }
