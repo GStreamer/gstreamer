@@ -179,7 +179,7 @@ gst_rtp_header_extension_twcc_write (GstRTPHeaderExtension * ext,
   g_return_val_if_fail (write_flags &
       gst_rtp_header_extension_twcc_get_supported_flags (ext), -1);
 
-  if (!gst_rtp_buffer_map (output, GST_MAP_READWRITE, &rtp))
+  if (!gst_rtp_buffer_map (output, GST_MAP_READ, &rtp))
     goto map_failed;
 
   /* if there already is a twcc-seqnum inside the packet */
