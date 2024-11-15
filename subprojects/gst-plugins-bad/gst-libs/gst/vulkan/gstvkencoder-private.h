@@ -31,6 +31,10 @@
 GST_VULKAN_API
 GType gst_vulkan_encoder_get_type       (void);
 
+#define GST_TYPE_VULKAN_ENCODER_RATE_CONTROL_MODE   (gst_vulkan_encoder_rate_control_mode_get_type())
+GST_VULKAN_API
+GType gst_vulkan_encoder_rate_control_mode_get_type (void);
+
 typedef struct _GstVulkanEncoder GstVulkanEncoder;
 typedef struct _GstVulkanEncoderClass GstVulkanEncoderClass;
 typedef struct _GstVulkanEncoderQualityPoperties GstVulkanEncoderQualityProperties;

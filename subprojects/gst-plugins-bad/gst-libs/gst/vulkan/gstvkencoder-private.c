@@ -1424,3 +1424,28 @@ gst_vulkan_encoder_set_rc_mode (GstVulkanEncoder * self,
   priv->session_reset = TRUE;
   priv->rc_mode = rc_mode;
 }
+
+GType
+gst_vulkan_encoder_rate_control_mode_get_type (void)
+{
+  static GType type = 0;
+
+  if (type == 0) {
+    /* *INDENT-OFF* */
+    static const GEnumValue values[] = {
+      { VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DEFAULT_KHR,
+        "Driver's default", "default" },
+      { VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR,
+        "Constant quantizer", "cqp" },
+      { VK_VIDEO_ENCODE_RATE_CONTROL_MODE_CBR_BIT_KHR,
+        "Constant bitrate", "cbr" },
+      { VK_VIDEO_ENCODE_RATE_CONTROL_MODE_VBR_BIT_KHR,
+        "Variable bitrate", "vbr" },
+      { 0, }
+    };
+    /* *INDENT-ON* */
+
+    type = g_enum_register_static ("GstVulkanEncoderRateControlMode", values);
+  }
+  return type;
+}
