@@ -2026,8 +2026,12 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
         gst_buffer_get_video_meta (output_frame->output_buffer);
     if (vmeta) {
       GstVideoInfo *info = &ffmpegdec->output_state->info;
-      g_assert ((gint) vmeta->width == GST_VIDEO_INFO_WIDTH (info));
-      g_assert ((gint) vmeta->height == GST_VIDEO_INFO_HEIGHT (info));
+      if (vmeta->width != GST_VIDEO_INFO_WIDTH (info) ||
+          vmeta->height != GST_VIDEO_INFO_HEIGHT (info)) {
+        g_error ("video meta uses %dx%d instead of %dx%d",
+            vmeta->width, vmeta->height, GST_VIDEO_INFO_WIDTH (info),
+            GST_VIDEO_INFO_HEIGHT (info));
+      }
     }
   }
 #endif
