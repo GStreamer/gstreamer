@@ -1132,14 +1132,12 @@ cerbero trigger:
   timeout: '4h'
   tags:
     - placeholder-job
-  extends:
-    - '.fedora image'
-    - '.fdo.suffixed-image@fedora'
+  image: python:alpine
   needs:
     - "trigger"
-    - "fedora amd64 docker"
   script:
-    - ci/gitlab/trigger_cerbero_pipeline.py
+    - pip install python-gitlab
+    - python ci/gitlab/trigger_cerbero_pipeline.py
 
   rules:
     - if: '$MESON_COMMIT'
