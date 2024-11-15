@@ -2630,12 +2630,11 @@ _on_data_channel_ready_state (WebRTCDataChannel * channel,
     if (found == FALSE) {
       GST_FIXME_OBJECT (webrtc, "Received close for unknown data channel");
     } else {
-      gst_element_set_locked_state (channel->src_bin, TRUE);
-      gst_element_set_state (channel->src_bin, GST_STATE_NULL);
+      /* Take an extra ref to src & sink bins so that teardown can be made outside dc_lock */
+      gst_object_ref (channel->src_bin);
       gst_bin_remove (GST_BIN (webrtc), channel->src_bin);
 
-      gst_element_set_locked_state (channel->sink_bin, TRUE);
-      gst_element_set_state (channel->sink_bin, GST_STATE_NULL);
+      gst_object_ref (channel->sink_bin);
       gst_bin_remove (GST_BIN (webrtc), channel->sink_bin);
 
       if (found_pending == FALSE) {
@@ -2643,6 +2642,17 @@ _on_data_channel_ready_state (WebRTCDataChannel * channel,
       }
     }
     DC_UNLOCK (webrtc);
+
+    if (found == TRUE) {
+      /* Tear down bins outside dc_lock to avoid deadlocks */
+      gst_element_set_locked_state (channel->src_bin, TRUE);
+      gst_element_set_state (channel->src_bin, GST_STATE_NULL);
+      gst_object_unref (channel->src_bin);
+
+      gst_element_set_locked_state (channel->sink_bin, TRUE);
+      gst_element_set_state (channel->sink_bin, GST_STATE_NULL);
+      gst_object_unref (channel->sink_bin);
+    }
   }
 }
 
