@@ -86,6 +86,7 @@ gst_playback_utils_get_n_common_capsfeatures (GstElementFactory * fact1,
       gst_caps_unref (fact1_tmpl_caps);
     else if (fact2_tmpl_caps)
       gst_caps_unref (fact2_tmpl_caps);
+    gst_clear_caps (&raw_caps);
     return 0;
   }
 
@@ -132,6 +133,7 @@ gst_playback_utils_get_n_common_capsfeatures (GstElementFactory * fact1,
 
   gst_caps_unref (fact1_tmpl_caps);
   gst_caps_unref (fact2_tmpl_caps);
+  gst_clear_caps (&raw_caps);
 
   return n_common_cf;
 }
