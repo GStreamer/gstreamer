@@ -22,26 +22,26 @@
  * @title: zbar
  *
  * Detect bar codes in the video streams and send them as element messages to
- * the #GstBus if .#GstZBar:message property is %TRUE.
- * If the .#GstZBar:attach-frame property is %TRUE, the posted barcode message
+ * the #GstBus if #GstZBar:message property is %TRUE.
+ * If the #GstZBar:attach-frame property is %TRUE, the posted barcode message
  * includes a sample of the frame where the barcode was detected (Since 1.6).
  *
- * The element generate messages named`barcode`. The structure contains these fields:
+ * The element generates messages named `barcode`. The structure contains these fields:
  *
  * * #GstClockTime `timestamp`: the timestamp of the buffer that triggered the message.
  * * gchar * `type`: the symbol type.
  * * gchar * `symbol`: the detected bar code data.
  * * gint `quality`: an unscaled, relative quantity: larger values are better than smaller
  *   values.
- * * GstSample `frame`: the frame in which the barcode message was detected, if
- *   the .#GstZBar:attach-frame property was set to %TRUE (Since 1.6)
+ * * #GstSample `frame`: the frame in which the barcode message was detected, if
+ *   the #GstZBar:attach-frame property was set to %TRUE (Since 1.6)
  *
  * ## Example launch lines
  * |[
  * gst-launch-1.0 -m v4l2src ! videoconvert ! zbar ! videoconvert ! xvimagesink
  * ]| This pipeline will detect barcodes and send them as messages.
  * |[
- * gst-launch-1.0 -m v4l2src ! tee name=t ! queue ! videoconvert ! zbar ! fakesink t. ! queue ! xvimagesink
+ * gst-launch-1.0 -m v4l2src ! tee name=t ! queue ! videoconvert ! zbar ! fakesink t. ! queue ! videoconvert ! xvimagesink
  * ]| Same as above, but running the filter on a branch to keep the display in color
  *
  */
