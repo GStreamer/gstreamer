@@ -902,8 +902,9 @@ gst_ffmpegviddec_ensure_internal_pool (GstFFMpegVidDec * ffmpegdec,
       ffmpegdec->pool_format == picture->format)
     return;
 
-  GST_DEBUG_OBJECT (ffmpegdec, "Updating internal pool (%i, %i)",
-      picture->width, picture->height);
+  GST_DEBUG_OBJECT (ffmpegdec, "Updating internal pool (%i, %i) -> (%i, %i)",
+      ffmpegdec->pool_width, ffmpegdec->pool_height, picture->width,
+      picture->height);
 
   /* if we are negotiating from get_buffer, then renegotiate later in order
    * to potentially use a downstream pool */
