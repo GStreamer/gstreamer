@@ -22,11 +22,11 @@
  * @title: zxing
  *
  * Detect bar codes in the video streams and send them as element messages to
- * the #GstBus if .#GstZXing:message property is %TRUE.
- * If the .#GstZXing:attach-frame property is %TRUE, the posted barcode message
+ * the #GstBus if #GstZXing:message property is %TRUE.
+ * If the #GstZXing:attach-frame property is %TRUE, the posted barcode message
  * includes a sample of the frame where the barcode was detected (Since 1.18).
  *
- * The element generate messages named `barcode`. The structure contains these fields:
+ * The element generates messages named `barcode`. The structure contains these fields:
  *
  * * #GstClockTime `timestamp`: the timestamp of the buffer that triggered the message.
  * * gchar * `type`: the symbol type.
@@ -37,14 +37,14 @@
  *   the .#GstZXing:attach-frame property was set to %TRUE (Since 1.18)
  *
  *   This element is based on the c++ implementation of zxing which can found
- *   at https://github.com/zxing-cpp/zxing-cpp.
+ *   at <https://github.com/zxing-cpp/zxing-cpp>.
  *
  * ## Example launch lines
  * |[
  * gst-launch-1.0 -m v4l2src ! videoconvert ! zxing ! videoconvert ! xvimagesink
  * ]| This pipeline will detect barcodes and send them as messages.
  * |[
- * gst-launch-1.0 -m v4l2src ! tee name=t ! queue ! videoconvert ! zxing ! fakesink t. ! queue ! xvimagesink
+ * gst-launch-1.0 -m v4l2src ! tee name=t ! queue ! videoconvert ! zxing ! fakesink t. ! queue ! videoconvert ! xvimagesink
  * ]| Same as above, but running the filter on a branch to keep the display in color
  *
  * Since: 1.18
