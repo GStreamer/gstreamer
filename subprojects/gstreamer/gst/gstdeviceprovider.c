@@ -179,8 +179,8 @@ gst_device_provider_dispose (GObject * object)
   gst_object_replace ((GstObject **) & provider->priv->bus, NULL);
 
   GST_OBJECT_LOCK (provider);
-  g_list_free_full (provider->devices, (GDestroyNotify) gst_object_unparent);
-  provider->devices = NULL;
+  g_clear_list (&provider->devices, (GDestroyNotify) gst_object_unparent);
+  g_clear_list (&provider->priv->hidden_providers, (GDestroyNotify) g_free);
   GST_OBJECT_UNLOCK (provider);
 
   G_OBJECT_CLASS (gst_device_provider_parent_class)->dispose (object);
@@ -534,8 +534,8 @@ gst_device_provider_stop (GstDeviceProvider * provider)
     if (klass->stop)
       klass->stop (provider);
     GST_OBJECT_LOCK (provider);
-    g_list_free_full (provider->devices, (GDestroyNotify) gst_object_unparent);
-    provider->devices = NULL;
+    g_clear_list (&provider->devices, (GDestroyNotify) gst_object_unparent);
+    g_clear_list (&provider->priv->hidden_providers, (GDestroyNotify) g_free);
     GST_OBJECT_UNLOCK (provider);
   } else if (provider->priv->started_count < 1) {
     g_critical
