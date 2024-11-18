@@ -6520,6 +6520,53 @@ GST_START_TEST (dash_mpdparser_check_mpd_client_set_methods)
 
 GST_END_TEST;
 
+GST_START_TEST (dash_mpdparser_check_mpd_client_set_period_to_0)
+{
+  GstMPDClient *mpdclient = NULL;
+  GstMPDPeriodNode *period;
+  gchar *period_id;
+  gchar *new_xml;
+  gint new_xml_size;
+  const gchar *xml = "<?xml version=\"1.0\"?>\n"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\" profiles=\"urn:mpeg:dash:profile:isoff-main:2011\" "
+      "schemaLocation=\"TestSchemaLocation\" xmlns:xsi=\"TestNamespaceXSI\" xmlns:ext=\"TestNamespaceEXT\" "
+      "id=\"testId\" type=\"static\" minBufferTime=\"P0Y0M0DT0H0M2.0S\">"
+      "<BaseURL serviceLocation=\"TestServiceLocation\" byteRange=\"TestByteRange\">TestBaseURL</BaseURL>"
+      "<Period id=\"TestId\" start=\"PT0S\" duration=\"P0Y0M0DT0H0M40.0S\" bitstreamSwitching=\"true\"/></MPD>\n";
+
+  mpdclient = gst_mpd_client_new ();
+  gst_mpd_client_set_root_node (mpdclient,
+      "default-namespace", "urn:mpeg:dash:schema:mpd:2011",
+      "profiles", "urn:mpeg:dash:profile:isoff-main:2011",
+      "schema-location", "TestSchemaLocation",
+      "namespace-xsi", "TestNamespaceXSI",
+      "namespace-ext", "TestNamespaceEXT", "id", "testId", NULL);
+  gst_mpd_client_add_baseurl_node (mpdclient,
+      "url", "TestBaseURL",
+      "service-location", "TestServiceLocation",
+      "byte-range", "TestByteRange", NULL);
+  period_id = gst_mpd_client_set_period_node (mpdclient, (gchar *) "TestId", "start", (guint64) 0,      // ms
+      "duration", (guint64) 40000, "bitstream-switching", 1, NULL);
+
+  /* Period */
+  period = (GstMPDPeriodNode *) mpdclient->mpd_root_node->Periods->data;
+
+  assert_equals_string (period_id, "TestId");
+  assert_equals_string (period->id, "TestId");
+  assert_equals_int64 (period->start, 0);
+  assert_equals_int64 (period->duration, 40000);
+  assert_equals_int (period->bitstreamSwitching, 1);
+
+  /* XML content */
+  gst_mpd_client_get_xml_content (mpdclient, &new_xml, &new_xml_size);
+  assert_equals_string (xml, new_xml);
+  g_free (new_xml);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
 /*
  * create a test suite containing all dash testcases
  */
@@ -6544,6 +6591,8 @@ dash_suite (void)
 
   /* test mpd client set methods */
   tcase_add_test (tc_simpleMPD, dash_mpdparser_check_mpd_client_set_methods);
+  tcase_add_test (tc_simpleMPD,
+      dash_mpdparser_check_mpd_client_set_period_to_0);
 
   /* tests parsing attributes from each element type */
   tcase_add_test (tc_simpleMPD, dash_mpdparser_mpd);

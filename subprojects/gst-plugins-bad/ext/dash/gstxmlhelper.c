@@ -1203,6 +1203,8 @@ gst_xml_helper_set_prop_duration (xmlNode * node, const gchar * name,
     GST_LOG ("duration %" G_GUINT64_FORMAT " -> %s", value, text);
     xmlSetProp (node, (xmlChar *) name, (xmlChar *) text);
     g_free (text);
+  } else {
+    xmlSetProp (node, (xmlChar *) name, (xmlChar *) "PT0S");
   }
 }
 
