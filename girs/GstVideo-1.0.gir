@@ -18754,6 +18754,46 @@ performance is achieved when @quantizer is a power of 2.
         </parameter>
       </parameters>
     </function>
+    <function name="video_dma_drm_format_from_gst_format" c:identifier="gst_video_dma_drm_format_from_gst_format" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">Converting the video format into dma drm fourcc/modifier pair.
+If no matching fourcc found, then DRM_FORMAT_INVALID is returned
+and @modifier will be set to DRM_FORMAT_MOD_INVALID.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">the DRM_FORMAT_* corresponding to @format.</doc>
+        <type name="guint32" c:type="guint32"/>
+      </return-value>
+      <parameters>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">a #GstVideoFormat</doc>
+          <type name="VideoFormat" c:type="GstVideoFormat"/>
+        </parameter>
+        <parameter name="modifier" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">return location for the modifier</doc>
+          <type name="guint64" c:type="guint64*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="video_dma_drm_format_to_gst_format" c:identifier="gst_video_dma_drm_format_to_gst_format" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">Converting a dma drm fourcc and modifier pair into a #GstVideoFormat. If
+no matching video format is found, then GST_VIDEO_FORMAT_UNKNOWN is returned.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">the GST_VIDEO_FORMAT_* corresponding to the @fourcc and @modifier
+         pair.</doc>
+        <type name="VideoFormat" c:type="GstVideoFormat"/>
+      </return-value>
+      <parameters>
+        <parameter name="fourcc" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">the dma drm fourcc value.</doc>
+          <type name="guint32" c:type="guint32"/>
+        </parameter>
+        <parameter name="modifier" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">the dma drm modifier.</doc>
+          <type name="guint64" c:type="guint64"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="video_dma_drm_fourcc_from_format" c:identifier="gst_video_dma_drm_fourcc_from_format" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">Converting the video format into dma drm fourcc. If no
 matching fourcc found, then DRM_FORMAT_INVALID is returned.</doc>
