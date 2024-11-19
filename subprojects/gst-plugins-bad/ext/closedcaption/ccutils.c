@@ -626,7 +626,7 @@ push_internal (CCBuffer * buf, const guint8 * cea608_1,
       GST_WARNING_OBJECT (buf, "ccp data overflow, dropping all "
           "previous data, max %u, attempted to hold %u", max_cea708_bytes,
           cc_data_len + buf->cc_data->len);
-      g_array_set_size (buf->cea608_2, 0);
+      g_array_set_size (buf->cc_data, 0);
     }
     g_array_append_vals (buf->cc_data, cc_data, cc_data_len);
   }
