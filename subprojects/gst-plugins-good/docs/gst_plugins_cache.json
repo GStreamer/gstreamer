@@ -11245,7 +11245,7 @@
         "url": "Unknown package origin"
     },
     "navigationtest": {
-        "description": "Template for a video filter",
+        "description": "Navigation event handling test plugin",
         "elements": {
             "navigationtest": {
                 "author": "David Schleef <ds@schleef.org>",
