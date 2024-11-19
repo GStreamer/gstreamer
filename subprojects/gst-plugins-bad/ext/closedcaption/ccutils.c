@@ -921,16 +921,6 @@ cc_buffer_take_separated (CCBuffer * buf,
         }
       }
       *cc_data_len = write_ccp_size + ccp_padding;
-    } else if (buf->output_padding) {
-      guint i;
-      guint padding = 3 * fps_entry->max_ccp_count;
-      for (i = 0; i < padding; i += 3) {
-        cc_data[i + write_ccp_size] = 0xfa;
-        cc_data[i + 1 + write_ccp_size] = 0x00;
-        cc_data[i + 2 + write_ccp_size] = 0x00;
-      }
-      GST_TRACE_OBJECT (buf, "outputting only %u padding bytes", padding);
-      *cc_data_len = padding;
     } else {
       *cc_data_len = 0;
     }
