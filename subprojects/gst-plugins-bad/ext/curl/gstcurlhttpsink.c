@@ -188,9 +188,7 @@ gst_curl_http_sink_init (GstCurlHttpSink * sink)
   sink->discovered_content_type = NULL;
 
   sink->proxy_port = DEFAULT_PROXY_PORT;
-  sink->proxy_headers_set = FALSE;
   sink->proxy_auth = FALSE;
-  sink->use_proxy = FALSE;
   sink->proxy_conn_established = FALSE;
   sink->proxy_resp = -1;
 }
@@ -334,13 +332,6 @@ gst_curl_http_sink_set_header_unlocked (GstCurlBaseSink * bcsink)
     sink->header_list = NULL;
   }
 
-  if (!sink->proxy_headers_set && sink->use_proxy) {
-    sink->header_list = curl_slist_append (sink->header_list,
-        "Content-Length: 0");
-    sink->proxy_headers_set = TRUE;
-    goto set_headers;
-  }
-
   if (sink->use_content_length) {
     /* if content length is used we assume that every buffer is one
      * entire file, which is the case when uploading several jpegs */
@@ -374,8 +365,6 @@ gst_curl_http_sink_set_header_unlocked (GstCurlBaseSink * bcsink)
         "No content-type available to set in header, continue without it");
   }
 
-
-set_headers:
 
   if (bcsink->file_name) {
     tmp = g_strdup_printf ("Content-Disposition: attachment; filename="
@@ -578,8 +567,6 @@ proxy_setup (GstCurlBaseSink * bcsink)
       return FALSE;
     }
   }
-
-  sink->use_proxy = TRUE;
 
   return TRUE;
 }
