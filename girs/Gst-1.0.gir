@@ -101,6 +101,30 @@ See also #GstBufferMapInfo.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstallocator.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
+    <callback name="AllocationMetaParamsAggregator" c:type="GstAllocationMetaParamsAggregator" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">The aggregator function will combine the parameters from @params0 and @param1
+and write the result back into @aggregated_params.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">%TRUE if the parameters were successfully aggregated, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="aggregated_params" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">This structure will be updated with the
+                    combined parameters from both @params0 and @params1.</doc>
+          <type name="Structure" c:type="GstStructure**"/>
+        </parameter>
+        <parameter name="params0" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">a #GstStructure containing the new parameters to be aggregated.</doc>
+          <type name="Structure" c:type="const GstStructure*"/>
+        </parameter>
+        <parameter name="params1" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">a #GstStructure containing the new parameters to be aggregated.</doc>
+          <type name="Structure" c:type="const GstStructure*"/>
+        </parameter>
+      </parameters>
+    </callback>
     <record name="AllocationParams" c:type="GstAllocationParams" glib:type-name="GstAllocationParams" glib:get-type="gst_allocation_params_get_type" c:symbol-prefix="allocation_params">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstallocator.h">Parameters to control the allocation of memory</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstallocator.h"/>
@@ -27199,6 +27223,37 @@ to remember the size of previous data to preallocate the next.</doc>
           </parameter>
         </parameters>
       </method>
+      <function name="api_type_aggregate_params" c:identifier="gst_meta_api_type_aggregate_params" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">When a element like `tee` decides the allocation, each downstream element may
+fill different parameters and pass them to gst_query_add_allocation_meta().
+In order to keep these parameters, a merge operation is needed. This
+aggregate function can combine the parameters from @params0 and @param1, and
+write the result back into @aggregated_params.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">%TRUE if the parameters were successfully aggregated, %FALSE otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="api" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the GType of the API for which the parameters are being aggregated.</doc>
+            <type name="GType" c:type="GType"/>
+          </parameter>
+          <parameter name="aggregated_params" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">This structure will be updated with the
+                    combined parameters from both @params0 and @params1.</doc>
+            <type name="Structure" c:type="GstStructure**"/>
+          </parameter>
+          <parameter name="params0" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstStructure containing the new parameters to be aggregated.</doc>
+            <type name="Structure" c:type="const GstStructure*"/>
+          </parameter>
+          <parameter name="params1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstStructure containing the new parameters to be aggregated.</doc>
+            <type name="Structure" c:type="const GstStructure*"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="api_type_get_tags" c:identifier="gst_meta_api_type_get_tags" version="1.2">
         <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
         <return-value transfer-ownership="none">
@@ -27250,6 +27305,24 @@ to remember the size of previous data to preallocate the next.</doc>
             <array c:type="const gchar**">
               <type name="utf8" c:type="gchar*"/>
             </array>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="api_type_set_params_aggregator" c:identifier="gst_meta_api_type_set_params_aggregator" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">This function sets the aggregator function for a specific API type.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="api" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the #GType of the API for which the aggregator function is being set.</doc>
+            <type name="GType" c:type="GType"/>
+          </parameter>
+          <parameter name="aggregator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the aggregator function to be associated with the given API
+             type.</doc>
+            <type name="AllocationMetaParamsAggregator" c:type="GstAllocationMetaParamsAggregator"/>
           </parameter>
         </parameters>
       </function>
@@ -55133,6 +55206,37 @@ of @new_message.</doc>
         <parameter name="type" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">the message type</doc>
           <type name="MessageType" c:type="GstMessageType"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="meta_api_type_aggregate_params" c:identifier="gst_meta_api_type_aggregate_params" moved-to="Meta.api_type_aggregate_params" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">When a element like `tee` decides the allocation, each downstream element may
+fill different parameters and pass them to gst_query_add_allocation_meta().
+In order to keep these parameters, a merge operation is needed. This
+aggregate function can combine the parameters from @params0 and @param1, and
+write the result back into @aggregated_params.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">%TRUE if the parameters were successfully aggregated, %FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="api" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the GType of the API for which the parameters are being aggregated.</doc>
+          <type name="GType" c:type="GType"/>
+        </parameter>
+        <parameter name="aggregated_params" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">This structure will be updated with the
+                    combined parameters from both @params0 and @params1.</doc>
+          <type name="Structure" c:type="GstStructure**"/>
+        </parameter>
+        <parameter name="params0" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstStructure containing the new parameters to be aggregated.</doc>
+          <type name="Structure" c:type="const GstStructure*"/>
+        </parameter>
+        <parameter name="params1" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstStructure containing the new parameters to be aggregated.</doc>
+          <type name="Structure" c:type="const GstStructure*"/>
         </parameter>
       </parameters>
     </function>
