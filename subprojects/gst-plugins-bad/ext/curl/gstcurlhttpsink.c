@@ -117,7 +117,8 @@ GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (curlhttpsink, "curlhttpsink",
     GST_RANK_NONE, GST_TYPE_CURL_HTTP_SINK, curl_element_init (plugin));
 /* private functions */
 
-static gboolean proxy_setup (GstCurlBaseSink * bcsink);
+static gboolean proxy_setup (GstCurlBaseSink * bcsink, const gchar * http_proxy,
+    const gchar * https_proxy);
 
 static void
 gst_curl_http_sink_class_init (GstCurlHttpSinkClass * klass)
@@ -390,15 +391,37 @@ gst_curl_http_sink_set_header_unlocked (GstCurlBaseSink * bcsink)
 }
 
 static gboolean
+proxy_enabled (GstCurlHttpSink * sink, gchar ** http_proxy,
+    gchar ** https_proxy)
+{
+  gboolean res = FALSE;
+
+  if (sink->proxy != NULL)
+    res = TRUE;
+
+  *http_proxy = getenv ("http_proxy");
+  if (*http_proxy != NULL)
+    res = TRUE;
+
+  *https_proxy = getenv ("https_proxy");
+  if (*https_proxy != NULL)
+    res = TRUE;
+
+  return res;
+}
+
+static gboolean
 gst_curl_http_sink_set_options_unlocked (GstCurlBaseSink * bcsink)
 {
   GstCurlHttpSink *sink = GST_CURL_HTTP_SINK (bcsink);
   GstCurlTlsSinkClass *parent_class;
   CURLcode res;
+  gchar *http_proxy = NULL;
+  gchar *https_proxy = NULL;
 
   /* proxy settings */
-  if (sink->proxy != NULL) {
-    if (!proxy_setup (bcsink)) {
+  if (proxy_enabled (sink, &http_proxy, &https_proxy)) {
+    if (!proxy_setup (bcsink, http_proxy, https_proxy)) {
       return FALSE;
     }
   }
@@ -509,7 +532,41 @@ gst_curl_http_sink_stop (GstBaseSink * bsink)
 }
 
 static gboolean
-proxy_setup (GstCurlBaseSink * bcsink)
+url_contains_credentials (const gchar * url)
+{
+  CURLUcode rc;
+  g_autofree gchar *user = NULL;
+  g_autofree gchar *pass = NULL;
+  CURLU *handle = NULL;
+
+  if (url == NULL) {
+    return FALSE;
+  }
+
+  handle = curl_url ();
+
+  rc = curl_url_set (handle, CURLUPART_URL, url, 0);
+  if (rc != CURLUE_OK)
+    goto error;
+
+  rc = curl_url_get (handle, CURLUPART_USER, &user, 0);
+  if (rc != CURLUE_OK)
+    goto error;
+
+  rc = curl_url_get (handle, CURLUPART_PASSWORD, &pass, 0);
+  if (rc != CURLUE_OK)
+    goto error;
+
+  curl_url_cleanup (handle);
+  return TRUE;
+
+error:
+  curl_url_cleanup (handle);
+  return FALSE;
+}
+
+static gboolean
+custom_proxy_setup (GstCurlBaseSink * bcsink)
 {
   GstCurlHttpSink *sink = GST_CURL_HTTP_SINK (bcsink);
   CURLcode res;
@@ -547,14 +604,6 @@ proxy_setup (GstCurlBaseSink * bcsink)
       return FALSE;
     }
 
-    res = curl_easy_setopt (bcsink->curl, CURLOPT_PROXYAUTH, CURLAUTH_ANY);
-    if (res != CURLE_OK) {
-      bcsink->error =
-          g_strdup_printf ("failed to set proxy authentication method: %s",
-          curl_easy_strerror (res));
-      return FALSE;
-    }
-
     sink->proxy_auth = TRUE;
   }
 
@@ -563,6 +612,33 @@ proxy_setup (GstCurlBaseSink * bcsink)
     res = curl_easy_setopt (bcsink->curl, CURLOPT_HTTPPROXYTUNNEL, 1L);
     if (res != CURLE_OK) {
       bcsink->error = g_strdup_printf ("failed to set HTTP proxy tunnel: %s",
+          curl_easy_strerror (res));
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+
+static gboolean
+proxy_setup (GstCurlBaseSink * bcsink, const gchar * http_proxy,
+    const gchar * https_proxy)
+{
+  GstCurlHttpSink *sink = GST_CURL_HTTP_SINK (bcsink);
+  CURLcode res;
+
+  if (sink->proxy != NULL) {
+    if (!custom_proxy_setup (bcsink))
+      return FALSE;
+  } else {
+    sink->proxy_auth = url_contains_credentials (http_proxy)
+        || url_contains_credentials (https_proxy);
+  }
+
+  if (sink->proxy_auth) {
+    res = curl_easy_setopt (bcsink->curl, CURLOPT_PROXYAUTH, CURLAUTH_ANY);
+    if (res != CURLE_OK) {
+      bcsink->error =
+          g_strdup_printf ("failed to set proxy authentication method: %s",
           curl_easy_strerror (res));
       return FALSE;
     }
