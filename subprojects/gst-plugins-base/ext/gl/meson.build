@@ -114,7 +114,13 @@ if bcm_host_dep.found()
   optional_deps += bcm_host_dep
 endif
 
-if egl_dep.found() and cc.has_header('drm_fourcc.h', dependencies: libdrm_dep)
+if libdrm_dep.type_name() == 'internal'
+  drm_has_fourcc = true
+else
+  drm_has_fourcc = cc.has_header('drm_fourcc.h', dependencies: libdrm_dep)
+endif
+
+if egl_dep.found() and drm_has_fourcc
   optional_deps += [allocators_dep, libdrm_dep]
 endif
 
