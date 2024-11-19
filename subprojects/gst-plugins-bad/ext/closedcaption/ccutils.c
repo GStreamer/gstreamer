@@ -1104,7 +1104,7 @@ cc_buffer_take_cea608_field2 (CCBuffer * buf,
     g_array_remove_range (buf->cea608_2, 0, write_cea608_2_size);
   }
   *cea608_2_len = write_cea608_2_size;
-  if (buf->output_padding && field1_padding > 0) {
+  if (buf->output_padding && field2_padding > 0) {
     memset (&cea608_2[write_cea608_2_size], 0x80, field2_padding);
     *cea608_2_len += field2_padding;
   }
