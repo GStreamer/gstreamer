@@ -771,7 +771,7 @@ cc_buffer_get_out_sizes (CCBuffer * buf, const struct cdp_fps_entry *fps_entry,
 {
   gint extra_ccp = 0, extra_cea608_1 = 0, extra_cea608_2 = 0;
   gint write_ccp_size = 0, write_cea608_1_size = 0, write_cea608_2_size = 0;
-  gboolean wrote_first = FALSE;
+  gboolean write_field1 = FALSE;
 
   if (buf->cc_data->len) {
     extra_ccp = buf->cc_data->len - 3 * fps_entry->max_ccp_count;
@@ -784,7 +784,8 @@ cc_buffer_get_out_sizes (CCBuffer * buf, const struct cdp_fps_entry *fps_entry,
   *field1_padding = 0;
   *field2_padding = 0;
 
-  wrote_first = buf->last_cea608_written_was_field1;
+  write_field1 = !buf->last_cea608_written_was_field1;
+
   /* try to push data into the packets.  Anything 'extra' will be
    * stored for later */
   while (TRUE) {
@@ -795,7 +796,7 @@ cc_buffer_get_out_sizes (CCBuffer * buf, const struct cdp_fps_entry *fps_entry,
     if (avail_1 + avail_2 >= 2 * fps_entry->max_cea608_count)
       break;
 
-    if (!wrote_first) {
+    if (write_field1) {
       if (extra_cea608_1 > 0) {
         extra_cea608_1 -= 2;
         g_assert_cmpint (extra_cea608_1, >=, 0);
@@ -821,7 +822,8 @@ cc_buffer_get_out_sizes (CCBuffer * buf, const struct cdp_fps_entry *fps_entry,
        * requested to start with field2 */
       *field2_padding += 2;
     }
-    wrote_first = FALSE;
+
+    write_field1 = TRUE;
   }
 
   // don't write padding if not requested
@@ -941,7 +943,7 @@ cc_buffer_take_cc_data (CCBuffer * buf,
 {
   guint write_cea608_1_size, write_cea608_2_size, write_ccp_size;
   guint field1_padding, field2_padding;
-  gboolean wrote_first;
+  gboolean write_field1;
   gboolean nul_padding =
       (buf->cea608_padding_strategy & CC_BUFFER_CEA608_PADDING_STRATEGY_VALID)
       == 0;
@@ -959,9 +961,10 @@ cc_buffer_take_cc_data (CCBuffer * buf,
         field2_padding;
     guint ccp_padding = 0;
 
-    wrote_first = !buf->last_cea608_written_was_field1;
+    write_field1 = !buf->last_cea608_written_was_field1;
+
     while (cea608_1_i + cea608_2_i < cea608_output_count) {
-      if (wrote_first) {
+      if (write_field1) {
         if (cea608_1_i < write_cea608_1_size) {
           cc_data[out_i++] = 0xfc;
           cc_data[out_i++] = cea608_1[cea608_1_i];
@@ -1019,7 +1022,7 @@ cc_buffer_take_cc_data (CCBuffer * buf,
         buf->field2_padding_written_count += 1;
       }
 
-      wrote_first = TRUE;
+      write_field1 = TRUE;
     }
 
     if (write_ccp_size > 0)
