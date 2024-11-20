@@ -73,6 +73,7 @@ static void
 plugin_deinit (gpointer data)
 {
   gst_d3d12_ipc_client_deinit ();
+  gst_d3d12_flush_all_devices ();
 }
 
 static gboolean

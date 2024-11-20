@@ -367,20 +367,6 @@ public:
     return device;
   }
 
-  void ReleaseDevice (gint64 luid)
-  {
-    std::lock_guard <std::recursive_mutex> lk (lock_);
-    for (const auto & it : list_) {
-      if (it->adapter_luid == luid) {
-        if (it.use_count () == 1) {
-          it->Drain ();
-          it->ReportLiveObjects ();
-        }
-        return;
-      }
-    }
-  }
-
   void OnDeviceRemoved (gint64 luid)
   {
     std::lock_guard <std::recursive_mutex> lk (lock_);
@@ -495,6 +481,15 @@ public:
     for (auto it : clients) {
       g_object_notify_by_pspec (G_OBJECT (it), pspec_removed_reason);
       gst_object_unref (it);
+    }
+  }
+
+  void FlushAll ()
+  {
+    std::lock_guard <std::recursive_mutex> lk (lock_);
+    for (const auto & it : list_) {
+      it->Drain ();
+      it->ReportLiveObjects ();
     }
   }
 
@@ -729,14 +724,7 @@ gst_d3d12_device_finalize (GObject * object)
 
   GST_DEBUG_OBJECT (self, "Finalize");
 
-  gint64 luid = 0;
-  if (self->priv->inner)
-    luid = self->priv->inner->adapter_luid;
-
   delete self->priv;
-
-  auto manager = DeviceCacheManager::GetInstance ();
-  manager->ReleaseDevice (luid);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2240,4 +2228,18 @@ gst_d3d12_device_non_zeroed_supported (GstD3D12Device * device)
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
 
   return device->priv->inner->non_zeroed_supported;
+}
+
+/**
+ * gst_d3d12_flush_all_devices:
+ *
+ * Flushes all devices and waits for completion of all scheduled GPU tasks
+ *
+ * Since: 1.26
+ */
+void
+gst_d3d12_flush_all_devices (void)
+{
+  auto manager = DeviceCacheManager::GetInstance ();
+  manager->FlushAll ();
 }

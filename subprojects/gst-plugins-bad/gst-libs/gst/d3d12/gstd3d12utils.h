@@ -78,6 +78,10 @@ gboolean  gst_d3d12_get_copyable_footprints (GstD3D12Device * device,
                                              D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES],
                                              guint64 * size);
 
+
+GST_D3D12_API
+void      gst_d3d12_flush_all_devices (void);
+
 GST_D3D12_API
 gboolean _gst_d3d12_result (HRESULT hr,
                             GstD3D12Device * device,
