@@ -4519,6 +4519,51 @@ gst_util_ceil_log2 (guint32 v)
 }
 
 /**
+ * gst_util_floor_log2:
+ * @v: a #guint32 value.
+ *
+ * Returns smallest integral value not bigger than log2(v).
+ *
+ * Returns: a computed #guint val.
+ *
+ * Since: 1.26
+ */
+guint
+gst_util_floor_log2 (guint32 v)
+{
+  guint32 result = 0;
+
+  g_return_val_if_fail (v != 0, -1);
+
+  if (v & 0xffff0000) {
+    v >>= 16;
+    result += 16;
+  }
+
+  if (v & 0xff00) {
+    v >>= 8;
+    result += 8;
+  }
+
+  if (v & 0xf0) {
+    v >>= 4;
+    result += 4;
+  }
+
+  if (v & 0xc) {
+    v >>= 2;
+    result += 2;
+  }
+
+  if (v & 0x2) {
+    v >>= 1;
+    result += 1;
+  }
+
+  return result;
+}
+
+/**
  * gst_calculate_linear_regression: (skip)
  * @xy: Pairs of (x,y) values
  * @temp: Temporary scratch space used by the function
