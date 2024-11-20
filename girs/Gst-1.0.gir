@@ -57447,6 +57447,19 @@ the result.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="util_floor_log2" c:identifier="gst_util_floor_log2" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Returns smallest integral value not bigger than log2(v).</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a computed #guint val.</doc>
+        <type name="guint" c:type="guint"/>
+      </return-value>
+      <parameters>
+        <parameter name="x" transfer-ownership="none">
+          <type name="guint32" c:type="guint32"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="util_fraction_add" c:identifier="gst_util_fraction_add">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Adds the fractions @a_n/@a_d and @b_n/@b_d and stores
 the result in @res_n and @res_d.</doc>
