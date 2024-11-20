@@ -2047,6 +2047,13 @@ start_discovering (GstDiscoverer * dc)
   GST_DEBUG ("Starting");
 
   DISCO_LOCK (dc);
+  if (dc->priv->cleanup) {
+    GST_DEBUG ("The discoverer is busy cleaning up.");
+    res = GST_DISCOVERER_BUSY;
+    DISCO_UNLOCK (dc);
+    goto beach;
+  }
+
   if (dc->priv->pending_uris == NULL) {
     GST_WARNING ("No URI to process");
     res = GST_DISCOVERER_URI_INVALID;

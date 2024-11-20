@@ -267,7 +267,7 @@ discovered_cb (GstDiscoverer * discoverer,
 }
 
 static void
-test_disco_async_with_context (GMainContext * context)
+test_disco_async_with_context (GMainContext * context, guint num)
 {
   GstDiscoverer *dc;
   GError *err = NULL;
@@ -293,14 +293,17 @@ test_disco_async_with_context (GMainContext * context)
   g_signal_connect (dc, "discovered", G_CALLBACK (discovered_cb), &data);
 
   gst_discoverer_start (dc);
-  fail_unless (gst_discoverer_discover_uri_async (dc, data.uri) == TRUE);
 
-  g_main_loop_run (data.loop);
+  for (guint i = 0; i < num; ++i) {
+    fail_unless (gst_discoverer_discover_uri_async (dc, data.uri) == TRUE);
 
-  if (have_theora && have_ogg) {
-    fail_unless_equals_int (data.result, GST_DISCOVERER_OK);
-  } else {
-    fail_unless_equals_int (data.result, GST_DISCOVERER_MISSING_PLUGINS);
+    g_main_loop_run (data.loop);
+
+    if (have_theora && have_ogg) {
+      fail_unless_equals_int (data.result, GST_DISCOVERER_OK);
+    } else {
+      fail_unless_equals_int (data.result, GST_DISCOVERER_MISSING_PLUGINS);
+    }
   }
 
   gst_discoverer_stop (dc);
@@ -316,7 +319,15 @@ test_disco_async_with_context (GMainContext * context)
 GST_START_TEST (test_disco_async)
 {
   /* use default GMainContext */
-  test_disco_async_with_context (NULL);
+  test_disco_async_with_context (NULL, 1);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_disco_async_reuse)
+{
+  /* use default GMainContext */
+  test_disco_async_with_context (NULL, 3);
 }
 
 GST_END_TEST;
@@ -336,7 +347,7 @@ custom_context_thread_func (CustomContextData * data)
 
   /* test async APIs with custom GMainContext */
   context = g_main_context_new ();
-  test_disco_async_with_context (context);
+  test_disco_async_with_context (context, 1);
   g_main_context_unref (context);
 
   data->finish = TRUE;
@@ -394,6 +405,7 @@ discoverer_suite (void)
   tcase_add_test (tc_chain, test_disco_serializing);
   tcase_add_test (tc_chain, test_disco_async);
   tcase_add_test (tc_chain, test_disco_async_custom_context);
+  tcase_add_test (tc_chain, test_disco_async_reuse);
   return s;
 }
 
