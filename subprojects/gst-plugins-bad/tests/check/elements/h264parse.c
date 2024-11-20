@@ -1488,6 +1488,16 @@ GST_START_TEST (test_parse_sei_userdefinedunregistered)
     0x1f, 0x00, 0x05, 0xff, 0x21, 0x7e, 0xff, 0x29,
     0xb5, 0xff, 0xdc, 0x13
   };
+  // Same SEI as above but without data
+  const guint8 no_data_sei[] = {
+    0x00, 0x00, 0x00, 0x20, 0x06, 0x05, 0x10, 0x4d,
+    0x49, 0x53, 0x50, 0x6d, 0x69, 0x63, 0x72, 0x6f,
+    0x73, 0x65, 0x63, 0x74, 0x69, 0x6d, 0x65,
+    /* IDR frame (doesn't match caps) */
+    0x00, 0x00, 0x00, 0x14, 0x65, 0x88, 0x84, 0x00,
+    0x10, 0xff, 0xfe, 0xf6, 0xf0, 0xfe, 0x05, 0x36,
+    0x56, 0x04, 0x50, 0x96, 0x7b, 0x3f, 0x53, 0xe1
+  };
 
   h = gst_harness_new ("h264parse");
 
@@ -1508,6 +1518,21 @@ GST_START_TEST (test_parse_sei_userdefinedunregistered)
 
   fail_unless (memcmp (meta->uuid, H264_MISP_MICROSECTIME, 16) == 0);
   fail_unless (memcmp (meta->data, st0604_data, 12) == 0);
+
+  gst_buffer_unref (buf);
+
+  // Now try parsing an unregistered SEI without data
+  buf = gst_buffer_new_and_alloc (misb_sei_size);
+  gst_buffer_fill (buf, 0, no_data_sei, sizeof (no_data_sei));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  buf = gst_harness_pull (h);
+  meta = gst_buffer_get_video_sei_user_data_unregistered_meta (buf);
+  fail_unless (meta != NULL);
+
+  fail_unless (memcmp (meta->uuid, H264_MISP_MICROSECTIME, 16) == 0);
+  fail_unless (meta->data == NULL);
+  fail_unless (meta->size == 0);
 
   gst_buffer_unref (buf);
 
