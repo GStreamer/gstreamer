@@ -42,13 +42,16 @@ static GList *gst_aja_device_provider_probe(GstDeviceProvider *provider) {
   while (CNTV2DeviceScanner::GetDeviceAtIndex(device_idx, device)) {
     auto features = device.features();
     // Skip non-input / non-output devices
-    if (features.GetNumVideoInputs() == 0 && features.GetNumVideoOutputs() == 0)
+    if (features.GetNumVideoInputs() == 0 && features.GetNumVideoOutputs() == 0) {
+      device_idx += 1;
       continue;
+    }
 
     if (features.GetNumVideoInputs() > 0)
       ret = g_list_prepend(ret, gst_aja_device_new(device, device_idx, TRUE));
     if (features.GetNumVideoOutputs() > 0)
       ret = g_list_prepend(ret, gst_aja_device_new(device, device_idx, FALSE));
+    device_idx += 1;
   }
 
   ret = g_list_reverse(ret);
