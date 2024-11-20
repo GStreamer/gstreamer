@@ -623,9 +623,6 @@ gst_h264_parse_process_sei_user_data_unregistered (GstH264Parse * h264parse,
 {
   GstByteReader br;
 
-  if (urud->data == NULL || urud->size < 1)
-    return;
-
   gst_byte_reader_init (&br, urud->data, urud->size);
 
   gst_video_parse_user_data_unregistered ((GstElement *) h264parse,

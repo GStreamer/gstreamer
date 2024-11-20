@@ -156,7 +156,7 @@ gst_video_sei_user_data_unregistered_meta_get_info (void)
  * gst_buffer_add_video_sei_user_data_unregistered_meta:
  * @buffer: a #GstBuffer
  * @uuid: User Data Unregistered UUID
- * @data: (transfer none): SEI User Data Unregistered buffer
+ * @data: (transfer none) (allow-none): SEI User Data Unregistered buffer
  * @size: size of the data buffer
  *
  * Attaches #GstVideoSEIUserDataUnregisteredMeta metadata to @buffer with the given
@@ -172,7 +172,6 @@ gst_buffer_add_video_sei_user_data_unregistered_meta (GstBuffer * buffer,
 {
   GstVideoSEIUserDataUnregisteredMeta *meta;
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-  g_return_val_if_fail (data != NULL, NULL);
 
   meta = (GstVideoSEIUserDataUnregisteredMeta *) gst_buffer_add_meta (buffer,
       GST_VIDEO_SEI_USER_DATA_UNREGISTERED_META_INFO, NULL);
