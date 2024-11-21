@@ -42,7 +42,12 @@ if not add_languages('cpp', native: false, required: qt5_option)
 endif
 
 qt5_mod = import('qt5')
-if not qt5_mod.has_tools(method: qt5_method)
+if meson.version().version_compare('>=1.6')
+  have_tools = qt5_mod.has_tools(method: qt5_method, tools: ['moc', 'uic', 'rcc'])
+else
+  have_tools = qt5_mod.has_tools(method: qt5_method)
+endif
+if not have_tools
   if qt5_option.enabled()
     error('qt5 qmlglsink plugin is enabled, but qt specific tools were not found')
   endif
