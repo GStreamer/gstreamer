@@ -1378,6 +1378,14 @@ gst_vtenc_set_colorimetry (GstVTEnc * self, VTCompressionSessionRef session)
         GST_WARNING_OBJECT (self, "macOS version is too old, the SMPTE2084 "
             "transfer function is not available");
       break;
+    case GST_VIDEO_TRANSFER_ARIB_STD_B67:
+      if (__builtin_available (macOS 10.13, *))
+        transfer = kCVImageBufferTransferFunction_ITU_R_2100_HLG;
+      else
+        GST_WARNING_OBJECT (self,
+            "macOS version is too old, the ITU-R BT.2100-1 "
+            "transfer function is not available");
+      break;
     default:
       GST_WARNING_OBJECT (self, "Unsupported color transfer %u", cm.transfer);
   }
