@@ -8077,16 +8077,21 @@ gst_value_transform_allocation_params_string (const GValue * value1,
 {
   GstAllocationParams *params = value1->data[0].v_pointer;
   gchar *res;
-  GstStructure *s;
 
-  s = gst_structure_new_static_str ("GstAllocationParams",
-      "flags", GST_TYPE_MEMORY_FLAGS, params->flags,
-      "align", G_TYPE_UINT64, params->align,
-      "prefix", G_TYPE_UINT64, params->prefix,
-      "padding", G_TYPE_UINT64, params->padding, NULL);
+  if (params) {
+    GstStructure *s = NULL;
 
-  res = gst_structure_to_string (s);
-  gst_structure_free (s);
+    s = gst_structure_new_static_str ("GstAllocationParams",
+        "flags", GST_TYPE_MEMORY_FLAGS, params->flags,
+        "align", G_TYPE_UINT64, params->align,
+        "prefix", G_TYPE_UINT64, params->prefix,
+        "padding", G_TYPE_UINT64, params->padding, NULL);
+
+    res = gst_structure_to_string (s);
+    gst_structure_free (s);
+  } else {
+    res = g_strdup ("NULL");
+  }
 
   dest_value->data[0].v_pointer = res;
 }
