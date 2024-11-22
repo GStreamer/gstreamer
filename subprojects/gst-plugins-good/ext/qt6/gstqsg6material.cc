@@ -473,14 +473,18 @@ GstQSG6Material::setCaps (GstCaps * caps)
 gboolean
 GstQSG6Material::setBuffer (GstBuffer * buffer)
 {
-  GST_LOG ("%p setBuffer %" GST_PTR_FORMAT, this, buffer);
+  GstGLContext *qt_context = gst_gl_context_get_current ();
+
+  GST_LOG ("%p setBuffer %" GST_PTR_FORMAT " with qt context %" GST_PTR_FORMAT,
+      this, buffer, qt_context);
   /* FIXME: update more state here */
+
+  g_weak_ref_set (&this->qt_context_ref_, qt_context);
+
   if (!gst_buffer_replace (&this->buffer_, buffer))
     return FALSE;
 
   this->buffer_was_bound = false;
-
-  g_weak_ref_set (&this->qt_context_ref_, gst_gl_context_get_current ());
 
   if (this->v_frame.buffer) {
     gst_video_frame_unmap (&this->v_frame);
@@ -567,7 +571,7 @@ video_format_to_texel_size (GstVideoFormat format, guint plane)
 QSGTexture *
 GstQSG6Material::bind(GstQSG6MaterialShader *shader, QRhi * rhi, QRhiResourceUpdateBatch *res_updates, guint plane, GstVideoFormat v_format)
 {
-  GstGLContext *qt_context, *context;
+  GstGLContext *qt_context = NULL, *context;
   GstMemory *mem;
   GstGLMemory *gl_mem;
   GstGLSyncMeta *sync_meta;
@@ -578,14 +582,16 @@ GstQSG6Material::bind(GstQSG6MaterialShader *shader, QRhi * rhi, QRhiResourceUpd
   QSize tex_size;
   QRhiTexture::Flags flags = {};
 
-  qt_context = GST_GL_CONTEXT (g_weak_ref_get (&this->qt_context_ref_));
-  if (!qt_context)
-    goto out;
-
   if (!this->buffer_)
     goto out;
   if (GST_VIDEO_INFO_FORMAT (&this->v_info) == GST_VIDEO_FORMAT_UNKNOWN)
     goto out;
+
+  qt_context = GST_GL_CONTEXT (g_weak_ref_get (&this->qt_context_ref_));
+  if (!qt_context)
+    goto out;
+
+  GST_DEBUG ("%p attempting to bind with context %" GST_PTR_FORMAT, this, qt_context);
 
   mem = gst_buffer_peek_memory (this->buffer_, plane);
   g_assert (gst_is_gl_memory (mem));

@@ -451,16 +451,23 @@ GstQSGMaterial::setCaps (GstCaps * caps)
 gboolean
 GstQSGMaterial::setBuffer (GstBuffer * buffer)
 {
-  GST_LOG ("%p setBuffer %" GST_PTR_FORMAT, this, buffer);
+  GstGLContext *qt_context;
+  gboolean ret = FALSE;
+
   /* FIXME: update more state here */
-  if (!gst_buffer_replace (&this->buffer_, buffer))
-    return FALSE;
+  if (gst_buffer_replace (&this->buffer_, buffer)) {
+    GST_LOG ("%p setBuffer new buffer %" GST_PTR_FORMAT, this, buffer);
 
-  this->buffer_was_bound = FALSE;
+    this->buffer_was_bound = FALSE;
+    ret = TRUE;
+  }
 
-  g_weak_ref_set (&this->qt_context_ref_, gst_gl_context_get_current ());
+  qt_context = gst_gl_context_get_current ();
+  GST_DEBUG ("%p setBuffer with qt context %" GST_PTR_FORMAT, this, qt_context);
 
-  return TRUE;
+  g_weak_ref_set (&this->qt_context_ref_, qt_context);
+
+  return ret;
 }
 
 /* only called from the streaming thread with scene graph thread blocked */
@@ -481,7 +488,7 @@ void
 GstQSGMaterial::bind(GstQSGMaterialShader *shader, GstVideoFormat v_format)
 {
   const GstGLFuncs *gl;
-  GstGLContext *context, *qt_context;
+  GstGLContext *context, *qt_context = NULL;
   GstGLSyncMeta *sync_meta;
   GstMemory *mem;
   GstGLMemory *gl_mem;
@@ -492,10 +499,6 @@ GstQSGMaterial::bind(GstQSGMaterialShader *shader, GstVideoFormat v_format)
     memset (&this->v_frame, 0, sizeof (this->v_frame));
   }
 
-  qt_context = GST_GL_CONTEXT (g_weak_ref_get (&this->qt_context_ref_));
-  if (!qt_context)
-    goto out;
-
   if (!this->buffer_)
     goto out;
   if (GST_VIDEO_INFO_FORMAT (&this->v_info) == GST_VIDEO_FORMAT_UNKNOWN)
@@ -503,6 +506,10 @@ GstQSGMaterial::bind(GstQSGMaterialShader *shader, GstVideoFormat v_format)
 
   this->mem_ = gst_buffer_peek_memory (this->buffer_, 0);
   if (!this->mem_)
+    goto out;
+
+  qt_context = GST_GL_CONTEXT (g_weak_ref_get (&this->qt_context_ref_));
+  if (!qt_context)
     goto out;
 
   gl = qt_context->gl_vtable;
@@ -513,6 +520,8 @@ GstQSGMaterial::bind(GstQSGMaterialShader *shader, GstVideoFormat v_format)
     g_assert_not_reached ();
     goto out;
   }
+
+  GST_DEBUG ("%p attempting to bind with context %" GST_PTR_FORMAT, this, qt_context);
 
   mem = gst_buffer_peek_memory (this->buffer_, 0);
   g_assert (gst_is_gl_memory (mem));
