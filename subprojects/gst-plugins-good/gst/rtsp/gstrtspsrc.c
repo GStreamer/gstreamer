@@ -5364,8 +5364,6 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     name = g_strdup_printf ("stream_%u", stream->id);
     template = gst_static_pad_template_get (&rtptemplate);
     stream->srcpad = gst_ghost_pad_new_from_template (name, outpad, template);
-    gst_pad_set_event_function (stream->srcpad, gst_rtspsrc_handle_src_event);
-    gst_pad_set_query_function (stream->srcpad, gst_rtspsrc_handle_src_query);
     gst_object_unref (template);
     g_free (name);
 
