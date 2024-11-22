@@ -654,6 +654,7 @@ enum
   ON_DATA_CHANNEL_SIGNAL,
   PREPARE_DATA_CHANNEL_SIGNAL,
   REQUEST_AUX_SENDER,
+  REQUEST_POST_RTP_AUX_SENDER,
   ADD_ICE_CANDIDATE_FULL_SIGNAL,
   LAST_SIGNAL,
 };
@@ -5064,6 +5065,56 @@ try_match_transceiver_with_fec_decoder (GstWebRTCBin * webrtc,
   }
 }
 
+/* connects a specific sessions send_rtp_src pad with the matching sink pad in
+ * the transport stream. If an aux sender was requested, insert it between these
+ * elements, before linking. */
+static void
+connect_rtpbin_with_sendbin (GstWebRTCBin * webrtc, guint session_id,
+    TransportStream * stream)
+{
+  GstElement *aux_sender;
+  g_signal_emit (webrtc,
+      gst_webrtc_bin_signals[REQUEST_POST_RTP_AUX_SENDER], 0,
+      stream->transport, &aux_sender);
+  gboolean aux_success = FALSE;
+  gchar *rtp_pad_name = g_strdup_printf ("send_rtp_src_%u", session_id);
+  if (aux_sender) {
+    gst_object_ref_sink (aux_sender);
+    if (!gst_bin_add (GST_BIN (webrtc), aux_sender)) {
+      GST_ERROR_OBJECT (webrtc,
+          "Unable to add aux_sender %" GST_PTR_FORMAT " to webrtcbin"
+          ". Skipping it.", aux_sender);
+      goto aux_done;
+    }
+    gst_element_sync_state_with_parent (aux_sender);
+    if (!gst_element_link_pads (GST_ELEMENT (webrtc->rtpbin), rtp_pad_name,
+            aux_sender, "sink")) {
+      GST_ERROR_OBJECT (webrtc,
+          "Unable to link aux_sender %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT
+          ". Skipping it.", webrtc->rtpbin, aux_sender);
+      goto aux_done;
+    }
+    if (!gst_element_link_pads (aux_sender, "src",
+            GST_ELEMENT (stream->send_bin), "rtp_sink")) {
+      gst_element_unlink_pads (GST_ELEMENT (webrtc->rtpbin), rtp_pad_name,
+          aux_sender, "sink");
+      GST_ERROR_OBJECT (webrtc,
+          "Unable to link %" GST_PTR_FORMAT " to aux sender %" GST_PTR_FORMAT
+          ". Skipping it.", aux_sender, stream->send_bin);
+      goto aux_done;
+    }
+    aux_success = TRUE;
+  aux_done:
+    gst_clear_object (&aux_sender);
+  }
+  if (!aux_success) {
+    if (!gst_element_link_pads (GST_ELEMENT (webrtc->rtpbin), rtp_pad_name,
+            GST_ELEMENT (stream->send_bin), "rtp_sink"))
+      g_warn_if_reached ();
+  }
+  g_free (rtp_pad_name);
+}
+
 static void
 _set_internal_rtpbin_element_props_from_stream (GstWebRTCBin * webrtc,
     TransportStream * stream)
@@ -5269,11 +5320,7 @@ _connect_input_stream (GstWebRTCBin * webrtc, GstWebRTCBinPad * pad)
     gst_pad_link (srcpad, rtp_sink);
     gst_object_unref (rtp_sink);
 
-    pad_name = g_strdup_printf ("send_rtp_src_%u", pad->trans->mline);
-    if (!gst_element_link_pads (GST_ELEMENT (webrtc->rtpbin), pad_name,
-            GST_ELEMENT (trans->stream->send_bin), "rtp_sink"))
-      g_warn_if_reached ();
-    g_free (pad_name);
+    connect_rtpbin_with_sendbin (webrtc, pad->trans->mline, trans->stream);
   } else {
     gchar *pad_name = g_strdup_printf ("sink_%u", pad->trans->mline);
     GstPad *funnel_sinkpad =
@@ -6082,11 +6129,7 @@ _connect_rtpfunnel (GstWebRTCBin * webrtc, guint session_id, GError ** error)
   gst_object_unref (srcpad);
   gst_object_unref (rtp_sink);
 
-  pad_name = g_strdup_printf ("send_rtp_src_%d", session_id);
-  if (!gst_element_link_pads (GST_ELEMENT (webrtc->rtpbin), pad_name,
-          GST_ELEMENT (stream->send_bin), "rtp_sink"))
-    g_warn_if_reached ();
-  g_free (pad_name);
+  connect_rtpbin_with_sendbin (webrtc, session_id, stream);
 
 done:
   return TRUE;
@@ -9280,6 +9323,23 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       G_SIGNAL_RUN_LAST, 0, _gst_element_accumulator, NULL, NULL,
       GST_TYPE_ELEMENT, 1, GST_TYPE_WEBRTC_DTLS_TRANSPORT);
 
+   /**
+   * GstWebRTCBin::request-post-rtp-aux-sender:
+   * @object: the #GstWebRTCBin
+   * @dtls-transport: The #GstWebRTCDTLSTransport object for which the aux
+   * sender will be used.
+   *
+   * Request an AUX sender element for the given @dtls-transport,
+   * that is placed between RTPBin and Transportbin..
+   *
+   * Returns: (transfer full): A new GStreamer element
+   *
+   * Since: 1.26
+   */
+  gst_webrtc_bin_signals[REQUEST_POST_RTP_AUX_SENDER] =
+      g_signal_new ("request-post-rtp-aux-sender",
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, _gst_element_accumulator,
+      NULL, NULL, GST_TYPE_ELEMENT, 1, GST_TYPE_WEBRTC_DTLS_TRANSPORT);
   /**
    * GstWebRTCBin::add-transceiver:
    * @object: the #webrtcbin
