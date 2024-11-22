@@ -71,3 +71,6 @@ subprojects/*/
 
 # apk files from CI (or following its commands)
 *.apk
+
+# Cache files (from emacs)
+*~
