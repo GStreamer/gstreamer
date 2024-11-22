@@ -3398,8 +3398,8 @@ mq_slot_handle_stream_start (MultiQueueSlot * slot, GstEvent * stream_event)
   }
 
 check_for_switch:
-  if (!dbin->upstream_handles_selection && collection == dbin->output_collection
-      && collection->all_streams_present) {
+  if (!dbin->upstream_handles_selection
+      && collection == dbin->output_collection) {
     handle_stream_switch (dbin);
   }
 
@@ -4121,6 +4121,8 @@ mq_slot_unassign_probe (GstPad * pad, GstPadProbeInfo * info,
  *
  * Figures out which slots to (de)activate for the given output_collection.
  *
+ * Will only take place if all streams of the output collection are present.
+ *
  * Must be called with SELECTION_LOCK taken.
  */
 static void
@@ -4138,6 +4140,12 @@ handle_stream_switch (GstDecodebin3 * dbin)
   GList *slots_to_reassign = NULL;
 
   g_return_if_fail (collection);
+
+  if (!collection->all_streams_present) {
+    GST_DEBUG_OBJECT (dbin,
+        "Not all streams are present yet. Delaying actual switch");
+    return;
+  }
 
   /* COMPARE the requested streams to the active and requested streams
    * on multiqueue. */
@@ -4367,7 +4375,7 @@ handle_select_streams (GstDecodebin3 * dbin, GstEvent * event)
   collection->seqnum = seqnum;
   collection->posted_streams_selected_msg = FALSE;
 
-  /* If the collection is the current output one, handle the switch */
+  /* If the collection is the current output one, handle the switch. */
   if (collection == dbin->output_collection)
     handle_stream_switch (dbin);
 
