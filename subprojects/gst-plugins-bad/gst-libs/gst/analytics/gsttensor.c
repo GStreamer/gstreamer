@@ -209,3 +209,50 @@ gst_tensor_get_dims (GstTensor * tensor, gsize * num_dims)
     *num_dims = tensor->num_dims;
   return tensor->dims;
 }
+
+/**
+ * gst_tensor_data_type_get_name:
+ * @data_type: a #GstTensorDataType
+ *
+ * Get a string version of the data type
+ *
+ * Returns: a constant string with the name of the data type
+ *
+ * Since: 1.28
+ */
+const gchar *
+gst_tensor_data_type_get_name (GstTensorDataType data_type)
+{
+  switch (data_type) {
+    case GST_TENSOR_DATA_TYPE_INT4:
+      return "int4";
+    case GST_TENSOR_DATA_TYPE_INT8:
+      return "int8";
+    case GST_TENSOR_DATA_TYPE_INT16:
+      return "int16";
+    case GST_TENSOR_DATA_TYPE_INT32:
+      return "int32";
+    case GST_TENSOR_DATA_TYPE_INT64:
+      return "int64";
+    case GST_TENSOR_DATA_TYPE_UINT4:
+      return "uint4";
+    case GST_TENSOR_DATA_TYPE_UINT8:
+      return "uint8";
+    case GST_TENSOR_DATA_TYPE_UINT16:
+      return "uint16";
+    case GST_TENSOR_DATA_TYPE_UINT32:
+      return "uint32";
+    case GST_TENSOR_DATA_TYPE_UINT64:
+      return "uint64";
+    case GST_TENSOR_DATA_TYPE_FLOAT16:
+      return "float16";
+    case GST_TENSOR_DATA_TYPE_FLOAT32:
+      return "float32";
+    case GST_TENSOR_DATA_TYPE_FLOAT64:
+      return "float64";
+    case GST_TENSOR_DATA_TYPE_BFLOAT16:
+      return "bfloat16";
+    default:
+      return NULL;
+  }
+}

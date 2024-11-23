@@ -1385,6 +1385,20 @@ dimension is dynamic.</doc>
           </parameter>
         </parameters>
       </method>
+      <function name="data_type_get_name" c:identifier="gst_tensor_data_type_get_name" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Get a string version of the data type</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a constant string with the name of the data type</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="data_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a #GstTensorDataType</doc>
+            <type name="TensorDataType" c:type="GstTensorDataType"/>
+          </parameter>
+        </parameters>
+      </function>
     </record>
     <enumeration name="TensorDataType" version="1.26" c:type="GstTensorDataType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Describe the type of data contain in the tensor.</doc>
@@ -1890,6 +1904,20 @@ metadata type.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">A #GstAnalyticsMtdType type</doc>
         <type name="MtdType" c:type="GstAnalyticsMtdType"/>
       </return-value>
+    </function>
+    <function name="tensor_data_type_get_name" c:identifier="gst_tensor_data_type_get_name" moved-to="Tensor.data_type_get_name" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Get a string version of the data type</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a constant string with the name of the data type</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="data_type" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">a #GstTensorDataType</doc>
+          <type name="TensorDataType" c:type="GstTensorDataType"/>
+        </parameter>
+      </parameters>
     </function>
     <function name="tensor_meta_api_get_type" c:identifier="gst_tensor_meta_api_get_type" version="1.26" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>

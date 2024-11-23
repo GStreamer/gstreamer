@@ -149,6 +149,9 @@ gsize * gst_tensor_get_dims (GstTensor * tensor, gsize * num_dims);
 GST_ANALYTICS_META_API
 GType gst_tensor_get_type (void);
 
+GST_ANALYTICS_META_API
+const gchar *gst_tensor_data_type_get_name (GstTensorDataType data_type);
+
 G_END_DECLS
 
 #endif /* __GST_TENSOR_H__ */
