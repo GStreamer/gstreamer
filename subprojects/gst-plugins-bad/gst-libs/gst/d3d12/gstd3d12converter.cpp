@@ -166,14 +166,7 @@ struct VertexData
   } texture;
 };
 
-struct GammaLut
-{
-  guint16 lut[GAMMA_LUT_SIZE];
-};
-
 /* *INDENT-OFF* */
-typedef std::shared_ptr<GammaLut> GammaLutPtr;
-
 static const XMFLOAT4X4A g_matrix_identity = XMFLOAT4X4A (
     1.0f, 0.0f, 0.0f, 0.0f,
     0.0f, 1.0f, 0.0f, 0.0f,
@@ -293,6 +286,12 @@ struct _GstD3D12ConverterPrivate
     if (fence_val > 0 && cq)
       gst_d3d12_cmd_queue_fence_wait (cq, fence_val);
 
+    if (setup_fence) {
+      auto completed = setup_fence->GetCompletedValue ();
+      if (completed < setup_fence_val)
+        setup_fence->SetEventOnCompletion (setup_fence_val, nullptr);
+    }
+
     gst_clear_object (&srv_heap_pool);
     gst_clear_object (&cq);
     gst_clear_object (&pack);
@@ -323,7 +322,7 @@ struct _GstD3D12ConverterPrivate
   gboolean have_lut = FALSE;
 
   D3D12_VERTEX_BUFFER_VIEW vbv;
-  D3D12_INDEX_BUFFER_VIEW idv;
+  D3D12_INDEX_BUFFER_VIEW ibv;
   D3D12_GPU_VIRTUAL_ADDRESS const_buf_addr[2];
   ComPtr<ID3D12Resource> shader_buf;
   ComPtr<ID3D12Resource> vertex_upload;
@@ -359,6 +358,9 @@ struct _GstD3D12ConverterPrivate
 
   std::mutex prop_lock;
   guint64 fence_val = 0;
+
+  ComPtr<ID3D12Fence> setup_fence;
+  guint64 setup_fence_val = 0;
 
   /* properties */
   gint src_x = 0;
@@ -695,54 +697,6 @@ gst_d3d12_converter_get_property (GObject * object, guint prop_id,
   }
 }
 
-static GammaLutPtr
-gst_d3d12_converter_get_gamma_dec_table (GstVideoTransferFunction func)
-{
-  static std::mutex lut_lock;
-  static std::map < GstVideoTransferFunction, GammaLutPtr > g_gamma_dec_table;
-
-  std::lock_guard < std::mutex > lk (lut_lock);
-  auto lut = g_gamma_dec_table.find (func);
-  if (lut != g_gamma_dec_table.end ())
-    return lut->second;
-
-  const gdouble scale = (gdouble) 1 / (GAMMA_LUT_SIZE - 1);
-  auto table = std::make_shared < GammaLut > ();
-  for (guint i = 0; i < GAMMA_LUT_SIZE; i++) {
-    gdouble val = gst_video_transfer_function_decode (func, i * scale);
-    val = rint (val * 65535);
-    val = CLAMP (val, 0, 65535);
-    table->lut[i] = (guint16) val;
-  }
-
-  g_gamma_dec_table[func] = table;
-  return table;
-}
-
-static GammaLutPtr
-gst_d3d12_converter_get_gamma_enc_table (GstVideoTransferFunction func)
-{
-  static std::mutex lut_lock;
-  static std::map < GstVideoTransferFunction, GammaLutPtr > g_gamma_enc_table;
-
-  std::lock_guard < std::mutex > lk (lut_lock);
-  auto lut = g_gamma_enc_table.find (func);
-  if (lut != g_gamma_enc_table.end ())
-    return lut->second;
-
-  const gdouble scale = (gdouble) 1 / (GAMMA_LUT_SIZE - 1);
-  auto table = std::make_shared < GammaLut > ();
-  for (guint i = 0; i < GAMMA_LUT_SIZE; i++) {
-    gdouble val = gst_video_transfer_function_encode (func, i * scale);
-    val = rint (val * 65535);
-    val = CLAMP (val, 0, 65535);
-    table->lut[i] = (guint16) val;
-  }
-
-  g_gamma_enc_table[func] = table;
-  return table;
-}
-
 static guint
 reorder_rtv_index (GstVideoFormat output_format, guint index)
 {
@@ -820,8 +774,6 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   HRESULT hr;
   VertexData vertex_data[4];
   ComPtr < ID3D12Resource > upload_buf;
-  ComPtr < ID3D12Resource > gamma_dec_lut_upload;
-  ComPtr < ID3D12Resource > gamma_enc_lut_upload;
 
   auto device = gst_d3d12_device_get_device_handle (self->device);
 
@@ -1023,9 +975,9 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     priv->vbv.SizeInBytes = g_vertex_buf_size;
     priv->vbv.StrideInBytes = sizeof (VertexData);
 
-    priv->idv.BufferLocation = priv->vbv.BufferLocation + g_vertex_buf_size;
-    priv->idv.SizeInBytes = g_index_buf_size;
-    priv->idv.Format = DXGI_FORMAT_R16_UINT;
+    priv->ibv.BufferLocation = priv->vbv.BufferLocation + g_vertex_buf_size;
+    priv->ibv.SizeInBytes = g_index_buf_size;
+    priv->ibv.Format = DXGI_FORMAT_R16_UINT;
 
     priv->const_buf_addr[0] = priv->vbv.BufferLocation + vertex_index_size;
     priv->const_buf_addr[1] = priv->vbv.BufferLocation + other_const_off;
@@ -1053,106 +1005,12 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     upload_buf->Unmap (0, nullptr);
   }
 
-  if (priv->have_lut) {
-    heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
-    resource_desc = CD3DX12_RESOURCE_DESC::Tex1D (DXGI_FORMAT_R16_UNORM,
-        GAMMA_LUT_SIZE, 1, 1);
+  auto in_trc = in_info->colorimetry.transfer;
+  auto out_trc = in_info->colorimetry.transfer;
 
-    hr = device->CreateCommittedResource (&heap_prop,
-        heap_flags, &resource_desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
-        IID_PPV_ARGS (&priv->gamma_dec_lut));
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't create gamma decoding LUT");
-      return FALSE;
-    }
-
-    hr = device->CreateCommittedResource (&heap_prop,
-        heap_flags, &resource_desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
-        IID_PPV_ARGS (&priv->gamma_enc_lut));
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't create gamma encoding LUT");
-      return FALSE;
-    }
-
-    UINT64 gamma_lut_size;
-    device->GetCopyableFootprints (&resource_desc, 0, 1, 0,
-        &priv->gamma_lut_layout, nullptr, nullptr, &gamma_lut_size);
-
-    heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
-    resource_desc = CD3DX12_RESOURCE_DESC::Buffer (gamma_lut_size);
-
-    hr = device->CreateCommittedResource (&heap_prop,
-        heap_flags, &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-        IID_PPV_ARGS (&gamma_dec_lut_upload));
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't create gamma decoding LUT upload");
-      return FALSE;
-    }
-
-    hr = device->CreateCommittedResource (&heap_prop,
-        heap_flags, &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-        IID_PPV_ARGS (&gamma_enc_lut_upload));
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't create gamma encoding LUT upload");
-      return FALSE;
-    }
-
-    auto in_trc = in_info->colorimetry.transfer;
-    auto out_trc = in_info->colorimetry.transfer;
-
-    if (priv->convert_type[0] == CONVERT_TYPE::GAMMA ||
-        priv->convert_type[0] == CONVERT_TYPE::PRIMARY) {
-      out_trc = out_info->colorimetry.transfer;
-    }
-
-    auto gamma_dec_table = gst_d3d12_converter_get_gamma_dec_table (in_trc);
-    auto gamma_enc_table = gst_d3d12_converter_get_gamma_enc_table (out_trc);
-
-    hr = gamma_dec_lut_upload->Map (0, &range, (void **) &data);
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't map gamma lut upload buffer");
-      return FALSE;
-    }
-
-    memcpy (data, gamma_dec_table->lut, GAMMA_LUT_SIZE * sizeof (guint16));
-    gamma_dec_lut_upload->Unmap (0, nullptr);
-
-    hr = gamma_enc_lut_upload->Map (0, &range, (void **) &data);
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't map gamma lut upload buffer");
-      return FALSE;
-    }
-
-    memcpy (data, gamma_enc_table->lut, GAMMA_LUT_SIZE * sizeof (guint16));
-    gamma_enc_lut_upload->Unmap (0, nullptr);
-
-    D3D12_DESCRIPTOR_HEAP_DESC desc = { };
-    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    desc.NumDescriptors = 2;
-    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-
-    auto hr = device->CreateDescriptorHeap (&desc,
-        IID_PPV_ARGS (&priv->gamma_lut_heap));
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't map gamma lut upload buffer");
-      return FALSE;
-    }
-
-    auto cpu_handle =
-        CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
-        (priv->gamma_lut_heap));
-
-    D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
-    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
-    srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srv_desc.Texture1D.MipLevels = 1;
-
-    device->CreateShaderResourceView (priv->gamma_dec_lut.Get (), &srv_desc,
-        cpu_handle);
-    cpu_handle.Offset (priv->srv_inc_size);
-
-    device->CreateShaderResourceView (priv->gamma_enc_lut.Get (), &srv_desc,
-        cpu_handle);
+  if (priv->convert_type[0] == CONVERT_TYPE::GAMMA ||
+      priv->convert_type[0] == CONVERT_TYPE::PRIMARY) {
+    out_trc = out_info->colorimetry.transfer;
   }
 
   priv->input_texture_width = GST_VIDEO_INFO_WIDTH (in_info);
@@ -1172,84 +1030,52 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     priv->scissor_rect[i].bottom = GST_VIDEO_INFO_COMP_HEIGHT (out_info, i);
   }
 
-  ComPtr < ID3D12CommandAllocator > ca;
-  hr = device->CreateCommandAllocator (D3D12_COMMAND_LIST_TYPE_DIRECT,
-      IID_PPV_ARGS (&ca));
-  if (!gst_d3d12_result (hr, self->device))
-    return FALSE;
-
-  ComPtr < ID3D12GraphicsCommandList > cl;
-  hr = device->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-      ca.Get (), nullptr, IID_PPV_ARGS (&cl));
-  if (!gst_d3d12_result (hr, self->device))
-    return FALSE;
-
-  std::vector < D3D12_RESOURCE_BARRIER > barriers;
-  cl->CopyResource (priv->shader_buf.Get (), upload_buf.Get ());
-
-  barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (priv->shader_buf.
-          Get (), D3D12_RESOURCE_STATE_COPY_DEST, STATE_VERTEX_AND_INDEX));
-
   if (priv->have_lut) {
-    D3D12_TEXTURE_COPY_LOCATION src;
-    D3D12_TEXTURE_COPY_LOCATION dst;
-    src =
-        CD3DX12_TEXTURE_COPY_LOCATION (gamma_dec_lut_upload.Get (),
-        priv->gamma_lut_layout);
-    dst = CD3DX12_TEXTURE_COPY_LOCATION (priv->gamma_dec_lut.Get ());
-    cl->CopyTextureRegion (&dst, 0, 0, 0, &src, nullptr);
-
-    src =
-        CD3DX12_TEXTURE_COPY_LOCATION (gamma_enc_lut_upload.Get (),
-        priv->gamma_lut_layout);
-    dst = CD3DX12_TEXTURE_COPY_LOCATION (priv->gamma_enc_lut.Get ());
-    cl->CopyTextureRegion (&dst, 0, 0, 0, &src, nullptr);
-
-    barriers.
-        push_back (CD3DX12_RESOURCE_BARRIER::Transition (priv->gamma_dec_lut.
-            Get (), D3D12_RESOURCE_STATE_COPY_DEST,
-            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-    barriers.
-        push_back (CD3DX12_RESOURCE_BARRIER::Transition (priv->gamma_enc_lut.
-            Get (), D3D12_RESOURCE_STATE_COPY_DEST,
-            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+    hr = gst_d3d12_device_get_converter_resources (self->device,
+        priv->shader_buf.Get (), upload_buf.Get (), &priv->vbv, &priv->ibv,
+        in_trc, &priv->gamma_dec_lut, out_trc, &priv->gamma_enc_lut,
+        &priv->setup_fence, &priv->setup_fence_val);
+  } else {
+    hr = gst_d3d12_device_get_converter_resources (self->device,
+        priv->shader_buf.Get (), upload_buf.Get (), &priv->vbv, &priv->ibv,
+        in_trc, nullptr, out_trc, nullptr, &priv->setup_fence,
+        &priv->setup_fence_val);
   }
 
-  cl->ResourceBarrier (barriers.size (), barriers.data ());
-
-  hr = cl->Close ();
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't close upload command list");
-    return FALSE;
-  }
-
-  ID3D12CommandList *cmd_list[] = { cl.Get () };
-
-  hr = gst_d3d12_cmd_queue_execute_command_lists (priv->cq, 1, cmd_list,
-      &priv->fence_val);
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't execute command list");
     return FALSE;
   }
 
-  GstD3D12FenceData *fence_data;
-  gst_d3d12_device_acquire_fence_data (self->device, &fence_data);
-  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (cl.Detach ()));
-  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (ca.Detach ()));
-  gst_d3d12_fence_data_push (fence_data,
-      FENCE_NOTIFY_COM (upload_buf.Detach ()));
-  if (gamma_dec_lut_upload) {
-    gst_d3d12_fence_data_push (fence_data,
-        FENCE_NOTIFY_COM (gamma_dec_lut_upload.Detach ()));
-  }
+  if (priv->have_lut) {
+    D3D12_DESCRIPTOR_HEAP_DESC desc = { };
+    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    desc.NumDescriptors = 2;
+    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
-  if (gamma_enc_lut_upload) {
-    gst_d3d12_fence_data_push (fence_data,
-        FENCE_NOTIFY_COM (gamma_enc_lut_upload.Detach ()));
-  }
+    auto hr = device->CreateDescriptorHeap (&desc,
+        IID_PPV_ARGS (&priv->gamma_lut_heap));
+    if (!gst_d3d12_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't create gamma lut heap");
+      return FALSE;
+    }
 
-  gst_d3d12_cmd_queue_set_notify (priv->cq, priv->fence_val,
-      FENCE_NOTIFY_MINI_OBJECT (fence_data));
+    auto cpu_handle =
+        CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
+        (priv->gamma_lut_heap));
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
+    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
+    srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srv_desc.Texture1D.MipLevels = 1;
+
+    device->CreateShaderResourceView (priv->gamma_dec_lut.Get (), &srv_desc,
+        cpu_handle);
+    cpu_handle.Offset (priv->srv_inc_size);
+
+    device->CreateShaderResourceView (priv->gamma_enc_lut.Get (), &srv_desc,
+        cpu_handle);
+  }
 
   return TRUE;
 }
@@ -2410,7 +2236,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
   cl->SetGraphicsRootConstantBufferView (pipeline_data.crs->GetPsCbvIdx (),
       priv->const_buf_addr[pipeline_index]);
 
-  cl->IASetIndexBuffer (&priv->idv);
+  cl->IASetIndexBuffer (&priv->ibv);
   cl->IASetVertexBuffers (0, 1, &priv->vbv);
   cl->IASetPrimitiveTopology (D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   cl->RSSetViewports (1, priv->viewport);
@@ -2532,6 +2358,20 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
   if (ret && execute_gpu_wait) {
     gst_d3d12_frame_fence_gpu_wait (&in_frame, priv->cq);
     gst_d3d12_frame_fence_gpu_wait (&out_frame, priv->cq);
+  }
+
+  if (priv->setup_fence) {
+    auto default_queue = gst_d3d12_device_get_cmd_queue (converter->device,
+        D3D12_COMMAND_LIST_TYPE_DIRECT);
+    if (priv->cq != default_queue) {
+      auto completed = priv->setup_fence->GetCompletedValue ();
+      if (completed < priv->setup_fence_val) {
+        gst_d3d12_cmd_queue_execute_wait (priv->cq, priv->setup_fence.Get (),
+            priv->setup_fence_val);
+      }
+    }
+
+    priv->setup_fence = nullptr;
   }
 
   gst_d3d12_frame_unmap (&in_frame);

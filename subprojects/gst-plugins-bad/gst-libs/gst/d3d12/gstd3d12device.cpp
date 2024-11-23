@@ -26,6 +26,7 @@
 #include "gstd3d12cmdlistpool.h"
 #include <directx/d3dx12.h>
 #include <d3d11on12.h>
+#include <gst/d3dshader/gstd3dshader.h>
 #include <wrl.h>
 #include <vector>
 #include <string.h>
@@ -142,8 +143,13 @@ struct DeviceInner
     gst_clear_object (&copy_cl_pool);
 
     gst_clear_object (&fence_data_pool);
+    gst_clear_object (&rtv_heap_pool);
 
+    gamma_dec_lut.clear();
+    gamma_enc_lut.clear();
     samplers.clear ();
+    gamma_lut_pso = nullptr;
+    gamma_lut_rs = nullptr;
 
     factory = nullptr;
     adapter = nullptr;
@@ -263,6 +269,12 @@ struct DeviceInner
   GstD3D12CmdAllocPool *copy_ca_pool = nullptr;
 
   GstD3D12FenceDataPool *fence_data_pool = nullptr;
+
+  ComPtr<ID3D12RootSignature> gamma_lut_rs;
+  ComPtr<ID3D12PipelineState> gamma_lut_pso;
+  std::unordered_map<DWORD, ComPtr<ID3D12Resource>> gamma_dec_lut;
+  std::unordered_map<DWORD, ComPtr<ID3D12Resource>> gamma_enc_lut;
+  GstD3D12DescHeapPool *rtv_heap_pool = nullptr;
 
   guint rtv_inc_size;
 
@@ -1392,6 +1404,17 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
       priv->non_zeroed_supported = TRUE;
   }
 
+  {
+    D3D12_DESCRIPTOR_HEAP_DESC rtv_desc = { };
+    rtv_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    rtv_desc.NumDescriptors = 2;
+    rtv_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+    priv->rtv_heap_pool = gst_d3d12_desc_heap_pool_new (device.Get (),
+        &rtv_desc);
+    GST_OBJECT_FLAG_SET (priv->rtv_heap_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  }
+
   return self;
 
 error:
@@ -2242,4 +2265,375 @@ gst_d3d12_flush_all_devices (void)
 {
   auto manager = DeviceCacheManager::GetInstance ();
   manager->FlushAll ();
+}
+
+static inline DWORD
+gst_d3d12_transfer_func_to_gamma_func (GstVideoTransferFunction func)
+{
+  enum class GammaFuncType
+  {
+    GAMMA10,
+    GAMMA18,
+    GAMMA20,
+    GAMMA22,
+    BT709,
+    SMPTE240M,
+    SRGB,
+    GAMMA28,
+    LOG100,
+    LOG316,
+    BT2020,
+    ADOBERGB,
+    PQ,
+    HLG,
+  };
+
+  switch (func) {
+    case GST_VIDEO_TRANSFER_GAMMA18:
+      return (DWORD) GammaFuncType::GAMMA18;
+    case GST_VIDEO_TRANSFER_GAMMA20:
+      return (DWORD) GammaFuncType::GAMMA20;
+    case GST_VIDEO_TRANSFER_GAMMA22:
+      return (DWORD) GammaFuncType::GAMMA22;
+    case GST_VIDEO_TRANSFER_BT601:
+    case GST_VIDEO_TRANSFER_BT709:
+    case GST_VIDEO_TRANSFER_BT2020_10:
+      return (DWORD) GammaFuncType::BT709;
+    case GST_VIDEO_TRANSFER_SMPTE240M:
+      return (DWORD) GammaFuncType::SMPTE240M;
+    case GST_VIDEO_TRANSFER_SRGB:
+      return (DWORD) GammaFuncType::SRGB;
+    case GST_VIDEO_TRANSFER_GAMMA28:
+      return (DWORD) GammaFuncType::GAMMA28;
+    case GST_VIDEO_TRANSFER_LOG100:
+      return (DWORD) GammaFuncType::LOG100;
+    case GST_VIDEO_TRANSFER_LOG316:
+      return (DWORD) GammaFuncType::LOG316;
+    case GST_VIDEO_TRANSFER_BT2020_12:
+      return (DWORD) GammaFuncType::BT2020;
+    case GST_VIDEO_TRANSFER_ADOBERGB:
+      return (DWORD) GammaFuncType::ADOBERGB;
+    case GST_VIDEO_TRANSFER_SMPTE2084:
+      return (DWORD) GammaFuncType::PQ;
+    case GST_VIDEO_TRANSFER_ARIB_STD_B67:
+      return (DWORD) GammaFuncType::HLG;
+    default:
+      break;
+  }
+
+  return (DWORD) GammaFuncType::GAMMA10;
+}
+
+HRESULT
+gst_d3d12_device_get_converter_resources (GstD3D12Device * device,
+    ID3D12Resource * index_buf, ID3D12Resource * index_upload,
+    const D3D12_VERTEX_BUFFER_VIEW * vbv, const D3D12_INDEX_BUFFER_VIEW * ibv,
+    GstVideoTransferFunction gamma_dec_func, ID3D12Resource ** gamma_dec,
+    GstVideoTransferFunction gamma_enc_func, ID3D12Resource ** gamma_enc,
+    ID3D12Fence ** fence, guint64 * fence_val)
+{
+  auto priv = device->priv->inner;
+  GstD3D12FenceData *fence_data = nullptr;
+  GstD3D12CmdAlloc *gst_ca = nullptr;
+  GstD3D12CmdList *gst_cl = nullptr;
+  bool need_lut = false;
+  HRESULT hr = S_OK;
+  DWORD gamma_dec_func_d3d12 = 0;
+  DWORD gamma_enc_func_d3d12 = 0;
+
+  if (gamma_dec != nullptr && gamma_enc != nullptr)
+    need_lut = true;
+
+  if (need_lut) {
+    gamma_dec_func_d3d12 =
+        gst_d3d12_transfer_func_to_gamma_func (gamma_dec_func);
+    gamma_enc_func_d3d12 =
+        gst_d3d12_transfer_func_to_gamma_func (gamma_enc_func);
+  }
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (!priv->gamma_lut_rs) {
+    D3D12_ROOT_SIGNATURE_FLAGS rs_flags =
+        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS;
+    D3D12_VERSIONED_ROOT_SIGNATURE_DESC rs_desc = { };
+    CD3DX12_ROOT_PARAMETER root_params[1];
+
+    root_params[0].InitAsConstants (2, 0);
+
+    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC::Init_1_0 (rs_desc, 1, root_params,
+        0, nullptr, rs_flags);
+
+    ComPtr < ID3DBlob > rs_blob;
+    ComPtr < ID3DBlob > error_blob;
+    hr = D3DX12SerializeVersionedRootSignature (&rs_desc,
+        D3D_ROOT_SIGNATURE_VERSION_1, &rs_blob, &error_blob);
+
+    if (!gst_d3d12_result (hr, device)) {
+      const gchar *error_msg = nullptr;
+      if (error_blob)
+        error_msg = (const gchar *) error_blob->GetBufferPointer ();
+
+      GST_ERROR_OBJECT (device,
+          "Couldn't serialize root signature, hr: 0x%x, error detail: %s",
+          (guint) hr, GST_STR_NULL (error_msg));
+      return hr;
+    }
+
+    hr = priv->device->CreateRootSignature (0, rs_blob->GetBufferPointer (),
+        rs_blob->GetBufferSize (), IID_PPV_ARGS (&priv->gamma_lut_rs));
+    if (!gst_d3d12_result (hr, device)) {
+      GST_ERROR_OBJECT (device, "Couldn't create root signature");
+      return hr;
+    }
+  }
+
+  if (!priv->gamma_lut_pso) {
+    GstD3DShaderByteCode vs_blob;
+    GstD3DShaderByteCode ps_blob;
+    if (!gst_d3d12_shader_cache_get_gamma_lut_blob (&vs_blob, &ps_blob)) {
+      GST_ERROR_OBJECT (device, "Couldn't get gamma decode byte code");
+      return E_FAIL;
+    }
+
+    D3D12_INPUT_ELEMENT_DESC input_desc[2];
+    input_desc[0].SemanticName = "POSITION";
+    input_desc[0].SemanticIndex = 0;
+    input_desc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+    input_desc[0].InputSlot = 0;
+    input_desc[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+    input_desc[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+    input_desc[0].InstanceDataStepRate = 0;
+
+    input_desc[1].SemanticName = "TEXCOORD";
+    input_desc[1].SemanticIndex = 0;
+    input_desc[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+    input_desc[1].InputSlot = 0;
+    input_desc[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+    input_desc[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+    input_desc[1].InstanceDataStepRate = 0;
+
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC pso_desc = { };
+    pso_desc.pRootSignature = priv->gamma_lut_rs.Get ();
+    pso_desc.VS.pShaderBytecode = vs_blob.byte_code;
+    pso_desc.VS.BytecodeLength = vs_blob.byte_code_len;
+    pso_desc.PS.pShaderBytecode = ps_blob.byte_code;
+    pso_desc.PS.BytecodeLength = ps_blob.byte_code_len;
+    pso_desc.BlendState = CD3DX12_BLEND_DESC (D3D12_DEFAULT);
+    pso_desc.SampleMask = UINT_MAX;
+    pso_desc.RasterizerState = CD3DX12_RASTERIZER_DESC (D3D12_DEFAULT);
+    pso_desc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+    pso_desc.DepthStencilState.DepthEnable = FALSE;
+    pso_desc.DepthStencilState.StencilEnable = FALSE;
+    pso_desc.InputLayout.pInputElementDescs = input_desc;
+    pso_desc.InputLayout.NumElements = 2;
+    pso_desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    pso_desc.NumRenderTargets = 1;
+    pso_desc.RTVFormats[0] = DXGI_FORMAT_R16_UNORM;
+    pso_desc.SampleDesc.Count = 1;
+    pso_desc.SampleDesc.Quality = 0;
+
+    hr = priv->device->CreateGraphicsPipelineState (&pso_desc,
+        IID_PPV_ARGS (&priv->gamma_lut_pso));
+    if (!gst_d3d12_result (hr, device)) {
+      GST_ERROR_OBJECT (device, "Couldn't create gamma decode pso");
+      return hr;
+    }
+  }
+
+  gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
+
+  gst_d3d12_cmd_alloc_pool_acquire (priv->direct_ca_pool, &gst_ca);
+  if (!gst_ca) {
+    GST_ERROR_OBJECT (device, "Couldn't acquire command allocator");
+    gst_d3d12_fence_data_unref (fence_data);
+    return E_FAIL;
+  }
+
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
+
+  auto ca = gst_d3d12_cmd_alloc_get_handle (gst_ca);
+  gst_d3d12_cmd_list_pool_acquire (priv->direct_cl_pool, ca, &gst_cl);
+
+  if (!gst_cl) {
+    GST_ERROR_OBJECT (device, "Couldn't acquire command list");
+    gst_d3d12_fence_data_unref (fence_data);
+    return E_FAIL;
+  }
+
+  ComPtr < ID3D12CommandList > cl_base;
+  ComPtr < ID3D12GraphicsCommandList > cl;
+
+  cl_base = gst_d3d12_cmd_list_get_handle (gst_cl);
+  cl_base.As (&cl);
+
+  cl->CopyResource (index_buf, index_upload);
+  index_buf->AddRef ();
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (index_buf));
+
+  index_upload->AddRef ();
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (index_upload));
+
+  D3D12_RESOURCE_BARRIER copy_barrier =
+      CD3DX12_RESOURCE_BARRIER::Transition (index_buf,
+      D3D12_RESOURCE_STATE_COPY_DEST,
+      D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER |
+      D3D12_RESOURCE_STATE_INDEX_BUFFER,
+      D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+
+  cl->ResourceBarrier (1, &copy_barrier);
+
+  bool store_dec = false;
+  bool store_enc = false;
+  ComPtr < ID3D12Resource > gamma_dec_resource;
+  ComPtr < ID3D12Resource > gamma_enc_resource;
+
+  if (need_lut) {
+    const UINT lut_size = 4096;
+
+    auto dec_iter = priv->gamma_dec_lut.find (gamma_dec_func_d3d12);
+    if (dec_iter != priv->gamma_dec_lut.end ()) {
+      GST_LOG_OBJECT (device, "Reuse gamma decode LUT");
+      gamma_dec_resource = dec_iter->second;
+    } else {
+      GST_DEBUG_OBJECT (device, "Need to build gamma decode LUT");
+    }
+
+    auto enc_iter = priv->gamma_enc_lut.find (gamma_enc_func_d3d12);
+    if (enc_iter != priv->gamma_enc_lut.end ()) {
+      GST_LOG_OBJECT (device, "Reuse gamma encode LUT");
+      gamma_enc_resource = enc_iter->second;
+    } else {
+      GST_DEBUG_OBJECT (device, "Need to build gamma encode LUT");
+    }
+
+    if (!gamma_dec_resource || !gamma_enc_resource) {
+      GstD3D12DescHeap *desc_heap = nullptr;
+      D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+      if (gst_d3d12_device_non_zeroed_supported (device))
+        heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
+      auto heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
+      auto resource_desc = CD3DX12_RESOURCE_DESC::Tex1D (DXGI_FORMAT_R16_UNORM,
+          lut_size, 1, 1, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
+          D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+
+      D3D12_RENDER_TARGET_VIEW_DESC rtv_desc = { };
+      rtv_desc.Format = DXGI_FORMAT_R16_UNORM;
+      rtv_desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1D;
+      rtv_desc.Texture1D.MipSlice = 0;
+
+      gst_d3d12_desc_heap_pool_acquire (priv->rtv_heap_pool, &desc_heap);
+      if (!desc_heap) {
+        GST_ERROR_OBJECT (device, "Couldn't acquire descriptor heap");
+        gst_d3d12_fence_data_unref (fence_data);
+        return E_FAIL;
+      }
+
+      gst_d3d12_fence_data_push (fence_data,
+          FENCE_NOTIFY_MINI_OBJECT (desc_heap));
+
+      auto desc_handle = gst_d3d12_desc_heap_get_handle (desc_heap);
+      auto cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
+          (GetCPUDescriptorHandleForHeapStart (desc_handle));
+
+      cl->SetGraphicsRootSignature (priv->gamma_lut_rs.Get ());
+      cl->SetPipelineState (priv->gamma_lut_pso.Get ());
+      cl->IASetIndexBuffer (ibv);
+      cl->IASetVertexBuffers (0, 1, vbv);
+      cl->IASetPrimitiveTopology (D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+      D3D12_VIEWPORT viewport = { };
+      viewport.Width = lut_size;
+      viewport.Height = 1;
+      viewport.MinDepth = 0;
+      viewport.MaxDepth = 1;
+      cl->RSSetViewports (1, &viewport);
+
+      D3D12_RECT scissor_rect = { };
+      scissor_rect.left = 0;
+      scissor_rect.top = 0;
+      scissor_rect.right = lut_size;
+      scissor_rect.bottom = 1;
+      cl->RSSetScissorRects (1, &scissor_rect);
+
+      if (!gamma_dec_resource) {
+        store_dec = true;
+        hr = priv->device->CreateCommittedResource (&heap_prop, heap_flags,
+            &resource_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
+            IID_PPV_ARGS (&gamma_dec_resource));
+        if (!gst_d3d12_result (hr, device)) {
+          GST_ERROR_OBJECT (device, "Couldn't create LUT texture");
+          return hr;
+        }
+
+        priv->device->CreateRenderTargetView (gamma_dec_resource.Get (),
+            &rtv_desc, cpu_handle);
+
+        cl->SetGraphicsRoot32BitConstant (0, 1, 0);
+        cl->SetGraphicsRoot32BitConstant (0, gamma_dec_func_d3d12, 1);
+        cl->OMSetRenderTargets (1, &cpu_handle, FALSE, nullptr);
+        cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
+
+        cpu_handle.Offset (priv->rtv_inc_size);
+      }
+
+      if (!gamma_enc_resource) {
+        store_enc = true;
+        hr = priv->device->CreateCommittedResource (&heap_prop, heap_flags,
+            &resource_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
+            IID_PPV_ARGS (&gamma_enc_resource));
+        if (!gst_d3d12_result (hr, device)) {
+          GST_ERROR_OBJECT (device, "Couldn't create LUT texture");
+          return hr;
+        }
+
+        priv->device->CreateRenderTargetView (gamma_enc_resource.Get (),
+            &rtv_desc, cpu_handle);
+
+        cl->SetGraphicsRoot32BitConstant (0, 0, 0);
+        cl->SetGraphicsRoot32BitConstant (0, gamma_enc_func_d3d12, 1);
+        cl->OMSetRenderTargets (1, &cpu_handle, FALSE, nullptr);
+        cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
+      }
+    }
+  }
+
+  hr = cl->Close ();
+  if (!gst_d3d12_result (hr, device)) {
+    GST_ERROR_OBJECT (device, "Couldn't close command list");
+    gst_d3d12_fence_data_unref (fence_data);
+    return hr;
+  }
+
+  ID3D12CommandList *cmd_list[] = { cl.Get () };
+  hr = gst_d3d12_cmd_queue_execute_command_lists (priv->direct_queue,
+      1, cmd_list, fence_val);
+  if (!gst_d3d12_result (hr, device)) {
+    GST_ERROR_OBJECT (device, "Couldn't execute command list");
+    gst_d3d12_fence_data_unref (fence_data);
+    return hr;
+  }
+
+  gst_d3d12_cmd_queue_set_notify (priv->direct_queue, *fence_val, fence_data,
+      (GDestroyNotify) gst_d3d12_fence_data_unref);
+
+  if (need_lut) {
+    if (store_dec)
+      priv->gamma_dec_lut[gamma_dec_func_d3d12] = gamma_dec_resource;
+    if (store_enc)
+      priv->gamma_enc_lut[gamma_enc_func_d3d12] = gamma_enc_resource;
+
+    *gamma_dec = gamma_dec_resource.Detach ();
+    *gamma_enc = gamma_enc_resource.Detach ();
+  }
+
+  *fence = gst_d3d12_cmd_queue_get_fence_handle (priv->direct_queue);
+  (*fence)->AddRef ();
+
+  return S_OK;
 }

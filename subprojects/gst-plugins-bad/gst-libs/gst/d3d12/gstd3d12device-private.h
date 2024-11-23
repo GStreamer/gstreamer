@@ -100,5 +100,18 @@ HRESULT     gst_d3d12_device_get_sampler_state (GstD3D12Device * device,
 GST_D3D12_API
 gboolean    gst_d3d12_device_non_zeroed_supported (GstD3D12Device * device);
 
+GST_D3D12_API
+HRESULT     gst_d3d12_device_get_converter_resources (GstD3D12Device * device,
+                                                      ID3D12Resource * index_buf,
+                                                      ID3D12Resource * index_upload,
+                                                      const D3D12_VERTEX_BUFFER_VIEW * vbv,
+                                                      const D3D12_INDEX_BUFFER_VIEW * ibv,
+                                                      GstVideoTransferFunction gamma_dec_func,
+                                                      ID3D12Resource ** gamma_dec,
+                                                      GstVideoTransferFunction gamma_enc_func,
+                                                      ID3D12Resource ** gamma_enc,
+                                                      ID3D12Fence ** fence,
+                                                      guint64 * fence_val);
+
 G_END_DECLS
 
