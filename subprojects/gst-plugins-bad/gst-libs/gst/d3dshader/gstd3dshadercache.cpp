@@ -53,6 +53,7 @@ static std::unordered_map<std::string, std::pair<const BYTE *, SIZE_T>> g_plugin
 
 static std::vector<std::pair<std::string, ID3DBlob *>> g_compiled_blobs;
 static std::mutex g_blob_lock;
+static std::mutex g_ps_cache_lock;
 
 /* *INDENT-ON* */
 
@@ -1007,8 +1008,6 @@ gst_d3d_converter_shader_get_ps_blob (GstVideoFormat in_format,
     GstD3DConverterType conv_type, GstD3DShaderModel shader_model,
     GstD3DConverterPSByteCode byte_code[4])
 {
-  static std::mutex cache_lock;
-
   auto input = conv_ps_make_input (in_format, in_premul);
   auto output = conv_ps_make_output (out_format, out_premul);
   std::string conv_type_str;
@@ -1044,7 +1043,7 @@ gst_d3d_converter_shader_get_ps_blob (GstVideoFormat in_format,
 
   sm_target = std::string ("ps_") + g_sm_map[shader_model];
 
-  std::lock_guard <std::mutex> lk (cache_lock);
+  std::lock_guard <std::mutex> lk (g_ps_cache_lock);
   for (const auto & it : output) {
     auto output_builder = it.second;
     std::string shader_name = "PSMain_" + input + "_" + conv_type_str + "_" +
@@ -1103,4 +1102,64 @@ gst_d3d_converter_shader_get_ps_blob (GstVideoFormat in_format,
   }
 
   return ret;
+}
+
+gboolean
+gst_d3d12_shader_cache_get_gamma_lut_blob (GstD3DShaderByteCode * vs_blob,
+    GstD3DShaderByteCode * ps_blob)
+{
+  if (vs_blob && !gst_d3d_plugin_shader_get_vs_blob (GST_D3D_PLUGIN_VS_COORD,
+        GST_D3D_SM_5_0, vs_blob)) {
+    GST_ERROR ("Couldn't get vertext shader blob");
+    return FALSE;
+  }
+
+  if (ps_blob) {
+    std::lock_guard <std::mutex> lk (g_ps_cache_lock);
+    std::string shader_name = "PSMain_Gamma_LUT_5_0";
+
+    auto cached = g_converter_ps_table.find (shader_name);
+    if (cached != g_converter_ps_table.end ()) {
+      ps_blob->byte_code = cached->second.first;
+      ps_blob->byte_code_len = cached->second.second;
+    } else {
+      std::vector<std::pair<std::string,std::string>> macro_str_pairs;
+      std::vector<D3D_SHADER_MACRO> macros;
+
+      macro_str_pairs.push_back ({"ENTRY_POINT", shader_name});
+
+      for (const auto & def : macro_str_pairs)
+        macros.push_back({def.first.c_str (), def.second.c_str ()});
+
+      macros.push_back({nullptr, nullptr});
+
+      ID3DBlob *blob = nullptr;
+      ComPtr<ID3DBlob> error_msg;
+
+      auto hr = gst_d3d_compile (str_PSMain_gamma_lut,
+          sizeof (str_PSMain_gamma_lut), nullptr, macros.data (), nullptr,
+          shader_name.c_str (), "ps_5_0", 0, 0, &blob, &error_msg);
+      if (FAILED (hr)) {
+        const gchar *err = nullptr;
+        if (error_msg)
+          err = (const gchar *) error_msg->GetBufferPointer ();
+
+        GST_ERROR ("Couldn't compile code, hr: 0x%x, error detail: %s",
+            (guint) hr, GST_STR_NULL (err));
+        return FALSE;
+      }
+
+      ps_blob->byte_code = blob->GetBufferPointer ();
+      ps_blob->byte_code_len = blob->GetBufferSize ();
+
+      g_converter_ps_table[shader_name] = {
+          (const BYTE *) blob->GetBufferPointer (),
+          blob->GetBufferSize () };
+
+      std::lock_guard <std::mutex> blk (g_blob_lock);
+      g_compiled_blobs.push_back ({ shader_name, blob });
+    }
+  }
+
+  return TRUE;
 }

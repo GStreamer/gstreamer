@@ -1,6 +1,7 @@
 hlsl_ps_source = files('PSMain_converter.hlsl')
 hlsl_vs_source = files('VSMain_converter.hlsl')
 hlsl_cs_source = files('CSMain_converter.hlsl')
+hlsl_ps_gamma_lut_source = files('PSMain_gamma_lut.hlsl')
 
 hlsl_ps_input_formats = [
   ['NV12', false],
@@ -119,6 +120,10 @@ hlsl_cs_entry_points = [
   'CSMain_RGBA_to_BGRA',
 ]
 
+hlsl_ps_lut_entry_points = [
+  'PSMain_Gamma_LUT',
+]
+
 conv_ps_precompiled = []
 conv_vs_precompiled = []
 conv_cs_precompiled = []
@@ -155,6 +160,23 @@ foreach input_format : hlsl_ps_input_formats
                   '@INPUT@'])
     conv_ps_precompiled += [compiled_shader]
   endforeach
+endforeach
+
+foreach shader : hlsl_ps_lut_entry_points
+  entry_point = '@0@_@1@'.format(shader, shader_model)
+  header = '@0@.h'.format(entry_point)
+  sm_target = 'ps_@0@'.format(shader_model)
+  compiled_shader = custom_target(header,
+      input : hlsl_ps_gamma_lut_source,
+      output : header,
+      command : [fxc, '/Fh', '@OUTPUT@',
+                '/E', entry_point,
+                '/T', sm_target,
+                '/D', 'BUILDING_HLSL=1',
+                '/D', 'ENTRY_POINT=@0@'.format(entry_point),
+                '/nologo',
+                '@INPUT@'])
+  conv_ps_precompiled += [compiled_shader]
 endforeach
 
 conv_ps_collection = custom_target('converter_hlsl_ps',

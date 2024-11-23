@@ -22,3 +22,4 @@
 #include "CSMain_converter.hlsl"
 #include "PSMain_converter.hlsl"
 #include "VSMain_converter.hlsl"
+#include "PSMain_gamma_lut.hlsl"

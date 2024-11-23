@@ -124,11 +124,15 @@ gboolean gst_d3d_converter_shader_get_cs_blob (GstVideoFormat in_format,
 
 GST_D3D_SHADER_API
 guint   gst_d3d_converter_shader_get_ps_blob (GstVideoFormat in_format,
-                                               GstVideoFormat out_format,
-                                               gboolean in_premul,
-                                               gboolean out_premul,
-                                               GstD3DConverterType conv_type,
-                                               GstD3DShaderModel shader_model,
-                                               GstD3DConverterPSByteCode byte_code[4]);
+                                              GstVideoFormat out_format,
+                                              gboolean in_premul,
+                                              gboolean out_premul,
+                                              GstD3DConverterType conv_type,
+                                              GstD3DShaderModel shader_model,
+                                              GstD3DConverterPSByteCode byte_code[4]);
+
+GST_D3D_SHADER_API
+gboolean gst_d3d12_shader_cache_get_gamma_lut_blob (GstD3DShaderByteCode * vs_blob,
+                                                    GstD3DShaderByteCode * ps_blob);
 
 G_END_DECLS
