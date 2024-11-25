@@ -1045,6 +1045,7 @@ gst_leaks_tracer_activity_start_tracking (GstLeaksTracer * self)
   GST_OBJECT_LOCK (self);
   if (self->added) {
     GST_ERROR_OBJECT (self, "tracking is already in progress");
+    GST_OBJECT_UNLOCK (self);
     return;
   }
 
