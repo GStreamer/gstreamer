@@ -63,7 +63,7 @@ struct _GstSplitMuxPartReaderInfo
 
 struct _GstSplitMuxPartReader
 {
-  GstPipeline parent;
+  GstBin parent;
 
   GstSplitMuxPartState prep_state;
   gboolean need_duration_measuring;
@@ -105,7 +105,7 @@ struct _GstSplitMuxPartReader
 
 struct _GstSplitMuxPartReaderClass
 {
-  GstPipelineClass parent_class;
+  GstBinClass parent_class;
 
   void (*prepared)  (GstSplitMuxPartReader *reader);
   void (*end_of_part) (GstSplitMuxPartReader *reader);
