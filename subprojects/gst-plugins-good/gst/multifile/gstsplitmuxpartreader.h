@@ -54,7 +54,7 @@ typedef GstPad *(*GstSplitMuxPartReaderPadCb)(GstSplitMuxPartReader *reader, Gst
 
 struct _GstSplitMuxPartReader
 {
-  GstPipeline parent;
+  GstBin parent;
 
   GstSplitMuxPartState prep_state;
 
@@ -88,7 +88,7 @@ struct _GstSplitMuxPartReader
 
 struct _GstSplitMuxPartReaderClass
 {
-  GstPipelineClass parent_class;
+  GstBinClass parent_class;
 
   void (*prepared)  (GstSplitMuxPartReader *reader);
   void (*end_of_part) (GstSplitMuxPartReader *reader);

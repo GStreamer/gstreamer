@@ -650,8 +650,7 @@ static void splitmux_part_reader_finalize (GObject * object);
 static void splitmux_part_reader_reset (GstSplitMuxPartReader * reader);
 
 #define gst_splitmux_part_reader_parent_class parent_class
-G_DEFINE_TYPE (GstSplitMuxPartReader, gst_splitmux_part_reader,
-    GST_TYPE_PIPELINE);
+G_DEFINE_TYPE (GstSplitMuxPartReader, gst_splitmux_part_reader, GST_TYPE_BIN);
 
 static void
 gst_splitmux_part_reader_class_init (GstSplitMuxPartReaderClass * klass)
@@ -676,6 +675,7 @@ static void
 gst_splitmux_part_reader_init (GstSplitMuxPartReader * reader)
 {
   GstElement *typefind;
+  GstBus *bus;
 
   reader->active = FALSE;
   reader->duration = GST_CLOCK_TIME_NONE;
@@ -684,6 +684,10 @@ gst_splitmux_part_reader_init (GstSplitMuxPartReader * reader)
   g_mutex_init (&reader->lock);
   g_mutex_init (&reader->type_lock);
   g_mutex_init (&reader->msg_lock);
+
+  bus = g_object_new (GST_TYPE_BUS, "enable-async", FALSE, NULL);
+  gst_element_set_bus (GST_ELEMENT_CAST (reader), bus);
+  gst_object_unref (bus);
 
   /* FIXME: Create elements on a state change */
   reader->src = gst_element_factory_make ("filesrc", NULL);
