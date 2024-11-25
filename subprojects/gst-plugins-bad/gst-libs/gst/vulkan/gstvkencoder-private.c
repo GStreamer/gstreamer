@@ -585,8 +585,8 @@ gst_vulkan_encoder_stop (GstVulkanEncoder * self)
 /**
  * gst_vulkan_encoder_start:
  * @self: a #GstVulkanEncoder
- * @profile: (in): #GstVulkanVideoProfile
- * @out_buffer_size: (in): a maximal buffer size to be used by the encoder to store the output
+ * @profile: a #GstVulkanVideoProfile
+ * @out_buffer_size: a maximal buffer size to be used by the encoder to store the output
  * @error: (out) : an error result in case of failure or %NULL
  *
  * Start the encoding session according to a valid Vulkan profile
@@ -820,7 +820,7 @@ failed:
 /**
  * gst_vulkan_encoder_update_video_session_parameters:
  * @self: a #GstVulkanEncoder
- * @params: (in): #GstVulkanEncoderParameters
+ * @params: a #GstVulkanEncoderParameters
  * @error: (out) (optional): an error result in case of failure
  *
  * Set the sessions parameters to be used by the encoder
@@ -853,7 +853,7 @@ gst_vulkan_encoder_update_video_session_parameters (GstVulkanEncoder * self,
 /**
  * gst_vulkan_encoder_video_session_parameters_overrides:
  * @self: a #GstVulkanEncoder
- * @params: (in): #GstVulkanEncoderParametersOverrides
+ * @params: a #GstVulkanEncoderParametersOverrides
  * @feedback: (out) (optional): #GstVulkanEncoderParametersFeedback or %NULL
  * @data_size: (out) (optional): the allocated size of @data
  * @data: (out) (optional): location to store the requested overrides, use
@@ -1038,8 +1038,8 @@ bail:
 /**
  * gst_vulkan_encoder_encode:
  * @self: a #GstVulkanEncoder
- * @pic: (in): #GstVulkanEncodePicture
- * @ref_pics: (in): an array of #GstVulkanEncodePicture
+ * @pic: a #GstVulkanEncodePicture
+ * @ref_pics: an array of #GstVulkanEncodePicture
  *
  * Encode a picture according to its reference pictures.
  *
