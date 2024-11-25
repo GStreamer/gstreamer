@@ -2894,7 +2894,11 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
     maxw = MIN (size.stepwise.max_width, G_MAXINT);
     maxh = MIN (size.stepwise.max_height, G_MAXINT);
 
-    /* FIXME: check for sanity and that min/max are multiples of the steps */
+    /* ensure maxes are multiples of the steps */
+    maxw -= maxw % step_w;
+    maxh -= maxh % step_h;
+
+    /* FIXME: check for sanity */
 
     /* we only query details for the min width/height in order to allow for
        a big range of frameintervals.
