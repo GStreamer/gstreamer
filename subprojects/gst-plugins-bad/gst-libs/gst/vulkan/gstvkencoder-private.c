@@ -414,7 +414,7 @@ gst_vulkan_encoder_get_image_view_from_buffer (GstVulkanEncoder * self,
 /**
  * gst_vulkan_encode_picture_new:
  * @self: the #GstVulkanEncoder with the pool's configuration.
- * @in_buffer: the input buffer. Take a reference to the buffer
+ * @in_buffer: (transfer none): the input #GstBuffer.
  * @width: the picture width
  * @height: the picture height
  * @is_ref: the picture reference flag
