@@ -1535,6 +1535,10 @@ discoverer_collect (GstDiscoverer * dc)
         g_variant_get_data (variant), g_variant_get_size (variant), NULL);
     g_variant_unref (variant);
   }
+#if !GLIB_CHECK_VERSION(2,74,0)
+  /* Make sure the missing element details are NULL-terminated */
+  g_ptr_array_add (dc->priv->current_info->missing_elements_details, NULL);
+#endif
 
   if (dc->priv->async)
     emit_discovered (dc);
