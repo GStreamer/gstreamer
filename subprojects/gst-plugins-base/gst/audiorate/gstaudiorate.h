@@ -54,7 +54,6 @@ struct _GstAudioRate
 
   gboolean discont;
 
-  gboolean new_segment;
   /* we accept all formats on the sink */
   GstSegment sink_segment;
   /* we output TIME format on the src */
