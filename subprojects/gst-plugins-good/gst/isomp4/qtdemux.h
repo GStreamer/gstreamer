@@ -422,6 +422,8 @@ struct _QtDemuxStream
                                  * Currently only set for raw audio streams*/
 
   /* video info */
+  GstVideoInfo info;
+
   /* aspect ratio */
   gint display_width;
   gint display_height;
@@ -432,6 +434,7 @@ struct _QtDemuxStream
   GstAllocationParams params;
 
   gsize alignment;
+  gsize stride;
 
   /* when a discontinuity is pending */
   gboolean discont;

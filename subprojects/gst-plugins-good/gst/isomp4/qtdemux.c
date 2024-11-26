@@ -1892,9 +1892,11 @@ _create_stream (GstQTDemux * demux, guint32 track_id)
   stream->duration_moof = 0;
   stream->duration_last_moof = 0;
   stream->alignment = 1;
+  stream->stride = 0;
   stream->stream_tags = gst_tag_list_new_empty ();
   gst_tag_list_set_scope (stream->stream_tags, GST_TAG_SCOPE_STREAM);
   g_queue_init (&stream->protection_scheme_event_queue);
+  gst_video_info_init (&stream->info);
   stream->ref_count = 1;
   /* consistent default for push based mode */
   gst_segment_init (&stream->segment, GST_FORMAT_TIME);
@@ -6178,6 +6180,54 @@ gst_qtdemux_align_buffer (GstQTDemux * demux,
   return buffer;
 }
 
+static GstBuffer *
+gst_qtdemux_row_align_buffer (GstQTDemux * demux,
+    QtDemuxStream * stream, GstBuffer * buffer)
+{
+  gsize old_stride = stream->stride;
+  gsize size = gst_buffer_get_size (buffer);
+  gsize height = size / old_stride;
+
+  // Assert stride is initialized
+  gsize aligned_stride = stream->info.stride[0];
+  if (aligned_stride == 0) {
+    return buffer;
+  }
+
+  GstMapInfo map;
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  if (old_stride == aligned_stride) {
+    gst_buffer_unmap (buffer, &map);
+    return buffer;              // Buffer is already row aligned
+  }
+
+  GstMapInfo new_map;
+  gsize new_buffer_size = height * aligned_stride;
+  GstBuffer *new_buffer = gst_buffer_new_allocate (NULL, new_buffer_size, NULL);
+  if (new_buffer == NULL) {
+    gst_buffer_unmap (buffer, &map);
+    gst_buffer_unref (buffer);
+    return NULL;
+  }
+  gst_buffer_map (new_buffer, &new_map, GST_MAP_WRITE);
+
+  // Align Data
+  gsize min_stride = MIN (old_stride, aligned_stride);
+  for (guint32 row = 0; row < height; row++) {
+    gsize row_offset = row * aligned_stride;
+    gconstpointer src = map.data + row * old_stride;
+    gpointer dest = new_map.data + row_offset;
+    memcpy (dest, src, min_stride);
+  }
+
+  gst_buffer_copy_into (new_buffer, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
+
+  gst_buffer_unmap (new_buffer, &new_map);
+  gst_buffer_unmap (buffer, &map);
+  gst_buffer_unref (buffer);
+  return new_buffer;
+}
+
 static guint8 *
 convert_to_s334_1a (const guint8 * ccpair, guint8 ccpair_size, guint field,
     gsize * res)
@@ -6632,6 +6682,14 @@ gst_qtdemux_push_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   if (stream->alignment > 1)
     buf = gst_qtdemux_align_buffer (qtdemux, buf, stream->alignment);
+
+  if (stream->stride > 0) {
+    buf = gst_qtdemux_row_align_buffer (qtdemux, stream, buf);
+    if (buf == NULL) {
+      ret = GST_FLOW_ERROR;
+      goto exit;
+    }
+  }
 
   if (CUR_STREAM (stream)->needs_reorder)
     buf = gst_qtdemux_reorder_audio_channels (qtdemux, stream, buf);
@@ -11868,6 +11926,368 @@ qtdemux_parse_stereo_svmi_atom (GstQTDemux * qtdemux, QtDemuxStream * stream,
   return TRUE;
 }
 
+typedef enum
+{
+  // ISO/IEC 23001-17 Table 1 - Component Types
+  COMPONENT_MONOCHROME = 0,
+  COMPONENT_LUMA_Y = 1,         // Y
+  COMPONENT_CHROMA_U = 2,       // Cb or U
+  COMPONENT_CHROMA_V = 3,       // Cr or V
+  COMPONENT_RED = 4,            // R
+  COMPONENT_GREEN = 5,          // G
+  COMPONENT_BLUE = 6,           // B
+  COMPONENT_ALPHA = 7,          // A
+  COMPONENT_DEPTH = 8,
+  COMPONENT_DISPARITY = 9,
+  COMPONENT_PALETTE = 10,       // The component_format value for this component shall be 0.
+  COMPONENT_FILTER_ARRAY = 11,  // Bayer, RGBW, etc.
+  COMPONENT_PADDING = 12,       // unused bit/bytes
+  COMPONENT_CYAN = 13,
+  COMPONENT_MAGENTA = 14,
+  COMPONENT_YELLOW = 15,
+  COMPONENT_KEY = 16,           // Black
+} ComponentType;
+
+typedef struct ComponentDefinitionBox
+{
+  // ComponentDefinitionBox
+  guint32 component_count;      // Should match the uncC component_count
+  ComponentType *types;         // The type of component (R,G,B,A,Y,U,V, etc.)
+  const gchar **type_uris;      // Describes a user-defined component type
+} ComponentDefinitionBox;
+
+typedef struct UncompressedFrameConfigComponent
+{
+  guint16 index;                // Index associated with the cmpd box
+  guint8 bit_depth;             // May vary between components
+  guint8 format;                // 0: int, 1: float, 2: complex
+  guint8 align_size;            // The component byte-alignment size
+} UncompressedFrameConfigComponent;
+
+typedef struct UncompressedFrameConfigBox
+{
+  guint8 version;
+  guint32 flags;
+  guint32 profile;              // indicates a predefined configuration
+  guint32 component_count;      // Should match the cmpd component_count
+  UncompressedFrameConfigComponent *components; // Array of Components
+  guint8 sampling_type;         // 0=4:4:4, 1=4:2:2, 2=4:2:0, 3=4:1:1
+  guint8 interleave_type;       // Planar, interleaved, etc. 
+  guint8 block_size;            // Stores data in fixed-sized blocks
+  gboolean components_little_endian;    // indicates that components are stored as little endian
+  gboolean block_pad_lsb;       // Padding bits location
+  gboolean block_little_endian; // Block Endianness
+  gboolean block_reversed;      // Indicates if component order is reversed within the block
+  gboolean pad_unknown;         // the value of padded bits is unknown
+  guint32 pixel_size;           // number of bytes used to store all components for a single pixel
+  guint32 row_align_size;       // Padding between rows
+  guint32 tile_align_size;      // Padding between tiles
+  guint32 num_tile_cols;        // Number of horizontal tiles
+  guint32 num_tile_rows;        // Number of vertical tiles
+} UncompressedFrameConfigBox;
+
+static void
+qtdemux_clear_uncC (UncompressedFrameConfigBox * uncC)
+{
+  if (!uncC)
+    return;
+
+  g_free (uncC->components);
+}
+
+static void
+qtdemux_clear_cmpd (ComponentDefinitionBox * cmpd)
+{
+  if (!cmpd)
+    return;
+
+  g_free (cmpd->types);
+  g_free (cmpd->type_uris);
+}
+
+static gboolean
+qtdemux_parse_cmpd (GstQTDemux * qtdemux, GstByteReader * reader,
+    ComponentDefinitionBox * cmpd, guint32 size)
+{
+  /* There should be enough to parse the component_count (4) */
+  if (gst_byte_reader_get_remaining (reader) < 4) {
+    GST_ERROR_OBJECT (qtdemux, "cmpd is too short");
+    goto error;
+  }
+
+  cmpd->component_count = gst_byte_reader_get_uint32_be_unchecked (reader);
+
+  guint32 minimum_size = cmpd->component_count * 2 + 4; // assuming type_uris are not used
+  if (size < minimum_size) {
+    GST_ERROR_OBJECT (qtdemux, "cmpd size is too short");
+    goto error;
+  }
+
+  cmpd->types = g_new0 (ComponentType, cmpd->component_count);
+  cmpd->type_uris = g_new0 (const gchar *, cmpd->component_count);
+
+  guint16 type = 0;
+  for (guint32 i = 0; i < cmpd->component_count; i++) {
+    if (!gst_byte_reader_get_uint16_be (reader, &type)) {
+      GST_ERROR_OBJECT (qtdemux, "Failed to read component type");
+      goto error;
+    }
+    if (type >= 0x8000) {
+      if (!gst_byte_reader_get_string (reader, &cmpd->type_uris[i])) {
+        GST_ERROR_OBJECT (qtdemux, "Failed to read component type URI");
+        goto error;
+      }
+    }
+    cmpd->types[i] = (ComponentType) type;
+  }
+
+  /* Success */
+  return TRUE;
+
+error:
+  return FALSE;
+}
+
+static gboolean
+qtdemux_parse_uncC (GstQTDemux * qtdemux, GstByteReader * reader,
+    UncompressedFrameConfigBox * uncC, guint32 size)
+{
+  /* There should be enough to parse the version/flags (4) & profile (4) */
+  if (gst_byte_reader_get_remaining (reader) < 8) {
+    GST_ERROR_OBJECT (qtdemux, "uncC is too short");
+    goto error;
+  }
+
+  uncC->version = gst_byte_reader_get_uint8_unchecked (reader);
+  uncC->flags = gst_byte_reader_get_uint24_be_unchecked (reader);
+
+  uncC->profile = gst_byte_reader_get_uint32_le_unchecked (reader);
+  if (uncC->version == 1) {
+    /* Use the profile for predetermined settings */
+    goto success;
+  } else if (uncC->version != 0) {
+    GST_ERROR_OBJECT (qtdemux, "Unsupported uncC version");
+    goto error;
+  }
+
+  if (!gst_byte_reader_get_uint32_be (reader, &uncC->component_count)) {
+    GST_ERROR_OBJECT (qtdemux, "Failed to read component count");
+    goto error;
+  }
+
+  guint32 expected_size = uncC->component_count * 5 + 44;
+  if (size != expected_size) {
+    GST_ERROR_OBJECT (qtdemux, "uncC size is incorrect");
+    goto error;
+  }
+
+  guint32 expected_remaining = size - 20;       // 20 = box_size(4) + uncC(4) + version/flags(4) + profile(4) + component_count(4)
+  if (gst_byte_reader_get_remaining (reader) < expected_remaining) {
+    GST_ERROR_OBJECT (qtdemux, "uncC is too short");
+    goto error;
+  }
+
+  uncC->components =
+      g_new0 (UncompressedFrameConfigComponent, uncC->component_count);
+
+  for (guint32 i = 0; i < uncC->component_count; i++) {
+    UncompressedFrameConfigComponent *component = &uncC->components[i];
+    component->index = gst_byte_reader_get_uint16_be_unchecked (reader);
+    component->bit_depth = gst_byte_reader_get_uint8_unchecked (reader) + 1;
+    component->format = gst_byte_reader_get_uint8_unchecked (reader);
+    component->align_size = gst_byte_reader_get_uint8_unchecked (reader);
+  }
+
+  uncC->sampling_type = gst_byte_reader_get_uint8_unchecked (reader);
+  uncC->interleave_type = gst_byte_reader_get_uint8_unchecked (reader);
+  uncC->block_size = gst_byte_reader_get_uint8_unchecked (reader);
+
+  guint8 block_flags = gst_byte_reader_get_uint8_unchecked (reader);
+  uncC->components_little_endian = (block_flags >> 7) & 0x01;
+  uncC->block_pad_lsb = (block_flags >> 6) & 0x01;
+  uncC->block_little_endian = (block_flags >> 5) & 0x01;
+  uncC->block_reversed = (block_flags >> 4) & 0x01;
+  uncC->pad_unknown = (block_flags >> 3) & 0x01;
+
+  uncC->pixel_size = gst_byte_reader_get_uint32_be_unchecked (reader);
+  uncC->row_align_size = gst_byte_reader_get_uint32_be_unchecked (reader);
+  uncC->tile_align_size = gst_byte_reader_get_uint32_be_unchecked (reader);
+  uncC->num_tile_cols = gst_byte_reader_get_uint32_be_unchecked (reader) + 1;
+  uncC->num_tile_rows = gst_byte_reader_get_uint32_be_unchecked (reader) + 1;
+
+success:
+  return TRUE;
+
+error:
+  return FALSE;
+}
+
+static GstVideoFormat
+qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
+    QtDemuxStreamStsdEntry * entry, QtDemuxStream * stream,
+    UncompressedFrameConfigBox * uncC, ComponentDefinitionBox * cmpd)
+{
+  guint32 num_components = uncC->component_count;
+  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+  stream->alignment = 4;
+
+  if (uncC->version == 1) {
+    // Determine format with profile
+    switch (uncC->profile) {
+      case GST_MAKE_FOURCC ('r', 'g', 'b', '3'):       // RGB 24 bits packed
+        format = GST_VIDEO_FORMAT_RGB;
+        stream->stride = entry->width * num_components;
+        break;
+
+      case GST_MAKE_FOURCC ('2', 'v', 'u', 'y'):       // 8 bits  YUV  422 packed Cb Y0 Cr Y1
+      case GST_MAKE_FOURCC ('y', 'u', 'v', '2'):       // 8 bits  YUV  422 packed Y0 Cb Y1 Cr
+      case GST_MAKE_FOURCC ('y', 'v', 'y', 'u'):       // 8 bits  YUV  422 packed Y0 Cr Y1 Cb
+      case GST_MAKE_FOURCC ('v', 'y', 'u', 'y'):       // 8 bits  YUV  422 packed Cr Y0 Cb Y1
+      case GST_MAKE_FOURCC ('y', 'u', 'v', '1'):       // 8 bits  YUV  411 packed Y0 Y1 Cb Y2 Y3 Cr
+      case GST_MAKE_FOURCC ('v', '3', '0', '8'):       // 8 bits  YUV  444 packed Cr Y Cb
+      case GST_MAKE_FOURCC ('v', '4', '0', '8'):       // 8 bits  YUVA 444 packed Cb Y Cr A
+      case GST_MAKE_FOURCC ('y', '2', '1', '0'):       // 10 bits YUV  422 packed LE Y0 Cb Y1 Cr
+      case GST_MAKE_FOURCC ('v', '4', '1', '0'):       // 10 bits YUV  444 packed CbYCr, 2 unused bits
+      case GST_MAKE_FOURCC ('v', '2', '1', '0'):       // 10 bits YUV  422 packed CbYCr
+      case GST_MAKE_FOURCC ('i', '4', '2', '0'):       // 8 bits  YUV  420 planar YCbCr
+      case GST_MAKE_FOURCC ('n', 'v', '1', '2'):       // 8 bits  YUV  420 semiplanar YCbCr
+      case GST_MAKE_FOURCC ('n', 'v', '2', '1'):       // 8 bits  YUV  420 semiplanar YCrCb
+      case GST_MAKE_FOURCC ('r', 'g', 'b', 'a'):       // 32 bits RGBA packed
+      case GST_MAKE_FOURCC ('a', 'b', 'g', 'r'):       // 32 bits RGBA packed
+      case GST_MAKE_FOURCC ('y', 'u', '2', '2'):       // 8 bits  YUV  422 planar YCbCr
+      case GST_MAKE_FOURCC ('y', 'v', '2', '2'):       // 8 bits  YUV  422 planar YCrCb
+      case GST_MAKE_FOURCC ('y', 'v', '2', '0'):       // 8 bits  YUV  420 planar YCrCb
+      default:
+        goto unsupported_feature;
+    }
+    return format;
+
+  } else if (uncC->version == 0) {
+    // Determine format with uncC & cmpd boxes
+  } else {
+    GST_WARNING_OBJECT (qtdemux, "Unsupported uncv version: %u", uncC->version);
+    goto unsupported_feature;
+  }
+
+
+  /* Assert that components are similar */
+  UncompressedFrameConfigComponent *first_comp = &uncC->components[0];
+  guint8 align_size = first_comp->align_size;
+  for (guint32 i = 0; i < num_components; i++) {
+    // For now, assert that each component has the same bit depth
+    UncompressedFrameConfigComponent *comp = &uncC->components[i];
+    if (comp->bit_depth != first_comp->bit_depth) {
+      goto unsupported_feature;
+    }
+    // For now, assert that each component has the same align size
+    if (comp->align_size != first_comp->align_size) {
+      goto unsupported_feature;
+    }
+  }
+
+  switch (uncC->sampling_type) {
+    case 0:                    // 4:4:4 (No subsampling)
+      // Default
+      break;
+    case 1:                    // YCbCr 4:2:2 subsampling
+    case 2:                    // YCbCr 4:2:0 subsampling
+    case 3:                    // YCbCr 4:1:1 subsampling
+    default:
+      goto unsupported_feature;
+  }
+
+
+  switch (uncC->interleave_type) {
+    case 1:                    // Pixel Interleaved
+      // Default Format
+      break;
+    case 0:                    // Component Interleaving (Planar)
+    case 2:                    // Mixed Interleaved
+    case 3:                    // Row Interleaved
+    case 4:                    // Tile Interleaved
+    case 5:                    // Multi-Y Pixel Interleaved
+    default:
+      goto unsupported_feature;
+  }
+
+
+  /* Padding */
+  // TODO: Handle various padding configurations
+  if (align_size) {
+    // If component_align_size is 0, the component value
+    // is coded on component_bit_depth bits exactly.
+    goto unsupported_feature;
+  } else if (uncC->block_size) {
+    // Component values can be stored either directly in the
+    // sample data or inside fixed-size blocks. The block
+    // size in bytes is specified by the block_size field.
+    goto unsupported_feature;
+  } else if (uncC->pixel_size != 0 && uncC->pixel_size != num_components) {
+    // If pixel_size is 0, no additional padding is present after each pixel.
+    goto unsupported_feature;
+  } else if (uncC->row_align_size) {
+    // row_align_size indicates the padding between rows
+    goto unsupported_feature;
+  } else if (uncC->tile_align_size) {
+    // tile_align_size indicates the padding between tiles
+    goto unsupported_feature;
+  }
+
+  /* Determine Format */
+  switch (num_components) {
+    case 1:
+      if (cmpd->types[0] == COMPONENT_MONOCHROME) {
+        format = GST_VIDEO_FORMAT_GRAY8;
+      }
+      break;
+    case 3:
+      if (cmpd->types[0] == COMPONENT_RED &&
+          cmpd->types[1] == COMPONENT_GREEN &&
+          cmpd->types[2] == COMPONENT_BLUE) {
+        format = GST_VIDEO_FORMAT_RGB;
+      }
+      if (cmpd->types[0] == COMPONENT_BLUE &&
+          cmpd->types[1] == COMPONENT_GREEN &&
+          cmpd->types[2] == COMPONENT_RED) {
+        format = GST_VIDEO_FORMAT_BGR;
+      }
+      break;
+    case 4:
+      if (cmpd->types[0] == COMPONENT_RED &&
+          cmpd->types[1] == COMPONENT_GREEN &&
+          cmpd->types[2] == COMPONENT_BLUE &&
+          cmpd->types[3] == COMPONENT_ALPHA) {
+        format = GST_VIDEO_FORMAT_RGBA;
+      }
+      if (cmpd->types[0] == COMPONENT_RED &&
+          cmpd->types[1] == COMPONENT_GREEN &&
+          cmpd->types[2] == COMPONENT_BLUE &&
+          cmpd->types[3] == COMPONENT_PADDING) {
+        format = GST_VIDEO_FORMAT_RGBx;
+      }
+      break;
+    default:
+      goto unsupported_feature;
+  }
+
+  /* Calculate Stride */
+  if (first_comp->bit_depth != 8) {
+    goto unsupported_feature;   // TODO - account for higher bit depths
+  } else if (uncC->sampling_type != 0) {
+    goto unsupported_feature;   // TODO - account for subsampling
+  } else if (uncC->interleave_type != 1) {
+    goto unsupported_feature;   // TODO - account for various interleave types
+  }
+  stream->stride = entry->width * num_components;       // TODO - account for non-zero row alignment
+
+  /* success */
+  return format;
+
+unsupported_feature:
+  GST_WARNING_OBJECT (qtdemux, "Unsupported uncv format");
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
 /* *INDENT-OFF* */
 
 // ISO/IEC 23091-3
@@ -16639,6 +17059,105 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("Lagarith lossless video codec");
       caps = gst_caps_new_empty_simple ("video/x-lagarith");
       break;
+    case FOURCC_uncv:
+    {
+      const guint8 ENTRY_MINIMUM_SIZE = 86;     // video sample description minimum size in bytes
+      const guint8 *first_child = stsd_entry_data + ENTRY_MINIMUM_SIZE;
+      const guint32 UNCV_SIZE = QT_UINT32 (stsd_entry_data);
+      const guint32 UNCV_CHILDREN_SIZE = UNCV_SIZE - ENTRY_MINIMUM_SIZE;
+      gboolean found_cmpd = FALSE;
+      gboolean found_uncC = FALSE;
+      gboolean success = TRUE;
+      GstByteReader reader;
+      UncompressedFrameConfigBox uncC = { 0 };
+      ComponentDefinitionBox cmpd = { 0 };
+
+      if (UNCV_SIZE < ENTRY_MINIMUM_SIZE) {
+        GST_WARNING_OBJECT (qtdemux, "visual sample entry 'uncv' is too small");
+        return NULL;
+      }
+
+      gst_byte_reader_init (&reader, first_child, UNCV_CHILDREN_SIZE);
+
+      // Parse each uncv child
+      while (gst_byte_reader_get_remaining (&reader)) {
+        guint32 child_size = 0; // Includes size (4), fourcc (4), & data
+        guint32 child_data_size = 0;    // The size in bytes of the data, not including the size (4) and fourcc (4)
+        guint32 child_fourcc = 0;
+
+        if (gst_byte_reader_get_remaining (&reader) < 8) {
+          GST_WARNING_OBJECT (qtdemux, "uncv child box is too small");
+          return NULL;
+        }
+
+        // Parse Child Header
+        child_size = gst_byte_reader_get_uint32_be_unchecked (&reader);
+        child_fourcc = gst_byte_reader_get_uint32_le_unchecked (&reader);
+        child_data_size = child_size - 8;
+
+        if (child_data_size > gst_byte_reader_get_remaining (&reader)) {
+          GST_WARNING_OBJECT (qtdemux, "uncv child box is too big");
+          return NULL;
+        }
+
+        switch (child_fourcc) {
+          case FOURCC_uncC:
+          {
+            if (found_uncC) {
+              success = FALSE;
+              GST_WARNING_OBJECT (qtdemux, "Found multiple uncC boxes in uncv");
+            } else {
+              found_uncC = TRUE;
+              success =
+                  qtdemux_parse_uncC (qtdemux, &reader, &uncC, child_size);
+            }
+            break;
+          }
+          case FOURCC_cmpd:
+          {
+            if (found_cmpd) {
+              success = FALSE;
+              GST_WARNING_OBJECT (qtdemux, "Found multiple cmpd boxes in uncv");
+            } else {
+              found_cmpd = TRUE;
+              success =
+                  qtdemux_parse_cmpd (qtdemux, &reader, &cmpd, child_size);
+            }
+            break;
+          }
+          default:
+          {
+            GST_LOG_OBJECT (qtdemux,
+                "Ignoring unknown uncv child: %" GST_FOURCC_FORMAT,
+                GST_FOURCC_ARGS (child_fourcc));
+            gst_byte_reader_skip_unchecked (&reader, child_data_size);  // Skip unknown child box
+          }
+        }
+        if (!success) {
+          GST_WARNING_OBJECT (qtdemux, "Failed to parse uncv");
+          break;
+        }
+      }
+
+      /* Successfully Parsed uncv? */
+      if (!found_uncC) {
+        GST_WARNING_OBJECT (qtdemux,
+            "Expected to find uncC box when parsing uncv");
+      } else if (uncC.version == 0 && !found_cmpd) {
+        GST_WARNING_OBJECT (qtdemux,
+            "Expected to find cmpd box when uncC version is 0");
+      } else if (!success) {
+        GST_WARNING_OBJECT (qtdemux, "Error when parsing uncv box");
+      } else {
+        format = qtdemux_get_format_from_uncv (qtdemux, entry, stream,
+            &uncC, &cmpd);
+      }
+
+      /* Free Memory */
+      qtdemux_clear_uncC (&uncC);
+      qtdemux_clear_cmpd (&cmpd);
+      break;
+    }
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
     {
@@ -16648,17 +17167,16 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
   }
 
   if (format != GST_VIDEO_FORMAT_UNKNOWN) {
-    GstVideoInfo info;
+    gst_video_info_set_format (&stream->info, format, entry->width,
+        entry->height);
 
-    gst_video_info_init (&info);
-    gst_video_info_set_format (&info, format, entry->width, entry->height);
-
-    caps = gst_video_info_to_caps (&info);
+    caps = gst_video_info_to_caps (&stream->info);
     *codec_name = gst_pb_utils_get_codec_description (caps);
 
     /* enable clipping for raw video streams */
     stream->need_clip = TRUE;
     stream->alignment = 32;
+
   }
 
   return caps;
