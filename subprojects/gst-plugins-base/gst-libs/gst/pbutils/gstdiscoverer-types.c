@@ -455,6 +455,14 @@ gst_discoverer_info_copy (GstDiscovererInfo * ptr)
   if (ptr->toc)
     ret->toc = gst_toc_ref (ptr->toc);
 
+  if (ptr->missing_elements_details->len > 0) {
+    guint i;
+
+    for (i = 0; i < ptr->missing_elements_details->len; i++)
+      g_ptr_array_add (ret->missing_elements_details,
+          g_strdup (ptr->missing_elements_details->pdata[i]));
+  }
+
   g_hash_table_destroy (stream_map);
   return ret;
 }
