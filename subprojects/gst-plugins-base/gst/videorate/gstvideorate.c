@@ -973,6 +973,24 @@ gst_video_rate_rollback_to_prev_caps_if_needed (GstVideoRate * videorate)
   return prev_caps;
 }
 
+/* FIXME: audiorate has a copy, should it be public API? */
+static guint64
+convert_position (GstSegment * old_segment, GstSegment * new_segment,
+    guint64 position)
+{
+  g_return_val_if_fail (old_segment->format == new_segment->format, -1);
+  if (position == -1)
+    return -1;
+  position += old_segment->base;
+  if (position < new_segment->base)
+    return -1;
+  position -= new_segment->base;
+  if (position < new_segment->start || (new_segment->stop != -1
+          && position > new_segment->stop))
+    return -1;
+  return position;
+}
+
 static gboolean
 gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
@@ -1033,13 +1051,26 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
 
           gst_caps_unref (rolled_back_caps);
         }
-        if (segment.rate < 0)
+
+        /* Convert next_ts and last_ts to new segment. */
+        videorate->next_ts =
+            convert_position (&videorate->segment, &segment,
+            videorate->next_ts);
+        if (videorate->next_ts == -1)
+          videorate->last_ts = -1;
+        videorate->last_ts =
+            convert_position (&videorate->segment, &segment,
+            videorate->last_ts);
+
+        if (videorate->next_ts != -1)
+          videorate->base_ts = videorate->next_ts;
+        else if (segment.rate < 0)
           videorate->base_ts = segment.stop;
         else
           videorate->base_ts = segment.start;
+
         videorate->out_frame_count = 0;
-        videorate->next_ts = GST_CLOCK_TIME_NONE;
-        videorate->last_ts = GST_CLOCK_TIME_NONE;
+
         gst_buffer_replace (&videorate->prevbuf, NULL);
       }
 
