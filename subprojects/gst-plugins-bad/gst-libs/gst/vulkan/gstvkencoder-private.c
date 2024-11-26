@@ -344,7 +344,7 @@ gst_vulkan_encoder_new_video_session_parameters (GstVulkanEncoder * self,
   VkVideoSessionParametersKHR session_params;
 
   g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), NULL);
-  g_return_val_if_fail (params, NULL);
+  g_return_val_if_fail (params != NULL, NULL);
 
   priv = gst_vulkan_encoder_get_instance_private (self);
 
@@ -430,18 +430,22 @@ gst_vulkan_encode_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
     int width, int height, gboolean is_ref, gint nb_refs)
 {
   GstVulkanEncodePicture *pic;
-  GstVulkanEncoderPrivate *priv =
-      gst_vulkan_encoder_get_instance_private (self);
+  GstVulkanEncoderPrivate *priv;
 
-  g_return_val_if_fail (self && GST_IS_VULKAN_ENCODER (self), NULL);
-  g_return_val_if_fail (in_buffer && GST_IS_BUFFER (in_buffer), NULL);
+  g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (in_buffer), NULL);
+
+  priv = gst_vulkan_encoder_get_instance_private (self);
 
   pic = g_new0 (GstVulkanEncodePicture, 1);
+
   if (priv->layered_dpb) {
     g_assert (priv->layered_buffer);
     pic->dpb_buffer = gst_buffer_ref (priv->layered_buffer);
   } else {
     GstFlowReturn ret;
+
+    g_assert (GST_IS_BUFFER_POOL (priv->dpb_pool));
     ret =
         gst_buffer_pool_acquire_buffer (priv->dpb_pool, &pic->dpb_buffer, NULL);
     if (ret != GST_FLOW_OK) {
@@ -474,7 +478,8 @@ gst_vulkan_encode_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
 void
 gst_vulkan_encode_picture_free (GstVulkanEncodePicture * pic)
 {
-  g_return_if_fail (pic);
+  g_return_if_fail (pic != NULL);
+
   gst_clear_buffer (&pic->in_buffer);
   gst_clear_buffer (&pic->dpb_buffer);
   gst_clear_buffer (&pic->out_buffer);
@@ -615,6 +620,7 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   GError *query_err = NULL;
 
   g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), FALSE);
+  g_return_val_if_fail (profile != NULL, FALSE);
 
   priv = gst_vulkan_encoder_get_instance_private (self);
 
@@ -829,6 +835,7 @@ gst_vulkan_encoder_update_video_session_parameters (GstVulkanEncoder * self,
   GstVulkanHandle *handle;
 
   g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), FALSE);
+  g_return_val_if_fail (params != NULL, FALSE);
 
   handle =
       gst_vulkan_encoder_new_video_session_parameters (self, params, error);
@@ -878,7 +885,7 @@ gst_vulkan_encoder_video_session_parameters_overrides (GstVulkanEncoder * self,
   gpointer param_data;
 
   g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), FALSE);
-  g_return_val_if_fail (params, FALSE);
+  g_return_val_if_fail (params != NULL && feedback != NULL, FALSE);
 
   priv = gst_vulkan_encoder_get_instance_private (self);
   if (!priv->started)
@@ -1047,8 +1054,7 @@ gboolean
 gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     GstVulkanEncodePicture * pic, GstVulkanEncodePicture ** ref_pics)
 {
-  GstVulkanEncoderPrivate *priv =
-      gst_vulkan_encoder_get_instance_private (self);
+  GstVulkanEncoderPrivate *priv;
   GError *err = NULL;
   gboolean ret = TRUE;
   GstMemory *mem;
@@ -1062,11 +1068,18 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
   VkVideoBeginCodingInfoKHR begin_coding;
   VkVideoEncodeInfoKHR encode_info;
   VkVideoEndCodingInfoKHR end_coding;
-  gint maxDpbSlots = priv->layered_dpb ? 2 : priv->caps.caps.maxDpbSlots;
+  gint maxDpbSlots;
   VkVideoReferenceSlotInfoKHR ref_slots[16];
   gint ref_slot_num = 0;
   GstVulkanCommandBuffer *cmd_buf;
   GArray *barriers;
+
+  g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), FALSE);
+  g_return_val_if_fail (pic != NULL, FALSE);
+
+  priv = gst_vulkan_encoder_get_instance_private (self);
+
+  maxDpbSlots = priv->layered_dpb ? 2 : priv->caps.caps.maxDpbSlots;
 
   /* initialize the vulkan operation */
   if (!gst_vulkan_operation_begin (priv->exec, &err))
