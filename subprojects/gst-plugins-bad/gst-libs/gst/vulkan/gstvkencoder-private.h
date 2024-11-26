@@ -41,7 +41,7 @@ typedef struct _GstVulkanEncoderPicture GstVulkanEncoderPicture;
 /**
  * GstVulkanEncoderPicture:
  * @slotIndex: slot index
- * @packed_headers: packed headers
+ * @offset: headers offset
  * @width: picture width
  * @height: picture height
  * @fps_n: fps numerator
@@ -57,8 +57,7 @@ struct _GstVulkanEncoderPicture
 {
   gint slotIndex;
 
-  /* picture parameters */
-  GPtrArray *packed_headers;
+  guint64 offset;
 
   gint width;
   gint height;

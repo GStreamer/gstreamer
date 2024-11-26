@@ -421,9 +421,8 @@ gst_vulkan_encoder_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
       VK_BUFFER_USAGE_VIDEO_ENCODE_DST_BIT_KHR, size_aligned);
   pic->width = width;
   pic->height = height;
-  pic->packed_headers =
-      g_ptr_array_new_with_free_func ((GDestroyNotify) gst_buffer_unref);
   pic->slotIndex = -1;
+  pic->offset = 0;
 
   pic->img_view = gst_vulkan_video_image_create_view (pic->in_buffer,
       priv->layered_dpb, TRUE, NULL);
@@ -459,8 +458,6 @@ gst_vulkan_encoder_picture_free (GstVulkanEncoderPicture * pic)
 
   gst_vulkan_image_view_unref (pic->dpb_view);
   pic->dpb_view = NULL;
-
-  g_clear_pointer (&pic->packed_headers, g_ptr_array_unref);
 
   g_free (pic);
 }
@@ -1080,8 +1077,6 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
   GstMemory *mem;
   int i;
   GstVulkanEncodeQueryResult *encode_res;
-  guint n_mems = 0;
-  gsize params_size = 0;
   VkVideoEncodeRateControlLayerInfoKHR rate_control_layer;
   VkVideoEncodeQualityLevelInfoKHR quality_level_info;
   VkVideoCodingControlInfoKHR coding_ctrl;
@@ -1249,22 +1244,8 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     priv->first_encode_cmd = TRUE;
   }
 
-  /* Add the packed headers if present on head of the output buffer */
-  for (i = 0; pic->packed_headers && i < pic->packed_headers->len; i++) {
-    GstBuffer *buffer;
-    GstMapInfo info;
-    buffer = g_ptr_array_index (pic->packed_headers, i);
-    gst_buffer_map (buffer, &info, GST_MAP_READ);
-    GST_MEMDUMP ("params buffer", info.data, info.size);
-    gst_buffer_unmap (buffer, &info);
-    params_size += gst_buffer_get_size (buffer);
-    mem = gst_memory_copy (gst_buffer_peek_memory (buffer, 0), 0, -1);
-    gst_buffer_insert_memory (pic->out_buffer, i, mem);
-    n_mems++;
-  }
-  g_clear_pointer (&pic->packed_headers, g_ptr_array_unref);
   /* Peek the output memory to be used by VkVideoEncodeInfoKHR.dstBuffer */
-  mem = gst_buffer_peek_memory (pic->out_buffer, n_mems);
+  mem = gst_buffer_peek_memory (pic->out_buffer, 0);
 
   /* Attribute a free slot index to the picture to be used later as a reference.
    * The picture is kept until it remains useful to the encoding process.*/
@@ -1281,7 +1262,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     .pNext = pic->codec_pic_info,
     .flags = 0x0,
     .dstBuffer = ((GstVulkanBufferMemory *) mem)->buffer,
-    .dstBufferOffset = 0,
+    .dstBufferOffset = pic->offset,
     .dstBufferRange = gst_memory_get_sizes (mem, NULL, NULL),
     .srcPictureResource = (VkVideoPictureResourceInfoKHR) { // SPEC: this should be separate
         .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
@@ -1300,6 +1281,10 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     .precedingExternallyEncodedBytes = 0,
   };
   /* *INDENT-ON* */
+
+  encode_info.dstBufferRange -= encode_info.dstBufferOffset;
+  encode_info.dstBufferRange = GST_ROUND_DOWN_N (encode_info.dstBufferRange,
+      priv->caps.caps.minBitstreamBufferSizeAlignment);
 
   gst_vulkan_operation_add_dependency_frame (priv->exec, pic->in_buffer,
       VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
@@ -1355,10 +1340,9 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
 
   gst_vulkan_operation_get_query (priv->exec, (gpointer *) & encode_res, &err);
   if (encode_res->status == VK_QUERY_RESULT_STATUS_COMPLETE_KHR) {
-    GST_INFO_OBJECT (self, "The frame %p has been encoded with size %lu",
-        pic, encode_res->data_size + params_size);
-    gst_buffer_resize (pic->out_buffer, encode_res->offset,
-        encode_res->data_size + params_size);
+    GST_INFO_OBJECT (self, "The frame %p has been encoded with size %"
+        G_GUINT64_FORMAT, pic, encode_res->data_size + pic->offset);
+    gst_buffer_set_size (pic->out_buffer, encode_res->data_size + pic->offset);
   } else {
     GST_ERROR_OBJECT (self,
         "The operation did not complete properly, query status = %d",
