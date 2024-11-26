@@ -437,9 +437,10 @@ gst_vulkan_encode_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
   g_return_val_if_fail (in_buffer && GST_IS_BUFFER (in_buffer), NULL);
 
   pic = g_new0 (GstVulkanEncodePicture, 1);
-  if (priv->layered_dpb)
+  if (priv->layered_dpb) {
+    g_assert (priv->layered_buffer);
     pic->dpb_buffer = gst_buffer_ref (priv->layered_buffer);
-  else {
+  } else {
     GstFlowReturn ret;
     ret =
         gst_buffer_pool_acquire_buffer (priv->dpb_pool, &pic->dpb_buffer, NULL);
