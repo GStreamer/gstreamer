@@ -1519,6 +1519,10 @@ discoverer_collect (GstDiscoverer * dc)
   }
 
   _ensure_info_tags (dc);
+#if !GLIB_CHECK_VERSION(2,74,0)
+  /* Make sure the missing element details are NULL-terminated */
+  g_ptr_array_add (info->missing_elements_details, NULL);
+#endif
   serialize_info_if_required (dc, dc->priv->current_info);
   if (dc->priv->async)
     emit_discovered (dc);

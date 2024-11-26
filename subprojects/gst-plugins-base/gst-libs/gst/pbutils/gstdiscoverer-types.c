@@ -365,7 +365,12 @@ G_DEFINE_TYPE (GstDiscovererInfo, gst_discoverer_info, G_TYPE_OBJECT);
 static void
 gst_discoverer_info_init (GstDiscovererInfo * info)
 {
+#if GLIB_CHECK_VERSION(2,74,0)
+  info->missing_elements_details =
+      g_ptr_array_new_null_terminated (16, g_free, TRUE);
+#else
   info->missing_elements_details = g_ptr_array_new_with_free_func (g_free);
+#endif
 }
 
 static void
@@ -1179,18 +1184,11 @@ const gchar **
 gst_discoverer_info_get_missing_elements_installer_details (const
     GstDiscovererInfo * info)
 {
-
   if (info->result != GST_DISCOVERER_MISSING_PLUGINS) {
     GST_WARNING_OBJECT (info, "Trying to get missing element installed details "
         "but result is not 'MISSING_PLUGINS'");
 
     return NULL;
-  }
-
-  if (info->missing_elements_details->pdata[info->missing_elements_details->
-          len]) {
-    GST_DEBUG ("Adding NULL pointer to the end of missing_elements_details");
-    g_ptr_array_add (info->missing_elements_details, NULL);
   }
 
   return (const gchar **) info->missing_elements_details->pdata;
