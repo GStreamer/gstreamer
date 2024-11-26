@@ -1426,7 +1426,7 @@ discoverer_collect (GstDiscoverer * dc)
   if (dc->priv->use_cache && dc->priv->current_info
       && dc->priv->current_info_from_cache) {
     GST_DEBUG_OBJECT (dc,
-        "Nothing to collect as the info was built from" " the cache");
+        "Nothing to collect as the info was built from the cache");
     return;
   }
 
