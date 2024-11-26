@@ -301,19 +301,15 @@ schedule_cea608_raw (GstCCCombiner * self, guint8 * data, guint len)
 }
 
 static void
-schedule_caption (GstCCCombiner * self, GstBuffer * caption_buf,
-    const GstVideoTimeCode * tc)
+schedule_caption (GstCCCombiner * self, GstAggregatorPad * caption_pad,
+    GstBuffer * caption_buf, const GstVideoTimeCode * tc)
 {
   GstMapInfo map;
   GstClockTime pts, duration, running_time;
-  GstAggregatorPad *caption_pad;
 
   pts = GST_BUFFER_PTS (caption_buf);
   duration = GST_BUFFER_DURATION (caption_buf);
 
-  caption_pad =
-      GST_AGGREGATOR_PAD_CAST (gst_element_get_static_pad (GST_ELEMENT_CAST
-          (self), "caption"));
   running_time =
       gst_segment_to_running_time (&caption_pad->segment, GST_FORMAT_TIME, pts);
 
@@ -336,8 +332,6 @@ schedule_caption (GstCCCombiner * self, GstBuffer * caption_buf,
   }
 
   self->last_caption_ts = running_time;
-
-  gst_clear_object (&caption_pad);
 
   gst_buffer_map (caption_buf, &map, GST_MAP_READ);
 
@@ -647,7 +641,7 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
       caption_data.buffer = caption_buf;
       g_array_append_val (self->current_frame_captions, caption_data);
     } else {
-      schedule_caption (self, caption_buf, tc);
+      schedule_caption (self, caption_pad, caption_buf, tc);
       gst_buffer_unref (caption_buf);
     }
   } while (TRUE);
