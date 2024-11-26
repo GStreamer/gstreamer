@@ -97,6 +97,8 @@ struct _GstDiscovererPrivate
   gint current_info_stream_count;
   GError *current_error;
   GstStructure *current_topology;
+  gchar *current_cachefile;
+  gboolean current_info_from_cache;
 
   GstTagList *all_tags;
   GstTagList *global_tags;
@@ -1369,12 +1371,12 @@ static void
 serialize_info_if_required (GstDiscoverer * dc, GstDiscovererInfo * info)
 {
 
-  if (dc->priv->use_cache && info->cachefile
+  if (dc->priv->use_cache && dc->priv->current_cachefile
       && info->result == GST_DISCOVERER_OK) {
     GVariant *variant = gst_discoverer_info_to_variant (info,
         GST_DISCOVERER_SERIALIZE_ALL);
 
-    g_file_set_contents (info->cachefile,
+    g_file_set_contents (dc->priv->current_cachefile,
         g_variant_get_data (variant), g_variant_get_size (variant), NULL);
     g_variant_unref (variant);
   }
@@ -1392,6 +1394,9 @@ emit_discovered (GstDiscoverer * dc)
   gst_discoverer_info_unref (dc->priv->current_info);
   dc->priv->current_info = NULL;
   dc->priv->current_info_stream_count = 0;
+  g_free (dc->priv->current_cachefile);
+  dc->priv->current_cachefile = NULL;
+  dc->priv->current_info_from_cache = FALSE;
 }
 
 static gboolean
@@ -1419,7 +1424,7 @@ discoverer_collect (GstDiscoverer * dc)
   }
 
   if (dc->priv->use_cache && dc->priv->current_info
-      && dc->priv->current_info->from_cache) {
+      && dc->priv->current_info_from_cache) {
     GST_DEBUG_OBJECT (dc,
         "Nothing to collect as the info was built from" " the cache");
     return;
@@ -1852,13 +1857,14 @@ _get_info_from_cachefile (GstDiscoverer * dc, gchar * cachefile)
     g_variant_unref (variant);
 
     if (info) {
-      info->cachefile = cachefile;
-      info->from_cache = (gpointer) 0x01;
+      dc->priv->current_cachefile = cachefile;
+      dc->priv->current_info_from_cache = TRUE;
     } else {
       g_free (cachefile);
     }
 
-    GST_INFO_OBJECT (dc, "Got info from cache: %p %s", info, info->cachefile);
+    GST_INFO_OBJECT (dc, "Got info from cache: %p %s", info,
+        dc->priv->current_cachefile);
     g_free (data);
 
     return info;
@@ -1915,7 +1921,7 @@ _setup_locked (GstDiscoverer * dc)
       (GstDiscovererInfo *) g_object_new (GST_TYPE_DISCOVERER_INFO, NULL);
   dc->priv->current_info_stream_count = 0;
   if (dc->priv->use_cache)
-    dc->priv->current_info->cachefile = _serialized_info_get_path (dc, uri);
+    dc->priv->current_cachefile = _serialized_info_get_path (dc, uri);
   dc->priv->current_info->uri = uri;
 
   /* set uri on uridecodebin */
@@ -1983,6 +1989,9 @@ discoverer_cleanup (GstDiscoverer * dc)
 
   dc->priv->current_info = NULL;
   dc->priv->current_info_stream_count = 0;
+  g_free (dc->priv->current_cachefile);
+  dc->priv->current_cachefile = NULL;
+  dc->priv->current_info_from_cache = FALSE;
 
   if (dc->priv->all_tags) {
     gst_tag_list_unref (dc->priv->all_tags);
