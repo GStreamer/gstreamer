@@ -94,6 +94,7 @@ struct _GstDiscovererPrivate
 
   /* current items */
   GstDiscovererInfo *current_info;
+  gint current_info_stream_count;
   GError *current_error;
   GstStructure *current_topology;
 
@@ -1277,7 +1278,7 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
     }
 
     if (add_to_list) {
-      res->stream_number = dc->priv->current_info->stream_count++;
+      res->stream_number = dc->priv->current_info_stream_count++;
       dc->priv->current_info->stream_list =
           g_list_append (dc->priv->current_info->stream_list, res);
     } else {
@@ -1390,6 +1391,7 @@ emit_discovered (GstDiscoverer * dc)
   /* Clients get a copy of current_info since it is a boxed type */
   gst_discoverer_info_unref (dc->priv->current_info);
   dc->priv->current_info = NULL;
+  dc->priv->current_info_stream_count = 0;
 }
 
 static gboolean
@@ -1487,7 +1489,7 @@ discoverer_collect (GstDiscoverer * dc)
       dc->priv->current_info->live = TRUE;
 
     if (dc->priv->current_topology) {
-      dc->priv->current_info->stream_count = 1;
+      dc->priv->current_info_stream_count = 1;
       dc->priv->current_info->stream_info = parse_stream_topology (dc,
           dc->priv->current_topology, NULL);
       if (dc->priv->current_info->stream_info)
@@ -1911,6 +1913,7 @@ _setup_locked (GstDiscoverer * dc)
   /* Pop URI off the pending URI list */
   dc->priv->current_info =
       (GstDiscovererInfo *) g_object_new (GST_TYPE_DISCOVERER_INFO, NULL);
+  dc->priv->current_info_stream_count = 0;
   if (dc->priv->use_cache)
     dc->priv->current_info->cachefile = _serialized_info_get_path (dc, uri);
   dc->priv->current_info->uri = uri;
@@ -1979,6 +1982,7 @@ discoverer_cleanup (GstDiscoverer * dc)
   }
 
   dc->priv->current_info = NULL;
+  dc->priv->current_info_stream_count = 0;
 
   if (dc->priv->all_tags) {
     gst_tag_list_unref (dc->priv->all_tags);
