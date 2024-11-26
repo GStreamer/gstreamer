@@ -6046,15 +6046,19 @@ _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
   transport_receive_bin_set_receive_state (receive, RECEIVE_STATE_PASS);
 }
 
-static void
-_connect_rtpfunnel (GstWebRTCBin * webrtc, guint session_id)
+static gboolean
+_connect_rtpfunnel (GstWebRTCBin * webrtc, guint session_id, GError ** error)
 {
   gchar *pad_name;
   GstPad *srcpad;
   GstPad *rtp_sink;
   TransportStream *stream = _find_transport_for_session (webrtc, session_id);
 
-  g_assert (stream);
+  if (!stream) {
+    g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
+        "Invalid bundle id %u, no session found", session_id);
+    return FALSE;
+  }
 
   if (webrtc->rtpfunnel)
     goto done;
@@ -6084,7 +6088,7 @@ _connect_rtpfunnel (GstWebRTCBin * webrtc, guint session_id)
   g_free (pad_name);
 
 done:
-  return;
+  return TRUE;
 }
 
 static gboolean
@@ -6126,7 +6130,9 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
     }
     ensure_rtx_hdr_ext (bundle_stream);
 
-    _connect_rtpfunnel (webrtc, bundle_idx);
+    if (!_connect_rtpfunnel (webrtc, bundle_idx, error)) {
+      goto done;
+    }
   }
 
   for (i = 0; i < gst_sdp_message_medias_len (sdp->sdp); i++) {
