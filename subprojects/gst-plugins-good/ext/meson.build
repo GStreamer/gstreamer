@@ -18,40 +18,43 @@ soup_ver_opt = get_option('soup-version')
 default_library = get_option('default_library')
 soup_linked_target = host_system == 'windows' or default_library != 'shared'
 soup_lookup_dep = get_option('soup-lookup-dep') or soup_linked_target
-if soup_ver_opt in ['auto', '3']
-  libsoup3_dep = dependency('libsoup-3.0', allow_fallback: true,
-                            required: soup_ver_opt == '3' and soup_lookup_dep)
-endif
-if soup_ver_opt in ['auto', '2']
-  libsoup2_dep = dependency('libsoup-2.4', version : '>=2.48', allow_fallback: true,
-                            default_options: ['sysprof=disabled'],
-                            required: soup_ver_opt == '2' and soup_lookup_dep)
-endif
-
-if soup_linked_target
-  if libsoup3_dep.found()
-    soup_linked_target_deps = [libsoup3_dep]
-    soup_linked_target_args = ['-DLINK_SOUP=3']
-    message('soup and adaptivedemux2 plugins: linking to libsoup-3.0')
-  elif libsoup2_dep.found()
-    soup_linked_target_deps = [libsoup2_dep]
-    soup_linked_target_args = ['-DLINK_SOUP=2']
-    message('soup and adaptivedemux2 plugins: linking to libsoup-2.4')
-  endif
-endif
-
-# Hack to set the right RPATH for making dlopen() work inside the devenv on
-# macOS when using libsoup as a subproject.
 soup_dlopen_target_kwargs = {}
-if host_system == 'darwin'
-  foreach dep : [libsoup3_dep, libsoup2_dep]
-    if dep.found() and dep.type_name() == 'internal'
-      soup_dlopen_target_kwargs += {
-        'build_rpath': '@loader_path/../../../libsoup-' + dep.version() / 'libsoup',
-      }
-      break
+
+if get_option('soup').allowed() or get_option('adaptivedemux2').allowed()
+  if soup_ver_opt in ['auto', '3']
+    libsoup3_dep = dependency('libsoup-3.0', allow_fallback: true,
+                              required: soup_ver_opt == '3' and soup_lookup_dep)
+  endif
+  if soup_ver_opt in ['auto', '2']
+    libsoup2_dep = dependency('libsoup-2.4', version : '>=2.48', allow_fallback: true,
+                              default_options: ['sysprof=disabled'],
+                              required: soup_ver_opt == '2' and soup_lookup_dep)
+  endif
+
+  if soup_linked_target
+    if libsoup3_dep.found()
+      soup_linked_target_deps = [libsoup3_dep]
+      soup_linked_target_args = ['-DLINK_SOUP=3']
+      message('soup and adaptivedemux2 plugins: linking to libsoup-3.0')
+    elif libsoup2_dep.found()
+      soup_linked_target_deps = [libsoup2_dep]
+      soup_linked_target_args = ['-DLINK_SOUP=2']
+      message('soup and adaptivedemux2 plugins: linking to libsoup-2.4')
     endif
-  endforeach
+  endif
+
+  # Hack to set the right RPATH for making dlopen() work inside the devenv on
+  # macOS when using libsoup as a subproject.
+  if host_system == 'darwin'
+    foreach dep : [libsoup3_dep, libsoup2_dep]
+      if dep.found() and dep.type_name() == 'internal'
+        soup_dlopen_target_kwargs += {
+          'build_rpath': '@loader_path/../../../libsoup-' + dep.version() / 'libsoup',
+        }
+        break
+      endif
+    endforeach
+  endif
 endif
 
 subdir('aalib')
