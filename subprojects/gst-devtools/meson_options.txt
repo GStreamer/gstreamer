@@ -1,5 +1,7 @@
 option('validate', type : 'feature', value : 'auto',
        description : 'Build GstValidate')
+option('dots_viewer', type : 'feature', value : 'auto',
+       description : 'Build gst-dots-viewer')
 option('cairo', type : 'feature', value : 'auto', description : 'Build GstValidateVideo')
 option('debug_viewer', type : 'feature', value : 'disabled',
         description : 'Build GstDebugViewer (GPLv3+)')

@@ -185,6 +185,10 @@ if not get_option('validate').disabled()
   subdir('validate')
 endif
 
+if not get_option('dots_viewer').disabled()
+  subdir('dots-viewer')
+endif
+
 if not get_option('debug_viewer').disabled()
   subdir('debug-viewer')
 endif

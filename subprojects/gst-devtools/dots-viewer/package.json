@@ -1,0 +1,15 @@
+{
+  "name": "gst-dots",
+  "version": "1.0.0",
+  "description": "GStreamer dot files viewer",
+  "main": "static/js/gstdots.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Thibault Saunier <tsaunier@igalia.com>",
+  "license": "MPL-2.0",
+  "dependencies": {
+    "@viz-js/viz": "^3.4.0",
+    "fuse.js": "^7.0.0"
+  }
+}
