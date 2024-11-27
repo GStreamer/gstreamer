@@ -745,6 +745,13 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
         GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
         goto beach;
       }
+
+      /*
+       * In case we are flushing or stopping the element, ensure the active
+       * state is reflected onto the newly create pool.
+       */
+      if (!g_atomic_int_get (&self->active))
+        gst_v4l2_object_unlock (self->v4l2capture);
     }
 
     /* just a safety, as introducing mistakes in negotiation seems rather
