@@ -130,6 +130,7 @@ static void gst_audio_rate_get_property (GObject * object,
 
 static GstStateChangeReturn gst_audio_rate_change_state (GstElement * element,
     GstStateChange transition);
+static gboolean gst_audio_rate_convert_segments (GstAudioRate * audiorate);
 
 /*static guint gst_audio_rate_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -341,16 +342,14 @@ gst_audio_rate_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_DEBUG_OBJECT (audiorate, "updated segment: %" GST_SEGMENT_FORMAT,
           &audiorate->sink_segment);
 
-      if (audiorate->sink_segment.format == GST_FORMAT_TIME) {
-        /* TIME formats can be copied to src and forwarded */
-        res = gst_pad_push_event (audiorate->srcpad, event);
-        gst_segment_copy_into (&audiorate->sink_segment,
-            &audiorate->src_segment);
-      } else {
-        /* other formats will be handled in the _chain function */
-        gst_event_unref (event);
-        res = TRUE;
-      }
+      /* Copy sink_segment into src_segment and convert to TIME format. */
+      gst_audio_rate_convert_segments (audiorate);
+
+      /* Push updated segment */
+      guint32 seqnum = gst_event_get_seqnum (event);
+      gst_event_take (&event, gst_event_new_segment (&audiorate->src_segment));
+      gst_event_set_seqnum (event, seqnum);
+      res = gst_pad_push_event (audiorate->srcpad, event);
       break;
     }
     case GST_EVENT_EOS:
@@ -414,14 +413,17 @@ gst_audio_rate_convert_segments (GstAudioRate * audiorate)
 
   src_fmt = audiorate->sink_segment.format;
   dst_fmt = audiorate->src_segment.format;
-
+  if (src_fmt == dst_fmt) {
+    gst_segment_copy_into (&audiorate->sink_segment, &audiorate->src_segment);
+    return TRUE;
+  }
 #define CONVERT_VAL(field) gst_audio_rate_convert (audiorate, \
-		src_fmt, audiorate->sink_segment.field,       \
-		dst_fmt, &audiorate->src_segment.field);
+    src_fmt, audiorate->sink_segment.field,                   \
+    dst_fmt, &audiorate->src_segment.field);
 
-  audiorate->sink_segment.rate = audiorate->src_segment.rate;
-  audiorate->sink_segment.flags = audiorate->src_segment.flags;
-  audiorate->sink_segment.applied_rate = audiorate->src_segment.applied_rate;
+  audiorate->src_segment.rate = audiorate->sink_segment.rate;
+  audiorate->src_segment.flags = audiorate->sink_segment.flags;
+  audiorate->src_segment.applied_rate = audiorate->sink_segment.applied_rate;
   CONVERT_VAL (start);
   CONVERT_VAL (stop);
   CONVERT_VAL (time);
@@ -468,9 +470,6 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   /* we have a new pending segment */
   if (audiorate->next_offset == -1) {
     gint64 pos;
-
-    /* update the TIME segment */
-    gst_audio_rate_convert_segments (audiorate);
 
     /* first buffer, we are negotiated and we have a segment, calculate the
      * current expected offsets based on the segment.start, which is the first
