@@ -374,7 +374,7 @@ gst_vulkan_encoder_new_video_session_parameters (GstVulkanEncoder * self,
 }
 
 /**
- * gst_vulkan_encode_picture_new:
+ * gst_vulkan_encoder_picture_new:
  * @self: the #GstVulkanEncoder with the pool's configuration.
  * @in_buffer: (transfer none): the input #GstBuffer.
  * @width: the picture width
@@ -384,14 +384,14 @@ gst_vulkan_encoder_new_video_session_parameters (GstVulkanEncoder * self,
  *
  * Create a new vulkan encode picture from the input buffer.
  *
- * Returns: a new #GstVulkanEncodePicture.
+ * Returns: a new #GstVulkanEncoderPicture.
  *
  */
-GstVulkanEncodePicture *
-gst_vulkan_encode_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
+GstVulkanEncoderPicture *
+gst_vulkan_encoder_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
     int width, int height, gboolean is_ref, gint nb_refs)
 {
-  GstVulkanEncodePicture *pic;
+  GstVulkanEncoderPicture *pic;
   GstVulkanEncoderPrivate *priv;
 
   g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), NULL);
@@ -399,7 +399,7 @@ gst_vulkan_encode_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
 
   priv = gst_vulkan_encoder_get_instance_private (self);
 
-  pic = g_new0 (GstVulkanEncodePicture, 1);
+  pic = g_new0 (GstVulkanEncoderPicture, 1);
 
   if (priv->layered_dpb) {
     g_assert (priv->layered_buffer);
@@ -411,7 +411,7 @@ gst_vulkan_encode_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
     ret =
         gst_buffer_pool_acquire_buffer (priv->dpb_pool, &pic->dpb_buffer, NULL);
     if (ret != GST_FLOW_OK) {
-      gst_vulkan_encode_picture_free (pic);
+      gst_vulkan_encoder_picture_free (pic);
       return NULL;
     }
   }
@@ -441,14 +441,14 @@ gst_vulkan_encode_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
 }
 
 /**
- * gst_vulkan_encode_picture_free:
- * @pic: the #GstVulkanEncodePicture to free.
+ * gst_vulkan_encoder_picture_free:
+ * @pic: the #GstVulkanEncoderPicture to free.
  *
- * Free the #GstVulkanEncodePicture.
+ * Free the #GstVulkanEncoderPicture.
  *
  */
 void
-gst_vulkan_encode_picture_free (GstVulkanEncodePicture * pic)
+gst_vulkan_encoder_picture_free (GstVulkanEncoderPicture * pic)
 {
   g_return_if_fail (pic != NULL);
 
@@ -1026,8 +1026,8 @@ bail:
 /**
  * gst_vulkan_encoder_encode:
  * @self: a #GstVulkanEncoder
- * @pic: a #GstVulkanEncodePicture
- * @ref_pics: an array of #GstVulkanEncodePicture
+ * @pic: a #GstVulkanEncoderPicture
+ * @ref_pics: an array of #GstVulkanEncoderPicture
  *
  * Encode a picture according to its reference pictures.
  *
@@ -1036,7 +1036,7 @@ bail:
  */
 gboolean
 gst_vulkan_encoder_encode (GstVulkanEncoder * self,
-    GstVulkanEncodePicture * pic, GstVulkanEncodePicture ** ref_pics)
+    GstVulkanEncoderPicture * pic, GstVulkanEncoderPicture ** ref_pics)
 {
   GstVulkanEncoderPrivate *priv;
   GError *err = NULL;

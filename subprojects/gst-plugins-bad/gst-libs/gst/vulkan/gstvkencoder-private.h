@@ -36,10 +36,10 @@ typedef struct _GstVulkanEncoderClass GstVulkanEncoderClass;
 typedef union _GstVulkanEncoderParameters GstVulkanEncoderParameters;
 typedef union _GstVulkanEncoderParametersOverrides GstVulkanEncoderParametersOverrides;
 typedef union _GstVulkanEncoderParametersFeedback GstVulkanEncoderParametersFeedback;
-typedef struct _GstVulkanEncodePicture GstVulkanEncodePicture;
+typedef struct _GstVulkanEncoderPicture GstVulkanEncoderPicture;
 
 /**
- * GstVulkanEncodePicture:
+ * GstVulkanEncoderPicture:
  * @is_ref: picture is reference
  * @nb_refs: number of references
  * @slotIndex: slot index
@@ -57,7 +57,7 @@ typedef struct _GstVulkanEncodePicture GstVulkanEncodePicture;
  *
  * Since: 1.24
  */
-struct _GstVulkanEncodePicture
+struct _GstVulkanEncoderPicture
 {
   gboolean is_ref;
   gint nb_refs;
@@ -175,19 +175,19 @@ gboolean                gst_vulkan_encoder_create_dpb_pool      (GstVulkanEncode
                                                                  GstCaps * caps);
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_encode               (GstVulkanEncoder * self,
-                                                                 GstVulkanEncodePicture * pic,
-                                                                 GstVulkanEncodePicture ** ref_pics);
+                                                                 GstVulkanEncoderPicture * pic,
+                                                                 GstVulkanEncoderPicture ** ref_pics);
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_caps                 (GstVulkanEncoder * self,
                                                                  GstVulkanVideoCapabilities * caps);
 GST_VULKAN_API
 GstCaps *               gst_vulkan_encoder_profile_caps         (GstVulkanEncoder * self);
 GST_VULKAN_API
-GstVulkanEncodePicture * gst_vulkan_encode_picture_new          (GstVulkanEncoder * self,
+GstVulkanEncoderPicture* gst_vulkan_encoder_picture_new         (GstVulkanEncoder * self,
                                                                  GstBuffer * in_buffer,
                                                                  gint width,
                                                                  gint height,
                                                                  gboolean is_ref,
                                                                  gint nb_refs);
 GST_VULKAN_API
-void                     gst_vulkan_encode_picture_free         (GstVulkanEncodePicture * pic);
+void                     gst_vulkan_encoder_picture_free        (GstVulkanEncoderPicture * pic);

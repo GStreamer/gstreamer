@@ -47,7 +47,7 @@ static GstVideoInfo in_info;
 static GstVideoInfo out_info;
 typedef struct
 {
-  GstVulkanEncodePicture *picture;
+  GstVulkanEncoderPicture *picture;
 
   VkVideoEncodeH265PictureInfoKHR enc_pic_info;
   VkVideoEncodeH265NaluSliceSegmentInfoKHR slice_info;
@@ -66,7 +66,7 @@ typedef struct
 
 
 static GstVulkanH265EncodeFrame *
-_h265_encode_frame_new (GstVulkanEncodePicture * picture)
+_h265_encode_frame_new (GstVulkanEncoderPicture * picture)
 {
   GstVulkanH265EncodeFrame *frame;
 
@@ -81,7 +81,7 @@ static void
 _h265_encode_frame_free (gpointer pframe)
 {
   GstVulkanH265EncodeFrame *frame = pframe;
-  g_clear_pointer (&frame->picture, gst_vulkan_encode_picture_free);
+  g_clear_pointer (&frame->picture, gst_vulkan_encoder_picture_free);
   g_free (frame);
 }
 
@@ -364,8 +364,8 @@ allocate_frame (GstVulkanEncoder * enc, int width,
   upload_buffer_to_image(img_pool, in_buffer, &img_buffer);
 
 
-  frame = _h265_encode_frame_new (gst_vulkan_encode_picture_new (enc, img_buffer, width, height, is_ref,
-      nb_refs));
+  frame = _h265_encode_frame_new (gst_vulkan_encoder_picture_new (enc,
+      img_buffer, width, height, is_ref, nb_refs));
   fail_unless (frame);
   fail_unless (frame->picture);
   gst_buffer_unref (in_buffer);
@@ -390,12 +390,12 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
 {
   GstVulkanVideoCapabilities enc_caps;
   int i, ref_pics_num = 0;
-  GstVulkanEncodePicture *ref_pics[16] = { NULL, };
+  GstVulkanEncoderPicture *ref_pics[16] = { NULL, };
   gint16 delta_poc_s0_minus1 = 0, delta_poc_s1_minus1 = 0;
   guint qp_i = 26;
   guint qp_p = 26;
   guint qp_b = 26;
-  GstVulkanEncodePicture *picture = frame->picture;
+  GstVulkanEncoderPicture *picture = frame->picture;
   gint picture_type = PICTURE_TYPE(slice_type, picture->is_ref);
 
   GST_DEBUG ("Encoding frame num: %d", frame_num);
