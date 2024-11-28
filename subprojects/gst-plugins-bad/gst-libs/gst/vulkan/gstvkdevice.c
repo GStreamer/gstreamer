@@ -194,6 +194,9 @@ gst_vulkan_device_constructed (GObject * object)
     VK_KHR_VIDEO_ENCODE_QUEUE_EXTENSION_NAME,
     VK_KHR_VIDEO_ENCODE_H264_EXTENSION_NAME,
     VK_KHR_VIDEO_ENCODE_H265_EXTENSION_NAME,
+#if defined(VK_KHR_video_maintenance1)
+    VK_KHR_VIDEO_MAINTENANCE_1_EXTENSION_NAME,
+#endif
 #endif
   };
   int i;
