@@ -491,6 +491,8 @@ gst_shout2send_event (GstBaseSink * sink, GstEvent * event)
     }
   }
 
+  gst_event_unref (event);
+
   return ret;
 }
 
