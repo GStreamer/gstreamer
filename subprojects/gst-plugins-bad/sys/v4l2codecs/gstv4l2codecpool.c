@@ -28,7 +28,7 @@ struct _GstV4l2CodecPool
   GstAtomicQueue *queue;
   GstV4l2CodecAllocator *allocator;
   /* Used to set GstVideoMeta */
-  GstVideoInfo *vinfo;
+  GstVideoInfoDmaDrm *vinfo_drm;
 };
 
 G_DEFINE_TYPE (GstV4l2CodecPool, gst_v4l2_codec_pool, GST_TYPE_BUFFER_POOL);
@@ -54,7 +54,7 @@ gst_v4l2_codec_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   GstVideoMeta *vmeta;
 
   /* A GstVideoInfo must be set before buffer can be acquired */
-  g_return_val_if_fail (self->vinfo, GST_FLOW_ERROR);
+  g_return_val_if_fail (self->vinfo_drm, GST_FLOW_ERROR);
 
   buf = gst_atomic_queue_pop (self->queue);
   if (!buf)
@@ -85,12 +85,12 @@ gst_v4l2_codec_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   }
 
   vmeta = gst_buffer_get_video_meta (buf);
-  vmeta->format = GST_VIDEO_INFO_FORMAT (self->vinfo);
-  vmeta->width = GST_VIDEO_INFO_WIDTH (self->vinfo);
-  vmeta->height = GST_VIDEO_INFO_HEIGHT (self->vinfo);
-  vmeta->n_planes = GST_VIDEO_INFO_N_PLANES (self->vinfo);
-  memcpy (vmeta->offset, self->vinfo->offset, sizeof (vmeta->offset));
-  memcpy (vmeta->stride, self->vinfo->stride, sizeof (vmeta->stride));
+  vmeta->format = GST_VIDEO_INFO_FORMAT (&self->vinfo_drm->vinfo);
+  vmeta->width = GST_VIDEO_INFO_WIDTH (&self->vinfo_drm->vinfo);
+  vmeta->height = GST_VIDEO_INFO_HEIGHT (&self->vinfo_drm->vinfo);
+  vmeta->n_planes = GST_VIDEO_INFO_N_PLANES (&self->vinfo_drm->vinfo);
+  memcpy (vmeta->offset, self->vinfo_drm->vinfo.offset, sizeof (vmeta->offset));
+  memcpy (vmeta->stride, self->vinfo_drm->vinfo.stride, sizeof (vmeta->stride));
 
   *buffer = buf;
   return GST_FLOW_OK;
@@ -133,8 +133,8 @@ gst_v4l2_codec_pool_finalize (GObject * object)
   gst_atomic_queue_unref (self->queue);
   g_object_unref (self->allocator);
 
-  if (self->vinfo)
-    gst_video_info_free (self->vinfo);
+  if (self->vinfo_drm)
+    gst_video_info_dma_drm_free (self->vinfo_drm);
 
   G_OBJECT_CLASS (gst_v4l2_codec_pool_parent_class)->finalize (object);
 }
@@ -154,13 +154,14 @@ gst_v4l2_codec_pool_class_init (GstV4l2CodecPoolClass * klass)
 
 GstV4l2CodecPool *
 gst_v4l2_codec_pool_new (GstV4l2CodecAllocator * allocator,
-    const GstVideoInfo * vinfo)
+    const GstVideoInfoDmaDrm * vinfo_drm)
 {
   GstV4l2CodecPool *pool = g_object_new (GST_TYPE_V4L2_CODEC_POOL, NULL);
   gsize pool_size;
 
   pool->allocator = g_object_ref (allocator);
-  pool->vinfo = gst_video_info_copy (vinfo);
+
+  pool->vinfo_drm = g_boxed_copy (GST_TYPE_VIDEO_INFO_DMA_DRM, vinfo_drm);
 
   pool_size = gst_v4l2_codec_allocator_get_pool_size (allocator);
   for (gsize i = 0; i < pool_size; i++) {
