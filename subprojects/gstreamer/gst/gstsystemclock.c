@@ -871,7 +871,6 @@ gst_system_clock_async_thread (GstClock * clock)
   GstSystemClock *sysclock = GST_SYSTEM_CLOCK_CAST (clock);
   GstSystemClockPrivate *priv = sysclock->priv;
   GstClockReturn status;
-  gboolean entry_needs_unlock = FALSE;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "enter system clock thread");
   GST_SYSTEM_CLOCK_LOCK (clock);
@@ -904,7 +903,6 @@ gst_system_clock_async_thread (GstClock * clock)
 
     /* unlocked before the next loop iteration at latest */
     GST_SYSTEM_CLOCK_ENTRY_LOCK ((GstClockEntryImpl *) entry);
-    entry_needs_unlock = TRUE;
 
     /* set entry status to busy before we release the clock lock */
     status = GST_CLOCK_ENTRY_STATUS (entry);
@@ -915,7 +913,7 @@ gst_system_clock_async_thread (GstClock * clock)
       GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
           "async entry %p unscheduled", entry);
       GST_SYSTEM_CLOCK_UNLOCK (clock);
-      goto next_entry;
+      goto unlock_entry_and_next_entry;
     }
 
     /* for periodic timers, status can be EARLY from a previous run */
@@ -946,12 +944,11 @@ gst_system_clock_async_thread (GstClock * clock)
         /* entry was unscheduled, move to the next */
         GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
             "async entry %p unscheduled", entry);
-        goto next_entry;
+        goto unlock_entry_and_next_entry;
       case GST_CLOCK_OK:
       case GST_CLOCK_EARLY:
       {
         GST_SYSTEM_CLOCK_ENTRY_UNLOCK ((GstClockEntryImpl *) entry);
-        entry_needs_unlock = FALSE;
         /* entry timed out normally, fire the callback and move to the next
          * entry */
         GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "async entry %p timed out",
@@ -997,11 +994,11 @@ gst_system_clock_async_thread (GstClock * clock)
             "strange result %d waiting for %p, skipping", res, entry);
         g_warning ("%s: strange result %d waiting for %p, skipping",
             GST_OBJECT_NAME (clock), res, entry);
-        goto next_entry;
+        goto unlock_entry_and_next_entry;
     }
+  unlock_entry_and_next_entry:
+    GST_SYSTEM_CLOCK_ENTRY_UNLOCK ((GstClockEntryImpl *) entry);
   next_entry:
-    if (entry_needs_unlock)
-      GST_SYSTEM_CLOCK_ENTRY_UNLOCK ((GstClockEntryImpl *) entry);
     GST_SYSTEM_CLOCK_LOCK (clock);
 
     /* we remove the current entry and unref it */
