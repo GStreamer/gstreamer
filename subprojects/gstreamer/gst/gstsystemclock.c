@@ -1126,15 +1126,25 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
   GstClockReturn status;
   gint64 mono_ts;
 
-  status = GST_CLOCK_ENTRY_STATUS (entry);
-  if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED)) {
-    return GST_CLOCK_UNSCHEDULED;
-  }
+  /* Getting the time from the clock locks the clock, so without unlocking the
+   * entry we would have a lock order violation here that can lead to deadlocks.
+   *
+   * It's not a problem to take the mutex again after getting the times (which
+   * might block for a moment) as waiting happens based on the absolute time.
+   */
+  GST_SYSTEM_CLOCK_ENTRY_UNLOCK ((GstClockEntryImpl *) entry);
 
   /* need to call the overridden method because we want to sync against the time
    * of the clock, whatever the subclass uses as a clock. */
   now = gst_clock_get_time (clock);
   mono_ts = g_get_monotonic_time ();
+
+  GST_SYSTEM_CLOCK_ENTRY_LOCK ((GstClockEntryImpl *) entry);
+  /* Might have been unscheduled in the meantime */
+  status = GST_CLOCK_ENTRY_STATUS (entry);
+  if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED)) {
+    return GST_CLOCK_UNSCHEDULED;
+  }
 
   /* get the time of the entry */
   entryt = GST_CLOCK_ENTRY_TIME (entry);
@@ -1223,10 +1233,20 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
               "entry %p unlocked after timeout", entry);
         }
 
+        GST_SYSTEM_CLOCK_ENTRY_UNLOCK ((GstClockEntryImpl *) entry);
+
         /* reschedule if gst_cond_wait_until returned early or we have to reschedule after
          * an unlock*/
-        mono_ts = g_get_monotonic_time ();
         now = gst_clock_get_time (clock);
+        mono_ts = g_get_monotonic_time ();
+
+        GST_SYSTEM_CLOCK_ENTRY_LOCK ((GstClockEntryImpl *) entry);
+        /* Might have been unscheduled in the meantime */
+        status = GST_CLOCK_ENTRY_STATUS (entry);
+        if (G_UNLIKELY (status == GST_CLOCK_UNSCHEDULED)) {
+          goto done;
+        }
+
         diff = GST_CLOCK_DIFF (now, entryt);
 
         if (diff <= CLOCK_MIN_WAIT_TIME) {
