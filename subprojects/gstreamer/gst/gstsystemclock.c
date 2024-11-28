@@ -571,6 +571,7 @@ ensure_entry_initialized (GstClockEntryImpl * entry_impl)
 struct _GstSystemClockPrivate
 {
   GThread *thread;              /* thread for async notify */
+  gboolean starting;
   gboolean stopping;
 
   GList *entries;
@@ -875,6 +876,7 @@ gst_system_clock_async_thread (GstClock * clock)
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "enter system clock thread");
   GST_SYSTEM_CLOCK_LOCK (clock);
   /* signal spinup */
+  priv->starting = FALSE;
   GST_SYSTEM_CLOCK_BROADCAST (clock);
   /* now enter our (almost) infinite loop */
   while (!priv->stopping) {
@@ -1316,6 +1318,7 @@ gst_system_clock_start_async (GstSystemClock * clock)
   if (G_LIKELY (priv->thread != NULL))
     return TRUE;                /* Thread already running. Nothing to do */
 
+  priv->starting = TRUE;
   priv->thread = g_thread_try_new ("GstSystemClock",
       (GThreadFunc) gst_system_clock_async_thread, clock, &error);
 
@@ -1323,13 +1326,15 @@ gst_system_clock_start_async (GstSystemClock * clock)
     goto no_thread;
 
   /* wait for it to spin up */
-  GST_SYSTEM_CLOCK_WAIT (clock);
+  while (priv->starting)
+    GST_SYSTEM_CLOCK_WAIT (clock);
 
   return TRUE;
 
   /* ERRORS */
 no_thread:
   {
+    priv->starting = FALSE;
     g_warning ("could not create async clock thread: %s", error->message);
     g_error_free (error);
   }
