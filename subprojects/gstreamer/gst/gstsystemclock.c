@@ -989,8 +989,7 @@ gst_system_clock_async_thread (GstClock * clock)
          * _unschedule() code can see if an entry is currently being waited
          * on (when its state is BUSY). */
         GST_CLOCK_ENTRY_STATUS (entry) = GST_CLOCK_OK;
-        if (entry_needs_unlock)
-          GST_SYSTEM_CLOCK_ENTRY_UNLOCK ((GstClockEntryImpl *) entry);
+        GST_SYSTEM_CLOCK_ENTRY_UNLOCK ((GstClockEntryImpl *) entry);
         GST_SYSTEM_CLOCK_LOCK (clock);
         continue;
       default:
