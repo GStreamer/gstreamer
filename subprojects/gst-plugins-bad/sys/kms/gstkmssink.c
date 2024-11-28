@@ -57,16 +57,13 @@
 #include <xf86drmMode.h>
 #include <drm_fourcc.h>
 #include <string.h>
+#include <math.h>
 
 #include "gstkmssink.h"
 #include "gstkmsutils.h"
 #include "gstkmsbufferpool.h"
 #include "gstkmsallocator.h"
-
-#ifdef HAVE_DRM_HDR
-#include <math.h>
 #include "gstkmsedid.h"
-#endif
 
 #define GST_PLUGIN_NAME "kmssink"
 #define GST_PLUGIN_DESC "Video sink using the Linux kernel mode setting API"
@@ -110,7 +107,6 @@ enum
 
 static GParamSpec *g_properties[PROP_N] = { NULL, };
 
-#ifdef HAVE_DRM_HDR
 enum hdmi_metadata_type
 {
   HDMI_STATIC_METADATA_TYPE1 = 0,
@@ -405,7 +401,6 @@ gst_kms_sink_set_hdr10_caps (GstKMSSink * self, GstCaps * caps)
   }
 }
 
-#endif /* HAVE_DRM_HDR */
 
 static void
 gst_kms_sink_set_render_rectangle (GstVideoOverlay * overlay,
@@ -1681,9 +1676,7 @@ gst_kms_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (GST_VIDEO_SINK_WIDTH (self) <= 0 || GST_VIDEO_SINK_HEIGHT (self) <= 0)
     goto invalid_size;
 
-#ifdef HAVE_DRM_HDR
   gst_kms_sink_set_hdr10_caps (self, caps);
-#endif
 
   /* discard dumb buffer pool */
   if (self->pool) {
@@ -2218,10 +2211,8 @@ retry_set_plane:
     src.w = result.w;
     src.h = result.h;
   }
-#ifdef HAVE_DRM_HDR
   /* Send the HDR infoframes if appropriate */
   gst_kms_push_hdr_infoframe (self, FALSE);
-#endif
 
   GST_TRACE_OBJECT (self,
       "drmModeSetPlane at (%i,%i) %ix%i sourcing at (%i,%i) %ix%i",
@@ -2540,7 +2531,6 @@ gst_kms_sink_init (GstKMSSink * sink)
   gst_video_info_dma_drm_init (&sink->vinfo_drm);
   sink->skip_vsync = FALSE;
 
-#ifdef HAVE_DRM_HDR
   sink->no_infoframe = FALSE;
   sink->has_hdr_info = FALSE;
   sink->has_sent_hdrif = FALSE;
@@ -2549,7 +2539,6 @@ gst_kms_sink_init (GstKMSSink * sink)
   sink->colorimetry = HDMI_EOTF_TRADITIONAL_GAMMA_SDR;
   gst_video_mastering_display_info_init (&sink->hdr_minfo);
   gst_video_content_light_level_init (&sink->hdr_cll);
-#endif
 }
 
 static void

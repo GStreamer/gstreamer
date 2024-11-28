@@ -99,7 +99,6 @@ struct _GstKMSSink {
   gboolean is_internal_fd;
   gboolean skip_vsync;
 
-#ifdef HAVE_DRM_HDR
   /* HDR mastering related structure */
   gboolean no_infoframe;
   gboolean has_hdr_info;
@@ -109,7 +108,6 @@ struct _GstKMSSink {
   gchar colorimetry;
   GstVideoMasteringDisplayInfo hdr_minfo;
   GstVideoContentLightLevel hdr_cll;
-#endif
 };
 
 struct _GstKMSSinkClass {
