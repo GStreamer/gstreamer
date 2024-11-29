@@ -1417,8 +1417,11 @@ gst_gl_download_element_prepare_output_buffer (GstBaseTransform * bt,
       ret = gst_base_transform_update_src_caps (bt, src_caps);
       gst_caps_unref (src_caps);
 
-      if (!ret) {
-        GST_ERROR_OBJECT (bt, "DMABuf exportation didn't work and system "
+      if (ret) {
+        GST_WARNING_OBJECT (bt, "DMABuf export didn't work. Falling back to "
+            "system memory.");
+      } else {
+        GST_ERROR_OBJECT (bt, "DMABuf export didn't work and system "
             "memory is not supported.");
         return GST_FLOW_NOT_NEGOTIATED;
       }
