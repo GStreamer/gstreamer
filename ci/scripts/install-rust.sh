@@ -19,7 +19,7 @@ chmod +x rustup-init;
 rm rustup-init;
 chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
-cargo install --locked cargo-c --version 0.10.5+cargo-0.83.0
+cargo install --locked cargo-c --version 0.10.7+cargo-0.84.0
 
 rustup --version
 cargo --version
