@@ -4,8 +4,17 @@ use std::env;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
+use tracing::{error, info};
 
 fn main() {
+    tracing_subscriber::fmt()
+        .compact()
+        .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
+        .with_env_filter(
+            tracing_subscriber::filter::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| tracing_subscriber::filter::EnvFilter::new("warn")),
+        )
+        .init();
     // Determine the directory to use for dumping GStreamer pipelines
     let gstdot_path = env::var("GST_DEBUG_DUMP_DOT_DIR")
         .map(PathBuf::from)
@@ -28,11 +37,11 @@ fn main() {
     // Ensure the directory exists
     fs::create_dir_all(&gstdot_path).expect("Failed to create dot directory");
 
-    println!("Dumping GStreamer pipelines into {:?}", gstdot_path);
+    info!("Dumping GStreamer pipelines into {:?}", gstdot_path);
     let command_idx = if delete {
         // Build the glob pattern and remove existing .dot files
         let pattern = gstdot_path.join("**/*.dot").to_string_lossy().into_owned();
-        println!("Removing existing .dot files matching {pattern}");
+        info!("Removing existing .dot files matching {pattern}");
         for entry in glob(&pattern).expect("Failed to read glob pattern") {
             match entry {
                 Ok(path) => {
@@ -40,7 +49,7 @@ fn main() {
                         fs::remove_file(path).expect("Failed to remove file");
                     }
                 }
-                Err(e) => eprintln!("Error reading file: {}", e),
+                Err(e) => error!("Error reading file: {}", e),
             }
         }
         0
@@ -50,6 +59,27 @@ fn main() {
 
     // Set the environment variable to use the determined directory
     env::set_var("GST_DEBUG_DUMP_DOT_DIR", &gstdot_path);
+    match Command::new("gst-inspect-1.0")
+        .args(["--exists", "pipeline-snapshot"])
+        .status()
+    {
+        Ok(status) => {
+            if !status.success() {
+                error!(
+                    "WARNING: pipeline-snapshot tracer not found. \
+                           Please ensure that the `rstracers` plugin is installed."
+                );
+            }
+        }
+        Err(e) => {
+            error!(
+                "WARNING: Could not run gst-inspect-1.0: {e} \
+                      to check the presence of the `pipeline-snapshot` tracer.\n\
+                WARNING: Please ensure GStreamer is properly installed."
+            );
+        }
+    }
+
     let default_pipeline_snapshot = "pipeline-snapshot(dots-viewer-ws-url=ws://127.0.0.1:3000/snapshot/,xdg-cache=true,folder-mode=numbered)";
     env::set_var(
         "GST_TRACERS",
@@ -57,7 +87,7 @@ fn main() {
             |_| default_pipeline_snapshot.to_string(),
             |tracers| {
                 if !tracers.contains("pipeline-snapshot") {
-                    println!("pipeline-snapshot already enabled");
+                    info!("pipeline-snapshot already enabled");
 
                     tracers
                 } else {
@@ -68,7 +98,7 @@ fn main() {
     );
 
     // Run the command provided in arguments
-    eprintln!("Running {:?}", &args[command_idx..]);
+    info!("Running {:?}", &args[command_idx..]);
     if args.len() >= command_idx {
         let output = Command::new(&args[command_idx])
             .args(&args[command_idx + 1..])
@@ -76,7 +106,7 @@ fn main() {
 
         match output {
             Ok(_status) => (),
-            Err(e) => eprintln!("Error: {e:?}"),
+            Err(e) => error!("Error: {e:?}"),
         }
     }
 }
