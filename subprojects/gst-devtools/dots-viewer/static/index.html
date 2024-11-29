@@ -20,16 +20,22 @@
         margin: 0;
         font-family: 'Lato', sans-serif;
         text-align: center;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+    }
+
+    h1 {
+        color: #ffffff;
     }
 
     .instructions {
-        color: #fcfcfc;
+        color: #e0e0e0;
         position: absolute;
         z-index: 100;
         bottom: 0px;
         left: 0px;
     }
-    
+
     .preview {
       width: -webkit-fill-available;
       width: -moz-available;
@@ -38,9 +44,10 @@
 
     .internalframe {
       flex-grow: 1;
-       border: none;
-       margin: 0;
-       padding: 0;
+      border: none;
+      margin: 0;
+      padding: 0;
+      background-color: #1a1a1a;
     }
 
     .overlay {
@@ -50,8 +57,7 @@
         z-index: 1;
         top: 0;
         left: 0;
-        background-color: rgb(0,0,0);
-        background-color: rgba(0,0,0, 0.9);
+        background-color: rgba(0,0,0, 0.95);
         overflow-x: hidden;
         transition: 0.5s;
         visibility: "visible";
@@ -70,19 +76,37 @@
         padding: 8px;
         text-decoration: none;
         font-size: 36px;
-        color: #818181;
+        color: #a0a0a0;
         display: block;
         transition: 0.3s;
     }
 
     .overlay a:hover, .overlay a:focus {
-        color: #f1f1f1;
+        color: #ffffff;
     }
 
     .overlay .closebtn {
         top: 20px;
         right: 45px;
         font-size: 30px;
+    }
+
+    input[type="text"] {
+        background-color: #2a2a2a;
+        color: #e0e0e0;
+        border: 1px solid #404040;
+        padding: 8px;
+        border-radius: 4px;
+        margin: 10px 0;
+    }
+
+    input[type="text"]::placeholder {
+        color: #808080;
+    }
+
+    input[type="text"]:focus {
+        outline: none;
+        border-color: #0069ff;
     }
 
     @media screen and (max-height: 250000px) {
@@ -95,22 +119,55 @@
       }
     }
 
-  input[type='checkbox'] { display: none; }
-  .wrap-collabsible { margin: 1.2rem 0; }
-  .lbl-toggle { display: block; font-weight: bold; font-family: monospace; font-size: 1.2rem; text-transform: uppercase; text-align: center; padding: 1rem; color: #DDD; background: #0069ff; cursor: pointer; border-radius: 7px; transition: all 0.25s ease-out; }
-  .lbl-toggle:hover { color: #FFF; }
-  .lbl-toggle::before { content: ' '; display: inline-block; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 5px solid currentColor; vertical-align: middle; margin-right: .7rem; transform: translateY(-2px); transition: transform .2s ease-out; }
-  .toggle:checked+.lbl-toggle::before { transform: rotate(90deg) translateX(-3px); }
-  .collapsible-content { max-height: 0px; overflow: hidden; transition: max-height .25s ease-in-out; }
-  .toggle:checked + .lbl-toggle + .collapsible-content { max-height: 999999999px; }
-  .toggle:checked+.lbl-toggle { border-bottom-right-radius: 0; border-bottom-left-radius: 0; }
-  .collapsible-content .content-inner { background: rgba(0, 105, 255, .2); border-bottom: 1px solid rgba(0, 105, 255, .45); border-bottom-left-radius: 7px; border-bottom-right-radius: 7px; padding: .5rem 1rem; }
-  .collapsible-content p { margin-bottom: 0; }
+    input[type='checkbox'] { display: none; }
+    .wrap-collabsible { margin: 1.2rem 0; }
+    .lbl-toggle {
+        display: block;
+        font-weight: bold;
+        font-family: monospace;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        text-align: center;
+        padding: 1rem;
+        color: #ffffff;
+        background: #1a4c9e;
+        cursor: pointer;
+        border-radius: 7px;
+        transition: all 0.25s ease-out;
+    }
+    .lbl-toggle:hover { background: #2161c9; }
+    .lbl-toggle::before {
+        content: ' ';
+        display: inline-block;
+        border-top: 5px solid transparent;
+        border-bottom: 5px solid transparent;
+        border-left: 5px solid currentColor;
+        vertical-align: middle;
+        margin-right: .7rem;
+        transform: translateY(-2px);
+        transition: transform .2s ease-out;
+    }
+    .toggle:checked+.lbl-toggle::before { transform: rotate(90deg) translateX(-3px); }
+    .collapsible-content {
+        max-height: 0px;
+        overflow: hidden;
+        transition: max-height .25s ease-in-out;
+    }
+    .toggle:checked + .lbl-toggle + .collapsible-content { max-height: 999999999px; }
+    .toggle:checked+.lbl-toggle { border-bottom-right-radius: 0; border-bottom-left-radius: 0; }
+    .collapsible-content .content-inner {
+        background: rgba(26, 76, 158, 0.2);
+        border-bottom: 1px solid rgba(26, 76, 158, 0.45);
+        border-bottom-left-radius: 7px;
+        border-bottom-right-radius: 7px;
+        padding: .5rem 1rem;
+    }
+    .collapsible-content p { margin-bottom: 0; }
   </style>
 
   <script src="/js/gstdots.js" type="module"> </script>
   <script type="module">
-  import {updateFromUrl, connectWs, connectSearch, removePipelineOverlay} from '/js/gstdots.js';
+    import {updateFromUrl, connectWs, connectSearch, removePipelineOverlay} from '/js/gstdots.js';
 
     window.addEventListener('popstate', function(event) {
       updateFromUrl(true);
@@ -141,17 +198,15 @@
         }
       });
     }
-    </script>
+  </script>
 
   <body>
     <h1>GStreamer Pipeline graphs</h1>
 
     <div>
-      <input type="text", id="search", placeholder="Search for pipeline">
+      <input type="text" id="search" placeholder="Search for pipeline">
     </div>
 
     <div id="pipelines"></div>
   </body>
 </html>
-
-
