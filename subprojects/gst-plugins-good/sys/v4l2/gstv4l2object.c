@@ -4129,25 +4129,79 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
         pixelformat, width, height, s);
 
     if (tmp) {
-      gint min_fps_n, min_fps_d, max_fps_n, max_fps_d;
-      gdouble max_fps, desired_fps;
+      gdouble desired_fps;
 
-      gst_structure_get (tmp, "framerate", GST_TYPE_FRACTION_RANGE,
-          &min_fps_n, &min_fps_d, &max_fps_n, &max_fps_d, NULL);
-      gst_util_fraction_to_double (max_fps_n, max_fps_d, &max_fps);
       gst_util_fraction_to_double (fps_n, fps_d, &desired_fps);
 
-      if (desired_fps > max_fps) {
-        GST_WARNING_OBJECT (v4l2object->dbg_obj, "Max framerate: %u/%u (%f)",
-            max_fps_n, max_fps_d, max_fps);
-        GST_WARNING_OBJECT (v4l2object->dbg_obj,
-            "Desired framerate: %u/%u (%f)", fps_n, fps_d, desired_fps);
-        fps_n = max_fps_n;
-        fps_d = max_fps_d;
-        gst_structure_set (s, "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
-            NULL);
+      if (gst_structure_has_field_typed (tmp, "framerate",
+              GST_TYPE_FRACTION_RANGE)) {
+        gint min_fps_n, min_fps_d, max_fps_n, max_fps_d;
+        gdouble max_fps, min_fps;
+
+        gst_structure_get (tmp, "framerate", GST_TYPE_FRACTION_RANGE,
+            &min_fps_n, &min_fps_d, &max_fps_n, &max_fps_d, NULL);
+        gst_util_fraction_to_double (min_fps_n, min_fps_d, &min_fps);
+        gst_util_fraction_to_double (max_fps_n, max_fps_d, &max_fps);
+
+        if (desired_fps > max_fps) {
+          GST_WARNING_OBJECT (v4l2object->dbg_obj,
+              "Desired framerate < max: %d/%d (%f) < %d/%d (%f), clipping",
+              fps_n, fps_d, desired_fps, max_fps_n, max_fps_d, max_fps);
+          fps_n = max_fps_n;
+          fps_d = max_fps_d;
+          gst_structure_set (s, "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
+              NULL);
+        }
+        if (desired_fps < min_fps) {
+          GST_WARNING_OBJECT (v4l2object->dbg_obj,
+              "Desired framerate > min: %d/%d (%f) > %d/%d (%f), clipping",
+              fps_n, fps_d, desired_fps, min_fps_n, min_fps_d, min_fps);
+          fps_n = min_fps_n;
+          fps_d = min_fps_d;
+          gst_structure_set (s, "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
+              NULL);
+        }
+      } else if (gst_structure_has_field_typed (tmp, "framerate",
+              GST_TYPE_FRACTION)) {
+        gint corrected_fps_n, corrected_fps_d;
+        gdouble corrected_fps;
+        gst_structure_get (tmp, "framerate", GST_TYPE_FRACTION,
+            &corrected_fps_n, &corrected_fps_d, NULL);
+        gst_util_fraction_to_double (corrected_fps_n, corrected_fps_d,
+            &corrected_fps);
+        if (corrected_fps_n != fps_n || corrected_fps_d != fps_d) {
+          GST_WARNING_OBJECT (v4l2object->dbg_obj,
+              "Driver not providing desired framerate: %d/%d (%f) != %d/%d (%f), correcting",
+              fps_n, fps_d, desired_fps, corrected_fps_n, corrected_fps_d,
+              corrected_fps);
+          fps_n = corrected_fps_n;
+          fps_d = corrected_fps_d;
+          gst_structure_set (s, "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
+              NULL);
+        }
+      } else if (gst_structure_has_field_typed (tmp, "framerate",
+              GST_TYPE_LIST)) {
+        if (gst_structure_fixate_field_nearest_fraction (tmp, "framerate",
+                fps_n, fps_d)) {
+          gint corrected_fps_n, corrected_fps_d;
+          gst_structure_get_fraction (tmp, "framerate", &corrected_fps_n,
+              &corrected_fps_d);
+
+          if (corrected_fps_n != fps_n || corrected_fps_d != fps_d) {
+            GST_WARNING_OBJECT (v4l2object->dbg_obj,
+                "Desired framerate not supported: %d/%d (%f), corrected to %d/%d",
+                fps_n, fps_d, desired_fps, corrected_fps_n, corrected_fps_d);
+            fps_n = corrected_fps_n;
+            fps_d = corrected_fps_d;
+            gst_structure_set (s, "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
+                NULL);
+          }
+        }
+      } else {
+        g_assert_not_reached ();
       }
     }
+    gst_clear_structure (&tmp);
   }
 
   if (try_only)                 /* good enough for trying only */
