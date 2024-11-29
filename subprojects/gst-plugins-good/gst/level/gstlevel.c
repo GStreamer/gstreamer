@@ -731,8 +731,18 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   if (filter->audio_level_meta) {
     gdouble RMS = sqrt (CS_tot / num_int_samples);
     gdouble RMSdB = 20 * log10 (RMS + EPSILON);
+    guint8 level;
 
-    gst_level_rtp_audio_level_meta (filter, in, -RMSdB);
+    /* -127db is considered silent in audio level meta, clip anything below and
+     * avoid possible integer overflow */
+    if (RMSdB < -127.0)
+      level = 127;
+    else if (RMSdB > 0.0)
+      level = 0;
+    else
+      level = -RMSdB;
+
+    gst_level_rtp_audio_level_meta (filter, in, level);
   }
 
   GST_OBJECT_UNLOCK (filter);
