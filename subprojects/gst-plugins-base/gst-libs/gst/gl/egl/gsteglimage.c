@@ -1106,6 +1106,8 @@ gst_egl_image_export_dmabuf (GstEGLImage * image, int *fd, gint * stride,
  * gst_egl_image_from_dmabuf() even when GL supports the video format as
  * external-only or not at all.
  *
+ * Since: 1.26
+ *
  * Returns: #TRUE if @format can be emulated
  */
 gboolean
