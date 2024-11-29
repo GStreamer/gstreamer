@@ -1699,6 +1699,22 @@ GST_START_TEST (test_rtcp_buffer_xr_voipmtrx)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtcp_utils)
+{
+  /* Make sure conversion from NTP doesn't incur precision loss */
+  GstClockTime orig_ts = gst_util_get_timestamp ();
+  guint64 ntp_ts = gst_rtcp_unix_to_ntp (orig_ts);
+  GstClockTime new_ts = gst_rtcp_ntp_to_unix (ntp_ts);
+  fail_unless_equals_clocktime (orig_ts, new_ts);
+
+  GstClockTime hardcoded_ts = 185774825249347;
+  ntp_ts = gst_rtcp_unix_to_ntp (hardcoded_ts);
+  new_ts = gst_rtcp_ntp_to_unix (ntp_ts);
+  fail_unless_equals_clocktime (hardcoded_ts, new_ts);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_rtp_ntp64_extension)
 {
   GstBuffer *buf;
@@ -2357,6 +2373,7 @@ rtp_suite (void)
   tcase_add_test (tc_chain, test_rtcp_buffer_xr_dlrr);
   tcase_add_test (tc_chain, test_rtcp_buffer_xr_ssumm);
   tcase_add_test (tc_chain, test_rtcp_buffer_xr_voipmtrx);
+  tcase_add_test (tc_chain, test_rtcp_utils);
 
   tcase_add_test (tc_chain, test_rtp_ntp64_extension);
   tcase_add_test (tc_chain, test_rtp_ntp56_extension);
