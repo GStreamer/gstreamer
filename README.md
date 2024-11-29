@@ -619,3 +619,9 @@ gst-launch-1.0.exe videotestsrc ! glimagesink
 ```
 
 [binfmt]: http://man7.org/linux/man-pages/man5/binfmt.d.5.html
+
+#### vscode integration
+
+A file named `.vscode/launch.json.sample` can be used as a reference to debug and run
+GStreamer applications such as `gst-launch-1.0`. You just have to copy the file to
+`.vscode/launch.json` to enable the debugging session in Visual Studio Code.
