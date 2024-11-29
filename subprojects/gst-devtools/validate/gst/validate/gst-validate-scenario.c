@@ -3210,7 +3210,7 @@ execute_action:
       priv->execute_actions_source_id = 0;
       SCENARIO_UNLOCK (scenario);
 
-      return G_SOURCE_CONTINUE;
+      return G_SOURCE_REMOVE;
     case GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS:
       return G_SOURCE_CONTINUE;
     case GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING:
@@ -3572,10 +3572,12 @@ _execute_wait_for_message (GstValidateScenario * scenario,
 
   gst_validate_printf (action, "Waiting for '%s' message\n", message_type);
 
+  SCENARIO_LOCK (scenario);
   if (priv->execute_actions_source_id) {
     g_source_remove (priv->execute_actions_source_id);
     priv->execute_actions_source_id = 0;
   }
+  SCENARIO_UNLOCK (scenario);
 
   g_assert (!priv->wait_message_action);
   priv->wait_message_action = gst_validate_action_ref (action);
