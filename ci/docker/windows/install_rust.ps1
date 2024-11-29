@@ -1,6 +1,6 @@
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
 
-$rust_version = '1.82.0'
+$rust_version = '1.83.0'
 $rustup_url = 'https://win.rustup.rs/x86_64'
 
 Invoke-WebRequest -Uri $rustup_url -OutFile C:\rustup-init.exe
