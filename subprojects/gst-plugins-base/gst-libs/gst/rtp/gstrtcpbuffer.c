@@ -2136,7 +2136,7 @@ gst_rtcp_ntp_to_unix (guint64 ntptime)
   unixtime = ntptime - (G_GUINT64_CONSTANT (2208988800) << 32);
   /* conversion to nanoseconds */
   unixtime =
-      gst_util_uint64_scale (unixtime, GST_SECOND,
+      gst_util_uint64_scale_ceil (unixtime, GST_SECOND,
       (G_GINT64_CONSTANT (1) << 32));
 
   return unixtime;
