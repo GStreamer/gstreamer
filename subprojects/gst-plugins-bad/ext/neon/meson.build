@@ -1,5 +1,4 @@
-neon_dep = dependency('neon', version: ['>= 0.27', '<= 0.33.99'],
-                      required : get_option('neon'))
+neon_dep = dependency('neon', version: '>= 0.27', required: get_option('neon'))
 
 if neon_dep.found()
   gstneon = library('gstneonhttpsrc',
