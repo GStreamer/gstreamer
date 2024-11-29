@@ -41,11 +41,7 @@ so pipelines that are 'manually' dumped by the application are also dumped.
 
 ## Demo
 
-Demo of the `gstdump`, gst-dots-viewer used in combination with the [tracer-pipeline-snapshot](tracer-pipeline-snapshot)
-
-### Video:
-
-[![](static/images/gst-dots-viewer-video.jpeg){width=70%}](https://youtu.be/-cHME_eNKbc "GStreamer dot files viewer")
+How to use `gstdump`, gst-dots-viewer used in combination with the [tracer-pipeline-snapshot](tracer-pipeline-snapshot)
 
 ### Start gst-dots
 
@@ -62,6 +58,9 @@ $ gst-dots-viewer
 # This runs the pipeline with `gstdump` which sets up:
 #
 # - the `pipeline-snapshot` tracer with the following parameters:
+#   - `dots-viewer-ws-url=ws://127.0.0.1:3000/snapshot/`: Sets the URL
+#      of the default websocket server used by `gst-dots-viewer` so that the
+#      pipelines can be dumped from the web interface.
 #   - xdg-cache=true: Use the default 'cache' directory to store `.dot` files,
 #                     the same as what `gst-dots-viewer` uses by default
 #   - folder-mode=numbered: Use folders to store the `.dot` files, with
@@ -72,11 +71,7 @@ $ gst-dots-viewer
 gstdump gst-launch-1.0 videotestsrc ! webrtcsink run-signalling-server=true0
 ```
 
-### Dump pipelines manually thanks to the `pipeline-snapshot` tracer
+### Dump pipelines from the web interface
 
-``` sh
-kill -SIGUSR1 $(pgrep gst-launch-1.0)
-```
-
-Each time the pipeline is dumped, the `gst-dots-viewer` server will refresh
-the page to display the new pipelines.
+You can clock the "Dump Pipelines" button in the `gst-dots-viewer` web interface
+to force

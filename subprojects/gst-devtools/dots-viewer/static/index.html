@@ -109,6 +109,25 @@
         border-color: #0069ff;
     }
 
+    button {
+        background-color: #2a2a2a;
+        color: #e0e0e0;
+        border: 1px solid #404040;
+        padding: 8px 16px;
+        border-radius: 4px;
+        margin: 10px 0;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #3a3a3a;
+        border-color: #505050;
+    }
+
+    button:active {
+        background-color: #404040;
+    }
+
     @media screen and (max-height: 250000px) {
       .overlay a {font-size: 20px}
       .overlay .closebtn {
@@ -167,7 +186,7 @@
 
   <script src="/js/gstdots.js" type="module"> </script>
   <script type="module">
-    import {updateFromUrl, connectWs, connectSearch, removePipelineOverlay} from '/js/gstdots.js';
+    import {updateFromUrl, connectWs, connectSearch, removePipelineOverlay,  dumpPipelines } from '/js/gstdots.js';
 
     window.addEventListener('popstate', function(event) {
       updateFromUrl(true);
@@ -177,6 +196,8 @@
       connectWs();
       connectSearch();
       updateFromUrl(true);
+
+      document.getElementById('dump-button').addEventListener('click', dumpPipelines);
     });
 
     document.addEventListener('keyup', function(e) {
@@ -205,6 +226,7 @@
 
     <div>
       <input type="text" id="search" placeholder="Search for pipeline">
+      <button id="dump-button">Dump Pipelines</button>
     </div>
 
     <div id="pipelines"></div>

@@ -336,4 +336,9 @@ export function removePipelineOverlay(noHistoryUpdate) {
     updateSearch();
 }
 
+export function dumpPipelines() {
+    if (ws) {
+        ws.send(JSON.stringify({ type: "Snapshot" }));
+    }
+}
 

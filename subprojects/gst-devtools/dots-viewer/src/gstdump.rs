@@ -50,17 +50,18 @@ fn main() {
 
     // Set the environment variable to use the determined directory
     env::set_var("GST_DEBUG_DUMP_DOT_DIR", &gstdot_path);
+    let default_pipeline_snapshot = "pipeline-snapshot(dots-viewer-ws-url=ws://127.0.0.1:3000/snapshot/,xdg-cache=true,folder-mode=numbered)";
     env::set_var(
         "GST_TRACERS",
         env::var("GST_TRACERS").map_or_else(
-            |_| "pipeline-snapshot(xdg-cache=true,folder-mode=numbered)".to_string(),
+            |_| default_pipeline_snapshot.to_string(),
             |tracers| {
                 if !tracers.contains("pipeline-snapshot") {
                     println!("pipeline-snapshot already enabled");
 
                     tracers
                 } else {
-                    format!("{tracers},pipeline-snapshot(xdg-cache=true,folder-mode=numbered)")
+                    format!("{tracers},{default_pipeline_snapshot}")
                 }
             },
         ),
