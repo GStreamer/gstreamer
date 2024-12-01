@@ -573,7 +573,7 @@ mxf_timestamp_set_now (MXFTimestamp * timestamp)
 #endif
 
   timestamp->year = tm->tm_year + 1900;
-  timestamp->month = tm->tm_mon;
+  timestamp->month = tm->tm_mon + 1;
   timestamp->day = tm->tm_mday;
   timestamp->hour = tm->tm_hour;
   timestamp->minute = tm->tm_min;
