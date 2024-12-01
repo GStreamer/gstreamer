@@ -1424,10 +1424,11 @@ gst_rtsp_connection_connect_usec (GstRTSPConnection * conn, gint64 timeout)
 static void
 gen_date_string (gchar * date_string, guint len)
 {
-  static const char wkdays[7][4] =
-      { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-  static const char months[12][4] =
-      { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
+  static const char *wkdays[8] =
+      { NULL, "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+  static const char *months[13] =
+      { NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+    "Oct",
     "Nov", "Dec"
   };
   GDateTime *now;
