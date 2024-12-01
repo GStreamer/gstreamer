@@ -1185,10 +1185,10 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     GDateTime *now;
     gchar *s;
     static const gchar *weekdays[] = {
-      "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+      NULL, "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
     };
     static const gchar *months[] = {
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+      NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
       "Aug", "Sep", "Oct", "Nov", "Dec"
     };
 
