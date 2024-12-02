@@ -40,8 +40,8 @@ if host_system not in ['windows', 'linux']
 endif
 
 # Linux ARM would need -latomic for std::atomic<int64_t>
-if host_system == 'linux' and host_machine.cpu_family() not in ['x86', 'x86_64']
-  libatomic_dep = cxx.find_library('atomic', required: false)
+if host_system == 'linux' and host_machine.cpu_family() in ['aarch64', 'arm']
+  libatomic_dep = cxx.find_library('atomic', required: get_option('cuda-nvmm'))
   if not libatomic_dep.found()
     subdir_done()
   endif
@@ -89,41 +89,50 @@ if host_system == 'windows'
     ])
   endif
 else
+  # We have NVMM with nvbufsurface.h on both Linux x86 and Jetson (aarch64)
   nvmm_opt = get_option('cuda-nvmm')
-  if not nvmm_opt.disabled()
+  fsmod = import('fs')
+  if nvmm_opt.allowed()
+    incdir_candidates = []
+
     nvmm_inc_opt = get_option('cuda-nvmm-include-path')
     if nvmm_inc_opt != ''
-      gstcuda_nvmm_inc = [include_directories(nvmm_inc_opt)]
+      incdir_candidates += [nvmm_inc_opt]
+    else
+      # try some other default locations
+      incdir_candidates = [
+        '/usr/src/jetson_multimedia_api/include',
+        '/opt/nvidia/deepstream/deepstream/sources/includes',
+      ]
     endif
 
-    if cc.has_header('nvbufsurface.h',
-                     include_directories: gstcuda_nvmm_inc,
-                     required: false)
-      have_nvbufsurface_h = true
-    # try some other default locations
-    elif cc.has_header('/usr/src/jetson_multimedia_api/include/nvbufsurface.h',
-	               required: false)
-      have_nvbufsurface_h = true
-      gstcuda_nvmm_inc = [include_directories('/usr/src/jetson_multimedia_api/include')]
-    elif cc.has_header('/opt/nvidia/deepstream/deepstream/sources/includes/nvbufsurface.h',
-                       required: false)
-      have_nvbufsurface_h = true
-      gstcuda_nvmm_inc = [include_directories('/opt/nvidia/deepstream/deepstream/sources/includes')]
-    endif
-    if nvmm_opt.enabled() and not have_nvbufsurface_h
+    foreach incdir: incdir_candidates
+      if fsmod.is_dir(incdir)
+        incdir = include_directories(incdir)
+        if cc.has_header('nvbufsurface.h',
+                         include_directories: incdir,
+                         required: false)
+          have_nvbufsurface_h = true
+          gstcuda_nvmm_inc = incdir
+          break
+        endif
+      endif
+    endforeach
+
+    if have_nvbufsurface_h
+      extra_args += ['-DHAVE_CUDA_NVMM']
+      # On Tegra, we also have libnvbufsurface.so, which is not present on x86
+      if host_machine.cpu_family() == 'aarch64'
+        # check if we have a tegra based system (jetson)
+        nvbuf_dep = cc.find_library('nvbufsurface', dirs: '/usr/lib/aarch64-linux-gnu/tegra/', required: nvmm_opt)
+        if nvbuf_dep.found()
+          extra_deps += [nvbuf_dep]
+          extra_args += ['-DHAVE_CUDA_NVMM_JETSON']
+        endif
+      endif
+    elif nvmm_opt.enabled()
       error('Could not find required header: "nvbufsurface.h"')
       subdir_done()
-    endif
-  endif
-
-  if have_nvbufsurface_h
-    extra_args += ['-DHAVE_CUDA_NVMM']
-
-    # check if we have a tegra based system (jetson)
-    nvbuf_dep = cc.find_library('nvbufsurface', dirs: '/usr/lib/aarch64-linux-gnu/tegra/', required: false)
-    if nvbuf_dep.found()
-      extra_deps += [nvbuf_dep]
-      extra_args += ['-DHAVE_CUDA_NVMM_JETSON']
     endif
   endif
 endif
