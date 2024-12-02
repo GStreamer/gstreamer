@@ -398,9 +398,6 @@ GST_PLUGIN_STATIC_DECLARE(fieldanalysis);
 #if defined(GST_IOS_PLUGIN_FREEVERB) || defined(GST_IOS_PLUGINS_EFFECTS)
 GST_PLUGIN_STATIC_DECLARE(freeverb);
 #endif
-#if defined(GST_IOS_PLUGIN_FREI0R) || defined(GST_IOS_PLUGINS_EFFECTS)
-GST_PLUGIN_STATIC_DECLARE(frei0r);
-#endif
 #if defined(GST_IOS_PLUGIN_GAUDIEFFECTS) || defined(GST_IOS_PLUGINS_EFFECTS)
 GST_PLUGIN_STATIC_DECLARE(gaudieffects);
 #endif
@@ -960,9 +957,6 @@ gst_ios_init (void)
 #endif
 #if defined(GST_IOS_PLUGIN_FREEVERB) || defined(GST_IOS_PLUGINS_EFFECTS)
     GST_PLUGIN_STATIC_REGISTER(freeverb);
-#endif
-#if defined(GST_IOS_PLUGIN_FREI0R) || defined(GST_IOS_PLUGINS_EFFECTS)
-    GST_PLUGIN_STATIC_REGISTER(frei0r);
 #endif
 #if defined(GST_IOS_PLUGIN_GAUDIEFFECTS) || defined(GST_IOS_PLUGINS_EFFECTS)
     GST_PLUGIN_STATIC_REGISTER(gaudieffects);
