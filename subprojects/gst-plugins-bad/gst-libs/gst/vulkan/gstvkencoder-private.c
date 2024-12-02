@@ -1295,7 +1295,8 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   /* *INDENT-ON* */
   g_array_unref (barriers);
 
-  gst_vulkan_operation_begin_query (priv->exec, 0);
+  gst_vulkan_operation_begin_query (priv->exec,
+      (VkBaseInStructure *) & encode_info, 0);
   priv->vk.CmdEncodeVideo (cmd_buf->cmd, &encode_info);
   gst_vulkan_operation_end_query (priv->exec, 0);
 

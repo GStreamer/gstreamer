@@ -4755,8 +4755,10 @@ called internally if something failed.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="begin_query" c:identifier="gst_vulkan_operation_begin_query">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Begins a query operation with @id in the current command buffer.</doc>
+      <method name="begin_query" c:identifier="gst_vulkan_operation_begin_query" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Begins a query operation with @id in the current command buffer. If video maintenance1 extension
+is available the query will be recorded as a video inline query. If NULL is passed to @base,
+the query will be recorded as a normal query anyway.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">whether the begin command was set</doc>
@@ -4767,6 +4769,10 @@ called internally if something failed.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a #GstVulkanOperation</doc>
             <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
           </instance-parameter>
+          <parameter name="base" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a VkBaseInStructure base</doc>
+            <type name="Vulkan.BaseInStructure" c:type="VkBaseInStructure*"/>
+          </parameter>
           <parameter name="id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">query id</doc>
             <type name="guint32" c:type="guint32"/>

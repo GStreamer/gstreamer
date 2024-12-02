@@ -23,6 +23,7 @@
 #endif
 
 #include "gstvkoperation.h"
+#include "gstvkphysicaldevice-private.h"
 
 /**
  * SECTION:vkoperation
@@ -57,6 +58,9 @@ struct _GstVulkanOperationPrivate
 
   VkQueryPool query_pool;
   VkQueryType query_type;
+#if defined(VK_KHR_video_maintenance1)
+  VkVideoInlineQueryInfoKHR inline_query;
+#endif
   guint n_queries;
   gsize query_data_size;
   gsize query_data_stride;
@@ -66,6 +70,8 @@ struct _GstVulkanOperationPrivate
   gboolean has_sync2;
   gboolean has_video;
   gboolean has_timeline;
+  gboolean has_video_maintenance1;
+  gboolean use_inline_query;
 
   GArray *barriers;
 
@@ -140,6 +146,35 @@ gst_vulkan_operation_get_property (GObject * object, guint prop_id,
   }
 }
 
+static gboolean
+_video_maintenance1_supported (GstVulkanOperation * self)
+{
+#if defined(VK_KHR_video_maintenance1)
+  GstVulkanOperationPrivate *priv;
+  GstVulkanDevice *device;
+  const VkPhysicalDeviceFeatures2 *features;
+  const VkBaseOutStructure *iter;
+
+  g_return_val_if_fail (GST_IS_VULKAN_OPERATION (self), FALSE);
+
+  priv = GET_PRIV (self);
+
+  device = priv->cmd_pool->queue->device;
+
+  features = gst_vulkan_physical_device_get_features (device->physical_device);
+  for (iter = (const VkBaseOutStructure *) features; iter; iter = iter->pNext) {
+
+    if (iter->sType ==
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_MAINTENANCE_1_FEATURES_KHR) {
+      const VkPhysicalDeviceVideoMaintenance1FeaturesKHR *video_maintenance1 =
+          (const VkPhysicalDeviceVideoMaintenance1FeaturesKHR *) iter;
+      return video_maintenance1->videoMaintenance1;
+    }
+  }
+#endif
+  return FALSE;
+}
+
 static void
 gst_vulkan_operation_constructed (GObject * object)
 {
@@ -180,6 +215,7 @@ gst_vulkan_operation_constructed (GObject * object)
   priv->has_video = gst_vulkan_device_is_extension_enabled (device,
       VK_KHR_VIDEO_QUEUE_EXTENSION_NAME);
 #endif
+  priv->has_video_maintenance1 = _video_maintenance1_supported (self);
 
 #if defined(VK_KHR_timeline_semaphore)
   priv->has_timeline = gst_vulkan_device_is_extension_enabled (device,
@@ -1337,14 +1373,21 @@ gst_vulkan_operation_get_query (GstVulkanOperation * self, gpointer * result,
 /**
  * gst_vulkan_operation_begin_query:
  * @self: a #GstVulkanOperation
+ * @base: a VkBaseInStructure base
  * @id: query id
  *
- * Begins a query operation with @id in the current command buffer.
+ * Begins a query operation with @id in the current command buffer. If video maintenance1 extension
+ * is available the query will be recorded as a video inline query. If NULL is passed to @base,
+ * the query will be recorded as a normal query anyway.
  *
  * Returns: whether the begin command was set
+ *
+ * Since: 1.26
+ *
  */
 gboolean
-gst_vulkan_operation_begin_query (GstVulkanOperation * self, guint32 id)
+gst_vulkan_operation_begin_query (GstVulkanOperation * self,
+    VkBaseInStructure * base, guint32 id)
 {
   GstVulkanOperationPrivate *priv;
 
@@ -1358,11 +1401,23 @@ gst_vulkan_operation_begin_query (GstVulkanOperation * self, guint32 id)
     GST_INFO_OBJECT (self, "Cannot begin query without begin operation");
     return FALSE;
   }
-
-  gst_vulkan_command_buffer_lock (self->cmd_buf);
-  vkCmdBeginQuery (self->cmd_buf->cmd, priv->query_pool, id, 0);
-  gst_vulkan_command_buffer_unlock (self->cmd_buf);
-
+#if defined(VK_KHR_video_maintenance1)
+  if (priv->has_video_maintenance1 && base != NULL) {
+    priv->inline_query.pNext = base->pNext;
+    priv->inline_query.sType = VK_STRUCTURE_TYPE_VIDEO_INLINE_QUERY_INFO_KHR;
+    priv->inline_query.queryPool = priv->query_pool;
+    priv->inline_query.firstQuery = id;
+    priv->inline_query.queryCount = 1;
+    base->pNext = (VkBaseInStructure *) & priv->inline_query;
+    priv->use_inline_query = TRUE;
+  } else
+#endif
+  {
+    gst_vulkan_command_buffer_lock (self->cmd_buf);
+    vkCmdBeginQuery (self->cmd_buf->cmd, priv->query_pool, id, 0);
+    gst_vulkan_command_buffer_unlock (self->cmd_buf);
+    priv->use_inline_query = FALSE;
+  }
   return TRUE;
 }
 
@@ -1392,10 +1447,16 @@ gst_vulkan_operation_end_query (GstVulkanOperation * self, guint32 id)
     return FALSE;
   }
 
-  gst_vulkan_command_buffer_lock (self->cmd_buf);
-  vkCmdEndQuery (self->cmd_buf->cmd, priv->query_pool, id);
-  gst_vulkan_command_buffer_unlock (self->cmd_buf);
-
+#if defined(VK_KHR_video_maintenance1)
+  if (priv->has_video_maintenance1 && priv->use_inline_query) {
+    return TRUE;
+  } else
+#endif
+  {
+    gst_vulkan_command_buffer_lock (self->cmd_buf);
+    vkCmdEndQuery (self->cmd_buf->cmd, priv->query_pool, id);
+    gst_vulkan_command_buffer_unlock (self->cmd_buf);
+  }
   return TRUE;
 }
 

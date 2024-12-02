@@ -776,7 +776,8 @@ gst_vulkan_decoder_decode (GstVulkanDecoder * self,
   g_array_unref (barriers);
 
   priv->vk.CmdBeginVideoCoding (cmd_buf->cmd, &decode_start);
-  gst_vulkan_operation_begin_query (priv->exec, 0);
+  gst_vulkan_operation_begin_query (priv->exec,
+      (VkBaseInStructure *) & pic->decode_info, 0);
   priv->vk.CmdDecodeVideo (cmd_buf->cmd, &pic->decode_info);
   gst_vulkan_operation_end_query (priv->exec, 0);
   priv->vk.CmdEndVideoCoding (cmd_buf->cmd, &decode_end);

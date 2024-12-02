@@ -140,11 +140,11 @@ gboolean                gst_vulkan_operation_get_query          (GstVulkanOperat
                                                                  GError ** error);
 GST_VULKAN_API
 gboolean                gst_vulkan_operation_begin_query        (GstVulkanOperation * self,
+                                                                 VkBaseInStructure* base,
                                                                  guint32 id);
 GST_VULKAN_API
 gboolean                gst_vulkan_operation_end_query          (GstVulkanOperation * self,
                                                                  guint32 id);
-
 GST_VULKAN_API
 gboolean                gst_vulkan_operation_use_sync2          (GstVulkanOperation * self);
 GST_VULKAN_API
