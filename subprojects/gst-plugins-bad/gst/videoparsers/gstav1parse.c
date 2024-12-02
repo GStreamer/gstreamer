@@ -1593,7 +1593,6 @@ gst_av1_parse_handle_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
      start a TU. We only check TD here. */
   if (obu->obu_type == GST_AV1_OBU_TEMPORAL_DELIMITER) {
     gst_av1_parse_reset_obu_data_state (self);
-    gst_av1_parse_reset_tu_timestamp (self);
 
     if (check_new_tu) {
       *check_new_tu = TRUE;
@@ -1950,20 +1949,15 @@ again:
     if (res != GST_AV1_PARSER_OK)
       break;
 
-    /* Take the DTS from the first OBU of the TU */
-    if (!GST_CLOCK_TIME_IS_VALID (self->buffer_dts))
-      self->buffer_dts = GST_BUFFER_DTS (buffer);
-
     check_new_tu = FALSE;
-    if (self->align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT
-        || self->align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
-      res = gst_av1_parse_handle_one_obu (self, &obu, &frame_complete,
-          &check_new_tu);
-    } else {
-      res = gst_av1_parse_handle_one_obu (self, &obu, &frame_complete, NULL);
-    }
+    res = gst_av1_parse_handle_one_obu (self, &obu, &frame_complete,
+        &check_new_tu);
     if (res != GST_AV1_PARSER_OK)
       break;
+
+    /* Take the DTS from the first OBU of the TU */
+    if (!GST_CLOCK_TIME_IS_VALID (self->buffer_dts) || check_new_tu)
+      self->buffer_dts = GST_BUFFER_DTS (buffer);
 
     if (check_new_tu && (gst_adapter_available (self->cache_out) ||
             gst_adapter_available (self->frame_cache))) {
