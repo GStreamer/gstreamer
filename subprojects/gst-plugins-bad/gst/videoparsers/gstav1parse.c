@@ -1506,7 +1506,7 @@ new_tu:
   if (ret) {
     if (self->within_one_frame)
       GST_WARNING_OBJECT (self,
-          "Start a new temporal unit with incompleted frame.");
+          "Start a new temporal unit with incomplete frame.");
 
     gst_av1_parse_reset_obu_data_state (self);
     gst_av1_parse_reset_tu_timestamp (self);
@@ -2313,7 +2313,7 @@ gst_av1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   }
 
   if (self->align == GST_AV1_PARSE_ALIGN_FRAME) {
-    /* Input buffers may may contain more than one frames inside its buffer.
+    /* Input buffers may contain more than one frames inside its buffer.
        When splitting a TU into frames, the base parse class only assign the
        PTS to the first frame and leave the others PTS invalid. But in fact,
        all decode only frames should have invalid PTS while showable frames
