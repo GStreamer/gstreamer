@@ -414,6 +414,10 @@ gst_vulkan_encoder_picture_init (GstVulkanEncoderPicture * pic,
   pic->out_buffer =
       gst_vulkan_video_codec_buffer_new (self->queue->device, &priv->profile,
       VK_BUFFER_USAGE_VIDEO_ENCODE_DST_BIT_KHR, size_aligned);
+  if (!pic->out_buffer) {
+    gst_clear_buffer (&pic->dpb_buffer);
+    return FALSE;
+  }
   pic->slotIndex = -1;
   pic->offset = 0;
 
