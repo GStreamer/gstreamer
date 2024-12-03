@@ -3168,6 +3168,7 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
 
 error:
   GST_WARNING ("error parsing \"Sei message\"");
+  gst_h265_sei_free (sei);
   return GST_H265_PARSER_ERROR;
 }
 
