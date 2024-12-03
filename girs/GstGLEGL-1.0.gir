@@ -1,0 +1,914 @@
+<!-- This file was automatically generated from C sources - DO NOT EDIT!
+To affect the contents of this file, edit the original C definitions,
+and/or use gtk-doc annotations.  -->
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+  <include name="Gst" version="1.0"/>
+  <include name="GstBase" version="1.0"/>
+  <include name="GstGL" version="1.0"/>
+  <include name="GstVideo" version="1.0"/>
+  <package name="gstreamer-gl-egl-1.0"/>
+  <c:include name="gst/gl/egl/egl.h"/>
+  <namespace name="GstGLEGL" version="1.0" shared-library="libgstgl-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
+    <record name="EGLImage" c:type="GstEGLImage" glib:type-name="GstEGLImage" glib:get-type="gst_egl_image_get_type" c:symbol-prefix="egl_image">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">#GstEGLImage represents and holds an `EGLImage` handle.
+
+A #GstEGLImage can be created from a dmabuf with gst_egl_image_from_dmabuf(),
+or gst_egl_image_from_dmabuf_direct(), or #GstGLMemoryEGL provides a
+#GstAllocator to allocate `EGLImage`'s bound to and OpenGL texture.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+      <field name="parent" readable="0" private="1">
+        <type name="Gst.MiniObject" c:type="GstMiniObject"/>
+      </field>
+      <field name="context" readable="0" private="1">
+        <type name="GstGL.GLContext" c:type="GstGLContext*"/>
+      </field>
+      <field name="image" readable="0" private="1">
+        <type name="gpointer" c:type="gpointer"/>
+      </field>
+      <field name="format" readable="0" private="1">
+        <type name="GstGL.GLFormat" c:type="GstGLFormat"/>
+      </field>
+      <field name="destroy_data" readable="0" private="1">
+        <type name="gpointer" c:type="gpointer"/>
+      </field>
+      <field name="destroy_notify" readable="0" private="1">
+        <type name="EGLImageDestroyNotify" c:type="GstEGLImageDestroyNotify"/>
+      </field>
+      <field name="_padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <constructor name="new_wrapped" c:identifier="gst_egl_image_new_wrapped">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a new #GstEGLImage wrapping @image</doc>
+          <type name="EGLImage" c:type="GstEGLImage*"/>
+        </return-value>
+        <parameters>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLContext (must be an EGL context)</doc>
+            <type name="GstGL.GLContext" c:type="GstGLContext*"/>
+          </parameter>
+          <parameter name="image" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the image to wrap</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="format" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the #GstGLFormat</doc>
+            <type name="GstGL.GLFormat" c:type="GstGLFormat"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" scope="notified">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">user data</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="user_data_destroy" transfer-ownership="none" scope="notified" destroy="3">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">called when @user_data is no longer needed</doc>
+            <type name="EGLImageDestroyNotify" c:type="GstEGLImageDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="export_dmabuf" c:identifier="gst_egl_image_export_dmabuf">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="image" transfer-ownership="none">
+            <type name="EGLImage" c:type="GstEGLImage*"/>
+          </instance-parameter>
+          <parameter name="fd" transfer-ownership="none">
+            <type name="gint" c:type="int*"/>
+          </parameter>
+          <parameter name="stride" transfer-ownership="none">
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="offset" transfer-ownership="none">
+            <type name="gsize" c:type="gsize*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_image" c:identifier="gst_egl_image_get_image">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the `EGLImage` of @image</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="image" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstEGLImage</doc>
+            <type name="EGLImage" c:type="GstEGLImage*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <function name="can_emulate" c:identifier="gst_egl_image_can_emulate" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Checks if the given @context can emulate @format using a limited subset of
+RGB texture formats. Such @format is then suitable for importing using
+gst_egl_image_from_dmabuf() even when GL supports the video format as
+external-only or not at all.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">#TRUE if @format can be emulated</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLContext (must be an EGL context)</doc>
+            <type name="GstGL.GLContext" c:type="GstGLContext*"/>
+          </parameter>
+          <parameter name="format" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstVideoFormat</doc>
+            <type name="GstVideo.VideoFormat" c:type="GstVideoFormat"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="from_dmabuf" c:identifier="gst_egl_image_from_dmabuf">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Creates an EGL image that imports the dmabuf FD. The dmabuf data
+is passed as RGBA data. Shaders later take this "RGBA" data and
+convert it from its true format (described by in_info) to actual
+RGBA output. For example, with I420, three EGL images are created,
+one for each @plane, each EGL image with a single-channel R format.
+With NV12, two EGL images are created, one with R format, one
+with RG format etc.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstEGLImage wrapping @dmabuf or %NULL on failure</doc>
+          <type name="EGLImage" c:type="GstEGLImage*"/>
+        </return-value>
+        <parameters>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLContext (must be an EGL context)</doc>
+            <type name="GstGL.GLContext" c:type="GstGLContext*"/>
+          </parameter>
+          <parameter name="dmabuf" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the DMA-Buf file descriptor</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="in_info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the #GstVideoInfo in @dmabuf</doc>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+          <parameter name="plane" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the plane in @in_info to create and #GstEGLImage for</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="offset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the byte-offset in the data</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="from_dmabuf_direct" c:identifier="gst_egl_image_from_dmabuf_direct">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Creates an EGL image that imports the dmabuf FD. The dmabuf data
+is passed directly as the format described in in_info. This is
+useful if the hardware is capable of performing color space conversions
+internally. The appropriate DRM format is picked, and the EGL image
+is created with this DRM format.
+
+Another notable difference to gst_egl_image_from_dmabuf()
+is that this function creates one EGL image for all planes, not one for
+a single plane.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstEGLImage wrapping @dmabuf or %NULL on failure</doc>
+          <type name="EGLImage" c:type="GstEGLImage*"/>
+        </return-value>
+        <parameters>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLContext (must be an EGL context)</doc>
+            <type name="GstGL.GLContext" c:type="GstGLContext*"/>
+          </parameter>
+          <parameter name="fd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Array of DMABuf file descriptors</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="offset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Array of offsets, relative to the DMABuf</doc>
+            <type name="gsize" c:type="const gsize*"/>
+          </parameter>
+          <parameter name="in_info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the #GstVideoInfo</doc>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="from_dmabuf_direct_target" c:identifier="gst_egl_image_from_dmabuf_direct_target" version="1.18">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Creates an EGL image that imports the dmabuf FD. The dmabuf data
+is passed directly as the format described in @in_info. This is
+useful if the hardware is capable of performing color space conversions
+internally. The appropriate DRM format is picked, and the EGL image
+is created with this DRM format.
+
+Another notable difference to gst_egl_image_from_dmabuf()
+is that this function creates one EGL image for all planes, not one for
+a single plane.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstEGLImage wrapping @dmabuf or %NULL on failure</doc>
+          <type name="EGLImage" c:type="GstEGLImage*"/>
+        </return-value>
+        <parameters>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLContext (must be an EGL context)</doc>
+            <type name="GstGL.GLContext" c:type="GstGLContext*"/>
+          </parameter>
+          <parameter name="fd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Array of DMABuf file descriptors</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="offset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Array of offsets, relative to the DMABuf</doc>
+            <type name="gsize" c:type="const gsize*"/>
+          </parameter>
+          <parameter name="in_info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the #GstVideoInfo</doc>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+          <parameter name="target" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">GL texture target this GstEGLImage is intended for</doc>
+            <type name="GstGL.GLTextureTarget" c:type="GstGLTextureTarget"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="from_dmabuf_direct_target_with_dma_drm" c:identifier="gst_egl_image_from_dmabuf_direct_target_with_dma_drm" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Creates an EGL image that imports the dmabuf FD. The dmabuf data is passed
+directly as the format described in @in_info. This is useful if the hardware
+is capable of performing color space conversions internally.
+
+Another notable difference to gst_egl_image_from_dmabuf() is that this
+function creates one EGL image for all planes, not one for a single plane.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstEGLImage wrapping @dmabuf or %NULL on failure</doc>
+          <type name="EGLImage" c:type="GstEGLImage*"/>
+        </return-value>
+        <parameters>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLContext (must be an EGL context)</doc>
+            <type name="GstGL.GLContext" c:type="GstGLContext*"/>
+          </parameter>
+          <parameter name="n_planes" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">number of planes (obtained from a #GstVideoMeta)</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="fd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Array of DMABuf file descriptors</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="offset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Array of offsets, relative to the DMABuf</doc>
+            <type name="gsize" c:type="const gsize*"/>
+          </parameter>
+          <parameter name="in_info_dma" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the #GstVideoInfoDmaDrm</doc>
+            <type name="GstVideo.VideoInfoDmaDrm" c:type="const GstVideoInfoDmaDrm*"/>
+          </parameter>
+          <parameter name="target" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">GL texture target this GstEGLImage is intended for</doc>
+            <type name="GstGL.GLTextureTarget" c:type="GstGLTextureTarget"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="from_texture" c:identifier="gst_egl_image_from_texture">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstEGLImage wrapping @gl_mem or %NULL on failure</doc>
+          <type name="EGLImage" c:type="GstEGLImage*"/>
+        </return-value>
+        <parameters>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLContext (must be an EGL context)</doc>
+            <type name="GstGL.GLContext" c:type="GstGLContext*"/>
+          </parameter>
+          <parameter name="gl_mem" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLMemory</doc>
+            <type name="GstGL.GLMemory" c:type="GstGLMemory*"/>
+          </parameter>
+          <parameter name="attribs" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">additional attributes to add to the `eglCreateImage`() call.</doc>
+            <type name="guintptr" c:type="guintptr*"/>
+          </parameter>
+        </parameters>
+      </function>
+    </record>
+    <callback name="EGLImageDestroyNotify" c:type="GstEGLImageDestroyNotify">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h">Function to be called when the GstEGLImage is destroyed. It should free
+the associated `EGLImage` if necessary</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="image" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h">a #GstEGLImage</doc>
+          <type name="EGLImage" c:type="GstEGLImage*"/>
+        </parameter>
+        <parameter name="data" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h">user data passed to gst_egl_image_new_wrapped()</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
+    <function-macro name="EGL_IMAGE" c:identifier="GST_EGL_IMAGE" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="EGL_IMAGE_CAST" c:identifier="GST_EGL_IMAGE_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <class name="GLDisplayEGL" c:symbol-prefix="gl_display_egl" c:type="GstGLDisplayEGL" parent="GstGL.GLDisplay" glib:type-name="GstGLDisplayEGL" glib:get-type="gst_gl_display_egl_get_type" glib:type-struct="GLDisplayEGLClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h">the contents of a #GstGLDisplayEGL are private and should only be accessed
+through the provided API</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h"/>
+      <constructor name="new" c:identifier="gst_gl_display_egl_new">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">Create a new #GstGLDisplayEGL using the default EGL_DEFAULT_DISPLAY.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">a new #GstGLDisplayEGL or %NULL</doc>
+          <type name="GLDisplayEGL" c:type="GstGLDisplayEGL*"/>
+        </return-value>
+      </constructor>
+      <constructor name="new_surfaceless" c:identifier="gst_gl_display_egl_new_surfaceless" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">Create a new surfaceless #GstGLDisplayEGL using the Mesa3D
+EGL_PLATFORM_SURFACELESS_MESA extension.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">a new #GstGLDisplayEGL or %NULL</doc>
+          <type name="GLDisplayEGL" c:type="GstGLDisplayEGL*"/>
+        </return-value>
+      </constructor>
+      <constructor name="new_with_egl_display" c:identifier="gst_gl_display_egl_new_with_egl_display">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h"/>
+        <return-value transfer-ownership="none">
+          <type name="GLDisplayEGL" c:type="GstGLDisplayEGL*"/>
+        </return-value>
+        <parameters>
+          <parameter name="display" transfer-ownership="none" nullable="1" allow-none="1">
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <function name="from_gl_display" c:identifier="gst_gl_display_egl_from_gl_display" version="1.12">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">Creates a EGL display connection from a native Display.
+
+This function will return the same value for multiple calls with the same
+@display.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">a new #GstGLDisplayEGL</doc>
+          <type name="GLDisplayEGL" c:type="GstGLDisplayEGL*"/>
+        </return-value>
+        <parameters>
+          <parameter name="display" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">an existing #GstGLDisplay</doc>
+            <type name="GstGL.GLDisplay" c:type="GstGLDisplay*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="get_from_native" c:identifier="gst_gl_display_egl_get_from_native" version="1.12">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">Attempts to create a new `EGLDisplay` from @display.  If @type is
+%GST_GL_DISPLAY_TYPE_ANY or %GST_GL_DISPLAY_TYPE_EGL_SURFACELESS, then
+@display must be 0. @type must not be %GST_GL_DISPLAY_TYPE_NONE.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">A `EGLDisplay` or `EGL_NO_DISPLAY`</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </return-value>
+        <parameters>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">a #GstGLDisplayType</doc>
+            <type name="GstGL.GLDisplayType" c:type="GstGLDisplayType"/>
+          </parameter>
+          <parameter name="display" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">pointer to a display (or 0)</doc>
+            <type name="guintptr" c:type="guintptr"/>
+          </parameter>
+        </parameters>
+      </function>
+      <field name="parent">
+        <type name="GstGL.GLDisplay" c:type="GstGLDisplay"/>
+      </field>
+      <field name="display" readable="0" private="1">
+        <type name="gpointer" c:type="gpointer"/>
+      </field>
+      <field name="foreign_display" readable="0" private="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="_padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="GLDisplayEGLClass" c:type="GstGLDisplayEGLClass" glib:is-gtype-struct-for="GLDisplayEGL">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h"/>
+      <field name="object_class">
+        <type name="GstGL.GLDisplayClass" c:type="GstGLDisplayClass"/>
+      </field>
+      <field name="_padding">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <class name="GLDisplayEGLDevice" c:symbol-prefix="gl_display_egl_device" c:type="GstGLDisplayEGLDevice" version="1.18" parent="GstGL.GLDisplay" glib:type-name="GstGLDisplayEGLDevice" glib:get-type="gst_gl_display_egl_device_get_type" glib:type-struct="GLDisplayEGLDeviceClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.h">the contents of a #GstGLDisplayEGLDevice are private and should only be accessed
+through the provided API</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.h"/>
+      <constructor name="new" c:identifier="gst_gl_display_egl_device_new" version="1.18">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.c">Create a new #GstGLDisplayEGLDevice with an EGLDevice supported device</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.c">a new #GstGLDisplayEGLDevice or %NULL</doc>
+          <type name="GLDisplayEGLDevice" c:type="GstGLDisplayEGLDevice*"/>
+        </return-value>
+        <parameters>
+          <parameter name="device_index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.c">the index of device to use</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_with_egl_device" c:identifier="gst_gl_display_egl_device_new_with_egl_device" version="1.18">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.c">Creates a new #GstGLDisplayEGLDevice with EGLDeviceEXT .
+The @device must be created using EGLDevice enumeration.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.c">a new #GstGLDisplayEGLDevice</doc>
+          <type name="GLDisplayEGLDevice" c:type="GstGLDisplayEGLDevice*"/>
+        </return-value>
+        <parameters>
+          <parameter name="device" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.c">an existing EGLDeviceEXT</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <field name="parent">
+        <type name="GstGL.GLDisplay" c:type="GstGLDisplay"/>
+      </field>
+      <field name="device">
+        <type name="gpointer" c:type="gpointer"/>
+      </field>
+      <field name="_padding">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="GLDisplayEGLDeviceClass" c:type="GstGLDisplayEGLDeviceClass" glib:is-gtype-struct-for="GLDisplayEGLDevice" version="1.18">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.h">Opaque #GstGLDisplayEGLDeviceClass struct</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.h"/>
+      <field name="object_class">
+        <type name="GstGL.GLDisplayClass" c:type="GstGLDisplayClass"/>
+      </field>
+      <field name="_padding">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="GLMemoryEGL" c:type="GstGLMemoryEGL" glib:type-name="GstGLMemoryEGL" glib:get-type="gst_gl_memory_egl_get_type" c:symbol-prefix="gl_memory_egl">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.c">#GstGLMemoryEGL is created or wrapped through gst_gl_base_memory_alloc()
+with #GstGLVideoAllocationParams.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+      <field name="mem" readable="0" private="1">
+        <type name="GstGL.GLMemory" c:type="GstGLMemory"/>
+      </field>
+      <field name="image" readable="0" private="1">
+        <type name="EGLImage" c:type="GstEGLImage*"/>
+      </field>
+      <field name="_padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <method name="get_display" c:identifier="gst_gl_memory_egl_get_display" version="1.10">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.c">The EGLDisplay @mem is associated with</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mem" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.c">a #GstGLMemoryEGL</doc>
+            <type name="GLMemoryEGL" c:type="GstGLMemoryEGL*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_image" c:identifier="gst_gl_memory_egl_get_image" version="1.10">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.c">The EGLImage held by @mem</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mem" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.c">a #GstGLMemoryEGL</doc>
+            <type name="GLMemoryEGL" c:type="GstGLMemoryEGL*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <function name="init_once" c:identifier="gst_gl_memory_egl_init_once" version="1.10">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.c">Initializes the GL Memory allocator. It is safe to call this function
+multiple times.  This must be called before any other GstGLMemoryEGL operation.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </function>
+    </record>
+    <class name="GLMemoryEGLAllocator" c:symbol-prefix="gl_memory_egl_allocator" c:type="GstGLMemoryEGLAllocator" parent="GstGL.GLMemoryAllocator" glib:type-name="GstGLMemoryEGLAllocator" glib:get-type="gst_gl_memory_egl_allocator_get_type" glib:type-struct="GLMemoryEGLAllocatorClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h">Opaque #GstGLMemoryEGLAllocator struct</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+      <field name="parent" readable="0" private="1">
+        <type name="GstGL.GLMemoryAllocator" c:type="GstGLMemoryAllocator"/>
+      </field>
+      <field name="_padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="GLMemoryEGLAllocatorClass" c:type="GstGLMemoryEGLAllocatorClass" glib:is-gtype-struct-for="GLMemoryEGLAllocator">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h">The #GstGLMemoryEGLAllocatorClass only contains private data</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+      <field name="parent_class" readable="0" private="1">
+        <type name="GstGL.GLMemoryAllocatorClass" c:type="GstGLMemoryAllocatorClass"/>
+      </field>
+      <field name="_padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <function-macro name="GL_DISPLAY_EGL" c:identifier="GST_GL_DISPLAY_EGL" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_DISPLAY_EGL_CAST" c:identifier="GST_GL_DISPLAY_EGL_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_DISPLAY_EGL_CLASS" c:identifier="GST_GL_DISPLAY_EGL_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_DISPLAY_EGL_DEVICE" c:identifier="GST_GL_DISPLAY_EGL_DEVICE" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_DISPLAY_EGL_DEVICE_CAST" c:identifier="GST_GL_DISPLAY_EGL_DEVICE_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_DISPLAY_EGL_DEVICE_CLASS" c:identifier="GST_GL_DISPLAY_EGL_DEVICE_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="GL_DISPLAY_EGL_NAME" value="gst.gl.display.egl" c:type="GST_GL_DISPLAY_EGL_NAME">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <function-macro name="GL_MEMORY_EGL_ALLOCATOR" c:identifier="GST_GL_MEMORY_EGL_ALLOCATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_MEMORY_EGL_ALLOCATOR_CAST" c:identifier="GST_GL_MEMORY_EGL_ALLOCATOR_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_MEMORY_EGL_ALLOCATOR_CLASS" c:identifier="GST_GL_MEMORY_EGL_ALLOCATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_MEMORY_EGL_ALLOCATOR_GET_CLASS" c:identifier="GST_GL_MEMORY_EGL_ALLOCATOR_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="GL_MEMORY_EGL_ALLOCATOR_NAME" value="GLMemoryEGL" c:type="GST_GL_MEMORY_EGL_ALLOCATOR_NAME">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h">The name of the GL Memory EGL allocator</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <function-macro name="IS_EGL_IMAGE" c:identifier="GST_IS_EGL_IMAGE" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_GL_DISPLAY_EGL" c:identifier="GST_IS_GL_DISPLAY_EGL" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_GL_DISPLAY_EGL_CLASS" c:identifier="GST_IS_GL_DISPLAY_EGL_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_GL_DISPLAY_EGL_DEVICE" c:identifier="GST_IS_GL_DISPLAY_EGL_DEVICE" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_GL_DISPLAY_EGL_DEVICE_CLASS" c:identifier="GST_IS_GL_DISPLAY_EGL_DEVICE_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_GL_MEMORY_EGL_ALLOCATOR" c:identifier="GST_IS_GL_MEMORY_EGL_ALLOCATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_GL_MEMORY_EGL_ALLOCATOR_CLASS" c:identifier="GST_IS_GL_MEMORY_EGL_ALLOCATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function name="egl_get_error_string" c:identifier="gst_egl_get_error_string">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstegl.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstegl.c">the short string representation of @err</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="err" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstegl.c">an EGL error code</doc>
+          <type name="gint32" c:type="EGLint"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="egl_image_can_emulate" c:identifier="gst_egl_image_can_emulate" moved-to="EGLImage.can_emulate" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Checks if the given @context can emulate @format using a limited subset of
+RGB texture formats. Such @format is then suitable for importing using
+gst_egl_image_from_dmabuf() even when GL supports the video format as
+external-only or not at all.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">#TRUE if @format can be emulated</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLContext (must be an EGL context)</doc>
+          <type name="GstGL.GLContext" c:type="GstGLContext*"/>
+        </parameter>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstVideoFormat</doc>
+          <type name="GstVideo.VideoFormat" c:type="GstVideoFormat"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="egl_image_from_dmabuf" c:identifier="gst_egl_image_from_dmabuf" moved-to="EGLImage.from_dmabuf">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Creates an EGL image that imports the dmabuf FD. The dmabuf data
+is passed as RGBA data. Shaders later take this "RGBA" data and
+convert it from its true format (described by in_info) to actual
+RGBA output. For example, with I420, three EGL images are created,
+one for each @plane, each EGL image with a single-channel R format.
+With NV12, two EGL images are created, one with R format, one
+with RG format etc.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstEGLImage wrapping @dmabuf or %NULL on failure</doc>
+        <type name="EGLImage" c:type="GstEGLImage*"/>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLContext (must be an EGL context)</doc>
+          <type name="GstGL.GLContext" c:type="GstGLContext*"/>
+        </parameter>
+        <parameter name="dmabuf" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the DMA-Buf file descriptor</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="in_info" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the #GstVideoInfo in @dmabuf</doc>
+          <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+        </parameter>
+        <parameter name="plane" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the plane in @in_info to create and #GstEGLImage for</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="offset" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the byte-offset in the data</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="egl_image_from_dmabuf_direct" c:identifier="gst_egl_image_from_dmabuf_direct" moved-to="EGLImage.from_dmabuf_direct">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Creates an EGL image that imports the dmabuf FD. The dmabuf data
+is passed directly as the format described in in_info. This is
+useful if the hardware is capable of performing color space conversions
+internally. The appropriate DRM format is picked, and the EGL image
+is created with this DRM format.
+
+Another notable difference to gst_egl_image_from_dmabuf()
+is that this function creates one EGL image for all planes, not one for
+a single plane.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstEGLImage wrapping @dmabuf or %NULL on failure</doc>
+        <type name="EGLImage" c:type="GstEGLImage*"/>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLContext (must be an EGL context)</doc>
+          <type name="GstGL.GLContext" c:type="GstGLContext*"/>
+        </parameter>
+        <parameter name="fd" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Array of DMABuf file descriptors</doc>
+          <type name="gint" c:type="gint*"/>
+        </parameter>
+        <parameter name="offset" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Array of offsets, relative to the DMABuf</doc>
+          <type name="gsize" c:type="const gsize*"/>
+        </parameter>
+        <parameter name="in_info" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the #GstVideoInfo</doc>
+          <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="egl_image_from_dmabuf_direct_target" c:identifier="gst_egl_image_from_dmabuf_direct_target" moved-to="EGLImage.from_dmabuf_direct_target" version="1.18">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Creates an EGL image that imports the dmabuf FD. The dmabuf data
+is passed directly as the format described in @in_info. This is
+useful if the hardware is capable of performing color space conversions
+internally. The appropriate DRM format is picked, and the EGL image
+is created with this DRM format.
+
+Another notable difference to gst_egl_image_from_dmabuf()
+is that this function creates one EGL image for all planes, not one for
+a single plane.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstEGLImage wrapping @dmabuf or %NULL on failure</doc>
+        <type name="EGLImage" c:type="GstEGLImage*"/>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLContext (must be an EGL context)</doc>
+          <type name="GstGL.GLContext" c:type="GstGLContext*"/>
+        </parameter>
+        <parameter name="fd" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Array of DMABuf file descriptors</doc>
+          <type name="gint" c:type="gint*"/>
+        </parameter>
+        <parameter name="offset" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Array of offsets, relative to the DMABuf</doc>
+          <type name="gsize" c:type="const gsize*"/>
+        </parameter>
+        <parameter name="in_info" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the #GstVideoInfo</doc>
+          <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+        </parameter>
+        <parameter name="target" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">GL texture target this GstEGLImage is intended for</doc>
+          <type name="GstGL.GLTextureTarget" c:type="GstGLTextureTarget"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="egl_image_from_dmabuf_direct_target_with_dma_drm" c:identifier="gst_egl_image_from_dmabuf_direct_target_with_dma_drm" moved-to="EGLImage.from_dmabuf_direct_target_with_dma_drm" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Creates an EGL image that imports the dmabuf FD. The dmabuf data is passed
+directly as the format described in @in_info. This is useful if the hardware
+is capable of performing color space conversions internally.
+
+Another notable difference to gst_egl_image_from_dmabuf() is that this
+function creates one EGL image for all planes, not one for a single plane.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstEGLImage wrapping @dmabuf or %NULL on failure</doc>
+        <type name="EGLImage" c:type="GstEGLImage*"/>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLContext (must be an EGL context)</doc>
+          <type name="GstGL.GLContext" c:type="GstGLContext*"/>
+        </parameter>
+        <parameter name="n_planes" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">number of planes (obtained from a #GstVideoMeta)</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+        <parameter name="fd" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Array of DMABuf file descriptors</doc>
+          <type name="gint" c:type="gint*"/>
+        </parameter>
+        <parameter name="offset" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">Array of offsets, relative to the DMABuf</doc>
+          <type name="gsize" c:type="const gsize*"/>
+        </parameter>
+        <parameter name="in_info_dma" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">the #GstVideoInfoDmaDrm</doc>
+          <type name="GstVideo.VideoInfoDmaDrm" c:type="const GstVideoInfoDmaDrm*"/>
+        </parameter>
+        <parameter name="target" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">GL texture target this GstEGLImage is intended for</doc>
+          <type name="GstGL.GLTextureTarget" c:type="GstGLTextureTarget"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="egl_image_from_texture" c:identifier="gst_egl_image_from_texture" moved-to="EGLImage.from_texture">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.h"/>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstEGLImage wrapping @gl_mem or %NULL on failure</doc>
+        <type name="EGLImage" c:type="GstEGLImage*"/>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLContext (must be an EGL context)</doc>
+          <type name="GstGL.GLContext" c:type="GstGLContext*"/>
+        </parameter>
+        <parameter name="gl_mem" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">a #GstGLMemory</doc>
+          <type name="GstGL.GLMemory" c:type="GstGLMemory*"/>
+        </parameter>
+        <parameter name="attribs" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gsteglimage.c">additional attributes to add to the `eglCreateImage`() call.</doc>
+          <type name="guintptr" c:type="guintptr*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="gl_memory_egl_init_once" c:identifier="gst_gl_memory_egl_init_once" moved-to="GLMemoryEGL.init_once" version="1.10">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.c">Initializes the GL Memory allocator. It is safe to call this function
+multiple times.  This must be called before any other GstGLMemoryEGL operation.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+    </function>
+    <docsection name="gstgldisplay_egl">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl.c">#GstGLDisplayEGL represents a connection to an EGL `EGLDisplay` handle created
+internally (gst_gl_display_egl_new() or gst_gl_display_egl_new_surfaceless())
+or wrapped by the application (gst_gl_display_egl_new_with_egl_display())</doc>
+    </docsection>
+    <docsection name="gstgldisplay_egl_device">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstgldisplay_egl_device.c">#GstGLDisplayEGLDevice represents a `EGLDeviceEXT` handle created internally
+(gst_gl_display_egl_device_new()) or wrapped by the application
+(gst_gl_display_egl_device_new_with_egl_device())</doc>
+    </docsection>
+    <function name="is_gl_memory_egl" c:identifier="gst_is_gl_memory_egl" version="1.10">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.c">whether @mem is a #GstGLMemoryEGL</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="mem" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/egl/gstglmemoryegl.c">a #GstMemory to test</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </parameter>
+      </parameters>
+    </function>
+  </namespace>
+</repository>
