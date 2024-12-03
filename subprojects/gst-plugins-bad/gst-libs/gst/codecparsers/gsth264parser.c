@@ -1408,6 +1408,7 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
 
 error:
   GST_WARNING ("error parsing \"Sei message\"");
+  gst_h264_sei_clear (sei);
   return GST_H264_PARSER_ERROR;
 }
 
