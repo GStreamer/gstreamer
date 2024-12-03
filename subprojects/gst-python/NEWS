@@ -2,11 +2,11 @@ GStreamer 1.24 Release Notes
 
 GStreamer 1.24.0 was originally released on 4 March 2024.
 
-The latest bug-fix release in the stable 1.24 series is 1.24.9 and was released on 30 October 2024.
+The latest bug-fix release in the stable 1.24 series is 1.24.10 and was released on 03 December 2024.
 
 See https://gstreamer.freedesktop.org/releases/1.24/ for the latest version of this document.
 
-Last updated: Wednesday 30 October 2024, 20:00 UTC (log)
+Last updated: Tuesday 03 December 2024, 14:00 UTC (log)
 
 ## Introduction
 
@@ -2725,6 +2725,182 @@ List of merge requests and issues fixed in 1.24.9
 
 -   List of Merge Requests applied in 1.24.9
 -   List of Issues fixed in 1.24.9
+
+1.24.10
+
+The tenth 1.24 bug-fix release (1.24.10) was released on 03 December 2024.
+
+This release only contains bugfixes and security fixes. It should be safe to update from 1.24.x and we would recommend you
+update at your earliest convenience.
+
+Highlighted bugfixes in 1.24.10
+
+-   More than 40 security fixes across a wide range of elements following an audit by the GitHub Security Lab, including the
+    MP4, Matroska, Ogg and WAV demuxers, subtitle parsers, image decoders, audio decoders and the id3v2 tag parser.
+-   avviddec: Fix regression that could trigger assertions about width/height mismatches
+-   appsink and appsrc fixes
+-   closed caption handling fixes
+-   decodebin3 and urisourcebin fixes
+-   glupload: dmabuf: Fix emulated tiled import
+-   level: fix LevelMeta values outside of the stated range
+-   mpegtsmux, flvmux: fix potential busy looping with high cpu usage in live mode
+-   pipeline dot file graph generation improvements
+-   qt(6): fix criticals with multiple qml(6)gl{src,sink}
+-   rtspsrc: Optionally timestamp RTP packets with their receive times in TCP/HTTP mode to enable clock drift handling
+-   splitmuxsrc: reduce number of file descriptors used
+-   systemclock: locking order fixes
+-   v4l2: fix possible v4l2videodec deadlock on shutdown; 8-bit bayer format fixes
+-   x265: Fix build with libx265 version >= 4.1 after masteringDisplayColorVolume API change
+-   macOS: fix rendering artifacts in retina displays, plus ptp clock fixes
+-   cargo: Default to thin lto for the release profile (for faster builds with lower memory requirements)
+-   Various bug fixes, build fixes, memory leak fixes, and other stability and reliability improvements
+-   Translation updates
+
+gstreamer
+
+-   allocator: Avoid integer overflow when allocating sysmem and avoid integer overflow in qtdemux theora extension parsing
+-   deviceprovider: fix leaking hidden providers
+-   gstreamer: prefix debug dot node names to prevent splitting
+-   pad: Never push sticky events in response to a FLUSH_STOP
+-   systemclock: Fix lock order violation and some cleanup
+-   utils: improve gst_util_ceil_log2()
+-   ptp: use ip_mreq instead of ip_mreqn for macos
+-   tracers: unlock leaks tracer if already tracking
+
+gst-plugins-base
+
+-   appsink: fix timeout logic for gst_app_sink_try_pull_sample()
+-   appsrc: Fix use-after-free when making buffer / buffer-lists writable
+-   audiostreamalign: Don’t report disconts for every buffer if alignment-threshold is too small
+-   decodebin3: Unify collection switching checks
+-   discoverer: Don’t print channel layout for more than 64 channels
+-   discoverer: Make sure the missing elements details array is NULL-terminated in a thread-safe way
+-   discoverer: fix segfault in race condition adding a new uri
+-   id3v2: Don’t try parsing extended header if not enough data is available
+-   glupload: dmabuf: Fix emulated tiled import
+-   gl: cocoa: fix rendering artifacts in retina displays
+-   gl: meson: Don’t use libdrm_dep in cc.has_header()
+-   oggstream: fix invalid ogg_packet->packet accesses, address invalid writes CVE
+-   opusdec: Set at most 64 channels to NONE position
+-   playbin: Fix caps leak in get_n_common_capsfeatures()
+-   playbin3: ERROR when setting new HLS URI with instant-uri=true
+-   sdp: Add debug categories for message and mikey modules
+-   ssaparse: Search for closing brace after opening brace
+-   splitmuxsrc: Convert part reader to a bin with a non-async bus
+-   subparse: Check for NULL return of strchr() when parsing LRC subtitles
+-   streamsynchronizer: Only send GAP events out of source pads
+-   urisourcebin: Also use event probe for HLS use-cases
+-   video-converter: Set TIME segment format on appsrc
+-   vorbisdec: Set at most 64 channels to NONE position
+-   Translation for gst-plugins-base 1.24.0 not sync-ed with Translation Project
+-   Update translations
+
+gst-plugins-good
+
+-   avisubtitle: Fix size checks and avoid overflows when checking sizes
+-   flvmux: Don’t time out in live mode if no timestamped next buffer is available
+-   gdkpixbufdec: Check if initializing the video info actually succeeded
+-   jpegdec: Directly error out on negotiation failures
+-   level: Fix integer overflow when filling LevelMeta
+-   level: produces level value outside of Stated Range
+-   matroskademux: header parsing fixes
+-   qtdemux: header and sample table parsing fixes
+-   qtdemux: avoid integer overflow in theora extension parsing
+-   qt(6)/material: ensure that we always update the context in setBuffer()
+-   rtspsrc: Optionally timestamp RTP packets with their receive times in TCP/HTTP mode
+-   rtp: Fix precision loss in gst_rtcp_ntp_to_unix()
+-   rtpfunnel: Ensure segment events are forwarded after flushs
+-   rtpmanager: don’t map READWRITE in twcc header ext
+-   rtph264depay, rtph265depay: Fix various OOB reads / NULL pointer dereferences in parameter-set string handling
+-   shout2send: Unref event at the end of the event function
+-   udpsrc: protect cancellable from unlock/unlock_stop race
+-   v4l2object: Fixed incorrect maximum value for int range
+-   v4l2object: Remove little endian marker on 8 bit bayer format names
+-   v4l2videodec: fix freeze race condition
+-   wavparse: Fix various (missing) size checks and other parsing problems
+
+gst-plugins-bad
+
+-   ccconverter: Don’t override in_fps_entry when trying to take output
+-   ccutils fixes
+-   kmssink: Add mediatek auto-detection
+-   mpegtsmux: Don’t time out in live mode if no timestamped next buffer is available (fixes busy loop with high cpu usage)
+-   mpegvideoparse: do not set delta unit flag on unknown frame type
+-   mxfmux: Fix off-by-one in the month when generating a timestamp for now
+-   timecodestamper: Don’t fail the latency query in LTC mode if we have no framerate
+-   webrtc: don’t crash on invalid bundle id
+-   x265: Allow building with x265-4.1 (after masteringDisplayColorVolume API change)
+-   meson: Don’t unconditionally invoke the libsoup subproject for tests
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+-   cargo: Default to thin lto for the release profile (for faster builds with lower memory requirements)
+
+gst-libav
+
+-   avcodecmap: Use avcodec_get_supported_config() instead of struct fields
+-   libav: viddec: provide details if meta has the wrong resolution
+-   avviddec: Unlock video decoder stream lock temporarily while finishing frames
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   No changes
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   validate: Fix leaks in ssim components
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   meson: Fix failing libva wrap file build
+
+Cerbero build tool and packaging changes in 1.24.10
+
+-   shell: fix TemporaryDirectory error with the with statement when ZSH
+-   ci: update macos CI to 15 Sequoia
+
+Contributors to 1.24.10
+
+Albert Sjolund, Alicia Boya García, Andoni Morales Alastruey, Antonio Morales, Edward Hervey, Guillaume Desmottes, Jan Alexander
+Steffens (heftig), Jan Schmidt, Jonas Rebmann, Jordan Petridis, Mathieu Duponchelle, Matthew Waters, Nicolas Dufresne, Nirbheek
+Chauhan, Pablo Sun, Philippe Normand, Robert Rosengren, Ruben Gonzalez, Sebastian Dröge, Seungmin Kim, Stefan Riedmüller,
+Stéphane Cerveau, Taruntej Kanakamalla, Théo Maillart, Thibault Saunier, Tim-Philipp Müller, Tomáš Polomský, Wilhelm Bartel, Xi
+Ruoyao,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.24.10
+
+-   List of Merge Requests applied in 1.24.10
+-   List of Issues fixed in 1.24.10
 
 Schedule for 1.26
 
