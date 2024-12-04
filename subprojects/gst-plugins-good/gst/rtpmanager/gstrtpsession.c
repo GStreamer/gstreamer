@@ -3007,6 +3007,8 @@ gst_rtp_session_notify_twcc (RTPSession * sess,
     event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, twcc_packets);
     gst_pad_push_event (send_rtp_sink, event);
     gst_object_unref (send_rtp_sink);
+  } else {
+    gst_structure_free (twcc_packets);
   }
 
   g_object_notify (G_OBJECT (rtpsession), "twcc-stats");

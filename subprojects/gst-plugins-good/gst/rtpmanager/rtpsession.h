@@ -159,6 +159,9 @@ typedef void (*RTPSessionNotifyNACK) (RTPSession *sess,
 
 /**
  * RTPSessionNotifyTWCC:
+ * @sess: an #RTPSession
+ * @twcc_packets: (transfer full): TWCC packets #GstStructure
+ * @twcc_stats: (transfer full): TWCC stats #GstStructure
  * @user_data: user data specified when registering
  *
  * Notifies of Transport-wide congestion control packets and stats.
