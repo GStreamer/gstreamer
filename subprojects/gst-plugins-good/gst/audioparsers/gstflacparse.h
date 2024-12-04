@@ -72,7 +72,7 @@ struct _GstFlacParse {
   /* Current frame */
   guint64 offset;
   guint8 blocking_strategy;
-  guint16 block_size;
+  guint16 block_size, fixed_block_size;
   guint64 sample_number;
   guint64 first_sample_number;
   gboolean strategy_checked;

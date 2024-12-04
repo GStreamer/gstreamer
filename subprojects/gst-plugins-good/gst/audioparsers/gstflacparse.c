@@ -64,6 +64,16 @@
 GST_DEBUG_CATEGORY_STATIC (flacparse_debug);
 #define GST_CAT_DEFAULT flacparse_debug
 
+typedef struct
+{
+  guint16 block_size;
+  guint32 samplerate;
+  guint8 bps;
+  guint8 blocking_strategy;
+  guint8 channels;
+  guint64 sample_number;
+} FlacFrameHeader;
+
 /* CRC-8, poly = x^8 + x^2 + x^1 + x^0, init = 0 */
 static const guint8 crc8_table[256] = {
   0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15,
@@ -353,6 +363,7 @@ gst_flac_parse_start (GstBaseParse * parse)
   flacparse->offset = GST_CLOCK_TIME_NONE;
   flacparse->blocking_strategy = 0;
   flacparse->block_size = 0;
+  flacparse->fixed_block_size = 0;
   flacparse->sample_number = 0;
   flacparse->strategy_checked = FALSE;
 
@@ -401,8 +412,8 @@ typedef enum
 
 static FrameHeaderCheckReturn
 gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
-    const guint8 * data, guint size, gboolean set, guint16 * block_size_ret,
-    gboolean * suspect)
+    const guint8 * data, guint size, guint64 offset,
+    FlacFrameHeader * header_ret)
 {
   GstBitReader reader = GST_BIT_READER_INIT (data, size);
   guint8 blocking_strategy;
@@ -422,8 +433,6 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
 
   /* 0 == fixed block size, 1 == variable block size */
   blocking_strategy = gst_bit_reader_get_bits_uint8_unchecked (&reader, 1);
-  if (flacparse->force_variable_block_size)
-    blocking_strategy = 1;
 
   /* block size index, calculation of the real blocksize below */
   block_size = gst_bit_reader_get_bits_uint16_unchecked (&reader, 4);
@@ -444,8 +453,6 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
   } else if (channels > 10) {
     goto error;
   }
-  if (flacparse->channels && flacparse->channels != channels)
-    goto error;
 
   /* bits per sample */
   bps = gst_bit_reader_get_bits_uint8_unchecked (&reader, 3);
@@ -453,10 +460,11 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
     goto error;
   } else if (bps == 0 && flacparse->bps == 0) {
     goto need_streaminfo;
+  } else if (bps == 0 && flacparse->bps != 0) {
+    bps = flacparse->bps;
+  } else {
+    bps = sample_size_table[bps];
   }
-  bps = sample_size_table[bps];
-  if (flacparse->bps && bps != flacparse->bps)
-    goto error;
 
   /* reserved, must be 0 */
   if (gst_bit_reader_get_bits_uint8_unchecked (&reader, 1) != 0)
@@ -527,6 +535,8 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
   /* calculate the real samplerate from the samplerate index */
   if (samplerate == 0 && flacparse->samplerate == 0) {
     goto need_streaminfo;
+  } else if (samplerate == 0 && flacparse->samplerate != 0) {
+    samplerate = flacparse->samplerate;
   } else if (samplerate < 12) {
     samplerate = sample_rate_table[samplerate];
   } else if (samplerate == 12) {
@@ -542,9 +552,6 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
     samplerate *= 10;
   }
 
-  if (flacparse->samplerate && flacparse->samplerate != samplerate)
-    goto error;
-
   /* check crc-8 for the header */
   if (!gst_bit_reader_get_bits_uint8 (&reader, &expected_crc, 8))
     goto need_more_data;
@@ -559,29 +566,240 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
     goto error;
   }
 
+  GST_TRACE_OBJECT (flacparse,
+      "Parsed frame at offset %" G_GUINT64_FORMAT ":\n" "Block size: %u\n"
+      "Samplerate %u\nbps: %u\nBlocking strategy: %u\nChannels: %u\n"
+      "Sample/Frame number: %" G_GUINT64_FORMAT, offset,
+      block_size, samplerate, bps, blocking_strategy, channels, sample_number);
+
+  if (header_ret) {
+    header_ret->block_size = block_size;
+    header_ret->samplerate = samplerate;
+    header_ret->bps = bps;
+    header_ret->blocking_strategy = blocking_strategy;
+    header_ret->channels = channels;
+    header_ret->sample_number = sample_number;
+  }
+
+  return FRAME_HEADER_VALID;
+
+need_streaminfo:
+  GST_ERROR_OBJECT (flacparse, "Need STREAMINFO metadata. Bits per sample "
+      "or sample rate not in frame header");
+error:
+  return FRAME_HEADER_INVALID;
+
+need_more_data:
+  return FRAME_HEADER_MORE_DATA;
+}
+
+static void
+gst_flac_parse_frame_header_update (GstFlacParse * flacparse,
+    const FlacFrameHeader * header)
+{
+
+  if (flacparse->samplerate != header->samplerate
+      || flacparse->channels != header->channels) {
+    GstCaps *caps;
+
+    GST_DEBUG_OBJECT (flacparse,
+        "Configuring caps with sample rate %d and %d channels",
+        header->samplerate, header->channels);
+
+    /* Do not include the headers as they would contain an invalid samplerate /
+     * channel count now */
+    caps = gst_caps_new_simple ("audio/x-flac",
+        "channels", G_TYPE_INT, header->channels,
+        "framed", G_TYPE_BOOLEAN, TRUE, "rate", G_TYPE_INT, header->samplerate,
+        NULL);
+
+    gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (flacparse)),
+        caps);
+    gst_caps_unref (caps);
+  }
+
+  flacparse->block_size = header->block_size;
+  flacparse->samplerate = header->samplerate;
+  flacparse->bps = header->bps;
+  flacparse->blocking_strategy = header->blocking_strategy;
+  flacparse->channels = header->channels;
+  flacparse->sample_number = header->sample_number;
+
+  /* Remember the initial fixed block size */
+  if (flacparse->blocking_strategy == 0 && flacparse->fixed_block_size == 0)
+    flacparse->fixed_block_size = header->block_size;
+}
+
+static gboolean
+gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
+    const guint8 * data, gsize size, guint * ret)
+{
+  guint max;
+  guint i, search_start, search_end;
+  FrameHeaderCheckReturn header_ret;
+  FlacFrameHeader header_start, header_end = { 0, };
+  gboolean suspect_start;
+
+  /* minimum frame header size is 5 bytes and we read that much
+   * without checking the size below */
+  if (size < MAX (flacparse->min_framesize, 5))
+    goto need_more;
+
+  header_ret =
+      gst_flac_parse_frame_header_is_valid (flacparse, data, size,
+      flacparse->offset, &header_start);
+  if (header_ret == FRAME_HEADER_INVALID) {
+    *ret = 0;
+    return FALSE;
+  }
+  if (header_ret == FRAME_HEADER_MORE_DATA)
+    goto need_more;
+
+  suspect_start = (flacparse->channels
+      && flacparse->channels != header_start.channels) || (flacparse->bps
+      && flacparse->bps != header_start.bps) || (flacparse->samplerate
+      && flacparse->samplerate != header_start.samplerate)
+      || (flacparse->block_size && !flacparse->force_variable_block_size
+      && flacparse->blocking_strategy != header_start.blocking_strategy)
+      || (flacparse->block_size && !flacparse->force_variable_block_size
+      && header_start.blocking_strategy == 0
+      && flacparse->block_size != header_start.block_size);
+
+  /* mind unknown framesize */
+  search_start = MAX (2, flacparse->min_framesize);
+
+  /* at minimum 5 bytes are read below so stop 5 bytes before the end.
+   * we also checked above that at least 5 bytes are available. */
+  search_end = size - 5;
+  if (flacparse->max_framesize)
+    search_end = MIN (search_end, flacparse->max_framesize + 9 + 2);
+
+  for (i = search_start; i < search_end; i++) {
+
+    if ((GST_READ_UINT16_BE (data + i) & 0xfffe) != 0xfff8)
+      continue;
+
+    GST_LOG_OBJECT (flacparse, "possible frame end at offset %d", i);
+    header_ret =
+        gst_flac_parse_frame_header_is_valid (flacparse, data + i,
+        size - i, flacparse->offset + i, &header_end);
+    if (header_ret == FRAME_HEADER_VALID) {
+      gboolean suspect_end;
+
+      suspect_end = (header_start.channels != header_end.channels) ||
+          (header_start.bps != header_end.bps) ||
+          (header_start.samplerate != header_end.samplerate) ||
+          (!flacparse->force_variable_block_size
+          && header_start.blocking_strategy != header_end.blocking_strategy)
+          || (!flacparse->force_variable_block_size
+          && header_start.blocking_strategy == 0
+          && header_start.block_size != header_end.block_size);
+
+      if (flacparse->check_frame_checksums || suspect_start || suspect_end) {
+        guint16 actual_crc = gst_flac_calculate_crc16 (data, i - 2);
+        guint16 expected_crc = GST_READ_UINT16_BE (data + i - 2);
+
+        GST_LOG_OBJECT (flacparse,
+            "Found possible frame (%d, %d). Checking for CRC match",
+            suspect_start, suspect_end);
+        if (actual_crc != expected_crc) {
+          GST_DEBUG_OBJECT (flacparse,
+              "Checksum mismatch. Header CRC was '%d' but frame has '%d'",
+              expected_crc, actual_crc);
+          continue;
+        }
+      }
+      *ret = i;
+      goto valid_frame;
+    } else if (header_ret == FRAME_HEADER_MORE_DATA) {
+      goto need_more;
+    }
+  }
+
+  /* For the last frame output everything to the end */
+  if (G_UNLIKELY (GST_BASE_PARSE_DRAINING (flacparse))) {
+    if (flacparse->check_frame_checksums) {
+      guint16 actual_crc = gst_flac_calculate_crc16 (data, size - 2);
+      guint16 expected_crc = GST_READ_UINT16_BE (data + size - 2);
+
+      if (actual_crc == expected_crc) {
+        *ret = size;
+        goto valid_frame;
+      }
+    } else {
+      *ret = size;
+      goto valid_frame;
+    }
+  }
+
+  /* so we searched to expected end and found nothing,
+   * give up on this frame (start) */
+  if (flacparse->max_framesize && i > 2 * flacparse->max_framesize) {
+    GST_LOG_OBJECT (flacparse,
+        "could not determine valid frame end, discarding frame (start)");
+    *ret = 1;
+    return FALSE;
+  }
+
+need_more:
+  max = flacparse->max_framesize + 16;
+  if (max == 16)
+    max = 1 << 24;
+  *ret = MIN (size + 4096, max);
+  return TRUE;
+
+valid_frame:
+  if (!flacparse->strategy_checked) {
+    GST_INFO_OBJECT (flacparse, "First sample number is %" G_GUINT64_FORMAT,
+        header_start.sample_number);
+    flacparse->first_sample_number = header_start.sample_number;
+  }
+
   /* Sanity check sample number against blocking strategy, as it seems
      some files claim fixed block size but supply sample numbers,
      rather than block numbers. */
-  if (blocking_strategy == 0 && flacparse->block_size != 0) {
-    if (!flacparse->strategy_checked) {
-      if (block_size == sample_number) {
+  if (!flacparse->strategy_checked) {
+    if (header_start.blocking_strategy == 0 && header_end.blocking_strategy == 0
+        && header_end.block_size != 0) {
+      if (header_end.block_size == header_end.sample_number) {
         GST_WARNING_OBJECT (flacparse, "This file claims fixed block size, "
             "but seems to be lying: assuming variable block size");
         flacparse->force_variable_block_size = TRUE;
-        blocking_strategy = 1;
+        header_start.blocking_strategy = 1;
       }
-      flacparse->strategy_checked = TRUE;
     }
+    flacparse->strategy_checked = TRUE;
+  }
+
+  if (flacparse->force_variable_block_size)
+    header_start.blocking_strategy = 1;
+
+  if (flacparse->channels && flacparse->channels != header_start.channels) {
+    GST_WARNING_OBJECT (flacparse, "channels are not constant (%d -> %d)",
+        flacparse->channels, header_start.channels);
+  }
+
+  if (flacparse->bps && header_start.bps != flacparse->bps) {
+    GST_WARNING_OBJECT (flacparse, "bps is not constant (%d -> %d)",
+        flacparse->bps, header_start.bps);
+  }
+
+  if (flacparse->samplerate && flacparse->samplerate != header_start.samplerate) {
+    GST_WARNING_OBJECT (flacparse, "samplerate is not constant (%d -> %d)",
+        flacparse->samplerate, header_start.samplerate);
   }
 
   /* documentation says:
    * The "blocking strategy" bit must be the same throughout the entire stream. */
-  if (flacparse->blocking_strategy != blocking_strategy) {
-    if (flacparse->block_size != 0) {
-      GST_WARNING_OBJECT (flacparse, "blocking strategy is not constant");
-      if (suspect)
-        *suspect = TRUE;
-    }
+  if (flacparse->block_size
+      && flacparse->blocking_strategy != header_start.blocking_strategy) {
+    GST_WARNING_OBJECT (flacparse,
+        "blocking strategy is not constant (%d -> %d)",
+        flacparse->blocking_strategy, header_start.blocking_strategy);
+
+    /* Reset if switching to a fixed block size at this point */
+    if (header_start.blocking_strategy == 0)
+      flacparse->fixed_block_size = 0;
   }
 
   /*
@@ -601,152 +819,21 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
      This will also fix a timestamp problem with the last block's timestamp
      being miscalculated by scaling the block number by a "wrong" block size.
    */
-  if (blocking_strategy == 0) {
-    if (flacparse->block_size != 0) {
-      /* after first block */
-      if (flacparse->block_size != block_size) {
-        /* TODO: can we know we're on the last frame, to avoid warning ? */
-        GST_WARNING_OBJECT (flacparse, "Block size is not constant");
-        block_size = flacparse->block_size;
-        if (suspect)
-          *suspect = TRUE;
-      }
+  if (flacparse->block_size && header_start.blocking_strategy == 0) {
+    /* Only check if we're not draining, i.e. block size of the next frame could
+     * be read successfully */
+    if (header_end.block_size
+        && flacparse->block_size != header_start.block_size) {
+      GST_WARNING_OBJECT (flacparse, "Block size is not constant (%d -> %d)",
+          flacparse->block_size, header_start.block_size);
+      header_start.block_size = flacparse->fixed_block_size;
     }
   }
 
-  if (set) {
-    flacparse->block_size = block_size;
-    if (!flacparse->samplerate)
-      flacparse->samplerate = samplerate;
-    if (!flacparse->bps)
-      flacparse->bps = bps;
-    if (!flacparse->blocking_strategy)
-      flacparse->blocking_strategy = blocking_strategy;
-    if (!flacparse->channels)
-      flacparse->channels = channels;
-    if (!flacparse->sample_number)
-      flacparse->sample_number = sample_number;
+  gst_flac_parse_frame_header_update (flacparse, &header_start);
 
-    GST_DEBUG_OBJECT (flacparse,
-        "Parsed frame at offset %" G_GUINT64_FORMAT ":\n" "Block size: %u\n"
-        "Sample/Frame number: %" G_GUINT64_FORMAT, flacparse->offset,
-        flacparse->block_size, flacparse->sample_number);
-  }
+  GST_TRACE_OBJECT (flacparse, "Found valid frame");
 
-  if (block_size_ret)
-    *block_size_ret = block_size;
-
-  return FRAME_HEADER_VALID;
-
-need_streaminfo:
-  GST_ERROR_OBJECT (flacparse, "Need STREAMINFO metadata. Bits per sample "
-      "or sample rate not in frame header");
-error:
-  return FRAME_HEADER_INVALID;
-
-need_more_data:
-  return FRAME_HEADER_MORE_DATA;
-}
-
-static gboolean
-gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
-    const guint8 * data, gsize size, guint * ret)
-{
-  guint max;
-  guint i, search_start, search_end;
-  FrameHeaderCheckReturn header_ret;
-  guint16 block_size;
-  gboolean suspect_start = FALSE, suspect_end = FALSE;
-
-  /* minimum frame header size is 5 bytes and we read that much
-   * without checking the size below */
-  if (size < MAX (flacparse->min_framesize, 5))
-    goto need_more;
-
-  header_ret =
-      gst_flac_parse_frame_header_is_valid (flacparse, data, size, TRUE,
-      &block_size, &suspect_start);
-  if (header_ret == FRAME_HEADER_INVALID) {
-    *ret = 0;
-    return FALSE;
-  }
-  if (header_ret == FRAME_HEADER_MORE_DATA)
-    goto need_more;
-
-  /* mind unknown framesize */
-  search_start = MAX (2, flacparse->min_framesize);
-
-  /* at minimum 5 bytes are read below so stop 5 bytes before the end.
-   * we also checked above that at least 5 bytes are available. */
-  search_end = size - 5;
-  if (flacparse->max_framesize)
-    search_end = MIN (search_end, flacparse->max_framesize + 9 + 2);
-
-  for (i = search_start; i < search_end; i++) {
-
-    if ((GST_READ_UINT16_BE (data + i) & 0xfffe) != 0xfff8)
-      continue;
-
-    GST_LOG_OBJECT (flacparse, "possible frame end at offset %d", i);
-    suspect_end = FALSE;
-    header_ret =
-        gst_flac_parse_frame_header_is_valid (flacparse, data + i,
-        size - i, FALSE, NULL, &suspect_end);
-    if (header_ret == FRAME_HEADER_VALID) {
-      if (flacparse->check_frame_checksums || suspect_start || suspect_end) {
-        guint16 actual_crc = gst_flac_calculate_crc16 (data, i - 2);
-        guint16 expected_crc = GST_READ_UINT16_BE (data + i - 2);
-
-        GST_LOG_OBJECT (flacparse,
-            "Found possible frame (%d, %d). Checking for CRC match",
-            suspect_start, suspect_end);
-        if (actual_crc != expected_crc) {
-          GST_DEBUG_OBJECT (flacparse,
-              "Checksum mismatch. Header CRC was '%d' but frame has '%d'",
-              expected_crc, actual_crc);
-          continue;
-        }
-      }
-      *ret = i;
-      flacparse->block_size = block_size;
-      return TRUE;
-    } else if (header_ret == FRAME_HEADER_MORE_DATA) {
-      goto need_more;
-    }
-  }
-
-  /* For the last frame output everything to the end */
-  if (G_UNLIKELY (GST_BASE_PARSE_DRAINING (flacparse))) {
-    if (flacparse->check_frame_checksums) {
-      guint16 actual_crc = gst_flac_calculate_crc16 (data, size - 2);
-      guint16 expected_crc = GST_READ_UINT16_BE (data + size - 2);
-
-      if (actual_crc == expected_crc) {
-        *ret = size;
-        flacparse->block_size = block_size;
-        return TRUE;
-      }
-    } else {
-      *ret = size;
-      flacparse->block_size = block_size;
-      return TRUE;
-    }
-  }
-
-  /* so we searched to expected end and found nothing,
-   * give up on this frame (start) */
-  if (flacparse->max_framesize && i > 2 * flacparse->max_framesize) {
-    GST_LOG_OBJECT (flacparse,
-        "could not determine valid frame end, discarding frame (start)");
-    *ret = 1;
-    return FALSE;
-  }
-
-need_more:
-  max = flacparse->max_framesize + 16;
-  if (max == 16)
-    max = 1 << 24;
-  *ret = MIN (size + 4096, max);
   return TRUE;
 }
 
@@ -800,8 +887,8 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
   }
 
   if ((GST_READ_UINT16_BE (map.data) & 0xfffe) == 0xfff8) {
-    gboolean ret, is_first = !flacparse->strategy_checked;
-    guint next;
+    gboolean ret;
+    guint next = 0;
 
     flacparse->offset = GST_BUFFER_OFFSET (buffer);
     flacparse->blocking_strategy = 0;
@@ -810,11 +897,6 @@ gst_flac_parse_handle_frame (GstBaseParse * parse,
     GST_DEBUG_OBJECT (flacparse, "Found sync code");
     ret = gst_flac_parse_frame_is_valid (flacparse, map.data, map.size, &next);
     if (ret) {
-      if (is_first) {
-        GST_INFO_OBJECT (flacparse, "First sample number is %" G_GUINT64_FORMAT,
-            flacparse->sample_number);
-        flacparse->first_sample_number = flacparse->sample_number;
-      }
       framesize = next;
       goto cleanup;
     }
@@ -1615,16 +1697,25 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
   } else {
     if (flacparse->offset != GST_BUFFER_OFFSET (buffer)) {
       FrameHeaderCheckReturn ret;
+      FlacFrameHeader header;
+
+      GST_DEBUG_OBJECT (flacparse,
+          "Unexpected offset %" G_GUINT64_FORMAT ", expected %"
+          G_GUINT64_FORMAT, GST_BUFFER_OFFSET (buffer), flacparse->offset);
 
       flacparse->offset = GST_BUFFER_OFFSET (buffer);
       ret =
           gst_flac_parse_frame_header_is_valid (flacparse,
-          map.data, map.size, TRUE, NULL, NULL);
+          map.data, map.size, flacparse->offset, &header);
       if (ret != FRAME_HEADER_VALID) {
         GST_ERROR_OBJECT (flacparse,
             "Baseclass didn't provide a complete frame");
         goto cleanup;
       }
+
+      /* We don't do any sanity checks here but assume that this frame is valid
+       * if we somehow got a complete frame from an unexpected offset. */
+      gst_flac_parse_frame_header_update (flacparse, &header);
     }
 
     if (flacparse->block_size == 0) {
@@ -1660,9 +1751,9 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     if (flacparse->blocking_strategy == 0) {
       GST_BUFFER_PTS (buffer) =
           gst_util_uint64_scale (relative_sample_number,
-          flacparse->block_size * GST_SECOND, flacparse->samplerate);
+          flacparse->fixed_block_size * GST_SECOND, flacparse->samplerate);
       GST_BUFFER_OFFSET_END (buffer) =
-          relative_sample_number * flacparse->block_size +
+          relative_sample_number * flacparse->fixed_block_size +
           flacparse->block_size;
     } else {
       GST_BUFFER_PTS (buffer) =
