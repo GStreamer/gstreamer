@@ -1457,6 +1457,14 @@ gst_splitmux_part_reader_set_start_offset (GstSplitMuxPartReader * reader,
   reader->ts_offset = ts_offset;
   GST_INFO_OBJECT (reader, "Time offset now %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time_offset));
+
+  if (!reader->need_duration_measuring
+      && reader->info.start_offset != GST_CLOCK_TIME_NONE) {
+    reader->end_offset = reader->info.start_offset + reader->info.duration;
+    GST_INFO_OBJECT (reader, "End offset set to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (reader->end_offset));
+  }
+
   SPLITMUX_PART_UNLOCK (reader);
 }
 
@@ -1470,6 +1478,14 @@ gst_splitmux_part_reader_set_duration (GstSplitMuxPartReader * reader,
 
   GST_INFO_OBJECT (reader, "Duration manually set to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (duration));
+
+  if (!reader->need_duration_measuring
+      && reader->info.start_offset != GST_CLOCK_TIME_NONE) {
+    reader->end_offset = reader->info.start_offset + reader->info.duration;
+    GST_INFO_OBJECT (reader, "End offset set to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (reader->end_offset));
+  }
+
   SPLITMUX_PART_UNLOCK (reader);
 }
 
