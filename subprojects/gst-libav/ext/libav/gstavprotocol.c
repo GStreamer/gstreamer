@@ -332,9 +332,16 @@ int
 gst_ffmpeg_pipe_close (AVIOContext * h)
 {
   GST_LOG ("Closing pipe");
+  GstProtocolInfo *info;
 
   if (h == NULL)
     return 0;
+
+  info = (GstProtocolInfo *) h->opaque;
+  if (info == NULL)
+    return 0;
+
+  g_free (info);
 
   h->opaque = NULL;
   av_freep (&h->buffer);
