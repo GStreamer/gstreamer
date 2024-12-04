@@ -11556,9 +11556,106 @@
     "osxaudio": {
         "description": "OSX (Mac OS X) audio support for GStreamer",
         "elements": {
+            "atdec": {
+                "author": "Alessandro Decina <alessandro.d@gmail.com>",
+                "description": "AudioToolbox based audio decoder",
+                "hierarchy": [
+                    "GstATDec",
+                    "GstAudioDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Audio",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/mpeg:\n    mpegversion: 4\n         framed: true\n       channels: [ 1, 2147483647 ]\naudio/mpeg:\n    mpegversion: 1\n          layer: [ 1, 3 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\naudio/x-raw:\n         format: F32LE\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "marginal"
+            },
+            "atenc": {
+                "author": "Piotr Brzeziński <piotr@centricular.com>",
+                "description": "AudioToolbox based audio encoder for macOS/iOS",
+                "hierarchy": [
+                    "GstATEnc",
+                    "GstAudioEncoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstPreset"
+                ],
+                "klass": "Coder/Encoder/Audio/Converter",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n         layout: interleaved\n           rate: { (int)8000, (int)11025, (int)12000, (int)16000, (int)22050, (int)24000, (int)32000, (int)44100, (int)48000 }\n       channels: [ 1, 8 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "audio/mpeg:\n    mpegversion: 4\n           rate: { (int)8000, (int)11025, (int)12000, (int)16000, (int)22050, (int)24000, (int)32000, (int)44100, (int)48000 }\n       channels: [ 1, 8 ]\n  stream-format: raw\n        profile: lc\n         framed: true\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "bitrate": {
+                        "blurb": "target output bitrate in bps (for rate-control=cbr/lta) (0 - auto)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "rate-control": {
+                        "blurb": "Mode of output bitrate control to be applied",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "cbr (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstATEncRateControl",
+                        "writable": true
+                    },
+                    "vbr-quality": {
+                        "blurb": "Sound quality setting for VBR encoding (rate-control=vbr) (0-127)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "65",
+                        "max": "127",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            },
             "osxaudiosink": {
                 "author": "Zaheer Abbas Merali <zaheerabbas at merali dot org>",
-                "description": "Output to a sound card in OS X",
+                "description": "Output to a sound card on macOS",
                 "hierarchy": [
                     "GstOsxAudioSink",
                     "GstAudioBaseSink",
@@ -11595,6 +11692,18 @@
                         "type": "gint",
                         "writable": true
                     },
+                    "unique-id": {
+                        "blurb": "Unique persistent ID for the input device",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": false
+                    },
                     "volume": {
                         "blurb": "Volume of this stream",
                         "conditionally-available": false,
@@ -11614,7 +11723,7 @@
             },
             "osxaudiosrc": {
                 "author": "Zaheer Abbas Merali <zaheerabbas at merali dot org>",
-                "description": "Input from a sound card in OS X",
+                "description": "Input from a sound card on macOS",
                 "hierarchy": [
                     "GstOsxAudioSrc",
                     "GstAudioBaseSrc",
@@ -11651,6 +11760,18 @@
                         "readable": true,
                         "type": "gint",
                         "writable": true
+                    },
+                    "unique-id": {
+                        "blurb": "Unique persistent ID for the input device",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": false
                     }
                 },
                 "rank": "primary"
@@ -11677,7 +11798,7 @@
         "elements": {
             "osxvideosink": {
                 "author": "Zaheer Abbas Merali <zaheerabbas at merali dot org>",
-                "description": "OSX native videosink",
+                "description": "macOS native videosink",
                 "hierarchy": [
                     "GstOSXVideoSink",
                     "GstVideoSink",
