@@ -5188,7 +5188,7 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
       return FALSE;
     } else if (stride[p] > obj->info.stride[p]) {
       GST_LOG_OBJECT (obj->dbg_obj,
-          "remote stride %i is higher than %i on plane %u",
+          "Remote stride %i is higher than %i on plane %u",
           stride[p], obj->info.stride[p], p);
       need_fmt_update = TRUE;
     }
@@ -5206,17 +5206,21 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
           offset[p], obj->info.offset[p], p);
       need_fmt_update = TRUE;
     }
+  }
 
-    if (padded_height) {
-      guint fmt_height;
+  if (padded_height) {
+    guint fmt_height;
 
-      if (V4L2_TYPE_IS_MULTIPLANAR (obj->type))
-        fmt_height = obj->format.fmt.pix_mp.height;
-      else
-        fmt_height = obj->format.fmt.pix.height;
+    if (V4L2_TYPE_IS_MULTIPLANAR (obj->type))
+      fmt_height = obj->format.fmt.pix_mp.height;
+    else
+      fmt_height = obj->format.fmt.pix.height;
 
-      if (padded_height > fmt_height)
-        need_fmt_update = TRUE;
+    if (padded_height > fmt_height) {
+      GST_LOG_OBJECT (obj->dbg_obj,
+          "Remote height %" G_GUINT32_FORMAT " is higher than %"
+          G_GUINT32_FORMAT, padded_height, fmt_height);
+      need_fmt_update = TRUE;
     }
   }
 
@@ -5251,10 +5255,11 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
               GST_VIDEO_FORMAT_INFO_TILE_STRIDE (obj->info.finfo, i);
 
         format.fmt.pix_mp.plane_fmt[i].bytesperline = plane_stride;
-        format.fmt.pix_mp.height = padded_height;
         wanted_stride[i] = plane_stride;
         GST_DEBUG_OBJECT (obj->dbg_obj, "    [%u] %i", i, wanted_stride[i]);
       }
+
+      format.fmt.pix_mp.height = padded_height;
     } else {
       gint plane_stride = stride[0];
 
