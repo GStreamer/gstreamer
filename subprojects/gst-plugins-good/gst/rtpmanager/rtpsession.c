@@ -3002,8 +3002,12 @@ rtp_session_process_twcc (RTPSession * sess, guint32 sender_ssrc,
 
   RTP_SESSION_UNLOCK (sess);
   if (sess->callbacks.notify_twcc)
-    sess->callbacks.notify_twcc (sess, twcc_packets_s, twcc_stats_s,
-        sess->notify_twcc_user_data);
+    sess->callbacks.notify_twcc (sess, g_steal_pointer (&twcc_packets_s),
+        g_steal_pointer (&twcc_stats_s), sess->notify_twcc_user_data);
+  else {
+    gst_structure_free (twcc_packets_s);
+    gst_structure_free (twcc_stats_s);
+  }
   RTP_SESSION_LOCK (sess);
 }
 
