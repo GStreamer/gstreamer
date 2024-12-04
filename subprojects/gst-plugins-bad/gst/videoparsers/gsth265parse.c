@@ -303,6 +303,7 @@ gst_h265_parse_stop (GstBaseParse * parse)
   gst_h265_parse_reset (h265parse);
 
   gst_h265_parser_free (h265parse->nalparser);
+  h265parse->nalparser = NULL;
 
   return TRUE;
 }
