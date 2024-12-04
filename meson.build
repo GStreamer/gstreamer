@@ -237,7 +237,7 @@ foreach sp : subprojects
 
     subprojects_names += [project_name]
 
-    if not meson.is_cross_build() and build_infos.get('build-hotdoc', false)
+    if not meson.is_cross_build() and build_infos.get('build-hotdoc', false) and get_option('doc').allowed()
       plugins_doc_caches += [subproj.get_variable('gst_plugins_doc_dep', [])]
       if documented_projects != ''
         documented_projects += ','
@@ -258,12 +258,16 @@ if glib_dep.type_name() == 'internal'
   endif
 endif
 
-gst_plugins_doc_dep = custom_target('plugins-doc-cache',
-  command: [python3, '-c', 'print("Built all doc caches")'],
-  input: plugins_doc_caches,
-  output: 'plugins_doc_caches',
-  capture: true,
-)
+if get_option('doc').allowed()
+  gst_plugins_doc_dep = custom_target('plugins-doc-cache',
+    command: [python3, '-c', 'print("Built all doc caches")'],
+    input: plugins_doc_caches,
+    output: 'plugins_doc_caches',
+    capture: true,
+  )
+else
+  message('doc option is disabled, will not generate targets for building plugins doc caches')
+endif
 
 gir_files = []
 gir_targets = []
