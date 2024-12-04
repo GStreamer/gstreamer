@@ -42,6 +42,7 @@ configure_file(input : 'ajantv2/includes/ntv2version.h.in',
 thread_dep = dependency('threads')
 rt_dep = cxx.find_library('rt', required : false)
 dl_dep = cxx.find_library('dl', required : false)
+libudev_dep = dependency('libudev', required: true)
 
 ajantv2_sources = [
   'ajaanc/src/ancillarydata.cpp',
@@ -178,7 +179,7 @@ ajantv2_inc = include_directories(
 libajantv2 = static_library(
   'libajantv2',
   sources: ajantv2_sources,
-  dependencies : [thread_dep, rt_dep, dl_dep],
+  dependencies : [thread_dep, rt_dep, dl_dep, libudev_dep],
   cpp_args: [ajantv2_args, common_flags],
   include_directories: ajantv2_inc,
   pic: true,
