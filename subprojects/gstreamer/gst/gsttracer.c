@@ -52,6 +52,11 @@ enum
 
 static GParamSpec *properties[PROP_LAST];
 
+typedef struct
+{
+  gboolean use_structure_params;
+} GstTracerClassPrivate;
+
 static void gst_tracer_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_tracer_get_property (GObject * object, guint prop_id,
@@ -62,8 +67,13 @@ struct _GstTracerPrivate
   gchar *params;
 };
 
+#define _do_init \
+    g_type_add_class_private (g_define_type_id, \
+        sizeof (GstTracerClassPrivate));
+
 #define gst_tracer_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstTracer, gst_tracer, GST_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstTracer, gst_tracer, GST_TYPE_OBJECT,
+    G_ADD_PRIVATE (GstTracer) _do_init);
 
 static void
 gst_tracer_dispose (GObject * object)
@@ -191,4 +201,49 @@ gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type)
       GST_PLUGIN_FEATURE_CAST (factory));
 
   return TRUE;
+}
+
+/**
+ * gst_tracer_class_uses_structure_params:
+ * @klass: the #GstTracerClass to to check
+ *
+ * If set, the tracer subsystem will consider parameters passed to the
+ * `GST_TRACERS` environment variable as a #GstStructure and use its
+ * fields as properties to instanciate the tracer.
+ *
+ * Returns: %TRUE if the tracer uses structure parameters, %FALSE otherwise
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_tracer_class_uses_structure_params (GstTracerClass * klass)
+{
+  g_return_val_if_fail (GST_IS_TRACER_CLASS (klass), FALSE);
+
+  return G_TYPE_CLASS_GET_PRIVATE (klass, GST_TYPE_TRACER,
+      GstTracerClassPrivate)->use_structure_params;
+}
+
+/**
+ * gst_tracer_class_set_use_structure_params:
+ * @klass: the #GstTracerFactoryClass to mark as using structure parameters
+ * @use_structure_params: %TRUE to use structure parameters, %FALSE otherwise
+ *
+ * Sets whether the tracer should use structure parameters for configuration.
+ * This function configures how parameters should be passed when instantiating
+ * the tracer.
+ *
+ * This is typically called in the tracer's class initialization function to
+ * indicate its parameter handling preference.
+ *
+ * Since: 1.26
+ */
+void
+gst_tracer_class_set_use_structure_params (GstTracerClass * klass,
+    gboolean use_structure_params)
+{
+  g_return_if_fail (GST_IS_TRACER_CLASS (klass));
+
+  G_TYPE_CLASS_GET_PRIVATE (klass, GST_TYPE_TRACER,
+      GstTracerClassPrivate)->use_structure_params = use_structure_params;
 }

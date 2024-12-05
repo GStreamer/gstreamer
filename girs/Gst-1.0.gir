@@ -49595,6 +49595,42 @@ contextual data, which they must not modify.</doc>
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
+      <method name="set_use_structure_params" c:identifier="gst_tracer_class_set_use_structure_params" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttracer.c">Sets whether the tracer should use structure parameters for configuration.
+This function configures how parameters should be passed when instantiating
+the tracer.
+
+This is typically called in the tracer's class initialization function to
+indicate its parameter handling preference.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gsttracer.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="tracer_class" transfer-ownership="none">
+            <type name="TracerClass" c:type="GstTracerClass*"/>
+          </instance-parameter>
+          <parameter name="use_structure_params" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttracer.c">%TRUE to use structure parameters, %FALSE otherwise</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="uses_structure_params" c:identifier="gst_tracer_class_uses_structure_params" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttracer.c">If set, the tracer subsystem will consider parameters passed to the
+`GST_TRACERS` environment variable as a #GstStructure and use its
+fields as properties to instanciate the tracer.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gsttracer.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttracer.c">%TRUE if the tracer uses structure parameters, %FALSE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="tracer_class" transfer-ownership="none">
+            <type name="TracerClass" c:type="GstTracerClass*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
     </record>
     <class name="TracerFactory" c:symbol-prefix="tracer_factory" c:type="GstTracerFactory" version="1.8" parent="PluginFeature" glib:type-name="GstTracerFactory" glib:get-type="gst_tracer_factory_get_type" glib:type-struct="TracerFactoryClass">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttracerfactory.c">Use gst_tracer_factory_get_list() to get a list of tracer factories known to
