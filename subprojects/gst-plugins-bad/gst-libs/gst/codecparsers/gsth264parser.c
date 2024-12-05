@@ -1435,7 +1435,7 @@ gst_h264_nal_parser_new (void)
  * gst_h264_nal_parser_free:
  * @nalparser: the #GstH264NalParser to free
  *
- * Frees @nalparser and sets it to %NULL
+ * Frees @nalparser
  */
 void
 gst_h264_nal_parser_free (GstH264NalParser * nalparser)
@@ -1447,8 +1447,6 @@ gst_h264_nal_parser_free (GstH264NalParser * nalparser)
   for (i = 0; i < GST_H264_MAX_PPS_COUNT; i++)
     gst_h264_pps_clear (&nalparser->pps[i]);
   g_free (nalparser);
-
-  nalparser = NULL;
 }
 
 /**
