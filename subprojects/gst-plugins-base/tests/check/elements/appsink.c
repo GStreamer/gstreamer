@@ -1173,6 +1173,37 @@ GST_START_TEST (test_query_allocation_signals)
 
 GST_END_TEST;
 
+GST_START_TEST (test_eos_reset)
+{
+  GstElement *sink;
+
+  sink = setup_appsink ();
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+  fail_if (gst_app_sink_is_eos (GST_APP_SINK (sink)));
+
+  /* send EOS event */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  fail_unless (gst_app_sink_is_eos (GST_APP_SINK (sink)));
+
+  ASSERT_SET_STATE (sink, GST_STATE_PAUSED, GST_STATE_CHANGE_SUCCESS);
+  fail_unless (gst_app_sink_is_eos (GST_APP_SINK (sink)));
+
+  /* transition from PAUSED to READY should reset EOS flag */
+  ASSERT_SET_STATE (sink, GST_STATE_READY, GST_STATE_CHANGE_SUCCESS);
+  fail_if (gst_app_sink_is_eos (GST_APP_SINK (sink)));
+
+  ASSERT_SET_STATE (sink, GST_STATE_PAUSED, GST_STATE_CHANGE_ASYNC);
+  fail_if (gst_app_sink_is_eos (GST_APP_SINK (sink)));
+
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+
+  cleanup_appsink (sink);
+}
+
+GST_END_TEST;
+
 struct TestBufferingLimitsParams
 {
   guint64 max_time;
@@ -1270,6 +1301,7 @@ appsink_suite (void)
   tcase_add_test (tc_chain, test_caps_before_flush_race_condition);
   tcase_add_test (tc_chain, test_query_allocation_callback);
   tcase_add_test (tc_chain, test_query_allocation_signals);
+  tcase_add_test (tc_chain, test_eos_reset);
   tcase_add_loop_test (tc_chain, test_buffering_limits, 0,
       G_N_ELEMENTS (test_buffering_limit_params) * 2);
 

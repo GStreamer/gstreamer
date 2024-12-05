@@ -267,6 +267,8 @@ static gboolean gst_app_sink_setcaps (GstBaseSink * sink, GstCaps * caps);
 static GstCaps *gst_app_sink_getcaps (GstBaseSink * psink, GstCaps * filter);
 static gboolean gst_app_sink_propose_allocation (GstBaseSink * bsink,
     GstQuery * query);
+static GstStateChangeReturn gst_app_sink_change_state (GstElement * element,
+    GstStateChange transition);
 
 static guint gst_app_sink_signals[LAST_SIGNAL] = { 0 };
 
@@ -741,6 +743,8 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_app_sink_template);
+
+  element_class->change_state = gst_app_sink_change_state;
 
   basesink_class->unlock = gst_app_sink_unlock_start;
   basesink_class->unlock_stop = gst_app_sink_unlock_stop;
@@ -2692,6 +2696,32 @@ gst_app_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
   g_clear_pointer (&callbacks, callbacks_unref);
   g_clear_pointer (&simple_callbacks, gst_app_sink_simple_callbacks_unref);
+
+  return ret;
+}
+
+static GstStateChangeReturn
+gst_app_sink_change_state (GstElement * element, GstStateChange transition)
+{
+  GstAppSink *appsink = GST_APP_SINK_CAST (element);
+  GstAppSinkPrivate *priv = appsink->priv;
+
+  GstStateChangeReturn ret;
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE) {
+    return ret;
+  }
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      g_mutex_lock (&priv->mutex);
+      priv->is_eos = FALSE;
+      g_mutex_unlock (&priv->mutex);
+      break;
+    default:
+      break;
+  }
 
   return ret;
 }
