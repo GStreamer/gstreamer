@@ -42,6 +42,12 @@ G_BEGIN_DECLS
 typedef struct _GstLeaksTracer GstLeaksTracer;
 typedef struct _GstLeaksTracerClass GstLeaksTracerClass;
 
+typedef enum {
+  GST_LEAKS_STACK_TRACE_DISABLED = -1,
+  GST_LEAKS_STACK_TRACE_NONE = GST_STACK_TRACE_SHOW_NONE,
+  GST_LEAKS_STACK_TRACE_FULL = GST_STACK_TRACE_SHOW_FULL
+} GstLeaksStackTraceFlags;
+
 /**
  * GstLeaksTracer:
  *
@@ -71,7 +77,7 @@ struct _GstLeaksTracer {
   gboolean check_refs;
   gboolean log_leaks;
 
-  GstStackTraceFlags trace_flags;
+  GstLeaksStackTraceFlags trace_flags;
 };
 
 struct _GstLeaksTracerClass {

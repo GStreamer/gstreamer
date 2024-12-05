@@ -44,15 +44,9 @@
  * `GST_TRACERS=leaks;latency`, and multiple instances of the same tracer can be
  * active at the same time.
  *
- * Parameters can also be passed to each tracer. The leaks tracer currently
- * accepts five params:
- * 1. filters: (string) to filter which objects to record
- * 2. check-refs: (boolean) whether to record every location where a leaked
- *    object was reffed and unreffed
- * 3. stack-traces-flags: (string) full or none; see: #GstStackTraceFlags
- * 4. name: (string) set a name for the tracer object itself
- * 5. log-leaks-on-deinit: (boolean) whether to report all leaks on
- *    gst_deinit() by printing them in the debug log; "true" by default
+ * The tracer properties can also be set to each tracer by passing the object
+ * properties in the list of parameters to the tracer. This uses the same
+ * serialization format as #GstStructure (without a name).
  *
  * Examples:
  * ```
@@ -90,7 +84,40 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_LOG_LEAKS TRUE  /* for backwards-compat */
+#define DEFAULT_LOG_LEAKS TRUE
+#define DEFAULT_CHECK_REFS FALSE
+
+#define GST_TYPE_LEAKS_STACK_TRACE_FLAGS (gst_leaks_stack_trace_flags_get_type())
+static GType
+gst_leaks_stack_trace_flags_get_type (void)
+{
+  static GType type = 0;
+  static const GFlagsValue values[] = {
+    {GST_LEAKS_STACK_TRACE_DISABLED, "Disabled", "disabled"},
+    {GST_LEAKS_STACK_TRACE_NONE, "None", "none"},
+    {GST_LEAKS_STACK_TRACE_FULL, "Full", "full"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_flags_register_static ("GstLeaksStackTraceFlags", values);
+  }
+  return type;
+}
+
+#define DEFAULT_STACK_TRACE_FLAGS GST_LEAKS_STACK_TRACE_DISABLED
+
+enum
+{
+  PROP_0,
+  PROP_FILTERS,
+  PROP_CHECK_REFS,
+  PROP_STACK_TRACES_FLAGS,
+  PROP_LOG_LEAKS_ON_DEINIT,
+  N_PROPERTIES
+};
+
+static GParamSpec *properties[N_PROPERTIES] = { NULL, };
 
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_leaks_debug, "leaks", 0, "leaks tracer");
@@ -159,39 +186,6 @@ object_refing_infos_free (ObjectRefingInfos * infos)
 }
 
 static void
-set_print_stack_trace_from_string (GstLeaksTracer * self, const gchar * str)
-{
-  gchar *trace;
-
-  /* Test if we can retrieve backtrace */
-  trace = gst_debug_get_stack_trace (FALSE);
-  if (!trace)
-    return;
-
-  g_free (trace);
-
-  if (g_strcmp0 (str, "full") == 0)
-    self->trace_flags = GST_STACK_TRACE_SHOW_FULL;
-  else
-    self->trace_flags = GST_STACK_TRACE_SHOW_NONE;
-}
-
-static void
-set_print_stack_trace (GstLeaksTracer * self, GstStructure * params)
-{
-  const gchar *trace_flags = g_getenv ("GST_LEAKS_TRACER_STACK_TRACE");
-
-  self->trace_flags = -1;
-  if (!trace_flags && params)
-    trace_flags = gst_structure_get_string (params, "stack-traces-flags");
-
-  if (!trace_flags)
-    return;
-
-  set_print_stack_trace_from_string (self, trace_flags);
-}
-
-static void
 set_filters (GstLeaksTracer * self, const gchar * filters)
 {
   guint i;
@@ -224,51 +218,6 @@ set_filters (GstLeaksTracer * self, const gchar * filters)
   }
 
   g_strfreev (tmp);
-}
-
-static void
-set_params_from_structure (GstLeaksTracer * self, GstStructure * params)
-{
-  const gchar *filters, *name;
-
-  filters = gst_structure_get_string (params, "filters");
-  if (filters)
-    set_filters (self, filters);
-
-  name = gst_structure_get_string (params, "name");
-  if (name)
-    gst_object_set_name (GST_OBJECT (self), name);
-
-  gst_structure_get_boolean (params, "check-refs", &self->check_refs);
-  gst_structure_get_boolean (params, "log-leaks-on-deinit", &self->log_leaks);
-}
-
-static void
-set_params (GstLeaksTracer * self)
-{
-  gchar *params, *tmp;
-  GstStructure *params_struct = NULL;
-
-  g_object_get (self, "params", &params, NULL);
-  if (!params)
-    goto set_stacktrace;
-
-  tmp = g_strdup_printf ("leaks,%s", params);
-  params_struct = gst_structure_from_string (tmp, NULL);
-  g_free (tmp);
-
-  if (params_struct)
-    set_params_from_structure (self, params_struct);
-  else
-    set_filters (self, params);
-
-  g_free (params);
-
-set_stacktrace:
-  set_print_stack_trace (self, params_struct);
-
-  if (params_struct)
-    gst_structure_free (params_struct);
 }
 
 static gboolean
@@ -415,8 +364,9 @@ handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
   }
 
   GST_OBJECT_LOCK (self);
-  if ((gint) self->trace_flags != -1)
-    infos->creation_trace = gst_debug_get_stack_trace (self->trace_flags);
+  if ((gint) self->trace_flags != GST_LEAKS_STACK_TRACE_DISABLED)
+    infos->creation_trace =
+        gst_debug_get_stack_trace ((GstStackTraceFlags) self->trace_flags);
 
   g_hash_table_insert (self->objects, object, infos);
 
@@ -470,8 +420,9 @@ handle_object_reffed (GstLeaksTracer * self, gpointer object, GType type,
   refinfo->ts = ts;
   refinfo->new_refcount = new_refcount;
   refinfo->reffed = reffed;
-  if ((gint) self->trace_flags != -1)
-    refinfo->trace = gst_debug_get_stack_trace (self->trace_flags);
+  if ((gint) self->trace_flags != GST_LEAKS_STACK_TRACE_DISABLED)
+    refinfo->trace =
+        gst_debug_get_stack_trace ((GstStackTraceFlags) self->trace_flags);
 
   infos->refing_infos = g_list_prepend (infos->refing_infos, refinfo);
 
@@ -523,6 +474,8 @@ static void
 gst_leaks_tracer_init (GstLeaksTracer * self)
 {
   self->log_leaks = DEFAULT_LOG_LEAKS;
+  self->check_refs = DEFAULT_CHECK_REFS;
+  self->trace_flags = DEFAULT_STACK_TRACE_FLAGS;
   self->objects = g_hash_table_new_full (NULL, NULL, NULL,
       (GDestroyNotify) object_refing_infos_free);
 
@@ -544,8 +497,6 @@ gst_leaks_tracer_constructed (GObject * object)
 {
   GstLeaksTracer *self = GST_LEAKS_TRACER (object);
   GstTracer *tracer = GST_TRACER (object);
-
-  set_params (self);
 
   gst_tracing_register_hook (tracer, "mini-object-created",
       G_CALLBACK (mini_object_created_cb));
@@ -1021,6 +972,7 @@ gst_leaks_tracer_get_live_objects (GstLeaksTracer * self)
 
   g_value_init (&live_objects, GST_TYPE_LIST);
 
+  GST_TRACE_OBJECT (self, "start listing currently alive objects");
   GST_OBJECT_LOCK (self);
   process_leaks (self, &live_objects);
   GST_OBJECT_UNLOCK (self);
@@ -1139,12 +1091,149 @@ gst_leaks_tracer_activity_stop_tracking (GstLeaksTracer * self)
 }
 
 static void
+gst_leaks_tracer_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstLeaksTracer *self = GST_LEAKS_TRACER (object);
+
+  GST_OBJECT_LOCK (self);
+  switch (prop_id) {
+    case PROP_CHECK_REFS:
+      g_value_set_boolean (value, self->check_refs);
+      break;
+    case PROP_STACK_TRACES_FLAGS:
+      g_value_set_flags (value, self->trace_flags);
+      break;
+    case PROP_LOG_LEAKS_ON_DEINIT:
+      g_value_set_boolean (value, self->log_leaks);
+      break;
+    case PROP_FILTERS:
+    {
+      GString *str = g_string_new ("");
+      if (self->filter) {
+        guint i;
+        for (i = 0; i < self->filter->len; i++) {
+          GType type = g_array_index (self->filter, GType, i);
+          if (i > 0)
+            g_string_append_c (str, ',');
+          g_string_append (str, g_type_name (type));
+        }
+      }
+      g_value_take_string (value, g_string_free (str, FALSE));
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (self);
+}
+
+static void
+gst_leaks_tracer_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstLeaksTracer *self = GST_LEAKS_TRACER (object);
+
+  GST_OBJECT_LOCK (self);
+  switch (prop_id) {
+    case PROP_CHECK_REFS:
+      self->check_refs = g_value_get_boolean (value);
+      break;
+    case PROP_STACK_TRACES_FLAGS:
+      self->trace_flags = g_value_get_flags (value);
+      break;
+    case PROP_LOG_LEAKS_ON_DEINIT:
+      self->log_leaks = g_value_get_boolean (value);
+      break;
+    case PROP_FILTERS:
+      if (self->filter) {
+        g_array_free (self->filter, TRUE);
+        self->filter = NULL;
+      }
+      const gchar *filters = g_value_get_string (value);
+      if (filters) {
+        set_filters (self, g_value_get_string (value));
+      }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (self);
+}
+
+static void
 gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
+  gst_tracer_class_set_use_structure_params (GST_TRACER_CLASS (klass), TRUE);
+
   gobject_class->constructed = gst_leaks_tracer_constructed;
   gobject_class->finalize = gst_leaks_tracer_finalize;
+  gobject_class->get_property = gst_leaks_tracer_get_property;
+  gobject_class->set_property = gst_leaks_tracer_set_property;
+
+  /**
+   * GstLeaksTracer:filters:
+   *
+   * Comma-separated list of GObject types to track. Only objects of these types
+   * or their subtypes will be monitored for leaks.
+   *
+   * Example: "GstEvent,GstMessage" to only track GstEvent and GstMessage objects.
+   *
+   * Since: 1.26
+   */
+  properties[PROP_FILTERS] = g_param_spec_string ("filters",
+      "Type Filters",
+      "Comma-separated list of GObject types to track", NULL,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY);
+
+  /**
+   * GstLeaksTracer:check-refs:
+   *
+   * Whether to record every location where a leaked object was reffed and unreffed.
+   * When enabled, the tracer will collect stack traces for every ref/unref operation
+   * on tracked objects.
+   *
+   * Since: 1.26
+   */
+  properties[PROP_CHECK_REFS] = g_param_spec_boolean ("check-refs",
+      "Check References",
+      "Whether to track ref/unref operations", DEFAULT_CHECK_REFS,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY);
+
+  /**
+   * GstLeaksTracer:stack-traces-flags:
+   *
+   * Stack trace collection mode. Controls whether and how stack traces are collected
+   * for object allocations and ref/unref operations.
+   *
+   * Since: 1.26
+   */
+  properties[PROP_STACK_TRACES_FLAGS] =
+      g_param_spec_flags ("stack-traces-flags", "Stack Trace Flags",
+      "Stack trace collection mode", GST_TYPE_LEAKS_STACK_TRACE_FLAGS,
+      DEFAULT_STACK_TRACE_FLAGS,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY);
+
+  /**
+   * GstLeaksTracer:log-leaks-on-deinit:
+   *
+   * Whether to report all leaks on gst_deinit() by printing them in the debug log.
+   * When enabled, any detected leaks will be logged under GST_TRACER:7 when the
+   * GStreamer is being shut down.
+   *
+   * Since: 1.26
+   */
+  properties[PROP_LOG_LEAKS_ON_DEINIT] =
+      g_param_spec_boolean ("log-leaks-on-deinit", "Log Leaks",
+      "Whether to log leaks on shutdown", DEFAULT_LOG_LEAKS,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY);
+
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, properties);
 
   tr_alive = gst_tracer_record_new ("object-alive.class",
       RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS, RECORD_FIELD_DESC,
