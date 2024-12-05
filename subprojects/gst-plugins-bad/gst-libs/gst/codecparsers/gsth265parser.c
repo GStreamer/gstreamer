@@ -1400,13 +1400,12 @@ gst_h265_parser_new (void)
  * gst_h265_parser_free:
  * @parser: the #GstH265Parser to free
  *
- * Frees @parser and sets it to %NULL
+ * Frees @parser
  */
 void
 gst_h265_parser_free (GstH265Parser * parser)
 {
   g_free (parser);
-  parser = NULL;
 }
 
 /**
