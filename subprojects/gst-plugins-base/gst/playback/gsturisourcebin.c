@@ -3051,6 +3051,10 @@ handle_message (GstBin * bin, GstMessage * msg)
                   gst_message_new_stream_collection ((GstObject *) urisrc,
                   aggregated);
             }
+            if (aggregated) {
+              /* Remove ref obtained from aggregate_collection() */
+              gst_object_unref (aggregated);
+            }
             gst_object_unref (collection);
           }
         }
