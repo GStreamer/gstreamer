@@ -20,6 +20,7 @@
 """
 The GstValidate default testsuite
 """
+from __future__ import annotations
 
 import os
 import glob
@@ -30,8 +31,11 @@ import subprocess
 from testsuiteutils import update_assets
 from launcher import utils
 from launcher.baseclasses import MediaFormatCombination
-from launcher.apps.gstvalidate import GstValidateSimpleTestsGenerator
+from launcher.apps.gstvalidate import GstValidateSimpleTestsGenerator, GstValidateTestManager
 from validate_known_issues import KNOWN_ISSUES
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from launcher.main import LauncherConfig
 
 
 TEST_MANAGER = "validate"
@@ -96,7 +100,7 @@ def add_accurate_seek_tests(test_manager, media_dir, extra_data):
     )
 
 
-def setup_tests(test_manager, options):
+def setup_tests(test_manager: GstValidateTestManager, options: LauncherConfig):
     testsuite_dir = os.path.realpath(os.path.join(os.path.dirname(__file__)))
     media_dir = os.path.realpath(os.path.join(testsuite_dir, os.path.pardir, "medias"))
 

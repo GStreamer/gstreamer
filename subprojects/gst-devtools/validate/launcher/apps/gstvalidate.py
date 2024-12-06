@@ -22,6 +22,7 @@ import os
 import copy
 import sys
 import time
+from types import SimpleNamespace
 import urllib.parse
 import shlex
 import socket
@@ -33,7 +34,7 @@ import math
 from launcher.loggable import Loggable, error
 
 from launcher.baseclasses import GstValidateTest, Test, \
-    ScenarioManager, NamedDic, GstValidateTestsGenerator, \
+    ScenarioManager, GstValidateTestsGenerator, \
     GstValidateMediaDescriptor, GstValidateEncodingTestInterface, \
     GstValidateBaseTestManager, MediaDescriptor, MediaFormatCombination, VariableFramerateMode
 
@@ -488,8 +489,8 @@ class GstValidatePlaybinTestsGenerator(GstValidatePipelineTestsGenerator):
                               )
 
                 if test_rtsp and protocol == Protocols.FILE and not minfo.media_descriptor.is_image():
-                    rtspminfo = NamedDic({"path": minfo.media_descriptor.get_path(),
-                                          "media_descriptor": GstValidateRTSPMediaDescriptor(minfo.media_descriptor.get_path())})
+                    rtspminfo = SimpleNamespace(path=minfo.media_descriptor.get_path(),
+                                                media_descriptor=GstValidateRTSPMediaDescriptor(minfo.media_descriptor.get_path()))
                     if not rtspminfo.media_descriptor.is_compatible(scenario):
                         self.debug("Skipping (media descriptor is not compatible for rtsp test): %s", fname)
                         continue
@@ -1133,8 +1134,8 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
             special_scenarios = self.scenarios_manager.find_special_scenarios(
                 scenario_bname)
             self._uris.append((uri,
-                               NamedDic({"path": media_info,
-                                         "media_descriptor": media_descriptor}),
+                               SimpleNamespace(path=media_info,
+                                               media_descriptor=media_descriptor),
                                special_scenarios))
         except configparser.NoOptionError as e:
             self.debug("Exception: %s for %s", e, media_info)
@@ -1276,36 +1277,20 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
         """
         Registers default test scenarios
         """
-        if self.options.long_limit != 0:
-            self.add_scenarios([
-                "play_15s",
-                "reverse_playback",
-                "fast_forward",
-                "seek_forward",
-                "seek_backward",
-                "seek_with_stop",
-                "switch_audio_track",
-                "switch_audio_track_while_paused",
-                "switch_subtitle_track",
-                "switch_subtitle_track_while_paused",
-                "disable_subtitle_track_while_paused",
-                "change_state_intensive",
-                "scrub_forward_seeking"])
-        else:
-            self.add_scenarios([
-                "play_15s",
-                "reverse_playback",
-                "fast_forward",
-                "seek_forward",
-                "seek_backward",
-                "seek_with_stop",
-                "switch_audio_track",
-                "switch_audio_track_while_paused",
-                "switch_subtitle_track",
-                "switch_subtitle_track_while_paused",
-                "disable_subtitle_track_while_paused",
-                "change_state_intensive",
-                "scrub_forward_seeking"])
+        self.add_scenarios([
+            "play_15s",
+            "reverse_playback",
+            "fast_forward",
+            "seek_forward",
+            "seek_backward",
+            "seek_with_stop",
+            "switch_audio_track",
+            "switch_audio_track_while_paused",
+            "switch_subtitle_track",
+            "switch_subtitle_track_while_paused",
+            "disable_subtitle_track_while_paused",
+            "change_state_intensive",
+            "scrub_forward_seeking"])
 
     def register_default_encoding_formats(self):
         """
@@ -1387,7 +1372,12 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
         if self._default_generators_registered:
             return
 
-        self.add_generators([GstValidatePlaybinTestsGenerator(self),
-                             GstValidateMediaCheckTestsGenerator(self),
-                             GstValidateTranscodingTestsGenerator(self)])
+        self.add_generators([
+            # <testsuitename>.*.playback.*
+            GstValidatePlaybinTestsGenerator(self),
+            # <testsuitename>.*.media_check.*
+            GstValidateMediaCheckTestsGenerator(self),
+            # <testsuitename>.*.transcode.to_*.*
+            GstValidateTranscodingTestsGenerator(self)
+        ])
         self._default_generators_registered = True

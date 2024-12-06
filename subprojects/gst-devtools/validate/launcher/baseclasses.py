@@ -2402,14 +2402,6 @@ class _TestsLauncher(Loggable):
                 return True
 
 
-class NamedDic(object):
-
-    def __init__(self, props):
-        if props:
-            for name, value in props.items():
-                setattr(self, name, value)
-
-
 class Scenario(object):
 
     def __init__(self, name, props, path=None):
