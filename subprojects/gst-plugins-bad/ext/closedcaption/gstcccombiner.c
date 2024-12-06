@@ -90,6 +90,9 @@ gst_cccombiner_input_meta_processing_get_type (void)
     {CCCOMBINER_INPUT_PROCESSING_FAVOR,
           "discard aggregated CC when input video buffers hold CC metas already",
         "favor"},
+    {CCCOMBINER_INPUT_PROCESSING_FORCE,
+          "discard aggregated CC even when input video buffers do not hold CC",
+        "force"},
     {0, NULL, NULL},
   };
 
@@ -678,6 +681,12 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
             self->current_frame_captions->len);
         g_array_set_size (self->current_frame_captions, 0);
       }
+      break;
+    case CCCOMBINER_INPUT_PROCESSING_FORCE:
+      GST_LOG_OBJECT (self,
+          "Forced input captions, dropping %d dequeued captions",
+          self->current_frame_captions->len);
+      g_array_set_size (self->current_frame_captions, 0);
       break;
   }
 

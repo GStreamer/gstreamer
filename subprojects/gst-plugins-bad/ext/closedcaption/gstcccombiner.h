@@ -47,6 +47,7 @@ typedef struct _GstCCCombinerClass GstCCCombinerClass;
  * @CCCOMBINER_INPUT_PROCESSING_APPEND: append aggregated CC to existing metas on video buffers
  * @CCCOMBINER_INPUT_PROCESSING_DROP: drop existing CC metas on input video buffers
  * @CCCOMBINER_INPUT_PROCESSING_FAVOR: discard aggregated CC when input video buffers hold CC metas already
+ * @CCCOMBINER_INPUT_PROCESSING_FORCE: discard aggregated CC even when input video buffers do not hold CC meta
  *
  * Possible processing types for the input-meta-processing property.
  *
@@ -56,6 +57,7 @@ typedef enum {
   CCCOMBINER_INPUT_PROCESSING_APPEND = 0,
   CCCOMBINER_INPUT_PROCESSING_DROP,
   CCCOMBINER_INPUT_PROCESSING_FAVOR,
+  CCCOMBINER_INPUT_PROCESSING_FORCE,
 } GstCCCombinerInputProcessing;
 
 struct _GstCCCombiner
