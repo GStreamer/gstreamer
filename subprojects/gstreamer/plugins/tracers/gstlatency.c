@@ -539,55 +539,68 @@ do_query_post (GstLatencyTracer * tracer, GstClockTime ts, GstPad * pad,
 
 /* tracer class */
 
+/* Define the GType for GstLatencyTracerFlags */
+static GType
+gst_latency_tracer_flags_get_type (void)
+{
+  static GType type = 0;
+  static const GFlagsValue values[] = {
+    {GST_LATENCY_TRACER_FLAG_PIPELINE, "Trace pipeline latency", "pipeline"},
+    {GST_LATENCY_TRACER_FLAG_ELEMENT, "Trace per-element latency", "element"},
+    {GST_LATENCY_TRACER_FLAG_REPORTED_ELEMENT, "Trace reported element latency",
+        "reported"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_flags_register_static ("GstLatencyTracerFlags", values);
+  }
+  return type;
+}
+
+enum
+{
+  PROP_0,
+  PROP_FLAGS,
+  PROP_LAST
+};
+
+static void
+gst_latency_tracer_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstLatencyTracer *self = GST_LATENCY_TRACER (object);
+
+  switch (prop_id) {
+    case PROP_FLAGS:
+      g_value_set_flags (value, self->flags);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_latency_tracer_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstLatencyTracer *self = GST_LATENCY_TRACER (object);
+
+  switch (prop_id) {
+    case PROP_FLAGS:
+      self->flags = g_value_get_flags (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 static void
 gst_latency_tracer_constructed (GObject * object)
 {
-  GstLatencyTracer *self = GST_LATENCY_TRACER (object);
-  gchar *params, *tmp;
-  GstStructure *params_struct = NULL;
-
-  g_object_get (self, "params", &params, NULL);
-
-  if (!params)
-    return;
-
-  tmp = g_strdup_printf ("latency,%s", params);
-  params_struct = gst_structure_from_string (tmp, NULL);
-  g_free (tmp);
-
-  if (params_struct) {
-    const gchar *name, *flags;
-    /* Set the name if assigned */
-    name = gst_structure_get_string (params_struct, "name");
-    if (name)
-      gst_object_set_name (GST_OBJECT (self), name);
-
-    /* Read the flags if available */
-    flags = gst_structure_get_string (params_struct, "flags");
-
-    self->flags = 0;
-
-    if (flags) {
-      GStrv split = g_strsplit (flags, "+", -1);
-      gint i;
-
-      for (i = 0; split[i]; i++) {
-        if (g_str_equal (split[i], "pipeline"))
-          self->flags |= GST_LATENCY_TRACER_FLAG_PIPELINE;
-        else if (g_str_equal (split[i], "element"))
-          self->flags |= GST_LATENCY_TRACER_FLAG_ELEMENT;
-        else if (g_str_equal (split[i], "reported"))
-          self->flags |= GST_LATENCY_TRACER_FLAG_REPORTED_ELEMENT;
-        else
-          GST_WARNING ("Invalid latency tracer flags %s", split[i]);
-      }
-
-      g_strfreev (split);
-    }
-    gst_structure_free (params_struct);
-  }
-
-  g_free (params);
+  G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 
 static void
@@ -595,7 +608,18 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
+  gst_tracer_class_set_use_structure_params (GST_TRACER_CLASS (klass), TRUE);
+
   gobject_class->constructed = gst_latency_tracer_constructed;
+  gobject_class->get_property = gst_latency_tracer_get_property;
+  gobject_class->set_property = gst_latency_tracer_set_property;
+
+  g_object_class_install_property (gobject_class, PROP_FLAGS,
+      g_param_spec_flags ("flags", "Flags",
+          "Flags to control what latency measurements to perform",
+          gst_latency_tracer_flags_get_type (),
+          GST_LATENCY_TRACER_FLAG_PIPELINE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 
   latency_probe_id = g_quark_from_static_string ("latency_probe.id");
   sub_latency_probe_id = g_quark_from_static_string ("sub_latency_probe.id");
