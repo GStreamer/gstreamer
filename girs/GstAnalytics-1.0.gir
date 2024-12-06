@@ -352,14 +352,11 @@ identified by @id is stored.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">First analysis-meta contain second analysis-meta.</doc>
       </member>
       <member name="relate_to" value="8" c:identifier="GST_ANALYTICS_REL_TYPE_RELATE_TO">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">First analysis-meta relate to second analysis-meta.</doc>
       </member>
-      <member name="n_to_n" value="16" c:identifier="GST_ANALYTICS_REL_TYPE_N_TO_N">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Used to express relations between two groups
-   where each group's components correspond to the respective component in the
-   other group. Since: 1.26</doc>
-      </member>
-      <member name="last" value="32" c:identifier="GST_ANALYTICS_REL_TYPE_LAST">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">reserved</doc>
+      <member name="n_to_n" value="16" c:identifier="GST_ANALYTICS_REL_TYPE_N_TO_N" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Used to express relations between two groups where each group's components
+correspond to the respective component in the other group.</doc>
       </member>
       <member name="any" value="2147483647" c:identifier="GST_ANALYTICS_REL_TYPE_ANY">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Only use for criteria.</doc>
