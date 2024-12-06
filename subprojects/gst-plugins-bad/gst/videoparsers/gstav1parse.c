@@ -86,7 +86,7 @@ GST_DEBUG_CATEGORY (av1_parse_debug);
 
 /* We combine the stream format and the alignment
    together. When stream format is annexb, the
-   alignment must be TU. */
+   alignment must be TU or byte. */
 typedef enum
 {
   GST_AV1_PARSE_ALIGN_ERROR = -1,
@@ -96,6 +96,7 @@ typedef enum
   GST_AV1_PARSE_ALIGN_FRAME,
   GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT,
   GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B,
+  GST_AV1_PARSE_ALIGN_ANNEX_B,
 } GstAV1ParseAligment;
 
 struct _GstAV1Parse
@@ -538,6 +539,7 @@ gst_av1_parse_alignment_to_steam_format_string (GstAV1ParseAligment align)
     case GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT:
     case GST_AV1_PARSE_ALIGN_FRAME:
       return "obu-stream";
+    case GST_AV1_PARSE_ALIGN_ANNEX_B:
     case GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B:
       return "annexb";
     default:
@@ -553,6 +555,7 @@ gst_av1_parse_alignment_to_string (GstAV1ParseAligment align)
 {
   switch (align) {
     case GST_AV1_PARSE_ALIGN_BYTE:
+    case GST_AV1_PARSE_ALIGN_ANNEX_B:
       return "byte";
     case GST_AV1_PARSE_ALIGN_OBU:
       return "obu";
@@ -578,11 +581,12 @@ gst_av1_parse_alignment_from_string (const gchar * align,
 
   if (stream_format) {
     if (g_strcmp0 (stream_format, "annexb") == 0) {
-      if (align && g_strcmp0 (align, "tu") != 0) {
-        /* annex b stream must align to TU. */
-        return GST_AV1_PARSE_ALIGN_ERROR;
-      } else {
+      if (align && g_strcmp0 (align, "tu") == 0) {
         return GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B;
+      } else if (align && g_strcmp0 (align, "none") == 0) {
+        return GST_AV1_PARSE_ALIGN_ANNEX_B;
+      } else {
+        return GST_AV1_PARSE_ALIGN_ERROR;
       }
     } else if (g_strcmp0 (stream_format, "obu-stream") != 0) {
       /* unrecognized */
@@ -643,6 +647,10 @@ gst_av1_parse_caps_has_alignment (GstCaps * caps, GstAV1ParseAligment alignment)
       break;
     case GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B:
       cmp_align_str = "tu";
+      cmp_stream_str = "annexb";
+      break;
+    case GST_AV1_PARSE_ALIGN_ANNEX_B:
+      cmp_align_str = "none";
       cmp_stream_str = "annexb";
       break;
     default:
@@ -1036,10 +1044,12 @@ gst_av1_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
 
   self->in_align = align;
 
-  if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT)
+  if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT
+      || self->in_align == GST_AV1_PARSE_ALIGN_ANNEX_B)
     self->detect_annex_b = TRUE;
 
-  if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
+  if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B
+      || self->in_align == GST_AV1_PARSE_ALIGN_ANNEX_B) {
     gst_av1_parser_reset (self->parser, TRUE);
   } else {
     gst_av1_parser_reset (self->parser, FALSE);
@@ -2195,6 +2205,8 @@ gst_av1_parse_handle_frame (GstBaseParse * parse,
     upstream_caps =
         gst_pad_peer_query_caps (GST_BASE_PARSE_SINK_PAD (self), NULL);
     if (upstream_caps) {
+      gboolean detect_annex_b = FALSE;
+
       if (!gst_caps_is_empty (upstream_caps)
           && !gst_caps_is_any (upstream_caps)) {
         GstAV1ParseAligment align;
@@ -2217,8 +2229,11 @@ gst_av1_parse_handle_frame (GstBaseParse * parse,
 
       gst_caps_unref (upstream_caps);
 
-      gst_av1_parser_reset (self->parser,
-          self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B);
+      if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B
+          || self->in_align == GST_AV1_PARSE_ALIGN_ANNEX_B)
+        detect_annex_b = TRUE;
+
+      gst_av1_parser_reset (self->parser, detect_annex_b);
     }
 
     if (self->in_align != GST_AV1_PARSE_ALIGN_NONE) {
@@ -2231,7 +2246,8 @@ gst_av1_parse_handle_frame (GstBaseParse * parse,
     }
   }
 
-  if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT
+  if ((self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT
+          || self->in_align == GST_AV1_PARSE_ALIGN_ANNEX_B)
       && self->detect_annex_b) {
     /* Only happend at the first time of handle_frame, try to
        recognize the annex b stream format. */
