@@ -649,7 +649,7 @@ gboolean
 gst_analytics_relation_meta_set_relation (GstAnalyticsRelationMeta * meta,
     GstAnalyticsRelTypes type, guint an_meta_first_id, guint an_meta_second_id)
 {
-  g_return_val_if_fail (type < GST_ANALYTICS_REL_TYPE_LAST, FALSE);
+  g_return_val_if_fail (type <= 0xFF, FALSE);
   g_return_val_if_fail (meta, FALSE);
   if (an_meta_first_id >= meta->rel_order
       || an_meta_second_id >= meta->rel_order) {

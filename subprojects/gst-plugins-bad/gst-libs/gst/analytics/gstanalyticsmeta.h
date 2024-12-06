@@ -169,8 +169,10 @@ GstAnalyticsRelationMetaInitParams;
  * @GST_ANALYTICS_REL_TYPE_NONE: No relation
  * @GST_ANALYTICS_REL_TYPE_IS_PART_OF: First analysis-meta is part of second analysis-meta
  * @GST_ANALYTICS_REL_TYPE_CONTAIN: First analysis-meta contain second analysis-meta.
- * @GST_ANALYTICS_REL_TYPE_RELATE: First analysis-meta relate to second analysis-meta.
- * @GST_ANALYTICS_REL_TYPE_LAST: reserved
+ * @GST_ANALYTICS_REL_TYPE_RELATE_TO: First analysis-meta relate to second analysis-meta.
+ * @GST_ANALYTICS_REL_TYPE_N_TO_N: Used to express relations between two groups
+ *    where each group's components correspond to the respective component in the
+ *    other group. Since: 1.26
  * @GST_ANALYTICS_REL_TYPE_ANY: Only use for criteria.
  *
  * Since: 1.24
@@ -181,7 +183,15 @@ typedef enum
   GST_ANALYTICS_REL_TYPE_IS_PART_OF = (1 << 1),
   GST_ANALYTICS_REL_TYPE_CONTAIN = (1 << 2),
   GST_ANALYTICS_REL_TYPE_RELATE_TO = (1 << 3),
-  GST_ANALYTICS_REL_TYPE_LAST = (1 << 4),
+  /**
+   * GST_ANALYTICS_REL_TYPE_N_TO_N:
+   *
+   * Used to express relations between two groups where each group's components
+   * correspond to the respective component in the other group.
+   *
+   * Since: 1.26
+   */
+  GST_ANALYTICS_REL_TYPE_N_TO_N = (1 << 4),
   GST_ANALYTICS_REL_TYPE_ANY = G_MAXINT
 } GstAnalyticsRelTypes;
 
