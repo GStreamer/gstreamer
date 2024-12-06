@@ -708,28 +708,28 @@ gst_decklink_get_mode_enum_from_bmd (BMDDisplayMode mode)
       displayMode = GST_DECKLINK_MODE_4320p60;
       break;
     case bmdMode8kDCI2398:
-      displayMode = GST_DECKLINK_MODE_4Kp2398;
+      displayMode = GST_DECKLINK_MODE_8Kp2398;
       break;
     case bmdMode8kDCI24:
-      displayMode = GST_DECKLINK_MODE_4Kp24;
+      displayMode = GST_DECKLINK_MODE_8Kp24;
       break;
     case bmdMode8kDCI25:
-      displayMode = GST_DECKLINK_MODE_4Kp25;
+      displayMode = GST_DECKLINK_MODE_8Kp25;
       break;
     case bmdMode8kDCI2997:
-      displayMode = GST_DECKLINK_MODE_4Kp2997;
+      displayMode = GST_DECKLINK_MODE_8Kp2997;
       break;
     case bmdMode8kDCI30:
-      displayMode = GST_DECKLINK_MODE_4Kp30;
+      displayMode = GST_DECKLINK_MODE_8Kp30;
       break;
     case bmdMode8kDCI50:
-      displayMode = GST_DECKLINK_MODE_4Kp50;
+      displayMode = GST_DECKLINK_MODE_8Kp50;
       break;
     case bmdMode8kDCI5994:
-      displayMode = GST_DECKLINK_MODE_4Kp5994;
+      displayMode = GST_DECKLINK_MODE_8Kp5994;
       break;
     case bmdMode8kDCI60:
-      displayMode = GST_DECKLINK_MODE_4Kp60;
+      displayMode = GST_DECKLINK_MODE_8Kp60;
       break;
     case bmdMode640x480p60:
       displayMode = GST_DECKLINK_MODE_640x480p60;
