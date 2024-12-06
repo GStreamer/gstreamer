@@ -109,11 +109,11 @@ few options to control how transcoding should be tested.
 * `--set-scenario`: Let you set a scenario, it can be a full path to a scenario file or
   the name of the scenario (name of the file without the `.scenario`
   extension).
-* `-l`, `--list-scenarios`: List the avalaible scenarios that can be run.
+* `-l`, `--list-scenarios`: List the available scenarios that can be run.
 * `--scenarios-defs-output-file`: The output file to store scenarios details. Implies
   `--list-scenario`.
-* `-t`, `--inspect-action-type`: Inspect the avalaible action types with which to write scenarios if
-  no parameter passed, it will list all avalaible action types
+* `-t`, `--inspect-action-type`: Inspect the available action types with which to write scenarios if
+  no parameter passed, it will list all available action types
   otherwize will print the full description of the wanted types.
 * `--set-configs`: Let you set a config scenario. The scenario needs to be set as
   `config`. You can specify a list of scenarios separated by `:`. It

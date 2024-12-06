@@ -168,7 +168,7 @@ girs_dir = join_paths(meson.global_source_root(), 'girs')
 
 codegen_enabled = false
 if not bindinate.found()
-    warning('Bindinator not usable as some required dependencies are not avalaible.')
+    warning('Bindinator not usable as some required dependencies are not available.')
 elif not fs.is_dir(girs_dir)
     message('Code generation disabled, gstreamer-sharp must be a GStreamer subproject.')
 else

@@ -29,7 +29,7 @@ Basically, asset is a way of avoiding duplicating data between object and avoid
 processing when the same processing would happen several times for an 2 different
 objects of a same type.
 
-    * There will be a listing of avalaible, ready to use assets
+    * There will be a listing of available, ready to use assets
     * Asset allow to create some particular types of object that implement the GESExtractable
       interface
     * Assets will hold metadatas
