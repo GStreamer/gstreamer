@@ -954,7 +954,14 @@ main (int argc, char *argv[])
       if (GST_IS_TRACER_FACTORY (feature)) {
         if (!f)
           g_string_append_printf (json, ",");
-        g_string_append_printf (json, "\"%s\": {}", GST_OBJECT_NAME (feature));
+
+        GstTracer *tracer =
+            g_object_new (gst_tracer_factory_get_tracer_type (GST_TRACER_FACTORY
+                (feature)), NULL);;
+        g_string_append_printf (json, "\"%s\": {", GST_OBJECT_NAME (feature));
+        _add_object_details (json, other_types, seen_other_types,
+            G_OBJECT (tracer), G_OBJECT_TYPE (tracer), G_OBJECT_TYPE (tracer));
+        g_string_append (json, "}");
         f = FALSE;
       }
     }
