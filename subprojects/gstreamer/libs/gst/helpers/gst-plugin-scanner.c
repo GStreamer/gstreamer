@@ -67,6 +67,8 @@ main (int argc, char *argv[])
   my_argv[0] = argv[0];
   my_argv[1] = (char *) "--gst-disable-registry-update";
 
+  g_unsetenv ("GST_TRACERS");
+
 #ifndef GST_DISABLE_REGISTRY
   _gst_disable_registry_cache = TRUE;
 #endif
