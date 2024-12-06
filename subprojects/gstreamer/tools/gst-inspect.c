@@ -452,6 +452,7 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
   guint num_properties, i;
   gboolean readable;
   gboolean first_flag;
+  gboolean is_tracer = GST_IS_TRACER (obj);
 
   property_specs = g_object_class_list_properties (obj_class, &num_properties);
   g_sort_array (property_specs, num_properties, sizeof (gpointer),
@@ -471,6 +472,10 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
     if (obj == NULL && (owner_type == G_TYPE_OBJECT
             || owner_type == GST_TYPE_OBJECT || owner_type == GST_TYPE_PAD))
       continue;
+
+    if (is_tracer && !g_strcmp0 (param->name, "params")) {
+      continue;
+    }
 
     g_value_init (&value, param->value_type);
 
@@ -1938,6 +1943,15 @@ print_tracer_info (GstPluginFeature * feature, gboolean print_names)
 
   print_hierarchy (G_OBJECT_TYPE (tracer), 0, &maxlevel);
   print_interfaces (G_OBJECT_TYPE (tracer));
+  print_object_properties_info (G_OBJECT (tracer),
+      G_OBJECT_GET_CLASS (tracer), "Tracer Properties");
+
+  n_print ("\n%sNOTE: those properties can be set using the `GST_TRACERS`"
+      " environment variable as follow:%s"
+      "\n\n    $ %sGST_TRACERS%s=\"%s%s%s(%sproperty1-name%s=value1,%sproperty2-name%s=value2));....\"",
+      HEADING_COLOR, RESET_COLOR, DATATYPE_COLOR, RESET_COLOR,
+      HEADING_COLOR, GST_OBJECT_NAME (factory), RESET_COLOR,
+      PROP_NAME_COLOR, RESET_COLOR, PROP_NAME_COLOR, RESET_COLOR);
 
   /* TODO: list what hooks it registers
    * - the data is available in gsttracerutils, we need to iterate the
