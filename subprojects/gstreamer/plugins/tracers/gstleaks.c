@@ -1322,7 +1322,7 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
           log_live_objects), NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
-   * GstLeaksTracer:::activity-start-tracking
+   * GstLeaksTracer::activity-start-tracking:
    * @leakstracer: the leaks tracer object to emit this signal on
    *
    * Start storing information about all objects that are being created or
@@ -1340,7 +1340,7 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
       G_TYPE_NONE);
 
   /**
-   * GstLeaksTracer:::activity-get-checkpoint
+   * GstLeaksTracer::activity-get-checkpoint:
    * @leakstracer: the leaks tracer object to emit this signal on
    *
    * You must call this after calling `activity-start-tracking` and you should
@@ -1370,7 +1370,7 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
       G_TYPE_NONE);
 
   /**
-   * GstLeaksTracer:::activity-log-checkpoint
+   * GstLeaksTracer::activity-log-checkpoint:
    * @leakstracer: the leaks tracer object to emit this signal on
    *
    * You must call this after calling `activity-start-tracking` and you should
@@ -1391,7 +1391,7 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
       G_TYPE_NONE);
 
   /**
-   * GstLeaksTracer:::activity-stop-tracking
+   * GstLeaksTracer::activity-stop-tracking:
    * @leakstracer: the leaks tracer object to emit this signal on
    *
    * Stop tracking all objects that are being created or removed, undoes the
