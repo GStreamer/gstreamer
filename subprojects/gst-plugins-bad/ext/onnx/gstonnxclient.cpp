@@ -224,6 +224,7 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
       env =
           Ort::Env (OrtLoggingLevel::ORT_LOGGING_LEVEL_WARNING,
           "GstOnnxNamespace");
+      env.DisableTelemetryEvents();
       session = new Ort::Session (env, modelFile.c_str (), sessionOptions);
       auto inputTypeInfo = session->GetInputTypeInfo (0);
       std::vector < int64_t > inputDims =
