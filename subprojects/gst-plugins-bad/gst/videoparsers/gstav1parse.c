@@ -1159,7 +1159,7 @@ gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
     gst_buffer_unref (buf);
 
     gst_av1_parse_update_src_caps (self, NULL);
-    GST_LOG_OBJECT (self, "comsumed %d, output one buffer with size %"
+    GST_LOG_OBJECT (self, "consumed %d, output one buffer with size %"
         G_GSSIZE_FORMAT, finish_sz, sz);
     ret = gst_base_parse_finish_frame (GST_BASE_PARSE (self), frame, finish_sz);
 
