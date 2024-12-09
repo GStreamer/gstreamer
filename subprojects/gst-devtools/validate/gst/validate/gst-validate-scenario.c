@@ -1052,7 +1052,7 @@ _validate_sink_information (GstValidateScenario * scenario)
       all_sinks_ready = FALSE;
     else if (sink_info->segment.format == GST_FORMAT_TIME) {
       /* Are we in the middle of switching segments (from the current
-       * one, or to the next week) ? */
+       * one, or to the next seek) ? */
       if (sink_info->segment_seqnum == scenario->priv->current_seqnum ||
           sink_info->segment_seqnum == next_seqnum)
         transitioning = TRUE;
