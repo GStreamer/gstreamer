@@ -136,11 +136,14 @@ if build_gir
         {'name': 'audio', 'gir': audio_gir, 'lib': gstbadaudio_dep, 'prefix': 'bad-'},
         {'name': 'transcoder', 'gir': transcoder_gir, 'lib': gst_transcoder_dep},
         {'name': 'codecs', 'gir': codecs_gir, 'lib': gstcodecs_dep},
-        {'name': 'cuda', 'gir': gst_cuda_gir, 'lib': gstcuda_dep, 'c_source_patterns': ['*.h', '*.cpp']},
         {'name': 'dxva', 'gir': dxva_gir, 'lib': gstdxva_dep, 'c_source_patterns': ['*.h', '*.cpp']},
         {'name': 'mse', 'gir': mse_gir, 'lib': gstmse_dep, 'suffix': 'lib'},
         {'name': 'analytics', 'gir': analytics_gir, 'lib': gstanalytics_dep},
     ]
+
+    if get_variable('gst_cuda_gir', []).length() > 0
+        libs += [{'name': 'cuda', 'gir': gst_cuda_gir, 'lib': gstcuda_dep, 'c_source_patterns': ['*.h', '*.cpp']}]
+    endif
 
     if gstopencv_dep.found()
         libs += [
