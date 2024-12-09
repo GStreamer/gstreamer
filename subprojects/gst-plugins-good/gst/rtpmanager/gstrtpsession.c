@@ -2993,24 +2993,38 @@ gst_rtp_session_notify_twcc (RTPSession * sess,
 {
   GstRtpSession *rtpsession = GST_RTP_SESSION (user_data);
   GstEvent *event;
+  GstPad *send_rtp_src;
   GstPad *send_rtp_sink;
 
   GST_RTP_SESSION_LOCK (rtpsession);
   if ((send_rtp_sink = rtpsession->send_rtp_sink))
     gst_object_ref (send_rtp_sink);
+  if ((send_rtp_src = rtpsession->send_rtp_src))
+    gst_object_ref (send_rtp_src);
   if (rtpsession->priv->last_twcc_stats)
     gst_structure_free (rtpsession->priv->last_twcc_stats);
   rtpsession->priv->last_twcc_stats = twcc_stats;
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
   if (send_rtp_sink) {
-    event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, twcc_packets);
+    event =
+        gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+        gst_structure_copy (twcc_packets));
     gst_pad_push_event (send_rtp_sink, event);
     gst_object_unref (send_rtp_sink);
   } else {
     gst_structure_free (twcc_packets);
   }
 
+  if (send_rtp_src) {
+    event =
+        gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+        gst_structure_copy (twcc_packets));
+    gst_pad_push_event (send_rtp_src, event);
+    gst_object_unref (send_rtp_src);
+  }
+
+  gst_structure_free (twcc_packets);
   g_object_notify (G_OBJECT (rtpsession), "twcc-stats");
 }
 
