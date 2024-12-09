@@ -178,7 +178,11 @@ gst_osx_audio_sink_class_init (GstOsxAudioSinkClass * klass)
       g_param_spec_int ("device", "Device ID", "Device ID of output device",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /*
+  /**
+   * osxaudiosink:unique-id
+   *
+   * Unique persistent ID for the output device
+   *
    * Since: 1.26
    */
   g_object_class_install_property (gobject_class, ARG_UNIQUE_ID,

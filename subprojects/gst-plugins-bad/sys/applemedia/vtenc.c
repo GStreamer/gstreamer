@@ -485,6 +485,28 @@ gst_vtenc_class_init (GstVTEncClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
+   * vtenc_h264:rate-control
+   *
+   * Since: 1.26
+   */
+  /**
+   * vtenc_h264_hw:rate-control
+   *
+   * Since: 1.26
+   */
+  /**
+   * vtenc_h265:rate-control
+   *
+   * Since: 1.26
+   */
+  /**
+   * vtenc_h265_hw:rate-control
+   *
+   * Since: 1.26
+   */
+  /**
+   * vtenc_prores:rate-control
+   *
    * Since: 1.26
    */
   g_object_class_install_property (gobject_class, PROP_RATE_CONTROL,
@@ -494,6 +516,28 @@ gst_vtenc_class_init (GstVTEncClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
+   * vtenc_h264:data-rate-limits
+   *
+   * Since: 1.26
+   */
+  /**
+   * vtenc_h264_hw:data-rate-limits
+   *
+   * Since: 1.26
+   */
+  /**
+   * vtenc_h265:data-rate-limits
+   *
+   * Since: 1.26
+   */
+  /**
+   * vtenc_h265_hw:data-rate-limits
+   *
+   * Since: 1.26
+   */
+  /**
+   * vtenc_prores:data-rate-limits
+   *
    * Since: 1.26
    */
   g_object_class_install_property (gobject_class, PROP_DATA_RATE_LIMITS,
@@ -510,6 +554,10 @@ gst_vtenc_class_init (GstVTEncClass * klass)
    */
   if (g_strcmp0 (G_OBJECT_CLASS_NAME (klass), "vtenc_prores") == 0) {
     /**
+     * vtenc_prores:max-frame-delay
+     *
+     * Maximum frames allowed in the compression window (-1 = unlimited)
+     *
      * Since: 1.26
      */
     g_object_class_install_property (gobject_class, PROP_MAX_FRAME_DELAY,

@@ -152,7 +152,11 @@ gst_osx_audio_src_class_init (GstOsxAudioSrcClass * klass)
       g_param_spec_int ("device", "Device ID", "Device ID of input device",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /*
+  /**
+   * osxaudiosrc:unique-id
+   *
+   * Unique persistent ID for the input device
+   *
    * Since: 1.26
    */
   g_object_class_install_property (gobject_class, ARG_UNIQUE_ID,
