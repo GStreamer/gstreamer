@@ -52408,16 +52408,21 @@ to call gst_vec_deque_sort() first.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="push_tail_struct" c:identifier="gst_vec_deque_push_tail_struct">
+      <method name="push_tail_struct" c:identifier="gst_vec_deque_push_tail_struct" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvecdeque.c">Pushes the element at address @p_struct to the tail of the queue @array
+(Copies the contents of a structure of the struct_size specified when
+creating the queue into the array).</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstvecdeque.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
         <parameters>
           <instance-parameter name="array" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvecdeque.c">a #GstVecDeque object</doc>
             <type name="VecDeque" c:type="GstVecDeque*"/>
           </instance-parameter>
           <parameter name="p_struct" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvecdeque.c">address of element or structure to push to the tail of the queue</doc>
             <type name="gpointer" c:type="gpointer"/>
           </parameter>
         </parameters>

@@ -388,7 +388,7 @@ gst_vec_deque_do_expand (GstVecDeque * array)
 }
 
 /**
- * gst_vec_deque_push_element_tail: (skip)
+ * gst_vec_deque_push_tail_struct: (skip)
  * @array: a #GstVecDeque object
  * @p_struct: address of element or structure to push to the tail of the queue
  *
