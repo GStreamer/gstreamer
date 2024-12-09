@@ -23,7 +23,7 @@
 #endif
 
 #include "gstvkoperation.h"
-#include "gstvkphysicaldevice-private.h"
+#include "gstvkvideo-private.h"
 
 /**
  * SECTION:vkoperation
@@ -146,34 +146,7 @@ gst_vulkan_operation_get_property (GObject * object, guint prop_id,
   }
 }
 
-static gboolean
-_video_maintenance1_supported (GstVulkanOperation * self)
-{
-#if defined(VK_KHR_video_maintenance1)
-  GstVulkanOperationPrivate *priv;
-  GstVulkanDevice *device;
-  const VkPhysicalDeviceFeatures2 *features;
-  const VkBaseOutStructure *iter;
 
-  g_return_val_if_fail (GST_IS_VULKAN_OPERATION (self), FALSE);
-
-  priv = GET_PRIV (self);
-
-  device = priv->cmd_pool->queue->device;
-
-  features = gst_vulkan_physical_device_get_features (device->physical_device);
-  for (iter = (const VkBaseOutStructure *) features; iter; iter = iter->pNext) {
-
-    if (iter->sType ==
-        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_MAINTENANCE_1_FEATURES_KHR) {
-      const VkPhysicalDeviceVideoMaintenance1FeaturesKHR *video_maintenance1 =
-          (const VkPhysicalDeviceVideoMaintenance1FeaturesKHR *) iter;
-      return video_maintenance1->videoMaintenance1;
-    }
-  }
-#endif
-  return FALSE;
-}
 
 static void
 gst_vulkan_operation_constructed (GObject * object)
@@ -215,7 +188,7 @@ gst_vulkan_operation_constructed (GObject * object)
   priv->has_video = gst_vulkan_device_is_extension_enabled (device,
       VK_KHR_VIDEO_QUEUE_EXTENSION_NAME);
 #endif
-  priv->has_video_maintenance1 = _video_maintenance1_supported (self);
+  priv->has_video_maintenance1 = gst_vulkan_video_has_maintenance1 (device);
 
 #if defined(VK_KHR_timeline_semaphore)
   priv->has_timeline = gst_vulkan_device_is_extension_enabled (device,
