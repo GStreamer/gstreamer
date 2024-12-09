@@ -560,6 +560,19 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   GST_OBJECT_LOCK (ffmpegdec);
 
   if (!gst_ffmpegviddec_needs_reset (ffmpegdec, state)) {
+    if (ffmpegdec->last_caps) {
+      gint last_fps_n, last_fps_d, fps_n, fps_d;
+
+      if (gst_structure_get (gst_caps_get_structure (ffmpegdec->last_caps, 0),
+              "framerate", GST_TYPE_FRACTION, &last_fps_n, &last_fps_d, NULL) &&
+          gst_structure_get (gst_caps_get_structure (state->caps, 0),
+              "framerate", GST_TYPE_FRACTION, &fps_n, &fps_d, NULL)) {
+
+        ffmpegdec->needs_renegotation = (last_fps_d != fps_d
+            || last_fps_n != fps_n);
+      }
+
+    }
     gst_caps_replace (&ffmpegdec->last_caps, state->caps);
     goto update_state;
   }
@@ -1482,9 +1495,12 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   gint caps_height;
   gboolean one_field = !!(flags & GST_VIDEO_BUFFER_FLAG_ONEFIELD);
 
-  if (!update_video_context (ffmpegdec, context, picture, one_field))
+  if (!update_video_context (ffmpegdec, context, picture, one_field)
+      && !ffmpegdec->needs_renegotation) {
     return TRUE;
+  }
 
+  ffmpegdec->needs_renegotation = FALSE;
   caps_height = ffmpegdec->pic_height;
 
   fmt = gst_ffmpeg_pixfmt_to_videoformat (ffmpegdec->pic_pix_fmt);
@@ -2425,6 +2441,7 @@ gst_ffmpegviddec_stop (GstVideoDecoder * decoder)
   ffmpegdec->pool_width = 0;
   ffmpegdec->pool_height = 0;
   ffmpegdec->pool_format = 0;
+  ffmpegdec->needs_renegotation = FALSE;
 
   return TRUE;
 }
