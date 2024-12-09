@@ -19464,6 +19464,7 @@
   "GstVtdec!src",
   "GstVtdecHw!sink",
   "GstVtdecHw!src",
+  "GstVTEnc",
   "GstVulkanBarrierBufferInfo",
   "GstVulkanBarrierBufferInfo.offset",
   "GstVulkanBarrierBufferInfo.parent",

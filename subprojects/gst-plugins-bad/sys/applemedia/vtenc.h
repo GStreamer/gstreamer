@@ -28,8 +28,16 @@
 
 G_BEGIN_DECLS
 
-#define GST_VTENC_CAST(obj) \
-  ((GstVTEnc *) (obj))
+#define GST_TYPE_VTENC            (gst_vtenc_get_type())
+#define GST_VTENC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_VTENC, GstVTEnc))
+#define GST_VTENC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VTENC, GstVTEncClass))
+#define GST_IS_VTENC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VTENC))
+#define GST_IS_VTENC_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VTENC))
+#define GST_VTENC_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_VTENC, GstVTEncClass))
+#define GST_VTENC_CAST(obj)       ((GstVTEnc *)obj)
+typedef struct _GstVTEnc GstVTEnc;
+typedef struct _GstVTEncClass GstVTEncClass;
+
 #define GST_VTENC_CLASS_GET_CODEC_DETAILS(klass) \
   ((const GstVTEncoderDetails *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass), \
       GST_VTENC_CODEC_DETAILS_QDATA))
@@ -48,10 +56,6 @@ typedef enum
 } GstVtencRateControl;
 
 typedef struct _GstVTEncoderDetails GstVTEncoderDetails;
-
-typedef struct _GstVTEncClassParams GstVTEncClassParams;
-typedef struct _GstVTEncClass GstVTEncClass;
-typedef struct _GstVTEnc GstVTEnc;
 
 struct _GstVTEncoderDetails
 {
@@ -118,6 +122,8 @@ struct _GstVTEnc
    * before the next encode call */
   gboolean require_restart;
 };
+
+GType gst_vtenc_get_type (void);
 
 void gst_vtenc_register_elements (GstPlugin * plugin);
 

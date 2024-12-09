@@ -127,7 +127,9 @@
 #include "vtenc.h"
 
 #include "coremediabuffer.h"
+#ifdef HAVE_IOS
 #include "corevideobuffer.h"
+#endif
 #include "vtutil.h"
 #include "helpers.h"
 #include <gst/pbutils/codec-utils.h>
@@ -205,7 +207,8 @@ struct _GstVTEncFrame
   GstVideoFrame videoframe;
 };
 
-static GstElementClass *parent_class = NULL;
+#define parent_class gst_vtenc_parent_class
+G_DEFINE_TYPE (GstVTEnc, gst_vtenc, GST_TYPE_VIDEO_ENCODER);
 
 static void gst_vtenc_get_property (GObject * obj, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -422,15 +425,9 @@ gst_vtenc_base_init (GstVTEncClass * klass)
 static void
 gst_vtenc_class_init (GstVTEncClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *element_class;
-  GstVideoEncoderClass *gstvideoencoder_class;
-
-  gobject_class = (GObjectClass *) klass;
-  element_class = (GstElementClass *) klass;
-  gstvideoencoder_class = (GstVideoEncoderClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstVideoEncoderClass *gstvideoencoder_class = GST_VIDEO_ENCODER_CLASS (klass);
 
   gobject_class->get_property = gst_vtenc_get_property;
   gobject_class->set_property = gst_vtenc_set_property;
@@ -438,13 +435,14 @@ gst_vtenc_class_init (GstVTEncClass * klass)
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_vtenc_change_state);
 
-  gstvideoencoder_class->start = gst_vtenc_start;
-  gstvideoencoder_class->stop = gst_vtenc_stop;
-  gstvideoencoder_class->set_format = gst_vtenc_set_format;
-  gstvideoencoder_class->handle_frame = gst_vtenc_handle_frame;
-  gstvideoencoder_class->finish = gst_vtenc_finish;
-  gstvideoencoder_class->flush = gst_vtenc_flush;
-  gstvideoencoder_class->sink_event = gst_vtenc_sink_event;
+  gstvideoencoder_class->start = GST_DEBUG_FUNCPTR (gst_vtenc_start);
+  gstvideoencoder_class->stop = GST_DEBUG_FUNCPTR (gst_vtenc_stop);
+  gstvideoencoder_class->set_format = GST_DEBUG_FUNCPTR (gst_vtenc_set_format);
+  gstvideoencoder_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_vtenc_handle_frame);
+  gstvideoencoder_class->finish = GST_DEBUG_FUNCPTR (gst_vtenc_finish);
+  gstvideoencoder_class->flush = GST_DEBUG_FUNCPTR (gst_vtenc_flush);
+  gstvideoencoder_class->sink_event = GST_DEBUG_FUNCPTR (gst_vtenc_sink_event);
 
   g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate",
@@ -580,6 +578,7 @@ gst_vtenc_class_init (GstVTEncClass * klass)
             G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   }
 
+  gst_type_mark_as_plugin_api (GST_TYPE_VTENC, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_VTENC_RATE_CONTROL, 0);
 }
 
@@ -2558,8 +2557,7 @@ gst_vtenc_register (GstPlugin * plugin,
 
   type_name = g_strdup_printf ("vtenc_%s", codec_details->element_name);
 
-  type =
-      g_type_register_static (GST_TYPE_VIDEO_ENCODER, type_name, &type_info, 0);
+  type = g_type_register_static (GST_TYPE_VTENC, type_name, &type_info, 0);
 
   g_type_set_qdata (type, GST_VTENC_CODEC_DETAILS_QDATA,
       (gpointer) codec_details);
