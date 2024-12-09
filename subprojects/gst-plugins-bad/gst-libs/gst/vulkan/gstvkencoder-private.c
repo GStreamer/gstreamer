@@ -1182,7 +1182,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
       .width = GST_VIDEO_INFO_WIDTH (info),
       .height = GST_VIDEO_INFO_HEIGHT (info),
     },
-    .baseArrayLayer = 0,
+    .baseArrayLayer = priv->layered_dpb ? slot_index : 0,
     .imageViewBinding = pic->dpb_view->view,
   };
   pic->dpb_slot = (VkVideoReferenceSlotInfoKHR) {
