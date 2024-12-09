@@ -11780,6 +11780,31 @@
         "filename": "gstosxaudio",
         "license": "LGPL",
         "other-types": {
+            "GstATEncRateControl": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Constant bitrate",
+                        "name": "cbr",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Long-term-average bitrate",
+                        "name": "lta",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Constrained variable bitrate",
+                        "name": "cvbr",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Variable bitrate",
+                        "name": "vbr",
+                        "value": "3"
+                    }
+                ]
+            },
             "GstOsxAudioElement": {
                 "hierarchy": [
                     "GstOsxAudioElement",

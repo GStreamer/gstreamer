@@ -27,6 +27,7 @@
  * ]|
  * Encodes audio from audiotestsrc and writes it to a file.
  *
+ * Since: 1.26
  */
 
 #ifdef HAVE_CONFIG_H
@@ -183,7 +184,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_atenc_debug);
 G_DEFINE_TYPE (GstATEnc, gst_atenc, GST_TYPE_AUDIO_ENCODER);
 GST_ELEMENT_REGISTER_DEFINE (atenc, "atenc", GST_RANK_PRIMARY, GST_TYPE_ATENC);
 
-#define GST_ATENC_RATE_CONTROL (gst_atenc_rate_control_get_type ())
+#define GST_TYPE_ATENC_RATE_CONTROL (gst_atenc_rate_control_get_type ())
 static GType
 gst_atenc_rate_control_get_type (void)
 {
@@ -913,7 +914,7 @@ gst_atenc_class_init (GstATEncClass * klass)
       g_param_spec_enum ("rate-control",
           "Rate control",
           "Mode of output bitrate control to be applied",
-          GST_ATENC_RATE_CONTROL,
+          GST_TYPE_ATENC_RATE_CONTROL,
           DEFAULT_RATE_CONTROL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -940,4 +941,6 @@ gst_atenc_class_init (GstATEncClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_atenc_debug, "atenc", 0,
       "AudioToolbox based audio encoder");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_ATENC_RATE_CONTROL, 0);
 }
