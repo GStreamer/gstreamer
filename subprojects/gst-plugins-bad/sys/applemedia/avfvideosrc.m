@@ -1271,18 +1271,50 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
       g_param_spec_boolean ("capture-screen-mouse-clicks", "Enable mouse clicks capture",
           "Enable mouse clicks capture while capturing screen", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * avfvideosrc:screen-crop-x
+   *
+   * Horizontal coordinate of top left corner of the screen capture area
+   *
+   * Since: 1.22
+   */
   g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN_CROP_X,
       g_param_spec_uint ("screen-crop-x", "Screen capture crop X",
           "Horizontal coordinate of top left corner of the screen capture area",
           0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * avfvideosrc:screen-crop-y
+   *
+   * Vertical coordinate of top left corner of the screen capture area
+   *
+   * Since: 1.22
+   */
   g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN_CROP_Y,
       g_param_spec_uint ("screen-crop-y", "Screen capture crop Y",
           "Vertical coordinate of top left corner of the screen capture area",
           0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * avfvideosrc:screen-crop-width
+   *
+   * Width of the screen capture area (0 = maximum)
+   *
+   * Since: 1.22
+   */
   g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN_CROP_WIDTH,
       g_param_spec_uint ("screen-crop-width", "Screen capture crop width",
           "Width of the screen capture area (0 = maximum)",
           0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * avfvideosrc:screen-crop-height
+   *
+   * Height of the screen capture area (0 = maximum)
+   *
+   * Since: 1.22
+   */
   g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN_CROP_HEIGHT,
       g_param_spec_uint ("screen-crop-height", "Screen capture crop height",
           "Height of the screen capture area (0 = maximum)",
