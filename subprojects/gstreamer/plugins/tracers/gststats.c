@@ -25,6 +25,12 @@
  * A tracing module that builds usage statistic for elements and pads.
  */
 
+/**
+ * GstStatsTracer:
+ *
+ * Since: 1.8
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif

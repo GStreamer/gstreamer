@@ -42,6 +42,11 @@ G_BEGIN_DECLS
 typedef struct _GstLatencyTracer GstLatencyTracer;
 typedef struct _GstLatencyTracerClass GstLatencyTracerClass;
 
+/**
+ * GstLatencyTracerFlags:
+ *
+ * Since: 1.16
+ */
 typedef enum
 {
   GST_LATENCY_TRACER_FLAG_PIPELINE = 1 << 0,
@@ -53,6 +58,8 @@ typedef enum
  * GstLatencyTracer:
  *
  * Opaque #GstLatencyTracer data structure
+ *
+ * Since: 1.8
  */
 struct _GstLatencyTracer {
   GstTracer 	 parent;
