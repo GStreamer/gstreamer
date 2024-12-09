@@ -531,6 +531,8 @@ gst_vtenc_class_init (GstVTEncClass * klass)
             VTENC_DEFAULT_PRESERVE_ALPHA,
             G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   }
+
+  gst_type_mark_as_plugin_api (GST_TYPE_VTENC_RATE_CONTROL, 0);
 }
 
 static void
