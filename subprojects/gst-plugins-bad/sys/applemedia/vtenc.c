@@ -309,8 +309,7 @@ gst_vtenc_base_init (GstVTEncClass * klass)
   description = g_strdup_printf ("%s encoder", codec_details->name);
 
   gst_element_class_set_metadata (element_class, longname,
-      "Codec/Encoder/Video/Hardware", description,
-      "Ole André Vadla Ravnås <oleavr@soundrop.com>, Dominik Röttsches <dominik.rottsches@intel.com>");
+      "Codec/Encoder/Video/Hardware", description, codec_details->authors);
 
   g_free (longname);
   g_free (description);
@@ -2551,7 +2550,7 @@ gst_vtenc_register (GstPlugin * plugin,
     0,
     (GInstanceInitFunc) gst_vtenc_init,
   };
-  gchar *type_name;
+  char *type_name;
   GType type;
   gboolean result;
 
@@ -2571,18 +2570,30 @@ gst_vtenc_register (GstPlugin * plugin,
 }
 
 static const GstVTEncoderDetails gst_vtenc_codecs[] = {
-  {"H.264", "h264", "video/x-h264", kCMVideoCodecType_H264, FALSE},
-  {"H.265/HEVC", "h265", "video/x-h265", kCMVideoCodecType_HEVC, FALSE},
+  {"H.264", "h264", "video/x-h264",
+        "Ole André Vadla Ravnås <oleavr@soundrop.com>, "
+        "Dominik Röttsches <dominik.rottsches@intel.com>",
+      kCMVideoCodecType_H264, FALSE},
+  {"H.265/HEVC", "h265", "video/x-h265",
+        "Piotr Brzeziński <piotr@centricular.com>",
+      kCMVideoCodecType_HEVC, FALSE},
   {"H.265/HEVC with alpha", "h265a", "video/x-h265",
+        "Piotr Brzeziński <piotr@centricular.com>",
       kCMVideoCodecType_HEVCWithAlpha, FALSE},
 #ifndef HAVE_IOS
-  {"H.264 (HW only)", "h264_hw", "video/x-h264", kCMVideoCodecType_H264, TRUE},
-  {"H.265/HEVC (HW only)", "h265_hw", "video/x-h265", kCMVideoCodecType_HEVC,
-      TRUE},
+  {"H.264 (HW only)", "h264_hw", "video/x-h264",
+        "Ole André Vadla Ravnås <oleavr@soundrop.com>, "
+        "Dominik Röttsches <dominik.rottsches@intel.com>",
+      kCMVideoCodecType_H264, TRUE},
+  {"H.265/HEVC (HW only)", "h265_hw", "video/x-h265",
+        "Piotr Brzeziński <piotr@centricular.com>",
+      kCMVideoCodecType_HEVC, TRUE},
   {"H.265/HEVC with alpha (HW only)", "h265a_hw", "video/x-h265",
+        "Piotr Brzeziński <piotr@centricular.com>",
       kCMVideoCodecType_HEVCWithAlpha, TRUE},
 #endif
   {"Apple ProRes", "prores", "video/x-prores",
+        "Nirbheek Chauhan <nirbheek@centricular.com>",
       GST_kCMVideoCodecType_Some_AppleProRes, FALSE},
 };
 

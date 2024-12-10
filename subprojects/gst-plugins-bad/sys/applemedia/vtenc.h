@@ -59,9 +59,10 @@ typedef struct _GstVTEncoderDetails GstVTEncoderDetails;
 
 struct _GstVTEncoderDetails
 {
-  const gchar * name;
-  const gchar * element_name;
-  const gchar * mimetype;
+  const char * name;
+  const char * element_name;
+  const char * mimetype;
+  const char * authors;
   CMVideoCodecType format_id;
   gboolean require_hardware;
 };
