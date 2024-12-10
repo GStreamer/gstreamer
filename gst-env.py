@@ -281,6 +281,9 @@ def get_subprocess_env(options, gst_version):
     prepend_env_var(env, "GST_VALIDATE_APPS_DIR", os.path.normpath(
         "%s/subprojects/gst-examples/webrtc/check/validate/apps" %
         SCRIPTDIR), options.sysroot)
+    env["GST_VALIDATE_LAUNCHER_HTTP_SERVER_PATH"] = os.path.normpath(
+        "%s/subprojects/gst-devtools/validate/launcher/RangeHTTPServer.py" %
+        SCRIPTDIR)
 
     if options.wine:
         return get_wine_subprocess_env(options, env)

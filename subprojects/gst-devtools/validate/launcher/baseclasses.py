@@ -2352,6 +2352,7 @@ class _TestsLauncher(Loggable):
             self._stop_server()
 
     def run_tests(self):
+        os.environ["GST_VALIDATE_LAUNCHER_HTTP_SERVER_PATH"] = os.path.join(os.path.dirname(__file__), "RangeHTTPServer.py")
         r = 0
         try:
             self._start_server()

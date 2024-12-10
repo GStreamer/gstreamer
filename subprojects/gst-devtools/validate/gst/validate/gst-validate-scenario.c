@@ -44,6 +44,7 @@
 #include "config.h"
 #endif
 
+#include <stdio.h>
 #include <gst/gst.h>
 #include <gio/gio.h>
 #include <string.h>
@@ -187,6 +188,12 @@ typedef struct
   GstValidateAction *action;
 } GstValidateSeekInformation;
 
+typedef struct
+{
+  GSubprocess *subprocess;
+  gint port;
+} HTTPServer;
+
 /* GstValidateScenario is not really thread safe and
  * everything should be done from the thread GstValidate
  * was inited from, unless stated otherwise.
@@ -282,6 +289,8 @@ struct _GstValidateScenarioPrivate
   guint segments_needed;
 
   GMainContext *context;
+
+    GArray /*< HTTPServer> */  * http_servers;
 };
 
 typedef struct KeyFileGroupName
@@ -5736,6 +5745,32 @@ one_actions_scenario_max:
 }
 
 static void
+gst_validate_scenario_stop_http_servers (GstValidateScenario * scenario)
+{
+  if (scenario->priv->http_servers) {
+    for (guint i = 0; i < scenario->priv->http_servers->len; i++) {
+      HTTPServer *server =
+          &g_array_index (scenario->priv->http_servers, HTTPServer, i);
+      if (server->subprocess) {
+        GError *error = NULL;
+        g_subprocess_force_exit (server->subprocess);
+
+        if (!g_subprocess_wait_check (server->subprocess, NULL, &error)) {
+          GST_WARNING_OBJECT (scenario,
+              "Error waiting for subprocess to exit: %s",
+              error ? error->message : "unknown error");
+          g_clear_error (&error);
+        }
+
+        g_clear_object (&server->subprocess);
+      }
+    }
+    g_array_free (scenario->priv->http_servers, TRUE);
+    scenario->priv->http_servers = NULL;
+  }
+}
+
+static void
 gst_validate_scenario_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -5935,6 +5970,8 @@ gst_validate_scenario_finalize (GObject * object)
   if (self->description)
     gst_structure_free (self->description);
   g_mutex_clear (&priv->lock);
+
+  gst_validate_scenario_stop_http_servers (self);
 
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->finalize (object);
 }
@@ -7105,10 +7142,10 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
   SCENARIO_UNLOCK (scenario);
 
   gst_validate_scenario_check_dropped (scenario);
-
   gst_bus_post (bus,
       gst_message_new_request_state (GST_OBJECT_CAST (scenario),
           GST_STATE_NULL));
+  gst_validate_scenario_stop_http_servers (scenario);
   gst_object_unref (bus);
   gst_object_unref (pipeline);
 
@@ -7471,6 +7508,86 @@ done:
   return res;
 }
 
+static GstValidateExecuteActionReturn
+_execute_start_http_server (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  const gchar *server_path, *working_dir;
+  GError *err = NULL;
+  HTTPServer server = { 0 };
+  GInputStream *stdout_stream = NULL;
+  GSubprocess *subprocess = NULL;
+  gint port = 0;
+
+  server_path = g_getenv ("GST_VALIDATE_LAUNCHER_HTTP_SERVER_PATH");
+  REPORT_UNLESS (server_path, done,
+      "GST_VALIDATE_LAUNCHER_HTTP_SERVER_PATH not set");
+
+  REPORT_UNLESS (g_file_test (server_path,
+          G_FILE_TEST_IS_REGULAR), done,
+      "HTTP server script not found at: %s", server_path);
+
+  working_dir =
+      gst_structure_get_string (action->structure, "working-directory");
+  REPORT_UNLESS (working_dir, done, "working-directory not specified");
+  REPORT_UNLESS (g_file_test (working_dir,
+          G_FILE_TEST_IS_DIR), done,
+      "working-directory '%s' doesn't exist", working_dir);
+
+  gchar const *argv[3] = { server_path, "0", NULL };
+  gboolean no_pipe = FALSE;
+  gst_structure_get_boolean (action->structure, "no-pipe", &no_pipe);
+  GSubprocessLauncher *launcher =
+      g_subprocess_launcher_new (no_pipe ? G_SUBPROCESS_FLAGS_STDOUT_PIPE :
+      G_SUBPROCESS_FLAGS_STDOUT_PIPE | G_SUBPROCESS_FLAGS_STDERR_PIPE);
+  g_subprocess_launcher_set_cwd (launcher, working_dir);
+  subprocess =
+      g_subprocess_launcher_spawnv (launcher, (const gchar * const *) argv,
+      &err);
+  g_object_unref (launcher);
+
+  REPORT_UNLESS (subprocess, done,
+      "Failed to start HTTP server: %s", err->message);
+
+  stdout_stream = g_subprocess_get_stdout_pipe (subprocess);
+  GDataInputStream *data_stream = g_data_input_stream_new (stdout_stream);
+  gchar *line = g_data_input_stream_read_line (data_stream, NULL, NULL, &err);
+  g_object_unref (data_stream);
+
+  REPORT_UNLESS (err == NULL, done, "Failed to read server output: %s",
+      err->message);
+  REPORT_UNLESS (sscanf (line, "PORT: %d", &port) == 1, done,
+      "Failed to parse port number from server output: %s", line);
+
+  server.port = port;
+  server.subprocess = subprocess;
+
+  if (!scenario->priv->http_servers)
+    scenario->priv->http_servers =
+        g_array_new (FALSE, FALSE, sizeof (HTTPServer));
+
+  g_array_append_val (scenario->priv->http_servers, server);
+
+  gint i = 1;
+  gchar *port_varname = g_strdup ("http_server_port");
+  while (gst_structure_has_field (scenario->priv->vars, port_varname)) {
+    g_free (port_varname);
+    port_varname = g_strdup_printf ("http_server_port_%d", i++);
+  }
+
+  gst_structure_set (scenario->priv->vars, port_varname,
+      G_TYPE_INT, port, NULL);
+  g_free (port_varname);
+
+done:
+  if (subprocess && !server.subprocess) {
+    g_object_unref (subprocess);
+  }
+  g_clear_error (&err);
+
+  return res;
+}
 
 /**
  * gst_validate_action_get_scenario:
@@ -9016,6 +9133,40 @@ register_action_types (void)
       "When a scenario is specified, and while the sub pipeline is running\n"
       " it will be possible to execute actions from the main scenario on that pipeline\n"
       " using the `run-on-sub-pipeline` action type.",
+      GST_VALIDATE_ACTION_TYPE_NONE);
+
+  REGISTER_ACTION_TYPE("start-http-server", _execute_start_http_server,
+      ((GstValidateActionParameter[]) {
+        {
+          .name = "working-directory",
+          .description = "Server’s current working directory",
+          .mandatory = TRUE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "no-pipe",
+          .description = "Do not pipe http server stderr/stdout ",
+          .mandatory = FALSE,
+          .types = "bool",
+          .def = "false",
+          NULL,
+        },
+        {NULL}
+      }),
+      "Start an HTTP server in a separate process to serve files from $(working-directory).\n"
+      "The server is started on any available port and the action sets the `$(http_server_port)`\n"
+      "variable so it can be used afterward. For subsequent servers started, the\n"
+      "variable names become `http_server_port_1`, `http_server_port_2`, etc.\n\n"
+      "The server implementation must be specified through the GST_VALIDATE_LAUNCHER_HTTP_SERVER_PATH\n"
+      "environment variable. By default, it uses our `RangeHTTPServer.py` implementation which\n"
+      "provides support for HTTP range requests and directory listing as well as specific POST requests\n"
+      "for testing purposes (check the file for details).\n\n"
+      "Example:\n"
+      "```\n"
+      "- start-http-server, working-directory=/path/to/media/files\n"
+      "- set-property, playbin::uri=\"http://127.0.0.1:$(http_server_port)/video.mp4\"\n"
+      "```\n",
       GST_VALIDATE_ACTION_TYPE_NONE);
 
     /* Internal actions types to test the validate scenario implementation */

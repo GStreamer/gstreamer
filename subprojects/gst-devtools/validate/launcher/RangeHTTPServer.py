@@ -50,8 +50,15 @@ import time
 _bandwidth = 0
 
 
+def debug(msg):
+    print(f'msg: {msg}', file=sys.stderr)
+
+
 class ThreadingSimpleServer(ThreadingMixIn, http.server.HTTPServer):
-    pass
+    def server_bind(self):
+        super().server_bind()
+        print(f"PORT: {self.server_port}")
+        sys.stdout.flush()
 
 
 class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
@@ -72,7 +79,7 @@ class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         """Serve a GET request."""
         f, start_range, end_range = self.send_head()
-        print("Got values of {} and {}".format(start_range, end_range))
+        debug("Got values of {} and {}".format(start_range, end_range))
         if f:
             f.seek(start_range, 0)
             chunk = 0x1000
@@ -165,7 +172,7 @@ class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_header("Content-Length", end_range - start_range)
         self.end_headers()
 
-        print("Sending bytes {} to {}...".format(start_range, end_range))
+        debug("Sending bytes {} to {}...".format(start_range, end_range))
         return (f, start_range, end_range)
 
     def list_directory(self, path):
@@ -289,3 +296,4 @@ def test(handler_class=RangeHTTPRequestHandler, server_class=http.server.HTTPSer
 if __name__ == "__main__":
     httpd = ThreadingSimpleServer(("0.0.0.0", int(sys.argv[1])), RangeHTTPRequestHandler)
     httpd.serve_forever()
+    print("EXIT")
