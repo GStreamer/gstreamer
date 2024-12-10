@@ -19,12 +19,42 @@
 # 02110-1301, USA.
 
 
-"""Range HTTP Server.
+"""Simple HTTP request handler with GET, HEAD, PUT and DELETE commands.
+    This serves files from the current directory and any of its
+    subdirectories. The MIME type for files is determined by
+    calling the .guess_type() method.
 
-This module builds on BaseHTTPServer by implementing the standard GET
-and HEAD requests in a fairly straightforward manner, and includes support
-for the Range header.
+    The GET and HEAD requests are identical except that the HEAD
+    request omits the actual contents of the file.
 
+    Administrative API endpoints:
+        PUT /admin/status-rules
+            Request body: {
+                "path": "/path/to/file",
+                "status_code": 503,
+                "repeat": 3,  # optional
+                "during": 6.0  # optional (duration for which the rule is active, in seconds)
+            }
+            Description: Configure a path to return a specific status code. The rule can be
+            set to expire after a number of requests (repeat) or after a time duration (during).
+
+        DELETE /admin/status-rules/<encoded-path>
+            Description: Remove a previously configured status rule for the specified path.
+
+        PUT /admin/failure-counts/start
+            Request body: {
+                "path": "/path/to/file"
+            }
+            Description: Start counting the number of forced failures (via status-rules) for
+            the specified path. The count starts at 0 when this endpoint is called.
+
+        GET /admin/failure-counts/<encoded-path>
+            Response body: {
+                "path": "/path/to/file",
+                "count": 42
+            }
+            Description: Get the current count of forced failures for the specified path.
+            Returns 404 if the path is not being monitored.
 """
 
 
@@ -33,6 +63,7 @@ __version__ = "0.1"
 __all__ = ["RangeHTTPRequestHandler"]
 
 import os
+import json
 import sys
 
 from socketserver import ThreadingMixIn
@@ -64,20 +95,172 @@ class ThreadingSimpleServer(ThreadingMixIn, http.server.HTTPServer):
 class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
     """Simple HTTP request handler with GET and HEAD commands.
-
     This serves files from the current directory and any of its
     subdirectories.  The MIME type for files is determined by
     calling the .guess_type() method.
 
     The GET and HEAD requests are identical except that the HEAD
     request omits the actual contents of the file.
-
     """
-
+    # Class-level dictionaries to store forced return codes and their repeat counts
+    forced_return_codes = {}
+    forced_failure_counts = {}
     server_version = "RangeHTTP/" + __version__
+
+    def start_counting_failure(self, data):
+        if not isinstance(data, dict) or 'path' not in data:
+            self.send_error(400, "Invalid request body format")
+            return
+
+        # Start counting failures for this path
+        self.__class__.forced_failure_counts[data['path']] = 0
+
+        self.send_response(201)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({'status': 'started'}).encode('utf-8'))
+
+    def do_PUT(self):
+        """Handle PUT requests for setting status rules."""
+        if self.path not in ["/admin/failure-counts/start", "/admin/status-rules"]:
+            self.send_error(404, "Not Found")
+            return
+
+        content_length = int(self.headers.get('Content-Length', 0))
+        if content_length == 0:
+            self.send_error(400, "Missing request body")
+            return
+
+        try:
+            body = self.rfile.read(content_length).decode('utf-8')
+            data = json.loads(body)
+
+            if self.path == "/admin/failure-counts/start":
+                self.start_counting_failure(data)
+                return
+
+            if not isinstance(data, dict):
+                self.send_error(400, "Invalid request body format - expected JSON object")
+                return
+            if 'path' not in data:
+                self.send_error(400, "Invalid request body format - missing required 'path' field")
+                return
+            if 'status_code' not in data:
+                self.send_error(400, "Invalid request body format - missing required 'status_code' field")
+                return
+
+            forcereturn = {
+                'code': int(data['status_code'])
+            }
+
+            if 'repeat' in data:
+                repeat_count = int(data['repeat'])
+                if repeat_count > 0:
+                    forcereturn['repeat'] = repeat_count
+                    debug(f"Will remove status rule after {repeat_count} GET requests")
+
+            if 'during' in data:
+                forcereturn['until'] = time.time() + float(data['during'])
+                debug(f"Will remove status rule after {data['during']} seconds")
+
+            self.__class__.forced_return_codes[data['path']] = forcereturn
+
+            self.send_response(201)  # Created
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'status': 'created'}).encode('utf-8'))
+
+        except (ValueError, json.JSONDecodeError) as e:
+            self.send_error(400, f"Invalid request: {str(e)}")
+            return
+
+    def do_DELETE(self):
+        """Handle DELETE requests for removing status rules."""
+        if not self.path.startswith("/admin/status-rules/"):
+            self.send_error(404, "Not Found")
+            return
+
+        # Extract the path from the URL (need to decode it as it might contain slashes)
+        encoded_path = self.path[len("/admin/status-rules/"):]
+        try:
+            path = urllib.parse.unquote(encoded_path)
+        except Exception:
+            self.send_error(400, "Invalid path encoding")
+            return
+
+        if path in self.__class__.forced_return_codes:
+            del self.__class__.forced_return_codes[path]
+            self.send_response(204)  # No Content
+            self.end_headers()
+        else:
+            self.send_error(404, "Status rule not found")
+
+    def get_failure_count(self):
+        failure_count_path = "/admin/failure-counts"
+        debug(f"Path is: {self.path} == {failure_count_path} ==>  {self.path.startswith(failure_count_path)}")
+        if not self.path.startswith(failure_count_path):
+            return False
+
+        # Extract the path from the URL
+        encoded_path = self.path[len(failure_count_path):]
+        try:
+            path = urllib.parse.unquote(encoded_path)
+        except Exception:
+            self.send_error(400, "Invalid path encoding")
+            return True
+
+        if path in self.__class__.forced_failure_counts:
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            response = {
+                'path': path,
+                'count': self.__class__.forced_failure_counts[path]
+            }
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+        else:
+            self.send_error(404, f"Path {path} is not being monitored {self.__class__.forced_failure_counts}")
+
+        return True
 
     def do_GET(self):
         """Serve a GET request."""
+        if self.get_failure_count():
+            return
+
+        # Check if there's a forced return code for this path
+        parsed_url = urllib.parse.urlparse(self.path)
+        forcereturn = self.__class__.forced_return_codes.get(parsed_url.path)
+        debug(f"Rules {self.__class__.forced_return_codes}")
+        if forcereturn:
+            repeat = forcereturn.get('repeat')
+            if repeat:
+                repeat -= 1
+                if repeat <= 0:
+                    del self.__class__.forced_return_codes[parsed_url.path]
+                    debug(f"Stopped forcing return code for {parsed_url.path}")
+                else:
+                    forcereturn['repeat'] = repeat
+
+                    self.__class__.forced_return_codes[parsed_url.path] = forcereturn
+
+            force_until = forcereturn.get('until')
+            if force_until:
+                remaining_forcing_time = force_until - time.time()
+                debug("Forcing for {}s".format(remaining_forcing_time))
+                if remaining_forcing_time <= 0:
+                    del self.__class__.forced_return_codes[parsed_url.path]
+                    debug(f"Stopped forcing return code for {parsed_url.path}")
+                    forcereturn = None
+
+            if forcereturn is not None:
+                if parsed_url.path in self.__class__.forced_failure_counts:
+                    self.__class__.forced_failure_counts[parsed_url.path] += 1
+                self.send_response(forcereturn['code'])
+                self.end_headers()
+                return
+        debug("Got request for {}".format(self.path))
+
         f, start_range, end_range = self.send_head()
         debug("Got values of {} and {}".format(start_range, end_range))
         if f:
