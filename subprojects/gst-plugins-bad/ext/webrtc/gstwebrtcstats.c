@@ -815,8 +815,8 @@ _get_codec_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad,
     GstStructure *caps_s = gst_caps_get_structure (caps, 0);
     gint pt;
     const gchar *encoding_name, *media, *encoding_params;
-    GstSDPMedia sdp_media = { 0 };
     guint channels = 0;
+    const gchar *fmtp;
 
     if (gst_structure_get_int (caps_s, "payload", &pt))
       gst_structure_set (stats, "payload-type", G_TYPE_UINT, pt, NULL);
@@ -852,15 +852,10 @@ _get_codec_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad,
     else
       gst_structure_set (stats, "codec-type", G_TYPE_STRING, "encode", NULL);
 
-    gst_sdp_media_init (&sdp_media);
-    if (gst_sdp_media_set_media_from_caps (caps, &sdp_media) == GST_SDP_OK) {
-      const gchar *fmtp = gst_sdp_media_get_attribute_val (&sdp_media, "fmtp");
-
-      if (fmtp) {
-        gst_structure_set (stats, "sdp-fmtp-line", G_TYPE_STRING, fmtp, NULL);
-      }
+    fmtp = gst_structure_get_string (caps_s, "a-fmtp");
+    if (fmtp) {
+      gst_structure_set (stats, "sdp-fmtp-line", G_TYPE_STRING, fmtp, NULL);
     }
-    gst_sdp_media_uninit (&sdp_media);
 
     /* FIXME: transportId */
   }
