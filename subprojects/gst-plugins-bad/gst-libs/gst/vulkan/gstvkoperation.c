@@ -23,7 +23,9 @@
 #endif
 
 #include "gstvkoperation.h"
-#include "gstvkvideo-private.h"
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+# include "gstvkvideo-private.h"
+#endif
 
 /**
  * SECTION:vkoperation
@@ -187,9 +189,8 @@ gst_vulkan_operation_constructed (GObject * object)
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   priv->has_video = gst_vulkan_device_is_extension_enabled (device,
       VK_KHR_VIDEO_QUEUE_EXTENSION_NAME);
-#endif
   priv->has_video_maintenance1 = gst_vulkan_video_has_maintenance1 (device);
-
+#endif
 #if defined(VK_KHR_timeline_semaphore)
   priv->has_timeline = gst_vulkan_device_is_extension_enabled (device,
       VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
@@ -1254,6 +1255,18 @@ gst_vulkan_operation_enable_query (GstVulkanOperation * self,
         priv->cmd_pool->queue);
     return FALSE;
   }
+
+  if ((query_type == VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR
+          || query_type == VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR)
+      && priv->has_video && priv->has_video_maintenance1) {
+    VkBaseInStructure *base;
+    for (base = pnext; base; base = (VkBaseInStructure *) base->pNext) {
+      if (base->sType == VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR) {
+        priv->use_inline_query = TRUE;
+        break;
+      }
+    }
+  }
 #endif
 
   res = vkCreateQueryPool (priv->cmd_pool->queue->device->device,
@@ -1374,23 +1387,31 @@ gst_vulkan_operation_begin_query (GstVulkanOperation * self,
     GST_INFO_OBJECT (self, "Cannot begin query without begin operation");
     return FALSE;
   }
+
+  if (priv->use_inline_query)
+    g_return_val_if_fail (base, FALSE);
+
 #if defined(VK_KHR_video_maintenance1)
-  if (priv->has_video_maintenance1 && base != NULL) {
-    priv->inline_query.pNext = base->pNext;
-    priv->inline_query.sType = VK_STRUCTURE_TYPE_VIDEO_INLINE_QUERY_INFO_KHR;
-    priv->inline_query.queryPool = priv->query_pool;
-    priv->inline_query.firstQuery = id;
-    priv->inline_query.queryCount = 1;
+  if (priv->use_inline_query) {
+    /* *INDENT-OFF* */
+    priv->inline_query = (VkVideoInlineQueryInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_INLINE_QUERY_INFO_KHR,
+      .pNext = base->pNext,
+      .queryPool = priv->query_pool,
+      .firstQuery = id,
+      .queryCount = 1,
+    };
+    /* *INDENT-ON* */
     base->pNext = (VkBaseInStructure *) & priv->inline_query;
-    priv->use_inline_query = TRUE;
-  } else
-#endif
-  {
-    gst_vulkan_command_buffer_lock (self->cmd_buf);
-    vkCmdBeginQuery (self->cmd_buf->cmd, priv->query_pool, id, 0);
-    gst_vulkan_command_buffer_unlock (self->cmd_buf);
-    priv->use_inline_query = FALSE;
+
+    return TRUE;
   }
+#endif
+
+  gst_vulkan_command_buffer_lock (self->cmd_buf);
+  vkCmdBeginQuery (self->cmd_buf->cmd, priv->query_pool, id, 0);
+  gst_vulkan_command_buffer_unlock (self->cmd_buf);
+
   return TRUE;
 }
 
@@ -1420,16 +1441,13 @@ gst_vulkan_operation_end_query (GstVulkanOperation * self, guint32 id)
     return FALSE;
   }
 
-#if defined(VK_KHR_video_maintenance1)
-  if (priv->has_video_maintenance1 && priv->use_inline_query) {
+  if (priv->use_inline_query)
     return TRUE;
-  } else
-#endif
-  {
-    gst_vulkan_command_buffer_lock (self->cmd_buf);
-    vkCmdEndQuery (self->cmd_buf->cmd, priv->query_pool, id);
-    gst_vulkan_command_buffer_unlock (self->cmd_buf);
-  }
+
+  gst_vulkan_command_buffer_lock (self->cmd_buf);
+  vkCmdEndQuery (self->cmd_buf->cmd, priv->query_pool, id);
+  gst_vulkan_command_buffer_unlock (self->cmd_buf);
+
   return TRUE;
 }
 
