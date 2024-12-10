@@ -11431,6 +11431,23 @@ qtdemux_parse_transformation_matrix (GstQTDemux * qtdemux,
 }
 
 static void
+qtdemux_mul_transformation_matrix (GstQTDemux * qtdemux,
+    guint32 * a, guint32 * b, guint32 * c)
+{
+#define QTMUL_MATRIX(_a,_b) (((_a) == 0 || (_b) == 0) ? 0 : \
+      ((_a) == (_b) ? 1 : -1))
+#define QTADD_MATRIX(_a,_b) ((_a) + (_b) > 0 ? (1U << 16) : \
+      ((_a) + (_b) < 0) ? (G_MAXUINT16 << 16) : 0u)
+
+  c[2] = c[5] = c[6] = c[7] = 0;
+  c[0] = QTADD_MATRIX (QTMUL_MATRIX (a[0], b[0]), QTMUL_MATRIX (a[1], b[3]));
+  c[1] = QTADD_MATRIX (QTMUL_MATRIX (a[0], b[1]), QTMUL_MATRIX (a[1], b[4]));
+  c[3] = QTADD_MATRIX (QTMUL_MATRIX (a[3], b[0]), QTMUL_MATRIX (a[4], b[3]));
+  c[4] = QTADD_MATRIX (QTMUL_MATRIX (a[3], b[1]), QTMUL_MATRIX (a[4], b[4]));
+  c[8] = a[8];
+}
+
+static void
 qtdemux_inspect_transformation_matrix (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 * matrix, GstTagList ** taglist)
 {
@@ -11459,6 +11476,14 @@ qtdemux_inspect_transformation_matrix (GstQTDemux * qtdemux,
       rotation_tag = "rotate-180";
     } else if (QTCHECK_MATRIX (matrix, 0, G_MAXUINT16, 1, 0)) {
       rotation_tag = "rotate-270";
+    } else if (QTCHECK_MATRIX (matrix, G_MAXUINT16, 0, 0, 1)) {
+      rotation_tag = "flip-rotate-0";
+    } else if (QTCHECK_MATRIX (matrix, 0, G_MAXUINT16, 1, 0)) {
+      rotation_tag = "flip-rotate-90";
+    } else if (QTCHECK_MATRIX (matrix, 1, 0, 0, G_MAXUINT16)) {
+      rotation_tag = "flip-rotate-180";
+    } else if (QTCHECK_MATRIX (matrix, 0, 1, 1, 0)) {
+      rotation_tag = "flip-rotate-270";
     } else {
       GST_FIXME_OBJECT (qtdemux, "Unhandled transformation matrix values");
     }
@@ -11745,7 +11770,7 @@ qtdemux_parse_stereo_svmi_atom (GstQTDemux * qtdemux, QtDemuxStream * stream,
  * traks that do not decode to something (like strm traks) will not have a pad.
  */
 static gboolean
-qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
+qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
 {
   GstByteReader tkhd;
   int offset;
@@ -11917,14 +11942,20 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   /* parse rest of tkhd */
   if (stream->subtype == FOURCC_vide) {
+    guint32 tkhd_matrix[9];
     guint32 matrix[9];
 
     /* version 1 uses some 64-bit ints */
     if (!gst_byte_reader_skip (&tkhd, 20 + value_size))
       goto corrupt_file;
 
-    if (!qtdemux_parse_transformation_matrix (qtdemux, &tkhd, matrix, "tkhd"))
+    if (!qtdemux_parse_transformation_matrix (qtdemux, &tkhd, tkhd_matrix,
+            "tkhd"))
       goto corrupt_file;
+
+    /* calculate the final matrix from the mvhd_matrix and the tkhd matrix */
+    qtdemux_mul_transformation_matrix (qtdemux, mvhd_matrix, tkhd_matrix,
+        matrix);
 
     if (!gst_byte_reader_get_uint32_be (&tkhd, &w)
         || !gst_byte_reader_get_uint32_be (&tkhd, &h))
@@ -14808,11 +14839,14 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   guint64 creation_time;
   GstDateTime *datetime = NULL;
   gint version;
+  GstByteReader mvhd_reader;
+  guint32 matrix[9];
 
   /* make sure we have a usable taglist */
   qtdemux->tag_list = gst_tag_list_make_writable (qtdemux->tag_list);
 
-  mvhd = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_mvhd);
+  mvhd = qtdemux_tree_get_child_by_type_full (qtdemux->moov_node,
+      FOURCC_mvhd, &mvhd_reader);
   if (mvhd == NULL) {
     GST_LOG_OBJECT (qtdemux, "No mvhd node found, looking for redirects.");
     return qtdemux_parse_redirects (qtdemux);
@@ -14823,14 +14857,25 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
     creation_time = QT_UINT64 ((guint8 *) mvhd->data + 12);
     qtdemux->timescale = QT_UINT32 ((guint8 *) mvhd->data + 28);
     qtdemux->duration = QT_UINT64 ((guint8 *) mvhd->data + 32);
+    if (!gst_byte_reader_skip (&mvhd_reader, 4 + 8 + 8 + 4 + 8))
+      return FALSE;
   } else if (version == 0) {
     creation_time = QT_UINT32 ((guint8 *) mvhd->data + 12);
     qtdemux->timescale = QT_UINT32 ((guint8 *) mvhd->data + 20);
     qtdemux->duration = QT_UINT32 ((guint8 *) mvhd->data + 24);
+    if (!gst_byte_reader_skip (&mvhd_reader, 4 + 4 + 4 + 4 + 4))
+      return FALSE;
   } else {
     GST_WARNING_OBJECT (qtdemux, "Unhandled mvhd version %d", version);
     return FALSE;
   }
+
+  if (!gst_byte_reader_skip (&mvhd_reader, 4 + 2 + 2 + 2 * 4))
+    return FALSE;
+
+  if (!qtdemux_parse_transformation_matrix (qtdemux, &mvhd_reader, matrix,
+          "mvhd"))
+    return FALSE;
 
   /* Moving qt creation time (secs since 1904) to unix time */
   if (creation_time != 0) {
@@ -14900,7 +14945,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   /* parse all traks */
   trak = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_trak);
   while (trak) {
-    qtdemux_parse_trak (qtdemux, trak);
+    qtdemux_parse_trak (qtdemux, trak, matrix);
     /* iterate all siblings */
     trak = qtdemux_tree_get_sibling_by_type (trak, FOURCC_trak);
   }
