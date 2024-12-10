@@ -1821,6 +1821,7 @@ struct RawUpload
   GstGLUpload *upload;
   struct RawUploadFrame *in_frame;
   GstGLVideoAllocationParams *params;
+  GstCapsFeatures *features;
 };
 
 static struct RawUploadFrame *
@@ -1876,6 +1877,8 @@ _raw_data_upload_new (GstGLUpload * upload)
   struct RawUpload *raw = g_new0 (struct RawUpload, 1);
 
   raw->upload = upload;
+  raw->features = gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
 
   return raw;
 }
@@ -1940,16 +1943,10 @@ _raw_data_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   struct RawUpload *raw = impl;
   GstCapsFeatures *features;
 
-  features =
-      gst_caps_features_new_single_static_str
-      (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
   /* Also consider the omited system memory feature cases, such as
      video/x-raw(meta:GstVideoOverlayComposition) */
-  if (!_filter_caps_with_features (in_caps, features, NULL)) {
-    gst_caps_features_free (features);
+  if (!_filter_caps_with_features (in_caps, raw->features, NULL))
     return FALSE;
-  }
-  gst_caps_features_free (features);
 
   features = gst_caps_get_features (out_caps, 0);
   if (!gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY))
@@ -2022,6 +2019,7 @@ _raw_data_upload_free (gpointer impl)
   if (raw->params)
     gst_gl_allocation_params_free ((GstGLAllocationParams *) raw->params);
 
+  gst_caps_features_free (raw->features);
   g_free (raw);
 }
 
@@ -2039,6 +2037,83 @@ static const UploadMethod _raw_data_upload = {
   &_raw_data_upload_perform,
   &_raw_data_upload_free
 };
+
+#if GST_GL_HAVE_DMABUF
+
+static gpointer
+_raw_data_upload_drm_new (GstGLUpload * upload)
+{
+  struct RawUpload *raw = g_new0 (struct RawUpload, 1);
+
+  raw->upload = upload;
+  raw->features = gst_caps_features_new_single_static_str
+      (GST_CAPS_FEATURE_MEMORY_DMABUF);
+
+  return raw;
+}
+
+static GstCaps *
+_raw_data_upload_drm_transform_caps (gpointer impl, GstGLContext * context,
+    GstPadDirection direction, GstCaps * caps)
+{
+  struct RawUpload *raw = impl;
+  GstGLDrmFormatFlags flags =
+      GST_GL_DRM_FORMAT_LINEAR_ONLY | GST_GL_DRM_FORMAT_INCLUDE_EMULATED;
+  GstCaps *ret;
+
+  if (direction == GST_PAD_SINK) {
+    ret = _dma_buf_upload_transform_caps_common (caps, context, direction,
+        flags, 1 << GST_GL_TEXTURE_TARGET_2D, GST_CAPS_FEATURE_MEMORY_DMABUF,
+        GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
+
+    if (!ret) {
+      GST_DEBUG_OBJECT (raw->upload,
+          "direction %s, fails to transformed DMA caps %" GST_PTR_FORMAT,
+          "sink", caps);
+      return NULL;
+    }
+  } else {
+    gint i, n;
+
+    ret = _dma_buf_upload_transform_caps_common (caps, context, direction,
+        flags, 1 << GST_GL_TEXTURE_TARGET_2D, GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+        GST_CAPS_FEATURE_MEMORY_DMABUF);
+
+    if (!ret) {
+      GST_DEBUG_OBJECT (raw->upload,
+          "direction %s, fails to transformed DMA caps %" GST_PTR_FORMAT,
+          "src", caps);
+      return NULL;
+    }
+
+    n = gst_caps_get_size (ret);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (ret, i);
+
+      gst_structure_remove_fields (s, "texture-target", NULL);
+    }
+  }
+
+  return ret;
+}
+
+static GstStaticCaps _raw_data_upload_drm_caps =
+    GST_STATIC_CAPS (GST_VIDEO_DMA_DRM_CAPS_MAKE ";"
+    GST_VIDEO_CAPS_MAKE (GST_GL_MEMORY_VIDEO_FORMATS_STR));
+
+static const UploadMethod _raw_data_upload_drm = {
+  "Raw Data DRM",
+  0,
+  &_raw_data_upload_drm_caps,
+  &_raw_data_upload_drm_new,
+  &_raw_data_upload_drm_transform_caps,
+  &_raw_data_upload_accept,
+  &_raw_data_upload_propose_allocation,
+  &_raw_data_upload_perform,
+  &_raw_data_upload_free
+};
+
+#endif /* GST_GL_HAVE_DMABUF */
 
 #if GST_GL_HAVE_VIV_DIRECTVIV
 #ifndef GL_BGRA_EXT
@@ -2888,7 +2963,10 @@ static const UploadMethod *upload_methods[] = {
 #endif /* HAVE_NVMM */
   &_upload_meta_upload,
   /* Raw data must always be last / least preferred */
-  &_raw_data_upload
+  &_raw_data_upload,
+#if GST_GL_HAVE_DMABUF
+  &_raw_data_upload_drm,
+#endif
 };
 
 static GMutex upload_global_lock;
