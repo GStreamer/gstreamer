@@ -26,10 +26,11 @@ gstanalytics = library('gstanalytics-' + api_version,
   soversion : soversion,
   darwin_versions : osxversion,
   install : true,
-  dependencies : [gstbase_dep, gstvideo_dep])
+  dependencies : [gstbase_dep, gstvideo_dep],
+  link_args : ['-lm'])
 
 pkgconfig.generate(gstanalytics,
-  libraries : [gst_dep, gstbase_dep],
+  libraries : [gst_dep, gstbase_dep, '-lm'],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
   name : pkg_name,

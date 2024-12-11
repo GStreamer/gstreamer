@@ -331,6 +331,46 @@ identified by @id is stored.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_oriented_location" c:identifier="gst_analytics_od_mtd_get_oriented_location" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Retrieve oriented location and location confidence level.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">TRUE on success, otherwise FALSE.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">instance</doc>
+            <type name="ODMtd" c:type="const GstAnalyticsODMtd*"/>
+          </instance-parameter>
+          <parameter name="x" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">x component of upper-left corner of the object location (pre-rotation)</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="y" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">y component of upper-left corner of the object location (pre-rotation)</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="w" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">bounding box width of the object location</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="h" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">bounding box height of the object location</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="r" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Rotation of the bounding box in radians &lt;0, 2xPI&gt;
+   with respect to the bounding box center
+   (the rotation value is a clock-wise angle)</doc>
+            <type name="gfloat" c:type="gfloat*"/>
+          </parameter>
+          <parameter name="loc_conf_lvl" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Confidence on object location</doc>
+            <type name="gfloat" c:type="gfloat*"/>
+          </parameter>
+        </parameters>
+      </method>
       <function name="get_mtd_type" c:identifier="gst_analytics_od_mtd_get_mtd_type" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Get an id that represent object-detection metadata type</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
@@ -498,6 +538,54 @@ new struct sub-classing GstAnalyticsRelatableMtd.</doc>
           <parameter name="cls_mtd" direction="out" caller-allocates="1" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Handle updated to newly added classification meta.</doc>
             <type name="ClsMtd" c:type="GstAnalyticsClsMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_oriented_od_mtd" c:identifier="gst_analytics_relation_meta_add_oriented_od_mtd" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Added successfully</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Instance of #GstAnalyticsRelationMeta where to add classification instance</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Quark of the object type</doc>
+            <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+          <parameter name="x" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">x component of bounding box upper-left corner (pre-rotation)</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="y" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">y component of bounding box upper-left corner (pre-rotation)</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="w" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">bounding box width</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="h" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">bounding box height</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="r" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">bounding box rotation in radians &lt;0, 2xPI&gt;
+   with respect to the bounding box center
+   (the rotation value is a clock-wise angle)</doc>
+            <type name="gfloat" c:type="gfloat"/>
+          </parameter>
+          <parameter name="loc_conf_lvl" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">confidence level on the object location</doc>
+            <type name="gfloat" c:type="gfloat"/>
+          </parameter>
+          <parameter name="od_mtd" direction="out" caller-allocates="1" transfer-ownership="none" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Handle updated with newly added object detection
+   meta. Add an object-detetion metadata to @instance.</doc>
+            <type name="ODMtd" c:type="GstAnalyticsODMtd*"/>
           </parameter>
         </parameters>
       </method>

@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2023 Collabora Ltd
+ * Copyright (C) 2024 Intel Corporation
  *
  * gstanalyticsobjectdetectionmtd.h
  *
@@ -52,6 +53,11 @@ gboolean gst_analytics_od_mtd_get_location (const GstAnalyticsODMtd *
     instance, gint * x, gint * y, gint * w, gint * h, gfloat * loc_conf_lvl);
 
 GST_ANALYTICS_META_API
+gboolean gst_analytics_od_mtd_get_oriented_location (const GstAnalyticsODMtd
+    * instance, gint * x, gint * y, gint * w, gint * h, gfloat * r,
+    gfloat * loc_conf_lvl);
+
+GST_ANALYTICS_META_API
 gboolean gst_analytics_od_mtd_get_confidence_lvl (const GstAnalyticsODMtd *
     instance, gfloat * loc_conf_lvl);
 
@@ -62,6 +68,12 @@ GST_ANALYTICS_META_API
 gboolean gst_analytics_relation_meta_add_od_mtd (GstAnalyticsRelationMeta *
     instance, GQuark type, gint x, gint y, gint w, gint h, gfloat loc_conf_lvl,
     GstAnalyticsODMtd * od_mtd);
+
+GST_ANALYTICS_META_API
+gboolean
+gst_analytics_relation_meta_add_oriented_od_mtd (GstAnalyticsRelationMeta *
+    instance, GQuark type, gint x, gint y, gint w, gint h, gfloat r,
+    gfloat loc_conf_lvl, GstAnalyticsODMtd * od_mtd);
 
 GST_ANALYTICS_META_API
 gboolean

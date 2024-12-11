@@ -4,6 +4,7 @@
 # gst-python - Python bindings for GStreamer
 # Copyright (C) 2024 Collabora Ltd
 #  Author: Olivier Crête <olivier.crete@collabora.com>
+# Copyright (C) 2024 Intel Corporation
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -84,6 +85,36 @@ class TestAnalyticsODMtd(TestCase):
         self.assertEqual(location[4], 40)
         self.assertAlmostEqual(location[5], 0.3, 3)
 
+        location = meta.get_od_mtd(0)[1].get_oriented_location()
+        self.assertEqual(location[1], 10)
+        self.assertEqual(location[2], 20)
+        self.assertEqual(location[3], 30)
+        self.assertEqual(location[4], 40)
+        self.assertEqual(location[5], 0)
+        self.assertAlmostEqual(location[6], 0.3, 3)
+
+        (ret, mtd) = meta.add_oriented_od_mtd(qk, 600, 400, 200, 100, 0.785, 0.3)
+        self.assertTrue(ret)
+        self.assertIsNotNone(mtd)
+
+        (ret, mtd) = meta.get_od_mtd(1)
+        self.assertTrue(ret)
+        self.assertIsNotNone(mtd)
+
+        location = mtd.get_oriented_location()
+        self.assertEqual(location[1], 600)
+        self.assertEqual(location[2], 400)
+        self.assertEqual(location[3], 200)
+        self.assertEqual(location[4], 100)
+        self.assertAlmostEqual(location[5], 0.785, 3)
+        self.assertAlmostEqual(location[6], 0.3, 3)
+
+        location = mtd.get_location()
+        self.assertEqual(location[1], 594)
+        self.assertEqual(location[2], 344)
+        self.assertEqual(location[3], 212)
+        self.assertEqual(location[4], 212)
+        self.assertAlmostEqual(location[5], 0.3, 3)
 
 class TestAnalyticsClsMtd(TestCase):
     def test(self):

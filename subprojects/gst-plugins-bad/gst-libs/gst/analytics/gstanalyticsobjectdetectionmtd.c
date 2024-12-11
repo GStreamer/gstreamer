@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2023 Collabora Ltd
+ * Copyright (C) 2024 Intel Corporation
  *
  * gstanalyticsobjectdetectionmtd.c
  *
@@ -25,6 +26,7 @@
 #include "gstanalyticsobjectdetectionmtd.h"
 
 #include <gst/video/video.h>
+#include <math.h>
 
 /**
  * SECTION:gstanalyticsobjectdetectionmtd
@@ -45,10 +47,13 @@ typedef struct _GstAnalyticsODMtdData GstAnalyticsODMtdData;
 /**
  * GstAnalyticsODMtdData:
  * @object_type: Type of object
- * @x: x component of upper-left corner
- * @y: y component of upper-left corner
+ * @x: x component of upper-left corner (pre-rotation)
+ * @y: y component of upper-left corner (pre-rotation)
  * @w: bounding box width
  * @h: bounding box height
+ * @r: bounding box rotation in radians <0, 2xPI>
+ *    with respect to the bounding box center
+ *    (the rotation value is a clock-wise angle)
  * @location_confidence_lvl: Confidence on object location
  *
  * Store information on results of object detection
@@ -62,6 +67,7 @@ struct _GstAnalyticsODMtdData
   gint y;
   gint w;
   gint h;
+  gfloat r;
   gfloat location_confidence_lvl;
 };
 
@@ -153,6 +159,92 @@ gst_analytics_od_mtd_get_location (const GstAnalyticsODMtd * instance,
   if (loc_conf_lvl)
     *loc_conf_lvl = data->location_confidence_lvl;
 
+  gfloat r = data->r;
+  if (r != 0) {
+    gint xc = *x + *w / 2;
+    gint yc = *y + *h / 2;
+
+    gint corners[4][2] = {
+      {*x, *y},
+      {*x + *w, *y},
+      {*x + *w, *y + *h},
+      {*x, *y + *h}
+    };
+
+    gint rotated_corners[4][2];
+    for (int i = 0; i < 4; i++) {
+      gint xt = corners[i][0] - xc;
+      gint yt = corners[i][1] - yc;
+
+      gint xr = (gint) round (xt * cos (r) - yt * sin (r));
+      gint yr = (gint) round (xt * sin (r) + yt * cos (r));
+
+      rotated_corners[i][0] = xr + xc;
+      rotated_corners[i][1] = yr + yc;
+    }
+
+    *x = rotated_corners[0][0];
+    *y = rotated_corners[0][1];
+    gint max_x = rotated_corners[0][0];
+    gint max_y = rotated_corners[0][1];
+
+    for (int i = 1; i < 4; i++) {
+      if (rotated_corners[i][0] < *x)
+        *x = rotated_corners[i][0];
+      if (rotated_corners[i][1] < *y)
+        *y = rotated_corners[i][1];
+      if (rotated_corners[i][0] > max_x)
+        max_x = rotated_corners[i][0];
+      if (rotated_corners[i][1] > max_y)
+        max_y = rotated_corners[i][1];
+    }
+
+    *w = max_x - *x;
+    *h = max_y - *y;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_analytics_od_mtd_get_oriented_location:
+ * @instance: instance
+ * @x: (out): x component of upper-left corner of the object location (pre-rotation)
+ * @y: (out): y component of upper-left corner of the object location (pre-rotation)
+ * @w: (out): bounding box width of the object location
+ * @h: (out): bounding box height of the object location
+ * @r: (out): Rotation of the bounding box in radians <0, 2xPI>
+ *    with respect to the bounding box center
+ *    (the rotation value is a clock-wise angle)
+ * @loc_conf_lvl: (out)(optional): Confidence on object location
+
+ *
+ * Retrieve oriented location and location confidence level.
+ *
+ * Returns: TRUE on success, otherwise FALSE.
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_analytics_od_mtd_get_oriented_location (const GstAnalyticsODMtd * instance,
+    gint * x, gint * y, gint * w, gint * h, gfloat * r, gfloat * loc_conf_lvl)
+{
+  GstAnalyticsODMtdData *data;
+
+  g_return_val_if_fail (instance && x && y && w && h && r, FALSE);
+  data = gst_analytics_relation_meta_get_mtd_data (instance->meta,
+      instance->id);
+  g_return_val_if_fail (data != NULL, FALSE);
+
+  *x = data->x;
+  *y = data->y;
+  *w = data->w;
+  *h = data->h;
+  *r = data->r;
+
+  if (loc_conf_lvl)
+    *loc_conf_lvl = data->location_confidence_lvl;
+
   return TRUE;
 }
 
@@ -233,6 +325,47 @@ gst_analytics_relation_meta_add_od_mtd (GstAnalyticsRelationMeta *
     od_mtd_data->y = y;
     od_mtd_data->w = w;
     od_mtd_data->h = h;
+    od_mtd_data->r = 0;
+    od_mtd_data->location_confidence_lvl = loc_conf_lvl;
+    od_mtd_data->object_type = type;
+  }
+  return od_mtd_data != NULL;
+}
+
+/**
+ * gst_analytics_relation_meta_add_oriented_od_mtd:
+ * @instance: Instance of #GstAnalyticsRelationMeta where to add classification instance
+ * @type: Quark of the object type
+ * @x: x component of bounding box upper-left corner (pre-rotation)
+ * @y: y component of bounding box upper-left corner (pre-rotation)
+ * @w: bounding box width
+ * @h: bounding box height
+ * @r: bounding box rotation in radians <0, 2xPI>
+ *    with respect to the bounding box center
+ *    (the rotation value is a clock-wise angle)
+ * @loc_conf_lvl: confidence level on the object location
+ * @od_mtd: (out)(nullable): Handle updated with newly added object detection
+ *    meta. Add an object-detetion metadata to @instance.
+ *
+ * Returns: Added successfully
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_analytics_relation_meta_add_oriented_od_mtd (GstAnalyticsRelationMeta *
+    instance, GQuark type, gint x, gint y, gint w, gint h, gfloat r,
+    gfloat loc_conf_lvl, GstAnalyticsODMtd * od_mtd)
+{
+  g_return_val_if_fail (instance != NULL, FALSE);
+  gsize size = sizeof (GstAnalyticsODMtdData);
+  GstAnalyticsODMtdData *od_mtd_data = (GstAnalyticsODMtdData *)
+      gst_analytics_relation_meta_add_mtd (instance, &od_impl, size, od_mtd);
+  if (od_mtd_data) {
+    od_mtd_data->x = x;
+    od_mtd_data->y = y;
+    od_mtd_data->w = w;
+    od_mtd_data->h = h;
+    od_mtd_data->r = r;
     od_mtd_data->location_confidence_lvl = loc_conf_lvl;
     od_mtd_data->object_type = type;
   }

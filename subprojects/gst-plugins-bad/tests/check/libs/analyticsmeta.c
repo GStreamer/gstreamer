@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2022 Collabora Ltd
+ * Copyright (C) 2024 Intel Corporation
  *
  * analyticmeta.c
  *
@@ -542,6 +543,34 @@ GST_START_TEST (test_add_od_meta)
 
 GST_END_TEST;
 
+GST_START_TEST (test_add_oriented_od_meta)
+{
+  /* Verity we can add Oriented Object Detection relatable metadata to a relation
+   * metadata */
+  GstBuffer *buf;
+  GstAnalyticsRelationMetaInitParams init_params = { 5, 150 };
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsODMtd od_mtd;
+  gboolean ret;
+  buf = gst_buffer_new ();
+
+  rmeta = gst_buffer_add_analytics_relation_meta_full (buf, &init_params);
+
+  GQuark type = g_quark_from_string ("dog");
+  gint x = 20;
+  gint y = 20;
+  gint w = 10;
+  gint h = 15;
+  gfloat r = 0.785f;
+  gfloat loc_conf_lvl = 0.6f;
+  ret = gst_analytics_relation_meta_add_oriented_od_mtd (rmeta, type, x, y,
+      w, h, r, loc_conf_lvl, &od_mtd);
+  fail_unless (ret == TRUE);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_od_meta_fields)
 {
   /* Verify we can readback fields of object detection metadata */
@@ -580,6 +609,160 @@ GST_START_TEST (test_od_meta_fields)
   gst_analytics_od_mtd_get_confidence_lvl (&od_mtd, &_loc_conf_lvl);
 
   fail_unless (_loc_conf_lvl == loc_conf_lvl);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_oriented_od_meta_fields)
+{
+  /* Verify we can readback fields of object detection metadata */
+  GstBuffer *buf;
+  GstAnalyticsRelationMetaInitParams init_params = { 5, 150 };
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsODMtd od_mtd;
+  gboolean ret;
+  buf = gst_buffer_new ();
+
+  rmeta = gst_buffer_add_analytics_relation_meta_full (buf, &init_params);
+
+  GQuark type = g_quark_from_string ("dog");
+  gint x = 21;
+  gint y = 20;
+  gint w = 10;
+  gint h = 15;
+  gfloat r = 0.785f;
+  gfloat loc_conf_lvl = 0.6f;
+  ret = gst_analytics_relation_meta_add_oriented_od_mtd (rmeta, type, x, y,
+      w, h, r, loc_conf_lvl, &od_mtd);
+
+  fail_unless (ret == TRUE);
+
+  gint _x, _y, _w, _h;
+  gfloat _r, _loc_conf_lvl;
+  gst_analytics_od_mtd_get_oriented_location (&od_mtd, &_x, &_y, &_w, &_h, &_r,
+      &_loc_conf_lvl);
+
+  fail_unless (_x == x);
+  fail_unless (_y == y);
+  fail_unless (_w == w);
+  fail_unless (_h == h);
+  fail_unless (_r == r);
+  fail_unless (_loc_conf_lvl == loc_conf_lvl);
+
+  _loc_conf_lvl = -200.0;       // dirty this var by setting invalid value.
+  gst_analytics_od_mtd_get_confidence_lvl (&od_mtd, &_loc_conf_lvl);
+
+  fail_unless (_loc_conf_lvl == loc_conf_lvl);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_add_non_oriented_get_oriented_od_meta_fields)
+{
+  /* Verify we can readback fields of object detection metadata */
+  GstBuffer *buf;
+  GstAnalyticsRelationMetaInitParams init_params = { 5, 150 };
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsODMtd od_mtd;
+  gboolean ret;
+  buf = gst_buffer_new ();
+
+  rmeta = gst_buffer_add_analytics_relation_meta_full (buf, &init_params);
+
+  GQuark type = g_quark_from_string ("dog");
+  gint x = 21;
+  gint y = 20;
+  gint w = 10;
+  gint h = 15;
+  gfloat loc_conf_lvl = 0.6f;
+  ret = gst_analytics_relation_meta_add_od_mtd (rmeta, type, x, y,
+      w, h, loc_conf_lvl, &od_mtd);
+
+  fail_unless (ret == TRUE);
+
+  gint _x, _y, _w, _h;
+  gfloat _r, _loc_conf_lvl;
+  gst_analytics_od_mtd_get_oriented_location (&od_mtd, &_x, &_y, &_w, &_h, &_r,
+      &_loc_conf_lvl);
+
+  fail_unless (_x == x);
+  fail_unless (_y == y);
+  fail_unless (_w == w);
+  fail_unless (_h == h);
+  fail_unless (_r == 0);
+  fail_unless (_loc_conf_lvl == loc_conf_lvl);
+
+  _loc_conf_lvl = -200.0;       // dirty this var by setting invalid value.
+  gst_analytics_od_mtd_get_confidence_lvl (&od_mtd, &_loc_conf_lvl);
+
+  fail_unless (_loc_conf_lvl == loc_conf_lvl);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_add_oriented_get_non_oriented_od_meta_fields)
+{
+  /* Verify we can readback fields of object detection metadata */
+  GstBuffer *buf;
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsODMtd od_mtd;
+  gboolean ret;
+  gint _x, _y, _w, _h;
+  gfloat _loc_conf_lvl;
+
+  buf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  struct
+  {
+    gint x, y, w, h;
+    gfloat r;
+    gint expected_x, expected_y, expected_w, expected_h;
+  } test_cases[] = {
+    {500, 300, 200, 100, 0.0f, 500, 300, 200, 100},
+    {600, 400, 200, 100, 0.785f, 594, 344, 212, 212},
+    {400, 400, 150, 100, 1.570f, 425, 375, 100, 150},
+    {400, 300, 200, 100, 2.268f, 397, 241, 206, 218},
+    {400, 400, 200, 100, 3.142f, 400, 400, 200, 100},
+    {300, 300, 150, 100, 4.712f, 325, 275, 100, 150},
+    {500, 400, 1, 100, 0.785f, 465, 415, 71, 71},
+    {400, 500, 100, 1, 2.268f, 417, 461, 65, 77},
+    {400, 400, 100, 100, 6.283f, 400, 400, 100, 100},
+  };
+
+  gfloat loc_conf_lvl = 0.9f;
+  for (gsize i = 0; i < G_N_ELEMENTS (test_cases); i++) {
+    gint x = test_cases[i].x;
+    gint y = test_cases[i].y;
+    gint w = test_cases[i].w;
+    gint h = test_cases[i].h;
+    gfloat r = test_cases[i].r;
+
+    gint expected_x = test_cases[i].expected_x;
+    gint expected_y = test_cases[i].expected_y;
+    gint expected_w = test_cases[i].expected_w;
+    gint expected_h = test_cases[i].expected_h;
+
+    ret =
+        gst_analytics_relation_meta_add_oriented_od_mtd (rmeta,
+        g_quark_from_string ("dog"), x, y, w, h, r, loc_conf_lvl, &od_mtd);
+    fail_unless (ret == TRUE);
+
+    gst_analytics_od_mtd_get_location (&od_mtd, &_x, &_y, &_w, &_h,
+        &_loc_conf_lvl);
+
+    fail_unless (_x == expected_x);
+    fail_unless (_y == expected_y);
+    fail_unless (_w == expected_w);
+    fail_unless (_h == expected_h);
+    fail_unless (_loc_conf_lvl == loc_conf_lvl);
+  }
 
   gst_buffer_unref (buf);
 }
@@ -1432,7 +1615,13 @@ analyticmeta_suite (void)
   tc_chain_od = tcase_create ("Object Detection Mtd");
   suite_add_tcase (s, tc_chain_od);
   tcase_add_test (tc_chain_od, test_add_od_meta);
+  tcase_add_test (tc_chain_od, test_add_oriented_od_meta);
   tcase_add_test (tc_chain_od, test_od_meta_fields);
+  tcase_add_test (tc_chain_od, test_oriented_od_meta_fields);
+  tcase_add_test (tc_chain_od,
+      test_add_non_oriented_get_oriented_od_meta_fields);
+  tcase_add_test (tc_chain_od,
+      test_add_oriented_get_non_oriented_od_meta_fields);
 
   tc_chain_od_cls = tcase_create ("Object Detection <-> Classification Mtd");
   suite_add_tcase (s, tc_chain_od_cls);
