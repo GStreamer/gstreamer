@@ -1695,6 +1695,19 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
   }
 #endif
 
+  switch (status_code) {
+    case SOUP_STATUS_SERVICE_UNAVAILABLE:
+    case SOUP_STATUS_INTERNAL_SERVER_ERROR:
+      if (src->max_retries == -1 || src->retry_count < src->max_retries) {
+        return GST_FLOW_CUSTOM_ERROR;
+      }
+      /* Error out when max_retries is reached. */
+      break;
+    default:
+      break;
+  }
+
+
   if (SOUP_STATUS_IS_CLIENT_ERROR (status_code) ||
       SOUP_STATUS_IS_REDIRECTION (status_code) ||
       SOUP_STATUS_IS_SERVER_ERROR (status_code)) {
