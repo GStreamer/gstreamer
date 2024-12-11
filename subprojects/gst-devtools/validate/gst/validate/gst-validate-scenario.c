@@ -5222,7 +5222,13 @@ handle_bus_message (MessageData * d)
             GST_VALIDATE_REPORT_ACTION (scenario, act,
                 SCENARIO_ACTION_EXECUTION_ERROR,
                 "Error message happened while executing action");
+            if (scenario->priv->changing_state) {
+              gst_element_set_state (pipeline, GST_STATE_NULL);
+            }
+            act->priv->state = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
             gst_validate_action_set_done (act);
+            gst_bus_set_flushing (scenario->priv->bus, TRUE);
+            gst_bus_set_flushing (scenario->priv->bus, FALSE);
 
             gst_validate_action_unref (act);
           }
