@@ -45,6 +45,16 @@ typedef enum {
   GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_CANCELLED,
 } GstSoupHTTPSrcSessionIOStatus;
 
+typedef struct {
+  gint max;
+  gint count;            /* Number of retries since we received data */
+
+  gdouble backoff_factor;
+  gdouble backoff_max;
+  GMutex lock;
+  GCond cond;
+} Retry;
+
 /* opaque from here, implementation detail */
 typedef struct _GstSoupSession GstSoupSession;
 
@@ -66,8 +76,6 @@ struct _GstSoupHTTPSrc {
   gboolean session_is_shared;
   GstSoupSession *external_session; /* Shared via GstContext */
   SoupMessage *msg;            /* Request message. */
-  gint retry_count;            /* Number of retries since we received data */
-  gint max_retries;            /* Maximum number of retries */
   gchar *method;               /* HTTP method */
 
   GstFlowReturn headers_ret;
@@ -124,6 +132,8 @@ struct _GstSoupHTTPSrc {
   GstEvent *http_headers_event;
 
   gint64 last_socket_read_time;
+
+  Retry retry;
 };
 
 struct _GstSoupHTTPSrcClass {

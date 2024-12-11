@@ -24502,6 +24502,34 @@
                         "type": "gint",
                         "writable": true
                     },
+                    "retry-backoff-factor": {
+                        "blurb": "Exponential retry backoff factor in seconds",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "1.79769e+308",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    },
+                    "retry-backoff-max": {
+                        "blurb": "Maximum backoff delay in seconds",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "60",
+                        "max": "1.79769e+308",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    },
                     "ssl-ca-file": {
                         "blurb": "Location of a SSL anchor CA file to use",
                         "conditionally-available": false,
