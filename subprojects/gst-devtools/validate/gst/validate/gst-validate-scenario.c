@@ -5203,9 +5203,18 @@ handle_bus_message (MessageData * d)
       }
 
       if (is_error && priv->allow_errors) {
-        GST_INFO_OBJECT (scenario, "Got error but ignoring it!");
-        if (scenario->priv->needs_async_done || scenario->priv->changing_state) {
+#ifndef GST_DISABLE_GST_DEBUG
+        GError *err = NULL;
+        gchar *dbg_info = NULL;
+        gst_message_parse_error (message, &err, &dbg_info);
 
+        GST_INFO_OBJECT (scenario, "Got expected error %" GST_PTR_FORMAT,
+            message);
+        g_clear_error (&err);
+        g_free (dbg_info);
+#endif
+
+        if (scenario->priv->needs_async_done || scenario->priv->changing_state) {
           if (scenario->priv->actions) {
             GstValidateAction *act =
                 gst_validate_action_ref (scenario->priv->actions->data);
