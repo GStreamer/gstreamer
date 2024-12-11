@@ -109,7 +109,7 @@ handle_xdg_toplevel_close (void *data, struct xdg_toplevel *xdg_toplevel)
 {
   GstWlWindow *self = data;
 
-  GST_DEBUG ("XDG toplevel got a \"close\" event.");
+  GST_DEBUG_OBJECT (self, "XDG toplevel got a \"close\" event.");
   g_signal_emit (self, signals[CLOSED], 0);
 }
 
@@ -120,7 +120,7 @@ handle_xdg_toplevel_configure (void *data, struct xdg_toplevel *xdg_toplevel,
   GstWlWindow *self = data;
   const uint32_t *state;
 
-  GST_DEBUG ("XDG toplevel got a \"configure\" event, [ %d, %d ].",
+  GST_DEBUG_OBJECT (self, "XDG toplevel got a \"configure\" event, [ %d, %d ].",
       width, height);
 
   wl_array_for_each (state, states) {
@@ -316,7 +316,7 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
     priv->xdg_surface = xdg_wm_base_get_xdg_surface (xdg_wm_base,
         priv->area_surface);
     if (!priv->xdg_surface) {
-      GST_ERROR ("Unable to get xdg_surface");
+      GST_ERROR_OBJECT (self, "Unable to get xdg_surface");
       goto error;
     }
     xdg_surface_add_listener (priv->xdg_surface, &xdg_surface_listener, self);
@@ -324,7 +324,7 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
     /* Then the toplevel */
     priv->xdg_toplevel = xdg_surface_get_toplevel (priv->xdg_surface);
     if (!priv->xdg_toplevel) {
-      GST_ERROR ("Unable to get xdg_toplevel");
+      GST_ERROR_OBJECT (self, "Unable to get xdg_toplevel");
       goto error;
     }
     xdg_toplevel_add_listener (priv->xdg_toplevel,
@@ -347,7 +347,8 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
     while (!priv->configured) {
       if (!g_cond_wait_until (&priv->configure_cond, &priv->configure_mutex,
               timeout)) {
-        GST_WARNING ("The compositor did not send configure event.");
+        GST_WARNING_OBJECT (self,
+            "The compositor did not send configure event.");
         break;
       }
     }
@@ -356,7 +357,8 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
     zwp_fullscreen_shell_v1_present_surface (fullscreen_shell,
         priv->area_surface, ZWP_FULLSCREEN_SHELL_V1_PRESENT_METHOD_ZOOM, NULL);
   } else {
-    GST_ERROR ("Unable to use either xdg_wm_base or zwp_fullscreen_shell.");
+    GST_ERROR_OBJECT (self,
+        "Unable to use either xdg_wm_base or zwp_fullscreen_shell.");
     goto error;
   }
 
@@ -535,7 +537,7 @@ frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
   GstWlBuffer *next_buffer;
 
-  GST_INFO ("frame_redraw_cb ");
+  GST_DEBUG_OBJECT (self, "frame_redraw_cb");
 
   wl_callback_destroy (callback);
   priv->frame_callback = NULL;
