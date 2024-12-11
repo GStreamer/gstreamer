@@ -66,6 +66,8 @@
 #include <gst/validate/gst-validate-override-registry.h>
 #include <gst/validate/gst-validate-pipeline-monitor.h>
 
+extern gboolean run_http_request (const GstStructure * args, GError ** error);
+
 #define GST_VALIDATE_SCENARIO_DIRECTORY "scenarios"
 
 #define DEFAULT_SEEK_TOLERANCE (1 * GST_MSECOND)        /* tolerance seek interval
@@ -7524,6 +7526,25 @@ done:
 }
 
 static GstValidateExecuteActionReturn
+_execute_http_request (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GError *error = NULL;
+  GstValidateExecuteActionReturn ret = GST_VALIDATE_EXECUTE_ACTION_OK;
+
+  if (!run_http_request (action->structure, &error)) {
+    GST_VALIDATE_REPORT_ACTION (scenario, action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
+        "Failed to execute HTTP request: %s",
+        error ? error->message : "Unknown error");
+    g_clear_error (&error);
+    ret = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  return ret;
+}
+
+static GstValidateExecuteActionReturn
 _execute_start_http_server (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
@@ -9148,6 +9169,61 @@ register_action_types (void)
       "When a scenario is specified, and while the sub pipeline is running\n"
       " it will be possible to execute actions from the main scenario on that pipeline\n"
       " using the `run-on-sub-pipeline` action type.",
+      GST_VALIDATE_ACTION_TYPE_NONE);
+
+  REGISTER_ACTION_TYPE("http-request", _execute_http_request,
+      ((GstValidateActionParameter[]) {
+        {
+          .name = "uri",
+          .description = "The URI to send the request to",
+          .mandatory = TRUE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "method",
+          .description = "The HTTP method to use (GET, POST, etc)",
+          .mandatory = TRUE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "body",
+          .description = "The request body (for POST/PUT requests)",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "headers",
+          .description = "The request headers as Content-Type",
+          .mandatory = FALSE,
+          .types = "string",
+          .def = "application/json",
+          NULL
+        },
+        {
+          .name = "expected-response",
+          .description = "The exact expected response as a string",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {NULL}
+      }),
+      "Send an HTTP request to a server.\n"
+      "\n"
+      "NOTE: This is not expected to be usebale on any server but the\n"
+      "one started with the `start-http-server` action.\n"
+      "\n"
+      "Example:\n"
+      "``` jproperties\n"
+      "http-request,\n"
+      "  uri=\"http://127.0.0.1:$(http_server_port)/test\",\n"
+      "  method=POST,\n"
+      "  body=\"test data\",\n"
+      "  headers=\"text/plain\"\n"
+      "```\n",
       GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE("start-http-server", _execute_start_http_server,

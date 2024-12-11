@@ -1,6 +1,7 @@
 runner_file = files('gst-validate-runner.c')
 gstvalidate_sources = files(
     'gst-validate-reporter.c',
+    'gst-validate-http-actions.c',
     'gst-validate-mockdecryptor.c',
     'gst-validate-monitor.c',
     'gst-validate-element-monitor.c',
