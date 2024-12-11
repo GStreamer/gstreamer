@@ -1,0 +1,73 @@
+meta,
+    handles-states=true,
+    ignore-eos=true,
+    allow-errors=true,
+    args = {
+        "playbin3 name=pb video-sink=fakesink audio-sink=fakesink",
+    },
+    expected-issues = {
+        # First attempt to play while the mpd is not available
+        "expected-issue, issue-id=\"runtime::error-on-bus\", details=\".*Service Unavailable.*\"",
+        "expected-issue, issue-id=\"runtime::error-on-bus\", details=\".*Got error: Internal data stream error.*\"",
+        "expected-issue, issue-id=\"scenario::execution-error\", details=\".*Error message happened while executing action.*\"",
+        # Spurious error that happens racily when tearing down the pipeline
+        "expected-issue, issue-id=\"runtime::error-on-bus\", details=\".*Stream doesn't contain enough.*\", sometimes=true",
+    }
+
+start-http-server, working-directory="$(test_dir)/../../../medias/defaults/dash/webm/"
+set-vars,
+  start_count_uri="http://127.0.0.1:$(http_server_port)/admin/failure-counts/start",
+  status_rules_uri="http://127.0.0.1:$(http_server_port)/admin/status-rules",
+  failure_count_uri="http://127.0.0.1:$(http_server_port)/admin/failure-counts"
+
+
+set-properties, pb::uri="http://127.0.0.1:$(http_server_port)/output.mpd"
+
+# Set retry backoff factor to 0.5 meaning it will wait for:
+# - first retry: 1s
+# - second retry: 2s
+# Total: 3s
+set-property, on-all-instances=true, property-name="retry-backoff-factor", property-value=0.50, target-element-factory-name=souphttpsrc
+set-property, on-all-instances=true, property-name="retry-backoff-factor", property-value=0.50, target-element-factory-name=dashdemux2
+
+
+# Force the HTTP server to return 503 (Service Unavailable) for 5 seconds
+# to download the DASH manifest (output.mpd). souphttpsrc will retry 3 times by
+# for a total duration of 3s, meaning that the pipeline and we get the
+# "First attempt to play while the mpd is not available" expected issues
+http-request, uri="$(status_rules_uri)", method=PUT,
+    body="{\"path\": \"/output.mpd\", \"during\": 5.0, \"status_code\": 503}"
+play, description="Playing will fail as souphttpsrc::retries=3 by default"
+
+# Force the HTTP server to return 503 (Service Unavailable) for 2 seconds
+# to download the DASH manifest (output.mpd). souphttpsrc will retry 3 times
+# with a total duration of 3s, meaning that the pipeline should work
+http-request, uri="$(status_rules_uri)", method=PUT,
+    body="{\"path\": \"/output.mpd\", \"during\": 2.0, \"status_code\": 503}"
+http-request, uri="$(start_count_uri)", method=PUT,
+    body="{\"path\": \"/output.mpd\"}"
+http-request, uri="$(failure_count_uri)/output.mpd", method=GET,
+    expected-response="{\"path\": \"/output.mpd\", \"count\": 0}"
+
+play, description="Playing will work after 2 retries of downloading the manifest"
+set-state, state=null, playback-time=1.0
+
+http-request, uri="$(failure_count_uri)/output.mpd", method=GET,
+    expected-response="{\"path\": \"/output.mpd\", \"count\": 2}"
+
+# Force the HTTP server to return 503 (Service Unavailable) for 2 seconds
+# to download the DASH manifest (output.mpd). souphttpsrc will retry 3 times
+# with a total duration of 3s, meaning that the pipeline should work
+http-request, uri="$(status_rules_uri)", method=PUT,
+    body="{\"path\": \"/chunk-stream0-00001.webm\", \"during\": 2.0, \"status_code\": 503}"
+http-request, uri="$(start_count_uri)", method=PUT,
+    body="{\"path\": \"/chunk-stream0-00001.webm\"}"
+http-request, uri="$(failure_count_uri)/chunk-stream0-00001.webm", method=GET,
+    expected-response="{\"path\": \"/chunk-stream0-00001.webm\", \"count\": 0}"
+
+play, description="Playing will work after 2 retries of downloading the first chunk"
+set-state, state=null, playback-time=1.0
+http-request, uri="$(failure_count_uri)/chunk-stream0-00001.webm", method=GET,
+    expected-response="{\"path\": \"/chunk-stream0-00001.webm\", \"count\": 2}"
+
+stop

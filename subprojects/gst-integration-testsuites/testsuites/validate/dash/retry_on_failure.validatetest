@@ -19,7 +19,6 @@ meta,
     }
 
 start-http-server, working-directory="$(test_dir)/../../../medias/defaults/dash/webm/"
-set-vars, http_control="$(test_dir)/http_control.py"
 set-properties, pb::uri="http://127.0.0.1:$(http_server_port)/output.mpd"
 
 # Force the HTTP server to return 503 (Service Unavailable) for the first 3 attempts
