@@ -66,9 +66,7 @@ GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
 #define gst_vulkan_decoder_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanDecoder, gst_vulkan_decoder,
-    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstVulkanDecoder)
-    GST_DEBUG_CATEGORY_INIT (gst_vulkan_decoder_debug,
-        "vulkandecoder", 0, "Vulkan device decoder"));
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstVulkanDecoder));
 
 static GstVulkanHandle *gst_vulkan_decoder_new_video_session_parameters
     (GstVulkanDecoder * self, GstVulkanDecoderParameters * params,
@@ -1301,6 +1299,7 @@ gst_vulkan_decoder_new_from_queue (GstVulkanQueue * queue, guint codec)
   GstVulkanDecoder *decoder;
   guint flags, expected_flag, supported_video_ops;
   const char *extension;
+  static gsize cat_gonce = 0;
 
   g_return_val_if_fail (GST_IS_VULKAN_QUEUE (queue), NULL);
 
@@ -1308,6 +1307,12 @@ gst_vulkan_decoder_new_from_queue (GstVulkanQueue * queue, guint codec)
   expected_flag = VK_QUEUE_VIDEO_DECODE_BIT_KHR;
   flags = device->queue_family_props[queue->family].queueFlags;
   supported_video_ops = device->queue_family_ops[queue->family].video;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    GST_DEBUG_CATEGORY_INIT (gst_vulkan_decoder_debug,
+        "vulkandecoder", 0, "Vulkan device decoder");
+    g_once_init_leave (&cat_gonce, TRUE);
+  }
 
   if (device->properties.apiVersion < VK_MAKE_VERSION (1, 3, 275)) {
     GST_WARNING_OBJECT (queue,
