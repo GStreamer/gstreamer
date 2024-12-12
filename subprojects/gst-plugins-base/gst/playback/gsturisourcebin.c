@@ -724,6 +724,24 @@ gst_uri_source_bin_get_property (GObject * object, guint prop_id,
   }
 }
 
+static GstEvent *
+add_stream_start_custom_flag (GstEvent ** event)
+{
+  GstStructure *s;
+  /* This is a temporary hack to notify downstream decodebin3 to *not*
+   * plug in an extra parsebin */
+  s = (GstStructure *) gst_event_get_structure (*event);
+  if (!gst_structure_has_field_typed (s, "urisourcebin-parsed-data",
+          G_TYPE_BOOLEAN)) {
+    *event = gst_event_make_writable (*event);
+    s = (GstStructure *) gst_event_get_structure (*event);
+    gst_structure_set (s, "urisourcebin-parsed-data", G_TYPE_BOOLEAN, TRUE,
+        NULL);
+  }
+
+  return *event;
+}
+
 typedef struct
 {
   GstPad *target_pad;
@@ -738,13 +756,7 @@ copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
 
   if (data->rewrite_stream_start &&
       GST_EVENT_TYPE (*event) == GST_EVENT_STREAM_START) {
-    GstStructure *s;
-    /* This is a temporary hack to notify downstream decodebin3 to *not*
-     * plug in an extra parsebin */
-    *event = gst_event_make_writable (*event);
-    s = (GstStructure *) gst_event_get_structure (*event);
-    gst_structure_set (s, "urisourcebin-parsed-data", G_TYPE_BOOLEAN, TRUE,
-        NULL);
+    add_stream_start_custom_flag (event);
   }
   GST_DEBUG_OBJECT (gpad,
       "store sticky event from %" GST_PTR_FORMAT " %" GST_PTR_FORMAT, pad,
@@ -977,11 +989,7 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, OutputSlotInfo * slot)
        * plug in an extra parsebin */
       if (urisrc->is_adaptive || (slot->linked_info
               && slot->linked_info->demuxer_is_parsebin)) {
-        GstStructure *s;
-        GST_PAD_PROBE_INFO_DATA (info) = ev = gst_event_make_writable (ev);
-        s = (GstStructure *) gst_event_get_structure (ev);
-        gst_structure_set (s, "urisourcebin-parsed-data", G_TYPE_BOOLEAN, TRUE,
-            NULL);
+        GST_PAD_PROBE_INFO_DATA (info) = add_stream_start_custom_flag (&ev);
       }
     }
       /* PASSTHROUGH */
