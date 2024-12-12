@@ -5374,6 +5374,7 @@ store_sticky_event (GstPad * pad, GstEvent * event)
   gboolean res = FALSE;
   const gchar *name = NULL;
   gboolean insert = TRUE;
+  gboolean changed_stream_id = FALSE;
 
   type = GST_EVENT_TYPE (event);
   guint sticky_order = _to_sticky_order (type);
@@ -5390,10 +5391,9 @@ store_sticky_event (GstPad * pad, GstEvent * event)
   /* Unset the EOS flag when received STREAM_START event, so pad can
    * store sticky event and then push it later */
   if (type == GST_EVENT_STREAM_START) {
-    GST_LOG_OBJECT (pad, "Removing pending EOS, StreamGroupDone, TAG events");
+    GST_LOG_OBJECT (pad, "Removing pending EOS, StreamGroupDone events");
     remove_event_by_type (pad, GST_EVENT_EOS);
     remove_event_by_type (pad, GST_EVENT_STREAM_GROUP_DONE);
-    remove_event_by_type (pad, GST_EVENT_TAG);
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
   }
 
@@ -5416,6 +5416,15 @@ store_sticky_event (GstPad * pad, GstEvent * event)
       /* matching types, check matching name if needed */
       if (name && !gst_event_has_name (ev->event, name))
         continue;
+
+      if (type == GST_EVENT_STREAM_START && event != ev->event) {
+        const gchar *old_stream_id, *new_stream_id;
+
+        gst_event_parse_stream_start (ev->event, &old_stream_id);
+        gst_event_parse_stream_start (event, &new_stream_id);
+
+        changed_stream_id = !g_str_equal (old_stream_id, new_stream_id);
+      }
 
       /* overwrite */
       if ((res = gst_event_replace (&ev->event, event)))
@@ -5446,6 +5455,12 @@ store_sticky_event (GstPad * pad, GstEvent * event)
     ev.received = FALSE;
     g_array_insert_val (events, i, ev);
     res = TRUE;
+    changed_stream_id = type == GST_EVENT_STREAM_START;
+  }
+
+  if (changed_stream_id) {
+    GST_LOG_OBJECT (pad, "Removing pending TAG events");
+    remove_event_by_type (pad, GST_EVENT_TAG);
   }
 
   if (res) {
