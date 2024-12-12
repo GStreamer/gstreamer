@@ -216,7 +216,7 @@ gst_gl_display_gbm_setup_drm (GstGLDisplayGBM * display_gbm, const gchar *
     }
 
     if (connected_connector == NULL) {
-      GST_ERROR ("No connected DRM connector found");
+      GST_WARNING ("No connected DRM connector found");
       goto cleanup;
     }
 
