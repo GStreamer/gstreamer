@@ -36,7 +36,6 @@
 G_BEGIN_DECLS
 
 #define NUM_LOOKBACK_FRAGMENTS 3
-#define MAX_DOWNLOAD_ERROR_COUNT 3
 
 /* Internal, so not using GST_FLOW_CUSTOM_SUCCESS_N */
 #define GST_ADAPTIVE_DEMUX_FLOW_SWITCH (GST_FLOW_CUSTOM_SUCCESS_2 + 2)
@@ -164,6 +163,11 @@ struct _GstAdaptiveDemuxPrivate
    * Head is the period being outputted, or to be outputted first
    * Tail is where new streams get added */
   GQueue *periods;
+
+  /* The maximum number of times HTTP request can be required before considering
+   * failed */
+  gint max_retries;
+
 };
 
 static inline gboolean gst_adaptive_demux_scheduler_lock(GstAdaptiveDemux *d)

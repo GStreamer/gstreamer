@@ -113,6 +113,7 @@ GST_DEBUG_CATEGORY_EXTERN (adaptivedemux2_debug);
 #define GST_CAT_DEFAULT adaptivedemux2_debug
 
 #define DEFAULT_FAILED_COUNT 3
+#define DEFAULT_MAX_RETRIES 3
 #define DEFAULT_CONNECTION_BITRATE 0
 #define DEFAULT_BANDWIDTH_TARGET_RATIO 0.8f
 
@@ -133,6 +134,7 @@ enum
 {
   PROP_0,
   PROP_CONNECTION_SPEED,
+  PROP_MAX_RETRIES,
   PROP_BANDWIDTH_TARGET_RATIO,
   PROP_CONNECTION_BITRATE,
   PROP_MIN_BITRATE,
@@ -288,6 +290,11 @@ gst_adaptive_demux_set_property (GObject * object, guint prop_id,
   GST_OBJECT_LOCK (demux);
 
   switch (prop_id) {
+    case PROP_MAX_RETRIES:
+      demux->priv->max_retries = g_value_get_int (value);
+      GST_DEBUG_OBJECT (demux, "Maximum retries set to %u",
+          demux->priv->max_retries);
+      break;
     case PROP_CONNECTION_SPEED:
       demux->connection_speed = g_value_get_uint (value) * 1000;
       GST_DEBUG_OBJECT (demux, "Connection speed set to %u",
@@ -339,6 +346,9 @@ gst_adaptive_demux_get_property (GObject * object, guint prop_id,
   GST_OBJECT_LOCK (demux);
 
   switch (prop_id) {
+    case PROP_MAX_RETRIES:
+      g_value_set_int (value, demux->priv->max_retries);
+      break;
     case PROP_CONNECTION_SPEED:
       g_value_set_uint (value, demux->connection_speed / 1000);
       break;
@@ -506,6 +516,20 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
           G_PARAM_READABLE | GST_PARAM_MUTABLE_PLAYING |
           G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstAdaptiveDemux2:max-retries:
+   *
+   * Maximum number of times HTTP request can be retried before considering
+   * the request as failed (-1=infinite)
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_RETRIES,
+      g_param_spec_int ("max-retries", "Maximum Retries",
+          "Maximum number of retries for HTTP requests (-1=infinite)",
+          -1, G_MAXUINT, DEFAULT_MAX_RETRIES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_adaptive_demux_audiosrc_template);
   gst_element_class_add_static_pad_template (gstelement_class,
@@ -588,6 +612,7 @@ gst_adaptive_demux_init (GstAdaptiveDemux * demux,
 
   demux->current_level_time_video = DEFAULT_CURRENT_LEVEL_TIME_VIDEO;
   demux->current_level_time_audio = DEFAULT_CURRENT_LEVEL_TIME_AUDIO;
+  demux->priv->max_retries = DEFAULT_MAX_RETRIES;
 
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 
@@ -3004,7 +3029,7 @@ gst_adaptive_demux_manifest_update_cb (GstAdaptiveDemux * demux)
   } else {
     demux->priv->update_failed_count++;
 
-    if (demux->priv->update_failed_count <= DEFAULT_FAILED_COUNT) {
+    if (demux->priv->update_failed_count <= demux->priv->max_retries) {
       GST_WARNING_OBJECT (demux, "Could not update the playlist, flow: %s",
           gst_flow_get_name (ret));
     } else {
@@ -3955,4 +3980,14 @@ GstAdaptiveDemuxLoop *
 gst_adaptive_demux_get_loop (GstAdaptiveDemux * demux)
 {
   return gst_adaptive_demux_loop_ref (demux->priv->scheduler_task);
+}
+
+gint
+gst_adaptive_demux_max_retries (GstAdaptiveDemux * self)
+{
+  GST_OBJECT_LOCK (self);
+  gint res = self->priv->max_retries;
+  GST_OBJECT_UNLOCK (self);
+
+  return res;
 }

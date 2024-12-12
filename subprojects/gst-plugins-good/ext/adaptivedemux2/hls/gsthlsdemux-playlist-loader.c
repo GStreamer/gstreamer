@@ -470,7 +470,8 @@ static void
 handle_download_error (GstHLSDemuxPlaylistLoader * pl,
     GstHLSDemuxPlaylistLoaderPrivate * priv)
 {
-  if (++priv->download_error_count > MAX_DOWNLOAD_ERROR_COUNT) {
+  gint max_retries = gst_adaptive_demux_max_retries (priv->demux);
+  if (max_retries >= 0 && ++priv->download_error_count > max_retries) {
     GST_DEBUG_OBJECT (pl,
         "Reached %d download failures on URI %s. Reporting the failure",
         priv->download_error_count, priv->loading_playlist_uri);

@@ -1404,6 +1404,20 @@
                         "type": "guint64",
                         "writable": true
                     },
+                    "max-retries": {
+                        "blurb": "Maximum number of retries for HTTP requests (-1=infinite)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "3",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
                     "min-bitrate": {
                         "blurb": "Minimum bitrate to use when switching to alternates (bits/s)",
                         "conditionally-available": false,

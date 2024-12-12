@@ -1212,6 +1212,7 @@ on_download_error (DownloadRequest * request, DownloadRequestState state,
       request->state, last_status_code,
       stream->download_error_count, live, stream->download_error_retry);
 
+  gint max_retries = gst_adaptive_demux_max_retries (demux);
   if (!stream->download_error_retry && ((last_status_code / 100 == 4 && live)
           || last_status_code / 100 == 5)) {
     /* 4xx/5xx */
@@ -1255,7 +1256,7 @@ on_download_error (DownloadRequest * request, DownloadRequestState state,
       }
     }
 
-    if (++stream->download_error_count >= MAX_DOWNLOAD_ERROR_COUNT) {
+    if (max_retries >= 0 && ++stream->download_error_count >= max_retries) {
       /* looks like there is no way of knowing when a live stream has ended
        * Have to assume we are falling behind and cause a manifest reload */
       GST_DEBUG_OBJECT (stream, "Converting error of live stream to EOS");
@@ -1271,7 +1272,7 @@ on_download_error (DownloadRequest * request, DownloadRequestState state,
     return;
   } else {
     /* retry same segment */
-    if (++stream->download_error_count > MAX_DOWNLOAD_ERROR_COUNT) {
+    if (max_retries >= 0 && ++stream->download_error_count > max_retries) {
       gst_adaptive_demux2_stream_error (stream);
       return;
     }
@@ -2007,7 +2008,8 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
     default:
       if (ret <= GST_FLOW_ERROR) {
         GST_WARNING_OBJECT (demux, "Error while downloading fragment");
-        if (++stream->download_error_count > MAX_DOWNLOAD_ERROR_COUNT) {
+        gint max_retries = gst_adaptive_demux_max_retries (demux);
+        if (max_retries >= 0 && ++stream->download_error_count > max_retries) {
           gst_adaptive_demux2_stream_error (stream);
           return FALSE;
         }

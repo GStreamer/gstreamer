@@ -481,6 +481,7 @@ gdouble gst_adaptive_demux_play_rate (GstAdaptiveDemux *demux);
 
 void gst_adaptive_demux2_manual_manifest_update (GstAdaptiveDemux * demux);
 GstAdaptiveDemuxLoop *gst_adaptive_demux_get_loop (GstAdaptiveDemux *demux);
+gint gst_adaptive_demux_max_retries (GstAdaptiveDemux *self);
 
 G_END_DECLS
 
