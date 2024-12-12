@@ -114,6 +114,8 @@ GST_DEBUG_CATEGORY_EXTERN (adaptivedemux2_debug);
 
 #define DEFAULT_FAILED_COUNT 3
 #define DEFAULT_MAX_RETRIES 3
+#define DEFAULT_RETRY_BACKOFF_FACTOR 0.0
+#define DEFAULT_RETRY_BACKOFF_MAX    60.0
 #define DEFAULT_CONNECTION_BITRATE 0
 #define DEFAULT_BANDWIDTH_TARGET_RATIO 0.8f
 
@@ -135,6 +137,8 @@ enum
   PROP_0,
   PROP_CONNECTION_SPEED,
   PROP_MAX_RETRIES,
+  PROP_RETRY_BACKOFF_FACTOR,
+  PROP_RETRY_BACKOFF_MAX,
   PROP_BANDWIDTH_TARGET_RATIO,
   PROP_CONNECTION_BITRATE,
   PROP_MIN_BITRATE,
@@ -329,6 +333,12 @@ gst_adaptive_demux_set_property (GObject * object, guint prop_id,
     case PROP_BUFFERING_LOW_WATERMARK_FRAGMENTS:
       demux->buffering_low_watermark_fragments = g_value_get_double (value);
       break;
+    case PROP_RETRY_BACKOFF_FACTOR:
+      demux->priv->retry_backoff_factor = g_value_get_double (value);
+      break;
+    case PROP_RETRY_BACKOFF_MAX:
+      demux->priv->retry_backoff_max = g_value_get_double (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -387,6 +397,12 @@ gst_adaptive_demux_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CURRENT_LEVEL_TIME_AUDIO:
       g_value_set_uint64 (value, demux->current_level_time_audio);
+      break;
+    case PROP_RETRY_BACKOFF_FACTOR:
+      g_value_set_double (value, demux->priv->retry_backoff_factor);
+      break;
+    case PROP_RETRY_BACKOFF_MAX:
+      g_value_set_double (value, demux->priv->retry_backoff_max);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -527,7 +543,41 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
   g_object_class_install_property (gobject_class, PROP_MAX_RETRIES,
       g_param_spec_int ("max-retries", "Maximum Retries",
           "Maximum number of retries for HTTP requests (-1=infinite)",
-          -1, G_MAXUINT, DEFAULT_MAX_RETRIES,
+          -1, G_MAXINT, DEFAULT_MAX_RETRIES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+ /**
+   * GstAdaptiveDemux2:retry-backoff-factor:
+   *
+   * A backoff factor to apply between attempts after the second try
+   * (most errors are resolved immediately by a second try without a delay).
+   * souphttpsrc will sleep for:
+   *
+   * ```
+   * {backoff factor} * (2 ** ({number of previous retries}))
+   * ``
+   *
+   * seconds
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_RETRY_BACKOFF_FACTOR,
+      g_param_spec_double ("retry-backoff-factor", "Backoff Factor",
+          "Exponential retry backoff factor in seconds", 0.0, G_MAXDOUBLE,
+          DEFAULT_RETRY_BACKOFF_FACTOR,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstAdaptiveDemux2:retry-backoff-max:
+   *
+   * Maximum retry backoff delay in seconds
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_RETRY_BACKOFF_MAX,
+      g_param_spec_double ("retry-backoff-max", "Maximum retry Backoff delay",
+          "Maximum backoff delay in seconds", 0.0, G_MAXDOUBLE,
+          DEFAULT_RETRY_BACKOFF_MAX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class,
@@ -613,6 +663,8 @@ gst_adaptive_demux_init (GstAdaptiveDemux * demux,
   demux->current_level_time_video = DEFAULT_CURRENT_LEVEL_TIME_VIDEO;
   demux->current_level_time_audio = DEFAULT_CURRENT_LEVEL_TIME_AUDIO;
   demux->priv->max_retries = DEFAULT_MAX_RETRIES;
+  demux->priv->retry_backoff_factor = DEFAULT_RETRY_BACKOFF_FACTOR;
+  demux->priv->retry_backoff_max = DEFAULT_RETRY_BACKOFF_MAX;
 
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 
@@ -3990,4 +4042,22 @@ gst_adaptive_demux_max_retries (GstAdaptiveDemux * self)
   GST_OBJECT_UNLOCK (self);
 
   return res;
+}
+
+GstClockTime
+gst_adaptive_demux_retry_delay (GstAdaptiveDemux * self, gint retry,
+    GstClockTime default_delay)
+{
+  GST_OBJECT_LOCK (self);
+  gdouble backoff_factor = self->priv->retry_backoff_factor;
+  gdouble backoff_max = self->priv->retry_backoff_max;
+  GST_OBJECT_UNLOCK (self);
+
+  GstClockTime delay = default_delay;
+  if (backoff_factor > 0) {
+    GstClockTime backoff_delay = (backoff_factor * (1 << retry)) * GST_SECOND;
+    delay = MIN (backoff_delay, (backoff_max * GST_SECOND));
+  }
+
+  return delay;
 }

@@ -209,20 +209,20 @@ struct _GstAdaptiveDemuxPeriod
   gint ref_count;
 
   GstAdaptiveDemux *demux;
-  
+
   /* TRUE if the streams of this period were prepared and can be started */
   gboolean prepared;
 
 
   /* TRUE if there is another period after this one */
   gboolean has_next_period;
-  
+
   /* An increasing unique identifier for the period.
    *
    * Note: unrelated to dash period id (which can be identical across
    * periods) */
   guint period_num;
-  
+
   /* The list of GstAdaptiveDemux2Stream (ref hold) */
   GList *streams;
 
@@ -264,7 +264,7 @@ struct _GstAdaptiveDemux
 
   /* Period used for input */
   GstAdaptiveDemuxPeriod *input_period;
-  
+
   GstSegment segment;
   gdouble instant_rate_multiplier; /* 1.0 by default, or from instant-rate seek */
 
@@ -482,6 +482,7 @@ gdouble gst_adaptive_demux_play_rate (GstAdaptiveDemux *demux);
 void gst_adaptive_demux2_manual_manifest_update (GstAdaptiveDemux * demux);
 GstAdaptiveDemuxLoop *gst_adaptive_demux_get_loop (GstAdaptiveDemux *demux);
 gint gst_adaptive_demux_max_retries (GstAdaptiveDemux *self);
+GstClockTime gst_adaptive_demux_retry_delay (GstAdaptiveDemux * self, gint retry, GstClockTime default_delay);
 
 G_END_DECLS
 

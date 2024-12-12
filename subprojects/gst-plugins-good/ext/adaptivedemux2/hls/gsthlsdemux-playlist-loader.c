@@ -482,8 +482,15 @@ handle_download_error (GstHLSDemuxPlaylistLoader * pl,
   /* The error callback may have provided a new playlist to load, which
    * will have scheduled a state update immediately. In that case,
    * don't trigger our own delayed retry */
-  if (priv->pending_cb_id == 0)
-    schedule_next_playlist_load (pl, priv, 100 * GST_MSECOND);
+  if (priv->pending_cb_id == 0) {
+    GstClockTime delay =
+        gst_adaptive_demux_retry_delay (priv->demux, priv->download_error_count,
+        100 * GST_MSECOND);
+    GST_DEBUG_OBJECT (pl,
+        "Scheduling delayed next playlist download in %" GST_TIMEP_FORMAT,
+        &delay);
+    schedule_next_playlist_load (pl, priv, delay);
+  }
 }
 
 static void

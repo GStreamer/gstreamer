@@ -1241,8 +1241,8 @@ on_download_error (DownloadRequest * request, DownloadRequestState state,
             GST_LOG_OBJECT (stream,
                 "Scheduling delayed load_a_fragment() call");
             stream->pending_cb_id =
-                gst_adaptive_demux_loop_call_delayed (demux->
-                priv->scheduler_task, wait_time,
+                gst_adaptive_demux_loop_call_delayed (demux->priv->
+                scheduler_task, wait_time,
                 (GSourceFunc) gst_adaptive_demux2_stream_load_a_fragment,
                 gst_object_ref (stream), (GDestroyNotify) gst_object_unref);
             return;
@@ -1281,10 +1281,16 @@ on_download_error (DownloadRequest * request, DownloadRequestState state,
 
 again:
   /* wait a short time in case the server needs a bit to recover */
-  GST_LOG_OBJECT (stream,
-      "Scheduling delayed load_a_fragment() call to retry in 10 milliseconds");
   g_assert (stream->pending_cb_id == 0);
-  stream->pending_cb_id = gst_adaptive_demux_loop_call_delayed (demux->priv->scheduler_task, 10 * GST_MSECOND,  /* Retry in 10 ms */
+
+  GstClockTime delay =
+      gst_adaptive_demux_retry_delay (demux, stream->download_error_count,
+      10 * GST_MSECOND);
+  GST_DEBUG_OBJECT (stream,
+      "Scheduling delayed reload_manifest_cb() %d call in %" GST_TIMEP_FORMAT,
+      stream->download_error_count, &delay);
+  stream->pending_cb_id =
+      gst_adaptive_demux_loop_call_delayed (demux->priv->scheduler_task, delay,
       (GSourceFunc) gst_adaptive_demux2_stream_load_a_fragment,
       gst_object_ref (stream), (GDestroyNotify) gst_object_unref);
 }
@@ -2030,12 +2036,15 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
           }
         }
 
-        /* Wait half the fragment duration before retrying */
-        GST_LOG_OBJECT (stream, "Scheduling delayed reload_manifest_cb() call");
+        GstClockTime delay = gst_adaptive_demux_retry_delay (stream->demux,
+            stream->download_error_count, stream->fragment.duration / 2);
+        GST_DEBUG_OBJECT (stream,
+            "Scheduling delayed reload_manifest_cb() call in %"
+            GST_TIMEP_FORMAT, &delay);
         g_assert (stream->pending_cb_id == 0);
         stream->pending_cb_id =
             gst_adaptive_demux_loop_call_delayed (demux->priv->scheduler_task,
-            stream->fragment.duration / 2,
+            delay,
             (GSourceFunc) gst_adaptive_demux2_stream_reload_manifest_cb,
             gst_object_ref (stream), (GDestroyNotify) gst_object_unref);
         return FALSE;

@@ -167,6 +167,9 @@ struct _GstAdaptiveDemuxPrivate
   /* The maximum number of times HTTP request can be required before considering
    * failed */
   gint max_retries;
+  /* The backoff factor and max for the HTTP request retries */
+  gdouble retry_backoff_factor;
+  gdouble retry_backoff_max;
 
 };
 
