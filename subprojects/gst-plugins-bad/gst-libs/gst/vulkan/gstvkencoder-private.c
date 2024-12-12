@@ -77,9 +77,7 @@ GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
 #define gst_vulkan_encoder_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanEncoder, gst_vulkan_encoder,
-    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstVulkanEncoder)
-    GST_DEBUG_CATEGORY_INIT (gst_vulkan_encoder_debug,
-        "vulkanencoder", 0, "Vulkan device encoder"));
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstVulkanEncoder));
 
 const uint32_t _vk_codec_supported_extensions[] = {
   [GST_VK_VIDEO_EXTENSION_ENCODE_H264] = VK_MAKE_VIDEO_STD_VERSION (0, 9, 11),
@@ -1353,6 +1351,7 @@ gst_vulkan_encoder_create_from_queue (GstVulkanQueue * queue, guint codec)
   GstVulkanEncoder *encoder;
   guint flags, expected_flag, supported_video_ops;
   const char *extension;
+  static gsize cat_gonce = 0;
 
   g_return_val_if_fail (GST_IS_VULKAN_QUEUE (queue), NULL);
 
@@ -1360,6 +1359,12 @@ gst_vulkan_encoder_create_from_queue (GstVulkanQueue * queue, guint codec)
   expected_flag = VK_QUEUE_VIDEO_ENCODE_BIT_KHR;
   flags = device->queue_family_props[queue->family].queueFlags;
   supported_video_ops = device->queue_family_ops[queue->family].video;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    GST_DEBUG_CATEGORY_INIT (gst_vulkan_encoder_debug,
+        "vulkanencoder", 0, "Vulkan device encoder");
+    g_once_init_leave (&cat_gonce, TRUE);
+  }
 
   if (device->properties.apiVersion < VK_MAKE_VERSION (1, 3, 275)) {
     GST_WARNING_OBJECT (queue,
