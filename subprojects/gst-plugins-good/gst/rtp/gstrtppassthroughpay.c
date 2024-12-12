@@ -23,12 +23,12 @@
  *
  * This elements pass RTP packets along unchanged and appear as a RTP
  * payloader element to the outside world.
- * 
+ *
  * This is useful, for example, in the case where you are receiving RTP
  * packets from a different source and want to serve them over RTSP. Since the
  * gst-rtsp-server library expect the element marked as `payX` to be a RTP
  * payloader element and assumes certain properties are available.
- * 
+ *
  * ## Example pipelines
  *
  * |[
@@ -418,6 +418,8 @@ gst_rtp_passthrough_pay_chain (GstPad * pad,
   GstRtpPassthroughPay *self = GST_RTP_PASSTHROUGH_PAY (parent);
   GstRTPBuffer rtp_buffer = GST_RTP_BUFFER_INIT;
   guint pt, ssrc, seqnum, timestamp;
+
+  buffer = gst_buffer_make_writable (buffer);
 
   if (!gst_rtp_buffer_map (buffer, GST_MAP_READWRITE, &rtp_buffer)) {
     GST_ERROR_OBJECT (self, "Invalid RTP buffer");
