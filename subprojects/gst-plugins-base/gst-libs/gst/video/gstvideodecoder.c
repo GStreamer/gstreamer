@@ -2439,6 +2439,9 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
 
   priv->input_offset += gst_buffer_get_size (buf);
 
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DECODE_ONLY))
+    GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (priv->current_frame);
+
   if (priv->packetized) {
     GstVideoCodecFrame *frame;
     gboolean was_keyframe = FALSE;
