@@ -880,6 +880,10 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
   GESLauncherParsedOptions *opts = &self->priv->parsed_options;
   GST_INFO ("Project loaded, playing it");
 
+  if (self->priv->seenerrors) {
+    return;
+  }
+
   if (opts->save_path || opts->save_only_path) {
     gchar *uri;
     GError *error = NULL;
