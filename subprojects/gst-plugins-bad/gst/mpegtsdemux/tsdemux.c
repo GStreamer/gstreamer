@@ -344,6 +344,9 @@ static void gst_ts_demux_check_and_sync_streams (GstTSDemux * demux,
     GstClockTime time);
 static void handle_psi (MpegTSBase * base, GstMpegtsSection * section);
 
+static void calculate_and_push_newsegment (GstTSDemux * demux,
+    TSDemuxStream * stream, MpegTSBaseProgram * target_program);
+
 #define gst_ts_demux_parent_class parent_class
 G_DEFINE_TYPE (GstTSDemux, gst_ts_demux, GST_TYPE_MPEGTS_BASE);
 #define _do_element_init \
@@ -2369,6 +2372,10 @@ gst_ts_demux_update_program (MpegTSBase * base, MpegTSBaseProgram * program)
          * pad already and which otherwise would only be sent on the first buffer
          * or serialized event (which means very late in case of subtitle streams),
          * and playsink waits for stream-start or another serialized event */
+        if (G_UNLIKELY (stream->need_newsegment)) {
+          calculate_and_push_newsegment (demux, stream, program);
+        }
+
         GST_DEBUG_OBJECT (stream->pad, "sparse stream, pushing GAP event");
         gst_pad_push_event (stream->pad, gst_event_new_gap (0, 0));
       }
@@ -2459,6 +2466,10 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
          * pad already and which otherwise would only be sent on the first buffer
          * or serialized event (which means very late in case of subtitle streams),
          * and playsink waits for stream-start or another serialized event */
+        if (G_UNLIKELY (stream->need_newsegment)) {
+          calculate_and_push_newsegment (demux, stream, program);
+        }
+
         GST_DEBUG_OBJECT (stream->pad, "sparse stream, pushing GAP event");
         gst_pad_push_event (stream->pad, gst_event_new_gap (0, 0));
       }
