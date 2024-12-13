@@ -2470,7 +2470,7 @@ gst_app_src_push_internal (GstAppSrc * appsrc, GstBuffer * buffer,
           break;
         }
 
-        GST_WARNING_OBJECT (appsrc, "Dropping old item %" GST_PTR_FORMAT, item);
+        GST_DEBUG_OBJECT (appsrc, "Dropping old item %" GST_PTR_FORMAT, item);
 
         gst_app_src_update_queued_pop (appsrc, item, FALSE);
         gst_mini_object_unref (item);
