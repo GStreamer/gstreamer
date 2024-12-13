@@ -5348,6 +5348,13 @@ efficient way of providing the list of contained #GESClip-s.</doc>
     <record name="LayerPrivate" c:type="GESLayerPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-editing-services/ges/ges-layer.h"/>
     </record>
+    <function-macro name="META_CONTAINER_GET_INTERFACE" c:identifier="GES_META_CONTAINER_GET_INTERFACE" introspectable="0">
+      <source-position filename="../subprojects/gst-editing-services/ges/ges-meta-container.h"/>
+      <parameters>
+        <parameter name="inst">
+        </parameter>
+      </parameters>
+    </function-macro>
     <constant name="META_DESCRIPTION" value="description" c:type="GES_META_DESCRIPTION">
       <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-meta-container.h">The description of the object, to be used in various contexts (string).</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-meta-container.h"/>
