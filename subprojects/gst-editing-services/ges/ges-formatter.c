@@ -187,6 +187,9 @@ ges_formatter_init (GESFormatter * object)
 static void
 ges_formatter_dispose (GObject * object)
 {
+  GESFormatter *self = GES_FORMATTER (object);
+
+  gst_clear_object (&self->timeline);
   ges_formatter_set_project (GES_FORMATTER (object), NULL);
 
   G_OBJECT_CLASS (ges_formatter_parent_class)->dispose (object);
@@ -421,7 +424,7 @@ ges_formatter_load_from_uri (GESFormatter * formatter,
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
 
   if (klass->load_from_uri) {
-    formatter->timeline = timeline;
+    formatter->timeline = gst_object_ref (timeline);
     ret = klass->load_from_uri (formatter, timeline, uri, error);
   }
 
