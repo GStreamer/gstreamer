@@ -167,6 +167,9 @@ ges_project_add_formatter (GESProject * project, GESFormatter * formatter)
 {
   GESProjectPrivate *priv = GES_PROJECT (project)->priv;
 
+  g_return_if_fail (GES_IS_PROJECT (project));
+  g_return_if_fail (GES_IS_FORMATTER (formatter));
+
   ges_formatter_set_project (formatter, project);
   GES_PROJECT_LOCK (project);
   priv->formatters = g_list_append (priv->formatters, formatter);
@@ -799,6 +802,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, GESProject * project)
 /**
  * ges_project_set_loaded:
  * @project: The #GESProject from which to emit the "project-loaded" signal
+ * @formatter: The #GESFormatter that loaded the project
  *
  * Emits the "loaded" signal. This method should be called by sublasses when
  * the project is fully loaded.
@@ -809,6 +813,10 @@ gboolean
 ges_project_set_loaded (GESProject * project, GESFormatter * formatter,
     GError * error)
 {
+  g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
+  g_return_val_if_fail (GES_IS_FORMATTER (formatter), FALSE);
+  g_return_val_if_fail (formatter->timeline, FALSE);
+
   if (error) {
     GST_ERROR_OBJECT (project, "Emit project error-loading %s", error->message);
     g_signal_emit (project, _signals[ERROR_LOADING], 0, formatter->timeline,
@@ -1027,6 +1035,7 @@ ges_project_add_asset (GESProject * project, GESAsset * asset)
 {
   gchar *internal_id;
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
+  g_return_val_if_fail (GES_IS_ASSET (asset), FALSE);
 
   GES_PROJECT_LOCK (project);
   internal_id = ges_project_internal_asset_id (asset);
@@ -1064,6 +1073,7 @@ ges_project_remove_asset (GESProject * project, GESAsset * asset)
   gchar *internal_id;
 
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
+  g_return_val_if_fail (GES_IS_ASSET (asset), FALSE);
 
   internal_id = ges_project_internal_asset_id (asset);
   GES_PROJECT_LOCK (project);
