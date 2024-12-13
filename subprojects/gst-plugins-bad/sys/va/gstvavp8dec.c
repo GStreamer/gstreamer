@@ -46,6 +46,7 @@
 #include "gstvavp8dec.h"
 
 #include "gstvabasedec.h"
+#include "gstvacodecalphadecodebin.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_vp8dec_debug);
 #ifndef GST_DISABLE_GST_DEBUG
@@ -81,6 +82,12 @@ static const gchar *src_caps_str =
 /* *INDENT-ON* */
 
 static const gchar *sink_caps_str = "video/x-vp8";
+
+static GstStaticPadTemplate alpha_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-vp8, codec-alpha = (boolean) true, "
+        "alignment = frame")
+    );
 
 static VAProfile
 _get_profile (GstVaVp8Dec * self, const GstVp8FrameHdr * frame_hdr)
@@ -488,6 +495,21 @@ _register_debug_category (gpointer data)
   return NULL;
 }
 
+static void
+gst_va_codec_vp8_alpha_decode_bin_class_init (GstVaCodecAlphaDecodeBinClass
+    * klass, gchar * decoder_name)
+{
+  GstElementClass *element_class = (GstElementClass *) klass;
+
+  klass->decoder_name = decoder_name;
+  gst_element_class_add_static_pad_template (element_class, &alpha_template);
+
+  gst_element_class_set_static_metadata (element_class,
+      "VA-API VP8 Alpha Decoder", "Codec/Decoder/Video/Hardware",
+      "Wrapper bin to decode VP8 with alpha stream.",
+      "Cheung Yik Pang <pang.cheung@harmonicinc.com>");
+}
+
 gboolean
 gst_va_vp8_dec_register (GstPlugin * plugin, GstVaDevice * device,
     GstCaps * sink_caps, GstCaps * src_caps, guint rank)
@@ -532,6 +554,14 @@ gst_va_vp8_dec_register (GstPlugin * plugin, GstVaDevice * device,
       type_name, &type_info, 0);
 
   ret = gst_element_register (plugin, feature_name, rank, type);
+
+  if (ret) {
+    ret = gst_va_codec_alpha_decode_bin_register (plugin,
+        (GClassInitFunc) gst_va_codec_vp8_alpha_decode_bin_class_init,
+        g_strdup (feature_name), "GstVaVp8AlphaDecodeBin",
+        "GstVaVp8%sAlphaDecodeBin", "vavp8alphadecodebin",
+        "vavp8%salphadecodebin", device, rank);
+  }
 
   g_free (type_name);
   g_free (feature_name);
