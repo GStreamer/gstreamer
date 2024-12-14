@@ -612,7 +612,20 @@ typedef struct
 {
   ColorMatrix toRGBCoeff;
   ColorMatrix toYuvCoeff;
-  ColorMatrix primariesCoeff;
+  int width;
+  int height;
+  int left;
+  int top;
+  int right;
+  int bottom;
+  int view_width;
+  int view_height;
+  float offset_x;
+  float offset_y;
+  float border_x;
+  float border_y;
+  float border_z;
+  float border_w;
 } ConstBuffer;
 
 #define COLOR_SPACE_IDENTITY "color_space_identity"
@@ -1425,60 +1438,66 @@ GST_CUDA_KERNEL_UNPACK_FUNC
 
 #define GST_CUDA_KERNEL_MAIN_FUNC "gst_cuda_converter_main"
 
-static const gchar TEMPLETA_KERNEL[] =
+static const gchar TEMPLATE_KERNEL[] =
 /* KERNEL_COMMON */
 "%s\n"
 /* UNPACK FUNCTION */
 "%s\n"
-"__constant__ ColorMatrix TO_RGB_MATRIX = { { %s, %s, %s },\n"
-"                                           { %s, %s, %s },\n"
-"                                           { %s, %s, %s },\n"
-"                                           { %s, %s, %s },\n"
-"                                           { %s, %s, %s },\n"
-"                                           { %s, %s, %s } };\n"
-"__constant__ ColorMatrix TO_YUV_MATRIX = { { %s, %s, %s },\n"
-"                                           { %s, %s, %s },\n"
-"                                           { %s, %s, %s },\n"
-"                                           { %s, %s, %s },\n"
-"                                           { %s, %s, %s },\n"
-"                                           { %s, %s, %s } };\n"
-"__constant__ int WIDTH = %d;\n"
-"__constant__ int HEIGHT = %d;\n"
-"__constant__ int LEFT = %d;\n"
-"__constant__ int TOP = %d;\n"
-"__constant__ int RIGHT = %d;\n"
-"__constant__ int BOTTOM = %d;\n"
-"__constant__ int VIEW_WIDTH = %d;\n"
-"__constant__ int VIEW_HEIGHT = %d;\n"
-"__constant__ float OFFSET_X = %s;\n"
-"__constant__ float OFFSET_Y = %s;\n"
-"__constant__ float BORDER_X = %s;\n"
-"__constant__ float BORDER_Y = %s;\n"
-"__constant__ float BORDER_Z = %s;\n"
-"__constant__ float BORDER_W = %s;\n"
+"struct ConstBuffer\n"
+"{\n"
+"  ColorMatrix toRGBCoeff;\n"
+"  ColorMatrix toYuvCoeff;\n"
+"  int width;\n"
+"  int height;\n"
+"  int left;\n"
+"  int top;\n"
+"  int right;\n"
+"  int bottom;\n"
+"  int view_width;\n"
+"  int view_height;\n"
+"  float offset_x;\n"
+"  float offset_y;\n"
+"  float border_x;\n"
+"  float border_y;\n"
+"  float border_z;\n"
+"  float border_w;\n"
+"};\n"
 "\n"
 "extern \"C\" {\n"
 "__global__ void\n"
 GST_CUDA_KERNEL_MAIN_FUNC "(cudaTextureObject_t tex0, cudaTextureObject_t tex1,\n"
 "    cudaTextureObject_t tex2, cudaTextureObject_t tex3, unsigned char * dst0,\n"
 "    unsigned char * dst1, unsigned char * dst2, unsigned char * dst3,\n"
-"    int stride0, int stride1)\n"
+"    int stride0, int stride1, ConstBuffer * const_buf)\n"
 "{\n"
 "  int x_pos = blockIdx.x * blockDim.x + threadIdx.x;\n"
 "  int y_pos = blockIdx.y * blockDim.y + threadIdx.y;\n"
 "  float4 sample;\n"
-"  if (x_pos >= WIDTH || y_pos >= HEIGHT)\n"
+"  if (x_pos >= const_buf->width || y_pos >= const_buf->height)\n"
 "    return;\n"
-"  if (x_pos < LEFT || x_pos >= RIGHT || y_pos < TOP || y_pos >= BOTTOM) {\n"
-"    sample = make_float4 (BORDER_X, BORDER_Y, BORDER_Z, BORDER_W);\n"
+"  if (x_pos < const_buf->left || x_pos >= const_buf->right ||\n"
+"      y_pos < const_buf->top || y_pos >= const_buf->bottom) {\n"
+"    sample = make_float4 (const_buf->border_x, const_buf->border_y,\n"
+"       const_buf->border_z, const_buf->border_w);\n"
 "  } else {\n"
-"    float x = OFFSET_X + (float) (x_pos - LEFT) / VIEW_WIDTH;\n"
-"    float y = OFFSET_Y + (float) (y_pos - TOP) / VIEW_HEIGHT;\n"
+"    float x, y;"
+"    if (const_buf->view_width > 0) {\n"
+"      x = const_buf->offset_x +\n"
+"        __int2float_rz (x_pos - const_buf->left) / const_buf->view_width;\n"
+"    } else {\n"
+"      x = const_buf->offset_x;\n"
+"    }\n"
+"    if (const_buf->view_height > 0) {\n"
+"      y = const_buf->offset_y +\n"
+"        __int2float_rz (y_pos - const_buf->top) / const_buf->view_height;\n"
+"    } else {\n"
+"      y = const_buf->offset_y;\n"
+"    }\n"
 "    float2 rotated = %s (x, y);\n"
 "    float4 s = %s (tex0, tex1, tex2, tex3, rotated.x, rotated.y);\n"
 "    float3 xyz = make_float3 (s.x, s.y, s.z);\n"
-"    float3 rgb = %s (xyz, &TO_RGB_MATRIX);\n"
-"    float3 yuv = %s (rgb, &TO_YUV_MATRIX);\n"
+"    float3 rgb = %s (xyz, &const_buf->toRGBCoeff);\n"
+"    float3 yuv = %s (rgb, &const_buf->toYuvCoeff);\n"
 "    sample = make_float4 (yuv.x, yuv.y, yuv.z, s.w);\n"
 "  }\n"
 "  %s (dst0, dst1, dst2, dst3, sample, x_pos, y_pos, stride0, stride1);\n"
@@ -1577,6 +1596,8 @@ struct _GstCudaConverterPrivate
   TextureBuffer fallback_buffer[GST_VIDEO_MAX_COMPONENTS];
   CUfilter_mode filter_mode[GST_VIDEO_MAX_COMPONENTS];
   TextureBuffer unpack_buffer;
+  ConstBuffer *const_buf_staging;
+  CUdeviceptr const_buf;
 
   CUmodule module;
   CUfunction main_func;
@@ -1646,6 +1667,16 @@ gst_cuda_converter_dispose (GObject * object)
       priv->unpack_buffer.ptr = 0;
     }
 
+    if (priv->const_buf_staging) {
+      CuMemFreeHost (priv->const_buf_staging);
+      priv->const_buf_staging = NULL;
+    }
+
+    if (priv->const_buf) {
+      CuMemFree (priv->const_buf);
+      priv->const_buf = 0;
+    }
+
     gst_cuda_context_pop (NULL);
   }
 
@@ -1680,32 +1711,6 @@ get_color_range_name (GstVideoColorRange range)
   return "UNKNOWN";
 }
 
-typedef struct _GstCudaColorMatrixString
-{
-  gchar matrix[3][3][G_ASCII_DTOSTR_BUF_SIZE];
-  gchar offset[3][G_ASCII_DTOSTR_BUF_SIZE];
-  gchar min[3][G_ASCII_DTOSTR_BUF_SIZE];
-  gchar max[3][G_ASCII_DTOSTR_BUF_SIZE];
-} GstCudaColorMatrixString;
-
-static void
-color_matrix_to_string (const GstCudaColorMatrix * m,
-    GstCudaColorMatrixString * str)
-{
-  guint i, j;
-  for (i = 0; i < 3; i++) {
-    for (j = 0; j < 3; j++) {
-      g_ascii_formatd (str->matrix[i][j], G_ASCII_DTOSTR_BUF_SIZE, "%f",
-          m->matrix[i][j]);
-    }
-
-    g_ascii_formatd (str->offset[i],
-        G_ASCII_DTOSTR_BUF_SIZE, "%f", m->offset[i]);
-    g_ascii_formatd (str->min[i], G_ASCII_DTOSTR_BUF_SIZE, "%f", m->min[i]);
-    g_ascii_formatd (str->max[i], G_ASCII_DTOSTR_BUF_SIZE, "%f", m->max[i]);
-  }
-}
-
 static gboolean
 gst_cuda_converter_setup (GstCudaConverter * self)
 {
@@ -1716,12 +1721,7 @@ gst_cuda_converter_setup (GstCudaConverter * self)
   GstCudaColorMatrix to_rgb_matrix;
   GstCudaColorMatrix to_yuv_matrix;
   GstCudaColorMatrix border_color_matrix;
-  GstCudaColorMatrixString to_rgb_matrix_str;
-  GstCudaColorMatrixString to_yuv_matrix_str;
-  gchar border_color_str[4][G_ASCII_DTOSTR_BUF_SIZE];
   gdouble border_color[4];
-  gchar offset_x[G_ASCII_DTOSTR_BUF_SIZE];
-  gchar offset_y[G_ASCII_DTOSTR_BUF_SIZE];
   gint i, j;
   const gchar *unpack_function = NULL;
   const gchar *write_func = NULL;
@@ -1927,11 +1927,7 @@ gst_cuda_converter_setup (GstCudaConverter * self)
     border_color[i] = border_color_matrix.offset[i];
     border_color[i] = CLAMP (border_color[i],
         border_color_matrix.min[i], border_color_matrix.max[i]);
-
-    g_ascii_formatd (border_color_str[i],
-        G_ASCII_DTOSTR_BUF_SIZE, "%f", border_color[i]);
   }
-  g_ascii_formatd (border_color_str[3], G_ASCII_DTOSTR_BUF_SIZE, "%f", 1);
 
   /* FIXME: handle primaries and transfer functions */
   if (GST_VIDEO_INFO_IS_RGB (texture_info)) {
@@ -2000,14 +1996,38 @@ gst_cuda_converter_setup (GstCudaConverter * self)
     }
   }
 
-  color_matrix_to_string (&to_rgb_matrix, &to_rgb_matrix_str);
-  color_matrix_to_string (&to_yuv_matrix, &to_yuv_matrix_str);
+  for (i = 0; i < 3; i++) {
+    priv->const_buf_staging->toRGBCoeff.coeffX[i] = to_rgb_matrix.matrix[0][i];
+    priv->const_buf_staging->toRGBCoeff.coeffY[i] = to_rgb_matrix.matrix[1][i];
+    priv->const_buf_staging->toRGBCoeff.coeffZ[i] = to_rgb_matrix.matrix[2][i];
+    priv->const_buf_staging->toRGBCoeff.offset[i] = to_rgb_matrix.offset[i];
+    priv->const_buf_staging->toRGBCoeff.min[i] = to_rgb_matrix.min[i];
+    priv->const_buf_staging->toRGBCoeff.max[i] = to_rgb_matrix.max[i];
 
-  /* half pixel offset, to sample texture at center of the pixel position */
-  g_ascii_formatd (offset_x, G_ASCII_DTOSTR_BUF_SIZE, "%f",
-      (gdouble) 0.5 / priv->dest_rect.width);
-  g_ascii_formatd (offset_y, G_ASCII_DTOSTR_BUF_SIZE, "%f",
-      (gdouble) 0.5 / priv->dest_rect.height);
+    priv->const_buf_staging->toYuvCoeff.coeffX[i] = to_yuv_matrix.matrix[0][i];
+    priv->const_buf_staging->toYuvCoeff.coeffY[i] = to_yuv_matrix.matrix[1][i];
+    priv->const_buf_staging->toYuvCoeff.coeffZ[i] = to_yuv_matrix.matrix[2][i];
+    priv->const_buf_staging->toYuvCoeff.offset[i] = to_yuv_matrix.offset[i];
+    priv->const_buf_staging->toYuvCoeff.min[i] = to_yuv_matrix.min[i];
+    priv->const_buf_staging->toYuvCoeff.max[i] = to_yuv_matrix.max[i];
+  }
+
+  priv->const_buf_staging->width = out_info->width;
+  priv->const_buf_staging->height = out_info->height;
+  priv->const_buf_staging->left = priv->dest_rect.x;
+  priv->const_buf_staging->top = priv->dest_rect.y;
+  priv->const_buf_staging->right = priv->dest_rect.x + priv->dest_rect.width;
+  priv->const_buf_staging->bottom = priv->dest_rect.y + priv->dest_rect.height;
+  priv->const_buf_staging->view_width = priv->dest_rect.width;
+  priv->const_buf_staging->view_height = priv->dest_rect.height;
+  priv->const_buf_staging->offset_x = priv->dest_rect.width != 0 ?
+      0.5 / priv->dest_rect.width : 0;
+  priv->const_buf_staging->offset_y = priv->dest_rect.height != 0 ?
+      0.5 / priv->dest_rect.height : 0;
+  priv->const_buf_staging->border_x = border_color[0];
+  priv->const_buf_staging->border_y = border_color[1];
+  priv->const_buf_staging->border_z = border_color[2];
+  priv->const_buf_staging->border_w = border_color[3];
 
   switch (priv->method) {
     case GST_VIDEO_ORIENTATION_90R:
@@ -2035,56 +2055,8 @@ gst_cuda_converter_setup (GstCudaConverter * self)
       break;
   }
 
-  str = g_strdup_printf (TEMPLETA_KERNEL, KERNEL_COMMON,
+  str = g_strdup_printf (TEMPLATE_KERNEL, KERNEL_COMMON,
       unpack_function ? unpack_function : "",
-      /* TO RGB matrix */
-      to_rgb_matrix_str.matrix[0][0],
-      to_rgb_matrix_str.matrix[0][1],
-      to_rgb_matrix_str.matrix[0][2],
-      to_rgb_matrix_str.matrix[1][0],
-      to_rgb_matrix_str.matrix[1][1],
-      to_rgb_matrix_str.matrix[1][2],
-      to_rgb_matrix_str.matrix[2][0],
-      to_rgb_matrix_str.matrix[2][1],
-      to_rgb_matrix_str.matrix[2][2],
-      to_rgb_matrix_str.offset[0],
-      to_rgb_matrix_str.offset[1],
-      to_rgb_matrix_str.offset[2],
-      to_rgb_matrix_str.min[0],
-      to_rgb_matrix_str.min[1],
-      to_rgb_matrix_str.min[2],
-      to_rgb_matrix_str.max[0],
-      to_rgb_matrix_str.max[1], to_rgb_matrix_str.max[2],
-      /* TO YUV matrix */
-      to_yuv_matrix_str.matrix[0][0],
-      to_yuv_matrix_str.matrix[0][1],
-      to_yuv_matrix_str.matrix[0][2],
-      to_yuv_matrix_str.matrix[1][0],
-      to_yuv_matrix_str.matrix[1][1],
-      to_yuv_matrix_str.matrix[1][2],
-      to_yuv_matrix_str.matrix[2][0],
-      to_yuv_matrix_str.matrix[2][1],
-      to_yuv_matrix_str.matrix[2][2],
-      to_yuv_matrix_str.offset[0],
-      to_yuv_matrix_str.offset[1],
-      to_yuv_matrix_str.offset[2],
-      to_yuv_matrix_str.min[0],
-      to_yuv_matrix_str.min[1],
-      to_yuv_matrix_str.min[2],
-      to_yuv_matrix_str.max[0],
-      to_yuv_matrix_str.max[1], to_yuv_matrix_str.max[2],
-      /* width/height */
-      GST_VIDEO_INFO_WIDTH (out_info), GST_VIDEO_INFO_HEIGHT (out_info),
-      /* viewport */
-      priv->dest_rect.x, priv->dest_rect.y,
-      priv->dest_rect.x + priv->dest_rect.width,
-      priv->dest_rect.y + priv->dest_rect.height,
-      priv->dest_rect.width, priv->dest_rect.height,
-      /* half pixel offsets */
-      offset_x, offset_y,
-      /* border colors */
-      border_color_str[0], border_color_str[1],
-      border_color_str[2], border_color_str[3],
       /* adjust coord before sampling */
       rotate_func,
       /* sampler function name */
@@ -2195,6 +2167,13 @@ gst_cuda_converter_setup (GstCudaConverter * self)
     }
   }
 
+  ret = CuMemcpyHtoD (priv->const_buf,
+      priv->const_buf_staging, sizeof (ConstBuffer));
+  if (!gst_cuda_result (ret)) {
+    GST_ERROR_OBJECT (self, "Could upload const buf");
+    goto error;
+  }
+
   gst_cuda_context_pop (NULL);
 
   return TRUE;
@@ -2241,6 +2220,7 @@ gst_cuda_converter_new (const GstVideoInfo * in_info,
   GstCudaConverter *self;
   GstCudaConverterPrivate *priv;
   gint method;
+  CUresult cuda_ret;
 
   g_return_val_if_fail (in_info != NULL, NULL);
   g_return_val_if_fail (out_info != NULL, NULL);
@@ -2272,6 +2252,26 @@ gst_cuda_converter_new (const GstVideoInfo * in_info,
           GST_TYPE_VIDEO_ORIENTATION_METHOD, &method)) {
     priv->method = method;
     GST_DEBUG_OBJECT (self, "Selected orientation method %d", method);
+  }
+
+  if (!gst_cuda_context_push (context)) {
+    GST_ERROR_OBJECT (self, "Couldn't push context");
+    goto error;
+  }
+
+  cuda_ret = CuMemAllocHost ((void **) &priv->const_buf_staging,
+      sizeof (ConstBuffer));
+  if (!gst_cuda_result (cuda_ret)) {
+    GST_ERROR_OBJECT (self, "Couldn't allocate staging const buf");
+    gst_cuda_context_pop (NULL);
+    goto error;
+  }
+
+  cuda_ret = CuMemAlloc (&priv->const_buf, sizeof (ConstBuffer));
+  gst_cuda_context_pop (NULL);
+  if (!gst_cuda_result (cuda_ret)) {
+    GST_ERROR_OBJECT (self, "Couldn't allocate const buf");
+    goto error;
   }
 
   if (!gst_cuda_converter_setup (self))
@@ -2439,9 +2439,6 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
   gboolean ret = FALSE;
   CUresult cuda_ret;
   gint width, height;
-  gpointer args[] = { &texture[0], &texture[1], &texture[2], &texture[3],
-    &dst[0], &dst[1], &dst[2], &dst[3], &stride[0], &stride[1]
-  };
   gboolean need_sync = FALSE;
   GstCudaMemory *cmem;
 
@@ -2453,6 +2450,11 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
   format = priv->texture_fmt;
 
   g_assert (format);
+
+  gpointer args[] = { &texture[0], &texture[1], &texture[2], &texture[3],
+    &dst[0], &dst[1], &dst[2], &dst[3], &stride[0], &stride[1],
+    &priv->const_buf
+  };
 
   cmem = (GstCudaMemory *) gst_buffer_peek_memory (src_frame->buffer, 0);
   g_return_val_if_fail (gst_is_cuda_memory (GST_MEMORY_CAST (cmem)), FALSE);
@@ -2521,7 +2523,6 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
   ret = TRUE;
 
 out:
-
   gst_cuda_context_pop (NULL);
   return ret;
 }
