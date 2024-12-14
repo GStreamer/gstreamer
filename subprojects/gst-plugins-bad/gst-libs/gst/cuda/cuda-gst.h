@@ -399,6 +399,51 @@ CUresult CUDAAPI CuWaitExternalSemaphoresAsync (const CUexternalSemaphore *extSe
                                                 unsigned int numExtSems,
                                                 CUstream stream);
 
+GST_CUDA_API
+CUresult CUDAAPI CuMemsetD2D8 (CUdeviceptr dstDevice,
+                               size_t dstPitch,
+                               unsigned char uc,
+                               size_t Width,
+                               size_t Height);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemsetD2D8Async (CUdeviceptr dstDevice,
+                                    size_t dstPitch,
+                                    unsigned char uc,
+                                    size_t Width,
+                                    size_t Height,
+                                    CUstream hStream);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemsetD2D16 (CUdeviceptr dstDevice,
+                                size_t dstPitch,
+                                unsigned short us,
+                                size_t Width,
+                                size_t Height);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemsetD2D16Async (CUdeviceptr dstDevice,
+                                     size_t dstPitch,
+                                     unsigned short us,
+                                     size_t Width,
+                                     size_t Height,
+                                     CUstream hStream);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemsetD2D32 (CUdeviceptr dstDevice,
+                                size_t dstPitch,
+                                unsigned int ui,
+                                size_t Width,
+                                size_t Height);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemsetD2D32Async (CUdeviceptr dstDevice,
+                                     size_t dstPitch,
+                                     unsigned int ui,
+                                     size_t Width,
+                                     size_t Height,
+                                     CUstream hStream);
+
 /* cudaGL.h */
 GST_CUDA_API
 CUresult CUDAAPI CuGraphicsGLRegisterImage  (CUgraphicsResource * pCudaResource,

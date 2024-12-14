@@ -252,6 +252,22 @@ typedef struct _GstNvCodecCudaVTable
       (const CUexternalSemaphore *extSemArray,
       const CUDA_EXTERNAL_SEMAPHORE_WAIT_PARAMS *paramsArray,
       unsigned int numExtSems, CUstream stream);
+
+  CUresult (CUDAAPI * CuMemsetD2D8) (CUdeviceptr dstDevice, size_t dstPitch,
+      unsigned char uc, size_t Width, size_t Height);
+  CUresult (CUDAAPI * CuMemsetD2D8Async) (CUdeviceptr dstDevice,
+      size_t dstPitch, unsigned char uc, size_t Width, size_t Height,
+      CUstream hStream);
+  CUresult (CUDAAPI * CuMemsetD2D16) (CUdeviceptr dstDevice, size_t dstPitch,
+      unsigned short us, size_t Width, size_t Height);
+  CUresult (CUDAAPI * CuMemsetD2D16Async) (CUdeviceptr dstDevice,
+      size_t dstPitch, unsigned short us, size_t Width, size_t Height,
+      CUstream hStream);
+  CUresult (CUDAAPI * CuMemsetD2D32) (CUdeviceptr dstDevice, size_t dstPitch,
+      unsigned int ui, size_t Width,  size_t Height);
+  CUresult (CUDAAPI * CuMemsetD2D32Async) (CUdeviceptr dstDevice,
+      size_t dstPitch, unsigned int ui, size_t Width, size_t Height,
+      CUstream hStream);
 } GstNvCodecCudaVTable;
 /* *INDENT-ON* */
 
@@ -382,6 +398,13 @@ gst_cuda_load_library_once_func (void)
 
   LOAD_SYMBOL (cuMemFree, CuMemFree);
   LOAD_SYMBOL (cuMemFreeHost, CuMemFreeHost);
+
+  LOAD_SYMBOL (cuMemsetD2D8, CuMemsetD2D8);
+  LOAD_SYMBOL (cuMemsetD2D8Async, CuMemsetD2D8Async);
+  LOAD_SYMBOL (cuMemsetD2D16, CuMemsetD2D16);
+  LOAD_SYMBOL (cuMemsetD2D16Async, CuMemsetD2D16Async);
+  LOAD_SYMBOL (cuMemsetD2D32, CuMemsetD2D32);
+  LOAD_SYMBOL (cuMemsetD2D32Async, CuMemsetD2D32Async);
 
   LOAD_SYMBOL (cuStreamCreate, CuStreamCreate);
   LOAD_SYMBOL (cuStreamDestroy, CuStreamDestroy);
@@ -1232,6 +1255,63 @@ CuWaitExternalSemaphoresAsync (const CUexternalSemaphore * extSemArray,
 
   return gst_cuda_vtable.CuWaitExternalSemaphoresAsync (extSemArray,
       paramsArray, numExtSems, stream);
+}
+
+CUresult CUDAAPI
+CuMemsetD2D8 (CUdeviceptr dstDevice, size_t dstPitch, unsigned char uc,
+    size_t Width, size_t Height)
+{
+  g_assert (gst_cuda_vtable.CuMemsetD2D8);
+
+  return gst_cuda_vtable.CuMemsetD2D8 (dstDevice, dstPitch, uc, Width, Height);
+}
+
+CUresult CUDAAPI
+CuMemsetD2D8Async (CUdeviceptr dstDevice, size_t dstPitch, unsigned char uc,
+    size_t Width, size_t Height, CUstream hStream)
+{
+  g_assert (gst_cuda_vtable.CuMemsetD2D8Async);
+
+  return gst_cuda_vtable.CuMemsetD2D8Async (dstDevice,
+      dstPitch, uc, Width, Height, hStream);
+}
+
+CUresult CUDAAPI
+CuMemsetD2D16 (CUdeviceptr dstDevice, size_t dstPitch, unsigned short us,
+    size_t Width, size_t Height)
+{
+  g_assert (gst_cuda_vtable.CuMemsetD2D16);
+
+  return gst_cuda_vtable.CuMemsetD2D16 (dstDevice, dstPitch, us, Width, Height);
+}
+
+CUresult CUDAAPI
+CuMemsetD2D16Async (CUdeviceptr dstDevice, size_t dstPitch, unsigned short us,
+    size_t Width, size_t Height, CUstream hStream)
+{
+  g_assert (gst_cuda_vtable.CuMemsetD2D16Async);
+
+  return gst_cuda_vtable.CuMemsetD2D16Async (dstDevice,
+      dstPitch, us, Width, Height, hStream);
+}
+
+CUresult CUDAAPI
+CuMemsetD2D32 (CUdeviceptr dstDevice, size_t dstPitch, unsigned int ui,
+    size_t Width, size_t Height)
+{
+  g_assert (gst_cuda_vtable.CuMemsetD2D32);
+
+  return gst_cuda_vtable.CuMemsetD2D32 (dstDevice, dstPitch, ui, Width, Height);
+}
+
+CUresult CUDAAPI
+CuMemsetD2D32Async (CUdeviceptr dstDevice, size_t dstPitch, unsigned int ui,
+    size_t Width, size_t Height, CUstream hStream)
+{
+  g_assert (gst_cuda_vtable.CuMemsetD2D32Async);
+
+  return gst_cuda_vtable.CuMemsetD2D32Async (dstDevice,
+      dstPitch, ui, Width, Height, hStream);
 }
 
 /* cudaGL.h */

@@ -495,6 +495,9 @@ typedef struct
 #define cuMemcpyHtoD cuMemcpyHtoD_v2
 #define cuMemcpyHtoDAsync cuMemcpyHtoDAsync_v2
 #define cuMemFree cuMemFree_v2
+#define cuMemsetD2D8 cuMemsetD2D8_v2
+#define cuMemsetD2D16 cuMemsetD2D16_v2
+#define cuMemsetD2D32 cuMemsetD2D32_v2
 
 #define cuEventDestroy cuEventDestroy_v2
 
