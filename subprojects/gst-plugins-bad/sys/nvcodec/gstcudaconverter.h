@@ -36,41 +36,6 @@ typedef struct _GstCudaConverter GstCudaConverter;
 typedef struct _GstCudaConverterClass GstCudaConverterClass;
 typedef struct _GstCudaConverterPrivate GstCudaConverterPrivate;
 
-/**
- * GST_CUDA_CONVERTER_OPT_DEST_X:
- *
- * #G_TYPE_INT, x position in the destination frame, default 0
- */
-#define GST_CUDA_CONVERTER_OPT_DEST_X   "GstCudaConverter.dest-x"
-
-/**
- * GST_CUDA_CONVERTER_OPT_DEST_Y:
- *
- * #G_TYPE_INT, y position in the destination frame, default 0
- */
-#define GST_CUDA_CONVERTER_OPT_DEST_Y   "GstCudaConverter.dest-y"
-
-/**
- * GST_CUDA_CONVERTER_OPT_DEST_WIDTH:
- *
- * #G_TYPE_INT, width in the destination frame, default destination width
- */
-#define GST_CUDA_CONVERTER_OPT_DEST_WIDTH   "GstCudaConverter.dest-width"
-
-/**
- * GST_CUDA_CONVERTER_OPT_DEST_HEIGHT:
- *
- * #G_TYPE_INT, height in the destination frame, default destination height
- */
-#define GST_CUDA_CONVERTER_OPT_DEST_HEIGHT   "GstCudaConverter.dest-height"
-
-/**
- * GST_CUDA_CONVERTER_OPT_ORIENTATION_METHOD:
- *
- * #GstVideoOrientationMethod, default #GST_VIDEO_ORIENTATION_IDENTITY
- */
-#define GST_CUDA_CONVERTER_OPT_ORIENTATION_METHOD   "GstCudaConverter.orientation-method"
-
 struct _GstCudaConverter
 {
   GstObject parent;

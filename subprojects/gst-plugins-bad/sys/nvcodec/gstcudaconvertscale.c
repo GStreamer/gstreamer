@@ -1415,27 +1415,20 @@ gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
       !needs_color_convert (in_info, out_info)) {
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (self), TRUE);
   } else {
-    GstStructure *config;
-
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (self), FALSE);
 
-    config = gst_structure_new_empty ("GstCudaConverter");
-    gst_structure_set (config,
-        GST_CUDA_CONVERTER_OPT_DEST_X, G_TYPE_INT, self->borders_w / 2,
-        GST_CUDA_CONVERTER_OPT_DEST_Y, G_TYPE_INT, self->borders_h / 2,
-        GST_CUDA_CONVERTER_OPT_DEST_WIDTH,
-        G_TYPE_INT, out_info->width - self->borders_w,
-        GST_CUDA_CONVERTER_OPT_DEST_HEIGHT,
-        G_TYPE_INT, out_info->height - self->borders_h,
-        GST_CUDA_CONVERTER_OPT_ORIENTATION_METHOD,
-        GST_TYPE_VIDEO_ORIENTATION_METHOD, active_method, NULL);
-
     self->converter = gst_cuda_converter_new (in_info,
-        out_info, btrans->context, config);
+        out_info, btrans->context, NULL);
     if (!self->converter) {
       GST_ERROR_OBJECT (self, "Couldn't create converter");
       return FALSE;
     }
+
+    g_object_set (self->converter, "dest-x", self->borders_w / 2,
+        "dest-y", self->borders_h / 2,
+        "dest-width", out_info->width - self->borders_w,
+        "dest-height", out_info->height - self->borders_h,
+        "fill-border", TRUE, "video-direction", active_method, NULL);
   }
 
   GST_DEBUG_OBJECT (self, "%s from=%dx%d (par=%d/%d dar=%d/%d), size %"
