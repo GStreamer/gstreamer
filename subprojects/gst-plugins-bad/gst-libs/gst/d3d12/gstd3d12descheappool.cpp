@@ -206,6 +206,8 @@ gst_d3d12_desc_heap_pool_acquire (GstD3D12DescHeapPool * pool,
     }
 
     new_heap = gst_d3d12_desc_heap_new (heap.Get ());
+    if (GST_OBJECT_FLAG_IS_SET (pool, GST_OBJECT_FLAG_MAY_BE_LEAKED))
+      GST_MINI_OBJECT_FLAG_SET (new_heap, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
   }
 
   new_heap->pool = (GstD3D12DescHeapPool *) gst_object_ref (pool);
