@@ -46,6 +46,12 @@ GST_CUDA_API
 CUresult CUDAAPI CuCtxSynchronize   (void);
 
 GST_CUDA_API
+CUresult CUDAAPI CuCtxGetLimit      (size_t *plimit, CUlimit limit);
+
+GST_CUDA_API
+CUresult CUDAAPI CuCtxSetLimit      (CUlimit limit, size_t value);
+
+GST_CUDA_API
 CUresult CUDAAPI CuCtxEnablePeerAccess (CUcontext peerContext,
                                              unsigned int Flags);
 

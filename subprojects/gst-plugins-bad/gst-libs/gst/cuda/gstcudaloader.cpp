@@ -76,6 +76,8 @@ typedef struct _GstNvCodecCudaVTable
   CUresult (CUDAAPI * CuCtxPopCurrent) (CUcontext * pctx);
   CUresult (CUDAAPI * CuCtxPushCurrent) (CUcontext ctx);
   CUresult (CUDAAPI * CuCtxSynchronize) (void);
+  CUresult (CUDAAPI * CuCtxGetLimit) (size_t * plimit, CUlimit limit);
+  CUresult (CUDAAPI * CuCtxSetLimit) (CUlimit limit, size_t value);
 
   CUresult (CUDAAPI * CuCtxEnablePeerAccess) (CUcontext peerContext,
       unsigned int Flags);
@@ -354,6 +356,8 @@ gst_cuda_load_library_once_func (void)
   LOAD_SYMBOL (cuCtxPushCurrent, CuCtxPushCurrent);
   LOAD_SYMBOL (cuCtxEnablePeerAccess, CuCtxEnablePeerAccess);
   LOAD_SYMBOL (cuCtxDisablePeerAccess, CuCtxDisablePeerAccess);
+  LOAD_SYMBOL (cuCtxGetLimit, CuCtxGetLimit);
+  LOAD_SYMBOL (cuCtxSetLimit, CuCtxSetLimit);
 
   LOAD_SYMBOL (cuGraphicsMapResources, CuGraphicsMapResources);
   LOAD_SYMBOL (cuGraphicsUnmapResources, CuGraphicsUnmapResources);
@@ -558,6 +562,22 @@ CuCtxDisablePeerAccess (CUcontext peerContext)
   g_assert (gst_cuda_vtable.CuCtxDisablePeerAccess != nullptr);
 
   return gst_cuda_vtable.CuCtxDisablePeerAccess (peerContext);
+}
+
+CUresult CUDAAPI
+CuCtxGetLimit (size_t *plimit, CUlimit limit)
+{
+  g_assert (gst_cuda_vtable.CuCtxGetLimit != nullptr);
+
+  return gst_cuda_vtable.CuCtxGetLimit (plimit, limit);
+}
+
+CUresult CUDAAPI
+CuCtxSetLimit (CUlimit limit, size_t value)
+{
+  g_assert (gst_cuda_vtable.CuCtxSetLimit != nullptr);
+
+  return gst_cuda_vtable.CuCtxSetLimit (limit, value);
 }
 
 CUresult CUDAAPI

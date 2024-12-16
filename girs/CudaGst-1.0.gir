@@ -621,6 +621,29 @@ and/or use gtk-doc annotations.  -->
       <member name="ipc_mem_lazy_enable_peer_access" value="1" c:identifier="CU_IPC_MEM_LAZY_ENABLE_PEER_ACCESS">
       </member>
     </enumeration>
+    <enumeration name="limit" c:type="CUlimit">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <member name="stack_size" value="0" c:identifier="CU_LIMIT_STACK_SIZE">
+      </member>
+      <member name="printf_fifo_size" value="1" c:identifier="CU_LIMIT_PRINTF_FIFO_SIZE">
+      </member>
+      <member name="malloc_heap_size" value="2" c:identifier="CU_LIMIT_MALLOC_HEAP_SIZE">
+      </member>
+      <member name="dev_runtime_sync_depth" value="3" c:identifier="CU_LIMIT_DEV_RUNTIME_SYNC_DEPTH">
+      </member>
+      <member name="dev_runtime_pending_launch_count" value="4" c:identifier="CU_LIMIT_DEV_RUNTIME_PENDING_LAUNCH_COUNT">
+      </member>
+      <member name="max_l2_fetch_granularity" value="5" c:identifier="CU_LIMIT_MAX_L2_FETCH_GRANULARITY">
+      </member>
+      <member name="persisting_l2_cache_size" value="6" c:identifier="CU_LIMIT_PERSISTING_L2_CACHE_SIZE">
+      </member>
+      <member name="shmem_size" value="7" c:identifier="CU_LIMIT_SHMEM_SIZE">
+      </member>
+      <member name="cig_enabled" value="8" c:identifier="CU_LIMIT_CIG_ENABLED">
+      </member>
+      <member name="cig_shmem_fallback_enabled" value="9" c:identifier="CU_LIMIT_CIG_SHMEM_FALLBACK_ENABLED">
+      </member>
+    </enumeration>
     <record name="memAccessDesc" c:type="CUmemAccessDesc">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
       <field name="location" writable="1">
