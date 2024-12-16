@@ -1116,7 +1116,7 @@ struct _GstH266RefPicListStruct {
   guint8 ltrp_in_header_flag;
   guint8 inter_layer_ref_pic_flag[GST_H266_MAX_REF_ENTRIES];
   guint8 st_ref_pic_flag[GST_H266_MAX_REF_ENTRIES];
-  guint8 abs_delta_poc_st[GST_H266_MAX_REF_ENTRIES];
+  guint16 abs_delta_poc_st[GST_H266_MAX_REF_ENTRIES];
   guint8 strp_entry_sign_flag[GST_H266_MAX_REF_ENTRIES];
   guint8 rpls_poc_lsb_lt[GST_H266_MAX_REF_ENTRIES];
   guint num_short_term_pic;
