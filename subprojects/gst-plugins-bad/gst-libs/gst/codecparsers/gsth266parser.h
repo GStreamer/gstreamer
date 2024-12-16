@@ -1104,6 +1104,8 @@ struct _GstH266VPS {
  *  is greater than or equal to 0.
  * @rpls_poc_lsb_lt: specifies the value of the picture order count modulo
  *  MaxPicOrderCntLsb of the picture referred to.
+ * @ilrp_idx: specifies the index of the ILRP entry of the i-th entry in the
+ *  ref_pic_list_struct.
  * @num_short_term_pic: the number of short term reference picture.
  * @num_long_term_pic: the number long term reference picture.
  * @num_inter_layer_pic: the number of inter layer reference picture.
@@ -1119,6 +1121,7 @@ struct _GstH266RefPicListStruct {
   guint16 abs_delta_poc_st[GST_H266_MAX_REF_ENTRIES];
   guint8 strp_entry_sign_flag[GST_H266_MAX_REF_ENTRIES];
   guint8 rpls_poc_lsb_lt[GST_H266_MAX_REF_ENTRIES];
+  guint8 ilrp_idx[GST_H266_MAX_REF_ENTRIES];
   guint num_short_term_pic;
   guint num_long_term_pic;
   guint num_inter_layer_pic;

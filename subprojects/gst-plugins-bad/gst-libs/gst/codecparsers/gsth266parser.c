@@ -625,6 +625,7 @@ gst_h266_ref_pic_list_struct (GstH266RefPicListStruct * rpls, NalReader * nr,
       rpls->inter_layer_ref_pic_flag[i] = 0;
 
     if (rpls->inter_layer_ref_pic_flag[i]) {
+      READ_UE_MAX (nr, rpls->ilrp_idx[i], GST_H266_MAX_REF_PIC_LISTS);
       rpls->num_inter_layer_pic++;
       continue;
     }
