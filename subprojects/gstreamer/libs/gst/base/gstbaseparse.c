@@ -952,16 +952,11 @@ gst_base_parse_queue_tag_event_update (GstBaseParse * parse)
   GST_DEBUG_OBJECT (parse, "merged   : %" GST_PTR_FORMAT, merged_tags);
 
   if (merged_tags == NULL)
-    return;
-
-  if (gst_tag_list_is_empty (merged_tags)) {
-    gst_tag_list_unref (merged_tags);
-    return;
-  }
+    merged_tags = gst_tag_list_new_empty ();
 
   if (parse->priv->framecount >= MIN_FRAMES_TO_POST_BITRATE) {
-    /* only add bitrate tags to non-empty taglists for now, and only if neither
-     * upstream tags nor the subclass sets the bitrate tag in question already */
+    /* only add bitrate tags if neither upstream tags nor the subclass sets the
+     * bitrate tag in question already */
     if (parse->priv->min_bitrate != G_MAXUINT && parse->priv->post_min_bitrate) {
       GST_LOG_OBJECT (parse, "adding min bitrate %u", parse->priv->min_bitrate);
       gst_tag_list_add (merged_tags, GST_TAG_MERGE_KEEP,
@@ -978,6 +973,11 @@ gst_base_parse_queue_tag_event_update (GstBaseParse * parse)
       gst_tag_list_add (merged_tags, GST_TAG_MERGE_KEEP,
           GST_TAG_BITRATE, parse->priv->avg_bitrate, NULL);
     }
+  }
+
+  if (gst_tag_list_is_empty (merged_tags)) {
+    gst_tag_list_unref (merged_tags);
+    return;
   }
 
   parse->priv->pending_events =
