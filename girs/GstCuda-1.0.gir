@@ -509,6 +509,10 @@ so all CUDA functions that operate on the current context are affected.</doc>
       <property name="cuda-device-id" writable="1" construct-only="1" transfer-ownership="none" default-value="0">
         <type name="guint" c:type="guint"/>
       </property>
+      <property name="default-gpu-stack-size" version="1.26" writable="1" transfer-ownership="none" default-value="1024">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">The default stack size for each GPU thread.</doc>
+        <type name="guint" c:type="guint"/>
+      </property>
       <property name="external-resource-interop" version="1.26" transfer-ownership="none" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">External resource interop API support</doc>
         <type name="gboolean" c:type="gboolean"/>

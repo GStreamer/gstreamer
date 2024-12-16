@@ -57,6 +57,7 @@ enum
   PROP_STREAM_ORDERED_ALLOC,
   PROP_PREFER_STREAM_ORDERED_ALLLOC,
   PROP_EXT_INTEROP,
+  PROP_DEFAULT_GPU_STACK_SIZE,
 };
 
 struct _GstCudaContextPrivate
@@ -70,6 +71,7 @@ struct _GstCudaContextPrivate
   gboolean stream_ordered_alloc_supported;
   gboolean prefer_stream_ordered_alloc;
   gboolean ext_interop_supported;
+  guint default_gpu_stack_size;
 
   gint tex_align;
 
@@ -182,6 +184,19 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
           "External resource interop API support", FALSE,
           (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstCudaContext:default-gpu-stack-size:
+   *
+   * The default stack size for each GPU thread.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_DEFAULT_GPU_STACK_SIZE,
+      g_param_spec_uint ("default-gpu-stack-size",
+          "Default GPU stack size",
+          "The initial stack size for GPU threads", 0, G_MAXUINT, 1024,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_cuda_memory_init_once ();
 }
 
@@ -214,6 +229,27 @@ gst_cuda_context_set_property (GObject * object, guint prop_id,
       priv->prefer_stream_ordered_alloc = g_value_get_boolean (value);
       g_mutex_unlock (&priv->lock);
       break;
+    case PROP_DEFAULT_GPU_STACK_SIZE:{
+      guint new_stack_limit = g_value_get_uint (value);
+
+      g_mutex_lock (&priv->lock);
+      if (new_stack_limit != priv->default_gpu_stack_size) {
+        size_t set_value = 0;
+        gst_cuda_context_push (context);
+        if (CuCtxSetLimit (CU_LIMIT_STACK_SIZE,
+                (size_t) new_stack_limit) == CUDA_SUCCESS) {
+          if (CuCtxGetLimit (&set_value, CU_LIMIT_STACK_SIZE) == CUDA_SUCCESS) {
+            priv->default_gpu_stack_size = (guint) set_value;
+            GST_INFO_OBJECT (context,
+                "set default stack size to %" G_GUINT64_FORMAT,
+                (guint64) set_value);
+          }
+        }
+        gst_cuda_context_pop (nullptr);
+      }
+      g_mutex_unlock (&priv->lock);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -250,6 +286,9 @@ gst_cuda_context_get_property (GObject * object, guint prop_id,
       break;
     case PROP_EXT_INTEROP:
       g_value_set_boolean (value, priv->ext_interop_supported);
+      break;
+    case PROP_DEFAULT_GPU_STACK_SIZE:
+      g_value_set_uint (value, priv->default_gpu_stack_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -635,6 +674,7 @@ gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
   GList *iter;
   gint tex_align = 0;
   GstCudaContext *self;
+  size_t default_gpu_stack_size;
 
   g_return_val_if_fail (handler, nullptr);
   g_return_val_if_fail (device >= 0, nullptr);
@@ -654,6 +694,16 @@ gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
   self->priv->context = handler;
   self->priv->device = device;
   self->priv->tex_align = tex_align;
+
+  gst_cuda_context_push (self);
+  if (CuCtxGetLimit (&default_gpu_stack_size,
+          CU_LIMIT_STACK_SIZE) == CUDA_SUCCESS) {
+    self->priv->default_gpu_stack_size = (guint) default_gpu_stack_size;
+    GST_DEBUG ("cuda default stack size %" G_GUINT64_FORMAT,
+        (guint64) default_gpu_stack_size);
+  }
+  gst_cuda_context_pop (nullptr);
+
   gst_object_ref_sink (self);
 
 #ifdef G_OS_WIN32
