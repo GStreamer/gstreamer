@@ -598,9 +598,8 @@ send_packet_error:
 
 get_frame_error:
   {
-    GST_ELEMENT_ERROR (jxsdec, STREAM, DECODE, (NULL),
-        ("Error decoding image, error code 0x%08x", dec_ret));
-    flow = GST_FLOW_ERROR;
+    GST_VIDEO_DECODER_ERROR (jxsdec, 1, STREAM, DECODE,
+        (NULL), ("Error decoding image, error code 0x%08x", dec_ret), flow);
     goto out_unmap;
   }
 }
