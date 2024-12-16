@@ -627,6 +627,8 @@ struct ConstBuffer
   float border_w;
   int fill_border;
   int video_direction;
+  float alpha;
+  int do_blend;
 };
 
 #define COLOR_SPACE_IDENTITY "color_space_identity"
@@ -655,37 +657,69 @@ struct ConstBuffer
 #define SAMPLE_VUYA "sample_vuya"
 
 #define WRITE_I420 "write_i420"
+#define BLEND_I420 "blend_i420"
 #define WRITE_YV12 "write_yv12"
+#define BLEND_YV12 "blend_yv12"
 #define WRITE_NV12 "write_nv12"
+#define BLEND_NV12 "blend_nv12"
 #define WRITE_NV21 "write_nv21"
+#define BLEND_NV21 "blend_nv21"
 #define WRITE_P010 "write_p010"
+#define BLEND_P010 "blend_p010"
 #define WRITE_I420_10 "write_i420_10"
+#define BLEND_I420_10 "blend_i420_10"
 #define WRITE_I420_12 "write_i420_12"
+#define BLEND_I420_12 "blend_i420_12"
 #define WRITE_Y444 "write_y444"
+#define BLEND_Y444 "blend_y444"
 #define WRITE_Y444_10 "write_y444_10"
+#define BLEND_Y444_10 "blend_y444_10"
 #define WRITE_Y444_12 "write_y444_12"
+#define BLEND_Y444_12 "blend_y444_12"
 #define WRITE_Y444_16 "write_y444_16"
+#define BLEND_Y444_16 "blend_y444_16"
 #define WRITE_RGBA "write_rgba"
+#define BLEND_RGBA "blend_rgba"
 #define WRITE_RGBx "write_rgbx"
+#define BLEND_RGBx "blend_rgbx"
 #define WRITE_BGRA "write_bgra"
+#define BLEND_BGRA "blend_bgra"
 #define WRITE_BGRx "write_bgrx"
+#define BLEND_BGRx "blend_bgrx"
 #define WRITE_ARGB "write_argb"
+#define BLEND_ARGB "blend_argb"
 #define WRITE_ABGR "write_abgr"
+#define BLEND_ABGR "blend_abgr"
 #define WRITE_RGB "write_rgb"
+#define BLEND_RGB "blend_rgb"
 #define WRITE_BGR "write_bgr"
+#define BLEND_BGR "blend_bgr"
 #define WRITE_RGB10A2 "write_rgb10a2"
+#define BLEND_RGB10A2 "blend_rgb10a2"
 #define WRITE_BGR10A2 "write_bgr10a2"
+#define BLEND_BGR10A2 "blend_bgr10a2"
 #define WRITE_Y42B "write_y42b"
+#define BLEND_Y42B "blend_y42b"
 #define WRITE_I422_10 "write_i422_10"
+#define BLEND_I422_10 "blend_i422_10"
 #define WRITE_I422_12 "write_i422_12"
+#define BLEND_I422_12 "blend_i422_12"
 #define WRITE_RGBP "write_rgbp"
+#define BLEND_RGBP "blend_rgbp"
 #define WRITE_BGRP "write_bgrp"
+#define BLEND_BGRP "blend_bgrp"
 #define WRITE_GBR "write_gbr"
+#define BLEND_GBR "blend_gbr"
 #define WRITE_GBR_10 "write_gbr_10"
+#define BLEND_GBR_10 "blend_gbr_10"
 #define WRITE_GBR_12 "write_gbr_12"
+#define BLEND_GBR_12 "blend_gbr_12"
 #define WRITE_GBR_16 "write_gbr_16"
+#define BLEND_GBR_16 "blend_gbr_16"
 #define WRITE_GBRA "write_gbra"
+#define BLEND_GBRA "blend_gbra"
 #define WRITE_VUYA "write_vuya"
+#define BLEND_VUYA "blend_vuya"
 
 /* *INDENT-OFF* */
 const static gchar KERNEL_COMMON[] =
@@ -747,6 +781,42 @@ const static gchar KERNEL_COMMON[] =
 "scale_to_12bits (float val)\n"
 "{\n"
 "  return (unsigned short) __float2int_rz (val * 4095.0);\n"
+"}\n"
+"\n"
+"__device__ inline unsigned char\n"
+"blend_uchar (unsigned char dst, float src, float src_alpha)\n"
+"{\n"
+"  // DstColor' = SrcA * SrcColor + (1 - SrcA) DstColor\n"
+"  float src_val = src * src_alpha;\n"
+"  float dst_val = __int2float_rz (dst) / 255.0 * (1.0 - src_alpha);\n"
+"  return scale_to_uchar(clamp(src_val + dst_val, 0, 1.0));\n"
+"}\n"
+"\n"
+"__device__ inline unsigned short\n"
+"blend_ushort (unsigned short dst, float src, float src_alpha)\n"
+"{\n"
+"  // DstColor' = SrcA * SrcColor + (1 - SrcA) DstColor\n"
+"  float src_val = src * src_alpha;\n"
+"  float dst_val = __int2float_rz (dst) / 65535.0 * (1.0 - src_alpha);\n"
+"  return scale_to_ushort(clamp(src_val + dst_val, 0, 1.0));\n"
+"}\n"
+"\n"
+"__device__ inline unsigned short\n"
+"blend_10bits (unsigned short dst, float src, float src_alpha)\n"
+"{\n"
+"  // DstColor' = SrcA * SrcColor + (1 - SrcA) DstColor\n"
+"  float src_val = src * src_alpha;\n"
+"  float dst_val = __int2float_rz (dst) / 1023.0 * (1.0 - src_alpha);\n"
+"  return scale_to_10bits(clamp(src_val + dst_val, 0, 1.0));\n"
+"}\n"
+"\n"
+"__device__ inline unsigned short\n"
+"blend_12bits (unsigned short dst, float src, float src_alpha)\n"
+"{\n"
+"  // DstColor' = SrcA * SrcColor + (1 - SrcA) DstColor\n"
+"  float src_val = src * src_alpha;\n"
+"  float dst_val = __int2float_rz (dst) / 4095.0 * (1.0 - src_alpha);\n"
+"  return scale_to_12bits(clamp(src_val + dst_val, 0, 1.0));\n"
 "}\n"
 "\n"
 "__device__ inline float3\n"
@@ -960,6 +1030,19 @@ WRITE_I420 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_I420 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  unsigned int pos = x + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);\n"
+"  if (x % 2 == 0 && y % 2 == 0) {\n"
+"    pos = x / 2 + (y / 2) * stride1;\n"
+"    dst1[pos] = blend_uchar (dst1[pos], sample.y, sample.w);\n"
+"    dst2[pos] = blend_uchar (dst2[pos], sample.z, sample.w);\n"
+"  }\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_YV12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -968,6 +1051,19 @@ WRITE_YV12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "    unsigned int pos = x / 2 + (y / 2) * stride1;\n"
 "    dst1[pos] = scale_to_uchar (sample.z);\n"
 "    dst2[pos] = scale_to_uchar (sample.y);\n"
+"  }\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_YV12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  unsigned int pos = x + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);\n"
+"  if (x % 2 == 0 && y % 2 == 0) {\n"
+"    pos = x / 2 + (y / 2) * stride1;\n"
+"    dst1[pos] = blend_uchar (dst1[pos], sample.z, sample.w);\n"
+"    dst2[pos] = blend_uchar (dst2[pos], sample.y, sample.w);\n"
 "  }\n"
 "}\n"
 "\n"
@@ -984,6 +1080,19 @@ WRITE_NV12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_NV12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  unsigned int pos = x + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);\n"
+"  if (x % 2 == 0 && y % 2 == 0) {\n"
+"    pos = x + (y / 2) * stride1;\n"
+"    dst1[pos] = blend_uchar (dst1[pos], sample.y, sample.w);\n"
+"    dst1[pos + 1] = blend_uchar (dst1[pos + 1], sample.z, sample.w);\n"
+"  }\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_NV21 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -992,6 +1101,19 @@ WRITE_NV21 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "    unsigned int pos = x + (y / 2) * stride1;\n"
 "    dst1[pos] = scale_to_uchar (sample.z);\n"
 "    dst1[pos + 1] = scale_to_uchar (sample.y);\n"
+"  }\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_NV21 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  unsigned int pos = x + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);\n"
+"  if (x % 2 == 0 && y % 2 == 0) {\n"
+"    pos = x + (y / 2) * stride1;\n"
+"    dst1[pos] = blend_uchar (dst1[pos], sample.z, sample.w);\n"
+"    dst1[pos + 1] = blend_uchar (dst1[pos + 1], sample.y, sample.w);\n"
 "  }\n"
 "}\n"
 "\n"
@@ -1008,6 +1130,22 @@ WRITE_P010 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_P010 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  unsigned int pos = x * 2 + y * stride0;\n"
+"  unsigned short * target = (unsigned short *) &dst0[pos];\n"
+"  *target = blend_ushort (*target, sample.x, sample.w);\n"
+"  if (x % 2 == 0 && y % 2 == 0) {\n"
+"    pos = x * 2 + (y / 2) * stride1;\n"
+"    target = (unsigned short *) &dst1[pos];\n"
+"    *target = blend_ushort (*target, sample.y, sample.w);\n"
+"    target = (unsigned short *) &dst1[pos + 2];\n"
+"    *target = blend_ushort (*target, sample.z, sample.w);\n"
+"  }\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_I420_10 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -1016,6 +1154,22 @@ WRITE_I420_10 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2
 "    unsigned int pos = x + (y / 2) * stride1;\n"
 "    *(unsigned short *) &dst1[pos] = scale_to_10bits (sample.y);\n"
 "    *(unsigned short *) &dst2[pos] = scale_to_10bits (sample.z);\n"
+"  }\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_I420_10 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  unsigned int pos = x * 2 + y * stride0;\n"
+"  unsigned short * target = (unsigned short *) &dst0[pos];\n"
+"  *target = blend_10bits (*target, sample.x, sample.w);\n"
+"  if (x % 2 == 0 && y % 2 == 0) {\n"
+"    pos = x * 2 + (y / 2) * stride1;\n"
+"    target = (unsigned short *) &dst1[pos];\n"
+"    *target = blend_10bits (*target, sample.y, sample.w);\n"
+"    target = (unsigned short *) &dst2[pos];\n"
+"    *target = blend_10bits (*target, sample.z, sample.w);\n"
 "  }\n"
 "}\n"
 "\n"
@@ -1032,6 +1186,22 @@ WRITE_I420_12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_I420_12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  unsigned int pos = x * 2 + y * stride0;\n"
+"  unsigned short * target = (unsigned short *) &dst0[pos];\n"
+"  *target = blend_12bits (*target, sample.x, sample.w);\n"
+"  if (x % 2 == 0 && y % 2 == 0) {\n"
+"    pos = x * 2 + (y / 2) * stride1;\n"
+"    target = (unsigned short *) &dst1[pos];\n"
+"    *target = blend_12bits (*target, sample.y, sample.w);\n"
+"    target = (unsigned short *) &dst2[pos];\n"
+"    *target = blend_12bits (*target, sample.z, sample.w);\n"
+"  }\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_Y444 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -1039,6 +1209,16 @@ WRITE_Y444 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "  dst0[pos] = scale_to_uchar (sample.x);\n"
 "  dst1[pos] = scale_to_uchar (sample.y);\n"
 "  dst2[pos] = scale_to_uchar (sample.z);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_Y444 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);\n"
+"  dst1[pos] = blend_uchar (dst1[pos], sample.y, sample.w);\n"
+"  dst2[pos] = blend_uchar (dst2[pos], sample.z, sample.w);\n"
 "}\n"
 "\n"
 "__device__ inline void\n"
@@ -1052,6 +1232,19 @@ WRITE_Y444_10 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_Y444_10 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 2 + y * stride0;\n"
+"  unsigned short * target = (unsigned short *) &dst0[pos];\n"
+"  *target = blend_10bits (*target, sample.x, sample.w);\n"
+"  target = (unsigned short *) &dst1[pos];\n"
+"  *target = blend_10bits (*target, sample.y, sample.w);\n"
+"  target = (unsigned short *) &dst2[pos];\n"
+"  *target = blend_10bits (*target, sample.z, sample.w);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_Y444_12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -1062,6 +1255,19 @@ WRITE_Y444_12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_Y444_12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 2 + y * stride0;\n"
+"  unsigned short * target = (unsigned short *) &dst0[pos];\n"
+"  *target = blend_12bits (*target, sample.x, sample.w);\n"
+"  target = (unsigned short *) &dst1[pos];\n"
+"  *target = blend_12bits (*target, sample.y, sample.w);\n"
+"  target = (unsigned short *) &dst2[pos];\n"
+"  *target = blend_12bits (*target, sample.z, sample.w);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_Y444_16 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -1069,6 +1275,19 @@ WRITE_Y444_16 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2
 "  *(unsigned short *) &dst0[pos] = scale_to_ushort (sample.x);\n"
 "  *(unsigned short *) &dst1[pos] = scale_to_ushort (sample.y);\n"
 "  *(unsigned short *) &dst2[pos] = scale_to_ushort (sample.z);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_Y444_16 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 2 + y * stride0;\n"
+"  unsigned short * target = (unsigned short *) &dst0[pos];\n"
+"  *target = blend_ushort (*target, sample.x, sample.w);\n"
+"  target = (unsigned short *) &dst1[pos];\n"
+"  *target = blend_ushort (*target, sample.y, sample.w);\n"
+"  target = (unsigned short *) &dst2[pos];\n"
+"  *target = blend_ushort (*target, sample.z, sample.w);\n"
 "}\n"
 "\n"
 "__device__ inline void\n"
@@ -1083,6 +1302,17 @@ WRITE_RGBA "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_RGBA "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 4 + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);\n"
+"  dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);\n"
+"  dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.z, sample.w);\n"
+"  dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0, sample.w);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_RGBx "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -1090,6 +1320,17 @@ WRITE_RGBx "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "  dst0[pos] = scale_to_uchar (sample.x);\n"
 "  dst0[pos + 1] = scale_to_uchar (sample.y);\n"
 "  dst0[pos + 2] = scale_to_uchar (sample.z);\n"
+"  dst0[pos + 3] = 255;\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_RGBx "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 4 + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);\n"
+"  dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);\n"
+"  dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.z, sample.w);\n"
 "  dst0[pos + 3] = 255;\n"
 "}\n"
 "\n"
@@ -1105,6 +1346,17 @@ WRITE_BGRA "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_BGRA "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 4 + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.z, sample.w);\n"
+"  dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);\n"
+"  dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.x, sample.w);\n"
+"  dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0, sample.w);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_BGRx "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -1112,6 +1364,17 @@ WRITE_BGRx "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "  dst0[pos] = scale_to_uchar (sample.z);\n"
 "  dst0[pos + 1] = scale_to_uchar (sample.y);\n"
 "  dst0[pos + 2] = scale_to_uchar (sample.x);\n"
+"  dst0[pos + 3] = 255;\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_BGRx "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 4 + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.z, sample.w);\n"
+"  dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);\n"
+"  dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.x, sample.w);\n"
 "  dst0[pos + 3] = 255;\n"
 "}\n"
 "\n"
@@ -1127,6 +1390,17 @@ WRITE_ARGB "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_ARGB "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 4 + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], 1.0, sample.w);\n"
+"  dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.x, sample.w);\n"
+"  dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.y, sample.w);\n"
+"  dst0[pos + 3] = blend_uchar (dst0[pos + 3], sample.z, sample.w);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_ABGR "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -1135,6 +1409,17 @@ WRITE_ABGR "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "  dst0[pos + 1] = scale_to_uchar (sample.z);\n"
 "  dst0[pos + 2] = scale_to_uchar (sample.y);\n"
 "  dst0[pos + 3] = scale_to_uchar (sample.x);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_ABGR "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 4 + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], 1.0, sample.w);\n"
+"  dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.z, sample.w);\n"
+"  dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.y, sample.w);\n"
+"  dst0[pos + 3] = blend_uchar (dst0[pos + 3], sample.x, sample.w);\n"
 "}\n"
 "\n"
 "__device__ inline void\n"
@@ -1148,6 +1433,16 @@ WRITE_RGB "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_RGB "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 3 + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);\n"
+"  dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);\n"
+"  dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.z, sample.w);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_BGR "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -1158,15 +1453,52 @@ WRITE_BGR "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_BGR "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 3 + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.z, sample.w);\n"
+"  dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);\n"
+"  dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.x, sample.w);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_RGB10A2 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
-"  unsigned int alpha = (unsigned int) scale_to_2bits (sample.x);\n"
+"  unsigned int alpha = (unsigned int) scale_to_2bits (sample.w);\n"
 "  unsigned int packed_rgb = alpha << 30;\n"
 "  packed_rgb |= ((unsigned int) scale_to_10bits (sample.x));\n"
 "  packed_rgb |= ((unsigned int) scale_to_10bits (sample.y)) << 10;\n"
 "  packed_rgb |= ((unsigned int) scale_to_10bits (sample.z)) << 20;\n"
 "  *(unsigned int *) &dst0[x * 4 + y * stride0] = packed_rgb;\n"
+"}\n"
+"\n"
+"__device__ inline ushort3\n"
+"unpack_rgb10a2 (unsigned int val)\n"
+"{\n"
+"  unsigned short r, g, b;\n"
+"  r = (val & 0x3ff);\n"
+"  r = (r << 6) | (r >> 4);\n"
+"  g = ((val >> 10) & 0x3ff);\n"
+"  g = (g << 6) | (g >> 4);\n"
+"  b = ((val >> 20) & 0x3ff);\n"
+"  b = (b << 6) | (b >> 4);\n"
+"  return make_ushort3 (r, g, b);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_RGB10A2 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  unsigned int * target = (unsigned int *) &dst0[x * 4 + y * stride0];\n"
+"  ushort3 val = unpack_rgb10a2 (*target);\n"
+"  unsigned int alpha = (unsigned int) scale_to_2bits (sample.w);\n"
+"  unsigned int packed_rgb = alpha << 30;\n"
+"  packed_rgb |= ((unsigned int) blend_10bits (val.x, sample.x, sample.w));\n"
+"  packed_rgb |= ((unsigned int) blend_10bits (val.y, sample.y, sample.w)) << 10;\n"
+"  packed_rgb |= ((unsigned int) blend_10bits (val.z, sample.z, sample.w)) << 20;\n"
+"  *target = packed_rgb;\n"
 "}\n"
 "\n"
 "__device__ inline void\n"
@@ -1181,6 +1513,33 @@ WRITE_BGR10A2 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2
 "  *(unsigned int *) &dst0[x * 4 + y * stride0] = packed_rgb;\n"
 "}\n"
 "\n"
+"__device__ inline ushort3\n"
+"unpack_bgr10a2 (unsigned int val)\n"
+"{\n"
+"  unsigned short r, g, b;\n"
+"  b = (val & 0x3ff);\n"
+"  b = (b << 6) | (b >> 4);\n"
+"  g = ((val >> 10) & 0x3ff);\n"
+"  g = (g << 6) | (g >> 4);\n"
+"  r = ((val >> 20) & 0x3ff);\n"
+"  r = (r << 6) | (r >> 4);\n"
+"  return make_ushort3 (r, g, b);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_BGR10A2 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  unsigned int * target = (unsigned int *) &dst0[x * 4 + y * stride0];\n"
+"  ushort3 val = unpack_bgr10a2 (*target);\n"
+"  unsigned int alpha = (unsigned int) scale_to_2bits (sample.w);\n"
+"  unsigned int packed_rgb = alpha << 30;\n"
+"  packed_rgb |= ((unsigned int) blend_10bits (val.x, sample.x, sample.w)) << 20;\n"
+"  packed_rgb |= ((unsigned int) blend_10bits (val.y, sample.y, sample.w)) << 10;\n"
+"  packed_rgb |= ((unsigned int) blend_10bits (val.z, sample.z, sample.w));\n"
+"  *target = packed_rgb;\n"
+"}\n"
+"\n"
 "__device__ inline void\n"
 WRITE_Y42B "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
@@ -1190,6 +1549,19 @@ WRITE_Y42B "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "    unsigned int pos = x / 2 + y * stride1;\n"
 "    dst1[pos] = scale_to_uchar (sample.y);\n"
 "    dst2[pos] = scale_to_uchar (sample.z);\n"
+"  }\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_Y42B "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  unsigned int pos = x + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);\n"
+"  if (x % 2 == 0) {\n"
+"    pos = x / 2 + y * stride1;\n"
+"    dst1[pos] = blend_uchar (dst1[pos], sample.y, sample.w);\n"
+"    dst2[pos] = blend_uchar (dst2[pos], sample.z, sample.w);\n"
 "  }\n"
 "}\n"
 "\n"
@@ -1206,6 +1578,22 @@ WRITE_I422_10 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_I422_10 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  unsigned int pos = x * 2 + y * stride0;\n"
+"  unsigned short * target = (unsigned short *) &dst0[pos];\n"
+"  *target = blend_10bits (*target, sample.x, sample.w);\n"
+"  if (x % 2 == 0) {\n"
+"    pos = x / 2 + y * stride1;\n"
+"    target = (unsigned short *) &dst1[pos];\n"
+"    *target = blend_10bits (*target, sample.y, sample.w);\n"
+"    target = (unsigned short *) &dst2[pos];\n"
+"    *target = blend_10bits (*target, sample.z, sample.w);\n"
+"  }\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_I422_12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -1214,6 +1602,22 @@ WRITE_I422_12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2
 "    unsigned int pos = x + y * stride1;\n"
 "    *(unsigned short *) &dst1[pos] = scale_to_12bits (sample.y);\n"
 "    *(unsigned short *) &dst2[pos] = scale_to_12bits (sample.z);\n"
+"  }\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_I422_12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  unsigned int pos = x * 2 + y * stride0;\n"
+"  unsigned short * target = (unsigned short *) &dst0[pos];\n"
+"  *target = blend_12bits (*target, sample.x, sample.w);\n"
+"  if (x % 2 == 0) {\n"
+"    pos = x / 2 + y * stride1;\n"
+"    target = (unsigned short *) &dst1[pos];\n"
+"    *target = blend_12bits (*target, sample.y, sample.w);\n"
+"    target = (unsigned short *) &dst2[pos];\n"
+"    *target = blend_12bits (*target, sample.z, sample.w);\n"
 "  }\n"
 "}\n"
 "\n"
@@ -1228,6 +1632,16 @@ WRITE_RGBP "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_RGBP "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.x, sample.w);\n"
+"  dst1[pos] = blend_uchar (dst1[pos], sample.y, sample.w);\n"
+"  dst2[pos] = blend_uchar (dst2[pos], sample.z, sample.w);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_BGRP "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -1235,6 +1649,16 @@ WRITE_BGRP "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "  dst0[pos] = scale_to_uchar (sample.z);\n"
 "  dst1[pos] = scale_to_uchar (sample.y);\n"
 "  dst2[pos] = scale_to_uchar (sample.x);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_BGRP "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.z, sample.w);\n"
+"  dst1[pos] = blend_uchar (dst1[pos], sample.y, sample.w);\n"
+"  dst2[pos] = blend_uchar (dst2[pos], sample.x, sample.w);\n"
 "}\n"
 "\n"
 "__device__ inline void\n"
@@ -1248,6 +1672,16 @@ WRITE_GBR "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_GBR "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.y, sample.w);\n"
+"  dst1[pos] = blend_uchar (dst1[pos], sample.z, sample.w);\n"
+"  dst2[pos] = blend_uchar (dst2[pos], sample.x, sample.w);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_GBR_10 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -1255,6 +1689,19 @@ WRITE_GBR_10 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
 "  *(unsigned short *) &dst0[pos] = scale_to_10bits (sample.y);\n"
 "  *(unsigned short *) &dst1[pos] = scale_to_10bits (sample.z);\n"
 "  *(unsigned short *) &dst2[pos] = scale_to_10bits (sample.x);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_GBR_10 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 2 + y * stride0;\n"
+"  unsigned short * target = (unsigned short *) &dst0[pos];\n"
+"  *target = blend_10bits (*target, sample.y, sample.w);\n"
+"  target = (unsigned short *) &dst1[pos];\n"
+"  *target = blend_10bits (*target, sample.z, sample.w);\n"
+"  target = (unsigned short *) &dst2[pos];\n"
+"  *target = blend_10bits (*target, sample.x, sample.w);\n"
 "}\n"
 "\n"
 "__device__ inline void\n"
@@ -1268,6 +1715,19 @@ WRITE_GBR_12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_GBR_12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 2 + y * stride0;\n"
+"  unsigned short * target = (unsigned short *) &dst0[pos];\n"
+"  *target = blend_12bits (*target, sample.y, sample.w);\n"
+"  target = (unsigned short *) &dst1[pos];\n"
+"  *target = blend_12bits (*target, sample.z, sample.w);\n"
+"  target = (unsigned short *) &dst2[pos];\n"
+"  *target = blend_12bits (*target, sample.x, sample.w);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_GBR_16 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -1275,6 +1735,19 @@ WRITE_GBR_16 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,
 "  *(unsigned short *) &dst0[pos] = scale_to_ushort (sample.y);\n"
 "  *(unsigned short *) &dst1[pos] = scale_to_ushort (sample.z);\n"
 "  *(unsigned short *) &dst2[pos] = scale_to_ushort (sample.x);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_GBR_16 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 2 + y * stride0;\n"
+"  unsigned short * target = (unsigned short *) &dst0[pos];\n"
+"  *target = blend_ushort (*target, sample.y, sample.w);\n"
+"  target = (unsigned short *) &dst1[pos];\n"
+"  *target = blend_ushort (*target, sample.z, sample.w);\n"
+"  target = (unsigned short *) &dst2[pos];\n"
+"  *target = blend_ushort (*target, sample.x, sample.w);\n"
 "}\n"
 "\n"
 "__device__ inline void\n"
@@ -1289,6 +1762,17 @@ WRITE_GBRA "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "}\n"
 "\n"
 "__device__ inline void\n"
+BLEND_GBRA "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.y, sample.w);\n"
+"  dst1[pos] = blend_uchar (dst1[pos], sample.z, sample.w);\n"
+"  dst2[pos] = blend_uchar (dst2[pos], sample.x, sample.w);\n"
+"  dst3[pos] = blend_uchar (dst3[pos], 1.0, sample.w);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
 WRITE_VUYA "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
 "{\n"
@@ -1297,6 +1781,17 @@ WRITE_VUYA "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "  dst0[pos + 1] = scale_to_uchar (sample.y);\n"
 "  dst0[pos + 2] = scale_to_uchar (sample.x);\n"
 "  dst0[pos + 3] = scale_to_uchar (sample.w);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+BLEND_VUYA "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 4 + y * stride0;\n"
+"  dst0[pos] = blend_uchar (dst0[pos], sample.z, sample.w);\n"
+"  dst0[pos + 1] = blend_uchar (dst0[pos + 1], sample.y, sample.w);\n"
+"  dst0[pos + 2] = blend_uchar (dst0[pos + 2], sample.x, sample.w);\n"
+"  dst0[pos + 3] = blend_uchar (dst0[pos + 3], 1.0, sample.w);\n"
 "}\n"
 "\n"
 "__device__ inline float2\n"
@@ -1476,6 +1971,8 @@ static const gchar TEMPLATE_KERNEL[] =
 "  float border_w;\n"
 "  int fill_border;\n"
 "  int video_direction;\n"
+"  float alpha;\n"
+"  int do_blend;\n"
 "};\n"
 "\n"
 "extern \"C\" {\n"
@@ -1511,7 +2008,12 @@ GST_CUDA_KERNEL_MAIN_FUNC "(cudaTextureObject_t tex0, cudaTextureObject_t tex1,\
 "    float3 yuv = %s (rgb, &const_buf->toYuvCoeff);\n"
 "    sample = make_float4 (yuv.x, yuv.y, yuv.z, s.w);\n"
 "  }\n"
-"  %s (dst0, dst1, dst2, dst3, sample, x_pos, y_pos, stride0, stride1);\n"
+"  sample.w = sample.w * const_buf->alpha;\n"
+"  if (!const_buf->do_blend) {\n"
+"    %s (dst0, dst1, dst2, dst3, sample, x_pos, y_pos, stride0, stride1);\n"
+"  } else {\n"
+"    %s (dst0, dst1, dst2, dst3, sample, x_pos, y_pos, stride0, stride1);\n"
+"   }"
 "}\n"
 "}\n";
 /* *INDENT-ON* */
@@ -1591,6 +2093,8 @@ enum
   PROP_DEST_HEIGHT,
   PROP_FILL_BORDER,
   PROP_VIDEO_DIRECTION,
+  PROP_ALPHA,
+  PROP_BLEND,
 };
 
 struct _GstCudaConverterPrivate
@@ -1626,7 +2130,7 @@ struct _GstCudaConverterPrivate
   CUfunction main_func = nullptr;
   CUfunction unpack_func = nullptr;
 
-  gboolean update_const_buf = FALSE;
+  gboolean update_const_buf = TRUE;
 
   /* properties */
   gint dest_x = 0;
@@ -1636,6 +2140,8 @@ struct _GstCudaConverterPrivate
   GstVideoOrientationMethod video_direction = GST_VIDEO_ORIENTATION_IDENTITY;
   gboolean fill_border = FALSE;
   CUfilter_mode filter_mode = CU_TR_FILTER_MODE_LINEAR;
+  gdouble alpha = 1.0;
+  gboolean blend = FALSE;
 };
 
 static void gst_cuda_converter_dispose (GObject * object);
@@ -1680,6 +2186,12 @@ gst_cuda_converter_class_init (GstCudaConverterClass * klass)
       g_param_spec_enum ("video-direction", "Video Direction",
           "Video direction", GST_TYPE_VIDEO_ORIENTATION_METHOD,
           GST_VIDEO_ORIENTATION_IDENTITY, param_flags));
+  g_object_class_install_property (object_class, PROP_ALPHA,
+      g_param_spec_double ("alpha", "Alpha",
+          "The alpha color value to use", 0, 1.0, 1.0, param_flags));
+  g_object_class_install_property (object_class, PROP_BLEND,
+      g_param_spec_boolean ("blend", "Blend",
+          "Enable alpha blending", FALSE, param_flags));
 
   GST_DEBUG_CATEGORY_INIT (gst_cuda_converter_debug,
       "cudaconverter", 0, "cudaconverter");
@@ -1827,6 +2339,24 @@ gst_cuda_converter_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_ALPHA:
+    {
+      auto alpha = g_value_get_double (value);
+      if (priv->alpha != alpha) {
+        priv->update_const_buf = TRUE;
+        priv->const_buf_staging->alpha = (float) alpha;
+      }
+      break;
+    }
+    case PROP_BLEND:
+    {
+      auto blend = g_value_get_boolean (value);
+      if (priv->blend != blend) {
+        priv->update_const_buf = TRUE;
+        priv->const_buf_staging->do_blend = blend;
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1859,6 +2389,12 @@ gst_cuda_converter_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VIDEO_DIRECTION:
       g_value_set_enum (value, priv->video_direction);
+      break;
+    case PROP_ALPHA:
+      g_value_set_double (value, priv->alpha);
+      break;
+    case PROP_BLEND:
+      g_value_set_boolean (value, priv->blend);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1895,6 +2431,7 @@ gst_cuda_converter_setup (GstCudaConverter * self)
   guint i, j;
   const gchar *unpack_function = nullptr;
   const gchar *write_func = nullptr;
+  const gchar *blend_func = nullptr;
   const gchar *to_rgb_func = COLOR_SPACE_IDENTITY;
   const gchar *to_yuv_func = COLOR_SPACE_IDENTITY;
   const GstVideoColorimetry *in_color;
@@ -1918,101 +2455,133 @@ gst_cuda_converter_setup (GstCudaConverter * self)
   switch (GST_VIDEO_INFO_FORMAT (out_info)) {
     case GST_VIDEO_FORMAT_I420:
       write_func = WRITE_I420;
+      blend_func = BLEND_I420;
       break;
     case GST_VIDEO_FORMAT_YV12:
       write_func = WRITE_YV12;
+      blend_func = BLEND_YV12;
       break;
     case GST_VIDEO_FORMAT_NV12:
       write_func = WRITE_NV12;
+      blend_func = BLEND_NV12;
       break;
     case GST_VIDEO_FORMAT_NV21:
       write_func = WRITE_NV21;
+      blend_func = BLEND_NV21;
       break;
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_P012_LE:
     case GST_VIDEO_FORMAT_P016_LE:
       write_func = WRITE_P010;
+      blend_func = BLEND_P010;
       break;
     case GST_VIDEO_FORMAT_I420_10LE:
       write_func = WRITE_I420_10;
+      blend_func = BLEND_I420_10;
       break;
     case GST_VIDEO_FORMAT_I420_12LE:
       write_func = WRITE_I420_12;
+      blend_func = BLEND_I420_12;
       break;
     case GST_VIDEO_FORMAT_Y444:
       write_func = WRITE_Y444;
+      blend_func = BLEND_Y444;
       break;
     case GST_VIDEO_FORMAT_Y444_10LE:
       write_func = WRITE_Y444_10;
+      blend_func = BLEND_Y444_10;
       break;
     case GST_VIDEO_FORMAT_Y444_12LE:
       write_func = WRITE_Y444_12;
+      blend_func = BLEND_Y444_12;
       break;
     case GST_VIDEO_FORMAT_Y444_16LE:
       write_func = WRITE_Y444_16;
+      blend_func = BLEND_Y444_16;
       break;
     case GST_VIDEO_FORMAT_RGBA:
       write_func = WRITE_RGBA;
+      blend_func = BLEND_RGBA;
       break;
     case GST_VIDEO_FORMAT_RGBx:
       write_func = WRITE_RGBx;
+      blend_func = BLEND_RGBx;
       break;
     case GST_VIDEO_FORMAT_BGRA:
       write_func = WRITE_BGRA;
+      blend_func = BLEND_BGRA;
       break;
     case GST_VIDEO_FORMAT_BGRx:
       write_func = WRITE_BGRx;
+      blend_func = BLEND_BGRx;
       break;
     case GST_VIDEO_FORMAT_ARGB:
       write_func = WRITE_ARGB;
+      blend_func = BLEND_ARGB;
       break;
     case GST_VIDEO_FORMAT_ABGR:
       write_func = WRITE_ABGR;
+      blend_func = BLEND_ABGR;
       break;
     case GST_VIDEO_FORMAT_RGB:
       write_func = WRITE_RGB;
+      blend_func = BLEND_RGB;
       break;
     case GST_VIDEO_FORMAT_BGR:
       write_func = WRITE_BGR;
+      blend_func = BLEND_BGR;
       break;
     case GST_VIDEO_FORMAT_RGB10A2_LE:
       write_func = WRITE_RGB10A2;
+      blend_func = BLEND_RGB10A2;
       break;
     case GST_VIDEO_FORMAT_BGR10A2_LE:
       write_func = WRITE_BGR10A2;
+      blend_func = BLEND_BGR10A2;
       break;
     case GST_VIDEO_FORMAT_Y42B:
       write_func = WRITE_Y42B;
+      blend_func = BLEND_Y42B;
       break;
     case GST_VIDEO_FORMAT_I422_10LE:
       write_func = WRITE_I422_10;
+      blend_func = BLEND_I422_10;
       break;
     case GST_VIDEO_FORMAT_I422_12LE:
       write_func = WRITE_I422_12;
+      blend_func = BLEND_I422_12;
       break;
     case GST_VIDEO_FORMAT_RGBP:
       write_func = WRITE_RGBP;
+      blend_func = BLEND_RGBP;
       break;
     case GST_VIDEO_FORMAT_BGRP:
       write_func = WRITE_BGRP;
+      blend_func = BLEND_BGRP;
       break;
     case GST_VIDEO_FORMAT_GBR:
       write_func = WRITE_GBR;
+      blend_func = BLEND_GBR;
       break;
     case GST_VIDEO_FORMAT_GBR_10LE:
       write_func = WRITE_GBR_10;
+      blend_func = BLEND_GBR_10;
       break;
     case GST_VIDEO_FORMAT_GBR_12LE:
       write_func = WRITE_GBR_12;
+      blend_func = BLEND_GBR_12;
       break;
     case GST_VIDEO_FORMAT_GBR_16LE:
       write_func = WRITE_GBR_16;
+      blend_func = BLEND_GBR_16;
       break;
     case GST_VIDEO_FORMAT_GBRA:
       write_func = WRITE_GBRA;
+      blend_func = BLEND_GBRA;
       break;
     case GST_VIDEO_FORMAT_VUYA:
       write_func = WRITE_VUYA;
+      blend_func = BLEND_VUYA;
       break;
     default:
       break;
@@ -2195,6 +2764,8 @@ gst_cuda_converter_setup (GstCudaConverter * self)
   priv->const_buf_staging->border_w = border_color[3];
   priv->const_buf_staging->fill_border = 0;
   priv->const_buf_staging->video_direction = 0;
+  priv->const_buf_staging->alpha = 1;
+  priv->const_buf_staging->do_blend = 0;
 
   str = g_strdup_printf (TEMPLATE_KERNEL, KERNEL_COMMON,
       unpack_function ? unpack_function : "",
@@ -2205,7 +2776,9 @@ gst_cuda_converter_setup (GstCudaConverter * self)
       /* TO YUV conversion function name */
       to_yuv_func,
       /* write function name */
-      write_func);
+      write_func,
+      /* blend function name */
+      blend_func);
 
   GST_LOG_OBJECT (self, "kernel code:\n%s\n", str);
   gint cuda_device;
