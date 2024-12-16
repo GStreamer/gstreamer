@@ -23,6 +23,7 @@
 
 #include <gst/codecparsers/gstvp9parser.h>
 #include <gst/video/video.h>
+#include <gst/pbutils/pbutils.h>
 #include "gstvideoparserselements.h"
 #include "gstvp9parse.h"
 
@@ -41,6 +42,8 @@ typedef enum
 struct _GstVp9Parse
 {
   GstBaseParse parent;
+
+  gboolean first_frame;
 
   /* parsed from the last keyframe */
   gint width;
@@ -151,6 +154,7 @@ gst_vp9_parse_reset (GstVp9Parse * self)
   self->profile = GST_VP9_PROFILE_UNDEFINED;
   self->bit_depth = (GstVp9BitDepth) 0;
   self->codec_alpha = FALSE;
+  self->first_frame = TRUE;
   gst_vp9_parse_reset_super_frame (self);
 }
 
@@ -441,6 +445,34 @@ gst_vp9_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   if (!frame->buffer)
     return GST_FLOW_OK;
+
+  if (self->first_frame) {
+    GstTagList *taglist;
+    GstCaps *caps;
+
+    /* codec tag */
+    caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    if (caps == NULL) {
+      if (GST_PAD_IS_FLUSHING (GST_BASE_PARSE_SRC_PAD (self))) {
+        GST_INFO_OBJECT (self, "Src pad is flushing");
+        return GST_FLOW_FLUSHING;
+      } else {
+        GST_INFO_OBJECT (self, "Src pad is not negotiated!");
+        return GST_FLOW_NOT_NEGOTIATED;
+      }
+    }
+
+    taglist = gst_tag_list_new_empty ();
+    gst_pb_utils_add_codec_description_to_tag_list (taglist,
+        GST_TAG_VIDEO_CODEC, caps);
+    gst_caps_unref (caps);
+
+    gst_base_parse_merge_tags (parse, taglist, GST_TAG_MERGE_REPLACE);
+    gst_tag_list_unref (taglist);
+
+    /* also signals the end of first-frame processing */
+    self->first_frame = FALSE;
+  }
 
   /* The super frame may contain more than one frames inside its buffer.
      When splitting a super frame into frames, the base parse class only
