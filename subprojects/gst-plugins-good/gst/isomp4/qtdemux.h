@@ -347,6 +347,8 @@ struct _QtDemuxStreamStsdEntry
   guint bytes_per_sample;
   guint bytes_per_frame;
   guint compression;
+  gboolean needs_reorder;
+  gint reorder_map[64];
 
   /* if we use chunks or samples */
   gboolean sampled;

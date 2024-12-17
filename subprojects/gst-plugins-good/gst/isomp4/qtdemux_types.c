@@ -249,6 +249,10 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_vttc, "VTTCueBox 14496-30", QT_FLAG_CONTAINER},
   {FOURCC_metx, "XML MetaData Sample Entry", 0},
   {FOURCC_cstb, "Correct Start Time Box", 0},
+  {FOURCC_ipcm, "RAW Integer PCM", 0},
+  {FOURCC_fpcm, "RAW Float PCM", 0},
+  {FOURCC_pcmC, "RAW PCM Configuration Box", 0},
+  {FOURCC_chnl, "Channel Layout Box", 0},
   {0, "unknown", 0,},
 };
 

@@ -6111,6 +6111,36 @@ clipped:
 }
 
 static GstBuffer *
+gst_qtdemux_reorder_audio_channels (GstQTDemux * demux,
+    QtDemuxStream * stream, GstBuffer * buffer)
+{
+  buffer = gst_buffer_make_writable (buffer);
+
+  GstMapInfo map;
+
+  if (!gst_buffer_map (buffer, &map, GST_MAP_READWRITE))
+    return buffer;
+
+  if (map.size % (CUR_STREAM (stream)->bytes_per_sample *
+          CUR_STREAM (stream)->n_channels) != 0) {
+    GST_WARNING_OBJECT (demux,
+        "Odd number of frames in raw audio buffer of length %" G_GSIZE_FORMAT
+        " with %u bps and %u channels", map.size,
+        CUR_STREAM (stream)->bytes_per_sample, CUR_STREAM (stream)->n_channels);
+    goto out;
+  }
+
+  gst_audio_reorder_channels_with_reorder_map (map.data, map.size,
+      CUR_STREAM (stream)->bytes_per_sample, CUR_STREAM (stream)->n_channels,
+      CUR_STREAM (stream)->reorder_map);
+
+out:
+  gst_buffer_unmap (buffer, &map);
+
+  return buffer;
+}
+
+static GstBuffer *
 gst_qtdemux_align_buffer (GstQTDemux * demux,
     GstBuffer * buffer, gsize alignment)
 {
@@ -6603,6 +6633,9 @@ gst_qtdemux_push_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   if (stream->alignment > 1)
     buf = gst_qtdemux_align_buffer (qtdemux, buf, stream->alignment);
 
+  if (CUR_STREAM (stream)->needs_reorder)
+    buf = gst_qtdemux_reorder_audio_channels (qtdemux, stream, buf);
+
   pts = GST_BUFFER_PTS (buf);
   duration = GST_BUFFER_DURATION (buf);
 
@@ -6802,6 +6835,9 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
 
     if (stream->alignment > 1)
       buffer = gst_qtdemux_align_buffer (qtdemux, buffer, stream->alignment);
+    if (CUR_STREAM (stream)->needs_reorder)
+      buffer = gst_qtdemux_reorder_audio_channels (qtdemux, stream, buffer);
+
     gst_pad_push (stream->pad, buffer);
 
     stream->buffers = g_slist_delete_link (stream->buffers, stream->buffers);
@@ -9147,6 +9183,20 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       }
       case FOURCC_enca:
       {
+        qtdemux_parse_container (qtdemux, node, buffer + 36, end);
+        break;
+      }
+      case FOURCC_ipcm:
+      case FOURCC_fpcm:
+      {
+        if (length < 36) {
+          GST_LOG_OBJECT (qtdemux, "skipping small %" GST_FOURCC_FORMAT " box",
+              GST_FOURCC_ARGS (fourcc));
+          break;
+        }
+
+        GST_MEMDUMP_OBJECT (qtdemux, fourcc == FOURCC_ipcm ? "ipcm" : "fpcm",
+            buffer, end - buffer);
         qtdemux_parse_container (qtdemux, node, buffer + 36, end);
         break;
       }
@@ -11803,6 +11853,533 @@ qtdemux_parse_stereo_svmi_atom (GstQTDemux * qtdemux, QtDemuxStream * stream,
   return TRUE;
 }
 
+/* *INDENT-OFF* */
+
+// ISO/IEC 23091-3
+static const GstAudioChannelPosition chnl_positions[] = {
+  // 0
+  GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_LFE1,
+  GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+  // 10
+  GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_WIDE_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_WIDE_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER,
+  // 20
+  GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_TOP_SIDE_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_SIDE_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_CENTER,
+  GST_AUDIO_CHANNEL_POSITION_LFE2,
+  GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_CENTER,
+  // 30
+  GST_AUDIO_CHANNEL_POSITION_TOP_SURROUND_LEFT,
+  GST_AUDIO_CHANNEL_POSITION_TOP_SURROUND_RIGHT,
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // reserved
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // reserved
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // reserved
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // reserved
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // low frequency enhancement 3
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // left edge of screen
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // right edge of screen
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // half-way between centre of screen and
+                                      // left edge of screen
+  // 40
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // half-way between centre of screen and
+                                      // right edge of screen
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // left back surround
+  GST_AUDIO_CHANNEL_POSITION_INVALID, // right back surround
+  // 43-125 reserved
+  // 126 explicit position
+  // 127 unknown / undefined
+};
+
+// Pre-defined channel layouts
+//
+// Each layout is terminated by INVALID to allow counting the number of
+// channels in the layout.
+static const GstAudioChannelPosition chnl_layouts[][25] = {
+ // 0
+ { GST_AUDIO_CHANNEL_POSITION_INVALID, },
+ // 1
+ { GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_INVALID, },
+ // 2
+ { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_INVALID, },
+ // 3
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 4
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 5
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 6
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_LFE1,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 7
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_LFE1,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 8
+ { GST_AUDIO_CHANNEL_POSITION_INVALID, },
+ // 9
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 10
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 11
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_LFE1,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 12
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_REAR_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_LFE1,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 13
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT, GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_REAR_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_LFE1, GST_AUDIO_CHANNEL_POSITION_LFE2,
+   GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_TOP_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_TOP_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+ // 14
+ {
+   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_LFE1,
+   GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT,
+   GST_AUDIO_CHANNEL_POSITION_INVALID,
+ },
+
+};
+/* *INDENT-ON* */
+
+static void
+qtdemux_parse_chnl (GstQTDemux * qtdemux, GstByteReader * br,
+    QtDemuxStream * stream, QtDemuxStreamStsdEntry * entry)
+{
+  GstAudioChannelPosition positions[64];
+  guint n_channels = 0;
+
+  guint8 version = gst_byte_reader_get_uint8_unchecked (br);
+  guint32 flags = gst_byte_reader_get_uint24_be_unchecked (br);
+
+  if (version == 0 && flags == 0) {
+    guint8 stream_structure;
+    if (!gst_byte_reader_get_uint8 (br, &stream_structure)) {
+      GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+      goto error;
+    }
+
+    // stream carries channels
+    if (stream_structure & 1) {
+      guint8 defined_layout;
+
+      if (!gst_byte_reader_get_uint8 (br, &defined_layout)) {
+        GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+        goto error;
+      }
+
+      n_channels = entry->n_channels;
+
+      if (defined_layout == 0) {
+        for (unsigned int i = 0; i < n_channels; i++) {
+          guint8 speaker_position;
+
+          if (!gst_byte_reader_get_uint8 (br, &speaker_position)) {
+            GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+            goto error;
+          }
+
+          // explicit position
+          if (speaker_position == 126) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Explicit speaker position not supported");
+            goto error;
+          }
+
+          if (speaker_position >= G_N_ELEMENTS (chnl_positions) ||
+              chnl_positions[speaker_position] ==
+              GST_AUDIO_CHANNEL_POSITION_INVALID) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Unsupported speaker channel %u position %u", i,
+                speaker_position);
+            goto error;
+          }
+
+          positions[i] = chnl_positions[speaker_position];
+        }
+      } else {
+        guint64 omitted_channels_map;
+
+        if (!gst_byte_reader_get_uint64_be (br, &omitted_channels_map)) {
+          GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+          goto error;
+        }
+
+        if (defined_layout >= G_N_ELEMENTS (chnl_layouts) ||
+            chnl_layouts[defined_layout][0] ==
+            GST_AUDIO_CHANNEL_POSITION_INVALID) {
+          GST_WARNING_OBJECT (qtdemux, "Unsupported defined layout %u",
+              defined_layout);
+          goto error;
+        }
+
+        const GstAudioChannelPosition *layout = chnl_layouts[defined_layout];
+
+        // The omitted channel map defines which of the channels of the
+        // pre-defined layout are *not* included.
+        for (unsigned int c = 0; c < n_channels; c++) {
+          // Find c-th channel in layout that is not omitted
+          unsigned int l_c = 0;
+          for (unsigned int i = 0; i < 64; i++) {
+            // If there are not enough non-omitted channels in the layout we end
+            // up here and return
+            if (layout[i] == GST_AUDIO_CHANNEL_POSITION_INVALID) {
+              GST_WARNING_OBJECT (qtdemux,
+                  "Invalid defined layout %u with %u channels and omitted channels map %016"
+                  G_GINT64_MODIFIER "x", defined_layout, n_channels,
+                  omitted_channels_map);
+              goto error;
+            }
+
+            // The i-th channel of the layout is included
+            if (((omitted_channels_map >> i) & 1) == 0) {
+              // The channel we're looking for
+              if (l_c == c) {
+                positions[c] = layout[l_c];
+                break;
+              }
+              l_c += 1;
+            }
+          }
+
+          // If there are not enough non-omitted channels in the omitted
+          // channels map then return here
+          if (positions[c] == GST_AUDIO_CHANNEL_POSITION_INVALID) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Invalid defined layout %u with %u channels and omitted channels map %016"
+                G_GINT64_MODIFIER "x", defined_layout, n_channels,
+                omitted_channels_map);
+            goto error;
+          }
+        }
+      }
+    }
+
+    // stream carries objects
+    if (stream_structure & 2) {
+      guint8 object_count;
+
+      if (!gst_byte_reader_get_uint8 (br, &object_count)) {
+        GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+        goto error;
+      }
+
+      GST_WARNING_OBJECT (qtdemux, "Stream carries %u objects", object_count);
+      goto error;
+    }
+  } else if (version == 1 && flags == 0) {
+    guint8 b;
+
+    if (!gst_byte_reader_get_uint8 (br, &b)) {
+      GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+      goto error;
+    }
+
+    guint8 stream_structure = b >> 4;
+    // guint8 format_ordering = b & 0x0f;
+
+    guint8 base_channel_count;
+    if (!gst_byte_reader_get_uint8 (br, &base_channel_count)) {
+      GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+      goto error;
+    }
+
+    // stream carries channels
+    if (stream_structure & 1) {
+      guint8 defined_layout;
+
+      if (!gst_byte_reader_get_uint8 (br, &defined_layout)) {
+        GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+        goto error;
+      }
+
+      if (defined_layout == 0) {
+        guint8 layout_channel_count;
+
+        if (!gst_byte_reader_get_uint8 (br, &layout_channel_count)) {
+          GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+          goto error;
+        }
+
+        if (layout_channel_count == 0) {
+          // Not present so configure a default based on the sample entry
+          goto error;
+        }
+
+        n_channels = layout_channel_count;
+        for (unsigned int i = 0; i < layout_channel_count; i++) {
+          guint8 speaker_position;
+
+          if (!gst_byte_reader_get_uint8 (br, &speaker_position)) {
+            GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+            goto error;
+          }
+
+          // explicit position
+          if (speaker_position == 126) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Explicit speaker position not supported");
+            goto error;
+          }
+
+          if (speaker_position >= G_N_ELEMENTS (chnl_positions) ||
+              chnl_positions[speaker_position] ==
+              GST_AUDIO_CHANNEL_POSITION_INVALID) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Unsupported speaker channel %u position %u", i,
+                speaker_position);
+            goto error;
+          }
+
+          positions[i] = chnl_positions[speaker_position];
+        }
+      } else {
+        if (!gst_byte_reader_get_uint8 (br, &b)) {
+          GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+          goto error;
+        }
+
+        guint8 channel_order_definition = (b >> 1) & 0x07;
+        guint8 omitted_channels_present = b & 0x01;
+
+        if (channel_order_definition != 0) {
+          GST_WARNING_OBJECT (qtdemux,
+              "Channel order definition %u not supported",
+              channel_order_definition);
+          goto error;
+        }
+
+        guint64 omitted_channels_map = 0;
+        if (omitted_channels_present) {
+          if (!gst_byte_reader_get_uint64_be (br, &omitted_channels_map)) {
+            GST_WARNING_OBJECT (qtdemux, "Too short chnl box");
+            goto error;
+          }
+        }
+
+        const GstAudioChannelPosition *layout = chnl_layouts[defined_layout];
+
+        // Calculate number of channels: number of channels in the layout
+        // minus number of omitted channels
+        n_channels = 0;
+        for (unsigned int i = 0; i < G_N_ELEMENTS (chnl_layouts[0]); i++) {
+          if (layout[i] == GST_AUDIO_CHANNEL_POSITION_INVALID)
+            break;
+
+          n_channels += 1;
+        }
+        for (unsigned int i = 0; i < 64; i++) {
+          if ((omitted_channels_map >> i) == 1) {
+            n_channels -= 1;
+          }
+          // No channels present
+          if (n_channels == 0) {
+            goto error;
+          }
+        }
+
+        // The omitted channel map defines which of the channels of the
+        // pre-defined layout are *not* included.
+        for (unsigned int c = 0; c < n_channels; c++) {
+          // Find c-th channel in layout that is not omitted
+          unsigned int l_c = 0;
+          for (unsigned int i = 0; i < 64; i++) {
+            // If there are not enough non-omitted channels in the layout we end
+            // up here and return
+            if (layout[i] == GST_AUDIO_CHANNEL_POSITION_INVALID) {
+              GST_WARNING_OBJECT (qtdemux,
+                  "Invalid defined layout %u with %u channels and omitted channels map %016"
+                  G_GINT64_MODIFIER "x", defined_layout, n_channels,
+                  omitted_channels_map);
+              goto error;
+            }
+
+            // The i-th channel of the layout is included
+            if (((omitted_channels_map >> i) & 1) == 0) {
+              // The channel we're looking for
+              if (l_c == c) {
+                positions[c] = layout[l_c];
+                break;
+              }
+              l_c += 1;
+            }
+          }
+
+          // If there are not enough non-omitted channels in the omitted
+          // channels map then return here
+          if (positions[c] == GST_AUDIO_CHANNEL_POSITION_INVALID) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Invalid defined layout %u with %u channels and omitted channels map %016"
+                G_GINT64_MODIFIER "x", defined_layout, n_channels,
+                omitted_channels_map);
+            goto error;
+          }
+        }
+      }
+    }
+
+    // stream carries objects
+    if (stream_structure & 2) {
+      guint8 object_count = base_channel_count - n_channels;
+      GST_WARNING_OBJECT (qtdemux, "Stream carries %u objects", object_count);
+      goto error;
+    }
+  } else {
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported chnl version %u flags %06x", version, flags);
+
+    goto error;
+  }
+
+#ifndef GST_DISABLE_GST_DEBUG
+  {
+    gchar *s = gst_audio_channel_positions_to_string (positions, n_channels);
+
+    GST_DEBUG_OBJECT (qtdemux, "Retrieved channel positions %s", s);
+
+    g_free (s);
+  }
+#endif
+
+  guint64 channel_mask;
+  GstAudioChannelPosition valid_positions[64];
+
+  if (!gst_audio_channel_positions_to_mask (positions, n_channels, FALSE,
+          &channel_mask)) {
+    GST_WARNING_OBJECT (qtdemux, "Can't convert channel positions to mask");
+    goto error;
+  }
+
+  memcpy (valid_positions, positions, sizeof (positions[0]) * n_channels);
+  if (!gst_audio_channel_positions_to_valid_order (valid_positions, n_channels)) {
+    GST_WARNING_OBJECT (qtdemux,
+        "Can't convert channel positions to GStreamer channel order");
+    goto error;
+  }
+
+  if (n_channels > 1) {
+    if (!gst_audio_get_channel_reorder_map (n_channels, positions,
+            valid_positions, entry->reorder_map)) {
+      GST_WARNING_OBJECT (qtdemux, "Can't calculate channel reorder map");
+      goto error;
+    }
+    entry->needs_reorder =
+        memcmp (positions, valid_positions,
+        sizeof (positions[0]) * n_channels) != 0;
+  }
+
+  gst_caps_set_simple (entry->caps, "channel-mask", GST_TYPE_BITMASK,
+      channel_mask, NULL);
+
+  // Update based on the actual channel count from this box
+  entry->samples_per_frame = n_channels;
+  entry->bytes_per_frame = n_channels * entry->bytes_per_sample;
+  entry->samples_per_packet = entry->samples_per_frame;
+  entry->bytes_per_packet = entry->bytes_per_sample;
+
+  stream->min_buffer_size = 1024 * entry->bytes_per_frame;
+  stream->max_buffer_size = entry->rate * entry->bytes_per_frame;
+  GST_DEBUG ("setting min/max buffer sizes to %d/%d", stream->min_buffer_size,
+      stream->max_buffer_size);
+
+  return;
+
+error:
+  {
+    // Set a default channel mask on errors
+    guint64 default_mask =
+        gst_audio_channel_get_fallback_mask (entry->n_channels);
+
+    GST_WARNING_OBJECT (qtdemux,
+        "Configuring default channel mask for %u channels", entry->n_channels);
+
+    gst_caps_set_simple (entry->caps, "channel-mask", GST_TYPE_BITMASK,
+        default_mask, NULL);
+  }
+}
+
 /* parse the traks.
  * With each track we associate a new QtDemuxStream that contains all the info
  * about the trak.
@@ -13304,6 +13881,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
         case FOURCC_sowt:
         case FOURCC_raw_:
         case FOURCC_lpcm:
+        case FOURCC_ipcm:
+        case FOURCC_fpcm:
           /* Sometimes these are set to 0 in the sound sample descriptions so
            * let's try to infer useful values from the other information we
            * have available */
@@ -13681,6 +14260,89 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
 
           break;
         }
+        case FOURCC_ipcm:
+        case FOURCC_fpcm:
+        {
+          GNode *fmt;
+          GNode *pcmC;
+
+          fmt = qtdemux_tree_get_child_by_type (stsd, fourcc);
+
+          pcmC = qtdemux_tree_get_child_by_type (fmt, FOURCC_pcmC);
+          if (pcmC) {
+            const guint8 *data = pcmC->data;
+            gsize len = QT_UINT32 (data);
+            if (len >= 8 + 6) {
+              GstByteReader br = GST_BYTE_READER_INIT (data, len);
+
+              gst_byte_reader_skip_unchecked (&br, 4 + 4);
+
+              guint32 version_flags =
+                  gst_byte_reader_get_uint32_be_unchecked (&br);
+              // Version 0, no flags
+              if (version_flags == 0) {
+                guint8 format_flags = gst_byte_reader_get_uint8_unchecked (&br);
+                guint8 pcm_sample_size =
+                    gst_byte_reader_get_uint8_unchecked (&br);
+                GstAudioFormat audio_format = GST_AUDIO_FORMAT_UNKNOWN;
+
+                if (fourcc == FOURCC_ipcm) {
+                  audio_format =
+                      gst_audio_format_build_integer (TRUE,
+                      (format_flags & 0x01) ? G_LITTLE_ENDIAN : G_BIG_ENDIAN,
+                      pcm_sample_size, pcm_sample_size);
+                } else {
+                  switch (pcm_sample_size) {
+                    case 32:
+                      audio_format =
+                          (format_flags & 0x01) ? GST_AUDIO_FORMAT_F32LE :
+                          GST_AUDIO_FORMAT_F32BE;
+                      break;
+                    case 64:
+                      audio_format =
+                          (format_flags & 0x01) ? GST_AUDIO_FORMAT_F64LE :
+                          GST_AUDIO_FORMAT_F64BE;
+                      break;
+                    default:
+                      GST_WARNING_OBJECT (qtdemux,
+                          "Unsupported floating point PCM sample size %u",
+                          pcm_sample_size);
+                      break;
+                  }
+                }
+                gst_caps_set_simple (entry->caps,
+                    "format", G_TYPE_STRING,
+                    audio_format !=
+                    GST_AUDIO_FORMAT_UNKNOWN ?
+                    gst_audio_format_to_string (audio_format) : "UNKNOWN",
+                    NULL);
+
+                entry->bytes_per_sample = pcm_sample_size / 8;
+                entry->samples_per_frame = entry->n_channels;
+                entry->bytes_per_frame =
+                    entry->n_channels * entry->bytes_per_sample;
+                entry->samples_per_packet = entry->samples_per_frame;
+                entry->bytes_per_packet = entry->bytes_per_sample;
+
+                stream->min_buffer_size = 1024 * entry->bytes_per_frame;
+                stream->max_buffer_size = entry->rate * entry->bytes_per_frame;
+                GST_DEBUG ("setting min/max buffer sizes to %d/%d",
+                    stream->min_buffer_size, stream->max_buffer_size);
+
+                stream->alignment = pcm_sample_size / 8;
+              } else {
+                GST_WARNING_OBJECT (qtdemux,
+                    "Unsupported pcmC version/flags %08x", version_flags);
+              }
+            }
+          } else {
+            GST_WARNING_OBJECT (qtdemux,
+                "%" GST_FOURCC_FORMAT " without pcmC box",
+                GST_FOURCC_ARGS (fourcc));
+          }
+
+          break;
+        }
         default:
           break;
       }
@@ -14037,15 +14699,36 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
             }
             break;
           }
-          case FOURCC_opus:
+          case FOURCC_opus:{
+            /* Fully handled elsewhere */
+            break;
+          }
           case FOURCC_lpcm:
+          case FOURCC_ipcm:
+          case FOURCC_fpcm:
           case FOURCC_in24:
           case FOURCC_in32:
           case FOURCC_fl32:
           case FOURCC_fl64:
-          case FOURCC_s16l:
-            /* Fully handled elsewhere */
+          case FOURCC_s16l:{
+            GNode *fmt, *chnl;
+
+            // Parse channel layout information for raw PCM
+            fmt = qtdemux_tree_get_child_by_type (stsd, fourcc);
+            chnl = qtdemux_tree_get_child_by_type (fmt, FOURCC_chnl);
+
+            if (chnl) {
+              const guint8 *data = chnl->data;
+              gsize len = QT_UINT32 (data);
+              if (len >= 8 + 4) {
+                GstByteReader br = GST_BYTE_READER_INIT (data, len);
+                // Skip over fourcc and length
+                gst_byte_reader_skip_unchecked (&br, 4 + 4);
+                qtdemux_parse_chnl (qtdemux, &br, stream, entry);
+              }
+            }
             break;
+          }
           default:
             GST_INFO_OBJECT (qtdemux,
                 "unhandled type %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
@@ -16281,6 +16964,15 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
             "non-interleaved" : "interleaved", NULL);
         stream->alignment = width / 8;
       }
+      break;
+    }
+    case FOURCC_ipcm:
+    case FOURCC_fpcm:
+    {
+      _codec ("RAW PCM audio");
+      caps =
+          gst_caps_new_simple ("audio/x-raw", "layout", G_TYPE_STRING,
+          "interleaved", NULL);
       break;
     }
     case GST_MAKE_FOURCC ('a', 'c', '-', '4'):
