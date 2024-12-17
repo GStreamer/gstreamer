@@ -473,6 +473,30 @@ gst_vulkan_encoder_quality_level (GstVulkanEncoder * self)
 }
 
 /**
+ * gst_vulkan_encoder_rc_mdoe:
+ * @self: a #GstVulkanEncoder
+ *
+ * Get the current rate control mode.
+ *
+ * Returns: whether the encoder has started, it will return the rate control
+ *     mode; otherwise it will return -1
+ */
+gint32
+gst_vulkan_encoder_rc_mode (GstVulkanEncoder * self)
+{
+  GstVulkanEncoderPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), -1);
+
+  priv = gst_vulkan_encoder_get_instance_private (self);
+
+  if (!priv->started)
+    return -1;
+
+  return priv->rc_mode;
+}
+
+/**
  * gst_vulkan_encoder_stop:
  * @self: a #GstVulkanEncoder
  *
@@ -537,20 +561,20 @@ _rate_control_mode_to_str (VkVideoEncodeRateControlModeFlagBitsKHR rc_mode)
 
 static void
 _rate_control_mode_validate (GstVulkanEncoder * self,
-    VkVideoEncodeRateControlModeFlagBitsKHR rc_mode)
+    VkVideoEncodeRateControlModeFlagBitsKHR * rc_mode)
 {
   GstVulkanEncoderPrivate *priv =
       gst_vulkan_encoder_get_instance_private (self);
 
   if (rc_mode > VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DEFAULT_KHR
-      && !(priv->caps.encoder.caps.rateControlModes & rc_mode)) {
-    rc_mode = VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DEFAULT_KHR;
+      && !(priv->caps.encoder.caps.rateControlModes & *rc_mode)) {
+    *rc_mode = VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DEFAULT_KHR;
     for (int i = VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR;
         i <= VK_VIDEO_ENCODE_RATE_CONTROL_MODE_VBR_BIT_KHR; i++) {
       if ((priv->caps.encoder.caps.rateControlModes) & i) {
         GST_DEBUG_OBJECT (self, "rate control mode is forced to: %s",
             _rate_control_mode_to_str (i));
-        rc_mode = i;
+        *rc_mode = i;
         break;
       }
     }
@@ -815,7 +839,7 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
     goto failed;
 
   /* check rate control mode if it was set before start */
-  _rate_control_mode_validate (self, priv->rc_mode);
+  _rate_control_mode_validate (self, &priv->rc_mode);
 
   priv->session_reset = TRUE;
   priv->started = TRUE;
@@ -1449,8 +1473,11 @@ gst_vulkan_encoder_set_rc_mode (GstVulkanEncoder * self,
   if (priv->rc_mode == rc_mode)
     return;
 
-  if (priv->started)
-    _rate_control_mode_validate (self, rc_mode);
+  if (priv->started) {
+    _rate_control_mode_validate (self, &rc_mode);
+    if (priv->rc_mode == rc_mode)
+      return;
+  }
 
   priv->session_reset = TRUE;
   priv->rc_mode = rc_mode;

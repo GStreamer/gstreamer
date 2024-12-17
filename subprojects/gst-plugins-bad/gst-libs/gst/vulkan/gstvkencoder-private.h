@@ -209,6 +209,8 @@ GST_VULKAN_API
 GstCaps *               gst_vulkan_encoder_profile_caps         (GstVulkanEncoder * self);
 GST_VULKAN_API
 gint32                  gst_vulkan_encoder_quality_level        (GstVulkanEncoder * self);
+GST_VULKAN_API
+gint32                  gst_vulkan_encoder_rc_mode              (GstVulkanEncoder * self);
 
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_picture_init         (GstVulkanEncoderPicture * pic,
