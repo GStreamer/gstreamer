@@ -39,6 +39,8 @@ static const struct {
       VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PROFILE_INFO_KHR },
   { GST_VULKAN_VIDEO_OPERATION_ENCODE, VK_VIDEO_CODEC_OPERATION_ENCODE_H265_BIT_KHR, "video/x-h265",
       VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_PROFILE_INFO_KHR },
+  { GST_VULKAN_VIDEO_OPERATION_ENCODE, VK_VIDEO_CODEC_OPERATION_ENCODE_AV1_BIT_KHR, "video/x-av1",
+      VK_STRUCTURE_TYPE_VIDEO_ENCODE_AV1_PROFILE_INFO_KHR },
 };
 
 static const struct {
@@ -92,6 +94,14 @@ static const struct {
   { STD_VIDEO_H265_PROFILE_IDC_SCC_EXTENSIONS, "scc-extensions" },
 };
 
+static const struct {
+  StdVideoAV1Profile vk_profile;
+  const char *profile_str;
+} av1_profile_map[] = {
+  { STD_VIDEO_AV1_PROFILE_MAIN, "main" },
+  { STD_VIDEO_AV1_PROFILE_HIGH, "high" },
+  { STD_VIDEO_AV1_PROFILE_PROFESSIONAL, "professional" },
+};
 /* *INDENT-ON* */
 
 /**
@@ -165,6 +175,16 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
               if (profile->codec.h265enc.stdProfileIdc
                   == h265_profile_map[j].vk_profile)
                 profile_str = h265_profile_map[j].profile_str;
+            }
+          }
+          break;
+        case VK_VIDEO_CODEC_OPERATION_ENCODE_AV1_BIT_KHR:
+          if (profile->codec.av1enc.sType == video_codecs_map[i].stype) {
+            int j;
+            for (j = 0; j < G_N_ELEMENTS (av1_profile_map); j++) {
+              if (profile->codec.av1enc.stdProfile
+                  == av1_profile_map[j].vk_profile)
+                profile_str = av1_profile_map[j].profile_str;
             }
           }
           break;
@@ -331,6 +351,22 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
             if (g_strcmp0 (profile_str, h265_profile_map[j].profile_str) == 0) {
               profile->codec.h265enc.stdProfileIdc =
                   h265_profile_map[j].vk_profile;
+              break;
+            }
+          }
+          break;
+        }
+        case VK_VIDEO_CODEC_OPERATION_ENCODE_AV1_BIT_KHR:{
+          int j;
+
+          profile->codec.av1enc.sType = video_codecs_map[i].stype;
+          profile->codec.av1enc.stdProfile = STD_VIDEO_AV1_PROFILE_INVALID;
+          profile->profile.pNext = &profile->codec;
+
+          profile_str = gst_structure_get_string (structure, "profile");
+          for (j = 0; profile_str && j < G_N_ELEMENTS (av1_profile_map); j++) {
+            if (g_strcmp0 (profile_str, av1_profile_map[j].profile_str) == 0) {
+              profile->codec.av1enc.stdProfile = av1_profile_map[j].vk_profile;
               break;
             }
           }

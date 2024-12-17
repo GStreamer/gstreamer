@@ -87,6 +87,9 @@ struct _GstVulkanPhysicalDevicePrivate
 #if defined (VK_KHR_video_maintenance2)
   VkPhysicalDeviceVideoMaintenance2FeaturesKHR videomaintenance2;
 #endif
+#if defined (VK_KHR_video_encode_av1)
+  VkPhysicalDeviceVideoEncodeAV1FeaturesKHR video_encoder_av1;
+#endif
 };
 
 static void
@@ -569,6 +572,12 @@ dump_features_extras (GstVulkanPhysicalDevice * device,
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_MAINTENANCE_2_FEATURES_KHR) {
     DEBUG_BOOL_STRUCT ("support for", &priv->videomaintenance2,
         videoMaintenance2);
+  }
+#endif
+#if defined (VK_KHR_video_encode_av1)
+  if (chain->sType ==
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_ENCODE_AV1_FEATURES_KHR) {
+    DEBUG_BOOL_STRUCT ("support for", &priv->video_encoder_av1, videoEncodeAV1);
   }
 #endif
 }
@@ -1074,12 +1083,17 @@ add_extra_features (GstVulkanPhysicalDevice * device)
 #if defined (VK_KHR_video_maintenance1)
   priv->videomaintenance1.sType =
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_MAINTENANCE_1_FEATURES_KHR;
-  vk_link_struct (&priv->features13, &priv->videomaintenance1);
+  vk_link_struct (&priv->features12, &priv->videomaintenance1);
 #endif
 #if defined (VK_KHR_video_maintenance2)
   priv->videomaintenance2.sType =
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_MAINTENANCE_2_FEATURES_KHR;
-  vk_link_struct (&priv->features13, &priv->videomaintenance2);
+  vk_link_struct (&priv->features12, &priv->videomaintenance2);
+#endif
+#if defined (VK_KHR_video_encode_av1)
+  priv->video_encoder_av1.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_ENCODE_AV1_FEATURES_KHR;
+  vk_link_struct (&priv->features12, &priv->video_encoder_av1);
 #endif
 }
 #endif /* VK_API_VERSION_1_2 */
@@ -1498,6 +1512,21 @@ gboolean
 
   priv = GET_PRIV (device);
   return priv->videomaintenance2.videoMaintenance2;
+#endif
+  return FALSE;
+}
+
+gboolean
+gst_vulkan_physical_device_has_feature_video_encode_av1 (GstVulkanPhysicalDevice
+    * device)
+{
+#if defined (VK_KHR_video_encode_av1)
+  GstVulkanPhysicalDevicePrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), FALSE);
+
+  priv = GET_PRIV (device);
+  return priv->video_encoder_av1.videoEncodeAV1;
 #endif
   return FALSE;
 }

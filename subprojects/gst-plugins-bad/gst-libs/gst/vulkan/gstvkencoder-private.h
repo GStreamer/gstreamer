@@ -132,6 +132,7 @@ union _GstVulkanEncoderParameters
   /*< private >*/
   VkVideoEncodeH264SessionParametersCreateInfoKHR h264;
   VkVideoEncodeH265SessionParametersCreateInfoKHR h265;
+  VkVideoEncodeAV1SessionParametersCreateInfoKHR av1;
 };
 
 union _GstVulkanEncoderParametersOverrides
@@ -154,6 +155,7 @@ struct _GstVulkanEncoderQualityPoperties
   {
     VkVideoEncodeH264QualityLevelPropertiesKHR h264;
     VkVideoEncodeH265QualityLevelPropertiesKHR h265;
+    VkVideoEncodeAV1QualityLevelPropertiesKHR av1;
   } codec;
 };
 

@@ -293,6 +293,10 @@ static const struct extension optional_extensions[] = {
   OPTIONAL_VIDEO_EXTENSION (VK_KHR_VIDEO_MAINTENANCE_2_EXTENSION_NAME,
       VK_KHR_VIDEO_QUEUE_EXTENSION_NAME, video_maintenance2),
 # endif
+# if defined(VK_KHR_video_encode_av1)
+  OPTIONAL_VIDEO_EXTENSION (VK_KHR_VIDEO_ENCODE_AV1_EXTENSION_NAME,
+      VK_KHR_VIDEO_ENCODE_QUEUE_EXTENSION_NAME, video_encode_av1),
+# endif
 #endif /* GST_VULKAN_HAVE_VIDEO_EXTENSIONS */
 };
 

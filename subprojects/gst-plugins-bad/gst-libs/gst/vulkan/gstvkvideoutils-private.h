@@ -65,6 +65,12 @@ struct _GstVulkanVideoProfile
      * Since: 1.26
      **/
     VkVideoEncodeH265ProfileInfoKHR h265enc;
+    /**
+     * GstVulkanVideoProfile.usage.codec.av1enc:
+     *
+     * Since: 1.28
+     **/
+    VkVideoEncodeAV1ProfileInfoKHR av1enc;
   } codec;
   gpointer _reserved[GST_PADDING];
 };
@@ -100,6 +106,13 @@ struct _GstVulkanVideoCapabilities
         /*< private >*/
         VkVideoEncodeH264CapabilitiesKHR h264;
         VkVideoEncodeH265CapabilitiesKHR h265;
+        /**
+         * _GstVulkanVideoCapabilities.encoder.codec.av1:
+         *
+         * Since: 1.28
+         **/
+        VkVideoEncodeAV1CapabilitiesKHR av1;
+
       } codec;
     } encoder;
   };
