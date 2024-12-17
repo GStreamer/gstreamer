@@ -39,6 +39,7 @@ base_tests = [
   [['elements/ccextractor.c'], not closedcaption_dep.found(), ],
   [['elements/cudaconvert.c'], false, [gstgl_dep, gmodule_dep]],
   [['elements/cudafilter.c'], false, [gstgl_dep, gmodule_dep]],
+  [['elements/dashsink.c']],
   [['elements/d3d11colorconvert.c'], host_machine.system() != 'windows', ],
   [['elements/d3d11videosink.c'], host_machine.system() != 'windows', ],
   [['elements/fdkaac.c'], not fdkaac_dep.found(), ],
