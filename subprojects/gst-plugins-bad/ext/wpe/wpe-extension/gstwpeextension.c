@@ -45,7 +45,6 @@ G_MODULE_EXPORT void extension_initialize (WebKitWebExtension * extension);
 
 static WebKitWebExtension *global_extension = NULL;
 
-#if !USE_WPE2
 static void
 console_message_cb (WebKitWebPage * page,
     WebKitConsoleMessage * console_message, gpointer data)
@@ -56,17 +55,13 @@ console_message_cb (WebKitWebPage * page,
       NULL);
   g_free (message);
 }
-#endif
 
 static void
 web_page_created_callback (WebKitWebExtension * extension,
     WebKitWebPage * web_page, gpointer data)
 {
-  // WebKitConsoleMessage is deprecated in wpe1 and has no replacement in wpe2.
-#if !USE_WPE2
   g_signal_connect (web_page, "console-message-sent",
       G_CALLBACK (console_message_cb), NULL);
-#endif
 }
 
 void
