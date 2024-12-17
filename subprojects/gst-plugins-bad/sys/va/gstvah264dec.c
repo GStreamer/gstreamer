@@ -787,6 +787,11 @@ _complete_sink_caps (GstCaps * sinkcaps)
 
     _append_str (&val, profile);
 
+    /* Similar to baseline and constrained-baseline, extended is the same as
+     * main if we ignore ASO/FMO features. */
+    if (g_strcmp0 (profile, "main") == 0)
+      _append_str (&val, "extended");
+
     if (g_strcmp0 (profile, "high") == 0) {
       for (j = 0; j < G_N_ELEMENTS (high_synthetic); j++)
         _append_str (&val, high_synthetic[j]);
