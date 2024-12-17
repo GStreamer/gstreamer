@@ -57,6 +57,7 @@
 #include "gstcudaipcsink.h"
 #include "gstcudaipcsrc.h"
 #include "gstnvcodecutils.h"
+#include "gstcudacompositor.h"
 
 #include <glib/gi18n-lib.h>
 
@@ -350,6 +351,8 @@ plugin_init (GstPlugin * plugin)
         GST_TYPE_CUDA_SCALE);
     gst_element_register (plugin, "cudaconvertscale", GST_RANK_NONE,
         GST_TYPE_CUDA_CONVERT_SCALE);
+    gst_element_register (plugin, "cudacompositor", GST_RANK_NONE,
+        GST_TYPE_CUDA_COMPOSITOR);
   }
   gst_element_register (plugin,
       "cudaipcsink", GST_RANK_NONE, GST_TYPE_CUDA_IPC_SINK);
