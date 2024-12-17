@@ -7439,6 +7439,21 @@ pause:
           GstMessage *message;
           GstEvent *event;
 
+          /* segment.position will still be at the last timestamp and won't always
+           * include the duration of the last packet. Expand that to the segment
+           * duration so that segment.base is increased correctly to include the
+           * length of the last packet when doing segment seeks. We need to do
+           * this before the segment-done event goes out so everything's ready
+           * for the next seek request coming in. */
+          if (GST_CLOCK_TIME_IS_VALID (stop)) {
+            GST_DEBUG_OBJECT (qtdemux,
+                "End of segment, updating segment.position from %"
+                GST_TIME_FORMAT " to stop %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (qtdemux->segment.position),
+                GST_TIME_ARGS (stop));
+            qtdemux->segment.position = stop;
+          }
+
           GST_LOG_OBJECT (qtdemux, "Sending segment done, at end of segment");
           message = gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
               GST_FORMAT_TIME, stop);
