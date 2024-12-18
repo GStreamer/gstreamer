@@ -1,9 +1,5 @@
 build_hotdoc = false
 
-if get_option('doc').disabled()
-  subdir_done()
-endif
-
 if meson.is_cross_build()
     if get_option('doc').enabled()
         error('Documentation enabled but building the doc while cross building is not supported yet.')
@@ -31,12 +27,10 @@ if not build_gir
     subdir_done()
 endif
 
-required_hotdoc_extensions = ['gi-extension', 'gst-extension']
 if gst_dep.type_name() == 'internal'
     gst_proj = subproject('gstreamer')
     plugins_cache_generator = gst_proj.get_variable('plugins_cache_generator')
 else
-    required_hotdoc_extensions += ['gst-extension']
     plugins_cache_generator = find_program(join_paths(gst_dep.get_variable('libexecdir'), 'gstreamer-' + api_version, 'gst-plugins-doc-cache-generator'),
         required: false)
 endif
@@ -52,6 +46,10 @@ elif plugins_cache_generator.found()
     )
 else
     warning('GStreamer plugin inspector for documentation not found, can\'t update the cache')
+endif
+
+if get_option('doc').disabled()
+  subdir_done()
 endif
 
 hotdoc_p = find_program('hotdoc', required: get_option('doc'))
@@ -72,6 +70,7 @@ if not hotdoc_version.version_compare(hotdoc_req)
 endif
 
 hotdoc = import('hotdoc')
+required_hotdoc_extensions = ['gi-extension', 'gst-extension']
 foreach extension: required_hotdoc_extensions
     if not hotdoc.has_extensions(extension)
         if get_option('doc').enabled()
