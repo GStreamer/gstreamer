@@ -70,7 +70,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
             "ARGB, BGRA, ABGR, RGBA, Y444, xRGB, RGBx, xBGR, BGRx, "
             "RGB, BGR, I420, YV12, IYUV, YUY2, UYVY, YVYU, NV12, NV21,"
             "GRAY8, GRAY16_BE, GRAY16_LE, I420_10LE, I420_10BE, I420_12LE, I420_12BE, "
-            "I422_10LE, I422_10BE, I422_12LE, I422_12BE, Y444_10LE, Y444_10BE, Y444_12LE, Y444_12BE }"))
+            "I422_10LE, I422_10BE, I422_12LE, I422_12BE, Y444_10LE, Y444_10BE, Y444_12LE, Y444_12BE, Y444_16LE, Y444_16BE }"))
     );
 
 static GstStaticPadTemplate gst_video_flip_sink_template =
@@ -81,7 +81,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
             "ARGB, BGRA, ABGR, RGBA, Y444, xRGB, RGBx, xBGR, BGRx, "
             "RGB, BGR, I420, YV12, IYUV, YUY2, UYVY, YVYU, NV12, NV21,"
             "GRAY8, GRAY16_BE, GRAY16_LE, I420_10LE, I420_10BE, I420_12LE, I420_12BE, "
-            "I422_10LE, I422_10BE, I422_12LE, I422_12BE, Y444_10LE, Y444_10BE, Y444_12LE, Y444_12BE }"))
+            "I422_10LE, I422_10BE, I422_12LE, I422_12BE, Y444_10LE, Y444_10BE, Y444_12LE, Y444_12BE, Y444_16LE, Y444_16BE }"))
     );
 
 #define GST_TYPE_VIDEO_FLIP_METHOD (gst_video_flip_method_get_type())
@@ -1471,6 +1471,8 @@ gst_video_flip_configure_process (GstVideoFlip * vf)
     case GST_VIDEO_FORMAT_Y444_10BE:
     case GST_VIDEO_FORMAT_Y444_12LE:
     case GST_VIDEO_FORMAT_Y444_12BE:
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_Y444_16BE:
       vf->process = gst_video_flip_planar_yuv_16bit;
       break;
     case GST_VIDEO_FORMAT_I422_10LE:
