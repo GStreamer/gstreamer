@@ -5190,12 +5190,24 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
   GSList *walk;
   GSList *formats;
   guint32 fourcc = 0;
+  gboolean enable_dmabuf = FALSE;
 
   if (v4l2object->fmtdesc)
     fourcc = GST_V4L2_PIXELFORMAT (v4l2object);
 
   gst_v4l2_object_clear_format_list (v4l2object);
   formats = gst_v4l2_object_get_format_list (v4l2object);
+
+  switch (v4l2object->req_mode) {
+    case GST_V4L2_IO_AUTO:
+    case GST_V4L2_IO_DMABUF:
+    case GST_V4L2_IO_DMABUF_IMPORT:
+      enable_dmabuf = TRUE;
+      break;
+    default:
+      break;
+  }
+
 
   /* Recover the fmtdesc, it may no longer exist, in which case it will be set
    * to null */
@@ -5250,7 +5262,7 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 
     sysmem_tmpl =
         gst_v4l2_object_v4l2fourcc_to_bare_struct (format->pixelformat,
-        &dmabuf_tmpl);
+        enable_dmabuf ? &dmabuf_tmpl : NULL);
 
     if (!sysmem_tmpl && !dmabuf_tmpl) {
       GST_DEBUG_OBJECT (v4l2object->dbg_obj,
