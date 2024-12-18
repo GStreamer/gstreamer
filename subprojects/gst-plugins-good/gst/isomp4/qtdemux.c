@@ -11416,16 +11416,43 @@ qtdemux_parse_transformation_matrix (GstQTDemux * qtdemux,
   matrix[7] = gst_byte_reader_get_uint32_be_unchecked (reader);
   matrix[8] = gst_byte_reader_get_uint32_be_unchecked (reader);
 
+  /* The 2.30 value conversion does not work for negative values */
   GST_DEBUG_OBJECT (qtdemux, "Transformation matrix from atom %s", atom);
-  GST_DEBUG_OBJECT (qtdemux, "%u.%u %u.%u %u.%u", matrix[0] >> 16,
-      matrix[0] & 0xFFFF, matrix[1] >> 16, matrix[1] & 0xFF, matrix[2] >> 16,
-      matrix[2] & 0xFF);
-  GST_DEBUG_OBJECT (qtdemux, "%u.%u %u.%u %u.%u", matrix[3] >> 16,
-      matrix[3] & 0xFFFF, matrix[4] >> 16, matrix[4] & 0xFF, matrix[5] >> 16,
-      matrix[5] & 0xFF);
-  GST_DEBUG_OBJECT (qtdemux, "%u.%u %u.%u %u.%u", matrix[6] >> 16,
-      matrix[6] & 0xFFFF, matrix[7] >> 16, matrix[7] & 0xFF, matrix[8] >> 16,
-      matrix[8] & 0xFF);
+  GST_DEBUG_OBJECT (qtdemux, "%i.%u %i.%u %u.%u", (gint16) (matrix[0] >> 16),
+      matrix[0] & 0xFFFF, (gint16) (matrix[1] >> 16), matrix[1] & 0xFFFF,
+      matrix[2] >> 30, matrix[2] & 0x3FFFFFFF);
+  GST_DEBUG_OBJECT (qtdemux, "%i.%u %i.%u %u.%u", (gint16) (matrix[3] >> 16),
+      matrix[3] & 0xFFFF, (gint16) (matrix[4] >> 16), matrix[4] & 0xFFFF,
+      matrix[5] >> 30, matrix[5] & 0x3FFFFFFF);
+  GST_DEBUG_OBJECT (qtdemux, "%i.%u %i.%u %u.%u", (gint16) (matrix[6] >> 16),
+      matrix[6] & 0xFFFF, (gint16) (matrix[7] >> 16), matrix[7] & 0xFFFF,
+      matrix[8] >> 30, matrix[8] & 0x3FFFFFFF);
+
+  return TRUE;
+}
+
+/* Check if all matrix elements are either 0, 1 or -1 */
+static gboolean
+qtdemux_transformation_matrix_is_simple (guint32 * m)
+{
+  int i;
+
+  for (i = 0; i < 9; i++) {
+    switch (i) {
+      case 2:
+      case 5:
+      case 8:
+        /* 2.30 */
+        if (m[i] != 0U && m[i] != (1U << 30) && m[i] != (3U << 30))
+          return FALSE;
+        break;
+      default:
+        /* 16.16 */
+        if (m[i] != 0U && m[i] != (1U << 16) && m[i] != (G_MAXUINT16 << 16))
+          return FALSE;
+        break;
+    }
+  }
 
   return TRUE;
 }
@@ -11439,12 +11466,22 @@ qtdemux_mul_transformation_matrix (GstQTDemux * qtdemux,
 #define QTADD_MATRIX(_a,_b) ((_a) + (_b) > 0 ? (1U << 16) : \
       ((_a) + (_b) < 0) ? (G_MAXUINT16 << 16) : 0u)
 
-  c[2] = c[5] = c[6] = c[7] = 0;
-  c[0] = QTADD_MATRIX (QTMUL_MATRIX (a[0], b[0]), QTMUL_MATRIX (a[1], b[3]));
-  c[1] = QTADD_MATRIX (QTMUL_MATRIX (a[0], b[1]), QTMUL_MATRIX (a[1], b[4]));
-  c[3] = QTADD_MATRIX (QTMUL_MATRIX (a[3], b[0]), QTMUL_MATRIX (a[4], b[3]));
-  c[4] = QTADD_MATRIX (QTMUL_MATRIX (a[3], b[1]), QTMUL_MATRIX (a[4], b[4]));
-  c[8] = a[8];
+  if (!qtdemux_transformation_matrix_is_simple (a) ||
+      !qtdemux_transformation_matrix_is_simple (b)) {
+    GST_WARNING_OBJECT (qtdemux,
+        "Cannot handle transform matrix with element values other than 0, 1 or -1");
+    /* Pretend to have an identity matrix in this case */
+    c[1] = c[2] = c[3] = c[5] = c[6] = c[7] = 0;
+    c[0] = c[4] = (1U << 16);
+    c[8] = (1 << 30);
+  } else {
+    c[2] = c[5] = c[6] = c[7] = 0;
+    c[0] = QTADD_MATRIX (QTMUL_MATRIX (a[0], b[0]), QTMUL_MATRIX (a[1], b[3]));
+    c[1] = QTADD_MATRIX (QTMUL_MATRIX (a[0], b[1]), QTMUL_MATRIX (a[1], b[4]));
+    c[3] = QTADD_MATRIX (QTMUL_MATRIX (a[3], b[0]), QTMUL_MATRIX (a[4], b[3]));
+    c[4] = QTADD_MATRIX (QTMUL_MATRIX (a[3], b[1]), QTMUL_MATRIX (a[4], b[4]));
+    c[8] = a[8];
+  }
 }
 
 static void
@@ -11456,7 +11493,7 @@ qtdemux_inspect_transformation_matrix (GstQTDemux * qtdemux,
  * [d e f]
  * [g h i]
  *
- * This macro will only compare value abdegh, it expects cfi to have already
+ * This macro will only compare value abde, it expects cfi to have already
  * been checked
  */
 #define QTCHECK_MATRIX(m,a,b,d,e) ((m)[0] == (a << 16) && (m)[1] == (b << 16) && \
