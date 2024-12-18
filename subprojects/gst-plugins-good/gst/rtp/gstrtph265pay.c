@@ -604,9 +604,10 @@ gst_rtp_h265_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
       rtph265pay->stream_format = GST_H265_STREAM_FORMAT_BYTESTREAM;
   }
 
-  if (!gst_structure_get_fraction (str, "framerate", &rtph265pay->fps_num,
-          &rtph265pay->fps_denum))
-    rtph265pay->fps_num = rtph265pay->fps_denum = 0;
+  rtph265pay->fps_num = 0;
+  rtph265pay->fps_denum = 1;
+  gst_structure_get_fraction (str, "framerate", &rtph265pay->fps_num,
+      &rtph265pay->fps_denum);
 
 
   /* packetized HEVC video has a codec_data */

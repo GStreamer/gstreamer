@@ -575,9 +575,10 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
       rtph264pay->stream_format = GST_H264_STREAM_FORMAT_BYTESTREAM;
   }
 
-  if (!gst_structure_get_fraction (str, "framerate", &rtph264pay->fps_num,
-          &rtph264pay->fps_denum))
-    rtph264pay->fps_num = rtph264pay->fps_denum = 0;
+  rtph264pay->fps_num = 0;
+  rtph264pay->fps_denum = 1;
+  gst_structure_get_fraction (str, "framerate", &rtph264pay->fps_num,
+      &rtph264pay->fps_denum);
 
   /* packetized AVC video has a codec_data */
   if ((value = gst_structure_get_value (str, "codec_data"))) {
