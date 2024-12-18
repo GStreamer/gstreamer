@@ -17,10 +17,10 @@ if validate_video_dep.found()
     },
   }
 else
-    message('Can not build gst-validate-images-check' + apiversion)
+    message('Can not build gst-validate-images-check' + api_version)
 endif
 
-rtsp_server_dep = dependency('gstreamer-rtsp-server-' + apiversion,
+rtsp_server_dep = dependency('gstreamer-rtsp-server-' + api_version,
   fallback: ['gst-rtsp-server', 'gst_rtsp_server_dep'],
   version : gst_req,
   required: false)
@@ -32,10 +32,10 @@ if rtsp_server_dep.found()
       }
     }
 else
-    message('Can not build gst-validate-rtsp-server-' + apiversion)
+    message('Can not build gst-validate-rtsp-server-' + api_version)
 endif
 
-gst_transcoder_dep = dependency('gstreamer-transcoder-' + apiversion, version : gst_req,
+gst_transcoder_dep = dependency('gstreamer-transcoder-' + api_version, version : gst_req,
     fallback : ['gst-plugins-bad', 'gst_transcoder_dep'], required: false)
 if gst_transcoder_dep.found()
     gst_tools += {'gst-validate-transcoding': {
@@ -44,14 +44,14 @@ if gst_transcoder_dep.found()
       }
     }
 else
-  message('Can not build gst-validate-transcoding-' + apiversion)
+  message('Can not build gst-validate-transcoding-' + api_version)
 endif
 
 if not get_option('tools').disabled() and not static_build
 
   foreach tool, data: gst_tools
     if not data.has_key('config_data')
-      exe_name = '@0@-@1@'.format(tool, apiversion)
+      exe_name = '@0@-@1@'.format(tool, api_version)
       executable(
         exe_name,
         data.get('files'),

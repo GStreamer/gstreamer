@@ -1,4 +1,4 @@
-gst_tester = executable('gst-tester-' + apiversion,
+gst_tester = executable('gst-tester-' + api_version,
     'gst-tester.c',
     c_args : gst_c_args,
     include_directories : [configinc],
@@ -7,7 +7,7 @@ gst_tester = executable('gst-tester-' + apiversion,
     dependencies : [gio_dep],
 )
 
-meson.override_find_program('gst-tester-' + apiversion, gst_tester)
+meson.override_find_program('gst-tester-' + api_version, gst_tester)
 
 tests = [
     'simplest',

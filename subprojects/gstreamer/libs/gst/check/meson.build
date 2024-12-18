@@ -37,7 +37,7 @@ configure_file(input : 'libcheck/check.h.in',
   install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/check'),
   configuration : check_cdata)
 
-gst_check = library('gstcheck-@0@'.format(apiversion),
+gst_check = library('gstcheck-@0@'.format(api_version),
   gst_check_sources,
   c_args : gst_c_args + ['-UG_DISABLE_ASSERT', '-DBUILDING_GST_CHECK', '-DG_LOG_DOMAIN="GStreamer-Check"'],
   version : libversion,
@@ -69,7 +69,7 @@ if build_gir
   gir = {
     'sources' : gst_check_sources + gst_check_headers,
     'namespace' : 'GstCheck',
-    'nsversion' : apiversion,
+    'nsversion' : api_version,
     'identifier_prefix' : 'Gst',
     'symbol_prefix' : 'gst',
     'export_packages' : pkg_name,

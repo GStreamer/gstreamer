@@ -65,7 +65,7 @@ validate_resources = gnome.compile_resources(
 
 validate_deps = [gst_check_dep, gst_dep, gst_controller_dep, gstbase_dep, gstapp_dep,
                  gio_dep, gmodule_dep, gst_pbutils_dep, mathlib, json_dep]
-gstvalidate = library('gstvalidate-@0@'.format(apiversion),
+gstvalidate = library('gstvalidate-@0@'.format(api_version),
     sources: gstvalidate_sources + gst_validate_enums + runner_file + validate_resources,
     version : libversion,
     soversion : soversion,
@@ -114,8 +114,8 @@ if build_gir
                         'GLib-2.0',
                         'Gio-2.0',
                         'GModule-2.0',
-                        'Gst-' + apiversion,
-                        'GstPbutils-' + apiversion],
+                        'Gst-' + api_version,
+                        'GstPbutils-' + api_version],
             'install' : true,
             'dependencies' : validate_deps,
             'extra_args' : gst_validate_gir_extra_args,

@@ -56,7 +56,7 @@ diff = find_program('Tests/test_abi.py')
 
 # TODO Handle monodoc
 
-apiversion = '1.0'
+api_version = '1.0'
 gst_required_version = '>=@0@'.format(meson.project_version())
 gst_deps = []
 
@@ -81,11 +81,11 @@ gst_deps_defs = [
 ]
 
 foreach dep: gst_deps_defs
-  gst_deps += [dependency(dep.get(0) + '-' + apiversion, version: gst_required_version,
+  gst_deps += [dependency(dep.get(0) + '-' + api_version, version: gst_required_version,
     fallback: dep.get(1))]
 endforeach
 
-ges_dep = dependency('gst-editing-services-' + apiversion, version: gst_required_version,
+ges_dep = dependency('gst-editing-services-' + api_version, version: gst_required_version,
     fallback: ['gst-editing-services', 'ges_dep'], required: false)
 
 if ges_dep.found()

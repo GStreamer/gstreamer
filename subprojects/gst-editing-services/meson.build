@@ -19,7 +19,7 @@ endif
 gst_version_is_stable = gst_version_minor.is_even()
 gst_version_is_dev = gst_version_minor.is_odd() and gst_version_micro < 90
 
-apiversion = '1.0'
+api_version = '1.0'
 soversion = 0
 # maintaining compatibility with the previous libtool versioning
 # current = minor * 100 + micro
@@ -92,13 +92,13 @@ cdata.set_quoted('GST_PACKAGE_ORIGIN', 'Unknown package origin')
 cdata.set_quoted('GST_LICENSE', 'LGPL')
 
 # Mandatory GST deps
-gst_dep = dependency('gstreamer-' + apiversion, version : gst_req,
+gst_dep = dependency('gstreamer-' + api_version, version : gst_req,
     fallback : ['gstreamer', 'gst_dep'])
-gstpbutils_dep = dependency('gstreamer-pbutils-' + apiversion, version : gst_req,
+gstpbutils_dep = dependency('gstreamer-pbutils-' + api_version, version : gst_req,
     fallback : ['gst-plugins-base', 'pbutils_dep'])
-gstvideo_dep = dependency('gstreamer-video-' + apiversion, version : gst_req,
+gstvideo_dep = dependency('gstreamer-video-' + api_version, version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
-gstaudio_dep = dependency('gstreamer-audio-' + apiversion, version : gst_req,
+gstaudio_dep = dependency('gstreamer-audio-' + api_version, version : gst_req,
     fallback : ['gst-plugins-base', 'audio_dep'])
 gstbase_dep = dependency('gstreamer-base-1.0', version : gst_req,
     fallback : ['gstreamer', 'gst_base_dep'])

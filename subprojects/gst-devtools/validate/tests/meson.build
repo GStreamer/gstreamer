@@ -1,6 +1,6 @@
 pluginsdirs = [  ]
 if gst_dep.type_name() == 'pkgconfig'
-  pbase = dependency('gstreamer-plugins-base-' + apiversion)
+  pbase = dependency('gstreamer-plugins-base-' + api_version)
 
   pluginsdirs = [gst_dep.get_variable('pluginsdir'),
                  pbase.get_variable('pluginsdir')]

@@ -17,7 +17,7 @@ else
   TESTSUITE_VERSION = 'master' # FIXME: main?
 endif
 
-apiversion = '1.0'
+api_version = '1.0'
 soversion = 0
 # maintaining compatibility with the previous libtool versioning
 # current = minor * 100 + micro
@@ -78,17 +78,17 @@ if cc.has_argument('-fno-strict-aliasing')
   add_project_arguments('-fno-strict-aliasing', language: 'c')
 endif
 
-gst_dep = dependency('gstreamer-' + apiversion, version : gst_req,
+gst_dep = dependency('gstreamer-' + api_version, version : gst_req,
     fallback : ['gstreamer', 'gst_dep'])
-gstbase_dep = dependency('gstreamer-base-' + apiversion, version : gst_req,
+gstbase_dep = dependency('gstreamer-base-' + api_version, version : gst_req,
     fallback : ['gstreamer', 'gst_base_dep'])
-gstapp_dep = dependency('gstreamer-app-' + apiversion, version : gst_req,
+gstapp_dep = dependency('gstreamer-app-' + api_version, version : gst_req,
     fallback : ['gst-plugins-base', 'app_dep'])
-gst_pbutils_dep = dependency('gstreamer-pbutils-' + apiversion, version : gst_req,
+gst_pbutils_dep = dependency('gstreamer-pbutils-' + api_version, version : gst_req,
     fallback : ['gst-plugins-base', 'pbutils_dep'])
-gst_video_dep = dependency('gstreamer-video-' + apiversion, version : gst_req,
+gst_video_dep = dependency('gstreamer-video-' + api_version, version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
-gst_controller_dep = dependency('gstreamer-controller-' + apiversion, version : gst_req,
+gst_controller_dep = dependency('gstreamer-controller-' + api_version, version : gst_req,
     fallback : ['gstreamer', 'gst_controller_dep'])
 gst_check_dep = dependency('gstreamer-check-1.0', version : gst_req,
   required : get_option('validate'),

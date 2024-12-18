@@ -32,7 +32,7 @@ if gst_dep.type_name() == 'internal'
     plugins_cache_generator = gst_proj.get_variable('plugins_cache_generator')
 else
     plugins_cache_generator = find_program('gst-plugins-doc-cache-generator',
-        dirs: [join_paths(gst_dep.get_variable('libexecdir', default_value: ''), 'gstreamer-' + apiversion)],
+        dirs: [join_paths(gst_dep.get_variable('libexecdir', default_value: ''), 'gstreamer-' + api_version)],
         required: false)
 endif
 
@@ -100,7 +100,7 @@ endforeach
 
 hotdoc = import('hotdoc')
 libs_doc = [hotdoc.generate_doc('gst-editing-services',
-    project_version: apiversion,
+    project_version: api_version,
     extra_assets: [join_paths(meson.current_source_dir(), 'images')],
     gi_c_sources: ges_sources + ges_headers,
     gi_c_source_roots: [join_paths(meson.current_source_dir(), '../ges/')],
@@ -126,7 +126,7 @@ gst_plugins_doc = run_command(
     plugins_cache_generator,
     'hotdoc-config',
     '--builddir', meson.current_build_dir(),
-    '--project_version', apiversion,
+    '--project_version', api_version,
     '--sitemap', cdir / 'plugins/sitemap.txt',
     '--index', cdir / 'plugins/index.md',
     '--gst_index', cdir / 'plugins/index.md',

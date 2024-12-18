@@ -37,7 +37,7 @@ gstcontroller_c = controller_enums[0]
 gstcontroller_h = controller_enums[1]
 
 gst_controller_gen_sources = [gstcontroller_h]
-gst_controller = library('gstcontroller-@0@'.format(apiversion),
+gst_controller = library('gstcontroller-@0@'.format(api_version),
   gst_controller_sources, gstcontroller_h, gstcontroller_c,
   c_args : gst_c_args + ['-DBUILDING_GST_CONTROLLER', '-DG_LOG_DOMAIN="GStreamer-Controller"'],
   install : true,
@@ -63,7 +63,7 @@ if build_gir
   gir = {
     'sources' : gst_controller_sources + gst_controller_headers + [gstcontroller_h] + [gstcontroller_c],
     'namespace': 'GstController',
-    'nsversion': apiversion,
+    'nsversion': api_version,
     'identifier_prefix' : 'Gst',
     'symbol_prefix' : 'gst',
     'export_packages' : pkg_name,

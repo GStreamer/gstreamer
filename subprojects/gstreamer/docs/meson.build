@@ -99,7 +99,7 @@ endforeach
 
 build_hotdoc = true
 docconf = configuration_data()
-docconf.set('GST_API_VERSION', apiversion)
+docconf.set('GST_API_VERSION', api_version)
 
 version_entities = configure_file(input : 'version.in',
     output : 'gst_api_version.md',
@@ -122,7 +122,7 @@ foreach h: ['gettext.h', 'glib-compat-private.h', 'glib-compat.h',
 endforeach
 
 libs_doc = [hotdoc.generate_doc('gstreamer',
-    project_version: apiversion,
+    project_version: api_version,
     gi_c_sources: '../gst/*.[hc]',
     gi_sources: [gst_gir[0].full_path()],
     gi_c_source_filters: gst_excludes,
@@ -148,7 +148,7 @@ foreach lib: libs
   gir = lib[1]
   deps = [lib[2], gir]
   libs_doc += [hotdoc.generate_doc(name,
-      project_version: apiversion,
+      project_version: api_version,
       gi_c_sources: ['../libs/gst/' + name + '/*.[hc]'],
       gi_c_source_filters: gst_excludes,
       gi_sources: gir[0].full_path(),
@@ -174,7 +174,7 @@ gst_plugins_doc = run_command(
     plugins_cache_generator,
     'hotdoc-config',
     '--builddir', meson.current_build_dir(),
-    '--project_version', apiversion,
+    '--project_version', api_version,
     '--sitemap', cdir / 'plugins/sitemap.txt',
     '--index', cdir / 'plugins/index.md',
     '--gst_index', cdir / 'plugins/index.md',

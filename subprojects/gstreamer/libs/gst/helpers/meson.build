@@ -46,7 +46,7 @@ gst_scanner_dir = meson.current_build_dir()
 
 
 install_data(['gst_gdb.py', 'glib_gobject_helper.py'],
-  install_dir : join_paths(get_option('datadir'), 'gstreamer-@0@'.format(apiversion), 'gdb'),
+  install_dir : join_paths(get_option('datadir'), 'gstreamer-@0@'.format(api_version), 'gdb'),
   install_tag : 'devel')
 
 # This is needed to make gdb find gst_gdb.py
@@ -55,7 +55,7 @@ env.prepend('PYTHONPATH', meson.current_source_dir())
 meson.add_devenv(env)
 
 gdbconf = configuration_data()
-gdbconf.set('GST_API_VERSION', apiversion)
+gdbconf.set('GST_API_VERSION', api_version)
 gdbconf.set('DATADIR', '@0@/@1@'.format(get_option('prefix'), get_option('datadir')))
 
 if host_system != 'windows'
@@ -68,7 +68,7 @@ else
   gdb_install_dir = disabler()
 endif
 configure_file(input : 'libgstreamer-gdb.py.in',
-  output : 'libgstreamer-@0@.so.@1@-gdb.py'.format(apiversion, libversion),
+  output : 'libgstreamer-@0@.so.@1@-gdb.py'.format(api_version, libversion),
   install_dir : gdb_install_dir,
   install_tag : 'devel',
   configuration : gdbconf)

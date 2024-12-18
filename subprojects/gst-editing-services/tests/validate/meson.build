@@ -8,7 +8,7 @@ env = environment()
 env.prepend('GST_VALIDATE_APPS_DIR', meson.current_source_dir())
 meson.add_devenv(env)
 
-gst_tester = find_program('gst-tester-@0@'.format(apiversion), required: get_option('tests'))
+gst_tester = find_program('gst-tester-@0@'.format(api_version), required: get_option('tests'))
 if not gst_tester.found()
     subdir_done()
 endif

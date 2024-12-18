@@ -210,7 +210,7 @@ if build_gir
     gir = {
         'sources' : ges_sources + ges_headers,
         'namespace' : 'GES',
-        'nsversion' : apiversion,
+        'nsversion' : api_version,
         'identifier_prefix' : 'GES',
         'symbol_prefix' : 'ges',
         'export_packages' : pkg_name,

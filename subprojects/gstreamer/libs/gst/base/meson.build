@@ -38,7 +38,7 @@ gst_base_headers = files(
   'gsttypefindhelper.h',
 )
 
-gst_base = library('gstbase-@0@'.format(apiversion),
+gst_base = library('gstbase-@0@'.format(api_version),
   gst_base_sources,
   c_args : gst_c_args + ['-DBUILDING_GST_BASE', '-DG_LOG_DOMAIN="GStreamer-Base"'],
   version : libversion,
@@ -65,7 +65,7 @@ if build_gir
   gir = {
     'sources' : gst_base_sources + gst_base_headers,
     'namespace' : 'GstBase',
-    'nsversion' : apiversion,
+    'nsversion' : api_version,
     'identifier_prefix' : 'Gst',
     'symbol_prefix' : 'gst',
     'export_packages' : pkg_name,

@@ -66,7 +66,7 @@ validate_sources = gstvalidate_headers + gstvalidate_sources
 hotdoc = import('hotdoc')
 plugins_doc = []
 libs_doc = [hotdoc.generate_doc('gst-devtools',
-    project_version: apiversion,
+    project_version: api_version,
     sitemap: 'sitemap.txt',
     index: 'index.md',
     gi_c_sources: validate_sources,

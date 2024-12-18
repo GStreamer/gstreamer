@@ -314,7 +314,7 @@ if build_gir
   gir = {
     'sources' : gst_sources + gst_headers + gst_enums + [gst_version_h],
     'namespace' : 'Gst',
-    'nsversion' : apiversion,
+    'nsversion' : api_version,
     'identifier_prefix' : 'Gst',
     'symbol_prefix' : 'gst',
     'export_packages' : pkg_name,

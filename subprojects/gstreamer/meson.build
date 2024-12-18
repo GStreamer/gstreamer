@@ -16,7 +16,7 @@ else
 endif
 gst_version_is_dev = gst_version_minor % 2 == 1 and gst_version_micro < 90
 
-apiversion = '1.0'
+api_version = '1.0'
 soversion = 0
 # maintaining compatibility with the previous libtool versioning
 # current = minor * 100 + micro
@@ -130,7 +130,7 @@ if disable_glib_checks
   add_project_arguments('-DG_DISABLE_CHECKS', language: 'c')
 endif
 
-cdata.set_quoted('GST_API_VERSION', apiversion)
+cdata.set_quoted('GST_API_VERSION', api_version)
 cdata.set_quoted('GST_DATADIR', datadir)
 cdata.set_quoted('LOCALEDIR', join_paths(prefix, get_option('localedir')))
 cdata.set_quoted('LIBDIR', join_paths(prefix, get_option('libdir')))

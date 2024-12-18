@@ -7,7 +7,7 @@ project('gstreamer-full', 'c',
                      # when it's no longer necessary.
                      'cpp_std=c++14'])
 
-apiversion = '1.0'
+api_version = '1.0'
 gst_version = '>= @0@'.format(meson.project_version())
 
 host_system = host_machine.system()
@@ -371,7 +371,7 @@ configure_file(
 
 if building_full
   cdata = configuration_data()
-  cdata.set_quoted('GST_API_VERSION', apiversion)
+  cdata.set_quoted('GST_API_VERSION', api_version)
   cdata.set_quoted('GETTEXT_PACKAGE', 'gstreamer-full-1.0')
   cdata.set_quoted('PACKAGE_VERSION', meson.project_version())
   cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
@@ -547,7 +547,7 @@ if building_full
     # Loop for tools
     foreach tool, data: all_tools
       gst_tools += tool
-      exe_name = '@0@-@1@'.format(tool, apiversion)
+      exe_name = '@0@-@1@'.format(tool, api_version)
 
       deps = []
       foreach d : data.get('deps', [])

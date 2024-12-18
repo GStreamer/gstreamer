@@ -40,12 +40,12 @@ gst_deps_defs = [
   ['gstreamer-rtsp-server', ['gst-rtsp-server', 'gst_rtsp_server_dep'], 'gst_rtsp_server'],
 ]
 
-apiversion = '1.0'
+api_version = '1.0'
 gst_required_version = '>=@0@'.format(meson.project_version())
 gst_deps = []
 
 foreach dep: gst_deps_defs
-  gst_deps += [dependency(dep.get(0) + '-' + apiversion, version: gst_required_version,
+  gst_deps += [dependency(dep.get(0) + '-' + api_version, version: gst_required_version,
     fallback: dep.get(1))]
 endforeach
 

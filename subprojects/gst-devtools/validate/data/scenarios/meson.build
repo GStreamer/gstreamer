@@ -28,15 +28,15 @@ _scenarios = ['simple_seeks.scenario',
 
 install_data(sources: _scenarios,
              install_dir: get_option('datadir') + '/gstreamer-' +
-             apiversion + '/validate/scenarios')
+             api_version + '/validate/scenarios')
 
 install_subdir('includes',
              install_dir: get_option('datadir') + '/gstreamer-' +
-             apiversion + '/validate/scenarios')
+             api_version + '/validate/scenarios')
 
 install_subdir('rtsp_overrides',
              install_dir: get_option('datadir') + '/gstreamer-' +
-             apiversion + '/validate/scenarios')
+             api_version + '/validate/scenarios')
 
 env = environment()
 env.prepend('GST_VALIDATE_SCENARIOS_PATH', meson.current_source_dir())
