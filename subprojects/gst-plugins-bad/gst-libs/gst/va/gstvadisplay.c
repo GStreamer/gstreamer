@@ -425,12 +425,12 @@ gst_va_display_initialize (GstVaDisplay * self)
 gpointer
 gst_va_display_get_va_dpy (GstVaDisplay * self)
 {
-  VADisplay dpy;
+  GstVaDisplayPrivate *priv;
 
   g_return_val_if_fail (GST_IS_VA_DISPLAY (self), NULL);
+  priv = GET_PRIV (self);
 
-  g_object_get (self, "va-display", &dpy, NULL);
-  return dpy;
+  return priv->display;
 }
 
 /**
