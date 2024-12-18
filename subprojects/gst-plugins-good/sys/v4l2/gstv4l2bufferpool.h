@@ -76,6 +76,7 @@ struct _GstV4l2BufferPool
   GstBufferPool *other_pool;
   guint size;
   GstVideoInfo caps_info;   /* Default video information */
+  gboolean have_dma_drm_caps; /* If the configured caps have memory:DMABuf */
 
   gboolean add_videometa;    /* set if video meta should be added */
   gboolean enable_copy_threshold; /* If copy_threshold should be set */

@@ -526,14 +526,18 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   gboolean updated = FALSE;
   gboolean ret;
 
-  pool->add_videometa =
-      gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_VIDEO_META);
-
   /* parse the config and keep around */
   if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
           &max_buffers))
     goto wrong_config;
+
+  pool->add_videometa =
+      gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  /* Always enable VideoMeta when we negotiate memory:DMABuf */
+  pool->have_dma_drm_caps = gst_video_is_dma_drm_caps (caps);
+  pool->add_videometa |= pool->have_dma_drm_caps;
 
   if (!gst_buffer_pool_config_get_allocator (config, &allocator, &params))
     goto wrong_config;
@@ -2258,7 +2262,8 @@ void
 gst_v4l2_buffer_pool_copy_at_threshold (GstV4l2BufferPool * pool, gboolean copy)
 {
   GST_OBJECT_LOCK (pool);
-  pool->enable_copy_threshold = copy;
+  /* Ignore copy threashold when memory:DMABuf caps features is in used */
+  pool->enable_copy_threshold = copy && !pool->have_dma_drm_caps;
   GST_OBJECT_UNLOCK (pool);
 }
 
