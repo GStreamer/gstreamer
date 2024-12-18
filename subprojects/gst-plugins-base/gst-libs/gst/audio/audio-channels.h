@@ -146,6 +146,12 @@ gboolean       gst_audio_reorder_channels        (gpointer data, gsize size,
                                                   const GstAudioChannelPosition * to);
 
 GST_AUDIO_API
+void           gst_audio_reorder_channels_with_reorder_map (gpointer data, gsize size,
+                                                            gint bps,
+                                                            gint channels,
+                                                            const gint *reorder_map);
+
+GST_AUDIO_API
 gboolean       gst_audio_channel_positions_to_valid_order (GstAudioChannelPosition *position,
                                                            gint channels);
 

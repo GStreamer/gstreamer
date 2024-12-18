@@ -11616,6 +11616,12 @@ the @dither and @ns parameters.</doc>
 positions @to. @from and @to must contain the same number of
 positions and the same positions, only in a different order.
 
+This function internally calls gst_audio_get_channel_reorder_map() and
+gst_audio_reorder_channels_with_reorder_map(). It is more efficient to call
+gst_audio_get_channel_reorder_map() once to retrieve the reorder map and
+then call gst_audio_reorder_channels_with_reorder_map() with the same
+reorder map until the channel positions change.
+
 Note: this function assumes the audio data is in interleaved layout</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channels.h"/>
       <return-value transfer-ownership="none">
@@ -11652,6 +11658,45 @@ Note: this function assumes the audio data is in interleaved layout</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channels.c">The channel positions to convert to.</doc>
           <array length="3" zero-terminated="0" c:type="const GstAudioChannelPosition*">
             <type name="AudioChannelPosition" c:type="GstAudioChannelPosition"/>
+          </array>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="audio_reorder_channels_with_reorder_map" c:identifier="gst_audio_reorder_channels_with_reorder_map" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channels.c">Reorders @data with the given @reorder_map.
+
+The reorder map can be retrieved for example with
+gst_audio_get_channel_reorder_map().
+
+Note: this function assumes the audio data is in interleaved layout</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channels.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="data" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channels.c">The pointer to
+  the memory.</doc>
+          <array length="1" zero-terminated="0" c:type="gpointer">
+            <type name="guint8"/>
+          </array>
+        </parameter>
+        <parameter name="size" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channels.c">The size of the memory.</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+        <parameter name="bps" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channels.c">The number of bytes per sample.</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="channels" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channels.c">The number of channels.</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="reorder_map" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channels.c">The channel reorder map.</doc>
+          <array length="3" zero-terminated="0" c:type="const gint*">
+            <type name="gint" c:type="gint"/>
           </array>
         </parameter>
       </parameters>
