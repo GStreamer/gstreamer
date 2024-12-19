@@ -886,6 +886,32 @@ gst_dash_sink_generate_mpd_content (GstDashSink * sink,
 }
 
 static void
+gst_dash_sink_send_mpd_update_msg (GstDashSink * sink, gchar * mpd_path)
+{
+  GstMessage *msg;
+  GstStructure *s = gst_structure_new ("dashsink-mpd-update",
+      "location", G_TYPE_STRING, mpd_path,
+      NULL);
+  msg = gst_message_new_element ((GstObject *) sink, s);
+  gst_element_post_message (GST_ELEMENT (sink), msg);
+}
+
+static void
+gst_dash_sink_send_new_segment_msg (GstDashSink * sink,
+    GstDashSinkStream * stream, const gchar * location, GstClockTime duration)
+{
+  GstMessage *msg;
+  GstStructure *s = gst_structure_new ("dashsink-new-segment",
+      "representation-id", G_TYPE_STRING, stream->representation_id,
+      "segment-id", G_TYPE_UINT, stream->current_segment_id,
+      "location", G_TYPE_STRING, location,
+      "duration", GST_TYPE_CLOCK_TIME, duration,
+      NULL);
+  msg = gst_message_new_element ((GstObject *) sink, s);
+  gst_element_post_message (GST_ELEMENT (sink), msg);
+}
+
+static void
 gst_dash_sink_write_mpd_file (GstDashSink * sink,
     GstDashSinkStream * current_stream)
 {
@@ -930,6 +956,8 @@ gst_dash_sink_write_mpd_file (GstDashSink * sink,
     error = NULL;
   }
 
+  gst_dash_sink_send_mpd_update_msg (sink, mpd_filepath);
+
   g_free (mpd_content);
   g_free (mpd_filepath);
   g_object_unref (file_stream);
@@ -956,10 +984,14 @@ gst_dash_sink_handle_message (GstBin * bin, GstMessage * message)
               &stream->current_running_time_start);
         } else if (gst_structure_has_name (s, "splitmuxsink-fragment-closed")) {
           GstClockTime running_time;
+          const gchar *location = gst_structure_get_string (s, "location");
+          GstClockTime duration;
+          gst_structure_get_clock_time (s, "fragment-duration", &duration);
           gst_structure_get_clock_time (s, "running-time", &running_time);
           if (sink->running_time < running_time)
             sink->running_time = running_time;
           gst_dash_sink_write_mpd_file (sink, stream);
+          gst_dash_sink_send_new_segment_msg (sink, stream, location, duration);
         }
       }
       break;
