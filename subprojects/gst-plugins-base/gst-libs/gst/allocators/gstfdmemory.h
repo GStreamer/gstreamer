@@ -88,6 +88,12 @@ GstMemory *     gst_fd_allocator_alloc  (GstAllocator * allocator, gint fd,
                                          gsize size, GstFdMemoryFlags flags);
 
 GST_ALLOCATORS_API
+GstMemory *     gst_fd_allocator_alloc_full
+                                        (GstAllocator * allocator, gint fd,
+                                         gsize maxsize, gsize offset, gsize size,
+                                         GstFdMemoryFlags flags);
+
+GST_ALLOCATORS_API
 gboolean        gst_is_fd_memory        (GstMemory *mem);
 
 GST_ALLOCATORS_API

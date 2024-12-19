@@ -263,6 +263,52 @@ gst_fd_allocator_new (void)
 }
 
 /**
+ * gst_fd_allocator_alloc_full:
+ * @allocator: allocator to be used for this memory
+ * @fd: file descriptor
+ * @maxsize: the total size of the memory represented by @fd
+ * @offset: the offset of valid data in the memory
+ * @size: the size of valid data in the memory
+ * @flags: extra #GstFdMemoryFlags
+ *
+ * Return a %GstMemory that wraps a generic file descriptor.
+ *
+ * Returns: (transfer full) (nullable): a GstMemory based on @allocator.
+ * When the buffer will be released the allocator will close the @fd unless
+ * the %GST_FD_MEMORY_FLAG_DONT_CLOSE flag is specified.
+ * The memory is only mmapped on gst_buffer_map() request.
+ *
+ * Since: 1.28
+ */
+GstMemory *
+gst_fd_allocator_alloc_full (GstAllocator * allocator, gint fd, gsize maxsize,
+    gsize offset, gsize size, GstFdMemoryFlags flags)
+{
+#ifdef HAVE_MMAP
+  GstFdMemory *mem;
+
+  g_return_val_if_fail (GST_IS_FD_ALLOCATOR (allocator), NULL);
+  g_return_val_if_fail (offset + size <= maxsize, NULL);
+
+  mem = g_new0 (GstFdMemory, 1);
+  gst_memory_init (GST_MEMORY_CAST (mem), 0, GST_ALLOCATOR_CAST (allocator),
+      NULL, maxsize, 0, offset, size);
+
+  mem->flags = flags;
+  mem->fd = fd;
+  g_mutex_init (&mem->lock);
+
+  GST_DEBUG ("%p: fd: %d maxsize %" G_GSIZE_FORMAT " offset %" G_GSIZE_FORMAT
+      " size %" G_GSIZE_FORMAT, mem, mem->fd, mem->mem.maxsize, mem->mem.offset,
+      mem->mem.size);
+
+  return (GstMemory *) mem;
+#else /* !HAVE_MMAP */
+  return NULL;
+#endif
+}
+
+/**
  * gst_fd_allocator_alloc:
  * @allocator: allocator to be used for this memory
  * @fd: file descriptor
@@ -282,26 +328,7 @@ GstMemory *
 gst_fd_allocator_alloc (GstAllocator * allocator, gint fd, gsize size,
     GstFdMemoryFlags flags)
 {
-#ifdef HAVE_MMAP
-  GstFdMemory *mem;
-
-  g_return_val_if_fail (GST_IS_FD_ALLOCATOR (allocator), NULL);
-
-  mem = g_new0 (GstFdMemory, 1);
-  gst_memory_init (GST_MEMORY_CAST (mem), 0, GST_ALLOCATOR_CAST (allocator),
-      NULL, size, 0, 0, size);
-
-  mem->flags = flags;
-  mem->fd = fd;
-  g_mutex_init (&mem->lock);
-
-  GST_DEBUG ("%p: fd: %d size %" G_GSIZE_FORMAT, mem, mem->fd,
-      mem->mem.maxsize);
-
-  return (GstMemory *) mem;
-#else /* !HAVE_MMAP */
-  return NULL;
-#endif
+  return gst_fd_allocator_alloc_full (allocator, fd, size, 0, size, flags);
 }
 
 /**

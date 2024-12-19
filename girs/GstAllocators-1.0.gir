@@ -330,6 +330,43 @@ The memory is only mmapped on gst_buffer_map() request.</doc>
           </parameter>
         </parameters>
       </function>
+      <function name="alloc_full" c:identifier="gst_fd_allocator_alloc_full" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstfdmemory.c">Return a %GstMemory that wraps a generic file descriptor.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstfdmemory.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstfdmemory.c">a GstMemory based on @allocator.
+When the buffer will be released the allocator will close the @fd unless
+the %GST_FD_MEMORY_FLAG_DONT_CLOSE flag is specified.
+The memory is only mmapped on gst_buffer_map() request.</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </return-value>
+        <parameters>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstfdmemory.c">allocator to be used for this memory</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+          <parameter name="fd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstfdmemory.c">file descriptor</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="maxsize" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstfdmemory.c">the total size of the memory represented by @fd</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="offset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstfdmemory.c">the offset of valid data in the memory</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="size" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstfdmemory.c">the size of valid data in the memory</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstfdmemory.c">extra #GstFdMemoryFlags</doc>
+            <type name="FdMemoryFlags" c:type="GstFdMemoryFlags"/>
+          </parameter>
+        </parameters>
+      </function>
       <field name="parent">
         <type name="Gst.Allocator" c:type="GstAllocator"/>
       </field>
