@@ -443,10 +443,15 @@ static gboolean
 _connect_mixer_element (GstGLMixerBin * self)
 {
   gboolean res = TRUE;
+  gchar *tmp, *name;
 
   g_return_val_if_fail (self->priv->input_chains == NULL, FALSE);
 
-  gst_object_set_name (GST_OBJECT (self->mixer), "mixer");
+  tmp = gst_object_get_name (GST_OBJECT (self));
+  name = g_strdup_printf ("%s-mixer", tmp);
+  g_free (tmp);
+  gst_object_set_name (GST_OBJECT (self->mixer), name);
+  g_free (name);
   res &= gst_bin_add (GST_BIN (self), self->mixer);
 
   res &= gst_element_link_pads (self->mixer, "src", self->out_convert, "sink");
