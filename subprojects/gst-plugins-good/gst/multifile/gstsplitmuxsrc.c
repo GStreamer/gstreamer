@@ -1051,12 +1051,26 @@ static gboolean
 gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part,
     GstSeekFlags extra_flags)
 {
+  GstMessage *msg;
+
   GST_DEBUG_OBJECT (splitmux, "Activating part %d", part);
   GstSplitMuxPartReader *reader = gst_object_ref (splitmux->parts[part]);
 
   splitmux->cur_part = part;
   add_to_active_readers (splitmux, reader, FALSE);
+
+  msg = gst_message_new_element (GST_OBJECT (splitmux),
+      gst_structure_new ("splitmuxsrc-fragment-started",
+          "fragment-id", G_TYPE_UINT, part,
+          "location", G_TYPE_STRING, reader->path,
+          "fragment-offset", GST_TYPE_CLOCK_TIME,
+          gst_splitmux_part_reader_get_start_offset (reader),
+          "fragment-duration", GST_TYPE_CLOCK_TIME,
+          gst_splitmux_part_reader_get_duration (reader), NULL));
+
   SPLITMUX_SRC_UNLOCK (splitmux);
+
+  gst_element_post_message (GST_ELEMENT_CAST (splitmux), msg);
 
   /* Drop lock around calling activate, as it might call back
    * into the splitmuxsrc when exposing pads */
@@ -1487,6 +1501,7 @@ gst_splitmux_push_flush_stop (GstSplitMuxSrc * splitmux, guint32 seqnum)
 static gboolean
 gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux, SplitMuxSrcPad * splitpad)
 {
+  GstMessage *msg = NULL;
   gint next_part = -1;
   gint cur_part = splitpad->cur_part;
   gboolean res = FALSE;
@@ -1562,6 +1577,16 @@ gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux, SplitMuxSrcPad * splitpad)
             GST_SEGMENT_FORMAT, next_part, &tmp);
         add_to_active_readers (splitmux, splitpad->reader, FALSE);
 
+        msg = gst_message_new_element (GST_OBJECT (splitmux),
+            gst_structure_new ("splitmuxsrc-fragment-started",
+                "fragment-id", G_TYPE_UINT, next_part,
+                "location", G_TYPE_STRING, splitpad->reader->path,
+                "fragment-offset", GST_TYPE_CLOCK_TIME,
+                gst_splitmux_part_reader_get_start_offset (splitpad->reader),
+                "fragment-duration", GST_TYPE_CLOCK_TIME,
+                gst_splitmux_part_reader_get_duration (splitpad->reader),
+                NULL));
+
         if (!gst_splitmux_part_reader_activate (splitpad->reader, &tmp,
                 GST_SEEK_FLAG_NONE)) {
           goto error;
@@ -1581,9 +1606,15 @@ gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux, SplitMuxSrcPad * splitpad)
   }
 
   SPLITMUX_SRC_UNLOCK (splitmux);
+
+  if (msg)
+    gst_element_post_message (GST_ELEMENT_CAST (splitmux),
+        g_steal_pointer (&msg));
+
   return res;
 error:
   SPLITMUX_SRC_UNLOCK (splitmux);
+  gst_clear_message (&msg);
   GST_ELEMENT_ERROR (splitmux, RESOURCE, READ, (NULL),
       ("Failed to activate part %d", splitmux->cur_part));
   return FALSE;
