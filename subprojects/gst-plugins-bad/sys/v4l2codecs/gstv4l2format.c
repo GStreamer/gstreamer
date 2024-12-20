@@ -282,7 +282,7 @@ gst_v4l2_format_to_drm_format (guint32 pix_fmt, guint32 * out_drm_fourcc,
     return FALSE;
 
   if (out_drm_fourcc)
-    *out_drm_fourcc = fmt_desc->gst_fmt;
+    *out_drm_fourcc = fmt_desc->drm_fourcc;
   if (out_drm_mod)
     *out_drm_mod = fmt_desc->drm_modifier;
   return TRUE;
