@@ -2021,16 +2021,16 @@ init_devices (gpointer data)
               GstStructure *s = gst_structure_copy (generic);
               gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt601",
                   NULL);
-              video_input_caps =
-                  gst_caps_merge_structure (video_input_caps, s);
+              video_output_caps =
+                  gst_caps_merge_structure (video_output_caps, s);
             }
 
             if (mode->mode_flags & flags & bmdDisplayModeColorspaceRec709) {
               GstStructure *s = gst_structure_copy (generic);
               gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt709",
                   NULL);
-              video_input_caps =
-                  gst_caps_merge_structure (video_input_caps, s);
+              video_output_caps =
+                  gst_caps_merge_structure (video_output_caps, s);
             }
 
             if ((supported & SUPPORT_COLORSPACE) &&
@@ -2038,23 +2038,23 @@ init_devices (gpointer data)
               GstStructure *s = gst_structure_copy (generic);
               gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2020",
                   NULL);
-              video_input_caps =
-                  gst_caps_merge_structure (video_input_caps, s);
+              video_output_caps =
+                  gst_caps_merge_structure (video_output_caps, s);
 
               if (dynamic_range & bmdDynamicRangeHDRStaticPQ) {
                 GstStructure *s = gst_structure_copy (generic);
                 gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-pq",
                     NULL);
-                video_input_caps =
-                    gst_caps_merge_structure (video_input_caps, s);
+                video_output_caps =
+                    gst_caps_merge_structure (video_output_caps, s);
               }
 
               if (dynamic_range & bmdDynamicRangeHDRStaticHLG) {
                 GstStructure *s = gst_structure_copy (generic);
                 gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-hlg",
                     NULL);
-                video_input_caps =
-                    gst_caps_merge_structure (video_input_caps, s);
+                video_output_caps =
+                    gst_caps_merge_structure (video_output_caps, s);
               }
             }
 
