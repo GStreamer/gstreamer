@@ -1676,6 +1676,9 @@ gst_gl_context_thread_add (GstGLContext * context,
 
   window = gst_gl_context_get_window (context);
 
+  GST_TRACE_OBJECT (context, "schedule function:%p data:%p", rdata.func,
+      rdata.data);
+
   gst_gl_window_send_message (window,
       GST_GL_WINDOW_CB (_gst_gl_context_thread_run_generic), &rdata);
 
