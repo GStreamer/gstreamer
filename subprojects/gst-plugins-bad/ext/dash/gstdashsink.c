@@ -281,6 +281,7 @@ typedef struct _GstDashSinkStream
   GstPad *pad;
   gint buffer_probe;
   GstElement *splitmuxsink;
+  GstElement *muxer;
   gint adaptation_set_id;
   gchar *representation_id;
   gchar *current_segment_location;
@@ -654,29 +655,12 @@ on_format_location (GstElement * splitmuxsink, guint fragment_id,
 static gboolean
 gst_dash_sink_add_splitmuxsink (GstDashSink * sink, GstDashSinkStream * stream)
 {
-  GstElement *mux =
-      gst_element_factory_make (dash_muxer_list[sink->muxer].element_name,
-      NULL);
-
-  if (sink->muxer == GST_DASH_SINK_MUXER_MP4) {
-    g_object_set (mux, "fragment-duration", sink->target_duration * GST_MSECOND,
-        NULL);
-  } else if (sink->muxer == GST_DASH_SINK_MUXER_DASHMP4) {
-    g_object_set (mux, "fragment-duration", sink->target_duration * GST_SECOND,
-        NULL);
-  }
-
-  g_return_val_if_fail (mux != NULL, FALSE);
-
   stream->splitmuxsink = gst_element_factory_make ("splitmuxsink", NULL);
-  if (!stream->splitmuxsink) {
-    gst_object_unref (mux);
-    return FALSE;
-  }
+  g_return_val_if_fail (stream->splitmuxsink != NULL, FALSE);
+
   stream->giostreamsink = gst_element_factory_make ("giostreamsink", NULL);
   if (!stream->giostreamsink) {
     gst_object_unref (stream->splitmuxsink);
-    gst_object_unref (mux);
     return FALSE;
   }
 
@@ -686,20 +670,16 @@ gst_dash_sink_add_splitmuxsink (GstDashSink * sink, GstDashSinkStream * stream)
    */
   gst_object_ref (stream->splitmuxsink);
 
-  if (!sink->use_segment_list)
-    stream->current_segment_id = 1;
-  else
-    stream->current_segment_id = 0;
-  stream->next_segment_id = stream->current_segment_id;
+  stream->muxer =
+      gst_element_factory_make (dash_muxer_list[sink->muxer].element_name,
+      NULL);
+
+  g_return_val_if_fail (stream->muxer != NULL, FALSE);
+
+  gst_object_ref (stream->muxer);
 
   g_object_set (stream->splitmuxsink, "location", NULL,
-      "max-size-time", ((GstClockTime) sink->target_duration * GST_SECOND),
-      "send-keyframe-requests", TRUE, "muxer", mux, "sink",
-      stream->giostreamsink, "send-keyframe-requests",
-      sink->send_keyframe_requests, NULL);
-
-  if (sink->muxer == GST_DASH_SINK_MUXER_TS)
-    g_object_set (stream->splitmuxsink, "reset-muxer", FALSE, NULL);
+      "muxer", stream->muxer, "sink", stream->giostreamsink, NULL);
 
   g_signal_connect (stream->splitmuxsink, "format-location",
       G_CALLBACK (on_format_location), stream);
@@ -734,6 +714,45 @@ gst_dash_sink_init (GstDashSink * sink)
 static void
 gst_dash_sink_reset (GstDashSink * sink)
 {
+  GList *l;
+  for (l = sink->streams; l != NULL; l = l->next) {
+    GstDashSinkStream *stream = (GstDashSinkStream *) l->data;
+    if (stream->muxer)
+      gst_object_unref (stream->muxer);
+
+    stream->muxer =
+        gst_element_factory_make (dash_muxer_list[sink->muxer].element_name,
+        NULL);
+
+    g_return_if_fail (stream->muxer != NULL);
+
+    gst_object_ref (stream->muxer);
+
+    g_object_set (stream->splitmuxsink, "muxer", stream->muxer, NULL);
+
+    g_object_set (stream->splitmuxsink, "max-size-time",
+        ((GstClockTime) sink->target_duration * GST_SECOND), NULL);
+    if (sink->muxer == GST_DASH_SINK_MUXER_MP4) {
+      g_object_set (stream->muxer, "fragment-duration",
+          sink->target_duration * GST_MSECOND, NULL);
+    } else if (sink->muxer == GST_DASH_SINK_MUXER_DASHMP4) {
+      g_object_set (stream->muxer, "fragment-duration",
+          sink->target_duration * GST_SECOND, NULL);
+    }
+    if (sink->muxer == GST_DASH_SINK_MUXER_TS)
+      g_object_set (stream->splitmuxsink, "reset-muxer", FALSE, NULL);
+    g_object_set (stream->splitmuxsink, "send-keyframe-requests",
+        sink->send_keyframe_requests, NULL);
+    g_object_set (stream->splitmuxsink, "max-size-time",
+        ((GstClockTime) sink->target_duration * GST_SECOND), NULL);
+
+    if (!sink->use_segment_list)
+      stream->current_segment_id = 1;
+    else
+      stream->current_segment_id = 0;
+    stream->next_segment_id = stream->current_segment_id;
+  }
+
   sink->index = 0;
 }
 
@@ -857,7 +876,7 @@ gst_dash_sink_generate_mpd_content (GstDashSink * sink,
     }
   }
   /* MPD updates */
-  if (sink->use_segment_list) {
+  if (stream && sink->use_segment_list) {
     GST_INFO_OBJECT (sink, "Add segment URL: %s",
         stream->current_segment_location);
     gst_mpd_client_add_segment_url (sink->mpd_client, sink->current_period_id,
@@ -1118,7 +1137,9 @@ gst_dash_sink_release_pad (GstElement * element, GstPad * pad)
   gst_element_remove_pad (element, pad);
   gst_pad_set_active (pad, FALSE);
 
-
+  if (stream->muxer) {
+    gst_object_unref (stream->muxer);
+  }
 
   if (stream->splitmuxsink) {
     gst_element_set_locked_state (stream->splitmuxsink, TRUE);
@@ -1148,6 +1169,16 @@ gst_dash_sink_change_state (GstElement * element, GstStateChange trans)
       if (!g_list_length (sink->streams)) {
         return GST_STATE_CHANGE_FAILURE;
       }
+
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:{
+      GST_DASHSINK_LOCK (sink);
+      gst_dash_sink_reset (sink);
+      GST_DASHSINK_UNLOCK (sink);
+      break;
+    }
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
