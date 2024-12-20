@@ -92,7 +92,7 @@ typedef enum _GstTensorDimOrder
 
 /**
  * GstTensorLayout:
- * @GST_TENSOR_LAYOUT_STRIDED: indicate the tensor is stored in a dense format in memory
+ * @GST_TENSOR_LAYOUT_CONTIGUOUS: indicate the tensor is stored in a dense format in memory
  *
  * Indicate tensor storage in memory.
  *
@@ -100,13 +100,13 @@ typedef enum _GstTensorDimOrder
  */
 typedef enum _GstTensorLayout
 {
-  GST_TENSOR_LAYOUT_STRIDED
+  GST_TENSOR_LAYOUT_CONTIGUOUS
 } GstTensorLayout;
 
 
 /**
  * GstTensorDim:
- * @size: Size of the dimension
+ * @size: Size of the dimension. Use 0 for dynamic dimension using.
  * @order_index: Dimension order in memory. @see_also #GST_TENSOR_DIM_ORDER_INDEXED
  *
  * Hold properties of the tensor's dimension
@@ -124,7 +124,6 @@ typedef struct _GstTensorDim
  * @id: semantically identify the contents of the tensor
  * @layout: Indicate tensor layout
  * @data_type: #GstTensorDataType of tensor data
- * @batch_size: Model batch size
  * @data: #GstBuffer holding tensor data
  * @dims_order: Indicate tensor elements layout in memory.
  * @num_dims: number of tensor dimensions
@@ -139,7 +138,6 @@ typedef struct _GstTensor
   GQuark id;
   GstTensorLayout layout;
   GstTensorDataType data_type;
-  gsize batch_size;
   GstBuffer *data;
   GstTensorDimOrder dims_order;
   gsize num_dims;
@@ -156,7 +154,6 @@ GstTensor * gst_tensor_alloc (gsize num_dims);
 GST_ANALYTICS_META_API
 GstTensor * gst_tensor_new_simple (GQuark id,
     GstTensorDataType data_type,
-    gsize batch_size,
     GstBuffer * data,
     GstTensorDimOrder dims_order,
     gsize num_dims,

@@ -88,11 +88,11 @@ size_for_elements (GstTensorDataType data_type, gsize elements)
  * gst_tensor_new_simple:
  * @id: semantically identify the contents of the tensor
  * @data_type: #GstTensorDataType of tensor data
- * @batch_size: Model batch size
  * @data: (transfer full): #GstBuffer holding tensor data
  * @dims_order: Indicate tensor dimension indexing order
  * @num_dims: number of tensor dimensions
- * @dims: (array length=num_dims): tensor dimensions
+ * @dims: (array length=num_dims): tensor dimensions. Value of 0 mean the
+ * dimension is dynamic.
  *
  * Allocates a new #GstTensor of @dims_order ROW_MAJOR or COLUMN_MAJOR and
  * with an interleaved layout
@@ -102,31 +102,35 @@ size_for_elements (GstTensorDataType data_type, gsize elements)
  * Since: 1.26
  */
 GstTensor *
-gst_tensor_new_simple (GQuark id, GstTensorDataType data_type,
-    gsize batch_size, GstBuffer * data,
+gst_tensor_new_simple (GQuark id, GstTensorDataType data_type, GstBuffer * data,
     GstTensorDimOrder dims_order, gsize num_dims, gsize * dims)
 {
   GstTensor *tensor;
   gsize num_elements = 1;
   gsize i;
+  gboolean dynamic_tensor_size = FALSE;
 
   /* Update this if adding more to GstTensorDataType */
   g_return_val_if_fail (data_type <= GST_TENSOR_DATA_TYPE_BFLOAT16, NULL);
 
-  g_return_val_if_fail (batch_size > 0, NULL);
   g_return_val_if_fail (GST_IS_BUFFER (data), NULL);
   g_return_val_if_fail (dims_order == GST_TENSOR_DIM_ORDER_ROW_MAJOR ||
       dims_order == GST_TENSOR_DIM_ORDER_COL_MAJOR, NULL);
   g_return_val_if_fail (num_dims > 0, NULL);
 
-
   for (i = 0; i < num_dims; i++) {
-    g_return_val_if_fail (dims[i] > 0, NULL);
-    num_elements *= dims[i];
-  }
-  num_elements *= batch_size;
+    dynamic_tensor_size = dims[i] == 0;
 
-  if (gst_buffer_get_size (data) != size_for_elements (data_type, num_elements)) {
+    if (dynamic_tensor_size == FALSE)
+      num_elements *= dims[i];
+    else
+      break;
+  }
+
+  /* We can't do this validation if the tensor size is dynamic */
+  if (dynamic_tensor_size == FALSE &&
+      gst_buffer_get_size (data) !=
+      size_for_elements (data_type, num_elements)) {
     g_critical ("Expected buffer of size %zu (%zu elements),"
         " but buffer has size %zu",
         size_for_elements (data_type, num_elements), num_elements,
@@ -136,20 +140,14 @@ gst_tensor_new_simple (GQuark id, GstTensorDataType data_type,
 
   tensor = gst_tensor_alloc (num_dims);
   tensor->id = id;
-  tensor->layout = GST_TENSOR_LAYOUT_STRIDED;
+  tensor->layout = GST_TENSOR_LAYOUT_CONTIGUOUS;
   tensor->data_type = data_type;
-  tensor->batch_size = batch_size;
   tensor->data = data;
   tensor->dims_order = dims_order;
   tensor->num_dims = num_dims;
   for (i = 0; i < num_dims; i++) {
     tensor->dims[i].size = dims[i];
-    if (dims_order == GST_TENSOR_DIM_ORDER_COL_MAJOR)
-      tensor->dims[i].order_index = i;
-    else if (dims_order == GST_TENSOR_DIM_ORDER_ROW_MAJOR)
-      tensor->dims[i].order_index = num_dims - i - 1;
   }
-
   return tensor;
 }
 

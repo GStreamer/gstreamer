@@ -1244,10 +1244,6 @@ pixel to instance of an object is identified.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">#GstTensorDataType of tensor data</doc>
         <type name="TensorDataType" c:type="GstTensorDataType"/>
       </field>
-      <field name="batch_size" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Model batch size</doc>
-        <type name="gsize" c:type="gsize"/>
-      </field>
       <field name="data" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">#GstBuffer holding tensor data</doc>
         <type name="Gst.Buffer" c:type="GstBuffer*"/>
@@ -1262,7 +1258,7 @@ pixel to instance of an object is identified.</doc>
       </field>
       <field name="dims" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">number of tensor dimensions</doc>
-        <array length="6" zero-terminated="0">
+        <array length="5" zero-terminated="0">
           <type name="TensorDim" c:type="GstTensorDim"/>
         </array>
       </field>
@@ -1297,10 +1293,6 @@ with an interleaved layout</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">#GstTensorDataType of tensor data</doc>
             <type name="TensorDataType" c:type="GstTensorDataType"/>
           </parameter>
-          <parameter name="batch_size" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Model batch size</doc>
-            <type name="gsize" c:type="gsize"/>
-          </parameter>
           <parameter name="data" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">#GstBuffer holding tensor data</doc>
             <type name="Gst.Buffer" c:type="GstBuffer*"/>
@@ -1314,8 +1306,9 @@ with an interleaved layout</doc>
             <type name="gsize" c:type="gsize"/>
           </parameter>
           <parameter name="dims" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">tensor dimensions</doc>
-            <array length="5" zero-terminated="0" c:type="gsize*">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">tensor dimensions. Value of 0 mean the
+dimension is dynamic.</doc>
+            <array length="4" zero-terminated="0" c:type="gsize*">
               <type name="gsize" c:type="gsize"/>
             </array>
           </parameter>
@@ -1419,7 +1412,7 @@ with an interleaved layout</doc>
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Hold properties of the tensor's dimension</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
       <field name="size" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Size of the dimension</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Size of the dimension. Use 0 for dynamic dimension using.</doc>
         <type name="gsize" c:type="gsize"/>
       </field>
       <field name="order_index" writable="1">
@@ -1447,7 +1440,7 @@ with an interleaved layout</doc>
     <enumeration name="TensorLayout" version="1.26" c:type="GstTensorLayout">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Indicate tensor storage in memory.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
-      <member name="tensor_layout_strided" value="0" c:identifier="GST_TENSOR_LAYOUT_STRIDED">
+      <member name="tensor_layout_contiguous" value="0" c:identifier="GST_TENSOR_LAYOUT_CONTIGUOUS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">indicate the tensor is stored in a dense format in memory</doc>
       </member>
     </enumeration>
