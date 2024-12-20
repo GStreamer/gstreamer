@@ -58,8 +58,8 @@
  * ## Example launch line to generate annex B format AV1 stream:
  * ```
  * gst-launch-1.0 filesrc location=sample.av1 ! ivfparse ! av1parse !  \
- *   video/x-av1,alignment=\(string\)tu,stream-format=\(string\)annexb ! \
- *   filesink location=matroskamux ! filesink location=trans.mkv
+ *   video/x-av1,alignment=\(string\)tu,stream-format=\(string\)obu-stream ! \
+ *   matroskamux ! filesink location=trans.mkv
  * ```
  *
  * Since: 1.20
