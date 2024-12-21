@@ -16,16 +16,13 @@
 # License along with this program; if not, write to the
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
-import argparse
 import json
 import os
 import sys
 import re
 import pickle
-import platform
 import shutil
 import subprocess
-import threading
 from pathlib import Path
 import concurrent.futures as conc
 

@@ -17,9 +17,7 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 import argparse
-from fractions import Fraction
 import os
-import copy
 import sys
 import time
 from types import SimpleNamespace
@@ -29,8 +27,6 @@ import socket
 import subprocess
 import configparser
 import xml.etree.ElementTree as ET
-import json
-import glob
 import math
 from launcher.loggable import Loggable, error
 
@@ -39,10 +35,9 @@ from launcher.baseclasses import GstValidateTest, Test, \
     GstValidateMediaDescriptor, GstValidateEncodingTestInterface, \
     GstValidateBaseTestManager, MediaDescriptor, MediaFormatCombination, VariableFramerateMode
 
-from launcher.utils import path2url, url2path, DEFAULT_TIMEOUT, which, \
-    GST_SECOND, Result, Protocols, mkdir, printc, Colors, get_data_file, \
+from launcher.utils import path2url, url2path, DEFAULT_TIMEOUT, GST_SECOND, Result, Protocols, mkdir, printc, Colors, get_data_file, \
     kill_subprocess, format_config_template, get_fakesink_for_media_type, \
-    parse_gsttimeargs, GstCaps
+    GstCaps
 
 #
 # Private global variables     #

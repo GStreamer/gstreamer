@@ -45,7 +45,7 @@ from itertools import cycle
 from fractions import Fraction
 from pathlib import Path
 
-from .utils import GstCaps, which
+from .utils import which
 from . import config
 from . import reporters
 from . import loggable
@@ -2720,7 +2720,7 @@ class MediaDescriptor(Loggable):
         Loggable.__init__(self)
 
     def get_path(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def has_frames(self):
         return False
@@ -2742,40 +2742,40 @@ class MediaDescriptor(Loggable):
         return Fraction(0, 1)
 
     def get_media_filepath(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def skip_parsers(self):
         return False
 
     def get_caps(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def get_uri(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def get_duration(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def get_protocol(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def is_seekable(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def is_live(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def is_image(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def get_num_tracks(self, track_type):
-        raise NotImplemented
+        raise NotImplementedError
 
     def get_tracks_caps(self):
         return []
 
     def can_play_reverse(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def prerolls(self):
         return True

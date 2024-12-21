@@ -27,7 +27,6 @@ import argparse
 import tempfile
 from . import reporters
 import subprocess
-import pathlib
 
 
 from .loggable import Loggable

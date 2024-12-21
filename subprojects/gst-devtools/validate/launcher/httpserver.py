@@ -49,7 +49,7 @@ class HTTPServer(loggable.Loggable):
                 response = urllib.request.urlopen('http://127.0.0.1:%s' % (
                     self.options.http_server_port))
                 return True
-            except urllib.error.URLError as e:
+            except urllib.error.URLError:
                 pass
 
             if time.time() - start > timeout:

@@ -24,7 +24,6 @@ except ImportError:
     from . import config
 
 import json
-import numbers
 import os
 import platform
 import re
@@ -249,7 +248,7 @@ def get_subclasses(klass, env):
     subclasses = []
     for symb in env.items():
         try:
-            if issubclass(symb[1], klass) and not symb[1] is klass:
+            if issubclass(symb[1], klass) and symb[1] is not klass:
                 subclasses.append(symb[1])
         except TypeError:
             pass
@@ -609,7 +608,7 @@ def check_bugs_resolution(bugs_definitions):
                        Colors.WARNING)
                 continue
 
-            if not status.lower() in ['new', 'verified']:
+            if status.lower() not in ['new', 'verified']:
                 printc("\n  + %s \n   --> bug: #%s: '%s'\n   ==> Bug CLOSED already (status: %s)" % (
                        regex, bugid, desc, status), Colors.WARNING)
 
