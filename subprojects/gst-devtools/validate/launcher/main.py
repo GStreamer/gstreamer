@@ -439,7 +439,7 @@ class LauncherConfig(Loggable):
         parser.add_argument("--n-runs", dest="n_runs", action='store',
                             help="Number of runs, if the testsuites."
                             " Meaning no failure will stop the testuite"
-                            " run meanwhile.", type=int),
+                            " run meanwhile.", type=int)
         parser.add_argument("-F", "--fatal-error", dest="fatal_error",
                             action="store_true",
                             help="Stop on first fail")
@@ -490,7 +490,7 @@ class LauncherConfig(Loggable):
         parser.add_argument("-lt", "--long-test-limit", dest="long_limit",
                             action='store',
                             help="Defines the limit for which a test is considered as long (in seconds)."
-                            " Note that 0 will enable all tests", type=int),
+                            " Note that 0 will enable all tests", type=int)
         parser.add_argument("--dump-on-failure", dest="dump_on_failure",
                             action="store_true", default=False,
                             help="Dump logs to stdout when a test fails."
