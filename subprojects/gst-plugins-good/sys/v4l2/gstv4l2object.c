@@ -172,6 +172,7 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   {MAP_FMT (NV24, NV24),                        GST_V4L2_RAW},
   {MAP_FMT (NV42, UNKNOWN),                     GST_V4L2_RAW},
   {MAP_FMT (MM21, NV12_16L32S),                 GST_V4L2_RAW},
+  {MAP_FMT (P010, P010_10LE),                   GST_V4L2_RAW},
 
   /* Bayer formats - see http://www.siliconimaging.com/RGB%20Bayer.htm */
   {MAP_FMT (SBGGR8, ENCODED),   GST_V4L2_BAYER},
