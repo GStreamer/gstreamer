@@ -195,8 +195,8 @@ class XunitReporter(Reporter):
         tmp_xml_file = codecs.open(self.tmp_xml_file.name, 'r',
                                    self.encoding, errors = 'replace')
 
-        for l in tmp_xml_file:
-            xml_file.write(l)
+        for line in tmp_xml_file:
+            xml_file.write(line)
 
         xml_file.write('</testsuite>')
         xml_file.close()
