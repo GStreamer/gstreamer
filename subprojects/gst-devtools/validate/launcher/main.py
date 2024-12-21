@@ -27,7 +27,7 @@ import argparse
 import tempfile
 from . import reporters
 import subprocess
-
+import importlib.util
 
 from .loggable import Loggable
 from .baseclasses import _TestsLauncher, ScenarioManager
@@ -361,9 +361,7 @@ class LauncherConfig(Loggable):
                 return False
 
         if self.html:
-            try:
-                import commonmark
-            except ImportError:
+            if not importlib.util.find_spec("commonmark"):
                 printc("You want to output html logs but commonmark not found. Install it"
                        " with `pip install commonmark` and try again.", Colors.FAIL)
                 return False
