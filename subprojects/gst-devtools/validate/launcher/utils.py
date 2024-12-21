@@ -326,12 +326,6 @@ def get_duration(media_file):
     return duration
 
 
-def get_scenarios():
-    GST_VALIDATE_COMMAND = "gst-validate-1.0"
-    os.system("%s --scenarios-defs-output-file %s" % (GST_VALIDATE_COMMAND,
-                                                      ))
-
-
 def get_gst_build_valgrind_suppressions():
     if hasattr(get_gst_build_valgrind_suppressions, "data"):
         return get_gst_build_valgrind_suppressions.data
