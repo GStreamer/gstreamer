@@ -451,7 +451,6 @@ class Test(Loggable):
                     # and wait here until gdb exits
                     self.process.communicate()
                 else:
-                    pname = self.command[0]
                     while True:
                         debugger = get_debugger()
                         if not debugger:
