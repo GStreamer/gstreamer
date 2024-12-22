@@ -36,7 +36,7 @@ G_DEFINE_TYPE (GstCoreAudio, gst_core_audio, G_TYPE_OBJECT);
 #endif
 
 static void
-gst_core_audio_finalize (GObject * object)
+gst_core_audio_finalize (GObject *object)
 {
   GstCoreAudio *core_audio = GST_CORE_AUDIO (object);
   g_mutex_clear (&core_audio->timing_lock);
@@ -45,14 +45,14 @@ gst_core_audio_finalize (GObject * object)
 }
 
 static void
-gst_core_audio_class_init (GstCoreAudioClass * klass)
+gst_core_audio_class_init (GstCoreAudioClass *klass)
 {
   GObjectClass *object_klass = G_OBJECT_CLASS (klass);
   object_klass->finalize = gst_core_audio_finalize;
 }
 
 static void
-gst_core_audio_init (GstCoreAudio * core_audio)
+gst_core_audio_init (GstCoreAudio *core_audio)
 {
   core_audio->is_passthrough = FALSE;
   core_audio->device_id = kAudioDeviceUnknown;
@@ -60,6 +60,7 @@ gst_core_audio_init (GstCoreAudio * core_audio)
   core_audio->audiounit = NULL;
   core_audio->cached_caps = NULL;
   core_audio->cached_caps_valid = FALSE;
+  core_audio->channel_layout = FALSE;
 #ifndef HAVE_IOS
   core_audio->hog_pid = -1;
   core_audio->disabled_mixing = FALSE;
@@ -110,7 +111,7 @@ _audio_unit_property_listener (void *inRefCon, AudioUnit inUnit,
 }
 
 static GstClockTime
-_current_time_ns (GstCoreAudio * core_audio)
+_current_time_ns (GstCoreAudio *core_audio)
 {
   guint64 mach_t = mach_absolute_time ();
   return gst_util_uint64_scale (mach_t, core_audio->timebase.numer,
@@ -118,7 +119,7 @@ _current_time_ns (GstCoreAudio * core_audio)
 }
 
 static GstClockTime
-_host_time_to_ns (GstCoreAudio * core_audio, uint64_t host_time)
+_host_time_to_ns (GstCoreAudio *core_audio, uint64_t host_time)
 {
   return gst_util_uint64_scale (host_time, core_audio->timebase.numer,
       core_audio->timebase.denom);
@@ -129,7 +130,7 @@ _host_time_to_ns (GstCoreAudio * core_audio, uint64_t host_time)
  *************************/
 
 GstCoreAudio *
-gst_core_audio_new (GstObject * osxbuf)
+gst_core_audio_new (GstObject *osxbuf)
 {
   GstCoreAudio *core_audio;
 
@@ -140,7 +141,7 @@ gst_core_audio_new (GstObject * osxbuf)
 }
 
 gboolean
-gst_core_audio_close (GstCoreAudio * core_audio)
+gst_core_audio_close (GstCoreAudio *core_audio)
 {
   OSStatus status;
 
@@ -169,7 +170,7 @@ gst_core_audio_close (GstCoreAudio * core_audio)
 }
 
 gboolean
-gst_core_audio_open (GstCoreAudio * core_audio)
+gst_core_audio_open (GstCoreAudio *core_audio)
 {
   OSStatus status;
 
@@ -209,26 +210,26 @@ gst_core_audio_open (GstCoreAudio * core_audio)
 }
 
 gboolean
-gst_core_audio_start_processing (GstCoreAudio * core_audio)
+gst_core_audio_start_processing (GstCoreAudio *core_audio)
 {
   return gst_core_audio_start_processing_impl (core_audio);
 }
 
 gboolean
-gst_core_audio_pause_processing (GstCoreAudio * core_audio)
+gst_core_audio_pause_processing (GstCoreAudio *core_audio)
 {
   return gst_core_audio_pause_processing_impl (core_audio);
 }
 
 gboolean
-gst_core_audio_stop_processing (GstCoreAudio * core_audio)
+gst_core_audio_stop_processing (GstCoreAudio *core_audio)
 {
   return gst_core_audio_stop_processing_impl (core_audio);
 }
 
 gboolean
-gst_core_audio_get_samples_and_latency (GstCoreAudio * core_audio,
-    gdouble rate, guint * samples, gdouble * latency)
+gst_core_audio_get_samples_and_latency (GstCoreAudio *core_audio,
+    gdouble rate, guint *samples, gdouble *latency)
 {
   uint64_t now_ns = _current_time_ns (core_audio);
   gboolean ret = gst_core_audio_get_samples_and_latency_impl (core_audio, rate,
@@ -300,8 +301,8 @@ gst_core_audio_get_samples_and_latency (GstCoreAudio * core_audio,
 }
 
 void
-gst_core_audio_update_timing (GstCoreAudio * core_audio,
-    const AudioTimeStamp * inTimeStamp, unsigned int inNumberFrames)
+gst_core_audio_update_timing (GstCoreAudio *core_audio,
+    const AudioTimeStamp *inTimeStamp, unsigned int inNumberFrames)
 {
   AudioTimeStampFlags target_flags =
       kAudioTimeStampSampleHostTimeValid | kAudioTimeStampRateScalarValid;
@@ -321,8 +322,8 @@ gst_core_audio_update_timing (GstCoreAudio * core_audio,
 }
 
 gboolean
-gst_core_audio_initialize (GstCoreAudio * core_audio,
-    AudioStreamBasicDescription format, GstCaps * caps,
+gst_core_audio_initialize (GstCoreAudio *core_audio,
+    AudioStreamBasicDescription format, GstCaps *caps,
     guint32 frames_per_packet, gboolean is_passthrough)
 {
   GST_DEBUG_OBJECT (core_audio,
@@ -352,21 +353,21 @@ gst_core_audio_initialize (GstCoreAudio * core_audio,
 }
 
 void
-gst_core_audio_uninitialize (GstCoreAudio * core_audio)
+gst_core_audio_uninitialize (GstCoreAudio *core_audio)
 {
   buffer_list_free (core_audio->recBufferList);
   core_audio->recBufferList = NULL;
 }
 
 void
-gst_core_audio_set_volume (GstCoreAudio * core_audio, gfloat volume)
+gst_core_audio_set_volume (GstCoreAudio *core_audio, gfloat volume)
 {
   AudioUnitSetParameter (core_audio->audiounit, kHALOutputParam_Volume,
       kAudioUnitScope_Global, 0, (float) volume, 0);
 }
 
 gboolean
-gst_core_audio_select_device (GstCoreAudio * core_audio)
+gst_core_audio_select_device (GstCoreAudio *core_audio)
 {
   return gst_core_audio_select_device_impl (core_audio);
 }
@@ -388,7 +389,7 @@ gst_core_audio_audio_device_is_spdif_avail (AudioDeviceID device_id)
  * (GStreamer is more strict than Core Audio, in that it requires either
  * all channels to be positioned, or all unpositioned.) */
 static gboolean
-_is_core_audio_layout_positioned (AudioChannelLayout * layout)
+_is_core_audio_layout_positioned (AudioChannelLayout *layout)
 {
   guint i;
 
@@ -408,8 +409,8 @@ _is_core_audio_layout_positioned (AudioChannelLayout * layout)
 }
 
 static void
-_core_audio_parse_channel_descriptions (AudioChannelLayout * layout,
-    guint * channels, guint64 * channel_mask, GstAudioChannelPosition * pos)
+_core_audio_parse_channel_descriptions (AudioChannelLayout *layout,
+    guint *channels, guint64 *channel_mask, GstAudioChannelPosition *pos)
 {
   gboolean positioned;
   guint i;
@@ -451,8 +452,8 @@ _core_audio_parse_channel_descriptions (AudioChannelLayout * layout,
 }
 
 gboolean
-gst_core_audio_parse_channel_layout (AudioChannelLayout * layout,
-    guint * channels, guint64 * channel_mask, GstAudioChannelPosition * pos)
+gst_core_audio_parse_channel_layout (AudioChannelLayout *layout,
+    guint *channels, guint64 *channel_mask, GstAudioChannelPosition *pos)
 {
   g_assert (channels != NULL);
   g_assert (channel_mask != NULL);
@@ -588,8 +589,8 @@ gst_core_audio_parse_channel_layout (AudioChannelLayout * layout,
  * than the AU element's total number of channels.
  */
 GstCaps *
-gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd,
-    AudioChannelLayout * layout)
+gst_core_audio_asbd_to_caps (AudioStreamBasicDescription *asbd,
+    AudioChannelLayout *layout)
 {
   GstAudioInfo info;
   GstAudioFormat format = GST_AUDIO_FORMAT_UNKNOWN;
@@ -675,8 +676,8 @@ error:
 }
 
 static gboolean
-_core_audio_get_property (GstCoreAudio * core_audio, gboolean outer,
-    AudioUnitPropertyID inID, void *inData, UInt32 * inDataSize)
+_core_audio_get_property (GstCoreAudio *core_audio, gboolean outer,
+    AudioUnitPropertyID inID, void *inData, UInt32 *inDataSize)
 {
   OSStatus status;
   AudioUnitScope scope;
@@ -694,8 +695,8 @@ _core_audio_get_property (GstCoreAudio * core_audio, gboolean outer,
 }
 
 static gboolean
-_core_audio_get_stream_format (GstCoreAudio * core_audio,
-    AudioStreamBasicDescription * asbd, gboolean outer)
+_core_audio_get_stream_format (GstCoreAudio *core_audio,
+    AudioStreamBasicDescription *asbd, gboolean outer)
 {
   UInt32 size;
 
@@ -705,7 +706,7 @@ _core_audio_get_stream_format (GstCoreAudio * core_audio,
 }
 
 AudioChannelLayout *
-gst_core_audio_get_channel_layout (GstCoreAudio * core_audio, gboolean outer)
+gst_core_audio_get_channel_layout (GstCoreAudio *core_audio, gboolean outer)
 {
   UInt32 size;
   AudioChannelLayout *layout;
@@ -738,7 +739,7 @@ gst_core_audio_get_channel_layout (GstCoreAudio * core_audio, gboolean outer)
    GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT))
 
 GstCaps *
-gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
+gst_core_audio_probe_caps (GstCoreAudio *core_audio, GstCaps *in_caps)
 {
   guint i, channels;
   gboolean spdif_allowed;
@@ -757,7 +758,7 @@ gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
   /* Collect info about the HW capabilities and preferences */
   spdif_allowed =
       gst_core_audio_audio_device_is_spdif_avail (core_audio->device_id);
-  if (!core_audio->is_src)
+  if (!core_audio->is_src && core_audio->channel_layout)
     layout = gst_core_audio_get_channel_layout (core_audio, TRUE);
   else
     layout = NULL;              /* no supported for sources */

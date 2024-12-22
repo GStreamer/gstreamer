@@ -29,20 +29,20 @@
 #include <gst/gst.h>
 #include <gst/audio/audio-channels.h>
 #ifdef HAVE_IOS
-  #include <CoreAudio/CoreAudioTypes.h>
-  #define AudioDeviceID gint
-  #define kAudioDeviceUnknown 0
+#include <CoreAudio/CoreAudioTypes.h>
+#define AudioDeviceID gint
+#define kAudioDeviceUnknown 0
 #else
-  #include <CoreAudio/CoreAudio.h>
-  #include <AudioToolbox/AudioToolbox.h>
-  #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-    #include <CoreServices/CoreServices.h>
-    #define AudioComponentFindNext FindNextComponent
-    #define AudioComponentInstanceNew OpenAComponent
-    #define AudioComponentInstanceDispose CloseComponent
-    #define AudioComponent Component
-    #define AudioComponentDescription ComponentDescription
-  #endif
+#include <CoreAudio/CoreAudio.h>
+#include <AudioToolbox/AudioToolbox.h>
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+#include <CoreServices/CoreServices.h>
+#define AudioComponentFindNext FindNextComponent
+#define AudioComponentInstanceNew OpenAComponent
+#define AudioComponentInstanceDispose CloseComponent
+#define AudioComponent Component
+#define AudioComponentDescription ComponentDescription
+#endif
 #endif
 #include <AudioUnit/AudioUnit.h>
 #include <mach/mach_time.h>
@@ -50,7 +50,6 @@
 
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_CORE_AUDIO \
   (gst_core_audio_get_type())
 #define GST_CORE_AUDIO(obj) \
@@ -63,18 +62,13 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CORE_AUDIO))
 #define GST_IS_CORE_AUDIO_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CORE_AUDIO))
-
 #define GST_OSX_AUDIO_MAX_CHANNEL (64)
-
 #define CORE_AUDIO_FORMAT_IS_SPDIF(f) ((f).mFormat.mFormatID == 'IAC3' || (f).mFormat.mFormatID == 'iac3' || (f).mFormat.mFormatID == kAudioFormat60958AC3 || (f).mFormat.mFormatID == kAudioFormatAC3)
-
 #define CORE_AUDIO_FORMAT "FormatID: %" GST_FOURCC_FORMAT " rate: %f flags: 0x%x BytesPerPacket: %u FramesPerPacket: %u BytesPerFrame: %u ChannelsPerFrame: %u BitsPerChannel: %u"
 #define CORE_AUDIO_FORMAT_ARGS(f) GST_FOURCC_ARGS((unsigned int)(f).mFormatID),(f).mSampleRate,(unsigned int)(f).mFormatFlags,(unsigned int)(f).mBytesPerPacket,(unsigned int)(f).mFramesPerPacket,(unsigned int)(f).mBytesPerFrame,(unsigned int)(f).mChannelsPerFrame,(unsigned int)(f).mBitsPerChannel
-
 #define CORE_AUDIO_INNER_SCOPE(core_audio) ((core_audio)->is_src ? kAudioUnitScope_Output : kAudioUnitScope_Input)
 #define CORE_AUDIO_OUTER_SCOPE(core_audio) ((core_audio)->is_src ? kAudioUnitScope_Input : kAudioUnitScope_Output)
 #define CORE_AUDIO_ELEMENT(core_audio) ((core_audio)->is_src ? 1 : 0)
-
 typedef struct _GstCoreAudio GstCoreAudio;
 typedef struct _GstCoreAudioClass GstCoreAudioClass;
 
@@ -92,15 +86,18 @@ struct _GstCoreAudio
   gboolean is_passthrough;
   AudioDeviceID device_id;
   gboolean is_default;
-  gboolean cached_caps_valid; /* thread-safe flag */
+  gboolean cached_caps_valid;   /* thread-safe flag */
   GstCaps *cached_caps;
   gint stream_idx;
   gboolean io_proc_active;
   gboolean io_proc_needs_deactivation;
+  /* TODO: temporary fix for multichannel misaligned ordering 
+   * Centricular will analyze and provide a better one */
+  gboolean channel_layout;
 
   /* For LPCM in/out */
   AudioUnit audiounit;
-  UInt32 recBufferSize; /* AudioUnitRender clobbers mDataByteSize */
+  UInt32 recBufferSize;         /* AudioUnitRender clobbers mDataByteSize */
   AudioBufferList *recBufferList;
 
 #ifndef HAVE_IOS
@@ -125,58 +122,51 @@ struct _GstCoreAudioClass
   GObjectClass parent_class;
 };
 
-GType gst_core_audio_get_type                                (void);
+GType gst_core_audio_get_type (void);
 
 void gst_core_audio_init_debug (void);
 
-GstCoreAudio * gst_core_audio_new                            (GstObject *osxbuf);
+GstCoreAudio *gst_core_audio_new (GstObject * osxbuf);
 
-gboolean gst_core_audio_open                                 (GstCoreAudio *core_audio);
+gboolean gst_core_audio_open (GstCoreAudio * core_audio);
 
-gboolean gst_core_audio_close                                (GstCoreAudio *core_audio);
+gboolean gst_core_audio_close (GstCoreAudio * core_audio);
 
-gboolean gst_core_audio_initialize                           (GstCoreAudio *core_audio,
-                                                              AudioStreamBasicDescription format,
-                                                              GstCaps *caps,
-                                                              guint32 frames_per_packet,
-                                                              gboolean is_passthrough);
+gboolean gst_core_audio_initialize (GstCoreAudio * core_audio,
+    AudioStreamBasicDescription format,
+    GstCaps * caps, guint32 frames_per_packet, gboolean is_passthrough);
 
-void gst_core_audio_uninitialize                             (GstCoreAudio *core_audio);
+void gst_core_audio_uninitialize (GstCoreAudio * core_audio);
 
-gboolean gst_core_audio_start_processing                     (GstCoreAudio *core_audio);
+gboolean gst_core_audio_start_processing (GstCoreAudio * core_audio);
 
-gboolean gst_core_audio_pause_processing                     (GstCoreAudio *core_audio);
+gboolean gst_core_audio_pause_processing (GstCoreAudio * core_audio);
 
-gboolean gst_core_audio_stop_processing                      (GstCoreAudio *core_audio);
+gboolean gst_core_audio_stop_processing (GstCoreAudio * core_audio);
 
-gboolean gst_core_audio_get_samples_and_latency              (GstCoreAudio * core_audio,
-                                                              gdouble rate,
-                                                              guint *samples,
-                                                              gdouble *latency);
+gboolean gst_core_audio_get_samples_and_latency (GstCoreAudio * core_audio,
+    gdouble rate, guint * samples, gdouble * latency);
 
-void gst_core_audio_update_timing                            (GstCoreAudio * core_audio,
-                                                              const AudioTimeStamp * inTimeStamp,
-                                                              unsigned int inNumberFrames);
+void gst_core_audio_update_timing (GstCoreAudio * core_audio,
+    const AudioTimeStamp * inTimeStamp, unsigned int inNumberFrames);
 
-void  gst_core_audio_set_volume                              (GstCoreAudio *core_audio,
-                                                              gfloat volume);
+void gst_core_audio_set_volume (GstCoreAudio * core_audio, gfloat volume);
 
-gboolean gst_core_audio_audio_device_is_spdif_avail          (AudioDeviceID device_id);
+gboolean gst_core_audio_audio_device_is_spdif_avail (AudioDeviceID device_id);
 
 
-gboolean gst_core_audio_select_device                        (GstCoreAudio * core_audio);
+gboolean gst_core_audio_select_device (GstCoreAudio * core_audio);
 
-GstCaps *
-gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps);
+GstCaps *gst_core_audio_probe_caps (GstCoreAudio * core_audio,
+    GstCaps * in_caps);
 
-AudioChannelLayout *
-gst_core_audio_get_channel_layout (GstCoreAudio * core_audio, gboolean outer);
+AudioChannelLayout *gst_core_audio_get_channel_layout (GstCoreAudio *
+    core_audio, gboolean outer);
 
 gboolean gst_core_audio_parse_channel_layout (AudioChannelLayout * layout,
     guint * channels, guint64 * channel_mask, GstAudioChannelPosition * pos);
-GstCaps * gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd,
+GstCaps *gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd,
     AudioChannelLayout * layout);
 
 G_END_DECLS
-
 #endif /* __GST_CORE_AUDIO_H__ */
