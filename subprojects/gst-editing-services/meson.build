@@ -176,34 +176,50 @@ elif build_gir and python.found()
     fsmod = import('fs')
     pylib_prefix = 'lib'
     pylib_suffix = 'so'
+    pylib_ver = python_dep.version()
+    pylib_locs = []
     if host_system == 'windows'
       if cc.get_argument_syntax() == 'msvc'
         pylib_prefix = ''
       endif
       pylib_suffix = 'dll'
+      pylib_ver = pylib_ver.replace('.', '')
     elif host_system == 'darwin'
       pylib_suffix = 'dylib'
     endif
     pylib_fnames = []
     # Library name with soversion, non-devel package
-    pylib_fnames += python.get_variable('INSTSONAME', [])
+    if python.has_variable('INSTSONAME')
+      pylib_fnames += python.get_variable('INSTSONAME')
+    endif
     # Library name without soversion, devel package, framework, etc.
-    pylib_fnames += python.get_variable('LDLIBRARY', [])
+    if python.has_variable('LDLIBRARY')
+      pylib_fnames += python.get_variable('LDLIBRARY')
+    endif
     # Manually construct name as a fallback
     pylib_fnames += [
-      pylib_prefix + 'python' + python_dep.version() + python_abi_flags + '.' + pylib_suffix
+      pylib_prefix + 'python' + pylib_ver + python_abi_flags + '.' + pylib_suffix
     ]
     if pylib_loc != ''
       pylib_locs = [pylib_loc]
     else
-      pylib_locs = [
-        python.get_variable('LIBDIR', ''),
-        python.get_variable('LIBPL', ''),
-      ]
+      if python.has_variable('LIBDIR')
+        pylib_locs += python.get_variable('LIBDIR')
+      endif
+      if python.has_variable('LIBPL')
+        pylib_locs += python.get_variable('LIBPL')
+      endif
+      # On Windows, python312.dll is in the rootdir where Python is installed,
+      # which is configured as the "prefix" in sysconfig.
+      if host_system == 'windows'
+        pylib_locs += python.get_variable('prefix')
+      endif
     endif
     foreach loc: pylib_locs
       foreach fname: pylib_fnames
-        if fsmod.exists(loc / fname)
+        fpath = loc / fname
+        debug(f'Looking for Python library at: @fpath@')
+        if fsmod.exists(fpath)
           libges_deps = libges_deps + [python_dep, gmodule_dep, libdl]
           has_python = true
           cdata.set('HAS_PYTHON', true)
@@ -214,12 +230,7 @@ elif build_gir and python.found()
       endforeach
     endforeach
     if not has_python
-      error_msg = 'Could not find python library to load'
-      if python_opt.enabled()
-        error(error_msg)
-      else
-        message(error_msg)
-      endif
+      message('Could not find python library to load, will try loading at runtime')
     endif
   endif
 endif
