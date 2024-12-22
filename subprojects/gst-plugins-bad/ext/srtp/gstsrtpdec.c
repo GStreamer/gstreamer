@@ -1386,10 +1386,11 @@ err:
 }
 
 /*
- * This function should be called while holding the filter lock
+ * This function should be called while holding the filter lock.
+ * The decoded buffer is stored in-place of the input @buf.
  */
 static gboolean
-gst_srtp_dec_decode_buffer (GstSrtpDec * filter, GstPad * pad, GstBuffer * buf,
+gst_srtp_dec_decode_buffer (GstSrtpDec * filter, GstPad * pad, GstBuffer ** buf,
     gboolean is_rtcp, guint32 ssrc)
 {
   GstMapInfo map;
@@ -1397,14 +1398,16 @@ gst_srtp_dec_decode_buffer (GstSrtpDec * filter, GstPad * pad, GstBuffer * buf,
   gint size;
   GstSrtpDecSsrcStream *stream;
 
+  g_return_val_if_fail (GST_IS_BUFFER (*buf), FALSE);
+
   GST_LOG_OBJECT (pad, "Received %s buffer of size %" G_GSIZE_FORMAT
-      " with SSRC = %u", is_rtcp ? "RTCP" : "RTP", gst_buffer_get_size (buf),
+      " with SSRC = %u", is_rtcp ? "RTCP" : "RTP", gst_buffer_get_size (*buf),
       ssrc);
   filter->recv_count++;
   /* Change buffer to remove protection */
-  buf = gst_buffer_make_writable (buf);
+  *buf = gst_buffer_make_writable (*buf);
 
-  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
+  gst_buffer_map (*buf, &map, GST_MAP_READWRITE);
   size = map.size;
 
 unprotect:
@@ -1434,7 +1437,7 @@ unprotect:
         guint16 seqnum = 0;
         GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
 
-        gst_rtp_buffer_map (buf,
+        gst_rtp_buffer_map (*buf,
             GST_MAP_READ | GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING, &rtpbuf);
         seqnum = gst_rtp_buffer_get_seq (&rtpbuf);
         gst_rtp_buffer_unmap (&rtpbuf);
@@ -1510,13 +1513,13 @@ unprotect:
       stream->recv_drop_count++;
       goto err;
   }
-  gst_buffer_unmap (buf, &map);
-  gst_buffer_set_size (buf, size);
+  gst_buffer_unmap (*buf, &map);
+  gst_buffer_set_size (*buf, size);
   return TRUE;
 
 err:
   filter->recv_drop_count++;
-  gst_buffer_unmap (buf, &map);
+  gst_buffer_unmap (*buf, &map);
   return FALSE;
 }
 
@@ -1545,7 +1548,7 @@ gst_srtp_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
     goto push_out;
   }
 
-  if (!gst_srtp_dec_decode_buffer (filter, pad, buf, is_rtcp, ssrc)) {
+  if (!gst_srtp_dec_decode_buffer (filter, pad, &buf, is_rtcp, ssrc)) {
     GST_OBJECT_UNLOCK (filter);
     goto drop_buffer;
   }
