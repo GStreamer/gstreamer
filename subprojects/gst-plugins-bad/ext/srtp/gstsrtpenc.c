@@ -327,13 +327,11 @@ gst_srtp_enc_class_init (GstSrtpEncClass * klass)
   g_object_class_install_property (gobject_class, PROP_STATS,
       g_param_spec_boxed ("stats", "Statistics", "Various statistics",
           GST_TYPE_STRUCTURE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-#ifdef HAVE_SRTP2
   g_object_class_install_property (gobject_class, PROP_MKI,
       g_param_spec_boxed ("mki", "MKI",
           "Master key Identifier (NULL means no MKI)", GST_TYPE_BUFFER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
-#endif
 
   /**
    * GstSrtpEnc::soft-limit:
@@ -388,12 +386,10 @@ gst_srtp_enc_create_session (GstSrtpEnc * filter)
   srtp_policy_t policy;
   GstMapInfo map;
   guchar tmp[1];
-#ifdef HAVE_SRTP2
   srtp_master_key_t mkey;
   srtp_master_key_t *mkey_ptr = &mkey;
   gboolean has_mki = FALSE;
   GstMapInfo mki_map;
-#endif
 
   memset (&policy, 0, sizeof (srtp_policy_t));
 
@@ -438,7 +434,6 @@ gst_srtp_enc_create_session (GstSrtpEnc * filter)
     policy.key = tmp;
   }
 
-#ifdef HAVE_SRTP2
   if (filter->mki) {
     if (!gst_buffer_map (filter->mki, &mki_map, GST_MAP_READ)) {
       GST_OBJECT_UNLOCK (filter);
@@ -459,7 +454,6 @@ gst_srtp_enc_create_session (GstSrtpEnc * filter)
     mkey.mki_id = (guchar *) mki_map.data;
     mkey.mki_size = mki_map.size;
   }
-#endif
 
   policy.ssrc.value = 0;
   policy.ssrc.type = ssrc_any_outbound;
@@ -474,12 +468,10 @@ gst_srtp_enc_create_session (GstSrtpEnc * filter)
   ret = srtp_create (&filter->session, &policy);
   filter->first_session = FALSE;
 
-#ifdef HAVE_SRTP2
 done:
 
   if (has_mki)
     gst_buffer_unmap (filter->mki, &mki_map);
-#endif
 
   if (HAS_CRYPTO (filter))
     gst_buffer_unmap (filter->key, &map);
@@ -750,14 +742,12 @@ gst_srtp_enc_set_property (GObject * object, guint prop_id,
     case PROP_ALLOW_REPEAT_TX:
       filter->allow_repeat_tx = g_value_get_boolean (value);
       break;
-#ifdef HAVE_SRTP2
     case PROP_MKI:
       gst_clear_buffer (&filter->mki);
       filter->mki = g_value_dup_boxed (value);
       filter->key_changed = TRUE;
       GST_INFO_OBJECT (object, "Set property: mki=[%p]", filter->mki);
       break;
-#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -802,12 +792,10 @@ gst_srtp_enc_get_property (GObject * object, guint prop_id,
     case PROP_STATS:
       g_value_take_boxed (value, gst_srtp_enc_create_stats (filter));
       break;
-#ifdef HAVE_SRTP2
     case PROP_MKI:
       if (filter->mki)
         g_value_set_boxed (value, filter->mki);
       break;
-#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -892,10 +880,8 @@ gst_srtp_enc_sink_setcaps (GstPad * pad, GstSrtpEnc * filter,
   if (HAS_CRYPTO (filter))
     gst_structure_set (ps, "srtp-key", GST_TYPE_BUFFER, filter->key, NULL);
 
-#ifdef HAVE_SRTP2
   if (filter->mki)
     gst_structure_set (ps, "mki", GST_TYPE_BUFFER, filter->mki, NULL);
-#endif
 
   /* Add srtp-specific params to source caps */
   gst_structure_set (ps,
@@ -1156,19 +1142,12 @@ gst_srtp_enc_process_buffer (GstSrtpEnc * filter, GstPad * pad,
 
   gst_srtp_enc_ensure_ssrc (filter, buf);
 
-#ifdef HAVE_SRTP2
   if (is_rtcp)
     err = srtp_protect_rtcp_mki (filter->session, mapout.data, &size,
         (filter->mki != NULL), 0);
   else
     err = srtp_protect_mki (filter->session, mapout.data, &size,
         (filter->mki != NULL), 0);
-#else
-  if (is_rtcp)
-    err = srtp_protect_rtcp (filter->session, mapout.data, &size);
-  else
-    err = srtp_protect (filter->session, mapout.data, &size);
-#endif
 
   GST_OBJECT_UNLOCK (filter);
 

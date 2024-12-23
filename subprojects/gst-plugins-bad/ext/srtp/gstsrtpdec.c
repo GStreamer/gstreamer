@@ -233,13 +233,11 @@ struct _GstSrtpDecSsrcStream
   guint recv_drop_count;
 };
 
-#ifdef HAVE_SRTP2
 struct GstSrtpDecKey
 {
   GstBuffer *mki;
   GstBuffer *key;
 };
-#endif
 
 #define STREAM_HAS_CRYPTO(stream)                       \
   (stream->rtp_cipher != GST_SRTP_CIPHER_NULL ||        \
@@ -538,7 +536,6 @@ find_stream_by_ssrc (GstSrtpDec * filter, guint32 ssrc)
   return g_hash_table_lookup (filter->streams, GUINT_TO_POINTER (ssrc));
 }
 
-#ifdef HAVE_SRTP2
 static void
 clear_key (gpointer data)
 {
@@ -547,8 +544,6 @@ clear_key (gpointer data)
   gst_clear_buffer (&key->mki);
   gst_clear_buffer (&key->key);
 }
-#endif
-
 
 /* get info from buffer caps
  */
@@ -607,15 +602,12 @@ get_stream_from_caps (GstSrtpDec * filter, GstCaps * caps, guint32 ssrc)
   }
 
   if (gst_structure_get (s, "srtp-key", GST_TYPE_BUFFER, &buf, NULL) && buf) {
-#ifdef HAVE_SRTP2
     GstBuffer *mki = NULL;
     guint i;
     gsize mki_size = 0;
-#endif
 
     GST_DEBUG_OBJECT (filter, "Got key [%p] for SSRC %u", buf, ssrc);
 
-#ifdef HAVE_SRTP2
     if (gst_structure_get (s, "mki", GST_TYPE_BUFFER, &mki, NULL) && mki) {
       struct GstSrtpDecKey key = {.mki = mki,.key = buf };
 
@@ -659,9 +651,7 @@ get_stream_from_caps (GstSrtpDec * filter, GstCaps * caps, guint32 ssrc)
           break;
         }
       }
-    } else
-#endif
-    {
+    } else {
       stream->key = buf;
     }
   } else if (STREAM_HAS_CRYPTO (stream)) {
@@ -700,10 +690,8 @@ init_session_stream (GstSrtpDec * filter, guint32 ssrc,
   srtp_policy_t policy;
   GstMapInfo map;
   guchar tmp[1];
-#ifdef HAVE_SRTP2
   GstMapInfo *key_maps = NULL;
   GstMapInfo *mki_maps = NULL;
-#endif
 
   memset (&policy, 0, sizeof (srtp_policy_t));
 
@@ -717,7 +705,6 @@ init_session_stream (GstSrtpDec * filter, guint32 ssrc,
   set_crypto_policy_cipher_auth (stream->rtcp_cipher, stream->rtcp_auth,
       &policy.rtcp);
 
-#ifdef HAVE_SRTP2
   if (stream->keys) {
     guint i;
     srtp_master_key_t *keys;
@@ -740,9 +727,7 @@ init_session_stream (GstSrtpDec * filter, guint32 ssrc,
       policy.keys[i]->mki_size = mki_maps[i].size;
     }
     policy.num_master_keys = stream->keys->len;
-  } else
-#endif
-  if (stream->key) {
+  } else if (stream->key) {
     gst_buffer_map (stream->key, &map, GST_MAP_READ);
     policy.key = (guchar *) map.data;
   } else {
@@ -765,7 +750,6 @@ init_session_stream (GstSrtpDec * filter, guint32 ssrc,
   if (stream->key)
     gst_buffer_unmap (stream->key, &map);
 
-#ifdef HAVE_SRTP2
   if (key_maps) {
     guint i;
 
@@ -777,22 +761,12 @@ init_session_stream (GstSrtpDec * filter, guint32 ssrc,
     }
 
   }
-#endif
 
   if (ret == srtp_err_status_ok) {
     srtp_err_status_t status;
 
     status = srtp_set_stream_roc (filter->session, ssrc, stream->roc);
-#ifdef HAVE_SRTP2
     (void) status;              /* Ignore unused variable */
-#else
-    if (status == srtp_err_status_ok) {
-      /* Here, we just set the ROC, but we also need to set the initial
-       * RTP sequence number later, otherwise libsrtp will not be able
-       * to get the right packet index. */
-      g_hash_table_add (filter->streams_roc_changed, GUINT_TO_POINTER (ssrc));
-    }
-#endif
 
     filter->first_session = FALSE;
     g_hash_table_insert (filter->streams, GUINT_TO_POINTER (stream->ssrc),
@@ -880,7 +854,6 @@ buffers_are_equal (GstBuffer * a, GstBuffer * b)
 static gboolean
 keys_are_equal (GArray * a, GArray * b)
 {
-#ifdef HAVE_SRTP2
   guint i;
 
   if (a == b)
@@ -906,9 +879,6 @@ keys_are_equal (GArray * a, GArray * b)
   }
 
   return TRUE;
-#else
-  return FALSE;
-#endif
 }
 
 /* Create new stream from params in caps
@@ -1368,54 +1338,15 @@ unprotect:
   gst_srtp_init_event_reporter ();
 
   if (is_rtcp) {
-#ifdef HAVE_SRTP2
     stream = find_stream_by_ssrc (filter, ssrc);
 
     err = srtp_unprotect_rtcp_mki (filter->session, map.data, &size,
         stream && stream->keys);
-#else
-    err = srtp_unprotect_rtcp (filter->session, map.data, &size);
-#endif
   } else {
-#ifndef HAVE_SRTP2
-    /* If ROC has changed, we know we need to set the initial RTP
-     * sequence number too. */
-    if (g_hash_table_contains (filter->streams_roc_changed,
-            GUINT_TO_POINTER (ssrc))) {
-      srtp_stream_t stream;
+    stream = find_stream_by_ssrc (filter, ssrc);
 
-      stream = srtp_get_stream (filter->session, htonl (ssrc));
-
-      if (stream) {
-        guint16 seqnum = 0;
-        GstRTPBuffer rtpbuf = GST_RTP_BUFFER_INIT;
-
-        gst_rtp_buffer_map (*buf,
-            GST_MAP_READ | GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING, &rtpbuf);
-        seqnum = gst_rtp_buffer_get_seq (&rtpbuf);
-        gst_rtp_buffer_unmap (&rtpbuf);
-
-        /* We finally add the RTP sequence number to the current
-         * rollover counter. */
-        stream->rtp_rdbx.index &= ~0xFFFF;
-        stream->rtp_rdbx.index |= seqnum;
-      }
-
-      g_hash_table_remove (filter->streams_roc_changed,
-          GUINT_TO_POINTER (ssrc));
-    }
-#endif
-
-#ifdef HAVE_SRTP2
-    {
-      stream = find_stream_by_ssrc (filter, ssrc);
-
-      err = srtp_unprotect_mki (filter->session, map.data, &size,
-          stream && stream->keys);
-    }
-#else
-    err = srtp_unprotect (filter->session, map.data, &size);
-#endif
+    err = srtp_unprotect_mki (filter->session, map.data, &size,
+        stream && stream->keys);
   }
   stream = find_stream_by_ssrc (filter, ssrc);
   if (stream == NULL) {
@@ -1571,12 +1502,6 @@ gst_srtp_dec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       filter->streams = g_hash_table_new_full (g_direct_hash, g_direct_equal,
           NULL, (GDestroyNotify) free_stream);
-
-#ifndef HAVE_SRTP2
-      filter->streams_roc_changed =
-          g_hash_table_new (g_direct_hash, g_direct_equal);
-#endif
-
       filter->rtp_has_segment = FALSE;
       filter->rtcp_has_segment = FALSE;
       filter->recv_count = 0;
@@ -1600,11 +1525,6 @@ gst_srtp_dec_change_state (GstElement * element, GstStateChange transition)
       gst_srtp_dec_clear_streams (filter);
       g_hash_table_unref (filter->streams);
       filter->streams = NULL;
-#ifndef HAVE_SRTP2
-      g_hash_table_unref (filter->streams_roc_changed);
-      filter->streams_roc_changed = NULL;
-#endif
-
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

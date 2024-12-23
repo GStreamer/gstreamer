@@ -31,36 +31,6 @@
 #include "gstsrtpenc.h"
 #include "gstsrtpdec.h"
 
-#ifndef HAVE_SRTP2
-srtp_err_status_t
-srtp_set_stream_roc (srtp_t session, guint32 ssrc, guint32 roc)
-{
-  srtp_stream_t stream;
-
-  stream = srtp_get_stream (session, htonl (ssrc));
-  if (stream == NULL) {
-    return srtp_err_status_bad_param;
-  }
-
-  rdbx_set_roc (&stream->rtp_rdbx, roc);
-  return srtp_err_status_ok;
-}
-
-srtp_err_status_t
-srtp_get_stream_roc (srtp_t session, guint32 ssrc, guint32 * roc)
-{
-  srtp_stream_t stream;
-
-  stream = srtp_get_stream (session, htonl (ssrc));
-  if (stream == NULL) {
-    return srtp_err_status_bad_param;
-  }
-
-  *roc = stream->rtp_rdbx.index >> 16;
-  return srtp_err_status_ok;
-}
-#endif
-
 static void free_reporter_data (gpointer data);
 
 GPrivate current_callback = G_PRIVATE_INIT (free_reporter_data);

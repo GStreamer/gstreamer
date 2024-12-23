@@ -54,41 +54,8 @@
 
 #include <gst/gst.h>
 
-#ifdef HAVE_SRTP2
-#  include <srtp2/srtp.h>
-#  include <srtp2/crypto_types.h>
-#else
-#  include <srtp/srtp.h>
-#  include <srtp/srtp_priv.h>
-#  include <srtp/crypto_types.h>
-
-#  define srtp_crypto_policy_t crypto_policy_t
-#  define SRTP_AES_ICM_128 AES_ICM
-#  define SRTP_AES_ICM_256 AES_ICM
-#  define SRTP_AES_GCM_128 AES_128_GCM
-#  define SRTP_AES_GCM_256 AES_256_GCM
-#  define SRTP_NULL_CIPHER NULL_CIPHER
-#  define SRTP_AES_ICM_128_KEY_LEN_WSALT 30
-#  define SRTP_AES_ICM_256_KEY_LEN_WSALT 46
-#  define SRTP_AES_GCM_128_KEY_LEN_WSALT AES_128_GCM_KEYSIZE_WSALT
-#  define SRTP_AES_GCM_256_KEY_LEN_WSALT AES_256_GCM_KEYSIZE_WSALT
-#  define SRTP_HMAC_SHA1 HMAC_SHA1
-#  define SRTP_NULL_AUTH NULL_AUTH
-#  define srtp_err_status_t err_status_t
-#  define srtp_err_status_ok err_status_ok
-#  define srtp_err_status_bad_param err_status_bad_param
-#  define srtp_err_status_replay_fail err_status_replay_fail
-#  define srtp_err_status_replay_old err_status_replay_old
-#  define srtp_err_status_key_expired err_status_key_expired
-#  define srtp_err_status_auth_fail err_status_auth_fail
-#  define srtp_err_status_cipher_fail err_status_cipher_fail
-#  define srtp_err_status_fail err_status_fail
-
-srtp_err_status_t srtp_set_stream_roc (srtp_t session, guint32 ssrc,
-    guint32 roc);
-srtp_err_status_t srtp_get_stream_roc (srtp_t session, guint32 ssrc,
-    guint32 * roc);
-#endif
+#include <srtp2/srtp.h>
+#include <srtp2/crypto_types.h>
 
 void     gst_srtp_init_event_reporter    (void);
 gboolean gst_srtp_get_soft_limit_reached (void);
