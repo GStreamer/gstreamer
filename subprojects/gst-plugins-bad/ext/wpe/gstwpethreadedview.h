@@ -65,7 +65,7 @@ public:
     void notifyLoadFinished();
 
 protected:
-    void handleExportedImage(gpointer);
+    void handleExportedImage(struct wpe_fdo_egl_exported_image*);
     void handleExportedBuffer(struct wpe_fdo_shm_exported_buffer*);
 
 private:
@@ -73,7 +73,7 @@ private:
     void frameComplete();
     void loadUriUnlocked(const gchar*);
 
-    void releaseImage(gpointer);
+    void releaseImage(struct wpe_fdo_egl_exported_image *);
     void releaseSHMBuffer(gpointer);
     static void s_releaseSHMBuffer(gpointer);
 
