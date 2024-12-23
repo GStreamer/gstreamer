@@ -1307,13 +1307,18 @@ caps_error:
   }
 }
 
+/* Must be called holding the GST_VIDEO_DECODER_STREAM_LOCK */
 static gboolean
-gst_video_decoder_handle_missing_data_default (GstVideoDecoder *
-    decoder, GstClockTime timestamp, GstClockTime duration)
+gst_video_decoder_handle_missing_data_default (GstVideoDecoder * decoder,
+    GstClockTime timestamp, GstClockTime duration)
 {
   GstVideoDecoderPrivate *priv;
 
   priv = decoder->priv;
+
+  /* Exit early in case the decoder has been resetted and hasn't received a new segment event yet. */
+  if (decoder->input_segment.format != GST_FORMAT_TIME)
+    return FALSE;
 
   if (priv->automatic_request_sync_points) {
     GstClockTime deadline =
