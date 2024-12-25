@@ -157,6 +157,72 @@ GST_START_TEST (test_parse_adts_detect_mpeg_version)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_adts_reuse)
+{
+  GstElement *aacparse;
+  GstPad *sinkpad;
+  GstPad *srcpad;
+
+  aacparse = gst_element_factory_make ("aacparse", NULL);
+
+  gst_element_set_state (aacparse, GST_STATE_PLAYING);
+
+  sinkpad = gst_element_get_static_pad (aacparse, "sink");
+  srcpad = gst_element_get_static_pad (aacparse, "src");
+
+  GstEvent *streamstart_event = gst_event_new_stream_start ("test");
+
+  GstCaps *caps = gst_caps_from_string (SINK_CAPS_MPEG2);
+  GstEvent *caps_event = gst_event_new_caps (caps);
+  gst_clear_caps (&caps);
+
+  GstSegment segment;
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  GstEvent *segment_event = gst_event_new_segment (&segment);
+
+  GstBuffer *buf;
+  buf = gst_buffer_new_memdup (adts_frame_mpeg2, sizeof (adts_frame_mpeg2));
+
+  // Send start-up events
+  fail_unless (gst_pad_send_event (sinkpad, gst_event_ref (streamstart_event)));
+  fail_unless (gst_pad_send_event (sinkpad, gst_event_ref (caps_event)));
+  fail_unless (gst_pad_send_event (sinkpad, gst_event_ref (segment_event)));
+
+  // Send Buffer
+  fail_unless_equals_int (gst_pad_chain (sinkpad, gst_buffer_ref (buf)),
+      GST_FLOW_OK);
+
+  // Send EOS (so it can parse the single frame without next frame sync)
+  gst_pad_send_event (sinkpad, gst_event_new_eos ());
+
+  // Should have output caps now
+  fail_unless (gst_pad_has_current_caps (srcpad));
+
+  // Shut down and start up again
+  gst_element_set_state (aacparse, GST_STATE_NULL);
+  fail_if (gst_pad_has_current_caps (srcpad));
+
+  gst_element_set_state (aacparse, GST_STATE_PLAYING);
+  fail_if (gst_pad_has_current_caps (srcpad));
+
+  fail_unless (gst_pad_send_event (sinkpad, streamstart_event));
+  fail_unless (gst_pad_send_event (sinkpad, caps_event));
+  fail_unless (gst_pad_send_event (sinkpad, segment_event));
+  fail_unless_equals_int (gst_pad_chain (sinkpad, buf), GST_FLOW_OK);
+  gst_pad_send_event (sinkpad, gst_event_new_eos ());
+
+  // Should have output caps again
+  fail_unless (gst_pad_has_current_caps (srcpad));
+
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+
+  gst_element_set_state (aacparse, GST_STATE_NULL);
+  gst_object_unref (aacparse);
+}
+
+GST_END_TEST;
+
 /*
  * Test if the parser correctly handles short raw frames and doesn't
  * concatenate them.
@@ -296,6 +362,7 @@ aacparse_suite (void)
   tcase_add_test (tc_chain, test_parse_adts_split);
   tcase_add_test (tc_chain, test_parse_adts_skip_garbage);
   tcase_add_test (tc_chain, test_parse_adts_detect_mpeg_version);
+  tcase_add_test (tc_chain, test_parse_adts_reuse);
 
   /* Raw tests */
   tcase_add_test (tc_chain, test_parse_raw_short);
