@@ -45,6 +45,7 @@ public:
     void loadData(GBytes*);
     void runJavascript(const gchar*);
     void setDrawBackground(gboolean);
+    void clearBuffers();
 
     GstEGLImage* image();
     GstBuffer* buffer();

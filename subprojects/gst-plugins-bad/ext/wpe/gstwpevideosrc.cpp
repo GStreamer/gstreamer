@@ -329,6 +329,11 @@ gst_wpe_video_src_start (GstWpeVideoSrc * src)
     return FALSE;
   }
 
+  if (!created_view) {
+    GST_INFO_OBJECT (src, "Re-starting after re-negotiation, clearing cached SHM buffers");
+    src->view->clearBuffers ();
+  }
+
   GST_OBJECT_LOCK (src);
   bytes = src->bytes;
   src->bytes = NULL;
