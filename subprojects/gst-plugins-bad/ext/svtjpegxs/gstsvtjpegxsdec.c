@@ -30,6 +30,8 @@
 GST_DEBUG_CATEGORY_STATIC (svtjpegxsdec_debug);
 #define GST_CAT_DEFAULT svtjpegxsdec_debug
 
+#define GST_JPEG_XS_DEC_FLOW_DROP_FRAME (GST_FLOW_CUSTOM_ERROR - 1000)
+
 static const uint8_t BLOCKING = 1;
 
 typedef struct _GstSvtJpegXsDec
@@ -504,6 +506,7 @@ gst_svt_jpeg_xs_dec_decode_codestream (GstSvtJpegXsDec * jxsdec,
       goto get_frame_error;
   }
 
+  GST_TRACE_OBJECT (jxsdec, "Decoding finished OK");
   return GST_FLOW_OK;
 
 send_packet_error:
@@ -517,8 +520,13 @@ get_frame_error:
   {
     GstFlowReturn flow = GST_FLOW_ERROR;
 
+    GST_TRACE_OBJECT (jxsdec, "Decoding error 0x%08x", dec_ret);
+
     GST_VIDEO_DECODER_ERROR (jxsdec, 1, STREAM, DECODE,
         (NULL), ("Error decoding image, error code 0x%08x", dec_ret), flow);
+
+    if (flow == GST_FLOW_OK)
+      flow = GST_JPEG_XS_DEC_FLOW_DROP_FRAME;
 
     return flow;
   }
@@ -576,8 +584,12 @@ gst_svt_jpeg_xs_dec_handle_frame (GstVideoDecoder * vdecoder,
     in_map.memory = NULL;
   }
 
-  // And output!
-  flow = gst_video_decoder_finish_frame (vdecoder, frame);
+  // And output! (or drop)
+  if (flow == GST_FLOW_OK) {
+    flow = gst_video_decoder_finish_frame (vdecoder, frame);
+  } else {
+    flow = gst_video_decoder_drop_frame (vdecoder, frame);
+  }
 
   frame = NULL;
 
