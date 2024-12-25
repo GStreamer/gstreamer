@@ -711,6 +711,37 @@ void GstWPEThreadedView::resize(int width, int height)
     });
 }
 
+void GstWPEThreadedView::clearBuffers()
+{
+  bool dispatchFrameComplete = false;
+  {
+    GMutexHolder lock(images_mutex);
+
+    if (shm.pending) {
+      auto meta = gst_buffer_get_video_meta(shm.pending);
+      if (static_cast<int>(meta->width) != wpe.width || static_cast<int>(meta->height) != wpe.height) {
+        gst_clear_buffer(&shm.pending);
+        dispatchFrameComplete = true;
+      }
+    }
+
+    if (shm.committed) {
+      auto meta = gst_buffer_get_video_meta(shm.committed);
+      if (static_cast<int>(meta->width) != wpe.width || static_cast<int>(meta->height) != wpe.height) {
+        gst_clear_buffer(&shm.committed);
+        dispatchFrameComplete = true;
+      }
+    }
+  }
+
+  if (dispatchFrameComplete) {
+    frameComplete();
+    // Wait until the next SHM buffer has been received.
+    threading.ready = false;
+    waitLoadCompletion();
+  }
+}
+
 void GstWPEThreadedView::frameComplete()
 {
     GST_TRACE("frame complete");
