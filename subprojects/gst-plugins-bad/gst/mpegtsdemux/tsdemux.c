@@ -1894,6 +1894,17 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       if (jpegxs.frat != 0) {
         gint framerate_num = (jpegxs.frat & 0x0000FFFFU);
         gint framerate_den = ((jpegxs.frat >> 24) & 0x0000003FU);
+        if (framerate_den == 1) {
+          // framerate_den = 1;
+        } else if (framerate_den == 2) {
+          framerate_num *= 1000;
+          framerate_den = 1001;
+        } else {                // Reserved value
+          GST_WARNING_OBJECT (demux,
+              "Unknown JPEG XS framerate denominator code %u", framerate_den);
+          break;
+        }
+
         gst_caps_set_simple (caps,
             "framerate", GST_TYPE_FRACTION, framerate_num, framerate_den, NULL);
       }
