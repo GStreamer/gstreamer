@@ -515,7 +515,7 @@ gst_base_ts_mux_jpegxs_descriptor (GstBaseTsMux * mux,
           GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST) {
         frat |= 1 << 31;
       } else {
-        GST_ERROR_OBJECT (ts_pad, "Unknown interlace mode");
+        GST_ERROR_OBJECT (ts_pad, "Unknown interlace mode (no field order)");
         goto free_return;
       }
     }

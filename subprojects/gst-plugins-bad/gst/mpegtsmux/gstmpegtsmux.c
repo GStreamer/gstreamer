@@ -131,7 +131,8 @@ static GstStaticPadTemplate gst_mpeg_ts_mux_sink_factory =
         "meta/x-st-2038, alignment = (string) line;"
         "video/x-vp9;"
         "image/x-jpc, alignment = (string) frame, profile = (int)[0, 49151];"
-        "image/x-jxsc, alignment = (string) frame, sampling = { YCbCr-4:2:2, YCbCr-4:4:4 };"));
+        "image/x-jxsc, alignment = (string) frame, sampling = { YCbCr-4:2:2, YCbCr-4:4:4 }, interlace-mode = progressive; "
+        "image/x-jxsc, alignment = (string) frame, sampling = { YCbCr-4:2:2, YCbCr-4:4:4 }, interlace-mode = fields, field-order = { top-field-first, bottom-field-first };"));
 
 static GstStaticPadTemplate gst_mpeg_ts_mux_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
