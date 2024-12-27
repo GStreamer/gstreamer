@@ -972,6 +972,7 @@ activate_source_item (GstSourceItem * item)
   return GST_STATE_CHANGE_SUCCESS;
 }
 
+/* PLAY_ITEMS_LOCK held */
 static void
 link_src_pad_to_db3 (GstURIDecodeBin3 * uridecodebin, GstSourcePad * spad)
 {
@@ -1005,6 +1006,10 @@ link_src_pad_to_db3 (GstURIDecodeBin3 * uridecodebin, GstSourcePad * spad)
       && !handler->play_item->sub_item->handler) {
     GstStateChangeReturn ret;
 
+    /* Temporarily release play items lock to avoid deadlock if activating the
+     * source item causes a message that calls back into our message handler */
+    PLAY_ITEMS_UNLOCK (uridecodebin);
+
     /* The state lock is taken to ensure we can atomically change the
      * urisourcebin back to NULL in case of failures */
     GST_STATE_LOCK (uridecodebin);
@@ -1016,9 +1021,11 @@ link_src_pad_to_db3 (GstURIDecodeBin3 * uridecodebin, GstSourcePad * spad)
           FALSE);
       handler->play_item->sub_item->handler = NULL;
       GST_STATE_UNLOCK (uridecodebin);
+      PLAY_ITEMS_LOCK (uridecodebin);
       goto sub_item_activation_failed;
     }
     GST_STATE_UNLOCK (uridecodebin);
+    PLAY_ITEMS_LOCK (uridecodebin);
   }
 
   return;
