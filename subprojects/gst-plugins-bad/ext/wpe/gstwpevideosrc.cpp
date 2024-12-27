@@ -174,6 +174,17 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (WPE_VIDEO_SRC_CAPS));
 
+#define GST_ELEMENT_PROGRESS(el, type, code, text)                             \
+  G_STMT_START {                                                               \
+    gchar *__txt = _gst_element_error_printf text;                             \
+    gst_element_post_message (                                                 \
+        GST_ELEMENT_CAST (el),                                                 \
+        gst_message_new_progress (GST_OBJECT_CAST (el),                        \
+                                  GST_PROGRESS_TYPE_##type, code, __txt));     \
+    g_free (__txt);                                                            \
+  }                                                                            \
+  G_STMT_END
+
 static GstFlowReturn
 gst_wpe_video_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     GstBuffer ** buf)
@@ -284,6 +295,7 @@ gst_wpe_video_src_start (GstWpeVideoSrc * src)
   gboolean created_view = FALSE;
   GBytes *bytes;
 
+  GST_ELEMENT_PROGRESS (src, START, "open", ("Starting up"));
   GST_INFO_OBJECT (src, "Starting up");
   WPE_LOCK (src);
 
@@ -298,15 +310,20 @@ gst_wpe_video_src_start (GstWpeVideoSrc * src)
   auto & thread = GstWPEContextThread::singleton ();
 
   if (!src->view) {
-    src->view = thread.createWPEView (src, context, display,
+    GST_ELEMENT_PROGRESS (src, CONTINUE, "open", ("Creating WPE WebView"));
+    src->view =
+        thread.createWPEView (src, context, display,
         GST_VIDEO_INFO_WIDTH (&base_src->out_info),
         GST_VIDEO_INFO_HEIGHT (&base_src->out_info));
     created_view = TRUE;
     GST_DEBUG_OBJECT (src, "created view %p", src->view);
+    GST_ELEMENT_PROGRESS (src, CONTINUE, "open", ("WPE WebView is ready"));
   }
 
   if (!src->view) {
     WPE_UNLOCK (src);
+    GST_ELEMENT_PROGRESS (src, ERROR, "open",
+        ("WPEBackend-FDO EGL display initialisation failed"));
     GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
         ("WPEBackend-FDO EGL display initialisation failed"), (NULL));
     return FALSE;
@@ -318,6 +335,7 @@ gst_wpe_video_src_start (GstWpeVideoSrc * src)
   GST_OBJECT_UNLOCK (src);
 
   if (bytes != NULL) {
+    GST_ELEMENT_PROGRESS (src, CONTINUE, "open", ("Loading HTML data"));
     src->view->loadData (bytes);
     g_bytes_unref (bytes);
   }
@@ -326,6 +344,7 @@ gst_wpe_video_src_start (GstWpeVideoSrc * src)
     src->n_frames = 0;
   }
   WPE_UNLOCK (src);
+  GST_ELEMENT_PROGRESS (src, COMPLETE, "open", ("Ready to produce buffers"));
   return TRUE;
 }
 
