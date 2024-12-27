@@ -1,3 +1,8 @@
+valgrind_dep = dependency('valgrind', required: false).partial_dependency(compile_args : true)
+if valgrind_dep.found()
+  cdata.set('HAVE_VALGRIND', 1)
+endif
+
 have_registry = true # FIXME get_option('registry')
 
 libparser = static_library('parser',
