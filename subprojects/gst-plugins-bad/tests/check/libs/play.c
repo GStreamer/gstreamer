@@ -228,6 +228,8 @@ test_play_state_reset (GstPlay * player, TestPlayerState * state)
   state->end_of_stream = state->is_error = state->seek_done = FALSE;
   state->state = GST_PLAY_STATE_STOPPED;
   state->width = state->height = 0;
+  if (state->media_info)
+    g_object_unref (state->media_info);
   state->media_info = NULL;
   state->last_position = GST_CLOCK_TIME_NONE;
   state->done = FALSE;
@@ -390,6 +392,7 @@ process_play_messages (GstPlay * player, TestPlayerState * state)
       gst_play_message_parse_type (msg, &type);
       switch (type) {
         case GST_PLAY_MESSAGE_URI_LOADED:
+          g_clear_pointer (&state->uri_loaded, g_free);
           state->uri_loaded = gst_play_get_uri (player);
           state->test_callback (player, STATE_CHANGE_URI_LOADED, &old_state,
               state);
@@ -445,22 +448,28 @@ process_play_messages (GstPlay * player, TestPlayerState * state)
               state);
           break;
         case GST_PLAY_MESSAGE_ERROR:{
+          g_clear_error (&state->error);
+          gst_clear_structure (&state->error_details);
           gst_play_message_parse_error (msg, &state->error,
               &state->error_details);
           GST_DEBUG ("error: %s details: %" GST_PTR_FORMAT,
               state->error ? state->error->message : "", state->error_details);
           state->is_error = TRUE;
+          state->is_warning = FALSE;
           test_play_state_change_debug (player, STATE_CHANGE_ERROR,
               &old_state, state);
           state->test_callback (player, STATE_CHANGE_ERROR, &old_state, state);
           break;
         }
         case GST_PLAY_MESSAGE_WARNING:{
-          gst_play_message_parse_error (msg, &state->error,
+          g_clear_error (&state->error);
+          gst_clear_structure (&state->error_details);
+          gst_play_message_parse_warning (msg, &state->error,
               &state->error_details);
           GST_DEBUG ("error: %s details: %" GST_PTR_FORMAT,
               state->error ? state->error->message : "", state->error_details);
           state->is_warning = TRUE;
+          state->is_error = FALSE;
           test_play_state_change_debug (player, STATE_CHANGE_WARNING,
               &old_state, state);
           state->test_callback (player, STATE_CHANGE_WARNING, &old_state,
@@ -484,6 +493,8 @@ process_play_messages (GstPlay * player, TestPlayerState * state)
           GstPlayMediaInfo *media_info;
           gst_play_message_parse_media_info_updated (msg, &media_info);
 
+          if (state->media_info)
+            g_object_unref (state->media_info);
           state->media_info = media_info;
           test_play_state_change_debug (player,
               STATE_CHANGE_MEDIA_INFO_UPDATED, &old_state, state);
@@ -1694,6 +1705,16 @@ http_main (gpointer data)
 
 #define TEST_USER_AGENT "test user agent"
 
+static GstElement *test_user_agent_source = NULL;
+
+static void
+test_user_agent_source_setup_cp (GstElement * element, GstElement * source,
+    gpointer user_data)
+{
+  gst_object_replace ((GstObject **) & test_user_agent_source,
+      (GstObject *) source);
+}
+
 static void
 test_user_agent_cb (GstPlay * player,
     TestPlayerStateChange change, TestPlayerState * old_state,
@@ -1701,17 +1722,12 @@ test_user_agent_cb (GstPlay * player,
 {
   if (change == STATE_CHANGE_STATE_CHANGED
       && new_state->state == GST_PLAY_STATE_PAUSED) {
-    GstElement *pipeline;
-    GstElement *source;
     gchar *user_agent;
 
-    pipeline = gst_play_get_pipeline (player);
-    source = gst_bin_get_by_name (GST_BIN_CAST (pipeline), "source");
-    g_object_get (source, "user-agent", &user_agent, NULL);
+    fail_unless (test_user_agent_source != NULL);
+    g_object_get (test_user_agent_source, "user-agent", &user_agent, NULL);
     fail_unless_equals_string (user_agent, TEST_USER_AGENT);
     g_free (user_agent);
-    gst_object_unref (source);
-    gst_object_unref (pipeline);
     new_state->done = TRUE;
   }
 }
@@ -1719,12 +1735,15 @@ test_user_agent_cb (GstPlay * player,
 START_TEST (test_user_agent)
 {
   GstPlay *player;
+  GstElement *pipeline;
   GstStructure *config;
   gchar *user_agent;
   TestPlayerState state;
   guint port;
   gchar *url;
   ServerContext *context = g_new (ServerContext, 1);
+
+  test_user_agent_source = NULL;
 
   g_mutex_init (&context->lock);
   g_cond_init (&context->cond);
@@ -1748,8 +1767,13 @@ START_TEST (test_user_agent)
   state.test_callback = test_user_agent_cb;
   state.test_data = GINT_TO_POINTER (0);
 
-  player = gst_play_new (NULL);
+  player = test_play_new (&state);
   fail_unless (player != NULL);
+
+  pipeline = gst_play_get_pipeline (player);
+  g_signal_connect (pipeline, "source-setup",
+      G_CALLBACK (test_user_agent_source_setup_cp), NULL);
+  gst_object_unref (pipeline);
 
   port = get_port_from_server (context->server);
   url = g_strdup_printf ("http://127.0.0.1:%u/audio.ogg", port);
@@ -1771,11 +1795,12 @@ START_TEST (test_user_agent)
   process_play_messages (player, &state);
 
   stop_player (player, &state);
+  gst_clear_object (&test_user_agent_source);
   g_object_unref (player);
 
 beach:
   g_main_loop_quit (context->loop);
-  g_thread_unref (context->thread);
+  g_thread_join (context->thread);
   g_main_loop_unref (context->loop);
   context->loop = NULL;
   g_main_context_unref (context->ctx);
