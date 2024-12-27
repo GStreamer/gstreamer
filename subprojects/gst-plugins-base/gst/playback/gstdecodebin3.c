@@ -794,8 +794,17 @@ gst_decodebin3_dispose (GObject * object)
   g_mutex_unlock (&dbin->factories_lock);
 
   INPUT_LOCK (dbin);
-  g_list_free_full (dbin->inputs, (GDestroyNotify) gst_decodebin_input_free);
+  while (dbin->inputs) {
+    DecodebinInput *input = dbin->inputs->data;
+    if (input->is_main)
+      dbin->main_input = NULL;
+    gst_decodebin_input_free (input);
+
+    dbin->inputs = g_list_delete_link (dbin->inputs, dbin->inputs);
+  }
   dbin->inputs = NULL;
+  if (dbin->main_input)
+    gst_decodebin_input_free (dbin->main_input);
   dbin->main_input = NULL;
   INPUT_UNLOCK (dbin);
 
