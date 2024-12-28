@@ -1667,12 +1667,15 @@ stream_collection_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
       const gchar *stream_id = gst_stream_get_stream_id (stream);
 
       if ((stream_type & GST_STREAM_TYPE_AUDIO) && select_audio) {
+        g_free (self->audio_sid);
         self->audio_sid = g_strdup (stream_id);
         select_audio = FALSE;
       } else if ((stream_type & GST_STREAM_TYPE_VIDEO) && select_video) {
+        g_free (self->video_sid);
         self->video_sid = g_strdup (stream_id);
         select_video = FALSE;
       } else if ((stream_type & GST_STREAM_TYPE_TEXT) && select_subtitle) {
+        g_free (self->subtitle_sid);
         self->subtitle_sid = g_strdup (stream_id);
         select_subtitle = FALSE;
       }
@@ -1718,9 +1721,11 @@ streams_selected_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
     GstStreamType stream_type;
     const gchar *stream_id;
     gchar **current_sid;
+
     stream = gst_message_streams_selected_get_stream (msg, i);
     stream_type = gst_stream_get_stream_type (stream);
     stream_id = gst_stream_get_stream_id (stream);
+
     if (stream_type & GST_STREAM_TYPE_AUDIO)
       current_sid = &self->audio_sid;
     else if (stream_type & GST_STREAM_TYPE_VIDEO)
