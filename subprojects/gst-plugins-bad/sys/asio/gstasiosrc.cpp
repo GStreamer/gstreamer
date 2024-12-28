@@ -17,6 +17,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-asiosrc
+ * @title: asiosrc
+ * @short_description: ASIO source
+ *
+ * Since: 1.20
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -106,9 +114,9 @@ gst_asio_src_class_init (GstAsioSrcClass * klass)
               G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_OCCUPY_ALL_CHANNELS,
       g_param_spec_boolean ("occupy-all-channels",
-          "Occupy All Channles",
+          "Occupy All Channels",
           "When enabled, ASIO device will allocate resources for all in/output "
-          "channles",
+          "channels",
           DEFAULT_OCCUPY_ALL_CHANNELS,
           (GParamFlags) (GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS)));
