@@ -17,6 +17,18 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d12swapchainsink
+ * @title: d3d12swapchainsink
+ *
+ * d3d12swapchainsink offers DXGI swapchain created via
+ * IDXGIFactory2::CreateSwapChainForComposition for
+ * DirectComposition, WinUI3, and UWP applications, and presents video frames
+ * using swapchain
+ *
+ * Since: 1.26
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

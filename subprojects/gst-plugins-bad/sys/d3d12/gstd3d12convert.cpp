@@ -17,6 +17,63 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d12convert
+ * @title: d3d12convert
+ * @short_description: A Direct3D12 based color conversion and video resizing element
+ *
+ * This element resizes video frames and change color space.
+ * By default the element will try to negotiate to the same size on the source
+ * and sinkpad so that no scaling is needed.
+ * It is therefore safe to insert this element in a pipeline to
+ * get more robust behaviour without any cost if no scaling is needed.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc ! video/x-raw,format=NV12 ! d3d12upload ! d3d12convert ! d3d12videosink
+ * ```
+ *  This will output a test video (generated in NV12 format) in a video
+ * window. If the video sink selected does not support NV12
+ * d3d12convert will automatically convert the video to a format understood
+ * by the video sink.
+ *
+ * Since: 1.24
+ */
+
+/**
+ * SECTION:element-d3d12colorconvert
+ * @title: d3d12colorconvert
+ *
+ * A Direct3D12 based color conversion element
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc ! video/x-raw,format=NV12 ! d3d12upload ! d3d12colorconvert ! d3d12download ! video/x-raw,format=RGBA ! fakesink
+ * ```
+ *  This will upload a test video (generated in NV12 format) to Direct3D12
+ * memory space and convert it to RGBA format. Then a converted Direct3D12
+ * frame will be downloaded to system memory space.
+ *
+ * Since: 1.26
+ */
+
+/**
+ * SECTION:element-d3d12scale
+ * @title: d3d12scale
+ *
+ * A Direct3D12 based video resizing element
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc ! video/x-raw,width=640,height=480 ! d3d12upload ! d3d12scale ! d3d12download ! video/x-raw,width=1280,height=720 ! fakesink
+ * ```
+ *  This will upload a 640x480 resolution test video to Direct3D12
+ * memory space and resize it to 1280x720 resolution. Then a resized Direct3D12
+ * frame will be downloaded to system memory space.
+ *
+ * Since: 1.26
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -251,6 +308,11 @@ gst_d3d12_base_convert_class_init (GstD3D12BaseConvertClass * klass)
           (GParamFlags) (GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D12BaseConvert:async-depth:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_ASYNC_DEPTH,
       g_param_spec_uint ("async-depth", "Async Depth",
           "Number of in-flight GPU commands which can be scheduled without "

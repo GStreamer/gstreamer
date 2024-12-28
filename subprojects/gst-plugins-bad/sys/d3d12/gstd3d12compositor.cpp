@@ -1314,6 +1314,11 @@ gst_d3d12_compositor_class_init (GstD3D12CompositorClass * klass)
           "Avoid timing out waiting for inactive pads", FALSE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D12Compositor:async-depth:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_ASYNC_DEPTH,
       g_param_spec_uint ("async-depth", "Async Depth",
           "Number of in-flight GPU commands which can be scheduled without "

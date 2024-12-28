@@ -84,7 +84,7 @@ enum GstD3D12WindowCaptureMode
 
 #ifdef HAVE_WGC
 /**
- * GstD3D11ScreenCaptureAPI:
+ * GstD3D12ScreenCaptureAPI:
  *
  * Since: 1.26
  */
@@ -123,9 +123,9 @@ gst_d3d12_screen_capture_api_get_type (void)
  *
  * Since: 1.26
  */
-#define GST_TYPE_D3D12_WINDOW_CAPTURE_MODE (gst_d3d11_window_capture_mode_get_type())
+#define GST_TYPE_D3D12_WINDOW_CAPTURE_MODE (gst_d3d12_window_capture_mode_get_type())
 static GType
-gst_d3d11_window_capture_mode_get_type (void)
+gst_d3d12_window_capture_mode_get_type (void)
 {
   static GType type = 0;
 

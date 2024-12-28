@@ -17,6 +17,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d12mipmapping
+ * @title: d3d12mipmapping
+ * @short_description: Direct3D12 Mipmap generator element
+ *
+ * d3d12mipmapping element generates mipmap enabled Direct3D12 textures
+ * from input textures
+ *
+ * Since: 1.26
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

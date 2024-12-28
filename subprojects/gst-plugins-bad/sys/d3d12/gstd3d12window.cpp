@@ -53,6 +53,11 @@ enum
 
 static guint d3d12_window_signals[SIGNAL_LAST] = { 0, };
 
+/**
+ * GstD3D12WindowOverlayMode:
+ *
+ * Since: 1.26
+ */
 GType
 gst_d3d12_window_overlay_mode_get_type (void)
 {
@@ -60,11 +65,34 @@ gst_d3d12_window_overlay_mode_get_type (void)
 
   GST_D3D12_CALL_ONCE_BEGIN {
     static const GFlagsValue mode_types[] = {
+      /**
+       * GstD3D12WindowOverlayMode::none:
+       *
+       * Since: 1.26
+       */
       {GST_D3D12_WINDOW_OVERLAY_NONE, "None", "none"},
+
+      /**
+       * GstD3D12WindowOverlayMode::d3d12:
+       *
+       * Since: 1.26
+       */
       {GST_D3D12_WINDOW_OVERLAY_D3D12,
           "Emits present signal with Direct3D12 resources", "d3d12"},
+
+      /**
+       * GstD3D12WindowOverlayMode::d3d11:
+       *
+       * Since: 1.26
+       */
       {GST_D3D12_WINDOW_OVERLAY_D3D11,
           "Emits present signal with Direct3D12/11 resources", "d3d11"},
+
+      /**
+       * GstD3D12WindowOverlayMode::d2d:
+       *
+       * Since: 1.26
+       */
       {GST_D3D12_WINDOW_OVERLAY_D2D,
             "Emit present signal with Direct3D12/11 and Direct2D resources",
           "d2d"},

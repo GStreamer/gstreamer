@@ -1388,6 +1388,12 @@ gst_d3d12_test_src_class_init (GstD3D12TestSrcClass * klass)
           0, 1, DEFAULT_ALPHA,
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
               G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12TestSrc:async-depth:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_ASYNC_DEPTH,
       g_param_spec_uint ("async-depth", "Async Depth",
           "Number of in-flight GPU commands which can be scheduled without "

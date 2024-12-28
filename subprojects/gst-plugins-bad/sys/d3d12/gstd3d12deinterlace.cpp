@@ -17,6 +17,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-d3d12deinterlace
+ * @title: d3d12deinterlace
+ *
+ * A Direct3D12 based deinterlacing element
+ *
+ * Since: 1.26
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -64,6 +73,11 @@ enum GstD3D12DeinterlaceFields
   GST_D3D12_DEINTERLACE_FIELDS_BOTTOM,
 };
 
+/**
+ * GstD3D12DeinterlaceFields:
+ *
+ * Since: 1.26
+ */
 #define GST_TYPE_D3D12_DEINTERLACE_FIELDS (gst_d3d12_deinterlace_fields_get_type())
 static GType
 gst_d3d12_deinterlace_fields_get_type (void)
@@ -72,8 +86,26 @@ gst_d3d12_deinterlace_fields_get_type (void)
 
   GST_D3D12_CALL_ONCE_BEGIN {
     static const GEnumValue types[] = {
+      /**
+       * GstD3D12DeinterlaceFields::all:
+       *
+       * Since: 1.26
+       */
       {GST_D3D12_DEINTERLACE_FIELDS_ALL, "All fields", "all"},
+
+      /**
+       * GstD3D12DeinterlaceFields::top:
+       *
+       * Since: 1.26
+       */
       {GST_D3D12_DEINTERLACE_FIELDS_TOP, "Top fields only", "top"},
+
+
+      /**
+       * GstD3D12DeinterlaceFields::bottom:
+       *
+       * Since: 1.26
+       */
       {GST_D3D12_DEINTERLACE_FIELDS_BOTTOM, "Bottom fields only", "bottom"},
       {0, nullptr, nullptr},
     };
@@ -91,6 +123,11 @@ enum GstD3D12DeinterlaceEngine
   GST_D3D12_DEINTERLACE_ENGINE_COMPUTE,
 };
 
+/**
+ * GstD3D12DeinterlaceEngine:
+ *
+ * Since: 1.26
+ */
 #define GST_TYPE_D3D12_DEINTERLACE_ENGINE (gst_d3d12_deinterlace_engine_get_type())
 static GType
 gst_d3d12_deinterlace_engine_get_type (void)
@@ -99,9 +136,26 @@ gst_d3d12_deinterlace_engine_get_type (void)
 
   GST_D3D12_CALL_ONCE_BEGIN {
     static const GEnumValue types[] = {
+      /**
+       * GstD3D12DeinterlaceEngine::auto:
+       *
+       * Since: 1.26
+       */
       {GST_D3D12_DEINTERLACE_ENGINE_AUTO,
           "iGPU uses 3D engine, dGPU uses compute engine", "auto"},
+
+      /**
+       * GstD3D12DeinterlaceEngine::3d:
+       *
+       * Since: 1.26
+       */
       {GST_D3D12_DEINTERLACE_ENGINE_3D, "3D", "3d"},
+
+      /**
+       * GstD3D12DeinterlaceEngine::compute:
+       *
+       * Since: 1.26
+       */
       {GST_D3D12_DEINTERLACE_ENGINE_COMPUTE, "Compute", "compute"},
       {0, nullptr, nullptr},
     };
@@ -282,7 +336,9 @@ gst_d3d12_deinterlace_class_init (GstD3D12DeinterlaceClass * klass)
 
   filter_class->set_info = GST_DEBUG_FUNCPTR (gst_d3d12_deinterlace_set_info);
 
-  gst_type_mark_as_plugin_api (GST_TYPE_D3D12_SAMPLING_METHOD,
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D12_DEINTERLACE_FIELDS,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D12_DEINTERLACE_ENGINE,
       (GstPluginAPIFlags) 0);
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_deinterlace_debug, "d3d12deinterlace", 0,

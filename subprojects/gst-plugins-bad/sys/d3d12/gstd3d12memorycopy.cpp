@@ -319,6 +319,11 @@ static void gst_d3d12_memory_copy_before_transform (GstBaseTransform * trans,
 static GstFlowReturn gst_d3d12_memory_copy_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
 
+/**
+ * GstD3D12MemoryCopy:
+ *
+ * Since: 1.26
+ */
 #define gst_d3d12_memory_copy_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstD3D12MemoryCopy, gst_d3d12_memory_copy,
     GST_TYPE_BASE_TRANSFORM);
@@ -366,6 +371,9 @@ gst_d3d12_memory_copy_class_init (GstD3D12MemoryCopyClass * klass)
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_d3d12_memory_copy_transform);
 
   meta_tag_video_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_STR);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D12_MEMORY_COPY,
+      (GstPluginAPIFlags) 0);
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_memory_copy_debug,
       "d3d12memorycopy", 0, "d3d12memorycopy");
 }

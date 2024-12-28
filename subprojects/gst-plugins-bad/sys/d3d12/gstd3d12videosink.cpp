@@ -513,7 +513,7 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
    * creating child window. Note that once direct swapchain is configured,
    * GDI will no longer work with the given window handle.
    *
-   * If enabled, GstVideoOverlay::set_render_rectangle() will be ignored,
+   * If enabled, GstVideoOverlay::set_render_rectangle will be ignored,
    * and application should handle window positioning.
    *
    * Since: 1.26
@@ -595,13 +595,15 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
    * Singla handler should not assume the @device11on12 and @resource11
    * are always valid handle since d3d11on12 API may not be supported.
    * The @resource11 is wrapped resource created via
-   * ID3D11On12Device::CreateWrappedResource(). Thus, signal handler must follow
-   * required steps for d3d11on12 device, for example,
-   * ID3D11On12Device::AcquireWrappedResources() must be called before recoding
-   * GPU commands. Once GPU commands are recoded via d3d11 or d2d APIs,
+   * [ID3D11On12Device::CreateWrappedResource](https://learn.microsoft.com/en-us/windows/win32/api/d3d11on12/nf-d3d11on12-id3d11on12device-createwrappedresource).
+   * Thus, signal handler must follow required steps for d3d11on12 device, for example,
+   * [ID3D11On12Device::AcquireWrappedResources](https://learn.microsoft.com/en-us/windows/win32/api/d3d11on12/nf-d3d11on12-id3d11on12device-acquirewrappedresources)
+   * must be called before recoding GPU commands.
+   * Once GPU commands are recoded via d3d11 or d2d APIs,
    * the resource should be released via
-   * ID3D11On12Device::ReleaseWrappedResources(), and then
-   * ID3D11DeviceContext::Flush() must be called in the signal handler.
+   * [ID3D11On12Device::ReleaseWrappedResources](https://learn.microsoft.com/en-us/windows/win32/api/d3d11on12/nf-d3d11on12-id3d11on12device-releasewrappedresources),
+   * and then [ID3D11DeviceContext::Flush](https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11devicecontext-flush)
+   * must be called in the signal handler.
    *
    * If "overlay-mode" is GST_D3D12_WINDOW_OVERLAY_D2D and d2d device is
    * available, @context2d will be valid handle. When this signal is emitted,
@@ -648,6 +650,10 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
 
   gst_type_mark_as_plugin_api (GST_TYPE_D3D12_MSAA_MODE, (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_D3D12_SAMPLING_METHOD,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D12_WINDOW_OVERLAY_MODE,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D12_VIDEO_SINK_DISPLAY_FORMAT,
       (GstPluginAPIFlags) 0);
 }
 
