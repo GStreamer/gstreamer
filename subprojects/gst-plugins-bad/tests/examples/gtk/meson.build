@@ -1,4 +1,8 @@
-if gtk_dep.found() and gtk_wayland_dep.found() and use_wayland
+if not use_wayland
+  subdir_done()
+endif
+
+if gtk_dep.found() and gtk_wayland_dep.found()
   executable('gtkwaylandsink',
     'gtkwaylandsink.c',
     extra_files: ['window.ui'],
