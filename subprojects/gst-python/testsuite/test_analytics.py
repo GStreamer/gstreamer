@@ -116,6 +116,7 @@ class TestAnalyticsODMtd(TestCase):
         self.assertEqual(location[4], 212)
         self.assertAlmostEqual(location[5], 0.3, 3)
 
+
 class TestAnalyticsClsMtd(TestCase):
     def test(self):
         buf = Gst.Buffer()
@@ -209,30 +210,38 @@ class TestAnalyticsTensorMeta(TestCase):
         self.assertIsNotNone(data)
 
         tensor = GstAnalytics.Tensor.new_simple(0, GstAnalytics.TensorDataType.UINT8,
-                                                1, data,
+                                                data,
                                                 GstAnalytics.TensorDimOrder.ROW_MAJOR,
-                                                [2, 3, 4])
+                                                [1, 2, 3, 4])
         self.assertIsNotNone(tensor)
         self.assertEqual(tensor.id, 0)
-        self.assertEqual(tensor.num_dims, 3)
-        self.assertEqual(tensor.batch_size, 1)
+        self.assertEqual(tensor.num_dims, 4)
         dims = tensor.get_dims()
-        self.assertEqual(len(dims), 3)
-        self.assertEqual(dims[0].size, 2)
-        self.assertEqual(dims[1].size, 3)
-        self.assertEqual(dims[2].size, 4)
+        self.assertEqual(len(dims), 4)
+        self.assertEqual(dims[0].size, 1)
+        self.assertEqual(dims[1].size, 2)
+        self.assertEqual(dims[2].size, 3)
+        self.assertEqual(dims[3].size, 4)
         self.assertEqual(tensor.data, data)
         self.assertEqual(tensor.data_type, GstAnalytics.TensorDataType.UINT8)
         self.assertEqual(tensor.dims_order, GstAnalytics.TensorDimOrder.ROW_MAJOR)
 
         data2 = Gst.Buffer.new_allocate(None, 2 * 3 * 4 * 5)
         tensor2 = GstAnalytics.Tensor.new_simple(0, GstAnalytics.TensorDataType.UINT16,
-                                                1, data2,
+                                                data2,
                                                 GstAnalytics.TensorDimOrder.ROW_MAJOR,
-                                                [3, 4, 5])
+                                                [1, 3, 4, 5])
         tmeta.set([tensor, tensor2])
 
         tmeta2 = GstAnalytics.buffer_get_tensor_meta(buf)
         self.assertEqual(tmeta2.num_tensors, 2)
         self.assertEqual(tmeta2.get(0).data, data)
         self.assertEqual(tmeta2.get(1).data, data2)
+
+        data3 = Gst.Buffer.new_allocate(None, 30)
+        tensor3 = GstAnalytics.Tensor.new_simple(0,
+                                                 GstAnalytics.TensorDataType.UINT16,
+                                                 data3,
+                                                 GstAnalytics.TensorDimOrder.ROW_MAJOR,
+                                                 [0, 2, 5])
+        self.assertIsNotNone(tensor3)
