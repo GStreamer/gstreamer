@@ -399,7 +399,7 @@ if x11_dep.found()
 endif
 
 # Optional dep of msdk and va
-if host_system not in ['darwin', 'ios', 'android', 'windows']
+if host_system not in ['darwin', 'ios', 'android', 'windows', 'gnu']
   libdrm_dep = dependency('libdrm', version : '>=2.4.50',
     required : get_option('drm').enabled() or get_option('msdk').enabled(),
   )
