@@ -59,8 +59,8 @@ seekable_sinkpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
 #define compare_buffer_to_data(buffer, data, data_size)             \
 G_STMT_START {                                                      \
-fail_unless_equals_int (data_size, gst_buffer_get_size (buffer));   \
-fail_unless (gst_buffer_memcmp (buffer, 0, data, data_size) == 0);  \
+  fail_unless_equals_int (data_size, gst_buffer_get_size (buffer)); \
+  fail_unless (gst_buffer_memcmp (buffer, 0, data, data_size) == 0);\
 } G_STMT_END
 
 static void
@@ -227,7 +227,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_block_group_v2)
 {
-  guint8 data0_v2[] = { 0xa3, 0x85, 0x81, 0x00, 0x01, 0x00 };
+  guint8 data0_v2[] = { 0xa3, 0x85, 0x81, 0x00, 0x01, 0x80 };
 
   test_block_group_with_version (2, data0_v2, sizeof (data0_v2));
 }
@@ -307,10 +307,10 @@ GST_START_TEST (test_timecodescale)
 {
   GstBuffer *inbuffer, *outbuffer;
   guint8 data_h0[] = {
-    0xa3, 0x85, 0x81, 0x00, 0x00, 0x00,
+    0xa3, 0x85, 0x81, 0x00, 0x00, 0x80,
   };
   guint8 data_h1[] = {
-    0xa3, 0x85, 0x81, 0x00, 0x01, 0x00,
+    0xa3, 0x85, 0x81, 0x00, 0x01, 0x80,
   };
 
   GstHarness *h = setup_matroskamux_harness (AC3_CAPS_STRING);
