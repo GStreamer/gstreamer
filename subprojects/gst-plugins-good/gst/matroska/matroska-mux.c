@@ -3853,7 +3853,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaMuxPad * mux_pad,
   guint64 block_duration, duration_diff = 0;
   gboolean is_video_keyframe = FALSE;
   gboolean is_video_invisible = FALSE;
-  gboolean is_audio_only = FALSE;
+  gboolean is_audio_only = FALSE, is_audio = FALSE;
   gboolean is_min_duration_reached = FALSE;
   gboolean is_max_duration_exceeded = FALSE;
   gint flags = 0;
@@ -3940,6 +3940,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaMuxPad * mux_pad,
   is_audio_only =
       gst_matroska_mux_pads_is_audio_only (GST_ELEMENT (mux)->sinkpads);
   GST_OBJECT_UNLOCK (mux);
+
+  is_audio = mux_pad->track->type == GST_MATROSKA_TRACK_TYPE_AUDIO;
 
   is_min_duration_reached = (mux->min_cluster_duration == 0
       || (buffer_timestamp > mux->cluster_time
@@ -4102,7 +4104,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaMuxPad * mux_pad,
     flags |= 0x08;
 
   if (mux->doctype_version > 1 && !write_duration && !cmeta) {
-    if (is_video_keyframe)
+    if (is_video_keyframe || is_audio)
       flags |= 0x80;
 
     hdr =
