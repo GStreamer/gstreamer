@@ -5597,6 +5597,8 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
         case GST_EVENT_RECONFIGURE:
           if (GST_PAD_IS_SINK (pad))
             GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
+          if (pad->ABI.abi.last_flowret == GST_FLOW_NOT_LINKED)
+            pad->ABI.abi.last_flowret = GST_FLOW_OK;
           break;
         default:
           break;
@@ -5948,9 +5950,6 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushing;
       break;
-    case GST_EVENT_RECONFIGURE:
-      if (GST_PAD_IS_SRC (pad))
-        GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
     default:
       GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad,
           "have event type %" GST_PTR_FORMAT, event);
@@ -5977,6 +5976,12 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
           remove_event_by_type (pad, GST_EVENT_STREAM_GROUP_DONE);
           remove_event_by_type (pad, GST_EVENT_TAG);
           GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
+          break;
+        case GST_EVENT_RECONFIGURE:
+          if (GST_PAD_IS_SRC (pad))
+            GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
+          if (pad->ABI.abi.last_flowret == GST_FLOW_NOT_LINKED)
+            pad->ABI.abi.last_flowret = GST_FLOW_OK;
           break;
         default:
           if (serialized) {
