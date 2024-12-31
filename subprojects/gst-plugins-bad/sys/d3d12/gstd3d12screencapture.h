@@ -57,11 +57,14 @@ struct _GstD3D12ScreenCaptureClass
 {
   GstObjectClass parent_class;
 
-  GstFlowReturn (*prepare) (GstD3D12ScreenCapture * capture);
+  GstFlowReturn (*prepare) (GstD3D12ScreenCapture * capture,
+                            guint flags);
 
   gboolean      (*get_size) (GstD3D12ScreenCapture * capture,
                              guint * width,
                              guint * height);
+
+  GstVideoFormat (*get_format) (GstD3D12ScreenCapture * capture);
 
   gboolean      (*unlock)          (GstD3D12ScreenCapture * capture);
 
@@ -70,11 +73,14 @@ struct _GstD3D12ScreenCaptureClass
 
 GType           gst_d3d12_screen_capture_get_type (void);
 
-GstFlowReturn   gst_d3d12_screen_capture_prepare (GstD3D12ScreenCapture * capture);
+GstFlowReturn   gst_d3d12_screen_capture_prepare (GstD3D12ScreenCapture * capture,
+                                                  guint flags);
 
 gboolean        gst_d3d12_screen_capture_get_size (GstD3D12ScreenCapture * capture,
                                                    guint * width,
                                                    guint * height);
+
+GstVideoFormat  gst_d3d12_screen_capture_get_format (GstD3D12ScreenCapture * capture);
 
 gboolean        gst_d3d12_screen_capture_unlock      (GstD3D12ScreenCapture * capture);
 

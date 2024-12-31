@@ -890,7 +890,8 @@ struct _GstD3D12GraphicsCapture
 static void gst_d3d12_graphics_capture_finalize (GObject * object);
 
 static GstFlowReturn
-gst_d3d12_graphics_capture_prepare (GstD3D12ScreenCapture * capture);
+gst_d3d12_graphics_capture_prepare (GstD3D12ScreenCapture * capture,
+    guint flags);
 static gboolean
 gst_d3d12_graphics_capture_get_size (GstD3D12ScreenCapture * capture,
     guint * width, guint * height);
@@ -1162,7 +1163,8 @@ out:
 }
 
 static GstFlowReturn
-gst_d3d12_graphics_capture_prepare (GstD3D12ScreenCapture * capture)
+gst_d3d12_graphics_capture_prepare (GstD3D12ScreenCapture * capture,
+    guint flags)
 {
   return GST_FLOW_OK;
 }

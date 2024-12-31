@@ -68,6 +68,7 @@ enum
   PROP_CAPTURE_API,
   PROP_ADAPTER,
   PROP_WINDOW_CAPTURE_MODE,
+  PROP_TONEMAP,
 };
 
 enum GstD3D12ScreenCaptureAPI
@@ -80,6 +81,12 @@ enum GstD3D12WindowCaptureMode
 {
   GST_D3D12_WINDOW_CAPTURE_DEFAULT,
   GST_D3D12_WINDOW_CAPTURE_CLIENT,
+};
+
+enum GstD3D12ScreenCaptureTonemap
+{
+  GST_D3D12_SCREEN_CAPTURE_TONEMAP_LINEAR,
+  GST_D3D12_SCREEN_CAPTURE_TONEMAP_REINHARD,
 };
 
 #ifdef HAVE_WGC
@@ -155,20 +162,58 @@ gst_d3d12_window_capture_mode_get_type (void)
 }
 #endif
 
+/**
+ * GstD3D12ScreenCaptureTonemap:
+ *
+ * Since: 1.26
+ */
+#define GST_TYPE_D3D12_SCREEN_CAPTURE_TONEMAP (gst_d3d12_screen_capture_tonemap_get_type())
+static GType
+gst_d3d12_screen_capture_tonemap_get_type (void)
+{
+  static GType type = 0;
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    static const GEnumValue modes[] = {
+      /**
+       * GstD3D12ScreenCaptureTonemap::linear:
+       *
+       * Since: 1.26
+       */
+      {GST_D3D12_SCREEN_CAPTURE_TONEMAP_LINEAR,
+          "Linear scaling", "linear"},
+
+      /**
+       * GstD3D12ScreenCaptureTonemap::reinhard:
+       *
+       * Since: 1.26
+       */
+      {GST_D3D12_SCREEN_CAPTURE_TONEMAP_REINHARD, "Reinhard tonemap",
+          "reinhard"},
+      {0, nullptr, nullptr},
+    };
+
+    type = g_enum_register_static ("GstD3D12ScreenCaptureTonemap", modes);
+  } GST_D3D12_CALL_ONCE_END;
+
+  return type;
+}
+
 #define DEFAULT_MONITOR_INDEX -1
 #define DEFAULT_SHOW_CURSOR FALSE
 #define DEFAULT_SHOW_BORDER FALSE
 #define DEFAULT_CAPTURE_API GST_D3D12_SCREEN_CAPTURE_API_DXGI
 #define DEFAULT_ADAPTER -1
 #define DEFAULT_WINDOW_CAPTURE_MODE GST_D3D12_WINDOW_CAPTURE_DEFAULT
+#define DEFAULT_TONEMAP GST_D3D12_SCREEN_CAPTURE_TONEMAP_LINEAR
 
 static GstStaticPadTemplate src_template =
     GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, "BGRA")
+        (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, "{ BGRA, RGBA64_LE }")
         ", pixel-aspect-ratio = 1/1, colorimetry = (string) sRGB; "
-        GST_VIDEO_CAPS_MAKE ("BGRA") ", pixel-aspect-ratio = 1/1, "
-        "colorimetry = (string) sRGB"));
+        GST_VIDEO_CAPS_MAKE ("{ BGRA, RGBA64_LE }")
+        ", pixel-aspect-ratio = 1/1, " "colorimetry = (string) sRGB"));
 
 struct GstD3D12ScreenCaptureSrcPrivate
 {
@@ -203,6 +248,7 @@ struct GstD3D12ScreenCaptureSrcPrivate
   GstD3D12ScreenCaptureAPI capture_api = DEFAULT_CAPTURE_API;
   GstD3D12ScreenCaptureAPI selected_capture_api = DEFAULT_CAPTURE_API;
   GstD3D12WindowCaptureMode hwnd_capture_mode = DEFAULT_WINDOW_CAPTURE_MODE;
+  GstD3D12ScreenCaptureTonemap tonemap = DEFAULT_TONEMAP;
 
   gboolean flushing = FALSE;
   GstClockTime latency = GST_CLOCK_TIME_NONE;
@@ -388,6 +434,23 @@ gst_d3d12_screen_capture_src_class_init (GstD3D12ScreenCaptureSrcClass * klass)
   }
 #endif
 
+  /**
+   * GstD3D12ScreenCaptureSrc:tonemap:
+   *
+   * Tonemapping method in case of HDR capture
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_TONEMAP,
+      g_param_spec_enum ("tonemap", "Tonemap",
+          "Tonemapping method to use when HDR capturing is enabled",
+          GST_TYPE_D3D12_SCREEN_CAPTURE_TONEMAP, DEFAULT_TONEMAP,
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+              G_PARAM_STATIC_STRINGS)));
+
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D12_SCREEN_CAPTURE_TONEMAP,
+      (GstPluginAPIFlags) 0);
+
   element_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_d3d12_screen_capture_src_provide_clock);
   element_class->set_context =
@@ -506,6 +569,9 @@ gst_d3d12_screen_capture_src_set_property (GObject * object, guint prop_id,
       }
 #endif
       break;
+    case PROP_TONEMAP:
+      priv->tonemap = (GstD3D12ScreenCaptureTonemap) g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -556,6 +622,9 @@ gst_d3d12_screen_capture_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_WINDOW_CAPTURE_MODE:
       g_value_set_enum (value, priv->hwnd_capture_mode);
+      break;
+    case PROP_TONEMAP:
+      g_value_set_enum (value, priv->tonemap);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -622,6 +691,7 @@ gst_d3d12_screen_capture_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   auto self = GST_D3D12_SCREEN_CAPTURE_SRC (bsrc);
   auto priv = self->priv;
   guint width, height;
+  GstVideoFormat format = GST_VIDEO_FORMAT_BGRA;
 
   std::lock_guard < std::recursive_mutex > lk (priv->lock);
   if (!priv->capture) {
@@ -637,10 +707,13 @@ gst_d3d12_screen_capture_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
     height = priv->crop_box.bottom - priv->crop_box.top;
   }
 
+  format = gst_d3d12_screen_capture_get_format (priv->capture);
+
   auto caps = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
   caps = gst_caps_make_writable (caps);
 
-  gst_caps_set_simple (caps, "width", G_TYPE_INT, width, "height",
+  gst_caps_set_simple (caps, "format", G_TYPE_STRING,
+      gst_video_format_to_string (format), "width", G_TYPE_INT, width, "height",
       G_TYPE_INT, height, nullptr);
 
   if (filter) {
@@ -920,7 +993,8 @@ gst_d3d12_screen_capture_src_start (GstBaseSrc * bsrc)
   }
 
   /* Check if we can open device */
-  ret = gst_d3d12_screen_capture_prepare (capture);
+  ret = gst_d3d12_screen_capture_prepare (capture,
+      priv->tonemap == GST_D3D12_SCREEN_CAPTURE_TONEMAP_REINHARD);
   switch (ret) {
     case GST_D3D12_SCREEN_CAPTURE_FLOW_EXPECTED_ERROR:
     case GST_FLOW_OK:
