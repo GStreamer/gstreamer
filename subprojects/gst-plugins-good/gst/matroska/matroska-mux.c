@@ -3142,6 +3142,21 @@ gst_matroska_mux_write_chapter_edition (GstMatroskaMux * mux,
   return internal_edition;
 }
 
+static gboolean
+gst_matroska_pads_is_audio_only (GstMatroskaMux * mux)
+{
+  for (GSList * collected = mux->collect->data; collected;
+      collected = g_slist_next (collected)) {
+    GstMatroskaPad *collect_pad = (GstMatroskaPad *) collected->data;
+
+    if (collect_pad->track->type != GST_MATROSKA_TRACK_TYPE_AUDIO) {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
 /**
  * gst_matroska_mux_start:
  * @mux: #GstMatroskaMux
@@ -3203,7 +3218,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux, GstMatroskaPad * first_pad,
   gst_pad_push_event (mux->srcpad, gst_event_new_stream_start (s_id));
 
   /* output caps */
-  audio_only = mux->num_v_streams == 0 && mux->num_a_streams > 0;
+  audio_only = gst_matroska_pads_is_audio_only (mux);
   if (mux->is_webm) {
     media_type = (audio_only) ? "audio/webm" : "video/webm";
   } else {
@@ -4094,8 +4109,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
    * related arithmetic, so apply the timestamp offset if we have one */
   buffer_timestamp += mux->cluster_timestamp_offset;
 
-  is_audio_only = (collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_AUDIO) &&
-      (mux->num_streams == 1);
+  is_audio_only = gst_matroska_pads_is_audio_only (mux);
+
   is_min_duration_reached = (mux->min_cluster_duration == 0
       || (buffer_timestamp > mux->cluster_time
           && (buffer_timestamp - mux->cluster_time) >=
