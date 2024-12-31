@@ -2989,6 +2989,12 @@ channel.</doc>
       <member name="surround_right" value="27" c:identifier="GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT" glib:nick="surround-right" glib:name="GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channels.h">Surround right (between rear right and side right)</doc>
       </member>
+      <member name="top_surround_left" value="28" c:identifier="GST_AUDIO_CHANNEL_POSITION_TOP_SURROUND_LEFT" version="1.26" glib:nick="top-surround-left" glib:name="GST_AUDIO_CHANNEL_POSITION_TOP_SURROUND_LEFT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channels.h">Top surround left (between rear left and side left).</doc>
+      </member>
+      <member name="top_surround_right" value="29" c:identifier="GST_AUDIO_CHANNEL_POSITION_TOP_SURROUND_RIGHT" version="1.26" glib:nick="top-surround-right" glib:name="GST_AUDIO_CHANNEL_POSITION_TOP_SURROUND_RIGHT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-channels.h">Top surround right (between rear right and side right).</doc>
+      </member>
     </enumeration>
     <record name="AudioClippingMeta" c:type="GstAudioClippingMeta" version="1.8">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudiometa.h">Extra buffer metadata describing how much audio has to be clipped from
