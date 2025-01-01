@@ -26,6 +26,8 @@
 #include "PSMain_color.hlsl"
 #include "PSMain_sample_premul.hlsl"
 #include "PSMain_sample.hlsl"
+#include "PSMain_sample_scrgb_tonemap.hlsl"
+#include "PSMain_sample_scrgb.hlsl"
 #include "PSMain_snow.hlsl"
 #include "VSMain_color.hlsl"
 #include "VSMain_coord.hlsl"

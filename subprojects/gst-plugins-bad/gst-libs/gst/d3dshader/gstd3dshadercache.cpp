@@ -75,6 +75,8 @@ static const ShaderItem g_ps_map[] = {
   {GST_D3D_PLUGIN_PS_COLOR, BUILD_SOURCE (PSMain_color)},
   {GST_D3D_PLUGIN_PS_SAMPLE_PREMULT, BUILD_SOURCE (PSMain_sample_premul)},
   {GST_D3D_PLUGIN_PS_SAMPLE, BUILD_SOURCE (PSMain_sample)},
+  {GST_D3D_PLUGIN_PS_SAMPLE_SCRGB_TONEMAP, BUILD_SOURCE (PSMain_sample_scrgb_tonemap)},
+  {GST_D3D_PLUGIN_PS_SAMPLE_SCRGB, BUILD_SOURCE (PSMain_sample_scrgb)},
   {GST_D3D_PLUGIN_PS_SNOW, BUILD_SOURCE (PSMain_snow)},
 };
 

@@ -6,6 +6,8 @@ hlsl_sources = [
   ['PSMain_color', 'ps'],
   ['PSMain_sample_premul', 'ps'],
   ['PSMain_sample', 'ps'],
+  ['PSMain_sample_scrgb_tonemap', 'ps'],
+  ['PSMain_sample_scrgb', 'ps'],
   ['PSMain_snow', 'ps'],
   ['VSMain_color', 'vs'],
   ['VSMain_coord', 'vs'],
