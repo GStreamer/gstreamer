@@ -165,11 +165,9 @@ foreach lib: libs
 endforeach
 
 cdir = meson.current_source_dir()
-if host_machine.system() == 'windows'
-  pathsep = ';'
-else
-  pathsep = ':'
-endif
+
+doc_source_file = configure_file(output: 'doc_sources.json', configuration: plugin_sources, output_format: 'json')
+
 gst_plugins_doc = run_command(
     plugins_cache_generator,
     'hotdoc-config',
@@ -178,6 +176,7 @@ gst_plugins_doc = run_command(
     '--sitemap', cdir / 'plugins/sitemap.txt',
     '--index', cdir / 'plugins/index.md',
     '--gst_index', cdir / 'plugins/index.md',
+    '--gst_c_source_file', doc_source_file,
     '--gst_c_sources',
         cdir / '../plugins/*/*.c',
         cdir / '../plugins/*/*.h',

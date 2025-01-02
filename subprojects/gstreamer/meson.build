@@ -678,6 +678,11 @@ if host_system == 'darwin'
   pkgconfig_libs = ['-Wl,-rpath,${libdir}']
 endif
 
+if host_machine.system() == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
+endif
 
 gst_libraries = []
 subdir('cmake')

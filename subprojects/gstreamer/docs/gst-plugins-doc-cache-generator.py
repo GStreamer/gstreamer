@@ -47,17 +47,32 @@ class GstPluginsHotdocConfGen:
         parser.add_argument('--project_version')
         parser.add_argument('--include_paths', nargs='*', default=[])
         parser.add_argument('--gst_c_source_filters', nargs='*', default=[])
+        parser.add_argument('--gst_c_source_file', type=P)
 
         parser.parse_args(namespace=self, args=sys.argv[2:])
 
     def generate_plugins_configs(self):
         plugin_files = []
+
+        if self.gst_c_source_file is not None:
+            with self.gst_c_source_file.open() as fd:
+                gst_c_source_map = json.load(fd)
+        else:
+            gst_c_source_map = {}
+
         with self.gst_cache_file.open() as fd:
             all_plugins = json.load(fd)
 
             for plugin_name in all_plugins.keys():
                 conf = self.builddir / f'plugin-{plugin_name}.json'
                 plugin_files.append(str(conf))
+
+                # New-style, sources are explicitly provided, as opposed to using wildcards
+                if plugin_name in gst_c_source_map:
+                    gst_c_sources = gst_c_source_map[plugin_name].split(os.pathsep)
+                else:
+                    gst_c_sources = self.gst_c_sources
+
                 with conf.open('w') as f:
                     json.dump({
                         'sitemap': str(self.sitemap),
@@ -71,7 +86,7 @@ class GstPluginsHotdocConfGen:
                         'gst_plugin_name': plugin_name,
                         'c_flags': self.c_flags,
                         'gst_smart_index': True,
-                        'gst_c_sources': self.gst_c_sources,
+                        'gst_c_sources': gst_c_sources,
                         'gst_c_source_filters': [str(s) for s in self.gst_c_source_filters],
                         'include_paths': self.include_paths,
                         'gst_order_generated_subpages': True,

@@ -13,6 +13,15 @@ gst_tracers_sources = [
   'gstfactories.c'
 ]
 
+gst_tracers_headers = [
+  'gstfactories.h',
+  'gstlatency.h',
+  'gstleaks.h',
+  'gstlog.h',
+  'gstrusage.h',
+  'gststats.h',
+]
+
 if gst_debug
   gst_tracers_sources += ['gstlog.c']
 endif
@@ -32,3 +41,12 @@ gst_tracers = library('gstcoretracers',
   install_dir : plugins_install_dir,
 )
 plugins += [gst_tracers]
+
+doc_sources = []
+foreach s: gst_tracers_sources + gst_tracers_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'coretracers': pathsep.join(doc_sources)
+}

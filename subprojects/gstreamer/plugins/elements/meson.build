@@ -26,6 +26,34 @@ gst_elements_sources = [
   'gstvalve.c',
 ]
 
+gst_elements_headers = [
+  'gstcapsfilter.h',
+  'gstclocksync.h',
+  'gstconcat.h',
+  'gstcoreelementselements.h',
+  'gstdataurisrc.h',
+  'gstdownloadbuffer.h',
+  'gstelements_private.h',
+  'gstfakesink.h',
+  'gstfakesrc.h',
+  'gstfdsink.h',
+  'gstfdsrc.h',
+  'gstfilesink.h',
+  'gstfilesrc.h',
+  'gstfunnel.h',
+  'gstidentity.h',
+  'gstinputselector.h',
+  'gstmultiqueue.h',
+  'gstoutputselector.h',
+  'gstqueue2.h',
+  'gstqueue.h',
+  'gstsparsefile.h',
+  'gststreamiddemux.h',
+  'gsttee.h',
+  'gsttypefindelement.h',
+  'gstvalve.h',
+]
+
 gst_elements = library('gstcoreelements',
   gst_elements_sources,
   c_args : gst_c_args,
@@ -36,3 +64,12 @@ gst_elements = library('gstcoreelements',
 )
 
 plugins += [gst_elements]
+
+doc_sources = []
+foreach s: gst_elements_sources + gst_elements_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'coreelements': pathsep.join(doc_sources)
+}
