@@ -2052,7 +2052,7 @@ handle_send_time_ack (const guint8 * data, gsize size,
         " from helper process",
         GST_STIME_ARGS ((GstClockTimeDiff) (helper_send_time -
                 sync->delay_req_send_time_local)),
-        GST_STIME_ARGS (receive_time - helper_send_time));
+        GST_STIME_ARGS ((GstClockTimeDiff) (receive_time - helper_send_time)));
     sync->delay_req_send_time_local = helper_send_time;
   }
 }
