@@ -340,6 +340,7 @@ sink_query_caps (GstPad * pad, GstObject * object, GstQuery * q)
           " query-only-field=(int)1");
       gst_query_set_caps_result (q, caps);
       gst_caps_unref (caps);
+      /* FALLTHROUGH */
     default:
       ret = gst_pad_query_default (pad, object, q);
       break;

@@ -2671,8 +2671,8 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
           g_object_notify_by_pspec (G_OBJECT (queue), obj_props[PROP_BITRATE]);
         }
       }
-      /* Fall-through */
     }
+      /* FALLTHROUGH */
     default:
       if (GST_EVENT_IS_SERIALIZED (event)) {
         gboolean bitrate_changed = TRUE;

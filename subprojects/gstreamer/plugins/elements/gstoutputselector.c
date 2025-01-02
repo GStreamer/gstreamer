@@ -640,8 +640,8 @@ gst_output_selector_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_copy_segment (event, &sel->segment);
       GST_DEBUG_OBJECT (sel, "configured SEGMENT %" GST_SEGMENT_FORMAT,
           &sel->segment);
-      /* fall through */
     }
+      /* FALLTHROUGH */
     default:
     {
       active = gst_output_selector_get_active (sel);

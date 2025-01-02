@@ -617,6 +617,7 @@ gst_fake_src_prepare_buffer (GstFakeSrc * src, guint8 * data, gsize size)
     }
     case FAKE_SRC_FILLTYPE_PATTERN:
       src->pattern_byte = 0x00;
+      /* FALLTHROUGH */
     case FAKE_SRC_FILLTYPE_PATTERN_CONT:
     {
       gint i;
