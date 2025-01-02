@@ -123,7 +123,7 @@ endforeach
 
 libs_doc = [hotdoc.generate_doc('gstreamer',
     project_version: api_version,
-    gi_c_sources: '../gst/*.[hc]',
+    gi_c_sources: gst_sources + gst_headers,
     gi_sources: [gst_gir[0].full_path()],
     gi_c_source_filters: gst_excludes,
     sitemap: 'gst/sitemap.txt',
