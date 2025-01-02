@@ -11482,6 +11482,9 @@ qtdemux_mul_transformation_matrix (GstQTDemux * qtdemux,
     c[4] = QTADD_MATRIX (QTMUL_MATRIX (a[3], b[1]), QTMUL_MATRIX (a[4], b[4]));
     c[8] = a[8];
   }
+
+#undef QTMUL_MATRIX
+#undef QTADD_MATRIX
 }
 
 static void
