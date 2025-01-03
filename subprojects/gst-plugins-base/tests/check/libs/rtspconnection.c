@@ -819,8 +819,8 @@ GST_START_TEST (test_rtspconnection_backlog)
     num_sent--;
 
     g_main_context_iteration (NULL, FALSE);
+    fail_unless (num_queued >= message_sent_count);
     num_queued -= message_sent_count;
-    fail_unless (num_queued >= 0);
   }
 
   /* make sure we can read the rest of the data */
