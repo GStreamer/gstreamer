@@ -280,7 +280,7 @@ no_memory:
  * Returns: (transfer full): a new #GstBufferPool to allocate video frames
  */
 GstBufferPool *
-gst_video_buffer_pool_new ()
+gst_video_buffer_pool_new (void)
 {
   GstVideoBufferPool *pool;
 

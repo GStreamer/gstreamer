@@ -213,7 +213,7 @@ typedef GHashTable GstXmpSchema;
 #define gst_xmp_schema_lookup g_hash_table_lookup
 #define gst_xmp_schema_insert g_hash_table_insert
 static GstXmpSchema *
-gst_xmp_schema_new ()
+gst_xmp_schema_new (void)
 {
   return g_hash_table_new (g_direct_hash, g_direct_equal);
 }
@@ -1066,7 +1066,7 @@ _init_xmp_tag_map (gpointer user_data)
 }
 
 static void
-xmp_tags_initialize ()
+xmp_tags_initialize (void)
 {
   static GOnce my_once = G_ONCE_INIT;
   g_once (&my_once, (GThreadFunc) _init_xmp_tag_map, NULL);
