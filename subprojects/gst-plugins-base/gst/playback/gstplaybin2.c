@@ -5839,6 +5839,7 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       GST_PLAY_BIN_DYN_UNLOCK (playbin);
       if (!do_save)
         break;
+      /* FALLTHROUGH */
     case GST_STATE_CHANGE_READY_TO_NULL:
       /* we go async to PAUSED, so if that fails, we never make it to PAUSED
        * and no state change PAUSED to READY passes here,

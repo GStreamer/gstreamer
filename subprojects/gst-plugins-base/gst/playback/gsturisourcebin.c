@@ -992,7 +992,7 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, OutputSlotInfo * slot)
         GST_PAD_PROBE_INFO_DATA (info) = add_stream_start_custom_flag (&ev);
       }
     }
-      /* PASSTHROUGH */
+      /* FALLTHROUGH */
     case GST_EVENT_FLUSH_STOP:
       BUFFERING_LOCK (urisrc);
       slot->is_eos = FALSE;

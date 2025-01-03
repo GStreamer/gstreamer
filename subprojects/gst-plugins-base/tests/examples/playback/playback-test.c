@@ -2039,6 +2039,7 @@ msg_buffering (GstBus * bus, GstMessage * message, PlaybackApp * app)
       break;
     case GST_BUFFERING_LIVE:
       app->is_live = TRUE;
+      /* FALLTHROUGH */
     case GST_BUFFERING_TIMESHIFT:
     case GST_BUFFERING_STREAM:
       do_stream_buffering (app, percent);

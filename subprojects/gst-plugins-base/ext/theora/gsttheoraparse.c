@@ -769,6 +769,7 @@ theora_parse_src_convert (GstPad * pad,
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
           scale = 3 * (parse->info.pic_width * parse->info.pic_height) / 2;
+          /* FALLTHROUGH */
         case GST_FORMAT_DEFAULT:
           *dest_value = scale * gst_util_uint64_scale (src_value,
               parse->info.fps_numerator,

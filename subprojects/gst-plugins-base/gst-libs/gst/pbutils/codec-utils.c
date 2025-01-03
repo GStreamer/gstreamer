@@ -3410,6 +3410,7 @@ gst_codec_utils_caps_from_mime_codec_single (const gchar * codec)
       GST_FIXME
           ("Signalling of ATMOS ('ec+3') isn't defined yet. Falling back to EAC3 caps");
       /* withdrawn, unused, do not use (was enhanced AC-3 audio with JOC) */
+      /* FALLTHROUGH */
     case GST_MAKE_FOURCC ('e', 'c', '-', '3'):
       /* ETSI TS 102 366 v1.4.1 - Digital Audio Compression (AC-3, Enhanced AC-3) Standard, Annex F */
       caps = gst_caps_new_empty_simple ("audio/x-eac3");

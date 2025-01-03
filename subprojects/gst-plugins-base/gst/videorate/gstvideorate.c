@@ -1256,8 +1256,8 @@ gst_video_rate_src_event (GstBaseTransform * trans, GstEvent * event)
         gst_event_unref (event);
         event = gst_event_new_qos (type, proportion, diff, timestamp);
       }
-      /* Fallthrough */
     }
+      /* FALLTHROUGH */
     default:
       res = gst_pad_push_event (sinkpad, event);
       break;

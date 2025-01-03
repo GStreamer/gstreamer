@@ -1179,8 +1179,8 @@ gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
             break;
         }
       }
-      /* fall through */
     }
+      /* FALLTHROUGH */
     default:
       res = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
       break;

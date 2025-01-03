@@ -556,6 +556,7 @@ vorbis_parse_convert (GstPad * pad,
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
           scale = sizeof (float) * parse->vi.channels;
+          /* FALLTHROUGH */
         case GST_FORMAT_DEFAULT:
           *dest_value =
               scale * gst_util_uint64_scale_int (src_value, parse->vi.rate,
