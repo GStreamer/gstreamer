@@ -48,6 +48,7 @@ class GstPluginsHotdocConfGen:
         parser.add_argument('--include_paths', nargs='*', default=[])
         parser.add_argument('--gst_c_source_filters', nargs='*', default=[])
         parser.add_argument('--gst_c_source_file', type=P)
+        parser.add_argument('--output', type=P)
 
         parser.parse_args(namespace=self, args=sys.argv[2:])
 
@@ -91,6 +92,10 @@ class GstPluginsHotdocConfGen:
                         'include_paths': self.include_paths,
                         'gst_order_generated_subpages': True,
                     }, f, indent=4)
+
+        if self.output is not None:
+            with self.output.open('w') as f:
+                json.dump(plugin_files, f, indent=4)
 
         return plugin_files
 

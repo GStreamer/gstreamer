@@ -26,7 +26,9 @@ git checkout $(git ls-files 'subprojects/*.wrap')
 git checkout $(git ls-files 'subprojects/*.wrap')
 ./ci/scripts/check-diff.py
 
-export GI_TYPELIB_PATH="$PWD/girs"
-hotdoc run --conf-file "$builddir/subprojects/gst-docs/GStreamer-doc.json"
+ninja -C "$builddir" subprojects/gst-docs/sitemap.txt
+
+export GI_TYPELIB_PATH=$PWD/girs
+hotdoc run --conf-file build/subprojects/gst-docs/GStreamer-doc.json
 
 mv "$builddir/subprojects/gst-docs/GStreamer-doc/html" documentation/
