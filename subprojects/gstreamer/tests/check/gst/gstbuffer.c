@@ -761,7 +761,10 @@ GST_START_TEST (test_find)
 
   size = gst_buffer_get_sizes (buf, &offset, &maxalloc);
   fail_unless (size == 25);
-  fail_unless (offset >= 0);
+  /* NOTE: The offset isn't checked for the buffer since it's not deterministic
+   * (there could be pre-allocated memory before). The only check that could be
+   * done is to check that it's >= 0 which ... will always be TRUE since it's an
+   * unsigned integer ;) */
   fail_unless (maxalloc >= 25);
   fail_unless (gst_buffer_n_memory (buf) == 4);
 
