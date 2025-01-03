@@ -1900,6 +1900,34 @@ See also #gst_play_get_message_bus()</doc-version>
           </parameter>
         </parameters>
       </function>
+      <function name="get_stream_id" c:identifier="gst_play_message_get_stream_id" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Reads the stream ID the play message @msg applies to, if any.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The stream ID this message applies to</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="get_uri" c:identifier="gst_play_message_get_uri" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Reads the URI the play message @msg applies to.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The URI this message applies to</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="parse_buffering" c:identifier="gst_play_message_parse_buffering" version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given buffering @msg and extract the corresponding value</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
@@ -1971,7 +1999,11 @@ See also #gst_play_get_message_bus()</doc-version>
         </parameters>
       </function>
       <function name="parse_error" c:identifier="gst_play_message_parse_error" version="1.20">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given error @msg and extract the corresponding #GError.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given error @msg and extract the corresponding #GError.
+
+Since 1.26 the details will always contain the URI this refers to in an
+"uri" field of type string, and (if known) the string "stream-id" it is
+referring to.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -1988,6 +2020,35 @@ See also #gst_play_get_message_bus()</doc-version>
           <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstStructure containing additional details about the error</doc>
             <type name="Gst.Structure" c:type="GstStructure**"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_error_missing_plugin" c:identifier="gst_play_message_parse_error_missing_plugin" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parses missing plugin descriptions and installer details from a
+GST_PLAY_ERROR_MISSING_PLUGIN error message.
+
+Both arrays will have the same length, and strings at the same index
+correspond to each other.
+
+The installer details can be passed to gst_install_plugins_sync() or
+gst_install_plugins_async().</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE if the message contained a missing-plugin error.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="descriptions" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of descriptions</doc>
+            <type name="utf8" c:type="gchar***"/>
+          </parameter>
+          <parameter name="installer_details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of installer details</doc>
+            <type name="utf8" c:type="gchar***"/>
           </parameter>
         </parameters>
       </function>
@@ -2149,7 +2210,11 @@ See also #gst_play_get_message_bus()</doc-version>
         </parameters>
       </function>
       <function name="parse_warning" c:identifier="gst_play_message_parse_warning" version="1.20">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given warning @msg and extract the corresponding #GError</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given warning @msg and extract the corresponding #GError.
+
+Since 1.26 the details will always contain the URI this refers to in an
+"uri" field of type string, and (if known) the string "stream-id" it is
+referring to.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -2166,6 +2231,35 @@ See also #gst_play_get_message_bus()</doc-version>
           <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstStructure containing additional details about the warning</doc>
             <type name="Gst.Structure" c:type="GstStructure**"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_warning_missing_plugin" c:identifier="gst_play_message_parse_warning_missing_plugin" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parses missing plugin descriptions and installer details from a
+GST_PLAY_ERROR_MISSING_PLUGIN warning message.
+
+Both arrays will have the same length, and strings at the same index
+correspond to each other.
+
+The installer details can be passed to gst_install_plugins_sync() or
+gst_install_plugins_async().</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE if the message contained a missing-plugin error.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="descriptions" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of descriptions</doc>
+            <type name="utf8" c:type="gchar***"/>
+          </parameter>
+          <parameter name="installer_details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of installer details</doc>
+            <type name="utf8" c:type="gchar***"/>
           </parameter>
         </parameters>
       </function>
@@ -2928,6 +3022,34 @@ freed using gst_play_visualization_free().</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="play_message_get_stream_id" c:identifier="gst_play_message_get_stream_id" moved-to="PlayMessage.get_stream_id" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Reads the stream ID the play message @msg applies to, if any.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The stream ID this message applies to</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_get_uri" c:identifier="gst_play_message_get_uri" moved-to="PlayMessage.get_uri" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Reads the URI the play message @msg applies to.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The URI this message applies to</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="play_message_parse_buffering" c:identifier="gst_play_message_parse_buffering" moved-to="PlayMessage.parse_buffering" version="1.26">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given buffering @msg and extract the corresponding value</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
@@ -2999,7 +3121,11 @@ freed using gst_play_visualization_free().</doc>
       </parameters>
     </function>
     <function name="play_message_parse_error" c:identifier="gst_play_message_parse_error" moved-to="PlayMessage.parse_error" version="1.20">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given error @msg and extract the corresponding #GError.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given error @msg and extract the corresponding #GError.
+
+Since 1.26 the details will always contain the URI this refers to in an
+"uri" field of type string, and (if known) the string "stream-id" it is
+referring to.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
       <return-value transfer-ownership="none">
         <type name="none" c:type="void"/>
@@ -3016,6 +3142,35 @@ freed using gst_play_visualization_free().</doc>
         <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstStructure containing additional details about the error</doc>
           <type name="Gst.Structure" c:type="GstStructure**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_parse_error_missing_plugin" c:identifier="gst_play_message_parse_error_missing_plugin" moved-to="PlayMessage.parse_error_missing_plugin" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parses missing plugin descriptions and installer details from a
+GST_PLAY_ERROR_MISSING_PLUGIN error message.
+
+Both arrays will have the same length, and strings at the same index
+correspond to each other.
+
+The installer details can be passed to gst_install_plugins_sync() or
+gst_install_plugins_async().</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE if the message contained a missing-plugin error.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="descriptions" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of descriptions</doc>
+          <type name="utf8" c:type="gchar***"/>
+        </parameter>
+        <parameter name="installer_details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of installer details</doc>
+          <type name="utf8" c:type="gchar***"/>
         </parameter>
       </parameters>
     </function>
@@ -3177,7 +3332,11 @@ freed using gst_play_visualization_free().</doc>
       </parameters>
     </function>
     <function name="play_message_parse_warning" c:identifier="gst_play_message_parse_warning" moved-to="PlayMessage.parse_warning" version="1.20">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given warning @msg and extract the corresponding #GError</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given warning @msg and extract the corresponding #GError.
+
+Since 1.26 the details will always contain the URI this refers to in an
+"uri" field of type string, and (if known) the string "stream-id" it is
+referring to.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
       <return-value transfer-ownership="none">
         <type name="none" c:type="void"/>
@@ -3194,6 +3353,35 @@ freed using gst_play_visualization_free().</doc>
         <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstStructure containing additional details about the warning</doc>
           <type name="Gst.Structure" c:type="GstStructure**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_parse_warning_missing_plugin" c:identifier="gst_play_message_parse_warning_missing_plugin" moved-to="PlayMessage.parse_warning_missing_plugin" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parses missing plugin descriptions and installer details from a
+GST_PLAY_ERROR_MISSING_PLUGIN warning message.
+
+Both arrays will have the same length, and strings at the same index
+correspond to each other.
+
+The installer details can be passed to gst_install_plugins_sync() or
+gst_install_plugins_async().</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE if the message contained a missing-plugin error.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="descriptions" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of descriptions</doc>
+          <type name="utf8" c:type="gchar***"/>
+        </parameter>
+        <parameter name="installer_details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of installer details</doc>
+          <type name="utf8" c:type="gchar***"/>
         </parameter>
       </parameters>
     </function>

@@ -188,6 +188,8 @@ struct _GstPlay
 
   GstStructure *config;
 
+  GList *missing_plugin_messages;
+
   /* Protected by lock */
   gboolean seek_pending;        /* Only set from main context */
   GstClockTime last_seek_time;  /* Only set from main context */
@@ -273,6 +275,8 @@ static void remove_seek_source (GstPlay * self);
 
 static gboolean query_position (GstPlay * self, GstClockTime * position);
 
+static void gst_play_set_uri_details (GstPlay * self, GstStructure * details);
+
 static void
 gst_play_init (GstPlay * self)
 {
@@ -318,6 +322,7 @@ api_bus_post_message (GstPlay * self, GstPlayMessage message_type,
     const gchar * firstfield, ...)
 {
   GstStructure *message_data = NULL;
+  GstStructure *details = NULL;
   GstMessage *msg = NULL;
   va_list varargs;
 
@@ -332,8 +337,26 @@ api_bus_post_message (GstPlay * self, GstPlayMessage message_type,
 
   msg = gst_message_new_custom (GST_MESSAGE_APPLICATION,
       GST_OBJECT (self), message_data);
-  GST_DEBUG ("Created message with payload: [ %" GST_PTR_FORMAT " ]",
-      message_data);
+
+  // ERROR/WARNING messages store the details in differently named fields for
+  // backwards compatibility
+  if (message_type == GST_PLAY_MESSAGE_ERROR) {
+    const GValue *v = gst_structure_get_value (message_data,
+        GST_PLAY_MESSAGE_DATA_ERROR_DETAILS);
+    details = g_value_get_boxed (v);
+  } else if (message_type == GST_PLAY_MESSAGE_WARNING) {
+    const GValue *v = gst_structure_get_value (message_data,
+        GST_PLAY_MESSAGE_DATA_WARNING_DETAILS);
+    details = g_value_get_boxed (v);
+  }
+
+  if (!details)
+    details = gst_message_writable_details (msg);
+
+  gst_play_set_uri_details (self, details);
+
+  GST_DEBUG_OBJECT (self,
+      "Created message with payload: [ %" GST_PTR_FORMAT " ]", message_data);
   gst_bus_post (self->api_bus, msg);
 }
 
@@ -931,48 +954,42 @@ remove_ready_timeout_source (GstPlay * self)
 
 
 static void
-on_error (GstPlay * self, GError * err, const GstStructure * details)
+on_error (GstPlay * self, GError * err, GstStructure * details)
 {
 #ifndef GST_DISABLE_GST_DEBUG
-  GstStructure *extra_details = NULL;
   gchar *dot_data = NULL;
 #endif
 
   GST_ERROR_OBJECT (self, "Error: %s (%s, %d)", err->message,
       g_quark_to_string (err->domain), err->code);
 
+  if (!details)
+    details = gst_structure_new_static_str_empty ("error-details");
+
 #ifndef GST_DISABLE_GST_DEBUG
-  if (details != NULL) {
-    extra_details = gst_structure_copy (details);
-  } else {
-    extra_details = gst_structure_new_static_str_empty ("error-details");
-  }
   if (gst_play_config_get_pipeline_dump_in_error_details (self->config)) {
     dot_data = gst_debug_bin_to_dot_data (GST_BIN_CAST (self->playbin),
         GST_DEBUG_GRAPH_SHOW_ALL);
-    gst_structure_set (extra_details, "pipeline-dump", G_TYPE_STRING, dot_data,
-        NULL);
+    gst_structure_set (details, "pipeline-dump", G_TYPE_STRING, dot_data, NULL);
   }
 #endif
   api_bus_post_message (self, GST_PLAY_MESSAGE_ERROR,
       GST_PLAY_MESSAGE_DATA_ERROR, G_TYPE_ERROR, err,
-      GST_PLAY_MESSAGE_DATA_ERROR_DETAILS, GST_TYPE_STRUCTURE,
-#ifndef GST_DISABLE_GST_DEBUG
-      extra_details
-#else
-      details
-#endif
-      , NULL);
+      GST_PLAY_MESSAGE_DATA_ERROR_DETAILS, GST_TYPE_STRUCTURE, details, NULL);
 
 #ifndef GST_DISABLE_GST_DEBUG
   g_free (dot_data);
-  gst_structure_free (extra_details);
 #endif
+  gst_structure_free (details);
 
   g_error_free (err);
 
   remove_tick_source (self);
   remove_ready_timeout_source (self);
+
+  g_list_free_full (self->missing_plugin_messages,
+      (GDestroyNotify) gst_message_unref);
+  self->missing_plugin_messages = NULL;
 
   self->target_state = GST_STATE_NULL;
   self->current_state = GST_STATE_NULL;
@@ -1014,17 +1031,108 @@ dump_dot_file (GstPlay * self, const gchar * name)
 }
 
 static void
+gst_play_set_missing_plugin_details (GstPlay * self, GstStructure * details)
+{
+  GValue missing_plugin_details = G_VALUE_INIT;
+
+  g_value_init (&missing_plugin_details, GST_TYPE_ARRAY);
+
+  for (GList * l = self->missing_plugin_messages; l; l = l->next) {
+    GstMessage *missing_plugin_message = l->data;
+    GValue v = G_VALUE_INIT;
+    GstStructure *s;
+    gchar *description, *installer_details;
+
+    description =
+        gst_missing_plugin_message_get_description (missing_plugin_message);
+    installer_details =
+        gst_missing_plugin_message_get_installer_detail
+        (missing_plugin_message);
+
+    s = gst_structure_new_static_str ("missing-plugin-detail", "description",
+        G_TYPE_STRING, description, "installer-details", G_TYPE_STRING,
+        installer_details, NULL);
+    g_value_init (&v, GST_TYPE_STRUCTURE);
+    g_value_take_boxed (&v, s);
+    gst_value_array_append_and_take_value (&missing_plugin_details, &v);
+
+    g_free (description);
+    g_free (installer_details);
+  }
+
+
+  gst_structure_take_value_static_str (details, "missing-plugin-details",
+      &missing_plugin_details);
+}
+
+static void
+gst_play_set_uri_details (GstPlay * self, GstStructure * details)
+{
+  if (!gst_structure_has_field (details, "uri")) {
+    gchar *uri;
+
+    g_object_get (self->playbin, "current-uri", &uri, NULL);
+    if (!uri)
+      g_object_get (self->playbin, "uri", &uri, NULL);
+    if (!uri)
+      uri = g_strdup (self->uri);
+    gst_structure_set (details, "uri", G_TYPE_STRING, uri, NULL);
+    g_free (uri);
+  }
+}
+
+static void
+gst_play_set_stream_id_details (GstPlay * self, GstMessage * msg,
+    GstStructure * details)
+{
+  if (!gst_structure_has_field (details, "stream-id")) {
+    GstPad *pad = NULL;
+    gchar *stream_id;
+
+    if (GST_IS_ELEMENT (GST_MESSAGE_SRC (msg))) {
+      GstElement *element = GST_ELEMENT (GST_MESSAGE_SRC (msg));
+
+      // If the message src has only one sinkpad (or is a source element)
+      // grab the stream id from there
+      GST_OBJECT_LOCK (element);
+      if (element->numsinkpads == 1) {
+        pad = gst_object_ref (element->sinkpads->data);
+      } else if (element->numsinkpads == 0 && element->numsrcpads > 0) {
+        pad = gst_object_ref (element->srcpads->data);
+      }
+      GST_OBJECT_UNLOCK (element);
+    } else if (GST_IS_PAD (GST_MESSAGE_SRC (msg))) {
+      pad = gst_object_ref (GST_PAD (GST_MESSAGE_SRC (msg)));
+    }
+
+    if (pad) {
+      stream_id = gst_pad_get_stream_id (pad);
+      if (stream_id)
+        gst_structure_set (details, "stream-id", G_TYPE_STRING, stream_id,
+            NULL);
+      g_free (stream_id);
+      gst_object_unref (pad);
+    }
+  }
+}
+
+static void
 error_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg, gpointer user_data)
 {
   GstPlay *self = GST_PLAY (user_data);
   GError *err, *play_err;
   gchar *name, *debug, *message, *full_message;
-  const GstStructure *details = NULL;
+  GstStructure *details = NULL;
+  GstPlayError play_error = GST_PLAY_ERROR_FAILED;
 
   dump_dot_file (self, "error");
 
   gst_message_parse_error (msg, &err, &debug);
-  gst_message_parse_error_details (msg, &details);
+  gst_message_parse_error_details (msg, (const GstStructure **) &details);
+  if (details)
+    details = gst_structure_copy (details);
+  else
+    details = gst_structure_new_static_str_empty ("message-details");
 
   name = gst_object_get_path_string (msg->src);
   message = gst_error_get_message (err->domain, err->code);
@@ -1042,8 +1150,15 @@ error_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg, gpointer user_data)
   if (debug != NULL)
     GST_ERROR_OBJECT (self, "Additional debug info: %s", debug);
 
-  play_err =
-      g_error_new_literal (GST_PLAY_ERROR, GST_PLAY_ERROR_FAILED, full_message);
+  gst_play_set_stream_id_details (self, msg, details);
+  if (g_error_matches (err, GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN) ||
+      g_error_matches (err, GST_STREAM_ERROR,
+          GST_STREAM_ERROR_CODEC_NOT_FOUND)) {
+    play_error = GST_PLAY_ERROR_MISSING_PLUGIN;
+    gst_play_set_missing_plugin_details (self, details);
+  }
+
+  play_err = g_error_new_literal (GST_PLAY_ERROR, play_error, full_message);
   on_error (self, play_err, details);
 
   g_clear_error (&err);
@@ -1059,12 +1174,17 @@ warning_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg, gpointer user_data)
   GstPlay *self = GST_PLAY (user_data);
   GError *err, *play_err;
   gchar *name, *debug, *message, *full_message;
-  const GstStructure *details = NULL;
+  GstStructure *details = NULL;
+  GstPlayError play_error = GST_PLAY_ERROR_FAILED;
 
   dump_dot_file (self, "warning");
 
   gst_message_parse_warning (msg, &err, &debug);
-  gst_message_parse_warning_details (msg, &details);
+  gst_message_parse_warning_details (msg, (const GstStructure **) &details);
+  if (details)
+    details = gst_structure_copy (details);
+  else
+    details = gst_structure_new_static_str_empty ("message-details");
 
   name = gst_object_get_path_string (msg->src);
   message = gst_error_get_message (err->domain, err->code);
@@ -1082,22 +1202,24 @@ warning_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg, gpointer user_data)
   if (debug != NULL)
     GST_WARNING_OBJECT (self, "Additional debug info: %s", debug);
 
-  play_err =
-      g_error_new_literal (GST_PLAY_ERROR, GST_PLAY_ERROR_FAILED, full_message);
+  gst_play_set_stream_id_details (self, msg, details);
+  if (g_error_matches (err, GST_CORE_ERROR, GST_CORE_ERROR_MISSING_PLUGIN) ||
+      g_error_matches (err, GST_STREAM_ERROR,
+          GST_STREAM_ERROR_CODEC_NOT_FOUND)) {
+    play_error = GST_PLAY_ERROR_MISSING_PLUGIN;
+    gst_play_set_missing_plugin_details (self, details);
+  }
+
+  play_err = g_error_new_literal (GST_PLAY_ERROR, play_error, full_message);
 
   GST_WARNING_OBJECT (self, "Warning: %s (%s, %d)", err->message,
       g_quark_to_string (err->domain), err->code);
 
-  if (details != NULL) {
-    api_bus_post_message (self, GST_PLAY_MESSAGE_WARNING,
-        GST_PLAY_MESSAGE_DATA_WARNING, G_TYPE_ERROR, play_err,
-        GST_PLAY_MESSAGE_DATA_WARNING_DETAILS, GST_TYPE_STRUCTURE, details,
-        NULL);
-  } else {
-    api_bus_post_message (self, GST_PLAY_MESSAGE_WARNING,
-        GST_PLAY_MESSAGE_DATA_WARNING, G_TYPE_ERROR, play_err, NULL);
-  }
+  api_bus_post_message (self, GST_PLAY_MESSAGE_WARNING,
+      GST_PLAY_MESSAGE_DATA_WARNING, G_TYPE_ERROR, play_err,
+      GST_PLAY_MESSAGE_DATA_WARNING_DETAILS, GST_TYPE_STRUCTURE, details, NULL);
 
+  gst_structure_free (details);
   g_clear_error (&play_err);
   g_clear_error (&err);
   g_free (debug);
@@ -1606,6 +1728,9 @@ element_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg, gpointer user_data)
       else if (target_state == GST_STATE_PLAYING)
         gst_play_play_internal (self);
     }
+  } else if (gst_is_missing_plugin_message (msg)) {
+    self->missing_plugin_messages =
+        g_list_prepend (self->missing_plugin_messages, gst_message_ref (msg));
   }
 }
 
@@ -2472,6 +2597,10 @@ gst_play_main (gpointer data)
   remove_tick_source (self);
   remove_ready_timeout_source (self);
 
+  g_list_free_full (self->missing_plugin_messages,
+      (GDestroyNotify) gst_message_unref);
+  self->missing_plugin_messages = NULL;
+
   g_mutex_lock (&self->lock);
   if (self->media_info) {
     g_object_unref (self->media_info);
@@ -2717,6 +2846,10 @@ gst_play_stop_internal (GstPlay * self, gboolean transient)
 
   tick_cb (self);
   remove_tick_source (self);
+
+  g_list_free_full (self->missing_plugin_messages,
+      (GDestroyNotify) gst_message_unref);
+  self->missing_plugin_messages = NULL;
 
   add_ready_timeout_source (self);
 
@@ -4337,6 +4470,8 @@ gst_play_error_get_name (GstPlayError error)
   switch (error) {
     case GST_PLAY_ERROR_FAILED:
       return "failed";
+    case GST_PLAY_ERROR_MISSING_PLUGIN:
+      return "missing-plugin";
   }
 
   g_assert_not_reached ();
@@ -4733,6 +4868,94 @@ gst_play_message_parse_type (GstMessage * msg, GstPlayMessage * type)
 }
 
 /**
+ * gst_play_message_get_uri:
+ * @msg: A #GstMessage
+ *
+ * Reads the URI the play message @msg applies to.
+ *
+ * Returns: (transfer none): The URI this message applies to
+ *
+ * Since: 1.26
+ */
+const gchar *
+gst_play_message_get_uri (GstMessage * msg)
+{
+  const GstStructure *details = NULL;
+  const gchar *uri;
+  GstPlayMessage msg_type;
+
+  g_return_val_if_fail (gst_play_is_play_message (msg), NULL);
+
+  gst_play_message_parse_type (msg, &msg_type);
+
+  // ERROR/WARNING messages store the details in differently named fields for
+  // backwards compatibility
+  if (msg_type == GST_PLAY_MESSAGE_ERROR) {
+    const GstStructure *s = gst_message_get_structure (msg);
+    const GValue *v =
+        gst_structure_get_value (s, GST_PLAY_MESSAGE_DATA_ERROR_DETAILS);
+    details = g_value_get_boxed (v);
+  } else if (msg_type == GST_PLAY_MESSAGE_WARNING) {
+    const GstStructure *s = gst_message_get_structure (msg);
+    const GValue *v =
+        gst_structure_get_value (s, GST_PLAY_MESSAGE_DATA_WARNING_DETAILS);
+    details = g_value_get_boxed (v);
+  }
+
+  if (!details)
+    details = gst_message_get_details (msg);
+
+  g_return_val_if_fail (details, NULL);
+  uri = gst_structure_get_string (details, "uri");
+  g_return_val_if_fail (uri, NULL);
+
+  return uri;
+}
+
+/**
+ * gst_play_message_get_stream_id:
+ * @msg: A #GstMessage
+ *
+ * Reads the stream ID the play message @msg applies to, if any.
+ *
+ * Returns: (transfer none) (nullable): The stream ID this message applies to
+ *
+ * Since: 1.26
+ */
+const gchar *
+gst_play_message_get_stream_id (GstMessage * msg)
+{
+  const GstStructure *details = NULL;
+  const gchar *stream_id;
+  GstPlayMessage msg_type;
+
+  g_return_val_if_fail (gst_play_is_play_message (msg), NULL);
+
+  gst_play_message_parse_type (msg, &msg_type);
+
+  // ERROR/WARNING messages store the details in differently named fields for
+  // backwards compatibility
+  if (msg_type == GST_PLAY_MESSAGE_ERROR) {
+    const GstStructure *s = gst_message_get_structure (msg);
+    const GValue *v =
+        gst_structure_get_value (s, GST_PLAY_MESSAGE_DATA_ERROR_DETAILS);
+    details = g_value_get_boxed (v);
+  } else if (msg_type == GST_PLAY_MESSAGE_WARNING) {
+    const GstStructure *s = gst_message_get_structure (msg);
+    const GValue *v =
+        gst_structure_get_value (s, GST_PLAY_MESSAGE_DATA_WARNING_DETAILS);
+    details = g_value_get_boxed (v);
+  }
+
+  if (!details)
+    details = gst_message_get_details (msg);
+  g_return_val_if_fail (details, NULL);
+  stream_id = gst_structure_get_string (details, "stream-id");
+
+  return stream_id;
+}
+
+/**
  * gst_play_message_parse_uri_loaded:
  * @msg: A #GstMessage
  * @uri: (out) (optional) (transfer full): the resulting URI
@@ -4857,6 +5080,10 @@ gst_play_message_parse_buffering_percent (GstMessage * msg, guint * percent)
  *
  * Parse the given error @msg and extract the corresponding #GError.
  *
+ * Since 1.26 the details will always contain the URI this refers to in an
+ * "uri" field of type string, and (if known) the string "stream-id" it is
+ * referring to.
+ *
  * Since: 1.20
  */
 void
@@ -4869,13 +5096,118 @@ gst_play_message_parse_error (GstMessage * msg, GError ** error,
       GST_PLAY_MESSAGE_DATA_ERROR_DETAILS, GST_TYPE_STRUCTURE, details);
 }
 
+static gboolean
+gst_play_message_parse_missing_plugin (GstMessage * msg,
+    GstPlayMessage msg_type, gchar *** descriptions,
+    gchar *** installer_details)
+{
+  const GError *err;
+  const GValue *v, *details_array;
+  const GstStructure *s, *details;
+  guint n_details;
+
+  if (descriptions)
+    *descriptions = NULL;
+  if (installer_details)
+    *installer_details = NULL;
+
+  s = gst_message_get_structure (msg);
+
+  v = gst_structure_get_value (s,
+      msg_type ==
+      GST_PLAY_MESSAGE_ERROR ? GST_PLAY_MESSAGE_DATA_ERROR :
+      GST_PLAY_MESSAGE_DATA_WARNING);
+  if (!v)
+    return FALSE;
+  err = g_value_get_boxed (v);
+  if (!err)
+    return FALSE;
+
+  if (!g_error_matches (err, GST_PLAY_ERROR, GST_PLAY_ERROR_MISSING_PLUGIN))
+    return FALSE;
+
+  v = gst_structure_get_value (s,
+      msg_type ==
+      GST_PLAY_MESSAGE_ERROR ? GST_PLAY_MESSAGE_DATA_ERROR_DETAILS :
+      GST_PLAY_MESSAGE_DATA_WARNING_DETAILS);
+  if (!v)
+    return FALSE;
+  details = g_value_get_boxed (v);
+  if (!details)
+    return FALSE;
+
+  details_array = gst_structure_get_value (details, "missing-plugin-details");
+
+  n_details = gst_value_array_get_size (details_array);
+  if (descriptions)
+    *descriptions = g_new0 (gchar *, n_details + 1);
+  if (installer_details)
+    *installer_details = g_new0 (gchar *, n_details + 1);
+
+  for (guint i = 0; i < n_details; i++) {
+    const GValue *details_v = gst_value_array_get_value (details_array, i);
+    const GstStructure *details_s = g_value_get_boxed (details_v);
+    gchar *str;
+
+    if (descriptions) {
+      gst_structure_get (details_s, "description", G_TYPE_STRING, &str, NULL);
+      (*descriptions)[i] = str;
+    }
+
+    if (installer_details) {
+      gst_structure_get (details_s, "installer-details", G_TYPE_STRING, &str,
+          NULL);
+      (*installer_details)[i] = str;
+    }
+  }
+
+  return TRUE;
+
+}
+
+/**
+ * gst_play_message_parse_error_missing_plugin:
+ * @msg: A #GstMessage
+ * @descriptions: (out) (optional) (transfer full): a %NULL-terminated array of descriptions
+ * @installer_details: (out) (optional) (nullable) (transfer full): a %NULL-terminated array of installer details
+ *
+ * Parses missing plugin descriptions and installer details from a
+ * GST_PLAY_ERROR_MISSING_PLUGIN error message.
+ *
+ * Both arrays will have the same length, and strings at the same index
+ * correspond to each other.
+ *
+ * The installer details can be passed to gst_install_plugins_sync() or
+ * gst_install_plugins_async().
+ *
+ * Returns: %TRUE if the message contained a missing-plugin error.
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_play_message_parse_error_missing_plugin (GstMessage * msg,
+    gchar *** descriptions, gchar *** installer_details)
+{
+  GstPlayMessage msg_type;
+
+  gst_play_message_parse_type (msg, &msg_type);
+  g_return_val_if_fail (msg_type == GST_PLAY_MESSAGE_ERROR, FALSE);
+
+  return gst_play_message_parse_missing_plugin (msg, msg_type, descriptions,
+      installer_details);
+}
+
 /**
  * gst_play_message_parse_warning:
  * @msg: A #GstMessage
  * @error: (out) (optional) (transfer full): the resulting warning
  * @details: (out) (optional) (nullable) (transfer full): A #GstStructure containing additional details about the warning
  *
- * Parse the given warning @msg and extract the corresponding #GError
+ * Parse the given warning @msg and extract the corresponding #GError.
+ *
+ * Since 1.26 the details will always contain the URI this refers to in an
+ * "uri" field of type string, and (if known) the string "stream-id" it is
+ * referring to.
  *
  * Since: 1.20
  */
@@ -4887,6 +5219,38 @@ gst_play_message_parse_warning (GstMessage * msg, GError ** error,
       GST_PLAY_MESSAGE_DATA_WARNING, G_TYPE_ERROR, error);
   PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_WARNING,
       GST_PLAY_MESSAGE_DATA_WARNING_DETAILS, GST_TYPE_STRUCTURE, details);
+}
+
+/**
+ * gst_play_message_parse_warning_missing_plugin:
+ * @msg: A #GstMessage
+ * @descriptions: (out) (optional) (transfer full): a %NULL-terminated array of descriptions
+ * @installer_details: (out) (optional) (nullable) (transfer full): a %NULL-terminated array of installer details
+ *
+ * Parses missing plugin descriptions and installer details from a
+ * GST_PLAY_ERROR_MISSING_PLUGIN warning message.
+ *
+ * Both arrays will have the same length, and strings at the same index
+ * correspond to each other.
+ *
+ * The installer details can be passed to gst_install_plugins_sync() or
+ * gst_install_plugins_async().
+ *
+ * Returns: %TRUE if the message contained a missing-plugin error.
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_play_message_parse_warning_missing_plugin (GstMessage * msg,
+    gchar *** descriptions, gchar *** installer_details)
+{
+  GstPlayMessage msg_type;
+
+  gst_play_message_parse_type (msg, &msg_type);
+  g_return_val_if_fail (msg_type == GST_PLAY_MESSAGE_WARNING, FALSE);
+
+  return gst_play_message_parse_missing_plugin (msg, msg_type, descriptions,
+      installer_details);
 }
 
 /**

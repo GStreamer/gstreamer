@@ -137,11 +137,28 @@ GType        gst_play_error_get_type                (void);
 /**
  * GstPlayError:
  * @GST_PLAY_ERROR_FAILED: generic error.
+ * @GST_PLAY_ERROR_MISSING_PLUGIN: playback requires additional plugins (Since: 1.26).
  *
  * Since: 1.20
  */
 typedef enum {
-  GST_PLAY_ERROR_FAILED = 0
+  GST_PLAY_ERROR_FAILED = 0,
+
+  /**
+   * GST_PLAY_ERROR_MISSING_PLUGIN:
+   *
+   * Playback requires additional plugins. Information about the missing
+   * plugins can be retrieved from the message details.
+   *
+   * The details will contain the the missing plugin details in a field of
+   * type %GstArray named "missing-plugin-details". This array will contain
+   * %GstStructure with string "description" and a string "installer-details".
+   *
+   * The "installer-details" can be passed to gst_install_plugins_async().
+   *
+   * Since: 1.26
+   */
+  GST_PLAY_ERROR_MISSING_PLUGIN
 } GstPlayError;
 
 GST_PLAY_API
@@ -432,6 +449,12 @@ GST_PLAY_API
 void           gst_play_message_parse_type                       (GstMessage *msg, GstPlayMessage *type);
 
 GST_PLAY_API
+const gchar *  gst_play_message_get_uri                          (GstMessage *msg);
+
+GST_PLAY_API
+const gchar *  gst_play_message_get_stream_id                    (GstMessage *msg);
+
+GST_PLAY_API
 void           gst_play_message_parse_uri_loaded                 (GstMessage *msg, gchar **uri);
 
 GST_PLAY_DEPRECATED_FOR(gst_play_message_parse_duration_changed)
@@ -456,7 +479,13 @@ GST_PLAY_API
 void           gst_play_message_parse_error                      (GstMessage *msg, GError **error, GstStructure **details);
 
 GST_PLAY_API
+gboolean       gst_play_message_parse_error_missing_plugin       (GstMessage *msg, gchar *** descriptions, gchar *** installer_details);
+
+GST_PLAY_API
 void           gst_play_message_parse_warning                    (GstMessage *msg, GError **error, GstStructure **details);
+
+GST_PLAY_API
+gboolean       gst_play_message_parse_warning_missing_plugin       (GstMessage *msg, gchar *** descriptions, gchar *** installer_details);
 
 GST_PLAY_API
 void           gst_play_message_parse_video_dimensions_changed   (GstMessage *msg, guint *width, guint *height);
