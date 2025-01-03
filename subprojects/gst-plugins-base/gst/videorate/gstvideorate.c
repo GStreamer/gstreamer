@@ -1921,8 +1921,12 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
         next_ts = videorate->base_ts - (
             (videorate->base_ts - next_ts) * videorate->rate);
-        next_end_ts = videorate->base_ts - (MAX (0,
-                (videorate->base_ts - next_end_ts)) * videorate->rate);
+        if (videorate->base_ts > next_end_ts)
+          next_end_ts =
+              videorate->base_ts - ((videorate->base_ts -
+                  next_end_ts) * videorate->rate);
+        else
+          next_end_ts = videorate->base_ts;
 
         diff1 = ABSDIFF (prev_endtime, next_end_ts);
         diff2 = ABSDIFF (in_endtime, next_end_ts);
