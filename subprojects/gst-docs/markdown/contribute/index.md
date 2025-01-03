@@ -722,6 +722,24 @@ If you have a concern it might be the case you can look at the relevant
 hotdoc.json file for your subproject to see exactly what sources are
 included / excluded.
 
+You can enable checks for up-to-date plugin caches and presence of the necessary
+since tags at commit time by setting the `GST_ENABLE_DOC_PRE_COMMIT_HOOK`
+environment variable to any value other than "0":
+
+``` shell
+GST_ENABLE_DOC_PRE_COMMIT_HOOK=1 git commit
+```
+
+The pre-commit hook will:
+
+* Stash unstaged changes (the path to the patch file is printed out)
+* Locate the build directory (the location can be specified through the `GST_DOC_BUILDDIR` environment variable)
+* Build the version of the code that is to be committed
+* Build the relevant plugins caches and error out if there is a diff
+* Build the relevant doc subprojects using `hotdoc` and error out in case of since tag errors
+
+In any case, the stashed changes are then re-applied
+
 ## Backporting to a stable branch
 
 Before backporting any changes to a stable branch, they should first be
