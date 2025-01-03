@@ -2875,6 +2875,7 @@ gst_decodebin3_handle_message (GstBin * bin, GstMessage * message)
         }
       }
       SELECTION_UNLOCK (dbin);
+      break;
     }
     case GST_MESSAGE_WARNING:
     case GST_MESSAGE_ERROR:
