@@ -1507,11 +1507,6 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
     case 't':
       play_switch_trick_mode (play);
       break;
-    case 27:                   /* ESC */
-      if (key_input[1] == '\0') {
-        g_main_loop_quit (play->loop);
-        break;
-      }
     case 'a':
     case 'A':
       play_cycle_track_selection (play, GST_PLAY_TRACK_TYPE_AUDIO, key == 'a');
@@ -1531,6 +1526,12 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
     case 'm':
       play_toggle_audio_mute (play);
       break;
+    case 27:                   /* ESC */
+      if (key_input[1] == '\0') {
+        g_main_loop_quit (play->loop);
+        break;
+      }
+      /* FALLTHROUGH */
     default:
       if (strcmp (key_input, GST_PLAY_KB_ARROW_RIGHT) == 0) {
         relative_seek (play, +0.08);
