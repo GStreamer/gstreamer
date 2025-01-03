@@ -228,7 +228,7 @@ gst_audio_rate_setcaps (GstAudioRate * audiorate, GstCaps * caps)
   prev_rate = audiorate->info.rate;
   audiorate->info = info;
 
-  if (audiorate->next_offset >= 0 && prev_rate > 0 && prev_rate != info.rate) {
+  if (audiorate->next_offset != -1 && prev_rate > 0 && prev_rate != info.rate) {
     GST_DEBUG_OBJECT (audiorate,
         "rate changed from %d to %d", prev_rate, info.rate);
 
