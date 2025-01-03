@@ -95,6 +95,14 @@ cleanup_filesink (GstElement * filesink)
       g_rand_free (rand);                                                 \
     } G_STMT_END
 
+#define PUSH_EMPTY_BUF()                                                       \
+  G_STMT_START {                                                               \
+    GstBuffer *buf = gst_buffer_new();                                         \
+    if (sync_buffers)                                                          \
+      GST_BUFFER_FLAG_SET(buf, GST_BUFFER_FLAG_SYNC_AFTER);                    \
+    fail_unless_equals_int(gst_pad_push(mysrcpad, buf), GST_FLOW_OK);          \
+  } G_STMT_END
+
 /* Push Buffer with num_mem_blocks memory block each of size num_bytes*/
 #define PUSH_BUFFER_WITH_MULTIPLE_MEM_BLOCKS(num_mem_blocks, num_bytes)      \
     G_STMT_START {                                                           \
@@ -261,7 +269,7 @@ GST_START_TEST (test_seeking)
   CHECK_QUERY_POSITION (filesink, GST_FORMAT_BYTES, 0);
 
   /* push buffer with size 0 and NULL data */
-  PUSH_BYTES (0);
+  PUSH_EMPTY_BUF ();
   CHECK_QUERY_POSITION (filesink, GST_FORMAT_BYTES, 0);
 
   PUSH_BYTES (1);
