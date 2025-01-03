@@ -156,14 +156,43 @@ done:
   return ret;
 }
 
+/* Retrieve the actual sink from inside an auto*sink */
+static GstElement *
+get_actual_sink (GstElement * autosink)
+{
+  GstPad *sinkpad = gst_element_get_static_pad (autosink, "sink");
+  GstPad *actual_sinkpad = gst_ghost_pad_get_target (GST_GHOST_PAD (sinkpad));
+  gst_object_unref (GST_OBJECT (sinkpad));
+
+  if (actual_sinkpad == NULL) {
+    return NULL;
+  }
+
+  GstElement *actual_sink =
+      (GstElement *) gst_object_get_parent (GST_OBJECT (actual_sinkpad));
+  gst_object_unref (GST_OBJECT (actual_sinkpad));
+
+  return actual_sink;
+}
+
 static GstClockTime
 get_current_position (Context * ctx, gboolean reverse)
 {
-  GstSample *sample;
+  GstSample *sample = NULL;
   GstBuffer *buffer;
   GstClockTime ret;
 
-  g_object_get (ctx->sink, "last-sample", &sample, NULL);
+  GstElement *sink = get_actual_sink (ctx->sink);
+  if (sink == NULL) {
+    return 0;
+  }
+
+  g_object_get (sink, "last-sample", &sample, NULL);
+  gst_object_unref (sink);
+
+  if (sample == NULL) {
+    return 0;
+  }
 
   buffer = gst_sample_get_buffer (sample);
 
