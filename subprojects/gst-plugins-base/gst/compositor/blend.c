@@ -734,7 +734,7 @@ compositor_blend_argb64 (guint8 * ORC_RESTRICT d1, int d1_stride,
       src_alpha = src_val & comp_mask_alpha;
       src_alpha *= p1;
       src_alpha /= G_MAXUINT16;
-      src_alpha = CLAMP (src_alpha, 0, G_MAXUINT16);
+      src_alpha = MIN (src_alpha, G_MAXUINT16);
       src_alpha_inv = G_MAXUINT16 - src_alpha;
 
       for (k = 0; k < G_N_ELEMENTS (src_comp); k++) {
@@ -743,7 +743,7 @@ compositor_blend_argb64 (guint8 * ORC_RESTRICT d1, int d1_stride,
         dst_comp[k] += src_comp[k];
         dst_comp[k] /= G_MAXUINT16;
 
-        dst_comp[k] = CLAMP (dst_comp[k], 0, G_MAXUINT16);
+        dst_comp[k] = MIN (dst_comp[k], G_MAXUINT16);
       }
 
       dst_val = (dst_comp[0] << 48) | (dst_comp[1] << 32) | (dst_comp[2] << 16)
@@ -776,7 +776,7 @@ compositor_source_argb64 (guint8 * ORC_RESTRICT d1, int d1_stride,
       src_alpha = src_val & comp_mask_alpha;
       src_alpha *= p1;
       src_alpha /= G_MAXUINT16;
-      src_alpha = CLAMP (src_alpha, 0, G_MAXUINT16);
+      src_alpha = MIN (src_alpha, G_MAXUINT16);
 
       dst_val = (src_val & comp_mask_non_alpha) | src_alpha;
       dst[i] = dst_val;
@@ -822,7 +822,7 @@ compositor_overlay_argb64 (guint8 * ORC_RESTRICT d1, int d1_stride,
       src_alpha = src_val & comp_mask_alpha;
       src_alpha *= p1;
       src_alpha /= G_MAXUINT16;
-      src_alpha = CLAMP (src_alpha, 0, G_MAXUINT16);
+      src_alpha = MIN (src_alpha, G_MAXUINT16);
       src_alpha_inv = G_MAXUINT16 - src_alpha;
 
       for (k = 0; k < G_N_ELEMENTS (src_comp); k++)
@@ -841,13 +841,13 @@ compositor_overlay_argb64 (guint8 * ORC_RESTRICT d1, int d1_stride,
 
       /* calc the final destination alpha_d = alpha_s + alpha_d * (255-alpha_s)/255 */
       dst_alpha += src_alpha;
-      dst_alpha = CLAMP (dst_alpha, 0, G_MAXUINT16);
+      dst_alpha = MIN (dst_alpha, G_MAXUINT16);
 
       /* now normalize the pix_d by the final alpha to make it associative */
       for (k = 0; k < G_N_ELEMENTS (dst_comp); k++) {
         if (dst_alpha > 0)
           dst_comp[k] /= dst_alpha;
-        dst_comp[k] = CLAMP (dst_comp[k], 0, G_MAXUINT16);
+        dst_comp[k] = MIN (dst_comp[k], G_MAXUINT16);
       }
 
       dst_val = (dst_comp[0] << 48) | (dst_comp[1] << 32) | (dst_comp[2] << 16)
@@ -896,7 +896,7 @@ compositor_overlay_argb64_addition (guint8 * ORC_RESTRICT d1, int d1_stride,
       src_alpha = src_val & comp_mask_alpha;
       src_alpha *= p1;
       src_alpha /= G_MAXUINT16;
-      src_alpha = CLAMP (src_alpha, 0, G_MAXUINT16);
+      src_alpha = MIN (src_alpha, G_MAXUINT16);
       src_alpha_inv = G_MAXUINT16 - src_alpha;
 
       for (k = 0; k < G_N_ELEMENTS (src_comp); k++)
@@ -915,19 +915,19 @@ compositor_overlay_argb64_addition (guint8 * ORC_RESTRICT d1, int d1_stride,
 
       /* calc the alpha factor alpha_factor = alpha_s + alpha_factor * (255-alpha_s)/255 */
       alpha_factor += src_alpha;
-      alpha_factor = CLAMP (alpha_factor, 0, G_MAXUINT16);
+      alpha_factor = MIN (alpha_factor, G_MAXUINT16);
 
       /* now normalize the pix_d by the final alpha to make it associative */
       for (k = 0; k < G_N_ELEMENTS (dst_comp); k++) {
         if (alpha_factor > 0)
           dst_comp[k] /= alpha_factor;
-        dst_comp[k] = CLAMP (dst_comp[k], 0, G_MAXUINT16);
+        dst_comp[k] = MIN (dst_comp[k], G_MAXUINT16);
       }
 
       /* calc the final global alpha_d = alpha_d + (alpha_s * (alpha / 255)) */
       dst_alpha = dst_val & comp_mask_alpha;
       dst_alpha += src_alpha;
-      dst_alpha = CLAMP (dst_alpha, 0, G_MAXUINT16);
+      dst_alpha = MIN (dst_alpha, G_MAXUINT16);
 
       dst_val = (dst_comp[0] << 48) | (dst_comp[1] << 32) | (dst_comp[2] << 16)
           | dst_alpha;
