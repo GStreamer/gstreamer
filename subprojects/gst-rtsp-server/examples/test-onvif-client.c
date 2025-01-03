@@ -22,6 +22,9 @@
 #include <gst/gst.h>
 #include <gst/rtsp/rtsp.h>
 
+/* Uncomment to enable audio output */
+// #define OUTPUT_AUDIO
+
 typedef struct
 {
   gchar *range;
@@ -34,6 +37,8 @@ typedef struct
 typedef struct
 {
   GstElement *src;
+  GstElement *vconv;            /* decodebin -> vconv */
+
   GstElement *sink;
   GstElement *pipe;
   SeekParameters *seek_params;
@@ -103,28 +108,137 @@ G_STMT_START { \
 #define DEFAULT_REVERSE FALSE
 
 static void
-pad_added_cb (GstElement * src, GstPad * srcpad, GstElement * peer)
+decode_pad_added_cb (GstElement * src, GstPad * srcpad, Context * ctx)
 {
-  GstPad *sinkpad = gst_element_get_static_pad (peer, "sink");
+  /* Try to link to video output */
+  GstCaps *caps = gst_pad_get_current_caps (srcpad);
+  if (caps == NULL)
+    goto no_caps;
 
-  gst_pad_link (srcpad, sinkpad);
+  const GstStructure *s = gst_caps_get_structure (caps, 0);
+  if (s == NULL) {
+    goto no_caps;
+  }
 
+  GstElement *peer = NULL;
+  if (gst_structure_has_name (s, "video/x-raw")) {
+    GST_INFO ("Have decoded video stream");
+    peer = ctx->vconv;
+  }
+#if defined(OUTPUT_AUDIO)
+  else if (gst_structure_has_name (s, "audio/x-raw")) {
+    GstElement *aconv, *asink;
+
+    GST_INFO ("Have decoded audio stream");
+    MAKE_AND_ADD (aconv, ctx->pipe, "audioconvert", fail, NULL);
+    MAKE_AND_ADD (asink, ctx->pipe, "autoaudiosink", fail, NULL);
+
+    gst_element_set_state (aconv, GST_STATE_PLAYING);
+    gst_element_set_state (asink, GST_STATE_PLAYING);
+
+    if (!gst_element_link (aconv, asink)) {
+      goto fail;
+    }
+    peer = aconv;
+  }
+#endif
+
+  gst_caps_replace (&caps, NULL);
+
+  if (peer != NULL) {
+    GstPad *sinkpad = gst_element_get_static_pad (peer, "sink");
+    if (gst_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK) {
+      goto not_negotiated;
+    }
+    gst_object_unref (sinkpad);
+  }
+
+  return;
+
+no_caps:
+  GST_ELEMENT_ERROR (ctx->pipe, CORE, NEGOTIATION, (NULL),
+      ("decoded pad %" GST_PTR_FORMAT " did not have caps", srcpad));
+  gst_caps_replace (&caps, NULL);
+  return;
+not_negotiated:
+  GST_ELEMENT_ERROR (ctx->pipe, CORE, NEGOTIATION, (NULL),
+      ("Failed to link decoded pad %" GST_PTR_FORMAT " to output", srcpad));
+  return;
+#if defined(OUTPUT_AUDIO)
+fail:
+  GST_ELEMENT_ERROR (ctx->pipe, CORE, NEGOTIATION, (NULL),
+      ("Failed to connect %" GST_PTR_FORMAT " to output", srcpad));
+  return;
+#endif
+}
+
+static void
+pad_added_cb (GstElement * src, GstPad * srcpad, Context * ctx)
+{
+  GstCaps *caps = gst_pad_get_current_caps (srcpad);
+  if (caps == NULL)
+    goto no_caps;
+
+  const GstStructure *s = gst_caps_get_structure (caps, 0);
+  if (s == NULL) {
+    goto no_caps;
+  }
+
+  /* If the media is not audio or video, ignore it. (Could put ONVIF metadata to an appsink here though */
+  const gchar *media = gst_structure_get_string (s, "media");
+  if (media == NULL || (!g_str_equal (media, "video") &&
+          !g_str_equal (media, "audio"))) {
+    GST_INFO ("Ignoring rtsp pad %" GST_PTR_FORMAT " with caps %"
+        GST_PTR_FORMAT, srcpad, caps);
+    return;
+  }
+
+  GstElement *queue, *onvifparse, *dec;
+
+  /* Create decode chain */
+  MAKE_AND_ADD (queue, ctx->pipe, "queue", fail, NULL);
+  MAKE_AND_ADD (onvifparse, ctx->pipe, "rtponvifparse", fail, NULL);
+  MAKE_AND_ADD (dec, ctx->pipe, "decodebin", fail, NULL);
+
+  gst_element_set_state (queue, GST_STATE_PLAYING);
+  gst_element_set_state (onvifparse, GST_STATE_PLAYING);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+
+  g_signal_connect (dec, "pad-added", G_CALLBACK (decode_pad_added_cb), ctx);
+
+  if (!gst_element_link_many (queue, onvifparse, dec, NULL)) {
+    goto fail;
+  }
+
+  /* Connect srcpad to decode chain */
+  GstPad *sinkpad = gst_element_get_static_pad (queue, "sink");
+  if (gst_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK) {
+    goto fail;
+  }
   gst_object_unref (sinkpad);
+
+  return;
+
+no_caps:
+  GST_ELEMENT_ERROR (ctx->pipe, CORE, NEGOTIATION, (NULL),
+      ("decoded pad %" GST_PTR_FORMAT " did not have caps", srcpad));
+  return;
+fail:
+  GST_ELEMENT_ERROR (ctx->pipe, CORE, NEGOTIATION, (NULL),
+      ("Could not link input stream to decoders handling pad %" GST_PTR_FORMAT,
+          srcpad));
+  return;
 }
 
 static gboolean
 setup (Context * ctx)
 {
-  GstElement *onvifparse, *queue, *vdepay, *vdec, *vconv, *toverlay, *tee,
-      *vqueue;
+  GstElement *toverlay, *tee, *vqueue;
   gboolean ret = FALSE;
 
   MAKE_AND_ADD (ctx->src, ctx->pipe, "rtspsrc", done, NULL);
-  MAKE_AND_ADD (queue, ctx->pipe, "queue", done, NULL);
-  MAKE_AND_ADD (onvifparse, ctx->pipe, "rtponvifparse", done, NULL);
-  MAKE_AND_ADD (vdepay, ctx->pipe, "rtph264depay", done, NULL);
-  MAKE_AND_ADD (vdec, ctx->pipe, "avdec_h264", done, NULL);
-  MAKE_AND_ADD (vconv, ctx->pipe, "videoconvert", done, NULL);
+
+  MAKE_AND_ADD (ctx->vconv, ctx->pipe, "videoconvert", done, NULL);
   MAKE_AND_ADD (toverlay, ctx->pipe, "timeoverlay", done, NULL);
   MAKE_AND_ADD (tee, ctx->pipe, "tee", done, NULL);
   MAKE_AND_ADD (vqueue, ctx->pipe, "queue", done, NULL);
@@ -137,10 +251,10 @@ setup (Context * ctx)
 
   g_object_set (toverlay, "datetime-format", "%a %d, %b %Y - %T", NULL);
 
-  g_signal_connect (ctx->src, "pad-added", G_CALLBACK (pad_added_cb), queue);
+  g_signal_connect (ctx->src, "pad-added", G_CALLBACK (pad_added_cb), ctx);
 
-  if (!gst_element_link_many (queue, onvifparse, vdepay, vdec, vconv, toverlay,
-          tee, vqueue, ctx->sink, NULL)) {
+  if (!gst_element_link_many (ctx->vconv, toverlay, tee, vqueue, ctx->sink,
+          NULL)) {
     goto done;
   }
 
