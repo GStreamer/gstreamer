@@ -325,7 +325,7 @@ gst_file_src_fill (GstBaseSrc * basesrc, guint64 offset, guint length,
     off_t res;
 
     res = lseek (src->fd, offset, SEEK_SET);
-    if (G_UNLIKELY (res < 0 || res != offset))
+    if (G_UNLIKELY (res == (off_t) - 1 || res != offset))
       goto seek_failed;
 
     src->read_position = offset;
@@ -546,14 +546,14 @@ gst_file_src_start (GstBaseSrc * basesrc)
   {
     off_t res = lseek (src->fd, 0, SEEK_END);
 
-    if (res < 0) {
+    if (res == (off_t) - 1) {
       GST_LOG_OBJECT (src, "disabling seeking, lseek failed: %s",
           g_strerror (errno));
       src->seekable = FALSE;
     } else {
       res = lseek (src->fd, 0, SEEK_SET);
 
-      if (res < 0) {
+      if (res == (off_t) - 1) {
         /* We really don't like not being able to go back to 0 */
         src->seekable = FALSE;
         goto lseek_wonky;
