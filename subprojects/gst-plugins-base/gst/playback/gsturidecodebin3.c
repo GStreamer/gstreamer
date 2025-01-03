@@ -2181,9 +2181,7 @@ update_message_with_uri (GstURIDecodeBin3 * uridecodebin, GstMessage * msg)
     GstStructure *details;
     msg = gst_message_make_writable (msg);
     details = gst_message_writable_details (msg);
-    if (details) {
-      gst_structure_set (details, "uri", G_TYPE_STRING, uri, NULL);
-    }
+    gst_structure_set (details, "uri", G_TYPE_STRING, uri, NULL);
   }
 
   if (unlock_after)

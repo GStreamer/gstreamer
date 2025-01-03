@@ -26819,8 +26819,8 @@ want to write to the @details structure.
 
 The returned structure must not be freed.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
-        <return-value transfer-ownership="none" nullable="1">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">The details, or NULL if none.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">The details</doc>
           <type name="Structure" c:type="GstStructure*"/>
         </return-value>
         <parameters>

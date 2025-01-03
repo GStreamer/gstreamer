@@ -505,7 +505,7 @@ gst_message_get_details (GstMessage * message)
  *
  * The returned structure must not be freed.
  *
- * Returns: (transfer none) (nullable): The details, or NULL if none.
+ * Returns: (transfer none): The details
  *
  * Since: 1.26
  */
