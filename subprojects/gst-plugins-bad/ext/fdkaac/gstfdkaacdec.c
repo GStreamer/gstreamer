@@ -305,6 +305,7 @@ gst_fdkaacdec_map_channels (GstFdkAacDec * self, const CStreamInfo * in,
   switch (n_front) {
     case 7:
       SHIFT_CHAN (front, FRONT_CENTER);
+      /* FALLTHROUGH */
     case 6:
       SHIFT_CHAN (front, FRONT_LEFT_OF_CENTER);
       SHIFT_CHAN (front, FRONT_RIGHT_OF_CENTER);
@@ -316,6 +317,7 @@ gst_fdkaacdec_map_channels (GstFdkAacDec * self, const CStreamInfo * in,
 
     case 5:
       SHIFT_CHAN (front, FRONT_CENTER);
+      /* FALLTHROUGH */
     case 4:
       SHIFT_CHAN (front, FRONT_LEFT_OF_CENTER);
       SHIFT_CHAN (front, FRONT_RIGHT_OF_CENTER);
@@ -325,6 +327,7 @@ gst_fdkaacdec_map_channels (GstFdkAacDec * self, const CStreamInfo * in,
 
     case 3:
       SHIFT_CHAN (front, FRONT_CENTER);
+      /* FALLTHROUGH */
     case 2:
       SHIFT_CHAN (front, FRONT_LEFT);
       SHIFT_CHAN (front, FRONT_RIGHT);
@@ -394,6 +397,7 @@ gst_fdkaacdec_map_channels (GstFdkAacDec * self, const CStreamInfo * in,
   switch (n_top_front) {
     case 3:
       SHIFT_CHAN (top_front, TOP_FRONT_CENTER);
+      /* FALLTHROUGH */
     case 2:
       SHIFT_CHAN (top_front, TOP_FRONT_LEFT);
       SHIFT_CHAN (top_front, TOP_FRONT_RIGHT);
@@ -407,6 +411,7 @@ gst_fdkaacdec_map_channels (GstFdkAacDec * self, const CStreamInfo * in,
   switch (n_top_center) {
     case 3:
       SHIFT_CHAN (top_center, TOP_CENTER);
+      /* FALLTHROUGH */
     case 2:
       SHIFT_CHAN (top_center, TOP_SIDE_LEFT);
       SHIFT_CHAN (top_center, TOP_SIDE_RIGHT);
@@ -437,6 +442,7 @@ gst_fdkaacdec_map_channels (GstFdkAacDec * self, const CStreamInfo * in,
   switch (n_bottom_front) {
     case 3:
       SHIFT_CHAN (bottom_front, BOTTOM_FRONT_CENTER);
+      /* FALLTHROUGH */
     case 2:
       SHIFT_CHAN (bottom_front, BOTTOM_FRONT_LEFT);
       SHIFT_CHAN (bottom_front, BOTTOM_FRONT_RIGHT);

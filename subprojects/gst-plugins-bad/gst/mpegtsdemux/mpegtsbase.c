@@ -785,6 +785,7 @@ _stream_is_private_section (const GstMpegtsPMT * pmt,
       if (registration_id != DRF_ID_CUEI && registration_id != DRF_ID_ETV1)
         return FALSE;
     }
+      /* FALLTHROUGH */
     case GST_MPEGTS_STREAM_TYPE_PRIVATE_SECTIONS:
     case GST_MPEGTS_STREAM_TYPE_MHEG:
     case GST_MPEGTS_STREAM_TYPE_DSM_CC:

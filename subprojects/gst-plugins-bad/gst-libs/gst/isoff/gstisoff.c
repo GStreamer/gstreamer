@@ -845,6 +845,7 @@ gst_isoff_sidx_parser_parse (GstSidxParser * parser,
 
       parser->status = GST_ISOFF_SIDX_PARSER_HEADER;
 
+      G_GNUC_FALLTHROUGH;
     case GST_ISOFF_SIDX_PARSER_HEADER:
       remaining = gst_byte_reader_get_remaining (reader);
       if (remaining < 12 + (parser->sidx.version == 0 ? 8 : 16)) {

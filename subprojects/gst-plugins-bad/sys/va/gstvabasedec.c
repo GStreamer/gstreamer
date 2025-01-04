@@ -202,8 +202,8 @@ gst_va_base_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
         ret = TRUE;
         break;
       }
-      /* else jump to default */
     }
+      /* FALLTHROUGH */
     default:
       ret = GST_VIDEO_DECODER_CLASS (GST_VA_BASE_DEC_GET_PARENT_CLASS
           (decoder))->src_query (decoder, query);

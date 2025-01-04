@@ -881,8 +881,8 @@ gst_va_base_enc_src_query (GstVideoEncoder * venc, GstQuery * query)
         ret = TRUE;
         break;
       }
-      /* else jump to default */
     }
+      /* FALLTHROUGH */
     default:
       ret = GST_VIDEO_ENCODER_CLASS (parent_class)->src_query (venc, query);
       break;

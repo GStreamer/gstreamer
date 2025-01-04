@@ -189,6 +189,7 @@ ensure_bitrate_control (GstMsdkEnc * thiz)
 
     case MFX_RATECONTROL_LA_ICQ:
       option2->LookAheadDepth = thiz->lookahead_depth;
+      /* FALLTHROUGH */
     case MFX_RATECONTROL_ICQ:
       mfx->ICQQuality = CLAMP (thiz->qpi, 1, 51);
       break;

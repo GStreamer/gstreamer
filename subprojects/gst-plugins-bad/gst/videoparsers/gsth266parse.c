@@ -1553,8 +1553,8 @@ get_compatible_profiles (GstH266Profile profile)
       g_array_append_val (profiles, p);
       p = GST_H266_PROFILE_MAIN_16_444_STILL_PICTURE;
       g_array_append_val (profiles, p);
-      /* Fall down. */
     }
+      /* FALLTHROUGH */
     case GST_H266_PROFILE_MAIN_12_444:
     {
       /* A.3.5 */
@@ -1594,8 +1594,8 @@ get_compatible_profiles (GstH266Profile profile)
       /* A.3.5 */
       p = GST_H266_PROFILE_MAIN_16_444_STILL_PICTURE;
       g_array_append_val (profiles, p);
-      /* Fall down. */
     }
+      /* FALLTHROUGH */
     case GST_H266_PROFILE_MAIN_12_444_INTRA:
     {
       /* A.3.5 */
@@ -1618,8 +1618,8 @@ get_compatible_profiles (GstH266Profile profile)
       /* A.3.5 */
       p = GST_H266_PROFILE_MAIN_12_444_STILL_PICTURE;
       g_array_append_val (profiles, p);
-      /* Fall down. */
     }
+      /* FALLTHROUGH */
     case GST_H266_PROFILE_MAIN_12_444_STILL_PICTURE:
     {
       /* A.3.5 */
@@ -1627,8 +1627,8 @@ get_compatible_profiles (GstH266Profile profile)
       g_array_append_val (profiles, p);
       p = GST_H266_PROFILE_MAIN_12_STILL_PICTURE;
       g_array_append_val (profiles, p);
-      /* Fall down. */
     }
+      /* FALLTHROUGH */
     case GST_H266_PROFILE_MAIN_12_STILL_PICTURE:
     {
       /* A.3.5 */

@@ -309,15 +309,15 @@ serialize_next (GstRtmpChunkStream * cstream, guint32 chunk_size,
     case CHUNK_TYPE_0:
       /* SRSLY:  "Message stream ID is stored in little-endian format." */
       GST_WRITE_UINT32_LE (map.data + offset + 7, meta->mstream);
-      /* no break */
+      /* FALLTHROUGH */
     case CHUNK_TYPE_1:
       GST_WRITE_UINT24_BE (map.data + offset + 3, meta->size);
       GST_WRITE_UINT8 (map.data + offset + 6, meta->type);
-      /* no break */
+      /* FALLTHROUGH */
     case CHUNK_TYPE_2:
       GST_WRITE_UINT24_BE (map.data + offset,
           ext_ts ? 0xffffff : meta->ts_delta);
-      /* no break */
+      /* FALLTHROUGH */
     case CHUNK_TYPE_3:
       offset += chunk_header_sizes[type];
 
@@ -325,6 +325,7 @@ serialize_next (GstRtmpChunkStream * cstream, guint32 chunk_size,
         GST_WRITE_UINT32_BE (map.data + offset, meta->ts_delta);
         offset += 4;
       }
+      break;
   }
 
   g_assert (offset == header_size);
@@ -462,14 +463,14 @@ gst_rtmp_chunk_stream_parse_header (GstRtmpChunkStream * cstream,
       has_abs_timestamp = TRUE;
       /* SRSLY:  "Message stream ID is stored in little-endian format." */
       meta->mstream = GST_READ_UINT32_LE (message_header + 7);
-      /* no break */
+      /* FALLTHROUGH */
     case CHUNK_TYPE_1:
       meta->type = GST_READ_UINT8 (message_header + 6);
       meta->size = GST_READ_UINT24_BE (message_header + 3);
-      /* no break */
+      /* FALLTHROUGH */
     case CHUNK_TYPE_2:
       meta->ts_delta = GST_READ_UINT24_BE (message_header);
-      /* no break */
+      /* FALLTHROUGH */
     case CHUNK_TYPE_3:
       if (needs_ext_ts (meta)) {
         guint32 timestamp;
@@ -491,6 +492,7 @@ gst_rtmp_chunk_stream_parse_header (GstRtmpChunkStream * cstream,
           header_size += 4;
         }
       }
+      break;
   }
 
   GST_MEMDUMP ("<<< chunk header", data, header_size);

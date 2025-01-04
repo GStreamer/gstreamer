@@ -37,6 +37,7 @@ message_cb (GstBus * bus, GstMessage * message, gpointer user_data)
       g_error_free (err);
       g_free (debug);
     }
+      /* FALLTHROUGH */
     case GST_MESSAGE_EOS:
       g_main_loop_quit (user_data);
       break;

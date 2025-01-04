@@ -565,8 +565,9 @@ gst_ipc_pipeline_src_forward_message (GstIpcPipelineSrc * src, GstMessage * msg)
         GST_DEBUG_OBJECT (src, "Detected lost state, notifying master");
         gst_ipc_pipeline_comm_write_state_lost_to_fd (&src->comm);
       }
-      /* fall through & skip */
+      /* and skip */
     }
+      /* FALLTHROUGH */
     case GST_MESSAGE_ASYNC_START:
     case GST_MESSAGE_CLOCK_PROVIDE:
     case GST_MESSAGE_CLOCK_LOST:

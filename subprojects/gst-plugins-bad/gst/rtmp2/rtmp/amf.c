@@ -540,14 +540,14 @@ dump_node (GString * string, const GstAmfNode * node, gint indent,
 
     case GST_AMF_TYPE_LONG_STRING:
       g_string_append_c (string, 'L');
-      /* no break */
+      G_GNUC_FALLTHROUGH;
     case GST_AMF_TYPE_STRING:
       dump_bytes (string, node->value.v_bytes);
       break;
 
     case GST_AMF_TYPE_ECMA_ARRAY:
       object_delim = "[]";
-      /* no break */
+      G_GNUC_FALLTHROUGH;
     case GST_AMF_TYPE_OBJECT:{
       guint i, len = gst_amf_node_get_num_fields (node);
       g_string_append_c (string, object_delim[0]);
@@ -566,8 +566,8 @@ dump_node (GString * string, const GstAmfNode * node, gint indent,
         dump_indent (string, indent, recursion_depth);
       }
       g_string_append_c (string, object_delim[1]);
-      break;
     }
+      break;
 
     case GST_AMF_TYPE_STRICT_ARRAY:{
       guint i, len = gst_amf_node_get_num_elements (node);

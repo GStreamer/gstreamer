@@ -945,6 +945,7 @@ gst_msdkh265enc_is_format_supported (GstMsdkEnc * encoder,
           h265enc->tune_mode == MFX_CODINGOPTION_OFF)
         return TRUE;
 #endif
+      /* FALLTHROUGH */
     default:
       return FALSE;
   }

@@ -1226,6 +1226,7 @@ gst_dvbsub_overlay_event_video (GstPad * pad, GstObject * parent,
     }
     case GST_EVENT_FLUSH_STOP:
       gst_segment_init (&render->video_segment, GST_FORMAT_TIME);
+      /* FALLTHROUGH */
     default:
       ret = gst_pad_push_event (render->srcpad, event);
       break;

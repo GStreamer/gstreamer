@@ -1557,7 +1557,7 @@ gst_aiff_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       if (aiff->state != AIFF_PARSE_HEADER)
         break;
 
-      /* otherwise fall-through */
+      G_GNUC_FALLTHROUGH;
     case AIFF_PARSE_HEADER:
       GST_INFO_OBJECT (aiff, "AIFF_PARSE_HEADER");
       if ((ret = gst_aiff_parse_stream_headers (aiff)) != GST_FLOW_OK)
@@ -1569,7 +1569,7 @@ gst_aiff_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       aiff->state = AIFF_PARSE_DATA;
       GST_INFO_OBJECT (aiff, "AIFF_PARSE_DATA");
 
-      /* fall-through */
+      /* FALLTHROUGH */
     case AIFF_PARSE_DATA:
       if ((ret = gst_aiff_parse_stream_data (aiff)) != GST_FLOW_OK)
         goto done;

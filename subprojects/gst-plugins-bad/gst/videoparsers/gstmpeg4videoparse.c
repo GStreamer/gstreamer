@@ -494,6 +494,7 @@ next:
       ret = gst_mpeg4vparse_process_sc (mp4vparse, &packet, size);
       if (ret)
         break;
+      /* FALLTHROUGH */
     case (GST_MPEG4_PARSER_NO_PACKET):
     case (GST_MPEG4_PARSER_ERROR):
       /* if draining, take all */

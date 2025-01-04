@@ -209,7 +209,7 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res)
       case PES_TRICK_MODE_FAST_REVERSE:
         res->intra_slice_refresh = (val8 >> 2) & 0x1;
         res->frequency_truncation = val8 & 0x3;
-        /* passthrough */
+        G_GNUC_FALLTHROUGH;
       case PES_TRICK_MODE_FREEZE_FRAME:
         res->field_id = (val8 >> 3) & 0x3;
         break;

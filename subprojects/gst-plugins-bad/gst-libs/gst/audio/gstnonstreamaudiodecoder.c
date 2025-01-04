@@ -2117,8 +2117,7 @@ gst_nonstream_audio_decoder_output_task (GstNonstreamAudioDecoder * dec)
         GST_DEBUG_OBJECT (dec, "trying to renegotiate");
         break;
       }
-      /* fallthrough to default */
-
+      /* FALLTHROUGH */
     default:
       GST_ELEMENT_ERROR (dec, STREAM, FAILED, ("Internal data flow error."),
           ("streaming task paused, reason %s (%d)", gst_flow_get_name (flow),
