@@ -289,7 +289,7 @@ gst_push_file_src_ghostpad_event (GstPad * pad, GstObject * parent,
         ret = FALSE;
         break;
       }
-      /* PASSTHROUGH */
+      /* FALLTHROUGH */
     default:
       ret = gst_pad_event_default (pad, parent, event);
       break;

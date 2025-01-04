@@ -14641,8 +14641,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
             break;
           }
           case FOURCC_sawb:
-            /* Fallthrough! */
             amrwb = TRUE;
+            /* FALLTHROUGH */
           case FOURCC_samr:
           {
             gint len = QT_UINT32 (stsd_entry_data);
@@ -16699,9 +16699,10 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       if (depth == 8)
         format = GST_AUDIO_FORMAT_U8;
       /* otherwise it's signed and big-endian just like 'twos' */
+      /* FALLTHROUGH */
     case FOURCC_twos:
       endian = G_BIG_ENDIAN;
-      /* fall-through */
+      /* FALLTHROUGH */
     case FOURCC_sowt:
     {
       gchar *str;

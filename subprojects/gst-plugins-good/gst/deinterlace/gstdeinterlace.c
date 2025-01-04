@@ -3353,6 +3353,7 @@ gst_deinterlace_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         }
         break;
       }
+      /* FALLTHROUGH */
     default:
       res = gst_pad_query_default (pad, parent, query);
       break;

@@ -3199,8 +3199,8 @@ gst_matroska_parse_handle_sink_event (GstPad * pad, GstObject * parent,
       parse->common.segment.position = GST_CLOCK_TIME_NONE;
       parse->cluster_time = GST_CLOCK_TIME_NONE;
       parse->cluster_offset = 0;
-      /* fall-through */
     }
+      /* FALLTHROUGH */
     default:
       res = gst_pad_event_default (pad, parent, event);
       break;

@@ -5380,7 +5380,8 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     case GST_RTSP_LOWER_TRANS_UDP_MCAST:
       if (!gst_rtspsrc_stream_configure_mcast (src, stream, transport, &outpad))
         goto transport_failed;
-      /* fallthrough, the rest is the same for UDP and MCAST */
+      /* the rest is the same for UDP and MCAST */
+      /* FALLTHROUGH */
     case GST_RTSP_LOWER_TRANS_UDP:
       if (!gst_rtspsrc_stream_configure_udp (src, stream, transport, &outpad))
         goto transport_failed;
@@ -6434,6 +6435,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
         continue;
       case GST_RTSP_ENET:
         GST_DEBUG_OBJECT (src, "An ethernet problem occurred.");
+        /* FALLTHROUGH */
       default:
         GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
             ("Unhandled return value %d.", res));

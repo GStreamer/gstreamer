@@ -317,8 +317,8 @@ gst_qt_sink_query (GstBaseSink * bsink, GstQuery * query)
           qt_sink->display, qt_sink->context, qt_sink->qt_context))
         return TRUE;
 
-      /* fallthrough */
     }
+    /* FALLTHROUGH */
     default:
       res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;

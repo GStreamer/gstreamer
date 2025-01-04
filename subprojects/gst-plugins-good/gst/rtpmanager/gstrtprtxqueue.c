@@ -322,8 +322,8 @@ gst_rtp_rtx_queue_sink_event (GstPad * pad, GstObject * parent,
       gst_event_copy_segment (event, &rtx->head_segment);
       g_queue_push_head (rtx->queue, gst_event_ref (event));
       g_mutex_unlock (&rtx->lock);
-      /* fall through */
     }
+      /* FALLTHROUGH */
     default:
       res = gst_pad_event_default (pad, parent, event);
       break;

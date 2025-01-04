@@ -319,9 +319,8 @@ gst_qml6_gl_sink_query (GstBaseSink * bsink, GstQuery * query)
       if (gst_gl_handle_context_query ((GstElement *) qt_sink, query,
           qt_sink->display, qt_sink->context, qt_sink->qt_context))
         return TRUE;
-
-      /* fallthrough */
     }
+    /* FALLTHROUGH */
     default:
       res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;

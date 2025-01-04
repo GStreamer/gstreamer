@@ -909,8 +909,8 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstObject * parent,
       for (i = 0; i < avi->num_streams; i++) {
         avi->stream[i].discont = TRUE;
       }
-      /* fall through to default case so that the event gets passed downstream */
     }
+      /* FALLTHROUGH */
     default:
       res = gst_pad_event_default (pad, parent, event);
       break;
@@ -3467,7 +3467,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
         /* Need more data */
         return ret;
       }
-      /* fall-though */
+      /* FALLTHROUGH */
     case GST_AVI_DEMUX_HEADER_INFO:
       GST_DEBUG_OBJECT (avi, "skipping junk between header and data ...");
       while (TRUE) {

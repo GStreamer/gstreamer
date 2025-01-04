@@ -2400,7 +2400,7 @@ gst_wavparse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       if (wav->state != GST_WAVPARSE_HEADER)
         break;
 
-      /* otherwise fall-through */
+      /* FALLTHROUGH */
     case GST_WAVPARSE_HEADER:
       GST_INFO_OBJECT (wav, "GST_WAVPARSE_HEADER");
       if ((ret = gst_wavparse_stream_headers (wav)) != GST_FLOW_OK)
@@ -2412,7 +2412,7 @@ gst_wavparse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       wav->state = GST_WAVPARSE_DATA;
       GST_INFO_OBJECT (wav, "GST_WAVPARSE_DATA");
 
-      /* fall-through */
+      /* FALLTHROUGH */
     case GST_WAVPARSE_DATA:
       if (buf && GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))
         wav->discont = TRUE;
@@ -2600,8 +2600,8 @@ gst_wavparse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       dur = wav->segment.duration;
       gst_segment_init (&wav->segment, wav->segment.format);
       wav->segment.duration = dur;
-      /* fall-through */
     }
+      /* FALLTHROUGH */
     default:
       ret = gst_pad_event_default (wav->sinkpad, parent, event);
       break;

@@ -6366,8 +6366,8 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstObject * parent,
       demux->cluster_offset = 0;
       demux->cluster_prevsize = 0;
       GST_OBJECT_UNLOCK (demux);
-      /* fall-through */
     }
+      /* FALLTHROUGH */
     default:
       res = gst_pad_event_default (pad, parent, event);
       break;

@@ -175,18 +175,24 @@ gst_wavpack_get_default_channel_mask (gint nchannels)
     case 11:
       channel_mask |= 0x00400;
       channel_mask |= 0x00200;
+      /* FALLTHROUGH */
     case 9:
       channel_mask |= 0x00100;
+      /* FALLTHROUGH */
     case 8:
       channel_mask |= 0x00080;
       channel_mask |= 0x00040;
+      /* FALLTHROUGH */
     case 6:
       channel_mask |= 0x00020;
       channel_mask |= 0x00010;
+      /* FALLTHROUGH */
     case 4:
       channel_mask |= 0x00008;
+      /* FALLTHROUGH */
     case 3:
       channel_mask |= 0x00004;
+      /* FALLTHROUGH */
     case 2:
       channel_mask |= 0x00002;
       channel_mask |= 0x00001;
