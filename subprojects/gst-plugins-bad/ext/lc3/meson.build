@@ -19,7 +19,7 @@ plugin_sources += {
   'lc3': pathsep.join(doc_sources)
 }
 
-lc3_dep = dependency('lc3', required:get_option ('lc3'))
+lc3_dep = dependency('lc3', required: get_option('lc3'))
 
 if lc3_dep.found()
   gstlc3 = library('gstlc3',
