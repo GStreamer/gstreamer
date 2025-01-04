@@ -4501,7 +4501,7 @@ init:
         G_GINT64_FORMAT " (%" GST_TIME_FORMAT ") of %" G_GINT64_FORMAT " (%"
         GST_STIME_FORMAT ")", first_qt_dts, GST_TIME_ARGS (first_dts), dts,
         GST_TIME_ARGS (current_dts), dts - first_qt_dts,
-        GST_STIME_ARGS (current_dts - first_dts));
+        GST_STIME_ARGS ((GstClockTimeDiff) (current_dts - first_dts)));
     atom_traf_set_base_decode_time (pad->traf, dts - first_qt_dts);
   }
 
