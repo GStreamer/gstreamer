@@ -2722,6 +2722,7 @@ gst_adaptive_demux_query (GstElement * element, GstQuery * query)
             "No period setup yet, but still answering buffering query");
         return TRUE;
       }
+      break;
     }
     case GST_QUERY_SEEKING:
     {
