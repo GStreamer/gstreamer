@@ -319,7 +319,7 @@ get_first_mpegts_time (const guint8 * data, gsize size, guint packet_size)
           if (GST_CLOCK_TIME_IS_VALID (pts)) {
             /* Only take the PTS if it's lower than the dts and does not differ
              * by more than a second (which would indicate bogus values) */
-            if (pts < dts && ABS (pts - dts) < GST_SECOND)
+            if (pts < dts && (dts - pts) < GST_SECOND)
               internal_time = pts;
             else
               internal_time = dts;
