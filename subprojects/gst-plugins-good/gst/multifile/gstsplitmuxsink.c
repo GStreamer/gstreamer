@@ -2552,8 +2552,8 @@ need_new_fragment (GstSplitMuxSink * splitmux,
     }
     GST_TRACE_OBJECT (splitmux,
         "GOP start time %" GST_STIME_FORMAT " is after requested split point %"
-        GST_STIME_FORMAT, GST_STIME_ARGS (gop->start_time),
-        GST_STIME_ARGS (time_to_split));
+        GST_TIME_FORMAT, GST_STIME_ARGS (gop->start_time),
+        GST_TIME_ARGS (time_to_split));
     GST_OBJECT_UNLOCK (splitmux);
     return TRUE;
   }
@@ -2566,8 +2566,8 @@ need_new_fragment (GstSplitMuxSink * splitmux,
 
   if (thresh_time > 0 && queued_time > thresh_time) {
     GST_TRACE_OBJECT (splitmux,
-        "queued time %" GST_STIME_FORMAT " overruns time limit",
-        GST_STIME_ARGS (queued_time));
+        "queued time %" GST_TIME_FORMAT " overruns time limit",
+        GST_TIME_ARGS (queued_time));
     return TRUE;                /* Would overrun time limit */
   }
 
