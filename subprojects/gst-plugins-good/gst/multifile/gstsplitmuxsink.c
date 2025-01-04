@@ -2572,7 +2572,7 @@ need_new_fragment (GstSplitMuxSink * splitmux,
   }
 
   if (splitmux->tc_interval) {
-    GstClockTime next_gop_start_time =
+    GstClockTimeDiff next_gop_start_time =
         next_gop ? next_gop->start_time : splitmux->max_in_running_time;
 
     if (GST_CLOCK_TIME_IS_VALID (splitmux->next_fragment_start_tc_time) &&
