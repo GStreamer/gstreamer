@@ -2715,7 +2715,7 @@ gst_adaptive_demux2_stream_update_current_bitrate (GstAdaptiveDemux2Stream *
   /* No explicit connection_speed, so choose the new variant to use as a
    * fraction of the measured download rate */
   target_download_rate =
-      CLAMP (stream->current_download_rate, 0,
+      MIN (stream->current_download_rate,
       G_MAXUINT) * (gdouble) demux->bandwidth_target_ratio;
 
   GST_DEBUG_OBJECT (stream, "Bitrate after target ratio limit (%0.2f): %u",
