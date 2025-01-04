@@ -1230,8 +1230,8 @@ gst_hls_demux_reset_for_lost_sync (GstHLSDemux * hlsdemux)
         gst_hls_media_playlist_recalculate_stream_time (hls_stream->playlist,
             hls_stream->current_segment);
         GST_DEBUG_OBJECT (stream,
-            "Resynced variant playlist to %" GST_STIME_FORMAT,
-            GST_STIME_ARGS (stream->current_position));
+            "Resynced variant playlist to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (stream->current_position));
         map =
             gst_hls_demux_find_time_map (hlsdemux,
             hls_stream->current_segment->discont_sequence);

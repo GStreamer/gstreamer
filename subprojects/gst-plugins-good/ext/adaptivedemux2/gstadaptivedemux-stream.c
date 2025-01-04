@@ -2082,8 +2082,8 @@ gst_adaptive_demux2_stream_next_download (GstAdaptiveDemux2Stream * stream)
 
       GST_DEBUG_OBJECT (stream,
           "stream_time after restart seek: %" GST_STIME_FORMAT
-          " position %" GST_STIME_FORMAT, GST_STIME_ARGS (stream_time),
-          GST_STIME_ARGS (stream->current_position));
+          " position %" GST_TIME_FORMAT, GST_STIME_ARGS (stream_time),
+          GST_TIME_ARGS (stream->current_position));
     }
 
     /* Trigger (re)computation of the parsebin input segment */

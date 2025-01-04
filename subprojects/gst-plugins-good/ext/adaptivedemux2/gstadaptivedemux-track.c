@@ -325,8 +325,8 @@ gst_adaptive_demux_track_drain_to (GstAdaptiveDemuxTrack * track,
   GstAdaptiveDemux *demux = track->demux;
 
   GST_DEBUG_ID (track->id,
-      "draining to running time %" GST_STIME_FORMAT,
-      GST_STIME_ARGS (drain_running_time));
+      "draining to running time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (drain_running_time));
 
   while (track->next_position == GST_CLOCK_STIME_NONE ||
       track->next_position < drain_running_time) {
