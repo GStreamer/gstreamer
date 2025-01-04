@@ -1476,7 +1476,8 @@ gst_hls_media_playlist_find_partial_position (GstHLSMediaPlaylist * playlist,
 
     GST_DEBUG ("partial segment %d ts:%" GST_STIME_FORMAT " end:%"
         GST_STIME_FORMAT, part_idx, GST_STIME_ARGS (cand->stream_time),
-        GST_STIME_ARGS (cand->stream_time + cand->duration));
+        GST_STIME_ARGS ((GstClockTimeDiff) (cand->stream_time +
+                cand->duration)));
 
     /* If the target timestamp is before this partial segment, or in the first half, this
      * is the partial segment to land in */
@@ -1529,8 +1530,8 @@ gst_hls_media_playlist_find_position (GstHLSMediaPlaylist * playlist,
     GST_DEBUG ("segment %d ts:%" GST_STIME_FORMAT " end:%" GST_STIME_FORMAT
         " partial only: %d",
         seg_idx, GST_STIME_ARGS (cand->stream_time),
-        GST_STIME_ARGS (cand->stream_time + cand->duration),
-        cand->partial_only);
+        GST_STIME_ARGS ((GstClockTimeDiff) (cand->stream_time +
+                cand->duration)), cand->partial_only);
 
     /* Ignore any (disallowed by the spec) partial_only segment if
      * the playlist is no longer live */
@@ -2531,8 +2532,8 @@ gst_hls_media_playlist_has_lost_sync (GstHLSMediaPlaylist * m3u8,
   first = g_ptr_array_index (m3u8->segments, 0);
 
   GST_DEBUG ("position %" GST_TIME_FORMAT " first %" GST_STIME_FORMAT
-      " duration %" GST_STIME_FORMAT, GST_TIME_ARGS (position),
-      GST_STIME_ARGS (first->stream_time), GST_STIME_ARGS (first->duration));
+      " duration %" GST_TIME_FORMAT, GST_TIME_ARGS (position),
+      GST_STIME_ARGS (first->stream_time), GST_TIME_ARGS (first->duration));
 
   if (first->stream_time <= 0)
     return FALSE;

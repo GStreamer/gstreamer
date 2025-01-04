@@ -831,8 +831,8 @@ gst_hlsdemux_handle_content_webvtt (GstHLSDemux * demux,
   gchar **original_lines;
   GstClockTime localtime = GST_CLOCK_TIME_NONE;
   GstClockTime mpegtime = GST_CLOCK_TIME_NONE;
-  GstClockTime low_stream_time = GST_CLOCK_STIME_NONE;
-  GstClockTime high_stream_time = GST_CLOCK_STIME_NONE;
+  GstClockTimeDiff low_stream_time = GST_CLOCK_STIME_NONE;
+  GstClockTimeDiff high_stream_time = GST_CLOCK_STIME_NONE;
   gboolean found_timing = FALSE;
   gboolean found_text = FALSE;
   GPtrArray *builder;
@@ -971,11 +971,12 @@ out:
      * reassess which segment we really are in */
     GST_WARNING ("Cue %" GST_STIME_FORMAT " -> %" GST_STIME_FORMAT
         " is outside of segment %" GST_STIME_FORMAT " -> %"
-        GST_STIME_FORMAT, GST_STIME_ARGS (low_stream_time),
+        GST_STIME_FORMAT,
+        GST_STIME_ARGS (low_stream_time),
         GST_STIME_ARGS (high_stream_time),
         GST_STIME_ARGS (current_segment->stream_time),
-        GST_STIME_ARGS (current_segment->stream_time +
-            current_segment->duration));
+        GST_STIME_ARGS ((GstClockTimeDiff) (current_segment->stream_time +
+                current_segment->duration)));
 
     GstM3U8SeekResult seek_result;
 
