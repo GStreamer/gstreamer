@@ -74,7 +74,6 @@ static GParamSpec *properties[NUM_PROPERTIES];
 #define DEFAULT_LOCAL_SCTP_PORT 0
 #define MAX_SCTP_PORT 65535
 #define MAX_GST_SCTP_ASSOCIATION_ID 65535
-#define MAX_STREAM_ID 65535
 
 GType gst_sctp_dec_pad_get_type (void);
 
@@ -559,9 +558,6 @@ get_pad_for_stream_id (GstSctpDec * self, guint16 stream_id)
   }
 
   GST_DEBUG_OBJECT (self, "Creating new pad for stream id %u", stream_id);
-
-  if (stream_id > MAX_STREAM_ID)
-    return NULL;
 
   template = gst_static_pad_template_get (&src_template);
   new_pad = g_object_new (GST_TYPE_SCTP_DEC_PAD, "name", pad_name,
