@@ -1593,8 +1593,8 @@ validate_codec_stats (const GstStructure * s)
   fail_unless (gst_structure_get (s, "payload-type", G_TYPE_UINT, &pt, NULL));
   fail_unless (gst_structure_get (s, "clock-rate", G_TYPE_UINT, &clock_rate,
           NULL));
-  fail_unless (pt >= 0 && pt <= 127);
-  fail_unless (clock_rate >= 0);
+  fail_unless (pt <= 127);
+  /* NOTE: Can't check the validity of the clock rate. It could be anything from 0 to the maximum value */
 }
 
 static void
