@@ -271,6 +271,8 @@ enum
 #define TS_MUX_CLOCK_BASE (TSMUX_CLOCK_FREQ * 10 * 360)
 
 #define GSTTIME_TO_MPEGTIME(time) \
+  (gst_util_uint64_scale (time, CLOCK_BASE, GST_MSECOND/10))
+#define GSTTIMEDIFF_TO_MPEGTIME(time) \
     (((time) > 0 ? (gint64) 1 : (gint64) -1) * \
     (gint64) gst_util_uint64_scale (ABS(time), CLOCK_BASE, GST_MSECOND/10))
 /* 27 MHz SCR conversions: */
@@ -1677,7 +1679,7 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
   }
 
   if (GST_CLOCK_STIME_IS_VALID (best->dts)) {
-    dts = GSTTIME_TO_MPEGTIME (best->dts);
+    dts = GSTTIMEDIFF_TO_MPEGTIME (best->dts);
     GST_DEBUG_OBJECT (mux, "Buffer has DTS %" GST_STIME_FORMAT " dts %"
         G_GINT64_FORMAT, GST_STIME_ARGS (best->dts), dts);
   }
@@ -2218,7 +2220,7 @@ handle_scte35_section (GstBaseTsMux * mux, GstEvent * event,
 
     /* Account for offsets potentially introduced between the demuxer and us */
     pts_adjust +=
-        GSTTIME_TO_MPEGTIME (gst_event_get_running_time_offset (event));
+        GSTTIMEDIFF_TO_MPEGTIME (gst_event_get_running_time_offset (event));
 
     pts_adjust &= 0x1ffffffff;
     section_data = g_memdup2 (section->data, section->section_length);
