@@ -903,7 +903,7 @@ ignored.
             <type name="SourceBuffer" c:type="GstSourceBuffer*"/>
           </instance-parameter>
           <parameter name="start" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">the append window end</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">the append window start</doc>
             <type name="Gst.ClockTime" c:type="GstClockTime"/>
           </parameter>
         </parameters>

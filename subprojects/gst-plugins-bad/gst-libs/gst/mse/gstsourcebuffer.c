@@ -1082,7 +1082,7 @@ gst_source_buffer_get_append_window_start (GstSourceBuffer * self)
 /**
  * gst_source_buffer_set_append_window_start:
  * @self: #GstSourceBuffer instance
- * @start: the append window end
+ * @start: the append window start
  * @error: (out) (optional) (nullable) (transfer full): the resulting error or `NULL`
  *
  * Modifies the current append window start of @self. If successful, samples
@@ -1115,7 +1115,7 @@ gst_source_buffer_set_append_window_start (GstSourceBuffer * self,
     return FALSE;
   }
 
-  if (start < 0 || start <= self->append_window_end) {
+  if (!GST_CLOCK_TIME_IS_VALID (start) || start <= self->append_window_end) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_TYPE,
         "append window start must be between zero and append window end");
