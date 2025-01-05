@@ -515,6 +515,7 @@ speed_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstSpeed *filter = GST_SPEED (parent);
   gboolean ret = FALSE;
+  gboolean forward = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:{
@@ -523,6 +524,8 @@ speed_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gint64 start_value, stop_value;
       const GstSegment *segment;
       GstSegment seg;
+
+      forward = FALSE;
 
       gst_event_parse_segment (event, &segment);
 
@@ -569,14 +572,17 @@ speed_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       ret = speed_setcaps (pad, caps);
       if (!ret) {
         gst_event_unref (event);
-        return ret;
+        forward = FALSE;
       }
+      break;
     }
-      /* Fallthrough so that the caps event gets forwarded */
     default:
-      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
+
+  if (forward)
+    ret = gst_pad_event_default (pad, parent, event);
+
   return ret;
 }
 
