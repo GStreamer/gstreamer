@@ -318,11 +318,6 @@ keyboard_cb (const gchar * key_input, GstElement * pipeline)
     case 't':
       play_switch_trick_mode (pipeline);
       break;
-    case 27:                   /* ESC */
-      if (key_input[1] == '\0') {
-        g_main_loop_quit (loop);
-        break;
-      }
     case '0':
       play_do_seek (pipeline, 0, cur_rate, trick_mode);
       break;
@@ -330,6 +325,12 @@ keyboard_cb (const gchar * key_input, GstElement * pipeline)
       GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
           GST_DEBUG_GRAPH_SHOW_ALL, "ipc.master.requested");
       break;
+    case 27:                   /* ESC */
+      if (key_input[1] == '\0') {
+        g_main_loop_quit (loop);
+        break;
+      }
+      /* FALLTHROUGH */
     default:
       if (strcmp (key_input, GST_PLAY_KB_ARROW_RIGHT) == 0) {
         relative_seek (pipeline, +0.08);
