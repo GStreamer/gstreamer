@@ -1090,6 +1090,7 @@ _identify_section (guint16 pid, guint8 table_id)
     case GST_MTS_TABLE_ID_SELECTION_INFORMATION:
       if (pid == 0x001f)
         return GST_MPEGTS_SECTION_SIT;
+      break;
     default:
       /* Handle ranges */
       if (table_id >= GST_MTS_TABLE_ID_EVENT_INFORMATION_ACTUAL_TS_PRESENT &&
