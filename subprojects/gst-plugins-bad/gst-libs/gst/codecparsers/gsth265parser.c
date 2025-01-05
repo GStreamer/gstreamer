@@ -2369,10 +2369,8 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
         div_ceil (sps->pic_height_in_luma_samples, CtbSizeY);
     pps->PicWidthInCtbsY = div_ceil (sps->pic_width_in_luma_samples, CtbSizeY);
 
-    READ_UE_ALLOWED (&nr,
-        pps->num_tile_columns_minus1, 0, pps->PicWidthInCtbsY - 1);
-    READ_UE_ALLOWED (&nr,
-        pps->num_tile_rows_minus1, 0, pps->PicHeightInCtbsY - 1);
+    READ_UE_MAX (&nr, pps->num_tile_columns_minus1, pps->PicWidthInCtbsY - 1);
+    READ_UE_MAX (&nr, pps->num_tile_rows_minus1, pps->PicHeightInCtbsY - 1);
 
     if (pps->num_tile_columns_minus1 + 1 >
         G_N_ELEMENTS (pps->column_width_minus1)) {
@@ -2490,11 +2488,10 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
         sps->bit_depth_luma_minus8 > 2 ? sps->bit_depth_luma_minus8 - 2 : 0;
     MaxBitDepthC =
         sps->bit_depth_chroma_minus8 > 2 ? sps->bit_depth_chroma_minus8 - 2 : 0;
-    READ_UE_ALLOWED (&nr, pps->pps_extension_params.log2_sao_offset_scale_luma,
-        0, MaxBitDepthY);
-    READ_UE_ALLOWED (&nr,
-        pps->pps_extension_params.log2_sao_offset_scale_chroma, 0,
-        MaxBitDepthC);
+    READ_UE_MAX (&nr, pps->pps_extension_params.log2_sao_offset_scale_luma,
+        MaxBitDepthY);
+    READ_UE_MAX (&nr,
+        pps->pps_extension_params.log2_sao_offset_scale_chroma, MaxBitDepthC);
   }
 
   if (pps->pps_multilayer_extension_flag) {
