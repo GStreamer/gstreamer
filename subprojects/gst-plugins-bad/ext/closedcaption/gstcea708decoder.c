@@ -283,20 +283,20 @@ gst_cea708dec_process_dtvcc_byte (Cea708Dec * decoder,
   }
   GST_DEBUG ("processing 0x%02X", c);
 
-  if (c >= 0x00 && c <= 0x1F) { /* C0 */
+  if (c <= 0x1F) {              /* C0 */
     if (c == 0x03) {            /* ETX */
       gst_cea708dec_process_command (decoder, dtvcc_buffer, index);
     } else if (c == 0x00 || c == 0x08 || c == 0x0C || c == 0x0D || c == 0x0E) {
       gst_cea708dec_window_add_char (decoder, c);
     } else if (c == 0x10) {     /* EXT1 */
       guint8 next_c = dtvcc_buffer[index + 1];
-      if (next_c >= 0x00 && next_c <= 0x1F) {   /* C2 */
+      if (next_c <= 0x1F) {     /* C2 */
         gst_cea708dec_process_c2 (decoder, dtvcc_buffer, index + 1);
       } else if (next_c >= 0x20 && next_c <= 0x7F) {    /* G2 */
         gst_cea708dec_process_g2 (decoder, dtvcc_buffer, index + 1);
       } else if (next_c >= 0x80 && next_c <= 0x9F) {    /* C3 */
         gst_cea708dec_process_c3 (decoder, dtvcc_buffer, index + 1);
-      } else if (next_c >= 0xA0 && next_c <= 0xFF) {    /* G3 */
+      } else if (next_c >= 0xA0) {      /* G3 */
         gst_cea708dec_process_g3 (decoder, dtvcc_buffer, index + 1);
       }
     } else if (c > 0x10 && c < 0x18) {
@@ -315,7 +315,7 @@ gst_cea708dec_process_dtvcc_byte (Cea708Dec * decoder,
     }
   } else if ((c >= 0x80) && (c <= 0x9F)) {      /* C1 */
     gst_cea708dec_process_command (decoder, dtvcc_buffer, index);
-  } else if ((c >= 0xA0) && (c <= 0xFF)) {      /* G1 */
+  } else if ((c >= 0xA0)) {     /* G1 */
     gst_cea708dec_window_add_char (decoder, c);
   }
 }
@@ -1772,7 +1772,7 @@ static void
 gst_cea708dec_process_c2 (Cea708Dec * decoder, guint8 * dtvcc_buffer, int index)
 {
   guint8 c = dtvcc_buffer[index];
-  if (c >= 0x00 && c <= 0x07) {
+  if (c <= 0x07) {
     decoder->output_ignore = 1;
   } else if (c >= 0x08 && c <= 0x0F) {
     decoder->output_ignore = 2;
