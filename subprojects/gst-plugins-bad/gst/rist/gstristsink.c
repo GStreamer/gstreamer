@@ -909,6 +909,7 @@ gst_rist_sink_change_state (GstElement * element, GstStateChange transition)
        * a NULL interface on a network without a default gateway */
       if (gst_rist_sink_start (sink) == GST_STATE_CHANGE_FAILURE)
         return GST_STATE_CHANGE_FAILURE;
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_rist_sink_disable_stats_interval (sink);
       break;
