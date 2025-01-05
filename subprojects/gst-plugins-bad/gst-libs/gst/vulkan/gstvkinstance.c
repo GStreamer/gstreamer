@@ -1322,9 +1322,9 @@ gst_vulkan_instance_check_version (GstVulkanInstance * instance,
 
   return (priv->requested_api_major == 0
       && VK_MAKE_VERSION (major, minor, patch) <= priv->supported_instance_api)
-      || (priv->requested_api_major >= 0 && (major < priv->requested_api_major
-          || (major == priv->requested_api_major
-              && minor <= priv->requested_api_minor)));
+      || (major < priv->requested_api_major
+      || (major == priv->requested_api_major
+          && minor <= priv->requested_api_minor));
 }
 
 /**
