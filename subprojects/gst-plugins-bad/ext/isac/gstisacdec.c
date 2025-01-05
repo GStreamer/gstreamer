@@ -187,14 +187,7 @@ gst_isacdec_plc (GstIsacDec * self, GstClockTime duration)
 
   gst_buffer_unmap (output, &map_write);
 
-  if (ret < 0) {
-    /* error */
-    gint16 code = WebRtcIsac_GetErrorCode (self->isac);
-    GST_WARNING_OBJECT (self, "Failed to produce PLC: %s (%d)",
-        isac_error_code_to_str (code), code);
-    gst_buffer_unref (output);
-    return GST_FLOW_ERROR;
-  } else if (ret == 0) {
+  if (ret == 0) {
     GST_DEBUG_OBJECT (self, "Decoder didn't produce any PLC frame");
     gst_buffer_unref (output);
     return GST_FLOW_OK;
