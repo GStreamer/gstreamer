@@ -188,7 +188,8 @@ static void
 take_s334_both_fields (GstCea608Mux * self, GstBuffer * buffer)
 {
   GstMapInfo out = GST_MAP_INFO_INIT;
-  guint s334_len, cc_data_len, i;
+  gint s334_len;
+  guint cc_data_len, i;
 
   gst_buffer_map (buffer, &out, GST_MAP_READWRITE);
 
