@@ -163,8 +163,7 @@ _seq_hdr_is_valid (GstMpegVideoSequenceHdr * hdr)
 static inline gboolean
 _seq_ext_is_valid (GstMpegVideoSequenceExt * ext)
 {
-  return ext->profile >= GST_MPEG_VIDEO_PROFILE_422
-      && ext->profile <= GST_MPEG_VIDEO_PROFILE_SIMPLE;
+  return ext->profile <= GST_MPEG_VIDEO_PROFILE_SIMPLE;
 }
 
 #define SEQ_EXT_INIT (GstMpegVideoSequenceExt) { 0xff, 0, }
