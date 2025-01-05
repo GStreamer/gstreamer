@@ -57,12 +57,6 @@ is_token_character (const gchar c)
 }
 
 static gboolean
-is_ascii (const gchar c)
-{
-  return c > 0 && c <= G_MAXINT8;
-}
-
-static gboolean
 is_eos (const gchar c)
 {
   return c == '\0';
@@ -135,8 +129,8 @@ quoted_string_char (const gchar ** input, gchar * value)
   g_return_val_if_fail (value != NULL, FALSE);
 
   const gchar *unparsed = *input;
-  char c = unparsed[0];
-  if (!is_ascii (c)) {
+  gchar c = unparsed[0];
+  if (!g_ascii_isprint (c)) {
     return FALSE;
   }
 
@@ -160,7 +154,7 @@ escaped_ascii_char (const gchar ** input, gchar * value)
   }
 
   gchar c = (*input)[0];
-  if (!is_ascii (c)) {
+  if (!g_ascii_isprint (c)) {
     return FALSE;
   }
 
