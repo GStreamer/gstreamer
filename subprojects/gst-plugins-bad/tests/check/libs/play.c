@@ -1427,7 +1427,7 @@ test_play_position_update_interval_cb (GstPlay * player,
       GstClockTime delta = GST_CLOCK_DIFF (old_state->last_position, position);
       GST_DEBUG_OBJECT (player,
           "current delta: %" GST_TIME_FORMAT " interval: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (delta), GST_TIME_ARGS (update_interval));
+          GST_TIME_ARGS (delta), GST_TIME_ARGS (update_interval * GST_MSECOND));
 
       if (update_interval > 10) {
         fail_unless (delta > ((update_interval - 10) * GST_MSECOND)
