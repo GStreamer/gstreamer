@@ -5061,8 +5061,7 @@ collect_index_table_segments (GstMXFDemux * demux)
         MXFIndexEntry *entry = &s->index_entries[entidx];
         gint8 offs = -entry->temporal_offset;
         /* Check we don't exceed boundaries */
-        if ((start + entidx + entry->temporal_offset) < 0 ||
-            (start + entidx + entry->temporal_offset) >
+        if (start + entidx + entry->temporal_offset >
             table->reverse_temporal_offsets->len) {
           GST_ERROR_OBJECT (demux,
               "Temporal offset exceeds boundaries. entry:%d offset:%d max:%d",
