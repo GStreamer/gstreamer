@@ -837,9 +837,17 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
     gboolean warned = FALSE;
 
     /* Garbage collect old frames in case of codec bugs */
-    while ((oldest_frame = gst_video_decoder_get_oldest_frame (decoder)) &&
-        check_system_frame_number_too_old (frame->system_frame_number,
-            oldest_frame->system_frame_number)) {
+    while ((oldest_frame = gst_video_decoder_get_oldest_frame (decoder))) {
+      if (frame->system_frame_number > oldest_frame->system_frame_number &&
+          GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (oldest_frame)) {
+        gst_video_decoder_finish_frame (decoder, oldest_frame);
+        oldest_frame = NULL;
+        continue;
+      }
+
+      if (G_LIKELY (!check_system_frame_number_too_old
+              (frame->system_frame_number, oldest_frame->system_frame_number)))
+        break;
       if (oldest_frame->system_frame_number > 0) {
         gst_video_decoder_drop_frame (decoder, oldest_frame);
         oldest_frame = NULL;
