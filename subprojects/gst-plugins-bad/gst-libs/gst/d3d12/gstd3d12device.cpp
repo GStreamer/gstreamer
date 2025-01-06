@@ -1930,12 +1930,16 @@ gst_d3d12_device_d3d12_debug (GstD3D12Device * device, const gchar * file,
         case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION:
         case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR:
           level = GST_LEVEL_ERROR;
+          break;
         case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_WARNING:
           level = GST_LEVEL_WARNING;
+          break;
         case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_INFO:
           level = GST_LEVEL_INFO;
+          break;
         case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_MESSAGE:
           level = GST_LEVEL_DEBUG;
+          break;
         default:
           break;
       }
