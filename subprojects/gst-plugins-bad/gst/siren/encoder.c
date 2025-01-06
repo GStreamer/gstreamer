@@ -210,7 +210,7 @@ Siren7_EncodeFrame (SirenEncoder encoder, unsigned char *DataIn,
   }
 
   if (checksum_bits > 0) {
-    BufferOut[idx - 1] &= (-1 << checksum_bits);
+    BufferOut[idx - 1] &= (((unsigned short) -1) << checksum_bits);
     sum = 0;
     idx = 0;
     do {
