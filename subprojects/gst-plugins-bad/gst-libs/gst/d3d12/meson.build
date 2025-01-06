@@ -58,6 +58,10 @@ else
     '-Wno-unknown-pragmas',
     # Various warnings in DirectX-Headers headers
     '-Wno-switch',
+    # Ignore missing fallthrough in DirectX-Headers headers
+    '-Wimplicit-fallthrough=0',
+    # Ignore definition issues
+    '-Wno-undef',
   ])
 endif
 
