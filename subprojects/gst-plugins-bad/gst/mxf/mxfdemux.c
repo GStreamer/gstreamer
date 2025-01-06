@@ -2497,11 +2497,11 @@ find_entry_for_offset (GstMXFDemux * demux, GstMXFDemuxEssenceTrack * etrack,
 
   /* Find the segment that covers the given stream offset (the highest one that
    * covers that offset) */
-  for (i = index_table->segments->len - 1; i >= 0; i--) {
+  for (i = index_table->segments->len; i > 0; i--) {
     index_segment =
-        &g_array_index (index_table->segments, MXFIndexTableSegment, i);
+        &g_array_index (index_table->segments, MXFIndexTableSegment, i - 1);
     GST_DEBUG_OBJECT (demux,
-        "Checking segment #%d (essence_offset %" G_GUINT64_FORMAT ")", i,
+        "Checking segment #%d (essence_offset %" G_GUINT64_FORMAT ")", i - 1,
         index_segment->segment_start_offset);
     /* Not in the right segment yet */
     if (offset >= index_segment->segment_start_offset) {
