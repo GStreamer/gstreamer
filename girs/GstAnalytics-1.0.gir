@@ -1259,7 +1259,7 @@ pixel to instance of an object is identified.</doc>
       <field name="dims" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">number of tensor dimensions</doc>
         <array length="5" zero-terminated="0">
-          <type name="TensorDim" c:type="GstTensorDim"/>
+          <type name="gsize" c:type="gsize"/>
         </array>
       </field>
       <constructor name="alloc" c:identifier="gst_tensor_alloc" version="1.26">
@@ -1346,8 +1346,8 @@ dimension is dynamic.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">The dims array form the tensor</doc>
-          <array length="0" zero-terminated="0" c:type="GstTensorDim*">
-            <type name="TensorDim" c:type="GstTensorDim"/>
+          <array length="0" zero-terminated="0" c:type="gsize*">
+            <type name="gsize" c:type="gsize"/>
           </array>
         </return-value>
         <parameters>
@@ -1408,18 +1408,6 @@ dimension is dynamic.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">"brain" 16 bit floating point tensor data</doc>
       </member>
     </enumeration>
-    <record name="TensorDim" c:type="GstTensorDim" version="1.26">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Hold properties of the tensor's dimension</doc>
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
-      <field name="size" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Size of the dimension. Use 0 for dynamic dimension using.</doc>
-        <type name="gsize" c:type="gsize"/>
-      </field>
-      <field name="order_index" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Dimension order in memory. @see_also #GST_TENSOR_DIM_ORDER_INDEXED</doc>
-        <type name="gsize" c:type="gsize"/>
-      </field>
-    </record>
     <enumeration name="TensorDimOrder" version="1.26" c:type="GstTensorDimOrder">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Indicate to read tensor from memory in row-major or column-major order.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
@@ -1428,13 +1416,6 @@ dimension is dynamic.</doc>
       </member>
       <member name="col_major" value="1" c:identifier="GST_TENSOR_DIM_ORDER_COL_MAJOR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">elements along a column are consecutive in memory</doc>
-      </member>
-      <member name="indexed" value="2" c:identifier="GST_TENSOR_DIM_ORDER_INDEXED">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">elements storage follow the order defined by
-   #GstTensorDim.order_index This mean that when iterating the tensor
-   the dimension with index 0 is the most nested in the loops and consecutive
-   in memory, followed by other dimensions in the order defined by
-   #GstTensorDim.order_index.</doc>
       </member>
     </enumeration>
     <enumeration name="TensorLayout" version="1.26" c:type="GstTensorLayout">

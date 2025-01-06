@@ -73,11 +73,6 @@ typedef enum _GstTensorDataType
  * GstTensorDimOrder:
  * @GST_TENSOR_DIM_ORDER_ROW_MAJOR: elements along a row are consecutive in memory
  * @GST_TENSOR_DIM_ORDER_COL_MAJOR: elements along a column are consecutive in memory
- * @GST_TENSOR_DIM_ORDER_INDEXED: elements storage follow the order defined by
- *    #GstTensorDim.order_index This mean that when iterating the tensor
- *    the dimension with index 0 is the most nested in the loops and consecutive
- *    in memory, followed by other dimensions in the order defined by
- *    #GstTensorDim.order_index.
  *
  * Indicate to read tensor from memory in row-major or column-major order.
  *
@@ -86,8 +81,7 @@ typedef enum _GstTensorDataType
 typedef enum _GstTensorDimOrder
 {
   GST_TENSOR_DIM_ORDER_ROW_MAJOR,
-  GST_TENSOR_DIM_ORDER_COL_MAJOR,
-  GST_TENSOR_DIM_ORDER_INDEXED
+  GST_TENSOR_DIM_ORDER_COL_MAJOR
 } GstTensorDimOrder;
 
 /**
@@ -102,22 +96,6 @@ typedef enum _GstTensorLayout
 {
   GST_TENSOR_LAYOUT_CONTIGUOUS
 } GstTensorLayout;
-
-
-/**
- * GstTensorDim:
- * @size: Size of the dimension. Use 0 for dynamic dimension using.
- * @order_index: Dimension order in memory. @see_also #GST_TENSOR_DIM_ORDER_INDEXED
- *
- * Hold properties of the tensor's dimension
- *
- * Since: 1.26
- */
-typedef struct _GstTensorDim
-{
-  gsize size;
-  gsize order_index;
-} GstTensorDim;
 
 /**
  * GstTensor:
@@ -141,7 +119,7 @@ typedef struct _GstTensor
   GstBuffer *data;
   GstTensorDimOrder dims_order;
   gsize num_dims;
-  GstTensorDim dims[];
+  gsize dims[];
 } GstTensor;
 
 G_BEGIN_DECLS
@@ -166,7 +144,7 @@ GST_ANALYTICS_META_API
 GstTensor * gst_tensor_copy (const GstTensor * tensor);
 
 GST_ANALYTICS_META_API
-GstTensorDim * gst_tensor_get_dims (GstTensor * tensor, gsize * num_dims);
+gsize * gst_tensor_get_dims (GstTensor * tensor, gsize * num_dims);
 
 GST_ANALYTICS_META_API
 GType gst_tensor_get_type (void);

@@ -25,7 +25,7 @@
 #include "gsttensor.h"
 
 #define GST_TENSOR_SIZE(num_dims) \
-  (sizeof (GstTensor) + (sizeof (GstTensorDim) * num_dims))
+  (sizeof (GstTensor) + (sizeof (gsize) * num_dims))
 
 G_DEFINE_BOXED_TYPE (GstTensor, gst_tensor,
     (GBoxedCopyFunc) gst_tensor_copy, (GBoxedFreeFunc) gst_tensor_free);
@@ -145,9 +145,8 @@ gst_tensor_new_simple (GQuark id, GstTensorDataType data_type, GstBuffer * data,
   tensor->data = data;
   tensor->dims_order = dims_order;
   tensor->num_dims = num_dims;
-  for (i = 0; i < num_dims; i++) {
-    tensor->dims[i].size = dims[i];
-  }
+  memcpy (tensor->dims, dims, sizeof (gsize) * num_dims);
+
   return tensor;
 }
 
@@ -203,7 +202,7 @@ gst_tensor_copy (const GstTensor * tensor)
  * Since: 1.26
  */
 
-GstTensorDim *
+gsize *
 gst_tensor_get_dims (GstTensor * tensor, gsize * num_dims)
 {
   if (num_dims)
