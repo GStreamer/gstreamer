@@ -2,11 +2,11 @@ GStreamer 1.24 Release Notes
 
 GStreamer 1.24.0 was originally released on 4 March 2024.
 
-The latest bug-fix release in the stable 1.24 series is 1.24.10 and was released on 03 December 2024.
+The latest bug-fix release in the stable 1.24 series is 1.24.10 and was released on 06 January 2025.
 
 See https://gstreamer.freedesktop.org/releases/1.24/ for the latest version of this document.
 
-Last updated: Tuesday 03 December 2024, 14:00 UTC (log)
+Last updated: Tuesday 06 January 2025, 19:30 UTC (log)
 
 ## Introduction
 
@@ -2901,6 +2901,134 @@ List of merge requests and issues fixed in 1.24.10
 
 -   List of Merge Requests applied in 1.24.10
 -   List of Issues fixed in 1.24.10
+
+1.24.11
+
+The eleventh 1.24 bug-fix release (1.24.11) was released on 06 January 2025.
+
+This release only contains bugfixes and it should be safe to update from 1.24.x.
+
+Highlighted bugfixes in 1.24.11
+
+-   playback: Fix SSA/ASS subtitles with embedded fonts
+-   decklink: add missing video modes and fix 8K video modes
+-   matroskamux: spec compliance fixes for audio-only files
+-   onnx: disable onnxruntime telemetry
+-   qtdemux: Fix base offset update when doing segment seeks
+-   srtpdec: Fix a use-after-free issue
+-   (uri)decodebin3: Fix stream change scenarios, possible deadlock on shutdown
+-   video: fix missing alpha flag in AV12 format description
+-   avcodecmap: Add some more channel position mappings
+-   cerbero bootstrap fixes for Windows 11
+-   Various bug fixes, build fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   No changes
+
+gst-plugins-base
+
+-   appsrc: Decrease log level for item drop
+-   gl: raise WARNING instead of ERROR when no connector is connected
+-   decodebin3: Free main input even if it is not part of the list of inputs
+-   urisourcebin: Avoid deadlock on shutdown
+-   urisourcebin: Only rewrite stream-start event once
+-   urisourcebin/(uri)decodebin3: Fix stream change scenarios
+-   urisourcebin: Reference counting leak
+-   playbin3: leak detected with A/V playback and window closed
+-   videodecoder: Gracefully handle missing data without prior input segment
+-   videodecoder: set decode only flag by decode only buffer
+-   video: fix AV12 format lacking the GST_VIDEO_FORMAT_FLAG_ALPHA flag.
+-   Fix SSA/ASS subtitles with embedded fonts
+
+gst-plugins-good
+
+-   matroskamux: Fix audio-only stream conditions and consider audio buffers as keyframes when writing out simpleblocks
+-   qtdemux: fix accumulated base offset in segment seeks
+-   rtppassthroughpay: ensure buffer is writable before mapping writable
+-   rtpsession: Fix twcc stats structure leak
+-   v4l2: object: Add P010 format
+-   v4l2videodec: release decode only frame in input list
+
+gst-plugins-bad
+
+-   decklink: add missing video modes, fix 8K video modes
+-   onnx: disable onnxruntime telemetry
+-   srtpdec: fix build when libsrtp1 is being used
+-   srtpdec: Fix a use-after-free buffer issue
+-   va: display: Optimize out some property indirection
+-   vp9parse/av1parse: Add video codec tag to the tag list
+-   webrtc: Simplify fmtp handling in codec stats
+-   webrtcbin: Fix potential deadlock on bin elements cleanup
+-   zxing: Replace deprecated DecodeHints with ReaderOptions
+-   meson: Also disable drm on GNU/Hurd
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+-   No changes
+
+gst-libav
+
+-   avcodecmap: Add some more channel position mappings
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   meson: Re-added required: lines accidentally removed
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   ges: Fix some reference counting and error handling
+-   ges-meta-container: Fix the GET_INTERFACE macro
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   No changes
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   No changes
+
+Cerbero build tool and packaging changes in 1.24.11
+
+-   Fix bootstrap on Windows 11: Install WMIC when missing
+
+Contributors to 1.24.11
+
+Armin Begovic, Benjamin Gräf, Cheung Yik Pang, Christian Meissl, Daniel Morin, Dean Zhang (张安迪), Edward Hervey, Emil
+Ljungdahl, Francisco Javier Velázquez-García, Guillaume Desmottes, Jan Alexander Steffens (heftig), L. E. Segovia, Matthew
+Waters, Max Romanov, Nicolas Dufresne, Philippe Normand, Robert Mader, Samuel Thibault, Sebastian Dröge, Stéphane Cerveau,
+Thibault Saunier, Tim-Philipp Müller,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.24.11
+
+-   List of Merge Requests applied in 1.24.11
+-   List of Issues fixed in 1.24.11
 
 Schedule for 1.26
 
