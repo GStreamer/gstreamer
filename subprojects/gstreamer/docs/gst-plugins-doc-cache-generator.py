@@ -48,6 +48,7 @@ class GstPluginsHotdocConfGen:
         parser.add_argument('--include_paths', nargs='*', default=[])
         parser.add_argument('--gst_c_source_filters', nargs='*', default=[])
         parser.add_argument('--gst_c_source_file', type=P)
+        parser.add_argument('--gst_plugin_libraries_file', type=P)
         parser.add_argument('--output', type=P)
 
         parser.parse_args(namespace=self, args=sys.argv[2:])
@@ -60,6 +61,12 @@ class GstPluginsHotdocConfGen:
                 gst_c_source_map = json.load(fd)
         else:
             gst_c_source_map = {}
+
+        if self.gst_plugin_libraries_file is not None:
+            with self.gst_plugin_libraries_file.open() as fd:
+                gst_plugin_libraries_map = json.load(fd)
+        else:
+            gst_plugin_libraries_map = {}
 
         with self.gst_cache_file.open() as fd:
             all_plugins = json.load(fd)
@@ -91,6 +98,7 @@ class GstPluginsHotdocConfGen:
                         'gst_c_source_filters': [str(s) for s in self.gst_c_source_filters],
                         'include_paths': self.include_paths,
                         'gst_order_generated_subpages': True,
+                        'gst_plugin_library': gst_plugin_libraries_map.get(plugin_name),
                     }, f, indent=4)
 
         if self.output is not None:
