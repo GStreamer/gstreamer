@@ -127,7 +127,7 @@ render (GstBaseSink * sink, GstBuffer * buf)
     goto write_error;
 
   written_bytes = write (fds[0], info.data, info.size);
-  if (written_bytes < 0)
+  if (written_bytes == (gsize) - 1)
     goto write_error;
 
   if (written_bytes != info.size)
