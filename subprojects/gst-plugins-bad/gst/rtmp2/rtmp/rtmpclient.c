@@ -103,7 +103,7 @@ gst_rtmp_scheme_from_string (const gchar * string)
     }
   }
 
-  return -1;
+  return GST_RTMP_SCHEME_ERROR;
 }
 
 GstRtmpScheme
@@ -120,7 +120,7 @@ gst_rtmp_scheme_from_uri (const GstUri * uri)
 const gchar *
 gst_rtmp_scheme_to_string (GstRtmpScheme scheme)
 {
-  if (scheme >= 0 && scheme < NUM_SCHEMES) {
+  if (scheme != GST_RTMP_SCHEME_ERROR && scheme < NUM_SCHEMES) {
     return scheme_strings[scheme];
   }
 
