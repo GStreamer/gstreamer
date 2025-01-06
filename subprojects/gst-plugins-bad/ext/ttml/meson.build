@@ -12,7 +12,7 @@ if libxml_dep.found() and pango_dep.found() and cairo_dep.found() and pangocairo
      'gstttmlrender.c',
      'gstttmlelement.c',
      'gstttmlplugin.c'],
-    c_args : gst_plugins_bad_args,
+    c_args : gst_plugins_bad_args + cc.get_supported_arguments(['-Wno-aggregate-return']),
     include_directories : [configinc],
     dependencies : [gstvideo_dep, libxml_dep, pango_dep, cairo_dep, pangocairo_dep, libm],
     install : true,

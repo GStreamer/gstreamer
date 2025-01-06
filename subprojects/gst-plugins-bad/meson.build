@@ -220,23 +220,30 @@ cdata.set_quoted('GST_LICENSE', 'LGPL')
 cdata.set_quoted('LIBDIR', join_paths(get_option('prefix'), get_option('libdir')))
 cdata.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
 
+# NOTE: Keep entries alphabetically sorted
 warning_flags = [
-  '-Wmissing-declarations',
-  '-Wredundant-decls',
-  '-Wwrite-strings',
+  '-Waddress',
   '-Wformat',
   '-Wformat-security',
+  '-Wimplicit-fallthrough=3',
   '-Winit-self',
+  '-Wmissing-declarations',
   '-Wmissing-include-dirs',
-  '-Waddress',
+  '-Wmissing-parameter-type',
   '-Wno-multichar',
-  '-Wvla',
   '-Wpointer-arith',
+  '-Wredundant-decls',
+  '-Wshift-negative-value',
+  '-Wtype-limits',
+  '-Wundef',
+  '-Wvla',
+  '-Wwrite-strings',
 ]
 
 warning_c_flags = [
   '-Wmissing-prototypes',
   '-Wold-style-definition',
+  '-Waggregate-return',
 ]
 
 warning_cxx_flags = [

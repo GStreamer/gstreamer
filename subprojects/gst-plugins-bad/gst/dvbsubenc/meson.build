@@ -14,9 +14,7 @@ libimagequant_sources = [
 ]
 
 local_c_args = ['-DLIQ_PRIVATE='] # GStreamer already has the right hidden symbol visibility
-if cc.has_argument ('-Wno-unknown-pragmas')
-  local_c_args += ['-Wno-unknown-pragmas']
-endif
+local_c_args += cc.get_supported_arguments(['-Wno-unknown-pragmas', '-Wno-aggregate-return'])
 
 gstdvbsubenc = library('gstdvbsubenc',
   subenc_sources + libimagequant_sources,

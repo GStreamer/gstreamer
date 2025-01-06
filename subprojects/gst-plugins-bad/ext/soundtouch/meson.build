@@ -43,6 +43,9 @@ elif host_system == 'android'
   soundtouch_cargs += cxx.get_supported_arguments('-fexceptions')
 endif
 
+# Soundtouch headers have plenty of undefined macros
+soundtouch_cargs += cxx.get_supported_arguments('-Wno-undef')
+
 if soundtouch_dep.found()
   gstsoundtouch = library('gstsoundtouch',
     soundtouch_sources,

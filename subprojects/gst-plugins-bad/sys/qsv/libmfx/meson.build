@@ -69,6 +69,7 @@ else
     # clang complains
     '-Wno-missing-braces',
     '-Wno-format-nonliteral',
+    '-Wno-undef'
   ])
 endif
 

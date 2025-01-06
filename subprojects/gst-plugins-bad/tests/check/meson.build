@@ -217,7 +217,8 @@ else
 endif
 gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner')
 
-extra_args = []
+extra_args = cc.get_supported_arguments(['-Wno-aggregate-return'])
+
 # XXX: our MinGW 32bits toolchain complians when ComPtr is in use
 if host_system == 'windows' and cc.get_id() != 'msvc'
   mingw_args = cc.get_supported_arguments([

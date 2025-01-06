@@ -31,6 +31,7 @@ else
         '-Wno-missing-declarations',
         '-Wno-old-style-definition',
         '-Wno-redundant-decls',
+        '-Wno-maybe-uninitialized'
     ])
 endif
 

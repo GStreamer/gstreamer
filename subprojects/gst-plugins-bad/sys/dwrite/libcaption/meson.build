@@ -9,6 +9,7 @@ libcaption_sources = [
 
 libcaption_static = static_library('libcaption-static',
   libcaption_sources,
+  c_args : cc.get_supported_arguments(['-Wno-missing-prototypes']),
   include_directories : include_directories('.'),
   override_options: ['werror=false'],
 )

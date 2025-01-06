@@ -372,9 +372,12 @@ vulkan_enumtypes_c = custom_target('gstvulkanenum_c',
   command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
 gen_sources += [vulkan_enumtypes_h]
 
+# Disable warnings of dependencies
+vulkan_args = cc.get_supported_arguments(['-Wno-aggregate-return'])
+
 gstvulkan = library('gstvulkan-' + api_version,
   vulkan_sources, vulkan_priv_sources, vulkan_wayland_sources, vulkan_xcb_sources, vulkan_enumtypes_c, vulkan_enumtypes_h,
-  c_args : gst_plugins_bad_args + vulkan_defines + ['-DBUILDING_GST_VULKAN', '-DG_LOG_DOMAIN="GStreamer-Vulkan"'],
+  c_args : gst_plugins_bad_args + vulkan_defines + vulkan_args + ['-DBUILDING_GST_VULKAN', '-DG_LOG_DOMAIN="GStreamer-Vulkan"'],
   objc_args : gst_plugins_bad_args + vulkan_defines + vulkan_objc_args + ['-DBUILDING_GST_VULKAN', '-DG_LOG_DOMAIN="GStreamer-Vulkan"'],
   include_directories : [configinc, libsinc],
   version : libversion,
