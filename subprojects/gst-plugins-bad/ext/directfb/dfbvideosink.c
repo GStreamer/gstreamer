@@ -594,21 +594,18 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
             "event buffer");
       } else {                  /* Handle event */
         if (event.input.type == DIET_KEYPRESS) {
-          switch (event.input.key_symbol) {
-            case DIKS_ESCAPE:
-            {
-              GST_ELEMENT_ERROR (dfbvideosink, RESOURCE, OPEN_WRITE,
-                  ("Video output device is gone."),
-                  ("We were running fullscreen and user "
-                      "pressed the ESC key, stopping playback."));
-            }
-            default:
-              GST_DEBUG_OBJECT (dfbvideosink, "key press event %c !",
-                  event.input.key_symbol);
-              gst_dfbvideosink_navigation_send_event
-                  (GST_NAVIGATION (dfbvideosink),
-                  gst_navigation_event_new_key_press ("prout",
-                      GST_NAVIGATION_MODIFIER_NONE));
+          if (event.input.key_symbol == DIKS_ESCAPE) {
+            GST_ELEMENT_ERROR (dfbvideosink, RESOURCE, OPEN_WRITE,
+                ("Video output device is gone."),
+                ("We were running fullscreen and user "
+                    "pressed the ESC key, stopping playback."));
+          } else {
+            GST_DEBUG_OBJECT (dfbvideosink, "key press event %c !",
+                event.input.key_symbol);
+            gst_dfbvideosink_navigation_send_event
+                (GST_NAVIGATION (dfbvideosink),
+                gst_navigation_event_new_key_press ("dfb",
+                    GST_NAVIGATION_MODIFIER_NONE));
           }
         } else if (event.input.type == DIET_BUTTONPRESS) {
           gint x, y;
