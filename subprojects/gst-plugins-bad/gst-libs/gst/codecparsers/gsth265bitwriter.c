@@ -639,7 +639,6 @@ _h265_bit_writer_scaling_lists (const GstH265ScalingList * src_scaling_list,
       const guint8 *sl;
       const guint8 *default_sl;
       guint8 nextCoef;
-      gint8 coef_val;
       guint8 scaling_list_pred_matrix_id_delta;
 
       if (!_get_scaling_list_params (src_scaling_list, sizeId, matrixId,
@@ -696,7 +695,7 @@ _h265_bit_writer_scaling_lists (const GstH265ScalingList * src_scaling_list,
       }
 
       for (i = 0; i < size; i++) {
-        coef_val = sl[i] - nextCoef;
+        gint coef_val = sl[i] - nextCoef;
         nextCoef = sl[i];
 
         if (coef_val > 127) {
