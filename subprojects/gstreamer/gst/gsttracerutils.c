@@ -204,7 +204,7 @@ gst_tracer_utils_create_tracer (GstTracerFactory * factory, const gchar * name,
     names[0] = (const gchar *) "params";
     values = g_new0 (GValue, 1);
     g_value_init (&values[0], G_TYPE_STRING);
-    g_value_set_string (&values[0], name);
+    g_value_set_string (&values[0], params);
   }
   GST_INFO_OBJECT (factory, "creating tracer: type-id=%u",
       (guint) factory->type);
