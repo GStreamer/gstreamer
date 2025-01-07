@@ -49,6 +49,8 @@ using namespace Microsoft::WRL;
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_mip_mapping_debug);
 #define GST_CAT_DEFAULT gst_d3d12_mip_mapping_debug
 
+#define OUTPUT_FORMATS "{ VUYA, RGBA, AYUV64, RGBA64_LE }"
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -63,11 +65,11 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, "RGBA") "; "
+        (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY, OUTPUT_FORMATS) "; "
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY ","
             GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
-            "RGBA")));
+            OUTPUT_FORMATS)));
 
 enum
 {

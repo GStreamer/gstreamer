@@ -267,7 +267,11 @@ gst_d3d12_mip_gen_execute (GstD3D12MipGen * gen, ID3D12Resource * resource,
   cl->SetPipelineState (priv->pso.Get ());
 
   D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
-  srv_desc.Format = desc.Format;
+  DXGI_FORMAT view_format = desc.Format;
+  if (desc.Format == DXGI_FORMAT_AYUV)
+    view_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+  srv_desc.Format = view_format;
   srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
   srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
   srv_desc.Texture2D.MipLevels = desc.MipLevels;
@@ -335,7 +339,7 @@ gst_d3d12_mip_gen_execute (GstD3D12MipGen * gen, ID3D12Resource * resource,
 
     for (guint mip = 0; mip < mipCount; mip++) {
       D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = { };
-      uavDesc.Format = desc.Format;
+      uavDesc.Format = view_format;
       uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
       uavDesc.Texture2D.MipSlice = srcMip + mip + 1;
 
