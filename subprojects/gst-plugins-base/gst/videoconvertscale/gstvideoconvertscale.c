@@ -1275,7 +1275,6 @@ transfer_colorimetry_from_input (GstBaseTransform * trans, GstCaps * in_caps,
   }
 }
 
-
 static GstCaps *
 gst_video_convert_scale_get_fixed_format (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
@@ -1304,6 +1303,35 @@ gst_video_convert_scale_get_fixed_format (GstBaseTransform * trans,
   }
 
   return result;
+}
+
+static void
+gst_video_convert_scale_get_fraction (const GValue * par,
+    gint64 * par_n, gint64 * par_d)
+{
+  *par_n = gst_value_get_fraction_numerator (par);
+  *par_d = gst_value_get_fraction_denominator (par);
+}
+
+static void
+gst_video_convert_multiply_fraction (gint64 numerator1, gint64 denominator1,
+    gint64 numerator2, gint64 denominator2, gint64 * res_numerator,
+    gint64 * res_denominator)
+{
+  if (gst_util_fraction_multiply_int64 (numerator1, denominator1, numerator2,
+          denominator2, res_numerator, res_denominator)) {
+    return;
+  }
+
+  // Fallback to using doubles if the above fails, this means loss of precision
+  // but at least we can work with it
+  gdouble double1, double2;
+  gst_util_fraction_to_double (numerator1, denominator1, &double1);
+  gst_util_fraction_to_double (numerator2, denominator2, &double2);
+
+  gdouble res_double = double1 * double2;
+  gst_util_double_to_fraction (res_double, (gint *) & res_numerator,
+      (gint *) & res_denominator);
 }
 
 static GstCaps *
@@ -1356,30 +1384,36 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
 
   /* we have both PAR but they might not be fixated */
   {
-    gint from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d;
-    gint w = 0, h = 0;
-    gint from_dar_n, from_dar_d;
-    gint num, den;
+    gint64 from_w = 0, from_h = 0, from_par_n = 1, from_par_d = 1, to_par_n =
+        1, to_par_d = 1;
+    gint64 w = 0, h = 0;
+    gint64 from_dar_n, from_dar_d;
+    gint64 num, den;
+    guint64 tmpw, tmph;
 
     /* from_par should be fixed */
     g_return_val_if_fail (gst_value_is_fixed (from_par), othercaps);
 
-    from_par_n = gst_value_get_fraction_numerator (from_par);
-    from_par_d = gst_value_get_fraction_denominator (from_par);
+    gst_video_convert_scale_get_fraction (from_par, &from_par_n, &from_par_d);
+    gst_structure_get (ins,
+        "width", G_TYPE_INT, &from_w, "height", G_TYPE_INT, &from_h, NULL);
 
-    gst_structure_get_int (ins, "width", &from_w);
-    gst_structure_get_int (ins, "height", &from_h);
-
-    gst_structure_get_int (outs, "width", &w);
-    gst_structure_get_int (outs, "height", &h);
+    {
+      gint wi = 0, hi = 0;
+      gst_structure_get (outs,
+          "width", G_TYPE_INT, &wi, "height", G_TYPE_INT, &hi, NULL);
+      w = wi;
+      h = hi;
+    }
 
     /* if both width and height are already fixed, we can't do anything
      * about it anymore */
     if (w && h) {
       guint n, d;
 
-      GST_DEBUG_OBJECT (base, "dimensions already set to %dx%d, not fixating",
-          w, h);
+      GST_DEBUG_OBJECT (base,
+          "dimensions already set to %" G_GINT64_FORMAT "x%" G_GINT64_FORMAT
+          ", not fixating", w, h);
       if (!gst_value_is_fixed (to_par)) {
         if (gst_video_calculate_display_ratio (&n, &d, from_w, from_h,
                 from_par_n, from_par_d, w, h)) {
@@ -1396,14 +1430,12 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
     }
 
     /* Calculate input DAR */
-    if (!gst_util_fraction_multiply (from_w, from_h, from_par_n, from_par_d,
-            &from_dar_n, &from_dar_d)) {
-      GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
-          ("Error calculating the output scaled size - integer overflow"));
-      goto done;
-    }
+    gst_video_convert_multiply_fraction (from_w, from_h, from_par_n,
+        from_par_d, &from_dar_n, &from_dar_d);
 
-    GST_DEBUG_OBJECT (base, "Input DAR is %d/%d", from_dar_n, from_dar_d);
+    GST_DEBUG_OBJECT (base,
+        "Input DAR is %" G_GINT64_FORMAT "/%" G_GINT64_FORMAT "", from_dar_n,
+        from_dar_d);
 
     /* If either width or height are fixed there's not much we
      * can do either except choosing a height or width and PAR
@@ -1413,25 +1445,29 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       GstStructure *tmp;
       gint set_w, set_par_n, set_par_d;
 
-      GST_DEBUG_OBJECT (base, "height is fixed (%d)", h);
+      GST_DEBUG_OBJECT (base, "height is fixed (%" G_GINT64_FORMAT ")", h);
 
       /* If the PAR is fixed too, there's not much to do
        * except choosing the width that is nearest to the
        * width with the same DAR */
       if (gst_value_is_fixed (to_par)) {
-        to_par_n = gst_value_get_fraction_numerator (to_par);
-        to_par_d = gst_value_get_fraction_denominator (to_par);
 
-        GST_DEBUG_OBJECT (base, "PAR is fixed %d/%d", to_par_n, to_par_d);
+        gst_video_convert_scale_get_fraction (to_par, &to_par_n, &to_par_d);
 
-        if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, to_par_d,
-                to_par_n, &num, &den)) {
+        GST_DEBUG_OBJECT (base,
+            "PAR is fixed %" G_GINT64_FORMAT "/%" G_GINT64_FORMAT "", to_par_n,
+            to_par_d);
+
+        gst_video_convert_multiply_fraction (from_dar_n, from_dar_d, to_par_d,
+            to_par_n, &num, &den);
+
+        tmpw = gst_util_uint64_scale_int_round (h, num, den);
+        if (tmpw > G_MAXINT) {
           GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
               ("Error calculating the output scaled size - integer overflow"));
           goto done;
         }
-
-        w = (guint) gst_util_uint64_scale_int_round (h, num, den);
+        w = (guint) tmpw;
         gst_structure_fixate_field_nearest_int (outs, "width", w);
 
         goto done;
@@ -1447,13 +1483,8 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
 
       /* Might have failed but try to keep the DAR nonetheless by
        * adjusting the PAR */
-      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, h, set_w,
-              &to_par_n, &to_par_d)) {
-        GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
-            ("Error calculating the output scaled size - integer overflow"));
-        gst_structure_free (tmp);
-        goto done;
-      }
+      gst_video_convert_multiply_fraction (from_dar_n, from_dar_d, h, set_w,
+          &to_par_n, &to_par_d);
 
       if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
         gst_structure_set_value_static_str (tmp, "pixel-aspect-ratio", to_par);
@@ -1476,14 +1507,17 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       /* Otherwise scale the width to the new PAR and check if the
        * adjusted with is accepted. If all that fails we can't keep
        * the DAR */
-      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_par_d,
-              set_par_n, &num, &den)) {
+      gst_video_convert_multiply_fraction (from_dar_n, from_dar_d, set_par_d,
+          set_par_n, &num, &den);
+
+      tmpw = gst_util_uint64_scale_int_round (h, num, den);
+      if (tmpw > G_MAXINT) {
         GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
             ("Error calculating the output scaled size - integer overflow"));
         goto done;
       }
 
-      w = (guint) gst_util_uint64_scale_int_round (h, num, den);
+      w = (guint) tmpw;
       gst_structure_fixate_field_nearest_int (outs, "width", w);
       if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
           set_par_n != set_par_d)
@@ -1495,25 +1529,23 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       GstStructure *tmp;
       gint set_h, set_par_n, set_par_d;
 
-      GST_DEBUG_OBJECT (base, "width is fixed (%d)", w);
+      GST_DEBUG_OBJECT (base, "width is fixed (%" G_GINT64_FORMAT ")", w);
 
       /* If the PAR is fixed too, there's not much to do
        * except choosing the height that is nearest to the
        * height with the same DAR */
       if (gst_value_is_fixed (to_par)) {
-        to_par_n = gst_value_get_fraction_numerator (to_par);
-        to_par_d = gst_value_get_fraction_denominator (to_par);
+        gst_video_convert_scale_get_fraction (to_par, &to_par_n, &to_par_d);
+        gst_video_convert_multiply_fraction (from_dar_n, from_dar_d, to_par_d,
+            to_par_n, &num, &den);
 
-        GST_DEBUG_OBJECT (base, "PAR is fixed %d/%d", to_par_n, to_par_d);
-
-        if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, to_par_d,
-                to_par_n, &num, &den)) {
+        tmph = (guint) gst_util_uint64_scale_int_round (w, den, num);
+        if (tmph > G_MAXINT) {
           GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
               ("Error calculating the output scaled size - integer overflow"));
           goto done;
         }
-
-        h = (guint) gst_util_uint64_scale_int_round (w, den, num);
+        h = tmph;
         gst_structure_fixate_field_nearest_int (outs, "height", h);
 
         goto done;
@@ -1529,13 +1561,8 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
 
       /* Might have failed but try to keep the DAR nonetheless by
        * adjusting the PAR */
-      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_h, w,
-              &to_par_n, &to_par_d)) {
-        GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
-            ("Error calculating the output scaled size - integer overflow"));
-        gst_structure_free (tmp);
-        goto done;
-      }
+      gst_video_convert_multiply_fraction (from_dar_n, from_dar_d, set_h, w,
+          &to_par_n, &to_par_d);
       if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
         gst_structure_set_value_static_str (tmp, "pixel-aspect-ratio", to_par);
       gst_structure_fixate_field_nearest_fraction (tmp, "pixel-aspect-ratio",
@@ -1557,14 +1584,16 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       /* Otherwise scale the height to the new PAR and check if the
        * adjusted with is accepted. If all that fails we can't keep
        * the DAR */
-      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_par_d,
-              set_par_n, &num, &den)) {
+      gst_video_convert_multiply_fraction (from_dar_n, from_dar_d, set_par_d,
+          set_par_n, &num, &den);
+
+      tmph = gst_util_uint64_scale_int_round (w, den, num);
+      if (tmph > G_MAXINT) {
         GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
             ("Error calculating the output scaled size - integer overflow"));
         goto done;
       }
-
-      h = (guint) gst_util_uint64_scale_int_round (w, den, num);
+      h = (guint) tmph;
       gst_structure_fixate_field_nearest_int (outs, "height", h);
       if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
           set_par_n != set_par_d)
@@ -1576,16 +1605,10 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       GstStructure *tmp;
       gint set_h, set_w, f_h, f_w;
 
-      to_par_n = gst_value_get_fraction_numerator (to_par);
-      to_par_d = gst_value_get_fraction_denominator (to_par);
-
+      gst_video_convert_scale_get_fraction (to_par, &to_par_n, &to_par_d);
       /* Calculate scale factor for the PAR change */
-      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, to_par_n,
-              to_par_d, &num, &den)) {
-        GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
-            ("Error calculating the output scaled size - integer overflow"));
-        goto done;
-      }
+      gst_video_convert_multiply_fraction (from_dar_n, from_dar_d, to_par_n,
+          to_par_d, &num, &den);
 
       /* Try to keep the input height (because of interlacing) */
       tmp = gst_structure_copy (outs);
@@ -1594,7 +1617,13 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
 
       /* This might have failed but try to scale the width
        * to keep the DAR nonetheless */
-      w = (guint) gst_util_uint64_scale_int_round (set_h, num, den);
+      tmpw = gst_util_uint64_scale_int_round (set_h, num, den);
+      if (tmpw > G_MAXINT) {
+        GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
+            ("Error calculating the output scaled size - integer overflow"));
+        goto done;
+      }
+      w = (guint) tmpw;
       gst_structure_fixate_field_nearest_int (tmp, "width", w);
       gst_structure_get_int (tmp, "width", &set_w);
       gst_structure_free (tmp);
@@ -1616,7 +1645,13 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
 
       /* This might have failed but try to scale the width
        * to keep the DAR nonetheless */
-      h = (guint) gst_util_uint64_scale_int_round (set_w, den, num);
+      guint64 tmph = gst_util_uint64_scale_int_round (set_w, den, num);
+      if (tmph > G_MAXINT) {
+        GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
+            ("Error calculating the output scaled size - integer overflow"));
+        goto done;
+      }
+      h = (guint) tmph;
       gst_structure_fixate_field_nearest_int (tmp, "height", h);
       gst_structure_get_int (tmp, "height", &set_h);
       gst_structure_free (tmp);
@@ -1653,13 +1688,8 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       gst_structure_fixate_field_nearest_int (tmp, "width", from_w);
       gst_structure_get_int (tmp, "width", &set_w);
 
-      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_h, set_w,
-              &to_par_n, &to_par_d)) {
-        GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
-            ("Error calculating the output scaled size - integer overflow"));
-        gst_structure_free (tmp);
-        goto done;
-      }
+      gst_video_convert_multiply_fraction (from_dar_n, from_dar_d, set_h,
+          set_w, &to_par_n, &to_par_d);
 
       if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
         gst_structure_set_value_static_str (tmp, "pixel-aspect-ratio", to_par);
@@ -1682,14 +1712,10 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
 
       /* Otherwise try to scale width to keep the DAR with the set
        * PAR and height */
-      if (!gst_util_fraction_multiply (from_dar_n, from_dar_d, set_par_d,
-              set_par_n, &num, &den)) {
-        GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
-            ("Error calculating the output scaled size - integer overflow"));
-        goto done;
-      }
+      gst_video_convert_multiply_fraction (from_dar_n, from_dar_d, set_par_d,
+          set_par_n, &num, &den);
 
-      w = (guint) gst_util_uint64_scale_int_round (set_h, num, den);
+      w = gst_util_uint64_scale_round (set_h, num, den);
       tmp = gst_structure_copy (outs);
       gst_structure_fixate_field_nearest_int (tmp, "width", w);
       gst_structure_get_int (tmp, "width", &tmp2);
@@ -1706,7 +1732,7 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
       }
 
       /* ... or try the same with the height */
-      h = (guint) gst_util_uint64_scale_int_round (set_w, den, num);
+      h = gst_util_uint64_scale_round (set_w, den, num);
       tmp = gst_structure_copy (outs);
       gst_structure_fixate_field_nearest_int (tmp, "height", h);
       gst_structure_get_int (tmp, "height", &tmp2);
