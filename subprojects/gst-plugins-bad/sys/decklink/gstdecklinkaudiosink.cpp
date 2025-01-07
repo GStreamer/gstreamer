@@ -556,6 +556,12 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     self->output->output->BeginAudioPreroll ();
   }
 
+  if (!self->output->videosink) {
+    GST_ERROR_OBJECT (self,
+        "Can't output audio without video sink on the same device");
+    return GST_FLOW_ERROR;
+  }
+
   video_sink =
       GST_DECKLINK_VIDEO_SINK (gst_object_ref (self->output->videosink));
 
@@ -926,7 +932,7 @@ gst_decklink_audio_sink_change_state (GstElement * element,
       GST_OBJECT_UNLOCK (self);
 
       g_mutex_lock (&self->output->lock);
-      if (self->output->start_scheduled_playback)
+      if (self->output->start_scheduled_playback && self->output->videosink)
         self->output->start_scheduled_playback (self->output->videosink);
       g_mutex_unlock (&self->output->lock);
       break;
