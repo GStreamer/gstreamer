@@ -1489,7 +1489,6 @@ gst_splitmux_push_flush_stop (GstSplitMuxSrc * splitmux, guint32 seqnum)
     gst_event_ref (e);
     gst_pad_push_event (GST_PAD_CAST (target), e);
     target->sent_caps = FALSE;
-    target->sent_stream_start = FALSE;
     target->sent_segment = FALSE;
   }
   SPLITMUX_SRC_PADS_RUNLOCK (splitmux);
