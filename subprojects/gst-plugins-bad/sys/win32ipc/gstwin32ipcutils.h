@@ -25,6 +25,4 @@ G_BEGIN_DECLS
 
 gchar * gst_win32_ipc_get_mmf_prefix (void);
 
-gboolean gst_win32_ipc_clock_is_qpc (GstClock * clock);
-
 G_END_DECLS

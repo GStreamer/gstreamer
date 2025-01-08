@@ -47,25 +47,3 @@ gst_win32_ipc_get_mmf_prefix (void)
 
   return g_strdup (prefix.c_str ());
 }
-
-gboolean
-gst_win32_ipc_clock_is_qpc (GstClock * clock)
-{
-  GstClockType clock_type = GST_CLOCK_TYPE_MONOTONIC;
-  GstClock *mclock;
-
-  if (G_OBJECT_TYPE (clock) != GST_TYPE_SYSTEM_CLOCK)
-    return FALSE;
-
-  g_object_get (clock, "clock-type", &clock_type, nullptr);
-  if (clock_type != GST_CLOCK_TYPE_MONOTONIC)
-    return FALSE;
-
-  mclock = gst_clock_get_master (clock);
-  if (!mclock)
-    return TRUE;
-
-  gst_object_unref (mclock);
-
-  return FALSE;
-}

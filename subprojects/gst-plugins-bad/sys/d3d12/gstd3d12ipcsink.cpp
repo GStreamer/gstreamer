@@ -686,7 +686,7 @@ gst_d3d12_ipc_sink_render (GstBaseSink * sink, GstBuffer * buf)
 
   if (GST_CLOCK_TIME_IS_VALID (buffer_clock)) {
     GstClock *clock = gst_element_get_clock (GST_ELEMENT_CAST (sink));
-    if (!gst_d3d12_ipc_clock_is_system (clock)) {
+    if (!gst_clock_is_system_monotonic (clock)) {
       GstClockTime now_gst = gst_clock_get_time (clock);
       GstClockTimeDiff converted = buffer_clock;
 

@@ -481,7 +481,7 @@ gst_d3d12_ipc_src_create (GstBaseSrc * src, guint64 offset, guint size,
   clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
   now_gst = gst_clock_get_time (clock);
   base_time = GST_ELEMENT_CAST (self)->base_time;
-  is_system_clock = gst_d3d12_ipc_clock_is_system (clock);
+  is_system_clock = gst_clock_is_system_monotonic (clock);
   gst_object_unref (clock);
 
   buffer = gst_sample_get_buffer (sample);

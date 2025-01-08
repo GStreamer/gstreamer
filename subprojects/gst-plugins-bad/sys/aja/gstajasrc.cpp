@@ -2360,17 +2360,7 @@ restart:
   gst_clear_object(&clock);
   clock = gst_element_get_clock(GST_ELEMENT_CAST(self));
 
-  clock_is_monotonic_system_clock = false;
-  if (G_OBJECT_TYPE(clock) == GST_TYPE_SYSTEM_CLOCK) {
-    GstClock *system_clock = gst_system_clock_obtain();
-
-    if (clock == system_clock) {
-      GstClockType clock_type;
-      g_object_get(clock, "clock-type", &clock_type, NULL);
-      clock_is_monotonic_system_clock = clock_type == GST_CLOCK_TYPE_MONOTONIC;
-    }
-    gst_clear_object(&system_clock);
-  }
+  clock_is_monotonic_system_clock = gst_clock_is_system_monotonic(clock);
 
   // Reset all local state after restart
   have_signal = true;

@@ -486,7 +486,7 @@ gst_win32_ipc_video_sink_render (GstBaseSink * sink, GstBuffer * buf)
     GstClock *clock = gst_element_get_clock (GST_ELEMENT_CAST (sink));
     gboolean is_qpc = TRUE;
 
-    is_qpc = gst_win32_ipc_clock_is_qpc (clock);
+    is_qpc = gst_clock_is_system_monotonic (clock);
     if (!is_qpc) {
       GstClockTime now_gst = gst_clock_get_time (clock);
       GstClockTimeDiff converted = buffer_clock;

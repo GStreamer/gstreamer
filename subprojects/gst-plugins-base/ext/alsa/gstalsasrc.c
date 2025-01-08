@@ -278,19 +278,13 @@ gst_alsasrc_change_state (GstElement * element, GstStateChange transition)
 
       clk = gst_element_get_clock (element);
       if (clk != NULL) {
-        if (G_OBJECT_TYPE (clk) == GST_TYPE_SYSTEM_CLOCK) {
-          gint clocktype;
-          g_object_get (clk, "clock-type", &clocktype, NULL);
-          if (clocktype == GST_CLOCK_TYPE_MONOTONIC &&
-              alsa->use_driver_timestamps) {
-            GST_INFO ("Using driver timestamps !");
-            alsa->driver_timestamps = TRUE;
-          } else {
-            GST_INFO ("Not using driver timestamps !");
-            alsa->driver_timestamps = FALSE;
-          }
+        if (gst_clock_is_system_monotonic (clk) && alsa->use_driver_timestamps) {
+          GST_INFO ("Using driver timestamps !");
+          alsa->driver_timestamps = TRUE;
+        } else {
+          GST_INFO ("Not using driver timestamps !");
+          alsa->driver_timestamps = FALSE;
         }
-
         gst_object_unref (clk);
       }
       break;

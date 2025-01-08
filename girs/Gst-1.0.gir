@@ -10301,6 +10301,22 @@ given invalid input.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="is_system_monotonic" c:identifier="gst_clock_is_system_monotonic" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsystemclock.c">Checks that @clock is the default system clock, as returned by
+gst_system_clock_obtain(), and is of type %GST_CLOCK_TYPE_MONOTONIC.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstsystemclock.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsystemclock.c">%TRUE if @clock is the default system monotonic clock,
+  %FALSE otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="clock" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsystemclock.c">a #GstClock</doc>
+            <type name="Clock" c:type="GstClock*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="new_periodic_id" c:identifier="gst_clock_new_periodic_id">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.c">Gets an ID from @clock to trigger a periodic notification.
 The periodic notifications will start at time @start_time and

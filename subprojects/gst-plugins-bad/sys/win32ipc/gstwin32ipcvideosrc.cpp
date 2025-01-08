@@ -531,7 +531,7 @@ gst_win32_ipc_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
   now_gst = gst_clock_get_time (clock);
   base_time = GST_ELEMENT_CAST (self)->base_time;
 
-  is_qpc = gst_win32_ipc_clock_is_qpc (clock);
+  is_qpc = gst_clock_is_system_monotonic (clock);
   gst_object_unref (clock);
 
   if (!is_qpc) {

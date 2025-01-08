@@ -180,8 +180,6 @@ void gst_cuda_ipc_pkt_build_fin (std::vector<guint8> & buf);
 
 std::string gst_cuda_ipc_mem_handle_to_string (const CUipcMemHandle & handle);
 
-bool gst_cuda_ipc_clock_is_system (GstClock * clock);
-
 std::string gst_cuda_ipc_win32_error_to_string (guint err);
 
 bool gst_cuda_ipc_handle_is_equal (const CUipcMemHandle & handle,

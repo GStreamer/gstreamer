@@ -546,27 +546,6 @@ gst_cuda_ipc_mem_handle_to_string (const CUipcMemHandle & handle)
   return dump;
 }
 
-bool
-gst_cuda_ipc_clock_is_system (GstClock * clock)
-{
-  GstClockType clock_type = GST_CLOCK_TYPE_MONOTONIC;
-  GstClock *mclock;
-
-  if (G_OBJECT_TYPE (clock) != GST_TYPE_SYSTEM_CLOCK)
-    return false;
-
-  g_object_get (clock, "clock-type", &clock_type, nullptr);
-  if (clock_type != GST_CLOCK_TYPE_MONOTONIC)
-    return false;
-
-  mclock = gst_clock_get_master (clock);
-  if (!mclock)
-    return true;
-
-  gst_object_unref (mclock);
-  return false;
-}
-
 #ifdef G_OS_WIN32
 /* *INDENT-OFF* */
 static inline void rtrim(std::string &s) {

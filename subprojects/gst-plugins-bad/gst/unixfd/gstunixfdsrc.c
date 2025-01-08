@@ -470,12 +470,8 @@ gst_unix_fd_src_set_clock (GstElement * element, GstClock * clock)
 {
   GstUnixFdSrc *self = (GstUnixFdSrc *) element;
 
-  self->uses_monotonic_clock = FALSE;
-  if (clock != NULL && G_OBJECT_TYPE (clock) == GST_TYPE_SYSTEM_CLOCK) {
-    GstClockType clock_type;
-    g_object_get (clock, "clock-type", &clock_type, NULL);
-    self->uses_monotonic_clock = clock_type == GST_CLOCK_TYPE_MONOTONIC;
-  }
+  self->uses_monotonic_clock = clock != NULL
+      && gst_clock_is_system_monotonic (clock);
 
   return GST_ELEMENT_CLASS (gst_unix_fd_src_parent_class)->set_clock (element,
       clock);

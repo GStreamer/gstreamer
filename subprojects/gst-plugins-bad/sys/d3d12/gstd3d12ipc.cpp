@@ -336,27 +336,6 @@ gst_d3d12_ipc_pkt_build_fin (std::vector < guint8 > &buf)
   memcpy (&buf[0], &header, GST_D3D12_IPC_PKT_HEADER_SIZE);
 }
 
-bool
-gst_d3d12_ipc_clock_is_system (GstClock * clock)
-{
-  GstClockType clock_type = GST_CLOCK_TYPE_MONOTONIC;
-  GstClock *mclock;
-
-  if (G_OBJECT_TYPE (clock) != GST_TYPE_SYSTEM_CLOCK)
-    return false;
-
-  g_object_get (clock, "clock-type", &clock_type, nullptr);
-  if (clock_type != GST_CLOCK_TYPE_MONOTONIC)
-    return false;
-
-  mclock = gst_clock_get_master (clock);
-  if (!mclock)
-    return true;
-
-  gst_object_unref (mclock);
-  return false;
-}
-
 std::string
 gst_d3d12_ipc_wstring_to_string (const std::wstring & str)
 {
