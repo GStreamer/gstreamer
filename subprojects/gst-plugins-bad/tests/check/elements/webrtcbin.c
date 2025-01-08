@@ -6501,6 +6501,49 @@ GST_START_TEST (test_offer_rollback)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_rtx_no_duplicate_payloads)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GstWebRTCRTPTransceiverDirection direction;
+  GstWebRTCRTPTransceiver *trans;
+  GstCaps *caps;
+
+  VAL_SDP_INIT (no_duplicate_payloads, on_sdp_media_no_duplicate_payloads,
+      NULL, NULL);
+  guint media_format_count[] = { 3 };
+  VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
+      media_format_count, &no_duplicate_payloads);
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (1),
+      &media_formats);
+  const gchar *expected_offer_setup[] = { "actpass", };
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup, &count);
+  const gchar *expected_offer_direction[] = { "sendrecv", };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &offer_setup);
+
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
+
+  /* Setup sendrecv transceiver with VP8 and H264.
+   * The RTX's payload type shouldn't be 96 or 97 since those are already taken. */
+  caps = gst_caps_from_string (VP8_RTP_CAPS (96) ";" H264_RTP_CAPS (97));
+  direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV;
+  g_signal_emit_by_name (t->webrtc1, "add-transceiver", direction, caps,
+      &trans);
+  gst_caps_unref (caps);
+  fail_unless (trans != NULL);
+  g_object_set (trans, "do-nack", TRUE, NULL);
+  gst_object_unref (trans);
+
+  /* We don't really care about the answer in this test */
+  test_validate_sdp (t, &offer, NULL);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -6602,6 +6645,7 @@ webrtcbin_suite (void)
           sctpdec);
     }
     tcase_add_test (tc, test_offer_rollback);
+    tcase_add_test (tc, test_video_rtx_no_duplicate_payloads);
   } else {
     GST_WARNING ("Some required elements were not found. "
         "All media tests are disabled. nicesrc %p, nicesink %p, "

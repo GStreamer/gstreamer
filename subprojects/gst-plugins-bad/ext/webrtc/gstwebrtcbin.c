@@ -3608,6 +3608,7 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     GstCaps *format = gst_caps_new_empty ();
     GstStructure *s = gst_structure_copy (gst_caps_get_structure (caps, i));
+    gint media_pt;
 
     if (i == 0) {
       gst_structure_foreach_id_str (extmap,
@@ -3631,6 +3632,9 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
       return FALSE;
     }
 
+    if (gst_structure_get_int (s, "payload", &media_pt))
+      find_or_create_payload_map_for_media_pt (media_mapping, media_pt);
+
     gst_caps_unref (format);
   }
 
@@ -3643,10 +3647,7 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
     guint rtx_target_ssrc = -1;
     gint media_pt;
 
-    if (gst_structure_get_int (s, "payload", &media_pt) &&
-        webrtc->bundle_policy == GST_WEBRTC_BUNDLE_POLICY_NONE)
-      find_or_create_payload_map_for_media_pt (media_mapping, media_pt);
-
+    gst_structure_get_int (s, "payload", &media_pt);
     rtx_target_pt = media_pt;
 
     if (!gst_structure_get_int (s, "clock-rate", &clockrate))
