@@ -572,6 +572,14 @@ smart_encoder_get_caps (GstSmartEncoder * self, GstCaps * original_caps)
 
   gst_video_info_from_caps (&info, caps);
   gst_caps_unref (caps);
+  /* Make sure to initialize some kind of chroma-site. These are
+   * the defaults from video-info.c now */
+  if (info.chroma_site == GST_VIDEO_CHROMA_SITE_UNKNOWN) {
+    if (info.height > 576)
+      info.chroma_site = GST_VIDEO_CHROMA_SITE_H_COSITED;
+    else
+      info.chroma_site = GST_VIDEO_CHROMA_SITE_NONE;
+  }
   caps = gst_video_info_to_caps (&info);
   _struct = gst_caps_get_structure (caps, 0);
 
