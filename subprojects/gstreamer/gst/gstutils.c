@@ -3927,6 +3927,86 @@ gst_util_fraction_multiply (gint a_n, gint a_d, gint b_n, gint b_d,
 }
 
 /**
+ * gst_util_fraction_multiply_int64:
+ * @a_n: Numerator of first value
+ * @a_d: Denominator of first value
+ * @b_n: Numerator of second value
+ * @b_d: Denominator of second value
+ * @res_n: (out): Pointer to #gint to hold the result numerator
+ * @res_d: (out): Pointer to #gint to hold the result denominator
+ *
+ * Multiplies the fractions @a_n/@a_d and @b_n/@b_d and stores
+ * the result in @res_n and @res_d.
+ *
+ * Returns: %FALSE on overflow, %TRUE otherwise.
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_util_fraction_multiply_int64 (gint64 a_n, gint64 a_d, gint64 b_n,
+    gint64 b_d, gint64 * res_n, gint64 * res_d)
+{
+  gint gcd;
+  gint64 initial_a_n, initial_a_d;
+
+  initial_a_n = a_n;
+  initial_a_d = a_d;
+
+  g_return_val_if_fail (res_n != NULL, FALSE);
+  g_return_val_if_fail (res_d != NULL, FALSE);
+  g_return_val_if_fail (a_d != 0, FALSE);
+  g_return_val_if_fail (b_d != 0, FALSE);
+
+  /* early out if either is 0, as its gcd would be 0 */
+  if (a_n == 0 || b_n == 0) {
+    *res_n = 0;
+    *res_d = 1;
+    return TRUE;
+  }
+
+  gcd = gst_util_greatest_common_divisor_int64 (a_n, a_d);
+  a_n /= gcd;
+  a_d /= gcd;
+
+  gcd = gst_util_greatest_common_divisor_int64 (b_n, b_d);
+  b_n /= gcd;
+  b_d /= gcd;
+
+  gcd = gst_util_greatest_common_divisor_int64 (a_n, b_d);
+  a_n /= gcd;
+  b_d /= gcd;
+
+  gcd = gst_util_greatest_common_divisor_int64 (a_d, b_n);
+  a_d /= gcd;
+  b_n /= gcd;
+
+  /* This would result in overflow */
+  if (a_n != 0 && G_MAXINT64 / ABS (a_n) < ABS (b_n)) {
+    gcd = gst_util_greatest_common_divisor_int64 (initial_a_n, initial_a_d);
+    GST_INFO ("gcd(a_n(%" G_GINT64_FORMAT "), a_d(%" G_GINT64_FORMAT ")) = %d",
+        initial_a_n, initial_a_d, gcd);
+    GST_INFO ("Integer overflow in numerator multiplication: %" G_GINT64_FORMAT
+        " * %" G_GINT64_FORMAT " > G_MAXINT64", ABS (a_n), ABS (b_n));
+    return FALSE;
+  }
+  if (G_MAXINT64 / ABS (a_d) < ABS (b_d)) {
+    GST_ERROR ("Integer overflow in denominator multiplication: %"
+        G_GINT64_FORMAT " * %" G_GINT64_FORMAT " > G_MAXINT64", ABS (a_d),
+        ABS (b_d));
+    return FALSE;
+  }
+
+  *res_n = a_n * b_n;
+  *res_d = a_d * b_d;
+
+  gcd = gst_util_greatest_common_divisor_int64 (*res_n, *res_d);
+  *res_n /= gcd;
+  *res_d /= gcd;
+
+  return TRUE;
+}
+
+/**
  * gst_util_fraction_add:
  * @a_n: Numerator of first value
  * @a_d: Denominator of first value

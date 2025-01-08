@@ -57598,6 +57598,41 @@ the result in @res_n and @res_d.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="util_fraction_multiply_int64" c:identifier="gst_util_fraction_multiply_int64" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Multiplies the fractions @a_n/@a_d and @b_n/@b_d and stores
+the result in @res_n and @res_d.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">%FALSE on overflow, %TRUE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="a_n" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Numerator of first value</doc>
+          <type name="gint64" c:type="gint64"/>
+        </parameter>
+        <parameter name="a_d" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Denominator of first value</doc>
+          <type name="gint64" c:type="gint64"/>
+        </parameter>
+        <parameter name="b_n" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Numerator of second value</doc>
+          <type name="gint64" c:type="gint64"/>
+        </parameter>
+        <parameter name="b_d" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Denominator of second value</doc>
+          <type name="gint64" c:type="gint64"/>
+        </parameter>
+        <parameter name="res_n" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Pointer to #gint to hold the result numerator</doc>
+          <type name="gint64" c:type="gint64*"/>
+        </parameter>
+        <parameter name="res_d" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Pointer to #gint to hold the result denominator</doc>
+          <type name="gint64" c:type="gint64*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="util_fraction_to_double" c:identifier="gst_util_fraction_to_double">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Transforms a fraction to a #gdouble.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
