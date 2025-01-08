@@ -188,13 +188,15 @@ elif build_gir and python.found()
       pylib_suffix = 'dylib'
     endif
     pylib_fnames = []
-    # Library name with soversion, non-devel package
-    if python.has_variable('INSTSONAME')
-      pylib_fnames += python.get_variable('INSTSONAME')
-    endif
-    # Library name without soversion, devel package, framework, etc.
-    if python.has_variable('LDLIBRARY')
-      pylib_fnames += python.get_variable('LDLIBRARY')
+    if host_system != 'darwin' # Ignore system Python (INSTSONAME points to the Python3 executable and not libpython3.9.dylib)
+      # Library name with soversion, non-devel package
+      if python.has_variable('INSTSONAME')
+        pylib_fnames += python.get_variable('INSTSONAME')
+      endif
+      # Library name without soversion, devel package, framework, etc.
+      if python.has_variable('LDLIBRARY')
+        pylib_fnames += python.get_variable('LDLIBRARY')
+      endif
     endif
     # Manually construct name as a fallback
     pylib_fnames += [
