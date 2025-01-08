@@ -71,6 +71,8 @@ struct _Qt6GLVideoItemPrivate
   GstBuffer *buffer;
   GstCaps *new_caps;
   GstCaps *caps;
+  gboolean caps_change;
+
   GstVideoInfo new_v_info;
   GstVideoInfo v_info;
   GstVideoRectangle v_rect;
@@ -361,7 +363,10 @@ Qt6GLVideoItem::updatePaintNode(QSGNode * oldNode,
     old_buffer = NULL;
   }
 
-  tex->setCaps (this->priv->caps);
+  if (this->priv->caps_change) {
+    tex->setCaps (this->priv->caps);
+    this->priv->caps_change = FALSE;
+  }
   tex->setBuffer (this->priv->buffer);
 
   if (this->priv->force_aspect_ratio && this->priv->caps) {
@@ -700,6 +705,7 @@ Qt6GLVideoItemInterface::setBuffer (GstBuffer * buffer)
     GST_DEBUG ("%p caps change from %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT,
         this, qt_item->priv->caps, qt_item->priv->new_caps);
     gst_caps_take (&qt_item->priv->caps, qt_item->priv->new_caps);
+    qt_item->priv->caps_change = TRUE;
     qt_item->priv->new_caps = NULL;
     qt_item->priv->v_info = qt_item->priv->new_v_info;
 
