@@ -139,6 +139,7 @@ struct _GstAV1Parse
   gboolean header;
   gboolean keyframe;
   gboolean show_frame;
+  gboolean seen_non_padding;
 
   GstClockTime buffer_pts;
   GstClockTime buffer_dts;
@@ -333,6 +334,7 @@ gst_av1_parse_reset (GstAV1Parse * self)
   self->last_parsed_offset = 0;
   self->highest_spatial_id = 0;
   self->first_frame = TRUE;
+  self->seen_non_padding = FALSE;
   gst_av1_parse_reset_obu_data_state (self);
   g_clear_pointer (&self->colorimetry, g_free);
   g_clear_pointer (&self->parser, gst_av1_parser_free);
@@ -1150,6 +1152,8 @@ gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
     GST_LOG_OBJECT (self, "comsumed %d, output one buffer with size %"
         G_GSSIZE_FORMAT, finish_sz, sz);
     ret = gst_base_parse_finish_frame (GST_BASE_PARSE (self), frame, finish_sz);
+
+    self->seen_non_padding = FALSE;
   }
 
   return ret;
@@ -1594,15 +1598,25 @@ gst_av1_parse_handle_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
   if (obu->obu_type == GST_AV1_OBU_TEMPORAL_DELIMITER) {
     gst_av1_parse_reset_obu_data_state (self);
 
+    /* Let the leading padding OBUs be the part of the new TD. */
+    if (!self->seen_non_padding)
+      goto out;
+
     if (check_new_tu) {
       *check_new_tu = TRUE;
       res = GST_AV1_PARSER_OK;
-      goto out;
     }
+
+    /* Start a new TD should also complete the current frame. */
+    *frame_complete = TRUE;
+
+    goto out;
   }
 
-  if (obu->obu_type == GST_AV1_OBU_SEQUENCE_HEADER)
+  if (obu->obu_type == GST_AV1_OBU_SEQUENCE_HEADER) {
     self->header = TRUE;
+    goto out;
+  }
 
   if (obu->obu_type == GST_AV1_OBU_FRAME_HEADER
       || obu->obu_type == GST_AV1_OBU_FRAME
@@ -1672,6 +1686,9 @@ out:
       res = GST_AV1_PARSER_OK;
     }
   }
+
+  if (obu->obu_type != GST_AV1_OBU_PADDING)
+    self->seen_non_padding = TRUE;
 
   return res;
 }
@@ -1761,6 +1778,7 @@ gst_av1_parse_handle_obu_to_obu (GstBaseParse * parse,
 
   GST_LOG_OBJECT (self, "Output one buffer with size %d", consumed);
   ret = gst_base_parse_finish_frame (parse, frame, consumed);
+  self->seen_non_padding = FALSE;
   *skipsize = 0;
 
 out:
@@ -1819,29 +1837,6 @@ again:
     if (res != GST_AV1_PARSER_OK)
       break;
 
-    if (obu.obu_type == GST_AV1_OBU_TEMPORAL_DELIMITER
-        && consumed_before_push > 0) {
-      GST_DEBUG_OBJECT (self, "Encounter TD inside one %s aligned"
-          " buffer, should not happen normally.",
-          gst_av1_parse_alignment_to_string (self->in_align));
-
-      if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B)
-        gst_av1_parser_reset_annex_b (self->parser);
-
-      /* Not include this TD obu, it should belong to the next TU or frame,
-         we push all the data we already got. */
-      gst_av1_parse_create_subframe (frame, &subframe, buffer);
-      ret = gst_av1_parse_push_data (self, &subframe,
-          consumed_before_push, TRUE);
-      if (ret != GST_FLOW_OK)
-        goto out;
-
-      /* Begin to find the next. */
-      frame_complete = FALSE;
-      consumed_before_push = 0;
-      continue;
-    }
-
     gst_av1_parse_cache_one_obu (self, buffer, &obu,
         map_info.data + offset, consumed, frame_complete);
 
@@ -1899,8 +1894,8 @@ again:
 
   /* If the total buffer exhausted but frame is not complete, we just
      push the left data and consider it as a frame. */
-  if (consumed_before_push > 0 && !frame_complete
-      && self->align == GST_AV1_PARSE_ALIGN_FRAME) {
+  if (consumed_before_push > 0 && !frame_complete && self->seen_non_padding &&
+      self->align == GST_AV1_PARSE_ALIGN_FRAME) {
     g_assert (offset >= map_info.size);
     /* Warning and still consider the frame is complete */
     GST_WARNING_OBJECT (self, "Exhaust the buffer but still incomplete frame,"
@@ -1908,7 +1903,8 @@ again:
         gst_av1_parse_alignment_to_string (self->in_align));
   }
 
-  ret = gst_av1_parse_push_data (self, frame, consumed_before_push, TRUE);
+  if (self->seen_non_padding)
+    ret = gst_av1_parse_push_data (self, frame, consumed_before_push, TRUE);
 
 out:
   gst_buffer_unmap (buffer, &map_info);
@@ -2149,6 +2145,7 @@ again:
 
 out:
   gst_av1_parse_reset_obu_data_state (self);
+  self->seen_non_padding = FALSE;
   gst_buffer_unmap (buffer, &map_info);
   gst_buffer_unref (buffer);
   return ret;
@@ -2181,6 +2178,7 @@ gst_av1_parse_handle_frame (GstBaseParse * parse,
     GST_LOG_OBJECT (self, "parsing new frame");
     gst_adapter_clear (self->cache_out);
     gst_adapter_clear (self->frame_cache);
+    self->seen_non_padding = FALSE;
     self->last_parsed_offset = 0;
     self->header = FALSE;
     self->keyframe = FALSE;
