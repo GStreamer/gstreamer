@@ -33,6 +33,8 @@
 #include "VSMain_coord.hlsl"
 #include "VSMain_pos.hlsl"
 #include "CSMain_mipgen.hlsl"
+#include "CSMain_mipgen_vuya.hlsl"
+#include "CSMain_mipgen_ayuv.hlsl"
 #include "CSMain_yadif_1.hlsl"
 #include "CSMain_yadif_1_10.hlsl"
 #include "CSMain_yadif_1_12.hlsl"

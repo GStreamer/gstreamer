@@ -901,7 +901,16 @@ gst_d3d12_mip_mapping_set_info (GstD3D12BaseFilter * filter,
     return FALSE;
   }
 
-  ctx->gen = gst_d3d12_mip_gen_new (filter->device);
+  GstD3DPluginCS cs_type = GST_D3D_PLUGIN_CS_MIP_GEN;
+  if (!GST_VIDEO_INFO_HAS_ALPHA (in_info)) {
+    GST_DEBUG_OBJECT (self, "Use VUYA shader");
+    if (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_AYUV64)
+      cs_type = GST_D3D_PLUGIN_CS_MIP_GEN_AYUV;
+    else
+      cs_type = GST_D3D_PLUGIN_CS_MIP_GEN_VUYA;
+  }
+
+  ctx->gen = gst_d3d12_mip_gen_new (filter->device, cs_type);
   if (!ctx->gen) {
     GST_ERROR_OBJECT (self, "Couldn't create mip generator");
     return FALSE;

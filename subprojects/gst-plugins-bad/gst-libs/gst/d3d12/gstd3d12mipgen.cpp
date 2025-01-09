@@ -129,7 +129,7 @@ gst_d3d12_mip_gen_finalize (GObject * object)
 }
 
 GstD3D12MipGen *
-gst_d3d12_mip_gen_new (GstD3D12Device * device)
+gst_d3d12_mip_gen_new (GstD3D12Device * device, GstD3DPluginCS cs_type)
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
 
@@ -197,8 +197,7 @@ gst_d3d12_mip_gen_new (GstD3D12Device * device)
   }
 
   GstD3DShaderByteCode byte_code;
-  if (!gst_d3d_plugin_shader_get_cs_blob (GST_D3D_PLUGIN_CS_MIP_GEN,
-          GST_D3D_SM_5_0, &byte_code)) {
+  if (!gst_d3d_plugin_shader_get_cs_blob (cs_type, GST_D3D_SM_5_0, &byte_code)) {
     GST_ERROR_OBJECT (self, "Couldn't get shader byte code");
     gst_object_unref (self);
     return nullptr;

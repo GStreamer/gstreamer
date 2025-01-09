@@ -88,6 +88,8 @@ static const ShaderItem g_vs_map[] = {
 
 static const ShaderItem g_cs_map[] = {
   {GST_D3D_PLUGIN_CS_MIP_GEN, BUILD_SOURCE (CSMain_mipgen)},
+  {GST_D3D_PLUGIN_CS_MIP_GEN_VUYA, BUILD_SOURCE (CSMain_mipgen_vuya)},
+  {GST_D3D_PLUGIN_CS_MIP_GEN_AYUV, BUILD_SOURCE (CSMain_mipgen_ayuv)},
   {GST_D3D_PLUGIN_CS_YADIF_1, BUILD_SOURCE (CSMain_yadif_1)},
   {GST_D3D_PLUGIN_CS_YADIF_1_10, BUILD_SOURCE (CSMain_yadif_1_10)},
   {GST_D3D_PLUGIN_CS_YADIF_1_12, BUILD_SOURCE (CSMain_yadif_1_12)},
