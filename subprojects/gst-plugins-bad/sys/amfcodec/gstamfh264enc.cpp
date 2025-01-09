@@ -1082,6 +1082,7 @@ gst_amf_h264_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PA_FRAME_SAD:
       update_bool (self, &self->pa.frame_sad, value);
+      break;
     case PROP_PA_LTR:
       update_bool (self, &self->pa.ltr, value);
       break;
