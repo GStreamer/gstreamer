@@ -616,7 +616,8 @@ gst_wasapi_sink_write (GstAudioSink * asink, gpointer data, guint length)
   HRESULT hr;
   gint16 *dst = NULL;
   DWORD dwWaitResult;
-  guint can_frames, have_frames, n_frames, write_len, written_len = 0;
+  gint can_frames;
+  guint have_frames, n_frames, write_len, written_len = 0;
   HANDLE event_handle[2];
 
   event_handle[0] = self->event_handle;
