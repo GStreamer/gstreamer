@@ -166,10 +166,8 @@ set_default_colorimetry (GstVideoInfo * info)
 
   if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo)) {
     if (info->height > 576) {
-      info->chroma_site = GST_VIDEO_CHROMA_SITE_H_COSITED;
       info->colorimetry = default_color[DEFAULT_YUV_HD];
     } else {
-      info->chroma_site = GST_VIDEO_CHROMA_SITE_NONE;
       info->colorimetry = default_color[DEFAULT_YUV_SD];
     }
   } else if (GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo)) {
@@ -182,7 +180,7 @@ set_default_colorimetry (GstVideoInfo * info)
 }
 
 static gboolean
-validate_colorimetry (GstVideoInfo * info)
+validate_colorimetry (const GstVideoInfo * info)
 {
   const GstVideoFormatInfo *finfo = info->finfo;
 
@@ -198,6 +196,48 @@ validate_colorimetry (GstVideoInfo * info)
   if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo) &&
       info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN) {
     GST_WARNING ("Need to specify a color matrix when using YUV format (%s)",
+        finfo->name);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static void
+set_default_chroma_site (GstVideoInfo * info)
+{
+  const GstVideoFormatInfo *finfo = info->finfo;
+
+  if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo)) {
+    if (info->height > 576) {
+      info->chroma_site = GST_VIDEO_CHROMA_SITE_H_COSITED;
+    } else {
+      info->chroma_site = GST_VIDEO_CHROMA_SITE_NONE;
+    }
+  } else {
+    info->chroma_site = GST_VIDEO_CHROMA_SITE_UNKNOWN;
+  }
+}
+
+static gboolean
+validate_chroma_site (const GstVideoInfo * info)
+{
+  const GstVideoFormatInfo *finfo = info->finfo;
+
+  if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo)) {
+    // FIXME: Might also want to check here for subsampling?
+    // - chroma-site only makes sense with subsampled formats?
+    // - ALT_LINE only makes sense for formats with vertical subsampling, and if
+    //   also V_COSITED?
+    if ((info->chroma_site & GST_VIDEO_CHROMA_SITE_NONE) &&
+        (info->chroma_site & (GST_VIDEO_CHROMA_SITE_H_COSITED |
+                GST_VIDEO_CHROMA_SITE_V_COSITED))) {
+      GST_WARNING
+          ("No chroma siting together with horizontal or vertical cositing is invalid");
+      return FALSE;
+    }
+  } else if (info->chroma_site != GST_VIDEO_CHROMA_SITE_UNKNOWN) {
+    GST_WARNING ("chroma-site only makes sense for YUV formats, %s is none",
         finfo->name);
     return FALSE;
   }
@@ -503,10 +543,19 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
      * PAR to be doubled/halved too many times */
   }
 
-  if ((s = gst_structure_get_string (structure, "chroma-site")))
+  if ((s = gst_structure_get_string (structure, "chroma-site"))) {
     info->chroma_site = gst_video_chroma_site_from_string (s);
-  else
-    info->chroma_site = GST_VIDEO_CHROMA_SITE_UNKNOWN;
+    if (!validate_chroma_site (info)) {
+      GST_WARNING ("invalid chroma-site, using default");
+      set_default_chroma_site (info);
+    } else if (GST_VIDEO_FORMAT_INFO_IS_YUV (info->finfo)
+        && info->chroma_site == GST_VIDEO_CHROMA_SITE_UNKNOWN) {
+      /* force a default chroma-site for YUV formats */
+      set_default_chroma_site (info);
+    }
+  } else {
+    set_default_chroma_site (info);
+  }
 
   if ((s = gst_structure_get_string (structure, "colorimetry"))) {
     if (!gst_video_colorimetry_from_string (&info->colorimetry, s)) {

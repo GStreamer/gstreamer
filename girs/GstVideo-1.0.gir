@@ -5650,7 +5650,7 @@ performed.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-chroma.h">chroma is vertically cosited</doc>
       </member>
       <member name="alt_line" value="8" c:identifier="GST_VIDEO_CHROMA_SITE_ALT_LINE" glib:nick="alt-line" glib:name="GST_VIDEO_CHROMA_SITE_ALT_LINE">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-chroma.h">choma samples are sited on alternate lines</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-chroma.h">chroma samples are sited on alternate lines</doc>
       </member>
       <member name="cosited" value="6" c:identifier="GST_VIDEO_CHROMA_SITE_COSITED" glib:nick="cosited" glib:name="GST_VIDEO_CHROMA_SITE_COSITED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-chroma.h">chroma samples cosited with luma samples</doc>
