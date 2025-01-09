@@ -565,46 +565,21 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   g_mutex_lock (&self->display_lock);
 
   if (self->display) {
-    GValue shm_list = G_VALUE_INIT, dmabuf_list = G_VALUE_INIT;
-    GValue value = G_VALUE_INIT;
-    GArray *formats, *modifiers;
-    gint i;
-    guint fmt;
-    GstVideoFormat gfmt;
-    guint64 mod;
+    GValue format_list = G_VALUE_INIT;
 
-    g_value_init (&shm_list, GST_TYPE_LIST);
-    g_value_init (&dmabuf_list, GST_TYPE_LIST);
+    g_value_init (&format_list, GST_TYPE_LIST);
 
     /* Add corresponding shm formats */
-    formats = gst_wl_display_get_shm_formats (self->display);
-    for (i = 0; i < formats->len; i++) {
-      fmt = g_array_index (formats, uint32_t, i);
-      gfmt = gst_wl_shm_format_to_video_format (fmt);
-      if (gfmt != GST_VIDEO_FORMAT_UNKNOWN) {
-        g_value_init (&value, G_TYPE_STRING);
-        g_value_set_static_string (&value, gst_video_format_to_string (gfmt));
-        gst_value_list_append_and_take_value (&shm_list, &value);
-      }
-    }
-
+    gst_wl_display_fill_shm_format_list (self->display, &format_list);
     gst_structure_take_value (gst_caps_get_structure (caps, 0), "format",
-        &shm_list);
+        &format_list);
+
+    g_value_init (&format_list, GST_TYPE_LIST);
 
     /* Add corresponding dmabuf formats */
-    formats = gst_wl_display_get_dmabuf_formats (self->display);
-    modifiers = gst_wl_display_get_dmabuf_modifiers (self->display);
-    for (i = 0; i < formats->len; i++) {
-      fmt = g_array_index (formats, uint32_t, i);
-      mod = g_array_index (modifiers, guint64, i);
-      g_value_init (&value, G_TYPE_STRING);
-      g_value_take_string (&value, gst_video_dma_drm_fourcc_to_string (fmt,
-              mod));
-      gst_value_list_append_and_take_value (&dmabuf_list, &value);
-    }
-
+    gst_wl_display_fill_dmabuf_format_list (self->display, &format_list);
     gst_structure_take_value (gst_caps_get_structure (caps, 1), "drm-format",
-        &dmabuf_list);
+        &format_list);
 
     GST_DEBUG_OBJECT (self, "display caps: %" GST_PTR_FORMAT, caps);
   }

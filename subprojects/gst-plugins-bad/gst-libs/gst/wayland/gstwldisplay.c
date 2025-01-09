@@ -676,6 +676,61 @@ gst_wl_display_get_dmabuf_formats (GstWlDisplay * self)
   return priv->dmabuf_formats;
 }
 
+/**
+ * gst_wl_display_fill_shm_format_list:
+ * @self: A #GstWlDisplay
+ * @format_list: A #GValue of type #GST_TYPE_LIST
+ *
+ * Append supported SHM formats to a given list, suitable for use with the "format" caps value.
+ *
+ * Since: 1.26
+ */
+void
+gst_wl_display_fill_shm_format_list (GstWlDisplay * self, GValue * format_list)
+{
+  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+  GValue value = G_VALUE_INIT;
+  guint fmt;
+  GstVideoFormat gfmt;
+
+  for (gint i = 0; i < priv->shm_formats->len; i++) {
+    fmt = g_array_index (priv->shm_formats, uint32_t, i);
+    gfmt = gst_wl_shm_format_to_video_format (fmt);
+    if (gfmt != GST_VIDEO_FORMAT_UNKNOWN) {
+      g_value_init (&value, G_TYPE_STRING);
+      g_value_set_static_string (&value, gst_video_format_to_string (gfmt));
+      gst_value_list_append_and_take_value (format_list, &value);
+    }
+  }
+}
+
+/**
+ * gst_wl_display_fill_drm_format_list:
+ * @self: A #GstWlDisplay
+ * @format_list: A #GValue of type #GST_TYPE_LIST
+ *
+ * Append supported DRM formats to a given list, suitable for use with the "drm-format" caps value.
+ *
+ * Since: 1.26
+ */
+void
+gst_wl_display_fill_dmabuf_format_list (GstWlDisplay * self,
+    GValue * format_list)
+{
+  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+  GValue value = G_VALUE_INIT;
+  guint fmt;
+  guint64 mod;
+
+  for (gint i = 0; i < priv->dmabuf_formats->len; i++) {
+    fmt = g_array_index (priv->dmabuf_formats, uint32_t, i);
+    mod = g_array_index (priv->dmabuf_formats, guint64, i);
+    g_value_init (&value, G_TYPE_STRING);
+    g_value_take_string (&value, gst_video_dma_drm_fourcc_to_string (fmt, mod));
+    gst_value_list_append_and_take_value (format_list, &value);
+  }
+}
+
 struct wp_single_pixel_buffer_manager_v1 *
 gst_wl_display_get_single_pixel_buffer_manager_v1 (GstWlDisplay * self)
 {
