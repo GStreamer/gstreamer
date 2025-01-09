@@ -22,6 +22,9 @@ endif
 
 pypluginsdir = [join_paths (meson.project_build_root(), 'plugin'), meson.current_source_dir()]
 
+# FIXME : We shouldn't require these dependencies to be present, and instead
+# check if they are present and, if needed, only enable the tests that depend on
+# them
 gst_deps_defs = [
   ['gstreamer', ['gstreamer', 'gst_dep'], 'libgst'],
   ['gstreamer-app', ['gst-plugins-base', 'app_dep'], 'gstapp'],
@@ -37,8 +40,6 @@ gst_deps_defs = [
   ['gstreamer-sdp', ['gst-plugins-base', 'sdp_dep'], 'gstsdp'],
   ['gstreamer-tag', ['gst-plugins-base', 'tag_dep'], 'gsttag'],
   ['gstreamer-video', ['gst-plugins-base', 'video_dep'], 'gstvideo'],
-  ['gstreamer-webrtc', ['gst-plugins-bad', 'gstwebrtc_dep'], 'gstwebrtc'],
-  ['gstreamer-rtsp-server', ['gst-rtsp-server', 'gst_rtsp_server_dep'], 'gst_rtsp_server'],
 ]
 
 api_version = '1.0'
