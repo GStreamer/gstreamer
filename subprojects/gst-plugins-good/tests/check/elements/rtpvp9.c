@@ -24,6 +24,7 @@
 
 #include <gst/check/check.h>
 #include <gst/check/gstharness.h>
+#include <gst/rtp/gstrtpbuffer.h>
 
 #define RTP_VP9_CAPS_STR \
   "application/x-rtp,media=video,encoding-name=VP9,clock-rate=90000,payload=96"
@@ -478,6 +479,126 @@ GST_START_TEST (test_pay_delta_unit_flag)
 
 GST_END_TEST;
 
+static void
+fail_unless_vp9_ss (GstBuffer * buf, gint width, gint height)
+{
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  guint8 *payload;
+
+  /* check the SS, on the payloaded buffer */
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+  payload = gst_rtp_buffer_get_payload (&rtp);
+
+  /* Assume: buffer should be the start of the frame as well as a keyframe */
+  fail_unless_equals_int (8, (gint) (payload[0] & 0x08));
+  fail_unless_equals_int (0, (gint) (payload[0] & 0x40));
+
+  /* it also should have set its V bit as we always hard code a SS */
+  fail_unless_equals_int (2, (gint) (payload[0] & 0x02));
+
+  /* similarly, as we don't set the picture ID mode on the payloader,
+   * it should not have its I set */
+  fail_unless_equals_int (0, (gint) (payload[0] & 0x80));
+
+  /* Now assuming no picture ID signaled, we should find the SS right after */
+  /* *INDENT-OFF* */
+  fail_unless_equals_int (0x18,           (gint) payload[1]); /* N_S=0 Y=1 G=1 */
+  fail_unless_equals_int (width >> 8,     (gint) payload[2]);
+  fail_unless_equals_int (width & 0xFF,   (gint) payload[3]);
+  fail_unless_equals_int (height >> 8,    (gint) payload[4]);
+  fail_unless_equals_int (height & 0xFF,  (gint) payload[5]);
+  /* *INDENT-ON* */
+
+  fail_unless_equals_int (0x01, (gint) payload[6]);     /* N_G=1 */
+  fail_unless_equals_int (0x04, (gint) payload[7]);     /* T=0 U=0 R=1 */
+  fail_unless_equals_int (0x01, (gint) payload[8]);     /* P_DIFF=1 */
+
+  gst_rtp_buffer_unmap (&rtp);
+}
+
+static void
+test_pay_ss_resolution_profiles (guint8 payload[], gint payload_len)
+{
+  GstHarness *h = gst_harness_new_parse ("rtpvp9pay");
+  GstFlowReturn ret;
+  GstBuffer *buffer, *out;
+
+  gst_harness_set_src_caps_str (h, "video/x-vp9");
+
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      payload, payload_len, 0, payload_len, NULL, NULL);
+
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  out = gst_harness_pull (h);
+  fail_if (out == NULL);
+  fail_unless_vp9_ss (out, 16, 16);
+  gst_buffer_unref (out);
+
+  gst_harness_teardown (h);
+}
+
+GST_START_TEST (test_pay_ss_resolution_profile_0)
+{
+  // keyframe bitstream for profile 0, with 16x16 frame size
+  guint8 payload[] =
+      { 0x82, 0x49, 0x83, 0x42, 0x20, 0x0, 0xf0, 0x0, 0xf6, 0x0, 0x38, 0x24,
+    0x1c, 0x18, 0x42, 0x0, 0x0, 0x33, 0x0, 0x0, 0x0, 0x85, 0xff, 0xfa, 0xd0,
+    0x7f, 0xff, 0xff, 0xff, 0xde, 0x4c, 0x1f, 0xff, 0xff, 0xff, 0xf9, 0xa6,
+    0x50, 0x0
+  };
+  test_pay_ss_resolution_profiles (payload, G_N_ELEMENTS (payload));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_pay_ss_resolution_profile_1)
+{
+  // keyframe bitstream for profile 1, with 16x16 frame size
+  guint8 payload[] = {
+    0xa2, 0x49, 0x83, 0x42, 0x20, 0x00, 0x1e, 0x00,
+    0x1e, 0xc0, 0x07, 0x04, 0x83, 0x83, 0x08, 0x40,
+    0x00, 0x06, 0x60, 0x00, 0x00, 0x10, 0xbf, 0xff,
+    0x5a, 0x0f, 0xff, 0xff, 0xff, 0xfb, 0xc9, 0x83,
+    0xff, 0xff, 0xff, 0xff, 0x34, 0xca, 0x00
+  };
+  test_pay_ss_resolution_profiles (payload, G_N_ELEMENTS (payload));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_pay_ss_resolution_profile_2)
+{
+  // keyframe bitstream for profile 2, with 16x16 frame size
+  guint8 payload[] = {
+    0x92, 0x49, 0x83, 0x42, 0x10, 0x00, 0x78, 0x00,
+    0x7b, 0x00, 0x1c, 0x12, 0x0e, 0x0c, 0x21, 0x00,
+    0x00, 0x19, 0x80, 0x00, 0x00, 0x42, 0xff, 0xfd,
+    0x68, 0x3f, 0xff, 0xff, 0xff, 0xef, 0x26, 0x0f,
+    0xff, 0xff, 0xff, 0xfc, 0xd3, 0x28, 0x00
+  };
+  test_pay_ss_resolution_profiles (payload, G_N_ELEMENTS (payload));
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_pay_ss_resolution_profile_3)
+{
+  // keyframe bitstream for profile 3, with 16x16 frame size
+  guint8 payload[] =
+      { 0xb1, 0x24, 0xc1, 0xa1, 0x8, 0x0, 0x7, 0x80, 0x7, 0xb0, 0x1, 0xc1, 0x20,
+    0xe0, 0xc2, 0x10, 0x0, 0x1, 0x98, 0x0, 0x0, 0x4, 0x2f, 0xff, 0xd6, 0x83,
+    0xff, 0xff, 0xff, 0xfe, 0xf2, 0x60, 0xff, 0xff, 0xff, 0xff, 0xcd, 0x32,
+    0x80, 0x0
+  };
+  test_pay_ss_resolution_profiles (payload, G_N_ELEMENTS (payload));
+}
+
+GST_END_TEST;
+
+
 static Suite *
 rtpvp9_suite (void)
 {
@@ -486,6 +607,13 @@ rtpvp9_suite (void)
 
   suite_add_tcase (s, (tc_chain = tcase_create ("vp9pay")));
   tcase_add_test (tc_chain, test_pay_delta_unit_flag);
+
+  suite_add_tcase (s, (tc_chain =
+          tcase_create ("vp9pay-ss-resolution-profile")));
+  tcase_add_test (tc_chain, test_pay_ss_resolution_profile_0);
+  tcase_add_test (tc_chain, test_pay_ss_resolution_profile_1);
+  tcase_add_test (tc_chain, test_pay_ss_resolution_profile_2);
+  tcase_add_test (tc_chain, test_pay_ss_resolution_profile_3);
 
   suite_add_tcase (s, (tc_chain = tcase_create ("vp9depay")));
   tcase_add_test (tc_chain, test_depay_flexible_mode);
