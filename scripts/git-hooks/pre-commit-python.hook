@@ -162,15 +162,16 @@ def run_doc_checks(modified_files):
     # dynamic library associated with the hotdoc configuration files that need
     # rebuilding, and only update the caches using those libraries.
     # This is done in order to minimize spurious diffs as much as possible.
-    caches = {
-            'gstreamer': []
-    }
+    caches = {}
 
     (confs_need_rebuild, caches_need_rebuild) = get_hotdoc_confs_to_rebuild(builddir, modified_files)
 
     for libpath in caches_need_rebuild:
         cache_project = Path(libpath).relative_to(builddir).parts[1]
-        caches[cache_project].append(libpath)
+        if cache_project not in caches:
+            caches[cache_project] = [libpath]
+        else:
+            caches[cache_project].append(libpath)
 
     for (subproject, libpaths) in caches.items():
         build_cache(builddir, subproject, libpaths)
