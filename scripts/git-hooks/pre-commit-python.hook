@@ -118,7 +118,7 @@ def build_cache(builddir, subproject, targets):
     print (f'Rebuilding {subproject} cache with changes from {targets}')
 
     cmd = [
-        os.path.join(builddir, f'subprojects/{subproject}/docs/gst-plugins-doc-cache-generator'),
+        os.path.join(builddir, f'subprojects/gstreamer/docs/gst-plugins-doc-cache-generator'),
         os.path.join(os.getcwd(), f'subprojects/{subproject}/docs/plugins/gst_plugins_cache.json'),
         os.path.join(builddir, f'subprojects/{subproject}/docs/gst_plugins_cache.json'),
     ] + targets
