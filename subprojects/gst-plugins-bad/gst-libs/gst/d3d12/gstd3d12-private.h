@@ -25,6 +25,7 @@
 #include <gst/d3d12/gstd3d12format-private.h>
 #include <gst/d3d12/gstd3d12converter-private.h>
 #include <gst/d3d12/gstd3d12cmdqueue-private.h>
+#include <gst/d3d12/gstd3d12mipgen-private.h>
 #include <gst/d3d12/gstd3d12compat.h>
 
 /*

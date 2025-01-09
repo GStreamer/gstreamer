@@ -20,7 +20,6 @@ d3d12_sources = [
   'gstd3d12ipcsink.cpp',
   'gstd3d12ipcsrc.cpp',
   'gstd3d12mpeg2dec.cpp',
-  'gstd3d12mipgen.cpp',
   'gstd3d12mipmapping.cpp',
   'gstd3d12overlaycompositor.cpp',
   'gstd3d12pluginutils.cpp',

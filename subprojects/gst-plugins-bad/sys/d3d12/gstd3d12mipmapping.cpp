@@ -33,7 +33,6 @@
 #endif
 
 #include "gstd3d12mipmapping.h"
-#include "gstd3d12mipgen.h"
 #include "gstd3d12pluginutils.h"
 #include <directx/d3dx12.h>
 #include <mutex>

@@ -13,6 +13,7 @@ d3d12_sources = [
   'gstd3d12format.cpp',
   'gstd3d12frame.cpp',
   'gstd3d12memory.cpp',
+  'gstd3d12mipgen.cpp',
   'gstd3d12utils.cpp',
 ]
 

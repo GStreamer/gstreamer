@@ -20,15 +20,19 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <gst/d3d12/gstd3d12.h>
+#include <gst/d3d12/gstd3d12_fwd.h>
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_D3D12_MIP_GEN (gst_d3d12_mip_gen_get_type())
+
+GST_D3D12_API
 G_DECLARE_FINAL_TYPE (GstD3D12MipGen, gst_d3d12_mip_gen, GST, D3D12_MIP_GEN, GstObject);
 
+GST_D3D12_API
 GstD3D12MipGen * gst_d3d12_mip_gen_new (GstD3D12Device * device);
 
+GST_D3D12_API
 gboolean         gst_d3d12_mip_gen_execute (GstD3D12MipGen * gen,
                                             ID3D12Resource * resource,
                                             GstD3D12FenceData * fence_data,

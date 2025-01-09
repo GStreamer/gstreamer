@@ -45,7 +45,6 @@
 #include "config.h"
 #endif
 
-#include "gstd3d12mipgen.h"
 #include <gst/d3d12/gstd3d12-private.h>
 #include <gst/d3dshader/gstd3dshader.h>
 #include <directx/d3dx12.h>
