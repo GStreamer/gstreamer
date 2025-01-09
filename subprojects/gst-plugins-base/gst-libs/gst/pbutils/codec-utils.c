@@ -2425,7 +2425,8 @@ done:
  *
  * Since: 1.26
  *
- * Returns: (transfer full): The parsed AV1 caps, or NULL if there is an error
+ * Returns: (transfer full) (nullable): The parsed AV1 caps, or %NULL if there
+ * is an error
  */
 GstCaps *
 gst_codec_utils_av1_create_caps_from_av1c (GstBuffer * av1c)
@@ -2546,8 +2547,8 @@ done:
  *
  * Since: 1.26
  *
- * Returns: (transfer full): The AV1 Codec Configuration Record, or NULL if
- * there was an error.
+ * Returns: (transfer full) (nullable): The AV1 Codec Configuration Record, or
+ * %NULL if there was an error.
  */
 
 GstBuffer *

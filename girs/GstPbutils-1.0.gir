@@ -3169,9 +3169,9 @@ rate.</doc>
     <function name="codec_utils_av1_create_av1c_from_caps" c:identifier="gst_codec_utils_av1_create_av1c_from_caps" version="1.26">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">Creates the corresponding AV1 Codec Configuration Record</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h"/>
-      <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">The AV1 Codec Configuration Record, or NULL if
-there was an error.</doc>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">The AV1 Codec Configuration Record, or
+%NULL if there was an error.</doc>
         <type name="Gst.Buffer" c:type="GstBuffer*"/>
       </return-value>
       <parameters>
@@ -3184,8 +3184,9 @@ there was an error.</doc>
     <function name="codec_utils_av1_create_caps_from_av1c" c:identifier="gst_codec_utils_av1_create_caps_from_av1c" version="1.26">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">Parses the provided @av1c and returns the corresponding caps</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.h"/>
-      <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">The parsed AV1 caps, or NULL if there is an error</doc>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/codec-utils.c">The parsed AV1 caps, or %NULL if there
+is an error</doc>
         <type name="Gst.Caps" c:type="GstCaps*"/>
       </return-value>
       <parameters>
