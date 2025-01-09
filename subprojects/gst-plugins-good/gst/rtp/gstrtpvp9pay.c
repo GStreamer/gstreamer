@@ -278,8 +278,11 @@ gst_rtp_vp9_pay_parse_frame (GstRtpVP9Pay * self, GstBuffer * buffer,
     goto error;
 
   /* profile, variable length */
-  if (!gst_bit_reader_get_bits_uint32 (&reader, &profile, 2))
+  guint8 version, high;
+  if (!(gst_bit_reader_get_bits_uint8 (&reader, &version, 1) &&
+          gst_bit_reader_get_bits_uint8 (&reader, &high, 1)))
     goto error;
+  profile = (high << 1) + version;
   if (profile > 2) {
     if (!gst_bit_reader_get_bits_uint32 (&reader, &tmp, 1))
       goto error;
