@@ -31,5 +31,5 @@ struct VS_OUTPUT
 
 VS_OUTPUT VSMain_color (VS_INPUT input)
 {
-  return input;
+  return VS_OUTPUT(input);
 }

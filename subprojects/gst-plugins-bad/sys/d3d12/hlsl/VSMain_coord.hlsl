@@ -31,5 +31,5 @@ struct VS_OUTPUT
 
 VS_OUTPUT VSMain_coord (VS_INPUT input)
 {
-  return input;
+  return VS_OUTPUT(input);
 }

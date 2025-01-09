@@ -29,5 +29,5 @@ struct VS_OUTPUT
 
 VS_OUTPUT VSMain_pos (VS_INPUT input)
 {
-  return input;
+  return VS_OUTPUT(input);
 }
