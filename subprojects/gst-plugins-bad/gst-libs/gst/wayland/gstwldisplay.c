@@ -204,7 +204,7 @@ dmabuf_modifier (void *data, struct zwp_linux_dmabuf_v1 *zwp_linux_dmabuf,
 {
   GstWlDisplay *self = data;
   guint64 modifier = (guint64) modifier_hi << 32 | modifier_lo;
-  static gboolean table_header = TRUE;
+  static uint32_t last_format = 0;
 
   GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
 
@@ -220,14 +220,15 @@ dmabuf_modifier (void *data, struct zwp_linux_dmabuf_v1 *zwp_linux_dmabuf,
     if (fourcc == DRM_FORMAT_INVALID || modifier == DRM_FORMAT_MOD_INVALID)
       return;
 
-    if (table_header == TRUE) {
+    if (last_format == 0) {
       GST_INFO ("===== All DMA Formats With Modifiers =====");
       GST_INFO ("| Gst Format   | DRM Format              |");
-      table_header = FALSE;
     }
 
-    if (modifier == 0)
+    if (last_format != format) {
       GST_INFO ("|-----------------------------------------");
+      last_format = format;
+    }
 
     GST_INFO ("| %-12s | %-23s |",
         (modifier == 0) ? gst_video_format_to_string (gst_format) : "",
