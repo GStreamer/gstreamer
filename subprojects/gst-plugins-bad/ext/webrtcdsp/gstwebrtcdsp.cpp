@@ -241,12 +241,14 @@ struct _GstWebrtcDsp
   gboolean interleaved;
   guint period_size;
   guint period_samples;
+#ifdef HAVE_WEBRTC1
   gboolean stream_has_voice;
+#endif
 
   /* Protected by the stream lock */
   GstAdapter *adapter;
   GstPlanarAudioAdapter *padapter;
-  webrtc::AudioProcessing *apm;
+  rtc::scoped_refptr<webrtc::AudioProcessing> apm;
 
   /* Protected by the object lock */
   gchar *probe_name;
@@ -263,7 +265,9 @@ struct _GstWebrtcDsp
   gint startup_min_volume;
   gboolean limiter;
   webrtc::AudioProcessing::Config::GainController1::Mode gain_control_mode;
+#ifdef HAVE_WEBRTC1
   gboolean voice_detection;
+#endif
 };
 
 G_DEFINE_TYPE_WITH_CODE (GstWebrtcDsp, gst_webrtc_dsp, GST_TYPE_AUDIO_FILTER,
@@ -368,7 +372,7 @@ gst_webrtc_dsp_analyze_reverse_stream (GstWebrtcDsp * self,
     GstClockTime rec_time)
 {
   GstWebrtcEchoProbe *probe = NULL;
-  webrtc::AudioProcessing *apm;
+  rtc::scoped_refptr<webrtc::AudioProcessing> apm;
   GstBuffer *buf = NULL;
   GstAudioInfo info;
   gboolean interleaved = self->interleaved;
@@ -392,7 +396,11 @@ gst_webrtc_dsp_analyze_reverse_stream (GstWebrtcDsp * self,
   apm = self->apm;
   apm->set_stream_delay_ms (delay);
 
+#ifdef HAVE_WEBRTC1
   webrtc::StreamConfig config (info.rate, info.channels, false);
+#else
+  webrtc::StreamConfig config (info.rate, info.channels);
+#endif
 
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
@@ -433,6 +441,7 @@ done:
   return ret;
 }
 
+#ifdef HAVE_WEBRTC1
 static void
 gst_webrtc_vad_post_activity (GstWebrtcDsp *self, GstBuffer *buffer,
     gboolean stream_has_voice, guint8 level)
@@ -464,14 +473,19 @@ gst_webrtc_vad_post_activity (GstWebrtcDsp *self, GstBuffer *buffer,
   gst_element_post_message (GST_ELEMENT (self),
       gst_message_new_element (GST_OBJECT (self), s));
 }
+#endif
 
 static GstFlowReturn
 gst_webrtc_dsp_process_stream (GstWebrtcDsp * self,
     GstBuffer * buffer)
 {
   GstAudioBuffer abuf;
-  webrtc::AudioProcessing * apm = self->apm;
+  rtc::scoped_refptr<webrtc::AudioProcessing> apm = self->apm;
+#ifdef HAVE_WEBRTC1
   webrtc::StreamConfig config (self->info.rate, self->info.channels, false);
+#else
+  webrtc::StreamConfig config (self->info.rate, self->info.channels);
+#endif
   gint err;
 
   if (!gst_audio_buffer_map (&abuf, &self->info, buffer,
@@ -492,6 +506,7 @@ gst_webrtc_dsp_process_stream (GstWebrtcDsp * self,
     GST_WARNING_OBJECT (self, "Failed to filter the audio: %s.",
         webrtc_error_to_string (err));
   } else {
+#ifdef HAVE_WEBRTC1
     if (self->voice_detection) {
       webrtc::AudioProcessingStats stats = apm->GetStatistics ();
       gboolean stream_has_voice = stats.voice_detected && *stats.voice_detected;
@@ -503,6 +518,7 @@ gst_webrtc_dsp_process_stream (GstWebrtcDsp * self,
 
       self->stream_has_voice = stream_has_voice;
     }
+#endif
   }
 
   gst_audio_buffer_unmap (&abuf);
@@ -604,7 +620,11 @@ gst_webrtc_dsp_setup (GstAudioFilter * filter, const GstAudioInfo * info)
 
   self->info = *info;
   self->interleaved = (info->layout == GST_AUDIO_LAYOUT_INTERLEAVED);
+#ifdef HAVE_WEBRTC1
+  self->apm = rtc::scoped_refptr(webrtc::AudioProcessingBuilder().Create());
+#else
   self->apm = webrtc::AudioProcessingBuilder().Create();
+#endif
 
   if (!self->interleaved)
     gst_planar_audio_adapter_configure (self->padapter, info);
@@ -650,13 +670,13 @@ gst_webrtc_dsp_setup (GstAudioFilter * filter, const GstAudioInfo * info)
     config.noise_suppression.level = self->noise_suppression_level;
   }
 
-  // TODO: expose transient suppression
-
+#ifdef HAVE_WEBRTC1
   if (self->voice_detection) {
     GST_DEBUG_OBJECT (self, "Enabling Voice Activity Detection");
     config.voice_detection.enabled = true;
     self->stream_has_voice = FALSE;
   }
+#endif
 
   if (self->gain_control) {
     GEnumClass *mode_class = (GEnumClass *)
@@ -674,7 +694,9 @@ gst_webrtc_dsp_setup (GstAudioFilter * filter, const GstAudioInfo * info)
     config.gain_controller1.target_level_dbfs = self->target_level_dbfs;
     config.gain_controller1.compression_gain_db = self->compression_gain_db;
     config.gain_controller1.enable_limiter = self->limiter;
+#ifdef HAVE_WEBRTC1
     config.level_estimation.enabled = true;
+#endif
   }
 
   // TODO: expose gain controller 2
@@ -719,8 +741,7 @@ gst_webrtc_dsp_stop (GstBaseTransform * btrans)
     self->probe = NULL;
   }
 
-  delete self->apm;
-  self->apm = NULL;
+  self->apm = nullptr;
 
   GST_OBJECT_UNLOCK (self);
 
@@ -780,7 +801,11 @@ gst_webrtc_dsp_set_property (GObject * object,
           (GstWebrtcGainControlMode) g_value_get_enum (value);
       break;
     case PROP_VOICE_DETECTION:
+#ifdef HAVE_WEBRTC1
       self->voice_detection = g_value_get_boolean (value);
+#else
+      GST_WARNING_OBJECT (self, "Voice activity detection is no longer supported");
+#endif
       break;
     case PROP_VOICE_DETECTION_FRAME_SIZE_MS:
       break;
@@ -847,7 +872,11 @@ gst_webrtc_dsp_get_property (GObject * object,
       g_value_set_enum (value, self->gain_control_mode);
       break;
     case PROP_VOICE_DETECTION:
+#ifdef HAVE_WEBRTC1
       g_value_set_boolean (value, self->voice_detection);
+#else
+      g_value_set_boolean (value, FALSE);
+#endif
       break;
     case PROP_VOICE_DETECTION_FRAME_SIZE_MS:
       g_value_set_int (value, 0);
@@ -1041,7 +1070,11 @@ gst_webrtc_dsp_class_init (GstWebrtcDspClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_VOICE_DETECTION,
       g_param_spec_boolean ("voice-detection", "Voice Detection",
+#ifdef HAVE_WEBRTC1
           "Enable or disable the voice activity detector",
+#else
+          "Enable or disable the voice activity detector (deprecated)",
+#endif
           DEFAULT_VOICE_DETECTION, (GParamFlags) (G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT)));
 
