@@ -49,7 +49,7 @@ using namespace Microsoft::WRL;
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_mip_mapping_debug);
 #define GST_CAT_DEFAULT gst_d3d12_mip_mapping_debug
 
-#define OUTPUT_FORMATS "{ VUYA, RGBA, AYUV64, RGBA64_LE }"
+#define OUTPUT_FORMATS "{ VUYA, RGBA, AYUV64, RGBA64_LE, GRAY8, GRAY16_LE }"
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -902,7 +902,10 @@ gst_d3d12_mip_mapping_set_info (GstD3D12BaseFilter * filter,
   }
 
   GstD3DPluginCS cs_type = GST_D3D_PLUGIN_CS_MIP_GEN;
-  if (!GST_VIDEO_INFO_HAS_ALPHA (in_info)) {
+  if (GST_VIDEO_INFO_IS_GRAY (out_info)) {
+    GST_DEBUG_OBJECT (self, "Use GRAY shader");
+    cs_type = GST_D3D_PLUGIN_CS_MIP_GEN_GRAY;
+  } else if (!GST_VIDEO_INFO_HAS_ALPHA (in_info)) {
     GST_DEBUG_OBJECT (self, "Use VUYA shader");
     if (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_AYUV64)
       cs_type = GST_D3D_PLUGIN_CS_MIP_GEN_AYUV;
