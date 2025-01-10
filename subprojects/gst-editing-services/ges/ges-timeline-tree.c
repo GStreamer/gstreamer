@@ -161,13 +161,13 @@ new_snapped_position (GstClockTime distance)
 }
 
 static GHashTable *
-new_edit_table ()
+new_edit_table (void)
 {
   return g_hash_table_new_full (NULL, NULL, NULL, g_free);
 }
 
 static GHashTable *
-new_position_table ()
+new_position_table (void)
 {
   return g_hash_table_new_full (NULL, NULL, NULL, g_free);
 }

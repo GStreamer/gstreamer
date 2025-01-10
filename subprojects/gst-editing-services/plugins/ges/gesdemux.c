@@ -86,7 +86,7 @@ enum
 static GParamSpec *properties[PROP_LAST];
 
 static GstCaps *
-ges_demux_get_sinkpad_caps ()
+ges_demux_get_sinkpad_caps (void)
 {
   GList *tmp, *formatters;
   GstCaps *sinkpad_caps = gst_caps_new_empty ();

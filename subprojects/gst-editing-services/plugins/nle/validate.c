@@ -133,7 +133,7 @@ clean:
 NLE_END_VALIDATE_ACTION;
 
 static void
-register_action_types ()
+register_action_types (void)
 {
   GST_DEBUG_CATEGORY_INIT (nle_validate_debug, "nlevalidate",
       GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "NLE validate");
@@ -164,7 +164,7 @@ register_action_types ()
 
 
 void
-nle_validate_init ()
+nle_validate_init (void)
 {
   register_action_types ();
 }

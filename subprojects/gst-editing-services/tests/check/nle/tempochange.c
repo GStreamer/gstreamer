@@ -636,7 +636,7 @@ GST_START_TEST (test_tempochange_seek)
 GST_END_TEST;
 
 static void
-late_ges_init ()
+late_ges_init (void)
 {
   /* We need to do this inside the test cases, not during the initialization
    * of the suite, as ges_init() will initialize thread pools, which cannot
