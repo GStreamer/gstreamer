@@ -229,6 +229,10 @@ is_provider_hidden (GstDeviceMonitor * monitor, GList * hidden,
 {
   GstDeviceProviderFactory *factory;
 
+  g_return_val_if_fail (monitor, FALSE);
+  g_return_val_if_fail (hidden, FALSE);
+  g_return_val_if_fail (provider, FALSE);
+
   if (monitor->priv->show_all)
     return FALSE;
 
