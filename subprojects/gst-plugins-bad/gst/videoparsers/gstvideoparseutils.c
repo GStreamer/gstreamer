@@ -564,8 +564,9 @@ gst_video_push_user_data_unregistered (GstElement * elt,
  *
  * Clears the user data unregistered, resetting it for the next frame
  */
-void gst_video_clear_user_data_unregistered
-    (GstVideoParseUserDataUnregistered * user_data, gboolean free)
+void
+gst_video_clear_user_data_unregistered (GstVideoParseUserDataUnregistered *
+    user_data, gboolean free)
 {
   if (free)
     g_clear_pointer (&user_data->messages, g_array_unref);
