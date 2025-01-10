@@ -7,7 +7,7 @@ x265_dep = dependency('x265', required: x265_opt)
 if x265_dep.found()
   gstx265 = library('gstx265',
     'gstx265enc.c',
-    c_args : gst_plugins_bad_args,
+    c_args : gst_plugins_bad_args + cc.get_supported_arguments(['-Wno-undef']),
     include_directories : [configinc],
     dependencies : [gstpbutils_dep, gstvideo_dep, x265_dep],
     install : true,
