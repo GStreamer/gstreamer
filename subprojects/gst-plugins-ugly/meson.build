@@ -244,19 +244,22 @@ else
 endif
 
 warning_flags = [
-  '-Wmissing-declarations',
-  '-Wredundant-decls',
-  '-Wwrite-strings',
+  '-Waddress',
+  '-Waggregate-return',
   '-Wformat',
   '-Wformat-nonliteral',
   '-Wformat-security',
+  '-Wimplicit-fallthrough=3',
   '-Winit-self',
+  '-Wmissing-declarations',
   '-Wmissing-include-dirs',
-  '-Waddress',
   '-Wno-multichar',
-  '-Wvla',
   '-Wpointer-arith',
-  '-Waggregate-return',
+  '-Wredundant-decls',
+  '-Wshift-negative-value',
+  '-Wtype-limits',
+  '-Wvla',
+  '-Wwrite-strings',
   '-fno-strict-aliasing',
   # Symbol visibility
   '-fvisibility=hidden',

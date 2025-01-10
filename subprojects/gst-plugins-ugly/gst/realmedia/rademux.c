@@ -595,14 +595,14 @@ gst_real_audio_demux_handle_buffer (GstRealAudioDemux * demux, GstBuffer * buf)
       ret = gst_real_audio_demux_parse_marker (demux);
       if (ret != GST_FLOW_OK || demux->state != REAL_AUDIO_DEMUX_STATE_HEADER)
         break;
-      /* otherwise fall through */
     }
+      /* FALLTHROUGH */
     case REAL_AUDIO_DEMUX_STATE_HEADER:{
       ret = gst_real_audio_demux_parse_header (demux);
       if (ret != GST_FLOW_OK || demux->state != REAL_AUDIO_DEMUX_STATE_DATA)
         break;
-      /* otherwise fall through */
     }
+      /* FALLTHROUGH */
     case REAL_AUDIO_DEMUX_STATE_DATA:{
       ret = gst_real_audio_demux_parse_data (demux);
       break;
