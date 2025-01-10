@@ -33,6 +33,8 @@ extra_args = [
   '-DGST_USE_UNSTABLE_API',
   '-DMFX_DEPRECATED_OFF'
 ]
+# Ignore aggregate from SDK
+extra_args += cc.get_supported_arguments(['-Wno-aggregate-return'])
 
 msdk_option = get_option('msdk')
 if msdk_option.disabled()
