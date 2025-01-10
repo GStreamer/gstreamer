@@ -10,6 +10,8 @@ ltc_dep = dependency('ltc', version : '>=1.1.4', required : false)
 if ltc_dep.found()
   cdata.set('HAVE_LTC', 1)
   tc_deps += [ltc_dep]
+else
+  cdata.set('HAVE_LTC', 0)
 endif
 
 gsttimecode = library('gsttimecode',
