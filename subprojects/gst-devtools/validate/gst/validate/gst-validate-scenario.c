@@ -5181,7 +5181,7 @@ handle_bus_message (MessageData * d)
     case GST_MESSAGE_ERROR:
       is_error = TRUE;
 
-      /* Passthrough */
+      /* FALLTHROUGH */
     case GST_MESSAGE_EOS:
     {
       GstValidateAction *stop_action;
@@ -7147,6 +7147,7 @@ _action_set_done (GstValidateAction * action)
     case GST_VALIDATE_EXECUTE_ACTION_ERROR:
       GST_VALIDATE_REPORT_ACTION (scenario, action,
           SCENARIO_ACTION_EXECUTION_ERROR, "Action %s failed", action->type);
+      /* FALLTHROUGH */
     case GST_VALIDATE_EXECUTE_ACTION_ASYNC:
     case GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS:
     case GST_VALIDATE_EXECUTE_ACTION_NONE:
