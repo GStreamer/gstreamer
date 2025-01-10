@@ -24,7 +24,7 @@
 
 #include "gsttranscoding.h"
 #include "gsttranscodeelements.h"
-#if HAVE_GETRUSAGE
+#ifdef HAVE_GETRUSAGE
 #include "gst-cpu-throttling-clock.h"
 #endif
 #include <gst/pbutils/pbutils.h>
@@ -488,7 +488,7 @@ setup_failed:
 static void
 gst_uri_transcode_bin_constructed (GObject * object)
 {
-#if HAVE_GETRUSAGE
+#ifdef HAVE_GETRUSAGE
   GstUriTranscodeBin *self = GST_URI_TRANSCODE_BIN (object);
 
   self->cpu_clock =
@@ -591,7 +591,7 @@ gst_uri_transcode_bin_set_property (GObject * object,
       GST_OBJECT_UNLOCK (self);
       break;
     case PROP_CPU_USAGE:
-#if HAVE_GETRUSAGE
+#ifdef HAVE_GETRUSAGE
       GST_OBJECT_LOCK (self);
       self->wanted_cpu_usage = g_value_get_uint (value);
       g_object_set (self->cpu_clock, "cpu-usage", self->wanted_cpu_usage, NULL);
