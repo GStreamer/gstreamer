@@ -22,13 +22,13 @@
 #endif
 #include "corevideobuffer.h"
 #include "corevideomemory.h"
-#if !HAVE_IOS
+#ifndef HAVE_IOS
 #include "iosurfaceglmemory.h"
 #endif
 #include "videotexturecache-gl.h"
 #if defined(APPLEMEDIA_MOLTENVK)
 #include "videotexturecache-vulkan.h"
-#if !HAVE_IOS
+#ifndef HAVE_IOS
 #include "iosurfacevulkanmemory.h"
 #endif
 #endif
@@ -110,7 +110,7 @@ static GstMemory *
 _create_glmem (GstAppleCoreVideoPixelBuffer * gpixbuf,
     GstVideoInfo * info, guint plane, gsize size, GstVideoTextureCache * cache)
 {
-#if HAVE_IOS
+#ifdef HAVE_IOS
   return gst_video_texture_cache_create_memory (cache, gpixbuf, plane, size);
 #else
   GstIOSurfaceGLMemory *mem;

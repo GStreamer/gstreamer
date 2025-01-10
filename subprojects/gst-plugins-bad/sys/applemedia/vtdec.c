@@ -555,7 +555,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
         GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
     if (output_textures)
       gst_caps_set_simple (output_state->caps, "texture-target", G_TYPE_STRING,
-#if !HAVE_IOS
+#ifndef HAVE_IOS
           GST_GL_TEXTURE_TARGET_RECTANGLE_STR,
 #else
           GST_GL_TEXTURE_TARGET_2D_STR,

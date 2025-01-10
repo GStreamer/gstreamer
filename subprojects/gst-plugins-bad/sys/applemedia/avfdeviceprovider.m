@@ -81,7 +81,7 @@ gst_av_capture_device_get_props (AVCaptureDevice *device)
   g_free (unique_id);
   g_free (model_id);
 
-#if !HAVE_IOS
+#ifndef HAVE_IOS
   char *manufacturer = g_strdup ([[device manufacturer] UTF8String]);
   gst_structure_set (props,
     "avf.manufacturer", G_TYPE_STRING, manufacturer,

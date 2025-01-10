@@ -1532,7 +1532,7 @@ gst_vtenc_create_session (GstVTEnc * self)
   const GstVTEncoderDetails *codec_details =
       GST_VTENC_CLASS_GET_CODEC_DETAILS (G_OBJECT_GET_CLASS (self));
 
-#if !HAVE_IOS
+#ifndef HAVE_IOS
   /* Apple's M1 hardware encoding fails when provided with an interlaced ProRes source.
    * It's most likely a bug in VideoToolbox, as no such limitation has been officially mentioned anywhere.
    * For now let's disable HW encoding entirely when such case occurs. */

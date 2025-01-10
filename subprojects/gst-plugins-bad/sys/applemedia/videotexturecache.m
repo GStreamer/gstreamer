@@ -21,7 +21,7 @@
 #  include "config.h"
 #endif
 
-#if !HAVE_IOS
+#ifndef HAVE_IOS
 #import <AppKit/AppKit.h>
 #endif
 #include "videotexturecache.h"
