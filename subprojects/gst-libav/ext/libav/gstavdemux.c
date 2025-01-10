@@ -1775,9 +1775,8 @@ gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstObject * parent,
       gst_clear_tag_list (&upstream_tags);
       event = gst_event_new_tag (tags);
       gst_event_set_seqnum (event, seqnum);
-
-      /* fall through */
     }
+      /* FALLTHROUGH */
     default:
       /* for a serialized event, wait until an earlier data is gone,
        * though this is no guarantee as to when task is done with it.
