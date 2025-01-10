@@ -128,6 +128,9 @@ if cc.get_id() != 'msvc'
   extra_args += extra_mingw_args
 endif
 
+# Definition issues
+extra_args += cc.get_supported_arguments(['-Wno-undef'])
+
 gstd3d11 = library('gstd3d11',
   d3d11_sources,
   c_args : gst_plugins_bad_args + extra_c_args + extra_args,

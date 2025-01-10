@@ -40,6 +40,8 @@ extra_comm_args = [
   '-DBUILDING_GST_D3D11',
   '-DG_LOG_DOMAIN="GStreamer-D3D11"',
 ]
+# Definition issues in external headers
+extra_comm_args += cc.get_supported_arguments(['-Wno-undef'])
 
 have_d3d11sdk_h = false
 have_dxgidebug_h = false
