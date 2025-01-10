@@ -110,6 +110,25 @@ gst_d3d12_converter_color_balance_get_type (void)
   return type;
 }
 
+GType
+gst_d3d12_converter_mip_gen_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue mipgen[] = {
+    {GST_D3D12_CONVERTER_MIP_GEN_DISABLED,
+        "GST_D3D12_CONVERTER_MIP_GEN_DISABLED", "disabled"},
+    {GST_D3D12_CONVERTER_MIP_GEN_ENABLED,
+        "GST_D3D12_CONVERTER_MIP_GEN_ENABLED", "enabled"},
+    {0, nullptr, nullptr},
+  };
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstD3D12ConverterMipGen", mipgen);
+  } GST_D3D12_CALL_ONCE_END;
+
+  return type;
+}
+
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 using namespace DirectX;
@@ -123,6 +142,7 @@ using namespace DirectX;
 #define DEFAULT_SATURATION 1.0
 #define DEFAULT_BRIGHTNESS 0.0
 #define DEFAULT_CONTRAST 1.0
+#define DEFAULT_MAX_MIP_LEVELS 1
 
 static const WORD g_indices[6] = { 0, 1, 2, 3, 0, 2 };
 
@@ -240,6 +260,7 @@ enum
   PROP_SATURATION,
   PROP_BRIGHTNESS,
   PROP_CONTRAST,
+  PROP_MAX_MIP_LEVELS,
 };
 
 /* *INDENT-OFF* */
@@ -356,18 +377,25 @@ struct _GstD3D12ConverterPrivate
       gst_d3d12_cmd_queue_fence_wait (cq, fence_val);
 
     main_ctx = nullptr;
+    mipgen_ctx = nullptr;
+    post_mipgen_ctx = nullptr;
+    gst_clear_buffer (&mipgen_buf);
 
+    gst_clear_object (&mipgen_srv_heap_pool);
     gst_clear_object (&srv_heap_pool);
     gst_clear_object (&cq);
     gst_clear_object (&pack);
     gst_clear_object (&unpack);
+    gst_clear_object (&mipgen);
   }
 
   GstD3D12CmdQueue *cq = nullptr;
   GstD3D12Unpack *unpack = nullptr;
   GstD3D12Pack *pack = nullptr;
+  GstD3D12MipGen *mipgen = nullptr;
 
   GstVideoInfo in_info;
+  GstVideoInfo mipgen_info;
   GstVideoInfo out_info;
 
   D3D12_BLEND_DESC blend_desc;
@@ -378,12 +406,15 @@ struct _GstD3D12ConverterPrivate
   gboolean update_sampler = FALSE;
 
   GstD3D12DescHeapPool *srv_heap_pool = nullptr;
+  GstD3D12DescHeapPool *mipgen_srv_heap_pool = nullptr;
 
   guint srv_inc_size;
   guint rtv_inc_size;
   guint sampler_inc_size;
 
   ConvertCtxPtr main_ctx;
+  ConvertCtxPtr mipgen_ctx;
+  ConvertCtxPtr post_mipgen_ctx;
 
   guint64 input_texture_width;
   guint input_texture_height;
@@ -399,6 +430,12 @@ struct _GstD3D12ConverterPrivate
 
   GstVideoOrientationMethod video_direction;
   gboolean color_balance_enabled = FALSE;
+  gboolean mipgen_enabled = FALSE;
+
+  D3D12_SHADER_RESOURCE_VIEW_DESC mipgen_srv_desc = { };
+  D3D12_RESOURCE_DESC mipgen_desc = { };
+  GstBuffer *mipgen_buf = nullptr;
+  guint auto_mipgen_level = 1;
 
   std::mutex prop_lock;
   guint64 fence_val = 0;
@@ -418,6 +455,7 @@ struct _GstD3D12ConverterPrivate
       GST_D3D12_CONVERTER_ALPHA_MODE_UNSPECIFIED;
   GstD3D12ConverterAlphaMode dst_alpha_mode =
       GST_D3D12_CONVERTER_ALPHA_MODE_UNSPECIFIED;
+  guint mip_levels = DEFAULT_MAX_MIP_LEVELS;
 };
 /* *INDENT-ON* */
 
@@ -501,6 +539,12 @@ gst_d3d12_converter_class_init (GstD3D12ConverterClass * klass)
   g_object_class_install_property (object_class, PROP_CONTRAST,
       g_param_spec_double ("contrast", "Contrast", "contrast",
           0.0, 2.0, DEFAULT_CONTRAST, param_flags));
+  g_object_class_install_property (object_class, PROP_MAX_MIP_LEVELS,
+      g_param_spec_uint ("max-mip-levels", "Max Mip Levels",
+          "Maximum mip levels of shader resource to create "
+          "if render viewport size is smaller than shader resource "
+          "(0 = maximum level)", 0, G_MAXUINT16, DEFAULT_MAX_MIP_LEVELS,
+          param_flags));
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_converter_debug,
       "d3d12converter", 0, "d3d12converter");
@@ -667,6 +711,9 @@ gst_d3d12_converter_set_property (GObject * object, guint prop_id,
         on_color_balance_updated (self);
       }
       break;
+    case PROP_MAX_MIP_LEVELS:
+      priv->mip_levels = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -733,6 +780,9 @@ gst_d3d12_converter_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CONTRAST:
       g_value_set_double (value, comm->const_data_dyn.hsvcFactor[3]);
+      break;
+    case PROP_MAX_MIP_LEVELS:
+      g_value_set_uint (value, priv->mip_levels);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2035,6 +2085,13 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
       priv->color_balance_enabled = TRUE;
     }
 
+    if (gst_structure_get_enum (config, GST_D3D12_CONVERTER_OPT_MIP_GEN,
+            GST_TYPE_D3D12_CONVERTER_MIP_GEN, &value) &&
+        (GstD3D12ConverterMipGen) value !=
+        GST_D3D12_CONVERTER_MIP_GEN_DISABLED) {
+      priv->mipgen_enabled = TRUE;
+    }
+
     gst_structure_get_enum (config, GST_D3D12_CONVERTER_OPT_SAMPLER_FILTER,
         GST_TYPE_D3D12_CONVERTER_SAMPLER_FILTER, (int *) &sampler_filter);
 
@@ -2064,6 +2121,8 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
   self->device = (GstD3D12Device *) gst_object_ref (device);
   gst_d3d12_unpack_get_video_info (priv->unpack, &priv->in_info);
   gst_d3d12_pack_get_video_info (priv->pack, &priv->out_info);
+
+  priv->mipgen_info = priv->in_info;
 
   /* Init properties */
   priv->src_width = GST_VIDEO_INFO_WIDTH (in_info);
@@ -2110,6 +2169,106 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
   CONVERT_TYPE convert_type[2];
   gboolean have_lut = FALSE;
 
+  if (priv->mipgen_enabled) {
+    GstVideoFormat mipgen_format = GST_VIDEO_FORMAT_RGBA;
+    GstD3DPluginCS mipgen_cs_type = GST_D3D_PLUGIN_CS_MIP_GEN;
+    if (GST_VIDEO_INFO_IS_GRAY (&priv->in_info)) {
+      mipgen_cs_type = GST_D3D_PLUGIN_CS_MIP_GEN_GRAY;
+      if (GST_VIDEO_INFO_COMP_DEPTH (&priv->in_info, 0) > 8) {
+        mipgen_format = GST_VIDEO_FORMAT_GRAY16_LE;
+      } else {
+        mipgen_format = GST_VIDEO_FORMAT_GRAY8;
+      }
+    } else if (GST_VIDEO_INFO_IS_YUV (&priv->in_info)) {
+      if (GST_VIDEO_INFO_COMP_DEPTH (&priv->in_info, 0) > 8) {
+        mipgen_format = GST_VIDEO_FORMAT_AYUV64;
+        if (!GST_VIDEO_INFO_HAS_ALPHA (in_info)) {
+          mipgen_cs_type = GST_D3D_PLUGIN_CS_MIP_GEN_AYUV;
+        }
+      } else {
+        mipgen_format = GST_VIDEO_FORMAT_VUYA;
+        if (!GST_VIDEO_INFO_HAS_ALPHA (in_info)) {
+          mipgen_cs_type = GST_D3D_PLUGIN_CS_MIP_GEN_VUYA;
+        }
+      }
+    } else {
+      if (GST_VIDEO_INFO_COMP_DEPTH (&priv->in_info, 0) > 8) {
+        mipgen_format = GST_VIDEO_FORMAT_RGBA64_LE;
+      } else {
+        mipgen_format = GST_VIDEO_FORMAT_RGBA;
+      }
+    }
+
+    gst_video_info_set_format (&priv->mipgen_info, mipgen_format,
+        in_info->width, in_info->height);
+    priv->mipgen_info.colorimetry = in_info->colorimetry;
+
+    /* Create intermediate conversion pipeline if input format is not
+     * a supported mip format */
+    if (mipgen_format != GST_VIDEO_INFO_FORMAT (&priv->in_info)) {
+      if (!gst_d3d12_converter_setup_colorspace (self, &priv->in_info,
+              &priv->mipgen_info, FALSE, FALSE, FALSE, &have_lut, convert_type,
+              const_data)) {
+        gst_object_unref (self);
+        return nullptr;
+      }
+
+      DXGI_SAMPLE_DESC sample_desc_default = { };
+      sample_desc_default.Count = 1;
+      sample_desc_default.Quality = 0;
+      D3D12_BLEND_DESC blend_desc_default = CD3DX12_BLEND_DESC (D3D12_DEFAULT);
+
+      priv->mipgen_ctx =
+          gst_d3d12_converter_setup_resource (self, &priv->in_info,
+          &priv->mipgen_info, DEFAULT_SAMPLER_FILTER, &sample_desc_default,
+          &blend_desc_default, convert_type, have_lut, FALSE,
+          GST_D3D12_CONVERTER_ALPHA_MODE_STRAIGHT,
+          GST_D3D12_CONVERTER_ALPHA_MODE_STRAIGHT, const_data, nullptr);
+      if (!priv->mipgen_ctx) {
+        gst_object_unref (self);
+        return nullptr;
+      }
+    }
+
+    D3D12_DESCRIPTOR_HEAP_DESC srv_heap_desc = { };
+    srv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    srv_heap_desc.NumDescriptors = 1;
+    srv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+    priv->mipgen_srv_heap_pool = gst_d3d12_desc_heap_pool_new (device_handle,
+        &srv_heap_desc);
+
+    priv->mipgen = gst_d3d12_mip_gen_new (self->device, mipgen_cs_type);
+    if (!priv->mipgen) {
+      GST_ERROR_OBJECT (self, "Couldn't create mipgen object");
+      gst_object_unref (self);
+      return nullptr;
+    }
+
+    GstD3D12Format mipgen_dev_format;
+    gst_d3d12_device_get_format (self->device,
+        mipgen_format, &mipgen_dev_format);
+    DXGI_FORMAT mipgen_dxgi_format = mipgen_dev_format.dxgi_format;
+    if (mipgen_dxgi_format == DXGI_FORMAT_UNKNOWN)
+      mipgen_dxgi_format = mipgen_dev_format.resource_format[0];
+
+    priv->mipgen_desc = CD3DX12_RESOURCE_DESC::Tex2D (mipgen_dxgi_format,
+        priv->in_info.width, priv->in_info.height, 1, 1, 1, 0,
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
+        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+
+    priv->mipgen_srv_desc.Format = mipgen_dxgi_format;
+    if (mipgen_dxgi_format == DXGI_FORMAT_AYUV)
+      priv->mipgen_srv_desc.Format = mipgen_dev_format.resource_format[0];
+
+    priv->mipgen_srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    priv->mipgen_srv_desc.Shader4ComponentMapping =
+        D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    priv->mipgen_srv_desc.Texture2D.PlaneSlice = 0;
+    priv->mipgen_srv_desc.Texture2D.MipLevels = 1;
+  }
+
   if (!gst_d3d12_converter_setup_colorspace (self, &priv->in_info,
           &priv->out_info, allow_gamma, allow_primaries,
           priv->color_balance_enabled, &have_lut, convert_type, const_data)) {
@@ -2121,24 +2280,38 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
       &priv->out_info, sampler_filter, &priv->sample_desc, &priv->blend_desc,
       convert_type, have_lut, priv->color_balance_enabled,
       priv->src_alpha_mode, priv->dst_alpha_mode, const_data, nullptr);
-
   if (!priv->main_ctx) {
     gst_object_unref (self);
     return nullptr;
+  }
+
+  if (priv->mipgen_ctx) {
+    if (!gst_d3d12_converter_setup_colorspace (self, &priv->mipgen_info,
+            &priv->out_info, allow_gamma, allow_primaries,
+            priv->color_balance_enabled, &have_lut, convert_type, const_data)) {
+      gst_object_unref (self);
+      return nullptr;
+    }
+
+    priv->post_mipgen_ctx = gst_d3d12_converter_setup_resource (self,
+        &priv->mipgen_info, &priv->out_info, sampler_filter, &priv->sample_desc,
+        &priv->blend_desc, convert_type, have_lut, priv->color_balance_enabled,
+        priv->src_alpha_mode, priv->dst_alpha_mode, const_data,
+        priv->main_ctx->comm);
+    if (!priv->post_mipgen_ctx) {
+      gst_object_unref (self);
+      return nullptr;
+    }
   }
 
   return self;
 }
 
 static gboolean
-gst_d3d12_converter_update_pso (GstD3D12Converter * self)
+gst_d3d12_converter_update_context_pso (GstD3D12Converter * self,
+    ConvertCtxPtr ctx)
 {
   auto priv = self->priv;
-  if (!priv->update_pso)
-    return TRUE;
-
-  priv->update_pso = FALSE;
-  auto ctx = priv->main_ctx;
 
   auto device = gst_d3d12_device_get_device_handle (self->device);
   for (size_t i = 0; i < ctx->pipeline_data.size (); i++) {
@@ -2172,6 +2345,24 @@ gst_d3d12_converter_update_pso (GstD3D12Converter * self)
   return TRUE;
 }
 
+static gboolean
+gst_d3d12_converter_update_pso (GstD3D12Converter * self)
+{
+  auto priv = self->priv;
+  if (!priv->update_pso)
+    return TRUE;
+
+  priv->update_pso = FALSE;
+
+  if (!gst_d3d12_converter_update_context_pso (self, priv->main_ctx))
+    return FALSE;
+
+  if (!priv->post_mipgen_ctx)
+    return TRUE;
+
+  return gst_d3d12_converter_update_context_pso (self, priv->post_mipgen_ctx);
+}
+
 static void
 gst_d3d12_converter_update_sampler (GstD3D12Converter * self)
 {
@@ -2200,53 +2391,54 @@ reorder_rtv_handles (GstVideoFormat output_format,
 
 static gboolean
 gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
-    GstD3D12Frame * out_frame, ConvertCtxPtr & ctx,
+    GstD3D12Frame * out_frame, ConvertCtxPtr & ctx, gboolean is_internal,
     GstD3D12FenceData * fence_data, ID3D12GraphicsCommandList * cl)
 {
   auto priv = self->priv;
   auto & comm = ctx->comm;
 
-  std::lock_guard < std::mutex > lk (priv->prop_lock);
-  auto desc = GetDesc (in_frame->data[0]);
-  if (desc.Width != priv->input_texture_width ||
-      desc.Height != priv->input_texture_height) {
-    GST_DEBUG_OBJECT (self, "Texture resolution changed %ux%u -> %ux%u",
-        (guint) priv->input_texture_width, priv->input_texture_height,
-        (guint) desc.Width, desc.Height);
-    priv->input_texture_width = desc.Width;
-    priv->input_texture_height = desc.Height;
-    priv->update_src_rect = TRUE;
-  }
+  if (!is_internal) {
+    auto desc = GetDesc (in_frame->data[0]);
+    if (desc.Width != priv->input_texture_width ||
+        desc.Height != priv->input_texture_height) {
+      GST_DEBUG_OBJECT (self, "Texture resolution changed %ux%u -> %ux%u",
+          (guint) priv->input_texture_width, priv->input_texture_height,
+          (guint) desc.Width, desc.Height);
+      priv->input_texture_width = desc.Width;
+      priv->input_texture_height = desc.Height;
+      priv->update_src_rect = TRUE;
+    }
 
-  desc = GetDesc (out_frame->data[0]);
-  if (desc.SampleDesc.Count != priv->sample_desc.Count ||
-      desc.SampleDesc.Quality != priv->sample_desc.Quality) {
-    GST_DEBUG_OBJECT (self, "Sample desc updated");
-    priv->sample_desc = desc.SampleDesc;
-    priv->update_pso = TRUE;
-  }
+    desc = GetDesc (out_frame->data[0]);
+    if (desc.SampleDesc.Count != priv->sample_desc.Count ||
+        desc.SampleDesc.Quality != priv->sample_desc.Quality) {
+      GST_DEBUG_OBJECT (self, "Sample desc updated");
+      priv->sample_desc = desc.SampleDesc;
+      priv->update_pso = TRUE;
+    }
 
-  if (!gst_d3d12_converter_update_dest_rect (self)) {
-    GST_ERROR_OBJECT (self, "Failed to update dest rect");
-    return FALSE;
-  }
+    if (!gst_d3d12_converter_update_dest_rect (self)) {
+      GST_ERROR_OBJECT (self, "Failed to update dest rect");
+      return FALSE;
+    }
 
-  if (!gst_d3d12_converter_update_src_rect (self)) {
-    GST_ERROR_OBJECT (self, "Failed to update src rect");
-    return FALSE;
-  }
+    if (!gst_d3d12_converter_update_src_rect (self)) {
+      GST_ERROR_OBJECT (self, "Failed to update src rect");
+      return FALSE;
+    }
 
-  if (!gst_d3d12_converter_update_transform (self)) {
-    GST_ERROR_OBJECT (self, "Failed to update transform matrix");
-    return FALSE;
-  }
+    if (!gst_d3d12_converter_update_transform (self)) {
+      GST_ERROR_OBJECT (self, "Failed to update transform matrix");
+      return FALSE;
+    }
 
-  if (!gst_d3d12_converter_update_pso (self)) {
-    GST_ERROR_OBJECT (self, "Failed to update pso");
-    return FALSE;
-  }
+    if (!gst_d3d12_converter_update_pso (self)) {
+      GST_ERROR_OBJECT (self, "Failed to update pso");
+      return FALSE;
+    }
 
-  gst_d3d12_converter_update_sampler (self);
+    gst_d3d12_converter_update_sampler (self);
+  }
 
   if (ctx->vertex_upload) {
     auto barrier =
@@ -2329,7 +2521,8 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
   cl->RSSetScissorRects (1, comm->scissor_rect);
   cl->OMSetRenderTargets (pipeline_data.quad_data[0].num_rtv,
       reordered_rtv_handle, FALSE, nullptr);
-  cl->OMSetBlendFactor (priv->blend_factor);
+  if (!is_internal)
+    cl->OMSetBlendFactor (priv->blend_factor);
   cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
 
   pso->AddRef ();
@@ -2362,6 +2555,40 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
   gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (sampler));
 
   return TRUE;
+}
+
+static void
+calculate_auto_mipgen_level (GstD3D12Converter * self)
+{
+  auto priv = self->priv;
+
+  guint src_width = (guint) priv->mipgen_desc.Width;
+  guint src_height = priv->mipgen_desc.Height;
+  guint dst_width = priv->dest_width;
+  guint dst_height = priv->dest_height;
+  switch (priv->video_direction) {
+    case GST_VIDEO_ORIENTATION_90R:
+    case GST_VIDEO_ORIENTATION_90L:
+    case GST_VIDEO_ORIENTATION_UL_LR:
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      dst_width = priv->dest_height;
+      dst_height = priv->dest_width;
+      break;
+    default:
+      break;
+  }
+
+  for (UINT16 i = 0; i < priv->mipgen_desc.MipLevels; i++) {
+    guint width = src_width >> i;
+    guint height = src_height >> i;
+
+    if (width <= dst_width && height <= dst_height) {
+      priv->auto_mipgen_level = i + 1;
+      return;
+    }
+  }
+
+  priv->auto_mipgen_level = priv->mipgen_desc.MipLevels;
 }
 
 /**
@@ -2399,6 +2626,7 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
   GstD3D12Frame out_frame;
 
   auto priv = converter->priv;
+  std::lock_guard < std::mutex > lk (priv->prop_lock);
 
   auto render_target = gst_d3d12_pack_acquire_render_target (priv->pack,
       out_buf);
@@ -2433,8 +2661,213 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
     return FALSE;
   }
 
-  auto ret = gst_d3d12_converter_execute (converter,
-      &in_frame, &out_frame, priv->main_ctx, fence_data, command_list);
+  gboolean ret = TRUE;
+  guint mip_levels = 1;
+  auto in_desc = GetDesc (in_frame.data[0]);
+
+  if (priv->mipgen_enabled) {
+    if (in_desc.Width != priv->mipgen_desc.Width ||
+        in_desc.Height != priv->mipgen_desc.Height) {
+      gst_clear_buffer (&priv->mipgen_buf);
+      priv->mipgen_desc.Width = in_desc.Width;
+      priv->mipgen_desc.Height = in_desc.Height;
+      if (priv->mipgen_ctx) {
+        auto & comm = priv->mipgen_ctx->comm;
+        comm->viewport[0].Width = (FLOAT) in_desc.Width;
+        comm->viewport[0].Height = (FLOAT) in_desc.Height;
+        comm->scissor_rect[0].right = (LONG) in_desc.Width;
+        comm->scissor_rect[0].bottom = (LONG) in_desc.Height;
+      }
+    }
+
+    if (priv->mip_levels != 1 && !priv->mipgen_buf) {
+      D3D12_HEAP_PROPERTIES heap_props =
+          CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
+      D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
+      if (gst_d3d12_device_non_zeroed_supported (converter->device))
+        heap_flags = D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+
+      priv->mipgen_desc.MipLevels = 0;
+      auto mem = gst_d3d12_allocator_alloc (nullptr, converter->device,
+          &heap_props, heap_flags, &priv->mipgen_desc,
+          D3D12_RESOURCE_STATE_COMMON, nullptr);
+      priv->mipgen_desc.MipLevels = 1;
+      if (!mem) {
+        GST_ERROR_OBJECT (converter, "Couldn't allocate mipmap texture");
+        gst_d3d12_frame_unmap (&in_frame);
+        gst_d3d12_frame_unmap (&out_frame);
+
+        gst_buffer_unref (in_buf);
+        gst_buffer_unref (render_target);
+
+        return FALSE;
+      }
+
+      auto resource =
+          gst_d3d12_memory_get_resource_handle (GST_D3D12_MEMORY_CAST (mem));
+      priv->mipgen_desc = GetDesc (resource);
+
+      priv->mipgen_buf = gst_buffer_new ();
+      gst_buffer_append_memory (priv->mipgen_buf, mem);
+
+      guint dst_width = priv->dest_width;
+      guint dst_height = priv->dest_height;
+      switch (priv->video_direction) {
+        case GST_VIDEO_ORIENTATION_90R:
+        case GST_VIDEO_ORIENTATION_90L:
+        case GST_VIDEO_ORIENTATION_UL_LR:
+        case GST_VIDEO_ORIENTATION_UR_LL:
+          dst_width = priv->dest_height;
+          dst_height = priv->dest_width;
+          break;
+        default:
+          break;
+      }
+
+      calculate_auto_mipgen_level (converter);
+      GST_DEBUG_OBJECT (converter, "Calculated mip level %d",
+          priv->auto_mipgen_level);
+    }
+  }
+
+  if (priv->mipgen_enabled && priv->mip_levels != 1) {
+    if (priv->mip_levels == 0) {
+      mip_levels = priv->mipgen_desc.MipLevels;
+    } else {
+      mip_levels = MIN (priv->mip_levels, priv->mipgen_desc.MipLevels);
+    }
+
+    if (priv->update_transform || priv->update_dest_rect) {
+      calculate_auto_mipgen_level (converter);
+      GST_DEBUG_OBJECT (converter,
+          "Calculated mip level on viewport size change %d",
+          priv->auto_mipgen_level);
+    }
+
+    if (mip_levels > 1)
+      mip_levels = MIN (mip_levels, priv->auto_mipgen_level);
+
+    /* Do not need to generate mipmap if input texture has mipmap already */
+    if (in_desc.MipLevels >= mip_levels)
+      mip_levels = 1;
+  }
+
+  if (priv->mipgen_enabled && mip_levels != 1) {
+    GST_LOG_OBJECT (converter, "Generating mipmap");
+
+    GstD3D12Frame mipgen_frame;
+    if (!gst_d3d12_frame_map (&mipgen_frame, &priv->mipgen_info,
+            priv->mipgen_buf,
+            GST_MAP_D3D12, GST_D3D12_FRAME_MAP_FLAG_SRV |
+            GST_D3D12_FRAME_MAP_FLAG_RTV)) {
+      GST_ERROR_OBJECT (converter, "Couldn't map mipmap texture");
+
+      gst_d3d12_frame_unmap (&in_frame);
+      gst_d3d12_frame_unmap (&out_frame);
+
+      gst_buffer_unref (in_buf);
+      gst_buffer_unref (render_target);
+
+      return FALSE;
+    }
+
+    if (priv->mipgen_ctx) {
+      if (!gst_d3d12_converter_execute (converter, &in_frame, &mipgen_frame,
+              priv->mipgen_ctx, TRUE, fence_data, command_list)) {
+        GST_ERROR_OBJECT (converter, "Couldn't convert to mipmap format");
+        gst_d3d12_frame_unmap (&in_frame);
+        gst_d3d12_frame_unmap (&mipgen_frame);
+        gst_d3d12_frame_unmap (&out_frame);
+
+        gst_buffer_unref (in_buf);
+        gst_buffer_unref (render_target);
+
+        return FALSE;
+      }
+
+      auto barrier = CD3DX12_RESOURCE_BARRIER::Transition (mipgen_frame.data[0],
+          D3D12_RESOURCE_STATE_RENDER_TARGET,
+          D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, 0);
+      command_list->ResourceBarrier (1, &barrier);
+    } else {
+      D3D12_BOX src_box;
+      src_box.left = 0;
+      src_box.top = 0;
+      src_box.right = (UINT) priv->mipgen_desc.Width;
+      src_box.bottom = (UINT) priv->mipgen_desc.Height;
+      src_box.front = 0;
+      src_box.back = 1;
+
+      auto copy_src = CD3DX12_TEXTURE_COPY_LOCATION (in_frame.data[0], 0);
+      auto copy_dst = CD3DX12_TEXTURE_COPY_LOCATION (mipgen_frame.data[0], 0);
+      command_list->CopyTextureRegion (&copy_dst, 0, 0, 0, &copy_src, &src_box);
+
+      auto barrier = CD3DX12_RESOURCE_BARRIER::Transition (mipgen_frame.data[0],
+          D3D12_RESOURCE_STATE_COPY_DEST,
+          D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, 0);
+      command_list->ResourceBarrier (1, &barrier);
+    }
+
+    ret = gst_d3d12_mip_gen_execute_full (priv->mipgen, mipgen_frame.data[0],
+        fence_data, command_list, mip_levels,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    if (!ret) {
+      GST_ERROR_OBJECT (converter, "Couldn't generate mip levels");
+      gst_d3d12_frame_unmap (&in_frame);
+      gst_d3d12_frame_unmap (&mipgen_frame);
+      gst_d3d12_frame_unmap (&out_frame);
+
+      gst_buffer_unref (in_buf);
+      gst_buffer_unref (render_target);
+
+      return FALSE;
+    }
+
+    if (mip_levels != priv->mipgen_desc.MipLevels) {
+      GstD3D12DescHeap *desc_heap;
+      if (!gst_d3d12_desc_heap_pool_acquire (priv->mipgen_srv_heap_pool,
+              &desc_heap)) {
+        GST_ERROR_OBJECT (converter, "Couldn't acquire descriptor heap");
+        gst_d3d12_frame_unmap (&in_frame);
+        gst_d3d12_frame_unmap (&mipgen_frame);
+        gst_d3d12_frame_unmap (&out_frame);
+
+        gst_buffer_unref (in_buf);
+        gst_buffer_unref (render_target);
+
+        return FALSE;
+      }
+
+      auto srv_heap = gst_d3d12_desc_heap_get_handle (desc_heap);
+      auto cpu_handle = GetCPUDescriptorHandleForHeapStart (srv_heap);
+      gst_d3d12_fence_data_push (fence_data,
+          FENCE_NOTIFY_MINI_OBJECT (desc_heap));
+
+      auto device = gst_d3d12_device_get_device_handle (converter->device);
+      priv->mipgen_srv_desc.Texture2D.MipLevels = mip_levels;
+      device->CreateShaderResourceView (mipgen_frame.data[0],
+          &priv->mipgen_srv_desc, cpu_handle);
+
+      mipgen_frame.srv_desc_handle[0] = cpu_handle;
+    }
+
+    if (priv->post_mipgen_ctx) {
+      ret = gst_d3d12_converter_execute (converter,
+          &mipgen_frame, &out_frame, priv->post_mipgen_ctx,
+          FALSE, fence_data, command_list);
+    } else {
+      ret = gst_d3d12_converter_execute (converter,
+          &mipgen_frame, &out_frame, priv->main_ctx,
+          FALSE, fence_data, command_list);
+    }
+
+    gst_d3d12_frame_unmap (&mipgen_frame);
+  } else {
+    ret = gst_d3d12_converter_execute (converter,
+        &in_frame, &out_frame, priv->main_ctx, FALSE, fence_data, command_list);
+  }
 
   if (ret) {
     ret = gst_d3d12_pack_execute (priv->pack, render_target, out_buf,

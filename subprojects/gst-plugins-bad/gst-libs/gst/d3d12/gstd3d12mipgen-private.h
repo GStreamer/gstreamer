@@ -40,5 +40,13 @@ gboolean         gst_d3d12_mip_gen_execute (GstD3D12MipGen * gen,
                                             GstD3D12FenceData * fence_data,
                                             ID3D12GraphicsCommandList * cl);
 
+GST_D3D12_API
+gboolean         gst_d3d12_mip_gen_execute_full (GstD3D12MipGen * gen,
+                                                 ID3D12Resource * resource,
+                                                 GstD3D12FenceData * fence_data,
+                                                 ID3D12GraphicsCommandList * cl,
+                                                 guint mip_levels,
+                                                 D3D12_RESOURCE_STATES state_after);
+
 G_END_DECLS
 

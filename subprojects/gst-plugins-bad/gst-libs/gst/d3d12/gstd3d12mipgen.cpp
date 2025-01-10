@@ -50,6 +50,7 @@
 #include <directx/d3dx12.h>
 #include <wrl.h>
 #include <algorithm>
+#include <vector>
 
 #define _XM_NO_INTRINSICS_
 #include <DirectXMath.h>
@@ -86,6 +87,8 @@ struct GstD3D12MipGenPrivate
   ComPtr < ID3D12PipelineState > pso;
   ComPtr < ID3D12RootSignature > rs;
   guint desc_inc_size;
+  std::vector < D3D12_RESOURCE_STATES > resource_states;
+  std::vector < D3D12_RESOURCE_BARRIER > barriers;
 };
 
 struct _GstD3D12MipGen
@@ -234,15 +237,11 @@ gst_d3d12_mip_gen_new (GstD3D12Device * device, GstD3DPluginCS cs_type)
   return self;
 }
 
-gboolean
-gst_d3d12_mip_gen_execute (GstD3D12MipGen * gen, ID3D12Resource * resource,
-    GstD3D12FenceData * fence_data, ID3D12GraphicsCommandList * cl)
+static gboolean
+gst_d3d12_mip_gen_execute_internal (GstD3D12MipGen * gen,
+    ID3D12Resource * resource, GstD3D12FenceData * fence_data,
+    ID3D12GraphicsCommandList * cl, guint mip_levels)
 {
-  g_return_val_if_fail (GST_IS_D3D12_MIP_GEN (gen), FALSE);
-  g_return_val_if_fail (resource, FALSE);
-  g_return_val_if_fail (fence_data, FALSE);
-  g_return_val_if_fail (cl, FALSE);
-
   auto desc = GetDesc (resource);
 
   if (desc.MipLevels == 1) {
@@ -258,8 +257,13 @@ gst_d3d12_mip_gen_execute (GstD3D12MipGen * gen, ID3D12Resource * resource,
     return FALSE;
   }
 
+  if (mip_levels != 0 && mip_levels < desc.MipLevels)
+    desc.MipLevels = (UINT16) mip_levels;
+
   auto priv = gen->priv;
   auto device = gst_d3d12_device_get_device_handle (priv->device);
+  priv->resource_states.resize (desc.MipLevels);
+  priv->resource_states[0] = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 
   cl->SetComputeRootSignature (priv->rs.Get ());
   cl->SetPipelineState (priv->pso.Get ());
@@ -314,11 +318,17 @@ gst_d3d12_mip_gen_execute (GstD3D12MipGen * gen, ID3D12Resource * resource,
     cbuf.TexelSize.y = 1.0f / (float) dstHeight;
 
     if (srcMip != 0) {
-      D3D12_RESOURCE_BARRIER barrier =
-          CD3DX12_RESOURCE_BARRIER::Transition (resource,
+      D3D12_RESOURCE_BARRIER barriers[2];
+      barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition (resource,
           D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+          D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
           D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, srcMip);
-      cl->ResourceBarrier (1, &barrier);
+      barriers[1] = CD3DX12_RESOURCE_BARRIER::UAV (resource);
+      cl->ResourceBarrier (2, barriers);
+
+      priv->resource_states[srcMip] =
+          D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+          D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
     }
 
     GstD3D12DescHeap *desc_heap;
@@ -341,6 +351,9 @@ gst_d3d12_mip_gen_execute (GstD3D12MipGen * gen, ID3D12Resource * resource,
       uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
       uavDesc.Texture2D.MipSlice = srcMip + mip + 1;
 
+      priv->resource_states[uavDesc.Texture2D.MipSlice] =
+          D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+
       cpu_handle.Offset (priv->desc_inc_size);
       device->CreateUnorderedAccessView (resource,
           nullptr, &uavDesc, cpu_handle);
@@ -358,11 +371,51 @@ gst_d3d12_mip_gen_execute (GstD3D12MipGen * gen, ID3D12Resource * resource,
 
     cl->Dispatch ((dstWidth + 7) / 8, (dstHeight + 7) / 8, 1);
 
-    D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::UAV (resource);
-    cl->ResourceBarrier (1, &barrier);
-
     srcMip += mipCount;
   }
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d12_mip_gen_execute (GstD3D12MipGen * gen, ID3D12Resource * resource,
+    GstD3D12FenceData * fence_data, ID3D12GraphicsCommandList * cl)
+{
+  g_return_val_if_fail (GST_IS_D3D12_MIP_GEN (gen), FALSE);
+  g_return_val_if_fail (resource, FALSE);
+  g_return_val_if_fail (fence_data, FALSE);
+  g_return_val_if_fail (cl, FALSE);
+
+  return gst_d3d12_mip_gen_execute_internal (gen, resource, fence_data, cl, 0);
+}
+
+gboolean
+gst_d3d12_mip_gen_execute_full (GstD3D12MipGen * gen, ID3D12Resource * resource,
+    GstD3D12FenceData * fence_data, ID3D12GraphicsCommandList * cl,
+    guint mip_levels, D3D12_RESOURCE_STATES state_after)
+{
+  g_return_val_if_fail (GST_IS_D3D12_MIP_GEN (gen), FALSE);
+  g_return_val_if_fail (resource, FALSE);
+  g_return_val_if_fail (fence_data, FALSE);
+  g_return_val_if_fail (cl, FALSE);
+
+  auto priv = gen->priv;
+
+  if (!gst_d3d12_mip_gen_execute_internal (gen, resource, fence_data, cl, 0))
+    return FALSE;
+
+  priv->barriers.resize (0);
+  for (size_t i = 1; i < priv->resource_states.size (); i++) {
+    auto state_before = priv->resource_states[i];
+    if ((state_before & state_after) != state_after) {
+      priv->barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
+              state_before, state_after, i));
+    }
+  }
+
+  auto size = priv->barriers.size ();
+  if (size != 0)
+    cl->ResourceBarrier (size, priv->barriers.data ());
 
   return TRUE;
 }

@@ -163,6 +163,32 @@ GType gst_d3d12_converter_color_balance_get_type (void);
 #define GST_D3D12_CONVERTER_OPT_COLOR_BALANCE "GstD3D12Converter.color-balance"
 
 /**
+ * GstD3D12ConverterMipGen:
+ * @GST_D3D12_CONVERTER_MIP_GEN_DISABLED: Disable mipmap generating feature
+ * @GST_D3D12_CONVERTER_MIP_GEN_ENABLED: Enable mipmap generating feature
+ *
+ * Since: 1.26
+ */
+typedef enum
+{
+  GST_D3D12_CONVERTER_MIP_GEN_DISABLED,
+  GST_D3D12_CONVERTER_MIP_GEN_ENABLED,
+} GstD3D12ConverterMipGen;
+
+GST_D3D12_API
+GType gst_d3d12_converter_mip_gen_get_type (void);
+#define GST_TYPE_D3D12_CONVERTER_MIP_GEN (gst_d3d12_converter_mip_gen_get_type())
+
+/**
+ * GST_D3D12_CONVERTER_OPT_MIP_GEN:
+ *
+ * #GstD3D12ConverterMipGen, an option to enable mipmap genarating feature
+ *
+ * Since: 1.26
+ */
+#define GST_D3D12_CONVERTER_OPT_MIP_GEN "GstD3D12Converter.mip-gen"
+
+/**
  * GstD3D12Converter:
  *
  * Opaque GstD3D12Converter struct
