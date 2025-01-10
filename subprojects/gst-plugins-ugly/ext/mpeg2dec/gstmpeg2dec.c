@@ -1120,8 +1120,10 @@ gst_mpeg2dec_handle_frame (GstVideoDecoder * decoder,
         break;
       case STATE_INVALID_END:
         GST_DEBUG_OBJECT (mpeg2dec, "invalid end");
+        /* FALLTHROUGH */
       case STATE_END:
         GST_DEBUG_OBJECT (mpeg2dec, "end");
+        /* FALLTHROUGH */
       case STATE_SLICE:
         GST_DEBUG_OBJECT (mpeg2dec, "display_fbuf:%p, discard_fbuf:%p",
             info->display_fbuf, info->discard_fbuf);
