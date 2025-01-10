@@ -1151,7 +1151,17 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   if (self->mode == GST_DECKLINK_MODE_AUTO) {
     BMDPixelFormat f;
-    mode = gst_decklink_find_mode_and_format_for_caps (caps, &f);
+    GstCaps *tmp = gst_caps_copy (caps);
+    guint i, n = gst_caps_get_size (tmp);
+
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (tmp, 0);
+      gst_structure_remove_field (s, "framerate");
+    }
+
+    mode = gst_decklink_find_mode_and_format_for_caps (tmp, &f);
+    gst_caps_unref (tmp);
+
     if (mode == NULL) {
       GST_WARNING_OBJECT (self,
           "Failed to find compatible mode for caps  %" GST_PTR_FORMAT, caps);
@@ -1309,13 +1319,18 @@ gst_decklink_video_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   /* For output we support any framerate and only really care about timestamps */
   gst_caps_map_in_place (mode_caps, reset_framerate, NULL);
 
+  GST_DEBUG_OBJECT (self, "Mode caps %" GST_PTR_FORMAT, mode_caps);
+
   if (filter) {
+    GST_DEBUG_OBJECT (self, "Filter caps %" GST_PTR_FORMAT, filter);
     caps =
         gst_caps_intersect_full (filter, mode_caps, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (mode_caps);
   } else {
     caps = mode_caps;
   }
+
+  GST_DEBUG_OBJECT (self, "Returning caps %" GST_PTR_FORMAT, caps);
 
   return caps;
 }
@@ -1866,9 +1881,12 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
   if (duration == GST_CLOCK_TIME_NONE) {
-    duration =
-        gst_util_uint64_scale_int (GST_SECOND, self->info.fps_d,
-        self->info.fps_n);
+    if (self->info.fps_n == 0)
+      duration = 0;
+    else
+      duration =
+          gst_util_uint64_scale_int (GST_SECOND, self->info.fps_d,
+          self->info.fps_n);
   }
   running_time =
       gst_segment_to_running_time (&GST_BASE_SINK_CAST (self)->segment,
