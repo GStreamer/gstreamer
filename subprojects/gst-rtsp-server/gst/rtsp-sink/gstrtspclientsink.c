@@ -2341,6 +2341,7 @@ gst_rtsp_client_sink_loop_rx (GstRTSPClientSink * sink)
         break;
       case GST_RTSP_ENET:
         GST_DEBUG_OBJECT (sink, "An ethernet problem occured.");
+        /* FALLTHROUGH */
       default:
         GST_ELEMENT_WARNING (sink, RESOURCE, READ, (NULL),
             ("Unhandled return value %d.", res));
@@ -2988,7 +2989,8 @@ receive_error:
                       FALSE)) == 0)
             goto again;
         }
-        /* only try once after reconnect, then fallthrough and error out */
+        /* only try once after reconnect, else carry on and error out */
+        /* FALLTHROUGH */
       default:
       {
         gchar *str = gst_rtsp_strresult (res);
@@ -4912,8 +4914,8 @@ gst_rtsp_client_sink_handle_message (GstBin * bin, GstMessage * message)
             gst_element_state_get_name (newstate),
             gst_element_state_get_name (pending), rtsp_client_sink->prerolled);
       }
-      /* fallthrough */
     }
+      /* FALLTHROUGH */
     default:
     {
       GST_BIN_CLASS (parent_class)->handle_message (bin, message);
