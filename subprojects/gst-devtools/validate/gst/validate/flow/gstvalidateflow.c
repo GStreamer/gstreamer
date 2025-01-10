@@ -653,7 +653,7 @@ _execute_checkpoint (GstValidateScenario * scenario, GstValidateAction * action)
 }
 
 gboolean
-gst_validate_flow_init ()
+gst_validate_flow_init (void)
 {
   GList *tmp;
   gint default_generate = -1;

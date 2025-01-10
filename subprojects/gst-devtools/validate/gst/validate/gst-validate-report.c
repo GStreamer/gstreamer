@@ -1564,7 +1564,7 @@ gst_validate_abort (const gchar * format, ...)
 }
 
 gboolean
-is_tty ()
+is_tty (void)
 {
   return output_is_tty;
 }

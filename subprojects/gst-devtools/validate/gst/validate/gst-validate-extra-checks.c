@@ -139,7 +139,7 @@ gst_validate_add_num_instances_check (GstStructure * structure)
 }
 
 gboolean
-gst_validate_extra_checks_init ()
+gst_validate_extra_checks_init (void)
 {
   GList *config, *tmp;
   config = gst_validate_get_config ("extrachecks");
