@@ -4883,6 +4883,9 @@ profiles defined in Annex A for service-compatible stereoscopic 3D services</doc
       <member name="video_jpeg_xs" value="50" c:identifier="GST_MPEGTS_STREAM_TYPE_VIDEO_JPEG_XS" version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">JPEG-XS stream type</doc>
       </member>
+      <member name="video_vvc" value="51" c:identifier="GST_MPEGTS_STREAM_TYPE_VIDEO_VVC" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">VVC/H.266 video stream type</doc>
+      </member>
       <member name="ipmp_stream" value="127" c:identifier="GST_MPEGTS_STREAM_TYPE_IPMP_STREAM">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">IPMP stream</doc>
       </member>

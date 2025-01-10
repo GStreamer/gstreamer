@@ -289,7 +289,7 @@ typedef struct _GstMpegtsPMT GstMpegtsPMT;
  * @GST_MPEGTS_STREAM_TYPE_RESERVED_00: ITU-T | ISO/IEC Reserved
  * @GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG1: ISO/IEC 11172-2 Video (i.e. MPEG-1 Video)
  * @GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG2: Rec. ITU-T H.262 | ISO/IEC 13818-2
- *       Video or ISO/IEC 11172-2 constrained parameter video stream (i.e. 
+ *       Video or ISO/IEC 11172-2 constrained parameter video stream (i.e.
  *       MPEG-2 Video)
  * @GST_MPEGTS_STREAM_TYPE_AUDIO_MPEG1: ISO/IEC 11172-3 Audio
  * @GST_MPEGTS_STREAM_TYPE_AUDIO_MPEG2: ISO/IEC 13818-3 Audio
@@ -398,7 +398,6 @@ typedef enum {
   GST_MPEGTS_STREAM_TYPE_VIDEO_MPEG2_STEREO_ADDITIONAL_VIEW = 0x22,
   GST_MPEGTS_STREAM_TYPE_VIDEO_H264_STEREO_ADDITIONAL_VIEW  = 0x23,
   GST_MPEGTS_STREAM_TYPE_VIDEO_HEVC                   = 0x24,
-  /* 0x24 - 0x7e : Rec. ITU-T H.222.0 | ISO/IEC 13818-1 Reserved */
   /**
    * GST_MPEGTS_STREAM_TYPE_VIDEO_JPEG_XS:
    *
@@ -407,6 +406,15 @@ typedef enum {
    * Since: 1.26
    */
   GST_MPEGTS_STREAM_TYPE_VIDEO_JPEG_XS		      = 0x32,
+  /**
+   * GST_MPEGTS_STREAM_TYPE_VIDEO_VVC:
+   *
+   * VVC/H.266 video stream type
+   *
+   * Since: 1.26
+   */
+  GST_MPEGTS_STREAM_TYPE_VIDEO_VVC                    = 0x33,
+  /* 0x36 - 0x7e : Rec. ITU-T H.222.0 | ISO/IEC 13818-1 Reserved */
   GST_MPEGTS_STREAM_TYPE_IPMP_STREAM                  = 0x7f,
   /* 0x80 - 0xff : User Private (or defined in other specs) */
 
