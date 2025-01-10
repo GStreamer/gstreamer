@@ -811,13 +811,11 @@ gst_gtk_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
     modifiers = gst_wl_display_get_dmabuf_modifiers (priv->display);
     for (i = 0; i < formats->len; i++) {
       fmt = g_array_index (formats, uint32_t, i);
-      gfmt = gst_wl_dmabuf_format_to_video_format (fmt);
       mod = g_array_index (modifiers, guint64, i);
-      if (gfmt != GST_VIDEO_FORMAT_UNKNOWN) {
-        g_value_init (&value, G_TYPE_STRING);
-        g_value_take_string (&value, gst_wl_dmabuf_format_to_string (fmt, mod));
-        gst_value_list_append_and_take_value (&dmabuf_list, &value);
-      }
+      g_value_init (&value, G_TYPE_STRING);
+      g_value_take_string (&value, gst_video_dma_drm_fourcc_to_string (fmt,
+              mod));
+      gst_value_list_append_and_take_value (&dmabuf_list, &value);
     }
 
     gst_structure_take_value (gst_caps_get_structure (caps, 1), "drm-format",
