@@ -68,6 +68,7 @@ if cxx.get_id() != 'msvc'
     '-Wno-format-security',
     # ../sys/amfcodec/include/core/PropertyStorage.h:87:50: error: 'virtual void amf::AMFPropertyStorage::RemoveObserver(amf::AMFPropertyStorageObserver*)' was hidden [-Werror=overloaded-virtual=]
     '-Wno-overloaded-virtual',
+    '-Wno-undef'
   ])
 endif
 
