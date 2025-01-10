@@ -13,7 +13,7 @@ spandsp_dep = dependency('spandsp', version : '>= 0.0.6', required : get_option(
 if spandsp_dep.found()
   gstspandsp = library('gstspandsp',
     spandsp_sources,
-    c_args : gst_plugins_bad_args,
+    c_args : gst_plugins_bad_args + cc.get_supported_arguments(['-Wno-undef']),
     include_directories : [configinc],
     dependencies : [gstvideo_dep, spandsp_dep],
     install : true,
