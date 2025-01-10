@@ -38,6 +38,8 @@
 
 #include "gstmpegdemux.h"
 
+#define DEBUG_TIMING 0
+
 #define RSN_TYPE_INPUT_SELECTOR GST_TYPE_INPUT_SELECTOR
 
 GST_DEBUG_CATEGORY_EXTERN (resindvd_debug);
