@@ -26,6 +26,7 @@
 
 #include "gstvkerror.h"
 #include "gstvkdebug.h"
+#include "gstvkapi.h"
 #include "gstvkdebug-private.h"
 
 /**
