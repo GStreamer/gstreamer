@@ -9,9 +9,12 @@ if libvisual_dep.found()
   core_conf.set_quoted('LIBVISUAL_PLUGINSBASEDIR',
     libvisual_dep.get_variable('pluginsbasedir'))
 
+  # Ignore issues in libvisual header
+  extra_args = cc.get_supported_arguments(['-Wno-old-style-definition'])
+
   gstlibvisual = library('gstlibvisual',
     libvisual_sources,
-    c_args : gst_plugins_base_args,
+    c_args : gst_plugins_base_args + extra_args,
     include_directories: [configinc, libsinc],
     dependencies : [libvisual_dep, audio_dep, video_dep, pbutils_dep, gst_dep, gst_base_dep],
     install : true,
