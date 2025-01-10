@@ -160,6 +160,7 @@ check_headers = [
   ['HAVE_NETINET_IP_H', 'netinet/ip.h'],
   ['HAVE_NETINET_TCP_H', 'netinet/tcp.h'],
   ['HAVE_PTHREAD_H', 'pthread.h'],
+  ['HAVE_PWD_H', 'pwd.h'],
   ['HAVE_STDINT_H', 'stdint.h'],
   ['HAVE_STDLIB_H', 'stdlib.h'],
   ['HAVE_STRINGS_H', 'strings.h'],
