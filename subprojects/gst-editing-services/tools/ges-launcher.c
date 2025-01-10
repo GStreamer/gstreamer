@@ -1670,14 +1670,15 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
     case 't':
       play_switch_trick_mode (self);
       break;
+    case '0':
+      play_do_seek (self, 0, self->priv->rate, self->priv->trick_mode);
+      break;
     case 27:                   /* ESC */
       if (key_input[1] == '\0') {
         g_application_quit (G_APPLICATION (self));
         break;
       }
-    case '0':
-      play_do_seek (self, 0, self->priv->rate, self->priv->trick_mode);
-      break;
+      /* FALLTHROUGH */
     default:
       if (strcmp (key_input, GST_PLAY_KB_ARROW_RIGHT) == 0) {
         relative_seek (self, +0.08);

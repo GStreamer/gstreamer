@@ -277,20 +277,27 @@ else
   message('GStreamer debug system is enabled')
 endif
 
+# NOTE: Keep entries alphabetically sorted
 warning_flags = [
-  '-Wmissing-declarations',
-  '-Wmissing-prototypes',
-  '-Wredundant-decls',
-  '-Wundef',
-  '-Wwrite-strings',
+  '-Waddress',
+  # '-Waggregate-return',
   '-Wformat',
   '-Wformat-security',
+  '-Wimplicit-fallthrough=3',
   '-Winit-self',
+  '-Wmissing-declarations',
   '-Wmissing-include-dirs',
-  '-Waddress',
+  '-Wmissing-parameter-type',
+  '-Wmissing-prototypes',
   '-Wno-multichar',
-  '-Wvla',
+  '-Wold-style-definition',
   '-Wpointer-arith',
+  '-Wredundant-decls',
+  '-Wshift-negative-value',
+  '-Wtype-limits',
+  '-Wundef',
+  '-Wvla',
+  '-Wwrite-strings',
 ]
 
 foreach extra_arg : warning_flags
