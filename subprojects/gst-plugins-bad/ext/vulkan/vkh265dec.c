@@ -143,7 +143,7 @@ struct _GstVulkanH265DecoderClass
 static GstStaticPadTemplate gst_vulkan_h265dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h265, "
-        "profile = (string) main,"
+        "profile = { (string) main, (string) main-10},"
         "stream-format = { (string) hvc1, (string) hev1, (string) byte-stream }, "
         "alignment = (string) au"));
 
