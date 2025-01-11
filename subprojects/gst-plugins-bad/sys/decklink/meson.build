@@ -15,6 +15,8 @@ endif
 build_decklink = false
 decklink_ldflags = []
 decklink_libs = []
+# Ignore issues in external headers
+extra_args = cc.get_supported_arguments(['-Wno-undef'])
 
 if host_system == 'windows'
   decklink_sources += ['win/DeckLinkAPIDispatch.cpp', 'win/DeckLinkAPI_i.c']
@@ -48,7 +50,7 @@ if build_decklink
   message('Building decklink plugin')
   decklink = library('gstdecklink',
     decklink_sources,
-    cpp_args : gst_plugins_bad_args + [ '-DGST_USE_UNSTABLE_API' ],
+    cpp_args : gst_plugins_bad_args + extra_args + [ '-DGST_USE_UNSTABLE_API' ],
     link_args : decklink_ldflags + noseh_link_args,
     include_directories : [configinc],
     dependencies : [gstvideo_dep, gstaudio_dep, gstbase_dep, gst_dep] + decklink_libs,
