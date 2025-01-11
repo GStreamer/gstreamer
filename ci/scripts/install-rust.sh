@@ -4,7 +4,7 @@ set -eux
 
 # Install Rust
 RUSTUP_VERSION=1.27.1
-RUST_VERSION=1.83.0
+RUST_VERSION=1.84.0
 RUST_ARCH="x86_64-unknown-linux-gnu"
 
 RUSTUP_URL=https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/$RUST_ARCH/rustup-init
@@ -19,7 +19,7 @@ chmod +x rustup-init;
 rm rustup-init;
 chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
-cargo install --locked cargo-c --version 0.10.7+cargo-0.84.0
+cargo install --locked cargo-c --version 0.10.8+cargo-0.85.0
 
 rustup --version
 cargo --version

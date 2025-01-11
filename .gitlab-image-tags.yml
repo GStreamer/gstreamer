@@ -5,9 +5,9 @@ variables:
   # If you are hacking on them or need a them to rebuild, its enough
   # to change any part of the string of the image you want.
   ###
-  FEDORA_TAG:  '2024-11-29.0'
+  FEDORA_TAG:  '2025-01-11.0'
 
-  DEBIAN_TAG:  '2024-11-29.0'
+  DEBIAN_TAG:  '2025-01-11.0'
 
   INDENT_TAG: '2024-05-28.0'
 
@@ -15,4 +15,4 @@ variables:
 
   ABI_CHECK_TAG: '2025-01-08.1'
 
-  WINDOWS_TAG: '2024-11-29.0'
+  WINDOWS_TAG: '2025-01-11.0'
