@@ -353,7 +353,8 @@ gst_gdiscreencapsrc_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   RECT rect_dst;
   GstCaps *caps;
 
-  src->screen_rect = rect_dst = gst_win32_get_monitor_rect (src->monitor);
+  gst_win32_get_monitor_rect (src->monitor, &rect_dst);
+  src->screen_rect = rect_dst;
 
   if (src->capture_w && src->capture_h &&
       src->capture_x + src->capture_w < rect_dst.right - rect_dst.left &&

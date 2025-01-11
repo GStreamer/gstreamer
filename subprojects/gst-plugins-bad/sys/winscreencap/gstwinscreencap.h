@@ -26,7 +26,7 @@
 
 G_BEGIN_DECLS
 
-RECT gst_win32_get_monitor_rect (UINT index);
+void gst_win32_get_monitor_rect (UINT index, RECT *rect);
 
 G_END_DECLS
 

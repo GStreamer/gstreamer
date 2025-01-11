@@ -33,10 +33,9 @@ _diplay_monitor_enum (HMONITOR hMon, HDC hdc, LPRECT rect, LPARAM param)
   return TRUE;
 }
 
-RECT
-gst_win32_get_monitor_rect (UINT index)
+void
+gst_win32_get_monitor_rect (UINT index, RECT * rect)
 {
-  RECT ret_rect;
   LPRECT data;
 
   data = (LPRECT) malloc (sizeof (RECT) * GetSystemMetrics (SM_CMONITORS));
@@ -44,13 +43,11 @@ gst_win32_get_monitor_rect (UINT index)
     LPRECT tmp = data;
     EnumDisplayMonitors (NULL, NULL, _diplay_monitor_enum, (LPARAM) & tmp);
 
-    ret_rect = data[index];
+    *rect = data[index];
     free (data);
   } else {
-    ZeroMemory (&ret_rect, sizeof (RECT));
+    ZeroMemory (rect, sizeof (RECT));
   }
-
-  return ret_rect;
 }
 
 static gboolean
