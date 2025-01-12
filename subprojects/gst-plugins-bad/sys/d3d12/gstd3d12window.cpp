@@ -146,6 +146,7 @@ struct GstD3D12WindowPrivate
   gdouble saturation = 1.0;
   gdouble brightness = 0.0;
   gdouble contrast = 1.0;
+  guint mip_levels = 1;
 
   /* fullscreen related variables */
   std::atomic<gboolean> fullscreen_on_alt_enter = { FALSE };
@@ -528,7 +529,8 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
           "dest-y", priv->output_rect.y, "dest-width", priv->output_rect.w,
           "dest-height", priv->output_rect.h, "hue", priv->hue,
           "saturation", priv->saturation, "brightness", priv->brightness,
-          "contrast", priv->contrast, nullptr);
+          "contrast", priv->contrast, "max-mip-levels", priv->mip_levels,
+          nullptr);
 
       if (gst_d3d12_need_transform (priv->rotation_x, priv->rotation_y,
               priv->rotation_z, priv->scale_x, priv->scale_y)) {
@@ -790,7 +792,7 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
   auto proxy = priv->proxy.lock ();
 
   if (!proxy) {
-    GST_WARNING_OBJECT (window, "Window was closed");
+    GST_DEBUG_OBJECT (window, "Window was closed");
     return GST_D3D12_WINDOW_FLOW_CLOSED;
   }
 
@@ -1132,4 +1134,32 @@ gst_d3d12_window_get_contrast (GstD3D12Window * window)
   auto priv = window->priv;
   std::lock_guard < std::recursive_mutex > lk (priv->lock);
   return priv->contrast;
+}
+
+void
+gst_d3d12_window_set_mip_levels (GstD3D12Window * window, gboolean immediate,
+    guint value)
+{
+  auto priv = window->priv;
+  gboolean updated = FALSE;
+
+  {
+    std::lock_guard < std::recursive_mutex > lk (priv->lock);
+    if (priv->mip_levels != value) {
+      priv->mip_levels = value;
+      priv->output_updated = TRUE;
+      updated = TRUE;
+    }
+  }
+
+  if (updated && immediate)
+    gst_d3d12_window_set_buffer (window, nullptr);
+}
+
+guint
+gst_d3d12_window_get_mip_levels (GstD3D12Window * window)
+{
+  auto priv = window->priv;
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  return priv->mip_levels;
 }

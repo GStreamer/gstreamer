@@ -113,6 +113,7 @@ enum
   PROP_SATURATION,
   PROP_BRIGHTNESS,
   PROP_CONTRAST,
+  PROP_MAX_MIP_LEVELS,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -139,6 +140,7 @@ enum
 #define DEFAULT_SATURATION 1.0
 #define DEFAULT_BRIGHTNESS 0.0
 #define DEFAULT_CONTRAST 1.0
+#define DEFAULT_MAX_MIP_LEVELS 1
 
 enum
 {
@@ -568,6 +570,18 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
+   * GstD3D12VideoSink:max-mip-levels:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_MAX_MIP_LEVELS,
+      g_param_spec_uint ("max-mip-levels", "Max Mip Levels",
+          "Maximum mip levels of shader resource to create "
+          "if viewport size is smaller than shader resource "
+          "(0 = maximum level)", 0, G_MAXUINT16, DEFAULT_MAX_MIP_LEVELS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
    * GstD3D12VideoSink::overlay:
    * @d3d12videosink: the d3d12videosink element that emitted the signal
    * @command_queue: ID3D12CommandQueue
@@ -844,6 +858,10 @@ gst_d3d12_video_sink_set_property (GObject * object, guint prop_id,
           color_balance_label = "CONTRAST";
         }
         break;
+      case PROP_MAX_MIP_LEVELS:
+        gst_d3d12_window_set_mip_levels (priv->window, priv->redraw_on_update,
+            g_value_get_uint (value));
+        break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -957,6 +975,9 @@ gst_d3d12_video_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CONTRAST:
       g_value_set_double (value, gst_d3d12_window_get_contrast (priv->window));
+      break;
+    case PROP_MAX_MIP_LEVELS:
+      g_value_set_uint (value, gst_d3d12_window_get_mip_levels (priv->window));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1278,7 +1299,9 @@ gst_d3d12_video_sink_set_buffer (GstD3D12VideoSink * self,
         GST_D3D12_CONVERTER_ALPHA_MODE_UNSPECIFIED,
         GST_D3D12_CONVERTER_OPT_COLOR_BALANCE,
         GST_TYPE_D3D12_CONVERTER_COLOR_BALANCE,
-        GST_D3D12_CONVERTER_COLOR_BALANCE_ENABLED, nullptr);
+        GST_D3D12_CONVERTER_COLOR_BALANCE_ENABLED,
+        GST_D3D12_CONVERTER_OPT_MIP_GEN, GST_TYPE_D3D12_CONVERTER_MIP_GEN,
+        GST_D3D12_CONVERTER_MIP_GEN_ENABLED, nullptr);
 
     ret = gst_d3d12_window_prepare (priv->window, self->device,
         GST_VIDEO_SINK_WIDTH (self), GST_VIDEO_SINK_HEIGHT (self), priv->caps,
