@@ -130,6 +130,7 @@ enum
 #define DEFAULT_SATURATION 1.0
 #define DEFAULT_BRIGHTNESS 0.0
 #define DEFAULT_CONTRAST 1.0
+#define DEFAULT_MAX_MIP_LEVELS 1
 
 /* *INDENT-OFF* */
 struct ConvertContext
@@ -238,6 +239,8 @@ struct GstD3D12BaseConvertPrivate
   gdouble contrast = DEFAULT_CONTRAST;
   gboolean color_balance_updated = FALSE;
   gboolean need_color_balance = FALSE;
+  gboolean mip_levels_updated = FALSE;
+  guint mip_levels = DEFAULT_MAX_MIP_LEVELS;
 
   std::atomic<guint> async_depth = { DEFAULT_ASYNC_DEPTH };
 
@@ -1879,7 +1882,10 @@ gst_d3d12_base_convert_set_info (GstD3D12BaseFilter * filter,
       GST_D3D12_CONVERTER_OPT_COLOR_BALANCE,
       GST_TYPE_D3D12_CONVERTER_COLOR_BALANCE, klass->enable_color_balance ?
       GST_D3D12_CONVERTER_COLOR_BALANCE_ENABLED :
-      GST_D3D12_CONVERTER_COLOR_BALANCE_DISABLED, nullptr);
+      GST_D3D12_CONVERTER_COLOR_BALANCE_DISABLED,
+      GST_D3D12_CONVERTER_OPT_MIP_GEN, GST_TYPE_D3D12_CONVERTER_MIP_GEN,
+      klass->enable_mip_levels ? GST_D3D12_CONVERTER_MIP_GEN_ENABLED :
+      GST_D3D12_CONVERTER_MIP_GEN_DISABLED, nullptr);
 
   auto ctx = std::make_unique < ConvertContext > (filter->device);
 
@@ -1938,6 +1944,11 @@ gst_d3d12_base_convert_set_info (GstD3D12BaseFilter * filter,
     g_object_set (ctx->conv, "hue", priv->hue,
         "saturation", priv->saturation, "brightness", priv->brightness,
         "contrast", priv->contrast, nullptr);
+  }
+
+  if (klass->enable_mip_levels) {
+    priv->mip_levels_updated = FALSE;
+    g_object_set (ctx->conv, "max-mip-levels", priv->mip_levels, nullptr);
   }
 
   priv->ctx = std::move (ctx);
@@ -2094,6 +2105,12 @@ gst_d3d12_base_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
           "saturation", priv->saturation, "brightness", priv->brightness,
           "contrast", priv->contrast, nullptr);
     }
+
+    if (priv->mip_levels_updated) {
+      priv->mip_levels_updated = FALSE;
+      g_object_set (priv->ctx->conv,
+          "max-mip-levels", priv->mip_levels, nullptr);
+    }
   }
 
   GstD3D12CmdAlloc *gst_ca;
@@ -2197,6 +2214,7 @@ enum
   PROP_CONVERT_SATURATION,
   PROP_CONVERT_BRIGHTNESS,
   PROP_CONVERT_CONTRAST,
+  PROP_CONVERT_MAX_MIP_LEVELS,
 };
 
 struct _GstD3D12Convert
@@ -2368,6 +2386,17 @@ gst_d3d12_base_convert_set_contrast (GstD3D12BaseConvert * self, gdouble value)
       "CONTRAST", &priv->contrast, value);
 }
 
+static void
+gst_d3d12_base_convert_set_mip_levels (GstD3D12BaseConvert * self, guint value)
+{
+  auto priv = self->priv;
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (priv->mip_levels != value) {
+    priv->mip_levels_updated = TRUE;
+    priv->mip_levels = value;
+  }
+}
+
 G_DEFINE_TYPE_WITH_CODE (GstD3D12Convert, gst_d3d12_convert,
     GST_TYPE_D3D12_BASE_CONVERT,
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_DIRECTION,
@@ -2463,6 +2492,18 @@ gst_d3d12_convert_class_init (GstD3D12ConvertClass * klass)
           (GParamFlags) (GST_PARAM_CONTROLLABLE |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D12Convert:max-mip-levels:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_CONVERT_MAX_MIP_LEVELS,
+      g_param_spec_uint ("max-mip-levels", "Max Mip Levels",
+          "Maximum mip levels of shader resource to create "
+          "if viewport size is smaller than shader resource "
+          "(0 = maximum level)", 0, G_MAXUINT16, DEFAULT_MAX_MIP_LEVELS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_set_static_metadata (element_class,
       "Direct3D12 Converter",
       "Filter/Converter/Scaler/Effect/Video/Hardware",
@@ -2473,6 +2514,7 @@ gst_d3d12_convert_class_init (GstD3D12ConvertClass * klass)
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_d3d12_convert_sink_event);
 
   conv_class->enable_color_balance = TRUE;
+  conv_class->enable_mip_levels = TRUE;
 }
 
 static void
@@ -2518,6 +2560,9 @@ gst_d3d12_convert_set_property (GObject * object, guint prop_id,
     case PROP_CONVERT_CONTRAST:
       gst_d3d12_base_convert_set_contrast (self, g_value_get_double (value));
       break;
+    case PROP_CONVERT_MAX_MIP_LEVELS:
+      gst_d3d12_base_convert_set_mip_levels (self, g_value_get_uint (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2559,6 +2604,9 @@ gst_d3d12_convert_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CONVERT_CONTRAST:
       g_value_set_double (value, priv->contrast);
+      break;
+    case PROP_CONVERT_MAX_MIP_LEVELS:
+      g_value_set_uint (value, priv->mip_levels);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2814,6 +2862,7 @@ enum
 {
   PROP_SCALE_ADD_BORDERS = 1,
   PROP_SCALE_BORDER_COLOR,
+  PROP_SCALE_MAX_MIP_LEVELS,
 };
 
 struct _GstD3D12Scale
@@ -2838,6 +2887,7 @@ gst_d3d12_scale_class_init (GstD3D12ScaleClass * klass)
   auto object_class = G_OBJECT_CLASS (klass);
   auto element_class = GST_ELEMENT_CLASS (klass);
   auto trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+  auto conv_class = GST_D3D12_BASE_CONVERT_CLASS (klass);
 
   object_class->set_property = gst_d3d12_scale_set_property;
   object_class->get_property = gst_d3d12_scale_get_property;
@@ -2854,6 +2904,18 @@ gst_d3d12_scale_class_init (GstD3D12ScaleClass * klass)
           DEFAULT_BORDER_COLOR, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D12Scale:max-mip-levels:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_SCALE_MAX_MIP_LEVELS,
+      g_param_spec_uint ("max-mip-levels", "Max Mip Levels",
+          "Maximum mip levels of shader resource to create "
+          "if viewport size is smaller than shader resource "
+          "(0 = maximum level)", 0, G_MAXUINT16, DEFAULT_MAX_MIP_LEVELS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_set_static_metadata (element_class,
       "Direct3D12 Scaler",
       "Filter/Converter/Video/Scaler/Hardware",
@@ -2863,6 +2925,8 @@ gst_d3d12_scale_class_init (GstD3D12ScaleClass * klass)
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_d3d12_scale_transform_caps);
   trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_d3d12_scale_fixate_caps);
+
+  conv_class->enable_mip_levels = TRUE;
 }
 
 static void
@@ -2884,6 +2948,9 @@ gst_d3d12_scale_set_property (GObject * object, guint prop_id,
       gst_d3d12_base_convert_set_border_color (base,
           g_value_get_uint64 (value));
       break;
+    case PROP_SCALE_MAX_MIP_LEVELS:
+      gst_d3d12_base_convert_set_mip_levels (base, g_value_get_uint (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2904,6 +2971,9 @@ gst_d3d12_scale_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SCALE_BORDER_COLOR:
       g_value_set_uint64 (value, priv->border_color);
+      break;
+    case PROP_SCALE_MAX_MIP_LEVELS:
+      g_value_set_uint (value, priv->mip_levels);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

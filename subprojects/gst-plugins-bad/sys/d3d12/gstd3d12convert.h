@@ -38,6 +38,7 @@ struct _GstD3D12BaseConvertClass
 {
   GstD3D12BaseFilterClass parent_class;
   gboolean enable_color_balance;
+  gboolean enable_mip_levels;
 };
 
 GType gst_d3d12_base_convert_get_type (void);
