@@ -237,7 +237,10 @@ GType
 gst_video_overlay_composition_meta_api_get_type (void)
 {
   static GType type = 0;
-  static const gchar *tags[] = { NULL };
+  static const gchar *tags[] =
+      { GST_META_TAG_VIDEO_STR, GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR, NULL
+  };
 
   if (g_once_init_enter (&type)) {
     GType _type =
