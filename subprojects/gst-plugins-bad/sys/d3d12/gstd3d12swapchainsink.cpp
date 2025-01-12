@@ -62,6 +62,7 @@ enum
   PROP_SATURATION,
   PROP_BRIGHTNESS,
   PROP_CONTRAST,
+  PROP_MAX_MIP_LEVELS,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -75,6 +76,7 @@ enum
 #define DEFAULT_SATURATION 1.0
 #define DEFAULT_BRIGHTNESS 0.0
 #define DEFAULT_CONTRAST 1.0
+#define DEFAULT_MAX_MIP_LEVELS 1
 
 #define BACK_BUFFER_COUNT 2
 
@@ -236,6 +238,7 @@ struct GstD3D12SwapChainSinkPrivate
   gdouble saturation = DEFAULT_SATURATION;
   gdouble brightness = DEFAULT_BRIGHTNESS;
   gdouble contrast = DEFAULT_CONTRAST;
+  guint mip_levels = DEFAULT_MAX_MIP_LEVELS;
 };
 /* *INDENT-ON* */
 
@@ -366,6 +369,18 @@ gst_d3d12_swapchain_sink_class_init (GstD3D12SwapChainSinkClass * klass)
           DEFAULT_CONTRAST,
           (GParamFlags) (GST_PARAM_CONTROLLABLE |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12SwapChainSink:max-mip-levels:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_MAX_MIP_LEVELS,
+      g_param_spec_uint ("max-mip-levels", "Max Mip Levels",
+          "Maximum mip levels of shader resource to create "
+          "if viewport size is smaller than shader resource "
+          "(0 = maximum level)", 0, G_MAXUINT16, DEFAULT_MAX_MIP_LEVELS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   d3d12_swapchain_sink_signals[SIGNAL_RESIZE] =
       g_signal_new_class_handler ("resize", G_TYPE_FROM_CLASS (klass),
@@ -511,6 +526,11 @@ gst_d3d12_swapchain_sink_set_property (GObject * object, guint prop_id,
     case PROP_CONTRAST:
       gst_d3d12_swapchain_sink_update_color_balance (self,
           "CONTRAST", &priv->contrast, g_value_get_double (value));
+      break;
+    case PROP_MAX_MIP_LEVELS:
+      priv->mip_levels = g_value_get_uint (value);
+      if (priv->conv)
+        g_object_set (priv->conv, "max-mip-levels", priv->mip_levels, nullptr);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -707,6 +727,9 @@ gst_d3d12_swapchain_sink_get_property (GObject * object, guint prop_id,
     case PROP_CONTRAST:
       g_value_set_double (value, priv->contrast);
       break;
+    case PROP_MAX_MIP_LEVELS:
+      g_value_set_uint (value, priv->mip_levels);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -876,7 +899,8 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
         "dest-y", priv->viewport.y, "dest-width", priv->viewport.w,
         "dest-height", priv->viewport.h, "hue", priv->hue,
         "saturation", priv->saturation, "brightness", priv->brightness,
-        "contrast", priv->contrast, nullptr);
+        "contrast", priv->contrast, "max-mip-levels", priv->mip_levels,
+        nullptr);
     gst_d3d12_overlay_compositor_update_viewport (priv->comp, &priv->viewport);
 
     priv->first_present = false;
@@ -1090,7 +1114,9 @@ gst_d3d12_swapchain_sink_set_buffer (GstD3D12SwapChainSink * self,
           sample_desc.Quality,
           GST_D3D12_CONVERTER_OPT_COLOR_BALANCE,
           GST_TYPE_D3D12_CONVERTER_COLOR_BALANCE,
-          GST_D3D12_CONVERTER_COLOR_BALANCE_ENABLED, nullptr);
+          GST_D3D12_CONVERTER_COLOR_BALANCE_ENABLED,
+          GST_D3D12_CONVERTER_OPT_MIP_GEN, GST_TYPE_D3D12_CONVERTER_MIP_GEN,
+          GST_D3D12_CONVERTER_MIP_GEN_ENABLED, nullptr);
 
       priv->conv = gst_d3d12_converter_new (self->device, nullptr, &priv->info,
           &priv->display_info, nullptr, nullptr,
