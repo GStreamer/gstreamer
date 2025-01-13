@@ -661,7 +661,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
               /* use total time to update the total ogg time */
               if (ogg->total_time == -1) {
                 ogg->total_time = ipad->map.total_time;
-              } else if (ipad->map.total_time > 0) {
+              } else if (GST_CLOCK_TIME_IS_VALID (ipad->map.total_time)) {
                 ogg->total_time = MAX (ogg->total_time, ipad->map.total_time);
               }
             }
