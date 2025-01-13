@@ -111,7 +111,7 @@ def build(builddir):
     subprocess.run(['ninja', '-C', builddir], check=True)
     subprocess.run(['ninja', '-C', builddir, 'subprojects/gstreamer/docs/hotdoc-configs.json'], check=True)
 
-def build_cache(builddir, subproject, targets):
+def build_cache(builddir, subproject, targets, subdir):
     if not targets:
         return
 
@@ -119,7 +119,7 @@ def build_cache(builddir, subproject, targets):
 
     cmd = [
         os.path.join(builddir, f'subprojects/gstreamer/docs/gst-plugins-doc-cache-generator'),
-        os.path.join(os.getcwd(), f'subprojects/{subproject}/docs/plugins/gst_plugins_cache.json'),
+        os.path.join(os.getcwd(), f'subprojects/{subproject}/docs/{subdir}gst_plugins_cache.json'),
         os.path.join(builddir, f'subprojects/{subproject}/docs/gst_plugins_cache.json'),
     ] + targets
 
@@ -174,7 +174,8 @@ def run_doc_checks(modified_files):
             caches[cache_project].append(libpath)
 
     for (subproject, libpaths) in caches.items():
-        build_cache(builddir, subproject, libpaths)
+        cache_subdir = 'plugins/' if subproject in ['gst-plugins-bad', 'gst-plugins-base', 'gst-rtsp-server', 'gstreamer', 'gst-plugins-rs'] else ''
+        build_cache(builddir, subproject, libpaths, cache_subdir)
 
     try:
         subprocess.run(['git', 'diff', '--ignore-submodules', '--exit-code'], check=True)
