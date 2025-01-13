@@ -27,6 +27,15 @@
 #include "gstopenaptxdec.h"
 #include "gstopenaptxenc.h"
 
+/**
+ * SECTION:plugin-openaptx
+ *
+ * aptX audio encoding and decoding
+ *
+ * See also: @openaptxenc, @openaptxenc
+ * Since: 1.20
+ */
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
