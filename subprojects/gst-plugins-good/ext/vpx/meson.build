@@ -10,6 +10,28 @@ vpx_sources = [
   'plugin.c',
 ]
 
+vpx_headers = [
+  'gstvp9enc.h',
+  'gstvpxelements.h',
+  'gstvpxdec.h',
+  'gstvp8utils.h',
+  'gstvp9dec.h',
+  'gstvp8dec.h',
+  'gstvpxenums.h',
+  'gstvpxenc.h',
+  'gstvpxcompat.h',
+  'gstvp8enc.h',
+]
+
+doc_sources = []
+foreach s: vpx_sources + vpx_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'vpx': pathsep.join(doc_sources)
+}
+
 vpx_features = [
   [ 'vpx/vp8cx.h', 'vpx_codec_vp8_cx_algo', '-DHAVE_VP8_ENCODER', 'VP8 encoder' ],
   [ 'vpx/vp8dx.h', 'vpx_codec_vp8_dx_algo', '-DHAVE_VP8_DECODER', 'VP8 decoder' ],
@@ -31,7 +53,7 @@ if vpx_dep.found()
                      const vpx_codec_iface_t *c = &@1@;
                      return c != 0;
                    }'''.format(header,codec_iface)
-    # Link-time checks are only compatible with externally supplied libraries 
+    # Link-time checks are only compatible with externally supplied libraries
     if vpx_dep.type_name() == 'internal'
       vpx_codec = vpx_dep.get_variable(f.get(3).split(' ')[0].to_lower())
       vpx_feature = vpx_dep.get_variable(f.get(3).to_lower().underscorify())

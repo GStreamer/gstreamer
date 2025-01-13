@@ -1,5 +1,18 @@
 shout2_sources = ['gstshout2.c']
 
+shout2_headers = [
+  'gstshout2.h',
+]
+
+doc_sources = []
+foreach s: shout2_sources + shout2_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'shout2': pathsep.join(doc_sources)
+}
+
 shout2_dep = dependency('shout', version : '>= 2.4.3', required : get_option('shout2'))
 
 if shout2_dep.found()

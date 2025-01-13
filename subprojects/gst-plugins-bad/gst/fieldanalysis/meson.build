@@ -2,6 +2,23 @@ fielda_sources = [
   'gstfieldanalysis.c'
 ]
 
+fielda_headers = [
+  'gstfieldanalysis.h',
+]
+
+doc_sources = []
+foreach s: fielda_sources + fielda_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'fieldanalysis': pathsep.join(doc_sources)
+}
+
+if get_option('fieldanalysis').disabled()
+  subdir_done()
+endif
+
 orcsrc = 'gstfieldanalysisorc'
 if have_orcc
   orc_h = custom_target(orcsrc + '.h',

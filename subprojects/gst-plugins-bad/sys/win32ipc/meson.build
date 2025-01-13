@@ -12,6 +12,23 @@ win32ipc_sources = [
   'plugin.cpp',
 ]
 
+win32ipc_headers = [
+  'gstwin32ipcvideosink.h',
+  'gstwin32ipcmemory.h',
+  'gstwin32ipcvideosrc.h',
+  'gstwin32ipcbufferpool.h',
+  'gstwin32ipcutils.h',
+]
+
+doc_sources = []
+foreach s: win32ipc_sources + win32ipc_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'win32ipc': pathsep.join(doc_sources)
+}
+
 if host_system != 'windows' or get_option('win32ipc').disabled()
   subdir_done()
 endif

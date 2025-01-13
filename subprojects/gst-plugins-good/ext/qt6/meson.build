@@ -1,4 +1,4 @@
-sources = [
+qt6_sources = [
   'gstplugin.cc',
   'gstqt6element.cc',
   'gstqsg6material.cc',
@@ -10,6 +10,20 @@ sources = [
   'qt6glitem.cc',
   'qt6glwindow.cc',
   'qt6glrenderer.cc',
+]
+
+qt6_headers = [
+  'gstqml6glsink.h',
+  'gstqt6elements.h',
+  'qt6glrenderer.h',
+  'gstqt6glutility.h',
+  'qt6glitem.h',
+  'gstqt6gl.h',
+  'gstqsg6material.h',
+  'qt6glwindow.h',
+  'gstqml6glsrc.h',
+  'gstqml6glmixer.h',
+  'gstqml6gloverlay.h',
 ]
 
 moc_headers = [
@@ -24,6 +38,15 @@ shader_sources = [
   { 'glsl': 'YUV_BIPLANAR.frag' },
   { 'glsl': 'YUV_TRIPLANAR.frag' },
 ]
+
+doc_sources = []
+foreach s: qt6_sources + qt6_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'qml6': pathsep.join(doc_sources)
+}
 
 qt6qml_dep = dependency('', required: false)
 qt6_option = get_option('qt6')
@@ -200,7 +223,7 @@ if qt6_option.require(have_qt_windowing, error_message: 'No windowing, enable on
   resource_file = configure_file(input: 'resources.qrc', output: 'resources.qrc', copy: true)
   qresources = qt6_mod.compile_resources(sources: resource_file, method: qt6_method)
 
-  gstqml6gl = library('gstqml6', sources, moc_files, qresources,
+  gstqml6gl = library('gstqml6', qt6_sources, moc_files, qresources,
     cpp_args : gst_plugins_good_args + qt_defines,
     link_args : noseh_link_args,
     include_directories: [configinc, libsinc],

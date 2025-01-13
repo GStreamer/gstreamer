@@ -3,6 +3,21 @@ theora_sources = [
   'gsttheoraparse.c',
 ]
 
+theora_headers = [
+  'gsttheoraenc.h',
+  'gsttheoraparse.h',
+  'gsttheoradec.h',
+]
+
+doc_sources = []
+foreach s: theora_sources + theora_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'theora': pathsep.join(doc_sources)
+}
+
 theoradec_dep = dependency('theoradec', version : '>=1.1', required : get_option('theora'))
 theoraenc_dep = dependency('theoraenc', version : '>=1.1', required : get_option('theora'))
 theora_deps = []

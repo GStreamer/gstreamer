@@ -1,5 +1,18 @@
 voaac_sources = ['gstvoaac.c', 'gstvoaacenc.c']
 
+voaac_headers = [
+  'gstvoaacenc.h',
+]
+
+doc_sources = []
+foreach s: voaac_sources + voaac_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'voaacenc': pathsep.join(doc_sources)
+}
+
 voaac_dep = dependency('vo-aacenc', required : get_option('voaacenc'))
 
 if voaac_dep.found()

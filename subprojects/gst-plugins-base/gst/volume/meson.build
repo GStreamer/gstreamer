@@ -1,3 +1,24 @@
+volume_sources = [
+  'gstvolume.c'
+]
+
+volume_headers = [
+  'gstvolume.h'
+]
+
+doc_sources = []
+foreach s: volume_sources + volume_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'volume': pathsep.join(doc_sources)
+}
+
+if get_option('volume').disabled()
+  subdir_done()
+endif
+
 volume_deps = [audio_dep, gst_dep, gst_base_dep]
 orcsrc = 'gstvolumeorc'
 if have_orcc
@@ -20,7 +41,7 @@ else
     copy : true)
 endif
 
-gstvolume = library('gstvolume', 'gstvolume.c', orc_c, orc_h,
+gstvolume = library('gstvolume', volume_sources + [orc_c, orc_h],
   c_args : gst_plugins_base_args,
   include_directories: [configinc, libsinc],
   dependencies : volume_deps,

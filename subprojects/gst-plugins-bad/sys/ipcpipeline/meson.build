@@ -7,6 +7,23 @@ ipcpipeline_sources = [
   'gstipcslavepipeline.c'
 ]
 
+ipcpipeline_headers = [
+  'gstipcpipelinesink.h',
+  'gstipcpipelineelements.h',
+  'gstipcpipelinecomm.h',
+  'gstipcpipelinesrc.h',
+  'gstipcslavepipeline.h',
+]
+
+doc_sources = []
+foreach s: ipcpipeline_sources + ipcpipeline_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'ipcpipeline': pathsep.join(doc_sources)
+}
+
 if get_option('ipcpipeline').disabled()
   subdir_done()
 endif

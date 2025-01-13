@@ -1,3 +1,22 @@
+tinyalsa_sources = [
+  'tinyalsa.c',
+  'tinyalsasink.c',
+]
+
+tinyalsa_headers = [
+  'tinyalsasink.h',
+]
+
+doc_sources = []
+foreach s: tinyalsa_sources + tinyalsa_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'tinyalsa': pathsep.join(doc_sources)
+}
+
+
 if get_option('tinyalsa').disabled()
   subdir_done()
 endif
@@ -9,7 +28,7 @@ have_tinyalsa = tinyalsa_dep.found()
 
 if have_tinyalsa
   gsttinyalsa = library('gsttinyalsa',
-    'tinyalsa.c', 'tinyalsasink.c',
+    tinyalsa_sources,
     c_args: gst_plugins_bad_args,
     include_directories: [configinc],
     dependencies : [gstbase_dep, gstaudio_dep, tinyalsa_dep],

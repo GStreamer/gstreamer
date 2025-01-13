@@ -1,3 +1,23 @@
+gsm_sources = [
+  'gstgsm.c',
+  'gstgsmenc.c',
+  'gstgsmdec.c',
+]
+
+gsm_headers = [
+  'gstgsmenc.h',
+  'gstgsmdec.h',
+]
+
+doc_sources = []
+foreach s: gsm_sources + gsm_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'gsm': pathsep.join(doc_sources)
+}
+
 if get_option('gsm').disabled()
   subdir_done()
 endif
@@ -17,7 +37,7 @@ endif
 
 if gsm_dep.found() and have_gsm_create
   gstgsm = library('gstgsm',
-    ['gstgsm.c', 'gstgsmenc.c', 'gstgsmdec.c'],
+    gsm_sources,
     c_args : gst_plugins_bad_args + gsm_cargs,
     include_directories : [configinc],
     dependencies : [gstaudio_dep, gsm_dep],

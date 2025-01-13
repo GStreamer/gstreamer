@@ -3,6 +3,19 @@ libvisual_sources = [
   'plugin.c',
 ]
 
+libvisual_headers = [
+  'visual.h',
+]
+
+doc_sources = []
+foreach s: libvisual_sources + libvisual_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'libvisual': pathsep.join(doc_sources)
+}
+
 libvisual_dep = dependency('libvisual-0.4', version : '>= 0.4.0',
                            required : get_option('libvisual'))
 if libvisual_dep.found()

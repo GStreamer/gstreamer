@@ -23,6 +23,43 @@ mxf_sources = [
 #  'mxfdms1.c',
 ]
 
+mxf_headers = [
+  'mxfmetadata.h',
+  'mxfd10.h',
+  'mxfvanc.h',
+  'mxfdemux.h',
+  'mxftypes.h',
+  'mxfdms1.h',
+  'mxfdv-dif.h',
+  'mxfjpeg2000.h',
+  'mxful.h',
+  'mxfmpeg.h',
+  'mxfquark.h',
+  'mxfvc3.h',
+  'mxfcustom.h',
+  'mxfffv1.h',
+  'mxfaes-bwf.h',
+  'mxfup.h',
+  'mxfprores.h',
+  'gstmxfelements.h',
+  'mxfessence.h',
+  'mxfalaw.h',
+  'mxfmux.h',
+]
+
+doc_sources = []
+foreach s: mxf_sources + mxf_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'mxf': pathsep.join(doc_sources)
+}
+
+if get_option('mxf').disabled()
+  subdir_done()
+endif
+
 gstmxf = library('gstmxf',
   mxf_sources,
   c_args : gst_plugins_bad_args + [ '-DGST_USE_UNSTABLE_API' ],

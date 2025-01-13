@@ -47,6 +47,7 @@ osxversion = curversion + 1
 plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
 static_build = get_option('default_library') == 'static'
 plugins = []
+plugin_sources = {}
 gst_libraries = []
 
 cc = meson.get_compiler('c')
@@ -488,6 +489,12 @@ pkgconfig_variables = [
 pkgconfig_subdirs = ['gstreamer-1.0']
 
 meson_pkg_config_file_fixup_script = find_program('scripts/meson-pkg-config-file-fixup.py')
+
+if host_machine.system() == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
+endif
 
 python3 = import('python').find_installation()
 subdir('gst-libs')

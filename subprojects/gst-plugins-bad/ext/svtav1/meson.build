@@ -2,6 +2,19 @@ svtav1_sources = [
   'gstsvtav1enc.c',
 ]
 
+svtav1_headers = [
+  'gstsvtav1enc.h',
+]
+
+doc_sources = []
+foreach s: svtav1_sources + svtav1_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'svtav1': pathsep.join(doc_sources)
+}
+
 svtav1_dep = dependency('SvtAv1Enc', version : '>= 1.1', required: get_option('svtav1'))
 
 if svtav1_dep.found()

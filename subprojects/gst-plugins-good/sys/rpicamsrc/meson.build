@@ -7,6 +7,25 @@ rpicamsrc_sources = [
   'RaspiCLI.c',
 ]
 
+rpicamsrc_headers = [
+  'gstrpicamsrcdeviceprovider.h',
+  'gstrpicamsrc.h',
+  'RaspiPreview.h',
+  'RaspiCapture.h',
+  'gstrpicam_types.h',
+  'RaspiCLI.h',
+  'RaspiCamControl.h',
+]
+
+doc_sources = []
+foreach s: rpicamsrc_sources + rpicamsrc_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'rpicamsrc': pathsep.join(doc_sources)
+}
+
 if host_system != 'linux' or (host_cpu != 'arm' and host_cpu != 'aarch64')
   assert(not get_option('rpicamsrc').enabled(), 'rpicamsrc was enabled by options but will not be built')
   subdir_done()

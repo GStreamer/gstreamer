@@ -5,6 +5,25 @@ vfilt_sources = [
   'gstvideofiltersbad.c',
 ]
 
+vfilt_headers = [
+  'gstscenechange.h',
+  'gstzebrastripe.h',
+  'gstvideodiff.h',
+]
+
+doc_sources = []
+foreach s: vfilt_sources + vfilt_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'videofiltersbad': pathsep.join(doc_sources)
+}
+
+if get_option('videofilters').disabled()
+  subdir_done()
+endif
+
 orcsrc = 'gstscenechangeorc'
 if have_orcc
   orc_h = custom_target(orcsrc + '.h',

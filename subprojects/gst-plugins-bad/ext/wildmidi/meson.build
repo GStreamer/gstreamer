@@ -1,3 +1,20 @@
+wildmidi_sources = [
+  'gstwildmididec.c',
+]
+
+wildmidi_headers = [
+  'gstwildmididec.h',
+]
+
+doc_sources = []
+foreach s: wildmidi_sources + wildmidi_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'wildmidi': pathsep.join(doc_sources)
+}
+
 if get_option('wildmidi').disabled()
   subdir_done()
 endif
@@ -23,7 +40,7 @@ endif
 
 if wildmidi_dep.found()
   gstwildmidi = library('gstwildmidi',
-    'gstwildmididec.c',
+    wildmidi_sources,
     c_args: gst_plugins_bad_args,
     include_directories: [configinc],
     dependencies: [gstaudio_dep, gstbadaudio_dep, wildmidi_dep],

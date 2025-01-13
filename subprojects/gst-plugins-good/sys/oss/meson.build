@@ -7,6 +7,34 @@ oss_header_locations = [
   ['machine/soundcard.h', 'HAVE_OSS_INCLUDE_IN_MACHINE', 'OSS includes are in machine/'],
 ]
 
+ossaudio_sources = [
+  'gstossaudio.c',
+  'gstossaudioelement.c',
+  'gstossdeviceprovider.c',
+  'gstosshelper.c',
+  'gstosssink.c',
+  'gstosssrc.c',
+]
+
+ossaudio_headers = [
+  'gstosshelper.h',
+  'gstosssrc.h',
+  'gstosssink.h',
+  'gstossdeviceprovider.h',
+  'common.h',
+  'gstossaudioelements.h',
+  'gstossdmabuffer.h',
+]
+
+doc_sources = []
+foreach s: ossaudio_sources + ossaudio_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'ossaudio': pathsep.join(doc_sources)
+}
+
 have_oss = false
 oss_option = get_option('oss')
 if not oss_option.disabled()
@@ -25,11 +53,13 @@ if not oss_option.disabled()
 endif
 
 if have_oss
-  plugins += [library('gstossaudio',
-    'gstossaudio.c', 'gstossaudioelement.c', 'gstossdeviceprovider.c', 'gstosshelper.c', 'gstosssink.c', 'gstosssrc.c',
+  gstossaudio = library('gstossaudio',
+    ossaudio_sources,
     c_args : gst_plugins_good_args,
     include_directories : [configinc, libsinc],
     dependencies : [gstaudio_dep, gstbase_dep],
     install : true,
-    install_dir : plugins_install_dir)]
+    install_dir : plugins_install_dir)
+
+  plugins += [gstossaudio]
 endif

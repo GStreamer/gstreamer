@@ -6,6 +6,26 @@ rtsp_sources = [
   'gstrtspext.c',
 ]
 
+rtsp_headers = [
+  'gstrtpdec.h',
+  'gstrtspelements.h',
+  'gstrtspsrc.h',
+  'gstrtspext.h',
+]
+
+doc_sources = []
+foreach s: rtsp_sources + rtsp_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'rtsp': pathsep.join(doc_sources)
+}
+
+if get_option('rtsp').disabled()
+  subdir_done()
+endif
+
 gstrtsp = library('gstrtsp',
   rtsp_sources,
   c_args : gst_plugins_good_args,

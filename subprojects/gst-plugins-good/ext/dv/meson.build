@@ -6,6 +6,22 @@ dv_sources = [
   'gstsmptetimecode.c',
 ]
 
+dv_headers = [
+  'gstsmptetimecode.h',
+  'gstdvdec.h',
+  'gstdvelements.h',
+  'gstdvdemux.h',
+]
+
+doc_sources = []
+foreach s: dv_sources + dv_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'dv': pathsep.join(doc_sources)
+}
+
 dv_dep = dependency('libdv', version : '>= 0.100', required : get_option('dv'),
   fallback: ['dv', 'dv_dep'])
 

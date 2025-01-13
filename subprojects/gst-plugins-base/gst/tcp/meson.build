@@ -11,8 +11,34 @@ tcp_sources = [
   'gsttcpplugin.c',
 ]
 
+tcp_headers = [
+  'gstsocketsrc.h',
+  'gstmultisocketsink.h',
+  'gsttcpclientsink.h',
+  'gstmultihandlesink.h',
+  'gsttcpelements.h',
+  'gsttcpserversink.h',
+  'gsttcpclientsrc.h',
+  'gstmultifdsink.h',
+  'gsttcpsrcstats.h',
+  'gsttcpserversrc.h',
+]
+
 if core_conf.has('HAVE_SYS_SOCKET_H')
    tcp_sources += 'gstmultifdsink.c'
+endif
+
+doc_sources = []
+foreach s: tcp_sources + tcp_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'tcp': pathsep.join(doc_sources)
+}
+
+if get_option('tcp').disabled()
+  subdir_done()
 endif
 
 gsttcp = library('gsttcp',

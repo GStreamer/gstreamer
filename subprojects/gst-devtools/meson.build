@@ -167,10 +167,17 @@ pkgconfig_subdirs = ['gstreamer-1.0']
 
 gst_plugins_doc_dep = []
 plugins = []
+plugin_sources = {}
 i18n = import('i18n')
 
 static_build = get_option('default_library') == 'static'
 gst_libraries = []
+
+if host_machine.system() == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
+endif
 
 python_mod = import('python')
 python3 = python_mod.find_installation()

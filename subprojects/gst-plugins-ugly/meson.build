@@ -32,6 +32,7 @@ api_version = '1.0'
 static_build = get_option('default_library') == 'static'
 plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
 plugins = []
+plugin_sources = {}
 
 cc = meson.get_compiler('c')
 if have_cxx
@@ -322,6 +323,12 @@ endif
 gpl_allowed = get_option('gpl').allowed()
 
 python3 = import('python').find_installation()
+
+if host_machine.system() == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
+endif
 
 subdir('gst')
 subdir('ext')

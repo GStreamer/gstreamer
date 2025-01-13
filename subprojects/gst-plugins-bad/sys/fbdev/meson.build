@@ -2,6 +2,19 @@ fbdevsink_sources = [
   'gstfbdevsink.c',
 ]
 
+fbdevsink_headers = [
+  'gstfbdevsink.h',
+]
+
+doc_sources = []
+foreach s: fbdevsink_sources + fbdevsink_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'fbdevsink': pathsep.join(doc_sources)
+}
+
 if get_option('fbdev').disabled()
   subdir_done()
 endif

@@ -1,4 +1,4 @@
-sources = [
+qmlgl_sources = [
   'gstplugin.cc',
   'gstqtelement.cc',
   'gstqsgmaterial.cc',
@@ -11,11 +11,33 @@ sources = [
   'qtwindow.cc',
 ]
 
+qmlgl_headers = [
+  'qtitem.h',
+  'gstqtoverlay.h',
+  'gstqtsink.h',
+  'gstqsgmaterial.h',
+  'gstqtelements.h',
+  'gstqtsrc.h',
+  'qtglrenderer.h',
+  'gstqtgl.h',
+  'qtwindow.h',
+  'gstqtglutility.h',
+]
+
 moc_headers = [
   'qtitem.h',
   'qtwindow.h',
   'qtglrenderer.h',
 ]
+
+doc_sources = []
+foreach s: qmlgl_sources + qmlgl_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'qmlgl': pathsep.join(doc_sources)
+}
 
 # Define a not-found dependency so this variable is always defined when we're
 # deciding whether to build the qt5 examples
@@ -196,7 +218,8 @@ if qt5_option.require(have_qt_windowing, error_message: 'No windowing, enable on
 
   # Build it!
   moc_files = qt5_mod.preprocess(moc_headers : moc_headers, method: qt5_method)
-  gstqmlgl = library('gstqmlgl', sources, moc_files,
+
+  gstqmlgl = library('gstqmlgl', qmlgl_sources, moc_files,
     cpp_args : gst_plugins_good_args + qt_defines,
     link_args : noseh_link_args,
     include_directories: [configinc, libsinc],

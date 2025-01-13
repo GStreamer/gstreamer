@@ -6,6 +6,23 @@ ladspa_sources = [
   'gstladspautils.c',
 ]
 
+ladspa_headers = [
+  'gstladspasink.h',
+  'gstladspa.h',
+  'gstladspautils.h',
+  'gstladspafilter.h',
+  'gstladspasource.h',
+]
+
+doc_sources = []
+foreach s: ladspa_sources + ladspa_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'ladspa': pathsep.join(doc_sources)
+}
+
 ladspa_cargs = []
 
 if get_option('ladspa').disabled()

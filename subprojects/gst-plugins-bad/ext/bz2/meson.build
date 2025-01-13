@@ -4,6 +4,20 @@ bz2_sources = [
   'gstbz2enc.c',
 ]
 
+bz2_headers = [
+  'gstbz2enc.h',
+  'gstbz2dec.h',
+]
+
+doc_sources = []
+foreach s: bz2_sources + bz2_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'bz2': pathsep.join(doc_sources)
+}
+
 bz2_dep = cc.find_library('bz2', required : get_option('bz2'))
 
 if bz2_dep.found() and cc.has_header_symbol('bzlib.h', 'BZ2_bzlibVersion')

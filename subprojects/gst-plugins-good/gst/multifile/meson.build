@@ -11,8 +11,33 @@ multifile_sources = [
   'gstimagesequencesrc.c',
 ]
 
+multifile_headers = [
+  'gstimagesequencesrc.h',
+  'gstmultifilesink.h',
+  'gstmultifilesrc.h',
+  'gstsplitfilesrc.h',
+  'gstsplitmuxpartreader.h',
+  'gstsplitmuxsink.h',
+  'gstsplitmuxsrc.h',
+  'gstsplitutils.h',
+  'patternspec.h',
+]
+
+doc_sources = []
+foreach s: multifile_sources + multifile_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'multifile': pathsep.join(doc_sources)
+}
+
+if get_option('multifile').disabled()
+  subdir_done()
+endif
+
 gstmultifile = library('gstmultifile',
-  multifile_sources,
+  multifile_sources + multifile_headers,
   c_args : gst_plugins_good_args,
   include_directories : [configinc, libsinc],
   dependencies : [gstvideo_dep, gstbase_dep,

@@ -13,6 +13,31 @@ curl_sources = [
   'gstcurlqueue.c',
 ]
 
+curl_headers = [
+  'gstcurltlssink.h',
+  'gstcurlsshsink.h',
+  'gstcurlelements.h',
+  'gstcurlftpsink.h',
+  'gstcurlfilesink.h',
+  'gstcurlsmtpsink.h',
+  'gstcurlhttpsink.h',
+  'gstcurlqueue.h',
+  'gstcurlsftpsink.h',
+  'gstcurlbasesink.h',
+  'gstcurlhttpsrc.h',
+  'gstcurldefaults.h',
+  'curltask.h',
+]
+
+doc_sources = []
+foreach s: curl_sources + curl_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'curl': pathsep.join(doc_sources)
+}
+
 curl_dep = dependency('libcurl', version : '>= 7.55.0', required : get_option('curl'))
 
 if curl_dep.found()

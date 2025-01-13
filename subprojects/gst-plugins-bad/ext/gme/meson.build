@@ -1,3 +1,20 @@
+gme_sources = [
+  'gstgme.c',
+]
+
+gme_headers = [
+  'gstgme.h',
+]
+
+doc_sources = []
+foreach s: gme_sources + gme_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'gme': pathsep.join(doc_sources)
+}
+
 if get_option('gme').disabled()
   subdir_done()
 endif
@@ -10,7 +27,9 @@ endif
 
 if have_gme
   cdata.set('HAVE_LIBGME_ACCURACY', cc.has_function('gme_enable_accuracy', dependencies: gme_dep))
-  gstgme = library('gstgme', 'gstgme.c',
+
+  gstgme = library('gstgme',
+    gme_sources,
     c_args: gst_plugins_bad_args,
     include_directories: [configinc],
     dependencies: [gstaudio_dep, gme_dep],

@@ -1,5 +1,19 @@
 osxvideo_sources = ['osxvideosink.m', 'cocoawindow.m']
 
+osxvideo_headers = [
+  'osxvideosink.h',
+  'cocoawindow.h',
+]
+
+doc_sources = []
+foreach s: osxvideo_sources + osxvideo_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'osxvideo': pathsep.join(doc_sources)
+}
+
 have_osxvideo = false
 if host_system != 'darwin'
   subdir_done()

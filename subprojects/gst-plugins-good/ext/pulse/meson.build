@@ -7,6 +7,23 @@ pulse_sources = [
   'pulseutil.c',
 ]
 
+pulse_headers = [
+  'pulsesink.h',
+  'pulseutil.h',
+  'pulsedeviceprovider.h',
+  'gstpulseelements.h',
+  'pulsesrc.h',
+]
+
+doc_sources = []
+foreach s: pulse_sources + pulse_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'pulseaudio': pathsep.join(doc_sources)
+}
+
 libpulse_dep = dependency('libpulse', version : '>=2.0', required : get_option('pulse'))
 
 if libpulse_dep.found()

@@ -3,6 +3,25 @@ compositor_sources = [
   'compositor.c',
 ]
 
+compositor_headers = [
+  'blendorc.h',
+  'compositor.h',
+  'blend.h',
+]
+
+doc_sources = []
+foreach s: compositor_sources + compositor_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'compositor': pathsep.join(doc_sources)
+}
+
+if get_option('compositor').disabled()
+  subdir_done()
+endif
+
 orcsrc = 'compositororc'
 if have_orcc
   orc_h = custom_target(orcsrc + '.h',

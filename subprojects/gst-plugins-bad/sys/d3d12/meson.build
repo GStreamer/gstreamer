@@ -38,6 +38,72 @@ d3d12_sources = [
   'plugin.cpp',
 ]
 
+d3d12_headers = [
+  'gstd3d12upload.h',
+  'gstd3d12decoder.h',
+  'gstd3d12screencapturedevice.h',
+  'gstd3d12h264dec.h',
+  'gstd3d12yadif.h',
+  'gstd3d12h264enc.h',
+  'gstd3d12convert.h',
+  'gstd3d12encoderbufferpool.h',
+  'gstd3d12download.h',
+  'gstd3d12ipcclient.h',
+  'gstd3d12mpeg2dec.h',
+  'gstd3d12graphicscapture.h',
+  'gstd3d12ipcsink.h',
+  'gstd3d12memorycopy.h',
+  'gstd3d12decodercpbpool.h',
+  'gstd3d12compositor.h',
+  'gstd3d12window-swapchain-resource.h',
+  'gstd3d12mipgen.h',
+  'gstd3d12swapchainsink.h',
+  'gstd3d12window-swapchain.h',
+  'gstd3d12dpbstorage.h',
+  'gstd3d12pluginutils.h',
+  'gstd3d12h265dec.h',
+  'gstd3d12screencapturesrc.h',
+  'gstd3d12overlaycompositor.h',
+  'gstd3d12window.h',
+  'gstd3d12av1dec.h',
+  'gstd3d12videosink.h',
+  'gstd3d12window-win32.h',
+  'gstd3d12encoder.h',
+  'gstd3d12dxgicapture.h',
+  'gstd3d12mipmapping.h',
+  'gstd3d12vp9dec.h',
+  'gstd3d12ipc.h',
+  'gstd3d12deinterlace.h',
+  'gstd3d12ipcserver.h',
+  'gstd3d12ipcsrc.h',
+  'gstd3d12screencapture.h',
+  'gstd3d12basefilter.h',
+  'gstd3d12testsrc.h',
+  'gstd3d12vp8dec.h',
+]
+
+graphicscapture_sources = [
+  'gstd3d12graphicscapture.cpp',
+]
+
+memorycopy_sources = [
+  'gstd3d12memorycopy.cpp',
+]
+
+download_upload_sources = [
+  'gstd3d12download.cpp',
+  'gstd3d12upload.cpp',
+]
+
+doc_sources = []
+foreach s: d3d12_sources + graphicscapture_sources + memorycopy_sources + download_upload_sources + d3d12_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'd3d12': pathsep.join(doc_sources)
+}
+
 extra_args = [
   '-DGST_USE_UNSTABLE_API',
   '-DGST_D3D12_USE_DIRECTX_HEADERS',
@@ -163,21 +229,16 @@ endif
 
 if have_wgc and dwmapi_lib.found()
   d3d12_cdata.set('HAVE_WGC', true)
-  d3d12_sources += ['gstd3d12graphicscapture.cpp']
+  d3d12_sources += graphicscapture_sources
   extra_deps += [dwmapi_lib]
 endif
 
 if gstd3d11_dep.found()
   d3d12_cdata.set('HAVE_GST_D3D11', true)
   extra_deps += [gstd3d11_dep]
-  d3d12_sources += [
-    'gstd3d12memorycopy.cpp',
-  ]
+  d3d12_sources += memorycopy_sources
 else
-  d3d12_sources += [
-    'gstd3d12download.cpp',
-    'gstd3d12upload.cpp',
-  ]
+  d3d12_sources += download_upload_sources
 endif
 
 configure_file(

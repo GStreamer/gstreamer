@@ -7,6 +7,23 @@ wic_sources = [
   'plugin.cpp',
 ]
 
+wic_headers = [
+  'gstwicimagingfactory.h',
+  'gstwicdecoder.h',
+  'gstwicpngdec.h',
+  'gstwicjpegdec.h',
+  'gstwicutils.h',
+]
+
+doc_sources = []
+foreach s: wic_sources + wic_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'wic': pathsep.join(doc_sources)
+}
+
 extra_args = []
 wic_deps = []
 

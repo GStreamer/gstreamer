@@ -1,3 +1,4 @@
+wavpack_dep = dependency('wavpack', version : '>= 4.60.0', required : get_option('wavpack'))
 wavpack_sources = [
   'gstwavpackelement.c',
   'gstwavpack.c',
@@ -7,7 +8,23 @@ wavpack_sources = [
   'gstwavpackstreamreader.c',
 ]
 
-wavpack_dep = dependency('wavpack', version : '>= 4.60.0', required : get_option('wavpack'))
+wavpack_headers = [
+  'gstwavpackcommon.h',
+  'gstwavpackenc.h',
+  'gstwavpackelements.h',
+  'gstwavpackdec.h',
+  'gstwavpackstreamreader.h',
+]
+
+doc_sources = []
+foreach s: wavpack_sources + wavpack_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'wavpack': pathsep.join(doc_sources)
+}
+
 
 if wavpack_dep.found()
   gstwavpack = library('gstwavpack',

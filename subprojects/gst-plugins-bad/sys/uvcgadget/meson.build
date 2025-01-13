@@ -4,6 +4,20 @@ uvcgadget_sources = [
   'uvc.c'
 ]
 
+uvcgadget_headers = [
+  'configfs.h',
+  'gstuvcsink.h',
+]
+
+doc_sources = []
+foreach s: uvcgadget_sources + uvcgadget_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'uvcgadget': pathsep.join(doc_sources)
+}
+
 libgudev_dep = dependency('gudev-1.0', required: get_option('uvcgadget'))
 
 if get_option('uvcgadget').disabled()

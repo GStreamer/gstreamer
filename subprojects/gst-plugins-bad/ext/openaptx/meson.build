@@ -4,6 +4,21 @@ openaptx_sources = [
   'gstopenaptxenc.c',
 ]
 
+openaptx_headers = [
+  'gstopenaptxenc.h',
+  'openaptx-plugin.h',
+  'gstopenaptxdec.h',
+]
+
+doc_sources = []
+foreach s: openaptx_sources + openaptx_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'openaptx': pathsep.join(doc_sources)
+}
+
 if not get_option('openaptx').allowed()
   subdir_done()
 endif

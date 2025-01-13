@@ -90,6 +90,14 @@ else
   warning('Statically building GstValidate as a tracer is not supported yet.')
 endif
 
+doc_sources = []
+foreach s: gstvalidate_headers
+  doc_sources += meson.current_source_dir() / s.full_path()
+endforeach
+
+plugin_sources += {
+  'validatetracer': pathsep.join(doc_sources)
+}
 
 pkg_name = 'gstreamer-validate-1.0'
 library_def = {'lib': gstvalidate}

@@ -1,3 +1,24 @@
+videobox_sources = [
+  'gstvideobox.c',
+]
+
+videobox_headers = [
+  'gstvideobox.h',
+]
+
+doc_sources = []
+foreach s: videobox_sources + videobox_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'videobox': pathsep.join(doc_sources)
+}
+
+if get_option('videobox').disabled()
+  subdir_done()
+endif
+
 orcsrc = 'gstvideoboxorc'
 if have_orcc
   orc_h = custom_target(orcsrc + '.h',
@@ -19,7 +40,7 @@ else
 endif
 
 gstvideobox = library('gstvideobox',
-  'gstvideobox.c', orc_c, orc_h,
+  videobox_sources + [orc_c, orc_h],
   c_args : gst_plugins_good_args,
   include_directories : [configinc],
   dependencies : [orc_dep, gstbase_dep, gstvideo_dep],

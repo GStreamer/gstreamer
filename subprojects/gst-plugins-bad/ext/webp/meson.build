@@ -4,6 +4,20 @@ webp_sources = [
   'gstwebpenc.c',
 ]
 
+webp_headers = [
+  'gstwebpdec.h',
+  'gstwebpenc.h',
+]
+
+doc_sources = []
+foreach s: webp_sources + webp_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'webp': pathsep.join(doc_sources)
+}
+
 webp_dep = dependency('libwebp', version : '>= 0.2.1', required : get_option('webp'))
 webpmux_dep = dependency('libwebpmux', version : '>= 0.2.1', required : get_option('webp'))
 

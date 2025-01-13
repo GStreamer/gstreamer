@@ -4,6 +4,20 @@ opus_sources = [
   'gstopusparse.c',
 ]
 
+opus_headers = [
+  'gstopusheader.h',
+  'gstopusparse.h',
+]
+
+doc_sources = []
+foreach s: opus_sources + opus_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'opusparse': pathsep.join(doc_sources)
+}
+
 opus_dep = dependency('opus', version : '>= 0.9.4', required : get_option('opus'))
 
 if opus_dep.found()

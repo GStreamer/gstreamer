@@ -8,6 +8,24 @@ pango_sources = [
   'gsttimeoverlay.c',
 ]
 
+pango_headers = [
+  'gsttextrender.h',
+  'gsttimeoverlay.h',
+  'gsttextoverlay.h',
+  'gstbasetextoverlay.h',
+  'gstpangoelements.h',
+  'gstclockoverlay.h',
+]
+
+doc_sources = []
+foreach s: pango_sources + pango_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'pango': pathsep.join(doc_sources)
+}
+
 pango_dep = dependency('pangocairo', version : '>=1.22.0', required : get_option('pango'),
   fallback: ['pango', 'libpangocairo_dep'],
   default_options: ['cairo=enabled'])

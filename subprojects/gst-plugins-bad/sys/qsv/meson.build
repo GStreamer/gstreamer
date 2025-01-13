@@ -15,6 +15,24 @@ qsv_sources = [
   'plugin.cpp',
 ]
 
+qsv_headers = [
+  'gstqsvallocator_d3d11.h',
+  'gstqsvallocator.h',
+  'gstqsvallocator_va.h',
+  'gstqsvav1enc.h',
+  'gstqsvdecoder.h',
+  'gstqsvencoder.h',
+  'gstqsvh264dec.h',
+  'gstqsvh264enc.h',
+  'gstqsvh265dec.h',
+  'gstqsvh265enc.h',
+  'gstqsvjpegdec.h',
+  'gstqsvjpegenc.h',
+  'gstqsvutils.h',
+  'gstqsvvp9dec.h',
+  'gstqsvvp9enc.h',
+]
+
 qsv_d3d11_sources = [
   'gstqsvallocator_d3d11.cpp',
 ]
@@ -22,6 +40,15 @@ qsv_d3d11_sources = [
 qsv_va_sources = [
   'gstqsvallocator_va.cpp',
 ]
+
+doc_sources = []
+foreach s: qsv_sources + qsv_d3d11_sources + qsv_va_sources + qsv_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'qsv': pathsep.join(doc_sources)
+}
 
 extra_args = [
   '-DGST_USE_UNSTABLE_API',

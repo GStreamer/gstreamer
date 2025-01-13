@@ -7,6 +7,23 @@ amf_sources = [
   'plugin.cpp',
 ]
 
+amf_headers = [
+  'gstamfutils.h',
+  'gstamfencoder.h',
+  'gstamfh265enc.h',
+  'gstamfh264enc.h',
+  'gstamfav1enc.h',
+]
+
+doc_sources = []
+foreach s: amf_sources + amf_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'amfcodec': pathsep.join(doc_sources)
+}
+
 amf_option = get_option('amfcodec')
 if amf_option.disabled()
   subdir_done()

@@ -40,6 +40,15 @@ mf_header_deps = [
   'codecapi.h',
 ]
 
+doc_sources = []
+foreach s: mf_sources + mf_desktop_sources + mf_app_sources
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'mediafoundation': pathsep.join(doc_sources)
+}
+
 winapi_desktop = false
 winapi_app = false
 have_capture_engine = false

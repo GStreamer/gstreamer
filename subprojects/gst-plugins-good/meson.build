@@ -35,6 +35,7 @@ api_version = '1.0'
 
 plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
 plugins = []
+plugin_sources = {}
 static_build = get_option('default_library') == 'static'
 
 host_system = host_machine.system()
@@ -516,6 +517,12 @@ plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')
 if get_option('default_library') == 'shared'
   # If we don't build static plugins there is no need to generate pc files
   plugins_pkgconfig_install_dir = disabler()
+endif
+
+if host_machine.system() == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
 endif
 
 subdir('gst')

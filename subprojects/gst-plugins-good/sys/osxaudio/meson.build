@@ -10,6 +10,36 @@ osxaudio_sources = [
   'gstatenc.c',
 ]
 
+osxaudio_headers = [
+  'gstosxaudiosink.h',
+  'gstosxaudiodeviceprovider.h',
+  'gstatenc.h',
+  'gstosxaudiosrc.h',
+  'gstatdec.h',
+  'gstiosaudiosession.h',
+  'gstosxaudioelement.h',
+  'gstosxaudioringbuffer.h',
+  'gstosxcoreaudiocommon.h',
+  'gstosxcoreaudio.h',
+]
+
+darwin_sources = [
+  'gstosxaudiodeviceprovider.c'
+]
+
+ios_sources = [
+  'gstiosaudiosession.m'
+]
+
+doc_sources = []
+foreach s: osxaudio_sources + darwin_sources + ios_sources + osxaudio_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'osxaudio': pathsep.join(doc_sources)
+}
+
 have_osxaudio = false
 osxaudio_option = get_option('osxaudio')
 if osxaudio_option.disabled() or not ['darwin', 'ios'].contains(host_system)
@@ -19,10 +49,10 @@ endif
 if host_system == 'darwin'
   # TODO: https://github.com/mesonbuild/meson/issues/3940
   have_osxaudio = cc.has_header('CoreAudio/CoreAudio.h', required: osxaudio_option)
-  osxaudio_sources += ['gstosxaudiodeviceprovider.c']
+  osxaudio_sources += darwin_sources
 elif host_system == 'ios'
   have_osxaudio = cc.has_header('CoreAudio/CoreAudioTypes.h', required: osxaudio_option)
-  osxaudio_sources += ['gstiosaudiosession.m']
+  osxaudio_sources += ios_sources
 endif
 
 if have_osxaudio

@@ -2,6 +2,20 @@ nvdswrapper_sources = [
   'plugin.cpp',
   'gstnvdsdewarp.cpp',
 ]
+
+nvdswrapper_headers = [
+  'gstnvdsdewarp.h',
+]
+
+doc_sources = []
+foreach s: nvdswrapper_sources + nvdswrapper_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'nvdswrapper': pathsep.join(doc_sources)
+}
+
 extra_args = ['-DGST_USE_UNSTABLE_API']
 
 nvdswrapper_opt = get_option('nvdswrapper')

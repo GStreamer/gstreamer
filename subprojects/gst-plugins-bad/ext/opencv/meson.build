@@ -1,8 +1,3 @@
-if get_option('opencv').disabled()
-  opencv_dep = disabler()
-  subdir_done()
-endif
-
 gstopencv_sources = [
   'gstcvdilate.cpp',
   'gstcvdilateerode.cpp',
@@ -33,6 +28,48 @@ gstopencv_sources = [
   'gstcameraundistort.cpp',
   'gstcvtracker.cpp'
 ]
+
+gstopencv_headers = [
+  'gstcvlaplace.h',
+  'gstcameracalibrate.h',
+  'gstcverode.h',
+  'gstsegmentation.h',
+  'gsttextoverlay.h',
+  'gstcvequalizehist.h',
+  'gstdisparity.h',
+  'gstgrabcut.h',
+  'gstedgedetect.h',
+  'gstskindetect.h',
+  'gsttemplatematch.h',
+  'gstfacedetect.h',
+  'gstretinex.h',
+  'MotionCells.h',
+  'gstcvdilateerode.h',
+  'gstdewarp.h',
+  'motioncells_wrapper.h',
+  'gstcvdilate.h',
+  'gstcvsobel.h',
+  'gstfaceblur.h',
+  'gstmotioncells.h',
+  'gstcvsmooth.h',
+  'gsthanddetect.h',
+  'gstcameraundistort.h',
+  'gstcvtracker.h',
+]
+
+doc_sources = []
+foreach s: gstopencv_sources + gstopencv_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'opencv': pathsep.join(doc_sources)
+}
+
+if get_option('opencv').disabled()
+  opencv_dep = disabler()
+  subdir_done()
+endif
 
 if opencv_found
   gstopencv = library('gstopencv',

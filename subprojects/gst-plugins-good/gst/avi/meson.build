@@ -6,6 +6,27 @@ avi_sources = [
   'gstavisubtitle.c'
 ]
 
+avi_headers = [
+  'gstavielements.h',
+  'avi-ids.h',
+  'gstavidemux.h',
+  'gstavisubtitle.h',
+  'gstavimux.h',
+]
+
+doc_sources = []
+foreach s: avi_sources + avi_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'avi': pathsep.join(doc_sources)
+}
+
+if get_option('avi').disabled()
+  subdir_done()
+endif
+
 gstavi = library('gstavi',
   avi_sources,
   c_args : gst_plugins_good_args,

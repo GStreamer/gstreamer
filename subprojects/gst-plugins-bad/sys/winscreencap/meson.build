@@ -4,6 +4,21 @@ winscreencap_sources = [
   'gstwinscreencap.c',
 ]
 
+winscreencap_headers = [
+  'gstwinscreencap.h',
+  'gstgdiscreencapsrc.h',
+  'gstdx9screencapsrc.h',
+]
+
+doc_sources = []
+foreach s: winscreencap_sources + winscreencap_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'winscreencap': pathsep.join(doc_sources)
+}
+
 if host_system != 'windows' or get_option('winscreencap').disabled()
   subdir_done()
 endif

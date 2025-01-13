@@ -6,6 +6,22 @@ lcevcdecoder_sources = [
   'gstlcevch264decodebin.c',
 ]
 
+lcevcdecoder_headers = [
+  'gstlcevcdec.h',
+  'gstlcevch264decodebin.h',
+  'gstlcevcdecutils.h',
+  'gstlcevcdecodebin.h',
+]
+
+doc_sources = []
+foreach s: lcevcdecoder_sources + lcevcdecoder_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'lcevcdecoder': pathsep.join(doc_sources)
+}
+
 lcevc_dec_dep = dependency ('lcevc_dec', required: get_option('lcevcdecoder'))
 
 if lcevc_dec_dep.found()

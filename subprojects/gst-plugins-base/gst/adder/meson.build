@@ -1,3 +1,24 @@
+adder_sources = [
+  'gstadder.c',
+]
+
+adder_headers = [
+  'gstadder.h',
+]
+
+doc_sources = []
+foreach s: adder_sources + adder_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'adder': pathsep.join(doc_sources)
+}
+
+if get_option('adder').disabled()
+  subdir_done()
+endif
+
 adder_deps = [audio_dep]
 orcsrc = 'gstadderorc'
 if have_orcc
@@ -21,7 +42,7 @@ else
 endif
 
 adder = library('gstadder',
-  'gstadder.c', orc_c, orc_h,
+  adder_sources + [orc_c, orc_h],
   c_args: gst_plugins_base_args,
   include_directories: [configinc, libsinc],
   dependencies : adder_deps,

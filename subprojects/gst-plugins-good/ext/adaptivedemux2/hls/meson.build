@@ -8,6 +8,15 @@ hls_sources = [
   'hls/m3u8.c',
 ]
 
+hls_headers = [
+  'hls/gsthlsdemux.h',
+  'hls/gsthlsdemux-playlist-loader.h',
+  'hls/gsthlsdemux-preloader.h',
+  'hls/gsthlsdemux-stream.h',
+  'hls/gsthlselements.h',
+  'hls/m3u8.h',
+]
+
 hls_cargs = []
 
 hls_crypto = get_option('hls-crypto')

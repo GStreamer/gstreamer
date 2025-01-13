@@ -33,6 +33,50 @@ dash_sources = [
   'gstdashsink.c',
 ]
 
+dash_headers = [
+  'gstdashsink.h',
+  'gstmpdsegmenttemplatenode.h',
+  'gstdashdemux.h',
+  'gstmpdsubsetnode.h',
+  'gstmpdhelper.h',
+  'gstmpdrootnode.h',
+  'gstmpdrepresentationnode.h',
+  'gstmpdmultsegmentbasenode.h',
+  'gstmpdsubrepresentationnode.h',
+  'gstmpdsegmentlistnode.h',
+  'gstmpdclient.h',
+  'gstxmlhelper.h',
+  'gstmpdmetricsrangenode.h',
+  'gstmpdnode.h',
+  'gstmpdlocationnode.h',
+  'gstmpdutctimingnode.h',
+  'gstmpdsegmenturlnode.h',
+  'gstmpdrepresentationbasenode.h',
+  'gstmpdsnode.h',
+  'gstmpdurltypenode.h',
+  'gstmpdprograminformationnode.h',
+  'gstmpdsegmenttimelinenode.h',
+  'gstmpdsegmentbasenode.h',
+  'gstmpdadaptationsetnode.h',
+  'gstmpdmetricsnode.h',
+  'gstmpdreportingnode.h',
+  'gstmpdcontentcomponentnode.h',
+  'gstmpddescriptortypenode.h',
+  'gstmpdparser.h',
+  'gstmpdbaseurlnode.h',
+  'gstdash_debug.h',
+  'gstmpdperiodnode.h',
+]
+
+doc_sources = []
+foreach s: dash_sources + dash_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'dash': pathsep.join(doc_sources)
+}
+
 xml2_dep = dependency('libxml-2.0',
   version : '>= 2.8',
   fallback : 'libxml2',

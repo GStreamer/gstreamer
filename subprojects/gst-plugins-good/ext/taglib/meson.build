@@ -1,3 +1,5 @@
+taglib_dep = dependency('taglib', version : '>= 1.5', required : get_option('taglib'))
+
 taglib_sources = [
   'gstapev2mux.cc',
   'gstid3v2mux.cc',
@@ -5,7 +7,20 @@ taglib_sources = [
   'gsttaglibplugin.c',
 ]
 
-taglib_dep = dependency('taglib', version : '>= 1.5', required : get_option('taglib'))
+taglib_headers = [
+  'gsttaglibelements.h',
+  'gstapev2mux.h',
+  'gstid3v2mux.h',
+]
+
+doc_sources = []
+foreach s: taglib_sources + taglib_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'taglib': pathsep.join(doc_sources)
+}
 
 if taglib_dep.found() and add_languages('cpp', native: false, required: get_option('taglib'))
   extra_args = []

@@ -29,6 +29,39 @@ va_sources = [
   'gstvavpp.c',
 ]
 
+va_headers = [
+  'gstjpegdecoder.h',
+  'gstvaav1dec.h',
+  'gstvaav1enc.h',
+  'gstvabasedec.h',
+  'gstvabaseenc.h',
+  'gstvabase.h',
+  'gstvabasetransform.h',
+  'gstvacaps.h',
+  'gstvacompositor.h',
+  'gstvadecoder.h',
+  'gstvadeinterlace.h',
+  'gstvadevice.h',
+  'gstvadisplay_priv.h',
+  'gstvaencoder.h',
+  'gstvafilter.h',
+  'gstvah264dec.h',
+  'gstvah264enc.h',
+  'gstvah265dec.h',
+  'gstvah265enc.h',
+  'gstvajpegdec.h',
+  'gstvajpegenc.h',
+  'gstvampeg2dec.h',
+  'gstvapluginutils.h',
+  'gstvaprofile.h',
+  'gstvavp8dec.h',
+  'gstvavp8enc.h',
+  'gstvavp9dec.h',
+  'gstvavp9enc.h',
+  'gstvavpp.h',
+  'vacompat.h',
+]
+
 va_linux_sources = [
   'gstvadevice_linux.c'
 ]
@@ -36,6 +69,19 @@ va_linux_sources = [
 va_win32_sources = [
   'gstvadevice_win32.cpp'
 ]
+
+va_av1enc_sources = [
+  'gstvaav1enc.c'
+]
+
+doc_sources = []
+foreach s: va_sources + va_linux_sources + va_win32_sources + va_av1enc_sources + va_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'va': pathsep.join(doc_sources)
+}
 
 if host_system not in ['linux', 'windows']
   subdir_done()
@@ -75,7 +121,7 @@ if cc.get_id() == 'msvc'
 endif
 
 if libva_dep.version().version_compare('>= 1.15')
-  va_sources += 'gstvaav1enc.c'
+  va_sources += va_av1enc_sources
 endif
 
 gstva = library('gstva',

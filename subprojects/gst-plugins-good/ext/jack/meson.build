@@ -7,6 +7,25 @@ jack_sources = [
   'gstjackloader.c',
 ]
 
+jack_headers = [
+  'gstjackringbuffer.h',
+  'gstjack.h',
+  'gstjackloader.h',
+  'gstjackaudiosrc.h',
+  'gstjackaudioclient.h',
+  'gstjackutil.h',
+  'gstjackaudiosink.h',
+]
+
+doc_sources = []
+foreach s: jack_sources + jack_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'jack': pathsep.join(doc_sources)
+}
+
 jack_option = get_option('jack')
 if jack_option.disabled()
   subdir_done()

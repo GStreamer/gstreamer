@@ -10,6 +10,31 @@ mpeg2enc_opt = get_option('mpeg2enc').require(gpl_allowed, error_message: '''
 mjpegtools_dep = dependency('mjpegtools', version : '>=2.0.0', required : mpeg2enc_opt)
 mpeg2enc_dep = cxx.find_library('mpeg2encpp', required : mpeg2enc_opt)
 
+mpeg2enc_sources = [
+  'gstmpeg2enc.cc',
+  'gstmpeg2encoptions.cc',
+  'gstmpeg2encoder.cc',
+  'gstmpeg2encstreamwriter.cc',
+  'gstmpeg2encpicturereader.cc',
+]
+
+mpeg2enc_headers = [
+  'gstmpeg2enc.hh',
+  'gstmpeg2encoptions.hh',
+  'gstmpeg2encpicturereader.hh',
+  'gstmpeg2encoder.hh',
+  'gstmpeg2encstreamwriter.hh',
+]
+
+doc_sources = []
+foreach s: mpeg2enc_sources + mpeg2enc_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'mpeg2enc': pathsep.join(doc_sources)
+}
+
 if mjpegtools_dep.found() and mpeg2enc_dep.found()
   no_warn_args = []
   foreach arg : [
@@ -22,11 +47,7 @@ if mjpegtools_dep.found() and mpeg2enc_dep.found()
   endforeach
 
   gstmpeg2enc = library('gstmpeg2enc',
-    'gstmpeg2enc.cc',
-    'gstmpeg2encoptions.cc',
-    'gstmpeg2encoder.cc',
-    'gstmpeg2encstreamwriter.cc',
-    'gstmpeg2encpicturereader.cc',
+    mpeg2enc_sources,
     cpp_args : gst_plugins_bad_args + ['-DGST_MJPEGTOOLS_API=20000'] + no_warn_args,
     link_args : noseh_link_args,
     include_directories : [configinc, libsinc],

@@ -7,6 +7,17 @@ nle_sources = ['nleobject.c',
     'gstnle.c'
 ]
 
+nle_headers = [
+  'nlesource.h',
+  'nle.h',
+  'nleurisource.h',
+  'nletypes.h',
+  'nlecomposition.h',
+  'nleghostpad.h',
+  'nleobject.h',
+  'nleoperation.h',
+]
+
 deps = [gst_dep, gstbase_dep]
 c_args = ges_c_args
 if gstvalidate_dep.found()
@@ -23,3 +34,12 @@ nle = library('gstnle', nle_sources,
   install_dir : plugins_install_dir,
 )
 plugins += [nle]
+
+doc_sources = []
+foreach s: nle_sources + nle_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'nle': pathsep.join(doc_sources)
+}

@@ -8,6 +8,28 @@ udp_sources = [
   'gstudpnetutils.c'
 ]
 
+udp_headers = [
+  'gstmultiudpsink.h',
+  'gstudpnetutils.h',
+  'gstudpelements.h',
+  'gstudpsrc.h',
+  'gstdynudpsink.h',
+  'gstudpsink.h',
+]
+
+doc_sources = []
+foreach s: udp_sources + udp_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'udp': pathsep.join(doc_sources)
+}
+
+if get_option('udp').disabled()
+  subdir_done()
+endif
+
 gstudp = library('gstudp',
   udp_sources,
   c_args : gst_plugins_good_args,

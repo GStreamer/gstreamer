@@ -29,6 +29,28 @@ goom2k1_sources = [
   'lines.c'
 ]
 
+goom2k1_headers = [
+  'gstgoom.h',
+  'lines.h',
+  'goom_tools.h',
+  'filters.h',
+  'goom_core.h',
+  'graphic.h',
+]
+
+doc_sources = []
+foreach s: goom2k1_sources + goom2k1_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'goom2k1': pathsep.join(doc_sources)
+}
+
+if get_option('goom2k1').disabled()
+  subdir_done()
+endif
+
 gstgoom2k1 = library('gstgoom2k1',
   goom2k1_sources,
   c_args : gst_plugins_good_args + goom2k1_args + filter_args,

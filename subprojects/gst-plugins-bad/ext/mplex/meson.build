@@ -7,12 +7,32 @@ mplex_opt = get_option('mplex').require(gpl_allowed, error_message: '''
 mjpegtools_dep = dependency('mjpegtools', version : '>=2.0.0', required : mplex_opt)
 mplex2_dep = cxx.find_library('mplex2', required : mplex_opt)
 
+mplex_sources = [
+  'gstmplex.cc',
+  'gstmplexibitstream.cc',
+  'gstmplexjob.cc',
+  'gstmplexoutputstream.cc',
+]
+
+mplex_headers = [
+  'gstmplex.hh',
+  'gstmplexibitstream.hh',
+  'gstmplexoutputstream.hh',
+  'gstmplexjob.hh',
+]
+
+doc_sources = []
+foreach s: mplex_sources + mplex_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'mplex': pathsep.join(doc_sources)
+}
+
 if mjpegtools_dep.found() and mplex2_dep.found()
   gstmplex2 = library('gstmplex',
-    'gstmplex.cc',
-    'gstmplexibitstream.cc',
-    'gstmplexjob.cc',
-    'gstmplexoutputstream.cc',
+    mplex_sources,
     cpp_args : gst_plugins_bad_args + ['-DGST_MJPEGTOOLS_API=20000'],
     link_args : noseh_link_args,
     include_directories : [configinc, libsinc],

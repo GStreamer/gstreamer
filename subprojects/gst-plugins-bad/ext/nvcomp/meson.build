@@ -4,6 +4,22 @@ nvcomp_sources = [
   'gstnvcompvideoenc.cpp',
   'plugin.cpp',
 ]
+
+nvcomp_headers = [
+  'gstnvcomp.h',
+  'gstnvcompvideoenc.h',
+  'gstnvcompvideodec.h',
+]
+
+doc_sources = []
+foreach s: nvcomp_sources + nvcomp_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'nvcomp': pathsep.join(doc_sources)
+}
+
 extra_args = ['-DGST_USE_UNSTABLE_API']
 
 nvcomp_opt = get_option('nvcomp')

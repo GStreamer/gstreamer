@@ -3,6 +3,23 @@ dsd_sources = [
   'plugin.c'
   ]
 
+dsd_headers = [
+  'gstdsdconvert.h',
+]
+
+doc_sources = []
+foreach s: dsd_sources + dsd_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'dsd': pathsep.join(doc_sources)
+}
+
+if get_option('dsd').disabled()
+  subdir_done()
+endif
+
 gstdsd = library('gstdsd',
   dsd_sources,
   c_args : gst_plugins_base_args,

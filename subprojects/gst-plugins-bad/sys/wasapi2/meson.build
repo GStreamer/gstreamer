@@ -8,11 +8,30 @@ wasapi2_sources = [
   'plugin.c',
 ]
 
+wasapi2_headers = [
+  'gstwasapi2ringbuffer.h',
+  'gstwasapi2device.h',
+  'gstwasapi2util.h',
+  'gstwasapi2src.h',
+  'gstwasapi2sink.h',
+  'gstwasapi2client.h',
+  'AsyncOperations.h',
+]
+
 mmdeviceapi_symbols = [
   'ActivateAudioInterfaceAsync',
   'DEVINTERFACE_AUDIO_RENDER',
   'DEVINTERFACE_AUDIO_CAPTURE',
 ]
+
+doc_sources = []
+foreach s: wasapi2_sources + wasapi2_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'wasapi2': pathsep.join(doc_sources)
+}
 
 wasapi2_option = get_option('wasapi2')
 if host_system != 'windows'

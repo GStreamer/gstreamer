@@ -6,6 +6,25 @@ audiomixer_sources = [
   'gstaudiomixerplugin.c'
 ]
 
+audiomixer_headers = [
+  'gstaudiomixer.h',
+  'gstaudiomixerelements.h',
+  'gstaudiointerleave.h',
+]
+
+doc_sources = []
+foreach s: audiomixer_sources + audiomixer_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'audiomixer': pathsep.join(doc_sources)
+}
+
+if get_option('audiomixer').disabled()
+  subdir_done()
+endif
+
 orcsrc = 'gstaudiomixerorc'
 if have_orcc
   orc_h = custom_target(orcsrc + '.h',
@@ -27,7 +46,7 @@ else
 endif
 
 gstaudiomixer = library('gstaudiomixer',
-  audiomixer_sources, orc_c, orc_h,
+  audiomixer_sources + [orc_c, orc_h],
   c_args : gst_plugins_base_args,
   include_directories : [configinc],
   dependencies : [audio_dep, gst_base_dep, orc_dep],

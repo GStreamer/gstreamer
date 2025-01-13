@@ -5,6 +5,25 @@ segment_sources = [
   'plugin.c',
 ]
 
+segment_headers = [
+  'gstsegmentclip.h',
+  'gstvideosegmentclip.h',
+  'gstaudiosegmentclip.h',
+]
+
+doc_sources = []
+foreach s: segment_sources + segment_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'segmentclip': pathsep.join(doc_sources)
+}
+
+if get_option('segmentclip').disabled()
+  subdir_done()
+endif
+
 gstsegmentclip = library('gstsegmentclip',
   segment_sources,
   c_args : gst_plugins_bad_args,

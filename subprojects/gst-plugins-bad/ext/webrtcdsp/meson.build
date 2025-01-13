@@ -4,6 +4,19 @@ webrtc_sources = [
   'gstwebrtcdspplugin.cpp'
 ]
 
+webrtc_headers = [
+  'gstwebrtcechoprobe.h',
+  'gstwebrtcdsp.h',
+]
+doc_sources = []
+foreach s: webrtc_sources + webrtc_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'webrtcdsp': pathsep.join(doc_sources)
+}
+
 webrtc_dep = dependency('webrtc-audio-processing-1', version : ['>= 1.0'],
                         required : get_option('webrtcdsp'))
 
@@ -20,3 +33,4 @@ if webrtc_dep.found()
   )
   plugins += [gstwebrtcdsp]
 endif
+

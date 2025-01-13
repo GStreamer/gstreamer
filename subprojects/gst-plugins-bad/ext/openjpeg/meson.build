@@ -4,6 +4,21 @@ openjpeg_sources = [
   'gstopenjpegenc.c',
 ]
 
+openjpeg_headers = [
+  'gstopenjpegenc.h',
+  'gstopenjpeg.h',
+  'gstopenjpegdec.h',
+]
+
+doc_sources = []
+foreach s: openjpeg_sources + openjpeg_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'openjpeg': pathsep.join(doc_sources)
+}
+
 openjpeg_cargs = []
 
 openjpeg_dep = dependency('libopenjp2', version : '>=2.2',

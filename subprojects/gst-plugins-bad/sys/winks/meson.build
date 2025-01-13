@@ -7,6 +7,24 @@ winks_sources = [
   'ksvideohelpers.c',
 ]
 
+winks_headers = [
+  'gstksvideodevice.h',
+  'ksvideohelpers.h',
+  'ksdeviceprovider.h',
+  'kshelpers.h',
+  'gstksvideosrc.h',
+  'gstksclock.h',
+]
+
+doc_sources = []
+foreach s: winks_sources + winks_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'winks': pathsep.join(doc_sources)
+}
+
 winks_option = get_option('winks')
 if host_system == 'windows' and not winks_option.disabled()
   # FIXME: Add a way to skip this library when these deps are not found. Not

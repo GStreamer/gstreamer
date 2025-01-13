@@ -6,6 +6,22 @@ shm_sources = [
   'gstshmsink.c',
 ]
 
+shm_headers = [
+  'gstshmsink.h',
+  'shmpipe.h',
+  'gstshmsrc.h',
+  'shmalloc.h',
+]
+
+doc_sources = []
+foreach s: shm_sources + shm_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'shm': pathsep.join(doc_sources)
+}
+
 shm_deps = []
 shm_enabled = false
 if get_option('shm').disabled()

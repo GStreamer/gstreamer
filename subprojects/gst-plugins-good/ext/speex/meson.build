@@ -5,6 +5,21 @@ speex_sources = [
   'gstspeexenc.c',
 ]
 
+speex_headers = [
+  'gstspeexenc.h',
+  'gstspeexdec.h',
+  'gstspeexelements.h',
+]
+
+doc_sources = []
+foreach s: speex_sources + speex_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'speex': pathsep.join(doc_sources)
+}
+
 speex_dep = dependency('speex', version : '>=1.1.6', required : get_option('speex'))
 windows_args = []
 if host_system == 'windows'

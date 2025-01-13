@@ -312,6 +312,12 @@ pkgconfig_subdirs = ['gstreamer-1.0']
 configinc = include_directories('.')
 gst_libraries = []
 
+if host_system == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
+endif
+
 subdir('ges')
 subdir('plugins')
 subdir('tools')

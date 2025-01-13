@@ -89,24 +89,28 @@ foreach f: []
     excludes += [join_paths(meson.current_source_dir(), root_rel, '..', f)]
 endforeach
 
-libs_doc = []
-plugins_doc = []
-list_plugin_res = run_command(python3, '-c',
-'''
-import sys
-import json
+doc_source_file = configure_file(output: 'doc_sources.json', configuration: plugin_sources, output_format: 'json')
 
-with open("@0@") as f:
-        print(':'.join(json.load(f).keys()), end='')
-'''.format(plugins_cache),
-  check: true)
+plugin_libraries = {}
+
+foreach plugin: plugins
+  if plugin.name().startswith('gst')
+    plugin_name = plugin.name().substring(3)
+  else
+    plugin_name = plugin.name()
+  endif
+
+  plugin_libraries += {
+    plugin_name: plugin.full_path()
+  }
+endforeach
+
+doc_plugin_libs_file = configure_file(output: 'doc_plugin_libs.json', configuration: plugin_libraries, output_format: 'json')
+
 cdir = meson.current_source_dir()
-if host_machine.system() == 'windows'
-  pathsep = ';'
-else
-  pathsep = ':'
-endif
-gst_plugins_doc = run_command(
+plugin_hotdoc_configs = custom_target(
+  'build-hotdoc-configs',
+  command: [
     plugins_cache_generator,
     'hotdoc-config',
     '--builddir', meson.current_build_dir(),
@@ -114,11 +118,12 @@ gst_plugins_doc = run_command(
     '--sitemap', cdir / 'sitemap.txt',
     '--index', cdir / 'index.md',
     '--gst_index', cdir / 'index.md',
-    '--gst_c_sources',
-        cdir / root_rel / 'sys/*/*.[ch]',
-        cdir / root_rel / 'ext/*/*.[ch]',
-        cdir / root_rel / 'gst/*/*.[ch]',
     '--gst_c_source_filters', excludes,
-    '--gst_cache_file', plugins_cache,
-    check: true,
-).stdout().split(pathsep)
+    '--gst_cache_file', '@INPUT@',
+    '--output', '@OUTPUT@',
+    '--gst_c_source_file', doc_source_file,
+    '--gst_plugin_libraries_file', doc_plugin_libs_file,
+  ],
+  input: plugins_cache,
+  output: 'hotdoc-configs.json',
+)

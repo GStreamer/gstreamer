@@ -1,4 +1,4 @@
-dash_sources = [
+adaptive_sources = [
   'dash/gstdashdemux.c',
   'dash/gstmpdnode.c',
   'dash/gstmpdrootnode.c',
@@ -28,16 +28,10 @@ dash_sources = [
   'dash/gstxmlhelper.c',
   'dash/gstmpdhelper.c',
   'dash/gstmpdparser.c',
-  'dash/gstmpdclient.c'
-]
-
-smoothstreaming_sources = [
+  'dash/gstmpdclient.c',
   'mss/gstmssdemux.c',
   'mss/gstmssmanifest.c',
   'mss/gstmssfragmentparser.c',
-]
-
-plugin_sources = [
   'plugin.c',
   'gstisoff.c',
   'gstadaptivedemux.c',
@@ -50,6 +44,67 @@ plugin_sources = [
   'downloadrequest.c',
   '../soup/gstsouploader.c'
 ]
+
+adaptive_headers = [
+  'downloadhelper.h',
+  'downloadrequest.h',
+  'gstadaptivedemuxelements.h',
+  'gstadaptivedemux.h',
+  'gstadaptivedemux-private.h',
+  'gstadaptivedemux-stream.h',
+  'gstadaptivedemux-types.h',
+  'gstadaptivedemuxutils.h',
+  'gstisoff.h',
+  'dash/gstdash_debug.h',
+  'dash/gstdashdemux.h',
+  'dash/gstmpdadaptationsetnode.h',
+  'dash/gstmpdbaseurlnode.h',
+  'dash/gstmpdclient.h',
+  'dash/gstmpdcontentcomponentnode.h',
+  'dash/gstmpddescriptortypenode.h',
+  'dash/gstmpdhelper.h',
+  'dash/gstmpdlocationnode.h',
+  'dash/gstmpdmetricsnode.h',
+  'dash/gstmpdmetricsrangenode.h',
+  'dash/gstmpdmultsegmentbasenode.h',
+  'dash/gstmpdnode.h',
+  'dash/gstmpdparser.h',
+  'dash/gstmpdperiodnode.h',
+  'dash/gstmpd-prelude.h',
+  'dash/gstmpdprograminformationnode.h',
+  'dash/gstmpdreportingnode.h',
+  'dash/gstmpdrepresentationbasenode.h',
+  'dash/gstmpdrepresentationnode.h',
+  'dash/gstmpdrootnode.h',
+  'dash/gstmpdsegmentbasenode.h',
+  'dash/gstmpdsegmentlistnode.h',
+  'dash/gstmpdsegmenttemplatenode.h',
+  'dash/gstmpdsegmenttimelinenode.h',
+  'dash/gstmpdsegmenturlnode.h',
+  'dash/gstmpdsnode.h',
+  'dash/gstmpdsubrepresentationnode.h',
+  'dash/gstmpdsubsetnode.h',
+  'dash/gstmpdurltypenode.h',
+  'dash/gstmpdutctimingnode.h',
+  'dash/gstxmlhelper.h',
+  'mss/gstmssdemux.h',
+  'mss/gstmssfragmentparser.h',
+  'mss/gstmssmanifest.h',
+  'mss/gstmss-prelude.h',
+]
+
+subdir('hls')
+
+adaptive_sources += hls_sources
+adaptive_headers += hls_headers
+doc_sources = []
+foreach s: adaptive_sources + adaptive_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'adaptivedemux2': pathsep.join(doc_sources)
+}
 
 # Used for unit tests, so need to be defined even if we skip the subdir
 hls_dep = dependency('', required : false)
@@ -76,18 +131,12 @@ if not adaptive_xml2_dep.found()
   subdir_done()
 endif
 
-subdir('hls')
-
-plugin_sources += dash_sources
-plugin_sources += smoothstreaming_sources
-plugin_sources += hls_sources
-
 libdl = cc.find_library('dl', required: false)
 soup_loader_args = ['-DBUILDING_ADAPTIVEDEMUX2']
 
 # Shared plugin doesn't link to libsoup but dlopen()s it at runtime
 adaptive_kwargs = {
-  'sources': plugin_sources,
+  'sources': adaptive_sources,
   'include_directories': [configinc, libsinc],
   'install': true,
   'install_dir': plugins_install_dir,

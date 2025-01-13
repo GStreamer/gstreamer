@@ -4,6 +4,20 @@ sbc_sources = [
   'gstsbcenc.c',
 ]
 
+sbc_headers = [
+  'gstsbcdec.h',
+  'gstsbcenc.h',
+]
+
+doc_sources = []
+foreach s: sbc_sources + sbc_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'sbc': pathsep.join(doc_sources)
+}
+
 sbc_dep = dependency('sbc', version : '>= 1.0', required : get_option('sbc'))
 
 if sbc_dep.found()

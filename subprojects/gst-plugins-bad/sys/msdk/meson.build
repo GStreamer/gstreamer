@@ -23,6 +23,72 @@ msdk_sources = [
   'msdk.c',
 ]
 
+msdk_headers = [
+  'gstmsdkallocator.h',
+  'gstmsdkcaps.h',
+  'gstmsdkcontext.h',
+  'gstmsdkav1dec.h',
+  'gstmsdkvp8dec.h',
+  'msdk_libva.h',
+  'gstmsdkvp9enc.h',
+  'gstmsdkh264enc.h',
+  'gstmsdkav1enc.h',
+  'gstmsdkvp9dec.h',
+  'gstmsdkmjpegdec.h',
+  'gstmsdkallocator_libva.h',
+  'gstmsdkdec.h',
+  'gstmsdkenc.h',
+  'gstmsdkmpeg2dec.h',
+  'gstmsdkh265enc.h',
+  'gstmsdkvpputil.h',
+  'msdk.h',
+  'gstmsdkdecproputil.h',
+  'gstmsdkh265dec.h',
+  'gstmsdkcontextutil.h',
+  'gstmsdkvc1dec.h',
+  'gstmsdkmpeg2enc.h',
+  'msdk-enums.h',
+  'gstmsdkmjpegenc.h',
+  'gstmsdkh264dec.h',
+  'gstmsdkvpp.h',
+]
+
+windows_sources = [
+    'msdk_d3d.c',
+    'gstmsdkallocator_d3d.c',
+]
+
+non_windows_sources = [
+  'msdk_libva.c',
+  'gstmsdkallocator_libva.c',
+]
+
+vp9dec_sources = [
+  'gstmsdkvp9dec.c',
+]
+
+vp9enc_sources = [
+  'gstmsdkvp9enc.c',
+]
+
+av1dec_sources = [
+  'gstmsdkav1dec.c',
+]
+
+av1enc_sources = [
+  'gstmsdkav1enc.c',
+]
+
+doc_sources = []
+foreach s: msdk_sources + windows_sources + non_windows_sources + vp9dec_sources + vp9enc_sources + av1dec_sources + av1enc_sources + msdk_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'msdk': pathsep.join(doc_sources)
+}
+have_msdk = true
+
 have_msdk = false
 msdk_dep = []
 use_msdk = false
@@ -42,7 +108,7 @@ if msdk_option.disabled()
 endif
 
 if host_machine.system() == 'windows'
-  msdk_sources += ['msdk_d3d.c', 'gstmsdkallocator_d3d.c' ]
+  msdk_sources += windows_sources
   if gstd3d11_dep.found()
     extra_args += ['-DCOBJMACROS']
   else
@@ -59,7 +125,7 @@ else
     endif
     subdir_done()
   endif
-  msdk_sources += ['msdk_libva.c', 'gstmsdkallocator_libva.c']
+  msdk_sources += non_windows_sources
 endif
 
 mfx_api = get_option('mfx_api')
@@ -122,7 +188,7 @@ elif cxx.has_header('mfx/mfxdefs.h', args: '-I' + mfx_incdir)
 endif
 
 if use_onevpl or cxx.has_header('mfxvp9.h', args: '-I' + mfx_incdir)
-  msdk_sources += [ 'gstmsdkvp9dec.c' ]
+  msdk_sources += vp9dec_sources
   cdata.set('USE_MSDK_VP9_DEC', 1)
 endif
 
@@ -142,7 +208,7 @@ have_mfx_ver126 = cc.compiles(mfx_ver126_check_code,
                 include_directories : [configinc, mfx_inc])
 
 if have_mfx_ver126
-  msdk_sources += [ 'gstmsdkvp9enc.c' ]
+  msdk_sources += vp9enc_sources
   cdata.set('USE_MSDK_VP9_ENC', 1)
 endif
 
@@ -157,7 +223,7 @@ have_mfx_ver134 = cc.compiles(mfx_ver134_check_code,
                 include_directories : [configinc, mfx_inc])
 
 if have_mfx_ver134
-  msdk_sources += [ 'gstmsdkav1dec.c' ]
+  msdk_sources += av1dec_sources
   cdata.set('USE_MSDK_AV1_DEC', 1)
 endif
 
@@ -172,7 +238,7 @@ have_mfx_ver205 = cc.compiles(mfx_ver205_check_code,
                 include_directories: [configinc, mfx_inc])
 
 if use_onevpl and have_mfx_ver205
-  msdk_sources += [ 'gstmsdkav1enc.c' ]
+  msdk_sources += av1enc_sources
   cdata.set10('USE_MSDK_AV1_ENC', 1)
 endif
 
@@ -208,5 +274,4 @@ if msdk_deps_found
     install_dir : plugins_install_dir,
   )
   plugins += [gstmsdktag]
-  have_msdk = true
 endif

@@ -1,5 +1,24 @@
 openexr_dep = dependency('OpenEXR', modules: ['OpenEXR::IlmImf'], required: get_option('openexr'))
 
+openexr_sources = [
+  'gstopenexr.c',
+  'gstopenexrdec.cpp',
+]
+
+openexr_headers = [
+  'gstopenexr.h',
+  'gstopenexrdec.h',
+]
+
+doc_sources = []
+foreach s: openexr_sources + openexr_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'openexr': pathsep.join(doc_sources)
+}
+
 if openexr_dep.found()
   openexr_override_options = []
   # Older versions of openexr fail to build with -Werror when using GCC >= 9.2
@@ -22,8 +41,7 @@ if openexr_dep.found()
   endif
 
   gstopenexr = library('gstopenexr',
-    'gstopenexr.c',
-    'gstopenexrdec.cpp',
+    openexr_sources,
     c_args: gst_plugins_bad_args,
     cpp_args: gst_plugins_bad_args,
     link_args: noseh_link_args,

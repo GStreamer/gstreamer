@@ -9,6 +9,26 @@ hls_sources = [
   'm3u8.c',
 ]
 
+hls_headers = [
+  'gstm3u8playlist.h',
+  'm3u8.h',
+  'gsthlsdemux.h',
+  'gsthlssink.h',
+  'gsthlselements.h',
+  'gsthlssink2.h',
+]
+
+doc_sources = []
+foreach s: hls_sources + hls_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'hls': pathsep.join(doc_sources)
+}
+
+hls_dep = declare_dependency(include_directories : include_directories('.'))
+
 hls_cargs = ['-DGST_USE_UNSTABLE_API']
 
 hls_crypto = get_option('hls-crypto')
@@ -64,4 +84,3 @@ gsthls = library('gsthls',
   install_dir : plugins_install_dir,
 )
 plugins += [gsthls]
-hls_dep = declare_dependency(include_directories : include_directories('.'))

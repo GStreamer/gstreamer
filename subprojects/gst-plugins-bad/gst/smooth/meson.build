@@ -2,6 +2,23 @@ smooth_sources = [
   'gstsmooth.c',
 ]
 
+smooth_headers = [
+  'gstsmooth.h',
+]
+
+doc_sources = []
+foreach s: smooth_sources + smooth_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'smooth': pathsep.join(doc_sources)
+}
+
+if get_option('smooth').disabled()
+  subdir_done()
+endif
+
 gstsmooth = library('gstsmooth',
   smooth_sources,
   c_args : gst_plugins_bad_args,

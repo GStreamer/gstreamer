@@ -4,6 +4,23 @@ app_sources = [
   'gstappsrc.c',
 ]
 
+app_headers = [
+  'gstappelements.h',
+]
+
+doc_sources = []
+foreach s: app_sources + app_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'app': pathsep.join(doc_sources)
+}
+
+if get_option('app').disabled()
+  subdir_done()
+endif
+
 gstapp_plugin = library('gstapp',
   app_sources,
   c_args: gst_plugins_base_args,

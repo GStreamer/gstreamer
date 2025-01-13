@@ -13,6 +13,29 @@ dshow_sources = [
   'plugin.cpp',
 ]
 
+dshow_headers = [
+  'gstdshowaudiodec.h',
+  'gstdshowaudiosrc.h',
+  'gstdshowutil.h',
+  'dshowdeviceprovider.h',
+  'gstdshowvideodec.h',
+  'dshowvideofakesrc.h',
+  'gstdshow.h',
+  'gstdshowfakesrc.h',
+  'gstdshowfakesink.h',
+  'dshowvideosink.h',
+  'gstdshowvideosrc.h',
+]
+
+doc_sources = []
+foreach s: dshow_sources + dshow_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'directshow': pathsep.join(doc_sources)
+}
+
 dshow_option = get_option('directshow')
 
 if cxx.get_id() != 'msvc' or dshow_option.disabled()

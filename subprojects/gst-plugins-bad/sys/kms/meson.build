@@ -5,6 +5,24 @@ kmssink_sources = [
   'gstkmssink.c',
   'gstkmsutils.c',
 ]
+
+kmssink_headers = [
+  'gstkmsallocator.h',
+  'gstkmsutils.h',
+  'gstkmsedid.h',
+  'gstkmsbufferpool.h',
+  'gstkmssink.h',
+]
+
+doc_sources = []
+foreach s: kmssink_sources + kmssink_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'kms': pathsep.join(doc_sources)
+}
+
 extra_deps = []
 
 if host_system != 'linux'

@@ -7,6 +7,26 @@ eq_sources = [
   'gstiirequalizerplugin.c',
 ]
 
+eq_headers = [
+  'gstiirequalizernbands.h',
+  'gstiirequalizer3bands.h',
+  'gstiirequalizer.h',
+  'gstiirequalizer10bands.h',
+]
+
+doc_sources = []
+foreach s: eq_sources + eq_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'equalizer': pathsep.join(doc_sources)
+}
+
+if get_option('equalizer').disabled()
+  subdir_done()
+endif
+
 gstequalizer = library('gstequalizer',
   eq_sources,
   c_args : gst_plugins_good_args,

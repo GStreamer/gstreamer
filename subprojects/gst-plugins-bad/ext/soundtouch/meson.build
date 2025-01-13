@@ -4,6 +4,20 @@ soundtouch_sources = [
   'gstbpmdetect.cc',
 ]
 
+soundtouch_headers = [
+  'gstbpmdetect.hh',
+  'gstpitch.hh',
+]
+
+doc_sources = []
+foreach s: soundtouch_sources + soundtouch_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'soundtouch': pathsep.join(doc_sources)
+}
+
 soundtouch_cargs = ['-DHAVE_SOUNDTOUCH']
 if get_option('soundtouch').disabled()
   subdir_done()

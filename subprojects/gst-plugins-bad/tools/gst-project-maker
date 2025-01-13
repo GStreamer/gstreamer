@@ -164,14 +164,14 @@ cat >$basedir/plugins/meson.build <<EOF
 lib_args = common_args + []
 
 # sources used to compile this plug-in
-plugin_sources = [
+sources = [
   '${gstreplace}plugin.c',
   '${gstreplace}.c',
   '${gstreplace}.h'
 ]
 
 shlib = shared_library('${gstreplace}',
-  plugin_sources,
+  sources,
   c_args : lib_args,
   include_directories: [configinc],
   dependencies : plugin_deps,

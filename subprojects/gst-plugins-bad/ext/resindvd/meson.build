@@ -15,6 +15,27 @@ resindvd_sources = [
   'rsnparsetter.c',
 ]
 
+resindvd_headers = [
+  'gstpesfilter.h',
+  'rsnparsetter.h',
+  'resindvdsrc.h',
+  'gstmpegdemux.h',
+  'gstmpegdesc.h',
+  'rsninputselector.h',
+  'resindvdbin.h',
+  'rsndec.h',
+  'gstmpegdefs.h',
+]
+
+doc_sources = []
+foreach s: resindvd_sources + resindvd_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'resindvd': pathsep.join(doc_sources)
+}
+
 dvdnav_dep = dependency('dvdnav', version : '>= 4.1.2', required : resindvd_opt)
 dvdread_dep = dependency('dvdread', version : '>= 4.1.2', required : resindvd_opt)
 

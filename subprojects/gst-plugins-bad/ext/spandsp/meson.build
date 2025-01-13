@@ -8,6 +8,21 @@ spandsp_sources = [
   'gsttonegeneratesrc.h',
 ]
 
+spandsp_headers = [
+  'gstspanplc.h',
+  'gstdtmfdetect.h',
+  'gsttonegeneratesrc.h',
+]
+
+doc_sources = []
+foreach s: spandsp_sources + spandsp_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'spandsp': pathsep.join(doc_sources)
+}
+
 spandsp_dep = dependency('spandsp', version : '>= 0.0.6', required : get_option('spandsp'))
 
 if spandsp_dep.found()

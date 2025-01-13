@@ -4,6 +4,21 @@ d3dvideosink_sources = [
   'gstd3d9overlay.c'
 ]
 
+d3dvideosink_headers = [
+  'gstd3d9overlay.h',
+  'd3dvideosink.h',
+  'd3dhelpers.h',
+]
+
+doc_sources = []
+foreach s: d3dvideosink_sources + d3dvideosink_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'd3d': pathsep.join(doc_sources)
+}
+
 if host_system != 'windows' or get_option('d3dvideosink').disabled()
   subdir_done()
 endif

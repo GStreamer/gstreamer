@@ -20,11 +20,44 @@ androidmedia_sources = [
   'jni/gstamcsurfacetexture-jni.c',
 ]
 
+ndk_sources = [
+  'ndk/gstamc-codec-ndk.c',
+  'ndk/gstamc-format-ndk.c',
+]
+
+androidmedia_headers = [
+  'gstahcsrc.h',
+  'gstahssrc.h',
+  'gstamcaudiodec.h',
+  'gstamc-codec.h',
+  'gstamc-codeclist.h',
+  'gstamc-constants.h',
+  'gstamc-format.h',
+  'gstamc.h',
+  'gstamcsurfacetexture.h',
+  'gstamcvideodec.h',
+  'gstamcvideoenc.h',
+  'gst-android-graphics-imageformat.h',
+  'gst-android-hardware-camera.h',
+  'gst-android-hardware-sensor.h',
+  'gstjniutils.h',
+  'gstsensors.h',
+]
+
 androidmedia_java_sources = [
   'org/freedesktop/gstreamer/androidmedia/GstAhcCallback.java',
   'org/freedesktop/gstreamer/androidmedia/GstAhsCallback.java',
   'org/freedesktop/gstreamer/androidmedia/GstAmcOnFrameAvailableListener.java',
 ]
+
+doc_sources = []
+foreach s: androidmedia_sources + ndk_sources + androidmedia_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'androidmedia': pathsep.join(doc_sources)
+}
 
 amc_opt = get_option('androidmedia')
 amc_opt = amc_opt.require(gstgl_dep.found(),
@@ -51,10 +84,7 @@ extra_cargs = [
 # but use only type definations (and then rely on dlopen and dlsym), so this
 # doesn't affect compatibility with older Android versions.
 if cc.check_header('media/NdkMediaCodec.h')
-  androidmedia_sources += [
-    'ndk/gstamc-codec-ndk.c',
-    'ndk/gstamc-format-ndk.c',
-  ]
+  androidmedia_sources += ndk_sources
   extra_cargs += [ '-DHAVE_NDKMEDIA' ]
   extra_deps += [ cc.find_library('android', required : true) ]
 endif

@@ -19,6 +19,32 @@ playback_sources = [
   'gststreamsynchronizer.c'
 ]
 
+playback_headers = [
+  'gstplaysinkaudioconvert.h',
+  'gstplaybackelements.h',
+  'gstplaysinkvideoconvert.h',
+  'gstplaysink.h',
+  'gstrawcaps.h',
+  'gstplaybackutils.h',
+  'gstplay-enum.h',
+  'gststreamsynchronizer.h',
+  'gstplaysinkconvertbin.h',
+  'gstsubtitleoverlay.h',
+]
+
+doc_sources = []
+foreach s: playback_sources + playback_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'playback': pathsep.join(doc_sources)
+}
+
+if get_option('playback').disabled()
+  subdir_done()
+endif
+
 gstplayback = library('gstplayback',
   playback_sources,
   c_args : gst_plugins_base_args + ['-DCOLORSPACE="videoconvert"'],

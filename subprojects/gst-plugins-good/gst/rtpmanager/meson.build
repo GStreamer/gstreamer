@@ -28,6 +28,48 @@ rtpmanager_sources = [
   'gstrtputils.c'
 ]
 
+rtpmanager_headers = [
+  'gstrtprtxreceive.h',
+  'rtpsession.h',
+  'gstrtphdrext-repairedstreamid.h',
+  'gstrtprtxqueue.h',
+  'rtpsource.h',
+  'gstrtpptdemux.h',
+  'gstrtpmux.h',
+  'gstrtphdrext-mid.h',
+  'rtptwcc.h',
+  'gstrtprtxsend.h',
+  'gstrtphdrext-streamid.h',
+  'gstrtpst2022-1-fecenc.h',
+  'rtpjitterbuffer.h',
+  'rtpstats.h',
+  'gstrtpssrcdemux.h',
+  'gstrtpbin.h',
+  'gstrtphdrext-twcc.h',
+  'gstrtphdrext-clientaudiolevel.h',
+  'gstrtpfunnel.h',
+  'gstrtpjitterbuffer.h',
+  'rtptimerqueue.h',
+  'gstrtputils.h',
+  'gstrtpsession.h',
+  'gstrtphdrext-ntp.h',
+  'gstrtpst2022-1-fecdec.h',
+  'gstrtpdtmfmux.h',
+]
+
+doc_sources = []
+foreach s: rtpmanager_sources + rtpmanager_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'rtpmanager': pathsep.join(doc_sources)
+}
+
+if get_option('rtpmanager').disabled()
+  subdir_done()
+endif
+
 gstrtpmanager = library('gstrtpmanager',
   rtpmanager_sources,
   c_args : gst_plugins_good_args,

@@ -4,6 +4,24 @@ bayer_sources = [
   'gstrgb2bayer.c',
 ]
 
+bayer_headers = [
+  'gstbayerelements.h',
+  'gstrgb2bayer.h',
+]
+
+doc_sources = []
+foreach s: bayer_sources + bayer_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'bayer': pathsep.join(doc_sources)
+}
+
+if get_option('bayer').disabled()
+  subdir_done()
+endif
+
 orcsrc = 'gstbayerorc'
 if have_orcc
   orc_h = custom_target(orcsrc + '.h',

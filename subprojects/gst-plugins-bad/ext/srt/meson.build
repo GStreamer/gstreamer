@@ -6,6 +6,24 @@ srt_sources = [
   'gstsrtsink.c',
   'gstsrtsrc.c'
 ]
+
+srt_headers = [
+  'gstsrtelements.h',
+  'gstsrtsrc.h',
+  'gstsrtsink.h',
+  'gstsrtobject.h',
+  'gstsrt-enums.h',
+]
+
+doc_sources = []
+foreach s: srt_sources + srt_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'srt': pathsep.join(doc_sources)
+}
+
 srt_option = get_option('srt')
 if srt_option.disabled()
   srt_dep = dependency('', required : false)

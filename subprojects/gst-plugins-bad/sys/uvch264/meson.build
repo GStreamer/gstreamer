@@ -6,6 +6,22 @@ uvch264_sources = [
   'uvc_h264.c',
 ]
 
+uvch264_headers = [
+  'uvc_h264.h',
+  'gstuvch264_src.h',
+  'gstuvch264_mjpgdemux.h',
+  'gstuvch264deviceprovider.h',
+]
+
+doc_sources = []
+foreach s: uvch264_sources + uvch264_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'uvch264': pathsep.join(doc_sources)
+}
+
 libgudev_dep = dependency('gudev-1.0', required : get_option('uvch264'), allow_fallback: true)
 libusb_dep = dependency('libusb-1.0', required : get_option('uvch264'))
 has_uvcvideo_h = cc.has_header('linux/uvcvideo.h')

@@ -1,3 +1,31 @@
+aja_sources = [
+  'plugin.cpp',
+  'gstajacommon.cpp',
+  'gstajasink.cpp',
+  'gstajasinkcombiner.cpp',
+  'gstajasrc.cpp',
+  'gstajasrcdemux.cpp',
+  'gstajadeviceprovider.cpp',
+]
+
+aja_headers = [
+  'gstajacommon.h',
+  'gstajasinkcombiner.h',
+  'gstajasink.h',
+  'gstajasrcdemux.h',
+  'gstajadeviceprovider.h',
+  'gstajasrc.h',
+]
+
+doc_sources = []
+foreach s: aja_sources + aja_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'aja': pathsep.join(doc_sources)
+}
+
 aja_option = get_option('aja') \
     .require(host_system == 'linux',
              error_message: 'AJA plugin is currently only available on Linux')
@@ -102,14 +130,7 @@ if not found_ajantv2
 endif
 
 gstaja = library('gstaja',
-  ['plugin.cpp',
-   'gstajacommon.cpp',
-   'gstajasink.cpp',
-   'gstajasinkcombiner.cpp',
-   'gstajasrc.cpp',
-   'gstajasrcdemux.cpp',
-   'gstajadeviceprovider.cpp',
-  ],
+  aja_sources,
   override_options : ['cpp_std=c++11'],
   cpp_args : gst_plugins_bad_args + common_flags,
   include_directories : [configinc],

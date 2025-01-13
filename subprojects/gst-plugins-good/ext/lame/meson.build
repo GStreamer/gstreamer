@@ -1,3 +1,21 @@
+lame_sources = [
+  'gstlamemp3enc.c',
+  'plugin.c',
+]
+
+lame_headers = [
+  'gstlamemp3enc.h',
+]
+
+doc_sources = []
+foreach s: lame_sources + lame_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'lame': pathsep.join(doc_sources)
+}
+
 lame_dep = dependency('', required: false)
 lame_option = get_option('lame')
 
@@ -27,7 +45,7 @@ if not have_lame
 endif
 
 lame = library('gstlame',
-  ['gstlamemp3enc.c', 'plugin.c'],
+  lame_sources,
   c_args : gst_plugins_good_args + lame_extra_c_args,
   include_directories : [configinc, libsinc],
   dependencies : [gstaudio_dep, lame_dep],

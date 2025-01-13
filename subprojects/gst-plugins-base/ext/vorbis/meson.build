@@ -9,6 +9,16 @@ vorbis_sources = [
   'gstvorbiscommon.c',
 ]
 
+vorbis_headers = [
+  'gstvorbiscommon.h',
+  'gstvorbisdec.h',
+  'gstvorbisdeclib.h',
+  'gstvorbiselements.h',
+  'gstvorbisenc.h',
+  'gstvorbisparse.h',
+  'gstvorbistag.h',
+]
+
 vorbisidec_sources = [
   'gstivorbisdec.c',
   'gstvorbiselement.c',
@@ -16,6 +26,31 @@ vorbisidec_sources = [
   'gstvorbisdeclib.c',
   'gstvorbiscommon.c',
 ]
+
+vorbisidec_headers = [
+  'gstvorbiscommon.h',
+  'gstvorbisdec.h',
+  'gstvorbisdeclib.h',
+  'gstvorbiselements.h',
+]
+
+doc_sources = []
+foreach s: vorbis_sources + vorbis_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'vorbis': pathsep.join(doc_sources)
+}
+
+doc_sources = []
+foreach s: vorbisidec_sources + vorbisidec_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'ivorbisdec': pathsep.join(doc_sources)
+}
 
 vorbis_dep = dependency('vorbis', version : '>= 1.3.1', allow_fallback: true, required : get_option('vorbis'))
 vorbisenc_dep = dependency('vorbisenc', version : '>= 1.3.1', allow_fallback: true, required : get_option('vorbis'))

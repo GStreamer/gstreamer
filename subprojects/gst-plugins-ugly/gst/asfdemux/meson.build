@@ -8,6 +8,28 @@ asf_sources = [
   'gstrtspwms.c',
 ]
 
+asf_headers = [
+  'gstasfelements.h',
+  'gstasfdemux.h',
+  'asfheaders.h',
+  'gstrtpasfdepay.h',
+  'gstrtspwms.h',
+  'asfpacket.h',
+]
+
+doc_sources = []
+foreach s: asf_sources + asf_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'asf': pathsep.join(doc_sources)
+}
+
+if get_option('asfdemux').disabled()
+  subdir_done()
+endif
+
 gstasf = library('gstasf',
   asf_sources,
   c_args : ugly_args,

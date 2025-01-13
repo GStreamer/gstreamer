@@ -1,5 +1,18 @@
 bs2b_sources = [ 'gstbs2b.c', ]
 
+bs2b_headers = [
+  'gstbs2b.h',
+]
+
+doc_sources = []
+foreach s: bs2b_sources + bs2b_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'bs2b': pathsep.join(doc_sources)
+}
+
 bs2b_dep = dependency('libbs2b', version : '>=3.1.0', required : get_option('bs2b'))
 
 if bs2b_dep.found()

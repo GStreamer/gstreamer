@@ -8,6 +8,20 @@ x264_sources = [
   'gstencoderbitrateprofilemanager.c',
 ]
 
+x264_headers = [
+  'gstx264enc.h',
+  'gstencoderbitrateprofilemanager.h',
+]
+
+doc_sources = []
+foreach s: x264_sources + x264_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'x264': pathsep.join(doc_sources)
+}
+
 x264_dep = dependency('x264', version : '>=0.156', required : x264_opt,
                       fallback: ['x264', 'libx264_dep'])
 

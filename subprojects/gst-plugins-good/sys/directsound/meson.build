@@ -4,12 +4,26 @@ directsoundsink_sources = [
   'gstdirectsoundplugin.c',
 ]
 
+directsoundsink_headers = [
+  'gstdirectsounddevice.h',
+  'gstdirectsoundsink.h',
+]
+
 directsoundsink_device_flags = [
   '-DGstDirectSoundDeviceProvider=GstDirectSoundSinkDeviceProvider',
   '-DGstDirectSoundDeviceProviderClass=GstDirectSoundSinkDeviceProviderClass',
   '-DGstDirectSoundDevice=GstDirectSoundSinkDevice',
   '-DGstDirectSoundDeviceClass=GstDirectSoundSinkDeviceClass',
 ]
+
+doc_sources = []
+foreach s: directsoundsink_sources + directsoundsink_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'directsound': pathsep.join(doc_sources)
+}
 
 have_dsound = false
 dsound_option = get_option('directsound')

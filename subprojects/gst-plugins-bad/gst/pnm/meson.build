@@ -5,6 +5,25 @@ pnm_sources = [
   'gstpnmenc.c',
 ]
 
+pnm_headers = [
+  'gstpnmdec.h',
+  'gstpnmenc.h',
+  'gstpnmutils.h',
+]
+
+doc_sources = []
+foreach s: pnm_sources + pnm_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'pnm': pathsep.join(doc_sources)
+}
+
+if get_option('pnm').disabled()
+  subdir_done()
+endif
+
 gstpnm = library('gstpnm',
   pnm_sources,
   c_args : gst_plugins_bad_args,

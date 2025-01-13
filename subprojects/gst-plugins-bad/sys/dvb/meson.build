@@ -16,6 +16,32 @@ dvb_sources = [
   'parsechannels.c',
 ]
 
+dvb_headers = [
+  'camconditionalaccess.h',
+  'cam.h',
+  'camdevice.h',
+  'camapplication.h',
+  'dvbbasebin.h',
+  'gstdvbsrc.h',
+  'camutils.h',
+  'camsession.h',
+  'camswclient.h',
+  'gstdvbelements.h',
+  'parsechannels.h',
+  'camresourcemanager.h',
+  'camtransport.h',
+  'camapplicationinfo.h',
+]
+
+doc_sources = []
+foreach s: dvb_sources + dvb_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'dvb': pathsep.join(doc_sources)
+}
+
 if get_option('dvb').disabled()
   subdir_done()
 endif

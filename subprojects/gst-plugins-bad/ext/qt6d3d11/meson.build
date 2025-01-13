@@ -5,6 +5,21 @@ gstqt6d3d11_sources = [
   'plugin.cpp',
 ]
 
+gstqt6d3d11_headers = [
+  'gstqml6d3d11sink.h',
+  'gstqsg6d3d11node.h',
+  'gstqt6d3d11videoitem.h',
+]
+
+doc_sources = []
+foreach s: gstqt6d3d11_sources + gstqt6d3d11_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'qt6d3d11': pathsep.join(doc_sources)
+}
+
 moc_headers = [
   'gstqsg6d3d11node.h',
   'gstqt6d3d11videoitem.h'

@@ -27,6 +27,68 @@ d3d11_sources = [
   'plugin.cpp',
 ]
 
+d3d11_headers = [
+  'gstd3d11ipcsrc.h',
+  'gstd3d11window_dummy.h',
+  'gstd3d11videosink.h',
+  'gstd3d11compositor.h',
+  'gstd3d11ipcsink.h',
+  'gstd3d11ipcserver.h',
+  'gstd3d11vp8dec.h',
+  'gstd3d11download.h',
+  'gstd3d11screencapturesrc.h',
+  'gstd3d11av1dec.h',
+  'gstd3d11mpeg2dec.h',
+  'gstd3d11testsrc.h',
+  'gstd3d11window_swapchainpanel.h',
+  'gstd3d11upload.h',
+  'gstd3d11window_corewindow.h',
+  'gstd3d11pluginutils.h',
+  'gstd3d11deinterlace.h',
+  'gstd3d11screencapturedevice.h',
+  'gstd3d11dxgicapture.h',
+  'gstd3d11h265dec.h',
+  'gstd3d11winrtcapture.h',
+  'gstd3d11ipcclient.h',
+  'gstd3d11overlay.h',
+  'gstd3d11window_win32.h',
+  'gstd3d11screencapture.h',
+  'gstd3d11window.h',
+  'gstd3d11convert.h',
+  'gstd3d11ipc.h',
+  'gstd3d11overlaycompositor.h',
+  'gstd3d11vp9dec.h',
+  'gstd3d11decoder.h',
+  'gstd3d11basefilter.h',
+  'gstd3d11h264dec.h',
+]
+
+winapi_app_sources = [
+  'gstd3d11window_corewindow.cpp',
+  'gstd3d11window_swapchainpanel.cpp',
+]
+
+winapi_desktop_sources = [
+  'gstd3d11dxgicapture.cpp',
+  'gstd3d11screencapture.cpp',
+  'gstd3d11screencapturedevice.cpp',
+  'gstd3d11screencapturesrc.cpp',
+  'gstd3d11window_win32.cpp',
+]
+
+winrtcapture_sources = [
+  'gstd3d11winrtcapture.cpp'
+]
+
+doc_sources = []
+foreach s: d3d11_sources + winapi_app_sources + winapi_desktop_sources + winrtcapture_sources + d3d11_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'd3d11': pathsep.join(doc_sources)
+}
+
 extra_c_args = ['-DCOBJMACROS']
 extra_args = ['-DGST_USE_UNSTABLE_API']
 extra_dep = []
@@ -88,8 +150,7 @@ endif
 # if build target is Windows 10 and WINAPI_PARTITION_APP is allowed,
 # we can build UWP only modules as well
 if d3d11_winapi_app
-  d3d11_sources += ['gstd3d11window_corewindow.cpp',
-                    'gstd3d11window_swapchainpanel.cpp']
+  d3d11_sources += winapi_app_sources
   extra_dep += [runtimeobject_lib]
   if cc.get_id() == 'msvc' and get_option('b_sanitize') == 'address'
     extra_args += ['/bigobj']
@@ -97,11 +158,7 @@ if d3d11_winapi_app
 endif
 
 if d3d11_winapi_desktop
-  d3d11_sources += ['gstd3d11dxgicapture.cpp',
-                    'gstd3d11screencapture.cpp',
-                    'gstd3d11screencapturedevice.cpp',
-                    'gstd3d11screencapturesrc.cpp',
-                    'gstd3d11window_win32.cpp']
+  d3d11_sources += winapi_desktop_sources
 
   # multimedia clock is desktop only API
   if winmm_lib.found() and cc.has_header('mmsystem.h')
@@ -110,7 +167,7 @@ if d3d11_winapi_desktop
   endif
 
   if have_wgc and dwmapi_lib.found()
-    d3d11_sources += ['gstd3d11winrtcapture.cpp']
+    d3d11_sources += winrtcapture_sources
     extra_args += ['-DHAVE_WINRT_CAPTURE']
     extra_dep += [dwmapi_lib]
   endif

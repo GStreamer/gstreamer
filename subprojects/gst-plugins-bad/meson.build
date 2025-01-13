@@ -37,6 +37,7 @@ osxversion = curversion + 1
 plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
 static_build = get_option('default_library') == 'static'
 plugins = []
+plugin_sources = {}
 gst_libraries = []
 
 cc = meson.get_compiler('c')
@@ -576,6 +577,12 @@ pkgconfig.generate(
 )
 
 gpl_allowed = get_option('gpl').allowed()
+
+if host_machine.system() == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
+endif
 
 subdir('gst-libs')
 subdir('gst')

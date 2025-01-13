@@ -5,6 +5,21 @@ sctp_sources = [
   'sctpassociation.c'
 ]
 
+sctp_headers = [
+  'gstsctpdec.h',
+  'gstsctpenc.h',
+  'sctpassociation.h',
+]
+
+doc_sources = []
+foreach s: sctp_sources + sctp_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'sctp': pathsep.join(doc_sources)
+}
+
 sctp_option = get_option('sctp').enable_if(get_option('webrtc').enabled(), error_message: 'webrtc option is enabled')
 if sctp_option.disabled()
   subdir_done()

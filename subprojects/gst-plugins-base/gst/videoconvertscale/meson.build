@@ -5,6 +5,25 @@ videoconvertscale_sources = [
   'gstvideoscale.c',
 ]
 
+videoconvertscale_headers = [
+  'gstvideoconvert.h',
+  'gstvideoscale.h',
+  'gstvideoconvertscale.h',
+]
+
+doc_sources = []
+foreach s: videoconvertscale_sources + videoconvertscale_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'videoconvertscale': pathsep.join(doc_sources)
+}
+
+if get_option('videoconvertscale').disabled()
+  subdir_done()
+endif
+
 gstvideoconvertscale = library('gstvideoconvertscale',
   videoconvertscale_sources,
   c_args : gst_plugins_base_args,

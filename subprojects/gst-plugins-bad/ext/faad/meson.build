@@ -1,3 +1,20 @@
+faad_sources = [
+  'gstfaad.c',
+]
+
+faad_headers = [
+  'gstfaad.h',
+]
+
+doc_sources = []
+foreach s: faad_sources + faad_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'faad': pathsep.join(doc_sources)
+}
+
 faad_opt = get_option('faad').require(gpl_allowed, error_message: '''
   Plugin faad explicitly required via options but GPL-licensed plugins disabled via options.
   Pass option -Dgpl=enabled to Meson to allow GPL-licensed plugins to be built.
@@ -20,7 +37,7 @@ faad_dep = cc.find_library('faad', required : faad_opt)
 
 if faad_dep.found() and have_faad_2_7
   gstfaad = library('gstfaad',
-    'gstfaad.c',
+    faad_sources,
     c_args : gst_plugins_bad_args + [ '-DFAAD2_MINOR_VERSION=7', '-DFAAD_IS_NEAAC' ],
     link_args : noseh_link_args,
     include_directories : [configinc],

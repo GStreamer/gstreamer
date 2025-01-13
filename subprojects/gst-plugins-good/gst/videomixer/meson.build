@@ -3,6 +3,25 @@ vmixer_sources = [
   'videomixer2.c',
 ]
 
+vmixer_headers = [
+  'videomixer2pad.h',
+  'blend.h',
+  'videomixer2.h',
+]
+
+doc_sources = []
+foreach s: vmixer_sources + vmixer_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'videomixer': pathsep.join(doc_sources)
+}
+
+if get_option('videomixer').disabled()
+  subdir_done()
+endif
+
 orcsrc = 'videomixerorc'
 if have_orcc
   orc_h = custom_target(orcsrc + '.h',

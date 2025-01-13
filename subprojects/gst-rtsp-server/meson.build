@@ -195,9 +195,16 @@ if get_option('default_library') == 'shared'
 endif
 
 plugins = []
+plugin_sources = {}
 pkgconfig_subdirs = ['gstreamer-1.0']
 static_build = get_option('default_library') == 'static'
 gst_libraries = []
+
+if host_machine.system() == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
+endif
 
 subdir('gst')
 

@@ -1,6 +1,23 @@
 gstpbtypes_sources = [
   'gstpbtypes.c'
-  ]
+]
+
+gstpbtypes_headers = [
+  'gstpbtypes.h',
+]
+
+doc_sources = []
+foreach s: gstpbtypes_sources + gstpbtypes_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'pbtypes': pathsep.join(doc_sources)
+}
+
+if get_option('pbtypes').disabled()
+  subdir_done()
+endif
 
 gstpbtypes = library('gstpbtypes',
   gstpbtypes_sources,

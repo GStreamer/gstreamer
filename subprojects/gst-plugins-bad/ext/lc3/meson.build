@@ -4,6 +4,21 @@ lc3_sources = [
   'gstlc3enc.c',
 ]
 
+lc3_headers = [
+  'gstlc3dec.h',
+  'gstlc3common.h',
+  'gstlc3enc.h',
+]
+
+doc_sources = []
+foreach s: lc3_sources + lc3_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'lc3': pathsep.join(doc_sources)
+}
+
 lc3_dep = dependency('lc3', required:get_option ('lc3'))
 
 if lc3_dep.found()

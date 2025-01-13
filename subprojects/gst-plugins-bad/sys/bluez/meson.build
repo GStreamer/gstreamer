@@ -8,6 +8,25 @@ bluez_sources = [
   'gstavrcputil.c',
 ]
 
+bluez_headers = [
+  'gstbluezelements.h',
+  'a2dp-codecs.h',
+  'gstavrcputil.h',
+  'gstavdtpsrc.h',
+  'gsta2dpsink.h',
+  'gstavdtputil.h',
+  'gstavdtpsink.h',
+]
+
+doc_sources = []
+foreach s: bluez_sources + bluez_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'bluez': pathsep.join(doc_sources)
+}
+
 if host_system == 'windows'
   subdir_done()
 endif

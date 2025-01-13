@@ -1,5 +1,27 @@
 fdkaac_dep = dependency('fdk-aac', allow_fallback: true, required : get_option('fdkaac'), include_type: 'system')
 
+fdkaac_sources = [
+  'gstfdkaac.c',
+  'gstfdkaacenc.c',
+  'gstfdkaacdec.c',
+  'gstfdkaacplugin.c',
+]
+
+fdkaac_headers = [
+  'gstfdkaacdec.h',
+  'gstfdkaacenc.h',
+  'gstfdkaac.h',
+]
+
+doc_sources = []
+foreach s: fdkaac_sources + fdkaac_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'fdkaac': pathsep.join(doc_sources)
+}
+
 if fdkaac_dep.found()
   fdkaac_defines = []
 
@@ -14,7 +36,7 @@ if fdkaac_dep.found()
   endif
 
   gstfdkaac = library('gstfdkaac',
-    ['gstfdkaac.c', 'gstfdkaacenc.c', 'gstfdkaacdec.c','gstfdkaacplugin.c'],
+    fdkaac_sources,
     c_args : gst_plugins_bad_args + fdkaac_defines,
     include_directories : [configinc],
     dependencies : [gstaudio_dep, gstpbutils_dep, fdkaac_dep],

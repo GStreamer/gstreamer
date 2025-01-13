@@ -14,6 +14,30 @@ v4l2codecs_sources = [
   'gstv4l2codecalphadecodebin.c',
 ]
 
+v4l2codecs_headers = [
+  'gstv4l2format.h',
+  'gstv4l2decoder.h',
+  'gstv4l2codecvp9dec.h',
+  'gstv4l2codecvp8dec.h',
+  'gstv4l2codech265dec.h',
+  'gstv4l2codech264dec.h',
+  'gstv4l2codecalphadecodebin.h',
+  'gstv4l2codecallocator.h',
+  'gstv4l2codecav1dec.h',
+  'gstv4l2codecmpeg2dec.h',
+  'gstv4l2codecdevice.h',
+  'gstv4l2codecpool.h',
+]
+
+doc_sources = []
+foreach s: v4l2codecs_sources + v4l2codecs_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'v4l2codecs': pathsep.join(doc_sources)
+}
+
 libgudev_dep = dependency('gudev-1.0', required: get_option('v4l2codecs'), allow_fallback: true)
 
 if get_option('v4l2codecs').disabled()

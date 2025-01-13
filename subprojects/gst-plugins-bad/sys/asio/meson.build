@@ -8,6 +8,25 @@ asio_sources = [
   'plugin.c',
 ]
 
+asio_headers = [
+  'gstasioringbuffer.h',
+  'asio.h',
+  'gstasiodeviceprovider.h',
+  'gstasiosink.h',
+  'gstasioobject.h',
+  'gstasiosrc.h',
+  'gstasioutils.h',
+]
+
+doc_sources = []
+foreach s: asio_sources + asio_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'asio': pathsep.join(doc_sources)
+}
+
 asio_option = get_option('asio')
 if asio_option.disabled() or host_system != 'windows'
   subdir_done()

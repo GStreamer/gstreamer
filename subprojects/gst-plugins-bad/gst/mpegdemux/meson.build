@@ -4,6 +4,25 @@ mpegd_sources = [
   'gstpesfilter.c',
 ]
 
+mpegd_headers = [
+  'gstpesfilter.h',
+  'gstmpegdemux.h',
+  'gstmpegdefs.h',
+]
+
+doc_sources = []
+foreach s: mpegd_sources + mpegd_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'mpegpsdemux': pathsep.join(doc_sources)
+}
+
+if get_option('mpegdemux').disabled()
+  subdir_done()
+endif
+
 gstmpedpsdemux = library('gstmpegpsdemux',
   mpegd_sources,
   c_args : gst_plugins_bad_args,

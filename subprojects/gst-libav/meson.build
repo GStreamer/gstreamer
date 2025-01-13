@@ -237,6 +237,12 @@ if get_option('default_library') == 'shared'
 endif
 
 plugins = []
+plugin_sources = {}
+if host_machine.system() == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
+endif
 subdir('ext/libav')
 subdir('docs')
 subdir('tests')

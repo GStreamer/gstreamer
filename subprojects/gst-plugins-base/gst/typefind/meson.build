@@ -13,6 +13,24 @@ typefindfunctions_sources = [
 'gsttypefindfunctionsstartwith.c',
 ]
 
+typefindfunctions_headers = [
+  'gsttypefindfunctionsdata.h',
+  'gsttypefindfunctionsplugin.h',
+]
+
+doc_sources = []
+foreach s: typefindfunctions_sources + typefindfunctions_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'typefindfunctions': pathsep.join(doc_sources)
+}
+
+if get_option('typefind').disabled()
+  subdir_done()
+endif
+
 gsttypefind = library('gsttypefindfunctions',
   typefindfunctions_sources,
   c_args : gst_plugins_base_args + typefindfunctions_extra_defs,

@@ -18,6 +18,34 @@ avtp_sources = [
   'gstavtpcrfcheck.c',
 ]
 
+avtp_headers = [
+  'gstavtpvfpaybase.h',
+  'gstavtpcrfutil.h',
+  'gstavtpsink.h',
+  'gstavtprvfpay.h',
+  'gstavtpcrfsync.h',
+  'gstavtpcrfbase.h',
+  'gstavtpcrfcheck.h',
+  'gstavtprvfdepay.h',
+  'gstavtpvfdepaybase.h',
+  'gstavtpcvfpay.h',
+  'gstavtpaafpay.h',
+  'gstavtpsrc.h',
+  'gstavtpbasedepayload.h',
+  'gstavtpaafdepay.h',
+  'gstavtpbasepayload.h',
+  'gstavtpcvfdepay.h',
+]
+
+doc_sources = []
+foreach s: avtp_sources + avtp_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'avtp': pathsep.join(doc_sources)
+}
+
 avtp_dep = dependency('', required: false)
 avtp_option = get_option('avtp')
 

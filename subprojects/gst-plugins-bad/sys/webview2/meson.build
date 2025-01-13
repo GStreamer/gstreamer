@@ -4,6 +4,20 @@ webview2_sources = [
   'plugin.cpp',
 ]
 
+webview2_headers = [
+  'gstwebview2object.h',
+  'gstwebview2src.h',
+]
+
+doc_sources = []
+foreach s: webview2_sources + webview2_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'webview2': pathsep.join(doc_sources)
+}
+
 extra_args = ['-DGST_USE_UNSTABLE_API']
 
 webview2_option = get_option('webview2')

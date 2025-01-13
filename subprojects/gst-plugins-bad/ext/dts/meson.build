@@ -3,6 +3,23 @@ dts_opt = get_option('dts').require(gpl_allowed, error_message: '''
   Pass option -Dgpl=enabled to Meson to allow GPL-licensed plugins to be built.
   ''')
 
+dtsdec_sources = [
+  'gstdtsdec.c',
+]
+
+dtsdec_headers = [
+  'gstdtsdec.h',
+]
+
+doc_sources = []
+foreach s: dtsdec_sources + dtsdec_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'dtsdec': pathsep.join(doc_sources)
+}
+
 # Don't do any dependency checks if disabled
 if dts_opt.disabled()
   subdir_done()
@@ -28,7 +45,7 @@ endif
 
 if dca_dep.found()
   gstdtsdec = library('gstdtsdec',
-    'gstdtsdec.c',
+    dtsdec_sources,
     c_args : gst_plugins_bad_args + no_warn_c_args,
     link_args : noseh_link_args,
     include_directories : [configinc, libsinc],

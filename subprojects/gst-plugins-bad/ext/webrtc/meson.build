@@ -12,6 +12,29 @@ webrtc_sources = [
   'webrtcdatachannel.c',
 ]
 
+webrtc_headers = [
+  'transportstream.h',
+  'gstwebrtcbin.h',
+  'transportreceivebin.h',
+  'fwd.h',
+  'transportsendbin.h',
+  'webrtcdatachannel.h',
+  'webrtcsctptransport.h',
+  'webrtctransceiver.h',
+  'utils.h',
+  'webrtcsdp.h',
+  'gstwebrtcstats.h',
+]
+
+doc_sources = []
+foreach s: webrtc_sources + webrtc_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'webrtc': pathsep.join(doc_sources)
+}
+
 webrtc_option = get_option('webrtc').require(
   libgstwebrtcnice_dep.found(), error_message: 'webrtc plugin requires libgstwebrtcnice.')
 if webrtc_option.disabled()
@@ -28,4 +51,3 @@ gstwebrtc_plugin = library('gstwebrtc',
   install_dir : plugins_install_dir,
 )
 plugins += [gstwebrtc_plugin]
-

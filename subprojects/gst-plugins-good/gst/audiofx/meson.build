@@ -18,6 +18,39 @@ audiofx_sources = [
   'gststereo.c'
 ]
 
+audiofx_headers = [
+  'math_compat.h',
+  'audiofxbaseiirfilter.h',
+  'audioamplify.h',
+  'audiowsincband.h',
+  'audioecho.h',
+  'audiokaraoke.h',
+  'audioiirfilter.h',
+  'audiochebband.h',
+  'gstscaletempo.h',
+  'audioinvert.h',
+  'gststereo.h',
+  'audiodynamic.h',
+  'audiopanorama.h',
+  'audiowsinclimit.h',
+  'audiofirfilter.h',
+  'audiofxbasefirfilter.h',
+  'audiocheblimit.h',
+]
+
+doc_sources = []
+foreach s: audiofx_sources + audiofx_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'audiofx': pathsep.join(doc_sources)
+}
+
+if get_option('audiofx').disabled()
+  subdir_done()
+endif
+
 orcsrc = 'audiopanoramaorc'
 if have_orcc
   orc_h = custom_target(orcsrc + '.h',

@@ -12,6 +12,28 @@ dtls_sources = [
   'gstdtlselement.c',
 ]
 
+dtls_headers = [
+  'gstdtlscertificate.h',
+  'gstdtlsenc.h',
+  'gstdtlssrtpenc.h',
+  'gstdtlselements.h',
+  'gstdtlssrtpdec.h',
+  'gstdtlsconnection.h',
+  'gstdtlsdec.h',
+  'gstdtlssrtpbin.h',
+  'gstdtlssrtpdemux.h',
+  'gstdtlsagent.h',
+]
+
+doc_sources = []
+foreach s: dtls_sources + dtls_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'dtls': pathsep.join(doc_sources)
+}
+
 dtls_option = get_option('dtls').enable_if(get_option('webrtc').enabled(), error_message: 'webrtc option is enabled')
 openssl_dep = dependency('openssl', version: '>= 1.0.1', required: dtls_option)
 libcrypto_dep = dependency('libcrypto', required: dtls_option)

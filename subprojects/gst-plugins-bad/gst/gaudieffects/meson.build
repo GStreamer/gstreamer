@@ -9,6 +9,29 @@ gaudio_sources = [
   'gstplugin.c',
 ]
 
+gaudio_headers = [
+  'gstchromium.h',
+  'gstgaussblur.h',
+  'gstdilate.h',
+  'gstexclusion.h',
+  'gstsolarize.h',
+  'gstdodge.h',
+  'gstburn.h',
+]
+
+doc_sources = []
+foreach s: gaudio_sources + gaudio_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'gaudieffects': pathsep.join(doc_sources)
+}
+
+if get_option('gaudieffects').disabled()
+  subdir_done()
+endif
+
 orcsrc = 'gstgaudieffectsorc'
 if have_orcc
   orc_h = custom_target(orcsrc + '.h',

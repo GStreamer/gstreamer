@@ -3,6 +3,19 @@ waveformsink_sources = [
   'gstwaveformplugin.c',
 ]
 
+waveformsink_headers = [
+  'gstwaveformsink.h',
+]
+
+doc_sources = []
+foreach s: waveformsink_sources + waveformsink_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'waveform': pathsep.join(doc_sources)
+}
+
 have_waveform = false
 waveform_option = get_option('waveform')
 if host_system != 'windows' or waveform_option.disabled()

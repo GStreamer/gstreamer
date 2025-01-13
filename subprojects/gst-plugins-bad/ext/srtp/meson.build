@@ -6,6 +6,23 @@ srtp_sources = [
   'gstsrtpenc.c',
 ]
 
+srtp_headers = [
+  'gstsrtp.h',
+  'gstsrtpenums.h',
+  'gstsrtpenc.h',
+  'gstsrtpdec.h',
+  'gstsrtpelements.h',
+]
+
+doc_sources = []
+foreach s: srtp_sources + srtp_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'srtp': pathsep.join(doc_sources)
+}
+
 srtp_cargs = []
 srtp_option = get_option('srtp').enable_if(get_option('webrtc').enabled(), error_message: 'webrtc option is enabled')
 if srtp_option.disabled()

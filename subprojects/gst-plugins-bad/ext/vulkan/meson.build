@@ -1,3 +1,49 @@
+vulkan_sources = [
+  'gstvulkan.c',
+  'gstvulkanelement.c',
+  'vkdownload.c',
+  'vkdeviceprovider.c',
+  'vksink.c',
+  'vkupload.c',
+]
+
+vulkan_headers = [
+  'gstvulkanelements.h',
+  'vkcolorconvert.h',
+  'vkdeviceprovider.h',
+  'vkdownload.h',
+  'vkh264dec.h',
+  'vkh265dec.h',
+  'vkimageidentity.h',
+  'vkoverlaycompositor.h',
+  'vkshaderspv.h',
+  'vksink.h',
+  'vkupload.h',
+  'vkviewconvert.h',
+]
+
+glsc_sources = [
+  'vkcolorconvert.c',
+  'vkimageidentity.c',
+  'vkshaderspv.c',
+  'vkviewconvert.c',
+  'vkoverlaycompositor.c',
+]
+
+video_sources = [
+  'vkh264dec.c',
+  'vkh265dec.c',
+]
+
+doc_sources = []
+foreach s: vulkan_sources + glsc_sources + video_sources + vulkan_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'vulkan': pathsep.join(doc_sources)
+}
+
 if get_option('vulkan').disabled()
   subdir_done()
 endif
@@ -13,14 +59,6 @@ endif
 extra_deps = []
 extra_args = []
 
-vulkan_sources = files(
-  'gstvulkan.c',
-  'gstvulkanelement.c',
-  'vkdownload.c',
-  'vkdeviceprovider.c',
-  'vksink.c',
-  'vkupload.c',
-)
 vulkan_plugin_enums = []
 
 glslc = find_program('glslc', required: false)
@@ -36,13 +74,7 @@ else
   extra_args += ['-DHAVE_GLSLC']
   subdir('shaders')
 
-  vulkan_sources += files(
-    'vkcolorconvert.c',
-    'vkimageidentity.c',
-    'vkshaderspv.c',
-    'vkviewconvert.c',
-    'vkoverlaycompositor.c',
-  )
+  vulkan_sources += glsc_sources
   vulkan_plugin_enum_headers = files(
     'vkviewconvert.h',
   )
@@ -53,7 +85,7 @@ else
 endif
 
 if vulkan_conf.get('GST_VULKAN_HAVE_VIDEO_EXTENSIONS') == 1
-  vulkan_sources += files('vkh264dec.c', 'vkh265dec.c')
+  vulkan_sources += video_sources
   extra_deps += gstcodecs_dep
   extra_args += ['-DGST_USE_UNSTABLE_API']
 endif

@@ -7,6 +7,24 @@ wasapi_sources = [
   'gstwasapidevice.c',
 ]
 
+wasapi_headers = [
+  'gstwasapisink.h',
+  'gstwasapisrc.h',
+  'gstmmdeviceenumerator.h',
+  'gstwasapidevice.h',
+  'gstwasapiutil.h',
+  'gstaudioclient3.h',
+]
+
+doc_sources = []
+foreach s: wasapi_sources + wasapi_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'wasapi': pathsep.join(doc_sources)
+}
+
 if host_system != 'windows'
   if get_option('wasapi').disabled()
     subdir_done()

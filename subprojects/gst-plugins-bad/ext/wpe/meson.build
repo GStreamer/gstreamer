@@ -1,3 +1,25 @@
+wpe_sources = [
+  'gstwpethreadedview.cpp','gstwpe.cpp',
+  'gstwpevideosrc.cpp',
+  'gstwpesrcbin.cpp',
+]
+
+wpe_headers = [
+  'gstwpesrcbin.h',
+  'gstwpevideosrc.h',
+  'gstwpe.h',
+  'gstwpethreadedview.h',
+]
+
+doc_sources = []
+foreach s: wpe_sources + wpe_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'wpe': pathsep.join(doc_sources)
+}
+
 building_wpe = false
 wpe_feat = get_option('wpe').require(gstgl_dep.found(),
   error_message : 'wpe plugin enabled but GL support was not detected')
@@ -55,8 +77,9 @@ giounix_dep = dependency('gio-unix-2.0', required: false)
 wpe_extension_install_dir = get_option('prefix') / get_option('libdir') / meson.project_name() / 'wpe-extension'
 
 building_wpe = true
+
 gstwpe = library('gstwpe',
-  ['gstwpethreadedview.cpp', 'gstwpe.cpp', 'gstwpevideosrc.cpp', 'gstwpesrcbin.cpp'],
+  wpe_sources,
   dependencies : [egl_dep, wpewebkit_dep, wpe_fdo_dep, gstallocators_dep, gstaudio_dep, gstvideo_dep,
     gstbase_dep, gstgl_dep, xkbcommon_dep, wl_server_dep, giounix_dep],
   cpp_args : gst_plugins_bad_args + ['-DHAVE_CONFIG_H=1',

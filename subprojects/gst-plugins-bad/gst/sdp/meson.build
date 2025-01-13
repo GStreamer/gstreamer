@@ -5,6 +5,24 @@ sdp_sources = [
   'gstsdpsrc.c'
 ]
 
+sdp_headers = [
+  'gstsdpdemux.h',
+  'gstsdpsrc.h',
+]
+
+doc_sources = []
+foreach s: sdp_sources + sdp_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'sdpelem': pathsep.join(doc_sources)
+}
+
+if get_option('sdp').disabled()
+  subdir_done()
+endif
+
 gstsdpelem = library('gstsdpelem',
   sdp_sources,
   c_args : gst_plugins_bad_args,

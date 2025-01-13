@@ -7,6 +7,23 @@ soup_sources = [
   'gstsouputils.c',
 ]
 
+soup_headers = [
+  'gstsoupelements.h',
+  'gstsouphttpclientsink.h',
+  'gstsouphttpsrc.h',
+  'gstsouploader.h',
+  'gstsouputils.h',
+]
+
+doc_sources = []
+foreach s: soup_sources + soup_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'soup': pathsep.join(doc_sources)
+}
+
 soup_opt = get_option('soup')
 soup_ver_opt = get_option('soup-version')
 if soup_opt.disabled()

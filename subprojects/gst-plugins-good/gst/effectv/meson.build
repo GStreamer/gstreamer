@@ -4,6 +4,35 @@ effect_sources = [
   'gstradioac.c', 'gststreak.c', 'gstripple.c'
 ]
 
+effect_headers = [
+  'gstop.h',
+  'gstdice.h',
+  'gstrev.h',
+  'gstwarp.h',
+  'gstaging.h',
+  'gstquark.h',
+  'gsteffectv.h',
+  'gstshagadelic.h',
+  'gstripple.h',
+  'gstradioac.h',
+  'gstedge.h',
+  'gststreak.h',
+  'gstvertigo.h',
+]
+
+doc_sources = []
+foreach s: effect_sources + effect_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'effectv': pathsep.join(doc_sources)
+}
+
+if get_option('effectv').disabled()
+  subdir_done()
+endif
+
 gsteffectv = library('gsteffectv',
   effect_sources,
   c_args : gst_plugins_good_args,

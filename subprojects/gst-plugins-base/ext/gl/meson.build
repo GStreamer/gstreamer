@@ -46,6 +46,53 @@ opengl_sources = [
   'gstglutils.c'
 ]
 
+opengl_headers = [
+  'caopengllayersink.h',
+  'gstgloverlaycompositorelement.h',
+  'gstglcolorbalance.h',
+  'gstglmixerbin.h',
+  'gstglstereosplit.h',
+  'gstglstereomix.h',
+  'gstgldeinterlace.h',
+  'gstglbumper.h',
+  'gstglfiltershader.h',
+  'gstgltestsrc.h',
+  'gstglmosaic.h',
+  'gstgldifferencematte.h',
+  'gstgltransformation.h',
+  'gstglalpha.h',
+  'gstgloverlay.h',
+  'gstglvideomixer.h',
+  'gstglcolorscale.h',
+  'gstglelements.h',
+  'gstglutils.h',
+  'gstglfiltercube.h',
+  'gstglfilterglass.h',
+  'gstgluploadelement.h',
+  'gstglimagesink.h',
+  'gstglcolorconvertelement.h',
+  'gltestsrc.h',
+  'gstgleffects.h',
+  'gstglfilterapp.h',
+  'gstgldmabufbufferpool.h',
+  'gstgldownloadelement.h',
+  'gstglfilterreflectedscreen.h',
+  'gstglviewconvert.h',
+  'gstglfilterbin.h',
+  'gstglsinkbin.h',
+  'gstglsrcbin.h',
+  'gstglvideoflip.h',
+]
+
+doc_sources = []
+foreach s: opengl_sources + opengl_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'opengl': pathsep.join(doc_sources)
+}
+
 if get_option('gl').disabled() or not gstgl_dep.found()
   subdir_done()
 endif

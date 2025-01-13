@@ -4,9 +4,26 @@ x265_opt = get_option('x265').require(gpl_allowed, error_message: '''
   ''')
 
 x265_dep = dependency('x265', required: x265_opt)
+x265_sources = [
+  'gstx265enc.c',
+]
+
+x265_headers = [
+  'gstx265enc.h',
+]
+
+doc_sources = []
+foreach s: x265_sources + x265_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'x265': pathsep.join(doc_sources)
+}
+
 if x265_dep.found()
   gstx265 = library('gstx265',
-    'gstx265enc.c',
+    x265_sources,
     c_args : gst_plugins_bad_args + cc.get_supported_arguments(['-Wno-undef']),
     include_directories : [configinc],
     dependencies : [gstpbutils_dep, gstvideo_dep, x265_dep],

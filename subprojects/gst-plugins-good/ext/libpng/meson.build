@@ -4,6 +4,21 @@ png_sources = [
   'gstpngdec.c',
 ]
 
+png_headers = [
+  'gstpngenc.h',
+  'gstpng.h',
+  'gstpngdec.h',
+]
+
+doc_sources = []
+foreach s: png_sources + png_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'png': pathsep.join(doc_sources)
+}
+
 libpng_dep = dependency('libpng', version : '>=1.2', required : get_option('png'))
 
 if libpng_dep.found()

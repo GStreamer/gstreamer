@@ -7,6 +7,27 @@ codecalpha_sources = [
   'gstcodecalphademux.c',
 ]
 
+codecalpha_headers = [
+  'gstalphadecodebin.h',
+  'gstalphacombine.h',
+  'gstvp9alphadecodebin.h',
+  'gstcodecalphademux.h',
+  'gstvp8alphadecodebin.h',
+]
+
+doc_sources = []
+foreach s: codecalpha_sources + codecalpha_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'codecalpha': pathsep.join(doc_sources)
+}
+
+if get_option('codecalpha').disabled()
+  subdir_done()
+endif
+
 gstcodecalpha = library('gstcodecalpha',
   codecalpha_sources,
   c_args : gst_plugins_bad_args,

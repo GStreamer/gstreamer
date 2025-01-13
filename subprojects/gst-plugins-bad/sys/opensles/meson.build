@@ -7,6 +7,23 @@ opensles_sources = [
   'openslesplugin.c',
 ]
 
+opensles_headers = [
+  'openslessrc.h',
+  'openslesringbuffer.h',
+  'openslescommon.h',
+  'opensles.h',
+  'openslessink.h',
+]
+
+doc_sources = []
+foreach s: opensles_sources + opensles_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'opensles': pathsep.join(doc_sources)
+}
+
 opensles_option = get_option('opensles')
 if opensles_option.disabled()
   subdir_done()

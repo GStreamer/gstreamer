@@ -3,12 +3,24 @@ flite_sources = [
   'gstflitetestsrc.c',
 ]
 
+flite_headers = [
+]
+
 flite_libs = [
   'flite',
   'flite_cmu_us_kal',
   'flite_usenglish',
   'flite_cmulex'
 ]
+
+doc_sources = []
+foreach s: flite_sources + flite_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'flite': pathsep.join(doc_sources)
+}
 
 if get_option('flite').disabled()
   subdir_done()

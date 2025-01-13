@@ -2,6 +2,19 @@ svthevcenc_sources = [
   'gstsvthevcenc.c',
 ]
 
+svthevcenc_headers = [
+  'gstsvthevcenc.h',
+]
+
+doc_sources = []
+foreach s: svthevcenc_sources + svthevcenc_headers
+  doc_sources += meson.current_source_dir() / s
+endforeach
+
+plugin_sources += {
+  'svthevcenc': pathsep.join(doc_sources)
+}
+
 svthevcenc_dep = dependency('SvtHevcEnc', version : '>= 1.4.1', required: get_option('svthevcenc'))
 
 if svthevcenc_dep.found()
