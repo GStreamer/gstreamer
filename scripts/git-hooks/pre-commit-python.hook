@@ -109,7 +109,8 @@ def get_hotdoc_confs_to_rebuild(builddir, modified_files) -> Tuple[Set, Set]:
 
 def build(builddir):
     subprocess.run(['ninja', '-C', builddir], check=True)
-    subprocess.run(['ninja', '-C', builddir, 'subprojects/gstreamer/docs/hotdoc-configs.json'], check=True)
+    for subproject in ('gstreamer', 'gst-plugins-base', 'gst-plugins-good', 'gst-plugins-bad', 'gst-plugins-ugly', 'gst-rtsp-server', 'gst-libav', 'gst-editing-services'):
+        subprocess.run(['ninja', '-C', builddir, f'subprojects/{subproject}/docs/hotdoc-configs.json'], check=True)
 
 def build_cache(builddir, subproject, targets, subdir):
     if not targets:
