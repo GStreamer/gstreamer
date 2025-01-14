@@ -1682,7 +1682,7 @@ gst_webrtc_nice_constructed (GObject * object)
   options |= NICE_AGENT_OPTION_REGULAR_NOMINATION;
 
 /*  https://gitlab.freedesktop.org/libnice/libnice/-/merge_requests/257 */
-#if HAVE_LIBNICE_CONSENT_FIX
+#ifdef HAVE_LIBNICE_CONSENT_FIX
   options |= NICE_AGENT_OPTION_CONSENT_FRESHNESS;
 #endif
 
