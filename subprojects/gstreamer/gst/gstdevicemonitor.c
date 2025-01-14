@@ -277,9 +277,9 @@ bus_sync_message (GstBus * bus, GstMessage * message,
       gst_message_parse_device_changed (message, &device, NULL);
 
     GST_OBJECT_LOCK (monitor);
-    provider =
-        GST_DEVICE_PROVIDER (gst_object_get_parent (GST_OBJECT (device)));
-    if (is_provider_hidden (monitor, monitor->priv->hidden, provider)) {
+    provider = GST_DEVICE_PROVIDER (GST_MESSAGE_SRC (message));
+    if (provider &&
+        is_provider_hidden (monitor, monitor->priv->hidden, provider)) {
       matches = FALSE;
     } else {
       guint i;
@@ -299,7 +299,6 @@ bus_sync_message (GstBus * bus, GstMessage * message,
     }
     GST_OBJECT_UNLOCK (monitor);
 
-    gst_object_unref (provider);
     gst_object_unref (device);
 
     if (matches)
