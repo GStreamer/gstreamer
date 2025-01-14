@@ -19,7 +19,7 @@ namespace Gst.PbUtils {
 		public const int PLUGINS_BASE_VERSION_MAJOR = 1;
 		public const int PLUGINS_BASE_VERSION_MICRO = 1;
 		public const int PLUGINS_BASE_VERSION_MINOR = 25;
-		public const int PLUGINS_BASE_VERSION_NANO = 0;
+		public const int PLUGINS_BASE_VERSION_NANO = 1;
 #endregion
 	}
 }

@@ -12345,7 +12345,7 @@
       <constant value="1" ctype="gint" gtype="gint"         name="VERSION_MAJOR" />
       <constant value="1" ctype="gint" gtype="gint"         name="VERSION_MICRO" />
       <constant value="25" ctype="gint" gtype="gint"         name="VERSION_MINOR" />
-      <constant value="0" ctype="gint" gtype="gint"         name="VERSION_NANO" />
+      <constant value="1" ctype="gint" gtype="gint"          name="VERSION_NANO" />
     </object>
     <class name="Parse" cname="GstParse" disable_void_ctor="1">
       <method name="ParseBinFromDescription" cname="gst_parse_bin_from_description" shared="true">
@@ -22379,7 +22379,7 @@
       <constant value="1" ctype="gint" gtype="gint"         name="PLUGINS_BASE_VERSION_MAJOR" />
       <constant value="1" ctype="gint" gtype="gint"         name="PLUGINS_BASE_VERSION_MICRO" />
       <constant value="25" ctype="gint" gtype="gint"         name="PLUGINS_BASE_VERSION_MINOR" />
-      <constant value="0" ctype="gint" gtype="gint"         name="PLUGINS_BASE_VERSION_NANO" />
+      <constant value="1" ctype="gint" gtype="gint"          name="PLUGINS_BASE_VERSION_NANO" />
     </object>
   </namespace>
   <namespace name="Gst.Rtp" library="gstrtp-1.0-0.dll">
