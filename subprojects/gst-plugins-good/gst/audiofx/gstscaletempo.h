@@ -36,6 +36,20 @@ typedef struct _GstScaletempo GstScaletempo;
 typedef struct _GstScaletempoClass GstScaletempoClass;
 typedef struct _GstScaletempoPrivate GstScaletempoPrivate;
 
+/**
+ * GstScaletempoMode:
+ * @GST_SCALETEMPO_MODE_NONE: scale according to segment rate
+ * @GST_SCALETEMPO_MODE_FIT_DOWN: fit audio data to buffer duration, only supported with rate == 1.0
+ *
+ * Possible values for the GstScaletempo:mode property.
+ *
+ * Since: 1.26
+ */
+typedef enum {
+  GST_SCALETEMPO_MODE_NONE = 0,
+  GST_SCALETEMPO_MODE_FIT_DOWN = (1 << 0),
+} GstScaletempoMode;
+
 struct _GstScaletempo
 {
   GstBaseTransform element;
@@ -47,6 +61,7 @@ struct _GstScaletempo
   guint ms_stride;
   gdouble percent_overlap;
   guint ms_search;
+  GstScaletempoMode mode;
 
   /* caps */
   GstAudioFormat format;

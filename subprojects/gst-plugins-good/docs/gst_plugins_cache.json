@@ -2969,6 +2969,18 @@
                     }
                 },
                 "properties": {
+                    "mode": {
+                        "blurb": "Control how the scaling factor is selected",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "none",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "GstScaletempoMode",
+                        "writable": true
+                    },
                     "overlap": {
                         "blurb": "Percentage of stride to overlap",
                         "conditionally-available": false,
@@ -3325,6 +3337,21 @@
                         "desc": "Hann window",
                         "name": "hann",
                         "value": "4"
+                    }
+                ]
+            },
+            "GstScaletempoMode": {
+                "kind": "flags",
+                "values": [
+                    {
+                        "desc": "default behavior, scale according to segment rate",
+                        "name": "none",
+                        "value": "0x00000000"
+                    },
+                    {
+                        "desc": "fit audio data down to buffer duration, only supported with rate == 1.0",
+                        "name": "fit-down",
+                        "value": "0x00000001"
                     }
                 ]
             }

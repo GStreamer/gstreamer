@@ -55,6 +55,15 @@
  * cycles here. One can use the #GstScaletempo:search propery to tune how far
  * the algorithm looks.
  *
+ * Scaletempo also supports an alternative mode where a scaling factor is dynamically
+ * selected to scale input data down to the duration of the input buffers.
+ *
+ * The use case for this is when text to speech / speech synthesis elements are
+ * placed upstream: they will attach the duration of the input text as a custom
+ * `GstScaletempoTargetDurationMeta` to the audio buffers they output,
+ * scaletempo can then rescale the audio down to the expected duration.
+ *
+ * When this mode is selected, using a rate != 1.0 is not supported.
  */
 
 /*
@@ -88,6 +97,7 @@ enum
   PROP_STRIDE,
   PROP_OVERLAP,
   PROP_SEARCH,
+  PROP_MODE,
 };
 
 #define SUPPORTED_CAPS \
@@ -114,6 +124,31 @@ G_DEFINE_TYPE_WITH_CODE (GstScaletempo, gst_scaletempo,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT (0));
 GST_ELEMENT_REGISTER_DEFINE (scaletempo, "scaletempo",
     GST_RANK_NONE, GST_TYPE_SCALETEMPO);
+
+#define GST_TYPE_SCALETEMPO_MODE (gst_scaletempo_mode_get_type())
+static GType
+gst_scaletempo_mode_get_type (void)
+{
+  static const GFlagsValue values[] = {
+    {GST_SCALETEMPO_MODE_NONE,
+        "default behavior, scale according to segment rate", "none"},
+    {GST_SCALETEMPO_MODE_FIT_DOWN,
+          "fit audio data down to buffer duration, only supported with rate == 1.0",
+        "fit-down"},
+    {0, NULL, NULL}
+  };
+  static GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_flags_register_static ("GstScaletempoMode", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
 
 #define CREATE_BEST_OVERLAP_OFFSET_FLOAT_FUNC(type) \
 static guint \
@@ -403,13 +438,16 @@ reinit_buffers (GstScaletempo * st)
   st->bytes_queue_max = new_size;
   st->buf_queue = g_realloc (st->buf_queue, st->bytes_queue_max);
 
-  latency =
-      gst_util_uint64_scale (st->bytes_queue_max, GST_SECOND,
-      st->bytes_per_frame * st->sample_rate);
-  if (st->latency != latency) {
-    st->latency = latency;
-    gst_element_post_message (GST_ELEMENT (st),
-        gst_message_new_latency (GST_OBJECT (st)));
+  // When fitting down, no latency is introduced
+  if (st->mode == GST_SCALETEMPO_MODE_NONE) {
+    latency =
+        gst_util_uint64_scale (st->bytes_queue_max, GST_SECOND,
+        st->bytes_per_frame * st->sample_rate);
+    if (st->latency != latency) {
+      st->latency = latency;
+      gst_element_post_message (GST_ELEMENT (st),
+          gst_message_new_latency (GST_OBJECT (st)));
+    }
   }
 
   st->bytes_stride_scaled = st->bytes_stride * st->scale;
@@ -481,6 +519,37 @@ gst_scaletempo_transform (GstBaseTransform * trans,
   GstClockTime timestamp;
   GstBuffer *tmpbuf = NULL;
 
+  if (st->mode & GST_SCALETEMPO_MODE_FIT_DOWN) {
+    if (st->scale != 1.0) {
+      GST_ERROR_OBJECT (st, "non-1.0 rate not supported in fit-down mode");
+      return GST_FLOW_NOT_SUPPORTED;
+    }
+
+    GstCustomMeta *meta =
+        gst_buffer_get_custom_meta (inbuf, "GstScaletempoTargetDurationMeta");
+    GstClockTime target_duration;
+
+    if (meta
+        && gst_structure_get_uint64 (gst_custom_meta_get_structure (meta),
+            "duration", &target_duration)) {
+      GstClockTime actual_duration =
+          gst_util_uint64_scale (gst_buffer_get_size (inbuf), GST_SECOND,
+          st->bytes_per_frame * st->sample_rate);
+      if (actual_duration > target_duration) {
+        st->scale = (gdouble) actual_duration / (gdouble) target_duration;
+        GST_DEBUG_OBJECT (st, "dynamically selected scale: %lf", st->scale);
+      }
+    }
+
+    st->bytes_stride_scaled = st->bytes_stride * st->scale;
+    st->frames_stride_scaled = st->bytes_stride_scaled / st->bytes_per_frame;
+    GST_DEBUG ("%.3f scale, %.3f stride_in, %i stride_out",
+        st->scale, st->frames_stride_scaled,
+        (gint) (st->bytes_stride / st->bytes_per_frame));
+
+    st->bytes_to_slide = 0;
+  }
+
   if (st->reverse)
     tmpbuf = reverse_buffer (st, inbuf);
 
@@ -519,7 +588,11 @@ gst_scaletempo_transform (GstBaseTransform * trans,
   }
   gst_buffer_unmap (outbuf, &omap);
 
-  if (st->reverse) {
+  if (st->mode & GST_SCALETEMPO_MODE_FIT_DOWN) {
+    timestamp = GST_BUFFER_TIMESTAMP (inbuf) - st->in_segment.start;
+    st->scale = 1.0;
+    st->reinit_buffers = TRUE;
+  } else if (st->reverse) {
     timestamp = st->in_segment.stop - GST_BUFFER_TIMESTAMP (inbuf);
     if (timestamp < st->latency)
       timestamp = 0;
@@ -600,10 +673,18 @@ gst_scaletempo_sink_event (GstBaseTransform * trans, GstEvent * event)
 
     gst_event_copy_segment (event, &segment);
 
+    if (scaletempo->mode != GST_SCALETEMPO_MODE_NONE
+        && ABS (segment.rate - 1.0) > DBL_EPSILON) {
+      GST_ERROR_OBJECT (trans, "non-1.0 rate not supported in fit mode");
+      return FALSE;
+    }
+
     if (segment.format != GST_FORMAT_TIME
         || scaletempo->scale != ABS (segment.rate)
         || !!scaletempo->reverse != !!(segment.rate < 0.0)) {
-      if (segment.format != GST_FORMAT_TIME || ABS (segment.rate - 1.0) < 1e-10) {
+      if ((segment.format != GST_FORMAT_TIME
+              || ABS (segment.rate - 1.0) < 1e-10) &&
+          scaletempo->mode == GST_SCALETEMPO_MODE_NONE) {
         scaletempo->scale = 1.0;
         gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (scaletempo),
             TRUE);
@@ -671,6 +752,27 @@ gst_scaletempo_sink_event (GstBaseTransform * trans, GstEvent * event)
   }
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
+}
+
+static gboolean
+gst_scaletempo_src_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstScaletempo *scaletempo = GST_SCALETEMPO (trans);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
+    if (scaletempo->mode == GST_SCALETEMPO_MODE_FIT_DOWN) {
+      gdouble rate;
+
+      gst_event_parse_seek (event, &rate, NULL, NULL, NULL, NULL, NULL, NULL);
+
+      if (ABS (rate - 1.0) > DBL_EPSILON) {
+        GST_ERROR_OBJECT (trans, "non-1.0 rate not supported in fit-down mode");
+        return FALSE;
+      }
+    }
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans, event);
 }
 
 static gboolean
@@ -832,6 +934,9 @@ gst_scaletempo_get_property (GObject * object,
     case PROP_SEARCH:
       g_value_set_uint (value, scaletempo->ms_search);
       break;
+    case PROP_MODE:
+      g_value_set_flags (value, scaletempo->mode);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -869,6 +974,9 @@ gst_scaletempo_set_property (GObject * object,
       }
       break;
     }
+    case PROP_MODE:
+      scaletempo->mode = g_value_get_flags (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -904,6 +1012,21 @@ gst_scaletempo_class_init (GstScaletempoClass * klass)
           "Length in milliseconds to search for best overlap position", 0, 500,
           14, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstScaletempo:mode
+   *
+   * Control how the scaling factor is selected.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_MODE, g_param_spec_flags ("mode",
+          "Mode",
+          "Control how the scaling factor is selected",
+          GST_TYPE_SCALETEMPO_MODE, GST_SCALETEMPO_MODE_NONE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
   gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
   gst_element_class_set_static_metadata (gstelement_class, "Scaletempo",
@@ -913,6 +1036,7 @@ gst_scaletempo_class_init (GstScaletempoClass * klass)
 
   basetransform_class->sink_event =
       GST_DEBUG_FUNCPTR (gst_scaletempo_sink_event);
+  basetransform_class->src_event = GST_DEBUG_FUNCPTR (gst_scaletempo_src_event);
   basetransform_class->set_caps = GST_DEBUG_FUNCPTR (gst_scaletempo_set_caps);
   basetransform_class->transform_size =
       GST_DEBUG_FUNCPTR (gst_scaletempo_transform_size);
@@ -922,6 +1046,10 @@ gst_scaletempo_class_init (GstScaletempoClass * klass)
   basetransform_class->stop = GST_DEBUG_FUNCPTR (gst_scaletempo_stop);
   basetransform_class->submit_input_buffer =
       GST_DEBUG_FUNCPTR (gst_scaletempo_submit_input_buffer);
+
+  gst_meta_register_custom_simple ("GstScaletempoTargetDurationMeta");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_SCALETEMPO_MODE, 0);
 }
 
 static void
@@ -933,6 +1061,7 @@ gst_scaletempo_init (GstScaletempo * scaletempo)
   scaletempo->ms_search = 14;
 
   /* uninitialized */
+  scaletempo->latency = 0;
   scaletempo->scale = 0;
   scaletempo->sample_rate = 0;
   scaletempo->frames_stride_error = 0;
