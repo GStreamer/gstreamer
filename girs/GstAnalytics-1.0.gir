@@ -877,6 +877,30 @@ Ids (@an_meta_first_id and @an_meta_second_id) must be from a call to
           </parameter>
         </parameters>
       </method>
+      <method name="get_segmentation_mtd" c:identifier="gst_analytics_relation_meta_get_segmentation_mtd" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Fill @rlt if a analytics-meta with id == @an_meta_id exist in @meta instance,
+otherwise this method return FALSE and @rlt is invalid.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">TRUE if successful.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Instance of #GstAnalyticsRelationMeta</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="an_meta_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Id of #GstAnalyticsSegmentationMtd instance to retrieve</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="rlt" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Will be filled with relatable
+   meta</doc>
+            <type name="SegmentationMtd" c:type="GstAnalyticsSegmentationMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_tracking_mtd" c:identifier="gst_analytics_relation_meta_get_tracking_mtd" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Fill @rlt if a analytics-meta with id == @an_meta_id exist in @meta instance,
 otherwise this method return FALSE and @rlt is invalid.</doc>
@@ -958,7 +982,7 @@ Ids must have been obtained a call to
           </parameter>
         </parameters>
       </method>
-      <function name="get_info" c:identifier="gst_analytics_relation_meta_get_info" version="1.24" introspectable="0">
+      <function name="get_info" c:identifier="gst_analytics_relation_meta_get_info" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Get the meta info</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
         <return-value transfer-ownership="none">
@@ -1744,7 +1768,7 @@ information about the tracking, for example, it can be used alongside a
         <type name="GType" c:type="GType"/>
       </return-value>
     </function>
-    <function name="relation_meta_get_info" c:identifier="gst_analytics_relation_meta_get_info" moved-to="RelationMeta.get_info" version="1.24" introspectable="0">
+    <function name="relation_meta_get_info" c:identifier="gst_analytics_relation_meta_get_info" moved-to="RelationMeta.get_info" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Get the meta info</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <return-value transfer-ownership="none">

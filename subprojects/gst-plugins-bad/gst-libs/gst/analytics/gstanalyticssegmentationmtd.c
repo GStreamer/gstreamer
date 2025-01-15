@@ -465,3 +465,26 @@ gst_analytics_segmentation_mtd_transform (GstBuffer * transbuf,
 
   return TRUE;
 }
+
+/**
+ * gst_analytics_relation_meta_get_segmentation_mtd:
+ * @meta: Instance of #GstAnalyticsRelationMeta
+ * @an_meta_id: Id of #GstAnalyticsSegmentationMtd instance to retrieve
+ * @rlt: (out caller-allocates)(not nullable): Will be filled with relatable
+ *    meta
+ *
+ * Fill @rlt if a analytics-meta with id == @an_meta_id exist in @meta instance,
+ * otherwise this method return FALSE and @rlt is invalid.
+ *
+ * Returns: TRUE if successful.
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_analytics_relation_meta_get_segmentation_mtd (GstAnalyticsRelationMeta *
+    meta, guint an_meta_id, GstAnalyticsSegmentationMtd * rlt)
+{
+  return gst_analytics_relation_meta_get_mtd (meta, an_meta_id,
+      gst_analytics_segmentation_mtd_get_mtd_type (),
+      (GstAnalyticsSegmentationMtd *) rlt);
+}

@@ -93,5 +93,10 @@ gst_analytics_relation_meta_add_segmentation_mtd (GstAnalyticsRelationMeta *
     guint masks_loc_w, guint masks_loc_h, GstAnalyticsSegmentationMtd *
     segmentation_mtd);
 
+GST_ANALYTICS_META_API
+gboolean
+gst_analytics_relation_meta_get_segmentation_mtd (GstAnalyticsRelationMeta *
+    meta, guint an_meta_id, GstAnalyticsSegmentationMtd * rlt);
+
 G_END_DECLS
 #endif // __GST_ANALYTICS_SEGMENTATION_META_H__
