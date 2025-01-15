@@ -982,7 +982,7 @@ Ids must have been obtained a call to
           </parameter>
         </parameters>
       </method>
-      <function name="get_info" c:identifier="gst_analytics_relation_meta_get_info" version="1.24">
+      <function name="get_info" c:identifier="gst_analytics_relation_meta_get_info" version="1.24" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Get the meta info</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
         <return-value transfer-ownership="none">
@@ -1768,7 +1768,7 @@ information about the tracking, for example, it can be used alongside a
         <type name="GType" c:type="GType"/>
       </return-value>
     </function>
-    <function name="relation_meta_get_info" c:identifier="gst_analytics_relation_meta_get_info" moved-to="RelationMeta.get_info" version="1.24">
+    <function name="relation_meta_get_info" c:identifier="gst_analytics_relation_meta_get_info" moved-to="RelationMeta.get_info" version="1.24" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Get the meta info</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <return-value transfer-ownership="none">
