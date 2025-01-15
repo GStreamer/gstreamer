@@ -34,6 +34,15 @@ gstmse_sources_public = files(
   'gstsourcebufferlist.c',
 )
 
+doc_sources = []
+foreach s: gstmse_headers_private + gstmse_sources_private + gstmse_headers_public + gstmse_sources_public
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'mse': pathsep.join(doc_sources)
+}
+
 gstmse_header_dir = 'gstreamer-' + api_version + '/gst/mse/'
 
 gstmse_enums_private = gnome.mkenums_simple('mse-enumtypes-private',

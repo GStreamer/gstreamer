@@ -24,6 +24,15 @@ gstplayer_headers = files([
 
 install_headers(gstplayer_headers, subdir : 'gstreamer-' + api_version + '/gst/player/')
 
+doc_sources = []
+foreach s: gstplayer_sources + gstplayer_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'player': pathsep.join(doc_sources)
+}
+
 gstplayer = library('gstplayer-' + api_version,
   gstplayer_sources,
   c_args : gst_plugins_bad_args + ['-DBUILDING_GST_PLAYER', '-DG_LOG_DOMAIN="GStreamer-Player"'],

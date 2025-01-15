@@ -31,24 +31,14 @@ if not build_gir
     subdir_done()
 endif
 
-hotdoc_p = find_program('hotdoc', required: get_option('doc'))
-if not hotdoc_p.found()
-    message('Hotdoc not found, not building the documentation')
-    subdir_done()
+if gst_dep.type_name() == 'internal'
+    gst_proj = subproject('gstreamer')
+    plugins_cache_generator = gst_proj.get_variable('plugins_cache_generator')
+else
+    plugins_cache_generator = find_program('gst-plugins-doc-cache-generator',
+        dirs: [join_paths(gst_dep.get_variable('libexecdir', default_value: ''), 'gstreamer-' + api_version)],
+        required: false)
 endif
-
-required_hotdoc_extensions = ['gi-extension']
-hotdoc = import('hotdoc')
-foreach extension: required_hotdoc_extensions
-    if not hotdoc.has_extensions(extension)
-        if get_option('doc').enabled()
-            error('Documentation enabled but @0@ missing'.format(extension))
-        endif
-
-        message('@0@ extension not found, not building documentation'.format(extension))
-        subdir_done()
-    endif
-endforeach
 
 excludes = ['gettext.h',
     'gst-validate-internal.h',
@@ -62,18 +52,41 @@ foreach f: excludes
         'validate', 'gst', 'validate', f)]
 endforeach
 
-validate_sources = gstvalidate_headers + gstvalidate_sources
-hotdoc = import('hotdoc')
-libs_doc = [hotdoc.generate_doc('gst-devtools',
-    project_version: api_version,
-    sitemap: 'sitemap.txt',
-    index: 'index.md',
-    gi_c_sources: validate_sources,
-    gi_c_source_filters: validate_excludes,
-    gi_index: 'gi-index.md',
-    gi_smart_index: true,
-    gi_sources: [validate_gir[0].full_path()],
-    disable_incremental_build: true,
-    dependencies : [validate_dep],
-    depends: validate_gir[0],
-)]
+cdir = meson.current_source_dir()
+doc_sources = []
+foreach s: gstvalidate_headers + gstvalidate_sources
+  doc_sources += s.full_path()
+endforeach
+
+lib_sources = {
+  'validate': pathsep.join(doc_sources)
+}
+
+lib_doc_source_file = configure_file(
+  output: 'lib_doc_sources.json',
+  configuration: lib_sources,
+  output_format: 'json')
+
+lib_doc_gi_source_file = configure_file(
+  output: 'lib_doc_gi_sources.json',
+  configuration: {'validate': validate_gir[0].full_path()},
+  output_format: 'json')
+
+lib_hotdoc_config = custom_target(
+  'build-gst-hotdoc-configs',
+  command: [
+    plugins_cache_generator,
+    'hotdoc-lib-config',
+    '--srcdir', cdir,
+    '--builddir', meson.current_build_dir(),
+    '--buildroot', meson.global_build_root(),
+    '--project_version', api_version,
+    '--gi_source_file', lib_doc_gi_source_file,
+    '--gi_c_source_file', lib_doc_source_file,
+    '--gi_c_source_filters', validate_excludes,
+    '--source_root', cdir,
+    '--gi_source_root', cdir / '..' / 'validate' / 'gst' / 'validate',
+    '--output', '@OUTPUT@',
+  ],
+  output: 'hotdoc-lib-configs.json',
+)

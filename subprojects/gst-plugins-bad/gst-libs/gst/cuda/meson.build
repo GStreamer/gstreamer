@@ -23,6 +23,15 @@ cuda_headers = files([
   'gstcudautils.h',
 ])
 
+doc_sources = []
+foreach s: cuda_sources + cuda_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'cuda': pathsep.join(doc_sources)
+}
+
 extra_deps = []
 gstcuda_dep = dependency('', required : false)
 cuda_stubinc = include_directories('./stub')

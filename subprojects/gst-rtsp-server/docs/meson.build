@@ -53,51 +53,45 @@ if get_option('doc').disabled()
   subdir_done()
 endif
 
-hotdoc_p = find_program('hotdoc', required: get_option('doc'))
-if not hotdoc_p.found()
-    message('Hotdoc not found, not building the documentation')
-    subdir_done()
-endif
+build_hotdoc = true
 
-hotdoc_req = '>= 0.11.0'
-hotdoc_version = run_command(hotdoc_p, '--version', check: false).stdout()
-if not hotdoc_version.version_compare(hotdoc_req)
-    if get_option('doc').enabled()
-        error('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
-    else
-        message('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
-        subdir_done()
-    endif
-endif
-
-hotdoc = import('hotdoc')
-required_hotdoc_extensions = ['gi-extension', 'gst-extension']
-foreach extension: required_hotdoc_extensions
-    if not hotdoc.has_extensions(extension)
-        if get_option('doc').enabled()
-            error('Documentation enabled but @0@ missing'.format(extension))
-        endif
-
-        message('@0@ extension not found, not building documentation'.format(extension))
-        subdir_done()
-    endif
+cdir = meson.current_source_dir()
+doc_sources = []
+foreach s: rtsp_server_sources + rtsp_server_headers
+  doc_sources += s.full_path()
 endforeach
 
-build_hotdoc = true
-hotdoc = import('hotdoc')
+lib_sources = {
+  'rtspserver': pathsep.join(doc_sources)
+}
 
-libs_doc = [hotdoc.generate_doc('gst-rtsp-server',
-    project_version: api_version,
-    gi_c_sources: ['../gst/rtsp-server/*.[hc]'],
-    gi_sources: rtsp_server_gir[0].full_path(),
-    sitemap: 'sitemap.txt',
-    index: 'index.md',
-    gi_index: 'index.md',
-    gi_smart_index: true,
-    gi_order_generated_subpages: true,
-    depends: rtsp_server_gir[0],
-)]
+lib_doc_source_file = configure_file(
+  output: 'lib_doc_sources.json',
+  configuration: lib_sources,
+  output_format: 'json')
 
+lib_doc_gi_source_file = configure_file(
+  output: 'lib_doc_gi_sources.json',
+  configuration: {'rtspserver': rtsp_server_gir[0].full_path()},
+  output_format: 'json')
+
+lib_hotdoc_config = custom_target(
+  'build-gst-hotdoc-configs',
+  command: [
+    plugins_cache_generator,
+    'hotdoc-lib-config',
+    '--srcdir', cdir,
+    '--builddir', meson.current_build_dir(),
+    '--buildroot', meson.global_build_root(),
+    '--project_version', api_version,
+    '--gi_source_file', lib_doc_gi_source_file,
+    '--gi_c_source_file', lib_doc_source_file,
+    '--source_root', cdir,
+    '--gi_source_root', cdir / '..' / 'gst' / 'rtsp-server',
+    '--output', '@OUTPUT@',
+  ],
+  output: 'hotdoc-lib-configs.json',
+)
 
 doc_source_file = configure_file(output: 'doc_sources.json', configuration: plugin_sources, output_format: 'json')
 
@@ -136,5 +130,3 @@ plugin_hotdoc_configs = custom_target(
   input: plugins_cache,
   output: 'hotdoc-configs.json',
 )
-
-doc = libs_doc[0]

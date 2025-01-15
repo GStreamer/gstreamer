@@ -90,6 +90,15 @@ gl_headers = gir_gl_headers + files([
   'gstglfuncs.h',
 ])
 
+doc_sources = []
+foreach s: gl_sources + gl_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'gl': pathsep.join(doc_sources)
+}
+
 gl_prototype_headers = files([
   'glprototypes/all_functions.h',
   'glprototypes/base.h',
@@ -565,6 +574,16 @@ if need_platform_egl != 'no'
       'egl/gstglmemoryegl.h',
       'egl/gstgldisplay_egl_device.h',
     ])
+
+    doc_sources = []
+    foreach s: gl_egl_sources + gl_egl_headers
+      doc_sources += s.full_path()
+    endforeach
+
+    libs_sources += {
+      'gl-egl': pathsep.join(doc_sources)
+    }
+
     gl_platform_deps += egl_dep
     glconf.set('GST_GL_HAVE_PLATFORM_EGL', 1)
 
@@ -668,6 +687,7 @@ if need_win_wayland != 'no'
         'wayland/wayland.h',
         'wayland/gstgldisplay_wayland.h'
       ])
+
       glconf.set('GST_GL_HAVE_WINDOW_WAYLAND', 1)
       gl_winsys_deps += [wayland_client_dep, wayland_cursor_dep, wayland_egl_dep]
       enabled_gl_winsys += 'wayland'
@@ -707,6 +727,7 @@ if need_win_x11 != 'no'
       'x11/x11.h',
       'x11/gstgldisplay_x11.h',
     ])
+
     glconf.set('GST_GL_HAVE_WINDOW_X11', 1)
     gl_winsys_deps += [x11_dep, xcb_dep]
     enabled_gl_winsys += 'x11'
@@ -1187,6 +1208,16 @@ if build_gstgl
     )
     gl_x11_gir = []
     if build_gir
+
+      doc_sources = []
+      foreach s: gl_x11_sources + gl_x11_headers
+        doc_sources += s.full_path()
+      endforeach
+
+      libs_sources += {
+        'gl-x11': pathsep.join(doc_sources)
+      }
+
       gir = {
         'sources' : gl_x11_sources + gl_x11_headers,
         'namespace' : 'GstGLX11',
@@ -1224,6 +1255,15 @@ if build_gstgl
     )
     gl_wayland_gir = []
     if build_gir
+      doc_sources = []
+      foreach s: gl_wayland_sources + gl_wayland_headers
+        doc_sources += s.full_path()
+      endforeach
+
+      libs_sources += {
+        'gl-wayland': pathsep.join(doc_sources)
+      }
+
       gir = {
         'sources' : gl_wayland_sources + gl_wayland_headers,
         'namespace' : 'GstGLWayland',

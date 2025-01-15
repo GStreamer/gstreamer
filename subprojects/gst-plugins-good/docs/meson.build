@@ -45,43 +45,11 @@ if get_option('doc').disabled()
   subdir_done()
 endif
 
-hotdoc_p = find_program('hotdoc', required: get_option('doc'))
-if not hotdoc_p.found()
-    message('Hotdoc not found, not building the documentation')
-    subdir_done()
-endif
-
-hotdoc_req = '>= 0.11.0'
-hotdoc_version = run_command(hotdoc_p, '--version', check: false).stdout()
-if not hotdoc_version.version_compare(hotdoc_req)
-    if get_option('doc').enabled()
-        error('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
-    else
-        message('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
-        subdir_done()
-    endif
-endif
-
-hotdoc = import('hotdoc')
-required_hotdoc_extensions = ['gst-extension']
-foreach extension: required_hotdoc_extensions
-    if not hotdoc.has_extensions(extension)
-        if get_option('doc').enabled()
-            error('Documentation enabled but @0@ missing'.format(extension))
-        endif
-
-        message('@0@ extension not found, not building documentation'.format(extension))
-        subdir_done()
-    endif
-endforeach
-
 docconf = configuration_data()
 docconf.set('GST_API_VERSION', api_version)
 configure_file(input : 'gst_api_version.in',
                output : 'gst_api_version.md',
                configuration : docconf)
-libs_doc = []
-plugins_doc = []
 excludes = []
 build_hotdoc = true
 foreach f: ['gstgdkpixbufplugin.c']

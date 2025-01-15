@@ -2,6 +2,15 @@ insert_sources = files('gstinsertbin.c')
 insert_headers = files('gstinsertbin.h')
 install_headers(insert_headers, subdir : 'gstreamer-1.0/gst/insertbin')
 
+doc_sources = []
+foreach s: insert_sources + insert_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'insertbin': pathsep.join(doc_sources)
+}
+
 gstinsertbin = library('gstinsertbin-' + api_version,
   insert_sources,
   c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_INSERT_BIN', '-DG_LOG_DOMAIN="GStreamer-InsertBin"'],

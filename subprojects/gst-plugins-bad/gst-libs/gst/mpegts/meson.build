@@ -23,6 +23,15 @@ mpegts_headers = files(
 )
 install_headers(mpegts_headers, subdir : 'gstreamer-1.0/gst/mpegts')
 
+doc_sources = []
+foreach s: mpegts_sources + mpegts_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'mpegts': pathsep.join(doc_sources)
+}
+
 mpegts_enums = gnome.mkenums_simple('gstmpegts-enumtypes',
   sources : mpegts_headers,
   body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',

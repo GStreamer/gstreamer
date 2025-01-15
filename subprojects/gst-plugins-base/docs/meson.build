@@ -56,37 +56,8 @@ if get_option('doc').disabled()
   subdir_done()
 endif
 
-hotdoc_p = find_program('hotdoc', required: get_option('doc'))
-if not hotdoc_p.found()
-    message('Hotdoc not found, not building the documentation')
-    subdir_done()
-endif
-
-hotdoc_req = '>= 0.11.0'
-hotdoc_version = run_command(hotdoc_p, '--version', check: false).stdout()
-if not hotdoc_version.version_compare(hotdoc_req)
-    if get_option('doc').enabled()
-        error('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
-    else
-        message('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
-        subdir_done()
-    endif
-endif
-
-hotdoc = import('hotdoc')
-required_hotdoc_extensions = ['gi-extension', 'gst-extension']
-foreach extension: required_hotdoc_extensions
-    if not hotdoc.has_extensions(extension)
-        if get_option('doc').enabled()
-            error('Documentation enabled but @0@ missing'.format(extension))
-        endif
-
-        message('@0@ extension not found, not building documentation'.format(extension))
-        subdir_done()
-    endif
-endforeach
-
 build_hotdoc = true
+
 docconf = configuration_data()
 docconf.set('GST_API_VERSION', api_version)
 
@@ -108,96 +79,66 @@ foreach h: ['pbutils-private.h', 'gsttageditingprivate.h', 'id3v2.h',
   libs_excludes += [join_paths(meson.current_source_dir(), '..', 'gst-libs/gst/*/', h)]
 endforeach
 
-libs = [
-  ['allocators', allocators_gir, allocators_dep],
-  ['app', app_gir, app_dep],
-  ['audio', audio_gir, audio_dep],
-  # FIXME! ['fft', fft_gir, fft_dep],
-  ['pbutils', pbutils_gir, pbutils_dep],
-  ['rtp', rtp_gir, rtp_dep],
-  ['rtsp', rtsp_gir, rtsp_dep],
-  ['sdp', sdp_gir, sdp_dep],
-  ['tag', tag_gir, tag_dep],
-  ['video', video_gir, video_dep],
-]
+libs_doc_source_file = configure_file(
+  output: 'libs_doc_sources.json',
+  configuration: libs_sources,
+  output_format: 'json')
 
-if build_gstgl
-  libs += [['gl', gl_gir, gstgl_dep]]
-  if enabled_gl_platforms.contains('egl')
-    libs += [['gl-egl', gl_egl_gir, gstgl_dep, [
-      join_paths('../gst-libs/gst', 'gl', 'egl', 'gstegl.[ch]'),
-      join_paths('../gst-libs/gst', 'gl', 'egl', 'gsteglimage.[ch]'),
-      join_paths('../gst-libs/gst', 'gl', 'egl', 'gstgldisplay_egl.[ch]'),
-      join_paths('../gst-libs/gst', 'gl', 'egl', 'gstgldisplay_egl_device.[ch]'),
-      join_paths('../gst-libs/gst', 'gl', 'egl', 'gstglmemoryegl.[ch]'),
-    ]]]
-  endif
-  if enabled_gl_winsys.contains('x11')
-    libs += [['gl-x11', gl_x11_gir, gstgl_dep, [
-      join_paths('../gst-libs/gst', 'gl', 'x11', 'gstgldisplay_x11.[ch]'),
-    ]]]
-  endif
-  if enabled_gl_winsys.contains('wayland')
-    libs += [['gl-wayland', gl_wayland_gir, gstgl_dep, [
-      join_paths('../gst-libs/gst', 'gl', 'wayland', 'gstgldisplay_wayland.[ch]'),
-    ]]]
-  endif
-endif
+libs_doc_c_source_file = configure_file(
+  output: 'libs_doc_c_sources.json',
+  configuration: libs_c_sources,
+  output_format: 'json')
 
-# Used to avoid conflicts with known plugin names
-project_names = {
-  'app': 'applib',
-  'rtp': 'rtplib',
-  'rtsp': 'rtsplib',
+libs_doc_gi_conf = {
+  'allocators': allocators_gir[0].full_path(),
+  'app': app_gir[0].full_path(),
+  'audio': audio_gir[0].full_path(),
+  'pbutils': pbutils_gir[0].full_path(),
+  'rtp': rtp_gir[0].full_path(),
+  'rtsp': rtsp_gir[0].full_path(),
+  'sdp': sdp_gir[0].full_path(),
+  'tag': tag_gir[0].full_path(),
+  'video': video_gir[0].full_path(),
 }
 
-libs_doc = []
-foreach lib: libs
-  name = lib[0]
-  gir = lib[1]
-  deps = [lib[2], gir]
-  extra_sources = []
-  if lib.length() >= 4
-    extra_sources = lib[3]
+if build_gstgl
+  libs_doc_gi_conf += {'gl': gl_gir[0].full_path()}
+  if enabled_gl_platforms.contains('egl')
+    libs_doc_gi_conf += {'gl-egl': gl_egl_gir[0].full_path()}
   endif
-  project_name = project_names.get(name, name)
-  libs_doc += [hotdoc.generate_doc(project_name,
-      project_version: api_version,
-      gi_c_sources: [join_paths('../gst-libs/gst', name, '*.[hc]')] + extra_sources,
-      gi_sources: gir[0].full_path(),
-      gi_c_source_filters: libs_excludes,
-      gi_c_source_roots: [join_paths(meson.current_source_dir(), '../gst-libs/gst/' + name), ],
-      sitemap: 'libs/' + name + '/sitemap.txt',
-      index: 'libs/' + name + '/index.md',
-      gi_index: 'libs/' + name + '/index.md',
-      gi_smart_index: true,
-      gi_order_generated_subpages: true,
-      dependencies: deps,
-      install: false,
-      depends: gir[0],
-  )]
-endforeach
-
-if not hotdoc.has_extensions('c-extension')
-    if get_option('doc').enabled()
-        error('Documentation enabled but c-extension missing')
-    endif
-    message('c-extension not found, not building documentation')
-else
-    libs_doc += [hotdoc.generate_doc('riff',
-        project_version: api_version,
-        c_sources: ['../gst-libs/gst/riff/*.[hc]'],
-        c_source_filters: libs_excludes,
-        sitemap: 'libs/riff/sitemap.txt',
-        index: 'libs/riff/index.md',
-        c_index: 'libs/riff/index.md',
-        c_smart_index: true,
-        c_order_generated_subpages: true,
-        dependencies: [gst_base_dep, riff_dep],
-        install: false,
-        disable_incremental_build: true,
-    )]
+  if enabled_gl_winsys.contains('x11')
+    libs_doc_gi_conf += {'gl-x11': gl_x11_gir[0].full_path()}
+  endif
+  if enabled_gl_winsys.contains('wayland')
+    libs_doc_gi_conf += {'gl-wayland': gl_wayland_gir[0].full_path()}
+  endif
 endif
+
+libs_doc_gi_source_file = configure_file(
+  output: 'libs_doc_gi_sources.json',
+  configuration: libs_doc_gi_conf,
+  output_format: 'json')
+
+libs_hotdoc_configs = custom_target(
+  'build-libs-hotdoc-configs',
+  command: [
+    plugins_cache_generator,
+    'hotdoc-lib-config',
+    '--srcdir', cdir,
+    '--builddir', meson.current_build_dir(),
+    '--buildroot', meson.global_build_root(),
+    '--project_version', api_version,
+    '--gi_source_file', libs_doc_gi_source_file,
+    '--gi_c_source_file', libs_doc_source_file,
+    '--gi_c_source_filters', libs_excludes,
+    '--c_source_filters', libs_excludes,
+    '--c_source_file', libs_doc_c_source_file,
+    '--source_root', cdir / 'libs',
+    '--gi_source_root', cdir / '..' / 'gst-libs' / 'gst',
+    '--output', '@OUTPUT@',
+  ],
+  output: 'hotdoc-libs-configs.json',
+)
 
 doc_source_file = configure_file(output: 'doc_sources.json', configuration: plugin_sources, output_format: 'json')
 

@@ -36,6 +36,15 @@ webrtc_enumtypes_headers = files([
   'webrtc_fwd.h',
 ])
 
+doc_sources = []
+foreach s: webrtc_sources + webrtc_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'webrtc': pathsep.join(doc_sources)
+}
+
 webrtc_enums = gnome.mkenums_simple('webrtc-enumtypes',
   sources : webrtc_enumtypes_headers,
   body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',

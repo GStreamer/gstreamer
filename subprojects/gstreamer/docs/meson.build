@@ -44,36 +44,6 @@ gst_plugins_doc_dep = custom_target('build-doc-cache',
     build_always_stale: true,
 )
 
-hotdoc_p = find_program('hotdoc', required: get_option('doc'))
-if not hotdoc_p.found()
-    message('Hotdoc not found, not building the documentation')
-    subdir_done()
-endif
-
-hotdoc_req = '>= 0.11.0'
-hotdoc_version = run_command(hotdoc_p, '--version', check: false).stdout()
-if not hotdoc_version.version_compare(hotdoc_req)
-    if get_option('doc').enabled()
-        error('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
-    else
-        message('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
-        subdir_done()
-    endif
-endif
-
-hotdoc = import('hotdoc')
-required_hotdoc_extensions = ['gi-extension', 'gst-extension']
-foreach extension: required_hotdoc_extensions
-    if not hotdoc.has_extensions(extension)
-        if get_option('doc').enabled()
-            error('Documentation enabled but @0@ missing'.format(extension))
-        endif
-
-        message('@0@ extension not found, not building documentation'.format(extension))
-        subdir_done()
-    endif
-endforeach
-
 if static_build
     if get_option('doc').enabled()
         error('Documentation enabled but not supported when building statically.')
@@ -121,50 +91,79 @@ foreach h: ['gettext.h', 'glib-compat-private.h', 'glib-compat.h',
     gst_excludes += [join_paths(meson.current_source_dir(), '..', 'gst', h)]
 endforeach
 
-libs_doc = [hotdoc.generate_doc('gstreamer',
-    project_version: api_version,
-    gi_c_sources: gst_sources + gst_headers,
-    gi_sources: [gst_gir[0].full_path()],
-    gi_c_source_filters: gst_excludes,
-    sitemap: 'gst/sitemap.txt',
-    index: 'gst/index.md',
-    gi_index: 'gst/gi-index.md',
-    gi_smart_index: true,
-    gi_c_source_roots: [join_paths(meson.current_source_dir(), '../gst/'), ],
-    dependencies: [gst_dep, gmodule_dep],
-    extra_assets: [join_paths(meson.current_source_dir(), 'images')],
-    depends: gst_gir[0],
-)]
+cdir = meson.current_source_dir()
 
-libs = [
-  ['base', gst_base_gir, gst_base_dep],
-  ['controller', gst_controller_gir, gst_controller_dep,],
-  ['net', gst_net_gir, gst_net_dep],
-  ['check', gst_check_gir, gst_check_dep],
-]
-
-foreach lib: libs
-  name = lib[0]
-  gir = lib[1]
-  deps = [lib[2], gir]
-  libs_doc += [hotdoc.generate_doc(name,
-      project_version: api_version,
-      gi_c_sources: ['../libs/gst/' + name + '/*.[hc]'],
-      gi_c_source_filters: gst_excludes,
-      gi_sources: gir[0].full_path(),
-      gi_c_source_roots: [join_paths(meson.current_source_dir(), '../libs/gst/' + name), ],
-      sitemap: join_paths('libs', name, 'sitemap.txt'),
-      index: join_paths('libs/', name, 'index.md'),
-      gi_index: join_paths('libs/', name, 'index.md'),
-      gi_smart_index: true,
-      gi_order_generated_subpages: true,
-      dependencies: deps,
-      install: false,
-      depends: gir[0],
-  )]
+doc_sources = []
+foreach s: gst_sources + gst_headers
+  doc_sources += s.full_path()
 endforeach
 
-cdir = meson.current_source_dir()
+lib_sources = {
+  'gst': pathsep.join(doc_sources)
+}
+
+gst_doc_source_file = configure_file(
+  output: 'gst_doc_sources.json',
+  configuration: lib_sources,
+  output_format: 'json')
+
+gst_doc_gi_source_file = configure_file(
+  output: 'gst_doc_gi_sources.json',
+  configuration: {'gst': gst_gir[0].full_path()},
+  output_format: 'json')
+
+lib_hotdoc_config = custom_target(
+  'build-gst-hotdoc-configs',
+  command: [
+    plugins_cache_generator,
+    'hotdoc-lib-config',
+    '--srcdir', cdir,
+    '--builddir', meson.current_build_dir(),
+    '--buildroot', meson.global_build_root(),
+    '--project_version', api_version,
+    '--gi_source_file', gst_doc_gi_source_file,
+    '--gi_c_source_file', gst_doc_source_file,
+    '--gi_c_source_filters', gst_excludes,
+    '--source_root', cdir / 'gst',
+    '--gi_source_root', cdir / '..' / 'gst',
+    '--output', '@OUTPUT@',
+  ],
+  output: 'hotdoc-gst-configs.json',
+)
+
+libs_doc_source_file = configure_file(
+  output: 'libs_doc_sources.json',
+  configuration: libs_sources,
+  output_format: 'json')
+
+libs_doc_gi_source_file = configure_file(
+  output: 'libs_doc_gi_sources.json',
+  configuration: {
+    'base': gst_base_gir[0].full_path(),
+    'controller': gst_controller_gir[0].full_path(),
+    'net': gst_net_gir[0].full_path(),
+    'check': gst_check_gir[0].full_path(),
+  },
+  output_format: 'json')
+
+libs_hotdoc_configs = custom_target(
+  'build-libs-hotdoc-configs',
+  command: [
+    plugins_cache_generator,
+    'hotdoc-lib-config',
+    '--srcdir', cdir,
+    '--builddir', meson.current_build_dir(),
+    '--buildroot', meson.global_build_root(),
+    '--project_version', api_version,
+    '--gi_source_file', libs_doc_gi_source_file,
+    '--gi_c_source_file', libs_doc_source_file,
+    '--gi_c_source_filters', gst_excludes,
+    '--source_root', cdir / 'libs',
+    '--gi_source_root', cdir / '..' / 'libs' / 'gst',
+    '--output', '@OUTPUT@',
+  ],
+  output: 'hotdoc-libs-configs.json',
+)
 
 doc_source_file = configure_file(output: 'doc_sources.json', configuration: plugin_sources, output_format: 'json')
 

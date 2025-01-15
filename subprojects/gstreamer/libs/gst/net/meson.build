@@ -23,6 +23,15 @@ gst_net_headers = files(
 )
 install_headers(gst_net_headers, subdir : 'gstreamer-1.0/gst/net/')
 
+doc_sources = []
+foreach s: gst_net_sources + gst_net_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'net': pathsep.join(doc_sources)
+}
+
 gst_net_gen_sources = []
 gst_net = library('gstnet-@0@'.format(api_version),
   gst_net_sources,

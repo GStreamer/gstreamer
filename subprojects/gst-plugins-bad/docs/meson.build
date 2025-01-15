@@ -54,36 +54,6 @@ if get_option('doc').disabled()
   subdir_done()
 endif
 
-
-hotdoc_p = find_program('hotdoc', required: get_option('doc'))
-if not hotdoc_p.found()
-    message('Hotdoc not found, not building the documentation')
-    subdir_done()
-endif
-
-hotdoc_req = '>= 0.11.0'
-hotdoc_version = run_command(hotdoc_p, '--version', check: false).stdout()
-if not hotdoc_version.version_compare(hotdoc_req)
-    if get_option('doc').enabled()
-        error('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
-    else
-        message('Hotdoc version @0@ not found, got @1@'.format(hotdoc_req, hotdoc_version))
-        subdir_done()
-    endif
-endif
-
-hotdoc = import('hotdoc')
-required_hotdoc_extensions = ['gi-extension', 'c-extension', 'gst-extension']
-foreach extension: required_hotdoc_extensions
-    if not hotdoc.has_extensions(extension)
-        if get_option('doc').enabled()
-            error('Documentation enabled but @0@ missing'.format(extension))
-        endif
-
-        message('@0@ extensions not found, not building documentation requiring it'.format(extension))
-    endif
-endforeach
-
 build_hotdoc = true
 
 docconf = configuration_data()
@@ -124,125 +94,83 @@ foreach f: [
     excludes += [join_paths(meson.current_source_dir(), root_rel, f)]
 endforeach
 
+libs_doc_source_file = configure_file(
+  output: 'libs_doc_sources.json',
+  configuration: libs_sources,
+  output_format: 'json')
+
+libs_doc_c_source_file = configure_file(
+  output: 'libs_doc_c_sources.json',
+  configuration: libs_c_sources,
+  output_format: 'json')
+
+libs_doc_gi_conf = {}
+
 libs = []
 if build_gir
-    libs = [
-        {'name': 'mpegts', 'gir': mpegts_gir, 'lib': gstmpegts_dep},
-        {'name': 'play', 'gir': play_gir, 'lib': gstplay_dep},
-        {'name': 'player', 'gir': player_gir, 'lib': gstplayer_dep},
-        {'name': 'insertbin', 'gir': insertbin_gir, 'lib': gstinsertbin_dep},
-        {'name': 'codecparsers', 'lib': gstcodecparsers_dep},
-        {'name': 'adaptivedemux', 'lib': gstadaptivedemux_dep},
-        {'name': 'basecamerabinsrc', 'gir': basecamerabin_gir, 'lib': gstbasecamerabin_dep},
-        {'name': 'webrtc', 'gir': webrtc_gir, 'lib': gstwebrtc_dep, 'suffix': 'lib'},
-        {'name': 'audio', 'gir': audio_gir, 'lib': gstbadaudio_dep, 'prefix': 'bad-'},
-        {'name': 'transcoder', 'gir': transcoder_gir, 'lib': gst_transcoder_dep},
-        {'name': 'codecs', 'gir': codecs_gir, 'lib': gstcodecs_dep},
-        {'name': 'dxva', 'gir': dxva_gir, 'lib': gstdxva_dep, 'c_source_patterns': ['*.h', '*.cpp']},
-        {'name': 'mse', 'gir': mse_gir, 'lib': gstmse_dep, 'suffix': 'lib'},
-        {'name': 'analytics', 'gir': analytics_gir, 'lib': gstanalytics_dep},
-    ]
+    libs_doc_gi_conf += {
+      'mpegts': mpegts_gir[0].full_path(),
+      'play': play_gir[0].full_path(),
+      'player': player_gir[0].full_path(),
+      'insertbin': insertbin_gir[0].full_path(),
+      'basecamerabinsrc': basecamerabin_gir[0].full_path(),
+      'webrtc': webrtc_gir[0].full_path(),
+      'audio': audio_gir[0].full_path(),
+      'transcoder': transcoder_gir[0].full_path(),
+      'codecs': codecs_gir[0].full_path(),
+      'dxva': dxva_gir[0].full_path(),
+      'mse': mse_gir[0].full_path(),
+      'analytics': analytics_gir[0].full_path(),
+    }
 
     if get_variable('gst_cuda_gir', []).length() > 0
-        libs += [{'name': 'cuda', 'gir': gst_cuda_gir, 'lib': gstcuda_dep, 'c_source_patterns': ['*.h', '*.cpp']}]
-    endif
-
-    if gstopencv_dep.found()
-        libs += [
-            {'name': 'opencv', 'lib': gstopencv_dep, 'c_source_patterns': ['*.h', '*.cpp'], 'extra_c_flags': ['-x c++']},
-        ]
+        libs_doc_gi_conf += {'cuda': gst_cuda_gir[0].full_path()}
     endif
 
     if gstva_dep.found()
-        libs += [{'name': 'va', 'gir': va_gir, 'lib': gstva_dep, 'suffix': 'lib'}]
+        libs_doc_gi_conf += {'va': va_gir[0].full_path()}
     else
-        libs += [{'name': 'va', 'gir-file': join_paths(meson.global_source_root(), 'girs', 'GstVa-1.0.gir'), 'lib': []}]
+        libs_doc_gi_conf += {'va': join_paths(meson.global_source_root(), 'girs', 'GstVa-1.0.gir')}
     endif
 
     if gstvulkan_dep.found()
-        libs += [
-             {'name': 'vulkan', 'gir': vulkan_gir, 'lib': gstvulkan_dep, 'suffix': 'lib'},
-        ]
+        libs_doc_gi_conf += {'vulkan': vulkan_gir[0].full_path()}
         if enabled_vulkan_winsys.contains('xcb')
-            libs += [
-                {'name': 'vulkan-xcb', 'gir': vulkan_xcb_gir, 'lib': gstvulkanxcb_dep, 'extra_sources' : [
-                    join_paths(root_rel, 'gst-libs/gst/vulkan/xcb/gstvkdisplay_xcb.[ch]'),
-                ]},
-            ]
+            libs_doc_gi_conf += {'vulkan-xcb': vulkan_xcb_gir[0].full_path()}
         endif
         if enabled_vulkan_winsys.contains('wayland')
-            libs += [
-                {'name': 'vulkan-wayland', 'gir': vulkan_wayland_gir, 'lib': gstvulkanwayland_dep, 'extra_sources' : [
-                    join_paths(root_rel, 'gst-libs/gst/vulkan/wayland/gstvkdisplay_wayland.[ch]'),
-                ]},
-            ]
+            libs_doc_gi_conf += {'vulkan-wayland': vulkan_wayland_gir[0].full_path()}
         endif
     endif
 endif
 
-has_gi_extension = hotdoc.has_extensions('gi-extension')
-has_c_extension = hotdoc.has_extensions('c-extension')
-libs_doc = []
-foreach lib_def: libs
-  name = lib_def['name']
-  lib = lib_def['lib']
-  extra_sources = lib_def.get('extra_sources', [])
+cdir = meson.current_source_dir()
 
-  c_source_patterns = lib_def.get('c_source_patterns', ['*.[hc]'])
-  c_sources = []
-  foreach pattern: c_source_patterns
-    c_sources += join_paths(root_rel, 'gst-libs/gst', name, pattern)
-  endforeach
-  c_sources += extra_sources
+libs_doc_gi_source_file = configure_file(
+  output: 'libs_doc_gi_sources.json',
+  configuration: libs_doc_gi_conf,
+  output_format: 'json')
 
-    if lib_def.has_key('gir') or lib_def.has_key('gir-file')
-        if has_gi_extension
-            if lib_def.has_key('gir')
-                gir_targets = lib_def['gir']
-                gir = gir_targets[0]
-                gir_file = gir[0].full_path()
-            else
-                gir_targets = []
-                gir = []
-                gir_file = lib_def['gir-file']
-            endif
-
-            prefix = lib_def.get('prefix', '')
-            suffix = lib_def.get('suffix', '')
-            libs_doc += [hotdoc.generate_doc(prefix + name + suffix,
-                project_version: api_version,
-                gi_c_sources: c_sources,
-                gi_sources: gir_file,
-                gi_c_source_filters: excludes,
-                sitemap: join_paths('libs', name, 'sitemap.txt'),
-                index: join_paths('libs/', name, 'index.md'),
-                gi_index: join_paths('libs/', name, 'index.md'),
-                gi_smart_index: true,
-                gi_order_generated_subpages: true,
-                dependencies: [lib, gir_targets],
-                c_flags: '-DGST_USE_UNSTABLE_API',
-                install: false,
-                depends: gir,
-            )]
-        endif
-    else
-        if has_c_extension
-            libs_doc += [hotdoc.generate_doc('gst-plugins-bad-' + name,
-                sitemap: join_paths('libs', name, 'sitemap.txt'),
-                index: join_paths('libs', name, 'index.md'),
-                project_version: api_version,
-                c_sources: c_sources,
-                c_source_filters: excludes,
-                c_index: join_paths('libs', name, 'index.md'),
-                c_smart_index: true,
-                c_order_generated_subpages: true,
-                extra_c_flags: ['-DGST_USE_UNSTABLE_API'] + lib_def.get('extra_c_flags', []),
-                dependencies: lib,
-                install: false,
-            )]
-        endif
-    endif
-endforeach
+libs_hotdoc_configs = custom_target(
+  'build-libs-hotdoc-configs',
+  command: [
+    plugins_cache_generator,
+    'hotdoc-lib-config',
+    '--srcdir', cdir,
+    '--builddir', meson.current_build_dir(),
+    '--buildroot', meson.global_build_root(),
+    '--project_version', api_version,
+    '--gi_source_file', libs_doc_gi_source_file,
+    '--gi_c_source_file', libs_doc_source_file,
+    '--gi_c_source_filters', excludes,
+    '--c_source_filters', excludes,
+    '--c_source_file', libs_doc_c_source_file,
+    '--source_root', cdir / 'libs',
+    '--gi_source_root', cdir / '..' / 'gst-libs' / 'gst',
+    '--output', '@OUTPUT@',
+  ],
+  output: 'hotdoc-libs-configs.json',
+)
 
 doc_source_file = configure_file(output: 'doc_sources.json', configuration: plugin_sources, output_format: 'json')
 

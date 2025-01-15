@@ -3,6 +3,15 @@ headers = files(['gsttranscoder.h', 'transcoder-prelude.h', 'gsttranscoder-signa
 
 install_headers(headers, subdir : 'gstreamer-' + api_version + '/gst/transcoder')
 
+doc_sources = []
+foreach s: sources + headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'transcoder': pathsep.join(doc_sources)
+}
+
 transcoder_enums = gnome.mkenums_simple('transcoder-enumtypes',
   sources : headers,
   body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',

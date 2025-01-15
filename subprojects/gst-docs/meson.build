@@ -62,6 +62,7 @@ plugins_doc = ''
 deps = []
 plugins_sitemap = ''
 plugin_configs = []
+libs_configs = []
 if built_subprojects != ''
     foreach project_name: built_subprojects.split(',')
         sub = subproject(project_name)
@@ -86,6 +87,10 @@ if built_subprojects != ''
             endforeach
 
             plugin_configs += sub.get_variable('plugin_hotdoc_configs', [])
+
+            # Handle the GStreamer special case with two custom targets
+            libs_configs += sub.get_variable('lib_hotdoc_config', [])
+            libs_configs += sub.get_variable('libs_hotdoc_configs', [])
         else
             message('@0@ did not build hotdoc documentation, can\'t build API doc'.format(project_name))
         endif
@@ -106,7 +111,8 @@ sitemap = custom_target(command: [
   '--markdown-index', 'gi-index',
   '--libs', libs,
   '--plugins', plugins_doc,
-  '--plugin-configs', plugin_configs],
+  '--plugin-configs', plugin_configs,
+  '--lib-configs', libs_configs],
   input: 'sitemap.txt',
   output: 'sitemap.txt')
 deps += [sitemap]

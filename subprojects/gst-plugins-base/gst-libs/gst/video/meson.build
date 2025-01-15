@@ -80,6 +80,15 @@ video_headers = files([
 ])
 install_headers(video_headers, subdir : 'gstreamer-1.0/gst/video/')
 
+doc_sources = []
+foreach s: video_sources + video_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'video': pathsep.join(doc_sources)
+}
+
 video_mkenum_headers = [
   'video.h',
   'video-anc.h',

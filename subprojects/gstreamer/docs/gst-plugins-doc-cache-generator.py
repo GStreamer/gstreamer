@@ -32,6 +32,198 @@ try:
 except ImportError:  # python <3.3
     from collections import Mapping
 
+# Some project names need to be amended, to avoid conflicts with plugins.
+# We also map gst to gstreamer to preserve existing links
+PROJECT_NAME_MAP = {
+    'gst': 'gstreamer',
+    'app': 'applib',
+    'rtp': 'rtplib',
+    'rtsp': 'rtsplib',
+    'webrtc': 'webrtclib',
+    'mse': 'mselib',
+    'va': 'valib',
+    'vulkan': 'vulkanlib',
+    'rtspserver': 'gst-rtsp-server',
+    'validate': 'gst-devtools',
+    'ges': 'gst-editing-services',
+    'opencv': 'opencvlib',
+}
+
+
+def get_c_flags(dep, buildroot, uninstalled=True):
+    env = {}
+    if uninstalled:
+        env['PKG_CONFIG_PATH'] = os.path.join(buildroot, 'meson-uninstalled')
+    res = subprocess.run(['pkg-config', '--cflags', dep], env = env, capture_output=True)
+
+    return [res.stdout.decode().strip()]
+
+class GstLibsHotdocConfGen:
+    def __init__(self):
+        parser = ArgumentParser()
+        parser.add_argument('--srcdir', type=P)
+        parser.add_argument('--builddir', type=P)
+        parser.add_argument('--buildroot', type=P)
+        parser.add_argument('--source_root', type=P)
+        parser.add_argument('--gi_source_file', type=P)
+        parser.add_argument('--gi_c_source_file', type=P)
+        parser.add_argument('--gi_source_root', type=P)
+        parser.add_argument('--c_source_file', type=P)
+        parser.add_argument('--project_version')
+        parser.add_argument('--gi_c_source_filters', nargs='*', default=[])
+        parser.add_argument('--c_source_filters', nargs='*', default=[])
+        parser.add_argument('--output', type=P)
+
+        parser.parse_args(namespace=self, args=sys.argv[2:])
+
+    def generate_libs_configs(self):
+        conf_files = []
+
+        with self.gi_c_source_file.open() as fd:
+            gi_c_source_map = json.load(fd)
+
+        with self.gi_source_file.open() as fd:
+            gi_source_map = json.load(fd)
+
+        if self.c_source_file is not None:
+            with self.c_source_file.open() as fd:
+                c_source_map = json.load(fd)
+        else:
+            c_source_map = {}
+
+        for libname in gi_source_map.keys():
+            gi_c_sources = gi_c_source_map[libname].split(os.pathsep)
+            gi_sources = gi_source_map[libname].split(os.pathsep)
+
+            project_name = PROJECT_NAME_MAP.get(libname, libname)
+
+            if project_name == 'audio' and gi_sources[0].endswith('GstBadAudio-1.0.gir'):
+                project_name = 'bad-audio'
+
+            conf_path = self.builddir / f'{project_name}-doc.json'
+            conf_files.append(str(conf_path))
+
+            index_path = os.path.join(self.source_root, 'index.md')
+            if not os.path.exists(index_path):
+                index_path = os.path.join(self.source_root, libname, 'index.md')
+                sitemap_path = os.path.join(self.source_root, libname, 'sitemap.txt')
+                gi_index_path = os.path.join(self.source_root, libname, 'gi-index.md')
+            else:
+                sitemap_path = os.path.join(self.source_root, 'sitemap.txt')
+                gi_index_path = os.path.join(self.source_root, 'gi-index.md')
+
+            assert(os.path.exists(index_path))
+            assert(os.path.exists(sitemap_path))
+            if not os.path.exists(gi_index_path):
+                gi_index_path = index_path
+
+            gi_source_root = os.path.join(self.gi_source_root, libname)
+            if not os.path.exists(gi_source_root):
+                gi_source_root = os.path.join(self.gi_source_root)
+
+            conf = {
+                'sitemap': sitemap_path,
+                'index': index_path,
+                'gi_index': gi_index_path,
+                'output': f'{project_name}-doc',
+                'conf_file': str(conf_path),
+                'project_name': project_name,
+                'project_version': self.project_version,
+                'gi_smart_index': True,
+                'gi_order_generated_subpages': True,
+                'gi_c_sources': gi_c_sources,
+                'gi_c_source_roots': [
+                    os.path.abspath(gi_source_root),
+                    os.path.abspath(os.path.join(self.srcdir, '..',)),
+                    os.path.abspath(os.path.join(self.builddir, '..',)),
+                ],
+                'include_paths': [
+                    os.path.join(self.builddir),
+                    os.path.join(self.srcdir),
+                ],
+                'gi_sources': gi_sources,
+                'gi_c_source_filters': [str(s) for s in self.gi_c_source_filters],
+                'extra_assets': os.path.join(self.srcdir, 'images'),
+            }
+
+            with conf_path.open('w') as f:
+                json.dump(conf, f, indent=4)
+
+        for libname in c_source_map.keys():
+            c_sources = c_source_map[libname].split(os.pathsep)
+
+            project_name = PROJECT_NAME_MAP.get(libname, libname)
+
+            conf_path = self.builddir / f'{project_name}-doc.json'
+            conf_files.append(str(conf_path))
+
+            index_path = os.path.join(self.source_root, 'index.md')
+            if not os.path.exists(index_path):
+                index_path = os.path.join(self.source_root, libname, 'index.md')
+                sitemap_path = os.path.join(self.source_root, libname, 'sitemap.txt')
+                c_index_path = os.path.join(self.source_root, libname, 'c-index.md')
+            else:
+                sitemap_path = os.path.join(self.source_root, 'sitemap.txt')
+                c_index_path = os.path.join(self.source_root, 'c-index.md')
+
+            assert(os.path.exists(index_path))
+            assert(os.path.exists(sitemap_path))
+            if not os.path.exists(c_index_path):
+                c_index_path = index_path
+
+
+            try:
+                if libname == 'adaptivedemux':
+                    c_flags = get_c_flags(f'gstreamer-base-{self.project_version}', self.buildroot)
+                    c_flags += [f'-I{self.srcdir}/../gst-libs']
+                elif libname == 'opencv':
+                    c_flags = get_c_flags(f'gstreamer-base-{self.project_version}', self.buildroot)
+                    c_flags += get_c_flags(f'gstreamer-video-{self.project_version}', self.buildroot)
+                    c_flags += get_c_flags(f'opencv', self.buildroot, uninstalled = True)
+                    c_flags += [f'-I{self.srcdir}/../gst-libs']
+                else:
+                    c_flags = get_c_flags(f'gstreamer-{libname}-{self.project_version}', self.buildroot)
+            except Exception as e:
+                print (f'Cannot document {libname}')
+                print (e)
+                continue
+
+            c_flags += ['-DGST_USE_UNSTABLE_API']
+
+            if libname == 'opencv':
+                c_flags += ['-x c++']
+
+            conf = {
+                'sitemap': sitemap_path,
+                'index': index_path,
+                'c_index': c_index_path,
+                'output': f'{project_name}-doc',
+                'conf_file': str(conf_path),
+                'project_name': project_name,
+                'project_version': self.project_version,
+                'c_smart_index': True,
+                'c_order_generated_subpages': True,
+                'c_sources': c_sources,
+                'include_paths': [
+                    os.path.join(self.builddir),
+                    os.path.join(self.srcdir),
+                ],
+                'c_source_filters': [str(s) for s in self.c_source_filters],
+                'extra_assets': os.path.join(self.srcdir, 'images'),
+                'extra_c_flags': c_flags
+            }
+
+            with conf_path.open('w') as f:
+                json.dump(conf, f, indent=4)
+
+
+        if self.output is not None:
+            with self.output.open('w') as f:
+                json.dump(conf_files, f, indent=4)
+
+        return conf_files
+
+
 
 class GstPluginsHotdocConfGen:
     def __init__(self):
@@ -159,6 +351,10 @@ if __name__ == "__main__":
         fs = GstPluginsHotdocConfGen().generate_plugins_configs()
         print(os.pathsep.join(fs))
         sys.exit(0)
+    elif sys.argv[1] == "hotdoc-lib-config":
+        fs = GstLibsHotdocConfGen().generate_libs_configs()
+        sys.exit(0)
+
 
     cache_filename = sys.argv[1]
     output_filename = sys.argv[2]

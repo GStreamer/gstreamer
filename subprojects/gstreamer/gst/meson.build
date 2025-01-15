@@ -152,8 +152,8 @@ gst_headers = files(
   'math-compat.h',
 )
 if host_system == 'darwin'
-  gst_headers += 'gstmacos.h'
-  gst_sources += 'gstmacos.m'
+  gst_headers += files('gstmacos.h')
+  gst_sources += files('gstmacos.m')
 endif
 
 install_headers(gst_headers, subdir : 'gstreamer-1.0/gst')
@@ -166,7 +166,7 @@ endif
 
 extra_deps = []
 if host_system == 'android'
-  gst_sources += 'gstandroid.c'
+  gst_sources += files('gstandroid.c')
   extra_deps += cc.find_library('log')
 endif
 

@@ -38,6 +38,15 @@ cp_args = [
   '-DG_LOG_DOMAIN="GStreamer-Codecs"'
 ]
 
+doc_sources = []
+foreach s: codecs_sources + codecs_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'codecs': pathsep.join(doc_sources)
+}
+
 gstcodecs = library('gstcodecs-' + api_version,
   codecs_sources,
   c_args : gst_plugins_bad_args + cp_args,

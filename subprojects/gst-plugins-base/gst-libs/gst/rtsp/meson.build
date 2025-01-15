@@ -22,6 +22,15 @@ rtsp_headers = files([
 ])
 install_headers(rtsp_headers, subdir : 'gstreamer-1.0/gst/rtsp/')
 
+doc_sources = []
+foreach s: rtsp_sources + rtsp_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'rtsp': pathsep.join(doc_sources)
+}
+
 rtsp_enums = gnome.mkenums_simple('gstrtsp-enumtypes',
   sources : rtsp_headers,
   body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',

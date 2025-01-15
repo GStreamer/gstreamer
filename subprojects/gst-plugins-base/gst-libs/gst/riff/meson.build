@@ -1,17 +1,26 @@
-riff_sources = [
+riff_sources = files(
   'riff.c',
   'riff-media.c',
   'riff-read.c',
-]
+)
 
-riff_headers = [
+riff_headers = files(
   'riff.h',
   'riff-prelude.h',
   'riff-ids.h',
   'riff-media.h',
   'riff-read.h',
-]
+  )
 install_headers(riff_headers, subdir : 'gstreamer-1.0/gst/riff/')
+
+doc_sources = []
+foreach s: riff_sources + riff_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_c_sources += {
+  'riff': pathsep.join(doc_sources)
+}
 
 riff_deps = [audio_dep, tag_dep]
 gstriff = library('gstriff-@0@'.format(api_version),

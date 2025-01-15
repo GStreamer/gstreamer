@@ -24,6 +24,15 @@ rtp_headers = files([
 ])
 install_headers(rtp_headers, subdir : 'gstreamer-1.0/gst/rtp/')
 
+doc_sources = []
+foreach s: rtp_sources + rtp_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'rtp': pathsep.join(doc_sources)
+}
+
 rtp_enums = gnome.mkenums_simple('gstrtp-enumtypes',
   sources : rtp_headers,
   body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',

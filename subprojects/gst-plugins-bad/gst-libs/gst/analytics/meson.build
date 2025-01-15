@@ -17,6 +17,15 @@ analytics_headers = files(    'analytics.h',
                               'gsttensor.h')
 install_headers(analytics_headers, subdir : 'gstreamer-1.0/gst/analytics')
 
+doc_sources = []
+foreach s: analytics_sources + analytics_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'analytics': pathsep.join(doc_sources)
+}
+
 pkg_name = 'gstreamer-analytics-1.0'
 gstanalytics = library('gstanalytics-' + api_version,
   analytics_sources,

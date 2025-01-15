@@ -24,7 +24,7 @@ codecparser_sources = files([
   'gstjpegbitwriter.c',
   'gstlcevcmeta.c',
 ])
-codecparser_headers = [
+codecparser_headers = files([
   'codecparsers-prelude.h',
   'gstmpegvideoparser.h',
   'gsth264parser.h',
@@ -39,8 +39,18 @@ codecparser_headers = [
   'gstvp9parser.h',
   'gstav1parser.h',
   'gstlcevcmeta.h',
-]
+  'gsth266parser.h',
+])
 install_headers(codecparser_headers, subdir : 'gstreamer-1.0/gst/codecparsers')
+
+doc_sources = []
+foreach s: codecparser_sources + codecparser_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_c_sources += {
+  'codecparsers': pathsep.join(doc_sources)
+}
 
 cp_args = [
   '-DGST_USE_UNSTABLE_API',

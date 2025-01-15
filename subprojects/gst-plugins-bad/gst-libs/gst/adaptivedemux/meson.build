@@ -1,6 +1,15 @@
 adaptivedemux_sources = files('gstadaptivedemux.c')
 adaptivedemux_headers = files('gstadaptivedemux.h')
 
+doc_sources = []
+foreach s: adaptivedemux_sources + adaptivedemux_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_c_sources += {
+  'adaptivedemux': pathsep.join(doc_sources)
+}
+
 pkg_name = 'gstreamer-adaptivedemux-1.0'
 gstadaptivedemux = library('gstadaptivedemux-' + api_version,
   adaptivedemux_sources,
@@ -12,6 +21,7 @@ gstadaptivedemux = library('gstadaptivedemux-' + api_version,
   install : true,
   dependencies : [gstbase_dep, gsturidownloader_dep],
 )
+
 gst_libraries += [[pkg_name, {'lib': gstadaptivedemux}]]
 
 gstadaptivedemux_dep = declare_dependency(link_with : gstadaptivedemux,

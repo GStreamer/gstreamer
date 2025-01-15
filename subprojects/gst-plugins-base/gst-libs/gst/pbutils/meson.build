@@ -36,6 +36,15 @@ pbutils_headers = files([
 ])
 install_headers(pbutils_headers, subdir : 'gstreamer-1.0/gst/pbutils/')
 
+doc_sources = []
+foreach s: pbutils_sources + pbutils_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'pbutils': pathsep.join(doc_sources)
+}
+
 pbutils_mkenum_headers = pbutils_headers
 
 pbutils_enums = gnome.mkenums_simple('pbutils-enumtypes',

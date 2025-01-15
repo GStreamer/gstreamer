@@ -7,6 +7,15 @@ app_mkenum_headers = files([
 app_headers = app_mkenum_headers + files([ 'app.h', 'app-prelude.h', 'gstappsrc.h', 'gstappsink.h' ])
 install_headers(app_headers, subdir : 'gstreamer-1.0/gst/app/')
 
+doc_sources = []
+foreach s: app_sources + app_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'app': pathsep.join(doc_sources)
+}
+
 app_enums = gnome.mkenums_simple('app-enumtypes',
   sources : app_mkenum_headers,
   body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',

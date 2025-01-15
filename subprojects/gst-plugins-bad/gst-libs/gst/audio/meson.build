@@ -2,6 +2,14 @@ badaudio_sources = files('gstnonstreamaudiodecoder.c', 'gstplanaraudioadapter.c'
 badaudio_headers = files('gstnonstreamaudiodecoder.h', 'audio-bad-prelude.h', 'gstplanaraudioadapter.h')
 install_headers(badaudio_headers, subdir : 'gstreamer-1.0/gst/audio')
 
+doc_sources = []
+foreach s: badaudio_sources + badaudio_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'audio': pathsep.join(doc_sources)
+}
 
 gstbadaudio = library('gstbadaudio-' + api_version,
   badaudio_sources,

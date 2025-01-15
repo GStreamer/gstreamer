@@ -17,6 +17,15 @@ gst_allocators_sources = files([
   'gstshmallocator.c',
 ])
 
+doc_sources = []
+foreach s: gst_allocators_sources + gst_allocators_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'allocators': pathsep.join(doc_sources)
+}
+
 gst_allocators_cargs = [
   gst_plugins_base_args,
   '-DBUILDING_GST_ALLOCATORS',

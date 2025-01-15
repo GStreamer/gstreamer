@@ -13,32 +13,44 @@ if __name__ == "__main__":
     parser.add_argument('--libs', type=str)
     parser.add_argument('--plugins', type=str)
     parser.add_argument('--plugin-configs', nargs='*', default=[])
+    parser.add_argument('--lib-configs', nargs='*', default=[])
 
     args = parser.parse_args()
 
     in_ = args.input_sitemap
     out = args.output_sitemap
     index_md = args.markdown_index
-    libs = args.libs
     plugins = args.plugins
     plugin_configs = args.plugin_configs
+    lib_configs = args.lib_configs
 
     with open(in_) as f:
         index = f.read()
         index = '\n'.join(line for line in index.splitlines())
 
+        if args.libs is None:
+            libs = []
+        else:
+            libs = args.libs.split(os.pathsep)
+        for config in lib_configs:
+            with open(config) as f:
+                libs += json.load(f)
+        plugins = plugins.replace('\n', '').split(os.pathsep)
+        for config in plugin_configs:
+            with open(config) as f:
+                plugins += json.load(f)
+        plugins = sorted(plugins, key=lambda x: os.path.basename(x))
+
         if libs:
-            libs = libs.split(os.pathsep)
-            plugins = plugins.replace('\n', '').split(os.pathsep)
-            for config in plugin_configs:
-                with open(config) as f:
-                    plugins += json.load(f)
-            plugins = sorted(plugins, key=lambda x: os.path.basename(x))
             index += '\n\tlibs.md'
             for lib in libs:
                 if not lib:
                     continue
-                index += "\n\t\t" + lib + '.json'
+                name = lib
+                if not name.endswith('.json'):
+                    name += '.json'
+                index += "\n\t\t" + name
+        if plugins:
             index += '\n\tgst-index'
             for plugin in plugins:
                 if not plugin:

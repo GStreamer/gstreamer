@@ -26,6 +26,16 @@ gst_controller_headers = controller_mkenum_headers + files(
 )
 install_headers(gst_controller_headers, subdir : 'gstreamer-1.0/gst/controller/')
 
+doc_sources = []
+foreach s: gst_controller_sources + gst_controller_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'controller': pathsep.join(doc_sources)
+}
+
+
 controller_enums = gnome.mkenums_simple('controller-enumtypes',
   sources : controller_mkenum_headers,
   header_prefix : '#include <gst/controller/controller-prelude.h>',

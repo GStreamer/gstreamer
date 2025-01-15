@@ -17,6 +17,15 @@ gst_check_headers = files(
 )
 install_headers(gst_check_headers, subdir : 'gstreamer-1.0/gst/check/')
 
+doc_sources = []
+foreach s: gst_check_sources + gst_check_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'check': pathsep.join(doc_sources)
+}
+
 
 check_cdata = configuration_data()
 

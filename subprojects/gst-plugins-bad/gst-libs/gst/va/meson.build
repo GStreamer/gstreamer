@@ -39,6 +39,15 @@ va_win32_headers = files(
   'gstvadisplay_win32.h',
 )
 
+doc_sources = []
+foreach s: va_sources + va_sources_priv + va_headers + va_linux_sources + va_linux_headers + va_win32_sources + va_win32_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'va': pathsep.join(doc_sources)
+}
+
 gstva_dep = dependency('', required : false)
 platform_deps = []
 extra_args = ['-DGST_USE_UNSTABLE_API',

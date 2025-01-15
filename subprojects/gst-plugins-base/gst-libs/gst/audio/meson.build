@@ -66,6 +66,15 @@ audio_headers = audio_mkenum_headers + files([
 ])
 install_headers(audio_headers, subdir : 'gstreamer-1.0/gst/audio/')
 
+doc_sources = []
+foreach s: audio_src + audio_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'audio': pathsep.join(doc_sources)
+}
+
 audio_enums = gnome.mkenums_simple('audio-enumtypes',
   sources : audio_mkenum_headers,
   body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',

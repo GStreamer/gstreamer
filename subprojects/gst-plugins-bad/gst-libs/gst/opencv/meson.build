@@ -3,16 +3,16 @@ if get_option('opencv').disabled()
   subdir_done()
 endif
 
-opencv_sources = [
+opencv_sources = files([
   'gstopencvutils.cpp',
   'gstopencvvideofilter.cpp',
-]
+])
 
-opencv_headers = [
+opencv_headers = files([
   'opencv-prelude.h',
   'gstopencvutils.h',
   'gstopencvvideofilter.h',
-]
+])
 
 libopencv_headers = [
   'opencv2/bgsegm.hpp',
@@ -24,6 +24,7 @@ libopencv_headers = [
   'opencv2/video.hpp',
   'opencv2/tracking.hpp',
 ]
+
 
 gstopencv_cargs = ['-DGST_HAAR_CASCADES_DIR="@0@"']
 
@@ -87,6 +88,15 @@ if opencv_found
     install : true,
     dependencies : [gstbase_dep, gstvideo_dep, opencv_dep],
   )
+
+  doc_sources = []
+  foreach s: opencv_sources + opencv_headers
+    doc_sources += s.full_path()
+  endforeach
+
+  libs_c_sources += {
+    'opencv': pathsep.join(doc_sources)
+  }
 
   gst_libraries += [[pkg_name, {'lib': gstopencv}]]
   gstopencv_dep = declare_dependency(link_with: gstopencv,

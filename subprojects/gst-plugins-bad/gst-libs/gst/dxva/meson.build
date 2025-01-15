@@ -25,6 +25,15 @@ extra_args = [
   '-DG_LOG_DOMAIN="GStreamer-Dxva"',
 ]
 
+doc_sources = []
+foreach s: dxva_sources + dxva_headers
+  doc_sources += s.full_path()
+endforeach
+
+libs_sources += {
+  'dxva': pathsep.join(doc_sources)
+}
+
 if host_system != 'windows' and not build_gir
   subdir_done()
 endif
