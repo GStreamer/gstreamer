@@ -1,1 +1,0 @@
-# GStreamer core libraries API
