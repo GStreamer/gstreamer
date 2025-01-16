@@ -115,7 +115,9 @@ struct _GstH264Parse
 
   /* Infos we need to keep track of */
   guint32 sei_cpb_removal_delay;
-  guint8 sei_pic_struct;
+  /* The picture struct type */
+  GstH264SEIPicStructType sei_pic_struct;
+  /* sei_pic_struct is present and valid */
   guint8 sei_pic_struct_pres_flag;
   guint field_pic_flag;
   gboolean ignore_vui_fps;

@@ -581,6 +581,26 @@ _nal_name (GstH264NalUnitType nal_type)
     return nal_names[nal_type];
   return "Invalid";
 }
+
+static const gchar *pic_struct_name[] = {
+  "Frame",
+  "Top Field",
+  "Bottom Field",
+  "Top-Bottom",
+  "Bottom-Top",
+  "Top-Bottom-Top",
+  "Bottom-Top-Bottom",
+  "Doubling",
+  "Tripling"
+};
+
+static const gchar *
+_pic_struct_name (GstH264SEIPicStructType pic_type)
+{
+  if (pic_type <= GST_H264_SEI_PIC_STRUCT_FRAME_TRIPLING)
+    return pic_struct_name[pic_type];
+  return "Invalid";
+}
 #endif
 
 static void
@@ -657,6 +677,9 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
             sei.payload.pic_timing.cpb_removal_delay;
         if (h264parse->sei_pic_struct_pres_flag) {
           h264parse->sei_pic_struct = sei.payload.pic_timing.pic_struct;
+          GST_DEBUG_OBJECT (h264parse, "SEI Picture type %d (%s)",
+              h264parse->sei_pic_struct,
+              _pic_struct_name (h264parse->sei_pic_struct));
         }
 
         h264parse->num_clock_timestamp = 0;
