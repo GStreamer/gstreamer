@@ -2179,6 +2179,9 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
   guint8 *buffer, *sps;
   gulong buffer_size;
   gint sei_ni, sps_ni, pps_ni;
+  guint8 avc_profile_indication;
+  guint8 chroma_format;
+  guint8 bit_depth_luma_minus8, bit_depth_chroma_minus8;
 
   if (G_UNLIKELY (encoder->x264enc == NULL))
     return NULL;
@@ -2228,7 +2231,7 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
   sps++;
 
   buffer[0] = 1;                /* AVC Decoder Configuration Record ver. 1 */
-  buffer[1] = sps[0];           /* profile_idc                             */
+  avc_profile_indication = buffer[1] = sps[0];  /* aka. profile_idc        */
   buffer[2] = sps[1];           /* profile_compability                     */
   buffer[3] = sps[2];           /* level_idc                               */
   buffer[4] = 0xfc | (4 - 1);   /* nal_length_size_minus1                  */
@@ -2251,6 +2254,54 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
   GST_WRITE_UINT16_BE (buffer + i_size, nal_size);
   i_size += nal_size + 2;
 
+#if X264_BUILD >= 153
+  // if we use an earlier API version, we can really only output old format and hope the receiver can work it out
+  //
+  // See ISO/IEC 14496-15:2024 Section 5.3.2.1.2 for the syntax encoding used here.
+  // The AVCProfileIndication values correspond to the profile code (profile_idc) in ISO/IEC 14496-10.
+  // Roughly, 66 is Baseline, 77 is Main, 88 is Extended. Other codes mostly correspond to some variation on High.
+  // See the standards for the specific interpretation.
+  if ((avc_profile_indication != 66) && (avc_profile_indication != 77)
+      && (avc_profile_indication != 88)) {
+    switch (encoder->x264param.i_csp) {
+      case X264_CSP_I400:
+        chroma_format = 0;      // mono
+        break;
+      case X264_CSP_I420:
+      case X264_CSP_YV12:
+      case X264_CSP_NV12:
+      case X264_CSP_NV21:
+        chroma_format = 1;      // 4:2:0
+        break;
+      case X264_CSP_I422:
+      case X264_CSP_YV16:
+      case X264_CSP_NV16:
+      case X264_CSP_YUYV:
+      case X264_CSP_UYVY:
+      case X264_CSP_V210:
+        chroma_format = 2;      // 4:2:2
+        break;
+      case X264_CSP_I444:
+      case X264_CSP_YV24:
+      case X264_CSP_BGR:
+      case X264_CSP_BGRA:
+      case X264_CSP_RGB:
+        chroma_format = 3;      // 4:4:4
+        break;
+      default:
+        GST_WARNING_OBJECT (encoder,
+            "Failed to decode colourspace, likely invalid output");
+        goto return_what_we_have;
+    }
+    buffer[i_size++] = 0xfc | chroma_format;
+    bit_depth_luma_minus8 = bit_depth_chroma_minus8 =
+        (encoder->x264param.i_bitdepth - 8);
+    buffer[i_size++] = 0xf8 | bit_depth_luma_minus8;
+    buffer[i_size++] = 0xf8 | bit_depth_chroma_minus8;
+    buffer[i_size++] = 0;       // numOfSequenceParameterSetExt
+  }
+#endif
+return_what_we_have:
   buf = gst_buffer_new_and_alloc (i_size);
   gst_buffer_fill (buf, 0, buffer, i_size);
 
