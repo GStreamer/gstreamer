@@ -492,6 +492,29 @@ _is_core_audio_layout_positioned (AudioChannelLayout * layout)
   return FALSE;
 }
 
+static gboolean
+_core_audio_has_invalid_channel_labels (AudioChannelLayout * layout)
+{
+  guint i;
+
+  g_assert (layout->mChannelLayoutTag ==
+      kAudioChannelLayoutTag_UseChannelDescriptions);
+
+  for (i = 0; i < layout->mNumberChannelDescriptions; ++i) {
+    /* Let's use our mapping to judge whether the value is valid.
+     * It doesn't support all of the defined positions, but the missing ones
+     * aren't useful to us anyway. */
+    GstAudioChannelPosition p =
+        gst_core_audio_channel_label_to_gst
+        (layout->mChannelDescriptions[i].mChannelLabel, i, FALSE);
+
+    if (p == GST_AUDIO_CHANNEL_POSITION_INVALID)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 static void
 _core_audio_parse_channel_descriptions (AudioChannelLayout * layout,
     guint * channels, guint64 * channel_mask, GstAudioChannelPosition * pos)
@@ -501,6 +524,24 @@ _core_audio_parse_channel_descriptions (AudioChannelLayout * layout,
 
   g_assert (layout->mChannelLayoutTag ==
       kAudioChannelLayoutTag_UseChannelDescriptions);
+
+  /* For >16ch devices, CoreAudio can give out completely incorrect
+   * channel positions by default - instead of using kAudioChannelLabel_Discrete_X,
+   * it just returns incrementing values starting from 0, some of which are not
+   * valid if you check against the CoreAudioBaseTypes.h header.
+   * If such case is detected, let's just swap all positions to Discrete,
+   * which map to GST_AUDIO_CHANNEL_POSITION_NONE. */
+  if (_core_audio_has_invalid_channel_labels (layout)) {
+    GST_DEBUG
+        ("Invalid channel positions given by CoreAudio, setting all to unpositioned");
+    if (pos) {
+      for (i = 0; i < layout->mNumberChannelDescriptions; ++i)
+        pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+    }
+    *channels = layout->mNumberChannelDescriptions;
+    *channel_mask = 0;
+    return;
+  }
 
   positioned = _is_core_audio_layout_positioned (layout);
   *channel_mask = 0;
