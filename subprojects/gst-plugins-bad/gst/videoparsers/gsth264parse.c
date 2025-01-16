@@ -334,7 +334,7 @@ gst_h264_parse_start (GstBaseParse * parse)
   h264parse->dts = GST_CLOCK_TIME_NONE;
   h264parse->ts_trn_nb = GST_CLOCK_TIME_NONE;
   h264parse->sei_pic_struct_pres_flag = FALSE;
-  h264parse->sei_pic_struct = 0;
+  h264parse->sei_pic_struct = GST_H264_SEI_PIC_STRUCT_FRAME;
   h264parse->field_pic_flag = 0;
   h264parse->aud_needed = TRUE;
   h264parse->aud_insert = FALSE;
@@ -2674,14 +2674,7 @@ gst_h264_parse_get_duration (GstH264Parse * h264parse, gboolean frame)
     goto fps_duration;
   }
 
-  if (h264parse->sei_pic_struct_pres_flag &&
-      h264parse->sei_pic_struct != (guint8) - 1) {
-    /* Note that when h264parse->sei_pic_struct == -1 (unspecified), there
-     * are ways to infer its value. This is related to computing the
-     * TopFieldOrderCnt and BottomFieldOrderCnt, which looks
-     * complicated and thus not implemented for the time being. Yet
-     * the value we have here is correct for many applications
-     */
+  if (h264parse->sei_pic_struct_pres_flag) {
     switch (h264parse->sei_pic_struct) {
       case GST_H264_SEI_PIC_STRUCT_TOP_FIELD:
       case GST_H264_SEI_PIC_STRUCT_BOTTOM_FIELD:
@@ -2773,14 +2766,7 @@ gst_h264_parse_get_timestamp (GstH264Parse * h264parse,
     goto exit;
   }
 
-  if (h264parse->sei_pic_struct_pres_flag &&
-      h264parse->sei_pic_struct != (guint8) - 1) {
-    /* Note that when h264parse->sei_pic_struct == -1 (unspecified), there
-     * are ways to infer its value. This is related to computing the
-     * TopFieldOrderCnt and BottomFieldOrderCnt, which looks
-     * complicated and thus not implemented for the time being. Yet
-     * the value we have here is correct for many applications
-     */
+  if (h264parse->sei_pic_struct_pres_flag) {
     switch (h264parse->sei_pic_struct) {
       case GST_H264_SEI_PIC_STRUCT_TOP_FIELD:
       case GST_H264_SEI_PIC_STRUCT_BOTTOM_FIELD:
