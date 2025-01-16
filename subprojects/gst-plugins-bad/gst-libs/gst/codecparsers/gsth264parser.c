@@ -2936,6 +2936,11 @@ gst_h264_quant_matrix_4x4_get_raster_from_zigzag (guint8 out_quant[16],
  * @field_pic_flag from a slice header and @pic_struct from #GstH264PicTiming SEI
  * message.
  *
+ * **WARNING** This assumes that *all* pictures are identical ! Do not use this
+ * with content on which you are not 100% certain it's not telecine material, or
+ * other types of content which will use different picture types throughout the
+ * stream.
+ *
  * If framerate is variable or can't be determined, @fps_num will be set to 0
  * and @fps_den to 1.
  */

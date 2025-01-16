@@ -2258,7 +2258,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     caps = gst_caps_copy (sink_caps);
   } else {
     gint crop_width, crop_height;
-    gint fps_num, fps_den;
+    gint fps_num = 0, fps_den = 1;
     gint par_n, par_d;
     GstH264VUIParams *vui = &sps->vui_parameters;
     gchar *colorimetry = NULL;
@@ -2292,8 +2292,14 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 
     /* 0/1 is set as the default in the codec parser, we will set
      * it in case we have no info */
-    gst_h264_video_calculate_framerate (sps, h264parse->field_pic_flag,
-        h264parse->sei_pic_struct, &fps_num, &fps_den);
+    if (sps && sps->vui_parameters_present_flag
+        && sps->vui_parameters.timing_info_present_flag) {
+      const GstH264VUIParams *vui = &sps->vui_parameters;
+      /* The framerate is solely based on the timing information */
+      fps_num = vui->time_scale;
+      /* We need a framerate, this is a field rate */
+      fps_den = vui->num_units_in_tick * 2;
+    }
 
     /* Checks whether given framerate makes sense or not
      * See also A.3.4 Effect of level limits on frame rate (informative)
