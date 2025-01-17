@@ -3396,7 +3396,6 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   GstBuffer *new_buf;
   GstEvent *event;
   GstBuffer *parse_buffer = NULL;
-  gboolean is_interlaced = FALSE;
   GstH264SPS *sps;
 
   h264parse = GST_H264_PARSE (parse);
@@ -3650,7 +3649,6 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
       if (tim->ct_type == GST_H264_CT_TYPE_INTERLACED) {
         flags |= GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
-        is_interlaced = TRUE;
       }
 
       /* Equation D-1 (without and tOffset)
@@ -3711,10 +3709,51 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     h264parse->num_clock_timestamp = 0;
   }
 
-  if (is_interlaced) {
-    GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED);
-    if (h264parse->sei_pic_struct == GST_H264_SEI_PIC_STRUCT_TOP_FIELD)
+  if (h264parse->sei_pic_struct_pres_flag) {
+    gboolean interlaced = TRUE;
+    gboolean top_field_first = FALSE;
+    gboolean repeat_first_field = FALSE;
+
+    switch (h264parse->sei_pic_struct) {
+      case GST_H264_SEI_PIC_STRUCT_FRAME:
+      case GST_H264_SEI_PIC_STRUCT_FRAME_DOUBLING:
+      case GST_H264_SEI_PIC_STRUCT_FRAME_TRIPLING:
+        interlaced = FALSE;
+        break;
+      case GST_H264_SEI_PIC_STRUCT_TOP_FIELD:
+        top_field_first = TRUE;
+        /* NOTE: We *could* set GST_VIDEO_BUFFER_FLAG_ONEFIELD for this and the
+         * following but we don't since the usage of that flag is not 100%
+         * coherent accross elements. */
+        break;
+      case GST_H264_SEI_PIC_STRUCT_BOTTOM_FIELD:
+        break;
+      case GST_H264_SEI_PIC_STRUCT_TOP_BOTTOM:
+        top_field_first = TRUE;
+        break;
+      case GST_H264_SEI_PIC_STRUCT_BOTTOM_TOP:
+        /* All defaults */
+        break;
+      case GST_H264_SEI_PIC_STRUCT_TOP_BOTTOM_TOP:
+        top_field_first = TRUE;
+        repeat_first_field = TRUE;
+        break;
+      case GST_H264_SEI_PIC_STRUCT_BOTTOM_TOP_BOTTOM:
+        repeat_first_field = TRUE;
+        break;
+      default:
+        interlaced = FALSE;
+        break;
+    }
+
+    if (interlaced)
+      GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+
+    if (top_field_first)
       GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
+
+    if (repeat_first_field)
+      GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_RFF);
   }
 
   gst_video_push_user_data ((GstElement *) h264parse, &h264parse->user_data,
