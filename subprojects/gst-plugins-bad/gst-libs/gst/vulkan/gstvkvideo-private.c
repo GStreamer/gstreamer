@@ -42,6 +42,10 @@ const VkExtensionProperties _vk_codec_extensions[] = {
     .extensionName = VK_STD_VULKAN_VIDEO_CODEC_VP9_DECODE_EXTENSION_NAME,
     .specVersion = VK_STD_VULKAN_VIDEO_CODEC_VP9_DECODE_SPEC_VERSION,
   },
+  [GST_VK_VIDEO_EXTENSION_DECODE_AV1] = {
+    .extensionName = VK_STD_VULKAN_VIDEO_CODEC_AV1_DECODE_EXTENSION_NAME,
+    .specVersion = VK_STD_VULKAN_VIDEO_CODEC_AV1_DECODE_SPEC_VERSION,
+  },
   [GST_VK_VIDEO_EXTENSION_ENCODE_H264] = {
     .extensionName = VK_STD_VULKAN_VIDEO_CODEC_H264_ENCODE_EXTENSION_NAME,
     .specVersion = VK_STD_VULKAN_VIDEO_CODEC_H264_ENCODE_SPEC_VERSION,
@@ -53,7 +57,7 @@ const VkExtensionProperties _vk_codec_extensions[] = {
   [GST_VK_VIDEO_EXTENSION_ENCODE_AV1] = {
     .extensionName = VK_STD_VULKAN_VIDEO_CODEC_AV1_ENCODE_EXTENSION_NAME,
     .specVersion = VK_STD_VULKAN_VIDEO_CODEC_AV1_ENCODE_SPEC_VERSION,
-  }
+  },
 };
 
 const VkComponentMapping _vk_identity_component_map = {

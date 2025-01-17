@@ -136,6 +136,13 @@ _create_empty_params (GstVulkanDecoder * self, GError ** error)
     case VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR:
       /* VP9 doesn't have session parameters */
       return TRUE;
+    case VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR:
+      /* *INDENT-OFF* */
+      empty_params.av1 = (VkVideoDecodeAV1SessionParametersCreateInfoKHR) {
+        .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_AV1_SESSION_PARAMETERS_CREATE_INFO_KHR,
+      };
+      /* *INDENT-ON* */
+      break;
     default:
       g_assert_not_reached ();
   }
@@ -190,6 +197,7 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
     case VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR:
     case VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR:
     case VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR:
+    case VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR:
       if (!gst_vulkan_video_profile_is_valid (profile, self->codec)) {
         g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
             "Invalid profile");
@@ -231,6 +239,14 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
       /* *INDENT-ON* */
       codec_idx = GST_VK_VIDEO_EXTENSION_DECODE_VP9;
       break;
+    case VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR:
+      /* *INDENT-OFF* */
+      priv->caps.decoder.codec.av1 = (VkVideoDecodeAV1CapabilitiesKHR) {
+          .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_AV1_CAPABILITIES_KHR,
+      };
+      /* *INDENT-ON* */
+      codec_idx = GST_VK_VIDEO_EXTENSION_DECODE_AV1;
+      break;
     default:
       g_assert_not_reached ();
   }
@@ -261,6 +277,9 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
       break;
     case VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR:
       maxlevel = priv->caps.decoder.codec.vp9.maxLevel;
+      break;
+    case VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR:
+      maxlevel = priv->caps.decoder.codec.av1.maxLevel;
       break;
     default:
       maxlevel = 0;
@@ -1294,6 +1313,8 @@ static const struct
       VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME},
   {VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR,
       VK_KHR_VIDEO_DECODE_VP9_EXTENSION_NAME},
+  {VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR,
+      VK_KHR_VIDEO_DECODE_AV1_EXTENSION_NAME},
 };
 
 /**

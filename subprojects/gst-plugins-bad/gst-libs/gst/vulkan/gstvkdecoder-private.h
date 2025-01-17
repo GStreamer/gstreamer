@@ -139,6 +139,7 @@ union _GstVulkanDecoderParameters
   /*< private >*/
   VkVideoDecodeH264SessionParametersCreateInfoKHR h264;
   VkVideoDecodeH265SessionParametersCreateInfoKHR h265;
+  VkVideoDecodeAV1SessionParametersCreateInfoKHR av1;
 };
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanDecoder, gst_object_unref)

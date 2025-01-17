@@ -53,6 +53,7 @@ struct _GstVulkanVideoProfile
     VkBaseInStructure base;
     VkVideoDecodeH264ProfileInfoKHR h264dec;
     VkVideoDecodeH265ProfileInfoKHR h265dec;
+    VkVideoDecodeAV1ProfileInfoKHR av1dec;
     /**
      * GstVulkanVideoProfile.usage.codec.vp9dec:
      *
@@ -107,6 +108,12 @@ struct _GstVulkanVideoCapabilities
          * Since: 1.28
          **/
         VkVideoDecodeVP9CapabilitiesKHR vp9;
+        /**
+         * GstVulkanVideoCapabilities.caps.codec.av1:
+         *
+         * Since: 1.28
+         **/
+        VkVideoDecodeAV1CapabilitiesKHR av1;
       } codec;
     } decoder;
     struct

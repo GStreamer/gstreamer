@@ -37,6 +37,7 @@ video_sources = [
   'vkh264dec.c',
   'vkh265dec.c',
   'vkvp9dec.c',
+  'vkav1dec.c',
 ]
 
 doc_sources = []
