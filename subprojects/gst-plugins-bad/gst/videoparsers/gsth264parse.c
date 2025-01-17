@@ -1690,7 +1690,13 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
           && GST_H264_PARSE_FORMAT_AVC3 != h264parse->format))
     return NULL;
 
-  buf = gst_buffer_new_allocate (NULL, 5 + 1 + sps_size + 1 + pps_size, NULL);
+  if ((profile_idc != 66) && (profile_idc != 77) && (profile_idc != 88)) {
+    buf =
+        gst_buffer_new_allocate (NULL, 5 + 1 + sps_size + 1 + pps_size + 4,
+        NULL);
+  } else {
+    buf = gst_buffer_new_allocate (NULL, 5 + 1 + sps_size + 1 + pps_size, NULL);
+  }
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
   data = map.data;
   nl = h264parse->nal_length_size;
@@ -1725,6 +1731,18 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
         data += 2 + nal_size;
       }
     }
+  }
+
+  if ((profile_idc != 66) && (profile_idc != 77) && (profile_idc != 88)
+      && (h264parse->nalparser->last_sps)) {
+    data[0] = 0xfc | h264parse->nalparser->last_sps->chroma_format_idc;
+    data++;
+    data[0] = 0xf8 | h264parse->nalparser->last_sps->bit_depth_luma_minus8;
+    data++;
+    data[0] = 0xf8 | h264parse->nalparser->last_sps->bit_depth_chroma_minus8;
+    data++;
+    data[0] = 0;                // numOfSequenceParameterSetExt;
+    data++;
   }
 
   gst_buffer_unmap (buf, &map);

@@ -1,6 +1,6 @@
 event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_SELECT, group-id=(uint)1;
 event stream-collection: stream-collection, collection=(GstStreamCollection)"\(GstStreamCollection\)\ adaptivedemux";
-event caps: video/x-h264, alignment=(string)au, bit-depth-chroma=(uint)8, bit-depth-luma=(uint)8, chroma-format=(string)4:2:0, codec_data=(buffer)01640033ffe1001027640033ac56700d8010fa6a0202020401000428ee3cb0, coded-picture-structure=(string)frame, colorimetry=(string)bt709, framerate=(fraction)0/1, height=(int)2160, interlace-mode=(string)progressive, level=(string)5.1, parsed=(boolean)true, pixel-aspect-ratio=(fraction)1/1, profile=(string)high, stream-format=(string)avc, width=(int)3456;
+event caps: video/x-h264, alignment=(string)au, bit-depth-chroma=(uint)8, bit-depth-luma=(uint)8, chroma-format=(string)4:2:0, codec_data=(buffer)01640033ffe1001027640033ac56700d8010fa6a0202020401000428ee3cb0fdf8f800, coded-picture-structure=(string)frame, colorimetry=(string)bt709, framerate=(fraction)0/1, height=(int)2160, interlace-mode=(string)progressive, level=(string)5.1, parsed=(boolean)true, pixel-aspect-ratio=(fraction)1/1, profile=(string)high, stream-format=(string)avc, width=(int)3456;
 event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
 event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)0;
 event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)100000000;
