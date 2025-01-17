@@ -2420,6 +2420,22 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
         }
       }
 
+      if (s && !gst_structure_has_field (s, "interlace-mode")) {
+        const gchar *interlace_mode;
+        /* If a picture timing is present, and upstream didn't specify the
+         * interlace mode, we are in mixed mode (i.e. we are not guaranteed we
+         * will either be always interlaced or always progressive)
+         */
+        if (vui->pic_struct_present_flag)
+          interlace_mode = "mixed";
+        else
+          interlace_mode = "progressive";
+        GST_DEBUG_OBJECT (h264parse, "Setting interlace-mode : %s",
+            interlace_mode);
+        gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING,
+            interlace_mode, NULL);
+      }
+
       /* Pass through or set output stereo/multiview config */
       if (s && gst_structure_has_field (s, "multiview-mode")) {
         caps_mview_mode = gst_structure_get_string (s, "multiview-mode");
