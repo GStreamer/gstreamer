@@ -28,7 +28,7 @@ dnf install -y glib2-doc gdk-pixbuf2-devel gtk3-devel-docs gtk4-devel-docs libso
 # Make sure we don't end up installing these from some transient dependency
 dnf remove -y "gstreamer1*-devel" rust cargo meson 'fdk-aac-free*'
 
-pip3 install meson==1.5.2 python-gitlab tomli junitparser
+pip3 install meson==1.5.2 python-gitlab tomli junitparser bs4
 pip3 install git+https://github.com/hotdoc/hotdoc.git@8c1cc997f5bc16e068710a8a8121f79ac25cbcce
 
 # Install most debug symbols, except the big ones from things we use

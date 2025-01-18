@@ -32,3 +32,6 @@ export GI_TYPELIB_PATH=$PWD/girs
 hotdoc run --conf-file build/subprojects/gst-docs/GStreamer-doc.json
 
 mv "$builddir/subprojects/gst-docs/GStreamer-doc/html" documentation/
+
+pip3 install bs4
+python3 subprojects/gst-docs/scripts/rust_doc_unifier.py documentation/
