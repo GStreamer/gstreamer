@@ -1817,6 +1817,62 @@ gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list,
   return;
 }
 
+static void
+gst_qt_mux_set_matrix_from_tags (guint32 * matrix, const GstTagList * tags)
+{
+  gchar *orientation;
+
+  if (!tags ||
+      !gst_tag_list_get_string (tags, "image-orientation", &orientation))
+    return;
+
+  if (!g_strcmp0 ("rotate-0", orientation)) {
+    matrix[0] = 1 << 16;
+    matrix[1] = 0;
+    matrix[3] = 0;
+    matrix[4] = 1 << 16;
+  } else if (!g_strcmp0 ("rotate-90", orientation)) {
+    matrix[0] = 0;
+    matrix[1] = 1 << 16;
+    matrix[3] = G_MAXUINT16 << 16;
+    matrix[4] = 0;
+  } else if (!g_strcmp0 ("rotate-180", orientation)) {
+    matrix[0] = G_MAXUINT16 << 16;
+    matrix[1] = 0;
+    matrix[3] = 0;
+    matrix[4] = G_MAXUINT16 << 16;
+  } else if (!g_strcmp0 ("rotate-270", orientation)) {
+    matrix[0] = 0;
+    matrix[1] = G_MAXUINT16 << 16;
+    matrix[3] = 1 << 16;
+    matrix[4] = 0;
+  } else if (!g_strcmp0 ("flip-rotate-0", orientation)) {
+    matrix[0] = G_MAXUINT16 << 16;
+    matrix[1] = 0;
+    matrix[3] = 0;
+    matrix[4] = 1 << 16;
+  } else if (!g_strcmp0 ("flip-rotate-90", orientation)) {
+    matrix[0] = 0;
+    matrix[1] = G_MAXUINT16 << 16;
+    matrix[3] = G_MAXUINT16 << 16;
+    matrix[4] = 0;
+  } else if (!g_strcmp0 ("flip-rotate-180", orientation)) {
+    matrix[0] = 1 << 16;
+    matrix[1] = 0;
+    matrix[3] = 0;
+    matrix[4] = G_MAXUINT16 << 16;
+  } else if (!g_strcmp0 ("flip-rotate-270", orientation)) {
+    matrix[0] = 0;
+    matrix[1] = 1 << 16;
+    matrix[3] = 1 << 16;
+    matrix[4] = 0;
+  } else {
+    GST_WARNING ("Unsupported orientation %s", orientation);
+  }
+
+  g_free (orientation);
+}
+
 /*
  * Gets the tagsetter iface taglist and puts the known tags
  * into the output stream
@@ -1825,6 +1881,7 @@ static void
 gst_qt_mux_setup_metadata (GstQTMux * qtmux)
 {
   const GstTagList *tags = NULL;
+  guint32 transform_matrix[9] = { 0 };
   GList *l;
 
   GST_OBJECT_LOCK (qtmux);
@@ -1852,6 +1909,12 @@ gst_qt_mux_setup_metadata (GstQTMux * qtmux)
     GST_DEBUG_OBJECT (qtmux, "No new tags received");
   }
 
+  /* Initialize to identity */
+  transform_matrix[0] = 1 << 16;
+  transform_matrix[4] = 1 << 16;
+  transform_matrix[8] = 1 << 30;
+  gst_qt_mux_set_matrix_from_tags (transform_matrix, tags);
+
   GST_OBJECT_LOCK (qtmux);
   for (l = GST_ELEMENT (qtmux)->sinkpads; l; l = l->next) {
     GstQTMuxPad *qpad = GST_QT_MUX_PAD (l->data);
@@ -1860,6 +1923,12 @@ gst_qt_mux_setup_metadata (GstQTMux * qtmux)
       GST_DEBUG_OBJECT (qpad, "Adding tags");
       gst_tag_list_remove_tag (qpad->tags, GST_TAG_CONTAINER_FORMAT);
       gst_qt_mux_add_metadata_tags (qtmux, qpad->tags, &qpad->trak->udta);
+
+      /* Use the matrix from the stream tags if available, otherwise fall back
+       * to global tags or identity. */
+      memcpy (qpad->trak->tkhd.matrix, transform_matrix, sizeof (guint32) * 9);
+      gst_qt_mux_set_matrix_from_tags (qpad->trak->tkhd.matrix, qpad->tags);
+
       qpad->tags_changed = FALSE;
       GST_DEBUG_OBJECT (qpad, "Tags added");
     } else {
