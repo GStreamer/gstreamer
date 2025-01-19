@@ -31,6 +31,7 @@
 #include <errno.h>
 
 #include <libavcodec/avcodec.h>
+#include <libavutil/cpu.h>
 #include <libavutil/opt.h>
 
 #include <gst/gst.h>
@@ -47,6 +48,8 @@ enum
   PROP_0,
   PROP_CFG_BASE,
 };
+
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
 static void gst_ffmpegaudenc_class_init (GstFFMpegAudEncClass * klass);
 static void gst_ffmpegaudenc_base_init (GstFFMpegAudEncClass * klass);
@@ -150,6 +153,8 @@ gst_ffmpegaudenc_class_init (GstFFMpegAudEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_ffmpegaudenc_set_format);
   gstaudioencoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_ffmpegaudenc_handle_frame);
+
+  GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 }
 
 static void
@@ -517,7 +522,27 @@ gst_ffmpegaudenc_send_frame (GstFFMpegAudEnc * ffmpegaudenc, GstBuffer * buffer)
       gst_buffer_unref (buffer);
       buffer_info->buffer = NULL;
     } else {
-      frame->data[0] = audio_in;
+      // This is the worst case requirement. It might be possible to query the
+      // specific alignment requirement for the encoder and transforms in use.
+      size_t min_align = av_cpu_max_align ();
+
+      if (((size_t) audio_in & (min_align - 1)) == 0) {
+        frame->data[0] = audio_in;
+      } else {
+        GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, ffmpegaudenc,
+            "Copying input data at %p to ensure minimum alignment of %zu bytes",
+            audio_in, min_align);
+
+        buffer_info->ext_data = av_memdup (audio_in, in_size);
+        frame->data[0] = buffer_info->ext_data;
+
+        // Todo: could probably avoid the buffer_info helper struct allocation
+        // in this case (and above too)
+        gst_buffer_unmap (buffer, &buffer_info->map);
+        gst_buffer_unref (buffer);
+        buffer_info->buffer = NULL;
+      }
+
       frame->extended_data = frame->data;
       frame->linesize[0] = in_size;
       frame->nb_samples = nsamples = in_size / info->bpf;
