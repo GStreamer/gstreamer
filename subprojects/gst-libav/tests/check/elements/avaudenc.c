@@ -137,9 +137,61 @@ GST_START_TEST (test_audioenc_16_channels)
   size = 1024 * GST_AUDIO_INFO_BPF (&info);
   in_buf = gst_buffer_new_and_alloc (size);
   gst_buffer_memset (in_buf, 0, 0, size);
+  GST_BUFFER_PTS (in_buf) = 0;
 
   GstFlowReturn ret = gst_harness_push (h, in_buf);
   fail_if (ret != GST_FLOW_OK);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+// Make sure we fix up any too-small memory alignment before feeding data
+// to FFmpeg. By default we use the malloc alignment, which might be 16,
+// but FFmpeg might be using SIMD operations that require a bigger alignment.
+GST_START_TEST (test_audioenc_alignment_fixup)
+{
+  GstHarness *h;
+  GstAudioInfo info;
+  GstCaps *caps;
+
+  h = gst_harness_new ("avenc_ac3");
+  fail_unless (h != NULL);
+
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_F32, 44100, 1, NULL);
+
+  caps = gst_audio_info_to_caps (&info);
+  gst_harness_set_src_caps (h, caps);
+
+  fail_unless_equals_int (GST_AUDIO_INFO_BPF (&info), sizeof (float));
+
+  // AC-3 has 1536 samples per frame. Need to supply that many per buffer,
+  // otherwise the audio encoder baseclass will realloc things via GstAdapter
+  // and mess up our carefully curated audio buffer (mis)alignment.
+# define N_SAMPLES 1536
+# define N_ALIGNMENTS 16
+
+  const gsize size = N_SAMPLES * sizeof (float);
+
+  float *samples = g_newa0 (float, (N_SAMPLES + N_ALIGNMENTS));
+
+  guint64 offset = 0;
+
+  for (int i = 0; i < 100; ++i) {
+    GstMemory *mem = gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+        samples + (i % N_ALIGNMENTS), size, 0, size,
+        NULL, NULL);
+
+    GstBuffer *in_buf = gst_buffer_new ();
+    gst_buffer_insert_memory (in_buf, 0, mem);
+
+    GST_BUFFER_PTS (in_buf) = gst_util_uint64_scale (offset, GST_SECOND, 44100);
+
+    GstFlowReturn ret = gst_harness_push (h, g_steal_pointer (&in_buf));
+    fail_unless_equals_int (ret, GST_FLOW_OK);
+    offset += N_SAMPLES;
+  }
 
   gst_harness_teardown (h);
 }
@@ -155,6 +207,7 @@ avaudenc_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_audioenc_drain);
   tcase_add_test (tc_chain, test_audioenc_16_channels);
+  tcase_add_test (tc_chain, test_audioenc_alignment_fixup);
 
   return s;
 }
