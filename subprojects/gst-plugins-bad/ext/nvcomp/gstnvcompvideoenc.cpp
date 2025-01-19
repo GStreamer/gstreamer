@@ -481,6 +481,14 @@ gst_nv_comp_video_enc_class_init (GstNvCompVideoEncClass * klass)
   encoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_nv_comp_video_enc_handle_frame);
 
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_COMP_METHOD, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_COMP_DEFLATE_ALGO,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_COMP_BITCOMP_ALGO,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_COMP_DATA_TYPE,
+      (GstPluginAPIFlags) 0);
+
   GST_DEBUG_CATEGORY_INIT (gst_nv_comp_video_enc_debug,
       "nvcompvideoenc", 0, "nvcompvideoenc");
 }

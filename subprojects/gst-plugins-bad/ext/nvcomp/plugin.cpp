@@ -17,6 +17,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * plugin-nvcomp:
+ *
+ * Since: 1.26
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
