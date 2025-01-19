@@ -44,6 +44,24 @@
 GST_DEBUG_CATEGORY_STATIC (gst_nv_vp8_dec_debug);
 #define GST_CAT_DEFAULT gst_nv_vp8_dec_debug
 
+#define DOC_SINK_CAPS \
+    "video/x-vp8, width = (int) [ 48, 4096 ], height = (int) [ 16, 4096 ]" \
+
+#define DOC_SRC_CAPS_COMM \
+    "format = (string) NV12, " \
+    "width = (int) [ 48, 4096 ], height = (int) [ 16, 4096 ]"
+
+#define DOC_SRC_CAPS_D3D11 \
+    "format = (string) NV12, " \
+    "width = (int) [ 48, 4096 ], height = (int) [ 16, 4096 ]"
+
+#define DOC_SRC_CAPS \
+    "video/x-raw(memory:CUDAMemory), " DOC_SRC_CAPS_COMM "; " \
+    "video/x-raw(memory:D3D12Memory), " DOC_SRC_CAPS_COMM "; " \
+    "video/x-raw(memory:D3D11Memory), " DOC_SRC_CAPS_D3D11 "; " \
+    "video/x-raw(memory:GLMemory), " DOC_SRC_CAPS_COMM "; " \
+    "video/x-raw, " DOC_SRC_CAPS_COMM
+
 typedef struct _GstNvVp8Dec
 {
   GstVp8Decoder parent;
@@ -216,12 +234,19 @@ gst_nv_vp8_dec_class_init (GstNvVp8DecClass * klass,
       "Codec/Decoder/Video/Hardware",
       "NVIDIA VP8 video decoder", "Seungha Yang <seungha@centricular.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  auto pad_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, cdata->sink_caps);
+  auto doc_caps = gst_caps_from_string (DOC_SINK_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
+
+  pad_templ = gst_pad_template_new ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, cdata->src_caps);
+  doc_caps = gst_caps_from_string (DOC_SRC_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
 
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_open);
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_close);

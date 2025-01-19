@@ -1547,6 +1547,7 @@ gst_nv_decoder_check_device_caps (GstCudaContext * context,
       APPEND_STRING (format_str, formats, "P010_10LE");
       APPEND_STRING (format_str, formats, "P012_LE");
       APPEND_STRING (format_str, formats, "Y444");
+      APPEND_STRING (format_str, formats, "Y444_16LE");
       APPEND_STRING (format_str, formats, "GBR");
       format_str += " }";
     }

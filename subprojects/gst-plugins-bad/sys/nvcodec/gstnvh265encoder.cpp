@@ -48,6 +48,32 @@
 GST_DEBUG_CATEGORY_STATIC (gst_nv_h265_encoder_debug);
 #define GST_CAT_DEFAULT gst_nv_h265_encoder_debug
 
+#define DOC_SINK_CAPS_COMM \
+    "format = (string) { NV12, P010_10LE, Y444, Y444_16LE, GBR, GBR_16LE, VUYA, RGBA, RGBx, BGRA, BGRx, RGB10A2_LE }, " \
+    "width = (int) [ 144, 8192 ], height = (int) [ 48, 8192 ], " \
+    "interlace-mode = (string) progressive"
+
+#define DOC_SINK_CAPS \
+    "video/x-raw(memory:CUDAMemory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw(memory:D3D12Memory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw(memory:GLMemory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw, " DOC_SINK_CAPS_COMM
+
+#define DOC_SINK_CAPS_D3D11 \
+    "video/x-raw(memory:D3D11Memory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw, " DOC_SINK_CAPS_COMM
+
+#define DOC_SINK_CAPS_AUTOGPU \
+    "video/x-raw(memory:CUDAMemory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw(memory:D3D11Memory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw(memory:GLMemory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw, " DOC_SINK_CAPS_COMM
+
+#define DOC_SRC_CAPS \
+    "video/x-h265, width = (int) [ 144, 8192 ], height = (int) [ 48, 8192 ], " \
+    "profile = (string) { main, main-10, main-444, main-444-10 }, " \
+    "stream-format = (string) { byte-stream, hvc1, hev1 }, alignment = (string) au"
+
 static GTypeClass *parent_class = NULL;
 
 enum
@@ -488,6 +514,9 @@ gst_nv_h265_encoder_class_init (GstNvH265EncoderClass * klass, gpointer data)
           "ignored if negotiated stream-format is \"hvc1\"",
           DEFAULT_REPEAT_SEQUENCE_HEADER, param_flags));
 
+  GstPadTemplate *pad_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, cdata->sink_caps);
+  GstCaps *doc_caps = nullptr;
   switch (cdata->device_mode) {
     case GST_NV_ENCODER_DEVICE_CUDA:
       gst_element_class_set_static_metadata (element_class,
@@ -495,6 +524,7 @@ gst_nv_h265_encoder_class_init (GstNvH265EncoderClass * klass, gpointer data)
           "Codec/Encoder/Video/Hardware",
           "Encode H.265 video streams using NVCODEC API CUDA Mode",
           "Seungha Yang <seungha@centricular.com>");
+      doc_caps = gst_caps_from_string (DOC_SINK_CAPS);
       break;
     case GST_NV_ENCODER_DEVICE_D3D11:
       gst_element_class_set_static_metadata (element_class,
@@ -502,6 +532,7 @@ gst_nv_h265_encoder_class_init (GstNvH265EncoderClass * klass, gpointer data)
           "Codec/Encoder/Video/Hardware",
           "Encode H.265 video streams using NVCODEC API Direct3D11 Mode",
           "Seungha Yang <seungha@centricular.com>");
+      doc_caps = gst_caps_from_string (DOC_SINK_CAPS_D3D11);
       break;
     case GST_NV_ENCODER_DEVICE_AUTO_SELECT:
       gst_element_class_set_static_metadata (element_class,
@@ -509,18 +540,23 @@ gst_nv_h265_encoder_class_init (GstNvH265EncoderClass * klass, gpointer data)
           "Codec/Encoder/Video/Hardware",
           "Encode H.265 video streams using NVCODEC API auto GPU select Mode",
           "Seungha Yang <seungha@centricular.com>");
+      doc_caps = gst_caps_from_string (DOC_SINK_CAPS_AUTOGPU);
       break;
     default:
       g_assert_not_reached ();
       break;
   }
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
+
+  pad_templ = gst_pad_template_new ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, cdata->src_caps);
+  doc_caps = gst_caps_from_string (DOC_SRC_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
 
   videoenc_class->getcaps = GST_DEBUG_FUNCPTR (gst_nv_h265_encoder_getcaps);
   videoenc_class->stop = GST_DEBUG_FUNCPTR (gst_nv_h265_encoder_stop);
