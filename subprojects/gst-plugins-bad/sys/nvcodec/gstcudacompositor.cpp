@@ -17,6 +17,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-cudacompositor
+ * @title: cudacompositor
+ *
+ * A CUDA based video compositing element.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 cudacompositor name=c ! cudadownload ! autovideosink \
+ *     videotestsrc ! video/x-raw,width=320,height=240 ! cudaupload ! c. \
+ *     videotestsrc pattern=ball ! video/x-raw,width=100,height=100 ! cudaupload ! c.
+ *
+ * Since: 1.26
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -34,6 +49,11 @@ enum GstCudaCompositorOperator
   GST_CUDA_COMPOSITOR_OPERATOR_OVER,
 };
 
+/**
+ * GstCudaCompositorOperator:
+ *
+ * Since: 1.26
+ */
 #define GST_TYPE_CUDA_COMPOSITOR_OPERATOR (gst_cuda_compositor_operator_get_type())
 static GType
 gst_cuda_compositor_operator_get_type (void)
@@ -60,6 +80,11 @@ enum GstCudaCompositorSizingPolicy
   GST_CUDA_COMPOSITOR_SIZING_POLICY_KEEP_ASPECT_RATIO,
 };
 
+/**
+ * GstCudaCompositorSizingPolicy:
+ *
+ * Since: 1.26
+ */
 #define GST_TYPE_CUDA_COMPOSITOR_SIZING_POLICY (gst_cuda_compositor_sizing_policy_get_type())
 static GType
 gst_cuda_compositor_sizing_policy_get_type (void)
@@ -148,6 +173,11 @@ struct GstCudaCompositorPadPrivate
   GstCudaCompositorSizingPolicy sizing_policy = DEFAULT_PAD_SIZING_POLICY;
 };
 
+/**
+ * GstCudaCompositorPad:
+ *
+ * Since: 1.26
+ */
 struct _GstCudaCompositorPad
 {
   GstVideoAggregatorConvertPad parent;

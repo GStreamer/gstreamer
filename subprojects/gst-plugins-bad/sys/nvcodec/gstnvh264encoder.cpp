@@ -383,26 +383,61 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
           "Number of frames between intra frames (-1 = infinite)",
           -1, G_MAXINT, DEFAULT_GOP_SIZE, param_flags));
   if (dev_caps->max_bframes > 0) {
+    /**
+     * GstNvD3D11H264Enc:bframes:
+     *
+     * Since: 1.26
+     */
     g_object_class_install_property (object_class, PROP_B_FRAMES,
         g_param_spec_uint ("bframes", "B Frames",
             "Number of B-frames between I and P", 0, dev_caps->max_bframes,
             DEFAULT_B_FRAMES, conditional_param_flags));
   }
+
+  /**
+   * GstNvD3D11H264Enc:rc-mode:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_RATE_CONTROL,
       g_param_spec_enum ("rc-mode", "RC Mode", "Rate Control Mode",
           GST_TYPE_NV_ENCODER_RC_MODE, DEFAULT_RATE_CONTROL, param_flags));
+
+  /**
+   * GstNvD3D11H264Enc:qp-const:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_QP_CONST,
       g_param_spec_int ("qp-const", "QP Const",
           "DEPRECATED, use qp-const-{i,p,b} properties instead", -1, 51,
           DEFAULT_QP, param_flags));
+
+  /**
+   * GstNvD3D11H264Enc:qp-const-i:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_QP_CONST_I,
       g_param_spec_int ("qp-const-i", "QP Const I",
           "Constant QP value for I frame (-1 = default)", -1, 51,
           DEFAULT_QP, param_flags));
+
+  /**
+   * GstNvD3D11H264Enc:qp-const-p:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_QP_CONST_P,
       g_param_spec_int ("qp-const-p", "QP Cost P",
           "Constant QP value for P frame (-1 = default)", -1, 51,
           DEFAULT_QP, param_flags));
+
+  /**
+   * GstNvD3D11H264Enc:qp-const-b:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_QP_CONST_B,
       g_param_spec_int ("qp-const-b", "QP Const B",
           "Constant QP value for B frame (-1 = default)", -1, 51,
@@ -447,6 +482,12 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
             "Temporal Adaptive Quantization", DEFAULT_TEMPORAL_AQ,
             conditional_param_flags));
   }
+
+  /**
+   * GstNvD3D11H264Enc:zerolatency:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_ZEROLATENCY,
       g_param_spec_boolean ("zerolatency", "Zerolatency",
           "Zero latency operation (no reordering delay)",
@@ -464,34 +505,82 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
           "Adaptive Quantization Strength when spatial-aq is enabled"
           " from 1 (low) to 15 (aggressive), (0 = autoselect)",
           0, 15, DEFAULT_AQ_STRENGTH, param_flags));
+
+  /**
+   * GstNvD3D11H264Enc:qp-min:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_QP_MIN,
       g_param_spec_int ("qp-min", "QP Min",
           "DEPRECATED, Use qp-min-{i,p,b} properties instead", -1, 51,
           DEFAULT_QP, param_flags));
+
+  /**
+   * GstNvD3D11H264Enc:qp-min-i:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_QP_MIN_I,
       g_param_spec_int ("qp-min-i", "QP Min I",
           "Minimum QP value for I frame, (-1 = automatic)", -1, 51,
           DEFAULT_QP, param_flags));
+
+  /**
+   * GstNvD3D11H264Enc:qp-min-p:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_QP_MIN_P,
       g_param_spec_int ("qp-min-p", "QP Min P",
           "Minimum QP value for P frame, (-1 = automatic)", -1, 51,
           DEFAULT_QP, param_flags));
+
+  /**
+   * GstNvD3D11H264Enc:qp-min-b:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_QP_MIN_B,
       g_param_spec_int ("qp-min-b", "QP Min B",
           "Minimum QP value for B frame, (-1 = automatic)", -1, 51,
           DEFAULT_QP, param_flags));
+
+  /**
+   * GstNvD3D11H264Enc:qp-max:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_QP_MAX,
       g_param_spec_int ("qp-max", "QP Max",
           "DEPRECATED, Use qp-max-{i,p,b} properties instead", -1, 51,
           DEFAULT_QP, param_flags));
+
+  /**
+   * GstNvD3D11H264Enc:qp-max-i:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_QP_MAX_I,
       g_param_spec_int ("qp-max-i", "QP Max I",
           "Maximum QP value for I frame, (-1 = automatic)", -1, 51,
           DEFAULT_QP, param_flags));
+
+  /**
+   * GstNvD3D11H264Enc:qp-max-p:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_QP_MAX_P,
       g_param_spec_int ("qp-max-p", "QP Max P",
           "Maximum QP value for P frame, (-1 = automatic)", -1, 51,
           DEFAULT_QP, param_flags));
+
+  /**
+   * GstNvD3D11H264Enc:qp-max-b:
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (object_class, PROP_QP_MAX_B,
       g_param_spec_int ("qp-max-b", "Max QP B",
           "Maximum QP value for B frame, (-1 = automatic)", -1, 51,

@@ -17,6 +17,33 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-nvav1enc
+ * @title: nvav1enc
+ *
+ * NVIDIA AV1 video encoder
+ *
+ * Since: 1.26
+ */
+
+/**
+ * SECTION:element-nvd3d11av1enc
+ * @title: nvd3d11av1enc
+ *
+ * NVIDIA Direct3D11 mode AV1 video encoder
+ *
+ * Since: 1.26
+ */
+
+/**
+ * SECTION:element-nvautogpuav1enc
+ * @title: nvautogpuav1enc
+ *
+ * NVIDIA auto GPU select mode AV1 video encoder
+ *
+ * Since: 1.26
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -263,6 +290,11 @@ gst_nv_av1_encoder_class_init (GstNvAv1EncoderClass * klass, gpointer data)
                     GST_PARAM_DOC_SHOW_DEFAULT)));
       }
       if (cdata->adapter_luid_size > 0) {
+        /**
+         * GstNvAutoGpuAv1Enc:adapter-luid:
+         *
+         * Since: 1.26
+         */
         g_object_class_install_property (object_class, PROP_ADAPTER_LUID,
             g_param_spec_int64 ("adapter-luid", "Adapter LUID",
                 "DXGI Adapter LUID (Locally Unique Identifier) to use",
