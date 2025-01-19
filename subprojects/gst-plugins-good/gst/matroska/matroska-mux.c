@@ -2826,17 +2826,83 @@ gst_matroska_mux_write_colour (GstMatroskaMux * mux,
   gst_ebml_write_master_finish (ebml, master);
 }
 
-/**
- * gst_matroska_mux_track_header:
- * @mux: #GstMatroskaMux
- * @context: Tack context.
- *
- * Write a track header.
- */
+static void
+gst_matroska_mux_write_projection (GstMatroskaMux * mux,
+    GstMatroskaPad * collect_pad)
+{
+  GstEbmlWrite *ebml = mux->ebml_write;
+  gchar *orientation;
+  guint64 master;
+  float yaw, roll;
+
+  if (!collect_pad->tags ||
+      !gst_tag_list_get_string (collect_pad->tags, GST_TAG_IMAGE_ORIENTATION,
+          &orientation)) {
+    const GstTagList *global_tags;
+
+    global_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
+    if (!global_tags ||
+        !gst_tag_list_get_string (global_tags, GST_TAG_IMAGE_ORIENTATION,
+            &orientation))
+      return;
+  }
+
+  if (!g_strcmp0 ("rotate-0", orientation)) {
+    yaw = 0.0;
+    roll = 0.0;
+  } else if (!g_strcmp0 ("rotate-90", orientation)) {
+    yaw = 0.0;
+    roll = -90.0;
+  } else if (!g_strcmp0 ("rotate-180", orientation)) {
+    yaw = 0.0;
+    roll = 180.0;
+  } else if (!g_strcmp0 ("rotate-270", orientation)) {
+    yaw = 0.0;
+    roll = 90.0;
+  } else if (!g_strcmp0 ("flip-rotate-0", orientation)) {
+    yaw = 180.0;
+    roll = 0.0;
+  } else if (!g_strcmp0 ("flip-rotate-90", orientation)) {
+    yaw = 180.0;
+    roll = -90.0;
+  } else if (!g_strcmp0 ("flip-rotate-180", orientation)) {
+    yaw = 180.0;
+    roll = 180.0;
+  } else if (!g_strcmp0 ("flip-rotate-270", orientation)) {
+    yaw = 180.0;
+    roll = 90.0;
+  } else {
+    GST_FIXME_OBJECT (mux, "Unsupported orientation %s", orientation);
+    yaw = 0.0;
+    roll = 0.0;
+  }
+
+  /* Default projection, skip writing */
+  if (yaw == 0.0 && roll == 0.0) {
+    g_free (orientation);
+    return;
+  }
+
+  master = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_VIDEOPROJECTION);
+
+  gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOPROJECTIONTYPE, 0);
+  gst_ebml_write_float (ebml, GST_MATROSKA_ID_VIDEOPROJECTIONPOSEYAW, yaw);
+  gst_ebml_write_float (ebml, GST_MATROSKA_ID_VIDEOPROJECTIONPOSEPITCH, 0.0);
+  gst_ebml_write_float (ebml, GST_MATROSKA_ID_VIDEOPROJECTIONPOSEROLL, roll);
+
+  gst_ebml_write_master_finish (ebml, master);
+
+  GST_INFO_OBJECT (mux,
+      "Wrote projection type: 0 yaw: %f pitch: 0.0 row: %f from tag: %s", yaw,
+      roll, orientation);
+  g_free (orientation);
+}
+
 static void
 gst_matroska_mux_track_header (GstMatroskaMux * mux,
-    GstMatroskaTrackContext * context)
+    GstMatroskaPad * collect_pad)
 {
+  GstMatroskaTrackContext *context = collect_pad->track;
   GstEbmlWrite *ebml = mux->ebml_write;
   guint64 master;
 
@@ -2898,7 +2964,10 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
         gst_ebml_write_binary (ebml, GST_MATROSKA_ID_VIDEOCOLOURSPACE,
             (gpointer) & fcc_le, 4);
       }
+
       gst_matroska_mux_write_colour (mux, videocontext);
+      gst_matroska_mux_write_projection (mux, collect_pad);
+
       if (videocontext->multiview_mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
         guint64 stereo_mode = 0;
 
@@ -3389,7 +3458,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux, GstMatroskaPad * first_pad,
 
     collect_pad->track->num = tracknum++;
     child = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TRACKENTRY);
-    gst_matroska_mux_track_header (mux, collect_pad->track);
+    gst_matroska_mux_track_header (mux, collect_pad);
     gst_ebml_write_master_finish (ebml, child);
     /* some remaining pad/track setup */
     collect_pad->default_duration_scaled =
