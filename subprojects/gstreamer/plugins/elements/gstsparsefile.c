@@ -330,7 +330,7 @@ error:
  * @remaining will be set to the amount of bytes remaining in the read
  * range.
  *
- * Returns: The number of bytes read of 0 on error.
+ * Returns: The number of bytes read or 0 on error.
  *
  * Since: 1.4
  */
