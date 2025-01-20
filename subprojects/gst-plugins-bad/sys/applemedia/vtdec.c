@@ -303,7 +303,6 @@ gst_vtdec_output_loop (GstVtdec * vtdec)
   GstVideoCodecFrame *frame;
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoDecoder *decoder = GST_VIDEO_DECODER (vtdec);
-  gboolean is_flushing;
 
   g_mutex_lock (&vtdec->queue_mutex);
   while (gst_vec_deque_is_empty (vtdec->reorder_queue)
@@ -321,6 +320,8 @@ gst_vtdec_output_loop (GstVtdec * vtdec)
    * that we push in PTS order, or if we're draining/flushing */
   while ((gst_vec_deque_get_length (vtdec->reorder_queue) >=
           vtdec->dbp_size) || vtdec->is_flushing || vtdec->is_draining) {
+    gboolean is_flushing;
+
     frame = gst_vec_deque_pop_head (vtdec->reorder_queue);
     is_flushing = vtdec->is_flushing;
     g_cond_signal (&vtdec->queue_cond);
@@ -358,7 +359,6 @@ gst_vtdec_output_loop (GstVtdec * vtdec)
 
   g_mutex_unlock (&vtdec->queue_mutex);
   GST_VIDEO_DECODER_STREAM_LOCK (vtdec);
-  vtdec->downstream_ret = ret;
 
   /* We need to empty the queue immediately so that session_output_callback() 
    * can push out the current buffer, otherwise it can deadlock */
@@ -370,10 +370,14 @@ gst_vtdec_output_loop (GstVtdec * vtdec)
       gst_video_decoder_release_frame (decoder, frame);
     }
 
+    if (vtdec->is_flushing && ret == GST_FLOW_FLUSHING) {
+      ret = GST_FLOW_OK;
+    }
     g_cond_signal (&vtdec->queue_cond);
     g_mutex_unlock (&vtdec->queue_mutex);
   }
 
+  vtdec->downstream_ret = ret;
   GST_VIDEO_DECODER_STREAM_UNLOCK (vtdec);
 
   if (ret != GST_FLOW_OK) {
