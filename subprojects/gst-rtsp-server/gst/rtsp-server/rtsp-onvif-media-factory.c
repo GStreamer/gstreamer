@@ -114,7 +114,6 @@ gst_rtsp_onvif_media_factory_construct (GstRTSPMediaFactory * factory,
   GstElement *element, *pipeline;
   GstRTSPMediaFactoryClass *klass;
   GType media_gtype;
-  gboolean got_backchannel_stream;
   GstRTSPContext *ctx = gst_rtsp_context_get_current ();
 
   /* Mostly a copy of the default implementation but with backchannel support below,
@@ -153,14 +152,17 @@ gst_rtsp_onvif_media_factory_construct (GstRTSPMediaFactory * factory,
   /* this adds the non-backchannel streams */
   gst_rtsp_media_collect_streams (media);
 
-  /* this adds the backchannel stream */
-  got_backchannel_stream =
-      gst_rtsp_onvif_media_collect_backchannel (GST_RTSP_ONVIF_MEDIA (media));
-  /* FIXME: This should not happen! We checked for that before */
-  if (gst_rtsp_onvif_media_factory_requires_backchannel (factory, ctx) &&
-      !got_backchannel_stream) {
-    g_object_unref (media);
-    return NULL;
+  GstRTSPOnvifMediaFactory *onvif_factory =
+      GST_RTSP_ONVIF_MEDIA_FACTORY (factory);
+  GstRTSPOnvifMediaFactoryClass *onvif_klass =
+      GST_RTSP_ONVIF_MEDIA_FACTORY_GET_CLASS (factory);
+  if (onvif_klass->create_backchannel_stream != NULL) {
+    /* this creates and adds the backchannel stream */
+    if (!onvif_klass->create_backchannel_stream (onvif_factory,
+            GST_RTSP_ONVIF_MEDIA (media), ctx)) {
+      g_object_unref (media);
+      return NULL;
+    }
   }
 
   pipeline = klass->create_pipeline (factory, media);
@@ -325,6 +327,26 @@ static gboolean
   return factory->priv->backchannel_launch != NULL;
 }
 
+
+static gboolean
+create_backchannel_stream_default (GstRTSPOnvifMediaFactory * factory,
+    GstRTSPOnvifMedia * media, GstRTSPContext * ctx)
+{
+  /* this adds the backchannel stream */
+  gboolean got_backchannel_stream =
+      gst_rtsp_onvif_media_collect_backchannel (media);
+
+  /* FIXME: This should not happen! We checked for that before */
+  if (gst_rtsp_onvif_media_factory_requires_backchannel (GST_RTSP_MEDIA_FACTORY
+          (factory), ctx) && !got_backchannel_stream) {
+    GST_WARNING_OBJECT (factory,
+        "Failed to collect backchannel, but factory requires backchannel");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static void
 gst_rtsp_onvif_media_factory_finalize (GObject * object)
 {
@@ -352,6 +374,7 @@ gst_rtsp_onvif_media_factory_class_init (GstRTSPOnvifMediaFactoryClass * klass)
 
   klass->has_backchannel_support =
       gst_rtsp_onvif_media_factory_has_backchannel_support_default;
+  klass->create_backchannel_stream = create_backchannel_stream_default;
 }
 
 static void
