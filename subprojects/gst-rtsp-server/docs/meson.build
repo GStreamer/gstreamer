@@ -91,6 +91,7 @@ lib_hotdoc_config = custom_target(
     '--output', '@OUTPUT@',
   ],
   output: 'hotdoc-lib-configs.json',
+  depends: [rtsp_server_gir[0]],
 )
 
 doc_source_file = configure_file(output: 'doc_sources.json', configuration: plugin_sources, output_format: 'json')

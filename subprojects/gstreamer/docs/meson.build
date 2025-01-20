@@ -110,7 +110,8 @@ gst_doc_source_file = configure_file(
 gst_doc_gi_source_file = configure_file(
   output: 'gst_doc_gi_sources.json',
   configuration: {'gst': gst_gir[0].full_path()},
-  output_format: 'json')
+  output_format: 'json'
+)
 
 lib_hotdoc_config = custom_target(
   'build-gst-hotdoc-configs',
@@ -129,6 +130,7 @@ lib_hotdoc_config = custom_target(
     '--output', '@OUTPUT@',
   ],
   output: 'hotdoc-gst-configs.json',
+  depends: [gst_gir[0]],
 )
 
 libs_doc_source_file = configure_file(
@@ -163,6 +165,7 @@ libs_hotdoc_configs = custom_target(
     '--output', '@OUTPUT@',
   ],
   output: 'hotdoc-libs-configs.json',
+  depends: [gst_base_gir[0], gst_controller_gir[0], gst_net_gir[0], gst_check_gir[0]],
 )
 
 doc_source_file = configure_file(output: 'doc_sources.json', configuration: plugin_sources, output_format: 'json')

@@ -89,4 +89,5 @@ lib_hotdoc_config = custom_target(
     '--output', '@OUTPUT@',
   ],
   output: 'hotdoc-lib-configs.json',
+  depends: [validate_gir[0]],
 )

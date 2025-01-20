@@ -106,7 +106,8 @@ libs_doc_c_source_file = configure_file(
 
 libs_doc_gi_conf = {}
 
-libs = []
+libs_doc_depends = []
+
 if build_gir
     libs_doc_gi_conf += {
       'mpegts': mpegts_gir[0].full_path(),
@@ -123,23 +124,43 @@ if build_gir
       'analytics': analytics_gir[0].full_path(),
     }
 
+    libs_doc_depends += [
+      mpegts_gir[0],
+      play_gir[0],
+      player_gir[0],
+      insertbin_gir[0],
+      basecamerabin_gir[0],
+      webrtc_gir[0],
+      audio_gir[0],
+      transcoder_gir[0],
+      codecs_gir[0],
+      dxva_gir[0],
+      mse_gir[0],
+      analytics_gir[0],
+    ]
+
     if get_variable('gst_cuda_gir', []).length() > 0
         libs_doc_gi_conf += {'cuda': gst_cuda_gir[0].full_path()}
+        libs_doc_depends += [gst_cuda_gir[0]]
     endif
 
     if gstva_dep.found()
         libs_doc_gi_conf += {'va': va_gir[0].full_path()}
+        libs_doc_depends += [va_gir[0]]
     else
         libs_doc_gi_conf += {'va': join_paths(meson.global_source_root(), 'girs', 'GstVa-1.0.gir')}
     endif
 
     if gstvulkan_dep.found()
         libs_doc_gi_conf += {'vulkan': vulkan_gir[0].full_path()}
+        libs_doc_depends += [vulkan_gir[0]]
         if enabled_vulkan_winsys.contains('xcb')
             libs_doc_gi_conf += {'vulkan-xcb': vulkan_xcb_gir[0].full_path()}
+            libs_doc_depends += [vulkan_xcb_gir[0]]
         endif
         if enabled_vulkan_winsys.contains('wayland')
             libs_doc_gi_conf += {'vulkan-wayland': vulkan_wayland_gir[0].full_path()}
+            libs_doc_depends += [vulkan_wayland_gir[0]]
         endif
     endif
 endif
@@ -170,6 +191,7 @@ libs_hotdoc_configs = custom_target(
     '--output', '@OUTPUT@',
   ],
   output: 'hotdoc-libs-configs.json',
+  depends: libs_doc_depends,
 )
 
 doc_source_file = configure_file(output: 'doc_sources.json', configuration: plugin_sources, output_format: 'json')

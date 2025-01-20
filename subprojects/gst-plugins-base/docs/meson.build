@@ -101,16 +101,30 @@ libs_doc_gi_conf = {
   'video': video_gir[0].full_path(),
 }
 
+libs_doc_depends = [
+  app_gir[0],
+  audio_gir[0],
+  pbutils_gir[0],
+  rtp_gir[0],
+  rtsp_gir[0],
+  sdp_gir[0],
+  tag_gir[0],
+  video_gir[0],
+]
+
 if build_gstgl
   libs_doc_gi_conf += {'gl': gl_gir[0].full_path()}
   if enabled_gl_platforms.contains('egl')
     libs_doc_gi_conf += {'gl-egl': gl_egl_gir[0].full_path()}
+    libs_doc_depends += [gl_egl_gir[0]]
   endif
   if enabled_gl_winsys.contains('x11')
     libs_doc_gi_conf += {'gl-x11': gl_x11_gir[0].full_path()}
+    libs_doc_depends += [gl_x11_gir[0]]
   endif
   if enabled_gl_winsys.contains('wayland')
     libs_doc_gi_conf += {'gl-wayland': gl_wayland_gir[0].full_path()}
+    libs_doc_depends += [gl_wayland_gir[0]]
   endif
 endif
 
@@ -138,6 +152,7 @@ libs_hotdoc_configs = custom_target(
     '--output', '@OUTPUT@',
   ],
   output: 'hotdoc-libs-configs.json',
+  depends: libs_doc_depends,
 )
 
 doc_source_file = configure_file(output: 'doc_sources.json', configuration: plugin_sources, output_format: 'json')
