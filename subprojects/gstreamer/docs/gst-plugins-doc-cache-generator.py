@@ -155,7 +155,6 @@ class GstLibsHotdocConfGen:
             project_name = PROJECT_NAME_MAP.get(libname, libname)
 
             conf_path = self.builddir / f'{project_name}-doc.json'
-            conf_files.append(str(conf_path))
 
             index_path = os.path.join(self.source_root, 'index.md')
             if not os.path.exists(index_path):
@@ -170,7 +169,6 @@ class GstLibsHotdocConfGen:
             assert(os.path.exists(sitemap_path))
             if not os.path.exists(c_index_path):
                 c_index_path = index_path
-
 
             try:
                 if libname == 'adaptivedemux':
@@ -215,6 +213,8 @@ class GstLibsHotdocConfGen:
 
             with conf_path.open('w') as f:
                 json.dump(conf, f, indent=4)
+
+            conf_files.append(str(conf_path))
 
 
         if self.output is not None:
