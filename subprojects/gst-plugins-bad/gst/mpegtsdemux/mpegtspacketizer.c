@@ -2284,7 +2284,7 @@ mpegts_packetizer_pts_to_ts_internal (MpegTSPacketizer2 * packetizer,
         pcrtable->base_time += diff;
         pcrtable->base_pcrtime += diff;
       } else if (pcrtable->base_pcrtime > tmp_pts
-          && pcrtable->base_pcrtime > PCR_GST_MAX_VALUE / 2) {
+          && pcrtable->base_pcrtime - tmp_pts > PCR_GST_MAX_VALUE / 2) {
         pcrtable->pcroffset += PCR_GST_MAX_VALUE;
       }
     }
