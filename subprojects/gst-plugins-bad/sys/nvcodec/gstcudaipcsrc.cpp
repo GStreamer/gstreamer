@@ -152,9 +152,10 @@ gst_cuda_ipc_src_class_init (GstCudaIpcSrcClass * klass)
   g_object_class_install_property (object_class, PROP_ADDRESS,
       g_param_spec_string ("address", "Address",
           "Server address. Specifies name of WIN32 named pipe "
-          "or unix domain socket path on Linux",
-          DEFAULT_ADDRESS, (GParamFlags) (G_PARAM_READWRITE |
-              G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY)));
+          "or unix domain socket path on Linux", "",
+          (GParamFlags) (G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY |
+              GST_PARAM_DOC_SHOW_DEFAULT)));
 
   g_object_class_install_property (object_class, PROP_PROCESSING_DEADLINE,
       g_param_spec_uint64 ("processing-deadline", "Processing deadline",
