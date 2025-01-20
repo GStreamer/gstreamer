@@ -383,7 +383,14 @@ error:
           gst_sparse_file_io_error_from_errno (errno), "Error reading file: %s",
           g_strerror (errno));
     } else if (feof (file->file)) {
+      if (res == 0) {
+        g_set_error_literal (error, GST_SPARSE_FILE_IO_ERROR,
+            GST_SPARSE_FILE_IO_ERROR_FAILED, "Error reading file: EOF");
+      }
       return res;
+    } else {
+      g_set_error_literal (error, GST_SPARSE_FILE_IO_ERROR,
+          GST_SPARSE_FILE_IO_ERROR_FAILED, "Error reading file");
     }
     return 0;
   }
