@@ -22,7 +22,6 @@ import os
 import sys
 import re
 import subprocess
-import tempfile
 from pathlib import Path as P
 from argparse import ArgumentParser
 
@@ -51,7 +50,7 @@ PROJECT_NAME_MAP = {
 
 
 def get_c_flags(dep, buildroot, uninstalled=True):
-    env = {}
+    env = os.environ.copy()
     if uninstalled:
         env['PKG_CONFIG_PATH'] = os.path.join(buildroot, 'meson-uninstalled')
     res = subprocess.run(['pkg-config', '--cflags', dep], env=env, capture_output=True)
