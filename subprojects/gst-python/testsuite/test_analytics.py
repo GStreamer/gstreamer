@@ -37,7 +37,6 @@ from gi.repository import Gst
 from gi.repository import GstAnalytics
 from gi.repository import GstVideo
 Gst.init(None)
-GstAnalytics.init()
 
 
 class TestAnalyticsODMtd(TestCase):
@@ -280,6 +279,7 @@ class TestAnalyticsRelationMetaIterator(TestCase):
         self.assertEqual(len(mtds), len(mtds_from_iter))
 
         for e, i in zip(mtds, rmeta):
+            assert i == e[0]
             assert e[0].id == i.id
             assert e[0].meta == i.meta
             assert e[1] == i.get_mtd_type()

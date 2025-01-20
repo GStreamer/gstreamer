@@ -35,11 +35,30 @@ _gi_gst_analytics
 __mtd_types__ = {}
 
 
-def init():
-    __mtd_types__[GstAnalytics.ODMtd.get_mtd_type()] = GstAnalytics.RelationMeta.get_od_mtd
-    __mtd_types__[GstAnalytics.ClsMtd.get_mtd_type()] = GstAnalytics.RelationMeta.get_cls_mtd
-    __mtd_types__[GstAnalytics.TrackingMtd.get_mtd_type()] = GstAnalytics.RelationMeta.get_tracking_mtd
-    __mtd_types__[GstAnalytics.SegmentationMtd.get_mtd_type()] = GstAnalytics.RelationMeta.get_segmentation_mtd
+class Mtd(GstAnalytics.Mtd):
+    def __eq__(self, other):
+        if not hasattr(other, 'meta') or not hasattr(other, 'id'):
+            return False
+        return self.meta == other.meta and self.id == other.id
+
+
+__all__.append('Mtd')
+
+
+def _wrap_mtd(module, name, getter):
+    baseclass = getattr(module, name)
+    wrapper = type(name, (baseclass, Mtd), {})
+    globals()[name] = wrapper
+
+    __mtd_types__[baseclass.get_mtd_type()] = getter
+    __all__.append(name)
+
+
+for c in dir(GstAnalytics):
+    if c.endswith('Mtd') and c != 'Mtd':
+        lower_c = c[:-3].lower()
+        getter = getattr(GstAnalytics.RelationMeta, 'get_' + lower_c + '_mtd')
+        _wrap_mtd(GstAnalytics, c, getter)
 
 
 def _get_mtd(mtd_type, rmeta, mtd_id):
@@ -55,4 +74,3 @@ class RelationMeta(GstAnalytics.RelationMeta):
 
 
 __all__.append('RelationMeta')
-__all__.append('init')
