@@ -54,9 +54,10 @@ def get_c_flags(dep, buildroot, uninstalled=True):
     env = {}
     if uninstalled:
         env['PKG_CONFIG_PATH'] = os.path.join(buildroot, 'meson-uninstalled')
-    res = subprocess.run(['pkg-config', '--cflags', dep], env = env, capture_output=True)
+    res = subprocess.run(['pkg-config', '--cflags', dep], env=env, capture_output=True)
 
     return [res.stdout.decode().strip()]
+
 
 class GstLibsHotdocConfGen:
     def __init__(self):
@@ -112,8 +113,8 @@ class GstLibsHotdocConfGen:
                 sitemap_path = os.path.join(self.source_root, 'sitemap.txt')
                 gi_index_path = os.path.join(self.source_root, 'gi-index.md')
 
-            assert(os.path.exists(index_path))
-            assert(os.path.exists(sitemap_path))
+            assert (os.path.exists(index_path))
+            assert (os.path.exists(sitemap_path))
             if not os.path.exists(gi_index_path):
                 gi_index_path = index_path
 
@@ -165,8 +166,8 @@ class GstLibsHotdocConfGen:
                 sitemap_path = os.path.join(self.source_root, 'sitemap.txt')
                 c_index_path = os.path.join(self.source_root, 'c-index.md')
 
-            assert(os.path.exists(index_path))
-            assert(os.path.exists(sitemap_path))
+            assert (os.path.exists(index_path))
+            assert (os.path.exists(sitemap_path))
             if not os.path.exists(c_index_path):
                 c_index_path = index_path
 
@@ -177,13 +178,13 @@ class GstLibsHotdocConfGen:
                 elif libname == 'opencv':
                     c_flags = get_c_flags(f'gstreamer-base-{self.project_version}', self.buildroot)
                     c_flags += get_c_flags(f'gstreamer-video-{self.project_version}', self.buildroot)
-                    c_flags += get_c_flags(f'opencv', self.buildroot, uninstalled = True)
+                    c_flags += get_c_flags(f'opencv', self.buildroot, uninstalled=True)
                     c_flags += [f'-I{self.srcdir}/../gst-libs']
                 else:
                     c_flags = get_c_flags(f'gstreamer-{libname}-{self.project_version}', self.buildroot)
             except Exception as e:
-                print (f'Cannot document {libname}')
-                print (e)
+                print(f'Cannot document {libname}')
+                print(e)
                 continue
 
             c_flags += ['-DGST_USE_UNSTABLE_API']
@@ -222,7 +223,6 @@ class GstLibsHotdocConfGen:
                 json.dump(conf_files, f, indent=4)
 
         return conf_files
-
 
 
 class GstPluginsHotdocConfGen:
@@ -308,7 +308,6 @@ class GstPluginsHotdocConfGen:
 UNSTABLE_VALUE = "unstable-values"
 
 
-
 def dict_recursive_update(d, u):
     modified = False
     unstable_values = d.get(UNSTABLE_VALUE, [])
@@ -329,22 +328,23 @@ def dict_recursive_update(d, u):
 
 
 def test_unstable_values():
-    current_cache = { "v1": "yes", "unstable-values": "v1"}
-    new_cache = { "v1": "no" }
+    current_cache = {"v1": "yes", "unstable-values": "v1"}
+    new_cache = {"v1": "no"}
 
-    assert(dict_recursive_update(current_cache, new_cache) == False)
+    assert (dict_recursive_update(current_cache, new_cache) is False)
 
-    new_cache = { "v1": "no", "unstable-values": "v2" }
-    assert(dict_recursive_update(current_cache, new_cache) == True)
+    new_cache = {"v1": "no", "unstable-values": "v2"}
+    assert (dict_recursive_update(current_cache, new_cache) is True)
 
-    current_cache = { "v1": "yes", "v2": "yay", "unstable-values": "v1",}
-    new_cache = { "v1": "no" }
-    assert(dict_recursive_update(current_cache, new_cache) == False)
+    current_cache = {"v1": "yes", "v2": "yay", "unstable-values": "v1", }
+    new_cache = {"v1": "no"}
+    assert (dict_recursive_update(current_cache, new_cache) is False)
 
-    current_cache = { "v1": "yes", "v2": "yay", "unstable-values": "v2"}
-    new_cache = { "v1": "no", "v2": "unstable" }
-    assert (dict_recursive_update(current_cache, new_cache) == True)
-    assert (current_cache == { "v1": "no", "v2": "yay", "unstable-values": "v2" })
+    current_cache = {"v1": "yes", "v2": "yay", "unstable-values": "v2"}
+    new_cache = {"v1": "no", "v2": "unstable"}
+    assert (dict_recursive_update(current_cache, new_cache) is True)
+    assert (current_cache == {"v1": "no", "v2": "yay", "unstable-values": "v2"})
+
 
 if __name__ == "__main__":
     if sys.argv[1] == "hotdoc-config":
@@ -354,7 +354,6 @@ if __name__ == "__main__":
     elif sys.argv[1] == "hotdoc-lib-config":
         fs = GstLibsHotdocConfGen().generate_libs_configs()
         sys.exit(0)
-
 
     cache_filename = sys.argv[1]
     output_filename = sys.argv[2]
