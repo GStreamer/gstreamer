@@ -84,6 +84,8 @@ typedef enum /*< skip >*/
   GST_TRACER_QUARK_HOOK_PAD_CHAIN_POST,
   GST_TRACER_QUARK_HOOK_PAD_CHAIN_LIST_PRE,
   GST_TRACER_QUARK_HOOK_PAD_CHAIN_LIST_POST,
+  GST_TRACER_QUARK_HOOK_PAD_SEND_EVENT_PRE,
+  GST_TRACER_QUARK_HOOK_PAD_SEND_EVENT_POST,
   GST_TRACER_QUARK_MAX
 } GstTracerQuarkId;
 
@@ -267,6 +269,38 @@ typedef void (*GstTracerHookPadPushEventPost) (GObject *self, GstClockTime ts,
 #define GST_TRACER_PAD_PUSH_EVENT_POST(pad, res) G_STMT_START{ \
   GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_PUSH_EVENT_POST), \
     GstTracerHookPadPushEventPost, (GST_TRACER_ARGS, pad, res)); \
+}G_STMT_END
+
+/**
+ * GstTracerHookPadSendEventPre:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @pad: the pad
+ * @event: the event
+ *
+ * Pre-hook for gst_pad_send_event_unchecked() named "pad-send-event-pre".
+ */
+typedef void (*GstTracerHookPadSendEventPre) (GObject *self, GstClockTime ts,
+    GstPad *pad, GstEvent *event);
+#define GST_TRACER_PAD_SEND_EVENT_PRE(pad, event) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_SEND_EVENT_PRE), \
+    GstTracerHookPadSendEventPre, (GST_TRACER_ARGS, pad, event)); \
+}G_STMT_END
+
+/**
+ * GstTracerHookPadSendEventPost:
+ * @self: the tracer instance
+ * @ts: the current timestamp
+ * @pad: the pad
+ * @res: the result of gst_pad_send_event_unchecked()
+ *
+ * Post-hook for gst_pad_send_event_unchecked() named "pad-send-event-post".
+ */
+typedef void (*GstTracerHookPadSendEventPost) (GObject *self, GstClockTime ts,
+    GstPad *pad, GstFlowReturn res);
+#define GST_TRACER_PAD_SEND_EVENT_POST(pad, res) G_STMT_START{ \
+  GST_TRACER_DISPATCH(GST_TRACER_QUARK(HOOK_PAD_SEND_EVENT_POST), \
+    GstTracerHookPadSendEventPost, (GST_TRACER_ARGS, pad, res)); \
 }G_STMT_END
 
 /**

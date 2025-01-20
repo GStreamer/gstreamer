@@ -58,6 +58,7 @@
  *    * `pad-chain-list-pre`, `pad-chain-list-post`
  *  * `GST_DEBUG=GST_EVENT:TRACE`
  *    * `pad-push-event-pre`, `pad-push-event-post`
+ *    * `pad-send-event-pre`, `pad-send-event-post`
  *  * `GST_DEBUG=GST_QUERY:TRACE`
  *    * `pad-query-pre`, `pad-query-post`
  *    * `element-query-pre`, `element-query-post`
@@ -258,6 +259,23 @@ do_push_event_post (GstTracer * self, guint64 ts, GstPad * pad, gboolean res)
   do_log (GST_CAT_EVENT, GST_FUNCTION, (GObject *) pad,
       "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%d",
       GST_TIME_ARGS (ts), pad, res);
+}
+
+static void
+do_send_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * event)
+{
+  do_log (GST_CAT_EVENT, GST_FUNCTION, (GObject *) pad,
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", event=%" GST_PTR_FORMAT,
+      GST_TIME_ARGS (ts), pad, event);
+}
+
+static void
+do_send_event_post (GstTracer * self, guint64 ts, GstPad * pad,
+    GstFlowReturn res)
+{
+  do_log (GST_CAT_EVENT, GST_FUNCTION, (GObject *) pad,
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%s",
+      GST_TIME_ARGS (ts), pad, gst_flow_get_name (res));
 }
 
 static void
@@ -491,6 +509,10 @@ gst_log_tracer_init (GstLogTracer * self)
       G_CALLBACK (do_push_event_pre));
   gst_tracing_register_hook (tracer, "pad-push-event-post",
       G_CALLBACK (do_push_event_post));
+  gst_tracing_register_hook (tracer, "pad-send-event-pre",
+      G_CALLBACK (do_send_event_pre));
+  gst_tracing_register_hook (tracer, "pad-send-event-post",
+      G_CALLBACK (do_send_event_post));
   gst_tracing_register_hook (tracer, "pad-query-pre",
       G_CALLBACK (do_pad_query_pre));
   gst_tracing_register_hook (tracer, "pad-query-post",
