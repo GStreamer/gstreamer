@@ -51,9 +51,11 @@
  *
  *  * `GST_DEBUG=GST_BUFFER:TRACE`
  *    * `pad-push-pre`, `pad-push-post`
+ *    * `pad-chain-pre`, `pad-chain-post`
  *    * `pad-pull-range-pre`, `pad-pull-range-post`
  *  * `GST_DEBUG=GST_BUFFER_LIST:TRACE`
  *    * `pad-push-list-pre`, `pad-push-list-post`
+ *    * `pad-chain-list-pre`, `pad-chain-list-post`
  *  * `GST_DEBUG=GST_EVENT:TRACE`
  *    * `pad-push-event-pre`, `pad-push-event-post`
  *  * `GST_DEBUG=GST_QUERY:TRACE`
@@ -181,6 +183,42 @@ do_push_buffer_list_pre (GstTracer * self, guint64 ts, GstPad * pad,
 
 static void
 do_push_buffer_list_post (GstTracer * self, guint64 ts, GstPad * pad,
+    GstFlowReturn res)
+{
+  do_log (GST_CAT_BUFFER_LIST, GST_FUNCTION, (GObject *) pad,
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%d",
+      GST_TIME_ARGS (ts), pad, res);
+}
+
+static void
+do_chain_buffer_pre (GstTracer * self, guint64 ts, GstPad * pad,
+    GstFlowReturn res)
+{
+  do_log (GST_CAT_BUFFER, GST_FUNCTION, (GObject *) pad,
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%d",
+      GST_TIME_ARGS (ts), pad, res);
+}
+
+static void
+do_chain_buffer_post (GstTracer * self, guint64 ts, GstPad * pad,
+    GstFlowReturn res)
+{
+  do_log (GST_CAT_BUFFER, GST_FUNCTION, (GObject *) pad,
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%d",
+      GST_TIME_ARGS (ts), pad, res);
+}
+
+static void
+do_chain_buffer_list_pre (GstTracer * self, guint64 ts, GstPad * pad,
+    GstFlowReturn res)
+{
+  do_log (GST_CAT_BUFFER_LIST, GST_FUNCTION, (GObject *) pad,
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%d",
+      GST_TIME_ARGS (ts), pad, res);
+}
+
+static void
+do_chain_buffer_list_post (GstTracer * self, guint64 ts, GstPad * pad,
     GstFlowReturn res)
 {
   do_log (GST_CAT_BUFFER_LIST, GST_FUNCTION, (GObject *) pad,
@@ -437,6 +475,14 @@ gst_log_tracer_init (GstLogTracer * self)
       G_CALLBACK (do_push_buffer_list_pre));
   gst_tracing_register_hook (tracer, "pad-push-list-post",
       G_CALLBACK (do_push_buffer_list_post));
+  gst_tracing_register_hook (tracer, "pad-chain-pre",
+      G_CALLBACK (do_chain_buffer_pre));
+  gst_tracing_register_hook (tracer, "pad-chain-post",
+      G_CALLBACK (do_chain_buffer_post));
+  gst_tracing_register_hook (tracer, "pad-chain-list-pre",
+      G_CALLBACK (do_chain_buffer_list_pre));
+  gst_tracing_register_hook (tracer, "pad-chain-list-post",
+      G_CALLBACK (do_chain_buffer_list_post));
   gst_tracing_register_hook (tracer, "pad-pull-range-pre",
       G_CALLBACK (do_pull_range_pre));
   gst_tracing_register_hook (tracer, "pad-pull-range-post",
