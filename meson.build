@@ -35,9 +35,12 @@ endif
 gitlint_req = '>= 0.18'
 gitlint = find_program('gitlint', version: gitlint_req, required: false)
 if gitlint.found()
-  run_command(gitlint, 'install-hook', check: false)
+  gitlint_status = run_command(gitlint, 'install-hook', check: false)
+  if gitlint_status.returncode() != 0
+    warning(gitlint_status.stderr().strip())
+  endif
 else
-  message('gitlint not found or too old, please install it with your package manager or `python3 -m pip install gitlint` to enable the commit message hook')
+  warning('gitlint not found or too old, please install it with your package manager or `python3 -m pip install gitlint` to enable the commit message hook')
 endif
 
 pre_commit_req = '>= 3.6.0'
