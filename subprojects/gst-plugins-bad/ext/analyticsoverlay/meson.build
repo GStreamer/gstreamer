@@ -1,6 +1,7 @@
 analyticsoverlay_sources = [
   'gstanalyticsoverlay.c',
   'gstobjectdetectionoverlay.c',
+  'gstsegmentationoverlay.c'
 ]
 
 analyticsoverlay_headers = [
@@ -27,7 +28,7 @@ if gstanalyticsoverlay_ext_dep.found()
     c_args : gst_plugins_bad_args,
     include_directories : [configinc, libsinc],
     dependencies : [
-      gstbase_dep, gstvideo_dep, gstanalytics_dep, gstanalyticsoverlay_ext_dep
+      gstbase_dep, gstvideo_dep, gstanalytics_dep, gstanalyticsoverlay_ext_dep, libm
       ],
     install : true,
     install_dir : plugins_install_dir,

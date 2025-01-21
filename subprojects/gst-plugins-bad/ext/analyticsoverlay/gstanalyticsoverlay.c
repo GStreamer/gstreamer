@@ -25,6 +25,7 @@
 #endif
 
 #include "gstobjectdetectionoverlay.h"
+#include "gstsegmentationoverlay.h"
 
 /**
  * SECTION:plugin-analyticsoverlay
@@ -41,6 +42,7 @@ plugin_init (GstPlugin * plugin)
   gboolean ret = FALSE;
 
   ret |= GST_ELEMENT_REGISTER (objectdetectionoverlay, plugin);
+  ret |= GST_ELEMENT_REGISTER (segmentationoverlay, plugin);
 
   return ret;
 }
