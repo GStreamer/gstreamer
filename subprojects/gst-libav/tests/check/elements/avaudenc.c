@@ -174,7 +174,7 @@ GST_START_TEST (test_audioenc_alignment_fixup)
 
   const gsize size = N_SAMPLES * sizeof (float);
 
-  float *samples = g_newa0 (float, (N_SAMPLES + N_ALIGNMENTS));
+  float *samples = g_new0 (float, (N_SAMPLES + N_ALIGNMENTS));
 
   guint64 offset = 0;
 
@@ -192,6 +192,8 @@ GST_START_TEST (test_audioenc_alignment_fixup)
     fail_unless_equals_int (ret, GST_FLOW_OK);
     offset += N_SAMPLES;
   }
+
+  g_free (samples);
 
   gst_harness_teardown (h);
 }
