@@ -91,6 +91,7 @@ typedef struct _GstMatroskaDemux {
   guint64                  first_cluster_offset;
   guint64                  next_cluster_offset;
   GstClockTime             requested_seek_time;
+  GstClockTime             requested_seek_duration;
   guint64                  seek_offset;
   GstClockTime             audio_lead_in_ts;
 

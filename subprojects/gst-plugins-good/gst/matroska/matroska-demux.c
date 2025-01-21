@@ -354,6 +354,7 @@ gst_matroska_demux_reset (GstElement * element)
   demux->upstream_format_is_time = FALSE;
   demux->segment_seqnum = 0;
   demux->requested_seek_time = GST_CLOCK_TIME_NONE;
+  demux->requested_seek_duration = GST_CLOCK_TIME_NONE;
   demux->seek_offset = -1;
   demux->audio_lead_in_ts = 0;
   demux->building_index = FALSE;
@@ -3019,6 +3020,8 @@ finish:
     /* track real position we should start at */
     GST_DEBUG_OBJECT (demux, "storing segment start");
     demux->requested_seek_time = seeksegment.position;
+    if (GST_CLOCK_TIME_IS_VALID (stop))
+      demux->requested_seek_duration = stop - cur;
     demux->seek_offset = entry->pos + demux->common.ebml_segment_start;
     GST_OBJECT_UNLOCK (demux);
     /* need to seek to cluster start to pick up cluster time */
@@ -3147,10 +3150,6 @@ gst_matroska_demux_handle_seek_push (GstMatroskaDemux * demux, GstPad * pad,
     return FALSE;
   }
 
-  if (stop_type != GST_SEEK_TYPE_NONE && stop != GST_CLOCK_TIME_NONE) {
-    GST_DEBUG_OBJECT (demux, "Seek end-time not supported in streaming mode");
-    return FALSE;
-  }
 
   if (!(flags & GST_SEEK_FLAG_FLUSH)) {
     GST_DEBUG_OBJECT (demux,
@@ -4359,6 +4358,27 @@ gst_matroska_demux_parse_blockmore (GstMatroskaDemux * demux,
   return ret;
 }
 
+static gboolean
+gst_matroska_demux_all_streams_eos (GstMatroskaDemux * demux)
+{
+  if (G_UNLIKELY (!demux->common.src->len)) {
+    return FALSE;
+  }
+
+  guint i;
+
+  g_assert (demux->common.num_streams == demux->common.src->len);
+  for (i = 0; i < demux->common.src->len; i++) {
+    GstMatroskaTrackContext *context = g_ptr_array_index (demux->common.src,
+        i);
+    if (context->eos == FALSE)
+      return FALSE;
+  }
+
+
+  return TRUE;
+}
+
 /* BLOCKADDITIONS
  *  BLOCKMORE
  *    BLOCKADDID
@@ -4716,7 +4736,10 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       /* We shouldn't modify upstream driven TIME FORMAT segment */
       if (!demux->upstream_format_is_time) {
         segment->start = clace_time;
-        segment->stop = demux->common.segment.stop;
+        if (GST_CLOCK_TIME_IS_VALID (demux->requested_seek_duration)) {
+          segment->stop = clace_time + demux->requested_seek_duration;
+          demux->requested_seek_duration = GST_CLOCK_TIME_NONE;
+        }
         segment->time = segment->start - demux->stream_start_time;
         segment->position = segment->start - demux->stream_start_time;
       }
@@ -5139,6 +5162,10 @@ eos:
   {
     stream->eos = TRUE;
     ret = GST_FLOW_OK;
+    if (demux->streaming && gst_matroska_demux_all_streams_eos (demux)) {
+      ret = GST_FLOW_EOS;
+    }
+
     /* combine flows */
     ret = gst_flow_combiner_update_pad_flow (demux->flowcombiner, stream->pad,
         ret);
@@ -6028,25 +6055,12 @@ gst_matroska_demux_loop (GstPad * pad)
     goto pause;
 
   /* check if we're at the end of a configured segment */
-  if (G_LIKELY (demux->common.src->len)) {
-    guint i;
-
-    g_assert (demux->common.num_streams == demux->common.src->len);
-    for (i = 0; i < demux->common.src->len; i++) {
-      GstMatroskaTrackContext *context = g_ptr_array_index (demux->common.src,
-          i);
-      GST_DEBUG_OBJECT (context->pad, "pos %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (context->pos));
-      if (context->eos == FALSE)
-        goto next;
-    }
-
+  if (gst_matroska_demux_all_streams_eos (demux)) {
     GST_INFO_OBJECT (demux, "All streams are EOS");
     ret = GST_FLOW_EOS;
     goto eos;
   }
 
-next:
   if (G_UNLIKELY (demux->cached_length == G_MAXUINT64 ||
           demux->common.offset >= demux->cached_length)) {
     demux->cached_length = gst_matroska_read_common_get_length (&demux->common);
@@ -6244,6 +6258,10 @@ next:
   ret = gst_matroska_demux_parse_id (demux, id, length, needed);
   if (ret == GST_FLOW_EOS) {
     /* need more data */
+    if (gst_matroska_demux_all_streams_eos (demux)) {
+      return GST_FLOW_EOS;
+    }
+
     return GST_FLOW_OK;
   } else if (ret != GST_FLOW_OK) {
     return ret;
