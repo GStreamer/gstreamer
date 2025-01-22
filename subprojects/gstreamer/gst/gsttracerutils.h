@@ -234,7 +234,12 @@ typedef void (*GstTracerHookPadPullRangePost) (GObject *self, GstClockTime ts,
  * @pad: the pad
  * @event: the event
  *
- * Pre-hook for gst_pad_push_event() named "pad-push-event-pre".
+ * Pre-hook for when an event is pushed through a pad, named
+ * "pad-push-event-pre".
+ *
+ * Called by gst_pad_push_event(). Also called by functions other than
+ * gst_pad_push_event() that call gst_pad_push_event_unchecked() directly,
+ * namely push_sticky() and check_sticky().
  */
 typedef void (*GstTracerHookPadPushEventPre) (GObject *self, GstClockTime ts,
     GstPad *pad, GstEvent *event);
@@ -250,7 +255,12 @@ typedef void (*GstTracerHookPadPushEventPre) (GObject *self, GstClockTime ts,
  * @pad: the pad
  * @res: the result of gst_pad_push_event()
  *
- * Post-hook for gst_pad_push_event() named "pad-push-event-post".
+ * Post-hook for when an event has been pushed through a pad, named
+ * "pad-push-event-post".
+ *
+ * Called by gst_pad_push_event(). Also called by functions other than
+ * gst_pad_push_event() that call gst_pad_push_event_unchecked() directly,
+ * namely push_sticky() and check_sticky().
  */
 typedef void (*GstTracerHookPadPushEventPost) (GObject *self, GstClockTime ts,
     GstPad *pad, gboolean res);
