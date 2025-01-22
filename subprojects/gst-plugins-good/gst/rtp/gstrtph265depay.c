@@ -39,6 +39,14 @@ GST_DEBUG_CATEGORY_STATIC (rtph265depay_debug);
  * expressed a restriction or preference via caps */
 #define DEFAULT_STREAM_FORMAT GST_H265_STREAM_FORMAT_BYTESTREAM
 #define DEFAULT_ACCESS_UNIT   FALSE
+#define DEFAULT_WAIT_FOR_KEYFRAME FALSE
+
+enum
+{
+  PROP_0,
+  PROP_WAIT_FOR_KEYFRAME
+};
+
 
 /* 3 zero bytes syncword */
 static const guint8 sync_bytes[] = { 0, 0, 0, 1 };
@@ -119,6 +127,38 @@ static void gst_rtp_h265_depay_push (GstRtpH265Depay * rtph265depay,
     GstBuffer * outbuf, gboolean keyframe, GstClockTime timestamp,
     gboolean marker);
 
+static void
+gst_rtp_h265_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtpH265Depay *self = GST_RTP_H265_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_WAIT_FOR_KEYFRAME:
+      self->wait_for_keyframe = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_h265_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtpH265Depay *self = GST_RTP_H265_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_WAIT_FOR_KEYFRAME:
+      g_value_set_boolean (value, self->wait_for_keyframe);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 
 static void
 gst_rtp_h265_depay_class_init (GstRtpH265DepayClass * klass)
@@ -132,6 +172,24 @@ gst_rtp_h265_depay_class_init (GstRtpH265DepayClass * klass)
   gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_h265_depay_finalize;
+  gobject_class->set_property = gst_rtp_h265_depay_set_property;
+  gobject_class->get_property = gst_rtp_h265_depay_get_property;
+
+  /**
+   * GstRtpH265Depay:wait-for-keyframe:
+   *
+   * Wait for the next keyframe after packet loss.
+   *
+   * Note: currently this only has an effect if outputting access units.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_WAIT_FOR_KEYFRAME,
+      g_param_spec_boolean ("wait-for-keyframe", "Wait for Keyframe",
+          "Wait for the next keyframe after packet loss, meaningful only when "
+          "outputting access units",
+          DEFAULT_WAIT_FOR_KEYFRAME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_rtp_h265_depay_src_template);
@@ -168,6 +226,7 @@ gst_rtp_h265_depay_init (GstRtpH265Depay * rtph265depay)
       (GDestroyNotify) gst_buffer_unref);
   rtph265depay->pps = g_ptr_array_new_with_free_func (
       (GDestroyNotify) gst_buffer_unref);
+  rtph265depay->wait_for_keyframe = DEFAULT_WAIT_FOR_KEYFRAME;
 }
 
 static void
@@ -175,6 +234,7 @@ gst_rtp_h265_depay_reset (GstRtpH265Depay * rtph265depay, gboolean hard)
 {
   gst_adapter_clear (rtph265depay->adapter);
   rtph265depay->wait_start = TRUE;
+  rtph265depay->waiting_for_keyframe = rtph265depay->wait_for_keyframe;
   gst_adapter_clear (rtph265depay->picture_adapter);
   rtph265depay->picture_start = FALSE;
   rtph265depay->last_keyframe = FALSE;
@@ -1171,29 +1231,33 @@ gst_rtp_h265_depay_handle_nal (GstRtpH265Depay * rtph265depay, GstBuffer * nal,
   if (rtph265depay->merge) {
     gboolean start = FALSE, complete = FALSE;
 
+    if (NAL_TYPE_IS_CODED_SLICE_SEGMENT (nal_type)) {
+      /* A NAL unit (X) ends an access unit if the next-occurring VCL NAL unit (Y) has the high-order bit of the first byte after its NAL unit header equal to 1 */
+      start = TRUE;
+      if (((map.data[6] >> 7) & 0x01) == 1) {
+        complete = TRUE;
+      }
+    } else if ((nal_type >= 32 && nal_type <= 35)
+        || nal_type == 39 || (nal_type >= 41 && nal_type <= 44)
+        || (nal_type >= 48 && nal_type <= 55)) {
+      /* VPS, SPS, PPS, SEI, ... terminate an access unit */
+      complete = TRUE;
+    }
+    GST_DEBUG_OBJECT (depayload, "start %d, complete %d", start, complete);
+
     /* marker bit isn't mandatory so in the following code we try to detect
      * an AU boundary (see H.265 spec section 7.4.2.4.4) */
     if (!marker) {
-      if (NAL_TYPE_IS_CODED_SLICE_SEGMENT (nal_type)) {
-        /* A NAL unit (X) ends an access unit if the next-occurring VCL NAL unit (Y) has the high-order bit of the first byte after its NAL unit header equal to 1 */
-        start = TRUE;
-        if (((map.data[6] >> 7) & 0x01) == 1) {
-          complete = TRUE;
-        }
-      } else if ((nal_type >= 32 && nal_type <= 35)
-          || nal_type == 39 || (nal_type >= 41 && nal_type <= 44)
-          || (nal_type >= 48 && nal_type <= 55)) {
-        /* VPS, SPS, PPS, SEI, ... terminate an access unit */
-        complete = TRUE;
-      }
-      GST_DEBUG_OBJECT (depayload, "start %d, complete %d", start, complete);
-
       if (complete && rtph265depay->picture_start)
         outbuf = gst_rtp_h265_complete_au (rtph265depay, &out_timestamp,
             &out_keyframe);
     }
+
     /* add to adapter */
     gst_buffer_unmap (nal, &map);
+
+    if (!rtph265depay->picture_start && start && out_keyframe)
+      rtph265depay->waiting_for_keyframe = FALSE;
 
     GST_DEBUG_OBJECT (depayload, "adding NAL to picture adapter");
     gst_adapter_push (rtph265depay->picture_adapter, nal);
@@ -1212,8 +1276,16 @@ gst_rtp_h265_depay_handle_nal (GstRtpH265Depay * rtph265depay, GstBuffer * nal,
   }
 
   if (outbuf) {
-    gst_rtp_h265_depay_push (rtph265depay, outbuf, out_keyframe, out_timestamp,
-        marker);
+    if (!rtph265depay->waiting_for_keyframe) {
+      GST_INFO_OBJECT (depayload, "Pushing frame %" GST_PTR_FORMAT, outbuf);
+      gst_rtp_h265_depay_push (rtph265depay, outbuf, out_keyframe,
+          out_timestamp, marker);
+    } else {
+      GST_INFO_OBJECT (depayload,
+          "Dropping %" GST_PTR_FORMAT ", we are waiting for a keyframe",
+          outbuf);
+      gst_buffer_unref (outbuf);
+    }
   }
 
   return;
@@ -1265,12 +1337,19 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
   rtph265depay = GST_RTP_H265_DEPAY (depayload);
 
+  if (!rtph265depay->merge)
+    rtph265depay->waiting_for_keyframe = FALSE;
+
   /* flush remaining data on discont */
   if (GST_BUFFER_IS_DISCONT (rtp->buffer)) {
     gst_adapter_clear (rtph265depay->adapter);
     rtph265depay->wait_start = TRUE;
     rtph265depay->current_fu_type = 0;
     rtph265depay->last_fu_seqnum = 0;
+
+    if (rtph265depay->merge && rtph265depay->wait_for_keyframe) {
+      rtph265depay->waiting_for_keyframe = TRUE;
+    }
   }
 
   {
