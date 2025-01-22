@@ -1378,7 +1378,7 @@ gst_net_client_clock_constructed (GObject * object)
         GST_NET_CLIENT_INTERNAL_CLOCK (tmp->clock);
 
     if (internal_clock->marked_corrupted)
-      break;
+      continue;
 
     if (strcmp (internal_clock->address, self->priv->address) == 0 &&
         internal_clock->port == self->priv->port) {
