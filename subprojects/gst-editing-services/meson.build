@@ -147,7 +147,7 @@ gir_init_section = [ '--add-init-section=' + \
 
 pymod = import('python')
 python_opt = get_option('python')
-python = pymod.find_installation(required: python_opt)
+python = pymod.find_installation(get_option('python-exe'), required: python_opt)
 has_python = false
 static_build = get_option('default_library') == 'static'
 if static_build

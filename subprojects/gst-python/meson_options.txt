@@ -2,6 +2,8 @@ option('pygi-overrides-dir', type : 'string', value : '',
         description: 'Path to pygobject overrides directory')
 option('libpython-dir', type : 'string', value : '',
         description: 'Path to find libpythonXX.so')
-option('python', type : 'string')
+option('python', type : 'string', deprecated: 'python-exe')
+option('python-exe', type : 'string', value : 'python3', yield: true,
+       description: 'Path or name of the Python interpreter to build for.')
 option('tests', type : 'feature', value : 'auto', yield : true)
 option('plugin', type : 'feature', value : 'auto')

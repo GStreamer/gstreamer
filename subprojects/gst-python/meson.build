@@ -27,7 +27,7 @@ libdl = cc.find_library('dl', required: false)
 pygobject_dep = dependency('pygobject-3.0', fallback: ['pygobject', 'pygobject_dep'], version : '>= 3.8')
 
 pymod = import('python')
-python = pymod.find_installation(get_option('python'))
+python = pymod.find_installation(get_option('python-exe'), required: true)
 pythonver = python.language_version()
 if pythonver.version_compare('<3.0')
   error('Python2 is not supported anymore, please port your code to python3 (@0@ specified)'.format(python.language_version()))
