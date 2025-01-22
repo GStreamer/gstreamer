@@ -48,15 +48,12 @@ if host_system not in ['windows', 'linux']
   subdir_done()
 endif
 
-# Linux ARM would need -latomic for std::atomic<int64_t>
-if host_system == 'linux' and host_machine.cpu_family() in ['aarch64', 'arm']
-  libatomic_dep = cxx.find_library('atomic', required: get_option('cuda-nvmm'))
-  if not libatomic_dep.found()
-    subdir_done()
-  endif
-
-  gstcuda_platform_dep += [libatomic_dep]
-endif
+# Check for libatomic for use of C11 atomics: some architectures need
+# to link explicitly to this library.
+# TODO: Once meson 1.7 is in use, this can be updated to
+# dependency('atomic')
+atomic_dep = cxx.find_library('atomic', required: false)
+gstcuda_platform_dep += [atomic_dep]
 
 cuda_win32_headers = [
   'initguid.h',
