@@ -427,17 +427,22 @@ In the simplest case, you might be able to get away with just doing a `git pull
 #### Coding Style
 
 Try to stick to the GStreamer indentation and coding style. There is an
-application called [`gst-indent`][gst-indent] which should be available
+application called [`gst-indent-1.0`][gst-indent] which should be available
 in a GStreamer development environment and which you can run over your `.c` or
 `.cpp` files if you want your code auto-indented before making the patch.
 
-Please do _not_ run `gst-indent` on header files, our header file
+Please do _not_ run `gst-indent-1.0` on header files, our header file
 indentation is free-form.
 
 If you build GStreamer from git, a local commit hook will be installed that
 checks if your commit conforms to the required style. You can bypass that local
 indentation check hook by using `git commit -n`, but it will still be checked
 again later on the CI when you submit your changes through GitLab for merging.
+
+If `gst-indent-1.0` is not found on your system at setup time, it will be
+supplied from the Meson wrap in the main project; you must build GStreamer
+once, and that will make `gst-indent-1.0` available to the developer
+environment.
 
 We are working on making this less hasslesome.
 
