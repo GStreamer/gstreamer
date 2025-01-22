@@ -66,7 +66,7 @@ buffer: content-id=2, pts=0:00:01.900000000, dur=0:00:00.033333333, flags=gap
 buffer: content-id=2, pts=0:00:01.933333333, dur=0:00:00.033333333, flags=gap
 buffer: content-id=2, pts=0:00:01.966666666, dur=0:00:00.033333334, flags=gap
 buffer: content-id=2, pts=0:00:02.000000000, dur=0:00:00.033333333, flags=gap
-buffer: content-id=2, pts=0:00:02.033333333, dur=0:00:00.033333333, flags=gap
+buffer: content-id=2, pts=0:00:02.033333333, dur=0:00:00.033333333
 buffer: content-id=2, pts=0:00:02.066666666, dur=0:00:00.033333334, flags=gap
 buffer: content-id=2, pts=0:00:02.100000000, dur=0:00:00.033333333, flags=gap
 buffer: content-id=2, pts=0:00:02.133333333, dur=0:00:00.033333333, flags=gap

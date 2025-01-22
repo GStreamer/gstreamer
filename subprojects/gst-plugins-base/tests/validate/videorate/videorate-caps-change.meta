@@ -1,0 +1,26 @@
+# Common metadatas to check the videorate element caps change behavior with different
+# new-pref specified by previously setting variables with:
+# ```
+# set-global, new_pref=<videorate new preference>
+# ```
+# and then `include, location="videorate-caps-change.meta" to setup the test with this
+# file
+meta,
+    args = {
+            "appsrc name=src format=time handle-segment-change=true ! \
+                videorate new-pref=$(new_pref) name=videorate ! video/x-raw,framerate=10/1 ! fakesink sync=true",
+    },
+    configs = {
+       "$(validateflow), pad=videorate:sink, buffers-checksum=as-id, ignored-event-types={ tag }",
+       "$(validateflow), pad=videorate:src, buffers-checksum=as-id, ignored-event-types={ tag }",
+    },
+    handles-states=true,
+    ignore-eos=true
+
+appsrc-push, target-element-name=src, fill-mode=counter, pts=0.0, duration=1.0, size=115200,
+    caps=(GstCaps)[video/x-raw,format=I420,framerate=1/1,width=320,height=240],
+    segment=[segment, stop=1.1, format=(GstFormat)time]
+
+appsrc-push, target-element-name=src, fill-mode=counter, pts=1.0, duration=1.0, size=460800,
+    caps=(GstCaps)[video/x-raw,format=I420,framerate=1/1,width=640,height=480],
+    segment=[segment, stop=1.1, format=(GstFormat)time]

@@ -3,6 +3,11 @@ event caps: video/x-raw, format=(string)I420, framerate=(fraction)30/1, height=(
 event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
 buffer: content-id=0, pts=0:00:00.000000000, dur=0:00:00.033333333, flags=discont
 buffer: content-id=1, pts=0:00:00.033333333, dur=0:00:00.033333333
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=0:00:00.600000000, flags=0x01, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+buffer: content-id=0, pts=0:00:00.000000000, dur=0:00:00.033333333, flags=discont
+buffer: content-id=1, pts=0:00:00.033333333, dur=0:00:00.033333333
 buffer: content-id=2, pts=0:00:00.066666666, dur=0:00:00.033333334
 buffer: content-id=3, pts=0:00:00.100000000, dur=0:00:00.033333333
 buffer: content-id=4, pts=0:00:00.133333333, dur=0:00:00.033333333
@@ -19,7 +24,4 @@ buffer: content-id=14, pts=0:00:00.466666666, dur=0:00:00.033333334
 buffer: content-id=15, pts=0:00:00.500000000, dur=0:00:00.033333333
 buffer: content-id=16, pts=0:00:00.533333333, dur=0:00:00.033333333
 buffer: content-id=17, pts=0:00:00.566666666, dur=0:00:00.033333334
-buffer: content-id=18, pts=0:00:00.600000000, dur=0:00:00.033333333
-buffer: content-id=19, pts=0:00:00.633333333, dur=0:00:00.033333333
-buffer: content-id=20, pts=0:00:00.666666666, dur=0:00:00.033333334
-buffer: content-id=21, pts=0:00:00.700000000, dur=0:00:00.033333333
+event eos: (no structure)

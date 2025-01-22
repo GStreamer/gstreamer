@@ -21,6 +21,9 @@ tests = [
     'videorate/reverse.variable_to_10fps',
     'videorate/reverse_fast.variable_to_10fps',
     'videorate/reverse_slow.variable_to_10fps',
+    'videorate/caps_change',
+    'videorate/caps_change_new_pref_0_0',
+    'videorate/caps_change_new_pref_1_0',
     'videorate/change_rate_while_playing',
     'videorate/change_rate_reverse_playback',
     'videorate/rate_0_5',
@@ -46,7 +49,7 @@ env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
 env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), 'validate'))
 env.set('GST_PLUGIN_SCANNER_1_0', gst_plugin_scanner_path)
 env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer', 'gst-validate', 'debugutilsbad',
-    'gst-plugins-base@' + meson.project_build_root())
+    'gst-plugins-good', 'gst-plugins-base@' + meson.project_build_root())
 
 foreach t: tests
     test_dir_name = t.split('/')

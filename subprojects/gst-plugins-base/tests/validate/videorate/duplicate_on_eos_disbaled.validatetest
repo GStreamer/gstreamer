@@ -13,11 +13,8 @@ pause
 
 seek, flags=flush+accurate, start=0, stop=2.0
 play
-crank-clock, repeat=31
+crank-clock, repeat=32
 wait, message-type=eos
-
-# Second buffer won't be duplicated as we disabled on on EOS
-check-position, expected-position=1.0
 stop
 
 

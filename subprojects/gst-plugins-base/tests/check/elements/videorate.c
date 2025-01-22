@@ -19,6 +19,7 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#include "gst/gstclock.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -245,10 +246,11 @@ GST_START_TEST (test_more)
   /* ... and a copy is now stuck inside videorate */
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
 
-  /* ... and the first one is pushed out, with timestamp 0 */
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  assert_videorate_stats (videorate, "second buffer", 2, 1, 0, 0);
+  /* ... and the first two are pushed out, with timestamp 0 and 1/25 */
+  fail_unless_equals_int (g_list_length (buffers), 2);
+  assert_videorate_stats (videorate, "second buffer", 2, 2, 0, 0);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
+  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
 
   outbuffer = buffers->data;
   fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (outbuffer), 0);
@@ -267,8 +269,9 @@ GST_START_TEST (test_more)
   /* ... and a copy is now stuck inside videorate */
   ASSERT_BUFFER_REFCOUNT (third, "third", 1);
 
-  /* submitting the third buffer has triggered flushing of three more frames */
-  assert_videorate_stats (videorate, "third buffer", 3, 4, 0, 2);
+  /* submitting the third buffer has triggered flushing of five more frames,
+     everything until 1/25 -> 6/25 (12/50) */
+  assert_videorate_stats (videorate, "third buffer", 3, 7, 0, 4);
 
   /* check timestamp and source correctness */
   l = buffers;
@@ -297,17 +300,16 @@ GST_START_TEST (test_more)
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET (l->data), 3);
   fail_unless_equals_uint64 (GST_BUFFER_OFFSET_END (l->data), 4);
 
-  fail_unless_equals_int (g_list_length (buffers), 4);
+  fail_unless_equals_int (g_list_length (buffers), 7);
   /* one held by us, three held by each output frame taken from the second */
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
 
   /* now send EOS */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
 
-  /* submitting eos should flush out two more frames for tick 8 and 10 */
-  /* FIXME: right now it only flushes out one, so out is 5 instead of 6 ! */
-  assert_videorate_stats (videorate, "eos", 3, 5, 0, 2);
-  fail_unless_equals_int (g_list_length (buffers), 5);
+  /* submitting eos flush out one more frame for the next tick */
+  assert_videorate_stats (videorate, "eos", 3, 8, 0, 4);
+  fail_unless_equals_int (g_list_length (buffers), 8);
 
   /* cleanup */
   g_rand_free (rand);
@@ -379,19 +381,18 @@ GST_START_TEST (test_wrong_order_from_zero)
   /* ... and a copy is now stuck inside videorate */
   ASSERT_BUFFER_REFCOUNT (third, "third", 1);
 
-  /* and now the first one should be pushed once and dupped 24 + 13 times, to
-   * reach the half point between 1 s (first) and 2 s (third) */
-  fail_unless_equals_int (g_list_length (buffers), 38);
+  /* 26 buffer for 0s -> 1s and another 25 from 26/25s -> 2s */
+  fail_unless_equals_int (g_list_length (buffers), 51);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
   ASSERT_BUFFER_REFCOUNT (third, "third", 1);
-  assert_videorate_stats (videorate, "third", 3, 38, 1, 37);
+  assert_videorate_stats (videorate, "third", 3, 51, 1, 49);
 
   /* verify last buffer */
   outbuffer = g_list_last (buffers)->data;
   fail_unless (GST_IS_BUFFER (outbuffer));
   fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (outbuffer),
-      GST_SECOND * 37 / 25);
+      GST_SECOND * 50 / 25);
 
   /* cleanup */
   gst_buffer_unref (first);
@@ -445,9 +446,10 @@ GST_START_TEST (test_max_duplication_time)
   fail_unless (gst_pad_push (mysrcpad, second) == GST_FLOW_OK);
   /* ... and a copy is now stuck inside videorate */
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
-  /* and it created 13 output buffers as copies of the first frame */
-  fail_unless_equals_int (g_list_length (buffers), 13);
-  assert_videorate_stats (videorate, "second", 2, 13, 0, 12);
+  /* and it created 26 output buffers as copies of the
+     first and second frame */
+  fail_unless_equals_int (g_list_length (buffers), 26);
+  assert_videorate_stats (videorate, "second", 2, 26, 0, 24);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
 
   /* third buffer */
@@ -463,14 +465,15 @@ GST_START_TEST (test_max_duplication_time)
   ASSERT_BUFFER_REFCOUNT (third, "third", 1);
 
   /* submitting a frame with 2 seconds triggers output of 25 more frames */
-  fail_unless_equals_int (g_list_length (buffers), 38);
+  fail_unless_equals_int (g_list_length (buffers), 51);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
   ASSERT_BUFFER_REFCOUNT (third, "third", 1);
-  /* three frames submitted; two of them output as is, and 36 duplicated */
-  assert_videorate_stats (videorate, "third", 3, 38, 0, 36);
+  /* three frames submitted; two of them output as is,
+     and 36 + 12 duplicated */
+  assert_videorate_stats (videorate, "third", 3, 51, 0, 48);
 
-  /* fourth buffer */
+  /* fourth buffer, this buffer exceeds max-duplication-time */
   fourth = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (fourth) = 5 * GST_SECOND;
   gst_buffer_memset (fourth, 0, 0, 4);
@@ -482,18 +485,18 @@ GST_START_TEST (test_max_duplication_time)
   /* ... and a copy is now stuck inside videorate */
   ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
 
-  /* should now have drained everything up to the 2s buffer above */
-  fail_unless_equals_int (g_list_length (buffers), 51);
+  /* should now have drained everything up to the 5s buffer above */
+  fail_unless_equals_int (g_list_length (buffers), 52);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
   ASSERT_BUFFER_REFCOUNT (third, "third", 1);
   ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
-  assert_videorate_stats (videorate, "fourth", 4, 51, 0, 48);
+  assert_videorate_stats (videorate, "fourth", 4, 52, 0, 48);
 
   /* verify last buffer */
   outbuffer = g_list_last (buffers)->data;
   fail_unless (GST_IS_BUFFER (outbuffer));
-  fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (outbuffer), 2 * GST_SECOND);
+  fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (outbuffer), 5 * GST_SECOND);
 
   /* fifth buffer */
   fifth = gst_buffer_new_and_alloc (4);
@@ -507,28 +510,28 @@ GST_START_TEST (test_max_duplication_time)
   /* ... and a copy is now stuck inside videorate */
   ASSERT_BUFFER_REFCOUNT (third, "fifth", 1);
 
-  /* submitting a frame with 6 seconds triggers output of 12 more frames */
-  fail_unless_equals_int (g_list_length (buffers), 63);
+  /* submitting a frame with 6 seconds triggers output of 23 more frames */
+  fail_unless_equals_int (g_list_length (buffers), 76);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
   ASSERT_BUFFER_REFCOUNT (third, "third", 1);
   ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
   ASSERT_BUFFER_REFCOUNT (fifth, "fifth", 1);
-  /* five frames submitted; two of them output as is, 63 and 59 duplicated */
-  assert_videorate_stats (videorate, "fifth", 5, 63, 0, 59);
+  /* five frames submitted; two of them output as is, 76 */
+  assert_videorate_stats (videorate, "fifth", 5, 76, 0, 71);
 
   /* push EOS to drain */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
 
   /* we should now have gotten one output for the last frame */
-  fail_unless_equals_int (g_list_length (buffers), 64);
+  fail_unless_equals_int (g_list_length (buffers), 77);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
   ASSERT_BUFFER_REFCOUNT (third, "third", 1);
   ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
   ASSERT_BUFFER_REFCOUNT (fifth, "fifth", 1);
-  /* five frames submitted; two of them output as is, 64 and 60 duplicated */
-  assert_videorate_stats (videorate, "fifth", 5, 64, 0, 59);
+  /* five frames submitted; two of them output as is, 77 */
+  assert_videorate_stats (videorate, "fifth", 5, 77, 0, 71);
 
   /* cleanup */
   gst_buffer_unref (first);
@@ -583,9 +586,9 @@ GST_START_TEST (test_wrong_order)
   fail_unless (gst_pad_push (mysrcpad, second) == GST_FLOW_OK);
   /* ... and a copy is now stuck inside videorate */
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
-  /* and it created 13 output buffers as copies of the first frame */
-  fail_unless_equals_int (g_list_length (buffers), 13);
-  assert_videorate_stats (videorate, "second", 2, 13, 0, 12);
+  /* and it created 26 output buffers as copies of the first frame */
+  fail_unless_equals_int (g_list_length (buffers), 26);
+  assert_videorate_stats (videorate, "second", 2, 26, 0, 24);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
 
   /* third buffer */
@@ -600,12 +603,12 @@ GST_START_TEST (test_wrong_order)
   /* ... and a copy is now stuck inside videorate */
   ASSERT_BUFFER_REFCOUNT (third, "third", 1);
 
-  /* submitting a frame with 2 seconds triggers output of 25 more frames */
-  fail_unless_equals_int (g_list_length (buffers), 38);
+  /* submitting a frame at 2s triggers output of 25 more frames */
+  fail_unless_equals_int (g_list_length (buffers), 51);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
-  /* three frames submitted; two of them output as is, and 36 duplicated */
-  assert_videorate_stats (videorate, "third", 3, 38, 0, 36);
+  /* three frames submitted; two of them output as is, and 36 + 11 duplicated */
+  assert_videorate_stats (videorate, "third", 3, 51, 0, 48);
 
   /* fourth buffer */
   fourth = gst_buffer_new_and_alloc (4);
@@ -619,16 +622,16 @@ GST_START_TEST (test_wrong_order)
   /* ... and it is dropped */
   ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
 
-  fail_unless_equals_int (g_list_length (buffers), 38);
+  fail_unless_equals_int (g_list_length (buffers), 51);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
-  assert_videorate_stats (videorate, "fourth", 4, 38, 1, 36);
+  assert_videorate_stats (videorate, "fourth", 4, 51, 1, 48);
 
   /* verify last buffer */
   outbuffer = g_list_last (buffers)->data;
   fail_unless (GST_IS_BUFFER (outbuffer));
   fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (outbuffer),
-      GST_SECOND * 37 / 25);
+      GST_SECOND * 50 / 25);
 
 
   /* cleanup */
@@ -712,9 +715,9 @@ GST_START_TEST (test_changing_size)
   gst_buffer_memset (second, 0, 0, 4);
 
   fail_unless (gst_pad_push (mysrcpad, second) == GST_FLOW_OK);
-  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_unless_equals_int (g_list_length (buffers), 2);
   outbuf = buffers->data;
-  /* first buffer should be output here */
+  /* first two buffers should be output here */
   fail_unless (GST_BUFFER_TIMESTAMP (outbuf) == 0);
 
   /* third buffer with new size */
@@ -725,12 +728,12 @@ GST_START_TEST (test_changing_size)
   gst_pad_set_caps (mysrcpad, caps_newsize);
 
   fail_unless (gst_pad_push (mysrcpad, third) == GST_FLOW_OK);
-  /* new caps flushed the internal state, no new output yet */
-  fail_unless_equals_int (g_list_length (buffers), 1);
+  /* output next buffer after caps change */
+  fail_unless_equals_int (g_list_length (buffers), 3);
   outbuf = g_list_last (buffers)->data;
-  /* first buffer should be output here */
+  /* first 3 buffers should be output here */
   //fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (outbuf), caps));
-  fail_unless (GST_BUFFER_TIMESTAMP (outbuf) == 0);
+  fail_unless (GST_BUFFER_TIMESTAMP (outbuf) == GST_SECOND * 2 / 25);
 
   /* fourth buffer with original size */
   fourth = gst_buffer_new_and_alloc (4);
@@ -739,7 +742,7 @@ GST_START_TEST (test_changing_size)
   gst_pad_set_caps (mysrcpad, caps);
 
   fail_unless (gst_pad_push (mysrcpad, fourth) == GST_FLOW_OK);
-  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_unless_equals_int (g_list_length (buffers), 4);
 
   /* fifth buffer with original size */
   fifth = gst_buffer_new_and_alloc (4);
@@ -747,12 +750,11 @@ GST_START_TEST (test_changing_size)
   gst_buffer_memset (fifth, 0, 0, 4);
 
   fail_unless (gst_pad_push (mysrcpad, fifth) == GST_FLOW_OK);
-  /* all four missing buffers here, dups of fourth buffer */
-  fail_unless_equals_int (g_list_length (buffers), 4);
+  /* all five buffers here */
+  fail_unless_equals_int (g_list_length (buffers), 5);
   outbuf = g_list_last (buffers)->data;
   /* third buffer should be output here */
-  fail_unless (GST_BUFFER_TIMESTAMP (outbuf) == 3 * GST_SECOND / 25);
-  //fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (outbuf), caps));
+  fail_unless (GST_BUFFER_TIMESTAMP (outbuf) == 4 * GST_SECOND / 25);
 
   gst_caps_unref (caps);
   gst_caps_unref (caps_newsize);
@@ -1740,8 +1742,8 @@ GST_START_TEST (test_segment_update_start_advance)
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
   ASSERT_BUFFER_REFCOUNT (buf, "second", 1);
   gst_buffer_unref (buf);
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  assert_videorate_stats (videorate, "second", 2, 1, 0, 0);
+  fail_unless_equals_int (g_list_length (buffers), 2);
+  assert_videorate_stats (videorate, "second", 2, 2, 0, 0);
 
   /* third buffer */
   buf = gst_buffer_new_and_alloc (4);
@@ -1754,8 +1756,8 @@ GST_START_TEST (test_segment_update_start_advance)
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
   ASSERT_BUFFER_REFCOUNT (buf, "third", 1);
   gst_buffer_unref (buf);
-  fail_unless_equals_int (g_list_length (buffers), 2);
-  assert_videorate_stats (videorate, "second", 3, 2, 0, 0);
+  fail_unless_equals_int (g_list_length (buffers), 3);
+  assert_videorate_stats (videorate, "second", 3, 3, 0, 0);
 
   /* should have the first 2 buffers here */
   for (l = buffers; l; l = l->next) {
@@ -1790,7 +1792,7 @@ GST_START_TEST (test_segment_update_start_advance)
   ASSERT_BUFFER_REFCOUNT (buf, "fourth", 1);
   gst_buffer_unref (buf);
   fail_unless_equals_int (g_list_length (buffers), 1);
-  assert_videorate_stats (videorate, "fourth", 4, 3, 0, 0);
+  assert_videorate_stats (videorate, "fourth", 4, 4, 0, 0);
 
   /* Should have the last buffer of the previous segment here */
   for (l = buffers; l; l = l->next) {
@@ -1816,14 +1818,14 @@ GST_START_TEST (test_segment_update_start_advance)
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
   ASSERT_BUFFER_REFCOUNT (buf, "fifth", 1);
   gst_buffer_unref (buf);
-  fail_unless_equals_int (g_list_length (buffers), 2);
-  assert_videorate_stats (videorate, "fifth", 5, 5, 0, 1);
+  fail_unless_equals_int (g_list_length (buffers), 3);
+  assert_videorate_stats (videorate, "fifth", 5, 7, 0, 1);
 
   /* push EOS to drain out all buffers */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
-  fail_unless_equals_int (g_list_length (buffers), 3);
+  fail_unless_equals_int (g_list_length (buffers), 4);
 
-  assert_videorate_stats (videorate, "fifth", 5, 6, 0, 1);
+  assert_videorate_stats (videorate, "fifth", 5, 8, 0, 1);
 
   /* Should start with the new buffers of the new segment now */
   next_ts = 30 * GST_SECOND;
@@ -1832,7 +1834,7 @@ GST_START_TEST (test_segment_update_start_advance)
     fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), next_ts);
     fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf), 40 * GST_MSECOND);
 
-    if (n < 6) {
+    if (n < 7) {
       fail_unless_equals_int (buffer_get_byte (buf, 0), 4);
     } else {
       fail_unless_equals_int (buffer_get_byte (buf, 0), 5);
@@ -1841,7 +1843,7 @@ GST_START_TEST (test_segment_update_start_advance)
     next_ts += GST_SECOND / 25;
     n += 1;
   }
-  fail_unless_equals_int (n, 7);
+  fail_unless_equals_int (n, 9);
   gst_check_drop_buffers ();
   fail_unless_equals_int (g_list_length (buffers), 0);
 
@@ -1906,8 +1908,8 @@ GST_START_TEST (test_segment_update_same)
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
   ASSERT_BUFFER_REFCOUNT (buf, "second", 1);
   gst_buffer_unref (buf);
-  fail_unless_equals_int (g_list_length (buffers), 51);
-  assert_videorate_stats (videorate, "second", 2, 51, 0, 50);
+  fail_unless_equals_int (g_list_length (buffers), 52);
+  assert_videorate_stats (videorate, "second", 2, 52, 0, 50);
 
   /* third buffer */
   buf = gst_buffer_new_and_alloc (4);
@@ -1920,10 +1922,11 @@ GST_START_TEST (test_segment_update_same)
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
   ASSERT_BUFFER_REFCOUNT (buf, "third", 1);
   gst_buffer_unref (buf);
-  fail_unless_equals_int (g_list_length (buffers), 52);
-  assert_videorate_stats (videorate, "second", 3, 52, 0, 50);
+  /* first buffer has been dupped to fill the gap to the 2nd buffer */
+  fail_unless_equals_int (g_list_length (buffers), 53);
+  assert_videorate_stats (videorate, "second", 3, 53, 0, 50);
 
-  /* should have the first 2 buffers here */
+  /* have the first 3 buffers here */
   next_ts = 30 * GST_SECOND;
   for (l = buffers; l; l = l->next) {
     buf = l->data;
@@ -1932,8 +1935,10 @@ GST_START_TEST (test_segment_update_same)
 
     if (n < 52) {
       fail_unless_equals_int (buffer_get_byte (buf, 0), 1);
-    } else {
+    } else if (n < 53) {
       fail_unless_equals_int (buffer_get_byte (buf, 0), 2);
+    } else {
+      fail_unless_equals_int (buffer_get_byte (buf, 0), 3);
     }
 
     next_ts += GST_SECOND / 25;
@@ -1961,15 +1966,19 @@ GST_START_TEST (test_segment_update_same)
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
   ASSERT_BUFFER_REFCOUNT (buf, "fourth", 1);
   gst_buffer_unref (buf);
-  fail_unless_equals_int (g_list_length (buffers), 38);
-  assert_videorate_stats (videorate, "fourth", 4, 90, 0, 87);
+  fail_unless_equals_int (g_list_length (buffers), 74);
+  assert_videorate_stats (videorate, "fourth", 4, 127, 0, 123);
 
-  /* Should have the last buffer of the previous segment here */
+  /* lot's of new buffers upto 35s 40ms */
   for (l = buffers; l; l = l->next) {
     buf = l->data;
     fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), next_ts);
     fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf), 40 * GST_MSECOND);
-    fail_unless_equals_int (buffer_get_byte (buf, 0), 3);
+    if (n < 91) {
+      fail_unless_equals_int (buffer_get_byte (buf, 0), 3);
+    } else {
+      fail_unless_equals_int (buffer_get_byte (buf, 0), 4);
+    }
 
     next_ts += GST_SECOND / 25;
     n += 1;
@@ -1988,13 +1997,13 @@ GST_START_TEST (test_segment_update_same)
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
   ASSERT_BUFFER_REFCOUNT (buf, "fifth", 1);
   gst_buffer_unref (buf);
-  fail_unless_equals_int (g_list_length (buffers), 37);
+  fail_unless_equals_int (g_list_length (buffers), 1);
 
   /* push EOS to drain out all buffers */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
-  fail_unless_equals_int (g_list_length (buffers), 38);
+  fail_unless_equals_int (g_list_length (buffers), 2);
 
-  assert_videorate_stats (videorate, "fourth", 5, 128, 0, 123);
+  assert_videorate_stats (videorate, "fourth", 5, 129, 0, 123);
 
   for (l = buffers; l; l = l->next) {
     buf = l->data;
@@ -2148,7 +2157,7 @@ GST_START_TEST (test_segment_update)
   buf = gst_buffer_new_and_alloc (frame_size);
   GST_BUFFER_TIMESTAMP (buf) = 3 * 40 * GST_MSECOND;
   gst_pad_push (mysrcpad, buf);
-  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_unless_equals_int (g_list_length (buffers), 2);
   fail_unless_equals_int64 (GST_BUFFER_PTS (buffers->data),
       2 * 40 * GST_MSECOND);
   gst_check_drop_buffers ();

@@ -42,8 +42,11 @@ struct _GstVideoRate
   gint from_rate_numerator, from_rate_denominator;
   gint to_rate_numerator, to_rate_denominator;
   guint64 next_ts;              /* Timestamp of next buffer to output */
+  guint64 next_end_ts;          /* Timestamp of end of next buffer to output */
   GstBuffer *prevbuf;
+  gboolean prevbuf_pushed;
   guint64 prev_ts;              /* Previous buffer timestamp */
+  guint64 prev_end_ts;          /* Previous buffer end timestamp */
   guint64 out_frame_count;      /* number of frames output since the beginning
                                  * of the segment or the last frame rate caps
                                  * change, whichever was later */

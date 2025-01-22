@@ -30,7 +30,6 @@ crank-clock, repeat=5, expected-elapsed-time=0.1
 wait, on-clock=true
 check-position, expected-position=4.0 # seek.stop - (10*(1/10fps)) = 4.0s
 
-set-vars, rate=(string)0.1
 checkpoint, text="Setting videorate.rate=0.1"
 set-property, playback-time=99.0, target-element-name=videorate, property-name=rate, property-value=0.1
 crank-clock, repeat=20

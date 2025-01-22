@@ -2,4 +2,4 @@
 # FIXME: Use a fakevideodec once merged!
 set-globals, rate=(string)"0.5", decoder="! theoraenc ! theoradec !"
 
-include, location="check-rate-prop.meta"
+include, location="check-rate-prop-with-decoder.meta"

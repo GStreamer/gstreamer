@@ -1,3 +1,3 @@
-set-globals, rate=(string)"2.0", decoder="!"
+set-globals, rate=(string)"2.0"
 
 include, location="check-rate-prop.meta"

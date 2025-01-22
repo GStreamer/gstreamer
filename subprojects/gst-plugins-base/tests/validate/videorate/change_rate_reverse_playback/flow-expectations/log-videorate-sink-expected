@@ -13,25 +13,25 @@ buffer: content-id=5, pts=0:00:04.700000000, dur=0:00:00.100000000, flags=discon
 buffer: content-id=6, pts=0:00:04.600000000, dur=0:00:00.100000000, flags=discont
 buffer: content-id=7, pts=0:00:04.500000000, dur=0:00:00.100000000, flags=discont
 buffer: content-id=8, pts=0:00:04.400000000, dur=0:00:00.100000000, flags=discont
-buffer: content-id=9, pts=0:00:04.300000000, dur=0:00:00.100000000, flags=discont
-buffer: content-id=10, pts=0:00:04.200000000, dur=0:00:00.100000000, flags=discont
 
 CHECKPOINT: Setting videorate.rate=0.5
 
+buffer: content-id=9, pts=0:00:04.300000000, dur=0:00:00.100000000, flags=discont
+buffer: content-id=10, pts=0:00:04.200000000, dur=0:00:00.100000000, flags=discont
 buffer: content-id=11, pts=0:00:04.100000000, dur=0:00:00.100000000, flags=discont
-buffer: content-id=12, pts=0:00:04.000000000, dur=0:00:00.100000000, flags=discont
-buffer: content-id=13, pts=0:00:03.900000000, dur=0:00:00.100000000, flags=discont
 
 CHECKPOINT: Setting videorate.rate=0.1
 
+buffer: content-id=12, pts=0:00:04.000000000, dur=0:00:00.100000000, flags=discont
+buffer: content-id=13, pts=0:00:03.900000000, dur=0:00:00.100000000, flags=discont
 buffer: content-id=14, pts=0:00:03.800000000, dur=0:00:00.100000000, flags=discont
 buffer: content-id=15, pts=0:00:03.700000000, dur=0:00:00.100000000, flags=discont
 buffer: content-id=16, pts=0:00:03.600000000, dur=0:00:00.100000000, flags=discont
-buffer: content-id=17, pts=0:00:03.500000000, dur=0:00:00.100000000, flags=discont
-buffer: content-id=18, pts=0:00:03.400000000, dur=0:00:00.100000000, flags=discont
 
 CHECKPOINT: Setting videorate.rate=2.0
 
+buffer: content-id=17, pts=0:00:03.500000000, dur=0:00:00.100000000, flags=discont
+buffer: content-id=18, pts=0:00:03.400000000, dur=0:00:00.100000000, flags=discont
 buffer: content-id=19, pts=0:00:03.300000000, dur=0:00:00.100000000, flags=discont
 buffer: content-id=20, pts=0:00:03.200000000, dur=0:00:00.100000000, flags=discont
 buffer: content-id=21, pts=0:00:03.100000000, dur=0:00:00.100000000, flags=discont
@@ -66,7 +66,7 @@ buffer: content-id=49, pts=0:00:00.300000000, dur=0:00:00.100000000, flags=disco
 buffer: content-id=50, pts=0:00:00.200000000, dur=0:00:00.100000000, flags=discont
 buffer: content-id=51, pts=0:00:00.100000000, dur=0:00:00.100000000, flags=discont
 buffer: content-id=52, pts=0:00:00.000000000, dur=0:00:00.100000000, flags=discont
-event eos: (no structure)
 
 CHECKPOINT: Filling up segment with last buffer
 
+event eos: (no structure)

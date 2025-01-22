@@ -1,0 +1,10 @@
+set-globals, new_pref=0.0
+
+include, location="videorate-caps-change.meta"
+
+play
+crank-clock, expected-elapsed-time=0.0
+crank-clock, repeat=10, expected-elapsed-time=0.1
+crank-clock, repeat=1, expected-elapsed-time=0.1
+wait, message-type=eos
+stop

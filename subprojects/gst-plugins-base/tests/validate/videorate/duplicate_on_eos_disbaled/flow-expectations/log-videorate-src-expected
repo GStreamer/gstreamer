@@ -35,4 +35,5 @@ buffer: content-id=1, pts=0:00:00.866666666, dur=0:00:00.033333334, flags=gap
 buffer: content-id=1, pts=0:00:00.900000000, dur=0:00:00.033333333, flags=gap
 buffer: content-id=1, pts=0:00:00.933333333, dur=0:00:00.033333333, flags=gap
 buffer: content-id=1, pts=0:00:00.966666666, dur=0:00:00.033333334, flags=gap
+buffer: content-id=1, pts=0:00:01.000000000, dur=0:00:00.033333333, flags=gap
 event eos: (no structure)
