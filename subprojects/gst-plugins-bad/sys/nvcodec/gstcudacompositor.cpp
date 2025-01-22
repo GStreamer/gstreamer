@@ -663,10 +663,10 @@ gst_cuda_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
           &pad->info, buffer, (GstMapFlags) (GST_MAP_READ | GST_MAP_CUDA))) {
     GST_ERROR_OBJECT (self, "Couldn't map frame");
     gst_buffer_unref (buffer);
+    return FALSE;
   }
 
-  prepared_frame->buffer = buffer;
-  priv->prepared_buf = gst_buffer_ref (buffer);
+  priv->prepared_buf = buffer;
 
   return TRUE;
 }
