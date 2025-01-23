@@ -281,7 +281,6 @@ gst_wpe_video_src_fill_memory (GstGLBaseSrc * bsrc, GstGLMemory * memory)
   gl->BindTexture (GL_TEXTURE_2D, tex_id);
   gl->EGLImageTargetTexture2D (GL_TEXTURE_2D,
       gst_egl_image_get_image (locked_image));
-  gl->Flush ();
   WPE_UNLOCK (src);
   return TRUE;
 }
