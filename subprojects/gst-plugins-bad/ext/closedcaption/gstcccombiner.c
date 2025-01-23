@@ -355,19 +355,19 @@ dequeue_caption (GstCCCombiner * self, GstVideoTimeCode * tc, gboolean drain)
   if (drain && cc_buffer_is_empty (self->cc_buffer))
     return;
 
-  if (self->prop_schedule_timeout != GST_CLOCK_TIME_NONE) {
+  if (self->schedule_timeout != GST_CLOCK_TIME_NONE) {
     if (self->last_caption_ts == GST_CLOCK_TIME_NONE) {
       return;
     }
 
     if (self->current_video_running_time > self->last_caption_ts
         && self->current_video_running_time - self->last_caption_ts
-        > self->prop_schedule_timeout) {
+        > self->schedule_timeout) {
       GST_LOG_OBJECT (self, "Not outputting caption as last caption buffer ts %"
           GST_TIME_FORMAT " is more than the schedule timeout %" GST_TIME_FORMAT
           " from the current output time %" GST_TIME_FORMAT,
           GST_TIME_ARGS (self->last_caption_ts),
-          GST_TIME_ARGS (self->prop_schedule_timeout),
+          GST_TIME_ARGS (self->schedule_timeout),
           GST_TIME_ARGS (self->current_video_running_time));
       return;
     }
@@ -1182,10 +1182,14 @@ gst_cc_combiner_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       self->schedule = self->prop_schedule;
       self->max_scheduled = self->prop_max_scheduled;
-      self->output_padding = self->prop_output_padding;
+      self->schedule_timeout = self->prop_schedule_timeout;
       cc_buffer_set_max_buffer_time (self->cc_buffer, GST_CLOCK_TIME_NONE);
       cc_buffer_set_output_padding (self->cc_buffer, self->prop_output_padding,
           self->prop_output_padding);
+      cc_buffer_set_cea608_padding_strategy (self->cc_buffer,
+          self->prop_cea608_padding_strategy);
+      cc_buffer_set_cea608_valid_timeout (self->cc_buffer,
+          self->prop_cea608_valid_padding_timeout);
       break;
     default:
       break;
@@ -1212,13 +1216,9 @@ gst_cc_combiner_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CEA608_PADDING_STRATEGY:
       self->prop_cea608_padding_strategy = g_value_get_flags (value);
-      cc_buffer_set_cea608_padding_strategy (self->cc_buffer,
-          self->prop_cea608_padding_strategy);
       break;
     case PROP_CEA608_VALID_PADDING_TIMEOUT:
       self->prop_cea608_valid_padding_timeout = g_value_get_uint64 (value);
-      cc_buffer_set_cea608_valid_timeout (self->cc_buffer,
-          self->prop_cea608_valid_padding_timeout);
       break;
     case PROP_SCHEDULE_TIMEOUT:
       self->prop_schedule_timeout = g_value_get_uint64 (value);
@@ -1368,7 +1368,7 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
           GST_TYPE_CC_BUFFER_CEA608_PADDING_STRATEGY,
           DEFAULT_CEA608_PADDING_STRATEGY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_MUTABLE_PLAYING));
+          GST_PARAM_MUTABLE_READY));
 
   /**
    * GstCCCombiner:cea608-padding-valid-timeout:
@@ -1386,7 +1386,7 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
           "How long after receiving valid non-padding CEA-608 data to keep writing valid CEA-608 padding bytes",
           0, G_MAXUINT64, DEFAULT_CEA608_VALID_PADDING_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_MUTABLE_PLAYING));
+          GST_PARAM_MUTABLE_READY));
 
   /**
    * GstCCCombiner:schedule-timeout:
@@ -1404,7 +1404,7 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
           "How long after not receiving caption data on the caption pad to continue adding (padding) caption data on output buffers",
           0, G_MAXUINT64, DEFAULT_SCHEDULE_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_MUTABLE_PLAYING));
+          GST_PARAM_MUTABLE_READY));
 
   /**
    * GstCCCombiner:input-meta-processing
@@ -1484,9 +1484,4 @@ gst_cc_combiner_init (GstCCCombiner * self)
   self->last_caption_ts = GST_CLOCK_TIME_NONE;
 
   self->cc_buffer = cc_buffer_new ();
-  cc_buffer_set_max_buffer_time (self->cc_buffer, GST_CLOCK_TIME_NONE);
-  cc_buffer_set_cea608_valid_timeout (self->cc_buffer,
-      self->prop_cea608_valid_padding_timeout);
-  cc_buffer_set_cea608_padding_strategy (self->cc_buffer,
-      self->prop_cea608_padding_strategy);
 }
