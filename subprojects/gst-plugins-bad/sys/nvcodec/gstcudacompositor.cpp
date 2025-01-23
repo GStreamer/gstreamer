@@ -425,7 +425,7 @@ gst_cuda_compositor_pad_get_output_size (GstCudaCompositorPad * self,
     return;
   }
 
-  GST_TRACE_OBJECT (priv, "scaling %ux%u by %u/%u (%u/%u / %u/%u)",
+  GST_TRACE_OBJECT (self, "scaling %ux%u by %u/%u (%u/%u / %u/%u)",
       pad_width, pad_height, dar_n, dar_d,
       GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
       GST_VIDEO_INFO_PAR_D (&vagg_pad->info), out_par_n, out_par_d);
