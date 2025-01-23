@@ -348,8 +348,8 @@ gst_plugin_loader_try_helper (GstPluginLoader * self, gchar * location)
   GST_LOG ("Trying to spawn gst-plugin-scanner helper at %s, command %s",
       location, cmd);
   ret = CreateProcessW (NULL, (WCHAR *) wcmd, NULL, NULL, FALSE,
-      CREATE_UNICODE_ENVIRONMENT, (LPVOID) self->env_string, NULL, &si,
-      &self->child_info);
+      CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW, (LPVOID) self->env_string,
+      NULL, &si, &self->child_info);
 
   if (!ret) {
     last_err = GetLastError ();
