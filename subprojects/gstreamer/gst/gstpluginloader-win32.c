@@ -485,6 +485,7 @@ find_helper_bin_location (void)
     if (plugin_subdir_depth < MAX_PATH_DEPTH) {
       const char *filenamev[MAX_PATH_DEPTH + 5];
       int i = 0, j;
+      gchar *helper_bin_location;
 
       filenamev[i++] = relocated_libgstreamer;
       for (j = 0; j < plugin_subdir_depth; j++)
@@ -498,8 +499,9 @@ find_helper_bin_location (void)
       GST_DEBUG ("constructing path to system plugin scanner using "
           "plugin dir: \'%s\', plugin scanner dir: \'%s\'",
           GST_PLUGIN_SUBDIR, GST_PLUGIN_SCANNER_SUBDIR);
+      helper_bin_location = g_build_filenamev ((char **) filenamev);
       g_free (relocated_libgstreamer);
-      return g_build_filenamev ((char **) filenamev);
+      return helper_bin_location;
     } else {
       GST_WARNING ("GST_PLUGIN_SUBDIR: \'%s\' has too many path segments",
           GST_PLUGIN_SUBDIR);
