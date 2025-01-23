@@ -105,6 +105,7 @@
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 #include <gst/base/gstbytereader.h>
+#include <gst/base/gstbytewriter.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -2169,19 +2170,18 @@ no_peer:
 static GstBuffer *
 gst_x264_enc_header_buf (GstX264Enc * encoder)
 {
-  GstBuffer *buf;
+  GstByteWriter bw;
   x264_nal_t *nal;
   int i_nal;
   int header_return;
-  int i_size;
   int nal_size;
   gint i;
-  guint8 *buffer, *sps;
-  gulong buffer_size;
+  guint8 *sps;
   gint sei_ni, sps_ni, pps_ni;
   guint8 avc_profile_indication;
   guint8 chroma_format;
   guint8 bit_depth_luma_minus8, bit_depth_chroma_minus8;
+  gboolean ok;
 
   if (G_UNLIKELY (encoder->x264enc == NULL))
     return NULL;
@@ -2222,37 +2222,30 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
     GST_MEMDUMP ("SEI", nal[sei_ni].p_payload, nal[sei_ni].i_payload);
   }
 
-  /* nal payloads with emulation_prevention_three_byte, and some header data */
-  buffer_size = (nal[sps_ni].i_payload + nal[pps_ni].i_payload) * 4 + 100;
-  buffer = g_malloc (buffer_size);
+  // 128 is indicative size, should usually be enough to avoid reallocation.
+  gst_byte_writer_init_with_size (&bw, 128, FALSE);
 
   sps = nal[sps_ni].p_payload + 4;
   /* skip NAL unit type */
   sps++;
 
-  buffer[0] = 1;                /* AVC Decoder Configuration Record ver. 1 */
-  avc_profile_indication = buffer[1] = sps[0];  /* aka. profile_idc        */
-  buffer[2] = sps[1];           /* profile_compability                     */
-  buffer[3] = sps[2];           /* level_idc                               */
-  buffer[4] = 0xfc | (4 - 1);   /* nal_length_size_minus1                  */
+  ok = gst_byte_writer_put_uint8 (&bw, 1);      /* AVC Decoder Configuration Record ver. 1 */
+  ok &= gst_byte_writer_put_uint8 (&bw, sps[0]);        /* AVCProfileIndication aka profile_idc    */
+  ok &= gst_byte_writer_put_uint8 (&bw, sps[1]);        /* profile_compability                     */
+  ok &= gst_byte_writer_put_uint8 (&bw, sps[2]);        /* level_idc                               */
 
-  i_size = 5;
-
-  buffer[i_size++] = 0xe0 | 1;  /* number of SPSs */
+  ok &= gst_byte_writer_put_uint8 (&bw, 0xfc | (4 - 1));        /* nal_length_size_minus1                  */
+  ok &= gst_byte_writer_put_uint8 (&bw, 0xe0 | 1);      /* number of SPSs */
 
   nal_size = nal[sps_ni].i_payload - 4;
-  memcpy (buffer + i_size + 2, nal[sps_ni].p_payload + 4, nal_size);
+  ok &= gst_byte_writer_put_uint16_be (&bw, nal_size);
+  ok &= gst_byte_writer_put_data (&bw, nal[sps_ni].p_payload + 4, nal_size);
 
-  GST_WRITE_UINT16_BE (buffer + i_size, nal_size);
-  i_size += nal_size + 2;
-
-  buffer[i_size++] = 1;         /* number of PPSs */
+  ok &= gst_byte_writer_put_uint8 (&bw, 1);     /* number of PPSs */
 
   nal_size = nal[pps_ni].i_payload - 4;
-  memcpy (buffer + i_size + 2, nal[pps_ni].p_payload + 4, nal_size);
-
-  GST_WRITE_UINT16_BE (buffer + i_size, nal_size);
-  i_size += nal_size + 2;
+  ok &= gst_byte_writer_put_uint16_be (&bw, nal_size);
+  ok &= gst_byte_writer_put_data (&bw, nal[pps_ni].p_payload + 4, nal_size);
 
 #if X264_BUILD >= 153
   // if we use an earlier API version, we can really only output old format and hope the receiver can work it out
@@ -2261,6 +2254,7 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
   // The AVCProfileIndication values correspond to the profile code (profile_idc) in ISO/IEC 14496-10.
   // Roughly, 66 is Baseline, 77 is Main, 88 is Extended. Other codes mostly correspond to some variation on High.
   // See the standards for the specific interpretation.
+  avc_profile_indication = sps[0];
   if ((avc_profile_indication != 66) && (avc_profile_indication != 77)
       && (avc_profile_indication != 88)) {
     switch (encoder->x264param.i_csp) {
@@ -2293,22 +2287,21 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
             "Failed to decode colourspace, likely invalid output");
         goto return_what_we_have;
     }
-    buffer[i_size++] = 0xfc | chroma_format;
+    ok &= gst_byte_writer_put_uint8 (&bw, 0xfc | chroma_format);
     bit_depth_luma_minus8 = bit_depth_chroma_minus8 =
         (encoder->x264param.i_bitdepth - 8);
-    buffer[i_size++] = 0xf8 | bit_depth_luma_minus8;
-    buffer[i_size++] = 0xf8 | bit_depth_chroma_minus8;
-    buffer[i_size++] = 0;       // numOfSequenceParameterSetExt
+    ok &= gst_byte_writer_put_uint8 (&bw, 0xf8 | bit_depth_luma_minus8);
+    ok &= gst_byte_writer_put_uint8 (&bw, 0xf8 | bit_depth_chroma_minus8);
+    ok &= gst_byte_writer_put_uint8 (&bw, 0);   // numOfSequenceParameterSetExt
   }
 #endif
 return_what_we_have:
-  buf = gst_buffer_new_and_alloc (i_size);
-  gst_buffer_fill (buf, 0, buffer, i_size);
-
-  GST_MEMDUMP ("header", buffer, i_size);
-  g_free (buffer);
-
-  return buf;
+  if (ok) {
+    return gst_byte_writer_reset_and_get_buffer (&bw);
+  } else {
+    gst_byte_writer_reset (&bw);
+    return NULL;
+  }
 }
 
 /* gst_x264_enc_set_src_caps
