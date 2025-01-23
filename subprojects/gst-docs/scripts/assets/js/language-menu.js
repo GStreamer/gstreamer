@@ -1,25 +1,33 @@
 // Wait for the language dropdown to be created
 const language_observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
-        if (mutation.addedNodes.length) {
-            const languageDropdown = document.querySelector('ul.dropdown-menu li a[href*="gi-language="]');
-            if (languageDropdown) {
-                // Found the language dropdown, so we can add Rust
-                const dropdownMenu = languageDropdown.closest('ul.dropdown-menu');
-                if (dropdownMenu && !dropdownMenu.querySelector('a[href*="rust"]')) {
-                    // Create new list item for Rust
-                    const rustItem = document.createElement('li');
-                    const rustLink = document.createElement('a');
-                    rustLink.href = 'rust/stable/latest/docs/index.html?gi-language=rust';
-                    rustLink.textContent = 'rust';
-                    rustItem.appendChild(rustLink);
-                    dropdownMenu.appendChild(rustItem);
+        mutation.addedNodes.forEach(node => {
+            if (node.nodeType === Node.ELEMENT_NODE &&
+                node.classList.contains('dropdown')) {
 
-                    // Disconnect language_observer since we've done our work
-                    language_observer.disconnect();
+                const dropdownToggle = node.querySelector('a.dropdown-toggle');
+                const dropdownMenu = node.querySelector('ul.dropdown-menu');
+
+                if (dropdownToggle?.textContent.includes('Language') && dropdownMenu) {
+                    let rustLink = Array.from(dropdownMenu.querySelectorAll('a'))
+                        .find(link => link.textContent.trim() === 'rust');
+                    if (!rustLink) {
+                        const rustItem = document.createElement('li');
+                        rustLink = document.createElement('a');
+                        rustLink.textContent = 'rust';
+                        rustLink.href = 'rust/stable/latest/docs/index.html?gi-language=rust';
+                        rustItem.appendChild(rustLink);
+                        dropdownMenu.appendChild(rustItem);
+                        language_observer.disconnect();
+                    }
+
+                    const is_rustdoc_page = !!document.getElementById('hotdoc-rust-info');
+                    if (is_rustdoc_page) {
+                        rustLink.href = window.location.href;
+                    }
                 }
             }
-        }
+        });
     });
 });
 
