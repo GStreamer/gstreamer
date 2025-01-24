@@ -111,6 +111,13 @@ gst_rtsp_onvif_media_setup_sdp (GstRTSPMedia * media, GstSDPMessage * sdp,
     }
 
     n_caps = gst_caps_get_size (caps);
+    if (n_caps == 0) {
+      GST_ERROR ("media caps for stream %p are %" GST_PTR_FORMAT, stream, caps);
+      res = FALSE;
+      gst_caps_unref (caps);
+      break;
+    }
+
     for (j = 0; res && j < n_caps; j++) {
       GstStructure *s = gst_caps_get_structure (caps, j);
       GstCaps *media_caps = gst_caps_new_full (gst_structure_copy (s), NULL);
