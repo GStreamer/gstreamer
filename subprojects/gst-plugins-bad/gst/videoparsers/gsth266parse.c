@@ -854,9 +854,10 @@ gst_h266_parse_process_nal (GstH266Parse * h266parse, GstH266NalUnit * nalu)
         else if (h266parse->content_light_level_state ==
             GST_H266_PARSE_SEI_ACTIVE)
           h266parse->content_light_level_state = GST_H266_PARSE_SEI_EXPIRED;
-
-        update_idr_pos (h266parse, nalu);
       }
+
+      if (ph->gdr_or_irap_pic_flag || h266parse->push_codec)
+        update_idr_pos (h266parse, nalu);
 
       break;
     }
@@ -916,9 +917,10 @@ gst_h266_parse_process_nal (GstH266Parse * h266parse, GstH266NalUnit * nalu)
         else if (h266parse->content_light_level_state ==
             GST_H266_PARSE_SEI_ACTIVE)
           h266parse->content_light_level_state = GST_H266_PARSE_SEI_EXPIRED;
-
-        update_idr_pos (h266parse, nalu);
       }
+
+      if (is_irap_or_gdr || h266parse->push_codec)
+        update_idr_pos (h266parse, nalu);
 
       break;
     }
