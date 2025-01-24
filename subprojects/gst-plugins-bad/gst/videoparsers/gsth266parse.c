@@ -3066,6 +3066,29 @@ gst_h266_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   /* get upstream format and align from caps */
   gst_h266_parse_format_from_caps (h266parse, caps, &format, &align);
 
+  if (format == GST_H266_PARSE_FORMAT_NONE) {
+    format = GST_H266_PARSE_FORMAT_BYTE;
+    align = GST_H266_PARSE_ALIGN_AU;
+  }
+
+  /* It is important that we negotiate the src caps before processing NALs from codec data,
+     because those NALs should come before in-band NALs. It fixes conditions where e.g. codec data
+     is valid but there are missing parameter sets in-band. */
+  {
+    GstCaps *in_caps;
+
+    /* prefer input type determined above */
+    in_caps = gst_caps_new_simple ("video/x-h266",
+        "parsed", G_TYPE_BOOLEAN, TRUE,
+        "stream-format", G_TYPE_STRING,
+        gst_h266_parse_get_string (h266parse, TRUE, format),
+        "alignment", G_TYPE_STRING,
+        gst_h266_parse_get_string (h266parse, FALSE, align), NULL);
+    /* negotiate with downstream, sets ->format and ->align */
+    gst_h266_parse_negotiate (h266parse, format, in_caps);
+    gst_caps_unref (in_caps);
+  }
+
   /* packetized video has a codec_data */
   if (format != GST_H266_PARSE_FORMAT_BYTE &&
       (value = gst_structure_get_value (str, "codec_data"))) {
@@ -3105,12 +3128,6 @@ gst_h266_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       }
     }
 
-    /* don't confuse codec_data with inband vps/sps/pps */
-    h266parse->have_vps_in_frame = FALSE;
-    h266parse->have_sps_in_frame = FALSE;
-    h266parse->have_pps_in_frame = FALSE;
-    h266parse->have_aps_in_frame = FALSE;
-
     gst_h266_decoder_config_record_free (config);
     gst_buffer_unmap (codec_data, &map);
   } else {
@@ -3119,26 +3136,6 @@ gst_h266_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     h266parse->packetized = FALSE;
     /* we have 4 sync bytes */
     h266parse->nal_length_size = 4;
-
-    if (format == GST_H266_PARSE_FORMAT_NONE) {
-      format = GST_H266_PARSE_FORMAT_BYTE;
-      align = GST_H266_PARSE_ALIGN_AU;
-    }
-  }
-
-  {
-    GstCaps *in_caps;
-
-    /* prefer input type determined above */
-    in_caps = gst_caps_new_simple ("video/x-h266",
-        "parsed", G_TYPE_BOOLEAN, TRUE,
-        "stream-format", G_TYPE_STRING,
-        gst_h266_parse_get_string (h266parse, TRUE, format),
-        "alignment", G_TYPE_STRING,
-        gst_h266_parse_get_string (h266parse, FALSE, align), NULL);
-    /* negotiate with downstream, sets ->format and ->align */
-    gst_h266_parse_negotiate (h266parse, format, in_caps);
-    gst_caps_unref (in_caps);
   }
 
   if (format == h266parse->format && align == h266parse->align) {
