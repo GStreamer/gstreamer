@@ -1374,43 +1374,165 @@ get_level_string (guint8 level_idc)
   }
 }
 
-/* byte together hevc codec data based on collected vps, pps and sps so far */
+static GstBuffer *
+gst_h266_parse_make_codec_data_general_constraint_info (GstH266ProfileTierLevel
+    * pft, guint8 num_sublayers)
+{
+  GstBitWriter *biw = gst_bit_writer_new_with_size (12, FALSE);
+
+#define WRITE_GCI_U8(val, nbits) G_STMT_START { \
+  gst_bit_writer_put_bits_uint8(biw, val, nbits); \
+} G_STMT_END;
+
+  WRITE_GCI_U8 (pft->frame_only_constraint_flag, 1);
+  WRITE_GCI_U8 (pft->multilayer_enabled_flag, 1);
+  if (!pft->general_constraints_info.present_flag) {
+    WRITE_GCI_U8 (0, 6);
+  } else {
+    GstH266GeneralConstraintsInfo *gci = &pft->general_constraints_info;
+    WRITE_GCI_U8 (gci->present_flag, 1);
+    WRITE_GCI_U8 (gci->intra_only_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->all_layers_independent_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->one_au_only_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->sixteen_minus_max_bitdepth_constraint_idc, 4);
+    WRITE_GCI_U8 (gci->three_minus_max_chroma_format_constraint_idc, 2);
+    WRITE_GCI_U8 (gci->no_mixed_nalu_types_in_pic_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_trail_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_stsa_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_rasl_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_radl_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_idr_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_cra_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_gdr_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_aps_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_idr_rpl_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->one_tile_per_pic_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->pic_header_in_slice_header_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->one_slice_per_pic_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_rectangular_slice_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->one_slice_per_subpic_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_subpic_info_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->three_minus_max_log2_ctu_size_constraint_idc, 2);
+    WRITE_GCI_U8 (gci->no_partition_constraints_override_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_mtt_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_qtbtt_dual_tree_intra_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_palette_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_ibc_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_isp_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_mrl_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_mip_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_cclm_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_ref_pic_resampling_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_res_change_in_clvs_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_weighted_prediction_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_ref_wraparound_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_temporal_mvp_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_sbtmvp_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_amvr_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_bdof_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_smvd_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_dmvr_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_mmvd_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_affine_motion_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_prof_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_bcw_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_ciip_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_gpm_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_luma_transform_size_64_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_transform_skip_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_bdpcm_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_mts_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_lfnst_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_joint_cbcr_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_sbt_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_act_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_explicit_scaling_list_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_dep_quant_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_sign_data_hiding_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_cu_qp_delta_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_chroma_qp_offset_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_sao_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_alf_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_ccalf_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_lmcs_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_ladf_constraint_flag, 1);
+    WRITE_GCI_U8 (gci->no_virtual_boundaries_constraint_flag, 1);
+
+    if (gci->all_rap_pictures_constraint_flag ||
+        gci->no_extended_precision_processing_constraint_flag ||
+        gci->no_ts_residual_coding_rice_constraint_flag ||
+        gci->no_rrc_rice_extension_constraint_flag ||
+        gci->no_persistent_rice_adaptation_constraint_flag ||
+        gci->no_reverse_last_sig_coeff_constraint_flag) {
+      WRITE_GCI_U8 (6, 8);
+      WRITE_GCI_U8 (gci->all_rap_pictures_constraint_flag, 1);
+      WRITE_GCI_U8 (gci->no_extended_precision_processing_constraint_flag, 1);
+      WRITE_GCI_U8 (gci->no_ts_residual_coding_rice_constraint_flag, 1);
+      WRITE_GCI_U8 (gci->no_rrc_rice_extension_constraint_flag, 1);
+      WRITE_GCI_U8 (gci->no_persistent_rice_adaptation_constraint_flag, 1);
+      WRITE_GCI_U8 (gci->no_reverse_last_sig_coeff_constraint_flag, 1);
+    } else {
+      WRITE_GCI_U8 (0, 8);
+    }
+
+    gst_bit_writer_align_bytes (biw, 0);
+  }
+
+#undef WRITE_GCI_U8
+
+  return gst_bit_writer_free_and_get_buffer (biw);
+}
+
+/* byte together vvc codec data based on collected vps, pps and sps so far */
 static GstBuffer *
 gst_h266_parse_make_codec_data (GstH266Parse * h266parse)
 {
   GstBuffer *nal;
   GstH266SPS *sps;
-  gint i, j;
-  guint num_vps = 0, num_sps = 0, num_pps = 0, num_aps = 0;
+  gint i;
+  guint vps_size = 0, sps_size = 0, pps_size = 0;
+  guint16 num_vps = 0, num_sps = 0, num_pps = 0;
   gboolean found = FALSE;
+  guint8 num_arrays = 0;
+  gint nl;
+  GstH266ProfileTierLevel *pft = NULL;
+  GstByteWriter bw;
+  guint8 array_completeness;
+  gboolean ptl_present_flag;
+  guint8 num_sublayers = 0;
+
 
   for (i = 0; i < GST_H266_MAX_VPS_COUNT; i++) {
-    if ((nal = h266parse->vps_nals[i]))
+    if ((nal = h266parse->vps_nals[i])) {
       num_vps++;
+      vps_size += 2 + gst_buffer_get_size (nal);
+    }
   }
+  if (num_vps > 0)
+    num_arrays++;
 
   for (i = 0; i < GST_H266_MAX_SPS_COUNT; i++) {
     if ((nal = h266parse->sps_nals[i])) {
       num_sps++;
       found = TRUE;
+      sps_size += 2 + gst_buffer_get_size (nal);
     }
   }
+  if (num_sps > 0)
+    num_arrays++;
 
   for (i = 0; i < GST_H266_MAX_PPS_COUNT; i++) {
-    if ((nal = h266parse->pps_nals[i]))
+    if ((nal = h266parse->pps_nals[i])) {
       num_pps++;
-  }
-
-  for (i = 0; i < GST_H266_APS_TYPE_MAX; i++) {
-    for (j = 0; j < GST_H266_MAX_APS_COUNT; j++) {
-      if ((nal = h266parse->aps_nals[i][j]))
-        num_aps++;
+      pps_size += 2 + gst_buffer_get_size (nal);
     }
   }
+  if (num_pps > 0)
+    num_arrays++;
 
   GST_DEBUG_OBJECT (h266parse,
-      "constructing codec_data: num_vps =%d num_sps=%d, num_pps=%d, num_aps=%d",
-      num_vps, num_sps, num_pps, num_aps);
+      "constructing codec_data: num_vps=%d num_sps=%d, num_pps=%d",
+      num_vps, num_sps, num_pps);
 
   if (!found)
     return NULL;
@@ -1419,10 +1541,126 @@ gst_h266_parse_make_codec_data (GstH266Parse * h266parse)
   if (!sps)
     return NULL;
 
-  /* TODO: Need to refer to the new ISO/IEC 14496-15 */
-  GST_FIXME_OBJECT (h266parse, "Codec data is not supported now.");
+  gst_byte_writer_init_with_size (&bw, 16 + (3 * num_arrays) + vps_size +
+      sps_size + pps_size, FALSE);
 
-  return NULL;
+  nl = h266parse->nal_length_size;
+  if (sps->ptl_dpb_hrd_params_present_flag) {
+    pft = &sps->profile_tier_level;
+    num_sublayers = sps->max_sublayers_minus1 + 1;
+  } else if (h266parse->nalparser->last_vps
+      && h266parse->nalparser->last_vps->pt_present_flag[0]) {
+    pft = &h266parse->nalparser->last_vps->profile_tier_level[0];
+    num_sublayers = h266parse->nalparser->last_vps->max_sublayers_minus1 + 1;
+  }
+
+  /* reserved(5) = 11111 | LengthSizeMinusOne(2) | ptl_present_flag(1) */
+  ptl_present_flag = pft != NULL;
+  gst_byte_writer_put_uint8 (&bw,
+      (0x1F << 3) | (((guint8) nl - 1) << 1) | ptl_present_flag);
+
+  if (ptl_present_flag) {
+    /* It's unclear where to get constant_frame_rate from. */
+    guint8 constant_frame_rate = 1;
+    guint8 chroma_format_idc = sps->chroma_format_idc;
+    GstBuffer *pci;
+
+    /* ols_idx(9) | num_sublayers(3) | constant_frame_rate(2) | chroma_format_idc(2) */
+    /* FIXME: OPI isn't parsed so we don't store an ols_idx in the parser and just write 0 here. */
+    guint16 ols_idx = 0;
+    gst_byte_writer_put_uint16_be (&bw,
+        (ols_idx << 7) | (num_sublayers << 4) |
+        (constant_frame_rate << 2) | chroma_format_idc);
+
+    /* bit_depth_minus8(3) | reserved(5) = 11111 */
+    gst_byte_writer_put_uint8 (&bw, (sps->bitdepth_minus8 << 5) | 0x1F);
+
+    /* VvcPTLRecord */
+    pci =
+        gst_h266_parse_make_codec_data_general_constraint_info (pft,
+        num_sublayers);
+    /* reserved(2) = 0 | num_bytes_constraint_info(6) */
+    gst_byte_writer_put_uint8 (&bw, gst_buffer_get_size (pci));
+
+    /* general_profile_idc(7) | general_tier_flag(1) */
+    gst_byte_writer_put_uint8 (&bw,
+        ((guint8) pft->profile_idc << 1) | pft->tier_flag);
+    gst_byte_writer_put_uint8 (&bw, pft->level_idc);
+    gst_byte_writer_put_buffer (&bw, pci, 0, -1);
+    gst_buffer_unref (pci);
+
+    if (num_sublayers > 1) {
+      guint8 ptl_sublayer_level_present_flag = 0;
+      for (i = num_sublayers - 2; i >= 0; i--)
+        ptl_sublayer_level_present_flag |=
+            (pft->sublayer_level_present_flag[i] << (5 + num_sublayers - i));
+      gst_byte_writer_put_uint8 (&bw, ptl_sublayer_level_present_flag);
+
+      for (i = num_sublayers - 2; i >= 0; i--)
+        if (pft->sublayer_level_present_flag[i])
+          gst_byte_writer_put_uint8 (&bw, pft->sublayer_level_idc[i]);
+    }
+
+    gst_byte_writer_put_uint8 (&bw, pft->num_sub_profiles);
+    for (i = 0; i < pft->num_sub_profiles; i++)
+      gst_byte_writer_put_uint32_be (&bw, pft->sub_profile_idc[i]);
+
+    gst_byte_writer_put_uint16_be (&bw, sps->pic_width_max_in_luma_samples);
+    gst_byte_writer_put_uint16_be (&bw, sps->pic_height_max_in_luma_samples);
+    /* keep avg_frame_rate unspecified */
+    gst_byte_writer_put_uint16_be (&bw, 0);
+  }
+
+
+  gst_byte_writer_put_uint8 (&bw, num_arrays);
+  array_completeness = h266parse->format == GST_H266_PARSE_FORMAT_VVC1;
+
+  /* VPS */
+  if (num_vps > 0) {
+    /* array_completeness(1) | reserved(2) = 0 | nal_unit_type */
+    guint8 nal_unit_type = GST_H266_NAL_VPS;
+    gst_byte_writer_put_uint8 (&bw, (array_completeness << 7) | nal_unit_type);
+    gst_byte_writer_put_uint16_be (&bw, num_vps);
+    for (i = 0; i < GST_H266_MAX_VPS_COUNT; i++) {
+      if ((nal = h266parse->vps_nals[i])) {
+        gsize nal_unit_length = gst_buffer_get_size (nal);
+        gst_byte_writer_put_uint16_be (&bw, nal_unit_length);
+        gst_byte_writer_put_buffer (&bw, nal, 0, nal_unit_length);
+      }
+    }
+  }
+
+  /* SPS */
+  if (num_sps > 0) {
+    /* array_completeness(1) | reserved(2) = 0 | nal_unit_type */
+    guint8 nal_unit_type = GST_H266_NAL_SPS;
+    gst_byte_writer_put_uint8 (&bw, (array_completeness << 7) | nal_unit_type);
+    gst_byte_writer_put_uint16_be (&bw, num_sps);
+    for (i = 0; i < GST_H266_MAX_SPS_COUNT; i++) {
+      if ((nal = h266parse->sps_nals[i])) {
+        gsize nal_unit_length = gst_buffer_get_size (nal);
+        gst_byte_writer_put_uint16_be (&bw, nal_unit_length);
+        gst_byte_writer_put_buffer (&bw, nal, 0, nal_unit_length);
+      }
+    }
+  }
+
+  /* PPS */
+  if (num_pps > 0) {
+    /* array_completeness(1) | reserved(2) = 0 | nal_unit_type */
+    guint8 nal_unit_type = GST_H266_NAL_PPS;
+    gst_byte_writer_put_uint8 (&bw, (array_completeness << 7) | nal_unit_type);
+    gst_byte_writer_put_uint16_be (&bw, num_pps);
+    for (i = 0; i < GST_H266_MAX_PPS_COUNT; i++) {
+      if ((nal = h266parse->pps_nals[i])) {
+        gsize nal_unit_length = gst_buffer_get_size (nal);
+        gst_byte_writer_put_uint16_be (&bw, nal_unit_length);
+        gst_byte_writer_put_buffer (&bw, nal, 0, nal_unit_length);
+      }
+    }
+  }
+
+  return gst_byte_writer_reset_and_get_buffer (&bw);
 }
 
 static GstH266Profile
