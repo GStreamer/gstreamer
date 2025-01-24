@@ -3401,7 +3401,9 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
 static void
 stream_collect_blocking (GstRTSPStream * stream, gboolean * blocked)
 {
-  *blocked &= gst_rtsp_stream_is_blocking (stream);
+  if (gst_rtsp_stream_is_sender (stream)) {
+    *blocked &= gst_rtsp_stream_is_blocking (stream);
+  }
 }
 
 static gboolean
