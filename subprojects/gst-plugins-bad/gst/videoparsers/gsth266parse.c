@@ -28,7 +28,7 @@
  * conversion between the alignments and the stream-formats.
  *
  * The alignments can be: nal and au.
- * The stream-formats can be: byte-streamm, vvc1 and vvi1.
+ * The stream-formats can be: byte-stream, vvc1 and vvi1.
  *
  * ## Example launch line:
  * ```
@@ -3075,7 +3075,7 @@ gst_h266_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       goto wrong_type;
 
     /* TODO: Need to refer to the new ISO/IEC 14496-15 to handle codec data. */
-    goto vvc1_failed;
+    goto vvcc_failed;
 
     /* don't confuse codec_data with inband vps/sps/pps */
     h266parse->have_vps_in_frame = FALSE;
@@ -3132,10 +3132,10 @@ gst_h266_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
 
   return TRUE;
 
-  /* TODO: ERRORS */
-vvc1_failed:
+  /* ERRORS */
+vvcc_failed:
   {
-    GST_DEBUG_OBJECT (h266parse, "Failed to parse vvc1 data");
+    GST_DEBUG_OBJECT (h266parse, "Failed to parse vvcC data");
     goto refuse_caps;
   }
 wrong_type:
