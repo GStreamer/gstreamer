@@ -270,7 +270,9 @@ gst_rtsp_onvif_media_factory_create_element (GstRTSPMediaFactory * factory,
     }
 
     depay_ghostpad = gst_ghost_pad_new ("sink", depay_pad);
-    gst_element_add_pad (backchannel_bin, depay_ghostpad);
+    gst_object_unref (depay_pad);
+
+    gst_element_add_pad (backchannel_bin, depay_ghostpad);      // Takes ownership of depay_ghostpad
 
     gst_bin_add (GST_BIN (element), backchannel_bin);
   }
