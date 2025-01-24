@@ -24,6 +24,7 @@
 
 #include <gst/check/check.h>
 #include <gst/video/video-sei.h>
+#include <gst/codecparsers/gsth266parser.h>
 #include "parser.h"
 
 #define SRC_CAPS_TMPL   "video/x-h266, parsed=(boolean)false"
@@ -80,6 +81,50 @@ static const guint8 h266_sps[] = {
 static const guint8 h266_pps[] = {
   0x00, 0x00, 0x00, 0x01, 0x00, 0x81, 0x00, 0x00, 0x34, 0x40, 0xf2, 0x29,
   0x08, 0x01, 0x67, 0xb2, 0x16, 0x59, 0x62
+};
+
+static const guint8 h266_vvc1_codec_data[] = {
+  0xFF, 0x00, 0x15, 0x5F, 0x01, 0x22, 0x23, 0xC0, 0x00, 0x00, 0xD0, 0x00,
+  0x78, 0x00, 0x00, 0x03, 0x8E, 0x00, 0x01, 0x00, 0x17, 0x00, 0x71, 0x10,
+  0x40, 0x00, 0x4C, 0x01, 0x80, 0x80, 0x22, 0x23, 0xC0, 0x00, 0x33, 0xC0,
+  0x84, 0x02, 0x10, 0x06, 0x82, 0x01, 0xE1, 0x59, 0x8F, 0x00, 0x01, 0x00,
+  0x9B, 0x00, 0x79, 0x01, 0x0D, 0x22, 0x23, 0xC0, 0x00, 0x40, 0x34, 0x40,
+  0xF2, 0x35, 0x00, 0x23, 0xD1, 0x1B, 0xA2, 0x11, 0xA2, 0x14, 0x99, 0x19,
+  0x84, 0xD9, 0x58, 0xC1, 0x02, 0x09, 0xE0, 0x06, 0x8B, 0x88, 0x88, 0x88,
+  0x97, 0xC4, 0x44, 0x4B, 0xA8, 0x88, 0x89, 0x77, 0x11, 0x11, 0x2E, 0x48,
+  0x88, 0x89, 0x72, 0xC4, 0x44, 0x4B, 0x9A, 0x22, 0x22, 0x5C, 0xF1, 0x11,
+  0x15, 0xBF, 0x27, 0xE5, 0xFF, 0x2F, 0xEA, 0x5F, 0xDC, 0xBF, 0x92, 0x5F,
+  0xCB, 0x2F, 0xE6, 0x97, 0xF3, 0xCB, 0xF8, 0x89, 0x7D, 0x44, 0x4B, 0xEE,
+  0x22, 0x5F, 0x24, 0x44, 0xBE, 0x58, 0x89, 0x7C, 0xD1, 0x12, 0xF9, 0xE2,
+  0x21, 0xA2, 0xEA, 0xA1, 0xC9, 0x7D, 0x42, 0xD2, 0xEA, 0xA1, 0x69, 0x7D,
+  0x43, 0x12, 0xEA, 0xA1, 0x89, 0x7C, 0x90, 0xC4, 0xBA, 0x92, 0x18, 0x97,
+  0xD4, 0x39, 0x5B, 0xF2, 0x7E, 0x5F, 0xF2, 0xFE, 0xA5, 0xFD, 0xCB, 0xF9,
+  0x25, 0xFF, 0x2F, 0xEA, 0x5F, 0xF2, 0xFE, 0xA5, 0xFF, 0x2F, 0xEA, 0x5F,
+  0xDC, 0xBF, 0x92, 0x5F, 0xF2, 0xFE, 0xAE, 0x3F, 0xBE, 0xBB, 0x18, 0x81,
+  0x90, 0x00, 0x01, 0x00, 0x0F, 0x00, 0x81, 0x00, 0x00, 0x34, 0x40, 0xF2,
+  0x29, 0x08, 0x01, 0x67, 0xB2, 0x16, 0x59, 0x62
+};
+
+static const guint8 h266_vvi1_codec_data[] = {
+  0xFF, 0x00, 0x15, 0x5F, 0x01, 0x22, 0x23, 0xC0, 0x00, 0x00, 0xD0, 0x00,
+  0x78, 0x00, 0x00, 0x03, 0x0E, 0x00, 0x01, 0x00, 0x17, 0x00, 0x71, 0x10,
+  0x40, 0x00, 0x4C, 0x01, 0x80, 0x80, 0x22, 0x23, 0xC0, 0x00, 0x33, 0xC0,
+  0x84, 0x02, 0x10, 0x06, 0x82, 0x01, 0xE1, 0x59, 0x0F, 0x00, 0x01, 0x00,
+  0x9B, 0x00, 0x79, 0x01, 0x0D, 0x22, 0x23, 0xC0, 0x00, 0x40, 0x34, 0x40,
+  0xF2, 0x35, 0x00, 0x23, 0xD1, 0x1B, 0xA2, 0x11, 0xA2, 0x14, 0x99, 0x19,
+  0x84, 0xD9, 0x58, 0xC1, 0x02, 0x09, 0xE0, 0x06, 0x8B, 0x88, 0x88, 0x88,
+  0x97, 0xC4, 0x44, 0x4B, 0xA8, 0x88, 0x89, 0x77, 0x11, 0x11, 0x2E, 0x48,
+  0x88, 0x89, 0x72, 0xC4, 0x44, 0x4B, 0x9A, 0x22, 0x22, 0x5C, 0xF1, 0x11,
+  0x15, 0xBF, 0x27, 0xE5, 0xFF, 0x2F, 0xEA, 0x5F, 0xDC, 0xBF, 0x92, 0x5F,
+  0xCB, 0x2F, 0xE6, 0x97, 0xF3, 0xCB, 0xF8, 0x89, 0x7D, 0x44, 0x4B, 0xEE,
+  0x22, 0x5F, 0x24, 0x44, 0xBE, 0x58, 0x89, 0x7C, 0xD1, 0x12, 0xF9, 0xE2,
+  0x21, 0xA2, 0xEA, 0xA1, 0xC9, 0x7D, 0x42, 0xD2, 0xEA, 0xA1, 0x69, 0x7D,
+  0x43, 0x12, 0xEA, 0xA1, 0x89, 0x7C, 0x90, 0xC4, 0xBA, 0x92, 0x18, 0x97,
+  0xD4, 0x39, 0x5B, 0xF2, 0x7E, 0x5F, 0xF2, 0xFE, 0xA5, 0xFD, 0xCB, 0xF9,
+  0x25, 0xFF, 0x2F, 0xEA, 0x5F, 0xF2, 0xFE, 0xA5, 0xFF, 0x2F, 0xEA, 0x5F,
+  0xDC, 0xBF, 0x92, 0x5F, 0xF2, 0xFE, 0xAE, 0x3F, 0xBE, 0xBB, 0x18, 0x81,
+  0x10, 0x00, 0x01, 0x00, 0x0F, 0x00, 0x81, 0x00, 0x00, 0x34, 0x40, 0xF2,
+  0x29, 0x08, 0x01, 0x67, 0xB2, 0x16, 0x59, 0x62
 };
 
 static const guint8 h266_prefix_aps[] = {
@@ -206,8 +251,9 @@ verify_buffer_bs_au (buffer_verify_data_s * vdata, GstBuffer * buffer)
     guint8 *data = map.data;
 
     /* VPS, SPS, PPS */
-    fail_unless (map.size == vdata->data_to_verify_size + ctx_headers[0].size +
-        ctx_headers[1].size + ctx_headers[2].size + ctx_headers[3].size);
+    fail_unless_equals_int (map.size,
+        vdata->data_to_verify_size + ctx_headers[0].size + ctx_headers[1].size +
+        ctx_headers[2].size + ctx_headers[3].size);
 
     fail_unless (memcmp (data, ctx_headers[0].data, ctx_headers[0].size) == 0);
     data += ctx_headers[0].size;
@@ -309,6 +355,19 @@ wrap_buffer (const guint8 * buf, gsize size, GstClockTime pts,
 }
 
 static inline GstBuffer *
+wrap_allocated_buffer (const guint8 * buf, gsize size, GstClockTime pts,
+    GstBufferFlags flags)
+{
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_new_wrapped ((gpointer) buf, size);
+  GST_BUFFER_PTS (buffer) = pts;
+  GST_BUFFER_FLAGS (buffer) |= flags;
+
+  return buffer;
+}
+
+static inline GstBuffer *
 composite_buffer (GstClockTime pts, GstBufferFlags flags, gint count, ...)
 {
   va_list vl;
@@ -325,6 +384,51 @@ composite_buffer (GstClockTime pts, GstBufferFlags flags, gint count, ...)
     size = va_arg (vl, gsize);
 
     buffer = gst_buffer_append (buffer, wrap_buffer (data, size, 0, 0));
+  }
+  GST_BUFFER_PTS (buffer) = pts;
+  GST_BUFFER_FLAGS (buffer) |= flags;
+
+  va_end (vl);
+
+  return buffer;
+}
+
+static void
+annexb_to_length_prefixed (const guint8 * in_data, gsize size,
+    guint8 nal_length_size, guint8 ** out_data, gsize * out_size)
+{
+  g_assert (size > 4);
+  *out_size = size - 4 + nal_length_size;
+  *out_data = g_malloc (*out_size);
+  guint32 length = GUINT32_TO_BE ((size - 4) << (32 - 8 * nal_length_size));
+  memcpy (*out_data, &length, nal_length_size);
+  memcpy (*out_data + nal_length_size, in_data + 4, size - 4);
+}
+
+static inline GstBuffer *
+composite_buffer_vvc1 (GstClockTime pts, GstBufferFlags flags,
+    guint8 nal_length_size, gint count, ...)
+{
+  va_list vl;
+  gint i;
+  const guint8 *data;
+  gsize size;
+  GstBuffer *buffer;
+  guint8 *vvc1_data = NULL;
+  gsize vvc1_data_size;
+
+  va_start (vl, count);
+
+  buffer = gst_buffer_new ();
+  for (i = 0; i < count; i++) {
+    data = va_arg (vl, guint8 *);
+    size = va_arg (vl, gsize);
+
+    annexb_to_length_prefixed (data, size, nal_length_size, &vvc1_data,
+        &vvc1_data_size);
+    buffer =
+        gst_buffer_append (buffer, wrap_allocated_buffer (vvc1_data,
+            vvc1_data_size, 0, 0));
   }
   GST_BUFFER_PTS (buffer) = pts;
   GST_BUFFER_FLAGS (buffer) |= flags;
@@ -359,6 +463,20 @@ composite_buffer (GstClockTime pts, GstBufferFlags flags, gint count, ...)
     GstBuffer *cb; \
     \
     cb = composite_buffer (0, 0, __VA_ARGS__); \
+    gst_buffer_map (cb, &info, GST_MAP_READ); \
+    \
+    pull_and_check_full (h, info.data, info.size, pts, flags); \
+    \
+    gst_buffer_unmap (cb, &info); \
+    gst_buffer_unref (cb); \
+  } G_STMT_END
+
+#define pull_and_check_composite_vvc1(h, pts, flags, ...) \
+  G_STMT_START { \
+    GstMapInfo info; \
+    GstBuffer *cb; \
+    \
+    cb = composite_buffer_vvc1 (0, 0, __VA_ARGS__); \
     gst_buffer_map (cb, &info, GST_MAP_READ); \
     \
     pull_and_check_full (h, info.data, info.size, pts, flags); \
@@ -491,6 +609,313 @@ GST_START_TEST (test_headers_au_au)
       h266_prefix_aps, sizeof (h266_prefix_aps), h266_idr, sizeof (h266_idr),
       h266_suffix_sei, sizeof (h266_suffix_sei));
 
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_transform_bytestream_vvc1)
+{
+  GstHarness *h = gst_harness_new ("h266parse");
+  const GValue *val;
+  GstBuffer *buf;
+  GstCaps *sinkcaps;
+  GstStructure *s;
+
+  gst_harness_set_caps_str (h,
+      "video/x-h266, parsed=(boolean)false, stream-format=byte-stream, alignment=au",
+      "video/x-h266, parsed=(boolean)true, stream-format=vvc1, alignment=au");
+
+  bytestream_push_all_nals_as_au (h);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  sinkcaps = gst_pad_get_current_caps (h->sinkpad);
+  s = gst_caps_get_structure (sinkcaps, 0);
+
+  val = gst_structure_get_value (s, "codec_data");
+  fail_unless (val != NULL);
+  buf = gst_value_get_buffer (val);
+  fail_unless (buf != NULL);
+  gst_check_buffer_data (buf, h266_vvc1_codec_data,
+      sizeof (h266_vvc1_codec_data));
+  gst_caps_unref (sinkcaps);
+
+  pull_and_check_composite_vvc1 (h, 10, 0, 4, 6,
+      h266_vps, sizeof (h266_vps), h266_sps, sizeof (h266_sps), h266_pps,
+      sizeof (h266_pps), h266_prefix_aps, sizeof (h266_prefix_aps), h266_idr,
+      sizeof (h266_idr), h266_suffix_sei, sizeof (h266_suffix_sei));
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_transform_bytestream_vvi1)
+{
+  GstHarness *h = gst_harness_new ("h266parse");
+  GstCaps *sinkcaps;
+  GstStructure *s;
+  const GValue *val;
+  GstBuffer *buf;
+
+  gst_harness_set_caps_str (h,
+      "video/x-h266, parsed=(boolean)false, stream-format=byte-stream, alignment=au",
+      "video/x-h266, parsed=(boolean)true, stream-format=vvi1, alignment=au");
+
+  bytestream_push_all_nals_as_au (h);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  sinkcaps = gst_pad_get_current_caps (h->sinkpad);
+  s = gst_caps_get_structure (sinkcaps, 0);
+
+  val = gst_structure_get_value (s, "codec_data");
+  fail_unless (val != NULL);
+  buf = gst_value_get_buffer (val);
+  fail_unless (buf != NULL);
+  gst_check_buffer_data (buf, h266_vvi1_codec_data,
+      sizeof (h266_vvi1_codec_data));
+  gst_caps_unref (sinkcaps);
+
+  pull_and_check_composite_vvc1 (h, 10, 0, 4, 6,
+      h266_vps, sizeof (h266_vps), h266_sps, sizeof (h266_sps), h266_pps,
+      sizeof (h266_pps), h266_prefix_aps, sizeof (h266_prefix_aps), h266_idr,
+      sizeof (h266_idr), h266_suffix_sei, sizeof (h266_suffix_sei));
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_transform_vvc1_bytestream)
+{
+  GstHarness *h = gst_harness_new ("h266parse");
+  gsize h266_vvc1_codec_data_size = sizeof (h266_vvc1_codec_data);
+
+  GstBuffer *codec_data =
+      wrap_buffer (h266_vvc1_codec_data, h266_vvc1_codec_data_size, 0, 0);;
+  GstCaps *src_caps = gst_caps_new_simple ("video/x-h266",
+      "parsed", G_TYPE_BOOLEAN, FALSE,
+      "stream-format", G_TYPE_STRING, "vvc1",
+      "alignment", G_TYPE_STRING, "au",
+      "codec_data", GST_TYPE_BUFFER, codec_data,
+      NULL);
+  gst_buffer_unref (codec_data);
+
+  GstCaps *sink_caps = gst_caps_new_simple ("video/x-h266",
+      "parsed", G_TYPE_BOOLEAN, TRUE,
+      "stream-format", G_TYPE_STRING, "byte-stream",
+      "alignment", G_TYPE_STRING, "au",
+      NULL);
+  gst_harness_set_caps (h, src_caps, sink_caps);
+
+  GstBuffer *buf;
+  buf = composite_buffer_vvc1 (10, 0, 4, 3,
+      h266_prefix_aps, sizeof (h266_prefix_aps), h266_idr, sizeof (h266_idr),
+      h266_suffix_sei, sizeof (h266_suffix_sei));
+
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  GstCaps *sinkcaps = gst_pad_get_current_caps (h->sinkpad);
+  GstStructure *s = gst_caps_get_structure (sinkcaps, 0);
+  fail_unless_structure_field_int_equals (s, "width", 208);
+  fail_unless_structure_field_int_equals (s, "height", 120);
+  fail_unless_structure_field_string_equals (s, "profile",
+      "multilayer-main-10");
+  fail_unless (gst_structure_get_value (s, "codec_data") == NULL);
+  gst_caps_unref (sinkcaps);
+
+  pull_and_check_composite (h, 10, 0, 6,
+      h266_vps, sizeof (h266_vps), h266_sps, sizeof (h266_sps), h266_pps,
+      sizeof (h266_pps), h266_prefix_aps,
+      sizeof (h266_prefix_aps), h266_idr, sizeof (h266_idr), h266_suffix_sei,
+      sizeof (h266_suffix_sei));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_transform_vvi1_bytestream)
+{
+  GstHarness *h = gst_harness_new ("h266parse");
+  gsize h266_vvi1_codec_data_size = sizeof (h266_vvi1_codec_data);
+
+  GstBuffer *codec_data =
+      wrap_buffer (h266_vvc1_codec_data, h266_vvi1_codec_data_size, 0, 0);
+  GstCaps *src_caps = gst_caps_new_simple ("video/x-h266",
+      "parsed", G_TYPE_BOOLEAN, FALSE,
+      "stream-format", G_TYPE_STRING, "vvi1",
+      "alignment", G_TYPE_STRING, "au",
+      "codec_data", GST_TYPE_BUFFER, codec_data,
+      NULL);
+  gst_buffer_unref (codec_data);
+
+  GstCaps *sink_caps = gst_caps_new_simple ("video/x-h266",
+      "parsed", G_TYPE_BOOLEAN, TRUE,
+      "stream-format", G_TYPE_STRING, "byte-stream",
+      "alignment", G_TYPE_STRING, "au",
+      NULL);
+  gst_harness_set_caps (h, src_caps, sink_caps);
+
+  GstBuffer *buf;
+  buf = composite_buffer_vvc1 (10, 0, 4, 6,
+      h266_vps, sizeof (h266_vps), h266_sps, sizeof (h266_sps), h266_pps,
+      sizeof (h266_pps), h266_prefix_aps, sizeof (h266_prefix_aps), h266_idr,
+      sizeof (h266_idr), h266_suffix_sei, sizeof (h266_suffix_sei));
+
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  GstCaps *sinkcaps = gst_pad_get_current_caps (h->sinkpad);
+  GstStructure *s = gst_caps_get_structure (sinkcaps, 0);
+  fail_unless_structure_field_int_equals (s, "width", 208);
+  fail_unless_structure_field_int_equals (s, "height", 120);
+  fail_unless_structure_field_string_equals (s, "profile",
+      "multilayer-main-10");
+  fail_unless (gst_structure_get_value (s, "codec_data") == NULL);
+  gst_caps_unref (sinkcaps);
+
+  pull_and_check_composite (h, 10, 0, 9,
+      h266_vps, sizeof (h266_vps), h266_sps, sizeof (h266_sps), h266_pps,
+      sizeof (h266_pps), h266_vps, sizeof (h266_vps), h266_sps,
+      sizeof (h266_sps), h266_pps, sizeof (h266_pps), h266_prefix_aps,
+      sizeof (h266_prefix_aps), h266_idr, sizeof (h266_idr), h266_suffix_sei,
+      sizeof (h266_suffix_sei));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_transform_vvc1_bytestream_missing_sps_in_frame)
+{
+  GstHarness *h = gst_harness_new ("h266parse");
+  gsize h266_vvc1_codec_data_size = sizeof (h266_vvc1_codec_data);
+  GstBuffer *buf;
+
+  GstBuffer *codec_data =
+      wrap_buffer (h266_vvc1_codec_data, h266_vvc1_codec_data_size, 0, 0);
+  GstCaps *src_caps = gst_caps_new_simple ("video/x-h266",
+      "parsed", G_TYPE_BOOLEAN, FALSE,
+      "stream-format", G_TYPE_STRING, "vvc1",
+      "alignment", G_TYPE_STRING, "au",
+      "codec_data", GST_TYPE_BUFFER, codec_data,
+      NULL);
+  gst_buffer_unref (codec_data);
+
+  GstCaps *sink_caps = gst_caps_new_simple ("video/x-h266",
+      "parsed", G_TYPE_BOOLEAN, TRUE,
+      "stream-format", G_TYPE_STRING, "byte-stream",
+      "alignment", G_TYPE_STRING, "au",
+      NULL);
+  gst_harness_set_caps (h, src_caps, sink_caps);
+
+  /* Note that the buffer starts with a PPS without a matching SPS before it.
+     However, VPS/SPS/PPS has already been pushed before via codec_data. This kind of semi-malformed
+     bistream has been observed with sample file "DVB-DASH VVC 8b BT709" from
+     https://dvb.org/specifications/verification-validation/vvc-test-content/
+   */
+  buf = composite_buffer_vvc1 (10, 0, 4, 4,
+      h266_pps,
+      sizeof (h266_pps), h266_prefix_aps, sizeof (h266_prefix_aps), h266_idr,
+      sizeof (h266_idr), h266_suffix_sei, sizeof (h266_suffix_sei));
+
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  GstCaps *sinkcaps = gst_pad_get_current_caps (h->sinkpad);
+  GstStructure *s = gst_caps_get_structure (sinkcaps, 0);
+  fail_unless_structure_field_int_equals (s, "width", 208);
+  fail_unless_structure_field_int_equals (s, "height", 120);
+  fail_unless_structure_field_string_equals (s, "profile",
+      "multilayer-main-10");
+  fail_unless (gst_structure_get_value (s, "codec_data") == NULL);
+  gst_caps_unref (sinkcaps);
+
+  /* The parsed outgoing buffer should lead with VPS and SPS, and NOT with a leading PPS without an SPS before it. */
+  pull_and_check_composite (h, 10, 0, 7,
+      h266_vps, sizeof (h266_vps), h266_sps, sizeof (h266_sps), h266_pps,
+      sizeof (h266_pps), h266_pps, sizeof (h266_pps), h266_prefix_aps,
+      sizeof (h266_prefix_aps), h266_idr, sizeof (h266_idr), h266_suffix_sei,
+      sizeof (h266_suffix_sei));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_headers_bs_vvc1)
+{
+  GstHarness *h = gst_harness_new ("h266parse");
+  GstBuffer *buf;
+  GstMapInfo map;
+  GstH266Parser *parser;
+  GstH266DecoderConfigRecord *config;
+
+  /* SPS and PPS NALs from the standard ITU-T stream LMCS_C_1.bit. */
+  const guint8 LMCS_C_1_SPS_PPS[] =
+      { 0x00, 0x00, 0x00, 0x01, 0x00, 0x79, 0x00, 0xad, 0x02, 0x43, 0xa0, 0x00,
+    0x00, 0x03, 0x00, 0x00, 0x03, 0x00, 0x00, 0x03, 0x00, 0x01, 0x00, 0x00,
+    0x03, 0x00, 0x00, 0xc0, 0x07, 0x81, 0x00, 0x21, 0xc8, 0xd4, 0x00, 0xe6,
+    0xe8, 0x8d, 0xd1, 0x08, 0xd1, 0x0a, 0x4c, 0x8d, 0x83, 0x65, 0x38, 0xf0,
+    0x80, 0x84, 0x8a, 0x20, 0x58, 0x40, 0x36, 0x53, 0x8f, 0x08, 0x85, 0xc8,
+    0x9a, 0x14, 0x34, 0x3a, 0x41, 0x28, 0x28, 0x21, 0x10, 0x5a, 0xe0, 0x02,
+    0x62, 0x02, 0x08, 0x42, 0x10, 0xb0, 0x84, 0x21, 0x62, 0x21, 0x0b, 0x24,
+    0x21, 0x6a, 0x10, 0xbd, 0x1e, 0xad, 0x49, 0x79, 0x24, 0xd4, 0x96, 0x48,
+    0x8b, 0x51, 0x17, 0x88, 0x93, 0x51, 0x12, 0x29, 0x22, 0x24, 0xc9, 0x11,
+    0x2e, 0xa4, 0x88, 0xb1, 0x10, 0x85, 0x92, 0x10, 0xb5, 0x08, 0x5e, 0x10,
+    0x93, 0x50, 0x84, 0x8a, 0x48, 0x42, 0x4c, 0x90, 0x84, 0xba, 0x92, 0x10,
+    0x90, 0x91, 0x10, 0x84, 0x8a, 0x22, 0x10, 0x93, 0x11, 0x08, 0x4b, 0xa8,
+    0x88, 0x42, 0x45, 0x19, 0x08, 0x49, 0x8c, 0x84, 0x25, 0xd4, 0x64, 0x21,
+    0x40, 0x82, 0xc2, 0x10, 0x40, 0x62, 0x21, 0x03, 0x24, 0x41, 0xa9, 0x00,
+    0x99, 0x82, 0x08, 0x42, 0xc2, 0x00, 0x41, 0x62, 0x01, 0x01, 0x08, 0x10,
+    0x08, 0x0a, 0x84, 0x08, 0x04, 0x06, 0x90, 0x81, 0x00, 0x80, 0xb1, 0x02,
+    0x01, 0x01, 0x10, 0x40, 0x20, 0x2c, 0x82, 0x01, 0x01, 0x21, 0x00, 0x81,
+    0x90, 0x10, 0x11, 0x08, 0x08, 0x0b, 0x21, 0x01, 0x01, 0x22, 0x02, 0x06,
+    0x81, 0x01, 0x24, 0x08, 0x1c, 0x10, 0x31, 0x00, 0x85, 0x90, 0x20, 0x44,
+    0x20, 0x40, 0xb2, 0x10, 0x20, 0x48, 0x81, 0x06, 0x82, 0x04, 0x90, 0x41,
+    0xc2, 0x0c, 0x81, 0x16, 0x84, 0x12, 0x42, 0x1c, 0x43, 0x42, 0x5c, 0x8e,
+    0x54, 0x08, 0x2c, 0x20, 0x04, 0x16, 0x20, 0x10, 0x10, 0x81, 0x00, 0x80,
+    0xa8, 0x40, 0x80, 0x40, 0xff, 0xff, 0xfa, 0xfe, 0x88, 0x10, 0x00, 0x00,
+    0x00, 0x01, 0x00, 0x81, 0x00, 0x00, 0x07, 0x81, 0x00, 0x21, 0xc8, 0xa9,
+    0x00, 0xc7, 0xb0, 0x20
+  };
+
+  gst_harness_set_caps_str (h,
+      "video/x-h266",
+      "video/x-h266, parsed=(boolean)true, stream-format=vvc1, alignment=au");
+
+  buf = wrap_buffer (LMCS_C_1_SPS_PPS, sizeof (LMCS_C_1_SPS_PPS), 0, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  GstCaps *sinkcaps = gst_pad_get_current_caps (h->sinkpad);
+  GstStructure *s = gst_caps_get_structure (sinkcaps, 0);
+  const GValue *val = gst_structure_get_value (s, "codec_data");
+  fail_unless (val != NULL);
+  buf = gst_value_get_buffer (val);
+  fail_unless (buf != NULL);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+
+  /* Basic back-to-back checks that the codec_data written by h266parse can also be parsed back by our parser. */
+  parser = gst_h266_parser_new ();
+  fail_unless_equals_int (gst_h266_parser_parse_decoder_config_record (parser,
+          map.data, map.size, &config), GST_H266_PARSER_OK);
+  gst_buffer_unmap (buf, &map);
+  fail_unless (config->ptl_present_flag);
+  fail_unless_equals_int (config->max_picture_width, 1920);
+  fail_unless_equals_int (config->max_picture_height, 1080);
+  fail_unless_equals_int (config->nalu_array->len, 2);
+  fail_unless_equals_int (g_array_index (config->nalu_array,
+          GstH266DecoderConfigRecordNalUnitArray, 0).nal_unit_type,
+      GST_H266_NAL_SPS);
+  fail_unless_equals_int (g_array_index (config->nalu_array,
+          GstH266DecoderConfigRecordNalUnitArray, 1).nal_unit_type,
+      GST_H266_NAL_PPS);
+
+  gst_caps_unref (sinkcaps);
+  gst_h266_decoder_config_record_free (config);
+  gst_h266_parser_free (parser);
   gst_harness_teardown (h);
 }
 
@@ -815,6 +1240,7 @@ h266parse_harnessed_suite (void)
   tcase_add_test (tc_chain, test_headers_nal_nal);
   tcase_add_test (tc_chain, test_headers_au_nal);
   tcase_add_test (tc_chain, test_headers_au_au);
+  tcase_add_test (tc_chain, test_headers_bs_vvc1);
 
   tcase_add_test (tc_chain, test_flow_nal_nal);
   tcase_add_test (tc_chain, test_flow_au_nal);
@@ -832,6 +1258,13 @@ h266parse_harnessed_suite (void)
 
   tcase_add_test (tc_chain, test_parse_skip_to_4bytes_sc);
   tcase_add_test (tc_chain, test_parse_sc_with_half_nal);
+
+  tcase_add_test (tc_chain, test_transform_bytestream_vvc1);
+  tcase_add_test (tc_chain, test_transform_bytestream_vvi1);
+  tcase_add_test (tc_chain, test_transform_vvc1_bytestream);
+  tcase_add_test (tc_chain, test_transform_vvi1_bytestream);
+  tcase_add_test (tc_chain,
+      test_transform_vvc1_bytestream_missing_sps_in_frame);
 
   tcase_add_test (tc_chain, test_drain);
 
