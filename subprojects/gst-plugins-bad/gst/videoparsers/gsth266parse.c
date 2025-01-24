@@ -1008,7 +1008,107 @@ static GstFlowReturn
 gst_h266_parse_handle_frame_packetized (GstBaseParse * parse,
     GstBaseParseFrame * frame)
 {
-  return GST_FLOW_NOT_SUPPORTED;
+  GstH266Parse *h266parse = GST_H266_PARSE (parse);
+  GstBuffer *buffer = frame->buffer;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstH266ParserResult parse_res;
+  GstH266NalUnit nalu;
+  const guint nl = h266parse->nal_length_size;
+  GstMapInfo map;
+  gint left;
+
+  GST_TRACE_OBJECT (h266parse, "Handling packetized frame");
+
+  if (nl < 1 || nl > 4) {
+    GST_DEBUG_OBJECT (h266parse, "Unsupported NAL length size %d", nl);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+
+  /* need to save buffer from invalidation upon _finish_frame */
+  if (h266parse->split_packetized)
+    buffer = gst_buffer_copy (frame->buffer);
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+  left = map.size;
+
+  GST_LOG_OBJECT (h266parse,
+      "processing packet buffer of size %" G_GSIZE_FORMAT, map.size);
+
+  parse_res = gst_h266_parser_identify_nalu_vvc (h266parse->nalparser,
+      map.data, 0, map.size, nl, &nalu);
+
+  while (parse_res == GST_H266_PARSER_OK) {
+    GST_DEBUG_OBJECT (h266parse, "VVC nal offset %d", nalu.offset + nalu.size);
+
+    /* either way, have a look at it */
+    gst_h266_parse_process_nal (h266parse, &nalu);
+
+    /* dispatch per NALU if needed */
+    if (h266parse->split_packetized) {
+      GstBaseParseFrame tmp_frame;
+
+      gst_base_parse_frame_init (&tmp_frame);
+      tmp_frame.flags |= frame->flags;
+      tmp_frame.offset = frame->offset;
+      tmp_frame.overhead = frame->overhead;
+      tmp_frame.buffer = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL,
+          nalu.offset, nalu.size);
+      /* Don't lose timestamp when offset is not 0. */
+      GST_BUFFER_PTS (tmp_frame.buffer) = GST_BUFFER_PTS (buffer);
+      GST_BUFFER_DTS (tmp_frame.buffer) = GST_BUFFER_DTS (buffer);
+      GST_BUFFER_DURATION (tmp_frame.buffer) = GST_BUFFER_DURATION (buffer);
+
+      /* Set marker on last packet */
+      if (nl + nalu.size == left) {
+        if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_MARKER))
+          h266parse->marker = TRUE;
+      }
+
+      /* note we don't need to come up with a sub-buffer, since
+       * subsequent code only considers input buffer's metadata.
+       * Real data is either taken from input by baseclass or
+       * a replacement output buffer is provided anyway. */
+      gst_h266_parse_parse_frame (parse, &tmp_frame);
+      ret = gst_base_parse_finish_frame (parse, &tmp_frame, nl + nalu.size);
+      left -= nl + nalu.size;
+    }
+
+    parse_res = gst_h266_parser_identify_nalu_vvc (h266parse->nalparser,
+        map.data, nalu.offset + nalu.size, map.size, nl, &nalu);
+  }
+
+  gst_buffer_unmap (buffer, &map);
+
+  if (!h266parse->split_packetized) {
+    h266parse->marker = TRUE;
+    gst_h266_parse_parse_frame (parse, frame);
+    ret = gst_base_parse_finish_frame (parse, frame, map.size);
+  } else {
+    gst_buffer_unref (buffer);
+    if (G_UNLIKELY (left)) {
+      /* should not be happening for nice VVC */
+      GST_WARNING_OBJECT (parse, "skipping leftover VVC data %d", left);
+      frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DROP;
+      ret = gst_base_parse_finish_frame (parse, frame, map.size);
+    }
+  }
+
+  if (parse_res == GST_H266_PARSER_NO_NAL_END ||
+      parse_res == GST_H266_PARSER_BROKEN_DATA) {
+
+    if (h266parse->split_packetized) {
+      GST_ELEMENT_ERROR (h266parse, STREAM, FAILED, (NULL),
+          ("invalid VVC input data"));
+
+      return GST_FLOW_ERROR;
+    } else {
+      /* do not meddle to much in this case */
+      GST_DEBUG_OBJECT (h266parse, "parsing packet failed");
+    }
+  }
+
+  return ret;
 }
 
 static GstFlowReturn
