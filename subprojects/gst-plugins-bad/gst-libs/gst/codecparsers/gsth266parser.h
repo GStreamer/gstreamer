@@ -451,6 +451,9 @@ typedef struct _GstH266ScalableNesting          GstH266ScalableNesting;
 typedef struct _GstH266SubPicLevelInfo          GstH266SubPicLevelInfo;
 typedef struct _GstH266FrameFieldInfo           GstH266FrameFieldInfo;
 typedef struct _GstH266SEIMessage               GstH266SEIMessage;
+typedef struct _GstH266DecoderConfigRecordNalUnitArray GstH266DecoderConfigRecordNalUnitArray;
+typedef struct _GstH266PTLRecord                GstH266PTLRecord;
+typedef struct _GstH266DecoderConfigRecord      GstH266DecoderConfigRecord;
 
 /**
  * GstH266NalUnit:
@@ -3247,6 +3250,172 @@ struct _GstH266SEIMessage
 };
 
 /**
+  * GstH266DecoderConfigRecordNalUnitArray:
+  *
+  * Contains NAL Unit array data as defined in ISO/IEC 14496-15
+  *
+  * Since: 1.26
+ */
+struct _GstH266DecoderConfigRecordNalUnitArray
+{
+  /**
+   * GstH266DecoderConfigRecordNalUnitArray.array_completeness:
+   *
+   * 1: all NAL units of the given type are in this array and none
+   *   are in the stream.
+   * 0: additional NAL units of the indicated type may be in the stream
+   */
+  guint8 array_completeness;
+
+  /**
+   * GstH266DecoderConfigRecordNalUnitArray.nal_unit_type:
+   *
+   * Indicates the type of the NAL units in the following array.
+   * Shall be VPS, SPS, PPS, prefix APS or suffix APS
+   */
+  GstH266NalUnitType nal_unit_type;
+
+  /**
+   * GstH266DecoderConfigRecordNalUnitArray.nalu:
+   *
+   * Array of identified #GstH266NalUnit
+   */
+  GArray *nalu;
+};
+
+/**
+ * GstH266PTLRecord:
+ *
+ * Contains VvcPTLRecord data as defined in ISO/IEC 14496-15
+ *
+ * @num_bytes_constraint_info: Number of bytes for constraint information.
+ * @general_profile_idc: General profile id.
+ * @general_tier_flag: General tier flag.
+ * @general_level_idc: General level id.
+ * @ptl_frame_only_constraint_flag: Frame-only constraint flag.
+ * @ptl_multilayer_enabled_flag: Multilayer enabled flag.
+ * @general_constraint_info: Array containing general constraint information.
+ * @ptl_sublayer_level_present_flag: Array indicating presence of sublayer level.
+ * @sublayer_level_idc: Array containing sublayer level ids.
+ * @ptl_num_sub_profiles: Number of sub-profiles.
+ * @general_sub_profile_idc: Array containing general sub-profile ids.
+ *
+ * Since: 1.26
+ */
+struct _GstH266PTLRecord {
+  guint8 num_bytes_constraint_info;
+  guint8 general_profile_idc;
+  guint8 general_tier_flag;
+  guint8 general_level_idc;
+  guint8 ptl_frame_only_constraint_flag;
+  guint8 ptl_multilayer_enabled_flag;
+  guint8 general_constraint_info[63];
+  guint8 ptl_sublayer_level_present_flag[7];
+  guint8 sublayer_level_idc[7];
+  guint8 ptl_num_sub_profiles;
+  guint32 general_sub_profile_idc[255];
+};
+
+/**
+ * GstH266DecoderConfigRecord:
+ *
+ * Contains VVCDecoderConfigurationRecord data as defined in ISO/IEC 14496-15
+ *
+ * Since: 1.26
+ */
+struct _GstH266DecoderConfigRecord
+{
+  /**
+   * GstH266DecoderConfigRecord.length_size_minus_one:
+   *
+   * indicates the length in bytes of nal unit length field.
+   * This value shall be one of 0, 1, or 3 corresponding to a length
+   * encoded with 1, 2, or 4 bytes, respectively
+   */
+  guint8 length_size_minus_one;
+
+  /**
+   * GstH266DecoderConfigRecord.ptl_present_flag:
+   *
+   * true: profile, tier and level information is present
+   */
+  guint8 ptl_present_flag;
+
+  /**
+   * GstH266DecoderConfigRecord.ols_idx:
+   *
+   * Operating point layer set index
+   */
+  guint16 ols_idx;
+
+  /**
+   * GstH266DecoderConfigRecord.num_sublayers:
+   *
+   * Number of sublayers
+   */
+  guint8 num_sublayers;
+
+  /**
+   * GstH266DecoderConfigRecord.constant_frame_rate:
+   *
+   * Indicates if the frame rate is constant
+   */
+  guint8 constant_frame_rate;
+
+  /**
+   * GstH266DecoderConfigRecord.chroma_format_idc:
+   *
+   * Chroma format indicator
+   */
+  guint8 chroma_format_idc;
+
+  /**
+   * GstH266DecoderConfigRecord.bit_depth_minus8:
+   *
+   * Bit depth minus 8
+   */
+  guint8 bit_depth_minus8;
+
+  /**
+    * GstH266DecoderConfigRecord.native_ptl:
+    *
+    * Profile, tier and level information
+   */
+  GstH266PTLRecord native_ptl;
+
+  /**
+   * GstH266DecoderConfigRecord.max_picture_width:
+   *
+   * Maximum picture width
+   */
+  guint16 max_picture_width;
+
+  /**
+   * GstH266DecoderConfigRecord.max_picture_height:
+   *
+   * Maximum picture height
+   */
+  guint16 max_picture_height;
+
+  /**
+   * GstH266DecoderConfigRecord.avg_frame_rate:
+   *
+   * Average frame rate
+   */
+  guint16 avg_frame_rate;
+
+  /**
+   * GstH266DecoderConfigRecord.nalu_array:
+   *
+   * Array of #GstH266DecoderConfigRecordNalUnitArray
+   */
+  GArray *nalu_array;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+/**
  * GstH266Parser:
  *
  * H266 NAL Parser (opaque structure).
@@ -3364,5 +3533,14 @@ GST_CODEC_PARSERS_API
 const gchar *       gst_h266_profile_to_string         (GstH266Profile profile);
 GST_CODEC_PARSERS_API
 GstH266Profile      gst_h266_profile_from_string       (const gchar * string);
+
+GST_CODEC_PARSERS_API
+void                gst_h266_decoder_config_record_free (GstH266DecoderConfigRecord * config);
+
+GST_CODEC_PARSERS_API
+GstH266ParserResult gst_h266_parser_parse_decoder_config_record (GstH266Parser * parser,
+                                                                 const guint8 * data,
+                                                                 gsize size,
+                                                                 GstH266DecoderConfigRecord ** config);
 
 G_END_DECLS

@@ -5996,3 +5996,245 @@ gst_h266_profile_from_string (const gchar * string)
 
   return GST_H266_PROFILE_INVALID;
 }
+
+/**
+ * gst_h266_decoder_config_record_free:
+ * @config: (nullable): a #GstH266DecoderConfigRecord data
+ *
+ * Free @config data
+ *
+ * Since: 1.26
+ */
+void
+gst_h266_decoder_config_record_free (GstH266DecoderConfigRecord * config)
+{
+  if (!config)
+    return;
+
+  if (config->nalu_array)
+    g_array_unref (config->nalu_array);
+
+  g_free (config);
+}
+
+static void
+    gst_clear_h266_decoder_config_record_nalu_array
+    (GstH266DecoderConfigRecordNalUnitArray * array)
+{
+  if (!array)
+    return;
+
+  if (array->nalu)
+    g_array_unref (array->nalu);
+}
+
+static GstH266DecoderConfigRecord *
+gst_h266_decoder_config_record_new (void)
+{
+  GstH266DecoderConfigRecord *config;
+
+  config = g_new0 (GstH266DecoderConfigRecord, 1);
+  config->nalu_array = g_array_new (FALSE,
+      FALSE, sizeof (GstH266DecoderConfigRecordNalUnitArray));
+  g_array_set_clear_func (config->nalu_array,
+      (GDestroyNotify) gst_clear_h266_decoder_config_record_nalu_array);
+
+  return config;
+}
+
+#define READ_CONFIG_UINT8(br, val, nbits) G_STMT_START { \
+  if (!gst_bit_reader_get_bits_uint8 (br, &val, nbits)) { \
+    GST_WARNING ("Failed to read " G_STRINGIFY (val)); \
+    goto error; \
+  } \
+} G_STMT_END;
+
+#define READ_CONFIG_UINT16(br, val, nbits) G_STMT_START { \
+  if (!gst_bit_reader_get_bits_uint16 (br, &val, nbits)) { \
+    GST_WARNING ("Failed to read " G_STRINGIFY (val)); \
+    goto error; \
+  } \
+} G_STMT_END;
+
+#define READ_CONFIG_UINT32(br, val, nbits) G_STMT_START { \
+  if (!gst_bit_reader_get_bits_uint32 (br, &val, nbits)) { \
+    GST_WARNING ("Failed to read " G_STRINGIFY (val)); \
+    goto error; \
+  } \
+} G_STMT_END;
+
+#define SKIP_CONFIG_BITS(br, nbits) G_STMT_START { \
+  if (!gst_bit_reader_skip (br, nbits)) { \
+    GST_WARNING ("Failed to skip %d bits", nbits); \
+    goto error; \
+  } \
+} G_STMT_END;
+
+static GstH266ParserResult
+gst_h266_parser_parse_ptl_record (GstBitReader * br, GstH266PTLRecord * ptl,
+    guint8 num_sublayers)
+{
+  GstH266ParserResult result = GST_H266_PARSER_OK;
+  gint i;
+
+  SKIP_CONFIG_BITS (br, 2);
+  READ_CONFIG_UINT8 (br, ptl->num_bytes_constraint_info, 6);
+  if (!ptl->num_bytes_constraint_info)
+    GST_WARNING
+        ("num_bytes_constraint_info is 0, but should be greater than 0");
+  READ_CONFIG_UINT8 (br, ptl->general_profile_idc, 7);
+  READ_CONFIG_UINT8 (br, ptl->general_tier_flag, 1);
+  READ_CONFIG_UINT8 (br, ptl->general_level_idc, 8);
+
+  READ_CONFIG_UINT8 (br, ptl->ptl_frame_only_constraint_flag, 1);
+  READ_CONFIG_UINT8 (br, ptl->ptl_multilayer_enabled_flag, 1);
+
+  for (i = 0; i < ptl->num_bytes_constraint_info - 1; i++)
+    READ_CONFIG_UINT8 (br, ptl->general_constraint_info[i], 8);
+  READ_CONFIG_UINT8 (br, ptl->general_constraint_info[i], 6);
+
+  for (i = num_sublayers - 2; i >= 0; i--)
+    READ_CONFIG_UINT8 (br, ptl->ptl_sublayer_level_present_flag[i], 1);
+
+  if (num_sublayers > 1)
+    SKIP_CONFIG_BITS (br, 9 - num_sublayers);
+
+  for (i = num_sublayers - 2; i >= 0; i--)
+    if (ptl->ptl_sublayer_level_present_flag[i])
+      READ_CONFIG_UINT8 (br, ptl->sublayer_level_idc[i], 8);
+
+  READ_CONFIG_UINT8 (br, ptl->ptl_num_sub_profiles, 8);
+  for (i = 0; i < ptl->ptl_num_sub_profiles; i++)
+    READ_CONFIG_UINT32 (br, ptl->general_sub_profile_idc[i], 32);
+
+  return result;
+
+error:
+  GST_WARNING ("Failed to parse PTL record");
+  result = GST_H266_PARSER_ERROR;
+  return result;
+}
+
+/**
+ * gst_h266_parser_parse_decoder_config_record:
+ * @parser: a #GstH266Parser
+ * @data: the data to parse
+ * @size: the size of @data
+ * @config: (out): parsed #GstH266DecoderConfigRecord data
+ *
+ * Parses VVCDecoderConfigurationRecord data and fill into @config.
+ * The caller must free @config via gst_h266_decoder_config_record_free()
+ *
+ * This method does not parse APS, VPS, SPS and PPS and therefore the caller needs to
+ * parse each NAL unit via appropriate parsing method.
+ *
+ * Returns: a #GstH266ParserResult
+ *
+ * Since: 1.26
+ */
+GstH266ParserResult
+gst_h266_parser_parse_decoder_config_record (GstH266Parser * parser,
+    const guint8 * data, gsize size, GstH266DecoderConfigRecord ** config)
+{
+  GstH266DecoderConfigRecord *ret;
+  GstBitReader br;
+  GstH266ParserResult result = GST_H266_PARSER_OK;
+  guint i;
+  guint8 num_of_arrays;
+
+  GST_LOG ("parsing \"Decoder configuration record\"");
+
+  g_return_val_if_fail (parser != NULL, GST_H266_PARSER_ERROR);
+  g_return_val_if_fail (data != NULL, GST_H266_PARSER_ERROR);
+  g_return_val_if_fail (config != NULL, GST_H266_PARSER_ERROR);
+
+  *config = NULL;
+
+  if (size < 2) {
+    GST_WARNING ("Too small size vvcC");
+    return GST_H266_PARSER_ERROR;
+  }
+
+  gst_bit_reader_init (&br, data, size);
+  ret = gst_h266_decoder_config_record_new ();
+
+  SKIP_CONFIG_BITS (&br, 5);
+  READ_CONFIG_UINT8 (&br, ret->length_size_minus_one, 2);
+  if (ret->length_size_minus_one == 2) {
+    /* "length_size_minus_one + 1" should be 1, 2, or 4 */
+    GST_WARNING ("Wrong nal-length-size");
+  }
+  READ_CONFIG_UINT8 (&br, ret->ptl_present_flag, 1);
+
+  if (ret->ptl_present_flag) {
+    READ_CONFIG_UINT16 (&br, ret->ols_idx, 9);
+    READ_CONFIG_UINT8 (&br, ret->num_sublayers, 3);
+    READ_CONFIG_UINT8 (&br, ret->constant_frame_rate, 2);
+    READ_CONFIG_UINT8 (&br, ret->chroma_format_idc, 2);
+
+    READ_CONFIG_UINT8 (&br, ret->bit_depth_minus8, 3);
+    SKIP_CONFIG_BITS (&br, 5);
+
+    if (gst_h266_parser_parse_ptl_record (&br, &ret->native_ptl,
+            ret->num_sublayers) != GST_H266_PARSER_OK)
+      goto error;
+
+    READ_CONFIG_UINT16 (&br, ret->max_picture_width, 16);
+    READ_CONFIG_UINT16 (&br, ret->max_picture_height, 16);
+    READ_CONFIG_UINT16 (&br, ret->avg_frame_rate, 16);
+  }
+
+  READ_CONFIG_UINT8 (&br, num_of_arrays, 8);
+  for (i = 0; i < num_of_arrays; i++) {
+    GstH266DecoderConfigRecordNalUnitArray array;
+    guint8 nalu_type;
+    GstH266NalUnit nalu;
+    guint16 num_nalu = 1, j;
+    guint bit_offset, offset;
+
+    READ_CONFIG_UINT8 (&br, array.array_completeness, 1);
+    SKIP_CONFIG_BITS (&br, 2);
+    READ_CONFIG_UINT8 (&br, nalu_type, 5);
+    array.nal_unit_type = nalu_type;
+
+    if (nalu_type != GST_H266_NAL_DCI && nalu_type != GST_H266_NAL_OPI)
+      READ_CONFIG_UINT16 (&br, num_nalu, 16);
+
+    bit_offset = gst_bit_reader_get_pos (&br);
+    g_assert (bit_offset % 8 == 0);
+    offset = bit_offset / 8;
+    array.nalu = g_array_sized_new (FALSE, FALSE, sizeof (GstH266NalUnit),
+        num_nalu);
+    for (j = 0; j < num_nalu; j++) {
+      result = gst_h266_parser_identify_nalu_vvc (parser, data, offset, size,
+          2, &nalu);
+      if (result != GST_H266_PARSER_OK) {
+        g_array_unref (array.nalu);
+        goto error;
+      }
+
+      g_array_append_val (array.nalu, nalu);
+      offset = nalu.offset + nalu.size;
+    }
+
+    g_array_append_val (ret->nalu_array, array);
+
+    if (i != num_of_arrays - 1 && !gst_bit_reader_set_pos (&br, offset * 8)) {
+      GST_WARNING ("Not enough bytes for NAL reading");
+      goto error;
+    }
+  }
+
+  *config = ret;
+  return GST_H266_PARSER_OK;
+
+error:
+  result = GST_H266_PARSER_ERROR;
+  gst_h266_decoder_config_record_free (ret);
+  return result;
+}
+
+#undef READ_CONFIG_UINT8
+#undef READ_CONFIG_UINT16
+#undef READ_CONFIG_UINT32
+#undef SKIP_CONFIG_BITS
