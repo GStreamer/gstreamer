@@ -174,6 +174,16 @@ got_buf (GstElement * fakesink, GstBuffer * buf, GstPad * pad, GList ** p_bufs)
 }
 
 static void
+statistics_check (GstElement * audiorate)
+{
+  guint64 in, out, add, drop;
+
+  g_object_get (audiorate, "in", &in, "out", &out, "add", &add,
+      "drop", &drop, NULL);
+  fail_unless_equals_uint64 (out - in, add - drop);
+}
+
+static void
 do_perfect_stream_test (guint rate, const gchar * format,
     gdouble drop_probability, gdouble inject_probability)
 {
@@ -286,6 +296,7 @@ do_perfect_stream_test (guint rate, const gchar * format,
     next_time = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
     next_offset = GST_BUFFER_OFFSET_END (buf);
   }
+  statistics_check (audiorate);
 
   gst_message_unref (msg);
   gst_element_set_state (pipe, GST_STATE_NULL);
@@ -440,6 +451,8 @@ GST_START_TEST (test_large_discont)
    * buffers, because the gap is > 1 second (but less than 2 seconds) */
   fail_unless_equals_int (g_list_length (buffers), 4);
 
+  statistics_check (audiorate);
+
   gst_element_set_state (audiorate, GST_STATE_NULL);
   gst_caps_unref (caps);
 
@@ -499,7 +512,7 @@ GST_START_TEST (test_rate_change_down)
   GstElement *audiorate;
   GstCaps *caps1, *caps2;
   int i = 0;
-  gint64 drop, in, out;
+  gint64 drop;
   GstBus *bus;
 
   caps1 = gst_caps_from_string (FIRST_CAPS);
@@ -547,13 +560,15 @@ GST_START_TEST (test_rate_change_down)
   gst_object_unref (bus);
 
   audiorate = gst_bin_get_by_name (GST_BIN (pipeline), "audiorate");
-  g_object_get (audiorate, "drop", &drop, "out", &out, "in", &in, NULL);
+  g_object_get (audiorate, "drop", &drop, NULL);
   gst_object_unref (audiorate);
 
   fail_unless_equals_int64 (drop, 0);
 
   g_list_foreach (rbufs, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (rbufs);
+
+  statistics_check (audiorate);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
@@ -646,6 +661,8 @@ GST_START_TEST (test_segment_update)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_unless_equals_int64 (GST_BUFFER_PTS (buffers->data), pts);
   gst_check_drop_buffers ();
+
+  statistics_check (audiorate);
 
   gst_element_set_state (audiorate, GST_STATE_NULL);
   gst_caps_unref (caps);

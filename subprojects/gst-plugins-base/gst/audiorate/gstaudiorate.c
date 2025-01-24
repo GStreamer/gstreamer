@@ -623,6 +623,7 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       if (!audiorate->silent)
         gst_audio_rate_notify_add (audiorate);
     }
+    audiorate->out += in_samples;
 
   } else if (in_offset < audiorate->next_offset) {
     /* need to remove samples */
