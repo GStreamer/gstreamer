@@ -133,7 +133,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h266, parsed = (boolean) true, "
-        "stream-format=(string) { byte-stream }, "
+        "stream-format=(string) { vvc1, vvi1, byte-stream }, "
         "alignment=(string) { au, nal }"));
 
 #define parent_class gst_h266_parse_parent_class
