@@ -3265,6 +3265,13 @@ exit:
   else
     demux->to_time = GST_CLOCK_TIME_NONE;
   demux->segment_seqnum = seqnum;
+
+  for (int i = 0; i < demux->common.src->len; i++) {
+    GstMatroskaTrackContext *stream;
+
+    stream = g_ptr_array_index (demux->common.src, i);
+    stream->tags_changed = TRUE;
+  }
   GST_OBJECT_UNLOCK (demux);
 
   /* restart our task since it might have been stopped when we did the
@@ -6255,6 +6262,7 @@ gst_matroska_demux_loop (GstPad * pad)
     if (G_UNLIKELY (demux->new_segment)) {
       gst_matroska_demux_send_event (demux, demux->new_segment);
       demux->new_segment = NULL;
+      gst_matroska_demux_send_tags (demux);
     }
   }
 
