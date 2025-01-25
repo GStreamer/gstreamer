@@ -1138,6 +1138,164 @@ gst_matroska_demux_parse_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml,
               break;
             }
 
+            case GST_MATROSKA_ID_VIDEOPROJECTION:
+            {
+              gboolean supported = TRUE;
+              gboolean found_type = FALSE;
+              gboolean found_yaw = FALSE;
+              gboolean found_pitch = FALSE;
+              gboolean found_roll = FALSE;
+              gdouble pose_yaw;
+              gdouble pose_roll;
+
+              if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+                break;
+
+              while (ret == GST_FLOW_OK &&
+                  gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
+                if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
+                  break;
+
+                switch (id) {
+                  case GST_MATROSKA_ID_VIDEOPROJECTIONTYPE:{
+                    guint64 num;
+
+                    if ((ret =
+                            gst_ebml_read_uint (ebml, &id,
+                                &num)) != GST_FLOW_OK)
+                      break;
+
+                    if (num != 0) {
+                      supported = FALSE;
+                      GST_WARNING_OBJECT (demux,
+                          "ProjectionType value not supported: %"
+                          G_GUINT64_FORMAT, num);
+                    }
+
+                    found_type = TRUE;
+                    break;
+                  }
+
+                  case GST_MATROSKA_ID_VIDEOPROJECTIONPRIVATE:{
+                    supported = FALSE;
+                    ret = gst_ebml_read_skip (ebml);
+                    GST_WARNING_OBJECT (demux,
+                        "ProjectionPrivate not supported");
+                    break;
+                  }
+
+                  case GST_MATROSKA_ID_VIDEOPROJECTIONPOSEYAW:{
+                    if ((ret =
+                            gst_ebml_read_float (ebml, &id,
+                                &pose_yaw)) != GST_FLOW_OK)
+                      break;
+
+                    if (!(G_APPROX_VALUE (pose_yaw, 0.0, FLT_EPSILON)
+                            || G_APPROX_VALUE (pose_yaw, 180.0, FLT_EPSILON)
+                            || G_APPROX_VALUE (pose_yaw, -180.0, FLT_EPSILON))) {
+                      supported = FALSE;
+                      GST_WARNING_OBJECT (demux,
+                          "ProjectionPoseYaw value not supported: %f",
+                          pose_yaw);
+                    }
+
+                    found_yaw = TRUE;
+                    break;
+                  }
+
+                  case GST_MATROSKA_ID_VIDEOPROJECTIONPOSEPITCH:{
+                    gdouble pose_pitch;
+
+                    if ((ret =
+                            gst_ebml_read_float (ebml, &id,
+                                &pose_pitch)) != GST_FLOW_OK)
+                      break;
+
+                    if (!G_APPROX_VALUE (pose_pitch, 0.0, FLT_EPSILON)) {
+                      supported = FALSE;
+                      GST_WARNING_OBJECT (demux,
+                          "ProjectionPosePitch value not supported: %f",
+                          pose_pitch);
+                    }
+
+                    found_pitch = TRUE;
+                    break;
+                  }
+
+                  case GST_MATROSKA_ID_VIDEOPROJECTIONPOSEROLL:{
+                    if ((ret =
+                            gst_ebml_read_float (ebml, &id,
+                                &pose_roll)) != GST_FLOW_OK)
+                      break;
+
+                    if (!(G_APPROX_VALUE (pose_roll, 0.0, FLT_EPSILON)
+                            || G_APPROX_VALUE (pose_roll, 90.0, FLT_EPSILON)
+                            || G_APPROX_VALUE (pose_roll, -90.0, FLT_EPSILON)
+                            || G_APPROX_VALUE (pose_roll, 180.0, FLT_EPSILON)
+                            || G_APPROX_VALUE (pose_roll, -180.0, FLT_EPSILON))) {
+                      supported = FALSE;
+                      GST_WARNING_OBJECT (demux,
+                          "ProjectionPoseRoll value not supported: %f",
+                          pose_roll);
+                    }
+
+                    found_roll = TRUE;
+                    break;
+                  }
+
+                  default:
+                    ret = gst_ebml_read_skip (ebml);
+                    break;
+                }
+              }
+
+              if (supported && found_type && found_yaw && found_pitch &&
+                  found_roll) {
+                const gchar *rotation_tag = NULL;
+                gboolean flip;
+
+                flip = G_APPROX_VALUE (pose_yaw, 180.0, FLT_EPSILON)
+                    || G_APPROX_VALUE (pose_yaw, -180.0, FLT_EPSILON);
+
+                if (G_APPROX_VALUE (pose_roll, 0.0, FLT_EPSILON)) {
+                  if (flip)
+                    rotation_tag = "flip-rotate-0";
+                  else
+                    rotation_tag = "rotate-0";
+                } else if (G_APPROX_VALUE (pose_roll, 180.0, FLT_EPSILON)
+                    || G_APPROX_VALUE (pose_roll, -180.0, FLT_EPSILON)) {
+                  if (flip)
+                    rotation_tag = "flip-rotate-180";
+                  else
+                    rotation_tag = "rotate-180";
+                } else if (G_APPROX_VALUE (pose_roll, 90.0, FLT_EPSILON)) {
+                  if (flip)
+                    rotation_tag = "flip-rotate-270";
+                  else
+                    rotation_tag = "rotate-270";
+                } else if (G_APPROX_VALUE (pose_roll, -90.0, FLT_EPSILON)) {
+                  if (flip)
+                    rotation_tag = "flip-rotate-90";
+                  else
+                    rotation_tag = "rotate-90";
+                } else {
+                  GST_FIXME_OBJECT (demux,
+                      "Unhandled transformation matrix values");
+                }
+
+                if (rotation_tag) {
+                  gst_tag_list_add (context->tags, GST_TAG_MERGE_REPLACE,
+                      GST_TAG_IMAGE_ORIENTATION, rotation_tag, NULL);
+                  context->tags_changed = TRUE;
+                }
+              } else {
+                GST_WARNING_OBJECT (demux,
+                    "Some Projection value not supported or missing - ignoring");
+              }
+
+              break;
+            }
+
             default:
               GST_WARNING_OBJECT (demux,
                   "Unknown TrackVideo subelement 0x%x - ignoring", id);
