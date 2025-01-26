@@ -43,6 +43,7 @@
 
 #include "rtsp-onvif-media.h"
 #include "rtsp-latency-bin.h"
+#include "rtsp-server-internal.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtsp_onvif_media_debug);
 #define GST_CAT_DEFAULT rtsp_onvif_media_debug
@@ -317,7 +318,8 @@ gst_rtsp_onvif_media_collect_backchannel (GstRTSPOnvifMedia * media)
     goto out;
 
   GST_LOG_OBJECT (media, "Creating backchannel stream");
-  gst_rtsp_media_create_stream (GST_RTSP_MEDIA (media), latency_bin, pad);
+  gst_rtsp_media_create_and_join_stream (GST_RTSP_MEDIA (media), latency_bin,
+      pad);
   ret = TRUE;
 
 out:

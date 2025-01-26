@@ -2747,6 +2747,35 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
   return stream;
 }
 
+GstRTSPStream *
+gst_rtsp_media_create_and_join_stream (GstRTSPMedia * media,
+    GstElement * payloader, GstPad * pad)
+{
+  GstRTSPStream *stream = gst_rtsp_media_create_stream (media, payloader, pad);
+  GstRTSPMediaPrivate *priv = media->priv;
+
+  if (stream == NULL) {
+    return NULL;
+  }
+
+  g_rec_mutex_lock (&priv->state_lock);
+  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING) {
+    /* join the element in the PAUSED state because this callback is
+     * called from the streaming thread and it is PAUSED */
+    if (!gst_rtsp_stream_join_bin (stream, GST_BIN (priv->pipeline),
+            priv->rtpbin, GST_STATE_PAUSED)) {
+      GST_WARNING ("failed to join bin element");
+    }
+
+    if (priv->blocked)
+      gst_rtsp_stream_set_blocked (stream, TRUE);
+  }
+
+  g_rec_mutex_unlock (&priv->state_lock);
+
+  return stream;
+}
+
 static void
 gst_rtsp_media_remove_stream (GstRTSPMedia * media, GstRTSPStream * stream)
 {

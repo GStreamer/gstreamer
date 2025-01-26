@@ -67,6 +67,10 @@ void                     gst_rtsp_stream_set_drop_delta_units (GstRTSPStream * s
 
 gboolean                 gst_rtsp_stream_install_drop_probe (GstRTSPStream * stream);
 
+GstRTSPStream *          gst_rtsp_media_create_and_join_stream (GstRTSPMedia * media,
+                                                                GstElement * payloader,
+                                                                GstPad * pad);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_SERVER_INTERNAL_H__ */
