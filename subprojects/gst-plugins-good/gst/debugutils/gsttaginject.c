@@ -30,7 +30,7 @@
  * gst-launch-1.0 audiotestsrc num-buffers=100 ! taginject tags="title=testsrc,artist=gstreamer" ! vorbisenc ! oggmux ! filesink location=test.ogg
  * ]| set title and artist
  * |[
- * gst-launch-1.0 audiotestsrc num-buffers=100 ! taginject tags="keywords=\{\"testone\",\"audio\"\},title=\"audio\ testtone\"" ! vorbisenc ! oggmux ! filesink location=test.ogg
+ * gst-launch-1.0 audiotestsrc num-buffers=100 ! taginject tags="keywords=\{\"testtone\",\"audio\"\},title=\"audio\ testtone\"" ! vorbisenc ! oggmux ! filesink location=test.ogg
  * ]| set keywords and title demonstrating quoting of special chars and handling lists
  * |[
  * gst-launch-1.0.exe audiotestsrc num-buffers=500 ! taginject tags="title=MyTitle,artist=MyArtist,album=MyAlbum,genre=MyGenre" scope=global ! qtmux ! filesink location=test.m4a
