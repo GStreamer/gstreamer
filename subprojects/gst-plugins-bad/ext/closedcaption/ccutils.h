@@ -100,6 +100,12 @@ typedef enum {
 #define GST_TYPE_CC_BUFFER_CEA608_PADDING_STRATEGY (gst_cc_buffer_cea608_padding_strategy_get_type())
 GType gst_cc_buffer_cea608_padding_strategy_get_type (void);
 
+typedef enum {
+  CC_BUFFER_PUSH_OK,
+  CC_BUFFER_PUSH_NO_DATA,
+  CC_BUFFER_PUSH_OVERFLOW,
+} CCBufferPushReturn;
+
 G_DECLARE_FINAL_TYPE (CCBuffer, cc_buffer, GST, CC_BUFFER, GObject);
 
 G_GNUC_INTERNAL
@@ -110,7 +116,7 @@ void            cc_buffer_get_stored_size       (CCBuffer * buf,
                                                  guint * cea608_2_len,
                                                  guint * cc_data_len);
 G_GNUC_INTERNAL
-gboolean        cc_buffer_push_separated        (CCBuffer * buf,
+CCBufferPushReturn  cc_buffer_push_separated    (CCBuffer * buf,
                                                  const guint8 * cea608_1,
                                                  guint cea608_1_len,
                                                  const guint8 * cea608_2,
@@ -118,7 +124,7 @@ gboolean        cc_buffer_push_separated        (CCBuffer * buf,
                                                  const guint8 * cc_data,
                                                  guint cc_data_len);
 G_GNUC_INTERNAL
-gboolean        cc_buffer_push_cc_data          (CCBuffer * buf,
+CCBufferPushReturn  cc_buffer_push_cc_data      (CCBuffer * buf,
                                                  const guint8 * cc_data,
                                                  guint cc_data_len);
 G_GNUC_INTERNAL

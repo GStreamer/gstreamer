@@ -246,7 +246,7 @@ out:
   gst_buffer_set_size (buffer, s334_len);
 }
 
-static void
+static CCBufferPushReturn
 schedule_cdp (GstCCCombiner * self, const GstVideoTimeCode * tc,
     const guint8 * data, guint len, GstClockTime pts, GstClockTime duration)
 {
@@ -254,10 +254,10 @@ schedule_cdp (GstCCCombiner * self, const GstVideoTimeCode * tc,
   guint cc_data_len;
 
   cc_data_len = extract_cdp (self, data, len, cc_data);
-  cc_buffer_push_cc_data (self->cc_buffer, cc_data, cc_data_len);
+  return cc_buffer_push_cc_data (self->cc_buffer, cc_data, cc_data_len);
 }
 
-static void
+static CCBufferPushReturn
 schedule_cea608_s334_1a (GstCCCombiner * self, guint8 * data, guint len,
     GstClockTime pts, GstClockTime duration)
 {
@@ -287,21 +287,22 @@ schedule_cea608_s334_1a (GstCCCombiner * self, guint8 * data, guint len,
     }
   }
 
-  cc_buffer_push_separated (self->cc_buffer, field0_data, field0_len,
+  return cc_buffer_push_separated (self->cc_buffer, field0_data, field0_len,
       field1_data, field1_len, NULL, 0);
 }
 
-static void
+static CCBufferPushReturn
 schedule_cea708_raw (GstCCCombiner * self, guint8 * data, guint len,
     GstClockTime pts, GstClockTime duration)
 {
-  cc_buffer_push_cc_data (self->cc_buffer, data, len);
+  return cc_buffer_push_cc_data (self->cc_buffer, data, len);
 }
 
-static void
+static CCBufferPushReturn
 schedule_cea608_raw (GstCCCombiner * self, guint8 * data, guint len)
 {
-  cc_buffer_push_separated (self->cc_buffer, data, len, NULL, 0, NULL, 0);
+  return cc_buffer_push_separated (self->cc_buffer, data, len,
+      NULL, 0, NULL, 0);
 }
 
 static void
@@ -310,6 +311,7 @@ schedule_caption (GstCCCombiner * self, GstAggregatorPad * caption_pad,
 {
   GstMapInfo map;
   GstClockTime pts, duration, running_time;
+  CCBufferPushReturn push_ret = CC_BUFFER_PUSH_NO_DATA;
 
   pts = GST_BUFFER_PTS (caption_buf);
   duration = GST_BUFFER_DURATION (caption_buf);
@@ -323,22 +325,38 @@ schedule_caption (GstCCCombiner * self, GstAggregatorPad * caption_pad,
 
   switch (self->caption_type) {
     case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
-      schedule_cdp (self, tc, map.data, map.size, pts, duration);
+      push_ret = schedule_cdp (self, tc, map.data, map.size, pts, duration);
       break;
     case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
-      schedule_cea708_raw (self, map.data, map.size, pts, duration);
+      push_ret = schedule_cea708_raw (self, map.data, map.size, pts, duration);
       break;
     case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:
-      schedule_cea608_s334_1a (self, map.data, map.size, pts, duration);
+      push_ret =
+          schedule_cea608_s334_1a (self, map.data, map.size, pts, duration);
       break;
     case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
-      schedule_cea608_raw (self, map.data, map.size);
+      push_ret = schedule_cea608_raw (self, map.data, map.size);
       break;
     default:
       break;
   }
 
   gst_buffer_unmap (caption_buf, &map);
+
+  if (push_ret == CC_BUFFER_PUSH_OVERFLOW) {
+    GstClockTime stream_time;
+
+    GST_WARNING_OBJECT (self, "CC buffer overflowed with %" GST_PTR_FORMAT,
+        caption_buf);
+
+    stream_time =
+        gst_segment_to_stream_time (&caption_pad->segment, GST_FORMAT_TIME,
+        pts);
+
+    gst_element_post_message (GST_ELEMENT_CAST (self),
+        gst_message_new_qos (GST_OBJECT_CAST (self), FALSE,
+            running_time, stream_time, pts, duration));
+  }
 }
 
 static void

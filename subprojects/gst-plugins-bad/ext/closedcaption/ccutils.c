@@ -589,12 +589,13 @@ calculate_n_cea708_doubles_from_time_ceil (GstClockTime ns)
   return GST_ROUND_UP_2 (ret);
 }
 
-static void
+static CCBufferPushReturn
 push_internal (CCBuffer * buf, const guint8 * cea608_1,
     guint cea608_1_len, const guint8 * cea608_2, guint cea608_2_len,
     const guint8 * cc_data, guint cc_data_len)
 {
   guint max_cea608_bytes;
+  gboolean pushed = FALSE, overflow = FALSE;
 
   GST_DEBUG_OBJECT (buf, "pushing cea608-1: %u cea608-2: %u ccp: %u",
       cea608_1_len, cea608_2_len, cc_data_len);
@@ -607,8 +608,10 @@ push_internal (CCBuffer * buf, const guint8 * cea608_1,
           "previous data, max %u, attempted to hold %u", max_cea608_bytes,
           cea608_1_len + buf->cea608_1->len);
       g_array_set_size (buf->cea608_1, 0);
+      overflow = TRUE;
     }
     g_array_append_vals (buf->cea608_1, cea608_1, cea608_1_len);
+    pushed = TRUE;
   }
   if (cea608_2_len > 0) {
     if (cea608_2_len + buf->cea608_2->len > max_cea608_bytes) {
@@ -616,8 +619,10 @@ push_internal (CCBuffer * buf, const guint8 * cea608_1,
           "previous data, max %u, attempted to hold %u", max_cea608_bytes,
           cea608_2_len + buf->cea608_2->len);
       g_array_set_size (buf->cea608_2, 0);
+      overflow = TRUE;
     }
     g_array_append_vals (buf->cea608_2, cea608_2, cea608_2_len);
+    pushed = TRUE;
   }
   if (cc_data_len > 0) {
     guint max_cea708_bytes =
@@ -627,12 +632,21 @@ push_internal (CCBuffer * buf, const guint8 * cea608_1,
           "previous data, max %u, attempted to hold %u", max_cea708_bytes,
           cc_data_len + buf->cc_data->len);
       g_array_set_size (buf->cc_data, 0);
+      overflow = TRUE;
     }
     g_array_append_vals (buf->cc_data, cc_data, cc_data_len);
+    pushed = TRUE;
   }
+
+  if (overflow)
+    return CC_BUFFER_PUSH_OVERFLOW;
+  else if (pushed)
+    return CC_BUFFER_PUSH_OK;
+  else
+    return CC_BUFFER_PUSH_NO_DATA;
 }
 
-gboolean
+CCBufferPushReturn
 cc_buffer_push_separated (CCBuffer * buf, const guint8 * cea608_1,
     guint cea608_1_len, const guint8 * cea608_2, guint cea608_2_len,
     const guint8 * cc_data, guint cc_data_len)
@@ -681,13 +695,11 @@ cc_buffer_push_separated (CCBuffer * buf, const guint8 * cea608_1,
     cc_data_len = 0;
   }
 
-  push_internal (buf, cea608_1_copy, cea608_1_len, cea608_2_copy,
+  return push_internal (buf, cea608_1_copy, cea608_1_len, cea608_2_copy,
       cea608_2_len, cc_data_copy, cc_data_len);
-
-  return cea608_1_len > 0 || cea608_2_len > 0 || cc_data_len > 0;
 }
 
-gboolean
+CCBufferPushReturn
 cc_buffer_push_cc_data (CCBuffer * buf, const guint8 * cc_data,
     guint cc_data_len)
 {
@@ -709,13 +721,11 @@ cc_buffer_push_cc_data (CCBuffer * buf, const guint8 * cc_data,
 
   if (ccp_offset < 0) {
     GST_WARNING_OBJECT (buf, "Failed to extract cea608 from cc_data");
-    return FALSE;
+    return CC_BUFFER_PUSH_NO_DATA;
   }
 
-  push_internal (buf, cea608_1, cea608_1_len, cea608_2,
-      cea608_2_len, &cc_data_copy[ccp_offset], cc_data_len - ccp_offset);
-
-  return cea608_1_len > 0 || cea608_2_len > 0 || cc_data_len - ccp_offset > 0;
+  return push_internal (buf, cea608_1, cea608_1_len, cea608_2, cea608_2_len,
+      &cc_data_copy[ccp_offset], cc_data_len - ccp_offset);
 }
 
 void
