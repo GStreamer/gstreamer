@@ -59,7 +59,7 @@
  *  * `GST_DEBUG=GST_EVENT:TRACE`
  *    * `pad-push-event-pre`, `pad-push-event-post`
  *    * `pad-send-event-pre`, `pad-send-event-post`
- *  * `GST_DEBUG=GST_QUERY:TRACE`
+ *  * `GST_DEBUG=query:TRACE`
  *    * `pad-query-pre`, `pad-query-post`
  *    * `element-query-pre`, `element-query-post`
  *  * `GST_DEBUG=GST_MESSAGE:TRACE`
@@ -71,7 +71,7 @@
  *    * `element-remove-pad`
  *  * `GST_DEBUG=GST_STATES:TRACE`
  *    * `element-change-state-pre`, `element-change-state-post`
- *  * `GST_DEBUG=GST_BIN:TRACE`
+ *  * `GST_DEBUG=bin:TRACE`
  *    * `bin-add-pre`, `bin-add-post`
  *    * `bin-remove-pre`, `bin-remove-post`
  *  * `GST_DEBUG=GST_PADS:TRACE`
