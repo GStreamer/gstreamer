@@ -866,7 +866,7 @@ gst_core_audio_get_channel_layout (GstCoreAudio * core_audio, gboolean outer)
 GstCaps *
 gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
 {
-  guint i, channels;
+  guint i, channels, channels_max = 0;
   gboolean spdif_allowed;
   AudioChannelLayout *layout;
   AudioStreamBasicDescription outer_asbd;
@@ -896,6 +896,17 @@ gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
             NULL)) {
       GST_WARNING_OBJECT (core_audio, "Failed to parse channel layout");
       channel_mask = 0;
+    }
+
+    if (channel_mask != 0 && channels > 2 &&
+        layout->mChannelLayoutTag ==
+        kAudioChannelLayoutTag_UseChannelDescriptions) {
+      /* CoreAudio gave us a positioned layout, which might mean we're ignoring some unpositioned channels.
+       * For example, with a 64ch output, macOS only allows assigning positions to 16 channels at most.
+       * Let's make sure we also expose the actual maximum amount of channels in our caps,
+       * without any positions assigned. */
+      channels_max =
+          MIN (layout->mNumberChannelDescriptions, GST_OSX_AUDIO_MAX_CHANNEL);
     }
 
     /* If available, start with the preferred caps. */
@@ -982,7 +993,17 @@ gst_core_audio_probe_caps (GstCoreAudio * core_audio, GstCaps * in_caps)
         gst_caps_append_structure (caps, out_s);
         gst_caps_append_structure (caps, mono);
       } else {
-        /* Otherwise just add the caps */
+        /* Otherwise, if needed, add an unpositioned max-channels variant ... */
+        if (channels_max > 0) {
+          GstStructure *unpos_s = gst_structure_copy (in_s);
+          gst_structure_set (unpos_s, "channels", G_TYPE_INT, channels_max,
+              NULL);
+          gst_structure_set (unpos_s, "channel-mask", GST_TYPE_BITMASK, 0,
+              NULL);
+          gst_caps_append_structure (caps, unpos_s);
+        }
+
+        /* ... and just add the caps */
         gst_caps_append_structure (caps, out_s);
       }
     }
