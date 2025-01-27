@@ -193,11 +193,11 @@ do_push_buffer_list_post (GstTracer * self, guint64 ts, GstPad * pad,
 
 static void
 do_chain_buffer_pre (GstTracer * self, guint64 ts, GstPad * pad,
-    GstFlowReturn res)
+    GstBuffer * buffer)
 {
   do_log (GST_CAT_BUFFER, GST_FUNCTION, (GObject *) pad,
-      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%d",
-      GST_TIME_ARGS (ts), pad, res);
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", buffer=%" GST_PTR_FORMAT,
+      GST_TIME_ARGS (ts), pad, buffer);
 }
 
 static void
@@ -211,11 +211,11 @@ do_chain_buffer_post (GstTracer * self, guint64 ts, GstPad * pad,
 
 static void
 do_chain_buffer_list_pre (GstTracer * self, guint64 ts, GstPad * pad,
-    GstFlowReturn res)
+    GstBufferList * list)
 {
   do_log (GST_CAT_BUFFER_LIST, GST_FUNCTION, (GObject *) pad,
-      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%d",
-      GST_TIME_ARGS (ts), pad, res);
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", list=%p",
+      GST_TIME_ARGS (ts), pad, list);
 }
 
 static void
