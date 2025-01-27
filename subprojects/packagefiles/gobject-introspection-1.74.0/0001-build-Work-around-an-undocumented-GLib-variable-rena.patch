@@ -1,0 +1,28 @@
+From 3163d96f47a62a20a343eb7af9d3c2931563a63d Mon Sep 17 00:00:00 2001
+From: "L. E. Segovia" <amy@centricular.com>
+Date: Sat, 24 Feb 2024 14:14:19 -0300
+Subject: [PATCH] build: Work around an undocumented GLib variable renaming
+
+See: https://gitlab.gnome.org/GNOME/glib/-/merge_requests/3892
+---
+ gir/meson.build | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/gir/meson.build b/gir/meson.build
+index b732d24d..3a016831 100644
+--- a/gir/meson.build
++++ b/gir/meson.build
+@@ -155,7 +155,9 @@ elif dep_type == 'internal'
+ 
+   if giounix_dep.found()
+     glib_files += [
+-      glib_subproject.get_variable('glib_unix_h')
++      # Variable was renamed in 2.79.2
++      # https://gitlab.gnome.org/GNOME/glib/-/commit/1f9e44d6232c3e96caa8a96d9b1cc2c65cf5848c
++      glib_subproject.get_variable('glib_unix_headers')
+     ]
+   endif
+ 
+-- 
+2.47.1
+
