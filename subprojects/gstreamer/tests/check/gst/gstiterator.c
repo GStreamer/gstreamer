@@ -37,6 +37,41 @@ make_list_of_ints (gint n)
   return g_list_reverse (ret);
 }
 
+static GstIteratorResult
+broken_iterator_next (G_GNUC_UNUSED GstIterator * it,
+    G_GNUC_UNUSED GValue * val)
+{
+  return GST_ITERATOR_ERROR;
+}
+
+static void
+broken_iterator_resync (G_GNUC_UNUSED GstIterator * it)
+{
+}
+
+static void
+broken_iterator_free (G_GNUC_UNUSED GstIterator * it)
+{
+}
+
+static GstIterator *
+make_broken_iterator (GType item_type, GMutex * mutex, guint32 * cookie)
+{
+  return gst_iterator_new (sizeof (GstIterator),
+      item_type,
+      mutex,
+      cookie,
+      NULL,
+      broken_iterator_next, NULL, broken_iterator_resync, broken_iterator_free);
+}
+
+static gint
+passthrough_filter (G_GNUC_UNUSED gconstpointer a,
+    G_GNUC_UNUSED gconstpointer b)
+{
+  return 0;
+}
+
 #define NUM_ELEMENTS 10
 
 GST_START_TEST (test_manual_iteration)
@@ -424,6 +459,28 @@ GST_START_TEST (test_filter_of_filter_locking)
 
 GST_END_TEST;
 
+GST_START_TEST (test_filter_propagates_error)
+{
+  guint32 cookie = 0;
+  GMutex m;
+  g_mutex_init (&m);
+
+  GValue v = G_VALUE_INIT;
+  g_value_init (&v, G_TYPE_POINTER);
+
+  GstIterator *it =
+      gst_iterator_filter (make_broken_iterator (G_TYPE_POINTER, &mutex,
+          &cookie), passthrough_filter, NULL);
+
+  fail_unless_equals_int (gst_iterator_next (it, &v), GST_ITERATOR_ERROR);
+
+  gst_iterator_free (it);
+  g_mutex_clear (&m);
+  g_value_unset (&v);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_iterator_suite (void)
 {
@@ -441,6 +498,7 @@ gst_iterator_suite (void)
   tcase_add_test (tc_chain, test_filter_locking);
   tcase_add_test (tc_chain, test_filter_of_filter);
   tcase_add_test (tc_chain, test_filter_of_filter_locking);
+  tcase_add_test (tc_chain, test_filter_propagates_error);
   return s;
 }
 

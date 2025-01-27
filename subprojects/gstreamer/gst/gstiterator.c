@@ -486,6 +486,7 @@ filter_next (GstIteratorFilter * it, GValue * elem)
         break;
       case GST_ITERATOR_RESYNC:
       case GST_ITERATOR_DONE:
+      case GST_ITERATOR_ERROR:
         done = TRUE;
         break;
       default:
