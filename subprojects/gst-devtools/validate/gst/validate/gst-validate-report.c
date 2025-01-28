@@ -1538,7 +1538,8 @@ gst_validate_error_structure (gpointer structure, const gchar * format, ...)
   if (debug)
     g_string_append (f, debug);
 
-  g_print ("Bail out! %sERROR%s: %s\n\n", color ? color : "", endcolor, f->str);
+  g_printerr ("Bail out! %sERROR%s: %s\n\n", color ? color : "", endcolor,
+      f->str);
   g_string_free (f, TRUE);
   g_free (debug);
   g_free (color);
@@ -1558,7 +1559,7 @@ gst_validate_abort (const gchar * format, ...)
   tmp = gst_info_strdup_vprintf (format, var_args);
   va_end (var_args);
 
-  g_print ("Bail out! %s\n", tmp);
+  g_printerr ("Bail out! %s\n", tmp);
   g_free (tmp);
   exit (-18);
 }
