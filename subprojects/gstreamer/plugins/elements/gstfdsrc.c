@@ -109,6 +109,7 @@ enum
 
   PROP_FD,
   PROP_TIMEOUT,
+  PROP_IS_LIVE,
 
   PROP_LAST
 };
@@ -171,6 +172,17 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
           "Post a message after timeout microseconds (0 = disabled)", 0,
           G_MAXUINT64, DEFAULT_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstFdSrc:is-live
+   *
+   * Act like a live source if set to %TRUE.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_IS_LIVE,
+      g_param_spec_boolean ("is-live", "is-live", "Act like a live source",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Filedescriptor Source",
@@ -362,6 +374,10 @@ gst_fd_src_set_property (GObject * object, guint prop_id, const GValue * value,
       GST_DEBUG_OBJECT (src, "poll timeout set to %" GST_TIME_FORMAT,
           GST_TIME_ARGS (src->timeout));
       break;
+    case PROP_IS_LIVE:
+      GST_DEBUG_OBJECT (src, "live set to %d", g_value_get_boolean (value));
+      gst_base_src_set_live (GST_BASE_SRC (src), g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -380,6 +396,9 @@ gst_fd_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TIMEOUT:
       g_value_set_uint64 (value, src->timeout);
+      break;
+    case PROP_IS_LIVE:
+      g_value_set_boolean (value, gst_base_src_is_live (GST_BASE_SRC (src)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

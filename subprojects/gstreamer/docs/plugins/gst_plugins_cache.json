@@ -839,6 +839,18 @@
                         "type": "gint",
                         "writable": true
                     },
+                    "is-live": {
+                        "blurb": "Act like a live source",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "timeout": {
                         "blurb": "Post a message after timeout microseconds (0 = disabled)",
                         "conditionally-available": false,
