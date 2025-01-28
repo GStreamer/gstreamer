@@ -2200,6 +2200,9 @@ gst_qt_mux_set_header_on_caps (GstQTMux * mux, GstBuffer * buf)
   GstCaps *caps, *tcaps;
 
   tcaps = gst_pad_get_current_caps (GST_AGGREGATOR_SRC_PAD (mux));
+  if (G_UNLIKELY (tcaps == NULL))
+    return;
+
   caps = gst_caps_copy (tcaps);
   gst_caps_unref (tcaps);
 
