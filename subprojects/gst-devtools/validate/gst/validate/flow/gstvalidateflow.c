@@ -461,8 +461,11 @@ run_diff (const gchar * expected_file, const gchar * actual_file)
       "--", expected_file, actual_file, NULL);
   gchar *stdout_text = NULL;
 
-  g_subprocess_communicate_utf8 (process, NULL, NULL, &stdout_text, NULL,
-      &error);
+  if (!error) {
+    g_subprocess_communicate_utf8 (process, NULL, NULL, &stdout_text, NULL,
+        &error);
+  }
+
   if (!error) {
     gboolean colored = gst_validate_has_colored_output ();
     GSubprocess *process2;
