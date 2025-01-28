@@ -479,8 +479,11 @@ run_diff (const gchar * expected_file, const gchar * actual_file)
           "diff", "--paging", "never", "--color", colored ? "always" : "never",
           fname, NULL);
 
-      g_subprocess_communicate_utf8 (process2, NULL, NULL, &tmpstdout, NULL,
-          &error);
+      if (!error) {
+        g_subprocess_communicate_utf8 (process2, NULL, NULL, &tmpstdout, NULL,
+            &error);
+      }
+
       if (!error) {
         g_free (stdout_text);
         stdout_text = tmpstdout;
