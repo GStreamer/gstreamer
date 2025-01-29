@@ -693,6 +693,8 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
     gint maxchannels = 2;
     const gint *rates = NULL;
     gint n_rates = 0;
+    const gint *channels = NULL;
+    gint n_channels = 0;
 
     /* so we must be after restricted caps in this case */
     switch (codec_id) {
@@ -796,6 +798,12 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
         rates = l_rates;
         break;
       }
+      case AV_CODEC_ID_S302M:{
+        const static gint l_channels[] = { 2, 4, 6, 8 };
+        n_channels = G_N_ELEMENTS (l_channels);
+        channels = l_channels;
+        break;
+      }
       default:
         break;
     }
@@ -874,6 +882,22 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
           }
           layouts++;
         }
+      } else if (n_channels) {
+        GValue list = { 0, };
+
+        caps = gst_caps_new_empty_simple (mimetype);
+
+        g_value_init (&list, GST_TYPE_LIST);
+        for (i = 0; i < n_channels; i++) {
+          GValue v = { 0, };
+
+          g_value_init (&v, G_TYPE_INT);
+          g_value_set_int (&v, channels[i]);
+          gst_value_list_append_value (&list, &v);
+          g_value_unset (&v);
+        }
+        gst_caps_set_value (caps, "channels", &list);
+        g_value_unset (&list);
       } else {
         if (maxchannels == 1)
           caps = gst_caps_new_simple (mimetype,
@@ -2757,7 +2781,9 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       break;
 
     case AV_CODEC_ID_S302M:
-      caps = gst_caps_new_empty_simple ("audio/x-smpte-302m");
+      caps =
+          gst_ff_aud_caps_new (context, NULL, codec_id, encode,
+          "audio/x-smpte-302m", NULL);
       break;
 
     case AV_CODEC_ID_DVD_SUBTITLE:
