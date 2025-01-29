@@ -2163,7 +2163,7 @@ See ISO/IEC 13818-1:2018 Section 2.6.62 and 2.6.63 for details.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">The registration ID (in host endiannes)</doc>
             <type name="guint32" c:type="guint32*"/>
           </parameter>
-          <parameter name="additional_info" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <parameter name="additional_info" direction="out" caller-allocates="0" transfer-ownership="none" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">The additional information</doc>
             <array length="2" zero-terminated="0" c:type="guint8**">
               <type name="guint8" c:type="guint8*"/>

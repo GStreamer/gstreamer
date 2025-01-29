@@ -914,7 +914,7 @@ gst_mpegts_descriptor_from_registration (const gchar * format_identifier,
  * gst_mpegts_descriptor_parse_registration:
  * @descriptor: a %GST_MTS_DESC_REGISTRATION #GstMpegtsDescriptor
  * @registration_id: (out): The registration ID (in host endiannes)
- * @additional_info: (out) (allow-none) (array length=additional_info_length): The additional information
+ * @additional_info: (out) (allow-none) (transfer none) (array length=additional_info_length): The additional information
  * @additional_info_length: (out) (allow-none): The size of @additional_info in bytes.
  *
  * Extracts the Registration information from @descriptor.
