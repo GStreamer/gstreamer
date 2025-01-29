@@ -1276,7 +1276,7 @@ Android
 -   There are known issues with FFmpeg version 6.0.0 due to opaque passing being broken in that version. This affects at least
     avdec_h264, but may affect other decoders as well. Versions before 6.0.0, and 6.0.1 or higher are not affected.
 
--   gst-libav currently doesn’t build against the latest FFmpeg 7.0 release. This is being worked on and tracked in this “libav:
+-   gst-libav < 1.24.6 didn’t build against the latest FFmpeg 7.0 release. This has been worked on and tracked in this “libav:
     Fix compatibility with ffmpeg 7” Merge Request.
 
 ## Statistics
@@ -3029,6 +3029,147 @@ List of merge requests and issues fixed in 1.24.11
 
 -   List of Merge Requests applied in 1.24.11
 -   List of Issues fixed in 1.24.11
+
+1.24.12
+
+The twelfth 1.24 bug-fix release (1.24.12) was released on 29 January 2025.
+
+This release only contains bugfixes and it should be safe to update from 1.24.x.
+
+Highlighted bugfixes in 1.24.12
+
+-   d3d12: Fix shaders failing to compile with newer dxc versions
+-   decklinkvideosink: Fix handling of caps framerate in auto mode; also a decklinkaudiosink fix
+-   devicemonitor: Fix potential crash macOS when a device is unplugged
+-   gst-libav: Fix crash in audio encoders like avenc_ac3 if input data has insufficient alignment
+-   gst-libav: Fix build against FFmpeg 4.2 as in Ubuntu 20.04
+-   gst-editing-services: Fix Python library name fetching on Windows
+-   netclientclock: Don’t store failed internal clocks in the cache, so applications can re-try later
+-   oggdemux: Seeking and duration handling fixes
+-   osxaudiosrc: Fixes for failing init/no output on recent iOS versions
+-   qtdemux: Use mvhd transform matrix and support for flipping
+-   rtpvp9pay: Fix profile parsing
+-   splitmuxsrc: Fix use with decodebin3 which would occasionally fail with an assertion when seeking
+-   tsdemux: Fix backwards PTS wraparound detection with ignore-pcr=true
+-   video-overlay-composition: Declare the video/size/orientation tags for the meta and implement scale transformations
+-   vtdec: Fix seeks occasionally hanging on macOS due to a race condition when draining
+-   webrtc: Fix duplicate payload types with RTX and multiple video codecs
+-   win32-pluginloader: Make sure not to create any windows when inspecting plugins
+-   wpe: Various fixes for re-negotiation, latency reporting, progress messages on startup
+-   x264enc: Add missing data to AvcDecoderConfigurationRecord in codec_data for high profile variants
+-   cerbero: Support using ccache with cmake if enabled
+-   Various bug fixes, build fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   device: Fix racy nullptr deref on macOS when a device is unplugged
+-   iterator: Added error handling to filtered iterators
+-   netclientclock: Don’t ever store failed internal clocks in the cache
+-   netclock-replay: use gst_c_args when building, fixing build failure on Solaris
+-   pluginloader-win32: create no window
+-   pluginloader-win32: fix use after free in find_helper_bin_location
+-   sparsefile: ensure error is set when read_buffer() returns 0
+-   basetransform: fix incorrect logging inside gst_base_transform_query_caps
+
+gst-plugins-base
+
+-   oggdemux: fixes seeking in some cases by not overwriting a valid duration with CLOCK_TIME_NONE
+-   video-overlay-composition: Declare the video/size/orientation tags for the meta & implement scale transformation
+-   Various fixes found from adding extra warning flags
+
+gst-plugins-good
+
+-   osxaudiosrc: Fixes for failing init/no output on recent iOS versions
+-   qtdemux: Use mvhd transform matrix and support for flipping
+-   qtmux: fix critical warnings on negotiation error
+-   rtpvp9pay: fix profile parsing
+-   splitmuxsrc: Ensure only a single stream-start event is pushed
+-   splitmuxsrc: decodebin3 Fails with assertion in mq_slot_handle_stream_start when seeking
+-   Various fixes found from adding extra warning flags
+
+gst-plugins-bad
+
+-   decklinkvideosink: Fix handling of caps framerate in auto mode
+-   decklinkaudiosink: Don’t crash if started without corresponding video sink
+-   d3d12: Fix shaders failing to compile with newer dxc versions
+-   tsdemux: Fix backwards PTS wraparound detection with ignore-pcr=true
+-   vtdec: fix seeks hangs due to a race condition draining
+-   vtdec: seeks freeze the pipeline
+-   wayland: Print table split when DMABuf format changes
+-   webrtc: fix duplicate payload types with RTX and multiple video codecs
+-   wpevideosrc: Clear cached SHM buffers after caps re-negotiation
+-   wpe: Report latency and start-up progress messages
+-   wpe: remove glFlush() when filling buffer
+-   Fix build with gtk3 but not wayland
+-   Various fixes found from adding extra warning flags
+
+gst-plugins-ugly
+
+-   x264enc: add missing data to AvcDecoderConfigurationRecord, and switch to GstByteWriter
+
+GStreamer Rust plugins
+
+-   No changes
+
+gst-libav
+
+-   avaudenc: fix crash in avenc_ac3 if input buffers are insufficiently aligned
+-   avcodecmap: Only use new channel positions when compiling against new enough ffmpeg
+-   gst-libav: 1.24.11: Fails to build with minimum supported ffmpeg version
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   ges: Fix Python library name fetching on Windows
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   No changes
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   No changes
+
+Cerbero build tool and packaging changes in 1.24.12
+
+-   cmake: Support using ccache if enabled
+
+Contributors to 1.24.12
+
+Adrian Perez de Castro, Alan Coopersmith, Alexander Slobodeniuk, Andoni Morales Alastruey, Andrew Yooeun Chun, Brad Hards,
+Carlos Bentzen, Colin Kinloch, Edward Hervey, François Laignel, Guillaume Desmottes, Jochen Henneberg, Jordan Yelloz, L. E.
+Segovia, Monty C, Nirbheek Chauhan, Philippe Normand, Piotr Brzeziński, Rares Branici, Samuel Thibault, Sebastian Dröge, Silvio
+Lazzeretti, Tim-Philipp Müller, Tomas Granath, Will Miller,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.24.12
+
+-   List of Merge Requests applied in 1.24.12
+-   List of Issues fixed in 1.24.12
 
 Schedule for 1.26
 
