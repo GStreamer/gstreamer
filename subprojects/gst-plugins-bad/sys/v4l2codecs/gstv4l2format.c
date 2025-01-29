@@ -141,8 +141,7 @@ set_stride (GstVideoInfoDmaDrm * info, gint plane, gint stride)
 {
   const GstVideoFormatInfo *finfo = info->vinfo.finfo;
 
-  if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo) &&
-      info->drm_modifier == DRM_FORMAT_MOD_INVALID) {
+  if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
     guint x_tiles, y_tiles, tile_height, padded_height;
 
     tile_height = GST_VIDEO_FORMAT_INFO_TILE_HEIGHT (finfo, plane);
