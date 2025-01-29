@@ -893,8 +893,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
 
           g_value_init (&v, G_TYPE_INT);
           g_value_set_int (&v, channels[i]);
-          gst_value_list_append_value (&list, &v);
-          g_value_unset (&v);
+          gst_value_list_append_and_take_value (&list, &v);
         }
         gst_caps_set_value (caps, "channels", &list);
         g_value_unset (&list);
@@ -917,8 +916,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
 
         g_value_init (&v, G_TYPE_INT);
         g_value_set_int (&v, rates[i]);
-        gst_value_list_append_value (&list, &v);
-        g_value_unset (&v);
+        gst_value_list_append_and_take_value (&list, &v);
       }
       gst_caps_set_value (caps, "rate", &list);
       g_value_unset (&list);
