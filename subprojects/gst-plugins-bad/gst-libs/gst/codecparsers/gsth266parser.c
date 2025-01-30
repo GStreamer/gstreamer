@@ -2546,10 +2546,8 @@ gst_h266_parse_vps (GstH266NalUnit * nalu, GstH266VPS * vps)
   }
 
   READ_UINT8 (&nr, vps->extension_flag, 1);
-  if (vps->extension_flag) {
-    GST_WARNING ("extension_flag is not supported in current version VPS.");
-    goto error;
-  }
+  if (vps->extension_flag)
+    GST_WARNING ("extension_flag not supported. Ignoring extension data.");
 
   if (!gst_h266_parser_check_vps (vps))
     goto error;
@@ -4288,10 +4286,8 @@ gst_h266_parse_pps (GstH266Parser * parser, GstH266NalUnit * nalu,
   READ_UINT8 (&nr, pps->slice_header_extension_present_flag, 1);
 
   READ_UINT8 (&nr, pps->extension_flag, 1);
-  if (pps->extension_flag) {
-    GST_WARNING ("extension_flag is not supported in current version pps.");
-    goto error;
-  }
+  if (pps->extension_flag)
+    GST_WARNING ("extension_flag not supported. Ignoring extension data.");
 
   /* calculate width and height */
   pps->width = pps->pic_width_in_luma_samples;
@@ -4399,14 +4395,8 @@ gst_h266_parse_aps (GstH266Parser * parser, GstH266NalUnit * nalu,
   }
 
   READ_UINT8 (&nr, aps->extension_flag, 1);
-  if (aps->extension_flag) {
-    READ_UINT8 (&nr, aps->extension_data_flag, 1);
-    if (aps->extension_data_flag) {
-      GST_WARNING ("extension_data_flag shall be equal to 0 "
-          "in current version aps.");
-      goto error;
-    }
-  }
+  if (aps->extension_flag)
+    GST_WARNING ("extension_flag not supported. Ignoring extension data.");
 
   aps->valid = TRUE;
   return GST_H266_PARSER_OK;
@@ -4492,14 +4482,8 @@ gst_h266_parser_parse_opi (GstH266Parser * parser,
     READ_UINT8 (&nr, opi->htid_plus1, 3);
 
   READ_UINT8 (&nr, opi->extension_flag, 1);
-  if (opi->extension_flag) {
-    GST_WARNING ("extension_flag is not supported in current version OPI.");
-    goto error;
-  }
-
-  /* Skip the byte alignment bits */
-  if (!nal_reader_skip (&nr, 1))
-    goto error;
+  if (opi->extension_flag)
+    GST_WARNING ("extension_flag not supported. Ignoring extension data.");
 
   return GST_H266_PARSER_OK;
 
@@ -4545,14 +4529,8 @@ gst_h266_parser_parse_dci (GstH266Parser * parser,
   }
 
   READ_UINT8 (&nr, dci->extension_flag, 1);
-  if (dci->extension_flag) {
-    GST_WARNING ("extension_flag is not supported in current version DCI.");
-    goto error;
-  }
-
-  /* Skip the byte alignment bits */
-  if (!nal_reader_skip (&nr, 1))
-    goto error;
+  if (dci->extension_flag)
+    GST_WARNING ("extension_flag not supported. Ignoring extension data.");
 
   return GST_H266_PARSER_OK;
 
