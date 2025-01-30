@@ -447,7 +447,7 @@ gst_v4l2_video_dec_negotiate (GstVideoDecoder * decoder)
   acquired_caps = gst_video_info_to_caps (&info.vinfo);
   if (acquired_caps) {
     GST_DEBUG_OBJECT (self, "Acquired caps: %" GST_PTR_FORMAT, acquired_caps);
-    gst_caps_append (fixation_caps, gst_caps_copy (acquired_drm_caps));
+    gst_caps_append (fixation_caps, gst_caps_copy (acquired_caps));
   }
 
   for (i = 0; i < gst_caps_get_size (fixation_caps); i++) {
