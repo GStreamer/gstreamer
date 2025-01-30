@@ -1090,7 +1090,8 @@ gst_plugin_loader_new (GstRegistry * registry)
 
   /* Checks whether helper bin is installed or not. Expected exit code is 1 */
   ret = CreateProcessW (NULL, helper_bin_location_wide, NULL, NULL, FALSE,
-      CREATE_UNICODE_ENVIRONMENT, env_string, NULL, &si, &pi);
+      CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW, env_string,
+      NULL, &si, &pi);
   g_free (helper_bin_location_wide);
 
   if (!ret) {
