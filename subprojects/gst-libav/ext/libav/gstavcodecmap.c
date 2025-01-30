@@ -3430,6 +3430,7 @@ static const PixToFmt pixtofmttable[] = {
   {GST_VIDEO_FORMAT_Y212_LE, AV_PIX_FMT_Y212LE},
   {GST_VIDEO_FORMAT_Y412_LE, AV_PIX_FMT_XV36LE},
 #endif
+  {GST_VIDEO_FORMAT_GRAY10_LE16, AV_PIX_FMT_GRAY10LE}
 };
 
 GstVideoFormat
