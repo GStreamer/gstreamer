@@ -17,6 +17,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-v4l2slmpeg2dec
+ * @title: v4l2slmpeg2dec
+ * @short_description: V4L2 Stateless MPEG2 Video video decoder
+ *
+ * decodes MPEG2 Video bitstreams as DMABuf using Linux V4L2 Stateless API.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=some.mov ! parsebin ! v4l2slmpeg2dec ! autovideosink
+ * ```
+ *
+ * Since: 1.20
+ */
+
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

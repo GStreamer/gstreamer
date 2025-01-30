@@ -17,6 +17,38 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-v4l2slvp8dec
+ * @title: v4l2slvp8dec
+ * @short_description: V4L2 Stateless VP8 video decoder
+ *
+ * decodes VP8 bitstreams as DMABuf using Linux V4L2 Stateless API.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=some.mkv ! parsebin ! v4l2slvp8dec ! autovideosink
+ * ```
+ *
+ * Since: 1.20
+ */
+
+/**
+ * SECTION:element-v4l2slvp8alphadecodebin
+ * @title: v4l2slvp8alphadecodebin
+ * @short_description: V4L2 Stateless VP8 with alpa video decoder
+ *
+ * decodes VP8 bitstreams with alpha auxiliary stream as DMABuf using Linux
+ * V4L2 Stateless API.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=some.mkv ! parsebin ! v4l2slvp8alphadecodebin ! autovideosink
+ * ```
+ *
+ * Since: 1.20
+ */
+
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif

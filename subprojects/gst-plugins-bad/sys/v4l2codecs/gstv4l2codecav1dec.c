@@ -18,6 +18,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-v4l2slav1dec
+ * @title: v4l2slav1dec
+ * @short_description: V4L2 Stateless AV1 video decoder
+ *
+ * decodes AV1 bitstreams as DMABuf using Linux V4L2 Stateless API.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=some.mov ! parsebin ! v4l2slav1dec ! autovideosink
+ * ```
+ *
+ * Since: 1.24
+ */
+
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

@@ -28,6 +28,21 @@ G_BEGIN_DECLS
 G_DECLARE_DERIVABLE_TYPE (GstV4l2CodecAlphaDecodeBin,
     gst_v4l2_codec_alpha_decode_bin, GST, V4L2_CODEC_ALPHA_DECODE_BIN, GstBin);
 
+/**
+ * GstV4l2CodecAlphaDecodeBin:
+ *
+ * Base class for V4L2 Stateless alpha decoders.
+ *
+ * Since: 1.20
+ */
+
+/**
+ * GstV4l2CodecAlphaDecodeBinClass:
+ *
+ * Base class for V4L2 Stateless alpha decoders.
+ *
+ * Since: 1.20
+ */
 struct _GstV4l2CodecAlphaDecodeBinClass
 {
   GstBinClass parent_class;

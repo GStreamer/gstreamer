@@ -17,6 +17,22 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-v4l2slh264dec
+ * @title: v4l2slh264dec
+ * @short_description: V4L2 Stateless H.264 video decoder
+ *
+ * decodes H.264 bitstreams as DMABuf using Linux V4L2 Stateless API.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=some.mov ! parsebin ! v4l2slh264dec ! autovideosink
+ * ```
+ *
+ * Since: 1.20
+ */
+
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif

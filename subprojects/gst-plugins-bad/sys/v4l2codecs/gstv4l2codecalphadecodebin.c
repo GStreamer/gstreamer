@@ -18,6 +18,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstv4l2codecalphadecodebin
+ * @title: GstV4l2CodecAlphaDecodeBin
+ * @short_description: V4L2 base class to implement VP8/VP9 alpha decoding.
+ *
+ * V4L2 base class to implement VP8/VP9 alpha decoding.
+ *
+ * Since: 1.20
+ */
+
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

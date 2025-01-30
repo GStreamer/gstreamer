@@ -10,6 +10,9 @@ set -eux
 
 source "ci/scripts/source_image_env.sh"
 
+# Special doc mode for V4L2 stateless codecs
+export GST_V4L2_CODEC_GEN_DOC=1
+
 meson_args="${MESON_ARGS:--Ddoc=enabled -Drs=enabled -Dgst-docs:fatal_warnings=true}"
 echo "$meson_args"
 meson setup "$builddir" $meson_args

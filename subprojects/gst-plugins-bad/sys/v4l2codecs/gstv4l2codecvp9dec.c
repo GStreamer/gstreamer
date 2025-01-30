@@ -18,6 +18,37 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-v4l2slvp9dec
+ * @title: v4l2slvp9dec
+ * @short_description: V4L2 Stateless VP9 video decoder
+ *
+ * decodes VP9 bitstreams as DMABuf using Linux V4L2 Stateless API.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=some.mkv ! parsebin ! v4l2slvp9dec ! autovideosink
+ * ```
+ *
+ * Since: 1.20
+ */
+
+/**
+ * SECTION:element-v4l2slvp9alphadecodebin
+ * @title: v4l2slvp9alphadecodebin
+ * @short_description: V4L2 Stateless VP9 with alpa video decoder
+ *
+ * decodes VP9 bitstreams with alpha auxiliary stream as DMABuf using Linux
+ * V4L2 Stateless API.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=some.mkv ! parsebin ! v4l2slvp9alphadecodebin ! autovideosink
+ * ```
+ *
+ * Since: 1.20
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
