@@ -2669,11 +2669,19 @@ handle_gathered_gop (GstSplitMuxSink * splitmux, const InputGop * gop,
       GST_STIME_ARGS (queued_time), queued_bytes,
       GST_STIME_ARGS (next_gop_start_time), GST_STIME_ARGS (gop->start_time));
 
-  if (queued_gop_time < 0)
-    goto error_gop_duration;
+  if (queued_gop_time < 0) {
+    GST_WARNING_OBJECT (splitmux,
+        "Queued GOP time is negative %" GST_STIME_FORMAT,
+        -GST_STIME_ARGS (queued_gop_time));
+    queued_gop_time = 0;
+  }
 
-  if (queued_time < splitmux->fragment_start_time)
-    goto error_queued_time;
+  if (queued_time < splitmux->fragment_start_time) {
+    GST_WARNING_OBJECT (splitmux,
+        "Queued time is negative. Input went backwards. queued_time - %"
+        GST_STIME_FORMAT, GST_STIME_ARGS (queued_time));
+    queued_time = splitmux->fragment_start_time;
+  }
 
   queued_time -= splitmux->fragment_start_time;
   if (queued_time < queued_gop_time)
@@ -2742,19 +2750,6 @@ handle_gathered_gop (GstSplitMuxSink * splitmux, const InputGop * gop,
     GST_SPLITMUX_BROADCAST_OUTPUT (splitmux);
   }
 
-  return;
-
-error_gop_duration:
-  GST_ELEMENT_ERROR (splitmux,
-      STREAM, FAILED, ("Timestamping error on input streams"),
-      ("Queued GOP time is negative %" GST_STIME_FORMAT,
-          GST_STIME_ARGS (queued_gop_time)));
-  return;
-error_queued_time:
-  GST_ELEMENT_ERROR (splitmux,
-      STREAM, FAILED, ("Timestamping error on input streams"),
-      ("Queued time is negative. Input went backwards. queued_time - %"
-          GST_STIME_FORMAT, GST_STIME_ARGS (queued_time)));
   return;
 }
 
