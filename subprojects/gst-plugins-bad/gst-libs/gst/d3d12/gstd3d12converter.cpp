@@ -436,6 +436,7 @@ struct _GstD3D12ConverterPrivate
   D3D12_RESOURCE_DESC mipgen_desc = { };
   GstBuffer *mipgen_buf = nullptr;
   guint auto_mipgen_level = 1;
+  guint max_srv_desc = 0;
 
   std::mutex prop_lock;
   guint64 fence_val = 0;
@@ -993,6 +994,13 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     }
   }
 
+  auto num_srv = ctx->pipeline_data[0].crs->GetNumSrv ();
+  if (have_lut)
+    num_srv += 2;
+
+  if (priv->max_srv_desc < num_srv)
+    priv->max_srv_desc = num_srv;
+
   if (ctx->comm)
     return ctx;
 
@@ -1014,18 +1022,6 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   }
 
   comm->sampler_filter = sampler_filter;
-
-  if (!priv->srv_heap_pool) {
-    D3D12_DESCRIPTOR_HEAP_DESC srv_heap_desc = { };
-    srv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    srv_heap_desc.NumDescriptors = ctx->pipeline_data[0].crs->GetNumSrv ();
-    if (comm->have_lut)
-      srv_heap_desc.NumDescriptors += 2;
-
-    srv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-    priv->srv_heap_pool = gst_d3d12_desc_heap_pool_new (device, &srv_heap_desc);
-  }
 
   /* bottom left */
   vertex_data[0].position.x = -1.0f;
@@ -2303,6 +2299,13 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
       return nullptr;
     }
   }
+
+  D3D12_DESCRIPTOR_HEAP_DESC srv_heap_desc = { };
+  srv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+  srv_heap_desc.NumDescriptors = priv->max_srv_desc;
+  srv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+  priv->srv_heap_pool = gst_d3d12_desc_heap_pool_new (device_handle,
+      &srv_heap_desc);
 
   return self;
 }
