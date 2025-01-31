@@ -1164,13 +1164,11 @@ gst_v4l2_decoder_get_property (GObject * object, guint prop_id,
 /**
  * gst_v4l2_decoder_register:
  * @plugin: a #GstPlugin
- * @dec_type: A #GType for the codec
- * @class_init: The #GClassInitFunc for #dec_type
- * @instance_init: The #GInstanceInitFunc for #dec_type
+ * @dec_type: Base #GType for the codec
+ * @type_info: a #GTypeInfo for the codec
  * @element_name_tmpl: A string to use for the first codec found and as a template for the next ones.
  * @device: (transfer full) A #GstV4l2CodecDevice
  * @rank: The rank to use for the element
- * @class_data: (nullable) (transfer full) A #gpointer to pass as class_data, set to @device if null
  * @element_name (nullable) (out) Sets the pointer to the new element name
  *
  * Registers a decoder element as a subtype of @dec_type for @plugin.
@@ -1179,24 +1177,13 @@ gst_v4l2_decoder_get_property (GObject * object, guint prop_id,
  */
 void
 gst_v4l2_decoder_register (GstPlugin * plugin,
-    GType dec_type, GClassInitFunc class_init, gconstpointer class_data,
-    GInstanceInitFunc instance_init, const gchar * element_name_tmpl,
+    GType dec_type, GTypeInfo * type_info, const gchar * element_name_tmpl,
     GstV4l2CodecDevice * device, guint rank, gchar ** element_name)
 {
-  GTypeQuery type_query;
-  GTypeInfo type_info = { 0, };
   GType subtype;
   gchar *type_name;
 
-  g_type_query (dec_type, &type_query);
-  memset (&type_info, 0, sizeof (type_info));
-  type_info.class_size = type_query.class_size;
-  type_info.instance_size = type_query.instance_size;
-  type_info.class_init = class_init;
-  type_info.class_data = class_data;
-  type_info.instance_init = instance_init;
-
-  if (class_data == device)
+  if (type_info->class_data == device)
     GST_MINI_OBJECT_FLAG_SET (device, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
 
   /* The first decoder to be registered should use a constant name, like
@@ -1213,7 +1200,7 @@ gst_v4l2_decoder_register (GstPlugin * plugin,
     g_free (basename);
   }
 
-  subtype = g_type_register_static (dec_type, type_name, &type_info, 0);
+  subtype = g_type_register_static (dec_type, type_name, type_info, 0);
 
   if (!gst_element_register (plugin, type_name, rank, subtype)) {
     GST_WARNING ("Failed to register plugin '%s'", type_name);

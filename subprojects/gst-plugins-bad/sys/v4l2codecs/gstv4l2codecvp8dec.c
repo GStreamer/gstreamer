@@ -39,10 +39,7 @@
 GST_DEBUG_CATEGORY_STATIC (v4l2_vp8dec_debug);
 #define GST_CAT_DEFAULT v4l2_vp8dec_debug
 
-#define GST_TYPE_V4L2_CODEC_VP8_DEC \
-  (gst_v4l2_codec_vp8_dec_get_type())
-#define GST_V4L2_CODEC_VP8_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_V4L2_CODEC_VP8_DEC,GstV4l2CodecVp8Dec))
+#define GST_V4L2_CODEC_VP8_DEC(obj) ((GstV4l2CodecVp8Dec *) obj)
 
 enum
 {
@@ -104,12 +101,7 @@ struct _GstV4l2CodecVp8Dec
   GstMapInfo bitstream_map;
 };
 
-static GType gst_v4l2_codec_vp8_dec_get_type (void);
-
-G_DEFINE_ABSTRACT_TYPE (GstV4l2CodecVp8Dec, gst_v4l2_codec_vp8_dec,
-    GST_TYPE_VP8_DECODER);
-
-#define parent_class gst_v4l2_codec_vp8_dec_parent_class
+static GstElementClass *parent_class = NULL;
 
 static guint
 gst_v4l2_codec_vp8_dec_get_preferred_output_delay (GstVp8Decoder * decoder,
@@ -903,12 +895,7 @@ gst_v4l2_codec_vp8_dec_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_v4l2_codec_vp8_dec_init (GstV4l2CodecVp8Dec * self)
-{
-}
-
-static void
-gst_v4l2_codec_vp8_dec_subinit (GstV4l2CodecVp8Dec * self,
+gst_v4l2_codec_vp8_dec_init (GstV4l2CodecVp8Dec * self,
     GstV4l2CodecVp8DecClass * klass)
 {
   self->decoder = gst_v4l2_decoder_new (klass->device);
@@ -926,12 +913,7 @@ gst_v4l2_codec_vp8_dec_dispose (GObject * object)
 }
 
 static void
-gst_v4l2_codec_vp8_dec_class_init (GstV4l2CodecVp8DecClass * klass)
-{
-}
-
-static void
-gst_v4l2_codec_vp8_dec_subclass_init (GstV4l2CodecVp8DecClass * klass,
+gst_v4l2_codec_vp8_dec_class_init (GstV4l2CodecVp8DecClass * klass,
     GstV4l2CodecDevice * device)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
@@ -948,6 +930,8 @@ gst_v4l2_codec_vp8_dec_subclass_init (GstV4l2CodecVp8DecClass * klass,
       "Codec/Decoder/Video/Hardware",
       "A V4L2 based VP8 video decoder",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
+
+  parent_class = g_type_class_peek_parent (klass);
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_pad_template (element_class,
@@ -1005,6 +989,13 @@ void
 gst_v4l2_codec_vp8_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
     GstV4l2CodecDevice * device, guint rank)
 {
+  GTypeInfo type_info = {
+    .class_size = sizeof (GstV4l2CodecVp8DecClass),
+    .class_init = (GClassInitFunc) gst_v4l2_codec_vp8_dec_class_init,
+    .class_data = gst_mini_object_ref (GST_MINI_OBJECT (device)),
+    .instance_size = sizeof (GstV4l2CodecVp8Dec),
+    .instance_init = (GInstanceInitFunc) gst_v4l2_codec_vp8_dec_init,
+  };
   gchar *element_name;
   GstCaps *src_caps = NULL, *alpha_caps;
 
@@ -1034,10 +1025,7 @@ gst_v4l2_codec_vp8_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
       gst_v4l2_decoder_enum_all_src_formats (decoder, &static_src_caps);
 
 register_element:
-  gst_v4l2_decoder_register (plugin, GST_TYPE_V4L2_CODEC_VP8_DEC,
-      (GClassInitFunc) gst_v4l2_codec_vp8_dec_subclass_init,
-      gst_mini_object_ref (GST_MINI_OBJECT (device)),
-      (GInstanceInitFunc) gst_v4l2_codec_vp8_dec_subinit,
+  gst_v4l2_decoder_register (plugin, GST_TYPE_VP8_DECODER, &type_info,
       "v4l2sl%svp8dec", device, rank, &element_name);
 
   if (!element_name)

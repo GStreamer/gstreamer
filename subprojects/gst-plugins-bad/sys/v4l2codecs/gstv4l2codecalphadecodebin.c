@@ -232,8 +232,15 @@ gst_v4l2_codec_alpha_decode_bin_register (GstPlugin * plugin,
 {
   /* TODO check that we have compatible src format */
 
-  gst_v4l2_decoder_register (plugin,
-      GST_TYPE_V4L2_CODEC_ALPHA_DECODE_BIN, class_init, class_data, NULL,
-      element_name_tmpl, device,
+  GTypeInfo type_info = {
+    .class_size = sizeof (GstV4l2CodecAlphaDecodeBinClass),
+    .class_init = class_init,
+    .class_data = class_data,
+    .instance_size = sizeof (GstV4l2CodecAlphaDecodeBin),
+    .instance_init = NULL,
+  };
+
+  gst_v4l2_decoder_register (plugin, GST_TYPE_V4L2_CODEC_ALPHA_DECODE_BIN,
+      &type_info, element_name_tmpl, device,
       rank + GST_V4L2_CODEC_ALPHA_DECODE_BIN_RANK_OFFSET, NULL);
 }

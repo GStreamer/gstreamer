@@ -128,9 +128,7 @@ void              gst_v4l2_decoder_get_property (GObject * object, guint prop_id
 
 void              gst_v4l2_decoder_register (GstPlugin * plugin,
                                              GType dec_type,
-                                             GClassInitFunc class_init,
-                                             gconstpointer class_data,
-                                             GInstanceInitFunc instance_init,
+                                             GTypeInfo * type_info,
                                              const gchar *element_name_tmpl,
                                              GstV4l2CodecDevice * device,
                                              guint rank,
