@@ -1277,7 +1277,7 @@ static void gst_v4l2_codec_vp9_alpha_decode_bin_subclass_init
   gst_element_class_add_static_pad_template (element_class, &alpha_template);
 
   gst_element_class_set_static_metadata (element_class,
-      "VP9 Alpha Decoder", "Codec/Decoder/Video",
+      "VP9 Alpha Decoder", "Codec/Decoder/Video/Hardware",
       "Wrapper bin to decode VP9 with alpha stream.",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
 }

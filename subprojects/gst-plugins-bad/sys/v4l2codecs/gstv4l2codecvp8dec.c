@@ -996,7 +996,7 @@ static void gst_v4l2_codec_vp8_alpha_decode_bin_subclass_init
   gst_element_class_add_static_pad_template (element_class, &alpha_template);
 
   gst_element_class_set_static_metadata (element_class,
-      "VP8 Alpha Decoder", "Codec/Decoder/Video",
+      "VP8 Alpha Decoder", "Codec/Decoder/Video/Hardware",
       "Wrapper bin to decode VP8 with alpha stream.",
       "Daniel Almeida <daniel.almeida@collabora.com>");
 }
