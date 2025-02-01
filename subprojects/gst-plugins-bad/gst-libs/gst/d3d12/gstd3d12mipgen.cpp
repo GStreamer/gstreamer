@@ -131,16 +131,80 @@ gst_d3d12_mip_gen_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static gboolean
+get_mipgen_rs_blob (GstD3D12Device * device, ID3DBlob ** blob)
+{
+  static ID3DBlob *rs_blob_ = nullptr;
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    D3D12_VERSIONED_ROOT_SIGNATURE_DESC desc = { };
+    CD3DX12_ROOT_PARAMETER root_params[3];
+    CD3DX12_DESCRIPTOR_RANGE range_srv;
+    CD3DX12_DESCRIPTOR_RANGE range_uav;
+    D3D12_STATIC_SAMPLER_DESC sampler_desc = { };
+
+    sampler_desc.Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+    sampler_desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    sampler_desc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    sampler_desc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    sampler_desc.MipLODBias = 0;
+    sampler_desc.MaxAnisotropy = 1;
+    sampler_desc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+    sampler_desc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+    sampler_desc.MinLOD = 0;
+    sampler_desc.MaxLOD = D3D12_FLOAT32_MAX;
+    sampler_desc.ShaderRegister = 0;
+    sampler_desc.RegisterSpace = 0;
+    sampler_desc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    root_params[0].InitAsConstants (6, 0, 0);
+
+    range_srv.Init (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+    root_params[1].InitAsDescriptorTable (1, &range_srv);
+
+    range_uav.Init (D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 4, 0);
+    root_params[2].InitAsDescriptorTable (1, &range_uav);
+
+    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC::Init_1_0 (desc, 3, root_params,
+        1, &sampler_desc,
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS);
+
+    ComPtr < ID3DBlob > rs_blob;
+    ComPtr < ID3DBlob > error_blob;
+    auto hr = D3DX12SerializeVersionedRootSignature (&desc,
+        D3D_ROOT_SIGNATURE_VERSION_1_0, &rs_blob, &error_blob);
+    if (!gst_d3d12_result (hr, device)) {
+      const gchar *error_msg = nullptr;
+      if (error_blob)
+        error_msg = (const gchar *) error_blob->GetBufferPointer ();
+
+      GST_ERROR_OBJECT (device,
+          "Couldn't serialize rs, hr: 0x%x, error detail: %s",
+          (guint) hr, GST_STR_NULL (error_msg));
+    } else {
+      rs_blob_ = rs_blob.Detach ();
+    }
+  }
+  GST_D3D12_CALL_ONCE_END;
+
+  if (rs_blob_) {
+    *blob = rs_blob_;
+    rs_blob_->AddRef ();
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 GstD3D12MipGen *
 gst_d3d12_mip_gen_new (GstD3D12Device * device, GstD3DPluginCS cs_type)
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
-
-  D3D12_VERSIONED_ROOT_SIGNATURE_DESC rs_desc = { };
-  CD3DX12_ROOT_PARAMETER root_params[3];
-  CD3DX12_DESCRIPTOR_RANGE range_srv;
-  CD3DX12_DESCRIPTOR_RANGE range_uav;
-  D3D12_STATIC_SAMPLER_DESC sampler_desc = { };
 
   auto self = (GstD3D12MipGen *) g_object_new (GST_TYPE_D3D12_MIP_GEN, nullptr);
   gst_object_ref_sink (self);
@@ -148,50 +212,14 @@ gst_d3d12_mip_gen_new (GstD3D12Device * device, GstD3DPluginCS cs_type)
   auto priv = self->priv;
   priv->device = (GstD3D12Device *) gst_object_ref (device);
 
-  sampler_desc.Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-  sampler_desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-  sampler_desc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-  sampler_desc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-  sampler_desc.MipLODBias = 0;
-  sampler_desc.MaxAnisotropy = 1;
-  sampler_desc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-  sampler_desc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
-  sampler_desc.MinLOD = 0;
-  sampler_desc.MaxLOD = D3D12_FLOAT32_MAX;
-  sampler_desc.ShaderRegister = 0;
-  sampler_desc.RegisterSpace = 0;
-  sampler_desc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-  root_params[0].InitAsConstants (6, 0, 0);
-
-  range_srv.Init (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-  root_params[1].InitAsDescriptorTable (1, &range_srv);
-
-  range_uav.Init (D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 4, 0);
-  root_params[2].InitAsDescriptorTable (1, &range_uav);
-
-  CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC::Init_1_0 (rs_desc, 3, root_params,
-      1, &sampler_desc, D3D12_ROOT_SIGNATURE_FLAG_NONE);
-
   ComPtr < ID3DBlob > rs_blob;
-  ComPtr < ID3DBlob > error_blob;
-  auto hr = D3DX12SerializeVersionedRootSignature (&rs_desc,
-      D3D_ROOT_SIGNATURE_VERSION_1, &rs_blob, &error_blob);
-
-  if (!gst_d3d12_result (hr, device)) {
-    const gchar *error_msg = nullptr;
-    if (error_blob)
-      error_msg = (const gchar *) error_blob->GetBufferPointer ();
-
-    GST_ERROR_OBJECT (self,
-        "Couldn't serialize root signature, hr: 0x%x, error detail: %s",
-        (guint) hr, GST_STR_NULL (error_msg));
+  if (!get_mipgen_rs_blob (device, &rs_blob)) {
     gst_object_unref (self);
     return nullptr;
   }
 
   auto device_handle = gst_d3d12_device_get_device_handle (device);
-  hr = device_handle->CreateRootSignature (0, rs_blob->GetBufferPointer (),
+  auto hr = device_handle->CreateRootSignature (0, rs_blob->GetBufferPointer (),
       rs_blob->GetBufferSize (), IID_PPV_ARGS (&priv->rs));
   if (!gst_d3d12_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create root signature");
