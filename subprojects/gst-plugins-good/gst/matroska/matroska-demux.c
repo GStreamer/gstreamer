@@ -3695,6 +3695,17 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
       GST_OBJECT_UNLOCK (demux);
       gst_pad_push_event (context->pad, event);
       GST_OBJECT_LOCK (demux);
+
+      /* Mark the stream as EOS if synchronization advanced past the requested segment. */
+      if (GST_CLOCK_TIME_IS_VALID (demux->common.segment.stop)
+          && stop >= demux->common.segment.stop) {
+        GST_DEBUG_OBJECT (demux,
+            "Synchronizing stream %d to %" GST_TIME_FORMAT
+            " put the stream after the segment stop at %" GST_TIME_FORMAT,
+            stream_nr, GST_TIME_ARGS (stop),
+            GST_TIME_ARGS (demux->common.segment.stop));
+        context->eos = TRUE;
+      }
     }
   }
 
