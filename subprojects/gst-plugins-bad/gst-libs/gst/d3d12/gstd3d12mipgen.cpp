@@ -429,8 +429,10 @@ gst_d3d12_mip_gen_execute_full (GstD3D12MipGen * gen, ID3D12Resource * resource,
 
   auto priv = gen->priv;
 
-  if (!gst_d3d12_mip_gen_execute_internal (gen, resource, fence_data, cl, 0))
+  if (!gst_d3d12_mip_gen_execute_internal (gen,
+          resource, fence_data, cl, mip_levels)) {
     return FALSE;
+  }
 
   priv->barriers.resize (0);
   for (size_t i = 1; i < priv->resource_states.size (); i++) {
