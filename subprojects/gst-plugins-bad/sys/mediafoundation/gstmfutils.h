@@ -36,6 +36,7 @@
 #include <mferror.h>
 #include <mfobjects.h>
 #include <strmif.h>
+#include <cguid.h>
 
 G_BEGIN_DECLS
 
