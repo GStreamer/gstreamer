@@ -157,6 +157,7 @@ if host_system == 'windows'
 else
   if default_library in ['static', 'both']
     # Static plugin links to libsoup directly at build time
+    assert(soup_linked_target)
     adaptivedemux2_static = static_library('gstadaptivedemux2',
       c_args: [adaptive_args, soup_linked_target_args],
       dependencies: [adaptive_deps, soup_linked_target_deps],
@@ -165,7 +166,7 @@ else
   if default_library in ['shared', 'both']
     adaptivedemux2_shared = shared_library('gstadaptivedemux2',
       c_args: adaptive_args,
-      dependencies: adaptive_deps,
+      dependencies: [adaptive_deps, soup_dlopen_target_deps],
       kwargs: adaptive_kwargs + soup_dlopen_target_kwargs)
   endif
 endif

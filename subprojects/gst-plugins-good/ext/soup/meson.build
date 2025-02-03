@@ -71,7 +71,7 @@ else
   if default_library in ['shared', 'both']
     gstsouphttpsrc_shared = shared_library('gstsoup',
       c_args : soup_library_c_args,
-      dependencies : soup_library_deps,
+      dependencies : soup_library_deps + soup_dlopen_target_deps,
       kwargs: soup_library_kwargs + soup_dlopen_target_kwargs,
     )
   endif

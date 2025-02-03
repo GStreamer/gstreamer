@@ -18,6 +18,7 @@ soup_ver_opt = get_option('soup-version')
 default_library = get_option('default_library')
 soup_linked_target = host_system == 'windows' or default_library != 'shared'
 soup_lookup_dep = get_option('soup-lookup-dep') or soup_linked_target
+soup_dlopen_target_deps = []
 soup_dlopen_target_kwargs = {}
 
 if get_option('soup').allowed() or get_option('adaptivedemux2').allowed()
@@ -43,16 +44,22 @@ if get_option('soup').allowed() or get_option('adaptivedemux2').allowed()
     endif
   endif
 
-  # Hack to set the right RPATH for making dlopen() work inside the devenv on
-  # macOS when using libsoup as a subproject.
+  # Hack to set the LC_RPATH for making dlopen() work, since meson will only
+  # add that for deps that are in the list of dependencies. We also need to add
+  # install_rpath to cover the installation case. Every other dep is loaded via
+  # absolute LC_LOAD_DYLIB entries.
   if host_system == 'darwin'
     foreach dep : [libsoup3_dep, libsoup2_dep]
-      if dep.found() and dep.type_name() == 'internal'
-        soup_dlopen_target_kwargs += {
-          'build_rpath': '@loader_path/../../../libsoup-' + dep.version() / 'libsoup',
-        }
-        break
+      if not dep.found()
+        continue
       endif
+      soup_dlopen_target_deps += [dep]
+      if dep.type_name() == 'internal'
+        soup_dlopen_target_kwargs += {'install_rpath': '@loader_path/..'}
+      else
+        soup_dlopen_target_kwargs += {'install_rpath': dep.get_variable('libdir')}
+      endif
+      break
     endforeach
   endif
 endif
