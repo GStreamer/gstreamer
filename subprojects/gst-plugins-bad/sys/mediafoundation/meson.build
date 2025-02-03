@@ -63,13 +63,6 @@ if host_system != 'windows' or mf_option.disabled()
   subdir_done()
 endif
 
-if cc.get_id() != 'msvc'
-  if mf_option.enabled()
-    error('mediafoundation plugin can only be built with MSVC')
-  endif
-  subdir_done()
-endif
-
 mf_lib = cc.find_library('mf', required : mf_option)
 mfplat_lib = cc.find_library('mfplat', required : mf_option)
 mfreadwrite_lib = cc.find_library('mfreadwrite', required : mf_option)
