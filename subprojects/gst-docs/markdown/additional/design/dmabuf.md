@@ -121,10 +121,11 @@ format. For example, `NV12:0x0100000000000002` is a new video format
 combined by video format NV12 and the modifier `0x0100000000000002`. It's
 not NV12 and it's not its subset either.
 
-*DRM_FORMAT* can be printed by using
-`GST_FOURCC_FORMAT` and `GST_FOURCC_ARGS` macros from the
-`DRM_FORMAT_*` constants, it is NOT a `GstVideoFormat`, so it would be
-different from the content of the `format` field in a non-dmabuf caps.
+The 7 least significant bits of *DRM_FORMAT* is a fourcc. That fourcc is used
+to serialize it into a string. The result is different from the serialization of
+gstreamer video formats. The 8th bit is used to indicate that tis is a big
+endian format. In this case, the serializer will postfix the name with `_BE`.
+
 A modifier must always be present, except if the modifier is linear,
 then it should not be included, so `NV12:0x0000000000000000` is
 invalid, it must be `drm-format=NV12`. DRM fourcc are used

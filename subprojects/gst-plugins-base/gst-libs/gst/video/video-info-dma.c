@@ -434,12 +434,18 @@ gst_video_dma_drm_fourcc_from_string (const gchar * format_str,
   const gchar *mod_str;
   guint32 fourcc = DRM_FORMAT_INVALID;
   guint64 m = DRM_FORMAT_MOD_INVALID;
+  gboolean big_endian = FALSE;
 
   g_return_val_if_fail (format_str != NULL, 0);
 
   mod_str = strchr (format_str, ':');
   if (mod_str) {
-    if (mod_str - format_str != 4) {
+    gint fmt_len = mod_str - format_str;
+
+    /* Handle big endian (FOURCC_BE) case */
+    if (fmt_len == 7 && strstr (format_str + 4, "_BE")) {
+      big_endian = TRUE;
+    } else if (fmt_len != 4) {
       /* fourcc always has 4 characters. */
       GST_DEBUG ("%s is not a drm string", format_str);
       return DRM_FORMAT_INVALID;
@@ -458,7 +464,12 @@ gst_video_dma_drm_fourcc_from_string (const gchar * format_str,
       return DRM_FORMAT_INVALID;
     }
   } else {
-    if (strlen (format_str) != 4) {
+    gint fmt_len = strlen (format_str);
+
+    /* Handle big endian (FOURCC_BE) case */
+    if (fmt_len == 7 && strstr (format_str + 4, "_BE")) {
+      big_endian = TRUE;
+    } else if (fmt_len != 4) {
       /* fourcc always has 4 characters. */
       GST_DEBUG ("%s is not a drm string", format_str);
       return DRM_FORMAT_INVALID;
@@ -469,6 +480,9 @@ gst_video_dma_drm_fourcc_from_string (const gchar * format_str,
 
   fourcc = GST_MAKE_FOURCC (format_str[0], format_str[1],
       format_str[2], format_str[3]);
+
+  if (big_endian)
+    fourcc |= DRM_FORMAT_BIG_ENDIAN;
 
   if (modifier)
     *modifier = m;
@@ -492,16 +506,23 @@ gst_video_dma_drm_fourcc_from_string (const gchar * format_str,
 gchar *
 gst_video_dma_drm_fourcc_to_string (guint32 fourcc, guint64 modifier)
 {
+  gboolean big_endian = FALSE;
   gchar *s;
 
   g_return_val_if_fail (fourcc != DRM_FORMAT_INVALID, NULL);
   g_return_val_if_fail (modifier != DRM_FORMAT_MOD_INVALID, NULL);
 
+  if (fourcc & DRM_FORMAT_BIG_ENDIAN) {
+    big_endian = TRUE;
+    fourcc &= ~DRM_FORMAT_BIG_ENDIAN;
+  }
+
   if (modifier == DRM_FORMAT_MOD_LINEAR) {
-    s = g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+    s = g_strdup_printf ("%" GST_FOURCC_FORMAT "%s", GST_FOURCC_ARGS (fourcc),
+        big_endian ? "_BE" : "");
   } else {
-    s = g_strdup_printf ("%" GST_FOURCC_FORMAT ":0x%016" G_GINT64_MODIFIER "x",
-        GST_FOURCC_ARGS (fourcc), modifier);
+    s = g_strdup_printf ("%" GST_FOURCC_FORMAT "%s:0x%016" G_GINT64_MODIFIER
+        "x", GST_FOURCC_ARGS (fourcc), big_endian ? "_BE" : "", modifier);
   }
 
   return s;
