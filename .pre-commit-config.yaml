@@ -19,6 +19,7 @@ repos:
         entry: ./scripts/gst-indent-all.py
         pass_filenames: false
         types_or: ["c", "c++"]
+        additional_dependencies: ["gst-indent==1.0.0"]
     # The rust hook uses cargo fmt, which requires a Cargo.toml
     # We use a local hook to run rustfmt directly
     -   id: rustfmt
