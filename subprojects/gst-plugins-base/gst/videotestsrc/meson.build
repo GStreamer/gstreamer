@@ -17,7 +17,7 @@ plugin_sources += {
   'videotestsrc': pathsep.join(doc_sources)
 }
 
-if get_option('adder').disabled()
+if get_option('videotestsrc').disabled()
   subdir_done()
 endif
 
