@@ -64,6 +64,14 @@ enum
 
 typedef struct
 {
+  guint64 pulse;
+  guint tempo;
+  /* total duration before this tempo set */
+  GstClockTime duration;
+} TempoSet;
+
+typedef struct
+{
   guint8 *data;
   guint size;
   guint offset;
@@ -531,6 +539,160 @@ parse_varlen (GstMidiParse * midiparse, guint8 * data, guint size,
   return 0;
 }
 
+static void
+free_tempo_set (TempoSet * tempo)
+{
+  g_free (tempo);
+}
+
+static gint
+compare_tempo_set (TempoSet * a, TempoSet * b, gpointer unused)
+{
+  return a->pulse < b->pulse ? -1 : (a->pulse == b->pulse ? 0 : 1);
+}
+
+/* GSequence with pulse increasing */
+/* example:  [0, 100000] -> [96, 500000] -> [192, 1000000] */
+static gboolean
+save_tempo (GstMidiParse * midiparse, GstMidiTrack * track, guint32 tempo)
+{
+  GSequenceIter *iter;
+  TempoSet *tempo_set_ptr;
+  TempoSet *new_tempo_set_ptr;
+
+  if (!midiparse->tempo_list) {
+    midiparse->tempo_list = g_sequence_new ((GDestroyNotify) free_tempo_set);
+
+    tempo_set_ptr = g_new (TempoSet, 1);
+    if (!tempo_set_ptr) {
+      GST_ERROR_OBJECT (midiparse, "failed to allocate TempoSet");
+
+      return FALSE;
+    }
+
+    /* add default tempo to GSequence */
+    tempo_set_ptr->pulse = 0;
+    tempo_set_ptr->tempo = DEFAULT_TEMPO;
+    tempo_set_ptr->duration = 0;
+    g_sequence_insert_sorted (midiparse->tempo_list, tempo_set_ptr,
+        (GCompareDataFunc) compare_tempo_set, NULL);
+
+    GST_DEBUG_OBJECT (midiparse,
+        "add TempoSet: pulse %" G_GUINT64_FORMAT " tempo %u",
+        tempo_set_ptr->pulse, tempo_set_ptr->tempo);
+  }
+
+  new_tempo_set_ptr = g_new (TempoSet, 1);
+  new_tempo_set_ptr->pulse = track->pulse;
+  new_tempo_set_ptr->tempo = tempo;
+
+  iter =
+      g_sequence_search (midiparse->tempo_list, new_tempo_set_ptr,
+      (GCompareDataFunc) compare_tempo_set, NULL);
+  /* We know the sequence isn't empty, this is safe */
+  tempo_set_ptr = g_sequence_get (g_sequence_iter_prev (iter));
+  if (tempo_set_ptr->pulse == new_tempo_set_ptr->pulse) {
+    if (tempo_set_ptr->tempo == new_tempo_set_ptr->tempo) {
+      GST_DEBUG_OBJECT (midiparse, "skip same TempoSet");
+    } else {
+      if (iter != g_sequence_get_end_iter (midiparse->tempo_list)) {
+        /* Pulse of set tempo event should be monotonically
+         * increasing, so only the last tempo set should be
+         * updated. */
+        GST_WARNING_OBJECT (midiparse,
+            "ignore overlapping set tempo event. pulse %" G_GUINT64_FORMAT
+            " tempo %u", new_tempo_set_ptr->pulse, new_tempo_set_ptr->tempo);
+      } else {
+        /* update tempo set */
+        GST_DEBUG_OBJECT (midiparse,
+            "update TempoSet: pulse %" G_GUINT64_FORMAT " tempo from %u to %u",
+            tempo_set_ptr->pulse, tempo_set_ptr->tempo,
+            new_tempo_set_ptr->tempo);
+        tempo_set_ptr->tempo = new_tempo_set_ptr->tempo;
+      }
+    }
+
+    g_free (new_tempo_set_ptr);
+
+    return TRUE;
+  }
+
+  new_tempo_set_ptr->duration =
+      tempo_set_ptr->duration +
+      gst_util_uint64_scale (new_tempo_set_ptr->pulse - tempo_set_ptr->pulse,
+      1000 * tempo_set_ptr->tempo, midiparse->division);
+
+  g_sequence_insert_sorted (midiparse->tempo_list, new_tempo_set_ptr,
+      (GCompareDataFunc) compare_tempo_set, NULL);
+
+  GST_DEBUG_OBJECT (midiparse,
+      "add TempoSet: pulse %" G_GUINT64_FORMAT " tempo %u",
+      new_tempo_set_ptr->pulse, new_tempo_set_ptr->tempo);
+
+  return TRUE;
+}
+
+static GstClockTime
+get_duration (GstMidiParse * midiparse, guint64 pulse_start, guint64 pulse_end)
+{
+  GstClockTime duration, pulse_end_duration, pulse_start_duration;
+  GSequenceIter *iter;
+  TempoSet tempo_set;
+  TempoSet *tempo_set_ptr;
+
+  if (pulse_start >= pulse_end) {
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  if (!midiparse->tempo_list) {
+    GST_DEBUG_OBJECT (midiparse, "used default tempo");
+
+    return gst_util_uint64_scale (pulse_end - pulse_start,
+        1000 * DEFAULT_TEMPO, midiparse->division);
+  }
+
+  GST_DEBUG_OBJECT (midiparse,
+      "pulse_start %" G_GUINT64_FORMAT " pulse_end %" G_GUINT64_FORMAT,
+      pulse_start, pulse_end);
+
+  /* find pulse_end's tempo set  */
+  tempo_set.pulse = pulse_end;
+  tempo_set.tempo = 0;          /* not interested */
+  iter =
+      g_sequence_search (midiparse->tempo_list, &tempo_set,
+      (GCompareDataFunc) compare_tempo_set, NULL);
+  iter = g_sequence_iter_prev (iter);
+
+  /* We know the sequence isn't empty, this is safe */
+  tempo_set_ptr = g_sequence_get (iter);
+
+  pulse_end_duration =
+      tempo_set_ptr->duration + gst_util_uint64_scale (pulse_end -
+      tempo_set_ptr->pulse, 1000 * tempo_set_ptr->tempo, midiparse->division);
+
+  /* find pulse_start's tempo set  */
+  tempo_set.pulse = pulse_start;
+  tempo_set.tempo = 0;          /* not interested */
+  iter =
+      g_sequence_search (midiparse->tempo_list, &tempo_set,
+      (GCompareDataFunc) compare_tempo_set, NULL);
+  iter = g_sequence_iter_prev (iter);
+
+  /* We know the sequence isn't empty, this is safe */
+  tempo_set_ptr = g_sequence_get (iter);
+
+  pulse_start_duration =
+      tempo_set_ptr->duration + gst_util_uint64_scale (pulse_start -
+      tempo_set_ptr->pulse, 1000 * tempo_set_ptr->tempo, midiparse->division);
+
+  duration = pulse_end_duration - pulse_start_duration;
+
+  GST_DEBUG_OBJECT (midiparse, "duration %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (duration));
+
+  return duration;
+}
+
 static GstFlowReturn
 handle_meta_event (GstMidiParse * midiparse, GstMidiTrack * track, guint8 event)
 {
@@ -598,9 +760,8 @@ handle_meta_event (GstMidiParse * midiparse, GstMidiTrack * track, guint8 event)
       break;
     case 0x51:
     {
-      guint32 uspqn = (data[0] << 16) | (data[1] << 8) | data[2];
-      midiparse->tempo = (uspqn ? uspqn : DEFAULT_TEMPO);
-      GST_DEBUG_OBJECT (midiparse, "tempo %u", midiparse->tempo);
+      guint32 tempo = (data[0] << 16) | (data[1] << 8) | data[2];
+      save_tempo (midiparse, track, tempo);
       break;
     }
     case 0x54:
@@ -842,8 +1003,8 @@ parse_MTrk (GstMidiParse * midiparse, guint8 * data, guint size)
     handle_next_event (midiparse, track, NULL, NULL);
   }
 
-  duration = gst_util_uint64_scale (track->pulse,
-      1000 * midiparse->tempo, midiparse->division);
+
+  duration = get_duration (midiparse, 0, track->pulse);
 
   GST_DEBUG_OBJECT (midiparse, "duration %" GST_TIME_FORMAT,
       GST_TIME_ARGS (duration));
@@ -1003,7 +1164,6 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
   data = gst_adapter_take (midiparse->adapter, size);
 
   midiparse->data = data;
-  midiparse->tempo = DEFAULT_TEMPO;
 
   if (!find_midi_chunk (midiparse, data, size, &offset, &length))
     goto invalid_format;
@@ -1128,8 +1288,10 @@ gst_midi_parse_do_play (GstMidiParse * midiparse)
         goto error;
     }
 
-    if (!track->eot && track->pulse < next_pulse)
+    if (!track->eot && track->pulse < next_pulse) {
       next_pulse = track->pulse;
+      next_position = get_duration (midiparse, 0, next_pulse);
+    }
   }
 
   if (next_pulse == G_MAXUINT64)
@@ -1137,11 +1299,6 @@ gst_midi_parse_do_play (GstMidiParse * midiparse)
 
   tick = position / (10 * GST_MSECOND);
   GST_DEBUG_OBJECT (midiparse, "current tick %" G_GUINT64_FORMAT, tick);
-
-  next_position = gst_util_uint64_scale (next_pulse,
-      1000 * midiparse->tempo, midiparse->division);
-  GST_DEBUG_OBJECT (midiparse, "next position %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (next_position));
 
   /* send 10ms ticks to advance the downstream element */
   while (TRUE) {
@@ -1308,6 +1465,11 @@ gst_midi_parse_reset (GstMidiParse * midiparse)
   midiparse->track_count = 0;
   midiparse->have_group_id = FALSE;
   midiparse->group_id = G_MAXUINT;
+
+  if (midiparse->tempo_list) {
+    g_sequence_free (midiparse->tempo_list);
+    midiparse->tempo_list = NULL;
+  }
 }
 
 static GstStateChangeReturn
