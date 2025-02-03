@@ -84,7 +84,7 @@ if host_system == 'windows'
 
   qsv_sources += qsv_d3d11_sources
   qsv_platform_deps += [gstd3d11_dep]
-  if gstd3d12_dep.found()
+  if gstd3d12_dep.found() and cc.has_header('d3d12video.h')
     qsv_platform_deps += [gstd3d12_dep]
     extra_args += ['-DHAVE_GST_D3D12']
   endif

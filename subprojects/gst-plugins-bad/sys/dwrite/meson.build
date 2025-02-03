@@ -102,7 +102,7 @@ endif
 
 subdir('libcaption')
 
-if gstd3d12_dep.found() and cc.has_header('d3d11on12.h')
+if gstd3d12_dep.found() and cc.has_header('d3d11on12.h') and cc.has_header('d3d12video.h')
   extra_args += ['-DHAVE_GST_D3D12']
   extra_deps += [gstd3d12_dep]
   dwrite_sources += d3d12_sources

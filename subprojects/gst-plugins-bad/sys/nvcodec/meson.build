@@ -99,7 +99,7 @@ if not nvbuf_dep.found()
   nvcodec_sources += nvcodec_dgpu_sources
 endif
 
-if gstd3d12_dep.found()
+if gstd3d12_dep.found() and cc.has_header('d3d12video.h')
   extra_args += ['-DHAVE_GST_D3D12']
   extra_deps += [gstd3d12_dep]
   nvcodec_sources += nvcodec_d3d12_sources
