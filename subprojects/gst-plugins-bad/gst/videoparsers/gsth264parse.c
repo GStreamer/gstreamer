@@ -3187,14 +3187,8 @@ gst_h264_parse_create_pic_timing_sei (GstH264Parse * h264parse,
     tim->seconds_value = tc->seconds;
 
     tim->full_timestamp_flag =
-        tim->seconds_flag = tim->minutes_flag = tim->hours_flag = 0;
+        tim->seconds_flag = tim->minutes_flag = tim->hours_flag = 1;
 
-    if (tc->hours > 0)
-      tim->full_timestamp_flag = 1;
-    else if (tc->minutes > 0)
-      tim->seconds_flag = tim->minutes_flag = 1;
-    else if (tc->seconds > 0)
-      tim->seconds_flag = 1;
 
     GST_LOG_OBJECT (h264parse,
         "New time code value %02u:%02u:%02u:%02u",
