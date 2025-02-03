@@ -387,7 +387,7 @@ gst_win32_device_watcher_stop (GstWin32DeviceWatcher * watcher)
   data.handled = FALSE;
 
   g_main_context_invoke (watcher->context,
-      (GSourceFunc) register_device_notification, &data);
+      (GSourceFunc) unregister_device_notification, &data);
   g_mutex_lock (&watcher->lock);
   while (!data.handled)
     g_cond_wait (&watcher->cond, &watcher->lock);
