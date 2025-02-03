@@ -61,7 +61,6 @@ struct _GstMidiParse
   /* input stream properties */
   GstMidiParseState state;
 
-  guint tempo;
   guint16 ntracks;
   guint16 division;
 
@@ -79,6 +78,7 @@ struct _GstMidiParse
   guint32 seqnum;
 
   guint64 pulse;
+  GSequence *tempo_list;
 };
 
 struct _GstMidiParseClass
