@@ -88,57 +88,60 @@ typedef struct
 } GstV4L2FormatDesc;
 
 
-#define MAP_FMT(v4l2_format, gst_fmt) \
-  V4L2_PIX_FMT_##v4l2_format, GST_VIDEO_FORMAT_##gst_fmt
+#define MAP_FMT(v4l2_format, gst_format) \
+  V4L2_PIX_FMT_##v4l2_format, GST_VIDEO_FORMAT_##gst_format
 
 #define MAP_DRM(drm_fmt, drm_mod) \
   DRM_FORMAT_##drm_fmt, DRM_FORMAT_MOD_##drm_mod
 
+#define KNOWN_DRM_MAP \
+  MAP_DRM (INVALID, INVALID)
+
 #define MAP_DRM_BE(drm_fmt, drm_mod) \
   DRM_FORMAT_##drm_fmt | DRM_FORMAT_BIG_ENDIAN, DRM_FORMAT_MOD_##drm_mod
 
-#define MAP_ENC_FMT(v4l2_format, gst_fmt) \
-  V4L2_PIX_FMT_##v4l2_format, GST_VIDEO_FORMAT_##gst_fmt, DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID
+#define MAP_ENC_FMT(v4l2_format, gst_format) \
+  V4L2_PIX_FMT_##v4l2_format, GST_VIDEO_FORMAT_##gst_format, DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID
 
 /* *INDENT-OFF* */
-static const GstV4L2FormatDesc gst_v4l2_formats[] = {
+static GstV4L2FormatDesc gst_v4l2_formats[] = {
   /* RGB formats */
   {MAP_FMT (RGB332, UNKNOWN),   MAP_DRM (RGB332,   LINEAR),     GST_V4L2_RAW},
   {MAP_FMT (ARGB555, UNKNOWN),  MAP_DRM (ARGB1555, LINEAR),     GST_V4L2_RAW},
-  {MAP_FMT (XRGB555, RGB15),    MAP_DRM (XRGB1555, LINEAR),     GST_V4L2_RAW},
+  {MAP_FMT (XRGB555, RGB15),    KNOWN_DRM_MAP,                  GST_V4L2_RAW},
   {MAP_FMT (XRGB555X,UNKNOWN),  MAP_DRM_BE (XRGB1555, LINEAR),  GST_V4L2_RAW},
   {MAP_FMT (ARGB555X, UNKNOWN), MAP_DRM_BE (ARGB1555, LINEAR),  GST_V4L2_RAW},
-  {MAP_FMT (RGB565, RGB16),     MAP_DRM (RGB565, LINEAR),       GST_V4L2_RAW},
+  {MAP_FMT (RGB565, RGB16),     KNOWN_DRM_MAP,                  GST_V4L2_RAW},
   {MAP_FMT (RGB565X,UNKNOWN),   MAP_DRM_BE (RGB565, LINEAR),    GST_V4L2_RAW},
   {MAP_FMT (BGR666, UNKNOWN),   MAP_DRM (INVALID, INVALID),     GST_V4L2_RAW},
-  {MAP_FMT (BGR24, BGR),        MAP_DRM (RGB888, LINEAR),       GST_V4L2_RAW},
-  {MAP_FMT (RGB24, RGB),        MAP_DRM (BGR888, LINEAR),       GST_V4L2_RAW},
-  {MAP_FMT (ABGR32, BGRA),      MAP_DRM (ARGB8888, LINEAR),     GST_V4L2_RAW},
-  {MAP_FMT (XBGR32, BGRx),      MAP_DRM (XRGB8888, LINEAR),     GST_V4L2_RAW},
-  {MAP_FMT (BGRA32, ABGR),      MAP_DRM (RGBA8888, LINEAR),     GST_V4L2_RAW},
-  {MAP_FMT (BGRX32, xBGR),      MAP_DRM (RGBX8888, LINEAR),     GST_V4L2_RAW},
-  {MAP_FMT (RGBA32, RGBA),      MAP_DRM (ABGR8888, LINEAR),     GST_V4L2_RAW},
-  {MAP_FMT (RGBX32, RGBx),      MAP_DRM (XBGR8888, LINEAR),     GST_V4L2_RAW},
-  {MAP_FMT (ARGB32, ARGB),      MAP_DRM (BGRA8888, LINEAR),     GST_V4L2_RAW},
-  {MAP_FMT (XRGB32, xRGB),      MAP_DRM (BGRX8888, LINEAR),     GST_V4L2_RAW},
+  {MAP_FMT (BGR24, BGR),        KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (RGB24, RGB),        KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (ABGR32, BGRA),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (XBGR32, BGRx),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (BGRA32, ABGR),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (BGRX32, xBGR),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (RGBA32, RGBA),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (RGBX32, RGBx),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (ARGB32, ARGB),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (XRGB32, xRGB),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
 
   /* Deprecated Packed RGB Image Formats (alpha ambiguity) */
   {MAP_FMT (RGB444, UNKNOWN), MAP_DRM (INVALID, INVALID), GST_V4L2_RAW},
-  {MAP_FMT (RGB555, RGB15),   MAP_DRM (INVALID, INVALID), GST_V4L2_RAW},
+  {MAP_FMT (RGB555, RGB15),   KNOWN_DRM_MAP,              GST_V4L2_RAW},
   {MAP_FMT (RGB555X, BGR15),  MAP_DRM (INVALID, INVALID), GST_V4L2_RAW},
-  {MAP_FMT (BGR32, BGRx),     MAP_DRM (INVALID, INVALID), GST_V4L2_RAW},
-  {MAP_FMT (BGR32, BGRA),     MAP_DRM (INVALID, INVALID), GST_V4L2_RAW},
-  {MAP_FMT (RGB32, xRGB),     MAP_DRM (INVALID, INVALID), GST_V4L2_RAW},
-  {MAP_FMT (RGB32, ARGB),     MAP_DRM (INVALID, INVALID), GST_V4L2_RAW},
+  {MAP_FMT (BGR32, BGRx),     KNOWN_DRM_MAP,              GST_V4L2_RAW},
+  {MAP_FMT (BGR32, BGRA),     KNOWN_DRM_MAP,              GST_V4L2_RAW},
+  {MAP_FMT (RGB32, xRGB),     KNOWN_DRM_MAP,              GST_V4L2_RAW},
+  {MAP_FMT (RGB32, ARGB),     KNOWN_DRM_MAP,              GST_V4L2_RAW},
 
   /* Grey formats */
-  {MAP_FMT (GREY, GRAY8),       MAP_DRM (R8, LINEAR),       GST_V4L2_RAW},
+  {MAP_FMT (GREY, GRAY8),       KNOWN_DRM_MAP,              GST_V4L2_RAW},
   {MAP_FMT (Y4, UNKNOWN),       MAP_DRM (R4, LINEAR),       GST_V4L2_RAW},
   {MAP_FMT (Y6, UNKNOWN),       MAP_DRM (INVALID, INVALID), GST_V4L2_RAW},
   {MAP_FMT (Y10, UNKNOWN),      MAP_DRM (R10, LINEAR),      GST_V4L2_RAW},
   {MAP_FMT (Y12, UNKNOWN),      MAP_DRM (R12, LINEAR),      GST_V4L2_RAW},
-  {MAP_FMT (Y16, GRAY16_LE),    MAP_DRM (R16, LINEAR),      GST_V4L2_RAW},
-  {MAP_FMT (Y16_BE, GRAY16_BE), MAP_DRM_BE (R16, LINEAR),   GST_V4L2_RAW},
+  {MAP_FMT (Y16, GRAY16_LE),    KNOWN_DRM_MAP,              GST_V4L2_RAW},
+  {MAP_FMT (Y16_BE, GRAY16_BE), KNOWN_DRM_MAP,              GST_V4L2_RAW},
   {MAP_FMT (Y10BPACK, UNKNOWN), MAP_DRM (INVALID, INVALID), GST_V4L2_RAW},
 
   /* Palette formats */
@@ -148,20 +151,20 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   {MAP_FMT (UV8, UNKNOWN), MAP_DRM (GR88, LINEAR),    GST_V4L2_RAW},
 
   /* Luminance+Chrominance formats */
-  {MAP_FMT (YUV410, YUV9),    MAP_DRM (YUV410, LINEAR),   GST_V4L2_RAW},
-  {MAP_FMT (YVU410, YVU9),    MAP_DRM (YVU410, LINEAR),   GST_V4L2_RAW},
-  {MAP_FMT (YUV420M, I420),   MAP_DRM (YUV420, LINEAR),   GST_V4L2_RAW},
-  {MAP_FMT (YUV420, I420),    MAP_DRM (YUV420, LINEAR),   GST_V4L2_RAW},
-  {MAP_FMT (YVU420M, YV12),   MAP_DRM (YVU420, LINEAR),   GST_V4L2_RAW},
-  {MAP_FMT (YVU420, YV12),    MAP_DRM (YVU420, LINEAR),   GST_V4L2_RAW},
-  {MAP_FMT (YUYV, YUY2),      MAP_DRM (YUYV, LINEAR),     GST_V4L2_RAW},
+  {MAP_FMT (YUV410, YUV9),    KNOWN_DRM_MAP,              GST_V4L2_RAW},
+  {MAP_FMT (YVU410, YVU9),    KNOWN_DRM_MAP,              GST_V4L2_RAW},
+  {MAP_FMT (YUV420M, I420),   KNOWN_DRM_MAP,              GST_V4L2_RAW},
+  {MAP_FMT (YUV420, I420),    KNOWN_DRM_MAP,              GST_V4L2_RAW},
+  {MAP_FMT (YVU420M, YV12),   KNOWN_DRM_MAP,              GST_V4L2_RAW},
+  {MAP_FMT (YVU420, YV12),    KNOWN_DRM_MAP,              GST_V4L2_RAW},
+  {MAP_FMT (YUYV, YUY2),      KNOWN_DRM_MAP,              GST_V4L2_RAW},
   {MAP_FMT (YYUV, UNKNOWN),   MAP_DRM (YVYU, LINEAR),     GST_V4L2_RAW},
-  {MAP_FMT (YVYU, YVYU),      MAP_DRM (YVYU, LINEAR),     GST_V4L2_RAW},
-  {MAP_FMT (UYVY, UYVY),      MAP_DRM (UYVY, LINEAR),     GST_V4L2_RAW},
+  {MAP_FMT (YVYU, YVYU),      KNOWN_DRM_MAP,              GST_V4L2_RAW},
+  {MAP_FMT (UYVY, UYVY),      KNOWN_DRM_MAP,              GST_V4L2_RAW},
   {MAP_FMT (VYUY, UNKNOWN),   MAP_DRM (VYUY, LINEAR),     GST_V4L2_RAW},
-  {MAP_FMT (YUV422M, Y42B),   MAP_DRM (YUV422, LINEAR),   GST_V4L2_RAW},
-  {MAP_FMT (YUV422P, Y42B),   MAP_DRM (YUV422, LINEAR),   GST_V4L2_RAW},
-  {MAP_FMT (YUV411P, Y41B),   MAP_DRM (YUV411, LINEAR),   GST_V4L2_RAW},
+  {MAP_FMT (YUV422M, Y42B),   KNOWN_DRM_MAP,              GST_V4L2_RAW},
+  {MAP_FMT (YUV422P, Y42B),   KNOWN_DRM_MAP,              GST_V4L2_RAW},
+  {MAP_FMT (YUV411P, Y41B),   KNOWN_DRM_MAP,              GST_V4L2_RAW},
   {MAP_FMT (Y41P, UNKNOWN),   MAP_DRM (INVALID, INVALID), GST_V4L2_RAW},
   {MAP_FMT (YUV444, UNKNOWN), MAP_DRM (INVALID, INVALID), GST_V4L2_RAW},
   {MAP_FMT (YUV555, UNKNOWN), MAP_DRM (INVALID, INVALID), GST_V4L2_RAW},
@@ -171,23 +174,23 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   {MAP_FMT (M420, UNKNOWN),   MAP_DRM (INVALID, INVALID),  GST_V4L2_RAW},
 
   /* two planes -- one Y,         one Cr + Cb interleaved  */
-  {MAP_FMT (NV12M, NV12),                       MAP_DRM (NV12, LINEAR),             GST_V4L2_RAW},
-  {MAP_FMT (NV12, NV12),                        MAP_DRM (NV12, LINEAR),             GST_V4L2_RAW},
-  {MAP_FMT (NV12MT, NV12_64Z32),                MAP_DRM (NV12, SAMSUNG_64_32_TILE), GST_V4L2_RAW},
+  {MAP_FMT (NV12M, NV12),                       KNOWN_DRM_MAP,                      GST_V4L2_RAW},
+  {MAP_FMT (NV12, NV12),                        KNOWN_DRM_MAP,                      GST_V4L2_RAW},
+  {MAP_FMT (NV12MT, NV12_64Z32),                KNOWN_DRM_MAP,                      GST_V4L2_RAW},
   {MAP_FMT (NV12MT_16X16, UNKNOWN),             MAP_DRM (NV12, SAMSUNG_16_16_TILE), GST_V4L2_RAW},
   {MAP_FMT (NV12_16L16, UNKNOWN),               MAP_DRM (NV12, SAMSUNG_16_16_TILE), GST_V4L2_RAW},
   {MAP_FMT (NV12M_8L128, NV12_8L128),           MAP_DRM (INVALID, INVALID),         GST_V4L2_RAW},
   {MAP_FMT (NV12M_10BE_8L128, NV12_10BE_8L128), MAP_DRM (INVALID, INVALID),         GST_V4L2_RAW},
-  {MAP_FMT (NV21M, NV21),                       MAP_DRM (NV21, LINEAR),             GST_V4L2_RAW},
-  {MAP_FMT (NV21, NV21),                        MAP_DRM (NV21, LINEAR),             GST_V4L2_RAW},
-  {MAP_FMT (NV16M, NV16),                       MAP_DRM (NV16, LINEAR),             GST_V4L2_RAW},
-  {MAP_FMT (NV16, NV16),                        MAP_DRM (NV16, LINEAR),             GST_V4L2_RAW},
-  {MAP_FMT (NV61M, NV61),                       MAP_DRM (NV61, LINEAR),             GST_V4L2_RAW},
-  {MAP_FMT (NV61, NV61),                        MAP_DRM (NV61, LINEAR),             GST_V4L2_RAW},
-  {MAP_FMT (NV24, NV24),                        MAP_DRM (NV24, LINEAR),             GST_V4L2_RAW},
+  {MAP_FMT (NV21M, NV21),                       KNOWN_DRM_MAP,                      GST_V4L2_RAW},
+  {MAP_FMT (NV21, NV21),                        KNOWN_DRM_MAP,                      GST_V4L2_RAW},
+  {MAP_FMT (NV16M, NV16),                       KNOWN_DRM_MAP,                      GST_V4L2_RAW},
+  {MAP_FMT (NV16, NV16),                        KNOWN_DRM_MAP,                      GST_V4L2_RAW},
+  {MAP_FMT (NV61M, NV61),                       KNOWN_DRM_MAP,                      GST_V4L2_RAW},
+  {MAP_FMT (NV61, NV61),                        KNOWN_DRM_MAP,                      GST_V4L2_RAW},
+  {MAP_FMT (NV24, NV24),                        KNOWN_DRM_MAP,                      GST_V4L2_RAW},
   {MAP_FMT (NV42, UNKNOWN),                     MAP_DRM (NV42, LINEAR),             GST_V4L2_RAW},
-  {MAP_FMT (MM21, NV12_16L32S),                 MAP_DRM (INVALID, INVALID),         GST_V4L2_RAW},
-  {MAP_FMT (P010, P010_10LE),                   MAP_DRM (P010, LINEAR),             GST_V4L2_RAW},
+  {MAP_FMT (MM21, NV12_16L32S),                 KNOWN_DRM_MAP,                      GST_V4L2_RAW},
+  {MAP_FMT (P010, P010_10LE),                   KNOWN_DRM_MAP,                      GST_V4L2_RAW},
 
   /* Bayer formats - see http://www.siliconimaging.com/RGB%20Bayer.htm */
   {MAP_ENC_FMT (SBGGR8,  ENCODED),   GST_V4L2_BAYER},
@@ -1371,13 +1374,34 @@ gst_v4l2_object_get_format_list (GstV4l2Object * v4l2object)
 }
 
 static const GstV4L2FormatDesc *
+gst_v4l2_format_desc (void)
+{
+  static gsize once = 0;
+
+  if (g_once_init_enter (&once)) {
+    for (int i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
+      if (gst_v4l2_formats[i].gst_format != GST_VIDEO_FORMAT_UNKNOWN) {
+        gst_v4l2_formats[i].drm_fourcc =
+            gst_video_dma_drm_format_from_gst_format (gst_v4l2_formats
+            [i].gst_format, &gst_v4l2_formats[i].drm_modifier);
+      }
+    }
+
+    g_once_init_leave (&once, 1);
+  }
+
+  return gst_v4l2_formats;
+}
+
+static const GstV4L2FormatDesc *
 gst_v4l2_object_get_desc_from_v4l2fourcc (guint32 fourcc)
 {
+  const GstV4L2FormatDesc *formats = gst_v4l2_format_desc ();
   gint i;
 
   for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
-    if (gst_v4l2_formats[i].v4l2_format == fourcc) {
-      return &gst_v4l2_formats[i];
+    if (formats[i].v4l2_format == fourcc) {
+      return &formats[i];
     }
   }
 
@@ -1424,6 +1448,7 @@ static const GstV4L2FormatDesc *
 gst_v4l2_object_get_desc_from_video_format (GstVideoFormat format,
     const GstV4L2FormatDesc ** fallback)
 {
+  const GstV4L2FormatDesc *formats = gst_v4l2_format_desc ();
   const GstV4L2FormatDesc *ret = NULL;
   gint i;
 
@@ -1431,11 +1456,11 @@ gst_v4l2_object_get_desc_from_video_format (GstVideoFormat format,
     *fallback = NULL;
 
   for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
-    if (gst_v4l2_formats[i].gst_format == format) {
+    if (formats[i].gst_format == format) {
       if (!ret)
-        ret = &gst_v4l2_formats[i];
+        ret = &formats[i];
       else if (fallback && !*fallback)
-        *fallback = &gst_v4l2_formats[i];
+        *fallback = &formats[i];
       else
         break;
     }
@@ -1448,6 +1473,7 @@ static const GstV4L2FormatDesc *
 gst_v4l2_object_get_desc_from_drm_fourcc (guint32 drm_fourcc,
     guint64 drm_modifier, const GstV4L2FormatDesc ** fallback)
 {
+  const GstV4L2FormatDesc *formats = gst_v4l2_format_desc ();
   const GstV4L2FormatDesc *ret = NULL;
   gint i;
 
@@ -1455,12 +1481,12 @@ gst_v4l2_object_get_desc_from_drm_fourcc (guint32 drm_fourcc,
     *fallback = NULL;
 
   for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
-    if (gst_v4l2_formats[i].drm_fourcc == drm_fourcc
-        && gst_v4l2_formats[i].drm_modifier == drm_modifier) {
+    if (formats[i].drm_fourcc == drm_fourcc
+        && formats[i].drm_modifier == drm_modifier) {
       if (!ret)
-        ret = &gst_v4l2_formats[i];
+        ret = &formats[i];
       else if (fallback && !*fallback)
-        *fallback = &gst_v4l2_formats[i];
+        *fallback = &formats[i];
       else
         break;
     }
@@ -1666,6 +1692,7 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc,
 gboolean
 gst_v4l2_object_is_raw (GstV4l2Object * v4l2object)
 {
+  const GstV4L2FormatDesc *formats = gst_v4l2_format_desc ();
   gint i;
 
   if (GST_VIDEO_INFO_FORMAT (&v4l2object->info.vinfo) !=
@@ -1673,8 +1700,8 @@ gst_v4l2_object_is_raw (GstV4l2Object * v4l2object)
     return TRUE;
 
   for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
-    if (gst_v4l2_formats[i].v4l2_format == GST_V4L2_PIXELFORMAT (v4l2object)) {
-      return !!(gst_v4l2_formats[i].flags & GST_V4L2_RAW);
+    if (formats[i].v4l2_format == GST_V4L2_PIXELFORMAT (v4l2object)) {
+      return !!(formats[i].flags & GST_V4L2_RAW);
     }
   }
   return FALSE;
@@ -1820,11 +1847,12 @@ gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags,
 GstCaps *
 gst_v4l2_object_get_all_caps (void)
 {
+  const GstV4L2FormatDesc *formats = gst_v4l2_format_desc ();
   static GstCaps *caps = NULL;
 
   if (g_once_init_enter (&caps)) {
     GstCaps *all_caps = gst_v4l2_object_get_caps_helper (GST_V4L2_ALL,
-        gst_v4l2_formats, GST_V4L2_FORMAT_COUNT);
+        formats, GST_V4L2_FORMAT_COUNT);
     GST_MINI_OBJECT_FLAG_SET (all_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
     g_once_init_leave (&caps, all_caps);
   }
@@ -1835,11 +1863,12 @@ gst_v4l2_object_get_all_caps (void)
 GstCaps *
 gst_v4l2_object_get_raw_caps (void)
 {
+  const GstV4L2FormatDesc *formats = gst_v4l2_format_desc ();
   static GstCaps *caps = NULL;
 
   if (g_once_init_enter (&caps)) {
     GstCaps *raw_caps = gst_v4l2_object_get_caps_helper (GST_V4L2_RAW,
-        gst_v4l2_formats, GST_V4L2_FORMAT_COUNT);
+        formats, GST_V4L2_FORMAT_COUNT);
     GST_MINI_OBJECT_FLAG_SET (raw_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
     g_once_init_leave (&caps, raw_caps);
   }
@@ -1850,11 +1879,12 @@ gst_v4l2_object_get_raw_caps (void)
 GstCaps *
 gst_v4l2_object_get_codec_caps (void)
 {
+  const GstV4L2FormatDesc *formats = gst_v4l2_format_desc ();
   static GstCaps *caps = NULL;
 
   if (g_once_init_enter (&caps)) {
     GstCaps *codec_caps = gst_v4l2_object_get_caps_helper (GST_V4L2_CODEC,
-        gst_v4l2_formats, GST_V4L2_FORMAT_COUNT);
+        formats, GST_V4L2_FORMAT_COUNT);
     GST_MINI_OBJECT_FLAG_SET (codec_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
     g_once_init_leave (&caps, codec_caps);
   }
@@ -2866,15 +2896,17 @@ gst_v4l2_object_update_and_append (GstV4l2Object * v4l2object,
     guint32 format, GstCaps * caps, GstStructure * fields,
     const GstStructure * sysmem_tmpl, const GstStructure * dmabuf_tmpl)
 {
+  const GstV4L2FormatDesc *formats = gst_v4l2_format_desc ();
+
   /* Encoded stream on output buffer need to be parsed */
   if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT ||
       v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
     gint i = 0;
 
     for (; i < GST_V4L2_FORMAT_COUNT; i++) {
-      if (format == gst_v4l2_formats[i].v4l2_format &&
-          gst_v4l2_formats[i].flags & GST_V4L2_CODEC &&
-          !(gst_v4l2_formats[i].flags & GST_V4L2_NO_PARSE)) {
+      if (format == formats[i].v4l2_format &&
+          formats[i].flags & GST_V4L2_CODEC &&
+          !(formats[i].flags & GST_V4L2_NO_PARSE)) {
         gst_structure_set (fields, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
         break;
       }
