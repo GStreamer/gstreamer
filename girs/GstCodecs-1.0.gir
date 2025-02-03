@@ -2646,6 +2646,759 @@ corresponding to the @system_frame_number</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <class name="H266Decoder" c:symbol-prefix="h266_decoder" c:type="GstH266Decoder" version="1.26" parent="GstVideo.VideoDecoder" abstract="1" glib:type-name="GstH266Decoder" glib:get-type="gst_h266_decoder_get_type" glib:type-struct="H266DecoderClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">The opaque #GstH266Decoder data structure.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+      <virtual-method name="decode_slice" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">Provides per slice data with parsed slice header and required raw bitstream
+for subclass to decode it.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Decoder</doc>
+            <type name="H266Decoder" c:type="GstH266Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Picture</doc>
+            <type name="H266Picture" c:type="GstH266Picture*"/>
+          </parameter>
+          <parameter name="slice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Slice</doc>
+            <type name="H266Slice" c:type="GstH266Slice*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="end_picture" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">Optional. Called per one #GstH266Picture to notify subclass to finish
+decoding process for the #GstH266Picture</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Decoder</doc>
+            <type name="H266Decoder" c:type="GstH266Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Picture</doc>
+            <type name="H266Picture" c:type="GstH266Picture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_preferred_output_delay" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">Optional. Called by baseclass to query whether delaying output is
+preferred by subclass or not.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">the number of perferred delayed output frame</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Decoder</doc>
+            <type name="H266Decoder" c:type="GstH266Decoder*"/>
+          </instance-parameter>
+          <parameter name="live" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">whether upstream is live or not</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="new_picture" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">Optional. Called whenever new #GstH266Picture is created.
+Subclass can set implementation specific user data
+on the #GstH266Picture via gst_h266_picture_set_user_data</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Decoder</doc>
+            <type name="H266Decoder" c:type="GstH266Decoder*"/>
+          </instance-parameter>
+          <parameter name="frame" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstVideoCodecFrame</doc>
+            <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+          </parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Picture</doc>
+            <type name="H266Picture" c:type="GstH266Picture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="new_sequence" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">Notifies subclass of video sequence update</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Decoder</doc>
+            <type name="H266Decoder" c:type="GstH266Decoder*"/>
+          </instance-parameter>
+          <parameter name="sps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266SPS</doc>
+            <type c:type="const GstH266SPS*"/>
+          </parameter>
+          <parameter name="max_dpb_size" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">the size of dpb including preferred output delay
+  by subclass reported via get_preferred_output_delay method.</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="output_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="H266Decoder" c:type="GstH266Decoder*"/>
+          </instance-parameter>
+          <parameter name="frame" transfer-ownership="none">
+            <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+          </parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="H266Picture" c:type="GstH266Picture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="start_picture" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">Optional. Called per one #GstH266Picture to notify subclass to prepare
+decoding process for the #GstH266Picture</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Decoder</doc>
+            <type name="H266Decoder" c:type="GstH266Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Picture</doc>
+            <type name="H266Picture" c:type="GstH266Picture*"/>
+          </parameter>
+          <parameter name="slice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Slice</doc>
+            <type name="H266Slice" c:type="GstH266Slice*"/>
+          </parameter>
+          <parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <field name="parent" readable="0" private="1">
+        <type name="GstVideo.VideoDecoder" c:type="GstVideoDecoder"/>
+      </field>
+      <field name="input_state" readable="0" private="1">
+        <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+      </field>
+      <field name="aps_list" readable="0" private="1">
+        <array zero-terminated="0">
+          <array name="GLib.Array" c:type="GArray*">
+            <type name="gpointer" c:type="gpointer"/>
+          </array>
+        </array>
+      </field>
+      <field name="RefPicList" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="58">
+          <type name="H266Picture" c:type="GstH266Picture*"/>
+        </array>
+      </field>
+      <field name="NumRefIdxActive" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="2">
+          <type name="guint" c:type="guint"/>
+        </array>
+      </field>
+      <field name="RefPicPocList" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="58">
+          <type name="gint" c:type="gint"/>
+        </array>
+      </field>
+      <field name="RefPicLtPocList" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="58">
+          <type name="gint" c:type="gint"/>
+        </array>
+      </field>
+      <field name="inter_layer_ref" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="58">
+          <type name="gboolean" c:type="gboolean"/>
+        </array>
+      </field>
+      <field name="RefPicScale" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="116">
+          <type name="guint" c:type="guint"/>
+        </array>
+      </field>
+      <field name="RprConstraintsActiveFlag" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="58">
+          <type name="gboolean" c:type="gboolean"/>
+        </array>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="H266DecoderPrivate" c:type="GstH266DecoderPrivate*"/>
+      </field>
+      <field name="padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="20">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="H266DecoderClass" c:type="GstH266DecoderClass" glib:is-gtype-struct-for="H266Decoder" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">The opaque #GstH266DecoderClass data structure.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+      <field name="parent_class">
+        <type name="GstVideo.VideoDecoderClass" c:type="GstVideoDecoderClass"/>
+      </field>
+      <field name="new_sequence" introspectable="0">
+        <callback name="new_sequence" introspectable="0">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Decoder</doc>
+              <type name="H266Decoder" c:type="GstH266Decoder*"/>
+            </parameter>
+            <parameter name="sps" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266SPS</doc>
+              <type c:type="const GstH266SPS*"/>
+            </parameter>
+            <parameter name="max_dpb_size" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">the size of dpb including preferred output delay
+  by subclass reported via get_preferred_output_delay method.</doc>
+              <type name="gint" c:type="gint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="new_picture">
+        <callback name="new_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Decoder</doc>
+              <type name="H266Decoder" c:type="GstH266Decoder*"/>
+            </parameter>
+            <parameter name="frame" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstVideoCodecFrame</doc>
+              <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Picture</doc>
+              <type name="H266Picture" c:type="GstH266Picture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="start_picture">
+        <callback name="start_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Decoder</doc>
+              <type name="H266Decoder" c:type="GstH266Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Picture</doc>
+              <type name="H266Picture" c:type="GstH266Picture*"/>
+            </parameter>
+            <parameter name="slice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Slice</doc>
+              <type name="H266Slice" c:type="GstH266Slice*"/>
+            </parameter>
+            <parameter name="dpb" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Dpb</doc>
+              <type name="H266Dpb" c:type="GstH266Dpb*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="decode_slice">
+        <callback name="decode_slice">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Decoder</doc>
+              <type name="H266Decoder" c:type="GstH266Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Picture</doc>
+              <type name="H266Picture" c:type="GstH266Picture*"/>
+            </parameter>
+            <parameter name="slice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Slice</doc>
+              <type name="H266Slice" c:type="GstH266Slice*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="end_picture">
+        <callback name="end_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Decoder</doc>
+              <type name="H266Decoder" c:type="GstH266Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Picture</doc>
+              <type name="H266Picture" c:type="GstH266Picture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="output_picture">
+        <callback name="output_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="H266Decoder" c:type="GstH266Decoder*"/>
+            </parameter>
+            <parameter name="frame" transfer-ownership="none">
+              <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="H266Picture" c:type="GstH266Picture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_preferred_output_delay">
+        <callback name="get_preferred_output_delay">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">the number of perferred delayed output frame</doc>
+            <type name="guint" c:type="guint"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">a #GstH266Decoder</doc>
+              <type name="H266Decoder" c:type="GstH266Decoder*"/>
+            </parameter>
+            <parameter name="live" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h">whether upstream is live or not</doc>
+              <type name="gboolean" c:type="gboolean"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="20">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="H266DecoderPrivate" c:type="GstH266DecoderPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+    </record>
+    <record name="H266Dpb" c:type="GstH266Dpb" disguised="1" opaque="1" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">The #GstH266Dpb represents the dpb for decoding.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+      <method name="add" c:identifier="gst_h266_dpb_add" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">Store the @picture and perform increase pic_latency_cnt as defined in
+"C.5.2.3 Additional bumping" process</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Picture</doc>
+            <type name="H266Picture" c:type="GstH266Picture*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="bump" c:identifier="gst_h266_dpb_bump" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">Perform bumping process as defined in C.5.2.4 "Bumping" process.
+If @drain is %TRUE, @dpb will remove a #GstH266Picture from internal array
+so that returned #GstH266Picture could hold the last reference of it.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Picture which is needed to be
+outputted</doc>
+          <type name="H266Picture" c:type="GstH266Picture*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+          <parameter name="drain" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">whether draining or not</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="clear" c:identifier="gst_h266_dpb_clear" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">Clear all stored #GstH266Picture</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="delete_unused" c:identifier="gst_h266_dpb_delete_unused" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">Delete unneeded pictures from dpb as defined in "C.5.2.2 Output and
+removal of pictures from the DPB".</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="free" c:identifier="gst_h266_dpb_free" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">Free the @dpb</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb to free</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_max_num_pics" c:identifier="gst_h266_dpb_get_max_num_pics" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">the number of maximum pictures</doc>
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_picture_by_poc" c:identifier="gst_h266_dpb_get_picture_by_poc" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">Find a picture which has matching poc</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Picture</doc>
+          <type name="H266Picture" c:type="GstH266Picture*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+          <parameter name="poc" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a picture order count</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_picture_by_poc_lsb" c:identifier="gst_h266_dpb_get_picture_by_poc_lsb" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">Find a picture which has matching poc_lsb</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Picture</doc>
+          <type name="H266Picture" c:type="GstH266Picture*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+          <parameter name="poc_lsb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a picture order count lsb</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_pictures_all" c:identifier="gst_h266_dpb_get_pictures_all" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GArray of
+  #GstH266Picture stored in @dpb</doc>
+          <array name="GLib.Array" c:type="GArray*">
+            <type name="H266Picture"/>
+          </array>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_size" c:identifier="gst_h266_dpb_get_size" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">the length of stored dpb array</doc>
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="mark_all_non_output" c:identifier="gst_h266_dpb_mark_all_non_output" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">Mark all pictures are no needed for output</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="mark_all_non_ref" c:identifier="gst_h266_dpb_mark_all_non_ref" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">Mark all pictures are not referenced</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="needs_bump" c:identifier="gst_h266_dpb_needs_bump" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">%TRUE if bumping is required</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+          <parameter name="max_num_reorder_pics" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">dpb_max_num_reorder_pics[HighestTid]</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="max_latency_increase" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">MaxLatencyPictures[HighestTid]</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="max_dec_pic_buffering" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">dpb_max_dec_pic_buffering_minus1[HighestTid] + 1
+  or zero if this shouldn't be used for bumping decision.</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="num_ref_pictures" c:identifier="gst_h266_dpb_num_ref_pictures" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">The number of referenced pictures in dpb.</doc>
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="set_max_num_pics" c:identifier="gst_h266_dpb_set_max_num_pics" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">Set the number of maximum allowed pictures to store</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dpb" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a #GstH266Dpb</doc>
+            <type name="H266Dpb" c:type="GstH266Dpb*"/>
+          </instance-parameter>
+          <parameter name="max_num_pics" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">the maximum number of picture</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <function name="new" c:identifier="gst_h266_dpb_new" version="1.26" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">Create new #GstH266Dpb</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a new #GstH266Dpb</doc>
+          <type name="H266Dpb" c:type="GstH266Dpb*"/>
+        </return-value>
+      </function>
+    </record>
+    <record name="H266Picture" c:type="GstH266Picture" version="1.26" glib:type-name="GstH266Picture" glib:get-type="gst_h266_picture_get_type" c:symbol-prefix="h266_picture">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h">The #GstH266Picture represents a picture for decoding.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+      <field name="parent" readable="0" private="1">
+        <type name="CodecPicture" c:type="GstCodecPicture"/>
+      </field>
+      <field name="type" introspectable="0" readable="0" private="1">
+        <type c:type="GstH266SliceType"/>
+      </field>
+      <field name="pic_order_cnt" readable="0" private="1">
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="pic_order_cnt_msb" readable="0" private="1">
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="pic_order_cnt_lsb" readable="0" private="1">
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="pic_latency_cnt" readable="0" private="1">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="output_flag" readable="0" private="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="NoOutputOfPriorPicsFlag" readable="0" private="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="NoOutputBeforeRecoveryFlag" readable="0" private="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="pps_width" readable="0" private="1">
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="pps_height" readable="0" private="1">
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="pps_conformance_window_flag" readable="0" private="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="pps_crop_rect_width" readable="0" private="1">
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="pps_crop_rect_height" readable="0" private="1">
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="pps_crop_rect_x" readable="0" private="1">
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="pps_crop_rect_y" readable="0" private="1">
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="non_ref" readable="0" private="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="ref" readable="0" private="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="long_term" readable="0" private="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="inter_layer_ref" readable="0" private="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="needed_for_output" readable="0" private="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="ff_info" introspectable="0" readable="0" private="1">
+        <type c:type="GstH266FrameFieldInfo"/>
+      </field>
+      <field name="buffer_flags" readable="0" private="1">
+        <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
+      </field>
+      <constructor name="new" c:identifier="gst_h266_picture_new" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">Create new #GstH266Picture</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a new #GstH266Picture</doc>
+          <type name="H266Picture" c:type="GstH266Picture*"/>
+        </return-value>
+      </constructor>
+    </record>
+    <record name="H266Slice" c:type="GstH266Slice" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h">The #GstH266Slice represents a slice for decoding.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+      <field name="header" introspectable="0" writable="1">
+        <type c:type="GstH266SliceHdr"/>
+      </field>
+      <field name="nalu" introspectable="0" writable="1">
+        <type c:type="GstH266NalUnit"/>
+      </field>
+      <field name="no_output_before_recovery_flag" readable="0" private="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="no_output_of_prior_pics_flag" readable="0" private="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="first_slice" readable="0" private="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="clear_dpb" readable="0" private="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+    </record>
+    <function-macro name="H266_DECODER" c:identifier="GST_H266_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="H266_DECODER_CLASS" c:identifier="GST_H266_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="H266_DECODER_GET_CLASS" c:identifier="GST_H266_DECODER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="H266_PICTURE" c:identifier="GST_H266_PICTURE" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="IS_AV1_DECODER" c:identifier="GST_IS_AV1_DECODER" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1decoder.h"/>
       <parameters>
@@ -2704,6 +3457,27 @@ corresponding to the @system_frame_number</doc>
     </function-macro>
     <function-macro name="IS_H265_PICTURE" c:identifier="GST_IS_H265_PICTURE" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_H266_DECODER" c:identifier="GST_IS_H266_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_H266_DECODER_CLASS" c:identifier="GST_IS_H266_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266decoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_H266_PICTURE" c:identifier="GST_IS_H266_PICTURE" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
       <parameters>
         <parameter name="obj">
         </parameter>
@@ -5028,6 +5802,14 @@ gst_vp9_stateful_parser_free() after use.</doc>
       <return-value>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.c">a new #GstH265Dpb</doc>
         <type name="H265Dpb" c:type="GstH265Dpb*"/>
+      </return-value>
+    </function>
+    <function name="h266_dpb_new" c:identifier="gst_h266_dpb_new" moved-to="H266Dpb.new" version="1.26" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">Create new #GstH266Dpb</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.h"/>
+      <return-value>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth266picture.c">a new #GstH266Dpb</doc>
+        <type name="H266Dpb" c:type="GstH266Dpb*"/>
       </return-value>
     </function>
     <function name="mpeg2_dpb_new" c:identifier="gst_mpeg2_dpb_new" moved-to="Mpeg2Dpb.new" version="1.20" introspectable="0">
