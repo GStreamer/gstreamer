@@ -18,6 +18,16 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-cc708overlay
+ * @title: cc708overlay
+ *
+ * CEA-708 overlay element.
+ *
+ * This element is deprecated and will be removed in the future. Use
+ * #cea708overlay instead.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -370,6 +380,9 @@ gst_base_cea_cc_overlay_init (GstCeaCcOverlay * overlay,
   g_mutex_init (&overlay->lock);
   g_cond_init (&overlay->cond);
   gst_segment_init (&overlay->segment, GST_FORMAT_TIME);
+
+  g_warning
+      ("cc708overlay is deprecated and will be removed in the future. Use cea708overlay instead.");
 }
 
 /* only negotiate/query video overlay composition support for now */
