@@ -210,7 +210,7 @@ plugin_init (GstPlugin * plugin)
 
   hr = MFStartup (MF_VERSION, MFSTARTUP_NOSOCKET);
   if (!gst_mf_result (hr)) {
-    GST_WARNING ("MFStartup failure, hr: 0x%x", hr);
+    GST_WARNING ("MFStartup failure, hr: 0x%x", (guint) hr);
     return TRUE;
   }
 

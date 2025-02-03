@@ -1311,9 +1311,9 @@ gst_mf_capture_dshow_on_buffer (double sample_time, BYTE * data, LONG len,
     gst_clear_caps (&caps);
   }
 
-  if (len < GST_VIDEO_INFO_SIZE (&self->info)) {
+  if (len < (LONG) GST_VIDEO_INFO_SIZE (&self->info)) {
     GST_ERROR_OBJECT (self, "Too small size %d < %d",
-        (gint) len, GST_VIDEO_INFO_SIZE (&self->info));
+        (gint) len, (guint) GST_VIDEO_INFO_SIZE (&self->info));
     goto error;
   }
 
@@ -1346,7 +1346,7 @@ gst_mf_capture_dshow_on_buffer (double sample_time, BYTE * data, LONG len,
     src = data + src_stride * (height - 1);
     dst = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
 
-    for (guint i = 0; i < height; i++) {
+    for (gint i = 0; i < height; i++) {
       memcpy (dst, src, width);
       src -= src_stride;
       dst += dst_stride;
@@ -1365,7 +1365,7 @@ gst_mf_capture_dshow_on_buffer (double sample_time, BYTE * data, LONG len,
       width = GST_VIDEO_INFO_COMP_WIDTH (&self->info, i)
           * GST_VIDEO_INFO_COMP_PSTRIDE (&self->info, i);
 
-      for (guint j = 0; j < GST_VIDEO_INFO_COMP_HEIGHT (&self->info, i); j++) {
+      for (gint j = 0; j < GST_VIDEO_INFO_COMP_HEIGHT (&self->info, i); j++) {
         memcpy (dst, src, width);
         src += src_stride;
         dst += dst_stride;

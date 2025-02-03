@@ -332,6 +332,7 @@ gst_mf_source_object_get_running_time (GstMFSourceObject * object)
   return timestamp;
 }
 
+#if GST_MF_WINAPI_APP && GST_MF_WINAPI_DESKTOP
 static gboolean
 gst_mf_source_object_use_winrt_api (void)
 {
@@ -365,6 +366,7 @@ gst_mf_source_object_use_winrt_api (void)
 
   return ret;
 }
+#endif
 
 GstMFSourceObject *
 gst_mf_source_object_new (GstMFSourceType type, gint device_index,

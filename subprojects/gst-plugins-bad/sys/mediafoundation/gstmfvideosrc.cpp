@@ -365,11 +365,10 @@ gst_mf_video_src_fixate (GstBaseSrc * src, GstCaps * caps)
 {
   GstStructure *structure;
   GstCaps *fixated_caps;
-  gint i;
 
   fixated_caps = gst_caps_make_writable (caps);
 
-  for (i = 0; i < gst_caps_get_size (fixated_caps); ++i) {
+  for (guint i = 0; i < gst_caps_get_size (fixated_caps); ++i) {
     structure = gst_caps_get_structure (fixated_caps, i);
     gst_structure_fixate_field_nearest_int (structure, "width", G_MAXINT);
     gst_structure_fixate_field_nearest_int (structure, "height", G_MAXINT);
@@ -503,7 +502,7 @@ gst_mf_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   }
 
   diff = GST_CLOCK_DIFF (GST_BUFFER_PTS (buf), running_time);
-  if (diff > self->latency) {
+  if (diff > (GstClockTimeDiff) self->latency) {
     self->latency = (GstClockTime) diff;
     GST_DEBUG_OBJECT (self, "Updated latency value %" GST_TIME_FORMAT,
         GST_TIME_ARGS (self->latency));

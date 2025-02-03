@@ -443,17 +443,6 @@ gst_mf_source_reader_start (GstMFSourceObject * object)
   return TRUE;
 }
 
-static GstMFSourceReaderSample *
-gst_mf_source_reader_sample_new (IMFSample * sample, GstClockTime timestamp)
-{
-  GstMFSourceReaderSample *reader_sample = g_new0 (GstMFSourceReaderSample, 1);
-
-  reader_sample->sample = sample;
-  reader_sample->clock_time = timestamp;
-
-  return reader_sample;
-}
-
 static gboolean
 gst_mf_source_reader_stop (GstMFSourceObject * object)
 {
@@ -483,7 +472,7 @@ gst_mf_source_reader_read_sample (GstMFSourceReader * self)
 
   if ((stream_flags & MF_SOURCE_READERF_ERROR) == MF_SOURCE_READERF_ERROR) {
     GST_ERROR_OBJECT (self, "Error while reading sample, sample flags 0x%x",
-        stream_flags);
+        (guint) stream_flags);
     return GST_FLOW_ERROR;
   }
 
@@ -572,7 +561,6 @@ gst_mf_source_reader_fill (GstMFSourceObject * object, GstBuffer * buffer)
   ComPtr < IMFMediaBuffer > media_buffer;
   GstVideoFrame frame;
   BYTE *data;
-  gint i, j;
   HRESULT hr;
   GstClockTime timestamp = GST_CLOCK_TIME_NONE;
   GstClockTime duration = GST_CLOCK_TIME_NONE;
@@ -614,13 +602,13 @@ gst_mf_source_reader_fill (GstMFSourceObject * object, GstBuffer * buffer)
     src = data + src_stride * (height - 1);
     dst = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
 
-    for (j = 0; j < height; j++) {
+    for (gint j = 0; j < height; j++) {
       memcpy (dst, src, width);
       src -= src_stride;
       dst += dst_stride;
     }
   } else {
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->info); i++) {
+    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->info); i++) {
       guint8 *src, *dst;
       gint src_stride, dst_stride;
       gint width;
@@ -633,7 +621,7 @@ gst_mf_source_reader_fill (GstMFSourceObject * object, GstBuffer * buffer)
       width = GST_VIDEO_INFO_COMP_WIDTH (&self->info, i)
           * GST_VIDEO_INFO_COMP_PSTRIDE (&self->info, i);
 
-      for (j = 0; j < GST_VIDEO_INFO_COMP_HEIGHT (&self->info, i); j++) {
+      for (gint j = 0; j < GST_VIDEO_INFO_COMP_HEIGHT (&self->info, i); j++) {
         memcpy (dst, src, width);
         src += src_stride;
         dst += dst_stride;
@@ -826,7 +814,7 @@ gst_mf_source_reader_thread_func (GstMFSourceReader * self)
     } else if (object->device_name) {
       match = g_ascii_strcasecmp (activate->name, object->device_name) == 0;
     } else if (object->device_index >= 0) {
-      match = activate->index == object->device_index;
+      match = activate->index == (guint) object->device_index;
     } else {
       /* pick the first entry */
       match = TRUE;

@@ -360,7 +360,7 @@ gst_mf_video_encoder_init_mft (GstMFVideoEncoder * self)
   hr = MFSetAttributeRatio (out_type.Get (), MF_MT_FRAME_RATE, fps_n, fps_d);
   if (!gst_mf_result (hr)) {
     GST_ERROR_OBJECT (self,
-        "Couldn't set framerate %d/%d, hr: 0x%x", (guint) hr);
+        "Couldn't set framerate %d/%d, hr: 0x%x", fps_n, fps_d, (guint) hr);
     return FALSE;
   }
 
@@ -848,7 +848,7 @@ gst_mf_video_encoder_finish_sample (GstMFVideoEncoder * self,
     /* This would be the first frame */
     if (self->mf_pts_offset == 0) {
       LONGLONG mf_pts_offset = -1;
-      if (sample_timestamp > mf_dts) {
+      if (sample_timestamp > (LONGLONG) mf_dts) {
         mf_pts_offset = sample_timestamp - mf_dts;
         GST_DEBUG_OBJECT (self, "Calculates PTS offset using \"PTS - DTS\": %"
             G_GINT64_FORMAT, mf_pts_offset);
@@ -914,7 +914,7 @@ gst_mf_video_encoder_finish_sample (GstMFVideoEncoder * self,
 
     if (keyframe) {
       GST_DEBUG_OBJECT (self, "Keyframe pts %" GST_TIME_FORMAT,
-          GST_BUFFER_PTS (buffer));
+          GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
       GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     } else {
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -957,7 +957,6 @@ gst_mf_video_encoder_create_input_sample (GstMFVideoEncoder * self,
   ComPtr < IMFMediaBuffer > media_buffer;
   ComPtr < IGstMFVideoBuffer > video_buffer;
   GstVideoInfo *info = &self->input_state->info;
-  gint i, j;
   GstVideoFrame *vframe = nullptr;
   BYTE *data = nullptr;
   gboolean need_copy = self->need_align;
@@ -1000,7 +999,7 @@ gst_mf_video_encoder_create_input_sample (GstMFVideoEncoder * self,
     if (!gst_mf_result (hr))
       goto error;
 
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
       guint8 *src, *dst;
       gint src_stride, dst_stride;
       gint width;
@@ -1014,7 +1013,7 @@ gst_mf_video_encoder_create_input_sample (GstMFVideoEncoder * self,
       width = GST_VIDEO_INFO_COMP_WIDTH (info, i)
           * GST_VIDEO_INFO_COMP_PSTRIDE (info, i);
 
-      for (j = 0; j < GST_VIDEO_INFO_COMP_HEIGHT (info, i); j++) {
+      for (gint j = 0; j < GST_VIDEO_INFO_COMP_HEIGHT (info, i); j++) {
         memcpy (dst, src, width);
         src += src_stride;
         dst += dst_stride;
@@ -1480,7 +1479,7 @@ gst_mf_video_encoder_enum_internal (GstMFTransform * transform, GUID & subtype,
   HRESULT hr;
   MFT_REGISTER_TYPE_INFO *infos;
   UINT32 info_size;
-  gint i;
+  guint i;
   GstCaps *src_caps = nullptr;
   GstCaps *sink_caps = nullptr;
   GstCaps *d3d11_caps = nullptr;

@@ -104,7 +104,7 @@ public:
   STDMETHODIMP_ (ULONG)
   AddRef (void)
   {
-    GST_TRACE ("%p, %d", this, ref_count_);
+    GST_TRACE ("%p, %u", this, (guint) ref_count_);
     return InterlockedIncrement (&ref_count_);
   }
 
@@ -113,7 +113,7 @@ public:
   {
     ULONG ref_count;
 
-    GST_TRACE ("%p, %d", this, ref_count_);
+    GST_TRACE ("%p, %u", this, (guint) ref_count_);
     ref_count = InterlockedDecrement (&ref_count_);
 
     if (ref_count == 0) {
@@ -186,7 +186,7 @@ private:
     g_weak_ref_init (&client_, nullptr);
   }
 
-  ~GstMFTransformAsyncCallback ()
+  virtual ~GstMFTransformAsyncCallback ()
   {
     g_weak_ref_clear (&client_);
   }
@@ -641,7 +641,7 @@ gst_mf_transform_process_output (GstMFTransform * self)
       GST_DEBUG_OBJECT (self, "Ignore error on flushing");
       ret = GST_FLOW_FLUSHING;
     } else {
-      GST_ERROR_OBJECT (self, "ProcessOutput error, hr 0x%x", hr);
+      GST_ERROR_OBJECT (self, "ProcessOutput error, hr 0x%x", (guint) hr);
       ret = GST_FLOW_ERROR;
     }
   }

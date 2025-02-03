@@ -28,7 +28,7 @@
 #include <mutex>
 
 #ifndef __cplusplus
-#error IGstMFVideoBuffer interface doesn't provide C API
+#error IGstMFVideoBuffer interface does not provide C API
 #endif
 
 /* Define UUID for QueryInterface() */
@@ -92,7 +92,7 @@ public:
 
 private:
   IGstMFVideoBuffer (void);
-  ~IGstMFVideoBuffer (void);
+  virtual ~IGstMFVideoBuffer (void);
 
   HRESULT Initialize (GstVideoInfo * info);
   HRESULT InitializeWrapped (GstVideoInfo * info,

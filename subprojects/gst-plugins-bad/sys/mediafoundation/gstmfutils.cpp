@@ -94,8 +94,7 @@ static struct
 GstVideoFormat
 gst_mf_video_subtype_to_video_format (const GUID * subtype)
 {
-  gint i;
-  for (i = 0; i < G_N_ELEMENTS (raw_video_format_map); i++) {
+  for (guint i = 0; i < G_N_ELEMENTS (raw_video_format_map); i++) {
     if (IsEqualGUID (raw_video_format_map[i].mf_format, *subtype))
       return raw_video_format_map[i].format;
   }
@@ -106,8 +105,7 @@ gst_mf_video_subtype_to_video_format (const GUID * subtype)
 const GUID *
 gst_mf_video_subtype_from_video_format (GstVideoFormat format)
 {
-  gint i;
-  for (i = 0; i < G_N_ELEMENTS (raw_video_format_map); i++) {
+  for (guint i = 0; i < G_N_ELEMENTS (raw_video_format_map); i++) {
     if (raw_video_format_map[i].format == format)
       return &raw_video_format_map[i].mf_format;
   }
@@ -120,7 +118,7 @@ gst_mf_media_type_to_video_caps (IMFMediaType * media_type)
 {
   HRESULT hr;
   GstCaps *caps = nullptr;
-  gint i;
+  guint i;
   guint32 width = 0;
   guint32 height = 0;
   guint32 num, den;
@@ -156,7 +154,7 @@ gst_mf_media_type_to_video_caps (IMFMediaType * media_type)
 
   if (!caps) {
     GST_WARNING ("Unknown format %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (subtype.Data1));
+        GST_FOURCC_ARGS ((int) subtype.Data1));
     return nullptr;
   }
 
@@ -568,7 +566,7 @@ gst_mf_media_type_release (IMFMediaType * media_type)
 gboolean
 gst_mf_update_video_info_with_stride (GstVideoInfo * info, gint stride)
 {
-  guint width, height, cr_h;
+  guint height, cr_h;
 
   g_return_val_if_fail (info != nullptr, FALSE);
   g_return_val_if_fail (stride > 0, FALSE);
@@ -578,7 +576,6 @@ gst_mf_update_video_info_with_stride (GstVideoInfo * info, gint stride)
   if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_ENCODED)
     return TRUE;
 
-  width = GST_VIDEO_INFO_WIDTH (info);
   height = GST_VIDEO_INFO_HEIGHT (info);
 
   /* copied from video-info */
@@ -925,9 +922,9 @@ gst_mf_attribute_value_to_string (const GUID & guid, const PROPVARIANT & var)
 
   switch (var.vt) {
     case VT_UI4:
-      return g_strdup_printf ("%d", var.ulVal);
+      return g_strdup_printf ("%d", (guint) var.ulVal);
     case VT_UI8:
-      return g_strdup_printf ("%" G_GUINT64_FORMAT, var.uhVal);
+      return g_strdup_printf ("%" G_GUINT64_FORMAT, var.uhVal.QuadPart);
     case VT_R8:
       return g_strdup_printf ("%f", var.dblVal);
     case VT_CLSID:

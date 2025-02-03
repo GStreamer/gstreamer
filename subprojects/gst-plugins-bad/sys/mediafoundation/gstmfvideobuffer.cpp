@@ -192,7 +192,7 @@ IGstMFVideoBuffer::GetUserData (gpointer * user_data)
 STDMETHODIMP_ (ULONG)
 IGstMFVideoBuffer::AddRef (void)
 {
-  GST_TRACE ("%p, %d", this, ref_count_);
+  GST_TRACE ("%p, %d", this, (guint) ref_count_);
   return InterlockedIncrement (&ref_count_);
 }
 
@@ -201,7 +201,7 @@ IGstMFVideoBuffer::Release (void)
 {
   ULONG ref_count;
 
-  GST_TRACE ("%p, %d", this, ref_count_);
+  GST_TRACE ("%p, %d", this, (guint) ref_count_);
   ref_count = InterlockedDecrement (&ref_count_);
 
   if (ref_count == 0) {
@@ -315,7 +315,7 @@ IGstMFVideoBuffer::GetCurrentLength (DWORD * length)
 
   *length = current_len_;
 
-  GST_TRACE ("%p, %d", this, current_len_);
+  GST_TRACE ("%p, %d", this, (guint) current_len_);
 
   return S_OK;
 }
@@ -325,11 +325,11 @@ IGstMFVideoBuffer::SetCurrentLength (DWORD length)
 {
   std::lock_guard<std::mutex> lock(lock_);
 
-  GST_TRACE ("%p %d", this, length);
+  GST_TRACE ("%p %d", this, (guint) length);
 
   if (length > contiguous_len_) {
     GST_LOG ("%p, Requested length %d is larger than contiguous_len %d",
-        this, length, contiguous_len_);
+        this, (guint) length, (guint) contiguous_len_);
     return E_INVALIDARG;
   }
 
@@ -465,7 +465,7 @@ IGstMFVideoBuffer::ContiguousCopyToUnlocked (BYTE * dest_buffer,
     return S_OK;
   }
 
-  for (gint i = 0; i < GST_VIDEO_INFO_N_PLANES (info_); i++) {
+  for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info_); i++) {
     BYTE *src, *dst;
     guint src_stride, dst_stride;
     guint width, height;
@@ -480,7 +480,7 @@ IGstMFVideoBuffer::ContiguousCopyToUnlocked (BYTE * dest_buffer,
         * GST_VIDEO_INFO_COMP_PSTRIDE (info_, i);
     height = GST_VIDEO_INFO_COMP_HEIGHT (info_, i);
 
-    for (gint j  = 0; j < height; j++) {
+    for (guint j  = 0; j < height; j++) {
       memcpy (dst, src, width);
       src += src_stride;
       dst += dst_stride;
@@ -510,7 +510,7 @@ IGstMFVideoBuffer::ContiguousCopyFromUnlocked (const BYTE * src_buffer,
     return S_OK;
   }
 
-  for (gint i = 0; i < GST_VIDEO_INFO_N_PLANES (info_); i++) {
+  for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info_); i++) {
     BYTE *dst;
     guint src_stride, dst_stride;
     guint width, height;
@@ -526,7 +526,7 @@ IGstMFVideoBuffer::ContiguousCopyFromUnlocked (const BYTE * src_buffer,
         * GST_VIDEO_INFO_COMP_PSTRIDE (info_, i);
     height = GST_VIDEO_INFO_COMP_HEIGHT (info_, i);
 
-    for (gint j  = 0; j < height; j++) {
+    for (guint j  = 0; j < height; j++) {
       gint to_copy = 0;
 
       if (offset + width < src_buffer_length)

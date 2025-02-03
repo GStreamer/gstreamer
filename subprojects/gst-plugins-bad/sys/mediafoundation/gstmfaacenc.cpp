@@ -252,14 +252,14 @@ gst_mf_aac_enc_get_output_type (GstMFAudioEncoder * encoder,
     if (!gst_mf_result (hr))
       continue;
 
-    if (value != GST_AUDIO_INFO_CHANNELS (info))
+    if (value != (UINT32) GST_AUDIO_INFO_CHANNELS (info))
       continue;
 
     hr = type->GetUINT32 (MF_MT_AUDIO_SAMPLES_PER_SECOND, &value);
     if (!gst_mf_result (hr))
       continue;
 
-    if (value != GST_AUDIO_INFO_RATE (info))
+    if (value != (UINT32) GST_AUDIO_INFO_RATE (info))
       continue;
 
     hr = type->GetUINT32 (MF_MT_AUDIO_AVG_BYTES_PER_SECOND, &value);
@@ -278,7 +278,8 @@ gst_mf_aac_enc_get_output_type (GstMFAudioEncoder * encoder,
     return FALSE;
   }
 
-  GST_DEBUG_OBJECT (self, "have %d candidate output", filtered_types.size ());
+  GST_DEBUG_OBJECT (self, "have %d candidate output",
+      (guint) filtered_types.size ());
 
   /* 2. Find the best matching bitrate */
   bitrate = self->bitrate;
@@ -400,14 +401,14 @@ gst_mf_aac_enc_get_input_type (GstMFAudioEncoder * encoder, GstAudioInfo * info,
     if (!gst_mf_result (hr))
       continue;
 
-    if (value != GST_AUDIO_INFO_CHANNELS (info))
+    if (value != (UINT32) GST_AUDIO_INFO_CHANNELS (info))
       continue;
 
     hr = type->GetUINT32 (MF_MT_AUDIO_SAMPLES_PER_SECOND, &value);
     if (!gst_mf_result (hr))
       continue;
 
-    if (value != GST_AUDIO_INFO_RATE (info))
+    if (value != (UINT32) GST_AUDIO_INFO_RATE (info))
       continue;
 
     filtered_types.push_back (type);
@@ -421,7 +422,7 @@ gst_mf_aac_enc_get_input_type (GstMFAudioEncoder * encoder, GstAudioInfo * info,
   }
 
   GST_DEBUG_OBJECT (self, "Total %d input types are available",
-      filtered_types.size ());
+      (guint) filtered_types.size ());
 
   /* Just select the first one */
   target_input = *filtered_types.begin ();
@@ -461,7 +462,7 @@ gst_mf_aac_enc_set_src_caps (GstMFAudioEncoder * encoder, GstAudioInfo * info)
   hr = output_type->GetBlobSize (MF_MT_USER_DATA, &blob_size);
   if (!gst_mf_result (hr) || blob_size <= config_data_offset) {
     GST_ERROR_OBJECT (self,
-        "Couldn't get size of MF_MT_USER_DATA, size %d, %d", blob_size);
+        "Couldn't get size of MF_MT_USER_DATA, size %d", blob_size);
     return FALSE;
   }
 

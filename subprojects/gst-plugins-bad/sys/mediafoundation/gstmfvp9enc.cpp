@@ -685,12 +685,10 @@ gst_mf_vp9_enc_set_src_caps (GstMFVideoEncoder * encoder,
 {
   GstMFVP9Enc *self = (GstMFVP9Enc *) encoder;
   GstVideoCodecState *out_state;
-  GstStructure *s;
   GstCaps *out_caps;
   GstTagList *tags;
 
   out_caps = gst_caps_new_empty_simple ("video/x-vp9");
-  s = gst_caps_get_structure (out_caps, 0);
 
   out_state = gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (self),
       out_caps, state);
