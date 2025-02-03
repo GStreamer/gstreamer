@@ -1670,7 +1670,7 @@ gst_mf_video_encoder_enum_internal (GstMFTransform * transform, GUID & subtype,
       }
 
       /* Add "constrained-baseline" in addition to "baseline" */
-      if (profile_str == "baseline") {
+      if (g_strcmp0 (profile_str, "baseline") == 0) {
         g_value_init (&profile_val, G_TYPE_STRING);
         g_value_set_static_string (&profile_val, "constrained-baseline");
         gst_value_list_append_and_take_value (profiles, &profile_val);
