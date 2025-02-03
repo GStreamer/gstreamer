@@ -991,7 +991,8 @@ gst_mf_video_encoder_create_input_sample (GstMFVideoEncoder * self,
     goto error;
 
   if (!need_copy) {
-    hr = media_buffer.As (&video_buffer);
+    hr = media_buffer->QueryInterface (IID_IGstMFVideoBuffer,
+        (void **) &video_buffer);
     if (!gst_mf_result (hr))
       goto error;
   } else {

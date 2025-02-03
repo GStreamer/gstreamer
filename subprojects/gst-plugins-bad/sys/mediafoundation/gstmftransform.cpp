@@ -916,7 +916,8 @@ gst_mf_transform_open_internal (GstMFTransformOpenData * data)
     object->output_id = 0;
   }
 
-  hr = object->transform->QueryInterface (IID_PPV_ARGS (&object->codec_api));
+  hr = object->transform->QueryInterface (IID_ICodecAPI,
+      (void **) &object->codec_api);
   if (!gst_mf_result (hr)) {
     GST_WARNING_OBJECT (object, "ICodecAPI is unavailable");
   }

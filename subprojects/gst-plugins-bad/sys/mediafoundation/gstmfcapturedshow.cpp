@@ -51,9 +51,17 @@ DEFINE_GUID (CLSID_SampleGrabber, 0xc1f400A0, 0x3f08, 0x11d3, 0x9f, 0x0b, 0x00,
 DEFINE_GUID (CLSID_NullRenderer, 0xc1f400a4, 0x3f08, 0x11d3, 0x9f, 0x0b, 0x00,
     0x60, 0x08, 0x03, 0x9e, 0x37);
 
+DEFINE_GUID (IID_ISampleGrabberCB, 0x0579154a, 0x2b53,
+    0x4994, 0xb0, 0xd0, 0xe7, 0x73, 0x14, 0x82, 0xff, 0x85);
+
+DEFINE_GUID (IID_ISampleGrabber, 0x6b652fff, 0x11fe,
+    0x4fce, 0x92, 0xad, 0x02, 0x66, 0xb5, 0xd7, 0xc7, 0x8f);
+
+DEFINE_GUID (IID_IGstMFSampleGrabberCB, 0xbfae6598, 0x5df6,
+    0x11ed, 0x9b, 0x6a, 0x02, 0x42, 0xac, 0x12, 0x00, 0x02);
+
 /* *INDENT-OFF* */
-struct DECLSPEC_UUID("0579154a-2b53-4994-b0d0-e773148eff85")
-ISampleGrabberCB : public IUnknown
+struct ISampleGrabberCB : public IUnknown
 {
   virtual HRESULT STDMETHODCALLTYPE SampleCB(
       double SampleTime,
@@ -65,8 +73,7 @@ ISampleGrabberCB : public IUnknown
       LONG BufferLen) = 0;
 };
 
-struct DECLSPEC_UUID("6b652fff-11fe-4fce-92ad-0266b5d7c78f")
-ISampleGrabber : public IUnknown
+struct ISampleGrabber : public IUnknown
 {
   virtual HRESULT STDMETHODCALLTYPE SetOneShot(
       BOOL OneShot) = 0;
@@ -97,8 +104,7 @@ typedef void (*OnBufferCB) (double sample_time,
                             LONG len,
                             gpointer user_data);
 
-class DECLSPEC_UUID("bfae6598-5df6-11ed-9b6a-0242ac120002")
-IGstMFSampleGrabberCB : public ISampleGrabberCB
+class IGstMFSampleGrabberCB : public ISampleGrabberCB
 {
 public:
   static HRESULT
@@ -141,10 +147,10 @@ public:
     if (riid == __uuidof (IUnknown)) {
       *object = static_cast<IUnknown *>
           (static_cast<IGstMFSampleGrabberCB *> (this));
-    } else if (riid == __uuidof (ISampleGrabberCB)) {
+    } else if (riid == IID_ISampleGrabberCB) {
       *object = static_cast<ISampleGrabberCB *>
           (static_cast<IGstMFSampleGrabberCB *> (this));
-    } else if (riid == __uuidof (IGstMFSampleGrabberCB)) {
+    } else if (riid == IID_IGstMFSampleGrabberCB) {
       *object = this;
     } else {
       *object = nullptr;
@@ -1155,7 +1161,7 @@ gst_mf_capture_dshow_thread_func (GstMFCaptureDShow * self)
       /* Make sure ISampleGrabber and NullRenderer are available,
        * MS may want to drop the the legacy implementations */
       hr = CoCreateInstance (CLSID_SampleGrabber, nullptr, CLSCTX_INPROC_SERVER,
-          IID_PPV_ARGS (&grabber));
+          IID_ISampleGrabber, (void **) &grabber);
       if (!gst_mf_result (hr)) {
         GST_WARNING_OBJECT (self, "ISampleGrabber interface is not available");
         goto run_loop;

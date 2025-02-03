@@ -233,7 +233,7 @@ IGstMFVideoBuffer::QueryInterface (REFIID riid, void ** object)
   } else if (riid == __uuidof(IMF2DBuffer)) {
     GST_TRACE ("query IMF2DBuffer interface %p", this);
     *object = static_cast<IMF2DBuffer *> (this);
-  } else if (riid == __uuidof(IGstMFVideoBuffer)) {
+  } else if (riid == IID_IGstMFVideoBuffer) {
     GST_TRACE ("query IGstMFVideoBuffer interface %p", this);
     *object = this;
   } else {
