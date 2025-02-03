@@ -72,8 +72,8 @@ GST_DEBUG_CATEGORY (gstwayland_debug);
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_WL_VIDEO_FORMATS) ";"
-        GST_VIDEO_DMA_DRM_CAPS_MAKE)
+    GST_STATIC_CAPS (GST_VIDEO_DMA_DRM_CAPS_MAKE ";"
+        GST_VIDEO_CAPS_MAKE (GST_WL_VIDEO_FORMATS))
     );
 
 static void gst_wayland_sink_get_property (GObject * object,
@@ -569,16 +569,16 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 
     g_value_init (&format_list, GST_TYPE_LIST);
 
-    /* Add corresponding shm formats */
-    gst_wl_display_fill_shm_format_list (self->display, &format_list);
-    gst_structure_take_value (gst_caps_get_structure (caps, 0), "format",
+    /* Add corresponding dmabuf formats */
+    gst_wl_display_fill_dmabuf_format_list (self->display, &format_list);
+    gst_structure_take_value (gst_caps_get_structure (caps, 0), "drm-format",
         &format_list);
 
     g_value_init (&format_list, GST_TYPE_LIST);
 
-    /* Add corresponding dmabuf formats */
-    gst_wl_display_fill_dmabuf_format_list (self->display, &format_list);
-    gst_structure_take_value (gst_caps_get_structure (caps, 1), "drm-format",
+    /* Add corresponding shm formats */
+    gst_wl_display_fill_shm_format_list (self->display, &format_list);
+    gst_structure_take_value (gst_caps_get_structure (caps, 1), "format",
         &format_list);
 
     GST_DEBUG_OBJECT (self, "display caps: %" GST_PTR_FORMAT, caps);
