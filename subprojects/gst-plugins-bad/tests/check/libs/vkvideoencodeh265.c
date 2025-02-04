@@ -51,7 +51,6 @@ typedef struct
 
   gboolean is_ref;
   gint pic_num;
-  gint pic_order_cnt;
 
   VkVideoEncodeH265PictureInfoKHR enc_pic_info;
   VkVideoEncodeH265NaluSliceSegmentInfoKHR slice_info;
@@ -509,9 +508,9 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
   };
 
   if (list0_num)
-    delta_poc_s0_minus1 = frame->pic_order_cnt - list0[0]->pic_order_cnt - 1;
+    delta_poc_s0_minus1 = frame->pic_num - list0[0]->pic_num - 1;
   if (list1_num)
-    delta_poc_s1_minus1 = list1[0]->pic_order_cnt - frame->pic_order_cnt - 1;
+    delta_poc_s1_minus1 = list1[0]->pic_num - frame->pic_num - 1;
 
   frame->short_term_ref_pic_set = (StdVideoH265ShortTermRefPicSet) {
     /* *INDENT-OFF* */
@@ -549,7 +548,7 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
     .sps_video_parameter_set_id = vps_id,
     .pps_seq_parameter_set_id = sps_id,
     .pps_pic_parameter_set_id = pps_id,
-    .PicOrderCntVal = frame->pic_order_cnt,
+    .PicOrderCntVal = frame->pic_num,
     .pShortTermRefPicSet = &frame->short_term_ref_pic_set,
     .pLongTermRefPics = NULL,
     /* *INDENT-ON* */
@@ -598,7 +597,7 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
       .unused_for_reference = 0,
     },
     .pic_type = picture_type,
-    .PicOrderCntVal = frame->pic_order_cnt,
+    .PicOrderCntVal = frame->pic_num,
     .TemporalId = 0,
   };
   /* *INDENT-ON* */
@@ -1017,6 +1016,7 @@ GST_START_TEST (test_encoder_h265_i_p)
   img_pool = allocate_image_buffer_pool (enc, width, height);
 
   frame = allocate_frame (enc, width, height, TRUE);
+  frame->pic_num = frame_num;
   /* Encode first picture as an IDR-Frame */
   encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_I,
       frame_num, NULL, 0, NULL, 0, vps_id, sps_id, pps_id);
