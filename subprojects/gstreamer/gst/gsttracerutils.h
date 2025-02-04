@@ -936,6 +936,8 @@ _priv_gst_tracing_deinit (void)
 #define GST_TRACER_PAD_CHAIN_POST(pad, res)
 #define GST_TRACER_PAD_CHAIN_LIST_PRE(pad, list)
 #define GST_TRACER_PAD_CHAIN_LIST_POST(pad, res)
+#define GST_TRACER_PAD_SEND_EVENT_PRE(pad, event)
+#define GST_TRACER_PAD_SEND_EVENT_POST(pad, res)
 
 #endif /* GST_DISABLE_GST_TRACER_HOOKS */
 
