@@ -439,6 +439,7 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
     GstVulkanH265EncodeFrame ** list1, gint list1_num, gint vps_id, gint sps_id,
     gint pps_id)
 {
+  GstVulkanVideoCapabilities enc_caps;
   int i, ref_pics_num = 0;
   GstVulkanEncoderPicture *ref_pics[16] = { NULL, };
   gint16 delta_poc_s0_minus1 = 0, delta_poc_s1_minus1 = 0;
@@ -448,7 +449,9 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
 
   GST_DEBUG ("Encoding frame num: %d", frame_num);
 
-  gst_vulkan_encoder_set_callbacks (enc, &cb, NULL, NULL);
+  fail_unless (gst_vulkan_encoder_caps (enc, &enc_caps));
+
+  gst_vulkan_encoder_set_callbacks (enc, &cb, &enc_caps, NULL);
 
   ref_pics_num = list0_num + list1_num;
 
@@ -580,7 +583,10 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH265EncodeFrame * frame,
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_NALU_SLICE_SEGMENT_INFO_KHR,
     .pNext = NULL,
     .pStdSliceSegmentHeader = &frame->slice_hdr,
+    .constantQp = 26,
   };
+
+  fail_unless(frame->slice_info.constantQp >= enc_caps.encoder.codec.h265.minQp);
 
   frame->rc_info = (VkVideoEncodeH265RateControlInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_RATE_CONTROL_INFO_KHR,

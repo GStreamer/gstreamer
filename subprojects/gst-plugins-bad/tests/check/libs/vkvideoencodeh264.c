@@ -514,7 +514,10 @@ encode_frame (GstVulkanEncoder * enc, GstVulkanH264EncodeFrame * frame,
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_NALU_SLICE_INFO_KHR,
     .pNext = NULL,
     .pStdSliceHeader = &frame->slice_hdr,
+    .constantQp = 26,
   };
+
+  fail_unless (frame->slice_info.constantQp >= enc_caps.encoder.codec.h264.minQp);
 
   frame->rc_info = (VkVideoEncodeH264RateControlInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_INFO_KHR,
