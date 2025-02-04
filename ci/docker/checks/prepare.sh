@@ -18,44 +18,11 @@ apt install -y dotnet-sdk-7.0
 dotnet tool install --global dotnet-format
 ln -s ~/.dotnet/tools/dotnet-format /usr/local/bin/dotnet-format
 
-# Build and install gst-indent-1.0
+# Install build dependencies
 echo "deb-src http://deb.debian.org/debian/ bookworm main" >> /etc/apt/sources.list
 apt update
 
 apt-get install --assume-yes devscripts build-essential dpkg-dev wget  meson ninja-build pkg-config libssl-dev
-
-apt-get build-dep --assume-yes indent
-
-git clone https://gitlab.freedesktop.org/gstreamer/gst-indent.git
-cd gst-indent
-
-meson setup --prefix=/usr _build
-meson install -C _build
-
-# Try it
-wget -O gstbayer2rgb.c "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/raw/main/subprojects/gst-plugins-bad/gst/bayer/gstbayer2rgb.c?inline=false"
-
-for i in 1 2; do
-gst-indent-1.0 \
-  --braces-on-if-line \
-  --case-brace-indentation0 \
-  --case-indentation2 \
-  --braces-after-struct-decl-line \
-  --line-length80 \
-  --no-tabs \
-  --cuddle-else \
-  --dont-line-up-parentheses \
-  --continuation-indentation4 \
-  --honour-newlines \
-  --tab-size8 \
-  --indent-level2 \
-  --leave-preprocessor-space \
-  gstbayer2rgb.c
-done;
-
-# Clean up gst-indent
-cd ..
-rm -rf gst-indent
 
 export PIP_BREAK_SYSTEM_PACKAGES=1
 # Install pre-commit

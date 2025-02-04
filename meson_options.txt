@@ -45,7 +45,6 @@ option('gst-full-target-type', type : 'combo', value : 'shared_library', choices
 option('orc-source', type: 'combo', choices: ['system', 'subproject', 'auto'], value: 'subproject')
 option('build-tools-source', type: 'combo', choices: ['system', 'subproject'], value: 'subproject')
 option('virtme_kernel_image', type: 'string', value: '', description: 'Path to a Linux kernel image to be used for virtme testing')
-option('gst-indent', type: 'feature', value: 'auto', description: 'Whether to build the gst-indent tool')
 
 # License-related feature options
 option('gpl', type: 'feature', value: 'disabled',

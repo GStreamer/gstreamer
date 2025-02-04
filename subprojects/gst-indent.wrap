@@ -1,8 +1,0 @@
-[wrap-git]
-directory=gst-indent
-url=https://gitlab.freedesktop.org/gstreamer/gst-indent.git
-push-url=git@gitlab.freedesktop.org:gstreamer/gst-indent.git
-revision=main
-
-[provide]
-program_names = gst-indent-1.0

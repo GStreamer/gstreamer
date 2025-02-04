@@ -686,8 +686,6 @@ if dotnet_format.found()
     )
 endif
 
-indent = find_program('gst-indent-1.0', native: true, required: get_option('gst-indent').allowed())
-
 summary({
   'gstreamer-full library': building_full,
   'gstreamer-full target type': get_option('gst-full-target-type'),

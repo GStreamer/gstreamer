@@ -322,14 +322,6 @@ def get_subprocess_env(options, gst_version):
     prepend_env_var(env, "PKG_CONFIG_PATH", os.path.join(PREFIX_DIR, 'lib', 'pkgconfig'),
                     options.sysroot)
 
-    # gst-indent-1.0
-    prepend_env_var(env, "PATH", os.path.join(options.builddir, 'subprojects',
-                    'gst-indent', 'src'),
-                    options.sysroot)
-    # gst-indent (FIXME: remove or move into gst-indent module)
-    prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'scripts'),
-                    options.sysroot)
-
     # tools: gst-launch-1.0, gst-inspect-1.0
     prepend_env_var(env, "PATH", os.path.join(options.builddir, 'subprojects',
                                               'gstreamer', 'tools'),

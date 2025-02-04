@@ -120,9 +120,9 @@ Rust source files (.rs files) are indented with the standard `rustfmt`.
 
 One way to make sure you are following our coding style is to run your code
 (remember, only the `*.c` files, not the headers) through the `gst-indent-1.0`
-tool, which should be available in the uninstalled GStreamer development
-environment from version 1.23.1 onwards. Alternatively you can also get the
-tool from the [gst-indent repository](https://gitlab.freedesktop.org/gstreamer/gst-indent/)
+tool, which can be installed with `pip install gst-indent`.
+Alternatively you can also get the tool from the
+[gst-indent repository](https://gitlab.freedesktop.org/gstreamer/gst-indent/)
 and build it yourself.
 
 The easiest way to get the indenting right is probably to develop against a git
