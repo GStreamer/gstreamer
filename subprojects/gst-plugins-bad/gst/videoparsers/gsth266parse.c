@@ -3038,6 +3038,8 @@ gst_h266_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   GstCaps *old_caps;
   GstBuffer *codec_data = NULL;
   const GValue *value;
+  GstH266DecoderConfigRecord *config = NULL;
+  GstH266ParserResult parseres;
 
   h266parse = GST_H266_PARSE (parse);
 
@@ -3067,6 +3069,8 @@ gst_h266_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   /* packetized video has a codec_data */
   if (format != GST_H266_PARSE_FORMAT_BYTE &&
       (value = gst_structure_get_value (str, "codec_data"))) {
+    GstMapInfo map;
+    guint i, j;
 
     GST_DEBUG_OBJECT (h266parse, "have packetized h266");
     /* make note for optional split processing */
@@ -3076,14 +3080,39 @@ gst_h266_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     if (!codec_data)
       goto wrong_type;
 
-    /* TODO: Need to refer to the new ISO/IEC 14496-15 to handle codec data. */
-    goto vvcc_failed;
+    gst_buffer_map (codec_data, &map, GST_MAP_READ);
+
+    parseres =
+        gst_h266_parser_parse_decoder_config_record (h266parse->nalparser,
+        map.data, map.size, &config);
+    if (parseres != GST_H266_PARSER_OK) {
+      gst_buffer_unmap (codec_data, &map);
+      goto vvcc_failed;
+    }
+
+    h266parse->nal_length_size = config->length_size_minus_one + 1;
+    GST_DEBUG_OBJECT (h266parse, "nal length size %u",
+        h266parse->nal_length_size);
+
+    for (i = 0; i < config->nalu_array->len; i++) {
+      GstH266DecoderConfigRecordNalUnitArray *array =
+          &g_array_index (config->nalu_array,
+          GstH266DecoderConfigRecordNalUnitArray, i);
+
+      for (j = 0; j < array->nalu->len; j++) {
+        GstH266NalUnit *nalu = &g_array_index (array->nalu, GstH266NalUnit, j);
+        gst_h266_parse_process_nal (h266parse, nalu);
+      }
+    }
 
     /* don't confuse codec_data with inband vps/sps/pps */
     h266parse->have_vps_in_frame = FALSE;
     h266parse->have_sps_in_frame = FALSE;
     h266parse->have_pps_in_frame = FALSE;
     h266parse->have_aps_in_frame = FALSE;
+
+    gst_h266_decoder_config_record_free (config);
+    gst_buffer_unmap (codec_data, &map);
   } else {
     GST_DEBUG_OBJECT (h266parse, "have bytestream h266");
     /* nothing to pre-process */
