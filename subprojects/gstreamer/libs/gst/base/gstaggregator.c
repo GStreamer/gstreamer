@@ -2849,6 +2849,8 @@ gst_aggregator_constructed (GObject * object)
 {
   GstAggregator *agg = GST_AGGREGATOR (object);
 
+  G_OBJECT_CLASS (aggregator_parent_class)->constructed (object);
+
   if (agg->priv->force_live) {
     GST_OBJECT_FLAG_SET (agg, GST_ELEMENT_FLAG_SOURCE);
   }
@@ -3509,6 +3511,8 @@ static void
 gst_aggregator_pad_constructed (GObject * object)
 {
   GstPad *pad = GST_PAD (object);
+
+  G_OBJECT_CLASS (gst_aggregator_pad_parent_class)->constructed (object);
 
   if (GST_PAD_IS_SINK (pad)) {
     gst_pad_set_chain_function (pad,
