@@ -90,13 +90,11 @@ struct _GstH266Parse
   gboolean have_vps;
   gboolean have_sps;
   gboolean have_pps;
-  gboolean have_aps;
 
   /* per frame vps/sps/pps/aps check for periodic push codec decision */
   gboolean have_vps_in_frame;
   gboolean have_sps_in_frame;
   gboolean have_pps_in_frame;
-  gboolean have_aps_in_frame;
 
   gboolean first_frame;
 
@@ -104,7 +102,6 @@ struct _GstH266Parse
   GstBuffer *vps_nals[GST_H266_MAX_VPS_COUNT];
   GstBuffer *sps_nals[GST_H266_MAX_SPS_COUNT];
   GstBuffer *pps_nals[GST_H266_MAX_PPS_COUNT];
-  GstBuffer *aps_nals[GST_H266_APS_TYPE_MAX][GST_H266_MAX_APS_COUNT];
 
   /* FFI SEI Info we need to keep track of */
   GstH266FrameFieldInfo sei_frame_field;

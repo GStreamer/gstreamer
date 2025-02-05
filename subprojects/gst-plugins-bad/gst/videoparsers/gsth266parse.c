@@ -258,7 +258,7 @@ gst_h266_parse_reset_frame (GstH266Parse * h266parse)
 static void
 gst_h266_parse_reset_stream_info (GstH266Parse * h266parse)
 {
-  gint i, j;
+  gint i;
 
   h266parse->width = 0;
   h266parse->height = 0;
@@ -297,10 +297,6 @@ gst_h266_parse_reset_stream_info (GstH266Parse * h266parse)
     gst_buffer_replace (&h266parse->sps_nals[i], NULL);
   for (i = 0; i < GST_H266_MAX_PPS_COUNT; i++)
     gst_buffer_replace (&h266parse->pps_nals[i], NULL);
-  for (i = 0; i < GST_H266_APS_TYPE_MAX; i++) {
-    for (j = 0; j < GST_H266_MAX_APS_COUNT; j++)
-      gst_buffer_replace (&h266parse->aps_nals[i][j], NULL);
-  }
 
   gst_video_mastering_display_info_init (&h266parse->mastering_display_info);
   h266parse->mastering_display_info_state = GST_H266_PARSE_SEI_EXPIRED;
@@ -526,11 +522,6 @@ gst_h266_parse_store_nal (GstH266Parse * h266parse, guint id,
     store_size = GST_H266_MAX_PPS_COUNT;
     store = h266parse->pps_nals;
     GST_LOG_OBJECT (h266parse, "storing pps %u", id);
-  } else if (naltype == GST_H266_NAL_PREFIX_APS ||
-      naltype == GST_H266_NAL_SUFFIX_APS) {
-    store_size = GST_H266_MAX_APS_COUNT;
-    store = h266parse->aps_nals[params_type];
-    GST_LOG_OBJECT (h266parse, "storing aps %u", id);
   } else {
     g_return_if_reached ();
   }
@@ -797,8 +788,6 @@ gst_h266_parse_process_nal (GstH266Parse * h266parse, GstH266NalUnit * nalu)
           return FALSE;
       }
 
-      gst_h266_parse_store_nal (h266parse, aps->aps_id, nal_type,
-          aps->params_type, nalu);
       h266parse->header = TRUE;
 
       if (nal_type == GST_H266_NAL_PREFIX_APS)
