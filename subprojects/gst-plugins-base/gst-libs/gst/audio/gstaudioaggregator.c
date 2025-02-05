@@ -643,6 +643,8 @@ gst_audio_aggregator_constructed (GObject * object)
 {
   GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (object);
 
+  G_OBJECT_CLASS (gst_audio_aggregator_pad_parent_class)->constructed (object);
+
   gst_audio_aggregator_translate_output_buffer_duration (aagg,
       DEFAULT_OUTPUT_BUFFER_DURATION);
   gst_audio_aggregator_recalculate_latency (aagg);
