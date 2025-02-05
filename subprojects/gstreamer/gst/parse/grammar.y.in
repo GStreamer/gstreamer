@@ -905,7 +905,7 @@ static void gst_parse_free_delayed_link (DelayedLink *link)
 
 #define PRETTY_PAD_NAME_FMT "%s %s of %s named %s"
 #define PRETTY_PAD_NAME_ARGS(elem, pad_name) \
-  (pad_name ? "pad " : "some"), (pad_name ? pad_name : "pad"), \
+  (pad_name ? "pad" : "some"), (pad_name ? pad_name : "pad"), \
   G_OBJECT_TYPE_NAME(elem), GST_STR_NULL (GST_ELEMENT_NAME (elem))
 
 static void gst_parse_no_more_pads (GstElement *src, gpointer data)
@@ -1042,6 +1042,23 @@ gst_parse_element_can_do_caps (GstElement * e, GstPadDirection dir,
   return can_do;
 }
 
+static gchar*
+format_pad_names(const GSList* list)
+{
+  if (!list)
+    return g_strdup ("(any)");
+  GString* str = g_string_new (NULL);
+  gboolean is_first = TRUE;
+  while (list) {
+    if (!is_first)
+      g_string_append (str, ", ");
+    g_string_append (str, (const gchar *) list->data);
+    list = list->next;
+    is_first = FALSE;
+  }
+  return g_string_free (str, FALSE);
+}
+
 /*
  * performs a link and frees the struct. src and sink elements must be given
  * return values   0 - link performed
@@ -1058,11 +1075,17 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
   g_assert (GST_IS_ELEMENT (src));
   g_assert (GST_IS_ELEMENT (sink));
 
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar* srcpad_names = format_pad_names (srcs);
+  gchar* sinkpad_names = format_pad_names (sinks);
   GST_CAT_INFO (GST_CAT_PIPELINE,
-      "linking " PRETTY_PAD_NAME_FMT " to " PRETTY_PAD_NAME_FMT " (%u/%u) with caps \"%" GST_PTR_FORMAT "\"",
-      PRETTY_PAD_NAME_ARGS (src, link->src.name),
-      PRETTY_PAD_NAME_ARGS (sink, link->sink.name),
-      g_slist_length (srcs), g_slist_length (sinks), link->caps);
+      "linking pads {%s} of %s named %s to pads {%s} of %s named %s with caps \"%" GST_PTR_FORMAT "\"",
+      srcpad_names, G_OBJECT_TYPE_NAME (src), GST_STR_NULL (GST_ELEMENT_NAME (src)),
+      sinkpad_names, G_OBJECT_TYPE_NAME (sink), GST_STR_NULL (GST_ELEMENT_NAME (sink)),
+      link->caps);
+  g_free (srcpad_names);
+  g_free (sinkpad_names);
+#endif
 
   if (!srcs || !sinks) {
     gboolean found_one = gst_element_link_pads_filtered (src,
