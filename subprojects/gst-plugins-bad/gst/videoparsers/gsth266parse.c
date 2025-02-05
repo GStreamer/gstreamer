@@ -252,7 +252,6 @@ gst_h266_parse_reset_frame (GstH266Parse * h266parse)
   h266parse->have_vps_in_frame = FALSE;
   h266parse->have_sps_in_frame = FALSE;
   h266parse->have_pps_in_frame = FALSE;
-  h266parse->have_aps_in_frame = FALSE;
   gst_adapter_clear (h266parse->frame_out);
 }
 
@@ -276,7 +275,6 @@ gst_h266_parse_reset_stream_info (GstH266Parse * h266parse)
   h266parse->have_pps = FALSE;
   h266parse->have_sps = FALSE;
   h266parse->have_vps = FALSE;
-  h266parse->have_aps = FALSE;
   h266parse->align = GST_H266_PARSE_ALIGN_NONE;
   h266parse->format = GST_H266_PARSE_FORMAT_NONE;
   h266parse->transform = FALSE;
@@ -707,7 +705,6 @@ gst_h266_parse_process_nal (GstH266Parse * h266parse, GstH266NalUnit * nalu)
         h266parse->have_vps = FALSE;
         h266parse->have_sps = FALSE;
         h266parse->have_pps = FALSE;
-        h266parse->have_aps = FALSE;
       }
 
       gst_h266_parse_store_nal (h266parse, vps->vps_id, nal_type, -1, nalu);
@@ -799,8 +796,6 @@ gst_h266_parse_process_nal (GstH266Parse * h266parse, GstH266NalUnit * nalu)
         if (pres != GST_H266_PARSER_BROKEN_LINK)
           return FALSE;
       }
-
-      h266parse->have_aps_in_frame = TRUE;
 
       gst_h266_parse_store_nal (h266parse, aps->aps_id, nal_type,
           aps->params_type, nalu);
@@ -2541,12 +2536,19 @@ gst_h266_parse_push_codec_buffer (GstH266Parse * parse, GstBuffer * nal,
   return gst_pad_push (GST_BASE_PARSE_SRC_PAD (parse), nal);
 }
 
+/* This function handles codec NALs by directly pushing them or prefixing them into an AU.
+ * APS NALs are not handled here on purpose, because if they were added to codec_data, it should be
+ * only PREFIX_APS according to ISO/IEC 14496-15, but it's optional and at the same time
+ * PREFIX_APS can be pushed/changed also with non-IDR frames.
+ *
+ * So instead, the much easier way to handle APS NALs is just to push them in-band.
+ * This is done in gst_h266_parse_process_nal(). */
 static gboolean
-gst_h266_parse_handle_vps_sps_pps_aps_nals (GstH266Parse * parse,
+gst_h266_parse_handle_vps_sps_pps_nals (GstH266Parse * parse,
     GstBuffer * buffer, GstBaseParseFrame * frame)
 {
   GstBuffer *codec_nal;
-  gint i, j;
+  gint i;
   gboolean send_done = FALSE;
 
   if (parse->have_vps_in_frame && parse->have_sps_in_frame
@@ -2581,16 +2583,6 @@ gst_h266_parse_handle_vps_sps_pps_aps_nals (GstH266Parse * parse,
         GST_DEBUG_OBJECT (parse, "sending PPS nal");
         gst_h266_parse_push_codec_buffer (parse, codec_nal, buffer);
         send_done = TRUE;
-      }
-    }
-
-    for (i = 0; i < GST_H266_APS_TYPE_MAX; i++) {
-      for (j = 0; j < GST_H266_MAX_APS_COUNT; j++) {
-        if ((codec_nal = parse->aps_nals[i][j])) {
-          GST_DEBUG_OBJECT (parse, "sending APS nal");
-          gst_h266_parse_push_codec_buffer (parse, codec_nal, buffer);
-          send_done = TRUE;
-        }
       }
     }
   } else {
@@ -2665,28 +2657,6 @@ gst_h266_parse_handle_vps_sps_pps_aps_nals (GstH266Parse * parse,
 
         ok &= gst_byte_writer_put_buffer (&bw, codec_nal, 0, nal_size);
         send_done = TRUE;
-      }
-    }
-
-    for (i = 0; i < GST_H266_APS_TYPE_MAX; i++) {
-      for (j = 0; j < GST_H266_MAX_APS_COUNT; j++) {
-        if ((codec_nal = parse->aps_nals[i][j])) {
-          gsize nal_size = gst_buffer_get_size (codec_nal);
-
-          GST_DEBUG_OBJECT (parse, "inserting APS nal.");
-
-          if (bs) {
-            /* Write the start code. */
-            ok &= gst_byte_writer_put_uint32_be (&bw, 0x01);
-          } else {
-            ok &= gst_byte_writer_put_uint32_be (&bw, (nal_size << (nls * 8)));
-            ok &= gst_byte_writer_set_pos (&bw,
-                gst_byte_writer_get_pos (&bw) - nls);
-          }
-
-          ok &= gst_byte_writer_put_buffer (&bw, codec_nal, 0, nal_size);
-          send_done = TRUE;
-        }
       }
     }
 
@@ -2766,8 +2736,8 @@ gst_h266_parse_prepare_key_unit (GstH266Parse * parse, GstEvent * event)
   GstClockTime running_time;
   guint count;
 #ifndef GST_DISABLE_GST_DEBUG
-  gboolean have_vps, have_sps, have_pps, have_aps;
-  gint i, j;
+  gboolean have_vps, have_sps, have_pps;
+  gint i;
 #endif
 
   parse->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
@@ -2802,18 +2772,10 @@ gst_h266_parse_prepare_key_unit (GstH266Parse * parse, GstEvent * event)
       break;
     }
   }
-  for (i = 0; i < GST_H266_APS_TYPE_MAX; i++) {
-    for (j = 0; j < GST_H266_MAX_APS_COUNT; j++) {
-      if (parse->aps_nals[i][j] != NULL) {
-        have_aps = TRUE;
-        break;
-      }
-    }
-  }
 
   GST_INFO_OBJECT (parse,
-      "preparing key unit, have vps %d, have sps %d, have pps %d, have_aps %d",
-      have_vps, have_sps, have_pps, have_aps);
+      "preparing key unit, have vps %d, have sps %d, have pps %d",
+      have_vps, have_sps, have_pps);
 #endif
 
   /* set push_codec to TRUE so that pre_push_frame sends VPS/SPS/PPS again */
@@ -2905,8 +2867,7 @@ gst_h266_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         new_ts = GST_CLOCK_TIME_IS_VALID (timestamp) ? timestamp :
             h266parse->last_report;
 
-        if (gst_h266_parse_handle_vps_sps_pps_aps_nals (h266parse,
-                buffer, frame)) {
+        if (gst_h266_parse_handle_vps_sps_pps_nals (h266parse, buffer, frame)) {
           h266parse->last_report = new_ts;
         }
       }
@@ -2916,21 +2877,19 @@ gst_h266_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       h266parse->have_vps = FALSE;
       h266parse->have_sps = FALSE;
       h266parse->have_pps = FALSE;
-      h266parse->have_aps = FALSE;
       h266parse->state &= GST_H266_PARSE_STATE_VALID_SPS_PPS;
     }
   } else if (h266parse->interval == -1) {
     if (h266parse->idr_pos >= 0) {
       GST_LOG_OBJECT (h266parse, "IDR nal at offset %d", h266parse->idr_pos);
 
-      gst_h266_parse_handle_vps_sps_pps_aps_nals (h266parse, buffer, frame);
+      gst_h266_parse_handle_vps_sps_pps_nals (h266parse, buffer, frame);
 
       /* we pushed whatever we had */
       h266parse->push_codec = FALSE;
       h266parse->have_vps = FALSE;
       h266parse->have_sps = FALSE;
       h266parse->have_pps = FALSE;
-      h266parse->have_aps = FALSE;
       h266parse->state &= GST_H266_PARSE_STATE_VALID_SPS_PPS;
     }
   }
@@ -3150,7 +3109,6 @@ gst_h266_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     h266parse->have_vps = FALSE;
     h266parse->have_sps = FALSE;
     h266parse->have_pps = FALSE;
-    h266parse->have_aps = FALSE;
     if (h266parse->align == GST_H266_PARSE_ALIGN_NAL)
       h266parse->split_packetized = TRUE;
     h266parse->packetized = TRUE;
