@@ -119,32 +119,43 @@ __gst_parse_element_free (element_t *data)
 
 /*******************************************************************************************
 *** define SET_ERROR macro/function
+*
+* SET_ERROR() must only be called from the thread running priv_gst_parse_launch() and must
+* only be used for errors that occur during the initial construction of the chain, i.e.
+* before priv_gst_parse_launch() returns.
 *******************************************************************************************/
+static void error_append_probable_reason (graph_t *graph);
+
 #ifdef G_HAVE_ISO_VARARGS
 
-#  define SET_ERROR(error, type, ...) \
+#  define SET_ERROR(graph, type, ...) \
 G_STMT_START { \
+  GError** error = (graph)->error; \
   GST_CAT_ERROR (GST_CAT_PIPELINE, __VA_ARGS__); \
   if ((error) && !*(error)) { \
     g_set_error ((error), GST_PARSE_ERROR, (type), __VA_ARGS__); \
+    error_append_probable_reason ((graph)); \
   } \
 } G_STMT_END
 
 #elif defined(G_HAVE_GNUC_VARARGS)
 
-#  define SET_ERROR(error, type, args...) \
+#  define SET_ERROR(graph, type, args...) \
 G_STMT_START { \
+  GError** error = (graph)->error; \
   GST_CAT_ERROR (GST_CAT_PIPELINE, args ); \
-  if ((error) && !*(error)) { \
-    g_set_error ((error), GST_PARSE_ERROR, (type), args ); \
+  if (error && !*error) { \
+    g_set_error (error, GST_PARSE_ERROR, (type), args ); \
+    error_append_probable_reason ((graph)); \
   } \
 } G_STMT_END
 
 #else
 
 static inline void
-SET_ERROR (GError **error, gint type, const char *format, ...)
+SET_ERROR (graph_t *graph, gint type, const char *format, ...)
 {
+  GError** error = graph->error;
   if (error) {
     if (*error) {
       g_warning ("error while parsing");
@@ -159,11 +170,32 @@ SET_ERROR (GError **error, gint type, const char *format, ...)
       g_set_error (error, GST_PARSE_ERROR, type, string);
 
       g_free (string);
+      error_append_probable_reason ((graph));
     }
   }
 }
 
 #endif /* G_HAVE_ISO_VARARGS */
+
+static void error_append_probable_reason (graph_t *graph) {
+  g_return_if_fail (*graph->error);
+  GError* error = *graph->error;
+
+  reason_receiver_t* receiver = graph->error_probable_reason_receiver;
+  /* If by the time SET_ERROR() was called no bus was set, there is no receiver
+   * and no error from the bus to append. */
+  if (!receiver)
+    return;
+
+  g_mutex_lock (&receiver->mutex);
+  if (receiver->reason) {
+    gchar *new_message = g_strdup_printf ("%s -- %s", error->message,
+        receiver->reason);
+    g_free (error->message);
+    error->message = new_message;
+  }
+  g_mutex_unlock (&receiver->mutex);
+}
 
 /*** define YYPRINTF macro/function if we're debugging */
 
@@ -292,12 +324,12 @@ beach:
 
 #define TRY_SETUP_LINK(l) G_STMT_START { \
    if( (!(l)->src.element) && (!(l)->src.name) ){ \
-     SET_ERROR (graph->error, GST_PARSE_ERROR_LINK, _("link has no source [sink=%s@%p]"), \
+     SET_ERROR (graph, GST_PARSE_ERROR_LINK, _("link has no source [sink=%s@%p]"), \
 	(l)->sink.name ? (l)->sink.name : "", \
 	(l)->sink.element); \
      gst_parse_free_link (l); \
    }else if( (!(l)->sink.element) && (!(l)->sink.name) ){ \
-     SET_ERROR (graph->error, GST_PARSE_ERROR_LINK, _("link has no sink [source=%s@%p]"), \
+     SET_ERROR (graph, GST_PARSE_ERROR_LINK, _("link has no sink [source=%s@%p]"), \
 	(l)->src.name ? (l)->src.name : "", \
 	(l)->src.element); \
      gst_parse_free_link (l); \
@@ -592,13 +624,13 @@ out:
   return;
 
 not_a_preset:
-  SET_ERROR (graph->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
+  SET_ERROR (graph, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
          _("Element \"%s\" is not a GstPreset"),
          GST_ELEMENT_NAME (element));
   goto out;
 
 error:
-  SET_ERROR (graph->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
+  SET_ERROR (graph, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
          _("could not set preset \"%s\" in element \"%s\""),
          value, GST_ELEMENT_NAME (element));
   goto out;
@@ -630,7 +662,7 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
   GstElement *ret = NULL;
 
   if (!factory) {
-    SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, _("no element \"%s\""), data->factory_name);
+    SET_ERROR (graph, GST_PARSE_ERROR_NO_SUCH_ELEMENT, _("no element \"%s\""), data->factory_name);
     return NULL;
   }
 
@@ -672,7 +704,7 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
       }
 
       if (!collect_value (pspec, value, &values_array[n_params])) {
-        SET_ERROR (graph->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
+        SET_ERROR (graph, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
                _("could not set property \"%s\" in element \"%s\" to \"%s\""),
          name, data->factory_name, value);
         g_value_unset (&values_array[n_params]);
@@ -683,7 +715,7 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
 
       ++n_params;
     } else {
-      SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
+      SET_ERROR (graph, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
           _("no property \"%s\" in element \"%s\""), name, \
           data->factory_name);
       goto done;
@@ -717,7 +749,7 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
         gst_parse_add_delayed_set (GST_CHILD_PROXY (ret), pp->name, pp->value);
       } else {
         gst_object_unref (target);
-        SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
+        SET_ERROR (graph, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
             _("no property \"%s\" in element \"%s\""), pp->name, \
             GST_ELEMENT_NAME (ret));
         goto done;
@@ -726,7 +758,7 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
       GValue v = { 0, };
 
       if (!collect_value (pspec, pp->value, &v)) {
-        SET_ERROR (graph->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
+        SET_ERROR (graph, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
                _("could not set property \"%s\" in child of element \"%s\" to \"%s\""),
          pp->name, data->factory_name, pp->value);
         g_value_unset (&v);
@@ -831,7 +863,7 @@ static void gst_parse_element_set (gchar *value, GstElement *element, graph_t *g
       target = G_OBJECT (g_object_ref (element));
       GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, target, "found %s property", value);
     } else {
-      SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
+      SET_ERROR (graph, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
           _("no property \"%s\" in element \"%s\""), value, \
           GST_ELEMENT_NAME (element));
     }
@@ -854,7 +886,7 @@ out:
   return;
 
 error:
-  SET_ERROR (graph->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
+  SET_ERROR (graph, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
          _("could not set property \"%s\" in element \"%s\" to \"%s\""),
          value, GST_ELEMENT_NAME (element), pos);
   goto out;
@@ -1151,27 +1183,27 @@ error:
         gst_parse_element_can_do_caps (sink, GST_PAD_SINK, link->caps);
 
     if (!src_can_do_caps && sink_can_do_caps) {
-      SET_ERROR (graph->error, GST_PARSE_ERROR_LINK,
+      SET_ERROR (graph, GST_PARSE_ERROR_LINK,
           _("could not link %s to %s, %s can't handle caps %s"),
           GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (sink),
           GST_ELEMENT_NAME (src), caps_str);
     } else if (src_can_do_caps && !sink_can_do_caps) {
-      SET_ERROR (graph->error, GST_PARSE_ERROR_LINK,
+      SET_ERROR (graph, GST_PARSE_ERROR_LINK,
           _("could not link %s to %s, %s can't handle caps %s"),
           GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (sink),
           GST_ELEMENT_NAME (sink), caps_str);
     } else if (!src_can_do_caps && !sink_can_do_caps) {
-      SET_ERROR (graph->error, GST_PARSE_ERROR_LINK,
+      SET_ERROR (graph, GST_PARSE_ERROR_LINK,
           _("could not link %s to %s, neither element can handle caps %s"),
           GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (sink), caps_str);
     } else {
-      SET_ERROR (graph->error, GST_PARSE_ERROR_LINK,
+      SET_ERROR (graph, GST_PARSE_ERROR_LINK,
           _("could not link %s to %s with caps %s"),
           GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (sink), caps_str);
     }
     g_free (caps_str);
   } else {
-    SET_ERROR (graph->error, GST_PARSE_ERROR_LINK,
+    SET_ERROR (graph, GST_PARSE_ERROR_LINK,
         _("could not link %s to %s"), GST_ELEMENT_NAME (src),
         GST_ELEMENT_NAME (sink));
   }
@@ -1325,13 +1357,13 @@ elementary:
 **************************************************************/
 chain:	openchain			      { $$=$1;
 						if($$->last.name){
-							SET_ERROR (graph->error, GST_PARSE_ERROR_SYNTAX,
+							SET_ERROR (graph, GST_PARSE_ERROR_SYNTAX,
 							_("unexpected reference \"%s\" - ignoring"), $$->last.name);
 							gst_parse_strfree($$->last.name);
 							$$->last.name=NULL;
 						}
 						if($$->last.pads){
-							SET_ERROR (graph->error, GST_PARSE_ERROR_SYNTAX,
+							SET_ERROR (graph, GST_PARSE_ERROR_SYNTAX,
 							_("unexpected pad-reference \"%s\" - ignoring"), (gchar*)$$->last.pads->data);
 							g_slist_foreach ($$->last.pads, (GFunc) gst_parse_strfree, NULL);
 							g_slist_free ($$->last.pads);
@@ -1366,7 +1398,7 @@ link:	LINK				      { $$ = gst_parse_link_new ();
 						  $$->caps = gst_caps_from_string (str);
 						  g_free (str);
 						  if ($$->caps == NULL)
-						    SET_ERROR (graph->error, GST_PARSE_ERROR_LINK, _("could not parse caps \"%s\""), $1);
+						    SET_ERROR (graph, GST_PARSE_ERROR_LINK, _("could not parse caps \"%s\""), $1);
 						  gst_parse_strfree ($1);
 						}
 					      }
@@ -1377,7 +1409,7 @@ link:	LINK				      { $$ = gst_parse_link_new ();
 						  $$->caps = gst_caps_from_string (str);
 						  g_free (str);
 						  if ($$->caps == NULL)
-						    SET_ERROR (graph->error, GST_PARSE_ERROR_LINK, _("could not parse caps \"%s\""), $1);
+						    SET_ERROR (graph, GST_PARSE_ERROR_LINK, _("could not parse caps \"%s\""), $1);
 						  gst_parse_strfree ($1);
 						}
 					      }
@@ -1404,7 +1436,7 @@ chain:	openchain link PARSE_URL	      { GstElement *element =
 							  gst_element_make_from_uri (GST_URI_SINK, $3, NULL, NULL);
 						/* FIXME: get and parse error properly */
 						if (!element) {
-						  SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
+						  SET_ERROR (graph, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
 							  _("no sink element for URI \"%s\""), $3);
 						}
 						$$ = $1;
@@ -1423,7 +1455,7 @@ openchain:
 							  gst_element_make_from_uri (GST_URI_SRC, $1, NULL, NULL);
 						/* FIXME: get and parse error properly */
 						if (!element) {
-						  SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
+						  SET_ERROR (graph, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
 						    _("no source element for URI \"%s\""), $1);
 						}
 						$$ = gst_parse_chain_new ();
@@ -1514,7 +1546,7 @@ chainlist: /* NOP */			      { $$ = NULL; }
 					      }
 	| chainlist error		      { $$=$1;
 						GST_CAT_DEBUG (GST_CAT_PIPELINE,"trying to recover from syntax error");
-						SET_ERROR (graph->error, GST_PARSE_ERROR_SYNTAX, _("syntax error"));
+						SET_ERROR (graph, GST_PARSE_ERROR_SYNTAX, _("syntax error"));
 					      }
 	;
 
@@ -1536,7 +1568,7 @@ bin:	binopener assignments chainlist ')'   {
 						GSList *walk;
 						GstBin *bin = (GstBin *) gst_element_factory_make ($1, NULL);
 						if (!chain) {
-						  SET_ERROR (graph->error, GST_PARSE_ERROR_EMPTY_BIN,
+						  SET_ERROR (graph, GST_PARSE_ERROR_EMPTY_BIN,
 						    _("specified empty bin \"%s\", not allowed"), $1);
 						  chain = gst_parse_chain_new ();
 						  chain->first.element = chain->last.element = NULL;
@@ -1546,7 +1578,7 @@ bin:	binopener assignments chainlist ')'   {
 						}
 						if (!bin) {
 						  add_missing_element(graph, $1);
-						  SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
+						  SET_ERROR (graph, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
 						    _("no bin \"%s\", unpacking elements"), $1);
 						  /* clear property-list */
 						  g_slist_foreach ($2, (GFunc) gst_parse_strfree, NULL);
@@ -1578,7 +1610,7 @@ bin:	binopener assignments chainlist ')'   {
 graph:	chainlist			      { $$ = graph;
 						$$->chain = $1;
 						if(!$1) {
-						  SET_ERROR (graph->error, GST_PARSE_ERROR_EMPTY, _("empty pipeline not allowed"));
+						  SET_ERROR (graph, GST_PARSE_ERROR_EMPTY, _("empty pipeline not allowed"));
 						}
 					      }
 	;
@@ -1595,6 +1627,77 @@ yyerror (void *scanner, graph_t *graph, const char *s)
 }
 
 
+static GstBusSyncReply
+parse_launch_handle_message_sync (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+  reason_receiver_t *receiver = (reason_receiver_t *) user_data;
+  GstObject *src = GST_MESSAGE_SRC (message);
+  GstMessageType type = GST_MESSAGE_TYPE (message);
+
+  switch (type) {
+    case GST_MESSAGE_ERROR:
+    {
+      GError *error;
+      gchar *debug_msg;
+      gchar *explanation;
+      const GstStructure *details;
+      gst_message_parse_error (message, &error, &debug_msg);
+      gst_message_parse_error_details (message, &details);
+
+      explanation = gst_info_strdup_printf ("%s %" GST_PTR_FORMAT " posted "
+          "an error message: %s", src ? G_OBJECT_TYPE_NAME(src) : "", src,
+          error->message);
+      /* We lock the mutex a bit early so that if errors occur simultaneously
+       * from two threads the following log lines are logged one error at a
+       * time, just for convenience of the person reading the logs. */
+      g_mutex_lock (&receiver->mutex);
+      GST_CAT_ERROR (GST_CAT_PIPELINE, "%s", explanation);
+      if (debug_msg)
+        GST_CAT_ERROR (GST_CAT_PIPELINE, "Debug message: %s", debug_msg);
+      if (details)
+        GST_CAT_ERROR (GST_CAT_PIPELINE, "Details: %" GST_PTR_FORMAT, details);
+
+      /* This message will be suffixed when SET_ERROR() is called.
+       * This allows the message to be seen in gst-launch even if no logging is
+       * enabled, which is the default for GStreamer releases. */
+      if (!receiver->reason)
+        receiver->reason = g_strdup (explanation);
+      g_mutex_unlock (&receiver->mutex);
+
+      g_free (explanation);
+      g_error_free (error);
+      g_free (debug_msg);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return GST_BUS_PASS;
+}
+
+static reason_receiver_t*
+reason_receiver_new (void) {
+  reason_receiver_t *receiver = g_atomic_rc_box_new0 (reason_receiver_t);
+  g_mutex_init (&receiver->mutex);
+  receiver->reason = NULL;
+  return receiver;
+}
+
+static void
+reason_receiver_clear (reason_receiver_t *receiver) {
+  g_mutex_clear (&receiver->mutex);
+  g_free (receiver->reason);
+}
+
+#define reason_receiver_ref(receiver) g_atomic_rc_box_acquire (receiver)
+
+static void
+reason_receiver_unref (reason_receiver_t *receiver) {
+  g_atomic_rc_box_release_full (receiver,
+      (GDestroyNotify) reason_receiver_clear);
+}
+
 GstElement *
 priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
     GstParseFlags flags)
@@ -1604,6 +1707,8 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
   GSList *walk;
   GstElement *ret;
   yyscan_t scanner;
+  GstBin *bin = NULL;
+  GstBus *temp_bus = NULL, *old_bus = NULL;
 
   g_return_val_if_fail (str != NULL, NULL);
   g_return_val_if_fail (error == NULL || *error == NULL, NULL);
@@ -1613,6 +1718,7 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
   g.error = error;
   g.ctx = ctx;
   g.flags = flags;
+  g.error_probable_reason_receiver = NULL;
 
 #ifdef __GST_PARSE_TRACE
   GST_CAT_DEBUG (GST_CAT_PIPELINE, "TRACE: tracing enabled");
@@ -1630,7 +1736,7 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
 #endif
 
   if (yyparse (scanner, &g) != 0) {
-    SET_ERROR (error, GST_PARSE_ERROR_SYNTAX,
+    SET_ERROR (&g, GST_PARSE_ERROR_SYNTAX,
         "Unrecoverable syntax error while parsing pipeline %s", str);
 
     priv_gst_parse_yylex_destroy (scanner);
@@ -1664,12 +1770,22 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
 
   /* put all elements in our bin if necessary */
   if(g.chain->elements->next){
-    GstBin *bin;
     if (flags & GST_PARSE_FLAG_PLACE_IN_BIN)
       bin = GST_BIN (gst_element_factory_make ("bin", NULL));
     else
       bin = GST_BIN (gst_element_factory_make ("pipeline", NULL));
     g_assert (bin);
+
+    /* Assign the bin a temporary bus to catch any error messages posted during
+     * the construction of the pipeline and log them in a way that is visible
+     * by default in gst-launch. */
+    old_bus = gst_element_get_bus (GST_ELEMENT (bin));
+    temp_bus = gst_bus_new ();
+    g.error_probable_reason_receiver = reason_receiver_new ();
+    gst_bus_set_sync_handler (temp_bus, parse_launch_handle_message_sync,
+        reason_receiver_ref (g.error_probable_reason_receiver),
+        (GDestroyNotify) reason_receiver_unref);
+    gst_element_set_bus (GST_ELEMENT (bin), temp_bus);
 
     for (walk = g.chain->elements; walk; walk = walk->next) {
       if (walk->data != NULL)
@@ -1693,11 +1809,11 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
     err=gst_resolve_reference( &(l->src), ret);
     if (err) {
        if(-1==err){
-          SET_ERROR (error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
+          SET_ERROR (&g, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
               "No src-element named \"%s\" - omitting link", l->src.name);
        }else{
           /* probably a missing element which we've handled already */
-          SET_ERROR (error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
+          SET_ERROR (&g, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
               "No src-element found - omitting link");
        }
        gst_parse_free_link (l);
@@ -1707,11 +1823,11 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
     err=gst_resolve_reference( &(l->sink), ret);
     if (err) {
        if(-1==err){
-          SET_ERROR (error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
+          SET_ERROR (&g, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
               "No sink-element named \"%s\" - omitting link", l->src.name);
        }else{
           /* probably a missing element which we've handled already */
-          SET_ERROR (error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
+          SET_ERROR (&g, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
               "No sink-element found - omitting link");
        }
        gst_parse_free_link (l);
@@ -1731,6 +1847,14 @@ out:
         __chains, __links, __elements);
   }
 #endif /* __GST_PARSE_TRACE */
+
+  if (bin && temp_bus) {
+    gst_element_set_bus (GST_ELEMENT (bin), old_bus);
+    reason_receiver_unref (g.error_probable_reason_receiver);
+    g.error_probable_reason_receiver = NULL;
+    g_clear_object (&temp_bus);
+    g_clear_object (&old_bus);
+  }
 
   return ret;
 

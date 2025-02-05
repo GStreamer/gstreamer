@@ -30,12 +30,22 @@ typedef struct {
   GSList *presets;
 } element_t;
 
+/* Filled from a bus sync handler if a error message is posted during the
+ * construction of the chain.
+ * The mutex is necessary as the bus could -- at least in principle -- have
+ * messages posted from several threads simultaneously. */
+typedef struct {
+  GMutex mutex;
+  gchar *reason; /* owned by the struct */
+} reason_receiver_t;
+
 
 typedef struct _graph_t graph_t;
 struct _graph_t {
   chain_t *chain; /* links are supposed to be done now */
   GSList *links;
   GError **error;
+  reason_receiver_t *error_probable_reason_receiver;
   GstParseContext *ctx; /* may be NULL */
   GstParseFlags flags;
 };
