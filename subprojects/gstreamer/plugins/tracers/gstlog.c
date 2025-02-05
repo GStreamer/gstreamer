@@ -144,6 +144,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_ELEMENT_FACTORY);
 G_DEFINE_TYPE_WITH_CODE (GstLogTracer, gst_log_tracer, GST_TYPE_TRACER,
     _do_init);
 
+#define bool_to_str(val) (val ? "true" : "false")
+
 static void
 do_log (GstDebugCategory * cat, const char *func, GObject * obj,
     const char *fmt, ...)
@@ -169,8 +171,8 @@ do_push_buffer_post (GstTracer * self, guint64 ts, GstPad * pad,
     GstFlowReturn res)
 {
   do_log (GST_CAT_BUFFER, GST_FUNCTION, (GObject *) pad,
-      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%d",
-      GST_TIME_ARGS (ts), pad, res);
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%s",
+      GST_TIME_ARGS (ts), pad, gst_flow_get_name (res));
 }
 
 static void
@@ -178,7 +180,7 @@ do_push_buffer_list_pre (GstTracer * self, guint64 ts, GstPad * pad,
     GstBufferList * list)
 {
   do_log (GST_CAT_BUFFER_LIST, GST_FUNCTION, (GObject *) pad,
-      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", list=%p",
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", list=%" GST_PTR_FORMAT,
       GST_TIME_ARGS (ts), pad, list);
 }
 
@@ -187,8 +189,8 @@ do_push_buffer_list_post (GstTracer * self, guint64 ts, GstPad * pad,
     GstFlowReturn res)
 {
   do_log (GST_CAT_BUFFER_LIST, GST_FUNCTION, (GObject *) pad,
-      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%d",
-      GST_TIME_ARGS (ts), pad, res);
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%s",
+      GST_TIME_ARGS (ts), pad, gst_flow_get_name (res));
 }
 
 static void
@@ -205,8 +207,8 @@ do_chain_buffer_post (GstTracer * self, guint64 ts, GstPad * pad,
     GstFlowReturn res)
 {
   do_log (GST_CAT_BUFFER, GST_FUNCTION, (GObject *) pad,
-      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%d",
-      GST_TIME_ARGS (ts), pad, res);
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%s",
+      GST_TIME_ARGS (ts), pad, gst_flow_get_name (res));
 }
 
 static void
@@ -214,7 +216,7 @@ do_chain_buffer_list_pre (GstTracer * self, guint64 ts, GstPad * pad,
     GstBufferList * list)
 {
   do_log (GST_CAT_BUFFER_LIST, GST_FUNCTION, (GObject *) pad,
-      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", list=%p",
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", list=%" GST_PTR_FORMAT,
       GST_TIME_ARGS (ts), pad, list);
 }
 
@@ -223,8 +225,8 @@ do_chain_buffer_list_post (GstTracer * self, guint64 ts, GstPad * pad,
     GstFlowReturn res)
 {
   do_log (GST_CAT_BUFFER_LIST, GST_FUNCTION, (GObject *) pad,
-      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%d",
-      GST_TIME_ARGS (ts), pad, res);
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%s",
+      GST_TIME_ARGS (ts), pad, gst_flow_get_name (res));
 }
 
 static void
@@ -242,7 +244,7 @@ do_pull_range_post (GstTracer * self, guint64 ts, GstPad * pad,
 {
   do_log (GST_CAT_BUFFER, GST_FUNCTION, (GObject *) pad,
       "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", buffer=%" GST_PTR_FORMAT
-      ", res=%d", GST_TIME_ARGS (ts), pad, buffer, res);
+      ", res=%s", GST_TIME_ARGS (ts), pad, buffer, gst_flow_get_name (res));
 }
 
 static void
@@ -257,8 +259,8 @@ static void
 do_push_event_post (GstTracer * self, guint64 ts, GstPad * pad, gboolean res)
 {
   do_log (GST_CAT_EVENT, GST_FUNCTION, (GObject *) pad,
-      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%d",
-      GST_TIME_ARGS (ts), pad, res);
+      "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", res=%s",
+      GST_TIME_ARGS (ts), pad, bool_to_str (res));
 }
 
 static void
@@ -292,7 +294,7 @@ do_pad_query_post (GstTracer * self, guint64 ts, GstPad * pad, GstQuery * query,
 {
   do_log (GST_CAT_QUERY, GST_FUNCTION, (GObject *) pad,
       "%" GST_TIME_FORMAT ", pad=%" GST_PTR_FORMAT ", query=%" GST_PTR_FORMAT
-      ", res=%d", GST_TIME_ARGS (ts), pad, query, res);
+      ", res=%s", GST_TIME_ARGS (ts), pad, query, bool_to_str (res));
 }
 
 static void
@@ -309,8 +311,8 @@ do_post_message_post (GstTracer * self, guint64 ts, GstElement * elem,
     gboolean res)
 {
   do_log (GST_CAT_MESSAGE, GST_FUNCTION, (GObject *) elem,
-      "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", res=%d",
-      GST_TIME_ARGS (ts), elem, res);
+      "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", res=%s",
+      GST_TIME_ARGS (ts), elem, bool_to_str (res));
 }
 
 static void
@@ -328,7 +330,8 @@ do_element_query_post (GstTracer * self, guint64 ts, GstElement * elem,
 {
   do_log (GST_CAT_QUERY, GST_FUNCTION, (GObject *) elem,
       "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", query=%"
-      GST_PTR_FORMAT ", res=%d", GST_TIME_ARGS (ts), elem, query, res);
+      GST_PTR_FORMAT ", res=%s", GST_TIME_ARGS (ts), elem, query,
+      bool_to_str (res));
 }
 
 static void
@@ -362,8 +365,8 @@ do_element_change_state_pre (GstTracer * self, guint64 ts, GstElement * elem,
     GstStateChange change)
 {
   do_log (GST_CAT_STATES, GST_FUNCTION, (GObject *) elem,
-      "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", change=%d",
-      GST_TIME_ARGS (ts), elem, (gint) change);
+      "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", change=%s",
+      GST_TIME_ARGS (ts), elem, gst_state_change_get_name (change));
 }
 
 static void
@@ -371,8 +374,9 @@ do_element_change_state_post (GstTracer * self, guint64 ts, GstElement * elem,
     GstStateChange change, GstStateChangeReturn res)
 {
   do_log (GST_CAT_STATES, GST_FUNCTION, (GObject *) elem,
-      "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", change=%d, res=%d",
-      GST_TIME_ARGS (ts), elem, (gint) change, (gint) res);
+      "%" GST_TIME_FORMAT ", element=%" GST_PTR_FORMAT ", change=%s, res=%s",
+      GST_TIME_ARGS (ts), elem, gst_state_change_get_name (change),
+      gst_element_state_change_return_get_name (res));
 }
 
 static void
@@ -389,7 +393,7 @@ do_bin_add_post (GstTracer * self, guint64 ts, GstBin * bin, GstElement * elem,
 {
   do_log (GST_CAT_BIN, GST_FUNCTION, (GObject *) bin,
       "%" GST_TIME_FORMAT ", bin=%" GST_PTR_FORMAT ", element=%" GST_PTR_FORMAT
-      ", res=%d", GST_TIME_ARGS (ts), bin, elem, res);
+      ", res=%s", GST_TIME_ARGS (ts), bin, elem, bool_to_str (res));
 }
 
 static void
@@ -405,8 +409,8 @@ static void
 do_bin_remove_post (GstTracer * self, guint64 ts, GstBin * bin, gboolean res)
 {
   do_log (GST_CAT_BIN, GST_FUNCTION, (GObject *) bin,
-      "%" GST_TIME_FORMAT ", bin=%" GST_PTR_FORMAT ", res=%d",
-      GST_TIME_ARGS (ts), bin, res);
+      "%" GST_TIME_FORMAT ", bin=%" GST_PTR_FORMAT ", res=%s",
+      GST_TIME_ARGS (ts), bin, bool_to_str (res));
 }
 
 static void
@@ -423,7 +427,7 @@ do_pad_link_post (GstTracer * self, guint64 ts, GstPad * src, GstPad * sink,
 {
   do_log (GST_CAT_PADS, GST_FUNCTION, (GObject *) src,
       "%" GST_TIME_FORMAT ", src=%" GST_PTR_FORMAT ", sink=%" GST_PTR_FORMAT
-      ", res=%d", GST_TIME_ARGS (ts), src, sink, (gint) res);
+      ", res=%s", GST_TIME_ARGS (ts), src, sink, gst_pad_link_get_name (res));
 }
 
 static void
@@ -441,7 +445,7 @@ do_pad_unlink_post (GstTracer * self, guint64 ts, GstPad * src,
 {
   do_log (GST_CAT_PADS, GST_FUNCTION, (GObject *) src,
       "%" GST_TIME_FORMAT ", src=%" GST_PTR_FORMAT ", sink=%" GST_PTR_FORMAT
-      ", res=%d", GST_TIME_ARGS (ts), src, sink, (gint) res);
+      ", res=%s", GST_TIME_ARGS (ts), src, sink, bool_to_str (res));
 }
 
 /* tracer class */
