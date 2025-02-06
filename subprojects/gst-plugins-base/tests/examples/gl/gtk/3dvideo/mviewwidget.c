@@ -198,6 +198,8 @@ gst_mview_widget_constructed (GObject * o)
   GtkGrid *g = GTK_GRID (mv);
   GtkWidget *w;
 
+  G_OBJECT_CLASS (gst_mview_widget_parent_class)->constructed (o);
+
   gtk_widget_set_has_window (GTK_WIDGET (mv), FALSE);
 
   if (mv->is_output) {
