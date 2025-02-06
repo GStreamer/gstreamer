@@ -8,6 +8,12 @@ webrtc_headers = [
   'gstwebrtcechoprobe.h',
   'gstwebrtcdsp.h',
 ]
+
+webrtcdsp_opt = get_option('webrtcdsp')
+if webrtcdsp_opt.disabled()
+  subdir_done()
+endif
+
 doc_sources = []
 foreach s: webrtc_sources + webrtc_headers
   doc_sources += meson.current_source_dir() / s
@@ -40,7 +46,7 @@ if not webrtc_dep.found()
   webrtc_dep = dependency('webrtc-audio-processing-2', version : ['>= 2.0'],
                           allow_fallback : true,
                           default_options : [default_cppstd],
-                          required : get_option('webrtcdsp'))
+                          required : webrtcdsp_opt)
 endif
 
 if webrtc_dep.found()
