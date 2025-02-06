@@ -2852,6 +2852,13 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
   GST_LOG_OBJECT (demux, "pid: 0x%04x state:%d", stream->stream.pid,
       stream->state);
 
+  /* Handle expected discontinuity */
+  if (G_UNLIKELY (packet->afc_flags & MPEGTS_AFC_DISCONTINUITY_FLAG)) {
+    GST_LOG_OBJECT (demux, "pid: 0x%04x discontinuity flag, resetting counter",
+        stream->stream.pid);
+    stream->continuity_counter = CONTINUITY_UNSET;
+  }
+
   size = packet->data_end - packet->payload;
   data = packet->payload;
 
