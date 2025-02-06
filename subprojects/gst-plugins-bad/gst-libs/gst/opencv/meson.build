@@ -19,6 +19,7 @@ libopencv_headers = [
   'opencv2/bgsegm.hpp',
   'opencv2/calib3d.hpp',
   'opencv2/core.hpp',
+  'opencv2/imgcodecs.hpp',
   'opencv2/imgproc.hpp',
   'opencv2/objdetect.hpp',
   'opencv2/opencv.hpp',
