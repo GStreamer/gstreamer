@@ -627,6 +627,8 @@ ges_track_constructed (GObject * object)
   gchar *componame = NULL;
   gchar *capsfiltername = NULL;
 
+  G_OBJECT_CLASS (ges_track_parent_class)->constructed (object);
+
   if (self->type == GES_TRACK_TYPE_VIDEO) {
     componame =
         g_strdup_printf ("video_%s", GST_OBJECT_NAME (self->priv->composition));

@@ -476,6 +476,8 @@ ges_smart_mixer_constructed (GObject * obj)
   GESSmartMixer *self = GES_SMART_MIXER (obj);
   gchar *cname = g_strdup_printf ("%s-compositor", GST_OBJECT_NAME (self));
 
+  G_OBJECT_CLASS (ges_smart_mixer_parent_class)->constructed (obj);
+
   self->mixer =
       gst_element_factory_create (ges_get_compositor_factory (), cname);
   self->ABI.abi.has_operator =

@@ -770,6 +770,7 @@ nle_object_constructed (GObject * object)
 {
   NleObject *nleobject = (NleObject *) object;
 
+  G_OBJECT_CLASS (parent_class)->constructed (object);
   _update_stop (nleobject);
 }
 
