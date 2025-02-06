@@ -2862,6 +2862,8 @@ gst_base_ts_mux_constructed (GObject * object)
 {
   GstBaseTsMux *mux = GST_BASE_TS_MUX (object);
 
+  GST_CALL_PARENT (G_OBJECT_CLASS, constructed, (object));
+
   /* initial state */
   g_mutex_lock (&mux->lock);
   gst_base_ts_mux_reset (mux, TRUE);
