@@ -49,13 +49,19 @@ PROJECT_NAME_MAP = {
 }
 
 
-def get_c_flags(dep, buildroot, uninstalled=True):
+def get_c_flags(deps, buildroot, uninstalled=True):
+    if isinstance(deps, str):
+        deps = [deps]
     env = os.environ.copy()
     if uninstalled:
         env['PKG_CONFIG_PATH'] = os.path.join(buildroot, 'meson-uninstalled')
-    res = subprocess.run(['pkg-config', '--cflags', dep], env=env, capture_output=True)
+    for dep in deps:
+        res = subprocess.run(['pkg-config', '--cflags', dep], env=env, capture_output=True)
+        if res.returncode == 0:
+            return [res.stdout.decode().strip()]
+    print("Failed to get cflags for:", ", ".join(deps), ", ignoring")
+    return ''
 
-    return [res.stdout.decode().strip()]
 
 
 class GstLibsHotdocConfGen:
@@ -177,7 +183,7 @@ class GstLibsHotdocConfGen:
                 elif libname == 'opencv':
                     c_flags = get_c_flags(f'gstreamer-base-{self.project_version}', self.buildroot)
                     c_flags += get_c_flags(f'gstreamer-video-{self.project_version}', self.buildroot)
-                    c_flags += get_c_flags(f'opencv', self.buildroot, uninstalled=True)
+                    c_flags += get_c_flags(['opencv4', 'opencv'], self.buildroot, uninstalled=True)
                     c_flags += [f'-I{self.srcdir}/../gst-libs']
                 else:
                     c_flags = get_c_flags(f'gstreamer-{libname}-{self.project_version}', self.buildroot)
