@@ -17,6 +17,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * plugin-nvdswrapper:
+ *
+ * Since: 1.26
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

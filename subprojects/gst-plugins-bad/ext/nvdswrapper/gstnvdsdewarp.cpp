@@ -95,6 +95,11 @@ typedef enum
   GST_NV_DS_DEWARP_WARP_EQUIRECT_ROTCYLINDER,
 } GstNvDsDewarpWarpType;
 
+/**
+ * GstNvDsDewarpWarp:
+ *
+ * Since: 1.26
+ */
 #define GST_TYPE_NV_DS_DEWARP_WARP (gst_nv_ds_dewarp_warp_get_type())
 static GType
 gst_nv_ds_dewarp_warp_get_type (void)
@@ -216,6 +221,11 @@ static const GEnumValue g_axes_types[] = {
   {0, nullptr, nullptr},
 };
 
+/**
+ * GstNvDsDewarpAxes:
+ *
+ * Since: 1.26
+ */
 #define GST_TYPE_NV_DS_DEWARP_AXES (gst_nv_ds_dewarp_axes_get_type())
 static GType
 gst_nv_ds_dewarp_axes_get_type (void)
@@ -410,6 +420,11 @@ gst_nv_ds_dewarp_class_init (GstNvDsDewarpClass * klass)
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_nv_ds_dewarp_before_transform);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_nv_ds_dewarp_transform);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_DS_DEWARP_WARP,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_DS_DEWARP_AXES,
+      (GstPluginAPIFlags) 0);
 
   GST_DEBUG_CATEGORY_INIT (gst_nv_ds_dewarp_debug,
       "nvdsdewarp", 0, "nvdsdewarp");
