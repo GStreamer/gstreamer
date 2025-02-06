@@ -66,22 +66,17 @@ plugin_sources += {
   'opencv': pathsep.join(doc_sources)
 }
 
-if get_option('opencv').disabled()
-  opencv_dep = disabler()
+if get_option('opencv').disabled() or not opencv_dep.found()
   subdir_done()
 endif
 
-if opencv_found
-  gstopencv = library('gstopencv',
-    gstopencv_sources,
-    cpp_args : gst_plugins_bad_args + gstopencv_cargs + [ '-DGST_USE_UNSTABLE_API' ],
-    link_args : [noseh_link_args, '-lopencv_tracking'],
-    include_directories : [configinc, libsinc],
-    dependencies : [gstbase_dep, gstvideo_dep, opencv_dep, gstopencv_dep],
-    install : true,
-    install_dir : plugins_install_dir,
-  )
-  plugins += [gstopencv]
-elif get_option('opencv').enabled()
-  error('OpenCV support enabled but required dependencies were not found.')
-endif
+gstopencv = library('gstopencv',
+  gstopencv_sources,
+  cpp_args : gst_plugins_bad_args + gstopencv_cargs + [ '-DGST_USE_UNSTABLE_API' ],
+  link_args : [noseh_link_args, '-lopencv_tracking'],
+  include_directories : [configinc, libsinc],
+  dependencies : [gstbase_dep, gstvideo_dep, opencv_dep, gstopencv_dep],
+  install : true,
+  install_dir : plugins_install_dir,
+)
+plugins += [gstopencv]
