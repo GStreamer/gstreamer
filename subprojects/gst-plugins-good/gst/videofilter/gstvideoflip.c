@@ -1931,6 +1931,8 @@ gst_video_flip_constructed (GObject * object)
 {
   GstVideoFlip *self = GST_VIDEO_FLIP (object);
 
+  G_OBJECT_CLASS (gst_video_flip_parent_class)->constructed (object);
+
   if (self->method == (GstVideoOrientationMethod) PROP_METHOD_DEFAULT) {
     gst_video_flip_set_method (self,
         (GstVideoOrientationMethod) PROP_METHOD_DEFAULT, FALSE);
