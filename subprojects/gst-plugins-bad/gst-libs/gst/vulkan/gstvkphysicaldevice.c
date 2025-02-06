@@ -217,6 +217,8 @@ gst_vulkan_physical_device_constructed (GObject * object)
   GstVulkanPhysicalDevice *device = GST_VULKAN_PHYSICAL_DEVICE (object);
   GError *error = NULL;
 
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+
   if (device->instance == VK_NULL_HANDLE) {
     GST_ERROR_OBJECT (object, "Constructed without any instance set");
     return;
