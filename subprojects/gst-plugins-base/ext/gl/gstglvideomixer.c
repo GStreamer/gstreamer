@@ -571,6 +571,8 @@ gst_gl_video_mixer_bin_constructed (GObject * self)
 {
   GstGLMixerBin *mix_bin = GST_GL_MIXER_BIN (self);
 
+  G_OBJECT_CLASS (gst_gl_video_mixer_bin_parent_class)->constructed (self);
+
   gst_gl_mixer_bin_finish_init_with_element (mix_bin,
       g_object_new (GST_TYPE_GL_VIDEO_MIXER,
           "force-live", mix_bin->force_live,
