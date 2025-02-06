@@ -180,8 +180,7 @@ gst_auto_detect_constructed (GObject * object)
   GstAutoDetect *self = GST_AUTO_DETECT (object);
   gboolean is_audio;
 
-  if (G_OBJECT_CLASS (parent_class)->constructed)
-    G_OBJECT_CLASS (parent_class)->constructed (object);
+  G_OBJECT_CLASS (parent_class)->constructed (object);
 
   is_audio = !g_strcmp0 (self->media_klass, "Audio");
   self->type_klass = (self->flag == GST_ELEMENT_FLAG_SINK) ? "Sink" : "Source";
