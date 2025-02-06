@@ -3012,8 +3012,6 @@ gst_rtp_session_notify_twcc (RTPSession * sess,
         gst_structure_copy (twcc_packets));
     gst_pad_push_event (send_rtp_sink, event);
     gst_object_unref (send_rtp_sink);
-  } else {
-    gst_structure_free (twcc_packets);
   }
 
   if (send_rtp_src) {
