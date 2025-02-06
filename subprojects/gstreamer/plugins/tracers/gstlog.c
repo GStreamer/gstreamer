@@ -458,6 +458,8 @@ gst_log_tracer_constructed (GObject * object)
   const gchar *name;
   GstStructure *params_struct = NULL;
 
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+
   g_object_get (self, "params", &params, NULL);
 
   if (!params)

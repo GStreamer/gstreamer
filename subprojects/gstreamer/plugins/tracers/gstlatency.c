@@ -598,19 +598,12 @@ gst_latency_tracer_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_latency_tracer_constructed (GObject * object)
-{
-  G_OBJECT_CLASS (parent_class)->constructed (object);
-}
-
-static void
 gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gst_tracer_class_set_use_structure_params (GST_TRACER_CLASS (klass), TRUE);
 
-  gobject_class->constructed = gst_latency_tracer_constructed;
   gobject_class->get_property = gst_latency_tracer_get_property;
   gobject_class->set_property = gst_latency_tracer_set_property;
 
