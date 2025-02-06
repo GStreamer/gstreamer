@@ -364,6 +364,8 @@ gst_rtp_src_constructed (GObject * object)
   GstRtpSrc *self = GST_RTP_SRC (object);
   gchar *tmpname;
 
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+
   if (!self->rtp_src || !self->rtcp_src || !self->rtcp_sink)
     return;
 
