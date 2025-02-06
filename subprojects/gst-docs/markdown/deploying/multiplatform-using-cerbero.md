@@ -82,9 +82,6 @@ script; set the following attributes to describe your application:
 |                   | to the `configure`    |          |                      |
 |                   | script                |          |                      |
 |                   |                       |          |                      |
-| use_system_libs   | Whether to use system | No       | use_system_libs =    |
-|                   | provided libs         |          | True                 |
-|                   |                       |          |                      |
 | btype             | The build type        | No       | btype =              |
 |                   |                       |          | BuildType.CUSTOM     |
 |                   |                       |          |                      |
@@ -165,7 +162,6 @@ class Recipe(recipe.Recipe):
     files_typelibs = [
         'Pitivi-1.0',
     ]
-    use_system_libs = True
     files_bins = ['pitivi']
     files_lang = ['pitivi']
     files_pitivi = ['lib/pitivi/python/pitivi',
