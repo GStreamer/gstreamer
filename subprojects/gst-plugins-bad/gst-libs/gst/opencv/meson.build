@@ -28,7 +28,7 @@ libopencv_headers = [
 ]
 
 
-gstopencv_cargs = ['-DGST_HAAR_CASCADES_DIR="@0@"']
+gstopencv_cargs = []
 opencv_dep = dependency('opencv', version : ['>= 3.0.0', '< 3.5.0'], required : false)
 if not opencv_dep.found()
   opencv_dep = dependency('opencv', version : ['>= 4.0.0'], required : opencv_opt)
