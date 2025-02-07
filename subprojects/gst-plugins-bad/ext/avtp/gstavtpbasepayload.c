@@ -55,6 +55,9 @@ static void gst_avtp_base_payload_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_avtp_base_payload_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
+static gboolean gst_avtp_base_payload_src_query (GstPad * pad,
+    GstObject * parent, GstQuery * query);
+
 
 GType
 gst_avtp_base_payload_get_type (void)
@@ -133,6 +136,8 @@ gst_avtp_base_payload_init (GstAvtpBasePayload * avtpbasepayload,
 
   avtpbasepayload->srcpad = gst_pad_new_from_static_template (&src_template,
       "src");
+  gst_pad_set_query_function (avtpbasepayload->srcpad,
+      gst_avtp_base_payload_src_query);
   gst_element_add_pad (element, avtpbasepayload->srcpad);
 
   templ = gst_element_class_get_pad_template (element_class, "sink");
@@ -225,6 +230,34 @@ gst_avtp_base_payload_sink_event (GstPad * pad, GstObject * parent,
   }
 }
 
+static gboolean
+gst_avtp_base_payload_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
+{
+  GstAvtpBasePayload *avtpbasepayload = GST_AVTP_BASE_PAYLOAD (parent);
+  gboolean ret;
+
+  ret = gst_pad_query_default (pad, parent, query);
+
+  if (ret && GST_QUERY_TYPE (query) == GST_QUERY_LATENCY) {
+    gboolean live;
+    GstClockTime min_latency;
+
+    gst_query_parse_latency (query, &live, &min_latency, NULL);
+
+    if (live)
+      avtpbasepayload->latency = min_latency;
+    else
+      avtpbasepayload->latency = 0;
+
+    GST_DEBUG_OBJECT (avtpbasepayload, "live: %d latency %" GST_TIME_FORMAT,
+        live, GST_TIME_ARGS (avtpbasepayload->latency));
+  }
+
+  return ret;
+}
+
+
 GstClockTime
 gst_avtp_base_payload_calc_ptime (GstAvtpBasePayload * avtpbasepayload,
     GstBuffer * buffer)
@@ -235,15 +268,21 @@ gst_avtp_base_payload_calc_ptime (GstAvtpBasePayload * avtpbasepayload,
 
   if (G_UNLIKELY (avtpbasepayload->latency == GST_CLOCK_TIME_NONE)) {
     GstQuery *query;
+    gboolean live;
+    GstClockTime min_latency;
 
     query = gst_query_new_latency ();
     if (!gst_pad_peer_query (avtpbasepayload->sinkpad, query))
       return GST_CLOCK_TIME_NONE;
-    gst_query_parse_latency (query, NULL, &avtpbasepayload->latency, NULL);
+    gst_query_parse_latency (query, &live, &min_latency, NULL);
+    if (live)
+      avtpbasepayload->latency = min_latency;
+    else
+      avtpbasepayload->latency = 0;
     gst_query_unref (query);
 
-    GST_DEBUG_OBJECT (avtpbasepayload, "latency %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (avtpbasepayload->latency));
+    GST_DEBUG_OBJECT (avtpbasepayload, "live: %d latency %" GST_TIME_FORMAT,
+        live, GST_TIME_ARGS (avtpbasepayload->latency));
   }
 
   base_time = gst_element_get_base_time (GST_ELEMENT (avtpbasepayload));
