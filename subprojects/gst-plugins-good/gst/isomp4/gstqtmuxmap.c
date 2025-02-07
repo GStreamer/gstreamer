@@ -70,6 +70,12 @@
   "alignment = (string) au, " \
   COMMON_VIDEO_CAPS
 
+#define H266_CAPS \
+  "video/x-h266, " \
+  "stream-format = (string) { vvc1, vvi1 }, " \
+  "alignment = (string) au, " \
+  COMMON_VIDEO_CAPS
+
 #define MPEG4V_CAPS \
   "video/mpeg, " \
   "mpegversion = (int) 4, "\
@@ -197,6 +203,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             H263_CAPS "; "
             H264_CAPS "; "
             H265_CAPS "; "
+            H266_CAPS "; "
             SVQ_CAPS "; "
             "video/x-dv, "
             "systemstream = (boolean) false, "
@@ -229,9 +236,9 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "MP4",
         "GstMP4Mux",
         GST_STATIC_CAPS ("video/quicktime, variant = (string) iso"),
-        GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS ";" H265_CAPS ";"
-            "video/x-mp4-part," COMMON_VIDEO_CAPS "; "
-            "video/x-av1, " "stream-format = (string) \"obu-stream\", "
+        GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS ";" H265_CAPS ";" H266_CAPS
+            ";" "video/x-mp4-part," COMMON_VIDEO_CAPS "; " "video/x-av1, "
+            "stream-format = (string) \"obu-stream\", "
             "alignment = (string) \"tu\", " COMMON_VIDEO_CAPS "; " VP9_CAPS
             "; "),
         GST_STATIC_CAPS (MP123_CAPS "; " AAC_CAPS " ; " AC3_CAPS " ; " ALAC_CAPS

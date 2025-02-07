@@ -5820,7 +5820,8 @@ check_field (const GstIdStr * fieldname, const GValue * value,
   }
 
   if (g_strcmp0 (name, "video/x-h264") == 0 ||
-      g_strcmp0 (name, "video/x-h265") == 0) {
+      g_strcmp0 (name, "video/x-h265") == 0 ||
+      g_strcmp0 (name, "video/x-h266") == 0) {
     /* We support muxing multiple codec_data structures, and the new SPS
      * will contain updated tier / level / profiles, which means we do
      * not need to fail renegotiation when those change.
@@ -6465,6 +6466,28 @@ gst_qt_mux_video_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
       ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
 
     ext_atom = build_codec_data_extension (FOURCC_hvcC, codec_data);
+    if (ext_atom != NULL)
+      ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
+
+  } else if (strcmp (mimetype, "video/x-h266") == 0) {
+    const gchar *format;
+
+    if (!codec_data) {
+      GST_WARNING_OBJECT (qtmux, "no codec_data in h266 caps");
+      goto refuse_caps;
+    }
+
+    format = gst_structure_get_string (structure, "stream-format");
+    if (strcmp (format, "vvc1") == 0)
+      entry.fourcc = FOURCC_vvc1;
+    else if (strcmp (format, "vvi1") == 0)
+      entry.fourcc = FOURCC_vvi1;
+
+    ext_atom = build_btrt_extension (0, qtpad->avg_bitrate, qtpad->max_bitrate);
+    if (ext_atom != NULL)
+      ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
+
+    ext_atom = build_vvcC_extension (0, 0, codec_data);
     if (ext_atom != NULL)
       ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
 

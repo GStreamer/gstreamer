@@ -5811,3 +5811,32 @@ build_vpcC_extension (guint8 profile, guint8 level, guint8 bit_depth,
   return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
       atom_data_free);
 }
+
+AtomInfo *
+build_vvcC_extension (guint8 version, guint32 flags,
+    const GstBuffer * codec_data)
+{
+  AtomData *atom_data;
+  GstByteWriter bw;
+  gboolean hdl = TRUE;
+  guint8 *data_block;
+  guint data_block_len;
+
+  gst_byte_writer_init (&bw);
+  hdl &= gst_byte_writer_put_uint8 (&bw, version);
+  hdl &= gst_byte_writer_put_uint24_be (&bw, flags & 0xFFFFFF);
+  hdl &= gst_byte_writer_put_buffer (&bw, (GstBuffer *) codec_data, 0, -1);
+
+  if (!hdl) {
+    GST_WARNING ("error creating header");
+    return NULL;
+  }
+
+  data_block_len = gst_byte_writer_get_size (&bw);
+  data_block = gst_byte_writer_reset_and_get_data (&bw);
+  atom_data = atom_data_new_from_data (FOURCC_vvcC, data_block, data_block_len);
+  g_free (data_block);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
+}

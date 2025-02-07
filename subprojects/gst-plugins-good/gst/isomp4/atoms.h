@@ -1122,6 +1122,7 @@ AtomInfo *   build_vpcC_extension        (guint8 profile, guint8 level, guint8 b
                                           guint8 chroma_subsampling, gboolean video_full_range,
                                           guint8 colour_primaries, guint8 transfer_characteristics,
                                           guint8 matrix_coefficients);
+AtomInfo *   build_vvcC_extension        (guint8 version, guint32 flags, const GstBuffer* codec_data);
 
 
 /*
