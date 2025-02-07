@@ -4063,6 +4063,14 @@ If set to %FALSE, decision of whether to parse the data or not is up to
 the implementation (standard behaviour).</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
+      <property name="error-no-valid-frames" version="1.30" writable="1" transfer-ownership="none" default-value="TRUE">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.c">If set to %TRUE, baseparse will post an error on the bus if no valid frames
+were produced on EOS. This is the default legacy behaviour. If set to
+%FALSE, a warning message will be posted instead, the user will have to
+ensure it properly handles the fact that a parser might potentially push
+EOS without any data.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
       <field name="element">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">the parent element.</doc>
         <type name="Gst.Element" c:type="GstElement"/>
