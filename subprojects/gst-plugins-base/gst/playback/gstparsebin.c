@@ -2142,6 +2142,15 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
       subtitle = FALSE;
     }
 
+    /* We can handle streams without any data coming from parsers */
+    pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element),
+        "error-no-valid-frames");
+    if (pspec && G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_BOOLEAN) {
+      GST_DEBUG_OBJECT (parsebin,
+          "Disabling `error-no-valid-frames` on element");
+      g_object_set (G_OBJECT (element), "error-no-valid-frames", FALSE, NULL);
+    }
+
     /* link this element further */
     to_connect = connect_element (parsebin, pelem, chain);
 
