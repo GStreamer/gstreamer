@@ -123,6 +123,7 @@ enum TsMuxStreamType {
   TSMUX_ST_VIDEO_HEVC                 = 0x24,
   TSMUX_ST_VIDEO_JP2K                 = 0x21,
   TSMUX_ST_VIDEO_JPEG_XS              = 0x32,
+  TSMUX_ST_VIDEO_VVC                  = 0x33,
 
   /* private stream types */
   TSMUX_ST_PS_AUDIO_AC3               = 0x81,

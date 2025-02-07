@@ -108,6 +108,8 @@ static GstStaticPadTemplate gst_mpeg_ts_mux_sink_factory =
         "alignment=(string){au, nal}; "
         "video/x-h265,stream-format=(string)byte-stream,"
         "alignment=(string){au, nal}; "
+        "video/x-h266,stream-format=(string)byte-stream,"
+        "alignment=(string){au, nal}; "
         "audio/mpeg, "
         "parsed = (boolean) TRUE, "
         "mpegversion = (int) 1;"

@@ -628,6 +628,8 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     st = TSMUX_ST_VIDEO_H264;
   } else if (strcmp (mt, "video/x-h265") == 0) {
     st = TSMUX_ST_VIDEO_HEVC;
+  } else if (strcmp (mt, "video/x-h266") == 0) {
+    st = TSMUX_ST_VIDEO_VVC;
   } else if (strcmp (mt, "video/x-vp9") == 0) {
     if (mux->enable_custom_mappings) {
       st = TSMUX_ST_PS_VP9;

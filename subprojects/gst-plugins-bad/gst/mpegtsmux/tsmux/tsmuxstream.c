@@ -137,6 +137,7 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
     case TSMUX_ST_VIDEO_MPEG4:
     case TSMUX_ST_VIDEO_H264:
     case TSMUX_ST_VIDEO_HEVC:
+    case TSMUX_ST_VIDEO_VVC:
       if (stream_number > 0xF) {
         GST_WARNING
             ("video stream number %d is greater than 0xF. Setting to 0.",
