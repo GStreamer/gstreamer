@@ -143,7 +143,8 @@ enum
   PROP_LATENCY,
   PROP_TOLERANCE,
   PROP_PLC,
-  PROP_MAX_ERRORS
+  PROP_MAX_ERRORS,
+  PROP_ERROR_NO_VALID_FRAMES,
 };
 
 #define DEFAULT_LATENCY    0
@@ -152,6 +153,7 @@ enum
 #define DEFAULT_DRAINABLE  TRUE
 #define DEFAULT_NEEDS_FORMAT  FALSE
 #define DEFAULT_MAX_ERRORS GST_AUDIO_DECODER_MAX_ERRORS
+#define DEFAULT_ERROR_NO_VALID_FRAMES TRUE
 
 typedef struct _GstAudioDecoderContext
 {
@@ -238,6 +240,9 @@ struct _GstAudioDecoderPrivate
   gint error_count;
   /* max errors */
   gint max_errors;
+
+  /* Post an ERROR (true) or WARNING (false) if no valid frames were produced */
+  gboolean error_no_valid_frames;
 
   /* upstream stream tags (global tags are passed through as-is) */
   GstTagList *upstream_tags;
@@ -431,6 +436,25 @@ gst_audio_decoder_class_init (GstAudioDecoderClass * klass)
           -1, G_MAXINT, DEFAULT_MAX_ERRORS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstAudioDecoder:error-no-valid-frames:
+   *
+   * If set to %TRUE, the element will post an error on the bus if no valid
+   * frames were produced on EOS. This is the default legacy behaviour. If set
+   * to %FALSE, a warning message will be posted instead, the user will have to
+   * ensure it properly handles the fact that a decoder might potentially push
+   * EOS without any data.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_ERROR_NO_VALID_FRAMES,
+      g_param_spec_boolean ("error-no-valid-frames",
+          "Post ERROR message if no valid frames before EOS",
+          "Post ERROR message if no valid frames were produced before EOS "
+          "(FALSE: Post a WARNING message instead)",
+          DEFAULT_ERROR_NO_VALID_FRAMES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   audiodecoder_class->sink_event =
       GST_DEBUG_FUNCPTR (gst_audio_decoder_sink_eventfunc);
   audiodecoder_class->src_event =
@@ -501,6 +525,7 @@ gst_audio_decoder_init (GstAudioDecoder * dec, GstAudioDecoderClass * klass)
   dec->priv->drainable = DEFAULT_DRAINABLE;
   dec->priv->needs_format = DEFAULT_NEEDS_FORMAT;
   dec->priv->max_errors = GST_AUDIO_DECODER_MAX_ERRORS;
+  dec->priv->error_no_valid_frames = DEFAULT_ERROR_NO_VALID_FRAMES;
 
   /* init state */
   dec->priv->ctx.min_latency = 0;
@@ -2520,9 +2545,15 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
       if (dec->priv->ctx.had_input_data && !dec->priv->ctx.had_output_data) {
-        GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-            ("No valid frames decoded before end of stream"),
-            ("no valid frames found"));
+        if (dec->priv->error_no_valid_frames) {
+          GST_ELEMENT_ERROR (dec, STREAM, DECODE,
+              ("No valid frames decoded before end of stream"),
+              ("no valid frames found"));
+        } else {
+          GST_ELEMENT_WARNING (dec, STREAM, DECODE,
+              ("No valid frames decoded before end of stream"),
+              ("no valid frames found"));
+        }
       }
 
       /* Forward EOS because no buffer or serialized event will come after
@@ -3172,6 +3203,9 @@ gst_audio_decoder_get_property (GObject * object, guint prop_id,
     case PROP_MAX_ERRORS:
       g_value_set_int (value, gst_audio_decoder_get_max_errors (dec));
       break;
+    case PROP_ERROR_NO_VALID_FRAMES:
+      g_value_set_boolean (value, dec->priv->error_no_valid_frames);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3198,6 +3232,9 @@ gst_audio_decoder_set_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_ERRORS:
       gst_audio_decoder_set_max_errors (dec, g_value_get_int (value));
+      break;
+    case PROP_ERROR_NO_VALID_FRAMES:
+      dec->priv->error_no_valid_frames = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

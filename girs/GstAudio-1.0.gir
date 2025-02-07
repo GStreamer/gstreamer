@@ -4571,6 +4571,14 @@ handler with %GST_PAD_SET_ACCEPT_INTERSECT and
           </parameter>
         </parameters>
       </method>
+      <property name="error-no-valid-frames" version="1.30" writable="1" transfer-ownership="none" default-value="TRUE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudiodecoder.c">If set to %TRUE, the element will post an error on the bus if no valid
+frames were produced on EOS. This is the default legacy behaviour. If set
+to %FALSE, a warning message will be posted instead, the user will have to
+ensure it properly handles the fact that a decoder might potentially push
+EOS without any data.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
       <property name="max-errors" version="1.18" writable="1" transfer-ownership="none" setter="set_max_errors" getter="get_max_errors" default-value="-1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudiodecoder.c">Maximum number of tolerated consecutive decode errors. See
 gst_audio_decoder_set_max_errors() for more details.</doc>
