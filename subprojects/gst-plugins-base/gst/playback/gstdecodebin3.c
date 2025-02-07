@@ -3875,6 +3875,7 @@ db_output_stream_setup_decoder (DecodebinOutputStream * output,
 
   while (next_factory) {
     CandidateDecoder *candidate = NULL;
+    GParamSpec *pspec;
 
     /* If we don't have a decoder yet, instantiate one */
     output->decoder = gst_element_factory_create (
@@ -3900,6 +3901,16 @@ db_output_stream_setup_decoder (DecodebinOutputStream * output,
       goto try_next;
     }
     output->linked = TRUE;
+
+    /* Make sure decoders don't post an ERROR message if they didn't produce any
+     * valid frame before EOS. */
+    pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (output->decoder),
+        "error-no-valid-frames");
+    if (pspec && G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_BOOLEAN) {
+      GST_DEBUG_OBJECT (dbin, "Disabling `error-no-valid-frames` on element");
+      g_object_set (G_OBJECT (output->decoder), "error-no-valid-frames", FALSE,
+          NULL);
+    }
 
     if (gst_element_set_state (output->decoder, GST_STATE_READY) ==
         GST_STATE_CHANGE_FAILURE) {
