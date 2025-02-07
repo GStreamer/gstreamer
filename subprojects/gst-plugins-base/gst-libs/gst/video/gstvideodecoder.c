@@ -309,6 +309,7 @@ GST_DEBUG_CATEGORY (videodecoder_debug);
 #define DEFAULT_DISCARD_CORRUPTED_FRAMES FALSE
 #define DEFAULT_AUTOMATIC_REQUEST_SYNC_POINTS FALSE
 #define DEFAULT_AUTOMATIC_REQUEST_SYNC_POINT_FLAGS (GST_VIDEO_DECODER_REQUEST_SYNC_POINT_DISCARD_INPUT | GST_VIDEO_DECODER_REQUEST_SYNC_POINT_CORRUPT_OUTPUT)
+#define DEFAULT_ERROR_NO_VALID_FRAMES    TRUE
 
 /* Used for request_sync_point_frame_number. These are out of range for the
  * frame numbers and can be given special meaning */
@@ -324,6 +325,7 @@ enum
   PROP_DISCARD_CORRUPTED_FRAMES,
   PROP_AUTOMATIC_REQUEST_SYNC_POINTS,
   PROP_AUTOMATIC_REQUEST_SYNC_POINT_FLAGS,
+  PROP_ERROR_NO_VALID_FRAMES
 };
 
 struct _GstVideoDecoderPrivate
@@ -355,6 +357,10 @@ struct _GstVideoDecoderPrivate
   gint error_count;
   gboolean had_output_data;
   gboolean had_input_data;
+
+  /* Whether to post ERROR or WARNING message when no valid frames were
+   * produced */
+  gboolean error_no_valid_frames;
 
   gboolean needs_format;
   /* input_segment are output_segment identical */
@@ -719,6 +725,24 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
           DEFAULT_AUTOMATIC_REQUEST_SYNC_POINT_FLAGS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstVideoDecoder:error-no-valid-frames:
+   *
+   * If set to %TRUE, the element will post an error on the bus if no valid
+   * frames were produced on EOS. This is the default legacy behaviour. If set
+   * to %FALSE, a warning message will be posted instead, the user will have to
+   * ensure it properly handles the fact that a decoder might potentially push
+   * EOS without any data.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_ERROR_NO_VALID_FRAMES,
+      g_param_spec_boolean ("error-no-valid-frames",
+          "Post ERROR message if no valid frames before EOS",
+          "Post ERROR message if no valid frames were produced before EOS (FALSE: Post a WARNING message instead)",
+          DEFAULT_ERROR_NO_VALID_FRAMES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   meta_tag_video_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_STR);
 }
 
@@ -773,6 +797,7 @@ gst_video_decoder_init (GstVideoDecoder * decoder, GstVideoDecoderClass * klass)
   /* properties */
   decoder->priv->do_qos = DEFAULT_QOS;
   decoder->priv->max_errors = GST_VIDEO_DECODER_MAX_ERRORS;
+  decoder->priv->error_no_valid_frames = DEFAULT_ERROR_NO_VALID_FRAMES;
 
   decoder->priv->min_latency = 0;
   decoder->priv->max_latency = 0;
@@ -998,6 +1023,9 @@ gst_video_decoder_get_property (GObject * object, guint property_id,
     case PROP_AUTOMATIC_REQUEST_SYNC_POINT_FLAGS:
       g_value_set_flags (value, priv->automatic_request_sync_point_flags);
       break;
+    case PROP_ERROR_NO_VALID_FRAMES:
+      g_value_set_boolean (value, priv->error_no_valid_frames);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -1029,6 +1057,9 @@ gst_video_decoder_set_property (GObject * object, guint property_id,
       break;
     case PROP_AUTOMATIC_REQUEST_SYNC_POINT_FLAGS:
       priv->automatic_request_sync_point_flags = g_value_get_flags (value);
+      break;
+    case PROP_ERROR_NO_VALID_FRAMES:
+      priv->error_no_valid_frames = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1626,9 +1657,15 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
 
       /* Error out even if EOS was ok when we had input, but no output */
       if (ret && priv->had_input_data && !priv->had_output_data) {
-        GST_ELEMENT_ERROR (decoder, STREAM, DECODE,
-            ("No valid frames decoded before end of stream"),
-            ("no valid frames found"));
+        if (priv->error_no_valid_frames) {
+          GST_ELEMENT_ERROR (decoder, STREAM, DECODE,
+              ("No valid frames decoded before end of stream"),
+              ("no valid frames found"));
+        } else {
+          GST_ELEMENT_WARNING (decoder, STREAM, DECODE,
+              ("No valid frames decoded before end of stream"),
+              ("no valid frames found"));
+        }
       }
 
       /* Forward EOS immediately. This is required because no
