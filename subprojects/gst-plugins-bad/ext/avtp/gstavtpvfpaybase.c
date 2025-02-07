@@ -323,24 +323,26 @@ static gboolean
 gst_avtp_vf_pay_base_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
-  GstCaps *caps;
   GstAvtpBasePayload *avtpbasepayload = GST_AVTP_BASE_PAYLOAD (parent);
   GstAvtpVfPayBase *avtpvfpaybase = GST_AVTP_VF_PAY_BASE (avtpbasepayload);
-  gboolean ret;
 
   GST_DEBUG_OBJECT (avtpvfpaybase, "Sink event %s",
       GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
-      gst_event_parse_caps (event, &caps);
-      g_assert (GST_AVTP_VF_PAY_BASE_GET_CLASS (avtpvfpaybase)->new_caps !=
-          NULL);
-      ret =
-          GST_AVTP_VF_PAY_BASE_GET_CLASS (avtpvfpaybase)->new_caps
-          (avtpvfpaybase, caps);
-      gst_event_unref (event);
-      return ret;
+      if (GST_AVTP_VF_PAY_BASE_GET_CLASS (avtpvfpaybase)->new_caps) {
+        GstCaps *caps;
+        gboolean ret;
+
+        gst_event_parse_caps (event, &caps);
+        ret =
+            GST_AVTP_VF_PAY_BASE_GET_CLASS (avtpvfpaybase)->new_caps
+            (avtpvfpaybase, caps);
+        gst_event_unref (event);
+        return ret;
+      }
+      break;
     case GST_EVENT_FLUSH_STOP:
       if (GST_ELEMENT (avtpvfpaybase)->current_state == GST_STATE_PLAYING) {
         /* After a flush, the sink will reset pipeline base_time, but only
