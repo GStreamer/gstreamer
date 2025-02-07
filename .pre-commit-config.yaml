@@ -27,3 +27,9 @@ repos:
         language: system
         entry: rustfmt --verbose --edition 2021
         types_or: ["rust"]
+    -   id: doc-checks
+        name: doc-checks
+        language: python
+        entry: ./scripts/git-hooks/pre-commit-python.hook
+        pass_filenames: false
+        additional_dependencies: ["autopep8==2.3.2", "pycodestyle==2.12.1"]

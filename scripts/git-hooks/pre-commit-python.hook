@@ -1,0 +1,233 @@
+#!/usr/bin/env python3
+import os
+import subprocess
+import sys
+import tempfile
+import json
+import glob
+from pathlib import Path
+from typing import Dict, Optional, Set, Tuple
+
+NOT_PYCODESTYLE_COMPLIANT_MESSAGE_PRE = \
+    "Your code is not fully pycodestyle compliant and contains"\
+    " the following coding style issues:\n\n"
+
+NOT_PYCODESTYLE_COMPLIANT_MESSAGE_POST = \
+    "Please fix these errors and commit again, you can do so "\
+    "from the root directory automatically like this, assuming the whole "\
+    "file is to be committed:"
+
+NO_PYCODESTYLE_MESSAGE = \
+    "You should install the pycodestyle style checker to be able"\
+    " to commit in this repo.\nIt allows us to guarantee that "\
+    "anything that is committed respects the pycodestyle coding style "\
+    "standard.\nYou can install it:\n"\
+    "  * on ubuntu, debian: $sudo apt-get install pycodestyle \n"\
+    "  * on fedora: #yum install python3-pycodestyle \n"\
+    "  * on arch: #pacman -S python-pycodestyle \n"\
+    "  * or `pip install --user pycodestyle`"
+
+
+def system(*args, **kwargs):
+    kwargs.setdefault('stdout', subprocess.PIPE)
+    proc = subprocess.Popen(args, **kwargs)
+    out, err = proc.communicate()
+    if isinstance(out, bytes):
+        out = out.decode()
+    return out
+
+
+def copy_files_to_tmp_dir(files):
+    tempdir = tempfile.mkdtemp()
+    for name in files:
+        filename = os.path.join(tempdir, name)
+        filepath = os.path.dirname(filename)
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
+        with open(filename, 'w', encoding="utf-8") as f:
+            system('git', 'show', ':' + name, stdout=f)
+
+    return tempdir
+
+def find_builddir() -> Optional[Path]:
+    # Explicitly-defined builddir takes precedence
+    if 'GST_DOC_BUILDDIR' in os.environ:
+        return Path(os.environ['GST_DOC_BUILDDIR'])
+
+    # Now try the usual suspects
+    for name in ('build', '_build', 'builddir', 'b'):
+        if Path(name, 'build.ninja').exists():
+            return Path(name)
+
+    # Out of luck, look for the most recent folder with a `build.ninja` file
+    for d in sorted([p for p in Path('.').iterdir() if p.is_dir()], key=lambda p: p.stat().st_mtime):
+        if Path(d, 'build.ninja').exists():
+            print ('Found', d)
+            return d
+
+    return None
+
+def hotdoc_conf_needs_rebuild(conf_path: Path, conf_data: Dict, modified_fpaths):
+    if not isinstance(conf_data, dict):
+        return False
+
+    for (key, value) in conf_data.items():
+        if key.endswith('c_sources'):
+            if any(['*' in f for f in value]):
+                continue
+            conf_dir = conf_path.parent
+            for f in value:
+                fpath = Path(f)
+                if not fpath.is_absolute():
+                    fpath = Path(conf_dir, fpath)
+
+                fpath = fpath.resolve()
+                if fpath in modified_fpaths:
+                    return True
+
+    return False
+
+
+def get_hotdoc_confs_to_rebuild(builddir, modified_files) -> Tuple[Set, Set]:
+    srcdir = Path(os.getcwd())
+    modified_fpaths = set()
+    for f in modified_files:
+        modified_fpaths.add(Path(srcdir, f))
+
+    confs_need_rebuild = set()
+    caches_need_rebuild = set()
+    for path in glob.glob('**/docs/*.json', root_dir=builddir, recursive=True):
+        conf_path = Path(srcdir, builddir, path)
+        with open(conf_path) as f:
+            conf_data = json.load(f)
+
+        if hotdoc_conf_needs_rebuild(conf_path, conf_data, modified_fpaths):
+            confs_need_rebuild.add(conf_path)
+            caches_need_rebuild.add(conf_data.get('gst_plugin_library'))
+
+    return (confs_need_rebuild, caches_need_rebuild)
+
+def build(builddir):
+    subprocess.run(['ninja', '-C', builddir], check=True)
+    for subproject in ('gstreamer', 'gst-plugins-base', 'gst-plugins-good', 'gst-plugins-bad', 'gst-plugins-ugly', 'gst-rtsp-server', 'gst-libav', 'gst-editing-services'):
+        subprocess.run(['ninja', '-C', builddir, f'subprojects/{subproject}/docs/hotdoc-configs.json'], check=True)
+
+def build_cache(builddir, subproject, targets, subdir):
+    if not targets:
+        return
+
+    print (f'Rebuilding {subproject} cache with changes from {targets}')
+
+    cmd = [
+        os.path.join(builddir, f'subprojects/gstreamer/docs/gst-plugins-doc-cache-generator'),
+        os.path.join(os.getcwd(), f'subprojects/{subproject}/docs/{subdir}gst_plugins_cache.json'),
+        os.path.join(builddir, f'subprojects/{subproject}/docs/gst_plugins_cache.json'),
+    ] + targets
+
+    subprocess.run(cmd)
+
+class StashManager:
+    def __enter__(self):
+        print ('Stashing changes')
+        # First, save the difference with the current index to a patch file
+        tree = subprocess.run(['git', 'write-tree'], capture_output=True, check=True).stdout.strip()
+        result = subprocess.run(['git', 'diff-index', '--ignore-submodules', '--binary', '--no-color', '--no-ext-diff', tree], check=True, capture_output=True)
+        # Don't delete the temporary file, we want to make sure to prevent data loss
+        with tempfile.NamedTemporaryFile(delete_on_close=False, delete=False) as f:
+            f.write(result.stdout)
+            self.patch_file_name = f.name
+
+        # Print the path to the diff file, useful is something goes wrong
+        print ("unstaged diff saved to ", self.patch_file_name)
+
+        # Now stash the changes, we do not use git stash --keep-index because it causes spurious rebuilds
+        subprocess.run(['git', '-c', 'submodule.recurse=0', 'checkout', '--', '.'], check=True)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Now re-apply the non-staged changes
+        subprocess.run(['git', 'apply', '--allow-empty', self.patch_file_name], check=True)
+        print ('Unstashed changes')
+
+def run_doc_checks(modified_files):
+    builddir = find_builddir()
+
+    if builddir is None:
+        raise Exception('cannot run doc pre-commit hook without a build directory')
+
+    builddir = builddir.absolute()
+
+    build(builddir)
+
+    # Each subproject holds its own cache file. For each we keep track of the
+    # dynamic library associated with the hotdoc configuration files that need
+    # rebuilding, and only update the caches using those libraries.
+    # This is done in order to minimize spurious diffs as much as possible.
+    caches = {}
+
+    (confs_need_rebuild, caches_need_rebuild) = get_hotdoc_confs_to_rebuild(builddir, modified_files)
+
+    for libpath in caches_need_rebuild:
+        cache_project = Path(libpath).relative_to(builddir).parts[1]
+        if cache_project not in caches:
+            caches[cache_project] = [libpath]
+        else:
+            caches[cache_project].append(libpath)
+
+    for (subproject, libpaths) in caches.items():
+        cache_subdir = 'plugins/' if subproject in ['gst-plugins-bad', 'gst-plugins-base', 'gst-rtsp-server', 'gstreamer', 'gst-plugins-rs'] else ''
+        build_cache(builddir, subproject, libpaths, cache_subdir)
+
+    try:
+        subprocess.run(['git', 'diff', '--ignore-submodules', '--exit-code'], check=True)
+    except subprocess.CalledProcessError as e:
+        print ('You have a diff in the plugin cache, please commit it')
+        raise e
+
+    print ('No pending diff in plugin caches, checking since tags')
+
+    for conf_path in confs_need_rebuild:
+        subprocess.run(['hotdoc', 'run', '--fatal-warnings', '--disable-warnings', '--enabled-warnings', 'missing-since-marker', '--conf-file', conf_path, '--previous-symbol-index', 'subprojects/gst-docs/symbols/symbol_index.json'], check=True)
+
+def main():
+    modified_files = system('git', 'diff-index', '--cached',
+                            '--name-only', 'HEAD', '--diff-filter=ACMR').split("\n")[:-1]
+
+    if os.environ.get('GST_ENABLE_DOC_PRE_COMMIT_HOOK', '0') != '0':
+        with StashManager():
+            try:
+                run_doc_checks(modified_files)
+            except Exception as e:
+                print (e)
+                sys.exit(1)
+
+    non_compliant_files = []
+    output_message = None
+
+    for modified_file in modified_files:
+        try:
+            if not modified_file.endswith(".py"):
+                continue
+            pycodestyle_errors = system('pycodestyle', '--repeat', '--ignore', 'E402,E501,E128,W605,W503', modified_file)
+            if pycodestyle_errors:
+                if output_message is None:
+                    output_message = NOT_PYCODESTYLE_COMPLIANT_MESSAGE_PRE
+                output_message += pycodestyle_errors
+                non_compliant_files.append(modified_file)
+        except OSError as e:
+            output_message = NO_PYCODESTYLE_MESSAGE
+            break
+
+    if output_message:
+        print(output_message)
+        if non_compliant_files:
+            print(NOT_PYCODESTYLE_COMPLIANT_MESSAGE_POST)
+            for non_compliant_file in non_compliant_files:
+                print("autopep8 -i --max-line-length 120", non_compliant_file, "; git add ",
+                      non_compliant_file)
+            print("git commit")
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
