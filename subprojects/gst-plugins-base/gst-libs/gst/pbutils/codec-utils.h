@@ -97,6 +97,28 @@ gboolean      gst_codec_utils_h265_caps_set_level_tier_and_profile (GstCaps     
                                                                     const guint8 * profile_tier_level,
                                                                     guint          len);
 
+/* H.266 */
+
+GST_PBUTILS_API
+const gchar * gst_codec_utils_h266_get_profile                     (const guint8 * ptl_record,
+                                                                    guint len);
+
+GST_PBUTILS_API
+const gchar * gst_codec_utils_h266_get_tier                        (const guint8 * ptl_record,
+                                                                    guint len);
+
+GST_PBUTILS_API
+const gchar * gst_codec_utils_h266_get_level                       (const guint8 * ptl_record,
+                                                                    guint len);
+
+GST_PBUTILS_API
+guint8        gst_codec_utils_h266_get_level_idc                   (const gchar  * level);
+
+GST_PBUTILS_API
+gboolean      gst_codec_utils_h266_caps_set_level_tier_and_profile (GstCaps      * caps,
+                                                                    const guint8 * decoder_configuration,
+                                                                    guint          len);
+
 /* AV1 */
 
 GST_PBUTILS_API

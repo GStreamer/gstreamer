@@ -1118,6 +1118,65 @@ GST_START_TEST (test_pb_utils_h264_get_profile_flags_level)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pb_utils_h266_caps_set_level_tier_and_profile)
+{
+  GstCaps *caps;
+  GstStructure *s;
+  const guint8 good_config[] =
+      { 0xff, 0x00, 0x61, 0x1f, 0x01, 0x02, 0x50, 0x80 };
+  const guint8 short_config[] = { 0xff, 0x00, 0x61, 0x1f };
+  const guint8 no_ptl_config[] = { 0xfe, 0xba, 0xbe, 0xef };
+  const guint8 short_config_no_level[] = { 0xff, 0x00, 0x61, 0x1f, 0x01, 0x02 };
+
+  /* Happy path */
+  caps = gst_caps_new_empty_simple ("video/x-h266");
+  fail_unless (gst_codec_utils_h266_caps_set_level_tier_and_profile (caps,
+          good_config, sizeof (good_config)));
+  s = gst_caps_get_structure (caps, 0);
+
+  fail_unless_equals_string (gst_structure_get_string (s, "profile"),
+      "main-10");
+  fail_unless_equals_string (gst_structure_get_string (s, "level"), "5");
+  fail_unless_equals_string (gst_structure_get_string (s, "tier"), "main");
+  gst_caps_unref (caps);
+
+  /* Too short to have profile-tier-level */
+  caps = gst_caps_new_empty_simple ("video/x-h266");
+  fail_unless (!gst_codec_utils_h266_caps_set_level_tier_and_profile (caps,
+          short_config, sizeof (short_config)));
+  s = gst_caps_get_structure (caps, 0);
+
+  fail_unless_equals_string (gst_structure_get_string (s, "profile"), NULL);
+  fail_unless_equals_string (gst_structure_get_string (s, "level"), NULL);
+  fail_unless_equals_string (gst_structure_get_string (s, "tier"), NULL);
+  gst_caps_unref (caps);
+
+  /* ptl_present_flag = FALSE */
+  caps = gst_caps_new_empty_simple ("video/x-h266");
+  fail_unless (!gst_codec_utils_h266_caps_set_level_tier_and_profile (caps,
+          no_ptl_config, sizeof (no_ptl_config)));
+  s = gst_caps_get_structure (caps, 0);
+
+  fail_unless_equals_string (gst_structure_get_string (s, "profile"), NULL);
+  fail_unless_equals_string (gst_structure_get_string (s, "level"), NULL);
+  fail_unless_equals_string (gst_structure_get_string (s, "tier"), NULL);
+  gst_caps_unref (caps);
+
+  /* Too short to parse level */
+  caps = gst_caps_new_empty_simple ("video/x-h266");
+  fail_unless (!gst_codec_utils_h266_caps_set_level_tier_and_profile (caps,
+          short_config_no_level, sizeof (short_config_no_level)));
+  s = gst_caps_get_structure (caps, 0);
+
+  fail_unless_equals_string (gst_structure_get_string (s, "profile"),
+      "main-10");
+  fail_unless_equals_string (gst_structure_get_string (s, "level"), NULL);
+  fail_unless_equals_string (gst_structure_get_string (s, "tier"), "main");
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 #define PROFILE_TIER_LEVEL_LEN 11
 
 static void
@@ -1712,6 +1771,8 @@ libgstpbutils_suite (void)
   tcase_add_test (tc_chain, test_pb_utils_h265_profiles);
   tcase_add_test (tc_chain, test_pb_utils_caps_mime_codec);
   tcase_add_test (tc_chain, test_pb_utils_caps_from_mime_codec);
+  tcase_add_test (tc_chain, test_pb_utils_h266_caps_set_level_tier_and_profile);
+
   return s;
 }
 

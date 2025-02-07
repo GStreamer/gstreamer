@@ -1545,6 +1545,304 @@ gst_codec_utils_h265_caps_set_level_tier_and_profile (GstCaps * caps,
 }
 
 /**
+ * gst_codec_utils_h266_get_profile:
+ * @ptl_record: (array length=len): Pointer to the VvcPTLRecord structure as defined in ISO/IEC 14496-15.
+ * @len: Length of the data available in @ptl_record
+ *
+ * Converts the profile indication (general_profile_idc) in the stream's
+ * ptl_record structure into a string.
+ *
+ * Returns: (nullable): The profile as a const string, or %NULL if there is an error.
+ *
+ * Since: 1.26
+ */
+const gchar *
+gst_codec_utils_h266_get_profile (const guint8 * ptl_record, guint len)
+{
+  gint profile_idc;
+
+  g_return_val_if_fail (ptl_record != NULL, NULL);
+
+  if (len < 2)
+    return NULL;
+
+  GST_MEMDUMP ("VvcPTLRecord", ptl_record, len);
+
+  profile_idc = (ptl_record[1] & 0xFE) >> 1;
+
+  if (!profile_idc)
+    return NULL;
+
+  switch (profile_idc) {
+    case 1:
+      return "main-10";
+      break;
+    case 2:
+      return "main-12";
+      break;
+    case 10:
+      return "main-12-intra";
+      break;
+    case 17:
+      return "multilayer-main-10";
+      break;
+    case 33:
+      return "main-444-10";
+      break;
+    case 34:
+      return "main-444-12";
+      break;
+    case 35:
+      return "main-444-16";
+      break;
+    case 42:
+      return "main-444-12-intra";
+      break;
+    case 43:
+      return "main-444-16-intra";
+      break;
+    case 49:
+      return "multilayer-main-444-10";
+      break;
+    case 65:
+      return "main-10-still-picture";
+      break;
+    case 66:
+      return "main-12-still-picture";
+      break;
+    case 97:
+      return "main-444-10-still-picture";
+      break;
+    case 98:
+      return "main-444-12-still-picture";
+      break;
+    case 99:
+      return "main-444-16-still-picture";
+      break;
+    default:
+      return NULL;
+  }
+}
+
+/**
+ * gst_codec_utils_h266_get_tier:
+ * @ptl_record: (array length=len): Pointer to the VvcPTLRecord structure as defined in ISO/IEC 14496-15.
+ * @len: Length of the data available in @ptl_record.
+ *
+ * Converts the tier indication (general_tier_flag) in the stream's
+ * ptl_record structure into a string.
+ *
+ * Returns: (nullable): The tier as a const string, or %NULL if there is an error.
+ *
+ * Since: 1.26
+ */
+const gchar *
+gst_codec_utils_h266_get_tier (const guint8 * ptl_record, guint len)
+{
+  const gchar *tier = NULL;
+  gint tier_flag = 0;
+
+  g_return_val_if_fail (ptl_record != NULL, NULL);
+
+  if (len < 2)
+    return NULL;
+
+  GST_MEMDUMP ("VvcPTLRecord", ptl_record, len);
+
+  tier_flag = ptl_record[1] & 0x01;
+
+  if (tier_flag)
+    tier = "high";
+  else
+    tier = "main";
+
+  return tier;
+}
+
+/**
+ * gst_codec_utils_h266_get_level:
+ * @ptl_record: (array length=len): Pointer to the VvcPTLRecord structure as defined in ISO/IEC 14496-15.
+ * @len: Length of the data available in @ptl_record.
+ *
+ * Converts the level indication (general_level_idc) in the stream's
+ * ptl_record structure into a string.
+ *
+ * Returns: (nullable): The level as a const string, or %NULL if there is an error.
+ *
+ * Since: 1.26
+ */
+const gchar *
+gst_codec_utils_h266_get_level (const guint8 * ptl_record, guint len)
+{
+  guint8 level_idc;
+
+  g_return_val_if_fail (ptl_record != NULL, NULL);
+
+  if (len < 3)
+    return NULL;
+
+  GST_MEMDUMP ("VvcPTLRecord", ptl_record, len);
+
+  level_idc = ptl_record[2];
+
+  if (!level_idc)
+    return NULL;
+
+  switch (level_idc) {
+    case 16:
+      return "1";
+      break;
+    case 32:
+      return "2";
+      break;
+    case 35:
+      return "2.1";
+      break;
+    case 48:
+      return "3";
+      break;
+    case 51:
+      return "3.1";
+      break;
+    case 64:
+      return "4";
+      break;
+    case 67:
+      return "4.1";
+      break;
+    case 80:
+      return "5";
+      break;
+    case 83:
+      return "5.1";
+      break;
+    case 86:
+      return "5.2";
+      break;
+    case 96:
+      return "6";
+      break;
+    case 99:
+      return "6.1";
+      break;
+    case 102:
+      return "6.2";
+      break;
+    case 105:
+      return "6.3";
+      break;
+    default:
+      return NULL;
+  }
+}
+
+/**
+ * gst_codec_utils_h266_get_level_idc:
+ * @level: A level string from caps
+ *
+ * Transform a level string from the caps into the level_idc
+ *
+ * Returns: the level_idc or 0 if the level is unknown
+ *
+ * Since: 1.26
+ */
+guint8
+gst_codec_utils_h266_get_level_idc (const gchar * level)
+{
+  g_return_val_if_fail (level != NULL, 0);
+
+  if (!strcmp (level, "1"))
+    return 16;
+  else if (!strcmp (level, "2"))
+    return 32;
+  else if (!strcmp (level, "2.1"))
+    return 35;
+  else if (!strcmp (level, "3"))
+    return 48;
+  else if (!strcmp (level, "3.1"))
+    return 51;
+  else if (!strcmp (level, "4"))
+    return 64;
+  else if (!strcmp (level, "4.1"))
+    return 67;
+  else if (!strcmp (level, "5"))
+    return 80;
+  else if (!strcmp (level, "5.1"))
+    return 83;
+  else if (!strcmp (level, "5.2"))
+    return 86;
+  else if (!strcmp (level, "6"))
+    return 96;
+  else if (!strcmp (level, "6.1"))
+    return 99;
+  else if (!strcmp (level, "6.2"))
+    return 102;
+  else if (!strcmp (level, "6.3"))
+    return 105;
+
+
+  GST_WARNING ("Invalid level %s", level);
+  return 0;
+}
+
+/**
+ * gst_codec_utils_h266_caps_set_level_tier_and_profile:
+ * @caps: the #GstCaps to which the level, tier and profile are to be added
+ * @decoder_configuration: (array length=len): Pointer to the VvcDecoderConfigurationRecord struct as defined in ISO/IEC 14496-15
+ * @len: Length of the data available in @decoder_configuration.
+ *
+ * Sets the level, tier and profile in @caps if it can be determined from
+ * @decoder_configuration. See gst_codec_utils_h266_get_level(),
+ * gst_codec_utils_h266_get_tier() and gst_codec_utils_h266_get_profile()
+ * for more details on the parameters.
+ *
+ * Returns: %TRUE if the level, tier, profile could be set, %FALSE otherwise.
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_codec_utils_h266_caps_set_level_tier_and_profile (GstCaps * caps,
+    const guint8 * decoder_configuration, guint len)
+{
+  const gchar *level, *tier, *profile;
+  gboolean ptl_present_flag;
+  const guint8 *ptl_record;
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), FALSE);
+  g_return_val_if_fail (GST_SIMPLE_CAPS_HAS_NAME (caps, "video/x-h266"), FALSE);
+  g_return_val_if_fail (decoder_configuration != NULL, FALSE);
+
+  if (len < 5)
+    return FALSE;
+
+  ptl_present_flag = decoder_configuration[0] & 0x01;
+  if (!ptl_present_flag)
+    return FALSE;
+
+  ptl_record = decoder_configuration + 4;
+  len -= 4;
+
+  level = gst_codec_utils_h266_get_level (ptl_record, len);
+  if (level != NULL)
+    gst_caps_set_simple (caps, "level", G_TYPE_STRING, level, NULL);
+
+  tier = gst_codec_utils_h266_get_tier (ptl_record, len);
+  if (tier != NULL)
+    gst_caps_set_simple (caps, "tier", G_TYPE_STRING, tier, NULL);
+
+  profile = gst_codec_utils_h266_get_profile (ptl_record, len);
+  if (profile != NULL)
+    gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
+
+  GST_LOG ("profile : %s", (profile) ? profile : "---");
+  GST_LOG ("tier    : %s", (tier) ? tier : "---");
+  GST_LOG ("level   : %s", (level) ? level : "---");
+
+  return (level != NULL && tier != NULL && profile != NULL);
+}
+
+/**
  * gst_codec_utils_av1_get_seq_level_idx:
  * @level: A level string from caps
  *
