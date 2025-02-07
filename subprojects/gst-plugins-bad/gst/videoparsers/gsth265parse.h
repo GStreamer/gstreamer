@@ -87,6 +87,7 @@ struct _GstH265Parse
   gboolean have_sps_in_frame;
   gboolean have_pps_in_frame;
   gboolean have_aud_in_frame;
+  gboolean have_vcl_in_frame;
 
   gboolean first_frame;
 

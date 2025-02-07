@@ -396,7 +396,7 @@
       <segments>
         <segment next-frame-id="0" flags="0" rate="1.000000" applied-rate="1.000000" format="3" base="0" offset="0" start="66666666" stop="10066666666" time="0" position="66666666" duration="18446744073709551615"/>
       </segments>
-       <frame duration="33333333" id="0" is-keyframe="true" offset="0" offset-end="18446744073709551615" pts="66666666" dts="0" running-time="0" checksum="a0a010e4be3540fc885b5cf2cd7bcd7c"/>
+       <frame duration="0" id="0" is-keyframe="true" offset="0" offset-end="18446744073709551615" pts="66666666" dts="0" running-time="0" checksum="a0a010e4be3540fc885b5cf2cd7bcd7c"/>
        <frame duration="33333333" id="1" is-keyframe="false" offset="6856" offset-end="18446744073709551615" pts="166666666" dts="33333333" running-time="100000000" checksum="205434bfe42d6bf4698989a0e29a34db"/>
        <frame duration="33333334" id="2" is-keyframe="false" offset="10817" offset-end="18446744073709551615" pts="133333333" dts="66666666" running-time="66666667" checksum="0232f19135c59fd720e0090cb677de93"/>
        <frame duration="33333333" id="3" is-keyframe="false" offset="14585" offset-end="18446744073709551615" pts="100000000" dts="100000000" running-time="33333334" checksum="dc59301adb42db8211312c5384ac62f6"/>

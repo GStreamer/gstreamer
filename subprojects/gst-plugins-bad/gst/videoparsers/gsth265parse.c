@@ -214,6 +214,7 @@ gst_h265_parse_reset_frame (GstH265Parse * h265parse)
   h265parse->have_sps_in_frame = FALSE;
   h265parse->have_pps_in_frame = FALSE;
   h265parse->have_aud_in_frame = FALSE;
+  h265parse->have_vcl_in_frame = FALSE;
   h265parse->layer_id = 0;
   h265parse->temporal_id_plus1 = 0;
   gst_adapter_clear (h265parse->frame_out);
@@ -1117,6 +1118,12 @@ gst_h265_parse_collect_nal (GstH265Parse * h265parse, const guint8 * data,
   return complete;
 }
 
+static gboolean
+gst_h265_parse_nal_is_vcl (const GstH265NalUnit * nalu)
+{
+  return (nalu->type <= GST_H265_NAL_SLICE_CRA_NUT);
+}
+
 static GstFlowReturn
 gst_h265_parse_handle_frame_packetized (GstBaseParse * parse,
     GstBaseParseFrame * frame)
@@ -1234,6 +1241,8 @@ gst_h265_parse_handle_frame_packetized (GstBaseParse * parse,
       }
     }
   }
+
+  h265parse->have_vcl_in_frame |= gst_h265_parse_nal_is_vcl (&nalu);
 
   if (G_UNLIKELY (left)) {
     /* should not be happening for nice HEVC */
@@ -1432,6 +1441,8 @@ gst_h265_parse_handle_frame (GstBaseParse * parse,
 
     GST_DEBUG_OBJECT (h265parse, "%p complete nal found. Off: %u, Size: %u",
         data, nalu.offset, nalu.size);
+
+    h265parse->have_vcl_in_frame |= gst_h265_parse_nal_is_vcl (&nalu);
 
     if (gst_h265_parse_collect_nal (h265parse, data, size, &nalu)) {
       h265parse->aud_needed = TRUE;
@@ -2755,15 +2766,18 @@ gst_h265_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   gst_h265_parse_update_src_caps (h265parse, NULL);
 
-  if (h265parse->fps_num > 0 && h265parse->fps_den > 0 &&
-      !GST_BUFFER_DURATION_IS_VALID (buffer)) {
-    GstClockTime val =
-        gst_h265_parse_is_field_interlaced (h265parse) ? GST_SECOND /
-        2 : GST_SECOND;
+  if (h265parse->have_vcl_in_frame) {
+    if (h265parse->fps_num > 0 && h265parse->fps_den > 0 &&
+        !GST_BUFFER_DURATION_IS_VALID (buffer)) {
+      GstClockTime val =
+          gst_h265_parse_is_field_interlaced (h265parse) ? GST_SECOND /
+          2 : GST_SECOND;
 
-    GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (val,
-        h265parse->fps_den, h265parse->fps_num);
-  }
+      GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (val,
+          h265parse->fps_den, h265parse->fps_num);
+    }
+  } else
+    GST_BUFFER_DURATION (buffer) = 0;
 
   if (h265parse->keyframe)
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
