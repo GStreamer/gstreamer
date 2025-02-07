@@ -74,7 +74,7 @@ gstwebrtc = library('gstwebrtc-' + api_version,
 library_def = {'lib': gstwebrtc}
 pkg_name = 'gstreamer-webrtc-1.0'
 pkgconfig.generate(gstwebrtc,
-  libraries : [gst_dep, gstbase_dep],
+  libraries : [gst_dep, gstsdp_dep, gstbase_dep],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
   name : pkg_name,
