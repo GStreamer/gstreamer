@@ -7,6 +7,7 @@ and/or use gtk-doc annotations.  -->
   <package name="gstreamer-codecs-1.0"/>
   <c:include name="gst/codecs/gsth264decoder.h"/>
   <c:include name="gst/codecs/gsth265decoder.h"/>
+  <c:include name="gst/codecs/gsth266decoder.h"/>
   <c:include name="gst/codecs/gstmpeg2decoder.h"/>
   <c:include name="gst/codecs/gstvp8decoder.h"/>
   <c:include name="gst/codecs/gstvp9decoder.h"/>

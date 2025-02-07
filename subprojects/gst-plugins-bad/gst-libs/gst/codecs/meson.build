@@ -81,6 +81,7 @@ if build_gir
       '--c-include=gst/codecs/gstvp9decoder.h',
       '--c-include=gst/codecs/gstvp8decoder.h',
       '--c-include=gst/codecs/gstmpeg2decoder.h',
+      '--c-include=gst/codecs/gsth266decoder.h',
       ],
     'dependencies' : [gstvideo_dep, gstcodecparsers_dep]
   }
