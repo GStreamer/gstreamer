@@ -78,8 +78,7 @@
 
 #include <math.h>
 
-#include <gst/video/gstvideometa.h>
-#include <gst/video/gstvideopool.h>
+#include <gst/video/video.h>
 
 #include "gstvideoconvertscale.h"
 
@@ -264,9 +263,6 @@ static void gst_video_convert_scale_set_property (GObject * object,
 static void gst_video_convert_scale_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstCapsFeatures *features_format_interlaced,
-    *features_format_interlaced_sysmem;
-
 static gboolean
 gst_video_convert_scale_filter_meta (GstBaseTransform * trans, GstQuery * query,
     GType api, const GstStructure * params)
@@ -292,14 +288,6 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
   GST_DEBUG_CATEGORY_INIT (video_convertscale_debug, "videoconvertscale", 0,
       "videoconvertscale element");
   GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
-
-  features_format_interlaced =
-      gst_caps_features_new_static_str (GST_CAPS_FEATURE_FORMAT_INTERLACED,
-      NULL);
-  features_format_interlaced_sysmem =
-      gst_caps_features_copy (features_format_interlaced);
-  gst_caps_features_add (features_format_interlaced_sysmem,
-      GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
 
   _colorspace_quark = g_quark_from_static_string ("colorspace");
 
@@ -611,6 +599,35 @@ gst_video_convert_scale_get_property (GObject * object, guint prop_id,
   GST_OBJECT_UNLOCK (object);
 }
 
+static gboolean
+gst_video_convert_is_supported_caps_features (const GstCapsFeatures * features)
+{
+  if (gst_caps_features_is_any (features))
+    return FALSE;
+
+  // Check if all features are supported ones
+  guint n_features = gst_caps_features_get_size (features);
+  for (guint i = 0; i < n_features; i++) {
+    const GstIdStr *feature = gst_caps_features_get_nth_id_str (features, i);
+
+    if (gst_id_str_is_equal_to_str (feature,
+            GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY))
+      continue;
+
+    if (gst_id_str_is_equal_to_str (feature,
+            GST_CAPS_FEATURE_FORMAT_INTERLACED))
+      continue;
+
+    if (gst_id_str_is_equal_to_str (feature,
+            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION))
+      continue;
+
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static GstCaps *
 gst_video_convert_caps_remove_format_and_rangify_size_info (GstVideoConvertScale
     * self, GstCaps * caps)
@@ -635,12 +652,7 @@ gst_video_convert_caps_remove_format_and_rangify_size_info (GstVideoConvertScale
 
     structure = gst_structure_copy (structure);
     /* Only remove format info for the cases when we can actually convert */
-    if (!gst_caps_features_is_any (features)
-        && (gst_caps_features_is_equal (features,
-                GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)
-            || gst_caps_features_is_equal (features, features_format_interlaced)
-            || gst_caps_features_is_equal (features,
-                features_format_interlaced_sysmem))) {
+    if (gst_video_convert_is_supported_caps_features (features)) {
       if (klass->scales) {
         gst_structure_set_static_str (structure, "width", GST_TYPE_INT_RANGE, 1,
             G_MAXINT, "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
