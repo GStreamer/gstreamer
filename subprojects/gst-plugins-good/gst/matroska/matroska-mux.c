@@ -120,6 +120,8 @@ static GstStaticPadTemplate videosink_templ =
         COMMON_VIDEO_CAPS "; "
         "video/x-h265, stream-format = (string) { hvc1, hev1 }, alignment=au, "
         COMMON_VIDEO_CAPS "; "
+        "video/x-h266, stream-format = (string) { vvc1, vvi1 }, alignment=au, "
+        COMMON_VIDEO_CAPS "; "
         "video/x-divx, "
         COMMON_VIDEO_CAPS "; "
         "video/x-huffyuv, "
@@ -932,21 +934,31 @@ gst_matroska_mux_set_codec_id (GstMatroskaTrackContext * context,
 }
 
 static gboolean
+has_h26x_in_band_codec_data (GstStructure * structure)
+{
+  const gchar *name = gst_structure_get_name (structure);
+
+  return (g_strcmp0 (name, "video/x-h264") == 0
+      && !g_strcmp0 (gst_structure_get_string (structure, "stream-format"),
+          "avc3"))
+      || (g_strcmp0 (name, "video/x-h265") == 0
+      && !g_strcmp0 (gst_structure_get_string (structure, "stream-format"),
+          "hev1"))
+      || (g_strcmp0 (name, "video/x-h266") == 0
+      && !g_strcmp0 (gst_structure_get_string (structure, "stream-format"),
+          "vvi1"));
+}
+
+static gboolean
 check_field (const GstIdStr * fieldname, const GValue * value,
     gpointer user_data)
 {
   GstStructure *structure = (GstStructure *) user_data;
-  const gchar *name = gst_structure_get_name (structure);
 
-  if ((g_strcmp0 (name, "video/x-h264") == 0 &&
-          !g_strcmp0 (gst_structure_get_string (structure, "stream-format"),
-              "avc3")) || (g_strcmp0 (name, "video/x-h265") == 0
-          && !g_strcmp0 (gst_structure_get_string (structure, "stream-format"),
-              "hev1"))
-      ) {
-    /* While in theory, matroska only supports avc1 / hvc1, and doesn't support codec_data
-     * changes, in practice most decoders will use in-band SPS / PPS (avc3 / hev1), if the
-     * input stream is avc3 / hev1 we let the new codec_data slide to support "smart" encoding.
+  if (has_h26x_in_band_codec_data (structure)) {
+    /* While in theory, matroska only supports avc1 / hvc1 / vvc1, and doesn't support codec_data
+     * changes, in practice most decoders will use in-band SPS / PPS (avc3 / hev1 / vvi1), if the
+     * input stream is avc3 / hev1 / vvi1 we let the new codec_data slide to support "smart" encoding.
      *
      * We don't warn here as we already warned elsewhere.
      */
@@ -1336,6 +1348,23 @@ skip_details:
     }
 
     /* Create hvcC header */
+    if (codec_buf != NULL) {
+      context->codec_priv_size = gst_buffer_get_size (codec_buf);
+      context->codec_priv = g_malloc0 (context->codec_priv_size);
+      gst_buffer_extract (codec_buf, 0, context->codec_priv, -1);
+    }
+  } else if (!strcmp (mimetype, "video/x-h266")) {
+    gst_matroska_mux_set_codec_id (context,
+        GST_MATROSKA_CODEC_ID_VIDEO_MPEGI_VVC);
+    gst_matroska_mux_free_codec_priv (context);
+
+    if (!g_strcmp0 (gst_structure_get_string (structure, "stream-format"),
+            "vvi1")) {
+      GST_WARNING_OBJECT (mux,
+          "vvi1 is not officially supported, only use this format for smart encoding");
+    }
+
+    /* Create CodecPrivate with VVCDecoderConfigurationRecord */
     if (codec_buf != NULL) {
       context->codec_priv_size = gst_buffer_get_size (codec_buf);
       context->codec_priv = g_malloc0 (context->codec_priv_size);
