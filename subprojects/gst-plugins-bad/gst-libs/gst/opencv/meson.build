@@ -1,6 +1,7 @@
+opencv_dep = disabler()
+gstopencv_dep = disabler()
 opencv_opt = get_option('opencv')
 if opencv_opt.disabled()
-  opencv_dep = disabler()
   subdir_done()
 endif
 
@@ -31,7 +32,7 @@ libopencv_headers = [
 gstopencv_cargs = []
 opencv_dep = dependency('opencv', version : ['>= 3.0.0', '< 3.5.0'], required : false)
 if not opencv_dep.found()
-  opencv_dep = dependency('opencv', version : ['>= 4.0.0'], required : opencv_opt)
+  opencv_dep = dependency('opencv4', version : ['>= 4.0.0'], required : opencv_opt)
   if not opencv_dep.found()
     subdir_done()
   endif
@@ -76,7 +77,7 @@ else
   if opencv_opt.enabled()
     error('opencv enabled, but data directory not found')
   endif
-  message('Unable to detect OpenCV data directory')
+  message('Unable to detect OpenCV data directory in ' + opencv_prefix)
   subdir_done()
 endif
 
