@@ -1000,7 +1000,8 @@ parse_MTrk (GstMidiParse * midiparse, guint8 * data, guint size)
 
   /* now loop over all events and calculate the duration */
   while (!track->eot) {
-    handle_next_event (midiparse, track, NULL, NULL);
+    if (handle_next_event (midiparse, track, NULL, NULL) != GST_FLOW_OK)
+      return FALSE;
   }
 
 
