@@ -1,5 +1,5 @@
 project('gstreamer-full', 'c',
-  version : '1.25.1.1',
+  version : '1.25.50',
   meson_version : '>= 1.4',
   default_options : ['buildtype=debugoptimized',
                      # Needed due to https://github.com/mesonbuild/meson/issues/1889,

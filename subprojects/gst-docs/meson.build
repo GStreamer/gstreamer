@@ -1,5 +1,5 @@
 project('GStreamer manuals and tutorials', 'c',
-  version: '1.25.1.1',
+  version: '1.25.50',
   meson_version : '>= 1.4')
 
 hotdoc_p = find_program('hotdoc')
