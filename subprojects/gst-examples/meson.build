@@ -1,4 +1,4 @@
-project('gst-examples', 'c', version : '1.25.50', license : 'LGPL')
+project('gst-examples', 'c', version : '1.25.50.1', license : 'LGPL')
 
 static_build = get_option('default_library') == 'static'
 cc = meson.get_compiler('c')
