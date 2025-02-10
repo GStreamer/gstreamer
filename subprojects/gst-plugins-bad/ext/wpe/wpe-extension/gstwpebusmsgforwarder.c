@@ -37,6 +37,8 @@ dispose (GObject * object)
   GstWpeBusMsgForwarder *self = GST_WPE_BUS_MSG_FORWARDER (object);
 
   g_clear_object (&self->cancellable);
+
+  G_OBJECT_CLASS (gst_wpe_bus_msg_forwarder_parent_class)->dispose (object);
 }
 
 static WebKitUserMessage *
@@ -161,6 +163,9 @@ static void
 constructed (GObject * object)
 {
   GstTracer *tracer = GST_TRACER (object);
+
+  G_OBJECT_CLASS (gst_wpe_bus_msg_forwarder_parent_class)->constructed (object);
+
   gst_tracing_register_hook (tracer, "element-post-message-pre",
       G_CALLBACK (gst_message_post_cb));
 }
