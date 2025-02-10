@@ -138,6 +138,7 @@ gst_video_texture_cache_vulkan_constructed (GObject * object)
 {
   GstVideoTextureCacheVulkan *cache_vulkan = GST_VIDEO_TEXTURE_CACHE_VULKAN (object);
 
+  G_OBJECT_CLASS (gst_video_texture_cache_vulkan_parent_class)->constructed (object);
   g_return_if_fail (GST_IS_VULKAN_DEVICE (cache_vulkan->device));
 
   gst_io_surface_vulkan_memory_init ();

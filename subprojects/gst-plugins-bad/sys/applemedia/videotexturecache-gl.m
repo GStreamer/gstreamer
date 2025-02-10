@@ -130,6 +130,7 @@ gst_video_texture_cache_gl_constructed (GObject * object)
 {
   GstVideoTextureCacheGL *cache_gl = GST_VIDEO_TEXTURE_CACHE_GL (object);
 
+  G_OBJECT_CLASS (gst_video_texture_cache_gl_parent_class)->constructed (object);
   g_return_if_fail (GST_IS_GL_CONTEXT (cache_gl->ctx));
 
 #ifdef HAVE_IOS
