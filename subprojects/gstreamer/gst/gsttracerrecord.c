@@ -137,6 +137,8 @@ gst_tracer_record_dispose (GObject * object)
   }
   g_free (self->format);
   self->format = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
