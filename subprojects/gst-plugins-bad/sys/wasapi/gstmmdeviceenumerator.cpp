@@ -271,6 +271,8 @@ gst_mm_device_enumerator_constructed (GObject * object)
 {
   GstMMDeviceEnumerator *self = GST_MM_DEVICE_ENUMERATOR (object);
 
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+
   g_mutex_lock (&self->lock);
   self->thread = g_thread_new ("GstMMDeviceEnumerator",
       (GThreadFunc) gst_mm_device_enumerator_thread_func, self);
