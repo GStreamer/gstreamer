@@ -3086,42 +3086,22 @@ gst_gl_upload_transform_caps (GstGLUpload * upload, GstGLContext * context,
   GstCaps *result, *tmp;
   gint i;
 
+  GST_OBJECT_LOCK (upload);
+
+  // Prefer caps from the currently configured method, if any
   if (upload->priv->method) {
     tmp = upload->priv->method->transform_caps (upload->priv->method_impl,
         context, direction, caps);
-
-    if (tmp) {
-      /* If we're generating sink pad caps, make sure to include raw caps if needed by
-       * the current method */
-      if (direction == GST_PAD_SRC
-          && (upload->priv->method->flags & METHOD_FLAG_CAN_ACCEPT_RAW)) {
-        GstCapsFeatures *passthrough =
-            gst_caps_features_from_string
-            (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
-        GstCaps *raw_tmp = _set_caps_features_with_passthrough (tmp,
-            GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, passthrough);
-        gst_caps_append (tmp, raw_tmp);
-        gst_caps_features_free (passthrough);
-      }
-
-      if (filter) {
-        result =
-            gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
-        gst_caps_unref (tmp);
-      } else {
-        result = tmp;
-      }
-      if (!gst_caps_is_empty (result))
-        return result;
-      else
-        gst_caps_unref (result);
-    }
+  } else {
+    tmp = gst_caps_new_empty ();
   }
-
-  tmp = gst_caps_new_empty ();
 
   for (i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
     GstCaps *tmp2;
+
+    // Checked above already and put to the front
+    if (upload->priv->method == upload_methods[i])
+      continue;
 
     tmp2 =
         upload_methods[i]->transform_caps (upload->priv->upload_impl[i],
@@ -3137,6 +3117,8 @@ gst_gl_upload_transform_caps (GstGLUpload * upload, GstGLContext * context,
   } else {
     result = tmp;
   }
+
+  GST_OBJECT_UNLOCK (upload);
 
   return result;
 }
@@ -3412,6 +3394,26 @@ gst_gl_upload_fixate_caps (GstGLUpload * upload, GstPadDirection direction,
     ret_caps = othercaps;
     goto out;
   }
+
+  // If a method is currently configured then fixate to the caps of this method
+  // if possible.
+  GST_OBJECT_LOCK (upload);
+  if (upload->priv->method) {
+    GstCaps *current_method_caps =
+        upload->priv->method->transform_caps (upload->priv->method_impl,
+        upload->context, GST_PAD_SINK, caps);
+    GstCaps *tmp = gst_caps_intersect_full (current_method_caps, othercaps,
+        GST_CAPS_INTERSECT_FIRST);
+
+    if (!gst_caps_is_empty (tmp)) {
+      gst_caps_unref (othercaps);
+      othercaps = tmp;
+    } else {
+      gst_caps_unref (tmp);
+    }
+    gst_caps_unref (current_method_caps);
+  }
+  GST_OBJECT_UNLOCK (upload);
 
   /* Prefer target 2D->rectangle->oes */
   for (target = GST_GL_TEXTURE_TARGET_2D;
