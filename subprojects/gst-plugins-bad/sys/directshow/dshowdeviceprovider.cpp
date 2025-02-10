@@ -76,6 +76,8 @@ static void
 gst_dshow_device_provider_dispose (GObject * gobject)
 {
   CoUninitialize ();
+
+  G_OBJECT_CLASS (gst_dshow_device_provider_parent_class)->dispose (gobject);
 }
 
 static GstDevice *
