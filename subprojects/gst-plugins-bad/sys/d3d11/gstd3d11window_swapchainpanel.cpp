@@ -252,6 +252,8 @@ gst_d3d11_window_swap_chain_panel_constructed (GObject * object)
   ComPtr<Xaml::ISizeChangedEventHandler> resize_handler;
   ComPtr<Xaml::IFrameworkElement> framework;
 
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+
   if (!window->external_handle) {
     GST_ERROR_OBJECT (self, "No external window handle");
     return;
