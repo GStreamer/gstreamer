@@ -4,3 +4,4 @@
 #
 
 echo "This hook is deprecated, please run 'meson setup' to update your configuration"
+echo "You first need to install pre-commit with your package manager or python3 -m pip install pre-commit"
