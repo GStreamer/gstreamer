@@ -80,6 +80,8 @@ gst_tracer_dispose (GObject * object)
 {
   GstTracer *tracer = GST_TRACER (object);
   g_free (tracer->priv->params);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
