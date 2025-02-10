@@ -228,6 +228,7 @@ gst_kms_allocator_constructed (GObject * obj)
   GstKMSAllocator *alloc;
 
   alloc = GST_KMS_ALLOCATOR (obj);
+  G_OBJECT_CLASS (parent_class)->constructed (obj);
 
   /* Should be called after the properties are set */
   g_assert (check_fd (alloc));
