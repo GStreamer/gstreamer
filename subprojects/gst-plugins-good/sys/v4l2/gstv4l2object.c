@@ -106,24 +106,25 @@ typedef struct
 /* *INDENT-OFF* */
 static GstV4L2FormatDesc gst_v4l2_formats[] = {
   /* RGB formats */
-  {MAP_FMT (RGB332, UNKNOWN),   MAP_DRM (RGB332,   LINEAR),     GST_V4L2_RAW},
-  {MAP_FMT (ARGB555, UNKNOWN),  MAP_DRM (ARGB1555, LINEAR),     GST_V4L2_RAW},
-  {MAP_FMT (XRGB555, RGB15),    KNOWN_DRM_MAP,                  GST_V4L2_RAW},
-  {MAP_FMT (XRGB555X,UNKNOWN),  MAP_DRM_BE (XRGB1555, LINEAR),  GST_V4L2_RAW},
-  {MAP_FMT (ARGB555X, UNKNOWN), MAP_DRM_BE (ARGB1555, LINEAR),  GST_V4L2_RAW},
-  {MAP_FMT (RGB565, RGB16),     KNOWN_DRM_MAP,                  GST_V4L2_RAW},
-  {MAP_FMT (RGB565X,UNKNOWN),   MAP_DRM_BE (RGB565, LINEAR),    GST_V4L2_RAW},
-  {MAP_FMT (BGR666, UNKNOWN),   MAP_DRM (INVALID, INVALID),     GST_V4L2_RAW},
-  {MAP_FMT (BGR24, BGR),        KNOWN_DRM_MAP,                  GST_V4L2_RAW},
-  {MAP_FMT (RGB24, RGB),        KNOWN_DRM_MAP,                  GST_V4L2_RAW},
-  {MAP_FMT (ABGR32, BGRA),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
-  {MAP_FMT (XBGR32, BGRx),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
-  {MAP_FMT (BGRA32, ABGR),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
-  {MAP_FMT (BGRX32, xBGR),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
-  {MAP_FMT (RGBA32, RGBA),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
-  {MAP_FMT (RGBX32, RGBx),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
-  {MAP_FMT (ARGB32, ARGB),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
-  {MAP_FMT (XRGB32, xRGB),      KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (RGB332, UNKNOWN),         MAP_DRM (RGB332,   LINEAR),     GST_V4L2_RAW},
+  {MAP_FMT (ARGB555, UNKNOWN),        MAP_DRM (ARGB1555, LINEAR),     GST_V4L2_RAW},
+  {MAP_FMT (XRGB555, RGB15),          KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (XRGB555X,UNKNOWN),        MAP_DRM_BE (XRGB1555, LINEAR),  GST_V4L2_RAW},
+  {MAP_FMT (ARGB555X, UNKNOWN),       MAP_DRM_BE (ARGB1555, LINEAR),  GST_V4L2_RAW},
+  {MAP_FMT (RGB565, RGB16),           KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (RGB565X,UNKNOWN),         MAP_DRM_BE (RGB565, LINEAR),    GST_V4L2_RAW},
+  {MAP_FMT (BGR666, UNKNOWN),         MAP_DRM (INVALID, INVALID),     GST_V4L2_RAW},
+  {MAP_FMT (BGR24, BGR),              KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (RGB24, RGB),              KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (ABGR32, BGRA),            KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (XBGR32, BGRx),            KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (BGRA32, ABGR),            KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (BGRX32, xBGR),            KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (RGBA32, RGBA),            KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (RGBX32, RGBx),            KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (ARGB32, ARGB),            KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (XRGB32, xRGB),            KNOWN_DRM_MAP,                  GST_V4L2_RAW},
+  {MAP_FMT (ARGB2101010, BGR10A2_LE), KNOWN_DRM_MAP,                  GST_V4L2_RAW},
 
   /* Deprecated Packed RGB Image Formats (alpha ambiguity) */
   {MAP_FMT (RGB444, UNKNOWN), MAP_DRM (INVALID, INVALID), GST_V4L2_RAW},
@@ -1124,6 +1125,7 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
     case V4L2_PIX_FMT_RGBX32:
     case V4L2_PIX_FMT_ARGB32:
     case V4L2_PIX_FMT_XRGB32:
+    case V4L2_PIX_FMT_ARGB2101010:
       rank = RGB_BASE_RANK;
       break;
 
