@@ -8133,6 +8133,115 @@ gst_value_transform_object_string (const GValue * src_value,
   dest_value->data[0].v_pointer = str;
 }
 
+/*********
+ * GStrv *
+ *********/
+
+static gchar *
+gst_value_serialize_strv (const GValue * value)
+{
+  const gchar **strv = g_value_get_boxed (value);
+  GString *str = g_string_new ("<");
+
+  while (*strv != NULL) {
+    const gchar *s = *strv;
+
+    /* Add separator if it's not the first string */
+    if (str->len > 1)
+      g_string_append_c (str, ',');
+
+    g_string_append_c (str, '\"');
+
+    /* Escape \ to \\ and " to \" */
+    while (*s != '\0') {
+      if (*s == '\"' || *s == '\\')
+        g_string_append_c (str, '\\');
+      g_string_append_c (str, *s);
+      s++;
+    }
+
+    g_string_append_c (str, '\"');
+
+    strv++;
+  }
+
+  g_string_append_c (str, '>');
+
+  return g_string_free (str, FALSE);
+}
+
+static gboolean
+gst_value_deserialize_strv (GValue * dest, const gchar * s)
+{
+  /* If it's not starting with '<' assume it's a simple comma separated list
+   * with no escaping. Otherwise assume the format <"foo","bar"> with spaces
+   * allowed between delimiters and \ for escaping. */
+  if (*s != '<') {
+    g_value_take_boxed (dest, g_strsplit (s, ",", -1));
+    return TRUE;
+  }
+  s++;
+
+  while (g_ascii_isspace (*s))
+    s++;
+
+  GPtrArray *strv = g_ptr_array_new_with_free_func (g_free);
+  while (*s != '>') {
+    if (*s != '\"')
+      goto error;
+    s++;
+
+    /* Find string end and check if we need to unescape it */
+    gboolean escaped = FALSE;
+    const gchar *start = s;
+    while (*s != '\"') {
+      if (*s == '\\') {
+        escaped = TRUE;
+        s++;
+      }
+      if (*s == '\0')
+        goto error;
+      s++;
+    }
+    s++;
+
+    /* Always copy the whole string and unescape inplace */
+    gchar *substr = g_strndup (start, s - start - 1);
+    if (escaped) {
+      gchar *p1 = substr;
+      const gchar *p2 = substr;
+      while (*p2 != '\0') {
+        if (*p2 == '\\')
+          p2++;
+        *p1 = *p2;
+        p1++;
+        p2++;
+      }
+      *p1 = '\0';
+    }
+
+    g_ptr_array_add (strv, substr);
+
+    while (g_ascii_isspace (*s))
+      s++;
+
+    if (*s == ',') {
+      s++;
+      while (g_ascii_isspace (*s))
+        s++;
+    }
+  }
+
+  g_ptr_array_add (strv, NULL);
+  g_value_take_boxed (dest, g_ptr_array_free (strv, FALSE));
+
+  return TRUE;
+
+error:
+  g_ptr_array_free (strv, TRUE);
+  return FALSE;
+}
+
 static GTypeInfo _info = {
   0, NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, NULL,
 };
@@ -8363,10 +8472,12 @@ _priv_gst_value_initialize (void)
   REGISTER_SERIALIZATION (gst_bitmask_get_type (), bitmask);
   REGISTER_SERIALIZATION (gst_structure_get_type (), structure);
   REGISTER_SERIALIZATION (gst_flagset_get_type (), flagset);
+  REGISTER_SERIALIZATION (G_TYPE_GTYPE, gtype);
 
   REGISTER_SERIALIZATION_NO_COMPARE (gst_segment_get_type (), segment);
   REGISTER_SERIALIZATION_NO_COMPARE (gst_caps_features_get_type (),
       caps_features);
+  REGISTER_SERIALIZATION_NO_COMPARE (G_TYPE_STRV, strv);
 
   REGISTER_SERIALIZATION_COMPARE_ONLY (gst_allocation_params_get_type (),
       allocation_params);
@@ -8374,25 +8485,17 @@ _priv_gst_value_initialize (void)
 
   REGISTER_SERIALIZATION_CONST (G_TYPE_DOUBLE, double);
   REGISTER_SERIALIZATION_CONST (G_TYPE_FLOAT, float);
-
   REGISTER_SERIALIZATION_CONST (G_TYPE_STRING, string);
   REGISTER_SERIALIZATION_CONST (G_TYPE_BOOLEAN, boolean);
   REGISTER_SERIALIZATION_CONST (G_TYPE_ENUM, enum);
-
   REGISTER_SERIALIZATION_CONST (G_TYPE_FLAGS, gflags);
-
   REGISTER_SERIALIZATION_CONST (G_TYPE_INT, int);
-
   REGISTER_SERIALIZATION_CONST (G_TYPE_INT64, int64);
   REGISTER_SERIALIZATION_CONST (G_TYPE_LONG, long);
-
   REGISTER_SERIALIZATION_CONST (G_TYPE_UINT, uint);
   REGISTER_SERIALIZATION_CONST (G_TYPE_UINT64, uint64);
   REGISTER_SERIALIZATION_CONST (G_TYPE_ULONG, ulong);
-
   REGISTER_SERIALIZATION_CONST (G_TYPE_UCHAR, uchar);
-
-  REGISTER_SERIALIZATION (G_TYPE_GTYPE, gtype);
 
   REGISTER_SERIALIZATION_WITH_PSPEC (gst_value_list_get_type (), value_list);
   REGISTER_SERIALIZATION_WITH_PSPEC (gst_value_array_get_type (), value_array);

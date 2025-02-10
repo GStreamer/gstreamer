@@ -4001,6 +4001,68 @@ GST_START_TEST (test_serialize_deserialize_sample)
 
 GST_END_TEST;
 
+GST_START_TEST (test_serialize_deserialize_strv)
+{
+  GValue v = G_VALUE_INIT;
+  g_value_init (&v, G_TYPE_STRV);
+
+  fail_if (gst_value_deserialize (&v, "<"));
+  fail_if (gst_value_deserialize (&v, "< foo"));
+  fail_if (gst_value_deserialize (&v, "< \"foo"));
+  fail_if (gst_value_deserialize (&v, "< \"foo\\"));
+  fail_if (gst_value_deserialize (&v, "< \"foo\""));
+  fail_if (gst_value_deserialize (&v, "< \"foo\","));
+
+  struct
+  {
+    const gchar *str;
+    const gchar *deserialized[3];
+    const gchar *serialized;
+  } tests[] = {
+    {"", {NULL}, "<>"},
+    {"foo", {"foo", NULL}, "<\"foo\">"},
+    {"foo ", {"foo ", NULL}, "<\"foo \">"},
+    {"foo ,", {"foo ", "", NULL}, "<\"foo \",\"\">"},
+    {"foo , ", {"foo ", " ", NULL}, "<\"foo \",\" \">"},
+    {"foo,bar", {"foo", "bar", NULL}, "<\"foo\",\"bar\">"},
+    {"<>", {NULL}, "<>"},
+    {"<\"\">", {"", NULL}, "<\"\">"},
+    {"< \" \" > ", {" ", NULL}, "<\" \">"},
+    {"<\"foo\",> ", {"foo", NULL}, "<\"foo\">"},
+    {"<\"foo\" , > ", {"foo", NULL}, "<\"foo\">"},
+    {"<\"foo\",\"bar\"> ", {"foo", "bar", NULL}, "<\"foo\",\"bar\">"},
+    {"<\"foo\" , \"bar\"> ", {"foo", "bar", NULL}, "<\"foo\",\"bar\">"},
+    {"<\"\\\"\\\\,<>\">", {"\"\\,<>", NULL}, "<\"\\\"\\\\,<>\">"},
+  };
+
+  for (int i = 0; i < G_N_ELEMENTS (tests); i++) {
+    const gchar *str = tests[i].str;
+    const gchar *const *deserialized = tests[i].deserialized;
+
+    /* Deserialize */
+    if (!gst_value_deserialize (&v, str))
+      fail ("Failed to deserialize %dth '%s'", i, str);
+    const gchar *const *strv = g_value_get_boxed (&v);
+    if (!g_strv_equal (strv, deserialized)) {
+      gchar *strv_str = g_strjoinv (", ", (gchar **) strv);
+      gchar *expected_str = g_strjoinv (", ", (gchar **) deserialized);
+      fail ("Deserialized %dth '%s' to '%s', expected '%s'", i, str, strv_str,
+          expected_str);
+    }
+
+    /* Re-serialize */
+    gchar *serialized = gst_value_serialize (&v);
+    if (!g_str_equal (serialized, tests[i].serialized))
+      fail ("Serialized %dth '%s' to '%s', expected '%s'", i, str, serialized,
+          tests[i].serialized);
+    g_free (serialized);
+
+    g_value_reset (&v);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_value_suite (void)
 {
@@ -4063,6 +4125,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_serialize_deserialize_caps_features);
   tcase_add_test (tc_chain, test_serialize_deserialize_tag_list);
   tcase_add_test (tc_chain, test_serialize_deserialize_sample);
+  tcase_add_test (tc_chain, test_serialize_deserialize_strv);
 
   return s;
 }
