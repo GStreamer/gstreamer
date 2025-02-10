@@ -381,6 +381,8 @@ gst_asio_object_constructed (GObject * object)
 {
   GstAsioObject *self = GST_ASIO_OBJECT (object);
 
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+
   if (!self->device_info) {
     GST_ERROR_OBJECT (self, "Device info was not configured");
     return;
