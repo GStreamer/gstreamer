@@ -311,6 +311,8 @@ gst_winrt_device_watcher_constructed (GObject * object)
   GstWinRTDeviceWatcher *self = GST_WINRT_DEVICE_WATCHER (object);
   GstWinRTDeviceWatcherPrivate *priv = self->priv;
 
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+
   g_mutex_lock (&priv->lock);
   priv->thread = g_thread_new ("GstWinRTDeviceWatcher",
       (GThreadFunc) gst_winrt_device_watcher_thread_func, self);
