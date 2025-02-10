@@ -87,6 +87,8 @@ ges_base_bin_dispose (GObject * object)
   }
 
   GST_OBJECT_UNLOCK (self);
+
+  G_OBJECT_CLASS (ges_base_bin_parent_class)->dispose (object);
 }
 
 static void
@@ -96,6 +98,8 @@ ges_base_bin_finalize (GObject * object)
   GESBaseBinPrivate *priv = ges_base_bin_get_instance_private (self);
 
   gst_flow_combiner_free (priv->flow_combiner);
+
+  G_OBJECT_CLASS (ges_base_bin_parent_class)->finalize (object);
 }
 
 static void
