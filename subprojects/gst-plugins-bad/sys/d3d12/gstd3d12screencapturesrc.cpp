@@ -1312,6 +1312,7 @@ gst_d3d12_screen_capture_src_dxgi_capture (GstBaseSrc * bsrc,
   if (fps_n <= 0 || fps_d <= 0)
     return GST_FLOW_NOT_NEGOTIATED;
 
+again:
   {
     std::lock_guard < std::recursive_mutex > lk (priv->lock);
     draw_mouse = priv->show_cursor;
@@ -1328,7 +1329,6 @@ gst_d3d12_screen_capture_src_dxgi_capture (GstBaseSrc * bsrc,
     }
   }
 
-again:
   auto clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
 
   /* Check flushing before waiting clock because we are might be doing
