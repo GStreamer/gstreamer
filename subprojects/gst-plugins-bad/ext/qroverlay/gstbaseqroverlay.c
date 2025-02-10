@@ -305,6 +305,8 @@ gst_base_qr_overlay_dispose (GObject * object)
   GstBaseQROverlayPrivate *priv = PRIV (object);
 
   gst_mini_object_replace (((GstMiniObject **) & priv->prev_overlay), NULL);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 /* initialize the qroverlay's class */
