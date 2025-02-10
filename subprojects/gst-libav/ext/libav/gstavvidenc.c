@@ -883,7 +883,7 @@ gst_ffmpegvidenc_set_property (GObject * object,
 
   if (ffmpegenc->context) {
     GST_WARNING_OBJECT (ffmpegenc,
-        "Can't change properties once decoder is setup !");
+        "Can't change properties once encoder is setup !");
     return;
   }
 
