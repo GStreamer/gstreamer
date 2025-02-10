@@ -253,9 +253,9 @@ gst_video_overlay_composition_meta_transform (GstBuffer * dest, GstMeta * meta,
           &render_y, &render_width, &render_height);
 
       new_render_x = (render_x * nw) / ow;
-      new_render_y = (render_y * nw) / ow;
+      new_render_y = (render_y * nh) / oh;
       new_render_width = (render_width * nw) / ow;
-      new_render_height = (render_height * nw) / ow;
+      new_render_height = (render_height * nh) / oh;
 
       GST_DEBUG
           ("overlay rectangle %u (seqnum: %d) (%dx%d)x(%ux%u) -> (%dx%d)->(%ux%u)",
