@@ -85,6 +85,8 @@ gst_h265_2_json_finalize (GObject * object)
   json_object_unref (self->json);
   gst_h265_parser_free (self->parser);
   g_array_unref (self->split_nalu);
+
+  G_OBJECT_CLASS (gst_h265_2_json_parent_class)->finalize (object);
 }
 
 static gchar *

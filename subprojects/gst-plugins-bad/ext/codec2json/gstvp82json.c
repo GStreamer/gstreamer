@@ -81,6 +81,8 @@ gst_vp8_2_json_finalize (GObject * object)
   GstVp82json *self = GST_VP8_2_JSON (object);
 
   json_object_unref (self->json);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gchar *

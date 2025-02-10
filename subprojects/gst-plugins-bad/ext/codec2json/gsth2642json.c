@@ -83,6 +83,8 @@ gst_h264_2_json_finalize (GObject * object)
 
   json_object_unref (self->json);
   gst_h264_nal_parser_free (self->parser);
+
+  G_OBJECT_CLASS (gst_h264_2_json_parent_class)->finalize (object);
 }
 
 static gchar *

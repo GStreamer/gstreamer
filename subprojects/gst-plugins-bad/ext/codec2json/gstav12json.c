@@ -80,6 +80,8 @@ gst_av1_2_json_finalize (GObject * object)
 
   gst_av1_parser_free (self->parser);
   json_object_unref (self->json);
+
+  G_OBJECT_CLASS (gst_av1_2_json_parent_class)->finalize (object);
 }
 
 static gchar *
