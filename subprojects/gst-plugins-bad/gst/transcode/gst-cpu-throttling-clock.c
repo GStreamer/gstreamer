@@ -169,6 +169,8 @@ gst_cpu_throttling_clock_dispose (GObject * object)
     gst_poll_free (self->priv->timer);
     self->priv->timer = NULL;
   }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
