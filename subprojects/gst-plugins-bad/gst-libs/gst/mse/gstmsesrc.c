@@ -258,6 +258,8 @@ static void
 gst_mse_src_constructed (GObject * object)
 {
   GstMseSrc *self = GST_MSE_SRC (object);
+
+  G_OBJECT_CLASS (gst_mse_src_parent_class)->constructed (object);
   GST_OBJECT_FLAG_SET (self, GST_ELEMENT_FLAG_SOURCE);
 }
 
