@@ -378,7 +378,8 @@ gst_v4l2_allocator_release (GstV4l2Allocator * allocator, GstV4l2Memory * mem)
   if (g_atomic_int_dec_and_test (&group->mems_allocated)) {
     GST_LOG_OBJECT (allocator, "buffer %u released", group->buffer.index);
     gst_atomic_queue_push (allocator->free_queue, group);
-    g_signal_emit (allocator, gst_v4l2_allocator_signals[GROUP_RELEASED], 0);
+    g_signal_emit (allocator, gst_v4l2_allocator_signals[GROUP_RELEASED], 0,
+        group);
   }
 
   /* Keep last, allocator may be freed after this call */
@@ -458,7 +459,7 @@ gst_v4l2_allocator_class_init (GstV4l2AllocatorClass * klass)
 
   gst_v4l2_allocator_signals[GROUP_RELEASED] = g_signal_new ("group-released",
       G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
-      G_TYPE_NONE, 0);
+      G_TYPE_NONE, 1, GST_TYPE_V4L2_MEMORY_GROUP);
 
   GST_DEBUG_CATEGORY_INIT (v4l2allocator_debug, "v4l2allocator", 0,
       "V4L2 Allocator");
