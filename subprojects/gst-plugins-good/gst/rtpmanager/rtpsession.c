@@ -3855,6 +3855,8 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
     if (!rtp_source_get_new_sr (own, data->ntpnstime, data->running_time,
             &ntptime, &rtptime, &packet_count, &octet_count)) {
       gst_rtcp_buffer_unmap (&data->rtcpbuf);
+      gst_buffer_unref (data->rtcp);
+      data->rtcp = NULL;
       return FALSE;
     }
     /* store stats */
