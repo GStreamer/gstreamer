@@ -724,7 +724,7 @@ gst_wl_display_fill_dmabuf_format_list (GstWlDisplay * self,
 
   for (gint i = 0; i < priv->dmabuf_formats->len; i++) {
     fmt = g_array_index (priv->dmabuf_formats, uint32_t, i);
-    mod = g_array_index (priv->dmabuf_formats, guint64, i);
+    mod = g_array_index (priv->dmabuf_modifiers, guint64, i);
     g_value_init (&value, G_TYPE_STRING);
     g_value_take_string (&value, gst_video_dma_drm_fourcc_to_string (fmt, mod));
     gst_value_list_append_and_take_value (format_list, &value);
