@@ -12136,30 +12136,23 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
 
   if (uncC->version == 1) {
     // Determine format with profile
+    // The only supported options for version 1 are `rgb3`, `rgba`, and `abgr`
     switch (uncC->profile) {
       case GST_MAKE_FOURCC ('r', 'g', 'b', '3'):       // RGB 24 bits packed
         format = GST_VIDEO_FORMAT_RGB;
         stream->stride = entry->width * num_components;
         break;
 
-      case GST_MAKE_FOURCC ('2', 'v', 'u', 'y'):       // 8 bits  YUV  422 packed Cb Y0 Cr Y1
-      case GST_MAKE_FOURCC ('y', 'u', 'v', '2'):       // 8 bits  YUV  422 packed Y0 Cb Y1 Cr
-      case GST_MAKE_FOURCC ('y', 'v', 'y', 'u'):       // 8 bits  YUV  422 packed Y0 Cr Y1 Cb
-      case GST_MAKE_FOURCC ('v', 'y', 'u', 'y'):       // 8 bits  YUV  422 packed Cr Y0 Cb Y1
-      case GST_MAKE_FOURCC ('y', 'u', 'v', '1'):       // 8 bits  YUV  411 packed Y0 Y1 Cb Y2 Y3 Cr
-      case GST_MAKE_FOURCC ('v', '3', '0', '8'):       // 8 bits  YUV  444 packed Cr Y Cb
-      case GST_MAKE_FOURCC ('v', '4', '0', '8'):       // 8 bits  YUVA 444 packed Cb Y Cr A
-      case GST_MAKE_FOURCC ('y', '2', '1', '0'):       // 10 bits YUV  422 packed LE Y0 Cb Y1 Cr
-      case GST_MAKE_FOURCC ('v', '4', '1', '0'):       // 10 bits YUV  444 packed CbYCr, 2 unused bits
-      case GST_MAKE_FOURCC ('v', '2', '1', '0'):       // 10 bits YUV  422 packed CbYCr
-      case GST_MAKE_FOURCC ('i', '4', '2', '0'):       // 8 bits  YUV  420 planar YCbCr
-      case GST_MAKE_FOURCC ('n', 'v', '1', '2'):       // 8 bits  YUV  420 semiplanar YCbCr
-      case GST_MAKE_FOURCC ('n', 'v', '2', '1'):       // 8 bits  YUV  420 semiplanar YCrCb
-      case GST_MAKE_FOURCC ('r', 'g', 'b', 'a'):       // 32 bits RGBA packed
-      case GST_MAKE_FOURCC ('a', 'b', 'g', 'r'):       // 32 bits RGBA packed
-      case GST_MAKE_FOURCC ('y', 'u', '2', '2'):       // 8 bits  YUV  422 planar YCbCr
-      case GST_MAKE_FOURCC ('y', 'v', '2', '2'):       // 8 bits  YUV  422 planar YCrCb
-      case GST_MAKE_FOURCC ('y', 'v', '2', '0'):       // 8 bits  YUV  420 planar YCrCb
+      case GST_MAKE_FOURCC ('r', 'g', 'b', 'a'):       // RGBA 32 bits packed
+        format = GST_VIDEO_FORMAT_RGBA;
+        stream->stride = entry->width * num_components;
+        break;
+
+      case GST_MAKE_FOURCC ('a', 'b', 'g', 'r'):       // RGBA 32 bits packed
+        format = GST_VIDEO_FORMAT_ABGR;
+        stream->stride = entry->width * num_components;
+        break;
+
       default:
         goto unsupported_feature;
     }
@@ -12180,10 +12173,16 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     // For now, assert that each component has the same bit depth
     UncompressedFrameConfigComponent *comp = &uncC->components[i];
     if (comp->bit_depth != first_comp->bit_depth) {
+      GST_WARNING_OBJECT (qtdemux,
+          "Unsupported bit_depth combination for uncompressed track: %u != %u",
+          comp->bit_depth, first_comp->bit_depth);
       goto unsupported_feature;
     }
     // For now, assert that each component has the same align size
     if (comp->align_size != first_comp->align_size) {
+      GST_WARNING_OBJECT (qtdemux,
+          "Unsupported component_align_size for uncompressed track: %u != %u",
+          comp->align_size, first_comp->align_size);
       goto unsupported_feature;
     }
   }
@@ -12196,6 +12195,9 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     case 2:                    // YCbCr 4:2:0 subsampling
     case 3:                    // YCbCr 4:1:1 subsampling
     default:
+      GST_WARNING_OBJECT (qtdemux,
+          "Unsupported sampling_type for uncompressed track: %u",
+          uncC->sampling_type);
       goto unsupported_feature;
   }
 
@@ -12209,6 +12211,9 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     case 4:                    // Tile Interleaved
     case 5:                    // Multi-Y Pixel Interleaved
     default:
+      GST_WARNING_OBJECT (qtdemux,
+          "Unsupported interleave_type for uncompressed track: %u",
+          uncC->interleave_type);
       goto unsupported_feature;
   }
 
@@ -12216,21 +12221,33 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
   // TODO: Handle various padding configurations
   if (align_size) {
     // If component_align_size is 0, the component value
-    // is coded on component_bit_depth bits exactly.
+    // is coded on component_bit_depth bits exactly
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported align_size for uncompressed track: %u", align_size);
     goto unsupported_feature;
   } else if (uncC->block_size) {
     // Component values can be stored either directly in the
     // sample data or inside fixed-size blocks. The block
     // size in bytes is specified by the block_size field.
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported block_size for uncompressed track: %u", uncC->block_size);
     goto unsupported_feature;
   } else if (uncC->pixel_size != 0 && uncC->pixel_size != num_components) {
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported pixel_size for uncompressed track: %u", uncC->pixel_size);
     // If pixel_size is 0, no additional padding is present after each pixel.
     goto unsupported_feature;
   } else if (uncC->row_align_size) {
     // row_align_size indicates the padding between rows
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported row_align_size for uncompressed track: %u",
+        uncC->row_align_size);
     goto unsupported_feature;
   } else if (uncC->tile_align_size) {
     // tile_align_size indicates the padding between tiles
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported tile_align_size for uncompressed track: %u",
+        uncC->tile_align_size);
     goto unsupported_feature;
   }
 
@@ -12269,11 +12286,17 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
       }
       break;
     default:
+      GST_WARNING_OBJECT (qtdemux,
+          "Unsupported number of components for uncompressed track: %u",
+          num_components);
       goto unsupported_feature;
   }
 
   /* Calculate Stride */
   if (first_comp->bit_depth != 8) {
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported high bit depth for uncompressed track: %u",
+        first_comp->bit_depth);
     goto unsupported_feature;   // TODO - account for higher bit depths
   } else if (uncC->sampling_type != 0) {
     goto unsupported_feature;   // TODO - account for subsampling
