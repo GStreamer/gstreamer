@@ -43,6 +43,7 @@
 
 #define gst_v4l2_allocator_parent_class parent_class
 G_DEFINE_TYPE (GstV4l2Allocator, gst_v4l2_allocator, GST_TYPE_ALLOCATOR);
+G_DEFINE_POINTER_TYPE (GstV4l2MemoryGroup, gst_v4l2_memory_group);
 
 GST_DEBUG_CATEGORY_STATIC (v4l2allocator_debug);
 #define GST_CAT_DEFAULT v4l2allocator_debug
