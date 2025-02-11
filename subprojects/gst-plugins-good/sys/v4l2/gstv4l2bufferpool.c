@@ -778,6 +778,17 @@ gst_v4l2_buffer_pool_streamoff (GstV4l2BufferPool * pool)
   }
 }
 
+static void
+gst_v4l2_buffer_pool_group_released (GstV4l2BufferPool * pool,
+    GstV4l2MemoryGroup * group)
+{
+  gint index = group->buffer.index;
+
+  g_atomic_int_set (&pool->buffer_state[index], BUFFER_STATE_FREE);
+
+  gst_v4l2_buffer_pool_resurrect_buffer (pool);
+}
+
 static gboolean
 gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
 {
@@ -941,7 +952,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
 
     pool->group_released_handler =
         g_signal_connect_swapped (pool->vallocator, "group-released",
-        G_CALLBACK (gst_v4l2_buffer_pool_resurrect_buffer), pool);
+        G_CALLBACK (gst_v4l2_buffer_pool_group_released), pool);
     ret = gst_v4l2_buffer_pool_streamon (pool);
   }
 
