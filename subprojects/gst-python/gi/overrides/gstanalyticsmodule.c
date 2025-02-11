@@ -56,6 +56,7 @@ typedef struct
   GstAnalyticsRelationMeta *rmeta;
   gpointer state;
   gboolean ended;
+  GstAnalyticsMtdType filter;
 } _GstAnalyticsRelationMetaIterator;
 
 typedef struct
@@ -165,6 +166,7 @@ _gst_analytics_relation_meta_iterator_new (PyTypeObject * type, PyObject * args,
     self->py_module = py_module;
     self->py_rmeta = py_rmeta;
     self->state = NULL;
+    self->filter = GST_ANALYTICS_MTD_TYPE_ANY;
     Py_INCREF (py_module);
     Py_INCREF (py_rmeta);
     self->rmeta = (GstAnalyticsRelationMeta *) (pygobject_get (py_rmeta));
@@ -195,7 +197,7 @@ _gst_analytics_relation_meta_iterator_next (_GstAnalyticsRelationMetaIterator *
   PyObject *py_result = NULL;
 
   if (self->ended || !gst_analytics_relation_meta_iterate (self->rmeta,
-          &self->state, GST_ANALYTICS_MTD_TYPE_ANY, &mtd)) {
+          &self->state, self->filter, &mtd)) {
 
     self->ended = TRUE;
     return NULL;
@@ -251,14 +253,6 @@ _gi_gst_analytics_mtd_relation_path (PyObject * self, PyObject * args)
   return pathList;
 }
 
-static PyMethodDef _gi_gst_analytics_functions[] = {
-  {"AnalyticsMtdRelationPath",
-        (PyCFunction) _gi_gst_analytics_mtd_relation_path,
-        METH_VARARGS,
-      "Returns the relation path between two Mtd"},
-  {NULL, NULL, 0, NULL}
-};
-
 static PyTypeObject GstAnalyticsRelationMetaIteratorType = {
   PyVarObject_HEAD_INIT (NULL, 0)
       .tp_name = "_gi_gst_analytics.AnalyticsRelationMetaIterator",
@@ -283,6 +277,40 @@ static PyTypeObject GstAnalyticsMtdDirectRelatedIteratorType = {
   .tp_iter = (getiterfunc) PyObject_SelfIter,
   .tp_iternext = (iternextfunc) _gst_analytics_mtd_direct_related_iterator_next,
   .tp_dealloc = (destructor) _gst_analytics_mtd_direct_related_iterator_dtor
+};
+
+static PyObject *
+_gi_gst_analytics_relation_meta_iterator_with_type_filter (PyObject * self,
+    PyObject * args)
+{
+  PyObject *iter;
+  PyObject *py_rmeta;
+  PyObject *py_module;
+  PyObject *py_args;
+  GstAnalyticsMtdType mtdtype;
+  if (!PyArg_ParseTuple (args, "OOk", &py_module, &py_rmeta, &mtdtype)) {
+    return Py_None;
+  }
+
+  py_args = PyTuple_Pack (2, py_module, py_rmeta);
+  iter =
+      _gst_analytics_relation_meta_iterator_new
+      (&GstAnalyticsRelationMetaIteratorType, py_args, NULL);
+  if (iter)
+    ((_GstAnalyticsRelationMetaIterator *) iter)->filter = mtdtype;
+  return iter;
+}
+
+static PyMethodDef _gi_gst_analytics_functions[] = {
+  {"AnalyticsMtdRelationPath",
+        (PyCFunction) _gi_gst_analytics_mtd_relation_path,
+        METH_VARARGS,
+      "Returns the relation path between two Mtd"},
+  {"AnalyticsRelationMetaIteratorWithMtdTypeFilter",
+        (PyCFunction) _gi_gst_analytics_relation_meta_iterator_with_type_filter,
+        METH_VARARGS,
+      "Return an iterator to iterate over specific Mtd type"},
+  {NULL, NULL, 0, NULL}
 };
 
 PYGLIB_MODULE_START (_gi_gst_analytics, "_gi_gst_analytics")

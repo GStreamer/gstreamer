@@ -264,7 +264,9 @@ class TestAnalyticsRelationMetaIterator(TestCase):
         (_, od_mtd1) = rmeta.add_od_mtd(GLib.quark_from_string("od"), 1, 1, 2, 2, 0.1)
         (_, od_mtd2) = rmeta.add_od_mtd(GLib.quark_from_string("od"), 1, 1, 2, 2, 0.1)
         (_, cls_mtd) = rmeta.add_one_cls_mtd(0.1, GLib.quark_from_string("cls"))
+        (_, cls_mtd1) = rmeta.add_one_cls_mtd(0.4, GLib.quark_from_string("cls"))
         (_, trk_mtd) = rmeta.add_tracking_mtd(1, 10)
+        (_, trk_mtd1) = rmeta.add_tracking_mtd(1, 11)
         (_, seg_mtd) = rmeta.add_segmentation_mtd(mask_buf,
                                                GstAnalytics.SegmentationType.SEMANTIC,
                                                [7, 4, 2], 0, 0, 7, 13)
@@ -274,14 +276,59 @@ class TestAnalyticsRelationMetaIterator(TestCase):
             (od_mtd1, GstAnalytics.ODMtd.get_mtd_type()),
             (od_mtd2, GstAnalytics.ODMtd.get_mtd_type()),
             (cls_mtd, GstAnalytics.ClsMtd.get_mtd_type()),
+            (cls_mtd1, GstAnalytics.ClsMtd.get_mtd_type()),
             (trk_mtd, GstAnalytics.TrackingMtd.get_mtd_type()),
+            (trk_mtd1, GstAnalytics.TrackingMtd.get_mtd_type()),
             (seg_mtd, GstAnalytics.SegmentationMtd.get_mtd_type())
         ]
+
+        od_index_mtds = [0, 1, 2]
+        cls_index_mtds = [3, 4]
+        trk_index_mtds = [5, 6]
+        seg_index_mtds = [7]
 
         mtds_from_iter = list(rmeta)
 
         self.assertEqual(len(mtds), len(mtds_from_iter))
 
+        # Iterating on type GstAnalytics.ODMtd
+        for j, i in zip(od_index_mtds, rmeta.iter_on_type(GstAnalytics.ODMtd)):
+            assert mtds[j][0] == i
+            assert mtds[j][0].id == i.id
+            assert mtds[j][0].meta == i.meta
+            assert mtds[j][1] == i.get_mtd_type()
+            # call a method to ensure it's a ODMtd
+            loc = i.get_location()
+
+
+        # Iterating on type GstAnalytics.ClsMtd
+        for j, i in zip(cls_index_mtds, rmeta.iter_on_type(GstAnalytics.ClsMtd)):
+            assert mtds[j][0] == i
+            assert mtds[j][0].id == i.id
+            assert mtds[j][0].meta == i.meta
+            assert mtds[j][1] == i.get_mtd_type()
+            # call a method to ensure it's a ClsMtd
+            level = i.get_level(0)
+
+        # Iterating on type GstAnalytics.TrackingMtd
+        for j, i in zip(trk_index_mtds, rmeta.iter_on_type(GstAnalytics.TrackingMtd)):
+            assert mtds[j][0] == i
+            assert mtds[j][0].id == i.id
+            assert mtds[j][0].meta == i.meta
+            assert mtds[j][1] == i.get_mtd_type()
+            # call a method to ensure it's a TrackingMtd
+            info = i.get_info()
+
+        # Iterating on type GstAnalytics.SegmentationMtd
+        for j, i in zip(seg_index_mtds, rmeta.iter_on_type(GstAnalytics.SegmentationMtd)):
+            assert mtds[j][0] == i
+            assert mtds[j][0].id == i.id
+            assert mtds[j][0].meta == i.meta
+            assert mtds[j][1] == i.get_mtd_type()
+            # call a method to ensure it's a SegmentationMtd
+            mask = i.get_mask()
+
+        # Iterating on all type
         for e, i in zip(mtds, rmeta):
             assert i == e[0]
             assert e[0].id == i.id

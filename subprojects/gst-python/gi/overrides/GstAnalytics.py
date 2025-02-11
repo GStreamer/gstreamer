@@ -84,5 +84,15 @@ class RelationMeta(GstAnalytics.RelationMeta):
     def __iter__(self):
         return _gi_gst_analytics.AnalyticsRelationMetaIterator(sys.modules[__name__], self)
 
+    def iter_on_type(self, filter):
+        if filter == GstAnalytics.Mtd:
+           return self.__iter__();
+
+        mtdtype = filter.get_mtd_type()
+        if mtdtype in __mtd_types__:
+            return _gi_gst_analytics.AnalyticsRelationMetaIteratorWithMtdTypeFilter(
+                sys.modules[__name__], self, mtdtype)
+        else:
+            raise TypeError('Wrong filter type is used for iter_on_type method.')
 
 __all__.append('RelationMeta')
