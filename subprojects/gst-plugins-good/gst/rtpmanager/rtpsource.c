@@ -271,6 +271,7 @@ rtp_source_reset (RTPSource * src)
   g_queue_foreach (src->retained_feedback, (GFunc) gst_buffer_unref, NULL);
   g_queue_clear (src->retained_feedback);
   src->last_rtptime = -1;
+  src->last_rtime = -1;
 
   src->stats.cycles = -1;
   src->stats.jitter = 0;
@@ -1426,7 +1427,7 @@ rtp_source_send_rtp (RTPSource * src, RTPPacketInfo * pinfo)
   GST_LOG ("SSRC %08x, RTP %" G_GUINT64_FORMAT ", running_time %"
       GST_TIME_FORMAT, src->ssrc, ext_rtptime, GST_TIME_ARGS (running_time));
 
-  if (ext_rtptime > src->last_rtptime) {
+  if (src->last_rtime != -1 && ext_rtptime > src->last_rtptime) {
     rtp_diff = ext_rtptime - src->last_rtptime;
     rt_diff =
         GST_CLOCK_TIME_IS_VALID (running_time) ? running_time -
