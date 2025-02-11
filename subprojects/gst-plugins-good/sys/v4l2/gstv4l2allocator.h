@@ -29,6 +29,7 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_V4L2_MEMORY_GROUP              (gst_v4l2_memory_group_get_type())
 #define GST_TYPE_V4L2_ALLOCATOR                 (gst_v4l2_allocator_get_type())
 #define GST_IS_V4L2_ALLOCATOR(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4L2_ALLOCATOR))
 #define GST_IS_V4L2_ALLOCATOR_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_V4L2_ALLOCATOR))
@@ -110,6 +111,8 @@ struct _GstV4l2Allocator
 struct _GstV4l2AllocatorClass {
   GstAllocatorClass parent_class;
 };
+
+GType gst_v4l2_memory_group_get_type(void);
 
 GType gst_v4l2_allocator_get_type(void);
 
