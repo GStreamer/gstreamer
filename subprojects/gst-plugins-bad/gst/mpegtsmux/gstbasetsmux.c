@@ -1784,8 +1784,10 @@ gst_base_ts_mux_request_new_pad (GstElement * element, GstPadTemplate * templ,
     }
     /* Make sure we don't use reserved PID.
      * FIXME : This should be extended to other variants (ex: ATSC) reserved PID */
-    if (pid < TSMUX_START_ES_PID)
+    if (pid < TSMUX_START_ES_PID) {
+      g_mutex_unlock (&mux->lock);
       goto invalid_stream_pid;
+    }
   } else {
     do {
       pid = tsmux_get_new_pid (mux->tsmux);
