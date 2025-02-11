@@ -1820,7 +1820,7 @@ stream_exists:
 invalid_stream_pid:
   {
     GST_ELEMENT_ERROR (element, STREAM, MUX,
-        ("Invalid Elementary stream PID (0x%02u < 0x40)", pid), (NULL));
+        ("Invalid Elementary stream PID (0x%02x < 0x40)", pid), (NULL));
     return NULL;
   }
 }
