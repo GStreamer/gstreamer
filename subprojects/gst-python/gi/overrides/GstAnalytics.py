@@ -41,6 +41,15 @@ class Mtd(GstAnalytics.Mtd):
             return False
         return self.meta == other.meta and self.id == other.id
 
+    def iter_direct_related(self, relation, mtd_type = GstAnalytics.Mtd):
+        if mtd_type != GstAnalytics.Mtd:
+            mtd_type = mtd_type.get_mtd_type();
+        else:
+            mtd_type = GstAnalytics.MTD_TYPE_ANY
+
+        return _gi_gst_analytics.AnalyticsMtdDirectRelatedIterator(
+            sys.modules[__name__], self, relation, mtd_type)
+
 
 __all__.append('Mtd')
 

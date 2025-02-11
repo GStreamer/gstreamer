@@ -261,6 +261,8 @@ class TestAnalyticsRelationMetaIterator(TestCase):
                                        GstVideo.VideoFormat.GRAY8, 10, 10)
 
         (_, od_mtd) = rmeta.add_od_mtd(GLib.quark_from_string("od"), 1, 1, 2, 2, 0.1)
+        (_, od_mtd1) = rmeta.add_od_mtd(GLib.quark_from_string("od"), 1, 1, 2, 2, 0.1)
+        (_, od_mtd2) = rmeta.add_od_mtd(GLib.quark_from_string("od"), 1, 1, 2, 2, 0.1)
         (_, cls_mtd) = rmeta.add_one_cls_mtd(0.1, GLib.quark_from_string("cls"))
         (_, trk_mtd) = rmeta.add_tracking_mtd(1, 10)
         (_, seg_mtd) = rmeta.add_segmentation_mtd(mask_buf,
@@ -269,6 +271,8 @@ class TestAnalyticsRelationMetaIterator(TestCase):
 
         mtds = [
             (od_mtd, GstAnalytics.ODMtd.get_mtd_type()),
+            (od_mtd1, GstAnalytics.ODMtd.get_mtd_type()),
+            (od_mtd2, GstAnalytics.ODMtd.get_mtd_type()),
             (cls_mtd, GstAnalytics.ClsMtd.get_mtd_type()),
             (trk_mtd, GstAnalytics.TrackingMtd.get_mtd_type()),
             (seg_mtd, GstAnalytics.SegmentationMtd.get_mtd_type())
@@ -291,3 +295,33 @@ class TestAnalyticsRelationMetaIterator(TestCase):
         self.assertEqual(location[3], 2)
         self.assertEqual(location[4], 2)
         self.assertAlmostEqual(location[5], 0.1, 3)
+
+        # Test iteration over direct relation
+        rmeta.set_relation(GstAnalytics.RelTypes.RELATE_TO, od_mtd.id, od_mtd1.id)
+        rmeta.set_relation(GstAnalytics.RelTypes.IS_PART_OF, od_mtd.id, trk_mtd.id)
+        rmeta.set_relation(GstAnalytics.RelTypes.RELATE_TO, od_mtd.id, od_mtd2.id)
+        rmeta.set_relation(GstAnalytics.RelTypes.RELATE_TO, od_mtd.id, cls_mtd.id)
+        expected_mtd_ids = [od_mtd1.id, od_mtd2.id, cls_mtd.id]
+        expected_mtd_type = [GstAnalytics.ODMtd, GstAnalytics.ODMtd, GstAnalytics.ClsMtd]
+        count = 0
+        # Iterate over all type
+        for mtd in od_mtd.iter_direct_related(GstAnalytics.RelTypes.RELATE_TO):
+            assert mtd.id == expected_mtd_ids[count]
+            assert type(mtd) == expected_mtd_type[count]
+            if (type(mtd) == GstAnalytics.ODMtd):
+                assert mtd.get_obj_type() == GLib.quark_from_string("od")
+            elif (type(mtd) == GstAnalytics.ClsMtd):
+                assert mtd.get_quark(0) == GLib.quark_from_string("cls")
+            count = count + 1
+
+        assert(count == len(expected_mtd_ids))
+
+        # Iterate over only with type GstAnalytics.ODMtd
+        count = 0
+        for mtd in od_mtd.iter_direct_related(GstAnalytics.RelTypes.RELATE_TO, GstAnalytics.ODMtd):
+            assert mtd.id == expected_mtd_ids[count]
+            assert  type(mtd) == GstAnalytics.ODMtd
+            count = count + 1
+
+        assert(count == 2)
+
