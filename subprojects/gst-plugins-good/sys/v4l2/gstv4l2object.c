@@ -5290,7 +5290,7 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 
   for (walk = formats; walk; walk = walk->next) {
     struct v4l2_fmtdesc *format;
-    GstStructure *sysmem_tmpl, *dmabuf_tmpl;
+    GstStructure *sysmem_tmpl, *dmabuf_tmpl = NULL;
     GstCaps *tmp;
 
     format = (struct v4l2_fmtdesc *) walk->data;
