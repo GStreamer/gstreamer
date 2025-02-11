@@ -516,6 +516,96 @@ GST_START_TEST (test_cyclic_relation_meta)
 
 GST_END_TEST;
 
+GST_START_TEST (test_copy_metas)
+{
+  GstBuffer *buf, *buf2;
+  GstAnalyticsRelationMeta *rmeta, *rmeta2;
+  gboolean ret;
+  GstAnalyticsODMtd od_mtd1, od_mtd2;
+  gpointer state = NULL;
+  GstAnalyticsMtd mtd1, mtd2;
+  gint x, y, w, h;
+  gfloat conf;
+
+  buf = gst_buffer_new ();
+
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  GQuark type = g_quark_from_string ("dog");
+  ret = gst_analytics_relation_meta_add_od_mtd (rmeta, type, 10, 10,
+      10, 10, 1.0, &od_mtd1);
+  fail_unless (ret == TRUE);
+
+  ret = gst_analytics_relation_meta_add_od_mtd (rmeta, type, 20, 20,
+      20, 20, 1.0, &od_mtd2);
+  fail_unless (ret == TRUE);
+
+  fail_unless_equals_int (gst_analytics_relation_get_length (rmeta), 2);
+
+  ret = gst_analytics_relation_meta_set_relation (rmeta,
+      GST_ANALYTICS_REL_TYPE_RELATE_TO, od_mtd1.id, od_mtd2.id);
+  fail_unless (ret == TRUE);
+
+
+  /* Lets copy it into a new buffer */
+  buf2 = gst_buffer_new ();
+  ret = gst_buffer_copy_into (buf2, buf, GST_BUFFER_COPY_META, 0, -1);
+  fail_unless (ret == TRUE);
+
+  rmeta2 = gst_buffer_get_analytics_relation_meta (buf2);
+  fail_unless (rmeta2 != NULL);
+
+  fail_unless_equals_int (gst_analytics_relation_get_length (rmeta2), 2);
+
+  /* First meta */
+  ret = gst_analytics_relation_meta_iterate (rmeta2, &state,
+      GST_ANALYTICS_MTD_TYPE_ANY, &mtd1);
+  fail_unless (ret == TRUE);
+  fail_unless_equals_int (od_mtd1.id, mtd1.id);
+
+
+  ret = gst_analytics_od_mtd_get_confidence_lvl (&mtd1, &conf);
+  fail_unless (ret == TRUE);
+  fail_unless_equals_float (conf, 1.0);
+
+  ret = gst_analytics_od_mtd_get_location (&mtd1, &x, &y, &w, &h, &conf);
+  fail_unless (ret == TRUE);
+  fail_unless_equals_int (x, 10);
+  fail_unless_equals_int (y, 10);
+  fail_unless_equals_int (w, 10);
+  fail_unless_equals_int (h, 10);
+
+  /* Second meta */
+  ret = gst_analytics_relation_meta_iterate (rmeta2, &state,
+      GST_ANALYTICS_MTD_TYPE_ANY, &mtd2);
+  fail_unless (ret == TRUE);
+  fail_unless_equals_int (od_mtd2.id, mtd2.id);
+
+  ret = gst_analytics_od_mtd_get_confidence_lvl (&mtd2, &conf);
+  fail_unless (ret == TRUE);
+  fail_unless_equals_float (conf, 1.0);
+
+  ret = gst_analytics_od_mtd_get_location (&mtd2, &x, &y, &w, &h, &conf);
+  fail_unless (ret == TRUE);
+  fail_unless_equals_int (x, 20);
+  fail_unless_equals_int (y, 20);
+  fail_unless_equals_int (w, 20);
+  fail_unless_equals_int (h, 20);
+
+  fail_unless_equals_int (gst_analytics_relation_meta_get_relation (rmeta,
+          mtd1.id, mtd2.id), GST_ANALYTICS_REL_TYPE_RELATE_TO);
+
+  /* No third meta */
+  ret = gst_analytics_relation_meta_iterate (rmeta2, &state,
+      GST_ANALYTICS_MTD_TYPE_ANY, &mtd1);
+  fail_unless (ret == FALSE);
+
+  gst_buffer_unref (buf);
+  gst_buffer_unref (buf2);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_add_od_meta)
 {
   /* Verity we can add Object Detection relatable metadata to a relation
@@ -2001,6 +2091,7 @@ analyticmeta_suite (void)
   tcase_add_test (tc_chain_relation, test_path_relation_meta);
   tcase_add_test (tc_chain_relation, test_cyclic_relation_meta);
   tcase_add_test (tc_chain_relation, test_verify_mtd_clear);
+  tcase_add_test (tc_chain_relation, test_copy_metas);
 
   tc_chain_od = tcase_create ("Object Detection Mtd");
   suite_add_tcase (s, tc_chain_od);
