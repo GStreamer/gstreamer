@@ -175,7 +175,7 @@ def is_library_target_and_not_plugin(target, filename):
 
 
 def is_binary_target_and_in_path(target, filename, bindir):
-    if target['name'] in ['gst-dots-viewer', 'gstdump']:
+    if target['name'] in ['gst-dots-viewer']:
         return True
 
     if target['type'] != 'executable':

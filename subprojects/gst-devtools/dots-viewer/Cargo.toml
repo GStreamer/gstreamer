@@ -30,12 +30,6 @@ windows = { version = "0.59", features = ["Win32_UI_Shell"] }
 [build-dependencies]
 static-files = "0.2.1"
 
-# Binary target for gstdots
 [[bin]]
 name = "gst-dots-viewer"
 path = "src/main.rs"
-
-# Binary target for gstdump
-[[bin]]
-name = "gstdump"
-path = "src/gstdump.rs"

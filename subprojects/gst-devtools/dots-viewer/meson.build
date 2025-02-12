@@ -34,7 +34,7 @@ if get_option('default_library') == 'static'
   }
 endif
 
-foreach binname: ['gst-dots-viewer', 'gstdump']
+foreach binname: ['gst-dots-viewer']
   custom_target(binname,
     build_by_default: true,
     output: binname + exe_suffix,
