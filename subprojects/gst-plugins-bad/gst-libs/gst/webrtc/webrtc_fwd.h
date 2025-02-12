@@ -56,8 +56,6 @@ G_BEGIN_DECLS
 #define GST_WEBRTC_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) GST_WEBRTC_API
 #endif
 
-#include <gst/webrtc/webrtc-enumtypes.h>
-
 /**
  * GstWebRTCDTLSTransport:
  */

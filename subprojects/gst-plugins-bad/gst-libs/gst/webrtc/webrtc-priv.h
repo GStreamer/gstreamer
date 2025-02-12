@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/webrtc/webrtc_fwd.h>
+#include <gst/webrtc/webrtc-enumtypes.h>
 #include <gst/webrtc/rtpsender.h>
 #include <gst/webrtc/rtpreceiver.h>
 
