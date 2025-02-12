@@ -12,16 +12,14 @@ use notify::Watcher;
 use once_cell::sync::Lazy;
 use serde_json::json;
 use single_instance::SingleInstance;
+use std::env;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 use tokio::runtime;
-use tracing::debug;
-use tracing::error;
-use tracing::info;
 use tracing::instrument;
-use tracing::{event, Level};
+use tracing::{debug, error, info, warn};
 
 include!(concat!(env!("OUT_DIR"), "/generated.rs"));
 
@@ -89,6 +87,50 @@ impl std::fmt::Debug for GstDots {
     }
 }
 
+fn get_user_cache_dir() -> PathBuf {
+    if let Ok(cache_dir) = env::var("XDG_CACHE_HOME") {
+        if !cache_dir.is_empty() {
+            return PathBuf::from(cache_dir);
+        }
+    }
+
+    #[cfg(windows)]
+    {
+        use windows::Win32::UI::Shell::{
+            FOLDERID_InternetCache, SHGetKnownFolderPath, KF_FLAG_DEFAULT,
+        };
+
+        unsafe {
+            if let Ok(path) = SHGetKnownFolderPath(&FOLDERID_InternetCache, KF_FLAG_DEFAULT, None) {
+                if let Ok(path_str) = path.to_string() {
+                    return PathBuf::from(path_str);
+                }
+            }
+        }
+    }
+
+    let home = if let Ok(home) = env::var("HOME") {
+        PathBuf::from(home)
+    } else {
+        #[cfg(windows)]
+        {
+            if let Ok(profile) = env::var("USERPROFILE") {
+                PathBuf::from(profile)
+            } else {
+                warn!("Could not find home directory: $HOME is not set, and user database could not be read.");
+                PathBuf::from(r"C:\")
+            }
+        }
+        #[cfg(unix)]
+        {
+            warn!("Could not find home directory: $HOME is not set, and user database could not be read.");
+            PathBuf::from("/")
+        }
+    };
+
+    home.join(".cache")
+}
+
 impl GstDots {
     fn new(args: Args) -> Arc<Self> {
         let gstdot_path = args
@@ -96,7 +138,7 @@ impl GstDots {
             .as_ref()
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| {
-                let mut path = dirs::cache_dir().expect("Failed to find cache directory");
+                let mut path = get_user_cache_dir();
                 path.push("gstreamer-dots");
                 path
             });
@@ -331,7 +373,7 @@ impl GstDots {
                 .as_ref()
                 .map(std::path::PathBuf::from)
                 .unwrap_or_else(|| {
-                    let mut path = dirs::cache_dir().expect("Failed to find cache directory");
+                    let mut path = get_user_cache_dir();
                     path.push("gstreamer-dots");
                     path
                 });
