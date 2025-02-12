@@ -1,4 +1,5 @@
 gst_tracers_sources = [
+  'gstdots.c',
   'gstlatency.c',
   'gstleaks.c',
   'gststats.c',

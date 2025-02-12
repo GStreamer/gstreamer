@@ -31,9 +31,14 @@
 #include "gstleaks.h"
 #include "gstfactories.h"
 
+GType gst_dots_tracer_get_type (void);
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  if (!gst_tracer_register (plugin, "dots", gst_dots_tracer_get_type ()))
+    return FALSE;
+
   if (!gst_tracer_register (plugin, "latency", gst_latency_tracer_get_type ()))
     return FALSE;
 #ifndef GST_DISABLE_GST_DEBUG

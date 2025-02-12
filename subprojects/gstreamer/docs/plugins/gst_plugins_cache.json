@@ -2948,6 +2948,29 @@
         "package": "GStreamer",
         "source": "gstreamer",
         "tracers": {
+            "dots": {
+                "hierarchy": [
+                    "GstDotsTracer",
+                    "GstTracer",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "properties": {
+                    "no-delete": {
+                        "blurb": "Don't delete existing .dot files on startup",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                }
+            },
             "factories": {
                 "hierarchy": [
                     "GstFactoriesTracer",
