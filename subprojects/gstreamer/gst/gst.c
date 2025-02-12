@@ -815,6 +815,12 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
 #ifndef GST_DISABLE_GST_TRACER_HOOKS
   _priv_gst_tracing_init ();
+  /* Allow the `dots` tracer to set the `GST_DEBUG_DUMP_DOT_DIR` variable if it
+   * was not set before */
+#ifndef GST_DISABLE_GST_DEBUG
+  if (!priv_gst_dump_dot_dir)
+    priv_gst_dump_dot_dir = g_getenv ("GST_DEBUG_DUMP_DOT_DIR");
+#endif
 #endif
 
   return TRUE;
