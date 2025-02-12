@@ -29,7 +29,7 @@ def get_documentation_artifact_url(project_name='gstreamer/gstreamer',
     """
     gl = gitlab.Gitlab("https://gitlab.freedesktop.org/")
     project = gl.projects.get(project_name)
-    pipelines = project.pipelines.list(get_all=False)
+    pipelines = project.pipelines.list(iterator=True)
     for pipeline in pipelines:
         if pipeline.ref != branch:
             continue
