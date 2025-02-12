@@ -100,7 +100,8 @@ gst_mpegts_descriptor_parse_dvb_network_name (const GstMpegtsDescriptor *
  * with the network name @name. The data field of the #GstMpegtsDescriptor
  * will be allocated, and transferred to the caller.
  *
- * Returns: (transfer full): the #GstMpegtsDescriptor or %NULL on fail
+ * Returns: (transfer full) (nullable): the #GstMpegtsDescriptor or %NULL on
+ * failure.
  */
 GstMpegtsDescriptor *
 gst_mpegts_descriptor_from_dvb_network_name (const gchar * name)
@@ -510,7 +511,8 @@ gst_mpegts_descriptor_parse_dvb_service (const GstMpegtsDescriptor *
  * The data field of the #GstMpegtsDescriptor will be allocated,
  * and transferred to the caller.
  *
- * Returns: (transfer full): the #GstMpegtsDescriptor or %NULL on fail
+ * Returns: (transfer full) (nullable): the #GstMpegtsDescriptor or %NULL on
+ * failure
  */
 GstMpegtsDescriptor *
 gst_mpegts_descriptor_from_dvb_service (GstMpegtsDVBServiceType service_type,
@@ -839,7 +841,8 @@ fail:
  * gst_mpegts_dvb_linkage_descriptor_get_mobile_hand_over:
  * @desc: the #GstMpegtsDVBLinkageDescriptor
  *
- * Returns: The #GstMpegtsDVBLinkageMobileHandOver or %NULL if an error happened
+ * Returns: (transfer none) (nullable): The #GstMpegtsDVBLinkageMobileHandOver
+ * or %NULL if an error happened
  */
 const GstMpegtsDVBLinkageMobileHandOver *
 gst_mpegts_dvb_linkage_descriptor_get_mobile_hand_over (const
@@ -856,7 +859,8 @@ gst_mpegts_dvb_linkage_descriptor_get_mobile_hand_over (const
  * gst_mpegts_dvb_linkage_descriptor_get_event:
  * @desc: the #GstMpegtsDVBLinkageDescriptor
  *
- * Returns: The #GstMpegtsDVBLinkageEvent or %NULL if an error happened
+ * Returns: (transfer none) (nullable): The #GstMpegtsDVBLinkageEvent or %NULL
+ * if an error happened
  */
 const GstMpegtsDVBLinkageEvent *
 gst_mpegts_dvb_linkage_descriptor_get_event (const GstMpegtsDVBLinkageDescriptor
@@ -873,7 +877,9 @@ gst_mpegts_dvb_linkage_descriptor_get_event (const GstMpegtsDVBLinkageDescriptor
  * gst_mpegts_dvb_linkage_descriptor_get_extended_event:
  * @desc: the #GstMpegtsDVBLinkageDescriptor
  *
- * Returns: (element-type GstMpegtsDVBLinkageExtendedEvent): an #GstMpegtsDVBLinkageExtendedEvent array or %NULL if an error happened
+ * Returns: (element-type GstMpegtsDVBLinkageExtendedEvent) (transfer none)
+ * (nullable): an #GstMpegtsDVBLinkageExtendedEvent array or %NULL if an error
+ * happened
  */
 const GPtrArray *
 gst_mpegts_dvb_linkage_descriptor_get_extended_event (const

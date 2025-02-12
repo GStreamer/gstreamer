@@ -979,8 +979,9 @@ Consult the relevant specifications for more details.</doc>
       </method>
       <method name="get_event" c:identifier="gst_mpegts_dvb_linkage_descriptor_get_event">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.c">The #GstMpegtsDVBLinkageEvent or %NULL if an error happened</doc>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.c">The #GstMpegtsDVBLinkageEvent or %NULL
+if an error happened</doc>
           <type name="DVBLinkageEvent" c:type="const GstMpegtsDVBLinkageEvent*"/>
         </return-value>
         <parameters>
@@ -992,8 +993,9 @@ Consult the relevant specifications for more details.</doc>
       </method>
       <method name="get_extended_event" c:identifier="gst_mpegts_dvb_linkage_descriptor_get_extended_event">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.c">an #GstMpegtsDVBLinkageExtendedEvent array or %NULL if an error happened</doc>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.c">an #GstMpegtsDVBLinkageExtendedEvent array or %NULL if an error
+happened</doc>
           <array name="GLib.PtrArray" c:type="const GPtrArray*">
             <type name="DVBLinkageExtendedEvent"/>
           </array>
@@ -1007,8 +1009,9 @@ Consult the relevant specifications for more details.</doc>
       </method>
       <method name="get_mobile_hand_over" c:identifier="gst_mpegts_dvb_linkage_descriptor_get_mobile_hand_over">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.c">The #GstMpegtsDVBLinkageMobileHandOver or %NULL if an error happened</doc>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.c">The #GstMpegtsDVBLinkageMobileHandOver
+or %NULL if an error happened</doc>
           <type name="DVBLinkageMobileHandOver" c:type="const GstMpegtsDVBLinkageMobileHandOver*"/>
         </return-value>
         <parameters>
@@ -2214,8 +2217,9 @@ See ISO/IEC 13818-1:2018 Section 2.6.62 and 2.6.63 for details.</doc>
       <function name="from_custom" c:identifier="gst_mpegts_descriptor_from_custom">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">Creates a #GstMpegtsDescriptor with custom @tag and @data</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
-        <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">#GstMpegtsDescriptor</doc>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">#GstMpegtsDescriptor, or %NULL if input
+is invalid</doc>
           <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
         </return-value>
         <parameters>
@@ -2268,8 +2272,9 @@ See ISO/IEC 13818-1:2018 Section 2.6.62 and 2.6.63 for details.</doc>
 with the network name @name. The data field of the #GstMpegtsDescriptor
 will be allocated, and transferred to the caller.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.h"/>
-        <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.c">the #GstMpegtsDescriptor or %NULL on fail</doc>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.c">the #GstMpegtsDescriptor or %NULL on
+failure.</doc>
           <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
         </return-value>
         <parameters>
@@ -2284,8 +2289,9 @@ will be allocated, and transferred to the caller.</doc>
 The data field of the #GstMpegtsDescriptor will be allocated,
 and transferred to the caller.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.h"/>
-        <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.c">the #GstMpegtsDescriptor or %NULL on fail</doc>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.c">the #GstMpegtsDescriptor or %NULL on
+failure</doc>
           <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
         </return-value>
         <parameters>
@@ -3917,9 +3923,9 @@ the section (i.e. the first byte should contain the `table_id` field).</doc>
       <method name="get_atsc_cvct" c:identifier="gst_mpegts_section_get_atsc_cvct">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.c">Returns the #GstMpegtsAtscVCT contained in the @section</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.c">The #GstMpegtsAtscVCT contained in the section, or %NULL if an error
-happened.</doc>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.c">The #GstMpegtsAtscVCT contained in the
+section, or %NULL if an error happened.</doc>
           <type name="AtscVCT" c:type="const GstMpegtsAtscVCT*"/>
         </return-value>
         <parameters>
@@ -3962,9 +3968,9 @@ happened.</doc>
       <method name="get_atsc_mgt" c:identifier="gst_mpegts_section_get_atsc_mgt">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.c">Returns the #GstMpegtsAtscMGT contained in the @section.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.c">The #GstMpegtsAtscMGT contained in the section, or %NULL if an error
-happened.</doc>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.c">The #GstMpegtsAtscMGT contained in the
+section, or %NULL if an error happened.</doc>
           <type name="AtscMGT" c:type="const GstMpegtsAtscMGT*"/>
         </return-value>
         <parameters>
@@ -4007,9 +4013,9 @@ happened.</doc>
       <method name="get_atsc_tvct" c:identifier="gst_mpegts_section_get_atsc_tvct">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.c">Returns the #GstMpegtsAtscVCT contained in the @section</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.c">The #GstMpegtsAtscVCT contained in the section, or %NULL if an error
-happened.</doc>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.c">The #GstMpegtsAtscVCT contained in the
+section, or %NULL if an error happened.</doc>
           <type name="AtscVCT" c:type="const GstMpegtsAtscVCT*"/>
         </return-value>
         <parameters>
@@ -4022,9 +4028,9 @@ happened.</doc>
       <method name="get_bat" c:identifier="gst_mpegts_section_get_bat">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">Returns the #GstMpegtsBAT contained in the @section.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The #GstMpegtsBAT contained in the section, or %NULL if an error
-happened.</doc>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The #GstMpegtsBAT contained in the
+section, or %NULL if an error happened.</doc>
           <type name="BAT" c:type="const GstMpegtsBAT*"/>
         </return-value>
         <parameters>
@@ -4040,10 +4046,10 @@ happened.</doc>
 Returns the array of #GstMpegtsDescriptor contained in the Conditional
 Access Table.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h"/>
-        <return-value transfer-ownership="container">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">The array
-of #GstMpegtsDescriptor contained in the section, or %NULL if an error
-happened. Release with #g_array_unref when done.</doc>
+        <return-value transfer-ownership="container" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">
+The array of #GstMpegtsDescriptor contained in the section, or %NULL if an
+error happened. Release with #g_array_unref when done.</doc>
           <array name="GLib.PtrArray" c:type="GPtrArray*">
             <type name="Descriptor"/>
           </array>
@@ -4072,9 +4078,9 @@ happened. Release with #g_array_unref when done.</doc>
       <method name="get_eit" c:identifier="gst_mpegts_section_get_eit">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">Returns the #GstMpegtsEIT contained in the @section.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The #GstMpegtsEIT contained in the section, or %NULL if an error
-happened.</doc>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The #GstMpegtsEIT contained in the
+section, or %NULL if an error happened.</doc>
           <type name="EIT" c:type="const GstMpegtsEIT*"/>
         </return-value>
         <parameters>
@@ -4087,9 +4093,9 @@ happened.</doc>
       <method name="get_nit" c:identifier="gst_mpegts_section_get_nit">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">Returns the #GstMpegtsNIT contained in the @section.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The #GstMpegtsNIT contained in the section, or %NULL if an error
-happened.</doc>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The #GstMpegtsNIT contained in the
+section, or %NULL if an error happened.</doc>
           <type name="NIT" c:type="const GstMpegtsNIT*"/>
         </return-value>
         <parameters>
@@ -4107,11 +4113,11 @@ Returns the array of #GstMpegtsPatProgram contained in the section.
 Note: The PAT `transport_stream_id` field corresponds to the
 "subtable_extension" field of the provided @section.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h"/>
-        <return-value transfer-ownership="container">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">The
-#GstMpegtsPatProgram contained in the section, or %NULL if an error happened
-or the @section did not contain a valid PAT. Release with #g_ptr_array_unref
-when done.</doc>
+        <return-value transfer-ownership="container" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">
+The #GstMpegtsPatProgram contained in the section, or %NULL if an error
+happened or the @section did not contain a valid PAT. Release with
+#g_ptr_array_unref when done.</doc>
           <array name="GLib.PtrArray" c:type="GPtrArray*">
             <type name="PatProgram"/>
           </array>
@@ -4126,9 +4132,9 @@ when done.</doc>
       <method name="get_pmt" c:identifier="gst_mpegts_section_get_pmt">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">Parses the Program Map Table contained in the @section.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">The #GstMpegtsPMT contained in the section, or %NULL if an error
-happened.</doc>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">The #GstMpegtsPMT contained in the
+section, or %NULL if an error happened.</doc>
           <type name="PMT" c:type="const GstMpegtsPMT*"/>
         </return-value>
         <parameters>
@@ -4141,9 +4147,9 @@ happened.</doc>
       <method name="get_scte_sit" c:identifier="gst_mpegts_section_get_scte_sit">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.c">Returns the #GstMpegtsSCTESIT contained in the @section.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.c">The #GstMpegtsSCTESIT contained in the section, or %NULL if an error
-happened.</doc>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.c">The #GstMpegtsSCTESIT contained in the
+section, or %NULL if an error happened.</doc>
           <type name="SCTESIT" c:type="const GstMpegtsSCTESIT*"/>
         </return-value>
         <parameters>
@@ -4156,9 +4162,9 @@ happened.</doc>
       <method name="get_sdt" c:identifier="gst_mpegts_section_get_sdt">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">Returns the #GstMpegtsSDT contained in the @section.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The #GstMpegtsSDT contained in the section, or %NULL if an error
-happened.</doc>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The #GstMpegtsSDT contained in the
+section, or %NULL if an error happened.</doc>
           <type name="SDT" c:type="const GstMpegtsSDT*"/>
         </return-value>
         <parameters>
@@ -4171,9 +4177,9 @@ happened.</doc>
       <method name="get_sit" c:identifier="gst_mpegts_section_get_sit" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">Returns the #GstMpegtsSIT contained in the @section.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The #GstMpegtsSIT contained in the section, or %NULL if an error
-happened.</doc>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The #GstMpegtsSIT contained in the
+section, or %NULL if an error happened.</doc>
           <type name="SIT" c:type="const GstMpegtsSIT*"/>
         </return-value>
         <parameters>
@@ -4186,9 +4192,10 @@ happened.</doc>
       <method name="get_tdt" c:identifier="gst_mpegts_section_get_tdt">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">Returns the #GstDateTime of the TDT</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h"/>
-        <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The #GstDateTime contained in the section, or %NULL
-if an error happened. Release with #gst_date_time_unref when done.</doc>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The #GstDateTime contained in the
+section, or %NULL if an error happened. Release with #gst_date_time_unref
+when done.</doc>
           <type name="Gst.DateTime" c:type="GstDateTime*"/>
         </return-value>
         <parameters>
@@ -4201,9 +4208,9 @@ if an error happened. Release with #gst_date_time_unref when done.</doc>
       <method name="get_tot" c:identifier="gst_mpegts_section_get_tot">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">Returns the #GstMpegtsTOT contained in the @section.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The #GstMpegtsTOT contained in the section, or %NULL if an error
-happened.</doc>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">The #GstMpegtsTOT contained in the
+section, or %NULL if an error happened.</doc>
           <type name="TOT" c:type="const GstMpegtsTOT*"/>
         </return-value>
         <parameters>
@@ -4218,10 +4225,10 @@ happened.</doc>
 
 Returns the array of #GstMpegtsDescriptor contained in the section</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h"/>
-        <return-value transfer-ownership="container">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">The array
-of #GstMpegtsDescriptor contained in the section, or %NULL if an error
-happened. Release with #g_array_unref when done.</doc>
+        <return-value transfer-ownership="container" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">
+The array of #GstMpegtsDescriptor contained in the section, or %NULL if an
+error happened. Release with #g_array_unref when done.</doc>
           <array name="GLib.PtrArray" c:type="GPtrArray*">
             <type name="Descriptor"/>
           </array>
@@ -4272,10 +4279,11 @@ data field is allocated and populated.</doc>
           </parameter>
         </parameters>
       </method>
-      <function name="from_atsc_mgt" c:identifier="gst_mpegts_section_from_atsc_mgt" version="1.18">
+      <function name="from_atsc_mgt" c:identifier="gst_mpegts_section_from_atsc_mgt">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.h"/>
-        <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.c">the #GstMpegtsSection</doc>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.c">the #GstMpegtsSection, or %NULL if @mgt
+is invalid Since: 1.18</doc>
           <type name="Section" c:type="GstMpegtsSection*"/>
         </return-value>
         <parameters>
@@ -4310,8 +4318,9 @@ data field is allocated and populated.</doc>
       <function name="from_nit" c:identifier="gst_mpegts_section_from_nit">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">Ownership of @nit is taken. The data in @nit is managed by the #GstMpegtsSection</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h"/>
-        <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">the #GstMpegtsSection</doc>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">the #GstMpegtsSection, or %NULL if @nit
+is invalid</doc>
           <type name="Section" c:type="GstMpegtsSection*"/>
         </return-value>
         <parameters>
@@ -4344,8 +4353,9 @@ data field is allocated and populated.</doc>
       <function name="from_pmt" c:identifier="gst_mpegts_section_from_pmt">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">Creates a #GstMpegtsSection from @pmt that is bound to @pid</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h"/>
-        <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">#GstMpegtsSection</doc>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">#GstMpegtsSection, or %NULL if @pmt is
+invalid</doc>
           <type name="Section" c:type="GstMpegtsSection*"/>
         </return-value>
         <parameters>
@@ -4362,8 +4372,9 @@ data field is allocated and populated.</doc>
       <function name="from_scte_sit" c:identifier="gst_mpegts_section_from_scte_sit">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.c">Ownership of @sit is taken. The data in @sit is managed by the #GstMpegtsSection</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.h"/>
-        <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.c">the #GstMpegtsSection</doc>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.c">the #GstMpegtsSection, or %NULL if @sit
+is invalid</doc>
           <type name="Section" c:type="GstMpegtsSection*"/>
         </return-value>
         <parameters>
@@ -4379,8 +4390,9 @@ data field is allocated and populated.</doc>
       <function name="from_sdt" c:identifier="gst_mpegts_section_from_sdt">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">Ownership of @sdt is taken. The data in @sdt is managed by the #GstMpegtsSection</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h"/>
-        <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">the #GstMpegtsSection</doc>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">the #GstMpegtsSection or %NULL if @sdt
+is invalid</doc>
           <type name="Section" c:type="GstMpegtsSection*"/>
         </return-value>
         <parameters>
@@ -5103,8 +5115,9 @@ profiles defined in Annex A for service-compatible stereoscopic 3D services</doc
     <function name="descriptor_from_custom" c:identifier="gst_mpegts_descriptor_from_custom" moved-to="Descriptor.from_custom">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">Creates a #GstMpegtsDescriptor with custom @tag and @data</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
-      <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">#GstMpegtsDescriptor</doc>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">#GstMpegtsDescriptor, or %NULL if input
+is invalid</doc>
         <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
       </return-value>
       <parameters>
@@ -5157,8 +5170,9 @@ profiles defined in Annex A for service-compatible stereoscopic 3D services</doc
 with the network name @name. The data field of the #GstMpegtsDescriptor
 will be allocated, and transferred to the caller.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.h"/>
-      <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.c">the #GstMpegtsDescriptor or %NULL on fail</doc>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.c">the #GstMpegtsDescriptor or %NULL on
+failure.</doc>
         <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
       </return-value>
       <parameters>
@@ -5173,8 +5187,9 @@ will be allocated, and transferred to the caller.</doc>
 The data field of the #GstMpegtsDescriptor will be allocated,
 and transferred to the caller.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.h"/>
-      <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.c">the #GstMpegtsDescriptor or %NULL on fail</doc>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-descriptor.c">the #GstMpegtsDescriptor or %NULL on
+failure</doc>
         <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
       </return-value>
       <parameters>
@@ -5343,9 +5358,9 @@ a single language</doc>
     <function name="event_parse_mpegts_section" c:identifier="gst_event_parse_mpegts_section">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">Extracts the #GstMpegtsSection contained in the @event #GstEvent</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h"/>
-      <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">The extracted #GstMpegtsSection , or %NULL if the
-event did not contain a valid #GstMpegtsSection.</doc>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">The extracted #GstMpegtsSection , or
+%NULL if the event did not contain a valid #GstMpegtsSection.</doc>
         <type name="Section" c:type="GstMpegtsSection*"/>
       </return-value>
       <parameters>
@@ -5361,8 +5376,9 @@ event did not contain a valid #GstMpegtsSection.</doc>
 Note: To look for descriptors that can be present more than once in an
 array of descriptors, iterate the #GArray manually.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
-      <return-value transfer-ownership="none">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">the first descriptor matching @tag, else %NULL.</doc>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">the first descriptor matching @tag, else
+%NULL.</doc>
         <type name="Descriptor" c:type="const GstMpegtsDescriptor*"/>
       </return-value>
       <parameters>
@@ -5385,8 +5401,9 @@ of #GstMpegtsDescriptor</doc>
 Note: To look for descriptors that can be present more than once in an
 array of descriptors, iterate the #GArray manually.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
-      <return-value transfer-ownership="none">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">the first descriptor matchin @tag with @tag_extension, else %NULL.</doc>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">the first descriptor matchin @tag with
+@tag_extension, else %NULL.</doc>
         <type name="Descriptor" c:type="const GstMpegtsDescriptor*"/>
       </return-value>
       <parameters>
@@ -5525,9 +5542,9 @@ usage.</doc>
     <function name="message_new_mpegts_section" c:identifier="gst_message_new_mpegts_section">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">Creates a new #GstMessage for a @GstMpegtsSection.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h"/>
-      <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">The new #GstMessage to be posted, or %NULL if the
-section is not valid.</doc>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">The new #GstMessage to be posted, or
+%NULL if the section is not valid.</doc>
         <type name="Gst.Message" c:type="GstMessage*"/>
       </return-value>
       <parameters>
@@ -5544,7 +5561,7 @@ section is not valid.</doc>
     <function name="message_parse_mpegts_section" c:identifier="gst_message_parse_mpegts_section">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">Returns the #GstMpegtsSection contained in a message.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h"/>
-      <return-value transfer-ownership="full">
+      <return-value transfer-ownership="full" nullable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">the contained #GstMpegtsSection, or %NULL.</doc>
         <type name="Section" c:type="GstMpegtsSection*"/>
       </return-value>
@@ -5561,10 +5578,10 @@ array.
 
 Note: The data provided in @buffer will not be copied.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
-      <return-value transfer-ownership="full">
+      <return-value transfer-ownership="full" nullable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">an
-array of the parsed descriptors or %NULL if there was an error.
-Release with #g_array_unref when done with it.</doc>
+array of the parsed descriptors or %NULL if there was an error.  Release with
+#g_array_unref when done with it.</doc>
         <array name="GLib.PtrArray" c:type="GPtrArray*">
           <type name="Descriptor"/>
         </array>
@@ -5681,10 +5698,11 @@ If the @duration is 0 it won't be specified in the event.</doc>
         </parameter>
       </parameters>
     </function>
-    <function name="section_from_atsc_mgt" c:identifier="gst_mpegts_section_from_atsc_mgt" moved-to="Section.from_atsc_mgt" version="1.18">
+    <function name="section_from_atsc_mgt" c:identifier="gst_mpegts_section_from_atsc_mgt" moved-to="Section.from_atsc_mgt">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.h"/>
-      <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.c">the #GstMpegtsSection</doc>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-section.c">the #GstMpegtsSection, or %NULL if @mgt
+is invalid Since: 1.18</doc>
         <type name="Section" c:type="GstMpegtsSection*"/>
       </return-value>
       <parameters>
@@ -5719,8 +5737,9 @@ If the @duration is 0 it won't be specified in the event.</doc>
     <function name="section_from_nit" c:identifier="gst_mpegts_section_from_nit" moved-to="Section.from_nit">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">Ownership of @nit is taken. The data in @nit is managed by the #GstMpegtsSection</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h"/>
-      <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">the #GstMpegtsSection</doc>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">the #GstMpegtsSection, or %NULL if @nit
+is invalid</doc>
         <type name="Section" c:type="GstMpegtsSection*"/>
       </return-value>
       <parameters>
@@ -5753,8 +5772,9 @@ If the @duration is 0 it won't be specified in the event.</doc>
     <function name="section_from_pmt" c:identifier="gst_mpegts_section_from_pmt" moved-to="Section.from_pmt">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">Creates a #GstMpegtsSection from @pmt that is bound to @pid</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h"/>
-      <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">#GstMpegtsSection</doc>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.c">#GstMpegtsSection, or %NULL if @pmt is
+invalid</doc>
         <type name="Section" c:type="GstMpegtsSection*"/>
       </return-value>
       <parameters>
@@ -5771,8 +5791,9 @@ If the @duration is 0 it won't be specified in the event.</doc>
     <function name="section_from_scte_sit" c:identifier="gst_mpegts_section_from_scte_sit" moved-to="Section.from_scte_sit">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.c">Ownership of @sit is taken. The data in @sit is managed by the #GstMpegtsSection</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.h"/>
-      <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.c">the #GstMpegtsSection</doc>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-scte-section.c">the #GstMpegtsSection, or %NULL if @sit
+is invalid</doc>
         <type name="Section" c:type="GstMpegtsSection*"/>
       </return-value>
       <parameters>
@@ -5788,8 +5809,9 @@ If the @duration is 0 it won't be specified in the event.</doc>
     <function name="section_from_sdt" c:identifier="gst_mpegts_section_from_sdt" moved-to="Section.from_sdt">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">Ownership of @sdt is taken. The data in @sdt is managed by the #GstMpegtsSection</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.h"/>
-      <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">the #GstMpegtsSection</doc>
+      <return-value transfer-ownership="full" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-dvb-section.c">the #GstMpegtsSection or %NULL if @sdt
+is invalid</doc>
         <type name="Section" c:type="GstMpegtsSection*"/>
       </return-value>
       <parameters>

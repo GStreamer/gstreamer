@@ -426,8 +426,8 @@ error:
  *
  * Returns the #GstMpegtsSCTESIT contained in the @section.
  *
- * Returns: The #GstMpegtsSCTESIT contained in the section, or %NULL if an error
- * happened.
+ * Returns: (transfer none) (nullable): The #GstMpegtsSCTESIT contained in the
+ * section, or %NULL if an error happened.
  */
 const GstMpegtsSCTESIT *
 gst_mpegts_section_get_scte_sit (GstMpegtsSection * section)
@@ -888,7 +888,8 @@ _packetize_sit (GstMpegtsSection * section)
  *
  * Ownership of @sit is taken. The data in @sit is managed by the #GstMpegtsSection
  *
- * Returns: (transfer full): the #GstMpegtsSection
+ * Returns: (transfer full) (nullable): the #GstMpegtsSection, or %NULL if @sit
+ * is invalid
  */
 GstMpegtsSection *
 gst_mpegts_section_from_scte_sit (GstMpegtsSCTESIT * sit, guint16 pid)

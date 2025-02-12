@@ -291,8 +291,8 @@ error:
  *
  * Returns the #GstMpegtsEIT contained in the @section.
  *
- * Returns: The #GstMpegtsEIT contained in the section, or %NULL if an error
- * happened.
+ * Returns: (transfer none) (nullable): The #GstMpegtsEIT contained in the
+ * section, or %NULL if an error happened.
  */
 const GstMpegtsEIT *
 gst_mpegts_section_get_eit (GstMpegtsSection * section)
@@ -466,8 +466,8 @@ error:
  *
  * Returns the #GstMpegtsBAT contained in the @section.
  *
- * Returns: The #GstMpegtsBAT contained in the section, or %NULL if an error
- * happened.
+ * Returns: (transfer none) (nullable): The #GstMpegtsBAT contained in the
+ * section, or %NULL if an error happened.
  */
 const GstMpegtsBAT *
 gst_mpegts_section_get_bat (GstMpegtsSection * section)
@@ -646,8 +646,8 @@ error:
  *
  * Returns the #GstMpegtsNIT contained in the @section.
  *
- * Returns: The #GstMpegtsNIT contained in the section, or %NULL if an error
- * happened.
+ * Returns: (transfer none) (nullable): The #GstMpegtsNIT contained in the
+ * section, or %NULL if an error happened.
  */
 const GstMpegtsNIT *
 gst_mpegts_section_get_nit (GstMpegtsSection * section)
@@ -805,7 +805,8 @@ _packetize_nit (GstMpegtsSection * section)
  *
  * Ownership of @nit is taken. The data in @nit is managed by the #GstMpegtsSection
  *
- * Returns: (transfer full): the #GstMpegtsSection
+ * Returns: (transfer full) (nullable): the #GstMpegtsSection, or %NULL if @nit
+ * is invalid
  */
 GstMpegtsSection *
 gst_mpegts_section_from_nit (GstMpegtsNIT * nit)
@@ -973,8 +974,8 @@ error:
  *
  * Returns the #GstMpegtsSDT contained in the @section.
  *
- * Returns: The #GstMpegtsSDT contained in the section, or %NULL if an error
- * happened.
+ * Returns: (transfer none) (nullable): The #GstMpegtsSDT contained in the
+ * section, or %NULL if an error happened.
  */
 const GstMpegtsSDT *
 gst_mpegts_section_get_sdt (GstMpegtsSection * section)
@@ -1125,7 +1126,8 @@ _packetize_sdt (GstMpegtsSection * section)
  *
  * Ownership of @sdt is taken. The data in @sdt is managed by the #GstMpegtsSection
  *
- * Returns: (transfer full): the #GstMpegtsSection
+ * Returns: (transfer full) (nullable): the #GstMpegtsSection or %NULL if @sdt
+ * is invalid
  */
 GstMpegtsSection *
 gst_mpegts_section_from_sdt (GstMpegtsSDT * sdt)
@@ -1162,8 +1164,9 @@ _parse_tdt (GstMpegtsSection * section)
  *
  * Returns the #GstDateTime of the TDT
  *
- * Returns: The #GstDateTime contained in the section, or %NULL
- * if an error happened. Release with #gst_date_time_unref when done.
+ * Returns: (transfer full) (nullable): The #GstDateTime contained in the
+ * section, or %NULL if an error happened. Release with #gst_date_time_unref
+ * when done.
  */
 GstDateTime *
 gst_mpegts_section_get_tdt (GstMpegtsSection * section)
@@ -1237,8 +1240,8 @@ _parse_tot (GstMpegtsSection * section)
  *
  * Returns the #GstMpegtsTOT contained in the @section.
  *
- * Returns: The #GstMpegtsTOT contained in the section, or %NULL if an error
- * happened.
+ * Returns: (transfer none) (nullable): The #GstMpegtsTOT contained in the
+ * section, or %NULL if an error happened.
  */
 const GstMpegtsTOT *
 gst_mpegts_section_get_tot (GstMpegtsSection * section)
@@ -1391,8 +1394,8 @@ error:
  *
  * Returns the #GstMpegtsSIT contained in the @section.
  *
- * Returns: The #GstMpegtsSIT contained in the section, or %NULL if an error
- * happened.
+ * Returns: (transfer none) (nullable): The #GstMpegtsSIT contained in the
+ * section, or %NULL if an error happened.
  *
  * Since: 1.20
  */

@@ -255,8 +255,8 @@ error:
  *
  * Returns the #GstMpegtsAtscVCT contained in the @section
  *
- * Returns: The #GstMpegtsAtscVCT contained in the section, or %NULL if an error
- * happened.
+ * Returns: (transfer none) (nullable): The #GstMpegtsAtscVCT contained in the
+ * section, or %NULL if an error happened.
  */
 const GstMpegtsAtscVCT *
 gst_mpegts_section_get_atsc_tvct (GstMpegtsSection * section)
@@ -279,8 +279,8 @@ gst_mpegts_section_get_atsc_tvct (GstMpegtsSection * section)
  *
  * Returns the #GstMpegtsAtscVCT contained in the @section
  *
- * Returns: The #GstMpegtsAtscVCT contained in the section, or %NULL if an error
- * happened.
+ * Returns: (transfer none) (nullable): The #GstMpegtsAtscVCT contained in the
+ * section, or %NULL if an error happened.
  */
 const GstMpegtsAtscVCT *
 gst_mpegts_section_get_atsc_cvct (GstMpegtsSection * section)
@@ -521,8 +521,8 @@ _packetize_mgt (GstMpegtsSection * section)
  * gst_mpegts_section_from_atsc_mgt:
  * @mgt: (transfer full): a #GstMpegtsAtscMGT to create the #GstMpegtsSection from
  *
- * Returns: (transfer full): the #GstMpegtsSection
- * Since: 1.18
+ * Returns: (transfer full) (nullable): the #GstMpegtsSection, or %NULL if @mgt
+ * is invalid Since: 1.18
  */
 GstMpegtsSection *
 gst_mpegts_section_from_atsc_mgt (GstMpegtsAtscMGT * mgt)
@@ -548,8 +548,8 @@ gst_mpegts_section_from_atsc_mgt (GstMpegtsAtscMGT * mgt)
  *
  * Returns the #GstMpegtsAtscMGT contained in the @section.
  *
- * Returns: The #GstMpegtsAtscMGT contained in the section, or %NULL if an error
- * happened.
+ * Returns: (transfer none) (nullable): The #GstMpegtsAtscMGT contained in the
+ * section, or %NULL if an error happened.
  */
 const GstMpegtsAtscMGT *
 gst_mpegts_section_get_atsc_mgt (GstMpegtsSection * section)

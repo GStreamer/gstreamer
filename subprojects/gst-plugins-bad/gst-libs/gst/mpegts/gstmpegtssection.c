@@ -253,7 +253,7 @@ gst_mpegts_section_get_data (GstMpegtsSection * section)
  *
  * Returns the #GstMpegtsSection contained in a message.
  *
- * Returns: (transfer full): the contained #GstMpegtsSection, or %NULL.
+ * Returns: (transfer full) (nullable): the contained #GstMpegtsSection, or %NULL.
  */
 GstMpegtsSection *
 gst_message_parse_mpegts_section (GstMessage * message)
@@ -329,8 +329,8 @@ _mpegts_section_get_structure (GstMpegtsSection * section)
  *
  * Creates a new #GstMessage for a @GstMpegtsSection.
  *
- * Returns: (transfer full): The new #GstMessage to be posted, or %NULL if the
- * section is not valid.
+ * Returns: (transfer full) (nullable): The new #GstMessage to be posted, or
+ * %NULL if the section is not valid.
  */
 GstMessage *
 gst_message_new_mpegts_section (GstObject * parent, GstMpegtsSection * section)
@@ -373,8 +373,8 @@ gst_event_new_mpegts_section (GstMpegtsSection * section)
  *
  * Extracts the #GstMpegtsSection contained in the @event #GstEvent
  *
- * Returns: (transfer full): The extracted #GstMpegtsSection , or %NULL if the
- * event did not contain a valid #GstMpegtsSection.
+ * Returns: (transfer full) (nullable): The extracted #GstMpegtsSection , or
+ * %NULL if the event did not contain a valid #GstMpegtsSection.
  */
 GstMpegtsSection *
 gst_event_parse_mpegts_section (GstEvent * event)
@@ -494,10 +494,10 @@ _parse_pat (GstMpegtsSection * section)
  * Note: The PAT `transport_stream_id` field corresponds to the
  * "subtable_extension" field of the provided @section.
  *
- * Returns: (transfer container) (element-type GstMpegtsPatProgram): The
- * #GstMpegtsPatProgram contained in the section, or %NULL if an error happened
- * or the @section did not contain a valid PAT. Release with #g_ptr_array_unref
- * when done.
+ * Returns: (transfer container) (element-type GstMpegtsPatProgram) (nullable):
+ * The #GstMpegtsPatProgram contained in the section, or %NULL if an error
+ * happened or the @section did not contain a valid PAT. Release with
+ * #g_ptr_array_unref when done.
  */
 GPtrArray *
 gst_mpegts_section_get_pat (GstMpegtsSection * section)
@@ -768,8 +768,8 @@ error:
  *
  * Parses the Program Map Table contained in the @section.
  *
- * Returns: The #GstMpegtsPMT contained in the section, or %NULL if an error
- * happened.
+ * Returns: (transfer none) (nullable): The #GstMpegtsPMT contained in the
+ * section, or %NULL if an error happened.
  */
 const GstMpegtsPMT *
 gst_mpegts_section_get_pmt (GstMpegtsSection * section)
@@ -930,7 +930,8 @@ _packetize_pmt (GstMpegtsSection * section)
  *
  * Creates a #GstMpegtsSection from @pmt that is bound to @pid
  *
- * Returns: (transfer full): #GstMpegtsSection
+ * Returns: (transfer full) (nullable): #GstMpegtsSection, or %NULL if @pmt is
+ * invalid
  */
 GstMpegtsSection *
 gst_mpegts_section_from_pmt (GstMpegtsPMT * pmt, guint16 pid)
@@ -973,9 +974,9 @@ _parse_cat (GstMpegtsSection * section)
  * Returns the array of #GstMpegtsDescriptor contained in the Conditional
  * Access Table.
  *
- * Returns: (transfer container) (element-type GstMpegtsDescriptor): The array
- * of #GstMpegtsDescriptor contained in the section, or %NULL if an error
- * happened. Release with #g_array_unref when done.
+ * Returns: (transfer container) (element-type GstMpegtsDescriptor) (nullable):
+ * The array of #GstMpegtsDescriptor contained in the section, or %NULL if an
+ * error happened. Release with #g_array_unref when done.
  */
 GPtrArray *
 gst_mpegts_section_get_cat (GstMpegtsSection * section)
@@ -1002,9 +1003,9 @@ gst_mpegts_section_get_cat (GstMpegtsSection * section)
  *
  * Returns the array of #GstMpegtsDescriptor contained in the section
  *
- * Returns: (transfer container) (element-type GstMpegtsDescriptor): The array
- * of #GstMpegtsDescriptor contained in the section, or %NULL if an error
- * happened. Release with #g_array_unref when done.
+ * Returns: (transfer container) (element-type GstMpegtsDescriptor) (nullable):
+ * The array of #GstMpegtsDescriptor contained in the section, or %NULL if an
+ * error happened. Release with #g_array_unref when done.
  */
 GPtrArray *
 gst_mpegts_section_get_tsdt (GstMpegtsSection * section)

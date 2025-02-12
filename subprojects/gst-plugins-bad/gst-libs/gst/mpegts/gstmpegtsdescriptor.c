@@ -291,7 +291,7 @@ _encode_control_codes (gchar * text, gsize length, gboolean is_multibyte)
  * If no character map that contains all characters could be found, the
  * string is converted to ISO 6937 with unknown characters set to `?`.
  *
- * Returns: (transfer full): byte array of size @out_size
+ * Returns: (transfer full) (nullable): byte array of size @out_size
  */
 guint8 *
 dvb_text_from_utf8 (const gchar * text, gsize * out_size)
@@ -744,9 +744,9 @@ G_DEFINE_BOXED_TYPE (GstMpegtsDescriptor, gst_mpegts_descriptor,
  *
  * Note: The data provided in @buffer will not be copied.
  *
- * Returns: (transfer full) (element-type GstMpegtsDescriptor): an
- * array of the parsed descriptors or %NULL if there was an error.
- * Release with #g_array_unref when done with it.
+ * Returns: (transfer full) (element-type GstMpegtsDescriptor) (nullable): an
+ * array of the parsed descriptors or %NULL if there was an error.  Release with
+ * #g_array_unref when done with it.
  */
 GPtrArray *
 gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
@@ -830,7 +830,8 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
  * Note: To look for descriptors that can be present more than once in an
  * array of descriptors, iterate the #GArray manually.
  *
- * Returns: (transfer none): the first descriptor matching @tag, else %NULL.
+ * Returns: (transfer none) (nullable): the first descriptor matching @tag, else
+ * %NULL.
  */
 const GstMpegtsDescriptor *
 gst_mpegts_find_descriptor (GPtrArray * descriptors, guint8 tag)
@@ -859,7 +860,8 @@ gst_mpegts_find_descriptor (GPtrArray * descriptors, guint8 tag)
  * Note: To look for descriptors that can be present more than once in an
  * array of descriptors, iterate the #GArray manually.
  *
- * Returns: (transfer none): the first descriptor matchin @tag with @tag_extension, else %NULL.
+ * Returns: (transfer none) (nullable): the first descriptor matchin @tag with
+ * @tag_extension, else %NULL.
  *
  * Since: 1.20
  */
@@ -1215,7 +1217,8 @@ gst_mpegts_descriptor_parse_logical_channel (const GstMpegtsDescriptor *
  *
  * Creates a #GstMpegtsDescriptor with custom @tag and @data
  *
- * Returns: #GstMpegtsDescriptor
+ * Returns: (transfer full) (nullable): #GstMpegtsDescriptor, or %NULL if input
+ * is invalid
  */
 GstMpegtsDescriptor *
 gst_mpegts_descriptor_from_custom (guint8 tag, const guint8 * data,
@@ -1242,7 +1245,7 @@ gst_mpegts_descriptor_from_custom (guint8 tag, const guint8 * data,
  *
  * Creates a #GstMpegtsDescriptor with custom @tag, @tag_extension and @data
  *
- * Returns: #GstMpegtsDescriptor
+ * Returns: (transfer full): #GstMpegtsDescriptor
  *
  * Since: 1.20
  */
