@@ -12201,10 +12201,9 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
 
 
   switch (uncC->interleave_type) {
-    case 1:                    // Pixel Interleaved
-      // Default Format
-      break;
     case 0:                    // Component Interleaving (Planar)
+    case 1:                    // Pixel Interleaved
+      break;
     case 2:                    // Mixed Interleaved
     case 3:                    // Row Interleaved
     case 4:                    // Tile Interleaved
@@ -12212,7 +12211,6 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     default:
       goto unsupported_feature;
   }
-
 
   /* Padding */
   // TODO: Handle various padding configurations
@@ -12240,18 +12238,19 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
   switch (num_components) {
     case 1:
       if (cmpd->types[0] == COMPONENT_MONOCHROME) {
+        // Single channel, we can handle this in any interleave
         format = GST_VIDEO_FORMAT_GRAY8;
       }
       break;
     case 3:
       if (cmpd->types[0] == COMPONENT_RED &&
           cmpd->types[1] == COMPONENT_GREEN &&
-          cmpd->types[2] == COMPONENT_BLUE) {
+          cmpd->types[2] == COMPONENT_BLUE && uncC->interleave_type == 1) {
         format = GST_VIDEO_FORMAT_RGB;
       }
       if (cmpd->types[0] == COMPONENT_BLUE &&
           cmpd->types[1] == COMPONENT_GREEN &&
-          cmpd->types[2] == COMPONENT_RED) {
+          cmpd->types[2] == COMPONENT_RED && uncC->interleave_type == 1) {
         format = GST_VIDEO_FORMAT_BGR;
       }
       break;
@@ -12259,13 +12258,13 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
       if (cmpd->types[0] == COMPONENT_RED &&
           cmpd->types[1] == COMPONENT_GREEN &&
           cmpd->types[2] == COMPONENT_BLUE &&
-          cmpd->types[3] == COMPONENT_ALPHA) {
+          cmpd->types[3] == COMPONENT_ALPHA && uncC->interleave_type == 1) {
         format = GST_VIDEO_FORMAT_RGBA;
       }
       if (cmpd->types[0] == COMPONENT_RED &&
           cmpd->types[1] == COMPONENT_GREEN &&
           cmpd->types[2] == COMPONENT_BLUE &&
-          cmpd->types[3] == COMPONENT_PADDING) {
+          cmpd->types[3] == COMPONENT_PADDING && uncC->interleave_type == 1) {
         format = GST_VIDEO_FORMAT_RGBx;
       }
       break;
@@ -12278,7 +12277,7 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     goto unsupported_feature;   // TODO - account for higher bit depths
   } else if (uncC->sampling_type != 0) {
     goto unsupported_feature;   // TODO - account for subsampling
-  } else if (uncC->interleave_type != 1) {
+  } else if (uncC->interleave_type != 0 && uncC->interleave_type != 1) {
     goto unsupported_feature;   // TODO - account for various interleave types
   }
   stream->stride = entry->width * num_components;       // TODO - account for non-zero row alignment
