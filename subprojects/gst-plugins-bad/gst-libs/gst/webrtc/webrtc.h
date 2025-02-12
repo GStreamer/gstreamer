@@ -31,6 +31,7 @@
 #include <gst/webrtc/rtpreceiver.h>
 #include <gst/webrtc/rtpsender.h>
 #include <gst/webrtc/rtptransceiver.h>
+#include <gst/webrtc/sctptransport.h>
 #include <gst/webrtc/datachannel.h>
 
 #endif /* __GST_WEBRTC_WEBRTC_H__ */
