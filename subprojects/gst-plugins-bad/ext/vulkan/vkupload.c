@@ -722,13 +722,11 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 
   n_mems = gst_buffer_n_memory (inbuf);
   n_out_mems = gst_buffer_n_memory (*outbuf);
-  if (n_mems != n_out_mems)
-    goto unlock_error;
   n_planes = GST_VIDEO_INFO_N_PLANES (&raw->in_info);
 
-  for (i = 0; i < n_mems; i++) {
+  for (i = 0; i < n_out_mems; i++) {
     VkBufferImageCopy region;
-    GstMemory *in_mem, *out_mem;
+    GstMemory *in_mem = NULL, *out_mem;
     GstVulkanBufferMemory *buf_mem;
     GstVulkanImageMemory *img_mem;
     const VkImageAspectFlags aspects[] = { VK_IMAGE_ASPECT_PLANE_0_BIT,
@@ -737,7 +735,9 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     VkImageAspectFlags plane_aspect;
     guint idx;
 
-    in_mem = gst_buffer_peek_memory (inbuf, i);
+    if (i < n_mems)
+      in_mem = gst_buffer_peek_memory (inbuf, i);
+
     if (gst_is_vulkan_buffer_memory (in_mem)) {
       GST_TRACE_OBJECT (raw->upload, "Input is a GstVulkanBufferMemory");
       buf_mem = (GstVulkanBufferMemory *) in_mem;
@@ -800,7 +800,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       buf_mem = (GstVulkanBufferMemory *) in_mem;
     }
 
-    idx = MIN (i, n_mems - 1);
+    idx = MIN (i, n_out_mems - 1);
     out_mem = gst_buffer_peek_memory (*outbuf, idx);
     if (!gst_is_vulkan_image_memory (out_mem)) {
       GST_WARNING_OBJECT (raw->upload, "Output is not a GstVulkanImageMemory");
@@ -808,7 +808,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     }
     img_mem = (GstVulkanImageMemory *) out_mem;
 
-    if (n_planes == n_mems)
+    if (n_planes == n_out_mems)
       plane_aspect = VK_IMAGE_ASPECT_COLOR_BIT;
     else
       plane_aspect = aspects[i];
