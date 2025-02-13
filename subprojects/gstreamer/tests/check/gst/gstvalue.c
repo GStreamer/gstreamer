@@ -4063,6 +4063,435 @@ GST_START_TEST (test_serialize_deserialize_strv)
 
 GST_END_TEST;
 
+/* take ownership of @a and @b */
+static void
+test_hash_value_diff (GValue * a, GValue * b, gboolean compare)
+{
+  guint hash_a, hash_b;
+
+  if (compare) {
+    fail_unless (gst_value_compare (a, a) == GST_VALUE_EQUAL,
+        "[%s] value should be equal: \"%s\" \"%s\"",
+        G_VALUE_TYPE_NAME (a), gst_value_serialize (a),
+        gst_value_serialize (a));
+    fail_unless (gst_value_compare (b, b) == GST_VALUE_EQUAL,
+        "[%s] value should be equal: \"%s\" \"%s\"", G_VALUE_TYPE_NAME (a),
+        gst_value_serialize (b), gst_value_serialize (b));
+    fail_unless (gst_value_compare (a, b) != GST_VALUE_EQUAL,
+        "[%s] value should be different: \"%s\" \"%s\"", G_VALUE_TYPE_NAME (a),
+        gst_value_serialize (a), gst_value_serialize (b));
+  }
+
+  fail_unless (gst_value_hash (a, &hash_a),
+      "[%s] failed to hash: \"%s\"",
+      G_VALUE_TYPE_NAME (a), gst_value_serialize (a));
+  fail_unless (gst_value_hash (b, &hash_b),
+      "[%s] failed to hash: \"%s\"",
+      G_VALUE_TYPE_NAME (b), gst_value_serialize (b));
+  fail_unless (hash_a != hash_b,
+      "[%s] hash should be different: \"%s\" \"%s\"",
+      G_VALUE_TYPE_NAME (a), gst_value_serialize (a), gst_value_serialize (b));
+
+  g_value_unset (a);
+  g_value_unset (b);
+}
+
+/* take ownership of @a and @b */
+static void
+test_hash_value_equal (GValue * a, GValue * b, gboolean compare)
+{
+  guint hash_a, hash_b;
+
+  if (compare) {
+    fail_unless (gst_value_compare (a, a) == GST_VALUE_EQUAL,
+        "[%s] value should be equal: \"%s\" \"%s\"",
+        G_VALUE_TYPE_NAME (a), gst_value_serialize (a),
+        gst_value_serialize (a));
+    fail_unless (gst_value_compare (b, b) == GST_VALUE_EQUAL,
+        "[%s] value should be equal: \"%s\" \"%s\"", G_VALUE_TYPE_NAME (a),
+        gst_value_serialize (b), gst_value_serialize (b));
+    fail_unless (gst_value_compare (a, b) == GST_VALUE_EQUAL,
+        "[%s] value should be equal: \"%s\" \"%s\"", G_VALUE_TYPE_NAME (a),
+        gst_value_serialize (a), gst_value_serialize (b));
+  }
+
+  fail_unless (gst_value_hash (a, &hash_a),
+      "[%s] failed to hash: \"%s\"",
+      G_VALUE_TYPE_NAME (a), gst_value_serialize (a));
+  fail_unless (gst_value_hash (b, &hash_b),
+      "[%s] failed to hash: \"%s\"",
+      G_VALUE_TYPE_NAME (b), gst_value_serialize (b));
+  fail_unless (hash_a == hash_b,
+      "[%s] hash should be equal: \"%s\" \"%s\"",
+      G_VALUE_TYPE_NAME (a), gst_value_serialize (a), gst_value_serialize (b));
+
+  g_value_unset (a);
+  g_value_unset (b);
+}
+
+GST_START_TEST (test_hash)
+{
+  guint i;
+  /* tests where we can rely on gst_value_deserialize() to set GValue */
+  struct HashTest
+  {
+    GType gtype;
+    const gchar *a;
+    const gchar *b;
+    gboolean compare;
+  };
+
+  /* check that a and b are different */
+  struct HashTest tests_diff[] = {
+    {G_TYPE_INT, "1", "2", TRUE},
+    {G_TYPE_INT64, "1", "2", TRUE},
+    {G_TYPE_LONG, "1", "2", TRUE},
+    {G_TYPE_UINT, "1", "2", TRUE},
+    {G_TYPE_UINT64, "1", "2", TRUE},
+    {G_TYPE_ULONG, "1", "2", TRUE},
+    {G_TYPE_UCHAR, "1", "2", TRUE},
+    {G_TYPE_GTYPE, "gint", "gint64", TRUE},
+    {G_TYPE_DOUBLE, "1.0", "2.0", TRUE},
+    {G_TYPE_FLOAT, "1.0", "2.0", TRUE},
+    {G_TYPE_STRING, "a", "b", TRUE},
+    {G_TYPE_BOOLEAN, "TRUE", "FALSE", TRUE},
+    {GST_TYPE_BUFFER, "ab", "abcd", TRUE},
+    /* only difference is the buffer content */
+    {GST_TYPE_SAMPLE,
+          "6275660a64617400:Y2FwcywgSW50PShpbnQpMjAsIFN0cmluZz0oc3RyaW5nKSJhXCBzdHJpbmciAA__:c2VnbWVudCwgZmxhZ3M9KEdzdFNlZ21lbnRGbGFncylHU1RfU0VHTUVOVF9GTEFHX1JFU0VULCByYXRlPShkb3VibGUpMS4yLCBhcHBsaWVkLXJhdGU9KGRvdWJsZSkxLCBmb3JtYXQ9KEdzdEZvcm1hdClkZWZhdWx0LCBiYXNlPShndWludDY0KTAsIG9mZnNldD0oZ3VpbnQ2NCkwLCBzdGFydD0oZ3VpbnQ2NCkyMCwgc3RvcD0oZ3VpbnQ2NCkzMCwgdGltZT0oZ3VpbnQ2NCkyMCwgcG9zaXRpb249KGd1aW50NjQpMjAsIGR1cmF0aW9uPShndWludDY0KTE4NDQ2NzQ0MDczNzA5NTUxNjE1OwA_:c3RydWN0dXJlLCBGbG9hdD0oZmxvYXQpLTIuNTsA",
+          "4255460a44415400:Y2FwcywgSW50PShpbnQpMjAsIFN0cmluZz0oc3RyaW5nKSJhXCBzdHJpbmciAA__:c2VnbWVudCwgZmxhZ3M9KEdzdFNlZ21lbnRGbGFncylHU1RfU0VHTUVOVF9GTEFHX1JFU0VULCByYXRlPShkb3VibGUpMS4yLCBhcHBsaWVkLXJhdGU9KGRvdWJsZSkxLCBmb3JtYXQ9KEdzdEZvcm1hdClkZWZhdWx0LCBiYXNlPShndWludDY0KTAsIG9mZnNldD0oZ3VpbnQ2NCkwLCBzdGFydD0oZ3VpbnQ2NCkyMCwgc3RvcD0oZ3VpbnQ2NCkzMCwgdGltZT0oZ3VpbnQ2NCkyMCwgcG9zaXRpb249KGd1aW50NjQpMjAsIGR1cmF0aW9uPShndWludDY0KTE4NDQ2NzQ0MDczNzA5NTUxNjE1OwA_:c3RydWN0dXJlLCBGbG9hdD0oZmxvYXQpLTIuNTsA",
+        TRUE},
+    {GST_TYPE_FRACTION, "1/3", "3/1", TRUE},
+    {GST_TYPE_STRUCTURE, "video/x-raw", "audio/x-raw", TRUE},
+    {GST_TYPE_STRUCTURE, "video/x-raw,width=1920", "video/x-raw,width=800",
+        TRUE},
+    {GST_TYPE_CAPS, "video/x-raw", "audio/x-raw", TRUE},
+    {GST_TYPE_CAPS, "video/x-raw,width=1920", "video/x-raw,width=800", TRUE},
+    {GST_TYPE_CAPS, "video/x-raw", "video/x-raw(memory:DMABuf)", TRUE},
+    {GST_TYPE_TAG_LIST, "taglist, title=(string)Title, artist=(string)Artist",
+        "taglist, title=(string)Title2, artist=(string)Artist", TRUE},
+    {G_TYPE_DATE, "1984-11-30", "1985-11-30", TRUE},
+    {G_TYPE_DATE_TIME, "2011-06-23T07:40:10Z", "2011-06-23T07:40:11Z", TRUE},
+    {GST_TYPE_DATE_TIME, "2011-06-23T07:40:10Z", "2011-06-23T07:40:11Z",
+        TRUE},
+    {G_TYPE_BYTES, "YQ==", "Yg==", TRUE},
+    {GST_TYPE_BITMASK, "0xaa", "0xbb", TRUE},
+    {GST_TYPE_SEEK_FLAGS, "+flush", "+flush+trickmode/trickmode-no-audio",
+        TRUE},
+    {GST_TYPE_LIST, "{1, 2}", "{1, 3}", TRUE},
+    {GST_TYPE_CAPS_FEATURES, "memory:DMABuf", "memory:GLMemory", FALSE},
+  };
+
+  /* check that a and b are equal */
+  struct HashTest tests_equal[] = {
+    /* structures fields are not ordered */
+    {GST_TYPE_STRUCTURE, "video/x-raw,width=1920,height=1080",
+        "video/x-raw,height=1080,width=1920", TRUE},
+    /* fixed and unfixed caps are not ordered */
+    {GST_TYPE_CAPS, "video/x-raw; audio/x-raw", "audio/x-raw; video/x-raw",
+        TRUE},
+    {GST_TYPE_CAPS,
+          "video/x-raw,format=NV12,width=[1, 100]; video/x-raw,format=GREY8,width=[1, 100]",
+          "video/x-raw,format=GREY8,width=[1, 100]; video/x-raw,format=NV12,width=[1, 100]",
+        TRUE},
+    {GST_TYPE_LIST, "{1, 2}", "{2, 1}", TRUE},
+    {GST_TYPE_LIST, "{1, 2}", "{2, 1}", TRUE},
+    /* caps features are not ordered */
+    {GST_TYPE_CAPS_FEATURES, "memory:DMABuf, memory:GLMemory",
+        "memory:GLMemory, memory:DMABuf", FALSE},
+    /* same actual fraction have the same hash */
+    {GST_TYPE_FRACTION, "1/2", "2/4", TRUE},
+  };
+
+  for (i = 0; i < G_N_ELEMENTS (tests_diff); i++) {
+    GValue a = G_VALUE_INIT;
+    GValue b = G_VALUE_INIT;
+
+    g_value_init (&a, tests_diff[i].gtype);
+    fail_unless (gst_value_deserialize (&a, tests_diff[i].a),
+        "[%s] could not deserialize %s", g_type_name (tests_diff[i].gtype),
+        tests_diff[i].a);
+    g_value_init (&b, tests_diff[i].gtype);
+    fail_unless (gst_value_deserialize (&b, tests_diff[i].b),
+        "[%s] could not deserialize %s", g_type_name (tests_diff[i].gtype),
+        tests_diff[i].b);
+
+    test_hash_value_diff (&a, &b, tests_diff[i].compare);
+  }
+
+  for (i = 0; i < G_N_ELEMENTS (tests_equal); i++) {
+    GValue a = G_VALUE_INIT;
+    GValue b = G_VALUE_INIT;
+
+    g_value_init (&a, tests_equal[i].gtype);
+    fail_unless (gst_value_deserialize (&a, tests_equal[i].a),
+        "[%s] could not deserialize %s", g_type_name (tests_equal[i].gtype),
+        tests_equal[i].a);
+    g_value_init (&b, tests_equal[i].gtype);
+    fail_unless (gst_value_deserialize (&b, tests_equal[i].b),
+        "[%s] could not deserialize %s", g_type_name (tests_equal[i].gtype),
+        tests_equal[i].b);
+
+    test_hash_value_equal (&a, &b, tests_equal[i].compare);
+  }
+
+  /* tests for types not implementing deserialize */
+  {
+    GValue a = G_VALUE_INIT;
+    GValue b = G_VALUE_INIT;
+    GValue v = G_VALUE_INIT;
+    GValueArray *array;
+
+    /* int range */
+    g_value_init (&a, GST_TYPE_INT_RANGE);
+    g_value_init (&b, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (&a, 0, 2);
+    gst_value_set_int_range (&b, 0, 3);
+    test_hash_value_diff (&a, &b, TRUE);
+
+    /* int range with step */
+    g_value_init (&a, GST_TYPE_INT_RANGE);
+    g_value_init (&b, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range_step (&a, 0, 12, 2);
+    gst_value_set_int_range_step (&b, 0, 12, 4);
+    test_hash_value_diff (&a, &b, TRUE);
+
+    /* int64 range */
+    g_value_init (&a, GST_TYPE_INT64_RANGE);
+    g_value_init (&b, GST_TYPE_INT64_RANGE);
+    gst_value_set_int64_range (&a, 0, 2);
+    gst_value_set_int64_range (&b, 0, 3);
+    test_hash_value_diff (&a, &b, TRUE);
+
+    /* int64 range with step */
+    g_value_init (&a, GST_TYPE_INT64_RANGE);
+    g_value_init (&b, GST_TYPE_INT64_RANGE);
+    gst_value_set_int64_range_step (&a, 0, 12, 2);
+    gst_value_set_int64_range_step (&b, 0, 12, 4);
+    test_hash_value_diff (&a, &b, TRUE);
+
+    /* double range */
+    g_value_init (&a, GST_TYPE_DOUBLE_RANGE);
+    g_value_init (&b, GST_TYPE_DOUBLE_RANGE);
+    gst_value_set_double_range (&a, 0, 12);
+    gst_value_set_double_range (&b, 0, 13);
+    test_hash_value_diff (&a, &b, TRUE);
+
+    /* enum */
+    static const GEnumValue test_enum_vals[] = {
+      {0, "Badger", "badger"},
+      {1, "Mushroom", "mushroom"},
+      {0, NULL, NULL},
+    };
+    GType test_enum_type =
+        g_enum_register_static ("GstTestEnum", test_enum_vals);
+    g_value_init (&a, test_enum_type);
+    g_value_set_enum (&a, 0);
+    g_value_init (&b, test_enum_type);
+    g_value_set_enum (&b, 1);
+    test_hash_value_diff (&a, &b, TRUE);
+
+    /* flags */
+    static const GFlagsValue test_flags_vals[] = {
+      {0, "Badger", "badger"},
+      {1, "Mushroom", "mushroom"},
+      {0, NULL, NULL},
+    };
+    GType test_flags_type =
+        g_flags_register_static ("GstTestFlags", test_flags_vals);
+    g_value_init (&a, test_flags_type);
+    g_value_set_flags (&a, 0);
+    g_value_init (&b, test_flags_type);
+    g_value_set_flags (&b, 1);
+    test_hash_value_diff (&a, &b, TRUE);
+
+    /* value array */
+    setup_test_value_array (&a);
+    setup_test_value_array (&b);
+    GValueArray *arr = g_value_get_boxed (&b);
+    g_value_init (&v, G_TYPE_INT);
+    g_value_set_int (&v, 4);
+    g_value_array_append (arr, &v);
+    test_hash_value_diff (&a, &b, TRUE);
+    g_value_unset (&v);
+
+    g_value_init (&v, G_TYPE_INT);
+    g_value_init (&a, G_TYPE_VALUE_ARRAY);
+    array = g_value_array_new (2);
+    g_value_set_int (&v, 1);
+    g_value_array_append (array, &v);
+    g_value_set_int (&v, 2);
+    g_value_array_append (array, &v);
+    g_value_take_boxed (&a, array);
+    array = g_value_array_new (2);
+    g_value_init (&b, G_TYPE_VALUE_ARRAY);
+    g_value_set_int (&v, 2);
+    g_value_array_append (array, &v);
+    g_value_set_int (&v, 1);
+    g_value_array_append (array, &v);
+    g_value_take_boxed (&b, array);
+    test_hash_value_diff (&a, &b, TRUE);
+    g_value_unset (&v);
+
+    /* fraction range */
+    g_value_init (&a, GST_TYPE_FRACTION_RANGE);
+    g_value_init (&b, GST_TYPE_FRACTION_RANGE);
+    gst_value_set_fraction_range_full (&a, 1, 5, 4, 5);
+    gst_value_set_fraction_range_full (&a, 2, 5, 4, 5);
+    test_hash_value_diff (&a, &b, TRUE);
+
+    /* objet */
+    GstBufferPool *obj_a = gst_buffer_pool_new ();
+    GstBufferPool *obj_b = gst_buffer_pool_new ();
+    g_value_init (&a, G_TYPE_OBJECT);
+    g_value_take_object (&a, obj_a);
+    g_value_init (&b, G_TYPE_OBJECT);
+    g_value_take_object (&b, obj_b);
+    test_hash_value_diff (&a, &b, TRUE);
+
+    /* value array */
+    g_value_init (&a, GST_TYPE_ARRAY);
+    g_value_init (&v, G_TYPE_INT);
+    g_value_set_int (&v, 1);
+    gst_value_array_append_value (&a, &v);
+    g_value_set_int (&v, 2);
+    gst_value_array_append_value (&a, &v);
+    g_value_init (&b, GST_TYPE_ARRAY);
+    g_value_set_int (&v, 2);
+    gst_value_array_append_value (&b, &v);
+    g_value_set_int (&v, 2);
+    gst_value_array_append_value (&b, &v);
+    test_hash_value_diff (&a, &b, TRUE);
+    g_value_unset (&v);
+
+    /* AllocationParams */
+    GstAllocationParams params_a = { 0 }, params_b;
+    params_a.flags = 0;
+    params_a.align = 1;
+    params_a.prefix = 2;
+    params_a.padding = 3;
+    params_b = params_a;
+    params_b.padding = 4;
+    g_value_init (&a, GST_TYPE_ALLOCATION_PARAMS);
+    g_value_set_boxed (&a, &params_a);
+    g_value_init (&b, GST_TYPE_ALLOCATION_PARAMS);
+    g_value_set_boxed (&b, &params_b);
+    test_hash_value_diff (&a, &b, TRUE);
+
+    /* float NaN */
+    g_value_init (&a, G_TYPE_FLOAT);
+    g_value_set_float (&a, NAN);
+    g_value_init (&b, G_TYPE_FLOAT);
+    g_value_set_float (&b, 0);
+    test_hash_value_diff (&a, &b, FALSE);
+  }
+
+  /* types with specific compare function */
+  {
+    GValue a = G_VALUE_INIT;
+    GValue b = G_VALUE_INIT;
+
+    GstSegment seg_a, seg_b;
+    gst_segment_init (&seg_a, GST_FORMAT_DEFAULT);
+    fail_unless (gst_segment_do_seek (&seg_a, 1.2, GST_FORMAT_DEFAULT,
+            GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, 20, GST_SEEK_TYPE_SET, 30,
+            NULL));
+    seg_b = seg_a;
+    seg_b.rate = 1.0;
+    fail_unless (!gst_segment_is_equal (&seg_a, &seg_b));
+    g_value_init (&a, GST_TYPE_SEGMENT);
+    g_value_set_boxed (&a, &seg_a);
+    g_value_init (&b, GST_TYPE_SEGMENT);
+    g_value_set_boxed (&b, &seg_b);
+    test_hash_value_diff (&a, &b, FALSE);
+
+    g_value_init (&a, G_TYPE_STRV);
+    fail_unless (gst_value_deserialize (&a, "<\"foo\",\"bar\">"));
+    g_value_init (&b, G_TYPE_STRV);
+    fail_unless (gst_value_deserialize (&b, "<\"bar\",\"foo\">"));
+    fail_unless (!g_strv_equal (g_value_get_boxed (&a),
+            g_value_get_boxed (&b)));
+    test_hash_value_diff (&a, &b, FALSE);
+  }
+
+  // gst_value_compare() special cases
+  {
+    GValue a = G_VALUE_INIT;
+    GValue b = G_VALUE_INIT;
+    GValue v = G_VALUE_INIT;
+
+    /* { 1 } and 1 are considered as equals */
+    g_value_init (&a, GST_TYPE_LIST);
+    fail_unless (gst_value_deserialize (&a, "{ 1 }"));
+    g_value_init (&b, G_TYPE_INT);
+    fail_unless (gst_value_deserialize (&b, "1"));
+    test_hash_value_equal (&a, &b, TRUE);
+
+    /* list and range are considered as equal if they contain the same set of elements */
+    g_value_init (&a, GST_TYPE_LIST);
+    fail_unless (gst_value_deserialize (&a, "{ 1, 2 }"));
+    g_value_init (&b, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (&b, 1, 2);
+    test_hash_value_equal (&a, &b, TRUE);
+
+    /* same set with steps */
+    g_value_init (&a, GST_TYPE_LIST);
+    fail_unless (gst_value_deserialize (&a, "{ 2, 4, 6, 8 }"));
+    g_value_init (&b, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range_step (&b, 2, 8, 2);
+    test_hash_value_equal (&a, &b, TRUE);
+
+    /* different step */
+    g_value_init (&a, GST_TYPE_LIST);
+    fail_unless (gst_value_deserialize (&a, "{ 1, 3 }"));
+    g_value_init (&b, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (&b, 1, 3);
+    test_hash_value_diff (&a, &b, TRUE);
+
+    /* same for int64 range */
+    g_value_init (&a, GST_TYPE_LIST);
+    g_value_init (&v, G_TYPE_INT64);
+    g_value_set_int64 (&v, 1);
+    gst_value_list_append_and_take_value (&a, &v);
+    g_value_init (&v, G_TYPE_INT64);
+    g_value_set_int64 (&v, 2);
+    gst_value_list_append_and_take_value (&a, &v);
+    g_value_init (&b, GST_TYPE_INT64_RANGE);
+    gst_value_set_int64_range (&b, 1, 2);
+    test_hash_value_equal (&a, &b, TRUE);
+
+    g_value_init (&a, GST_TYPE_LIST);
+    g_value_init (&v, G_TYPE_INT64);
+    g_value_set_int64 (&v, 2);
+    gst_value_list_append_and_take_value (&a, &v);
+    g_value_init (&v, G_TYPE_INT64);
+    g_value_set_int64 (&v, 4);
+    gst_value_list_append_and_take_value (&a, &v);
+    g_value_init (&v, G_TYPE_INT64);
+    g_value_set_int64 (&v, 6);
+    gst_value_list_append_and_take_value (&a, &v);
+    g_value_init (&v, G_TYPE_INT64);
+    g_value_set_int64 (&v, 8);
+    gst_value_list_append_and_take_value (&a, &v);
+    g_value_init (&b, GST_TYPE_INT64_RANGE);
+    gst_value_set_int64_range_step (&b, 2, 8, 2);
+    test_hash_value_equal (&a, &b, TRUE);
+
+    g_value_init (&a, GST_TYPE_LIST);
+    g_value_init (&v, G_TYPE_INT64);
+    g_value_set_int64 (&v, 1);
+    gst_value_list_append_and_take_value (&a, &v);
+    g_value_init (&v, G_TYPE_INT64);
+    g_value_set_int64 (&v, 3);
+    gst_value_list_append_and_take_value (&a, &v);
+    g_value_init (&b, GST_TYPE_INT64_RANGE);
+    gst_value_set_int64_range (&b, 1, 3);
+    test_hash_value_diff (&a, &b, TRUE);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_value_suite (void)
 {
@@ -4126,6 +4555,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_serialize_deserialize_tag_list);
   tcase_add_test (tc_chain, test_serialize_deserialize_sample);
   tcase_add_test (tc_chain, test_serialize_deserialize_strv);
+  tcase_add_test (tc_chain, test_hash);
 
   return s;
 }

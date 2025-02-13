@@ -487,6 +487,19 @@ typedef gboolean (* GstValueDeserializeWithPSpecFunc) (GValue       *dest,
                                                        const gchar  *s,
                                                        GParamSpec   *pspec);
 
+/**
+ * GstValueHashFunc:
+ * @value: a #GValue
+ * @res: (out): a location to store the hash value
+ *
+ * Used by gst_value_hash() to calculate a hash of @value.
+ *
+ * Returns: %TRUE, or %FALSE if @value cannot be hashed.
+ *
+ * Since: 1.28
+ */
+typedef gboolean (* GstValueHashFunc) (const GValue *value,
+                                       guint *res);
 
 typedef struct _GstValueTable GstValueTable;
 /**
@@ -514,8 +527,17 @@ struct _GstValueTable {
    */
   GstValueDeserializeWithPSpecFunc deserialize_with_pspec;
 
+  /**
+   * GstValueTable.hash:
+   *
+   * a #GstValueHashFunc
+   *
+   * Since: 1.28
+   */
+  GstValueHashFunc hash;
+
   /*< private >*/
-  gpointer _gst_reserved [GST_PADDING - 1];
+  gpointer _gst_reserved [GST_PADDING - 2];
 };
 
 GST_API
@@ -568,6 +590,10 @@ GST_API
 gboolean        gst_value_deserialize_with_pspec (GValue               *dest,
                                                  const gchar           *src,
                                                  GParamSpec            *pspec);
+
+GST_API
+gboolean        gst_value_hash                  (const GValue * value,
+                                                 guint * res);
 
 /* list */
 

@@ -51890,6 +51890,24 @@ or GST_VALUE_UNORDERED</doc>
         </parameter>
       </parameters>
     </callback>
+    <callback name="ValueHashFunc" c:type="GstValueHashFunc" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">Used by gst_value_hash() to calculate a hash of @value.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">%TRUE, or %FALSE if @value cannot be hashed.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">a #GValue</doc>
+          <type name="GObject.Value" c:type="const GValue*"/>
+        </parameter>
+        <parameter name="res" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">a location to store the hash value</doc>
+          <type name="guint" c:type="guint*"/>
+        </parameter>
+      </parameters>
+    </callback>
     <class name="ValueList" c:symbol-prefix="value_list" glib:type-name="GstValueList" glib:get-type="gst_value_list_get_type" glib:fundamental="1">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">A fundamental type that describes an unordered list of #GValue</doc>
       <function name="append_and_take_value" c:identifier="gst_value_list_append_and_take_value" version="1.2">
@@ -52083,8 +52101,12 @@ Free-function: g_free</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">a #GstValueDeserializeWithPSpecFunc</doc>
         <type name="ValueDeserializeWithPSpecFunc" c:type="GstValueDeserializeWithPSpecFunc"/>
       </field>
+      <field name="hash" version="1.28" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.h">a #GstValueHashFunc</doc>
+        <type name="ValueHashFunc" c:type="GstValueHashFunc"/>
+      </field>
       <field name="_gst_reserved" readable="0" private="1">
-        <array zero-terminated="0" fixed-size="3">
+        <array zero-terminated="0" fixed-size="2">
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
@@ -58595,6 +58617,25 @@ a reference to @v.</doc>
         <parameter name="value" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a GValue initialized to GST_TYPE_STRUCTURE</doc>
           <type name="GObject.Value" c:type="const GValue*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="value_hash" c:identifier="gst_value_hash" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">Compute a hash value of @value.
+#GValue considered as equals by gst_value_compare() will have the same hash value.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstvalue.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">%TRUE, or %FALSE if @value cannot be hashed.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a #GValue to hash</doc>
+          <type name="GObject.Value" c:type="const GValue*"/>
+        </parameter>
+        <parameter name="res" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstvalue.c">a location to store the hash value</doc>
+          <type name="guint" c:type="guint*"/>
         </parameter>
       </parameters>
     </function>
