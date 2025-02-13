@@ -103,8 +103,9 @@ def get_hotdoc_confs_to_rebuild(builddir, modified_files) -> Tuple[Set, Set]:
 
         if hotdoc_conf_needs_rebuild(conf_path, conf_data, modified_fpaths):
             confs_need_rebuild.add(conf_path)
-            caches_need_rebuild.add(conf_data.get('gst_plugin_library'))
-
+            gst_plugin_library = conf_data.get('gst_plugin_library')
+            if gst_plugin_library:
+                caches_need_rebuild.add(gst_plugin_library)
     return (confs_need_rebuild, caches_need_rebuild)
 
 def build(builddir):
