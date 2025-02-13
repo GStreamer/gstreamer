@@ -236,15 +236,19 @@ gst_vulkan_fence_cache_release_impl (GstVulkanHandlePool * pool,
     gpointer handle)
 {
   GstVulkanFence *fence = handle;
+  GstVulkanFenceCache *cache = NULL;
 
   gst_vulkan_fence_reset (fence);
 
-  GST_VULKAN_HANDLE_POOL_CLASS (parent_class)->release (pool, handle);
-
   if (fence) {
-    gst_clear_object (&fence->cache);
+    cache = fence->cache;
+    fence->cache = NULL;
     gst_clear_object (&fence->device);
   }
+
+  GST_VULKAN_HANDLE_POOL_CLASS (parent_class)->release (pool, handle);
+
+  gst_clear_object (&cache);
 }
 
 static void
