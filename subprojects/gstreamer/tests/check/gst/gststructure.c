@@ -1169,6 +1169,31 @@ GST_START_TEST (test_strict)
 
 GST_END_TEST;
 
+GST_START_TEST (test_strv)
+{
+  GstStructure *s;
+  const gchar *strv[] = { "foo", " ,<>\" ", NULL };
+
+  s = gst_structure_new ("test-struct", "strv", G_TYPE_STRV, strv, NULL);
+  fail_unless (s);
+
+  gchar *serialized = gst_structure_serialize_full (s, GST_SERIALIZE_FLAG_NONE);
+  fail_unless (serialized);
+  gst_structure_free (s);
+
+  s = gst_structure_new_from_string (serialized);
+  fail_unless (s);
+  g_free (serialized);
+
+  gchar **out_strv = NULL;
+  fail_unless (gst_structure_get (s, "strv", G_TYPE_STRV, &out_strv, NULL));
+  fail_unless (g_strv_equal (strv, (const gchar * const *) out_strv));
+  gst_structure_free (s);
+  g_strfreev (out_strv);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_structure_suite (void)
 {
@@ -1203,6 +1228,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_flagset);
   tcase_add_test (tc_chain, test_flags);
   tcase_add_test (tc_chain, test_strict);
+  tcase_add_test (tc_chain, test_strv);
   return s;
 }
 

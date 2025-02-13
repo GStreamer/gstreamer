@@ -100,6 +100,8 @@ static gboolean _priv_gst_value_parse_list (gchar * s, gchar ** after,
     GValue * value, GType type, GParamSpec * pspec);
 static gboolean _priv_gst_value_parse_array (gchar * s, gchar ** after,
     GValue * value, GType type, GParamSpec * pspec);
+static gboolean _priv_gst_value_parse_strv (const gchar * s,
+    const gchar ** after, GValue * dest);
 
 typedef struct _GstValueUnionInfo GstValueUnionInfo;
 struct _GstValueUnionInfo
@@ -2811,8 +2813,13 @@ _priv_gst_value_parse_value (gchar * str,
     g_value_init (value, GST_TYPE_LIST);
     ret = _priv_gst_value_parse_list (s, &s, value, type, pspec);
   } else if (*s == '<') {
-    g_value_init (value, GST_TYPE_ARRAY);
-    ret = _priv_gst_value_parse_array (s, &s, value, type, pspec);
+    if (type == G_TYPE_STRV) {
+      g_value_init (value, G_TYPE_STRV);
+      ret = _priv_gst_value_parse_strv (s, (const gchar **) &s, value);
+    } else {
+      g_value_init (value, GST_TYPE_ARRAY);
+      ret = _priv_gst_value_parse_array (s, &s, value, type, pspec);
+    }
   } else {
     value_s = s;
 
@@ -8171,15 +8178,13 @@ gst_value_serialize_strv (const GValue * value)
 }
 
 static gboolean
-gst_value_deserialize_strv (GValue * dest, const gchar * s)
+_priv_gst_value_parse_strv (const gchar * s, const gchar ** after,
+    GValue * dest)
 {
-  /* If it's not starting with '<' assume it's a simple comma separated list
-   * with no escaping. Otherwise assume the format <"foo","bar"> with spaces
-   * allowed between delimiters and \ for escaping. */
-  if (*s != '<') {
-    g_value_take_boxed (dest, g_strsplit (s, ",", -1));
-    return TRUE;
-  }
+  /* Parse the format <"foo","bar"> with spaces allowed between delimiters,
+   * and \ for escaping. */
+  if (*s != '<')
+    return FALSE;
   s++;
 
   while (g_ascii_isspace (*s))
@@ -8235,11 +8240,25 @@ gst_value_deserialize_strv (GValue * dest, const gchar * s)
   g_ptr_array_add (strv, NULL);
   g_value_take_boxed (dest, g_ptr_array_free (strv, FALSE));
 
+  *after = s + 1;
+
   return TRUE;
 
 error:
   g_ptr_array_free (strv, TRUE);
   return FALSE;
+}
+
+static gboolean
+gst_value_deserialize_strv (GValue * dest, const gchar * s)
+{
+  /* If it's not starting with '<' assume it's a simple comma separated list
+   * with no escaping. This makes usage in gst-launch-1.0 easier. */
+  if (*s != '<') {
+    g_value_take_boxed (dest, g_strsplit (s, ",", -1));
+    return TRUE;
+  }
+  return _priv_gst_value_parse_strv (s, &s, dest);
 }
 
 static GTypeInfo _info = {
