@@ -486,7 +486,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
       G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
 
   /**
-   * GESTimelineElement:in-point:
+   * GESTimelineElement:in-point: (getter get_inpoint)(setter set_inpoint)
    *
    * The initial offset to use internally when outputting content (in
    * nanoseconds, but in the time coordinates of the internal content).
@@ -1201,7 +1201,7 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
 }
 
 /**
- * ges_timeline_element_set_inpoint:
+ * ges_timeline_element_set_inpoint: (set-property in-point):
  * @self: A #GESTimelineElement
  * @inpoint: The in-point, in internal time coordinates
  *
@@ -1382,7 +1382,7 @@ ges_timeline_element_get_start (GESTimelineElement * self)
 }
 
 /**
- * ges_timeline_element_get_inpoint:
+ * ges_timeline_element_get_inpoint: (get-property in-point):
  * @self: A #GESTimelineElement
  *
  * Gets the #GESTimelineElement:in-point for the element.

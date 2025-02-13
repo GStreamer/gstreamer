@@ -11198,7 +11198,7 @@ optionally by more name/return location pairs, followed by %NULL</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_inpoint" c:identifier="ges_timeline_element_get_inpoint">
+      <method name="get_inpoint" c:identifier="ges_timeline_element_get_inpoint" glib:get-property="in-point">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.c">Gets the #GESTimelineElement:in-point for the element.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-timeline-element.h"/>
         <return-value transfer-ownership="none">
@@ -11739,7 +11739,7 @@ last the desired duration.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_inpoint" c:identifier="ges_timeline_element_set_inpoint">
+      <method name="set_inpoint" c:identifier="ges_timeline_element_set_inpoint" glib:set-property="in-point">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.c">Sets #GESTimelineElement:in-point for the element. If the new in-point
 is above the current #GESTimelineElement:max-duration of the element,
 this method will fail.</doc>
@@ -11950,7 +11950,7 @@ operation element, this would determine for how long its effect
 should be applied to any source content.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="in-point" writable="1" transfer-ownership="none" default-value="0">
+      <property name="in-point" writable="1" transfer-ownership="none" setter="set_inpoint" getter="get_inpoint" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-timeline-element.c">The initial offset to use internally when outputting content (in
 nanoseconds, but in the time coordinates of the internal content).
 
