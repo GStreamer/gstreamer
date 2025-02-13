@@ -513,6 +513,7 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
   GstVideoTimeCodeMeta *tc_meta;
   GstVideoTimeCode *tc = NULL;
   gboolean caption_pad_is_eos = FALSE;
+  GstFlowReturn flow_ret = GST_FLOW_OK;
 
   g_assert (self->current_video_buffer != NULL);
 
@@ -720,7 +721,18 @@ done:
   src_pad->segment.position =
       GST_BUFFER_PTS (video_buf) + GST_BUFFER_DURATION (video_buf);
 
-  return gst_aggregator_finish_buffer (GST_AGGREGATOR_CAST (self), video_buf);
+  flow_ret =
+      gst_aggregator_finish_buffer (GST_AGGREGATOR_CAST (self), video_buf);
+
+  if (self->pending_video_caps) {
+    GST_DEBUG_OBJECT (self, "Setting pending video caps %" GST_PTR_FORMAT,
+        self->pending_video_caps);
+    gst_aggregator_set_src_caps (GST_AGGREGATOR_CAST (self),
+        self->pending_video_caps);
+    gst_clear_caps (&self->pending_video_caps);
+  }
+
+  return flow_ret;
 }
 
 static GstClockTime
@@ -946,7 +958,13 @@ gst_cc_combiner_sink_event (GstAggregator * aggregator,
         cc_buffer_set_max_buffer_time (self->cc_buffer,
             frame_duration * self->max_scheduled);
 
-        gst_aggregator_set_src_caps (aggregator, caps);
+        if (self->current_video_buffer) {
+          GST_DEBUG_OBJECT (self, "Storing new caps %" GST_PTR_FORMAT, caps);
+          gst_caps_replace (&self->pending_video_caps, caps);
+        } else {
+          gst_clear_caps (&self->pending_video_caps);
+          gst_aggregator_set_src_caps (aggregator, caps);
+        }
       }
 
       break;
@@ -982,6 +1000,7 @@ gst_cc_combiner_stop (GstAggregator * aggregator)
   self->current_video_running_time = self->current_video_running_time_end =
       self->previous_video_running_time_end = GST_CLOCK_TIME_NONE;
   gst_buffer_replace (&self->current_video_buffer, NULL);
+  gst_clear_caps (&self->pending_video_caps);
 
   g_array_set_size (self->current_frame_captions, 0);
   self->caption_type = GST_VIDEO_CAPTION_TYPE_UNKNOWN;
@@ -1002,6 +1021,7 @@ gst_cc_combiner_flush (GstAggregator * aggregator)
   self->current_video_running_time = self->current_video_running_time_end =
       self->previous_video_running_time_end = GST_CLOCK_TIME_NONE;
   gst_buffer_replace (&self->current_video_buffer, NULL);
+  gst_clear_caps (&self->pending_video_caps);
 
   g_array_set_size (self->current_frame_captions, 0);
 
