@@ -171,7 +171,7 @@ struct _GstValueList
 #define VALUE_LIST_IS_USING_DYNAMIC_ARRAY(array) ((array)->fields != &(array)->arr[0])
 
 static GArray *gst_value_table;
-static GHashTable *gst_value_hash;
+static GHashTable *gst_value_hash_table;
 static GstValueTable *gst_value_tables_fundamental[FUNDAMENTAL_TYPE_ID_MAX + 1];
 static GArray *gst_value_union_funcs;
 static GArray *gst_value_intersect_funcs;
@@ -199,7 +199,7 @@ gst_value_hash_lookup_type (GType type)
   if (G_LIKELY (G_TYPE_IS_FUNDAMENTAL (type)))
     return gst_value_tables_fundamental[FUNDAMENTAL_TYPE_ID (type)];
   else
-    return g_hash_table_lookup (gst_value_hash, (gpointer) type);
+    return g_hash_table_lookup (gst_value_hash_table, (gpointer) type);
 }
 
 static void
@@ -208,7 +208,7 @@ gst_value_hash_add_type (GType type, const GstValueTable * table)
   if (G_TYPE_IS_FUNDAMENTAL (type))
     gst_value_tables_fundamental[FUNDAMENTAL_TYPE_ID (type)] = (gpointer) table;
 
-  g_hash_table_insert (gst_value_hash, (gpointer) type, (gpointer) table);
+  g_hash_table_insert (gst_value_hash_table, (gpointer) type, (gpointer) table);
 }
 
 /********
@@ -8472,7 +8472,7 @@ _priv_gst_value_initialize (void)
   gst_value_table =
       g_array_sized_new (FALSE, FALSE, sizeof (GstValueTable),
       GST_VALUE_TABLE_DEFAULT_SIZE);
-  gst_value_hash = g_hash_table_new (NULL, NULL);
+  gst_value_hash_table = g_hash_table_new (NULL, NULL);
   gst_value_union_funcs = g_array_sized_new (FALSE, FALSE,
       sizeof (GstValueUnionInfo), GST_VALUE_UNION_TABLE_DEFAULT_SIZE);
   gst_value_intersect_funcs = g_array_sized_new (FALSE, FALSE,
