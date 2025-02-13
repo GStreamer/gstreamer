@@ -52,6 +52,7 @@ struct _GstCCCombiner
   GstClockTime current_video_running_time;
   GstClockTime current_video_running_time_end;
   GstBuffer *current_video_buffer;
+  GstCaps *pending_video_caps;
 
   GArray *current_frame_captions;
   GstVideoCaptionType caption_type;

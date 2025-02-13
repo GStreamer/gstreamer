@@ -299,6 +299,183 @@ GST_START_TEST (captions_no_output_padding_60fps_608_field1_only)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GMutex lock;
+  GCond cond;
+  guint num_buffers;
+  gboolean got_custom_event;
+  gboolean got_eos;
+} CapsChangeData;
+
+static GstPadProbeReturn
+video_caps_change_probe (GstPad * pad, GstPadProbeInfo * info,
+    CapsChangeData * data)
+{
+  g_mutex_lock (&data->lock);
+  if (GST_IS_EVENT (GST_PAD_PROBE_INFO_DATA (info))) {
+    GstEvent *ev = GST_PAD_PROBE_INFO_EVENT (info);
+    switch (GST_EVENT_TYPE (ev)) {
+      case GST_EVENT_CUSTOM_DOWNSTREAM:
+        data->got_custom_event = TRUE;
+        g_cond_signal (&data->cond);
+        break;
+      case GST_EVENT_CAPS:
+      {
+        GstCaps *caps;
+        GstStructure *s;
+        const gchar *name;
+
+        gst_event_parse_caps (ev, &caps);
+        s = gst_caps_get_structure (caps, 0);
+        name = gst_structure_get_name (s);
+
+        if (data->num_buffers == 0) {
+          fail_unless_equals_string (name, "test/foo");
+        } else {
+          fail_unless_equals_string (name, "test/bar");
+        }
+        break;
+      }
+      case GST_EVENT_EOS:
+        data->got_eos = TRUE;
+        g_cond_signal (&data->cond);
+        break;
+      default:
+        break;
+
+    }
+  } else if (GST_IS_BUFFER (GST_PAD_PROBE_INFO_DATA (info))) {
+    data->num_buffers++;
+  }
+  g_mutex_unlock (&data->lock);
+
+  return GST_PAD_PROBE_DROP;
+}
+
+GST_START_TEST (video_caps_change)
+{
+  GstBuffer *buf;
+  GstPad *sinkpad;
+  GstPad *caption_pad;
+  GstPad *srcpad;
+  GstCaps *caps;
+  const guint8 cc_data[3] = { 0xfc, 0x20, 0x20 };
+  GstEvent *event;
+  CapsChangeData data;
+  GstElement *elem;
+  GstSegment segment;
+  GstFlowReturn flow_ret;
+  gboolean ret;
+
+  g_mutex_init (&data.lock);
+  g_cond_init (&data.cond);
+  data.num_buffers = 0;
+  data.got_custom_event = FALSE;
+  data.got_eos = FALSE;
+
+  elem = gst_element_factory_make ("cccombiner", NULL);
+
+  g_object_set (elem, "schedule", FALSE, "output-padding", FALSE, NULL);
+
+  sinkpad = gst_element_get_static_pad (elem, "sink");
+  srcpad = gst_element_get_static_pad (elem, "src");
+  caption_pad = gst_element_request_pad_simple (elem, "caption");
+
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
+      (GstPadProbeCallback) video_caps_change_probe, &data, NULL);
+
+  gst_element_set_state (elem, GST_STATE_PLAYING);
+
+  /* Send mandatory events */
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test-start-0"));
+  gst_pad_send_event (caption_pad, gst_event_new_stream_start ("test-start-1"));
+
+  caps = gst_caps_from_string ("test/foo");
+  fail_unless (caps);
+  gst_pad_send_event (sinkpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string (cea708_cc_data_caps.string);
+  fail_unless (caps);
+  gst_pad_send_event (caption_pad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  gst_pad_send_event (sinkpad, gst_event_new_segment (&segment));
+  gst_pad_send_event (caption_pad, gst_event_new_segment (&segment));
+
+  /* Push a video buffer */
+  buf = gst_buffer_new_and_alloc (128);
+  GST_BUFFER_PTS (buf) = 0;
+  GST_BUFFER_DURATION (buf) = 40 * GST_MSECOND;
+  flow_ret = gst_pad_chain (sinkpad, buf);
+  fail_unless (flow_ret == GST_FLOW_OK);
+
+  /* Push a gap event. aggregate() will consume this event
+   * and cccombiner will hold the first video buffer without pushing
+   * to downstream */
+  event = gst_event_new_gap (0, 40 * GST_MSECOND - 1);
+  ret = gst_pad_send_event (caption_pad, event);
+  fail_unless (ret);
+
+  /* Send a serialized event to ensure aggregate() got called */
+  event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+      gst_structure_new_empty ("test-caps-serialize"));
+  ret = gst_pad_send_event (caption_pad, event);
+  fail_unless (ret);
+
+  g_mutex_lock (&data.lock);
+  while (!data.got_custom_event)
+    g_cond_wait (&data.cond, &data.lock);
+
+  /* there should no buffer pushed at this point */
+  fail_unless (data.num_buffers == 0);
+  g_mutex_unlock (&data.lock);
+
+  /* Push new caps with buffers */
+  caps = gst_caps_new_empty_simple ("test/bar");
+  gst_pad_send_event (sinkpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+
+  buf = gst_buffer_new_and_alloc (128);
+  GST_BUFFER_PTS (buf) = 40 * GST_MSECOND;
+  GST_BUFFER_DURATION (buf) = 40 * GST_MSECOND;
+  flow_ret = gst_pad_chain (sinkpad, buf);
+  fail_unless (flow_ret == GST_FLOW_OK);
+
+  buf = gst_buffer_new_and_alloc (3);
+  gst_buffer_fill (buf, 0, cc_data, 3);
+  GST_BUFFER_PTS (buf) = 40 * GST_MSECOND;
+  GST_BUFFER_DURATION (buf) = 40 * GST_MSECOND;
+  flow_ret = gst_pad_chain (caption_pad, buf);
+  fail_unless (flow_ret == GST_FLOW_OK);
+
+  ret = gst_pad_send_event (sinkpad, gst_event_new_eos ());
+  fail_unless (ret);
+  ret = gst_pad_send_event (caption_pad, gst_event_new_eos ());
+  fail_unless (ret);
+
+  g_mutex_lock (&data.lock);
+  while (!data.got_eos)
+    g_cond_wait (&data.cond, &data.lock);
+
+  fail_unless_equals_int (data.num_buffers, 2);
+  g_mutex_unlock (&data.lock);
+
+  gst_element_set_state (elem, GST_STATE_NULL);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+  gst_element_release_request_pad (elem, caption_pad);
+  gst_object_unref (caption_pad);
+  gst_object_unref (elem);
+
+  g_mutex_clear (&data.lock);
+  g_cond_clear (&data.cond);
+}
+
+GST_END_TEST;
+
 static Suite *
 cccombiner_suite (void)
 {
@@ -310,6 +487,7 @@ cccombiner_suite (void)
   tcase_add_test (tc, no_captions);
   tcase_add_test (tc, captions_and_eos);
   tcase_add_test (tc, captions_no_output_padding_60fps_608_field1_only);
+  tcase_add_test (tc, video_caps_change);
 
   return s;
 }
