@@ -453,12 +453,13 @@ gst_cuda_ipc_server_on_release_data (GstCudaIpcServer * self,
     GST_LOG_OBJECT (self, "RELEASE-DATA %s, conn-id: %u",
         handle_dump.c_str (), conn->id);
 
-    for (auto it = conn->peer_handles.begin (); it != conn->peer_handles.end ();
-        it++) {
-      CUipcMemHandle & tmp = (*it)->handle;
+    for (auto it = conn->peer_handles.begin ();
+        it != conn->peer_handles.end ();) {
+      auto current = it++;
+      CUipcMemHandle & tmp = (*current)->handle;
       if (gst_cuda_ipc_handle_is_equal (tmp, handle)) {
         found = true;
-        conn->peer_handles.erase (it);
+        conn->peer_handles.erase (current);
         break;
       }
     }
@@ -480,11 +481,12 @@ gst_cuda_ipc_server_on_release_data (GstCudaIpcServer * self,
     GST_LOG_OBJECT (self, "RELEASE-MMAP-DATA %" GST_CUDA_OS_HANDLE_FORMAT
         ", conn-id %u", handle, conn->id);
 
-    for (auto it = conn->peer_handles.begin (); it != conn->peer_handles.end ();
-        it++) {
-      if ((*it)->os_handle == handle) {
+    for (auto it = conn->peer_handles.begin ();
+        it != conn->peer_handles.end ();) {
+      auto current = it++;
+      if ((*current)->os_handle == handle) {
         found = true;
-        conn->peer_handles.erase (it);
+        conn->peer_handles.erase (current);
         break;
       }
     }

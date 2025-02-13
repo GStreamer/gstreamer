@@ -690,10 +690,11 @@ GstNvEncObject::runResourceGC ()
   GST_LOG_ID (id_.c_str (), "Running resource GC");
 
   DeviceLock ();
-  for (auto it : resource_queue_) {
-    if (active_resource_queue_.find (it) == active_resource_queue_.end ()) {
-      releaseResourceUnlocked (it);
-      resource_queue_.erase (it);
+  for (auto it = resource_queue_.begin(); it != resource_queue_.end();) {
+    auto current = it++;
+    if (active_resource_queue_.find (*current) == active_resource_queue_.end ()) {
+      releaseResourceUnlocked (*current);
+      resource_queue_.erase (*current);
     }
   }
   DeviceUnlock ();
