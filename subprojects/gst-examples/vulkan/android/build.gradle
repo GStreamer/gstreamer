@@ -23,7 +23,7 @@ android {
                 if (gstRoot == null)
                     throw new GradleException('GSTREAMER_ROOT_ANDROID must be set, or "gstAndroidRoot" must be defined in your gradle.properties in the top level directory of the unpacked universal GStreamer Android binaries')
 
-                arguments "-DCMAKE_BUILD_TYPE=Release", "-DANDROID_STL=c++_shared", "-DGSTREAMER_ROOT_ANDROID=$gstRoot"
+                arguments "-DANDROID_STL=c++_shared", "-DGSTREAMER_ROOT_ANDROID=$gstRoot", "-GNinja"
 
                 targets "vulkan-1"
 
