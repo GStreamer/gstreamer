@@ -414,24 +414,20 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
     if (packetizer->calculate_skew
         && GST_CLOCK_TIME_IS_VALID (packetizer->last_in_time)) {
       pcrtable = get_pcr_table (packetizer, packet->pid);
-      /* There is a signalled discontinuity. Reset observations */
-      if (afcflags & MPEGTS_AFC_DISCONTINUITY_FLAG) {
+      /* There is a signalled discontinuity and we deal with regularly timed
+       * input. Reset observations */
+      if (afcflags & MPEGTS_AFC_DISCONTINUITY_FLAG &&
+          (GST_CLOCK_TIME_IS_VALID (packetizer->last_dts) ||
+              GST_CLOCK_TIME_IS_VALID (packetizer->last_pts))) {
+        MpegTSPCR *fallback = get_pcr_table (packetizer, 0x1fff);
         GST_DEBUG ("pcr 0x%04x Discontinuity signalled, resetting observations",
             packet->pid);
         pcrtable->base_time = GST_CLOCK_TIME_NONE;
         pcrtable->base_pcrtime = GST_CLOCK_TIME_NONE;
+        fallback->base_time = GST_CLOCK_TIME_NONE;
       }
       calculate_skew (packetizer, pcrtable, packet->pcr,
           packetizer->last_in_time);
-      if (afcflags & MPEGTS_AFC_DISCONTINUITY_FLAG) {
-        MpegTSPCR *ignore_pcr =
-            packetizer->observations[packetizer->pcrtablelut[0x1fff]];
-        if (ignore_pcr) {
-          GST_DEBUG ("Resetting fallback PCR table due to discontinuity");
-          /* If there is a discontinuity, we need to reset the fallback PCR in case of */
-          ignore_pcr->base_time = GST_CLOCK_TIME_NONE;
-        }
-      }
     }
     if (packetizer->calculate_offset) {
       if (!pcrtable)
