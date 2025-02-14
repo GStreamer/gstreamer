@@ -141,7 +141,7 @@ ges_audio_source_create_element (GESTrackElement * trksrc)
   GST_DEBUG_OBJECT (trksrc, "Creating a bin sub_element ! volume");
   vbin =
       gst_parse_bin_from_description
-      ("audioconvert name=convert ! audioresample ! volume name=v ! capsfilter name=audio-track-caps-filter",
+      ("audioconvert name=convert ! audiorate skip-to-first=true ! audioconvert ! audioresample ! audioconvert ! volume name=v ! capsfilter name=audio-track-caps-filter",
       TRUE, NULL);
   elements = g_ptr_array_new ();
   g_ptr_array_add (elements, vbin);
