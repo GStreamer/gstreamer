@@ -285,6 +285,12 @@ gst_audio_rate_fill_to_time (GstAudioRate * audiorate, GstClockTime time)
       !GST_CLOCK_TIME_IS_VALID (audiorate->next_ts))
     return;
 
+  if (ABS (GST_CLOCK_DIFF (time, audiorate->next_ts)) <= audiorate->tolerance) {
+    GST_DEBUG_OBJECT (audiorate,
+        "Not filling gap as its duration < tolerance ( %" GST_TIMEP_FORMAT " )",
+        &audiorate->tolerance);
+  }
+
   /* feed an empty buffer to chain with the given timestamp,
    * it will take care of filling */
   buf = gst_buffer_new ();
