@@ -183,6 +183,8 @@ gst_avf_asset_src_dispose (GObject *object)
     gst_event_unref (self->seek_event);
     self->seek_event = NULL;
   }
+
+  G_OBJECT_CLASS (gst_avf_asset_src_parent_class)->dispose (object);
 }
 
 static void
