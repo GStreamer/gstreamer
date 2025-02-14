@@ -296,7 +296,7 @@ again:
     GstPad *sinkpad = GST_BASE_TRANSFORM_SINK_PAD (bt);
     GstCaps *incaps = gst_pad_get_current_caps (sinkpad);
     GST_DEBUG_OBJECT (bt,
-        "Failed to upload with curren caps -- reconfiguring.");
+        "Failed to upload with current caps -- reconfiguring.");
     /* Note: gst_base_transform_reconfigure_src() cannot be used here.
      * Reconfiguring must be synchronous to avoid dropping the current
      * buffer */
