@@ -43,7 +43,7 @@ furnished to do so, subject to the following conditions:
   <body>
     <h1 style="text-align: center" id="title"> {{ TITLE }}</h1>
 
-    <div id="graph" style="width: 100%; height: 100%; overflow: scroll;"></div>
+    <div id="graph" class="dragscroll" style="width: 100%; height: 100%; overflow: scroll;"></div>
     <div class="floating-rectangle" id="instructions">
       Click node to highlight<br/>Shift-Ctrl-scroll or w/s to zoom<br/>Esc to unhighlight
     </div>
@@ -54,6 +54,7 @@ furnished to do so, subject to the following conditions:
     <script type="text/javascript" src="https://cdn.rawgit.com/jquery/jquery-mousewheel/master/jquery.mousewheel.min.js"></script>
     <script type="text/javascript" src="https://cdn.rawgit.com/jquery/jquery-color/master/jquery.color.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://asvd.github.io/dragscroll/dragscroll.js"></script>
     <script type="text/javascript" src="/js/jquery.graphviz.svg.js"></script>
     <script type="text/javascript">
       let url = new URL(window.location.href);
