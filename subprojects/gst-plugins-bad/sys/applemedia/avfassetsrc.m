@@ -87,6 +87,7 @@ static void gst_avf_asset_src_set_property (GObject * object, guint prop_id,
 static void gst_avf_asset_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_avf_asset_src_dispose (GObject *object);
+static void gst_avf_asset_src_finalize (GObject *object);
 
 static GstStateChangeReturn gst_avf_asset_src_change_state (GstElement * element,
     GstStateChange transition);
@@ -148,6 +149,7 @@ gst_avf_asset_src_class_init (GstAVFAssetSrcClass * klass)
   gobject_class->set_property = gst_avf_asset_src_set_property;
   gobject_class->get_property = gst_avf_asset_src_get_property;
   gobject_class->dispose = gst_avf_asset_src_dispose;
+  gobject_class->finalize = gst_avf_asset_src_finalize;
 
   g_object_class_install_property (gobject_class, PROP_URI,
       g_param_spec_string ("uri", "Asset URI",
@@ -167,6 +169,15 @@ gst_avf_asset_src_init (GstAVFAssetSrc * self)
   self->last_audio_pad_ret = GST_FLOW_OK;
   self->last_video_pad_ret = GST_FLOW_OK;
   g_mutex_init (&self->lock);
+}
+
+static void
+gst_avf_asset_src_finalize (GObject *object)
+{
+  GstAVFAssetSrc *self = GST_AVF_ASSET_SRC (object);
+
+  g_mutex_clear (&self->lock);
+  G_OBJECT_CLASS (gst_avf_asset_src_parent_class)->finalize (object);
 }
 
 static void
