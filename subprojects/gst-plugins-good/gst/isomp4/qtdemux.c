@@ -12131,12 +12131,20 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     UncompressedFrameConfigBox * uncC, ComponentDefinitionBox * cmpd)
 {
   guint32 num_components = uncC->component_count;
+  guint16 component_types[4];
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+
   stream->alignment = 4;
+
+  if (num_components > 4) {
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported number of components for uncC: %u", num_components);
+    goto unsupported_feature;
+  }
 
   if (uncC->version == 1) {
     // Determine format with profile
-    // The only supported options for version 1 are `rgb3`, `rgba`, and `abgr`
+    // The only permitted profiles for version 1 are `rgb3`, `rgba`, and `abgr`
     switch (uncC->profile) {
       case GST_MAKE_FOURCC ('r', 'g', 'b', '3'):       // RGB 24 bits packed
         format = GST_VIDEO_FORMAT_RGB;
@@ -12251,37 +12259,43 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     goto unsupported_feature;
   }
 
+  for (guint32 i = 0; i < num_components; i++) {
+    guint16 component_index = uncC->components[i].index;
+    component_types[i] = cmpd->types[component_index];
+  }
+
   /* Determine Format */
   switch (num_components) {
     case 1:
-      if (cmpd->types[0] == COMPONENT_MONOCHROME) {
+      if (component_types[0] == COMPONENT_MONOCHROME) {
         // Single channel, we can handle this in any interleave
         format = GST_VIDEO_FORMAT_GRAY8;
       }
       break;
     case 3:
-      if (cmpd->types[0] == COMPONENT_RED &&
-          cmpd->types[1] == COMPONENT_GREEN &&
-          cmpd->types[2] == COMPONENT_BLUE && uncC->interleave_type == 1) {
+      if (component_types[0] == COMPONENT_RED &&
+          component_types[1] == COMPONENT_GREEN &&
+          component_types[2] == COMPONENT_BLUE && uncC->interleave_type == 1) {
         format = GST_VIDEO_FORMAT_RGB;
       }
-      if (cmpd->types[0] == COMPONENT_BLUE &&
-          cmpd->types[1] == COMPONENT_GREEN &&
-          cmpd->types[2] == COMPONENT_RED && uncC->interleave_type == 1) {
+      if (component_types[0] == COMPONENT_BLUE &&
+          component_types[1] == COMPONENT_GREEN &&
+          component_types[2] == COMPONENT_RED && uncC->interleave_type == 1) {
         format = GST_VIDEO_FORMAT_BGR;
       }
       break;
     case 4:
-      if (cmpd->types[0] == COMPONENT_RED &&
-          cmpd->types[1] == COMPONENT_GREEN &&
-          cmpd->types[2] == COMPONENT_BLUE &&
-          cmpd->types[3] == COMPONENT_ALPHA && uncC->interleave_type == 1) {
+      if (component_types[0] == COMPONENT_RED &&
+          component_types[1] == COMPONENT_GREEN &&
+          component_types[2] == COMPONENT_BLUE &&
+          component_types[3] == COMPONENT_ALPHA && uncC->interleave_type == 1) {
         format = GST_VIDEO_FORMAT_RGBA;
       }
-      if (cmpd->types[0] == COMPONENT_RED &&
-          cmpd->types[1] == COMPONENT_GREEN &&
-          cmpd->types[2] == COMPONENT_BLUE &&
-          cmpd->types[3] == COMPONENT_PADDING && uncC->interleave_type == 1) {
+      if (component_types[0] == COMPONENT_RED &&
+          component_types[1] == COMPONENT_GREEN &&
+          component_types[2] == COMPONENT_BLUE &&
+          component_types[3] == COMPONENT_PADDING
+          && uncC->interleave_type == 1) {
         format = GST_VIDEO_FORMAT_RGBx;
       }
       break;
