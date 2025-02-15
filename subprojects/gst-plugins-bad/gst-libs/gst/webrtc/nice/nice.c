@@ -1072,28 +1072,6 @@ _get_server_url (GstWebRTCNice * ice, NiceCandidate * cand)
   }
 }
 
-/* TODO: replace it with nice_candidate_type_to_string()
- * when it's ready for use
- * https://libnice.freedesktop.org/libnice/NiceCandidate.html#nice-candidate-type-to-string
- */
-static const gchar *
-_candidate_type_to_string (NiceCandidateType type)
-{
-  switch (type) {
-    case NICE_CANDIDATE_TYPE_HOST:
-      return "host";
-    case NICE_CANDIDATE_TYPE_SERVER_REFLEXIVE:
-      return "srflx";
-    case NICE_CANDIDATE_TYPE_PEER_REFLEXIVE:
-      return "prflx";
-    case NICE_CANDIDATE_TYPE_RELAYED:
-      return "relay";
-    default:
-      g_assert_not_reached ();
-      return NULL;
-  }
-}
-
 static void
 _populate_candidate_stats (GstWebRTCNice * ice, NiceCandidate * cand,
     GstWebRTCICEStream * stream, GstWebRTCICECandidateStats * stats,
@@ -1107,7 +1085,7 @@ _populate_candidate_stats (GstWebRTCNice * ice, NiceCandidate * cand,
   stats->port = nice_address_get_port (&cand->addr);
   stats->ipaddr = g_strdup (ipaddr);
   stats->stream_id = stream->stream_id;
-  stats->type = _candidate_type_to_string (cand->type);
+  stats->type = nice_candidate_type_to_string (cand->type);
   stats->prio = cand->priority;
   stats->proto =
       cand->transport == NICE_CANDIDATE_TRANSPORT_UDP ? "udp" : "tcp";
