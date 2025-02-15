@@ -280,7 +280,8 @@ gst_svt_jpeg_xs_enc_class_init (GstSvtJpegXsEncClass * klass)
           "Rate Control Mode",
           "Rate Control Mode",
           GST_SVT_JPEG_XS_ENC_TYPE_RATE_CONTROL_MODE,
-          DEFAULT_QUANT_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_RATE_CONTROL_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_CODING_SIGNS,
@@ -288,7 +289,7 @@ gst_svt_jpeg_xs_enc_class_init (GstSvtJpegXsEncClass * klass)
           "Coding Signs Handling Strategy",
           "Coding signs handling strategy",
           GST_SVT_JPEG_XS_ENC_TYPE_CODING_SIGNS,
-          DEFAULT_QUANT_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_CODING_SIGNS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_type_mark_as_plugin_api (GST_SVT_JPEG_XS_ENC_TYPE_QUANT_MODE, 0);
   gst_type_mark_as_plugin_api (GST_SVT_JPEG_XS_ENC_TYPE_RATE_CONTROL_MODE, 0);
