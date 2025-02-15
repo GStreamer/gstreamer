@@ -944,7 +944,8 @@ Get HTTP Proxy to be used when connecting to TURN server.</doc>
           </parameter>
         </parameters>
       </virtual-method>
-      <virtual-method name="get_selected_pair" invoker="get_selected_pair" version="1.22">
+      <virtual-method name="get_selected_pair" invoker="get_selected_pair" version="1.22" deprecated="1" deprecated-version="1.28">
+        <doc-deprecated xml:space="preserve">Use gst_webrtc_ice_transport_get_selected_candidate_pair().</doc-deprecated>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on failure, otherwise @local_stats @remote_stats will be set</doc>
@@ -1353,7 +1354,8 @@ Get HTTP Proxy to be used when connecting to TURN server.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_selected_pair" c:identifier="gst_webrtc_ice_get_selected_pair" version="1.22">
+      <method name="get_selected_pair" c:identifier="gst_webrtc_ice_get_selected_pair" version="1.22" deprecated="1" deprecated-version="1.28">
+        <doc-deprecated xml:space="preserve">Use gst_webrtc_ice_transport_get_selected_candidate_pair().</doc-deprecated>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on failure, otherwise @local_stats @remote_stats will be set</doc>
@@ -1626,6 +1628,105 @@ stops automatic ICE gathering.</doc>
         </parameters>
       </glib:signal>
     </class>
+    <record name="WebRTCICECandidate" c:type="GstWebRTCICECandidate" version="1.28" glib:type-name="GstWebRTCICECandidate" glib:get-type="gst_webrtc_ice_candidate_get_type" c:symbol-prefix="webrtc_ice_candidate">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+      <field name="candidate" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">String carrying the candidate-attribute as defined in
+  section 15.1 of RFC5245</doc>
+        <type name="utf8" c:type="gchar*"/>
+      </field>
+      <field name="component" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">The assigned network component of the candidate (1 for RTP
+  2 for RTCP).</doc>
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="sdp_mid" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">The media stream "identification-tag" defined in [RFC5888] for the
+  media component this candidate is associated with.</doc>
+        <type name="utf8" c:type="gchar*"/>
+      </field>
+      <field name="sdp_mline_index" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">The index (starting at zero) of the media description in
+  the SDP this candidate is associated with.</doc>
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="stats" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">The #GstWebRTCICECandidateStats associated to this candidate.</doc>
+        <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats*"/>
+      </field>
+      <field name="_gst_reserved" writable="1">
+        <array zero-terminated="0" fixed-size="20">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <method name="copy" c:identifier="gst_webrtc_ice_candidate_copy" version="1.28">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">A copy of @candidate</doc>
+          <type name="WebRTCICECandidate" c:type="GstWebRTCICECandidate*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="candidate" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICECandidate to be copied</doc>
+            <type name="WebRTCICECandidate" c:type="GstWebRTCICECandidate*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="free" c:identifier="gst_webrtc_ice_candidate_free" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">Helper function to free #GstWebRTCICECandidate</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="candidate" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICECandidate to be free'd</doc>
+            <type name="WebRTCICECandidate" c:type="GstWebRTCICECandidate*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <record name="WebRTCICECandidatePair" c:type="GstWebRTCICECandidatePair" version="1.28" glib:type-name="GstWebRTCICECandidatePair" glib:get-type="gst_webrtc_ice_candidate_pair_get_type" c:symbol-prefix="webrtc_ice_candidate_pair">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+      <field name="local" writable="1">
+        <type name="WebRTCICECandidate" c:type="GstWebRTCICECandidate*"/>
+      </field>
+      <field name="remote" writable="1">
+        <type name="WebRTCICECandidate" c:type="GstWebRTCICECandidate*"/>
+      </field>
+      <method name="copy" c:identifier="gst_webrtc_ice_candidate_pair_copy" version="1.28">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">A copy of @pair</doc>
+          <type name="WebRTCICECandidatePair" c:type="GstWebRTCICECandidatePair*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="pair" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICECandidatePair" c:type="GstWebRTCICECandidatePair*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="free" c:identifier="gst_webrtc_ice_candidate_pair_free" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">Helper function to free #GstWebRTCICECandidatePair</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="pair" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICECandidatePair to be free'd</doc>
+            <type name="WebRTCICECandidatePair" c:type="GstWebRTCICECandidatePair*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <enumeration name="WebRTCICECandidateProtocolType" version="1.28" glib:type-name="GstWebRTCICECandidateProtocolType" glib:get-type="gst_webrtc_ice_candidate_protocol_type_get_type" c:type="GstWebRTCICECandidateProtocolType">
+      <member name="tcp" value="0" c:identifier="GST_WEBRTC_ICE_CANDIDATE_PROTOCOL_TYPE_TCP" glib:nick="tcp" glib:name="GST_WEBRTC_ICE_CANDIDATE_PROTOCOL_TYPE_TCP">
+      </member>
+      <member name="udp" value="1" c:identifier="GST_WEBRTC_ICE_CANDIDATE_PROTOCOL_TYPE_UDP" glib:nick="udp" glib:name="GST_WEBRTC_ICE_CANDIDATE_PROTOCOL_TYPE_UDP">
+      </member>
+    </enumeration>
     <record name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats" version="1.22" glib:type-name="GstWebRTCICECandidateStats" glib:get-type="gst_webrtc_ice_candidate_stats_get_type" c:symbol-prefix="webrtc_ice_candidate_stats">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
       <field name="ipaddr" writable="1">
@@ -1716,6 +1817,29 @@ stops automatic ICE gathering.</doc>
         </parameters>
       </method>
     </record>
+    <enumeration name="WebRTCICECandidateType" version="1.28" glib:type-name="GstWebRTCICECandidateType" glib:get-type="gst_webrtc_ice_candidate_type_get_type" c:type="GstWebRTCICECandidateType">
+      <member name="host" value="0" c:identifier="GST_WEBRTC_ICE_CANDIDATE_TYPE_HOST" glib:nick="host" glib:name="GST_WEBRTC_ICE_CANDIDATE_TYPE_HOST">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">The candidate is a host candidate, whose
+  IP address as specified in the RTCIceCandidate.address property is in fact the
+  true address of the remote peer.</doc>
+      </member>
+      <member name="server_reflexive" value="1" c:identifier="GST_WEBRTC_ICE_CANDIDATE_TYPE_SERVER_REFLEXIVE" glib:nick="server-reflexive" glib:name="GST_WEBRTC_ICE_CANDIDATE_TYPE_SERVER_REFLEXIVE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">The candidate is a server
+  reflexive candidate; the ip and port are a binding allocated by a NAT for an
+  agent when it sent a packet through the NAT to a server. They can be learned by
+  the STUN server and TURN server to represent the candidate's peer anonymously.</doc>
+      </member>
+      <member name="peer_reflexive" value="2" c:identifier="GST_WEBRTC_ICE_CANDIDATE_TYPE_PEER_REFLEXIVE" glib:nick="peer-reflexive" glib:name="GST_WEBRTC_ICE_CANDIDATE_TYPE_PEER_REFLEXIVE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">The candidate is a peer
+  reflexive candidate; the ip and port are a binding allocated by a NAT when it
+  sent a STUN request to represent the candidate's peer anonymously.</doc>
+      </member>
+      <member name="relayed" value="3" c:identifier="GST_WEBRTC_ICE_CANDIDATE_TYPE_RELAYED" glib:nick="relayed" glib:name="GST_WEBRTC_ICE_CANDIDATE_TYPE_RELAYED">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">The candidate is a relay candidate,
+  obtained from a TURN server. The relay candidate's IP address is an address the
+  TURN server uses to forward the media between the two peers.</doc>
+      </member>
+    </enumeration>
     <record name="WebRTCICEClass" c:type="GstWebRTCICEClass" glib:is-gtype-struct-for="WebRTCICE">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
       <field name="parent_class">
@@ -2388,6 +2512,21 @@ complete.</doc>
           </instance-parameter>
         </parameters>
       </virtual-method>
+      <virtual-method name="get_selected_candidate_pair" invoker="get_selected_candidate_pair" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.c">See also
+https://w3c.github.io/webrtc-pc/#dom-rtcicetransport-getselectedcandidatepair</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.c">A #GstWebRTCICECandidatePair</doc>
+          <type name="WebRTCICECandidatePair" c:type="GstWebRTCICECandidatePair*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="transport" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.c">ICE Transport</doc>
+            <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
       <method name="connection_state_change" c:identifier="gst_webrtc_ice_transport_connection_state_change">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
         <return-value transfer-ownership="none">
@@ -2414,6 +2553,21 @@ complete.</doc>
           <parameter name="new_state" transfer-ownership="none">
             <type name="WebRTCICEGatheringState" c:type="GstWebRTCICEGatheringState"/>
           </parameter>
+        </parameters>
+      </method>
+      <method name="get_selected_candidate_pair" c:identifier="gst_webrtc_ice_transport_get_selected_candidate_pair" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.c">See also
+https://w3c.github.io/webrtc-pc/#dom-rtcicetransport-getselectedcandidatepair</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.c">A #GstWebRTCICECandidatePair</doc>
+          <type name="WebRTCICECandidatePair" c:type="GstWebRTCICECandidatePair*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="transport" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.c">ICE Transport</doc>
+            <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+          </instance-parameter>
         </parameters>
       </method>
       <method name="new_candidate" c:identifier="gst_webrtc_ice_transport_new_candidate">
@@ -2516,8 +2670,23 @@ complete.</doc>
           </parameters>
         </callback>
       </field>
+      <field name="get_selected_candidate_pair">
+        <callback name="get_selected_candidate_pair">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+          <return-value transfer-ownership="full" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.c">A #GstWebRTCICECandidatePair</doc>
+            <type name="WebRTCICECandidatePair" c:type="GstWebRTCICECandidatePair*"/>
+          </return-value>
+          <parameters>
+            <parameter name="transport" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.c">ICE Transport</doc>
+              <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
       <field name="_padding">
-        <array zero-terminated="0" fixed-size="4">
+        <array zero-terminated="0" fixed-size="3">
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>

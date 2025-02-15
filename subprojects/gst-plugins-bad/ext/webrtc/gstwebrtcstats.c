@@ -641,7 +641,7 @@ _get_stats_from_ice_candidates (GstWebRTCBin * webrtc,
   if (can->ABI.abi.related_address)
     gst_structure_set (stats, "related-address", G_TYPE_STRING,
         can->ABI.abi.related_address, NULL);
-  if (can->ABI.abi.related_port)
+  if (can->ABI.abi.related_port != -1)
     gst_structure_set (stats, "related-port", G_TYPE_UINT,
         can->ABI.abi.related_port, NULL);
   if (can->ABI.abi.username_fragment)
@@ -668,6 +668,7 @@ _get_stats_from_ice_transport (GstWebRTCBin * webrtc,
   gchar *id;
   gchar *local_cand_id = NULL, *remote_cand_id = NULL;
   double ts;
+  GstWebRTCICECandidatePair *selected_pair;
   GstWebRTCICECandidateStats *local_cand = NULL, *remote_cand = NULL;
 
   gst_structure_get_double (s, "timestamp", &ts);
@@ -714,23 +715,30 @@ _get_stats_from_ice_transport (GstWebRTCBin * webrtc,
      unsigned long long            responseBytesSent;
    */
 
-  if (gst_webrtc_ice_get_selected_pair (webrtc->priv->ice, stream,
-          &local_cand, &remote_cand)) {
-    local_cand_id =
-        _get_stats_from_ice_candidates (webrtc, local_cand, transport_id,
-        "local", s);
-    remote_cand_id =
-        _get_stats_from_ice_candidates (webrtc, remote_cand, transport_id,
-        "remote", s);
+  selected_pair =
+      gst_webrtc_ice_transport_get_selected_candidate_pair (transport);
+  if (selected_pair) {
+    if (selected_pair->local) {
+      local_cand_id =
+          _get_stats_from_ice_candidates (webrtc, selected_pair->local->stats,
+          transport_id, "local", s);
+      gst_structure_set (stats, "local-candidate-id", G_TYPE_STRING,
+          local_cand_id, NULL);
+    }
+    if (selected_pair->remote) {
+      remote_cand_id =
+          _get_stats_from_ice_candidates (webrtc, selected_pair->remote->stats,
+          transport_id, "remote", s);
 
-    gst_structure_set (stats, "local-candidate-id", G_TYPE_STRING,
-        local_cand_id, NULL);
-    gst_structure_set (stats, "remote-candidate-id", G_TYPE_STRING,
-        remote_cand_id, NULL);
-  } else
+      gst_structure_set (stats, "remote-candidate-id", G_TYPE_STRING,
+          remote_cand_id, NULL);
+    }
+    gst_webrtc_ice_candidate_pair_free (selected_pair);
+  } else {
     GST_INFO_OBJECT (webrtc,
         "No selected ICE candidate pair was found for transport %s",
         GST_OBJECT_NAME (transport));
+  }
 
   /* XXX: these stats are at the rtp session level but there isn't a specific
    * stats structure for that. The RTCIceCandidatePairStats is the closest with

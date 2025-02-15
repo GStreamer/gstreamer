@@ -314,6 +314,8 @@ gst_webrtc_ice_get_remote_candidates (GstWebRTCICE * ice,
  * Returns: FALSE on failure, otherwise @local_stats @remote_stats will be set
  *
  * Since: 1.22
+ *
+ * Deprecated: 1.28: Use gst_webrtc_ice_transport_get_selected_candidate_pair().
  */
 gboolean
 gst_webrtc_ice_get_selected_pair (GstWebRTCICE * ice,
@@ -522,6 +524,96 @@ gst_webrtc_ice_close (GstWebRTCICE * ice, GstPromise * promise)
 
   GST_WEBRTC_ICE_GET_CLASS (ice)->close (ice, promise);
 }
+
+/**
+ * gst_webrtc_ice_candidate_free:
+ * @candidate: The #GstWebRTCICECandidate to be free'd
+ *
+ * Helper function to free #GstWebRTCICECandidate
+ *
+ * Since: 1.28
+ */
+void
+gst_webrtc_ice_candidate_free (GstWebRTCICECandidate * candidate)
+{
+  if (candidate) {
+    g_free (candidate->candidate);
+    gst_webrtc_ice_candidate_stats_free (candidate->stats);
+    g_free (candidate->sdp_mid);
+  }
+
+  g_free (candidate);
+}
+
+/**
+ * gst_webrtc_ice_candidate_copy:
+ * @candidate: The #GstWebRTCICECandidate to be copied
+ *
+ * Returns: (transfer full): A copy of @candidate
+ *
+ * Since: 1.28
+ */
+GstWebRTCICECandidate *
+gst_webrtc_ice_candidate_copy (GstWebRTCICECandidate * candidate)
+{
+  GstWebRTCICECandidate *copy = g_malloc (sizeof (GstWebRTCICECandidate));
+
+  *copy = *candidate;
+
+  copy->candidate = g_strdup (candidate->candidate);
+  copy->stats = gst_webrtc_ice_candidate_stats_copy (candidate->stats);
+  copy->sdp_mid = g_strdup (candidate->sdp_mid);
+
+  return copy;
+}
+
+G_DEFINE_BOXED_TYPE (GstWebRTCICECandidate, gst_webrtc_ice_candidate,
+    (GBoxedCopyFunc) gst_webrtc_ice_candidate_copy,
+    (GBoxedFreeFunc) gst_webrtc_ice_candidate_free);
+
+
+/**
+ * gst_webrtc_ice_candidate_pair_free:
+ * @pair: The #GstWebRTCICECandidatePair to be free'd
+ *
+ * Helper function to free #GstWebRTCICECandidatePair
+ *
+ * Since: 1.28
+ */
+void
+gst_webrtc_ice_candidate_pair_free (GstWebRTCICECandidatePair * pair)
+{
+  if (pair) {
+    gst_webrtc_ice_candidate_free (pair->local);
+    gst_webrtc_ice_candidate_free (pair->remote);
+  }
+
+  g_free (pair);
+}
+
+/**
+ * gst_webrtc_ice_candidate_pair_copy:
+ * @pair: The #GstWebRTCICE
+ *
+ * Returns: (transfer full): A copy of @pair
+ *
+ * Since: 1.28
+ */
+GstWebRTCICECandidatePair *
+gst_webrtc_ice_candidate_pair_copy (GstWebRTCICECandidatePair * pair)
+{
+  GstWebRTCICECandidatePair *copy =
+      g_malloc (sizeof (GstWebRTCICECandidatePair));
+
+  copy->local = gst_webrtc_ice_candidate_copy (pair->local);
+  copy->remote = gst_webrtc_ice_candidate_copy (pair->remote);
+
+  return copy;
+}
+
+G_DEFINE_BOXED_TYPE (GstWebRTCICECandidatePair, gst_webrtc_ice_candidate_pair,
+    (GBoxedCopyFunc) gst_webrtc_ice_candidate_pair_copy,
+    (GBoxedFreeFunc) gst_webrtc_ice_candidate_pair_free);
 
 static void
 gst_webrtc_ice_set_property (GObject * object, guint prop_id,

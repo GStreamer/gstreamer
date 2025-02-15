@@ -102,6 +102,30 @@ gst_webrtc_ice_transport_new_candidate (GstWebRTCICETransport * ice,
       stream_id, component, attr);
 }
 
+/**
+ * gst_webrtc_ice_transport_get_selected_candidate_pair:
+ * @transport: ICE Transport
+ *
+ * See also
+ * https://w3c.github.io/webrtc-pc/#dom-rtcicetransport-getselectedcandidatepair
+ *
+ * Returns: (transfer full) (nullable): A #GstWebRTCICECandidatePair
+ *
+ * Since: 1.28
+ */
+GstWebRTCICECandidatePair *
+gst_webrtc_ice_transport_get_selected_candidate_pair (GstWebRTCICETransport *
+    transport)
+{
+  GstWebRTCICETransportClass *klass =
+      GST_WEBRTC_ICE_TRANSPORT_GET_CLASS (transport);
+
+  if (!klass->get_selected_candidate_pair)
+    return NULL;
+
+  return klass->get_selected_candidate_pair (transport);
+}
+
 static void
 gst_webrtc_ice_transport_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)

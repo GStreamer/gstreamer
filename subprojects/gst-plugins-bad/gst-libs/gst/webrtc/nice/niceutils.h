@@ -25,3 +25,5 @@
 
 gchar *gst_webrtc_nice_get_candidate_server_url(GstWebRTCNice * ice, NiceCandidate * cand);
 const gchar *gst_webrtc_nice_get_candidate_relay_protocol(GstUri * turn_server);
+void gst_webrtc_nice_fill_local_candidate_credentials(NiceAgent * agent, NiceCandidate * cand);
+void gst_webrtc_nice_fill_remote_candidate_credentials(GstWebRTCNice  *nice, NiceCandidate * cand);

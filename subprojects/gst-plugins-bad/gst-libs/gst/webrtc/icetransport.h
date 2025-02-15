@@ -53,9 +53,22 @@ struct _GstWebRTCICETransportClass
 {
   GstObjectClass               parent_class;
 
-  gboolean                  (*gather_candidates)        (GstWebRTCICETransport * transport);
+  gboolean                           (*gather_candidates)           (GstWebRTCICETransport * transport);
 
-  gpointer                  _padding[GST_PADDING];
+  /**
+   * GstWebRTCICETransportClass::get_selected_candidate_pair:
+   * @transport: a #GstWebRTCICETransport
+   *
+   * See also
+   * https://w3c.github.io/webrtc-pc/#dom-rtcicetransport-getselectedcandidatepair
+   *
+   * Returns: (transfer full) (nullable): A #GstWebRTCICECandidatePair
+   *
+   * Since: 1.28
+   */
+  GstWebRTCICECandidatePair*         (*get_selected_candidate_pair) (GstWebRTCICETransport * transport);
+
+  gpointer                  _padding[GST_PADDING - 1];
 };
 
 GST_WEBRTC_API
@@ -68,6 +81,9 @@ GST_WEBRTC_API
 void            gst_webrtc_ice_transport_selected_pair_change       (GstWebRTCICETransport * ice);
 GST_WEBRTC_API
 void            gst_webrtc_ice_transport_new_candidate              (GstWebRTCICETransport * ice, guint stream_id, GstWebRTCICEComponent component, const gchar * attr);
+
+GST_WEBRTC_API
+GstWebRTCICECandidatePair * gst_webrtc_ice_transport_get_selected_candidate_pair (GstWebRTCICETransport * transport);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCICETransport, gst_object_unref)
 

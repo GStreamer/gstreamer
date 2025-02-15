@@ -554,8 +554,9 @@ gst_webrtc_nice_add_stream (GstWebRTCICE * ice, guint session_id)
   return item->stream;
 }
 
-static void
-_fill_local_candidate_credentials (NiceAgent * agent, NiceCandidate * candidate)
+void
+gst_webrtc_nice_fill_local_candidate_credentials (NiceAgent * agent,
+    NiceCandidate * candidate)
 {
 
   if (!candidate->username || !candidate->password) {
@@ -579,8 +580,8 @@ _fill_local_candidate_credentials (NiceAgent * agent, NiceCandidate * candidate)
   }
 }
 
-static void
-_fill_remote_candidate_credentials (GstWebRTCNice * nice,
+void
+gst_webrtc_nice_fill_remote_candidate_credentials (GstWebRTCNice * nice,
     NiceCandidate * candidate)
 {
   if (!candidate->username)
@@ -606,7 +607,7 @@ _on_new_candidate (NiceAgent * agent, NiceCandidate * candidate,
   }
 
   c = nice_candidate_copy (candidate);
-  _fill_local_candidate_credentials (agent, c);
+  gst_webrtc_nice_fill_local_candidate_credentials (agent, c);
 
   attr = nice_agent_generate_local_candidate_sdp (agent, c);
 
@@ -1229,36 +1230,6 @@ gst_webrtc_nice_get_remote_candidates (GstWebRTCICE * ice,
   return (GstWebRTCICECandidateStats **) g_ptr_array_free (result, FALSE);
 }
 
-static gboolean
-gst_webrtc_nice_get_selected_pair (GstWebRTCICE * ice,
-    GstWebRTCICEStream * stream, GstWebRTCICECandidateStats ** local_stats,
-    GstWebRTCICECandidateStats ** remote_stats)
-{
-  GstWebRTCNice *nice = GST_WEBRTC_NICE (ice);
-  NiceCandidate *local_cand = NULL;
-  NiceCandidate *remote_cand = NULL;
-
-
-  if (stream) {
-    if (nice_agent_get_selected_pair (nice->priv->nice_agent, stream->stream_id,
-            NICE_COMPONENT_TYPE_RTP, &local_cand, &remote_cand)) {
-      _fill_local_candidate_credentials (nice->priv->nice_agent, local_cand);
-      _fill_remote_candidate_credentials (nice, remote_cand);
-
-      *local_stats = g_new0 (GstWebRTCICECandidateStats, 1);
-      _populate_candidate_stats (nice, local_cand, stream, *local_stats, TRUE);
-
-      *remote_stats = g_new0 (GstWebRTCICECandidateStats, 1);
-      _populate_candidate_stats (nice, remote_cand, stream, *remote_stats,
-          FALSE);
-
-      return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-
 static void
 _clear_ice_stream (struct NiceStreamItem *item)
 {
@@ -1803,7 +1774,6 @@ gst_webrtc_nice_class_init (GstWebRTCNiceClass * klass)
       gst_webrtc_nice_get_local_candidates;
   gst_webrtc_ice_class->get_remote_candidates =
       gst_webrtc_nice_get_remote_candidates;
-  gst_webrtc_ice_class->get_selected_pair = gst_webrtc_nice_get_selected_pair;
   gst_webrtc_ice_class->close = gst_webrtc_nice_close;
 
   gobject_class->constructed = gst_webrtc_nice_constructed;

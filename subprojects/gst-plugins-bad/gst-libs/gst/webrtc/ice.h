@@ -233,6 +233,35 @@ struct _GstWebRTCICECandidateStats
 #define GST_WEBRTC_ICE_CANDIDATE_STATS_TCP_TYPE(c) ((c)->ABI.abi.tcp_type)
 
 /**
+ * GstWebRTCICECandidate:
+ * @candidate: String carrying the candidate-attribute as defined in
+ *   section 15.1 of RFC5245
+ * @component: The assigned network component of the candidate (1 for RTP
+ *   2 for RTCP).
+ * @sdp_mid: The media stream "identification-tag" defined in [RFC5888] for the
+ *   media component this candidate is associated with.
+ * @sdp_mline_index: The index (starting at zero) of the media description in
+ *   the SDP this candidate is associated with.
+ * @stats: The #GstWebRTCICECandidateStats associated to this candidate.
+ *
+ * Since: 1.28
+ */
+struct _GstWebRTCICECandidate {
+  gchar                             *candidate;
+  gint                               component;
+  gchar                             *sdp_mid;
+  gint                               sdp_mline_index; /* Set to -1 if unknown. */
+  GstWebRTCICECandidateStats        *stats;
+
+  gpointer _gst_reserved[GST_PADDING_LARGE];
+};
+
+struct _GstWebRTCICECandidatePair {
+  GstWebRTCICECandidate *local;
+  GstWebRTCICECandidate *remote;
+};
+
+/**
  * GstWebRTCICEOnCandidateFunc:
  * @ice: The #GstWebRTCICE
  * @stream_id: The stream id
@@ -427,11 +456,13 @@ GST_WEBRTC_API
 GstWebRTCICECandidateStats** gst_webrtc_ice_get_remote_candidates   (GstWebRTCICE * ice,
                                                                      GstWebRTCICEStream * stream) G_GNUC_WARN_UNUSED_RESULT;
 
-GST_WEBRTC_API
+#ifndef GST_DISABLE_DEPRECATED
+GST_WEBRTC_DEPRECATED_FOR(gst_webrtc_ice_transport_get_selected_pair)
 gboolean                    gst_webrtc_ice_get_selected_pair        (GstWebRTCICE * ice,
                                                                      GstWebRTCICEStream * stream,
                                                                      GstWebRTCICECandidateStats ** local_stats,
                                                                      GstWebRTCICECandidateStats ** remote_stats);
+#endif
 
 GST_WEBRTC_API
 void                        gst_webrtc_ice_candidate_stats_free     (GstWebRTCICECandidateStats * stats);
@@ -447,6 +478,24 @@ GstWebRTCICECandidateStats * gst_webrtc_ice_candidate_stats_copy   (GstWebRTCICE
 GST_WEBRTC_API
 void                         gst_webrtc_ice_close                  (GstWebRTCICE * ice,
                                                                     GstPromise * promise);
+
+GST_WEBRTC_API
+void                        gst_webrtc_ice_candidate_free           (GstWebRTCICECandidate * candidate);
+
+GST_WEBRTC_API
+GType                       gst_webrtc_ice_candidate_get_type       (void);
+
+GST_WEBRTC_API
+GstWebRTCICECandidate *     gst_webrtc_ice_candidate_copy           (GstWebRTCICECandidate * candidate);
+
+GST_WEBRTC_API
+void                        gst_webrtc_ice_candidate_pair_free      (GstWebRTCICECandidatePair * pair);
+
+GST_WEBRTC_API
+GType                       gst_webrtc_ice_candidate_pair_get_type  (void);
+
+GST_WEBRTC_API
+GstWebRTCICECandidatePair * gst_webrtc_ice_candidate_pair_copy      (GstWebRTCICECandidatePair * pair);
 
 G_END_DECLS
 
