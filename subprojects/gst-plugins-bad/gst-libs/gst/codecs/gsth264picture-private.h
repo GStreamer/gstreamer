@@ -23,8 +23,10 @@
 
 G_BEGIN_DECLS
 
+GST_CODECS_API
 gint32 gst_h264_dpb_get_last_output_poc (GstH264Dpb * dpb);
 
+GST_CODECS_API
 void   gst_h264_picture_set_reference   (GstH264Picture * picture,
                                          GstH264PictureReference reference,
                                          gboolean other_field);
