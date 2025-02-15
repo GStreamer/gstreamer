@@ -23,6 +23,7 @@
 
 #include "nice.h"
 #include "nicestream.h"
+#include "niceutils.h"
 /* libnice */
 #include <agent.h>
 
@@ -1021,8 +1022,8 @@ gst_webrtc_nice_set_tos (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
   nice_agent_set_stream_tos (nice->priv->nice_agent, item->nice_stream_id, tos);
 }
 
-static const gchar *
-_relay_type_to_string (GstUri * turn_server)
+const gchar *
+gst_webrtc_nice_get_candidate_relay_protocol (GstUri * turn_server)
 {
   const gchar *scheme;
   const gchar *transport;
@@ -1045,8 +1046,9 @@ _relay_type_to_string (GstUri * turn_server)
   return "none";
 }
 
-static gchar *
-_get_server_url (GstWebRTCNice * ice, NiceCandidate * cand)
+gchar *
+gst_webrtc_nice_get_candidate_server_url (GstWebRTCNice * ice,
+    NiceCandidate * cand)
 {
   switch (cand->type) {
     case NICE_CANDIDATE_TYPE_RELAYED:{
@@ -1091,8 +1093,8 @@ _populate_candidate_stats (GstWebRTCNice * ice, NiceCandidate * cand,
       cand->transport == NICE_CANDIDATE_TRANSPORT_UDP ? "udp" : "tcp";
   if (is_local) {
     if (cand->type == NICE_CANDIDATE_TYPE_RELAYED)
-      stats->relay_proto = _relay_type_to_string (ice->priv->turn_server);
-    stats->url = _get_server_url (ice, cand);
+      stats->relay_proto = gst_webrtc_nice_get_candidate_relay_protocol (ice->priv->turn_server);
+    stats->url = gst_webrtc_nice_get_candidate_server_url (ice, cand);
   }
 }
 
