@@ -701,6 +701,9 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
           &g_array_index (self->current_frame_captions, CaptionData, i);
       GstMapInfo map;
 
+      if (gst_buffer_get_size (caption_data->buffer) == 0)
+        continue;
+
       gst_buffer_map (caption_data->buffer, &map, GST_MAP_READ);
       gst_buffer_add_video_caption_meta (video_buf, caption_data->caption_type,
           map.data, map.size);
