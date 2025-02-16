@@ -2044,11 +2044,15 @@ gst_install_plugins_async().</doc>
           </parameter>
           <parameter name="descriptions" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of descriptions</doc>
-            <type name="utf8" c:type="gchar***"/>
+            <array c:type="gchar***">
+              <type name="utf8" c:type="gchar**"/>
+            </array>
           </parameter>
-          <parameter name="installer_details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+          <parameter name="installer_details" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of installer details</doc>
-            <type name="utf8" c:type="gchar***"/>
+            <array c:type="gchar***">
+              <type name="utf8" c:type="gchar**"/>
+            </array>
           </parameter>
         </parameters>
       </function>
@@ -2255,11 +2259,15 @@ gst_install_plugins_async().</doc>
           </parameter>
           <parameter name="descriptions" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of descriptions</doc>
-            <type name="utf8" c:type="gchar***"/>
+            <array c:type="gchar***">
+              <type name="utf8" c:type="gchar**"/>
+            </array>
           </parameter>
-          <parameter name="installer_details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+          <parameter name="installer_details" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of installer details</doc>
-            <type name="utf8" c:type="gchar***"/>
+            <array c:type="gchar***">
+              <type name="utf8" c:type="gchar**"/>
+            </array>
           </parameter>
         </parameters>
       </function>
@@ -3166,11 +3174,15 @@ gst_install_plugins_async().</doc>
         </parameter>
         <parameter name="descriptions" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of descriptions</doc>
-          <type name="utf8" c:type="gchar***"/>
+          <array c:type="gchar***">
+            <type name="utf8" c:type="gchar**"/>
+          </array>
         </parameter>
-        <parameter name="installer_details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+        <parameter name="installer_details" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of installer details</doc>
-          <type name="utf8" c:type="gchar***"/>
+          <array c:type="gchar***">
+            <type name="utf8" c:type="gchar**"/>
+          </array>
         </parameter>
       </parameters>
     </function>
@@ -3377,11 +3389,15 @@ gst_install_plugins_async().</doc>
         </parameter>
         <parameter name="descriptions" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of descriptions</doc>
-          <type name="utf8" c:type="gchar***"/>
+          <array c:type="gchar***">
+            <type name="utf8" c:type="gchar**"/>
+          </array>
         </parameter>
-        <parameter name="installer_details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+        <parameter name="installer_details" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a %NULL-terminated array of installer details</doc>
-          <type name="utf8" c:type="gchar***"/>
+          <array c:type="gchar***">
+            <type name="utf8" c:type="gchar**"/>
+          </array>
         </parameter>
       </parameters>
     </function>

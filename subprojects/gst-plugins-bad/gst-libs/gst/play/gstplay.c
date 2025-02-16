@@ -5168,8 +5168,8 @@ gst_play_message_parse_missing_plugin (GstMessage * msg,
 /**
  * gst_play_message_parse_error_missing_plugin:
  * @msg: A #GstMessage
- * @descriptions: (out) (optional) (transfer full): a %NULL-terminated array of descriptions
- * @installer_details: (out) (optional) (nullable) (transfer full): a %NULL-terminated array of installer details
+ * @descriptions: (out) (optional) (transfer full) (array zero-terminated=1): a %NULL-terminated array of descriptions
+ * @installer_details: (out) (optional) (transfer full) (array zero-terminated=1): a %NULL-terminated array of installer details
  *
  * Parses missing plugin descriptions and installer details from a
  * GST_PLAY_ERROR_MISSING_PLUGIN error message.
@@ -5224,8 +5224,8 @@ gst_play_message_parse_warning (GstMessage * msg, GError ** error,
 /**
  * gst_play_message_parse_warning_missing_plugin:
  * @msg: A #GstMessage
- * @descriptions: (out) (optional) (transfer full): a %NULL-terminated array of descriptions
- * @installer_details: (out) (optional) (nullable) (transfer full): a %NULL-terminated array of installer details
+ * @descriptions: (out) (optional) (transfer full) (array zero-terminated=1): a %NULL-terminated array of descriptions
+ * @installer_details: (out) (optional) (transfer full) (array zero-terminated=1): a %NULL-terminated array of installer details
  *
  * Parses missing plugin descriptions and installer details from a
  * GST_PLAY_ERROR_MISSING_PLUGIN warning message.
