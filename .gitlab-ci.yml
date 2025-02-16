@@ -594,6 +594,7 @@ build vs2022 x86:
     MESON_CROSS_ARGS: >
       -Dpython=disabled
       -Dintrospection=disabled
+      -Dlibxml2:python=false
 
 build vs2022 arm64:
   extends: '.build windows cross'
