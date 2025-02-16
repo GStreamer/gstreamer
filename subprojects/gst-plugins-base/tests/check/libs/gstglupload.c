@@ -342,7 +342,6 @@ GST_START_TEST (test_upload_gl_memory)
   GstStructure *out_s;
   GstVideoInfo in_info;
   GstMapInfo map_info;
-  gint i = 0;
   gint res;
 
   base_mem_alloc =
@@ -373,9 +372,14 @@ GST_START_TEST (test_upload_gl_memory)
   /* at this point glupload hasn't received any buffers so can output anything */
   out_caps = gst_gl_upload_transform_caps (upload, context,
       GST_PAD_SINK, in_caps, NULL);
-  out_s = gst_caps_get_structure (out_caps, 0);
-  fail_unless (gst_structure_has_field_typed (out_s, "texture-target",
-          GST_TYPE_LIST));
+  for (gint i = 0; i < gst_caps_get_size (out_caps); i++) {
+    out_s = gst_caps_get_structure (out_caps, i);
+    res =
+        gst_structure_has_field_typed (out_s, "texture-target", GST_TYPE_LIST);
+    if (res)
+      break;
+  }
+  fail_unless (res);
   gst_caps_unref (out_caps);
 
   /* set some output caps without setting texture-target: this should trigger RECONFIGURE */
@@ -423,11 +427,9 @@ GST_START_TEST (test_upload_gl_memory)
   gst_gl_window_draw (window);
   gst_gl_window_send_message (window, GST_GL_WINDOW_CB (init), context);
 
-  while (i < 2) {
+  for (gint i = 0; i < 2; i++)
     gst_gl_window_send_message (window, GST_GL_WINDOW_CB (draw_render),
         context);
-    i++;
-  }
   gst_gl_window_send_message (window, GST_GL_WINDOW_CB (deinit), context);
 
   gst_caps_unref (in_caps);
