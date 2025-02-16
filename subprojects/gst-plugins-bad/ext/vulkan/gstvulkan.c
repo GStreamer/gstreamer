@@ -86,9 +86,9 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (vulkanoverlaycompositor, plugin);
 #endif
   if (have_instance && instance->n_physical_devices) {
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
     for (gint i = 0; i < instance->n_physical_devices; i++) {
       GstVulkanDevice *device = gst_vulkan_device_new_with_index (instance, i);
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
       if (gst_vulkan_device_is_extension_enabled (device,
               VK_KHR_VIDEO_DECODE_H264_EXTENSION_NAME)) {
         ret |= gst_vulkan_h264_decoder_register (plugin, device, GST_RANK_NONE);
@@ -97,10 +97,10 @@ plugin_init (GstPlugin * plugin)
               VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME)) {
         ret |= gst_vulkan_h265_decoder_register (plugin, device, GST_RANK_NONE);
       }
+#endif
       ret |= gst_vulkan_sink_register (plugin, device, GST_RANK_NONE);
       gst_object_unref (device);
     }
-#endif
   }
   gst_object_unref (instance);
   return ret;
