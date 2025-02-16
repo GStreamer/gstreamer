@@ -1,11 +1,13 @@
 [wrap-file]
-directory = libpng-1.6.37
-source_url = https://github.com/glennrp/libpng/archive/v1.6.37.tar.gz
-source_filename = libpng-1.6.37.tar.gz
-source_hash = ca74a0dace179a8422187671aee97dd3892b53e168627145271cad5b5ac81307
-patch_filename = libpng_1.6.37-5_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/libpng_1.6.37-5/get_patch
-patch_hash = 822200906ad2e82dc8b44e79fe960e980ccad96263548c35eef721086a9926f1
+directory = libpng-1.6.46
+source_url = https://github.com/glennrp/libpng/archive/v1.6.46.tar.gz
+source_filename = libpng-1.6.46.tar.gz
+source_hash = 767b01936f9620d4ab4cdf6ec348f6526f861f825648b610b1d604167dc738d2
+patch_filename = libpng_1.6.46-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/libpng_1.6.46-1/get_patch
+patch_hash = cb3ad0b73aeb2e99842f0ac50f974506c63ce77a9668e31b8ca156a47da3a222
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/libpng_1.6.46-1/libpng-1.6.46.tar.gz
+wrapdb_version = 1.6.46-1
 
 [provide]
 libpng = libpng_dep
