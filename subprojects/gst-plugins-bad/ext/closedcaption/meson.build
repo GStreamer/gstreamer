@@ -13,6 +13,7 @@ closedcaption_sources = [
     'gstline21enc.c',
     'ccutils.c',
     'gsth264ccextractor.c',
+    'gsth265ccextractor.c',
 ]
 
 closedcaption_headers = [
