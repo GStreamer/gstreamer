@@ -450,7 +450,7 @@ gst_meta_api_type_aggregate_params (GType api,
 /**
  * gst_meta_api_type_set_params_aggregator:
  * @api: the #GType of the API for which the aggregator function is being set.
- * @aggregator: the aggregator function to be associated with the given API
+ * @aggregator: (scope forever): the aggregator function to be associated with the given API
  *              type.
  *
  * This function sets the aggregator function for a specific API type.

@@ -529,7 +529,7 @@ filter_free (GstIteratorFilter * it)
 /**
  * gst_iterator_filter:
  * @it: The #GstIterator to filter
- * @func: (scope call) (closure user_data): the compare function to select elements
+ * @func: (scope call): the compare function to select elements
  * @user_data: user data passed to the compare function
  *
  * Create a new iterator from an existing iterator. The new iterator

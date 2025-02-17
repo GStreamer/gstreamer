@@ -207,7 +207,7 @@ gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type)
 
 /**
  * gst_tracer_class_uses_structure_params:
- * @klass: the #GstTracerClass to to check
+ * @tracer_class: the #GstTracerClass to to check
  *
  * If set, the tracer subsystem will consider parameters passed to the
  * `GST_TRACERS` environment variable as a #GstStructure and use its
@@ -218,17 +218,17 @@ gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type)
  * Since: 1.26
  */
 gboolean
-gst_tracer_class_uses_structure_params (GstTracerClass * klass)
+gst_tracer_class_uses_structure_params (GstTracerClass * tracer_class)
 {
-  g_return_val_if_fail (GST_IS_TRACER_CLASS (klass), FALSE);
+  g_return_val_if_fail (GST_IS_TRACER_CLASS (tracer_class), FALSE);
 
-  return G_TYPE_CLASS_GET_PRIVATE (klass, GST_TYPE_TRACER,
+  return G_TYPE_CLASS_GET_PRIVATE (tracer_class, GST_TYPE_TRACER,
       GstTracerClassPrivate)->use_structure_params;
 }
 
 /**
  * gst_tracer_class_set_use_structure_params:
- * @klass: the #GstTracerFactoryClass to mark as using structure parameters
+ * @tracer_class: the #GstTracerFactoryClass to mark as using structure parameters
  * @use_structure_params: %TRUE to use structure parameters, %FALSE otherwise
  *
  * Sets whether the tracer should use structure parameters for configuration.
@@ -241,11 +241,11 @@ gst_tracer_class_uses_structure_params (GstTracerClass * klass)
  * Since: 1.26
  */
 void
-gst_tracer_class_set_use_structure_params (GstTracerClass * klass,
+gst_tracer_class_set_use_structure_params (GstTracerClass * tracer_class,
     gboolean use_structure_params)
 {
-  g_return_if_fail (GST_IS_TRACER_CLASS (klass));
+  g_return_if_fail (GST_IS_TRACER_CLASS (tracer_class));
 
-  G_TYPE_CLASS_GET_PRIVATE (klass, GST_TYPE_TRACER,
+  G_TYPE_CLASS_GET_PRIVATE (tracer_class, GST_TYPE_TRACER,
       GstTracerClassPrivate)->use_structure_params = use_structure_params;
 }

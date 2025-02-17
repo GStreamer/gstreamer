@@ -22555,11 +22555,11 @@ MT safe.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstiterator.c">The #GstIterator to filter</doc>
             <type name="Iterator" c:type="GstIterator*"/>
           </instance-parameter>
-          <parameter name="func" transfer-ownership="none" scope="call" closure="1">
+          <parameter name="func" transfer-ownership="none" scope="call">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstiterator.c">the compare function to select elements</doc>
             <type name="GLib.CompareFunc" c:type="GCompareFunc"/>
           </parameter>
-          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+          <parameter name="user_data" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstiterator.c">user data passed to the compare function</doc>
             <type name="GObject.Value" c:type="const GValue*"/>
           </parameter>
@@ -27308,7 +27308,7 @@ write the result back into @aggregated_params.</doc>
           </parameter>
         </parameters>
       </function>
-      <function name="api_type_set_params_aggregator" c:identifier="gst_meta_api_type_set_params_aggregator" version="1.26" introspectable="0">
+      <function name="api_type_set_params_aggregator" c:identifier="gst_meta_api_type_set_params_aggregator" version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">This function sets the aggregator function for a specific API type.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
         <return-value transfer-ownership="none">
@@ -27319,7 +27319,7 @@ write the result back into @aggregated_params.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the #GType of the API for which the aggregator function is being set.</doc>
             <type name="GType" c:type="GType"/>
           </parameter>
-          <parameter name="aggregator" transfer-ownership="none">
+          <parameter name="aggregator" transfer-ownership="none" scope="forever">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the aggregator function to be associated with the given API
              type.</doc>
             <type name="AllocationMetaParamsAggregator" c:type="GstAllocationMetaParamsAggregator"/>
@@ -49611,6 +49611,7 @@ indicate its parameter handling preference.</doc>
         </return-value>
         <parameters>
           <instance-parameter name="tracer_class" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttracer.c">the #GstTracerFactoryClass to mark as using structure parameters</doc>
             <type name="TracerClass" c:type="GstTracerClass*"/>
           </instance-parameter>
           <parameter name="use_structure_params" transfer-ownership="none">
@@ -49630,6 +49631,7 @@ fields as properties to instanciate the tracer.</doc>
         </return-value>
         <parameters>
           <instance-parameter name="tracer_class" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttracer.c">the #GstTracerClass to to check</doc>
             <type name="TracerClass" c:type="GstTracerClass*"/>
           </instance-parameter>
         </parameters>
@@ -55338,6 +55340,24 @@ write the result back into @aggregated_params.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="meta_api_type_set_params_aggregator" c:identifier="gst_meta_api_type_set_params_aggregator" moved-to="Meta.api_type_set_params_aggregator" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">This function sets the aggregator function for a specific API type.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="api" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the #GType of the API for which the aggregator function is being set.</doc>
+          <type name="GType" c:type="GType"/>
+        </parameter>
+        <parameter name="aggregator" transfer-ownership="none" scope="forever">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the aggregator function to be associated with the given API
+             type.</doc>
+          <type name="AllocationMetaParamsAggregator" c:type="GstAllocationMetaParamsAggregator"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="meta_deserialize" c:identifier="gst_meta_deserialize" moved-to="Meta.deserialize" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">Recreate a #GstMeta from serialized data returned by
 gst_meta_serialize() and add it to @buffer.
@@ -57499,7 +57519,8 @@ the result.</doc>
         <type name="guint" c:type="guint"/>
       </return-value>
       <parameters>
-        <parameter name="x" transfer-ownership="none">
+        <parameter name="v" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a #guint32 value.</doc>
           <type name="guint32" c:type="guint32"/>
         </parameter>
       </parameters>
