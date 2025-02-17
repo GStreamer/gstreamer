@@ -2494,7 +2494,7 @@ to #GST_CLOCK_TIME_NONE and #GST_BUFFER_OFFSET_NONE.</doc>
               <type name="guint8"/>
             </array>
           </parameter>
-          <parameter name="size" direction="out" caller-allocates="0" transfer-ownership="full">
+          <parameter name="size" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">the size to extract</doc>
             <type name="gsize" c:type="gsize"/>
           </parameter>
