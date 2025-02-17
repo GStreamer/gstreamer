@@ -465,7 +465,7 @@ new struct sub-classing GstAnalyticsRelatableMtd.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Size required</doc>
             <type name="gsize" c:type="gsize"/>
           </parameter>
-          <parameter name="rlt_mtd" transfer-ownership="none">
+          <parameter name="rlt_mtd" direction="out" caller-allocates="1" transfer-ownership="none" nullable="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Updated handle</doc>
             <type name="Mtd" c:type="GstAnalyticsMtd*"/>
           </parameter>
@@ -777,7 +777,7 @@ otherwise this method return FALSE and @rlt is invalid.</doc>
    to @an_meta_id will be set in @rlt_mtd. Doesn't need to be free.</doc>
             <type name="gpointer" c:type="gpointer*"/>
           </parameter>
-          <parameter name="rlt_mtd" transfer-ownership="none">
+          <parameter name="rlt_mtd" direction="out" caller-allocates="1" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Handle updated to directly related relatable meta.</doc>
             <type name="Mtd" c:type="GstAnalyticsMtd*"/>
           </parameter>
@@ -946,7 +946,7 @@ otherwise this method return FALSE and @rlt is invalid.</doc>
  %GST_ANALYTICS_MTD_TYPE_ANY for any.</doc>
             <type name="MtdType" c:type="GstAnalyticsMtdType"/>
           </parameter>
-          <parameter name="rlt_mtd" transfer-ownership="none">
+          <parameter name="rlt_mtd" direction="out" caller-allocates="1" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Handle updated to iterated GstAnalyticsRelatableMtd.</doc>
             <type name="Mtd" c:type="GstAnalyticsMtd*"/>
           </parameter>

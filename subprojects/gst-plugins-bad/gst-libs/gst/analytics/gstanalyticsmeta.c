@@ -882,7 +882,7 @@ gst_buffer_get_analytics_relation_meta (GstBuffer * buffer)
  * @meta: Instance
  * @impl: Implementation of relatable (#GstAnalyticsRelatableMtd)
  * @size: Size required
- * @rlt_mtd: Updated handle
+ * @rlt_mtd: (out caller-allocates)(nullable): Updated handle
  *
  * Add a relatable metadata to @meta. This method is meant to be used by
  * new struct sub-classing GstAnalyticsRelatableMtd.
@@ -1037,7 +1037,7 @@ gst_analytics_relation_meta_get_mtd_data (const GstAnalyticsRelationMeta *
  * @state: (inout) (not nullable): Opaque data to store state of the query.
  *    If @state point to NULL, the first analytics-metadata directly related
  *    to @an_meta_id will be set in @rlt_mtd. Doesn't need to be free.
- * @rlt_mtd: Handle updated to directly related relatable meta.
+ * @rlt_mtd: (out caller-allocates)(not nullable): Handle updated to directly related relatable meta.
  *
  * Returns: TRUE if @rlt_mtd was updated, other wise FALSE
  * Since: 1.24
@@ -1109,7 +1109,7 @@ gst_analytics_relation_meta_get_direct_related (GstAnalyticsRelationMeta * meta,
  *    free it.
  * @type: Type of GstAnalyticsMtd to iterate on or use
  *  %GST_ANALYTICS_MTD_TYPE_ANY for any.
- * @rlt_mtd: Handle updated to iterated GstAnalyticsRelatableMtd.
+ * @rlt_mtd: (out caller-allocates)(not nullable): Handle updated to iterated GstAnalyticsRelatableMtd.
  *
  * Returns: FALSE if end was reached and iteration is completed.
  * Since: 1.24
