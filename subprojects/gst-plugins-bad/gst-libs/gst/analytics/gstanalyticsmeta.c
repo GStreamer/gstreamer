@@ -944,8 +944,10 @@ gst_analytics_relation_meta_add_mtd (GstAnalyticsRelationMeta * meta,
     meta->mtd_data_lookup[dest->id] = meta->offset;
     meta->offset += object_size;
     meta->length++;
-    rlt_mtd->id = dest->id;
-    rlt_mtd->meta = meta;
+    if (rlt_mtd) {
+      rlt_mtd->id = dest->id;
+      rlt_mtd->meta = meta;
+    }
     GST_CAT_TRACE (GST_CAT_AN_RELATION, "Add %p relatable type=%s (%"
         G_GSIZE_FORMAT " / %" G_GSIZE_FORMAT ").", dest,
         impl->name, new_size, meta->max_size);
