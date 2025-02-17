@@ -2185,3 +2185,9 @@ gst_tag_list_take (GstTagList ** old_taglist, GstTagList * new_taglist)
   return gst_mini_object_take ((GstMiniObject **) old_taglist,
       (GstMiniObject *) new_taglist);
 }
+
+const GstStructure *
+_gst_tag_list_structure (const GstTagList * list)
+{
+  return GST_TAG_LIST_STRUCTURE (list);
+}
