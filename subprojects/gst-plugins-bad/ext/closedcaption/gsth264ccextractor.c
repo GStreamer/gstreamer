@@ -31,7 +31,6 @@
 #endif
 
 #include "gsth264ccextractor.h"
-#include <gst/base/gstqueuearray.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_h264_cc_extractor_debug);
 #define GST_CAT_DEFAULT gst_h264_cc_extractor_debug
@@ -92,8 +91,8 @@ struct _GstH264CCExtractor
   GstH264Decoder parent;
 
   GstVideoCaptionType caption_type;
-  GstQueueArray *cur_data;
-  GstQueueArray *out_data;
+  GstVecDeque *cur_data;
+  GstVecDeque *out_data;
   gboolean on_eos;
   gint fps_n;
   gint fps_d;
@@ -159,12 +158,11 @@ caption_data_clear_func (CaptionData * data)
   gst_clear_buffer (&data->buffer);
 }
 
-static GstQueueArray *
+static GstVecDeque *
 caption_data_queue_new (void)
 {
-  GstQueueArray *array =
-      gst_queue_array_new_for_struct (sizeof (CaptionData), 2);
-  gst_queue_array_set_clear_func (array,
+  GstVecDeque *array = gst_vec_deque_new_for_struct (sizeof (CaptionData), 2);
+  gst_vec_deque_set_clear_func (array,
       (GDestroyNotify) caption_data_clear_func);
   return array;
 }
@@ -173,7 +171,7 @@ static void
 gst_h264_cc_extractor_init (GstH264CCExtractor * self)
 {
   self->cur_data = caption_data_queue_new ();
-  self->out_data = gst_queue_array_new_for_struct (sizeof (CaptionData), 2);
+  self->out_data = gst_vec_deque_new_for_struct (sizeof (CaptionData), 2);
   self->caption_type = GST_VIDEO_CAPTION_TYPE_UNKNOWN;
   self->fps_n = 0;
   self->fps_d = 1;
@@ -185,9 +183,9 @@ gst_h264_cc_extractor_finalize (GObject * object)
   GstH264CCExtractor *self = GST_H264_CC_EXTRACTOR (object);
 
   if (self->cur_data)
-    gst_queue_array_free (self->cur_data);
+    gst_vec_deque_free (self->cur_data);
 
-  gst_queue_array_free (self->out_data);
+  gst_vec_deque_free (self->out_data);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -257,7 +255,7 @@ gst_h264_cc_extractor_handle_frame (GstVideoDecoder * decoder,
   GstFlowReturn ret;
 
   if (self->cur_data)
-    gst_queue_array_clear (self->cur_data);
+    gst_vec_deque_clear (self->cur_data);
 
   tc_meta = gst_buffer_get_video_time_code_meta (frame->input_buffer);
 
@@ -278,16 +276,16 @@ gst_h264_cc_extractor_handle_frame (GstVideoDecoder * decoder,
     if (!self->cur_data)
       self->cur_data = caption_data_queue_new ();
 
-    gst_queue_array_push_tail_struct (self->cur_data, &data);
+    gst_vec_deque_push_tail_struct (self->cur_data, &data);
   }
 
-  GST_DEBUG_OBJECT (self, "Queued captions %u",
-      self->cur_data ? gst_queue_array_get_length (self->cur_data) : 0);
+  GST_DEBUG_OBJECT (self, "Queued captions %" G_GSIZE_FORMAT,
+      self->cur_data ? gst_vec_deque_get_length (self->cur_data) : 0);
 
   ret = GST_VIDEO_DECODER_CLASS (parent_class)->handle_frame (decoder, frame);
 
   if (self->cur_data)
-    gst_queue_array_clear (self->cur_data);
+    gst_vec_deque_clear (self->cur_data);
 
   return ret;
 }
@@ -329,12 +327,12 @@ gst_h264_cc_extractor_start_picture (GstH264Decoder * decoder,
 {
   GstH264CCExtractor *self = GST_H264_CC_EXTRACTOR (decoder);
   GstH264Picture *target_pic = picture;
-  GstQueueArray *pic_data;
+  GstVecDeque *pic_data;
 
   GST_LOG_OBJECT (self, "Start %s field picture", picture->second_field ?
       "second" : "first");
 
-  if (!self->cur_data || !gst_queue_array_get_length (self->cur_data))
+  if (!self->cur_data || !gst_vec_deque_get_length (self->cur_data))
     return GST_FLOW_OK;
 
   /* Baseclass will output only the first field's codec frame.
@@ -349,20 +347,20 @@ gst_h264_cc_extractor_start_picture (GstH264Decoder * decoder,
 
   pic_data = gst_h264_picture_get_user_data (target_pic);
   if (!pic_data) {
-    GST_DEBUG_OBJECT (self, "Creating new picture data, caption size: %u",
-        gst_queue_array_get_length (self->cur_data));
+    GST_DEBUG_OBJECT (self, "Creating new picture data, caption size: %"
+        G_GSIZE_FORMAT, gst_vec_deque_get_length (self->cur_data));
     gst_h264_picture_set_user_data (target_pic,
-        g_steal_pointer (&self->cur_data),
-        (GDestroyNotify) gst_queue_array_free);
+        g_steal_pointer (&self->cur_data), (GDestroyNotify) gst_vec_deque_free);
   } else {
     gpointer caption_data;
 
-    GST_DEBUG_OBJECT (self, "Appending %u caption buffers, prev size: %u",
-        gst_queue_array_get_length (self->cur_data),
-        gst_queue_array_get_length (pic_data));
+    GST_DEBUG_OBJECT (self, "Appending %" G_GSIZE_FORMAT
+        " caption buffers, prev size: %" G_GSIZE_FORMAT,
+        gst_vec_deque_get_length (self->cur_data),
+        gst_vec_deque_get_length (pic_data));
 
-    while ((caption_data = gst_queue_array_pop_head_struct (self->cur_data)))
-      gst_queue_array_push_tail_struct (pic_data, caption_data);
+    while ((caption_data = gst_vec_deque_pop_head_struct (self->cur_data)))
+      gst_vec_deque_push_tail_struct (pic_data, caption_data);
   }
 
   return GST_FLOW_OK;
@@ -386,7 +384,7 @@ gst_h264_cc_extractor_output_picture (GstH264Decoder * decoder,
   gint fps_d = 1;
   gboolean updated = FALSE;
   GstCodecPicture *codec_pic = GST_CODEC_PICTURE (picture);
-  GstQueueArray *pic_data;
+  GstVecDeque *pic_data;
   CaptionData *caption_data = NULL;
   GstBuffer *front_buf = NULL;
   GstClockTime pts, dur;
@@ -396,8 +394,8 @@ gst_h264_cc_extractor_output_picture (GstH264Decoder * decoder,
 
   /* Move caption buffer to our temporary storage */
   if (pic_data) {
-    while ((caption_data = gst_queue_array_pop_head_struct (pic_data)))
-      gst_queue_array_push_tail_struct (self->out_data, caption_data);
+    while ((caption_data = gst_vec_deque_pop_head_struct (pic_data)))
+      gst_vec_deque_push_tail_struct (self->out_data, caption_data);
   }
 
   fps_n = decoder->input_state->info.fps_n;
@@ -414,11 +412,11 @@ gst_h264_cc_extractor_output_picture (GstH264Decoder * decoder,
     self->fps_d = fps_d;
   }
 
-  GST_DEBUG_OBJECT (self, "picture is holding %u caption buffers",
-      gst_queue_array_get_length (self->out_data));
+  GST_DEBUG_OBJECT (self, "picture is holding %" G_GSIZE_FORMAT
+      " caption buffers", gst_vec_deque_get_length (self->out_data));
 
-  if (gst_queue_array_get_length (self->out_data)) {
-    caption_data = gst_queue_array_pop_head_struct (self->out_data);
+  if (gst_vec_deque_get_length (self->out_data)) {
+    caption_data = gst_vec_deque_pop_head_struct (self->out_data);
     front_buf = caption_data->buffer;
     if (caption_data->caption_type != self->caption_type) {
       GST_DEBUG_OBJECT (self, "Caption type changed, need new caps");
@@ -449,7 +447,7 @@ gst_h264_cc_extractor_output_picture (GstH264Decoder * decoder,
   ret = gst_video_decoder_finish_frame (videodec, frame);
 
   /* Drain other caption data */
-  while ((caption_data = gst_queue_array_pop_head_struct (self->out_data))) {
+  while ((caption_data = gst_vec_deque_pop_head_struct (self->out_data))) {
     if (ret == GST_FLOW_OK)
       ret = gst_pad_push (videodec->srcpad, caption_data->buffer);
     else
