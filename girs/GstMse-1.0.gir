@@ -563,7 +563,7 @@ Ready State.
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.c">The number of video tracks in the Media Source</doc>
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="position" version="1.24" transfer-ownership="none" getter="get_position" default-value="18446744073709551615">
+      <property name="position" version="1.24" transfer-ownership="none" getter="get_position" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.c">The playback position as a #GstClockTime
 
 [Specification](https://html.spec.whatwg.org/multipage/media.html#current-playback-position)</doc>
@@ -682,7 +682,7 @@ the track buffers for playback purposes.
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">#GstSourceBuffer instance</doc>
             <type name="SourceBuffer" c:type="GstSourceBuffer*"/>
           </instance-parameter>
-          <parameter name="buf" transfer-ownership="full">
+          <parameter name="buf" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">The media data to append</doc>
             <type name="Gst.Buffer" c:type="GstBuffer*"/>
           </parameter>
