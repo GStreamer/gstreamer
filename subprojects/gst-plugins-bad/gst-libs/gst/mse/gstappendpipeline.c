@@ -683,6 +683,9 @@ static gboolean
 background_task_start (BackgroundTask * task)
 {
   gst_bus_set_flushing (task->bus, FALSE);
+  gchar *name = g_strdup_printf ("%s:bg", GST_OBJECT_NAME (task->pipeline));
+  g_object_set (task->task, "name", name, NULL);
+  g_clear_pointer (&name, g_free);
   return gst_task_start (task->task);
 }
 
