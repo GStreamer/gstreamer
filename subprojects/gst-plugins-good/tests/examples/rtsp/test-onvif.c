@@ -52,7 +52,7 @@ setup_backchannel_shoveler (GstElement * rtspsrc, GstCaps * caps)
     backpipe =
         gst_parse_launch
         ("audiotestsrc is-live=true wave=red-noise ! capsfilter name=ratefilter ! "
-        "rtppcmupay ! appsink name=out", &error);
+        "mulawenc ! rtppcmupay ! appsink name=out", &error);
   } else if (g_str_equal (encoding, "MPEG4-GENERIC")) {
     backpipe =
         gst_parse_launch
