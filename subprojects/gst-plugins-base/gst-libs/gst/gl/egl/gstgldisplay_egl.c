@@ -256,6 +256,10 @@ default_display:
  *
  * Create a new #GstGLDisplayEGL using the default EGL_DEFAULT_DISPLAY.
  *
+ * The returned #GstGLDisplayEGL will by default free all EGL resources when
+ * finalized. See gst_gl_display_egl_set_foreign() for details on if you need
+ * the EGLDisplay to remain alive.
+ *
  * Returns: (transfer full) (nullable): a new #GstGLDisplayEGL or %NULL
  */
 GstGLDisplayEGL *
@@ -318,7 +322,9 @@ gst_gl_display_egl_new_surfaceless (void)
  * gst_gl_display_egl_new_with_display:
  * @display: an existing and connected EGLDisplay
  *
- * Creates a new display connection from a EGLDisplay.
+ * Creates a new display connection from a EGLDisplay. The display will be
+ * marked as foreign and freeing some EGL resources must be completed by the
+ * application.  See gst_gl_display_egl_set_foreign() for more details.
  *
  * Returns: (transfer full): a new #GstGLDisplayEGL
  *
@@ -358,6 +364,11 @@ _ref_if_set (gpointer data, gpointer user_data)
  *
  * This function will return the same value for multiple calls with the same
  * @display.
+ *
+ * The returned #GstGLDisplayEGL will *not* be marked as foreign and will free
+ * some display global EGL resources on finalization. If an external API/user
+ * will be also handling the lifetime of the `EGLDisplay`, you should mark the
+ * returned #GstGLDisplayEGL as foreign by calling gst_gl_display_egl_set_foreign().
  *
  * Returns: (transfer full) (nullable): a new #GstGLDisplayEGL
  *
@@ -413,6 +424,39 @@ gst_gl_display_egl_from_gl_display (GstGLDisplay * display)
       gst_object_ref (ret), (GDestroyNotify) gst_object_unref);
 
   return ret;
+}
+
+/**
+ * gst_gl_display_egl_set_foreign:
+ * @display_egl: a #GstGLDisplayEGL
+ * @foreign: whether @display_egl should be marked as containing a foreign
+ *           `EGLDisplay`
+ *
+ * Configure whether or not this EGL display is foreign and is managed by an
+ * external application/library.
+ *
+ * A display marked as foreign will not have display global resources freed when
+ * this display is finalized. As such, any external API using the same
+ * `EGLDisplay` must keep the `EGLDisplay` alive while GStreamer is using any
+ * EGL or GL resources associated with that `EGLDisplay`.  The reverse is also
+ * true and a foreign #GstGLDisplayEGL must not be used after the associated
+ * `EGLDisplay` has been destroyed externally with `eglTerminate()`.
+ *
+ * A non-foreign #GstGLDisplayEGL will destroy the associated `EGLDisplay` on
+ * finalization. This can also be useful when a user would like GStreamer to
+ * assume ownership of the `EGLDisplay` after calling e.g.
+ * gst_gl_display_egl_new_with_egl_display().
+ *
+ * Since: 1.26
+ */
+void
+gst_gl_display_egl_set_foreign (GstGLDisplayEGL * display_egl, gboolean foreign)
+{
+  g_return_if_fail (GST_IS_GL_DISPLAY_EGL (display_egl));
+
+  GST_OBJECT_LOCK (display_egl);
+  display_egl->foreign_display = foreign;
+  GST_OBJECT_UNLOCK (display_egl);
 }
 
 static guintptr
