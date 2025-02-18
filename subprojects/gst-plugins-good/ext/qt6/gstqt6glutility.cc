@@ -102,12 +102,18 @@ gst_qml6_get_gl_display (gboolean sink)
   if (QString::fromUtf8 ("wayland") == app->platformName()
         || QString::fromUtf8 ("wayland-egl") == app->platformName()){
     struct wl_display * wayland_display;
+    GstGLDisplayEGL *display_egl;
     QPlatformNativeInterface *native =
         QGuiApplication::platformNativeInterface();
     wayland_display = (struct wl_display *)
         native->nativeResourceForWindow("display", NULL);
     display = (GstGLDisplay *)
         gst_gl_display_wayland_new_with_display (wayland_display);
+
+    display_egl = gst_gl_display_egl_from_gl_display (display);
+    if (display_egl)
+      gst_gl_display_egl_set_foreign (display_egl, TRUE);
+    gst_clear_object (&display_egl);
   }
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL && GST_GL_HAVE_WINDOW_ANDROID
@@ -144,8 +150,11 @@ gst_qml6_get_gl_display (gboolean sink)
         QGuiApplication::platformNativeInterface();
     EGLDisplay egl_display = (EGLDisplay)
         native->nativeResourceForWindow("egldisplay", NULL);
-    if (egl_display != EGL_NO_DISPLAY)
-      display = (GstGLDisplay *) gst_gl_display_egl_new_with_egl_display (egl_display);
+    if (egl_display != EGL_NO_DISPLAY) {
+      GstGLDisplayEGL *display_egl = gst_gl_display_egl_new_with_egl_display (egl_display);
+      gst_gl_display_egl_set_foreign (display_egl, TRUE);
+      display = (GstGLDisplay *) display_egl;
+    }
 #else
     EGLDisplay egl_display = (EGLDisplay) gst_gl_display_egl_get_from_native (GST_GL_DISPLAY_TYPE_ANY, 0);
     display = (GstGLDisplay *) gst_gl_display_egl_new_with_egl_display (egl_display);
