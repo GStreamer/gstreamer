@@ -92,10 +92,6 @@ typedef struct
   gpointer user_data;
 } Callbacks;
 
-/**
- * GstSourceBuffer:
- * Since: 1.24
- */
 typedef struct
 {
   GstSourceBuffer *parent;
@@ -130,6 +126,10 @@ typedef struct
   gboolean end_buffered;
 } IsRangeBufferedAccumulator;
 
+/**
+ * GstSourceBuffer:
+ * Since: 1.24
+ */
 struct _GstSourceBuffer
 {
   GstObject parent_instance;
