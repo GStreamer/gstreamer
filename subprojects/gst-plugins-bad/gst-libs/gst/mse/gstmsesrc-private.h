@@ -44,9 +44,6 @@ void gst_mse_src_emit_streams (GstMseSrc * self, GstMediaSourceTrack ** tracks,
     gsize n_tracks);
 
 GST_MSE_PRIVATE
-void gst_mse_src_update_ready_state (GstMseSrc * self);
-
-GST_MSE_PRIVATE
 void gst_mse_src_attach (GstMseSrc * self, GstMediaSource * media_source);
 
 GST_MSE_PRIVATE
