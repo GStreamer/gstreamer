@@ -708,6 +708,10 @@ add_track_feed (GstMediaSourceTrack * track,
   GstTask *task = gst_task_new ((GstTaskFunction) track_feed_task, feed, NULL);
   g_rec_mutex_init (&feed->lock);
   gst_task_set_lock (task, &feed->lock);
+  const gchar *track_id = gst_media_source_track_get_id (track);
+  gchar *name = g_strdup_printf ("%s:%s", GST_OBJECT_NAME (self), track_id);
+  g_object_set (task, "name", name, NULL);
+  g_clear_pointer (&name, g_free);
   feed->task = task;
   feed->buffer = track_buffer;
   feed->track = gst_object_ref (track);
