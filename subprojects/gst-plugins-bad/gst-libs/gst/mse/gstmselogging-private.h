@@ -31,3 +31,6 @@ GST_DEBUG_CATEGORY_EXTERN (gst_mse_debug);
 
 G_GNUC_INTERNAL
 void gst_mse_init_logging (void);
+
+G_GNUC_INTERNAL
+const gchar * gst_mse_enum_value_nick (GType enum_type, gint mse_enum_value);
