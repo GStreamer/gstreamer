@@ -333,16 +333,8 @@ gst_media_source_track_buffer_get_storage_size (GstMediaSourceTrackBuffer *
 }
 
 GstIterator *
-gst_media_source_track_buffer_iter_samples (GstMediaSourceTrackBuffer * self,
-    GstClockTime start_dts, GstSample * start_sample)
+gst_media_source_track_buffer_iter_samples (GstMediaSourceTrackBuffer * self)
 {
-  /* *INDENT-OFF* */
-  return gst_media_source_sample_map_iter_samples_by_dts (
-      self->samples,
-      &self->new_data_mutex,
-      &self->master_cookie,
-      start_dts,
-      start_sample
-  );
-  /* *INDENT-ON* */
+  return gst_media_source_sample_map_iter_samples_by_dts (self->samples,
+      &self->new_data_mutex, &self->master_cookie);
 }

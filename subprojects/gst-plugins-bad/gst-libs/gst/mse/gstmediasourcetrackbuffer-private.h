@@ -87,7 +87,6 @@ gsize gst_media_source_track_buffer_get_storage_size (
 
 GST_MSE_PRIVATE
 GstIterator * gst_media_source_track_buffer_iter_samples (
-    GstMediaSourceTrackBuffer * buffer, GstClockTime start_dts,
-    GstSample * start_sample);
+    GstMediaSourceTrackBuffer * self);
 
 G_END_DECLS
