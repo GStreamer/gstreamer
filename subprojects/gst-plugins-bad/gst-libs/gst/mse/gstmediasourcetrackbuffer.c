@@ -188,16 +188,13 @@ gst_media_source_track_buffer_is_eos (GstMediaSourceTrackBuffer * self)
   return is_eos (self);
 }
 
-gboolean
-gst_media_source_track_buffer_await_eos_until (GstMediaSourceTrackBuffer * self,
-    gint64 deadline)
+void
+gst_media_source_track_buffer_await_new_data_until (GstMediaSourceTrackBuffer *
+    self, gint64 deadline)
 {
   NEW_DATA_LOCK (self);
-  while (!is_eos (self) && NEW_DATA_WAIT_UNTIL (self, deadline)) {
-    /* wait */
-  }
+  NEW_DATA_WAIT_UNTIL (self, deadline);
   NEW_DATA_UNLOCK (self);
-  return is_eos (self);
 }
 
 gint
