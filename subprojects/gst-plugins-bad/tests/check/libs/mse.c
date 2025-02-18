@@ -684,7 +684,7 @@ GST_START_TEST (test_track_buffer_discontinuous_span)
 
   GstClockTime a_start = 0;
   GstClockTime a_duration = GST_SECOND;
-  GstClockTime b_start = a_start + a_duration + GST_SECOND;
+  GstClockTime b_start = a_start + (a_duration * 3) + 1;
   GstClockTime b_duration = a_duration;
   GstSample *a = new_empty_sample_with_timing (a_start, a_start, a_duration);
   GstSample *b = new_empty_sample_with_timing (b_start, b_start, b_duration);

@@ -217,6 +217,7 @@ typedef struct
 {
   GArray *ranges;
   GstMediaSourceRange current_range;
+  GstClockTime max_duration;
 } GetRangesAccumulator;
 
 static gboolean
@@ -228,9 +229,23 @@ get_ranges_fold (const GValue * item, GetRangesAccumulator * acc,
   GstClockTime start = GST_BUFFER_PTS (buffer);
   GstClockTime end = start + GST_BUFFER_DURATION (buffer);
 
+  if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
+    acc->max_duration = MAX (acc->max_duration, GST_BUFFER_DURATION (buffer));
+  }
+
   GstMediaSourceRange *range = &acc->current_range;
 
-  if (range->end == 0 || start <= (range->end + (GST_SECOND / 100))) {
+  if (!GST_CLOCK_TIME_IS_VALID (acc->current_range.start)) {
+    acc->current_range.start = start;
+  }
+  if (!GST_CLOCK_TIME_IS_VALID (acc->current_range.end)) {
+    acc->current_range.end = end;
+  }
+
+  GstClockTime gap_tolerance = MAX (GST_SECOND / 10, acc->max_duration * 2);
+  GstClockTime gap = MAX (0, GST_CLOCK_DIFF (range->end, start));
+
+  if (range->end == 0 || gap <= gap_tolerance) {
     range->end = end;
     return TRUE;
   }
@@ -247,24 +262,34 @@ gst_media_source_track_buffer_get_ranges (GstMediaSourceTrackBuffer * self)
 {
   GetRangesAccumulator acc = {
     .ranges = g_array_new_ranges (),
-    .current_range = {.start = 0,.end = 0},
+    .max_duration = 0,
+    .current_range = {.start = GST_CLOCK_TIME_NONE,.end = GST_CLOCK_TIME_NONE},
   };
 
   /* *INDENT-OFF* */
   GstIterator *iter = gst_media_source_sample_map_iter_samples_by_pts (
       self->samples,
       &self->new_data_mutex,
-      &self->master_cookie,
-      0,
-      NULL
+      &self->master_cookie
   );
   /* *INDENT-ON* */
   while (gst_iterator_fold (iter, (GstIteratorFoldFunction) get_ranges_fold,
           (GValue *) & acc, NULL) == GST_ITERATOR_RESYNC) {
     gst_iterator_resync (iter);
+    g_clear_pointer (&acc.ranges, g_array_unref);
+    acc.ranges = g_array_new_ranges ();
+    acc.max_duration = 0;
+    acc.current_range.start = GST_CLOCK_TIME_NONE;
+    acc.current_range.end = GST_CLOCK_TIME_NONE;
   }
   gst_iterator_free (iter);
 
+  if (!GST_CLOCK_TIME_IS_VALID (acc.current_range.start)) {
+    acc.current_range.start = 0;
+  }
+  if (!GST_CLOCK_TIME_IS_VALID (acc.current_range.end)) {
+    acc.current_range.end = 0;
+  }
   if (acc.current_range.end > 0) {
     g_array_append_val (acc.ranges, acc.current_range);
   }
