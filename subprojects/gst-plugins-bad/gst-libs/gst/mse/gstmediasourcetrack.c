@@ -346,7 +346,7 @@ gst_media_source_track_push (GstMediaSourceTrack * self, GstSample * sample)
 
   gboolean was_empty = gst_media_source_track_is_empty (self);
 
-  GstDataQueueItem *item = wrap_sample (sample);
+  GstDataQueueItem *item = wrap_sample (gst_sample_ref (sample));
 
   gboolean result = gst_data_queue_push (self->samples, item);
 
