@@ -77,6 +77,7 @@
 #include "gstappendpipeline-private.h"
 #include "gstmediasource.h"
 #include "gstmediasource-private.h"
+#include "gstmediasourcesamplemap-private.h"
 #include "gstmediasourcetrack-private.h"
 #include "gstmediasourcetrackbuffer-private.h"
 #include "gstsourcebufferlist-private.h"
@@ -95,6 +96,14 @@ typedef struct
 typedef struct
 {
   GstSourceBuffer *parent;
+  GstTask *task;
+  GRecMutex lock;
+  gboolean cancelled;
+} AppendToBufferTask;
+
+typedef struct
+{
+  GWeakRef parent;
 
   GstMediaSourceTrack *track;
   GstMediaSourceTrackBuffer *buffer;
@@ -107,9 +116,9 @@ typedef struct
 
 typedef struct
 {
-  gsize n_samples;
-  GstSample *current_sample;
-  GstClockTime current_dts;
+  GstSourceBuffer *parent;
+  GHashTable *processed_samples;
+  gboolean push_failed;
 } TrackFeedAccumulator;
 
 typedef struct
@@ -145,14 +154,14 @@ struct _GstSourceBuffer
   gsize size_limit;
   gsize size;
   GstBuffer *pending_data;
-  GstTask *append_to_buffer_task;
-  GRecMutex append_to_buffer_lock;
-  GstClockTime seek_time;
+  GCond pending_data_cond;
+  AppendToBufferTask *append_to_buffer_task;
   GstAppendPipeline *append_pipeline;
   GstMseEventQueue *event_queue;
 
+  GMutex tracks_lock;
+  GstClockTime seek_time;
   gboolean processed_init_segment;
-
   GHashTable *track_buffers;
   GHashTable *track_feeds;
 
@@ -203,30 +212,35 @@ static void call_received_init_segment (GstSourceBuffer * self);
 static void call_duration_changed (GstSourceBuffer * self);
 static void call_active_state_changed (GstSourceBuffer * self);
 
-static inline gboolean is_removed (GstSourceBuffer * self);
-static void reset_parser_state (GstSourceBuffer * self);
-static void append_error (GstSourceBuffer * self);
+static GArray *get_buffered_unlocked (GstSourceBuffer * self);
+static inline gboolean is_removed_unlocked (GstSourceBuffer * self);
+static void reset_parser_state_unlocked (GstSourceBuffer * self);
+static void append_error_unlocked (GstSourceBuffer * self);
 
-static void seek_track_buffer (GstMediaSourceTrack * track,
+static void seek_track_buffer_unlocked (GstMediaSourceTrack * track,
     GstMediaSourceTrackBuffer * buffer, GstSourceBuffer * self);
 static void dispatch_event (SourceBufferEventItem * item, GstSourceBuffer *
     self);
-static void schedule_event (GstSourceBuffer * self, SourceBufferEvent event);
-static void append_to_buffer_task (GstSourceBuffer * self);
+static void schedule_event_unlocked (GstSourceBuffer * self,
+    SourceBufferEvent event);
+static void append_to_buffer_task_func (AppendToBufferTask * task);
+static void append_to_buffer_task_start (AppendToBufferTask * task);
+static void append_to_buffer_task_stop (AppendToBufferTask * task);
+static AppendToBufferTask *append_to_buffer_task_new (GstSourceBuffer * parent);
+static void append_to_buffer_task_free (AppendToBufferTask * task);
 static void track_feed_task (TrackFeedTask * feed);
 static void clear_track_feed (TrackFeedTask * feed);
 static void stop_track_feed (TrackFeedTask * feed);
 static void start_track_feed (TrackFeedTask * feed);
 static void reset_track_feed (TrackFeedTask * feed);
-static TrackFeedTask *get_track_feed (GstSourceBuffer * self,
+static TrackFeedTask *get_track_feed_unlocked (GstSourceBuffer * self,
     GstMediaSourceTrack * track);
-static GstMediaSourceTrackBuffer *get_track_buffer (GstSourceBuffer * self,
-    GstMediaSourceTrack * track);
-static void add_track_feed (GstMediaSourceTrack * track,
+static GstMediaSourceTrackBuffer *get_track_buffer_unlocked (GstSourceBuffer *
+    self, GstMediaSourceTrack * track);
+static void add_track_feed_unlocked (GstMediaSourceTrack * track,
     GstMediaSourceTrackBuffer * track_buffer, GstSourceBuffer * self);
-static void add_track_buffer (GstMediaSourceTrack * track, GstSourceBuffer *
-    self);
-static void update_msesrc_ready_state (GstSourceBuffer * self);
+static void add_track_buffer_unlocked (GstMediaSourceTrack * track,
+    GstSourceBuffer * self);
 
 static void on_duration_changed (GstAppendPipeline * pipeline,
     gpointer user_data);
@@ -238,38 +252,41 @@ static void on_new_sample (GstAppendPipeline * pipeline,
 static void on_received_init_segment (GstAppendPipeline * pipeline,
     gpointer user_data);
 
+#define TRACKS_LOCK(b)   g_mutex_lock(&(b)->tracks_lock)
+#define TRACKS_UNLOCK(b) g_mutex_unlock(&(b)->tracks_lock)
+
+static inline GstMediaSource *
+get_media_source_unlocked (GstSourceBuffer * self)
+{
+  GstObject *parent = GST_OBJECT_PARENT (self);
+  if (parent == NULL) {
+    return NULL;
+  }
+  return GST_MEDIA_SOURCE (gst_object_ref (parent));
+}
+
 static inline GstMediaSource *
 get_media_source (GstSourceBuffer * self)
 {
   return GST_MEDIA_SOURCE (gst_object_get_parent (GST_OBJECT (self)));
 }
 
-static GstMseSrc *
-get_msesrc (GstSourceBuffer * self)
-{
-  GstMediaSource *media_source = get_media_source (self);
-  if (media_source == NULL) {
-    return NULL;
-  }
-  return gst_media_source_get_source_element (media_source);
-}
-
 static void
-clear_pending_data (GstSourceBuffer * self)
+clear_pending_data_unlocked (GstSourceBuffer * self)
 {
   gst_clear_buffer (&self->pending_data);
 }
 
 static GstBuffer *
-take_pending_data (GstSourceBuffer * self)
+take_pending_data_unlocked (GstSourceBuffer * self)
 {
   return g_steal_pointer (&self->pending_data);
 }
 
 static void
-set_pending_data (GstSourceBuffer * self, GstBuffer * buffer)
+set_pending_data_unlocked (GstSourceBuffer * self, GstBuffer * buffer)
 {
-  clear_pending_data (self);
+  clear_pending_data_unlocked (self);
   self->pending_data = buffer;
 }
 
@@ -293,9 +310,9 @@ gst_source_buffer_new (const gchar * content_type, GstObject * parent,
       ? GST_SOURCE_BUFFER_APPEND_MODE_SEQUENCE
       : GST_SOURCE_BUFFER_APPEND_MODE_SEGMENTS;
 
-  GstSourceBuffer *self = g_object_new (GST_TYPE_SOURCE_BUFFER,
-      "parent", parent, NULL);
+  GstSourceBuffer *self = g_object_new (GST_TYPE_SOURCE_BUFFER, NULL);
 
+  gst_object_set_parent (GST_OBJECT_CAST (self), parent);
   self->generate_timestamps = generate_timestamps;
   self->append_mode = append_mode;
   self->content_type = g_strdup (content_type);
@@ -344,20 +361,27 @@ gst_source_buffer_new_with_callbacks (const gchar * content_type,
 }
 
 static void
+gst_source_buffer_constructed (GObject * object)
+{
+  GstSourceBuffer *self = GST_SOURCE_BUFFER (object);
+
+  append_to_buffer_task_start (self->append_to_buffer_task);
+
+  G_OBJECT_CLASS (gst_source_buffer_parent_class)->constructed (object);
+}
+
+static void
 gst_source_buffer_dispose (GObject * object)
 {
   GstSourceBuffer *self = (GstSourceBuffer *) object;
 
-  if (self->append_to_buffer_task) {
-    gst_task_join (self->append_to_buffer_task);
-  }
-  gst_clear_object (&self->append_to_buffer_task);
+  g_clear_pointer (&self->append_to_buffer_task, append_to_buffer_task_free);
 
   gst_clear_object (&self->append_pipeline);
 
   g_hash_table_remove_all (self->track_feeds);
 
-  if (!is_removed (self)) {
+  if (!is_removed_unlocked (self)) {
     GstMediaSource *parent = get_media_source (self);
     gst_media_source_remove_source_buffer (parent, self, NULL);
     gst_object_unref (parent);
@@ -374,10 +398,10 @@ gst_source_buffer_finalize (GObject * object)
   GstSourceBuffer *self = (GstSourceBuffer *) object;
 
   g_clear_pointer (&self->content_type, g_free);
-  g_rec_mutex_clear (&self->append_to_buffer_lock);
 
   g_hash_table_unref (self->track_buffers);
   g_hash_table_unref (self->track_feeds);
+  g_mutex_clear (&self->tracks_lock);
 
   G_OBJECT_CLASS (gst_source_buffer_parent_class)->finalize (object);
 }
@@ -445,6 +469,7 @@ gst_source_buffer_class_init (GstSourceBufferClass * klass)
 {
   GObjectClass *oclass = G_OBJECT_CLASS (klass);
 
+  oclass->constructed = GST_DEBUG_FUNCPTR (gst_source_buffer_constructed);
   oclass->dispose = GST_DEBUG_FUNCPTR (gst_source_buffer_dispose);
   oclass->finalize = GST_DEBUG_FUNCPTR (gst_source_buffer_finalize);
   oclass->get_property = GST_DEBUG_FUNCPTR (gst_source_buffer_get_property);
@@ -644,9 +669,15 @@ static void
 on_duration_changed (GstAppendPipeline * pipeline, gpointer user_data)
 {
   GstSourceBuffer *self = GST_SOURCE_BUFFER (user_data);
-  if (is_removed (self)) {
+
+  GST_OBJECT_LOCK (self);
+  gboolean removed = is_removed_unlocked (self);
+  GST_OBJECT_UNLOCK (self);
+
+  if (removed) {
     return;
   }
+
   call_duration_changed (self);
 }
 
@@ -655,23 +686,28 @@ on_eos (GstAppendPipeline * pipeline, GstMediaSourceTrack * track,
     gpointer user_data)
 {
   GstSourceBuffer *self = GST_SOURCE_BUFFER (user_data);
+
   if (GST_IS_MEDIA_SOURCE_TRACK (track)) {
+    TRACKS_LOCK (self);
     GST_DEBUG_OBJECT (self, "got EOS event on %" GST_PTR_FORMAT, track);
-    GstMediaSourceTrackBuffer *buffer = get_track_buffer (self, track);
+    GstMediaSourceTrackBuffer *buffer = get_track_buffer_unlocked (self, track);
     gst_media_source_track_buffer_eos (buffer);
+    TRACKS_UNLOCK (self);
   }
-  update_msesrc_ready_state (self);
 }
 
 static void
 on_error (GstAppendPipeline * pipeline, gpointer user_data)
 {
   GstSourceBuffer *self = GST_SOURCE_BUFFER (user_data);
-  append_error (self);
+
+  GST_OBJECT_LOCK (self);
+  append_error_unlocked (self);
+  GST_OBJECT_UNLOCK (self);
 }
 
 static GstMediaSourceTrackBuffer *
-get_track_buffer (GstSourceBuffer * self, GstMediaSourceTrack * track)
+get_track_buffer_unlocked (GstSourceBuffer * self, GstMediaSourceTrack * track)
 {
   g_return_val_if_fail (g_hash_table_contains (self->track_buffers, track),
       NULL);
@@ -679,14 +715,14 @@ get_track_buffer (GstSourceBuffer * self, GstMediaSourceTrack * track)
 }
 
 static inline TrackFeedTask *
-get_track_feed (GstSourceBuffer * self, GstMediaSourceTrack * track)
+get_track_feed_unlocked (GstSourceBuffer * self, GstMediaSourceTrack * track)
 {
   g_return_val_if_fail (g_hash_table_contains (self->track_feeds, track), NULL);
   return g_hash_table_lookup (self->track_feeds, track);
 }
 
 static void
-add_track_buffer (GstMediaSourceTrack * track, GstSourceBuffer * self)
+add_track_buffer_unlocked (GstMediaSourceTrack * track, GstSourceBuffer * self)
 {
   const gchar *id = gst_media_source_track_get_id (track);
   if (g_hash_table_contains (self->track_buffers, track)) {
@@ -697,11 +733,11 @@ add_track_buffer (GstMediaSourceTrack * track, GstSourceBuffer * self)
   g_hash_table_insert (self->track_buffers, track, buf);
   GST_DEBUG_OBJECT (self, "added track buffer for track %s", id);
 
-  add_track_feed (track, buf, self);
+  add_track_feed_unlocked (track, buf, self);
 }
 
 static void
-add_track_feed (GstMediaSourceTrack * track,
+add_track_feed_unlocked (GstMediaSourceTrack * track,
     GstMediaSourceTrackBuffer * track_buffer, GstSourceBuffer * self)
 {
   TrackFeedTask *feed = g_new0 (TrackFeedTask, 1);
@@ -715,7 +751,7 @@ add_track_feed (GstMediaSourceTrack * track,
   feed->task = task;
   feed->buffer = track_buffer;
   feed->track = gst_object_ref (track);
-  feed->parent = self;
+  g_weak_ref_init (&feed->parent, self);
   feed->cancelled = FALSE;
   g_hash_table_insert (self->track_feeds, track, feed);
 }
@@ -726,6 +762,7 @@ clear_track_feed (TrackFeedTask * feed)
   gst_object_unref (feed->task);
   g_rec_mutex_clear (&feed->lock);
   gst_object_unref (feed->track);
+  g_weak_ref_clear (&feed->parent);
   g_free (feed);
 }
 
@@ -755,7 +792,7 @@ reset_track_feed (TrackFeedTask * feed)
 }
 
 static gboolean
-is_within_append_window (GstSourceBuffer * self, GstSample * sample)
+is_within_append_window_unlocked (GstSourceBuffer * self, GstSample * sample)
 {
   GstBuffer *buffer = gst_sample_get_buffer (sample);
   GstClockTime start = GST_BUFFER_PTS (buffer);
@@ -778,22 +815,25 @@ on_new_sample (GstAppendPipeline * pipeline, GstMediaSourceTrack * track,
 {
   GstSourceBuffer *self = GST_SOURCE_BUFFER (user_data);
 
-  g_return_if_fail (self->processed_init_segment);
+  gboolean processed_init_segment =
+      g_atomic_int_get (&self->processed_init_segment);
+  g_return_if_fail (processed_init_segment);
 
   GST_OBJECT_LOCK (self);
+  gboolean is_within_window = is_within_append_window_unlocked (self, sample);
+  GST_OBJECT_UNLOCK (self);
 
-  if (is_within_append_window (self, sample)) {
-    GstMediaSourceTrackBuffer *track_buffer = get_track_buffer (self, track);
+  TRACKS_LOCK (self);
+  if (is_within_window) {
+    GstMediaSourceTrackBuffer *track_buffer =
+        get_track_buffer_unlocked (self, track);
     GST_TRACE_OBJECT (self, "new sample on %s with %" GST_PTR_FORMAT,
         gst_media_source_track_get_id (track), gst_sample_get_buffer (sample));
     gst_media_source_track_buffer_add (track_buffer, sample);
-    TrackFeedTask *feed = get_track_feed (self, track);
+    TrackFeedTask *feed = get_track_feed_unlocked (self, track);
     start_track_feed (feed);
   }
-
-  GST_OBJECT_UNLOCK (self);
-
-  update_msesrc_ready_state (self);
+  TRACKS_UNLOCK (self);
 }
 
 static void
@@ -845,25 +885,24 @@ on_received_init_segment (GstAppendPipeline * pipeline, gpointer user_data)
   GST_DEBUG_OBJECT (self, "got init segment, have duration %" GST_TIME_FORMAT,
       GST_TIME_ARGS (gst_append_pipeline_get_duration (pipeline)));
 
-  GST_OBJECT_LOCK (self);
+  TRACKS_LOCK (self);
 
-  if (!self->processed_init_segment) {
+  if (g_atomic_int_compare_and_exchange (&self->processed_init_segment, FALSE,
+          TRUE)) {
     GST_DEBUG_OBJECT (self, "processing first init segment");
 
     GPtrArray *audio_tracks = gst_append_pipeline_get_audio_tracks (pipeline);
     GPtrArray *text_tracks = gst_append_pipeline_get_text_tracks (pipeline);
     GPtrArray *video_tracks = gst_append_pipeline_get_video_tracks (pipeline);
 
-    g_ptr_array_foreach (audio_tracks, (GFunc) add_track_buffer, self);
-    g_ptr_array_foreach (text_tracks, (GFunc) add_track_buffer, self);
-    g_ptr_array_foreach (video_tracks, (GFunc) add_track_buffer, self);
+    g_ptr_array_foreach (audio_tracks, (GFunc) add_track_buffer_unlocked, self);
+    g_ptr_array_foreach (text_tracks, (GFunc) add_track_buffer_unlocked, self);
+    g_ptr_array_foreach (video_tracks, (GFunc) add_track_buffer_unlocked, self);
   }
-
-  self->processed_init_segment = TRUE;
 
   update_track_buffer_modes (self);
 
-  GST_OBJECT_UNLOCK (self);
+  TRACKS_UNLOCK (self);
 
   call_received_init_segment (self);
   call_active_state_changed (self);
@@ -896,16 +935,15 @@ gst_source_buffer_init (GstSourceBuffer * self)
   self->size_limit = DEFAULT_BUFFER_SIZE;
   self->size = 0;
   self->pending_data = NULL;
+  g_cond_init (&self->pending_data_cond);
   self->processed_init_segment = FALSE;
   self->event_queue =
       gst_mse_event_queue_new ((GstMseEventQueueCallback) dispatch_event, self);
 
-  g_rec_mutex_init (&self->append_to_buffer_lock);
-  self->append_to_buffer_task = gst_task_new (
-      (GstTaskFunction) append_to_buffer_task, self, NULL);
-  gst_task_set_lock (self->append_to_buffer_task, &self->append_to_buffer_lock);
+  self->append_to_buffer_task = append_to_buffer_task_new (self);
   self->track_buffers = g_hash_table_new_full ((GHashFunc) track_buffer_hash,
       (GEqualFunc) track_buffer_equal, NULL, gst_object_unref);
+  g_mutex_init (&self->tracks_lock);
 
   self->track_feeds = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, (GDestroyNotify) clear_track_feed);
@@ -915,19 +953,17 @@ gst_source_buffer_init (GstSourceBuffer * self)
 }
 
 static inline gboolean
-is_removed (GstSourceBuffer * self)
+is_removed_unlocked (GstSourceBuffer * self)
 {
-  GstObject *parent = gst_object_get_parent (GST_OBJECT (self));
+  GstObject *parent = GST_OBJECT_PARENT (self);
   if (parent == NULL) {
     return TRUE;
   }
-  gst_object_unref (parent);
 
-  GstMediaSource *source = get_media_source (self);
+  GstMediaSource *source = GST_MEDIA_SOURCE (parent);
   GstSourceBufferList *buffers = gst_media_source_get_source_buffers (source);
   gboolean removed = !gst_source_buffer_list_contains (buffers, self);
 
-  gst_object_unref (source);
   gst_object_unref (buffers);
 
   return removed;
@@ -970,13 +1006,13 @@ clear_errored (GstSourceBuffer * self)
 }
 
 static inline gboolean
-is_ended (GstSourceBuffer * self)
+is_ended_unlocked (GstSourceBuffer * self)
 {
-  if (is_removed (self)) {
+  if (is_removed_unlocked (self)) {
     return TRUE;
   }
 
-  GstMediaSource *source = get_media_source (self);
+  GstMediaSource *source = get_media_source_unlocked (self);
   gboolean ended = gst_media_source_get_ready_state (source) ==
       GST_MEDIA_SOURCE_READY_STATE_ENDED;
 
@@ -986,10 +1022,10 @@ is_ended (GstSourceBuffer * self)
 }
 
 static void
-open_parent (GstSourceBuffer * self)
+open_parent_unlocked (GstSourceBuffer * self)
 {
-  g_return_if_fail (!is_removed (self));
-  GstMediaSource *source = get_media_source (self);
+  g_return_if_fail (!is_removed_unlocked (self));
+  GstMediaSource *source = get_media_source_unlocked (self);
   gst_media_source_open (source);
   gst_object_unref (source);
 }
@@ -1007,7 +1043,11 @@ GstSourceBufferAppendMode
 gst_source_buffer_get_append_mode (GstSourceBuffer * self)
 {
   g_return_val_if_fail (GST_IS_SOURCE_BUFFER (self), DEFAULT_APPEND_MODE);
-  return self->append_mode;
+  GST_OBJECT_LOCK (self);
+  GstSourceBufferAppendMode append_mode = self->append_mode;
+  GST_OBJECT_UNLOCK (self);
+
+  return append_mode;
 }
 
 /**
@@ -1033,18 +1073,20 @@ gst_source_buffer_set_append_mode (GstSourceBuffer * self,
 {
   g_return_val_if_fail (GST_IS_SOURCE_BUFFER (self), FALSE);
 
-  if (is_removed (self)) {
+  GST_OBJECT_LOCK (self);
+
+  if (is_removed_unlocked (self)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "buffer is removed");
-    return FALSE;
+    goto error;
   }
 
   if (is_updating (self)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "buffer is still updating");
-    return FALSE;
+    goto error;
   }
 
   if (self->generate_timestamps && mode ==
@@ -1052,16 +1094,24 @@ gst_source_buffer_set_append_mode (GstSourceBuffer * self,
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_TYPE,
         "cannot change to segments mode while generate timestamps is active");
-    return FALSE;
+    goto error;
   }
 
-  if (is_ended (self)) {
-    open_parent (self);
+  if (is_ended_unlocked (self)) {
+    open_parent_unlocked (self);
   }
 
   self->append_mode = mode;
+
+  GST_OBJECT_UNLOCK (self);
+
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_APPEND_MODE]);
+
   return TRUE;
+
+error:
+  GST_OBJECT_UNLOCK (self);
+  return FALSE;
 }
 
 /**
@@ -1080,7 +1130,12 @@ GstClockTime
 gst_source_buffer_get_append_window_start (GstSourceBuffer * self)
 {
   g_return_val_if_fail (GST_IS_SOURCE_BUFFER (self), GST_CLOCK_TIME_NONE);
-  return self->append_window_start;
+
+  GST_OBJECT_LOCK (self);
+  GstClockTime append_window_start = self->append_window_start;
+  GST_OBJECT_UNLOCK (self);
+
+  return append_window_start;
 }
 
 /**
@@ -1104,32 +1159,42 @@ gst_source_buffer_set_append_window_start (GstSourceBuffer * self,
 {
   g_return_val_if_fail (GST_IS_SOURCE_BUFFER (self), FALSE);
 
-  if (is_removed (self)) {
+  GST_OBJECT_LOCK (self);
+
+  if (is_removed_unlocked (self)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "append window start cannot be set on source buffer "
         "with no media source");
-    return FALSE;
+    goto error;
   }
 
   if (is_updating (self)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "append window start cannot be set on source buffer while updating");
-    return FALSE;
+    goto error;
   }
 
   if (!GST_CLOCK_TIME_IS_VALID (start) || start <= self->append_window_end) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_TYPE,
         "append window start must be between zero and append window end");
-    return FALSE;
+    goto error;
   }
 
   self->append_window_start = start;
+
+  GST_OBJECT_UNLOCK (self);
+
   g_object_notify_by_pspec (G_OBJECT (self),
       properties[PROP_APPEND_WINDOW_START]);
+
   return TRUE;
+
+error:
+  GST_OBJECT_UNLOCK (self);
+  return FALSE;
 }
 
 /**
@@ -1148,7 +1213,12 @@ GstClockTime
 gst_source_buffer_get_append_window_end (GstSourceBuffer * self)
 {
   g_return_val_if_fail (GST_IS_SOURCE_BUFFER (self), GST_CLOCK_TIME_NONE);
-  return self->append_window_end;
+
+  GST_OBJECT_LOCK (self);
+  GstClockTime append_window_end = self->append_window_end;
+  GST_OBJECT_UNLOCK (self);
+
+  return append_window_end;
 }
 
 /**
@@ -1172,32 +1242,42 @@ gst_source_buffer_set_append_window_end (GstSourceBuffer * self,
 {
   g_return_val_if_fail (GST_IS_SOURCE_BUFFER (self), FALSE);
 
-  if (is_removed (self)) {
+  GST_OBJECT_LOCK (self);
+
+  if (is_removed_unlocked (self)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "append window end cannot be set on source buffer "
         "with no media source");
-    return FALSE;
+    goto error;
   }
 
   if (is_updating (self)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "append window end cannot be set on source buffer while updating");
-    return FALSE;
+    goto error;
   }
 
   if (end <= self->append_window_start) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_TYPE,
         "append window end must be after append window start");
-    return FALSE;
+    goto error;
   }
 
   self->append_window_end = end;
+
+  GST_OBJECT_UNLOCK (self);
+
   g_object_notify_by_pspec (G_OBJECT (self),
       properties[PROP_APPEND_WINDOW_END]);
+
   return TRUE;
+
+error:
+  GST_OBJECT_UNLOCK (self);
+  return FALSE;
 }
 
 static gboolean
@@ -1274,6 +1354,16 @@ GArray *
 gst_source_buffer_get_buffered (GstSourceBuffer * self, GError ** error)
 {
   g_return_val_if_fail (GST_IS_SOURCE_BUFFER (self), NULL);
+
+  TRACKS_LOCK (self);
+  GArray *buffered = get_buffered_unlocked (self);
+  TRACKS_UNLOCK (self);
+  return buffered;
+}
+
+static GArray *
+get_buffered_unlocked (GstSourceBuffer * self)
+{
   GHashTableIter iter;
   GArray *buffered = NULL;
   g_hash_table_iter_init (&iter, self->track_buffers);
@@ -1296,6 +1386,7 @@ gst_source_buffer_get_buffered (GstSourceBuffer * self, GError ** error)
     g_array_unref (buffered);
     buffered = intersection;
   }
+
   if (buffered == NULL) {
     return g_array_new_ranges ();
   } else {
@@ -1349,23 +1440,28 @@ gst_source_buffer_change_content_type (GstSourceBuffer * self,
     return FALSE;
   }
 
-  if (is_removed (self)) {
+  GST_OBJECT_LOCK (self);
+
+  if (is_removed_unlocked (self)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "content type cannot be set on source buffer with no media source");
-    return FALSE;
+    goto error;
   }
 
   if (is_updating (self)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "content type cannot be set on source buffer that is updating");
-    return FALSE;
+    goto error;
   }
 
   g_set_error (error,
       GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_NOT_SUPPORTED,
       "content type cannot be changed");
+
+error:
+  GST_OBJECT_UNLOCK (self);
   return FALSE;
 }
 
@@ -1403,7 +1499,13 @@ gst_source_buffer_remove (GstSourceBuffer * self, GstClockTime start,
 GstClockTime
 gst_source_buffer_get_timestamp_offset (GstSourceBuffer * self)
 {
-  return self->timestamp_offset;
+  g_return_val_if_fail (GST_IS_SOURCE_BUFFER (self), FALSE);
+
+  GST_OBJECT_LOCK (self);
+  GstClockTime timestamp_offset = self->timestamp_offset;
+  GST_OBJECT_UNLOCK (self);
+
+  return timestamp_offset;
 }
 
 /**
@@ -1425,34 +1527,46 @@ gst_source_buffer_set_timestamp_offset (GstSourceBuffer * self, GstClockTime
     offset, GError ** error)
 {
   g_return_val_if_fail (GST_IS_SOURCE_BUFFER (self), FALSE);
-  if (is_removed (self)) {
+
+  GST_OBJECT_LOCK (self);
+
+  if (is_removed_unlocked (self)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "source buffer is removed");
-    return FALSE;
+    goto error;
   }
   if (is_updating (self)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "source buffer is still updating");
-    return FALSE;
+    goto error;
   }
-  if (is_ended (self)) {
-    GstMediaSource *parent = get_media_source (self);
+  if (is_ended_unlocked (self)) {
+    GstMediaSource *parent = get_media_source_unlocked (self);
     gst_media_source_open (parent);
     gst_clear_object (&parent);
   }
-  GST_OBJECT_LOCK (self);
+  TRACKS_LOCK (self);
   GHashTableIter iter;
   g_hash_table_iter_init (&iter, self->track_buffers);
   for (gpointer value; g_hash_table_iter_next (&iter, NULL, &value);) {
     GstMediaSourceTrackBuffer *buffer = value;
     gst_media_source_track_buffer_set_group_start (buffer, offset);
   }
+  TRACKS_UNLOCK (self);
+
   self->timestamp_offset = offset;
+
   GST_OBJECT_UNLOCK (self);
+
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_TIMESTAMP_OFFSET]);
+
   return TRUE;
+
+error:
+  GST_OBJECT_UNLOCK (self);
+  return FALSE;
 }
 
 /**
@@ -1485,24 +1599,22 @@ compute_total_size_unlocked (GstSourceBuffer * self)
 }
 
 static gboolean
-will_overflow (GstSourceBuffer * self, gsize bytes)
+will_overflow_unlocked (GstSourceBuffer * self, gsize bytes)
 {
-  GST_OBJECT_LOCK (self);
   gsize total = compute_total_size_unlocked (self);
-  GST_OBJECT_UNLOCK (self);
   return total + bytes > self->size_limit;
 }
 
 static void
-evict_coded_frames (GstSourceBuffer * self, gsize space_required,
+evict_coded_frames_unlocked (GstSourceBuffer * self, gsize space_required,
     gsize size_limit, GstClockTime position, GstClockTime duration)
 {
-  if (!will_overflow (self, space_required)) {
+  if (!will_overflow_unlocked (self, space_required)) {
     return;
   }
 
   if (!GST_CLOCK_TIME_IS_VALID (position)) {
-    GST_ERROR ("invalid position, cannot delete anything");
+    GST_ERROR_OBJECT (self, "invalid position, cannot delete anything");
     return;
   }
 
@@ -1513,7 +1625,6 @@ evict_coded_frames (GstSourceBuffer * self, gsize space_required,
   GST_DEBUG_OBJECT (self, "position=%" GST_TIMEP_FORMAT
       ", attempting removal from 0 to %" GST_TIMEP_FORMAT, &position, &max_dts);
 
-  GST_OBJECT_LOCK (self);
   GHashTableIter iter;
   g_hash_table_iter_init (&iter, self->track_buffers);
   for (gpointer value; g_hash_table_iter_next (&iter, NULL, &value);) {
@@ -1521,7 +1632,6 @@ evict_coded_frames (GstSourceBuffer * self, gsize space_required,
     gst_media_source_track_buffer_remove_range (buffer, 0, max_dts);
   }
   self->size = compute_total_size_unlocked (self);
-  GST_OBJECT_UNLOCK (self);
 
   GST_DEBUG_OBJECT (self, "capacity=%" G_GSIZE_FORMAT "/%" G_GSIZE_FORMAT
       "(%" G_GSIZE_FORMAT "%%)", self->size, self->size_limit,
@@ -1529,9 +1639,9 @@ evict_coded_frames (GstSourceBuffer * self, gsize space_required,
 }
 
 static void
-reset_parser_state (GstSourceBuffer * self)
+reset_parser_state_unlocked (GstSourceBuffer * self)
 {
-  clear_pending_data (self);
+  clear_pending_data_unlocked (self);
   if (gst_append_pipeline_reset (self->append_pipeline)) {
     clear_errored (self);
   } else {
@@ -1540,59 +1650,118 @@ reset_parser_state (GstSourceBuffer * self)
 }
 
 static void
-append_error (GstSourceBuffer * self)
+append_error_unlocked (GstSourceBuffer * self)
 {
-  gst_task_stop (self->append_to_buffer_task);
-  reset_parser_state (self);
+  reset_parser_state_unlocked (self);
   clear_updating (self);
 
-  if (is_removed (self)) {
+  if (is_removed_unlocked (self)) {
     return;
   }
 
-  schedule_event (self, ON_ERROR);
-  schedule_event (self, ON_UPDATE_END);
+  schedule_event_unlocked (self, ON_ERROR);
+  schedule_event_unlocked (self, ON_UPDATE_END);
 
-  GstMediaSource *source = get_media_source (self);
+  GstMediaSource *source = get_media_source_unlocked (self);
   gst_media_source_end_of_stream (source, GST_MEDIA_SOURCE_EOS_ERROR_DECODE,
       NULL);
   gst_object_unref (source);
 }
 
 static void
-append_successful (GstSourceBuffer * self, gboolean ended)
+append_successful_unlocked (GstSourceBuffer * self, gboolean ended)
 {
-  gst_task_stop (self->append_to_buffer_task);
   clear_updating (self);
-  schedule_event (self, ON_UPDATE);
-  schedule_event (self, ON_UPDATE_END);
+  schedule_event_unlocked (self, ON_UPDATE);
+  schedule_event_unlocked (self, ON_UPDATE_END);
 }
 
 static gboolean
-encountered_bad_bytes (GstSourceBuffer * self)
+encountered_bad_bytes_unlocked (GstSourceBuffer * self)
 {
   return gst_append_pipeline_get_failed (self->append_pipeline);
 }
 
-static void
-append_to_buffer_task (GstSourceBuffer * self)
+static GstBuffer *
+await_pending_data_unlocked (GstSourceBuffer * self)
 {
-  if (is_removed (self)) {
-    append_successful (self, TRUE);
+  if (self->pending_data == NULL) {
+    guint64 deadline = g_get_monotonic_time () + G_TIME_SPAN_SECOND;
+    g_cond_wait_until (&self->pending_data_cond, GST_OBJECT_GET_LOCK (self),
+        deadline);
+  }
+  return take_pending_data_unlocked (self);
+}
+
+static AppendToBufferTask *
+append_to_buffer_task_new (GstSourceBuffer * parent)
+{
+  AppendToBufferTask *task = g_new0 (AppendToBufferTask, 1);
+  g_rec_mutex_init (&task->lock);
+  task->parent = parent;
+  task->task =
+      gst_task_new ((GstTaskFunction) append_to_buffer_task_func, task, NULL);
+  task->cancelled = FALSE;
+  gst_task_set_lock (task->task, &task->lock);
+  return task;
+}
+
+static void
+append_to_buffer_task_free (AppendToBufferTask * task)
+{
+  append_to_buffer_task_stop (task);
+  gst_task_join (task->task);
+  gst_clear_object (&task->task);
+  g_rec_mutex_clear (&task->lock);
+  task->parent = NULL;
+  g_free (task);
+}
+
+static void
+append_to_buffer_task_start (AppendToBufferTask * task)
+{
+  gchar *name = g_strdup_printf ("%s:append", GST_OBJECT_NAME (task->parent));
+  g_object_set (task->task, "name", name, NULL);
+  gst_task_start (task->task);
+  g_free (name);
+}
+
+static void
+append_to_buffer_task_stop (AppendToBufferTask * task)
+{
+  gst_task_stop (task->task);
+  g_atomic_int_set (&task->cancelled, TRUE);
+  g_cond_signal (&task->parent->pending_data_cond);
+}
+
+static void
+append_to_buffer_task_func (AppendToBufferTask * task)
+{
+  GstSourceBuffer *self = task->parent;
+  if (g_atomic_int_get (&task->cancelled)) {
+    GST_LOG_OBJECT (task->task, "task is done");
+    append_to_buffer_task_stop (task);
     return;
   }
 
-  if (encountered_bad_bytes (self)) {
-    append_error (self);
-    return;
+  GST_OBJECT_LOCK (self);
+
+  GstBuffer *pending_data = await_pending_data_unlocked (self);
+
+  if (is_removed_unlocked (self)) {
+    append_successful_unlocked (self, TRUE);
+    goto done;
   }
 
-  GstBuffer *pending_data = take_pending_data (self);
+  if (encountered_bad_bytes_unlocked (self)) {
+    append_error_unlocked (self);
+    goto done;
+  }
 
   if (!GST_IS_BUFFER (pending_data)) {
-    GST_LOG_OBJECT (self, "no pending data");
-    append_successful (self, is_ended (self));
-    return;
+    GST_TRACE_OBJECT (self, "no pending data");
+    append_successful_unlocked (self, is_ended_unlocked (self));
+    goto done;
   }
 
   GstFlowReturn result = gst_append_pipeline_append (self->append_pipeline,
@@ -1600,68 +1769,99 @@ append_to_buffer_task (GstSourceBuffer * self)
 
   if (result != GST_FLOW_OK) {
     GST_ERROR_OBJECT (self, "failed to append: %s", gst_flow_get_name (result));
-    append_error (self);
-    return;
+    append_error_unlocked (self);
+    goto done;
   }
 
-  append_successful (self, is_ended (self));
+  append_successful_unlocked (self, is_ended_unlocked (self));
+
+done:
+  GST_OBJECT_UNLOCK (self);
 }
 
 static gboolean
 track_feed_fold (const GValue * item, TrackFeedAccumulator * acc,
     TrackFeedTask * feed)
 {
-  GstSample *sample = gst_sample_ref (gst_value_get_sample (item));
-  GstClockTime dts = GST_BUFFER_DTS (gst_sample_get_buffer (sample));
-  acc->n_samples++;
-  acc->current_dts = dts;
-  gst_clear_sample (&acc->current_sample);
-  acc->current_sample = gst_sample_ref (sample);
-  if (gst_media_source_track_push (feed->track, sample)) {
-    return TRUE;
-  } else {
-    gst_sample_unref (sample);
+  if (g_atomic_int_get (&feed->cancelled)) {
     return FALSE;
   }
+  GstSourceBuffer *self = acc->parent;
+
+  GstMediaSourceCodedFrameGroup *group =
+      gst_value_get_media_source_coded_frame_group (item);
+  if (group == NULL) {
+    return FALSE;
+  }
+
+  for (GList * it = group->samples; it != NULL; it = g_list_next (it)) {
+    GstSample *sample = GST_SAMPLE (it->data);
+    if (!g_hash_table_add (acc->processed_samples, gst_sample_ref (sample))) {
+      continue;
+    }
+    if (!gst_media_source_track_push (feed->track, sample)) {
+      g_hash_table_remove (acc->processed_samples, sample);
+      GST_LOG_OBJECT (self, "%s: failed to push sample to track",
+          gst_media_source_track_get_id (feed->track));
+      acc->push_failed = TRUE;
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+static gint
+clip_to_seek_time_dts (const GValue * a, const GValue * b)
+{
+  GstMediaSourceCodedFrameGroup *group =
+      gst_value_get_media_source_coded_frame_group (a);
+  GstClockTime start_dts = g_value_get_uint64 (b);
+  return group != NULL && start_dts > group->end;
 }
 
 static void
 track_feed_task (TrackFeedTask * feed)
 {
-  GstSourceBuffer *self = feed->parent;
+  GstSourceBuffer *self = g_weak_ref_get (&feed->parent);
+  if (self == NULL) {
+    gst_task_stop (feed->task);
+    return;
+  }
   GstMediaSourceTrack *track = feed->track;
   GstMediaSourceTrackBuffer *buffer = feed->buffer;
-  GstClockTime time = feed->parent->seek_time;
+  GstClockTime time = self->seek_time;
   const gchar *track_id = gst_media_source_track_get_id (track);
 
   GST_DEBUG_OBJECT (self, "%s: feed starting@%" GST_TIMEP_FORMAT, track_id,
       &time);
 
   TrackFeedAccumulator acc = {
-    .n_samples = 0,
-    .current_dts = time,
-    .current_sample = NULL,
+    .parent = self,
+    .processed_samples = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+        (GDestroyNotify) gst_sample_unref, NULL),
+    .push_failed = FALSE,
   };
+  GValue start_dts_value = G_VALUE_INIT;
+  g_value_init (&start_dts_value, G_TYPE_UINT64);
+  g_value_set_uint64 (&start_dts_value, time);
   while (TRUE) {
     gboolean eos = gst_media_source_track_buffer_is_eos (buffer);
-    GstIterator *it = gst_media_source_track_buffer_iter_samples (buffer,
-        acc.current_dts, acc.current_sample);
-    while (TRUE) {
-      GstIteratorResult fold_result = gst_iterator_fold (it,
-          (GstIteratorFoldFunction) track_feed_fold, (GValue *) & acc, feed);
-      if (fold_result != GST_ITERATOR_RESYNC) {
-        break;
-      }
-      if (g_atomic_int_get (&feed->cancelled)) {
-        break;
-      }
-      gst_iterator_resync (it);
+    GstIterator *it = gst_media_source_track_buffer_iter_samples (buffer);
+    it = gst_iterator_filter (it, (GCompareFunc) clip_to_seek_time_dts,
+        &start_dts_value);
+    gst_iterator_fold (it, (GstIteratorFoldFunction) track_feed_fold,
+        (GValue *) & acc, feed);
+    g_clear_pointer (&it, gst_iterator_free);
+
+    if (acc.push_failed) {
+      gst_task_stop (feed->task);
+      break;
     }
-    gst_iterator_free (it);
 
     if (eos) {
-      GST_DEBUG_OBJECT (self, "%s: enqueued all %" G_GSIZE_FORMAT " samples",
-          track_id, acc.n_samples);
+      GST_DEBUG_OBJECT (self, "%s: enqueued all %u samples", track_id,
+          g_hash_table_size (acc.processed_samples));
       gst_media_source_track_push_eos (track);
       GST_DEBUG_OBJECT (self, "%s: marked EOS", track_id);
       gst_task_stop (feed->task);
@@ -1674,13 +1874,14 @@ track_feed_task (TrackFeedTask * feed)
       break;
     }
 
-    GST_DEBUG_OBJECT (self, "%s: resume after %" G_GSIZE_FORMAT " samples",
-        track_id, acc.n_samples);
+    GST_TRACE_OBJECT (self, "%s: resume after %u samples",
+        track_id, g_hash_table_size (acc.processed_samples));
     gint64 deadline = g_get_monotonic_time () + G_TIME_SPAN_SECOND;
-    gst_media_source_track_buffer_await_eos_until (buffer, deadline);
+    gst_media_source_track_buffer_await_new_data_until (buffer, deadline);
   }
-
-  gst_clear_sample (&acc.current_sample);
+  g_clear_pointer (&acc.processed_samples, g_hash_table_unref);
+  g_value_unset (&start_dts_value);
+  gst_clear_object (&self);
 }
 
 static void
@@ -1690,10 +1891,10 @@ dispatch_event (SourceBufferEventItem * item, GstSourceBuffer * self)
 }
 
 static void
-schedule_event (GstSourceBuffer * self, SourceBufferEvent event)
+schedule_event_unlocked (GstSourceBuffer * self, SourceBufferEvent event)
 {
   g_return_if_fail (event < N_SIGNALS);
-  if (is_removed (self)) {
+  if (is_removed_unlocked (self)) {
     return;
   }
   SourceBufferEventItem item = {
@@ -1707,27 +1908,13 @@ schedule_event (GstSourceBuffer * self, SourceBufferEvent event)
 static void
 schedule_append_to_buffer_task (GstSourceBuffer * self)
 {
-  GstTask *task = self->append_to_buffer_task;
-  g_return_if_fail (GST_IS_TASK (task));
-  g_return_if_fail (gst_task_get_state (task) != GST_TASK_STARTED);
-  gst_task_start (task);
-}
-
-static void
-update_msesrc_ready_state (GstSourceBuffer * self)
-{
-  GstMseSrc *element = get_msesrc (self);
-  if (element == NULL) {
-    return;
-  }
-  gst_mse_src_update_ready_state (element);
-  gst_object_unref (element);
+  g_cond_signal (&self->pending_data_cond);
 }
 
 /**
  * gst_source_buffer_append_buffer:
  * @self: #GstSourceBuffer instance
- * @buf: (transfer full):The media data to append
+ * @buf: (transfer none):The media data to append
  * @error: (out) (optional) (nullable) (transfer full): the resulting error or `NULL`
  *
  * Schedules the bytes inside @buf to be processed by @self. When it is possible
@@ -1746,49 +1933,60 @@ gst_source_buffer_append_buffer (GstSourceBuffer * self, GstBuffer * buf,
   g_return_val_if_fail (GST_IS_SOURCE_BUFFER (self), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buf), FALSE);
 
-  if (is_removed (self) || is_updating (self)) {
+  GST_OBJECT_LOCK (self);
+  TRACKS_LOCK (self);
+
+  if (is_removed_unlocked (self) || is_updating (self)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "source buffer is removed or still updating");
-    return FALSE;
+    goto error;
   }
 
   if (is_errored (self)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "source buffer has encountered error");
-    return FALSE;
+    goto error;
   }
 
-  if (is_ended (self)) {
-    open_parent (self);
+  if (is_ended_unlocked (self)) {
+    open_parent_unlocked (self);
   }
 
-  GstMediaSource *source = get_media_source (self);
+  GstMediaSource *source = get_media_source_unlocked (self);
   gsize buffer_size = gst_buffer_get_size (buf);
   GstClockTime position = gst_media_source_get_position (source);
   GstClockTime duration = gst_media_source_get_duration (source);
 
   gst_object_unref (source);
 
-  evict_coded_frames (self, buffer_size, self->size_limit, position, duration);
+  evict_coded_frames_unlocked (self, buffer_size, self->size_limit, position,
+      duration);
 
-  if (will_overflow (self, buffer_size)) {
+  if (will_overflow_unlocked (self, buffer_size)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_QUOTA_EXCEEDED,
         "buffer is full");
-    return FALSE;
+    goto error;
   }
 
   g_return_val_if_fail (self->pending_data == NULL, FALSE);
 
-  set_pending_data (self, buf);
+  set_pending_data_unlocked (self, gst_buffer_ref (buf));
   set_updating (self);
 
-  schedule_event (self, ON_UPDATE_START);
+  schedule_event_unlocked (self, ON_UPDATE_START);
   schedule_append_to_buffer_task (self);
 
+  TRACKS_UNLOCK (self);
+  GST_OBJECT_UNLOCK (self);
   return TRUE;
+
+error:
+  TRACKS_UNLOCK (self);
+  GST_OBJECT_UNLOCK (self);
+  return FALSE;
 }
 
 /**
@@ -1829,28 +2027,32 @@ static gboolean
 is_buffered_fold (const GValue * item, IsBufferedAccumulator * acc,
     GstSourceBuffer * self)
 {
-  GstSample *sample = gst_value_get_sample (item);
-  GstBuffer *buffer = gst_sample_get_buffer (sample);
-  GstClockTime buffer_start = GST_BUFFER_DTS (buffer);
-  GstClockTime buffer_end = buffer_start + GST_BUFFER_DURATION (buffer);
-  if (acc->time < buffer_start) {
-    GST_TRACE_OBJECT (self, "position precedes buffer start, done");
+  GstMediaSourceCodedFrameGroup *group =
+      gst_value_get_media_source_coded_frame_group (item);
+  if (group == NULL) {
     acc->buffered = FALSE;
     return FALSE;
   }
-  if (acc->time >= buffer_start && acc->time < buffer_end) {
-    GST_TRACE_OBJECT (self, "position is within buffer, done");
+  GstClockTime start = group->start;
+  GstClockTime end = group->end;
+  if (acc->time < start) {
+    GST_TRACE_OBJECT (self, "position precedes group start, done");
+    acc->buffered = FALSE;
+    return FALSE;
+  }
+  if (acc->time >= start && acc->time < end) {
+    GST_TRACE_OBJECT (self, "position is within group, done");
     acc->buffered = TRUE;
     return FALSE;
   }
   return TRUE;
 }
 
-gboolean
-gst_source_buffer_is_buffered (GstSourceBuffer * self, GstClockTime time)
+static gboolean
+is_buffered_unlocked (GstSourceBuffer * self, GstClockTime time)
 {
-  GHashTableIter iter;
   gboolean buffered = TRUE;
+  GHashTableIter iter;
   g_hash_table_iter_init (&iter, self->track_buffers);
   for (gpointer key, value;
       buffered && g_hash_table_iter_next (&iter, &key, &value);) {
@@ -1863,15 +2065,21 @@ gst_source_buffer_is_buffered (GstSourceBuffer * self, GstClockTime time)
       .time = time,
       .buffered = FALSE,
     };
-    GstIterator *iter =
-        gst_media_source_track_buffer_iter_samples (track_buffer, time, NULL);
-    while (gst_iterator_fold (iter, (GstIteratorFoldFunction) is_buffered_fold,
-            (GValue *) & acc, self) == GST_ITERATOR_RESYNC) {
-      gst_iterator_resync (iter);
-    }
-    gst_iterator_free (iter);
+    GstIterator *it = gst_media_source_track_buffer_iter_samples (track_buffer);
+    gst_iterator_fold (it, (GstIteratorFoldFunction) is_buffered_fold,
+        (GValue *) & acc, self);
+    g_clear_pointer (&it, gst_iterator_free);
     buffered = acc.buffered;
   }
+  return buffered;
+}
+
+gboolean
+gst_source_buffer_is_buffered (GstSourceBuffer * self, GstClockTime time)
+{
+  TRACKS_LOCK (self);
+  gboolean buffered = is_buffered_unlocked (self, time);
+  TRACKS_UNLOCK (self);
   return buffered;
 }
 
@@ -1879,10 +2087,13 @@ static gboolean
 is_range_buffered_fold (const GValue * item, IsRangeBufferedAccumulator * acc,
     GstSourceBuffer * self)
 {
-  GstSample *sample = gst_value_get_sample (item);
-  GstBuffer *buffer = gst_sample_get_buffer (sample);
-  GstClockTime buffer_start = GST_BUFFER_DTS (buffer);
-  GstClockTime buffer_end = buffer_start + GST_BUFFER_DURATION (buffer);
+  GstMediaSourceCodedFrameGroup *group =
+      gst_value_get_media_source_coded_frame_group (item);
+  if (group == NULL) {
+    return FALSE;
+  }
+  GstClockTime buffer_start = group->start;
+  GstClockTime buffer_end = group->end;
 
   GstClockTime start = acc->start;
   GstClockTime end = acc->end;
@@ -1918,6 +2129,7 @@ gst_source_buffer_is_range_buffered (GstSourceBuffer * self, GstClockTime start,
 {
   GHashTableIter iter;
   gboolean buffered = TRUE;
+  TRACKS_LOCK (self);
   g_hash_table_iter_init (&iter, self->track_buffers);
   for (gpointer key, value;
       buffered && g_hash_table_iter_next (&iter, &key, &value);) {
@@ -1932,16 +2144,13 @@ gst_source_buffer_is_range_buffered (GstSourceBuffer * self, GstClockTime start,
       .start_buffered = FALSE,
       .end_buffered = FALSE,
     };
-    GstIterator *iter =
-        gst_media_source_track_buffer_iter_samples (track_buffer, start, NULL);
-    while (gst_iterator_fold (iter,
-            (GstIteratorFoldFunction) is_range_buffered_fold, (GValue *) & acc,
-            self) == GST_ITERATOR_RESYNC) {
-      gst_iterator_resync (iter);
-    }
+    GstIterator *it = gst_media_source_track_buffer_iter_samples (track_buffer);
+    gst_iterator_fold (it, (GstIteratorFoldFunction) is_range_buffered_fold,
+        (GValue *) & acc, self);
+    g_clear_pointer (&it, gst_iterator_free);
     buffered = acc.end_buffered;
-    gst_iterator_free (iter);
   }
+  TRACKS_UNLOCK (self);
   return buffered;
 }
 
@@ -1955,8 +2164,10 @@ gst_source_buffer_get_duration (GstSourceBuffer * self)
 void
 gst_source_buffer_teardown (GstSourceBuffer * self)
 {
-  reset_parser_state (self);
+  GST_OBJECT_LOCK (self);
+  reset_parser_state_unlocked (self);
   clear_updating (self);
+  GST_OBJECT_UNLOCK (self);
 }
 
 GPtrArray *
@@ -1987,10 +2198,10 @@ gst_source_buffer_get_all_tracks (GstSourceBuffer * self)
 }
 
 static void
-seek_track_buffer (GstMediaSourceTrack * track,
+seek_track_buffer_unlocked (GstMediaSourceTrack * track,
     GstMediaSourceTrackBuffer * buffer, GstSourceBuffer * self)
 {
-  TrackFeedTask *feed = get_track_feed (self, track);
+  TrackFeedTask *feed = get_track_feed_unlocked (self, track);
 
   const gchar *track_id = gst_media_source_track_get_id (track);
   GST_DEBUG_OBJECT (self, "%s: seeking", track_id);
@@ -2003,8 +2214,12 @@ gst_source_buffer_seek (GstSourceBuffer * self, GstClockTime time)
 {
   g_return_if_fail (GST_IS_SOURCE_BUFFER (self));
   g_return_if_fail (GST_CLOCK_TIME_IS_VALID (time));
+
+  TRACKS_LOCK (self);
   self->seek_time = time;
-  g_hash_table_foreach (self->track_buffers, (GHFunc) seek_track_buffer, self);
+  g_hash_table_foreach (self->track_buffers,
+      (GHFunc) seek_track_buffer_unlocked, self);
+  TRACKS_UNLOCK (self);
 }
 
 gboolean
@@ -2012,12 +2227,14 @@ gst_source_buffer_get_active (GstSourceBuffer * self)
 {
   gboolean active = FALSE;
   GHashTableIter iter;
-  GST_OBJECT_LOCK (self);
+
+  TRACKS_LOCK (self);
   g_hash_table_iter_init (&iter, self->track_buffers);
   for (gpointer key; !active && g_hash_table_iter_next (&iter, &key, NULL);) {
     GstMediaSourceTrack *track = GST_MEDIA_SOURCE_TRACK (key);
     active |= gst_media_source_track_get_active (track);
   }
-  GST_OBJECT_UNLOCK (self);
+  TRACKS_UNLOCK (self);
+
   return active;
 }
