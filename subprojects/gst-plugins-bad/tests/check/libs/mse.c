@@ -609,6 +609,7 @@ GST_START_TEST (test_track_push_with_adequate_space)
   GstSample *sample = gst_sample_new (buffer, NULL, NULL, NULL);
   gboolean result = gst_media_source_track_push (track, sample);
   fail_unless (result);
+  gst_sample_unref (sample);
   gst_buffer_unref (buffer);
   gst_object_unref (track);
 }
