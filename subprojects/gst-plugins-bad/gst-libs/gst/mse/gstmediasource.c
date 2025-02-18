@@ -105,7 +105,10 @@ static guint signals[N_SIGNALS];
 #define DEFAULT_POSITION    GST_CLOCK_TIME_NONE
 #define DEFAULT_DURATION    GST_CLOCK_TIME_NONE
 
-static void rebuild_active_source_buffers (GstMediaSource * self);
+static void rebuild_active_source_buffers_unlocked (GstMediaSource * self);
+static void detach_unlocked (GstMediaSource * self);
+static void set_duration_unlocked (GstMediaSource * self,
+    GstClockTime duration);
 
 /**
  * gst_media_source_is_type_supported:
@@ -178,7 +181,7 @@ gst_media_source_dispose (GObject * object)
 {
   GstMediaSource *self = (GstMediaSource *) object;
 
-  gst_media_source_detach (self);
+  detach_unlocked (self);
 
   g_clear_object (&self->active_buffers);
 
@@ -471,14 +474,35 @@ gst_media_source_attach (GstMediaSource * self, GstMseSrc * element)
   g_return_if_fail (GST_IS_MEDIA_SOURCE (self));
   g_return_if_fail (GST_IS_MSE_SRC (element));
 
-  if (is_attached (self))
-    gst_media_source_detach (self);
+  GST_OBJECT_LOCK (self);
+  if (is_attached (self)) {
+    detach_unlocked (self);
+  }
 
-  self->element = gst_object_ref_sink (element);
+  self->element = gst_object_ref (element);
   gst_mse_src_attach (element, self);
 
   self->ready_state = GST_MEDIA_SOURCE_READY_STATE_OPEN;
+  GST_OBJECT_UNLOCK (self);
+
   schedule_event (self, ON_SOURCE_OPEN);
+}
+
+static void
+detach_unlocked (GstMediaSource * self)
+{
+  self->ready_state = GST_MEDIA_SOURCE_READY_STATE_CLOSED;
+  set_duration_unlocked (self, GST_CLOCK_TIME_NONE);
+
+  gst_source_buffer_list_remove_all (self->active_buffers);
+  empty_buffers (self);
+
+  if (is_attached (self)) {
+    gst_mse_src_detach (self->element);
+    gst_clear_object (&self->element);
+  }
+
+  schedule_event (self, ON_SOURCE_CLOSE);
 }
 
 /**
@@ -494,18 +518,9 @@ gst_media_source_detach (GstMediaSource * self)
 {
   g_return_if_fail (GST_IS_MEDIA_SOURCE (self));
 
-  self->ready_state = GST_MEDIA_SOURCE_READY_STATE_CLOSED;
-  gst_media_source_set_duration (self, GST_CLOCK_TIME_NONE, NULL);
-
-  gst_source_buffer_list_remove_all (self->active_buffers);
-  empty_buffers (self);
-
-  if (is_attached (self)) {
-    gst_mse_src_detach (self->element);
-    gst_clear_object (&self->element);
-  }
-
-  schedule_event (self, ON_SOURCE_CLOSE);
+  GST_OBJECT_LOCK (self);
+  detach_unlocked (self);
+  GST_OBJECT_UNLOCK (self);
 }
 
 /**
@@ -595,7 +610,12 @@ GstMediaSourceReadyState
 gst_media_source_get_ready_state (GstMediaSource * self)
 {
   g_return_val_if_fail (GST_IS_MEDIA_SOURCE (self), DEFAULT_READY_STATE);
-  return self->ready_state;
+
+  GST_OBJECT_LOCK (self);
+  GstMediaSourceReadyState ready_state = self->ready_state;
+  GST_OBJECT_UNLOCK (self);
+
+  return ready_state;
 }
 
 /**
@@ -611,9 +631,14 @@ GstClockTime
 gst_media_source_get_position (GstMediaSource * self)
 {
   g_return_val_if_fail (GST_IS_MEDIA_SOURCE (self), DEFAULT_POSITION);
-  if (is_attached (self))
-    return gst_mse_src_get_position (self->element);
-  return DEFAULT_POSITION;
+
+  GST_OBJECT_LOCK (self);
+  GstClockTime position =
+      is_attached (self) ? gst_mse_src_get_position (self->element) :
+      DEFAULT_POSITION;
+  GST_OBJECT_UNLOCK (self);
+
+  return position;
 }
 
 /**
@@ -631,9 +656,22 @@ GstClockTime
 gst_media_source_get_duration (GstMediaSource * self)
 {
   g_return_val_if_fail (GST_IS_MEDIA_SOURCE (self), DEFAULT_DURATION);
-  if (self->ready_state == GST_MEDIA_SOURCE_READY_STATE_CLOSED)
-    return GST_CLOCK_TIME_NONE;
-  return self->duration;
+
+  GST_OBJECT_LOCK (self);
+  GstClockTime duration =
+      self->ready_state ==
+      GST_MEDIA_SOURCE_READY_STATE_CLOSED ? GST_CLOCK_TIME_NONE :
+      self->duration;
+  GST_OBJECT_UNLOCK (self);
+
+  return duration;
+}
+
+static void
+set_duration_unlocked (GstMediaSource * self, GstClockTime duration)
+{
+  self->duration = duration;
+  update_duration (self);
 }
 
 /**
@@ -654,8 +692,12 @@ gst_media_source_set_duration (GstMediaSource * self, GstClockTime duration,
     GError ** error)
 {
   g_return_val_if_fail (GST_IS_MEDIA_SOURCE (self), FALSE);
+
+  GST_OBJECT_LOCK (self);
   self->duration = duration;
   update_duration (self);
+  GST_OBJECT_UNLOCK (self);
+
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DURATION]);
   return TRUE;
 }
@@ -665,8 +707,12 @@ on_received_init_segment (G_GNUC_UNUSED GstSourceBuffer * source_buffer,
     gpointer user_data)
 {
   GstMediaSource *self = GST_MEDIA_SOURCE (user_data);
+
+  GST_OBJECT_LOCK (self);
+
   if (!is_attached (self)) {
     GST_DEBUG_OBJECT (self, "received init segment while detached, ignoring");
+    GST_OBJECT_UNLOCK (self);
     return;
   }
 
@@ -682,6 +728,8 @@ on_received_init_segment (G_GNUC_UNUSED GstSourceBuffer * source_buffer,
     g_ptr_array_unref (tracks);
     gst_object_unref (buf);
   }
+
+  GST_OBJECT_UNLOCK (self);
 
   gst_mse_src_emit_streams (self->element,
       (GstMediaSourceTrack **) all_tracks->pdata, all_tracks->len);
@@ -731,9 +779,8 @@ source_buffer_list_as_set (GstSourceBufferList * list)
 }
 
 static void
-rebuild_active_source_buffers (GstMediaSource * self)
+rebuild_active_source_buffers_unlocked (GstMediaSource * self)
 {
-  // TODO: Lock the source buffer lists
   GST_DEBUG_OBJECT (self, "rebuilding active source buffers");
   GHashTable *previously_active =
       source_buffer_list_as_set (self->active_buffers);
@@ -777,7 +824,10 @@ static void
 on_active_state_changed (GstSourceBuffer * source_buffer, gpointer user_data)
 {
   GstMediaSource *self = GST_MEDIA_SOURCE (user_data);
-  rebuild_active_source_buffers (self);
+
+  GST_OBJECT_LOCK (self);
+  rebuild_active_source_buffers_unlocked (self);
+  GST_OBJECT_UNLOCK (self);
 }
 
 /**
@@ -815,11 +865,13 @@ gst_media_source_add_source_buffer (GstMediaSource * self, const gchar * type,
     return NULL;
   }
 
+  GST_OBJECT_LOCK (self);
+
   if (self->ready_state != GST_MEDIA_SOURCE_READY_STATE_OPEN) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "media source is not open");
-    return NULL;
+    goto error;
   }
 
   GstSourceBufferCallbacks callbacks = {
@@ -835,12 +887,18 @@ gst_media_source_add_source_buffer (GstMediaSource * self, const gchar * type,
     g_propagate_prefixed_error (error, source_buffer_error,
         "failed to create source buffer");
     gst_clear_object (&buf);
-    return NULL;
+    goto error;
   }
 
   gst_source_buffer_list_append (self->buffers, buf);
 
+  GST_OBJECT_UNLOCK (self);
+
   return buf;
+
+error:
+  GST_OBJECT_UNLOCK (self);
+  return NULL;
 }
 
 /**
@@ -866,11 +924,13 @@ gst_media_source_remove_source_buffer (GstMediaSource * self,
   g_return_val_if_fail (GST_IS_MEDIA_SOURCE (self), FALSE);
   g_return_val_if_fail (GST_IS_SOURCE_BUFFER (buffer), FALSE);
 
+  GST_OBJECT_LOCK (self);
+
   if (!gst_source_buffer_list_contains (self->buffers, buffer)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_NOT_FOUND,
         "the supplied source buffer was not found in this media source");
-    return FALSE;
+    goto error;
   }
 
   if (gst_source_buffer_get_updating (buffer))
@@ -881,7 +941,13 @@ gst_media_source_remove_source_buffer (GstMediaSource * self,
   gst_object_unparent (GST_OBJECT (buffer));
   gst_source_buffer_list_remove (self->buffers, buffer);
 
+  GST_OBJECT_UNLOCK (self);
+
   return TRUE;
+
+error:
+  GST_OBJECT_UNLOCK (self);
+  return FALSE;
 }
 
 static void
@@ -917,22 +983,26 @@ gst_media_source_end_of_stream (GstMediaSource * self,
 {
   g_return_val_if_fail (GST_IS_MEDIA_SOURCE (self), FALSE);
 
+  GST_OBJECT_LOCK (self);
+
   if (self->ready_state != GST_MEDIA_SOURCE_READY_STATE_OPEN) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "media source is not open");
-    return FALSE;
+    goto error;
   }
 
   if (is_updating (self)) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "some buffers are still updating");
-    return FALSE;
+    goto error;
   }
 
   self->ready_state = GST_MEDIA_SOURCE_READY_STATE_ENDED;
   schedule_event (self, ON_SOURCE_ENDED);
+
+  GST_OBJECT_UNLOCK (self);
 
   switch (eos_error) {
     case GST_MEDIA_SOURCE_EOS_ERROR_NETWORK:
@@ -948,6 +1018,10 @@ gst_media_source_end_of_stream (GstMediaSource * self,
   }
 
   return TRUE;
+
+error:
+  GST_OBJECT_UNLOCK (self);
+  return FALSE;
 }
 
 /**
@@ -973,24 +1047,33 @@ gst_media_source_set_live_seekable_range (GstMediaSource * self,
     GstClockTime start, GstClockTime end, GError ** error)
 {
   g_return_val_if_fail (GST_IS_MEDIA_SOURCE (self), FALSE);
+
+  GST_OBJECT_LOCK (self);
+
   if (self->ready_state != GST_MEDIA_SOURCE_READY_STATE_OPEN) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "media source is not open");
-    return FALSE;
+    goto error;
   }
 
   if (start > end) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_TYPE,
         "bad time range: start must be earlier than end");
-    return FALSE;
+    goto error;
   }
 
   self->live_seekable_range.start = start;
   self->live_seekable_range.end = end;
 
+  GST_OBJECT_UNLOCK (self);
+
   return TRUE;
+
+error:
+  GST_OBJECT_UNLOCK (self);
+  return FALSE;
 }
 
 /**
@@ -1015,16 +1098,24 @@ gst_media_source_clear_live_seekable_range (GstMediaSource * self,
 {
   g_return_val_if_fail (GST_IS_MEDIA_SOURCE (self), FALSE);
 
+  GST_OBJECT_LOCK (self);
+
   if (self->ready_state != GST_MEDIA_SOURCE_READY_STATE_OPEN) {
     g_set_error (error,
         GST_MEDIA_SOURCE_ERROR, GST_MEDIA_SOURCE_ERROR_INVALID_STATE,
         "media source is not open");
-    return FALSE;
+    goto error;
   }
 
   reset_live_seekable_range (self);
 
+  GST_OBJECT_UNLOCK (self);
+
   return TRUE;
+
+error:
+  GST_OBJECT_UNLOCK (self);
+  return FALSE;
 }
 
 /**
@@ -1044,20 +1135,26 @@ gst_media_source_get_live_seekable_range (GstMediaSource * self,
   g_return_if_fail (GST_IS_MEDIA_SOURCE (self));
   g_return_if_fail (range != NULL);
 
+  GST_OBJECT_LOCK (self);
   range->start = self->live_seekable_range.start;
   range->end = self->live_seekable_range.end;
+  GST_OBJECT_UNLOCK (self);
 }
 
 void
 gst_media_source_seek (GstMediaSource * self, GstClockTime time)
 {
   g_return_if_fail (GST_IS_MEDIA_SOURCE (self));
+
+  GST_OBJECT_LOCK (self);
   for (guint i = 0;; i++) {
     GstSourceBuffer *buf = gst_source_buffer_list_index (self->buffers, i);
     if (buf == NULL) {
-      return;
+      goto done;
     }
     gst_source_buffer_seek (buf, time);
     gst_object_unref (buf);
   }
+done:
+  GST_OBJECT_UNLOCK (self);
 }
