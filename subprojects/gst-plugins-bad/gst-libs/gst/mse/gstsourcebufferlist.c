@@ -98,6 +98,12 @@ typedef struct
 static GParamSpec *properties[N_PROPS];
 static guint signals[N_SIGNALS] = { 0 };
 
+static guint
+get_length_unlocked (GstSourceBufferList * self)
+{
+  return self->buffers->len;
+}
+
 static gboolean
 is_frozen (GstSourceBufferList * self)
 {
@@ -306,9 +312,14 @@ GstSourceBuffer *
 gst_source_buffer_list_index (GstSourceBufferList * self, guint index)
 {
   g_return_val_if_fail (GST_IS_SOURCE_BUFFER_LIST (self), NULL);
-  if (index >= gst_source_buffer_list_get_length (self))
-    return NULL;
-  return gst_object_ref (g_ptr_array_index (self->buffers, index));
+
+  GST_OBJECT_LOCK (self);
+  guint length = get_length_unlocked (self);
+  GstSourceBuffer *buf = index >= length ? NULL : gst_object_ref
+      (g_ptr_array_index (self->buffers, index));
+  GST_OBJECT_UNLOCK (self);
+
+  return buf;
 }
 
 /**
@@ -324,7 +335,12 @@ guint
 gst_source_buffer_list_get_length (GstSourceBufferList * self)
 {
   g_return_val_if_fail (GST_IS_SOURCE_BUFFER_LIST (self), 0);
-  return self->buffers->len;
+
+  GST_OBJECT_LOCK (self);
+  guint length = get_length_unlocked (self);
+  GST_OBJECT_UNLOCK (self);
+
+  return length;
 }
 
 gboolean
@@ -333,7 +349,12 @@ gst_source_buffer_list_contains (GstSourceBufferList * self,
 {
   g_return_val_if_fail (GST_IS_SOURCE_BUFFER_LIST (self), FALSE);
   g_return_val_if_fail (GST_IS_SOURCE_BUFFER (buf), FALSE);
-  return g_ptr_array_find (self->buffers, buf, NULL);
+
+  GST_OBJECT_LOCK (self);
+  gboolean found = g_ptr_array_find (self->buffers, buf, NULL);
+  GST_OBJECT_UNLOCK (self);
+
+  return found;
 }
 
 void
@@ -341,7 +362,11 @@ gst_source_buffer_list_append (GstSourceBufferList * self,
     GstSourceBuffer * buf)
 {
   g_return_if_fail (GST_IS_SOURCE_BUFFER_LIST (self));
+
+  GST_OBJECT_LOCK (self);
   g_ptr_array_add (self->buffers, gst_object_ref (buf));
+  GST_OBJECT_UNLOCK (self);
+
   call_source_buffer_added (self);
 }
 
