@@ -152,22 +152,6 @@ gst_media_source_track_buffer_add (GstMediaSourceTrackBuffer * self,
   NEW_DATA_UNLOCK (self);
 }
 
-void
-gst_media_source_track_buffer_remove (GstMediaSourceTrackBuffer * self,
-    GstSample * sample)
-{
-  g_return_if_fail (GST_IS_MEDIA_SOURCE_TRACK_BUFFER (self));
-  g_return_if_fail (GST_IS_SAMPLE (sample));
-
-  NEW_DATA_LOCK (self);
-
-  gst_media_source_sample_map_remove (self->samples, sample);
-  invalidate_cookie (self);
-
-  NEW_DATA_SIGNAL (self);
-  NEW_DATA_UNLOCK (self);
-}
-
 gsize
 gst_media_source_track_buffer_remove_range (GstMediaSourceTrackBuffer * self,
     GstClockTime earliest, GstClockTime latest)
@@ -179,19 +163,6 @@ gst_media_source_track_buffer_remove_range (GstMediaSourceTrackBuffer * self,
   NEW_DATA_SIGNAL (self);
   NEW_DATA_UNLOCK (self);
   return size;
-}
-
-void
-gst_media_source_track_buffer_clear (GstMediaSourceTrackBuffer * self)
-{
-  g_return_if_fail (GST_IS_MEDIA_SOURCE_TRACK_BUFFER (self));
-
-  NEW_DATA_LOCK (self);
-
-  g_set_object (&self->samples, gst_media_source_sample_map_new ());
-
-  NEW_DATA_SIGNAL (self);
-  NEW_DATA_UNLOCK (self);
 }
 
 static gboolean
