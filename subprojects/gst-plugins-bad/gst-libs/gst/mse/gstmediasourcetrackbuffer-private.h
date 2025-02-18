@@ -78,7 +78,7 @@ gboolean gst_media_source_track_buffer_is_eos (
     GstMediaSourceTrackBuffer * self);
 
 GST_MSE_PRIVATE
-gboolean gst_media_source_track_buffer_await_eos_until (
+void gst_media_source_track_buffer_await_new_data_until (
     GstMediaSourceTrackBuffer * self, gint64 deadline);
 
 GST_MSE_PRIVATE
