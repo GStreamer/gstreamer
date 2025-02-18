@@ -2129,6 +2129,12 @@ setup_parsebin_for_slot (ChildSrcPadInfo * info, GstPad * originating_pad)
     post_missing_plugin_error (GST_ELEMENT_CAST (urisrc), "parsebin");
     return FALSE;
   }
+
+  /* Make sure we limit state changes to happen as atomically as possible. This
+   * function might be called while a state change is currently taking place. We
+   * want to ensure we are the one activating (if needed) `parsebin`
+   */
+  gst_element_set_locked_state (info->demuxer, TRUE);
   gst_bin_add (GST_BIN_CAST (urisrc), info->demuxer);
 
   info->demuxer_is_parsebin = TRUE;
@@ -2156,12 +2162,15 @@ setup_parsebin_for_slot (ChildSrcPadInfo * info, GstPad * originating_pad)
   if (info->pre_parse_queue) {
     gst_element_sync_state_with_parent (info->pre_parse_queue);
   }
+  /* `parsebin` can be synchronized */
+  gst_element_set_locked_state (info->demuxer, FALSE);
   gst_element_sync_state_with_parent (info->demuxer);
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
   return TRUE;
 
 could_not_link:
   {
+    gst_element_set_locked_state (info->demuxer, FALSE);
     GST_URI_SOURCE_BIN_UNLOCK (urisrc);
     GST_ELEMENT_ERROR (urisrc, CORE, NEGOTIATION,
         (NULL), ("Can't link to (pre-)parsebin element"));
