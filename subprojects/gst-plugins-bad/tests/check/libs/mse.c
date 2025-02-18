@@ -65,6 +65,13 @@ opened_media_source (void)
   return media_source;
 }
 
+static GstClockTime
+sample_dts (GstSample * sample)
+{
+  GstBuffer *buffer = gst_sample_get_buffer (sample);
+  return GST_BUFFER_DTS (buffer);
+}
+
 static GstSample *
 new_empty_sample_full (GstClockTime dts, GstClockTime pts,
     GstClockTime duration, GstBufferFlags flags, GstCaps * caps,
@@ -78,6 +85,13 @@ new_empty_sample_full (GstClockTime dts, GstClockTime pts,
   GstSample *sample = gst_sample_new (buffer, caps, segment, info);
   gst_buffer_unref (buffer);
   return sample;
+}
+
+static GstSample *
+new_empty_sample_with_timing_and_flags (GstClockTime dts, GstClockTime pts,
+    GstClockTime duration, GstBufferFlags flags)
+{
+  return new_empty_sample_full (dts, pts, duration, flags, NULL, NULL, NULL);
 }
 
 static GstSample *
@@ -933,6 +947,10 @@ GST_START_TEST (test_sample_map_remove_range_from_start)
   for (guint i = 0; i < G_N_ELEMENTS (samples_to_remove); i++) {
     GstClockTime time = i;
     GstSample *sample = new_empty_sample_with_timing (time, time, 1);
+    if (i > 0) {
+      GstBuffer *head = gst_sample_get_buffer (sample);
+      GST_BUFFER_FLAGS (head) = GST_BUFFER_FLAG_DELTA_UNIT;
+    }
     gst_media_source_sample_map_add (map, sample);
     samples_to_remove[i] = sample;
   }
@@ -940,11 +958,15 @@ GST_START_TEST (test_sample_map_remove_range_from_start)
   for (guint i = 0; i < G_N_ELEMENTS (samples_to_preserve); i++) {
     GstClockTime time = i + G_N_ELEMENTS (samples_to_remove);
     GstSample *sample = new_empty_sample_with_timing (time, time, 0);
+    if (i > 0) {
+      GstBuffer *head = gst_sample_get_buffer (sample);
+      GST_BUFFER_FLAGS (head) = GST_BUFFER_FLAG_DELTA_UNIT;
+    }
     gst_media_source_sample_map_add (map, sample);
     samples_to_preserve[i] = sample;
   }
 
-  gst_media_source_sample_map_remove_range_from_start (map, 100);
+  gst_media_source_sample_map_remove_range (map, 0, 100);
 
   for (guint i = 0; i < G_N_ELEMENTS (samples_to_remove); i++) {
     GstSample *sample = samples_to_remove[i];
@@ -975,20 +997,27 @@ GST_START_TEST (test_sample_map_remove_range_from_start_byte_count)
     GBytes *bytes = g_bytes_new_static (chunk, buffer_size);
     total_bytes_to_remove += buffer_size;
     GstSample *sample = new_sample_with_bytes_and_timing (bytes, time, time, 1);
+    if (i > 0) {
+      GstBuffer *head = gst_sample_get_buffer (sample);
+      GST_BUFFER_FLAGS (head) = GST_BUFFER_FLAG_DELTA_UNIT;
+    }
     gst_media_source_sample_map_add (map, sample);
     samples_to_remove[i] = sample;
   }
   GstSample *samples_to_preserve[100] = { NULL };
-  for (guint i = 0; i < G_N_ELEMENTS (samples_to_preserve); i++) {
+  for (guint i = 0; i < G_N_ELEMENTS (samples_to_remove); i++) {
     GstClockTime time = i + G_N_ELEMENTS (samples_to_remove);
     GBytes *bytes = g_bytes_new_static (chunk, 1);
     GstSample *sample = new_sample_with_bytes_and_timing (bytes, time, time, 0);
+    if (i > 0) {
+      GstBuffer *head = gst_sample_get_buffer (sample);
+      GST_BUFFER_FLAGS (head) = GST_BUFFER_FLAG_DELTA_UNIT;
+    }
     gst_media_source_sample_map_add (map, sample);
     samples_to_preserve[i] = sample;
   }
 
-  gsize bytes_removed =
-      gst_media_source_sample_map_remove_range_from_start (map,
+  gsize bytes_removed = gst_media_source_sample_map_remove_range (map, 0,
       G_N_ELEMENTS (samples_to_remove));
   fail_unless_equals_uint64 (bytes_removed, total_bytes_to_remove);
 
@@ -1000,6 +1029,119 @@ GST_START_TEST (test_sample_map_remove_range_from_start_byte_count)
   }
 
   gst_object_unref (map);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_sample_map_remove_range_removes_coded_frame_group)
+{
+  GstMediaSourceSampleMap *map = gst_media_source_sample_map_new ();
+
+  static const GstClockTime duration = 1;
+  GstSample *keyframe0 = new_empty_sample_with_timing_and_flags (0, 0,
+      duration, 0);
+  GstSample *delta0 = new_empty_sample_with_timing_and_flags (1, 1,
+      duration, GST_BUFFER_FLAG_DELTA_UNIT);
+  GstSample *keyframe1 = new_empty_sample_with_timing_and_flags (2, 2,
+      duration, 0);
+  GstSample *delta1 = new_empty_sample_with_timing_and_flags (3, 3,
+      duration, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  GstSample *timeline[] = { keyframe0, delta0, keyframe1, delta1, NULL };
+
+  gst_media_source_sample_map_add (map, keyframe0);
+  gst_media_source_sample_map_add (map, delta0);
+  gst_media_source_sample_map_add (map, keyframe1);
+  gst_media_source_sample_map_add (map, delta1);
+
+  GstClockTime start = __i__ * 2;
+  GstClockTime end = start + duration * 2;
+
+  gst_media_source_sample_map_remove_range (map, start, end);
+
+  for (GstSample ** it = timeline; *it != NULL; it++) {
+    GstSample *sample = *it;
+    GstClockTime sample_start = sample_dts (sample);
+    GstClockTime sample_end = sample_start + duration;
+    if (sample_start >= start && sample_end <= end) {
+      fail_if (gst_media_source_sample_map_contains (map, sample));
+    } else {
+      fail_unless (gst_media_source_sample_map_contains (map, sample));
+    }
+  }
+
+  gst_object_unref (map);
+  gst_sample_unref (keyframe0);
+  gst_sample_unref (delta0);
+  gst_sample_unref (keyframe1);
+  gst_sample_unref (delta1);
+}
+
+GST_END_TEST;
+
+static void
+sample_map_iterate_size (const GValue * item, gpointer user_data)
+{
+  guint *counter = (guint *) user_data;
+  *counter = *counter + 1;
+}
+
+GST_START_TEST (test_sample_map_empty_iterator_by_dts)
+{
+  GstMediaSourceSampleMap *map = gst_media_source_sample_map_new ();
+
+  guint counter = 0;
+  GMutex mutex = { 0 };
+  guint32 cookie = 0;
+
+  GstIterator *it = gst_media_source_sample_map_iter_samples_by_dts (map,
+      &mutex, &cookie);
+  gst_iterator_foreach (it, sample_map_iterate_size, &counter);
+  gst_iterator_free (it);
+
+  assert_equals_int (counter, 0);
+
+  gst_object_unref (map);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_sample_map_grouped_iterator_by_dts)
+{
+  GstMediaSourceSampleMap *map = gst_media_source_sample_map_new ();
+
+  guint counter = 0;
+  GMutex mutex = { 0 };
+  guint32 cookie = 0;
+
+  GstSample *key = new_empty_sample_full (0,
+      0,
+      GST_SECOND,
+      0,
+      NULL,
+      NULL,
+      NULL);
+  GstSample *delta = new_empty_sample_full (GST_SECOND,
+      GST_SECOND,
+      GST_SECOND,
+      GST_BUFFER_FLAG_DELTA_UNIT,
+      NULL,
+      NULL,
+      NULL);
+
+  gst_media_source_sample_map_add (map, key);
+  gst_media_source_sample_map_add (map, delta);
+
+  GstIterator *it = gst_media_source_sample_map_iter_samples_by_dts (map,
+      &mutex, &cookie);
+  gst_iterator_foreach (it, sample_map_iterate_size, &counter);
+  gst_iterator_free (it);
+
+  assert_equals_int (counter, 1);
+
+  gst_object_unref (map);
+  gst_clear_sample (&key);
+  gst_clear_sample (&delta);
 }
 
 GST_END_TEST;
@@ -1102,8 +1244,12 @@ mse_suite (void)
   tcase_add_test (tc_sample_map, test_sample_map_add_invalid_sample);
   tcase_add_test (tc_sample_map, test_sample_map_remove_sample);
   tcase_add_test (tc_sample_map, test_sample_map_remove_range_from_start);
+  tcase_add_loop_test (tc_sample_map,
+      test_sample_map_remove_range_removes_coded_frame_group, 0, 2);
   tcase_add_test (tc_sample_map,
       test_sample_map_remove_range_from_start_byte_count);
+  tcase_add_test (tc_sample_map, test_sample_map_empty_iterator_by_dts);
+  tcase_add_test (tc_sample_map, test_sample_map_grouped_iterator_by_dts);
 
   suite_add_tcase (s, tc_media_source);
   suite_add_tcase (s, tc_source_buffer);
