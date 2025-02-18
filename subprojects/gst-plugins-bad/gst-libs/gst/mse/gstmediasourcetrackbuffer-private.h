@@ -66,16 +66,9 @@ void gst_media_source_track_buffer_add (GstMediaSourceTrackBuffer * self,
     GstSample * sample);
 
 GST_MSE_PRIVATE
-void gst_media_source_track_buffer_remove (GstMediaSourceTrackBuffer * self,
-    GstSample * sample);
-
-GST_MSE_PRIVATE
 gsize
 gst_media_source_track_buffer_remove_range (GstMediaSourceTrackBuffer * self,
     GstClockTime start, GstClockTime end);
-
-GST_MSE_PRIVATE
-void gst_media_source_track_buffer_clear (GstMediaSourceTrackBuffer * self);
 
 GST_MSE_PRIVATE
 void gst_media_source_track_buffer_eos (GstMediaSourceTrackBuffer * self);
