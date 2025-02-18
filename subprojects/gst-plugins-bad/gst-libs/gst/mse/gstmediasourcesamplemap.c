@@ -27,6 +27,16 @@
 #include "gstmediasourcesamplemap-private.h"
 #include "gstmselogging-private.h"
 
+G_DEFINE_BOXED_TYPE (GstMediaSourceCodedFrameGroup,
+    gst_media_source_coded_frame_group,
+    gst_media_source_coded_frame_group_copy,
+    gst_media_source_coded_frame_group_free);
+
+#define TIME_RANGE_FORMAT \
+    "[%" GST_TIMEP_FORMAT "..%" GST_TIMEP_FORMAT ")"
+#define TIME_RANGE_ARGS(a, b) &(a), &(b)
+#define CODED_FRAME_GROUP_ARGS(g) TIME_RANGE_ARGS ((g)->start, (g)->end)
+
 struct _GstMediaSourceSampleMap
 {
   GstObject parent_instance;
@@ -41,17 +51,27 @@ struct _GstMediaSourceSampleMap
 G_DEFINE_TYPE (GstMediaSourceSampleMap, gst_media_source_sample_map,
     GST_TYPE_OBJECT);
 
+static GstMediaSourceCodedFrameGroup *new_coded_frame_group_from_memory (const
+    GstMediaSourceCodedFrameGroup * src);
 static gint compare_pts (GstSample * a, GstSample * b, gpointer user_data);
-static GSequenceIter *find_sample_containing_dts (GstMediaSourceSampleMap *
-    self, GstClockTime dts);
-static GSequenceIter *find_sample_containing_pts (GstMediaSourceSampleMap *
-    self, GstClockTime pts);
-static GSequenceIter *find_sequentially (GSequence * sequence, gpointer item);
+static GSequenceIter *next_coded_frame_group (GSequenceIter * it, GValue * val);
+
+static inline GstClockTime
+sample_duration (GstSample * sample)
+{
+  return GST_BUFFER_DURATION (gst_sample_get_buffer (sample));
+}
 
 static inline GstClockTime
 sample_dts (GstSample * sample)
 {
   return GST_BUFFER_DTS (gst_sample_get_buffer (sample));
+}
+
+static inline GstClockTime
+sample_dts_end (GstSample * sample)
+{
+  return sample_dts (sample) + sample_duration (sample);
 }
 
 static inline GstClockTime
@@ -66,15 +86,11 @@ sample_buffer_size (GstSample * sample)
   return gst_buffer_get_size (gst_sample_get_buffer (sample));
 }
 
-static gboolean
-iter_is_delta_unit (GSequenceIter * iter)
+static inline gboolean
+sample_is_key_unit (GstSample * sample)
 {
-  if (g_sequence_iter_is_end (iter)) {
-    return TRUE;
-  }
-  GstSample *sample = g_sequence_get (iter);
   GstBuffer *buffer = gst_sample_get_buffer (sample);
-  return GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  return !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 }
 
 static gint
@@ -198,6 +214,115 @@ gst_media_source_sample_map_contains (GstMediaSourceSampleMap * self,
   return g_hash_table_contains (self->samples, sample);
 }
 
+static GSequenceIter *
+next_key_unit (GSequenceIter * it)
+{
+  for (; !g_sequence_iter_is_end (it); it = g_sequence_iter_next (it)) {
+    GstSample *sample = g_sequence_get (it);
+    if (sample_is_key_unit (sample)) {
+      break;
+    }
+  }
+  return it;
+}
+
+static GSequenceIter *
+next_coded_frame_group (GSequenceIter * it, GValue * val)
+{
+  it = next_key_unit (it);
+  if (g_sequence_iter_is_end (it)) {
+    return it;
+  }
+  GstSample *head = g_sequence_get (it);
+  g_return_val_if_fail (sample_is_key_unit (head), NULL);
+  GstMediaSourceCodedFrameGroup group = {
+    .start = sample_dts (head),
+    .end = sample_dts_end (head),
+    .samples = g_list_prepend (NULL, gst_sample_ref (head)),
+    .size = 1,
+  };
+  it = g_sequence_iter_next (it);
+  for (; !g_sequence_iter_is_end (it); it = g_sequence_iter_next (it)) {
+    GstSample *sample = g_sequence_get (it);
+    if (sample_is_key_unit (sample)) {
+      goto done;
+    }
+    group.end = sample_dts_end (sample), group.size++;
+    group.samples = g_list_prepend (group.samples, gst_sample_ref (sample));
+  }
+done:
+  group.samples = g_list_reverse (group.samples);
+  GstMediaSourceCodedFrameGroup *box =
+      new_coded_frame_group_from_memory (&group);
+  gst_value_take_media_source_coded_frame_group (val, box);
+  return it;
+}
+
+static GSequenceIter *
+find_start_point (GstMediaSourceSampleMap * self, GSequenceIter * it,
+    GList ** to_remove, GstClockTime earliest, GstClockTime latest)
+{
+  while (TRUE) {
+    GValue value = G_VALUE_INIT;
+    g_value_init (&value, GST_TYPE_MEDIA_SOURCE_CODED_FRAME_GROUP);
+    it = next_coded_frame_group (it, &value);
+    GstMediaSourceCodedFrameGroup *group =
+        gst_value_get_media_source_coded_frame_group (&value);
+    if (group == NULL) {
+      GST_TRACE_OBJECT (self,
+          "reached end of coded frames before finding start point");
+      goto done;
+    }
+
+    if (group->start >= earliest && group->end <= latest) {
+      GST_TRACE_OBJECT (self, "found start point for %" GST_TIMEP_FORMAT ": "
+          TIME_RANGE_FORMAT, &earliest, CODED_FRAME_GROUP_ARGS (group));
+      *to_remove = g_list_prepend (*to_remove,
+          gst_media_source_coded_frame_group_copy (group));
+      goto done;
+    }
+
+    g_value_unset (&value);
+    continue;
+  done:
+    g_value_unset (&value);
+    return it;
+  }
+  return it;
+}
+
+static GSequenceIter *
+find_end_point (GstMediaSourceSampleMap * self, GSequenceIter * it, GList **
+    to_remove, GstClockTime latest)
+{
+  while (TRUE) {
+    GValue value = G_VALUE_INIT;
+    g_value_init (&value, GST_TYPE_MEDIA_SOURCE_CODED_FRAME_GROUP);
+    it = next_coded_frame_group (it, &value);
+    GstMediaSourceCodedFrameGroup *group =
+        gst_value_get_media_source_coded_frame_group (&value);
+    if (group == NULL) {
+      GST_TRACE_OBJECT (self,
+          "reached end of coded frames before finding end point");
+      goto done;
+    }
+    if (group->end >= latest) {
+      GST_TRACE_OBJECT (self, "found end point for %" GST_TIMEP_FORMAT ": "
+          TIME_RANGE_FORMAT, &latest, CODED_FRAME_GROUP_ARGS (group));
+      goto done;
+    }
+    *to_remove = g_list_prepend (*to_remove,
+        gst_media_source_coded_frame_group_copy (group));
+    g_value_unset (&value);
+    continue;
+
+  done:
+    g_value_unset (&value);
+    return it;
+  }
+  return it;
+}
+
 gsize
 gst_media_source_sample_map_remove_range (GstMediaSourceSampleMap * self,
     GstClockTime earliest, GstClockTime latest)
@@ -205,52 +330,41 @@ gst_media_source_sample_map_remove_range (GstMediaSourceSampleMap * self,
   g_return_val_if_fail (GST_IS_MEDIA_SOURCE_SAMPLE_MAP (self), 0);
   g_return_val_if_fail (earliest <= latest, 0);
 
-  GSequenceIter *start_by_dts = find_sample_containing_dts (self, earliest);
-  GSequenceIter *end_by_dts = find_sample_containing_dts (self, latest);
+  GST_TRACE_OBJECT (self, "request remove range " TIME_RANGE_FORMAT,
+      TIME_RANGE_ARGS (earliest, latest));
 
-  GstSample *start = g_sequence_get (start_by_dts);
-  GstSample *end = g_sequence_get (end_by_dts);
-
-  GstClockTime start_time =
-      start == NULL ? GST_CLOCK_TIME_NONE : sample_dts (start);
-  GstClockTime end_time = end == NULL ? start_time : sample_dts (end);
-
-  GST_TRACE_OBJECT (self, "remove range [%" GST_TIMEP_FORMAT ",%"
-      GST_TIMEP_FORMAT ")", &start_time, &end_time);
+  GSequenceIter *it = g_sequence_get_begin_iter (self->samples_by_dts);
 
   GList *to_remove = NULL;
-  while (g_sequence_iter_compare (start_by_dts, end_by_dts) < 1) {
-    GstSample *sample = g_sequence_get (start_by_dts);
-    to_remove = g_list_prepend (to_remove, sample);
-    start_by_dts = g_sequence_iter_next (start_by_dts);
-  }
-  gsize bytes_removed = 0;
-  for (GList * iter = to_remove; iter != NULL; iter = g_list_next (iter)) {
-    GstSample *sample = iter->data;
-    bytes_removed += sample_buffer_size (sample);
-    gst_media_source_sample_map_remove (self, sample);
+
+  it = find_start_point (self, it, &to_remove, earliest, latest);
+
+  if (to_remove == NULL) {
+    return 0;
   }
 
-  g_list_free (to_remove);
+  it = find_end_point (self, it, &to_remove, latest);
+
+  to_remove = g_list_reverse (to_remove);
+
+  gsize bytes_removed = 0;
+  for (GList * group_iter = to_remove; group_iter != NULL;
+      group_iter = g_list_next (group_iter)) {
+    GstMediaSourceCodedFrameGroup *group = group_iter->data;
+    for (GList * sample_iter = group->samples; sample_iter != NULL;
+        sample_iter = g_list_next (sample_iter)) {
+      GstSample *sample = sample_iter->data;
+      bytes_removed += sample_buffer_size (sample);
+      gst_media_source_sample_map_remove (self, sample);
+    }
+  }
+
+  g_list_free_full (to_remove,
+      (GDestroyNotify) gst_media_source_coded_frame_group_free);
 
   GST_TRACE_OBJECT (self, "removed=%" G_GSIZE_FORMAT "B, latest=%"
       GST_TIMEP_FORMAT, bytes_removed, &latest);
   return bytes_removed;
-}
-
-gsize
-gst_media_source_sample_map_remove_range_from_start (GstMediaSourceSampleMap
-    * self, GstClockTime latest_dts)
-{
-  return gst_media_source_sample_map_remove_range (self, 0, latest_dts);
-}
-
-gsize
-gst_media_source_sample_map_remove_range_from_end (GstMediaSourceSampleMap
-    * self, GstClockTime earliest_dts)
-{
-  return gst_media_source_sample_map_remove_range (self, earliest_dts,
-      GST_CLOCK_TIME_NONE);
 }
 
 GstClockTime
@@ -286,178 +400,40 @@ gst_media_source_sample_map_get_storage_size (GstMediaSourceSampleMap * self)
   return self->storage_size;
 }
 
-static inline gboolean
-sample_contains_dts (GstSample * sample, GstClockTime dts)
-{
-  GstBuffer *buffer = gst_sample_get_buffer (sample);
-  g_return_val_if_fail (GST_BUFFER_DURATION_IS_VALID (buffer), FALSE);
-  g_return_val_if_fail (GST_BUFFER_DTS_IS_VALID (buffer), FALSE);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (dts), FALSE);
-  GstClockTime end = GST_BUFFER_DTS (buffer) + GST_BUFFER_DURATION (buffer);
-  return dts <= end;
-}
-
-static inline gboolean
-sample_contains_pts (GstSample * sample, GstClockTime pts)
-{
-  GstBuffer *buffer = gst_sample_get_buffer (sample);
-  g_return_val_if_fail (GST_BUFFER_DURATION_IS_VALID (buffer), FALSE);
-  g_return_val_if_fail (GST_BUFFER_PTS_IS_VALID (buffer), FALSE);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (pts), FALSE);
-  GstClockTime end = GST_BUFFER_PTS (buffer) + GST_BUFFER_DURATION (buffer);
-  return pts <= end;
-}
-
-static GSequenceIter *
-find_sequentially (GSequence * sequence, gpointer item)
-{
-  GSequenceIter *iter = g_sequence_get_begin_iter (sequence);
-  for (; !g_sequence_iter_is_end (iter); iter = g_sequence_iter_next (iter)) {
-    gpointer current = g_sequence_get (iter);
-    if (current == item) {
-      return iter;
-    }
-  }
-  return iter;
-}
-
-static GSequenceIter *
-find_sample_containing_dts (GstMediaSourceSampleMap * self, GstClockTime dts)
-{
-  if (dts == 0) {
-    return g_sequence_get_begin_iter (self->samples_by_dts);
-  }
-  if (dts == GST_CLOCK_TIME_NONE) {
-    return g_sequence_get_end_iter (self->samples_by_dts);
-  }
-  GSequenceIter *iter = g_sequence_get_begin_iter (self->samples_by_dts);
-  while (!g_sequence_iter_is_end (iter)) {
-    GstSample *sample = g_sequence_get (iter);
-    if (sample_contains_dts (sample, dts)) {
-      return iter;
-    }
-    iter = g_sequence_iter_next (iter);
-  }
-  return iter;
-}
-
-static GSequenceIter *
-find_sample_containing_pts (GstMediaSourceSampleMap * self, GstClockTime pts)
-{
-  if (pts == 0) {
-    return g_sequence_get_begin_iter (self->samples_by_pts);
-  }
-  if (pts == GST_CLOCK_TIME_NONE) {
-    return g_sequence_get_end_iter (self->samples_by_pts);
-  }
-  GSequenceIter *iter = g_sequence_get_begin_iter (self->samples_by_pts);
-  while (!g_sequence_iter_is_end (iter)) {
-    GstSample *sample = g_sequence_get (iter);
-    if (sample_contains_pts (sample, pts)) {
-      return iter;
-    }
-    iter = g_sequence_iter_next (iter);
-  }
-  return iter;
-}
-
-static GSequenceIter *
-find_previous_non_delta_unit (GstMediaSourceSampleMap * self,
-    GSequenceIter * iter)
-{
-  while (!g_sequence_iter_is_begin (iter)) {
-    if (!iter_is_delta_unit (iter)) {
-      GST_TRACE_OBJECT (self, "found valid sample");
-      return iter;
-    }
-    iter = g_sequence_iter_prev (iter);
-  }
-  GST_TRACE_OBJECT (self, "rolled back to the first sample");
-  return iter;
-}
-
-static GSequenceIter *
-gst_media_source_sample_map_iter_starting_dts (GstMediaSourceSampleMap * self,
-    GstClockTime start_dts)
-{
-  g_return_val_if_fail (GST_IS_MEDIA_SOURCE_SAMPLE_MAP (self), NULL);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (start_dts), NULL);
-  GSequenceIter *iter = find_sample_containing_dts (self, start_dts);
-  return find_previous_non_delta_unit (self, iter);
-}
-
-static GSequenceIter *
-gst_media_source_sample_map_iter_starting_pts (GstMediaSourceSampleMap
-    * self, GstClockTime start_pts)
-{
-  g_return_val_if_fail (GST_IS_MEDIA_SOURCE_SAMPLE_MAP (self), NULL);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (start_pts), NULL);
-  GSequenceIter *iter = find_sample_containing_pts (self, start_pts);
-  return find_previous_non_delta_unit (self, iter);
-}
-
 typedef struct _SampleMapIterator SampleMapIterator;
 
 struct _SampleMapIterator
 {
   GstIterator iterator;
   GstMediaSourceSampleMap *map;
-/* *INDENT-OFF* */
-  GstClockTime   (*timestamp_func)      (GstSample *);
-  GSequenceIter *(*resync_locator_func) (SampleMapIterator *);
-/* *INDENT-ON* */
+  GSequenceIter *(*reset_func) (SampleMapIterator *);
 
-  GstClockTime start_time;
-  GstClockTime current_time;
   GSequenceIter *current_iter;
-  GstSample *current_sample;
 };
 
 static void
 iter_copy (const SampleMapIterator * it, SampleMapIterator * copy)
 {
   copy->map = gst_object_ref (it->map);
-  copy->timestamp_func = it->timestamp_func;
-  copy->resync_locator_func = it->resync_locator_func;
+  copy->reset_func = it->reset_func;
 
-  copy->current_time = it->current_time;
-  copy->start_time = it->start_time;
   copy->current_iter = it->current_iter;
-  copy->current_sample = gst_sample_ref (it->current_sample);
 }
 
 static GSequenceIter *
-iter_find_resync_point_dts (SampleMapIterator * it)
+iter_reset_by_dts (SampleMapIterator * it)
 {
-  if (it->current_sample) {
-    GSequenceIter *iter =
-        find_sequentially (it->map->samples_by_dts, it->current_sample);
-    if (!g_sequence_iter_is_end (iter)) {
-      return g_sequence_iter_next (iter);
-    }
-  }
-
-  return gst_media_source_sample_map_iter_starting_dts (it->map,
-      it->current_time);
+  return g_sequence_get_begin_iter (it->map->samples_by_dts);
 }
 
 static GSequenceIter *
-iter_find_resync_point_pts (SampleMapIterator * it)
+iter_reset_by_pts (SampleMapIterator * it)
 {
-  if (it->current_sample) {
-    GSequenceIter *iter =
-        find_sequentially (it->map->samples_by_pts, it->current_sample);
-    if (!g_sequence_iter_is_end (iter)) {
-      return g_sequence_iter_next (iter);
-    }
-  }
-
-  return gst_media_source_sample_map_iter_starting_pts (it->map,
-      it->current_time);
+  return g_sequence_get_begin_iter (it->map->samples_by_pts);
 }
 
 static GstIteratorResult
-iter_next (SampleMapIterator * it, GValue * result)
+iter_next_sample (SampleMapIterator * it, GValue * result)
 {
 
   if (g_sequence_iter_is_end (it->current_iter)) {
@@ -465,13 +441,22 @@ iter_next (SampleMapIterator * it, GValue * result)
   }
 
   GstSample *sample = g_sequence_get (it->current_iter);
-  gst_clear_sample (&it->current_sample);
-  it->current_sample = gst_sample_ref (sample);
 
-  it->current_time = it->timestamp_func (sample);
   it->current_iter = g_sequence_iter_next (it->current_iter);
 
   gst_value_set_sample (result, sample);
+
+  return GST_ITERATOR_OK;
+}
+
+static GstIteratorResult
+iter_next_group (SampleMapIterator * it, GValue * result)
+{
+  if (g_sequence_iter_is_end (it->current_iter)) {
+    return GST_ITERATOR_DONE;
+  }
+
+  it->current_iter = next_coded_frame_group (it->current_iter, result);
 
   return GST_ITERATOR_OK;
 }
@@ -480,21 +465,43 @@ static void
 iter_resync (SampleMapIterator * it)
 {
   GST_TRACE_OBJECT (it->map, "resync");
-  it->current_time = it->start_time;
-  it->current_iter = it->resync_locator_func (it);
+  it->current_iter = it->reset_func (it);
 }
 
 static void
 iter_free (SampleMapIterator * it)
 {
   gst_clear_object (&it->map);
-  gst_clear_sample (&it->current_sample);
 }
 
 GstIterator *
-gst_media_source_sample_map_iter_samples_by_dts (GstMediaSourceSampleMap * map,
-    GMutex * lock, guint32 * master_cookie, GstClockTime start_dts,
-    GstSample * start_sample)
+gst_media_source_sample_map_iter_samples_by_dts (GstMediaSourceSampleMap * self,
+    GMutex * lock, guint32 * master_cookie)
+{
+/* *INDENT-OFF* */
+  SampleMapIterator *it = (SampleMapIterator *) gst_iterator_new (
+      sizeof (SampleMapIterator),
+      GST_TYPE_MEDIA_SOURCE_CODED_FRAME_GROUP,
+      lock,
+      master_cookie,
+      (GstIteratorCopyFunction) iter_copy,
+      (GstIteratorNextFunction) iter_next_group,
+      (GstIteratorItemFunction) NULL,
+      (GstIteratorResyncFunction) iter_resync,
+      (GstIteratorFreeFunction) iter_free
+  );
+/* *INDENT-ON* */
+
+  it->map = gst_object_ref (self);
+  it->reset_func = iter_reset_by_dts;
+  it->current_iter = iter_reset_by_dts (it);
+
+  return GST_ITERATOR (it);
+}
+
+GstIterator *
+gst_media_source_sample_map_iter_samples_by_pts (GstMediaSourceSampleMap * self,
+    GMutex * lock, guint32 * master_cookie)
 {
 /* *INDENT-OFF* */
   SampleMapIterator *it = (SampleMapIterator *) gst_iterator_new (
@@ -503,50 +510,43 @@ gst_media_source_sample_map_iter_samples_by_dts (GstMediaSourceSampleMap * map,
       lock,
       master_cookie,
       (GstIteratorCopyFunction) iter_copy,
-      (GstIteratorNextFunction) iter_next,
+      (GstIteratorNextFunction) iter_next_sample,
       (GstIteratorItemFunction) NULL,
       (GstIteratorResyncFunction) iter_resync,
       (GstIteratorFreeFunction) iter_free
   );
 /* *INDENT-ON* */
 
-  it->map = gst_object_ref (map);
-  it->timestamp_func = sample_dts;
-  it->resync_locator_func = iter_find_resync_point_dts;
-  it->start_time = start_dts;
-  it->current_time = start_dts;
-  it->current_sample = start_sample ? gst_sample_ref (start_sample) : NULL;
-  it->current_iter = iter_find_resync_point_dts (it);
+  it->map = gst_object_ref (self);
+  it->reset_func = iter_reset_by_pts;
+  it->current_iter = iter_reset_by_pts (it);
 
   return GST_ITERATOR (it);
 }
 
-GstIterator *
-gst_media_source_sample_map_iter_samples_by_pts (GstMediaSourceSampleMap * map,
-    GMutex * lock, guint32 * master_cookie, GstClockTime start_pts,
-    GstSample * start_sample)
+static GstMediaSourceCodedFrameGroup *
+new_coded_frame_group_from_memory (const GstMediaSourceCodedFrameGroup * src)
 {
-/* *INDENT-OFF* */
-  SampleMapIterator *it = (SampleMapIterator *) gst_iterator_new (
-      sizeof (SampleMapIterator),
-      GST_TYPE_SAMPLE,
-      lock,
-      master_cookie,
-      (GstIteratorCopyFunction) iter_copy,
-      (GstIteratorNextFunction) iter_next,
-      (GstIteratorItemFunction) NULL,
-      (GstIteratorResyncFunction) iter_resync,
-      (GstIteratorFreeFunction) iter_free
-  );
-/* *INDENT-ON* */
+  GstMediaSourceCodedFrameGroup *box =
+      g_atomic_rc_box_new0 (GstMediaSourceCodedFrameGroup);
+  memcpy (box, src, sizeof (GstMediaSourceCodedFrameGroup));
+  return box;
+}
 
-  it->map = gst_object_ref (map);
-  it->timestamp_func = sample_pts;
-  it->resync_locator_func = iter_find_resync_point_pts;
-  it->start_time = start_pts;
-  it->current_time = start_pts;
-  it->current_sample = start_sample ? gst_sample_ref (start_sample) : NULL;
-  it->current_iter = iter_find_resync_point_pts (it);
+GstMediaSourceCodedFrameGroup *
+gst_media_source_coded_frame_group_copy (GstMediaSourceCodedFrameGroup * self)
+{
+  return g_atomic_rc_box_acquire (self);
+}
 
-  return GST_ITERATOR (it);
+static void
+free_group_inner (GstMediaSourceCodedFrameGroup * self)
+{
+  g_list_free_full (self->samples, (GDestroyNotify) gst_sample_unref);
+}
+
+void
+gst_media_source_coded_frame_group_free (GstMediaSourceCodedFrameGroup * self)
+{
+  g_atomic_rc_box_release_full (self, (GDestroyNotify) free_group_inner);
 }
