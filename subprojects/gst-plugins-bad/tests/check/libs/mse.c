@@ -616,22 +616,6 @@ GST_START_TEST (test_track_push_with_adequate_space)
 
 GST_END_TEST;
 
-GST_START_TEST (test_track_push_with_inadequate_space)
-{
-  GstMediaSourceTrack *track =
-      gst_media_source_track_new_with_size (GST_MEDIA_SOURCE_TRACK_TYPE_OTHER,
-      "", 0);
-  GstBuffer *buffer = gst_buffer_new ();
-  GstSample *sample = gst_sample_new (buffer, NULL, NULL, NULL);
-  gboolean result = gst_media_source_track_try_push (track, sample);
-  fail_if (result);
-  gst_sample_unref (sample);
-  gst_buffer_unref (buffer);
-  gst_object_unref (track);
-}
-
-GST_END_TEST;
-
 GST_START_TEST (test_track_buffer_empty)
 {
   GstMediaSourceTrackBuffer *buffer = gst_media_source_track_buffer_new ();
@@ -1233,7 +1217,6 @@ mse_suite (void)
   tcase_add_test (tc_track, test_track_create_and_free);
   tcase_add_test (tc_track, test_track_create_with_invalid_type);
   tcase_add_test (tc_track, test_track_push_with_adequate_space);
-  tcase_add_test (tc_track, test_track_push_with_inadequate_space);
 
   tcase_add_test (tc_track_buffer, test_track_buffer_empty);
   tcase_add_test (tc_track_buffer, test_track_buffer_single_span);

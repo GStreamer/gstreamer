@@ -84,10 +84,6 @@ gboolean gst_media_source_track_push (GstMediaSourceTrack * self,
     GstSample * sample);
 
 GST_MSE_PRIVATE
-gboolean gst_media_source_track_try_push (GstMediaSourceTrack * self,
-    GstSample * sample);
-
-GST_MSE_PRIVATE
 gboolean gst_media_source_track_push_eos (GstMediaSourceTrack * self);
 
 GST_MSE_PRIVATE
