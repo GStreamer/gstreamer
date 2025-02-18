@@ -254,7 +254,7 @@ const GstMpegtsDescriptor * gst_mpegts_find_descriptor_with_extension (GPtrArray
  * @GST_MTS_REGISTRATION_BSSD: SMPTE 302M, Mapping of AES3 Data in mpeg-ts
  * @GST_MTS_REGISTRATION_GA94: ATSC A/53 compliant stream (i.e. ATSC)
  * @GST_MTS_REGISTRATION_HDMV: Blu-ray, "System Description Blu-ray Disc
- *             Read-Only Format part 3 Audio Visual Basic Specifications" 
+ *             Read-Only Format part 3 Audio Visual Basic Specifications"
  * @GST_MTS_REGISTRATION_KLVA: SMPTE RP217 : Non-synchronized Mapping of KLV
  *             Packets in mpeg-ts
  * @GST_MTS_REGISTRATION_OPUS: Opus Audio
@@ -272,36 +272,38 @@ const GstMpegtsDescriptor * gst_mpegts_find_descriptor_with_extension (GPtrArray
  */
 
 /**
- * REG_TO_UINT32: (skip) (attributes doc.skip=true)
+ * GST_MPEGTS_REG_TO_UINT32: (skip) (attributes doc.skip=true)
  */
-#define REG_TO_UINT32(a,b,c,d)((a) << 24 | (b) << 16 | (c) << 8 | (d))
+#define GST_MPEGTS_REG_TO_UINT32(a,b,c,d)((a) << 24 | (b) << 16 | (c) << 8 | (d))
 
 typedef enum {
   GST_MTS_REGISTRATION_0 = 0,
 
   /* SMPTE-RA registered */
-  GST_MTS_REGISTRATION_AC_3 = REG_TO_UINT32 ('A', 'C', '-', '3'),
-  GST_MTS_REGISTRATION_CUEI = REG_TO_UINT32 ('C', 'U', 'E', 'I'),
-  GST_MTS_REGISTRATION_drac = REG_TO_UINT32 ('d', 'r', 'a', 'c'),
-  GST_MTS_REGISTRATION_DTS1 = REG_TO_UINT32 ('D', 'T', 'S', '1'),
-  GST_MTS_REGISTRATION_DTS2 = REG_TO_UINT32 ('D', 'T', 'S', '2'),
-  GST_MTS_REGISTRATION_DTS3 = REG_TO_UINT32 ('D', 'T', 'S', '3'),
-  GST_MTS_REGISTRATION_BSSD = REG_TO_UINT32 ('B', 'S', 'S', 'D'),
-  GST_MTS_REGISTRATION_EAC3 = REG_TO_UINT32 ('E', 'A', 'C', '3'),
-  GST_MTS_REGISTRATION_ETV1 = REG_TO_UINT32 ('E', 'T', 'V', '1'),
-  GST_MTS_REGISTRATION_GA94 = REG_TO_UINT32 ('G', 'A', '9', '4'),
-  GST_MTS_REGISTRATION_HDMV = REG_TO_UINT32 ('H', 'D', 'M', 'V'),
-  GST_MTS_REGISTRATION_KLVA = REG_TO_UINT32 ('K', 'L', 'V', 'A'),
-  GST_MTS_REGISTRATION_OPUS = REG_TO_UINT32 ('O', 'P', 'U', 'S'),
-  GST_MTS_REGISTRATION_TSHV = REG_TO_UINT32 ('T', 'S', 'H', 'V'),
-  GST_MTS_REGISTRATION_VC_1 = REG_TO_UINT32 ('V', 'C', '-', '1'),
+  GST_MTS_REGISTRATION_AC_3 = GST_MPEGTS_REG_TO_UINT32 ('A', 'C', '-', '3'),
+  GST_MTS_REGISTRATION_CUEI = GST_MPEGTS_REG_TO_UINT32 ('C', 'U', 'E', 'I'),
+  GST_MTS_REGISTRATION_drac = GST_MPEGTS_REG_TO_UINT32 ('d', 'r', 'a', 'c'),
+  GST_MTS_REGISTRATION_DTS1 = GST_MPEGTS_REG_TO_UINT32 ('D', 'T', 'S', '1'),
+  GST_MTS_REGISTRATION_DTS2 = GST_MPEGTS_REG_TO_UINT32 ('D', 'T', 'S', '2'),
+  GST_MTS_REGISTRATION_DTS3 = GST_MPEGTS_REG_TO_UINT32 ('D', 'T', 'S', '3'),
+  GST_MTS_REGISTRATION_BSSD = GST_MPEGTS_REG_TO_UINT32 ('B', 'S', 'S', 'D'),
+  GST_MTS_REGISTRATION_EAC3 = GST_MPEGTS_REG_TO_UINT32 ('E', 'A', 'C', '3'),
+  GST_MTS_REGISTRATION_ETV1 = GST_MPEGTS_REG_TO_UINT32 ('E', 'T', 'V', '1'),
+  GST_MTS_REGISTRATION_GA94 = GST_MPEGTS_REG_TO_UINT32 ('G', 'A', '9', '4'),
+  GST_MTS_REGISTRATION_HDMV = GST_MPEGTS_REG_TO_UINT32 ('H', 'D', 'M', 'V'),
+  GST_MTS_REGISTRATION_KLVA = GST_MPEGTS_REG_TO_UINT32 ('K', 'L', 'V', 'A'),
+  GST_MTS_REGISTRATION_OPUS = GST_MPEGTS_REG_TO_UINT32 ('O', 'P', 'U', 'S'),
+  GST_MTS_REGISTRATION_TSHV = GST_MPEGTS_REG_TO_UINT32 ('T', 'S', 'H', 'V'),
+  GST_MTS_REGISTRATION_VC_1 = GST_MPEGTS_REG_TO_UINT32 ('V', 'C', '-', '1'),
 
   /* Self-registered by formats, but not in SMPTE-RA registry */
-  GST_MTS_REGISTRATION_AC_4 = REG_TO_UINT32 ('A', 'C', '-', '4'),
+  GST_MTS_REGISTRATION_AC_4 = GST_MPEGTS_REG_TO_UINT32 ('A', 'C', '-', '4'),
 
   /* Found elsewhere */
-  GST_MTS_REGISTRATION_OTHER_HEVC = REG_TO_UINT32 ('H', 'E', 'V', 'C')
+  GST_MTS_REGISTRATION_OTHER_HEVC = GST_MPEGTS_REG_TO_UINT32 ('H', 'E', 'V', 'C')
 } GstMpegtsRegistrationId;
+
+#undef GST_MPEGTS_REG_TO_UINT32
 
 /* GST_MTS_DESC_REGISTRATION (0x05) */
 

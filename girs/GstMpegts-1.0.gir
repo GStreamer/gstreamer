@@ -3277,6 +3277,20 @@ stream</doc>
         </return-value>
       </constructor>
     </record>
+    <function-macro name="REG_TO_UINT32" c:identifier="GST_MPEGTS_REG_TO_UINT32" introspectable="0">
+      <attribute name="doc.skip" value="true"/>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
+      <parameters>
+        <parameter name="a">
+        </parameter>
+        <parameter name="b">
+        </parameter>
+        <parameter name="c">
+        </parameter>
+        <parameter name="d">
+        </parameter>
+      </parameters>
+    </function-macro>
     <bitfield name="RegistrationId" version="1.20" c:type="GstMpegtsRegistrationId">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">Well-known registration ids, expressed as native-endian 32bit integers. These
 are used in descriptors of type %GST_MTS_DESC_REGISTRATION. Unless specified
