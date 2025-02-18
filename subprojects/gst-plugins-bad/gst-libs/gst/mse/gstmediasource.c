@@ -1030,7 +1030,7 @@ gst_media_source_clear_live_seekable_range (GstMediaSource * self,
 /**
  * gst_media_source_get_live_seekable_range:
  * @self: #GstMediaSource instance
- * @range: (out) (transfer none): time range
+ * @range: (out caller-allocates) (transfer none): time range
  *
  * Get the live seekable range of @self. Will fill in the supplied @range with
  * the current live seekable range.
