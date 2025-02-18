@@ -408,19 +408,6 @@ gst_media_source_track_resume (GstMediaSourceTrack * self)
 }
 
 gboolean
-gst_media_source_track_try_push (GstMediaSourceTrack * self, GstSample * sample)
-{
-  g_return_val_if_fail (GST_IS_MEDIA_SOURCE_TRACK (self), FALSE);
-  g_return_val_if_fail (GST_IS_SAMPLE (sample), FALSE);
-
-  if (gst_data_queue_is_full (self->samples)) {
-    return FALSE;
-  }
-
-  return gst_media_source_track_push (self, sample);
-}
-
-gboolean
 gst_media_source_track_is_empty (GstMediaSourceTrack * self)
 {
   g_return_val_if_fail (GST_IS_MEDIA_SOURCE_TRACK (self), FALSE);
