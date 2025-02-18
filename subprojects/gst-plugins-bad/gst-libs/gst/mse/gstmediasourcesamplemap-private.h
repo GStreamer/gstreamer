@@ -23,13 +23,28 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <glib-object.h>
 #include <gst/mse/mse-prelude.h>
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_MEDIA_SOURCE_SAMPLE_MAP \
     (gst_media_source_sample_map_get_type())
+
+#define GST_TYPE_MEDIA_SOURCE_CODED_FRAME_GROUP \
+    (gst_media_source_coded_frame_group_get_type())
+
+#define gst_value_get_media_source_coded_frame_group(v) \
+    (GstMediaSourceCodedFrameGroup *)(g_value_get_boxed (v))
+
+#define gst_value_take_media_source_coded_frame_group(v, g) \
+    g_value_take_boxed ((v), (g))
+
+typedef struct {
+  GstClockTime start;
+  GstClockTime end;
+  gsize size;
+  GList *samples;
+} GstMediaSourceCodedFrameGroup;
 
 GST_MSE_PRIVATE
 G_DECLARE_FINAL_TYPE (GstMediaSourceSampleMap, gst_media_source_sample_map, GST,
@@ -49,16 +64,6 @@ void gst_media_source_sample_map_remove (GstMediaSourceSampleMap * self,
 GST_MSE_PRIVATE
 gsize gst_media_source_sample_map_remove_range (GstMediaSourceSampleMap * self,
     GstClockTime earliest, GstClockTime latest);
-
-GST_MSE_PRIVATE
-gsize
-gst_media_source_sample_map_remove_range_from_start (GstMediaSourceSampleMap
-    * self, GstClockTime latest_dts);
-
-GST_MSE_PRIVATE
-gsize
-gst_media_source_sample_map_remove_range_from_end (GstMediaSourceSampleMap
-    * self, GstClockTime earliest_dts);
 
 GST_MSE_PRIVATE
 gboolean gst_media_source_sample_map_contains (GstMediaSourceSampleMap * self,
@@ -81,14 +86,23 @@ gsize gst_media_source_sample_map_get_storage_size (
 
 GST_MSE_PRIVATE
 GstIterator *
-gst_media_source_sample_map_iter_samples_by_dts (GstMediaSourceSampleMap * map,
-    GMutex * lock, guint32 * master_cookie, GstClockTime start_dts,
-    GstSample * start_sample);
+gst_media_source_sample_map_iter_samples_by_dts (GstMediaSourceSampleMap * self,
+    GMutex * lock, guint32 * master_cookie);
 
 GST_MSE_PRIVATE
 GstIterator *
-gst_media_source_sample_map_iter_samples_by_pts (GstMediaSourceSampleMap * map,
-    GMutex * lock, guint32 * master_cookie, GstClockTime start_pts,
-    GstSample *start_sample);
+gst_media_source_sample_map_iter_samples_by_pts (GstMediaSourceSampleMap * self,
+    GMutex * lock, guint32 * master_cookie);
+
+GST_MSE_PRIVATE
+GType gst_media_source_coded_frame_group_get_type (void);
+
+GST_MSE_PRIVATE
+GstMediaSourceCodedFrameGroup *
+gst_media_source_coded_frame_group_copy (GstMediaSourceCodedFrameGroup * group);
+
+GST_MSE_PRIVATE
+void
+gst_media_source_coded_frame_group_free (GstMediaSourceCodedFrameGroup * group);
 
 G_END_DECLS
