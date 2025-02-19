@@ -22,6 +22,7 @@
 #endif
 
 #include "gstcudaconverter.h"
+#include <gst/cuda/gstcuda-private.h>
 #include <string.h>
 #include <mutex>
 
@@ -2133,6 +2134,8 @@ struct _GstCudaConverterPrivate
 
   gboolean update_const_buf = TRUE;
 
+  GstCudaStream *stream = nullptr;
+
   /* properties */
   gint dest_x = 0;
   gint dest_y = 0;
@@ -2209,6 +2212,7 @@ gst_cuda_converter_dispose (GObject * object)
 {
   auto self = GST_CUDA_CONVERTER (object);
   auto priv = self->priv;
+  auto stream = gst_cuda_stream_get_handle (priv->stream);
 
   if (self->context && gst_cuda_context_push (self->context)) {
     if (priv->module) {
@@ -2223,7 +2227,10 @@ gst_cuda_converter_dispose (GObject * object)
           priv->fallback_buffer[i].texture = 0;
         }
 
-        CuMemFree (priv->fallback_buffer[i].ptr);
+        if (stream)
+          CuMemFreeAsync (priv->fallback_buffer[i].ptr, stream);
+        else
+          CuMemFree (priv->fallback_buffer[i].ptr);
         priv->fallback_buffer[i].ptr = 0;
       }
     }
@@ -2234,13 +2241,19 @@ gst_cuda_converter_dispose (GObject * object)
         priv->unpack_buffer.texture = 0;
       }
 
-      CuMemFree (priv->unpack_buffer.ptr);
+      if (stream)
+        CuMemFreeAsync (priv->unpack_buffer.ptr, stream);
+      else
+        CuMemFree (priv->unpack_buffer.ptr);
       priv->unpack_buffer.ptr = 0;
     }
 
     gst_cuda_context_pop (nullptr);
   }
 
+  if (stream)
+    CuStreamSynchronize (stream);
+  gst_clear_cuda_stream (&priv->stream);
   gst_clear_object (&self->context);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -2801,11 +2814,30 @@ gst_cuda_converter_setup (GstCudaConverter * self)
     memset (&texture_desc, 0, sizeof (CUDA_TEXTURE_DESC));
     memset (&resource_desc, 0, sizeof (CUDA_RESOURCE_DESC));
 
-    ret = CuMemAllocPitch (&priv->unpack_buffer.ptr,
-        &priv->unpack_buffer.stride,
-        GST_VIDEO_INFO_COMP_WIDTH (texture_info, 0) *
-        GST_VIDEO_INFO_COMP_PSTRIDE (texture_info, 0),
-        GST_VIDEO_INFO_HEIGHT (texture_info), 16);
+    if (priv->stream) {
+      auto stream = gst_cuda_stream_get_handle (priv->stream);
+      gint texture_align =
+          gst_cuda_context_get_texture_alignment (self->context);
+      gint stride = GST_VIDEO_INFO_COMP_WIDTH (texture_info, 0) *
+          GST_VIDEO_INFO_COMP_PSTRIDE (texture_info, 0);
+
+      priv->unpack_buffer.stride =
+          ((stride + texture_align - 1) / texture_align) * texture_align;
+
+      ret = CuMemAllocAsync (&priv->unpack_buffer.ptr,
+          priv->unpack_buffer.stride * GST_VIDEO_INFO_HEIGHT (texture_info),
+          stream);
+
+      if (gst_cuda_result (ret))
+        ret = CuStreamSynchronize (stream);
+    } else {
+      ret = CuMemAllocPitch (&priv->unpack_buffer.ptr,
+          &priv->unpack_buffer.stride,
+          GST_VIDEO_INFO_COMP_WIDTH (texture_info, 0) *
+          GST_VIDEO_INFO_COMP_PSTRIDE (texture_info, 0),
+          GST_VIDEO_INFO_HEIGHT (texture_info), 16);
+    }
+
     if (!gst_cuda_result (ret)) {
       GST_ERROR_OBJECT (self, "Couldn't allocate unpack buffer");
       goto error;
@@ -2887,6 +2919,19 @@ gst_cuda_converter_set_config (GstCudaConverter * self, GstStructure * config)
   gst_structure_free (config);
 }
 
+static gboolean
+default_stream_ordered_alloc_enabled (void)
+{
+  static gboolean enabled = FALSE;
+  GST_CUDA_CALL_ONCE_BEGIN {
+    if (g_getenv ("GST_CUDA_ENABLE_STREAM_ORDERED_ALLOC"))
+      enabled = TRUE;
+  }
+  GST_CUDA_CALL_ONCE_END;
+
+  return enabled;
+}
+
 GstCudaConverter *
 gst_cuda_converter_new (const GstVideoInfo * in_info,
     const GstVideoInfo * out_info, GstCudaContext * context,
@@ -2894,6 +2939,7 @@ gst_cuda_converter_new (const GstVideoInfo * in_info,
 {
   GstCudaConverter *self;
   GstCudaConverterPrivate *priv;
+  gboolean use_stream_ordered = FALSE;
 
   g_return_val_if_fail (in_info != nullptr, nullptr);
   g_return_val_if_fail (out_info != nullptr, nullptr);
@@ -2912,6 +2958,14 @@ gst_cuda_converter_new (const GstVideoInfo * in_info,
   priv->out_info = *out_info;
   priv->dest_width = out_info->width;
   priv->dest_height = out_info->height;
+
+  g_object_get (context, "prefer-stream-ordered-alloc",
+      &use_stream_ordered, nullptr);
+  if (!use_stream_ordered)
+    use_stream_ordered = default_stream_ordered_alloc_enabled ();
+
+  if (use_stream_ordered)
+    priv->stream = gst_cuda_stream_new (context);
 
   if (config)
     gst_cuda_converter_set_config (self, config);
@@ -2981,8 +3035,19 @@ ensure_fallback_buffer (GstCudaConverter * self, gint width_in_bytes,
   if (priv->fallback_buffer[plane].ptr)
     return TRUE;
 
-  ret = CuMemAllocPitch (&priv->fallback_buffer[plane].ptr,
-      &priv->fallback_buffer[plane].stride, width_in_bytes, height, 16);
+  if (priv->stream) {
+    auto stream = gst_cuda_stream_get_handle (priv->stream);
+    gint texture_align = gst_cuda_context_get_texture_alignment (self->context);
+    priv->fallback_buffer[plane].stride =
+        ((width_in_bytes + texture_align - 1) / texture_align) * texture_align;
+    ret = CuMemAllocAsync (&priv->unpack_buffer.ptr,
+        priv->fallback_buffer[plane].stride * height, stream);
+    if (gst_cuda_result (ret))
+      ret = CuStreamSynchronize (stream);
+  } else {
+    ret = CuMemAllocPitch (&priv->fallback_buffer[plane].ptr,
+        &priv->fallback_buffer[plane].stride, width_in_bytes, height, 16);
+  }
 
   if (!gst_cuda_result (ret)) {
     GST_ERROR_OBJECT (self, "Couldn't allocate fallback buffer");
