@@ -50,6 +50,7 @@ variables:
     -Dgst-plugins-base:opus=enabled
     -Dgst-plugins-good:soup-lookup-dep=true
     -Dgst-plugins-good:vpx=enabled
+    -Dgst-devtools:dots_viewer=disabled
     -Dpygobject:tests=false
     -Dpython=enabled
     -Dlibav=enabled
@@ -432,6 +433,7 @@ build fedora gcc:
         # Disabling building both qt5 and qt6 when doing static builds since we can only link against one
         MESON_ARGS: >-
           ${DEFAULT_MESON_ARGS}
+          -Dgst-devtools:dots_viewer=enabled
           -Dvaapi=disabled
           -Dpython=auto
           -Dgst-editing-services:python=disabled
