@@ -187,6 +187,12 @@ public:
   NVENCSTATUS   AcquireResource (GstMemory * mem,
                                  GstNvEncResource ** resource);
 
+  NVENCSTATUS   AcquireResourceWithSize (GstMemory * mem,
+                                         guint width,
+                                         guint height,
+                                         guint stride,
+                                         GstNvEncResource ** resource);
+
   GstFlowReturn AcquireTask (GstNvEncTask ** task,
                              bool force);
 
@@ -208,6 +214,9 @@ private:
   void releaseTaskUnlocked (GstNvEncTask * task);
 
   NVENCSTATUS acquireResourceCuda (GstMemory * mem,
+                                   guint width,
+                                   guint height,
+                                   guint stride,
                                    GstNvEncResource ** resource);
 
 #ifdef G_OS_WIN32

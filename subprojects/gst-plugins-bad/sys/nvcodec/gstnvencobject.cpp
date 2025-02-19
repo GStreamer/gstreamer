@@ -722,8 +722,8 @@ GstNvEncObject::DeviceUnlock ()
 }
 
 NVENCSTATUS
-GstNvEncObject::acquireResourceCuda (GstMemory * mem,
-    GstNvEncResource ** resource)
+GstNvEncObject::acquireResourceCuda (GstMemory * mem, guint width, guint height,
+      guint stride, GstNvEncResource ** resource)
 {
   GstNvEncResource *res;
   GstCudaMemory *cmem;
@@ -731,11 +731,6 @@ GstNvEncObject::acquireResourceCuda (GstMemory * mem,
   NV_ENC_MAP_INPUT_RESOURCE mapped_resource;
   NVENCSTATUS status;
   GstMapInfo info;
-
-  if (!gst_is_cuda_memory (mem)) {
-    GST_ERROR_ID (id_.c_str (), "Not a CUDA memory");
-    return NV_ENC_ERR_INVALID_CALL;
-  }
 
   cmem = GST_CUDA_MEMORY_CAST (mem);
 
@@ -761,9 +756,9 @@ GstNvEncObject::acquireResourceCuda (GstMemory * mem,
 
   new_resource.version = gst_nvenc_get_register_resource_version ();
   new_resource.resourceType = NV_ENC_INPUT_RESOURCE_TYPE_CUDADEVICEPTR;
-  new_resource.width = cmem->info.width;
-  new_resource.height = cmem->info.height;
-  new_resource.pitch = cmem->info.stride[0];
+  new_resource.width = width;
+  new_resource.height = height;
+  new_resource.pitch = stride;
   new_resource.resourceToRegister = info.data;
   new_resource.bufferFormat = buffer_format_;
 
@@ -895,8 +890,42 @@ GstNvEncObject::AcquireResource (GstMemory * mem, GstNvEncResource ** resource)
   } else
 #endif
   {
-    status = acquireResourceCuda (mem, resource);
+    if (!gst_is_cuda_memory (mem)) {
+      GST_ERROR_ID (id_.c_str (), "Not a CUDA memory");
+      return NV_ENC_ERR_INVALID_CALL;
+    }
+
+    auto cmem = GST_CUDA_MEMORY_CAST (mem);
+    auto width = cmem->info.width;
+    auto height = cmem->info.height;
+    auto stride = cmem->info.stride[0];
+
+    status = acquireResourceCuda (mem, width, height, stride, resource);
   }
+
+  if (status == NV_ENC_SUCCESS) {
+    GST_TRACE_ID (id_.c_str (), "Returning resource %u, "
+        "resource queue size %u (active %u)",
+        (*resource)->seq_num, (guint) resource_queue_.size (),
+        (guint) active_resource_queue_.size ());
+  }
+
+  return status;
+}
+
+NVENCSTATUS
+GstNvEncObject::AcquireResourceWithSize (GstMemory * mem,
+  guint width, guint height, guint stride, GstNvEncResource ** resource)
+{
+  NVENCSTATUS status;
+  std::lock_guard <std::recursive_mutex> lk (resource_lock_);
+
+  if (!gst_is_cuda_memory (mem)) {
+    GST_ERROR_ID (id_.c_str (), "Not a CUDA memory");
+    return NV_ENC_ERR_INVALID_CALL;
+  }
+
+  status = acquireResourceCuda (mem, width, height, stride, resource);
 
   if (status == NV_ENC_SUCCESS) {
     GST_TRACE_ID (id_.c_str (), "Returning resource %u, "
