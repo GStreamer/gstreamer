@@ -3092,6 +3092,8 @@ gst_gl_upload_transform_caps (GstGLUpload * upload, GstGLContext * context,
   if (upload->priv->method) {
     tmp = upload->priv->method->transform_caps (upload->priv->method_impl,
         context, direction, caps);
+    if (!tmp)
+      tmp = gst_caps_new_empty ();
   } else {
     tmp = gst_caps_new_empty ();
   }
