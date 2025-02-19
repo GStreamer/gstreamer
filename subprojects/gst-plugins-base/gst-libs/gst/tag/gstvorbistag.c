@@ -94,6 +94,7 @@ static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_ALBUM_ARTIST_SORTNAME, "ALBUMARTISTSORT"},
   {GST_TAG_ALBUM_ARTIST_SORTNAME, "ALBUMARTISTSORTORDER"},
   {GST_TAG_LANGUAGE_CODE, "LANGUAGE"},
+  {GST_TAG_LYRICS, "LYRICS"},
   {GST_TAG_CDDA_MUSICBRAINZ_DISCID, "MUSICBRAINZ_DISCID"},
   {GST_TAG_CDDA_CDDB_DISCID, "DISCID"},
   /* For the apparent de-facto standard for coverart in vorbis comments, see:
