@@ -169,8 +169,9 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
   /**
    * GstRtpH264Depay:wait-for-keyframe:
    *
-   * Wait for the next keyframe after packet loss,
-   * meaningful only when outputting access units
+   * Wait for the next keyframe after packet loss.
+   *
+   * Note: currently this only has an effect if outputting access units.
    *
    * Since: 1.20
    */
@@ -184,7 +185,7 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
   /**
    * GstRtpH264Depay:request-keyframe:
    *
-   * Request new keyframe when packet loss is detected
+   * Request new keyframe when packet loss is detected.
    *
    * Since: 1.20
    */
