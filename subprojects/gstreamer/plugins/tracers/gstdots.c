@@ -126,18 +126,11 @@ gst_dots_tracer_finalize (GObject * obj)
 static void
 clean_dot_files (const gchar * dir_path)
 {
-  GPatternSpec *pspec;
   GDir *dir;
   const gchar *filename;
   GError *error = NULL;
   GSList *paths = NULL, *l;
   GSList *dirs = NULL;
-  gchar *pattern;
-
-  /* Create glob pattern for .dot files */
-  pattern = g_build_filename (dir_path, "**", "*.dot", NULL);
-  pspec = g_pattern_spec_new (pattern);
-  g_free (pattern);
 
   /* Build directory list starting with root dir */
   dirs = g_slist_prepend (dirs, g_strdup (dir_path));
@@ -161,7 +154,7 @@ clean_dot_files (const gchar * dir_path)
 
       if (g_file_test (path, G_FILE_TEST_IS_DIR)) {
         dirs = g_slist_prepend (dirs, path);
-      } else if (g_pattern_spec_match_string (pspec, path)) {
+      } else if (g_str_has_suffix (path, ".dot")) {
         paths = g_slist_prepend (paths, path);
       } else {
         g_free (path);
@@ -178,7 +171,6 @@ clean_dot_files (const gchar * dir_path)
     }
   }
 
-  g_pattern_spec_free (pspec);
   g_slist_free_full (paths, g_free);
 }
 
