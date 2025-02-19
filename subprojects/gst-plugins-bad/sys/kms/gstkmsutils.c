@@ -51,6 +51,7 @@ static const struct
   DEF_FMT (P016, P016_LE),
 
   /* 16bits/c YUV 4:2:0 */
+  DEF_FMT (NV15, NV12_10LE40),
   DEF_FMT (P010, P010_10LE),
 
   /* YUV 4:4:4 */
@@ -128,6 +129,7 @@ gst_drm_bpp_from_drm (guint32 drmfmt)
     case DRM_FORMAT_NV24:
       bpp = 8;
       break;
+    case DRM_FORMAT_NV15:
     case DRM_FORMAT_P010:
       bpp = 10;
       break;
