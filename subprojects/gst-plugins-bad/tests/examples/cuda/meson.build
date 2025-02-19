@@ -84,3 +84,9 @@ executable('cudamemorypool', 'cudamemorypool.c',
   dependencies: [gst_dep, gstvideo_dep, gstcuda_dep],
   c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
   install: false)
+
+executable('nvenc-extern-pool', 'nvenc-extern-pool.c',
+  include_directories : [configinc, cuda_stubinc],
+  dependencies: [gst_dep, gstvideo_dep, gstcuda_dep],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
+  install: false)
