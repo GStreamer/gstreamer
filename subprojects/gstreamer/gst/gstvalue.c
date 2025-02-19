@@ -7521,6 +7521,7 @@ gst_value_serialize_g_date_time (const GValue * val)
 static gboolean
 gst_value_deserialize_g_date_time (GValue * dest, const gchar * s)
 {
+  GstDateTime *gst_datetime;
   GDateTime *datetime;
 
   if (!s || strcmp (s, "null") == 0) {
@@ -7528,8 +7529,13 @@ gst_value_deserialize_g_date_time (GValue * dest, const gchar * s)
   }
 
   /* The Gstreamer iso8601 parser is a bit more forgiving */
-  datetime =
-      gst_date_time_to_g_date_time (gst_date_time_new_from_iso8601_string (s));
+  gst_datetime = gst_date_time_new_from_iso8601_string (s);
+  if (gst_datetime == NULL) {
+    GST_WARNING ("Failed to deserialize date time string '%s'", s);
+    return FALSE;
+  }
+  datetime = gst_date_time_to_g_date_time (gst_datetime);
+  gst_date_time_unref (gst_datetime);
   if (datetime != NULL) {
     g_value_take_boxed (dest, datetime);
     return TRUE;
