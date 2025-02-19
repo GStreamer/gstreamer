@@ -7549,12 +7549,12 @@ gst_value_deserialize_bytes (GValue * dest, const gchar * s)
   guint8 *data;
 
   if (!s) {
-    g_value_set_boxed (dest, g_bytes_new (NULL, 0));
+    g_value_take_boxed (dest, g_bytes_new (NULL, 0));
     return TRUE;
   }
 
   data = g_base64_decode (s, &len);
-  g_value_set_boxed (dest, g_bytes_new_take (data, len));
+  g_value_take_boxed (dest, g_bytes_new_take (data, len));
   return TRUE;
 }
 
