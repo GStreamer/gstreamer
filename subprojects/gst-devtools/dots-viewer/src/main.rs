@@ -304,17 +304,18 @@ impl GstDots {
                                             let path = path.to_path_buf();
                                             let clients = app_clone.viewer_clients.lock().unwrap();
                                             let clients = clients.clone();
-
-                                            for client in clients.iter() {
-                                                debug!("Sending to client: {:?}", client);
-                                                client.do_send(TextMessage(
+                                            let path = path.to_path_buf();
+                                            let name = app_clone.relative_dot_path(&path);
+                                            let value =
                                                     json!({
                                                         "type": "DotRemoved",
-                                                        "name": path.file_name().unwrap().to_str().unwrap(),
-                                                        "creation_time": app_clone.modify_time(&event.paths[0]),
-                                                    })
-                                                    .to_string(),
-                                                ));
+                                                        "name": name,
+                                                        "creation_time": app_clone.modify_time(&path),
+                                                    });
+
+                                            for client in clients.iter() {
+                                                debug!("Sending {value:?} to client: {client:?}");
+                                                client.do_send(TextMessage(value.to_string()));
                                             }
                                         }
                                     }

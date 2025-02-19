@@ -214,11 +214,21 @@ export function connectWs() {
                     updateSearch();
                 });
             } else if (obj.type == "DotRemoved") {
+                console.debug(`Trying to remove: ${obj.name}`);
                 let dot_id = dotId(obj);
                 let dot_div = document.getElementById(dot_id);
                 if (dot_div) {
-                    console.info(`Removing dot_div ${dot_id}`);
-                    dot_div.remove();
+                    let parent = dot_div.parentElement;
+                    if (obj.name.includes('/') && parent.childElementCount == 1) {
+                        console.info(`Last element in folder, removing parent div for ${dot_id}`);
+                        const wrapperDiv = parent.closest('.wrap-collabsible');
+                        if (wrapperDiv) {
+                            wrapperDiv.remove();
+                        }
+                    } else {
+                        console.info(`Removing dot_div ${dot_id}`);
+                        dot_div.remove();
+                    }
                 } else {
                     console.error(`dot_div ${dot_id} not found`);
                 }
