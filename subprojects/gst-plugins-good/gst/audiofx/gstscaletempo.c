@@ -735,22 +735,41 @@ gst_scaletempo_sink_event (GstBaseTransform * trans, GstEvent * event)
     gst_segment_init (&scaletempo->out_segment, GST_FORMAT_UNDEFINED);
   } else if (GST_EVENT_TYPE (event) == GST_EVENT_GAP) {
     if (scaletempo->scale != 1.0) {
-      GstClockTime gap_ts, gap_duration;
-      gst_event_parse_gap (event, &gap_ts, &gap_duration);
-      if (scaletempo->reverse) {
-        gap_ts = scaletempo->in_segment.stop - gap_ts;
-      } else {
-        gap_ts = gap_ts - scaletempo->in_segment.start;
-      }
-      gap_ts = gap_ts / scaletempo->scale + scaletempo->in_segment.start;
+      GstClockTime gap_start, gap_duration;
+      GstClockTime gap_stop = GST_CLOCK_TIME_NONE;
+      GstClockTime cstart = GST_CLOCK_TIME_NONE;
+      GstClockTime cstop = GST_CLOCK_TIME_NONE;;
+
+      gst_event_parse_gap (event, &gap_start, &gap_duration);
       if (GST_CLOCK_TIME_IS_VALID (gap_duration)) {
+        gap_stop = gap_start + gap_duration;
+      }
+      if (G_UNLIKELY (!gst_segment_clip (&scaletempo->in_segment,
+                  GST_FORMAT_TIME, gap_start, gap_stop, &cstart, &cstop))) {
+        GST_DEBUG ("gap event outside configured segment");
+        goto done;
+      }
+
+      if (scaletempo->reverse) {
+        cstart = scaletempo->in_segment.stop - cstart;
+      } else {
+        cstart -= scaletempo->in_segment.start;
+      }
+      cstart = cstart / scaletempo->scale + scaletempo->in_segment.start;
+      if (GST_CLOCK_TIME_IS_VALID (gap_duration)) {
+        /* Clip duration if needed */
+        if (GST_CLOCK_TIME_IS_VALID (cstart)
+            && GST_CLOCK_TIME_IS_VALID (cstop)) {
+          gap_duration = cstop - cstart;
+        }
         gap_duration = gap_duration / ABS (scaletempo->scale);
       }
       gst_event_unref (event);
-      event = gst_event_new_gap (gap_ts, gap_duration);
+      event = gst_event_new_gap (cstart, gap_duration);
     }
   }
 
+done:
   return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 }
 
