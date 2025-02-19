@@ -17,6 +17,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <gst/allocators/allocators.h>
+
 #include "gstv4l2format.h"
 
 #include "linux/drm_fourcc.h"
@@ -42,19 +44,20 @@ typedef struct
 } GstV4l2FormatDesc;
 
 /* *INDENT-OFF* */
+/* Keep the same order as GST_V4L2_DEFAULT_VIDEO_FORMATS */
 static const GstV4l2FormatDesc gst_v4l2_descriptions[] = {
-  {V4L2_PIX_FMT_MM21,             GST_VIDEO_FORMAT_NV12_16L32S,     DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
-  {V4L2_PIX_FMT_MT2110T,          GST_VIDEO_FORMAT_MT2110T,         DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
   {V4L2_PIX_FMT_MT2110R,          GST_VIDEO_FORMAT_MT2110R,         DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
-  {V4L2_PIX_FMT_NV12,             GST_VIDEO_FORMAT_NV12,            DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
-  {V4L2_PIX_FMT_NV12_4L4,         GST_VIDEO_FORMAT_NV12_4L4,        DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
+  {V4L2_PIX_FMT_MT2110T,          GST_VIDEO_FORMAT_MT2110T,         DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
   {V4L2_PIX_FMT_NV15_4L4,         GST_VIDEO_FORMAT_NV12_10LE40_4L4, DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
   {V4L2_PIX_FMT_NV15,             GST_VIDEO_FORMAT_NV12_10LE40,     DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
   {V4L2_PIX_FMT_P010,             GST_VIDEO_FORMAT_P010_10LE,       DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
-  {V4L2_PIX_FMT_SUNXI_TILED_NV12, GST_VIDEO_FORMAT_NV12_32L32,      DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
-  {V4L2_PIX_FMT_YUV420M,          GST_VIDEO_FORMAT_I420,            DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
   {V4L2_PIX_FMT_YUYV,             GST_VIDEO_FORMAT_YUY2,            DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
+  {V4L2_PIX_FMT_MM21,             GST_VIDEO_FORMAT_NV12_16L32S,     DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
+  {V4L2_PIX_FMT_SUNXI_TILED_NV12, GST_VIDEO_FORMAT_NV12_32L32,      DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
+  {V4L2_PIX_FMT_NV12_4L4,         GST_VIDEO_FORMAT_NV12_4L4,        DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
   {V4L2_PIX_FMT_NC12,             GST_VIDEO_FORMAT_UNKNOWN,         DRM_FORMAT_NV12,    DRM_FORMAT_MOD_BROADCOM_SAND128, 2},
+  {V4L2_PIX_FMT_NV12,             GST_VIDEO_FORMAT_NV12,            DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
+  {V4L2_PIX_FMT_YUV420M,          GST_VIDEO_FORMAT_I420,            DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
 };
 /* *INDENT-ON* */
 #define GST_V4L2_FORMAT_DESC_COUNT (G_N_ELEMENTS (gst_v4l2_descriptions))
@@ -336,4 +339,45 @@ gst_v4l2_format_get_n_planes (GstVideoInfoDmaDrm * info)
 
   g_warn_if_reached ();
   return 0;
+}
+
+
+GstCaps *
+gst_v4l2_format_sort_caps (GstCaps * caps)
+{
+  const GstV4l2FormatDesc *fmt_descs = gst_v4l2_format_get_descriptions ();
+  GstCaps *sorted_caps = gst_caps_new_empty ();
+
+  for (int i = 0; i < GST_V4L2_FORMAT_DESC_COUNT; i++) {
+    if (fmt_descs[i].drm_fourcc != DRM_FORMAT_INVALID) {
+      guint32 drm_fourcc = fmt_descs[i].drm_fourcc;
+      guint64 drm_modifier = fmt_descs[i].drm_modifier;
+      GValue fmt = G_VALUE_INIT;
+      g_value_init (&fmt, G_TYPE_STRING);
+      g_value_take_string (&fmt,
+          gst_video_dma_drm_fourcc_to_string (drm_fourcc, drm_modifier));
+
+      GstStructure *dma_s = gst_structure_new ("video/x-raw",
+          "format", G_TYPE_STRING, "DMA_DRM", NULL);
+      gst_structure_take_value (dma_s, "drm-format", &fmt);
+      gst_caps_append_structure_full (sorted_caps, dma_s,
+          gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_DMABUF,
+              NULL));
+    }
+  }
+
+  for (int i = 0; i < GST_V4L2_FORMAT_DESC_COUNT; i++) {
+    if (fmt_descs[i].gst_fmt != GST_VIDEO_FORMAT_UNKNOWN) {
+      GstStructure *s = gst_structure_new ("video/x-raw",
+          "format", G_TYPE_STRING,
+          gst_video_format_to_string (fmt_descs[i].gst_fmt), NULL);
+      gst_caps_append_structure (sorted_caps, s);
+    }
+  }
+
+  GstCaps *ret =
+      gst_caps_intersect_full (sorted_caps, caps, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (sorted_caps);
+
+  return ret;
 }

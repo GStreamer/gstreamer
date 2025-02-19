@@ -680,6 +680,7 @@ gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
   }
 
   GST_DEBUG_OBJECT (self, "Original caps: %" GST_PTR_FORMAT, caps);
+  caps = gst_v4l2_format_sort_caps (caps);
   caps = gst_caps_fixate (caps);
   GST_DEBUG_OBJECT (self, "Fixated caps: %" GST_PTR_FORMAT, caps);
 
