@@ -109,13 +109,13 @@ async function createNewDotDiv(pipelines_div, dot_info) {
     img.loading = "lazy";
     img.dot_info = dot_info;
     const observer = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
+        for (const entry of entries) {
             if (entry.isIntersecting) {
                 console.debug(`Image ${div.id} is visible`);
                 generateSvg(img);
                 observer.unobserve(entry.target);
             }
-        });
+        }
     }, {
         rootMargin: '100px'
     });
@@ -282,15 +282,16 @@ function updateSearch() {
             return scoreB - scoreA;
         });
 
-        divs.forEach(div => {
+        for (const div of divs) {
             console.debug(`Moving ${div.id} in {div.parentNode}}`);
             div.parentNode.appendChild(div);
-        });
+        }
 
         return;
     }
 
     const options = {
+
         includeScore: true,
         threshold: 0.6,
         keys: ['title']
@@ -305,7 +306,10 @@ function updateSearch() {
     const fuse = new Fuse(list, options);
     const results = fuse.search(input.value);
 
-    allDivs.forEach(div => div.style.display = 'none');
+    for (div of allDivs) {
+        div.style.display = 'none';
+    }
+
     let divs = results.map(result => {
         let div = document.getElementById(result.item.id);
         div.style.display = '';
@@ -321,9 +325,9 @@ function updateSearch() {
         return scoreA - scoreB; // For ascending order. Use (scoreB - scoreA) for descending.
     });
 
-    divs.forEach(div => {
+    for (div of divs) {
         div.parentNode.appendChild(div);
-    });
+    }
 }
 
 export function connectSearch() {
