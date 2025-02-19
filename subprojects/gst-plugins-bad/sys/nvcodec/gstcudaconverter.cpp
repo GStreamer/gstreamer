@@ -1980,36 +1980,36 @@ static const gchar TEMPLATE_KERNEL[] =
 GST_CUDA_KERNEL_MAIN_FUNC "(cudaTextureObject_t tex0, cudaTextureObject_t tex1,\n"
 "    cudaTextureObject_t tex2, cudaTextureObject_t tex3, unsigned char * dst0,\n"
 "    unsigned char * dst1, unsigned char * dst2, unsigned char * dst3,\n"
-"    int stride0, int stride1, ConstBuffer * const_buf, int off_x, int off_y)\n"
+"    int stride0, int stride1, ConstBuffer const_buf, int off_x, int off_y)\n"
 "{\n"
 "  int x_pos = blockIdx.x * blockDim.x + threadIdx.x + off_x;\n"
 "  int y_pos = blockIdx.y * blockDim.y + threadIdx.y + off_y;\n"
 "  float4 sample;\n"
-"  if (x_pos >= const_buf->width || y_pos >= const_buf->height ||\n"
-"      const_buf->view_width <= 0 || const_buf->view_height <= 0)\n"
+"  if (x_pos >= const_buf.width || y_pos >= const_buf.height ||\n"
+"      const_buf.view_width <= 0 || const_buf.view_height <= 0)\n"
 "    return;\n"
-"  if (x_pos < const_buf->left || x_pos >= const_buf->right ||\n"
-"      y_pos < const_buf->top || y_pos >= const_buf->bottom) {\n"
-"    if (!const_buf->fill_border)\n"
+"  if (x_pos < const_buf.left || x_pos >= const_buf.right ||\n"
+"      y_pos < const_buf.top || y_pos >= const_buf.bottom) {\n"
+"    if (!const_buf.fill_border)\n"
 "      return;\n"
-"    sample = make_float4 (const_buf->border_x, const_buf->border_y,\n"
-"       const_buf->border_z, const_buf->border_w);\n"
+"    sample = make_float4 (const_buf.border_x, const_buf.border_y,\n"
+"       const_buf.border_z, const_buf.border_w);\n"
 "  } else {\n"
-"    float x = (__int2float_rz (x_pos - const_buf->left) + 0.5) / const_buf->view_width;\n"
+"    float x = (__int2float_rz (x_pos - const_buf.left) + 0.5) / const_buf.view_width;\n"
 "    if (x < 0.0 || x > 1.0)\n"
 "      return;\n"
-"    float y = (__int2float_rz (y_pos - const_buf->top) + 0.5) / const_buf->view_height;\n"
+"    float y = (__int2float_rz (y_pos - const_buf.top) + 0.5) / const_buf.view_height;\n"
 "    if (y < 0.0 || y > 1.0)\n"
 "      return;\n"
-"    float2 rotated = do_rotate (x, y, const_buf->video_direction);\n"
+"    float2 rotated = do_rotate (x, y, const_buf.video_direction);\n"
 "    float4 s = %s (tex0, tex1, tex2, tex3, rotated.x, rotated.y);\n"
 "    float3 xyz = make_float3 (s.x, s.y, s.z);\n"
-"    float3 rgb = %s (xyz, &const_buf->toRGBCoeff);\n"
-"    float3 yuv = %s (rgb, &const_buf->toYuvCoeff);\n"
+"    float3 rgb = %s (xyz, &const_buf.toRGBCoeff);\n"
+"    float3 yuv = %s (rgb, &const_buf.toYuvCoeff);\n"
 "    sample = make_float4 (yuv.x, yuv.y, yuv.z, s.w);\n"
 "  }\n"
-"  sample.w = sample.w * const_buf->alpha;\n"
-"  if (!const_buf->do_blend) {\n"
+"  sample.w = sample.w * const_buf.alpha;\n"
+"  if (!const_buf.do_blend) {\n"
 "    %s (dst0, dst1, dst2, dst3, sample, x_pos, y_pos, stride0, stride1);\n"
 "  } else {\n"
 "    %s (dst0, dst1, dst2, dst3, sample, x_pos, y_pos, stride0, stride1);\n"
@@ -2102,12 +2102,14 @@ struct _GstCudaConverterPrivate
   _GstCudaConverterPrivate ()
   {
     config = gst_structure_new_empty ("converter-config");
+    const_buf = g_new0 (ConstBuffer, 1);
   }
 
    ~_GstCudaConverterPrivate ()
   {
     if (config)
       gst_structure_free (config);
+    g_free (const_buf);
   }
 
   std::mutex lock;
@@ -2123,8 +2125,7 @@ struct _GstCudaConverterPrivate
 
   TextureBuffer fallback_buffer[GST_VIDEO_MAX_COMPONENTS];
   TextureBuffer unpack_buffer;
-  ConstBuffer *const_buf_staging = nullptr;
-  CUdeviceptr const_buf = 0;
+  ConstBuffer *const_buf = nullptr;
 
   CUmodule module = nullptr;
   CUfunction main_func = nullptr;
@@ -2237,16 +2238,6 @@ gst_cuda_converter_dispose (GObject * object)
       priv->unpack_buffer.ptr = 0;
     }
 
-    if (priv->const_buf_staging) {
-      CuMemFreeHost (priv->const_buf_staging);
-      priv->const_buf_staging = nullptr;
-    }
-
-    if (priv->const_buf) {
-      CuMemFree (priv->const_buf);
-      priv->const_buf = 0;
-    }
-
     gst_cuda_context_pop (nullptr);
   }
 
@@ -2280,8 +2271,8 @@ gst_cuda_converter_set_property (GObject * object, guint prop_id,
       if (priv->dest_x != dest_x) {
         priv->update_const_buf = TRUE;
         priv->dest_x = dest_x;
-        priv->const_buf_staging->left = dest_x;
-        priv->const_buf_staging->right = priv->dest_x + priv->dest_width;
+        priv->const_buf->left = dest_x;
+        priv->const_buf->right = priv->dest_x + priv->dest_width;
       }
       break;
     }
@@ -2291,8 +2282,8 @@ gst_cuda_converter_set_property (GObject * object, guint prop_id,
       if (priv->dest_y != dest_y) {
         priv->update_const_buf = TRUE;
         priv->dest_y = dest_y;
-        priv->const_buf_staging->top = dest_y;
-        priv->const_buf_staging->bottom = priv->dest_y + priv->dest_height;
+        priv->const_buf->top = dest_y;
+        priv->const_buf->bottom = priv->dest_y + priv->dest_height;
       }
       break;
     }
@@ -2302,8 +2293,8 @@ gst_cuda_converter_set_property (GObject * object, guint prop_id,
       if (priv->dest_width != dest_width) {
         priv->update_const_buf = TRUE;
         priv->dest_width = dest_width;
-        priv->const_buf_staging->right = priv->dest_x + dest_width;
-        priv->const_buf_staging->view_width = dest_width;
+        priv->const_buf->right = priv->dest_x + dest_width;
+        priv->const_buf->view_width = dest_width;
       }
       break;
     }
@@ -2313,8 +2304,8 @@ gst_cuda_converter_set_property (GObject * object, guint prop_id,
       if (priv->dest_height != dest_height) {
         priv->update_const_buf = TRUE;
         priv->dest_height = dest_height;
-        priv->const_buf_staging->bottom = priv->dest_y + dest_height;
-        priv->const_buf_staging->view_height = dest_height;
+        priv->const_buf->bottom = priv->dest_y + dest_height;
+        priv->const_buf->view_height = dest_height;
       }
       break;
     }
@@ -2324,7 +2315,7 @@ gst_cuda_converter_set_property (GObject * object, guint prop_id,
       if (priv->fill_border != fill_border) {
         priv->update_const_buf = TRUE;
         priv->fill_border = fill_border;
-        priv->const_buf_staging->fill_border = fill_border;
+        priv->const_buf->fill_border = fill_border;
       }
       break;
     }
@@ -2335,7 +2326,7 @@ gst_cuda_converter_set_property (GObject * object, guint prop_id,
       if (priv->video_direction != video_direction) {
         priv->update_const_buf = TRUE;
         priv->video_direction = video_direction;
-        priv->const_buf_staging->video_direction = video_direction;
+        priv->const_buf->video_direction = video_direction;
       }
       break;
     }
@@ -2344,7 +2335,7 @@ gst_cuda_converter_set_property (GObject * object, guint prop_id,
       auto alpha = g_value_get_double (value);
       if (priv->alpha != alpha) {
         priv->update_const_buf = TRUE;
-        priv->const_buf_staging->alpha = (float) alpha;
+        priv->const_buf->alpha = (float) alpha;
       }
       break;
     }
@@ -2353,7 +2344,7 @@ gst_cuda_converter_set_property (GObject * object, guint prop_id,
       auto blend = g_value_get_boolean (value);
       if (priv->blend != blend) {
         priv->update_const_buf = TRUE;
-        priv->const_buf_staging->do_blend = blend;
+        priv->const_buf->do_blend = blend;
       }
       break;
     }
@@ -2735,37 +2726,37 @@ gst_cuda_converter_setup (GstCudaConverter * self)
   }
 
   for (i = 0; i < 3; i++) {
-    priv->const_buf_staging->toRGBCoeff.coeffX[i] = to_rgb_matrix.matrix[0][i];
-    priv->const_buf_staging->toRGBCoeff.coeffY[i] = to_rgb_matrix.matrix[1][i];
-    priv->const_buf_staging->toRGBCoeff.coeffZ[i] = to_rgb_matrix.matrix[2][i];
-    priv->const_buf_staging->toRGBCoeff.offset[i] = to_rgb_matrix.offset[i];
-    priv->const_buf_staging->toRGBCoeff.min[i] = to_rgb_matrix.min[i];
-    priv->const_buf_staging->toRGBCoeff.max[i] = to_rgb_matrix.max[i];
+    priv->const_buf->toRGBCoeff.coeffX[i] = to_rgb_matrix.matrix[0][i];
+    priv->const_buf->toRGBCoeff.coeffY[i] = to_rgb_matrix.matrix[1][i];
+    priv->const_buf->toRGBCoeff.coeffZ[i] = to_rgb_matrix.matrix[2][i];
+    priv->const_buf->toRGBCoeff.offset[i] = to_rgb_matrix.offset[i];
+    priv->const_buf->toRGBCoeff.min[i] = to_rgb_matrix.min[i];
+    priv->const_buf->toRGBCoeff.max[i] = to_rgb_matrix.max[i];
 
-    priv->const_buf_staging->toYuvCoeff.coeffX[i] = to_yuv_matrix.matrix[0][i];
-    priv->const_buf_staging->toYuvCoeff.coeffY[i] = to_yuv_matrix.matrix[1][i];
-    priv->const_buf_staging->toYuvCoeff.coeffZ[i] = to_yuv_matrix.matrix[2][i];
-    priv->const_buf_staging->toYuvCoeff.offset[i] = to_yuv_matrix.offset[i];
-    priv->const_buf_staging->toYuvCoeff.min[i] = to_yuv_matrix.min[i];
-    priv->const_buf_staging->toYuvCoeff.max[i] = to_yuv_matrix.max[i];
+    priv->const_buf->toYuvCoeff.coeffX[i] = to_yuv_matrix.matrix[0][i];
+    priv->const_buf->toYuvCoeff.coeffY[i] = to_yuv_matrix.matrix[1][i];
+    priv->const_buf->toYuvCoeff.coeffZ[i] = to_yuv_matrix.matrix[2][i];
+    priv->const_buf->toYuvCoeff.offset[i] = to_yuv_matrix.offset[i];
+    priv->const_buf->toYuvCoeff.min[i] = to_yuv_matrix.min[i];
+    priv->const_buf->toYuvCoeff.max[i] = to_yuv_matrix.max[i];
   }
 
-  priv->const_buf_staging->width = out_info->width;
-  priv->const_buf_staging->height = out_info->height;
-  priv->const_buf_staging->left = 0;
-  priv->const_buf_staging->top = 0;
-  priv->const_buf_staging->right = out_info->width;
-  priv->const_buf_staging->bottom = out_info->height;
-  priv->const_buf_staging->view_width = out_info->width;
-  priv->const_buf_staging->view_height = out_info->height;
-  priv->const_buf_staging->border_x = border_color[0];
-  priv->const_buf_staging->border_y = border_color[1];
-  priv->const_buf_staging->border_z = border_color[2];
-  priv->const_buf_staging->border_w = border_color[3];
-  priv->const_buf_staging->fill_border = 0;
-  priv->const_buf_staging->video_direction = 0;
-  priv->const_buf_staging->alpha = 1;
-  priv->const_buf_staging->do_blend = 0;
+  priv->const_buf->width = out_info->width;
+  priv->const_buf->height = out_info->height;
+  priv->const_buf->left = 0;
+  priv->const_buf->top = 0;
+  priv->const_buf->right = out_info->width;
+  priv->const_buf->bottom = out_info->height;
+  priv->const_buf->view_width = out_info->width;
+  priv->const_buf->view_height = out_info->height;
+  priv->const_buf->border_x = border_color[0];
+  priv->const_buf->border_y = border_color[1];
+  priv->const_buf->border_z = border_color[2];
+  priv->const_buf->border_w = border_color[3];
+  priv->const_buf->fill_border = 0;
+  priv->const_buf->video_direction = 0;
+  priv->const_buf->alpha = 1;
+  priv->const_buf->do_blend = 0;
 
   str = g_strdup_printf (TEMPLATE_KERNEL, KERNEL_COMMON,
       unpack_function ? unpack_function : "",
@@ -2867,13 +2858,6 @@ gst_cuda_converter_setup (GstCudaConverter * self)
     }
   }
 
-  ret = CuMemcpyHtoD (priv->const_buf,
-      priv->const_buf_staging, sizeof (ConstBuffer));
-  if (!gst_cuda_result (ret)) {
-    GST_ERROR_OBJECT (self, "Could upload const buf");
-    goto error;
-  }
-
   gst_cuda_context_pop (nullptr);
 
   return TRUE;
@@ -2910,7 +2894,6 @@ gst_cuda_converter_new (const GstVideoInfo * in_info,
 {
   GstCudaConverter *self;
   GstCudaConverterPrivate *priv;
-  CUresult cuda_ret;
 
   g_return_val_if_fail (in_info != nullptr, nullptr);
   g_return_val_if_fail (out_info != nullptr, nullptr);
@@ -2932,26 +2915,6 @@ gst_cuda_converter_new (const GstVideoInfo * in_info,
 
   if (config)
     gst_cuda_converter_set_config (self, config);
-
-  if (!gst_cuda_context_push (context)) {
-    GST_ERROR_OBJECT (self, "Couldn't push context");
-    goto error;
-  }
-
-  cuda_ret = CuMemAllocHost ((void **) &priv->const_buf_staging,
-      sizeof (ConstBuffer));
-  if (!gst_cuda_result (cuda_ret)) {
-    GST_ERROR_OBJECT (self, "Couldn't allocate staging const buf");
-    gst_cuda_context_pop (nullptr);
-    goto error;
-  }
-
-  cuda_ret = CuMemAlloc (&priv->const_buf, sizeof (ConstBuffer));
-  gst_cuda_context_pop (nullptr);
-  if (!gst_cuda_result (cuda_ret)) {
-    GST_ERROR_OBJECT (self, "Couldn't allocate const buf");
-    goto error;
-  }
 
   if (!gst_cuda_converter_setup (self))
     goto error;
@@ -3136,20 +3099,9 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
   if (!priv->fill_border && (priv->dest_width <= 0 || priv->dest_height <= 0))
     return TRUE;
 
-  if (priv->update_const_buf) {
-    priv->update_const_buf = FALSE;
-    cuda_ret = CuMemcpyHtoDAsync (priv->const_buf, priv->const_buf_staging,
-        sizeof (ConstBuffer), stream);
-
-    if (!gst_cuda_result (cuda_ret)) {
-      GST_ERROR_OBJECT (converter, "Couldn't upload const buffer");
-      return FALSE;
-    }
-  }
-
   gpointer args[] = { &texture[0], &texture[1], &texture[2], &texture[3],
     &dst[0], &dst[1], &dst[2], &dst[3], &stride[0], &stride[1],
-    &priv->const_buf, &off_x, &off_y
+    priv->const_buf, &off_x, &off_y
   };
 
   cmem = (GstCudaMemory *) gst_buffer_peek_memory (src_frame->buffer, 0);
