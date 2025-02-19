@@ -234,6 +234,7 @@ gst_rtp_h264_depay_reset (GstRtpH264Depay * rtph264depay, gboolean hard)
   gst_adapter_clear (rtph264depay->adapter);
   rtph264depay->wait_start = TRUE;
   rtph264depay->waiting_for_keyframe = rtph264depay->wait_for_keyframe;
+  rtph264depay->requesting_keyframe = FALSE;
   gst_adapter_clear (rtph264depay->picture_adapter);
   rtph264depay->picture_start = FALSE;
   rtph264depay->last_keyframe = FALSE;
@@ -1098,8 +1099,10 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
     /* add to adapter */
     gst_buffer_unmap (nal, &map);
 
-    if (!rtph264depay->picture_start && start && out_keyframe)
+    if (!rtph264depay->picture_start && start && out_keyframe) {
       rtph264depay->waiting_for_keyframe = FALSE;
+      rtph264depay->requesting_keyframe = FALSE;
+    }
 
     GST_DEBUG_OBJECT (depayload, "adding NAL to picture adapter");
     gst_adapter_push (rtph264depay->picture_adapter, nal);
@@ -1118,7 +1121,17 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
   }
 
   if (outbuf) {
-    if (!rtph264depay->waiting_for_keyframe) {
+    /* Request a new keyframe if we are waiting for one */
+    if (rtph264depay->waiting_for_keyframe &&
+        !rtph264depay->requesting_keyframe && rtph264depay->request_keyframe) {
+      rtph264depay->requesting_keyframe = TRUE;
+      GST_INFO_OBJECT (depayload, "Requesting keyframe while waiting for one");
+      gst_pad_push_event (GST_RTP_BASE_DEPAYLOAD_SINKPAD (depayload),
+          gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
+              TRUE, 0));
+    }
+
+    if (!rtph264depay->waiting_for_keyframe || !rtph264depay->wait_for_keyframe) {
       gst_rtp_h264_depay_push (rtph264depay, outbuf, out_keyframe,
           out_timestamp, marker);
     } else {
@@ -1177,23 +1190,26 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 {
   GstRtpH264Depay *rtph264depay;
   GstBuffer *outbuf = NULL;
+  gboolean is_discont;
   guint8 nal_unit_type;
 
   rtph264depay = GST_RTP_H264_DEPAY (depayload);
 
-  if (!rtph264depay->merge)
+  if (!rtph264depay->merge) {
     rtph264depay->waiting_for_keyframe = FALSE;
+    rtph264depay->requesting_keyframe = FALSE;
+  }
 
   /* flush remaining data on discont */
-  if (GST_BUFFER_IS_DISCONT (rtp->buffer)) {
+  is_discont = GST_BUFFER_IS_DISCONT (rtp->buffer);
+  if (is_discont) {
     gst_adapter_clear (rtph264depay->adapter);
     rtph264depay->wait_start = TRUE;
     rtph264depay->current_fu_type = 0;
     rtph264depay->last_fu_seqnum = 0;
 
-    if (rtph264depay->merge && rtph264depay->wait_for_keyframe) {
+    if (rtph264depay->merge)
       rtph264depay->waiting_for_keyframe = TRUE;
-    }
 
 
     if (rtph264depay->request_keyframe)
@@ -1397,6 +1413,16 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           /* and assemble in the adapter */
           gst_adapter_push (rtph264depay->adapter, outbuf);
         } else {
+          /* If packet is discont and is not the first one of a FU, then we
+           * can tell it is not part of a keyframe, so request a new one */
+          if (is_discont && rtph264depay->request_keyframe) {
+            GST_INFO_OBJECT (depayload,
+                "discont FU received without start bit. Requesting keyframe.");
+            gst_pad_push_event (GST_RTP_BASE_DEPAYLOAD_SINKPAD (depayload),
+                gst_video_event_new_upstream_force_key_unit
+                (GST_CLOCK_TIME_NONE, TRUE, 0));
+          }
+
           if (rtph264depay->current_fu_type == 0) {
             /* previous FU packet missing start bit? */
             GST_WARNING_OBJECT (rtph264depay, "missing FU start bit on an "
