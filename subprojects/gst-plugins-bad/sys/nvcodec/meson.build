@@ -75,6 +75,15 @@ plugin_incdirs = [configinc, cuda_stubinc]
 extra_args = ['-DGST_USE_UNSTABLE_API']
 extra_deps = []
 
+nvcodec_kernel_precompiled = []
+nvcodec_precompile_opt = get_option('nvcodec-cuda-precompile')
+if not nvcodec_precompile_opt.disabled() and not meson.is_cross_build()
+  nvcc = find_program ('nvcc', required : nvcodec_precompile_opt)
+  if nvcc.found()
+    subdir('kernel')
+  endif
+endif
+
 if gstgl_dep.found()
   extra_args += ['-DHAVE_CUDA_GST_GL']
 endif
@@ -121,7 +130,7 @@ if cc.get_id() != 'msvc'
 endif
 
 gstnvcodec = library('gstnvcodec',
-  nvcodec_sources,
+  nvcodec_sources + nvcodec_kernel_precompiled,
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args : gst_plugins_bad_args + extra_args,
   include_directories : plugin_incdirs,

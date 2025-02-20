@@ -246,6 +246,10 @@ option('sctp-internal-usrsctp', type: 'feature', value : 'enabled',
 option('mfx_api', type : 'combo', choices : ['MSDK', 'oneVPL', 'auto'], value : 'auto',
        description : 'Select MFX API to build against')
 
+# nvcodec plugin options
+option('nvcodec-cuda-precompile', type : 'feature', value : 'disabled', description : 'Enable CUDA kernel precompile')
+option('nvcodec-nvcc-arch', type : 'string', value : 'compute_52', description : 'GPU architectur for nvcc -arch option')
+
 # nvCOMP plugin options
 option('nvcomp-sdk-path', type: 'string', value : '',
        description : 'nvCOMP SDK root directory')
