@@ -211,6 +211,25 @@ failed:
   return NULL;
 }
 
+static GstPadProbeReturn
+strip_video_crop_meta (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstBuffer *buf = gst_pad_probe_info_get_buffer (info);
+  GstVideoCropMeta *cmeta = gst_buffer_get_video_crop_meta (buf);
+
+  if (cmeta != NULL) {
+    /* Make the buffer writable before stripping the meta and
+     * putting the possibly-replaced buffer back into
+     * the pad probe data */
+    GST_DEBUG ("Removing video crop meta from input buffer");
+    buf = gst_buffer_make_writable (buf);
+    gst_buffer_remove_meta (buf, GST_META_CAST (cmeta));
+    GST_PAD_PROBE_INFO_DATA (info) = buf;
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
 static GstElement *
 build_convert_frame_pipeline (GstElement ** src_element,
     GstElement ** sink_element, GstCaps * from_caps,
@@ -277,16 +296,25 @@ build_convert_frame_pipeline (GstElement ** src_element,
     gst_video_info_from_caps (&info, from_caps);
     g_object_set (vcrop, "left", cmeta->x, NULL);
     g_object_set (vcrop, "top", cmeta->y, NULL);
-    g_object_set (vcrop, "right", GST_VIDEO_INFO_WIDTH (&info) - cmeta->width,
-        NULL);
+    g_object_set (vcrop, "right",
+        GST_VIDEO_INFO_WIDTH (&info) - (cmeta->x + cmeta->width), NULL);
     g_object_set (vcrop, "bottom",
-        GST_VIDEO_INFO_HEIGHT (&info) - cmeta->height, NULL);
+        GST_VIDEO_INFO_HEIGHT (&info) - (cmeta->y + cmeta->height), NULL);
+
+    /* Because we are asking videocrop to apply the cropping explicitly,
+     * we need to give it a buffer without crop meta, or the crop amounts end up
+     * getting applied twice. Add a probe to strip the meta and use videocrop's
+     * properties */
+    GstPad *sink = gst_element_get_static_pad (vcrop, "sink");
+    g_assert (sink != NULL);
+    gst_pad_add_probe (sink, GST_PAD_PROBE_TYPE_BUFFER,
+        strip_video_crop_meta, NULL, NULL);
+    gst_object_unref (sink);
+
     GST_DEBUG ("crop meta [x,y,width,height]: %d %d %d %d", cmeta->x, cmeta->y,
         cmeta->width, cmeta->height);
-  }
 
-  /* FIXME: linking is still way too expensive, profile this properly */
-  if (vcrop) {
+    /* FIXME: linking is still way too expensive, profile this properly */
     if (!dl) {
       GST_DEBUG ("linking src->csp2");
       if (!gst_element_link_pads (src, "src", csp2, "sink"))
