@@ -3391,8 +3391,11 @@ parse_pes_metadata_frame (TSDemuxStream * stream)
     if (!gst_byte_reader_get_uint16_be (&reader, &au_size))
       goto error;
 
-    if (gst_byte_reader_get_remaining (&reader) < au_size)
-      goto error;
+    guint rem = gst_byte_reader_get_remaining (&reader);
+
+    if (rem < au_size) {
+      au_size = rem;
+    }
 
     if (!gst_byte_reader_dup_data (&reader, au_size, &au_data))
       goto error;
