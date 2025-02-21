@@ -982,7 +982,9 @@ gst_ffmpeg_codecid_is_image (enum AVCodecID codec_id)
     case AV_CODEC_ID_PPM:
     case AV_CODEC_ID_PBM:
     case AV_CODEC_ID_PCX:
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 33, 100)
     case AV_CODEC_ID_QOI:
+#endif
     case AV_CODEC_ID_SGI:
     case AV_CODEC_ID_TARGA:
     case AV_CODEC_ID_TIFF:
@@ -1115,7 +1117,9 @@ gst_ffmpeg_codecid_is_known (enum AVCodecID codec_id)
     case AV_CODEC_ID_PAM:
     case AV_CODEC_ID_PGM:
     case AV_CODEC_ID_PCX:
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 33, 100)
     case AV_CODEC_ID_QOI:
+#endif
     case AV_CODEC_ID_SGI:
     case AV_CODEC_ID_TARGA:
     case AV_CODEC_ID_TIFF:
@@ -2253,11 +2257,13 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           NULL);
       break;
 
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(59, 33, 100)
     case AV_CODEC_ID_QOI:
       caps =
           gst_ff_vid_caps_new (context, NULL, codec_id, encode, "image/qoi",
           NULL);
       break;
+#endif
 
     case AV_CODEC_ID_SGI:
       caps =
