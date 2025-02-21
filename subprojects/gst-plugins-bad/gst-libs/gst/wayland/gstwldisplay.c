@@ -590,16 +590,8 @@ void
 gst_wl_display_callback_destroy (GstWlDisplay * self,
     struct wl_callback **callback)
 {
-  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
-
-  g_rec_mutex_lock (&priv->sync_mutex);
-
-  if (*callback) {
-    wl_callback_destroy (*callback);
-    *callback = NULL;
-  }
-
-  g_rec_mutex_unlock (&priv->sync_mutex);
+  gst_wl_display_object_destroy (self, (gpointer *) callback,
+      (GDestroyNotify) wl_callback_destroy);
 }
 
 struct wl_display *
