@@ -193,7 +193,15 @@ plugin_init (GstPlugin * plugin)
     return TRUE;
   }
 
+#ifdef NVCODEC_CUDA_PRECOMPILED
+  /* If cuda kernels are precompiled, just try library load library.
+   * Even if we have compiled kernel bytecode, we may need to use
+   * this runtime compiler as a fallback */
+  gst_cuda_nvrtc_load_library ();
+  have_nvrtc = TRUE;
+#else
   have_nvrtc = check_runtime_compiler ();
+#endif
   if (!have_nvrtc) {
     gst_plugin_add_status_info (plugin,
         "CUDA runtime compilation library \"" NVRTC_LIBNAME "\" was not found, "
