@@ -81,6 +81,7 @@ if not nvcodec_precompile_opt.disabled() and not meson.is_cross_build()
   nvcc = find_program ('nvcc', required : nvcodec_precompile_opt)
   if nvcc.found()
     subdir('kernel')
+    extra_args += ['-DNVCODEC_CUDA_PRECOMPILED']
   endif
 endif
 
