@@ -27,6 +27,8 @@
 #include <gmodule.h>
 #include <string>
 #include <mutex>
+#include <unordered_map>
+#include "kernel/gstnvjpegenc.cu"
 
 /**
  * SECTION:element-nvjpegenc
@@ -42,6 +44,18 @@
  * Since: 1.24
  *
  */
+
+/* *INDENT-OFF* */
+#ifdef NVCODEC_CUDA_PRECOMPILED
+#include "kernel/jpegenc_ptx.h"
+#else
+static std::unordered_map<std::string, const char *> g_precompiled_ptx_table;
+#endif
+
+static std::unordered_map<std::string, const char *> g_cubin_table;
+static std::unordered_map<std::string, const char *> g_ptx_table;
+static std::mutex g_kernel_table_lock;
+/* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY_STATIC (gst_nv_jpeg_enc_debug);
 #define GST_CAT_DEFAULT gst_nv_jpeg_enc_debug
@@ -391,38 +405,6 @@ gst_nv_jpeg_enc_set_context (GstElement * element, GstContext * context)
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
-#define KERNEL_MAIN_FUNC "gst_nv_jpec_enc_kernel"
-/* *INDENT-OFF* */
-const static gchar kernel_source[] =
-"extern \"C\" {\n"
-"__device__ inline unsigned char\n"
-"scale_to_uchar (float val)\n"
-"{\n"
-"  return (unsigned char) __float2int_rz (val * 255.0);\n"
-"}\n"
-"\n"
-"__global__ void\n"
-KERNEL_MAIN_FUNC "(cudaTextureObject_t uv_tex, unsigned char * out_u,\n"
-"    unsigned char * out_v, int width, int height, int stride)\n"
-"{\n"
-"  int x_pos = blockIdx.x * blockDim.x + threadIdx.x;\n"
-"  int y_pos = blockIdx.y * blockDim.y + threadIdx.y;\n"
-"  if (x_pos >= width || y_pos >= height)\n"
-"    return;\n"
-"  float x = 0;\n"
-"  float y = 0;\n"
-"  if (width > 1)\n"
-"    x = (float) x_pos / (width - 1);\n"
-"  if (height > 1)\n"
-"    y = (float) y_pos / (height - 1);\n"
-"  float2 uv = tex2D<float2> (uv_tex, x, y);\n"
-"  unsigned int pos = x_pos + (y_pos * stride);\n"
-"  out_u[pos] = scale_to_uchar (uv.x);\n"
-"  out_v[pos] = scale_to_uchar (uv.y);\n"
-"}\n"
-"}";
-/* *INDENT-ON* */
-
 static gboolean
 gst_nv_jpeg_enc_open (GstVideoEncoder * encoder)
 {
@@ -444,28 +426,81 @@ gst_nv_jpeg_enc_open (GstVideoEncoder * encoder)
   }
 
   if (!priv->module && klass->have_nvrtc) {
-    auto program = gst_cuda_nvrtc_compile_cubin (kernel_source,
-        klass->cuda_device_id);
-    if (!program)
-      program = gst_cuda_nvrtc_compile (kernel_source);
+    const gchar *program = nullptr;
+    auto precompiled = g_precompiled_ptx_table.find ("GstJpegEnc");
+    CUresult ret;
+    if (precompiled != g_precompiled_ptx_table.end ())
+      program = precompiled->second;
 
-    if (!program) {
-      GST_ERROR_OBJECT (self, "Couldn't compile kernel source");
-      gst_cuda_context_pop (nullptr);
-      return FALSE;
+    if (program) {
+      GST_DEBUG_OBJECT (self, "Precompiled PTX available");
+      ret = CuModuleLoadData (&priv->module, program);
+      if (ret != CUDA_SUCCESS) {
+        GST_WARNING_OBJECT (self, "Could not load module from precompiled PTX");
+        priv->module = nullptr;
+        program = nullptr;
+      }
     }
 
-    auto ret = CuModuleLoadData (&priv->module, program);
-    g_free (program);
+    if (!program) {
+      std::lock_guard < std::mutex > lk (g_kernel_table_lock);
+      std::string cubin_kernel_name =
+          "GstJpegEnc_device_" + std::to_string (klass->cuda_device_id);
 
-    if (!gst_cuda_result (ret)) {
+      auto cubin = g_cubin_table.find (cubin_kernel_name);
+      if (cubin == g_cubin_table.end ()) {
+        GST_DEBUG_OBJECT (self, "Building CUBIN");
+        program = gst_cuda_nvrtc_compile_cubin (GstNvJpegEncConvertMain_str,
+            klass->cuda_device_id);
+        if (program)
+          g_cubin_table[cubin_kernel_name] = program;
+      } else {
+        GST_DEBUG_OBJECT (self, "Found cached CUBIN");
+        program = cubin->second;
+      }
+
+      if (program) {
+        GST_DEBUG_OBJECT (self, "Loading CUBIN module");
+        ret = CuModuleLoadData (&priv->module, program);
+        if (ret != CUDA_SUCCESS) {
+          GST_WARNING_OBJECT (self, "Could not load module from cached CUBIN");
+          program = nullptr;
+          priv->module = nullptr;
+        }
+      }
+
+      if (!program) {
+        auto ptx = g_ptx_table.find ("GstJpegEnc");
+        if (ptx == g_ptx_table.end ()) {
+          GST_DEBUG_OBJECT (self, "Building PTX");
+          program = gst_cuda_nvrtc_compile (GstNvJpegEncConvertMain_str);
+          if (program)
+            g_ptx_table["GstJpegEnc"] = program;
+        } else {
+          GST_DEBUG_OBJECT (self, "Found cached PTX");
+          program = ptx->second;
+        }
+      }
+
+      if (program && !priv->module) {
+        GST_DEBUG_OBJECT (self, "Loading PTX module");
+        ret = CuModuleLoadData (&priv->module, program);
+        if (ret != CUDA_SUCCESS) {
+          GST_ERROR_OBJECT (self, "Could not load module from PTX");
+          program = nullptr;
+          priv->module = nullptr;
+        }
+      }
+    }
+
+    if (!priv->module) {
       GST_ERROR_OBJECT (self, "Couldn't load module");
       gst_cuda_context_pop (nullptr);
       return FALSE;
     }
 
     ret = CuModuleGetFunction (&priv->kernel_func, priv->module,
-        KERNEL_MAIN_FUNC);
+        "GstNvJpegEncConvertMain");
     if (!gst_cuda_result (ret)) {
       GST_ERROR_OBJECT (self, "Couldn't get kernel function");
       gst_cuda_context_pop (nullptr);
@@ -1013,6 +1048,10 @@ gst_nv_jpeg_enc_register (GstPlugin * plugin, GstCudaContext * context,
   g_object_get (context, "cuda-device-id", &cuda_device_id, nullptr);
 
   std::string format_string;
+#ifdef NVCODEC_CUDA_PRECOMPILED
+  have_nvrtc = TRUE;
+#endif
+
   if (have_nvrtc)
     format_string = "NV12, I420, Y42B, Y444";
   else
