@@ -34,7 +34,7 @@ python3 -m pip install gitlint
 
 # Install Rust
 RUSTUP_VERSION=1.27.1
-RUST_VERSION=1.81.0
+RUST_VERSION=1.85.0
 RUST_ARCH="x86_64-unknown-linux-gnu"
 
 RUSTUP_URL=https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/$RUST_ARCH/rustup-init
