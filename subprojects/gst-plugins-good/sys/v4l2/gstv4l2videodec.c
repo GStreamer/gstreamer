@@ -31,6 +31,7 @@
 
 #include "gstv4l2object.h"
 #include "gstv4l2videodec.h"
+#include "ext/drm_fourcc.h"
 
 #include "gstv4l2h264codec.h"
 #include "gstv4l2h265codec.h"
@@ -447,7 +448,10 @@ gst_v4l2_video_dec_negotiate (GstVideoDecoder * decoder)
   /* Create caps from the acquired format, removing the format fields */
   fixation_caps = gst_caps_new_empty ();
 
-  acquired_drm_caps = gst_video_info_dma_drm_to_caps (&info);
+  if (info.drm_fourcc == DRM_FORMAT_INVALID)
+    acquired_drm_caps = NULL;
+  else
+    acquired_drm_caps = gst_video_info_dma_drm_to_caps (&info);
   if (acquired_drm_caps) {
     GST_DEBUG_OBJECT (self, "Acquired DRM caps: %" GST_PTR_FORMAT,
         acquired_drm_caps);
