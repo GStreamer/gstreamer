@@ -37,7 +37,7 @@ if avtp_dep.found()
     avtp_sources,
     c_args : gst_plugins_bad_args,
     include_directories : [configinc],
-    dependencies : [gstaudio_dep, gstvideo_dep, avtp_dep, libm],
+    dependencies : [gio_dep, gstaudio_dep, gstvideo_dep, avtp_dep, libm],
     install : true,
     install_dir : plugins_install_dir,
   )

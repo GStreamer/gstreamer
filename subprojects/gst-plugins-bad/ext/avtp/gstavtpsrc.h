@@ -24,6 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -47,7 +48,8 @@ struct _GstAvtpSrc
   gchar * ifname;
   gchar * address;
 
-  int sk_fd;
+  GSocket *socket;
+  GCancellable *cancellable;
 };
 
 struct _GstAvtpSrcClass

@@ -86,6 +86,8 @@ static void gst_avtp_src_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_avtp_src_start (GstBaseSrc * basesrc);
 static gboolean gst_avtp_src_stop (GstBaseSrc * basesrc);
+static gboolean gst_avtp_src_unlock (GstBaseSrc * basesrc);
+static gboolean gst_avtp_src_unlock_stop (GstBaseSrc * basesrc);
 static GstFlowReturn gst_avtp_src_fill (GstPushSrc * pushsrc, GstBuffer *
     buffer);
 
@@ -121,6 +123,8 @@ gst_avtp_src_class_init (GstAvtpSrcClass * klass)
 
   basesrc_class->start = GST_DEBUG_FUNCPTR (gst_avtp_src_start);
   basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_avtp_src_stop);
+  basesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_avtp_src_unlock);
+  basesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_avtp_src_unlock_stop);
   pushsrc_class->fill = GST_DEBUG_FUNCPTR (gst_avtp_src_fill);
 
   GST_DEBUG_CATEGORY_INIT (avtpsrc_debug, "avtpsrc", 0, "AVTP Source");
@@ -135,7 +139,6 @@ gst_avtp_src_init (GstAvtpSrc * avtpsrc)
 
   avtpsrc->ifname = g_strdup (DEFAULT_IFNAME);
   avtpsrc->address = g_strdup (DEFAULT_ADDRESS);
-  avtpsrc->sk_fd = -1;
 }
 
 static void
@@ -145,6 +148,8 @@ gst_avtp_src_finalize (GObject * object)
 
   g_free (avtpsrc->ifname);
   g_free (avtpsrc->address);
+
+  g_clear_object (&avtpsrc->cancellable);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -202,17 +207,19 @@ gst_avtp_src_start (GstBaseSrc * basesrc)
   struct sockaddr_ll sk_addr = { 0 };
   struct packet_mreq mreq = { 0 };
   GstAvtpSrc *avtpsrc = GST_AVTP_SRC (basesrc);
+  GError *gerr = NULL;
 
   index = if_nametoindex (avtpsrc->ifname);
   if (!index) {
-    GST_ERROR_OBJECT (avtpsrc, "Failed to get if_index: %s",
-        g_strerror (errno));
+    GST_ELEMENT_ERROR (avtpsrc, RESOURCE, OPEN_READ, (NULL),
+        ("Failed to get if_index: %s", g_strerror (errno)));
     return FALSE;
   }
 
   fd = socket (AF_PACKET, SOCK_DGRAM, htons (ETH_P_TSN));
   if (fd < 0) {
-    GST_ERROR_OBJECT (avtpsrc, "Failed to open socket: %s", g_strerror (errno));
+    GST_ELEMENT_ERROR (avtpsrc, RESOURCE, OPEN_READ, (NULL),
+        ("Failed to open socket: %s", g_strerror (errno)));
     return FALSE;
   }
 
@@ -222,14 +229,16 @@ gst_avtp_src_start (GstBaseSrc * basesrc)
 
   res = bind (fd, (struct sockaddr *) &sk_addr, sizeof (sk_addr));
   if (res < 0) {
-    GST_ERROR_OBJECT (avtpsrc, "Failed to bind socket: %s", g_strerror (errno));
+    GST_ELEMENT_ERROR (avtpsrc, RESOURCE, SETTINGS, (NULL),
+        ("Failed to bind socket: %s", g_strerror (errno)));
     goto err;
   }
 
   res = sscanf (avtpsrc->address, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
       &addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5]);
   if (res != 6) {
-    GST_ERROR_OBJECT (avtpsrc, "Destination MAC address format not valid");
+    GST_ELEMENT_ERROR (avtpsrc, RESOURCE, SETTINGS, (NULL),
+        ("Destination MAC address format not valid"));
     goto err;
   }
 
@@ -240,12 +249,20 @@ gst_avtp_src_start (GstBaseSrc * basesrc)
   res = setsockopt (fd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mreq,
       sizeof (struct packet_mreq));
   if (res < 0) {
-    GST_ERROR_OBJECT (avtpsrc, "Failed to set multicast address: %s",
-        g_strerror (errno));
+    GST_ELEMENT_ERROR (avtpsrc, RESOURCE, SETTINGS, (NULL),
+        ("Failed to set multicast address: %s", g_strerror (errno)));
     goto err;
   }
 
-  avtpsrc->sk_fd = fd;
+  avtpsrc->socket = g_socket_new_from_fd (fd, &gerr);
+  if (gerr) {
+    GST_ELEMENT_ERROR (avtpsrc, RESOURCE, SETTINGS, (NULL),
+        ("Could not create socket object: %s", gerr->message));
+    g_clear_error (&gerr);
+    goto err;
+  }
+
+  avtpsrc->cancellable = g_cancellable_new ();
 
   GST_DEBUG_OBJECT (avtpsrc, "AVTP source started");
   return TRUE;
@@ -260,20 +277,55 @@ gst_avtp_src_stop (GstBaseSrc * basesrc)
 {
   GstAvtpSrc *avtpsrc = GST_AVTP_SRC (basesrc);
 
-  close (avtpsrc->sk_fd);
+  GST_OBJECT_LOCK (avtpsrc);
+  g_cancellable_cancel (avtpsrc->cancellable);
+  g_clear_object (&avtpsrc->cancellable);
+  GST_OBJECT_UNLOCK (avtpsrc);
+
+  if (avtpsrc->socket)
+    g_socket_close (avtpsrc->socket, NULL);
+  g_clear_object (&avtpsrc->socket);
 
   GST_DEBUG_OBJECT (avtpsrc, "AVTP source stopped");
   return TRUE;
 }
+
+static gboolean
+gst_avtp_src_unlock (GstBaseSrc * basesrc)
+{
+  GstAvtpSrc *avtpsrc = GST_AVTP_SRC (basesrc);
+
+  GST_OBJECT_LOCK (avtpsrc);
+  g_cancellable_cancel (avtpsrc->cancellable);
+  GST_OBJECT_UNLOCK (avtpsrc);
+
+  return TRUE;
+}
+
+static gboolean
+gst_avtp_src_unlock_stop (GstBaseSrc * basesrc)
+{
+  GstAvtpSrc *avtpsrc = GST_AVTP_SRC (basesrc);
+
+  GST_OBJECT_LOCK (avtpsrc);
+  g_clear_object (&avtpsrc->cancellable);
+  avtpsrc->cancellable = g_cancellable_new ();
+  GST_OBJECT_UNLOCK (avtpsrc);
+
+  return TRUE;
+}
+
 
 static GstFlowReturn
 gst_avtp_src_fill (GstPushSrc * pushsrc, GstBuffer * buffer)
 {
   GstMapInfo map;
   gsize buffer_size;
-  ssize_t n = MAX_AVTPDU_SIZE;
-  ssize_t received = -1;
+  gssize n = MAX_AVTPDU_SIZE;
+  gssize received = -1;
   GstAvtpSrc *avtpsrc = GST_AVTP_SRC (pushsrc);
+  GError *gerr = NULL;
+  GCancellable *cancellable;
 
   buffer_size = gst_buffer_get_size (buffer);
   if (G_UNLIKELY (buffer_size < MAX_AVTPDU_SIZE)) {
@@ -289,22 +341,33 @@ gst_avtp_src_fill (GstPushSrc * pushsrc, GstBuffer * buffer)
     return GST_FLOW_OK;
   }
 
-retry:
-  errno = 0;
-  received = recv (avtpsrc->sk_fd, map.data, n, 0);
-  if (received < 0) {
-    if (errno == EINTR) {
-      goto retry;
-    }
+  GST_OBJECT_LOCK (avtpsrc);
+  cancellable = g_object_ref (avtpsrc->cancellable);
+  GST_OBJECT_UNLOCK (avtpsrc);
+
+  received = g_socket_receive (avtpsrc->socket,
+      (gchar *) map.data, n, cancellable, &gerr);
+
+  g_object_unref (cancellable);
+
+  gst_buffer_unmap (buffer, &map);
+
+  if (g_error_matches (gerr, G_IO_ERROR, G_IO_ERROR_BUSY) ||
+      g_error_matches (gerr, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+    g_clear_error (&gerr);
+    return GST_FLOW_FLUSHING;
+  }
+
+  if (gerr) {
     GST_ELEMENT_ERROR (avtpsrc, RESOURCE, READ, (NULL),
-        ("Failed to receive AVTPDU: %s", g_strerror (errno)));
+        ("Failed to receive AVTPDU: %s", gerr->message));
     gst_buffer_unmap (buffer, &map);
+    g_clear_error (&gerr);
 
     return GST_FLOW_ERROR;
   }
 
   gst_buffer_set_size (buffer, received);
-  gst_buffer_unmap (buffer, &map);
 
   return GST_FLOW_OK;
 }
