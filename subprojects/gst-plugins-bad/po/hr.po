@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:37+0000\n"
+"POT-Creation-Date: 2025-02-23 16:56+0000\n"
 "PO-Revision-Date: 2024-03-08 10:41-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -33,7 +33,7 @@ msgstr "Nije bilo moguće pročitati informaciju o strukturi DVD-a."
 
 #, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Nije uspjelo otvoriti DVD uređaj „%s“."
+msgstr "Nije uspjelo otvoriti DVD uređaj „%s”."
 
 msgid "Failed to set PGC based seeking."
 msgstr "Nije uspjelo omogućiti pozicioniranje na osnovu PGC-a."
@@ -62,7 +62,7 @@ msgstr ""
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Nema elementa „%s“ -- provjerite vašu GStreamer instalaciju."
+msgstr "Nema elementa „%s” -- provjerite vašu GStreamer instalaciju."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr "Lokacija datoteke je prazna (NULL) -- navedite valjano ime datoteke"
@@ -85,26 +85,26 @@ msgstr "Interna greška protoka podataka."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Uređaj „%s“ ne postoji."
+msgstr "Uređaj „%s” ne postoji."
 
 # http://whatis.techtarget.com/definition/front-end
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Nije moguće otvoriti korisnikov (frontend) uređaj „%s“."
+msgstr "Nije moguće otvoriti korisnikov (frontend) uređaj „%s”."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Nije moguće dobiti postavke od korisnikovog (frontend) uređaja „%s“."
+msgstr "Nije moguće dobiti postavke od korisnikovog (frontend) uređaja „%s”."
 
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr ""
 "Nije moguće enumerirati sustave dostave iz korisnikovog (frontend) uređaja "
-"„%s“."
+"„%s”."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Nije moguće otvoriti datoteku „%s“ za čitanje."
+msgstr "Nije moguće otvoriti datoteku „%s” za čitanje."
 
 #, c-format
 msgid "Couldn't find channel configuration file"
@@ -112,23 +112,23 @@ msgstr "Nije moguće naći datoteku s postavkama za kanal"
 
 #, c-format
 msgid "Couldn't load channel configuration file: '%s'"
-msgstr "Nije moguće učitati datoteku s postavkama za kanal: „%s“"
+msgstr "Nije moguće učitati datoteku s postavkama za kanal: „%s”"
 
 #, c-format
 msgid "Couldn't find details for channel '%s'"
-msgstr "Nije moguće naći detalje za kanal „%s“"
+msgstr "Nije moguće naći detalje za kanal „%s”"
 
 #, c-format
 msgid "No properties for channel '%s'"
-msgstr "Nema svojstva za kanal „%s“"
+msgstr "Nema svojstva za kanal „%s”"
 
 #, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "Nije uspjelo postaviti svojstva za kanal „%s“"
+msgstr "Nije uspjelo postaviti svojstva za kanal „%s”"
 
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
-msgstr "Nije moguće naći datoteku s postavkama za kanal: „%s“"
+msgstr "Nije moguće naći datoteku s postavkama za kanal: „%s”"
 
 #, c-format
 msgid "Channel configuration file doesn't contain any channels"
@@ -161,11 +161,11 @@ msgstr "Datoteka s postavkama za kanal ne sadrži nijedan kanal"
 #~ msgid ""
 #~ "Given file name \"%s\" can't be converted to local file name encoding."
 #~ msgstr ""
-#~ "Naziv datoteke „%s“ ne može se pretvoriti u lokalno kodirane naziva "
+#~ "Naziv datoteke „%s” ne može se pretvoriti u lokalno kodirane naziva "
 #~ "datoteka."
 
 #~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Datoteku „%s“ nije moguće otvoriti za pisanje."
+#~ msgstr "Datoteku „%s” nije moguće otvoriti za pisanje."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Interna greška u protoku podataka."
