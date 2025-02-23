@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:56+0000\n"
 "PO-Revision-Date: 2024-03-08 10:45-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -46,13 +46,13 @@ msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
-"Zatražena brzina %d kbit/s za svojstvo „%s“ nije dopuštena -- postavljena je "
+"Zatražena brzina %d kbit/s za svojstvo „%s” nije dopuštena -- postavljena je "
 "na brzinu od %d kbit/s."
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
-msgstr "„%s“ od „%s“"
+msgstr "„%s” od „%s”"
 
 msgid "Could not connect to server"
 msgstr "Spajanje na server nije moguće"
@@ -187,64 +187,64 @@ msgstr "Raspberry Pi Kamera Modul"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "greška pri čitanju %d bajtova iz uređaja „%s“."
+msgstr "greška pri čitanju %d bajtova iz uređaja „%s”."
 
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
-"Nije uspjelo pokazati sve video formate s kojima može raditi uređaj „%s“"
+"Nije uspjelo pokazati sve video formate s kojima može raditi uređaj „%s”"
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr "Nije moguće mapirati međuspremnike uređaja „%s“"
+msgstr "Nije moguće mapirati međuspremnike uređaja „%s”"
 
 #, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr "Upravljački program uređaja „%s“ ne podržava metodu U/I %d"
+msgstr "Upravljački program uređaja „%s” ne podržava metodu U/I %d"
 
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
-"Upravljački program uređaja „%s“ ne podržava nijednu poznatu metodu U/I."
+"Upravljački program uređaja „%s” ne podržava nijednu poznatu metodu U/I."
 
 msgid "Invalid caps"
 msgstr "Nevaljana sposobnost (caps)."
 
 #, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Uređaj „%s“ nema podržani format"
+msgstr "Uređaj „%s” nema podržani format"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr "Nije uspjela inicijalizacija uređaja „%s“"
+msgstr "Nije uspjela inicijalizacija uređaja „%s”"
 
 #, c-format
 msgid "Device '%s' is busy"
-msgstr "Uređaj „%s“ je zauzet"
+msgstr "Uređaj „%s” je zauzet"
 
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Uređaj „%s“ ne može snimati u rezoluciji %dx%d"
+msgstr "Uređaj „%s” ne može snimati u rezoluciji %dx%d"
 
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "Uređaj „%s“ ne može snimati u specificiranom formatu"
+msgstr "Uređaj „%s” ne može snimati u specificiranom formatu"
 
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Device „%s“ podržava nepovezane plohe/ravnine (non-contiguous planes)"
+msgstr "Device „%s” podržava nepovezane plohe/ravnine (non-contiguous planes)"
 
 #, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Device „%s“ ne podržava preplitanje (interlacing) %s"
+msgstr "Device „%s” ne podržava preplitanje (interlacing) %s"
 
 #, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Uređaj „%s“ ne podržava kolorimetriju %s"
+msgstr "Uređaj „%s” ne podržava kolorimetriju %s"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr "Nije moguće dobiti parametre uređaja „%s“"
+msgstr "Nije moguće dobiti parametre uređaja „%s”"
 
 msgid "Video device did not accept new frame rate setting."
 msgstr "Videouređaj nije prihvatio novu postavku frekvencije okvira (slika)."
@@ -273,19 +273,19 @@ msgstr "Ne postoji mjesto (downstream pool) iz kojeg se može uvoziti."
 # tuner > štelanje frekvencije, mijenjanje (biranje) kanala
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
-msgstr "Nije uspjelo dobiti postavke tunera %d na uređaju „%s“."
+msgstr "Nije uspjelo dobiti postavke tunera %d na uređaju „%s”."
 
 #, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Greška pri dobivanju sposobnosti uređaja „%s“."
+msgstr "Greška pri dobivanju sposobnosti uređaja „%s”."
 
 #, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Uređaj „%s“ nije tuner."
+msgstr "Uređaj „%s” nije tuner."
 
 #, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Nije uspjelo dobiti radiosignal na uređaju „%s“."
+msgstr "Nije uspjelo dobiti radiosignal na uređaju „%s”."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
@@ -293,7 +293,7 @@ msgstr "Nije uspjelo postaviti ulaz %d na uređaju %s."
 
 #, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Nije uspjelo promijeniti stanje „mute“ na uređaju „%s“."
+msgstr "Nije uspjelo promijeniti stanje „mute” na uređaju „%s”."
 
 msgid "Failed to allocated required memory."
 msgstr "Nije uspjelo dodijeliti potrebnu memoriju."
@@ -338,7 +338,7 @@ msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
-"Greška pri dobivanju Caps (sposobnosti) za uređaj „%s“: To nije v4l2 "
+"Greška pri dobivanju Caps (sposobnosti) za uređaj „%s”: To nije v4l2 "
 "upravljački program. Provjerite je li to v4l1 upravljački program."
 
 #, c-format
@@ -347,77 +347,77 @@ msgstr "Nije uspjelo ispitati atribute ulaza %d uređaja %s"
 
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr "Nije uspjelo dobiti postavke tunera %d uređaja „%s“."
+msgstr "Nije uspjelo dobiti postavke tunera %d uređaja „%s”."
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr "Nije uspjelo ispitati „norm“ na uređaju „%s“."
+msgstr "Nije uspjelo ispitati „norm” na uređaju „%s”."
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr "Nije uspjelo dobiti atribute kontrola uređaja „%s“."
+msgstr "Nije uspjelo dobiti atribute kontrola uređaja „%s”."
 
 #, c-format
 msgid "Cannot identify device '%s'."
-msgstr "Nije moguće identificirati uređaj „%s“."
+msgstr "Nije moguće identificirati uređaj „%s”."
 
 #, c-format
 msgid "This isn't a device '%s'."
-msgstr "To nije uređaj „%s“."
+msgstr "To nije uređaj „%s”."
 
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
-msgstr "Nije bilo moguće otvoriti uređaj „%s“ za čitanje i pisanje."
+msgstr "Nije bilo moguće otvoriti uređaj „%s” za čitanje i pisanje."
 
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr "Uređaj „%s“ nije uređaj za snimanje."
+msgstr "Uređaj „%s” nije uređaj za snimanje."
 
 #, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Uređaj „%s“ nije izlazni uređaj."
+msgstr "Uređaj „%s” nije izlazni uređaj."
 
 #, c-format
 msgid "Device '%s' is not a M2M device."
-msgstr "Uređaj „%s“ nije uređaj M2M."
+msgstr "Uređaj „%s” nije uređaj M2M."
 
 #, c-format
 msgid "Could not dup device '%s' for reading and writing."
-msgstr "Nije uspjelo dup() uređaj „%s“ za čitanje i pisanje."
+msgstr "Nije uspjelo dup() uređaj „%s” za čitanje i pisanje."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr "Nije uspjelo postaviti „norm“ za uređaj „%s“."
+msgstr "Nije uspjelo postaviti „norm” za uređaj „%s”."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr "Nije uspjelo dobiti trenutnu frekvenciju tunera za uređaj „%s“."
+msgstr "Nije uspjelo dobiti trenutnu frekvenciju tunera za uređaj „%s”."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
-"Nije uspjelo postaviti trenutnu frekvenciju tunera za uređaj „%s“ na %lu Hz."
+"Nije uspjelo postaviti trenutnu frekvenciju tunera za uređaj „%s” na %lu Hz."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr "Nije uspjelo dobiti snagu signala za uređaj „%s“."
+msgstr "Nije uspjelo dobiti snagu signala za uređaj „%s”."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr "Nije uspjelo dobiti vrijednost za kontrolu %d na uređaju „%s“."
+msgstr "Nije uspjelo dobiti vrijednost za kontrolu %d na uređaju „%s”."
 
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
-msgstr "Nije uspjelo postaviti na vrijednost %d kontrolu %d na uređaju „%s“."
+msgstr "Nije uspjelo postaviti na vrijednost %d kontrolu %d na uređaju „%s”."
 
 #, c-format
 msgid "Failed to set value %s for control %d on device '%s'."
-msgstr "Nije uspjelo postaviti na vrijednost %s kontrolu %d na uređaju „%s“."
+msgstr "Nije uspjelo postaviti na vrijednost %s kontrolu %d na uređaju „%s”."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Nije uspjelo dobiti trenutni ulaz na uređaju „%s“ -- možda je to radiouređaj."
+"Nije uspjelo dobiti trenutni ulaz na uređaju „%s” -- možda je to radiouređaj."
 
 #, c-format
 msgid "Failed to set input %u on device %s."
@@ -427,7 +427,7 @@ msgstr "Nije uspjelo postaviti ulaz %u na uređaju %s."
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Nije uspjelo dobiti trenutni izlaz na uređaju „%s“ -- možda je to "
+"Nije uspjelo dobiti trenutni izlaz na uređaju „%s” -- možda je to "
 "radiouređaj."
 
 #, c-format

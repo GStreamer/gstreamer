@@ -1,22 +1,22 @@
 # Chinese (traditional) translation of gst-plugins-good.
 # This file is put in the public domain.
 # Abel Cheung <abelcheung@gmail.com>, 2006.
-# Yi-Jyun Pan <pan93412@gmail.com>, 2020, 2021.
+# Yi-Jyun Pan <pan93412@gmail.com>, 2020, 2021, 2024.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.21.90\n"
+"Project-Id-Version: gst-plugins-good-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
-"PO-Revision-Date: 2023-02-03 01:03+0800\n"
+"POT-Creation-Date: 2025-02-23 16:56+0000\n"
+"PO-Revision-Date: 2024-11-30 14:13+0800\n"
 "Last-Translator: Yi-Jyun Pan <pan93412@gmail.com>\n"
-"Language-Team: Chinese (traditional) <zh-l10n@lists.linux.org.tw>\n"
+"Language-Team: Chinese (traditional) <zh-l10n@lists.slat.org>\n"
 "Language: zh_TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.5\n"
 
 msgid "Jack server not found"
 msgstr "找不到 Jack 伺服器"
@@ -95,10 +95,10 @@ msgid "Invalid atom size."
 msgstr "atom 大小無效。"
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "無法查詢檔案大小"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "無法 demux 檔案"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "此檔案不完整，無法播放。"
@@ -307,9 +307,8 @@ msgstr "%s 裝置上的編碼工具沒有支援的輸出格式"
 msgid "Encoder on device %s has no supported input format"
 msgstr "%s 裝置上的編碼工具沒有支援的輸入格式"
 
-#, fuzzy
 msgid "Failed to force keyframe."
-msgstr "無法處理影格。"
+msgstr "無法強制關鍵影格間隔。"
 
 msgid "Failed to start encoding thread."
 msgstr "無法啟動編碼處理序。"

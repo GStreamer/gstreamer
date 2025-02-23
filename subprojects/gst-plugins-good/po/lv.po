@@ -6,12 +6,13 @@
 # Rihards Prieditis <rprieditis@gmail.com>, 2011.
 # Rūdolfs Mazurs <rudolfs.mazurs@gmail.com>, 2014.
 # Rihards Prieditis <rprieditis@gmail.com>, 2023.
+# Rihards Prieditis <rprieditis@gmail.com>, 2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.21.90\n"
+"Project-Id-Version: gst-plugins-good 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
-"PO-Revision-Date: 2023-12-24 18:57+0000\n"
+"POT-Creation-Date: 2025-02-23 16:56+0000\n"
+"PO-Revision-Date: 2024-12-22 09:58+0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
 "Language: lv\n"
@@ -21,7 +22,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==0 || (n%100>=11 && n%100<=19) ? 0 : "
 "n%10==1 && n%100!=11 ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.4.2\n"
+"X-Generator: Poedit 3.5\n"
 
 msgid "Jack server not found"
 msgstr "Jack serveris nav atrasts"
@@ -103,10 +104,10 @@ msgid "Invalid atom size."
 msgstr "Nederīgs atoma lielums."
 
 msgid "Cannot query file size"
-msgstr ""
+msgstr "Nevar iegūst faila izmēru"
 
 msgid "Cannot demux file"
-msgstr ""
+msgstr "Nevar demuxēt failu"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Šis fails ir nepilnīgs, un to nevar atskaņot."
@@ -324,9 +325,8 @@ msgstr "Ierīces %s kodētājam nav atbalstītu izvada formātu"
 msgid "Encoder on device %s has no supported input format"
 msgstr "Ierīces %s kodētājam nav atbalstītu ieejas formātu"
 
-#, fuzzy
 msgid "Failed to force keyframe."
-msgstr "Neizdevās apstrādāt kadru."
+msgstr "Neizdevās uzspiest atslēgkadru."
 
 msgid "Failed to start encoding thread."
 msgstr "Neizdevās sākt kodēšanas pavedienu."
