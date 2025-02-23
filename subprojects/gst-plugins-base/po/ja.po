@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2010-10-25 10:27+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -508,6 +508,14 @@ msgid "capturing white balance"
 msgstr "キャプチャーのホワイトバランス"
 
 msgid "The white balance mode set when capturing an image"
+msgstr "イメージをキャプチャするときのホワイトバランスモードセット"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "キャプチャーのソース"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
 msgstr "イメージをキャプチャするときのホワイトバランスモードセット"
 
 msgid "capturing contrast"

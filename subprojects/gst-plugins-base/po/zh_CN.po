@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2023-01-21 13:42+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -491,6 +491,14 @@ msgstr "捕捉白平衡"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "捕捉图像时的白平衡"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "捕捉源"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "用于捕捉图像的场景模式"
 
 msgid "capturing contrast"
 msgstr "捕捉对比度"

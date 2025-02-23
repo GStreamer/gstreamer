@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2023-02-25 08:25+0100\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <(nothing)>\n"
@@ -495,6 +495,14 @@ msgstr "ჩაწერის თეთრის ბალანსი"
 
 msgid "The white balance mode set when capturing an image"
 msgstr ""
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "ჩაწერის წყარო"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "სურათის გადაღებისას გამოყენებული ISO სიჩქარე"
 
 msgid "capturing contrast"
 msgstr "კონტრასტის ჩაწერა"

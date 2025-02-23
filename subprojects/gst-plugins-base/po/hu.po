@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2022-10-19 00:10+0200\n"
 "Last-Translator: Balázs Úr <ur.balazs@fsf.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -500,6 +500,14 @@ msgstr "felvétel fehéregyensúlya"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "A kép felvételéhez használt fehéregyensúlymód"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "felvétel forrása"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "A kép felvételéhez használt helyszínfelvételi mód"
 
 msgid "capturing contrast"
 msgstr "felvétel kontrasztja"

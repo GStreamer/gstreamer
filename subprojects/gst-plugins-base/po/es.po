@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2024-03-07 11:32-0600\n"
 "Last-Translator: Cristian Othón Martínez Vera <cfuga@cfuga.mx>\n"
 "Language-Team: Spanish <es@tp.org.es>\n"
@@ -498,6 +498,14 @@ msgstr "balance de blancos de la toma"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "El modo de balance de blancos usado al tomar una imagen"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "fuente de la toma"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "El modo de captura usado al tomar una imagen"
 
 msgid "capturing contrast"
 msgstr "contraste de la toma"

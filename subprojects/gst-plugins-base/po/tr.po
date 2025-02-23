@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2021-10-04 13:55+0300\n"
 "Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
 "Language-Team: Turkish <gnome-turk@gnome.org>\n"
@@ -500,6 +500,14 @@ msgstr "beyaz dengesi yakalanıyor"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Bir resim çekerken kullanılan beyaz dengesi kipi"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "kaynak yakalanıyor"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "Bir resim çekerken kullanılan manzara yakalama kipi"
 
 msgid "capturing contrast"
 msgstr "zıtlık yakalanıyor"

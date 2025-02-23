@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2024-03-16 23:45+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -501,6 +501,14 @@ msgstr "Weißabgleich"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Der eingestellte Weißabgleich bei Bildaufnahme"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "Aufnahmequelle"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "Die verwendete Motivwahl bei Bildaufnahme"
 
 msgid "capturing contrast"
 msgstr "Kontrast"

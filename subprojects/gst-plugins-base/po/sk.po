@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2016-05-20 12:24+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -501,6 +501,14 @@ msgstr "vyváženie bielej"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Režim vyváženia bielej nastavený pri zachytávaní obrázku"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "zdroj"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "Scénický režim použitý pri zachytávaní obrázku"
 
 msgid "capturing contrast"
 msgstr "kontrast"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2024-03-27 05:18+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -498,6 +498,14 @@ msgstr "баланс белого при съёмке"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Режим баланса белого при съёмке изображения"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "источник для съёмки"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "Тип сцены при съёмке изображения"
 
 msgid "capturing contrast"
 msgstr "контрастность при съёмке"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2019-09-03 10:01+0200\n"
 "Last-Translator: Milo Casagrande <milo@milo.name>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -529,6 +529,14 @@ msgstr "bilanciamento bianco di cattura"
 msgid "The white balance mode set when capturing an image"
 msgstr ""
 "La modalità di bilanciamento del bianco usata nel catturare un'immagine"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "sorgente di cattura"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "Il tipo di scena usato nel catturare un'immagine"
 
 msgid "capturing contrast"
 msgstr "contrasto di cattura"

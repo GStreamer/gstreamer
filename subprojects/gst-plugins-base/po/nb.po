@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2024-09-11 12:23+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <l10n-no@lister.huftis.org>\n"
@@ -494,6 +494,14 @@ msgstr "opptakshvitbalanse"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Hvitbalanseinnstillingen når du tar et bilde"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "opptakskilde"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "Sceneopptaksmodus som anvendes når du tar et bilde"
 
 msgid "capturing contrast"
 msgstr "opptakskontrast"

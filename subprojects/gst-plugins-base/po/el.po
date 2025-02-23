@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2012-05-05 19:13+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -517,6 +517,14 @@ msgstr "ισορροπία λευκού λήψης"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Η ισορροπία λευκού που ορίσθηκε κατά τη λήψη μιας εικόνας"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "πηγή λήψης"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "Ο τρόπος σύλληψης σκηνής που χρησιμοποιήθηκε για τη λήψη μιας εικόνας"
 
 msgid "capturing contrast"
 msgstr "αντίθεση λήψης"

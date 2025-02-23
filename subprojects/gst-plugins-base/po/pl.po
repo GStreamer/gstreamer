@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2024-03-07 21:02+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -503,6 +503,14 @@ msgstr "balans bieli"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Tryb balansu bieli ustawiony przy robieniu zdjęcia"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "źródło zdjęcia"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "Tryb sceny użyty przy robieniu zdjęcia"
 
 msgid "capturing contrast"
 msgstr "kontrast zdjęcia"

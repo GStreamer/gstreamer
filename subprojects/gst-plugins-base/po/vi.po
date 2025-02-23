@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2022-02-14 09:24+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -503,6 +503,14 @@ msgstr "cân trắng trắng khi chụp"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Đặt chế độ cân bằng trắng khi chụp một ảnh"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "nguồn chụp"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "Chế độ chụp phông nền được sử dụng khi chụp một ảnh"
 
 msgid "capturing contrast"
 msgstr "độ tương phản khi chụp"

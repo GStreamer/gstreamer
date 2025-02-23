@@ -34,7 +34,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2020-03-08 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -538,6 +538,14 @@ msgstr "hvidbalance for optagelse"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Hvidbalancetilstanden angivet under optagelse af et billede"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "optagekilde"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "Sceneoptagelsestilstanden brugt da billedet blev optaget"
 
 # kontrast for optagelse
 msgid "capturing contrast"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2024-03-07 18:20+0800\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -495,6 +495,14 @@ msgstr "vitbalans"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Vitbalansläge som sätts när bild infångas"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "infångstkälla"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "Scenläge som används när bild infångas"
 
 msgid "capturing contrast"
 msgstr "kontrast"

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2024-08-05 15:59+0200\n"
 "Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -498,6 +498,14 @@ msgstr "ravnotežje bele barve zajema"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Način ravnotežja bele barve, uporabljen med zajemanjem slike"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "vir zajema"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "Način zajemanja scene, uporabljen med zajemanjem slike"
 
 msgid "capturing contrast"
 msgstr "kontrast zajema"

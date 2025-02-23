@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -495,6 +495,12 @@ msgid "capturing white balance"
 msgstr ""
 
 msgid "The white balance mode set when capturing an image"
+msgstr ""
+
+msgid "capturing light source"
+msgstr ""
+
+msgid "The light source indicates the kind of light when capturing animage"
 msgstr ""
 
 msgid "capturing contrast"

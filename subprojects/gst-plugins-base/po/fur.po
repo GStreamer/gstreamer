@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2024-10-03 14:05+0000\n"
 "Last-Translator: Fabio T. <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
@@ -502,6 +502,14 @@ msgstr "belançament dal blanc de acuisizion"
 msgid "The white balance mode set when capturing an image"
 msgstr ""
 "La serie di modalitâts di belançament dal blanc te acuisizion de imagjin"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "sorzint di acuisizion"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "La modalitât di acuisizion de sene cuant che si acuisìs une imagjin"
 
 msgid "capturing contrast"
 msgstr "contrast di acuisizion"

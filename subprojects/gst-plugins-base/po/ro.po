@@ -20,7 +20,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2024-03-08 13:44+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -551,6 +551,14 @@ msgstr "balanță de alb de capturare"
 
 msgid "The white balance mode set when capturing an image"
 msgstr "Modul de balanță de alb stabilit când se capturează o imagine"
+
+#, fuzzy
+msgid "capturing light source"
+msgstr "sursă de capturare"
+
+#, fuzzy
+msgid "The light source indicates the kind of light when capturing animage"
+msgstr "Modul de captură de scenă utilizat când se capturează o imagine"
 
 msgid "capturing contrast"
 msgstr "contrast de capturare"
