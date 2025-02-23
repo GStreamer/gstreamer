@@ -20,6 +20,12 @@ gst_memory_is_type().</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstshmallocator.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
+    <constant name="ALLOCATOR_UDMABUF" value="udmabuf" c:type="GST_ALLOCATOR_UDMABUF" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.h">Name of this allocator, to be used for example with gst_allocator_find() and
+gst_memory_is_type().</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <constant name="CAPS_FEATURE_MEMORY_DMABUF" value="memory:DMABuf" c:type="GST_CAPS_FEATURE_MEMORY_DMABUF" version="1.12">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstdmabuf.h">Constant that defines the caps feature name for DMA buffer sharing.
 
@@ -522,6 +528,36 @@ gst_shm_allocator_init_once() has not been previously called.</doc>
       <field name="parent_class" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstshmallocator.h">Parent Class.</doc>
         <type name="FdAllocatorClass" c:type="GstFdAllocatorClass"/>
+      </field>
+    </record>
+    <class name="UdmabufAllocator" c:symbol-prefix="udmabuf_allocator" c:type="GstUdmabufAllocator" version="1.28" parent="DmaBufAllocator" glib:type-name="GstUdmabufAllocator" glib:get-type="gst_udmabuf_allocator_get_type" glib:type-struct="UdmabufAllocatorClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.c">This is a subclass of #GstDmaBufAllocator that implements the
+gst_allocator_alloc() method using `memfd_create()` and `UDMABUF_CREATE`.
+Platforms not supporting that (most non-Linux) will always return %NULL.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.h"/>
+      <function name="get" c:identifier="gst_udmabuf_allocator_get" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.c">Get the #GstUdmabufAllocator singleton if available.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.c">a #GstAllocator or %NULL if
+gst_udmabuf_allocator_init_once() did not register the allocator.</doc>
+          <type name="Gst.Allocator" c:type="GstAllocator*"/>
+        </return-value>
+      </function>
+      <function name="init_once" c:identifier="gst_udmabuf_allocator_init_once" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.c">Register a #GstUdmabufAllocator using gst_allocator_register() with the name
+%GST_ALLOCATOR_UDMABUF. This is no-op after the first call.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </function>
+    </class>
+    <record name="UdmabufAllocatorClass" c:type="GstUdmabufAllocatorClass" glib:is-gtype-struct-for="UdmabufAllocator">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.h"/>
+      <field name="parent_class" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstudmabufallocator.h">Parent Class.</doc>
+        <type name="DmaBufAllocatorClass" c:type="GstDmaBufAllocatorClass"/>
       </field>
     </record>
     <function name="dmabuf_memory_get_fd" c:identifier="gst_dmabuf_memory_get_fd" version="1.2">
