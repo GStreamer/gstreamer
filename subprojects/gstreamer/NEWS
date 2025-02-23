@@ -2,7 +2,8 @@ GStreamer 1.26 Release Notes
 
 GStreamer 1.26.0 has not been released yet. It will be released in early 2025.
 
-The latest development release towards the upcoming 1.26 stable series is 1.25.50 and was released on 09 February 2025.
+The latest development release towards the upcoming 1.26 stable series is 1.25.90 (1.26 release candidate 1) and was released on
+23 February 2025.
 
 ## Introduction
 
@@ -190,6 +191,15 @@ iOS
 Windows
 
 -   to be filled in
+
+-   Windows installer packages: Starting with 1.26, the default installation directory will change from C:\gstreamer to the
+    Program Files folder e.g. C:\Program Files (x86)\gstreamer for the 32-bit package. If you update an existing installation
+    the 1.26 installers will keep using the existing folder, but if you were using C:\gstreamer we strongly recommend you
+    uninstall and re-install into the new default location for security reasons.
+
+-   Note for MSI packagers: Starting with 1.26, the installers were ported to WiX 5.0. As part of this, the property for setting
+    the installation directory has been changed to INSTALLDIR, and it now requires a full path to the desired directory,
+    e.g. C:\gstreamer instead of C:\.
 
 Linux
 
