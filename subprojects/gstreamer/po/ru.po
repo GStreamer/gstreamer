@@ -4,13 +4,13 @@
 # Peter Astakhov <astakhovp@mail.ru>, 2005.
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021, 2023.
+# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021, 2023, 2024.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.21.90\n"
+"Project-Id-Version: gstreamer 1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
-"PO-Revision-Date: 2023-01-15 12:54+0300\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"PO-Revision-Date: 2024-11-23 09:47+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -20,10 +20,10 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Lokalize 20.12.0\n"
+"X-Generator: Lokalize 24.08.2\n"
 
 msgid "Print the GStreamer version"
-msgstr "Вывести версию GStreamer"
+msgstr "Показать версию GStreamer"
 
 msgid "Make all warnings fatal"
 msgstr "Сделать все предупреждения фатальными"
@@ -831,10 +831,10 @@ msgid "Private data"
 msgstr "Частная информация"
 
 msgid "container-specific-track-id"
-msgstr ""
+msgstr "container-specific-track-id"
 
 msgid "Container-specific Track ID"
-msgstr ""
+msgstr "ID трека, относящийся к контейнеру"
 
 #. separator between two strings
 msgid ", "
@@ -1091,7 +1091,7 @@ msgid "conditionally available"
 msgstr "условно доступно"
 
 msgid "can be set only at object construction time"
-msgstr ""
+msgstr "может быть задан только во время создания объекта"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "может быть равно состоянию NULL, READY, PAUSED или PLAYING"
@@ -1352,11 +1352,10 @@ msgid "PROPERTY-NAME"
 msgstr "ИМЯ-СВОЙСТВА"
 
 msgid "Set the name of the program"
-msgstr ""
+msgstr "Задать имя программы"
 
-#, fuzzy
 msgid "PROGRAM-NAME"
-msgstr "ИМЯ-СВОЙСТВА"
+msgstr "ИМЯ-ПРОГРАММЫ"
 
 msgid "Do not install a fault handler"
 msgstr "Не устанавливать обработчик ошибок"

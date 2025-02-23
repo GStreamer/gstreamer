@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
 "PO-Revision-Date: 2024-03-08 10:47-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -46,9 +46,9 @@ msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
-"POPIS parova (odvojenih zarezom) u formatu „category_name:level“ za "
-"postavljanje razine debugiranja za pojedine kategorije; Primjer: GST_CAT:5,"
-"GST_ELEMENT_*:3,oggdemux:5"
+"POPIS parova (odvojenih zarezom) u formatu „category_name:level” za "
+"postavljanje razine debugiranja za pojedine kategorije; Primjer: "
+"GST_CAT:5,GST_ELEMENT_*:3,oggdemux:5"
 
 msgid "LIST"
 msgstr "POPIS"
@@ -90,7 +90,7 @@ msgid "Disable updating the registry"
 msgstr "onemogući ažuriranje registra"
 
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "onemogući stvaranje procesa „helper“ tijekom skeniranja registra"
+msgstr "onemogući stvaranje procesa „helper” tijekom skeniranja registra"
 
 msgid "GStreamer Options"
 msgstr "Opcije GStreamera"
@@ -856,7 +856,7 @@ msgstr "Za protokol %s nije pronađen URI rukovatelj"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr "URI shema „%s“ nije podržana"
+msgstr "URI shema „%s” nije podržana"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -886,27 +886,27 @@ msgstr "Nema takvog svojstva."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr "nema svojstva „%s“ u elementu „%s“"
+msgstr "nema svojstva „%s” u elementu „%s”"
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
-msgstr "Element „%s“ nije GstPreset."
+msgstr "Element „%s” nije GstPreset."
 
 #, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
-msgstr "nije moguće postaviti preset „%s“ u elementu „%s“"
+msgstr "nije moguće postaviti preset „%s” u elementu „%s”"
 
 #, c-format
 msgid "no element \"%s\""
-msgstr "nema elementa „%s“"
+msgstr "nema elementa „%s”"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "nije moguće postaviti svojstvo „%s“ u elementu „%s“ na „%s“"
+msgstr "nije moguće postaviti svojstvo „%s” u elementu „%s” na „%s”"
 
 #, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
-msgstr "nije moguće postaviti svojstvo „%s“ u potomku od elementa „%s“ na „%s“"
+msgstr "nije moguće postaviti svojstvo „%s” u potomku od elementa „%s” na „%s”"
 
 msgid "Delayed linking failed."
 msgstr "Odgođeno povezivanje nije uspjelo."
@@ -930,35 +930,35 @@ msgstr "nije moguće povezati %s sa %s"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr "neočekivana referencija „%s“ - zanemareno"
+msgstr "neočekivana referencija „%s” - zanemareno"
 
 # pad pads are the element's interface to the outside world -> sučelje
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr "neočekivana referencija sučelja (pad-reference) „%s“ - zanemareno"
+msgstr "neočekivana referencija sučelja (pad-reference) „%s” - zanemareno"
 
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr "nije moguće raščlaniti sposobnosti „%s“"
+msgstr "nije moguće raščlaniti sposobnosti „%s”"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
-msgstr "nema elementa-ponor za URI „%s“"
+msgstr "nema elementa-ponor za URI „%s”"
 
 #, c-format
 msgid "no source element for URI \"%s\""
-msgstr "nema elementa-izvor za URI „%s“"
+msgstr "nema elementa-izvor za URI „%s”"
 
 msgid "syntax error"
 msgstr "sintaktička greška"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr "specificiran je prazni spremnik „%s“ -- to nije dopušteno"
+msgstr "specificiran je prazni spremnik „%s” -- to nije dopušteno"
 
 #, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "nema „%s“ bin -- raspakiravanje elemenata"
+msgstr "nema „%s” bin -- raspakiravanje elemenata"
 
 msgid "empty pipeline not allowed"
 msgstr "prazan cjevovod nije dopušten"
@@ -1002,11 +1002,11 @@ msgstr "Nijedan privremeni direktorij nije specificiran."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Nije moguće stvoriti privremenu datoteku „%s“."
+msgstr "Nije moguće stvoriti privremenu datoteku „%s”."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Nije moguće otvoriti datoteku „%s“ za čitanje."
+msgstr "Nije moguće otvoriti datoteku „%s” za čitanje."
 
 msgid "Error while writing to download file."
 msgstr "Greška pri pisanju u preuzetu datoteku."
@@ -1016,34 +1016,34 @@ msgstr "Nije specificirana datoteka za pisanje."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Nije moguće otvoriti datoteku „%s“ za pisanje."
+msgstr "Nije moguće otvoriti datoteku „%s” za pisanje."
 
 #, c-format
 msgid "Error closing file \"%s\"."
-msgstr "Greška pri zatvaranju datoteke „%s“."
+msgstr "Greška pri zatvaranju datoteke „%s”."
 
 #, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "Greška pri pozicioniranju u datoteci „%s“."
+msgstr "Greška pri pozicioniranju u datoteci „%s”."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "Greška pri pisanju u datoteku „%s“."
+msgstr "Greška pri pisanju u datoteku „%s”."
 
 msgid "No file name specified for reading."
 msgstr "Nije specificirana datoteka za čitanje."
 
 #, c-format
 msgid "Could not get info on \"%s\"."
-msgstr "Nije moguće dobiti podatke o „%s“."
+msgstr "Nije moguće dobiti podatke o „%s”."
 
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr "„%s“ je direktorij."
+msgstr "„%s” je direktorij."
 
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr "Datoteka „%s“ je utičnica (socket)."
+msgstr "Datoteka „%s” je utičnica (socket)."
 
 msgid "Failed after iterations as requested."
 msgstr "Neuspjeh nakon iteracija na zahtjev."
@@ -1064,7 +1064,7 @@ msgid "force caps"
 msgstr "nametne sposobnosti"
 
 msgid "force caps without doing a typefind"
-msgstr "nametne sposobnosti bez upotrebe „typefind“"
+msgstr "nametne sposobnosti bez upotrebe „typefind”"
 
 msgid "Stream doesn't contain enough data."
 msgstr "Tok ne sadrži dovoljno podataka."
@@ -1168,8 +1168,8 @@ msgid ""
 "list. (unordered)"
 msgstr ""
 "izlista nesortirani popis vrsta elemenata\n"
-"                                         (odvojenih s „/“); taj popis je\n"
-"                                          poznat kao „klass“"
+"                                         (odvojenih s „/”); taj popis je\n"
+"                                          poznat kao „klass”"
 
 msgid "Check if the specified element or plugin exists"
 msgstr ""
@@ -1194,7 +1194,7 @@ msgid ""
 "'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
 "Onemogućite obojeni izlaz. To možete također učiniti i postavljanjem "
-"varijable okruženja „GST_INSPECT_NO_COLORS“ na bilo koju vrijednost."
+"varijable okruženja „GST_INSPECT_NO_COLORS” na bilo koju vrijednost."
 
 msgid "Color output, even when not sending to a tty."
 msgstr "Obojeni izlaz, pa čak kad se šalje na tty."
@@ -1205,7 +1205,7 @@ msgstr "Nije moguće učitati datoteku plugina: %s\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr "Nema takvog elementa ili plugina „%s“\n"
+msgstr "Nema takvog elementa ili plugina „%s”\n"
 
 msgid "Index statistics"
 msgstr "Indeksna statistika"
@@ -1218,15 +1218,15 @@ msgstr "GREŠKA: cjevovod ne želi reproducirati (play).\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Primljena je poruka #%u od elementa „%s“ (%s): "
+msgstr "Primljena je poruka #%u od elementa „%s” (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "Primljena je poruka #%u od sučelja „%s:%s“ (%s): "
+msgstr "Primljena je poruka #%u od sučelja „%s:%s” (%s): "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "Primljena je poruka #%u od objekta „%s“ (%s): "
+msgstr "Primljena je poruka #%u od objekta „%s” (%s): "
 
 #, c-format
 msgid "Got message #%u (%s): "
@@ -1234,33 +1234,33 @@ msgstr "Primljena je poruka #%u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "Primljen je EOS (znak kraja protoka) od elementa „%s“.\n"
+msgstr "Primljen je EOS (znak kraja protoka) od elementa „%s”.\n"
 
 msgid "EOS received - stopping pipeline...\n"
 msgstr "Primljen je EOS - cjevovod se zaustavlja...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "PRONAĐEN TAG   : pronađen po elementu „%s“.\n"
+msgstr "PRONAĐEN TAG   : pronađen po elementu „%s”.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "PRONAĐEN TAG   : pronađen po sučelju „%s:%s“.\n"
+msgstr "PRONAĐEN TAG   : pronađen po sučelju „%s:%s”.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "PRONAĐEN TAG   : pronađen po objektu „%s“.\n"
+msgstr "PRONAĐEN TAG   : pronađen po objektu „%s”.\n"
 
 msgid "FOUND TAG\n"
 msgstr "PRONAĐEN TAG\n"
 
 #, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "PRONAĐEN TOC   : pronađen elementom „%s“.\n"
+msgstr "PRONAĐEN TOC   : pronađen elementom „%s”.\n"
 
 #, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "PRONAĐEN TOC   : pronađen objektom „%s“.\n"
+msgstr "PRONAĐEN TOC   : pronađen objektom „%s”.\n"
 
 msgid "FOUND TOC\n"
 msgstr "PRONAĐEN TOC\n"
@@ -1327,7 +1327,7 @@ msgstr "Nema elementa %s\n"
 
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "Primljen je kontekst od elementa „%s“: %s=%s\n"
+msgstr "Primljen je kontekst od elementa „%s”: %s=%s\n"
 
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "GREŠKA: cjevovod se ne želi pripremiti (preroll).\n"
@@ -1340,7 +1340,7 @@ msgid "Use Windows high-resolution clock, precision: %u ms\n"
 msgstr "Koristite Windows sat (clock) visoke rezolucije, preciznost: %u ms\n"
 
 msgid "Output tags (also known as metadata)"
-msgstr "izlazni tagovi (znani i kao „metapodaci“)"
+msgstr "izlazni tagovi (znani i kao „metapodaci”)"
 
 msgid "Output TOC (chapters and editions)"
 msgstr "ispiše TOC (sadržaj: poglavlja i izdanja)"
@@ -1388,14 +1388,14 @@ msgid ""
 msgstr ""
 "Ne ispisuje trenutni položaj cjevovoda. Ako ova opcija nije specificirana, "
 "ispisati će se položaj kad je stdout TTY. Da omogućite ispis položaja kad "
-"stdout nije TTY, koristite „force-position“ opciju."
+"stdout nije TTY, koristite „force-position” opciju."
 
 msgid ""
 "Allow printing current position of pipeline even if stdout is not a TTY. "
 "This option has no effect if the \"no-position\" option is specified"
 msgstr ""
 "Dopušta ispis trenutnog položaja cjevovoda i kad stdout nije TTY. Ova opcija "
-"nema efekta ako je „no-position“ opcija specificirana."
+"nema efekta ako je „no-position” opcija specificirana."
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1409,7 +1409,7 @@ msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "UPOZORENJE: pogrešni cjevovod: %s\n"
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr "GREŠKA: nije pronađen element „pipeline“.\n"
+msgstr "GREŠKA: nije pronađen element „pipeline”.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Postavljamo cjevovod na PAUSED ...\n"
@@ -1476,8 +1476,8 @@ msgstr "Cjevovod se prazni...\n"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
-#~ "Uporaba: gst-xmllaunch <datoteka.xml> [ element."
-#~ "svojstvo=vrijednost ... ]\n"
+#~ "Uporaba: gst-xmllaunch <datoteka.xml> "
+#~ "[ element.svojstvo=vrijednost ... ]\n"
 
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
 #~ msgstr "GREŠKA: analiza xml datoteke „%s” nije uspjela.\n"

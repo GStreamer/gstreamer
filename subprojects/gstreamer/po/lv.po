@@ -5,10 +5,10 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.21.90\n"
+"Project-Id-Version: gstreamer-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
-"PO-Revision-Date: 2023-12-25 17:53+0000\n"
+"POT-Creation-Date: 2025-02-23 16:55+0000\n"
+"PO-Revision-Date: 2024-12-22 09:55+0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
 "Language: lv\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==0 || (n%100>=11 && n%100<=19) ? 0 : "
 "n%10==1 && n%100!=11 ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.4.2\n"
+"X-Generator: Poedit 3.5\n"
 
 msgid "Print the GStreamer version"
 msgstr "Izdrukāt GStreamer versiju"
@@ -43,8 +43,8 @@ msgid ""
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
 "Ar komatu atdalīts kategoriju_nosaukums:līmenis pāru saraksts, lai iestatītu "
-"konkrētus līmeņus atsevišķām kategorijām. Piemērs: GST_AUTOPLUG:5,"
-"GST_ELEMENT_*:3"
+"konkrētus līmeņus atsevišķām kategorijām. Piemērs: "
+"GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 msgid "LIST"
 msgstr "SARAKSTS"
@@ -834,10 +834,10 @@ msgid "Private data"
 msgstr "Privātie dati"
 
 msgid "container-specific-track-id"
-msgstr ""
+msgstr "konteinera specifiskais-celiņa-id"
 
 msgid "Container-specific Track ID"
-msgstr ""
+msgstr "Konteinera specifiskais Celiņa Id"
 
 #. separator between two strings
 msgid ", "
@@ -1092,7 +1092,7 @@ msgid "conditionally available"
 msgstr "nosacīti pieejams"
 
 msgid "can be set only at object construction time"
-msgstr ""
+msgstr "var iestatīt tikai objekta konstruēšanas laikā"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "maināms NULL, READY, PAUSED vai PLAYING stāvoklī"
@@ -1354,11 +1354,10 @@ msgid "PROPERTY-NAME"
 msgstr "ĪPAŠĪBAS-NOSAUKUMS"
 
 msgid "Set the name of the program"
-msgstr ""
+msgstr "Programmas nosaukuma iestatīšana"
 
-#, fuzzy
 msgid "PROGRAM-NAME"
-msgstr "ĪPAŠĪBAS-NOSAUKUMS"
+msgstr "PROGRAMAS-NOSAUKUMS"
 
 msgid "Do not install a fault handler"
 msgstr "Neuzstādīt defektu apstrādātāju"
