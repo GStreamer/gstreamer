@@ -43,9 +43,6 @@ RUN choco install -y 7zip
 RUN choco install -y python3 --version=3.11.2 --installargs 'AssociateFiles=1 PrependPath=1 Include_pip=1 Include_dev=1'
 RUN choco install -y msys2 --params '/NoPath /NoUpdate /InstallDir:C:\\msys64'
 
-# Install WiX v3
-RUN choco install --execution-timeout=3600 -y wixtoolset
-
 # Install Wix v5 (complete install, no NuGet) from MSI
 RUN Invoke-WebRequest -Uri https://download.visualstudio.microsoft.com/download/pr/78caa28b-2982-43ed-8b9c-20e3369f0795/c771e9fd12a67068436115cf295740f7/dotnet-runtime-6.0.16-win-x86.exe -OutFile C:\TEMP\dotnet-runtime-6.0.16-win-x86.exe
 RUN C:\TEMP\dotnet-runtime-6.0.16-win-x86.exe /quiet
