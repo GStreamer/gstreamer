@@ -13,6 +13,7 @@ namespace Gst {
 
 		None = 0,
 		BackwardCompat = 1,
+		Strict = 2,
 	}
 
 	internal class SerializeFlagsGType {

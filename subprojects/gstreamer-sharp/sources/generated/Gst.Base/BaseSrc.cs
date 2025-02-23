@@ -19,6 +19,22 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_base_src_set_automatic_eos(IntPtr raw, bool automatic_eos);
+
+		[GLib.Property ("automatic-eos")]
+		public bool AutomaticEos {
+			get {
+				GLib.Value val = GetProperty ("automatic-eos");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set  {
+				gst_base_src_set_automatic_eos(Handle, value);
+			}
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_base_src_get_blocksize(IntPtr raw);
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -1628,15 +1644,6 @@ namespace Gst.Base {
 		public bool Async { 
 			set {
 				gst_base_src_set_async(Handle, value);
-			}
-		}
-
-		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_base_src_set_automatic_eos(IntPtr raw, bool automatic_eos);
-
-		public bool AutomaticEos { 
-			set {
-				gst_base_src_set_automatic_eos(Handle, value);
 			}
 		}
 

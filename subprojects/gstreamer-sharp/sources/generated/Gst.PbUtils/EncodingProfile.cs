@@ -107,6 +107,17 @@ namespace Gst.PbUtils {
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_encoding_profile_from_string(IntPtr str1ng);
+
+		public static Gst.PbUtils.EncodingProfile FromString(string str1ng) {
+			IntPtr native_str1ng = GLib.Marshaller.StringToPtrGStrdup (str1ng);
+			IntPtr raw_ret = gst_encoding_profile_from_string(native_str1ng);
+			Gst.PbUtils.EncodingProfile ret = GLib.Object.GetObject(raw_ret, true) as Gst.PbUtils.EncodingProfile;
+			GLib.Marshaller.Free (native_str1ng);
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_encoding_profile_copy(IntPtr raw);
 
 		public Gst.PbUtils.EncodingProfile Copy() {
@@ -337,6 +348,15 @@ namespace Gst.PbUtils {
 			set {
 				gst_encoding_profile_set_enabled(Handle, value);
 			}
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_encoding_profile_to_string(IntPtr raw);
+
+		public override string ToString() {
+			IntPtr raw_ret = gst_encoding_profile_to_string(Handle);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			return ret;
 		}
 
 

@@ -100,6 +100,24 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_message_get_details(IntPtr raw);
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_message_set_details(IntPtr raw, IntPtr details);
+
+		public Gst.Structure Details { 
+			get {
+				IntPtr raw_ret = gst_message_get_details(Handle);
+				Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), false);
+				return ret;
+			}
+			set {
+				value.Owned = false;
+				gst_message_set_details(Handle, value == null ? IntPtr.Zero : value.Handle);
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern UIntPtr gst_message_get_num_redirect_entries(IntPtr raw);
 
 		public ulong NumRedirectEntries { 
@@ -235,6 +253,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_message_parse_error_writable_details(IntPtr raw, out IntPtr structure);
+
+		public Gst.Structure ParseErrorWritableDetails() {
+			Gst.Structure structure;
+			IntPtr native_structure;
+			gst_message_parse_error_writable_details(Handle, out native_structure);
+			structure = native_structure == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (native_structure, typeof (Gst.Structure), false);
+			return structure;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_message_parse_group_id(IntPtr raw, out uint group_id);
 
 		public bool ParseGroupId(out uint group_id) {
@@ -271,6 +300,17 @@ namespace Gst {
 			Gst.Structure structure;
 			IntPtr native_structure;
 			gst_message_parse_info_details(Handle, out native_structure);
+			structure = native_structure == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (native_structure, typeof (Gst.Structure), false);
+			return structure;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_message_parse_info_writable_details(IntPtr raw, out IntPtr structure);
+
+		public Gst.Structure ParseInfoWritableDetails() {
+			Gst.Structure structure;
+			IntPtr native_structure;
+			gst_message_parse_info_writable_details(Handle, out native_structure);
 			structure = native_structure == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (native_structure, typeof (Gst.Structure), false);
 			return structure;
 		}
@@ -513,6 +553,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_message_parse_warning_writable_details(IntPtr raw, out IntPtr structure);
+
+		public Gst.Structure ParseWarningWritableDetails() {
+			Gst.Structure structure;
+			IntPtr native_structure;
+			gst_message_parse_warning_writable_details(Handle, out native_structure);
+			structure = native_structure == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (native_structure, typeof (Gst.Structure), false);
+			return structure;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_message_set_buffering_stats(IntPtr raw, int mode, int avg_in, int avg_out, long buffering_left);
 
 		public void SetBufferingStats(Gst.BufferingMode mode, int avg_in, int avg_out, long buffering_left) {
@@ -564,6 +615,15 @@ namespace Gst {
 		public Gst.Stream StreamsSelectedGetStream(uint idx) {
 			IntPtr raw_ret = gst_message_streams_selected_get_stream(Handle, idx);
 			Gst.Stream ret = GLib.Object.GetObject(raw_ret, true) as Gst.Stream;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_message_writable_details(IntPtr raw);
+
+		public Gst.Structure WritableDetails() {
+			IntPtr raw_ret = gst_message_writable_details(Handle);
+			Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), false);
 			return ret;
 		}
 

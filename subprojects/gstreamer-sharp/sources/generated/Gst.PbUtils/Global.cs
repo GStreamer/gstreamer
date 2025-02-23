@@ -80,6 +80,44 @@ namespace Gst.PbUtils {
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_codec_utils_av1_create_av1c_from_caps(IntPtr caps);
+
+		public static Gst.Buffer CodecUtilsAv1CreateAv1cFromCaps(Gst.Caps caps) {
+			IntPtr raw_ret = gst_codec_utils_av1_create_av1c_from_caps(caps == null ? IntPtr.Zero : caps.Handle);
+			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_codec_utils_av1_create_caps_from_av1c(IntPtr av1c);
+
+		public static Gst.Caps CodecUtilsAv1CreateCapsFromAv1c(Gst.Buffer av1c) {
+			IntPtr raw_ret = gst_codec_utils_av1_create_caps_from_av1c(av1c == null ? IntPtr.Zero : av1c.Handle);
+			Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_codec_utils_av1_get_level(byte seq_level_idx);
+
+		public static string CodecUtilsAv1GetLevel(byte seq_level_idx) {
+			IntPtr raw_ret = gst_codec_utils_av1_get_level(seq_level_idx);
+			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern byte gst_codec_utils_av1_get_seq_level_idx(IntPtr level);
+
+		public static byte CodecUtilsAv1GetSeqLevelIdx(string level) {
+			IntPtr native_level = GLib.Marshaller.StringToPtrGStrdup (level);
+			byte raw_ret = gst_codec_utils_av1_get_seq_level_idx(native_level);
+			byte ret = raw_ret;
+			GLib.Marshaller.Free (native_level);
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_codec_utils_caps_from_mime_codec(IntPtr codecs_field);
 
 		public static Gst.Caps CodecUtilsCapsFromMimeCodec(string codecs_field) {
@@ -197,6 +235,57 @@ namespace Gst.PbUtils {
 		public static string CodecUtilsH265GetTier(byte[] profile_tier_level) {
 			uint len = (uint)(profile_tier_level == null ? 0 : profile_tier_level.Length);
 			IntPtr raw_ret = gst_codec_utils_h265_get_tier(profile_tier_level, len);
+			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_codec_utils_h266_caps_set_level_tier_and_profile(IntPtr caps, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] decoder_configuration, uint len);
+
+		public static bool CodecUtilsH266CapsSetLevelTierAndProfile(Gst.Caps caps, byte[] decoder_configuration) {
+			uint len = (uint)(decoder_configuration == null ? 0 : decoder_configuration.Length);
+			bool raw_ret = gst_codec_utils_h266_caps_set_level_tier_and_profile(caps == null ? IntPtr.Zero : caps.Handle, decoder_configuration, len);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_codec_utils_h266_get_level([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] ptl_record, uint len);
+
+		public static string CodecUtilsH266GetLevel(byte[] ptl_record) {
+			uint len = (uint)(ptl_record == null ? 0 : ptl_record.Length);
+			IntPtr raw_ret = gst_codec_utils_h266_get_level(ptl_record, len);
+			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern byte gst_codec_utils_h266_get_level_idc(IntPtr level);
+
+		public static byte CodecUtilsH266GetLevelIdc(string level) {
+			IntPtr native_level = GLib.Marshaller.StringToPtrGStrdup (level);
+			byte raw_ret = gst_codec_utils_h266_get_level_idc(native_level);
+			byte ret = raw_ret;
+			GLib.Marshaller.Free (native_level);
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_codec_utils_h266_get_profile([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] ptl_record, uint len);
+
+		public static string CodecUtilsH266GetProfile(byte[] ptl_record) {
+			uint len = (uint)(ptl_record == null ? 0 : ptl_record.Length);
+			IntPtr raw_ret = gst_codec_utils_h266_get_profile(ptl_record, len);
+			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_codec_utils_h266_get_tier([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] ptl_record, uint len);
+
+		public static string CodecUtilsH266GetTier(byte[] ptl_record) {
+			uint len = (uint)(ptl_record == null ? 0 : ptl_record.Length);
+			IntPtr raw_ret = gst_codec_utils_h266_get_tier(ptl_record, len);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
 			return ret;
 		}
@@ -422,6 +511,24 @@ namespace Gst.PbUtils {
 			IntPtr raw_ret = gst_missing_plugin_message_get_installer_detail(msg == null ? IntPtr.Zero : msg.Handle);
 			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
 			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_missing_plugin_message_get_stream_id(IntPtr msg);
+
+		public static string MissingPluginMessageGetStreamId(Gst.Message msg) {
+			IntPtr raw_ret = gst_missing_plugin_message_get_stream_id(msg == null ? IntPtr.Zero : msg.Handle);
+			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_missing_plugin_message_set_stream_id(IntPtr msg, IntPtr stream_id);
+
+		public static void MissingPluginMessageSetStreamId(Gst.Message msg, string stream_id) {
+			IntPtr native_stream_id = GLib.Marshaller.StringToPtrGStrdup (stream_id);
+			gst_missing_plugin_message_set_stream_id(msg == null ? IntPtr.Zero : msg.Handle, native_stream_id);
+			GLib.Marshaller.Free (native_stream_id);
 		}
 
 		[DllImport("gstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

@@ -100,6 +100,7 @@ namespace Gst {
 		public const string TAG_CONDUCTOR = @"conductor";
 		public const string TAG_CONTACT = @"contact";
 		public const string TAG_CONTAINER_FORMAT = @"container-format";
+		public const string TAG_CONTAINER_SPECIFIC_TRACK_ID = @"container-specific-track-id";
 		public const string TAG_COPYRIGHT = @"copyright";
 		public const string TAG_COPYRIGHT_URI = @"copyright-uri";
 		public const string TAG_DATE = @"date";

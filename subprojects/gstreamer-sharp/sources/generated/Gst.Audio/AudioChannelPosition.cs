@@ -41,6 +41,8 @@ namespace Gst.Audio {
 		WideRight = 25,
 		SurroundLeft = 26,
 		SurroundRight = 27,
+		TopSurroundLeft = 28,
+		TopSurroundRight = 29,
 	}
 
 	internal class AudioChannelPositionGType {

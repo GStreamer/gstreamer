@@ -58,6 +58,24 @@ namespace Gst {
 		// End of the ABI representation.
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_tracer_class_set_use_structure_params(bool use_structure_params);
+
+		public static bool UseStructureParams { 
+			set {
+				gst_tracer_class_set_use_structure_params(value);
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_tracer_class_uses_structure_params();
+
+		public static bool UsesStructureParams() {
+			bool raw_ret = gst_tracer_class_uses_structure_params();
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_tracer_get_type();
 
 		public static new GLib.GType GType { 

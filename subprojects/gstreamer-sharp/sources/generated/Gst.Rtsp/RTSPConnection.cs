@@ -12,6 +12,17 @@ namespace Gst.Rtsp {
 	public partial class RTSPConnection : GLib.Opaque {
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_rtsp_connection_add_extra_http_request_header(IntPtr raw, IntPtr key, IntPtr value);
+
+		public void AddExtraHttpRequestHeader(string key, string value) {
+			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup (key);
+			IntPtr native_value = GLib.Marshaller.StringToPtrGStrdup (value);
+			gst_rtsp_connection_add_extra_http_request_header(Handle, native_key, native_value);
+			GLib.Marshaller.Free (native_key);
+			GLib.Marshaller.Free (native_value);
+		}
+
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtsp_connection_clear_auth_params(IntPtr raw);
 
 		public void ClearAuthParams() {

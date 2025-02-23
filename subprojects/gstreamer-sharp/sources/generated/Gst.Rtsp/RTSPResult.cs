@@ -28,6 +28,7 @@ namespace Gst.Rtsp {
 		Einval = -2,
 		Error = -1,
 		Ok = 0,
+		OkRedirect = 1,
 	}
 
 	internal class RTSPResultGType {

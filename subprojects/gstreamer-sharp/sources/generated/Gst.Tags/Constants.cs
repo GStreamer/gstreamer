@@ -25,6 +25,7 @@ namespace Gst.Tags {
 		public const string TAG_CAPTURING_FOCAL_RATIO = @"capturing-focal-ratio";
 		public const string TAG_CAPTURING_GAIN_ADJUSTMENT = @"capturing-gain-adjustment";
 		public const string TAG_CAPTURING_ISO_SPEED = @"capturing-iso-speed";
+		public const string TAG_CAPTURING_LIGHT_SOURCE = @"capturing-light-source";
 		public const string TAG_CAPTURING_METERING_MODE = @"capturing-metering-mode";
 		public const string TAG_CAPTURING_SATURATION = @"capturing-saturation";
 		public const string TAG_CAPTURING_SCENE_CAPTURE_TYPE = @"capturing-scene-capture-type";

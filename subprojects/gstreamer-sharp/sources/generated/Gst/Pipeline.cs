@@ -155,12 +155,34 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_pipeline_get_configured_latency(IntPtr raw);
+
+		public ulong ConfiguredLatency { 
+			get {
+				ulong raw_ret = gst_pipeline_get_configured_latency(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_pipeline_get_pipeline_clock(IntPtr raw);
 
 		public Gst.Clock PipelineClock { 
 			get {
 				IntPtr raw_ret = gst_pipeline_get_pipeline_clock(Handle);
 				Gst.Clock ret = GLib.Object.GetObject(raw_ret, true) as Gst.Clock;
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_pipeline_is_live(IntPtr raw);
+
+		public bool IsLive { 
+			get {
+				bool raw_ret = gst_pipeline_is_live(Handle);
+				bool ret = raw_ret;
 				return ret;
 			}
 		}

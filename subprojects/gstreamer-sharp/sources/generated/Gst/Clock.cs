@@ -645,19 +645,19 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_clock_add_observation(IntPtr raw, ulong slave, ulong master, out double r_squared);
+		static extern bool gst_clock_add_observation(IntPtr raw, ulong observation_internal, ulong observation_external, out double r_squared);
 
-		public bool AddObservation(ulong slave, ulong master, out double r_squared) {
-			bool raw_ret = gst_clock_add_observation(Handle, slave, master, out r_squared);
+		public bool AddObservation(ulong observation_internal, ulong observation_external, out double r_squared) {
+			bool raw_ret = gst_clock_add_observation(Handle, observation_internal, observation_external, out r_squared);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_clock_add_observation_unapplied(IntPtr raw, ulong slave, ulong master, out double r_squared, out ulong _internal, out ulong external, out ulong rate_num, out ulong rate_denom);
+		static extern bool gst_clock_add_observation_unapplied(IntPtr raw, ulong observation_internal, ulong observation_external, out double r_squared, out ulong _internal, out ulong external, out ulong rate_num, out ulong rate_denom);
 
-		public bool AddObservationUnapplied(ulong slave, ulong master, out double r_squared, out ulong _internal, out ulong external, out ulong rate_num, out ulong rate_denom) {
-			bool raw_ret = gst_clock_add_observation_unapplied(Handle, slave, master, out r_squared, out _internal, out external, out rate_num, out rate_denom);
+		public bool AddObservationUnapplied(ulong observation_internal, ulong observation_external, out double r_squared, out ulong _internal, out ulong external, out ulong rate_num, out ulong rate_denom) {
+			bool raw_ret = gst_clock_add_observation_unapplied(Handle, observation_internal, observation_external, out r_squared, out _internal, out external, out rate_num, out rate_denom);
 			bool ret = raw_ret;
 			return ret;
 		}

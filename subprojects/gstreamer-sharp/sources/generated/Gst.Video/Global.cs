@@ -12,6 +12,33 @@ namespace Gst.Video {
 	public partial class Global {
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_ancillary_meta_api_get_type();
+
+		public static GLib.GType AncillaryMetaApiGetType() {
+			IntPtr raw_ret = gst_ancillary_meta_api_get_type();
+			GLib.GType ret = new GLib.GType(raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_ancillary_meta_get_info();
+
+		public static Gst.MetaInfo AncillaryMetaGetInfo() {
+			IntPtr raw_ret = gst_ancillary_meta_get_info();
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_add_ancillary_meta(IntPtr buffer);
+
+		public static Gst.Video.AncillaryMeta BufferAddAncillaryMeta(Gst.Buffer buffer) {
+			IntPtr raw_ret = gst_buffer_add_ancillary_meta(buffer == null ? IntPtr.Zero : buffer.Handle);
+			Gst.Video.AncillaryMeta ret = Gst.Video.AncillaryMeta.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_add_video_afd_meta(IntPtr buffer, byte field, int spec, int afd);
 
 		public static Gst.Video.VideoAFDMeta BufferAddVideoAfdMeta(Gst.Buffer buffer, byte field, Gst.Video.VideoAFDSpec spec, Gst.Video.VideoAFDValue afd) {
@@ -117,6 +144,10 @@ namespace Gst.Video {
 			IntPtr raw_ret = gst_buffer_add_video_sei_user_data_unregistered_meta(buffer == null ? IntPtr.Zero : buffer.Handle, uuid, data, new UIntPtr (size));
 			Gst.Video.VideoSEIUserDataUnregisteredMeta ret = Gst.Video.VideoSEIUserDataUnregisteredMeta.New (raw_ret);
 			return ret;
+		}
+
+		public static Gst.Video.VideoSEIUserDataUnregisteredMeta BufferAddVideoSeiUserDataUnregisteredMeta(Gst.Buffer buffer, byte uuid, ulong size) {
+			return BufferAddVideoSeiUserDataUnregisteredMeta (buffer, uuid, 0, size);
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -258,6 +289,15 @@ namespace Gst.Video {
 
 		public static Gst.Event NavigationEventNewMouseButtonRelease(int button, double x, double y, Gst.Video.NavigationModifierType state) {
 			IntPtr raw_ret = gst_navigation_event_new_mouse_button_release(button, x, y, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_mouse_double_click(int button, double x, double y, int state);
+
+		public static Gst.Event NavigationEventNewMouseDoubleClick(int button, double x, double y, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_mouse_double_click(button, x, y, (int) state);
 			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
 			return ret;
 		}
@@ -903,6 +943,28 @@ namespace Gst.Video {
 		public static Gst.MetaInfo VideoCropMetaGetInfo() {
 			IntPtr raw_ret = gst_video_crop_meta_get_info();
 			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint gst_video_dma_drm_format_from_gst_format(int format, ulong modifier);
+
+		public static uint VideoDmaDrmFormatFromGstFormat(Gst.Video.VideoFormat format, ulong modifier) {
+			uint raw_ret = gst_video_dma_drm_format_from_gst_format((int) format, modifier);
+			uint ret = raw_ret;
+			return ret;
+		}
+
+		public static uint VideoDmaDrmFormatFromGstFormat(Gst.Video.VideoFormat format) {
+			return VideoDmaDrmFormatFromGstFormat (format, 0);
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_video_dma_drm_format_to_gst_format(uint fourcc, ulong modifier);
+
+		public static Gst.Video.VideoFormat VideoDmaDrmFormatToGstFormat(uint fourcc, ulong modifier) {
+			int raw_ret = gst_video_dma_drm_format_to_gst_format(fourcc, modifier);
+			Gst.Video.VideoFormat ret = (Gst.Video.VideoFormat) raw_ret;
 			return ret;
 		}
 

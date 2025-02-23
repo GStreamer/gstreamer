@@ -54,16 +54,6 @@ namespace GES {
 			}
 		}
 
-		[GLib.Signal("load-serialized-info")]
-		public event GES.LoadSerializedInfoHandler LoadSerializedInfo {
-			add {
-				this.AddSignalHandler ("load-serialized-info", value, typeof (GES.LoadSerializedInfoArgs));
-			}
-			remove {
-				this.RemoveSignalHandler ("load-serialized-info", value);
-			}
-		}
-
 		[GLib.Signal("discovered")]
 		public event GES.DiscoveredHandler Discovered {
 			add {
@@ -71,6 +61,26 @@ namespace GES {
 			}
 			remove {
 				this.RemoveSignalHandler ("discovered", value);
+			}
+		}
+
+		[GLib.Signal("source-setup")]
+		public event GES.SourceSetupHandler SourceSetup {
+			add {
+				this.AddSignalHandler ("source-setup", value, typeof (GES.SourceSetupArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("source-setup", value);
+			}
+		}
+
+		[GLib.Signal("load-serialized-info")]
+		public event GES.LoadSerializedInfoHandler LoadSerializedInfo {
+			add {
+				this.AddSignalHandler ("load-serialized-info", value, typeof (GES.LoadSerializedInfoArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("load-serialized-info", value);
 			}
 		}
 
@@ -183,6 +193,57 @@ namespace GES {
 			Gst.PbUtils.DiscovererInfo result = (Gst.PbUtils.DiscovererInfo) ret;
 			ret.Dispose ();
 			return result;
+		}
+
+		static SourceSetupNativeDelegate SourceSetup_cb_delegate;
+		static SourceSetupNativeDelegate SourceSetupVMCallback {
+			get {
+				if (SourceSetup_cb_delegate == null)
+					SourceSetup_cb_delegate = new SourceSetupNativeDelegate (SourceSetup_cb);
+				return SourceSetup_cb_delegate;
+			}
+		}
+
+		static void OverrideSourceSetup (GLib.GType gtype)
+		{
+			OverrideSourceSetup (gtype, SourceSetupVMCallback);
+		}
+
+		static void OverrideSourceSetup (GLib.GType gtype, SourceSetupNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "source-setup", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void SourceSetupNativeDelegate (IntPtr inst, IntPtr source);
+
+		static void SourceSetup_cb (IntPtr inst, IntPtr source)
+		{
+			try {
+				DiscovererManager __obj = GLib.Object.GetObject (inst, false) as DiscovererManager;
+				__obj.OnSourceSetup (GLib.Object.GetObject(source) as Gst.Element);
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.DiscovererManager), ConnectionMethod="OverrideSourceSetup")]
+		protected virtual void OnSourceSetup (Gst.Element source)
+		{
+			InternalSourceSetup (source);
+		}
+
+		private void InternalSourceSetup (Gst.Element source)
+		{
+			GLib.Value ret = GLib.Value.Empty;
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (2);
+			GLib.Value[] vals = new GLib.Value [2];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			vals [1] = new GLib.Value (source);
+			inst_and_params.Append (vals [1]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
 		}
 
 

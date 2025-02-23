@@ -23,6 +23,7 @@ namespace Gst.Video {
 		TouchUp = 10,
 		TouchFrame = 11,
 		TouchCancel = 12,
+		MouseDoubleClick = 13,
 	}
 
 	internal class NavigationEventTypeGType {

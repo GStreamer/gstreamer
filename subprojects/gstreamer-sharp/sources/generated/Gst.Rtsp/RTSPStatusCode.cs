@@ -21,6 +21,8 @@ namespace Gst.Rtsp {
 		SeeOther = 303,
 		NotModified = 304,
 		UseProxy = 305,
+		RedirectTemporarily = 307,
+		RedirectPermanently = 308,
 		BadRequest = 400,
 		Unauthorized = 401,
 		PaymentRequired = 402,

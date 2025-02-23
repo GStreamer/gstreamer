@@ -358,6 +358,15 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_audio_reorder_channels_with_reorder_map([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]IntPtr[] data, UIntPtr size, int bps, int channels, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]int[] reorder_map);
+
+		public static void AudioReorderChannelsWithReorderMap(IntPtr[] data, int bps, int[] reorder_map) {
+			ulong size = (ulong)(data == null ? 0 : data.Length);
+			int channels = (reorder_map == null ? 0 : reorder_map.Length);
+			gst_audio_reorder_channels_with_reorder_map(data, new UIntPtr ((uint)size), bps, channels, reorder_map);
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_audio_resampler_new(int method, int flags, int format, int channels, int in_rate, int out_rate, IntPtr options);
 
 		public static Gst.Audio.AudioResampler AudioResamplerNew(Gst.Audio.AudioResamplerMethod method, Gst.Audio.AudioResamplerFlags flags, Gst.Audio.AudioFormat format, int channels, int in_rate, int out_rate, Gst.Structure options) {

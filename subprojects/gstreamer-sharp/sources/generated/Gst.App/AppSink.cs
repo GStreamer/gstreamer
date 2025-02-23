@@ -117,6 +117,42 @@ namespace Gst.App {
 		}
 
 		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_app_sink_get_max_bytes(IntPtr raw);
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_app_sink_set_max_bytes(IntPtr raw, ulong max);
+
+		[GLib.Property ("max-bytes")]
+		public ulong MaxBytes {
+			get  {
+				ulong raw_ret = gst_app_sink_get_max_bytes(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+			set  {
+				gst_app_sink_set_max_bytes(Handle, value);
+			}
+		}
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_app_sink_get_max_time(IntPtr raw);
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_app_sink_set_max_time(IntPtr raw, ulong max);
+
+		[GLib.Property ("max-time")]
+		public ulong MaxTime {
+			get  {
+				ulong raw_ret = gst_app_sink_get_max_time(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+			set  {
+				gst_app_sink_set_max_time(Handle, value);
+			}
+		}
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_app_sink_get_wait_on_eos(IntPtr raw);
 
 		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

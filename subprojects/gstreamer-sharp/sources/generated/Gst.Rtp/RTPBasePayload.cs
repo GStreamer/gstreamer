@@ -33,6 +33,16 @@ namespace Gst.Rtp {
 			}
 		}
 
+		[GLib.Property ("extensions")]
+		public Gst.ValueArray Extensions {
+			get {
+				GLib.Value val = GetProperty ("extensions");
+				Gst.ValueArray ret = (Gst.ValueArray) val;
+				val.Dispose ();
+				return ret;
+			}
+		}
+
 		[GLib.Property ("max-ptime")]
 		public long MaxPtime {
 			get {

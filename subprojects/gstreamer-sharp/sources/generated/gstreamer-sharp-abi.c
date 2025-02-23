@@ -494,6 +494,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstAudioRingBuffer.may_start\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAudioRingBuffer, may_start));
 	g_print("\"GstAudioRingBuffer.active\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAudioRingBuffer, active));
 	g_print("\"GstAudioRingBuffer.cb_data_notify\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAudioRingBuffer, cb_data_notify));
+	g_print("\"GstAudioRingBuffer.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAudioRingBuffer, priv));
 	g_print("\"sizeof(GstAudioSinkClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstAudioSinkClass));
 	g_print("\"GstAudioSinkClass.open\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAudioSinkClass, open));
 	g_print("\"GstAudioSinkClass.prepare\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstAudioSinkClass, prepare));
@@ -1134,6 +1135,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstRTSPOnvifMedia.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstRTSPOnvifMedia, priv));
 	g_print("\"sizeof(GstRTSPOnvifMediaFactoryClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstRTSPOnvifMediaFactoryClass));
 	g_print("\"GstRTSPOnvifMediaFactoryClass.has_backchannel_support\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstRTSPOnvifMediaFactoryClass, has_backchannel_support));
+	g_print("\"GstRTSPOnvifMediaFactoryClass.create_backchannel_stream\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstRTSPOnvifMediaFactoryClass, create_backchannel_stream));
 	g_print("\"sizeof(GstRTSPOnvifMediaFactory)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstRTSPOnvifMediaFactory));
 	g_print("\"GstRTSPOnvifMediaFactory.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstRTSPOnvifMediaFactory, priv));
 	g_print("\"sizeof(GstRTSPOnvifServerClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstRTSPOnvifServerClass));

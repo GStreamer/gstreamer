@@ -8,13 +8,13 @@ namespace Gst {
 	public delegate void StreamNotifyHandler(object o, StreamNotifyArgs args);
 
 	public class StreamNotifyArgs : GLib.SignalArgs {
-		public Gst.Stream Object{
+		public Gst.Stream PropStream{
 			get {
 				return (Gst.Stream) Args [0];
 			}
 		}
 
-		public IntPtr P0{
+		public IntPtr Prop{
 			get {
 				return (IntPtr) Args [1];
 			}

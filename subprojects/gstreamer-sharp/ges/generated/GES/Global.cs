@@ -23,6 +23,15 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_buffer_add_frame_composition_meta(IntPtr buffer);
+
+		public static GES.FrameCompositionMeta BufferAddFrameCompositionMeta(Gst.Buffer buffer) {
+			IntPtr raw_ret = ges_buffer_add_frame_composition_meta(buffer == null ? IntPtr.Zero : buffer.Handle);
+			GES.FrameCompositionMeta ret = GES.FrameCompositionMeta.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern void ges_deinit();
 
 		public static void Deinit() {
@@ -55,6 +64,15 @@ namespace GES {
 			IntPtr raw_ret = ges_find_formatter_for_uri(native_uri);
 			GES.Asset ret = GLib.Object.GetObject(raw_ret) as GES.Asset;
 			GLib.Marshaller.Free (native_uri);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_frame_composition_meta_api_get_type();
+
+		public static GLib.GType FrameCompositionMetaApiGetType() {
+			IntPtr raw_ret = ges_frame_composition_meta_api_get_type();
+			GLib.GType ret = new GLib.GType(raw_ret);
 			return ret;
 		}
 

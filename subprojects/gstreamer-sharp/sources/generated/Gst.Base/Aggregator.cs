@@ -1770,6 +1770,16 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_aggregator_push_src_event(IntPtr raw, IntPtr evnt);
+
+		public bool PushSrcEvent(Gst.Event evnt) {
+			evnt.Owned = false;
+			bool raw_ret = gst_aggregator_push_src_event(Handle, evnt == null ? IntPtr.Zero : evnt.Handle);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_aggregator_selected_samples(IntPtr raw, ulong pts, ulong dts, ulong duration, IntPtr info);
 
 		public void SelectedSamples(ulong pts, ulong dts, ulong duration, Gst.Structure info) {

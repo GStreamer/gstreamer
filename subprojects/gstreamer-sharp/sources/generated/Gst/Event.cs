@@ -120,6 +120,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_event_has_name_id(IntPtr raw, uint name);
 
+		[Obsolete]
 		public bool HasNameId(uint name) {
 			bool raw_ret = gst_event_has_name_id(Handle, name);
 			bool ret = raw_ret;

@@ -41,6 +41,24 @@ namespace Gst {
 				return GstSharp.MetaTransformFunctionWrapper.GetManagedDelegate (_transform_func);
 			}
 		}
+		private GstSharp.MetaSerializeFunctionNative _serialize_func;
+		public Gst.MetaSerializeFunction SerializeFunc {
+			get {
+				return GstSharp.MetaSerializeFunctionWrapper.GetManagedDelegate (_serialize_func);
+			}
+		}
+		private GstSharp.MetaDeserializeFunctionNative _deserialize_func;
+		public Gst.MetaDeserializeFunction DeserializeFunc {
+			get {
+				return GstSharp.MetaDeserializeFunctionWrapper.GetManagedDelegate (_deserialize_func);
+			}
+		}
+		private GstSharp.MetaClearFunctionNative _clear_func;
+		public Gst.MetaClearFunction ClearFunc {
+			get {
+				return GstSharp.MetaClearFunctionWrapper.GetManagedDelegate (_clear_func);
+			}
+		}
 
 		public static Gst.MetaInfo Zero = new Gst.MetaInfo ();
 
@@ -65,6 +83,19 @@ namespace Gst {
 			}
 		}
 
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_meta_info_register(IntPtr raw);
+
+		public Gst.MetaInfo Register() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr raw_ret = gst_meta_info_register(this_as_native);
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
 		static void ReadNative (IntPtr native, ref Gst.MetaInfo target)
 		{
 			target = New (native);
@@ -72,7 +103,7 @@ namespace Gst {
 
 		public bool Equals (MetaInfo other)
 		{
-			return true && Api.Equals (other.Api) && Type.Equals (other.Type) && Size.Equals (other.Size) && InitFunc.Equals (other.InitFunc) && FreeFunc.Equals (other.FreeFunc) && TransformFunc.Equals (other.TransformFunc);
+			return true && Api.Equals (other.Api) && Type.Equals (other.Type) && Size.Equals (other.Size) && InitFunc.Equals (other.InitFunc) && FreeFunc.Equals (other.FreeFunc) && TransformFunc.Equals (other.TransformFunc) && SerializeFunc.Equals (other.SerializeFunc) && DeserializeFunc.Equals (other.DeserializeFunc) && ClearFunc.Equals (other.ClearFunc);
 		}
 
 		public override bool Equals (object other)
@@ -82,7 +113,7 @@ namespace Gst {
 
 		public override int GetHashCode ()
 		{
-			return this.GetType ().FullName.GetHashCode () ^ Api.GetHashCode () ^ Type.GetHashCode () ^ Size.GetHashCode () ^ InitFunc.GetHashCode () ^ FreeFunc.GetHashCode () ^ TransformFunc.GetHashCode ();
+			return this.GetType ().FullName.GetHashCode () ^ Api.GetHashCode () ^ Type.GetHashCode () ^ Size.GetHashCode () ^ InitFunc.GetHashCode () ^ FreeFunc.GetHashCode () ^ TransformFunc.GetHashCode () ^ SerializeFunc.GetHashCode () ^ DeserializeFunc.GetHashCode () ^ ClearFunc.GetHashCode ();
 		}
 
 		private static GLib.GType GType {

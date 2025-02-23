@@ -209,6 +209,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint gst_util_ceil_log2(uint v);
+
+		public static uint CeilLog2(uint v) {
+			uint raw_ret = gst_util_ceil_log2(v);
+			uint ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_util_double_to_fraction(double src, out int dest_n, out int dest_d);
 
 		public static void DoubleToFraction(double src, out int dest_n, out int dest_d) {
@@ -228,6 +237,28 @@ namespace Gst {
 		public static void DumpMem(byte[] mem) {
 			uint size = (uint)(mem == null ? 0 : mem.Length);
 			gst_util_dump_mem(mem, size);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_util_filename_compare(IntPtr a, IntPtr b);
+
+		public static int FilenameCompare(string a, string b) {
+			IntPtr native_a = GLib.Marshaller.StringToFilenamePtr (a);
+			IntPtr native_b = GLib.Marshaller.StringToFilenamePtr (b);
+			int raw_ret = gst_util_filename_compare(native_a, native_b);
+			int ret = raw_ret;
+			GLib.Marshaller.Free (native_a);
+			GLib.Marshaller.Free (native_b);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint gst_util_floor_log2(uint v);
+
+		public static uint FloorLog2(uint v) {
+			uint raw_ret = gst_util_floor_log2(v);
+			uint ret = raw_ret;
+			return ret;
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -253,6 +284,15 @@ namespace Gst {
 
 		public static bool FractionMultiply(int a_n, int a_d, int b_n, int b_d, out int res_n, out int res_d) {
 			bool raw_ret = gst_util_fraction_multiply(a_n, a_d, b_n, b_d, out res_n, out res_d);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_util_fraction_multiply_int64(long a_n, long a_d, long b_n, long b_d, out long res_n, out long res_d);
+
+		public static bool FractionMultiplyInt64(long a_n, long a_d, long b_n, long b_d, out long res_n, out long res_d) {
+			bool raw_ret = gst_util_fraction_multiply_int64(a_n, a_d, b_n, b_d, out res_n, out res_d);
 			bool ret = raw_ret;
 			return ret;
 		}

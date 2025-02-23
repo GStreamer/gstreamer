@@ -83,6 +83,66 @@ namespace Gst.RtspServer {
 			return __result;
 		}
 
+		static CreateBackchannelStreamNativeDelegate CreateBackchannelStream_cb_delegate;
+		static CreateBackchannelStreamNativeDelegate CreateBackchannelStreamVMCallback {
+			get {
+				if (CreateBackchannelStream_cb_delegate == null)
+					CreateBackchannelStream_cb_delegate = new CreateBackchannelStreamNativeDelegate (CreateBackchannelStream_cb);
+				return CreateBackchannelStream_cb_delegate;
+			}
+		}
+
+		static void OverrideCreateBackchannelStream (GLib.GType gtype)
+		{
+			OverrideCreateBackchannelStream (gtype, CreateBackchannelStreamVMCallback);
+		}
+
+		static void OverrideCreateBackchannelStream (GLib.GType gtype, CreateBackchannelStreamNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("create_backchannel_stream"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool CreateBackchannelStreamNativeDelegate (IntPtr inst, IntPtr media, IntPtr ctx);
+
+		static bool CreateBackchannelStream_cb (IntPtr inst, IntPtr media, IntPtr ctx)
+		{
+			try {
+				RTSPOnvifMediaFactory __obj = GLib.Object.GetObject (inst, false) as RTSPOnvifMediaFactory;
+				bool __result;
+				__result = __obj.OnCreateBackchannelStream (GLib.Object.GetObject(media) as Gst.RtspServer.RTSPOnvifMedia, Gst.RtspServer.RTSPContext.New (ctx));
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.RtspServer.RTSPOnvifMediaFactory), ConnectionMethod="OverrideCreateBackchannelStream")]
+		protected virtual bool OnCreateBackchannelStream (Gst.RtspServer.RTSPOnvifMedia media, Gst.RtspServer.RTSPContext ctx)
+		{
+			return InternalCreateBackchannelStream (media, ctx);
+		}
+
+		private bool InternalCreateBackchannelStream (Gst.RtspServer.RTSPOnvifMedia media, Gst.RtspServer.RTSPContext ctx)
+		{
+			CreateBackchannelStreamNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("create_backchannel_stream"));
+				unmanaged = (CreateBackchannelStreamNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(CreateBackchannelStreamNativeDelegate));
+			}
+			if (unmanaged == null) return false;
+
+			IntPtr native_ctx = GLib.Marshaller.StructureToPtrAlloc (ctx);
+			bool __result = unmanaged (this.Handle, media == null ? IntPtr.Zero : media.Handle, native_ctx);
+			Marshal.FreeHGlobal (native_ctx);
+			return __result;
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -94,14 +154,22 @@ namespace Gst.RtspServer {
 							, Gst.RtspServer.RTSPMediaFactory.class_abi.Fields
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // has_backchannel_support
 							, null
+							, "create_backchannel_stream"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("create_backchannel_stream"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // create_backchannel_stream
+							, "has_backchannel_support"
 							, "_gst_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_gst_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 20 // _gst_reserved
-							, "has_backchannel_support"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 19 // _gst_reserved
+							, "create_backchannel_stream"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0

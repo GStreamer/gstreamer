@@ -119,6 +119,15 @@ namespace Gst.Net {
 		}
 
 		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_ptp_init_full(IntPtr config);
+
+		public static bool PtpInitFull(Gst.Structure config) {
+			bool raw_ret = gst_ptp_init_full(config == null ? IntPtr.Zero : config.Handle);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_ptp_is_initialized();
 
 		public static bool PtpIsInitialized() {

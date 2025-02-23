@@ -12,6 +12,7 @@ namespace Gst {
 	public enum AllocatorFlags : uint {
 
 		CustomAlloc = 16,
+		NoCopy = 32,
 		Last = 1048576,
 	}
 

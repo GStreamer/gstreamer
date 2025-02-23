@@ -487,6 +487,7 @@ namespace AbiTester {
 			Console.WriteLine("\"GstAudioRingBuffer.may_start\": \"" + Gst.Audio.AudioRingBuffer.abi_info.GetFieldOffset("may_start") + "\"");
 			Console.WriteLine("\"GstAudioRingBuffer.active\": \"" + Gst.Audio.AudioRingBuffer.abi_info.GetFieldOffset("active") + "\"");
 			Console.WriteLine("\"GstAudioRingBuffer.cb_data_notify\": \"" + Gst.Audio.AudioRingBuffer.abi_info.GetFieldOffset("cb_data_notify") + "\"");
+			Console.WriteLine("\"GstAudioRingBuffer.priv\": \"" + Gst.Audio.AudioRingBuffer.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"sizeof(GstAudioSinkClass)\": \"" + Gst.Audio.AudioSink.class_abi.Size + "\"");
 			Console.WriteLine("\"GstAudioSinkClass.open\": \"" + Gst.Audio.AudioSink.class_abi.GetFieldOffset("open") + "\"");
 			Console.WriteLine("\"GstAudioSinkClass.prepare\": \"" + Gst.Audio.AudioSink.class_abi.GetFieldOffset("prepare") + "\"");
@@ -1127,6 +1128,7 @@ namespace AbiTester {
 			Console.WriteLine("\"GstRTSPOnvifMedia.priv\": \"" + Gst.RtspServer.RTSPOnvifMedia.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"sizeof(GstRTSPOnvifMediaFactoryClass)\": \"" + Gst.RtspServer.RTSPOnvifMediaFactory.class_abi.Size + "\"");
 			Console.WriteLine("\"GstRTSPOnvifMediaFactoryClass.has_backchannel_support\": \"" + Gst.RtspServer.RTSPOnvifMediaFactory.class_abi.GetFieldOffset("has_backchannel_support") + "\"");
+			Console.WriteLine("\"GstRTSPOnvifMediaFactoryClass.create_backchannel_stream\": \"" + Gst.RtspServer.RTSPOnvifMediaFactory.class_abi.GetFieldOffset("create_backchannel_stream") + "\"");
 			Console.WriteLine("\"sizeof(GstRTSPOnvifMediaFactory)\": \"" + Gst.RtspServer.RTSPOnvifMediaFactory.abi_info.Size + "\"");
 			Console.WriteLine("\"GstRTSPOnvifMediaFactory.priv\": \"" + Gst.RtspServer.RTSPOnvifMediaFactory.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"sizeof(GstRTSPOnvifServerClass)\": \"" + Gst.RtspServer.RTSPOnvifServer.class_abi.Size + "\"");

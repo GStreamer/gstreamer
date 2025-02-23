@@ -58,6 +58,43 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_meta_serialize(IntPtr raw, IntPtr data);
+
+		public bool Serialize(Gst.ByteArrayInterface data) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr native_data = GLib.Marshaller.StructureToPtrAlloc (data);
+			bool raw_ret = gst_meta_serialize(this_as_native, native_data);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			Marshal.FreeHGlobal (native_data);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_meta_serialize_simple(IntPtr raw, IntPtr[] data);
+
+		public bool SerializeSimple(IntPtr[] data) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_meta_serialize_simple(this_as_native, data);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_meta_api_type_aggregate_params(IntPtr api, IntPtr aggregated_params, IntPtr params0, IntPtr params1);
+
+		public static bool ApiTypeAggregateParams(GLib.GType api, Gst.Structure aggregated_params, Gst.Structure params0, Gst.Structure params1) {
+			bool raw_ret = gst_meta_api_type_aggregate_params(api.Val, aggregated_params == null ? IntPtr.Zero : aggregated_params.Handle, params0 == null ? IntPtr.Zero : params0.Handle, params1 == null ? IntPtr.Zero : params1.Handle);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_meta_api_type_has_tag(IntPtr api, uint tag);
 
 		public static bool ApiTypeHasTag(GLib.GType api, uint tag) {
@@ -80,28 +117,28 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_meta_api_type_set_params_aggregator(IntPtr api, GstSharp.AllocationMetaParamsAggregatorNative aggregator);
+
+		public static void ApiTypeSetParamsAggregator(GLib.GType api, Gst.AllocationMetaParamsAggregator aggregator) {
+			GstSharp.AllocationMetaParamsAggregatorWrapper aggregator_wrapper = new GstSharp.AllocationMetaParamsAggregatorWrapper (aggregator);
+			gst_meta_api_type_set_params_aggregator(api.Val, aggregator_wrapper.NativeDelegate);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_meta_deserialize(IntPtr buffer, byte data, UIntPtr size, out uint consumed);
+
+		public static Gst.Meta Deserialize(Gst.Buffer buffer, byte data, ulong size, out uint consumed) {
+			IntPtr raw_ret = gst_meta_deserialize(buffer == null ? IntPtr.Zero : buffer.Handle, data, new UIntPtr (size), out consumed);
+			Gst.Meta ret = Gst.Meta.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_meta_get_info(IntPtr impl);
 
 		public static Gst.MetaInfo GetInfo(string impl) {
 			IntPtr native_impl = GLib.Marshaller.StringToPtrGStrdup (impl);
 			IntPtr raw_ret = gst_meta_get_info(native_impl);
-			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
-			GLib.Marshaller.Free (native_impl);
-			return ret;
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_meta_register(IntPtr api, IntPtr impl, UIntPtr size, GstSharp.MetaInitFunctionNative init_func, GstSharp.MetaFreeFunctionNative free_func, GstSharp.MetaTransformFunctionNative transform_func);
-
-		public static Gst.MetaInfo Register(GLib.GType api, string impl, ulong size, Gst.MetaInitFunction init_func, Gst.MetaFreeFunction free_func, Gst.MetaTransformFunction transform_func) {
-			IntPtr native_impl = GLib.Marshaller.StringToPtrGStrdup (impl);
-			GstSharp.MetaInitFunctionWrapper init_func_wrapper = new GstSharp.MetaInitFunctionWrapper (init_func);
-			init_func_wrapper.PersistUntilCalled ();
-			GstSharp.MetaFreeFunctionWrapper free_func_wrapper = new GstSharp.MetaFreeFunctionWrapper (free_func);
-			free_func_wrapper.PersistUntilCalled ();
-			GstSharp.MetaTransformFunctionWrapper transform_func_wrapper = new GstSharp.MetaTransformFunctionWrapper (transform_func);
-			transform_func_wrapper.PersistUntilCalled ();
-			IntPtr raw_ret = gst_meta_register(api.Val, native_impl, new UIntPtr (size), init_func_wrapper.NativeDelegate, free_func_wrapper.NativeDelegate, transform_func_wrapper.NativeDelegate);
 			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
 			GLib.Marshaller.Free (native_impl);
 			return ret;
@@ -132,6 +169,17 @@ namespace Gst {
 
 		public static Gst.MetaInfo RegisterCustom(string name, string[] tags) {
 			return RegisterCustom (name, tags, null);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_meta_register_custom_simple(IntPtr name);
+
+		public static Gst.MetaInfo RegisterCustomSimple(string name) {
+			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr raw_ret = gst_meta_register_custom_simple(native_name);
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			GLib.Marshaller.Free (native_name);
+			return ret;
 		}
 
 		static void ReadNative (IntPtr native, ref Gst.Meta target)

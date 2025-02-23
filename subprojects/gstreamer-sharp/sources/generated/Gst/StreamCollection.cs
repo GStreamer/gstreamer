@@ -81,25 +81,25 @@ namespace Gst {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void StreamNotifyNativeDelegate (IntPtr inst, IntPtr _object, IntPtr p0);
+		delegate void StreamNotifyNativeDelegate (IntPtr inst, IntPtr prop_stream, IntPtr prop);
 
-		static void StreamNotify_cb (IntPtr inst, IntPtr _object, IntPtr p0)
+		static void StreamNotify_cb (IntPtr inst, IntPtr prop_stream, IntPtr prop)
 		{
 			try {
 				StreamCollection __obj = GLib.Object.GetObject (inst, false) as StreamCollection;
-				__obj.OnStreamNotify (GLib.Object.GetObject(_object) as Gst.Stream, p0);
+				__obj.OnStreamNotify (GLib.Object.GetObject(prop_stream) as Gst.Stream, prop);
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, false);
 			}
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.StreamCollection), ConnectionMethod="OverrideStreamNotify")]
-		protected virtual void OnStreamNotify (Gst.Stream _object, IntPtr p0)
+		protected virtual void OnStreamNotify (Gst.Stream prop_stream, IntPtr prop)
 		{
-			InternalStreamNotify (_object, p0);
+			InternalStreamNotify (prop_stream, prop);
 		}
 
-		private void InternalStreamNotify (Gst.Stream _object, IntPtr p0)
+		private void InternalStreamNotify (Gst.Stream prop_stream, IntPtr prop)
 		{
 			StreamNotifyNativeDelegate unmanaged = null;
 			unsafe {
@@ -108,7 +108,7 @@ namespace Gst {
 			}
 			if (unmanaged == null) return;
 
-			unmanaged (this.Handle, _object == null ? IntPtr.Zero : _object.Handle, p0);
+			unmanaged (this.Handle, prop_stream == null ? IntPtr.Zero : prop_stream.Handle, prop);
 		}
 
 

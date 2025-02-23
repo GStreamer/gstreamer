@@ -17,7 +17,7 @@ namespace Gst.Rtp {
 		public const int RTCP_MAX_SDES_ITEM_COUNT = 31;
 		public const int RTCP_REDUCED_SIZE_VALID_MASK = 49400;
 		public const int RTCP_VALID_MASK = 57598;
-		public const int RTCP_VALID_VALUE = 200;
+		public const int RTCP_VALID_VALUE = 32968;
 		public const int RTCP_VERSION = 2;
 		public const string RTP_HDREXT_BASE = @"urn:ietf:params:rtp-hdrext:";
 		public const string RTP_HDREXT_ELEMENT_CLASS = @"Network/Extension/RTPHeader";

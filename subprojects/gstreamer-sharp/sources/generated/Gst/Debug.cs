@@ -218,6 +218,34 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_debug_print_object(IntPtr ptr);
+
+		public static string PrintObject(IntPtr ptr) {
+			IntPtr raw_ret = gst_debug_print_object(ptr);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			return ret;
+		}
+
+		public static string PrintObject() {
+			return PrintObject (IntPtr.Zero);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_debug_print_segment(IntPtr segment);
+
+		public static string PrintSegment(Gst.Segment segment) {
+			IntPtr native_segment = GLib.Marshaller.StructureToPtrAlloc (segment);
+			IntPtr raw_ret = gst_debug_print_segment(native_segment);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			Marshal.FreeHGlobal (native_segment);
+			return ret;
+		}
+
+		public static string PrintSegment() {
+			return PrintSegment (Gst.Segment.Zero);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_debug_print_stack_trace();
 
 		public static void PrintStackTrace() {

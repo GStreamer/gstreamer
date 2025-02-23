@@ -1371,6 +1371,15 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_video_encoder_drop_frame(IntPtr raw, IntPtr frame);
+
+		public void DropFrame(Gst.Video.VideoCodecFrame frame) {
+			IntPtr native_frame = GLib.Marshaller.StructureToPtrAlloc (frame);
+			gst_video_encoder_drop_frame(Handle, native_frame);
+			Marshal.FreeHGlobal (native_frame);
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_video_encoder_finish_frame(IntPtr raw, IntPtr frame);
 
 		public Gst.FlowReturn FinishFrame(Gst.Video.VideoCodecFrame frame) {
@@ -1506,6 +1515,15 @@ namespace Gst.Video {
 
 		public Gst.Caps ProxyGetcaps() {
 			return ProxyGetcaps (null, null);
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_video_encoder_release_frame(IntPtr raw, IntPtr frame);
+
+		public void ReleaseFrame(Gst.Video.VideoCodecFrame frame) {
+			IntPtr native_frame = GLib.Marshaller.StructureToPtrAlloc (frame);
+			gst_video_encoder_release_frame(Handle, native_frame);
+			Marshal.FreeHGlobal (native_frame);
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

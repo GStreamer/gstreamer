@@ -12,6 +12,7 @@ namespace Gst {
 	public enum ObjectFlags : uint {
 
 		MayBeLeaked = 1,
+		Constructed = 2,
 		Last = 16,
 	}
 

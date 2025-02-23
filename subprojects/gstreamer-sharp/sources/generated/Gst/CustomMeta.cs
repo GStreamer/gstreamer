@@ -13,6 +13,15 @@ namespace Gst {
 	public partial struct CustomMeta : IEquatable<CustomMeta> {
 
 		public Gst.Meta Meta;
+		private IntPtr _structure;
+		public Gst.Structure Structure {
+			get {
+				return _structure == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (_structure, typeof (Gst.Structure), false);
+			}
+			set {
+				_structure = value == null ? IntPtr.Zero : value.Handle;
+			}
+		}
 
 		public static Gst.CustomMeta Zero = new Gst.CustomMeta ();
 
@@ -20,21 +29,6 @@ namespace Gst {
 			if (raw == IntPtr.Zero)
 				return Gst.CustomMeta.Zero;
 			return (Gst.CustomMeta) Marshal.PtrToStructure (raw, typeof (Gst.CustomMeta));
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_custom_meta_get_structure(IntPtr raw);
-
-		public Gst.Structure Structure { 
-			get {
-				IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
-				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-				IntPtr raw_ret = gst_custom_meta_get_structure(this_as_native);
-				Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), false);
-				ReadNative (this_as_native, ref this);
-				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
-				return ret;
-			}
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -59,7 +53,7 @@ namespace Gst {
 
 		public bool Equals (CustomMeta other)
 		{
-			return true && Meta.Equals (other.Meta);
+			return true && Meta.Equals (other.Meta) && Structure.Equals (other.Structure);
 		}
 
 		public override bool Equals (object other)
@@ -69,7 +63,7 @@ namespace Gst {
 
 		public override int GetHashCode ()
 		{
-			return this.GetType ().FullName.GetHashCode () ^ Meta.GetHashCode ();
+			return this.GetType ().FullName.GetHashCode () ^ Meta.GetHashCode () ^ Structure.GetHashCode ();
 		}
 
 		private static GLib.GType GType {

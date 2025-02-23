@@ -51,6 +51,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_caps_features_new_single_static_str(IntPtr feature);
+
+		public static CapsFeatures NewSingleStaticStr(string feature)
+		{
+			IntPtr native_feature = GLib.Marshaller.StringToPtrGStrdup (feature);
+			CapsFeatures result = CapsFeatures.New (gst_caps_features_new_single_static_str(native_feature));
+			GLib.Marshaller.Free (native_feature);
+			return result;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_features_get_type();
 
 		public static GLib.GType GType { 
@@ -77,12 +88,39 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_caps_features_add_id(IntPtr raw, uint feature);
 
+		[Obsolete]
 		public void AddId(uint feature) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
 			gst_caps_features_add_id(this_as_native, feature);
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_caps_features_add_id_str(IntPtr raw, IntPtr feature);
+
+		public void AddIdStr(Gst.IdStr feature) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr native_feature = GLib.Marshaller.StructureToPtrAlloc (feature);
+			gst_caps_features_add_id_str(this_as_native, native_feature);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			Marshal.FreeHGlobal (native_feature);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_caps_features_add_static_str(IntPtr raw, IntPtr feature);
+
+		public void AddStaticStr(string feature) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr native_feature = GLib.Marshaller.StringToPtrGStrdup (feature);
+			gst_caps_features_add_static_str(this_as_native, native_feature);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			GLib.Marshaller.Free (native_feature);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -103,6 +141,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_caps_features_contains_id(IntPtr raw, uint feature);
 
+		[Obsolete]
 		public bool ContainsId(uint feature) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
@@ -110,6 +149,21 @@ namespace Gst {
 			bool ret = raw_ret;
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_caps_features_contains_id_str(IntPtr raw, IntPtr feature);
+
+		public bool ContainsIdStr(Gst.IdStr feature) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr native_feature = GLib.Marshaller.StructureToPtrAlloc (feature);
+			bool raw_ret = gst_caps_features_contains_id_str(this_as_native, native_feature);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			Marshal.FreeHGlobal (native_feature);
 			return ret;
 		}
 
@@ -129,11 +183,25 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_caps_features_get_nth_id(IntPtr raw, uint i);
 
+		[Obsolete]
 		public uint GetNthId(uint i) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
 			uint raw_ret = gst_caps_features_get_nth_id(this_as_native, i);
 			uint ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_caps_features_get_nth_id_str(IntPtr raw, uint i);
+
+		public Gst.IdStr GetNthIdStr(uint i) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr raw_ret = gst_caps_features_get_nth_id_str(this_as_native, i);
+			Gst.IdStr ret = Gst.IdStr.New (raw_ret);
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 			return ret;
@@ -200,12 +268,26 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_caps_features_remove_id(IntPtr raw, uint feature);
 
+		[Obsolete]
 		public void RemoveId(uint feature) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
 			gst_caps_features_remove_id(this_as_native, feature);
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_caps_features_remove_id_str(IntPtr raw, IntPtr feature);
+
+		public void RemoveIdStr(Gst.IdStr feature) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr native_feature = GLib.Marshaller.StructureToPtrAlloc (feature);
+			gst_caps_features_remove_id_str(this_as_native, native_feature);
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			Marshal.FreeHGlobal (native_feature);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

@@ -158,6 +158,33 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_plugin_add_status_error(IntPtr raw, IntPtr message);
+
+		public void AddStatusError(string message) {
+			IntPtr native_message = GLib.Marshaller.StringToPtrGStrdup (message);
+			gst_plugin_add_status_error(Handle, native_message);
+			GLib.Marshaller.Free (native_message);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_plugin_add_status_info(IntPtr raw, IntPtr message);
+
+		public void AddStatusInfo(string message) {
+			IntPtr native_message = GLib.Marshaller.StringToPtrGStrdup (message);
+			gst_plugin_add_status_info(Handle, native_message);
+			GLib.Marshaller.Free (native_message);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_plugin_add_status_warning(IntPtr raw, IntPtr message);
+
+		public void AddStatusWarning(string message) {
+			IntPtr native_message = GLib.Marshaller.StringToPtrGStrdup (message);
+			gst_plugin_add_status_warning(Handle, native_message);
+			GLib.Marshaller.Free (native_message);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_plugin_get_cache_data(IntPtr raw);
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -248,6 +275,39 @@ namespace Gst {
 			get {
 				IntPtr raw_ret = gst_plugin_get_source(Handle);
 				string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_plugin_get_status_errors(IntPtr raw);
+
+		public string[] StatusErrors { 
+			get {
+				IntPtr raw_ret = gst_plugin_get_status_errors(Handle);
+				string[] ret = GLib.Marshaller.NullTermPtrToStringArray (raw_ret, true);
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_plugin_get_status_infos(IntPtr raw);
+
+		public string[] StatusInfos { 
+			get {
+				IntPtr raw_ret = gst_plugin_get_status_infos(Handle);
+				string[] ret = GLib.Marshaller.NullTermPtrToStringArray (raw_ret, true);
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_plugin_get_status_warnings(IntPtr raw);
+
+		public string[] StatusWarnings { 
+			get {
+				IntPtr raw_ret = gst_plugin_get_status_warnings(Handle);
+				string[] ret = GLib.Marshaller.NullTermPtrToStringArray (raw_ret, true);
 				return ret;
 			}
 		}
