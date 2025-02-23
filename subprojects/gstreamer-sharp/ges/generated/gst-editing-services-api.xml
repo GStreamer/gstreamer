@@ -949,7 +949,7 @@
       <method name="SetTimeTranslationFuncs" cname="ges_base_effect_set_time_translation_funcs" version="1.18" hidden="true">
         <return-type type="gboolean" />
         <parameters>
-          <parameter scope="notified" allow-none="1" name="source_to_sink_func" type="GESBaseEffectTimeTranslationFunc" />
+          <parameter closure="2" scope="notified" allow-none="1" name="source_to_sink_func" type="GESBaseEffectTimeTranslationFunc" />
           <parameter closure="2" destroy="3" scope="notified" allow-none="1" name="sink_to_source_func" type="GESBaseEffectTimeTranslationFunc" />
           <parameter scope="notified" allow-none="1" name="user_data" type="gpointer" />
           <parameter destroy="2" scope="async" allow-none="1" name="destroy" type="GLib.DestroyNotify" />
@@ -1467,6 +1467,12 @@
         <return-type type="GstDiscovererInfo*" owned="true" />
         <parameters>
           <parameter name="uri" type="const-gchar*" />
+        </parameters>
+      </signal>
+      <signal name="SourceSetup" cname="source-setup" when="last" version="1.24">
+        <return-type type="void" />
+        <parameters>
+          <parameter name="source" type="GstElement*" />
         </parameters>
       </signal>
     </object>
@@ -4359,6 +4365,18 @@
     <struct name="EffectClipPrivate" cname="GESEffectClipPrivate" opaque="true" hidden="true" />
     <struct name="EffectPrivate" cname="GESEffectPrivate" opaque="true" hidden="true" />
     <struct name="FormatterPrivate" cname="GESFormatterPrivate" opaque="true" hidden="true" />
+    <struct name="FrameCompositionMeta" cname="GESFrameCompositionMeta" opaque="false" hidden="false" version="1.24">
+      <field cname="meta" access="public" writeable="true" readable="true" is_callback="false" name="Meta" type="GstMeta">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="alpha" access="public" writeable="true" readable="true" is_callback="false" name="Alpha" type="gdouble" />
+      <field cname="posx" access="public" writeable="true" readable="true" is_callback="false" name="Posx" type="gdouble" />
+      <field cname="posy" access="public" writeable="true" readable="true" is_callback="false" name="Posy" type="gdouble" />
+      <field cname="height" access="public" writeable="true" readable="true" is_callback="false" name="Height" type="gdouble" />
+      <field cname="width" access="public" writeable="true" readable="true" is_callback="false" name="Width" type="gdouble" />
+      <field cname="zorder" access="public" writeable="true" readable="true" is_callback="false" name="Zorder" type="guint" />
+      <field cname="operator" access="public" writeable="true" readable="true" is_callback="false" name="Operator" type="gint" />
+    </struct>
     <struct name="GroupPrivate" cname="GESGroupPrivate" opaque="true" hidden="true" />
     <struct name="ImageSourcePrivate" cname="GESImageSourcePrivate" opaque="true" hidden="true" />
     <struct name="LayerPrivate" cname="GESLayerPrivate" opaque="true" hidden="true" />
@@ -4401,6 +4419,16 @@
           <parameter name="recurse" type="gboolean" />
         </parameters>
       </method>
+      <method name="BufferAddFrameCompositionMeta" cname="ges_buffer_add_frame_composition_meta" shared="true" version="1.24">
+        <return-type type="GESFrameCompositionMeta*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
       <method name="Deinit" cname="ges_deinit" shared="true">
         <return-type type="void" />
       </method>
@@ -4421,6 +4449,9 @@
         <parameters>
           <parameter name="uri" type="const-gchar*" />
         </parameters>
+      </method>
+      <method name="FrameCompositionMetaApiGetType" cname="ges_frame_composition_meta_api_get_type" shared="true">
+        <return-type type="GType" />
       </method>
       <method name="Init" cname="ges_init" shared="true">
         <return-type type="gboolean" />
@@ -4501,10 +4532,10 @@
       <constant value="4" ctype="gint" gtype="gint" name="PADDING" />
       <constant value="20" ctype="gint" gtype="gint" name="PADDING_LARGE" />
       <constant value="4294967295" ctype="guint32" gtype="guint32" name="TIMELINE_ELEMENT_NO_LAYER_PRIORITY" />
-      <constant value="1" ctype="gint" gtype="gint"  name="VERSION_MAJOR" />
-      <constant value="90" ctype="gint" gtype="gint"  name="VERSION_MICRO" />
-      <constant value="25" ctype="gint" gtype="gint"  name="VERSION_MINOR" />
-      <constant value="1" ctype="gint" gtype="gint"   name="VERSION_NANO" />
+      <constant value="1" ctype="gint" gtype="gint" name="VERSION_MAJOR" />
+      <constant value="90" ctype="gint" gtype="gint" name="VERSION_MICRO" />
+      <constant value="25" ctype="gint" gtype="gint" name="VERSION_MINOR" />
+      <constant value="1" ctype="gint" gtype="gint" name="VERSION_NANO" />
     </object>
   </namespace>
 </api>
