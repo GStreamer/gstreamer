@@ -219,7 +219,43 @@ _gst_analytics_relation_meta_iterator_next (_GstAnalyticsRelationMetaIterator *
   return py_result;
 }
 
+static PyObject *
+_gi_gst_analytics_mtd_relation_path (PyObject * self, PyObject * args)
+{
+  PyObject *py_module = NULL;
+  PyObject *py_mtd;
+  guint id;
+  guint max_span;
+  GstAnalyticsRelTypes reltype;
+  GArray *relation_path;
+  GstAnalyticsMtd *mtd;
+  PyObject *pathList;
+
+  if (!PyArg_ParseTuple (args, "OOIII", &py_module, &py_mtd, &id, &max_span,
+          &reltype)) {
+    return NULL;
+  }
+
+  relation_path = g_array_new (FALSE, FALSE, sizeof (guint));
+  mtd = (GstAnalyticsMtd *) pygobject_get (py_mtd);
+  gst_analytics_relation_meta_exist (mtd->meta, mtd->id, id,
+      max_span, reltype, &relation_path);
+
+  pathList = PyList_New (relation_path->len);
+  for (guint i = 0; i < relation_path->len; i++) {
+    guint id = g_array_index (relation_path, guint, i);
+    PyList_SetItem (pathList, i, PyLong_FromUnsignedLong (id));
+  }
+  g_array_free (relation_path, TRUE);
+
+  return pathList;
+}
+
 static PyMethodDef _gi_gst_analytics_functions[] = {
+  {"AnalyticsMtdRelationPath",
+        (PyCFunction) _gi_gst_analytics_mtd_relation_path,
+        METH_VARARGS,
+      "Returns the relation path between two Mtd"},
   {NULL, NULL, 0, NULL}
 };
 

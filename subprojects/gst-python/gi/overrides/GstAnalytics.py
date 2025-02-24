@@ -50,6 +50,9 @@ class Mtd(GstAnalytics.Mtd):
         return _gi_gst_analytics.AnalyticsMtdDirectRelatedIterator(
             sys.modules[__name__], self, relation, mtd_type)
 
+    def relation_path(self, mtd, max_span = 0, reltype = GstAnalytics.RelTypes.ANY):
+        return _gi_gst_analytics.AnalyticsMtdRelationPath(
+            sys.modules[__name__], self, mtd.get_id(), max_span, reltype);
 
 __all__.append('Mtd')
 

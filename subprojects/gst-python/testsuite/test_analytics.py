@@ -325,3 +325,13 @@ class TestAnalyticsRelationMetaIterator(TestCase):
 
         assert(count == 2)
 
+        # Create a relation path as od_mtd -> cls_mtd -> trk_mtd -> seg_mtd
+        rmeta.set_relation(GstAnalytics.RelTypes.NONE, od_mtd.id, trk_mtd.id) # clear relation
+        rmeta.set_relation(GstAnalytics.RelTypes.RELATE_TO, cls_mtd.id, trk_mtd.id)
+        rmeta.set_relation(GstAnalytics.RelTypes.RELATE_TO, trk_mtd.id, seg_mtd.id)
+        count = 0
+        expected_rel_ids = [od_mtd.id, cls_mtd.id, trk_mtd.id, seg_mtd.id]
+        for i in od_mtd.relation_path(seg_mtd, max_span=4):
+            assert i == expected_rel_ids[count]
+            count += 1
+        assert(count == 4)
