@@ -558,6 +558,28 @@ gst_wl_display_sync (GstWlDisplay * self,
   return callback;
 }
 
+/* gst_wl_display_object_destroy
+ *
+ * A syncronized version of `xxx_destroy` that ensures that the
+ * once this function returns, the destroy_func will either have already completed,
+ * or will never be called.
+ */
+void
+gst_wl_display_object_destroy (GstWlDisplay * self,
+    gpointer * object, GDestroyNotify destroy_func)
+{
+  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+
+  g_rec_mutex_lock (&priv->sync_mutex);
+
+  if (*object) {
+    destroy_func (*object);
+    *object = NULL;
+  }
+
+  g_rec_mutex_unlock (&priv->sync_mutex);
+}
+
 /* gst_wl_display_callback_destroy
  *
  * A syncronized version of `wl_callback_destroy` that ensures that the
