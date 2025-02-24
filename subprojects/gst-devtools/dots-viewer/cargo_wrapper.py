@@ -74,7 +74,7 @@ if __name__ == "__main__":
     opts = PARSER.parse_args()
     logdir = opts.root_dir / "meson-logs"
     logfile_path = logdir / f"{opts.src_dir.name}-cargo-wrapper.log"
-    logfile = open(logfile_path, mode="w", buffering=1)
+    logfile = open(logfile_path, mode="w", buffering=1, encoding='utf-8')
 
     print(opts, file=logfile)
     cargo_target_dir = opts.build_dir / "target"
