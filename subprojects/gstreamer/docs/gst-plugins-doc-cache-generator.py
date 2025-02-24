@@ -246,6 +246,7 @@ class GstPluginsHotdocConfGen:
         parser.add_argument('--gst_c_source_filters', nargs='*', default=[])
         parser.add_argument('--gst_c_source_file', type=P)
         parser.add_argument('--gst_plugin_libraries_file', type=P)
+        parser.add_argument('--extra_assets', nargs='*', default=[])
         parser.add_argument('--output', type=P)
 
         parser.parse_args(namespace=self, args=sys.argv[2:])
@@ -296,6 +297,7 @@ class GstPluginsHotdocConfGen:
                         'include_paths': self.include_paths,
                         'gst_order_generated_subpages': True,
                         'gst_plugin_library': gst_plugin_libraries_map.get(plugin_name),
+                        'extra_assets': self.extra_assets
                     }, f, indent=4)
 
         if self.output is not None:
