@@ -195,6 +195,10 @@ gst_wl_window_finalize (GObject * gobject)
 
   gst_wl_display_callback_destroy (priv->display, &priv->frame_callback);
   gst_wl_display_callback_destroy (priv->display, &priv->commit_callback);
+  gst_wl_display_object_destroy (priv->display,
+      (gpointer *) & priv->xdg_toplevel, (GDestroyNotify) xdg_toplevel_destroy);
+  gst_wl_display_object_destroy (priv->display,
+      (gpointer *) & priv->xdg_surface, (GDestroyNotify) xdg_surface_destroy);
 
   if (priv->staged_buffer)
     gst_wl_buffer_unref_buffer (priv->staged_buffer);
@@ -202,11 +206,6 @@ gst_wl_window_finalize (GObject * gobject)
   g_cond_clear (&priv->configure_cond);
   g_mutex_clear (&priv->configure_mutex);
   g_mutex_clear (&priv->window_lock);
-
-  if (priv->xdg_toplevel)
-    xdg_toplevel_destroy (priv->xdg_toplevel);
-  if (priv->xdg_surface)
-    xdg_surface_destroy (priv->xdg_surface);
 
   if (priv->video_viewport)
     wp_viewport_destroy (priv->video_viewport);
