@@ -199,9 +199,17 @@ Please ensure GStreamer is properly installed.");
     return FALSE;
   }
 
-  self->pipeline_snapshot_tracer = g_object_new (gst_tracer_factory_get_tracer_type (factory), "dot-dir", self->output_dir, "dots-viewer-ws-url", "ws://127.0.0.1:3000/snapshot/", "folder-mode", 1,    /*numbered */
-      NULL);
+  GType tracer_type = gst_tracer_factory_get_tracer_type (factory);
+  GObjectClass *tracer_class = g_type_class_ref (tracer_type);
+
+  if (g_object_class_find_property (tracer_class, "dots-viewer-ws-url"))
+    self->pipeline_snapshot_tracer = g_object_new (gst_tracer_factory_get_tracer_type (factory), "dot-dir", self->output_dir, "dots-viewer-ws-url", "ws://127.0.0.1:3000/snapshot/", "folder-mode", 1,  /*numbered */
+        NULL);
+  else
+    self->pipeline_snapshot_tracer =
+        g_object_new (gst_tracer_factory_get_tracer_type (factory), NULL);
   gst_object_unref (factory);
+  g_type_class_unref (tracer_class);
 
   if (!self->pipeline_snapshot_tracer) {
     GST_WARNING ("Could not create pipeline-snapshot tracer instance");
