@@ -882,7 +882,12 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     requested_instance_api = priv->supported_instance_api;
   }
 
-  if (requested_instance_api > priv->supported_instance_api) {
+  /* Since Vulkan 1.1, it is possible to have an instance API version that is
+   * less than a device supported API.  As such, requesting a higher API version
+   * is no longer an error.
+   */
+  if (priv->supported_instance_api < VK_MAKE_VERSION (1, 1, 0)
+      && requested_instance_api > priv->supported_instance_api) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "Requested API version (%u.%u) is larger than the maximum supported "
         "version (%u.%u)", VK_VERSION_MAJOR (requested_instance_api),
