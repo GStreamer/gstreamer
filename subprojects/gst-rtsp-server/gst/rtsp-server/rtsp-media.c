@@ -1729,7 +1729,7 @@ gst_rtsp_media_get_dscp_qos (GstRTSPMedia * media)
 
   priv = media->priv;
 
-  g_mutex_unlock (&priv->lock);
+  g_mutex_lock (&priv->lock);
   res = priv->dscp_qos;
   g_mutex_unlock (&priv->lock);
 
