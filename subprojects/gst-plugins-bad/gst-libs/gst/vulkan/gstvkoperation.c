@@ -163,21 +163,19 @@ gst_vulkan_operation_constructed (GObject * object)
       VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
 
   if (priv->has_sync2) {
-    priv->QueueSubmit2 = gst_vulkan_instance_get_proc_address (device->instance,
+    priv->QueueSubmit2 = gst_vulkan_device_get_proc_address (device,
         "vkQueueSubmit2");
     if (!priv->QueueSubmit2) {
       priv->QueueSubmit2 =
-          gst_vulkan_instance_get_proc_address (device->instance,
-          "vkQueueSubmit2KHR");
+          gst_vulkan_device_get_proc_address (device, "vkQueueSubmit2KHR");
     }
 
     if (!priv->CmdPipelineBarrier2) {
       priv->CmdPipelineBarrier2 =
-          gst_vulkan_instance_get_proc_address (device->instance,
-          "vkCmdPipelineBarrier2");
+          gst_vulkan_device_get_proc_address (device, "vkCmdPipelineBarrier2");
       if (!priv->CmdPipelineBarrier2) {
         priv->CmdPipelineBarrier2 =
-            gst_vulkan_instance_get_proc_address (device->instance,
+            gst_vulkan_device_get_proc_address (device,
             "vkCmdPipelineBarrier2KHR");
       }
     }
