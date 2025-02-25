@@ -23,9 +23,9 @@
 
 G_BEGIN_DECLS
 
-void gst_nv_jpeg_enc_register (GstPlugin * plugin,
-                               GstCudaContext * context,
-                               guint rank,
-                               gboolean have_nvrtc);
+gboolean gst_nv_jpeg_enc_register (GstPlugin * plugin,
+                                   GstCudaContext * context,
+                                   guint rank,
+                                   gboolean have_nvrtc);
 
 G_END_DECLS

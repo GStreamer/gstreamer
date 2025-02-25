@@ -129,6 +129,7 @@ plugin_init (GstPlugin * plugin)
   GList *h264_enc_cdata = NULL;
   GList *h265_enc_cdata = NULL;
   GList *av1_enc_cdata = NULL;
+  gboolean have_nvjpegenc = FALSE;
 #endif
   gboolean have_nvrtc = FALSE;
 
@@ -327,8 +328,8 @@ plugin_init (GstPlugin * plugin)
         av1_enc_cdata = g_list_append (av1_enc_cdata, cdata);
     }
 
-    gst_nv_jpeg_enc_register (plugin, context, GST_RANK_NONE, have_nvrtc);
-
+    if (gst_nv_jpeg_enc_register (plugin, context, GST_RANK_NONE, have_nvrtc))
+      have_nvjpegenc = TRUE;
 #endif
     gst_object_unref (context);
   }
@@ -348,6 +349,9 @@ plugin_init (GstPlugin * plugin)
     gst_nv_av1_encoder_register_auto_select (plugin, av1_enc_cdata,
         GST_RANK_NONE);
   }
+
+  if (have_nvjpegenc)
+    gst_nv_jpeg_enc_register (plugin, NULL, GST_RANK_NONE, have_nvrtc);
 #endif
 
   gst_cuda_memory_copy_register (plugin, GST_RANK_NONE);
