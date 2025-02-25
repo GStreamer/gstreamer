@@ -300,6 +300,7 @@ struct GstNvDsDewarpPrivate
   GstVideoInfo out_info;
   bool params_updated = true;
   bool clear_background = false;
+  bool same_size = false;
   GstVideoRectangle out_rect;
   gint64 texture_token = 0;
 
@@ -499,6 +500,7 @@ gst_nv_ds_dewarp_set_property (GObject * object, guint prop_id,
       if (priv->warp_type != warp_type) {
         priv->warp_type = warp_type;
         priv->params_updated = true;
+        gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
       }
       break;
     }
@@ -1398,7 +1400,16 @@ static GstCaps *
 gst_nv_ds_dewarp_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  auto ret = gst_nv_ds_dewarp_caps_rangify_size_info (caps);
+  auto self = GST_NV_DS_DEWARP (trans);
+  auto priv = self->priv;
+  GstCaps *ret;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  /* Passthrough should be the same size */
+  if (priv->warp_type == GST_NV_DS_DEWARP_WARP_NONE)
+    ret = gst_caps_ref (caps);
+  else
+    ret = gst_nv_ds_dewarp_caps_rangify_size_info (caps);
 
   if (filter) {
     auto tmp = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
@@ -1455,6 +1466,7 @@ gst_nv_ds_dewarp_set_caps (GstBaseTransform * trans, GstCaps * in_caps,
 
   auto in_info = &priv->in_info;
   auto out_info = &priv->out_info;
+  priv->same_size = false;
 
   in_width = in_info->height;
   in_height = in_info->width;
