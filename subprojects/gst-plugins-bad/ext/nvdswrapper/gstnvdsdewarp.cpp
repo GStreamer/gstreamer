@@ -268,7 +268,12 @@ enum
 
 struct GstNvDsDewarpPrivate
 {
-  ~GstNvDsDewarpPrivate ()
+  GstNvDsDewarpPrivate ()
+  {
+    texture_token = gst_cuda_create_user_token ();
+  }
+
+   ~GstNvDsDewarpPrivate ()
   {
     reset ();
   }
@@ -296,6 +301,7 @@ struct GstNvDsDewarpPrivate
   bool params_updated = true;
   bool clear_background = false;
   GstVideoRectangle out_rect;
+  gint64 texture_token = 0;
 
   std::recursive_mutex context_lock;
   std::mutex lock;
@@ -1538,6 +1544,12 @@ gst_nv_ds_dewarp_before_transform (GstBaseTransform * trans, GstBuffer * buffer)
   }
 }
 
+struct GstNvDsDewarpTextureData
+{
+  GstCudaContext *context;
+  CUtexObject texture;
+};
+
 static GstFlowReturn
 gst_nv_ds_dewarp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
@@ -1603,18 +1615,41 @@ gst_nv_ds_dewarp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     return GST_FLOW_ERROR;
   }
 
-  auto cuda_ret = CuTexObjectCreate (&texture,
-      &resource_desc, &texture_desc, nullptr);
-  if (!gst_cuda_result (cuda_ret)) {
-    GST_ERROR_OBJECT (self, "Couldn't create texture object");
-    gst_video_frame_unmap (&in_frame);
-    gst_video_frame_unmap (&out_frame);
-    gst_cuda_context_pop (nullptr);
-    return GST_FLOW_ERROR;
+  CUresult cuda_ret = CUDA_SUCCESS;
+  auto in_cmem = GST_CUDA_MEMORY_CAST (in_mem);
+  auto texture_data = (GstNvDsDewarpTextureData *)
+      gst_cuda_memory_get_token_data (in_cmem, priv->texture_token);
+  if (texture_data && texture_data->context == priv->context) {
+    GST_LOG_OBJECT (self, "Have cached texture");
+    texture = texture_data->texture;
+  } else {
+    GST_DEBUG_OBJECT (self, "Creating new texture object");
+
+    cuda_ret = CuTexObjectCreate (&texture,
+        &resource_desc, &texture_desc, nullptr);
+    if (!gst_cuda_result (cuda_ret)) {
+      GST_ERROR_OBJECT (self, "Couldn't create texture object");
+      gst_video_frame_unmap (&in_frame);
+      gst_video_frame_unmap (&out_frame);
+      gst_cuda_context_pop (nullptr);
+      return GST_FLOW_ERROR;
+    }
+
+    texture_data = new GstNvDsDewarpTextureData ();
+    texture_data->context = (GstCudaContext *) gst_object_ref (priv->context);
+    texture_data->texture = texture;
+
+    gst_cuda_memory_set_token_data (in_cmem, priv->texture_token, texture_data,
+        [](gpointer user_data)->void
+        {
+          auto data = (GstNvDsDewarpTextureData *) user_data;
+          gst_cuda_context_push (data->context);
+          CuTexObjectDestroy (data->texture); gst_cuda_context_pop (nullptr);
+          delete data;
+        });
   }
 
   CUstream cuda_stream = 0;
-  auto in_cmem = GST_CUDA_MEMORY_CAST (in_mem);
   auto stream = gst_cuda_memory_get_stream (in_cmem);
   if (stream)
     cuda_stream = gst_cuda_stream_get_handle (stream);
@@ -1642,8 +1677,6 @@ gst_nv_ds_dewarp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   auto ret = nvwarpWarpBuffer (priv->handle, (cudaStream_t) cuda_stream,
       (cudaTextureObject_t) texture, data + offset, stride);
   CuStreamSynchronize (cuda_stream);
-
-  CuTexObjectDestroy (texture);
   gst_cuda_context_pop (nullptr);
 
   GstFlowReturn flow_ret = GST_FLOW_OK;
