@@ -159,7 +159,7 @@ VkFormat                        gst_vulkan_format_from_video_info               
                                                                                  guint plane);
 
 GST_VULKAN_API
-gboolean                        gst_vulkan_format_from_video_info_2            (GstVulkanPhysicalDevice * physical_device,
+gboolean                        gst_vulkan_format_from_video_info_2            (GstVulkanDevice * device,
                                                                                 GstVideoInfo * info,
                                                                                 VkImageTiling tiling,
                                                                                 gboolean no_multiplane,

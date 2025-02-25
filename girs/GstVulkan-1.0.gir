@@ -7410,9 +7410,9 @@ properties.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </return-value>
       <parameters>
-        <parameter name="physical_device" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.c">a #GstVulkanPhysicalDevice</doc>
-          <type name="VulkanPhysicalDevice" c:type="GstVulkanPhysicalDevice*"/>
+        <parameter name="device" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.c">a #GstVulkanDevice</doc>
+          <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
         </parameter>
         <parameter name="info" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.c">the #GstVideoInfo</doc>
