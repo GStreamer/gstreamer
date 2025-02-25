@@ -1015,7 +1015,8 @@ gst_vulkan_decoder_update_ycbcr_sampler (GstVulkanDecoder * self,
 
   device = self->queue->device;
 
-  if (!gst_vulkan_instance_check_version (device->instance, 1, 2, 0)) {
+  if (!gst_vulkan_physical_device_check_api_version (device->physical_device, 1,
+          2, 0)) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "Sampler Ycbcr conversion not available in API");
     return FALSE;

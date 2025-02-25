@@ -62,8 +62,9 @@ GST_START_TEST (test_physical_device_version)
 
   gst_vulkan_physical_device_get_api_version (phys, &major, &minor, NULL);
 
-  if (major > 1 || minor >= 0)
-    fail_unless (gst_vulkan_physical_device_check_api_version (phys, major, minor, 0));
+  if (major > 0)
+    fail_unless (gst_vulkan_physical_device_check_api_version (phys, major,
+            minor, 0));
 
   if (minor > 0)
     fail_unless (gst_vulkan_physical_device_check_api_version (phys, major,

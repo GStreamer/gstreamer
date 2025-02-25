@@ -504,7 +504,7 @@ dump_features (GstVulkanPhysicalDevice * device, GError ** error)
   GstVulkanPhysicalDevicePrivate *priv = GET_PRIV (device);
   VkBaseOutStructure *iter;
 
-  if (gst_vulkan_instance_check_version (device->instance, 1, 2, 0)) {
+  if (gst_vulkan_physical_device_check_api_version (device, 1, 2, 0)) {
     for (iter = (VkBaseOutStructure *) & priv->features10; iter;
         iter = iter->pNext) {
       if (iter->sType == VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2)
@@ -517,12 +517,12 @@ dump_features (GstVulkanPhysicalDevice * device, GError ** error)
           VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES)
         dump_features12 (device, (VkPhysicalDeviceVulkan12Features *) iter);
 #if defined (VK_API_VERSION_1_3)
-      else if (gst_vulkan_instance_check_version (device->instance, 1, 3, 0)
+      else if (gst_vulkan_physical_device_check_api_version (device, 1, 3, 0)
           && iter->sType ==
           VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES)
         dump_features13 (device, (VkPhysicalDeviceVulkan13Features *) iter);
 #if defined(VK_KHR_video_maintenance1)
-      else if (gst_vulkan_instance_check_version (device->instance, 1, 3, 283)
+      else if (gst_vulkan_physical_device_check_api_version (device, 1, 3, 283)
           && iter->sType ==
           VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_MAINTENANCE_1_FEATURES_KHR)
         dump_videomaintenance1 (device,
@@ -909,7 +909,7 @@ physical_device_info (GstVulkanPhysicalDevice * device, GError ** error)
     return FALSE;
 
 #if defined (VK_API_VERSION_1_2)
-  if (gst_vulkan_instance_check_version (device->instance, 1, 2, 0)) {
+  if (gst_vulkan_physical_device_check_api_version (device, 1, 2, 0)) {
     for (iter = (VkBaseOutStructure *) & priv->properties10; iter;
         iter = iter->pNext) {
       if (iter->sType ==
@@ -919,7 +919,7 @@ physical_device_info (GstVulkanPhysicalDevice * device, GError ** error)
           VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES)
         dump_properties12 (device, (VkPhysicalDeviceVulkan12Properties *) iter);
 #if defined (VK_API_VERSION_1_3)
-      else if (gst_vulkan_instance_check_version (device->instance, 1, 3, 0)
+      else if (gst_vulkan_physical_device_check_api_version (device, 1, 3, 0)
           && iter->sType ==
           VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES)
         dump_properties13 (device, (VkPhysicalDeviceVulkan13Properties *) iter);
@@ -992,7 +992,7 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
 
   vkGetPhysicalDeviceProperties (device->device, &device->properties);
 #if defined (VK_API_VERSION_1_2)
-  if (gst_vulkan_instance_check_version (device->instance, 1, 2, 0)) {
+  if (gst_vulkan_physical_device_check_api_version (device, 1, 2, 0)) {
     PFN_vkGetPhysicalDeviceProperties2 get_props2;
     PFN_vkGetPhysicalDeviceMemoryProperties2 get_mem_props2;
     PFN_vkGetPhysicalDeviceFeatures2 get_features2;
@@ -1313,8 +1313,7 @@ gboolean
 gst_vulkan_physical_device_check_api_version (GstVulkanPhysicalDevice * device,
     guint major, guint minor, guint patch)
 {
-  /* Since Vulkan 1.1 it is possible to have different supported API versions
-   * between an instance and a device */
   return VK_MAKE_VERSION (major, minor, patch) <= device->properties.apiVersion
-    && (gst_vulkan_instance_check_version (device->instance, 1, 1, 0) || (major == 1 && minor == 0));
+      && gst_vulkan_instance_check_api_version (device->instance, major, minor,
+      patch);
 }
