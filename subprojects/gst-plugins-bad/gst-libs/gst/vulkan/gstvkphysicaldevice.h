@@ -133,7 +133,16 @@ gboolean                    gst_vulkan_physical_device_get_layer_info       (Gst
                                                                              gchar ** description,
                                                                              guint32 * spec_version,
                                                                              guint32 * implementation_version);
-
+GST_VULKAN_API
+void                        gst_vulkan_physical_device_get_api_version      (GstVulkanPhysicalDevice * device,
+                                                                             guint * major,
+                                                                             guint * minor,
+                                                                             guint * patch);
+GST_VULKAN_API
+gboolean                    gst_vulkan_physical_device_check_api_version    (GstVulkanPhysicalDevice * device,
+                                                                             guint major,
+                                                                             guint minor,
+                                                                             guint patch);
 
 G_END_DECLS
 

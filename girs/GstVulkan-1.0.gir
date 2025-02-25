@@ -4109,6 +4109,32 @@ surrounding elements of @element.</doc>
           </parameter>
         </parameters>
       </function>
+      <method name="check_api_version" c:identifier="gst_vulkan_instance_check_api_version" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">whether the #GstVulkanInstance supports the version specified
+         by @major, @minor and @patch.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">a #GstVulkanInstance</doc>
+            <type name="VulkanInstance" c:type="GstVulkanInstance*"/>
+          </instance-parameter>
+          <parameter name="major" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">the API major version to check</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="minor" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">the API minor version to check</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="patch" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">the API patch version to check</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="check_version" c:identifier="gst_vulkan_instance_check_version" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">Check if the configured vulkan instance supports the specified version.
 Will not work prior to opening the instance with gst_vulkan_instance_open().
@@ -4242,6 +4268,37 @@ is open.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_api_version" c:identifier="gst_vulkan_instance_get_api_version" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">Returns the vulkan API version configured when constructing the
+#GstVulkanInstance. This value can be any valid Vulkan API version and may
+not match gst_vulkan_instance_get_version() in any way.  This version is the
+maximum allowed vulkan API to be used in any capacity.
+
+This will not return valid values until gst_vulkan_instance_open() has been
+called.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">a #GstVulkanInstance</doc>
+            <type name="VulkanInstance" c:type="GstVulkanInstance*"/>
+          </instance-parameter>
+          <parameter name="major" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">major version</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+          <parameter name="minor" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">minor version</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+          <parameter name="patch" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">patch version</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_extension_info" c:identifier="gst_vulkan_instance_get_extension_info" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">Retrieves information about an extension.
 
@@ -4319,7 +4376,7 @@ called.</doc>
         </parameters>
       </method>
       <method name="get_version" c:identifier="gst_vulkan_instance_get_version" version="1.18">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">Retrieve the vulkan instance configured version.  Only returns the supported
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">Retrieve the vulkan instance supported version.  Only returns the supported
 API version by the instance without taking into account the requested API
 version.  This means gst_vulkan_instance_check_version() will return
 different values if a specific version has been requested (which is the
@@ -5092,6 +5149,62 @@ gst_vulkan_operation_add_frame_barrier().</doc>
           </parameter>
         </parameters>
       </function>
+      <method name="check_api_version" c:identifier="gst_vulkan_physical_device_check_api_version" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">Note: This is the intersection of the exposed supported API version as would
+be returned by gst_vulkan_physical_device_get_api_version() and
+gst_vulkan_instance_check_version().  The latter will take into account any
+requested API version and may result in a different result than directly
+comparing against gst_vulkan_instance_get_version().</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">whether the #GstVulkanPhysicalDevice supports the version specified
+         by @major, @minor and @patch.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">a #GstVulkanPhysicalDevice</doc>
+            <type name="VulkanPhysicalDevice" c:type="GstVulkanPhysicalDevice*"/>
+          </instance-parameter>
+          <parameter name="major" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">the API major version to check</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="minor" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">the API minor version to check</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="patch" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">the API patch version to check</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_api_version" c:identifier="gst_vulkan_physical_device_get_api_version" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">Retrieves the advertised Vulkan API version of the #GstVulkanPhysicalDevice.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">a #GstVulkanPhysicalDevice</doc>
+            <type name="VulkanPhysicalDevice" c:type="GstVulkanPhysicalDevice*"/>
+          </instance-parameter>
+          <parameter name="major" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">major version</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+          <parameter name="minor" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">minor version</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+          <parameter name="patch" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">patch version</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_extension_info" c:identifier="gst_vulkan_physical_device_get_extension_info" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">Retrieves information about a device extension.
 
