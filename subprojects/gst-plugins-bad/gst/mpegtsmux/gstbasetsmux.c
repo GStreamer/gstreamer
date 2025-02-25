@@ -597,7 +597,6 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
   guint8 color_spec = 0;
   const gchar *stream_format = NULL;
   const char *interlace_mode = NULL;
-  gchar *pmt_name;
   GstMpegtsDescriptor *pmt_descriptor = NULL;
 
   GST_DEBUG_OBJECT (ts_pad,
@@ -995,11 +994,23 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     ts_pad->stream->pmt_descriptor = pmt_descriptor;
   }
 
-  pmt_name = g_strdup_printf ("PMT_%d", ts_pad->pid);
-  if (mux->prog_map && gst_structure_has_field (mux->prog_map, pmt_name)) {
-    gst_structure_get_int (mux->prog_map, pmt_name, &ts_pad->stream->pmt_index);
+  if (mux->prog_map) {
+    gchar *pmt_name = g_strdup_printf ("PMT_ORDER_%d", ts_pad->pid);
+
+    if (!gst_structure_get_int (mux->prog_map, pmt_name,
+            &ts_pad->stream->pmt_index)) {
+      gchar *pmt_name_2 = g_strdup_printf ("PMT_%d", ts_pad->pid);
+
+      if (gst_structure_get_int (mux->prog_map, pmt_name_2,
+              &ts_pad->stream->pmt_index))
+        GST_FIXME_OBJECT (mux, "Use of ambiguous prog-map entry %s, prefer %s",
+            pmt_name_2, pmt_name);
+
+      g_free (pmt_name_2);
+    }
+
+    g_free (pmt_name);
   }
-  g_free (pmt_name);
 
   interlace_mode = gst_structure_get_string (s, "interlace-mode");
   gst_structure_get_int (s, "rate", &ts_pad->stream->audio_sampling);
