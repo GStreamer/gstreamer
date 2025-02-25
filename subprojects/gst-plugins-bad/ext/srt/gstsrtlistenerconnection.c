@@ -156,18 +156,24 @@ srt_listen_callback_func (GstSRTListenerConnection * connection, SRTSOCKET sock,
   GSocketAddress *addr = NULL;
   GstSRTObject *object = NULL;
 
-  object =
-      gst_srt_listener_connection_get_object (connection, (gchar *) stream_id);
-  if (!object) {
-    GST_DEBUG ("Caller with streamid: %s not part of connection: %s",
-        stream_id, connection->key);
-    return -1;
-  }
-
   addr = peeraddr_to_g_socket_address (peeraddr);
   if (!addr) {
     GST_WARNING ("Invalid peer address. Rejecting sink %d streamid: %s",
         sock, stream_id);
+    return -1;
+  }
+
+  object =
+      gst_srt_listener_connection_get_object (connection, (gchar *) stream_id);
+  if (!object) {
+    GList *iter = NULL;
+    GST_DEBUG ("Caller with streamid: %s not part of connection: %s",
+        stream_id, connection->key);
+    for (iter = connection->objects; iter; iter = iter->next) {
+      object = iter->data;
+      g_signal_emit_by_name (object->element, "caller-rejected", addr,
+          stream_id);
+    }
     return -1;
   }
 
