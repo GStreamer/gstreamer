@@ -53,7 +53,8 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
   GstVulkanInstance *instance = gst_vulkan_instance_new ();
-  gboolean have_instance = gst_vulkan_instance_open (instance, NULL);
+  GError *error = NULL;
+  gboolean have_instance = gst_vulkan_instance_open (instance, &error);
   const gchar *env_vars[] =
       { "VK_ICD_FILENAMES", "VK_DRIVER_FILES", "VK_ADD_DRIVER_FILES", NULL };
 #ifndef G_OS_WIN32
@@ -68,6 +69,12 @@ plugin_init (GstPlugin * plugin)
 #endif
   gst_plugin_add_dependency (plugin, env_vars, NULL, NULL,
       GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+
+  if (!have_instance) {
+    GST_WARNING_OBJECT (plugin, "Failed to create vulkan instance: %s",
+        error->message);
+    g_clear_error (&error);
+  }
 
   ret |= GST_DEVICE_PROVIDER_REGISTER (vulkandeviceprovider, plugin);
 
