@@ -1650,11 +1650,33 @@ gst_nv_ds_dewarp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   }
 
   CUstream cuda_stream = 0;
-  auto stream = gst_cuda_memory_get_stream (in_cmem);
-  if (stream)
-    cuda_stream = gst_cuda_stream_get_handle (stream);
-  else
-    cuda_stream = gst_cuda_stream_get_handle (priv->stream);
+  auto in_stream = gst_cuda_memory_get_stream (in_cmem);
+  auto out_cmem = GST_CUDA_MEMORY_CAST (out_mem);
+  auto out_stream = gst_cuda_memory_get_stream (out_cmem);
+  GstCudaStream *selected_stream = nullptr;
+
+  /* If downstream does not aware of CUDA stream (i.e., using default stream) */
+  if (!out_stream) {
+    if (in_stream) {
+      GST_TRACE_OBJECT (self, "Use upstram CUDA stream");
+      selected_stream = in_stream;
+    } else if (priv->stream) {
+      GST_TRACE_OBJECT (self, "Use our CUDA stream");
+      selected_stream = priv->stream;
+    }
+  } else {
+    selected_stream = out_stream;
+    if (in_stream) {
+      if (in_stream == out_stream) {
+        GST_TRACE_OBJECT (self, "Same stream");
+      } else {
+        GST_TRACE_OBJECT (self, "Different CUDA stream");
+        gst_cuda_memory_sync (in_cmem);
+      }
+    }
+  }
+
+  cuda_stream = gst_cuda_stream_get_handle (selected_stream);
 
   auto data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
   auto stride = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, 0);
@@ -1676,7 +1698,11 @@ gst_nv_ds_dewarp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   auto ret = nvwarpWarpBuffer (priv->handle, (cudaStream_t) cuda_stream,
       (cudaTextureObject_t) texture, data + offset, stride);
-  CuStreamSynchronize (cuda_stream);
+  if (selected_stream != out_stream) {
+    GST_MEMORY_FLAG_UNSET (out_cmem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
+    GST_TRACE_OBJECT (self, "Waiting for convert sync");
+    CuStreamSynchronize (cuda_stream);
+  }
   gst_cuda_context_pop (nullptr);
 
   GstFlowReturn flow_ret = GST_FLOW_OK;
