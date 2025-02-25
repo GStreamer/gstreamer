@@ -230,6 +230,7 @@ struct GstNvJpegEncPrivate
   std::mutex lock;
   guint quality = DEFAULT_JPEG_QUALITY;
   bool quality_updated = false;
+  gboolean use_stream_ordered = FALSE;
 };
 /* *INDENT-ON* */
 
@@ -406,6 +407,19 @@ gst_nv_jpeg_enc_set_context (GstElement * element, GstContext * context)
 }
 
 static gboolean
+default_stream_ordered_alloc_enabled (void)
+{
+  static gboolean enabled = FALSE;
+  GST_CUDA_CALL_ONCE_BEGIN {
+    if (g_getenv ("GST_CUDA_ENABLE_STREAM_ORDERED_ALLOC"))
+      enabled = TRUE;
+  }
+  GST_CUDA_CALL_ONCE_END;
+
+  return enabled;
+}
+
+static gboolean
 gst_nv_jpeg_enc_open (GstVideoEncoder * encoder)
 {
   auto self = GST_NV_JPEG_ENC (encoder);
@@ -532,12 +546,22 @@ gst_nv_jpeg_enc_reset (GstNvJpegEnc * self)
     if (priv->params)
       g_vtable.NvjpegEncoderParamsDestroy (priv->params);
 
+    gboolean need_sync = FALSE;
+    auto stream = gst_cuda_stream_get_handle (priv->stream);
     for (guint i = 0; i < G_N_ELEMENTS (priv->uv); i++) {
       if (priv->uv[i]) {
-        CuMemFree (priv->uv[i]);
+        if (priv->use_stream_ordered) {
+          CuMemFreeAsync (priv->uv[i], stream);
+          need_sync = TRUE;
+        } else {
+          CuMemFree (priv->uv[i]);
+        }
         priv->uv[i] = 0;
       }
     }
+
+    if (need_sync)
+      CuStreamSynchronize (stream);
 
     gst_cuda_context_pop (nullptr);
   }
@@ -729,6 +753,12 @@ gst_nv_jpeg_enc_set_format (GstVideoEncoder * encoder,
       return FALSE;
   }
 
+  priv->use_stream_ordered = FALSE;
+  g_object_get (priv->context, "prefer-stream-ordered-alloc",
+      &priv->use_stream_ordered, nullptr);
+  if (!priv->use_stream_ordered)
+    priv->use_stream_ordered = default_stream_ordered_alloc_enabled ();
+
   std::lock_guard < std::mutex > lk (priv->lock);
   priv->quality_updated = false;
 
@@ -737,30 +767,54 @@ gst_nv_jpeg_enc_set_format (GstVideoEncoder * encoder,
     return FALSE;
   }
 
+  auto stream = gst_cuda_stream_get_handle (priv->stream);
+
   /* Allocate memory  */
   if (priv->launch_kernel) {
     auto width = (priv->info.width + 1) / 2;
     auto height = (priv->info.height + 1) / 2;
     size_t pitch;
-    auto ret = CuMemAllocPitch (&priv->uv[0], &pitch, width, height, 16);
-    if (!gst_cuda_result (ret)) {
-      GST_ERROR_OBJECT (self, "Couldn't allocate U plane memory");
-      gst_cuda_context_pop (nullptr);
-      return FALSE;
-    }
+    CUresult ret = CUDA_SUCCESS;
 
-    ret = CuMemAllocPitch (&priv->uv[1], &pitch, width, height, 16);
-    if (!gst_cuda_result (ret)) {
-      GST_ERROR_OBJECT (self, "Couldn't allocate V plane memory");
-      gst_cuda_context_pop (nullptr);
-      gst_nv_jpeg_enc_reset (self);
-      return FALSE;
+    if (priv->use_stream_ordered) {
+      gint texture_align =
+          gst_cuda_context_get_texture_alignment (priv->context);
+      pitch = ((width + texture_align - 1) / texture_align) * texture_align;
+
+      ret = CuMemAllocAsync (&priv->uv[0], pitch * height, stream);
+      if (!gst_cuda_result (ret)) {
+        GST_ERROR_OBJECT (self, "Couldn't allocate U plane memory");
+        gst_cuda_context_pop (nullptr);
+        return FALSE;
+      }
+
+      ret = CuMemAllocAsync (&priv->uv[1], pitch * height, stream);
+      if (!gst_cuda_result (ret)) {
+        GST_ERROR_OBJECT (self, "Couldn't allocate V plane memory");
+        gst_nv_jpeg_enc_reset (self);
+        gst_cuda_context_pop (nullptr);
+        return FALSE;
+      }
+    } else {
+      ret = CuMemAllocPitch (&priv->uv[0], &pitch, width, height, 16);
+      if (!gst_cuda_result (ret)) {
+        GST_ERROR_OBJECT (self, "Couldn't allocate U plane memory");
+        gst_cuda_context_pop (nullptr);
+        return FALSE;
+      }
+
+      ret = CuMemAllocPitch (&priv->uv[1], &pitch, width, height, 16);
+      if (!gst_cuda_result (ret)) {
+        GST_ERROR_OBJECT (self, "Couldn't allocate V plane memory");
+        gst_cuda_context_pop (nullptr);
+        gst_nv_jpeg_enc_reset (self);
+        return FALSE;
+      }
     }
 
     priv->pitch = pitch;
   }
 
-  auto stream = gst_cuda_stream_get_handle (priv->stream);
   auto ret = g_vtable.NvjpegEncoderParamsCreate (priv->handle, &priv->params,
       stream);
   if (ret != NVJPEG_STATUS_SUCCESS) {
@@ -789,6 +843,14 @@ gst_nv_jpeg_enc_set_format (GstVideoEncoder * encoder,
   }
 
   ret = g_vtable.NvjpegEncoderStateCreate (priv->handle, &priv->state, stream);
+  if (priv->launch_kernel && priv->use_stream_ordered) {
+    if (!gst_cuda_result (CuStreamSynchronize (stream))) {
+      GST_ERROR_OBJECT (self, "Couldn't synchronize stream");
+      gst_cuda_context_pop (nullptr);
+      gst_nv_jpeg_enc_reset (self);
+      return FALSE;
+    }
+  }
   gst_cuda_context_pop (nullptr);
 
   if (ret != NVJPEG_STATUS_SUCCESS) {
