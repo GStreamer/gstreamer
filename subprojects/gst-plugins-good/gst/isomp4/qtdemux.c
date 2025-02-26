@@ -11559,7 +11559,7 @@ qtdemux_parse_transformation_matrix (GstQTDemux * qtdemux,
 
 /* Check if all matrix elements are either 0, 1 or -1 */
 static gboolean
-qtdemux_transformation_matrix_is_simple (guint32 * m)
+qtdemux_transformation_matrix_is_simple (GstQTDemux * qtdemux, guint32 * m)
 {
   int i;
 
@@ -11567,6 +11567,16 @@ qtdemux_transformation_matrix_is_simple (guint32 * m)
     switch (i) {
       case 2:
       case 5:
+        /* 2.30 */
+        if (m[i] != 0U)
+          GST_INFO_OBJECT (qtdemux, "Matrix non-zero UV values ignored");
+        break;
+      case 6:
+      case 7:
+        /* 16.16 */
+        if (m[i] != 0U)
+          GST_INFO_OBJECT (qtdemux, "Matrix non-zero XY values ignored");
+        break;
       case 8:
         /* 2.30 */
         if (m[i] != 0U && m[i] != (1U << 30) && m[i] != (3U << 30))
@@ -11592,8 +11602,8 @@ qtdemux_mul_transformation_matrix (GstQTDemux * qtdemux,
 #define QTADD_MATRIX(_a,_b) ((_a) + (_b) > 0 ? (1U << 16) : \
       ((_a) + (_b) < 0) ? (G_MAXUINT16 << 16) : 0u)
 
-  if (!qtdemux_transformation_matrix_is_simple (a) ||
-      !qtdemux_transformation_matrix_is_simple (b)) {
+  if (!qtdemux_transformation_matrix_is_simple (qtdemux, a) ||
+      !qtdemux_transformation_matrix_is_simple (qtdemux, b)) {
     GST_WARNING_OBJECT (qtdemux,
         "Cannot handle transform matrix with element values other than 0, 1 or -1");
     /* Pretend to have an identity matrix in this case */
