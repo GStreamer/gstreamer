@@ -245,7 +245,7 @@ main (int argc, char **argv)
     d->argv = argv;
     d->current_uri = 1;
 
-    d->pipeline = gst_parse_launch ("playbin video-sink=waylandsink", NULL);
+    d->pipeline = gst_parse_launch ("playbin3 video-sink=waylandsink", NULL);
     g_object_set (d->pipeline, "uri", argv[d->current_uri], NULL);
 
     /* enable looping */
