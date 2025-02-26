@@ -334,7 +334,6 @@ pre-commit checks:
 .gtk-build-rules:
   rules:
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - ".gitlab-ci.yml"
           - "meson.build"
@@ -371,11 +370,9 @@ pre-commit checks:
   rules:
     - !reference [.upstream-branch-rules, rules]
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           *modules_changes
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - "subprojects/gstreamer-vaapi/**/*"
 
@@ -515,11 +512,9 @@ build debian x86_64:
     - !reference [.gtk-build-rules, rules]
     - !reference [.upstream-branch-rules, rules]
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           *modules_changes
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - "subprojects/win-*/*"
   script:
@@ -643,11 +638,9 @@ build macos:
     - !reference [.gtk-build-rules, rules]
     - !reference [.upstream-branch-rules, rules]
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           *modules_changes
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - "subprojects/macos-*/*"
   parallel:
@@ -714,7 +707,6 @@ abi-check:
     PYTHONFAULTHANDLER: "enabled"
   rules:
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           *modules_changes
   script:
@@ -753,11 +745,9 @@ check fedora:
     TEST_SUITE: "check.gst*"
   rules:
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           *modules_changes
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - "subprojects/gstreamer-vaapi/**/*"
 
@@ -807,7 +797,6 @@ check video formats:
     - $CI_PROJECT_DIR/ci/scripts/check-video-formats.sh
   rules:
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - "${VIDEO_HEADER}"
           - "${WL_HEADER}"
@@ -905,7 +894,6 @@ fluster v4l2-stateless on visl:
       junit: build/fluster-results-*.xml
   rules:
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - ".gitlab-ci.yml"
           - ".gitlab-image-tags.yml"
@@ -926,11 +914,9 @@ fluster v4l2-stateless on visl:
   timeout: "1h30m"
   rules:
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           *modules_changes
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - "subprojects/gstreamer-vaapi/**/*"
 
@@ -940,7 +926,6 @@ valgrind core:
     TEST_SUITE: "check.gstreamer\\..*"
   rules:
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - "*"
           - "scripts/*"
@@ -954,7 +939,6 @@ valgrind base:
     TEST_SUITE: "check.gst-plugins-base\\..*"
   rules:
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - "*"
           - "scripts/*"
@@ -971,7 +955,6 @@ valgrind good:
     TIMEOUT_FACTOR: "4"
   rules:
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - "*"
           - "scripts/*"
@@ -987,7 +970,6 @@ valgrind ugly:
     TEST_SUITE: "check.gst-plugins-ugly\\..*"
   rules:
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - "*"
           - "scripts/*"
@@ -1004,7 +986,6 @@ valgrind bad:
     TEST_SUITE: "check.gst-plugins-bad\\..*"
   rules:
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - "*"
           - "scripts/*"
@@ -1021,7 +1002,6 @@ valgrind ges:
     TEST_SUITE: "check.gst-editing-services\\..*"
   rules:
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - "*"
           - "scripts/*"
@@ -1093,7 +1073,6 @@ build documentation:
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: never
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - ".gitlab-ci.yml"
           - ".gitlab-image-tags.yml"
@@ -1131,7 +1110,6 @@ cerbero trigger:
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: never
     - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
         paths:
           - ".gitlab-ci.yml"
           - "ci/gitlab/*.py"
