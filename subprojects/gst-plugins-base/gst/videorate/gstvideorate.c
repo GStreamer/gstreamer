@@ -1304,15 +1304,18 @@ gst_video_rate_src_event (GstBaseTransform * trans, GstEvent * event)
                         videorate->base_ts) * videorate->rate)), diff,
             (GstClockTimeDiff) (diff * videorate->rate));
 
-        if (videorate->segment.rate < 0.0)
+        if (videorate->segment.rate < 0.0) {
           timestamp =
               (videorate->segment.stop - videorate->base_ts) -
               ((videorate->segment.stop - videorate->base_ts -
                   timestamp) * videorate->rate);
-        else
+        } else if (videorate->base_ts > timestamp) {
+          timestamp = videorate->base_ts;
+        } else {
           timestamp =
               videorate->base_ts + ((timestamp -
                   videorate->base_ts) * videorate->rate);
+        }
 
         diff *= videorate->rate;
         GST_OBJECT_UNLOCK (trans);
