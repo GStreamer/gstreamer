@@ -16780,8 +16780,8 @@
       <field cname="samples_per_seg" access="public" writeable="false" readable="true" is_callback="false" name="SamplesPerSeg" type="gint" />
       <field cname="empty_seg" access="public" writeable="false" readable="true" is_callback="false" name="EmptySeg" type="guint8*" />
       <field cname="state" access="public" writeable="false" readable="true" is_callback="false" name="State" type="gint" />
-      <field cname="segdone" access="public" writeable="false" readable="true" is_callback="false" name="Segdone" type="gint" />
-      <field cname="segbase" access="public" writeable="false" readable="true" is_callback="false" name="Segbase" type="gint" />
+      <field cname="segdone" access="public" writeable="false" readable="true" is_callback="false" name="SegdoneField" type="gint" hidden="true" />
+      <field cname="segbase" access="public" writeable="false" readable="true" is_callback="false" name="SegbaseField" type="gint" hidden="true" />
       <field cname="waiting" access="public" writeable="false" readable="true" is_callback="false" name="Waiting" type="gint" />
       <field cname="callback" access="private" writeable="false" readable="false" is_callback="false" name="Callback" type="GstAudioRingBufferCallback" />
       <field cname="cb_data" access="private" writeable="false" readable="false" is_callback="false" name="CbData" type="gpointer" />

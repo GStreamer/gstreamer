@@ -341,6 +341,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="//callback[@cname='GstAudioFormatUnpack']/parameters/parameter[@name='length']" name="name">n_length</attr>
 	<attr path="/api/namespace/object[@cname='GstObject']/field[@cname='flags']" name="writeable">true</attr>
 	<attr path="/api/namespace/object[@cname='GstAudioRingBuffer']/field[@cname='empty_seg']" name="type">guint8*</attr>
+
+	<!-- GstAudioRingBuffer has segdone and segbase as struct fields and a get/set API with the same name but different types.
+	     The fields have been deprecated and they need to be hidden and we also need to rename them so that the generator does not mix types. -->
+	<attr path="//object[@cname='GstAudioRingBuffer']/field[@cname='segdone']" name="name">SegdoneField</attr>
+	<attr path="//object[@cname='GstAudioRingBuffer']/field[@cname='segdone']" name="hidden">true</attr>
+	<attr path="//object[@cname='GstAudioRingBuffer']/field[@cname='segbase']" name="name">SegbaseField</attr>
+	<attr path="//object[@cname='GstAudioRingBuffer']/field[@cname='segbase']" name="hidden">true</attr>
+
 	<attr path="/api/namespace/struct[@cname='GstMIKEYPayloadKeyData']/field[@cname='key_data']" name="type">guint8*</attr>
 	<attr path="/api/namespace/struct[@cname='GstMIKEYPayloadKeyData']/field[@cname='salt_data']" name="type">guint8*</attr>
 	<attr path="/api/namespace/struct[@cname='GstMIKEYPayloadKeyData']/field[@cname='kv_data']" name="type">guint8*</attr>

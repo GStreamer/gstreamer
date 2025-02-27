@@ -99,34 +99,6 @@ namespace Gst.Audio {
 			}
 		}
 
-		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern ulong gst_audio_ring_buffer_get_segdone(IntPtr raw);
-
-		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_audio_ring_buffer_set_segdone(IntPtr raw, ulong segdone);
-
-		public ulong Segdone {
-			get  {
-				ulong raw_ret = gst_audio_ring_buffer_get_segdone(Handle);
-				ulong ret = raw_ret;
-				return ret;
-			}
-			set  {
-				gst_audio_ring_buffer_set_segdone(Handle, value);
-			}
-		}
-
-		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern ulong gst_audio_ring_buffer_get_segbase(IntPtr raw);
-
-		public ulong Segbase {
-			get  {
-				ulong raw_ret = gst_audio_ring_buffer_get_segbase(Handle);
-				ulong ret = raw_ret;
-				return ret;
-			}
-		}
-
 		public int Waiting {
 			get {
 				unsafe {
@@ -1077,6 +1049,34 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_audio_ring_buffer_get_segbase(IntPtr raw);
+
+		public ulong Segbase { 
+			get {
+				ulong raw_ret = gst_audio_ring_buffer_get_segbase(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_audio_ring_buffer_get_segdone(IntPtr raw);
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_audio_ring_buffer_set_segdone(IntPtr raw, ulong segdone);
+
+		public ulong Segdone { 
+			get {
+				ulong raw_ret = gst_audio_ring_buffer_get_segdone(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+			set {
+				gst_audio_ring_buffer_set_segdone(Handle, value);
+			}
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_ring_buffer_is_acquired(IntPtr raw);
 
 		public bool IsAcquired { 
@@ -1497,14 +1497,14 @@ namespace Gst.Audio {
 		public struct GstAudioRingBuffer_segdoneAlign
 		{
 			sbyte f1;
-			private ulong segdone;
+			private int segdone;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
 		public struct GstAudioRingBuffer_segbaseAlign
 		{
 			sbyte f1;
-			private ulong segbase;
+			private int segbase;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
