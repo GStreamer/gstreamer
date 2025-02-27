@@ -2,6 +2,18 @@
 
 image_cache="${SUBPROJECTS_CACHE_DIR:-}"
 
+# Print useful metadata at the start of the build
+if [[ -e "/etc/os-release" ]]; then
+  cat /etc/os-release
+fi
+
+whoami
+id -u
+id -g
+date && date -u
+echo $SHELL
+echo $PATH
+
 # On the CI image we install the rust toolcahin under this path
 # If it exists set the HOME and PATH variables and print the versions
 # of what we have installed
