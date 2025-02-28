@@ -1773,7 +1773,7 @@ stream_collection_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
     return;
 
   g_mutex_lock (&self->lock);
-  do_default_selection = self->collection != NULL;
+  do_default_selection = self->collection == NULL;
   updated = update_stream_collection (self, collection);
   gst_object_unref (collection);
 
@@ -3446,6 +3446,9 @@ gst_play_select_streams (GstPlay * self)
 {
   GList *stream_list = NULL;
   gboolean ret = FALSE;
+
+  if (!self->collection)
+    return FALSE;
 
   if (self->audio_sid && self->audio_enabled)
     stream_list = g_list_append (stream_list, g_strdup (self->audio_sid));
