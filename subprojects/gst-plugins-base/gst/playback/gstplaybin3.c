@@ -2120,6 +2120,7 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
         GST_PLAY_BIN3_UNLOCK (playbin);
         gst_play_bin3_send_custom_event (GST_OBJECT (combiner),
             "playsink-custom-video-flush-finish");
+        return;
       }
       break;
     case GST_STREAM_TYPE_AUDIO:
@@ -2130,6 +2131,7 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
         GST_PLAY_BIN3_UNLOCK (playbin);
         gst_play_bin3_send_custom_event (GST_OBJECT (combiner),
             "playsink-custom-audio-flush-finish");
+        return;
       }
       break;
     case GST_STREAM_TYPE_TEXT:
@@ -2140,6 +2142,7 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
         GST_PLAY_BIN3_UNLOCK (playbin);
         gst_play_bin3_send_custom_event (GST_OBJECT (combiner),
             "playsink-custom-subtitle-flush-finish");
+        return;
       }
       break;
     default:
