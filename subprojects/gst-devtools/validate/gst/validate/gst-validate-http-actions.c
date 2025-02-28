@@ -62,7 +62,7 @@ parse_uri (const gchar * uri, gchar ** host, gint * port, gchar ** path,
   GUri *guri;
   gboolean ret = FALSE;
 
-  guri = g_uri_parse (uri, G_URI_FLAGS_NONE, error);
+  guri = g_uri_parse (uri, 0 /* G_URI_FLAGS_NONE in 2.66 */ , error);
   if (!guri)
     return FALSE;
 
