@@ -249,11 +249,11 @@ struct _GstDebugCategory {
  * statements.
  */
 #define GST_DEBUG_PAD_NAME(pad) \
-  (pad != NULL) ?  \
+  ((pad) != NULL) ?  \
   ((GST_OBJECT_PARENT(pad) != NULL) ? \
   GST_STR_NULL (GST_OBJECT_NAME (GST_OBJECT_PARENT(pad))) : \
   "''" ) : "''", \
-  (pad != NULL) ? GST_STR_NULL (GST_OBJECT_NAME (pad)) : "''"
+  ((pad) != NULL) ? GST_STR_NULL (GST_OBJECT_NAME (pad)) : "''"
 
 /**
  * GST_FUNCTION:
@@ -662,8 +662,9 @@ G_STMT_START{                                        \
  *
  */
 #define GST_DEBUG_CATEGORY_INIT(cat,name,color,description) G_STMT_START{\
-  if (cat == NULL)							\
+  if (cat == NULL) {							\
     cat = _gst_debug_category_new (name,color,description);		\
+  }									\
 }G_STMT_END
 
 /**
@@ -729,7 +730,7 @@ GST_API GstDebugLevel            _gst_debug_min;
  */
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_CAT_LEVEL_LOG(cat,level,object,...) G_STMT_START{		\
-  if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min)) {						\
+  if (G_UNLIKELY (((level) <= GST_LEVEL_MAX) && ((level) <= _gst_debug_min))) {						\
     gst_debug_log ((cat), (level), __FILE__, GST_FUNCTION, __LINE__,	\
         (GObject *) (object), __VA_ARGS__);				\
   }									\
@@ -785,7 +786,7 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  */
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_CAT_LEVEL_LOG_ID(cat,level,id,...) G_STMT_START{		\
-  if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min)) {						\
+  if (G_UNLIKELY (((level) <= GST_LEVEL_MAX) && ((level) <= _gst_debug_min))) {						\
     gst_debug_log_id ((cat), (level), __FILE__, GST_FUNCTION, __LINE__,	\
 		      (id), __VA_ARGS__);				\
   }									\
@@ -826,8 +827,8 @@ GST_CAT_LEVEL_LOG_ID (GstDebugCategory * cat, GstDebugLevel level,
  * other macros and hence in a separate block right here. Docs chunks are
  * with the other doc chunks below though. */
 #define __GST_CAT_MEMDUMP_LOG(cat,object,msg,data,length) G_STMT_START{       \
-    if (G_UNLIKELY (GST_LEVEL_MEMDUMP <= GST_LEVEL_MAX &&		      \
-		    GST_LEVEL_MEMDUMP <= _gst_debug_min)) {		      \
+    if (G_UNLIKELY ((GST_LEVEL_MEMDUMP <= GST_LEVEL_MAX) &&		      \
+		    (GST_LEVEL_MEMDUMP <= _gst_debug_min))) {		      \
     _gst_debug_dump_mem ((cat), __FILE__, GST_FUNCTION, __LINE__,             \
         (GObject *) (object), (msg), (data), (length));                       \
   }                                                                           \
@@ -845,8 +846,8 @@ GST_CAT_LEVEL_LOG_ID (GstDebugCategory * cat, GstDebugLevel level,
  * Since: 1.22
  */
 #define __GST_CAT_MEMDUMP_LOG_ID(cat,id,msg,data,length) G_STMT_START{	\
-    if (G_UNLIKELY (GST_LEVEL_MEMDUMP <= GST_LEVEL_MAX &&		\
-		    GST_LEVEL_MEMDUMP <= _gst_debug_min)) {		\
+    if (G_UNLIKELY ((GST_LEVEL_MEMDUMP <= GST_LEVEL_MAX) &&		\
+		    (GST_LEVEL_MEMDUMP <= _gst_debug_min))) {		\
       _gst_debug_dump_mem_id ((cat), __FILE__, GST_FUNCTION, __LINE__,	\
 			      (id), (msg), (data), (length));		\
     }									\
@@ -1813,7 +1814,7 @@ GST_TRACE (const char *format, ...)
  * Returns: the value passed to @ptr.
  */
 #define GST_DEBUG_FUNCPTR(ptr) \
-  (_gst_debug_register_funcptr((GstDebugFuncPtr)(ptr), #ptr) , ptr)
+  (_gst_debug_register_funcptr((GstDebugFuncPtr)(ptr), #ptr) , (ptr))
 
 /**
  * GST_DEBUG_FUNCPTR_NAME:
@@ -1826,7 +1827,7 @@ GST_TRACE (const char *format, ...)
  * freed by the caller.
  */
 #define GST_DEBUG_FUNCPTR_NAME(ptr) \
-  _gst_debug_nameof_funcptr((GstDebugFuncPtr)ptr)
+  _gst_debug_nameof_funcptr((GstDebugFuncPtr)(ptr))
 
 
 #else /* GST_DISABLE_GST_DEBUG */
@@ -2136,7 +2137,7 @@ GST_TRACE (const char *format, ...)
 
 #define GST_DEBUG_REGISTER_FUNCPTR(ptr) G_STMT_START{ }G_STMT_END
 #define GST_DEBUG_FUNCPTR(ptr) (ptr)
-#define GST_DEBUG_FUNCPTR_NAME(ptr) (g_strdup_printf ("%p", ptr))
+#define GST_DEBUG_FUNCPTR_NAME(ptr) (g_strdup_printf ("%p", (ptr)))
 
 #define GST_CAT_MEMDUMP_OBJECT(cat,obj,msg,data,length) G_STMT_START{ }G_STMT_END
 #define GST_CAT_MEMDUMP_ID(cat,id,msg,data,length)      G_STMT_START{ }G_STMT_END
