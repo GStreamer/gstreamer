@@ -3061,17 +3061,6 @@ gst_adaptive_demux_manifest_update_cb (GstAdaptiveDemux * demux)
   if (ret == GST_FLOW_OK) {
     GST_DEBUG_OBJECT (demux, "Updated playlist successfully");
     demux->priv->update_failed_count = 0;
-
-    /* Wake up download tasks */
-    if (demux->priv->stream_waiting_for_manifest) {
-      GList *iter;
-
-      for (iter = demux->input_period->streams; iter; iter = g_list_next (iter)) {
-        GstAdaptiveDemux2Stream *stream = iter->data;
-        gst_adaptive_demux2_stream_on_manifest_update (stream);
-      }
-      demux->priv->stream_waiting_for_manifest = FALSE;
-    }
   } else if (ret == GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC) {
     schedule_again = FALSE;
     gst_adaptive_demux_handle_lost_sync (demux);
@@ -3793,6 +3782,17 @@ handle_manifest_download_complete (DownloadRequest * request,
     } else {
       GST_DEBUG_OBJECT (demux,
           "Duration unknown, can not send the duration message");
+    }
+
+    /* Wake up download tasks */
+    if (demux->priv->stream_waiting_for_manifest) {
+      GList *iter;
+
+      for (iter = demux->input_period->streams; iter; iter = g_list_next (iter)) {
+        GstAdaptiveDemux2Stream *stream = iter->data;
+        gst_adaptive_demux2_stream_on_manifest_update (stream);
+      }
+      demux->priv->stream_waiting_for_manifest = FALSE;
     }
 
     /* If a manifest changes it's liveness or periodic updateness, we need
