@@ -80,7 +80,7 @@ enum
     "audio/x-raw, " \
       "format = (string) " GST_AUDIO_NE (S16) ", " \
       "rate = (int) [ 8000, MAX ], " \
-      "channels = (int) [ 1, MAX ]", \
+      "channels = (int) [ 1, MAX ], " \
       "layout = (string) interleaved"
 #else
 #error "Only integer or float samples are supported"
