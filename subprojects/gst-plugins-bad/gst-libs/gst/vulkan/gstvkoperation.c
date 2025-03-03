@@ -197,7 +197,10 @@ gst_vulkan_operation_constructed (GObject * object)
   priv->has_video_maintenance1 = gst_vulkan_video_has_maintenance1 (device);
 #endif
 #if defined(VK_KHR_timeline_semaphore)
-  priv->has_timeline = gst_vulkan_device_is_extension_enabled (device,
+  priv->has_timeline =
+      gst_vulkan_physical_device_check_api_version (device->physical_device, 1,
+      2, 0)
+      || gst_vulkan_device_is_extension_enabled (device,
       VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
 #endif
 #endif

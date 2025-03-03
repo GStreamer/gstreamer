@@ -167,7 +167,8 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
   mem->image = image;
 
 #if defined(VK_KHR_timeline_semaphore)
-  if (gst_vulkan_device_is_extension_enabled (device,
+  if (gst_vulkan_physical_device_check_api_version (device->physical_device, 1,
+          2, 0) || gst_vulkan_device_is_extension_enabled (device,
           VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME)) {
     VkSemaphoreTypeCreateInfo semaphore_type_info = {
       .sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO,
