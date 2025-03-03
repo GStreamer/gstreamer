@@ -159,25 +159,32 @@ gst_vulkan_operation_constructed (GObject * object)
   GstVulkanDevice *device = priv->cmd_pool->queue->device;
 
 #if defined(VK_KHR_synchronization2)
-  priv->has_sync2 = gst_vulkan_device_is_extension_enabled (device,
+  priv->has_sync2 =
+      gst_vulkan_physical_device_check_api_version (device->physical_device, 1,
+      3, 0)
+      || gst_vulkan_device_is_extension_enabled (device,
       VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME);
 
   if (priv->has_sync2) {
-    priv->QueueSubmit2 = gst_vulkan_device_get_proc_address (device,
-        "vkQueueSubmit2");
+    if (gst_vulkan_physical_device_check_api_version (device->physical_device,
+            1, 3, 0))
+      priv->QueueSubmit2 =
+          gst_vulkan_device_get_proc_address (device, "vkQueueSubmit2");
+
     if (!priv->QueueSubmit2) {
       priv->QueueSubmit2 =
           gst_vulkan_device_get_proc_address (device, "vkQueueSubmit2KHR");
     }
 
-    if (!priv->CmdPipelineBarrier2) {
+    if (gst_vulkan_physical_device_check_api_version (device->physical_device,
+            1, 3, 0))
       priv->CmdPipelineBarrier2 =
           gst_vulkan_device_get_proc_address (device, "vkCmdPipelineBarrier2");
-      if (!priv->CmdPipelineBarrier2) {
-        priv->CmdPipelineBarrier2 =
-            gst_vulkan_device_get_proc_address (device,
-            "vkCmdPipelineBarrier2KHR");
-      }
+
+    if (!priv->CmdPipelineBarrier2) {
+      priv->CmdPipelineBarrier2 =
+          gst_vulkan_device_get_proc_address (device,
+          "vkCmdPipelineBarrier2KHR");
     }
 
     priv->has_sync2 = (priv->QueueSubmit2 && priv->CmdPipelineBarrier2);
