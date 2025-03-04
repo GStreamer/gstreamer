@@ -205,6 +205,7 @@ failed:
   if (gst_v4l2_decoder_has_remove_bufs (decoder)) {
     while (i-- && (buf = g_queue_pop_tail (&self->pool))) {
       gst_v4l2_decoder_remove_buffers (decoder, direction, buf->index, 1);
+      gst_v4l2_codec_buffer_free (buf);
     }
   } else {
     gst_v4l2_decoder_request_buffers (decoder, direction, 0);
@@ -375,10 +376,11 @@ gst_v4l2_codec_allocator_detach (GstV4l2CodecAllocator * self)
     } else {
       GstV4l2CodecBuffer *buf;
 
-      while ((buf = g_queue_pop_tail (&self->pool)))
+      while ((buf = g_queue_pop_tail (&self->pool))) {
         gst_v4l2_decoder_remove_buffers (self->decoder, self->direction,
             buf->index, 1);
-
+        gst_v4l2_codec_buffer_free (buf);
+      }
     }
   }
   GST_OBJECT_UNLOCK (self);
