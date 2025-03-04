@@ -675,9 +675,7 @@ gst_h266_parse_process_nal (GstH266Parse * h266parse, GstH266NalUnit * nalu)
 
   switch (nal_type) {
     case GST_H266_NAL_VPS:
-      /* *INDENT-OFF* */
-      *vps = (GstH266VPS) { 0, };
-      /* *INDENT-ON* */
+      memset (vps, 0, sizeof (*vps));
       pres = gst_h266_parser_parse_vps (nalparser, nalu, vps);
       if (pres != GST_H266_PARSER_OK) {
         GST_WARNING_OBJECT (h266parse, "failed to parse VPS");
@@ -702,9 +700,7 @@ gst_h266_parse_process_nal (GstH266Parse * h266parse, GstH266NalUnit * nalu)
       h266parse->header = TRUE;
       break;
     case GST_H266_NAL_SPS:
-      /* *INDENT-OFF* */
-      *sps = (GstH266SPS) { 0, };
-      /* *INDENT-ON* */
+      memset (sps, 0, sizeof (*sps));
       /* reset state, everything else is obsolete */
       h266parse->state &= GST_H266_PARSE_STATE_GOT_PPS;
 
@@ -734,9 +730,7 @@ gst_h266_parse_process_nal (GstH266Parse * h266parse, GstH266NalUnit * nalu)
       h266parse->state |= GST_H266_PARSE_STATE_GOT_SPS;
       break;
     case GST_H266_NAL_PPS:
-      /* *INDENT-OFF* */
-      *pps = (GstH266PPS) { 0, };
-      /* *INDENT-ON* */
+      memset (pps, 0, sizeof (*pps));
       /* expected state: got-sps */
       h266parse->state &= GST_H266_PARSE_STATE_GOT_SPS;
       if (!GST_H266_PARSE_STATE_VALID (h266parse, GST_H266_PARSE_STATE_GOT_SPS))
@@ -773,9 +767,7 @@ gst_h266_parse_process_nal (GstH266Parse * h266parse, GstH266NalUnit * nalu)
       break;
     case GST_H266_NAL_PREFIX_APS:
     case GST_H266_NAL_SUFFIX_APS:
-      /* *INDENT-OFF* */
-      *aps = (GstH266APS) { 0, };
-      /* *INDENT-ON* */
+      memset (aps, 0, sizeof (*aps));
       /* expected state: got-sps and pps */
       if (!GST_H266_PARSE_STATE_VALID (h266parse,
               GST_H266_PARSE_STATE_VALID_SPS_PPS))
@@ -810,9 +802,7 @@ gst_h266_parse_process_nal (GstH266Parse * h266parse, GstH266NalUnit * nalu)
       break;
     case GST_H266_NAL_PH:
     {
-      /* *INDENT-OFF* */
-      *ph = (GstH266PicHdr) { 0, };
-      /* *INDENT-ON* */
+      memset (ph, 0, sizeof (*ph));
       /* expected state: got-sps and pps */
       if (!GST_H266_PARSE_STATE_VALID (h266parse,
               GST_H266_PARSE_STATE_VALID_SPS_PPS))
