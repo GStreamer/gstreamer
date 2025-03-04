@@ -416,6 +416,7 @@ gst_v4l2_codec_av1_dec_decide_allocation (GstVideoDecoder * decoder,
 
   g_clear_object (&self->src_pool);
   g_clear_object (&self->src_allocator);
+  g_clear_object (&self->sink_allocator);
 
   self->has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
