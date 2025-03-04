@@ -127,7 +127,7 @@ static GstStaticPadTemplate gst_video_rate_src_template =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw(ANY);" "video/x-bayer(ANY);"
-        "image/jpeg(ANY);" "image/png(ANY)")
+        "image/jpeg(ANY); image/x-jxsc(ANY), alignment=frame; image/png(ANY)")
     );
 
 static GstStaticPadTemplate gst_video_rate_sink_template =
@@ -135,7 +135,7 @@ static GstStaticPadTemplate gst_video_rate_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw(ANY);" "video/x-bayer(ANY);"
-        "image/jpeg(ANY);" "image/png(ANY)")
+        "image/jpeg(ANY); image/x-jxsc(ANY), alignment=frame; image/png(ANY)")
     );
 
 static void gst_video_rate_swap_prev (GstVideoRate * videorate,
