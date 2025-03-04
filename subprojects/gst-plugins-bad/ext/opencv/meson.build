@@ -66,7 +66,7 @@ plugin_sources += {
   'opencv': pathsep.join(doc_sources)
 }
 
-if get_option('opencv').disabled() or not opencv_dep.found()
+if get_option('opencv').disabled() or not opencv_dep.found() or not gstopencv_dep.found()
   subdir_done()
 endif
 

@@ -1,5 +1,5 @@
-opencv_dep = disabler()
-gstopencv_dep = disabler()
+opencv_dep = dependency('', required: false)
+gstopencv_dep = dependency('', required: false)
 opencv_opt = get_option('opencv')
 if opencv_opt.disabled()
   subdir_done()

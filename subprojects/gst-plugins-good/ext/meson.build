@@ -11,8 +11,8 @@
 # In cases 3,4: we create one static_library() target that links to libsoup
 # In cases 2,4: we create one shared_library() target that dlopen()s libsoup
 
-libsoup2_dep = disabler()
-libsoup3_dep = disabler()
+libsoup2_dep = dependency('', required: false)
+libsoup3_dep = dependency('', required: false)
 soup_ver_opt = get_option('soup-version')
 
 default_library = get_option('default_library')
