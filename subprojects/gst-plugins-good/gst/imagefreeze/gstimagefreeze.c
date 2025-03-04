@@ -90,12 +90,14 @@ static GstStaticPadTemplate sink_pad_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS
-    ("video/x-raw(ANY); video/x-bayer(ANY); image/jpeg(ANY); image/png(ANY)"));
+    ("video/x-raw(ANY); video/x-bayer(ANY); image/jpeg(ANY); "
+        "image/x-jxsc(ANY), alignment=frame; image/png(ANY)"));
 
 static GstStaticPadTemplate src_pad_template =
     GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS
-    ("video/x-raw(ANY); video/x-bayer(ANY); image/jpeg(ANY); image/png(ANY)"));
+    ("video/x-raw(ANY); video/x-bayer(ANY); image/jpeg(ANY); "
+        "image/x-jxsc(ANY), alignment=frame; image/png(ANY)"));
 
 GST_DEBUG_CATEGORY_STATIC (gst_image_freeze_debug);
 #define GST_CAT_DEFAULT gst_image_freeze_debug
