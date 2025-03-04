@@ -29,9 +29,9 @@ if voamrwbenc_dep.found()
     install_dir: plugins_install_dir,
   )
   plugins += [gstvoamrwbenc]
-endif
 
-install_data('GstVoAmrwbEnc.prs', install_dir: presetdir)
-env = environment()
-env.prepend('GST_PRESET_PATH', meson.current_source_dir())
-meson.add_devenv(env)
+  install_data('GstVoAmrwbEnc.prs', install_dir: presetdir)
+  env = environment()
+  env.prepend('GST_PRESET_PATH', meson.current_source_dir())
+  meson.add_devenv(env)
+endif
