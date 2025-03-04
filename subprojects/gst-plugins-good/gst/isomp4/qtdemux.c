@@ -11942,7 +11942,7 @@ qtdemux_parse_stereo_svmi_atom (GstQTDemux * qtdemux, QtDemuxStream * stream,
 typedef enum
 {
   // ISO/IEC 23001-17 Table 1 - Component Types
-  COMPONENT_MONOCHROME = 0,
+  COMPONENT_MONOCHROME = 0,     // Gray
   COMPONENT_LUMA_Y = 1,         // Y
   COMPONENT_CHROMA_U = 2,       // Cb or U
   COMPONENT_CHROMA_V = 3,       // Cr or V
@@ -11950,15 +11950,17 @@ typedef enum
   COMPONENT_GREEN = 5,          // G
   COMPONENT_BLUE = 6,           // B
   COMPONENT_ALPHA = 7,          // A
-  COMPONENT_DEPTH = 8,
-  COMPONENT_DISPARITY = 9,
+  COMPONENT_DEPTH = 8,          //
+  COMPONENT_DISPARITY = 9,      //
   COMPONENT_PALETTE = 10,       // The component_format value for this component shall be 0.
   COMPONENT_FILTER_ARRAY = 11,  // Bayer, RGBW, etc.
   COMPONENT_PADDING = 12,       // unused bit/bytes
-  COMPONENT_CYAN = 13,
-  COMPONENT_MAGENTA = 14,
-  COMPONENT_YELLOW = 15,
+  COMPONENT_CYAN = 13,          //
+  COMPONENT_MAGENTA = 14,       //
+  COMPONENT_YELLOW = 15,        //
   COMPONENT_KEY = 16,           // Black
+  // Values 17 to 0x7FFF are reserved
+  // Values 0x8000 to 0xFFFF are user-defined
 } ComponentType;
 
 typedef struct ComponentDefinitionBox
@@ -12135,6 +12137,28 @@ error:
   return FALSE;
 }
 
+typedef struct ComponentFormatMapping
+{
+  GstVideoFormat format;
+  guint num_components;
+  guint16 component_types[4];
+} ComponentFormatMapping;
+
+static const ComponentFormatMapping component_lookup[] = {
+  {GST_VIDEO_FORMAT_GRAY8, 1, {COMPONENT_MONOCHROME}},
+  {GST_VIDEO_FORMAT_RGB, 3, {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE}},
+  {GST_VIDEO_FORMAT_BGR, 3, {COMPONENT_BLUE, COMPONENT_GREEN, COMPONENT_RED}},
+  {GST_VIDEO_FORMAT_ARGB, 4,
+      {COMPONENT_ALPHA, COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE}},
+  {GST_VIDEO_FORMAT_BGRA, 4,
+      {COMPONENT_BLUE, COMPONENT_GREEN, COMPONENT_RED, COMPONENT_ALPHA}},
+  {GST_VIDEO_FORMAT_RGBA, 4,
+      {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE, COMPONENT_ALPHA}},
+  {GST_VIDEO_FORMAT_RGBx, 4,
+      {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE, COMPONENT_PADDING}},
+};
+
+
 static GstVideoFormat
 qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     QtDemuxStreamStsdEntry * entry, QtDemuxStream * stream,
@@ -12274,46 +12298,24 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     component_types[i] = cmpd->types[component_index];
   }
 
-  /* Determine Format */
-  switch (num_components) {
-    case 1:
-      if (component_types[0] == COMPONENT_MONOCHROME) {
-        // Single channel, we can handle this in any interleave
-        format = GST_VIDEO_FORMAT_GRAY8;
-      }
+  // Lookup Format
+  for (guint i = 0; i < G_N_ELEMENTS (component_lookup); i++) {
+    if (num_components != component_lookup[i].num_components) {
+      continue;
+    } else if (!memcmp (component_types, component_lookup[i].component_types,
+            num_components * sizeof (guint16))) {
+      format = component_lookup[i].format;
       break;
-    case 3:
-      if (component_types[0] == COMPONENT_RED &&
-          component_types[1] == COMPONENT_GREEN &&
-          component_types[2] == COMPONENT_BLUE && uncC->interleave_type == 1) {
-        format = GST_VIDEO_FORMAT_RGB;
-      }
-      if (component_types[0] == COMPONENT_BLUE &&
-          component_types[1] == COMPONENT_GREEN &&
-          component_types[2] == COMPONENT_RED && uncC->interleave_type == 1) {
-        format = GST_VIDEO_FORMAT_BGR;
-      }
-      break;
-    case 4:
-      if (component_types[0] == COMPONENT_RED &&
-          component_types[1] == COMPONENT_GREEN &&
-          component_types[2] == COMPONENT_BLUE &&
-          component_types[3] == COMPONENT_ALPHA && uncC->interleave_type == 1) {
-        format = GST_VIDEO_FORMAT_RGBA;
-      }
-      if (component_types[0] == COMPONENT_RED &&
-          component_types[1] == COMPONENT_GREEN &&
-          component_types[2] == COMPONENT_BLUE &&
-          component_types[3] == COMPONENT_PADDING
-          && uncC->interleave_type == 1) {
-        format = GST_VIDEO_FORMAT_RGBx;
-      }
-      break;
-    default:
-      GST_WARNING_OBJECT (qtdemux,
-          "Unsupported number of components for uncompressed track: %u",
-          num_components);
-      goto unsupported_feature;
+    }
+  }
+
+  // TODO: Handle various interleave types for multiple components
+  if (num_components != 1 && uncC->interleave_type != 1) {
+    // Single channels can by any interleave_type
+    GST_WARNING_OBJECT (qtdemux,
+        "Unsupported interleave_type for uncompressed track: %u",
+        uncC->interleave_type);
+    goto unsupported_feature;
   }
 
   /* Calculate Stride */
@@ -12324,8 +12326,6 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     goto unsupported_feature;   // TODO - account for higher bit depths
   } else if (uncC->sampling_type != 0) {
     goto unsupported_feature;   // TODO - account for subsampling
-  } else if (uncC->interleave_type != 0 && uncC->interleave_type != 1) {
-    goto unsupported_feature;   // TODO - account for various interleave types
   }
   stream->stride = entry->width * num_components;       // TODO - account for non-zero row alignment
 
