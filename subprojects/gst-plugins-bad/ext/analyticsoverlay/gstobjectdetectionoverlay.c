@@ -72,6 +72,7 @@ struct _GstObjectDetectionOverlay
   guint od_outline_color;
   guint od_outline_stroke_width;
   gboolean draw_labels;
+  gboolean filled_box;
   guint labels_color;
   gdouble labels_stroke_width;
   gdouble labels_outline_ofs;
@@ -100,6 +101,7 @@ enum
   PROP_OD_OUTLINE_COLOR = 1,
   PROP_DRAW_LABELS,
   PROP_LABELS_COLOR,
+  PROP_FILLED_BOX,
   _PROP_COUNT
 };
 
@@ -228,6 +230,20 @@ gst_object_detection_overlay_class_init (GstObjectDetectionOverlayClass * klass)
           "Color (ARGB) to use for object labels",
           0, G_MAXUINT, 0xFFFFFF, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+   /**
+   * GstObjectDetectionOverlay:filled-box
+   *
+   * Draw filled-box in the region where the object is detected is masked.
+   * Filling color will be based on object-detection-outline-color.
+   *
+   * Since: 1.28
+   */
+  g_object_class_install_property (gobject_class, PROP_FILLED_BOX,
+      g_param_spec_boolean ("filled-box",
+          "Filled box",
+          "Draw a filled box",
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   element_class = (GstElementClass *) klass;
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
@@ -282,6 +298,7 @@ gst_object_detection_overlay_init (GstObjectDetectionOverlay * overlay)
   overlay->od_outline_color = 0xFFFFFFFF;
   overlay->draw_labels = TRUE;
   overlay->labels_color = 0xFFFFFFFF;
+  overlay->filled_box = FALSE;
   overlay->in_info = &GST_VIDEO_FILTER (overlay)->in_info;
   overlay->attach_compo_to_buffer = TRUE;
   overlay->canvas = NULL;
@@ -311,6 +328,9 @@ gst_object_detection_overlay_set_property (GObject * object, guint prop_id,
     case PROP_LABELS_COLOR:
       overlay->labels_color = g_value_get_uint (value);
       break;
+    case PROP_FILLED_BOX:
+      overlay->filled_box = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -332,6 +352,9 @@ gst_object_detection_overlay_get_property (GObject * object,
       break;
     case PROP_LABELS_COLOR:
       g_value_set_uint (value, od_overlay->labels_color);
+      break;
+    case PROP_FILLED_BOX:
+      g_value_set_boolean (value, od_overlay->filled_box);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -844,7 +867,12 @@ gst_object_detection_overlay_render_boundingbox (GstObjectDetectionOverlay
 
   /* draw bounding box */
   cairo_rectangle (ctx->cr, x, y, w, h);
-  cairo_stroke (ctx->cr);
+
+  if (overlay->filled_box == FALSE)
+    cairo_stroke (ctx->cr);
+  else
+    cairo_fill (ctx->cr);
+
   cairo_restore (ctx->cr);
 }
 
