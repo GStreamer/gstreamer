@@ -11963,6 +11963,17 @@ typedef enum
   // Values 0x8000 to 0xFFFF are user-defined
 } ComponentType;
 
+typedef enum
+{
+  // ISO/IEC 23001-17 Table 4 - Interleave Types
+  INTERLEAVE_COMPONENT = 0,     // Planar: RRR... GGG... BBB...
+  INTERLEAVE_PIXEL = 1,         // Standard RGB RGB RGB ...
+  INTERLEAVE_MIXED = 2,         // Typically used for YUV 420 data
+  INTERLEAVE_ROW = 3,           // Interleaved by rows
+  INTERLEAVE_TILE = 4,          // Interleaved by tiles
+  INTERLEAVE_MULTI_Y = 5,       // Multiple Y components with a single UV pair
+} InterleaveType;
+
 typedef struct ComponentDefinitionBox
 {
   // ComponentDefinitionBox
@@ -12141,20 +12152,26 @@ typedef struct ComponentFormatMapping
 {
   GstVideoFormat format;
   guint num_components;
+  InterleaveType interleave_type;
   guint16 component_types[4];
 } ComponentFormatMapping;
 
 static const ComponentFormatMapping component_lookup[] = {
-  {GST_VIDEO_FORMAT_GRAY8, 1, {COMPONENT_MONOCHROME}},
-  {GST_VIDEO_FORMAT_RGB, 3, {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE}},
-  {GST_VIDEO_FORMAT_BGR, 3, {COMPONENT_BLUE, COMPONENT_GREEN, COMPONENT_RED}},
-  {GST_VIDEO_FORMAT_ARGB, 4,
+  {GST_VIDEO_FORMAT_GRAY8, 1, INTERLEAVE_COMPONENT,
+      {COMPONENT_MONOCHROME}},
+  {GST_VIDEO_FORMAT_GRAY8, 1, INTERLEAVE_PIXEL,
+      {COMPONENT_MONOCHROME}},
+  {GST_VIDEO_FORMAT_RGB, 3, INTERLEAVE_PIXEL,
+      {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE}},
+  {GST_VIDEO_FORMAT_BGR, 3, INTERLEAVE_PIXEL,
+      {COMPONENT_BLUE, COMPONENT_GREEN, COMPONENT_RED}},
+  {GST_VIDEO_FORMAT_ARGB, 4, INTERLEAVE_PIXEL,
       {COMPONENT_ALPHA, COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE}},
-  {GST_VIDEO_FORMAT_BGRA, 4,
+  {GST_VIDEO_FORMAT_BGRA, 4, INTERLEAVE_PIXEL,
       {COMPONENT_BLUE, COMPONENT_GREEN, COMPONENT_RED, COMPONENT_ALPHA}},
-  {GST_VIDEO_FORMAT_RGBA, 4,
+  {GST_VIDEO_FORMAT_RGBA, 4, INTERLEAVE_PIXEL,
       {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE, COMPONENT_ALPHA}},
-  {GST_VIDEO_FORMAT_RGBx, 4,
+  {GST_VIDEO_FORMAT_RGBx, 4, INTERLEAVE_PIXEL,
       {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE, COMPONENT_PADDING}},
 };
 
@@ -12245,13 +12262,13 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
 
 
   switch (uncC->interleave_type) {
-    case 0:                    // Component Interleaving (Planar)
-    case 1:                    // Pixel Interleaved
+    case INTERLEAVE_COMPONENT: // Component Interleaving (Planar)
+    case INTERLEAVE_PIXEL:     // Pixel Interleaved
       break;
-    case 2:                    // Mixed Interleaved
-    case 3:                    // Row Interleaved
-    case 4:                    // Tile Interleaved
-    case 5:                    // Multi-Y Pixel Interleaved
+    case INTERLEAVE_MIXED:     // Mixed Interleaved
+    case INTERLEAVE_ROW:       // Row Interleaved
+    case INTERLEAVE_TILE:      // Tile Interleaved
+    case INTERLEAVE_MULTI_Y:   // Multi-Y Pixel Interleaved
     default:
       GST_WARNING_OBJECT (qtdemux,
           "Unsupported interleave_type for uncompressed track: %u",
@@ -12299,14 +12316,23 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
   }
 
   // Lookup Format
+  const ComponentFormatMapping *lut = component_lookup;
   for (guint i = 0; i < G_N_ELEMENTS (component_lookup); i++) {
-    if (num_components != component_lookup[i].num_components) {
+    if (num_components != lut[i].num_components) {
       continue;
-    } else if (!memcmp (component_types, component_lookup[i].component_types,
-            num_components * sizeof (guint16))) {
-      format = component_lookup[i].format;
-      break;
     }
+
+    if (uncC->interleave_type != lut[i].interleave_type) {
+      continue;
+    }
+
+    if (memcmp (component_types, lut[i].component_types,
+            num_components * sizeof (guint16))) {
+      continue;
+    }
+
+    format = lut[i].format;
+    break;
   }
 
   // TODO: Handle various interleave types for multiple components
