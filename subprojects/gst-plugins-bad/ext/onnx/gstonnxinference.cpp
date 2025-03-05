@@ -187,9 +187,24 @@ gst_onnx_execution_provider_get_type (void)
     static GEnumValue execution_provider_types[] = {
       {GST_ONNX_EXECUTION_PROVIDER_CPU, "CPU execution provider",
           "cpu"},
+#if HAVE_CUDA
       {GST_ONNX_EXECUTION_PROVIDER_CUDA,
             "CUDA execution provider",
           "cuda"},
+#else
+      {GST_ONNX_EXECUTION_PROVIDER_CUDA,
+            "CUDA execution provider (compiled out, will use CPU)",
+          "cuda"},
+#endif
+#ifdef HAVE_VSI_NPU
+      {GST_ONNX_EXECUTION_PROVIDER_VSI,
+       "VeriSilicon NPU execution provider",
+       "vsi"},
+#else
+      {GST_ONNX_EXECUTION_PROVIDER_VSI,
+       "VeriSilicon NPU execution provider (compiled out, will use CPU)",
+       "vsi"},
+#endif
       {0, NULL, NULL},
     };
 
