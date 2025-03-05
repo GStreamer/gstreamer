@@ -54,7 +54,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <gst/base/gstpushsrc.h>
 
 #include "curltask.h"

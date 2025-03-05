@@ -49,7 +49,6 @@
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
-#include <unistd.h>
 #if HAVE_NETINET_IP_H
 #include <netinet/ip.h>
 #endif
