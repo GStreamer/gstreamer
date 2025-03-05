@@ -1436,8 +1436,6 @@ gst_v4l2_object_v4l2fourcc_is_rgb (guint32 fourcc)
   if (finfo) {
     if (GST_VIDEO_FORMAT_INFO_IS_RGB (finfo))
       return TRUE;
-    if (GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo))
-      return TRUE;
   }
 
   if ((desc->flags & GST_V4L2_BAYER) == GST_V4L2_BAYER)
