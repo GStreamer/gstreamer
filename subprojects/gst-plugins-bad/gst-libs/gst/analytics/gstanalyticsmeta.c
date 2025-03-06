@@ -205,8 +205,6 @@ gst_analytics_mtd_type_get_name (GstAnalyticsMtdType type)
 {
   GstAnalyticsMtdImpl *impl = (GstAnalyticsMtdImpl *) type;
 
-  g_return_val_if_fail (impl != NULL, NULL);
-
   if (type == GST_ANALYTICS_MTD_TYPE_ANY)
     return "ANY";
   else
