@@ -49,7 +49,7 @@
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
-#if HAVE_NETINET_IP_H
+#ifdef  HAVE_NETINET_IP_H
 #include <netinet/ip.h>
 #endif
 #ifdef HAVE_NETINET_TCP_H

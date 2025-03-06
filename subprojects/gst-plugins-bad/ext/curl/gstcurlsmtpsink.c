@@ -56,13 +56,13 @@
 #endif
 #include <sys/types.h>
 #include <sys/time.h>
-#if HAVE_PWD_H
+#ifdef HAVE_PWD_H
 #include <pwd.h>
 #endif
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
-#if HAVE_NETINET_IP_H
+#ifdef HAVE_NETINET_IP_H
 #include <netinet/ip.h>
 #endif
 #ifdef HAVE_NETINET_TCP_H
