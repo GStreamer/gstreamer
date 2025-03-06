@@ -48,7 +48,12 @@ static void gst_avtp_base_depayload_set_property (GObject * object,
 static void gst_avtp_base_depayload_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_avtp_base_depayload_sink_event (GstPad * pad,
+static gboolean gst_avtp_base_depayload_sink_event (GstAvtpBaseDepayload * self,
+    GstEvent * event);
+
+static GstFlowReturn avtp_base_depayload_chain (GstPad * pad,
+    GstObject * parent, GstBuffer * buffer);
+static gboolean avtp_base_depayload_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
 
 GType
@@ -92,8 +97,7 @@ gst_avtp_base_depayload_class_init (GstAvtpBaseDepayloadClass * klass)
           DEFAULT_STREAMID, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PAUSED));
 
-  klass->chain = NULL;
-  klass->sink_event = GST_DEBUG_FUNCPTR (gst_avtp_base_depayload_sink_event);
+  klass->sink_event = gst_avtp_base_depayload_sink_event;
 
   GST_DEBUG_CATEGORY_INIT (avtpbasedepayload_debug, "avtpbasedepayload", 0,
       "Base class for AVTP depayloaders");
@@ -111,7 +115,7 @@ gst_avtp_base_depayload_init (GstAvtpBaseDepayload * avtpbasedepayload,
   GstAvtpBaseDepayloadClass *avtpbasedepayload_class =
       GST_AVTP_BASE_DEPAYLOAD_CLASS (g_class);
 
-  g_assert (avtpbasedepayload_class->chain != NULL);
+  g_assert (avtpbasedepayload_class->process != NULL);
 
   templ = gst_element_class_get_pad_template (element_class, "src");
   g_assert (templ != NULL);
@@ -122,9 +126,9 @@ gst_avtp_base_depayload_init (GstAvtpBaseDepayload * avtpbasedepayload,
   avtpbasedepayload->sinkpad =
       gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_chain_function (avtpbasedepayload->sinkpad,
-      avtpbasedepayload_class->chain);
+      avtp_base_depayload_chain);
   gst_pad_set_event_function (avtpbasedepayload->sinkpad,
-      avtpbasedepayload_class->sink_event);
+      avtp_base_depayload_sink_event);
   gst_element_add_pad (element, avtpbasedepayload->sinkpad);
 
   avtpbasedepayload->streamid = DEFAULT_STREAMID;
@@ -169,14 +173,21 @@ gst_avtp_base_depayload_get_property (GObject * object, guint prop_id,
   }
 }
 
-static gboolean
-gst_avtp_base_depayload_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event)
+static GstFlowReturn
+avtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstAvtpBaseDepayload *avtpbasedepayload = GST_AVTP_BASE_DEPAYLOAD (parent);
+  GstAvtpBaseDepayloadClass *klass =
+      GST_AVTP_BASE_DEPAYLOAD_GET_CLASS (avtpbasedepayload);
 
-  GST_DEBUG_OBJECT (avtpbasedepayload, "event %s", GST_EVENT_TYPE_NAME (event));
+  return klass->process (avtpbasedepayload, buffer);
+}
 
+
+static gboolean
+gst_avtp_base_depayload_sink_event (GstAvtpBaseDepayload * avtpbasedepayload,
+    GstEvent * event)
+{
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
       /* Once the first AVTPDU is received, proper CAPS and SEGMENT events are
@@ -192,8 +203,22 @@ gst_avtp_base_depayload_sink_event (GstPad * pad, GstObject * parent,
       gst_event_unref (event);
       return TRUE;
     default:
-      return gst_pad_event_default (pad, parent, event);
+      return gst_pad_event_default (avtpbasedepayload->sinkpad,
+          GST_OBJECT (avtpbasedepayload), event);
   }
+}
+
+static gboolean
+avtp_base_depayload_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
+{
+  GstAvtpBaseDepayload *avtpbasedepayload = GST_AVTP_BASE_DEPAYLOAD (parent);
+  GstAvtpBaseDepayloadClass *klass =
+      GST_AVTP_BASE_DEPAYLOAD_GET_CLASS (avtpbasedepayload);
+
+  GST_DEBUG_OBJECT (avtpbasedepayload, "event %s", GST_EVENT_TYPE_NAME (event));
+
+  return klass->sink_event (avtpbasedepayload, event);
 }
 
 /* Helper function to convert AVTP timestamp to AVTP presentation time. Since

@@ -49,8 +49,8 @@ GST_DEBUG_CATEGORY_STATIC (avtpcvfdepay_debug);
 
 /* prototypes */
 
-static GstFlowReturn gst_avtp_cvf_depay_chain (GstPad * pad, GstObject * parent,
-    GstBuffer * buffer);
+static GstFlowReturn gst_avtp_cvf_depay_process (GstAvtpBaseDepayload *
+    avtpbasedepayload, GstBuffer * buffer);
 static gboolean gst_avtp_cvf_depay_push_caps (GstAvtpVfDepayBase * avtpvfdepay);
 
 #define AVTP_CVF_H264_HEADER_SIZE (sizeof(struct avtp_stream_pdu) + sizeof(guint32))
@@ -102,7 +102,7 @@ gst_avtp_cvf_depay_class_init (GstAvtpCvfDepayClass * klass)
       "Extracts compressed video from CVF AVTPDUs",
       "Ederson de Souza <ederson.desouza@intel.com>");
 
-  avtpbasedepayload_class->chain = GST_DEBUG_FUNCPTR (gst_avtp_cvf_depay_chain);
+  avtpbasedepayload_class->process = gst_avtp_cvf_depay_process;
 
   avtpvfdepaybase_class->depay_push_caps =
       GST_DEBUG_FUNCPTR (gst_avtp_cvf_depay_push_caps);
@@ -574,9 +574,10 @@ gst_avtp_cvf_depay_handle_single_nal (GstAvtpCvfDepay * avtpcvfdepay,
 }
 
 static GstFlowReturn
-gst_avtp_cvf_depay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+gst_avtp_cvf_depay_process (GstAvtpBaseDepayload * avtpbasedepayload,
+    GstBuffer * buffer)
 {
-  GstAvtpCvfDepay *avtpcvfdepay = GST_AVTP_CVF_DEPAY (parent);
+  GstAvtpCvfDepay *avtpcvfdepay = GST_AVTP_CVF_DEPAY (avtpbasedepayload);
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean lost_packet;
   GstMapInfo map;

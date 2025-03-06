@@ -50,8 +50,8 @@ GST_DEBUG_CATEGORY_STATIC (avtprvfdepay_debug);
 
 /* prototypes */
 
-static GstFlowReturn gst_avtp_rvf_depay_chain (GstPad * pad, GstObject * parent,
-    GstBuffer * buffer);
+static GstFlowReturn gst_avtp_rvf_depay_process (GstAvtpBaseDepayload *
+    basedepay, GstBuffer * buffer);
 
 static gboolean gst_avtp_rvf_depay_push_caps (GstAvtpVfDepayBase * avtpvfdepay);
 
@@ -91,7 +91,8 @@ gst_avtp_rvf_depay_class_init (GstAvtpRvfDepayClass * klass)
       "Extracts raw video from RVF AVTPDUs",
       "Adrian Fiergolski <Adrian.Fiergolski@fastree3d.com>");
 
-  avtpbasedepayload_class->chain = GST_DEBUG_FUNCPTR (gst_avtp_rvf_depay_chain);
+  avtpbasedepayload_class->process =
+      GST_DEBUG_FUNCPTR (gst_avtp_rvf_depay_process);
 
   avtpvfdepaybase_class->depay_push_caps =
       GST_DEBUG_FUNCPTR (gst_avtp_rvf_depay_push_caps);
@@ -682,9 +683,10 @@ gst_avtp_rvf_depay_handle_single_fragment (GstAvtpRvfDepay * avtprvfdepay,
 }
 
 static GstFlowReturn
-gst_avtp_rvf_depay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+gst_avtp_rvf_depay_process (GstAvtpBaseDepayload * basedepay,
+    GstBuffer * buffer)
 {
-  GstAvtpRvfDepay *avtprvfdepay = GST_AVTP_RVF_DEPAY (parent);
+  GstAvtpRvfDepay *avtprvfdepay = GST_AVTP_RVF_DEPAY (basedepay);
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean lost_packet;
   GstMapInfo map;

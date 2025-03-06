@@ -35,6 +35,9 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AVTP_BASE_DEPAYLOAD))
 #define GST_IS_AVTP_BASE_DEPAYLOAD_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AVTP_BASE_DEPAYLOAD))
+#define GST_AVTP_BASE_DEPAYLOAD_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_AVTP_BASE_DEPAYLOAD, \
+      GstAvtpBaseDepayloadClass))
 
 typedef struct _GstAvtpBaseDepayload GstAvtpBaseDepayload;
 typedef struct _GstAvtpBaseDepayloadClass GstAvtpBaseDepayloadClass;
@@ -59,9 +62,8 @@ struct _GstAvtpBaseDepayloadClass
   GstElementClass parent_class;
 
   /* Pure virtual function. */
-  GstPadChainFunction chain;
-
-  GstPadEventFunction sink_event;
+  GstFlowReturn (*process) (GstAvtpBaseDepayload *base, GstBuffer *buf);
+  gboolean (*sink_event) (GstAvtpBaseDepayload *base, GstEvent *event);
 
   gpointer _gst_reserved[GST_PADDING];
 };
