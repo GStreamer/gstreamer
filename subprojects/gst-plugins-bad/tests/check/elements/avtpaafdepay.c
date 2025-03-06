@@ -60,6 +60,8 @@ create_input_buffer (GstHarness * h)
   memcpy (pdu->avtp_payload, audio_data, sizeof (audio_data));
   gst_buffer_unmap (buf, &info);
 
+  GST_BUFFER_DTS (buf) = GST_SECOND;
+
   return buf;
 }
 
@@ -207,6 +209,7 @@ GST_START_TEST (test_events)
   const GstSegment *segment;
 
   h = setup_harness ();
+
   buf = create_input_buffer (h);
   gst_harness_push (h, buf);
 
@@ -231,9 +234,9 @@ GST_START_TEST (test_events)
   fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT);
   gst_event_parse_segment (event, &segment);
   fail_unless (segment->format == GST_FORMAT_TIME);
-  fail_unless (segment->base == 3000);
-  fail_unless (segment->start == 3000);
-  fail_unless (segment->stop == -1);
+  fail_unless_equals_uint64 (segment->base, 0);
+  fail_unless_equals_uint64 (segment->start, 0);
+  fail_unless_equals_uint64 (segment->stop, GST_CLOCK_TIME_NONE);
   gst_event_unref (event);
 
   gst_harness_teardown (h);
@@ -256,6 +259,8 @@ GST_START_TEST (test_buffer)
   gst_buffer_map (out, &info, GST_MAP_READ);
   fail_unless (memcmp (info.data, audio_data, info.size) == 0);
   gst_buffer_unmap (out, &info);
+
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (out), 3000);
 
   gst_buffer_unref (out);
   gst_harness_teardown (h);

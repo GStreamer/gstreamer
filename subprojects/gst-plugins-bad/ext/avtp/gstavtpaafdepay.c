@@ -284,10 +284,6 @@ gst_avtp_aaf_depay_process (GstAvtpBaseDepayload * avtpbasedepayload,
       gst_buffer_unref (buffer);
       return GST_FLOW_NOT_NEGOTIATED;
     }
-    if (!gst_avtp_base_depayload_push_segment_event (avtpbasedepayload, tstamp)) {
-      gst_buffer_unref (buffer);
-      return GST_FLOW_ERROR;
-    }
 
     avtpbasedepayload->seqnum = seqnum;
   }
@@ -304,16 +300,16 @@ gst_avtp_aaf_depay_process (GstAvtpBaseDepayload * avtpbasedepayload,
   avtpbasedepayload->seqnum++;
 
   ptime = gst_avtp_base_depayload_tstamp_to_ptime (avtpbasedepayload, tstamp,
-      avtpbasedepayload->prev_ptime);
+      avtpbasedepayload->last_dts);
 
   subbuffer = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL,
       sizeof (struct avtp_stream_pdu), data_len);
   GST_BUFFER_PTS (subbuffer) = ptime;
   GST_BUFFER_DTS (subbuffer) = ptime;
 
-  avtpbasedepayload->prev_ptime = ptime;
   gst_buffer_unref (buffer);
-  return gst_pad_push (avtpbasedepayload->srcpad, subbuffer);
+
+  return gst_avtp_base_depayload_push (avtpbasedepayload, subbuffer);
 
 discard:
   gst_buffer_unref (buffer);

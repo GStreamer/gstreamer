@@ -111,6 +111,7 @@ GST_START_TEST (test_depayloader_fragment_and_single)
 
   /* Create the input AVTPDU */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 10);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -175,6 +176,7 @@ GST_START_TEST (test_depayloader_fragmented_two_start_eos)
 
   /* Create the input AVTPDU */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 10);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -240,6 +242,7 @@ GST_START_TEST (test_depayloader_multiple_lost_eos)
 
   /* Create the input AVTPDU header */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 4);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -290,6 +293,7 @@ GST_START_TEST (test_depayloader_fragmented_eos)
 
   /* Create the input AVTPDU */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 10);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -346,6 +350,7 @@ GST_START_TEST (test_depayloader_single_eos)
 
   /* Create the input AVTPDU header */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 4);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -382,6 +387,7 @@ GST_START_TEST (test_depayloader_invalid_avtpdu)
 
   /* Create the input AVTPDU header */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 4);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -526,11 +532,13 @@ GST_START_TEST (test_depayloader_invalid_avtpdu)
 
   /* Invalid buffer size (too small to fit an AVTP header) */
   small = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE / 2);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_harness_push (h, small);
   fail_unless_equals_uint64 (gst_harness_buffers_received (h), 0);
 
   /* Invalid buffer size (too small to fit a fragment header) */
   small = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 1);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (small, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
   avtp_cvf_pdu_init (pdu, AVTP_CVF_FORMAT_SUBTYPE_H264);
@@ -571,6 +579,7 @@ GST_START_TEST (test_depayloader_lost_fragments)
 
   /* Create the input AVTPDU */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 10);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -703,6 +712,7 @@ GST_START_TEST (test_depayloader_lost_packet)
 
   /* Create the input AVTPDU header */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 4);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -798,6 +808,7 @@ GST_START_TEST (test_depayloader_single_and_messed_fragments)
 
   /* Create the input AVTPDU header */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 4);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -871,6 +882,7 @@ GST_START_TEST (test_depayloader_single_and_messed_fragments_2)
 
   /* Create the input AVTPDU header */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 4);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -959,6 +971,7 @@ GST_START_TEST (test_depayloader_single_and_messed_fragments_3)
 
   /* Create the input AVTPDU header */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 4);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -1095,6 +1108,7 @@ GST_START_TEST (test_depayloader_single_and_fragmented)
 
   /* Create the input AVTPDU header */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 4);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -1182,6 +1196,7 @@ GST_START_TEST (test_depayloader_fragmented)
 
   /* Create the input AVTPDU */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 10);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -1265,6 +1280,7 @@ GST_START_TEST (test_depayloader_fragmented_big)
 
   /* Create the input AVTPDU */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + DATA_LEN);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -1350,6 +1366,7 @@ GST_START_TEST (test_depayloader_multiple_single)
 
   /* Create the input AVTPDU header */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 4);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 
@@ -1438,6 +1455,7 @@ GST_START_TEST (test_depayloader_single)
 
   /* Create the input AVTPDU header */
   in = gst_harness_create_buffer (h, AVTP_CVF_H264_HEADER_SIZE + 4);
+  GST_BUFFER_DTS (in) = GST_SECOND;
   gst_buffer_map (in, &map, GST_MAP_READWRITE);
   pdu = (struct avtp_stream_pdu *) map.data;
 

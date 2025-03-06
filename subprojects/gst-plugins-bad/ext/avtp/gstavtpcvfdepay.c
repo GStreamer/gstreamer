@@ -301,6 +301,7 @@ static void
 gst_avtp_cvf_depay_get_avtp_timestamps (GstAvtpCvfDepay * avtpcvfdepay,
     GstMapInfo * map, GstClockTime * pts, GstClockTime * dts)
 {
+  GstAvtpBaseDepayload *base = GST_AVTP_BASE_DEPAYLOAD (avtpcvfdepay);
   struct avtp_stream_pdu *pdu;
   guint64 avtp_time, h264_time, tv, ptv;
   gint res;
@@ -317,7 +318,8 @@ gst_avtp_cvf_depay_get_avtp_timestamps (GstAvtpCvfDepay * avtpcvfdepay,
     res = avtp_cvf_pdu_get (pdu, AVTP_CVF_FIELD_TIMESTAMP, &avtp_time);
     g_assert (res == 0);
 
-    *dts = avtp_time;
+    *dts = gst_avtp_base_depayload_tstamp_to_ptime (base, avtp_time,
+        base->last_dts);
   }
 
   res = avtp_cvf_pdu_get (pdu, AVTP_CVF_FIELD_H264_PTV, &ptv);
@@ -327,7 +329,8 @@ gst_avtp_cvf_depay_get_avtp_timestamps (GstAvtpCvfDepay * avtpcvfdepay,
     res = avtp_cvf_pdu_get (pdu, AVTP_CVF_FIELD_H264_TIMESTAMP, &h264_time);
     g_assert (res == 0);
 
-    *pts = h264_time;
+    *pts = gst_avtp_base_depayload_tstamp_to_ptime (base, h264_time,
+        base->last_dts);
   }
 }
 

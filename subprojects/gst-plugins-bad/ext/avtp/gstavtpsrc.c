@@ -136,6 +136,7 @@ gst_avtp_src_init (GstAvtpSrc * avtpsrc)
   gst_base_src_set_live (GST_BASE_SRC (avtpsrc), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (avtpsrc), GST_FORMAT_TIME);
   gst_base_src_set_blocksize (GST_BASE_SRC (avtpsrc), MAX_AVTPDU_SIZE);
+  gst_base_src_set_do_timestamp (GST_BASE_SRC (avtpsrc), TRUE);
 
   avtpsrc->ifname = g_strdup (DEFAULT_IFNAME);
   avtpsrc->address = g_strdup (DEFAULT_ADDRESS);

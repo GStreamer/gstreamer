@@ -51,7 +51,9 @@ struct _GstAvtpBaseDepayload
 
   guint64 streamid;
 
-  GstClockTime prev_ptime;
+  GstClockTime last_dts;
+  gboolean segment_sent;
+
   guint8 seqnum;
 
   gpointer _gst_reserved[GST_PADDING];
@@ -73,8 +75,8 @@ GType gst_avtp_base_depayload_get_type (void);
 GstClockTime gst_avtp_base_depayload_tstamp_to_ptime (GstAvtpBaseDepayload *
     avtpbasedepayload, guint32 tstamp, GstClockTime ref);
 
-gboolean gst_avtp_base_depayload_push_segment_event (GstAvtpBaseDepayload *
-    avtpbasedepayload, guint32 avtp_tstamp);
+GstFlowReturn gst_avtp_base_depayload_push (GstAvtpBaseDepayload *
+    avtpbasedepayload, GstBuffer * buffer);
 
 G_END_DECLS
 
