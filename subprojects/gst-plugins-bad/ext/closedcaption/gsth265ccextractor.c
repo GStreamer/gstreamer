@@ -93,6 +93,7 @@ struct _GstH265CCExtractor
   gboolean on_eos;
   gint fps_n;
   gint fps_d;
+  gboolean need_negotiate;
 };
 
 #define gst_h265_cc_extractor_parent_class parent_class
@@ -194,6 +195,8 @@ gst_h265_cc_extractor_set_format (GstVideoDecoder * decoder,
   GstCaps *caps;
   gboolean ret;
 
+  self->need_negotiate = TRUE;
+
   /* Assume caption type is cea708 raw which is common cc type
    * embedded in SEI */
   if (self->caption_type == GST_VIDEO_CAPTION_TYPE_UNKNOWN)
@@ -220,13 +223,20 @@ static gboolean
 gst_h265_cc_extractor_negotiate (GstVideoDecoder * decoder)
 {
   GstH265CCExtractor *self = GST_H265_CC_EXTRACTOR (decoder);
-  GstCaps *caps = gst_video_caption_type_to_caps (self->caption_type);
+  GstCaps *caps;
+
+  if (!self->need_negotiate)
+    return TRUE;
+
+  caps = gst_video_caption_type_to_caps (self->caption_type);
 
   gst_caps_set_simple (caps,
       "framerate", GST_TYPE_FRACTION, self->fps_n, self->fps_d, NULL);
 
   gst_pad_set_caps (decoder->srcpad, caps);
   gst_caps_unref (caps);
+
+  self->need_negotiate = FALSE;
 
   return TRUE;
 }
@@ -399,8 +409,10 @@ gst_h265_cc_extractor_output_picture (GstH265Decoder * decoder,
     }
   }
 
-  if (updated)
+  if (updated) {
+    self->need_negotiate = TRUE;
     gst_video_decoder_negotiate (videodec);
+  }
 
   gst_h265_picture_unref (picture);
 
