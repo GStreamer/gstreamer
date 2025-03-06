@@ -122,6 +122,11 @@ struct _GstVTEnc
   /* If we get an EncoderMalfunctionErr or similar, we restart the session
    * before the next encode call */
   gboolean require_restart;
+
+  /* Certain properties (e.g. bitrate) can be changed on the fly.
+   * We can't do it straight from the setter as that would often deadlock,
+   * so we instead reconfigure on next encode call. */
+  gboolean require_reconfigure;
 };
 
 GType gst_vtenc_get_type (void);
