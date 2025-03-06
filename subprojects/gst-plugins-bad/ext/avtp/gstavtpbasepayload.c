@@ -263,6 +263,7 @@ gst_avtp_base_payload_calc_ptime (GstAvtpBasePayload * avtpbasepayload,
     GstBuffer * buffer)
 {
   GstClockTime base_time, running_time;
+  GstClockTime avtp_timestamp;
 
   g_assert (GST_BUFFER_PTS (buffer) != GST_CLOCK_TIME_NONE);
 
@@ -290,7 +291,22 @@ gst_avtp_base_payload_calc_ptime (GstAvtpBasePayload * avtpbasepayload,
   running_time = gst_segment_to_running_time (&avtpbasepayload->segment,
       avtpbasepayload->segment.format, GST_BUFFER_PTS (buffer));
 
-  return base_time + running_time + avtpbasepayload->latency +
+  avtp_timestamp = base_time + running_time + avtpbasepayload->latency +
       avtpbasepayload->processing_deadline + avtpbasepayload->mtt +
       avtpbasepayload->tu;
+
+  GST_TRACE_OBJECT (avtpbasepayload,
+      "Converting PTS: %" GST_TIME_FORMAT " into AVTP: %" GST_TIME_FORMAT
+      " using running_time: %" GST_TIME_FORMAT " + latency: %"
+      GST_TIME_FORMAT " + deadline: %" GST_TIME_FORMAT " + mtt: %"
+      GST_TIME_FORMAT " + tu: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
+      GST_TIME_ARGS (avtp_timestamp),
+      GST_TIME_ARGS (running_time),
+      GST_TIME_ARGS (avtpbasepayload->latency),
+      GST_TIME_ARGS (avtpbasepayload->processing_deadline),
+      GST_TIME_ARGS (avtpbasepayload->mtt),
+      GST_TIME_ARGS (avtpbasepayload->tu));
+
+  return avtp_timestamp;
 }
