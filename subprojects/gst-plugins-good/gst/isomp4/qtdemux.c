@@ -1892,11 +1892,12 @@ _create_stream (GstQTDemux * demux, guint32 track_id)
   stream->duration_moof = 0;
   stream->duration_last_moof = 0;
   stream->alignment = 1;
-  stream->stride = 0;
+  stream->needs_row_alignment = FALSE;
   stream->stream_tags = gst_tag_list_new_empty ();
   gst_tag_list_set_scope (stream->stream_tags, GST_TAG_SCOPE_STREAM);
   g_queue_init (&stream->protection_scheme_event_queue);
   gst_video_info_init (&stream->info);
+  gst_video_info_init (&stream->pre_info);
   stream->ref_count = 1;
   /* consistent default for push based mode */
   gst_segment_init (&stream->segment, GST_FORMAT_TIME);
@@ -6180,52 +6181,69 @@ gst_qtdemux_align_buffer (GstQTDemux * demux,
   return buffer;
 }
 
+/* Adds padding to the end of each row to achieve byte-alignment 
+ *
+ * Returns NULL if failed
+ */
 static GstBuffer *
-gst_qtdemux_row_align_buffer (GstQTDemux * demux,
-    QtDemuxStream * stream, GstBuffer * buffer)
+gst_qtdemux_row_align_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    GstBuffer * pre_buffer)
 {
-  gsize old_stride = stream->stride;
-  gsize size = gst_buffer_get_size (buffer);
-  gsize height = size / old_stride;
+  GstVideoFrame pre_frame;
+  GstVideoFrame new_frame;
+  GstVideoInfo pre_info = stream->pre_info;
+  GstVideoInfo new_info = stream->info;
+  GstBuffer *new_buffer = NULL;
+  gboolean pre_frame_mapped = FALSE;
+  gboolean new_frame_mapped = FALSE;
 
-  // Assert stride is initialized
-  gsize aligned_stride = stream->info.stride[0];
-  if (aligned_stride == 0) {
-    return buffer;
+  /* Map Buffer to Frame */
+  pre_frame_mapped =
+      gst_video_frame_map (&pre_frame, &pre_info, pre_buffer, GST_MAP_READ);
+  if (!pre_frame_mapped) {
+    GST_ERROR_OBJECT (qtdemux, "Failed to map video frame.");
+    goto error;
   }
 
-  GstMapInfo map;
-  gst_buffer_map (buffer, &map, GST_MAP_READ);
-  if (old_stride == aligned_stride) {
-    gst_buffer_unmap (buffer, &map);
-    return buffer;              // Buffer is already row aligned
+  /* Allocate New Buffer */
+  GstAllocationParams params = { 0, stream->alignment - 1, 0, 0, };
+  new_buffer = gst_buffer_new_allocate (NULL, new_info.size, &params);
+  if (!new_buffer) {
+    GST_ERROR_OBJECT (qtdemux, "Failed to allocate new buffer.");
+    goto error;
   }
 
-  GstMapInfo new_map;
-  gsize new_buffer_size = height * aligned_stride;
-  GstBuffer *new_buffer = gst_buffer_new_allocate (NULL, new_buffer_size, NULL);
-  if (new_buffer == NULL) {
-    gst_buffer_unmap (buffer, &map);
-    gst_buffer_unref (buffer);
-    return NULL;
-  }
-  gst_buffer_map (new_buffer, &new_map, GST_MAP_WRITE);
-
-  // Align Data
-  gsize min_stride = MIN (old_stride, aligned_stride);
-  for (guint32 row = 0; row < height; row++) {
-    gsize row_offset = row * aligned_stride;
-    gconstpointer src = map.data + row * old_stride;
-    gpointer dest = new_map.data + row_offset;
-    memcpy (dest, src, min_stride);
+  /* Map New Frame */
+  new_frame_mapped =
+      gst_video_frame_map (&new_frame, &new_info, new_buffer, GST_MAP_WRITE);
+  if (!new_frame_mapped) {
+    GST_ERROR_OBJECT (qtdemux, "Failed to map new video frame.");
+    goto error;
   }
 
-  gst_buffer_copy_into (new_buffer, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
+  /* Copying the frame will automatically row-align the buffer */
+  if (!gst_video_frame_copy (&new_frame, &pre_frame)) {
+    GST_ERROR_OBJECT (qtdemux, "Failed to copy video frame.");
+    goto error;
+  }
 
-  gst_buffer_unmap (new_buffer, &new_map);
-  gst_buffer_unmap (buffer, &map);
-  gst_buffer_unref (buffer);
+  /* Cleanup before returning */
+  gst_video_frame_unmap (&pre_frame);
+  gst_video_frame_unmap (&new_frame);
+  gst_buffer_unref (pre_buffer);
   return new_buffer;
+
+error:
+  if (new_frame_mapped) {
+    gst_video_frame_unmap (&new_frame);
+  }
+  if (pre_frame_mapped) {
+    gst_video_frame_unmap (&pre_frame);
+  }
+  if (new_buffer) {
+    gst_buffer_unref (new_buffer);
+  }
+  return NULL;
 }
 
 static guint8 *
@@ -6680,15 +6698,15 @@ gst_qtdemux_push_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
   }
 
-  if (stream->alignment > 1)
-    buf = gst_qtdemux_align_buffer (qtdemux, buf, stream->alignment);
-
-  if (stream->stride > 0) {
+  /* Copy buffer to ensure alignment */
+  if (stream->needs_row_alignment) {
     buf = gst_qtdemux_row_align_buffer (qtdemux, stream, buf);
     if (buf == NULL) {
       ret = GST_FLOW_ERROR;
       goto exit;
     }
+  } else if (stream->alignment > 1) {
+    buf = gst_qtdemux_align_buffer (qtdemux, buf, stream->alignment);
   }
 
   if (CUR_STREAM (stream)->needs_reorder)
@@ -11942,9 +11960,9 @@ typedef enum
 {
   // ISO/IEC 23001-17 Table 1 - Component Types
   COMPONENT_MONOCHROME = 0,     // Gray
-  COMPONENT_LUMA_Y = 1,         // Y
-  COMPONENT_CHROMA_U = 2,       // Cb or U
-  COMPONENT_CHROMA_V = 3,       // Cr or V
+  COMPONENT_Y = 1,              // Luma: Y
+  COMPONENT_U = 2,              // Chroma: Cb or U
+  COMPONENT_V = 3,              // Chroma: Cr or V
   COMPONENT_RED = 4,            // R
   COMPONENT_GREEN = 5,          // G
   COMPONENT_BLUE = 6,           // B
@@ -11966,12 +11984,21 @@ typedef enum
 {
   // ISO/IEC 23001-17 Table 4 - Interleave Types
   INTERLEAVE_COMPONENT = 0,     // Planar: RRR... GGG... BBB...
-  INTERLEAVE_PIXEL = 1,         // Standard RGB RGB RGB ...
-  INTERLEAVE_MIXED = 2,         // Typically used for YUV 420 data
+  INTERLEAVE_PIXEL = 1,         // Packed: RGB RGB RGB ...
+  INTERLEAVE_MIXED = 2,         // All Y components followed by interleaved U and V components.
   INTERLEAVE_ROW = 3,           // Interleaved by rows
   INTERLEAVE_TILE = 4,          // Interleaved by tiles
   INTERLEAVE_MULTI_Y = 5,       // Multiple Y components with a single UV pair
 } InterleaveType;
+
+typedef enum
+{
+  // ISO/IEC 23001-17 Table 3 - Sampling Types
+  SAMPLING_444 = 0,             // 4:4:4 (no subsampling)
+  SAMPLING_422 = 1,             // 4:2:2
+  SAMPLING_420 = 2,             // 4:2:0
+  SAMPLING_411 = 3,             // 4:1:1
+} SamplingType;
 
 typedef struct ComponentDefinitionBox
 {
@@ -11984,9 +12011,9 @@ typedef struct ComponentDefinitionBox
 typedef struct UncompressedFrameConfigComponent
 {
   guint16 index;                // Index associated with the cmpd box
-  guint8 bit_depth;             // May vary between components
+  guint8 bit_depth;             // The number of bits to store a component value.
   guint8 format;                // 0: int, 1: float, 2: complex
-  guint8 align_size;            // The component byte-alignment size
+  guint8 align_size;            // The number of bytes used to store a component value. If 0, refer to bit_depth.
 } UncompressedFrameConfigComponent;
 
 typedef struct UncompressedFrameConfigBox
@@ -12150,71 +12177,229 @@ error:
 typedef struct ComponentFormatMapping
 {
   GstVideoFormat format;
-  guint num_components;
-  InterleaveType interleave_type;
-  guint16 component_types[4];
+  UncompressedFrameConfigBox uncC;
+  UncompressedFrameConfigComponent component_config;    // All components are assumed to have the same config
+  guint16 component_types[4];   // From cmpd
 } ComponentFormatMapping;
 
 static const ComponentFormatMapping component_lookup[] = {
-  {GST_VIDEO_FORMAT_GRAY8, 1, INTERLEAVE_COMPONENT,
+  {
+        GST_VIDEO_FORMAT_GRAY8,
+        {.component_count = 1,.interleave_type =
+              INTERLEAVE_PIXEL,.sampling_type = SAMPLING_444,.pixel_size = 1},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
       {COMPONENT_MONOCHROME}},
-  {GST_VIDEO_FORMAT_GRAY8, 1, INTERLEAVE_PIXEL,
+  {
+        GST_VIDEO_FORMAT_GRAY8,
+        {.component_count = 1,.interleave_type =
+              INTERLEAVE_COMPONENT,.sampling_type = SAMPLING_444,.pixel_size =
+              1},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
       {COMPONENT_MONOCHROME}},
-  {GST_VIDEO_FORMAT_RGB, 3, INTERLEAVE_PIXEL,
+  {
+        GST_VIDEO_FORMAT_GRAY16_BE,
+        {.component_count = 1,.interleave_type =
+              INTERLEAVE_COMPONENT,.sampling_type = SAMPLING_444,.pixel_size =
+              2,.components_little_endian = FALSE},
+        {.bit_depth = 16,.format = 0,.align_size = 2},
+      {COMPONENT_MONOCHROME}},
+  {
+        GST_VIDEO_FORMAT_RGB,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_PIXEL,.sampling_type = SAMPLING_444,.pixel_size = 3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
       {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE}},
-  {GST_VIDEO_FORMAT_BGR, 3, INTERLEAVE_PIXEL,
+  {
+        GST_VIDEO_FORMAT_RGBP,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_COMPONENT,.sampling_type = SAMPLING_444,.pixel_size =
+              3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+      {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE}},
+  {
+        GST_VIDEO_FORMAT_BGRP,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_COMPONENT,.sampling_type = SAMPLING_444,.pixel_size =
+              3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
       {COMPONENT_BLUE, COMPONENT_GREEN, COMPONENT_RED}},
-  {GST_VIDEO_FORMAT_ARGB, 4, INTERLEAVE_PIXEL,
-      {COMPONENT_ALPHA, COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE}},
-  {GST_VIDEO_FORMAT_BGRA, 4, INTERLEAVE_PIXEL,
-      {COMPONENT_BLUE, COMPONENT_GREEN, COMPONENT_RED, COMPONENT_ALPHA}},
-  {GST_VIDEO_FORMAT_RGBA, 4, INTERLEAVE_PIXEL,
-      {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE, COMPONENT_ALPHA}},
-  {GST_VIDEO_FORMAT_RGBx, 4, INTERLEAVE_PIXEL,
-      {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE, COMPONENT_PADDING}},
+  {
+        GST_VIDEO_FORMAT_RGBx,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_PIXEL,.sampling_type = SAMPLING_444,.pixel_size = 4},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE}
+      },
+  {
+        GST_VIDEO_FORMAT_GBR,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_COMPONENT,.sampling_type = SAMPLING_444,.pixel_size =
+              3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_GREEN, COMPONENT_BLUE, COMPONENT_RED}
+      },
+  {
+        GST_VIDEO_FORMAT_BGR,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_PIXEL,.sampling_type = SAMPLING_444,.pixel_size = 3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_BLUE, COMPONENT_GREEN, COMPONENT_RED}
+      },
+  {
+        GST_VIDEO_FORMAT_BGRx,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_PIXEL,.sampling_type = SAMPLING_444,.pixel_size = 4},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_BLUE, COMPONENT_GREEN, COMPONENT_RED}
+      },
+  {
+        GST_VIDEO_FORMAT_r210,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_PIXEL,.sampling_type = SAMPLING_444,.pixel_size =
+              4,.block_size = 4},
+        {.bit_depth = 10,.format = 0,.align_size = 0},
+        {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE}
+      },
+  {
+        GST_VIDEO_FORMAT_Y444,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_COMPONENT,.sampling_type = SAMPLING_444,.pixel_size =
+              3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_Y, COMPONENT_U, COMPONENT_V}
+      },
+  {
+        GST_VIDEO_FORMAT_v308,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_PIXEL,.sampling_type = SAMPLING_444,.pixel_size = 3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_Y, COMPONENT_U, COMPONENT_V}
+      },
+  {
+        GST_VIDEO_FORMAT_Y42B,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_COMPONENT,.sampling_type = SAMPLING_422,.pixel_size =
+              3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_Y, COMPONENT_U, COMPONENT_V}
+      },
+  {
+        GST_VIDEO_FORMAT_I420,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_COMPONENT,.sampling_type = SAMPLING_420,.pixel_size =
+              3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_Y, COMPONENT_U, COMPONENT_V}
+      },
+  {
+        GST_VIDEO_FORMAT_YV12,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_COMPONENT,.sampling_type = SAMPLING_420,.pixel_size =
+              3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_Y, COMPONENT_V, COMPONENT_U}
+      },
+  {
+        GST_VIDEO_FORMAT_IYU2,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_PIXEL,.sampling_type = SAMPLING_444,.pixel_size = 3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_U, COMPONENT_Y, COMPONENT_V}
+      },
+  {
+        GST_VIDEO_FORMAT_NV12,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_MIXED,.sampling_type = SAMPLING_420,.pixel_size = 3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_Y, COMPONENT_U, COMPONENT_V}
+      },
+  {
+        GST_VIDEO_FORMAT_NV21,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_MIXED,.sampling_type = SAMPLING_420,.pixel_size = 3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_Y, COMPONENT_V, COMPONENT_U}
+      },
+  {
+        GST_VIDEO_FORMAT_NV16,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_MIXED,.sampling_type = SAMPLING_422,.pixel_size = 3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_Y, COMPONENT_U, COMPONENT_V}
+      },
+  {
+        GST_VIDEO_FORMAT_Y41B,
+        {.component_count = 3,.interleave_type =
+              INTERLEAVE_COMPONENT,.sampling_type = SAMPLING_411,.pixel_size =
+              3},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_Y, COMPONENT_U, COMPONENT_V}
+      },
+  {
+        GST_VIDEO_FORMAT_AYUV,
+        {.component_count = 4,.interleave_type =
+              INTERLEAVE_PIXEL,.sampling_type = SAMPLING_444,.pixel_size = 4},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_ALPHA, COMPONENT_Y, COMPONENT_U, COMPONENT_V}
+      },
+  {
+        GST_VIDEO_FORMAT_ARGB,
+        {.component_count = 4,.interleave_type =
+              INTERLEAVE_PIXEL,.sampling_type = SAMPLING_444,.pixel_size = 4},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_ALPHA, COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE}
+      },
+  {
+        GST_VIDEO_FORMAT_BGRA,
+        {.component_count = 4,.interleave_type =
+              INTERLEAVE_PIXEL,.sampling_type = SAMPLING_444,.pixel_size = 4},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_BLUE, COMPONENT_GREEN, COMPONENT_RED, COMPONENT_ALPHA}
+      },
+  {
+        GST_VIDEO_FORMAT_RGBA,
+        {.component_count = 4,.interleave_type =
+              INTERLEAVE_PIXEL,.sampling_type = SAMPLING_444,.pixel_size = 4},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE, COMPONENT_ALPHA}
+      },
+  {
+        GST_VIDEO_FORMAT_RGBx,
+        {.component_count = 4,.interleave_type =
+              INTERLEAVE_PIXEL,.sampling_type = SAMPLING_444,.pixel_size = 4},
+        {.bit_depth = 8,.format = 0,.align_size = 1},
+        {COMPONENT_RED, COMPONENT_GREEN, COMPONENT_BLUE, COMPONENT_PADDING}
+      },
 };
 
 
 static GstVideoFormat
 qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
-    QtDemuxStreamStsdEntry * entry, QtDemuxStream * stream,
     UncompressedFrameConfigBox * uncC, ComponentDefinitionBox * cmpd)
 {
   guint32 num_components = uncC->component_count;
   guint16 component_types[4];
-  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
 
-  stream->alignment = 4;
-
-  if (num_components > 4) {
-    GST_WARNING_OBJECT (qtdemux,
-        "Unsupported number of components for uncC: %u", num_components);
-    goto unsupported_feature;
-  }
 
   if (uncC->version == 1) {
     // Determine format with profile
     // The only permitted profiles for version 1 are `rgb3`, `rgba`, and `abgr`
     switch (uncC->profile) {
       case GST_MAKE_FOURCC ('r', 'g', 'b', '3'):       // RGB 24 bits packed
-        format = GST_VIDEO_FORMAT_RGB;
-        stream->stride = entry->width * num_components;
+        return GST_VIDEO_FORMAT_RGB;
         break;
 
       case GST_MAKE_FOURCC ('r', 'g', 'b', 'a'):       // RGBA 32 bits packed
-        format = GST_VIDEO_FORMAT_RGBA;
-        stream->stride = entry->width * num_components;
+        return GST_VIDEO_FORMAT_RGBA;
         break;
 
       case GST_MAKE_FOURCC ('a', 'b', 'g', 'r'):       // RGBA 32 bits packed
-        format = GST_VIDEO_FORMAT_ABGR;
-        stream->stride = entry->width * num_components;
+        return GST_VIDEO_FORMAT_ABGR;
         break;
 
       default:
         goto unsupported_feature;
     }
-    return format;
 
   } else if (uncC->version == 0) {
     // Determine format with uncC & cmpd boxes
@@ -12245,61 +12430,13 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     }
   }
 
-  switch (uncC->sampling_type) {
-    case 0:                    // 4:4:4 (No subsampling)
-      // Default
-      break;
-    case 1:                    // YCbCr 4:2:2 subsampling
-    case 2:                    // YCbCr 4:2:0 subsampling
-    case 3:                    // YCbCr 4:1:1 subsampling
-    default:
-      GST_WARNING_OBJECT (qtdemux,
-          "Unsupported sampling_type for uncompressed track: %u",
-          uncC->sampling_type);
-      goto unsupported_feature;
-  }
 
-
-  switch (uncC->interleave_type) {
-    case INTERLEAVE_COMPONENT: // Component Interleaving (Planar)
-    case INTERLEAVE_PIXEL:     // Pixel Interleaved
-      break;
-    case INTERLEAVE_MIXED:     // Mixed Interleaved
-    case INTERLEAVE_ROW:       // Row Interleaved
-    case INTERLEAVE_TILE:      // Tile Interleaved
-    case INTERLEAVE_MULTI_Y:   // Multi-Y Pixel Interleaved
-    default:
-      GST_WARNING_OBJECT (qtdemux,
-          "Unsupported interleave_type for uncompressed track: %u",
-          uncC->interleave_type);
-      goto unsupported_feature;
-  }
-
-  /* Padding */
-  // TODO: Handle various padding configurations
+  /* Unsupported Features */
   if (align_size) {
     // If component_align_size is 0, the component value
     // is coded on component_bit_depth bits exactly
     GST_WARNING_OBJECT (qtdemux,
         "Unsupported align_size for uncompressed track: %u", align_size);
-    goto unsupported_feature;
-  } else if (uncC->block_size) {
-    // Component values can be stored either directly in the
-    // sample data or inside fixed-size blocks. The block
-    // size in bytes is specified by the block_size field.
-    GST_WARNING_OBJECT (qtdemux,
-        "Unsupported block_size for uncompressed track: %u", uncC->block_size);
-    goto unsupported_feature;
-  } else if (uncC->pixel_size != 0 && uncC->pixel_size != num_components) {
-    GST_WARNING_OBJECT (qtdemux,
-        "Unsupported pixel_size for uncompressed track: %u", uncC->pixel_size);
-    // If pixel_size is 0, no additional padding is present after each pixel.
-    goto unsupported_feature;
-  } else if (uncC->row_align_size) {
-    // row_align_size indicates the padding between rows
-    GST_WARNING_OBJECT (qtdemux,
-        "Unsupported row_align_size for uncompressed track: %u",
-        uncC->row_align_size);
     goto unsupported_feature;
   } else if (uncC->tile_align_size) {
     // tile_align_size indicates the padding between tiles
@@ -12309,6 +12446,7 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
     goto unsupported_feature;
   }
 
+  // Get Component Types
   for (guint32 i = 0; i < num_components; i++) {
     guint16 component_index = uncC->components[i].index;
     component_types[i] = cmpd->types[component_index];
@@ -12317,11 +12455,43 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
   // Lookup Format
   const ComponentFormatMapping *lut = component_lookup;
   for (guint i = 0; i < G_N_ELEMENTS (component_lookup); i++) {
-    if (num_components != lut[i].num_components) {
+    // Component Count
+    if (num_components != lut[i].uncC.component_count) {
       continue;
     }
 
-    if (uncC->interleave_type != lut[i].interleave_type) {
+    // Component Bit Depth
+    if (first_comp->bit_depth != lut[i].component_config.bit_depth) {
+      continue;
+    }
+
+    // Component Align Size
+    if (align_size && align_size != lut[i].component_config.align_size) {
+      continue;                 // If set, the align size must match
+    }
+
+    // Interleave Types
+    if (uncC->interleave_type != lut[i].uncC.interleave_type) {
+      continue;
+    }
+
+    // Sampling Types
+    if (uncC->sampling_type != lut[i].uncC.sampling_type) {
+      continue;
+    }
+
+    // Pixel Size
+    if (uncC->pixel_size && uncC->pixel_size != lut[i].uncC.pixel_size) {
+      continue;                 // If set, the pixel size must match
+    }
+
+    // Block Size
+    if (uncC->block_size && uncC->block_size != lut[i].uncC.block_size) {
+      continue;                 // If set, the block size must match
+    }
+
+    // Endian
+    if (uncC->components_little_endian != lut[i].uncC.components_little_endian) {
       continue;
     }
 
@@ -12330,36 +12500,123 @@ qtdemux_get_format_from_uncv (GstQTDemux * qtdemux,
       continue;
     }
 
-    format = lut[i].format;
-    break;
+    /* success */
+    return lut[i].format;
   }
-
-  // TODO: Handle various interleave types for multiple components
-  if (num_components != 1 && uncC->interleave_type != 1) {
-    // Single channels can by any interleave_type
-    GST_WARNING_OBJECT (qtdemux,
-        "Unsupported interleave_type for uncompressed track: %u",
-        uncC->interleave_type);
-    goto unsupported_feature;
-  }
-
-  /* Calculate Stride */
-  if (first_comp->bit_depth != 8) {
-    GST_WARNING_OBJECT (qtdemux,
-        "Unsupported high bit depth for uncompressed track: %u",
-        first_comp->bit_depth);
-    goto unsupported_feature;   // TODO - account for higher bit depths
-  } else if (uncC->sampling_type != 0) {
-    goto unsupported_feature;   // TODO - account for subsampling
-  }
-  stream->stride = entry->width * num_components;       // TODO - account for non-zero row alignment
-
-  /* success */
-  return format;
 
 unsupported_feature:
   GST_WARNING_OBJECT (qtdemux, "Unsupported uncv format");
   return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+static void
+qtdemux_set_info_from_uncv (GstQTDemux * qtdemux,
+    QtDemuxStreamStsdEntry * entry, UncompressedFrameConfigBox * uncC,
+    GstVideoInfo * info)
+{
+  guint32 num_components = uncC->component_count;
+  guint32 row_align_size = uncC->row_align_size;
+  gint height = entry->height;
+
+  if (uncC->version == 1) {
+    switch (uncC->profile) {
+      case GST_MAKE_FOURCC ('r', 'g', 'b', '3'):
+        num_components = 3;
+        break;
+      case GST_MAKE_FOURCC ('r', 'g', 'b', 'a'):
+      case GST_MAKE_FOURCC ('a', 'b', 'g', 'r'):
+        num_components = 4;
+        break;
+      default:
+        GST_WARNING_OBJECT (qtdemux, "Unsupported uncv profile: %u",
+            uncC->profile);
+        return;
+    }
+    info->stride[0] = entry->width * num_components;
+    info->size = info->stride[0] * height;
+    return;
+  }
+
+  gint default_stride = 0;
+  if (row_align_size) {
+    default_stride = row_align_size;
+  } else {
+    default_stride = entry->width;
+  }
+
+  switch (uncC->sampling_type) {
+    case SAMPLING_444:
+      if (uncC->interleave_type == INTERLEAVE_PIXEL) {
+        if (row_align_size) {
+          info->stride[0] = row_align_size;
+        } else {
+          info->stride[0] = entry->width * num_components;
+        }
+        info->size = info->stride[0] * height;
+      } else {
+        for (gint i = 0; i < num_components; i++) {
+          info->stride[i] = default_stride;
+        }
+        info->size = info->stride[0] * height * num_components;
+      }
+      break;
+
+    case SAMPLING_422:
+      info->stride[0] = default_stride;
+      switch (uncC->interleave_type) {
+        case INTERLEAVE_COMPONENT:
+          info->stride[1] = info->stride[0] / 2;
+          info->stride[2] = info->stride[1];
+          break;
+        case INTERLEAVE_MIXED:
+          info->stride[1] = info->stride[0];
+          break;
+        case INTERLEAVE_MULTI_Y:
+          // TODO
+          break;
+        default:
+          break;                // Error
+      }
+      info->size = info->stride[0] * height * 2;
+      break;
+
+    case SAMPLING_420:
+      info->stride[0] = default_stride;
+      switch (uncC->interleave_type) {
+        case INTERLEAVE_COMPONENT:
+          info->stride[1] = info->stride[0] / 2;
+          info->stride[2] = info->stride[1];
+          break;
+        case INTERLEAVE_MIXED:
+          info->stride[1] = info->stride[0];
+          break;
+        default:
+          break;                // Error
+      }
+      info->size = info->stride[0] * height * 3 / 2;
+      break;
+
+    case SAMPLING_411:
+      info->stride[0] = default_stride;
+      switch (uncC->interleave_type) {
+        case INTERLEAVE_COMPONENT:
+          info->stride[1] = info->stride[0] / 4;
+          info->stride[2] = info->stride[1];
+          break;
+        case INTERLEAVE_MIXED:
+          info->stride[1] = info->stride[0];
+          break;
+        case INTERLEAVE_MULTI_Y:
+          // TODO
+        default:
+          break;                // Error
+      }
+      info->size = info->stride[0] * height * 3 / 2;
+      break;
+    default:
+      break;
+  }
+
 }
 
 /* *INDENT-OFF* */
@@ -17332,8 +17589,11 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       } else if (!success) {
         GST_WARNING_OBJECT (qtdemux, "Error when parsing uncv box");
       } else {
-        format = qtdemux_get_format_from_uncv (qtdemux, entry, stream,
-            &uncC, &cmpd);
+        format = qtdemux_get_format_from_uncv (qtdemux, &uncC, &cmpd);
+        gst_video_info_set_format (&stream->pre_info, format, entry->width,
+            entry->height);
+        qtdemux_set_info_from_uncv (qtdemux, entry, &uncC, &stream->pre_info);
+        stream->alignment = 32;
       }
 
       /* Free Memory */
@@ -17356,10 +17616,15 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     caps = gst_video_info_to_caps (&stream->info);
     *codec_name = gst_pb_utils_get_codec_description (caps);
 
+    /* If pre_info is initialized, then row_alignment may be neccessary */
+    if (stream->pre_info.size) {
+      stream->needs_row_alignment =
+          !gst_video_info_is_equal (&stream->info, &stream->pre_info);
+    }
+
     /* enable clipping for raw video streams */
     stream->need_clip = TRUE;
     stream->alignment = 32;
-
   }
 
   return caps;
