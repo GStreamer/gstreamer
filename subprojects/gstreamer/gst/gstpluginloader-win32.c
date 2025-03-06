@@ -283,6 +283,7 @@ gst_plugin_loader_try_helper (GstPluginLoader * self, gchar * location)
   gchar *cmd = NULL;
   gchar *err = NULL;
   gint last_err;
+  gunichar2 *wlocation = NULL;
   gunichar2 *wcmd = NULL;
   STARTUPINFOW si;
   BOOL ret;
@@ -298,8 +299,13 @@ gst_plugin_loader_try_helper (GstPluginLoader * self, gchar * location)
 
   pipe_name = g_strdup_printf ("%s.%u", self->pipe_prefix,
       (guint) InterlockedIncrement ((LONG *) & global_pipe_index));
-  cmd = g_strdup_printf ("%s -l %s %s", location, _gst_executable_path,
-      pipe_name);
+  wlocation = g_utf8_to_utf16 (location, -1, NULL, NULL, NULL);
+  if (!wlocation) {
+    GST_WARNING ("Couldn't build location string");
+    goto error;
+  }
+  cmd = g_strdup_printf ("\"%s\" -l \"%s\" \"%s\"", location,
+      _gst_executable_path, pipe_name);
   wcmd = g_utf8_to_utf16 (cmd, -1, NULL, NULL, NULL);
   if (!wcmd) {
     GST_WARNING ("Couldn't build cmd string");
@@ -347,7 +353,7 @@ gst_plugin_loader_try_helper (GstPluginLoader * self, gchar * location)
 
   GST_LOG ("Trying to spawn gst-plugin-scanner helper at %s, command %s",
       location, cmd);
-  ret = CreateProcessW (NULL, (WCHAR *) wcmd, NULL, NULL, FALSE,
+  ret = CreateProcessW ((WCHAR *) wlocation, (WCHAR *) wcmd, NULL, NULL, FALSE,
       CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW, (LPVOID) self->env_string,
       NULL, &si, &self->child_info);
 
@@ -427,6 +433,7 @@ gst_plugin_loader_try_helper (GstPluginLoader * self, gchar * location)
   self->client_running = TRUE;
 
   g_free (cmd);
+  g_free (wlocation);
   g_free (wcmd);
   g_free (err);
   g_free (pipe_name);
@@ -446,6 +453,7 @@ error:
     CloseHandle (loader->pipe);
   loader->pipe = INVALID_HANDLE_VALUE;
   g_free (cmd);
+  g_free (wlocation);
   g_free (wcmd);
   g_free (err);
   g_free (pipe_name);
@@ -1089,9 +1097,9 @@ gst_plugin_loader_new (GstRegistry * registry)
   memset (&pi, 0, sizeof (PROCESS_INFORMATION));
 
   /* Checks whether helper bin is installed or not. Expected exit code is 1 */
-  ret = CreateProcessW (NULL, helper_bin_location_wide, NULL, NULL, FALSE,
-      CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW, env_string,
-      NULL, &si, &pi);
+  ret = CreateProcessW (helper_bin_location_wide, NULL, NULL, NULL, FALSE,
+      CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW, env_string, NULL, &si,
+      &pi);
   g_free (helper_bin_location_wide);
 
   if (!ret) {
