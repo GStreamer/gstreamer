@@ -347,6 +347,12 @@ static void
 uvc_events_parse_control (GstUvcSink * self, uint8_t req,
     uint8_t cs, uint8_t entity_id, uint8_t len, struct uvc_request_data *resp)
 {
+  /*
+   * Responding to controls is not currently implemented.
+   */
+  resp->data[0] = 0x00;
+  resp->length = 1;
+
   switch (entity_id) {
     case 0:
       GST_DEBUG_OBJECT (self, "%s",
