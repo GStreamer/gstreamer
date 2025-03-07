@@ -1470,6 +1470,10 @@ GST_START_TEST (test_video_capture_with_tags)
 
     g_object_set (camera, "video-profile", profile, NULL);
     gst_encoding_profile_unref (profile);
+
+    caps = gst_caps_from_string ("video/x-raw, format=(string)Y444");
+    g_object_set (camera, "video-capture-caps", caps, NULL);
+    gst_caps_unref (caps);
   }
 
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
