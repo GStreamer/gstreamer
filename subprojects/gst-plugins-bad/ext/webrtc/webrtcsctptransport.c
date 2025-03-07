@@ -193,13 +193,14 @@ static void
 webrtc_sctp_transport_constructed (GObject * object)
 {
   WebRTCSCTPTransport *sctp = WEBRTC_SCTP_TRANSPORT (object);
-  guint association_id;
-
-  association_id = g_random_int_range (0, G_MAXUINT16);
 
   sctp->sctpdec =
       g_object_ref_sink (gst_element_factory_make ("sctpdec", NULL));
-  g_object_set (sctp->sctpdec, "sctp-association-id", association_id, NULL);
+  g_object_set (sctp->sctpdec, "automatic-association-id", TRUE, NULL);
+
+  guint association_id;
+  g_object_get (sctp->sctpdec, "sctp-association-id", &association_id, NULL);
+
   sctp->sctpenc =
       g_object_ref_sink (gst_element_factory_make ("sctpenc", NULL));
   g_object_set (sctp->sctpenc, "sctp-association-id", association_id, NULL);

@@ -67,7 +67,22 @@ gst_sctp_association_state_get_type (void)
   return id;
 }
 
-G_DEFINE_TYPE (GstSctpAssociation, gst_sctp_association, G_TYPE_OBJECT);
+static void
+_init_debug (void)
+{
+  static gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT (gst_sctp_association_debug_category,
+        "sctpassociation", 0, "debug category for sctpassociation");
+    GST_DEBUG_CATEGORY_INIT (gst_sctp_debug_category, "sctplib", 0,
+        "debug category for messages from usrsctp");
+    g_once_init_leave (&_init, 1);
+  }
+}
+
+G_DEFINE_TYPE_WITH_CODE (GstSctpAssociation, gst_sctp_association,
+    G_TYPE_OBJECT, _init_debug ());
 
 enum
 {
@@ -361,11 +376,6 @@ gst_sctp_association_get (guint32 association_id)
   GstSctpAssociation *association;
 
   G_LOCK (associations_lock);
-  GST_DEBUG_CATEGORY_INIT (gst_sctp_association_debug_category,
-      "sctpassociation", 0, "debug category for sctpassociation");
-  GST_DEBUG_CATEGORY_INIT (gst_sctp_debug_category,
-      "sctplib", 0, "debug category for messages from usrsctp");
-
   if (!associations) {
     associations =
         g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, NULL);
@@ -382,6 +392,40 @@ gst_sctp_association_get (guint32 association_id)
   } else {
     g_object_ref (association);
   }
+  G_UNLOCK (associations_lock);
+  return association;
+}
+
+GstSctpAssociation *
+gst_sctp_association_create (void)
+{
+  GstSctpAssociation *association;
+  guint association_id = 0;
+
+  G_LOCK (associations_lock);
+  if (!associations) {
+    associations =
+        g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, NULL);
+  }
+
+  while (association_id < G_MAXUINT16) {
+    association =
+        g_hash_table_lookup (associations, GUINT_TO_POINTER (association_id));
+    if (!association)
+      break;
+    association_id++;
+  }
+
+  if (association) {
+    G_UNLOCK (associations_lock);
+    return NULL;
+  }
+
+  association =
+      g_object_new (GST_SCTP_TYPE_ASSOCIATION, "association-id", association_id,
+      NULL);
+  g_hash_table_insert (associations, GUINT_TO_POINTER (association_id),
+      association);
   G_UNLOCK (associations_lock);
   return association;
 }

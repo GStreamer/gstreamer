@@ -50,7 +50,9 @@ struct _GstSctpDec
   GstPad *sink_pad;
   guint sctp_association_id;
   guint local_sctp_port;
+  gboolean automatic_association_id;
 
+  GstSctpAssociation *automatic_sctp_association;
   GstSctpAssociation *sctp_association;
   gulong signal_handler_stream_reset;
 };

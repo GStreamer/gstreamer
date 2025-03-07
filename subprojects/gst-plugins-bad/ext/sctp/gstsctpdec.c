@@ -64,6 +64,7 @@ enum
 
   PROP_GST_SCTP_ASSOCIATION_ID,
   PROP_LOCAL_SCTP_PORT,
+  PROP_AUTOMATIC_ASSOCIATION_ID,
 
   NUM_PROPERTIES
 };
@@ -72,6 +73,7 @@ static GParamSpec *properties[NUM_PROPERTIES];
 
 #define DEFAULT_GST_SCTP_ASSOCIATION_ID 1
 #define DEFAULT_LOCAL_SCTP_PORT 0
+#define DEFAULT_AUTOMATIC_ASSOCIATION_ID FALSE
 #define MAX_SCTP_PORT 65535
 #define MAX_GST_SCTP_ASSOCIATION_ID 65535
 
@@ -207,6 +209,20 @@ gst_sctp_dec_class_init (GstSctpDecClass * klass)
       0, MAX_SCTP_PORT, DEFAULT_LOCAL_SCTP_PORT,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  /**
+   * GstSctpDec:automatic-association-id:
+   *
+   * Whether a SCTP Association ID should be automatically generated.
+   *
+   * Since: 1.28
+   */
+  properties[PROP_AUTOMATIC_ASSOCIATION_ID] =
+      g_param_spec_boolean ("automatic-association-id",
+      "Automatic SCTP Association ID",
+      "Whether a SCTP Association ID should be automatically generated.",
+      DEFAULT_AUTOMATIC_ASSOCIATION_ID,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, NUM_PROPERTIES, properties);
 
   signals[SIGNAL_RESET_STREAM] = g_signal_new ("reset-stream",
@@ -226,7 +242,9 @@ gst_sctp_dec_init (GstSctpDec * self)
 {
   self->sctp_association_id = DEFAULT_GST_SCTP_ASSOCIATION_ID;
   self->local_sctp_port = DEFAULT_LOCAL_SCTP_PORT;
+  self->automatic_association_id = DEFAULT_AUTOMATIC_ASSOCIATION_ID;
 
+  self->automatic_sctp_association = NULL;
   self->flow_combiner = gst_flow_combiner_new ();
 
   self->sink_pad = gst_pad_new_from_static_template (&sink_template, "sink");
@@ -246,10 +264,28 @@ gst_sctp_dec_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_GST_SCTP_ASSOCIATION_ID:
-      self->sctp_association_id = g_value_get_uint (value);
+      if (self->automatic_association_id) {
+        GST_WARNING_OBJECT (object,
+            "Cannot modify association id if automatic association id enabled");
+      } else {
+        self->sctp_association_id = g_value_get_uint (value);
+      }
       break;
     case PROP_LOCAL_SCTP_PORT:
       self->local_sctp_port = g_value_get_uint (value);
+      break;
+    case PROP_AUTOMATIC_ASSOCIATION_ID:
+      self->automatic_association_id = g_value_get_boolean (value);
+      if (self->automatic_association_id && !self->automatic_sctp_association) {
+        self->automatic_sctp_association = gst_sctp_association_create ();
+        if (self->automatic_sctp_association)
+          self->sctp_association_id =
+              self->automatic_sctp_association->association_id;
+      } else if (!self->automatic_association_id
+          && self->automatic_sctp_association) {
+        gst_clear_object (&self->automatic_sctp_association);
+        self->sctp_association_id = DEFAULT_GST_SCTP_ASSOCIATION_ID;
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
@@ -270,6 +306,9 @@ gst_sctp_dec_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_LOCAL_SCTP_PORT:
       g_value_set_uint (value, self->local_sctp_port);
       break;
+    case PROP_AUTOMATIC_ASSOCIATION_ID:
+      g_value_set_boolean (value, self->automatic_association_id);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
       break;
@@ -283,6 +322,9 @@ gst_sctp_dec_finalize (GObject * object)
 
   gst_flow_combiner_free (self->flow_combiner);
   self->flow_combiner = NULL;
+
+  if (self->automatic_sctp_association)
+    gst_object_unref (self->automatic_sctp_association);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -467,7 +509,13 @@ configure_association (GstSctpDec * self)
 {
   gint state;
 
-  self->sctp_association = gst_sctp_association_get (self->sctp_association_id);
+  if (self->automatic_sctp_association) {
+    self->sctp_association = self->automatic_sctp_association;
+    self->automatic_sctp_association = NULL;
+  } else {
+    self->sctp_association =
+        gst_sctp_association_get (self->sctp_association_id);
+  }
 
   g_object_get (self->sctp_association, "state", &state, NULL);
 
