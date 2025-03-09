@@ -10,4 +10,10 @@ if gtk_dep.found()
     include_directories: [configinc, libsinc],
     dependencies : [gst_dep, libm, audio_dep, gtk_dep],
     install: false)
+  executable('audiobasesink-custom-clock-slaving',
+    'audiobasesink-custom-clock-slaving.c',
+    c_args : gst_plugins_base_args,
+    include_directories: [configinc, libsinc],
+    dependencies : [gst_dep, libm, audio_dep, gtk_dep],
+    install: false)
 endif
