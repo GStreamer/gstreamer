@@ -165,6 +165,11 @@ gst_rtp_vraw_depay_negotiate_pool (GstRtpVRawDepay * depay, GstCaps * caps,
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
     pool = gst_video_buffer_pool_new ();
+    {
+      gchar *name = g_strdup_printf ("%s-pool", GST_OBJECT_NAME (depay));
+      g_object_set (pool, "name", name, NULL);
+      g_free (name);
+    }
   }
 
   if (depay->pool)

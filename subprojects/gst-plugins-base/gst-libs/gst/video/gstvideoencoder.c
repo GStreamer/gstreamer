@@ -900,6 +900,12 @@ gst_video_encoder_propose_allocation_default (GstVideoEncoder * encoder,
       gst_query_add_allocation_param (query, allocator, &params);
 
     pool = gst_video_buffer_pool_new ();
+    {
+      gchar *name =
+          g_strdup_printf ("%s-propose-pool", GST_OBJECT_NAME (encoder));
+      g_object_set (pool, "name", name, NULL);
+      g_free (name);
+    }
 
     structure = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (structure, caps, size, 0, 0);

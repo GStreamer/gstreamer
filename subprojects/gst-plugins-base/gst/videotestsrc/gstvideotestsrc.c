@@ -983,6 +983,11 @@ gst_video_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
       pool = gst_buffer_pool_new ();
     else
       pool = gst_video_buffer_pool_new ();
+    {
+      gchar *name = g_strdup_printf ("%s-pool", GST_OBJECT_NAME (videotestsrc));
+      g_object_set (pool, "name", name, NULL);
+      g_free (name);
+    }
   }
 
   config = gst_buffer_pool_get_config (pool);

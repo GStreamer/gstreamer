@@ -1910,6 +1910,11 @@ _sink_query (GstAggregator * agg, GstAggregatorPad * bpad, GstQuery * query)
       size = GST_VIDEO_INFO_SIZE (&info);
 
       pool = gst_video_buffer_pool_new ();
+      {
+        gchar *name = g_strdup_printf ("%s-pool", GST_OBJECT_NAME (agg));
+        g_object_set (pool, "name", name, NULL);
+        g_free (name);
+      }
 
       structure = gst_buffer_pool_get_config (pool);
       gst_buffer_pool_config_set_params (structure, caps, size, 0, 0);

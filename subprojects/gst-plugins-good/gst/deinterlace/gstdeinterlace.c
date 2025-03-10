@@ -2735,6 +2735,11 @@ gst_deinterlace_do_bufferpool (GstDeinterlace * self, GstCaps * outcaps)
     /* no pool, we can make our own */
     GST_DEBUG_OBJECT (self, "no pool, making new pool");
     pool = gst_video_buffer_pool_new ();
+    {
+      gchar *name = g_strdup_printf ("%s-output-pool", GST_OBJECT_NAME (self));
+      g_object_set (pool, "name", name, NULL);
+      g_free (name);
+    }
   }
 
   /* now configure */
@@ -3172,6 +3177,11 @@ gst_deinterlace_propose_allocation (GstDeinterlace * self, GstQuery * query)
   size = GST_VIDEO_INFO_SIZE (&info);
 
   pool = gst_video_buffer_pool_new ();
+  {
+    gchar *name = g_strdup_printf ("%s-input-pool", GST_OBJECT_NAME (self));
+    g_object_set (pool, "name", name, NULL);
+    g_free (name);
+  }
 
   gst_query_add_allocation_pool (query, pool, size, 0, 0);
 

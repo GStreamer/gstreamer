@@ -651,6 +651,11 @@ gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
       /* No pool, create our own if we need to do stride conversion */
       pool = gst_video_buffer_pool_new ();
+      {
+        gchar *name = g_strdup_printf ("%s-pool", GST_OBJECT_NAME (y4mdec));
+        g_object_set (pool, "name", name, NULL);
+        g_free (name);
+      }
       config = gst_buffer_pool_get_config (pool);
       gst_buffer_pool_config_set_params (config, caps, y4mdec->out_info.size, 0,
           0);

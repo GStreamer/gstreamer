@@ -2780,8 +2780,14 @@ gst_video_aggregator_decide_allocation (GstAggregator * agg, GstQuery * query)
   gst_query_parse_allocation (query, &caps, NULL);
 
   /* no downstream pool, make our own */
-  if (pool == NULL)
+  if (pool == NULL) {
     pool = gst_video_buffer_pool_new ();
+    {
+      gchar *name = g_strdup_printf ("%s-pool", GST_OBJECT_NAME (agg));
+      g_object_set (pool, "name", name, NULL);
+      g_free (name);
+    }
+  }
 
   config = gst_buffer_pool_get_config (pool);
 
@@ -2802,6 +2808,12 @@ gst_video_aggregator_decide_allocation (GstAggregator * agg, GstQuery * query)
 
       gst_object_unref (pool);
       pool = gst_video_buffer_pool_new ();
+      {
+        gchar *name =
+            g_strdup_printf ("%s-fallback-pool", GST_OBJECT_NAME (agg));
+        g_object_set (pool, "name", name, NULL);
+        g_free (name);
+      }
       gst_buffer_pool_config_set_params (config, caps, size, min, max);
       gst_buffer_pool_config_set_allocator (config, allocator, &params);
 

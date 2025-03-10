@@ -567,6 +567,11 @@ gst_cuda_memory_copy_propose_allocation (GstBaseTransform * trans,
     if (!pool) {
       GST_DEBUG_OBJECT (self, "creating system buffer pool");
       pool = gst_video_buffer_pool_new ();
+      {
+        gchar *name = g_strdup_printf ("cuda-memory-copy-upstream-pool");
+        g_object_set (pool, "name", name, NULL);
+        g_free (name);
+      }
     }
 
     config = gst_buffer_pool_get_config (pool);

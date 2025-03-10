@@ -278,6 +278,11 @@ gst_dvdec_negotiate_pool (GstDVDec * dec, GstCaps * caps, GstVideoInfo * info)
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
     pool = gst_video_buffer_pool_new ();
+    {
+      gchar *name = g_strdup_printf ("%s-pool", GST_OBJECT_NAME (dec));
+      g_object_set (pool, "name", name, NULL);
+      g_free (name);
+    }
   }
 
   if (dec->pool) {

@@ -90,6 +90,15 @@ gst_va_create_other_pool (GstAllocator * allocator,
   }
 
   pool = gst_video_buffer_pool_new ();
+  {
+    gchar *name;
+    if (allocator)
+      name = g_strdup_printf ("va-%s-pool", GST_OBJECT_NAME (allocator));
+    else
+      name = g_strdup ("va-video-pool");
+    g_object_set (pool, "name", name, NULL);
+    g_free (name);
+  }
   config = gst_buffer_pool_get_config (pool);
 
   gst_buffer_pool_config_set_params (config, caps, size, 0, 0);

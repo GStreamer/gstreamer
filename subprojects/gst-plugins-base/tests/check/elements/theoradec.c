@@ -43,6 +43,11 @@ query_handler (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   gst_video_info_from_caps (&vinfo, caps);
 
   pool = gst_video_buffer_pool_new ();
+  {
+    gchar *name = g_strdup ("theora-test-pool");
+    g_object_set (pool, "name", name, NULL);
+    g_free (name);
+  }
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps, vinfo.size, 0, 1);
   gst_buffer_pool_set_config (pool, config);

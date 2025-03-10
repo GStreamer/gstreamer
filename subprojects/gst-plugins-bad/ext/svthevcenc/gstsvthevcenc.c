@@ -1454,6 +1454,12 @@ gst_svthevc_enc_set_format (GstVideoEncoder * video_enc,
 
     caps = gst_video_info_to_caps (info);
     pool = gst_video_buffer_pool_new ();
+    {
+      gchar *name =
+          g_strdup_printf ("%s-internal-pool", GST_OBJECT_NAME (encoder));
+      g_object_set (pool, "name", name, NULL);
+      g_free (name);
+    }
 
     size = GST_VIDEO_INFO_SIZE (info);
     GST_INFO_OBJECT (encoder,
@@ -1554,6 +1560,12 @@ gst_svthevc_enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
       gst_query_add_allocation_param (query, allocator, &params);
 
     pool = gst_video_buffer_pool_new ();
+    {
+      gchar *name =
+          g_strdup_printf ("%s-propose-pool", GST_OBJECT_NAME (svthevcenc));
+      g_object_set (pool, "name", name, NULL);
+      g_free (name);
+    }
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);

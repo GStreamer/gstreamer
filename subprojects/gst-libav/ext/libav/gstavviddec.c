@@ -946,6 +946,12 @@ gst_ffmpegviddec_ensure_internal_pool (GstFFMpegVidDec * ffmpegdec,
     gst_object_unref (ffmpegdec->internal_pool);
 
   ffmpegdec->internal_pool = gst_video_buffer_pool_new ();
+  {
+    gchar *name =
+        g_strdup_printf ("%s-internal-pool", GST_OBJECT_NAME (ffmpegdec));
+    g_object_set (ffmpegdec->internal_pool, "name", name, NULL);
+    g_free (name);
+  }
   config = gst_buffer_pool_get_config (ffmpegdec->internal_pool);
 
   caps = gst_video_info_to_caps (&info);
@@ -2509,6 +2515,12 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   if (max != 0 && max < REQUIRED_POOL_MAX_BUFFERS) {
     gst_object_unref (pool);
     pool = gst_video_buffer_pool_new ();
+    {
+      gchar *name =
+          g_strdup_printf ("%s-decide-pool", GST_OBJECT_NAME (ffmpegdec));
+      g_object_set (pool, "name", name, NULL);
+      g_free (name);
+    }
     max = 0;
     update_pool = TRUE;
     have_pool = FALSE;
@@ -2607,6 +2619,12 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     if (!working_pool) {
       gst_object_unref (pool);
       pool = gst_video_buffer_pool_new ();
+      {
+        gchar *name =
+            g_strdup_printf ("%s-fallback-pool", GST_OBJECT_NAME (ffmpegdec));
+        g_object_set (pool, "name", name, NULL);
+        g_free (name);
+      }
       config = gst_buffer_pool_get_config (pool);
       gst_buffer_pool_config_set_params (config, state->caps, size, min, max);
       gst_buffer_pool_config_set_allocator (config, NULL, &params);

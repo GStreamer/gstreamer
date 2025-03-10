@@ -4261,6 +4261,11 @@ gst_video_decoder_decide_allocation_default (GstVideoDecoder * decoder,
     /* no pool, we can make our own */
     GST_DEBUG_OBJECT (decoder, "no pool, making new pool");
     pool = gst_video_buffer_pool_new ();
+    {
+      gchar *name = g_strdup_printf ("%s-pool", GST_OBJECT_NAME (decoder));
+      g_object_set (pool, "name", name, NULL);
+      g_free (name);
+    }
   }
 
   /* now configure */
@@ -4281,6 +4286,12 @@ gst_video_decoder_decide_allocation_default (GstVideoDecoder * decoder,
 
       gst_object_unref (pool);
       pool = gst_video_buffer_pool_new ();
+      {
+        gchar *name =
+            g_strdup_printf ("%s-fallback-pool", GST_OBJECT_NAME (decoder));
+        g_object_set (pool, "name", name, NULL);
+        g_free (name);
+      }
       gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
       gst_buffer_pool_config_set_allocator (config, allocator, &params);
     }
