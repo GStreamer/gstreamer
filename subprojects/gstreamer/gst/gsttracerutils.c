@@ -59,6 +59,7 @@ static const gchar *_quark_strings[] = {
   "pad-chain-pre", "pad-chain-post", "pad-chain-list-pre",
   "pad-chain-list-post", "pad-send-event-pre", "pad-send-event-post",
   "memory-init", "memory-free-pre", "memory-free-post",
+  "pool-buffer-queued", "pool-buffer-dequeued",
 };
 
 GQuark _priv_gst_tracer_quark_table[GST_TRACER_QUARK_MAX];
