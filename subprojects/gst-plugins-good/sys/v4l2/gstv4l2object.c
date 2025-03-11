@@ -528,6 +528,23 @@ v4l2_mmap_wrapper (gpointer start, gsize length, gint prot, gint flags, gint fd,
 #define v4l2_mmap v4l2_mmap_wrapper
 
 #endif /* SIZEOF_OFF_T < 8 */
+
+#if defined(__linux__) && !defined(__GLIBC__)
+/* v4l2_ioctl always takes request as unsigned long int, not ioctl_req_t */
+static gint
+v4l2_ioctl_wrapper (gint fd, ioctl_req_t request, ...)
+{
+  void *arg;
+  va_list ap;
+
+  va_start (ap, request);
+  arg = va_arg (ap, void *);
+  va_end (ap);
+
+  return v4l2_ioctl (fd, request, arg);
+}
+#endif /* defined(__linux__) && !defined(__GLIBC__) */
+
 #endif /* HAVE_LIBV4L2 */
 
 GstV4l2Object *
@@ -578,7 +595,11 @@ gst_v4l2_object_new (GstElement * element,
     v4l2object->fd_open = v4l2_fd_open;
     v4l2object->close = v4l2_close;
     v4l2object->dup = v4l2_dup;
+#ifdef __GLIBC__
     v4l2object->ioctl = v4l2_ioctl;
+#else
+    v4l2object->ioctl = v4l2_ioctl_wrapper;
+#endif
     v4l2object->read = v4l2_read;
     v4l2object->mmap = v4l2_mmap;
     v4l2object->munmap = v4l2_munmap;
