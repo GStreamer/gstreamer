@@ -1151,7 +1151,7 @@ gst_curl_base_sink_transfer_socket_cb (void *clientp, curl_socket_t curlfd,
 
   g_assert (sink);
 
-  if (curlfd < 0) {
+  if (curlfd == CURL_SOCKET_BAD) {
     /* signal an unrecoverable error to the library which will close the socket
        and return CURLE_COULDNT_CONNECT
      */
