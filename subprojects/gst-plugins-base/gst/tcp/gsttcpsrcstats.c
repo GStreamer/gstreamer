@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#define _GNU_SOURCE             /* struct tcp_info */
+
 /* macOS and iOS have the .h files but the tcp_info struct is private API */
 #if defined(HAVE_NETINET_TCP_H) && defined(HAVE_NETINET_IN_H) && defined(HAVE_SYS_SOCKET_H)
 #include <netinet/tcp.h>
