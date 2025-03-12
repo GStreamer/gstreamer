@@ -35,7 +35,6 @@ export MESA_VK_DEVICE_SELECT="10005:0"
     "--builddir=$builddir" \
     gst-validate-launcher "$tests" \
     --jobs "$jobs" \
-    --check-bugs \
     --dump-on-failure \
     --mute \
     --shuffle \
