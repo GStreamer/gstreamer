@@ -442,7 +442,7 @@ impl App {
                 let twcc_id = media.attributes().find_map(|attr| {
                     let key = attr.key();
                     let value = attr.value();
-                    if key != "extmap" || !value.map_or(false, |value| value.ends_with(TWCC_URI)) {
+                    if key != "extmap" || !value.is_some_and(|value| value.ends_with(TWCC_URI)) {
                         return None;
                     }
                     let value = value.unwrap();
