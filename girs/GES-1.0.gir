@@ -15633,11 +15633,11 @@ contains one frame)</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-version.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
-    <constant name="VERSION_MINOR" value="26" c:type="GES_VERSION_MINOR">
+    <constant name="VERSION_MINOR" value="27" c:type="GES_VERSION_MINOR">
       <source-position filename="../subprojects/gst-editing-services/ges/ges-version.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
-    <constant name="VERSION_NANO" value="0" c:type="GES_VERSION_NANO">
+    <constant name="VERSION_NANO" value="1" c:type="GES_VERSION_NANO">
       <source-position filename="../subprojects/gst-editing-services/ges/ges-version.h"/>
       <type name="gint" c:type="gint"/>
     </constant>

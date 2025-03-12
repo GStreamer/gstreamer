@@ -1,17 +1,15 @@
-This is GStreamer gst-python 1.26.0.
+This is GStreamer gst-python 1.27.0.1.
 
-The GStreamer team is thrilled to announce a new major feature release
-of your favourite cross-platform multimedia framework!
-
-As always, this release is again packed with new features, bug fixes and
-other improvements.
+GStreamer 1.27 is the unstable development branch leading up to the next major
+stable version which will be 1.28.
  
-The 1.26 release series adds new features on top of the 1.24 series and is
-part of the API and ABI-stable 1.x release series.
+The 1.27 development series adds new features on top of the 1.24 series and is
+part of the API and ABI-stable 1.x release series of the GStreamer multimedia
+framework.
 
-Full release notes can be found at:
+Full release notes will one day be found at:
 
-  https://gstreamer.freedesktop.org/releases/1.26/
+  https://gstreamer.freedesktop.org/releases/1.28/
 
 Binaries for Android, iOS, Mac OS X and Windows will usually be provided
 shortly after the release.
