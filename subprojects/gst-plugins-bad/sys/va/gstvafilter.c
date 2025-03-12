@@ -28,10 +28,10 @@
 #include <gst/va/vasurfaceimage.h>
 #include <gst/video/video.h>
 #include <va/va_drmcommon.h>
+#include <string.h>
 
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
-#include <string.h>
 
 struct _GstVaFilter
 {

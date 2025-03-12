@@ -28,7 +28,6 @@
 #include <gst/va/vasurfaceimage.h>
 #include <va/va_drmcommon.h>
 
-#include "gstvadisplay_priv.h"
 #include "gstvaprofile.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gstva_debug);

@@ -28,10 +28,10 @@
 #include <gst/va/gstvavideoformat.h>
 #include <gst/va/vasurfaceimage.h>
 
+#include "vacompat.h"
 #include "gstvacaps.h"
 #include "gstvaprofile.h"
 #include "gstvadisplay_priv.h"
-#include "vacompat.h"
 
 struct _GstVaEncoder
 {

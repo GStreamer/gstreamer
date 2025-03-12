@@ -60,12 +60,10 @@
 #include <gst/video/video.h>
 #include <va/va_drmcommon.h>
 
+#include "vacompat.h"
 #include "gstvabaseenc.h"
-#include "gstvacaps.h"
-#include "gstvadisplay_priv.h"
 #include "gstvaencoder.h"
 #include "gstvaprofile.h"
-#include "vacompat.h"
 #include "gstvapluginutils.h"
 
 #include "gst/glib-compat-private.h"

@@ -55,7 +55,6 @@
 
 #include "gstvabase.h"
 #include "gstvacaps.h"
-#include "gstvadisplay_priv.h"
 #include "gstvafilter.h"
 #include "gstvapluginutils.h"
 

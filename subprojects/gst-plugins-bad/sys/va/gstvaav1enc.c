@@ -53,9 +53,7 @@
 #include "vacompat.h"
 #include "gstvabaseenc.h"
 #include "gstvaencoder.h"
-#include "gstvacaps.h"
 #include "gstvaprofile.h"
-#include "gstvadisplay_priv.h"
 #include "gstvapluginutils.h"
 
 #include "gst/glib-compat-private.h"
