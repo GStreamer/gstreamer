@@ -11,7 +11,7 @@ actix = "0.13"
 actix-web = "4.0"
 actix-web-actors = "4.0"
 actix-files = "0.6"
-notify = "6.0"
+notify = "8.0"
 tokio = { version = "1.0", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
@@ -25,7 +25,9 @@ glob = "0.3"
 single-instance = "0.3.3"
 opener = "0.7.1"
 anyhow = "1.0"
-windows = { version = "0.59", features = ["Win32_UI_Shell"] }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.60", features = ["Win32_UI_Shell"] }
 
 [build-dependencies]
 static-files = "0.2.1"
