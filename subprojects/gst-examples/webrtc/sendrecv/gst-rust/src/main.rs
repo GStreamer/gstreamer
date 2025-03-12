@@ -359,7 +359,7 @@ impl App {
         self.send_msg_tx
             .lock()
             .unwrap()
-            .unbounded_send(WsMessage::Text(message))
+            .unbounded_send(WsMessage::text(message))
             .context("Failed to send SDP offer")?;
 
         Ok(())
@@ -403,7 +403,7 @@ impl App {
         self.send_msg_tx
             .lock()
             .unwrap()
-            .unbounded_send(WsMessage::Text(message))
+            .unbounded_send(WsMessage::text(message))
             .context("Failed to send SDP answer")?;
 
         Ok(())
@@ -580,7 +580,7 @@ impl App {
         self.send_msg_tx
             .lock()
             .unwrap()
-            .unbounded_send(WsMessage::Text(message))
+            .unbounded_send(WsMessage::text(message))
             .context("Failed to send ICE candidate")?;
 
         Ok(())
@@ -763,16 +763,16 @@ async fn async_main() -> Result<(), anyhow::Error> {
     // Say HELLO to the server and see if it replies with HELLO
     let our_id = args
         .our_id
-        .unwrap_or_else(|| rand::thread_rng().gen_range(10..10_000));
+        .unwrap_or_else(|| rand::rng().random_range(10..10_000));
     println!("Registering id {our_id} with server");
-    ws.send(WsMessage::Text(format!("HELLO {our_id}"))).await?;
+    ws.send(WsMessage::text(format!("HELLO {our_id}"))).await?;
 
     let msg = ws
         .next()
         .await
         .ok_or_else(|| anyhow!("didn't receive anything"))??;
 
-    if msg != WsMessage::Text("HELLO".into()) {
+    if msg != WsMessage::text("HELLO") {
         bail!("server didn't say HELLO");
     }
 
@@ -780,7 +780,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
         println!("Setting up call with peer id {peer_id}");
 
         // Join the given session
-        ws.send(WsMessage::Text(format!("SESSION {peer_id}")))
+        ws.send(WsMessage::text(format!("SESSION {peer_id}")))
             .await?;
 
         let msg = ws
@@ -788,14 +788,14 @@ async fn async_main() -> Result<(), anyhow::Error> {
             .await
             .ok_or_else(|| anyhow!("didn't receive anything"))??;
 
-        if msg != WsMessage::Text("SESSION_OK".into()) {
+        if msg != WsMessage::text("SESSION_OK") {
             bail!("server error: {msg:?}");
         }
 
         // If we expect the peer to create the offer request it now
         if args.remote_offerer {
             println!("Requesting offer from peer");
-            ws.send(WsMessage::Text("OFFER_REQUEST".into())).await?;
+            ws.send(WsMessage::text("OFFER_REQUEST")).await?;
         }
     } else {
         println!("Waiting for incoming call");

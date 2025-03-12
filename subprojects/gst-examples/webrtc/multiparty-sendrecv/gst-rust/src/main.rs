@@ -659,7 +659,7 @@ impl Peer {
         self.send_msg_tx
             .lock()
             .unwrap()
-            .unbounded_send(WsMessage::Text(format!(
+            .unbounded_send(WsMessage::text(format!(
                 "ROOM_PEER_MSG {} {}",
                 self.peer_id, message
             )))
@@ -706,7 +706,7 @@ impl Peer {
         self.send_msg_tx
             .lock()
             .unwrap()
-            .unbounded_send(WsMessage::Text(format!(
+            .unbounded_send(WsMessage::text(format!(
                 "ROOM_PEER_MSG {} {}",
                 self.peer_id, message
             )))
@@ -794,7 +794,7 @@ impl Peer {
         self.send_msg_tx
             .lock()
             .unwrap()
-            .unbounded_send(WsMessage::Text(format!(
+            .unbounded_send(WsMessage::text(format!(
                 "ROOM_PEER_MSG {} {}",
                 self.peer_id, message
             )))
@@ -988,21 +988,21 @@ async fn async_main() -> Result<(), anyhow::Error> {
     println!("connected");
 
     // Say HELLO to the server and see if it replies with HELLO
-    let our_id = rand::thread_rng().gen_range(10..10_000);
+    let our_id = rand::rng().random_range(10..10_000);
     println!("Registering id {our_id} with server");
-    ws.send(WsMessage::Text(format!("HELLO {our_id}"))).await?;
+    ws.send(WsMessage::text(format!("HELLO {our_id}"))).await?;
 
     let msg = ws
         .next()
         .await
         .ok_or_else(|| anyhow!("didn't receive anything"))??;
 
-    if msg != WsMessage::Text("HELLO".into()) {
+    if msg != WsMessage::text("HELLO") {
         bail!("server didn't say HELLO");
     }
 
     // Join the given room
-    ws.send(WsMessage::Text(format!("ROOM {}", args.room_id)))
+    ws.send(WsMessage::text(format!("ROOM {}", args.room_id)))
         .await?;
 
     let msg = ws
