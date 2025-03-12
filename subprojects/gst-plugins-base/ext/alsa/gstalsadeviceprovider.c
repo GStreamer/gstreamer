@@ -56,7 +56,7 @@ add_device (GstDeviceProvider * provider, snd_ctl_t * info,
   if (snd_pcm_open (&handle, device_name, stream, SND_PCM_NONBLOCK) < 0) {
     GST_ERROR_OBJECT (provider, "Could not open device %s for inspection!",
         device_name);
-    g_free (device_name);
+    free (device_name);
 
     return NULL;
   }
@@ -72,7 +72,7 @@ add_device (GstDeviceProvider * provider, snd_ctl_t * info,
       "device.class", G_TYPE_STRING, "sound",
       "alsa.card", G_TYPE_INT, card,
       "alsa.card_name", G_TYPE_STRING, card_name, NULL);
-  g_free (card_name);
+  free (card_name);
 
   snd_ctl_card_info_alloca (&card_info);
   if (snd_ctl_card_info (info, card_info) == 0) {
@@ -89,6 +89,7 @@ add_device (GstDeviceProvider * provider, snd_ctl_t * info,
 
   snd_card_get_longname (card, &longname);
   device = gst_alsa_device_new (longname, caps, device_name, stream, props);
+  free (longname);
 
   snd_pcm_close (handle);
 
@@ -265,7 +266,7 @@ gst_alsa_device_finalize (GObject * object)
 {
   GstAlsaDevice *device = GST_ALSA_DEVICE (object);
 
-  g_free (device->internal_name);
+  free (device->internal_name);
 
   G_OBJECT_CLASS (gst_alsa_device_parent_class)->finalize (object);
 }
