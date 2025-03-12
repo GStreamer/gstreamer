@@ -153,8 +153,8 @@ struct JsonReply {
 }
 
 fn transaction_id() -> String {
-    thread_rng()
-        .sample_iter(&rand::distributions::Alphanumeric)
+    rand::rng()
+        .sample_iter(&rand::distr::Alphanumeric)
         .map(char::from)
         .take(30)
         .collect()
@@ -244,7 +244,7 @@ impl Peer {
 
         let transaction = transaction_id();
         let sdp_data = offer.sdp().as_text()?;
-        let msg = WsMessage::Text(
+        let msg = WsMessage::text(
             json!({
                  "janus": "message",
                  "transaction": transaction,
@@ -363,7 +363,7 @@ impl Peer {
     fn on_ice_candidate(&self, mlineindex: u32, candidate: &str) -> Result<(), anyhow::Error> {
         let transaction = transaction_id();
         info!("Sending ICE {} {}", mlineindex, &candidate);
-        let msg = WsMessage::Text(
+        let msg = WsMessage::text(
             json!({
                 "janus": "trickle",
                 "transaction": transaction,
@@ -420,7 +420,7 @@ impl JanusGateway {
         let (mut ws, _) = connect_async(request).await?;
 
         let transaction = transaction_id();
-        let msg = WsMessage::Text(
+        let msg = WsMessage::text(
             json!({
                 "janus": "create",
                 "transaction": transaction,
@@ -440,7 +440,7 @@ impl JanusGateway {
         let session_id = json_msg.data.expect("no session id").id;
 
         let transaction = transaction_id();
-        let msg = WsMessage::Text(
+        let msg = WsMessage::text(
             json!({
                 "janus": "attach",
                 "transaction": transaction,
@@ -462,7 +462,7 @@ impl JanusGateway {
         let handle = json_msg.data.expect("no session id").id;
 
         let transaction = transaction_id();
-        let msg = WsMessage::Text(
+        let msg = WsMessage::text(
             json!({
                 "janus": "message",
                 "transaction": transaction,
@@ -631,7 +631,7 @@ impl JanusGateway {
                     // Handle keepalive ticks, fired every 10 seconds
                     _ws_msg = timer_fuse.select_next_some() => {
                         let transaction = transaction_id();
-                        Some(WsMessage::Text(
+                        Some(WsMessage::text(
                             json!({
                                 "janus": "keepalive",
                                 "transaction": transaction,
