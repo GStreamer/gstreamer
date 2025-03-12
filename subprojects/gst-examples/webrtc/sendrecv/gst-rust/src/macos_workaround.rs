@@ -1,7 +1,6 @@
 /// macOS has a specific requirement that there must be a run loop running on the main thread in
 /// order to open windows and use OpenGL, and that the global NSApplication instance must be
 /// initialized.
-
 /// On macOS this launches the callback function on a thread.
 /// On other platforms it's just executed immediately.
 #[cfg(not(target_os = "macos"))]
