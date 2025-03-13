@@ -234,6 +234,7 @@ class Test(Loggable):
             copied_test._uuid = None
             copied_test.options = copy.copy(self.options)
             copied_test.options.logsdir = os.path.join(copied_test.options.logsdir, str(nth))
+            copied_test.extra_logfiles = set()
             os.makedirs(copied_test.options.logsdir, exist_ok=True)
 
         return copied_test
