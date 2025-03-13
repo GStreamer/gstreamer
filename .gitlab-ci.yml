@@ -73,6 +73,9 @@ variables:
 
   FF_TIMESTAMPS: true
 
+  # Can set this as part of a schedule pipeline to test the gtk4 build if desired
+  # GTK_ARGS: "-Dgtk=enabled"
+
 workflow:
   # https://docs.gitlab.com/ee/ci/yaml/index.html#switch-between-branch-pipelines-and-merge-request-pipelines
   rules:
@@ -330,17 +333,6 @@ pre-commit checks:
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: manual
 
-# Check whether the gtk wrap had any changes, and if so, build it
-.gtk-build-rules:
-  rules:
-    - changes:
-        paths:
-          - ".gitlab-ci.yml"
-          - "meson.build"
-          - "subprojects/*.wrap"
-      variables:
-        GTK_ARGS: "-Dgtk=enabled"
-
 .build:
   stage: 'build'
   needs:
@@ -509,7 +501,6 @@ build debian x86_64:
       -Dgst-plugins-good:soup=enabled
       -Dgst-plugins-bad:d3d11-wgc=enabled
   rules:
-    - !reference [.gtk-build-rules, rules]
     - !reference [.upstream-branch-rules, rules]
     - changes:
         paths:
@@ -635,7 +626,6 @@ build macos:
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
     SUBPROJECTS_CACHE_DIR: "/Users/gst-ci/subprojects"
   rules:
-    - !reference [.gtk-build-rules, rules]
     - !reference [.upstream-branch-rules, rules]
     - changes:
         paths:
