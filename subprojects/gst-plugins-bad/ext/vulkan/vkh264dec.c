@@ -47,7 +47,6 @@ struct CData
 
 typedef struct _GstVulkanH264Decoder GstVulkanH264Decoder;
 typedef struct _GstVulkanH264DecoderClass GstVulkanH264DecoderClass;
-typedef struct _GstVulkanH264Decoder GstVulkanH264Decoder;
 typedef struct _GstVulkanH264Picture GstVulkanH264Picture;
 typedef struct _SPS SPS;
 typedef struct _PPS PPS;
@@ -1356,11 +1355,9 @@ gst_vulkan_h264_decoder_class_init (gpointer g_klass, gpointer class_data)
       GST_VULKAN_H264_DECODER_CLASS (g_klass);
   struct CData *cdata = class_data;
   gchar *long_name;
-  const gchar *name, *desc;
+  const gchar *name;
 
   name = "Vulkan H.264 decoder";
-  desc = "A H.264 video decoder based on Vulkan";
-
   if (cdata->description)
     long_name = g_strdup_printf ("%s on %s", name, cdata->description);
   else
@@ -1369,11 +1366,10 @@ gst_vulkan_h264_decoder_class_init (gpointer g_klass, gpointer class_data)
   vk_h264_class->device_index = cdata->device_index;
 
   gst_element_class_set_metadata (element_class, long_name,
-      "Codec/Decoder/Video/Hardware", desc,
+      "Codec/Decoder/Video/Hardware", "A H.264 video decoder based on Vulkan",
       "Víctor Jáquez <vjaquez@igalia.com>");
 
   parent_class = g_type_class_peek_parent (g_klass);
-
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_vulkan_h264dec_sink_template);
@@ -1410,6 +1406,10 @@ gst_vulkan_h264_decoder_class_init (gpointer g_klass, gpointer class_data)
       GST_DEBUG_FUNCPTR (gst_vulkan_h264_decoder_end_picture);
   h264decoder_class->output_picture =
       GST_DEBUG_FUNCPTR (gst_vulkan_h264_decoder_output_picture);
+
+  g_free (long_name);
+  g_free (cdata->description);
+  g_free (cdata);
 }
 
 gboolean
