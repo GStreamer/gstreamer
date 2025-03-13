@@ -136,10 +136,9 @@ gst_vulkan_sink_class_init (gpointer g_klass, gpointer class_data)
   element_class = GST_ELEMENT_CLASS (g_klass);
   struct CData *cdata = class_data;
   gchar *long_name;
-  const gchar *name, *desc;
+  const gchar *name;
 
   name = "Vulkan Video sink";
-  desc = "A videosink based on Vulkan";
 
   if (cdata->description)
     long_name = g_strdup_printf ("%s on %s", name, cdata->description);
@@ -167,7 +166,8 @@ gst_vulkan_sink_class_init (gpointer g_klass, gpointer class_data)
           GST_TYPE_VULKAN_DEVICE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (element_class, long_name,
-      "Sink/Video", desc, "Matthew Waters <matthew@centricular.com>");
+      "Sink/Video", "A videosink based on Vulkan",
+      "Matthew Waters <matthew@centricular.com>");
 
   parent_class = g_type_class_peek_parent (g_klass);
 
@@ -186,6 +186,10 @@ gst_vulkan_sink_class_init (gpointer g_klass, gpointer class_data)
 
   gstvideosink_class->show_frame =
       GST_DEBUG_FUNCPTR (gst_vulkan_sink_show_frame);
+
+  g_free (long_name);
+  g_free (cdata->description);
+  g_free (cdata);
 }
 
 static gpointer
