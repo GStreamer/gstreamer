@@ -1100,6 +1100,7 @@ gst_vtenc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   self->session = session;
   GST_OBJECT_UNLOCK (self);
 
+  g_atomic_int_set (&self->require_restart, FALSE);
   g_atomic_int_set (&self->require_reconfigure, FALSE);
 
   return session != NULL;
