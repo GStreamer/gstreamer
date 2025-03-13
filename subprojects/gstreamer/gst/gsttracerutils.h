@@ -1110,8 +1110,8 @@ _priv_gst_tracing_deinit (void)
 #define GST_TRACER_MEMORY_INIT(mem)
 #define GST_TRACER_MEMORY_FREE_PRE(mem)
 #define GST_TRACER_MEMORY_FREE_POST(mem)
-#define GST_TRACER_POOL_BUFFER_QUEUED(mem)
-#define GST_TRACER_POOL_BUFFER_DEQUEUED(mem)
+#define GST_TRACER_POOL_BUFFER_QUEUED(pool, buffer)
+#define GST_TRACER_POOL_BUFFER_DEQUEUED(pool, buffer)
 
 
 #endif /* GST_DISABLE_GST_TRACER_HOOKS */
