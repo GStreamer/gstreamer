@@ -45,6 +45,7 @@ jasper-devel
 ladspa-devel
 lame-devel
 liba52-devel
+libatomic
 libICE-devel
 libmpcdec-devel
 libnice-devel
