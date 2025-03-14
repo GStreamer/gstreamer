@@ -173,9 +173,11 @@ ges_effect_clip_set_property (GObject * object,
 
   switch (property_id) {
     case PROP_VIDEO_BIN_DESCRIPTION:
+      /* G_PARAM_CONSTRUCT_ONLY */
       self->priv->video_bin_description = g_value_dup_string (value);
       break;
     case PROP_AUDIO_BIN_DESCRIPTION:
+      /* G_PARAM_CONSTRUCT_ONLY */
       self->priv->audio_bin_description = g_value_dup_string (value);
       break;
     default:

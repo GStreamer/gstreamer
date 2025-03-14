@@ -160,6 +160,7 @@ gst_media_source_track_set_property (GObject * object, guint prop_id,
       self->track_type = g_value_get_enum (value);
       break;
     case PROP_TRACK_ID:
+      /* G_PARAM_CONSTRUCT_ONLY */
       self->track_id = g_value_dup_string (value);
       break;
     case PROP_ACTIVE:

@@ -444,6 +444,7 @@ ges_asset_set_property (GObject * object, guint property_id,
       ges_extractable_register_metas (asset->priv->extractable_type, asset);
       break;
     case PROP_ID:
+      /* G_PARAM_CONSTRUCT_ONLY */
       asset->priv->id = g_value_dup_string (value);
       break;
     case PROP_PROXY:

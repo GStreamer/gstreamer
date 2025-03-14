@@ -130,6 +130,7 @@ gst_mf_device_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE_PATH:
+      /* G_PARAM_CONSTRUCT_ONLY */
       g_value_set_string (value, self->device_path);
       break;
     default:

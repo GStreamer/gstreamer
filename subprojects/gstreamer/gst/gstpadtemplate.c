@@ -546,6 +546,7 @@ gst_pad_template_set_property (GObject * object, guint prop_id,
   /* these properties are all construct-only */
   switch (prop_id) {
     case PROP_NAME_TEMPLATE:
+      /* G_PARAM_CONSTRUCT_ONLY */
       GST_PAD_TEMPLATE_NAME_TEMPLATE (object) = g_value_dup_string (value);
       break;
     case PROP_DIRECTION:

@@ -168,12 +168,14 @@ gst_device_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DISPLAY_NAME:
+      /* G_PARAM_CONSTRUCT_ONLY */
       gstdevice->priv->display_name = g_value_dup_string (value);
       break;
     case PROP_CAPS:
       gst_caps_replace (&gstdevice->priv->caps, g_value_get_boxed (value));
       break;
     case PROP_DEVICE_CLASS:
+      /* G_PARAM_CONSTRUCT_ONLY */
       gstdevice->priv->device_class = g_value_dup_string (value);
       break;
     case PROP_PROPERTIES:

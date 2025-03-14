@@ -786,6 +786,7 @@ gst_ks_device_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PATH:
+      /* G_PARAM_CONSTRUCT_ONLY */
       device->path = g_value_dup_string (value);
       break;
     default:

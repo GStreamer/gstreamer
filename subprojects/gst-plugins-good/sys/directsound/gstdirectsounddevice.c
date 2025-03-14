@@ -257,6 +257,7 @@ gst_directsound_device_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE_GUID:
+      /* G_PARAM_CONSTRUCT_ONLY */
       device->guid = g_value_dup_string (value);
       break;
     default:
