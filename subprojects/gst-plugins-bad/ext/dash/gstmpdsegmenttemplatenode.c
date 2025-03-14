@@ -42,15 +42,19 @@ gst_mpd_segment_template_node_set_property (GObject * object, guint prop_id,
   GstMPDSegmentTemplateNode *self = GST_MPD_SEGMENT_TEMPLATE_NODE (object);
   switch (prop_id) {
     case PROP_MPD_SEGMENT_TEMPLATE_MEDIA:
+      g_free (self->media);
       self->media = g_value_dup_string (value);
       break;
     case PROP_MPD_SEGMENT_TEMPLATE_INDEX:
+      g_free (self->index);
       self->index = g_value_dup_string (value);
       break;
     case PROP_MPD_SEGMENT_TEMPLATE_INITIALIZATION:
+      g_free (self->initialization);
       self->initialization = g_value_dup_string (value);
       break;
     case PROP_MPD_SEGMENT_TEMPLATE_BITSTREAM_SWITCHING:
+      g_free (self->bitstreamSwitching);
       self->bitstreamSwitching = g_value_dup_string (value);
       break;
     default:
@@ -88,14 +92,10 @@ gst_mpd_segment_template_node_finalize (GObject * object)
 {
   GstMPDSegmentTemplateNode *self = GST_MPD_SEGMENT_TEMPLATE_NODE (object);
 
-  if (self->media)
-    xmlFree (self->media);
-  if (self->index)
-    xmlFree (self->index);
-  if (self->initialization)
-    xmlFree (self->initialization);
-  if (self->bitstreamSwitching)
-    xmlFree (self->bitstreamSwitching);
+  g_free (self->media);
+  g_free (self->index);
+  g_free (self->initialization);
+  g_free (self->bitstreamSwitching);
 
   G_OBJECT_CLASS (gst_mpd_segment_template_node_parent_class)->finalize
       (object);

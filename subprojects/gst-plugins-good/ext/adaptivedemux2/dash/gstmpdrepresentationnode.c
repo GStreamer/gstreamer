@@ -82,8 +82,7 @@ gst_mpd_representation_node_finalize (GObject * object)
 {
   GstMPDRepresentationNode *self = GST_MPD_REPRESENTATION_NODE (object);
 
-  if (self->id)
-    xmlFree (self->id);
+  g_free (self->id);
   g_strfreev (self->dependencyId);
   g_strfreev (self->mediaStreamStructureId);
   g_list_free_full (self->SubRepresentations,
