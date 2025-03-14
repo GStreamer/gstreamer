@@ -2023,21 +2023,6 @@ gst_decodebin_input_requires_parsebin (DecodebinInput * input,
   } else if (input->input_is_parsed) {
     GST_DEBUG_OBJECT (sinkpad, "input is parsed, no parsebin needed");
     parsebin_needed = FALSE;
-  } else {
-    GList *decoder_list;
-    /* If the incoming caps are compatible with a decoder, we don't need to
-     * process it before */
-    g_mutex_lock (&dbin->factories_lock);
-    gst_decode_bin_update_factories_list (dbin);
-    decoder_list =
-        gst_element_factory_list_filter (dbin->decoder_factories, newcaps,
-        GST_PAD_SINK, TRUE);
-    g_mutex_unlock (&dbin->factories_lock);
-    if (decoder_list) {
-      GST_FIXME_OBJECT (sinkpad, "parsebin not needed (available decoders) !");
-      gst_plugin_feature_list_free (decoder_list);
-      parsebin_needed = FALSE;
-    }
   }
   if (stream)
     gst_object_unref (stream);
