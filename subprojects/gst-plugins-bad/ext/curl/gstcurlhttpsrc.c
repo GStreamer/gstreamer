@@ -566,6 +566,7 @@ gst_curl_http_src_set_property (GObject * object, guint prop_id,
       source->strict_ssl = g_value_get_boolean (value);
       break;
     case PROP_SSL_CA_FILE:
+      g_free (source->custom_ca_file);
       source->custom_ca_file = g_value_dup_string (value);
       break;
     case PROP_RETRIES:
@@ -1476,6 +1477,11 @@ gst_curl_http_src_cleanup_instance (GstCurlHttpSrc * src)
   g_mutex_unlock (&src->uri_mutex);
   g_mutex_clear (&src->uri_mutex);
 
+  g_free (src->username);
+  src->username = NULL;
+  g_free (src->password);
+  src->password = NULL;
+
   g_free (src->proxy_uri);
   src->proxy_uri = NULL;
   g_free (src->no_proxy_list);
@@ -1494,6 +1500,9 @@ gst_curl_http_src_cleanup_instance (GstCurlHttpSrc * src)
 
   g_free (src->user_agent);
   src->user_agent = NULL;
+
+  g_free (src->custom_ca_file);
+  src->custom_ca_file = NULL;
 
   g_mutex_clear (&src->buffer_mutex);
 
