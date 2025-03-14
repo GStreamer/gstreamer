@@ -414,6 +414,7 @@ gst_gtk_wayland_sink_set_property (GObject * object, guint prop_id,
           FALSE);
       break;
     case PROP_DRM_DEVICE:
+      /* G_PARAM_CONSTRUCT_ONLY */
       GST_OBJECT_LOCK (self);
       priv->drm_device = g_value_dup_string (value);
       GST_OBJECT_UNLOCK (self);

@@ -253,6 +253,7 @@ gst_alsa_device_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_INTERNAL_NAME:
+      /* G_PARAM_CONSTRUCT_ONLY */
       device->internal_name = g_value_dup_string (value);
       break;
     default:

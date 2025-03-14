@@ -513,6 +513,7 @@ _set_property (GESProject * project, guint property_id,
 {
   switch (property_id) {
     case PROP_URI:
+      /* G_PARAM_CONSTRUCT_ONLY */
       GES_PROJECT_LOCK (project);
       project->priv->uri = g_value_dup_string (value);
       GES_PROJECT_UNLOCK (project);

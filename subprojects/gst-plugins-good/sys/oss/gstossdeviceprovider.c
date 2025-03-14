@@ -223,6 +223,7 @@ gst_oss_device_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE_PATH:
+      /* G_PARAM_CONSTRUCT_ONLY */
       device->device_path = g_value_dup_string (value);
       break;
     default:

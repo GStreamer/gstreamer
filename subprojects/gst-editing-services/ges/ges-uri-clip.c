@@ -110,6 +110,7 @@ ges_uri_clip_set_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_URI:
+      /* G_PARAM_CONSTRUCT_ONLY */
       ges_uri_clip_set_uri (uriclip, g_value_dup_string (value));
       break;
     case PROP_MUTE:

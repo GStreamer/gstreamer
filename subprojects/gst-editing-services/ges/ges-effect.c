@@ -172,6 +172,7 @@ ges_effect_set_property (GObject * object,
 
   switch (property_id) {
     case PROP_BIN_DESCRIPTION:
+      /* G_PARAM_CONSTRUCT_ONLY */
       self->priv->bin_description = g_value_dup_string (value);
       break;
     default:

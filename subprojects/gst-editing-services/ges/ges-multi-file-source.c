@@ -98,6 +98,7 @@ ges_multi_file_source_set_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_URI:
+      /* G_PARAM_CONSTRUCT_ONLY */
       uriclip->uri = g_value_dup_string (value);
       break;
     default:

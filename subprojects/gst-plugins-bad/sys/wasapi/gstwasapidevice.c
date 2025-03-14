@@ -353,6 +353,7 @@ gst_wasapi_device_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE_STRID:
+      /* G_PARAM_CONSTRUCT_ONLY */
       device->strid = g_value_dup_string (value);
       break;
     default:
