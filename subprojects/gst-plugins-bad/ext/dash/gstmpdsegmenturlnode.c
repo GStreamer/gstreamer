@@ -69,8 +69,7 @@ gst_mpd_segment_url_node_finalize (GObject * object)
 {
   GstMPDSegmentURLNode *self = GST_MPD_SEGMENT_URL_NODE (object);
 
-  if (self->media)
-    xmlFree (self->media);
+  g_free (self->media);
   g_slice_free (GstXMLRange, self->mediaRange);
   if (self->index)
     xmlFree (self->index);

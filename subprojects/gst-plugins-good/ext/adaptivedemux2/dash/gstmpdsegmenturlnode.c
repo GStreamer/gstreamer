@@ -69,8 +69,7 @@ gst_mpd_segment_url_node_finalize (GObject * object)
 {
   GstMPDSegmentURLNode *self = GST_MPD_SEGMENT_URL_NODE (object);
 
-  if (self->media)
-    xmlFree (self->media);
+  g_free (self->media);
   g_free (self->mediaRange);
   if (self->index)
     xmlFree (self->index);
@@ -156,7 +155,7 @@ gst_mpd_segment_url_node_clone (GstMPDSegmentURLNode * seg_url)
 
   if (seg_url) {
     clone = gst_mpd_segment_url_node_new ();
-    clone->media = xmlMemStrdup (seg_url->media);
+    clone->media = g_strdup (seg_url->media);
     clone->mediaRange = gst_xml_helper_clone_range (seg_url->mediaRange);
     clone->index = xmlMemStrdup (seg_url->index);
     clone->indexRange = gst_xml_helper_clone_range (seg_url->indexRange);
