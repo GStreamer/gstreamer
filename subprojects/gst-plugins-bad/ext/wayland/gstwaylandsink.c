@@ -294,6 +294,7 @@ gst_wayland_sink_set_property (GObject * object,
   switch (prop_id) {
     case PROP_DISPLAY:
       GST_OBJECT_LOCK (self);
+      g_free (self->display_name);
       self->display_name = g_value_dup_string (value);
       GST_OBJECT_UNLOCK (self);
       break;
@@ -307,6 +308,7 @@ gst_wayland_sink_set_property (GObject * object,
           FALSE);
       break;
     case PROP_DRM_DEVICE:
+      /* G_PARAM_CONSTRUCT_ONLY */
       GST_OBJECT_LOCK (self);
       self->drm_device = g_value_dup_string (value);
       GST_OBJECT_UNLOCK (self);
