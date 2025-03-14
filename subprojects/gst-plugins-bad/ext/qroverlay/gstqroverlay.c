@@ -121,6 +121,16 @@ get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
 }
 
 static void
+gst_qr_overlay_finalize (GObject * object)
+{
+  GstQROverlay *self = GST_QR_OVERLAY (object);
+
+  g_free (self->data);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
 gst_qr_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -129,6 +139,7 @@ gst_qr_overlay_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DATA:
       GST_OBJECT_LOCK (self);
+      g_free (self->data);
       self->data = g_value_dup_string (value);
       self->data_changed = TRUE;
       GST_OBJECT_UNLOCK (self);
@@ -164,7 +175,7 @@ gst_qr_overlay_class_init (GstQROverlayClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-
+  gobject_class->finalize = gst_qr_overlay_finalize;
   gobject_class->set_property = gst_qr_overlay_set_property;
   gobject_class->get_property = gst_qr_overlay_get_property;
 

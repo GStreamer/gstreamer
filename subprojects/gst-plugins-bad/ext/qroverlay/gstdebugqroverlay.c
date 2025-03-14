@@ -102,6 +102,7 @@ GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (debugqroverlay, "debugqroverlay",
     GST_RANK_NONE, GST_TYPE_DEBUG_QR_OVERLAY, qroverlay_element_init (plugin));
 
 
+static void gst_debug_qr_overlay_finalize (GObject * object);
 static void gst_debug_qr_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_debug_qr_overlay_get_property (GObject * object, guint prop_id,
@@ -120,6 +121,7 @@ gst_debug_qr_overlay_class_init (GstDebugQROverlayClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_debug_qr_overlay_debug, "debugqroverlay", 0,
       "Qrcode overlay element");
 
+  gobject_class->finalize = gst_debug_qr_overlay_finalize;
   gobject_class->set_property = gst_debug_qr_overlay_set_property;
   gobject_class->get_property = gst_debug_qr_overlay_get_property;
 
@@ -178,6 +180,18 @@ gst_debug_qr_overlay_init (GstDebugQROverlay * filter)
 }
 
 static void
+gst_debug_qr_overlay_finalize (GObject * object)
+{
+  GstDebugQROverlay *filter = GST_DEBUG_QR_OVERLAY (object);
+
+  g_free (filter->extra_data_name);
+  g_free (filter->extra_data_str);
+  g_strfreev (filter->extra_data_array);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
 gst_debug_qr_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -191,6 +205,7 @@ gst_debug_qr_overlay_set_property (GObject * object, guint prop_id,
       filter->extra_data_span_buffers = g_value_get_int64 (value);
       break;
     case PROP_EXTRA_DATA_NAME:
+      g_clear_pointer (&filter->extra_data_name, g_free);
       filter->extra_data_name = g_value_dup_string (value);
       break;
     case PROP_EXTRA_DATA_ARRAY:
