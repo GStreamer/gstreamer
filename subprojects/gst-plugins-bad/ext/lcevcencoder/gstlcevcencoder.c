@@ -213,6 +213,7 @@ gst_lcevc_encoder_finalize (GObject * obj)
   GstLcevcEncoderPrivate *priv = gst_lcevc_encoder_get_instance_private (eil);
 
   g_clear_pointer (&priv->plugin_name, g_free);
+  g_clear_pointer (&priv->plugin_props, g_free);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
