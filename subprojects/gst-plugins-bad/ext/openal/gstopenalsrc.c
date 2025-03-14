@@ -232,9 +232,11 @@ gst_openal_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE:
+      g_free (openalsrc->default_device);
       openalsrc->default_device = g_value_dup_string (value);
       break;
     case PROP_DEVICE_NAME:
+      g_free (openalsrc->default_device_name);
       openalsrc->default_device_name = g_value_dup_string (value);
       break;
     default:
