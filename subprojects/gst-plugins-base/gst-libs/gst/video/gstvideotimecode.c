@@ -183,7 +183,9 @@ gst_video_time_code_to_date_time (const GstVideoTimeCode * tc)
 {
   GDateTime *ret;
   GDateTime *ret2;
-  gdouble add_us;
+  guint64 nseconds;
+  gdouble seconds;
+  gint hours, minutes;
 
   g_return_val_if_fail (gst_video_time_code_is_valid (tc), NULL);
 
@@ -198,22 +200,30 @@ gst_video_time_code_to_date_time (const GstVideoTimeCode * tc)
 
   ret = g_date_time_ref (tc->config.latest_daily_jam);
 
-  gst_util_fraction_to_double (tc->frames * tc->config.fps_d, tc->config.fps_n,
-      &add_us);
+  nseconds = gst_video_time_code_nsec_since_daily_jam (tc);
+
+  hours = nseconds / GST_SECOND / 60 / 60;
+  nseconds -= hours * GST_SECOND * 60 * 60;
+
+  minutes = nseconds / GST_SECOND / 60;
+  nseconds -= minutes * GST_SECOND * 60;
+
+  seconds = nseconds / 1000000000.0;
+
   if ((tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_INTERLACED)
       && tc->field_count == 1) {
-    gdouble sub_us;
+    gdouble sub_s;
 
     gst_util_fraction_to_double (tc->config.fps_d, 2 * tc->config.fps_n,
-        &sub_us);
-    add_us -= sub_us;
+        &sub_s);
+    seconds -= sub_s;
   }
 
-  ret2 = g_date_time_add_seconds (ret, add_us + tc->seconds);
+  ret2 = g_date_time_add_seconds (ret, seconds);
   g_date_time_unref (ret);
-  ret = g_date_time_add_minutes (ret2, tc->minutes);
+  ret = g_date_time_add_minutes (ret2, minutes);
   g_date_time_unref (ret2);
-  ret2 = g_date_time_add_hours (ret, tc->hours);
+  ret2 = g_date_time_add_hours (ret, hours);
   g_date_time_unref (ret);
 
   return ret2;

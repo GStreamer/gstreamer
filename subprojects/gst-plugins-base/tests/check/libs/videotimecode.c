@@ -337,6 +337,63 @@ GST_START_TEST (videotimecode_dailyjam_todatetime)
   gst_video_time_code_free (tc1);
   g_date_time_unref (dt2);
   g_date_time_unref (dt1);
+
+  dt1 = g_date_time_new_utc (2016, 7, 29, 0, 0, 0);
+
+  tc1 =
+      gst_video_time_code_new (30000, 1001, dt1,
+      GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME, 1, 4, 0, 2, 0);
+  /* 1 hour, 4 minutes, 0 seconds, and 2 frames
+   *
+   * Note: timecodes with 0 and 1 frames do not exist every full minute
+   * except for every 10th minute!
+   */
+  fail_unless (gst_video_time_code_is_valid (tc1));
+  fail_unless (tc1->hours == 1);
+  fail_unless (tc1->minutes == 4);
+  fail_unless (tc1->seconds == 0);
+  fail_unless (tc1->frames == 2);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc1),
+      115086);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc1),
+      3840036200000);
+
+  dt2 = gst_video_time_code_to_date_time (tc1);
+  fail_unless (g_date_time_get_year (dt2) == 2016);
+  fail_unless (g_date_time_get_month (dt2) == 7);
+  fail_unless (g_date_time_get_day_of_month (dt2) == 29);
+  fail_unless (g_date_time_get_hour (dt2) == 1);
+  fail_unless (g_date_time_get_minute (dt2) == 4);
+  fail_unless_equals_float (g_date_time_get_seconds (dt2), 0.0362);
+  g_date_time_unref (dt2);
+
+  /* 1 hour, 3 minutes, 59 seconds, and 29 frames
+   *
+   * Note: timecodes with 0 and 1 frames do not exist every full minute
+   * except for every 10th minute!
+   */
+  gst_video_time_code_add_frames (tc1, -1);
+  fail_unless (gst_video_time_code_is_valid (tc1));
+  fail_unless (tc1->hours == 1);
+  fail_unless (tc1->minutes == 3);
+  fail_unless (tc1->seconds == 59);
+  fail_unless (tc1->frames == 29);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc1),
+      115085);
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc1),
+      3840002833333);
+
+  dt2 = gst_video_time_code_to_date_time (tc1);
+  fail_unless (g_date_time_get_year (dt2) == 2016);
+  fail_unless (g_date_time_get_month (dt2) == 7);
+  fail_unless (g_date_time_get_day_of_month (dt2) == 29);
+  fail_unless (g_date_time_get_hour (dt2) == 1);
+  fail_unless (g_date_time_get_minute (dt2) == 4);
+  fail_unless_equals_float (g_date_time_get_seconds (dt2), 0.002833);
+
+  gst_video_time_code_free (tc1);
+  g_date_time_unref (dt2);
+  g_date_time_unref (dt1);
 }
 
 GST_END_TEST;
