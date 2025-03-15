@@ -453,6 +453,7 @@ void gst_aja_sink_finalize(GObject *object) {
   g_assert(self->device == NULL);
   g_assert(gst_vec_deque_get_length(self->queue) == 0);
   g_clear_pointer(&self->queue, gst_vec_deque_free);
+  g_free(self->device_identifier);
 
   g_mutex_clear(&self->queue_lock);
   g_cond_clear(&self->queue_cond);
