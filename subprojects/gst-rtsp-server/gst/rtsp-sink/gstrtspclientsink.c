@@ -955,6 +955,10 @@ gst_rtsp_client_sink_finalize (GObject * object)
   g_free (rtsp_client_sink->user_pw);
   g_free (rtsp_client_sink->multi_iface);
   g_free (rtsp_client_sink->user_agent);
+  g_free (rtsp_client_sink->prop_proxy_id);
+  g_free (rtsp_client_sink->prop_proxy_pw);
+  g_free (rtsp_client_sink->proxy_user);
+  g_free (rtsp_client_sink->proxy_passwd);
 
   if (rtsp_client_sink->pool) {
     gst_object_unref (rtsp_client_sink->pool);
