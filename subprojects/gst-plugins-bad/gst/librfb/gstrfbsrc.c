@@ -287,7 +287,8 @@ gst_rfb_src_set_property (GObject * object, guint prop_id,
       break;
     }
     case PROP_HOST:
-      src->host = g_value_dup_string (value);;
+      g_free (src->host);
+      src->host = g_value_dup_string (value);
       break;
     case PROP_PORT:
       src->port = g_value_get_int (value);
