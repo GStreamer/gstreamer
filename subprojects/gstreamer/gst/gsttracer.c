@@ -114,6 +114,7 @@ gst_tracer_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PARAMS:
+      g_free (self->priv->params);
       self->priv->params = g_value_dup_string (value);
       break;
     default:
