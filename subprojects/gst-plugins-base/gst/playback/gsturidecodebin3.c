@@ -1586,6 +1586,7 @@ gst_uri_decode_bin3_set_property (GObject * object, guint prop_id,
       dec->download = g_value_get_boolean (value);
       break;
     case PROP_DOWNLOAD_DIR:
+      g_free (dec->download_dir);
       dec->download_dir = g_value_dup_string (value);
       break;
     case PROP_USE_BUFFERING:
