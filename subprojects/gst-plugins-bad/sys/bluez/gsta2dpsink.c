@@ -121,6 +121,17 @@ cleanup_and_fail:
 }
 
 static void
+gst_a2dp_sink_finalize (GObject * object)
+{
+  GstA2dpSink *self = GST_A2DP_SINK (object);
+
+  g_free (self->device);
+  g_free (self->transport);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
 gst_a2dp_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -281,6 +292,7 @@ gst_a2dp_sink_class_init (GstA2dpSinkClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  object_class->finalize = GST_DEBUG_FUNCPTR (gst_a2dp_sink_finalize);
   object_class->set_property = GST_DEBUG_FUNCPTR (gst_a2dp_sink_set_property);
   object_class->get_property = GST_DEBUG_FUNCPTR (gst_a2dp_sink_get_property);
 
