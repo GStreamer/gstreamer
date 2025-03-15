@@ -95,6 +95,7 @@ GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (faceoverlay, "faceoverlay",
         "SVG Face Overlay");
     );
 
+static void gst_face_overlay_finalize (GObject * object);
 static void gst_face_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_face_overlay_get_property (GObject * object, guint prop_id,
@@ -289,6 +290,7 @@ gst_face_overlay_class_init (GstFaceOverlayClass * klass)
   gstbin_class = GST_BIN_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
 
+  gobject_class->finalize = gst_face_overlay_finalize;
   gobject_class->set_property = gst_face_overlay_set_property;
   gobject_class->get_property = gst_face_overlay_get_property;
 
@@ -354,6 +356,16 @@ gst_face_overlay_init (GstFaceOverlay * filter)
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
   gst_face_overlay_create_children (filter);
+}
+
+static void
+gst_face_overlay_finalize (GObject * object)
+{
+  GstFaceOverlay *filter = GST_FACEOVERLAY (object);
+
+  g_free (filter->location);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
