@@ -3456,6 +3456,8 @@ gst_gl_upload_fixate_caps (GstGLUpload * upload, GstPadDirection direction,
   ret_caps = gst_caps_fixate (othercaps);
 
 out:
-  GST_DEBUG_OBJECT (upload, "Fixate return %" GST_PTR_FORMAT, ret_caps);
+  GST_INFO_OBJECT (upload, "Fixate return %" GST_PTR_FORMAT " using caps %"
+      GST_PTR_FORMAT ", direction is %s.", ret_caps, caps,
+      direction == GST_PAD_SRC ? "src" : "sink");
   return ret_caps;
 }
