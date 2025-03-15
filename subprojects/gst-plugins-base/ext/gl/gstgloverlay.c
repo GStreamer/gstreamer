@@ -72,6 +72,7 @@ GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gloverlay, "gloverlay",
 static gboolean gst_gl_overlay_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
 
+static void gst_gl_overlay_finalize (GObject * object);
 static void gst_gl_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_overlay_get_property (GObject * object, guint prop_id,
@@ -203,6 +204,7 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
 
   gst_gl_filter_add_rgba_pad_templates (GST_GL_FILTER_CLASS (klass));
 
+  gobject_class->finalize = gst_gl_overlay_finalize;
   gobject_class->set_property = gst_gl_overlay_set_property;
   gobject_class->get_property = gst_gl_overlay_get_property;
 
@@ -286,6 +288,16 @@ gst_gl_overlay_init (GstGLOverlay * overlay)
   overlay->overlay_height = 0;
 
   overlay->alpha = 1.0;
+}
+
+static void
+gst_gl_overlay_finalize (GObject * object)
+{
+  GstGLOverlay *overlay = GST_GL_OVERLAY (object);
+
+  g_free (overlay->location);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

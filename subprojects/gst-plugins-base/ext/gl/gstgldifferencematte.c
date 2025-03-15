@@ -62,6 +62,7 @@ G_DEFINE_TYPE_WITH_CODE (GstGLDifferenceMatte, gst_gl_differencematte,
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gldifferencematte, "gldifferencematte",
     GST_RANK_NONE, GST_TYPE_GL_DIFFERENCEMATTE, gl_element_init (plugin));
 
+static void gst_gl_differencematte_finalize (GObject * object);
 static void gst_gl_differencematte_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_gl_differencematte_get_property (GObject * object,
@@ -215,8 +216,10 @@ gst_gl_differencematte_gl_stop (GstGLBaseFilter * base_filter)
       differencematte->midtexture[i] = NULL;
     }
   }
-  differencematte->location = NULL;
-  differencematte->pixbuf = NULL;
+  if (differencematte->pixbuf) {
+    free (differencematte->pixbuf);
+    differencematte->pixbuf = NULL;
+  }
   differencematte->bg_has_changed = FALSE;
 
   GST_GL_BASE_FILTER_CLASS (parent_class)->gl_stop (base_filter);
@@ -233,6 +236,7 @@ gst_gl_differencematte_class_init (GstGLDifferenceMatteClass * klass)
 
   gst_gl_filter_add_rgba_pad_templates (GST_GL_FILTER_CLASS (klass));
 
+  gobject_class->finalize = gst_gl_differencematte_finalize;
   gobject_class->set_property = gst_gl_differencematte_set_property;
   gobject_class->get_property = gst_gl_differencematte_get_property;
 
@@ -272,6 +276,16 @@ gst_gl_differencematte_init (GstGLDifferenceMatte * differencematte)
   differencematte->bg_has_changed = FALSE;
 
   fill_gaussian_kernel (differencematte->kernel, 7, 30.0);
+}
+
+static void
+gst_gl_differencematte_finalize (GObject * object)
+{
+  GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (object);
+
+  g_free (differencematte->location);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
