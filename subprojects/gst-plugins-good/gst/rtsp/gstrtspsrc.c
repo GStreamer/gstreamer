@@ -1842,6 +1842,10 @@ gst_rtspsrc_finalize (GObject * object)
   g_free (rtspsrc->user_pw);
   g_free (rtspsrc->multi_iface);
   g_free (rtspsrc->user_agent);
+  g_free (rtspsrc->prop_proxy_id);
+  g_free (rtspsrc->prop_proxy_pw);
+  g_free (rtspsrc->proxy_user);
+  g_free (rtspsrc->proxy_passwd);
 
   if (rtspsrc->sdp) {
     gst_sdp_message_free (rtspsrc->sdp);
