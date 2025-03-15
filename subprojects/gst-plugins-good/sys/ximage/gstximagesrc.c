@@ -1092,6 +1092,7 @@ gst_ximage_src_finalize (GObject * object)
   if (src->xcontext)
     ximageutil_xcontext_clear (src->xcontext);
 
+  g_free (src->display_name);
   g_free (src->xname);
   g_mutex_clear (&src->pool_lock);
   g_mutex_clear (&src->x_lock);
