@@ -328,7 +328,7 @@ rust plugins in `gst-build` (`rs` option), you would do:
 meson -Drs=disabled <build-directory>
 ```
 
-You can also peek at the `meson_options.txt` files and `subproject/xyz/meson_options.txt`
+You can also peek at the `meson.options` files and `subproject/xyz/meson.options`
 files which is where the various project specific build options are listed.
 These do not include all the standard Meson options however.
 
