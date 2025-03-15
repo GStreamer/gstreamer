@@ -157,6 +157,12 @@ gst_qt_moov_recover_init (GstQTMoovRecover * qtmr)
 static void
 gst_qt_moov_recover_finalize (GObject * object)
 {
+  GstQTMoovRecover *qtmr = GST_QT_MOOV_RECOVER_CAST (object);
+
+  g_free (qtmr->broken_input);
+  g_free (qtmr->recovery_input);
+  g_free (qtmr->fixed_output);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
