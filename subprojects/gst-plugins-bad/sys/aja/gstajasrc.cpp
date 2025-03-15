@@ -582,6 +582,7 @@ void gst_aja_src_finalize(GObject *object) {
   g_assert(self->device == NULL);
   g_assert(gst_vec_deque_get_length(self->queue) == 0);
   g_clear_pointer(&self->queue, gst_vec_deque_free);
+  g_free(self->device_identifier);
 
   gst_clear_object(&self->clock);
 
