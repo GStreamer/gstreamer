@@ -896,6 +896,7 @@ gst_jack_audio_src_dispose (GObject * object)
   }
 
   g_clear_pointer (&src->port_names, g_free);
+  g_clear_pointer (&src->server, g_free);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
