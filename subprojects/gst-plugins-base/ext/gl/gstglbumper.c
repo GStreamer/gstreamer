@@ -65,6 +65,7 @@ G_DEFINE_TYPE_WITH_CODE (GstGLBumper, gst_gl_bumper, GST_TYPE_GL_FILTER,
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glbumper, "glbumper",
     GST_RANK_NONE, GST_TYPE_GL_BUMPER, gl_element_init (plugin));
 
+static void gst_gl_bumper_finalize (GObject * object);
 static void gst_gl_bumper_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_bumper_get_property (GObject * object, guint prop_id,
@@ -281,6 +282,7 @@ gst_gl_bumper_class_init (GstGLBumperClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
+  gobject_class->finalize = gst_gl_bumper_finalize;
   gobject_class->set_property = gst_gl_bumper_set_property;
   gobject_class->get_property = gst_gl_bumper_get_property;
 
@@ -314,6 +316,16 @@ gst_gl_bumper_init (GstGLBumper * bumper)
   bumper->bumpmap_width = 0;
   bumper->bumpmap_height = 0;
   bumper->location = NULL;
+}
+
+static void
+gst_gl_bumper_finalize (GObject * object)
+{
+  GstGLBumper *bumper = GST_GL_BUMPER (object);
+
+  g_free (bumper->location);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
