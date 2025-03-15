@@ -83,6 +83,7 @@ rfb_decoder_free (RfbDecoder * decoder)
   g_clear_object (&decoder->socket_client);
   g_clear_object (&decoder->cancellable);
   g_mutex_clear (&decoder->write_lock);
+  g_free (decoder->password);
   g_free (decoder);
 }
 
