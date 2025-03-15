@@ -664,16 +664,16 @@ GST_START_TEST (videotimecode_validation)
   /* disallowed unknown frame rate */
   CHECK_TC (0, 1, FALSE, 0, 0, 0, 0, FALSE);
   /* disallowed fractional frame rate */
-  CHECK_TC (90000, 1001, FALSE, 0, 0, 0, 0, FALSE);
+  CHECK_TC (50000, 1001, FALSE, 0, 0, 0, 0, FALSE);
   /* allowed fractional frame rate */
   CHECK_TC (24000, 1001, FALSE, 0, 0, 0, 0, TRUE);
   /* allowed frame rate less than 1 FPS */
   CHECK_TC (900, 1000, FALSE, 0, 0, 0, 0, TRUE);
+  CHECK_TC (1, 4, FALSE, 0, 0, 0, 0, TRUE);
+  CHECK_TC (1, 4, FALSE, 0, 0, 2, 0, FALSE);
+  CHECK_TC (1, 4, FALSE, 0, 0, 4, 0, TRUE);
   /* allowed integer frame rate */
   CHECK_TC (9000, 100, FALSE, 0, 0, 0, 0, TRUE);
-  /* TODO: CHECK_TC (60060, 1001, FALSE, 0, 0, 0, 0, TRUE);
-   * https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/2823
-   */
 
   /* 'hours' >= 24 */
   CHECK_TC (60, 1, FALSE, 28, 1, 2, 3, FALSE);
@@ -683,7 +683,6 @@ GST_START_TEST (videotimecode_validation)
   CHECK_TC (25, 1, FALSE, 0, 1, 234, 5, FALSE);
   /* 'frames' >= FPS */
   CHECK_TC (24, 1, FALSE, 0, 1, 2, 34, FALSE);
-  /* TODO Add tests for dis-/allowed 'seconds' when FPS<1.0 */
 
   /* 23.976 is not a drop-frame frame rate */
   CHECK_TC (24000, 1001, TRUE, 0, 0, 0, 11, FALSE);
