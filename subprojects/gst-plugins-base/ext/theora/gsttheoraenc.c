@@ -1137,6 +1137,7 @@ theora_enc_set_property (GObject * object, guint prop_id,
       enc->rate_buffer = g_value_get_int (value);
       break;
     case PROP_MULTIPASS_CACHE_FILE:
+      g_free (enc->multipass_cache_file);
       enc->multipass_cache_file = g_value_dup_string (value);
       break;
     case PROP_MULTIPASS_MODE:
