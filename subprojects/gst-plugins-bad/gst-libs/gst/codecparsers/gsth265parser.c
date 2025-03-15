@@ -71,6 +71,8 @@
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbitreader.h>
 
+#define MAX_DPB_SIZE 16
+
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_h265_debug_category_get()
 static GstDebugCategory *
@@ -1895,7 +1897,7 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
   for (i =
       (vps->sub_layer_ordering_info_present_flag ? 0 :
           vps->max_sub_layers_minus1); i <= vps->max_sub_layers_minus1; i++) {
-    READ_UE_MAX (&nr, vps->max_dec_pic_buffering_minus1[i], G_MAXUINT32 - 1);
+    READ_UE_MAX (&nr, vps->max_dec_pic_buffering_minus1[i], MAX_DPB_SIZE - 1);
     READ_UE_MAX (&nr, vps->max_num_reorder_pics[i],
         vps->max_dec_pic_buffering_minus1[i]);
     READ_UE_MAX (&nr, vps->max_latency_increase_plus1[i], G_MAXUINT32 - 1);
@@ -2082,7 +2084,7 @@ gst_h265_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
   for (i =
       (sps->sub_layer_ordering_info_present_flag ? 0 :
           sps->max_sub_layers_minus1); i <= sps->max_sub_layers_minus1; i++) {
-    READ_UE_MAX (&nr, sps->max_dec_pic_buffering_minus1[i], 16);
+    READ_UE_MAX (&nr, sps->max_dec_pic_buffering_minus1[i], MAX_DPB_SIZE - 1);
     READ_UE_MAX (&nr, sps->max_num_reorder_pics[i],
         sps->max_dec_pic_buffering_minus1[i]);
     READ_UE_MAX (&nr, sps->max_latency_increase_plus1[i], G_MAXUINT32 - 1);
