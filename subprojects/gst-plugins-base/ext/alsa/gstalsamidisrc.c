@@ -308,6 +308,7 @@ G_DEFINE_TYPE_WITH_CODE (GstAlsaMidiSrc, gst_alsa_midi_src, GST_TYPE_PUSH_SRC,
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (alsamidisrc, "alsamidisrc",
     GST_RANK_PRIMARY, GST_TYPE_ALSA_MIDI_SRC, alsa_element_init (plugin));
 
+static void gst_alsa_midi_src_finalize (GObject * object);
 static void gst_alsa_midi_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_alsa_midi_src_get_property (GObject * object, guint prop_id,
@@ -336,6 +337,7 @@ gst_alsa_midi_src_class_init (GstAlsaMidiSrcClass * klass)
   gstbase_src_class = GST_BASE_SRC_CLASS (klass);
   gstpush_src_class = GST_PUSH_SRC_CLASS (klass);
 
+  gobject_class->finalize = gst_alsa_midi_src_finalize;
   gobject_class->set_property = gst_alsa_midi_src_set_property;
   gobject_class->get_property = gst_alsa_midi_src_get_property;
 
@@ -367,6 +369,16 @@ gst_alsa_midi_src_init (GstAlsaMidiSrc * alsamidisrc)
 
   gst_base_src_set_format (GST_BASE_SRC (alsamidisrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (alsamidisrc), TRUE);
+}
+
+static void
+gst_alsa_midi_src_finalize (GObject * object)
+{
+  GstAlsaMidiSrc *src = GST_ALSA_MIDI_SRC (object);
+
+  g_free (src->ports);
+
+  G_OBJECT_CLASS (gst_alsa_midi_src_parent_class)->finalize (object);
 }
 
 static void
@@ -621,7 +633,6 @@ gst_alsa_midi_src_stop (GstBaseSrc * basesrc)
     gst_poll_free (alsamidisrc->poll);
     alsamidisrc->poll = NULL;
   }
-  g_free (alsamidisrc->ports);
   g_free (alsamidisrc->buffer);
   snd_midi_event_free (alsamidisrc->parser);
   g_free (alsamidisrc->seq_ports);
