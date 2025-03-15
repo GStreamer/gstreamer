@@ -415,6 +415,7 @@ gst_frei0r_set_property (f0r_instance_t * instance, GstFrei0rFuncTable * ftable,
       /* Copies the string */
       if (instance)
         ftable->set_param_value (instance, s, prop->prop_idx);
+      g_free (property_cache[prop->prop_idx].data.s);
       property_cache[prop->prop_idx].data.s = s;
       break;
     }
