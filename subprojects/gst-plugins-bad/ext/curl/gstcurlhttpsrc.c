@@ -1973,7 +1973,13 @@ gst_curl_http_src_get_header (void *header, size_t size, size_t nmemb,
   GstCurlHttpSrc *s = src;
   char *substr;
 
-  GST_DEBUG_OBJECT (s, "Received header: %s", (char *) header);
+  if (nmemb == 2) {
+    /* blank header, skip */
+    return size * nmemb;
+  }
+
+  GST_DEBUG_OBJECT (s, "Received header: %.*s", (int) nmemb - 2,
+      (char *) header);
 
   g_mutex_lock (&s->buffer_mutex);
 
@@ -2015,6 +2021,7 @@ gst_curl_http_src_get_header (void *header, size_t size, size_t nmemb,
           (guint) g_ascii_strtoll (status_line_fields[1], NULL, 10);
       g_free (s->reason_phrase);
       s->reason_phrase = g_strdup (status_line_fields[2]);
+      g_strchomp (s->reason_phrase);
       GST_INFO_OBJECT (s, "Received status %u for request for URI %s: %s",
           s->status_code, s->uri, s->reason_phrase);
       gst_structure_set (s->http_headers, HTTP_STATUS_CODE,
