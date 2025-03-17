@@ -1697,6 +1697,20 @@ gst_curl_http_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
 
   src->request_position = segment->start;
   src->stop_position = segment->stop;
+
+  if (src->transfer_begun) {
+    GST_DEBUG_OBJECT (src, "stopping existing transfer");
+    g_mutex_unlock (&src->buffer_mutex);
+    gst_curl_http_src_wait_until_removed (src);
+    g_mutex_lock (&src->buffer_mutex);
+    src->transfer_begun = FALSE;
+    if (src->buffer_len > 0) {
+      g_free (src->buffer);
+      src->buffer = NULL;
+      src->buffer_len = 0;
+    }
+  }
+
 done:
   g_mutex_unlock (&src->buffer_mutex);
   return ret;
