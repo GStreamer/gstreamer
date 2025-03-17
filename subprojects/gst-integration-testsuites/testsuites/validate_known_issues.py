@@ -166,20 +166,6 @@ KNOWN_ISSUES = {
             },
         ],
     },
-    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/4666": {
-        "tests": [
-            "validate.http.*ogv",
-            "validate.http.*ogg",
-        ],
-        "issues": [
-            {
-                "summary": "We got an ERROR message on the bus",
-                "level": "critical",
-                "details": ".*Could not decode stream.*",
-                "sometimes": True,
-            },
-        ]
-    },
     "Our asf file is basically broken": {
         "tests": [
             "validate.file.transcode.*.samples_multimedia_cx_asf_wmv_elephant_asf",
