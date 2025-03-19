@@ -641,6 +641,7 @@ gst_image_freeze_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* fall-through */
     case GST_EVENT_SEGMENT:
       GST_DEBUG_OBJECT (pad, "Dropping event");
+      self->seqnum = GST_EVENT_SEQNUM (event);
       gst_event_unref (event);
       ret = TRUE;
       break;
