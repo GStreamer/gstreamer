@@ -10100,8 +10100,7 @@ qtdemux_merge_sample_table (GstQTDemux * qtdemux, QtDemuxStream * stream)
       num_chunks);
 
   if (gst_byte_reader_get_remaining (&stream->stsc) <
-      stream->n_samples_per_chunk * 3 * 4 +
-      (stream->n_samples_per_chunk - 1) * 4) {
+      stream->n_samples_per_chunk * 3 * 4) {
     GST_DEBUG_OBJECT (qtdemux, "Too small stsc");
     return;
   }
