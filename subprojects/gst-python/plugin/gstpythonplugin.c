@@ -53,8 +53,6 @@ gstpy_module_symbol (gpointer handle, const char *name, gpointer * symbol)
 }
 #endif
 
-void *_PyGstElement_Type;
-
 GST_DEBUG_CATEGORY_STATIC (pyplugindebug);
 #define GST_CAT_DEFAULT pyplugindebug
 
@@ -237,7 +235,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   PyGILState_STATE state = 0;
-  PyObject *gi, *require_version, *args, *gst, *dict, *pyplugin;
+  PyObject *gi, *require_version, *args, *gst, *pyplugin;
   gboolean we_initialized = FALSE;
   gpointer has_python = NULL;
   const gchar *override_path;
@@ -333,25 +331,6 @@ plugin_init (GstPlugin * plugin)
   }
 
   if (we_initialized) {
-    PyObject *tmp;
-
-    dict = PyModule_GetDict (gst);
-    if (!dict) {
-      g_critical ("gi.repository.Gst is no dict");
-      return FALSE;
-    }
-
-    tmp =
-        PyObject_GetAttr (PyMapping_GetItemString (dict,
-            "_introspection_module"), PyUnicode_FromString ("__dict__"));
-
-    _PyGstElement_Type = PyMapping_GetItemString (tmp, "Element");
-
-    if (!_PyGstElement_Type) {
-      g_critical ("Could not get Gst.Element");
-      return FALSE;
-    }
-
     pyplugin = pygobject_new (G_OBJECT (plugin));
     if (!pyplugin || PyModule_AddObject (gst, "__plugin__", pyplugin) != 0) {
       g_critical ("Couldn't set __plugin__ attribute");
