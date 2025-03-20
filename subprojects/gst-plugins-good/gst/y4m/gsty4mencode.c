@@ -70,6 +70,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ IYUV, I420, Y42B, Y41B, Y444 }"))
     );
 
+GST_DEBUG_CATEGORY (y4menc_debug);
+#define GST_CAT_DEFAULT y4menc_debug
 
 static void gst_y4m_encode_reset (GstY4mEncode * filter);
 
@@ -84,8 +86,9 @@ static gboolean gst_y4m_encode_set_format (GstVideoEncoder * encoder,
 
 #define gst_y4m_encode_parent_class parent_class
 G_DEFINE_TYPE (GstY4mEncode, gst_y4m_encode, GST_TYPE_VIDEO_ENCODER);
-GST_ELEMENT_REGISTER_DEFINE (y4menc, "y4menc", GST_RANK_PRIMARY,
-    GST_TYPE_Y4M_ENCODE);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (y4menc, "y4menc", GST_RANK_PRIMARY,
+    GST_TYPE_Y4M_ENCODE, GST_DEBUG_CATEGORY_INIT (y4menc_debug, "y4menc", 0,
+        "y4menc element"));
 
 static void
 gst_y4m_encode_class_init (GstY4mEncodeClass * klass)
@@ -369,6 +372,9 @@ gst_y4m_encode_handle_frame (GstVideoEncoder * encoder,
     outbuf = gst_buffer_copy (frame->input_buffer);
   }
   frame->output_buffer = gst_buffer_append (frame->output_buffer, outbuf);
+
+  GST_DEBUG_OBJECT (filter, "output buffer %" GST_PTR_FORMAT,
+      frame->output_buffer);
 
   return gst_video_encoder_finish_frame (encoder, frame);
 
