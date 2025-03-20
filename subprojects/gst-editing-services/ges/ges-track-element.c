@@ -1928,7 +1928,14 @@ ges_track_element_set_control_source (GESTrackElement * object,
     binding = gst_direct_control_binding_new (GST_OBJECT (element),
         property_name, source);
 
-  gst_object_add_control_binding (GST_OBJECT (element), binding);
+  ret = gst_object_add_control_binding (GST_OBJECT (element), binding);
+  if (!ret) {
+    GST_ERROR_OBJECT (object, "Could not add control binding");
+    gst_object_unref (binding);
+
+    goto done;
+  }
+
   /* FIXME: maybe we should force the
    * "ChildTypeName:property-name"
    * format convention for child property names in bindings_hashtable.
