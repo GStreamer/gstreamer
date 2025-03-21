@@ -614,13 +614,18 @@ _get_feature_flags (GstVulkanDevice * device, gpointer func,
 #endif
 
     gst_vkGetPhysicalDeviceFormatProperties2 (gpu, format, &prop2);
-    if (supports_KHR_format_feature_flags2 (device))
+    if (supports_KHR_format_feature_flags2 (device)) {
+#if defined (VK_KHR_format_feature_flags2)
       return tiling == VK_IMAGE_TILING_LINEAR ?
           prop3.linearTilingFeatures : prop3.optimalTilingFeatures;
-    else
+#else
+      g_assert_not_reached ();
+#endif
+    } else {
       return tiling == VK_IMAGE_TILING_LINEAR ?
           prop2.formatProperties.linearTilingFeatures :
           prop2.formatProperties.optimalTilingFeatures;
+    }
   }
 #endif /* defined (VK_KHR_get_physical_device_properties2) */
 
