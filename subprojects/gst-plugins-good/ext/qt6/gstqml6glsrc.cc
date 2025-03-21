@@ -423,6 +423,9 @@ gst_qml6_gl_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
+  /* invalidate current pool, will switch to the new one in create() */
+  qt6_gl_window_set_pool (qt_src->window, NULL);
+
   gst_object_unref (pool);
 
   GST_INFO_OBJECT (qt_src, "successfully decide_allocation");
