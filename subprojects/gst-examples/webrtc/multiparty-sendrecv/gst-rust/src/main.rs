@@ -7,15 +7,10 @@ use rand::prelude::*;
 
 use clap::Parser;
 
-use async_std::prelude::*;
-use async_std::task;
 use futures::channel::mpsc;
-use futures::sink::{Sink, SinkExt};
-use futures::stream::StreamExt;
+use futures::prelude::*;
 
-use async_tungstenite::tungstenite;
-use tungstenite::Error as WsError;
-use tungstenite::Message as WsMessage;
+use async_tungstenite::tungstenite::{Error as WsError, Message as WsMessage};
 
 use gst::glib;
 use gst::prelude::*;
@@ -983,7 +978,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
     let args = Args::parse();
 
     // Connect to the given server
-    let (mut ws, _) = async_tungstenite::async_std::connect_async(&args.server).await?;
+    let (mut ws, _) = async_tungstenite::tokio::connect_async(&args.server).await?;
 
     println!("connected");
 
@@ -1041,5 +1036,8 @@ async fn async_main() -> Result<(), anyhow::Error> {
 }
 
 fn main() -> Result<(), anyhow::Error> {
-    macos_workaround::run(|| task::block_on(async_main()))
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?;
+    macos_workaround::run(move || runtime.block_on(async_main()))
 }
