@@ -39,7 +39,7 @@ gstanalytics = library('gstanalytics-' + api_version,
   link_args : ['-lm'])
 
 pkgconfig.generate(gstanalytics,
-  libraries : [gst_dep, gstbase_dep, '-lm'],
+  libraries : [gst_dep, gstbase_dep, gstvideo_dep, '-lm'],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
   name : pkg_name,
