@@ -4,13 +4,15 @@ version = "0.1.0"
 authors = ["Sebastian Dröge <sebastian@centricular.com>"]
 edition = "2018"
 
+[workspace]
+
 [dependencies]
 futures = "0.3"
-async-std = "1"
+tokio = { version = "1", features = ["full"] }
 clap = { version = "4", features = ["derive"] }
 anyhow = "1"
 rand = { version = "0.9", features = ["thread_rng"] }
-async-tungstenite = { version = "0.29", features = ["async-std-runtime", "async-native-tls"] }
+async-tungstenite = { version = "0.29", features = ["tokio-runtime", "tokio-native-tls"] }
 gst = { package = "gstreamer", version = "0.23" }
 gst-webrtc = { package = "gstreamer-webrtc", version = "0.23" }
 gst-sdp = { package = "gstreamer-sdp", version = "0.23" }
