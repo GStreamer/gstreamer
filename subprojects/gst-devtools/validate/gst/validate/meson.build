@@ -103,7 +103,7 @@ plugin_sources += {
 pkg_name = 'gstreamer-validate-1.0'
 library_def = {'lib': gstvalidate}
 pkgconfig.generate(gstvalidate,
-  libraries : [gst_dep],
+  libraries : [gst_dep, gst_pbutils_dep, gst_video_dep],
   subdirs : pkgconfig_subdirs,
   name : pkg_name,
   description : 'GStreamer Validate',
