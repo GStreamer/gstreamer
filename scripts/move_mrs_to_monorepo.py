@@ -236,7 +236,7 @@ class GstMRMover:
             return gl
 
         sys.exit(bold(f"{red('FAILED')}.\n\nPlease go to:\n\n"
-                      '   https://gitlab.freedesktop.org/-/profile/personal_access_tokens\n\n'
+                      '   https://gitlab.freedesktop.org/-/user_settings/personal_access_tokens\n\n'
                       f'and generate a token {bold("with read/write access to all but the registry")},'
                       ' then set it in the "GITLAB_API_TOKEN" environment variable:"'
                       f'\n\n  $ GITLAB_API_TOKEN=<your token> {" ".join(sys.argv)}\n'))

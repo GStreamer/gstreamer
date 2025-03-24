@@ -31,7 +31,7 @@ The script will also check that there is no existing MR already to avoid duplica
 
 Before you can run the script, you first need to go to your profile page in GitLab to generate a gitlab access token:
 
-https://gitlab.freedesktop.org/-/profile/personal_access_tokens
+https://gitlab.freedesktop.org/-/user_settings/personal_access_tokens
 
 On this page you'll need to give a **token name**, grant access
 to (API, read_user, read_api) and then press the *create personal access token* button.
