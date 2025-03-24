@@ -3507,6 +3507,16 @@ GstH266ParserResult gst_h266_parser_identify_nalu_vvc  (GstH266Parser * parser,
                                                         gsize size,
                                                         guint8 nal_length_size,
                                                         GstH266NalUnit * nalu);
+
+GST_CODEC_PARSERS_API
+GstH266ParserResult gst_h266_parser_identify_and_split_nalu_vvc (GstH266Parser * parser,
+                                                                 const guint8 * data,
+                                                                 guint offset,
+                                                                 gsize size,
+                                                                 guint8 nal_length_size,
+                                                                 GArray * nalus,
+                                                                 gsize * consumed);
+
 GST_CODEC_PARSERS_API
 GstH266ParserResult gst_h266_parser_parse_nal          (GstH266Parser * parser,
                                                         GstH266NalUnit * nalu);
