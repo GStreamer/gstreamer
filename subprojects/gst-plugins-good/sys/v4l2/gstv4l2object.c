@@ -3124,6 +3124,7 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
       v4l2object->max_height = maxh;
     }
   } else {
+    gst_structure_free (template);
     goto unknown_type;
   }
 
@@ -3139,6 +3140,7 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
     results = g_list_delete_link (results, results);
   }
 
+  gst_structure_free (template);
   if (gst_caps_is_empty (ret))
     goto enum_framesizes_no_results;
 
@@ -5388,6 +5390,7 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
         gst_caps_append (interlaced_caps, filtered_caps);
 
       gst_caps_unref (filter);
+      gst_caps_unref (tmp);
     }
 
     if (sysmem_tmpl)
