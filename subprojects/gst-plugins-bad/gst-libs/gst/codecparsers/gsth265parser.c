@@ -66,6 +66,7 @@
 
 #include "nalutils.h"
 #include "gsth265parser.h"
+#include "gsth265parser-private.h"
 
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbitreader.h>
@@ -5132,4 +5133,33 @@ error:
 #undef READ_CONFIG_UINT8
 #undef READ_CONFIG_UINT16
 #undef SKIP_CONFIG_BITS
+}
+
+GstH265ParserResult
+gst_h265_parser_link_slice_hdr (GstH265Parser * parser, GstH265SliceHdr * slice,
+    guint pps_id)
+{
+  GstH265ParserResult ret;
+  GstH265PPS *pps;
+
+  g_return_val_if_fail (parser, GST_H265_PARSER_ERROR);
+  g_return_val_if_fail (slice, GST_H265_PARSER_ERROR);
+  g_return_val_if_fail (pps_id < GST_H265_MAX_PPS_COUNT, GST_H265_PARSER_ERROR);
+
+  pps = gst_h265_parser_get_pps (parser, pps_id);
+  if (!pps) {
+    GST_WARNING
+        ("couldn't find associated picture parameter set with id: %d", pps_id);
+    return GST_H265_PARSER_BROKEN_LINK;
+  }
+
+  ret = gst_h265_parser_fill_pps (parser, pps);
+  if (ret != GST_H265_PARSER_OK) {
+    GST_WARNING ("couldn't fill pps id: %d", pps_id);
+    return ret;
+  }
+
+  slice->pps = pps;
+
+  return GST_H265_PARSER_OK;
 }
