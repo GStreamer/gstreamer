@@ -412,6 +412,7 @@ real_main (int argc, char **argv)
   g_main_loop_unref (app.loop);
   g_timer_destroy (timer);
 
+  gst_deinit ();
   return 0;
 }
 
