@@ -3403,18 +3403,13 @@ gst_h265_parser_update_sps (GstH265Parser * parser, GstH265SPS * sps)
     return GST_H265_PARSER_ERROR;
   }
 
-  if (sps->vps) {
-    GstH265VPS *vps = gst_h265_parser_get_vps (parser, sps->vps->id);
-    if (!vps || vps != sps->vps) {
-      GST_WARNING ("Linked VPS is not identical to internal VPS");
-      return GST_H265_PARSER_BROKEN_LINK;
-    }
-  }
-
   GST_DEBUG ("Updating sequence parameter set with id: %d", sps->id);
 
   parser->sps[sps->id] = *sps;
   parser->last_sps = &parser->sps[sps->id];
+
+  if (sps->vps)
+    parser->sps[sps->id].vps = gst_h265_parser_get_vps (parser, sps->vps->id);
 
   return GST_H265_PARSER_OK;
 }
@@ -3434,8 +3429,6 @@ gst_h265_parser_update_sps (GstH265Parser * parser, GstH265SPS * sps)
 GstH265ParserResult
 gst_h265_parser_update_pps (GstH265Parser * parser, GstH265PPS * pps)
 {
-  GstH265SPS *sps;
-
   g_return_val_if_fail (parser != NULL, GST_H265_PARSER_ERROR);
   g_return_val_if_fail (pps != NULL, GST_H265_PARSER_ERROR);
   g_return_val_if_fail (pps->id < GST_H265_MAX_PPS_COUNT,
@@ -3446,21 +3439,13 @@ gst_h265_parser_update_pps (GstH265Parser * parser, GstH265PPS * pps)
     return GST_H265_PARSER_ERROR;
   }
 
-  if (!pps->sps) {
-    GST_WARNING ("No linked SPS struct");
-    return GST_H265_PARSER_BROKEN_LINK;
-  }
-
-  sps = gst_h265_parser_get_sps (parser, pps->sps->id);
-  if (!sps || sps != pps->sps) {
-    GST_WARNING ("Linked SPS is not identical to internal SPS");
-    return GST_H265_PARSER_BROKEN_LINK;
-  }
-
   GST_DEBUG ("Updating picture parameter set with id: %d", pps->id);
 
   parser->pps[pps->id] = *pps;
   parser->last_pps = &parser->pps[pps->id];
+
+  if (pps->sps)
+    parser->pps[pps->id].sps = gst_h265_parser_get_sps (parser, pps->sps->id);
 
   return GST_H265_PARSER_OK;
 }
