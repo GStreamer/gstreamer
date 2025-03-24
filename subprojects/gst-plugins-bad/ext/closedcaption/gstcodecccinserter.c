@@ -552,6 +552,7 @@ gst_codec_cc_inserter_chain (GstPad * pad, GstObject * parent,
   if (!klass->push (self, frame, &latency)) {
     GST_ERROR_OBJECT (self, "Couldn't process frame");
     priv->current_frame_events = frame->events;
+    frame->events = NULL;
     gst_video_codec_frame_unref (frame);
     /* TODO: return error in case of too many decoding error */
     return GST_FLOW_OK;
