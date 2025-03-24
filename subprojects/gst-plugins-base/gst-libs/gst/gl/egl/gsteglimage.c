@@ -1073,12 +1073,16 @@ gst_egl_image_export_dmabuf (GstEGLImage * image, int *fd, gint * stride,
     return FALSE;
 
   /* Don't allow multi-plane dmabufs */
-  if (num_planes > 1)
+  if (num_planes > 1) {
+    GST_WARNING ("Multi plane DMAbufs are not allowed to export");
     return FALSE;
+  }
 
   /* FIXME We don't support modifiers */
-  if (modifier[0] != DRM_FORMAT_MOD_LINEAR)
+  if (modifier[0] != DRM_FORMAT_MOD_LINEAR) {
+    GST_WARNING ("Non-linear DMAbufs are not allowed to export");
     return FALSE;
+  }
 
   if (!gst_eglExportDMABUFImageMESA (egl_display, image->image, &egl_fd,
           &egl_stride, &egl_offset))
