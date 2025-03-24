@@ -288,7 +288,7 @@ typedef struct _GstDashSinkStream
   gint current_segment_id;
   gint next_segment_id;
   gchar *mimetype;
-  gint bitrate;
+  guint64 bytes_count;
   gchar *codec;
   GstClockTime current_running_time_start;
   GstDashSinkStreamInfo info;
@@ -835,10 +835,24 @@ gst_dash_sink_generate_mpd_content (GstDashSink * sink,
        * */
       gst_mpd_client_set_adaptation_set_node (sink->mpd_client,
           sink->current_period_id, stream->adaptation_set_id, NULL);
-      /* Add or set representation node with stream ids */
+      /* Add or set representation node with stream ids
+       * Calculate the bitrate for stream in bits per second
+       * */
+      GstClockTime time_diff = sink->running_time -
+          stream->current_running_time_start;
+      if (time_diff < GST_MSECOND) {
+        time_diff = GST_MSECOND;
+      }
+      gdouble diff_seconds = ((gdouble) time_diff) / GST_SECOND;
+      guint bitrate =
+          (guint) (((gdouble) stream->bytes_count * 8.0) / diff_seconds);
+      GST_DEBUG_OBJECT (stream,
+          "Stream(%p) bitrate calculation: segment duration=%.3fs stream bytes received=%"
+          G_GUINT64_FORMAT " resulting bitrate in bps=%u",
+          (void *) stream, diff_seconds, stream->bytes_count, bitrate);
       gst_mpd_client_set_representation_node (sink->mpd_client,
           sink->current_period_id, stream->adaptation_set_id,
-          stream->representation_id, "bandwidth", stream->bitrate, "mime-type",
+          stream->representation_id, "bandwidth", bitrate, "mime-type",
           stream->mimetype, "codecs", stream->codec, NULL);
       /* Set specific to stream type */
       if (stream->type == DASH_SINK_STREAM_TYPE_VIDEO) {
@@ -1033,10 +1047,7 @@ _dash_sink_buffers_probe (GstPad * pad, GstPadProbeInfo * probe_info,
   GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (probe_info);
   GstDashSinkStream *stream = (GstDashSinkStream *) user_data;
 
-  if (GST_BUFFER_DURATION (buffer))
-    stream->bitrate =
-        gst_buffer_get_size (buffer) * GST_SECOND /
-        GST_BUFFER_DURATION (buffer);
+  stream->bytes_count += gst_buffer_get_size (buffer);
 
   return GST_PAD_PROBE_OK;
 }
