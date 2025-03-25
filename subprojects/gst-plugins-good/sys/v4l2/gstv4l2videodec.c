@@ -510,9 +510,10 @@ gst_v4l2_video_dec_negotiate (GstVideoDecoder * decoder)
   GST_DEBUG_OBJECT (self, "Chosen decoded caps: %" GST_PTR_FORMAT, caps);
 
   /* Try to set negotiated format, on success replace acquired format */
-  if (gst_v4l2_object_set_format (self->v4l2capture, caps, &error))
+  if (gst_v4l2_object_set_format (self->v4l2capture, caps, &error)) {
+    gst_caps_replace (&acquired_caps, caps);
     info = self->v4l2capture->info;
-  else
+  } else
     gst_v4l2_clear_error (&error);
 
 use_acquired_caps:
