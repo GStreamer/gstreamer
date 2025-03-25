@@ -2763,6 +2763,7 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
     return err;
   }
 
+  slice->pps_id = pps_id;
   slice->pps = pps;
   sps = pps->sps;
   if (!sps) {
