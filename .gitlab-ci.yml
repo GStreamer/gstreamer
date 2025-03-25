@@ -157,7 +157,7 @@ fedora amd64 docker:
   needs: []
   # Note: assumption is that placeholder jobs run on a packet runner
   # (which has faster network connectivity to the registry).
-  tags: [ 'placeholder-job' ]
+  tags: [ 'kvm' ]
 
 fedora amd64 docker fluster:
   extends:
@@ -167,7 +167,7 @@ fedora amd64 docker fluster:
   needs: ["fedora amd64 docker"]
   # Note: assumption is that placeholder jobs run on a packet runner
   # (which has faster network connectivity to the registry).
-  tags: [ 'placeholder-job' ]
+  tags: [ 'kvm' ]
 
 # Build a toolbox specific image to workaround ci-templates
 fedora amd64 toolbox:
@@ -176,7 +176,7 @@ fedora amd64 toolbox:
   needs: ["fedora amd64 docker"]
   # Note: assumption is that placeholder jobs run on a packet runner
   # (which has faster network connectivity to the registry).
-  tags: [ 'placeholder-job' ]
+  tags: [ 'kvm' ]
   variables:
     GST_CI_IMAGE: !reference [".build fedora x86_64", "variables", FDO_DISTRIBUTION_IMAGE]
     FDO_DISTRIBUTION_TAG: !reference [".fedora image", "variables", FDO_DISTRIBUTION_TAG]
@@ -201,10 +201,10 @@ debian amd64 docker:
   needs: []
   # Note: assumption is that placeholder jobs run on a packet runner
   # (which has faster network connectivity to the registry).
-  tags: [ 'placeholder-job' ]
+  tags: [ 'kvm' ]
 
 .checks image:
-  tags: [ 'placeholder-job' ]
+  tags: [ 'kvm' ]
   variables:
     FDO_DISTRIBUTION_VERSION: 'bookworm'
     FDO_REPO_SUFFIX: "$CHECKS_AMD64_SUFFIX"
@@ -261,9 +261,10 @@ windows amd64 docker:
     ABI_CHECK_CACHE: '/abi-check-cache'
 
 abi-check docker:
-  # placeholder-job has very minimal CPU available and may overrun the job
+  # kvm has very minimal CPU available and may overrun the job
   # timeout if an image rebuild (which builds GStreamer) needs to be performed.
-  #tags: [ 'placeholder-job' ]
+  # Re-enabled for now on new infra (tpm, 2024-03-25).
+  tags: [ 'kvm' ]
   stage: 'preparation'
   extends:
     - '.abi-check image'
@@ -280,6 +281,7 @@ pre-commit checks:
   needs:
     - job: 'checks amd64 docker'
       artifacts: false
+  tags: [ 'placeholder-job' ]
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 100
@@ -848,6 +850,7 @@ fluster v4l2-stateless on visl:
   extends:
     - '.build fedora fluster x86_64'
   stage: 'test'
+  tags: [ 'kvm' ]
   variables:
     BUILD_GST_DEBUG: '-Dgstreamer:gst_debug=false'
     GST_WERROR: "true"
