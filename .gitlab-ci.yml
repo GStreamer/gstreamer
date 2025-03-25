@@ -134,12 +134,10 @@ fedora amd64 docker:
     - '.fdo.container-build@fedora'
   stage: 'preparation'
   needs: []
-  # Note: assumption is that placeholder jobs run on a packet runner
-  # (which has faster network connectivity to the registry).
-  tags: [ 'placeholder-job' ]
+  tags: [ 'kvm' ]
 
 .gst-indent image:
-  tags: [ 'placeholder-job' ]
+  tags: [ 'kvm' ]
   variables:
     FDO_DISTRIBUTION_VERSION: 'bookworm'
     FDO_REPO_SUFFIX: "$INDENT_AMD64_SUFFIX"
@@ -156,7 +154,7 @@ gst-indent amd64 docker:
   needs: []
 
 .commitlint image:
-  tags: [ 'placeholder-job' ]
+  tags: [ 'kvm' ]
   variables:
     FDO_DISTRIBUTION_VERSION: '37'
     FDO_REPO_SUFFIX: "$COMMITLINT_AMD64_SUFFIX"
@@ -214,6 +212,7 @@ gst indent:
   needs:
     - job: 'gst-indent amd64 docker'
       artifacts: false
+  tags: [ 'placeholder-job' ]
   script:
     - ./scripts/check-format-c
     - ./scripts/format-csharp --check
@@ -242,6 +241,7 @@ commitlint:
     - '.commitlint image'
     - '.fdo.suffixed-image@fedora'
   stage: 'preparation'
+  tags: [ 'placeholder-job' ]
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 100
@@ -738,6 +738,7 @@ gstreamer-full-minimal static build:
 fluster v4l2-stateless on visl:
   extends: 'gstreamer-full static build'
   stage: 'test'
+  tags: [ 'kvm' ]
   variables:
     BUILD_GST_DEBUG: '-Dgstreamer:gst_debug=false'
     GST_WERROR: "true"
