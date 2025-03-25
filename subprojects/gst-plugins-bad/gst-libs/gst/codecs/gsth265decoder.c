@@ -32,7 +32,6 @@
 
 #include <gst/base/base.h>
 #include "gsth265decoder.h"
-#include <gst/codecparsers/gsth265parser-private.h>
 
 GST_DEBUG_CATEGORY (gst_h265_decoder_debug);
 #define GST_CAT_DEFAULT gst_h265_decoder_debug
@@ -152,7 +151,6 @@ typedef struct
     GstH265Slice slice;
   } unit;
   GstH265NalUnitType nalu_type;
-  guint pps_id;
 } GstH265DecoderNalUnit;
 
 typedef struct
@@ -961,7 +959,6 @@ gst_h265_decoder_parse_slice (GstH265Decoder * self, GstH265NalUnit * nalu)
 
   decoder_nalu.unit.slice = slice;
   decoder_nalu.nalu_type = nalu->type;
-  decoder_nalu.pps_id = slice.header.pps->id;
 
   g_array_append_val (priv->nalu, decoder_nalu);
 
@@ -1084,8 +1081,7 @@ gst_h265_decoder_decode_nalu (GstH265Decoder * self,
       break;
   }
 
-  rst = gst_h265_parser_link_slice_hdr (priv->parser,
-      &nalu->unit.slice.header, nalu->pps_id);
+  rst = gst_h265_parser_link_slice_hdr (priv->parser, &nalu->unit.slice.header);
 
   if (rst != GST_H265_PARSER_OK) {
     GST_ERROR_OBJECT (self, "Couldn't update slice header");

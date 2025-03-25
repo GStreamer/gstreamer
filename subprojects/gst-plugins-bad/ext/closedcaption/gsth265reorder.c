@@ -27,7 +27,6 @@
 #include "gsth265reorder.h"
 #include "gsth264reorder.h"
 #include <gst/codecs/gsth265picture.h>
-#include <gst/codecparsers/gsth265parser-private.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_h265_reorder_debug);
@@ -139,7 +138,6 @@ typedef struct
     GstH265Slice slice;
   } unit;
   GstH265NalUnitType nalu_type;
-  guint pps_id;
 } GstH265ReorderNalUnit;
 
 static void gst_h265_reorder_finalize (GObject * object);
@@ -589,7 +587,6 @@ gst_h265_reorder_parse_slice (GstH265Reorder * self, GstH265NalUnit * nalu)
 
   decoder_nalu.unit.slice = slice;
   decoder_nalu.nalu_type = nalu->type;
-  decoder_nalu.pps_id = slice.header.pps->id;
 
   g_array_append_val (self->nalu, decoder_nalu);
 
@@ -697,8 +694,7 @@ gst_h265_reorder_decode_nalu (GstH265Reorder * self,
       break;
   }
 
-  rst = gst_h265_parser_link_slice_hdr (self->parser,
-      &nalu->unit.slice.header, nalu->pps_id);
+  rst = gst_h265_parser_link_slice_hdr (self->parser, &nalu->unit.slice.header);
 
   if (rst != GST_H265_PARSER_OK) {
     GST_ERROR_OBJECT (self, "Couldn't update slice header");

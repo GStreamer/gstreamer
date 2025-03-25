@@ -2128,6 +2128,10 @@ GstH265ParserResult gst_h265_parser_update_pps      (GstH265Parser   * parser,
                                                      GstH265PPS      * pps);
 
 GST_CODEC_PARSERS_API
+GstH265ParserResult gst_h265_parser_link_slice_hdr  (GstH265Parser * parser,
+                                                     GstH265SliceHdr * slice);
+
+GST_CODEC_PARSERS_API
 void                gst_h265_parser_free            (GstH265Parser  * parser);
 
 GST_CODEC_PARSERS_API
