@@ -925,6 +925,15 @@ struct _GstH264PPS
 
   /* Since: 1.18 */
   guint8 pic_scaling_matrix_present_flag;
+
+  /**
+   * _GstH264PPS.sps_id:
+   *
+   * SPS id
+   *
+   * Since: 1.28
+   */
+  guint sps_id;
 };
 
 struct _GstH264RefPicListModification
@@ -1059,6 +1068,15 @@ struct _GstH264SliceHdr
    * delta_pic_order_cnt[1]. (Since: 1.18)
    */
   guint pic_order_cnt_bit_size;
+
+ /**
+  * _GstH264SliceHdr.pps_id:
+  *
+  * PPS id
+  *
+  * Since: 1.28
+  */
+  guint pps_id;
 };
 
 /**

@@ -2278,6 +2278,7 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
     return GST_H264_PARSER_BROKEN_LINK;
   }
   pps->sequence = sps;
+  pps->sps_id = sps_id;
   qp_bd_offset = 6 * (sps->bit_depth_luma_minus8 +
       sps->separate_colour_plane_flag);
 
@@ -2470,6 +2471,7 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
   }
 
   slice->pps = pps;
+  slice->pps_id = pps_id;
   sps = pps->sequence;
   if (!sps) {
     GST_WARNING ("couldn't find associated sequence parameter set with id: %d",
