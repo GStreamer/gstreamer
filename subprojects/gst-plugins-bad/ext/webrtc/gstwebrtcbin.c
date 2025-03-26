@@ -9256,6 +9256,11 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    *  "protocol"             G_TYPE_STRING              Either "udp" or "tcp". Based on the "transport" defined in RFC 5245
    *  "relay-protocol"       G_TYPE_STRING              protocol used by the endpoint to communicate with the TURN server. Only present for local candidates. Either "udp", "tcp" or "tls"
    *  "url"                  G_TYPE_STRING              URL of the ICE server from which the candidate was obtained. Only present for local candidates
+   * "foundation"            G_TYPE_STRING              ICE foundation as defined in RFC 5245 section 15.1 (Since: 1.28)
+   * "related-address"       G_TYPE_STRING              ICE rel-addr as defined in RFC 5245 section 15.1. Only set for server-reflexive, peer-reflexive and relay candidates (Since: 1.28)
+   * "related-port"          G_TYPE_UINT                ICE rel-port as defined in RFC 5245 section 15.1. Only set for serverreflexive, peer-reflexive and relay candidates (Since: 1.28)
+   * "username-fragment"     G_TYPE_STRING              ICE username fragment as defined in RFC 5245 section 7.1.2.3 (Since: 1.28)
+   * "tcp-type"              G_TYPE_STRING              ICE candidate TCP type as defined in RTCIceTcpCandidateType (Since: 1.28)
    *
    * RTCIceCandidatePairStats supported fields (https://www.w3.org/TR/webrtc-stats/#candidatepair-dict*) (Since: 1.22)
    *

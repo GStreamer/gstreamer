@@ -70,11 +70,6 @@ typedef struct _GstWebRTCDTLSTransportClass GstWebRTCDTLSTransportClass;
 typedef struct _GstWebRTCICE GstWebRTCICE;
 typedef struct _GstWebRTCICEClass GstWebRTCICEClass;
 
-/**
- * GstWebRTCICECandidateStats:
- *
- * Since: 1.22
- */
 typedef struct _GstWebRTCICECandidateStats GstWebRTCICECandidateStats;
 
 /**

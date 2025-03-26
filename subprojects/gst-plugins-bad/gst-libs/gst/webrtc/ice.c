@@ -341,6 +341,9 @@ gst_webrtc_ice_candidate_stats_free (GstWebRTCICECandidateStats * stats)
   if (stats) {
     g_free (stats->ipaddr);
     g_free (stats->url);
+    g_free (stats->ABI.abi.foundation);
+    g_free (stats->ABI.abi.related_address);
+    g_free (stats->ABI.abi.username_fragment);
   }
 
   g_free (stats);
@@ -364,6 +367,9 @@ gst_webrtc_ice_candidate_stats_copy (GstWebRTCICECandidateStats * stats)
 
   copy->ipaddr = g_strdup (stats->ipaddr);
   copy->url = g_strdup (stats->url);
+  copy->ABI.abi.foundation = g_strdup (stats->ABI.abi.foundation);
+  copy->ABI.abi.related_address = g_strdup (stats->ABI.abi.related_address);
+  copy->ABI.abi.username_fragment = g_strdup (stats->ABI.abi.username_fragment);
 
   return copy;
 }
