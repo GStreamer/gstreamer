@@ -1066,6 +1066,9 @@ gst_dash_sink_request_new_pad (GstElement * element, GstPadTemplate * templ,
     stream->adaptation_set_id = ADAPTATION_SET_ID_SUBTITLE;
   }
 
+  if (!split_pad_name)
+    split_pad_name = templ->name_template;
+
   if (pad_name)
     stream->representation_id = g_strdup (pad_name);
   else
