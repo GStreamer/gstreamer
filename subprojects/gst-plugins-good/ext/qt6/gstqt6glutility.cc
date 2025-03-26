@@ -379,7 +379,7 @@ qt6_opengl_native_context_from_gst_gl_context (GstGLContext * context)
         "1. Qt6 wasn't built with support for \'%s\'\n"
         "2. The qmlgl plugin was built without support for your platform.\n"
         "3. The necessary code to convert from a GstGLContext to Qt's "
-        "native context type for \'%s\' currently does not exist."
+        "native context type for \'%s\' currently does not exist.\n"
         "4. Qt failed to wrap an existing native context.",
         platform_s, platform_s);
     g_free (platform_s);
