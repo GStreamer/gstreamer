@@ -2924,6 +2924,100 @@ GST_START_TEST (test_data_channel_pre_negotiated)
 
 GST_END_TEST;
 
+typedef struct _stat_type_find_data
+{
+  GstWebRTCStatsType t;
+  GstStructure *res;
+} stat_type_find_data;
+
+static gboolean
+find_typed_stat (const GstIdStr * id, const GValue * value, gpointer user_data)
+{
+  stat_type_find_data *data = (stat_type_find_data *) user_data;
+
+  if (!GST_VALUE_HOLDS_STRUCTURE (value))
+    return TRUE;
+
+  const GstStructure *structure = gst_value_get_structure (value);
+  GstWebRTCStatsType statsType;
+  if (!gst_structure_get (structure, "type", GST_TYPE_WEBRTC_STATS_TYPE,
+          &statsType, NULL))
+    return TRUE;
+
+  if (statsType == data->t) {
+    data->res = gst_structure_copy (structure);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static GstStructure *
+get_typed_stats (GstElement * webrtcbin, GstWebRTCStatsType t)
+{
+  GstPromise *p;
+  GstPromiseResult res;
+  stat_type_find_data data;
+
+  data.t = t;
+  data.res = NULL;
+
+  p = gst_promise_new ();
+  g_signal_emit_by_name (webrtcbin, "get-stats", NULL, p);
+  res = gst_promise_wait (p);
+  fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
+
+  gst_structure_foreach_id_str (gst_promise_get_reply (p), find_typed_stat,
+      &data);
+  gst_promise_unref (p);
+  return data.res;
+}
+
+GST_START_TEST (test_data_channel_ice_stats)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GObject *channel = NULL;
+  VAL_SDP_INIT (media_count, _count_num_sdp_media, GUINT_TO_POINTER (1), NULL);
+  VAL_SDP_INIT (offer, on_sdp_has_datachannel, NULL, &media_count);
+  GstStructure *local_ice_cand_stats, *remote_ice_cand_stats;
+
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_prepare_data_channel = have_prepare_data_channel;
+  t->on_data_channel = signal_data_channel;
+
+  fail_if (gst_element_set_state (t->webrtc1, GST_STATE_READY) ==
+      GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2, GST_STATE_READY) ==
+      GST_STATE_CHANGE_FAILURE);
+
+  g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
+      &channel);
+  g_assert_nonnull (channel);
+
+  fail_if (gst_element_set_state (t->webrtc1, GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2, GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE);
+
+  /* Wait SCTP transport creation */
+  test_validate_sdp_full (t, &offer, &offer, 1 << STATE_CUSTOM, FALSE);
+
+  local_ice_cand_stats =
+      get_typed_stats (t->webrtc1, GST_WEBRTC_STATS_LOCAL_CANDIDATE);
+  remote_ice_cand_stats =
+      get_typed_stats (t->webrtc1, GST_WEBRTC_STATS_REMOTE_CANDIDATE);
+
+  g_assert_nonnull (local_ice_cand_stats);
+  g_assert_nonnull (remote_ice_cand_stats);
+  gst_structure_free (local_ice_cand_stats);
+  gst_structure_free (remote_ice_cand_stats);
+
+  g_object_unref (channel);
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static void
 _count_non_rejected_media (struct test_webrtc *t, GstElement * element,
     GstWebRTCSessionDescription * sd, gpointer user_data)
@@ -6729,6 +6823,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_sdp_no_media);
     tcase_add_test (tc, test_session_stats);
     tcase_add_test (tc, test_stats_with_stream);
+    tcase_add_test (tc, test_data_channel_ice_stats);
     if (vp8enc) {
       tcase_add_test (tc, test_stats_with_two_streams);
     } else {

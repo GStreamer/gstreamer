@@ -1015,6 +1015,28 @@ out:
   return TRUE;
 }
 
+static void
+_get_data_channel_transport_stats (GstWebRTCBin * webrtc, GstStructure * s)
+{
+  struct transport_stream_stats ts_stats = {
+    NULL,
+  };
+  GObject *gst_rtp_session;
+
+  if (!webrtc->priv->data_channel_transport)
+    return;
+
+  ts_stats.stream = webrtc->priv->data_channel_transport;
+
+  g_signal_emit_by_name (webrtc->rtpbin, "get-session",
+      ts_stats.stream->session_id, &gst_rtp_session);
+
+  ts_stats.transport_id =
+      _get_stats_from_dtls_transport (webrtc, ts_stats.stream->transport,
+      GST_WEBRTC_ICE_STREAM (ts_stats.stream->stream), NULL, s);
+  g_clear_pointer (&ts_stats.transport_id, g_free);
+}
+
 GstStructure *
 gst_webrtc_bin_create_stats (GstWebRTCBin * webrtc, GstPad * pad)
 {
@@ -1038,6 +1060,8 @@ gst_webrtc_bin_create_stats (GstWebRTCBin * webrtc, GstPad * pad)
     gst_structure_set (s, id, GST_TYPE_STRUCTURE, pc_stats, NULL);
     gst_structure_free (pc_stats);
   }
+
+  _get_data_channel_transport_stats (webrtc, s);
 
   if (pad)
     _get_stats_from_pad (webrtc, pad, s);
