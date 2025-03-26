@@ -234,7 +234,7 @@ setup_output_directory (GstDotsTracer * self)
     self->output_dir =
         g_build_filename (g_get_user_cache_dir (), "gstreamer-dots", NULL);
 
-    GST_ERROR ("Setting GST_DEBUG_DUMP_DOT_DIR to %s", self->output_dir);
+    GST_DEBUG ("Setting GST_DEBUG_DUMP_DOT_DIR to %s", self->output_dir);
 
     g_setenv ("GST_DEBUG_DUMP_DOT_DIR", self->output_dir, TRUE);
   }
