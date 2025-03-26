@@ -1,0 +1,35 @@
+/* GStreamer
+ *
+ * Copyright (C) 2025 Igalia, S.L.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+/* 1 frame 320x240 blue box  */
+
+
+
+static const uint8_t vp9_obu[] = {
+  0x82, 0x49, 0x83, 0x42, 0x20, 0x13, 0xf0, 0x0e, 0xf6, 0x00, 0x38, 0x24,
+  0x1c, 0x18, 0x42, 0x00, 0x00, 0x50, 0x61, 0xf6, 0x30, 0x00, 0x00, 0x67,
+  0x15, 0xe9, 0x6f, 0xff, 0xff, 0xff, 0xfd, 0x8a, 0x60, 0xff, 0xff, 0xff,
+  0xfc, 0x74, 0xea, 0x2a, 0x51, 0x9b, 0xaa, 0x23, 0x01, 0x04, 0xfd, 0x00
+};
+
+static const uint8_t vp9_obu_2[] = {
+  0x86, 0x00, 0x40, 0x92, 0x9c, 0x00, 0x49, 0x40, 0x00, 0x04, 0x26, 0xac,
+  0x00, 0x00, 0x5e, 0x91, 0xc5, 0xe0, 0x00
+};
