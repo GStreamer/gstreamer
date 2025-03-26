@@ -138,13 +138,16 @@ _create_empty_params (GstVulkanDecoder * self, GError ** error)
       };
       /* *INDENT-ON* */
       break;
+    case VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR:
+      /* VP9 doesn't have session parameters */
+      return TRUE;
     default:
       g_assert_not_reached ();
   }
 
   priv->empty_params = gst_vulkan_decoder_new_video_session_parameters (self,
       &empty_params, error);
-  return (!priv->empty_params);
+  return (priv->empty_params != NULL);
 }
 
 /**
@@ -199,6 +202,7 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
   switch (self->codec) {
     case VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR:
     case VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR:
+    case VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR:
       if (!gst_vulkan_video_profile_is_valid (profile, self->codec)) {
         g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
             "Invalid profile");
@@ -232,6 +236,14 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
       /* *INDENT-ON* */
       codec_idx = GST_VK_VIDEO_EXTENSION_DECODE_H265;
       break;
+    case VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR:
+      /* *INDENT-OFF* */
+      priv->caps.decoder.codec.vp9 = (VkVideoDecodeVP9CapabilitiesKHR) {
+          .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_VP9_CAPABILITIES_KHR,
+      };
+      /* *INDENT-ON* */
+      codec_idx = GST_VK_VIDEO_EXTENSION_DECODE_VP9;
+      break;
     default:
       g_assert_not_reached ();
   }
@@ -260,6 +272,9 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
       break;
     case VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR:
       maxlevel = priv->caps.decoder.codec.h265.maxLevelIdc;
+      break;
+    case VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR:
+      maxlevel = priv->caps.decoder.codec.vp9.maxLevel;
       break;
     default:
       maxlevel = 0;
@@ -685,7 +700,7 @@ gst_vulkan_decoder_decode (GstVulkanDecoder * self,
 
   if (!priv->started) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "Vulkan Decoder has not started or no session parameters are set");
+        "Vulkan Decoder has not started");
     return FALSE;
   }
 
@@ -1307,6 +1322,8 @@ static const struct
       VK_KHR_VIDEO_DECODE_H264_EXTENSION_NAME},
   {VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR,
       VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME},
+  {VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR,
+      VK_KHR_VIDEO_DECODE_VP9_EXTENSION_NAME},
 };
 
 /**

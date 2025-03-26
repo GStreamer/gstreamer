@@ -35,6 +35,8 @@ static const struct {
       VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PROFILE_INFO_KHR },
   { GST_VULKAN_VIDEO_OPERATION_DECODE, VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR, "video/x-h265",
       VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PROFILE_INFO_KHR },
+  { GST_VULKAN_VIDEO_OPERATION_DECODE, VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR, "video/x-vp9",
+        VK_STRUCTURE_TYPE_VIDEO_DECODE_VP9_PROFILE_INFO_KHR },
   { GST_VULKAN_VIDEO_OPERATION_ENCODE, VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_KHR, "video/x-h264",
       VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PROFILE_INFO_KHR },
   { GST_VULKAN_VIDEO_OPERATION_ENCODE, VK_VIDEO_CODEC_OPERATION_ENCODE_H265_BIT_KHR, "video/x-h265",
@@ -102,6 +104,15 @@ static const struct {
   { STD_VIDEO_AV1_PROFILE_HIGH, "high" },
   { STD_VIDEO_AV1_PROFILE_PROFESSIONAL, "professional" },
 };
+static const struct {
+  StdVideoVP9Profile vk_profile;
+  const char *profile_str;
+} vp9_profile_map[] = {
+  { STD_VIDEO_VP9_PROFILE_0, "0" },
+  { STD_VIDEO_VP9_PROFILE_1, "1" },
+  { STD_VIDEO_VP9_PROFILE_0, "2" },
+  { STD_VIDEO_VP9_PROFILE_0, "3" },
+};
 /* *INDENT-ON* */
 
 /**
@@ -155,6 +166,16 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
               if (profile->codec.h265dec.stdProfileIdc
                   == h265_profile_map[j].vk_profile)
                 profile_str = h265_profile_map[j].profile_str;
+            }
+          }
+          break;
+        case VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR:
+          if (profile->codec.vp9dec.sType == video_codecs_map[i].stype) {
+            int j;
+            for (j = 0; j < G_N_ELEMENTS (vp9_profile_map); j++) {
+              if (profile->codec.vp9dec.stdProfile
+                  == vp9_profile_map[j].vk_profile)
+                profile_str = vp9_profile_map[j].profile_str;
             }
           }
           break;
@@ -315,6 +336,22 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
             if (g_strcmp0 (profile_str, h265_profile_map[j].profile_str) == 0) {
               profile->codec.h265dec.stdProfileIdc =
                   h265_profile_map[j].vk_profile;
+              break;
+            }
+          }
+          break;
+        }
+        case VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR:{
+          int j;
+
+          profile->codec.vp9dec.sType = video_codecs_map[i].stype;
+          profile->codec.vp9dec.stdProfile = STD_VIDEO_VP9_PROFILE_INVALID;
+          profile->usage.decode.pNext = &profile->codec;
+
+          profile_str = gst_structure_get_string (structure, "profile");
+          for (j = 0; profile_str && j < G_N_ELEMENTS (vp9_profile_map); j++) {
+            if (g_strcmp0 (profile_str, vp9_profile_map[j].profile_str) == 0) {
+              profile->codec.vp9dec.stdProfile = vp9_profile_map[j].vk_profile;
               break;
             }
           }
@@ -486,6 +523,8 @@ gst_vulkan_video_profile_is_equal (const GstVulkanVideoProfile * a,
           && a->codec.h264dec.pictureLayout == b->codec.h264dec.pictureLayout);
     case VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR:
       return (a->codec.h265dec.stdProfileIdc == b->codec.h265dec.stdProfileIdc);
+    case VK_VIDEO_CODEC_OPERATION_DECODE_VP9_BIT_KHR:
+      return (a->codec.vp9dec.stdProfile == b->codec.vp9dec.stdProfile);
     default:
       return FALSE;
   }

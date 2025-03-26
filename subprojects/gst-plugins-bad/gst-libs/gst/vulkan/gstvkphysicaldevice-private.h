@@ -43,6 +43,9 @@ gboolean                    gst_vulkan_physical_device_has_feature_video_mainten
 gboolean                    gst_vulkan_physical_device_has_feature_video_maintenance2
                                                                             (GstVulkanPhysicalDevice * device);
 
+gboolean                    gst_vulkan_physical_device_has_feature_video_decode_vp9
+                                                                            (GstVulkanPhysicalDevice * device);
+
 gboolean                    gst_vulkan_physical_device_has_feature_video_encode_av1
                                                                             (GstVulkanPhysicalDevice * device);
 

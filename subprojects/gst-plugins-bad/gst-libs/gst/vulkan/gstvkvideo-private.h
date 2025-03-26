@@ -43,9 +43,11 @@ struct _GstVulkanVideoSession
 typedef enum {
   GST_VK_VIDEO_EXTENSION_DECODE_H264,
   GST_VK_VIDEO_EXTENSION_DECODE_H265,
+  GST_VK_VIDEO_EXTENSION_DECODE_VP9,
   GST_VK_VIDEO_EXTENSION_ENCODE_H264,
   GST_VK_VIDEO_EXTENSION_ENCODE_H265,
   GST_VK_VIDEO_EXTENSION_ENCODE_AV1,
+  GST_VK_VIDEO_EXTENSION_MAX,
 } GST_VK_VIDEO_EXTENSIONS;
 
 #define GST_VULKAN_VIDEO_FN_LIST(V)                                            \
@@ -74,7 +76,7 @@ struct _GstVulkanVideoFunctions
 #undef DEFINE_FUNCTION
 };
 
-extern const VkExtensionProperties _vk_codec_extensions[5];
+extern const VkExtensionProperties _vk_codec_extensions[GST_VK_VIDEO_EXTENSION_MAX];
 extern const VkComponentMapping _vk_identity_component_map;
 
 gboolean                gst_vulkan_video_get_vk_functions       (GstVulkanInstance * instance,
