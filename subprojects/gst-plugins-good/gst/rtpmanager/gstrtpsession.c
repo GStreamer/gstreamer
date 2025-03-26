@@ -1577,6 +1577,9 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
     goto stopping;
 
   if ((rtcp_src = rtpsession->send_rtcp_src)) {
+    gboolean push_eos;
+    guint32 seqnum;
+
     gst_object_ref (rtcp_src);
     GST_RTP_SESSION_UNLOCK (rtpsession);
 
@@ -1594,16 +1597,18 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
      * function/thread  by using send_rtp_sink_eos directly instead of
      * GST_PAD_IS_EOS*/
     GST_RTP_SESSION_LOCK (rtpsession);
-    if (all_sources_bye && rtpsession->priv->send_rtp_sink_eos) {
+    push_eos = all_sources_bye && rtpsession->priv->send_rtp_sink_eos;
+    seqnum = rtpsession->priv->recv_rtcp_segment_seqnum;
+    GST_RTP_SESSION_UNLOCK (rtpsession);
+    if (push_eos) {
       GstEvent *event;
 
       GST_LOG_OBJECT (rtpsession, "sending EOS");
 
       event = gst_event_new_eos ();
-      gst_event_set_seqnum (event, rtpsession->priv->recv_rtcp_segment_seqnum);
+      gst_event_set_seqnum (event, seqnum);
       gst_pad_push_event (rtcp_src, event);
     }
-    GST_RTP_SESSION_UNLOCK (rtpsession);
     gst_object_unref (rtcp_src);
   } else {
     GST_RTP_SESSION_UNLOCK (rtpsession);
