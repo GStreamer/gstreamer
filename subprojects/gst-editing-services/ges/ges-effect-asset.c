@@ -228,7 +228,8 @@ get_pad_from_elements_with_request_pad (GstElement * effect,
 
 static gboolean
 ghost_pad (GstElement * effect, const gchar * bin_desc, GstPad * pad,
-    gint n_pad, const gchar * converter_str, GError ** error)
+    gint n_pad, const gchar * converter_str, gboolean add_caps_filter,
+    GError ** error)
 {
   gchar *name;
   GstPad *peer, *ghosted;
@@ -236,13 +237,25 @@ ghost_pad (GstElement * effect, const gchar * bin_desc, GstPad * pad,
   GstElement *converter;
 
   if (!converter_str) {
+    g_assert (!add_caps_filter);
     ghosted = pad;
     goto ghost;
   }
 
-  converter = gst_parse_bin_from_description_full (converter_str, TRUE, NULL,
+  gchar *converter_str_with_capsfilter = NULL;
+  if (add_caps_filter) {
+    converter_str_with_capsfilter =
+        g_strdup_printf
+        ("bin.( name=___ges__converter_bin %s ! capsfilter name=___ges__effectcapsfilter )",
+        converter_str);
+  }
+  converter =
+      gst_parse_bin_from_description_full (converter_str_with_capsfilter ?
+      converter_str_with_capsfilter : converter_str, TRUE, NULL,
       GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS | GST_PARSE_FLAG_PLACE_IN_BIN,
       error);
+
+  g_free (converter_str_with_capsfilter);
 
   if (!converter) {
     GST_ERROR_OBJECT (effect, "Could not create converter '%s'", converter_str);
@@ -291,6 +304,7 @@ ges_effect_from_description (const gchar * bin_desc, GESTrackType type,
   gint n_sink = 0;
   GstPad *srcpad = NULL;
   GstCaps *valid_caps = NULL;
+  gboolean add_caps_filter = FALSE;
   const gchar *converter_str = NULL;
   GList *tmp, *sinkpads = NULL, *elems_with_reqsink = NULL,
       *elems_with_reqsrc = NULL;
@@ -307,6 +321,8 @@ ges_effect_from_description (const gchar * bin_desc, GESTrackType type,
   if (type == GES_TRACK_TYPE_VIDEO) {
     valid_caps = gst_caps_from_string ("video/x-raw(ANY)");
     converter_str = "videoconvert";
+
+    add_caps_filter = TRUE;
   } else if (type == GES_TRACK_TYPE_AUDIO) {
     valid_caps = gst_caps_from_string ("audio/x-raw(ANY)");
     converter_str = "audioconvert ! audioresample ! audioconvert";
@@ -336,12 +352,14 @@ ges_effect_from_description (const gchar * bin_desc, GESTrackType type,
   }
 
   for (tmp = sinkpads; tmp; tmp = tmp->next) {
-    if (!ghost_pad (effect, bin_desc, tmp->data, n_sink, converter_str, error))
+    if (!ghost_pad (effect, bin_desc, tmp->data, n_sink, converter_str, FALSE,
+            error))
       goto err;
     n_sink++;
   }
 
-  if (!ghost_pad (effect, bin_desc, srcpad, 0, converter_str, error))
+  if (!ghost_pad (effect, bin_desc, srcpad, 0, converter_str, add_caps_filter,
+          error))
     goto err;
 
 done:

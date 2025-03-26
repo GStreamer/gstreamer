@@ -1,0 +1,19 @@
+meta,
+    tool = "ges-launch-$(gst_api_version)",
+    handles-states=true,
+    overrides={
+        "change-severity, issue-id=\"event::segment-has-wrong-start\", new-severity=\"warning\"",
+    },
+    args={
+        "-t", "video",
+        "+clip", "testbin://video,caps=\"video/x-raw,framerate=60/1,format=I420\"", "d=1.0",
+        "+effect", "videorate rate=0.1 name=first",
+        "+effect", "videorate rate=2.0 name=last",
+        "--videosink=fakesink name=videosink",
+    },
+    configs={
+        "$(validateflow), pad=last:src, caps-properties={ framerate }, logged-event-types = { caps }",
+        "$(validateflow), pad=first:src, caps-properties={ framerate }, logged-event-types = { caps }",
+    }
+
+play

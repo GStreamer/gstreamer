@@ -457,6 +457,7 @@ G_GNUC_INTERNAL gboolean          ges_clip_can_set_track_of_child (GESClip * cli
 G_GNUC_INTERNAL gboolean          ges_clip_can_set_time_property_of_child (GESClip * clip, GESTrackElement * child, GObject * prop_object, GParamSpec * pspec, const GValue * value, GError ** error);
 G_GNUC_INTERNAL GstClockTime      ges_clip_duration_limit_with_new_children_inpoints (GESClip * clip, GHashTable * child_inpoints);
 G_GNUC_INTERNAL GstClockTime      ges_clip_get_core_internal_time_from_timeline_time (GESClip * clip, GstClockTime timeline_time, gboolean * no_core, GError ** error);
+G_GNUC_INTERNAL GstElement*       ges_clip_get_last_time_effect_filter           (GESClip * clip, GESTrack *track);
 G_GNUC_INTERNAL void              ges_clip_empty_from_track       (GESClip * clip, GESTrack * track);
 G_GNUC_INTERNAL void              ges_clip_set_add_error          (GESClip * clip, GError * error);
 G_GNUC_INTERNAL void              ges_clip_take_add_error         (GESClip * clip, GError ** error);

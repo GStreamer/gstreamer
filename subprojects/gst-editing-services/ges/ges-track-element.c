@@ -1172,8 +1172,11 @@ ges_track_element_add_children_props (GESTrackElement * self,
       case GST_ITERATOR_OK:
       {
         GstElement *child = g_value_get_object (&item);
-        ges_track_element_add_child_props (self, child, wanted_categories,
-            blacklist, whitelist);
+
+        if (!g_str_has_prefix (GST_OBJECT_NAME (child), "___ges__")) {
+          ges_track_element_add_child_props (self, child, wanted_categories,
+              blacklist, whitelist);
+        }
         g_value_reset (&item);
         break;
       }

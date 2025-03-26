@@ -122,6 +122,25 @@ gst_compositor_operator_get_type_and_default_value (int *default_operator_value)
   return operator_gtype;
 }
 
+static GstElement *
+get_last_time_effect_filter (GstFramePositioner * self)
+{
+  if (!self->track_source) {
+    GST_DEBUG_OBJECT (self, "No track src");
+    return FALSE;
+  }
+
+  GESTimelineElement *parent = GES_TIMELINE_ELEMENT_PARENT (self->track_source);
+
+  if (!parent || !GES_IS_CLIP (parent)) {
+    GST_DEBUG_OBJECT (self, "Not in a clip");
+    return NULL;
+  }
+
+  GESTrack *track = ges_track_element_get_track (self->track_source);
+  return ges_clip_get_last_time_effect_filter (GES_CLIP (parent), track);
+}
+
 static gboolean
 scales_downstream (GstFramePositioner * self)
 {
@@ -324,10 +343,6 @@ gst_frame_positioner_update_properties (GstFramePositioner * pos,
         pos->track_width, "height", G_TYPE_INT, pos->track_height, NULL);
   }
 
-  if (pos->fps_n != -1)
-    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, pos->fps_n,
-        pos->fps_d, NULL);
-
   if (pos->par_n != -1)
     gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
         pos->par_n, pos->par_d, NULL);
@@ -371,6 +386,26 @@ done:
         "Forcing natural width in source make downstream scaling work");
     gst_caps_set_simple (caps, "width", G_TYPE_INT, pos->natural_width,
         "height", G_TYPE_INT, pos->natural_height, NULL);
+  }
+
+  if (pos->fps_n != -1) {
+    GstElement *timeffect_capsfilter = get_last_time_effect_filter (pos);
+
+    if (timeffect_capsfilter) {
+      GstCaps *timeffect_caps =
+          gst_caps_new_simple ("video/x-raw", "framerate", GST_TYPE_FRACTION,
+          pos->fps_n, pos->fps_d, NULL);
+      gst_caps_set_features_simple (timeffect_caps,
+          gst_caps_features_new_any ());
+
+      GST_DEBUG_OBJECT (pos,
+          "Setting framerate on source last timne effect capsfilter");
+      g_object_set (timeffect_capsfilter, "caps", timeffect_caps, NULL);
+    } else {
+      GST_DEBUG_OBJECT (pos, "Setting framerate on source capsfilter");
+      gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, pos->fps_n,
+          pos->fps_d, NULL);
+    }
   }
 
   GST_DEBUG_OBJECT (pos, "setting caps %" GST_PTR_FORMAT, caps);
@@ -508,6 +543,37 @@ gst_frame_positioner_dispose (GObject * object)
   G_OBJECT_CLASS (gst_frame_positioner_parent_class)->dispose (object);
 }
 
+static GstStateChangeReturn
+gst_frame_positioner_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstFramePositioner *framepositioner = GST_FRAME_POSITIONNER (element);
+  if (transition == GST_STATE_CHANGE_READY_TO_PAUSED) {
+    gboolean track_mixing = TRUE;
+
+    if (framepositioner->current_track)
+      track_mixing = ges_track_get_mixing (framepositioner->current_track);
+    gst_frame_positioner_update_properties (framepositioner, track_mixing, 0,
+        0);
+  }
+
+  GstStateChangeReturn res =
+      GST_ELEMENT_CLASS (gst_frame_positioner_parent_class)->change_state
+      (element, transition);
+
+  if (transition == GST_STATE_CHANGE_PAUSED_TO_READY) {
+    GstElement *timeffect_capsfilter =
+        get_last_time_effect_filter (framepositioner);
+
+    if (timeffect_capsfilter) {
+      g_object_set (timeffect_capsfilter, "caps", NULL, NULL);
+    }
+  }
+
+  return res;
+}
+
+
 static void
 gst_frame_positioner_class_init (GstFramePositionerClass * klass)
 {
@@ -518,6 +584,7 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
   guint n_pspecs = PROP_LAST;
 
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *base_transform_class =
       GST_BASE_TRANSFORM_CLASS (klass);
 
@@ -532,6 +599,7 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
   gobject_class->set_property = gst_frame_positioner_set_property;
   gobject_class->get_property = gst_frame_positioner_get_property;
   gobject_class->dispose = gst_frame_positioner_dispose;
+  element_class->change_state = gst_frame_positioner_change_state;
   base_transform_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_frame_positioner_transform_ip);
 

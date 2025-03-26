@@ -1928,6 +1928,31 @@ ges_clip_has_scale_effect (GESClip * clip)
   return clip->priv->nb_scale_effects > 0;
 }
 
+GstElement *
+ges_clip_get_last_time_effect_filter (GESClip * clip, GESTrack * track)
+{
+  GList *topeffects = ges_clip_get_top_effects (clip);
+  for (GList * tmp = topeffects; tmp; tmp = tmp->next) {
+    GESTrackElement *effect = tmp->data;
+
+    if (GES_IS_TIME_EFFECT (effect)
+        && ges_track_element_get_track (effect) == track) {
+      GstElement *bin = ges_track_element_get_element (effect);
+      GstElement *element =
+          gst_bin_get_by_name (GST_BIN (bin), "___ges__effectcapsfilter");
+
+      if (!element) {
+        GST_ERROR_OBJECT (clip, "Last timeeffect doesn't have a capsfilter ");
+      }
+
+      return element;
+    }
+  }
+
+  g_list_free_full (topeffects, gst_object_unref);
+  return NULL;
+}
+
 static gboolean
 _remove_child (GESContainer * container, GESTimelineElement * element)
 {
