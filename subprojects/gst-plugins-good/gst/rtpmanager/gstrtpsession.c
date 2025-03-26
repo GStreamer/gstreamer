@@ -1504,26 +1504,31 @@ do_rtcp_events (GstRtpSession * rtpsession, GstPad * srcpad)
 {
   GstCaps *caps;
   GstSegment seg;
-  GstEvent *event;
+  GstEvent *segment;
+  GstEvent *stream_start;
   gchar *stream_id;
   gboolean have_group_id;
   guint group_id;
+  guint32 seqnum;
 
   stream_id =
       g_strdup_printf ("%08x%08x%08x%08x", g_random_int (), g_random_int (),
       g_random_int (), g_random_int ());
+  stream_start = gst_event_new_stream_start (stream_id);
+  seqnum = gst_event_get_seqnum (stream_start);
 
   GST_RTP_SESSION_LOCK (rtpsession);
   if (rtpsession->recv_rtp_sink) {
-    event =
-        gst_pad_get_sticky_event (rtpsession->recv_rtp_sink,
+    GstEvent *sticky = gst_pad_get_sticky_event (rtpsession->recv_rtp_sink,
         GST_EVENT_STREAM_START, 0);
-    if (event) {
-      if (gst_event_parse_group_id (event, &group_id))
+    if (sticky) {
+      if (gst_event_parse_group_id (sticky, &group_id))
         have_group_id = TRUE;
       else
         have_group_id = FALSE;
-      gst_event_unref (event);
+      /* the new events should have the same seqnum as the one of the sticky one */
+      seqnum = gst_event_get_seqnum (sticky);
+      gst_event_unref (sticky);
     } else {
       have_group_id = TRUE;
       group_id = gst_util_group_id_next ();
@@ -1534,12 +1539,12 @@ do_rtcp_events (GstRtpSession * rtpsession, GstPad * srcpad)
   }
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
-  event = gst_event_new_stream_start (stream_id);
-  rtpsession->recv_rtcp_segment_seqnum = gst_event_get_seqnum (event);
-  gst_event_set_seqnum (event, rtpsession->recv_rtcp_segment_seqnum);
+  rtpsession->recv_rtcp_segment_seqnum = seqnum;
+
+  gst_event_set_seqnum (stream_start, seqnum);
   if (have_group_id)
-    gst_event_set_group_id (event, group_id);
-  gst_pad_push_event (srcpad, event);
+    gst_event_set_group_id (stream_start, group_id);
+  gst_pad_push_event (srcpad, stream_start);
   g_free (stream_id);
 
   caps = gst_caps_new_empty_simple ("application/x-rtcp");
@@ -1547,9 +1552,9 @@ do_rtcp_events (GstRtpSession * rtpsession, GstPad * srcpad)
   gst_caps_unref (caps);
 
   gst_segment_init (&seg, GST_FORMAT_TIME);
-  event = gst_event_new_segment (&seg);
-  gst_event_set_seqnum (event, rtpsession->recv_rtcp_segment_seqnum);
-  gst_pad_push_event (srcpad, event);
+  segment = gst_event_new_segment (&seg);
+  gst_event_set_seqnum (segment, seqnum);
+  gst_pad_push_event (srcpad, segment);
 }
 
 /* called when the session manager has an RTCP packet ready for further
