@@ -120,6 +120,7 @@ typedef struct _DashSinkMuxer
   GstDashSinkMuxerType type;
   const gchar *element_name;
   const gchar *mimetype;
+  const gchar *audio_mimetype;
   const gchar *file_ext;
 } DashSinkMuxer;
 
@@ -153,16 +154,19 @@ static const DashSinkMuxer dash_muxer_list[] = {
         GST_DASH_SINK_MUXER_TS,
         "mpegtsmux",
         "video/mp2t",
+        "video/mp2t",
       "ts"},
   {
         GST_DASH_SINK_MUXER_MP4,
         "mp4mux",
         "video/mp4",
+        "audio/mp4",
       "mp4"},
   {
         GST_DASH_SINK_MUXER_DASHMP4,
         "dashmp4mux",
         "video/mp4",
+        "audio/mp4",
       "mp4"},
 };
 
@@ -1086,7 +1090,10 @@ gst_dash_sink_request_new_pad (GstElement * element, GstPadTemplate * templ,
     stream->representation_id =
         gst_dash_sink_stream_get_next_name (sink->streams, stream->type);
 
-  stream->mimetype = g_strdup (dash_muxer_list[sink->muxer].mimetype);
+  if (stream->type == DASH_SINK_STREAM_TYPE_AUDIO)
+    stream->mimetype = g_strdup (dash_muxer_list[sink->muxer].audio_mimetype);
+  else
+    stream->mimetype = g_strdup (dash_muxer_list[sink->muxer].mimetype);
 
   if (!gst_dash_sink_add_splitmuxsink (sink, stream)) {
     GST_ERROR_OBJECT (sink,
