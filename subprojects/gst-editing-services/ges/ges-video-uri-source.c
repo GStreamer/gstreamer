@@ -126,7 +126,7 @@ ges_video_uri_source_get_natural_size (GESVideoSource * source, gint * width,
     if (*height % par_n == 0) {
       *height = gst_util_uint64_scale_int (*height, par_d, par_n);
     } else if (*width % par_d == 0) {
-      *height = gst_util_uint64_scale_int (*width, par_n, par_d);
+      *width = gst_util_uint64_scale_int (*width, par_n, par_d);
     } else {
       *width = gst_util_uint64_scale_int (*height, par_d, par_n);
     }
