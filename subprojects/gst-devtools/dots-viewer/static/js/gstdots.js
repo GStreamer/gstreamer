@@ -306,7 +306,7 @@ function updateSearch() {
     const fuse = new Fuse(list, options);
     const results = fuse.search(input.value);
 
-    for (div of allDivs) {
+    for (let div of allDivs) {
         div.style.display = 'none';
     }
 
@@ -325,7 +325,7 @@ function updateSearch() {
         return scoreA - scoreB; // For ascending order. Use (scoreB - scoreA) for descending.
     });
 
-    for (div of divs) {
+    for (let div of divs) {
         div.parentNode.appendChild(div);
     }
 }
