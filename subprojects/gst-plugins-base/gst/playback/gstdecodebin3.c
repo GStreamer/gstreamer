@@ -2717,10 +2717,8 @@ handle_stream_collection_locked (GstDecodebin3 * dbin,
   }
 
   /* Replace collection in input */
-  if (input->collection)
-    gst_object_unref (input->collection);
-  if (collection)
-    input->collection = gst_object_ref (collection);
+  gst_object_replace ((GstObject **) & input->collection,
+      (GstObject *) collection);
   GST_DEBUG_OBJECT (dbin, "Setting collection %p on input %p", collection,
       input);
 
