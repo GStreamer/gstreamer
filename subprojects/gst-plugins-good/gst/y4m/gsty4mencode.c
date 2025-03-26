@@ -75,11 +75,8 @@ GST_DEBUG_CATEGORY (y4menc_debug);
 
 static void gst_y4m_encode_reset (GstY4mEncode * filter);
 
-static GstStateChangeReturn gst_y4m_encode_change_state (GstElement * element,
-    GstStateChange transition);
-
-static GstFlowReturn
-gst_y4m_encode_handle_frame (GstVideoEncoder * encoder,
+static gboolean gst_y4m_encode_start (GstVideoEncoder * encoder);
+static GstFlowReturn gst_y4m_encode_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_y4m_encode_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state);
@@ -96,8 +93,6 @@ gst_y4m_encode_class_init (GstY4mEncodeClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoEncoderClass *venc_class = GST_VIDEO_ENCODER_CLASS (klass);
 
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_y4m_encode_change_state);
-
   gst_element_class_add_static_pad_template (element_class,
       &y4mencode_src_factory);
   gst_element_class_add_static_pad_template (element_class,
@@ -107,9 +102,10 @@ gst_y4m_encode_class_init (GstY4mEncodeClass * klass)
       "YUV4MPEG video encoder", "Codec/Encoder/Video",
       "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
       "Wim Taymans <wim.taymans@gmail.com>");
+
+  venc_class->start = gst_y4m_encode_start;
   venc_class->set_format = gst_y4m_encode_set_format;
   venc_class->handle_frame = gst_y4m_encode_handle_frame;
-
 }
 
 static void
@@ -126,6 +122,14 @@ gst_y4m_encode_reset (GstY4mEncode * filter)
 {
   filter->header = FALSE;
   gst_video_info_init (&filter->info);
+}
+
+static gboolean
+gst_y4m_encode_start (GstVideoEncoder * encoder)
+{
+  gst_y4m_encode_reset (GST_Y4M_ENCODE (encoder));
+
+  return TRUE;
 }
 
 static gboolean
@@ -207,7 +211,7 @@ gst_y4m_encode_set_format (GstVideoEncoder * encoder,
       gst_static_pad_template_get_caps (&y4mencode_src_factory), state);
   gst_video_codec_state_unref (output_state);
 
-  return TRUE;
+  return gst_video_encoder_negotiate (encoder);
 
 invalid_format:
   {
@@ -385,36 +389,6 @@ not_negotiated:
 
     return GST_FLOW_NOT_NEGOTIATED;
   }
-}
-
-static GstStateChangeReturn
-gst_y4m_encode_change_state (GstElement * element, GstStateChange transition)
-{
-  GstY4mEncode *filter = GST_Y4M_ENCODE (element);
-  GstStateChangeReturn ret;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state,
-      (element, transition), GST_STATE_CHANGE_SUCCESS);
-  if (ret != GST_STATE_CHANGE_SUCCESS)
-    return ret;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_y4m_encode_reset (filter);
-      break;
-    default:
-      break;
-  }
-
-  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean
