@@ -560,8 +560,13 @@ class GstMRMover:
         for from_project in from_projects:
             with nested(f'{bold(from_project.path_with_namespace)}'):
                 fprint(f'Fetching mrs')
-                mrs = [mr for mr in from_project.mergerequests.list(
-                    all=True, author_id=self.gl.user.id) if mr.author['username'] == self.gl.user.username and mr.state == "opened"]
+                if self.mr:
+                    # Targetting a specific MR - just find that one
+                    mrs = [mr for mr in from_project.mergerequests.list(
+                        all=True) if mr.iid == self.mr and mr.state == "opened"]
+                else:
+                    mrs = [mr for mr in from_project.mergerequests.list(
+                        all=True, author_id=self.gl.user.id) if mr.author['username'] == self.gl.user.username and mr.state == "opened"]
                 if not mrs:
                     fprint(f"{yellow(' None')}\n", nested=False)
                     continue
