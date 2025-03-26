@@ -296,6 +296,8 @@ struct _GstRtpSessionPrivate
   GstBufferList *processed_list;
 
   gboolean send_rtp_sink_eos;
+
+  guint32 recv_rtcp_segment_seqnum;
 };
 
 /* callbacks to handle actions from the session manager */
@@ -937,7 +939,7 @@ gst_rtp_session_init (GstRtpSession * rtpsession)
   rtpsession->priv->ptmap = g_hash_table_new_full (NULL, NULL, NULL,
       (GDestroyNotify) gst_caps_unref);
 
-  rtpsession->recv_rtcp_segment_seqnum = GST_SEQNUM_INVALID;
+  rtpsession->priv->recv_rtcp_segment_seqnum = GST_SEQNUM_INVALID;
 
   gst_segment_init (&rtpsession->recv_rtp_seg, GST_FORMAT_UNDEFINED);
   gst_segment_init (&rtpsession->send_rtp_seg, GST_FORMAT_UNDEFINED);
@@ -1537,9 +1539,9 @@ do_rtcp_events (GstRtpSession * rtpsession, GstPad * srcpad)
     have_group_id = TRUE;
     group_id = gst_util_group_id_next ();
   }
-  GST_RTP_SESSION_UNLOCK (rtpsession);
 
-  rtpsession->recv_rtcp_segment_seqnum = seqnum;
+  rtpsession->priv->recv_rtcp_segment_seqnum = seqnum;
+  GST_RTP_SESSION_UNLOCK (rtpsession);
 
   gst_event_set_seqnum (stream_start, seqnum);
   if (have_group_id)
@@ -1598,7 +1600,7 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
       GST_LOG_OBJECT (rtpsession, "sending EOS");
 
       event = gst_event_new_eos ();
-      gst_event_set_seqnum (event, rtpsession->recv_rtcp_segment_seqnum);
+      gst_event_set_seqnum (event, rtpsession->priv->recv_rtcp_segment_seqnum);
       gst_pad_push_event (rtcp_src, event);
     }
     GST_RTP_SESSION_UNLOCK (rtpsession);
@@ -1798,9 +1800,9 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstObject * parent,
     }
     case GST_EVENT_FLUSH_STOP:
       gst_segment_init (&rtpsession->recv_rtp_seg, GST_FORMAT_UNDEFINED);
-      rtpsession->recv_rtcp_segment_seqnum = GST_SEQNUM_INVALID;
       ret = gst_pad_push_event (rtpsession->recv_rtp_src, event);
       GST_RTP_SESSION_LOCK (rtpsession);
+      rtpsession->priv->recv_rtcp_segment_seqnum = GST_SEQNUM_INVALID;
       rtpsession->priv->send_rtp_sink_eos = FALSE;
       GST_RTP_SESSION_UNLOCK (rtpsession);
       break;
@@ -1840,8 +1842,11 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstObject * parent,
 
       if (rtcp_src) {
         event = gst_event_new_eos ();
-        if (rtpsession->recv_rtcp_segment_seqnum != GST_SEQNUM_INVALID)
-          gst_event_set_seqnum (event, rtpsession->recv_rtcp_segment_seqnum);
+        GST_RTP_SESSION_LOCK (rtpsession);
+        if (rtpsession->priv->recv_rtcp_segment_seqnum != GST_SEQNUM_INVALID)
+          gst_event_set_seqnum (event,
+              rtpsession->priv->recv_rtcp_segment_seqnum);
+        GST_RTP_SESSION_UNLOCK (rtpsession);
         ret = gst_pad_push_event (rtcp_src, event);
         gst_object_unref (rtcp_src);
       } else {
