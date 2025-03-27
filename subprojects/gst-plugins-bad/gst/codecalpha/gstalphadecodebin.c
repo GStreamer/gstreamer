@@ -119,8 +119,8 @@ gst_alpha_decode_bin_constructed (GObject * obj)
     goto cleanup;
   }
 
-  queue = gst_element_factory_make ("queue", NULL);
-  alpha_queue = gst_element_factory_make ("queue", NULL);
+  queue = gst_element_factory_make ("queue", "main-queue");
+  alpha_queue = gst_element_factory_make ("queue", "alpha-queue");
   if (!queue || !alpha_queue) {
     priv->missing_element = "queue";
     goto cleanup;
