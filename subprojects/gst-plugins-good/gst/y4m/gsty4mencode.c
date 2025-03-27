@@ -263,19 +263,84 @@ gst_y4m_encode_get_frame_header (GstY4mEncode * filter)
   return buf;
 }
 
+static GstBuffer *
+gst_y4m_encode_copy_buffer (GstY4mEncode * filter, GstBuffer * inbuf)
+{
+  GstVideoFrame in_frame, out_frame;
+  GstBuffer *outbuf = NULL;
+  gssize size;
+  gboolean copied;
+
+  if (!gst_video_frame_map (&in_frame, &filter->info, inbuf, GST_MAP_READ))
+    goto invalid_buffer;
+
+  /* TODO: use a bufferpool */
+  size = GST_VIDEO_INFO_SIZE (&filter->out_info);
+  outbuf = gst_buffer_new_allocate (NULL, size, NULL);
+  if (!outbuf) {
+    gst_video_frame_unmap (&in_frame);
+    goto invalid_buffer;
+  }
+
+  if (!gst_video_frame_map (&out_frame, &filter->out_info, outbuf,
+          GST_MAP_WRITE))
+    goto invalid_buffer;
+
+  copied = gst_video_frame_copy (&out_frame, &in_frame);
+
+  gst_video_frame_unmap (&out_frame);
+  gst_video_frame_unmap (&in_frame);
+
+  if (!copied)
+    goto invalid_buffer;
+
+  return outbuf;
+
+invalid_buffer:
+  {
+    GST_ELEMENT_WARNING (filter, STREAM, FORMAT, (NULL),
+        ("invalid video buffer"));
+    if (outbuf)
+      gst_buffer_unref (outbuf);
+    return NULL;
+  }
+}
+
+static gboolean
+gst_y4m_encode_buffer_has_padding (GstY4mEncode * y4enc, GstBuffer * inbuf)
+{
+  GstVideoMeta *vmeta = gst_buffer_get_video_meta (inbuf);
+  const GstVideoInfo *out_info = &y4enc->out_info;
+  int i;
+
+  if (!vmeta)
+    return y4enc->padded;
+
+  for (i = 0; i < vmeta->n_planes; i++) {
+    if (vmeta->offset[i] != GST_VIDEO_INFO_PLANE_OFFSET (out_info, i))
+      return TRUE;
+    if (vmeta->stride[i] != GST_VIDEO_INFO_PLANE_STRIDE (out_info, i))
+      return TRUE;
+  }
+
+  if (vmeta->alignment.padding_bottom != 0 ||
+      vmeta->alignment.padding_left != 0 ||
+      vmeta->alignment.padding_right != 0 || vmeta->alignment.padding_top != 0)
+    return TRUE;
+
+  return FALSE;
+}
 
 static GstFlowReturn
 gst_y4m_encode_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame)
 {
   GstY4mEncode *filter = GST_Y4M_ENCODE (encoder);
-  GstClockTime timestamp;
+  GstBuffer *outbuf;
 
   /* check we got some decent info from caps */
   if (GST_VIDEO_INFO_FORMAT (&filter->info) == GST_VIDEO_FORMAT_UNKNOWN)
     goto not_negotiated;
-
-  timestamp = GST_BUFFER_TIMESTAMP (frame->input_buffer);
 
   if (G_UNLIKELY (!filter->header)) {
     gboolean tff = FALSE;
@@ -294,13 +359,16 @@ gst_y4m_encode_handle_frame (GstVideoEncoder * encoder,
     frame->output_buffer = gst_y4m_encode_get_frame_header (filter);
   }
 
-  frame->output_buffer =
-      gst_buffer_append (frame->output_buffer,
-      gst_buffer_copy (frame->input_buffer));
-
-  /* decorate */
-  frame->output_buffer = gst_buffer_make_writable (frame->output_buffer);
-  GST_BUFFER_TIMESTAMP (frame->output_buffer) = timestamp;
+  if (gst_y4m_encode_buffer_has_padding (filter, frame->input_buffer)) {
+    outbuf = gst_y4m_encode_copy_buffer (filter, frame->input_buffer);
+    if (!outbuf) {
+      gst_video_encoder_drop_frame (encoder, frame);
+      return GST_FLOW_ERROR;
+    }
+  } else {
+    outbuf = gst_buffer_copy (frame->input_buffer);
+  }
+  frame->output_buffer = gst_buffer_append (frame->output_buffer, outbuf);
 
   return gst_video_encoder_finish_frame (encoder, frame);
 
