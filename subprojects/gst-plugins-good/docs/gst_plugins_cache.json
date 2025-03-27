@@ -29611,9 +29611,34 @@
         "tracers": {},
         "url": "Unknown package origin"
     },
-    "y4menc": {
-        "description": "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
+    "y4m": {
+        "description": "Encodes and demuxes/decodes YUV4MPEG streams (mjpegtools)",
         "elements": {
+            "y4mdec": {
+                "author": "David Schleef <ds@schleef.org>",
+                "description": "Demuxes/decodes YUV4MPEG streams",
+                "hierarchy": [
+                    "GstY4mDec",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Demuxer",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-yuv4mpeg:\n     y4mversion: 2\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw:\n         format: { I420, Y41B, Y42B, Y444, I420_10LE, I422_10LE, Y444_10LE, I420_12LE, I422_12LE, Y444_12LE, Y444_16LE, GRAY8, GRAY16_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "secondary"
+            },
             "y4menc": {
                 "author": "Wim Taymans <wim.taymans@gmail.com>",
                 "description": "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
@@ -29629,7 +29654,6 @@
                     "GstPreset"
                 ],
                 "klass": "Codec/Encoder/Video",
-                "long-name": "YUV4MPEG video encoder",
                 "pad-templates": {
                     "sink": {
                         "caps": "video/x-raw:\n         format: { IYUV, I420, Y42B, Y41B, Y444 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
@@ -29642,11 +29666,10 @@
                         "presence": "always"
                     }
                 },
-                "properties": {},
                 "rank": "primary"
             }
         },
-        "filename": "gsty4menc",
+        "filename": "gsty4m",
         "license": "LGPL",
         "other-types": {},
         "package": "GStreamer Good Plug-ins",

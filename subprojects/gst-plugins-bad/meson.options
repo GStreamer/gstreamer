@@ -73,7 +73,6 @@ option('videoframe_audiolevel', type : 'feature', value : 'auto')
 option('videoparsers', type : 'feature', value : 'auto')
 option('videosignal', type : 'feature', value : 'auto')
 option('vmnc', type : 'feature', value : 'auto')
-option('y4m', type : 'feature', value : 'auto')
 
 # Feature options for libraries that need external deps
 option('opencv', type : 'feature', value : 'auto', description : 'OpenCV computer vision library support')
