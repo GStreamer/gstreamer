@@ -539,12 +539,17 @@ build debian x86_64:
    when: "always"
    paths:
      - 'build/meson-logs/'
+     - 'args.txt'
 
 build vs2022 amd64:
   extends: '.build windows'
   script:
     - !reference [".build windows", "script"]
-    - .\ci\run_retry.ps1 meson setup --vsenv build $env:MESON_ARGS $env:GTK_ARGS
+    # https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_character_encoding?view=powershell-7.5
+    # Meson's response files must be in UTF-8
+    # After updating to powershell >7.1, the shell in Dockerfile must be updated from Windows PS to PWSH
+    - echo "$env:MESON_ARGS $env:GTK_ARGS" | Out-File -File args.txt -Encoding ASCII
+    - .\ci\run_retry.ps1 meson setup --vsenv build '@args.txt'
     - .\ci\run_retry.ps1 meson compile -C build --jobs $env:FDO_CI_CONCURRENT
     - .\gst-env.py gst-inspect-1.0.exe --version
     - .\gst-env.py gst-inspect-1.0.exe
