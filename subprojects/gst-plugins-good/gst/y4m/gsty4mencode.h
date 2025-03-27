@@ -48,9 +48,13 @@ struct _GstY4mEncode {
   /* caps information */
   GstVideoInfo info;
 
+  /* output buffer layout */
+  GstVideoInfo out_info;
+
   const gchar *colorspace;
   /* state information */
   gboolean header;
+  gboolean padded;
 };
 
 struct _GstY4mEncodeClass {
