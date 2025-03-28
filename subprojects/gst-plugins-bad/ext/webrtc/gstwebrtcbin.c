@@ -4540,8 +4540,6 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
     }
 
     mid = gst_sdp_media_get_attribute_val (media, "mid");
-    /* XXX: not strictly required but a lot of functionality requires a mid */
-    g_assert (mid);
 
     /* set the a=setup: attribute */
     offer_setup = _get_dtls_setup_from_media (offer_media);
@@ -4603,12 +4601,22 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
       _remove_optional_offer_fields (offer_caps);
 
-      rtp_trans = _find_transceiver_for_mid (webrtc, mid);
-      if (!rtp_trans) {
-        g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INVALID_STATE,
-            "Transceiver for media with mid %s not found", mid);
-        gst_caps_unref (offer_caps);
-        goto rejected;
+      if (mid) {
+        rtp_trans = _find_transceiver_for_mid (webrtc, mid);
+        if (!rtp_trans) {
+          g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INVALID_STATE,
+              "Transceiver for media with mid %s not found", mid);
+          gst_caps_unref (offer_caps);
+          goto rejected;
+        }
+      } else {
+        rtp_trans = _find_transceiver_for_mline (webrtc, i);
+        if (!rtp_trans) {
+          g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INVALID_STATE,
+              "Transceiver for media with mline %u not found", i);
+          gst_caps_unref (offer_caps);
+          goto rejected;
+        }
       }
       GstCaps *current_caps =
           _find_codec_preferences (webrtc, rtp_trans, i, error);
@@ -4623,7 +4631,8 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
         const gchar *last_mid =
             gst_sdp_media_get_attribute_val (last_media, "mid");
         /* FIXME: assumes no shenanigans with recycling transceivers */
-        g_assert (g_strcmp0 (mid, last_mid) == 0);
+        if (mid != last_mid)
+          g_assert (g_strcmp0 (mid, last_mid) == 0);
         if (!current_caps)
           current_caps = _rtp_caps_from_media (last_media);
       }
@@ -6433,11 +6442,10 @@ _create_and_associate_transceivers_from_sdp (GstWebRTCBin * webrtc,
     mid = gst_sdp_media_get_attribute_val (media, "mid");
     direction = _get_direction_from_media (media);
 
-    /* XXX: not strictly required but a lot of functionality requires a mid */
-    if (!mid) {
-      g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
-          "Missing mid attribute in media");
-      goto out;
+    if (mid) {
+      trans = _find_transceiver_for_mid (webrtc, mid);
+    } else {
+      trans = _find_transceiver_for_mline (webrtc, i);
     }
 
     if (bundled)
@@ -6445,7 +6453,6 @@ _create_and_associate_transceivers_from_sdp (GstWebRTCBin * webrtc,
     else
       transport_idx = i;
 
-    trans = _find_transceiver_for_mid (webrtc, mid);
 
     if (sd->source == SDP_LOCAL) {
       /* If the media description was not yet associated with an RTCRtpTransceiver object then run the following steps: */
@@ -6469,8 +6476,10 @@ _create_and_associate_transceivers_from_sdp (GstWebRTCBin * webrtc,
         }
         trans->mline = i;
         /* Set transceiver.[[Mid]] to transceiver.[[JsepMid]] */
-        g_free (trans->mid);
-        trans->mid = g_strdup (mid);
+        g_clear_pointer (&trans->mid, g_free);
+        if (mid) {
+          trans->mid = g_strdup (mid);
+        }
         g_object_notify (G_OBJECT (trans), "mid");
         /* If transceiver.[[Stopped]] is true, abort these sub steps */
         if (trans->stopped)

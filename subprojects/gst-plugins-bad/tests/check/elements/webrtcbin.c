@@ -5044,6 +5044,166 @@ a=group:BUNDLE \r\n\
 
 GST_END_TEST;
 
+static GstWebRTCSessionDescription *
+remove_sdp_attributes (const GstWebRTCSessionDescription * desc, guint n_attrs,
+    const char *const *attributes)
+{
+  GstSDPMessage *sdp;
+  guint total_medias = gst_sdp_message_medias_len (desc->sdp);
+
+  gst_sdp_message_copy (desc->sdp, &sdp);
+  for (guint i = 0; i < total_medias; i++) {
+    gst_sdp_message_remove_media (sdp, i);
+  }
+
+  for (guint i = 0; i < total_medias; i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (desc->sdp, i);
+    guint total_attributes = gst_sdp_media_attributes_len (media);
+    GstSDPMedia *new_media;
+
+    gst_sdp_media_copy (media, &new_media);
+    for (guint ii = 0; ii < total_attributes; ii++) {
+      const GstSDPAttribute *attribute =
+          gst_sdp_media_get_attribute (new_media, ii);
+      for (guint iii = 0; iii < n_attrs; iii++) {
+        if (!g_strcmp0 (attribute->key, attributes[iii])) {
+          gst_sdp_media_remove_attribute (new_media, ii);
+          ii--;
+          total_attributes--;
+          break;
+        }
+      }
+    }
+    gst_sdp_message_add_media (sdp, new_media);
+    gst_sdp_media_free (new_media);
+  }
+
+  return gst_webrtc_session_description_new (desc->type, sdp);
+}
+
+static void
+do_missing_mid_test (gboolean is_offer)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  const gchar *attributes_to_remove[] = { "mid", "group" };
+  GstWebRTCSessionDescription *modified_desc = NULL;
+  GstPromise *promise;
+  GstPromiseResult res;
+  const GstStructure *s;
+  GstWebRTCSessionDescription *desc;
+  GstHarness *h1;
+
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
+
+  h1 = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
+  add_audio_test_src_harness (h1, 0xDEADBEEF);
+  t->harnesses = g_list_prepend (t->harnesses, h1);
+
+  fail_if (gst_element_set_state (t->webrtc1, GST_STATE_READY) ==
+      GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2, GST_STATE_READY) ==
+      GST_STATE_CHANGE_FAILURE);
+
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc1, "create-offer", NULL, promise);
+  res = gst_promise_wait (promise);
+  fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
+  s = gst_promise_get_reply (promise);
+  fail_unless (s != NULL);
+  fail_if (gst_structure_has_field (s, "error"));
+  gst_structure_get (s, "offer", GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &desc,
+      NULL);
+  fail_unless (desc != NULL);
+  gst_promise_unref (promise);
+
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc1, "set-local-description", desc, promise);
+  res = gst_promise_wait (promise);
+  fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
+  s = gst_promise_get_reply (promise);
+  fail_if (s && gst_structure_has_field (s, "error"));
+  gst_promise_unref (promise);
+
+  if (is_offer) {
+    modified_desc =
+        remove_sdp_attributes (desc, G_N_ELEMENTS (attributes_to_remove),
+        attributes_to_remove);
+  }
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc2, "set-remote-description",
+      modified_desc ? modified_desc : desc, promise);
+  res = gst_promise_wait (promise);
+  fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
+  s = gst_promise_get_reply (promise);
+  fail_if (s && gst_structure_has_field (s, "error"));
+  gst_promise_unref (promise);
+
+  g_clear_pointer (&modified_desc, gst_webrtc_session_description_free);
+  gst_webrtc_session_description_free (desc);
+
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc2, "create-answer", NULL, promise);
+  res = gst_promise_wait (promise);
+  fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
+  s = gst_promise_get_reply (promise);
+  fail_unless (s != NULL);
+  s = gst_promise_get_reply (promise);
+  fail_unless (s != NULL);
+  fail_if (gst_structure_has_field (s, "error"));
+  gst_structure_get (s, "answer", GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &desc,
+      NULL);
+  fail_unless (desc != NULL);
+  gst_promise_unref (promise);
+
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc2, "set-local-description", desc, promise);
+  res = gst_promise_wait (promise);
+  fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
+  s = gst_promise_get_reply (promise);
+  fail_if (s && gst_structure_has_field (s, "error"));
+  gst_promise_unref (promise);
+
+  if (!is_offer) {
+    modified_desc =
+        remove_sdp_attributes (desc, G_N_ELEMENTS (attributes_to_remove),
+        attributes_to_remove);
+  }
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (t->webrtc1, "set-remote-description",
+      modified_desc ? modified_desc : desc, promise);
+  res = gst_promise_wait (promise);
+  fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
+  s = gst_promise_get_reply (promise);
+  fail_if (s && gst_structure_has_field (s, "error"));
+  gst_promise_unref (promise);
+
+  g_clear_pointer (&modified_desc, gst_webrtc_session_description_free);
+  gst_webrtc_session_description_free (desc);
+
+  fail_if (gst_element_set_state (t->webrtc1, GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2, GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE);
+
+  test_webrtc_free (t);
+}
+
+GST_START_TEST (test_missing_mid_in_offer)
+{
+  do_missing_mid_test (TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_missing_mid_in_answer)
+{
+  do_missing_mid_test (FALSE);
+}
+
+GST_END_TEST;
+
 static void
 new_jitterbuffer_set_fast_start (GstElement * rtpbin,
     GstElement * rtpjitterbuffer, guint session_id, guint ssrc,
@@ -6624,6 +6784,8 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_sdp_session_setup_attribute);
     tcase_add_test (tc, test_rtp_header_extension_sendonly_recvonly_pair);
     tcase_add_test (tc, test_invalid_bundle_in_pending_remote_description);
+    tcase_add_test (tc, test_missing_mid_in_offer);
+    tcase_add_test (tc, test_missing_mid_in_answer);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_create_two_channels);

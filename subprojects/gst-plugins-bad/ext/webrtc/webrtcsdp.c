@@ -193,16 +193,10 @@ _media_has_attribute_key (const GstSDPMedia * media, const gchar * key)
 }
 
 static gboolean
-_media_has_mid (const GstSDPMedia * media, guint media_idx, GError ** error)
+_media_has_mid (const GstSDPMedia * media, guint media_idx)
 {
   const gchar *mid = gst_sdp_media_get_attribute_val (media, "mid");
-  if (IS_EMPTY_SDP_ATTRIBUTE (mid)) {
-    g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
-        "media %u is missing or contains an empty \'mid\' attribute",
-        media_idx);
-    return FALSE;
-  }
-  return TRUE;
+  return !IS_EMPTY_SDP_ATTRIBUTE (mid);
 }
 
 const gchar *
@@ -308,11 +302,13 @@ validate_sdp (GstWebRTCSignalingState state, SDPSource source,
     const GstSDPMedia *media = gst_sdp_message_get_media (sdp->sdp, i);
     const gchar *mid;
     gboolean media_in_bundle = FALSE;
-    if (!_media_has_mid (media, i, error))
-      goto fail;
-    mid = gst_sdp_media_get_attribute_val (media, "mid");
-    media_in_bundle = is_bundle
-        && g_strv_contains ((const gchar **) group_members, mid);
+
+    if (_media_has_mid (media, i)) {
+      mid = gst_sdp_media_get_attribute_val (media, "mid");
+      media_in_bundle =
+          is_bundle && g_strv_contains ((const gchar **) group_members, mid);
+    }
+
     if (!_media_get_ice_ufrag (sdp->sdp, i)) {
       g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
           "media %u is missing or contains an empty \'ice-ufrag\' attribute",
