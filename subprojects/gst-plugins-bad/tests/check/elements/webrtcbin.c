@@ -6510,7 +6510,8 @@ GST_START_TEST (test_video_rtx_no_duplicate_payloads)
 
   VAL_SDP_INIT (no_duplicate_payloads, on_sdp_media_no_duplicate_payloads,
       NULL, NULL);
-  guint media_format_count[] = { 3 };
+  // two formats for VP8 and H264 and two for VP8-RTX + H264-RTX
+  guint media_format_count[] = { 4 };
   VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
       media_format_count, &no_duplicate_payloads);
   VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (1),

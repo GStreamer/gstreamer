@@ -3065,11 +3065,9 @@ _pick_rtx_payload_types (GstWebRTCBin * webrtc, WebRTCTransceiver * trans,
 {
   gboolean ret = TRUE;
 
-  if (trans->local_rtx_ssrc_map)
-    gst_structure_free (trans->local_rtx_ssrc_map);
-
-  trans->local_rtx_ssrc_map =
-      gst_structure_new_empty ("application/x-rtp-ssrc-map");
+  if (!trans->local_rtx_ssrc_map)
+    trans->local_rtx_ssrc_map =
+        gst_structure_new_empty ("application/x-rtp-ssrc-map");
 
   if (trans->do_nack) {
     struct media_payload_map_item *item;
@@ -3640,8 +3638,9 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
 
   gst_clear_structure (&extmap);
 
-  {
-    const GstStructure *s = gst_caps_get_structure (caps, 0);
+  // create rtx entry for each format type
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    const GstStructure *s = gst_caps_get_structure (caps, i);
     gint clockrate = -1;
     gint rtx_target_pt;
     guint rtx_target_ssrc = -1;
