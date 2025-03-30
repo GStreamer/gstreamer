@@ -351,6 +351,10 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
   if (formats->len == 0)
     goto bail;
 
+  /* if driver reports maximum width or height lower than minimum then skip */
+  if (max_width < min_width || max_height < min_height)
+    goto bail;
+
   if (!fix_raw_formats (display, profile, entrypoint, formats))
     goto bail;
 
