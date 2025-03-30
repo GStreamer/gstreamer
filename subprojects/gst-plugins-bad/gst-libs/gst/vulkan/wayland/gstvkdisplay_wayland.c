@@ -158,7 +158,10 @@ gst_vulkan_display_wayland_new (const gchar * name)
 {
   GstVulkanDisplayWayland *ret;
   struct wl_display *display;
+  GType type;
 
+  /* get type first so we initialize the debug category */
+  type = GST_TYPE_VULKAN_DISPLAY_WAYLAND;
   display = wl_display_connect (name);
 
   if (!display) {
@@ -167,7 +170,7 @@ gst_vulkan_display_wayland_new (const gchar * name)
     return NULL;
   }
 
-  ret = g_object_new (GST_TYPE_VULKAN_DISPLAY_WAYLAND, NULL);
+  ret = g_object_new (type, NULL);
   gst_object_ref_sink (ret);
   ret->display = display;
 
