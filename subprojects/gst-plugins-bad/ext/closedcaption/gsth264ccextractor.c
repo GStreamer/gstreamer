@@ -446,12 +446,14 @@ gst_h264_cc_extractor_output_picture (GstH264Decoder * decoder,
   dur = GST_BUFFER_DURATION (frame->input_buffer);
 
   if (!front_buf) {
-    GstEvent *gap;
-
     GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
     ret = gst_video_decoder_finish_frame (videodec, frame);
-    gap = gst_event_new_gap (pts, dur);
-    gst_pad_push_event (videodec->srcpad, gap);
+
+    if (GST_CLOCK_TIME_IS_VALID (pts)) {
+      GstEvent *gap = gst_event_new_gap (pts, dur);
+      gst_pad_push_event (videodec->srcpad, gap);
+    }
+
     return ret;
   }
 
