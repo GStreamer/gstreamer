@@ -26,7 +26,7 @@ ninja -C $builddir install
 find ${install_prefix}/lib64 -type f -iname *libgst*.so.* -print0 | xargs -0 -I '{}' bash ${CI_PROJECT_DIR}/ci/scripts/save-abi.sh {} ${ABI_CHECK_DIR} ${install_prefix}/include/gstreamer-1.0
 
 fail_file=abi-compare-failure
-if ! find ${ABI_CHECK_CACHE} -type f -print0 | xargs -0 -I '{}' bash ${CI_PROJECT_DIR}/ci/scripts/compare-abi.sh {} ${CI_PROJECT_DIR}/${ABI_CHECK_DIR}/ ${fail_file}
+if ! find ${ABI_CHECK_CACHE} -type f -print0 | xargs -0 -I '{}' bash ${CI_PROJECT_DIR}/ci/scripts/compare-abi.sh {} ${CI_PROJECT_DIR}/${ABI_CHECK_DIR}/ ${fail_file} ${CI_PROJECT_DIR}/ci/scripts/gst.abignore
 then
   echo ABI comparison failed for the following modules!
   cat ${fail_file}
