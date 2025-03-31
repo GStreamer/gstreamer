@@ -5199,11 +5199,6 @@ handle_bus_message (MessageData * d)
       GstValidateActionType *stop_action_type;
       GstStructure *s;
 
-      if (!is_error && priv->ignore_eos) {
-        GST_INFO_OBJECT (scenario, "Got EOS but ignoring it!");
-        goto done;
-      }
-
       if (is_error && priv->allow_errors) {
 #ifndef GST_DISABLE_GST_DEBUG
         GError *err = NULL;
@@ -5254,17 +5249,25 @@ handle_bus_message (MessageData * d)
          * Is it possible that this handler is run before _action_set_done(), so
          * we check at this point for actions that have a pending_set_done and
          * call it before continuing. */
-        GList *actions = g_list_copy (priv->actions);
+        GList *actions = g_list_copy_deep (priv->actions,
+            (GCopyFunc) (gst_validate_action_ref), NULL);
         GList *i;
         for (i = actions; i; i = i->next) {
           GstValidateAction *action = (GstValidateAction *) i->data;
           if (action->priv->pending_set_done)
             _action_set_done (action);
         }
-        g_list_free (actions);
+        g_list_free_full (actions, (GDestroyNotify) gst_validate_action_unref);
       }
 
       if (!is_error) {
+        if (priv->ignore_eos) {
+          GST_INFO_OBJECT (scenario,
+              "Got EOS but ignoring it, executing next action?");
+          GST_VALIDATE_SCENARIO_EOS_HANDLING_UNLOCK (scenario);
+          goto done;
+        }
+
         priv->got_eos = TRUE;
         if (priv->wait_message_action) {
 
