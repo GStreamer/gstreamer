@@ -10,4 +10,6 @@ git config --global user.name "Gstbuild Runner"
 
 bash ./ci/scripts/install-rust.sh
 
+bash ./ci/scripts/create-container-user.sh
+
 bash ./ci/scripts/create-subprojects-cache.sh

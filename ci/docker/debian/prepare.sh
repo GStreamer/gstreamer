@@ -10,4 +10,6 @@ bash ./ci/scripts/install-rust.sh
 git config --global user.email "gstreamer@gstreamer.net"
 git config --global user.name "Gstbuild Runner"
 
+bash ./ci/scripts/create-container-user.sh
+
 bash ./ci/scripts/create-subprojects-cache.sh
