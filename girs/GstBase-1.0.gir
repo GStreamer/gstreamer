@@ -2503,6 +2503,18 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <property name="current-level-buffers" version="1.28" transfer-ownership="none" default-value="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">The number of currently queued buffers inside this pad</doc>
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="current-level-bytes" version="1.28" transfer-ownership="none" default-value="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">The number of currently queued bytes inside this pad</doc>
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="current-level-time" version="1.28" transfer-ownership="none" default-value="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">The amount of currently queued time inside this pad</doc>
+        <type name="guint64" c:type="guint64"/>
+      </property>
       <property name="emit-signals" version="1.16" writable="1" transfer-ownership="none" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">Enables the emission of signals such as #GstAggregatorPad::buffer-consumed</doc>
         <type name="gboolean" c:type="gboolean"/>
