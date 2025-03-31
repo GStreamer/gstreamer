@@ -95,12 +95,12 @@ build_container() {
   #   glib2
   # )
 
-  buildah run $build_cntr dnf install -y "${extra_packages[@]}"
-  buildah run $build_cntr dnf install -y "${our_extra_packages[@]}"
+  buildah run $build_cntr sudo dnf install -y "${extra_packages[@]}"
+  buildah run $build_cntr sudo dnf install -y "${our_extra_packages[@]}"
   # buildah run $build_cntr dnf debuginfo-install -y "${debug_packages[@]}"
 
-  buildah run $build_cntr dnf clean all
-  buildah run $build_cntr rm -rf /var/lib/cache/dnf
+  buildah run $build_cntr sudo dnf clean all
+  buildah run $build_cntr sudo rm -rf /var/lib/cache/dnf
 
   buildah config \
     --env RUSTUP_HOME="/usr/local/rustup" \
@@ -108,15 +108,10 @@ build_container() {
     --env PATH="$PATH:/usr/local/cargo/bin/" \
     $build_cntr
 
-  # Install rust-analyzer so it can be used with IDEs and devcontainer
-  buildah run $build_cntr rustup component add rust-analyzer rust-src
-
   # Remove the hardcoded HOME env var that ci-templates adds
   # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/2433#note_2243222
-  # Also add the OCI labels that toolbox expects, to advertize that image is compatible
-  # Additionally add a non-root default user
+  # Also add the OCI labels that toolbox expects, to advertize that the image is compatible
   buildah config --env HOME- \
-    --user containeruser \
     --label com.github.containers.toolbox=true \
     --label org.opencontainers.image.base.name=$BASE_CI_IMAGE \
     $build_cntr

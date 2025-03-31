@@ -8,18 +8,20 @@ RUST_VERSION=1.88.0
 RUST_ARCH="x86_64-unknown-linux-gnu"
 
 RUSTUP_URL=https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/$RUST_ARCH/rustup-init
-curl -o rustup-init $RUSTUP_URL
+curl -o /tmp/rustup-init $RUSTUP_URL
 
 export RUSTUP_HOME="/usr/local/rustup"
 export CARGO_HOME="/usr/local/cargo"
 export PATH="/usr/local/cargo/bin:$PATH"
 
-chmod +x rustup-init;
-./rustup-init -y --no-modify-path --default-toolchain $RUST_VERSION;
-rm rustup-init;
+chmod +x /tmp/rustup-init;
+sudo --preserve-env=RUSTUP_HOME,CARGO_HOME,PATH /tmp/rustup-init -y --no-modify-path --default-toolchain $RUST_VERSION;
+rm /tmp/rustup-init;
+
 # We are root while creating the directory, but we want it to
 # be accessible to all users
-chmod -R a+w $RUSTUP_HOME $CARGO_HOME
+sudo mkdir -p $RUSTUP_HOME $CARGO_HOME
+sudo chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
 cargo install --locked cargo-c --version 0.10.14+cargo-0.89.0
 # We don't need them in the build image and they occupy

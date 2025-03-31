@@ -5,16 +5,21 @@ set -eux
 sudo dnf install -y bc
 
 # Install virtme-ng
+pushd /tmp/
 git clone https://github.com/arighi/virtme-ng.git
 pushd virtme-ng
 git fetch --tags
 git checkout v1.8
-./setup.py install --prefix=/usr
+sudo ./setup.py install --prefix=/usr
+popd
 popd
 
 # Install fluster
 pushd /opt/
-git clone https://github.com/fluendo/fluster.git
+sudo mkdir ./fluster
+sudo chown containeruser:containeruser ./fluster/
+
+git clone  https://github.com/fluendo/fluster.git ./fluster
 pushd fluster
 git checkout 303a6edfda1701c8bc351909fb1173a0958810c2
 ./fluster.py download

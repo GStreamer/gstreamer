@@ -51,7 +51,7 @@ SCRIPT="\
 HALF_MEMORY="$(grep MemTotal /proc/meminfo | awk '{print $2}' | xargs -I {} echo "scale=0; 1+{}/1024^2/2" | bc)G"
 
 echo Running tests in virtual machine ...
-virtme-run \
+sudo virtme-run \
   --memory=${HALF_MEMORY} \
   --rw \
   --pwd \
