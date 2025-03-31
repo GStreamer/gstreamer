@@ -475,7 +475,10 @@ find_helper_bin_location (void)
   if (env && *env != '\0') {
     /* use the env-var if it is set */
     GST_LOG ("Trying GST_PLUGIN_SCANNER env var: %s", env);
-    return g_strdup (env);
+    if (g_str_has_suffix (env, ".exe"))
+      return g_strdup (env);
+    else
+      return g_strdup_printf ("%s.exe", env);
   }
 
   /* use the installed version */
