@@ -53,6 +53,9 @@ GST_DEBUG_CATEGORY (gst_avf_video_src_debug);
 static CMVideoDimensions
 get_oriented_dimensions(GstAVFVideoSourceOrientation orientation, CMVideoDimensions dimensions);
 
+static CMTime
+find_range_bound_close_enough_to_fps (AVFrameRateRange *range, int fps_n, int fps_d);
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -662,8 +665,11 @@ G_GNUC_END_IGNORE_DEPRECATIONS
         device.activeFormat = fmt;
         for (AVFrameRateRange *range in fmt.videoSupportedFrameRateRanges) {
           CMTime dur = CMTimeMake (info->fps_d, info->fps_n);
-          if (CMTIME_COMPARE_INLINE (range.minFrameDuration, <=, dur) &&
-              CMTIME_COMPARE_INLINE (range.maxFrameDuration, >=, dur)) {
+          // Either the value is directly supported, or we rounded it to the nearest 'sane' value in get_caps(),
+          // in which case AVF might refuse to accept it, so we try to use one of the range bounds if it's close enough.
+          if ((CMTIME_COMPARE_INLINE (range.minFrameDuration, <=, dur) &&
+               CMTIME_COMPARE_INLINE (range.maxFrameDuration, >=, dur)) ||
+               CMTIME_IS_VALID (dur = find_range_bound_close_enough_to_fps (range, info->fps_n, info->fps_d))) {
             device.activeVideoMinFrameDuration = dur;
             device.activeVideoMaxFrameDuration = dur;
             found_framerate = TRUE;
@@ -1581,16 +1587,20 @@ gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutpu
 
     for (AVFrameRateRange *range in format.videoSupportedFrameRateRanges) {
       int min_fps_n, min_fps_d, max_fps_n, max_fps_d;
+      GstClockTime min_dur, max_dur;
 
-      /* CMTime duration is the inverse of fps*/
-      min_fps_n = range.maxFrameDuration.timescale;
-      min_fps_d = range.maxFrameDuration.value;
-      max_fps_n = range.minFrameDuration.timescale;
-      max_fps_d = range.minFrameDuration.value;
+      // For some third-party devices macOS sometimes reports silly framerates, like 750003/6250 instead of 120/1.
+      // Let's round all values here just in case, and then reverse that in setDeviceCaps when passing values to AVF.
+      // Note: In the past, min/maxFrameRate were used instead, but that also came with its own set of rounding issues.
+      min_dur = gst_util_uint64_scale (GST_SECOND, range.minFrameDuration.value, range.minFrameDuration.timescale);
+      max_dur = gst_util_uint64_scale (GST_SECOND, range.maxFrameDuration.value, range.maxFrameDuration.timescale);
 
-      GST_DEBUG ("dimensions %ix%i fps range is [%i/%i, %i/%i]",
-          dimensions.width, dimensions.height, min_fps_n, min_fps_d, max_fps_n,
-          max_fps_d);
+      gst_video_guess_framerate (min_dur, &max_fps_n, &max_fps_d);
+      gst_video_guess_framerate (max_dur, &min_fps_n, &min_fps_d);
+
+      GST_DEBUG ("dimensions %ix%i, duration range %s, assuming fps range [%d/%d - %d/%d]",
+          dimensions.width, dimensions.height, [range description].UTF8String,
+          min_fps_n, min_fps_d, max_fps_n, max_fps_d);
 
       for (NSNumber *pixel_format in output.availableVideoCVPixelFormatTypes) {
         GstCaps *caps;
@@ -1658,4 +1668,27 @@ get_oriented_dimensions (GstAVFVideoSourceOrientation orientation, CMVideoDimens
     orientedDimensions = dimensions;
   }
   return orientedDimensions;
+}
+
+static CMTime
+find_range_bound_close_enough_to_fps (AVFrameRateRange *range, int fps_n, int fps_d)
+{
+  GstClockTime min_dur, max_dur;
+  gint guessed_n, guessed_d;
+
+  min_dur = gst_util_uint64_scale (GST_SECOND, range.minFrameDuration.value, range.minFrameDuration.timescale);
+  gst_video_guess_framerate (min_dur, &guessed_n, &guessed_d);
+  if (guessed_n == fps_n && guessed_d == fps_d) {
+    GST_DEBUG ("Using min duration from range %s for fps %d/%d", [range description].UTF8String, fps_n, fps_d);
+    return range.minFrameDuration;
+  }
+
+  max_dur = gst_util_uint64_scale (GST_SECOND, range.maxFrameDuration.value, range.maxFrameDuration.timescale);
+  gst_video_guess_framerate (max_dur, &guessed_n, &guessed_d);
+  if (guessed_n == fps_n && guessed_d == fps_d) {
+    GST_DEBUG ("Using max duration from range %s for fps %d/%d", [range description].UTF8String, fps_n, fps_d);
+    return range.maxFrameDuration;
+  }
+
+  return kCMTimeInvalid;
 }
