@@ -201,6 +201,17 @@ gst_alpha_combine_unlock_reset_flushing_state (GstAlphaCombine * self)
   self->alpha_format_cookie = 0;
 }
 
+/* Has to be called with buffer_lock held */
+static void
+gst_alpha_combine_reset (GstAlphaCombine * self)
+{
+  gst_alpha_combine_clear_sink_pad_probe (self);
+  gst_buffer_replace (&self->alpha_buffer, NULL);
+  gst_buffer_replace (&self->last_alpha_buffer, NULL);
+  self->last_flow_ret = GST_FLOW_OK;
+  self->alpha_eos = FALSE;
+}
+
 static void
 gst_alpha_combine_unlock_stop (GstAlphaCombine * self, GstPad * pad)
 {
@@ -212,7 +223,7 @@ gst_alpha_combine_unlock_stop (GstAlphaCombine * self, GstPad * pad)
     if (self->flush_stops == 2) {
       GST_DEBUG_OBJECT (self,
           "Both sink pads received FLUSH_STOP, unblocking them");
-      gst_alpha_combine_clear_sink_pad_probe (self);
+      gst_alpha_combine_reset (self);
     } else {
       GST_DEBUG_OBJECT (pad, "FLUSH_STOP received, blocking");
       g_assert (!self->pad_block_id);
@@ -227,18 +238,6 @@ gst_alpha_combine_unlock_stop (GstAlphaCombine * self, GstPad * pad)
   }
 
   gst_alpha_combine_unlock_reset_flushing_state (self);
-  g_mutex_unlock (&self->buffer_lock);
-}
-
-static void
-gst_alpha_combine_reset (GstAlphaCombine * self)
-{
-  g_mutex_lock (&self->buffer_lock);
-  gst_alpha_combine_clear_sink_pad_probe (self);
-  gst_buffer_replace (&self->alpha_buffer, NULL);
-  gst_buffer_replace (&self->last_alpha_buffer, NULL);
-  self->last_flow_ret = GST_FLOW_OK;
-  self->alpha_eos = FALSE;
   g_mutex_unlock (&self->buffer_lock);
 }
 
@@ -592,7 +591,6 @@ gst_alpha_combine_alpha_event (GstPad * pad, GstObject * object,
       break;
     case GST_EVENT_FLUSH_STOP:
       gst_alpha_combine_unlock_stop (self, pad);
-      gst_alpha_combine_reset (self);
       break;
     case GST_EVENT_CAPS:
     {
@@ -686,7 +684,9 @@ gst_alpha_combine_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      g_mutex_lock (&self->buffer_lock);
       gst_alpha_combine_reset (self);
+      g_mutex_unlock (&self->buffer_lock);
       self->src_format = GST_VIDEO_FORMAT_UNKNOWN;
       gst_video_info_init (&self->sink_vinfo);
       gst_video_info_init (&self->alpha_vinfo);
