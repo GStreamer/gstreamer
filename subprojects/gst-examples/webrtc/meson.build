@@ -1,11 +1,11 @@
 gst_req = '>= 1.14.0'
 gstsdp_dep = dependency('gstreamer-sdp-1.0', version : gst_req,
-    fallback : ['gst-plugins-base', 'sdp_dep'])
+    allow_fallback: true)
 
 libsoup_dep = dependency('libsoup-2.4', version : '>=2.48',
-    fallback : ['libsoup', 'libsoup_dep'], required: false)
+    include_type: 'system', allow_fallback: true, required: false)
 json_glib_dep = dependency('json-glib-1.0',
-    fallback : ['json-glib', 'json_glib_dep'], required: false)
+    include_type: 'system', allow_fallback: true, required: false)
 
 if not libsoup_dep.found() or not json_glib_dep.found()
     message('WebRTC examples are disabled because some dependencies are missing.')
