@@ -22,6 +22,9 @@ rm rustup-init;
 chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
 cargo install --locked cargo-c --version 0.10.12+cargo-0.87.0
+# We don't need them in the build image and they occupy
+# 600mb of html files (athough they compress extremely well)
+rustup component remove rust-docs
 
 rustup --version
 cargo --version
