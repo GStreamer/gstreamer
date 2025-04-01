@@ -17,9 +17,9 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION: icestream
- * @short_description: IceStream object
- * @title: GstIceStream
+ * SECTION: GstWebRTCICEStream
+ * @short_description: GstWebRTCICEStream object
+ * @title: GstWebRTCICEStream
  * @symbols:
  * - GstWebRTCICEStream
  */
