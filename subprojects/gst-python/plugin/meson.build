@@ -6,3 +6,7 @@ gstpython = library('gstpython',
     install_dir : '@0@/gstreamer-1.0'.format(get_option('libdir')),
 )
 plugins = [gstpython]
+# XXX: Generate a pc file for this plugin? Can gstpython be statically linked?
+dep = declare_dependency(link_with: gstpython, variables: {'full_path': gstpython.full_path()})
+meson.override_dependency(gstpython.name(), dep)
+gst_plugins = [dep]
