@@ -1,6 +1,6 @@
 [wrap-file]
-directory = glib-networking-2.78.1
-source_url = https://download.gnome.org/sources/glib-networking/2.78/glib-networking-2.78.1.tar.xz
-source_fallback_url = https://ftp.acc.umu.se/pub/gnome/sources/glib-networking/2.78/glib-networking-2.78.1.tar.xz
-source_filename = glib-networking-2.78.1.tar.xz
-source_hash = e48f2ddbb049832cbb09230529c5e45daca9f0df0eda325f832f7379859bf09f
+directory = glib-networking-2.80.1
+source_url = https://download.gnome.org/sources/glib-networking/2.80/glib-networking-2.80.1.tar.xz
+source_fallback_url = https://deb.debian.org/debian/pool/main/g/glib-networking/glib-networking_2.80.1.orig.tar.xz
+source_filename = glib-networking-2.80.1.tar.xz
+source_hash = b80e2874157cd55071f1b6710fa0b911d5ac5de106a9ee2a4c9c7bee61782f8e
