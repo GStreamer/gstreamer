@@ -264,7 +264,12 @@ restart:
   while ((cur = l->pending_plugins)) {
     PendingPluginEntry *entry = (PendingPluginEntry *) (cur->data);
 
-    if (!plugin_loader_load_and_sync (l, entry)) {
+    /* Maybe the cur(current head of the pending plugins list) has already been
+     * processed and deleted from pending plugins in handle_rx_packet when
+     * received this plugin details, so here add cur == l->pending_plugins
+     * to ensure that the cur is valid */
+    if (!plugin_loader_load_and_sync (l, entry)
+        && cur == l->pending_plugins) {
       /* Create dummy plugin entry to block re-scanning this file */
       GST_ERROR ("Plugin file %s failed to load. Blacklisting",
           entry->filename);
