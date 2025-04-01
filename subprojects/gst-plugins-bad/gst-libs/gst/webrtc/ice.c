@@ -182,6 +182,7 @@ gst_webrtc_ice_set_local_credentials (GstWebRTCICE * ice,
  * gst_webrtc_ice_gather_candidates:
  * @ice: The #GstWebRTCICE
  * @stream: The #GstWebRTCICEStream
+ *
  * Returns: FALSE on error, TRUE otherwise
  *
  * Since: 1.22
@@ -215,6 +216,7 @@ gst_webrtc_ice_set_is_controller (GstWebRTCICE * ice, gboolean controller)
 /**
  * gst_webrtc_ice_get_is_controller:
  * @ice: The #GstWebRTCICE
+ *
  * Returns: TRUE if set as controller, FALSE otherwise
  *
  * Since: 1.22
@@ -267,7 +269,8 @@ gst_webrtc_ice_set_tos (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
  * gst_webrtc_ice_get_local_candidates:
  * @ice: The #GstWebRTCICE
  * @stream: The #GstWebRTCICEStream
- * Returns: (transfer full)(array zero-terminated=1): List of local candidates
+ *
+ * Returns: (transfer full) (array zero-terminated=1): List of local candidates
  *
  * Since: 1.22
  */
@@ -286,6 +289,7 @@ gst_webrtc_ice_get_local_candidates (GstWebRTCICE * ice,
  * gst_webrtc_ice_get_remote_candidates:
  * @ice: The #GstWebRTCICE
  * @stream: The #GstWebRTCICEStream
+ *
  * Returns: (transfer full) (array zero-terminated=1): List of remote candidates
  *
  * Since: 1.22
