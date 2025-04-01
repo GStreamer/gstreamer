@@ -1,5 +1,4 @@
-import { instance } from "/js/viz-standalone.mjs";
-import Fuse from '/js/fuse.min.mjs'
+import "/dist/bundle.js";
 
 let ws = null;
 
@@ -54,7 +53,7 @@ async function generateSvg(img) {
 
     img.creating_svg = true;
     try {
-        let viz = await instance();
+        let viz = await window.instance();
         const svg = viz.renderSVGElement(img.dot_info.content);
         img.src = URL.createObjectURL(new Blob([svg.outerHTML], { type: 'image/svg+xml' }));
         img.creating_svg = false;
@@ -303,7 +302,7 @@ function updateSearch() {
         title: div.querySelector('h2').textContent
     }));
 
-    const fuse = new Fuse(list, options);
+    const fuse = new window.Fuse(list, options);
     const results = fuse.search(input.value);
 
     for (div of allDivs) {
