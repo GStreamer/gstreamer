@@ -1,7 +1,7 @@
 [wrap-file]
 directory = libdrm-2.4.124
 source_url = https://dri.freedesktop.org/libdrm/libdrm-2.4.124.tar.xz
-source_fallback_url = http://deb.debian.org/debian/pool/main/libd/libdrm/libdrm_2.4.124.orig.tar.xz
+source_fallback_url = https://deb.debian.org/debian/pool/main/libd/libdrm/libdrm_2.4.124.orig.tar.xz
 source_filename = libdrm-2.4.124.tar.xz
 source_hash = ac36293f61ca4aafaf4b16a2a7afff312aa4f5c37c9fbd797de9e3c0863ca379
 
