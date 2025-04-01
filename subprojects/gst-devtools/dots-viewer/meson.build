@@ -1,4 +1,4 @@
-if not add_languages('rust', required: get_option('dots_viewer'))
+if not add_languages('rust', required: get_option('dots_viewer'), native: false)
   subdir_done()
 endif
 
