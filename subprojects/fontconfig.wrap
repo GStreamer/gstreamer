@@ -1,9 +1,10 @@
 [wrap-file]
-directory = fontconfig-2.14.2
-source_url = https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.14.2.tar.xz
-source_filename = fontconfig-2.14.2.tar.xz
-source_hash = dba695b57bce15023d2ceedef82062c2b925e51f5d4cc4aef736cf13f60a468b
-diff_files = fontconfig-2.14.2/0001-meson-Always-use-posix-path-even-on-Windows.patch, fontconfig-2.14.2/0001-meson-Always-write-utf-8-files-with-LF-newlines.patch
+directory = fontconfig-2.15.0
+source_url = https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.15.0.tar.xz
+source_fallback_url = http://deb.debian.org/debian/pool/main/f/fontconfig/fontconfig_2.15.0.orig.tar.xz
+source_filename = fontconfig-2.15.0.tar.xz
+source_hash = 63a0658d0e06e0fa886106452b58ef04f21f58202ea02a94c39de0d3335d7c0e
+diff_files = fontconfig-2.15.0/0001-meson-Always-use-posix-path-even-on-Windows.patch
 
 [provide]
 fontconfig = fontconfig_dep
