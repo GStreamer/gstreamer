@@ -1,7 +1,7 @@
 [wrap-file]
 directory = libnice-0.1.22
 source_url = https://nice.freedesktop.org/releases/libnice-0.1.22.tar.gz
-source_fallback_url = http://deb.debian.org/debian/pool/main/libn/libnice/libnice_0.1.22.orig.tar.gz
+source_fallback_url = https://deb.debian.org/debian/pool/main/libn/libnice/libnice_0.1.22.orig.tar.gz
 source_filename = libnice-0.1.22.tar.gz
 source_hash = a5f724cf09eae50c41a7517141d89da4a61ec9eaca32da4a0073faed5417ad7e
 

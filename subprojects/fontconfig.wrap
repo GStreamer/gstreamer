@@ -1,7 +1,7 @@
 [wrap-file]
 directory = fontconfig-2.15.0
 source_url = https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.15.0.tar.xz
-source_fallback_url = http://deb.debian.org/debian/pool/main/f/fontconfig/fontconfig_2.15.0.orig.tar.xz
+source_fallback_url = https://deb.debian.org/debian/pool/main/f/fontconfig/fontconfig_2.15.0.orig.tar.xz
 source_filename = fontconfig-2.15.0.tar.xz
 source_hash = 63a0658d0e06e0fa886106452b58ef04f21f58202ea02a94c39de0d3335d7c0e
 diff_files = fontconfig-2.15.0/0001-meson-Always-use-posix-path-even-on-Windows.patch
