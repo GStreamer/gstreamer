@@ -1,8 +1,8 @@
 [wrap-file]
-directory = harfbuzz-8.0.0
-source_url = https://github.com/harfbuzz/harfbuzz/releases/download/8.0.0/harfbuzz-8.0.0.tar.xz
-source_filename = harfbuzz-8.0.0.tar.xz
-source_hash = 1f98b5e3d06a344fe667d7e8210094ced458791499839bddde98c167ce6a7c79
+directory = harfbuzz-10.4.0
+source_url = https://github.com/harfbuzz/harfbuzz/releases/download/10.4.0/harfbuzz-10.4.0.tar.xz
+source_filename = harfbuzz-10.4.0.tar.xz
+source_hash = 480b6d25014169300669aa1fc39fb356c142d5028324ea52b3a27648b9beaad8
 
 [provide]
 harfbuzz = libharfbuzz_dep

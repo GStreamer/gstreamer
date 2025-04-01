@@ -1,7 +1,7 @@
 [wrap-file]
 directory = gobject-introspection-1.74.0
 source_url = https://download.gnome.org/sources/gobject-introspection/1.74/gobject-introspection-1.74.0.tar.xz
-source_fallback_url = https://ftp.acc.umu.se/pub/gnome/sources/gobject-introspection/1.74/gobject-introspection-1.74.0.tar.xz
+source_fallback_url = https://deb.debian.org/debian/pool/main/g/gobject-introspection/gobject-introspection_1.74.0.orig.tar.xz
 source_filename = gobject-introspection-1.74.0.tar.xz
 source_hash = 347b3a719e68ba4c69ff2d57ee2689233ea8c07fc492205e573386779e42d653
 wrapdb_version = 1.74.0-0

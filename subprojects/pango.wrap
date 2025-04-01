@@ -1,9 +1,9 @@
 [wrap-file]
-directory = pango-1.54.0
-source_url = https://download.gnome.org/sources/pango/1.54/pango-1.54.0.tar.xz
-source_fallback_url = https://ftp.acc.umu.se/pub/gnome/sources/pango/1.54/pango-1.54.0.tar.xz
-source_filename = pango-1.54.0.tar.xz
-source_hash = 8a9eed75021ee734d7fc0fdf3a65c3bba51dfefe4ae51a9b414a60c70b2d1ed8
+directory = pango-1.56.3
+source_url = https://download.gnome.org/sources/pango/1.54/pango-1.56.3.tar.xz
+source_fallback_url = https://deb.debian.org/debian/pool/main/p/pango1.0/pango1.0_1.56.3.orig.tar.xz
+source_filename = pango-1.56.3.tar.xz
+source_hash = 2606252bc25cd8d24e1b7f7e92c3a272b37acd6734347b73b47a482834ba2491
 
 [provide]
-dependency_names = pango
+dependency_names = pango, pangocairo, pangofc, pangoft2, pangoot, pangoxft
