@@ -98,7 +98,7 @@ conf_lib_rs = configure_file(input : 'conf_lib.rs.in',
 
 conf = static_library('gst_ptp_helper_conf', conf_lib_rs,
   override_options : ['rust_std=2018'],
-  rust_crate_type : 'rlib')
+  rust_abi : 'rust')
 
 exe = executable('gst-ptp-helper', 'main.rs',
   override_options : ['rust_std=2018'],
