@@ -1,10 +1,18 @@
 #! /bin/bash
 
 image_cache="${SUBPROJECTS_CACHE_DIR:-}"
+ci_image_info="/.gstreamer-ci-linux-image";
 
 # Print useful metadata at the start of the build
 if [[ -e "/etc/os-release" ]]; then
   cat /etc/os-release
+fi
+
+if [[ -e "$ci_image_info" && -n "${CI:-}" ]]; then
+  if [[ -z "$image_cache" ]]; then
+    echo "Running in CI but haven't defined SUBPROJECTS_CACHE_DIR"
+    exit 1
+  fi
 fi
 
 whoami
@@ -15,10 +23,9 @@ echo $SHELL
 echo $PATH
 
 # On the CI image we install the rust toolcahin under this path
-# If it exists set the HOME and PATH variables and print the versions
+# set the HOME and PATH variables and print the versions
 # of what we have installed
-cargo_binary="/usr/local/cargo/bin/cargo";
-if [[ -e "$cargo_binary" ]]; then
+if [[ -e "$ci_image_info" ]]; then
   export RUSTUP_HOME="/usr/local/rustup"
   export CARGO_HOME="/usr/local/cargo"
   export PATH="/usr/local/cargo/bin:$PATH"

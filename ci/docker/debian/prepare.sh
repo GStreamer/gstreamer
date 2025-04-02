@@ -2,6 +2,8 @@
 
 set -eux
 
+bash ./ci/scripts/create-ci-identifier.sh
+
 bash ./ci/docker/debian/install-deps.sh
 
 bash ./ci/scripts/install-rust.sh

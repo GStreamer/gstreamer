@@ -2,6 +2,8 @@
 
 set -eux
 
+bash ./ci/scripts/create-ci-identifier.sh
+
 bash ./ci/docker/fedora/install-deps.sh
 
 # Configure git for various usage
