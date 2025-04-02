@@ -21,7 +21,8 @@ exif_dep = dependency('libexif', version : '>= 0.6.16', required : false)
 nalutils_dep = gstcodecparsers_dep.partial_dependency (compile_args: true, includes: true)
 
 enable_gst_play_tests = get_option('gst_play_tests')
-libsoup_dep = dependency('libsoup-3.0', include_type: 'system', required: enable_gst_play_tests)
+libsoup_dep = dependency('libsoup-3.0', include_type: 'system', required: enable_gst_play_tests,
+                         default_options: {'tests': false})
 
 # name, condition when to skip the test and extra dependencies
 base_tests = [

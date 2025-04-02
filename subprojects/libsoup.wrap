@@ -1,11 +1,9 @@
 [wrap-file]
-directory = libsoup-2.74.3
-source_url = https://download.gnome.org/sources/libsoup/2.74/libsoup-2.74.3.tar.xz
-source_fallback_url = https://deb.debian.org/debian/pool/main/libs/libsoup2.4/libsoup2.4_2.74.3.orig.tar.xz
-source_filename = libsoup-2.74.3.tar.xz
-source_hash = e4b77c41cfc4c8c5a035fcdc320c7bc6cfb75ef7c5a034153df1413fa1d92f13
-diff_files = libsoup-2.74.3/0001-Workaround-MinGW-build-werror.patch
+directory = libsoup-3.6.5
+source_url = https://download.gnome.org/sources/libsoup/3.6/libsoup-3.6.5.tar.xz
+source_fallback_url = https://deb.debian.org/debian/pool/main/libs/libsoup3/libsoup3_3.6.5.orig.tar.xz
+source_filename = libsoup-3.6.5.tar.xz
+source_hash = 6891765aac3e949017945c3eaebd8cc8216df772456dc9f460976fbdb7ada234
 
 [provide]
-libsoup-2.4 = libsoup_dep
-libsoup-gnome-2.4 = libsoup_gnome_dep
+libsoup-3.0 = libsoup_dep

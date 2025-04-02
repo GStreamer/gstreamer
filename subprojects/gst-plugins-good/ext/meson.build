@@ -24,7 +24,8 @@ soup_dlopen_target_kwargs = {}
 if get_option('soup').allowed() or get_option('adaptivedemux2').allowed()
   if soup_ver_opt in ['auto', '3']
     libsoup3_dep = dependency('libsoup-3.0', allow_fallback: true, include_type: 'system',
-                              required: soup_ver_opt == '3' and soup_lookup_dep)
+                              required: soup_ver_opt == '3' and soup_lookup_dep,
+                              default_options: {'tests': false})
   endif
   if soup_ver_opt in ['auto', '2']
     libsoup2_dep = dependency('libsoup-2.4', version: '>=2.48', allow_fallback: true,

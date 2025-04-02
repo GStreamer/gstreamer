@@ -984,13 +984,16 @@ connect_to_websocket_server_async (void)
   SoupSession *session;
   const char *https_aliases[] = { "wss", NULL };
 
-  session =
-      soup_session_new_with_options (SOUP_SESSION_SSL_STRICT, !disable_ssl,
-      SOUP_SESSION_SSL_USE_SYSTEM_CA_FILE, TRUE,
-      //SOUP_SESSION_SSL_CA_FILE, "/etc/ssl/certs/ca-bundle.crt",
-      SOUP_SESSION_HTTPS_ALIASES, https_aliases, NULL);
+  session = soup_session_new_with_options ("ssl-strict", !disable_ssl,
+      "ssl-use-system-ca-file", TRUE,
+      //"ssl-ca-file", "/etc/ssl/certs/ca-bundle.crt",
+      "http-aliases", https_aliases, NULL);
 
+#if SOUP_CHECK_VERSION(3,0,0)
+  logger = soup_logger_new (SOUP_LOGGER_LOG_BODY);
+#else
   logger = soup_logger_new (SOUP_LOGGER_LOG_BODY, -1);
+#endif
   soup_session_add_feature (session, SOUP_SESSION_FEATURE (logger));
   g_object_unref (logger);
 
@@ -999,8 +1002,11 @@ connect_to_websocket_server_async (void)
   gst_print ("Connecting to server...\n");
 
   /* Once connected, we will register */
-  soup_session_websocket_connect_async (session, message, NULL, NULL, NULL,
-      (GAsyncReadyCallback) on_server_connected, message);
+  soup_session_websocket_connect_async (session, message, NULL, NULL,
+#if SOUP_CHECK_VERSION(3,0,0)
+      G_PRIORITY_DEFAULT,
+#endif
+      NULL, (GAsyncReadyCallback) on_server_connected, message);
   app_state = SERVER_CONNECTING;
 }
 
