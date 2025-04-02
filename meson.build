@@ -35,9 +35,16 @@ endif
 gitlint_req = '>= 0.18'
 gitlint = find_program('gitlint', version: gitlint_req, required: false)
 if gitlint.found()
-  gitlint_status = run_command(gitlint, 'install-hook', check: false)
-  if gitlint_status.returncode() != 0
-    warning(gitlint_status.stderr().strip())
+  git = find_program('git', required: false)
+  if git.found() and fsmod.is_dir(meson.current_source_dir() / '.git')
+    gitlint_status = run_command(git, 'hook', 'run', 'commit-msg', check: false)
+    # exit code 253 means "wrong invocation" in Gitlint
+    if gitlint_status.returncode() != 253
+      gitlint_status = run_command(gitlint, 'install-hook', check: false)
+      if gitlint_status.returncode() != 0
+        warning(gitlint_status.stderr().strip())
+      endif
+    endif
   endif
 else
   warning('gitlint not found or too old, please install it with your package manager or `python3 -m pip install gitlint` to enable the commit message hook')
