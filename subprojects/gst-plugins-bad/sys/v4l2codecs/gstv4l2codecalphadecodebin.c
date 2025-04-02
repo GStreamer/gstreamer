@@ -119,8 +119,7 @@ gst_v4l2_codec_alpha_decode_bin_constructed (GObject * obj)
   GstPad *src_gpad, *sink_gpad;
   GstPad *src_pad = NULL, *sink_pad = NULL;
   GstElement *alphademux = NULL;
-  GstElement *queue = NULL;
-  GstElement *alpha_queue = NULL;
+  GstElement *mq = NULL;
   GstElement *decoder = NULL;
   GstElement *alpha_decoder = NULL;
   GstElement *alphacombine = NULL;
@@ -141,10 +140,9 @@ gst_v4l2_codec_alpha_decode_bin_constructed (GObject * obj)
     goto cleanup;
   }
 
-  queue = gst_element_factory_make ("queue", NULL);
-  alpha_queue = gst_element_factory_make ("queue", NULL);
-  if (!queue || !alpha_queue) {
-    priv->missing_element = "queue";
+  mq = gst_element_factory_make ("multiqueue", NULL);
+  if (!mq) {
+    priv->missing_element = "multiqueue";
     goto cleanup;
   }
 
@@ -171,7 +169,7 @@ gst_v4l2_codec_alpha_decode_bin_constructed (GObject * obj)
     goto cleanup;
   }
 
-  gst_bin_add_many (GST_BIN (self), alphademux, queue, alpha_queue, decoder,
+  gst_bin_add_many (GST_BIN (self), alphademux, mq, decoder,
       alpha_decoder, alphacombine, NULL);
 
   /* link elements */
@@ -179,21 +177,19 @@ gst_v4l2_codec_alpha_decode_bin_constructed (GObject * obj)
   gst_ghost_pad_set_target (GST_GHOST_PAD (sink_gpad), sink_pad);
   gst_clear_object (&sink_pad);
 
-  gst_element_link_pads (alphademux, "src", queue, "sink");
-  gst_element_link_pads (queue, "src", decoder, "sink");
+  gst_element_link_pads (alphademux, "src", mq, "sink_0");
+  gst_element_link_pads (mq, "src_0", decoder, "sink");
   gst_element_link_pads (decoder, "src", alphacombine, "sink");
 
-  gst_element_link_pads (alphademux, "alpha", alpha_queue, "sink");
-  gst_element_link_pads (alpha_queue, "src", alpha_decoder, "sink");
+  gst_element_link_pads (alphademux, "alpha", mq, "sink_1");
+  gst_element_link_pads (mq, "src_1", alpha_decoder, "sink");
   gst_element_link_pads (alpha_decoder, "src", alphacombine, "alpha");
 
   src_pad = gst_element_get_static_pad (alphacombine, "src");
   gst_ghost_pad_set_target (GST_GHOST_PAD (src_gpad), src_pad);
   gst_object_unref (src_pad);
 
-  g_object_set (queue, "max-size-bytes", 0, "max-size-time",
-      G_GUINT64_CONSTANT (0), "max-size-buffers", 1, NULL);
-  g_object_set (alpha_queue, "max-size-bytes", 0, "max-size-time",
+  g_object_set (mq, "max-size-bytes", 0, "max-size-time",
       G_GUINT64_CONSTANT (0), "max-size-buffers", 1, NULL);
 
   /* signal success, we will handle this in NULL->READY transition */
@@ -202,8 +198,7 @@ gst_v4l2_codec_alpha_decode_bin_constructed (GObject * obj)
 
 cleanup:
   gst_clear_object (&alphademux);
-  gst_clear_object (&queue);
-  gst_clear_object (&alpha_queue);
+  gst_clear_object (&mq);
   gst_clear_object (&decoder);
   gst_clear_object (&alpha_decoder);
   gst_clear_object (&alphacombine);
