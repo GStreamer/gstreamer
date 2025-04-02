@@ -1,0 +1,13 @@
+[wrap-file]
+directory = nghttp2-1.62.1
+source_url = https://github.com/nghttp2/nghttp2/releases/download/v1.62.1/nghttp2-1.62.1.tar.xz
+source_filename = nghttp2-1.62.1.tar.xz
+source_hash = 2345d4dc136fda28ce243e0bb21f2e7e8ef6293d62c799abbf6f633a6887af72
+patch_filename = nghttp2_1.62.1-2_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/nghttp2_1.62.1-2/get_patch
+patch_hash = 9bbc38da6ebb57ccecbbf0f719f8b3dd3a1632e1b6b1f898665fb342d6a6647c
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/nghttp2_1.62.1-2/nghttp2-1.62.1.tar.xz
+wrapdb_version = 1.62.1-2
+
+[provide]
+dependency_names = libnghttp2

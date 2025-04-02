@@ -25,31 +25,32 @@
 #define STUN_SERVER "stun.l.google.com:19302"
 
 
-
 typedef struct _ReceiverEntry ReceiverEntry;
 
-ReceiverEntry *create_receiver_entry (SoupWebsocketConnection * connection);
-void destroy_receiver_entry (gpointer receiver_entry_ptr);
+static ReceiverEntry *create_receiver_entry (SoupWebsocketConnection *
+    connection);
+static void destroy_receiver_entry (gpointer receiver_entry_ptr);
 
 GstPadProbeReturn payloader_caps_event_probe_cb (GstPad * pad,
     GstPadProbeInfo * info, gpointer user_data);
 
-void on_offer_created_cb (GstPromise * promise, gpointer user_data);
-void on_negotiation_needed_cb (GstElement * webrtcbin, gpointer user_data);
-void on_ice_candidate_cb (GstElement * webrtcbin, guint mline_index,
+static void on_offer_created_cb (GstPromise * promise, gpointer user_data);
+static void on_negotiation_needed_cb (GstElement * webrtcbin,
+    gpointer user_data);
+static void on_ice_candidate_cb (GstElement * webrtcbin, guint mline_index,
     gchar * candidate, gpointer user_data);
 
-void soup_websocket_message_cb (SoupWebsocketConnection * connection,
+static void soup_websocket_message_cb (SoupWebsocketConnection * connection,
     SoupWebsocketDataType data_type, GBytes * message, gpointer user_data);
-void soup_websocket_closed_cb (SoupWebsocketConnection * connection,
+static void soup_websocket_closed_cb (SoupWebsocketConnection * connection,
     gpointer user_data);
 
-void soup_http_handler (SoupServer * soup_server, SoupMessage * message,
-    const char *path, GHashTable * query, SoupClientContext * client_context,
+static void soup_http_handler (SoupServer * soup_server,
+    SoupServerMessage * msg, const char *path, GHashTable * query,
     gpointer user_data);
-void soup_websocket_handler (G_GNUC_UNUSED SoupServer * server,
-    SoupWebsocketConnection * connection, const char *path,
-    SoupClientContext * client_context, gpointer user_data);
+static void soup_websocket_handler (G_GNUC_UNUSED SoupServer * server,
+    SoupServerMessage * msg, const char *path, SoupWebsocketConnection * conn,
+    gpointer user_data);
 
 static gchar *get_string_from_json_object (JsonObject * object);
 
@@ -190,7 +191,7 @@ handle_media_stream (GstPad * pad, GstElement * pipe, const char *convert_name,
   GstElement *q, *conv, *resample, *sink;
   GstPadLinkReturn ret;
 
-  gst_print ("Trying to handle stream with %s ! %s", convert_name, sink_name);
+  gst_println ("Trying to handle stream with %s ! %s", convert_name, sink_name);
 
   q = gst_element_factory_make ("queue", NULL);
   g_assert_nonnull (q);
@@ -308,7 +309,7 @@ bus_watch_cb (GstBus * bus, GstMessage * message, gpointer user_data)
   return G_SOURCE_CONTINUE;
 }
 
-ReceiverEntry *
+static ReceiverEntry *
 create_receiver_entry (SoupWebsocketConnection * connection)
 {
   GError *error;
@@ -384,7 +385,7 @@ cleanup:
   return NULL;
 }
 
-void
+static void
 destroy_receiver_entry (gpointer receiver_entry_ptr)
 {
   ReceiverEntry *receiver_entry = (ReceiverEntry *) receiver_entry_ptr;
@@ -412,7 +413,7 @@ destroy_receiver_entry (gpointer receiver_entry_ptr)
 }
 
 
-void
+static void
 on_offer_created_cb (GstPromise * promise, gpointer user_data)
 {
   gchar *sdp_string;
@@ -436,7 +437,7 @@ on_offer_created_cb (GstPromise * promise, gpointer user_data)
   gst_promise_unref (local_desc_promise);
 
   sdp_string = gst_sdp_message_as_text (offer->sdp);
-  gst_print ("Negotiation offer created:\n%s\n", sdp_string);
+  gst_println ("Negotiation offer created:\n%s", sdp_string);
 
   sdp_json = json_object_new ();
   json_object_set_string_member (sdp_json, "type", "sdp");
@@ -457,13 +458,13 @@ on_offer_created_cb (GstPromise * promise, gpointer user_data)
 }
 
 
-void
+static void
 on_negotiation_needed_cb (GstElement * webrtcbin, gpointer user_data)
 {
   GstPromise *promise;
   ReceiverEntry *receiver_entry = (ReceiverEntry *) user_data;
 
-  gst_print ("Creating negotiation offer\n");
+  gst_println ("Creating negotiation offer");
 
   promise = gst_promise_new_with_change_func (on_offer_created_cb,
       (gpointer) receiver_entry, NULL);
@@ -471,7 +472,7 @@ on_negotiation_needed_cb (GstElement * webrtcbin, gpointer user_data)
 }
 
 
-void
+static void
 on_ice_candidate_cb (G_GNUC_UNUSED GstElement * webrtcbin, guint mline_index,
     gchar * candidate, gpointer user_data)
 {
@@ -496,7 +497,7 @@ on_ice_candidate_cb (G_GNUC_UNUSED GstElement * webrtcbin, guint mline_index,
 }
 
 
-void
+static void
 soup_websocket_message_cb (G_GNUC_UNUSED SoupWebsocketConnection * connection,
     SoupWebsocketDataType data_type, GBytes * message, gpointer user_data)
 {
@@ -573,7 +574,7 @@ soup_websocket_message_cb (G_GNUC_UNUSED SoupWebsocketConnection * connection,
     }
     sdp_string = json_object_get_string_member (data_json_object, "sdp");
 
-    gst_print ("Received SDP:\n%s\n", sdp_string);
+    gst_println ("Received SDP:\n%s", sdp_string);
 
     ret = gst_sdp_message_new (&sdp);
     g_assert_cmphex (ret, ==, GST_SDP_OK);
@@ -614,7 +615,7 @@ soup_websocket_message_cb (G_GNUC_UNUSED SoupWebsocketConnection * connection,
     candidate_string = json_object_get_string_member (data_json_object,
         "candidate");
 
-    gst_print ("Received ICE candidate with mline index %u; candidate: %s\n",
+    gst_println ("Received ICE candidate with mline index %u; candidate: %s",
         mline_index, candidate_string);
 
     g_signal_emit_by_name (receiver_entry->webrtcbin, "add-ice-candidate",
@@ -633,59 +634,52 @@ unknown_message:
   goto cleanup;
 }
 
-
-void
+static void
 soup_websocket_closed_cb (SoupWebsocketConnection * connection,
     gpointer user_data)
 {
   GHashTable *receiver_entry_table = (GHashTable *) user_data;
   g_hash_table_remove (receiver_entry_table, connection);
-  gst_print ("Closed websocket connection %p\n", (gpointer) connection);
+  gst_println ("Closed websocket connection %p", (gpointer) connection);
 }
 
-
-void
+static void
 soup_http_handler (G_GNUC_UNUSED SoupServer * soup_server,
-    SoupMessage * message, const char *path, G_GNUC_UNUSED GHashTable * query,
-    G_GNUC_UNUSED SoupClientContext * client_context,
+    SoupServerMessage * msg, const char *path, G_GNUC_UNUSED GHashTable * query,
     G_GNUC_UNUSED gpointer user_data)
 {
-  SoupBuffer *soup_buffer;
-
-  if ((g_strcmp0 (path, "/") != 0) && (g_strcmp0 (path, "/index.html") != 0)) {
-    soup_message_set_status (message, SOUP_STATUS_NOT_FOUND);
+  if (soup_server_message_get_method (msg) != SOUP_METHOD_GET) {
+    soup_server_message_set_status (msg, SOUP_STATUS_NOT_IMPLEMENTED, NULL);
     return;
   }
 
-  soup_buffer =
-      soup_buffer_new (SOUP_MEMORY_STATIC, html_source, strlen (html_source));
+  if ((g_strcmp0 (path, "/") != 0) && (g_strcmp0 (path, "/index.html") != 0)) {
+    soup_server_message_set_status (msg, SOUP_STATUS_NOT_FOUND, NULL);
+    return;
+  }
 
-  soup_message_headers_set_content_type (message->response_headers, "text/html",
-      NULL);
-  soup_message_body_append_buffer (message->response_body, soup_buffer);
-  soup_buffer_free (soup_buffer);
+  soup_server_message_set_response (msg, "text/html", SOUP_MEMORY_STATIC,
+      html_source, strlen (html_source));
 
-  soup_message_set_status (message, SOUP_STATUS_OK);
+  soup_server_message_set_status (msg, SOUP_STATUS_OK, NULL);
 }
 
-
-void
+static void
 soup_websocket_handler (G_GNUC_UNUSED SoupServer * server,
-    SoupWebsocketConnection * connection, G_GNUC_UNUSED const char *path,
-    G_GNUC_UNUSED SoupClientContext * client_context, gpointer user_data)
+    SoupServerMessage * msg, const char *path, SoupWebsocketConnection * conn,
+    gpointer user_data)
 {
   ReceiverEntry *receiver_entry;
   GHashTable *receiver_entry_table = (GHashTable *) user_data;
 
-  gst_print ("Processing new websocket connection %p", (gpointer) connection);
+  gst_println ("Processing new websocket connection %p", (gpointer) conn);
 
-  g_signal_connect (G_OBJECT (connection), "closed",
+  g_signal_connect (G_OBJECT (conn), "closed",
       G_CALLBACK (soup_websocket_closed_cb), (gpointer) receiver_entry_table);
 
-  receiver_entry = create_receiver_entry (connection);
-  g_hash_table_replace (receiver_entry_table, connection, receiver_entry);
+  receiver_entry = create_receiver_entry (conn);
+  g_hash_table_replace (receiver_entry_table, conn, receiver_entry);
 }
-
 
 static gchar *
 get_string_from_json_object (JsonObject * object)
@@ -707,10 +701,10 @@ get_string_from_json_object (JsonObject * object)
 }
 
 #ifdef G_OS_UNIX
-gboolean
+static gboolean
 exit_sighandler (gpointer user_data)
 {
-  gst_print ("Caught signal, stopping mainloop\n");
+  gst_println ("Caught signal, stopping mainloop");
   GMainLoop *mainloop = (GMainLoop *) user_data;
   g_main_loop_quit (mainloop);
   return TRUE;
@@ -739,15 +733,14 @@ main (int argc, char *argv[])
   g_unix_signal_add (SIGTERM, exit_sighandler, mainloop);
 #endif
 
-  soup_server =
-      soup_server_new (SOUP_SERVER_SERVER_HEADER, "webrtc-soup-server", NULL);
+  soup_server = soup_server_new ("server-header", "webrtc-soup-server", NULL);
   soup_server_add_handler (soup_server, "/", soup_http_handler, NULL, NULL);
   soup_server_add_websocket_handler (soup_server, "/ws", NULL, NULL,
       soup_websocket_handler, (gpointer) receiver_entry_table, NULL);
   soup_server_listen_all (soup_server, SOUP_HTTP_PORT,
       (SoupServerListenOptions) 0, NULL);
 
-  gst_print ("WebRTC page link: http://127.0.0.1:%d/\n", (gint) SOUP_HTTP_PORT);
+  gst_println ("WebRTC page link: http://127.0.0.1:%d/", (gint) SOUP_HTTP_PORT);
 
   g_main_loop_run (mainloop);
 

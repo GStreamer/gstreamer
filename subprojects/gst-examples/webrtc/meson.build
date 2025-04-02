@@ -1,8 +1,8 @@
-gst_req = '>= 1.14.0'
+gst_req = '>= 1.24.0'
 gstsdp_dep = dependency('gstreamer-sdp-1.0', version : gst_req,
     allow_fallback: true)
 
-libsoup_dep = dependency('libsoup-2.4', version : '>=2.48',
+libsoup_dep = dependency('libsoup-3.0', version: '>=3.2', default_options: {'tests': false},
     include_type: 'system', allow_fallback: true, required: false)
 json_glib_dep = dependency('json-glib-1.0',
     include_type: 'system', allow_fallback: true, required: false)
