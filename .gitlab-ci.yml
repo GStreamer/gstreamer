@@ -353,7 +353,7 @@ pre-commit checks:
     BUILD_GST_DEBUG: "-Dgstreamer:gst_debug=true"
     GST_WERROR: "true"
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
-    SUBPROJECTS_CACHE_DIR: "/subprojects"
+    SUBPROJECTS_CACHE_DIR: "/var/cache/subprojects"
     # Avoid weird issue about cross-device links
     # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3197
     GI_SCANNER_DISABLE_CACHE: "1"
@@ -381,7 +381,6 @@ pre-commit checks:
   variables:
     GST_WERROR: "true"
     MESON_ARGS: "${SIMPLE_BUILD}"
-    SUBPROJECTS_CACHE_DIR: "/subprojects"
   script:
     - $CI_PROJECT_DIR/ci/scripts/build.sh build/
     - ./gst-env.py gst-inspect-1.0 --version
@@ -683,7 +682,7 @@ abi-check:
   variables:
     GST_WERROR: "true"
     MESON_ARGS: "${SIMPLE_BUILD}"
-    SUBPROJECTS_CACHE_DIR: "/subprojects"
+    SUBPROJECTS_CACHE_DIR: !reference [".build", "variables", SUBPROJECTS_CACHE_DIR]
 
     # Avoid weird issue about cross-device links
     # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3197
@@ -775,7 +774,7 @@ check video formats:
     MESON_ARGS: "${SIMPLE_BUILD}"
     BUILD_GST_DEBUG: "-Dgstreamer:gst_debug=true"
     GST_WERROR: "true"
-    SUBPROJECTS_CACHE_DIR: "/subprojects"
+    SUBPROJECTS_CACHE_DIR: !reference [".build", "variables", SUBPROJECTS_CACHE_DIR]
     VIDEO_TOKEN: "GST_VIDEO_FORMATS_ALL_STR"
     VIDEO_HEADER: "subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"
     WL_TOKEN: "GST_WL_VIDEO_FORMATS"
@@ -806,8 +805,6 @@ gstreamer-full static build:
     MESON_ARGS: >-
       -Ddoc=disabled
       -Dqt5=disabled -Dqt6=enabled
-
-    SUBPROJECTS_CACHE_DIR: "/subprojects"
   script:
   - $CI_PROJECT_DIR/ci/scripts/build.sh build/
   - meson test -C build -v test-gst-full
@@ -832,7 +829,6 @@ gstreamer-full-minimal static build:
       -Dgst-full-typefind-functions=typefindfunctions:wav,flv
       -Dgst-full-device-providers=alsa:alsadeviceprovider
       -Dgst-full-dynamic-types=pbtypes:video_multiview_flagset
-    SUBPROJECTS_CACHE_DIR: "/subprojects"
 
   script:
   - $CI_PROJECT_DIR/ci/scripts/build.sh build/
@@ -874,7 +870,6 @@ fluster v4l2-stateless on visl:
       -Dgst-plugins-base:typefind=enabled
       -Dgst-plugins-base:playback=enabled
       -Dgst-plugins-good:matroska=enabled
-    SUBPROJECTS_CACHE_DIR: "/subprojects"
   script:
   - $CI_PROJECT_DIR/ci/scripts/build.sh build/
   - meson test -C build -v --suite v4l2-stateless-decoders
@@ -1019,7 +1014,6 @@ valgrind ges:
       -Dgst-plugins-bad:svthevcenc=disabled
     # Disable werror for the docs build, we don't need it
     GST_WERROR: 'false'
-    SUBPROJECTS_CACHE_DIR: "/subprojects"
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
   script:
     - $CI_PROJECT_DIR/ci/scripts/build-docs.sh build/

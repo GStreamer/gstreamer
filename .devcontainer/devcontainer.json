@@ -3,7 +3,7 @@
     "image": "registry.freedesktop.org/gstreamer/gstreamer/amd64/fedora:gst-toolbox-main",
     "containerUser": "containeruser",
     "remoteUser": "containeruser",
-    "postCreateCommand": ["python3", "${containerWorkspaceFolder}/ci/scripts/handle-subprojects-cache.py" ,"--cache-dir", "/subprojects", "subprojects/"],
+    "postCreateCommand": ["python3", "${containerWorkspaceFolder}/ci/scripts/handle-subprojects-cache.py" ,"--cache-dir", "/var/cache/subprojects", "subprojects/"],
     "privileged": false,
     "capAdd": [ "SYS_PTRACE" ],
     "customizations": {

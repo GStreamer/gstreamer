@@ -12,7 +12,7 @@ import subprocess
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument('subprojects_dir')
 PARSER.add_argument('--build', action="store_true", default=False)
-PARSER.add_argument('--cache-dir', default="/subprojects")
+PARSER.add_argument('--cache-dir', default="/var/cache/subprojects/")
 
 
 def create_cache_in_image(options):
