@@ -88,7 +88,7 @@ set(GStreamer_USE_STATIC_LIBS OFF)
 endif()
 
 # Set the environment for pkg-config
-if (WIN32)
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     set(ENV{PKG_CONFIG_PATH} "${GStreamer_ROOT_DIR}/lib/pkgconfig;${GStreamer_ROOT_DIR}/lib/gstreamer-1.0/pkgconfig;${GStreamer_ROOT_DIR}/lib/gio/modules/pkgconfig")
 else()
     set(ENV{PKG_CONFIG_PATH} "${GStreamer_ROOT_DIR}/lib/pkgconfig:${GStreamer_ROOT_DIR}/lib/gstreamer-1.0/pkgconfig:${GStreamer_ROOT_DIR}/lib/gio/modules/pkgconfig")
