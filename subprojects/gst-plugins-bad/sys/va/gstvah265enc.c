@@ -38,6 +38,26 @@
  *
  */
 
+/**
+ * SECTION:element-vah265lpenc
+ * @title: vah265lpenc
+ * @short_description: A VA-API based H265 low power video encoder
+ *
+ * vah265lpenc encodes raw video VA surfaces into H.265 bitstreams using
+ * the installed and chosen [VA-API](https://01.org/linuxmedia/vaapi)
+ * driver.
+ *
+ * The raw video frames in main memory can be imported into VA surfaces.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc num-buffers=60 ! timeoverlay ! vah265lpenc ! h265parse ! mp4mux ! filesink location=test.mp4
+ * ```
+ *
+ * Since: 1.22
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

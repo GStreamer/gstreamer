@@ -495,6 +495,22 @@ _register_debug_category (gpointer data)
   return NULL;
 }
 
+/**
+ * SECTION:element-vavp8alphadecodebin
+ * @title: vavp8alphadecodebin
+ * @short_description: A VA-API based VP8 video decoder
+ *
+ * Wraps two copies vavp8enc to decode a VP8 video with an alpha layer
+ * typically carried in a WebM file
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=sample.webm ! parsebin ! vavp8alphadecodebin ! autovideosink
+ * ```
+ *
+ * Since: 1.26
+ */
+
 static void
 gst_va_codec_vp8_alpha_decode_bin_class_init (GstVaCodecAlphaDecodeBinClass
     * klass, gchar * decoder_name)

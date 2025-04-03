@@ -693,6 +693,22 @@ _register_debug_category (gpointer data)
   return NULL;
 }
 
+/**
+ * SECTION:element-vavp9alphadecodebin
+ * @title: vavp9alphadecodebin
+ * @short_description: A VA-API based VP9 video decoder
+ *
+ * Wraps two copies vavp9enc to decode a VP9 video with an alpha layer
+ * typically carried in a WebM file
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=sample.webm ! parsebin ! vavp9alphadecodebin ! autovideosink
+ * ```
+ *
+ * Since: 1.26
+ */
+
 static void
 gst_va_codec_vp9_alpha_decode_bin_class_init (GstVaCodecAlphaDecodeBinClass
     * klass, gchar * decoder_name)
