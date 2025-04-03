@@ -406,7 +406,8 @@ again:
         ctx->n_memory = new_buffer->n_memory;
         for (int i = 0; i < new_buffer->n_memory; i++) {
           GstMemory *mem = gst_fd_allocator_alloc (allocator, fds_arr[i],
-              new_buffer->memories[i].size, GST_FD_MEMORY_FLAG_NONE);
+              new_buffer->memories[i].size + new_buffer->memories[i].offset,
+              GST_FD_MEMORY_FLAG_NONE);
           gst_memory_resize (mem, new_buffer->memories[i].offset,
               new_buffer->memories[i].size);
           GST_MINI_OBJECT_FLAG_SET (mem, GST_MEMORY_FLAG_READONLY);
