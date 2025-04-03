@@ -1573,9 +1573,11 @@ stops automatic ICE gathering.</doc>
         </parameters>
       </glib:signal>
     </class>
-    <record name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats" glib:type-name="GstWebRTCICECandidateStats" glib:get-type="gst_webrtc_ice_candidate_stats_get_type" c:symbol-prefix="webrtc_ice_candidate_stats">
+    <record name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats" version="1.22" glib:type-name="GstWebRTCICECandidateStats" glib:get-type="gst_webrtc_ice_candidate_stats_get_type" c:symbol-prefix="webrtc_ice_candidate_stats">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
       <field name="ipaddr" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">A string containing the address of the candidate. This value may be
+         an IPv4 address, an IPv6 address, or a fully-qualified domain name (Since: 1.22)</doc>
         <type name="utf8" c:type="gchar*"/>
       </field>
       <field name="port" writable="1">
@@ -1584,7 +1586,7 @@ stops automatic ICE gathering.</doc>
       </field>
       <field name="stream_id" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">A string that uniquely identifies the object that is being
- monitored to produce this set of statistics (Since: 1.22)</doc>
+            monitored to produce this set of statistics (Since: 1.22)</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="type" writable="1">
@@ -1593,7 +1595,7 @@ stops automatic ICE gathering.</doc>
       </field>
       <field name="proto" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">A string specifying the protocol (tcp or udp) used to transmit data
-on the @port (Since: 1.22)</doc>
+        on the @port (Since: 1.22)</doc>
         <type name="utf8" c:type="const gchar*"/>
       </field>
       <field name="relay_proto" writable="1">
@@ -1605,7 +1607,7 @@ on the @port (Since: 1.22)</doc>
       </field>
       <field name="url" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">For local candidates, the url property is the URL of the ICE server
-from which the candidate was received (Since: 1.22)</doc>
+      from which the candidate was received (Since: 1.22)</doc>
         <type name="utf8" c:type="gchar*"/>
       </field>
       <union name="ABI" c:type="ABI">
