@@ -957,7 +957,7 @@ gst_wpe_video_src_class_init (GstWpeVideoSrcClass * klass)
       G_TYPE_NONE, 1, G_TYPE_BYTES);
 
   /**
-   * GstWpeSrc::run-javascript:
+   * GstWpeVideoSrc::run-javascript:
    * @src: the object which received the signal
    * @script: the script to run
    *
