@@ -3273,9 +3273,12 @@ mq_slot_check_reconfiguration (MultiQueueSlot * slot)
     gst_element_post_message ((GstElement *) slot->dbin, selection_msg);
 }
 
+/* Update the `all_streams_present` state of the provided collection by checking
+ * if every stream is mapped to a slot */
 static void
 update_stream_presence (GstDecodebin3 * dbin, DecodebinCollection * collection)
 {
+  guint i, len;
   GList *tmp;
 
   if (dbin->upstream_handles_selection) {
@@ -3283,16 +3286,28 @@ update_stream_presence (GstDecodebin3 * dbin, DecodebinCollection * collection)
     return;
   }
 
-  if (g_list_length (dbin->slots) !=
+  /* All streams are present only if the number of slots if greater or equal to
+   * the number of streams in the collection */
+  if (g_list_length (dbin->slots) <
       gst_stream_collection_get_size (collection->collection)) {
     collection->all_streams_present = FALSE;
     return;
   }
 
-  for (tmp = dbin->slots; tmp; tmp = tmp->next) {
-    MultiQueueSlot *slot = tmp->data;
-    if (!stream_in_collection (collection->collection,
-            (gchar *) slot->active_stream_id)) {
+  /* Check if all streams of the collection are present on the current slots */
+  len = gst_stream_collection_get_size (collection->collection);
+  for (i = 0; i < len; i++) {
+    GstStream *stream =
+        gst_stream_collection_get_stream (collection->collection, i);
+    gboolean found_slot = FALSE;
+    for (tmp = dbin->slots; tmp; tmp = tmp->next) {
+      MultiQueueSlot *slot = tmp->data;
+      if (!g_strcmp0 (stream->stream_id, slot->active_stream_id)) {
+        found_slot = TRUE;
+        break;
+      }
+    }
+    if (!found_slot) {
       collection->all_streams_present = FALSE;
       return;
     }
