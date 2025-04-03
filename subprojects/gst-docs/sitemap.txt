@@ -166,6 +166,7 @@
 			additional/design/keyframe-force.md
 			additional/design/latency.md
 			additional/design/live-source.md
+			additional/design/machine-learning-analytics.md
 			additional/design/mediatype-audio-raw.md
 			additional/design/mediatype-text-raw.md
 			additional/design/mediatype-video-raw.md
