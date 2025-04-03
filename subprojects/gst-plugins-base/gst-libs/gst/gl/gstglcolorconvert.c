@@ -118,7 +118,13 @@ struct shader_templ
 
 static const char glsl_func_color_matrix[] = \
     "vec4 color_matrix_apply (vec4 texel, mat4 colormatrix) {\n" \
-    "  return colormatrix * texel;\n" \
+    // ignore alpha applying the RGB/YUV color matrix and copy alpha over to
+    // the output
+    "  float a = texel.a;\n" \
+    "  texel.a = 1.0;\n" \
+    "  vec4 ret = colormatrix * texel;\n" \
+    "  ret.a = a;\n" \
+    "  return ret;\n"
     "}\n";
 
 static const char glsl_func_swizzle[] = "vec4 swizzle(vec4 texel, int components[4]) {\n" \
