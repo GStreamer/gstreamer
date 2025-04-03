@@ -90,6 +90,8 @@ endif()
 # Set the environment for pkg-config
 if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     set(ENV{PKG_CONFIG_PATH} "${GStreamer_ROOT_DIR}/lib/pkgconfig;${GStreamer_ROOT_DIR}/lib/gstreamer-1.0/pkgconfig;${GStreamer_ROOT_DIR}/lib/gio/modules/pkgconfig")
+    # Block pkgconf's forced relocation for non-lib/pkgconfig modules on Windows -- https://github.com/pkgconf/pkgconf/commit/dcf529b83d621ed09e99e41fc35fdffd068bd87a
+    set(ENV{PKG_CONFIG_DONT_DEFINE_PREFIX} 1)
 else()
     set(ENV{PKG_CONFIG_PATH} "${GStreamer_ROOT_DIR}/lib/pkgconfig:${GStreamer_ROOT_DIR}/lib/gstreamer-1.0/pkgconfig:${GStreamer_ROOT_DIR}/lib/gio/modules/pkgconfig")
 endif()
