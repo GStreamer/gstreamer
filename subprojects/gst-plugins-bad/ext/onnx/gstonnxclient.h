@@ -30,6 +30,12 @@
 
 GST_DEBUG_CATEGORY_EXTERN (onnx_inference_debug);
 
+/**
+ * GstOnnxOptimizationLevel:
+ *
+ * Since: 1.20
+ */
+
 typedef enum
 {
   GST_ONNX_OPTIMIZATION_LEVEL_DISABLE_ALL,
@@ -37,6 +43,12 @@ typedef enum
   GST_ONNX_OPTIMIZATION_LEVEL_ENABLE_EXTENDED,
   GST_ONNX_OPTIMIZATION_LEVEL_ENABLE_ALL,
 } GstOnnxOptimizationLevel;
+
+/**
+ * GstOnnxExecutionProvider:
+ *
+ * Since: 1.20
+ */
 
 typedef enum
 {

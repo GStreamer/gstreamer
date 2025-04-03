@@ -54,7 +54,7 @@
  * to enable users to easily add and remove meta data from json files. It can also dump
  * the names of all output layers, which can then be used to craft the json meta data file.
  *
- *
+ * Since: 1.20
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -331,6 +331,13 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
       GST_DEBUG_FUNCPTR (gst_onnx_inference_transform_caps);
   basetransform_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_onnx_inference_set_caps);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_ONNX_OPTIMIZATION_LEVEL,
+			       (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_ONNX_EXECUTION_PROVIDER,
+			       (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_ML_MODEL_INPUT_IMAGE_FORMAT,
+			       (GstPluginAPIFlags) 0);
 }
 
 static void

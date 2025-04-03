@@ -24,6 +24,18 @@
 #include "config.h"
 #endif
 
+/**
+ * SECTION:plugin-onnx
+ * @title: ONNX
+ * @short_description: A plugin for ONNX-Runtime
+ *
+ * A plugin containing the inference elements using the ONNX Runtime project.
+ *
+ * See https://onnxruntime.ai/
+ *
+ * Since: 1.20
+ */
+
 #include "gstonnxinference.h"
 
 static gboolean
