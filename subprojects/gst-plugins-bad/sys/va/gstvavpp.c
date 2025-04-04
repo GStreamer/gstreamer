@@ -2302,14 +2302,29 @@ gst_va_vpp_init (GTypeInstance * instance, gpointer g_class)
   self->prev_direction = self->direction;
   self->tag_direction = GST_VIDEO_ORIENTATION_AUTO;
 
+  /**
+   * GstVaPostProc:denoise:
+   *
+   * Since: 1.20
+   */
   pspec = g_object_class_find_property (g_class, "denoise");
   if (pspec)
     self->denoise = g_value_get_float (g_param_spec_get_default_value (pspec));
 
+  /**
+   * GstVaPostProc:sharpen:
+   *
+   * Since: 1.20
+   */
   pspec = g_object_class_find_property (g_class, "sharpen");
   if (pspec)
     self->sharpen = g_value_get_float (g_param_spec_get_default_value (pspec));
 
+  /**
+   * GstVaPostProc:skin-tone:
+   *
+   * Since: 1.20
+   */
   pspec = g_object_class_find_property (g_class, "skin-tone");
   if (pspec) {
     const GValue *value = g_param_spec_get_default_value (pspec);
@@ -2320,22 +2335,44 @@ gst_va_vpp_init (GTypeInstance * instance, gpointer g_class)
   }
 
   /* color balance */
+                                        /**
+   * GstVaPostProc:brightness:
+   *
+   * Since: 1.20
+   */
   pspec = g_object_class_find_property (g_class, "brightness");
   if (pspec) {
     self->brightness =
         g_value_get_float (g_param_spec_get_default_value (pspec));
     _create_colorbalance_channel (self, "BRIGHTNESS");
   }
+  /**
+   * GstVaPostProc:contrast:
+   *
+   * Since: 1.20
+   */
   pspec = g_object_class_find_property (g_class, "contrast");
   if (pspec) {
     self->contrast = g_value_get_float (g_param_spec_get_default_value (pspec));
     _create_colorbalance_channel (self, "CONTRAST");
   }
+  /**
+   * GstVaPostProc:hue:
+   *
+   * Since: 1.20
+   */
   pspec = g_object_class_find_property (g_class, "hue");
   if (pspec) {
     self->hue = g_value_get_float (g_param_spec_get_default_value (pspec));
     _create_colorbalance_channel (self, "HUE");
   }
+  /**
+   * GstVaPostProc:saturation:
+   *
+   * Color saturation value
+   *
+   * Since: 1.20
+   */
   pspec = g_object_class_find_property (g_class, "saturation");
   if (pspec) {
     self->saturation =
@@ -2343,7 +2380,13 @@ gst_va_vpp_init (GTypeInstance * instance, gpointer g_class)
     _create_colorbalance_channel (self, "SATURATION");
   }
 
-  /* HDR tone mapping */
+                                        /**
+   * GstVaPostProc:hdr-tone-mapping:
+   *
+   * HDR tone mapping
+   *
+   * Since: 1.22
+   */
   pspec = g_object_class_find_property (g_class, "hdr-tone-mapping");
   if (pspec) {
     self->hdr_mapping =

@@ -61,6 +61,7 @@ va_headers = [
   'gstvavp9enc.h',
   'gstvavpp.h',
   'vacompat.h',
+  'gstvacodecalphadecodebin.h'
 ]
 
 va_linux_sources = [

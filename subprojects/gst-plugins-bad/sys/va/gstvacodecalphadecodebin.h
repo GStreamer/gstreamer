@@ -36,6 +36,15 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstVaCodecAlphaDecodeBin:
+ *
+ * Base class for VA-API based decoder for alpha formats which come
+ * as a separate stream, typically found in VP8 and VP9.
+ *
+ * Since: 1.24
+ */
+
 #define GST_TYPE_VA_CODEC_ALPHA_DECODE_BIN (gst_va_codec_alpha_decode_bin_get_type())
 G_DECLARE_DERIVABLE_TYPE (GstVaCodecAlphaDecodeBin,
     gst_va_codec_alpha_decode_bin, GST, VA_CODEC_ALPHA_DECODE_BIN, GstBin);
