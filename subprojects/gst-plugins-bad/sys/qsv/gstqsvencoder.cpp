@@ -219,6 +219,13 @@ gst_qsv_encoder_class_init (GstQsvEncoderClass * klass)
           "DXGI Adapter LUID (Locally Unique Identifier) of created device",
           G_MININT64, G_MAXINT64, 0, param_flags));
 #else
+  /**
+   * GstQsvEncoder:device-path:
+   *
+   * DRM device path
+   *
+   * Since: 1.22
+   */
   g_object_class_install_property (object_class, PROP_DEVICE_PATH,
       g_param_spec_string ("device-path", "Device Path",
           "DRM device path", nullptr, param_flags));
