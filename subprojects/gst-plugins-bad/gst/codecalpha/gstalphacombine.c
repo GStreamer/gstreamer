@@ -112,6 +112,8 @@ struct _GstAlphaCombine
   /* Number of flush-stop events received, used to know when all sink pads are
      done flushing. Protected by buffer_lock */
   guint flush_stops;
+  /* alpha stream EOS, protected by buffer_lock */
+  gboolean alpha_eos;
 
   /* sink pad being blocked while waiting for the other pad to receive
    * FLUSH_STOP. Protected by buffer_lock */
@@ -298,6 +300,11 @@ gst_alpha_combine_peek_alpha_buffer (GstAlphaCombine * self,
   if (self->flushing) {
     g_mutex_unlock (&self->buffer_lock);
     return GST_FLOW_FLUSHING;
+  }
+
+  if (self->alpha_eos) {
+    g_mutex_unlock (&self->buffer_lock);
+    return GST_FLOW_EOS;
   }
 
   /* Now is a good time to validate the formats, as the alpha_vinfo won't be
@@ -596,6 +603,22 @@ gst_alpha_combine_alpha_event (GstPad * pad, GstObject * object,
       gst_alpha_combine_handle_gap (self);
       break;
     }
+    case GST_EVENT_EOS:
+    {
+      /* alpha is eos so no point keep waiting for a alpha buffer */
+      g_mutex_lock (&self->buffer_lock);
+      self->alpha_eos = TRUE;
+      g_cond_broadcast (&self->buffer_cond);
+      g_mutex_unlock (&self->buffer_lock);
+      break;
+    }
+    case GST_EVENT_STREAM_START:
+    {
+      g_mutex_lock (&self->buffer_lock);
+      self->alpha_eos = FALSE;
+      g_mutex_unlock (&self->buffer_lock);
+      break;
+    }
     default:
       break;
   }
@@ -736,6 +759,7 @@ gst_alpha_combine_init (GstAlphaCombine * self)
   self->alpha_pad = gst_element_get_static_pad (GST_ELEMENT (self), "alpha");
   self->src_pad = gst_element_get_static_pad (GST_ELEMENT (self), "src");
   self->flushing = FALSE;
+  self->alpha_eos = FALSE;
   self->flush_stops = 0;
   self->pad_block_id = 0;
   self->blocked_pad = NULL;
