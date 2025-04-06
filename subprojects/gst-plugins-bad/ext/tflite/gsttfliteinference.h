@@ -26,6 +26,8 @@
 #include <gst/gst.h>
 #include <gst/base/base.h>
 
+#include "tensorflow/lite/c/c_api.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_TFLITE_INFERENCE            (gst_tflite_inference_get_type())
@@ -36,6 +38,9 @@ GST_ELEMENT_REGISTER_DECLARE (tflite_inference)
 struct _GstTFliteInferenceClass
 {
   GstBaseTransformClass basetransform;
+
+  gboolean (*update_options) (GstTFliteInference * self,
+      TfLiteInterpreterOptions * interpreter_options);
 };
 
 G_END_DECLS

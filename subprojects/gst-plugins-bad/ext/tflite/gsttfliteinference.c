@@ -42,8 +42,6 @@
 #include "config.h"
 #endif
 
-#include "tensorflow/lite/c/c_api.h"
-
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include "gsttfliteinference.h"
@@ -510,6 +508,10 @@ gst_tflite_inference_start (GstBaseTransform * trans)
     TfLiteInterpreterOptionsSetNumThreads (priv->interpreter_options,
         priv->numberOfThreads);
   }
+
+  if (klass->update_options)
+    if (!klass->update_options (self, priv->interpreter_options))
+      goto error;
 
   priv->interpreter = TfLiteInterpreterCreate (priv->model,
       priv->interpreter_options);

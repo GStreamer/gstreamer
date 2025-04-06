@@ -1,9 +1,8 @@
-
 /*
- * GStreamer gstreamer-tflite
+ * GStreamer gstreamer-tfliteinference
  * Copyright (C) 2024 Collabora Ltd
  *
- * gsttflite.c
+ * gsttfliteinference.h
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,30 +19,21 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+
+#ifndef __GST_TFLITE_EDGETPU_INFERENCE_H__
+#define __GST_TFLITE_EDGETPU_INFERENCE_H__
 
 #include "gsttfliteinference.h"
 
-#ifdef EDGETPU
-#include "gsttfliteedgetpuinference.h"
-#endif
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = GST_ELEMENT_REGISTER (tflite_inference, plugin);
+G_BEGIN_DECLS
 
-#ifdef EDGETPU
-  ret |= GST_ELEMENT_REGISTER (tflite_edgetpu_inference, plugin);
-#endif
+#define GST_TYPE_TFLITE_EDGETPU_INFERENCE    (gst_tflite_edgetpu_inference_get_type())
+G_DECLARE_FINAL_TYPE (GstTFliteEdgeTpuInference, gst_tflite_edgetpu_inference, GST,
+    TFLITE_EDGETPU_INFERENCE, GstTFliteInference)
 
-  return ret;
-}
+GST_ELEMENT_REGISTER_DECLARE (tflite_edgetpu_inference)
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    tflite,
-    "TFLITE neural network plugin",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+G_END_DECLS
+
+#endif /* __GST_TFLITE_INFERENCE_H__ */

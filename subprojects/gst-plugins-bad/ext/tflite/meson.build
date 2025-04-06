@@ -5,11 +5,16 @@ tflite_sources = [
 ]
 
 tflite_headers = [
-  'gstfliteinference.h'
+  'gsttfliteinference.h',
+  'gsttfliteedgetpuinference.h'
+]
+
+edgetpu_sources = [
+  'gsttfliteedgetpuinference.c'
 ]
 
 doc_sources = []
-foreach s: tflite_sources + tflite_headers
+foreach s: tflite_sources + tflite_headers + edgetpu_sources
   doc_sources += meson.current_source_dir() / s
 endforeach
 
@@ -29,6 +34,7 @@ tensorflow_lite_header_found = cc.has_header('tensorflow/lite/c/c_api.h',
 					     required: get_option('tflite'))
 
 if tensorflow_lite_dep.found() and tensorflow_lite_header_found
+  tflite_extra_dep = []
   tflite_c_args = []
 
   if cc.has_header_symbol('tensorflow/lite/c/c_api.h', 'kTfLiteBFloat16',
@@ -36,12 +42,25 @@ if tensorflow_lite_dep.found() and tensorflow_lite_header_found
     tflite_c_args += ['-DTFLITE_HAS_BFLOAT16']
   endif
 
+  edgetpu_dep = cc.find_library('edgetpu',
+				required : get_option('tflite-edgetpu'))
+
+  if edgetpu_dep.found() and cc.has_header('libedgetpu/edgetpu_c.h',
+                                           dependencies: edgetpu_dep,
+                                           required: get_option('tflite-edgetpu'))
+    tflite_c_args += ['-DEDGETPU','-DTFLITE_USE_OPAQUE_DELEGATE=0',
+		     '-DTFLITE_WITH_STABLE_ABI=0']
+    tflite_sources += edgetpu_sources
+    tflite_extra_dep += [edgetpu_dep]
+  endif
+
+
   gsttflite = library('gsttflite',
     tflite_sources,
     c_args : gst_plugins_bad_args + tflite_c_args,
     include_directories : [configinc, libsinc],
     dependencies : [gstbase_dep, gstvideo_dep, gstanalytics_dep,
-                      tensorflow_lite_dep,libm, gio_dep],
+                    tensorflow_lite_dep,libm, gio_dep, tflite_extra_dep],
     install : true,
     install_dir : plugins_install_dir,
   )
