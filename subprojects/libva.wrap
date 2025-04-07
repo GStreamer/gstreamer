@@ -1,8 +1,8 @@
 [wrap-file]
-directory = libva-2.21.0
-source_url = https://github.com/intel/libva/archive/2.21.0.tar.gz
-source_filename = libva-2.21.0.tar.gz
-source_hash = f7c3fffef3f04eb146e036dad2587d852bfb70e4926d014bf437244915ef7425
+directory = libva-2.22.0
+source_url = https://github.com/intel/libva/releases/download/2.22.0/libva-2.22.0.tar.bz2
+source_filename = libva-2.22.0.tar.gz
+source_hash = e3da2250654c8d52b3f59f8cb3f3d8e7fb1a2ee64378dbc400fbc5663de7edb8
 
 [provide]
 libva = libva_dep
