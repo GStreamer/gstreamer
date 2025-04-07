@@ -497,6 +497,7 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
   if (!gst_y4m_video_unpadded_info (&y4mdec->info, &y4mdec->out_info))
     return FALSE;
 
+  y4mdec->padded = !gst_video_info_is_equal (&y4mdec->info, &y4mdec->out_info);
 
   return TRUE;
 }
@@ -567,8 +568,7 @@ gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
 
       /* We only need a pool if we need to do stride conversion for downstream */
-      if (!y4mdec->video_meta && memcmp (&y4mdec->info, &y4mdec->out_info,
-              sizeof (y4mdec->info)) != 0) {
+      if (!y4mdec->video_meta && y4mdec->padded) {
         GstBufferPool *pool = NULL;
         GstAllocator *allocator = NULL;
         GstAllocationParams params;
@@ -585,10 +585,10 @@ gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         if (gst_query_get_n_allocation_pools (query) > 0) {
           gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min,
               &max);
-          size = MAX (size, y4mdec->out_info.size);
+          size = MAX (size, GST_VIDEO_INFO_SIZE (&y4mdec->out_info));
         } else {
           pool = NULL;
-          size = y4mdec->out_info.size;
+          size = GST_VIDEO_INFO_SIZE (&y4mdec->out_info);
           min = max = 0;
         }
 
@@ -606,8 +606,7 @@ gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
         y4mdec->pool = pool;
       }
-    } else if (memcmp (&y4mdec->info, &y4mdec->out_info,
-            sizeof (y4mdec->info)) != 0) {
+    } else if (y4mdec->padded) {
       GstBufferPool *pool;
       GstStructure *config;
 
@@ -619,8 +618,8 @@ gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         g_free (name);
       }
       config = gst_buffer_pool_get_config (pool);
-      gst_buffer_pool_config_set_params (config, caps, y4mdec->out_info.size, 0,
-          0);
+      gst_buffer_pool_config_set_params (config, caps,
+          GST_VIDEO_INFO_SIZE (&y4mdec->out_info), 0, 0);
       gst_buffer_pool_set_config (pool, config);
       y4mdec->pool = pool;
     }
@@ -705,8 +704,7 @@ gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       gst_buffer_add_video_meta_full (buffer, 0, y4mdec->info.finfo->format,
           y4mdec->info.width, y4mdec->info.height, y4mdec->info.finfo->n_planes,
           y4mdec->info.offset, y4mdec->info.stride);
-    } else if (memcmp (&y4mdec->info, &y4mdec->out_info,
-            sizeof (y4mdec->info)) != 0) {
+    } else if (y4mdec->padded) {
       GstBuffer *outbuf;
       GstVideoFrame iframe, oframe;
       gint i, j;

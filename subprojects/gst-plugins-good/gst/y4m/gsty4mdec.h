@@ -55,6 +55,7 @@ struct _GstY4mDec
   GstVideoInfo out_info;
   gboolean video_meta;
   GstBufferPool *pool;
+  gboolean padded;
 };
 
 struct _GstY4mDecClass
