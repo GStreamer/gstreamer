@@ -1288,8 +1288,18 @@ gst_ogg_pad_stream_out (GstOggPad * pad, gint npackets)
   GstFlowReturn result = GST_FLOW_OK;
   gboolean done = FALSE;
   GstOggDemux *ogg;
+  gboolean drop;
 
   ogg = pad->ogg;
+
+  GST_PUSH_LOCK (ogg);
+  drop = (ogg->seek_event_drop_till != GST_SEQNUM_INVALID);
+  GST_PUSH_UNLOCK (ogg);
+  if (drop) {
+    GST_DEBUG_OBJECT (ogg,
+        "Not pushing new packets until the pending seek is over");
+    return result;
+  }
 
   while (!done) {
     int ret;
