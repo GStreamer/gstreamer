@@ -37,6 +37,7 @@
 #include <string.h>
 
 #include "gsty4mdec.h"
+#include "gsty4mformat.h"
 
 #define MAX_SIZE 32768
 
@@ -387,6 +388,7 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
   gulong par_n = 0, par_d = 0;
   gulong width = 0, height = 0;
   GstVideoFormat format = GST_VIDEO_FORMAT_I420;
+  GstVideoInterlaceMode interlace_mode;
 
   if (memcmp (header, "YUV4MPEG2 ", 10) != 0) {
     GST_ERROR_OBJECT (y4mdec, "y4m start code not found");
@@ -458,59 +460,15 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
     return FALSE;
   }
 
-  gst_video_info_init (&y4mdec->info);
-  gst_video_info_set_format (&y4mdec->out_info, format, width, height);
-  y4mdec->info = y4mdec->out_info;
-
-  switch (y4mdec->info.finfo->format) {
-    case GST_VIDEO_FORMAT_I420:
-      y4mdec->info.offset[0] = 0;
-      y4mdec->info.stride[0] = width;
-      y4mdec->info.offset[1] = y4mdec->info.stride[0] * height;
-      y4mdec->info.stride[1] = GST_ROUND_UP_2 (width) / 2;
-      y4mdec->info.offset[2] =
-          y4mdec->info.offset[1] +
-          y4mdec->info.stride[1] * (GST_ROUND_UP_2 (height) / 2);
-      y4mdec->info.stride[2] = GST_ROUND_UP_2 (width) / 2;
-      y4mdec->info.size =
-          y4mdec->info.offset[2] +
-          y4mdec->info.stride[2] * (GST_ROUND_UP_2 (height) / 2);
-      break;
-    case GST_VIDEO_FORMAT_Y42B:
-      y4mdec->info.offset[0] = 0;
-      y4mdec->info.stride[0] = width;
-      y4mdec->info.offset[1] = y4mdec->info.stride[0] * height;
-      y4mdec->info.stride[1] = GST_ROUND_UP_2 (width) / 2;
-      y4mdec->info.offset[2] =
-          y4mdec->info.offset[1] + y4mdec->info.stride[1] * height;
-      y4mdec->info.stride[2] = GST_ROUND_UP_2 (width) / 2;
-      y4mdec->info.size =
-          y4mdec->info.offset[2] + y4mdec->info.stride[2] * height;
-      break;
-    case GST_VIDEO_FORMAT_Y444:
-      y4mdec->info.offset[0] = 0;
-      y4mdec->info.stride[0] = width;
-      y4mdec->info.offset[1] = y4mdec->info.stride[0] * height;
-      y4mdec->info.stride[1] = width;
-      y4mdec->info.offset[2] =
-          y4mdec->info.offset[1] + y4mdec->info.stride[1] * height;
-      y4mdec->info.stride[2] = width;
-      y4mdec->info.size =
-          y4mdec->info.offset[2] + y4mdec->info.stride[2] * height;
-      break;
-    default:
-      break;
-  }
-
   switch (interlaced_char) {
     case 0:
     case '?':
     case 'p':
-      y4mdec->info.interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+      interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
       break;
     case 't':
     case 'b':
-      y4mdec->info.interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
+      interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
       break;
     default:
       GST_ERROR_OBJECT (y4mdec, "Unknown interlaced char '%c'",
@@ -528,10 +486,17 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
   if (par_d == 0)
     par_d = 1;
 
-  y4mdec->info.fps_n = fps_n;
-  y4mdec->info.fps_d = fps_d;
-  y4mdec->info.par_n = par_n;
-  y4mdec->info.par_d = par_d;
+  gst_video_info_set_interlaced_format (&y4mdec->out_info, format,
+      interlace_mode, width, height);
+
+  GST_VIDEO_INFO_FPS_N (&y4mdec->out_info) = fps_n;
+  GST_VIDEO_INFO_FPS_D (&y4mdec->out_info) = fps_d;
+  GST_VIDEO_INFO_PAR_N (&y4mdec->out_info) = par_n;
+  GST_VIDEO_INFO_PAR_D (&y4mdec->out_info) = par_d;
+
+  if (!gst_y4m_video_unpadded_info (&y4mdec->info, &y4mdec->out_info))
+    return FALSE;
+
 
   return TRUE;
 }

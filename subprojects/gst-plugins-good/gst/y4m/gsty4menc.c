@@ -43,6 +43,7 @@
 #include <string.h>
 
 #include "gsty4menc.h"
+#include "gsty4mformat.h"
 
 /* Filter signals and args */
 enum
@@ -139,68 +140,29 @@ gst_y4m_encode_set_format (GstVideoEncoder * encoder,
   GstY4mEncode *y4menc;
   GstVideoInfo *info, out_info;
   GstVideoCodecState *output_state;
-  gint width, height;
-  GstVideoFormat format;
-  gsize cr_h;
 
   y4menc = GST_Y4M_ENCODE (encoder);
   info = &state->info;
 
-  format = GST_VIDEO_INFO_FORMAT (info);
-  width = GST_VIDEO_INFO_WIDTH (info);
-  height = GST_VIDEO_INFO_HEIGHT (info);
-
-  gst_video_info_set_format (&out_info, format, width, height);
-
-  switch (format) {
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
     case GST_VIDEO_FORMAT_I420:
       y4menc->colorspace = "420";
-      out_info.stride[0] = width;
-      out_info.stride[1] = GST_ROUND_UP_2 (width) / 2;
-      out_info.stride[2] = out_info.stride[1];
-      out_info.offset[0] = 0;
-      out_info.offset[1] = out_info.stride[0] * height;
-      cr_h = GST_ROUND_UP_2 (height) / 2;
-      if (GST_VIDEO_INFO_IS_INTERLACED (info))
-        cr_h = GST_ROUND_UP_2 (height);
-      out_info.offset[2] = out_info.offset[1] + out_info.stride[1] * cr_h;
-      out_info.size = out_info.offset[2] + out_info.stride[2] * cr_h;
       break;
     case GST_VIDEO_FORMAT_Y42B:
       y4menc->colorspace = "422";
-      out_info.stride[0] = width;
-      out_info.stride[1] = GST_ROUND_UP_2 (width) / 2;
-      out_info.stride[2] = out_info.stride[1];
-      out_info.offset[0] = 0;
-      out_info.offset[1] = out_info.stride[0] * height;
-      out_info.offset[2] = out_info.offset[1] + out_info.stride[1] * height;
-      /* simplification of ROUNDUP4(w)*h + 2*(ROUNDUP8(w)/2)*h */
-      out_info.size = out_info.offset[2] + out_info.stride[2] * height;
       break;
     case GST_VIDEO_FORMAT_Y41B:
       y4menc->colorspace = "411";
-      out_info.stride[0] = width;
-      out_info.stride[1] = GST_ROUND_UP_2 (width) / 4;
-      out_info.stride[2] = out_info.stride[1];
-      out_info.offset[0] = 0;
-      out_info.offset[1] = out_info.stride[0] * height;
-      out_info.offset[2] = out_info.offset[1] + out_info.stride[1] * height;
-      /* simplification of ROUNDUP4(w)*h + 2*((ROUNDUP16(w)/4)*h */
-      out_info.size = (width + (GST_ROUND_UP_2 (width) / 2)) * height;
       break;
     case GST_VIDEO_FORMAT_Y444:
       y4menc->colorspace = "444";
-      out_info.stride[0] = width;
-      out_info.stride[1] = out_info.stride[0];
-      out_info.stride[2] = out_info.stride[0];
-      out_info.offset[0] = 0;
-      out_info.offset[1] = out_info.stride[0] * height;
-      out_info.offset[2] = out_info.offset[1] * 2;
-      out_info.size = out_info.stride[0] * height * 3;
       break;
     default:
       goto invalid_format;
   }
+
+  if (!gst_y4m_video_unpadded_info (&out_info, info))
+    goto invalid_format;
 
   y4menc->info = *info;
   y4menc->out_info = out_info;

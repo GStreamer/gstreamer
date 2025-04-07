@@ -1,5 +1,6 @@
 y4m_sources = [
   'plugin.c',
+  'gsty4mformat.c',
   'gsty4menc.c',
   'gsty4mdec.c'
 ]
