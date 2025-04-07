@@ -179,14 +179,14 @@ gst_y4m_encode_set_format (GstVideoEncoder * encoder,
       break;
     case GST_VIDEO_FORMAT_Y41B:
       y4menc->colorspace = "411";
-      info->stride[0] = width;
-      info->stride[1] = GST_ROUND_UP_2 (width) / 4;
-      info->stride[2] = out_info.stride[1];
-      info->offset[0] = 0;
-      info->offset[1] = info->stride[0] * height;
-      info->offset[2] = info->offset[1] + info->stride[1] * height;
+      out_info.stride[0] = width;
+      out_info.stride[1] = GST_ROUND_UP_2 (width) / 4;
+      out_info.stride[2] = out_info.stride[1];
+      out_info.offset[0] = 0;
+      out_info.offset[1] = out_info.stride[0] * height;
+      out_info.offset[2] = out_info.offset[1] + out_info.stride[1] * height;
       /* simplification of ROUNDUP4(w)*h + 2*((ROUNDUP16(w)/4)*h */
-      info->size = (width + (GST_ROUND_UP_2 (width) / 2)) * height;
+      out_info.size = (width + (GST_ROUND_UP_2 (width) / 2)) * height;
       break;
     case GST_VIDEO_FORMAT_Y444:
       y4menc->colorspace = "444";
