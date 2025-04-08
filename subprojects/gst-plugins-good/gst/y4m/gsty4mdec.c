@@ -638,28 +638,41 @@ gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   if (y4mdec->have_new_segment) {
     GstEvent *event;
-    GstClockTime start = gst_y4m_dec_bytes_to_timestamp (y4mdec,
-        y4mdec->segment.start);
-    GstClockTime stop = gst_y4m_dec_bytes_to_timestamp (y4mdec,
-        y4mdec->segment.stop);
-    GstClockTime time = gst_y4m_dec_bytes_to_timestamp (y4mdec,
-        y4mdec->segment.time);
+    GstClockTime start, stop, time;
     GstSegment seg;
+
+
+    if (y4mdec->segment.format == GST_FORMAT_BYTES) {
+      start = gst_y4m_dec_bytes_to_timestamp (y4mdec, y4mdec->segment.start);
+      stop = gst_y4m_dec_bytes_to_timestamp (y4mdec, y4mdec->segment.stop);
+      time = gst_y4m_dec_bytes_to_timestamp (y4mdec, y4mdec->segment.time);
+    } else if (y4mdec->segment.format == GST_FORMAT_TIME) {
+      start = y4mdec->segment.start;
+      stop = y4mdec->segment.stop;
+      time = y4mdec->segment.time;
+    } else {
+      GST_ERROR_OBJECT (y4mdec, "invalid segment format");
+      return GST_FLOW_ERROR;
+    }
 
     gst_segment_init (&seg, GST_FORMAT_TIME);
     seg.start = start;
     seg.stop = stop;
     seg.time = time;
+
     event = gst_event_new_segment (&seg);
+    GST_DEBUG ("pushing segment event: %" GST_PTR_FORMAT, event);
 
     gst_pad_push_event (y4mdec->srcpad, event);
-    //gst_event_unref (event);
 
     y4mdec->have_new_segment = FALSE;
-    y4mdec->frame_index = gst_y4m_dec_bytes_to_frames (y4mdec,
-        y4mdec->segment.time);
+    if (y4mdec->segment.format == GST_FORMAT_BYTES) {
+      y4mdec->frame_index = gst_y4m_dec_bytes_to_frames (y4mdec,
+          y4mdec->segment.time);
+    } else {
+      y4mdec->frame_index = 0;
+    }
     GST_DEBUG ("new frame_index %d", y4mdec->frame_index);
-
   }
 
   while (1) {
@@ -764,7 +777,7 @@ gst_y4m_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   y4mdec = GST_Y4M_DEC (parent);
 
-  GST_DEBUG_OBJECT (y4mdec, "event");
+  GST_DEBUG_OBJECT (y4mdec, "event: %" GST_PTR_FORMAT, event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -781,10 +794,8 @@ gst_y4m_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       GST_DEBUG ("segment: %" GST_SEGMENT_FORMAT, &seg);
 
-      if (seg.format == GST_FORMAT_BYTES) {
-        y4mdec->segment = seg;
-        y4mdec->have_new_segment = TRUE;
-      }
+      y4mdec->segment = seg;
+      y4mdec->have_new_segment = TRUE;
 
       res = TRUE;
       /* not sure why it's not forwarded, but let's unref it so it
@@ -810,7 +821,7 @@ gst_y4m_dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   y4mdec = GST_Y4M_DEC (parent);
 
-  GST_DEBUG_OBJECT (y4mdec, "event");
+  GST_DEBUG_OBJECT (y4mdec, "event: %" GST_PTR_FORMAT, event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
