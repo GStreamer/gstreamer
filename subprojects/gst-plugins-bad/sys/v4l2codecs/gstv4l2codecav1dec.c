@@ -1298,6 +1298,7 @@ gst_v4l2_codec_av1_dec_end_picture (GstAV1Decoder * decoder,
   GstV4l2CodecAV1Dec *self = GST_V4L2_CODEC_AV1_DEC (decoder);
   GstVideoCodecFrame *frame;
   GstV4l2Request *request;
+  GstBuffer *buffer;
   GstFlowReturn flow_ret;
   guint count = 1;
   gsize bytesused;
@@ -1358,12 +1359,8 @@ gst_v4l2_codec_av1_dec_end_picture (GstAV1Decoder * decoder,
   self->bitstream_map = (GstMapInfo) GST_MAP_INFO_INIT;
   gst_memory_resize (self->bitstream, 0, bytesused);
 
-  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      GST_CODEC_PICTURE_FRAME_NUMBER (picture));
-  g_return_val_if_fail (frame, FALSE);
-
   flow_ret = gst_buffer_pool_acquire_buffer (GST_BUFFER_POOL (self->src_pool),
-      &frame->output_buffer, NULL);
+      &buffer, NULL);
   if (flow_ret != GST_FLOW_OK) {
     if (flow_ret == GST_FLOW_FLUSHING)
       GST_DEBUG_OBJECT (self, "Frame decoding aborted, we are flushing.");
@@ -1373,11 +1370,16 @@ gst_v4l2_codec_av1_dec_end_picture (GstAV1Decoder * decoder,
     goto fail;
   }
 
-  request = gst_v4l2_decoder_alloc_request (self->decoder,
-      GST_CODEC_PICTURE_FRAME_NUMBER (picture), self->bitstream,
-      frame->output_buffer);
 
+  frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture));
+  g_return_val_if_fail (frame, FALSE);
+  g_warn_if_fail (frame->output_buffer == NULL);
+  frame->output_buffer = buffer;
   gst_video_codec_frame_unref (frame);
+
+  request = gst_v4l2_decoder_alloc_request (self->decoder,
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture), self->bitstream, buffer);
 
   if (!request) {
     GST_ELEMENT_ERROR (self, RESOURCE, NO_SPACE_LEFT,
