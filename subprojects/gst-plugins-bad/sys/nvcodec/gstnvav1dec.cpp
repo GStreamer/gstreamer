@@ -673,7 +673,7 @@ gst_nv_av1_dec_start_picture (GstAV1Decoder * decoder, GstAV1Picture * picture,
   const GstAV1QuantizationParams *qp = &frame_hdr->quantization_params;
   const GstAV1TileInfo *ti = &frame_hdr->tile_info;
   const GstAV1CDEFParams *cp = &frame_hdr->cdef_params;
-  const GstAV1SegmenationParams *sp = &frame_hdr->segmentation_params;
+  const GstAV1SegmentationParams *sp = &frame_hdr->segmentation_params;
   const GstAV1LoopFilterParams *lp = &frame_hdr->loop_filter_params;
   const GstAV1LoopRestorationParams *lrp = &frame_hdr->loop_restoration_params;
   const GstAV1FilmGrainParams *fgp = &frame_hdr->film_grain_params;

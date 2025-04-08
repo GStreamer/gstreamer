@@ -672,7 +672,7 @@ gst_v4l2_codec_av1_fill_loop_filter (GstV4l2CodecAV1Dec * self,
 
 static void
 gst_v4l2_codec_av1_fill_segmentation (GstV4l2CodecAV1Dec * self,
-    const GstAV1SegmenationParams * seg)
+    const GstAV1SegmentationParams * seg)
 {
   struct v4l2_av1_segmentation *v4l2_seg = &self->v4l2_frame.segmentation;
   guint32 i;
@@ -846,7 +846,7 @@ gst_v4l2_codec_av1_dec_fill_frame_hdr (GstV4l2CodecAV1Dec * self,
   const GstAV1FrameHeaderOBU *f = &pic->frame_hdr;
   const GstAV1TileInfo *ti = &f->tile_info;
   const GstAV1QuantizationParams *q = &f->quantization_params;
-  const GstAV1SegmenationParams *seg = &f->segmentation_params; /* FIXME: send patch upstream to fix spelling on the parser s/segmenation/segmentation */
+  const GstAV1SegmentationParams *seg = &f->segmentation_params;
   const GstAV1LoopFilterParams *lf = &f->loop_filter_params;
   const GstAV1LoopRestorationParams *lr = &f->loop_restoration_params;
   guint i;

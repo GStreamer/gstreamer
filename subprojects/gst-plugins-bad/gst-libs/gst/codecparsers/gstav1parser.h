@@ -110,7 +110,15 @@ typedef struct _GstAV1MetadataScalability GstAV1MetadataScalability;
 typedef struct _GstAV1MetadataTimecode GstAV1MetadataTimecode;
 typedef struct _GstAV1LoopFilterParams GstAV1LoopFilterParams;
 typedef struct _GstAV1QuantizationParams GstAV1QuantizationParams;
-typedef struct _GstAV1SegmenationParams GstAV1SegmenationParams;
+typedef struct _GstAV1SegmentationParams GstAV1SegmentationParams;
+/**
+ * GstAV1SegmenationParams:
+ *
+ * Deprecated: 1.28: Use GstAV1SegmentationParams.
+ */
+#ifndef GST_DISABLE_DEPRECATED
+#define GstAV1SegmenationParams GstAV1SegmentationParams
+#endif
 typedef struct _GstAV1TileInfo GstAV1TileInfo;
 typedef struct _GstAV1CDEFParams GstAV1CDEFParams;
 typedef struct _GstAV1LoopRestorationParams GstAV1LoopRestorationParams;
@@ -1151,7 +1159,7 @@ struct _GstAV1QuantizationParams {
 };
 
 /**
- * GstAV1SegmenationParams:
+ * GstAV1SegmentationParams:
  * @segmentation_enabled: equal to 1 indicates that this frame makes use of the segmentation
  *   tool; @segmentation_enabled equal to 0 indicates that the frame does not use segmentation.
  * @segmentation_update_map: equal to 1 indicates that the segmentation map are updated during
@@ -1173,7 +1181,7 @@ struct _GstAV1QuantizationParams {
  *   This is used when decoding the segment id to only decode choices corresponding to used
  *   segments.
  */
-struct _GstAV1SegmenationParams {
+struct _GstAV1SegmentationParams {
   gboolean segmentation_enabled;
   guint8 segmentation_update_map;
   guint8 segmentation_temporal_update;
@@ -1506,7 +1514,7 @@ struct _GstAV1FilmGrainParams {
  *   for performing inter prediction.
  * @loop_filter_params: a #GstAV1LoopFilterParams holding the loop filter parameters.
  * @quantization_params: a #GstAV1QuantizationParams holding the quantization parameters.
- * @segmentation_params: a #GstAV1SegmenationParams holding the segementation parameters.
+ * @segmentation_params: a #GstAV1SegmentationParams holding the segmentation parameters.
  * @tile_info: a #GstAV1TileInfo holding the tile info.
  * @cdef_params: a #GstAV1CDEFParams holding the CDEF paramters.
  * @loop_restoration_params: a #GstAV1LoopRestorationParams holding the loop restoration parameters.
@@ -1580,7 +1588,7 @@ struct _GstAV1FrameHeaderOBU {
   GstAV1InterpolationFilter interpolation_filter;
   GstAV1LoopFilterParams loop_filter_params;
   GstAV1QuantizationParams quantization_params;
-  GstAV1SegmenationParams segmentation_params;
+  GstAV1SegmentationParams segmentation_params;
   GstAV1TileInfo tile_info;
   GstAV1CDEFParams cdef_params;
   GstAV1LoopRestorationParams loop_restoration_params;
@@ -1649,7 +1657,7 @@ struct _GstAV1ReferenceFrameInfoEntry {
   guint8 ref_subsampling_y;       /* RefSubsamplingY */
   guint8 ref_bit_depth;           /* RefBitDepth */
   guint32 ref_order_hint;         /* RefOrderHint */
-  GstAV1SegmenationParams ref_segmentation_params;
+  GstAV1SegmentationParams ref_segmentation_params;
   GstAV1GlobalMotionParams ref_global_motion_params;
   GstAV1LoopFilterParams ref_lf_params;
   GstAV1FilmGrainParams ref_film_grain_params;
