@@ -1392,8 +1392,10 @@ gst_v4l2_codec_h265_dec_submit_bitstream (GstV4l2CodecH265Dec * self,
         system_frame_number);
     g_return_val_if_fail (frame, FALSE);
 
-    if (!gst_v4l2_codec_h265_dec_ensure_output_buffer (self, frame))
+    if (!gst_v4l2_codec_h265_dec_ensure_output_buffer (self, frame)) {
+      gst_video_codec_frame_unref (frame);
       goto done;
+    }
 
     request = gst_v4l2_decoder_alloc_request (self->decoder,
         system_frame_number, self->bitstream, frame->output_buffer);
