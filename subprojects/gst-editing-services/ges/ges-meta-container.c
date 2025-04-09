@@ -235,11 +235,16 @@ _set_value (GESMetaContainer * container, const gchar * meta_item,
   gchar *val = gst_value_serialize (value);
 
   if (val == NULL) {
-    GST_WARNING_OBJECT (container, "Could not set value on item: %s",
-        meta_item);
+    if (G_VALUE_TYPE (value) == G_TYPE_STRING) {
+      val = g_strdup ("");
+    } else {
+      GST_WARNING_OBJECT (container,
+          "Could not serialize value for: %s of type %s", meta_item,
+          G_VALUE_TYPE_NAME (value));
 
-    g_free (val);
-    return FALSE;
+      g_free (val);
+      return FALSE;
+    }
   }
 
   structure = _meta_container_get_structure (container);
@@ -273,7 +278,8 @@ _can_write_value (GESMetaContainer * container, const gchar * item_name,
     return TRUE;
 
   if ((static_item->flags & GES_META_WRITABLE) == FALSE) {
-    GST_WARNING_OBJECT (container, "Can not write %s", item_name);
+    GST_WARNING_OBJECT (container, "Can not write %s of type %s", item_name,
+        g_type_name (type));
     return FALSE;
   }
 

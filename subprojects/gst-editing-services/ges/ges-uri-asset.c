@@ -330,9 +330,14 @@ _create_uri_source_asset (GESUriClipAsset * asset,
       g_strdup (gst_discoverer_stream_info_get_stream_id (sinfo));
 
   if (stream_id == NULL) {
-    GST_WARNING_OBJECT (asset,
-        "No stream ID, ignoring stream info: %p off type: %s", sinfo,
-        ges_track_type_name (type));
+    if (type != GES_TRACK_TYPE_UNKNOWN) {
+      GST_WARNING_OBJECT (asset,
+          "No stream ID, ignoring stream info: %p off type: %s", sinfo,
+          ges_track_type_name (type));
+    } else {
+      GST_INFO_OBJECT (asset, "No stream ID, ignoring stream info: %p", sinfo);
+    }
+
     return;
   }
 
