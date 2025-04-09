@@ -552,6 +552,31 @@ gst_webrtc_nice_add_stream (GstWebRTCICE * ice, guint session_id)
 }
 
 static void
+_fill_candidate_credentials (NiceAgent * agent, NiceCandidate * candidate)
+{
+
+  if (!candidate->username || !candidate->password) {
+    gboolean got_credentials;
+    gchar *ufrag, *password;
+
+    got_credentials =
+        nice_agent_get_local_credentials (agent, candidate->stream_id, &ufrag,
+        &password);
+    g_warn_if_fail (got_credentials);
+
+    if (!candidate->username)
+      candidate->username = ufrag;
+    else
+      g_free (ufrag);
+
+    if (!candidate->password)
+      candidate->password = password;
+    else
+      g_free (password);
+  }
+}
+
+static void
 _on_new_candidate (NiceAgent * agent, NiceCandidate * candidate,
     GstWebRTCNice * ice)
 {
@@ -565,24 +590,7 @@ _on_new_candidate (NiceAgent * agent, NiceCandidate * candidate,
     return;
   }
 
-  if (!candidate->username || !candidate->password) {
-    gboolean got_credentials;
-    gchar *ufrag, *password;
-
-    got_credentials = nice_agent_get_local_credentials (ice->priv->nice_agent,
-        candidate->stream_id, &ufrag, &password);
-    g_warn_if_fail (got_credentials);
-
-    if (!candidate->username)
-      candidate->username = ufrag;
-    else
-      g_free (ufrag);
-
-    if (!candidate->password)
-      candidate->password = password;
-    else
-      g_free (password);
-  }
+  _fill_candidate_credentials (agent, candidate);
 
   attr = nice_agent_generate_local_candidate_sdp (agent, candidate);
 
@@ -1084,19 +1092,56 @@ _populate_candidate_stats (GstWebRTCNice * ice, NiceCandidate * cand,
   g_assert (cand != NULL);
 
   nice_address_to_string (&cand->addr, ipaddr);
-  stats->port = nice_address_get_port (&cand->addr);
-  stats->ipaddr = g_strdup (ipaddr);
-  stats->stream_id = stream->stream_id;
-  stats->type = nice_candidate_type_to_string (cand->type);
-  stats->prio = cand->priority;
-  stats->proto =
+  GST_WEBRTC_ICE_CANDIDATE_STATS_PORT (stats) =
+      nice_address_get_port (&cand->addr);
+  GST_WEBRTC_ICE_CANDIDATE_STATS_ADDRESS (stats) = g_strdup (ipaddr);
+  GST_WEBRTC_ICE_CANDIDATE_STATS_STREAM_ID (stats) = stream->stream_id;
+  GST_WEBRTC_ICE_CANDIDATE_STATS_TYPE (stats) =
+      nice_candidate_type_to_string (cand->type);
+  GST_WEBRTC_ICE_CANDIDATE_STATS_PRIORITY (stats) = cand->priority;
+  GST_WEBRTC_ICE_CANDIDATE_STATS_PROTOCOL (stats) =
       cand->transport == NICE_CANDIDATE_TRANSPORT_UDP ? "udp" : "tcp";
   if (is_local) {
-    if (cand->type == NICE_CANDIDATE_TYPE_RELAYED)
-      stats->relay_proto =
+    if (cand->type == NICE_CANDIDATE_TYPE_RELAYED) {
+      NiceAddress relay_address;
+      nice_candidate_relay_address (cand, &relay_address);
+
+      GST_WEBRTC_ICE_CANDIDATE_STATS_RELATED_ADDRESS (stats) =
+          nice_address_dup_string (&relay_address);
+      GST_WEBRTC_ICE_CANDIDATE_STATS_RELATED_PORT (stats) =
+          nice_address_get_port (&relay_address);
+
+      GST_WEBRTC_ICE_CANDIDATE_STATS_RELAY_PROTOCOL (stats) =
           gst_webrtc_nice_get_candidate_relay_protocol (ice->priv->turn_server);
-    stats->url = gst_webrtc_nice_get_candidate_server_url (ice, cand);
+    }
+    GST_WEBRTC_ICE_CANDIDATE_STATS_URL (stats) =
+        gst_webrtc_nice_get_candidate_server_url (ice, cand);
   }
+
+  GST_WEBRTC_ICE_CANDIDATE_STATS_FOUNDATION (stats) =
+      g_strdup (cand->foundation);
+
+  switch (cand->transport) {
+    case NICE_CANDIDATE_TRANSPORT_UDP:
+      GST_WEBRTC_ICE_CANDIDATE_STATS_TCP_TYPE (stats) =
+          GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_NONE;
+      break;
+    case NICE_CANDIDATE_TRANSPORT_TCP_ACTIVE:
+      GST_WEBRTC_ICE_CANDIDATE_STATS_TCP_TYPE (stats) =
+          GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_ACTIVE;
+      break;
+    case NICE_CANDIDATE_TRANSPORT_TCP_PASSIVE:
+      GST_WEBRTC_ICE_CANDIDATE_STATS_TCP_TYPE (stats) =
+          GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_PASSIVE;
+      break;
+    case NICE_CANDIDATE_TRANSPORT_TCP_SO:
+      GST_WEBRTC_ICE_CANDIDATE_STATS_TCP_TYPE (stats) =
+          GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_SO;
+      break;
+  };
+
+  GST_WEBRTC_ICE_CANDIDATE_STATS_USERNAME_FRAGMENT (stats) =
+      g_strdup (cand->username);
 }
 
 static void
@@ -1167,6 +1212,9 @@ gst_webrtc_nice_get_selected_pair (GstWebRTCICE * ice,
   if (stream) {
     if (nice_agent_get_selected_pair (nice->priv->nice_agent, stream->stream_id,
             NICE_COMPONENT_TYPE_RTP, &local_cand, &remote_cand)) {
+      _fill_candidate_credentials (nice->priv->nice_agent, local_cand);
+      _fill_candidate_credentials (nice->priv->nice_agent, remote_cand);
+
       *local_stats = g_new0 (GstWebRTCICECandidateStats, 1);
       _populate_candidate_stats (nice, local_cand, stream, *local_stats, TRUE);
 

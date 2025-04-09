@@ -47,6 +47,31 @@ struct _GstWebRTCICE
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstWebRTCICECandidateStats:
+ * @ipaddr: A string containing the address of the candidate. This value may be
+ *          an IPv4 address, an IPv6 address, or a fully-qualified domain name
+ * @port: The network port number used by the candidate
+ * @stream_id: A string that uniquely identifies the object that is being
+ *             monitored to produce this set of statistics
+ * @type: The candidate type
+ * @proto: A string specifying the protocol (tcp or udp) used to transmit data
+ *         on the @port
+ * @replay_proto: A string identifying the protocol used by the endpoint for
+ *                communicating with the TURN server; valid values are tcp, udp, and tls
+ * @prio: The candidate's priority, corresponding to RTCIceCandidate.priority
+ * @url: For local candidates, the url property is the URL of the ICE server
+ *       from which the candidate was received
+ * @foundation: The ICE foundation as defined in RFC5245 section 15.1 (Since: 1.28)
+ * @related_address: The ICE rel-addr defined in RFC5245 section 15.1 Only
+ *                   set for serverreflexive, peerreflexive and relay candidates. (Since: 1.28)
+ * @related_port: The ICE rel-addr defined in RFC5245 section 15.1. Only set
+ *                for serverreflexive, peerreflexive and relay candidates. (Since: 1.28)
+ * @username_fragment: The ICE username fragment as defined in RFC5245 section 7.1.2.3 (Since: 1.28)
+ * @tcp_type: The ICE candidate TCP type, (Since: 1.28)
+ *
+ * Since: 1.22
+ */
 struct _GstWebRTCICECandidateStats
 {
   gchar                            *ipaddr;
@@ -58,8 +83,154 @@ struct _GstWebRTCICECandidateStats
   guint                             prio;
   gchar                            *url;
 
-  gpointer _gst_reserved[GST_PADDING_LARGE];
+  /**
+   * GstWebRTCICECandidateStats.ABI: (attributes doc.skip=true)
+   *
+   * ABI compatibility union
+   *
+   * Since: 1.28
+   */
+  union {
+    /**
+     * GstWebRTCICECandidateStats.ABI.abi: (attributes doc.skip=true)
+     *
+     * ABI compatibility struct
+     *
+     * Since: 1.28
+     */
+    struct {
+      /**
+       * GstWebRTCICECandidateStats.ABI.abi.foundation:
+       *
+       * The foundation of the ICE candidate.
+       *
+       * Since: 1.28
+       */
+      gchar *foundation;
+
+      /**
+       * GstWebRTCICECandidateStats.ABI.abi.related_address:
+       *
+       * The related address (STUN or TURN server) of the candidate. Will be
+       * NULL for host candidates.
+       *
+       * Since: 1.28
+       */
+      gchar *related_address;
+
+      /**
+       * GstWebRTCICECandidateStats.ABI.abi.related_port:
+       *
+       * The related port (STUN or TURN server) of the candidate. Will be
+       * 0 for host candidates.
+       *
+       * Since: 1.28
+       */
+      guint related_port;
+
+      /**
+       * GstWebRTCICECandidateStats.ABI.abi.username_fragment:
+       *
+       * The ICE username for this candidate.
+       *
+       * Since: 1.28
+       */
+      gchar *username_fragment;
+
+      /**
+       * GstWebRTCICECandidateStats.ABI.abi.tcp_type:
+       *
+       * The type of TCP candidate. Will be NULL if the candidate is not a TCP
+       * candidate.
+       *
+       * Since: 1.28
+       */
+      GstWebRTCICETcpCandidateType tcp_type;
+    } abi;
+    /*< private >*/
+    gpointer _gst_reserved[GST_PADDING_LARGE];
+  } ABI;
 };
+
+/**
+ * GST_WEBRTC_ICE_CANDIDATE_STATS_ADDRESS:
+ *
+ * Since: 1.28
+ */
+#define GST_WEBRTC_ICE_CANDIDATE_STATS_ADDRESS(c) ((c)->ipaddr)
+/**
+ * GST_WEBRTC_ICE_CANDIDATE_STATS_PORT:
+ *
+ * Since: 1.28
+ */
+#define GST_WEBRTC_ICE_CANDIDATE_STATS_PORT(c) ((c)->port)
+/**
+ * GST_WEBRTC_ICE_CANDIDATE_STATS_STREAM_ID:
+ *
+ * Since: 1.28
+ */
+#define GST_WEBRTC_ICE_CANDIDATE_STATS_STREAM_ID(c) ((c)->stream_id)
+/**
+ * GST_WEBRTC_ICE_CANDIDATE_STATS_TYPE:
+ *
+ * Since: 1.28
+ */
+#define GST_WEBRTC_ICE_CANDIDATE_STATS_TYPE(c) ((c)->type)
+/**
+ * GST_WEBRTC_ICE_CANDIDATE_STATS_PROTOCOL:
+ *
+ * Since: 1.28
+ */
+#define GST_WEBRTC_ICE_CANDIDATE_STATS_PROTOCOL(c) ((c)->proto)
+/**
+ * GST_WEBRTC_ICE_CANDIDATE_STATS_RELAY_PROTOCOL:
+ *
+ * Since: 1.28
+ */
+#define GST_WEBRTC_ICE_CANDIDATE_STATS_RELAY_PROTOCOL(c) ((c)->relay_proto)
+/**
+ * GST_WEBRTC_ICE_CANDIDATE_STATS_PRIORITY:
+ *
+ * Since: 1.28
+ */
+#define GST_WEBRTC_ICE_CANDIDATE_STATS_PRIORITY(c) ((c)->prio)
+/**
+ * GST_WEBRTC_ICE_CANDIDATE_STATS_URL:
+ *
+ * Since: 1.28
+ */
+#define GST_WEBRTC_ICE_CANDIDATE_STATS_URL(c) ((c)->url)
+
+/**
+ * GST_WEBRTC_ICE_CANDIDATE_STATS_FOUNDATION:
+ *
+ * Since: 1.28
+ */
+#define GST_WEBRTC_ICE_CANDIDATE_STATS_FOUNDATION(c) ((c)->ABI.abi.foundation)
+/**
+ * GST_WEBRTC_ICE_CANDIDATE_STATS_RELATED_ADDRESS:
+ *
+ * Since: 1.28
+ */
+#define GST_WEBRTC_ICE_CANDIDATE_STATS_RELATED_ADDRESS(c) ((c)->ABI.abi.related_address)
+/**
+ * GST_WEBRTC_ICE_CANDIDATE_STATS_RELATED_PORT:
+ *
+ * Since: 1.28
+ */
+#define GST_WEBRTC_ICE_CANDIDATE_STATS_RELATED_PORT(c) ((c)->ABI.abi.related_port)
+/**
+ * GST_WEBRTC_ICE_CANDIDATE_STATS_USERNAME_FRAGMENT:
+ *
+ * Since: 1.28
+ */
+#define GST_WEBRTC_ICE_CANDIDATE_STATS_USERNAME_FRAGMENT(c) ((c)->ABI.abi.username_fragment)
+/**
+ * GST_WEBRTC_ICE_CANDIDATE_STATS_TCP_TYPE:
+ *
+ * Since: 1.28
+ */
+#define GST_WEBRTC_ICE_CANDIDATE_STATS_TCP_TYPE(c) ((c)->ABI.abi.tcp_type)
 
 /**
  * GstWebRTCICEOnCandidateFunc:

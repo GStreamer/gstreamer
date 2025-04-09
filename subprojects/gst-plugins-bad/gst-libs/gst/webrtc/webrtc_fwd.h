@@ -70,12 +70,29 @@ typedef struct _GstWebRTCDTLSTransportClass GstWebRTCDTLSTransportClass;
 typedef struct _GstWebRTCICE GstWebRTCICE;
 typedef struct _GstWebRTCICEClass GstWebRTCICEClass;
 
-/**
- * GstWebRTCICECandidateStats:
- *
- * Since: 1.22
- */
 typedef struct _GstWebRTCICECandidateStats GstWebRTCICECandidateStats;
+
+/**
+ * GstWebRTCICETcpCandidateType:
+ * @GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_ACTIVE: An "active" TCP candidate is one for which the transport
+ *                                            will attempt to open an outbound connection but will not
+ *                                            receive incoming connection requests.
+ * @GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_PASSIVE: A "passive" TCP candidate is one for which the transport
+ *                                             will receive incoming connection attempts but not attempt
+ *                                             a connection.
+ * @GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_SO: An "so" candidate is one for which the transport will attempt
+ *                                        to open a connection simultaneously with its peer.
+ * @GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_NONE: Value used for non-TCP candidate type.
+ *
+ * Since: 1.28
+ */
+typedef enum /*< underscore_name=gst_webrtc_ice_tcp_candidate_type >*/
+{
+  GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_ACTIVE,
+  GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_PASSIVE,
+  GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_SO,
+  GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_NONE,
+} GstWebRTCICETcpCandidateType;
 
 /**
  * GstWebRTCICEStream:

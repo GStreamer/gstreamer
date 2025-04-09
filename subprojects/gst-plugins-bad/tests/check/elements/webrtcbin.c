@@ -1748,6 +1748,7 @@ validate_candidate_stats (const GstStructure * s, const GstStructure * stats)
   guint port;
   guint64 priority;
   gchar *address, *candidateType, *protocol;
+  gchar *foundation, *username_fragment;
 
   fail_unless (gst_structure_get (s, "address", G_TYPE_STRING, &address, NULL));
   fail_unless (gst_structure_get (s, "port", G_TYPE_UINT, &port, NULL));
@@ -1759,9 +1760,37 @@ validate_candidate_stats (const GstStructure * s, const GstStructure * stats)
 
   fail_unless (strcmp (protocol, "udp") || strcmp (protocol, "tcp"));
 
+  fail_unless (gst_structure_get (s, "foundation", G_TYPE_STRING, &foundation,
+          NULL));
+  fail_unless (gst_structure_get (s, "username-fragment", G_TYPE_STRING,
+          &username_fragment, NULL));
+
+  if (strcmp (candidateType, "host")) {
+    guint related_port;
+    gchar *related_address;
+    fail_unless (gst_structure_get (s, "related-address", G_TYPE_STRING,
+            &related_address, NULL));
+    fail_unless (gst_structure_get (s, "related-port", G_TYPE_UINT,
+            &related_port, NULL));
+    g_free (related_address);
+  } else {
+    fail_if (gst_structure_has_field (s, "related-address"));
+    fail_if (gst_structure_has_field (s, "related-port"));
+  }
+
+  if (!strcmp (protocol, "tcp")) {
+    GstWebRTCICETcpCandidateType tcp_type;
+    fail_unless (gst_structure_get (s, "tcp-type",
+            GST_TYPE_WEBRTC_ICE_TCP_CANDIDATE_TYPE, &tcp_type, NULL));
+    fail_if (tcp_type == GST_WEBRTC_ICE_TCP_CANDIDATE_TYPE_NONE);
+  } else {
+    fail_if (gst_structure_has_field (s, "tcp-type"));
+  }
   g_free (address);
   g_free (candidateType);
   g_free (protocol);
+  g_free (foundation);
+  g_free (username_fragment);
 }
 
 static void
