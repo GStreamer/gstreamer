@@ -298,7 +298,7 @@ _priv_gst_tracing_init (void)
         } else {
           g_warning ("loading plugin containing feature %s failed!", t[i]);
         }
-      } else {
+      } else if (t[i][0] != '\0') {
         g_warning ("no tracer named '%s'", t[i]);
       }
       i++;
