@@ -65,6 +65,13 @@ variables:
     -Dsharp=enabled
     -Ddoc=disabled
 
+  # Our gitlab instance and runner are using a proxy and have
+  # trouble with the normal fetch. git itself handles the proxy
+  # more reliably.
+  #
+  # https://doc.rust-lang.org/cargo/reference/config.html#netgit-fetch-with-cli
+  CARGO_NET_GIT_FETCH_WITH_CLI: true
+
 workflow:
   # https://docs.gitlab.com/ee/ci/yaml/index.html#switch-between-branch-pipelines-and-merge-request-pipelines
   rules:
