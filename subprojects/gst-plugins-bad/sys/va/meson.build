@@ -130,7 +130,7 @@ if libva_dep.version().version_compare('>= 1.15')
   va_sources += va_av1enc_sources
 endif
 
-if libva_dep.version().version_compare('>= 2.22')
+if libva_dep.version().version_compare('>= 1.22')
   va_sources += va_h266dec_sources
 endif
 
