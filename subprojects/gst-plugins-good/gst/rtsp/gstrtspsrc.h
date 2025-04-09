@@ -230,6 +230,7 @@ struct _GstRTSPSrc {
   GList           *streams;
   GMutex           flow_combiner_lock;
   GstFlowCombiner *flow_combiner;
+  gboolean         emitted_no_more_pads;
   GstStructure    *props;
   gboolean         need_activate;
 
