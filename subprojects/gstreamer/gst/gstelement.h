@@ -507,6 +507,25 @@ G_STMT_START {                                                          \
 } G_STMT_END
 
 /**
+ * GST_ELEMENT_FLOW_ERROR_WITH_LOG_CTX:
+ * @el:           the element that generates the error
+ * @log_ctx:      the log context
+ * @flow_return:  the GstFlowReturn leading to that ERROR message
+ *
+ * Utility function that elements can use in case they encountered a fatal
+ * data processing error due to wrong flow processing.
+ *
+ * Since: 1.28
+ */
+#define GST_ELEMENT_FLOW_ERROR_WITH_LOG_CTX(el,log_ctx,flow_return)  \
+G_STMT_START {                                                          \
+  GST_ELEMENT_ERROR_WITH_DETAILS_AND_LOG_CTX (el, STREAM, FAILED, log_ctx, \
+      ("Internal data stream error."), \
+      ("streaming stopped, reason %s (%d)", gst_flow_get_name (flow_return), flow_return), \
+      ("flow-return", G_TYPE_INT, flow_return, NULL));\
+} G_STMT_END
+
+/**
  * GST_ELEMENT_ERROR_WITH_DETAILS:
  * @el:     the element that generates the error
  * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))
@@ -540,6 +559,40 @@ G_STMT_START {                                                          \
 } G_STMT_END
 
 /**
+ * GST_ELEMENT_ERROR_WITH_DETAILS_AND_LOG_CTX:
+ * @el:     the element that generates the error
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))
+ * @code:   error code defined for that domain (see [GstGError](gsterror))
+ * @log_ctx: the log context
+ * @text:   the message to display (format string and args enclosed in
+            parentheses)
+ * @debug:  debugging information for the message (format string and args
+            enclosed in parentheses)
+ * @args:   optional name, type, value triplets, which will be stored
+ *          in the associated GstStructure. NULL terminator required.
+ *          Must be enclosed within parentheses.
+ *
+ * Utility function that elements can use in case they encountered a fatal
+ * data processing error. The pipeline will post an error message and the
+ * application will be requested to stop further media processing.
+ *
+ * Since: 1.28
+ */
+#define GST_ELEMENT_ERROR_WITH_DETAILS_AND_LOG_CTX(el,domain,code,log_ctx,text,debug,args)  \
+G_STMT_START {                                                          \
+  gchar *__txt = _gst_element_error_printf text;                        \
+  gchar *__dbg = _gst_element_error_printf debug;                       \
+  if (__txt)                                                            \
+    GST_CTX_WARNING_OBJECT (log_ctx, el, "error: %s", __txt);           \
+  if (__dbg)                                                            \
+    GST_CTX_WARNING_OBJECT (log_ctx, el, "error: %s", __dbg);           \
+  gst_element_message_full_with_details (GST_ELEMENT(el),               \
+    GST_MESSAGE_ERROR, GST_ ## domain ## _ERROR,                        \
+      GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,        \
+      GST_FUNCTION, __LINE__, GST_ELEMENT_MESSAGE_MAKE_DETAILS(args));  \
+} G_STMT_END
+
+/**
  * GST_ELEMENT_ERROR:
  * @el:     the element that generates the error
  * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))
@@ -561,6 +614,37 @@ G_STMT_START {                                                          \
     GST_WARNING_OBJECT (el, "error: %s", __txt);                        \
   if (__dbg)                                                            \
     GST_WARNING_OBJECT (el, "error: %s", __dbg);                        \
+  gst_element_message_full (GST_ELEMENT(el),                            \
+    GST_MESSAGE_ERROR, GST_ ## domain ## _ERROR,                        \
+      GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,        \
+      GST_FUNCTION, __LINE__);                                          \
+} G_STMT_END
+
+/**
+ * GST_ELEMENT_ERROR_WITH_LOG_CTX:
+ * @el:     the element that generates the error
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))
+ * @code:   error code defined for that domain (see [GstGError](gsterror))
+ * @log_ctx: the log context
+ * @text:   the message to display (format string and args enclosed in
+            parentheses)
+ * @debug:  debugging information for the message (format string and args
+            enclosed in parentheses)
+ *
+ * Utility function that elements can use in case they encountered a fatal
+ * data processing error. The pipeline will post an error message and the
+ * application will be requested to stop further media processing.
+ *
+ * Since: 1.28
+ */
+#define GST_ELEMENT_ERROR_WITH_LOG_CTX(el,domain,code,log_ctx,text,debug)     \
+G_STMT_START {                                                          \
+  gchar *__txt = _gst_element_error_printf text;                        \
+  gchar *__dbg = _gst_element_error_printf debug;                       \
+  if (__txt)                                                            \
+    GST_CTX_WARNING_OBJECT (log_ctx, el, "error: %s", __txt);           \
+  if (__dbg)                                                            \
+    GST_CTX_WARNING_OBJECT (log_ctx, el, "error: %s", __dbg);           \
   gst_element_message_full (GST_ELEMENT(el),                            \
     GST_MESSAGE_ERROR, GST_ ## domain ## _ERROR,                        \
       GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,        \
@@ -598,6 +682,71 @@ G_STMT_START {                                                          \
     GST_MESSAGE_WARNING, GST_ ## domain ## _ERROR,                      \
     GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,          \
     GST_FUNCTION, __LINE__, GST_ELEMENT_MESSAGE_MAKE_DETAILS(args));    \
+} G_STMT_END
+
+/**
+ * GST_ELEMENT_WARNING_WITH_DETAILS_AND_LOG_CTX:
+ * @el:     the element that generates the warning
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))
+ * @code:   error code defined for that domain (see [GstGError](gsterror))
+ * @log_ctx: the log context
+ * @text:   the message to display (format string and args enclosed in
+            parentheses)
+ * @debug:  debugging information for the message (format string and args
+            enclosed in parentheses)
+ * @args:   optional name, type, value triplets, which will be stored
+ *          in the associated GstStructure. NULL terminator required.
+ *          Must be enclosed within parentheses.
+ *
+ * Utility function that elements can use in case they encountered a non-fatal
+ * data processing problem. The pipeline will post a warning message and the
+ * application will be informed.
+ *
+ * Since: 1.28
+ */
+#define GST_ELEMENT_WARNING_WITH_DETAILS_AND_LOG_CTX(el, domain, code, log_ctx, text, debug, args)\
+G_STMT_START {                                                          \
+  gchar *__txt = _gst_element_error_printf text;                        \
+  gchar *__dbg = _gst_element_error_printf debug;                       \
+  if (__txt)                                                            \
+    GST_CTX_WARNING_OBJECT (log_ctx, el, "warning: %s", __txt);         \
+  if (__dbg)                                                            \
+    GST_CTX_WARNING_OBJECT (log_ctx, el, "warning: %s", __dbg);         \
+  gst_element_message_full_with_details (GST_ELEMENT(el),               \
+    GST_MESSAGE_WARNING, GST_ ## domain ## _ERROR,                      \
+    GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,          \
+    GST_FUNCTION, __LINE__, GST_ELEMENT_MESSAGE_MAKE_DETAILS(args));    \
+} G_STMT_END
+
+/**
+ * GST_ELEMENT_WARNING_WITH_LOG_CTX:
+ * @el:     the element that generates the warning
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))
+ * @code:   error code defined for that domain (see [GstGError](gsterror))
+ * @log_ctx: the log context
+ * @text:   the message to display (format string and args enclosed in
+            parentheses)
+ * @debug:  debugging information for the message (format string and args
+            enclosed in parentheses)
+ *
+ * Utility function that elements can use in case they encountered a non-fatal
+ * data processing problem. The pipeline will post a warning message and the
+ * application will be informed.
+ *
+ * Since: 1.28
+ */
+#define GST_ELEMENT_WARNING_WITH_LOG_CTX(el, domain, code, log_ctx, text, debug)              \
+G_STMT_START {                                                          \
+  gchar *__txt = _gst_element_error_printf text;                        \
+  gchar *__dbg = _gst_element_error_printf debug;                       \
+  if (__txt)                                                            \
+    GST_CTX_WARNING_OBJECT (log_ctx, el, "warning: %s", __txt);         \
+  if (__dbg)                                                            \
+    GST_CTX_WARNING_OBJECT (log_ctx, el, "warning: %s", __dbg);         \
+  gst_element_message_full (GST_ELEMENT(el),                            \
+    GST_MESSAGE_WARNING, GST_ ## domain ## _ERROR,                      \
+    GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,          \
+    GST_FUNCTION, __LINE__);                                            \
 } G_STMT_END
 
 /**
@@ -665,6 +814,43 @@ G_STMT_START {                                                          \
 } G_STMT_END
 
 /**
+ * GST_ELEMENT_INFO_WITH_DETAILS_AND_LOG_CTX:
+ * @el:     the element that generates the information
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))
+ * @code:   error code defined for that domain (see [GstGError](gsterror))
+ * @log_ctx: the log context
+ * @text:   the message to display (format string and args enclosed in
+            parentheses)
+ * @debug:  debugging information for the message (format string and args
+            enclosed in parentheses)
+ * @args:   optional name, type, value triplets, which will be stored
+ *          in the associated GstStructure. NULL terminator required.
+ *          Must be enclosed within parentheses.
+ *
+ * Utility function that elements can use in case they want to inform
+ * the application of something noteworthy that is not an error.
+ * The pipeline will post a info message and the
+ * application will be informed.
+ * Optional name, type, value triplets may be supplied, and will be stored
+ * in the associated GstStructure. NULL terminator required.
+ *
+ * Since: 1.28
+ */
+#define GST_ELEMENT_INFO_WITH_DETAILS_AND_LOG_CTX(el, domain, code, log_ctx, text, debug, args)   \
+G_STMT_START {                                                          \
+  gchar *__txt = _gst_element_error_printf text;                        \
+  gchar *__dbg = _gst_element_error_printf debug;                       \
+  if (__txt)                                                            \
+    GST_CTX_INFO_OBJECT (log_ctx, el, "info: %s", __txt);               \
+  if (__dbg)                                                            \
+    GST_CTX_INFO_OBJECT (log_ctx, el, "info: %s", __dbg);               \
+  gst_element_message_full_with_details (GST_ELEMENT(el),               \
+    GST_MESSAGE_INFO, GST_ ## domain ## _ERROR,                         \
+    GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,          \
+    GST_FUNCTION, __LINE__, GST_ELEMENT_MESSAGE_MAKE_DETAILS(args));    \
+} G_STMT_END
+
+/**
  * GST_ELEMENT_INFO:
  * @el:     the element that generates the information
  * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))
@@ -687,6 +873,38 @@ G_STMT_START {                                                          \
     GST_INFO_OBJECT (el, "info: %s", __txt);                            \
   if (__dbg)                                                            \
     GST_INFO_OBJECT (el, "info: %s", __dbg);                            \
+  gst_element_message_full (GST_ELEMENT(el),                            \
+    GST_MESSAGE_INFO, GST_ ## domain ## _ERROR,                         \
+    GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,          \
+    GST_FUNCTION, __LINE__);                                            \
+} G_STMT_END
+
+/**
+ * GST_ELEMENT_INFO_WITH_LOG_CTX:
+ * @el:     the element that generates the information
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))
+ * @code:   error code defined for that domain (see [GstGError](gsterror))
+ * @log_ctx: the log context
+ * @text:   the message to display (format string and args enclosed in
+            parentheses)
+ * @debug:  debugging information for the message (format string and args
+            enclosed in parentheses)
+ *
+ * Utility function that elements can use in case they want to inform
+ * the application of something noteworthy that is not an error.
+ * The pipeline will post a info message and the
+ * application will be informed.
+ *
+ * Since: 1.28
+ */
+#define GST_ELEMENT_INFO_WITH_LOG_CTX(el, domain, code, log_ctx, text, debug)  \
+G_STMT_START {                                                          \
+  gchar *__txt = _gst_element_error_printf text;                        \
+  gchar *__dbg = _gst_element_error_printf debug;                       \
+  if (__txt)                                                            \
+    GST_CTX_INFO_OBJECT (log_ctx, el, "info: %s", __txt);               \
+  if (__dbg)                                                            \
+    GST_CTX_INFO_OBJECT (log_ctx, el, "info: %s", __dbg);               \
   gst_element_message_full (GST_ELEMENT(el),                            \
     GST_MESSAGE_INFO, GST_ ## domain ## _ERROR,                         \
     GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,          \

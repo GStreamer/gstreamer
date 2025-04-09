@@ -6549,6 +6549,392 @@ The difference is calculated as @e - @s.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="CTX_DEBUG" c:identifier="GST_CTX_DEBUG" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a debug message in the specified context.
+If this exact message was already logged from the same location with this
+context, it will not be logged again unless the context has been reset.
+
+Example:
+``` c
+// Define a static context
+GST_LOG_CONTEXT_STATIC_DEFINE(debug_ctx, );
+#define DEBUG_CTX GST_LOG_CONTEXT_LAZY_INIT(debug_ctx)
+
+// Use in code - this message will only be logged once
+for (i = 0; i &lt; 1000; i++) {
+  GST_CTX_DEBUG(DEBUG_CTX, "Processing iteration %d", i);
+}
+```</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use for determining if message should be logged</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_DEBUG_ID" c:identifier="GST_CTX_DEBUG_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a debug message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_DEBUG_OBJECT" c:identifier="GST_CTX_DEBUG_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an info message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_ERROR" c:identifier="GST_CTX_ERROR" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an error message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_ERROR_ID" c:identifier="GST_CTX_ERROR_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an error message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_ERROR_OBJECT" c:identifier="GST_CTX_ERROR_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an error message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_FIXME" c:identifier="GST_CTX_FIXME" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a fixme message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_FIXME_ID" c:identifier="GST_CTX_FIXME_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a fixme message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_FIXME_OBJECT" c:identifier="GST_CTX_FIXME_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a fixme message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_INFO" c:identifier="GST_CTX_INFO" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an info message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_INFO_ID" c:identifier="GST_CTX_INFO_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an info message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_INFO_OBJECT" c:identifier="GST_CTX_INFO_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs an info message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_LEVEL_LOG" c:identifier="GST_CTX_LEVEL_LOG" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a memory dump message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="level">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">level of the message</doc>
+        </parameter>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_LEVEL_LOG_ID" c:identifier="GST_CTX_LEVEL_LOG_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a memory dump message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="level">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">level of the message</doc>
+        </parameter>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_LOG" c:identifier="GST_CTX_LOG" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a log message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_LOG_ID" c:identifier="GST_CTX_LOG_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a log message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_LOG_OBJECT" c:identifier="GST_CTX_LOG_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a log message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_MEMDUMP" c:identifier="GST_CTX_MEMDUMP" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a memory dump message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_MEMDUMP_ID" c:identifier="GST_CTX_MEMDUMP_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a memory dump message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_MEMDUMP_OBJECT" c:identifier="GST_CTX_MEMDUMP_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a memory dump message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_TRACE" c:identifier="GST_CTX_TRACE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a trace message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_TRACE_ID" c:identifier="GST_CTX_TRACE_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a trace message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_TRACE_OBJECT" c:identifier="GST_CTX_TRACE_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a trace message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_WARNING" c:identifier="GST_CTX_WARNING" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a warning message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_WARNING_ID" c:identifier="GST_CTX_WARNING_ID" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a warning message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="id">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">an object ID or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="CTX_WARNING_OBJECT" c:identifier="GST_CTX_WARNING_OBJECT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Logs a warning message in the specified context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContext to use</doc>
+        </parameter>
+        <parameter name="object">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GObject or %NULL</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">format string and optional arguments, followed by optional context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
     <record name="Caps" c:type="GstCaps" glib:type-name="GstCaps" glib:get-type="gst_caps_get_type" c:symbol-prefix="caps">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Caps (capabilities) are lightweight refcounted objects describing media types.
 They are composed of an array of #GstStructure.
@@ -14264,6 +14650,67 @@ application will be requested to stop further media processing.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="ELEMENT_ERROR_WITH_DETAILS_AND_LOG_CTX" c:identifier="GST_ELEMENT_ERROR_WITH_DETAILS_AND_LOG_CTX" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">Utility function that elements can use in case they encountered a fatal
+data processing error. The pipeline will post an error message and the
+application will be requested to stop further media processing.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstelement.h"/>
+      <parameters>
+        <parameter name="el">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the element that generates the error</doc>
+        </parameter>
+        <parameter name="domain">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))</doc>
+        </parameter>
+        <parameter name="code">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">error code defined for that domain (see [GstGError](gsterror))</doc>
+        </parameter>
+        <parameter name="log_ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the log context</doc>
+        </parameter>
+        <parameter name="text">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the message to display (format string and args enclosed in
+            parentheses)</doc>
+        </parameter>
+        <parameter name="debug">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">debugging information for the message (format string and args
+            enclosed in parentheses)</doc>
+        </parameter>
+        <parameter name="args">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">optional name, type, value triplets, which will be stored
+         in the associated GstStructure. NULL terminator required.
+         Must be enclosed within parentheses.</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="ELEMENT_ERROR_WITH_LOG_CTX" c:identifier="GST_ELEMENT_ERROR_WITH_LOG_CTX" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">Utility function that elements can use in case they encountered a fatal
+data processing error. The pipeline will post an error message and the
+application will be requested to stop further media processing.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstelement.h"/>
+      <parameters>
+        <parameter name="el">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the element that generates the error</doc>
+        </parameter>
+        <parameter name="domain">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))</doc>
+        </parameter>
+        <parameter name="code">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">error code defined for that domain (see [GstGError](gsterror))</doc>
+        </parameter>
+        <parameter name="log_ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the log context</doc>
+        </parameter>
+        <parameter name="text">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the message to display (format string and args enclosed in
+            parentheses)</doc>
+        </parameter>
+        <parameter name="debug">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">debugging information for the message (format string and args
+            enclosed in parentheses)</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="ELEMENT_FACTORY" c:identifier="GST_ELEMENT_FACTORY" introspectable="0">
       <source-position filename="../subprojects/gstreamer/gst/gstelementfactory.h"/>
       <parameters>
@@ -14488,6 +14935,22 @@ data processing error due to wrong flow processing.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="ELEMENT_FLOW_ERROR_WITH_LOG_CTX" c:identifier="GST_ELEMENT_FLOW_ERROR_WITH_LOG_CTX" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">Utility function that elements can use in case they encountered a fatal
+data processing error due to wrong flow processing.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstelement.h"/>
+      <parameters>
+        <parameter name="el">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the element that generates the error</doc>
+        </parameter>
+        <parameter name="log_ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the log context</doc>
+        </parameter>
+        <parameter name="flow_return">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the GstFlowReturn leading to that ERROR message</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="ELEMENT_GET_CLASS" c:identifier="GST_ELEMENT_GET_CLASS" introspectable="0">
       <source-position filename="../subprojects/gstreamer/gst/gstelement.h"/>
       <parameters>
@@ -14551,6 +15014,71 @@ in the associated GstStructure. NULL terminator required.</doc>
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">optional name, type, value triplets, which will be stored
          in the associated GstStructure. NULL terminator required.
          Must be enclosed within parentheses.</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="ELEMENT_INFO_WITH_DETAILS_AND_LOG_CTX" c:identifier="GST_ELEMENT_INFO_WITH_DETAILS_AND_LOG_CTX" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">Utility function that elements can use in case they want to inform
+the application of something noteworthy that is not an error.
+The pipeline will post a info message and the
+application will be informed.
+Optional name, type, value triplets may be supplied, and will be stored
+in the associated GstStructure. NULL terminator required.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstelement.h"/>
+      <parameters>
+        <parameter name="el">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the element that generates the information</doc>
+        </parameter>
+        <parameter name="domain">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))</doc>
+        </parameter>
+        <parameter name="code">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">error code defined for that domain (see [GstGError](gsterror))</doc>
+        </parameter>
+        <parameter name="log_ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the log context</doc>
+        </parameter>
+        <parameter name="text">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the message to display (format string and args enclosed in
+            parentheses)</doc>
+        </parameter>
+        <parameter name="debug">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">debugging information for the message (format string and args
+            enclosed in parentheses)</doc>
+        </parameter>
+        <parameter name="args">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">optional name, type, value triplets, which will be stored
+         in the associated GstStructure. NULL terminator required.
+         Must be enclosed within parentheses.</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="ELEMENT_INFO_WITH_LOG_CTX" c:identifier="GST_ELEMENT_INFO_WITH_LOG_CTX" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">Utility function that elements can use in case they want to inform
+the application of something noteworthy that is not an error.
+The pipeline will post a info message and the
+application will be informed.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstelement.h"/>
+      <parameters>
+        <parameter name="el">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the element that generates the information</doc>
+        </parameter>
+        <parameter name="domain">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))</doc>
+        </parameter>
+        <parameter name="code">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">error code defined for that domain (see [GstGError](gsterror))</doc>
+        </parameter>
+        <parameter name="log_ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the log context</doc>
+        </parameter>
+        <parameter name="text">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the message to display (format string and args enclosed in
+            parentheses)</doc>
+        </parameter>
+        <parameter name="debug">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">debugging information for the message (format string and args
+            enclosed in parentheses)</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -14824,6 +15352,67 @@ application will be informed.</doc>
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">optional name, type, value triplets, which will be stored
          in the associated GstStructure. NULL terminator required.
          Must be enclosed within parentheses.</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="ELEMENT_WARNING_WITH_DETAILS_AND_LOG_CTX" c:identifier="GST_ELEMENT_WARNING_WITH_DETAILS_AND_LOG_CTX" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">Utility function that elements can use in case they encountered a non-fatal
+data processing problem. The pipeline will post a warning message and the
+application will be informed.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstelement.h"/>
+      <parameters>
+        <parameter name="el">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the element that generates the warning</doc>
+        </parameter>
+        <parameter name="domain">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))</doc>
+        </parameter>
+        <parameter name="code">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">error code defined for that domain (see [GstGError](gsterror))</doc>
+        </parameter>
+        <parameter name="log_ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the log context</doc>
+        </parameter>
+        <parameter name="text">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the message to display (format string and args enclosed in
+            parentheses)</doc>
+        </parameter>
+        <parameter name="debug">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">debugging information for the message (format string and args
+            enclosed in parentheses)</doc>
+        </parameter>
+        <parameter name="args">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">optional name, type, value triplets, which will be stored
+         in the associated GstStructure. NULL terminator required.
+         Must be enclosed within parentheses.</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="ELEMENT_WARNING_WITH_LOG_CTX" c:identifier="GST_ELEMENT_WARNING_WITH_LOG_CTX" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">Utility function that elements can use in case they encountered a non-fatal
+data processing problem. The pipeline will post a warning message and the
+application will be informed.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstelement.h"/>
+      <parameters>
+        <parameter name="el">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the element that generates the warning</doc>
+        </parameter>
+        <parameter name="domain">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">like CORE, LIBRARY, RESOURCE or STREAM (see [GstGError](gsterror))</doc>
+        </parameter>
+        <parameter name="code">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">error code defined for that domain (see [GstGError](gsterror))</doc>
+        </parameter>
+        <parameter name="log_ctx">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the log context</doc>
+        </parameter>
+        <parameter name="text">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">the message to display (format string and args enclosed in
+            parentheses)</doc>
+        </parameter>
+        <parameter name="debug">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.h">debugging information for the message (format string and args
+            enclosed in parentheses)</doc>
         </parameter>
       </parameters>
     </function-macro>
@@ -22956,6 +23545,143 @@ character, a newline character will be added automatically.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="LOG_CONTEXT_BUILDER_NEW" c:identifier="GST_LOG_CONTEXT_BUILDER_NEW" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Creates a new log context builder with default settings.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="flags">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="LOG_CONTEXT_BUILDER_SET_CATEGORY" c:identifier="GST_LOG_CONTEXT_BUILDER_SET_CATEGORY" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Sets the debug category for the log context being built.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="category">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">a #GstDebugCategory to associate with the context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="LOG_CONTEXT_BUILDER_SET_HASH_FLAGS" c:identifier="GST_LOG_CONTEXT_BUILDER_SET_HASH_FLAGS" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Sets the hash flags for the log context being built, which control how
+the message hash is calculated.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="flags">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContextHashFlags to control message hash calculation</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="LOG_CONTEXT_BUILDER_SET_INTERVAL" c:identifier="GST_LOG_CONTEXT_BUILDER_SET_INTERVAL" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Sets the automatic reset interval for the log context being built.
+After this interval has elapsed, the context will allow previously logged
+messages to be logged again. This is useful for allowing periodic log
+messages.
+
+Example:
+
+``` c
+// Create a context that allows messages to repeat every minute
+GST_LOG_CONTEXT_STATIC_DEFINE(minute_ctx,
+  GST_LOG_CONTEXT_BUILDER_SET_INTERVAL(60 * GST_SECOND);
+);
+```</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="interval">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">interval in nanoseconds for automatic reset (e.g., 1 * GST_SECOND)</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="LOG_CONTEXT_INIT" c:identifier="GST_LOG_CONTEXT_INIT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Initializes a new log context for immediate use within a function. It requires
+flags to explicitly control whether throttling is enabled.
+By default, the context uses GST_CAT_DEFAULT and GST_LOG_CONTEXT_DEFAULT hash flags,
+but can be further customized with optional initialization code.
+
+Typical usage:
+
+``` c
+// Simple case with throttling
+GstLogContext *ctx = NULL, *periodic_ctx = NULL;
+
+GST_LOG_CONTEXT_INIT(ctx, GST_LOG_CONTEXT_FLAG_THROTTLE);
+
+// With interval for periodic reset and throttling
+GST_LOG_CONTEXT_INIT(periodic_ctx, GST_LOG_CONTEXT_FLAG_THROTTLE,
+  GST_LOG_CONTEXT_BUILDER_SET_INTERVAL(60 * GST_SECOND);
+);
+```
+
+The returned context should be freed with gst_log_context_free() when no longer needed.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="var">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">name for the context variable to initialize</doc>
+        </parameter>
+        <parameter name="flags">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">#GstLogContextFlags to control throttling behavior</doc>
+        </parameter>
+        <parameter name="...">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="LOG_CONTEXT_LAZY_INIT" c:identifier="GST_LOG_CONTEXT_LAZY_INIT" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">This macro is used to ensure a static logging context is initialized on
+first use. It should be used with a context defined using
+GST_LOG_CONTEXT_STATIC_DEFINE().</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="name">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">variable name for the context</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="LOG_CONTEXT_STATIC_DEFINE" c:identifier="GST_LOG_CONTEXT_STATIC_DEFINE" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Creates a static logging context that will be automatically initialized on
+first use and cleaned up during GStreamer deinitialization. It requires the
+behavior flags as a parameter to explicitly control whether throttling is enabled.
+By default, it uses GST_CAT_DEFAULT and GST_LOG_CONTEXT_DEFAULT hash flags,
+but can be further customized with optional initialization code.
+
+Example usage:
+```
+// Simple case with throttling enabled (logs messages only once)
+GST_LOG_CONTEXT_STATIC_DEFINE(simple_ctx, GST_LOG_CONTEXT_FLAG_THROTTLE, );
+
+// With interval for periodic logging (allow message to repeat after 60 seconds)
+GST_LOG_CONTEXT_STATIC_DEFINE(periodic_ctx,
+  GST_LOG_CONTEXT_BUILDER_SET_INTERVAL(60 * GST_SECOND);
+);
+
+// With custom category and flags (ignore object pointers when calculating message hash)
+GST_LOG_CONTEXT_STATIC_DEFINE(custom_ctx,
+  GST_LOG_CONTEXT_BUILDER_SET_CATEGORY(my_category);
+  GST_LOG_CONTEXT_BUILDER_SET_FLAGS(GST_LOG_CONTEXT_IGNORE_OBJECT);
+);
+```
+
+Use with GST_LOG_CONTEXT_LAZY_INIT() to get a reference to the context:
+```
+#define MY_CONTEXT GST_LOG_CONTEXT_LAZY_INIT(simple_ctx)
+
+// Then in code:
+GST_CTX_INFO(MY_CONTEXT, "This will only appear once");
+GST_CTX_INFO(MY_CONTEXT, "This will only appear once"); // Not logged again
+```
+
+When using this macro, gst_init() must be called in the application.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <parameters>
+        <parameter name="name">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">variable name for the context</doc>
+        </parameter>
+        <parameter name="flags">
+        </parameter>
+        <parameter name="...">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="LOG_ID" c:identifier="GST_LOG_ID" version="1.22" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Output a logging message for the given identifier in the default category.
 
@@ -23032,6 +23758,229 @@ deciding where to go while developing code.</doc>
       </member>
       <member name="last" value="256" c:identifier="GST_LOCK_FLAG_LAST" glib:nick="last" glib:name="GST_LOCK_FLAG_LAST">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstminiobject.h">first flag that can be used for custom purposes</doc>
+      </member>
+    </bitfield>
+    <record name="LogContext" c:type="GstLogContext" disguised="1" opaque="1" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">A context for controlling logging behavior, for example to handle
+logging once or periodic logging, avoiding to
+spam the terminal with the same log message multiple times.
+
+## Simple log context using static macros
+
+``` c
+// At global/file scope:
+GST_LOG_CONTEXT_STATIC_DEFINE(my_context, GST_LOG_CONTEXT_FLAG_THROTTLE, );
+#define MY_CONTEXT GST_LOG_CONTEXT_LAZY_INIT(my_context)
+
+// Then in code:
+GST_CTX_INFO(MY_CONTEXT, "This will only appear once per file/line");
+```
+
+## Periodic logging
+
+For messages that should be logged periodically (e.g., maximum once per minute):
+
+``` c
+// At global/file scope:
+GST_LOG_CONTEXT_STATIC_DEFINE(my_periodic_context, GST_LOG_CONTEXT_FLAG_THROTTLE,
+  GST_LOG_CONTEXT_BUILDER_SET_INTERVAL(60 * GST_SECOND);
+);
+#define MY_PERIODIC_CONTEXT GST_LOG_CONTEXT_LAZY_INIT(my_periodic_context)
+
+// Then in code:
+GST_CTX_INFO(MY_PERIODIC_CONTEXT, "This appears once per minute");
+```
+
+## Customizing Message hash with custom flags and category
+
+By default, a message's hash is determined by the file name, object pointer,
+and format string. You can customize this with builder operations:
+
+``` c
+// Ignore the object pointer when determining message hash (with throttling)
+GST_LOG_CONTEXT_STATIC_DEFINE(obj_independent_ctx, GST_LOG_CONTEXT_FLAG_THROTTLE,
+  GST_LOG_CONTEXT_BUILDER_SET_HASH_FLAGS(GST_LOG_CONTEXT_IGNORE_OBJECT);
+);
+
+// Use a custom category (without throttling)
+GST_LOG_CONTEXT_STATIC_DEFINE(custom_cat_ctx, GST_LOG_CONTEXT_FLAG_NONE,
+  GST_LOG_CONTEXT_BUILDER_SET_CATEGORY(my_category);
+);
+```</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <method name="free" c:identifier="gst_log_context_free" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Free the logging context, clearing all tracked messages.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ctx" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a #GstLogContext</doc>
+            <type name="LogContext" c:type="GstLogContext*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_category" c:identifier="gst_log_context_get_category" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Get the #GstDebugCategory associated with this log context.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+        <return-value>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the #GstDebugCategory to which the context is bound</doc>
+          <type name="DebugCategory" c:type="GstDebugCategory*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a #GstLogContext</doc>
+            <type name="LogContext" c:type="GstLogContext*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="reset" c:identifier="gst_log_context_reset" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Resets the logging context, clearing all tracked messages.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ctx" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a #GstLogContext</doc>
+            <type name="LogContext" c:type="GstLogContext*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <record name="LogContextBuilder" c:type="GstLogContextBuilder" disguised="1" opaque="1" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">A builder for creating a #GstLogContext. This provides a flexible way to
+configure a log context with various options while maintaining immutability
+of the resulting context.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <method name="build" c:identifier="gst_log_context_builder_build" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Builds a #GstLogContext from the builder configuration.
+The builder is consumed by this function and should not be used afterward.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a new #GstLogContext</doc>
+          <type name="LogContext" c:type="GstLogContext*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="builder" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a #GstLogContextBuilder</doc>
+            <type name="LogContextBuilder" c:type="GstLogContextBuilder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="set_category" c:identifier="gst_log_context_builder_set_category" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Sets the debug category for the log context being built.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the same #GstLogContextBuilder</doc>
+          <type name="LogContextBuilder" c:type="GstLogContextBuilder*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="builder" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a #GstLogContextBuilder</doc>
+            <type name="LogContextBuilder" c:type="GstLogContextBuilder*"/>
+          </instance-parameter>
+          <parameter name="category" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the debug category to use, or NULL for no specific category</doc>
+            <type name="DebugCategory" c:type="GstDebugCategory*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_hash_flags" c:identifier="gst_log_context_builder_set_hash_flags" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Sets the hash flags for the log context being built. These determine how
+message hashes are calculated for determining duplicates.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the same #GstLogContextBuilder</doc>
+          <type name="LogContextBuilder" c:type="GstLogContextBuilder*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="builder" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a #GstLogContextBuilder</doc>
+            <type name="LogContextBuilder" c:type="GstLogContextBuilder*"/>
+          </instance-parameter>
+          <parameter name="flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the hash flags to use for the log context</doc>
+            <type name="LogContextHashFlags" c:type="GstLogContextHashFlags"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_interval" c:identifier="gst_log_context_builder_set_interval" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Sets the automatic reset interval for the log context being built.
+If @interval is 0, no automatic reset will occur.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the same #GstLogContextBuilder</doc>
+          <type name="LogContextBuilder" c:type="GstLogContextBuilder*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="builder" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a #GstLogContextBuilder</doc>
+            <type name="LogContextBuilder" c:type="GstLogContextBuilder*"/>
+          </instance-parameter>
+          <parameter name="interval" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the interval in nanoseconds for automatic reset</doc>
+            <type name="ClockTime" c:type="GstClockTime"/>
+          </parameter>
+        </parameters>
+      </method>
+      <function name="new" c:identifier="gst_log_context_builder_new" version="1.28" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Creates a new builder for configuring a #GstLogContext with the specified
+debug category and flags.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a new #GstLogContextBuilder</doc>
+          <type name="LogContextBuilder" c:type="GstLogContextBuilder*"/>
+        </return-value>
+        <parameters>
+          <parameter name="category" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the debug category to use</doc>
+            <type name="DebugCategory" c:type="GstDebugCategory*"/>
+          </parameter>
+          <parameter name="flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the flags to use for the log context</doc>
+            <type name="LogContextFlags" c:type="GstLogContextFlags"/>
+          </parameter>
+        </parameters>
+      </function>
+    </record>
+    <bitfield name="LogContextFlags" version="1.28" glib:type-name="GstLogContextFlags" glib:get-type="gst_log_context_flags_get_type" c:type="GstLogContextFlags">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Flags to control the behavior of a #GstLogContext.</doc>
+      <member name="none" value="0" c:identifier="GST_LOG_CONTEXT_FLAG_NONE" glib:nick="none" glib:name="GST_LOG_CONTEXT_FLAG_NONE">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">No special behavior (empty flags)</doc>
+      </member>
+      <member name="throttle" value="1" c:identifier="GST_LOG_CONTEXT_FLAG_THROTTLE" glib:nick="throttle" glib:name="GST_LOG_CONTEXT_FLAG_THROTTLE">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Enable message throttling/deduplication. This
+ makes the context track which messages have been logged already based on
+ their message hash, and only log them once (or periodically if an
+ interval is set). Without this flag, all messages will be logged regardless
+ of whether they've been logged before.</doc>
+      </member>
+    </bitfield>
+    <bitfield name="LogContextHashFlags" version="1.28" glib:type-name="GstLogContextHashFlags" glib:get-type="gst_log_context_hash_flags_get_type" c:type="GstLogContextHashFlags">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Flags to control how the message hash is calculated in a #GstLogContext.
+The message hash is used to determine if a message is a duplicate of a previously
+logged message.</doc>
+      <member name="default" value="0" c:identifier="GST_LOG_CONTEXT_DEFAULT" glib:nick="default" glib:name="GST_LOG_CONTEXT_DEFAULT">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Default behavior for logging context
+                         (uses object, format, file but not line number or string args)</doc>
+      </member>
+      <member name="ignore_object" value="1" c:identifier="GST_LOG_CONTEXT_IGNORE_OBJECT" glib:nick="ignore-object" glib:name="GST_LOG_CONTEXT_IGNORE_OBJECT">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Ignore object pointer or object ID when calculating message hash</doc>
+      </member>
+      <member name="ignore_format" value="2" c:identifier="GST_LOG_CONTEXT_IGNORE_FORMAT" glib:nick="ignore-format" glib:name="GST_LOG_CONTEXT_IGNORE_FORMAT">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Ignore the "format" part of the debug
+log message</doc>
+      </member>
+      <member name="ignore_file" value="4" c:identifier="GST_LOG_CONTEXT_IGNORE_FILE" glib:nick="ignore-file" glib:name="GST_LOG_CONTEXT_IGNORE_FILE">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Ignore file name when calculating message hash</doc>
+      </member>
+      <member name="use_line_number" value="8" c:identifier="GST_LOG_CONTEXT_USE_LINE_NUMBER" glib:nick="use-line-number" glib:name="GST_LOG_CONTEXT_USE_LINE_NUMBER">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Use line number when calculating message hash (not used by default)</doc>
+      </member>
+      <member name="use_string_args" value="16" c:identifier="GST_LOG_CONTEXT_USE_STRING_ARGS" glib:nick="use-string-args" glib:name="GST_LOG_CONTEXT_USE_STRING_ARGS">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.h">Use the arguments part of the string message (not used by default)</doc>
       </member>
     </bitfield>
     <callback name="LogFunction" c:type="GstLogFunction">
@@ -53837,6 +54786,45 @@ would write out.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="debug_log_id_literal_with_context" c:identifier="gst_debug_log_id_literal_with_context" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Logs a message with the specified context and ID. If the context has already
+seen this message based on its flags configuration, the message will not be
+logged.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="ctx" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a #GstLogContext</doc>
+          <type name="LogContext" c:type="GstLogContext*"/>
+        </parameter>
+        <parameter name="level" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">level of the message</doc>
+          <type name="DebugLevel" c:type="GstDebugLevel"/>
+        </parameter>
+        <parameter name="file" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the file that emitted the message, usually the __FILE__ identifier</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="function" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the function that emitted the message</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="line" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the line that emitted the message, usually the __LINE__ identifier</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="id" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the contextual ID of the message</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="message" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">message string</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="debug_log_id_valist" c:identifier="gst_debug_log_id_valist" version="1.22" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Logs the given message using the currently registered debugging handlers.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
@@ -53879,6 +54867,92 @@ would write out.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="debug_log_id_with_context" c:identifier="gst_debug_log_id_with_context" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Logs a message with the specified context and ID. If the context has already
+seen this message based on its flags configuration, the message will not be
+logged.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="ctx" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a #GstLogContext</doc>
+          <type name="LogContext" c:type="GstLogContext*"/>
+        </parameter>
+        <parameter name="level" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">level of the message</doc>
+          <type name="DebugLevel" c:type="GstDebugLevel"/>
+        </parameter>
+        <parameter name="file" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the file that emitted the message, usually the __FILE__ identifier</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="function" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the function that emitted the message</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="line" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the line that emitted the message, usually the __LINE__ identifier</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="id" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the contextual ID of the message</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a printf style format string</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="..." transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">optional arguments for the format string</doc>
+          <varargs/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="debug_log_id_with_context_valist" c:identifier="gst_debug_log_id_with_context_valist" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Logs a message with the specified context and ID. If the context has already
+seen this message based on its flags configuration, the message will not be
+logged.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="ctx" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a #GstLogContext</doc>
+          <type name="LogContext" c:type="GstLogContext*"/>
+        </parameter>
+        <parameter name="level" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">level of the message</doc>
+          <type name="DebugLevel" c:type="GstDebugLevel"/>
+        </parameter>
+        <parameter name="file" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the file that emitted the message, usually the __FILE__ identifier</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="function" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the function that emitted the message</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="line" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the line that emitted the message, usually the __LINE__ identifier</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="id" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the contextual ID of the message</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a printf style format string</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="args" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">optional arguments for the format string</doc>
+          <type name="va_list" c:type="va_list"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="debug_log_literal" c:identifier="gst_debug_log_literal" version="1.20">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Logs the given message using the currently registered debugging handlers.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
@@ -53913,6 +54987,45 @@ would write out.</doc>
         </parameter>
         <parameter name="message_string" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a message string</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="debug_log_literal_with_context" c:identifier="gst_debug_log_literal_with_context" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Logs a literal message with the specified context. Depending on the context
+state, the message may not be logged at all.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="ctx" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a #GstLogContext</doc>
+          <type name="LogContext" c:type="GstLogContext*"/>
+        </parameter>
+        <parameter name="level" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">level of the message</doc>
+          <type name="DebugLevel" c:type="GstDebugLevel"/>
+        </parameter>
+        <parameter name="file" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the file that emitted the message, usually the __FILE__ identifier</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="function" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the function that emitted the message</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="line" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the line that emitted the message, usually the __LINE__ identifier</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="object" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the object this message relates to,
+    or %NULL if none</doc>
+          <type name="GObject.Object" c:type="GObject*"/>
+        </parameter>
+        <parameter name="message" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">message string</doc>
           <type name="utf8" c:type="const gchar*"/>
         </parameter>
       </parameters>
@@ -53955,6 +55068,93 @@ would write out.</doc>
         </parameter>
         <parameter name="args" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">optional arguments for the format</doc>
+          <type name="va_list" c:type="va_list"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="debug_log_with_context" c:identifier="gst_debug_log_with_context" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Logs a message with the specified context. If the context has already seen this
+message based on its flags configuration, the message will not be logged.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="ctx" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a #GstLogContext</doc>
+          <type name="LogContext" c:type="GstLogContext*"/>
+        </parameter>
+        <parameter name="level" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">level of the message</doc>
+          <type name="DebugLevel" c:type="GstDebugLevel"/>
+        </parameter>
+        <parameter name="file" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the file that emitted the message, usually the __FILE__ identifier</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="function" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the function that emitted the message</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="line" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the line that emitted the message, usually the __LINE__ identifier</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="object" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the object this message relates to,
+    or %NULL if none</doc>
+          <type name="GObject.Object" c:type="GObject*"/>
+        </parameter>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a printf style format string</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="..." transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">optional arguments for the format string</doc>
+          <varargs/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="debug_log_with_context_valist" c:identifier="gst_debug_log_with_context_valist" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Logs a message with the specified context using a va_list. If the context has
+already seen this message based on its flags configuration, the message will
+not be logged.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="ctx" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a #GstLogContext</doc>
+          <type name="LogContext" c:type="GstLogContext*"/>
+        </parameter>
+        <parameter name="level" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">level of the message</doc>
+          <type name="DebugLevel" c:type="GstDebugLevel"/>
+        </parameter>
+        <parameter name="file" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the file that emitted the message, usually the __FILE__ identifier</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="function" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the function that emitted the message</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="line" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the line that emitted the message, usually the __LINE__ identifier</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="object" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the object this message relates to,
+    or %NULL if none</doc>
+          <type name="GObject.Object" c:type="GObject*"/>
+        </parameter>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a printf style format string</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="args" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">optional arguments for the format string</doc>
           <type name="va_list" c:type="va_list"/>
         </parameter>
       </parameters>
@@ -55125,6 +56325,25 @@ or gst_init_check().</doc>
       <return-value transfer-ownership="none">
         <type name="GLib.Quark" c:type="GQuark"/>
       </return-value>
+    </function>
+    <function name="log_context_builder_new" c:identifier="gst_log_context_builder_new" moved-to="LogContextBuilder.new" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Creates a new builder for configuring a #GstLogContext with the specified
+debug category and flags.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <return-value transfer-ownership="full">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a new #GstLogContextBuilder</doc>
+        <type name="LogContextBuilder" c:type="GstLogContextBuilder*"/>
+      </return-value>
+      <parameters>
+        <parameter name="category" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the debug category to use</doc>
+          <type name="DebugCategory" c:type="GstDebugCategory*"/>
+        </parameter>
+        <parameter name="flags" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the flags to use for the log context</doc>
+          <type name="LogContextFlags" c:type="GstLogContextFlags"/>
+        </parameter>
+      </parameters>
     </function>
     <function name="make_element_message_details" c:identifier="gst_make_element_message_details" version="1.10" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstelement.c">Create a #GstStructure to be used with #gst_element_message_full_with_details.

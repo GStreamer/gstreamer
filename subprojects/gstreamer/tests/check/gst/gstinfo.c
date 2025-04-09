@@ -558,6 +558,234 @@ GST_START_TEST (info_set_and_reset_string)
 
 GST_END_TEST;
 
+static gint context_log_count = 0;
+
+static void
+context_log_counter_func (GstDebugCategory * category,
+    GstDebugLevel level, const gchar * file, const gchar * function,
+    gint line, GObject * object, GstDebugMessage * message, gpointer user_data)
+{
+  /* Track the number of messages received */
+  context_log_count++;
+
+  /* Let the default log function handle it for output if needed */
+  if (g_getenv ("GST_DEBUG")) {
+    gst_debug_log_default (category, level, file, function, line, object,
+        message, NULL);
+  }
+}
+
+GST_START_TEST (info_context_log)
+{
+  GstDebugCategory *cat = NULL;
+  GstLogContext *ctx = NULL;
+
+  gst_debug_remove_log_function (gst_debug_log_default);
+  gst_debug_add_log_function (context_log_counter_func, NULL, NULL);
+  gst_debug_set_default_threshold (GST_LEVEL_DEBUG);
+  GST_DEBUG_CATEGORY_INIT (cat, "contextcat", 0, "Log context test category");
+
+  GST_LOG_CONTEXT_INIT (ctx, GST_LOG_CONTEXT_FLAG_THROTTLE);
+  context_log_count = 0;
+  /* Test all the different logging macros with context and verify the log level is respected */
+  GST_CTX_ERROR (ctx, "Error message with context");
+  GST_CTX_WARNING (ctx, "Warning message with context");
+  GST_CTX_FIXME (ctx, "Fixme message with context");
+  GST_CTX_INFO (ctx, "Info message with context");
+  GST_CTX_DEBUG (ctx, "Debug message with context");
+  GST_CTX_LOG (ctx, "Log message with context");
+  GST_CTX_TRACE (ctx, "Trace message with context");
+  /* Since trace and log are above our threshold, it won't be counted */
+  fail_unless_equals_int (context_log_count, 5);
+
+  gst_debug_set_default_threshold (GST_LEVEL_NONE);
+  gst_debug_add_log_function (gst_debug_log_default, NULL, NULL);
+  gst_debug_remove_log_function (context_log_counter_func);
+  gst_log_context_free (ctx);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (info_context_log_once)
+{
+  GstDebugCategory *cat = NULL;
+  GstLogContext *ctx = NULL;
+
+  /* Set up our counting log function */
+  gst_debug_remove_log_function (gst_debug_log_default);
+  gst_debug_add_log_function (context_log_counter_func, NULL, NULL);
+
+  /* Enable debug logging to ensure our logs get processed */
+  gst_debug_set_default_threshold (GST_LEVEL_DEBUG);
+  GST_DEBUG_CATEGORY_INIT (cat, "contextcat", 0, "Log context test category");
+  GST_LOG_CONTEXT_INIT (ctx, GST_LOG_CONTEXT_FLAG_THROTTLE);
+
+  context_log_count = 0;
+
+  /* Log the same message multiple times */
+  GST_CTX_DEBUG (ctx, "This message should only appear once");
+  GST_CTX_DEBUG (ctx, "This message should only appear once");
+  GST_CTX_DEBUG (ctx, "This message should only appear once");
+
+  /* Different messages should appear */
+  GST_CTX_DEBUG (ctx, "A different message");
+  GST_CTX_DEBUG (ctx, "Another different message");
+
+  /* Should see 3 messages total */
+  fail_unless_equals_int (context_log_count, 3);
+
+  /* Clean up */
+  gst_debug_set_default_threshold (GST_LEVEL_NONE);
+  gst_debug_add_log_function (gst_debug_log_default, NULL, NULL);
+  gst_debug_remove_log_function (context_log_counter_func);
+  gst_log_context_free (ctx);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (info_context_log_periodic)
+{
+  GstDebugCategory *cat = NULL;
+  GstLogContext *ctx = NULL;
+
+  gst_debug_remove_log_function (gst_debug_log_default);
+  gst_debug_add_log_function (context_log_counter_func, NULL, NULL);
+  gst_debug_set_default_threshold (GST_LEVEL_DEBUG);
+  GST_DEBUG_CATEGORY_INIT (cat, "contextcat", 0, "Log context test category");
+
+  GST_LOG_CONTEXT_INIT (ctx, GST_LOG_CONTEXT_FLAG_THROTTLE, {
+        GST_LOG_CONTEXT_BUILDER_SET_INTERVAL (10 * GST_MSECOND);
+      }
+  );
+
+  /* Reset the counter */
+  context_log_count = 0;
+  GST_CTX_DEBUG (ctx, "This message should appear the first time");
+  GST_CTX_DEBUG (ctx, "This message should appear the first time");
+  GST_CTX_DEBUG (ctx, "This message should appear the first time");
+
+  /* Should see the message only once, unless it took more than 10ms to print 3
+   * debug message ... */
+  fail_unless_equals_int (context_log_count, 1);
+
+  /* Sleep to ensure the reset interval passes */
+  g_usleep (20000);             /* 20ms */
+
+  /* Log the same message again - it should appear after the interval */
+  GST_CTX_DEBUG (ctx, "This message should appear the first time");
+
+  /* Should see both messages now */
+  fail_unless_equals_int (context_log_count, 2);
+
+  /* Clean up */
+  gst_debug_set_default_threshold (GST_LEVEL_NONE);
+  gst_debug_add_log_function (gst_debug_log_default, NULL, NULL);
+  gst_debug_remove_log_function (context_log_counter_func);
+  gst_log_context_free (ctx);
+}
+
+GST_END_TEST;
+
+/* Test the static context macros */
+GST_LOG_CONTEXT_STATIC_DEFINE (static_ctx, GST_LOG_CONTEXT_FLAG_THROTTLE);
+#define STATIC_CTX GST_LOG_CONTEXT_LAZY_INIT(static_ctx)
+GST_LOG_CONTEXT_STATIC_DEFINE (static_periodic_ctx,
+    GST_LOG_CONTEXT_FLAG_THROTTLE, GST_LOG_CONTEXT_BUILDER_SET_INTERVAL (1);
+    );
+#define STATIC_PERIODIC_CTX GST_LOG_CONTEXT_LAZY_INIT(static_periodic_ctx)
+
+GST_START_TEST (info_context_log_static)
+{
+  GstDebugCategory *cat = NULL;
+
+  gst_debug_remove_log_function (gst_debug_log_default);
+  gst_debug_add_log_function (context_log_counter_func, NULL, NULL);
+  gst_debug_set_default_threshold (GST_LEVEL_DEBUG);
+  GST_DEBUG_CATEGORY_INIT (cat, "contextcat", 0, "Log context test category");
+
+  context_log_count = 0;
+
+  GST_CTX_DEBUG (STATIC_CTX, "Static context message");
+  GST_CTX_DEBUG (STATIC_CTX, "Static context default category message");
+  fail_unless_equals_int (context_log_count, 2);
+
+  context_log_count = 0;
+  GST_CTX_DEBUG (STATIC_PERIODIC_CTX, "Static periodic context message");
+  fail_unless_equals_int (context_log_count, 1);
+
+  /* Sleep to ensure the reset interval passes */
+  g_usleep (2000);              /* 2ms */
+  GST_CTX_DEBUG (STATIC_PERIODIC_CTX, "Static periodic context message");
+  fail_unless_equals_int (context_log_count, 2);
+
+  gst_debug_set_default_threshold (GST_LEVEL_NONE);
+  gst_debug_add_log_function (gst_debug_log_default, NULL, NULL);
+  gst_debug_remove_log_function (context_log_counter_func);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (info_context_log_flags)
+{
+  GstDebugCategory *cat = NULL;
+  GstElement *element;
+  GstLogContext *ctx1 = NULL, *ctx2 = NULL, *ctx3 = NULL;
+
+  /* Set up our counting log function */
+  gst_debug_remove_log_function (gst_debug_log_default);
+  gst_debug_add_log_function (context_log_counter_func, NULL, NULL);
+
+  /* Enable debug logging to ensure our logs get processed */
+  gst_debug_set_default_threshold (GST_LEVEL_DEBUG);
+  GST_DEBUG_CATEGORY_INIT (cat, "contextcat", 0, "Log context test category");
+
+  /* Create an element for object-based logging */
+  element = gst_element_factory_make ("identity", NULL);
+  fail_unless (element != NULL);
+
+  /* Test DEFAULT context */
+  GST_LOG_CONTEXT_INIT (ctx1, GST_LOG_CONTEXT_FLAG_THROTTLE);
+  context_log_count = 0;
+  GST_CTX_DEBUG_OBJECT (ctx1, element, "Test message with default context");
+  GST_CTX_DEBUG_OBJECT (ctx1, NULL, "Test message with default context");
+  /* Should see both messages since objects are different */
+  fail_unless_equals_int (context_log_count, 2);
+
+  /* Test IGNORE_OBJECT context */
+  GST_LOG_CONTEXT_INIT (ctx2, GST_LOG_CONTEXT_FLAG_THROTTLE, {
+        GST_LOG_CONTEXT_BUILDER_SET_HASH_FLAGS (GST_LOG_CONTEXT_IGNORE_OBJECT);
+      }
+  );
+  context_log_count = 0;
+  GST_CTX_DEBUG_OBJECT (ctx2, element,
+      "Test message with ignore object context");
+  GST_CTX_DEBUG_OBJECT (ctx2, NULL, "Test message with ignore object context");
+  /* Should see only one message since objects are ignored in hash calculation */
+  fail_unless_equals_int (context_log_count, 1);
+
+  /* Test USE_LINE_NUMBER context */
+  GST_LOG_CONTEXT_INIT (ctx3, GST_LOG_CONTEXT_FLAG_THROTTLE, {
+        GST_LOG_CONTEXT_BUILDER_SET_HASH_FLAGS
+        (GST_LOG_CONTEXT_USE_LINE_NUMBER);
+      }
+  );
+  context_log_count = 0;
+  GST_CTX_DEBUG (ctx3, "Test message with line context");
+  GST_CTX_DEBUG (ctx3, "Test message with line context");
+  /* Should see the 2 messages since line numbers are taken into account */
+  fail_unless_equals_int (context_log_count, 2);
+
+  gst_object_unref (element);
+  gst_debug_set_default_threshold (GST_LEVEL_NONE);
+  gst_debug_add_log_function (gst_debug_log_default, NULL, NULL);
+  gst_debug_remove_log_function (context_log_counter_func);
+  gst_log_context_free (ctx1);
+  gst_log_context_free (ctx2);
+  gst_log_context_free (ctx3);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_info_suite (void)
 {
@@ -581,6 +809,12 @@ gst_info_suite (void)
   tcase_add_test (tc_chain, info_set_and_unset_multiple);
   tcase_add_test (tc_chain, info_post_gst_init_category_registration);
   tcase_add_test (tc_chain, info_set_and_reset_string);
+
+  tcase_add_test (tc_chain, info_context_log);
+  tcase_add_test (tc_chain, info_context_log_once);
+  tcase_add_test (tc_chain, info_context_log_periodic);
+  tcase_add_test (tc_chain, info_context_log_static);
+  tcase_add_test (tc_chain, info_context_log_flags);
 #endif
 
   return s;
