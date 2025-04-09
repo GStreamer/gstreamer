@@ -993,6 +993,9 @@ do_async_done (GstURIDecodeBin * dbin)
 #define DEFAULT_QUEUE_MIN_THRESHOLD ((DEFAULT_QUEUE_SIZE * 30) / 100)
 #define DEFAULT_QUEUE_THRESHOLD     ((DEFAULT_QUEUE_SIZE * 95) / 100)
 
+GST_LOG_CONTEXT_STATIC_DEFINE (no_decoder_for_type_log_context,
+    GST_LOG_CONTEXT_FLAG_THROTTLE);
+#define NO_DECODER_FOR_TYPE_LOG_CTX GST_LOG_CONTEXT_LAZY_INIT(no_decoder_for_type_log_context)
 static void
 unknown_type_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     GstURIDecodeBin * decoder)
@@ -1000,7 +1003,8 @@ unknown_type_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   gchar *capsstr;
 
   capsstr = gst_caps_to_string (caps);
-  GST_ELEMENT_WARNING (decoder, STREAM, CODEC_NOT_FOUND,
+  GST_ELEMENT_WARNING_WITH_LOG_CTX (decoder, STREAM, CODEC_NOT_FOUND,
+      NO_DECODER_FOR_TYPE_LOG_CTX,
       (_("No decoder available for type \'%s\'."), capsstr), (NULL));
   g_free (capsstr);
 }

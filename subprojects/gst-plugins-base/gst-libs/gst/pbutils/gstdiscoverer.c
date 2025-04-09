@@ -56,8 +56,16 @@
 /* For g_stat () */
 #include <glib/gstdio.h>
 
+/* *INDENT-OFF* */
 GST_DEBUG_CATEGORY_STATIC (discoverer_debug);
 #define GST_CAT_DEFAULT discoverer_debug
+
+GST_LOG_CONTEXT_STATIC_DEFINE (warning_message_log_ctx, GST_LOG_CONTEXT_FLAG_THROTTLE,
+    GST_LOG_CONTEXT_BUILDER_SET_HASH_FLAGS(GST_LOG_CONTEXT_USE_STRING_ARGS);
+);
+#define WARNING_MESSAGE_LOG_CTX GST_LOG_CONTEXT_LAZY_INIT (warning_message_log_ctx)
+/* *INDENT-ON* */
+
 #define CACHE_DIRNAME "discoverer"
 
 typedef struct
@@ -1613,7 +1621,7 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
       gchar *debug = NULL;
 
       gst_message_parse_warning (msg, &err, &debug);
-      GST_WARNING_OBJECT (GST_MESSAGE_SRC (msg),
+      GST_CTX_WARNING_OBJECT (WARNING_MESSAGE_LOG_CTX, GST_MESSAGE_SRC (msg),
           "Got a warning [debug:%s], [message:%s]", debug, err->message);
       g_clear_error (&err);
       g_free (debug);

@@ -1255,6 +1255,10 @@ gst_pb_utils_add_codec_description_to_tag_list (GstTagList * taglist,
   return TRUE;
 }
 
+GST_LOG_CONTEXT_STATIC_DEFINE (unexisting_media_type_log_context,
+    GST_LOG_CONTEXT_FLAG_THROTTLE);
+#define UNEXISTING_MEDIA_TYPE_LOG_CONTEXT GST_LOG_CONTEXT_LAZY_INIT(unexisting_media_type_log_context)
+
 /**
  * gst_pb_utils_get_codec_description:
  * @caps: the (fixed) #GstCaps for which an format description is needed
@@ -1296,7 +1300,8 @@ gst_pb_utils_get_codec_description (const GstCaps * caps)
        * audio/, video/, image/ and application/ prefixes etc. */
     }
 
-    GST_WARNING ("No description available for media type: %s", str);
+    GST_CTX_WARNING (UNEXISTING_MEDIA_TYPE_LOG_CONTEXT,
+        "No description available for media type: %s", str);
   }
   gst_caps_unref (tmp);
 
