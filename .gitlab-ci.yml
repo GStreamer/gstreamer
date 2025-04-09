@@ -72,6 +72,13 @@ variables:
     -Dgstreamer-sharp:werror=false
     -Ddoc=disabled
 
+  # Our gitlab instance and runner are using a proxy and have
+  # trouble with the normal fetch. git itself handles the proxy
+  # more reliably.
+  #
+  # https://doc.rust-lang.org/cargo/reference/config.html#netgit-fetch-with-cli
+  CARGO_NET_GIT_FETCH_WITH_CLI: true
+
   FF_TIMESTAMPS: true
 
   # Can set this as part of a schedule pipeline to test the gtk4 build if desired
