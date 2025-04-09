@@ -1581,6 +1581,224 @@ GST_START_TEST (test_associate_segmentation_meta)
 
 GST_END_TEST;
 
+GST_START_TEST (test_iou_int)
+{
+  gint bb1_x = 30, bb1_y = 30, bb1_w = 10, bb1_h = 10;
+  gint bb2_x = 35, bb2_y = 30, bb2_w = 10, bb2_h = 10;
+  gfloat iou;
+
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 50.0 / 150.0);
+
+  bb2_y = 35;
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 25.0 / 175.0);
+
+  bb2_x = 40;
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 0.0 / 200.0);
+
+  bb2_x = 30;
+  bb2_y = 35;
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 50.0 / 150.0);
+
+  bb2_x = 25;
+  bb2_y = 35;
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 25.0 / 175.0);
+
+  bb2_x = 25;
+  bb2_y = 30;
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 50.0 / 150.0);
+
+  bb2_x = 25;
+  bb2_y = 25;
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 25.0 / 175.0);
+
+  bb2_x = 30;
+  bb2_y = 25;
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 50.0 / 150.0);
+
+  bb2_x = 30;
+  bb2_y = 25;
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 50.0 / 150.0);
+
+  bb2_x = 30;
+  bb2_y = 30;
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 100.0 / 100.0);
+
+  bb1_x = 0;
+  bb1_y = 0;
+  bb1_w = 10;
+  bb1_h = 10;
+
+  bb2_x = -5;
+  bb2_y = 0;
+  bb2_w = 10;
+  bb2_h = 10;
+
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 50.0 / 100.0);
+
+  bb2_y = -5;
+
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 25.0 / 100.0);
+
+  bb1_x = -5;
+  bb1_y = -5;
+
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 25.0 / 25.0);
+
+  bb1_x = -5;
+  bb1_y = 0;
+
+  bb2_x = 0;
+  bb2_y = -5;
+
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 25.0 / 75.0);
+
+  bb2_y = -10;
+
+  iou = gst_analytics_image_util_iou_int (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 0.0 / 100.0);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_iou_float)
+{
+  gfloat bb1_x = 30.0, bb1_y = 30.0, bb1_w = 10.0, bb1_h = 10.0;
+  gfloat bb2_x = 35.0, bb2_y = 30.0, bb2_w = 10.0, bb2_h = 10.0;
+  gfloat iou;
+
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 50.0 / 150.0);
+
+  bb2_y = 35;
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 25.0 / 175.0);
+
+  bb2_x = 40;
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 0.0 / 200.0);
+
+  bb2_x = 30;
+  bb2_y = 35;
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 50.0 / 150.0);
+
+  bb2_x = 25;
+  bb2_y = 35;
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 25.0 / 175.0);
+
+  bb2_x = 25;
+  bb2_y = 30;
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 50.0 / 150.0);
+
+  bb2_x = 25;
+  bb2_y = 25;
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 25.0 / 175.0);
+
+  bb2_x = 30;
+  bb2_y = 25;
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 50.0 / 150.0);
+
+  bb2_x = 30;
+  bb2_y = 25;
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 50.0 / 150.0);
+
+  bb2_x = 30;
+  bb2_y = 30;
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 100.0 / 100.0);
+
+  bb1_x = 0;
+  bb1_y = 0;
+  bb1_w = 10;
+  bb1_h = 10;
+
+  bb2_x = -5;
+  bb2_y = 0;
+  bb2_w = 10;
+  bb2_h = 10;
+
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 50.0 / 100.0);
+
+  bb2_y = -5;
+
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 25.0 / 100.0);
+
+  bb1_x = -5;
+  bb1_y = -5;
+
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 25.0 / 25.0);
+
+  bb1_x = -5;
+  bb1_y = 0;
+
+  bb2_x = 0;
+  bb2_y = -5;
+
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 25.0 / 75.0);
+
+  bb2_y = -10;
+
+  iou = gst_analytics_image_util_iou_float (bb1_x, bb1_y, bb1_w, bb1_h, bb2_x,
+      bb2_y, bb2_w, bb2_h);
+  fail_unless_equals_float (iou, 0.0 / 100.0);
+
+}
+
+GST_END_TEST;
+
+
 static Suite *
 analyticmeta_suite (void)
 {
@@ -1592,6 +1810,7 @@ analyticmeta_suite (void)
   TCase *tc_chain_od_cls;
   TCase *tc_chain_tracking;
   TCase *tc_chain_segmentation;
+  TCase *tc_chain_util;
 
   s = suite_create ("Analytic Meta Library");
 
@@ -1636,6 +1855,11 @@ analyticmeta_suite (void)
   suite_add_tcase (s, tc_chain_segmentation);
   tcase_add_test (tc_chain_segmentation, test_add_segmentation_meta);
   tcase_add_test (tc_chain_segmentation, test_associate_segmentation_meta);
+
+  tc_chain_util = tcase_create ("Utility");
+  suite_add_tcase (s, tc_chain_util);
+  tcase_add_test (tc_chain_util, test_iou_int);
+  tcase_add_test (tc_chain_util, test_iou_float);
 
   return s;
 }
