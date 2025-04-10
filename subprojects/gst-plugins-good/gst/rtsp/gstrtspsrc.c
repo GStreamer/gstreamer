@@ -3910,25 +3910,6 @@ new_manager_pad (GstElement * manager, GstPad * pad, GstRTSPSrc * src)
 
   /* save SSRC */
   stream->ssrc = ssrc;
-
-  /* we'll add it later see below */
-  stream->added = TRUE;
-
-  /* check if we added all streams */
-  all_added = TRUE;
-  for (ostreams = src->streams; ostreams; ostreams = g_list_next (ostreams)) {
-    GstRTSPStream *ostream = (GstRTSPStream *) ostreams->data;
-
-    GST_DEBUG_OBJECT (src, "stream %p, container %d, added %d, setup %d",
-        ostream, ostream->container, ostream->added, ostream->setup);
-
-    /* if we find a stream for which we did a setup that is not added, we
-     * need to wait some more */
-    if (ostream->setup && !ostream->added) {
-      all_added = FALSE;
-      break;
-    }
-  }
   GST_RTSP_STATE_UNLOCK (src);
 
   /* create a new pad we will use to stream to */
@@ -3966,6 +3947,29 @@ new_manager_pad (GstElement * manager, GstPad * pad, GstRTSPSrc * src)
     g_mutex_unlock (&src->flow_combiner_lock);
     gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
   }
+
+  GST_RTSP_STATE_LOCK (src);
+  /* Setting added after gst_element_add_pad will make
+     sure callbacks for signal 'pad-added' will always
+     finish before signal 'no-more-pads' is executed. */
+  stream->added = TRUE;
+
+  /* check if we added all streams */
+  all_added = TRUE;
+  for (ostreams = src->streams; ostreams; ostreams = g_list_next (ostreams)) {
+    GstRTSPStream *ostream = (GstRTSPStream *) ostreams->data;
+
+    GST_DEBUG_OBJECT (src, "stream %p, container %d, added %d, setup %d",
+        ostream, ostream->container, ostream->added, ostream->setup);
+
+    /* if we find a stream for which we did a setup that is not added, we
+     * need to wait some more */
+    if (ostream->setup && !ostream->added) {
+      all_added = FALSE;
+      break;
+    }
+  }
+  GST_RTSP_STATE_UNLOCK (src);
 
   if (all_added) {
     GST_DEBUG_OBJECT (src, "We added all streams");
