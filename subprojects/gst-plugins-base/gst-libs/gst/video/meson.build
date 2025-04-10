@@ -6,6 +6,7 @@ video_sources = files([
   'gstvideocodecalphameta.c',
   'gstvideoaggregator.c',
   'gstvideodecoder.c',
+  'gstvideodmabufpool.c',
   'gstvideoencoder.c',
   'gstvideofilter.c',
   'gstvideometa.c',
@@ -46,6 +47,7 @@ video_headers = files([
   'gstvideocodecalphameta.h',
   'gstvideoaggregator.h',
   'gstvideodecoder.h',
+  'gstvideodmabufpool.h',
   'gstvideoencoder.h',
   'gstvideofilter.h',
   'gstvideometa.h',
@@ -124,7 +126,7 @@ gstvideo_h = video_enums[1]
 video_gen_sources = [gstvideo_h]
 
 orcsrc = 'video-orc'
-gstvideo_deps = [gst_base_dep, libm]
+gstvideo_deps = [allocators_dep, gst_base_dep, libm]
 if have_orcc
   gstvideo_deps += [orc_dep]
   orc_h = custom_target(orcsrc + '.h',

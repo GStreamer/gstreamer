@@ -8804,6 +8804,26 @@ performance is achieved when @quantizer is a power of 2.
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-dither.h">ordered dither using a bayer pattern</doc>
       </member>
     </enumeration>
+    <class name="VideoDmabufPool" c:symbol-prefix="video_dmabuf_pool" c:type="GstVideoDmabufPool" version="1.28" parent="VideoBufferPool" glib:type-name="GstVideoDmabufPool" glib:get-type="gst_video_dmabuf_pool_get_type" glib:type-struct="VideoDmabufPoolClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufpool.c">Using #GstUdmabufAllocator, setting defaults and implementing implicit sync.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufpool.h"/>
+      <constructor name="new" c:identifier="gst_video_dmabuf_pool_new" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufpool.c">Create a new #GstVideoDmabufPool instance.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufpool.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufpool.c">a #GstVideoDmabufPool or %NULL
+    if dmabufs are not supported.</doc>
+          <type name="Gst.BufferPool" c:type="GstBufferPool*"/>
+        </return-value>
+      </constructor>
+    </class>
+    <record name="VideoDmabufPoolClass" c:type="GstVideoDmabufPoolClass" glib:is-gtype-struct-for="VideoDmabufPool">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufpool.h"/>
+      <field name="parent_class" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideodmabufpool.h">Parent Class.</doc>
+        <type name="VideoBufferPoolClass" c:type="GstVideoBufferPoolClass"/>
+      </field>
+    </record>
     <class name="VideoEncoder" c:symbol-prefix="video_encoder" c:type="GstVideoEncoder" parent="Gst.Element" abstract="1" glib:type-name="GstVideoEncoder" glib:get-type="gst_video_encoder_get_type" glib:type-struct="VideoEncoderClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideoencoder.c">This base class is for video encoders turning raw video into
 encoded video data.
