@@ -15,7 +15,7 @@
     "bootstrap": "^3.3.4",
     "dragscroll": "0.0.8",
     "fuse.js": "^7.0.0",
-    "jquery": "^2.2.4",
+    "jquery": "^3.7.1",
     "jquery-color": "^2.2.0",
     "jquery-mousewheel": "^3.2.2"
   },
