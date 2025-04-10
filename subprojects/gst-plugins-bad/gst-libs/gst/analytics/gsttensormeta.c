@@ -23,6 +23,33 @@
 #include "gsttensormeta.h"
 
 static gboolean
+gst_tensor_meta_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  GstTensorMeta *dmeta, *smeta;
+
+  smeta = (GstTensorMeta *) meta;
+
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    smeta = (GstTensorMeta *) meta;
+    dmeta = gst_buffer_add_tensor_meta (dest);
+    if (!dmeta)
+      return FALSE;
+    GST_TRACE ("copy tensor metadata");
+    dmeta->num_tensors = smeta->num_tensors;
+    dmeta->tensors = g_new (GstTensor *, smeta->num_tensors);
+    for (int i = 0; i < smeta->num_tensors; i++) {
+      dmeta->tensors[i] = gst_tensor_copy (smeta->tensors[i]);
+    }
+  } else {
+    GST_WARNING ("gst_tensor_meta_transform: transform type %u not supported",
+        type);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static gboolean
 gst_tensor_meta_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
 {
   GstTensorMeta *tmeta = (GstTensorMeta *) meta;
@@ -80,7 +107,7 @@ gst_tensor_meta_get_info (void)
         sizeof (GstTensorMeta),
         gst_tensor_meta_init,
         gst_tensor_meta_free,
-        NULL);                  /* tensor_meta_transform not implemented */
+        gst_tensor_meta_transform);
     g_once_init_leave (&tmeta_info, meta);
   }
   return tmeta_info;

@@ -718,6 +718,10 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
               "failed to copy meta %p of API type %s", meta,
               g_type_name (info->api));
         }
+      } else {
+        GST_CAT_WARNING (GST_CAT_BUFFER,
+            "No transform function for meta %p of API type %s\n", (void *) meta,
+            g_type_name (info->api));
       }
     }
   }
