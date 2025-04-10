@@ -1089,6 +1089,9 @@ gst_gl_download_element_transform_caps (GstBaseTransform * bt,
     result = tmp;
   }
 
+  if (context)
+    gst_object_unref (context);
+
   GST_DEBUG_OBJECT (bt, "returning caps %" GST_PTR_FORMAT, result);
 
   return result;
