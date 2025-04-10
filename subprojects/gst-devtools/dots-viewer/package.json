@@ -12,7 +12,7 @@
   "license": "MPL-2.0",
   "dependencies": {
     "@viz-js/viz": "^3.4.0",
-    "bootstrap": "^3.3.4",
+    "bootstrap": "^5.0.0",
     "dragscroll": "0.0.8",
     "fuse.js": "^7.0.0",
     "jquery": "^2.2.4",
