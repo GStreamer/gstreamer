@@ -112,6 +112,14 @@ gst_gl_dmabuf_buffer_pool_set_config (GstBufferPool * pool,
     g_clear_pointer (&glparams, gst_gl_allocation_params_free);
   }
 
+  /*
+   * This pool isn't reusing its buffers, which makes it pointless to enable
+   * "free cache" workaround in GstGLBufferPool base class. Holding an extra
+   * buffer in free queue can also lead to a deadlock when the pool's max buffer
+   * count is configured low (commonly 2).
+   */
+  gst_buffer_pool_config_set_gl_min_free_queue_size (config, 0);
+
   self->priv->add_glsyncmeta = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_GL_SYNC_META);
 
