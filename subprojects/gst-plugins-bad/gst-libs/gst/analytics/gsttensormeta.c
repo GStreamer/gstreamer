@@ -154,6 +154,32 @@ gst_tensor_meta_set (GstTensorMeta * tmeta, guint num_tensors,
 }
 
 /**
+ * gst_tensor_meta_get_by_id:
+ * @tmeta: A #GstTensorMeta
+ * @id: A #GQuark identifying tensor-encoding
+ *
+ * Get the first tensor from the #GstTensorMeta identified by @id.
+ *
+ * Return: (nullable)(transfer none): a GstTensor with id matching @id.
+ * Otherwise NULL will be returned.
+ *
+ * Since: 1.28
+ */
+const GstTensor *
+gst_tensor_meta_get_by_id (GstTensorMeta * tmeta, GQuark id)
+{
+  g_return_val_if_fail (tmeta != NULL, NULL);
+  g_return_val_if_fail (tmeta->tensors, NULL);
+
+  for (int i = 0; i < tmeta->num_tensors; ++i) {
+    if (tmeta->tensors[i]->id == id)
+      return tmeta->tensors[i];
+  }
+
+  return NULL;
+}
+
+/**
  * gst_tensor_meta_get:
  * @tmeta: A #GstTensorMeta
  * @index: The number of the tensor to get

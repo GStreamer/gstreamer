@@ -1481,6 +1481,25 @@ smaller than #GstTensorMeta.num_tensors</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="get_by_id" c:identifier="gst_tensor_meta_get_by_id" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">Get the first tensor from the #GstTensorMeta identified by @id.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">a GstTensor with id matching @id.
+Otherwise NULL will be returned.</doc>
+          <type name="Tensor" c:type="const GstTensor*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="tmeta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">A #GstTensorMeta</doc>
+            <type name="TensorMeta" c:type="GstTensorMeta*"/>
+          </instance-parameter>
+          <parameter name="id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">A #GQuark identifying tensor-encoding</doc>
+            <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_index_from_id" c:identifier="gst_tensor_meta_get_index_from_id" version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">Finds the first tensor with the requsted ID in the meta</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
