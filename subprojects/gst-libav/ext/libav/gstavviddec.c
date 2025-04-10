@@ -995,6 +995,26 @@ gst_ffmpeg_opaque_free (void *opaque, guint8 * data)
 }
 #endif
 
+/* The ffmpeg documentation for get_buffer2() states:
+ * "Some decoders do not support linesizes changing between frames."
+ * For some well known decoders we know that they can. */
+static gboolean
+gst_ffmpegviddec_decoder_can_change_stride (GstFFMpegVidDec * ffmpegdec)
+{
+  GstFFMpegVidDecClass *oclass;
+
+  oclass = GST_FFMPEGVIDDEC_GET_CLASS (ffmpegdec);
+
+  switch (oclass->in_plugin->id) {
+    case AV_CODEC_ID_H264:
+    case AV_CODEC_ID_HEVC:
+    case AV_CODEC_ID_VVC:
+      return TRUE;
+    default:
+      return FALSE;
+  }
+}
+
 /* called when ffmpeg wants us to allocate a buffer to write the decoded frame
  * into. We try to give it memory from our pool */
 static int
@@ -1091,16 +1111,19 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
     if (c < GST_VIDEO_INFO_N_PLANES (&ffmpegdec->pool_info)) {
       picture->data[c] = GST_VIDEO_FRAME_PLANE_DATA (&dframe->vframe, c);
       picture->linesize[c] = GST_VIDEO_FRAME_PLANE_STRIDE (&dframe->vframe, c);
+      if (!gst_ffmpegviddec_decoder_can_change_stride (ffmpegdec)) {
+        if (ffmpegdec->stride[c] == -1)
+          ffmpegdec->stride[c] = picture->linesize[c];
 
-      if (ffmpegdec->stride[c] == -1)
+        /* libav does not allow stride changes, decide allocation should check
+         * before replacing the internal pool with a downstream pool.
+         * https://bugzilla.gnome.org/show_bug.cgi?id=704769
+         * https://bugzilla.libav.org/show_bug.cgi?id=556
+         */
+        g_assert (picture->linesize[c] == ffmpegdec->stride[c]);
+      } else {
         ffmpegdec->stride[c] = picture->linesize[c];
-
-      /* libav does not allow stride changes, decide allocation should check
-       * before replacing the internal pool with a downstream pool.
-       * https://bugzilla.gnome.org/show_bug.cgi?id=704769
-       * https://bugzilla.libav.org/show_bug.cgi?id=556
-       */
-      g_assert (picture->linesize[c] == ffmpegdec->stride[c]);
+      }
     } else {
       picture->data[c] = NULL;
       picture->linesize[c] = 0;
@@ -2541,44 +2564,58 @@ gst_ffmpegviddec_try_pool (GstFFMpegVidDec * ffmpegdec, GstCaps * caps,
     }
 
     if (working_pool) {
-      GstFlowReturn ret;
-      GstBuffer *tmp;
+      if (!gst_ffmpegviddec_decoder_can_change_stride (ffmpegdec)) {
+        GstFlowReturn ret;
+        GstBuffer *tmp;
 
-      if (gst_buffer_pool_set_active (pool, TRUE)) {
-        ret = gst_buffer_pool_acquire_buffer (pool, &tmp, NULL);
-        if (ret == GST_FLOW_OK) {
-          GstVideoMeta *vmeta = gst_buffer_get_video_meta (tmp);
-          gboolean same_stride = TRUE;
-          guint i;
+        if (gst_buffer_pool_set_active (pool, TRUE)) {
+          ret = gst_buffer_pool_acquire_buffer (pool, &tmp, NULL);
+          if (ret == GST_FLOW_OK) {
+            GstVideoMeta *vmeta = gst_buffer_get_video_meta (tmp);
+            gboolean same_stride = TRUE;
+            guint i;
 
-          for (i = 0; i < vmeta->n_planes; i++) {
-            if (vmeta->stride[i] != ffmpegdec->stride[i]) {
-              same_stride = FALSE;
-              break;
+            for (i = 0; i < vmeta->n_planes; i++) {
+              if (vmeta->stride[i] != ffmpegdec->stride[i]) {
+                same_stride = FALSE;
+                break;
+              }
             }
-          }
 
-          gst_buffer_unref (tmp);
+            gst_buffer_unref (tmp);
 
-          if (same_stride) {
-            GST_DEBUG_OBJECT (ffmpegdec, "Enabling direct rendering");
-            gst_structure_free (config);
-            if (ffmpegdec->internal_pool)
-              gst_object_unref (ffmpegdec->internal_pool);
-            ffmpegdec->internal_pool = gst_object_ref (pool);
-            ffmpegdec->pool_width = GST_VIDEO_INFO_WIDTH (&aligned_info);
-            ffmpegdec->pool_height = MAX (GST_VIDEO_INFO_HEIGHT (&aligned_info),
-                ffmpegdec->context->coded_height);
-            ffmpegdec->pool_info = aligned_info;
-            *size = aligned_size;
-            return TRUE;
-          } else {
-            GST_DEBUG_OBJECT (ffmpegdec,
-                "Can't enable direct rendering because of stride mismatch");
+            if (same_stride) {
+              GST_DEBUG_OBJECT (ffmpegdec, "Enabling direct rendering");
+              gst_structure_free (config);
+              if (ffmpegdec->internal_pool)
+                gst_object_unref (ffmpegdec->internal_pool);
+              ffmpegdec->internal_pool = gst_object_ref (pool);
+              ffmpegdec->pool_width = GST_VIDEO_INFO_WIDTH (&aligned_info);
+              ffmpegdec->pool_height =
+                  MAX (GST_VIDEO_INFO_HEIGHT (&aligned_info),
+                  ffmpegdec->context->coded_height);
+              ffmpegdec->pool_info = aligned_info;
+              *size = aligned_size;
+              return TRUE;
+            } else {
+              GST_DEBUG_OBJECT (ffmpegdec,
+                  "Can't enable direct rendering because of stride mismatch");
+            }
+            gst_buffer_pool_set_active (pool, FALSE);
           }
+        } else {
+          GST_DEBUG_OBJECT (ffmpegdec, "Enabling direct rendering");
+          gst_structure_free (config);
+          if (ffmpegdec->internal_pool)
+            gst_object_unref (ffmpegdec->internal_pool);
+          ffmpegdec->internal_pool = gst_object_ref (pool);
+          ffmpegdec->pool_width = GST_VIDEO_INFO_WIDTH (&aligned_info);
+          ffmpegdec->pool_height = MAX (GST_VIDEO_INFO_HEIGHT (&aligned_info),
+              ffmpegdec->context->coded_height);
+          ffmpegdec->pool_info = aligned_info;
+          *size = aligned_size;
+          return TRUE;
         }
-
-        gst_buffer_pool_set_active (pool, FALSE);
       }
     }
   }
