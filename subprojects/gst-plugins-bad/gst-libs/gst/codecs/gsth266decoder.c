@@ -450,7 +450,7 @@ gst_h266_decoder_parse_sei (GstH266Decoder * self, GstH266NalUnit * nalu)
   }
 
   /* TODO: */
-
+  g_clear_pointer (&messages, g_array_unref);
   return GST_H266_PARSER_OK;
 }
 
