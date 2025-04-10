@@ -1,7 +1,8 @@
 /* GStreamer
- * Copyright (C) 2023 Collabora Ltd
+ * Copyright (C) 2025 Collabora Ltd
+ *  @author: Daniel Morin <daniel.morin@dmohub.org>
  *
- * analytics.h
+ * gstanalyticssegmentationmtd.h
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,19 +20,23 @@
  * Boston, MA 02110-1301, USA.
  */
 
-
-
-#ifndef __ANALYTICS_H__
-#define __ANALYTICS_H__
+#ifndef __GST_ANALYTICS_IMAGE_UTIL_H__
+#define __GST_ANALYTICS_IMAGE_UTIL_H__
 
 #include <gst/gst.h>
 #include <gst/analytics/analytics-meta-prelude.h>
-#include <gst/analytics/gstanalyticsmeta.h>
-#include <gst/analytics/gstanalyticsclassificationmtd.h>
-#include <gst/analytics/gstanalyticsobjectdetectionmtd.h>
-#include <gst/analytics/gstanalyticsobjecttrackingmtd.h>
-#include <gst/analytics/gstanalyticssegmentationmtd.h>
-#include <gst/analytics/gsttensormeta.h>
-#include <gst/analytics/gstanalytics_image_util.h>
 
-#endif /* __ANALYTICS_H__ */
+G_BEGIN_DECLS
+
+GST_ANALYTICS_META_API
+gfloat gst_analytics_image_util_iou_int (gint bb1_x, gint bb1_y, gint bb1_w,
+    gint bb1_h, gint bb2_x, gint bb2_y, gint bb2_w, gint bb2_h);
+
+GST_ANALYTICS_META_API
+gfloat gst_analytics_image_util_iou_float (gfloat bb1_x, gfloat bb1_y, gfloat
+    bb1_w, gfloat bb1_h, gfloat bb2_x, gfloat bb2_y, gfloat bb2_w, gfloat
+    bb2_h);
+
+G_END_DECLS
+
+#endif /* __GST_ANALYTICS_IMAGE_UTIL_H__ */
