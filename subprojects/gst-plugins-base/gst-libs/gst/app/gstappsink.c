@@ -41,7 +41,7 @@
  * Appsink will internally use a queue to collect buffers from the streaming
  * thread. If the application is not pulling samples fast enough, this queue
  * will consume a lot of memory over time. The "max-buffers", "max-time" and "max-bytes"
- * properties can be used to limit the queue size. The "drop" property controls whether the
+ * properties can be used to limit the queue size. The "leaky-type" property controls whether the
  * streaming thread blocks or if older buffers are dropped when the maximum
  * queue size is reached. Note that blocking the streaming thread can negatively
  * affect real-time performance and should be avoided.
@@ -71,6 +71,7 @@
 
 #include <string.h>
 
+#include "gstappsrc.h"          /* for GstAppLeakyType */
 #include "gstappsink.h"
 #include "gstapputils.h"
 
@@ -116,10 +117,10 @@ struct _GstAppSinkPrivate
   guint64 max_buffers;
   GstClockTime max_time;
   guint64 max_bytes;
-  gboolean drop;
   gboolean wait_on_eos;
   GstAppSinkWaitStatus wait_status;
   GstQueueStatusInfo queue_status_info;
+  GstAppLeakyType leaky_type;
 
   GCond cond;
   GMutex mutex;
@@ -173,6 +174,7 @@ enum
 #define DEFAULT_PROP_CURRENT_LEVEL_BYTES   0
 #define DEFAULT_PROP_CURRENT_LEVEL_BUFFERS 0
 #define DEFAULT_PROP_CURRENT_LEVEL_TIME    0
+#define DEFAULT_PROP_LEAKY_TYPE    GST_APP_LEAKY_TYPE_NONE
 
 enum
 {
@@ -189,6 +191,7 @@ enum
   PROP_CURRENT_LEVEL_BYTES,
   PROP_CURRENT_LEVEL_BUFFERS,
   PROP_CURRENT_LEVEL_TIME,
+  PROP_LEAKY_TYPE,
   PROP_LAST
 };
 
@@ -304,10 +307,17 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
           0, G_MAXUINT64, DEFAULT_PROP_MAX_BYTES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstAppSink:drop:
+   *
+   * Drop old buffers when the buffer queue is filled.
+   *
+   * Deprecated: 1.28: Use "leaky-type" property instead.
+   */
   g_object_class_install_property (gobject_class, PROP_DROP,
       g_param_spec_boolean ("drop", "Drop",
           "Drop old buffers when the buffer queue is filled", DEFAULT_PROP_DROP,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_DEPRECATED | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BUFFER_LIST,
       g_param_spec_boolean ("buffer-list", "Buffer List",
@@ -368,6 +378,24 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
           "The amount of currently queued time",
           0, G_MAXUINT64, DEFAULT_PROP_CURRENT_LEVEL_TIME,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstAppSink:leaky-type:
+   *
+   * When set to any other value than GST_APP_LEAKY_TYPE_NONE then the appsink
+   * will drop any buffers that are pushed into it once its internal queue is
+   * full. The selected type defines whether to drop the oldest or new
+   * buffers.
+   *
+   * Since: 1.28
+   */
+  g_object_class_install_property (gobject_class, PROP_LEAKY_TYPE,
+      g_param_spec_enum ("leaky-type", "Leaky Type",
+          "Whether to drop buffers once the internal queue is full",
+          GST_TYPE_APP_LEAKY_TYPE,
+          DEFAULT_PROP_LEAKY_TYPE,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
 
   /**
    * GstAppSink::eos:
@@ -508,7 +536,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    * Note that when the application does not pull samples fast enough, the
    * queued samples could consume a lot of memory, especially when dealing with
    * raw video frames. It's possible to control the behaviour of the queue with
-   * the "drop" and "max-buffers" / "max-bytes" / "max-time" set of properties.
+   * the "leaky-type" and "max-buffers" / "max-bytes" / "max-time" set of properties.
    *
    * If an EOS event was received before any buffers, this function returns
    * %NULL. Use gst_app_sink_is_eos () to check for the EOS condition.
@@ -570,7 +598,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    * Note that when the application does not pull samples fast enough, the
    * queued samples could consume a lot of memory, especially when dealing with
    * raw video frames. It's possible to control the behaviour of the queue with
-   * the "drop" and "max-buffers" / "max-bytes" / "max-time" set of properties.
+   * the "leaky-type" and "max-buffers" / "max-bytes" / "max-time" set of properties.
    *
    * If an EOS event was received before any buffers or the timeout expires,
    * this function returns %NULL. Use gst_app_sink_is_eos () to check
@@ -602,7 +630,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    * Note that when the application does not pull samples fast enough, the
    * queued samples could consume a lot of memory, especially when dealing with
    * raw video frames. It's possible to control the behaviour of the queue with
-   * the "drop" and "max-buffers" / "max-bytes" / "max-time" set of properties.
+   * the "leaky-type" and "max-buffers" / "max-bytes" / "max-time" set of properties.
    *
    * This function will only pull serialized events, excluding
    * the EOS event for which this functions returns
@@ -667,10 +695,10 @@ gst_app_sink_init (GstAppSink * appsink)
   priv->max_buffers = DEFAULT_PROP_MAX_BUFFERS;
   priv->max_bytes = DEFAULT_PROP_MAX_BYTES;
   priv->max_time = DEFAULT_PROP_MAX_TIME;
-  priv->drop = DEFAULT_PROP_DROP;
   priv->wait_on_eos = DEFAULT_PROP_WAIT_ON_EOS;
   priv->buffer_lists_supported = DEFAULT_PROP_BUFFER_LIST;
   priv->wait_status = NOONE_WAITING;
+  priv->leaky_type = DEFAULT_PROP_LEAKY_TYPE;
 }
 
 static void
@@ -752,6 +780,9 @@ gst_app_sink_set_property (GObject * object, guint prop_id,
     case PROP_WAIT_ON_EOS:
       gst_app_sink_set_wait_on_eos (appsink, g_value_get_boolean (value));
       break;
+    case PROP_LEAKY_TYPE:
+      gst_app_sink_set_leaky_type (appsink, g_value_get_enum (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -810,6 +841,9 @@ gst_app_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_CURRENT_LEVEL_TIME:
       g_value_set_uint64 (value, gst_app_sink_get_current_level_time (appsink));
+      break;
+    case PROP_LEAKY_TYPE:
+      g_value_set_enum (value, gst_app_sink_get_leaky_type (appsink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1195,7 +1229,7 @@ restart:
 
   while (gst_queue_status_info_is_full (&priv->queue_status_info,
           priv->max_buffers, priv->max_bytes, priv->max_time)) {
-    if (priv->drop) {
+    if (priv->leaky_type == GST_APP_LEAKY_TYPE_DOWNSTREAM) {
       GstMiniObject *old;
 
       /* we need to drop the oldest buffer/list and try again */
@@ -1203,6 +1237,8 @@ restart:
         GST_DEBUG_OBJECT (appsink, "dropping old buffer/list %p", old);
         gst_mini_object_unref (old);
       }
+    } else if (priv->leaky_type == GST_APP_LEAKY_TYPE_UPSTREAM) {
+      goto dropped;
     } else {
       GST_DEBUG_OBJECT (appsink,
           "waiting for free space: have %" G_GUINT64_FORMAT "  buffers (max %"
@@ -1264,6 +1300,12 @@ flushing:
 stopping:
   {
     GST_DEBUG_OBJECT (appsink, "we are stopping");
+    return ret;
+  }
+dropped:
+  {
+    GST_DEBUG_OBJECT (appsink, "dropped new buffer/list %p, we are full", data);
+    g_mutex_unlock (&priv->mutex);
     return ret;
   }
 }
@@ -1727,19 +1769,24 @@ gst_app_sink_get_current_level_time (GstAppSink * appsink)
  *
  * Instruct @appsink to drop old buffers when the maximum amount of queued
  * data is reached, that is, when any configured limit is hit (max-buffers, max-time or max-bytes).
+ *
+ * Deprecated: 1.28: Use gst_app_src_get_leaky_type() instead.
  */
 void
 gst_app_sink_set_drop (GstAppSink * appsink, gboolean drop)
 {
   GstAppSinkPrivate *priv;
+  GstAppLeakyType leaky_type;
 
   g_return_if_fail (GST_IS_APP_SINK (appsink));
 
   priv = appsink->priv;
 
+  leaky_type = drop ? GST_APP_LEAKY_TYPE_DOWNSTREAM : GST_APP_LEAKY_TYPE_NONE;
+
   g_mutex_lock (&priv->mutex);
-  if (priv->drop != drop) {
-    priv->drop = drop;
+  if (priv->leaky_type != leaky_type) {
+    priv->leaky_type = leaky_type;
     /* signal the change */
     g_cond_signal (&priv->cond);
   }
@@ -1755,6 +1802,8 @@ gst_app_sink_set_drop (GstAppSink * appsink, gboolean drop)
  *
  * Returns: %TRUE if @appsink is dropping old buffers when the queue is
  * filled.
+ *
+ * Deprecated: 1.28: Use gst_app_src_get_leaky_type() instead.
  */
 gboolean
 gst_app_sink_get_drop (GstAppSink * appsink)
@@ -1767,10 +1816,68 @@ gst_app_sink_get_drop (GstAppSink * appsink)
   priv = appsink->priv;
 
   g_mutex_lock (&priv->mutex);
-  result = priv->drop;
+  result = priv->leaky_type != GST_APP_LEAKY_TYPE_NONE;
   g_mutex_unlock (&priv->mutex);
 
   return result;
+}
+
+/**
+ * gst_app_sink_set_leaky_type:
+ * @appsink: a #GstAppSink
+ * @leaky: the #GstAppLeakyType
+ *
+ * When set to any other value than GST_APP_LEAKY_TYPE_NONE then the appsink
+ * will drop any buffers that are pushed into it once its internal queue is
+ * full. The selected type defines whether to drop the oldest or new
+ * buffers.
+ *
+ * Since: 1.28
+ */
+void
+gst_app_sink_set_leaky_type (GstAppSink * appsink, GstAppLeakyType leaky)
+{
+  GstAppSinkPrivate *priv;
+
+  g_return_if_fail (GST_IS_APP_SINK (appsink));
+
+  priv = appsink->priv;
+
+  g_mutex_lock (&priv->mutex);
+  if (priv->leaky_type != leaky) {
+    priv->leaky_type = leaky;
+    /* signal the change */
+    g_cond_signal (&priv->cond);
+  }
+  g_mutex_unlock (&priv->mutex);
+}
+
+/**
+ * gst_app_sink_get_leaky_type:
+ * @appsink: a #GstAppSink
+ *
+ * Returns the currently set #GstAppLeakyType. See gst_app_sink_set_leaky_type()
+ * for more details.
+ *
+ * Returns: The currently set #GstAppLeakyType.
+ *
+ * Since: 1.28
+ */
+GstAppLeakyType
+gst_app_sink_get_leaky_type (GstAppSink * appsink)
+{
+  GstAppSinkPrivate *priv;
+  GstAppLeakyType leaky_type;
+
+  g_return_val_if_fail (GST_IS_APP_SINK (appsink), GST_APP_LEAKY_TYPE_NONE);
+
+  priv = appsink->priv;
+
+  g_mutex_lock (&priv->mutex);
+  leaky_type = appsink->priv->leaky_type;
+  g_mutex_unlock (&priv->mutex);
+
+  return leaky_type;
 }
 
 /**

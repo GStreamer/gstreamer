@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
 #include <gst/app/app-prelude.h>
+#include <gst/app/gstappsrc.h>
 
 G_BEGIN_DECLS
 
@@ -172,11 +173,17 @@ guint64         gst_app_sink_get_current_level_buffers (GstAppSink * appsink);
 GST_APP_API
 GstClockTime    gst_app_sink_get_current_level_time (GstAppSink * appsink);
 
-GST_APP_API
+GST_APP_DEPRECATED_FOR(gst_app_sink_set_leaky_type)
 void            gst_app_sink_set_drop         (GstAppSink *appsink, gboolean drop);
 
-GST_APP_API
+GST_APP_DEPRECATED_FOR(gst_app_sink_get_leaky_type)
 gboolean        gst_app_sink_get_drop         (GstAppSink *appsink);
+
+GST_APP_API
+void            gst_app_sink_set_leaky_type (GstAppSink * appsink, GstAppLeakyType leaky);
+
+GST_APP_API
+GstAppLeakyType gst_app_sink_get_leaky_type (GstAppSink * appsink);
 
 GST_APP_API
 void            gst_app_sink_set_buffer_list_support  (GstAppSink *appsink, gboolean enable_lists);
