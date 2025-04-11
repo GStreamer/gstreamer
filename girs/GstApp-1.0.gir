@@ -927,11 +927,19 @@ condition.</doc>
         <doc-deprecated xml:space="preserve">Use "leaky-type" property instead.</doc-deprecated>
         <type name="gboolean" c:type="gboolean"/>
       </property>
+      <property name="dropped" version="1.28" transfer-ownership="none" default-value="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Number of buffers that were dropped.</doc>
+        <type name="guint64" c:type="guint64"/>
+      </property>
       <property name="emit-signals" writable="1" transfer-ownership="none" setter="set_emit_signals" getter="get_emit_signals" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="eos" transfer-ownership="none" default-value="TRUE">
         <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="in" version="1.28" transfer-ownership="none" default-value="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Number of input buffers that were queued.</doc>
+        <type name="guint64" c:type="guint64"/>
       </property>
       <property name="leaky-type" version="1.28" writable="1" transfer-ownership="none" setter="set_leaky_type" getter="get_leaky_type" default-value="GST_APP_LEAKY_TYPE_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">When set to any other value than GST_APP_LEAKY_TYPE_NONE then the appsink
@@ -951,6 +959,14 @@ buffers.</doc>
       <property name="max-time" version="1.24" writable="1" transfer-ownership="none" setter="set_max_time" getter="get_max_time" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Maximum total duration of data in the queue (0 = unlimited)</doc>
         <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="out" version="1.28" transfer-ownership="none" default-value="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Number of output buffers that were dequeued.</doc>
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="silent" version="1.28" writable="1" transfer-ownership="none" default-value="TRUE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Don't emit notify for input, output and dropped buffers.</doc>
+        <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="wait-on-eos" version="1.8" writable="1" transfer-ownership="none" setter="set_wait_on_eos" getter="get_wait_on_eos" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Wait for all buffers to be processed after receiving an EOS.
