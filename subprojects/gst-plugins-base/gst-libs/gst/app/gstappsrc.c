@@ -580,7 +580,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           "Whether to drop buffers once the internal queue is full",
           GST_TYPE_APP_LEAKY_TYPE,
           DEFAULT_PROP_LEAKY_TYPE,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
           G_PARAM_STATIC_STRINGS));
 
   /**
