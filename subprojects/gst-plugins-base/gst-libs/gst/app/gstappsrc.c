@@ -925,7 +925,7 @@ gst_app_src_set_property (GObject * object, guint prop_id,
       priv->handle_segment_change = g_value_get_boolean (value);
       break;
     case PROP_LEAKY_TYPE:
-      priv->leaky_type = g_value_get_enum (value);
+      gst_app_src_set_leaky_type (appsrc, g_value_get_enum (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1007,7 +1007,7 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, priv->handle_segment_change);
       break;
     case PROP_LEAKY_TYPE:
-      g_value_set_enum (value, priv->leaky_type);
+      g_value_set_enum (value, gst_app_src_get_leaky_type (appsrc));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2218,9 +2218,19 @@ gst_app_src_set_latencies (GstAppSrc * appsrc, gboolean do_min, guint64 min,
 void
 gst_app_src_set_leaky_type (GstAppSrc * appsrc, GstAppLeakyType leaky)
 {
+  GstAppSrcPrivate *priv;
+
   g_return_if_fail (GST_IS_APP_SRC (appsrc));
 
-  appsrc->priv->leaky_type = leaky;
+  priv = appsrc->priv;
+
+  g_mutex_lock (&priv->mutex);
+  if (priv->leaky_type != leaky) {
+    priv->leaky_type = leaky;
+    /* signal the change */
+    g_cond_signal (&priv->cond);
+  }
+  g_mutex_unlock (&priv->mutex);
 }
 
 /**
@@ -2237,9 +2247,18 @@ gst_app_src_set_leaky_type (GstAppSrc * appsrc, GstAppLeakyType leaky)
 GstAppLeakyType
 gst_app_src_get_leaky_type (GstAppSrc * appsrc)
 {
+  GstAppSrcPrivate *priv;
+  GstAppLeakyType leaky_type;
+
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), GST_APP_LEAKY_TYPE_NONE);
 
-  return appsrc->priv->leaky_type;
+  priv = appsrc->priv;
+
+  g_mutex_lock (&priv->mutex);
+  leaky_type = priv->leaky_type;
+  g_mutex_unlock (&priv->mutex);
+
+  return leaky_type;
 }
 
 /**
