@@ -164,6 +164,15 @@ GST_APP_API
 guint64         gst_app_sink_get_max_bytes (GstAppSink *appsink);
 
 GST_APP_API
+guint64         gst_app_sink_get_current_level_bytes (GstAppSink * appsink);
+
+GST_APP_API
+guint64         gst_app_sink_get_current_level_buffers (GstAppSink * appsink);
+
+GST_APP_API
+GstClockTime    gst_app_sink_get_current_level_time (GstAppSink * appsink);
+
+GST_APP_API
 void            gst_app_sink_set_drop         (GstAppSink *appsink, gboolean drop);
 
 GST_APP_API

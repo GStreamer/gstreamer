@@ -323,6 +323,48 @@ condition.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_current_level_buffers" c:identifier="gst_app_sink_get_current_level_buffers" glib:get-property="current-level-buffers" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Get the number of currently queued buffers inside @appsink.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">The number of currently queued buffers.</doc>
+          <type name="guint64" c:type="guint64"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="appsink" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">a #GstAppSink</doc>
+            <type name="AppSink" c:type="GstAppSink*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_current_level_bytes" c:identifier="gst_app_sink_get_current_level_bytes" glib:get-property="current-level-bytes" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Get the number of currently queued bytes inside @appsink.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">The number of currently queued bytes.</doc>
+          <type name="guint64" c:type="guint64"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="appsink" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">a #GstAppSink</doc>
+            <type name="AppSink" c:type="GstAppSink*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_current_level_time" c:identifier="gst_app_sink_get_current_level_time" glib:get-property="current-level-time" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Get the amount of currently queued time inside @appsink.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">The amount of currently queued time.</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="appsink" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">a #GstAppSink</doc>
+            <type name="AppSink" c:type="GstAppSink*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="get_drop" c:identifier="gst_app_sink_get_drop" glib:get-property="drop">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Check if @appsink will drop old buffers when the maximum amount of queued
 data is reached (meaning max buffers, time or bytes limit, whichever is hit first).</doc>
@@ -816,6 +858,18 @@ condition.</doc>
       </property>
       <property name="caps" writable="1" transfer-ownership="none" setter="set_caps" getter="get_caps">
         <type name="Gst.Caps"/>
+      </property>
+      <property name="current-level-buffers" version="1.28" transfer-ownership="none" getter="get_current_level_buffers" default-value="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">The number of currently queued buffers inside appsink.</doc>
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="current-level-bytes" version="1.28" transfer-ownership="none" getter="get_current_level_bytes" default-value="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">The number of currently queued bytes inside appsink.</doc>
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="current-level-time" version="1.28" transfer-ownership="none" getter="get_current_level_time" default-value="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">The amount of currently queued time inside appsink.</doc>
+        <type name="guint64" c:type="guint64"/>
       </property>
       <property name="drop" writable="1" transfer-ownership="none" setter="set_drop" getter="get_drop" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>

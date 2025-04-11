@@ -170,6 +170,9 @@ enum
 #define DEFAULT_PROP_DROP		FALSE
 #define DEFAULT_PROP_WAIT_ON_EOS	TRUE
 #define DEFAULT_PROP_BUFFER_LIST	FALSE
+#define DEFAULT_PROP_CURRENT_LEVEL_BYTES   0
+#define DEFAULT_PROP_CURRENT_LEVEL_BUFFERS 0
+#define DEFAULT_PROP_CURRENT_LEVEL_TIME    0
 
 enum
 {
@@ -183,6 +186,9 @@ enum
   PROP_BUFFER_LIST,
   PROP_MAX_TIME,
   PROP_MAX_BYTES,
+  PROP_CURRENT_LEVEL_BYTES,
+  PROP_CURRENT_LEVEL_BUFFERS,
+  PROP_CURRENT_LEVEL_TIME,
   PROP_LAST
 };
 
@@ -323,6 +329,45 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
           "Wait for all buffers to be processed after receiving an EOS",
           DEFAULT_PROP_WAIT_ON_EOS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstAppSink:current-level-bytes:
+   *
+   * The number of currently queued bytes inside appsink.
+   *
+   * Since: 1.28
+   */
+  g_object_class_install_property (gobject_class, PROP_CURRENT_LEVEL_BYTES,
+      g_param_spec_uint64 ("current-level-bytes", "Current Level Bytes",
+          "The number of currently queued bytes",
+          0, G_MAXUINT64, DEFAULT_PROP_CURRENT_LEVEL_BYTES,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstAppSink:current-level-buffers:
+   *
+   * The number of currently queued buffers inside appsink.
+   *
+   * Since: 1.28
+   */
+  g_object_class_install_property (gobject_class, PROP_CURRENT_LEVEL_BUFFERS,
+      g_param_spec_uint64 ("current-level-buffers", "Current Level Buffers",
+          "The number of currently queued buffers",
+          0, G_MAXUINT64, DEFAULT_PROP_CURRENT_LEVEL_BUFFERS,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstAppSink:current-level-time:
+   *
+   * The amount of currently queued time inside appsink.
+   *
+   * Since: 1.28
+   */
+  g_object_class_install_property (gobject_class, PROP_CURRENT_LEVEL_TIME,
+      g_param_spec_uint64 ("current-level-time", "Current Level Time",
+          "The amount of currently queued time",
+          0, G_MAXUINT64, DEFAULT_PROP_CURRENT_LEVEL_TIME,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstAppSink::eos:
@@ -754,6 +799,17 @@ gst_app_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_WAIT_ON_EOS:
       g_value_set_boolean (value, gst_app_sink_get_wait_on_eos (appsink));
+      break;
+    case PROP_CURRENT_LEVEL_BYTES:
+      g_value_set_uint64 (value,
+          gst_app_sink_get_current_level_bytes (appsink));
+      break;
+    case PROP_CURRENT_LEVEL_BUFFERS:
+      g_value_set_uint64 (value,
+          gst_app_sink_get_current_level_buffers (appsink));
+      break;
+    case PROP_CURRENT_LEVEL_TIME:
+      g_value_set_uint64 (value, gst_app_sink_get_current_level_time (appsink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1611,6 +1667,54 @@ guint64
 gst_app_sink_get_max_bytes (GstAppSink * appsink)
 {
   GST_APP_SINK_GET_PROPERTY (max_bytes);
+}
+
+/**
+ * gst_app_sink_get_current_level_bytes:
+ * @appsink: a #GstAppSink
+ *
+ * Get the number of currently queued bytes inside @appsink.
+ *
+ * Returns: The number of currently queued bytes.
+ *
+ * Since: 1.28
+ */
+guint64
+gst_app_sink_get_current_level_bytes (GstAppSink * appsink)
+{
+  GST_APP_SINK_GET_PROPERTY (queue_status_info.queued_bytes);
+}
+
+/**
+ * gst_app_sink_get_current_level_buffers:
+ * @appsink: a #GstAppSink
+ *
+ * Get the number of currently queued buffers inside @appsink.
+ *
+ * Returns: The number of currently queued buffers.
+ *
+ * Since: 1.28
+ */
+guint64
+gst_app_sink_get_current_level_buffers (GstAppSink * appsink)
+{
+  GST_APP_SINK_GET_PROPERTY (queue_status_info.queued_buffers);
+}
+
+/**
+ * gst_app_sink_get_current_level_time:
+ * @appsink: a #GstAppSink
+ *
+ * Get the amount of currently queued time inside @appsink.
+ *
+ * Returns: The amount of currently queued time.
+ *
+ * Since: 1.28
+ */
+GstClockTime
+gst_app_sink_get_current_level_time (GstAppSink * appsink)
+{
+  GST_APP_SINK_GET_PROPERTY (queue_status_info.queued_time);
 }
 
 #undef GST_APP_SINK_GET_PROPERTY
