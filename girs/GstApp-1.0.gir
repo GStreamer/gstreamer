@@ -2206,6 +2206,10 @@ on outgoing buffers.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The amount of currently queued time inside appsrc.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
+      <property name="dropped" version="1.28" transfer-ownership="none" default-value="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Number of buffers that were dropped.</doc>
+        <type name="guint64" c:type="guint64"/>
+      </property>
       <property name="duration" version="1.10" writable="1" transfer-ownership="none" setter="set_duration" getter="get_duration" default-value="18446744073709551615">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The total duration in nanoseconds of the data stream. If the total duration is known, it
 is recommended to configure it with this property.</doc>
@@ -2232,6 +2236,10 @@ FIXME: currently only GST_FORMAT_TIME format is supported and therefore
 GstAppSrc::format should be time. However, possibly #GstAppSrc can support
 other formats.</doc>
         <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="in" version="1.28" transfer-ownership="none" default-value="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Number of input buffers that were queued.</doc>
+        <type name="guint64" c:type="guint64"/>
       </property>
       <property name="is-live" writable="1" transfer-ownership="none" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Instruct the source to behave like a live source. This includes that it
@@ -2275,6 +2283,14 @@ latency calculations of #GstBaseSrc.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Make appsrc emit the "need-data" signal when the amount of bytes in the
 queue drops below this percentage of max-bytes.</doc>
         <type name="guint" c:type="guint"/>
+      </property>
+      <property name="out" version="1.28" transfer-ownership="none" default-value="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Number of output buffers that were dequeued.</doc>
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="silent" version="1.28" writable="1" transfer-ownership="none" default-value="TRUE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Don't emit notify for input, output and dropped buffers.</doc>
+        <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="size" writable="1" transfer-ownership="none" setter="set_size" getter="get_size" default-value="-1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The total size in bytes of the data stream. If the total size is known, it
