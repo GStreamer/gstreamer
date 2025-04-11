@@ -1043,6 +1043,8 @@ class GstValidateTest(Test):
             self.extra_logfiles.add(gstlogsfile)
             subproc_env["GST_DEBUG_FILE"] = gstlogsfile
             no_color = self.options.no_color
+        elif self.options.redirect_logs:
+            no_color = False
 
         if no_color:
             subproc_env["GST_DEBUG_NO_COLOR"] = '1'
