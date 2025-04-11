@@ -46,25 +46,22 @@ buffer: content-id=16, pts=0:00:01.800000000, dur=0:00:00.100000000, flags=gap
 
 CHECKPOINT: Setting videorate.rate=2.0
 
-buffer: content-id=34, pts=0:00:01.700000000, dur=0:00:00.100000000
-buffer: content-id=36, pts=0:00:01.600000000, dur=0:00:00.100000000
-buffer: content-id=38, pts=0:00:01.500000000, dur=0:00:00.100000000
-buffer: content-id=40, pts=0:00:01.400000000, dur=0:00:00.100000000
-buffer: content-id=42, pts=0:00:01.300000000, dur=0:00:00.100000000
-buffer: content-id=44, pts=0:00:01.200000000, dur=0:00:00.100000000
-buffer: content-id=46, pts=0:00:01.100000000, dur=0:00:00.100000000
-buffer: content-id=48, pts=0:00:01.000000000, dur=0:00:00.100000000
-buffer: content-id=50, pts=0:00:00.900000000, dur=0:00:00.100000000
-buffer: content-id=52, pts=0:00:00.800000000, dur=0:00:00.100000000
-
-CHECKPOINT: Filling up segment with last buffer
-
-buffer: content-id=52, pts=0:00:00.700000000, dur=0:00:00.100000000, flags=gap
-buffer: content-id=52, pts=0:00:00.600000000, dur=0:00:00.100000000, flags=gap
-buffer: content-id=52, pts=0:00:00.500000000, dur=0:00:00.100000000, flags=gap
-buffer: content-id=52, pts=0:00:00.400000000, dur=0:00:00.100000000, flags=gap
-buffer: content-id=52, pts=0:00:00.300000000, dur=0:00:00.100000000, flags=gap
-buffer: content-id=52, pts=0:00:00.200000000, dur=0:00:00.100000000, flags=gap
-buffer: content-id=52, pts=0:00:00.100000000, dur=0:00:00.100000000, flags=gap
-buffer: content-id=52, pts=0:00:00.000000000, dur=0:00:00.100000000, flags=gap
+buffer: content-id=16, pts=0:00:01.700000000, dur=0:00:00.100000000, flags=gap
+buffer: content-id=18, pts=0:00:01.600000000, dur=0:00:00.100000000
+buffer: content-id=20, pts=0:00:01.500000000, dur=0:00:00.100000000
+buffer: content-id=22, pts=0:00:01.400000000, dur=0:00:00.100000000
+buffer: content-id=24, pts=0:00:01.300000000, dur=0:00:00.100000000
+buffer: content-id=26, pts=0:00:01.200000000, dur=0:00:00.100000000
+buffer: content-id=28, pts=0:00:01.100000000, dur=0:00:00.100000000
+buffer: content-id=30, pts=0:00:01.000000000, dur=0:00:00.100000000
+buffer: content-id=32, pts=0:00:00.900000000, dur=0:00:00.100000000
+buffer: content-id=34, pts=0:00:00.800000000, dur=0:00:00.100000000
+buffer: content-id=36, pts=0:00:00.700000000, dur=0:00:00.100000000
+buffer: content-id=38, pts=0:00:00.600000000, dur=0:00:00.100000000
+buffer: content-id=40, pts=0:00:00.500000000, dur=0:00:00.100000000
+buffer: content-id=42, pts=0:00:00.400000000, dur=0:00:00.100000000
+buffer: content-id=44, pts=0:00:00.300000000, dur=0:00:00.100000000
+buffer: content-id=46, pts=0:00:00.200000000, dur=0:00:00.100000000
+buffer: content-id=48, pts=0:00:00.100000000, dur=0:00:00.100000000
+buffer: content-id=50, pts=0:00:00.000000000, dur=0:00:00.100000000
 event eos: (no structure)

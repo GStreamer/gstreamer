@@ -41,18 +41,35 @@ struct _GstVideoRate
   /* video state */
   gint from_rate_numerator, from_rate_denominator;
   gint to_rate_numerator, to_rate_denominator;
-  guint64 next_ts;              /* Timestamp of next buffer to output */
-  guint64 next_end_ts;          /* Timestamp of end of next buffer to output */
+
+  guint64 next_output_ts;              /* Timestamp of next buffer to output */
+  guint64 next_output_end_ts;          /* Timestamp of end of next buffer to output */
+
   GstBuffer *prevbuf;
   gboolean prevbuf_pushed;
   guint64 prev_ts;              /* Previous buffer timestamp */
   guint64 prev_end_ts;          /* Previous buffer end timestamp */
-  guint64 out_frame_count;      /* number of frames output since the beginning
-                                 * of the segment or the last frame rate caps
-                                 * change, whichever was later */
-  guint64 base_ts;              /* used in next_ts calculation after a
-                                 * frame rate caps change */
+
+  /* number of frames output since:
+   *  - the beginning of the segment
+   *  - the last frame rate caps change
+   *  - the last change of the rate
+   * whichever happenned last */
+  guint64 out_frame_count;
+  /* Same logic as out_frame_count but for the input frames received and used or dropped */
+  guint64 in_frame_count;
+
+  /* Timestamp of the buffer for the first output buffer
+   * as represented by `out_frame_count` */
+  guint64 base_output_ts;
+
+  /* Timestamp of the buffer for the first input buffer
+   * as represented by `in_frame_count` */
+  guint64 base_input_ts;
+
+  /* Next frame to output is a GST_BUFFER_FLAG_DISCONT */
   gboolean discont;
+
   guint64 last_ts;              /* Timestamp of last input buffer */
 
   guint64 average_period;

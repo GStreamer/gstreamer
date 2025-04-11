@@ -42,8 +42,6 @@ set-property, playback-time=-1, target-element-name=videorate, property-name=rat
 crank-clock, repeat=10
 wait, on-clock=true
 
-# Source is now EOS, videorate is filling up the segment with last buffer
-checkpoint, text="Filling up segment with last buffer"
 crank-clock, repeat=10
 
 stop, on-message=eos

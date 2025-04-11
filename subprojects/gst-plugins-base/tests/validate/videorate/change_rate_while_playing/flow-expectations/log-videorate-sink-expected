@@ -25,11 +25,11 @@ CHECKPOINT: Setting videorate.rate=0.1
 buffer: content-id=12, pts=0:00:01.000000000, dur=0:00:00.100000000
 buffer: content-id=13, pts=0:00:01.100000000, dur=0:00:00.100000000
 buffer: content-id=14, pts=0:00:01.200000000, dur=0:00:00.100000000
-buffer: content-id=15, pts=0:00:01.300000000, dur=0:00:00.100000000
-buffer: content-id=16, pts=0:00:01.400000000, dur=0:00:00.100000000
 
 CHECKPOINT: Setting videorate.rate=2.0
 
+buffer: content-id=15, pts=0:00:01.300000000, dur=0:00:00.100000000
+buffer: content-id=16, pts=0:00:01.400000000, dur=0:00:00.100000000
 buffer: content-id=17, pts=0:00:01.500000000, dur=0:00:00.100000000
 buffer: content-id=18, pts=0:00:01.600000000, dur=0:00:00.100000000
 buffer: content-id=19, pts=0:00:01.700000000, dur=0:00:00.100000000

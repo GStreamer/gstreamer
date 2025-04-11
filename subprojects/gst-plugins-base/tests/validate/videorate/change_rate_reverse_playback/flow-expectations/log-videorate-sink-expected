@@ -66,7 +66,4 @@ buffer: content-id=49, pts=0:00:00.300000000, dur=0:00:00.100000000, flags=disco
 buffer: content-id=50, pts=0:00:00.200000000, dur=0:00:00.100000000, flags=discont
 buffer: content-id=51, pts=0:00:00.100000000, dur=0:00:00.100000000, flags=discont
 buffer: content-id=52, pts=0:00:00.000000000, dur=0:00:00.100000000, flags=discont
-
-CHECKPOINT: Filling up segment with last buffer
-
 event eos: (no structure)
