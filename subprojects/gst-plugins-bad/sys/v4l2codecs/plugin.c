@@ -28,13 +28,13 @@
  * capabilities. For this reason, this documentation may differ from output
  * of running `gst-inspect-1.0` on your target.
  *
- * If you are having issues getting any elementis to be registered, you may want
+ * If you are having issues getting any elements to be registered, you may want
  * to verify that your user have adequate permissions to access media and video
  * devices. These Linux devices are usually found in `/dev/media*` and
  * `/dev/video*`.
  *
- * This documentation as been generated with the use of the environment variable
- * `GST_V4L2_CODEC_GEN_DOC=1`. Using tis environment outside of the documentation
+ * This documentation has been generated with the use of the environment variable
+ * `GST_V4L2_CODEC_GEN_DOC=1`. Using this environment outside of the documentation
  * generation will render your codecs unusable.
  *
  * Since: 1.18
