@@ -1247,7 +1247,9 @@ gst_x265_enc_set_src_caps (GstX265Enc * encoder, GstCaps * caps)
 
   tags = gst_tag_list_new_empty ();
   gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER, "x265",
-      GST_TAG_ENCODER_VERSION, x265_version_str, NULL);
+      GST_TAG_ENCODER_VERSION, x265_version_str,
+      GST_TAG_MAXIMUM_BITRATE, encoder->bitrate * 1024,
+      GST_TAG_NOMINAL_BITRATE, encoder->bitrate * 1024, NULL);
   gst_video_encoder_merge_tags (GST_VIDEO_ENCODER (encoder), tags,
       GST_TAG_MERGE_REPLACE);
   gst_tag_list_unref (tags);
