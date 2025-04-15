@@ -289,6 +289,48 @@
                         "type": "GstCaps",
                         "writable": true
                     },
+                    "current-level-buffers": {
+                        "blurb": "The number of currently queued buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
+                    "current-level-bytes": {
+                        "blurb": "The number of currently queued bytes",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
+                    "current-level-time": {
+                        "blurb": "The amount of currently queued time",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
                     "drop": {
                         "blurb": "Drop old buffers when the buffer queue is filled",
                         "conditionally-available": false,
@@ -300,6 +342,20 @@
                         "readable": true,
                         "type": "gboolean",
                         "writable": true
+                    },
+                    "dropped": {
+                        "blurb": "Number of dropped buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
                     },
                     "emit-signals": {
                         "blurb": "Emit new-preroll and new-sample signals",
@@ -324,6 +380,32 @@
                         "readable": true,
                         "type": "gboolean",
                         "writable": false
+                    },
+                    "in": {
+                        "blurb": "Number of input buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
+                    "leaky-type": {
+                        "blurb": "Whether to drop buffers once the internal queue is full",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "none (0)",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "GstAppLeakyType",
+                        "writable": true
                     },
                     "max-buffers": {
                         "blurb": "The maximum number of buffers to queue internally (0 = unlimited)",
@@ -365,6 +447,32 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "guint64",
+                        "writable": true
+                    },
+                    "out": {
+                        "blurb": "Number of output buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
+                    "silent": {
+                        "blurb": "Don't emit notify for input, output and dropped buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "wait-on-eos": {
@@ -548,6 +656,20 @@
                         "type": "guint64",
                         "writable": false
                     },
+                    "dropped": {
+                        "blurb": "Number of dropped buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
                     "duration": {
                         "blurb": "The duration of the data stream in nanoseconds (GST_CLOCK_TIME_NONE if unknown)",
                         "conditionally-available": false,
@@ -598,6 +720,20 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "in": {
+                        "blurb": "Number of input buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
                     "is-live": {
                         "blurb": "Whether to act as a live source",
                         "conditionally-available": false,
@@ -617,7 +753,7 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "none (0)",
-                        "mutable": "ready",
+                        "mutable": "playing",
                         "readable": true,
                         "type": "GstAppLeakyType",
                         "writable": true
@@ -704,6 +840,32 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "guint",
+                        "writable": true
+                    },
+                    "out": {
+                        "blurb": "Number of output buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": false
+                    },
+                    "silent": {
+                        "blurb": "Don't emit notify for input, output and dropped buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     },
                     "size": {
