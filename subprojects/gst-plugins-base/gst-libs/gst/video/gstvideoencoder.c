@@ -1543,6 +1543,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstClockTime pts, duration;
   GstFlowReturn ret = GST_FLOW_OK;
   guint64 start, stop, cstart, cstop;
+  guint64 cstart_adjusted;
 
   encoder = GST_VIDEO_ENCODER (parent);
   priv = encoder->priv;
@@ -1591,12 +1592,14 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   if (priv->time_adjustment != GST_CLOCK_TIME_NONE) {
-    cstart += priv->time_adjustment;
+    cstart_adjusted = cstart + priv->time_adjustment;
+  } else {
+    cstart_adjusted = cstart;
   }
 
   /* incoming DTS is not really relevant and does not make sense anyway,
    * so pass along _NONE and maybe come up with something better later on */
-  frame = gst_video_encoder_new_frame (encoder, buf, cstart,
+  frame = gst_video_encoder_new_frame (encoder, buf, cstart_adjusted,
       GST_CLOCK_TIME_NONE, duration);
 
   GST_OBJECT_LOCK (encoder);
@@ -1607,7 +1610,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     GQueue matching_fevt = G_QUEUE_INIT;
 
     running_time =
-        gst_segment_to_running_time (&encoder->output_segment, GST_FORMAT_TIME,
+        gst_segment_to_running_time (&encoder->input_segment, GST_FORMAT_TIME,
         cstart);
 
     throttled = (priv->min_force_key_unit_interval != 0 &&
@@ -1721,7 +1724,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   frame->deadline =
       gst_segment_to_running_time (&encoder->input_segment, GST_FORMAT_TIME,
-      frame->pts);
+      cstart);
 
   ret = klass->handle_frame (encoder, frame);
 
