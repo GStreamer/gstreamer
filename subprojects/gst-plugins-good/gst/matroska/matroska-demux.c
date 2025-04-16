@@ -5965,9 +5965,11 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
             demux->seek_block = 0;
           }
           demux->seek_first = FALSE;
-          /* record next cluster for recovery */
+          /* record next cluster for recovery, set to 0 if offset isn't known. */
           if (read != G_MAXUINT64)
             demux->next_cluster_offset = demux->cluster_offset + read;
+          else
+            demux->next_cluster_offset = 0;
           /* eat cluster prefix */
           gst_matroska_demux_flush (demux, needed);
           break;
