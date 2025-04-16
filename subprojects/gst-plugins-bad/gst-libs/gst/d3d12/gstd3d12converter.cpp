@@ -1264,23 +1264,11 @@ gst_d3d12_converter_update_transform (GstD3D12Converter * self)
 }
 
 static gboolean
-gst_d3d12_converter_update_src_rect (GstD3D12Converter * self)
+gst_d3d12_converter_update_ctx_src_rect (GstD3D12Converter * self,
+    ConvertCtxPtr & ctx, VertexData vertex_data[4])
 {
-  auto priv = self->priv;
-  VertexData vertex_data[4];
   HRESULT hr;
-  FLOAT u0, u1, v0, v1, off_u, off_v;
-  gint texture_width = priv->input_texture_width;
-  gint texture_height = priv->input_texture_height;
 
-  if (!priv->update_src_rect)
-    return TRUE;
-
-  priv->update_src_rect = FALSE;
-
-  GST_DEBUG_OBJECT (self, "Updating vertex buffer");
-
-  auto ctx = priv->main_ctx;
   if (!ctx->vertex_upload) {
     D3D12_HEAP_PROPERTIES heap_prop =
         CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
@@ -1295,6 +1283,36 @@ gst_d3d12_converter_update_src_rect (GstD3D12Converter * self)
       return FALSE;
     }
   }
+
+  guint8 *data;
+  CD3DX12_RANGE range (0, 0);
+  hr = ctx->vertex_upload->Map (0, &range, (void **) &data);
+  if (!gst_d3d12_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
+    return FALSE;
+  }
+
+  memcpy (data, vertex_data, g_vertex_buf_size);
+  ctx->vertex_upload->Unmap (0, nullptr);
+
+  return TRUE;
+}
+
+static gboolean
+gst_d3d12_converter_update_src_rect (GstD3D12Converter * self)
+{
+  auto priv = self->priv;
+  VertexData vertex_data[4];
+  FLOAT u0, u1, v0, v1, off_u, off_v;
+  gint texture_width = priv->input_texture_width;
+  gint texture_height = priv->input_texture_height;
+
+  if (!priv->update_src_rect)
+    return TRUE;
+
+  priv->update_src_rect = FALSE;
+
+  GST_DEBUG_OBJECT (self, "Updating vertex buffer");
 
   /*
    *  (u0, v0) -- (u1, v0)
@@ -1352,16 +1370,15 @@ gst_d3d12_converter_update_src_rect (GstD3D12Converter * self)
   vertex_data[3].texture.u = u1;
   vertex_data[3].texture.v = v1;
 
-  guint8 *data;
-  CD3DX12_RANGE range (0, 0);
-  hr = ctx->vertex_upload->Map (0, &range, (void **) &data);
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
+  if (!gst_d3d12_converter_update_ctx_src_rect (self, priv->main_ctx,
+          vertex_data)) {
     return FALSE;
   }
 
-  memcpy (data, vertex_data, g_vertex_buf_size);
-  ctx->vertex_upload->Unmap (0, nullptr);
+  if (priv->post_mipgen_ctx) {
+    return gst_d3d12_converter_update_ctx_src_rect (self, priv->post_mipgen_ctx,
+        vertex_data);
+  }
 
   return TRUE;
 }
@@ -1504,6 +1521,14 @@ gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
       break;
     default:
       break;
+  }
+
+  if (priv->post_mipgen_ctx) {
+    auto other_comm = priv->post_mipgen_ctx->comm;
+    for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+      other_comm->viewport[i] = comm->viewport[i];
+      other_comm->scissor_rect[i] = comm->scissor_rect[i];
+    }
   }
 
   priv->update_dest_rect = FALSE;
