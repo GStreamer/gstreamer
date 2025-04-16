@@ -17,6 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include "glib.h"
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -28,6 +29,7 @@
 #include <agent.h>
 
 #define HTTP_PROXY_PORT_DEFAULT 3128
+#define MAX_CLOSING_TIME_MILLI_SECONDS 2 * 1000 /* limit closing procedure to 2s */
 
 typedef struct
 {
@@ -1759,6 +1761,53 @@ gst_webrtc_nice_get_property (GObject * object, guint prop_id,
   }
 }
 
+#if HAVE_LIBNICE_AGENT_CLOSE_FORCED
+static void
+_agent_closed_cb (GObject * source_object, GAsyncResult * res,
+    gpointer user_data)
+{
+  gboolean *agent_closed = user_data;
+
+  *agent_closed = TRUE;
+}
+
+static gboolean
+_agent_closed_timeout_cb (gpointer user_data)
+{
+  gboolean *agent_timeout = user_data;
+
+  *agent_timeout = TRUE;
+  return FALSE;
+};
+
+static void
+_close_agent (GstWebRTCNice * ice)
+{
+  GMainContext *main_context = g_main_context_new ();
+  gboolean agent_closed = FALSE;
+  gboolean agent_timeout = FALSE;
+  GSource *timeout_source;
+
+  g_main_context_push_thread_default (main_context);
+  timeout_source = g_timeout_source_new (MAX_CLOSING_TIME_MILLI_SECONDS);
+  g_source_set_callback (timeout_source, _agent_closed_timeout_cb,
+      &agent_timeout, NULL);
+  g_source_attach (timeout_source, main_context);
+  nice_agent_close_async (ice->priv->nice_agent, _agent_closed_cb,
+      &agent_closed);
+  while (!agent_closed && !agent_timeout) {
+    g_main_context_iteration (main_context, TRUE);
+  }
+  if (agent_timeout) {
+    GST_WARNING ("nice_agent_close_async() did not finish");
+  }
+  g_source_destroy (timeout_source);
+  g_source_unref (timeout_source);
+  g_main_context_pop_thread_default (main_context);
+  g_main_context_unref (main_context);
+}
+#endif
+
 static void
 gst_webrtc_nice_finalize (GObject * object)
 {
@@ -1767,6 +1816,9 @@ gst_webrtc_nice_finalize (GObject * object)
   g_signal_handlers_disconnect_by_data (ice->priv->nice_agent, ice);
 
   g_cancellable_cancel (ice->priv->resolve_cancellable);
+#if HAVE_LIBNICE_AGENT_CLOSE_FORCED
+  _close_agent (ice);
+#endif
   outstanding_resolves_wait (ice->priv->outstanding_resolves);
 
   _stop_thread (ice);
@@ -1811,6 +1863,11 @@ gst_webrtc_nice_constructed (GObject * object)
 
   options |= NICE_AGENT_OPTION_ICE_TRICKLE;
   options |= NICE_AGENT_OPTION_REGULAR_NOMINATION;
+
+/* https://gitlab.freedesktop.org/libnice/libnice/-/merge_requests/283 */
+#ifdef HAVE_LIBNICE_AGENT_CLOSE_FORCED
+  options |= NICE_AGENT_OPTION_CLOSE_FORCED;
+#endif
 
 /*  https://gitlab.freedesktop.org/libnice/libnice/-/merge_requests/257 */
 #ifdef HAVE_LIBNICE_CONSENT_FIX
