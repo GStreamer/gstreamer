@@ -554,6 +554,9 @@ build vs2022 amd64:
   variables:
     # FIXME: https://github.com/mesonbuild/meson/pull/11007
     PKG_CONFIG: ${CI_PROJECT_DIR}/subprojects/win-pkgconfig/pkg-config.exe
+    # Work around Meson issues if this env var contains characters that
+    # cannot be represented in the active code page (e.g. CP1252)
+    CI_COMMIT_AUTHOR: null
 
 build vs2022 amd64 full-static:
   extends: ".build windows"
@@ -570,6 +573,9 @@ build vs2022 amd64 full-static:
       -Dlibav=disabled
       -Ddoc=disabled
       -Dgst-full-target-type=static_library
+    # Work around Meson issues if this env var contains characters that
+    # cannot be represented in the active code page (e.g. CP1252)
+    CI_COMMIT_AUTHOR: null
 
 .build windows cross:
   extends: '.build windows'
