@@ -476,7 +476,7 @@ gst_wasapi2_ring_buffer_read (GstWasapi2RingBuffer * self)
   guint32 to_read_bytes;
   DWORD flags = 0;
   HRESULT hr;
-  guint64 position;
+  guint64 position = 0;
   GstAudioInfo *info = &ringbuffer->spec.info;
   IAudioCaptureClient *capture_client = self->capture_client;
   guint gap_size = 0;
@@ -485,13 +485,24 @@ gst_wasapi2_ring_buffer_read (GstWasapi2RingBuffer * self)
   guint8 *readptr;
   gint len;
   bool is_device_muted;
+  UINT64 qpc_pos = 0;
+  GstClockTime qpc_time;
 
   if (!capture_client) {
     GST_ERROR_OBJECT (self, "IAudioCaptureClient is not available");
     return E_FAIL;
   }
 
-  hr = capture_client->GetBuffer (&data, &to_read, &flags, &position, nullptr);
+  hr = capture_client->GetBuffer (&data, &to_read, &flags, &position, &qpc_pos);
+  /* 100 ns unit */
+  qpc_time = qpc_pos * 100;
+
+  GST_LOG_OBJECT (self, "Reading %d frames offset at %" G_GUINT64_FORMAT
+      ", expected position %" G_GUINT64_FORMAT ", qpc-time %"
+      GST_TIME_FORMAT "(%" G_GUINT64_FORMAT "), flags 0x%x", to_read, position,
+      self->expected_position, GST_TIME_ARGS (qpc_time), qpc_pos,
+      (guint) flags);
+
   if (hr == AUDCLNT_S_BUFFER_EMPTY || to_read == 0) {
     GST_LOG_OBJECT (self, "Empty buffer");
     to_read = 0;
@@ -503,10 +514,6 @@ gst_wasapi2_ring_buffer_read (GstWasapi2RingBuffer * self)
       gst_wasapi2_client_is_endpoint_muted (self->client);
 
   to_read_bytes = to_read * GST_AUDIO_INFO_BPF (info);
-
-  GST_LOG_OBJECT (self, "Reading %d frames offset at %" G_GUINT64_FORMAT
-      ", expected position %" G_GUINT64_FORMAT, to_read, position,
-      self->expected_position);
 
   /* XXX: position might not be increased in case of process loopback  */
   if (!gst_wasapi2_device_class_is_process_loopback (self->device_class)) {
