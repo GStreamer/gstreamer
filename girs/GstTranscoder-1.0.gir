@@ -1,11 +1,12 @@
 <!-- This file was automatically generated from C sources - DO NOT EDIT!
 To affect the contents of this file, edit the original C definitions,
 and/or use gtk-doc annotations.  -->
-<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:doc="http://www.gtk.org/introspection/doc/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
   <include name="GObject" version="2.0"/>
   <include name="Gst" version="1.0"/>
   <include name="GstPbutils" version="1.0"/>
   <package name="gstreamer-transcoder-1.0"/>
+  <doc:format name="unknown"/>
   <namespace name="GstTranscoder" version="1.0" shared-library="libgsttranscoder-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst_">
     <class name="Transcoder" c:symbol-prefix="transcoder" c:type="GstTranscoder" parent="Gst.Object" glib:type-name="GstTranscoder" glib:get-type="gst_transcoder_get_type" glib:type-struct="TranscoderClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>

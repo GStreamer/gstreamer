@@ -1,7 +1,7 @@
 <!-- This file was automatically generated from C sources - DO NOT EDIT!
 To affect the contents of this file, edit the original C definitions,
 and/or use gtk-doc annotations.  -->
-<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:doc="http://www.gtk.org/introspection/doc/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
   <include name="GLib" version="2.0"/>
   <include name="GModule" version="2.0"/>
   <include name="GObject" version="2.0"/>
@@ -10,6 +10,7 @@ and/or use gtk-doc annotations.  -->
   <include name="GstPbutils" version="1.0"/>
   <package name="gstreamer-validate-1.0"/>
   <c:include name="gst/validate/validate.h"/>
+  <doc:format name="unknown"/>
   <namespace name="GstValidate" version="1.0" shared-library="libgstvalidate-1.0.so.0" c:identifier-prefixes="GstValidate" c:symbol-prefixes="gst_validate">
     <alias name="IssueId" c:type="GstValidateIssueId">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-report.h"/>
@@ -279,7 +280,7 @@ GST_VALIDATE_EXECUTE_ACTION_DONE:</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action will be executed asynchronously without blocking further
 actions to be executed</doc>
       </member>
-      <member name="interlaced" value="3" c:identifier="GST_VALIDATE_EXECUTE_ACTION_INTERLACED" glib:nick="interlaced" glib:name="GST_VALIDATE_EXECUTE_ACTION_INTERLACED">
+      <member name="interlaced" value="3" c:identifier="GST_VALIDATE_EXECUTE_ACTION_INTERLACED" deprecated="1" deprecated-version="1.20" glib:nick="interlaced" glib:name="GST_VALIDATE_EXECUTE_ACTION_INTERLACED">
         <doc-deprecated xml:space="preserve">Use #GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING instead.</doc-deprecated>
       </member>
       <member name="error_reported" value="4" c:identifier="GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED" glib:nick="error-reported" glib:name="GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED">
@@ -365,7 +366,7 @@ actions to be executed</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action can be executed asynchronously but without blocking further
 actions execution.</doc>
       </member>
-      <member name="interlaced" value="8" c:identifier="GST_VALIDATE_ACTION_TYPE_INTERLACED" glib:nick="interlaced" glib:name="GST_VALIDATE_ACTION_TYPE_INTERLACED">
+      <member name="interlaced" value="8" c:identifier="GST_VALIDATE_ACTION_TYPE_INTERLACED" deprecated="1" deprecated-version="1.20" glib:nick="interlaced" glib:name="GST_VALIDATE_ACTION_TYPE_INTERLACED">
         <doc-deprecated xml:space="preserve">Use #GST_VALIDATE_ACTION_TYPE_NON_BLOCKING instead.</doc-deprecated>
       </member>
       <member name="can_execute_on_addition" value="16" c:identifier="GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION" glib:nick="can-execute-on-addition" glib:name="GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION">

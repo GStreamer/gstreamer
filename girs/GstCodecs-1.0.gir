@@ -1,7 +1,7 @@
 <!-- This file was automatically generated from C sources - DO NOT EDIT!
 To affect the contents of this file, edit the original C definitions,
 and/or use gtk-doc annotations.  -->
-<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:doc="http://www.gtk.org/introspection/doc/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
   <include name="Gst" version="1.0"/>
   <include name="GstCodecParsers" version="1.0"/>
   <include name="GstVideo" version="1.0"/>
@@ -13,6 +13,7 @@ and/or use gtk-doc annotations.  -->
   <c:include name="gst/codecs/gstmpeg2decoder.h"/>
   <c:include name="gst/codecs/gstvp8decoder.h"/>
   <c:include name="gst/codecs/gstvp9decoder.h"/>
+  <doc:format name="unknown"/>
   <namespace name="GstCodecs" version="1.0" shared-library="libgstcodecs-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
     <class name="AV1Decoder" c:symbol-prefix="av1_decoder" c:type="GstAV1Decoder" version="1.20" parent="GstVideo.VideoDecoder" abstract="1" glib:type-name="GstAV1Decoder" glib:get-type="gst_av1_decoder_get_type" glib:type-struct="AV1DecoderClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1decoder.h">The opaque #GstAV1Decoder data structure.</doc>

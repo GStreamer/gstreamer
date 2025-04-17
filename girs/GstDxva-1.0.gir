@@ -1,0 +1,2125 @@
+<!-- This file was automatically generated from C sources - DO NOT EDIT!
+To affect the contents of this file, edit the original C definitions,
+and/or use gtk-doc annotations.  -->
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:doc="http://www.gtk.org/introspection/doc/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+  <include name="Gst" version="1.0"/>
+  <include name="GstCodecs" version="1.0"/>
+  <include name="GstVideo" version="1.0"/>
+  <package name="gstreamer-dxva-1.0"/>
+  <doc:format name="unknown"/>
+  <namespace name="GstDxva" version="1.0" shared-library="libgstdxva-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
+    <function-macro name="DXVA_AV1_DECODER" c:identifier="GST_DXVA_AV1_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_AV1_DECODER_CLASS" c:identifier="GST_DXVA_AV1_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_AV1_DECODER_GET_CLASS" c:identifier="GST_DXVA_AV1_DECODER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_H264_DECODER" c:identifier="GST_DXVA_H264_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_H264_DECODER_CLASS" c:identifier="GST_DXVA_H264_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_H264_DECODER_GET_CLASS" c:identifier="GST_DXVA_H264_DECODER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_H265_DECODER" c:identifier="GST_DXVA_H265_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_H265_DECODER_CLASS" c:identifier="GST_DXVA_H265_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_H265_DECODER_GET_CLASS" c:identifier="GST_DXVA_H265_DECODER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_MPEG2_DECODER" c:identifier="GST_DXVA_MPEG2_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_MPEG2_DECODER_CLASS" c:identifier="GST_DXVA_MPEG2_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_MPEG2_DECODER_GET_CLASS" c:identifier="GST_DXVA_MPEG2_DECODER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_VP8_DECODER" c:identifier="GST_DXVA_VP8_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_VP8_DECODER_CLASS" c:identifier="GST_DXVA_VP8_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_VP8_DECODER_GET_CLASS" c:identifier="GST_DXVA_VP8_DECODER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_VP9_DECODER" c:identifier="GST_DXVA_VP9_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_VP9_DECODER_CLASS" c:identifier="GST_DXVA_VP9_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DXVA_VP9_DECODER_GET_CLASS" c:identifier="GST_DXVA_VP9_DECODER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <class name="DxvaAV1Decoder" c:symbol-prefix="dxva_av1_decoder" c:type="GstDxvaAV1Decoder" version="1.24" parent="GstCodecs.AV1Decoder" abstract="1" glib:type-name="GstDxvaAV1Decoder" glib:get-type="gst_dxva_av1_decoder_get_type" glib:type-struct="DxvaAV1DecoderClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+      <virtual-method name="configure">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaAV1Decoder" c:type="GstDxvaAV1Decoder*"/>
+          </instance-parameter>
+          <parameter name="input_state" transfer-ownership="none">
+            <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+          </parameter>
+          <parameter name="info" transfer-ownership="none">
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+          <parameter name="crop_x" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="crop_y" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="coded_width" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="coded_height" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="max_dpb_size" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="duplicate_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaAV1Decoder" c:type="GstDxvaAV1Decoder*"/>
+          </instance-parameter>
+          <parameter name="src" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="dst" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="end_picture" introspectable="0">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaAV1Decoder" c:type="GstDxvaAV1Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="ref_pics" transfer-ownership="none">
+            <array name="GLib.PtrArray" c:type="GPtrArray*">
+              <type name="gpointer" c:type="gpointer"/>
+            </array>
+          </parameter>
+          <parameter name="args" transfer-ownership="none">
+            <type name="DxvaDecodingArgs" c:type="const GstDxvaDecodingArgs*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_picture_id">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="guint8" c:type="guint8"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaAV1Decoder" c:type="GstDxvaAV1Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="new_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaAV1Decoder" c:type="GstDxvaAV1Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="output_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaAV1Decoder" c:type="GstDxvaAV1Decoder*"/>
+          </instance-parameter>
+          <parameter name="frame" transfer-ownership="none">
+            <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+          </parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="buffer_flags" transfer-ownership="none">
+            <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
+          </parameter>
+          <parameter name="display_width" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="display_height" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="start_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaAV1Decoder" c:type="GstDxvaAV1Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="picture_id" transfer-ownership="none">
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <field name="parent">
+        <type name="GstCodecs.AV1Decoder" c:type="GstAV1Decoder"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="DxvaAV1DecoderPrivate" c:type="GstDxvaAV1DecoderPrivate*"/>
+      </field>
+    </class>
+    <record name="DxvaAV1DecoderClass" c:type="GstDxvaAV1DecoderClass" glib:is-gtype-struct-for="DxvaAV1Decoder" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+      <field name="parent_class">
+        <type name="GstCodecs.AV1DecoderClass" c:type="GstAV1DecoderClass"/>
+      </field>
+      <field name="configure">
+        <callback name="configure">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaAV1Decoder" c:type="GstDxvaAV1Decoder*"/>
+            </parameter>
+            <parameter name="input_state" transfer-ownership="none">
+              <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+            </parameter>
+            <parameter name="info" transfer-ownership="none">
+              <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+            </parameter>
+            <parameter name="crop_x" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="crop_y" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="coded_width" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="coded_height" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="max_dpb_size" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="new_picture">
+        <callback name="new_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaAV1Decoder" c:type="GstDxvaAV1Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="duplicate_picture">
+        <callback name="duplicate_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaAV1Decoder" c:type="GstDxvaAV1Decoder*"/>
+            </parameter>
+            <parameter name="src" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="dst" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_picture_id">
+        <callback name="get_picture_id">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="guint8" c:type="guint8"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaAV1Decoder" c:type="GstDxvaAV1Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="start_picture">
+        <callback name="start_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaAV1Decoder" c:type="GstDxvaAV1Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="picture_id" transfer-ownership="none">
+              <type name="guint8" c:type="guint8*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="end_picture" introspectable="0">
+        <callback name="end_picture" introspectable="0">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaAV1Decoder" c:type="GstDxvaAV1Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="ref_pics" transfer-ownership="none">
+              <array name="GLib.PtrArray" c:type="GPtrArray*">
+                <type name="gpointer" c:type="gpointer"/>
+              </array>
+            </parameter>
+            <parameter name="args" transfer-ownership="none">
+              <type name="DxvaDecodingArgs" c:type="const GstDxvaDecodingArgs*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="output_picture">
+        <callback name="output_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaAV1Decoder" c:type="GstDxvaAV1Decoder*"/>
+            </parameter>
+            <parameter name="frame" transfer-ownership="none">
+              <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="buffer_flags" transfer-ownership="none">
+              <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
+            </parameter>
+            <parameter name="display_width" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="display_height" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+    </record>
+    <record name="DxvaAV1DecoderPrivate" c:type="GstDxvaAV1DecoderPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+    </record>
+    <enumeration name="DxvaCodec" version="1.24" c:type="GstDxvaCodec">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvatypes.h"/>
+      <member name="none" value="0" c:identifier="GST_DXVA_CODEC_NONE">
+      </member>
+      <member name="mpeg2" value="1" c:identifier="GST_DXVA_CODEC_MPEG2">
+      </member>
+      <member name="h264" value="2" c:identifier="GST_DXVA_CODEC_H264">
+      </member>
+      <member name="h265" value="3" c:identifier="GST_DXVA_CODEC_H265">
+      </member>
+      <member name="vp8" value="4" c:identifier="GST_DXVA_CODEC_VP8">
+      </member>
+      <member name="vp9" value="5" c:identifier="GST_DXVA_CODEC_VP9">
+      </member>
+      <member name="av1" value="6" c:identifier="GST_DXVA_CODEC_AV1">
+      </member>
+      <member name="last" value="7" c:identifier="GST_DXVA_CODEC_LAST">
+      </member>
+    </enumeration>
+    <record name="DxvaDecodingArgs" c:type="GstDxvaDecodingArgs" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvatypes.h"/>
+      <field name="picture_params" writable="1">
+        <type name="gpointer" c:type="gpointer"/>
+      </field>
+      <field name="picture_params_size" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="slice_control" writable="1">
+        <type name="gpointer" c:type="gpointer"/>
+      </field>
+      <field name="slice_control_size" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="bitstream" writable="1">
+        <type name="gpointer" c:type="gpointer"/>
+      </field>
+      <field name="bitstream_size" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="inverse_quantization_matrix" writable="1">
+        <type name="gpointer" c:type="gpointer"/>
+      </field>
+      <field name="inverse_quantization_matrix_size" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+    </record>
+    <class name="DxvaH264Decoder" c:symbol-prefix="dxva_h264_decoder" c:type="GstDxvaH264Decoder" version="1.24" parent="GstCodecs.H264Decoder" abstract="1" glib:type-name="GstDxvaH264Decoder" glib:get-type="gst_dxva_h264_decoder_get_type" glib:type-struct="DxvaH264DecoderClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+      <virtual-method name="configure">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaH264Decoder" c:type="GstDxvaH264Decoder*"/>
+          </instance-parameter>
+          <parameter name="input_state" transfer-ownership="none">
+            <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+          </parameter>
+          <parameter name="info" transfer-ownership="none">
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+          <parameter name="crop_x" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="crop_y" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="coded_width" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="coded_height" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="max_dpb_size" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="duplicate_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaH264Decoder" c:type="GstDxvaH264Decoder*"/>
+          </instance-parameter>
+          <parameter name="src" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="dst" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="end_picture" introspectable="0">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaH264Decoder" c:type="GstDxvaH264Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="ref_pics" transfer-ownership="none">
+            <array name="GLib.PtrArray" c:type="GPtrArray*">
+              <type name="gpointer" c:type="gpointer"/>
+            </array>
+          </parameter>
+          <parameter name="args" transfer-ownership="none">
+            <type name="DxvaDecodingArgs" c:type="const GstDxvaDecodingArgs*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_picture_id">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="guint8" c:type="guint8"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaH264Decoder" c:type="GstDxvaH264Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="new_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaH264Decoder" c:type="GstDxvaH264Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="output_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaH264Decoder" c:type="GstDxvaH264Decoder*"/>
+          </instance-parameter>
+          <parameter name="frame" transfer-ownership="none">
+            <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+          </parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="buffer_flags" transfer-ownership="none">
+            <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
+          </parameter>
+          <parameter name="display_width" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="display_height" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="start_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaH264Decoder" c:type="GstDxvaH264Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="picture_id" transfer-ownership="none">
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <field name="parent">
+        <type name="GstCodecs.H264Decoder" c:type="GstH264Decoder"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="DxvaH264DecoderPrivate" c:type="GstDxvaH264DecoderPrivate*"/>
+      </field>
+    </class>
+    <record name="DxvaH264DecoderClass" c:type="GstDxvaH264DecoderClass" glib:is-gtype-struct-for="DxvaH264Decoder" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+      <field name="parent_class">
+        <type name="GstCodecs.H264DecoderClass" c:type="GstH264DecoderClass"/>
+      </field>
+      <field name="configure">
+        <callback name="configure">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaH264Decoder" c:type="GstDxvaH264Decoder*"/>
+            </parameter>
+            <parameter name="input_state" transfer-ownership="none">
+              <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+            </parameter>
+            <parameter name="info" transfer-ownership="none">
+              <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+            </parameter>
+            <parameter name="crop_x" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="crop_y" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="coded_width" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="coded_height" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="max_dpb_size" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="new_picture">
+        <callback name="new_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaH264Decoder" c:type="GstDxvaH264Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="duplicate_picture">
+        <callback name="duplicate_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaH264Decoder" c:type="GstDxvaH264Decoder*"/>
+            </parameter>
+            <parameter name="src" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="dst" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_picture_id">
+        <callback name="get_picture_id">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="guint8" c:type="guint8"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaH264Decoder" c:type="GstDxvaH264Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="start_picture">
+        <callback name="start_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaH264Decoder" c:type="GstDxvaH264Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="picture_id" transfer-ownership="none">
+              <type name="guint8" c:type="guint8*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="end_picture" introspectable="0">
+        <callback name="end_picture" introspectable="0">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaH264Decoder" c:type="GstDxvaH264Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="ref_pics" transfer-ownership="none">
+              <array name="GLib.PtrArray" c:type="GPtrArray*">
+                <type name="gpointer" c:type="gpointer"/>
+              </array>
+            </parameter>
+            <parameter name="args" transfer-ownership="none">
+              <type name="DxvaDecodingArgs" c:type="const GstDxvaDecodingArgs*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="output_picture">
+        <callback name="output_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaH264Decoder" c:type="GstDxvaH264Decoder*"/>
+            </parameter>
+            <parameter name="frame" transfer-ownership="none">
+              <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="buffer_flags" transfer-ownership="none">
+              <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
+            </parameter>
+            <parameter name="display_width" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="display_height" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+    </record>
+    <record name="DxvaH264DecoderPrivate" c:type="GstDxvaH264DecoderPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+    </record>
+    <class name="DxvaH265Decoder" c:symbol-prefix="dxva_h265_decoder" c:type="GstDxvaH265Decoder" version="1.24" parent="GstCodecs.H265Decoder" abstract="1" glib:type-name="GstDxvaH265Decoder" glib:get-type="gst_dxva_h265_decoder_get_type" glib:type-struct="DxvaH265DecoderClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+      <virtual-method name="configure">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaH265Decoder" c:type="GstDxvaH265Decoder*"/>
+          </instance-parameter>
+          <parameter name="input_state" transfer-ownership="none">
+            <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+          </parameter>
+          <parameter name="info" transfer-ownership="none">
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+          <parameter name="crop_x" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="crop_y" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="coded_width" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="coded_height" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="max_dpb_size" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="end_picture" introspectable="0">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaH265Decoder" c:type="GstDxvaH265Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="ref_pics" transfer-ownership="none">
+            <array name="GLib.PtrArray" c:type="GPtrArray*">
+              <type name="gpointer" c:type="gpointer"/>
+            </array>
+          </parameter>
+          <parameter name="args" transfer-ownership="none">
+            <type name="DxvaDecodingArgs" c:type="const GstDxvaDecodingArgs*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_picture_id">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="guint8" c:type="guint8"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaH265Decoder" c:type="GstDxvaH265Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="new_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaH265Decoder" c:type="GstDxvaH265Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="output_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaH265Decoder" c:type="GstDxvaH265Decoder*"/>
+          </instance-parameter>
+          <parameter name="frame" transfer-ownership="none">
+            <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+          </parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="buffer_flags" transfer-ownership="none">
+            <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
+          </parameter>
+          <parameter name="display_width" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="display_height" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="start_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaH265Decoder" c:type="GstDxvaH265Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="picture_id" transfer-ownership="none">
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <field name="parent">
+        <type name="GstCodecs.H265Decoder" c:type="GstH265Decoder"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="DxvaH265DecoderPrivate" c:type="GstDxvaH265DecoderPrivate*"/>
+      </field>
+    </class>
+    <record name="DxvaH265DecoderClass" c:type="GstDxvaH265DecoderClass" glib:is-gtype-struct-for="DxvaH265Decoder" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+      <field name="parent_class">
+        <type name="GstCodecs.H265DecoderClass" c:type="GstH265DecoderClass"/>
+      </field>
+      <field name="configure">
+        <callback name="configure">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaH265Decoder" c:type="GstDxvaH265Decoder*"/>
+            </parameter>
+            <parameter name="input_state" transfer-ownership="none">
+              <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+            </parameter>
+            <parameter name="info" transfer-ownership="none">
+              <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+            </parameter>
+            <parameter name="crop_x" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="crop_y" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="coded_width" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="coded_height" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="max_dpb_size" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="new_picture">
+        <callback name="new_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaH265Decoder" c:type="GstDxvaH265Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_picture_id">
+        <callback name="get_picture_id">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="guint8" c:type="guint8"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaH265Decoder" c:type="GstDxvaH265Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="start_picture">
+        <callback name="start_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaH265Decoder" c:type="GstDxvaH265Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="picture_id" transfer-ownership="none">
+              <type name="guint8" c:type="guint8*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="end_picture" introspectable="0">
+        <callback name="end_picture" introspectable="0">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaH265Decoder" c:type="GstDxvaH265Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="ref_pics" transfer-ownership="none">
+              <array name="GLib.PtrArray" c:type="GPtrArray*">
+                <type name="gpointer" c:type="gpointer"/>
+              </array>
+            </parameter>
+            <parameter name="args" transfer-ownership="none">
+              <type name="DxvaDecodingArgs" c:type="const GstDxvaDecodingArgs*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="output_picture">
+        <callback name="output_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaH265Decoder" c:type="GstDxvaH265Decoder*"/>
+            </parameter>
+            <parameter name="frame" transfer-ownership="none">
+              <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="buffer_flags" transfer-ownership="none">
+              <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
+            </parameter>
+            <parameter name="display_width" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="display_height" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+    </record>
+    <record name="DxvaH265DecoderPrivate" c:type="GstDxvaH265DecoderPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+    </record>
+    <class name="DxvaMpeg2Decoder" c:symbol-prefix="dxva_mpeg2_decoder" c:type="GstDxvaMpeg2Decoder" version="1.24" parent="GstCodecs.Mpeg2Decoder" abstract="1" glib:type-name="GstDxvaMpeg2Decoder" glib:get-type="gst_dxva_mpeg2_decoder_get_type" glib:type-struct="DxvaMpeg2DecoderClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+      <virtual-method name="configure">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+          </instance-parameter>
+          <parameter name="input_state" transfer-ownership="none">
+            <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+          </parameter>
+          <parameter name="info" transfer-ownership="none">
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+          <parameter name="crop_x" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="crop_y" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="coded_width" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="coded_height" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="max_dpb_size" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="duplicate_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+          </instance-parameter>
+          <parameter name="src" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="dst" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="end_picture" introspectable="0">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="ref_pics" transfer-ownership="none">
+            <array name="GLib.PtrArray" c:type="GPtrArray*">
+              <type name="gpointer" c:type="gpointer"/>
+            </array>
+          </parameter>
+          <parameter name="args" transfer-ownership="none">
+            <type name="DxvaDecodingArgs" c:type="const GstDxvaDecodingArgs*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_picture_id">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="guint8" c:type="guint8"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="new_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="output_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+          </instance-parameter>
+          <parameter name="frame" transfer-ownership="none">
+            <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+          </parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="buffer_flags" transfer-ownership="none">
+            <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
+          </parameter>
+          <parameter name="display_width" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="display_height" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="start_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="picture_id" transfer-ownership="none">
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <method name="disable_postproc" c:identifier="gst_dxva_mpeg2_decoder_disable_postproc">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <field name="parent">
+        <type name="GstCodecs.Mpeg2Decoder" c:type="GstMpeg2Decoder"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="DxvaMpeg2DecoderPrivate" c:type="GstDxvaMpeg2DecoderPrivate*"/>
+      </field>
+    </class>
+    <record name="DxvaMpeg2DecoderClass" c:type="GstDxvaMpeg2DecoderClass" glib:is-gtype-struct-for="DxvaMpeg2Decoder" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+      <field name="parent_class">
+        <type name="GstCodecs.Mpeg2DecoderClass" c:type="GstMpeg2DecoderClass"/>
+      </field>
+      <field name="configure">
+        <callback name="configure">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+            </parameter>
+            <parameter name="input_state" transfer-ownership="none">
+              <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+            </parameter>
+            <parameter name="info" transfer-ownership="none">
+              <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+            </parameter>
+            <parameter name="crop_x" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="crop_y" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="coded_width" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="coded_height" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="max_dpb_size" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="new_picture">
+        <callback name="new_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="duplicate_picture">
+        <callback name="duplicate_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+            </parameter>
+            <parameter name="src" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="dst" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_picture_id">
+        <callback name="get_picture_id">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="guint8" c:type="guint8"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="start_picture">
+        <callback name="start_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="picture_id" transfer-ownership="none">
+              <type name="guint8" c:type="guint8*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="end_picture" introspectable="0">
+        <callback name="end_picture" introspectable="0">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="ref_pics" transfer-ownership="none">
+              <array name="GLib.PtrArray" c:type="GPtrArray*">
+                <type name="gpointer" c:type="gpointer"/>
+              </array>
+            </parameter>
+            <parameter name="args" transfer-ownership="none">
+              <type name="DxvaDecodingArgs" c:type="const GstDxvaDecodingArgs*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="output_picture">
+        <callback name="output_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaMpeg2Decoder" c:type="GstDxvaMpeg2Decoder*"/>
+            </parameter>
+            <parameter name="frame" transfer-ownership="none">
+              <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="buffer_flags" transfer-ownership="none">
+              <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
+            </parameter>
+            <parameter name="display_width" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="display_height" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+    </record>
+    <record name="DxvaMpeg2DecoderPrivate" c:type="GstDxvaMpeg2DecoderPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+    </record>
+    <record name="DxvaResolution" c:type="GstDxvaResolution" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvatypes.h"/>
+      <field name="width" writable="1">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="height" writable="1">
+        <type name="guint" c:type="guint"/>
+      </field>
+    </record>
+    <class name="DxvaVp8Decoder" c:symbol-prefix="dxva_vp8_decoder" c:type="GstDxvaVp8Decoder" version="1.24" parent="GstCodecs.Vp8Decoder" abstract="1" glib:type-name="GstDxvaVp8Decoder" glib:get-type="gst_dxva_vp8_decoder_get_type" glib:type-struct="DxvaVp8DecoderClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+      <virtual-method name="configure">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaVp8Decoder" c:type="GstDxvaVp8Decoder*"/>
+          </instance-parameter>
+          <parameter name="input_state" transfer-ownership="none">
+            <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+          </parameter>
+          <parameter name="info" transfer-ownership="none">
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+          <parameter name="crop_x" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="crop_y" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="coded_width" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="coded_height" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="max_dpb_size" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="end_picture" introspectable="0">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaVp8Decoder" c:type="GstDxvaVp8Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="ref_pics" transfer-ownership="none">
+            <array name="GLib.PtrArray" c:type="GPtrArray*">
+              <type name="gpointer" c:type="gpointer"/>
+            </array>
+          </parameter>
+          <parameter name="args" transfer-ownership="none">
+            <type name="DxvaDecodingArgs" c:type="const GstDxvaDecodingArgs*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_picture_id">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="guint8" c:type="guint8"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaVp8Decoder" c:type="GstDxvaVp8Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="new_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaVp8Decoder" c:type="GstDxvaVp8Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="output_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaVp8Decoder" c:type="GstDxvaVp8Decoder*"/>
+          </instance-parameter>
+          <parameter name="frame" transfer-ownership="none">
+            <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+          </parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="buffer_flags" transfer-ownership="none">
+            <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
+          </parameter>
+          <parameter name="display_width" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="display_height" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="start_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaVp8Decoder" c:type="GstDxvaVp8Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="picture_id" transfer-ownership="none">
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <field name="parent">
+        <type name="GstCodecs.Vp8Decoder" c:type="GstVp8Decoder"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="DxvaVp8DecoderPrivate" c:type="GstDxvaVp8DecoderPrivate*"/>
+      </field>
+    </class>
+    <record name="DxvaVp8DecoderClass" c:type="GstDxvaVp8DecoderClass" glib:is-gtype-struct-for="DxvaVp8Decoder" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+      <field name="parent_class">
+        <type name="GstCodecs.Vp8DecoderClass" c:type="GstVp8DecoderClass"/>
+      </field>
+      <field name="configure">
+        <callback name="configure">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaVp8Decoder" c:type="GstDxvaVp8Decoder*"/>
+            </parameter>
+            <parameter name="input_state" transfer-ownership="none">
+              <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+            </parameter>
+            <parameter name="info" transfer-ownership="none">
+              <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+            </parameter>
+            <parameter name="crop_x" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="crop_y" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="coded_width" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="coded_height" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="max_dpb_size" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="new_picture">
+        <callback name="new_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaVp8Decoder" c:type="GstDxvaVp8Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_picture_id">
+        <callback name="get_picture_id">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="guint8" c:type="guint8"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaVp8Decoder" c:type="GstDxvaVp8Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="start_picture">
+        <callback name="start_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaVp8Decoder" c:type="GstDxvaVp8Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="picture_id" transfer-ownership="none">
+              <type name="guint8" c:type="guint8*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="end_picture" introspectable="0">
+        <callback name="end_picture" introspectable="0">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaVp8Decoder" c:type="GstDxvaVp8Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="ref_pics" transfer-ownership="none">
+              <array name="GLib.PtrArray" c:type="GPtrArray*">
+                <type name="gpointer" c:type="gpointer"/>
+              </array>
+            </parameter>
+            <parameter name="args" transfer-ownership="none">
+              <type name="DxvaDecodingArgs" c:type="const GstDxvaDecodingArgs*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="output_picture">
+        <callback name="output_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaVp8Decoder" c:type="GstDxvaVp8Decoder*"/>
+            </parameter>
+            <parameter name="frame" transfer-ownership="none">
+              <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="buffer_flags" transfer-ownership="none">
+              <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
+            </parameter>
+            <parameter name="display_width" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="display_height" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+    </record>
+    <record name="DxvaVp8DecoderPrivate" c:type="GstDxvaVp8DecoderPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+    </record>
+    <class name="DxvaVp9Decoder" c:symbol-prefix="dxva_vp9_decoder" c:type="GstDxvaVp9Decoder" version="1.24" parent="GstCodecs.Vp9Decoder" abstract="1" glib:type-name="GstDxvaVp9Decoder" glib:get-type="gst_dxva_vp9_decoder_get_type" glib:type-struct="DxvaVp9DecoderClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+      <virtual-method name="configure">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaVp9Decoder" c:type="GstDxvaVp9Decoder*"/>
+          </instance-parameter>
+          <parameter name="input_state" transfer-ownership="none">
+            <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+          </parameter>
+          <parameter name="info" transfer-ownership="none">
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+          <parameter name="crop_x" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="crop_y" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="coded_width" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="coded_height" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="max_dpb_size" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="duplicate_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaVp9Decoder" c:type="GstDxvaVp9Decoder*"/>
+          </instance-parameter>
+          <parameter name="src" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="dst" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="end_picture" introspectable="0">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaVp9Decoder" c:type="GstDxvaVp9Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="ref_pics" transfer-ownership="none">
+            <array name="GLib.PtrArray" c:type="GPtrArray*">
+              <type name="gpointer" c:type="gpointer"/>
+            </array>
+          </parameter>
+          <parameter name="args" transfer-ownership="none">
+            <type name="DxvaDecodingArgs" c:type="const GstDxvaDecodingArgs*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_picture_id">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="guint8" c:type="guint8"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaVp9Decoder" c:type="GstDxvaVp9Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="new_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaVp9Decoder" c:type="GstDxvaVp9Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="output_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaVp9Decoder" c:type="GstDxvaVp9Decoder*"/>
+          </instance-parameter>
+          <parameter name="frame" transfer-ownership="none">
+            <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+          </parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="buffer_flags" transfer-ownership="none">
+            <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
+          </parameter>
+          <parameter name="display_width" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="display_height" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="start_picture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="decoder" transfer-ownership="none">
+            <type name="DxvaVp9Decoder" c:type="GstDxvaVp9Decoder*"/>
+          </instance-parameter>
+          <parameter name="picture" transfer-ownership="none">
+            <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+          </parameter>
+          <parameter name="picture_id" transfer-ownership="none">
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <field name="parent">
+        <type name="GstCodecs.Vp9Decoder" c:type="GstVp9Decoder"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="DxvaVp9DecoderPrivate" c:type="GstDxvaVp9DecoderPrivate*"/>
+      </field>
+    </class>
+    <record name="DxvaVp9DecoderClass" c:type="GstDxvaVp9DecoderClass" glib:is-gtype-struct-for="DxvaVp9Decoder" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+      <field name="parent_class">
+        <type name="GstCodecs.Vp9DecoderClass" c:type="GstVp9DecoderClass"/>
+      </field>
+      <field name="configure">
+        <callback name="configure">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaVp9Decoder" c:type="GstDxvaVp9Decoder*"/>
+            </parameter>
+            <parameter name="input_state" transfer-ownership="none">
+              <type name="GstVideo.VideoCodecState" c:type="GstVideoCodecState*"/>
+            </parameter>
+            <parameter name="info" transfer-ownership="none">
+              <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+            </parameter>
+            <parameter name="crop_x" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="crop_y" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="coded_width" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="coded_height" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="max_dpb_size" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="new_picture">
+        <callback name="new_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaVp9Decoder" c:type="GstDxvaVp9Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="duplicate_picture">
+        <callback name="duplicate_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaVp9Decoder" c:type="GstDxvaVp9Decoder*"/>
+            </parameter>
+            <parameter name="src" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="dst" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_picture_id">
+        <callback name="get_picture_id">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="guint8" c:type="guint8"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaVp9Decoder" c:type="GstDxvaVp9Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="start_picture">
+        <callback name="start_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaVp9Decoder" c:type="GstDxvaVp9Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="picture_id" transfer-ownership="none">
+              <type name="guint8" c:type="guint8*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="end_picture" introspectable="0">
+        <callback name="end_picture" introspectable="0">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaVp9Decoder" c:type="GstDxvaVp9Decoder*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="ref_pics" transfer-ownership="none">
+              <array name="GLib.PtrArray" c:type="GPtrArray*">
+                <type name="gpointer" c:type="gpointer"/>
+              </array>
+            </parameter>
+            <parameter name="args" transfer-ownership="none">
+              <type name="DxvaDecodingArgs" c:type="const GstDxvaDecodingArgs*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="output_picture">
+        <callback name="output_picture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
+          </return-value>
+          <parameters>
+            <parameter name="decoder" transfer-ownership="none">
+              <type name="DxvaVp9Decoder" c:type="GstDxvaVp9Decoder*"/>
+            </parameter>
+            <parameter name="frame" transfer-ownership="none">
+              <type name="GstVideo.VideoCodecFrame" c:type="GstVideoCodecFrame*"/>
+            </parameter>
+            <parameter name="picture" transfer-ownership="none">
+              <type name="GstCodecs.CodecPicture" c:type="GstCodecPicture*"/>
+            </parameter>
+            <parameter name="buffer_flags" transfer-ownership="none">
+              <type name="GstVideo.VideoBufferFlags" c:type="GstVideoBufferFlags"/>
+            </parameter>
+            <parameter name="display_width" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+            <parameter name="display_height" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+    </record>
+    <record name="DxvaVp9DecoderPrivate" c:type="GstDxvaVp9DecoderPrivate" disguised="1" opaque="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+    </record>
+    <function-macro name="IS_DXVA_AV1_DECODER" c:identifier="GST_IS_DXVA_AV1_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_DXVA_AV1_DECODER_CLASS" c:identifier="GST_IS_DXVA_AV1_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvaav1decoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_DXVA_H264_DECODER" c:identifier="GST_IS_DXVA_H264_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_DXVA_H264_DECODER_CLASS" c:identifier="GST_IS_DXVA_H264_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah264decoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_DXVA_H265_DECODER" c:identifier="GST_IS_DXVA_H265_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_DXVA_H265_DECODER_CLASS" c:identifier="GST_IS_DXVA_H265_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvah265decoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_DXVA_MPEG2_DECODER" c:identifier="GST_IS_DXVA_MPEG2_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_DXVA_MPEG2_DECODER_CLASS" c:identifier="GST_IS_DXVA_MPEG2_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvampeg2decoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_DXVA_VP8_DECODER" c:identifier="GST_IS_DXVA_VP8_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_DXVA_VP8_DECODER_CLASS" c:identifier="GST_IS_DXVA_VP8_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp8decoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_DXVA_VP9_DECODER" c:identifier="GST_IS_DXVA_VP9_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_DXVA_VP9_DECODER_CLASS" c:identifier="GST_IS_DXVA_VP9_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvavp9decoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function name="dxva_codec_to_string" c:identifier="gst_dxva_codec_to_string" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvautils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvautils.cpp">the string representation of @codec</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="codec" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/dxva/gstdxvautils.cpp">a #GstDxvaCodec</doc>
+          <type name="DxvaCodec" c:type="GstDxvaCodec"/>
+        </parameter>
+      </parameters>
+    </function>
+  </namespace>
+</repository>

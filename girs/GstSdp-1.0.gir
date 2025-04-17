@@ -1,10 +1,11 @@
 <!-- This file was automatically generated from C sources - DO NOT EDIT!
 To affect the contents of this file, edit the original C definitions,
 and/or use gtk-doc annotations.  -->
-<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:doc="http://www.gtk.org/introspection/doc/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
   <include name="Gst" version="1.0"/>
   <package name="gstreamer-sdp-1.0"/>
   <c:include name="gst/sdp/sdp.h"/>
+  <doc:format name="unknown"/>
   <namespace name="GstSdp" version="1.0" shared-library="libgstsdp-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
     <enumeration name="MIKEYCacheType" c:type="GstMIKEYCacheType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstmikey.h">The different cache types</doc>

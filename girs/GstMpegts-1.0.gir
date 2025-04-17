@@ -1,10 +1,11 @@
 <!-- This file was automatically generated from C sources - DO NOT EDIT!
 To affect the contents of this file, edit the original C definitions,
 and/or use gtk-doc annotations.  -->
-<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:doc="http://www.gtk.org/introspection/doc/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
   <include name="Gst" version="1.0"/>
   <package name="gstreamer-mpegts-1.0"/>
   <c:include name="gst/mpegts/mpegts.h"/>
+  <doc:format name="unknown"/>
   <namespace name="GstMpegts" version="1.0" shared-library="libgstmpegts-1.0.so.0" c:identifier-prefixes="GstMpegts" c:symbol-prefixes="gst_mpegts,gst">
     <enumeration name="ATSCDescriptorType" c:type="GstMpegtsATSCDescriptorType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-atsc-descriptor.h">These values correspond to the registered descriptor type from

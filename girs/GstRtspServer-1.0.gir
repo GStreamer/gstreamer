@@ -1,12 +1,13 @@
 <!-- This file was automatically generated from C sources - DO NOT EDIT!
 To affect the contents of this file, edit the original C definitions,
 and/or use gtk-doc annotations.  -->
-<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:doc="http://www.gtk.org/introspection/doc/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
   <include name="Gst" version="1.0"/>
   <include name="GstNet" version="1.0"/>
   <include name="GstRtsp" version="1.0"/>
   <package name="gstreamer-rtsp-server-1.0"/>
   <c:include name="gst/rtsp-server/rtsp-server.h"/>
+  <doc:format name="unknown"/>
   <namespace name="GstRtspServer" version="1.0" shared-library="libgstrtspserver-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
     <function-macro name="IS_RTSP_ADDRESS_POOL" c:identifier="GST_IS_RTSP_ADDRESS_POOL" introspectable="0">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-address-pool.h"/>
