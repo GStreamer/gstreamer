@@ -1914,7 +1914,7 @@ schedule_append_to_buffer_task (GstSourceBuffer * self)
 /**
  * gst_source_buffer_append_buffer:
  * @self: #GstSourceBuffer instance
- * @buf: (transfer none):The media data to append
+ * @buf: (transfer full):The media data to append
  * @error: (out) (optional) (nullable) (transfer full): the resulting error or `NULL`
  *
  * Schedules the bytes inside @buf to be processed by @self. When it is possible
@@ -1973,7 +1973,7 @@ gst_source_buffer_append_buffer (GstSourceBuffer * self, GstBuffer * buf,
 
   g_return_val_if_fail (self->pending_data == NULL, FALSE);
 
-  set_pending_data_unlocked (self, gst_buffer_ref (buf));
+  set_pending_data_unlocked (self, buf);
   set_updating (self);
 
   schedule_event_unlocked (self, ON_UPDATE_START);
@@ -1986,6 +1986,7 @@ gst_source_buffer_append_buffer (GstSourceBuffer * self, GstBuffer * buf,
 error:
   TRACKS_UNLOCK (self);
   GST_OBJECT_UNLOCK (self);
+  gst_clear_buffer (&buf);
   return FALSE;
 }
 
