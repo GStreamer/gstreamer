@@ -682,7 +682,7 @@ the track buffers for playback purposes.
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">#GstSourceBuffer instance</doc>
             <type name="SourceBuffer" c:type="GstSourceBuffer*"/>
           </instance-parameter>
-          <parameter name="buf" transfer-ownership="none">
+          <parameter name="buf" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">The media data to append</doc>
             <type name="Gst.Buffer" c:type="GstBuffer*"/>
           </parameter>
