@@ -1946,6 +1946,7 @@ _av1_decide_profile (GstVaAV1Enc * self, guint rt_format,
       }
     }
   }
+  gst_caps_unref (allowed_caps);
 
   if (candidates->len == 0) {
     GST_ERROR_OBJECT (self, "No available profile in caps");
@@ -1991,7 +1992,7 @@ out:
   if (ret_profile != VAProfileNone)
     GST_INFO_OBJECT (self, "Decide the profile: %s",
         gst_va_profile_name (ret_profile));
-
+  g_array_unref (candidates);
   return ret_profile;
 }
 
