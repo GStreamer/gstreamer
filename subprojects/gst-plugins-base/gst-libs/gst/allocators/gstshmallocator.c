@@ -54,11 +54,6 @@
 #include <sys/mman.h>
 #endif
 
-struct _GstShmAllocator
-{
-  GstFdAllocator parent;
-};
-
 #define GST_CAT_DEFAULT gst_shm_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 

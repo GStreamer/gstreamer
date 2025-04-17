@@ -46,6 +46,14 @@ G_BEGIN_DECLS
  */
 
 /**
+ * GstShmAllocator.parent_instance:
+ *
+ * Parent instance.
+ *
+ * Since: 1.28
+ */
+
+ /**
  * GstShmAllocatorClass.parent_class:
  *
  * Parent Class.
@@ -62,7 +70,11 @@ G_BEGIN_DECLS
  */
 #define GST_TYPE_SHM_ALLOCATOR gst_shm_allocator_get_type ()
 GST_ALLOCATORS_API
-G_DECLARE_FINAL_TYPE (GstShmAllocator, gst_shm_allocator, GST, SHM_ALLOCATOR, GstFdAllocator)
+G_DECLARE_DERIVABLE_TYPE (GstShmAllocator, gst_shm_allocator, GST, SHM_ALLOCATOR, GstFdAllocator)
+
+struct _GstShmAllocatorClass {
+  GstFdAllocatorClass parent_class;
+};
 
 GST_ALLOCATORS_API void gst_shm_allocator_init_once (void);
 GST_ALLOCATORS_API GstAllocator* gst_shm_allocator_get (void);

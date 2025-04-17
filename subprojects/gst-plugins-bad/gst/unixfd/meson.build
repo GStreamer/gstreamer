@@ -1,5 +1,6 @@
 unixfd_sources = [
   'gstunixfd.c',
+  'gstunixfdallocator.c',
   'gstunixfdsink.c',
   'gstunixfdsrc.c',
 ]

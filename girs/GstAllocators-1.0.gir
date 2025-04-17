@@ -512,6 +512,10 @@ gst_shm_allocator_init_once() has not been previously called.</doc>
           <type name="none" c:type="void"/>
         </return-value>
       </function>
+      <field name="parent_instance" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstshmallocator.h">Parent instance.</doc>
+        <type name="FdAllocator" c:type="GstFdAllocator"/>
+      </field>
     </class>
     <record name="ShmAllocatorClass" c:type="GstShmAllocatorClass" glib:is-gtype-struct-for="ShmAllocator">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstshmallocator.h"/>

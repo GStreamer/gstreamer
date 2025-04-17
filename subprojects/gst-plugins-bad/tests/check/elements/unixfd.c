@@ -224,6 +224,76 @@ GST_START_TEST (test_unixfd_segment)
 
 GST_END_TEST;
 
+GST_START_TEST (test_unixfd_copy)
+{
+  GError *error = NULL;
+
+  /* Ensure we don't have socket from previous failed test */
+  gchar *tempdir = g_dir_make_tmp ("unixfd-test-XXXXXX", &error);
+  g_assert_no_error (error);
+  gchar *socket_path = g_strdup_printf ("%s/socket", tempdir);
+
+  GstCaps *caps = gst_caps_new_empty_simple ("video/x-raw");
+
+  /* Setup service */
+  gchar *pipeline_str =
+      g_strdup_printf
+      ("appsrc name=src format=time ! unixfdsink socket-path=%s sync=false async=false wait-for-connection=true",
+      socket_path);
+  GstElement *pipeline_service = gst_parse_launch (pipeline_str, &error);
+  g_assert_no_error (error);
+  fail_unless (gst_element_set_state (pipeline_service,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+  GstElement *appsrc = gst_bin_get_by_name (GST_BIN (pipeline_service), "src");
+  gst_object_unref (appsrc);
+  g_free (pipeline_str);
+
+  /* Setup client */
+  pipeline_str =
+      g_strdup_printf
+      ("unixfdsrc socket-path=%s ! appsink name=sink sync=false async=false",
+      socket_path);
+  GstElement *pipeline_client = gst_parse_launch (pipeline_str, &error);
+  g_assert_no_error (error);
+  fail_unless (gst_element_set_state (pipeline_client,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+  GstElement *appsink = gst_bin_get_by_name (GST_BIN (pipeline_client), "sink");
+  gst_object_unref (appsink);
+  g_free (pipeline_str);
+
+  /* Send a buffer with system memory */
+  GstSegment segment;
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  const char content[] = "Hello world!";
+  GstBuffer *buf = gst_buffer_new_memdup (content, strlen (content));
+  GstSample *sample = gst_sample_new (buf, caps, &segment, NULL);
+  gst_app_src_push_sample (GST_APP_SRC (appsrc), sample);
+  gst_sample_unref (sample);
+  gst_buffer_unref (buf);
+
+  /* Wait for it */
+  sample = gst_app_sink_pull_sample (GST_APP_SINK (appsink));
+  buf = gst_sample_get_buffer (sample);
+  fail_unless (gst_buffer_memcmp (buf, 0, content, strlen (content)) == 0);
+  gst_sample_unref (sample);
+
+  /* Teardown */
+  fail_unless (gst_element_set_state (pipeline_client,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (gst_element_set_state (pipeline_service,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+
+  g_rmdir (tempdir);
+  g_free (tempdir);
+
+  gst_object_unref (pipeline_service);
+  gst_object_unref (pipeline_client);
+  g_free (socket_path);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 unixfd_suite (void)
 {
@@ -233,6 +303,7 @@ unixfd_suite (void)
   suite_add_tcase (s, tc);
   tcase_add_test (tc, test_unixfd_videotestsrc);
   tcase_add_test (tc, test_unixfd_segment);
+  tcase_add_test (tc, test_unixfd_copy);
 
   return s;
 }
