@@ -857,7 +857,7 @@
                         "writable": false
                     },
                     "silent": {
-                        "blurb": "Don't emit notify for input, output and dropped buffers",
+                        "blurb": "Don't emit notify for dropped buffers",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,

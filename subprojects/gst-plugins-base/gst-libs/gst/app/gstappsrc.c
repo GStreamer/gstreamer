@@ -624,7 +624,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "silent",
-          "Don't emit notify for input, output and dropped buffers",
+          "Don't emit notify for dropped buffers",
           DEFAULT_SILENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -1104,8 +1104,6 @@ gst_app_src_send_event (GstElement * element, GstEvent * event)
       g_mutex_unlock (&priv->mutex);
 
       if (!priv->silent) {
-        g_object_notify (G_OBJECT (appsrc), "in");
-        g_object_notify (G_OBJECT (appsrc), "out");
         g_object_notify (G_OBJECT (appsrc), "dropped");
       }
       break;
@@ -1201,8 +1199,6 @@ gst_app_src_stop (GstBaseSrc * bsrc)
   g_mutex_unlock (&priv->mutex);
 
   if (!priv->silent) {
-    g_object_notify (G_OBJECT (appsrc), "in");
-    g_object_notify (G_OBJECT (appsrc), "out");
     g_object_notify (G_OBJECT (appsrc), "dropped");
   }
 
@@ -1355,8 +1351,6 @@ gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment)
     g_mutex_unlock (&priv->mutex);
 
     if (!priv->silent) {
-      g_object_notify (G_OBJECT (appsrc), "in");
-      g_object_notify (G_OBJECT (appsrc), "out");
       g_object_notify (G_OBJECT (appsrc), "dropped");
     }
   } else {
@@ -1808,10 +1802,6 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
     priv->wait_status &= ~STREAM_WAITING;
   }
   g_mutex_unlock (&priv->mutex);
-
-  if (ret == GST_FLOW_OK && !priv->silent) {
-    g_object_notify (G_OBJECT (appsrc), "out");
-  }
 
   return ret;
 
@@ -2691,10 +2681,6 @@ gst_app_src_push_internal (GstAppSrc * appsrc, GstBuffer * buffer,
     g_cond_broadcast (&priv->cond);
 
   g_mutex_unlock (&priv->mutex);
-
-  if (!appsrc->priv->silent) {
-    g_object_notify (G_OBJECT (appsrc), "in");
-  }
 
   return GST_FLOW_OK;
 
