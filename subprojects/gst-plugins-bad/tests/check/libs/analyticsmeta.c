@@ -1089,10 +1089,11 @@ GST_START_TEST (test_add_tracking_meta)
   GstBuffer *buf1, *buf2;
   GstAnalyticsRelationMetaInitParams init_params = { 5, 150 };
   GstAnalyticsRelationMeta *rmeta;
-  GstAnalyticsTrackingMtd tracking_mtd;
-  guint tracking_id;
-  GstClockTime tracking_observation_time_1;
-  gboolean ret;
+  GstAnalyticsTrackingMtd tracking_mtd, tracking_mtd2;
+  guint64 tracking_id, ret_trk_id;
+  GstClockTime time_1, time_2, time_ret_f, time_ret_l;
+  gboolean ret, found = FALSE, lost;
+  gpointer state = NULL;
 
   /* Verify we can add multiple trackings to relation metadata
    */
@@ -1100,9 +1101,9 @@ GST_START_TEST (test_add_tracking_meta)
   buf1 = gst_buffer_new ();
   rmeta = gst_buffer_add_analytics_relation_meta_full (buf1, &init_params);
   tracking_id = 1;
-  tracking_observation_time_1 = GST_BUFFER_TIMESTAMP (buf1);
+  time_1 = GST_BUFFER_TIMESTAMP (buf1);
   ret = gst_analytics_relation_meta_add_tracking_mtd (rmeta, tracking_id,
-      tracking_observation_time_1, &tracking_mtd);
+      time_1, &tracking_mtd);
   fail_unless (ret == TRUE);
 
   gst_buffer_unref (buf1);
@@ -1111,13 +1112,128 @@ GST_START_TEST (test_add_tracking_meta)
   rmeta = gst_buffer_add_analytics_relation_meta_full (buf2, &init_params);
   tracking_id = 1;
   ret = gst_analytics_relation_meta_add_tracking_mtd (rmeta, tracking_id,
-      tracking_observation_time_1, &tracking_mtd);
+      time_1, &tracking_mtd);
   fail_unless (ret == TRUE);
+
+  /* add itermadiate tracking point to very first and last are correct */
+  time_2 = GST_BUFFER_TIMESTAMP (buf2) + 1;
+  ret = gst_analytics_tracking_mtd_update_last_seen (&tracking_mtd, time_2);
+
+  /* add last tracking point */
+  time_2 += 1;
+  ret = gst_analytics_tracking_mtd_update_last_seen (&tracking_mtd, time_2);
+
+  /* Verify we can retrieve tracking mtd */
+  found = gst_analytics_relation_meta_iterate (rmeta, &state,
+      GST_ANALYTICS_MTD_TYPE_ANY, &tracking_mtd2);
+
+  /* Verify retrieved mtd is correct */
+  fail_unless (found == TRUE);
+  fail_unless (tracking_mtd2.id == tracking_mtd.id);
+  fail_unless (tracking_mtd2.meta == tracking_mtd.meta);
+
+  /* Verify specific tracking mtd data */
+  gst_analytics_tracking_mtd_get_info (&tracking_mtd2, &ret_trk_id, &time_ret_f,
+      &time_ret_l, &lost);
+  fail_unless (tracking_id == ret_trk_id);
+  fail_unless (time_1 == time_ret_f);
+  fail_unless (time_2 == time_ret_l);
+  fail_unless (lost == FALSE);
+
+  /* Set tracking lost */
+  gst_analytics_tracking_mtd_set_lost (&tracking_mtd);
+
+  /* Verify tracking lost was updated but other tracking data are still
+   * available */
+  gst_analytics_tracking_mtd_get_info (&tracking_mtd2, &ret_trk_id, &time_ret_f,
+      &time_ret_l, &lost);
+
+  fail_unless (tracking_id == ret_trk_id);
+  fail_unless (time_1 == time_ret_f);
+  fail_unless (time_2 == time_ret_l);
+  fail_unless (lost == TRUE);
 
   gst_buffer_unref (buf2);
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_od_trk_relation)
+{
+  /* Verify we retrive tracking from relation with OD */
+  GstBuffer *buf1;
+  guint64 tracking_id;
+  GstAnalyticsRelationMetaInitParams init_params = { 5, 150 };
+  GstAnalyticsRelationMeta *rmeta;
+  GstAnalyticsTrackingMtd tracking_mtd, tracking_mtd2;
+  GstClockTime tracking_observation_time_1;
+  gboolean ret, found = FALSE;
+  gpointer state = NULL;
+  GQuark type = g_quark_from_string ("dog");
+  gint x = 20;
+  gint y = 20;
+  gint w = 10;
+  gint h = 15;
+  gfloat loc_conf_lvl = 0.6f;
+  GstAnalyticsODMtd od_mtd, od_mtd2;
+
+
+  /* creating a buffer where we add a relation-meta */
+  buf1 = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta_full (buf1, &init_params);
+  tracking_id = 1;
+  tracking_observation_time_1 = GST_BUFFER_TIMESTAMP (buf1);
+  ret = gst_analytics_relation_meta_add_tracking_mtd (rmeta, tracking_id,
+      tracking_observation_time_1, &tracking_mtd);
+  fail_unless (ret == TRUE);
+
+  /* adding object-detection to rmeta */
+  ret = gst_analytics_relation_meta_add_od_mtd (rmeta, type, x, y,
+      w, h, loc_conf_lvl, &od_mtd);
+
+  /* set relation from object-detection to tracking */
+  gst_analytics_relation_meta_set_relation (rmeta,
+      GST_ANALYTICS_REL_TYPE_RELATE_TO, od_mtd.id, tracking_mtd.id);
+
+  /* query for related mtd of any type on od_mtd */
+  found = gst_analytics_relation_meta_get_direct_related (rmeta, od_mtd.id,
+      GST_ANALYTICS_REL_TYPE_RELATE_TO, GST_ANALYTICS_MTD_TYPE_ANY, &state,
+      &tracking_mtd2);
+
+  fail_unless (found == TRUE);
+  fail_unless (tracking_mtd2.id == tracking_mtd.id);
+  fail_unless (tracking_mtd2.meta == tracking_mtd.meta);
+
+  state = NULL;
+  /* query for related mtd of any type on tracking. */
+  found = gst_analytics_relation_meta_get_direct_related (rmeta,
+      tracking_mtd.id, GST_ANALYTICS_REL_TYPE_RELATE_TO,
+      GST_ANALYTICS_MTD_TYPE_ANY, &state, &od_mtd2);
+
+  /* since relation are directed and we only set a relation from
+   * object-detection to tracking, we shouldn't find any relation */
+  fail_unless (found == FALSE);
+
+  /* set relation from tracking to object-detection */
+  gst_analytics_relation_meta_set_relation (rmeta,
+      GST_ANALYTICS_REL_TYPE_RELATE_TO, tracking_mtd.id, od_mtd.id);
+
+  state = NULL;
+  /* query for related mtd of any type on tracking. */
+  found = gst_analytics_relation_meta_get_direct_related (rmeta,
+      tracking_mtd.id, GST_ANALYTICS_REL_TYPE_RELATE_TO,
+      GST_ANALYTICS_MTD_TYPE_ANY, &state, &od_mtd2);
+
+  /* now we should find as it was added */
+  fail_unless (found == TRUE);
+  fail_unless (od_mtd2.id == od_mtd.id);
+  fail_unless (od_mtd2.meta == od_mtd.meta);
+
+  gst_buffer_unref (buf1);
+}
+
+GST_END_TEST;
+
 
 GST_START_TEST (test_verify_mtd_clear)
 {
@@ -1905,6 +2021,7 @@ analyticmeta_suite (void)
   tc_chain_tracking = tcase_create ("Tracking Mtd");
   suite_add_tcase (s, tc_chain_tracking);
   tcase_add_test (tc_chain_tracking, test_add_tracking_meta);
+  tcase_add_test (tc_chain_tracking, test_od_trk_relation);
 
   tc_chain_segmentation = tcase_create ("Segmentation Mtd");
   suite_add_tcase (s, tc_chain_segmentation);
