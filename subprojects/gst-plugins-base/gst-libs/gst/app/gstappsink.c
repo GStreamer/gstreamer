@@ -445,7 +445,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "silent",
-          "Don't emit notify for input, output and dropped buffers",
+          "Don't emit notify for dropped buffers",
           DEFAULT_SILENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
@@ -1025,8 +1025,6 @@ gst_app_sink_stop (GstBaseSink * psink)
   g_mutex_unlock (&priv->mutex);
 
   if (!priv->silent) {
-    g_object_notify (G_OBJECT (appsink), "in");
-    g_object_notify (G_OBJECT (appsink), "out");
     g_object_notify (G_OBJECT (appsink), "dropped");
   }
 
@@ -1132,8 +1130,6 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
       g_mutex_unlock (&priv->mutex);
 
       if (!priv->silent) {
-        g_object_notify (G_OBJECT (appsink), "in");
-        g_object_notify (G_OBJECT (appsink), "out");
         g_object_notify (G_OBJECT (appsink), "dropped");
       }
       break;
@@ -1385,10 +1381,6 @@ restart:
   if (priv->callbacks)
     callbacks = callbacks_ref (priv->callbacks);
   g_mutex_unlock (&priv->mutex);
-
-  if (!priv->silent) {
-    g_object_notify (G_OBJECT (appsink), "in");
-  }
 
   if (callbacks && callbacks->callbacks.new_sample) {
     ret = callbacks->callbacks.new_sample (appsink, callbacks->user_data);
@@ -2445,12 +2437,10 @@ gst_app_sink_try_pull_object (GstAppSink * appsink, GstClockTime timeout)
 
   obj = dequeue_object (appsink);
 
-  gboolean notify_out = FALSE;
   /* convert buffer and buffer list to sample */
   if (GST_IS_BUFFER (obj)) {
     GST_DEBUG_OBJECT (appsink, "we have a buffer %p", obj);
     priv->out += 1;
-    notify_out = !priv->silent;
     priv->sample = gst_sample_make_writable (priv->sample);
     gst_sample_set_buffer_list (priv->sample, NULL);
     gst_sample_set_buffer (priv->sample, GST_BUFFER_CAST (obj));
@@ -2459,7 +2449,6 @@ gst_app_sink_try_pull_object (GstAppSink * appsink, GstClockTime timeout)
   } else if (GST_IS_BUFFER_LIST (obj)) {
     GST_DEBUG_OBJECT (appsink, "we have a list %p", obj);
     priv->out += gst_buffer_list_length (GST_BUFFER_LIST_CAST (obj));
-    notify_out = !priv->silent;
     priv->sample = gst_sample_make_writable (priv->sample);
     gst_sample_set_buffer (priv->sample, NULL);
     gst_sample_set_buffer_list (priv->sample, GST_BUFFER_LIST_CAST (obj));
@@ -2473,10 +2462,6 @@ gst_app_sink_try_pull_object (GstAppSink * appsink, GstClockTime timeout)
     g_cond_signal (&priv->cond);
 
   g_mutex_unlock (&priv->mutex);
-
-  if (notify_out) {
-    g_object_notify (G_OBJECT (appsink), "out");
-  }
 
   return ret;
 
