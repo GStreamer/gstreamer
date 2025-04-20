@@ -181,6 +181,11 @@ ConverterRootSignature::ConverterRootSignature (D3D_ROOT_SIGNATURE_VERSION
             D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE));
   }
 
+  range_v1_1.push_back (CD3DX12_DESCRIPTOR_RANGE1
+      (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 6, 0,
+          D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE |
+          D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE));
+
   param.InitAsDescriptorTable (range_v1_1.size (),
       range_v1_1.data (), D3D12_SHADER_VISIBILITY_PIXEL);
   param_list_v1_1.push_back (param);
@@ -190,11 +195,9 @@ ConverterRootSignature::ConverterRootSignature (D3D_ROOT_SIGNATURE_VERSION
   sampler_range_v1_1.push_back (CD3DX12_DESCRIPTOR_RANGE1
       (D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, 0,
           D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE));
-  if (build_lut) {
-    sampler_range_v1_1.push_back (CD3DX12_DESCRIPTOR_RANGE1
-        (D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1, 0,
-            D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE));
-  }
+  sampler_range_v1_1.push_back (CD3DX12_DESCRIPTOR_RANGE1
+      (D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 1, 0,
+          D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE));
   param.InitAsDescriptorTable (sampler_range_v1_1.size (),
       sampler_range_v1_1.data (), D3D12_SHADER_VISIBILITY_PIXEL);
   param_list_v1_1.push_back (param);
@@ -206,7 +209,7 @@ ConverterRootSignature::ConverterRootSignature (D3D_ROOT_SIGNATURE_VERSION
 
   /* PS alpha constant value, maybe updated */
   ps_root_const_ = (UINT) param_list_v1_1.size ();
-  param.InitAsConstants (8, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+  param.InitAsConstants (12, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
   param_list_v1_1.push_back (param);
 
   /* PS CBV, this is static */

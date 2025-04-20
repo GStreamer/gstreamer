@@ -155,7 +155,7 @@ struct PSAlphaFactor
 {
   FLOAT alpha;
   FLOAT padding[3];
-  FLOAT padding_other[4];
+  FLOAT padding_other[8];
 };
 
 struct PSConstBuffer
@@ -2132,6 +2132,7 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
   }
 
   self->device = (GstD3D11Device *) gst_object_ref (device);
+  memset (&priv->alpha_data, 0, sizeof (priv->alpha_data));
   priv->alpha_data.alpha = 1.0;
   priv->in_info = *in_info;
   priv->preproc_info = *in_info;

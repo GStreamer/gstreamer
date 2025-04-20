@@ -44,4 +44,8 @@ gboolean  gst_d3d12_converter_is_color_balance_needed (gfloat hue,
                                                        gfloat brightness,
                                                        gfloat contrast);
 
+GST_D3D12_API
+gboolean  gst_d3d12_converter_set_remap (GstD3D12Converter * converter,
+                                         ID3D12Resource * remap_vector);
+
 G_END_DECLS

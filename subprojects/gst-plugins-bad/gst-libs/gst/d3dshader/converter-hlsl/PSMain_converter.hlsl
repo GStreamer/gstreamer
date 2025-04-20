@@ -21,8 +21,10 @@
 cbuffer PsConstBufferDyn : register(b1)
 {
   float alphaFactor;
-  float3 padding_0;
+  uint remapUV;
+  float2 padding_0;
   float4 hsvcFactor;
+  float4 bg_color;
 };
 
 struct PSColorSpace
@@ -49,6 +51,7 @@ Texture2D shaderTexture_2 : register(t2);
 Texture2D shaderTexture_3 : register(t3);
 Texture1D<float> gammaDecLUT : register(t4);
 Texture1D<float> gammaEncLUT: register(t5);
+Texture2D samplerRemap : register(t6);
 
 SamplerState samplerState : register(s0);
 SamplerState lutSamplerState : register(s1);
@@ -1460,15 +1463,28 @@ OUTPUT_TYPE ENTRY_POINT (PS_INPUT input)
   SAMPLER g_sampler;
   CONVERTER g_converter;
   OUTPUT_BUILDER g_builder;
-  return g_builder.Build (g_converter.Execute (g_sampler.Execute (input.Texture)));
+  float2 uv;
+  [branch] if (remapUV) {
+    float4 val = samplerRemap.Sample(lutSamplerState, input.Texture);
+    if (val.w < 0.5)
+      return g_builder.Build (g_converter.Execute (bg_color));
+
+    uv = val.xy;
+  } else {
+    uv = input.Texture;
+  }
+
+  return g_builder.Build (g_converter.Execute (g_sampler.Execute (uv)));
 }
 #else /* BUILDING_HLSL */
 static const char str_PSMain_converter[] =
 "cbuffer PsConstBufferDyn : register(b1)\n"
 "{\n"
 "  float alphaFactor;\n"
-"  float3 padding_0;\n"
+"  uint remapUV;\n"
+"  float2 padding_0;\n"
 "  float4 hsvcFactor;\n"
+"  float4 bg_color;\n"
 "};\n"
 "\n"
 "struct PSColorSpace\n"
@@ -1495,6 +1511,7 @@ static const char str_PSMain_converter[] =
 "Texture2D shaderTexture_3 : register(t3);\n"
 "Texture1D<float> gammaDecLUT : register(t4);\n"
 "Texture1D<float> gammaEncLUT: register(t5);\n"
+"Texture2D samplerRemap : register(t6);\n"
 "\n"
 "SamplerState samplerState : register(s0);\n"
 "SamplerState lutSamplerState : register(s1);\n"
@@ -2906,6 +2923,17 @@ static const char str_PSMain_converter[] =
 "  SAMPLER g_sampler;\n"
 "  CONVERTER g_converter;\n"
 "  OUTPUT_BUILDER g_builder;\n"
-"  return g_builder.Build (g_converter.Execute (g_sampler.Execute (input.Texture)));\n"
+"  float2 uv;\n"
+"  [branch] if (remapUV) {\n"
+"    float4 val = samplerRemap.Sample(lutSamplerState, input.Texture);\n"
+"    if (val.w < 0.5)\n"
+"      return g_builder.Build (g_converter.Execute (bg_color));\n"
+"\n"
+"    uv = val.xy;\n"
+"  } else {\n"
+"    uv = input.Texture;\n"
+"  }\n"
+"\n"
+"  return g_builder.Build (g_converter.Execute (g_sampler.Execute (uv)));\n"
 "}\n";
 #endif

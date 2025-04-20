@@ -167,8 +167,10 @@ struct PSConstBuffer
 struct PSConstBufferDyn
 {
   float alphaFactor;
-  float padding[3];
+  UINT samplerRemap;
+  float padding[2];
   float hsvcFactor[4];
+  float bgColor[4];
 };
 
 struct VertexData
@@ -284,6 +286,7 @@ struct ConvertCtxCommon
   ConvertCtxCommon()
   {
     const_data_dyn.alphaFactor = 1.0;
+    const_data_dyn.samplerRemap = 0;
     const_data_dyn.hsvcFactor[0] = DEFAULT_HUE;
     const_data_dyn.hsvcFactor[1] = DEFAULT_SATURATION;
     const_data_dyn.hsvcFactor[2] = DEFAULT_BRIGHTNESS;
@@ -317,6 +320,7 @@ struct ConvertCtxCommon
   ComPtr<ID3D12Resource> gamma_enc_lut;
   ComPtr<ID3D12DescriptorHeap> gamma_lut_heap;
   ComPtr<ID3D12DescriptorHeap> sampler_heap;
+  ComPtr<ID3D12Resource> sampler_remap;
   D3D12_VIEWPORT viewport[GST_VIDEO_MAX_PLANES];
   D3D12_RECT scissor_rect[GST_VIDEO_MAX_PLANES];
   ComPtr<ID3D12Fence> setup_fence;
@@ -427,6 +431,7 @@ struct _GstD3D12ConverterPrivate
   gboolean clear_background = FALSE;
   FLOAT clear_color[4][4];
   GstD3D12ColorMatrix clear_color_matrix;
+  GstD3D12ColorMatrix in_clear_color_matrix;
 
   GstVideoOrientationMethod video_direction;
   gboolean color_balance_enabled = FALSE;
@@ -997,6 +1002,9 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   auto num_srv = ctx->pipeline_data[0].crs->GetNumSrv ();
   if (have_lut)
     num_srv += 2;
+
+  /* for sampler remap SRV */
+  num_srv++;
 
   if (priv->max_srv_desc < num_srv)
     priv->max_srv_desc = num_srv;
@@ -1723,11 +1731,13 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
 {
   auto priv = self->priv;
   GstD3D12ColorMatrix *m = &priv->clear_color_matrix;
+  GstD3D12ColorMatrix *in_m = &priv->in_clear_color_matrix;
   const GstVideoInfo *out_info = &priv->out_info;
   gdouble a;
   gdouble rgb[3];
   gdouble converted[3];
   GstVideoFormat format = GST_VIDEO_INFO_FORMAT (out_info);
+  auto comm = priv->main_ctx->comm;
 
   a = ((priv->border_color & 0xffff000000000000) >> 48) / (gdouble) G_MAXUINT16;
   rgb[0] =
@@ -1738,11 +1748,17 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
 
   for (guint i = 0; i < 3; i++) {
     converted[i] = 0;
+    comm->const_data_dyn.bgColor[i] = 0;
     for (guint j = 0; j < 3; j++) {
       converted[i] += m->matrix[i][j] * rgb[j];
+      comm->const_data_dyn.bgColor[i] += in_m->matrix[i][j] * rgb[j];
     }
     converted[i] += m->offset[i];
+    comm->const_data_dyn.bgColor[i] += in_m->offset[i];
+
     converted[i] = CLAMP (converted[i], m->min[i], m->max[i]);
+    comm->const_data_dyn.bgColor[i] = CLAMP (comm->const_data_dyn.bgColor[i],
+        in_m->min[i], in_m->max[i]);
   }
 
   GST_DEBUG_OBJECT (self, "Calculated background color ARGB: %f, %f, %f, %f",
@@ -2184,7 +2200,28 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
         &yuv_info, &priv->clear_color_matrix);
   }
 
-  gst_d3d12_converter_calculate_border_color (self);
+  if (GST_VIDEO_INFO_IS_RGB (&priv->in_info)) {
+    GstVideoInfo rgb_info = priv->in_info;
+    rgb_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+    gst_d3d12_color_range_adjust_matrix_unorm (&rgb_info, &priv->in_info,
+        &priv->in_clear_color_matrix);
+  } else {
+    GstVideoInfo rgb_info;
+    GstVideoInfo yuv_info;
+
+    gst_video_info_set_format (&rgb_info, GST_VIDEO_FORMAT_RGBA64_LE,
+        priv->in_info.width, priv->in_info.height);
+    convert_info_gray_to_yuv (&priv->in_info, &yuv_info);
+
+    if (yuv_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN ||
+        yuv_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
+      GST_WARNING_OBJECT (self, "Invalid matrix is detected");
+      yuv_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+    }
+
+    gst_d3d12_rgb_to_yuv_matrix_unorm (&rgb_info,
+        &yuv_info, &priv->in_clear_color_matrix);
+  }
 
   PSConstBuffer const_data[2];
   CONVERT_TYPE convert_type[2];
@@ -2324,6 +2361,8 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CmdQueue * queue,
       return nullptr;
     }
   }
+
+  gst_d3d12_converter_calculate_border_color (self);
 
   D3D12_DESCRIPTOR_HEAP_DESC srv_heap_desc = { };
   srv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -2509,6 +2548,12 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
     device->CopyDescriptorsSimple (2, cpu_handle,
         GetCPUDescriptorHandleForHeapStart (comm->gamma_lut_heap),
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    cpu_handle.Offset (priv->srv_inc_size);
+  }
+
+  if (comm->const_data_dyn.samplerRemap) {
+    device->CreateShaderResourceView (comm->sampler_remap.Get (),
+        nullptr, cpu_handle);
   }
 
   if (priv->clear_background) {
@@ -2576,6 +2621,12 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
   if (ctx->vertex_upload) {
     gst_d3d12_fence_data_push (fence_data,
         FENCE_NOTIFY_COM (ctx->vertex_upload.Detach ()));
+  }
+
+  if (ctx->comm->sampler_remap) {
+    ComPtr < ID3D12Resource > remap_clone = ctx->comm->sampler_remap;
+    gst_d3d12_fence_data_push (fence_data,
+        FENCE_NOTIFY_COM (remap_clone.Detach ()));
   }
 
   auto sampler = comm->sampler_heap.Get ();
@@ -3052,4 +3103,23 @@ gst_d3d12_converter_is_color_balance_needed (gfloat hue, gfloat saturation,
   }
 
   return FALSE;
+}
+
+gboolean
+gst_d3d12_converter_set_remap (GstD3D12Converter * converter,
+    ID3D12Resource * remap_vector)
+{
+  g_return_val_if_fail (GST_IS_D3D12_CONVERTER (converter), FALSE);
+
+  auto priv = converter->priv;
+  std::lock_guard < std::mutex > lk (priv->prop_lock);
+  auto comm = priv->main_ctx->comm;
+
+  comm->sampler_remap = remap_vector;
+  if (remap_vector)
+    comm->const_data_dyn.samplerRemap = 1;
+  else
+    comm->const_data_dyn.samplerRemap = 0;
+
+  return TRUE;
 }
