@@ -39,8 +39,7 @@ RUN choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System'
 RUN choco install -y git --params '/NoAutoCrlf /NoCredentialManager /NoShellHereIntegration /NoGuiHereIntegration /NoShellIntegration'
 RUN choco install -y git-lfs
 RUN choco install -y 7zip
-# See https://gitlab.freedesktop.org/gstreamer/cerbero/-/issues/427
-RUN choco install -y python3 --version=3.11.2 --installargs 'AssociateFiles=1 PrependPath=1 Include_pip=1 Include_dev=1'
+RUN choco install -y python3 --installargs 'AssociateFiles=1 PrependPath=1 Include_pip=1 Include_dev=1'
 RUN choco install -y msys2 --params '/NoPath /NoUpdate /InstallDir:C:\\msys64'
 
 # Install Wix v5 (complete install, no NuGet) from MSI
@@ -61,7 +60,7 @@ RUN C:\upgrade_msys2.ps1
 
 RUN C:\msys64\msys2_shell.cmd -ucrt64 -defterm -here -no-start -use-full-path -lc 'pacman -S --noconfirm mingw-w64-ucrt-x86_64-toolchain ninja openssh'
 
-RUN python -m pip install meson==1.5.2 python-gitlab
+RUN python -m pip install meson==1.7.2 python-gitlab setuptools wheel
 
 RUN 'git config --global user.email "cirunner@gstreamer.freedesktop.org"; git config --global user.name "GStreamer CI system"'
 
