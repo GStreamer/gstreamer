@@ -149,9 +149,8 @@ static gboolean
 gst_gl_window_x11_open (GstGLWindow * window, GError ** error)
 {
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
-  GstGLDisplayX11 *display_x11 = (GstGLDisplayX11 *) window->display;
 
-  window_x11->device = display_x11->display;
+  window_x11->device = (Display *) gst_gl_display_get_handle (window->display);
 //  window_x11->device = XOpenDisplay (display_x11->name);
   if (window_x11->device == NULL) {
     g_set_error (error, GST_GL_WINDOW_ERROR,
