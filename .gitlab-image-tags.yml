@@ -13,4 +13,4 @@ variables:
 
   ABI_CHECK_TAG: '2025-07-15.0'
 
-  WINDOWS_TAG: '2025-06-30.0'
+  WINDOWS_TAG: '2025-07-03.0'
