@@ -51,6 +51,7 @@
 #include "gstd3d12swapchainsink.h"
 #include "gstd3d12mipmapping.h"
 #include "gstd3d12deinterlace.h"
+#include "gstd3d12remap.h"
 #include <windows.h>
 #include <versionhelpers.h>
 #include <wrl.h>
@@ -192,6 +193,8 @@ plugin_init (GstPlugin * plugin)
       "d3d12mipmapping", GST_RANK_NONE, GST_TYPE_D3D12_MIP_MAPPING);
   gst_element_register (plugin,
       "d3d12deinterlace", GST_RANK_NONE, GST_TYPE_D3D12_DEINTERLACE);
+  gst_element_register (plugin,
+      "d3d12remap", GST_RANK_NONE, GST_TYPE_D3D12_REMAP);
 
   g_object_set_data_full (G_OBJECT (plugin),
       "plugin-d3d12-shutdown", (gpointer) "shutdown-data",

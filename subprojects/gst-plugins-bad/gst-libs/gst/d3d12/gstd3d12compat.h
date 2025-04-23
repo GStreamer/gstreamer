@@ -58,4 +58,17 @@ GetDesc (T resource)
   return desc;
 #endif
 }
+
+template <typename T>
+LUID
+GetAdapterLuid (T device)
+{
+#if defined(_MSC_VER) || !defined(_WIN32)
+  return device->GetAdapterLuid ();
+#else
+  LUID luid;
+  device->GetAdapterLuid (&luid);
+  return luid;
+#endif
+}
 #endif /* __cplusplus */
