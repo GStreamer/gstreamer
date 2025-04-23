@@ -22,9 +22,8 @@
  *
  * Plugin for [AJA](https://www.aja.com) capture and output cards.
  *
- * This plugin requires the AJA NTV2 SDK version 16 or newer and works with
- * both the [Open Source](https://github.com/aja-video/ntv2.git) and
- * [proprietary](https://www.aja.com/family/developer) version.
+ * This plugin requires the AJA NTV2 SDK version 17 or newer and works with
+ * The AJA SDK can be found [here](https://github.com/aja-video/libajantv2).
  *
  * Since: 1.24
  *
