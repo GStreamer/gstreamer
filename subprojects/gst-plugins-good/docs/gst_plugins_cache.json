@@ -29615,10 +29615,11 @@
         "description": "Encodes and demuxes/decodes YUV4MPEG streams (mjpegtools)",
         "elements": {
             "y4mdec": {
-                "author": "David Schleef <ds@schleef.org>",
+                "author": "David Schleef <ds@schleef.org>\nVictor Jaquez <vjaquez@igalia.com>",
                 "description": "Demuxes/decodes YUV4MPEG streams",
                 "hierarchy": [
                     "GstY4mDec",
+                    "GstBaseParse",
                     "GstElement",
                     "GstObject",
                     "GInitiallyUnowned",

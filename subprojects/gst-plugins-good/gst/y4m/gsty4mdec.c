@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) 2010 David Schleef <ds@schleef.org>
+ * Copyright (C) 2025 Igalia, S.L.
+ *                    author Victor Jaquez <vjaquez@igalia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -33,6 +35,8 @@
 #include "config.h"
 #endif
 
+#include <gst/base/gstbytereader.h>
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -40,36 +44,25 @@
 #include "gsty4mformat.h"
 
 #define MAX_SIZE 32768
+#define MAX_STREAM_HEADER_LENGTH 128
+
+#define Y4M_STREAM_MAGIC "YUV4MPEG2"
+#define Y4M_STREAM_MAGIC_LEN 9
+#define Y4M_FRAME_MAGIC "FRAME"
+#define Y4M_FRAME_MAGIC_LEN 5
 
 GST_DEBUG_CATEGORY (y4mdec_debug);
 #define GST_CAT_DEFAULT y4mdec_debug
 
 /* prototypes */
 
-static void gst_y4m_dec_set_property (GObject * object,
-    guint property_id, const GValue * value, GParamSpec * pspec);
-static void gst_y4m_dec_get_property (GObject * object,
-    guint property_id, GValue * value, GParamSpec * pspec);
-static void gst_y4m_dec_dispose (GObject * object);
-static void gst_y4m_dec_finalize (GObject * object);
-
-static GstFlowReturn gst_y4m_dec_chain (GstPad * pad, GstObject * parent,
-    GstBuffer * buffer);
-static gboolean gst_y4m_dec_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event);
-
-static gboolean gst_y4m_dec_src_event (GstPad * pad, GstObject * parent,
-    GstEvent * event);
-static gboolean gst_y4m_dec_src_query (GstPad * pad, GstObject * parent,
-    GstQuery * query);
-
-static GstStateChangeReturn
-gst_y4m_dec_change_state (GstElement * element, GstStateChange transition);
-
-enum
-{
-  PROP_0
-};
+static gboolean gst_y4m_dec_stop (GstBaseParse * parse);
+static gboolean gst_y4m_dec_start (GstBaseParse * parse);
+static GstFlowReturn gst_y4m_dec_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
+static gboolean gst_y4m_dec_sink_query (GstBaseParse * parse, GstQuery * query);
+static gboolean gst_y4m_dec_sink_event (GstBaseParse * parse, GstEvent * event);
+static gboolean gst_y4m_dec_src_event (GstBaseParse * parse, GstEvent * event);
 
 /* pad templates */
 
@@ -93,22 +86,30 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 /* class initialization */
 #define gst_y4m_dec_parent_class parent_class
-G_DEFINE_TYPE (GstY4mDec, gst_y4m_dec, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstY4mDec, gst_y4m_dec, GST_TYPE_BASE_PARSE);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (y4mdec, "y4mdec", GST_RANK_SECONDARY,
     gst_y4m_dec_get_type (), GST_DEBUG_CATEGORY_INIT (y4mdec_debug, "y4mdec", 0,
         "y4mdec element"));
+
+enum ParserState
+{
+  PARSER_STATE_NONE = 1 << 0,
+  PARSER_STATE_GOT_HEADER = 1 << 1,
+  PARSER_STATE_GOT_FRAME = 2 << 1,
+};
+
 static void
 gst_y4m_dec_class_init (GstY4mDecClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
 
-  gobject_class->set_property = gst_y4m_dec_set_property;
-  gobject_class->get_property = gst_y4m_dec_get_property;
-  gobject_class->dispose = gst_y4m_dec_dispose;
-  gobject_class->finalize = gst_y4m_dec_finalize;
-
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_y4m_dec_change_state);
+  parse_class->stop = GST_DEBUG_FUNCPTR (gst_y4m_dec_stop);
+  parse_class->start = GST_DEBUG_FUNCPTR (gst_y4m_dec_start);
+  parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_y4m_dec_handle_frame);
+  parse_class->sink_query = GST_DEBUG_FUNCPTR (gst_y4m_dec_sink_query);
+  parse_class->sink_event = GST_DEBUG_FUNCPTR (gst_y4m_dec_sink_event);
+  parse_class->src_event = GST_DEBUG_FUNCPTR (gst_y4m_dec_src_event);
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_y4m_dec_src_template);
@@ -117,176 +118,46 @@ gst_y4m_dec_class_init (GstY4mDecClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "YUV4MPEG demuxer/decoder", "Codec/Demuxer",
-      "Demuxes/decodes YUV4MPEG streams", "David Schleef <ds@schleef.org>");
+      "Demuxes/decodes YUV4MPEG streams", "David Schleef <ds@schleef.org>\n"
+      "Victor Jaquez <vjaquez@igalia.com>");
 }
 
 static void
 gst_y4m_dec_init (GstY4mDec * y4mdec)
 {
-  y4mdec->adapter = gst_adapter_new ();
-
-  y4mdec->sinkpad =
-      gst_pad_new_from_static_template (&gst_y4m_dec_sink_template, "sink");
-  gst_pad_set_event_function (y4mdec->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_y4m_dec_sink_event));
-  gst_pad_set_chain_function (y4mdec->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_y4m_dec_chain));
-  gst_element_add_pad (GST_ELEMENT (y4mdec), y4mdec->sinkpad);
-
-  y4mdec->srcpad = gst_pad_new_from_static_template (&gst_y4m_dec_src_template,
-      "src");
-  gst_pad_set_event_function (y4mdec->srcpad,
-      GST_DEBUG_FUNCPTR (gst_y4m_dec_src_event));
-  gst_pad_set_query_function (y4mdec->srcpad,
-      GST_DEBUG_FUNCPTR (gst_y4m_dec_src_query));
-  gst_pad_use_fixed_caps (y4mdec->srcpad);
-  gst_element_add_pad (GST_ELEMENT (y4mdec), y4mdec->srcpad);
-
 }
 
-void
-gst_y4m_dec_set_property (GObject * object, guint property_id,
-    const GValue * value, GParamSpec * pspec)
+static gboolean
+gst_y4m_dec_reset (GstBaseParse * parse)
 {
-  g_return_if_fail (GST_IS_Y4M_DEC (object));
+  GstY4mDec *y4mdec = GST_Y4M_DEC (parse);
 
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
+  GST_TRACE_OBJECT (y4mdec, "start");
+
+  y4mdec->state = PARSER_STATE_NONE;
+
+  gst_base_parse_set_min_frame_size (parse, MAX_STREAM_HEADER_LENGTH);
+
+  return TRUE;
 }
 
-void
-gst_y4m_dec_get_property (GObject * object, guint property_id,
-    GValue * value, GParamSpec * pspec)
+static gboolean
+gst_y4m_dec_start (GstBaseParse * parse)
 {
-  g_return_if_fail (GST_IS_Y4M_DEC (object));
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
+  return gst_y4m_dec_reset (parse);
 }
 
-void
-gst_y4m_dec_dispose (GObject * object)
+static gboolean
+gst_y4m_dec_stop (GstBaseParse * parse)
 {
-  GstY4mDec *y4mdec;
+  GstY4mDec *y4mdec = GST_Y4M_DEC (parse);
 
-  g_return_if_fail (GST_IS_Y4M_DEC (object));
-  y4mdec = GST_Y4M_DEC (object);
-
-  /* clean up as possible.  may be called multiple times */
-  if (y4mdec->adapter) {
-    g_object_unref (y4mdec->adapter);
-    y4mdec->adapter = NULL;
+  if (y4mdec->pool) {
+    gst_buffer_pool_set_active (y4mdec->pool, FALSE);
+    gst_clear_object (&y4mdec->pool);
   }
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-void
-gst_y4m_dec_finalize (GObject * object)
-{
-  g_return_if_fail (GST_IS_Y4M_DEC (object));
-
-  /* clean up object here */
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static GstStateChangeReturn
-gst_y4m_dec_change_state (GstElement * element, GstStateChange transition)
-{
-  GstY4mDec *y4mdec;
-  GstStateChangeReturn ret;
-
-  g_return_val_if_fail (GST_IS_Y4M_DEC (element), GST_STATE_CHANGE_FAILURE);
-
-  y4mdec = GST_Y4M_DEC (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (y4mdec->pool) {
-        gst_buffer_pool_set_active (y4mdec->pool, FALSE);
-        gst_object_unref (y4mdec->pool);
-      }
-      y4mdec->pool = NULL;
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
-
-  return ret;
-}
-
-static GstClockTime
-gst_y4m_dec_frames_to_timestamp (GstY4mDec * y4mdec, gint64 frame_index)
-{
-  if (frame_index == -1)
-    return -1;
-
-  return gst_util_uint64_scale (frame_index, GST_SECOND * y4mdec->info.fps_d,
-      y4mdec->info.fps_n);
-}
-
-static gint64
-gst_y4m_dec_timestamp_to_frames (GstY4mDec * y4mdec, GstClockTime timestamp)
-{
-  if (timestamp == -1)
-    return -1;
-
-  return gst_util_uint64_scale (timestamp, y4mdec->info.fps_n,
-      GST_SECOND * y4mdec->info.fps_d);
-}
-
-static gint64
-gst_y4m_dec_bytes_to_frames (GstY4mDec * y4mdec, gint64 bytes)
-{
-  if (bytes == -1)
-    return -1;
-
-  if (bytes < y4mdec->header_size)
-    return 0;
-  return (bytes - y4mdec->header_size) / (y4mdec->info.size + 6);
-}
-
-static guint64
-gst_y4m_dec_frames_to_bytes (GstY4mDec * y4mdec, gint64 frame_index)
-{
-  if (frame_index == -1)
-    return -1;
-
-  return y4mdec->header_size + (y4mdec->info.size + 6) * frame_index;
-}
-
-static GstClockTime
-gst_y4m_dec_bytes_to_timestamp (GstY4mDec * y4mdec, gint64 bytes)
-{
-  if (bytes == -1)
-    return -1;
-
-  return gst_y4m_dec_frames_to_timestamp (y4mdec,
-      gst_y4m_dec_bytes_to_frames (y4mdec, bytes));
+  return TRUE;
 }
 
 static GstVideoFormat
@@ -379,7 +250,7 @@ parse_ratio (const char *param, gulong * n, gulong * d)
 }
 
 static gboolean
-gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
+gst_y4m_dec_parse_header (GstY4mDec * y4mdec, const char *header)
 {
   guint len;
   char **params;
@@ -497,429 +368,407 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
   if (!gst_y4m_video_unpadded_info (&y4mdec->info, &y4mdec->out_info))
     return FALSE;
 
-  y4mdec->padded = !gst_video_info_is_equal (&y4mdec->info, &y4mdec->out_info);
+  y4mdec->passthrough =
+      gst_video_info_is_equal (&y4mdec->info, &y4mdec->out_info);
 
   return TRUE;
 }
 
-static GstFlowReturn
-gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+static inline gboolean
+gst_y4m_dec_negotiate_pool (GstY4mDec * y4mdec, GstCaps * caps)
 {
-  GstY4mDec *y4mdec;
-  int n_avail;
-  GstFlowReturn flow_ret = GST_FLOW_OK;
-#define MAX_HEADER_LENGTH 80
-  char header[MAX_HEADER_LENGTH];
-  int i;
-  int len;
+  GstBaseParse *parse = GST_BASE_PARSE (y4mdec);
+  GstBufferPool *pool = NULL;
+  GstAllocator *allocator = NULL;
+  GstAllocationParams params = { 0, };
+  GstStructure *config;
+  guint size = GST_VIDEO_INFO_SIZE (&y4mdec->out_info), min = 0, max = 0;
+  GstQuery *query;
+  gboolean our_pool = FALSE, ret;
 
-  y4mdec = GST_Y4M_DEC (parent);
+  if (y4mdec->pool) {
+    gst_buffer_pool_set_active (y4mdec->pool, FALSE);
+    gst_object_unref (y4mdec->pool);
+  }
+  y4mdec->pool = NULL;
+  y4mdec->has_video_meta = FALSE;
 
-  GST_DEBUG_OBJECT (y4mdec, "chain");
+  query = gst_query_new_allocation (caps, FALSE);
+  if (gst_pad_peer_query (GST_BASE_PARSE_SRC_PAD (parse), query)) {
+    y4mdec->has_video_meta =
+        gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
 
-  if (GST_BUFFER_IS_DISCONT (buffer)) {
-    GST_DEBUG ("got discont");
-    gst_adapter_clear (y4mdec->adapter);
+    if (gst_query_get_n_allocation_params (query) > 0) {
+      gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+    }
+
+    if (gst_query_get_n_allocation_pools (query) > 0) {
+      gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+      size = MAX (size, GST_VIDEO_INFO_SIZE (&y4mdec->out_info));
+    }
   }
 
-  gst_adapter_push (y4mdec->adapter, buffer);
-  n_avail = gst_adapter_available (y4mdec->adapter);
-
-  if (!y4mdec->have_header) {
-    gboolean ret;
-    GstCaps *caps;
-    GstQuery *query;
-
-    if (n_avail < MAX_HEADER_LENGTH)
-      return GST_FLOW_OK;
-
-    gst_adapter_copy (y4mdec->adapter, (guint8 *) header, 0, MAX_HEADER_LENGTH);
-
-    header[MAX_HEADER_LENGTH - 1] = 0;
-    for (i = 0; i < MAX_HEADER_LENGTH; i++) {
-      if (header[i] == 0x0a)
-        header[i] = 0;
-    }
-
-    ret = gst_y4m_dec_parse_header (y4mdec, header);
-    if (!ret) {
-      GST_ELEMENT_ERROR (y4mdec, STREAM, DECODE,
-          ("Failed to parse YUV4MPEG header"), (NULL));
-      return GST_FLOW_ERROR;
-    }
-
-    y4mdec->header_size = strlen (header) + 1;
-    gst_adapter_flush (y4mdec->adapter, y4mdec->header_size);
-
-    caps = gst_video_info_to_caps (&y4mdec->info);
-    ret = gst_pad_set_caps (y4mdec->srcpad, caps);
-
-    query = gst_query_new_allocation (caps, FALSE);
-    y4mdec->video_meta = FALSE;
-
-    if (y4mdec->pool) {
-      gst_buffer_pool_set_active (y4mdec->pool, FALSE);
-      gst_object_unref (y4mdec->pool);
-    }
-    y4mdec->pool = NULL;
-
-    if (gst_pad_peer_query (y4mdec->srcpad, query)) {
-      y4mdec->video_meta =
-          gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-
-      /* We only need a pool if we need to do stride conversion for downstream */
-      if (!y4mdec->video_meta && y4mdec->padded) {
-        GstBufferPool *pool = NULL;
-        GstAllocator *allocator = NULL;
-        GstAllocationParams params;
-        GstStructure *config;
-        guint size, min, max;
-
-        if (gst_query_get_n_allocation_params (query) > 0) {
-          gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
-        } else {
-          allocator = NULL;
-          gst_allocation_params_init (&params);
-        }
-
-        if (gst_query_get_n_allocation_pools (query) > 0) {
-          gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min,
-              &max);
-          size = MAX (size, GST_VIDEO_INFO_SIZE (&y4mdec->out_info));
-        } else {
-          pool = NULL;
-          size = GST_VIDEO_INFO_SIZE (&y4mdec->out_info);
-          min = max = 0;
-        }
-
-        if (pool == NULL) {
-          pool = gst_video_buffer_pool_new ();
-        }
-
-        config = gst_buffer_pool_get_config (pool);
-        gst_buffer_pool_config_set_params (config, caps, size, min, max);
-        gst_buffer_pool_config_set_allocator (config, allocator, &params);
-        gst_buffer_pool_set_config (pool, config);
-
-        if (allocator)
-          gst_object_unref (allocator);
-
-        y4mdec->pool = pool;
-      }
-    } else if (y4mdec->padded) {
-      GstBufferPool *pool;
-      GstStructure *config;
-
-      /* No pool, create our own if we need to do stride conversion */
+  do {
+    if (!pool) {
       pool = gst_video_buffer_pool_new ();
-      {
-        gchar *name = g_strdup_printf ("%s-pool", GST_OBJECT_NAME (y4mdec));
-        g_object_set (pool, "name", name, NULL);
-        g_free (name);
-      }
-      config = gst_buffer_pool_get_config (pool);
-      gst_buffer_pool_config_set_params (config, caps,
-          GST_VIDEO_INFO_SIZE (&y4mdec->out_info), 0, 0);
-      gst_buffer_pool_set_config (pool, config);
-      y4mdec->pool = pool;
+      our_pool = TRUE;
     }
-    if (y4mdec->pool) {
-      gst_buffer_pool_set_active (y4mdec->pool, TRUE);
-    }
-    gst_query_unref (query);
-    gst_caps_unref (caps);
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+    gst_buffer_pool_config_set_allocator (config, allocator, &params);
+
+    gst_clear_object (&allocator);
+
+    ret = gst_buffer_pool_set_config (pool, config);
     if (!ret) {
-      GST_DEBUG_OBJECT (y4mdec, "Couldn't set caps on src pad");
-      return GST_FLOW_ERROR;
-    }
-
-    y4mdec->have_header = TRUE;
-  }
-
-  if (y4mdec->have_new_segment) {
-    GstEvent *event;
-    GstClockTime start, stop, time;
-    GstSegment seg;
-
-
-    if (y4mdec->segment.format == GST_FORMAT_BYTES) {
-      start = gst_y4m_dec_bytes_to_timestamp (y4mdec, y4mdec->segment.start);
-      stop = gst_y4m_dec_bytes_to_timestamp (y4mdec, y4mdec->segment.stop);
-      time = gst_y4m_dec_bytes_to_timestamp (y4mdec, y4mdec->segment.time);
-    } else if (y4mdec->segment.format == GST_FORMAT_TIME) {
-      start = y4mdec->segment.start;
-      stop = y4mdec->segment.stop;
-      time = y4mdec->segment.time;
-    } else {
-      GST_ERROR_OBJECT (y4mdec, "invalid segment format");
-      return GST_FLOW_ERROR;
-    }
-
-    gst_segment_init (&seg, GST_FORMAT_TIME);
-    seg.start = start;
-    seg.stop = stop;
-    seg.time = time;
-
-    event = gst_event_new_segment (&seg);
-    GST_DEBUG ("pushing segment event: %" GST_PTR_FORMAT, event);
-
-    gst_pad_push_event (y4mdec->srcpad, event);
-
-    y4mdec->have_new_segment = FALSE;
-    if (y4mdec->segment.format == GST_FORMAT_BYTES) {
-      y4mdec->frame_index = gst_y4m_dec_bytes_to_frames (y4mdec,
-          y4mdec->segment.time);
-    } else {
-      y4mdec->frame_index = 0;
-    }
-    GST_DEBUG ("new frame_index %d", y4mdec->frame_index);
-  }
-
-  while (1) {
-    n_avail = gst_adapter_available (y4mdec->adapter);
-    if (n_avail < MAX_HEADER_LENGTH)
-      break;
-
-    gst_adapter_copy (y4mdec->adapter, (guint8 *) header, 0, MAX_HEADER_LENGTH);
-    header[MAX_HEADER_LENGTH - 1] = 0;
-    for (i = 0; i < MAX_HEADER_LENGTH; i++) {
-      if (header[i] == 0x0a)
-        header[i] = 0;
-    }
-    if (memcmp (header, "FRAME", 5) != 0) {
-      GST_ELEMENT_ERROR (y4mdec, STREAM, DECODE,
-          ("Failed to parse YUV4MPEG frame"), (NULL));
-      flow_ret = GST_FLOW_ERROR;
-      break;
-    }
-
-    len = strlen (header);
-    if (n_avail < y4mdec->info.size + len + 1) {
-      /* not enough data */
-      GST_TRACE ("not enough data for frame %d < %" G_GSIZE_FORMAT,
-          n_avail, y4mdec->info.size + len + 1);
-      break;
-    }
-
-    gst_adapter_flush (y4mdec->adapter, len + 1);
-
-    buffer = gst_adapter_take_buffer (y4mdec->adapter, y4mdec->info.size);
-
-    GST_BUFFER_TIMESTAMP (buffer) =
-        gst_y4m_dec_frames_to_timestamp (y4mdec, y4mdec->frame_index);
-    GST_BUFFER_DURATION (buffer) =
-        gst_y4m_dec_frames_to_timestamp (y4mdec, y4mdec->frame_index + 1) -
-        GST_BUFFER_TIMESTAMP (buffer);
-
-    y4mdec->frame_index++;
-
-    if (y4mdec->video_meta) {
-      gst_buffer_add_video_meta_full (buffer, 0, y4mdec->info.finfo->format,
-          y4mdec->info.width, y4mdec->info.height, y4mdec->info.finfo->n_planes,
-          y4mdec->info.offset, y4mdec->info.stride);
-    } else if (y4mdec->padded) {
-      GstBuffer *outbuf;
-      GstVideoFrame iframe, oframe;
-      gint i, j;
-      gint w, h, istride, ostride;
-      guint8 *src, *dest;
-
-      /* Allocate a new buffer and do stride conversion */
-      g_assert (y4mdec->pool != NULL);
-
-      flow_ret = gst_buffer_pool_acquire_buffer (y4mdec->pool, &outbuf, NULL);
-      if (flow_ret != GST_FLOW_OK) {
-        gst_buffer_unref (buffer);
+      if (our_pool) {
+        GST_ERROR_OBJECT (y4mdec, "pool %" GST_PTR_FORMAT
+            " doesn't accept configuration", pool);
+        gst_clear_object (&pool);
+        /* bail */
         break;
+      } else {
+        GST_WARNING_OBJECT (y4mdec, "pool %" GST_PTR_FORMAT "doesn't accept "
+            "configuration. Trying an internal pool", pool);
+        max = min = 0;
+        gst_clear_object (&pool);
       }
+    }
+  } while (!ret);
 
-      gst_video_frame_map (&iframe, &y4mdec->info, buffer, GST_MAP_READ);
-      gst_video_frame_map (&oframe, &y4mdec->out_info, outbuf, GST_MAP_WRITE);
+  y4mdec->pool = pool;
 
-      for (i = 0; i < 3; i++) {
-        w = GST_VIDEO_FRAME_COMP_WIDTH (&iframe, i);
-        h = GST_VIDEO_FRAME_COMP_HEIGHT (&iframe, i);
-        istride = GST_VIDEO_FRAME_COMP_STRIDE (&iframe, i);
-        ostride = GST_VIDEO_FRAME_COMP_STRIDE (&oframe, i);
-        src = GST_VIDEO_FRAME_COMP_DATA (&iframe, i);
-        dest = GST_VIDEO_FRAME_COMP_DATA (&oframe, i);
+  gst_query_unref (query);
+  gst_caps_unref (caps);
 
-        for (j = 0; j < h; j++) {
-          memcpy (dest, src, w);
+  return ret;
+}
 
-          dest += ostride;
-          src += istride;
+static inline gboolean
+gst_y4m_dec_negotiate (GstY4mDec * y4mdec)
+{
+  GstBaseParse *parse = GST_BASE_PARSE (y4mdec);
+  GstCaps *caps;
+
+  caps = gst_video_info_to_caps (&y4mdec->out_info);
+  if (!gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps)) {
+    GST_ERROR_OBJECT (y4mdec, "Failed to set caps in src pad: %" GST_PTR_FORMAT,
+        caps);
+    gst_caps_unref (caps);
+    return FALSE;
+  }
+
+  return gst_y4m_dec_negotiate_pool (y4mdec, caps);
+}
+
+static inline gboolean
+gst_y4m_dec_parse_magic (GstY4mDec * y4mdec, gpointer data, gsize size,
+    char header[MAX_STREAM_HEADER_LENGTH + 10])
+{
+  GstByteReader br;
+  guint i;
+
+  gst_byte_reader_init (&br, data, size);
+
+  /* what ever until '\n' */
+  for (i = 0; i < MAX_STREAM_HEADER_LENGTH; i++) {
+    header[i] = gst_byte_reader_get_uint8_unchecked (&br);
+    if (header[i] == '\n') {
+      header[i] = 0;
+      break;
+    }
+  }
+
+  if (i == MAX_STREAM_HEADER_LENGTH) {
+    GST_ERROR_OBJECT (y4mdec, "Y4M header is too large");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_y4m_dec_process_header (GstY4mDec * y4mdec, GstBuffer * buffer,
+    gint * skipsize)
+{
+  GstMapInfo mapinfo;
+  char stream_hdr[MAX_STREAM_HEADER_LENGTH + 10];
+  gboolean ret = FALSE;
+
+  if (!gst_buffer_map (buffer, &mapinfo, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (y4mdec, "Cannot map input buffer");
+    return FALSE;
+  }
+
+  g_assert (mapinfo.size >= MAX_STREAM_HEADER_LENGTH);
+
+  if (!gst_y4m_dec_parse_magic (y4mdec, mapinfo.data, mapinfo.size, stream_hdr))
+    goto bail;
+
+  if (!gst_y4m_dec_parse_header (y4mdec, stream_hdr))
+    goto bail;
+
+  if (!gst_y4m_dec_negotiate (y4mdec))
+    goto bail;
+
+  ret = TRUE;
+
+  /* let's skip the stream header + '\n' */
+  *skipsize = strlen (stream_hdr) + 1;
+
+bail:
+  gst_buffer_unmap (buffer, &mapinfo);
+  return ret;
+}
+
+enum
+{
+  FRAME_NOT_FOUND = -1,
+  HEADER_RESYNC = -2,
+};
+
+inline static gint
+gst_y4m_dec_frame_hdr_len (GstY4mDec * y4mdec, GstBuffer * buffer,
+    gsize * buffer_size)
+{
+  GstMapInfo mapinfo;
+  char frame_hdr[MAX_STREAM_HEADER_LENGTH + 10];
+  gint ret = FRAME_NOT_FOUND;
+
+  if (!gst_buffer_map (buffer, &mapinfo, GST_MAP_READ))
+    return FALSE;
+
+  if (!gst_y4m_dec_parse_magic (y4mdec, mapinfo.data, mapinfo.size, frame_hdr))
+    goto bail;
+
+  if (strncmp (frame_hdr, Y4M_FRAME_MAGIC, Y4M_FRAME_MAGIC_LEN) != 0) {
+    if (strncmp (frame_hdr, Y4M_STREAM_MAGIC, Y4M_STREAM_MAGIC_LEN) == 0) {
+      return HEADER_RESYNC;
+    } else {
+      GST_ERROR_OBJECT (y4mdec, "Frame header not found");
+      goto bail;
+    }
+  }
+
+  /* FRAME + '\n' */
+  ret = strlen (frame_hdr) + 1;
+  *buffer_size = mapinfo.size;
+
+bail:
+  gst_buffer_unmap (buffer, &mapinfo);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_y4m_dec_copy_buffer (GstY4mDec * y4mdec, GstBuffer * in_buffer,
+    GstBuffer ** out_buffer_ptr)
+{
+  GstVideoFrame in_frame, out_frame;
+  GstFlowReturn ret;
+  gboolean copied;
+  GstBuffer *out_buffer = NULL;
+
+  /* do memcpy hopefully in next element's pool */
+  g_assert (y4mdec->pool);
+
+  if (!gst_buffer_pool_set_active (y4mdec->pool, TRUE)) {
+    GST_ERROR_OBJECT (y4mdec, "Cannot activate internal pool");
+    goto error;
+  }
+
+  ret = gst_buffer_pool_acquire_buffer (y4mdec->pool, &out_buffer, NULL);
+  if (ret != GST_FLOW_OK) {
+    return ret;
+  }
+
+  if (!gst_video_frame_map (&in_frame, &y4mdec->info, in_buffer, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (y4mdec, "Cannot map input frame");
+    goto error;
+  }
+
+  if (!gst_video_frame_map (&out_frame, &y4mdec->out_info, out_buffer,
+          GST_MAP_WRITE)) {
+    GST_ERROR_OBJECT (y4mdec, "Cannot map output frame");
+    gst_video_frame_unmap (&in_frame);
+    goto error;
+  }
+
+  copied = gst_video_frame_copy (&out_frame, &in_frame);
+
+  gst_video_frame_unmap (&out_frame);
+  gst_video_frame_unmap (&in_frame);
+
+  if (!copied) {
+    GST_ERROR_OBJECT (y4mdec, "Cannot copy frame");
+    goto error;
+  }
+
+  *out_buffer_ptr = out_buffer;
+
+  return GST_FLOW_OK;
+
+error:
+  {
+    if (out_buffer)
+      gst_buffer_unref (out_buffer);
+    return GST_FLOW_ERROR;
+  }
+}
+
+static inline gboolean
+_buffer_memory_is_aligned (GstBuffer * buffer, gboolean * is_aligned)
+{
+  GstMapInfo mapinfo;
+
+  if (!gst_buffer_map (buffer, &mapinfo, GST_MAP_READ))
+    return FALSE;
+
+  /* check for 4 bytes alignment required for raw video */
+  *is_aligned = ((guintptr) mapinfo.data & 3) == 0;
+
+  gst_buffer_unmap (buffer, &mapinfo);
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_y4m_dec_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
+    gint * skipsize)
+{
+  GstY4mDec *y4mdec = GST_Y4M_DEC (parse);
+  gsize frame_size, buffer_size = 0;
+  gint frame_hdr_len;
+  gboolean is_aligned;
+
+  GST_TRACE_OBJECT (y4mdec, "frame %" GST_PTR_FORMAT, frame->buffer);
+
+  do {
+    switch (y4mdec->state) {
+      case PARSER_STATE_NONE:
+        /* TODO: find the header and dismiss previous garbage  (orc-based memem?) */
+        if (!gst_y4m_dec_process_header (y4mdec, frame->buffer, skipsize))
+          goto error;
+
+        /* reconfigure baseparse */
+        {
+          gst_base_parse_set_frame_rate (parse,
+              GST_VIDEO_INFO_FPS_N (&y4mdec->out_info),
+              GST_VIDEO_INFO_FPS_D (&y4mdec->out_info), 0, 0);
+
+          /* update min frame size to input size */
+          gst_base_parse_set_min_frame_size (parse,
+              GST_VIDEO_INFO_SIZE (&y4mdec->info) + Y4M_FRAME_MAGIC_LEN + 1);
         }
-      }
 
-      gst_video_frame_unmap (&iframe);
-      gst_video_frame_unmap (&oframe);
-      gst_buffer_copy_into (outbuf, buffer, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
-      gst_buffer_unref (buffer);
-      buffer = outbuf;
+        y4mdec->state = PARSER_STATE_GOT_HEADER;
+        return GST_FLOW_OK;
+      case PARSER_STATE_GOT_HEADER:
+      case PARSER_STATE_GOT_FRAME:
+        frame_hdr_len = gst_y4m_dec_frame_hdr_len (y4mdec, frame->buffer,
+            &buffer_size);
+
+        if (frame_hdr_len == FRAME_NOT_FOUND)
+          goto error;
+
+        if (frame_hdr_len == HEADER_RESYNC) {
+          y4mdec->state = PARSER_STATE_NONE;
+          break;
+        }
+
+        /* input frame size */
+        frame_size = GST_VIDEO_INFO_SIZE (&y4mdec->info);
+
+        /* frame is incomplete */
+        if (frame_size > buffer_size - frame_hdr_len)
+          return GST_FLOW_OK;
+
+        y4mdec->state = PARSER_STATE_GOT_FRAME;
+
+        /* remove frame-header */
+        gst_buffer_resize (frame->buffer, frame_hdr_len, frame_size);
+
+        if (!_buffer_memory_is_aligned (frame->buffer, &is_aligned))
+          goto error;
+
+        if (is_aligned && y4mdec->passthrough) {
+          /* best case scenario  */
+          frame->out_buffer = gst_buffer_ref (frame->buffer);
+        } else if (is_aligned && y4mdec->has_video_meta) {
+          /* delegate memcopy to next element */
+          gst_buffer_add_video_meta_full (frame->buffer, 0,
+              GST_VIDEO_INFO_FORMAT (&y4mdec->out_info),
+              GST_VIDEO_INFO_WIDTH (&y4mdec->out_info),
+              GST_VIDEO_INFO_HEIGHT (&y4mdec->out_info),
+              GST_VIDEO_INFO_N_PLANES (&y4mdec->out_info),
+              y4mdec->info.offset, y4mdec->info.stride);
+          frame->out_buffer = gst_buffer_ref (frame->buffer);
+        } else {
+          GstFlowReturn ret;
+
+          ret = gst_y4m_dec_copy_buffer (y4mdec, frame->buffer,
+              &frame->out_buffer);
+          if (ret == GST_FLOW_ERROR)
+            goto error;
+          else if (ret != GST_FLOW_OK)
+            return ret;
+        }
+
+        GST_DEBUG_OBJECT (y4mdec, "output frame %" GST_PTR_FORMAT,
+            frame->out_buffer);
+        return gst_base_parse_finish_frame (parse, frame,
+            frame_hdr_len + frame_size);
+
+      default:
+        GST_ERROR_OBJECT (y4mdec, "Invalid parser state");
+        return GST_FLOW_ERROR;
     }
+  } while (TRUE);
 
-    flow_ret = gst_pad_push (y4mdec->srcpad, buffer);
-    if (flow_ret != GST_FLOW_OK)
-      break;
+error:
+  {
+    GST_ELEMENT_ERROR (y4mdec, STREAM, DECODE,
+        ("Failed to parse YUV4MPEG header"), (NULL));
+    return GST_FLOW_ERROR;
   }
-
-  GST_DEBUG ("returning %d", flow_ret);
-
-  return flow_ret;
 }
 
 static gboolean
-gst_y4m_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_y4m_dec_sink_event (GstBaseParse * parse, GstEvent * event)
 {
-  gboolean res;
-  GstY4mDec *y4mdec;
-
-  y4mdec = GST_Y4M_DEC (parent);
-
-  GST_DEBUG_OBJECT (y4mdec, "event: %" GST_PTR_FORMAT, event);
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_START:
-      res = gst_pad_push_event (y4mdec->srcpad, event);
-      break;
-    case GST_EVENT_FLUSH_STOP:
-      res = gst_pad_push_event (y4mdec->srcpad, event);
-      break;
-    case GST_EVENT_SEGMENT:
-    {
-      GstSegment seg;
-
-      gst_event_copy_segment (event, &seg);
-
-      GST_DEBUG ("segment: %" GST_SEGMENT_FORMAT, &seg);
-
-      y4mdec->segment = seg;
-      y4mdec->have_new_segment = TRUE;
-
-      res = TRUE;
-      /* not sure why it's not forwarded, but let's unref it so it
-         doesn't leak, remove the unref if it gets forwarded again */
-      gst_event_unref (event);
-      //res = gst_pad_push_event (y4mdec->srcpad, event);
-    }
-      break;
-    case GST_EVENT_EOS:
-    default:
-      res = gst_pad_event_default (pad, parent, event);
-      break;
+  if (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START) {
+    if (!gst_y4m_dec_reset (parse))
+      return FALSE;
   }
 
-  return res;
+  return GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
 }
 
 static gboolean
-gst_y4m_dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_y4m_dec_sink_query (GstBaseParse * parse, GstQuery * query)
 {
-  gboolean res;
-  GstY4mDec *y4mdec;
+  /* videoencoder (from y4menc) does allocation queries. Ignore them. */
+  if (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION)
+    return FALSE;
 
-  y4mdec = GST_Y4M_DEC (parent);
-
-  GST_DEBUG_OBJECT (y4mdec, "event: %" GST_PTR_FORMAT, event);
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:
-    {
-      gdouble rate;
-      GstFormat format;
-      GstSeekFlags flags;
-      GstSeekType start_type, stop_type;
-      gint64 start, stop;
-      gint64 framenum;
-      guint64 byte;
-
-      gst_event_parse_seek (event, &rate, &format, &flags, &start_type,
-          &start, &stop_type, &stop);
-
-      if (format != GST_FORMAT_TIME) {
-        res = FALSE;
-        break;
-      }
-
-      framenum = gst_y4m_dec_timestamp_to_frames (y4mdec, start);
-      GST_DEBUG ("seeking to frame %" G_GINT64_FORMAT, framenum);
-      if (framenum == -1) {
-        res = FALSE;
-        break;
-      }
-
-      byte = gst_y4m_dec_frames_to_bytes (y4mdec, framenum);
-      GST_DEBUG ("offset %" G_GUINT64_FORMAT, (guint64) byte);
-      if (byte == -1) {
-        res = FALSE;
-        break;
-      }
-
-      gst_event_unref (event);
-      event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
-          start_type, byte, stop_type, -1);
-
-      res = gst_pad_push_event (y4mdec->sinkpad, event);
-    }
-      break;
-    default:
-      res = gst_pad_event_default (pad, parent, event);
-      break;
-  }
-
-  return res;
+  return GST_BASE_PARSE_CLASS (parent_class)->sink_query (parse, query);
 }
 
 static gboolean
-gst_y4m_dec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+gst_y4m_dec_src_event (GstBaseParse * parse, GstEvent * event)
 {
-  GstY4mDec *y4mdec = GST_Y4M_DEC (parent);
-  gboolean res = FALSE;
+  /* reject reverse playback */
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
+    gdouble rate;
 
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_DURATION:
-    {
-      GstFormat format;
-      GstQuery *peer_query;
+    gst_event_parse_seek (event, &rate, NULL, NULL, NULL, NULL, NULL, NULL);
+    if (rate < 0.0) {
+      GstY4mDec *y4mdec = GST_Y4M_DEC (parse);
 
-      GST_DEBUG ("duration query");
-
-      gst_query_parse_duration (query, &format, NULL);
-
-      if (format != GST_FORMAT_TIME) {
-        res = FALSE;
-        GST_DEBUG_OBJECT (y4mdec, "not handling duration query in format %d",
-            format);
-        break;
-      }
-
-      peer_query = gst_query_new_duration (GST_FORMAT_BYTES);
-
-      res = gst_pad_peer_query (y4mdec->sinkpad, peer_query);
-      if (res) {
-        gint64 duration;
-        int n_frames;
-
-        gst_query_parse_duration (peer_query, &format, &duration);
-
-        n_frames = gst_y4m_dec_bytes_to_frames (y4mdec, duration);
-        GST_DEBUG ("duration in frames %d", n_frames);
-
-        duration = gst_y4m_dec_frames_to_timestamp (y4mdec, n_frames);
-        GST_DEBUG ("duration in time %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (duration));
-
-        gst_query_set_duration (query, GST_FORMAT_TIME, duration);
-        res = TRUE;
-      }
-      gst_query_unref (peer_query);
-      break;
+      GST_ERROR_OBJECT (y4mdec, "Reverse playback is not supported");
+      return FALSE;
     }
-    default:
-      res = gst_pad_query_default (pad, parent, query);
-      break;
   }
 
-  return res;
+  return GST_BASE_PARSE_CLASS (parent_class)->src_event (parse, event);
 }
