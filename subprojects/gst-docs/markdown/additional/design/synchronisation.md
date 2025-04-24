@@ -89,9 +89,11 @@ to `running_time` as follows:
 The following notation is used:
 
 **B**: `GstBuffer`
+
     - B.timestamp = buffer timestamp (`GST_BUFFER_PTS` or `GST_BUFFER_DTS`)
 
 **S**:  SEGMENT event preceding the buffers.
+
     - S.start: start field in the SEGMENT event. This is the lowest allowed
             timestamp.
     - S.stop: stop field in the SEGMENT event. This is the highers allowed
