@@ -1417,9 +1417,9 @@ _decide_profile (GstVaH264Enc * self, VAProfile * _profile, guint * _rt_format)
         continue;
     }
 
-    /* baseline only support I/P mode. */
-    if (self->gop.num_bframes > 0) {
-      if (g_strstr_len (profile_name, -1, "baseline"))
+    /* baseline only support I/P mode and neither cabac nor dct8x8. */
+    if (!self->use_dct8x8 && !self->use_cabac && self->gop.num_bframes == 0) {
+      if (!g_strstr_len (profile_name, -1, "baseline"))
         continue;
     }
 
