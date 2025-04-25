@@ -552,7 +552,7 @@ gst_webrtc_nice_add_stream (GstWebRTCICE * ice, guint session_id)
 }
 
 static void
-_fill_candidate_credentials (NiceAgent * agent, NiceCandidate * candidate)
+_fill_local_candidate_credentials (NiceAgent * agent, NiceCandidate * candidate)
 {
 
   if (!candidate->username || !candidate->password) {
@@ -592,7 +592,7 @@ _on_new_candidate (NiceAgent * agent, NiceCandidate * candidate,
   }
 
   c = nice_candidate_copy (candidate);
-  _fill_candidate_credentials (agent, c);
+  _fill_local_candidate_credentials (agent, c);
 
   attr = nice_agent_generate_local_candidate_sdp (agent, c);
 
@@ -1216,8 +1216,7 @@ gst_webrtc_nice_get_selected_pair (GstWebRTCICE * ice,
   if (stream) {
     if (nice_agent_get_selected_pair (nice->priv->nice_agent, stream->stream_id,
             NICE_COMPONENT_TYPE_RTP, &local_cand, &remote_cand)) {
-      _fill_candidate_credentials (nice->priv->nice_agent, local_cand);
-      _fill_candidate_credentials (nice->priv->nice_agent, remote_cand);
+      _fill_local_candidate_credentials (nice->priv->nice_agent, local_cand);
 
       *local_stats = g_new0 (GstWebRTCICECandidateStats, 1);
       _populate_candidate_stats (nice, local_cand, stream, *local_stats, TRUE);
