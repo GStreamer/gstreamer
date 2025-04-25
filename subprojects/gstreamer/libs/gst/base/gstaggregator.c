@@ -924,6 +924,13 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
      */
     GST_OBJECT_UNLOCK (self);
     SRC_WAIT (self);
+
+    /* After waiting, check if we're actually still running */
+    if (!self->priv->running || !self->priv->send_eos) {
+      SRC_UNLOCK (self);
+
+      return FALSE;
+    }
   } else {
     GstClockTime base_time, time;
     GstClock *clock;
@@ -964,6 +971,13 @@ gst_aggregator_wait_and_check (GstAggregator * self, gboolean * timeout)
     GST_DEBUG_OBJECT (self,
         "clock returned %d (jitter: %" GST_STIME_FORMAT ")",
         status, GST_STIME_ARGS (jitter));
+
+    /* After waiting, check if we're actually still running */
+    if (!self->priv->running || !self->priv->send_eos) {
+      SRC_UNLOCK (self);
+
+      return FALSE;
+    }
 
     /* we timed out */
     if (status == GST_CLOCK_OK || status == GST_CLOCK_EARLY) {
