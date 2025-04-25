@@ -71,6 +71,9 @@ struct _GstWebRTCNicePrivate
   GHashTable *turn_servers;
 
   GstUri *http_proxy;
+
+  gchar *remote_ufrag;
+  gchar *remote_pwd;
 };
 
 #define gst_webrtc_nice_parent_class parent_class
@@ -577,6 +580,17 @@ _fill_local_candidate_credentials (NiceAgent * agent, NiceCandidate * candidate)
 }
 
 static void
+_fill_remote_candidate_credentials (GstWebRTCNice * nice,
+    NiceCandidate * candidate)
+{
+  if (!candidate->username)
+    candidate->username = g_strdup (nice->priv->remote_ufrag);
+
+  if (!candidate->password)
+    candidate->password = g_strdup (nice->priv->remote_pwd);
+}
+
+static void
 _on_new_candidate (NiceAgent * agent, NiceCandidate * candidate,
     GstWebRTCNice * ice)
 {
@@ -873,6 +887,11 @@ gst_webrtc_nice_set_remote_credentials (GstWebRTCICE * ice,
 
   nice_agent_set_remote_credentials (nice->priv->nice_agent,
       item->nice_stream_id, ufrag, pwd);
+
+  g_free (nice->priv->remote_ufrag);
+  g_free (nice->priv->remote_pwd);
+  nice->priv->remote_ufrag = g_strdup (ufrag);
+  nice->priv->remote_pwd = g_strdup (pwd);
 
   return TRUE;
 }
@@ -1217,6 +1236,7 @@ gst_webrtc_nice_get_selected_pair (GstWebRTCICE * ice,
     if (nice_agent_get_selected_pair (nice->priv->nice_agent, stream->stream_id,
             NICE_COMPONENT_TYPE_RTP, &local_cand, &remote_cand)) {
       _fill_local_candidate_credentials (nice->priv->nice_agent, local_cand);
+      _fill_remote_candidate_credentials (nice, remote_cand);
 
       *local_stats = g_new0 (GstWebRTCICECandidateStats, 1);
       _populate_candidate_stats (nice, local_cand, stream, *local_stats, TRUE);
@@ -1625,6 +1645,9 @@ gst_webrtc_nice_finalize (GObject * object)
   g_object_unref (ice->priv->nice_agent);
 
   g_hash_table_unref (ice->priv->turn_servers);
+
+  g_free (ice->priv->remote_ufrag);
+  g_free (ice->priv->remote_pwd);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
