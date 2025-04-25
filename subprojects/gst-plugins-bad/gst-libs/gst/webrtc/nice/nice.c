@@ -581,6 +581,7 @@ _on_new_candidate (NiceAgent * agent, NiceCandidate * candidate,
     GstWebRTCNice * ice)
 {
   struct NiceStreamItem *item;
+  NiceCandidate *c;
   gchar *attr;
 
   item = _find_item (ice, -1, candidate->stream_id, NULL);
@@ -590,9 +591,12 @@ _on_new_candidate (NiceAgent * agent, NiceCandidate * candidate,
     return;
   }
 
-  _fill_candidate_credentials (agent, candidate);
+  c = nice_candidate_copy (candidate);
+  _fill_candidate_credentials (agent, c);
 
-  attr = nice_agent_generate_local_candidate_sdp (agent, candidate);
+  attr = nice_agent_generate_local_candidate_sdp (agent, c);
+
+  nice_candidate_free (c);
 
   if (ice->priv->on_candidate)
     ice->priv->on_candidate (GST_WEBRTC_ICE (ice), item->session_id, attr,
