@@ -12,6 +12,7 @@ subprojects/gst-plugins-bad/sys/amfcodec
 subprojects/gst-plugins-bad/sys/d3d11
 subprojects/gst-plugins-bad/sys/d3d12
 subprojects/gst-plugins-bad/sys/dwrite
+subprojects/gst-plugins-bad/sys/hip
 subprojects/gst-plugins-bad/sys/mediafoundation
 subprojects/gst-plugins-bad/sys/nvcodec
 ^(subprojects/gst-plugins-bad/sys/qsv/)+(\w)+([^/])+(cpp$)
