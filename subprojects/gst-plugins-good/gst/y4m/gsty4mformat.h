@@ -25,3 +25,21 @@
 
 gboolean              gst_y4m_video_unpadded_info (GstVideoInfo * y4m_info,
                                                    const GstVideoInfo * vinfo);
+
+gboolean              gst_y4m_video_get_format_from_chroma_tag (const char * chroma_tag,
+                                                                GstVideoFormat * format,
+                                                                GstVideoChromaSite * chroma_site);
+
+const char *          gst_y4m_video_get_chroma_tag_from_format (GstVideoFormat format,
+                                                                GstVideoChromaSite chroma_site);
+
+gboolean              gst_y4m_video_get_format_from_yscss_tag  (const char * yscss_tag,
+                                                                GstVideoFormat * format,
+                                                                GstVideoChromaSite * chroma_site);
+
+const char *          gst_y4m_video_get_yscss_tag_from_format  (GstVideoFormat format,
+                                                                GstVideoChromaSite chroma_site);
+
+GstVideoColorRange    gst_y4m_video_get_color_range_from_range_tag (const char * range_tag);
+
+const char *          gst_y4m_video_get_range_tag_from_color_range (GstVideoColorRange range);

@@ -144,22 +144,11 @@ gst_y4m_encode_set_format (GstVideoEncoder * encoder,
   y4menc = GST_Y4M_ENCODE (encoder);
   info = &state->info;
 
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
-    case GST_VIDEO_FORMAT_I420:
-      y4menc->colorspace = "420";
-      break;
-    case GST_VIDEO_FORMAT_Y42B:
-      y4menc->colorspace = "422";
-      break;
-    case GST_VIDEO_FORMAT_Y41B:
-      y4menc->colorspace = "411";
-      break;
-    case GST_VIDEO_FORMAT_Y444:
-      y4menc->colorspace = "444";
-      break;
-    default:
-      goto invalid_format;
-  }
+  y4menc->colorspace =
+      gst_y4m_video_get_chroma_tag_from_format (GST_VIDEO_INFO_FORMAT (info),
+      GST_VIDEO_INFO_CHROMA_SITE (info));
+  if (y4menc->colorspace == NULL)
+    goto invalid_format;
 
   if (!gst_y4m_video_unpadded_info (&out_info, info))
     goto invalid_format;
@@ -199,6 +188,7 @@ gst_y4m_encode_get_stream_header (GstY4mEncode * filter, gboolean tff)
     interlaced = 'p';
   }
 
+  /* TODO: add YSCSS and color range */
   header = g_strdup_printf ("YUV4MPEG2 C%s W%d H%d I%c F%d:%d A%d:%d\n",
       filter->colorspace, GST_VIDEO_INFO_WIDTH (&filter->info),
       GST_VIDEO_INFO_HEIGHT (&filter->info), interlaced,
