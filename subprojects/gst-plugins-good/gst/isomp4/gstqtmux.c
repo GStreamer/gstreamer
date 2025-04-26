@@ -634,7 +634,9 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
   gstagg_class->negotiate = NULL;
 
   gst_type_mark_as_plugin_api (GST_TYPE_QT_MUX_PAD, 0);
+#ifndef GST_REMOVE_DEPRECATED
   gst_type_mark_as_plugin_api (GST_TYPE_QT_MUX_DTS_METHOD, 0);
+#endif
   gst_type_mark_as_plugin_api (GST_TYPE_QT_MUX_FRAGMENT_MODE, 0);
 }
 
