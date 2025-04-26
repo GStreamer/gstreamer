@@ -507,8 +507,9 @@ for more information.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="send_data" c:identifier="gst_webrtc_data_channel_send_data">
+      <method name="send_data" c:identifier="gst_webrtc_data_channel_send_data" deprecated="1" deprecated-version="1.22">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">Send @data as a data message over @channel.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_webrtc_data_channel_send_data_full() instead</doc-deprecated>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -542,8 +543,9 @@ for more information.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="send_string" c:identifier="gst_webrtc_data_channel_send_string">
+      <method name="send_string" c:identifier="gst_webrtc_data_channel_send_string" deprecated="1" deprecated-version="1.22">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">Send @str as a string message over @channel.</doc>
+        <doc-deprecated xml:space="preserve">Use gst_webrtc_data_channel_send_string_full() instead</doc-deprecated>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -664,7 +666,8 @@ for more information.</doc>
           <type name="none" c:type="void"/>
         </return-value>
       </glib:signal>
-      <glib:signal name="send-data" when="last" action="1">
+      <glib:signal name="send-data" when="last" action="1" deprecated="1" deprecated-version="1.22">
+        <doc-deprecated xml:space="preserve">Use gst_webrtc_data_channel_send_data_full() instead</doc-deprecated>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -675,7 +678,8 @@ for more information.</doc>
           </parameter>
         </parameters>
       </glib:signal>
-      <glib:signal name="send-string" when="last" action="1">
+      <glib:signal name="send-string" when="last" action="1" deprecated="1" deprecated-version="1.22">
+        <doc-deprecated xml:space="preserve">Use gst_webrtc_data_channel_send_string_full() instead</doc-deprecated>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>

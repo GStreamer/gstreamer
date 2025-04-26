@@ -332,10 +332,13 @@ gst_webrtc_data_channel_class_init (GstWebRTCDataChannelClass * klass)
       g_signal_new ("on-buffered-amount-low", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
 
+#ifndef GST_REMOVE_DEPRECATED
   /**
    * GstWebRTCDataChannel::send-data:
    * @object: the #GstWebRTCDataChannel
    * @data: (nullable): a #GBytes with the data
+   *
+   * Deprecated: 1.22: Use gst_webrtc_data_channel_send_data_full() instead
    */
   gst_webrtc_data_channel_signals[SIGNAL_SEND_DATA] =
       g_signal_new_class_handler ("send-data", G_TYPE_FROM_CLASS (klass),
@@ -347,12 +350,15 @@ gst_webrtc_data_channel_class_init (GstWebRTCDataChannelClass * klass)
    * GstWebRTCDataChannel::send-string:
    * @object: the #GstWebRTCDataChannel
    * @data: (nullable): the data to send as a string
+   *
+   * Deprecated: 1.22: Use gst_webrtc_data_channel_send_string_full() instead
    */
   gst_webrtc_data_channel_signals[SIGNAL_SEND_STRING] =
       g_signal_new_class_handler ("send-string", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION | G_SIGNAL_DEPRECATED,
       G_CALLBACK (gst_webrtc_data_channel_send_string), NULL, NULL, NULL,
       G_TYPE_NONE, 1, G_TYPE_STRING);
+#endif
 
   /**
    * GstWebRTCDataChannel::close:
@@ -508,12 +514,15 @@ gst_webrtc_data_channel_on_buffered_amount_low (GstWebRTCDataChannel * channel)
       gst_webrtc_data_channel_signals[SIGNAL_ON_BUFFERED_AMOUNT_LOW], 0);
 }
 
+#ifndef GST_REMOVE_DEPRECATED
 /**
  * gst_webrtc_data_channel_send_data:
  * @channel: a #GstWebRTCDataChannel
  * @data: (nullable): a #GBytes or %NULL
  *
  * Send @data as a data message over @channel.
+ *
+ * Deprecated: 1.22: Use gst_webrtc_data_channel_send_data_full() instead
  */
 void
 gst_webrtc_data_channel_send_data (GstWebRTCDataChannel * channel,
@@ -526,6 +535,7 @@ gst_webrtc_data_channel_send_data (GstWebRTCDataChannel * channel,
   klass = GST_WEBRTC_DATA_CHANNEL_GET_CLASS (channel);
   (void) klass->send_data (channel, data, NULL);
 }
+#endif
 
 /**
  * gst_webrtc_data_channel_send_data_full:
@@ -551,12 +561,15 @@ gst_webrtc_data_channel_send_data_full (GstWebRTCDataChannel * channel,
   return klass->send_data (channel, data, error);
 }
 
+#ifndef GST_REMOVE_DEPRECATED
 /**
  * gst_webrtc_data_channel_send_string:
  * @channel: a #GstWebRTCDataChannel
  * @str: (nullable): a string or %NULL
  *
  * Send @str as a string message over @channel.
+ *
+ * Deprecated: 1.22: Use gst_webrtc_data_channel_send_string_full() instead
  */
 void
 gst_webrtc_data_channel_send_string (GstWebRTCDataChannel * channel,
@@ -569,6 +582,7 @@ gst_webrtc_data_channel_send_string (GstWebRTCDataChannel * channel,
   klass = GST_WEBRTC_DATA_CHANNEL_GET_CLASS (channel);
   (void) klass->send_string (channel, str, NULL);
 }
+#endif
 
 /**
  * gst_webrtc_data_channel_send_string_full:
