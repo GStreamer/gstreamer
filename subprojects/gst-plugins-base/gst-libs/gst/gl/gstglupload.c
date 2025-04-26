@@ -3430,14 +3430,22 @@ gst_gl_upload_fixate_caps (GstGLUpload * upload, GstPadDirection direction,
 
     /* If the target is found, fixate the other fields */
     if (i < n) {
+      GstCapsFeatures *features;
+
+      features = gst_caps_get_features (othercaps, i);
+
       ret_caps = gst_caps_new_empty ();
       gst_caps_append_structure_full (ret_caps,
           gst_structure_copy (gst_caps_get_structure (othercaps, i)),
-          gst_caps_features_copy (gst_caps_get_features (othercaps, i)));
+          gst_caps_features_copy (features));
 
       ret_caps = gst_caps_fixate (ret_caps);
-      gst_caps_set_simple (ret_caps, "texture-target", G_TYPE_STRING,
-          gst_gl_texture_target_to_string (target), NULL);
+
+      if (gst_caps_features_contains (features,
+              GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
+        gst_caps_set_simple (ret_caps, "texture-target", G_TYPE_STRING,
+            gst_gl_texture_target_to_string (target), NULL);
+      }
 
       gst_caps_unref (othercaps);
 
