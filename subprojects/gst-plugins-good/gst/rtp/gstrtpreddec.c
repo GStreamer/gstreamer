@@ -619,7 +619,7 @@ gst_rtp_red_dec_class_init (GstRtpRedDecClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Redundant Audio Data (RED) Decoder",
       "Codec/Depayloader/Network/RTP",
       "Decode Redundant Audio Data (RED)",

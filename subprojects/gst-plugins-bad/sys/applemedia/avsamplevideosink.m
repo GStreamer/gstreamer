@@ -100,7 +100,7 @@ gst_av_sample_video_sink_class_init (GstAVSampleVideoSinkClass * klass)
           "The CoreAnimation layer that can be placed in the render tree",
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (element_class, "AV Sample video sink",
+  gst_element_class_set_static_metadata (element_class, "AV Sample video sink",
       "Sink/Video", "A videosink based on AVSampleBuffers",
       "Matthew Waters <matthew@centricular.com>");
 

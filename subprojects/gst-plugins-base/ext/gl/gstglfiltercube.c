@@ -179,7 +179,7 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
           "Specifies the distance from the viewer to the far clipping plane",
           0.0, 1000.0, 100.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (element_class, "OpenGL cube filter",
+  gst_element_class_set_static_metadata (element_class, "OpenGL cube filter",
       "Filter/Effect/Video", "Map input texture on the 6 cube faces",
       "Julien Isorce <julien.isorce@gmail.com>");
 

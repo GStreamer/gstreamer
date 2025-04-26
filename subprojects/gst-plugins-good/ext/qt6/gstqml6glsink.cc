@@ -161,7 +161,7 @@ gst_qml6_gl_sink_class_init (GstQml6GLSinkClass * klass)
   gobject_class->set_property = gst_qml6_gl_sink_set_property;
   gobject_class->get_property = gst_qml6_gl_sink_get_property;
 
-  gst_element_class_set_metadata (gstelement_class, "Qt6 Video Sink",
+  gst_element_class_set_static_metadata (gstelement_class, "Qt6 Video Sink",
       "Sink/Video", "A video sink that renders to a QQuickItem for Qt6",
       "Matthew Waters <matthew@centricular.com>");
 

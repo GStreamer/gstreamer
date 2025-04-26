@@ -318,7 +318,7 @@ gst_rist_rtp_deext_class_init (GstRistRtpDeextClass * klass)
   GstElementClass *element_class = (GstElementClass *) klass;
   GObjectClass *object_class = (GObjectClass *) klass;
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "RIST RTP Extension remover", "Filter/Network",
       "Removes RIST TR-06-2 RTP Header extension",
       "Olivier Crete <olivier.crete@collabora.com");

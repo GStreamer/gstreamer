@@ -1336,7 +1336,7 @@ gst_rist_sink_class_init (GstRistSinkClass * klass)
 
   session_id_quark = g_quark_from_static_string ("gst-rist-sink-session-id");
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "RIST Sink", "Source/Network",
       "Sink that implements RIST TR-06-1 streaming specification",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com");

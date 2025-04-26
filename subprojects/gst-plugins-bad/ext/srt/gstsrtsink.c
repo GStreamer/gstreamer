@@ -416,7 +416,7 @@ gst_srt_sink_class_init (GstSRTSinkClass * klass)
   gst_srt_object_install_properties_helper (gobject_class);
 
   gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "SRT sink", "Sink/Network",
       "Send data over the network via SRT",
       "Justin Kim <justin.joy.9to5@gmail.com>");

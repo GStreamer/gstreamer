@@ -277,8 +277,9 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
           upload_caps));
   gst_caps_unref (upload_caps);
 
-  gst_element_class_set_metadata (element_class, "OpenGL video_mixer empty bin",
-      "Bin/Filter/Effect/Video/Mixer", "OpenGL video_mixer empty bin",
+  gst_element_class_set_static_metadata (element_class,
+      "OpenGL video_mixer empty bin", "Bin/Filter/Effect/Video/Mixer",
+      "OpenGL video_mixer empty bin",
       "Matthew Waters <matthew@centricular.com>");
 
   gst_type_mark_as_plugin_api (GST_TYPE_GL_MIXER_BIN_START_TIME_SELECTION, 0);

@@ -8882,7 +8882,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
   gst_element_class_add_static_pad_template_with_gtype (element_class,
       &src_template, GST_TYPE_WEBRTC_BIN_SRC_PAD);
 
-  gst_element_class_set_metadata (element_class, "WebRTC Bin",
+  gst_element_class_set_static_metadata (element_class, "WebRTC Bin",
       "Filter/Network/WebRTC", "A bin for webrtc connections",
       "Matthew Waters <matthew@centricular.com>");
 

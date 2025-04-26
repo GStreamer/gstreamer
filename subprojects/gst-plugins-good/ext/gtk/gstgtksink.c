@@ -66,7 +66,7 @@ gst_gtk_sink_class_init (GstGtkSinkClass * klass)
   base_class->create_widget = gtk_gst_widget_new;
   base_class->window_title = "Gtk+ Cairo renderer";
 
-  gst_element_class_set_metadata (gstelement_class, "Gtk Video Sink",
+  gst_element_class_set_static_metadata (gstelement_class, "Gtk Video Sink",
       "Sink/Video", "A video sink that renders to a GtkWidget",
       "Matthew Waters <matthew@centricular.com>");
 

@@ -101,7 +101,7 @@ gst_qt_src_class_init (GstQtSrcClass * klass)
   gobject_class->get_property = gst_qt_src_get_property;
   gobject_class->finalize = gst_qt_src_finalize;
 
-  gst_element_class_set_metadata (gstelement_class, "Qt Video Source",
+  gst_element_class_set_static_metadata (gstelement_class, "Qt Video Source",
       "Source/Video", "A video src that captures a window from a QML view",
       "Multimedia Team <shmmmw@freescale.com>");
 

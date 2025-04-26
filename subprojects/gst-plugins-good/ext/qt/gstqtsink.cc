@@ -158,7 +158,7 @@ gst_qt_sink_class_init (GstQtSinkClass * klass)
   gobject_class->set_property = gst_qt_sink_set_property;
   gobject_class->get_property = gst_qt_sink_get_property;
 
-  gst_element_class_set_metadata (gstelement_class, "Qt Video Sink",
+  gst_element_class_set_static_metadata (gstelement_class, "Qt Video Sink",
       "Sink/Video", "A video sink that renders to a QQuickItem",
       "Matthew Waters <matthew@centricular.com>");
 

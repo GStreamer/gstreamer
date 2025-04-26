@@ -114,7 +114,7 @@ gst_gl_filter_app_class_init (GstGLFilterAppClass * klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 3, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT);
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "OpenGL application filter", "Filter/Effect",
       "Use client callbacks to define the scene",
       "Julien Isorce <julien.isorce@gmail.com>");

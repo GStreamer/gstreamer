@@ -241,8 +241,9 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
           "The final Graphene 4x4 Matrix for transformation",
           GRAPHENE_TYPE_MATRIX, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (element_class, "OpenGL transformation filter",
-      "Filter/Effect/Video", "Transform video on the GPU",
+  gst_element_class_set_static_metadata (element_class,
+      "OpenGL transformation filter", "Filter/Effect/Video",
+      "Transform video on the GPU",
       "Lubosz Sarnecki <lubosz@gmail.com>, "
       "Matthew Waters <matthew@centricular.com>");
 

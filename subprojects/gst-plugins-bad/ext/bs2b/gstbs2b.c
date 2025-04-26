@@ -222,7 +222,7 @@ gst_bs2b_class_init (GstBs2bClass * klass)
 
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Crossfeed effect",
       "Filter/Effect/Audio",
       "Improve headphone listening of stereo audio records using the bs2b "

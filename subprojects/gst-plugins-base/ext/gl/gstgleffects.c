@@ -349,7 +349,7 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
 
   klass->filter_descriptor = NULL;
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Gstreamer OpenGL Effects", "Filter/Effect/Video",
       "GL Shading Language effects",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");

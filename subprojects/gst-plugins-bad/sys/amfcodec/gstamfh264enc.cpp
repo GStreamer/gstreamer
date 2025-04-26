@@ -820,7 +820,7 @@ gst_amf_h264_enc_class_init (GstAmfH264EncClass * klass, gpointer data)
               pa_param_flags));
     }
   }
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "AMD AMF H.264 Video Encoder",
       "Codec/Encoder/Video/Hardware",
       "Encode H.264 video streams using AMF API",

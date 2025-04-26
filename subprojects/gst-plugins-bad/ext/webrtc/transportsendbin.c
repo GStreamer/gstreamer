@@ -509,8 +509,9 @@ transport_send_bin_class_init (TransportSendBinClass * klass)
   gst_element_class_add_static_pad_template (element_class,
       &data_sink_template);
 
-  gst_element_class_set_metadata (element_class, "WebRTC Transport Send Bin",
-      "Filter/Network/WebRTC", "A bin for webrtc connections",
+  gst_element_class_set_static_metadata (element_class,
+      "WebRTC Transport Send Bin", "Filter/Network/WebRTC",
+      "A bin for webrtc connections",
       "Matthew Waters <matthew@centricular.com>");
 
   gobject_class->constructed = transport_send_bin_constructed;

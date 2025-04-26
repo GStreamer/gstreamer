@@ -743,7 +743,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
 
   gst_video_overlay_install_properties (gobject_class, PROP_LAST);
 
-  gst_element_class_set_metadata (element_class, "OpenGL video sink",
+  gst_element_class_set_static_metadata (element_class, "OpenGL video sink",
       "Sink/Video", "A videosink based on OpenGL",
       "Julien Isorce <julien.isorce@gmail.com>");
 

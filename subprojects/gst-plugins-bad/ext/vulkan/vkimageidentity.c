@@ -97,8 +97,8 @@ gst_vulkan_image_identity_class_init (GstVulkanImageIdentityClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasetransform_class = (GstBaseTransformClass *) klass;
 
-  gst_element_class_set_metadata (gstelement_class, "Vulkan Image Identity",
-      "Filter/Video", "A Vulkan image copier",
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Vulkan Image Identity", "Filter/Video", "A Vulkan image copier",
       "Matthew Waters <matthew@centricular.com>");
 
   gst_element_class_add_static_pad_template (gstelement_class,

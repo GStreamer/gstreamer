@@ -716,7 +716,7 @@ gst_amf_h265_enc_class_init (GstAmfH265EncClass * klass, gpointer data)
     }
   }
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "AMD AMF H.265 Video Encoder",
       "Codec/Encoder/Video/Hardware",
       "Encode H.265 video streams using AMF API",

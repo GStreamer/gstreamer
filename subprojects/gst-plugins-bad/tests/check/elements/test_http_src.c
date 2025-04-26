@@ -188,7 +188,7 @@ gst_test_http_src_class_init (GstTestHTTPSrcClass * klass)
           "Value of the User-Agent HTTP request header field",
           DEFAULT_USER_AGENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Test HTTP source element for unit tests",
       "Source/Network",
       "Use in unit tests", "Alex Ashley <alex.ashley@youview.com>");

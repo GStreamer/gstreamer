@@ -120,7 +120,7 @@ gst_accurip_class_init (GstAccuripClass * klass)
   gstbasetrans_class->sink_event = GST_DEBUG_FUNCPTR (gst_accurip_sink_event);
   gstbasetrans_class->passthrough_on_same_caps = TRUE;
 
-  gst_element_class_set_metadata (GST_ELEMENT_CLASS (klass),
+  gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "AccurateRip(TM) CRC element",
       "Filter/Analyzer/Audio",
       "Computes an AccurateRip CRC", "Christophe Fergeau <teuf@gnome.org>");

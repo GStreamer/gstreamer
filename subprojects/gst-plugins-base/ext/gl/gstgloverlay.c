@@ -265,7 +265,7 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
           0.0, 1.0, 1.0, GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING
           | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Gstreamer OpenGL Overlay", "Filter/Effect/Video",
       "Overlay GL video texture with a JPEG/PNG image",
       "Filippo Argiolas <filippo.argiolas@gmail.com>, "

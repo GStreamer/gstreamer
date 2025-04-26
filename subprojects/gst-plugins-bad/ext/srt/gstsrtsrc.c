@@ -464,7 +464,7 @@ gst_srt_src_class_init (GstSRTSrcClass * klass)
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "SRT source", "Source/Network",
       "Receive data over the network via SRT",
       "Justin Kim <justin.joy.9to5@gmail.com>");

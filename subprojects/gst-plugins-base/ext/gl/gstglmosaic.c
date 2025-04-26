@@ -131,7 +131,7 @@ gst_gl_mosaic_class_init (GstGLMosaicClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_mosaic_request_new_pad);
   element_class->release_pad = GST_DEBUG_FUNCPTR (gst_gl_mosaic_release_pad);
 
-  gst_element_class_set_metadata (element_class, "OpenGL mosaic",
+  gst_element_class_set_static_metadata (element_class, "OpenGL mosaic",
       "Filter/Effect/Video", "OpenGL mosaic",
       "Julien Isorce <julien.isorce@gmail.com>");
 

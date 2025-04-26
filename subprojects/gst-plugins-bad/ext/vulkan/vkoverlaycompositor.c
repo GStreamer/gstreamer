@@ -509,8 +509,9 @@ gst_vulkan_overlay_compositor_class_init (GstVulkanOverlayCompositorClass *
   gstelement_class = (GstElementClass *) klass;
   gstbasetransform_class = (GstBaseTransformClass *) klass;
 
-  gst_element_class_set_metadata (gstelement_class, "Vulkan Overlay Compositor",
-      "Filter/Video", "Vulkan Overlay Composition element",
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Vulkan Overlay Compositor", "Filter/Video",
+      "Vulkan Overlay Composition element",
       "Matthew Waters <matthew@centricular.com>");
 
   gst_element_class_add_static_pad_template (gstelement_class,

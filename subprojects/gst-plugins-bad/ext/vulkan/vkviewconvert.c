@@ -610,8 +610,8 @@ gst_vulkan_view_convert_class_init (GstVulkanViewConvertClass * klass)
           GST_TYPE_VULKAN_STEREO_DOWNMIX, DEFAULT_DOWNMIX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (gstelement_class, "Vulkan View Convert",
-      "Filter/Video/Convert", "A Vulkan View Convert",
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Vulkan View Convert", "Filter/Video/Convert", "A Vulkan View Convert",
       "Matthew Waters <matthew@centricular.com>");
 
   gst_type_mark_as_plugin_api (GST_TYPE_VULKAN_STEREO_DOWNMIX, 0);

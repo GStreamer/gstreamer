@@ -442,7 +442,7 @@ gst_uvc_sink_class_init (GstUvcSinkClass * klass)
 
   element_class->change_state = gst_uvc_sink_change_state;
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "UVC Sink", "Sink/Video",
       "Streams Video via UVC Gadget", "Michael Grzeschik <mgr@pengutronix.de>");
 

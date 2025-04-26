@@ -162,7 +162,7 @@ gst_vulkan_shader_spv_class_init (GstVulkanShaderSpvClass * klass)
           "SPIRV fragment source", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (gstelement_class, "Vulkan Shader SPV",
+  gst_element_class_set_static_metadata (gstelement_class, "Vulkan Shader SPV",
       "Filter/Video", "Performs operations with SPIRV shaders in Vulkan",
       "Martin Reboredo <yakoyoku@gmail.com>");
 

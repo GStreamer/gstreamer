@@ -104,7 +104,7 @@ gst_gl_overlay_compositor_element_class_init (GstGLOverlayCompositorElementClass
 
   element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "OpenGL overlaying filter", "Filter/Effect",
       "Flatten a stream containing GstVideoOverlayCompositionMeta",
       "<matthew@centricular.com>");

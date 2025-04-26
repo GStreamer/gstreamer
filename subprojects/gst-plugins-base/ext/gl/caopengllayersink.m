@@ -229,7 +229,7 @@ gst_ca_opengl_layer_sink_class_init (GstCAOpenGLLayerSinkClass * klass)
           "OpenGL Core Animation layer",
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (element_class, "CAOpenGLLayer video sink",
+  gst_element_class_set_static_metadata (element_class, "CAOpenGLLayer video sink",
       "Sink/Video", "A video sink based on CAOpenGLLayer",
       "Matthew Waters <matthew@centricular.com>");
 

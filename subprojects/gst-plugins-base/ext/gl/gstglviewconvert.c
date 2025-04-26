@@ -111,7 +111,7 @@ gst_gl_view_convert_element_class_init (GstGLViewConvertElementClass * klass)
   gobject_class->get_property = gst_gl_view_convert_element_get_property;
   gobject_class->dispose = gst_gl_view_convert_dispose;
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "OpenGL Multiview/3D conversion filter", "Filter",
       "Convert stereoscopic/multiview video formats",
       "Jan Schmidt <jan@centricular.com>, "

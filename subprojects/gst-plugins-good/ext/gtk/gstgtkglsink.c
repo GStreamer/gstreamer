@@ -119,7 +119,7 @@ gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)
           GST_TYPE_VIDEO_ORIENTATION_METHOD, GST_VIDEO_ORIENTATION_IDENTITY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (gstelement_class, "Gtk GL Video Sink",
+  gst_element_class_set_static_metadata (gstelement_class, "Gtk GL Video Sink",
       "Sink/Video", "A video sink that renders to a GtkWidget using OpenGL",
       "Matthew Waters <matthew@centricular.com>");
 

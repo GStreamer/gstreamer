@@ -651,7 +651,7 @@ gst_net_sim_class_init (GstNetSimClass * klass)
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_net_sim_sink_template);
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Network Simulator",
       "Filter/Network",
       "An element that simulates network jitter, "

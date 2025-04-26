@@ -234,7 +234,7 @@ gst_nv_vp9_dec_class_init (GstNvVp9DecClass * klass,
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_vp9_dec_set_context);
 
   parent_class = (GTypeClass *) g_type_class_peek_parent (klass);
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "NVDEC VP9 Decoder",
       "Codec/Decoder/Video/Hardware",
       "NVIDIA VP9 video decoder", "Seungha Yang <seungha@centricular.com>");

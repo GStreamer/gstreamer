@@ -151,7 +151,7 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
           "Whether to act as a live source", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (element_class, "Video test source",
+  gst_element_class_set_static_metadata (element_class, "Video test source",
       "Source/Video", "Creates a test video stream",
       "David A. Schleef <ds@schleef.org>");
 

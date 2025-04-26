@@ -1350,7 +1350,7 @@ gst_rist_src_class_init (GstRistSrcClass * klass)
   GstElementClass *element_class = (GstElementClass *) klass;
   GObjectClass *object_class = (GObjectClass *) klass;
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "RIST Source", "Source/Network",
       "Source that implements RIST TR-06-1 streaming specification",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com");

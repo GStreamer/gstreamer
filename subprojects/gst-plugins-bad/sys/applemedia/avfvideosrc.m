@@ -1225,7 +1225,7 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
 
   gstpushsrc_class->create = gst_avf_video_src_create;
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Video Source (AVFoundation)", "Source/Video/Hardware",
       "Reads frames from an iOS/MacOS AVFoundation device",
       "Ole André Vadla Ravnås <oleavr@soundrop.com>");

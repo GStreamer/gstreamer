@@ -163,7 +163,7 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
       g_signal_new ("create-shader", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, GST_TYPE_GL_SHADER, 0);
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "OpenGL fragment shader filter", "Filter/Effect",
       "Perform operations with a GLSL shader", "<matthew@centricular.com>");
 

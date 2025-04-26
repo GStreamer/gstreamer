@@ -124,7 +124,7 @@ gst_round_robin_class_init (GstRoundRobinClass * klass)
 {
   GstElementClass *element_class = (GstElementClass *) klass;
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Round Robin", "Source/Network",
       "A round robin dispatcher element.",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com");

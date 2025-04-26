@@ -165,7 +165,7 @@ gst_gl_filter_glass_class_init (GstGLFilterGlassClass * klass)
   gobject_class->set_property = gst_gl_filter_glass_set_property;
   gobject_class->get_property = gst_gl_filter_glass_get_property;
 
-  gst_element_class_set_metadata (element_class, "OpenGL glass filter",
+  gst_element_class_set_static_metadata (element_class, "OpenGL glass filter",
       "Filter/Effect/Video", "Glass Filter",
       "Julien Isorce <julien.isorce@gmail.com>");
 
