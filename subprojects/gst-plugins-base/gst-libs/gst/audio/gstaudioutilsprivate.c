@@ -218,13 +218,16 @@ exit:
 }
 
 #ifdef G_OS_WIN32
+typedef HANDLE (WINAPI * AvSetMmThreadCharacteristicsPtr) (LPCSTR, LPDWORD);
+typedef BOOL (WINAPI * AvRevertMmThreadCharacteristicsPtr) (HANDLE);
+
 /* *INDENT-OFF* */
 static struct
 {
   HMODULE dll;
 
-  FARPROC AvSetMmThreadCharacteristics;
-  FARPROC AvRevertMmThreadCharacteristics;
+  AvSetMmThreadCharacteristicsPtr AvSetMmThreadCharacteristics;
+  AvRevertMmThreadCharacteristicsPtr AvRevertMmThreadCharacteristics;
 } _gst_audio_avrt_tbl = { 0 };
 /* *INDENT-ON* */
 #endif
@@ -246,6 +249,7 @@ __gst_audio_init_thread_priority (void)
     }
 
     _gst_audio_avrt_tbl.AvSetMmThreadCharacteristics =
+        (AvSetMmThreadCharacteristicsPtr)
         GetProcAddress (_gst_audio_avrt_tbl.dll,
         "AvSetMmThreadCharacteristicsA");
     if (!_gst_audio_avrt_tbl.AvSetMmThreadCharacteristics) {
@@ -255,6 +259,7 @@ __gst_audio_init_thread_priority (void)
     }
 
     _gst_audio_avrt_tbl.AvRevertMmThreadCharacteristics =
+        (AvRevertMmThreadCharacteristicsPtr)
         GetProcAddress (_gst_audio_avrt_tbl.dll,
         "AvRevertMmThreadCharacteristics");
 
