@@ -68,7 +68,7 @@ static GstStaticPadTemplate y4mencode_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ IYUV, I420, Y42B, Y41B, Y444 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (Y4M_VIDEO_FORMATS))
     );
 
 GST_DEBUG_CATEGORY (y4menc_debug);

@@ -77,12 +77,7 @@ static GstStaticPadTemplate gst_y4m_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ \
-        I420,Y41B,Y42B,Y444,                 \
-        I420_10LE,I422_10LE,Y444_10LE,       \
-        I420_12LE,I422_12LE,Y444_12LE,       \
-        Y444_16LE,GRAY8,GRAY16_LE            \
-    }")));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (Y4M_VIDEO_FORMATS)));
 
 /* class initialization */
 #define gst_y4m_dec_parent_class parent_class

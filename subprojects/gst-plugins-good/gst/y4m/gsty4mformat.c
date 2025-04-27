@@ -83,8 +83,65 @@ gst_y4m_video_unpadded_info (GstVideoInfo * y4m_info,
       out_info.offset[2] = out_info.offset[1] * 2;
       out_info.size = out_info.stride[0] * height * 3;
       break;
+    case GST_VIDEO_FORMAT_GRAY8:
+      out_info.stride[0] = width;
+      out_info.stride[1] = 0;
+      out_info.offset[0] = 0;
+      out_info.size = width * height;
+      break;
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+    case GST_VIDEO_FORMAT_GRAY10_LE16:
+      out_info.stride[0] = width * 2;
+      out_info.offset[0] = 0;
+      out_info.size = out_info.stride[0] * height;
+      break;
+    case GST_VIDEO_FORMAT_A444:
+      out_info.stride[0] = width;
+      out_info.stride[1] = out_info.stride[0];
+      out_info.stride[2] = out_info.stride[0];
+      out_info.stride[3] = out_info.stride[0];
+      out_info.offset[0] = 0;
+      out_info.offset[1] = out_info.stride[0] * height;
+      out_info.offset[2] = out_info.offset[1] + out_info.stride[1] * height;
+      out_info.offset[3] = out_info.offset[2] + out_info.stride[2] * height;
+      out_info.size = out_info.offset[3] + out_info.stride[0] * height;
+      break;
+    case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+      out_info.stride[0] = width * 2;
+      out_info.stride[1] = width;
+      out_info.stride[2] = out_info.stride[1];
+      out_info.offset[0] = 0;
+      out_info.offset[1] = out_info.stride[0] * height;
+      cr_h = GST_ROUND_UP_2 (height) / 2;
+      if (GST_VIDEO_INFO_IS_INTERLACED (vinfo))
+        cr_h = GST_ROUND_UP_2 (cr_h);
+      out_info.offset[2] = out_info.offset[1] + out_info.stride[1] * cr_h;
+      out_info.size = out_info.offset[2] + out_info.stride[2] * cr_h;
+      break;
+    case GST_VIDEO_FORMAT_I422_10LE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+      out_info.stride[0] = width * 2;
+      out_info.stride[1] = width;
+      out_info.stride[2] = out_info.stride[1];
+      out_info.offset[0] = 0;
+      out_info.offset[1] = out_info.stride[0] * height;
+      out_info.offset[2] = out_info.offset[1] + out_info.stride[1] * height;
+      out_info.size = out_info.offset[2] + out_info.stride[2] * height;
+      break;
+    case GST_VIDEO_FORMAT_Y444_10LE:
+    case GST_VIDEO_FORMAT_Y444_12LE:
+      out_info.stride[0] = width * 2;
+      out_info.stride[1] = out_info.stride[0];
+      out_info.stride[2] = out_info.stride[0];
+      out_info.offset[0] = 0;
+      out_info.offset[1] = out_info.stride[0] * height;
+      out_info.offset[2] = out_info.offset[1] * 2;
+      out_info.size = out_info.stride[0] * height * 3;
+      break;
     default:
       GST_FIXME ("%s is not supported", gst_video_format_to_string (format));
+      return FALSE;
   }
 
   *y4m_info = out_info;

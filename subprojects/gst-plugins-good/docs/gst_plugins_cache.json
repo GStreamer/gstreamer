@@ -29633,7 +29633,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw:\n         format: { I420, Y41B, Y42B, Y444, I420_10LE, I422_10LE, Y444_10LE, I420_12LE, I422_12LE, Y444_12LE, Y444_16LE, GRAY8, GRAY16_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { I420, Y42B, Y41B, Y444, A444, GRAY8, I420_12LE, I422_12LE, Y444_12LE, I420_10LE, I422_10LE, Y444_10LE, GRAY10_LE16, GRAY16_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -29657,7 +29657,7 @@
                 "klass": "Codec/Encoder/Video",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw:\n         format: { IYUV, I420, Y42B, Y41B, Y444 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { I420, Y42B, Y41B, Y444, A444, GRAY8, I420_12LE, I422_12LE, Y444_12LE, I420_10LE, I422_10LE, Y444_10LE, GRAY10_LE16, GRAY16_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },

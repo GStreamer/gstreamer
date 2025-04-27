@@ -23,6 +23,11 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
+#define Y4M_VIDEO_FORMATS "{ " \
+  "I420, Y42B, Y41B, Y444, A444, GRAY8, I420_12LE, I422_12LE, "         \
+  "Y444_12LE, I420_10LE, I422_10LE, Y444_10LE, GRAY10_LE16, GRAY16_LE " \
+  "}"
+
 gboolean              gst_y4m_video_unpadded_info (GstVideoInfo * y4m_info,
                                                    const GstVideoInfo * vinfo);
 
