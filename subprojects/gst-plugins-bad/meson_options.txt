@@ -206,6 +206,7 @@ option(
   choices: ['auto', '1.0', '1.1', '2.0'],
   description: 'WPE WebKit API to target (1.0 = soup2, 1.1/2.0 = soup3)'
 )
+option('wpe2', type : 'feature', value : 'auto', description : 'WPE Web browser plugin')
 
 option('magicleap', type : 'feature', value : 'auto', description : 'Magic Leap platform support')
 option('v4l2codecs', type : 'feature', value : 'auto', description : 'Video4Linux Stateless CODECs support')
