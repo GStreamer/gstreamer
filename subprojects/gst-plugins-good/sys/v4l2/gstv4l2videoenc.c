@@ -785,7 +785,7 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
       if (!gst_buffer_pool_set_config (opool, config)) {
         config = gst_buffer_pool_get_config (opool);
 
-        if (gst_buffer_pool_config_validate_params (config,
+        if (!gst_buffer_pool_config_validate_params (config,
                 self->input_state->caps, self->v4l2output->info.vinfo.size, min,
                 min)) {
           gst_structure_free (config);
