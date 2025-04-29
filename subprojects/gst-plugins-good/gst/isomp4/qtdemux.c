@@ -14904,7 +14904,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   GNode *pssh;
   guint64 creation_time;
   GstDateTime *datetime = NULL;
-  gint version;
+  guint8 version;
   GstByteReader mvhd_reader;
   guint32 matrix[9];
 
@@ -14918,19 +14918,35 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
     return qtdemux_parse_redirects (qtdemux);
   }
 
-  version = QT_UINT8 ((guint8 *) mvhd->data + 8);
+  if (!gst_byte_reader_get_uint8 (&mvhd_reader, &version))
+    return FALSE;
+  /* flags */
+  if (!gst_byte_reader_skip (&mvhd_reader, 3))
+    return FALSE;
   if (version == 1) {
-    creation_time = QT_UINT64 ((guint8 *) mvhd->data + 12);
-    qtdemux->timescale = QT_UINT32 ((guint8 *) mvhd->data + 28);
-    qtdemux->duration = QT_UINT64 ((guint8 *) mvhd->data + 32);
-    if (!gst_byte_reader_skip (&mvhd_reader, 4 + 8 + 8 + 4 + 8))
+    if (!gst_byte_reader_get_uint64_be (&mvhd_reader, &creation_time))
+      return FALSE;
+    /* modification time */
+    if (!gst_byte_reader_skip (&mvhd_reader, 8))
+      return FALSE;
+    if (!gst_byte_reader_get_uint32_be (&mvhd_reader, &qtdemux->timescale))
+      return FALSE;
+    if (!gst_byte_reader_get_uint64_be (&mvhd_reader, &qtdemux->duration))
       return FALSE;
   } else if (version == 0) {
-    creation_time = QT_UINT32 ((guint8 *) mvhd->data + 12);
-    qtdemux->timescale = QT_UINT32 ((guint8 *) mvhd->data + 20);
-    qtdemux->duration = QT_UINT32 ((guint8 *) mvhd->data + 24);
-    if (!gst_byte_reader_skip (&mvhd_reader, 4 + 4 + 4 + 4 + 4))
+    guint32 tmp;
+
+    if (!gst_byte_reader_get_uint32_be (&mvhd_reader, &tmp))
       return FALSE;
+    creation_time = tmp;
+    /* modification time */
+    if (!gst_byte_reader_skip (&mvhd_reader, 4))
+      return FALSE;
+    if (!gst_byte_reader_get_uint32_be (&mvhd_reader, &qtdemux->timescale))
+      return FALSE;
+    if (!gst_byte_reader_get_uint32_be (&mvhd_reader, &tmp))
+      return FALSE;
+    qtdemux->duration = tmp;
   } else {
     GST_WARNING_OBJECT (qtdemux, "Unhandled mvhd version %d", version);
     return FALSE;
