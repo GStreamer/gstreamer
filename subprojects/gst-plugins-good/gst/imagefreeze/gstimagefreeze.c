@@ -87,6 +87,8 @@ static gboolean gst_image_freeze_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_image_freeze_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
+static gboolean gst_image_freeze_src_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 
 static GstStaticPadTemplate sink_pad_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -184,6 +186,8 @@ gst_image_freeze_init (GstImageFreeze * self)
       GST_DEBUG_FUNCPTR (gst_image_freeze_src_event));
   gst_pad_set_query_function (self->srcpad,
       GST_DEBUG_FUNCPTR (gst_image_freeze_src_query));
+  gst_pad_set_activatemode_function (self->srcpad,
+      GST_DEBUG_FUNCPTR (gst_image_freeze_src_activate_mode));
   gst_pad_use_fixed_caps (self->srcpad);
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
@@ -650,6 +654,45 @@ gst_image_freeze_send_event (GstElement * element, GstEvent * event)
   return ret;
 }
 
+static gboolean
+gst_image_freeze_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
+{
+  gboolean res;
+  GstImageFreeze *self = GST_IMAGE_FREEZE (parent);
+
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      if (!active) {
+        GST_DEBUG_OBJECT (pad, "Pad deactivating");
+
+        g_mutex_lock (&self->lock);
+        self->flushing = TRUE;
+        if (self->clock_id) {
+          GST_DEBUG_OBJECT (self, "unlock clock wait");
+          gst_clock_id_unschedule (self->clock_id);
+        }
+        g_cond_signal (&self->blocked_cond);
+        g_mutex_unlock (&self->lock);
+
+        res = gst_pad_stop_task (pad);
+        gst_image_freeze_reset (self);
+      } else {
+        GST_DEBUG_OBJECT (pad, "Pad activating");
+        gst_image_freeze_reset (self);
+
+        g_mutex_lock (&self->lock);
+        self->flushing = FALSE;
+        g_mutex_unlock (&self->lock);
+        res = TRUE;
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
+}
 
 static gboolean
 gst_image_freeze_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
@@ -912,6 +955,13 @@ gst_image_freeze_sink_chain (GstPad * pad, GstObject * parent,
     gst_buffer_unref (buffer);
     g_mutex_unlock (&self->lock);
     return GST_FLOW_EOS;
+  }
+
+  if (self->flushing) {
+    GST_DEBUG_OBJECT (pad, "Flushing");
+    gst_buffer_unref (buffer);
+    g_mutex_unlock (&self->lock);
+    return GST_FLOW_FLUSHING;
   }
 
   if (self->buffer && !self->allow_replace) {
@@ -1261,9 +1311,7 @@ gst_image_freeze_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_image_freeze_reset (self);
       g_mutex_lock (&self->lock);
-      self->flushing = FALSE;
       self->blocked = TRUE;
       g_mutex_unlock (&self->lock);
       if (self->is_live)
@@ -1277,16 +1325,9 @@ gst_image_freeze_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       g_mutex_lock (&self->lock);
-      self->flushing = TRUE;
-      if (self->clock_id) {
-        GST_DEBUG_OBJECT (self, "unlock clock wait");
-        gst_clock_id_unschedule (self->clock_id);
-      }
       self->blocked = FALSE;
       g_cond_signal (&self->blocked_cond);
       g_mutex_unlock (&self->lock);
-      gst_image_freeze_reset (self);
-      gst_pad_stop_task (self->srcpad);
       break;
     default:
       break;
