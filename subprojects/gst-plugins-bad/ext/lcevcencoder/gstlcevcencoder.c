@@ -464,7 +464,7 @@ build_json_props (GstLcevcEncoder * eil)
             case EIL_PT_Int32:
             case EIL_PT_Int64:{
               gint64 val = g_ascii_strtoll (val_str + 1, NULL, 10);
-              g_string_append_printf (res, "%ld", val);
+              g_string_append_printf (res, "%" G_GINT64_FORMAT, val);
               break;
             }
             case EIL_PT_Uint8:
@@ -472,7 +472,7 @@ build_json_props (GstLcevcEncoder * eil)
             case EIL_PT_Uint32:
             case EIL_PT_Uint64:{
               guint64 val = g_ascii_strtoull (val_str + 1, NULL, 10);
-              g_string_append_printf (res, "%lu", val);
+              g_string_append_printf (res, "%" G_GUINT64_FORMAT, val);
               break;
             }
             case EIL_PT_Float:
@@ -548,15 +548,16 @@ on_encoded_output (void *data, EILOutput * output)
   frame = output->user_data;
   pts = frame->input_buffer->pts;
 
-  GST_INFO_OBJECT (eil, "Received output frame %ld with lcevc size %d", pts,
-      output->lcevc_length);
+  GST_INFO_OBJECT (eil, "Received output frame %" GST_TIME_FORMAT
+      " with lcevc size %u", GST_TIME_ARGS (pts), output->lcevc_length);
 
   /* The EIL DTS can be negative, we need to do the conversion so it can be
    * stored in a GstClockTime (guint64). The EIL PTS can never be negative
    * because it is set using the input buffer PTS, which is a GstClockTime. */
   if (output->dts < 0 && priv->out_ts_offset == 0) {
     priv->out_ts_offset = -1 * output->dts;
-    GST_INFO_OBJECT (eil, "Output DTS offset set to %ld", priv->out_ts_offset);
+    GST_INFO_OBJECT (eil, "Output DTS offset set to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (priv->out_ts_offset));
   }
 
   /* Created output buffer with output data */
@@ -758,14 +759,15 @@ gst_lcevc_encoder_handle_frame (GstVideoEncoder * encoder,
   if (!gst_video_frame_map (&video_frame, &priv->in_info, frame->input_buffer,
           GST_MAP_READ)) {
     GST_ELEMENT_ERROR (eil, STREAM, ENCODE, (NULL),
-        ("Could not map input buffer %ld", pts));
+        ("Could not map input buffer %" GST_TIME_FORMAT, GST_TIME_ARGS (pts)));
     goto error;
   }
 
   /* Initialize EIL picture */
   if (EIL_InitPictureDefault (&picture) != EIL_RC_Success) {
     GST_ELEMENT_ERROR (eil, STREAM, ENCODE, (NULL),
-        ("Could not initialize EIL picture %ld", pts));
+        ("Could not initialize EIL picture %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (pts)));
     goto error;
   }
 
@@ -773,7 +775,8 @@ gst_lcevc_encoder_handle_frame (GstVideoEncoder * encoder,
   if (!gst_lcevc_encoder_utils_init_eil_picture (priv->in_frame_type,
           &video_frame, pts, &picture)) {
     GST_ELEMENT_ERROR (eil, STREAM, ENCODE, (NULL),
-        ("Could not set frame values on EIL picture %ld", pts));
+        ("Could not set frame values on EIL picture %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (pts)));
     goto error;
   }
 
@@ -784,11 +787,13 @@ gst_lcevc_encoder_handle_frame (GstVideoEncoder * encoder,
   /* Encode frame */
   if (EIL_Encode (priv->ctx->context, &picture) != EIL_RC_Success) {
     GST_ELEMENT_ERROR (eil, STREAM, ENCODE, (NULL),
-        ("Could not encode input frame %ld", pts));
+        ("Could not encode input frame %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (pts)));
     goto error;
   }
 
-  GST_INFO_OBJECT (eil, "Sent input frame %ld", pts);
+  GST_INFO_OBJECT (eil, "Sent input frame %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (pts));
 
   gst_video_frame_unmap (&video_frame);
   return GST_FLOW_OK;
