@@ -1,6 +1,6 @@
 [wrap-file]
 directory = pango-1.56.3
-source_url = https://download.gnome.org/sources/pango/1.54/pango-1.56.3.tar.xz
+source_url = https://download.gnome.org/sources/pango/1.56/pango-1.56.3.tar.xz
 source_fallback_url = https://deb.debian.org/debian/pool/main/p/pango1.0/pango1.0_1.56.3.orig.tar.xz
 source_filename = pango-1.56.3.tar.xz
 source_hash = 2606252bc25cd8d24e1b7f7e92c3a272b37acd6734347b73b47a482834ba2491
