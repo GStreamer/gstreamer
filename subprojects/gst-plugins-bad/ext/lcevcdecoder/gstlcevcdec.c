@@ -406,7 +406,8 @@ receive_enhanced_picture (GstLcevcDec * lcevc)
     }
 
     GST_INFO_OBJECT (lcevc,
-        "Received enhanced picture: ts=%ld e=%d w=%d h=%d t=%d b=%d l=%d r=%d",
+        "Received enhanced picture: ts=%" G_GINT64_FORMAT " e=%d w=%d h=%d"
+        " t=%d b=%d l=%d r=%d",
         decode_info.timestamp, decode_info.enhanced, pic_desc.width,
         pic_desc.height, pic_desc.cropTop, pic_desc.cropBottom,
         pic_desc.cropLeft, pic_desc.cropRight);
@@ -479,12 +480,14 @@ receive_base_picture (GstLcevcDec * lcevc)
 
   while (LCEVC_ReceiveDecoderBase (lcevc->decoder_handle, &picture_handle)
       == LCEVC_Success) {
-    GST_DEBUG_OBJECT (lcevc, "Received base picture %ld", picture_handle.hdl);
+    GST_DEBUG_OBJECT (lcevc, "Received base picture %" G_GUINTPTR_FORMAT,
+        picture_handle.hdl);
 
     if (LCEVC_FreePicture (lcevc->decoder_handle, picture_handle)
         != LCEVC_Success) {
       GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
-          ("Could not free base picture %ld", picture_handle.hdl));
+          ("Could not free base picture %" G_GUINTPTR_FORMAT,
+              picture_handle.hdl));
       return FALSE;
     }
   }
@@ -502,8 +505,9 @@ send_enhancement_data (GstLcevcDec * lcevc, GstBuffer * input_buffer)
   lcevc_meta = gst_buffer_get_lcevc_meta (input_buffer);
   if (!lcevc_meta) {
     GST_INFO_OBJECT (lcevc,
-        "Input buffer %ld enhancement data not found, doing passthrough",
-        input_buffer->pts);
+        "Input buffer %" GST_TIME_FORMAT
+        " enhancement data not found, doing passthrough",
+        GST_TIME_ARGS (GST_BUFFER_PTS (input_buffer)));
 
     /* Set output state with input resolution to do passthrough */
     return ensure_output_resolution (lcevc,
@@ -513,8 +517,8 @@ send_enhancement_data (GstLcevcDec * lcevc, GstBuffer * input_buffer)
 
   if (!gst_buffer_map (lcevc_meta->enhancement_data, &enhancement_info,
           GST_MAP_READ)) {
-    GST_INFO_OBJECT (lcevc, "Could not map input buffer %ld enhancement data",
-        input_buffer->pts);
+    GST_INFO_OBJECT (lcevc, "Could not map input buffer %" GST_TIME_FORMAT
+        " enhancement data", GST_TIME_ARGS (GST_BUFFER_PTS (input_buffer)));
     goto done;
   }
 
@@ -522,15 +526,15 @@ send_enhancement_data (GstLcevcDec * lcevc, GstBuffer * input_buffer)
           input_buffer->pts, TRUE, enhancement_info.data,
           enhancement_info.size) != LCEVC_Success) {
     GST_INFO_OBJECT (lcevc,
-        "Could not send input buffer %ld enhancement data with size %ld",
-        input_buffer->pts, enhancement_info.size);
+        "Could not send input buffer %" GST_TIME_FORMAT
+        " enhancement data with size %zu",
+        GST_TIME_ARGS (GST_BUFFER_PTS (input_buffer)), enhancement_info.size);
     goto done;
   }
 
   GST_INFO_OBJECT (lcevc,
-      "Sent input buffer %ld enhancement data with size %lu",
-      input_buffer->pts, enhancement_info.size);
-
+      "Sent input buffer %" GST_TIME_FORMAT " enhancement data with size %zu",
+      GST_TIME_ARGS (GST_BUFFER_PTS (input_buffer)), enhancement_info.size);
   ret = TRUE;
 
 done:
@@ -548,27 +552,29 @@ send_base_picture (GstLcevcDec * lcevc, GstBuffer * input_buffer)
   if (!gst_video_frame_map (&frame, &lcevc->in_info, input_buffer,
           GST_MAP_READ)) {
     GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
-        ("Could not map input buffer %ld", input_buffer->pts));
+        ("Could not map input buffer %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (GST_BUFFER_PTS (input_buffer))));
     goto done;
   }
 
-  if (!gst_lcevc_dec_utils_alloc_picture_handle (lcevc->decoder_handle, &frame,
-          &picture_handle)) {
+  if (!gst_lcevc_dec_utils_alloc_picture_handle (lcevc->decoder_handle,
+          &frame, &picture_handle)) {
     GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
-        ("Could not allocate input picture handle %ld", input_buffer->pts));
+        ("Could not allocate input picture handle %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (GST_BUFFER_PTS (input_buffer))));
     goto done;
   }
 
   if (LCEVC_SendDecoderBase (lcevc->decoder_handle, input_buffer->pts, TRUE,
           picture_handle, 1000000, NULL) != LCEVC_Success) {
     GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
-        ("Could not send input buffer %ld base picture", input_buffer->pts));
+        ("Could not send input buffer %" GST_TIME_FORMAT " base picture",
+            GST_TIME_ARGS (GST_BUFFER_PTS (input_buffer))));
     goto done;
   }
 
-  GST_INFO_OBJECT (lcevc, "Sent input buffer %ld base picture",
-      input_buffer->pts);
-
+  GST_INFO_OBJECT (lcevc, "Sent input buffer %" GST_TIME_FORMAT " base picture",
+      GST_TIME_ARGS (GST_BUFFER_PTS (input_buffer)));
   ret = TRUE;
 
 done:
@@ -596,7 +602,7 @@ send_enhanced_picture (GstLcevcDec * lcevc, GstVideoCodecFrame * frame)
   if (!gst_video_frame_map (&map, &s->info, frame->output_buffer,
           GST_MAP_WRITE)) {
     GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
-        ("Could not map output buffer for writting"));
+        ("Could not map output buffer for writing"));
     goto done;
   }
 
@@ -639,8 +645,10 @@ gst_lcevc_dec_handle_frame (GstVideoDecoder * decoder,
 {
   GstLcevcDec *lcevc = GST_LCEVC_DEC (decoder);
 
-  GST_DEBUG_OBJECT (decoder, "Handling frame %d with timestamp %ld",
-      frame->system_frame_number, frame->input_buffer->pts);
+  GST_DEBUG_OBJECT (decoder, "Handling frame %" G_GUINT32_FORMAT
+      " with timestamp %" GST_TIME_FORMAT,
+      frame->system_frame_number,
+      GST_TIME_ARGS (GST_BUFFER_PTS (frame->input_buffer)));
 
   if (!send_enhancement_data (lcevc, frame->input_buffer))
     goto error;
