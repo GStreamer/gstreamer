@@ -1881,13 +1881,213 @@ payloads_from_bytes (ParseState state, GArray * payloads, const guint8 * d,
         g_array_append_val (payloads, p);
         break;
       }
-      case GST_MIKEY_PT_DH:
-      case GST_MIKEY_PT_SIGN:
-      case GST_MIKEY_PT_ID:
-      case GST_MIKEY_PT_CERT:
-      case GST_MIKEY_PT_CHASH:
-      case GST_MIKEY_PT_V:
+      case GST_MIKEY_PT_DH:{
+        guint8 dh_group;
+        guint dh_len;
+        guint8 kv;
+
+        /* TODO: Actually include the payload in the return value */
+
+        GST_FIXME ("MIKEY DH payload not supported");
+
+        /*
+         *                      1                   2                   3
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * !  Next Payload ! DH-Group      !  DH-value                     ~
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * ! Reserv! KV    ! KV data (optional)                            ~
+         * * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         */
+        CHECK_SIZE (2);
+        next_payload = d[0];
+        dh_group = d[1];
+        switch (dh_group) {
+          case 0:
+            /* OAKLEY 5 */
+            dh_len = 1536 / 8;
+            break;
+          case 1:
+            /* OAKLEY 1 */
+            dh_len = 768 / 8;
+            break;
+          case 2:
+            /* OAKLEY 2 */
+            dh_len = 1024 / 8;
+            break;
+          default:
+            goto invalid_data;
+        }
+        CHECK_SIZE (2 + dh_len);
+        ADVANCE (2 + dh_len);
+
+        CHECK_SIZE (1);
+        kv = d[0] & 0x0f;
+        ADVANCE (1);
+
+        switch (kv) {
+          case GST_MIKEY_KV_NULL:
+            break;
+          case GST_MIKEY_KV_SPI:{
+            guint8 spi_len;
+
+            /*
+             *                      1                   2                   3
+             *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+             * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+             * ! SPI Length    ! SPI                                           ~
+             * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+             */
+
+            CHECK_SIZE (1);
+            spi_len = d[0];
+            CHECK_SIZE (1 + spi_len);
+            ADVANCE (1 + spi_len);
+            break;
+          }
+          case GST_MIKEY_KV_INTERVAL:{
+            guint8 vf_len, vt_len;
+
+            /*
+             *                      1                   2                   3
+             *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+             * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+             * ! VF Length     ! Valid From                                    ~
+             * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+             * ! VT Length     ! Valid To (expires)                            ~
+             * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+             */
+
+            CHECK_SIZE (1);
+            vf_len = d[0];
+            CHECK_SIZE (1 + vf_len);
+            ADVANCE (1 + vf_len);
+            CHECK_SIZE (1);
+            vt_len = d[0];
+            CHECK_SIZE (1 + vt_len);
+            ADVANCE (1 + vt_len);
+
+            break;
+          }
+          default:
+            goto invalid_data;
+        }
+
         break;
+      }
+      case GST_MIKEY_PT_SIGN:{
+        guint16 sig_len;
+
+        /* TODO: Actually include the payload in the return value */
+
+        GST_FIXME ("MIKEY SIGN payload not supported");
+
+        /*
+         *                      1                   2                   3
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * ! S type| Signature len         ! Signature                     ~
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         */
+        /* No next payload! */
+        next_payload = GST_MIKEY_PT_LAST;
+        CHECK_SIZE (2);
+        sig_len = GST_READ_UINT16_BE (&d[0]) & 0x0fff;
+        CHECK_SIZE (2 + sig_len);
+        ADVANCE (2 + sig_len);
+        break;
+      }
+      case GST_MIKEY_PT_ID:
+      case GST_MIKEY_PT_CERT:{
+        guint16 cert_len;
+
+        /* TODO: Actually include the payload in the return value */
+
+        GST_FIXME ("MIKEY ID/CERT payload not supported");
+
+        /*
+         *                      1                   2                   3
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * !  Next Payload ! ID/Cert Type  ! ID/Cert len                   !
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * !                       ID/Certificate Data                     ~
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         */
+        CHECK_SIZE (4);
+        next_payload = d[0];
+        cert_len = GST_READ_UINT16_BE (&d[2]);
+        CHECK_SIZE (4 + cert_len);
+        ADVANCE (4 + cert_len);
+        break;
+      }
+      case GST_MIKEY_PT_CHASH:{
+        guint8 hash_func;
+        guint hash_length;
+
+        /* TODO: Actually include the payload in the return value */
+
+        GST_FIXME ("MIKEY CHASH payload not supported");
+
+        /*
+         *                      1                   2                   3
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * ! Next Payload  ! Hash func     ! Hash                          ~
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         */
+        CHECK_SIZE (2);
+        next_payload = d[0];
+        hash_func = d[1];
+        switch (hash_func) {
+          case 0:
+            /* SHA-1 */
+            hash_length = 160 / 8;
+            break;
+          case 1:
+            /* MD5 */
+            hash_length = 128 / 8;
+            break;
+          default:
+            goto invalid_data;
+        }
+        CHECK_SIZE (2 + hash_length);
+        ADVANCE (2 + hash_length);
+        break;
+      }
+      case GST_MIKEY_PT_V:{
+        guint8 auth_alg;
+        guint ver_len;
+
+        /* TODO: Actually include the payload in the return value */
+
+        GST_FIXME ("MIKEY V payload not supported");
+
+        /*
+         *                      1                   2                   3
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * ! Next Payload  ! Auth alg      ! Ver data                      ~
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         */
+        CHECK_SIZE (2);
+        next_payload = d[0];
+        auth_alg = d[1];
+
+        switch (auth_alg) {
+          case GST_MIKEY_MAC_NULL:
+            ver_len = 0;
+            break;
+          case GST_MIKEY_MAC_HMAC_SHA_1_160:
+            ver_len = 160 / 8;
+            break;
+          default:
+            goto invalid_data;
+        }
+        CHECK_SIZE (2 + ver_len);
+        ADVANCE (2 + ver_len);
+        break;
+      }
       case GST_MIKEY_PT_SP:
       {
         guint8 policy;
@@ -1954,8 +2154,24 @@ payloads_from_bytes (ParseState state, GArray * payloads, const guint8 * d,
         g_array_append_val (payloads, p);
         break;
       }
-      case GST_MIKEY_PT_ERR:
+      case GST_MIKEY_PT_ERR:{
+        /* TODO: Actually include the payload in the return value */
+
+        GST_FIXME ("MIKEY ERR payload not supported");
+
+        /*
+         *                      1                   2                   3
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * !  Next Payload ! Error no      !           Reserved            !
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         */
+        CHECK_SIZE (4);
+        next_payload = d[0];
+        /* skip remainder */
+        ADVANCE (4);
         break;
+      }
       case GST_MIKEY_PT_KEY_DATA:
       {
         GstMIKEYKeyDataType key_type;
@@ -2042,9 +2258,34 @@ payloads_from_bytes (ParseState state, GArray * payloads, const guint8 * d,
         g_array_append_val (payloads, p);
         break;
       }
-      case GST_MIKEY_PT_GEN_EXT:
+      case GST_MIKEY_PT_GEN_EXT:{
+        guint16 ext_len;
+
+        /* TODO: Actually include the payload in the return value */
+
+        GST_FIXME ("MIKEY GEN_EXT payload not supported");
+
+        /*
+         *                      1                   2                   3
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * ! Next payload  ! Type          ! Length                        !
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         * ! Data                                                          ~
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+         */
+        CHECK_SIZE (4);
+        next_payload = d[0];
+        /* skip type */
+        ext_len = GST_READ_UINT16_BE (&d[2]);
+        CHECK_SIZE (4 + ext_len);
+        ADVANCE (4 + ext_len);
+        break;
+      }
       case GST_MIKEY_PT_LAST:
         break;
+      default:
+        goto invalid_data;
     }
   }
   return TRUE;
