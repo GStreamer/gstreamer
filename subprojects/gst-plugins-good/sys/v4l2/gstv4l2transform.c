@@ -206,32 +206,36 @@ gst_v4l2_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   if (self->disable_passthrough)
     gst_base_transform_set_passthrough (trans, FALSE);
 
-  if (self->incaps && self->outcaps) {
-    if (gst_caps_is_equal (incaps, self->incaps) &&
-        gst_caps_is_equal (outcaps, self->outcaps)) {
-      GST_DEBUG_OBJECT (trans, "Caps did not changed");
-      return TRUE;
-    }
+  gboolean incaps_changed =
+      !(self->incaps && gst_caps_is_equal (incaps, self->incaps));
+  gboolean outcaps_changed =
+      !(self->outcaps && gst_caps_is_equal (outcaps, self->outcaps));
+
+  if (!incaps_changed && !outcaps_changed) {
+    GST_DEBUG_OBJECT (trans, "Caps did not change");
+    return TRUE;
   }
 
-  gst_v4l2_object_stop (self->v4l2output);
-  gst_v4l2_object_stop (self->v4l2capture);
+  if (incaps_changed) {
+    gst_v4l2_object_stop (self->v4l2output);
+    if (!gst_v4l2_object_set_format (self->v4l2output, incaps, &error))
+      goto incaps_failed;
+    gst_caps_replace (&self->incaps, incaps);
 
-  if (!gst_v4l2_object_set_format (self->v4l2output, incaps, &error))
-    goto incaps_failed;
+    /* FIXME implement fallback if crop not supported */
+    if (!gst_v4l2_object_setup_padding (self->v4l2output))
+      goto failed;
+  }
 
-  if (!gst_v4l2_object_set_format (self->v4l2capture, outcaps, &error))
-    goto outcaps_failed;
+  if (outcaps_changed) {
+    gst_v4l2_object_stop (self->v4l2capture);
+    if (!gst_v4l2_object_set_format (self->v4l2capture, outcaps, &error))
+      goto outcaps_failed;
+    gst_caps_replace (&self->outcaps, outcaps);
 
-  gst_caps_replace (&self->incaps, incaps);
-  gst_caps_replace (&self->outcaps, outcaps);
-
-  /* FIXME implement fallback if crop not supported */
-  if (!gst_v4l2_object_setup_padding (self->v4l2output))
-    goto failed;
-
-  if (!gst_v4l2_object_setup_padding (self->v4l2capture))
-    goto failed;
+    if (!gst_v4l2_object_setup_padding (self->v4l2capture))
+      goto failed;
+  }
 
   return TRUE;
 
@@ -1056,6 +1060,20 @@ gst_v4l2_transform_sink_event (GstBaseTransform * trans, GstEvent * event)
   return ret;
 }
 
+static gboolean
+gst_v4l2_transform_src_event (GstBaseTransform * trans, GstEvent * event)
+{
+  /* Don't propagate reconfigure event, we'll negotiate with downstream */
+  if ((GST_EVENT_TYPE (event) == GST_EVENT_RECONFIGURE)
+      && !gst_base_transform_is_passthrough (trans)) {
+    GST_DEBUG_OBJECT (trans, "Dropping reconfigure event");
+    gst_event_unref (event);
+    return TRUE;
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans, event);
+}
+
 static GstStateChangeReturn
 gst_v4l2_transform_change_state (GstElement * element,
     GstStateChange transition)
@@ -1171,6 +1189,8 @@ gst_v4l2_transform_class_init (GstV4l2TransformClass * klass)
   base_transform_class->query = GST_DEBUG_FUNCPTR (gst_v4l2_transform_query);
   base_transform_class->sink_event =
       GST_DEBUG_FUNCPTR (gst_v4l2_transform_sink_event);
+  base_transform_class->src_event =
+      GST_DEBUG_FUNCPTR (gst_v4l2_transform_src_event);
   base_transform_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_v4l2_transform_decide_allocation);
   base_transform_class->propose_allocation =
