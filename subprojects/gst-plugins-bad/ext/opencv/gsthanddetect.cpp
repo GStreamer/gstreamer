@@ -205,49 +205,49 @@ gst_handdetect_class_init (GstHanddetectClass * klass)
       );
   g_object_class_install_property (gobject_class,
       PROP_PROFILE_FIST,
-      g_param_spec_string ("profile_fist",
+      g_param_spec_string ("profile-fist",
           "Profile_fist",
           "Location of HAAR cascade file (fist gesture)",
-          HAAR_FILE_FIST, (GParamFlags) G_PARAM_READWRITE)
+          HAAR_FILE_FIST, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS))
       );
   g_object_class_install_property (gobject_class,
       PROP_PROFILE_PALM,
-      g_param_spec_string ("profile_palm",
+      g_param_spec_string ("profile-palm",
           "Profile_palm",
           "Location of HAAR cascade file (palm gesture)",
-          HAAR_FILE_PALM, (GParamFlags) G_PARAM_READWRITE)
+          HAAR_FILE_PALM, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS))
       );
-  /* FIXME: property name needs fixing */
+
   g_object_class_install_property (gobject_class,
       PROP_ROI_X,
-      g_param_spec_int ("ROI_X",
-          "ROI_X",
+      g_param_spec_int ("ROI-X",
+          "ROI-X",
           "X of left-top pointer in region of interest \nGestures in the defined region of interest will emit messages",
-          0, INT_MAX, 0, (GParamFlags) G_PARAM_READWRITE)
+          0, INT_MAX, 0, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS))
       );
-  /* FIXME: property name needs fixing */
+
   g_object_class_install_property (gobject_class,
       PROP_ROI_Y,
-      g_param_spec_int ("ROI_Y",
-          "ROI_Y",
+      g_param_spec_int ("ROI-Y",
+          "ROI-Y",
           "Y of left-top pointer in region of interest \nGestures in the defined region of interest will emit messages",
-          0, INT_MAX, 0, (GParamFlags) G_PARAM_READWRITE)
+          0, INT_MAX, 0, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS))
       );
-  /* FIXME: property name needs fixing */
+
   g_object_class_install_property (gobject_class,
       PROP_ROI_WIDTH,
-      g_param_spec_int ("ROI_WIDTH",
-          "ROI_WIDTH",
+      g_param_spec_int ("ROI-WIDTH",
+          "ROI-WIDTH",
           "WIDTH of left-top pointer in region of interest \nGestures in the defined region of interest will emit messages",
-          0, INT_MAX, 0, (GParamFlags) G_PARAM_READWRITE)
+          0, INT_MAX, 0, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS))
       );
-  /* FIXME: property name needs fixing */
+
   g_object_class_install_property (gobject_class,
       PROP_ROI_HEIGHT,
-      g_param_spec_int ("ROI_HEIGHT",
-          "ROI_HEIGHT",
+      g_param_spec_int ("ROI-HEIGHT",
+          "ROI-HEIGHT",
           "HEIGHT of left-top pointer in region of interest \nGestures in the defined region of interest will emit messages",
-          0, INT_MAX, 0, (GParamFlags) G_PARAM_READWRITE)
+          0, INT_MAX, 0, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS))
       );
 
   gst_element_class_set_static_metadata (element_class,
