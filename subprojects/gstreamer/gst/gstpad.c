@@ -4075,7 +4075,14 @@ typedef struct
   GstEvent *event;
 } PushStickyData;
 
-/* should be called with pad LOCK */
+/* Push the sticky event in the #PadEvent pointed by @ev.
+ *
+ * Must be called with pad LOCK.
+ *
+ * This function will temporarily unlock the pad during the event push, so care
+ * must be taken that all the arguments remain valid during the entire duration
+ * of the call.  Note that events_foreach() already guarantees this by making a
+ * stack copy of PadEvent and increasing the reference count of the event. */
 static gboolean
 push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
 {
@@ -4101,10 +4108,25 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
       data_sticky_order < ev->sticky_order) {
     data->ret = GST_FLOW_CUSTOM_SUCCESS_1;
   } else {
+    GST_OBJECT_UNLOCK (pad);
+    /* The event argument remains valid during the unlock as the caller must
+     * hold a strong reference to event during the call. */
     GST_TRACER_PAD_PUSH_EVENT_PRE (pad, event);
+    GST_OBJECT_LOCK (pad);
+    /* Note that serialized events (and by extension, the events in the sticky
+     * event list of the pad) are meant to be pushed while holding the srcpad
+     * stream lock.
+     * A FLUSH_START may have been pushed within the unlocked period, which
+     * would set the pad flushing flag, but a FLUSH_STOP requires the stream
+     * lock. */
+
     data->ret = gst_pad_push_event_unchecked (pad, gst_event_ref (event),
         GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
+
+    GST_OBJECT_UNLOCK (pad);
     GST_TRACER_PAD_PUSH_EVENT_POST (pad, data->ret >= GST_FLOW_OK);
+    GST_OBJECT_LOCK (pad);
+
     if (data->ret == GST_FLOW_CUSTOM_SUCCESS_1)
       data->ret = GST_FLOW_OK;
   }
@@ -4151,8 +4173,11 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
   return data->ret == GST_FLOW_OK;
 }
 
-/* check sticky events and push them when needed. should be called
- * with pad LOCK */
+/* Check the sticky event list of the pad and push all sticky events that
+ * have not been yet received by downstream and that aren't priority-ordered
+ * after the optional @event passed as argument.
+ *
+ * Must be called with pad LOCK. */
 static inline GstFlowReturn
 check_sticky (GstPad * pad, GstEvent * event)
 {
@@ -4175,10 +4200,21 @@ check_sticky (GstPad * pad, GstEvent * event)
       PadEvent *ev = find_event_by_type (pad, GST_EVENT_EOS, 0);
 
       if (ev && !ev->received) {
+        /* Store and ref the event *before* unlocking, as the PadEvent list
+         * may be modified during the unlocked period (e.g. by a flush or
+         * instant rate change event). */
+        GstEvent *event = gst_event_ref (ev->event);
+        GST_OBJECT_UNLOCK (pad);
         GST_TRACER_PAD_PUSH_EVENT_PRE (pad, event);
-        data.ret = gst_pad_push_event_unchecked (pad, gst_event_ref (ev->event),
+        GST_OBJECT_LOCK (pad);
+
+        data.ret = gst_pad_push_event_unchecked (pad, event,
             GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
+
+        GST_OBJECT_UNLOCK (pad);
         GST_TRACER_PAD_PUSH_EVENT_POST (pad, data.ret >= GST_FLOW_OK);
+        GST_OBJECT_LOCK (pad);
+
         /* the event could have been dropped. Because this can only
          * happen if the user asked for it, it's not an error */
         if (data.ret == GST_FLOW_CUSTOM_SUCCESS)
@@ -5737,8 +5773,8 @@ idle_probe_stopped:
 
 /**
  * gst_pad_push_event:
- * @pad: a #GstPad to push the event to.
- * @event: (transfer full): the #GstEvent to send to the pad.
+ * @pad: the #GstPad that will push the event.
+ * @event: (transfer full): the #GstEvent to push out of the pad.
  *
  * Sends the event to the peer of the given pad. This function is
  * mainly used by elements to send events to their peer

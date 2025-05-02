@@ -32820,11 +32820,11 @@ MT safe.</doc>
         </return-value>
         <parameters>
           <instance-parameter name="pad" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">a #GstPad to push the event to.</doc>
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">the #GstPad that will push the event.</doc>
             <type name="Pad" c:type="GstPad*"/>
           </instance-parameter>
           <parameter name="event" transfer-ownership="full">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">the #GstEvent to send to the pad.</doc>
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">the #GstEvent to push out of the pad.</doc>
             <type name="Event" c:type="GstEvent*"/>
           </parameter>
         </parameters>
