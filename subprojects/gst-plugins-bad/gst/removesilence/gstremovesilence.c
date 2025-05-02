@@ -175,12 +175,13 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MINIMUM_SILENCE_TIME,
-      g_param_spec_uint64 ("minimum_silence_time",
+      g_param_spec_uint64 ("minimum-silence-time",
           "Minimum silence time",
           "Define the minimum silence time in nanoseconds before removing "
           " silence, 0 means disabled. This will not introduce latency",
           MINIMUM_SILENCE_TIME_MIN, MINIMUM_SILENCE_TIME_MAX,
-          MINIMUM_SILENCE_TIME_DEF, G_PARAM_READWRITE));
+          MINIMUM_SILENCE_TIME_DEF,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "RemoveSilence",
