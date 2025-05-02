@@ -168,7 +168,7 @@ nle_source_class_init (NleSourceClass * klass)
   g_object_class_install_property (gobject_class, PROP_REVERSE,
       g_param_spec_boolean ("reverse", "Reverse",
           "Whether to playback the source reverse or not", FALSE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class, "GNonLin Source",
       "Filter/Editor",

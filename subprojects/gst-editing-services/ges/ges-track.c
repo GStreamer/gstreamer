@@ -734,7 +734,8 @@ ges_track_class_init (GESTrackClass * klass)
    */
   properties[ARG_CAPS] = g_param_spec_boxed ("caps", "Caps",
       "Caps used to choose the output stream",
-      GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+      GST_TYPE_CAPS,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, ARG_CAPS,
       properties[ARG_CAPS]);
 
@@ -754,7 +755,7 @@ ges_track_class_init (GESTrackClass * klass)
   properties[ARG_RESTRICTION_CAPS] =
       g_param_spec_boxed ("restriction-caps", "Restriction caps",
       "Caps used as a final filter on the output stream", GST_TYPE_CAPS,
-      G_PARAM_READWRITE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, ARG_RESTRICTION_CAPS,
       properties[ARG_RESTRICTION_CAPS]);
 
@@ -769,7 +770,7 @@ ges_track_class_init (GESTrackClass * klass)
    * the underlying composition? */
   properties[ARG_DURATION] = g_param_spec_uint64 ("duration", "Duration",
       "The current duration of the track", 0, G_MAXUINT64, GST_SECOND,
-      G_PARAM_READABLE);
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, ARG_DURATION,
       properties[ARG_DURATION]);
 
@@ -786,7 +787,7 @@ ges_track_class_init (GESTrackClass * klass)
   properties[ARG_TYPE] = g_param_spec_flags ("track-type", "TrackType",
       "Type of stream the track outputs",
       GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_CUSTOM,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, ARG_TYPE,
       properties[ARG_TYPE]);
 
@@ -801,7 +802,9 @@ ges_track_class_init (GESTrackClass * klass)
    */
   properties[ARG_MIXING] = g_param_spec_boolean ("mixing", "Mixing",
       "Whether layer mixing is activated on the track or not",
-      TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_EXPLICIT_NOTIFY);
+      TRUE,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_EXPLICIT_NOTIFY |
+      G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, ARG_MIXING,
       properties[ARG_MIXING]);
 

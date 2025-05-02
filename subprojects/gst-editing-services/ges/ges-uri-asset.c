@@ -287,7 +287,8 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
    */
   properties[PROP_DURATION] =
       g_param_spec_uint64 ("duration", "Duration", "The duration to use", 0,
-      G_MAXUINT64, GST_CLOCK_TIME_NONE, G_PARAM_READWRITE);
+      G_MAXUINT64, GST_CLOCK_TIME_NONE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_DURATION,
       properties[PROP_DURATION]);
 
@@ -300,7 +301,8 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
    */
   properties[PROP_IS_NESTED_TIMELINE] =
       g_param_spec_boolean ("is-nested-timeline", "Is nested timeline",
-      "Whether this is a nested timeline", FALSE, G_PARAM_READABLE);
+      "Whether this is a nested timeline", FALSE,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_IS_NESTED_TIMELINE,
       properties[PROP_IS_NESTED_TIMELINE]);
 

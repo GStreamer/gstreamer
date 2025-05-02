@@ -490,7 +490,7 @@ gst_drm_dumb_allocator_class_init (GstDRMDumbAllocatorClass * klass)
    */
   g_props[PROP_DRM_FD] = g_param_spec_int ("drm-fd", "DRM fd",
       "DRM file descriptor", -1, G_MAXINT, -1,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY);
 
   /**
    * GstDRMDumbAllocator:drm-device-path: (type filename):

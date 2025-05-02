@@ -380,17 +380,20 @@ gst_avdtp_sink_class_init (GstAvdtpSinkClass * klass)
 
   g_object_class_install_property (object_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
-          "Bluetooth remote device address", NULL, G_PARAM_READWRITE));
+          "Bluetooth remote device address", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_AUTOCONNECT,
       g_param_spec_boolean ("auto-connect",
           "Auto-connect",
           "Automatically attempt to connect "
-          "to device", DEFAULT_AUTOCONNECT, G_PARAM_READWRITE));
+          "to device", DEFAULT_AUTOCONNECT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_TRANSPORT,
       g_param_spec_string ("transport",
-          "Transport", "Use configured transport", NULL, G_PARAM_READWRITE));
+          "Transport", "Use configured transport", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (avdtp_sink_debug, "avdtpsink", 0,
       "A2DP headset sink element");

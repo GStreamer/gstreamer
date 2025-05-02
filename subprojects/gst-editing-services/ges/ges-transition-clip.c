@@ -284,7 +284,7 @@ ges_transition_clip_class_init (GESTransitionClipClass * klass)
           "The SMPTE video wipe to use, or 0 for crossfade",
           GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE,
           GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   GES_TIMELINE_ELEMENT_CLASS (klass)->lookup_child = _lookup_child;
   container_class->child_added = _child_added;

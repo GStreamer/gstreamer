@@ -542,7 +542,7 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
    */
   properties[PROP_ALPHA] =
       g_param_spec_double ("alpha", "alpha", "alpha of the stream", 0.0, 1.0,
-      1.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE);
+      1.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS);
 
   /**
    * gstframepositioner:posx:
@@ -552,7 +552,8 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
   properties[PROP_POSX] =
       g_param_spec_int ("posx", "posx", "x position of the stream",
       MIN_PIXELS, MAX_PIXELS, 0,
-      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION);
+      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION |
+      G_PARAM_STATIC_STRINGS);
 
   /**
    * gstframepositioner:fposx:
@@ -562,7 +563,8 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
   properties[PROP_FPOSX] =
       g_param_spec_float ("fposx", "fposx", "x position of the stream in float",
       MIN_PIXELS, MAX_PIXELS, 0,
-      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION);
+      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION |
+      G_PARAM_STATIC_STRINGS);
 
   /**
    * gstframepositioner:posy:
@@ -572,7 +574,8 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
   properties[PROP_POSY] =
       g_param_spec_int ("posy", "posy", "y position of the stream",
       MIN_PIXELS, MAX_PIXELS, 0,
-      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION);
+      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION |
+      G_PARAM_STATIC_STRINGS);
 
 
   /**
@@ -583,7 +586,8 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
   properties[PROP_FPOSY] =
       g_param_spec_float ("fposy", "fposy", "y position of the stream in float",
       MIN_PIXELS, MAX_PIXELS, 0,
-      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION);
+      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION |
+      G_PARAM_STATIC_STRINGS);
 
   /**
    * gstframepositioner:zorder:
@@ -592,7 +596,7 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
    */
   properties[PROP_ZORDER] =
       g_param_spec_uint ("zorder", "zorder", "z order of the stream", 0,
-      G_MAXUINT, 0, G_PARAM_READWRITE);
+      G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * gesframepositioner:width:
@@ -603,7 +607,8 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
   properties[PROP_WIDTH] =
       g_param_spec_int ("width", "width", "width of the source", 0,
       MAX_PIXELS, 0,
-      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION);
+      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION |
+      G_PARAM_STATIC_STRINGS);
 
   /**
    * gesframepositioner:fwidth:
@@ -614,7 +619,8 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
   properties[PROP_FWIDTH] =
       g_param_spec_float ("fwidth", "fwidth", "width of the source in float", 0,
       MAX_PIXELS, 0,
-      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION);
+      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION |
+      G_PARAM_STATIC_STRINGS);
 
   /**
    * gesframepositioner:height:
@@ -625,7 +631,8 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
   properties[PROP_HEIGHT] =
       g_param_spec_int ("height", "height", "height of the source", 0,
       MAX_PIXELS, 0,
-      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION);
+      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION |
+      G_PARAM_STATIC_STRINGS);
 
   /**
    * gesframepositioner:fheight:
@@ -636,7 +643,8 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
   properties[PROP_FHEIGHT] =
       g_param_spec_float ("fheight", "fheight", "height of the source in float",
       0, MAX_PIXELS, 0,
-      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION);
+      G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_LAX_VALIDATION |
+      G_PARAM_STATIC_STRINGS);
 
   /**
    * gesframepositioner:operator:

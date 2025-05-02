@@ -221,17 +221,17 @@ gst_dshowvideosink_class_init (GstDshowVideoSinkClass * klass)
       PROP_KEEP_ASPECT_RATIO, g_param_spec_boolean ("force-aspect-ratio",
           "Force aspect ratio",
           "When enabled, scaling will respect original aspect ratio", TRUE,
-          (GParamFlags)G_PARAM_READWRITE));
+          GParamFlags(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_FULL_SCREEN, g_param_spec_boolean ("fullscreen",
           "Full screen mode",
           "Use full-screen mode (not available when using XOverlay)", FALSE,
-          (GParamFlags)G_PARAM_READWRITE));
+	  GParamFlags(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_RENDERER, g_param_spec_string ("renderer", "Renderer",
       "Force usage of specific DirectShow renderer (EVR, VMR9 or VMR7)",
-      NULL, (GParamFlags)G_PARAM_READWRITE));
+      NULL, GParamFlags(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 }
 
 static void

@@ -303,12 +303,13 @@ gst_v4l2radio_class_init (GstV4l2RadioClass * klass)
   g_object_class_install_property (gobject_class, ARG_DEVICE,
       g_param_spec_string ("device", "Radio device location",
           "Video4Linux2 radio device location",
-          DEFAULT_PROP_DEVICE, G_PARAM_READWRITE));
+          DEFAULT_PROP_DEVICE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_FREQUENCY,
       g_param_spec_int ("frequency", "Station frequency",
           "Station frequency in Hz",
-          MIN_FREQUENCY, MAX_FREQUENCY, DEFAULT_FREQUENCY, G_PARAM_READWRITE));
+          MIN_FREQUENCY, MAX_FREQUENCY, DEFAULT_FREQUENCY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_v4l2radio_change_state);

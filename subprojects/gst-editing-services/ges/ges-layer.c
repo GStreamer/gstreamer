@@ -231,7 +231,8 @@ ges_layer_class_init (GESLayerClass * klass)
    */
   g_object_class_install_property (object_class, PROP_PRIORITY,
       g_param_spec_uint ("priority", "Priority",
-          "The priority of the layer", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
+          "The priority of the layer", 0, G_MAXUINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESLayer:auto-transition:
@@ -246,7 +247,8 @@ ges_layer_class_init (GESLayerClass * klass)
    */
   g_object_class_install_property (object_class, PROP_AUTO_TRANSITION,
       g_param_spec_boolean ("auto-transition", "Auto-Transition",
-          "whether the transitions are added", FALSE, G_PARAM_READWRITE));
+          "whether the transitions are added", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESLayer::clip-added:

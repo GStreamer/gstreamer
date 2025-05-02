@@ -100,7 +100,7 @@ ges_marker_class_init (GESMarkerClass * klass)
   marker_properties[PROP_MARKER_POSITION] =
       g_param_spec_uint64 ("position", "Position",
       "The position of the marker", 0, G_MAXUINT64,
-      GST_CLOCK_TIME_NONE, G_PARAM_READABLE);
+      GST_CLOCK_TIME_NONE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_MARKER_POSITION,
       marker_properties[PROP_MARKER_POSITION]);
 
@@ -220,7 +220,7 @@ ges_marker_list_class_init (GESMarkerListClass * klass)
       g_param_spec_flags ("flags", "Flags",
       "Functionalities the marker list should be used for",
       GES_TYPE_MARKER_FLAGS, GES_MARKER_FLAG_NONE,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_MARKER_LIST_FLAGS,
       list_properties[PROP_MARKER_LIST_FLAGS]);
 

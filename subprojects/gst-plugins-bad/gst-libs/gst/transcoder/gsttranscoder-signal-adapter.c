@@ -321,7 +321,7 @@ gst_transcoder_signal_adapter_class_init (GstTranscoderSignalAdapterClass *
   param_specs[PROP_TRANSCODER] =
       g_param_spec_object ("transcoder", "Transcoder",
       "The GstTranscoder @self is tracking", GST_TYPE_TRANSCODER,
-      G_PARAM_READABLE);
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, PROP_LAST, param_specs);
 }

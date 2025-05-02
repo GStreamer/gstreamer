@@ -140,36 +140,39 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
   g_object_class_install_property (gobject_class, PROP_REMOVE,
       g_param_spec_boolean ("remove", "Remove",
           "Set to true to remove silence from the stream, false otherwise",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_HYSTERESIS,
       g_param_spec_uint64 ("hysteresis",
           "Hysteresis",
           "Set the hysteresis (on samples) used on the internal VAD",
-          1, G_MAXUINT64, DEFAULT_VAD_HYSTERESIS, G_PARAM_READWRITE));
+          1, G_MAXUINT64, DEFAULT_VAD_HYSTERESIS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_THRESHOLD,
       g_param_spec_int ("threshold",
           "Threshold",
           "Set the silence threshold used on the internal VAD in dB",
-          -70, 70, DEFAULT_VAD_THRESHOLD, G_PARAM_READWRITE));
+          -70, 70, DEFAULT_VAD_THRESHOLD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SQUASH,
       g_param_spec_boolean ("squash", "Squash",
           "Set to true to retimestamp buffers when silence is removed and so avoid timestamp gap",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent",
           "Disable/enable bus message notifications for silence detected/finished",
-          TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MINIMUM_SILENCE_BUFFERS,
       g_param_spec_uint ("minimum-silence-buffers", "Minimum silence buffers",
           "Define the minimum number of consecutive silence buffers before "
           "removing silence, 0 means disabled. This will not introduce latency",
           MINIMUM_SILENCE_BUFFERS_MIN, MINIMUM_SILENCE_BUFFERS_MAX,
-          MINIMUM_SILENCE_BUFFERS_DEF, G_PARAM_READWRITE));
+          MINIMUM_SILENCE_BUFFERS_DEF,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MINIMUM_SILENCE_TIME,
       g_param_spec_uint64 ("minimum_silence_time",

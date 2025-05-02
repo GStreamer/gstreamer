@@ -217,7 +217,8 @@ gst_directsound_src_class_init (GstDirectSoundSrcClass * klass)
   g_object_class_install_property
       (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", NULL, G_PARAM_READWRITE));
+          "Human-readable name of the sound device", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_DEVICE,

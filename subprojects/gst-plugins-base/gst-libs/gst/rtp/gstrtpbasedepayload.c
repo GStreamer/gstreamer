@@ -315,7 +315,7 @@ gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass * klass)
   g_object_class_install_property (gobject_class, PROP_SOURCE_INFO,
       g_param_spec_boolean ("source-info", "RTP source information",
           "Add RTP source information as buffer meta",
-          DEFAULT_SOURCE_INFO, G_PARAM_READWRITE));
+          DEFAULT_SOURCE_INFO, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstRTPBaseDepayload:max-reorder:
@@ -330,7 +330,8 @@ gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass * klass)
   g_object_class_install_property (gobject_class, PROP_MAX_REORDER,
       g_param_spec_int ("max-reorder", "Max Reorder",
           "Max seqnum reorder before assuming sender has restarted",
-          0, G_MAXINT, DEFAULT_MAX_REORDER, G_PARAM_READWRITE));
+          0, G_MAXINT, DEFAULT_MAX_REORDER,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstRTPBaseDepayload:auto-header-extension:

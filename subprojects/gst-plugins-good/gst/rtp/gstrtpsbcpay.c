@@ -310,7 +310,8 @@ gst_rtp_sbc_pay_class_init (GstRtpSBCPayClass * klass)
       g_param_spec_int ("min-frames", "minimum frame number",
           "Minimum quantity of frames to send in one packet "
           "(-1 for maximum allowed by the mtu)",
-          -1, G_MAXINT, DEFAULT_MIN_FRAMES, G_PARAM_READWRITE));
+          -1, G_MAXINT, DEFAULT_MIN_FRAMES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_rtp_sbc_pay_sink_factory);

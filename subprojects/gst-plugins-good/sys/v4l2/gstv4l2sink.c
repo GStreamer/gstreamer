@@ -163,19 +163,21 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_CROP_TOP,
       g_param_spec_int ("crop-top", "Crop top",
           "The topmost (y) coordinate of the video crop; top left corner of image is 0,0",
-          0x80000000, 0x7fffffff, 0, G_PARAM_READWRITE));
+          0x80000000, 0x7fffffff, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CROP_LEFT,
       g_param_spec_int ("crop-left", "Crop left",
           "The leftmost (x) coordinate of the video crop; top left corner of image is 0,0",
-          0x80000000, 0x7fffffff, 0, G_PARAM_READWRITE));
+          0x80000000, 0x7fffffff, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CROP_WIDTH,
       g_param_spec_uint ("crop-width", "Crop width",
           "The width of the video crop; default is equal to negotiated image width",
-          0, 0xffffffff, 0, G_PARAM_READWRITE));
+          0, 0xffffffff, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CROP_HEIGHT,
       g_param_spec_uint ("crop-height", "Crop height",
           "The height of the video crop; default is equal to negotiated image height",
-          0, 0xffffffff, 0, G_PARAM_READWRITE));
+          0, 0xffffffff, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
       "Video (video4linux2) Sink", "Sink/Video",

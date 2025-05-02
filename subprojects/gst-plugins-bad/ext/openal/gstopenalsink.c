@@ -209,12 +209,13 @@ gst_openal_sink_class_init (GstOpenALSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the opened device", "", G_PARAM_READABLE));
+          "Human-readable name of the opened device", "",
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
           "Human-readable name of the device", OPENAL_DEFAULT_DEVICE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_USER_DEVICE,
       g_param_spec_pointer ("user-device", "ALCdevice", "User device",
@@ -226,7 +227,7 @@ gst_openal_sink_class_init (GstOpenALSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_USER_SOURCE,
       g_param_spec_uint ("user-source", "ALsource", "User source", 0, UINT_MAX,
-          0, G_PARAM_READWRITE));
+          0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class, "OpenAL Audio Sink",
       "Sink/Audio", "Output audio through OpenAL",

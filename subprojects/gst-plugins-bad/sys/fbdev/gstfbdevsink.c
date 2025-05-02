@@ -421,7 +421,8 @@ gst_fbdevsink_class_init (GstFBDEVSinkClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEVICE,
       g_param_spec_string ("device", "device",
-          "The framebuffer device eg: /dev/fb0", NULL, G_PARAM_READWRITE));
+          "The framebuffer device eg: /dev/fb0", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_fbdevsink_setcaps);
   basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_fbdevsink_getcaps);

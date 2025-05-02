@@ -275,7 +275,7 @@ gst_kms_allocator_class_init (GstKMSAllocatorClass * klass)
 
   g_props[PROP_DRM_FD] = g_param_spec_int ("drm-fd", "DRM fd",
       "DRM file descriptor", -1, G_MAXINT, -1,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, PROP_N, g_props);
 }

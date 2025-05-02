@@ -124,20 +124,22 @@ gst_fragment_class_init (GstFragmentClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_INDEX,
       g_param_spec_uint ("index", "Index", "Index of the fragment", 0,
-          G_MAXUINT, 0, G_PARAM_READABLE));
+          G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_NAME,
       g_param_spec_string ("name", "Name",
-          "Name of the fragment (eg:fragment-12.ts)", NULL, G_PARAM_READABLE));
+          "Name of the fragment (eg:fragment-12.ts)", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_DISCONTINOUS,
       g_param_spec_boolean ("discontinuous", "Discontinuous",
           "Whether this fragment has a discontinuity or not",
-          FALSE, G_PARAM_READABLE));
+          FALSE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_DURATION,
       g_param_spec_uint64 ("duration", "Fragment duration",
-          "Duration of the fragment", 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+          "Duration of the fragment", 0, G_MAXUINT64, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BUFFER,
       g_param_spec_boxed ("buffer", "Buffer",

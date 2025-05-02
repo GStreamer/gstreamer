@@ -211,7 +211,7 @@ gst_cvtracker_class_init (GstCVTrackerClass * klass)
   g_object_class_install_property (gobject_class, PROP_DRAW,
       g_param_spec_boolean ("draw-rect", "Display",
           "Draw rectangle around tracked object",
-          TRUE, (GParamFlags) G_PARAM_READWRITE));
+           TRUE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "cvtracker",

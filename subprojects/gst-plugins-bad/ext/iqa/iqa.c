@@ -476,13 +476,15 @@ gst_iqa_class_init (GstIqaClass * klass)
 #ifdef HAVE_DSSIM
   g_object_class_install_property (gobject_class, PROP_DO_SSIM,
       g_param_spec_boolean ("do-dssim", "do-dssim",
-          "Run structural similarity checks", FALSE, G_PARAM_READWRITE));
+          "Run structural similarity checks", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SSIM_ERROR_THRESHOLD,
       g_param_spec_double ("dssim-error-threshold", "dssim error threshold",
           "dssim value over which the element will post an error message on the bus."
           " A value < 0.0 means 'disabled'.",
-          -1.0, G_MAXDOUBLE, DEFAULT_DSSIM_ERROR_THRESHOLD, G_PARAM_READWRITE));
+          -1.0, G_MAXDOUBLE, DEFAULT_DSSIM_ERROR_THRESHOLD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
   /**
@@ -495,7 +497,7 @@ gst_iqa_class_init (GstIqaClass * klass)
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_flags ("mode", "IQA mode",
           "Controls the frame comparison mode.", GST_TYPE_IQA_MODE,
-          0, G_PARAM_READWRITE));
+          0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_type_mark_as_plugin_api (GST_TYPE_IQA_MODE, 0);
 

@@ -92,13 +92,14 @@ gst_chromaprint_class_init (GstChromaprintClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_FINGERPRINT,
       g_param_spec_string ("fingerprint", "Resulting fingerprint",
-          "Resulting fingerprint", NULL, G_PARAM_READABLE));
+          "Resulting fingerprint", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MAX_DURATION,
       g_param_spec_uint ("duration", "Duration limit",
           "Number of seconds of audio to use for fingerprinting",
           0, G_MAXUINT, DEFAULT_MAX_DURATION,
-          G_PARAM_READABLE | G_PARAM_WRITABLE));
+          G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_chromaprint_finalize);
 

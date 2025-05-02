@@ -201,7 +201,7 @@ gst_handdetect_class_init (GstHanddetectClass * klass)
       g_param_spec_boolean ("display",
           "Display",
           "Whether the detected hands are highlighted in output frame",
-          TRUE, (GParamFlags) G_PARAM_READWRITE)
+          TRUE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS))
       );
   g_object_class_install_property (gobject_class,
       PROP_PROFILE_FIST,

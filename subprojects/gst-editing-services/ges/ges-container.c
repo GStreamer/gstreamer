@@ -460,7 +460,7 @@ ges_container_class_init (GESContainerClass * klass)
    */
   properties[PROP_HEIGHT] = g_param_spec_uint ("height", "Height",
       "The span of priorities this container occupies", 0, G_MAXUINT, 1,
-      G_PARAM_READABLE);
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_HEIGHT,
       properties[PROP_HEIGHT]);
 

@@ -135,20 +135,20 @@ gst_dshowvideosrc_class_init (GstDshowVideoSrcClass * klass)
       (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
           "Directshow device path (@..classID/name)", NULL,
-          static_cast < GParamFlags > (G_PARAM_READWRITE)));
+          static_cast < GParamFlags > (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property
       (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
           "Human-readable name of the video device", NULL,
-          static_cast < GParamFlags > (G_PARAM_READWRITE)));
+          static_cast < GParamFlags > (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property
       (gobject_class, PROP_DEVICE_INDEX,
       g_param_spec_int ("device-index", "Device index",
           "Index of the enumerated video device", 0, G_MAXINT,
           DEFAULT_PROP_DEVICE_INDEX,
-          static_cast < GParamFlags > (G_PARAM_READWRITE)));
+          static_cast < GParamFlags > (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 

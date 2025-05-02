@@ -85,7 +85,8 @@ nle_urisource_class_init (NleURISourceClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_URI,
       g_param_spec_string ("uri", "Uri",
-          "Uri of the file to use", NULL, G_PARAM_READWRITE));
+          "Uri of the file to use", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &nle_urisource_src_template);
