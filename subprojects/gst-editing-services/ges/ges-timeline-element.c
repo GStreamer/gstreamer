@@ -459,7 +459,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   properties[PROP_PARENT] =
       g_param_spec_object ("parent", "Parent",
       "The parent container of the object", GES_TYPE_TIMELINE_ELEMENT,
-      G_PARAM_READWRITE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GESTimelineElement:timeline:
@@ -469,7 +469,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   properties[PROP_TIMELINE] =
       g_param_spec_object ("timeline", "Timeline",
       "The timeline the object is in", GES_TYPE_TIMELINE,
-      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
+      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
   /**
    * GESTimelineElement:start:
@@ -483,7 +483,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
    */
   properties[PROP_START] = g_param_spec_uint64 ("start", "Start",
       "The position in the timeline", 0, G_MAXUINT64, 0,
-      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
+      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
   /**
    * GESTimelineElement:in-point: (getter get_inpoint)(setter set_inpoint)
@@ -504,7 +504,8 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
    */
   properties[PROP_INPOINT] =
       g_param_spec_uint64 ("in-point", "In-point", "The in-point", 0,
-      G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
+      G_MAXUINT64, 0,
+      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
   /**
    * GESTimelineElement:duration:
@@ -519,7 +520,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   properties[PROP_DURATION] =
       g_param_spec_uint64 ("duration", "Duration", "The play duration", 0,
       G_MAXUINT64, GST_CLOCK_TIME_NONE,
-      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
+      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
   /**
    * GESTimelineElement:max-duration:
@@ -542,7 +543,8 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   properties[PROP_MAX_DURATION] =
       g_param_spec_uint64 ("max-duration", "Maximum duration",
       "The maximum duration of the object", 0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_EXPLICIT_NOTIFY);
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_EXPLICIT_NOTIFY |
+      G_PARAM_STATIC_STRINGS);
 
   /**
    * GESTimelineElement:priority:
@@ -552,7 +554,8 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
    * Deprecated: 1.10: Priority management is now done by GES itself.
    */
   properties[PROP_PRIORITY] = g_param_spec_uint ("priority", "Priority",
-      "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE);
+      "The priority of the object", 0, G_MAXUINT, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GESTimelineElement:name:
@@ -570,7 +573,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
    */
   properties[PROP_SERIALIZE] = g_param_spec_boolean ("serialize", "Serialize",
       "Whether the element should be serialized", TRUE,
-      G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION);
+      G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, PROP_LAST, properties);
 

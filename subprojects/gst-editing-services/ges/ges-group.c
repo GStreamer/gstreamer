@@ -583,7 +583,7 @@ ges_group_class_init (GESGroupClass * klass)
    */
   properties[PROP_START] = g_param_spec_uint64 ("start", "Start",
       "The position in the container", 0, G_MAXUINT64, 0,
-      G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION);
+      G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION | G_PARAM_STATIC_STRINGS);
 
   /**
    * GESGroup:in-point:
@@ -593,7 +593,8 @@ ges_group_class_init (GESGroupClass * klass)
    */
   properties[PROP_INPOINT] =
       g_param_spec_uint64 ("in-point", "In-point", "The in-point", 0,
-      G_MAXUINT64, 0, G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION);
+      G_MAXUINT64, 0,
+      G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION | G_PARAM_STATIC_STRINGS);
 
   /**
    * GESGroup:duration:
@@ -607,7 +608,7 @@ ges_group_class_init (GESGroupClass * klass)
   properties[PROP_DURATION] =
       g_param_spec_uint64 ("duration", "Duration", "The duration to use", 0,
       G_MAXUINT64, GST_CLOCK_TIME_NONE,
-      G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION);
+      G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION | G_PARAM_STATIC_STRINGS);
 
   /**
    * GESGroup:max-duration:
@@ -618,7 +619,8 @@ ges_group_class_init (GESGroupClass * klass)
   properties[PROP_MAX_DURATION] =
       g_param_spec_uint64 ("max-duration", "Maximum duration",
       "The maximum duration of the object", 0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | GES_PARAM_NO_SERIALIZATION);
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | GES_PARAM_NO_SERIALIZATION |
+      G_PARAM_STATIC_STRINGS);
 
   /**
    * GESGroup:priority:
@@ -629,7 +631,7 @@ ges_group_class_init (GESGroupClass * klass)
    */
   properties[PROP_PRIORITY] = g_param_spec_uint ("priority", "Priority",
       "The priority of the object", 0, G_MAXUINT, 0,
-      G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION);
+      G_PARAM_READWRITE | GES_PARAM_NO_SERIALIZATION | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, PROP_LAST, properties);
 

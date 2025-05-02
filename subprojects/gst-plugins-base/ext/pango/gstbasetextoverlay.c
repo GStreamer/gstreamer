@@ -423,7 +423,8 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TEXT_X,
       g_param_spec_int ("text-x", "horizontal position.",
           "Resulting X position of font rendering.", -G_MAXINT,
-          G_MAXINT, DEFAULT_PROP_TEXT_X, G_PARAM_READABLE));
+          G_MAXINT, DEFAULT_PROP_TEXT_X,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstBaseTextOverlay:text-y:
@@ -433,7 +434,8 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TEXT_Y,
       g_param_spec_int ("text-y", "vertical position",
           "Resulting Y position of font rendering.", -G_MAXINT,
-          G_MAXINT, DEFAULT_PROP_TEXT_Y, G_PARAM_READABLE));
+          G_MAXINT, DEFAULT_PROP_TEXT_Y,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstBaseTextOverlay:text-width:
@@ -443,7 +445,8 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TEXT_WIDTH,
       g_param_spec_uint ("text-width", "width",
           "Resulting width of font rendering",
-          0, G_MAXINT, DEFAULT_PROP_TEXT_WIDTH, G_PARAM_READABLE));
+          0, G_MAXINT, DEFAULT_PROP_TEXT_WIDTH,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstBaseTextOverlay:text-height:
@@ -453,7 +456,8 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TEXT_HEIGHT,
       g_param_spec_uint ("text-height", "height",
           "Resulting height of font rendering", 0,
-          G_MAXINT, DEFAULT_PROP_TEXT_HEIGHT, G_PARAM_READABLE));
+          G_MAXINT, DEFAULT_PROP_TEXT_HEIGHT,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstBaseTextOverlay:xpos:

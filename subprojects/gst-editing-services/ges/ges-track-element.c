@@ -356,7 +356,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
    */
   properties[PROP_ACTIVE] =
       g_param_spec_boolean ("active", "Active", "Use object in output", TRUE,
-      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
+      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_ACTIVE,
       properties[PROP_ACTIVE]);
 
@@ -371,7 +371,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   properties[PROP_TRACK_TYPE] = g_param_spec_flags ("track-type", "Track Type",
       "The track type of the object", GES_TYPE_TRACK_TYPE,
       GES_TRACK_TYPE_UNKNOWN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
-      G_PARAM_EXPLICIT_NOTIFY);
+      G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_TRACK_TYPE,
       properties[PROP_TRACK_TYPE]);
 
@@ -382,7 +382,8 @@ ges_track_element_class_init (GESTrackElementClass * klass)
    * belong to a track.
    */
   properties[PROP_TRACK] = g_param_spec_object ("track", "Track",
-      "The track the object is in", GES_TYPE_TRACK, G_PARAM_READABLE);
+      "The track the object is in", GES_TYPE_TRACK,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_TRACK,
       properties[PROP_TRACK]);
 
@@ -429,7 +430,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   properties[PROP_HAS_INTERNAL_SOURCE] =
       g_param_spec_boolean ("has-internal-source", "Has Internal Source",
       "Whether the element has some internal source of stream data", FALSE,
-      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
+      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_HAS_INTERNAL_SOURCE,
       properties[PROP_HAS_INTERNAL_SOURCE]);
 
@@ -452,7 +453,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
       g_param_spec_boolean ("auto-clamp-control-sources",
       "Auto-Clamp Control Sources", "Whether to automatically update the "
       "control sources with a change in in-point or out-point", TRUE,
-      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
+      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class,
       PROP_AUTO_CLAMP_CONTROL_SOURCES,
       properties[PROP_AUTO_CLAMP_CONTROL_SOURCES]);

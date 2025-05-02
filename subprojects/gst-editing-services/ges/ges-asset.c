@@ -494,7 +494,8 @@ ges_asset_class_init (GESAssetClass * klass)
   _properties[PROP_TYPE] =
       g_param_spec_gtype ("extractable-type", "Extractable type",
       "The type of the Object that can be extracted out of the asset",
-      G_TYPE_OBJECT, G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+      G_TYPE_OBJECT,
+      G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GESAsset:id:
@@ -512,7 +513,7 @@ ges_asset_class_init (GESAssetClass * klass)
   _properties[PROP_ID] =
       g_param_spec_string ("id", "Identifier",
       "The unique identifier of the asset", NULL,
-      G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+      G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GESAsset:proxy:
@@ -526,7 +527,8 @@ ges_asset_class_init (GESAssetClass * klass)
    */
   _properties[PROP_PROXY] =
       g_param_spec_object ("proxy", "Proxy",
-      "The asset default proxy.", GES_TYPE_ASSET, G_PARAM_READWRITE);
+      "The asset default proxy.", GES_TYPE_ASSET,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * GESAsset:proxy-target:
@@ -546,7 +548,8 @@ ges_asset_class_init (GESAssetClass * klass)
    */
   _properties[PROP_PROXY_TARGET] =
       g_param_spec_object ("proxy-target", "Proxy target",
-      "The target of a proxy asset.", GES_TYPE_ASSET, G_PARAM_READABLE);
+      "The target of a proxy asset.", GES_TYPE_ASSET,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, PROP_LAST, _properties);
 

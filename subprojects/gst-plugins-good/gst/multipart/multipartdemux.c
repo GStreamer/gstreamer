@@ -155,7 +155,7 @@ gst_multipart_demux_class_init (GstMultipartDemuxClass * klass)
   g_object_class_install_property (gobject_class, PROP_SINGLE_STREAM,
       g_param_spec_boolean ("single-stream", "Single Stream",
           "Assume that there is only one stream whose content-type will not change and emit no-more-pads as soon as the first boundary content is parsed, decoded, and pads are linked",
-          DEFAULT_SINGLE_STREAM, G_PARAM_READWRITE));
+          DEFAULT_SINGLE_STREAM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* populate gst names and mime types pairs */
   klass->gstnames = g_hash_table_new (g_str_hash, g_str_equal);

@@ -131,7 +131,7 @@ ges_clip_asset_class_init (GESClipAssetClass * self_class)
   properties[PROP_SUPPORTED_FORMATS] = g_param_spec_flags ("supported-formats",
       "Supported formats", "Formats supported by the file",
       GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_property (object_class, PROP_SUPPORTED_FORMATS,
       properties[PROP_SUPPORTED_FORMATS]);

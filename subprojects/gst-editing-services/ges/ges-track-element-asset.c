@@ -92,7 +92,7 @@ ges_track_element_asset_class_init (GESTrackElementAssetClass * klass)
   properties[PROP_TRACK_TYPE] = g_param_spec_flags ("track-type",
       "Track type", "The GESTrackType in which the object is",
       GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_UNKNOWN,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_property (object_class, PROP_TRACK_TYPE,
       properties[PROP_TRACK_TYPE]);

@@ -221,7 +221,7 @@ gst_segmentation_class_init (GstSegmentationClass * klass)
   g_object_class_install_property (gobject_class, PROP_LEARNING_RATE,
       g_param_spec_float ("learning-rate", "learning-rate",
           "Speed with which a motionless foreground pixel would become background (inverse of number of frames)",
-          0, 1, DEFAULT_LEARNING_RATE, (GParamFlags) (G_PARAM_READWRITE)));
+          0, 1, DEFAULT_LEARNING_RATE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "Foreground/background video sequence segmentation",

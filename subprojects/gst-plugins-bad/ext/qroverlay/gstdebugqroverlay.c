@@ -130,25 +130,29 @@ gst_debug_qr_overlay_class_init (GstDebugQROverlayClass * klass)
       g_param_spec_int64 ("extra-data-interval-buffers",
           "extra-data-interval-buffers",
           "Extra data append into the Qrcode at the first buffer of each "
-          " interval", 0, G_MAXINT64, 60, G_PARAM_READWRITE));
+          " interval", 0, G_MAXINT64, 60,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_DATA_SPAN_BUFFERS, g_param_spec_int64 ("extra-data-span-buffers",
           "extra-data-span-buffers",
           "Numbers of consecutive buffers that the extra data will be inserted "
-          " (counting the first buffer)", 0, G_MAXINT64, 1, G_PARAM_READWRITE));
+          " (counting the first buffer)", 0, G_MAXINT64, 1,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_EXTRA_DATA_NAME, g_param_spec_string ("extra-data-name",
           "Extra data name",
-          "Json key name for extra append data", NULL, G_PARAM_READWRITE));
+          "Json key name for extra append data", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_EXTRA_DATA_ARRAY, g_param_spec_string ("extra-data-array",
           "Extra data array",
           "List of comma separated values that the extra data value will be "
           " cycled from at each interval, example array structure :"
-          " \"240,480,720,960,1200,1440,1680,1920\"", NULL, G_PARAM_READWRITE));
+          " \"240,480,720,960,1200,1440,1680,1920\"", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 
   gst_element_class_set_details_simple (gstelement_class,

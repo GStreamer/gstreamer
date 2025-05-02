@@ -629,7 +629,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
   properties[PROP_DURATION] =
       g_param_spec_uint64 ("duration", "Duration",
       "The duration of the timeline", 0, G_MAXUINT64,
-      GST_CLOCK_TIME_NONE, G_PARAM_READABLE);
+      GST_CLOCK_TIME_NONE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_DURATION,
       properties[PROP_DURATION]);
 
@@ -643,7 +643,8 @@ ges_timeline_class_init (GESTimelineClass * klass)
    */
   g_object_class_install_property (object_class, PROP_AUTO_TRANSITION,
       g_param_spec_boolean ("auto-transition", "Auto-Transition",
-          "whether the transitions are added", FALSE, G_PARAM_READWRITE));
+          "whether the transitions are added", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESTimeline:snapping-distance:
@@ -656,7 +657,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
   properties[PROP_SNAPPING_DISTANCE] =
       g_param_spec_uint64 ("snapping-distance", "Snapping distance",
       "Distance from which moving an object will snap with neighbours", 0,
-      G_MAXUINT64, 0, G_PARAM_READWRITE);
+      G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_SNAPPING_DISTANCE,
       properties[PROP_SNAPPING_DISTANCE]);
 

@@ -176,7 +176,7 @@ nle_operation_class_init (NleOperationClass * klass)
   g_object_class_install_property (gobject_class, ARG_SINKS,
       g_param_spec_int ("sinks", "Sinks",
           "Number of input sinks (-1 for automatic handling)", -1, G_MAXINT, -1,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * NleOperation:input-priority-changed:

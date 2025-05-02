@@ -161,7 +161,8 @@ gst_aes_dec_class_init (GstAesDecClass * klass)
       g_param_spec_boolean ("serialize-iv", "Serialize IV",
           "Read initialization vector from first 16 bytes of first buffer",
           GST_AES_DEFAULT_SERIALIZE_IV,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY));
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
 
   /**
    * GstAesDec:per-buffer-padding
@@ -177,7 +178,8 @@ gst_aes_dec_class_init (GstAesDecClass * klass)
           "If true, pad each buffer using PKCS7 padding scheme. Otherwise, only"
           "pad final buffer",
           GST_AES_PER_BUFFER_PADDING_DEFAULT,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY));
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
 
   /**
    * GstAesDec:key
@@ -192,7 +194,8 @@ gst_aes_dec_class_init (GstAesDecClass * klass)
           "the number of bits in the key length : "
           "16 bytes for AES 128 and 32 bytes for AES 256",
           (gchar *) GST_AES_DEFAULT_KEY,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY));
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
   /**
    * GstAesDec:iv
    *
@@ -205,7 +208,8 @@ gst_aes_dec_class_init (GstAesDecClass * klass)
           "AES encryption initialization vector (in hexadecimal). "
           "Length must equal AES block length (16 bytes)",
           (gchar *) GST_AES_DEFAULT_IV,
-          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY));
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_details_simple (gstelement_class,
       "aesdec",

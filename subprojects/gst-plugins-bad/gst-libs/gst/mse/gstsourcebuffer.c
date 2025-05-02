@@ -585,7 +585,7 @@ gst_source_buffer_class_init (GstSourceBufferClass * klass)
       "Updating",
       "Whether the current Source Buffer is still"
       " asynchronously processing previously issued commands",
-      FALSE, G_PARAM_READABLE);
+      FALSE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (oclass, N_PROPS, properties);
 

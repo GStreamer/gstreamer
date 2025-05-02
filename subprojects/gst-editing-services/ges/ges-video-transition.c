@@ -158,7 +158,7 @@ ges_video_transition_class_init (GESVideoTransitionClass * klass)
    */
   properties[PROP_BORDER] =
       g_param_spec_uint ("border", "Border", "The border width", 0,
-      G_MAXUINT, 0, G_PARAM_READWRITE);
+      G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_BORDER,
       properties[PROP_BORDER]);
 
@@ -172,7 +172,8 @@ ges_video_transition_class_init (GESVideoTransitionClass * klass)
   properties[PROP_TRANSITION_TYPE] =
       g_param_spec_enum ("transition-type", "Transition type",
       "The type of the transition", GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE,
-      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE, G_PARAM_READWRITE);
+      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_TRANSITION_TYPE,
       properties[PROP_TRANSITION_TYPE]);
 
@@ -185,7 +186,8 @@ ges_video_transition_class_init (GESVideoTransitionClass * klass)
    */
   properties[PROP_INVERT] =
       g_param_spec_boolean ("invert", "Invert",
-      "Whether the transition is inverted", FALSE, G_PARAM_READWRITE);
+      "Whether the transition is inverted", FALSE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_INVERT,
       properties[PROP_INVERT]);
 

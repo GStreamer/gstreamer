@@ -152,7 +152,7 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
   g_object_class_install_property (object_class, PROP_TEXT,
       g_param_spec_string ("text", "Text", "The text to display",
           DEFAULT_TEXT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
-          GES_PARAM_NO_SERIALIZATION));
+          GES_PARAM_NO_SERIALIZATION | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESTitleClip:font-desc:
@@ -220,7 +220,7 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
   g_object_class_install_property (object_class, PROP_COLOR,
       g_param_spec_uint ("color", "Color", "The color of the text",
           0, G_MAXUINT32, G_MAXUINT32, G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
-          GES_PARAM_NO_SERIALIZATION));
+          GES_PARAM_NO_SERIALIZATION | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESTitleClip:background:
@@ -235,7 +235,8 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
   g_object_class_install_property (object_class, PROP_BACKGROUND,
       g_param_spec_uint ("background", "Background",
           "The background of the text", 0, G_MAXUINT32, G_MAXUINT32,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | GES_PARAM_NO_SERIALIZATION));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | GES_PARAM_NO_SERIALIZATION |
+          G_PARAM_STATIC_STRINGS));
 
   /**
    * GESTitleClip:xpos:
@@ -250,7 +251,7 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
   g_object_class_install_property (object_class, PROP_XPOS,
       g_param_spec_double ("xpos", "Xpos", "The horizontal position",
           0, 1, 0.5, G_PARAM_READWRITE | G_PARAM_CONSTRUCT
-          | GES_PARAM_NO_SERIALIZATION));
+          | GES_PARAM_NO_SERIALIZATION | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESTitleClip:ypos:
@@ -265,7 +266,7 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
   g_object_class_install_property (object_class, PROP_YPOS,
       g_param_spec_double ("ypos", "Ypos", "The vertical position",
           0, 1, 0.5, G_PARAM_READWRITE | G_PARAM_CONSTRUCT
-          | GES_PARAM_NO_SERIALIZATION));
+          | GES_PARAM_NO_SERIALIZATION | G_PARAM_STATIC_STRINGS));
 }
 
 static void

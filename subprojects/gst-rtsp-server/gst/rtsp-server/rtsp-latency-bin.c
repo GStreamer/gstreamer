@@ -78,7 +78,8 @@ gst_rtsp_latency_bin_class_init (GstRTSPLatencyBinClass * klass)
   g_object_class_install_property (gobject_klass, PROP_ELEMENT,
       g_param_spec_object ("element", "The Element",
           "The GstElement to prevent from affecting piplines latency",
-          GST_TYPE_ELEMENT, G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT,
+          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_rtsp_latency_bin_change_state);

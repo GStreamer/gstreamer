@@ -315,7 +315,8 @@ ges_test_clip_class_init (GESTestClipClass * klass)
       g_param_spec_enum ("vpattern", "VPattern",
           "Which video pattern to display. See videotestsrc element",
           GES_VIDEO_TEST_PATTERN_TYPE,
-          DEFAULT_VPATTERN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_VPATTERN,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESTestClip:freq:
@@ -325,7 +326,8 @@ ges_test_clip_class_init (GESTestClipClass * klass)
   g_object_class_install_property (object_class, PROP_FREQ,
       g_param_spec_double ("freq", "Audio Frequency",
           "The frequency to generate. See audiotestsrc element",
-          0, 20000, 440, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, 20000, 440,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESTestClip:volume:
@@ -335,7 +337,8 @@ ges_test_clip_class_init (GESTestClipClass * klass)
   g_object_class_install_property (object_class, PROP_VOLUME,
       g_param_spec_double ("volume", "Audio Volume",
           "The volume of the test audio signal.",
-          0, 1, DEFAULT_VOLUME, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, 1, DEFAULT_VOLUME,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
 
   /**
@@ -345,7 +348,8 @@ ges_test_clip_class_init (GESTestClipClass * klass)
    */
   g_object_class_install_property (object_class, PROP_MUTE,
       g_param_spec_boolean ("mute", "Mute", "Mute audio track",
-          FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          FALSE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   clip_class->create_track_element = ges_test_clip_create_track_element;
 }

@@ -522,7 +522,8 @@ gst_x265_enc_class_init (GstX265EncClass * klass)
   g_object_class_install_property (gobject_class, PROP_KEY_INT_MAX,
       g_param_spec_int ("key-int-max", "Max key frame",
           "Maximal distance between two key-frames (0 = x265 default / 250)",
-          0, G_MAXINT32, PROP_KEY_INT_MAX_DEFAULT, G_PARAM_READWRITE));
+          0, G_MAXINT32, PROP_KEY_INT_MAX_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
       "x265enc", "Codec/Encoder/Video", "H265 Encoder",

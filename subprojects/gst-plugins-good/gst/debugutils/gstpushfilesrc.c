@@ -129,31 +129,34 @@ gst_push_file_src_class_init (GstPushFileSrcClass * g_class)
 
   g_object_class_install_property (gobject_class, PROP_TIME_SEGMENT,
       g_param_spec_boolean ("time-segment", "Time Segment",
-          "Emit TIME SEGMENTS", DEFAULT_TIME_SEGMENT, G_PARAM_READWRITE));
+          "Emit TIME SEGMENTS", DEFAULT_TIME_SEGMENT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_STREAM_TIME,
       g_param_spec_int64 ("stream-time", "Stream Time",
           "Initial Stream Time (if time-segment TRUE)", 0, G_MAXINT64,
-          DEFAULT_STREAM_TIME, G_PARAM_READWRITE));
+          DEFAULT_STREAM_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_START_TIME,
       g_param_spec_int64 ("start-time", "Start Time",
           "Initial Start Time (if time-segment TRUE)", 0, G_MAXINT64,
-          DEFAULT_START_TIME, G_PARAM_READWRITE));
+          DEFAULT_START_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_INITIAL_TIMESTAMP,
       g_param_spec_uint64 ("initial-timestamp", "Initial Timestamp",
           "Initial Buffer Timestamp (if time-segment TRUE)", 0, G_MAXUINT64,
-          DEFAULT_INITIAL_TIMESTAMP, G_PARAM_READWRITE));
+          DEFAULT_INITIAL_TIMESTAMP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RATE,
       g_param_spec_double ("rate", "Rate", "Rate to use in TIME SEGMENT",
-          G_MINDOUBLE, G_MAXDOUBLE, DEFAULT_RATE, G_PARAM_READWRITE));
+          G_MINDOUBLE, G_MAXDOUBLE, DEFAULT_RATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_APPLIED_RATE,
       g_param_spec_double ("applied-rate", "Applied Rate",
           "Applied rate to use in TIME SEGMENT", G_MINDOUBLE, G_MAXDOUBLE,
-          DEFAULT_APPLIED_RATE, G_PARAM_READWRITE));
+          DEFAULT_APPLIED_RATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (element_class, &srctemplate);
 

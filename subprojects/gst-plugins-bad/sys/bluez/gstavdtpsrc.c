@@ -105,13 +105,14 @@ gst_avdtp_src_class_init (GstAvdtpSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_TRANSPORT,
       g_param_spec_string ("transport",
-          "Transport", "Use configured transport", NULL, G_PARAM_READWRITE));
+          "Transport", "Use configured transport", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_TRANSPORT_VOLUME,
       g_param_spec_uint ("transport-volume",
           "Transport volume",
           "Volume of the transport (only valid if transport is acquired)",
-          0, 127, DEFAULT_VOLUME, G_PARAM_READWRITE));
+          0, 127, DEFAULT_VOLUME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
       "Bluetooth AVDTP Source",

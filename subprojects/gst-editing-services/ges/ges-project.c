@@ -541,7 +541,8 @@ ges_project_class_init (GESProjectClass * klass)
    * The location of the project to use.
    */
   _properties[PROP_URI] = g_param_spec_string ("uri", "URI",
-      "uri of the project", NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+      "uri of the project", NULL,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, PROP_LAST, _properties);
 

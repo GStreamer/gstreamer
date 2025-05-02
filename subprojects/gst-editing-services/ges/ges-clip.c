@@ -2588,7 +2588,7 @@ ges_clip_class_init (GESClipClass * klass)
   properties[PROP_SUPPORTED_FORMATS] = g_param_spec_flags ("supported-formats",
       "Supported formats", "Formats supported by the clip",
       GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_property (object_class, PROP_SUPPORTED_FORMATS,
       properties[PROP_SUPPORTED_FORMATS]);
@@ -2604,7 +2604,8 @@ ges_clip_class_init (GESClipClass * klass)
    */
   properties[PROP_LAYER] = g_param_spec_object ("layer", "Layer",
       "The GESLayer where this clip is being used.",
-      GES_TYPE_LAYER, G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY);
+      GES_TYPE_LAYER,
+      G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_LAYER,
       properties[PROP_LAYER]);
 
@@ -2631,7 +2632,8 @@ ges_clip_class_init (GESClipClass * klass)
   properties[PROP_DURATION_LIMIT] =
       g_param_spec_uint64 ("duration-limit", "Duration Limit",
       "A limit on the duration of the clip", 0, G_MAXUINT64,
-      GST_CLOCK_TIME_NONE, G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY);
+      GST_CLOCK_TIME_NONE,
+      G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_DURATION_LIMIT,
       properties[PROP_DURATION_LIMIT]);
 

@@ -195,7 +195,7 @@ nle_object_class_init (NleObjectClass * klass)
    */
   properties[PROP_START] = g_param_spec_uint64 ("start", "Start",
       "The start position relative to the parent (in nanoseconds)",
-      0, G_MAXUINT64, 0, G_PARAM_READWRITE);
+      0, G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_START,
       properties[PROP_START]);
 
@@ -206,7 +206,7 @@ nle_object_class_init (NleObjectClass * klass)
    */
   properties[PROP_DURATION] = g_param_spec_int64 ("duration", "Duration",
       "Outgoing duration (in nanoseconds)", 0, G_MAXINT64, 0,
-      G_PARAM_READWRITE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_DURATION,
       properties[PROP_DURATION]);
 
@@ -219,7 +219,7 @@ nle_object_class_init (NleObjectClass * klass)
    */
   properties[PROP_STOP] = g_param_spec_uint64 ("stop", "Stop",
       "The stop position relative to the parent (in nanoseconds)",
-      0, G_MAXUINT64, 0, G_PARAM_READABLE);
+      0, G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_STOP,
       properties[PROP_STOP]);
 
@@ -234,7 +234,7 @@ nle_object_class_init (NleObjectClass * klass)
   properties[PROP_INPOINT] =
       g_param_spec_uint64 ("inpoint", "Media start",
       "The media start position (in nanoseconds)", 0, G_MAXUINT64,
-      GST_CLOCK_TIME_NONE, G_PARAM_READWRITE);
+      GST_CLOCK_TIME_NONE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_INPOINT,
       properties[PROP_INPOINT]);
 
@@ -254,7 +254,7 @@ nle_object_class_init (NleObjectClass * klass)
    */
   properties[PROP_PRIORITY] = g_param_spec_uint ("priority", "Priority",
       "The priority of the object (0 = highest priority)", 0, G_MAXUINT, 0,
-      G_PARAM_READWRITE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_PRIORITY,
       properties[PROP_PRIORITY]);
 
@@ -266,7 +266,8 @@ nle_object_class_init (NleObjectClass * klass)
    * Set to #TRUE to temporarily disable this object in a #NleComposition.
    */
   properties[PROP_ACTIVE] = g_param_spec_boolean ("active", "Active",
-      "Use this object in the NleComposition", TRUE, G_PARAM_READWRITE);
+      "Use this object in the NleComposition", TRUE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_ACTIVE,
       properties[PROP_ACTIVE]);
 
@@ -282,7 +283,7 @@ nle_object_class_init (NleObjectClass * klass)
    */
   properties[PROP_CAPS] = g_param_spec_boxed ("caps", "Caps",
       "Caps used to filter/choose the output stream",
-      GST_TYPE_CAPS, G_PARAM_READWRITE);
+      GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_CAPS,
       properties[PROP_CAPS]);
 
@@ -295,7 +296,7 @@ nle_object_class_init (NleObjectClass * klass)
   properties[PROP_EXPANDABLE] =
       g_param_spec_boolean ("expandable", "Expandable",
       "Expand to the full duration of the container composition", FALSE,
-      G_PARAM_READWRITE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_EXPANDABLE,
       properties[PROP_EXPANDABLE]);
 
@@ -314,7 +315,7 @@ nle_object_class_init (NleObjectClass * klass)
   properties[PROP_MEDIA_DURATION_FACTOR] =
       g_param_spec_double ("media-duration-factor", "Media duration factor",
       "The relative rate caused by this object", 0.01, G_MAXDOUBLE,
-      1.0, G_PARAM_READWRITE | G_PARAM_DEPRECATED);
+      1.0, G_PARAM_READWRITE | G_PARAM_DEPRECATED | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_MEDIA_DURATION_FACTOR,
       properties[PROP_MEDIA_DURATION_FACTOR]);
 

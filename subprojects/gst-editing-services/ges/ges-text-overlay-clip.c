@@ -168,7 +168,8 @@ ges_text_overlay_clip_class_init (GESTextOverlayClipClass * klass)
 
   g_object_class_install_property (object_class, PROP_TEXT,
       g_param_spec_string ("text", "Text", "The text to display",
-          DEFAULT_PROP_TEXT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_PROP_TEXT,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESTextOverlayClip:font-desc:
@@ -215,7 +216,8 @@ ges_text_overlay_clip_class_init (GESTextOverlayClipClass * klass)
 
   g_object_class_install_property (object_class, PROP_COLOR,
       g_param_spec_uint ("color", "Color", "The color of the text",
-          0, G_MAXUINT32, G_MAXUINT32, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXUINT32, G_MAXUINT32,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESTextOverlayClip:xpos:
@@ -225,7 +227,8 @@ ges_text_overlay_clip_class_init (GESTextOverlayClipClass * klass)
 
   g_object_class_install_property (object_class, PROP_XPOS,
       g_param_spec_double ("xpos", "Xpos", "The horizontal position",
-          0, 1, 0.5, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, 1, 0.5,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESTextOverlayClip:ypos:
@@ -235,7 +238,8 @@ ges_text_overlay_clip_class_init (GESTextOverlayClipClass * klass)
 
   g_object_class_install_property (object_class, PROP_YPOS,
       g_param_spec_double ("ypos", "Ypos", "The vertical position",
-          0, 1, 0.5, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, 1, 0.5,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 }
 
 static void

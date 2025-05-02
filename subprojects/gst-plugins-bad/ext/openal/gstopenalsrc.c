@@ -184,12 +184,12 @@ gst_openal_src_class_init (GstOpenalSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "ALCdevice",
           "User device, default device if NULL", OPENAL_DEFAULT_DEVICE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
           "Human-readable name of the device", OPENAL_DEFAULT_DEVICE_NAME,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "OpenAL Audio Source", "Source/Audio", "Input audio through OpenAL",

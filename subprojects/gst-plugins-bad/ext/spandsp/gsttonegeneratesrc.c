@@ -125,27 +125,29 @@ gst_tone_generate_src_class_init (GstToneGenerateSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_ON_TIME,
       g_param_spec_int ("on-time", "Signal ON time first period",
           "Time of the first period  when the tone signal is present", 1,
-          G_MAXINT, DEFAULT_ON_TIME, G_PARAM_READWRITE));
+          G_MAXINT, DEFAULT_ON_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_OFF_TIME,
       g_param_spec_int ("off-time", "Signal OFF time first period ",
           "Time of the first period  when the tone signal is off", 0, G_MAXINT,
-          DEFAULT_OFF_TIME, G_PARAM_READWRITE));
+          DEFAULT_OFF_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ON_TIME2,
       g_param_spec_int ("on-time2", "Signal ON time second period",
           "Time of the second period  when the tone signal is present", 1,
-          G_MAXINT, DEFAULT_ON_TIME, G_PARAM_READWRITE));
+          G_MAXINT, DEFAULT_ON_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_OFF_TIME2,
       g_param_spec_int ("off-time2", "Signal OFF time first period ",
           "Time of the second period  when the tone signal is off", 0, G_MAXINT,
-          DEFAULT_ON_TIME, G_PARAM_READWRITE));
+          DEFAULT_ON_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_REPEAT,
       g_param_spec_boolean ("repeat", "Repeat the specified tone period ",
           "Whether to repeat specified tone indefinitely", DEFAULT_REPEAT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_tone_generate_src_src_template);

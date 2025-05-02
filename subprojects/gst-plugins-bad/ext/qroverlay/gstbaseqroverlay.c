@@ -329,12 +329,12 @@ gst_base_qr_overlay_class_init (GstBaseQROverlayClass * klass)
   g_object_class_install_property (gobject_class, PROP_X_AXIS,
       g_param_spec_float ("x", "X position (in percent of the width)",
           "X position (in percent of the width)", 0.0, 100.0, DEFAULT_PROP_X,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_Y_AXIS,
       g_param_spec_float ("y", "Y position (in percent of the height)",
           "Y position (in percent of the height)", 0.0, 100.0, DEFAULT_PROP_Y,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstBaseQROverlay:size:
@@ -347,7 +347,8 @@ gst_base_qr_overlay_class_init (GstBaseQROverlayClass * klass)
       g_param_spec_float ("size",
           "Size of the square (in percent of the smallest of width and height)",
           "Size of the square (in percent of the smallest of width and height)",
-          0.0, 100.0, DEFAULT_PROP_SIZE, G_PARAM_READWRITE));
+          0.0, 100.0, DEFAULT_PROP_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_QRCODE_ERROR_CORRECTION,
       g_param_spec_enum ("qrcode-error-correction", "qrcode-error-correction",

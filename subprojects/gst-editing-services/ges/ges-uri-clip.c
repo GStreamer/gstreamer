@@ -157,7 +157,7 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
    */
   g_object_class_install_property (object_class, PROP_URI,
       g_param_spec_string ("uri", "URI", "uri of the resource", NULL,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESUriClip:mute:
@@ -166,7 +166,8 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
    */
   g_object_class_install_property (object_class, PROP_MUTE,
       g_param_spec_boolean ("mute", "Mute", "Mute audio track",
-          FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          FALSE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESUriClip:is-image:
@@ -177,7 +178,8 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
   g_object_class_install_property (object_class, PROP_IS_IMAGE,
       g_param_spec_boolean ("is-image", "Is still image",
           "Whether the clip represents a still image or not",
-          FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          FALSE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /* Redefine the supported formats property so the default value is UNKNOWN
    * and not AUDIO | VIDEO */
@@ -185,7 +187,7 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
       g_param_spec_flags ("supported-formats",
           "Supported formats", "Formats supported by the file",
           GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_UNKNOWN,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   element_class->set_max_duration = uri_clip_set_max_duration;
 

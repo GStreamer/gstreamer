@@ -106,7 +106,8 @@ gst_sf_src_class_init (GstSFSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "File Location",
-          "Location of the file to read", NULL, G_PARAM_READWRITE));
+          "Location of the file to read", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_sf_src_finalize);
 
