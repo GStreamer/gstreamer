@@ -310,6 +310,7 @@ G_BEGIN_DECLS
 #define FOURCC_fpcm     GST_MAKE_FOURCC('f','p','c','m')
 #define FOURCC_pcmC     GST_MAKE_FOURCC('p','c','m','C')
 #define FOURCC_chnl     GST_MAKE_FOURCC('c','h','n','l')
+#define FOURCC_chan     GST_MAKE_FOURCC('c','h','a','n')
 #define FOURCC_av01     GST_MAKE_FOURCC('a','v','0','1')
 #define FOURCC_av1C     GST_MAKE_FOURCC('a','v','1','C')
 #define FOURCC_av1f     GST_MAKE_FOURCC('a','v','1','f')
