@@ -9015,6 +9015,51 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_fLaC:
       case FOURCC_aavd:
       case FOURCC_opus:
+      case FOURCC_lpcm:
+      case FOURCC_wma_:
+      case FOURCC_owma:
+      case FOURCC_sowt:
+      case FOURCC_twos:
+      case FOURCC_in24:
+      case FOURCC_in32:
+      case FOURCC_fl32:
+      case FOURCC_fl64:
+      case FOURCC_s16l:
+      case FOURCC_ipcm:
+      case FOURCC_fpcm:
+      case FOURCC_samr:
+      case FOURCC_sawb:
+      case FOURCC_QDM2:
+      case FOURCC_QDMC:
+      case FOURCC_MAC6:
+      case FOURCC_MAC3:
+      case FOURCC_ima4:
+      case FOURCC_ulaw:
+      case FOURCC_alaw:
+      case FOURCC_agsm:
+      case 0x20736d:
+      case GST_MAKE_FOURCC ('e', 'c', '-', '3'):
+      case GST_MAKE_FOURCC ('s', 'a', 'c', '3'):       // Nero Recode
+      case FOURCC_ac_3:
+      case 0x0200736d:
+      case 0x6d730002:
+      case 0x1100736d:
+      case 0x6d730011:
+      case 0x1700736d:
+      case 0x6d730017:
+      case 0x5500736d:
+      case 0x6d730055:
+      case FOURCC__mp3:
+      case FOURCC_mp3_:
+      case GST_MAKE_FOURCC ('.', 'm', 'p', '2'):
+      case GST_MAKE_FOURCC ('d', 't', 's', 'c'):
+      case GST_MAKE_FOURCC ('D', 'T', 'S', ' '):
+      case GST_MAKE_FOURCC ('O', 'g', 'g', 'V'):
+      case GST_MAKE_FOURCC ('d', 'v', 'c', 'a'):
+      case GST_MAKE_FOURCC ('Q', 'c', 'l', 'p'):
+      case GST_MAKE_FOURCC ('a', 'c', '-', '4'):
+      case FOURCC_enca:
+        /* FIXME FOURCC_raw_ but that is used for video too */
       {
         guint8 stsd_version;
         guint32 version;
@@ -9109,11 +9154,26 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_apcn:
       case FOURCC_apco:
       case FOURCC_ap4h:
+      case FOURCC_ap4x:
       case FOURCC_xvid:
       case FOURCC_XVID:
       case FOURCC_H264:
       case FOURCC_avc1:
+      case FOURCC_dva1:
       case FOURCC_avc3:
+      case FOURCC_dvav:
+      case FOURCC_ai12:
+      case FOURCC_ai13:
+      case FOURCC_ai15:
+      case FOURCC_ai16:
+      case FOURCC_ai1p:
+      case FOURCC_ai1q:
+      case FOURCC_ai52:
+      case FOURCC_ai53:
+      case FOURCC_ai55:
+      case FOURCC_ai56:
+      case FOURCC_ai5p:
+      case FOURCC_ai5q:
       case FOURCC_H265:
       case FOURCC_hvc1:
       case FOURCC_hev1:
@@ -9124,6 +9184,145 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_H266:
       case FOURCC_vvc1:
       case FOURCC_vvi1:
+      case FOURCC_av01:
+      case FOURCC_uncv:
+      case FOURCC_SVQ3:
+      case FOURCC_VP31:
+      case FOURCC_jpeg:
+      case FOURCC_rle_:
+      case FOURCC_WRLE:
+      case FOURCC_ovc1:
+      case FOURCC_vc_1:
+      case FOURCC_VP80:
+      case FOURCC_vp08:
+      case FOURCC_vp09:
+      case FOURCC_png:
+      case GST_MAKE_FOURCC ('m', 'j', 'p', 'a'):
+      case GST_MAKE_FOURCC ('A', 'V', 'D', 'J'):
+      case GST_MAKE_FOURCC ('M', 'J', 'P', 'G'):
+      case GST_MAKE_FOURCC ('d', 'm', 'b', '1'):
+      case GST_MAKE_FOURCC ('m', 'j', 'p', 'b'):
+      case GST_MAKE_FOURCC ('s', 'v', 'q', 'i'):
+      case GST_MAKE_FOURCC ('S', 'V', 'Q', '1'):
+      case GST_MAKE_FOURCC ('W', 'R', 'A', 'W'):
+      case GST_MAKE_FOURCC ('y', 'v', '1', '2'):
+      case GST_MAKE_FOURCC ('y', 'u', 'v', '2'):
+      case GST_MAKE_FOURCC ('Y', 'u', 'v', '2'):
+      case GST_MAKE_FOURCC ('2', 'V', 'u', 'y'):
+      case GST_MAKE_FOURCC ('v', '3', '0', '8'):
+      case GST_MAKE_FOURCC ('v', '2', '1', '6'):
+      case FOURCC_v210:
+      case GST_MAKE_FOURCC ('r', '2', '1', '0'):
+      case GST_MAKE_FOURCC ('m', 'p', 'e', 'g'):
+      case GST_MAKE_FOURCC ('m', 'p', 'g', '1'):
+      case GST_MAKE_FOURCC ('m', '1', 'v', ' '):
+      case GST_MAKE_FOURCC ('h', 'd', 'v', '1'):
+      case GST_MAKE_FOURCC ('h', 'd', 'v', '2'):
+      case GST_MAKE_FOURCC ('h', 'd', 'v', '3'):
+      case GST_MAKE_FOURCC ('h', 'd', 'v', '4'):
+      case GST_MAKE_FOURCC ('h', 'd', 'v', '5'):
+      case GST_MAKE_FOURCC ('h', 'd', 'v', '6'):
+      case GST_MAKE_FOURCC ('h', 'd', 'v', '7'):
+      case GST_MAKE_FOURCC ('h', 'd', 'v', '8'):
+      case GST_MAKE_FOURCC ('h', 'd', 'v', '9'):
+      case GST_MAKE_FOURCC ('h', 'd', 'v', 'a'):
+      case GST_MAKE_FOURCC ('m', 'x', '5', 'n'):
+      case GST_MAKE_FOURCC ('m', 'x', '5', 'p'):
+      case GST_MAKE_FOURCC ('m', 'x', '4', 'n'):
+      case GST_MAKE_FOURCC ('m', 'x', '4', 'p'):
+      case GST_MAKE_FOURCC ('m', 'x', '3', 'n'):
+      case GST_MAKE_FOURCC ('m', 'x', '3', 'p'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', '1'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', '2'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', '3'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', '4'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', '5'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', '6'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', '7'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', '8'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', '9'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', 'a'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', 'b'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', 'c'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', 'd'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', 'e'):
+      case GST_MAKE_FOURCC ('x', 'd', 'v', 'f'):
+      case GST_MAKE_FOURCC ('x', 'd', '5', '1'):
+      case GST_MAKE_FOURCC ('x', 'd', '5', '4'):
+      case GST_MAKE_FOURCC ('x', 'd', '5', '5'):
+      case GST_MAKE_FOURCC ('x', 'd', '5', '9'):
+      case GST_MAKE_FOURCC ('x', 'd', '5', 'a'):
+      case GST_MAKE_FOURCC ('x', 'd', '5', 'b'):
+      case GST_MAKE_FOURCC ('x', 'd', '5', 'c'):
+      case GST_MAKE_FOURCC ('x', 'd', '5', 'd'):
+      case GST_MAKE_FOURCC ('x', 'd', '5', 'e'):
+      case GST_MAKE_FOURCC ('x', 'd', '5', 'f'):
+      case GST_MAKE_FOURCC ('x', 'd', 'h', 'd'):
+      case GST_MAKE_FOURCC ('x', 'd', 'h', '2'):
+      case GST_MAKE_FOURCC ('A', 'V', 'm', 'p'):
+      case GST_MAKE_FOURCC ('m', 'p', 'g', '2'):
+      case GST_MAKE_FOURCC ('m', 'p', '2', 'v'):
+      case GST_MAKE_FOURCC ('m', '2', 'v', '1'):
+      case GST_MAKE_FOURCC ('g', 'i', 'f', ' '):
+      case FOURCC_h263:
+      case GST_MAKE_FOURCC ('H', '2', '6', '3'):
+      case FOURCC_s263:
+      case GST_MAKE_FOURCC ('U', '2', '6', '3'):
+      case GST_MAKE_FOURCC ('3', 'i', 'v', 'd'):
+      case GST_MAKE_FOURCC ('3', 'I', 'V', 'D'):
+      case GST_MAKE_FOURCC ('D', 'I', 'V', '3'):
+      case GST_MAKE_FOURCC ('D', 'I', 'V', 'X'):
+      case GST_MAKE_FOURCC ('d', 'i', 'v', 'x'):
+      case GST_MAKE_FOURCC ('D', 'X', '5', '0'):
+      case GST_MAKE_FOURCC ('F', 'F', 'V', '1'):
+      case GST_MAKE_FOURCC ('3', 'I', 'V', '1'):
+      case GST_MAKE_FOURCC ('3', 'I', 'V', '2'):
+      case GST_MAKE_FOURCC ('U', 'M', 'P', '4'):
+      case GST_MAKE_FOURCC ('c', 'v', 'i', 'd'):
+      case GST_MAKE_FOURCC ('q', 'd', 'r', 'w'):
+      case GST_MAKE_FOURCC ('r', 'p', 'z', 'a'):
+      case GST_MAKE_FOURCC ('I', 'V', '3', '2'):
+      case GST_MAKE_FOURCC ('i', 'v', '3', '2'):
+      case GST_MAKE_FOURCC ('I', 'V', '4', '1'):
+      case GST_MAKE_FOURCC ('i', 'v', '4', '1'):
+      case FOURCC_dvcp:
+      case FOURCC_dvc_:
+      case GST_MAKE_FOURCC ('d', 'v', 's', 'd'):
+      case GST_MAKE_FOURCC ('D', 'V', 'S', 'D'):
+      case GST_MAKE_FOURCC ('d', 'v', 'c', 's'):
+      case GST_MAKE_FOURCC ('D', 'V', 'C', 'S'):
+      case GST_MAKE_FOURCC ('d', 'v', '2', '5'):
+      case GST_MAKE_FOURCC ('d', 'v', 'p', 'p'):
+      case FOURCC_dv5n:
+      case FOURCC_dv5p:
+      case GST_MAKE_FOURCC ('d', 'v', 'h', '5'):
+      case GST_MAKE_FOURCC ('d', 'v', 'h', '6'):
+      case GST_MAKE_FOURCC ('s', 'm', 'c', ' '):
+      case GST_MAKE_FOURCC ('V', 'P', '6', 'F'):
+      case FOURCC_drac:
+      case GST_MAKE_FOURCC ('t', 'i', 'f', 'f'):
+      case GST_MAKE_FOURCC ('i', 'c', 'o', 'd'):
+      case GST_MAKE_FOURCC ('A', 'V', 'd', 'n'):
+      case FOURCC_cfhd:
+      case FOURCC_SHQ0:
+      case FOURCC_SHQ1:
+      case FOURCC_SHQ2:
+      case FOURCC_SHQ3:
+      case FOURCC_SHQ4:
+      case FOURCC_SHQ5:
+      case FOURCC_SHQ6:
+      case FOURCC_SHQ7:
+      case FOURCC_SHQ8:
+      case FOURCC_SHQ9:
+      case FOURCC_LAGS:
+      case FOURCC_Hap1:
+      case FOURCC_Hap5:
+      case FOURCC_HapY:
+      case FOURCC_HapM:
+      case FOURCC_HapA:
+      case FOURCC_Hap7:
+      case FOURCC_HapH:
+        /* FIXME FOURCC_raw_ but that is used for audio too */
       {
         guint32 version;
         guint32 str_len;
@@ -9233,33 +9432,9 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
         }
         break;
       }
-      case FOURCC_in24:
-      {
-        qtdemux_parse_container (qtdemux, node, buffer + 0x34, end);
-        break;
-      }
       case FOURCC_uuid:
       {
         qtdemux_parse_uuid (qtdemux, buffer, end - buffer);
-        break;
-      }
-      case FOURCC_enca:
-      {
-        qtdemux_parse_container (qtdemux, node, buffer + 36, end);
-        break;
-      }
-      case FOURCC_ipcm:
-      case FOURCC_fpcm:
-      {
-        if (length < 36) {
-          GST_LOG_OBJECT (qtdemux, "skipping small %" GST_FOURCC_FORMAT " box",
-              GST_FOURCC_ARGS (fourcc));
-          break;
-        }
-
-        GST_MEMDUMP_OBJECT (qtdemux, fourcc == FOURCC_ipcm ? "ipcm" : "fpcm",
-            buffer, end - buffer);
-        qtdemux_parse_container (qtdemux, node, buffer + 36, end);
         break;
       }
       default:
