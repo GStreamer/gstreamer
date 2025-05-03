@@ -61,6 +61,7 @@ G_BEGIN_DECLS
 #define FOURCC_MP4V     GST_MAKE_FOURCC('M','P','4','V')
 #define FOURCC_PICT     GST_MAKE_FOURCC('P','I','C','T')
 #define FOURCC_QDM2     GST_MAKE_FOURCC('Q','D','M','2')
+#define FOURCC_QDMC     GST_MAKE_FOURCC('Q','D','M','C')
 #define FOURCC_SVQ3     GST_MAKE_FOURCC('S','V','Q','3')
 #define FOURCC_VP31     GST_MAKE_FOURCC('V','P','3','1')
 #define FOURCC_VP80     GST_MAKE_FOURCC('V','P','8','0')
