@@ -12056,6 +12056,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
     gchar *codec = NULL;
     QtDemuxStreamStsdEntry *entry = &stream->stsd_entries[stsd_index];
 
+    /* needs at least length and fourcc */
+    if (remaining_stsd_len < 8)
+      goto corrupt_file;
+
     /* and that entry should fit within stsd */
     len = QT_UINT32 (stsd_entry_data);
     if (len > remaining_stsd_len)
