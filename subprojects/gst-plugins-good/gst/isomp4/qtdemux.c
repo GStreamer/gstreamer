@@ -16865,6 +16865,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
             /* Fully handled elsewhere */
             break;
           }
+          case FOURCC_raw_:
+          case FOURCC_sowt:
+          case FOURCC_twos:
           case FOURCC_lpcm:
           case FOURCC_ipcm:
           case FOURCC_fpcm:
