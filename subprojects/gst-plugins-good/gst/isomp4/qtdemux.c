@@ -12110,7 +12110,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
       stream->display_height = h >> 16;
 
       offset = 16;
-      if (len < 86)             /* TODO verify */
+      /* sample description entry (16) + visual sample description (70) */
+      if (len < 86)
         goto corrupt_file;
 
       entry->width = QT_UINT16 (stsd_entry_data + offset + 16);
