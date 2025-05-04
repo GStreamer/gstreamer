@@ -12554,6 +12554,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
             const guint8 *data;
             const gchar *colorspace = NULL;
             gint ncomp = 0;
+            guint32 colr_len;
             guint32 ncomp_map = 0;
             gint32 *comp_map = NULL;
             guint32 nchan_def = 0;
@@ -12577,6 +12578,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
 
             colr = qtdemux_tree_get_child_by_type (jp2h, FOURCC_colr);
             if (!colr)
+              break;
+            colr_len = QT_UINT32 (colr->data);
+            if (colr_len < 15)
               break;
             GST_DEBUG_OBJECT (qtdemux, "found colr");
             /* extract colour space info */
