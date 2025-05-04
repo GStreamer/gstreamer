@@ -9077,6 +9077,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_aavd:
       case FOURCC_opus:
       {
+        guint8 stsd_version;
         guint32 version;
         guint32 offset;
         guint min_size;
@@ -9105,30 +9106,57 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
         /* 'version' here is the sound sample description version. Types 0 and
            1 are documented in the QTFF reference, but type 2 is not: it's
            described in Apple header files instead (struct SoundDescriptionV2
-           in Movies.h) */
+           in Movies.h).
+
+           For ISOBMFF there's only version 0 and 1, and both have the same size.
+           The distinction between the two version 1 can be made via the stsd (parent)
+           node version.
+         */
+        stsd_version = QT_UINT8 ((const guint8 *) node->data + 8);
         version = QT_UINT16 (buffer + 16);
 
-        GST_DEBUG_OBJECT (qtdemux, "%" GST_FOURCC_FORMAT " version 0x%08x",
-            GST_FOURCC_ARGS (fourcc), version);
+        GST_DEBUG_OBJECT (qtdemux,
+            "%" GST_FOURCC_FORMAT " stsd version %u version %u",
+            GST_FOURCC_ARGS (fourcc), stsd_version, version);
 
-        /* parse any esds descriptors */
-        switch (version) {
-          case 0:
-            offset = 0x24;
-            break;
-          case 1:
-            offset = 0x34;
-            break;
-          case 2:
-            offset = 0x48;
-            break;
-          default:
-            GST_WARNING_OBJECT (qtdemux,
-                "unhandled %" GST_FOURCC_FORMAT " version 0x%08x",
-                GST_FOURCC_ARGS (fourcc), version);
-            offset = 0;
-            break;
+        if (stsd_version == 0) {
+          /* parse any esds descriptors and other optional boxes */
+          switch (version) {
+            case 0:
+              offset = 36;
+              break;
+            case 1:
+              offset = 52;
+              break;
+            case 2:
+              offset = 72;
+              break;
+            default:
+              GST_WARNING_OBJECT (qtdemux,
+                  "unhandled %" GST_FOURCC_FORMAT " version %u",
+                  GST_FOURCC_ARGS (fourcc), version);
+              offset = 0;
+              break;
+          }
+        } else if (stsd_version == 1) {
+          switch (version) {
+            case 0:
+            case 1:
+              offset = 36;
+              break;
+            default:
+              GST_WARNING_OBJECT (qtdemux,
+                  "unhandled %" GST_FOURCC_FORMAT " version %u",
+                  GST_FOURCC_ARGS (fourcc), version);
+              offset = 0;
+              break;
+          }
+        } else {
+          GST_WARNING_OBJECT (qtdemux,
+              "unhandled stsd version %u", stsd_version);
+          offset = 0;
         }
+
         if (offset)
           qtdemux_parse_container (qtdemux, node, buffer + offset, end);
         break;
