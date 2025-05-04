@@ -14507,6 +14507,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
 
   QtDemuxStream *stream = NULL;
   const guint8 *stsd_data;
+  guint8 stsd_version;
   guint stsd_entry_count;
   guint stsd_index;
   guint16 lang_code;            /* quicktime lang code or packed iso code */
@@ -14699,6 +14700,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
     }
   }
 
+  stsd_version = QT_UINT8 (stsd_data + 8);
   stream->stsd_entries_length = stsd_entry_count = QT_UINT32 (stsd_data + 12);
   /* each stsd entry must contain at least 8 bytes */
   if (stream->stsd_entries_length == 0
@@ -15912,7 +15914,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
 
       offset = 36;
 
-      if (version == 0x00010000) {
+      /* This is only valid in MOV files. To distinguish this from the
+       * AudioSampleEntryV1 from ISOBMFF (which does not have the additional
+       * fields but instead the exact same layout as AudioSampleEntry), the
+       * latter requires a stsd of version 1 to be used.
+       * The same goes for version 2 below, for which no equivalent in ISOBMFF
+       * exists yet, fortunately
+       */
+      if (version == 0x00010000 && stsd_version == 0) {
         /* sample description entry (16) + sound sample description v1 (20+16) */
         if (len < 52)
           goto corrupt_file;
@@ -15939,7 +15948,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
           GST_LOG_OBJECT (qtdemux, "samples/frame:    %d",
               entry->samples_per_frame);
         }
-      } else if (version == 0x00020000) {
+      } else if (version == 0x00020000 && stsd_version == 0) {
         /* sample description entry (16) + sound sample description v2 (56) */
         if (len < 72)
           goto corrupt_file;
