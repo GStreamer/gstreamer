@@ -6181,7 +6181,7 @@ gst_qtdemux_align_buffer (GstQTDemux * demux,
   return buffer;
 }
 
-/* Adds padding to the end of each row to achieve byte-alignment 
+/* Adds padding to the end of each row to achieve byte-alignment
  *
  * Returns NULL if failed
  */
@@ -12024,7 +12024,7 @@ typedef struct UncompressedFrameConfigBox
   guint32 component_count;      // Should match the cmpd component_count
   UncompressedFrameConfigComponent *components; // Array of Components
   guint8 sampling_type;         // 0=4:4:4, 1=4:2:2, 2=4:2:0, 3=4:1:1
-  guint8 interleave_type;       // Planar, interleaved, etc. 
+  guint8 interleave_type;       // Planar, interleaved, etc.
   guint8 block_size;            // Stores data in fixed-sized blocks
   gboolean components_little_endian;    // indicates that components are stored as little endian
   gboolean block_pad_lsb;       // Padding bits location
@@ -14508,8 +14508,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
 
   QtDemuxStream *stream = NULL;
   const guint8 *stsd_data;
-  const guint8 *stsd_entry_data;
-  guint remaining_stsd_len;
   guint stsd_entry_count;
   guint stsd_index;
   guint16 lang_code;            /* quicktime lang code or packed iso code */
@@ -14713,17 +14711,20 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
   GST_LOG_OBJECT (qtdemux, "stsd len:           %d", stsd_len);
   GST_LOG_OBJECT (qtdemux, "stsd entry count:   %u", stsd_entry_count);
 
-  stsd_entry_data = stsd_data + 16;
-  remaining_stsd_len = stsd_len - 16;
   for (stsd_index = 0; stsd_index < stsd_entry_count; stsd_index++) {
+    GNode *stsd_entry;
+    const guint8 *stsd_entry_data;
     guint32 fourcc;
     gchar *codec = NULL;
     QtDemuxStreamStsdEntry *entry = &stream->stsd_entries[stsd_index];
 
-    /* and that entry should fit within stsd */
-    len = QT_UINT32 (stsd_entry_data);
-    if (len > remaining_stsd_len)
+    stsd_entry = qtdemux_tree_get_child_by_index (stsd, stsd_index);
+    if (!stsd_entry)
       goto corrupt_file;
+
+    stsd_entry_data = stsd_entry->data;
+
+    len = QT_UINT32 (stsd_entry_data);
 
     entry->fourcc = fourcc = QT_FOURCC (stsd_entry_data + 4);
     GST_LOG_OBJECT (qtdemux, "stsd type:          %" GST_FOURCC_FORMAT,
@@ -17036,10 +17037,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
     } else if (entry->fourcc == FOURCC_mp4a) {
       entry->sampled = TRUE;
     }
-
-
-    stsd_entry_data += len;
-    remaining_stsd_len -= len;
   }
 
   /* Sample grouping support */
