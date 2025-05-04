@@ -14751,11 +14751,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
     }
 
     if (fourcc == FOURCC_encv || fourcc == FOURCC_enca) {
-      /* FIXME this looks wrong, there might be multiple children
-       * with the same type */
-      GNode *enc = qtdemux_tree_get_child_by_type (stsd, fourcc);
       stream->protected = TRUE;
-      if (!qtdemux_parse_protection_scheme_info (qtdemux, stream, enc, &fourcc)) {
+      if (!qtdemux_parse_protection_scheme_info (qtdemux, stream, stsd_entry,
+              &fourcc)) {
         GST_ERROR_OBJECT (qtdemux, "Failed to parse protection scheme info");
         goto corrupt_file;
       }
