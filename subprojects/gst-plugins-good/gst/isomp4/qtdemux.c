@@ -14501,7 +14501,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
   GNode *stbl;
   GNode *stsd;
   GNode *mp4a;
-  GNode *mp4v;
   GNode *esds;
   GNode *tref;
   GNode *udta;
@@ -14930,31 +14929,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
       GST_LOG_OBJECT (qtdemux, "frame count:   %u",
           QT_UINT16 (stsd_entry_data + offset + 32));
 
-      esds = NULL;
-      pasp = NULL;
-      colr = NULL;
-      fiel = NULL;
-      /* pick 'the' stsd child */
-      mp4v = qtdemux_tree_get_child_by_index (stsd, stsd_index);
-      // We should skip parsing the stsd for non-protected streams if
-      // the entry doesn't match the fourcc, since they don't change
-      // format. However, for protected streams we can have partial
-      // encryption, where parts of the stream are encrypted and parts
-      // not. For both parts of such streams, we should ensure the
-      // esds overrides are parsed for both from the stsd.
-      if (QTDEMUX_TREE_NODE_FOURCC (mp4v) != fourcc) {
-        if (stream->protected && QTDEMUX_TREE_NODE_FOURCC (mp4v) != FOURCC_encv)
-          mp4v = NULL;
-        else if (!stream->protected)
-          mp4v = NULL;
-      }
-
-      if (mp4v) {
-        esds = qtdemux_tree_get_child_by_type (mp4v, FOURCC_esds);
-        pasp = qtdemux_tree_get_child_by_type (mp4v, FOURCC_pasp);
-        colr = qtdemux_tree_get_child_by_type (mp4v, FOURCC_colr);
-        fiel = qtdemux_tree_get_child_by_type (mp4v, FOURCC_fiel);
-      }
+      esds = qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_esds);
+      pasp = qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_pasp);
+      colr = qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_colr);
+      fiel = qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_fiel);
 
       if (pasp) {
         const guint8 *pasp_data = (const guint8 *) pasp->data;
@@ -15245,8 +15223,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
                 GST_FOURCC_ARGS (fourcc));
 
             /* codec data might be in glbl extension atom */
-            glbl = mp4v ?
-                qtdemux_tree_get_child_by_type (mp4v, FOURCC_glbl) : NULL;
+            glbl = qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_glbl);
             if (glbl) {
               guint8 *data;
               GstBuffer *buf;
