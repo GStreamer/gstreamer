@@ -355,7 +355,7 @@ static void gst_qtdemux_handle_esds (GstQTDemux * qtdemux,
     GstTagList * list);
 static GstCaps *qtdemux_video_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream, QtDemuxStreamStsdEntry * entry, guint32 fourcc,
-    const guint8 * stsd_entry_data, gchar ** codec_name);
+    GNode * stsd_entry, gchar ** codec_name);
 static GstCaps *qtdemux_audio_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream, QtDemuxStreamStsdEntry * entry, guint32 fourcc,
     const guint8 * data, int len, gchar ** codec_name);
@@ -12059,7 +12059,7 @@ qtdemux_clear_cmpd (ComponentDefinitionBox * cmpd)
 
 static gboolean
 qtdemux_parse_cmpd (GstQTDemux * qtdemux, GstByteReader * reader,
-    ComponentDefinitionBox * cmpd, guint32 size)
+    ComponentDefinitionBox * cmpd)
 {
   /* There should be enough to parse the component_count (4) */
   if (gst_byte_reader_get_remaining (reader) < 4) {
@@ -12070,7 +12070,7 @@ qtdemux_parse_cmpd (GstQTDemux * qtdemux, GstByteReader * reader,
   cmpd->component_count = gst_byte_reader_get_uint32_be_unchecked (reader);
 
   guint32 minimum_size = cmpd->component_count * 2 + 4; // assuming type_uris are not used
-  if (size < minimum_size) {
+  if (gst_byte_reader_get_size (reader) < minimum_size) {
     GST_ERROR_OBJECT (qtdemux, "cmpd size is too short");
     goto error;
   }
@@ -12102,7 +12102,7 @@ error:
 
 static gboolean
 qtdemux_parse_uncC (GstQTDemux * qtdemux, GstByteReader * reader,
-    UncompressedFrameConfigBox * uncC, guint32 size)
+    UncompressedFrameConfigBox * uncC)
 {
   /* There should be enough to parse the version/flags (4) & profile (4) */
   if (gst_byte_reader_get_remaining (reader) < 8) {
@@ -12127,13 +12127,13 @@ qtdemux_parse_uncC (GstQTDemux * qtdemux, GstByteReader * reader,
     goto error;
   }
 
-  guint32 expected_size = uncC->component_count * 5 + 44;
-  if (size != expected_size) {
+  guint32 expected_size = uncC->component_count * 5 + 36;
+  if (gst_byte_reader_get_size (reader) != expected_size) {
     GST_ERROR_OBJECT (qtdemux, "uncC size is incorrect");
     goto error;
   }
 
-  guint32 expected_remaining = size - 20;       // 20 = box_size(4) + uncC(4) + version/flags(4) + profile(4) + component_count(4)
+  guint32 expected_remaining = uncC->component_count * 5 + 24;
   if (gst_byte_reader_get_remaining (reader) < expected_remaining) {
     GST_ERROR_OBJECT (qtdemux, "uncC is too short");
     goto error;
@@ -14884,7 +14884,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
         gst_caps_unref (entry->caps);
 
       entry->caps =
-          qtdemux_video_caps (qtdemux, stream, entry, fourcc, stsd_entry_data,
+          qtdemux_video_caps (qtdemux, stream, entry, fourcc, stsd_entry,
           &codec);
       if (G_UNLIKELY (!entry->caps)) {
         g_free (palette_data);
@@ -18347,7 +18347,7 @@ _get_unknown_codec_name (const gchar * type, guint32 fourcc)
 static GstCaps *
 qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     QtDemuxStreamStsdEntry * entry, guint32 fourcc,
-    const guint8 * stsd_entry_data, gchar ** codec_name)
+    GNode * stsd_entry, gchar ** codec_name)
 {
   GstCaps *caps = NULL;
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
@@ -18403,7 +18403,8 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     {
       guint16 bps;
 
-      bps = QT_UINT16 (stsd_entry_data + 82);
+      // Read VisualSampleEntry depth. Size is checked by the caller already.
+      bps = QT_UINT16 ((const guint8 *) stsd_entry->data + 82);
       switch (bps) {
         case 15:
           format = GST_VIDEO_FORMAT_RGB15;
@@ -18866,100 +18867,45 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
     case FOURCC_uncv:
     {
-      const guint8 ENTRY_MINIMUM_SIZE = 86;     // video sample description minimum size in bytes
-      const guint8 *first_child = stsd_entry_data + ENTRY_MINIMUM_SIZE;
-      const guint32 UNCV_SIZE = QT_UINT32 (stsd_entry_data);
-      const guint32 UNCV_CHILDREN_SIZE = UNCV_SIZE - ENTRY_MINIMUM_SIZE;
-      gboolean found_cmpd = FALSE;
-      gboolean found_uncC = FALSE;
-      gboolean success = TRUE;
+      GNode *uncC_node, *cmpd_node;
+
       GstByteReader reader;
       UncompressedFrameConfigBox uncC = { 0 };
       ComponentDefinitionBox cmpd = { 0 };
 
-      if (UNCV_SIZE < ENTRY_MINIMUM_SIZE) {
-        GST_WARNING_OBJECT (qtdemux, "visual sample entry 'uncv' is too small");
-        return NULL;
-      }
-
-      gst_byte_reader_init (&reader, first_child, UNCV_CHILDREN_SIZE);
-
-      // Parse each uncv child
-      while (gst_byte_reader_get_remaining (&reader)) {
-        guint32 child_size = 0; // Includes size (4), fourcc (4), & data
-        guint32 child_data_size = 0;    // The size in bytes of the data, not including the size (4) and fourcc (4)
-        guint32 child_fourcc = 0;
-
-        if (gst_byte_reader_get_remaining (&reader) < 8) {
-          GST_WARNING_OBJECT (qtdemux, "uncv child box is too small");
-          return NULL;
-        }
-
-        // Parse Child Header
-        child_size = gst_byte_reader_get_uint32_be_unchecked (&reader);
-        child_fourcc = gst_byte_reader_get_uint32_le_unchecked (&reader);
-        child_data_size = child_size - 8;
-
-        if (child_data_size > gst_byte_reader_get_remaining (&reader)) {
-          GST_WARNING_OBJECT (qtdemux, "uncv child box is too big");
-          return NULL;
-        }
-
-        switch (child_fourcc) {
-          case FOURCC_uncC:
-          {
-            if (found_uncC) {
-              success = FALSE;
-              GST_WARNING_OBJECT (qtdemux, "Found multiple uncC boxes in uncv");
-            } else {
-              found_uncC = TRUE;
-              success =
-                  qtdemux_parse_uncC (qtdemux, &reader, &uncC, child_size);
-            }
-            break;
-          }
-          case FOURCC_cmpd:
-          {
-            if (found_cmpd) {
-              success = FALSE;
-              GST_WARNING_OBJECT (qtdemux, "Found multiple cmpd boxes in uncv");
-            } else {
-              found_cmpd = TRUE;
-              success =
-                  qtdemux_parse_cmpd (qtdemux, &reader, &cmpd, child_size);
-            }
-            break;
-          }
-          default:
-          {
-            GST_LOG_OBJECT (qtdemux,
-                "Ignoring unknown uncv child: %" GST_FOURCC_FORMAT,
-                GST_FOURCC_ARGS (child_fourcc));
-            gst_byte_reader_skip_unchecked (&reader, child_data_size);  // Skip unknown child box
-          }
-        }
-        if (!success) {
-          GST_WARNING_OBJECT (qtdemux, "Failed to parse uncv");
-          break;
-        }
-      }
-
-      /* Successfully Parsed uncv? */
-      if (!found_uncC) {
+      uncC_node =
+          qtdemux_tree_get_child_by_type_full (stsd_entry, FOURCC_uncC,
+          &reader);
+      if (!uncC_node) {
         GST_WARNING_OBJECT (qtdemux,
             "Expected to find uncC box when parsing uncv");
-      } else if (uncC.version == 0 && !found_cmpd) {
-        GST_WARNING_OBJECT (qtdemux,
-            "Expected to find cmpd box when uncC version is 0");
-      } else if (!success) {
-        GST_WARNING_OBJECT (qtdemux, "Error when parsing uncv box");
-      } else {
-        format = qtdemux_get_format_from_uncv (qtdemux, &uncC, &cmpd);
-        gst_video_info_set_format (&stream->pre_info, format, entry->width,
-            entry->height);
-        qtdemux_set_info_from_uncv (qtdemux, entry, &uncC, &stream->pre_info);
-        stream->alignment = 32;
+        break;
       }
+
+      if (!qtdemux_parse_uncC (qtdemux, &reader, &uncC)) {
+        GST_WARNING_OBJECT (qtdemux, "Failed parsing uncC box");
+        break;
+      }
+
+      cmpd_node =
+          qtdemux_tree_get_child_by_type_full (stsd_entry, FOURCC_cmpd,
+          &reader);
+      if (!cmpd_node) {
+        GST_WARNING_OBJECT (qtdemux,
+            "Expected to find cmpd box when parsing uncv");
+        break;
+      }
+
+      if (!qtdemux_parse_cmpd (qtdemux, &reader, &cmpd)) {
+        GST_WARNING_OBJECT (qtdemux, "Failed parsing cmpd box");
+        break;
+      }
+
+      format = qtdemux_get_format_from_uncv (qtdemux, &uncC, &cmpd);
+      gst_video_info_set_format (&stream->pre_info, format, entry->width,
+          entry->height);
+      qtdemux_set_info_from_uncv (qtdemux, entry, &uncC, &stream->pre_info);
+      stream->alignment = 32;
 
       /* Free Memory */
       qtdemux_clear_uncC (&uncC);
