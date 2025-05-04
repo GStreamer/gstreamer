@@ -16197,7 +16197,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
             gint16 wBitsPerSample;
             gint16 cbSize;
           } WAVEFORMATEX;
-          WAVEFORMATEX *wfex;
+          WAVEFORMATEX wfex;
 
           GST_DEBUG_OBJECT (qtdemux, "parse owma");
           owma_data = stsd_entry_data;
@@ -16206,16 +16206,22 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
             GST_WARNING_OBJECT (qtdemux, "Too small owma header, skipping");
             break;
           }
-          wfex = (WAVEFORMATEX *) (owma_data + 36);
+          wfex.wFormatTag = GST_READ_UINT16_LE (owma_data + 36 + 0);
+          wfex.nChannels = GST_READ_UINT16_LE (owma_data + 36 + 2);
+          wfex.nSamplesPerSec = GST_READ_UINT32_LE (owma_data + 36 + 4);
+          wfex.nAvgBytesPerSec = GST_READ_UINT32_LE (owma_data + 36 + 8);
+          wfex.nBlockAlign = GST_READ_UINT16_LE (owma_data + 36 + 12);
+          wfex.wBitsPerSample = GST_READ_UINT16_LE (owma_data + 36 + 14);
+          wfex.cbSize = GST_READ_UINT16_LE (owma_data + 36 + 16);
           buf = gst_buffer_new_and_alloc (owma_len - 54);
           gst_buffer_fill (buf, 0, owma_data + 54, owma_len - 54);
-          if (wfex->wFormatTag == 0x0161) {
+          if (wfex.wFormatTag == 0x0161) {
             codec_name = "Windows Media Audio";
             version = 2;
-          } else if (wfex->wFormatTag == 0x0162) {
+          } else if (wfex.wFormatTag == 0x0162) {
             codec_name = "Windows Media Audio 9 Pro";
             version = 3;
-          } else if (wfex->wFormatTag == 0x0163) {
+          } else if (wfex.wFormatTag == 0x0163) {
             codec_name = "Windows Media Audio 9 Lossless";
             /* is that correct? gstffmpegcodecmap.c is missing it, but
              * fluendo codec seems to support it */
@@ -16226,10 +16232,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
               "codec_data", GST_TYPE_BUFFER, buf,
               "wmaversion", G_TYPE_INT, version,
               "block_align", G_TYPE_INT,
-              GST_READ_UINT16_LE (&wfex->nBlockAlign), "bitrate", G_TYPE_INT,
-              GST_READ_UINT32_LE (&wfex->nAvgBytesPerSec), "width", G_TYPE_INT,
-              GST_READ_UINT16_LE (&wfex->wBitsPerSample), "depth", G_TYPE_INT,
-              GST_READ_UINT16_LE (&wfex->wBitsPerSample), NULL);
+              wfex.nBlockAlign, "bitrate", G_TYPE_INT,
+              wfex.nAvgBytesPerSec, "width", G_TYPE_INT,
+              wfex.wBitsPerSample, "depth", G_TYPE_INT,
+              wfex.wBitsPerSample, NULL);
           gst_buffer_unref (buf);
 
           if (codec_name) {
