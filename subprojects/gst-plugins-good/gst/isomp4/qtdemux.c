@@ -358,16 +358,17 @@ static GstCaps *qtdemux_video_caps (GstQTDemux * qtdemux,
     GNode * stsd_entry, gchar ** codec_name);
 static GstCaps *qtdemux_audio_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream, QtDemuxStreamStsdEntry * entry, guint32 fourcc,
-    const guint8 * data, int len, gchar ** codec_name);
+    guint8 stsd_version, guint32 version, GNode * stsd_entry,
+    gchar ** codec_name);
 static GstCaps *qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    QtDemuxStreamStsdEntry * entry, guint32 fourcc, const guint8 * data,
+    QtDemuxStreamStsdEntry * entry, guint32 fourcc, GNode * stsd_entry,
     gchar ** codec_name);
 static GstCaps *qtdemux_meta_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    QtDemuxStreamStsdEntry * entry, guint32 fourcc, const guint8 * data,
+    QtDemuxStreamStsdEntry * entry, guint32 fourcc, GNode * stsd_entry,
     gchar ** codec_name);
 static GstCaps *qtdemux_generic_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream, QtDemuxStreamStsdEntry * entry, guint32 fourcc,
-    const guint8 * stsd_entry_data, gchar ** codec_name);
+    GNode * stsd_entry, gchar ** codec_name);
 
 static gboolean qtdemux_parse_samples (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 n);
@@ -16103,7 +16104,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
         gst_caps_unref (entry->caps);
 
       entry->caps = qtdemux_audio_caps (qtdemux, stream, entry, fourcc,
-          stsd_entry_data + 32, len - 16, &codec);
+          stsd_version, version, stsd_entry, &codec);
 
       switch (fourcc) {
         case FOURCC_in24:
@@ -16933,8 +16934,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
       entry->sparse = TRUE;
 
       entry->caps =
-          qtdemux_sub_caps (qtdemux, stream, entry, fourcc, stsd_entry_data,
-          &codec);
+          qtdemux_sub_caps (qtdemux, stream, entry, fourcc, stsd_entry, &codec);
       if (codec) {
         gst_tag_list_add (stream->stream_tags, GST_TAG_MERGE_REPLACE,
             GST_TAG_SUBTITLE_CODEC, codec, NULL);
@@ -16976,7 +16976,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
       entry->sparse = TRUE;
 
       entry->caps =
-          qtdemux_meta_caps (qtdemux, stream, entry, fourcc, stsd_entry_data,
+          qtdemux_meta_caps (qtdemux, stream, entry, fourcc, stsd_entry,
           &codec);
       if (codec) {
         gst_tag_list_add (stream->stream_tags, GST_TAG_MERGE_REPLACE,
@@ -16993,7 +16993,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
       entry->sampled = TRUE;
 
       entry->caps =
-          qtdemux_generic_caps (qtdemux, stream, entry, fourcc, stsd_entry_data,
+          qtdemux_generic_caps (qtdemux, stream, entry, fourcc, stsd_entry,
           &codec);
 
       if (entry->caps == NULL)
@@ -18941,8 +18941,9 @@ round_up_pow2 (guint n)
 
 static GstCaps *
 qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    QtDemuxStreamStsdEntry * entry, guint32 fourcc, const guint8 * data,
-    int len, gchar ** codec_name)
+    QtDemuxStreamStsdEntry * entry, guint32 fourcc,
+    guint8 stsd_version, guint32 version,
+    GNode * stsd_entry, gchar ** codec_name)
 {
   GstCaps *caps;
   const GstStructure *s;
@@ -19133,14 +19134,14 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case FOURCC_QDM2:
       _codec ("QDesign Music v.2");
       /* FIXME: QDesign music version 2 (no constant) */
-      if (FALSE && data) {
-        caps = gst_caps_new_simple ("audio/x-qdm2",
-            "framesize", G_TYPE_INT, QT_UINT32 (data + 52),
-            "bitrate", G_TYPE_INT, QT_UINT32 (data + 40),
-            "blocksize", G_TYPE_INT, QT_UINT32 (data + 44), NULL);
-      } else {
-        caps = gst_caps_new_empty_simple ("audio/x-qdm2");
-      }
+      // if (FALSE && data) {
+      //   caps = gst_caps_new_simple ("audio/x-qdm2",
+      //       "framesize", G_TYPE_INT, QT_UINT32 (data + 52),
+      //       "bitrate", G_TYPE_INT, QT_UINT32 (data + 40),
+      //       "blocksize", G_TYPE_INT, QT_UINT32 (data + 44), NULL);
+      // } else {
+      caps = gst_caps_new_empty_simple ("audio/x-qdm2");
+      //}
       break;
     case FOURCC_agsm:
       _codec ("GSM audio");
@@ -19183,6 +19184,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     case FOURCC_lpcm:
     {
+      const guint8 *data;
+      guint32 len;
       guint32 flags = 0;
       guint32 depth = 0;
       guint32 width = 0;
@@ -19198,11 +19201,16 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       };
       _codec ("Raw LPCM audio");
 
-      if (data && len >= 36) {
-        depth = QT_UINT32 (data + 24);
-        flags = QT_UINT32 (data + 28);
-        width = QT_UINT32 (data + 32) * 8 / entry->n_channels;
+      data = stsd_entry->data;
+      len = QT_UINT32 (data);
+
+      if (stsd_version == 0 && version == 0x00020000 && len >= 16 + 56) {
+        /* sample description entry (16) + sound sample description v0 (20) */
+        depth = QT_UINT32 (data + 36 + 20);
+        flags = QT_UINT32 (data + 36 + 24);
+        width = QT_UINT32 (data + 36 + 28) * 8 / entry->n_channels;
       }
+
       if ((flags & FLAG_IS_FLOAT) == 0) {
         if (depth == 0)
           depth = 16;
@@ -19294,7 +19302,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
 static GstCaps *
 qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     QtDemuxStreamStsdEntry * entry, guint32 fourcc,
-    const guint8 * stsd_entry_data, gchar ** codec_name)
+    GNode * stsd_entry, gchar ** codec_name)
 {
   GstCaps *caps;
 
@@ -19365,7 +19373,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
 static GstCaps *
 qtdemux_meta_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     QtDemuxStreamStsdEntry * entry, guint32 fourcc,
-    const guint8 * stsd_entry_data, gchar ** codec_name)
+    GNode * stsd_entry, gchar ** codec_name)
 {
   GstCaps *caps = NULL;
 
@@ -19373,6 +19381,7 @@ qtdemux_meta_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   switch (fourcc) {
     case FOURCC_metx:{
+      const guint8 *stsd_entry_data = stsd_entry->data;
       gsize size = QT_UINT32 (stsd_entry_data);
       GstByteReader reader = GST_BYTE_READER_INIT (stsd_entry_data, size);
       const gchar *content_encoding;
@@ -19422,7 +19431,7 @@ qtdemux_meta_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
 static GstCaps *
 qtdemux_generic_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     QtDemuxStreamStsdEntry * entry, guint32 fourcc,
-    const guint8 * stsd_entry_data, gchar ** codec_name)
+    GNode * stsd_entry, gchar ** codec_name)
 {
   GstCaps *caps;
 
