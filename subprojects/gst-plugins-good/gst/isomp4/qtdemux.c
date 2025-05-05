@@ -11506,7 +11506,7 @@ qtdemux_get_rtsp_uri_from_hndl (GstQTDemux * qtdemux, GNode * minf)
 #define AMR_NB_ALL_MODES        0x81ff
 #define AMR_WB_ALL_MODES        0x83ff
 static guint
-qtdemux_parse_amr_bitrate (GstBuffer * buf, gboolean wb)
+qtdemux_parse_amr_bitrate (const guint8 * data, guint32 len, gboolean wb)
 {
   /* The 'damr' atom is of the form:
    *
@@ -11525,24 +11525,21 @@ qtdemux_parse_amr_bitrate (GstBuffer * buf, gboolean wb)
   static const guint wb_bitrates[] = {
     6600, 8850, 12650, 14250, 15850, 18250, 19850, 23050, 23850
   };
-  GstMapInfo map;
   gsize max_mode;
   guint16 mode_set;
 
-  gst_buffer_map (buf, &map, GST_MAP_READ);
-
-  if (map.size != 0x11) {
-    GST_DEBUG ("Atom should have size 0x11, not %" G_GSIZE_FORMAT, map.size);
+  if (len != 0x11) {
+    GST_DEBUG ("Atom should have size 0x11, not %u", len);
     goto bad_data;
   }
 
-  if (QT_FOURCC (map.data + 4) != FOURCC_damr) {
+  if (QT_FOURCC (data + 4) != FOURCC_damr) {
     GST_DEBUG ("Unknown atom in %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (QT_UINT32 (map.data + 4)));
+        GST_FOURCC_ARGS (QT_UINT32 (data + 4)));
     goto bad_data;
   }
 
-  mode_set = QT_UINT16 (map.data + 13);
+  mode_set = QT_UINT16 (data + 13);
 
   if (mode_set == (wb ? AMR_WB_ALL_MODES : AMR_NB_ALL_MODES))
     max_mode = 7 + (wb ? 1 : 0);
@@ -11556,11 +11553,9 @@ qtdemux_parse_amr_bitrate (GstBuffer * buf, gboolean wb)
     goto bad_data;
   }
 
-  gst_buffer_unmap (buf, &map);
   return wb ? wb_bitrates[max_mode] : nb_bitrates[max_mode];
 
 bad_data:
-  gst_buffer_unmap (buf, &map);
   return 0;
 }
 
@@ -16816,25 +16811,27 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
             /* FALLTHROUGH */
           case FOURCC_samr:
           {
-            gint len = QT_UINT32 (stsd_entry_data);
-
-            if (len > 0x24) {
-              GstBuffer *buf = gst_buffer_new_and_alloc (len - 0x24);
+            const GNode *damr =
+                qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_damr);
+            if (damr) {
+              guint32 len = QT_UINT32 (damr->data);
+              GstBuffer *buf = gst_buffer_new_and_alloc (len);
               guint bitrate;
 
-              gst_buffer_fill (buf, 0, stsd_entry_data + 0x24, len - 0x24);
-
-              /* If we have enough data, let's try to get the 'damr' atom. See
-               * the 3GPP container spec (26.244) for more details. */
-              if ((len - 0x34) > 8 &&
-                  (bitrate = qtdemux_parse_amr_bitrate (buf, amrwb))) {
-                gst_tag_list_add (stream->stream_tags, GST_TAG_MERGE_REPLACE,
-                    GST_TAG_MAXIMUM_BITRATE, bitrate, NULL);
-              }
+              gst_buffer_fill (buf, 0, damr->data, len);
 
               gst_caps_set_simple (entry->caps,
                   "codec_data", GST_TYPE_BUFFER, buf, NULL);
               gst_buffer_unref (buf);
+
+              /* If we have enough data, let's try to get the 'damr' atom. See
+               * the 3GPP container spec (26.244) for more details. */
+              if (len > 8 &&
+                  (bitrate =
+                      qtdemux_parse_amr_bitrate (damr->data, len, amrwb))) {
+                gst_tag_list_add (stream->stream_tags, GST_TAG_MERGE_REPLACE,
+                    GST_TAG_MAXIMUM_BITRATE, bitrate, NULL);
+              }
             }
             break;
           }
