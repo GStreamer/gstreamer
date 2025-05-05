@@ -11314,103 +11314,6 @@ done:
   return TRUE;
 }
 
-/*
- * Parses the stsd atom of a svq3 trak looking for
- * the SMI and gama atoms.
- */
-static void
-qtdemux_parse_svq3_stsd_data (GstQTDemux * qtdemux,
-    const guint8 * stsd_entry_data, const guint8 ** gamma, GstBuffer ** seqh)
-{
-  const guint8 *_gamma = NULL;
-  GstBuffer *_seqh = NULL;
-  const guint8 *stsd_data = stsd_entry_data;
-  guint32 length = QT_UINT32 (stsd_data);
-  guint16 version;
-
-  if (length < 32) {
-    GST_WARNING_OBJECT (qtdemux, "stsd too short");
-    goto end;
-  }
-
-  stsd_data += 16;
-  length -= 16;
-  version = QT_UINT16 (stsd_data);
-  if (version == 3) {
-    if (length >= 70) {
-      length -= 70;
-      stsd_data += 70;
-      while (length > 8) {
-        guint32 fourcc, size;
-        const guint8 *data;
-        size = QT_UINT32 (stsd_data);
-        fourcc = QT_FOURCC (stsd_data + 4);
-        data = stsd_data + 8;
-
-        if (size == 0) {
-          GST_WARNING_OBJECT (qtdemux, "Atom of size 0 found, aborting "
-              "svq3 atom parsing");
-          goto end;
-        }
-
-        switch (fourcc) {
-          case FOURCC_gama:{
-            if (size == 12) {
-              _gamma = data;
-            } else {
-              GST_WARNING_OBJECT (qtdemux, "Unexpected size %" G_GUINT32_FORMAT
-                  " for gama atom, expected 12", size);
-            }
-            break;
-          }
-          case FOURCC_SMI_:{
-            if (size > 16 && QT_FOURCC (data) == FOURCC_SEQH) {
-              guint32 seqh_size;
-              if (_seqh != NULL) {
-                GST_WARNING_OBJECT (qtdemux, "Unexpected second SEQH SMI atom "
-                    " found, ignoring");
-              } else {
-                /* Note: The size does *not* include the fourcc and the size field itself */
-                seqh_size = QT_UINT32 (data + 4);
-                if (seqh_size > 0 && seqh_size <= size - 8) {
-                  _seqh = gst_buffer_new_and_alloc (seqh_size);
-                  gst_buffer_fill (_seqh, 0, data + 8, seqh_size);
-                }
-              }
-            }
-            break;
-          }
-          default:{
-            GST_WARNING_OBJECT (qtdemux, "Unhandled atom %" GST_FOURCC_FORMAT
-                " in SVQ3 entry in stsd atom", GST_FOURCC_ARGS (fourcc));
-          }
-        }
-
-        if (size <= length) {
-          length -= size;
-          stsd_data += size;
-        }
-      }
-    } else {
-      GST_WARNING_OBJECT (qtdemux, "SVQ3 entry too short in stsd atom");
-    }
-  } else {
-    GST_WARNING_OBJECT (qtdemux, "Unexpected version for SVQ3 entry %"
-        G_GUINT16_FORMAT, version);
-    goto end;
-  }
-
-end:
-  if (gamma) {
-    *gamma = _gamma;
-  }
-  if (seqh) {
-    *seqh = _seqh;
-  } else if (_seqh) {
-    gst_buffer_unref (_seqh);
-  }
-}
-
 static gchar *
 qtdemux_get_rtsp_uri_from_hndl (GstQTDemux * qtdemux, GNode * minf)
 {
@@ -14788,6 +14691,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
       GNode *colr;
       GNode *fiel;
       GNode *pasp;
+      guint32 version;
       gboolean gray;
       gint depth, palette_size, palette_count;
       guint32 *palette_data = NULL;
@@ -14802,6 +14706,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
       if (len < 86)
         goto corrupt_file;
 
+      version = QT_UINT32 (stsd_entry_data + offset);
       entry->width = QT_UINT16 (stsd_entry_data + offset + 16);
       entry->height = QT_UINT16 (stsd_entry_data + offset + 18);
       entry->fps_n = 0;         /* this is filled in later */
@@ -15460,31 +15365,42 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
           case FOURCC_SVQ3:
           case FOURCC_VP31:
           {
-            GstBuffer *buf;
-            GstBuffer *seqh = NULL;
-            const guint8 *gamma_data = NULL;
-            guint len = QT_UINT32 (stsd_data);  /* FIXME review - why put the whole stsd in codec data? */
+            if (version >> 16 == 3) {
+              GNode *gama, *smi;
 
-            qtdemux_parse_svq3_stsd_data (qtdemux, stsd_entry_data, &gamma_data,
-                &seqh);
-            if (gamma_data) {
-              gst_caps_set_simple (entry->caps, "applied-gamma", G_TYPE_DOUBLE,
-                  QT_FP32 (gamma_data), NULL);
-            }
-            if (seqh) {
-              /* sorry for the bad name, but we don't know what this is, other
-               * than its own fourcc */
-              gst_caps_set_simple (entry->caps, "seqh", GST_TYPE_BUFFER, seqh,
-                  NULL);
-              gst_buffer_unref (seqh);
+              gama = qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_gama);
+              if (gama) {
+                guint32 size = QT_UINT32 (gama->data);
+
+                if (size == 12) {
+                  gdouble gamma = QT_FP32 ((const guint8 *) gama->data + 8);
+                  gst_caps_set_simple (entry->caps, "applied-gamma",
+                      G_TYPE_DOUBLE, gamma, NULL);
+                }
+              }
+
+              smi = qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_SMI_);
+              if (smi) {
+                const guint8 *data = smi->data;
+                guint32 size = QT_UINT32 (data);
+
+                // This has first a fourcc and then the size
+                if (size > 16 && QT_FOURCC (data + 8) == FOURCC_SEQH) {
+                  guint32 seqh_size = QT_UINT32 (data + 8 + 4);
+                  if (seqh_size > 0 && seqh_size <= size - 8 - 8) {
+                    GstBuffer *seqh = gst_buffer_new_and_alloc (seqh_size);
+                    gst_buffer_fill (seqh, 0, data + 8 + 8, seqh_size);
+
+                    /* sorry for the bad name, but we don't know what this is, other
+                     * than its own fourcc */
+                    gst_caps_set_simple (entry->caps, "seqh", GST_TYPE_BUFFER,
+                        seqh, NULL);
+                    gst_buffer_unref (seqh);
+                  }
+                }
+              }
             }
 
-            GST_DEBUG_OBJECT (qtdemux, "found codec_data in stsd");
-            buf = gst_buffer_new_and_alloc (len);
-            gst_buffer_fill (buf, 0, stsd_data, len);
-            gst_caps_set_simple (entry->caps,
-                "codec_data", GST_TYPE_BUFFER, buf, NULL);
-            gst_buffer_unref (buf);
             break;
           }
           case FOURCC_jpeg:
