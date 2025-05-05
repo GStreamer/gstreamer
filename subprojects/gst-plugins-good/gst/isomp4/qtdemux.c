@@ -15177,7 +15177,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
           case FOURCC_mjp2:
           {
             /* see annex I of the jpeg2000 spec */
-            GNode *jp2h, *ihdr, *colr, *mjp2, *field, *prefix, *cmap, *cdef;
+            GNode *jp2h, *ihdr, *colr, *mjp2, *prefix, *cmap, *cdef;
             const guint8 *data;
             const gchar *colorspace = NULL;
             gint ncomp = 0;
@@ -15332,17 +15332,15 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
               g_free (chan_def);
             }
 
+            /* indicate possible fields in caps */
+            if (CUR_STREAM (stream)->interlace_mode != 1) {
+              gst_caps_set_simple (entry->caps, "fields", G_TYPE_INT,
+                  CUR_STREAM (stream)->interlace_mode, NULL);
+            }
+
             /* some optional atoms */
-            field = qtdemux_tree_get_child_by_type (mjp2, FOURCC_fiel);
             prefix = qtdemux_tree_get_child_by_type (mjp2, FOURCC_jp2x);
 
-            /* indicate possible fields in caps */
-            if (field) {
-              data = (guint8 *) field->data + 8;
-              if (*data != 1)
-                gst_caps_set_simple (entry->caps, "fields", G_TYPE_INT,
-                    (gint) * data, NULL);
-            }
             /* add codec_data if provided */
             if (prefix) {
               GstBuffer *buf;
