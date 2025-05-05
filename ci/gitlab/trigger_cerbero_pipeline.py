@@ -48,16 +48,23 @@ if __name__ == "__main__":
         return None
 
     cerbero = None
-    # We do not want to run on (often out of date) user upstream branch
-    if os.environ["CI_COMMIT_REF_NAME"] != os.environ['GST_UPSTREAM_BRANCH']:
-        try:
-            cerbero_name = f'{os.environ["CI_PROJECT_NAMESPACE"]}/cerbero'
-            cerbero_branch = os.environ["CI_COMMIT_REF_NAME"]
-            cerbero = get_matching_user_project(cerbero_name, cerbero_branch)
-        except gitlab.exceptions.GitlabGetError:
-            pass
+    # Only look for user namespace cerbero branch when running in a merge request
+    if "CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" in os.environ:
+        print("GStreamer monorepo merge request")
+        cerbero_branch = os.environ["CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"]
+        user_project_path = os.environ["CI_MERGE_REQUEST_SOURCE_PROJECT_PATH"]
+        user_ns = os.path.dirname(user_project_path)
+        cerbero_name = f'{user_ns}/cerbero'
+        # We do not want to run on (often out of date) user upstream branch
+        if os.environ["CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"] != os.environ["GST_UPSTREAM_BRANCH"]:
+            try:
+                cerbero = get_matching_user_project(cerbero_name, cerbero_branch)
+            except gitlab.exceptions.GitlabGetError as e:
+                print("No matching user project found: " + str(e))
+                pass
 
     if cerbero is None:
+        print("Using gstreamer org namespace")
         cerbero_name = CERBERO_PROJECT
         cerbero_branch = os.environ["GST_UPSTREAM_BRANCH"]
         cerbero = gl.projects.get(cerbero_name)
