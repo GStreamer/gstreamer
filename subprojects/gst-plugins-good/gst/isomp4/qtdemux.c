@@ -16636,28 +16636,23 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
             stream->stream_tags);
       } else {
         switch (fourcc) {
-#if 0
-            /* FIXME: what is in the chunk? */
+          case FOURCC_QDM2:
           case FOURCC_QDMC:
           {
-            gint len = QT_UINT32 (stsd_data);
+            if (wave) {
+              guint32 len = QT_UINT32 (wave->data);
 
-            /* seems to be always = 116 = 0x74 */
-            break;
-          }
-#endif
-          case FOURCC_QDM2:
-          {
-            gint len = QT_UINT32 (stsd_entry_data);
+              if (len > 8) {
+                GstBuffer *buf = gst_buffer_new_and_alloc (len - 8);
 
-            if (len > 0x3C) {
-              GstBuffer *buf = gst_buffer_new_and_alloc (len - 0x3C);
-
-              gst_buffer_fill (buf, 0, stsd_entry_data + 0x3C, len - 0x3C);
-              gst_caps_set_simple (entry->caps,
-                  "codec_data", GST_TYPE_BUFFER, buf, NULL);
-              gst_buffer_unref (buf);
+                gst_buffer_fill (buf, 0, (const guint8 *) wave->data + 8,
+                    len - 8);
+                gst_caps_set_simple (entry->caps, "codec_data", GST_TYPE_BUFFER,
+                    buf, NULL);
+                gst_buffer_unref (buf);
+              }
             }
+
             gst_caps_set_simple (entry->caps,
                 "samplesize", G_TYPE_INT, samplesize, NULL);
             break;
@@ -19141,7 +19136,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "mpegversion", G_TYPE_INT, 4, "framed", G_TYPE_BOOLEAN, TRUE,
           "stream-format", G_TYPE_STRING, "raw", NULL);
       break;
-    case GST_MAKE_FOURCC ('Q', 'D', 'M', 'C'):
+    case FOURCC_QDMC:
       _codec ("QDesign Music");
       caps = gst_caps_new_empty_simple ("audio/x-qdm");
       break;
