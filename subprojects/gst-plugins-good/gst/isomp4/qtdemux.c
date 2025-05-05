@@ -3615,7 +3615,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   else
     stream->cslg_shift = 0;
 
-  GST_DEBUG_OBJECT (qtdemux, "Using clsg_shift %" G_GUINT64_FORMAT,
+  GST_DEBUG_OBJECT (qtdemux, "Using cslg_shift %" G_GUINT64_FORMAT,
       stream->cslg_shift);
 
   /* Update total duration if needed */
@@ -10602,7 +10602,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     stream->cslg_shift = 0;
   }
 
-  GST_DEBUG_OBJECT (qtdemux, "Using clsg_shift %" G_GUINT64_FORMAT,
+  GST_DEBUG_OBJECT (qtdemux, "Using cslg_shift %" G_GUINT64_FORMAT,
       stream->cslg_shift);
 
   /* For raw audio streams especially we might want to merge the samples
