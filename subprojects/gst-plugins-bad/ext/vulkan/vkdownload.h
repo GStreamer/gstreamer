@@ -53,6 +53,8 @@ struct DownloadMethod
   void              (*propose_allocation)       (gpointer impl,
                                                  GstQuery * decide_query,
                                                  GstQuery * query);
+  gboolean          (*decide_allocation)        (gpointer impl,
+                                                 GstQuery * decide_query);
   GstFlowReturn     (*perform)                  (gpointer impl,
                                                  GstBuffer * buffer,
                                                  GstBuffer ** outbuf);
