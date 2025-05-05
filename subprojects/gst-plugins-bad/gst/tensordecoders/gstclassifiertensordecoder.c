@@ -52,11 +52,12 @@
  *
  * ## Example launch command:
  * |[
- * gst-launch-1.0 multifilesrc location=/onnx-models/images/bus.jpg            \
- *  ! decodebin ! videoconvert ! onnxinference execution-provider=cpu          \
- *  model-file=/onnx-models/models/mobilenet_v1.onnx                           \
+ * gst-launch-1.0 filesrc location=/onnx-models/images/bus.jpg                 \
+ *  ! jpegdec                                                                  \
+ *  ! videoconvertscale add-borders=1                                          \
+ *  ! onnxinference execution-provider=cpu                                     \
+ *    model-file=/onnx-models/models/mobilenet_v1.onnx                         \
  *  ! classifiertensordecoder labels-file=labels.txt ! fakesink               \
-)
  * ]| This pipeline create an tensor-decoder for classification model
  *
  */
@@ -70,7 +71,7 @@
 #include <math.h>
 #include <gst/analytics/analytics.h>
 
-const gchar GST_MODEL_STD_IMAGE_CLASSIFICATION[] = "Gst.Model.Classifier.Std";
+const gchar GST_MODEL_STD_IMAGE_CLASSIFICATION[] = "classification-generic-out";
 
 GST_DEBUG_CATEGORY_STATIC (classifier_tensor_decoder_debug);
 #define GST_CAT_DEFAULT classifier_tensor_decoder_debug
@@ -391,14 +392,11 @@ gst_classifier_tensor_decoder_decode (GstClassifierTensorDecoder * self,
   gsize len;
   GQuark q, qmax;
   gint max_idx = -1;
-  gsize index;
-  GstTensor *tensor;
+  const GstTensor *tensor;
   GstAnalyticsClsMtd cls_mtd;
 
-  index = gst_tensor_meta_get_index_from_id (tmeta,
+  tensor = gst_tensor_meta_get_by_id (tmeta,
       g_quark_from_static_string (GST_MODEL_STD_IMAGE_CLASSIFICATION));
-
-  tensor = tmeta->tensors[index];
 
   if (tensor->dims_order != GST_TENSOR_DIM_ORDER_ROW_MAJOR) {
     GST_ELEMENT_ERROR (GST_BASE_TRANSFORM (self), STREAM, NOT_IMPLEMENTED,
