@@ -234,7 +234,7 @@ gst_curl_file_sink_prepare_transfer (GstCurlBaseSink * basesink)
     if (last_slash != NULL) {
       /* create dir if file name contains dir component */
       gchar *dir_name = g_strndup (file_name, last_slash - file_name);
-      if (g_mkdir_with_parents (dir_name, S_IRWXU) < 0) {
+      if (g_mkdir_with_parents (dir_name, 0755) < 0) {
         basesink->error = g_strdup_printf ("failed to create directory '%s'",
             dir_name);
         g_free (file_name);
