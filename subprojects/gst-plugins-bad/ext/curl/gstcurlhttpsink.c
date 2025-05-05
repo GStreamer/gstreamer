@@ -534,8 +534,8 @@ static gboolean
 url_contains_credentials (const gchar * url)
 {
   CURLUcode rc;
-  g_autofree gchar *user = NULL;
-  g_autofree gchar *pass = NULL;
+  gchar *user = NULL;
+  gchar *pass = NULL;
   CURLU *handle = NULL;
 
   if (url == NULL) {
@@ -556,10 +556,14 @@ url_contains_credentials (const gchar * url)
   if (rc != CURLUE_OK)
     goto error;
 
+  curl_free (pass);
+  curl_free (user);
   curl_url_cleanup (handle);
   return TRUE;
 
 error:
+  curl_free (pass);
+  curl_free (user);
   curl_url_cleanup (handle);
   return FALSE;
 }
