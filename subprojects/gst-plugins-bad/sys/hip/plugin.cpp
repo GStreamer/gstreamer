@@ -25,6 +25,7 @@
 #include "gsthipdevice.h"
 #include "gsthipmemorycopy.h"
 #include "gsthipconvertscale.h"
+#include "gsthiprtc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -40,16 +41,24 @@ plugin_init (GstPlugin * plugin)
 
   gboolean texture_support = FALSE;
   g_object_get (device, "texture2d-support", &texture_support, nullptr);
-  if (texture_support) {
+  if (!texture_support) {
+    gst_plugin_add_status_info (plugin,
+        "Texture2D not supported by HIP device");
+  }
+
+  auto have_rtc = gst_hip_rtc_load_library ();
+  if (!have_rtc) {
+    gst_plugin_add_status_info (plugin,
+        "Couldn't find runtime kernel compiler library");
+  }
+
+  if (texture_support && have_rtc) {
     gst_element_register (plugin,
         "hipconvertscale", GST_RANK_NONE, GST_TYPE_HIP_CONVERT_SCALE);
     gst_element_register (plugin,
         "hipconvert", GST_RANK_NONE, GST_TYPE_HIP_CONVERT);
     gst_element_register (plugin,
         "hipscale", GST_RANK_NONE, GST_TYPE_HIP_SCALE);
-  } else {
-    gst_plugin_add_status_info (plugin,
-        "Texture2D not supported by HIP device");
   }
 
   gst_clear_object (&device);

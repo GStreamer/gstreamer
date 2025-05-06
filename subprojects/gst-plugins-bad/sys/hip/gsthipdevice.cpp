@@ -22,6 +22,7 @@
 #endif
 
 #include "gsthip.h"
+#include "gsthiploader.h"
 #include <mutex>
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -123,7 +124,7 @@ gst_hip_init_once (void)
   static std::once_flag once;
 
   std::call_once (once,[&] {
-        ret = hipInit (0);
+        ret = HipInit (0);
       });
 
   return ret;
@@ -132,6 +133,11 @@ gst_hip_init_once (void)
 GstHipDevice *
 gst_hip_device_new (guint device_id)
 {
+  if (!gst_hip_load_library ()) {
+    GST_INFO ("Couldn't load HIP library");
+    return nullptr;
+  }
+
   auto hip_ret = gst_hip_init_once ();
   if (hip_ret != hipSuccess) {
     GST_DEBUG ("Couldn't initialize HIP, error: %d", hip_ret);
@@ -139,7 +145,7 @@ gst_hip_device_new (guint device_id)
   }
 
   int num_dev = 0;
-  hip_ret = hipGetDeviceCount (&num_dev);
+  hip_ret = HipGetDeviceCount (&num_dev);
   if (hip_ret != hipSuccess || num_dev <= 0) {
     GST_DEBUG ("No supported HIP device, error: %d", hip_ret);
     return nullptr;
@@ -152,13 +158,13 @@ gst_hip_device_new (guint device_id)
 
   gboolean texture_support = FALSE;
   int val = 0;
-  hip_ret = hipDeviceGetAttribute (&val,
+  hip_ret = HipDeviceGetAttribute (&val,
       hipDeviceAttributeMaxTexture2DWidth, device_id);
   if (hip_ret == hipSuccess && val > 0) {
-    hip_ret = hipDeviceGetAttribute (&val,
+    hip_ret = HipDeviceGetAttribute (&val,
         hipDeviceAttributeMaxTexture2DHeight, device_id);
     if (hip_ret == hipSuccess && val > 0) {
-      hip_ret = hipDeviceGetAttribute (&val,
+      hip_ret = HipDeviceGetAttribute (&val,
           hipDeviceAttributeTextureAlignment, device_id);
       if (hip_ret == hipSuccess && val > 0) {
         texture_support = TRUE;
@@ -179,7 +185,7 @@ gst_hip_device_set_current (GstHipDevice * device)
 {
   g_return_val_if_fail (GST_IS_HIP_DEVICE (device), FALSE);
 
-  auto hip_ret = hipSetDevice (device->priv->device_id);
+  auto hip_ret = HipSetDevice (device->priv->device_id);
   if (!gst_hip_result (hip_ret)) {
     GST_ERROR_OBJECT (device, "hipSetDevice result %d", hip_ret);
     return FALSE;
@@ -194,7 +200,7 @@ gst_hip_device_get_attribute (GstHipDevice * device, hipDeviceAttribute_t attr,
 {
   g_return_val_if_fail (GST_IS_HIP_DEVICE (device), hipErrorInvalidDevice);
 
-  return hipDeviceGetAttribute (value, attr, device->priv->device_id);
+  return HipDeviceGetAttribute (value, attr, device->priv->device_id);
 }
 
 gboolean

@@ -236,7 +236,7 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
   auto pitch = do_align (width_in_bytes, texture_align);
 
   void *data;
-  hip_ret = hipMalloc (&data, pitch * alloc_height);
+  hip_ret = HipMalloc (&data, pitch * alloc_height);
   if (!gst_hip_result (hip_ret)) {
     GST_ERROR_OBJECT (self, "Failed to allocate memory");
     return nullptr;
@@ -245,7 +245,7 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
   GstVideoInfo alloc_info;
   if (!gst_hip_allocator_update_info (info, pitch, alloc_height, &alloc_info)) {
     GST_ERROR_OBJECT (self, "Couldn't calculate aligned info");
-    hipFree (data);
+    HipFree (data);
     return nullptr;
   }
 
@@ -282,16 +282,16 @@ gst_hip_allocator_free (GstAllocator * allocator, GstMemory * mem)
     for (guint j = 0; j < N_TEX_ADDR_MODES; j++) {
       for (guint k = 0; k < N_TEX_FILTER_MODES; k++) {
         if (priv->texture[i][j][k]) {
-          hipTexObjectDestroy (priv->texture[i][j][k]);
+          HipTexObjectDestroy (priv->texture[i][j][k]);
         }
       }
     }
   }
 
-  hipFree (priv->data);
+  HipFree (priv->data);
 
   if (priv->staging)
-    hipHostFree (priv->staging);
+    HipHostFree (priv->staging);
 
   gst_object_unref (hmem->device);
 
@@ -327,9 +327,9 @@ gst_hip_memory_upload (GstHipAllocator * self, GstHipMemory * mem)
   param.Height = priv->height;
 
   /* TODO use stream */
-  auto hip_ret = hipMemcpyParam2DAsync (&param, nullptr);
+  auto hip_ret = HipMemcpyParam2DAsync (&param, nullptr);
   if (gst_hip_result (hip_ret))
-    hip_ret = hipStreamSynchronize (nullptr);
+    hip_ret = HipStreamSynchronize (nullptr);
 
   GST_MEMORY_FLAG_UNSET (mem, GST_HIP_MEMORY_TRANSFER_NEED_UPLOAD);
 
@@ -351,7 +351,7 @@ gst_hip_memory_download (GstHipAllocator * self, GstHipMemory * mem)
   }
 
   if (!priv->staging) {
-    auto hip_ret = hipHostMalloc (&priv->staging, GST_MEMORY_CAST (mem)->size,
+    auto hip_ret = HipHostMalloc (&priv->staging, GST_MEMORY_CAST (mem)->size,
         0);
 
     if (!gst_hip_result (hip_ret)) {
@@ -371,9 +371,9 @@ gst_hip_memory_download (GstHipAllocator * self, GstHipMemory * mem)
   param.Height = priv->height;
 
   /* TODO use stream */
-  auto hip_ret = hipMemcpyParam2DAsync (&param, nullptr);
+  auto hip_ret = HipMemcpyParam2DAsync (&param, nullptr);
   if (gst_hip_result (hip_ret))
-    hip_ret = hipStreamSynchronize (nullptr);
+    hip_ret = HipStreamSynchronize (nullptr);
 
   GST_MEMORY_FLAG_UNSET (mem, GST_HIP_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
@@ -481,9 +481,9 @@ hip_mem_copy (GstMemory * mem, gssize offset, gssize size)
   param.Height = src_mem->priv->height;
 
   /* TODO: use stream */
-  auto ret = hipMemcpyParam2DAsync (&param, nullptr);
+  auto ret = HipMemcpyParam2DAsync (&param, nullptr);
   if (gst_hip_result (ret))
-    ret = hipStreamSynchronize (nullptr);
+    ret = HipStreamSynchronize (nullptr);
 
   gst_memory_unmap (mem, &src_info);
   gst_memory_unmap (copy, &dst_info);
@@ -642,7 +642,7 @@ gst_hip_memory_get_texture (GstHipMemory * mem, guint plane,
   tex_desc.addressMode[2] = (HIPaddress_mode) address_mode;
 
   hipTextureObject_t tex_obj;
-  auto hip_ret = hipTexObjectCreate (&tex_obj, &res_desc, &tex_desc, nullptr);
+  auto hip_ret = HipTexObjectCreate (&tex_obj, &res_desc, &tex_desc, nullptr);
   if (!gst_hip_result (hip_ret)) {
     GST_ERROR_OBJECT (mem->device, "Couldn't create texture object");
     return FALSE;

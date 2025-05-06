@@ -27,6 +27,8 @@
 #include <mutex>
 #include <vector>
 #include <string>
+#include <gmodule.h>
+#include <string.h>
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
@@ -44,12 +46,104 @@ ensure_debug_category (void)
 }
 #endif
 
+#define LOAD_SYMBOL(name) G_STMT_START { \
+  if (!g_module_symbol (module, G_STRINGIFY (name), (gpointer *) &table->name)) { \
+    GST_ERROR ("Failed to load '%s', %s", G_STRINGIFY (name), g_module_error()); \
+    g_module_close (module); \
+    return; \
+  } \
+} G_STMT_END;
+
+/* *INDENT-OFF* */
+struct GstHipRtcFuncTableAmd
+{
+  gboolean loaded = FALSE;
+
+  hiprtcResult (*hiprtcCreateProgram) (hiprtcProgram * prog,
+    const char *src,
+    const char *name,
+    int numHeaders, const char **headers, const char **includeNames);
+  hiprtcResult (*hiprtcCompileProgram) (hiprtcProgram prog,
+    int numOptions, const char **options);
+  hiprtcResult (*hiprtcGetProgramLog) (hiprtcProgram prog, char *log);
+  hiprtcResult (*hiprtcGetProgramLogSize) (hiprtcProgram prog,
+    size_t *logSizeRet);
+  hiprtcResult (*hiprtcGetCodeSize) (hiprtcProgram prog, size_t *codeSizeRet);
+  hiprtcResult (*hiprtcGetCode) (hiprtcProgram prog, char *code);
+  hiprtcResult (*hiprtcDestroyProgram) (hiprtcProgram * prog);
+};
+/* *INDENT-ON* */
+
+static GstHipRtcFuncTableAmd amd_ftable = { };
+
+static void
+load_rtc_amd_func_table (void)
+{
+  GModule *module = nullptr;
+#ifndef G_OS_WIN32
+  module = g_module_open ("libhiprtc.so", G_MODULE_BIND_LAZY);
+  if (!module)
+    module = g_module_open ("/opt/rocm/lib/libhiprtc.so", G_MODULE_BIND_LAZY);
+#else
+  /* Prefer hip dll in SDK */
+  auto hip_root = g_getenv ("HIP_PATH");
+  if (hip_root) {
+    auto path = g_build_path (G_DIR_SEPARATOR_S, hip_root, "bin", nullptr);
+    auto dir = g_dir_open (path, 0, nullptr);
+    if (dir) {
+      const gchar *name;
+      while ((name = g_dir_read_name (dir))) {
+        if (g_str_has_prefix (name, "hiprtc") && g_str_has_suffix (name,
+                ".dll") && !strstr (name, "builtins")) {
+          auto lib_path = g_build_filename (path, name, nullptr);
+          module = g_module_open (lib_path, G_MODULE_BIND_LAZY);
+          break;
+        }
+      }
+
+      g_dir_close (dir);
+    }
+    g_free (path);
+  }
+#endif
+
+  if (!module) {
+    GST_INFO ("Couldn't open HIP RTC library");
+    return;
+  }
+
+  auto table = &amd_ftable;
+  LOAD_SYMBOL (hiprtcCreateProgram);
+  LOAD_SYMBOL (hiprtcCompileProgram);
+  LOAD_SYMBOL (hiprtcGetProgramLog);
+  LOAD_SYMBOL (hiprtcGetProgramLogSize);
+  LOAD_SYMBOL (hiprtcGetCodeSize);
+  LOAD_SYMBOL (hiprtcGetCode);
+  LOAD_SYMBOL (hiprtcDestroyProgram);
+
+  table->loaded = TRUE;
+}
+
+gboolean
+gst_hip_rtc_load_library (void)
+{
+  static std::once_flag once;
+  std::call_once (once,[]() {
+        load_rtc_amd_func_table ();
+      });
+
+  return amd_ftable.loaded;
+}
+
 gchar *
 gst_hip_rtc_compile (GstHipDevice * device,
     const gchar * source, const gchar ** options, guint num_options)
 {
+  if (!gst_hip_rtc_load_library ())
+    return nullptr;
+
   hiprtcProgram prog;
-  auto rtc_ret = hiprtcCreateProgram (&prog, source, "program.cpp",
+  auto rtc_ret = amd_ftable.hiprtcCreateProgram (&prog, source, "program.cpp",
       0, nullptr, nullptr);
 
   if (rtc_ret != HIPRTC_SUCCESS) {
@@ -60,22 +154,15 @@ gst_hip_rtc_compile (GstHipDevice * device,
   guint device_id;
   g_object_get (device, "device-id", &device_id, nullptr);
 
-  hipDeviceProp_t props = { };
-  auto hip_ret = hipGetDeviceProperties (&props, device_id);
-  if (!gst_hip_result (hip_ret)) {
-    GST_ERROR_OBJECT (device, "Couldn't query device property");
-    return nullptr;
-  }
-
-  rtc_ret = hiprtcCompileProgram (prog, num_options, options);
+  rtc_ret = amd_ftable.hiprtcCompileProgram (prog, num_options, options);
   if (rtc_ret != HIPRTC_SUCCESS) {
     size_t log_size = 0;
     gchar *err_str = nullptr;
-    rtc_ret = hiprtcGetProgramLogSize (prog, &log_size);
+    rtc_ret = amd_ftable.hiprtcGetProgramLogSize (prog, &log_size);
     if (rtc_ret == HIPRTC_SUCCESS) {
       err_str = (gchar *) g_malloc0 (log_size);
       err_str[log_size - 1] = '\0';
-      hiprtcGetProgramLog (prog, err_str);
+      amd_ftable.hiprtcGetProgramLog (prog, err_str);
     }
 
     GST_ERROR_OBJECT (device, "Couldn't compile program, ret: %d (%s)",
@@ -85,14 +172,14 @@ gst_hip_rtc_compile (GstHipDevice * device,
   }
 
   size_t code_size;
-  rtc_ret = hiprtcGetCodeSize (prog, &code_size);
+  rtc_ret = amd_ftable.hiprtcGetCodeSize (prog, &code_size);
   if (rtc_ret != HIPRTC_SUCCESS) {
     GST_ERROR_OBJECT (device, "Couldn't get code size, ret: %d", rtc_ret);
     return nullptr;
   }
 
   auto code = (gchar *) g_malloc0 (code_size);
-  rtc_ret = hiprtcGetCode (prog, code);
+  rtc_ret = amd_ftable.hiprtcGetCode (prog, code);
 
   if (rtc_ret != HIPRTC_SUCCESS) {
     GST_ERROR_OBJECT (device, "Couldn't get code, ret: %d", rtc_ret);
@@ -100,7 +187,7 @@ gst_hip_rtc_compile (GstHipDevice * device,
     return nullptr;
   }
 
-  hiprtcDestroyProgram (&prog);
+  amd_ftable.hiprtcDestroyProgram (&prog);
 
   return code;
 }

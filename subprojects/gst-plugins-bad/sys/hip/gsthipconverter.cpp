@@ -813,34 +813,34 @@ gst_hip_converter_dispose (GObject * object)
 
   if (self->device && gst_hip_device_set_current (self->device)) {
     if (priv->unpack_module) {
-      hipModuleUnload (priv->unpack_module);
+      HipModuleUnload (priv->unpack_module);
       priv->unpack_module = nullptr;
     }
 
     if (priv->main_module) {
-      hipModuleUnload (priv->main_module);
+      HipModuleUnload (priv->main_module);
       priv->main_module = nullptr;
     }
 
     for (guint i = 0; i < G_N_ELEMENTS (priv->fallback_buffer); i++) {
       if (priv->fallback_buffer[i].ptr) {
         if (priv->fallback_buffer[i].texture) {
-          hipTexObjectDestroy (priv->fallback_buffer[i].texture);
+          HipTexObjectDestroy (priv->fallback_buffer[i].texture);
           priv->fallback_buffer[i].texture = nullptr;
         }
 
-        hipFree (priv->fallback_buffer[i].ptr);
+        HipFree (priv->fallback_buffer[i].ptr);
         priv->fallback_buffer[i].ptr = 0;
       }
     }
 
     if (priv->unpack_buffer.ptr) {
       if (priv->unpack_buffer.texture) {
-        hipTexObjectDestroy (priv->unpack_buffer.texture);
+        HipTexObjectDestroy (priv->unpack_buffer.texture);
         priv->unpack_buffer.texture = 0;
       }
 
-      hipFree (priv->unpack_buffer.ptr);
+      HipFree (priv->unpack_buffer.ptr);
       priv->unpack_buffer.ptr = 0;
     }
   }
@@ -1357,7 +1357,7 @@ gst_hip_converter_setup (GstHipConverter * self)
 
     if (program && !priv->main_module) {
       GST_DEBUG_OBJECT (self, "Loading PTX module");
-      ret = hipModuleLoadData (&priv->main_module, program);
+      ret = HipModuleLoadData (&priv->main_module, program);
       if (ret != hipSuccess) {
         GST_ERROR_OBJECT (self, "Could not load module from PTX");
         program = nullptr;
@@ -1371,7 +1371,7 @@ gst_hip_converter_setup (GstHipConverter * self)
     return FALSE;
   }
 
-  ret = hipModuleGetFunction (&priv->main_func,
+  ret = HipModuleGetFunction (&priv->main_func,
       priv->main_module, "GstHipConverterMain");
   if (!gst_hip_result (ret)) {
     GST_ERROR_OBJECT (self, "Could not get main function");
@@ -1388,7 +1388,7 @@ gst_hip_converter_setup (GstHipConverter * self)
     stride = do_align (stride, priv->tex_align);
     priv->unpack_buffer.stride = stride;
 
-    ret = hipMalloc (&priv->unpack_buffer.ptr, stride *
+    ret = HipMalloc (&priv->unpack_buffer.ptr, stride *
         GST_VIDEO_INFO_HEIGHT (texture_info));
 
     if (!gst_hip_result (ret)) {
@@ -1410,7 +1410,7 @@ gst_hip_converter_setup (GstHipConverter * self)
     texture_desc.addressMode[1] = (HIPaddress_mode) 1;
     texture_desc.addressMode[2] = (HIPaddress_mode) 1;
 
-    ret = hipTexObjectCreate (&texture, &resource_desc, &texture_desc, nullptr);
+    ret = HipTexObjectCreate (&texture, &resource_desc, &texture_desc, nullptr);
     if (!gst_hip_result (ret)) {
       GST_ERROR_OBJECT (self, "Couldn't create unpack texture");
       return FALSE;
@@ -1439,7 +1439,7 @@ gst_hip_converter_setup (GstHipConverter * self)
 
       if (program && !priv->unpack_module) {
         GST_DEBUG_OBJECT (self, "PTX CUBIN module");
-        ret = hipModuleLoadData (&priv->unpack_module, program);
+        ret = HipModuleLoadData (&priv->unpack_module, program);
         if (!gst_hip_result (ret)) {
           GST_ERROR_OBJECT (self, "Could not load module from PTX");
           program = nullptr;
@@ -1453,7 +1453,7 @@ gst_hip_converter_setup (GstHipConverter * self)
       return FALSE;
     }
 
-    ret = hipModuleGetFunction (&priv->unpack_func,
+    ret = HipModuleGetFunction (&priv->unpack_func,
         priv->unpack_module, unpack_name.c_str ());
     if (!gst_hip_result (ret)) {
       GST_ERROR_OBJECT (self, "Could not get unpack function");
@@ -1556,7 +1556,7 @@ gst_hip_converter_create_texture_unchecked (GstHipConverter * self,
   texture_desc.addressMode[1] = (HIPaddress_mode) 1;
   texture_desc.addressMode[2] = (HIPaddress_mode) 1;
 
-  auto hip_ret = hipTexObjectCreate (&texture,
+  auto hip_ret = HipTexObjectCreate (&texture,
       &resource_desc, &texture_desc, nullptr);
   if (!gst_hip_result (hip_ret)) {
     GST_ERROR_OBJECT (self, "Could not create texture");
@@ -1577,7 +1577,7 @@ ensure_fallback_buffer (GstHipConverter * self, gint width_in_bytes,
 
   size_t pitch = do_align (width_in_bytes, priv->tex_align);
   priv->fallback_buffer[plane].stride = pitch;
-  auto hip_ret = hipMalloc (&priv->fallback_buffer[plane].ptr,
+  auto hip_ret = HipMalloc (&priv->fallback_buffer[plane].ptr,
       pitch * height);
 
   if (!gst_hip_result (hip_ret)) {
@@ -1610,7 +1610,7 @@ gst_hip_converter_create_texture (GstHipConverter * self,
       * GST_VIDEO_INFO_COMP_PSTRIDE (&priv->in_info, plane),
       params.Height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->in_info, plane);
 
-  auto hip_ret = hipMemcpyParam2DAsync (&params, nullptr);
+  auto hip_ret = HipMemcpyParam2DAsync (&params, nullptr);
   if (!gst_hip_result (hip_ret)) {
     GST_ERROR_OBJECT (self, "Couldn't copy to fallback buffer");
     return nullptr;
@@ -1647,7 +1647,7 @@ gst_hip_converter_unpack_rgb (GstHipConverter * self, GstVideoFrame * src_frame)
   src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, 0);
   dst_stride = (gint) priv->unpack_buffer.stride;
 
-  auto hip_ret = hipModuleLaunchKernel (priv->unpack_func,
+  auto hip_ret = HipModuleLaunchKernel (priv->unpack_func,
       DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y), 1,
       HIP_BLOCK_X, HIP_BLOCK_Y, 1, 0, nullptr, args, nullptr);
   if (!gst_hip_result (hip_ret)) {
@@ -1766,7 +1766,7 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   if (GST_VIDEO_FRAME_N_PLANES (&out_frame) > 1)
     stride[1] = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, 1);
 
-  auto hip_ret = hipModuleLaunchKernel (priv->main_func,
+  auto hip_ret = HipModuleLaunchKernel (priv->main_func,
       DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y), 1,
       HIP_BLOCK_X, HIP_BLOCK_Y, 1,
       0, nullptr, args, nullptr);
@@ -1779,7 +1779,7 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
     return FALSE;
   }
 
-  hipStreamSynchronize (nullptr);
+  HipStreamSynchronize (nullptr);
 
   return TRUE;
 }

@@ -27,4 +27,5 @@
 #include "gsthipmemory.h"
 #include "gsthipbufferpool.h"
 #include "gsthiputils.h"
+#include "gsthiploader.h"
 

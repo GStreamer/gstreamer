@@ -46,8 +46,8 @@ _gst_hip_result (hipError_t result, GstDebugCategory * cat, const gchar * file,
 {
   if (result != hipSuccess) {
 #ifndef GST_DISABLE_GST_DEBUG
-    auto error_name = hipGetErrorName (result);
-    auto error_str = hipGetErrorString (result);
+    auto error_name = HipGetErrorName (result);
+    auto error_str = HipGetErrorString (result);
     gst_debug_log (cat, GST_LEVEL_ERROR, file, function, line,
         NULL, "HIP call failed: %s, %s", error_name, error_str);
 #endif
