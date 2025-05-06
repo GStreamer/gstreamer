@@ -1388,6 +1388,8 @@ gst_gl_download_element_prepare_output_buffer (GstBaseTransform * bt,
       *outbuf = wrapped_dmabuf;
 
       return GST_FLOW_OK;
+    } else {
+      GST_WARNING_OBJECT (dl, "could not unwrap dma-buf-backed GL buffer");
     }
   }
 
@@ -1493,6 +1495,8 @@ gst_gl_download_element_decide_allocation (GstBaseTransform * trans,
 
       gst_query_parse_nth_allocation_pool (query, 0,
           &download->foreign_dmabuf_pool, NULL, NULL, NULL);
+      GST_INFO_OBJECT (trans, "using foreign dmabuf pool %" GST_PTR_FORMAT,
+          download->foreign_dmabuf_pool);
       download->foreign_dmabuf_caps = gst_caps_ref (caps);
 
       gst_query_remove_nth_allocation_pool (query, 0);
@@ -1579,7 +1583,8 @@ gst_gl_download_element_propose_allocation (GstBaseTransform * bt,
         GST_GL_DOWNLOAD_ELEMENT (bt)->foreign_dmabuf_pool,
         GST_GL_DOWNLOAD_ELEMENT (bt)->foreign_dmabuf_caps);
 
-    GST_LOG_OBJECT (bt, "offering dma-buf-backed GL buffer pool");
+    GST_INFO_OBJECT (bt,
+        "offering dma-buf-backed GL buffer pool %" GST_PTR_FORMAT, pool);
   }
 #endif
 

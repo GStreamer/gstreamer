@@ -415,9 +415,19 @@ GstBufferPool *
 gst_gl_dmabuf_buffer_pool_new (GstGLContext * context,
     GstBufferPool * dmabuf_pool, GstCaps * dmabuf_caps)
 {
-  GstGLDMABufBufferPool *pool;
+  static gint pool_seq = 0;
 
-  pool = g_object_new (GST_TYPE_GL_DMABUF_BUFFER_POOL, NULL);
+  GstGLDMABufBufferPool *pool;
+  gchar *name;
+  gchar *dmabuf_pool_name;
+
+  /* setting a significant unique name */
+  dmabuf_pool_name = gst_object_get_name (GST_OBJECT (dmabuf_pool));
+  name = g_strdup_printf ("%s:gldmabufpool%d",
+      dmabuf_pool_name, g_atomic_int_add (&pool_seq, 1));
+  g_clear_pointer (&dmabuf_pool_name, g_free);
+
+  pool = g_object_new (GST_TYPE_GL_DMABUF_BUFFER_POOL, "name", name, NULL);
   gst_object_ref_sink (pool);
 
   GST_GL_BUFFER_POOL (pool)->context = gst_object_ref (context);
@@ -427,8 +437,10 @@ gst_gl_dmabuf_buffer_pool_new (GstGLContext * context,
 
   gst_video_info_dma_drm_from_caps (&pool->priv->drm_info, dmabuf_caps);
 
-  GST_LOG_OBJECT (pool, "new GL-DMABuf buffer pool for pool %" GST_PTR_FORMAT
-      " and context %" GST_PTR_FORMAT, dmabuf_pool, context);
+  GST_INFO_OBJECT (pool, "new GL-DMABuf buffer pool %s with context "
+      "%" GST_PTR_FORMAT, name, context);
+
+  g_clear_pointer (&name, g_free);
 
   return GST_BUFFER_POOL_CAST (pool);
 }
