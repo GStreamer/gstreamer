@@ -488,6 +488,7 @@ void
 qt6_gl_window_set_pool (Qt6GLWindow * qt6_gl_window, GstBufferPool * pool)
 {
   g_mutex_lock(&qt6_gl_window->priv->lock);
+  GST_DEBUG("using pool %" GST_PTR_FORMAT, pool);
   if (qt6_gl_window->priv->pool)
     gst_object_unref (qt6_gl_window->priv->pool);
   qt6_gl_window->priv->pool = pool;
