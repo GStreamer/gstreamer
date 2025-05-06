@@ -13134,15 +13134,17 @@ qtdemux_parse_chnl (GstQTDemux * qtdemux, GstByteReader * br,
 
 error:
   {
-    // Set a default channel mask on errors
-    guint64 default_mask =
-        gst_audio_channel_get_fallback_mask (entry->n_channels);
-
     GST_WARNING_OBJECT (qtdemux,
         "Configuring default channel mask for %u channels", entry->n_channels);
 
-    gst_caps_set_simple (entry->caps, "channel-mask", GST_TYPE_BITMASK,
-        default_mask, NULL);
+    if (entry->n_channels > 1) {
+      // Set a default channel mask on errors
+      guint64 default_mask =
+          gst_audio_channel_get_fallback_mask (entry->n_channels);
+
+      gst_caps_set_simple (entry->caps, "channel-mask", GST_TYPE_BITMASK,
+          default_mask, NULL);
+    }
   }
 }
 
@@ -14468,15 +14470,17 @@ qtdemux_parse_chan (GstQTDemux * qtdemux, GstByteReader * br,
 
 error:
   {
-    // Set a default channel mask on errors
-    guint64 default_mask =
-        gst_audio_channel_get_fallback_mask (entry->n_channels);
-
     GST_WARNING_OBJECT (qtdemux,
         "Configuring default channel mask for %u channels", entry->n_channels);
 
-    gst_caps_set_simple (entry->caps, "channel-mask", GST_TYPE_BITMASK,
-        default_mask, NULL);
+    if (entry->n_channels > 1) {
+      // Set a default channel mask on errors
+      guint64 default_mask =
+          gst_audio_channel_get_fallback_mask (entry->n_channels);
+
+      gst_caps_set_simple (entry->caps, "channel-mask", GST_TYPE_BITMASK,
+          default_mask, NULL);
+    }
   }
 }
 
@@ -16902,16 +16906,18 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
                 qtdemux_parse_chan (qtdemux, &br, stream, entry);
               }
             } else {
-              // Set a default channel mask if all is unknown
-              guint64 default_mask =
-                  gst_audio_channel_get_fallback_mask (entry->n_channels);
-
               GST_DEBUG_OBJECT (qtdemux,
                   "Configuring default channel mask for %u channels",
                   entry->n_channels);
 
-              gst_caps_set_simple (entry->caps, "channel-mask",
-                  GST_TYPE_BITMASK, default_mask, NULL);
+              if (entry->n_channels > 1) {
+                // Set a default channel mask if all is unknown
+                guint64 default_mask =
+                    gst_audio_channel_get_fallback_mask (entry->n_channels);
+
+                gst_caps_set_simple (entry->caps, "channel-mask",
+                    GST_TYPE_BITMASK, default_mask, NULL);
+              }
             }
             break;
           }
