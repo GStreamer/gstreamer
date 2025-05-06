@@ -72,40 +72,72 @@ struct GstHipRtcFuncTableAmd
   hiprtcResult (*hiprtcGetCode) (hiprtcProgram prog, char *code);
   hiprtcResult (*hiprtcDestroyProgram) (hiprtcProgram * prog);
 };
+
+typedef gpointer nvrtcProgram;
+
+typedef enum {
+  NVRTC_SUCCESS = 0,
+} nvrtcResult;
+
+
+struct GstHipRtcFuncTableNvidia
+{
+  gboolean loaded = FALSE;
+
+  nvrtcResult (*nvrtcCompileProgram) (nvrtcProgram prog, int numOptions,
+      const char **options);
+  nvrtcResult (*nvrtcCreateProgram) (nvrtcProgram * prog, const char *src,
+      const char *name, int numHeaders, const char **headers,
+      const char **includeNames);
+  nvrtcResult (*nvrtcDestroyProgram) (nvrtcProgram * prog);
+  nvrtcResult (*nvrtcGetPTX) (nvrtcProgram prog, char *ptx);
+  nvrtcResult (*nvrtcGetPTXSize) (nvrtcProgram prog, size_t * ptxSizeRet);
+  nvrtcResult (*nvrtcGetProgramLog) (nvrtcProgram prog, char *log);
+  nvrtcResult (*nvrtcGetProgramLogSize) (nvrtcProgram prog,
+      size_t * logSizeRet);
+};
+
 /* *INDENT-ON* */
 
 static GstHipRtcFuncTableAmd amd_ftable = { };
+static GstHipRtcFuncTableNvidia nvidia_ftable = { };
 
 static void
 load_rtc_amd_func_table (void)
 {
   GModule *module = nullptr;
-#ifndef G_OS_WIN32
-  module = g_module_open ("libhiprtc.so", G_MODULE_BIND_LAZY);
-  if (!module)
-    module = g_module_open ("/opt/rocm/lib/libhiprtc.so", G_MODULE_BIND_LAZY);
-#else
-  /* Prefer hip dll in SDK */
-  auto hip_root = g_getenv ("HIP_PATH");
-  if (hip_root) {
-    auto path = g_build_path (G_DIR_SEPARATOR_S, hip_root, "bin", nullptr);
-    auto dir = g_dir_open (path, 0, nullptr);
-    if (dir) {
-      const gchar *name;
-      while ((name = g_dir_read_name (dir))) {
-        if (g_str_has_prefix (name, "hiprtc") && g_str_has_suffix (name,
-                ".dll") && !strstr (name, "builtins")) {
-          auto lib_path = g_build_filename (path, name, nullptr);
-          module = g_module_open (lib_path, G_MODULE_BIND_LAZY);
-          break;
-        }
-      }
+  auto module_name = g_getenv ("GST_HIP_HIPRTC_LIBNAME");
+  if (module_name)
+    module = g_module_open (module_name, G_MODULE_BIND_LAZY);
 
-      g_dir_close (dir);
+  if (!module) {
+#ifndef G_OS_WIN32
+    module = g_module_open ("libhiprtc.so", G_MODULE_BIND_LAZY);
+    if (!module)
+      module = g_module_open ("/opt/rocm/lib/libhiprtc.so", G_MODULE_BIND_LAZY);
+#else
+    int version = 0;
+    auto hip_ret = HipRuntimeGetVersion (GST_HIP_VENDOR_AMD, &version);
+    if (hip_ret != hipSuccess)
+      return;
+
+    int major = version / 10000000;
+    int minor = (version - (major * 10000000)) / 100000;
+    auto lib_name = g_strdup_printf ("hiprtc%02d%02d.dll", major, minor);
+    /* Prefer hip dll in SDK */
+    auto hip_root = g_getenv ("HIP_PATH");
+    if (hip_root) {
+      auto lib_path = g_build_filename (hip_root, "bin", lib_name, nullptr);
+      module = g_module_open (lib_path, G_MODULE_BIND_LAZY);
+      g_free (lib_path);
     }
-    g_free (path);
-  }
+
+    if (!module)
+      module = g_module_open (lib_name, G_MODULE_BIND_LAZY);
+
+    g_free (lib_name);
 #endif
+  }
 
   if (!module) {
     GST_INFO ("Couldn't open HIP RTC library");
@@ -124,24 +156,130 @@ load_rtc_amd_func_table (void)
   table->loaded = TRUE;
 }
 
-gboolean
-gst_hip_rtc_load_library (void)
+/* *INDENT-OFF* */
+static gboolean
+gst_hip_rtc_load_library_amd (void)
 {
   static std::once_flag once;
   std::call_once (once,[]() {
-        load_rtc_amd_func_table ();
-      });
+    if (!gst_hip_load_library (GST_HIP_VENDOR_AMD))
+      return;
+
+    load_rtc_amd_func_table ();
+  });
 
   return amd_ftable.loaded;
 }
+/* *INDENT-ON* */
 
-gchar *
-gst_hip_rtc_compile (GstHipDevice * device,
+static void
+load_rtc_nvidia_func_table (void)
+{
+  GModule *module = nullptr;
+  auto module_name = g_getenv ("GST_HIP_NVRTC_LIBNAME");
+  if (module_name)
+    module = g_module_open (module_name, G_MODULE_BIND_LAZY);
+
+  if (!module) {
+#ifndef G_OS_WIN32
+    module = g_module_open ("libnvrtc.so", G_MODULE_BIND_LAZY);
+#else
+    int version = 0;
+    auto hip_ret = HipDriverGetVersion (GST_HIP_VENDOR_NVIDIA, &version);
+    if (hip_ret != hipSuccess)
+      return;
+
+    int major = version / 1000;
+    int minor = (version % 1000) / 10;
+    auto lib_name = g_strdup_printf ("nvrtc64_%d%d_0.dll", major, minor);
+    module = g_module_open (lib_name, G_MODULE_BIND_LAZY);
+    g_free (lib_name);
+
+    if (!module) {
+      lib_name = g_strdup_printf ("nvrtc64_%d0_0.dll", major);
+      module = g_module_open (lib_name, G_MODULE_BIND_LAZY);
+      g_free (lib_name);
+    }
+
+    if (!module) {
+      auto cuda_root = g_getenv ("CUDA_PATH");
+      if (cuda_root) {
+        auto path = g_build_path (G_DIR_SEPARATOR_S, cuda_root, "bin", nullptr);
+        auto dir = g_dir_open (path, 0, nullptr);
+        if (dir) {
+          const gchar *name;
+          while ((name = g_dir_read_name (dir))) {
+            if (g_str_has_prefix (name, "nvrtc64_") &&
+                g_str_has_suffix (name, "_0.dll")) {
+              auto lib_path = g_build_filename (path, name, nullptr);
+              module = g_module_open (lib_path, G_MODULE_BIND_LAZY);
+              g_free (lib_path);
+              break;
+            }
+          }
+
+          g_dir_close (dir);
+        }
+        g_free (path);
+      }
+    }
+#endif
+  }
+
+  if (!module) {
+    GST_INFO ("Couldn't open NVRTC library");
+    return;
+  }
+
+  auto table = &nvidia_ftable;
+  LOAD_SYMBOL (nvrtcCompileProgram);
+  LOAD_SYMBOL (nvrtcCreateProgram);
+  LOAD_SYMBOL (nvrtcDestroyProgram);
+  LOAD_SYMBOL (nvrtcGetPTX);
+  LOAD_SYMBOL (nvrtcGetPTXSize);
+  LOAD_SYMBOL (nvrtcGetProgramLog);
+  LOAD_SYMBOL (nvrtcGetProgramLogSize);
+
+  table->loaded = TRUE;
+}
+
+/* *INDENT-OFF* */
+static gboolean
+gst_hip_rtc_load_library_nvidia (void)
+{
+  static std::once_flag once;
+  std::call_once (once,[]() {
+    if (!gst_hip_load_library (GST_HIP_VENDOR_NVIDIA))
+      return;
+
+    load_rtc_nvidia_func_table ();
+  });
+
+  return nvidia_ftable.loaded;
+}
+/* *INDENT-ON* */
+
+gboolean
+gst_hip_rtc_load_library (GstHipVendor vendor)
+{
+  switch (vendor) {
+    case GST_HIP_VENDOR_AMD:
+      return gst_hip_rtc_load_library_amd ();
+    case GST_HIP_VENDOR_NVIDIA:
+      return gst_hip_rtc_load_library_nvidia ();
+    case GST_HIP_VENDOR_UNKNOWN:
+      if (gst_hip_rtc_load_library_amd () || gst_hip_rtc_load_library_nvidia ())
+        return TRUE;
+      break;
+  }
+
+  return FALSE;
+}
+
+static gchar *
+gst_hip_rtc_compile_amd (GstHipDevice * device,
     const gchar * source, const gchar ** options, guint num_options)
 {
-  if (!gst_hip_rtc_load_library ())
-    return nullptr;
-
   hiprtcProgram prog;
   auto rtc_ret = amd_ftable.hiprtcCreateProgram (&prog, source, "program.cpp",
       0, nullptr, nullptr);
@@ -150,9 +288,6 @@ gst_hip_rtc_compile (GstHipDevice * device,
     GST_ERROR_OBJECT (device, "Couldn't create program, ret: %d", rtc_ret);
     return nullptr;
   }
-
-  guint device_id;
-  g_object_get (device, "device-id", &device_id, nullptr);
 
   rtc_ret = amd_ftable.hiprtcCompileProgram (prog, num_options, options);
   if (rtc_ret != HIPRTC_SUCCESS) {
@@ -190,4 +325,75 @@ gst_hip_rtc_compile (GstHipDevice * device,
   amd_ftable.hiprtcDestroyProgram (&prog);
 
   return code;
+}
+
+static gchar *
+gst_hip_rtc_compile_nvidia (GstHipDevice * device,
+    const gchar * source, const gchar ** options, guint num_options)
+{
+  nvrtcProgram prog;
+  auto rtc_ret = nvidia_ftable.nvrtcCreateProgram (&prog, source, "program.cpp",
+      0, nullptr, nullptr);
+
+  if (rtc_ret != NVRTC_SUCCESS) {
+    GST_ERROR_OBJECT (device, "Couldn't create program, ret: %d", rtc_ret);
+    return nullptr;
+  }
+
+  rtc_ret = nvidia_ftable.nvrtcCompileProgram (prog, num_options, options);
+  if (rtc_ret != NVRTC_SUCCESS) {
+    size_t log_size = 0;
+    gchar *err_str = nullptr;
+    rtc_ret = nvidia_ftable.nvrtcGetProgramLogSize (prog, &log_size);
+    if (rtc_ret == NVRTC_SUCCESS) {
+      err_str = (gchar *) g_malloc0 (log_size);
+      err_str[log_size - 1] = '\0';
+      nvidia_ftable.nvrtcGetProgramLog (prog, err_str);
+    }
+
+    GST_ERROR_OBJECT (device, "Couldn't compile program, ret: %d (%s)",
+        rtc_ret, GST_STR_NULL (err_str));
+    g_free (err_str);
+    return nullptr;
+  }
+
+  size_t code_size;
+  rtc_ret = nvidia_ftable.nvrtcGetPTXSize (prog, &code_size);
+  if (rtc_ret != NVRTC_SUCCESS) {
+    GST_ERROR_OBJECT (device, "Couldn't get code size, ret: %d", rtc_ret);
+    return nullptr;
+  }
+
+  auto code = (gchar *) g_malloc0 (code_size);
+  rtc_ret = nvidia_ftable.nvrtcGetPTX (prog, code);
+
+  if (rtc_ret != NVRTC_SUCCESS) {
+    GST_ERROR_OBJECT (device, "Couldn't get code, ret: %d", rtc_ret);
+    g_free (code);
+    return nullptr;
+  }
+
+  nvidia_ftable.nvrtcDestroyProgram (&prog);
+
+  return code;
+}
+
+gchar *
+gst_hip_rtc_compile (GstHipDevice * device,
+    const gchar * source, const gchar ** options, guint num_options)
+{
+  auto vendor = gst_hip_device_get_vendor (device);
+  if (!gst_hip_rtc_load_library (vendor))
+    return nullptr;
+
+  switch (vendor) {
+    case GST_HIP_VENDOR_AMD:
+      return gst_hip_rtc_compile_amd (device, source, options, num_options);
+    case GST_HIP_VENDOR_NVIDIA:
+      return gst_hip_rtc_compile_nvidia (device, source, options, num_options);
+    default:
+      break;
+  }
+
+  return nullptr;
 }

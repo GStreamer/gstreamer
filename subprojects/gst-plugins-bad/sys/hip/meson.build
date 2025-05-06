@@ -1,4 +1,5 @@
 hip_sources = [
+  'gsthip-enums.cpp',
   'gsthipbasefilter.cpp',
   'gsthipbufferpool.cpp',
   'gsthipconverter.cpp',

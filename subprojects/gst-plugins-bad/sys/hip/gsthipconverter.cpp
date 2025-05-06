@@ -29,6 +29,7 @@
 #include <mutex>
 #include <unordered_map>
 #include <string>
+#include <vector>
 #include "kernel/converter.cu"
 #include "kernel/converter-unpack.cu"
 
@@ -713,6 +714,7 @@ struct _GstHipConverterPrivate
 
   std::mutex lock;
 
+  GstHipVendor vendor;
   GstVideoInfo in_info;
   GstVideoInfo out_info;
 
@@ -813,34 +815,34 @@ gst_hip_converter_dispose (GObject * object)
 
   if (self->device && gst_hip_device_set_current (self->device)) {
     if (priv->unpack_module) {
-      HipModuleUnload (priv->unpack_module);
+      HipModuleUnload (priv->vendor, priv->unpack_module);
       priv->unpack_module = nullptr;
     }
 
     if (priv->main_module) {
-      HipModuleUnload (priv->main_module);
+      HipModuleUnload (priv->vendor, priv->main_module);
       priv->main_module = nullptr;
     }
 
     for (guint i = 0; i < G_N_ELEMENTS (priv->fallback_buffer); i++) {
       if (priv->fallback_buffer[i].ptr) {
         if (priv->fallback_buffer[i].texture) {
-          HipTexObjectDestroy (priv->fallback_buffer[i].texture);
+          HipTexObjectDestroy (priv->vendor, priv->fallback_buffer[i].texture);
           priv->fallback_buffer[i].texture = nullptr;
         }
 
-        HipFree (priv->fallback_buffer[i].ptr);
+        HipFree (priv->vendor, priv->fallback_buffer[i].ptr);
         priv->fallback_buffer[i].ptr = 0;
       }
     }
 
     if (priv->unpack_buffer.ptr) {
       if (priv->unpack_buffer.texture) {
-        HipTexObjectDestroy (priv->unpack_buffer.texture);
+        HipTexObjectDestroy (priv->vendor, priv->unpack_buffer.texture);
         priv->unpack_buffer.texture = 0;
       }
 
-      HipFree (priv->unpack_buffer.ptr);
+      HipFree (priv->vendor, priv->unpack_buffer.ptr);
       priv->unpack_buffer.ptr = 0;
     }
   }
@@ -1335,10 +1337,24 @@ gst_hip_converter_setup (GstHipConverter * self)
   std::string kernel_name = "GstHipConverterMain_" +
       std::string (priv->texture_fmt->sample_func) + "_" + output_name + "_" +
       std::to_string (device_id);
+  if (priv->vendor == GST_HIP_VENDOR_AMD)
+    kernel_name += "_amd";
+  else
+    kernel_name += "_nvidia";
   std::string sampler_define = std::string ("-DSAMPLER=Sample") +
       std::string (priv->texture_fmt->sample_func);
   std::string output_define = std::string ("-DOUTPUT=Output") + output_name;
-  const gchar *opts[2] = { sampler_define.c_str (), output_define.c_str () };
+  std::string texture_define;
+  if (priv->vendor == GST_HIP_VENDOR_AMD) {
+    texture_define = std::string ("-DTextureObject_t=hipTextureObject_t");
+  } else {
+    texture_define = std::string ("-DTextureObject_t=cudaTextureObject_t");
+  }
+  std::vector < const char *>opts;
+  opts.push_back (sampler_define.c_str ());
+  opts.push_back (output_define.c_str ());
+  opts.push_back (texture_define.c_str ());
+
   const gchar *program = nullptr;
 
   {
@@ -1347,7 +1363,8 @@ gst_hip_converter_setup (GstHipConverter * self)
     auto ptx = g_ptx_table.find (kernel_name);
     if (ptx == g_ptx_table.end ()) {
       GST_DEBUG_OBJECT (self, "Building PTX");
-      program = gst_hip_rtc_compile (self->device, ConverterMain_str, opts, 2);
+      program = gst_hip_rtc_compile (self->device, ConverterMain_str,
+          opts.data (), opts.size ());
       if (program)
         g_ptx_table[kernel_name] = program;
     } else {
@@ -1357,9 +1374,10 @@ gst_hip_converter_setup (GstHipConverter * self)
 
     if (program && !priv->main_module) {
       GST_DEBUG_OBJECT (self, "Loading PTX module");
-      ret = HipModuleLoadData (&priv->main_module, program);
+      gst_hip_device_set_current (self->device);
+      ret = HipModuleLoadData (priv->vendor, &priv->main_module, program);
       if (ret != hipSuccess) {
-        GST_ERROR_OBJECT (self, "Could not load module from PTX");
+        GST_ERROR_OBJECT (self, "Could not load module from PTX, ret %d", ret);
         program = nullptr;
         priv->main_module = nullptr;
       }
@@ -1371,9 +1389,9 @@ gst_hip_converter_setup (GstHipConverter * self)
     return FALSE;
   }
 
-  ret = HipModuleGetFunction (&priv->main_func,
+  ret = HipModuleGetFunction (priv->vendor, &priv->main_func,
       priv->main_module, "GstHipConverterMain");
-  if (!gst_hip_result (ret)) {
+  if (!gst_hip_result (ret, priv->vendor)) {
     GST_ERROR_OBJECT (self, "Could not get main function");
     return FALSE;
   }
@@ -1388,10 +1406,10 @@ gst_hip_converter_setup (GstHipConverter * self)
     stride = do_align (stride, priv->tex_align);
     priv->unpack_buffer.stride = stride;
 
-    ret = HipMalloc (&priv->unpack_buffer.ptr, stride *
+    ret = HipMalloc (priv->vendor, &priv->unpack_buffer.ptr, stride *
         GST_VIDEO_INFO_HEIGHT (texture_info));
 
-    if (!gst_hip_result (ret)) {
+    if (!gst_hip_result (ret, priv->vendor)) {
       GST_ERROR_OBJECT (self, "Couldn't allocate unpack buffer");
       return FALSE;
     }
@@ -1410,8 +1428,10 @@ gst_hip_converter_setup (GstHipConverter * self)
     texture_desc.addressMode[1] = (HIPaddress_mode) 1;
     texture_desc.addressMode[2] = (HIPaddress_mode) 1;
 
-    ret = HipTexObjectCreate (&texture, &resource_desc, &texture_desc, nullptr);
-    if (!gst_hip_result (ret)) {
+    ret =
+        HipTexObjectCreate (priv->vendor, &texture, &resource_desc,
+        &texture_desc, nullptr);
+    if (!gst_hip_result (ret, priv->vendor)) {
       GST_ERROR_OBJECT (self, "Couldn't create unpack texture");
       return FALSE;
     }
@@ -1424,6 +1444,10 @@ gst_hip_converter_setup (GstHipConverter * self)
       std::lock_guard < std::mutex > lk (g_kernel_table_lock);
       std::string unpack_module_name =
           "GstHipConverterUnpack_device_" + std::to_string (device_id);
+      if (priv->vendor == GST_HIP_VENDOR_AMD)
+        unpack_module_name += "_amd";
+      else
+        unpack_module_name += "_nvidia";
 
       auto ptx = g_ptx_table.find (unpack_module_name);
       if (ptx == g_ptx_table.end ()) {
@@ -1439,8 +1463,8 @@ gst_hip_converter_setup (GstHipConverter * self)
 
       if (program && !priv->unpack_module) {
         GST_DEBUG_OBJECT (self, "PTX CUBIN module");
-        ret = HipModuleLoadData (&priv->unpack_module, program);
-        if (!gst_hip_result (ret)) {
+        ret = HipModuleLoadData (priv->vendor, &priv->unpack_module, program);
+        if (!gst_hip_result (ret, priv->vendor)) {
           GST_ERROR_OBJECT (self, "Could not load module from PTX");
           program = nullptr;
           priv->unpack_module = nullptr;
@@ -1453,9 +1477,9 @@ gst_hip_converter_setup (GstHipConverter * self)
       return FALSE;
     }
 
-    ret = HipModuleGetFunction (&priv->unpack_func,
+    ret = HipModuleGetFunction (priv->vendor, &priv->unpack_func,
         priv->unpack_module, unpack_name.c_str ());
-    if (!gst_hip_result (ret)) {
+    if (!gst_hip_result (ret, priv->vendor)) {
       GST_ERROR_OBJECT (self, "Could not get unpack function");
       return FALSE;
     }
@@ -1517,6 +1541,7 @@ gst_hip_converter_new (GstHipDevice * device, const GstVideoInfo * in_info,
   priv->dest_width = out_info->width;
   priv->dest_height = out_info->height;
   priv->tex_align = tex_align;
+  priv->vendor = gst_hip_device_get_vendor (device);
 
   if (config)
     gst_hip_converter_set_config (self, config);
@@ -1534,6 +1559,7 @@ gst_hip_converter_create_texture_unchecked (GstHipConverter * self,
     gpointer src, gint width, gint height, hipArray_Format format,
     guint channels, gint stride, gint plane, HIPfilter_mode mode)
 {
+  auto priv = self->priv;
   HIP_TEXTURE_DESC texture_desc = { };
   HIP_RESOURCE_DESC resource_desc = { };
   hipTextureObject_t texture = nullptr;
@@ -1556,9 +1582,9 @@ gst_hip_converter_create_texture_unchecked (GstHipConverter * self,
   texture_desc.addressMode[1] = (HIPaddress_mode) 1;
   texture_desc.addressMode[2] = (HIPaddress_mode) 1;
 
-  auto hip_ret = HipTexObjectCreate (&texture,
+  auto hip_ret = HipTexObjectCreate (priv->vendor, &texture,
       &resource_desc, &texture_desc, nullptr);
-  if (!gst_hip_result (hip_ret)) {
+  if (!gst_hip_result (hip_ret, priv->vendor)) {
     GST_ERROR_OBJECT (self, "Could not create texture");
     return nullptr;
   }
@@ -1577,10 +1603,10 @@ ensure_fallback_buffer (GstHipConverter * self, gint width_in_bytes,
 
   size_t pitch = do_align (width_in_bytes, priv->tex_align);
   priv->fallback_buffer[plane].stride = pitch;
-  auto hip_ret = HipMalloc (&priv->fallback_buffer[plane].ptr,
+  auto hip_ret = HipMalloc (priv->vendor, &priv->fallback_buffer[plane].ptr,
       pitch * height);
 
-  if (!gst_hip_result (hip_ret)) {
+  if (!gst_hip_result (hip_ret, priv->vendor)) {
     GST_ERROR_OBJECT (self, "Couldn't allocate fallback buffer");
     return FALSE;
   }
@@ -1593,7 +1619,7 @@ gst_hip_converter_create_texture (GstHipConverter * self,
     gpointer src, gint width, gint height, gint stride, HIPfilter_mode mode,
     hipArray_Format format, guint channels, gint plane)
 {
-  GstHipConverterPrivate *priv = self->priv;
+  auto priv = self->priv;
   hip_Memcpy2D params = { };
 
   if (!ensure_fallback_buffer (self, stride, height, plane))
@@ -1610,8 +1636,8 @@ gst_hip_converter_create_texture (GstHipConverter * self,
       * GST_VIDEO_INFO_COMP_PSTRIDE (&priv->in_info, plane),
       params.Height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->in_info, plane);
 
-  auto hip_ret = HipMemcpyParam2DAsync (&params, nullptr);
-  if (!gst_hip_result (hip_ret)) {
+  auto hip_ret = HipMemcpyParam2DAsync (priv->vendor, &params, nullptr);
+  if (!gst_hip_result (hip_ret, priv->vendor)) {
     GST_ERROR_OBJECT (self, "Couldn't copy to fallback buffer");
     return nullptr;
   }
@@ -1647,10 +1673,10 @@ gst_hip_converter_unpack_rgb (GstHipConverter * self, GstVideoFrame * src_frame)
   src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, 0);
   dst_stride = (gint) priv->unpack_buffer.stride;
 
-  auto hip_ret = HipModuleLaunchKernel (priv->unpack_func,
+  auto hip_ret = HipModuleLaunchKernel (priv->vendor, priv->unpack_func,
       DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y), 1,
       HIP_BLOCK_X, HIP_BLOCK_Y, 1, 0, nullptr, args, nullptr);
-  if (!gst_hip_result (hip_ret)) {
+  if (!gst_hip_result (hip_ret, priv->vendor)) {
     GST_ERROR_OBJECT (self, "Couldn't unpack source RGB");
     return FALSE;
   }
@@ -1766,7 +1792,7 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   if (GST_VIDEO_FRAME_N_PLANES (&out_frame) > 1)
     stride[1] = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, 1);
 
-  auto hip_ret = HipModuleLaunchKernel (priv->main_func,
+  auto hip_ret = HipModuleLaunchKernel (priv->vendor, priv->main_func,
       DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y), 1,
       HIP_BLOCK_X, HIP_BLOCK_Y, 1,
       0, nullptr, args, nullptr);
@@ -1774,12 +1800,12 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   gst_video_frame_unmap (&out_frame);
   gst_video_frame_unmap (&in_frame);
 
-  if (!gst_hip_result (hip_ret)) {
+  if (!gst_hip_result (hip_ret, priv->vendor)) {
     GST_ERROR_OBJECT (converter, "Couldn't convert frame");
     return FALSE;
   }
 
-  HipStreamSynchronize (nullptr);
+  HipStreamSynchronize (priv->vendor, nullptr);
 
   return TRUE;
 }

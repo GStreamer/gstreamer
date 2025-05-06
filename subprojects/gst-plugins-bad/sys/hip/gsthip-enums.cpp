@@ -17,16 +17,28 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#pragma once
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include <gst/gst.h>
-
-#include <hip/hip_runtime.h>
-#include "gsthip_fwd.h"
 #include "gsthip-enums.h"
-#include "gsthipdevice.h"
-#include "gsthipmemory.h"
-#include "gsthipbufferpool.h"
-#include "gsthiputils.h"
-#include "gsthiploader.h"
+#include <mutex>
 
+GType
+gst_hip_vendor_get_type (void)
+{
+  static std::once_flag once;
+  static GType type = 0;
+  static const GEnumValue vendor[] = {
+    {GST_HIP_VENDOR_UNKNOWN, "Unknown", "unknown"},
+    {GST_HIP_VENDOR_AMD, "AMD", "amd"},
+    {GST_HIP_VENDOR_NVIDIA, "NVIDIA", "nvidia"},
+    {0, nullptr, nullptr},
+  };
+
+  std::call_once (once,[&]() {
+        type = g_enum_register_static ("GstHipVendor", vendor);
+      });
+
+  return type;
+}

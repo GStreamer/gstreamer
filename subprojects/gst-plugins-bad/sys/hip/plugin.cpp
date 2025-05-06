@@ -30,7 +30,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  auto device = gst_hip_device_new (0);
+  auto device = gst_hip_device_new (GST_HIP_VENDOR_UNKNOWN, 0);
   if (!device)
     return TRUE;
 
@@ -46,7 +46,7 @@ plugin_init (GstPlugin * plugin)
         "Texture2D not supported by HIP device");
   }
 
-  auto have_rtc = gst_hip_rtc_load_library ();
+  auto have_rtc = gst_hip_rtc_load_library (GST_HIP_VENDOR_UNKNOWN);
   if (!have_rtc) {
     gst_plugin_add_status_info (plugin,
         "Couldn't find runtime kernel compiler library");

@@ -21,57 +21,97 @@
 
 #include <gst/gst.h>
 #include <hip/hip_runtime.h>
+#include "gsthip-enums.h"
 
 G_BEGIN_DECLS
 
-gboolean gst_hip_load_library (void);
+gboolean gst_hip_load_library (GstHipVendor vendor);
 
-const char* HipGetErrorName(hipError_t hip_error);
+hipError_t HipInit (GstHipVendor vendor,
+                    unsigned int flags);
 
-const char* HipGetErrorString(hipError_t hipError);
+hipError_t HipDriverGetVersion (GstHipVendor vendor,
+                                int* driverVersion);
 
-hipError_t HipInit(unsigned int flags);
+hipError_t HipRuntimeGetVersion (GstHipVendor vendor,
+                                 int* runtimeVersion);
 
-hipError_t HipGetDeviceCount(int* count);
+const char* HipGetErrorName (GstHipVendor vendor,
+                             hipError_t hip_error);
 
-hipError_t HipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
+const char* HipGetErrorString (GstHipVendor vendor,
+                               hipError_t hipError);
 
-hipError_t HipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceId);
+hipError_t HipGetDeviceCount (GstHipVendor vendor,
+                              int* count);
 
-hipError_t HipSetDevice(int deviceId);
+hipError_t HipGetDeviceProperties (GstHipVendor vendor,
+                                   hipDeviceProp_t* prop,
+                                   int deviceId);
 
-hipError_t HipMalloc(void** ptr, size_t size);
+hipError_t HipDeviceGetAttribute (GstHipVendor vendor,
+                                  int* pi,
+                                  hipDeviceAttribute_t attr,
+                                  int deviceId);
 
-hipError_t HipFree(void* ptr);
+hipError_t HipSetDevice (GstHipVendor vendor,
+                         int deviceId);
 
-hipError_t HipHostMalloc(void** ptr, size_t size, unsigned int flags);
+hipError_t HipMalloc (GstHipVendor vendor,
+                      void** ptr,
+                      size_t size);
 
-hipError_t HipHostFree(void* ptr);
+hipError_t HipFree (GstHipVendor vendor,
+                    void* ptr);
 
-hipError_t HipStreamSynchronize(hipStream_t stream);
+hipError_t HipHostMalloc (GstHipVendor vendor,
+                          void** ptr,
+                          size_t size,
+                          unsigned int flags);
 
-hipError_t HipModuleLoadData(hipModule_t* module, const void* image);
+hipError_t HipHostFree (GstHipVendor vendor,
+                        void* ptr);
 
-hipError_t HipModuleUnload(hipModule_t module);
+hipError_t HipStreamSynchronize (GstHipVendor vendor,
+                                 hipStream_t stream);
 
-hipError_t HipModuleGetFunction(hipFunction_t* function, hipModule_t module, const char* kname);
+hipError_t HipModuleLoadData (GstHipVendor vendor,
+                              hipModule_t* module,
+                              const void* image);
 
-hipError_t HipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigned int gridDimY,
-    unsigned int gridDimZ, unsigned int blockDimX,
-    unsigned int blockDimY, unsigned int blockDimZ,
-    unsigned int sharedMemBytes, hipStream_t stream,
-    void** kernelParams, void** extra);
+hipError_t HipModuleUnload (GstHipVendor vendor,
+                            hipModule_t module);
 
-hipError_t HipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStream_t stream);
+hipError_t HipModuleGetFunction (GstHipVendor vendor,
+                                 hipFunction_t* function,
+                                 hipModule_t module,
+                                 const char* kname);
 
-hipError_t HipTexObjectCreate(
-    hipTextureObject_t* pTexObject,
-    const HIP_RESOURCE_DESC* pResDesc,
-    const HIP_TEXTURE_DESC* pTexDesc,
-    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
+hipError_t HipModuleLaunchKernel (GstHipVendor vendor,
+                                  hipFunction_t f,
+                                  unsigned int gridDimX,
+                                  unsigned int gridDimY,
+                                  unsigned int gridDimZ,
+                                  unsigned int blockDimX,
+                                  unsigned int blockDimY,
+                                  unsigned int blockDimZ,
+                                  unsigned int sharedMemBytes,
+                                  hipStream_t stream,
+                                  void** kernelParams,
+                                  void** extra);
 
-hipError_t HipTexObjectDestroy(
-    hipTextureObject_t texObject);
+hipError_t HipMemcpyParam2DAsync (GstHipVendor vendor,
+                                  const hip_Memcpy2D* pCopy,
+                                  hipStream_t stream);
+
+hipError_t HipTexObjectCreate (GstHipVendor vendor,
+                               hipTextureObject_t* pTexObject,
+                               const HIP_RESOURCE_DESC* pResDesc,
+                               const HIP_TEXTURE_DESC* pTexDesc,
+                               const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
+
+hipError_t HipTexObjectDestroy (GstHipVendor vendor,
+                                hipTextureObject_t texObject);
 
 G_END_DECLS
 

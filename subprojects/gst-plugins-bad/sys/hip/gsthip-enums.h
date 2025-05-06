@@ -21,12 +21,17 @@
 
 #include <gst/gst.h>
 
-#include <hip/hip_runtime.h>
-#include "gsthip_fwd.h"
-#include "gsthip-enums.h"
-#include "gsthipdevice.h"
-#include "gsthipmemory.h"
-#include "gsthipbufferpool.h"
-#include "gsthiputils.h"
-#include "gsthiploader.h"
+G_BEGIN_DECLS
+
+typedef enum
+{
+  GST_HIP_VENDOR_UNKNOWN,
+  GST_HIP_VENDOR_AMD,
+  GST_HIP_VENDOR_NVIDIA,
+} GstHipVendor;
+
+#define GST_TYPE_HIP_VENDOR (gst_hip_vendor_get_type())
+GType gst_hip_vendor_get_type (void);
+
+G_END_DECLS
 

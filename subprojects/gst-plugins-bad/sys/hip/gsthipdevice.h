@@ -21,6 +21,7 @@
 
 #include <gst/gst.h>
 #include "gsthip_fwd.h"
+#include "gsthip-enums.h"
 #include <hip/hip_runtime.h>
 
 G_BEGIN_DECLS
@@ -49,7 +50,8 @@ struct _GstHipDeviceClass
 
 GType          gst_hip_device_get_type    (void);
 
-GstHipDevice * gst_hip_device_new         (guint device_id);
+GstHipDevice * gst_hip_device_new         (GstHipVendor vendor,
+                                           guint device_id);
 
 gboolean       gst_hip_device_set_current (GstHipDevice * device);
 
@@ -59,6 +61,10 @@ hipError_t     gst_hip_device_get_attribute (GstHipDevice * device,
 
 gboolean       gst_hip_device_is_equal    (GstHipDevice * device1,
                                            GstHipDevice * device2);
+
+GstHipVendor   gst_hip_device_get_vendor  (GstHipDevice * device);
+
+guint          gst_hip_device_get_device_id  (GstHipDevice * device);
 
 G_END_DECLS
 

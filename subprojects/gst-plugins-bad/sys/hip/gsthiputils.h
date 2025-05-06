@@ -20,30 +20,33 @@
 #pragma once
 
 #include <gst/gst.h>
-#include "gsthip_fwd.h"
+#include "gsthipdevice.h"
 
 G_BEGIN_DECLS
 
 gboolean _gst_hip_result (hipError_t result,
-                         GstDebugCategory * cat,
-                         const gchar * file,
-                         const gchar * function,
-                         gint line);
+                          GstHipVendor vendor,
+                          GstDebugCategory * cat,
+                          const gchar * file,
+                          const gchar * function,
+                          gint line);
 
 #ifndef GST_DISABLE_GST_DEBUG
-#define gst_hip_result(result) \
-_gst_hip_result(result, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__)
+#define gst_hip_result(result,vendor) \
+_gst_hip_result(result, vendor, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__)
 #else
-#define gst_hip_result(result) \
-_gst_hip_result(result, NULL, __FILE__, GST_FUNCTION, __LINE__)
+#define gst_hip_result(result,vendor) \
+_gst_hip_result(result, vendor, NULL, __FILE__, GST_FUNCTION, __LINE__)
 #endif /* GST_DISABLE_GST_DEBUG */
 
 gboolean     gst_hip_ensure_element_data    (GstElement * element,
+                                             GstHipVendor vendor,
                                              gint device_id,
                                              GstHipDevice ** device);
 
 gboolean     gst_hip_handle_set_context     (GstElement * element,
                                              GstContext * context,
+                                             GstHipVendor vendor,
                                              gint device_id,
                                              GstHipDevice ** device);
 

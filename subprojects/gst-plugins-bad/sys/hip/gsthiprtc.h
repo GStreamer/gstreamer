@@ -24,7 +24,7 @@
 
 G_BEGIN_DECLS
 
-gboolean  gst_hip_rtc_load_library (void);
+gboolean  gst_hip_rtc_load_library (GstHipVendor vendor);
 
 gchar *   gst_hip_rtc_compile (GstHipDevice * device,
                                const gchar * source,

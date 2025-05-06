@@ -45,12 +45,14 @@ enum
 {
   PROP_0,
   PROP_DEVICE_ID,
+  PROP_VENDOR,
   PROP_TEXTURE2D_SUPPORT,
 };
 
 struct _GstHipDevicePrivate
 {
   guint device_id;
+  GstHipVendor vendor;
   gboolean texture_support;
 };
 
@@ -72,6 +74,10 @@ gst_hip_device_class_init (GstHipDeviceClass * klass)
   g_object_class_install_property (object_class, PROP_DEVICE_ID,
       g_param_spec_uint ("device-id", "Device ID", "Device ID",
           0, G_MAXUINT, 0,
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_VENDOR,
+      g_param_spec_enum ("vendor", "Vendor", "Vendor",
+          GST_TYPE_HIP_VENDOR, GST_HIP_VENDOR_UNKNOWN,
           (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_TEXTURE2D_SUPPORT,
       g_param_spec_boolean ("texture2d-support", "Texture2D support",
@@ -98,6 +104,9 @@ gst_hip_device_get_property (GObject * object, guint prop_id,
     case PROP_DEVICE_ID:
       g_value_set_uint (value, priv->device_id);
       break;
+    case PROP_VENDOR:
+      g_value_set_enum (value, priv->vendor);
+      break;
     case PROP_TEXTURE2D_SUPPORT:
       g_value_set_boolean (value, priv->texture_support);
       break;
@@ -117,35 +126,25 @@ gst_hip_device_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static hipError_t
-gst_hip_init_once (void)
-{
-  static hipError_t ret = hipErrorInitializationError;
-  static std::once_flag once;
-
-  std::call_once (once,[&] {
-        ret = HipInit (0);
-      });
-
-  return ret;
-}
-
 GstHipDevice *
-gst_hip_device_new (guint device_id)
+gst_hip_device_new (GstHipVendor vendor, guint device_id)
 {
-  if (!gst_hip_load_library ()) {
+  if (vendor == GST_HIP_VENDOR_UNKNOWN) {
+    if (gst_hip_load_library (GST_HIP_VENDOR_AMD))
+      vendor = GST_HIP_VENDOR_AMD;
+    else if (gst_hip_load_library (GST_HIP_VENDOR_NVIDIA))
+      vendor = GST_HIP_VENDOR_NVIDIA;
+    else
+      return nullptr;
+  }
+
+  if (!gst_hip_load_library (vendor)) {
     GST_INFO ("Couldn't load HIP library");
     return nullptr;
   }
 
-  auto hip_ret = gst_hip_init_once ();
-  if (hip_ret != hipSuccess) {
-    GST_DEBUG ("Couldn't initialize HIP, error: %d", hip_ret);
-    return nullptr;
-  }
-
   int num_dev = 0;
-  hip_ret = HipGetDeviceCount (&num_dev);
+  auto hip_ret = HipGetDeviceCount (vendor, &num_dev);
   if (hip_ret != hipSuccess || num_dev <= 0) {
     GST_DEBUG ("No supported HIP device, error: %d", hip_ret);
     return nullptr;
@@ -158,13 +157,13 @@ gst_hip_device_new (guint device_id)
 
   gboolean texture_support = FALSE;
   int val = 0;
-  hip_ret = HipDeviceGetAttribute (&val,
+  hip_ret = HipDeviceGetAttribute (vendor, &val,
       hipDeviceAttributeMaxTexture2DWidth, device_id);
   if (hip_ret == hipSuccess && val > 0) {
-    hip_ret = HipDeviceGetAttribute (&val,
+    hip_ret = HipDeviceGetAttribute (vendor, &val,
         hipDeviceAttributeMaxTexture2DHeight, device_id);
     if (hip_ret == hipSuccess && val > 0) {
-      hip_ret = HipDeviceGetAttribute (&val,
+      hip_ret = HipDeviceGetAttribute (vendor, &val,
           hipDeviceAttributeTextureAlignment, device_id);
       if (hip_ret == hipSuccess && val > 0) {
         texture_support = TRUE;
@@ -175,6 +174,7 @@ gst_hip_device_new (guint device_id)
   auto self = (GstHipDevice *) g_object_new (GST_TYPE_HIP_DEVICE, nullptr);
   gst_object_ref_sink (self);
   self->priv->device_id = device_id;
+  self->priv->vendor = vendor;
   self->priv->texture_support = texture_support;
 
   return self;
@@ -185,8 +185,9 @@ gst_hip_device_set_current (GstHipDevice * device)
 {
   g_return_val_if_fail (GST_IS_HIP_DEVICE (device), FALSE);
 
-  auto hip_ret = HipSetDevice (device->priv->device_id);
-  if (!gst_hip_result (hip_ret)) {
+  auto priv = device->priv;
+  auto hip_ret = HipSetDevice (priv->vendor, priv->device_id);
+  if (!gst_hip_result (hip_ret, priv->vendor)) {
     GST_ERROR_OBJECT (device, "hipSetDevice result %d", hip_ret);
     return FALSE;
   }
@@ -200,7 +201,9 @@ gst_hip_device_get_attribute (GstHipDevice * device, hipDeviceAttribute_t attr,
 {
   g_return_val_if_fail (GST_IS_HIP_DEVICE (device), hipErrorInvalidDevice);
 
-  return HipDeviceGetAttribute (value, attr, device->priv->device_id);
+  auto priv = device->priv;
+
+  return HipDeviceGetAttribute (priv->vendor, value, attr, priv->device_id);
 }
 
 gboolean
@@ -215,8 +218,26 @@ gst_hip_device_is_equal (GstHipDevice * device1, GstHipDevice * device2)
   if (device1 == device2)
     return TRUE;
 
-  if (device1->priv->device_id == device2->priv->device_id)
+  if (device1->priv->device_id == device2->priv->device_id &&
+      device1->priv->vendor == device2->priv->vendor) {
     return TRUE;
+  }
 
   return FALSE;
+}
+
+GstHipVendor
+gst_hip_device_get_vendor (GstHipDevice * device)
+{
+  g_return_val_if_fail (GST_IS_HIP_DEVICE (device), GST_HIP_VENDOR_UNKNOWN);
+
+  return device->priv->vendor;
+}
+
+guint
+gst_hip_device_get_device_id (GstHipDevice * device)
+{
+  g_return_val_if_fail (GST_IS_HIP_DEVICE (device), (guint) - 1);
+
+  return device->priv->device_id;
 }

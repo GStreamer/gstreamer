@@ -35,9 +35,11 @@ enum
 {
   PROP_0,
   PROP_DEVICE_ID,
+  PROP_VENDOR,
 };
 
 #define DEFAULT_DEVICE_ID -1
+#define DEFAULT_VENDOR GST_HIP_VENDOR_UNKNOWN
 
 struct _GstHipBaseFilterPrivate
 {
@@ -52,6 +54,7 @@ struct _GstHipBaseFilterPrivate
   GstCaps *out_caps = nullptr;
 
   gint device_id = DEFAULT_DEVICE_ID;
+  GstHipVendor vendor = DEFAULT_VENDOR;
 };
 
 #define gst_hip_base_filter_parent_class parent_class
@@ -96,6 +99,10 @@ gst_hip_base_filter_class_init (GstHipBaseFilterClass * klass)
           -1, G_MAXINT, DEFAULT_DEVICE_ID,
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
               G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_VENDOR,
+      g_param_spec_enum ("vendor", "Vendor", "Vendor type",
+          GST_TYPE_HIP_VENDOR, GST_HIP_VENDOR_UNKNOWN,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_hip_base_filter_set_context);
@@ -150,6 +157,9 @@ gst_hip_base_filter_set_property (GObject * object, guint prop_id,
     case PROP_DEVICE_ID:
       priv->device_id = g_value_get_int (value);
       break;
+    case PROP_VENDOR:
+      priv->vendor = (GstHipVendor) g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -169,6 +179,9 @@ gst_hip_base_filter_get_property (GObject * object, guint prop_id,
     case PROP_DEVICE_ID:
       g_value_set_int (value, priv->device_id);
       break;
+    case PROP_VENDOR:
+      g_value_set_enum (value, priv->vendor);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -183,8 +196,8 @@ gst_hip_base_filter_set_context (GstElement * element, GstContext * context)
 
   {
     std::lock_guard < std::recursive_mutex > lk (priv->lock);
-    gst_hip_handle_set_context (element, context, priv->device_id,
-        &self->device);
+    gst_hip_handle_set_context (element, context, priv->vendor,
+        priv->device_id, &self->device);
   }
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
@@ -198,8 +211,8 @@ gst_hip_base_filter_start (GstBaseTransform * trans)
 
   {
     std::lock_guard < std::recursive_mutex > lk (priv->lock);
-    if (!gst_hip_ensure_element_data (GST_ELEMENT (trans), priv->device_id,
-            &self->device)) {
+    if (!gst_hip_ensure_element_data (GST_ELEMENT (trans),
+            priv->vendor, priv->device_id, &self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't get HIP device");
       return FALSE;
     }

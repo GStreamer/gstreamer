@@ -47,6 +47,7 @@ static GstHipAllocator *_hip_memory_allocator = nullptr;
 #define N_TEX_FILTER_MODES 2
 struct _GstHipMemoryPrivate
 {
+  GstHipVendor vendor;
   void *data = nullptr;
   void *staging = nullptr;
   gsize pitch = 0;
@@ -228,6 +229,7 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
   if (!gst_hip_device_set_current (device))
     return nullptr;
 
+  auto vendor = gst_hip_device_get_vendor (device);
   gint texture_align = 0;
   gst_hip_device_get_attribute (device,
       hipDeviceAttributeTextureAlignment, &texture_align);
@@ -236,8 +238,8 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
   auto pitch = do_align (width_in_bytes, texture_align);
 
   void *data;
-  hip_ret = HipMalloc (&data, pitch * alloc_height);
-  if (!gst_hip_result (hip_ret)) {
+  hip_ret = HipMalloc (vendor, &data, pitch * alloc_height);
+  if (!gst_hip_result (hip_ret, vendor)) {
     GST_ERROR_OBJECT (self, "Failed to allocate memory");
     return nullptr;
   }
@@ -245,7 +247,7 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
   GstVideoInfo alloc_info;
   if (!gst_hip_allocator_update_info (info, pitch, alloc_height, &alloc_info)) {
     GST_ERROR_OBJECT (self, "Couldn't calculate aligned info");
-    HipFree (data);
+    HipFree (vendor, data);
     return nullptr;
   }
 
@@ -260,6 +262,7 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
   priv->pitch = pitch;
   priv->width_in_bytes = width_in_bytes;
   priv->height = alloc_height;
+  priv->vendor = vendor;
 
   g_object_get (device, "texture2d-support", &priv->texture_support, nullptr);
 
@@ -282,16 +285,16 @@ gst_hip_allocator_free (GstAllocator * allocator, GstMemory * mem)
     for (guint j = 0; j < N_TEX_ADDR_MODES; j++) {
       for (guint k = 0; k < N_TEX_FILTER_MODES; k++) {
         if (priv->texture[i][j][k]) {
-          HipTexObjectDestroy (priv->texture[i][j][k]);
+          HipTexObjectDestroy (priv->vendor, priv->texture[i][j][k]);
         }
       }
     }
   }
 
-  HipFree (priv->data);
+  HipFree (priv->vendor, priv->data);
 
   if (priv->staging)
-    HipHostFree (priv->staging);
+    HipHostFree (priv->vendor, priv->staging);
 
   gst_object_unref (hmem->device);
 
@@ -327,13 +330,13 @@ gst_hip_memory_upload (GstHipAllocator * self, GstHipMemory * mem)
   param.Height = priv->height;
 
   /* TODO use stream */
-  auto hip_ret = HipMemcpyParam2DAsync (&param, nullptr);
-  if (gst_hip_result (hip_ret))
-    hip_ret = HipStreamSynchronize (nullptr);
+  auto hip_ret = HipMemcpyParam2DAsync (priv->vendor, &param, nullptr);
+  if (gst_hip_result (hip_ret, priv->vendor))
+    hip_ret = HipStreamSynchronize (priv->vendor, nullptr);
 
   GST_MEMORY_FLAG_UNSET (mem, GST_HIP_MEMORY_TRANSFER_NEED_UPLOAD);
 
-  return gst_hip_result (hip_ret);
+  return gst_hip_result (hip_ret, priv->vendor);
 }
 
 static gboolean
@@ -351,10 +354,10 @@ gst_hip_memory_download (GstHipAllocator * self, GstHipMemory * mem)
   }
 
   if (!priv->staging) {
-    auto hip_ret = HipHostMalloc (&priv->staging, GST_MEMORY_CAST (mem)->size,
-        0);
+    auto hip_ret = HipHostMalloc (priv->vendor,
+        &priv->staging, GST_MEMORY_CAST (mem)->size, 0);
 
-    if (!gst_hip_result (hip_ret)) {
+    if (!gst_hip_result (hip_ret, priv->vendor)) {
       GST_ERROR_OBJECT (self, "Failed to allocate staging memory");
       return FALSE;
     }
@@ -371,13 +374,13 @@ gst_hip_memory_download (GstHipAllocator * self, GstHipMemory * mem)
   param.Height = priv->height;
 
   /* TODO use stream */
-  auto hip_ret = HipMemcpyParam2DAsync (&param, nullptr);
-  if (gst_hip_result (hip_ret))
-    hip_ret = HipStreamSynchronize (nullptr);
+  auto hip_ret = HipMemcpyParam2DAsync (priv->vendor, &param, nullptr);
+  if (gst_hip_result (hip_ret, priv->vendor))
+    hip_ret = HipStreamSynchronize (priv->vendor, nullptr);
 
   GST_MEMORY_FLAG_UNSET (mem, GST_HIP_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
-  return gst_hip_result (hip_ret);
+  return gst_hip_result (hip_ret, priv->vendor);
 }
 
 static gpointer
@@ -423,6 +426,7 @@ hip_mem_copy (GstMemory * mem, gssize offset, gssize size)
 {
   auto self = GST_HIP_ALLOCATOR (mem->allocator);
   auto src_mem = GST_HIP_MEMORY_CAST (mem);
+  auto vendor = src_mem->priv->vendor;
   auto device = src_mem->device;
   GstMapInfo src_info, dst_info;
   hip_Memcpy2D param = { };
@@ -481,14 +485,14 @@ hip_mem_copy (GstMemory * mem, gssize offset, gssize size)
   param.Height = src_mem->priv->height;
 
   /* TODO: use stream */
-  auto ret = HipMemcpyParam2DAsync (&param, nullptr);
-  if (gst_hip_result (ret))
-    ret = HipStreamSynchronize (nullptr);
+  auto ret = HipMemcpyParam2DAsync (vendor, &param, nullptr);
+  if (gst_hip_result (ret, vendor))
+    ret = HipStreamSynchronize (vendor, nullptr);
 
   gst_memory_unmap (mem, &src_info);
   gst_memory_unmap (copy, &dst_info);
 
-  if (!gst_hip_result (ret)) {
+  if (!gst_hip_result (ret, vendor)) {
     GST_ERROR_OBJECT (self, "Failed to copy memory");
     gst_memory_unref (copy);
     return nullptr;
@@ -642,8 +646,10 @@ gst_hip_memory_get_texture (GstHipMemory * mem, guint plane,
   tex_desc.addressMode[2] = (HIPaddress_mode) address_mode;
 
   hipTextureObject_t tex_obj;
-  auto hip_ret = HipTexObjectCreate (&tex_obj, &res_desc, &tex_desc, nullptr);
-  if (!gst_hip_result (hip_ret)) {
+  auto hip_ret =
+      HipTexObjectCreate (priv->vendor, &tex_obj, &res_desc, &tex_desc,
+      nullptr);
+  if (!gst_hip_result (hip_ret, priv->vendor)) {
     GST_ERROR_OBJECT (mem->device, "Couldn't create texture object");
     return FALSE;
   }

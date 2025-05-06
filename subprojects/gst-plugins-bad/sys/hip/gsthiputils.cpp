@@ -41,15 +41,17 @@ ensure_debug_category (void)
 #endif
 
 gboolean
-_gst_hip_result (hipError_t result, GstDebugCategory * cat, const gchar * file,
-    const gchar * function, gint line)
+_gst_hip_result (hipError_t result, GstHipVendor vendor, GstDebugCategory * cat,
+    const gchar * file, const gchar * function, gint line)
 {
   if (result != hipSuccess) {
 #ifndef GST_DISABLE_GST_DEBUG
-    auto error_name = HipGetErrorName (result);
-    auto error_str = HipGetErrorString (result);
-    gst_debug_log (cat, GST_LEVEL_ERROR, file, function, line,
-        NULL, "HIP call failed: %s, %s", error_name, error_str);
+    if (vendor != GST_HIP_VENDOR_UNKNOWN) {
+      auto error_name = HipGetErrorName (vendor, result);
+      auto error_str = HipGetErrorString (vendor, result);
+      gst_debug_log (cat, GST_LEVEL_ERROR, file, function, line,
+          NULL, "HIP call failed: %s, %s", error_name, error_str);
+    }
 #endif
     return FALSE;
   }
@@ -63,10 +65,12 @@ context_set_hip_device (GstContext * context, GstHipDevice * device)
   g_return_if_fail (context != nullptr);
 
   guint device_id;
-  g_object_get (device, "device-id", &device_id, nullptr);
+  GstHipVendor vendor;
+  g_object_get (device, "device-id", &device_id, "vendor", &vendor, nullptr);
 
   auto s = gst_context_writable_structure (context);
   gst_structure_set (s, "device", GST_TYPE_HIP_DEVICE, device,
+      "vendor", GST_TYPE_HIP_VENDOR, vendor,
       "device-id", G_TYPE_UINT, device_id, nullptr);
 }
 
@@ -139,8 +143,8 @@ run_hip_context_query (GstElement * element, GstHipDevice ** device)
 }
 
 gboolean
-gst_hip_ensure_element_data (GstElement * element, gint device_id,
-    GstHipDevice ** device)
+gst_hip_ensure_element_data (GstElement * element, GstHipVendor vendor,
+    gint device_id, GstHipDevice ** device)
 {
   if (*device)
     return TRUE;
@@ -153,11 +157,11 @@ gst_hip_ensure_element_data (GstElement * element, gint device_id,
   if (device_id > 0)
     target_device_id = device_id;
 
-  *device = gst_hip_device_new (target_device_id);
+  *device = gst_hip_device_new (vendor, target_device_id);
 
   if (*device == nullptr) {
     GST_ERROR_OBJECT (element,
-        "Couldn't create new device with adapter index %d", target_device_id);
+        "Couldn't create new device with device id %d", target_device_id);
     return FALSE;
   } else {
     auto ctx = gst_context_new_hip_device (*device);
@@ -171,7 +175,7 @@ gst_hip_ensure_element_data (GstElement * element, gint device_id,
 
 gboolean
 gst_hip_handle_set_context (GstElement * element, GstContext * context,
-    gint device_id, GstHipDevice ** device)
+    GstHipVendor vendor, gint device_id, GstHipDevice ** device)
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (device != nullptr, FALSE);
@@ -183,6 +187,7 @@ gst_hip_handle_set_context (GstElement * element, GstContext * context,
   if (g_strcmp0 (context_type, GST_HIP_DEVICE_CONTEXT_TYPE) == 0) {
     GstHipDevice *other_device = nullptr;
     guint other_idx = 0;
+    GstHipVendor other_vendor;
 
     /* If we had device already, will not replace it */
     if (*device)
@@ -190,8 +195,10 @@ gst_hip_handle_set_context (GstElement * element, GstContext * context,
 
     auto s = gst_context_get_structure (context);
     if (gst_structure_get (s, "device", GST_TYPE_HIP_DEVICE, &other_device,
+            "vendor", GST_TYPE_HIP_VENDOR, &other_vendor,
             "device-id", G_TYPE_UINT, &other_idx, nullptr)) {
-      if (device_id == -1 || (guint) device_id == other_idx) {
+      if ((device_id == -1 || (guint) device_id == other_idx) &&
+          (vendor == GST_HIP_VENDOR_UNKNOWN || vendor == other_vendor)) {
         *device = other_device;
         return TRUE;
       }

@@ -1476,11 +1476,6 @@ GstHipConverterMain (TextureObject_t tex0, TextureObject_t tex1,
 }
 #else
 static const char ConverterMain_str[] =
-"#ifdef __NVCC__\n"
-"#define TextureObject_t cudaTextureObject_t\n"
-"#else\n"
-"#define TextureObject_t hipTextureObject_t\n"
-"#endif\n"
 "struct ColorMatrix\n"
 "{\n"
 "  float CoeffX[3];\n"
