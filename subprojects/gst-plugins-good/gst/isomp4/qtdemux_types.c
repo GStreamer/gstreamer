@@ -163,7 +163,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_ctts, "Composition time to sample", 0, qtdemux_dump_ctts},
   {FOURCC_cslg, "Composition Shift Least Greatest", 0, qtdemux_dump_cslg},
   {FOURCC_XiTh, "XiTh", 0},
-  {FOURCC_XdxT, "XdxT", 0},
+  {FOURCC_XdxT, "XdxT", QT_FLAG_CONTAINER},
   {FOURCC_loci, "loci", 0},
   {FOURCC_clsf, "clsf", 0},
   {FOURCC_mfra, "movie fragment random access",
