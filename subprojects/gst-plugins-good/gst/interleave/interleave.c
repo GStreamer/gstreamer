@@ -732,7 +732,10 @@ gst_interleave_sink_getcaps (GstPad * pad, GstInterleave * self,
   /* If we already have caps on one of the sink pads return them */
   if (self->sinkcaps) {
     result = gst_caps_copy (self->sinkcaps);
+    GST_OBJECT_UNLOCK (self);
   } else {
+    GST_OBJECT_UNLOCK (self);
+
     /* get the downstream possible caps */
     peercaps = gst_pad_peer_query_caps (self->src, NULL);
 
@@ -755,8 +758,6 @@ gst_interleave_sink_getcaps (GstPad * pad, GstInterleave * self,
     }
     __set_channels (result, 1);
   }
-
-  GST_OBJECT_UNLOCK (self);
 
   if (filter != NULL) {
     GstCaps *caps = result;
