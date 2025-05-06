@@ -214,6 +214,8 @@ G_BEGIN_DECLS
 #define FOURCC_dops     GST_MAKE_FOURCC('d','O','p','s')
 #define FOURCC_pasp     GST_MAKE_FOURCC('p','a','s','p')
 #define FOURCC_colr     GST_MAKE_FOURCC('c','o','l','r')
+#define FOURCC_clli     GST_MAKE_FOURCC('c','l','l','i')
+#define FOURCC_mdcv     GST_MAKE_FOURCC('m','d','c','v')
 #define FOURCC_clap     GST_MAKE_FOURCC('c','l','a','p')
 #define FOURCC_tapt     GST_MAKE_FOURCC('t','a','p','t')
 #define FOURCC_clef     GST_MAKE_FOURCC('c','l','e','f')
