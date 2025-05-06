@@ -337,6 +337,10 @@ struct _QtDemuxStreamStsdEntry
   GstMemory *rgb8_palette;
   guint interlace_mode;
   guint field_order;
+  gboolean content_light_level_set;
+  GstVideoContentLightLevel content_light_level;
+  gboolean mastering_display_info_set;
+  GstVideoMasteringDisplayInfo mastering_display_info;
 
   /* audio info */
   gdouble rate;

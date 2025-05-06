@@ -9874,6 +9874,16 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
         g_free (colorimetry);
       }
 
+      if (CUR_STREAM (stream)->content_light_level_set) {
+        gst_video_content_light_level_add_to_caps (&CUR_STREAM
+            (stream)->content_light_level, CUR_STREAM (stream)->caps);
+      }
+
+      if (CUR_STREAM (stream)->mastering_display_info_set) {
+        gst_video_mastering_display_info_add_to_caps (&CUR_STREAM
+            (stream)->mastering_display_info, CUR_STREAM (stream)->caps);
+      }
+
       if (stream->multiview_mode != GST_VIDEO_MULTIVIEW_MODE_NONE) {
         guint par_w = 1, par_h = 1;
 
@@ -14805,6 +14815,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
       GNode *fiel;
       GNode *pasp;
       GNode *btrt;
+      GNode *clli;
+      GNode *mdcv;
       guint32 version;
       gboolean gray;
       gint depth, palette_size, palette_count;
@@ -14979,6 +14991,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
       colr = qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_colr);
       fiel = qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_fiel);
       btrt = qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_btrt);
+      clli = qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_clli);
+      mdcv = qtdemux_tree_get_child_by_type (stsd_entry, FOURCC_mdcv);
 
       if (pasp) {
         const guint8 *pasp_data = (const guint8 *) pasp->data;
@@ -15033,6 +15047,45 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
           }
         } else {
           GST_WARNING_OBJECT (qtdemux, "Invalid colr atom size");
+        }
+      }
+
+      if (clli) {
+        const guint8 *clli_data = clli->data;
+        guint32 len = QT_UINT32 (clli_data);
+
+        if (len >= 8 + 2 * 2) {
+          CUR_STREAM (stream)->content_light_level_set = TRUE;
+          CUR_STREAM (stream)->content_light_level.max_content_light_level =
+              QT_UINT16 (clli_data + 8);
+          CUR_STREAM (stream)->
+              content_light_level.max_frame_average_light_level =
+              QT_UINT16 (clli_data + 10);
+        }
+      }
+
+      if (mdcv) {
+        const guint8 *mdcv_data = mdcv->data;
+        guint32 len = QT_UINT32 (mdcv_data);
+
+        if (len >= 8 + 3 * 2 * 2 + 2 * 2 + 2 * 4) {
+          CUR_STREAM (stream)->mastering_display_info_set = TRUE;
+          for (gsize c = 0; c < 3; c++) {
+            CUR_STREAM (stream)->mastering_display_info.display_primaries[c].x =
+                QT_UINT16 (mdcv_data + 8 + c * 2 * 2);
+            CUR_STREAM (stream)->mastering_display_info.display_primaries[c].y =
+                QT_UINT16 (mdcv_data + 8 + c * 2 * 2 + 2);
+          }
+          CUR_STREAM (stream)->mastering_display_info.white_point.x =
+              QT_UINT16 (mdcv_data + 8 + 3 * 2 * 2);
+          CUR_STREAM (stream)->mastering_display_info.white_point.y =
+              QT_UINT16 (mdcv_data + 8 + 3 * 2 * 2 + 2);
+          CUR_STREAM (stream)->
+              mastering_display_info.max_display_mastering_luminance =
+              QT_UINT16 (mdcv_data + 8 + 3 * 2 * 2 + 2 * 2);
+          CUR_STREAM (stream)->
+              mastering_display_info.min_display_mastering_luminance =
+              QT_UINT16 (mdcv_data + 8 + 3 * 2 * 2 + 2 * 2 + 4);
         }
       }
 
