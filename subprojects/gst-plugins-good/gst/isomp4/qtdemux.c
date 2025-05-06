@@ -9303,6 +9303,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case GST_MAKE_FOURCC ('t', 'i', 'f', 'f'):
       case GST_MAKE_FOURCC ('i', 'c', 'o', 'd'):
       case GST_MAKE_FOURCC ('A', 'V', 'd', 'n'):
+      case GST_MAKE_FOURCC ('A', 'V', 'd', 'h'):
       case FOURCC_cfhd:
       case FOURCC_SHQ0:
       case FOURCC_SHQ1:
@@ -15829,6 +15830,55 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
             }
             break;
           }
+          case GST_MAKE_FOURCC ('A', 'V', 'd', 'h'):{
+            GNode *adhr;
+
+            adhr =
+                qtdemux_tree_get_child_by_type (stsd_entry,
+                GST_MAKE_FOURCC ('A', 'D', 'H', 'R'));
+            if (adhr) {
+              const guint8 *data = adhr->data;
+              guint32 size = QT_UINT32 (data);
+
+              if (size >= 8 + 4 + 4) {
+                guint32 version = QT_FOURCC (data + 8);
+
+                if (version == GST_MAKE_FOURCC ('0', '0', '0', '1') ||
+                    version == GST_MAKE_FOURCC ('0', '0', '0', '2')) {
+                  guint32 profile = QT_UINT32 (data + 12);
+                  const gchar *profile_s = "dnxhr";
+
+                  switch (profile) {
+                    case 0x4f6:
+                      profile_s = "dnxhr-444";
+                      break;
+                    case 0x4f7:
+                      profile_s = "dnxhr-hqx";
+                      break;
+                    case 0x4f8:
+                      profile_s = "dnxhr-hq";
+                      break;
+                    case 0x4f9:
+                      profile_s = "dnxhr-sq";
+                      break;
+                    case 0x4fa:
+                      profile_s = "dnxhr-lb";
+                      break;
+                    default:
+                      GST_WARNING_OBJECT (qtdemux, "Unknown DNxHR profile %08x",
+                          profile);
+                      break;
+                  }
+
+                  gst_caps_set_simple (entry->caps, "profile", G_TYPE_STRING,
+                      profile_s, NULL);
+                }
+              }
+            }
+            break;
+          }
+          default:
+            break;
         }
       }
 
@@ -18645,7 +18695,15 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     case GST_MAKE_FOURCC ('A', 'V', 'd', 'n'):
       _codec ("AVID DNxHD");
-      caps = gst_caps_from_string ("video/x-dnxhd");
+      caps =
+          gst_caps_new_simple ("video/x-dnxhd", "profile", G_TYPE_STRING,
+          "dnxhd", NULL);
+      break;
+    case GST_MAKE_FOURCC ('A', 'V', 'd', 'h'):
+      _codec ("AVID DNxHR");
+      caps =
+          gst_caps_new_simple ("video/x-dnxhd", "profile", G_TYPE_STRING,
+          "dnxhr", NULL);
       break;
     case FOURCC_VP80:
     case FOURCC_vp08:
