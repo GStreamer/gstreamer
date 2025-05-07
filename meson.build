@@ -36,7 +36,7 @@ gitlint_req = '>= 0.18'
 gitlint = find_program('gitlint', version: gitlint_req, required: false)
 if gitlint.found()
   git = find_program('git', required: false)
-  if git.found() and fsmod.is_dir(meson.current_source_dir() / '.git')
+  if git.found() and fs.is_dir(meson.current_source_dir() / '.git')
     gitlint_status = run_command(git, 'hook', 'run', 'commit-msg', check: false)
     # exit code 253 means "wrong invocation" in Gitlint
     if gitlint_status.returncode() != 253
