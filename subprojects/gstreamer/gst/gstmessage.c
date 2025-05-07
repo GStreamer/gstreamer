@@ -526,7 +526,7 @@ gst_message_writable_details (GstMessage * message)
  * gst_message_new_error_with_details:
  * @src: (transfer none) (nullable): The object originating the message.
  * @error: (transfer none): The GError for this message.
- * @debug: A debugging string.
+ * @debug: (nullable): A debugging string.
  * @details: (transfer full) (nullable): A GstStructure with details
  *
  * Create a new error message. The message will copy @error and
@@ -565,7 +565,7 @@ gst_message_new_error_with_details (GstObject * src, GError * error,
  * gst_message_new_error:
  * @src: (transfer none) (nullable): The object originating the message.
  * @error: (transfer none): The GError for this message.
- * @debug: A debugging string.
+ * @debug: (nullable): A debugging string.
  *
  * Create a new error message. The message will copy @error and
  * @debug. This message is posted by element when a fatal event
@@ -629,7 +629,7 @@ gst_message_parse_error_writable_details (GstMessage * message,
  * gst_message_new_warning_with_details:
  * @src: (transfer none) (nullable): The object originating the message.
  * @error: (transfer none): The GError for this message.
- * @debug: A debugging string.
+ * @debug: (nullable): A debugging string.
  * @details: (transfer full) (nullable): A GstStructure with details
  *
  * Create a new warning message. The message will make copies of @error and
@@ -666,7 +666,7 @@ gst_message_new_warning_with_details (GstObject * src, GError * error,
  * gst_message_new_warning:
  * @src: (transfer none) (nullable): The object originating the message.
  * @error: (transfer none): The GError for this message.
- * @debug: A debugging string.
+ * @debug: (nullable): A debugging string.
  *
  * Create a new warning message. The message will make copies of @error and
  * @debug.
@@ -728,7 +728,7 @@ gst_message_parse_warning_writable_details (GstMessage * message,
  * gst_message_new_info_with_details:
  * @src: (transfer none) (nullable): The object originating the message.
  * @error: (transfer none): The GError for this message.
- * @debug: A debugging string.
+ * @debug: (nullable): A debugging string.
  * @details: (transfer full) (nullable): A GstStructure with details
  *
  * Create a new info message. The message will make copies of @error and
@@ -765,7 +765,7 @@ gst_message_new_info_with_details (GstObject * src, GError * error,
  * gst_message_new_info:
  * @src: (transfer none) (nullable): The object originating the message.
  * @error: (transfer none): The GError for this message.
- * @debug: A debugging string.
+ * @debug: (nullable): A debugging string.
  *
  * Create a new info message. The message will make copies of @error and
  * @debug.

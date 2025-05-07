@@ -24559,7 +24559,7 @@ MT safe.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">The GError for this message.</doc>
             <type name="GLib.Error" c:type="GError*"/>
           </parameter>
-          <parameter name="debug" transfer-ownership="none">
+          <parameter name="debug" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A debugging string.</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
@@ -24584,7 +24584,7 @@ receiving this message should stop the pipeline.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">The GError for this message.</doc>
             <type name="GLib.Error" c:type="GError*"/>
           </parameter>
-          <parameter name="debug" transfer-ownership="none">
+          <parameter name="debug" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A debugging string.</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
@@ -24633,7 +24633,7 @@ MT safe.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">The GError for this message.</doc>
             <type name="GLib.Error" c:type="GError*"/>
           </parameter>
-          <parameter name="debug" transfer-ownership="none">
+          <parameter name="debug" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A debugging string.</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
@@ -24656,7 +24656,7 @@ MT safe.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">The GError for this message.</doc>
             <type name="GLib.Error" c:type="GError*"/>
           </parameter>
-          <parameter name="debug" transfer-ownership="none">
+          <parameter name="debug" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A debugging string.</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
@@ -25323,7 +25323,7 @@ MT safe.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">The GError for this message.</doc>
             <type name="GLib.Error" c:type="GError*"/>
           </parameter>
-          <parameter name="debug" transfer-ownership="none">
+          <parameter name="debug" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A debugging string.</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
@@ -25346,7 +25346,7 @@ MT safe.</doc>
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">The GError for this message.</doc>
             <type name="GLib.Error" c:type="GError*"/>
           </parameter>
-          <parameter name="debug" transfer-ownership="none">
+          <parameter name="debug" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A debugging string.</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
