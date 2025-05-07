@@ -585,6 +585,10 @@ gst_vp9_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
        * a replacement output buffer is provided anyway. */
       gst_vp9_parse_parse_frame (self, &subframe, &frame_hdr);
 
+      /* Only the last frame of the super-fame should be displayed */
+      if (i != superframe_info.frames_in_superframe - 1)
+        GST_BUFFER_FLAG_SET (subframe.buffer, GST_BUFFER_FLAG_DECODE_ONLY);
+
       ret = gst_base_parse_finish_frame (parse, &subframe, frame_size);
     } else {
       /* FIXME: need to parse all frames belong to this superframe? */
