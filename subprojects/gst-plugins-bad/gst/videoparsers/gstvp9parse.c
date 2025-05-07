@@ -37,7 +37,7 @@ typedef enum
   GST_VP9_PARSE_ALIGN_NONE = 0,
   GST_VP9_PARSE_ALIGN_SUPER_FRAME,
   GST_VP9_PARSE_ALIGN_FRAME,
-} GstVp9ParseAligment;
+} GstVp9ParseAlignment;
 
 struct _GstVp9Parse
 {
@@ -56,8 +56,8 @@ struct _GstVp9Parse
   GstVp9BitDepth bit_depth;
   gboolean codec_alpha;
 
-  GstVp9ParseAligment in_align;
-  GstVp9ParseAligment align;
+  GstVp9ParseAlignment in_align;
+  GstVp9ParseAlignment align;
 
   GstVp9Parser *parser;
   gboolean update_caps;
@@ -223,7 +223,7 @@ gst_vp9_parse_profile_from_string (const gchar * profile)
 }
 
 static const gchar *
-gst_vp9_parse_alignment_to_string (GstVp9ParseAligment align)
+gst_vp9_parse_alignment_to_string (GstVp9ParseAlignment align)
 {
   switch (align) {
     case GST_VP9_PARSE_ALIGN_SUPER_FRAME:
@@ -237,7 +237,7 @@ gst_vp9_parse_alignment_to_string (GstVp9ParseAligment align)
   return NULL;
 }
 
-static GstVp9ParseAligment
+static GstVp9ParseAlignment
 gst_vp9_parse_alignment_from_string (const gchar * align)
 {
   if (!align)
@@ -252,7 +252,7 @@ gst_vp9_parse_alignment_from_string (const gchar * align)
 }
 
 static void
-gst_vp9_parse_alignment_from_caps (GstCaps * caps, GstVp9ParseAligment * align)
+gst_vp9_parse_alignment_from_caps (GstCaps * caps, GstVp9ParseAlignment * align)
 {
   *align = GST_VP9_PARSE_ALIGN_NONE;
 
@@ -282,11 +282,11 @@ gst_vp9_parse_check_codec_alpha (GstStructure * s, gboolean codec_alpha)
 
 /* check downstream caps to configure format and alignment */
 static void
-gst_vp9_parse_negotiate (GstVp9Parse * self, GstVp9ParseAligment in_align,
+gst_vp9_parse_negotiate (GstVp9Parse * self, GstVp9ParseAlignment in_align,
     GstCaps * in_caps)
 {
   GstCaps *caps;
-  GstVp9ParseAligment align = self->align;
+  GstVp9ParseAlignment align = self->align;
 
   caps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (self));
   GST_DEBUG_OBJECT (self, "allowed caps: %" GST_PTR_FORMAT, caps);
@@ -819,7 +819,7 @@ gst_vp9_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
 {
   GstVp9Parse *self = GST_VP9_PARSE (parse);
   GstStructure *str;
-  GstVp9ParseAligment align;
+  GstVp9ParseAlignment align;
   GstCaps *in_caps = NULL;
   const gchar *profile;
 
