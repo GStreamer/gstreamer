@@ -22,7 +22,7 @@ if __name__ == "__main__":
         with open(diffname, 'w') as diff:
             subprocess.check_call(['git', 'diff'], stdout=diff)
             print(f'\033[91mYou have a diff in the {opts.name}. Please update with:\033[0m')
-            print('     $ curl %s/%s | git apply -' %
+            print('     $ curl -L %s/%s | git apply -' %
                   (os.environ.get('CI_ARTIFACTS_URL', "NOT_RUNNING_ON_CI"), diffname.replace('../', '')))
 
     if res != 0:
