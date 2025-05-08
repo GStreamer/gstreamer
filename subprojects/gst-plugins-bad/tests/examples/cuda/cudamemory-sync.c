@@ -391,7 +391,7 @@ main (gint argc, gchar ** argv)
     resource_desc.res.pitch2D.devPtr = (CUdeviceptr) src_map.data;
 
     texture_desc.filterMode = CU_TR_FILTER_MODE_LINEAR;
-    texture_desc.flags = CU_TRSF_NORMALIZED_COORDINATES;
+    texture_desc.flags = 0x02;  // CU_TRSF_NORMALIZED_COORDINATES
     texture_desc.addressMode[0] = CU_TR_ADDRESS_MODE_CLAMP;
     texture_desc.addressMode[1] = CU_TR_ADDRESS_MODE_CLAMP;
     texture_desc.addressMode[2] = CU_TR_ADDRESS_MODE_CLAMP;
