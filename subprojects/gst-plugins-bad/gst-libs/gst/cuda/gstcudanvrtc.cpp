@@ -328,6 +328,9 @@ gst_cuda_nvrtc_compile_with_option (const gchar * source,
   else
     opts.push_back ("--gpu-architecture=compute_30");
 
+  for (guint i = 0; i < num_options; i++)
+    opts.push_back (options[i]);
+
   ret = NvrtcCompileProgram (prog, opts.size (), opts.data ());
   if (ret != NVRTC_SUCCESS) {
     gsize log_size;
