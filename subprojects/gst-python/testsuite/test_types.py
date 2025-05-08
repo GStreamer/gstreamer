@@ -22,7 +22,8 @@ import overrides_hack
 overrides_hack
 
 from common import TestCase
-import unittest, sys
+import unittest
+import sys
 
 import gi
 gi.require_version("Gst", "1.0")
@@ -30,6 +31,7 @@ from gi.repository import Gst
 Gst.init(None)
 
 Gst.DoubleRange = Gst.DoubleRange
+
 
 class TestDoubleRange(TestCase):
     def testConstructor(self):
@@ -46,13 +48,13 @@ class TestDoubleRange(TestCase):
     def testRepr(self):
         Gst.init(None)
 
-        self.assertEqual(repr(Gst.DoubleRange(1,2)), '<Gst.DoubleRange [1.0,2.0]>')
+        self.assertEqual(repr(Gst.DoubleRange(1, 2)), '<Gst.DoubleRange [1.0,2.0]>')
 
     def testGetValue(self):
         Gst.init(None)
 
         st = Gst.Structure.new_empty("video/x-raw")
-        st["range"] = Gst.DoubleRange(1,2)
+        st["range"] = Gst.DoubleRange(1, 2)
         value = st["range"]
 
         self.assertEqual(value.start, 1.0)
@@ -180,7 +182,7 @@ class TestFractionRange(TestCase):
     def testRepr(self):
         Gst.init(None)
 
-        self.assertEqual(repr(Gst.FractionRange(Gst.Fraction(1,30), Gst.Fraction(1,2))),
+        self.assertEqual(repr(Gst.FractionRange(Gst.Fraction(1, 30), Gst.Fraction(1, 2))),
                 '<Gst.FractionRange [1/30,1/2]>')
 
     def testGetValue(self):
@@ -192,6 +194,7 @@ class TestFractionRange(TestCase):
 
         self.assertEqual(value.start, Gst.Fraction(1, 30))
         self.assertEqual(value.stop, Gst.Fraction(1, 2))
+
 
 class TestDoubleRange(TestCase):
     def testConstructor(self):
@@ -208,13 +211,13 @@ class TestDoubleRange(TestCase):
     def testRepr(self):
         Gst.init(None)
 
-        self.assertEqual(repr(Gst.DoubleRange(1,2)), '<Gst.DoubleRange [1.0,2.0]>')
+        self.assertEqual(repr(Gst.DoubleRange(1, 2)), '<Gst.DoubleRange [1.0,2.0]>')
 
     def testGetValue(self):
         Gst.init(None)
 
         st = Gst.Structure.new_empty("video/x-raw")
-        st["range"] = Gst.DoubleRange(1,2)
+        st["range"] = Gst.DoubleRange(1, 2)
         value = st["range"]
 
         self.assertEqual(value.start, 1.0)
@@ -255,8 +258,8 @@ class TestValueArray(TestCase):
     def testConstructor(self):
         Gst.init(None)
 
-        a = Gst.ValueArray((1,2,3))
-        self.assertEqual(a.array, [1,2,3])
+        a = Gst.ValueArray((1, 2, 3))
+        self.assertEqual(a.array, [1, 2, 3])
 
         self.assertRaises(TypeError, Gst.ValueArray, 1)
         self.assertRaises(TypeError, Gst.ValueArray)
@@ -264,7 +267,7 @@ class TestValueArray(TestCase):
     def testRepr(self):
         Gst.init(None)
 
-        self.assertEqual(repr(Gst.ValueArray([1,2,3])), '<Gst.ValueArray <1,2,3>>')
+        self.assertEqual(repr(Gst.ValueArray([1, 2, 3])), '<Gst.ValueArray <1,2,3>>')
 
     def testPropertyMarshalling(self):
         Gst.init(None)
@@ -281,7 +284,7 @@ class TestValueArray(TestCase):
         self.assertEqual(value[1], 160)
         self.assertEqual(value[2], 160)
 
-        obj.props.plane_strides = Gst.ValueArray([640,320,320])
+        obj.props.plane_strides = Gst.ValueArray([640, 320, 320])
 
         value = obj.props.plane_strides
         self.assertEqual(value[0], 640)
@@ -321,8 +324,8 @@ class TestValueList(TestCase):
     def testConstructor(self):
         Gst.init(None)
 
-        a = Gst.ValueList((1,2,3))
-        self.assertEqual(a.array, [1,2,3])
+        a = Gst.ValueList((1, 2, 3))
+        self.assertEqual(a.array, [1, 2, 3])
 
         self.assertRaises(TypeError, Gst.ValueList, 1)
         self.assertRaises(TypeError, Gst.ValueList)
@@ -330,7 +333,7 @@ class TestValueList(TestCase):
     def testRepr(self):
         Gst.init(None)
 
-        self.assertEqual(repr(Gst.ValueList([1,2,3])), '<Gst.ValueList {1,2,3}>')
+        self.assertEqual(repr(Gst.ValueList([1, 2, 3])), '<Gst.ValueList {1,2,3}>')
 
     def testGetValue(self):
         Gst.init(None)
@@ -342,13 +345,14 @@ class TestValueList(TestCase):
         self.assertEqual(value[0], Gst.Fraction(1, 30))
         self.assertEqual(value[1], Gst.Fraction(1, 2))
 
-        st["matrix"] = Gst.ValueList([Gst.ValueList([0, 1]), Gst.ValueList([-1 ,0])])
+        st["matrix"] = Gst.ValueList([Gst.ValueList([0, 1]), Gst.ValueList([-1, 0])])
         value = st["matrix"]
 
         self.assertEqual(value[0][0], 0)
         self.assertEqual(value[0][1], 1)
         self.assertEqual(value[1][0], -1)
         self.assertEqual(value[1][1], 0)
+
 
 class TestIntRange(TestCase):
     @unittest.skipUnless(sys.version_info >= (3, 0), "requires Python 3")
