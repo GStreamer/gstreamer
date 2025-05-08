@@ -2186,6 +2186,14 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
         buf = gst_buffer_ref (h264parse->codec_data_in);
       modified = TRUE;
     }
+
+    /* In AVC or AVC3, we can't issue caps without a codec_data */
+    if (buf == NULL) {
+      GST_DEBUG_OBJECT (h264parse, "Couldn't construct codec_data, not yet"
+          " ready to send out src caps for AVC stream");
+      gst_caps_unref (sink_caps);
+      return;
+    }
   }
 
   caps = NULL;
