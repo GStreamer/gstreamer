@@ -201,6 +201,7 @@ GstQt6QuickRenderer::GstQt6QuickRenderer()
       m_qmlEngine(nullptr),
       m_qmlComponent(nullptr),
       m_rootItem(nullptr),
+      m_setRootItem(nullptr),
       gl_allocator(NULL),
       gl_params(NULL),
       gl_mem(NULL),
@@ -414,11 +415,6 @@ bool GstQt6QuickRenderer::init (GstGLContext * context, GError ** error)
     m_renderControl->prepareThread (m_sharedRenderData->m_renderThread);
     g_mutex_unlock (&m_sharedRenderData->lock);
 
-    /* Create a QML engine. */
-    m_qmlEngine = new QQmlEngine;
-    if (!m_qmlEngine->incubationController())
-        m_qmlEngine->setIncubationController(m_quickWindow->incubationController());
-
     /* TODO: use buffer pool */
     gl_context = static_cast<GstGLContext*>(gst_object_ref (context));
     gl_allocator = (GstGLBaseMemoryAllocator *) gst_gl_memory_allocator_get_default (gl_context);
@@ -468,7 +464,8 @@ bool GstQt6QuickRenderer::init (GstGLContext * context, GError ** error)
 
 GstQt6QuickRenderer::~GstQt6QuickRenderer()
 {
-    gst_gl_allocation_params_free (gl_params);
+    if (gl_params)
+        gst_gl_allocation_params_free (gl_params);
     gst_clear_object (&gl_allocator);
 }
 
@@ -536,9 +533,10 @@ void GstQt6QuickRenderer::cleanup()
     if (m_qmlEngine)
         delete m_qmlEngine;
     m_qmlEngine = nullptr;
-    if (m_rootItem)
+    if (m_rootItem && !m_setRootItem)
         delete m_rootItem;
     m_rootItem = nullptr;
+    m_setRootItem = nullptr;
 
     if (gl_context)
         gst_gl_context_thread_add (gl_context,
@@ -583,7 +581,6 @@ GstQt6QuickRenderer::renderGstGL ()
         gl_params = (GstGLAllocationParams *)
             gst_gl_video_allocation_params_new (gl_context,
                 NULL, &this->v_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, GST_GL_RGBA8);
-    
 
     gl_mem = (GstGLMemory *) gst_gl_base_memory_alloc (gl_allocator, gl_params);
     m_quickWindow->setRenderTarget(QQuickRenderTarget::fromOpenGLTexture(gst_gl_memory_get_texture_id (gl_mem), gl_params_get_QSize(gl_params)));
@@ -697,6 +694,11 @@ void GstQt6QuickRenderer::initializeQml()
         return;
     }
 
+    initializeWinsys();
+}
+
+void GstQt6QuickRenderer::initializeWinsys()
+{
     /* The root item is ready. Associate it with the window. */
     m_rootItem->setParentItem(m_quickWindow->contentItem());
 
@@ -736,9 +738,17 @@ void GstQt6QuickRenderer::setSize(int w, int h)
 bool GstQt6QuickRenderer::setQmlScene (const gchar * scene, GError ** error)
 {
     /* replacing the scene is not supported */
+    g_return_val_if_fail (m_qmlEngine == NULL, false);
     g_return_val_if_fail (m_qmlComponent == NULL, false);
+    g_return_val_if_fail (m_setRootItem == NULL, false);
+    g_return_val_if_fail (m_rootItem == NULL, false);
 
     m_errorString = "";
+
+    /* Create a QML engine. */
+    m_qmlEngine = new QQmlEngine;
+    if (!m_qmlEngine->incubationController())
+        m_qmlEngine->setIncubationController(m_quickWindow->incubationController());
 
     m_qmlComponent = new QQmlComponent(m_qmlEngine);
     /* XXX: do we need to provide a propper base name? */
@@ -758,6 +768,20 @@ bool GstQt6QuickRenderer::setQmlScene (const gchar * scene, GError ** error)
     }
 
     return TRUE;
+}
+
+bool GstQt6QuickRenderer::setRootItem(QQuickItem *root)
+{
+    g_return_val_if_fail (m_qmlEngine == NULL, false);
+    g_return_val_if_fail (m_qmlComponent == NULL, false);
+
+    m_setRootItem = root;
+    m_rootItem = root;
+
+    if (m_rootItem)
+        initializeWinsys();
+
+    return true;
 }
 
 QQuickItem * GstQt6QuickRenderer::rootItem() const

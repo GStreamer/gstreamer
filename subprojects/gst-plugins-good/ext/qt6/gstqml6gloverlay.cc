@@ -203,8 +203,10 @@ gst_qml6_gl_overlay_class_init (GstQml6GLOverlayClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_ROOT_ITEM,
       g_param_spec_pointer ("root-item", "QQuickItem",
-          "The root QQuickItem from the qml-scene used to render",
-          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+          "On set, provides the QML scene to render. If not set (!= NULL), "
+          "then the qml-scene property is used to construct the QML scene. "
+          "In both cases, the returned value is the root QQuickItem used for rendering.",
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
    * GstQmlGLOverlay::qml-scene-initialized
@@ -246,6 +248,7 @@ gst_qml6_gl_overlay_init (GstQml6GLOverlay * qml6_gl_overlay)
 {
   qml6_gl_overlay->widget = QSharedPointer<Qt6GLVideoItemInterface>();
   qml6_gl_overlay->qml_scene = NULL;
+  qml6_gl_overlay->renderer = new GstQt6QuickRenderer;
 }
 
 static void
@@ -257,6 +260,9 @@ gst_qml6_gl_overlay_finalize (GObject * object)
   qml6_gl_overlay->qml_scene = NULL;
 
   qml6_gl_overlay->widget.clear();
+
+  delete qml6_gl_overlay->renderer;
+  qml6_gl_overlay->renderer = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -280,6 +286,12 @@ gst_qml6_gl_overlay_set_property (GObject * object, guint prop_id,
       g_free (qml6_gl_overlay->qml_scene);
       qml6_gl_overlay->qml_scene = g_value_dup_string (value);
       break;
+    case PROP_ROOT_ITEM: {
+      GST_OBJECT_LOCK (qml6_gl_overlay);
+      qml6_gl_overlay->root_item = (QQuickItem *) g_value_get_pointer (value);
+      GST_OBJECT_UNLOCK (qml6_gl_overlay);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -305,19 +317,19 @@ gst_qml6_gl_overlay_get_property (GObject * object, guint prop_id,
     case PROP_QML_SCENE:
       g_value_set_string (value, qml6_gl_overlay->qml_scene);
       break;
-    case PROP_ROOT_ITEM:
+    case PROP_ROOT_ITEM: {
+      QQuickItem *root;
       GST_OBJECT_LOCK (qml6_gl_overlay);
-      if (qml6_gl_overlay->renderer) {
-        QQuickItem *root = qml6_gl_overlay->renderer->rootItem();
-        if (root)
-          g_value_set_pointer (value, root);
-        else
-          g_value_set_pointer (value, NULL);
-      } else {
+      root = qml6_gl_overlay->renderer->rootItem();
+      if (root)
+        g_value_set_pointer (value, root);
+      else if (qml6_gl_overlay->root_item)
+        g_value_set_pointer (value, qml6_gl_overlay->root_item);
+      else
         g_value_set_pointer (value, NULL);
-      }
       GST_OBJECT_UNLOCK (qml6_gl_overlay);
       break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -330,11 +342,13 @@ gst_qml6_gl_overlay_gl_start (GstGLBaseFilter * bfilter)
   GstQml6GLOverlay *qml6_gl_overlay = GST_QML6_GL_OVERLAY (bfilter);
   QQuickItem *root;
   GError *error = NULL;
+  gboolean have_scene = FALSE;
 
   GST_TRACE_OBJECT (bfilter, "using scene:\n%s", qml6_gl_overlay->qml_scene);
 
-  if (!qml6_gl_overlay->qml_scene || g_strcmp0 (qml6_gl_overlay->qml_scene, "") == 0) {
-    GST_ELEMENT_ERROR (bfilter, RESOURCE, NOT_FOUND, ("qml-scene property not set"), (NULL));
+  have_scene = qml6_gl_overlay->qml_scene && g_strcmp0 (qml6_gl_overlay->qml_scene, "") != 0;
+  if (!have_scene && qml6_gl_overlay->root_item == NULL) {
+    GST_ELEMENT_ERROR (bfilter, RESOURCE, NOT_FOUND, ("root-item and qml-scene properties not set"), (NULL));
     return FALSE;
   }
 
@@ -342,33 +356,44 @@ gst_qml6_gl_overlay_gl_start (GstGLBaseFilter * bfilter)
     return FALSE;
 
   GST_OBJECT_LOCK (bfilter);
-  qml6_gl_overlay->renderer = new GstQt6QuickRenderer;
   if (!qml6_gl_overlay->renderer->init (bfilter->context, &error)) {
     GST_ELEMENT_ERROR (GST_ELEMENT (bfilter), RESOURCE, NOT_FOUND,
         ("%s", error->message), (NULL));
     delete qml6_gl_overlay->renderer;
-    qml6_gl_overlay->renderer = NULL;
+    qml6_gl_overlay->renderer = new GstQt6QuickRenderer;
     GST_OBJECT_UNLOCK (bfilter);
     return FALSE;
   }
 
   /* FIXME: Qml may do async loading and we need to propagate qml errors in that case as well */
-  if (!qml6_gl_overlay->renderer->setQmlScene (qml6_gl_overlay->qml_scene, &error)) {
-    GST_ELEMENT_ERROR (GST_ELEMENT (bfilter), RESOURCE, NOT_FOUND,
-        ("%s", error->message), (NULL));
-    goto fail_renderer;
-    return FALSE;
+  if (have_scene) {
+    if (!qml6_gl_overlay->renderer->setQmlScene (qml6_gl_overlay->qml_scene, &error)) {
+      GST_ELEMENT_ERROR (GST_ELEMENT (bfilter), RESOURCE, NOT_FOUND,
+          ("%s", error->message), (NULL));
+      goto fail_renderer;
+      return FALSE;
+    }
+
+    root = qml6_gl_overlay->renderer->rootItem();
+    if (!root) {
+      GST_ELEMENT_ERROR (GST_ELEMENT (bfilter), RESOURCE, NOT_FOUND,
+          ("Qml scene does not have a root item"), (NULL));
+      goto fail_renderer;
+    }
+    GST_OBJECT_UNLOCK (bfilter);
+
+    g_object_notify (G_OBJECT (qml6_gl_overlay), "root-item");
+  } else {
+    root = qml6_gl_overlay->root_item;
+    if (!root) {
+      GST_ELEMENT_ERROR (GST_ELEMENT (bfilter), RESOURCE, NOT_FOUND,
+          ("No root item provided"), (NULL));
+      goto fail_renderer;
+    }
+    qml6_gl_overlay->renderer->setRootItem(root);
+    GST_OBJECT_UNLOCK (bfilter);
   }
 
-  root = qml6_gl_overlay->renderer->rootItem();
-  if (!root) {
-    GST_ELEMENT_ERROR (GST_ELEMENT (bfilter), RESOURCE, NOT_FOUND,
-        ("Qml scene does not have a root item"), (NULL));
-    goto fail_renderer;
-  }
-  GST_OBJECT_UNLOCK (bfilter);
-
-  g_object_notify (G_OBJECT (qml6_gl_overlay), "root-item");
   g_signal_emit (qml6_gl_overlay, gst_qml6_gl_overlay_signals[SIGNAL_QML_SCENE_INITIALIZED], 0);
 
   GST_OBJECT_LOCK (bfilter);
@@ -385,7 +410,7 @@ fail_renderer:
   {
     qml6_gl_overlay->renderer->cleanup();
     delete qml6_gl_overlay->renderer;
-    qml6_gl_overlay->renderer = NULL;
+    qml6_gl_overlay->renderer = new GstQt6QuickRenderer;
     GST_OBJECT_UNLOCK (bfilter);
     return FALSE;
   }
@@ -399,9 +424,10 @@ gst_qml6_gl_overlay_gl_stop (GstGLBaseFilter * bfilter)
 
   /* notify before actually destroying anything */
   GST_OBJECT_LOCK (qml6_gl_overlay);
-  if (qml6_gl_overlay->renderer)
+  if (qml6_gl_overlay->renderer) {
     renderer = qml6_gl_overlay->renderer;
-  qml6_gl_overlay->renderer = NULL;
+    qml6_gl_overlay->renderer = new GstQt6QuickRenderer;
+  }
   GST_OBJECT_UNLOCK (qml6_gl_overlay);
 
   g_signal_emit (qml6_gl_overlay, gst_qml6_gl_overlay_signals[SIGNAL_QML_SCENE_DESTROYED], 0);

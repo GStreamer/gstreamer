@@ -12439,7 +12439,7 @@
                         "writable": true
                     },
                     "root-item": {
-                        "blurb": "The root QQuickItem from the qml-scene used to render",
+                        "blurb": "On set, provides the QML scene to render. If not set (!= NULL), then the qml-scene property is used to construct the QML scene. In both cases, the returned value is the root QQuickItem used for rendering.",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
@@ -12447,7 +12447,7 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gpointer",
-                        "writable": false
+                        "writable": true
                     },
                     "widget": {
                         "blurb": "The QQuickItem to place the input video in the object hierarchy",

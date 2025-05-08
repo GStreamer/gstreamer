@@ -54,6 +54,7 @@ struct _GstQml6GLOverlay
   gchar                *qml_scene;
 
   GstQt6QuickRenderer     *renderer;
+  QQuickItem              *root_item;
 
   QSharedPointer<Qt6GLVideoItemInterface> widget;
 };
