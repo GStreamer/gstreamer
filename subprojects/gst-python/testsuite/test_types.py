@@ -262,7 +262,6 @@ class TestValueArray(TestCase):
         self.assertEqual(a.array, [1, 2, 3])
 
         self.assertRaises(TypeError, Gst.ValueArray, 1)
-        self.assertRaises(TypeError, Gst.ValueArray)
 
     def testRepr(self):
         Gst.init(None)
@@ -319,6 +318,23 @@ class TestValueArray(TestCase):
         self.assertEqual(value[1][0], -1)
         self.assertEqual(value[1][1], 0)
 
+    def testAppendPrepend(self):
+        array = Gst.ValueArray()
+        Gst.ValueArray.append_value(array, 2)
+        Gst.ValueArray.prepend_value(array, 1)
+        array.append(3)
+        array.prepend(0)
+        self.assertEqual(len(array), 4)
+        self.assertEqual(array[0], 0)
+        self.assertEqual(array[1], 1)
+        self.assertEqual(array[2], 2)
+        self.assertEqual(array[3], 3)
+        self.assertEqual(Gst.ValueArray.get_size(array), 4)
+        self.assertEqual(Gst.ValueArray.get_value(array, 0), 0)
+        self.assertEqual(Gst.ValueArray.get_value(array, 1), 1)
+        self.assertEqual(Gst.ValueArray.get_value(array, 2), 2)
+        self.assertEqual(Gst.ValueArray.get_value(array, 3), 3)
+
 
 class TestValueList(TestCase):
     def testConstructor(self):
@@ -328,7 +344,6 @@ class TestValueList(TestCase):
         self.assertEqual(a.array, [1, 2, 3])
 
         self.assertRaises(TypeError, Gst.ValueList, 1)
-        self.assertRaises(TypeError, Gst.ValueList)
 
     def testRepr(self):
         Gst.init(None)
@@ -352,6 +367,23 @@ class TestValueList(TestCase):
         self.assertEqual(value[0][1], 1)
         self.assertEqual(value[1][0], -1)
         self.assertEqual(value[1][1], 0)
+
+    def testAppendPrepend(self):
+        array = Gst.ValueList()
+        Gst.ValueList.append_value(array, 2)
+        Gst.ValueList.prepend_value(array, 1)
+        array.append(3)
+        array.prepend(0)
+        self.assertEqual(len(array), 4)
+        self.assertEqual(array[0], 0)
+        self.assertEqual(array[1], 1)
+        self.assertEqual(array[2], 2)
+        self.assertEqual(array[3], 3)
+        self.assertEqual(Gst.ValueList.get_size(array), 4)
+        self.assertEqual(Gst.ValueList.get_value(array, 0), 0)
+        self.assertEqual(Gst.ValueList.get_value(array, 1), 1)
+        self.assertEqual(Gst.ValueList.get_value(array, 2), 2)
+        self.assertEqual(Gst.ValueList.get_value(array, 3), 3)
 
 
 class TestIntRange(TestCase):

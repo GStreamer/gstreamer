@@ -583,8 +583,22 @@ __all__.append('FractionRange')
 
 
 class ValueArray(Gst.ValueArray):
-    def __init__(self, array):
+    def __init__(self, array=[]):
         self.array = list(array)
+
+    def append(self, item):
+        self.array.append(item)
+
+    def prepend(self, item):
+        self.array = [item] + self.array
+
+    @staticmethod
+    def append_value(this, item):
+        this.append(item)
+
+    @staticmethod
+    def prepend_value(this, item):
+        this.prepend(item)
 
     def __getitem__(self, index):
         return self.array[index]
@@ -607,8 +621,22 @@ __all__.append('ValueArray')
 
 
 class ValueList(Gst.ValueList):
-    def __init__(self, array):
+    def __init__(self, array=[]):
         self.array = list(array)
+
+    def append(self, item):
+        self.array.append(item)
+
+    def prepend(self, item):
+        self.array = [item] + self.array
+
+    @staticmethod
+    def append_value(this, item):
+        this.append(item)
+
+    @staticmethod
+    def prepend_value(this, item):
+        this.prepend(item)
 
     def __getitem__(self, index):
         return self.array[index]
