@@ -668,6 +668,12 @@ subrip_unescape_formatting (gchar * txt, gconstpointer allowed_tags_ptr,
   res = g_regex_replace (tag_regex, txt, strlen (txt), 0,
       replace_pattern, 0, NULL);
 
+  /* Replacing can fail. Return an empty string in that case. */
+  if (!res) {
+    strcpy (txt, "");
+    return;
+  }
+
   /* res will always be shorter than the input or identical, so this
    * copy is OK */
   strcpy (txt, res);
@@ -1039,6 +1045,10 @@ parse_subrip (ParserState * state, const gchar * line)
         g_string_append_c (state->buf, '\n');
       g_string_append (state->buf, line);
       if (strlen (line) == 0) {
+        if (!g_utf8_validate (state->buf->str, state->buf->len, NULL)) {
+          g_string_truncate (state->buf, 0);
+          return NULL;
+        }
         ret = g_markup_escape_text (state->buf->str, state->buf->len);
         g_string_truncate (state->buf, 0);
         state->state = 0;
