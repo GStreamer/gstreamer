@@ -858,11 +858,20 @@ parse_subrip_time (const gchar * ts_string, GstClockTime * t)
   g_strdelimit (s, " ", '0');
   g_strdelimit (s, ".", ',');
 
-  /* make sure we have exactly three digits after he comma */
+  /* make sure we have exactly three digits after the comma */
   p = strchr (s, ',');
   if (p == NULL) {
     /* If there isn't a ',' the timestamp is broken */
     /* https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/532#note_100179 */
+    GST_WARNING ("failed to parse subrip timestamp string '%s'", s);
+    return FALSE;
+  }
+
+  /* Check if the comma is too far into the string to avoid
+   * stack overflow when zero-padding the sub-second part.
+   *
+   * Allow for 3 digits of hours just in case. */
+  if ((p - s) > sizeof ("hhh:mm:ss,")) {
     GST_WARNING ("failed to parse subrip timestamp string '%s'", s);
     return FALSE;
   }
