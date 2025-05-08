@@ -125,7 +125,9 @@ tmplayer_parse_line (ParserState * state, const gchar * line, guint line_num)
        * durations from the start times anyway, so as long as the parser just
        * forwards state->start_time by duration after it pushes the line we
        * are about to return it will all be good. */
-      g_string_append (state->buf, text_start + 1);
+      if (text_start) {
+        g_string_append (state->buf, text_start + 1);
+      }
     } else if (line_num > 0) {
       GST_WARNING ("end of subtitle unit but no valid start time?!");
     }
