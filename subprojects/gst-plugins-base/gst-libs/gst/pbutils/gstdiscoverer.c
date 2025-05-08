@@ -2768,21 +2768,30 @@ gst_discoverer_info_to_variant (GstDiscovererInfo * info,
  * Parses a #GVariant as produced by gst_discoverer_info_to_variant()
  * back to a #GstDiscovererInfo.
  *
- * Returns: (transfer full): A newly-allocated #GstDiscovererInfo.
+ * Returns: (transfer full) (nullable): A newly-allocated #GstDiscovererInfo.
  *
  * Since: 1.6
  */
 GstDiscovererInfo *
 gst_discoverer_info_from_variant (GVariant * variant)
 {
-  GstDiscovererInfo *info = g_object_new (GST_TYPE_DISCOVERER_INFO, NULL);
-  GVariant *info_variant = g_variant_get_variant (variant);
   GVariant *info_specific_variant;
   GVariant *wrapped;
+
+  g_return_val_if_fail (variant, NULL);
+
+  GVariant *info_variant = g_variant_get_variant (variant);
+
+  if (!info_variant) {
+    GST_WARNING ("Failed to get variant from serialized info");
+
+    return NULL;
+  }
 
   GET_FROM_TUPLE (info_variant, variant, 0, &info_specific_variant);
   GET_FROM_TUPLE (info_variant, variant, 1, &wrapped);
 
+  GstDiscovererInfo *info = g_object_new (GST_TYPE_DISCOVERER_INFO, NULL);
   _parse_info (info, info_specific_variant);
   _parse_discovery (wrapped, info);
   g_variant_unref (info_specific_variant);

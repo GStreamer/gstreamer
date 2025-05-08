@@ -807,7 +807,7 @@ the tags after the life-time of @info, you will need to copy them.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.c">Parses a #GVariant as produced by gst_discoverer_info_to_variant()
 back to a #GstDiscovererInfo.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.c">A newly-allocated #GstDiscovererInfo.</doc>
           <type name="DiscovererInfo" c:type="GstDiscovererInfo*"/>
         </return-value>
