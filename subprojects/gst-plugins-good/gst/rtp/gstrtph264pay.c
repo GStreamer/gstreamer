@@ -681,7 +681,13 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 
     gst_buffer_unmap (buffer, &map);
   } else {
-    GST_DEBUG_OBJECT (rtph264pay, "have bytestream h264");
+    if (rtph264pay->stream_format == GST_H264_STREAM_FORMAT_AVC) {
+      GST_ERROR_OBJECT (rtph264pay, "Caps have stream-format=avc but lack "
+          "codec_data, rejecting: %" GST_PTR_FORMAT, caps);
+      return FALSE;
+    } else {
+      GST_DEBUG_OBJECT (rtph264pay, "have bytestream h264");
+    }
   }
 
   return TRUE;
