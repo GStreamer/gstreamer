@@ -1593,6 +1593,110 @@ GST_START_TEST (test_parse_to_avc3_without_sps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_packetized_avc_drop_corrupt)
+{
+  GstBuffer *cdata;
+  GstCaps *in_caps, *out_caps;
+  GstHarness *h = gst_harness_new ("h264parse");
+  GstBuffer *buf, *bufout;
+  GstMapInfo mapout;
+
+  in_caps = gst_caps_from_string (stream_type_to_caps_str (PACKETIZED_AU));
+  cdata =
+      gst_buffer_new_memdup (h264_avc_codec_data, sizeof (h264_avc_codec_data));
+  gst_caps_set_simple (in_caps, "codec_data", GST_TYPE_BUFFER, cdata,
+      "stream-format", G_TYPE_STRING, "avc", NULL);
+  gst_buffer_unref (cdata);
+  out_caps = gst_caps_from_string (stream_type_to_caps_str (PACKETIZED_AU));
+
+  gst_harness_set_caps (h, in_caps, out_caps);
+
+  /* avc idr frame nal */
+  static guint8 *h264_idr_avc;
+
+  /* make avc idr frame NAL */
+  h264_idr_avc = g_malloc (sizeof (h264_idrframe));
+  GST_WRITE_UINT32_BE (h264_idr_avc, sizeof (h264_idrframe) - 4);
+  memcpy (h264_idr_avc + 4, h264_idrframe + 4, sizeof (h264_idrframe) - 4);
+
+  static guint8 h264_garbage_avc[] = {
+    0x00, 0x00, 0x00, 0x00, 0x05
+  };
+
+  /* Send all => drop garbage end but keep correct frame. */
+  buf = composite_buffer (100, 0, 2, h264_idr_avc, sizeof (h264_idrframe),
+      h264_garbage_avc, sizeof (h264_garbage_avc));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* Send 3 IDR frames => all should be kept. */
+  buf = composite_buffer (200, 0, 3, h264_idr_avc, sizeof (h264_idrframe),
+      h264_idr_avc, sizeof (h264_idrframe), h264_idr_avc,
+      sizeof (h264_idrframe));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* Send 2 IDR and one garbage => keep the first two and drop garabage. */
+  buf = composite_buffer (300, 0, 3, h264_idr_avc, sizeof (h264_idrframe),
+      h264_idr_avc, sizeof (h264_idrframe), h264_garbage_avc,
+      sizeof (h264_garbage_avc));
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* Only send part of correct frame => drop everything */
+  buf = wrap_buffer (h264_idr_avc, sizeof (h264_idrframe) - 10, 400, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* Send garbage frame => drop everything */
+  buf = wrap_buffer (h264_garbage_avc, sizeof (h264_garbage_avc), 500, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* EOS for pending buffers to be drained if any */
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  fail_unless_equals_int (gst_harness_buffers_received (h), 3);
+
+  /* Verify IDR + garbage. */
+  bufout = gst_harness_pull (h);
+  fail_unless (bufout != NULL);
+
+  gsize sps_pps_sz = sizeof (h264_sps) + sizeof (h264_pps);
+  gst_buffer_map (bufout, &mapout, GST_MAP_READ);
+  fail_unless_equals_int (mapout.size, sps_pps_sz + sizeof (h264_idrframe));
+  fail_unless (memcmp (mapout.data + sps_pps_sz,
+          h264_idr_avc, sizeof (h264_idrframe)) == 0);
+  gst_buffer_unmap (bufout, &mapout);
+  gst_buffer_unref (bufout);
+
+  /* Verify 3 * IDR.  */
+  bufout = gst_harness_pull (h);
+  fail_unless (bufout != NULL);
+
+  gst_buffer_map (bufout, &mapout, GST_MAP_READ);
+  fail_unless_equals_int (mapout.size, 3 * sizeof (h264_idrframe));
+  fail_unless (memcmp (mapout.data, h264_idr_avc, sizeof (h264_idrframe)) == 0);
+  fail_unless (memcmp (mapout.data + sizeof (h264_idrframe), h264_idr_avc,
+          sizeof (h264_idrframe)) == 0);
+  fail_unless (memcmp (mapout.data + 2 * sizeof (h264_idrframe), h264_idr_avc,
+          sizeof (h264_idrframe)) == 0);
+  gst_buffer_unmap (bufout, &mapout);
+  gst_buffer_unref (bufout);
+
+  /* Verify 2 * IDR + garbage. */
+  bufout = gst_harness_pull (h);
+  fail_unless (bufout != NULL);
+
+  gst_buffer_map (bufout, &mapout, GST_MAP_READ);
+  fail_unless_equals_int (mapout.size, 2 * sizeof (h264_idrframe));
+  fail_unless (memcmp (mapout.data, h264_idr_avc, sizeof (h264_idrframe)) == 0);
+  fail_unless (memcmp (mapout.data + sizeof (h264_idrframe), h264_idr_avc,
+          sizeof (h264_idrframe)) == 0);
+  gst_buffer_unmap (bufout, &mapout);
+  gst_buffer_unref (bufout);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
 /*
  * TODO:
  *   - Both push- and pull-modes need to be tested
@@ -1707,6 +1811,7 @@ main (int argc, char **argv)
     tcase_add_test (tc_chain, test_parse_aud_insert);
     tcase_add_test (tc_chain, test_parse_sei_userdefinedunregistered);
     tcase_add_test (tc_chain, test_parse_to_avc3_without_sps);
+    tcase_add_test (tc_chain, test_packetized_avc_drop_corrupt);
     nf += gst_check_run_suite (s, "h264parse", __FILE__);
   }
 
