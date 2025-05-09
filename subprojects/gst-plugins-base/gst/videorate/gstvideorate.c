@@ -1402,18 +1402,23 @@ gst_video_rate_src_event (GstBaseTransform * trans, GstEvent * event)
                         videorate->base_output_ts) * videorate->rate)), diff,
             (GstClockTimeDiff) (diff * videorate->rate));
 
-        if (videorate->segment.rate < 0.0) {
-          timestamp =
-              (videorate->segment.stop - videorate->base_output_ts) -
-              ((videorate->segment.stop - videorate->base_output_ts -
-                  timestamp) * videorate->rate);
-        } else {
-          timestamp =
-              videorate->base_output_ts + ((timestamp -
-                  videorate->base_output_ts) * videorate->rate);
-        }
-
         diff *= videorate->rate;
+        GstClockTime base_rtime =
+            gst_segment_to_running_time (&videorate->segment, GST_FORMAT_TIME,
+            videorate->base_output_ts);
+        if (videorate->segment.rate < 0.0) {
+          GstClockTime stop_rtime =
+              gst_segment_to_running_time (&videorate->segment, GST_FORMAT_TIME,
+              videorate->segment.stop);
+          timestamp =
+              (stop_rtime - base_rtime) - ((stop_rtime - base_rtime -
+                  timestamp) * videorate->rate);
+
+          if (diff < 0 && -diff > timestamp)
+            diff = 0;
+        } else {
+          timestamp = base_rtime + ((timestamp - base_rtime) * videorate->rate);
+        }
         GST_OBJECT_UNLOCK (trans);
 
         gst_event_unref (event);
