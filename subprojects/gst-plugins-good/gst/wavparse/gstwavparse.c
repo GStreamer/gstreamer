@@ -1321,10 +1321,13 @@ gst_wavparse_stream_headers (GstWavParse * wav)
       GstMapInfo map;
 
       buf = NULL;
-      if ((res =
-              gst_wavparse_pull_range_exact (wav, wav->offset, 8,
-                  &buf)) != GST_FLOW_OK)
+      res = gst_wavparse_pull_range_exact (wav, wav->offset, 8, &buf);
+      if (res == GST_FLOW_EOS) {
+        gotdata = TRUE;
+        break;
+      } else if (res != GST_FLOW_OK) {
         goto header_pull_error;
+      }
       gst_buffer_map (buf, &map, GST_MAP_READ);
       tag = GST_READ_UINT32_LE (map.data);
       size = GST_READ_UINT32_LE (map.data + 4);
@@ -1427,9 +1430,12 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           } else {
             gst_buffer_unref (buf);
             buf = NULL;
-            if ((res =
-                    gst_wavparse_pull_range_exact (wav, wav->offset + 8,
-                        data_size, &buf)) != GST_FLOW_OK)
+            res =
+                gst_wavparse_pull_range_exact (wav, wav->offset + 8,
+                data_size, &buf);
+            if (res == GST_FLOW_EOS)
+              break;
+            else if (res != GST_FLOW_OK)
               goto header_pull_error;
             gst_buffer_extract (buf, 0, &wav->fact, 4);
             wav->fact = GUINT32_FROM_LE (wav->fact);
@@ -1473,9 +1479,12 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           GstMapInfo map;
           gst_buffer_unref (buf);
           buf = NULL;
-          if ((res =
-                  gst_wavparse_pull_range_exact (wav, wav->offset + 8, size,
-                      &buf)) != GST_FLOW_OK)
+          res =
+              gst_wavparse_pull_range_exact (wav, wav->offset + 8, size, &buf);
+          goto header_pull_error;
+          if (res == GST_FLOW_EOS)
+            break;
+          else if (res != GST_FLOW_OK)
             goto header_pull_error;
           gst_buffer_map (buf, &map, GST_MAP_READ);
           tempo = GST_READ_FLOAT_LE (map.data + 20);
@@ -1516,9 +1525,10 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         } else {
           gst_buffer_unref (buf);
           buf = NULL;
-          if ((res =
-                  gst_wavparse_pull_range_exact (wav, wav->offset, 12,
-                      &buf)) != GST_FLOW_OK)
+          res = gst_wavparse_pull_range_exact (wav, wav->offset, 12, &buf);
+          if (res == GST_FLOW_EOS)
+            break;
+          else if (res != GST_FLOW_OK)
             goto header_pull_error;
           gst_buffer_extract (buf, 8, &ltag, 4);
           ltag = GUINT32_FROM_LE (ltag);
@@ -1545,9 +1555,12 @@ gst_wavparse_stream_headers (GstWavParse * wav)
               gst_buffer_unref (buf);
               buf = NULL;
               if (data_size > 0) {
-                if ((res =
-                        gst_wavparse_pull_range_exact (wav, wav->offset,
-                            data_size, &buf)) != GST_FLOW_OK)
+                res =
+                    gst_wavparse_pull_range_exact (wav, wav->offset,
+                    data_size, &buf);
+                if (res == GST_FLOW_EOS)
+                  break;
+                else if (res != GST_FLOW_OK)
                   goto header_pull_error;
               }
             }
@@ -1585,9 +1598,12 @@ gst_wavparse_stream_headers (GstWavParse * wav)
               gst_buffer_unref (buf);
               buf = NULL;
               wav->offset += 12;
-              if ((res =
-                      gst_wavparse_pull_range_exact (wav, wav->offset,
-                          data_size, &buf)) != GST_FLOW_OK)
+              res =
+                  gst_wavparse_pull_range_exact (wav, wav->offset,
+                  data_size, &buf);
+              if (res == GST_FLOW_EOS)
+                break;
+              else if (res != GST_FLOW_OK)
                 goto header_pull_error;
               gst_buffer_map (buf, &map, GST_MAP_READ);
               gst_wavparse_adtl_chunk (wav, (const guint8 *) map.data,
@@ -1631,9 +1647,11 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           wav->offset += 8;
           gst_buffer_unref (buf);
           buf = NULL;
-          if ((res =
-                  gst_wavparse_pull_range_exact (wav, wav->offset,
-                      data_size, &buf)) != GST_FLOW_OK)
+          res =
+              gst_wavparse_pull_range_exact (wav, wav->offset, data_size, &buf);
+          if (res == GST_FLOW_EOS)
+            break;
+          else if (res != GST_FLOW_OK)
             goto header_pull_error;
           gst_buffer_map (buf, &map, GST_MAP_READ);
           if (!gst_wavparse_cue_chunk (wav, (const guint8 *) map.data,
@@ -1675,9 +1693,11 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           wav->offset += 8;
           gst_buffer_unref (buf);
           buf = NULL;
-          if ((res =
-                  gst_wavparse_pull_range_exact (wav, wav->offset,
-                      data_size, &buf)) != GST_FLOW_OK)
+          res =
+              gst_wavparse_pull_range_exact (wav, wav->offset, data_size, &buf);
+          if (res == GST_FLOW_EOS)
+            break;
+          else if (res != GST_FLOW_OK)
             goto header_pull_error;
           gst_buffer_map (buf, &map, GST_MAP_READ);
           if (!gst_wavparse_smpl_chunk (wav, (const guint8 *) map.data,
