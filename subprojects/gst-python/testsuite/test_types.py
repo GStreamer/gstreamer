@@ -436,3 +436,26 @@ class TestBitmask(TestCase):
             self.assertEqual(str(r), '0x20')
         else:
             self.assertEqual(str(r), '0x20L')
+
+
+class TestFloat(TestCase):
+    def testSetProperty(self):
+        ''' Test we can set the mix-matrix property on audioconvert
+
+        It requires the Gst.Float class to force the conversion of python float
+        to G_TYPE_FLOAT instead of G_TYPE_DOUBLE.
+        '''
+        Gst.init(None)
+
+        audioconvert = Gst.ElementFactory.make("audioconvert")
+        if not audioconvert:
+            self.skipTest("audioconvert not available")
+
+        row = Gst.ValueArray([Gst.Float(0.0)])
+        matrix = Gst.ValueArray([row])
+        audioconvert.set_property("mix-matrix", matrix)
+
+        value = audioconvert.get_property("mix-matrix")
+        self.assertEqual(len(value), 1)
+        self.assertEqual(len(value[0]), 1)
+        self.assertEqual(value[0][0], 0.0)

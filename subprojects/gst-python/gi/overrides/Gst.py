@@ -48,6 +48,17 @@ python module to use with Gst 0.10"
     warnings.warn(warn_msg, RuntimeWarning)
 
 
+class Float(float):
+    '''
+    A wrapper to force conversion to G_TYPE_FLOAT instead of G_TYPE_DOUBLE when
+    used in e.g. Gst.ValueArray.
+    '''
+    __gtype__ = GObject.TYPE_FLOAT
+
+
+__all__.append('Float')
+
+
 # Ensuring that PyGObject loads the URIHandler interface
 # so we can force our own implementation soon enough (in gstmodule.c)
 class URIHandler(Gst.URIHandler):
