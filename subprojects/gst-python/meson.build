@@ -149,3 +149,6 @@ endif
 if not get_option('tests').disabled()
   subdir('testsuite')
 endif
+
+# This makes "import gi" load or overrides, see gi/__init__.py
+meson.add_devenv({'PYTHONPATH': meson.current_source_dir()}, method: 'prepend')
