@@ -600,6 +600,10 @@ class ValueArray(Gst.ValueArray):
     def prepend_value(this, item):
         this.prepend(item)
 
+    @staticmethod
+    def get_size(this):
+        return len(this.array)
+
     def __getitem__(self, index):
         return self.array[index]
 
@@ -637,6 +641,10 @@ class ValueList(Gst.ValueList):
     @staticmethod
     def prepend_value(this, item):
         this.prepend(item)
+
+    @staticmethod
+    def get_size(this):
+        return len(this.array)
 
     def __getitem__(self, index):
         return self.array[index]
