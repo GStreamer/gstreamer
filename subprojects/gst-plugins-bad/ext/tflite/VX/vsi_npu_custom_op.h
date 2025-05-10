@@ -30,19 +30,20 @@ typedef struct {
   char* binary;
 } TfLiteVsiNpuParams;
 
-
 #ifdef __cplusplus
-}  // extern "C"
-#endif  // __cplusplus
-
 namespace tflite {
-namespace ops {
-namespace custom {
+  namespace ops {
+    namespace custom {
+#endif  // __cplusplus
 
 TfLiteRegistration* Register_VSI_NPU_PRECOMPILED(void);
 
-}  // namespace custom
-}  // namespace ops
+#ifdef __cplusplus
+    }  // namespace custom
+  }  // namespace ops
 }  // namespace tflite
+
+}  // extern "C"
+#endif  // __cplusplus
 
 #endif //TENSORFLOW_LITE_DELEGATES_VSI_NPU_CUSTOM_OP_H_
