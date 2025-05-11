@@ -996,9 +996,11 @@ gst_video_rate_check_duplicate_to_close_segment (GstVideoRate * videorate,
   GstClockTime next_stream_time = videorate->next_output_ts;
   GstClockTime max_closing_segment_duplication_duration =
       videorate->max_closing_segment_duplication_duration;
+  GstClockTime last_input_ts_in_output_scale = last_input_ts / videorate->rate;
 
-  if (!GST_CLOCK_TIME_IS_VALID (videorate->next_output_ts))
+  if (!GST_CLOCK_TIME_IS_VALID (videorate->next_output_ts)) {
     return FALSE;
+  }
 
   if (videorate->segment.rate > 0.0) {
 
@@ -1007,14 +1009,16 @@ gst_video_rate_check_duplicate_to_close_segment (GstVideoRate * videorate,
       return is_first;
     }
 
-    if (next_stream_time >= videorate->segment.stop)
+    if (next_stream_time >= videorate->segment.stop) {
       return FALSE;
+    }
 
     if (GST_CLOCK_TIME_IS_VALID (max_closing_segment_duplication_duration)) {
-      if (last_input_ts > videorate->next_output_ts)
+      if (last_input_ts_in_output_scale > videorate->next_output_ts) {
         return TRUE;
+      }
 
-      return (videorate->next_output_ts - last_input_ts <
+      return (videorate->next_output_ts - last_input_ts_in_output_scale <
           max_closing_segment_duplication_duration);
     }
 
@@ -1032,10 +1036,10 @@ gst_video_rate_check_duplicate_to_close_segment (GstVideoRate * videorate,
     return FALSE;
 
   if (GST_CLOCK_TIME_IS_VALID (max_closing_segment_duplication_duration)) {
-    if (last_input_ts < videorate->next_output_ts)
+    if (last_input_ts_in_output_scale < videorate->next_output_ts)
       return TRUE;
 
-    return (last_input_ts - videorate->next_output_ts <
+    return (last_input_ts_in_output_scale - videorate->next_output_ts <
         max_closing_segment_duplication_duration);
   }
 
