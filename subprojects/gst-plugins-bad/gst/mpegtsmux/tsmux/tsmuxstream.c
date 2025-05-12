@@ -212,7 +212,12 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
     case TSMUX_ST_PS_TELETEXT:
       /* needs fixes PES header length */
       stream->pi.pes_header_length = 36;
-      /* fall through */
+      stream->id = 0xBD;
+      stream->stream_type = TSMUX_ST_PRIVATE_DATA;
+      stream->pi.flags |=
+          TSMUX_PACKET_FLAG_PES_FULL_HEADER |
+          TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
+      break;
     case TSMUX_ST_PS_DVB_SUBPICTURE:
       /* private stream 1 */
       stream->id = 0xBD;
@@ -965,15 +970,6 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
     case TSMUX_ST_PS_AUDIO_LPCM:
       /* FIXME */
       break;
-    case TSMUX_ST_PS_TELETEXT:
-      /* FIXME empty descriptor for now;
-       * should be provided by upstream in event or so ? */
-      descriptor =
-          gst_mpegts_descriptor_from_custom (GST_MTS_DESC_DVB_TELETEXT, 0, 1);
-
-      g_ptr_array_add (pmt_stream->descriptors, descriptor);
-      break;
-
     case TSMUX_ST_PES_METADATA:
 
       if (stream->internal_stream_type == TSMUX_ST_PS_ID3) {
@@ -1059,6 +1055,14 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
         if (stream->pmt_descriptor)
           g_ptr_array_add (pmt_stream->descriptors, stream->pmt_descriptor);
+      }
+      if (stream->internal_stream_type == TSMUX_ST_PS_TELETEXT) {
+        // FIXME empty descriptor for now;
+        // How should this be signalled from upstream?
+        // Definitions in  EN300468 - 6.2.43 Teletext descriptor
+        descriptor =
+            gst_mpegts_descriptor_from_custom (GST_MTS_DESC_DVB_TELETEXT, 0, 1);
+        g_ptr_array_add (pmt_stream->descriptors, descriptor);
       }
     default:
       break;
