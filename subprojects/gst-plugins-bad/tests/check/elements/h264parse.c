@@ -1548,6 +1548,51 @@ GST_START_TEST (test_parse_sei_userdefinedunregistered)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_to_avc3_without_sps)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  GstCaps *caps;
+
+  h = gst_harness_new ("h264parse");
+
+  gst_harness_set_caps_str (h,
+      "video/x-h264, stream-format=(string)byte-stream",
+      "video/x-h264, stream-format=(string)avc3, parsed=(boolean)true,"
+      " alignment=(string)au");
+
+  /* Send AUD */
+  buf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      h264_aud, sizeof (h264_aud), 0, sizeof (h264_aud), NULL, NULL);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* Send an IDR */
+  buf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      h264_idrframe, sizeof (h264_idrframe), 0, sizeof (h264_idrframe), NULL,
+      NULL);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* Send AUD to trigger the AU completion and pushing */
+  buf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      h264_aud, sizeof (h264_aud), 0, sizeof (h264_aud), NULL, NULL);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* send EOS */
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  /* Ensure that caps negotiation failed as an SPS is needed to generate the
+   * codec_data
+   */
+  fail_if (caps = gst_pad_get_current_caps (h->sinkpad), "caps: %s",
+      gst_caps_to_string (caps));
+
+  /* Ensure no buffer was pushed without caps */
+  fail_unless_equals_int (gst_harness_buffers_received (h), 0)
+      gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 /*
  * TODO:
  *   - Both push- and pull-modes need to be tested
@@ -1661,6 +1706,7 @@ main (int argc, char **argv)
     tcase_add_test (tc_chain, test_parse_skip_to_4bytes_sc);
     tcase_add_test (tc_chain, test_parse_aud_insert);
     tcase_add_test (tc_chain, test_parse_sei_userdefinedunregistered);
+    tcase_add_test (tc_chain, test_parse_to_avc3_without_sps);
     nf += gst_check_run_suite (s, "h264parse", __FILE__);
   }
 
