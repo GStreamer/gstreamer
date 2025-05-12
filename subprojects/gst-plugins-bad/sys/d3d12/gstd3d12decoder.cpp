@@ -560,17 +560,11 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
   auto priv = decoder->priv;
   HRESULT hr;
 
-  D3D12_VIDEO_DECODER_DESC prev_desc = { };
-  ComPtr < ID3D12VideoDecoder > prev_decoder;
-
-  /* Store previous encoder object and reuse if possible */
-  if (priv->session) {
-    prev_desc = priv->session->decoder_desc;
-    prev_decoder = priv->session->decoder;
-  }
-
   gst_d3d12_decoder_drain (decoder, videodec);
   priv->session = nullptr;
+
+  /* XXX: NVIDIA driver crash if cmdlist is reused... */
+  priv->cmd->cl = nullptr;
 
   if (!gst_d3d12_device_get_format (decoder->device,
           GST_VIDEO_INFO_FORMAT (info), &device_format) ||
@@ -674,26 +668,17 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
   session->aligned_width = GST_ROUND_UP_N (session->coded_width, alignment);
   session->aligned_height = GST_ROUND_UP_N (session->coded_height, alignment);
 
-  if (prev_decoder && prev_desc.Configuration.DecodeProfile ==
-      support.Configuration.DecodeProfile &&
-      prev_desc.Configuration.InterlaceType ==
-      support.Configuration.InterlaceType) {
-    session->decoder = prev_decoder;
-    session->decoder_desc = prev_desc;
-  } else {
-    D3D12_VIDEO_DECODER_DESC desc;
-
-    desc.NodeMask = 0;
-    desc.Configuration = support.Configuration;
-    hr = priv->cmd->video_device->CreateVideoDecoder (&desc,
-        IID_PPV_ARGS (&session->decoder));
-    if (!gst_d3d12_result (hr, decoder->device)) {
-      GST_ERROR_OBJECT (decoder, "Couldn't create decoder object");
-      return GST_FLOW_ERROR;
-    }
-
-    session->decoder_desc = desc;
+  D3D12_VIDEO_DECODER_DESC desc = { };
+  desc.NodeMask = 0;
+  desc.Configuration = support.Configuration;
+  hr = priv->cmd->video_device->CreateVideoDecoder (&desc,
+      IID_PPV_ARGS (&session->decoder));
+  if (!gst_d3d12_result (hr, decoder->device)) {
+    GST_ERROR_OBJECT (decoder, "Couldn't create decoder object");
+    return GST_FLOW_ERROR;
   }
+
+  session->decoder_desc = desc;
 
   D3D12_VIDEO_DECODER_HEAP_DESC heap_desc;
   heap_desc.NodeMask = 0;
