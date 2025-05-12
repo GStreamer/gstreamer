@@ -559,7 +559,9 @@ gst_bayer2rgb_process (GstBayer2RGB * bayer2rgb, uint8_t * dest,
   const int bayersrc16 = bayer2rgb->bpp > 8;
   int j;
   guint8 *tmp;
-  guint32 *dtmp;
+  // This is always initialized when we check for bayersrc16
+  // but explicitly do so to avoid the gcc false-positive warning
+  guint32 *dtmp = 0;
   process_func merge[2] = { NULL, NULL };
   process_func16 merge16[2] = { NULL, NULL };
   int r_off, g_off, b_off;
