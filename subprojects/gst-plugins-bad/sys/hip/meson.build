@@ -26,6 +26,8 @@ extra_args = [
   '-DGST_USE_UNSTABLE_API',
 ]
 
+extra_deps = []
+
 hip_option = get_option('hip')
 if hip_option.disabled()
   subdir_done()
@@ -36,12 +38,22 @@ if host_system not in ['linux', 'windows']
 endif
 
 hip_incdir = include_directories('./stub')
+hip_cdata = configuration_data()
+if gstcuda_dep.found()
+  hip_cdata.set('HAVE_GST_CUDA', true)
+  extra_deps += [gstcuda_dep]
+endif
+
+configure_file(
+  output: 'gsthip-config.h',
+  configuration: hip_cdata,
+)
 
 gsthip = library('gsthip', hip_sources,
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc, hip_incdir],
-  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep],
+  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep] + extra_deps,
   install : true,
   install_dir : plugins_install_dir,
 )

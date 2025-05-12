@@ -20,7 +20,8 @@
 #pragma once
 
 #include <gst/gst.h>
-#include "gsthipbasefilter.h"
+#include <gst/base/gstbasetransform.h>
+#include "gsthip.h"
 
 G_BEGIN_DECLS
 
@@ -37,14 +38,14 @@ typedef struct _GstHipMemoryCopyPrivate GstHipMemoryCopyPrivate;
 
 struct _GstHipMemoryCopy
 {
-  GstHipBaseFilter parent;
+  GstBaseTransform parent;
 
   GstHipMemoryCopyPrivate *priv;
 };
 
 struct _GstHipMemoryCopyClass
 {
-  GstHipBaseFilterClass parent_class;
+  GstBaseTransformClass parent_class;
 };
 
 GType gst_hip_memory_copy_get_type (void);
