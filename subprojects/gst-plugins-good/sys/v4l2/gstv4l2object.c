@@ -5988,10 +5988,11 @@ gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
 {
   GstBufferPool *pool = NULL;
   /* we need at least 2 buffers to operate */
-  guint size, min, max;
+  guint size, min, max, aligned_size = 0;
   GstCaps *caps;
   gboolean need_pool;
   GstStructure *allocation_meta = NULL;
+  GstAllocationParams allocation_params;
 
   /* Set defaults allocation parameters */
   size = GST_V4L2_SIZE (obj);
@@ -6040,6 +6041,24 @@ gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery * query)
   gst_v4l2_get_driver_min_buffers (obj);
 
   min = MAX (obj->min_buffers, GST_V4L2_MIN_BUFFERS (obj));
+
+  /* If the driver has any size alignment requirements, suggest the difference
+   * between aligned size and actual size as extra padding to the upstream
+   * element */
+  if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
+    /* FIXME */
+  } else {
+    aligned_size = obj->format.fmt.pix.sizeimage;
+  }
+
+  gst_allocation_params_init (&allocation_params);
+  allocation_params.padding = aligned_size - size;
+
+  if (allocation_params.padding) {
+    gst_query_add_allocation_param (query, NULL, &allocation_params);
+    /* Update size to aligned size required by driver */
+    size = aligned_size;
+  }
 
   gst_query_add_allocation_pool (query, pool, size, min, max);
 
