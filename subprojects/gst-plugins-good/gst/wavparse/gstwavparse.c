@@ -1312,8 +1312,9 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   gst_pad_peer_query_duration (wav->sinkpad, GST_FORMAT_BYTES, &upstream_size);
   GST_DEBUG_OBJECT (wav, "upstream size %" G_GUINT64_FORMAT, upstream_size);
 
-  /* loop headers until we get data */
-  while (!gotdata) {
+  /* loop headers until we got the data tag in push mode, or until we
+   * reached the end of file in pull mode*/
+  while (!gotdata || !wav->streaming) {
     if (wav->streaming) {
       if (!gst_wavparse_peek_chunk_info (wav, &tag, &size))
         goto exit;
@@ -1323,7 +1324,6 @@ gst_wavparse_stream_headers (GstWavParse * wav)
       buf = NULL;
       res = gst_wavparse_pull_range_exact (wav, wav->offset, 8, &buf);
       if (res == GST_FLOW_EOS) {
-        gotdata = TRUE;
         break;
       } else if (res != GST_FLOW_OK) {
         goto header_pull_error;
@@ -1367,7 +1367,6 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         }
         if (wav->streaming) {
           gst_adapter_flush (wav->adapter, 8);
-          gotdata = TRUE;
         } else {
           gst_buffer_unref (buf);
         }
@@ -1396,6 +1395,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           /* We will continue parsing tags 'till end */
           wav->offset += size64;
         }
+        gotdata = TRUE;
         GST_DEBUG_OBJECT (wav, "datasize = %" G_GUINT64_FORMAT, size64);
         break;
       }
@@ -1727,9 +1727,13 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
     if (upstream_size && (wav->offset >= upstream_size)) {
       /* Now we are gone through the whole file */
-      gotdata = TRUE;
+      if (!wav->streaming)
+        break;
     }
   }
+
+  if (!gotdata)
+    goto no_data;
 
   GST_DEBUG_OBJECT (wav, "Finished parsing headers");
 
@@ -1798,6 +1802,11 @@ fail:
   {
     res = GST_FLOW_ERROR;
     goto exit;
+  }
+no_data:
+  {
+    GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL), ("Stream without data"));
+    goto fail;
   }
 parse_header_error:
   {
