@@ -351,6 +351,13 @@ verify_h264parse_compatible_caps (guint profile_idc, guint constraint_set_flags,
   gst_buffer_fill (buf, 0, frame_sps, frame_sps_len);
   g_free (frame_sps);
   fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* push pps buffer */
+  buf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, h264_pps,
+      sizeof (h264_pps), 0, sizeof (h264_pps), NULL, NULL);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* send eos */
   fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
 
   /* check that the caps have been negociated correctly */
