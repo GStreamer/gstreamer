@@ -570,6 +570,7 @@ gst_uri_transcode_bin_set_property (GObject * object,
   switch (prop_id) {
     case PROP_PROFILE:
       GST_OBJECT_LOCK (self);
+      gst_clear_object (&self->profile);
       self->profile = g_value_dup_object (value);
       GST_OBJECT_UNLOCK (self);
       break;
