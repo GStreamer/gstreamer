@@ -1710,6 +1710,8 @@ gst_rtsp_client_sink_set_property (GObject * object, guint prop_id,
         rtsp_client_sink->multi_iface = g_value_dup_string (value);
       break;
     case PROP_SDES:
+      if (rtsp_client_sink->sdes)
+        gst_structure_free (rtsp_client_sink->sdes);
       rtsp_client_sink->sdes = g_value_dup_boxed (value);
       break;
     case PROP_TLS_VALIDATION_FLAGS:
