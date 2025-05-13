@@ -3970,6 +3970,14 @@
 }
 
 {
+    <glib-init-malloc>
+    Memcheck:Leak
+    fun:malloc
+    ...
+    fun:glib_init_ctor
+}
+
+{
    <quark table is leaked on purpose if it grows too big>
    Memcheck:Leak
    fun:malloc
