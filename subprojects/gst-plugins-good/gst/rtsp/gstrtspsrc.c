@@ -2084,6 +2084,8 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       rtspsrc->use_pipeline_clock = g_value_get_boolean (value);
       break;
     case PROP_SDES:
+      if (rtspsrc->sdes)
+        gst_structure_free (rtspsrc->sdes);
       rtspsrc->sdes = g_value_dup_boxed (value);
       break;
     case PROP_TLS_VALIDATION_FLAGS:
