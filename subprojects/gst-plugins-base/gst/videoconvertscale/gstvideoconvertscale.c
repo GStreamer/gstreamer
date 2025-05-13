@@ -1407,9 +1407,14 @@ gst_video_convert_scale_fixate_size (GstBaseTransform * base,
     g_return_val_if_fail (gst_value_is_fixed (from_par), othercaps);
 
     gst_video_convert_scale_get_fraction (from_par, &from_par_n, &from_par_d);
-    gst_structure_get (ins,
-        "width", G_TYPE_INT, &from_w, "height", G_TYPE_INT, &from_h, NULL);
 
+    {
+      gint wi = 0, hi = 0;
+      gst_structure_get (ins,
+          "width", G_TYPE_INT, &wi, "height", G_TYPE_INT, &hi, NULL);
+      from_w = wi;
+      from_h = hi;
+    }
     {
       gint wi = 0, hi = 0;
       gst_structure_get (outs,
