@@ -1325,10 +1325,9 @@ gst_curl_http_src_handle_response (GstCurlHttpSrc * src)
           "No Content-Length was specified in the response.");
       src->seekable = GSTCURL_SEEKABLE_FALSE;
     } else {
-      /* Note that in the case of a range get, Content-Length is the number
-         of bytes requested, not the total size of the resource */
-      GST_INFO_OBJECT (src, "Content-Length was given as %" G_GUINT64_FORMAT,
-          curl_info_offt);
+      GST_INFO_OBJECT (src,
+          "Content-Length was given as %" G_GOFFSET_FORMAT,
+          (goffset) curl_info_offt);
       if (src->content_size == 0) {
         src->content_size = src->request_position + curl_info_offt;
       }
