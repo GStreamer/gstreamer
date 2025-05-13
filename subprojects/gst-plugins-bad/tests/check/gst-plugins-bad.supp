@@ -65,6 +65,26 @@
    fun:_ZN3srt4CUDT11sendCtrlAckERNS_7CPacketEi
 }
 
+{
+   <leak in libsrt: 0x1091BE46: _sub_I_65535_0.0 (in /usr/lib64/libsrt.so.1.5.4)>
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_sub_I_65535_0.0
+   fun:call_init
+   fun:call_init
+   fun:_dl_init
+   fun:_dl_catch_exception
+   fun:dl_open_worker
+   fun:_dl_catch_exception
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_exception
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen_implementation
+   ...
+}
+
 
 {
    <openssl_poll leaks all over the place atm, needs debugging>
