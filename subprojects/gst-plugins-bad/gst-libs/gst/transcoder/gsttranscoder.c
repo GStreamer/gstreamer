@@ -263,6 +263,7 @@ gst_transcoder_finalize (GObject * object)
   g_free (self->dest_uri);
   g_cond_clear (&self->cond);
   gst_object_unref (self->api_bus);
+  gst_clear_object (&self->profile);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
