@@ -109,6 +109,7 @@ gst_video_texture_cache_vulkan_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE:
+      /* G_PARAM_CONSTRUCT_ONLY */
       cache_vulkan->device = (GstVulkanDevice *) g_value_dup_object (value);
       break;
     default:

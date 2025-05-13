@@ -76,9 +76,11 @@ gst_webrtc_rtp_transceiver_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SENDER:
+      /* G_PARAM_CONSTRUCT_ONLY */
       webrtc->sender = g_value_dup_object (value);
       break;
     case PROP_RECEIVER:
+      /* G_PARAM_CONSTRUCT_ONLY */
       webrtc->receiver = g_value_dup_object (value);
       break;
     case PROP_MLINE:

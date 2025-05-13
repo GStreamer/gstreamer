@@ -101,6 +101,7 @@ gst_video_texture_cache_gl_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_CONTEXT:
+      /* G_PARAM_CONSTRUCT_ONLY */
       cache_gl->ctx = g_value_dup_object (value);
       break;
     default:

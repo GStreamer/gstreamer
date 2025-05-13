@@ -123,6 +123,7 @@ gst_va_encoder_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DISPLAY:{
+      /* G_PARAM_CONSTRUCT_ONLY */
       g_assert (!self->display);
       self->display = g_value_dup_object (value);
       break;

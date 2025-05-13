@@ -1218,6 +1218,7 @@ gst_vaapi_encoder_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ENCODER_PROP_DISPLAY:
+      /* G_PARAM_CONSTRUCT_ONLY */
       g_assert (encoder->display == NULL);
       encoder->display = g_value_dup_object (value);
       g_assert (encoder->display != NULL);
