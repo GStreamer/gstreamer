@@ -975,6 +975,7 @@ static void
 _set_profile (GstTranscodeBin * self, GstEncodingProfile * profile)
 {
   GST_OBJECT_LOCK (self);
+  gst_clear_object (&self->profile);
   self->profile = profile;
   _setup_avoid_reencoding (self);
   GST_OBJECT_UNLOCK (self);
@@ -997,9 +998,17 @@ gst_transcode_bin_set_property (GObject * object,
       GST_OBJECT_UNLOCK (self);
       break;
     case PROP_AUDIO_FILTER:
+      if (self->audio_filter) {
+        GST_WARNING_OBJECT (self, "Audio filter already set");
+        return;
+      }
       _set_filter (self, g_value_dup_object (value), &self->audio_filter);
       break;
     case PROP_VIDEO_FILTER:
+      if (self->video_filter) {
+        GST_WARNING_OBJECT (self, "Video filter already set");
+        return;
+      }
       _set_filter (self, g_value_dup_object (value), &self->video_filter);
       break;
     default:
