@@ -1294,6 +1294,11 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
 
   res = gst_v4l2_allocator_dqbuf (pool->vallocator, &group);
 
+  if (res == GST_V4L2_FLOW_LAST_BUFFER)
+    goto eos;
+  if (res != GST_FLOW_OK)
+    goto dqbuf_failed;
+
   if (group->buffer.flags & V4L2_BUF_FLAG_ERROR) {
     if (V4L2_TYPE_IS_OUTPUT (obj->type))
       g_signal_emit (pool, gst_v4l2_buffer_pool_signals[OUTPUT_ERROR_DEQUEUED],
@@ -1302,11 +1307,6 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
       g_signal_emit (pool, gst_v4l2_buffer_pool_signals[CAPTURE_ERROR_DEQUEUED],
           0, (guint) group->buffer.timestamp.tv_sec);
   }
-
-  if (res == GST_V4L2_FLOW_LAST_BUFFER)
-    goto eos;
-  if (res != GST_FLOW_OK)
-    goto dqbuf_failed;
 
   old_buffer_state =
       g_atomic_int_and (&pool->buffer_state[group->buffer.index],
