@@ -137,6 +137,7 @@ gst_vulkan_device_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PHYSICAL_DEVICE:
+      /* G_PARAM_CONSTRUCT_ONLY */
       device->physical_device = g_value_dup_object (value);
       break;
     default:

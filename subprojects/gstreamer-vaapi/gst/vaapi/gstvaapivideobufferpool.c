@@ -77,6 +77,7 @@ gst_vaapi_video_buffer_pool_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DISPLAY:
+      /* G_PARAM_CONSTRUCT_ONLY */
       priv->display = g_value_dup_object (value);
       break;
     default:

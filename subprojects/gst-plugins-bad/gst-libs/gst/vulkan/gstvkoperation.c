@@ -123,6 +123,7 @@ gst_vulkan_operation_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_COMMAND_POOL:
+      /* G_PARAM_CONSTRUCT_ONLY */
       g_assert (!priv->cmd_pool);
       priv->cmd_pool = g_value_dup_object (value);
       break;

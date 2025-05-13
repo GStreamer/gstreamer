@@ -323,6 +323,7 @@ gst_transcoder_set_property (GObject * object, guint prop_id,
       gst_transcoder_set_position_update_interval_internal (self);
       break;
     case PROP_PROFILE:
+      /* G_PARAM_CONSTRUCT_ONLY */
       GST_OBJECT_LOCK (self);
       self->profile = g_value_dup_object (value);
       GST_OBJECT_UNLOCK (self);

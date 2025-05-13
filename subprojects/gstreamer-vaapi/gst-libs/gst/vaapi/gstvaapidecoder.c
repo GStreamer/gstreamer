@@ -494,6 +494,7 @@ gst_vaapi_decoder_set_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_DISPLAY:
+      /* G_PARAM_CONSTRUCT_ONLY */
       g_assert (decoder->display == NULL);
       decoder->display = g_value_dup_object (value);
       g_assert (decoder->display != NULL);

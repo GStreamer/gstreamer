@@ -85,6 +85,7 @@ gst_player_g_main_context_signal_dispatcher_set_property (GObject * object,
 
   switch (prop_id) {
     case G_MAIN_CONTEXT_SIGNAL_DISPATCHER_PROP_APPLICATION_CONTEXT:
+      /* G_PARAM_CONSTRUCT_ONLY */
       self->application_context = g_value_dup_boxed (value);
       if (!self->application_context)
         self->application_context = g_main_context_ref_thread_default ();

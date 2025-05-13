@@ -1627,6 +1627,7 @@ gst_d3d11_dxgi_capture_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_D3D11_DEVICE:
+      /* G_PARAM_CONSTRUCT_ONLY */
       self->device = (GstD3D11Device *) g_value_dup_object (value);
       break;
     case PROP_MONITOR_HANDLE:

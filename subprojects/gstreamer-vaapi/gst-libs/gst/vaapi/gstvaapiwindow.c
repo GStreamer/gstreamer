@@ -171,6 +171,7 @@ gst_vaapi_window_set_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_DISPLAY:
+      /* G_PARAM_CONSTRUCT_ONLY */
       g_assert (window->display == NULL);
       window->display = g_value_dup_object (value);
       g_assert (window->display != NULL);

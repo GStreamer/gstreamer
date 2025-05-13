@@ -361,9 +361,11 @@ gst_player_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SIGNAL_DISPATCHER:
+      /* G_PARAM_CONSTRUCT_ONLY */
       self->signal_dispatcher = g_value_dup_object (value);
       break;
     case PROP_VIDEO_RENDERER:
+      /* G_PARAM_CONSTRUCT_ONLY */
       self->video_renderer = g_value_dup_object (value);
       break;
     default:

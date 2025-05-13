@@ -815,6 +815,7 @@ gst_webview2_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE:
+      /* G_PARAM_CONSTRUCT_ONLY */
       priv->device = (GstD3D11Device *) g_value_dup_object (value);
       break;
     case PROP_USER_DATA_FOLDER:
