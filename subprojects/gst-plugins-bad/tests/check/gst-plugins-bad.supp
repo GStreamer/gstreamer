@@ -36,7 +36,22 @@
 }
 
 {
-   Issues in srt library
+   Issues in srt library, variant 1
+   Memcheck:Param
+   sendmsg(msg.msg_control)
+   fun:sendmsg
+   fun:_ZNK3srt8CChannel6sendtoERKNS_12sockaddr_anyERNS_7CPacketES3_
+}
+
+{
+   Issues in srt library, variant 2
+   Memcheck:Param
+   sendmsg(msg.msg_control)
+   fun:_ZNK3srt8CChannel6sendtoERKNS_12sockaddr_anyERNS_7CPacketES3_
+}
+
+{
+   Issues in srt library, variant 2
    Memcheck:Param
    sendmsg(msg.msg_control)
    fun:__libc_sendmsg
