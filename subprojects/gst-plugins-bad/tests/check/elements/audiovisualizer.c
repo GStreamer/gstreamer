@@ -23,6 +23,7 @@
 #endif
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio.h>
 
 static void
 eos_cb (GstBus * bus, GstMessage * message, GMainLoop * loop)
@@ -52,8 +53,8 @@ test_element (const gchar * element)
 
   pipe_str =
       g_strdup_printf
-      ("audiotestsrc num-buffers=20 ! audio/x-raw,format=S16LE,channels=2 ! %s ! fakesink",
-      element);
+      ("audiotestsrc num-buffers=20 ! audio/x-raw,format=" GST_AUDIO_NE (S16)
+      ",channels=2 ! %s ! fakesink", element);
 
   pipeline = gst_parse_launch (pipe_str, &error);
   fail_unless (pipeline != NULL, "Could not create pipeline: %s",
