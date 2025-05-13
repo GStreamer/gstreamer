@@ -3968,7 +3968,13 @@
    ...
    fun:gobject_init_ctor
 }
-
+{
+    <glib-init-malloc>
+    Memcheck:Leak
+    fun:malloc
+    ...
+    fun:glib_init_ctor
+}
 {
     <glib-init-malloc>
     Memcheck:Leak
