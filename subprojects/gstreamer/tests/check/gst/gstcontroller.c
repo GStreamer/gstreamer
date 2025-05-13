@@ -368,6 +368,8 @@ gst_test_control_binding_set_property (GObject * object,
 
   switch (property_id) {
     case PROP_CS:
+      if (self->cs)
+        gst_object_unref (self->cs);
       self->cs = g_value_dup_object (value);
       break;
     default:
