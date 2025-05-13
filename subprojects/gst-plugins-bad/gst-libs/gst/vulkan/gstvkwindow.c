@@ -155,6 +155,8 @@ gst_vulkan_window_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DISPLAY:
+      if (window->display)
+        gst_object_unref (window->display);
       window->display = g_value_dup_object (value);
       break;
     default:
