@@ -188,6 +188,10 @@ gst_gl_filtershader_finalize (GObject * object)
 {
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (object);
 
+  if (filtershader->shader)
+    gst_object_unref (filtershader->shader);
+  filtershader->shader = NULL;
+
   g_free (filtershader->vertex);
   filtershader->vertex = NULL;
 
@@ -211,7 +215,7 @@ gst_gl_filtershader_set_property (GObject * object, guint prop_id,
     case PROP_SHADER:
       GST_OBJECT_LOCK (filtershader);
       gst_object_replace ((GstObject **) & filtershader->shader,
-          g_value_dup_object (value));
+          g_value_get_object (value));
       filtershader->new_source = FALSE;
       GST_OBJECT_UNLOCK (filtershader);
       break;
@@ -284,12 +288,6 @@ gst_gl_filtershader_get_property (GObject * object, guint prop_id,
 static void
 gst_gl_filtershader_gl_stop (GstGLBaseFilter * base)
 {
-  GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (base);
-
-  if (filtershader->shader)
-    gst_object_unref (filtershader->shader);
-  filtershader->shader = NULL;
-
   GST_GL_BASE_FILTER_CLASS (parent_class)->gl_stop (base);
 }
 
