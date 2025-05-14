@@ -50,14 +50,8 @@
 #include "ges-audio-track.h"
 
 #define DEFAULT_CAPS "audio/x-raw"
-
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define DEFAULT_RESTRICTION_CAPS "audio/x-raw, format=S32LE, channels=2, "\
-  "rate=44100, layout=interleaved"
-#else
-#define DEFAULT_RESTRICTION_CAPS "audio/x-raw, format=S32BE, channels=2, "\
-  "rate=44100, layout=interleaved"
-#endif
+#define DEFAULT_RESTRICTION_CAPS "audio/x-raw, format=" GST_AUDIO_NE (S32) ", "\
+  "channels=2, rate=44100, layout=interleaved"
 
 struct _GESAudioTrackPrivate
 {
