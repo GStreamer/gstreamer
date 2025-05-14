@@ -48,11 +48,8 @@
 #include <math.h>
 
 #define GST_CAT_DEFAULT gst_videoframe_audiolevel_debug
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-# define FORMATS "{ S8, S16LE, S32LE, F32LE, F64LE }"
-#else
-# define FORMATS "{ S8, S16BE, S32BE, F32BE, F64BE }"
-#endif
+#define FORMATS "{ S8, " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S32) ", " \
+    GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (F64) " }"
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static GstStaticPadTemplate audio_sink_template =
