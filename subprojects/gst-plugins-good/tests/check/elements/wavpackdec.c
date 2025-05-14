@@ -23,17 +23,12 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio.h>
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
-
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-#define AUDIO_FORMAT "S16BE"
-#else
-#define AUDIO_FORMAT "S16LE"
-#endif
 
 guint8 test_frame[] = {
   0x77, 0x76, 0x70, 0x6B,       /* "wvpk" */
@@ -58,7 +53,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) " AUDIO_FORMAT ", "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
         "layout = (string) interleaved, "
         "channels = (int) 1, " "rate = (int) 44100")
     );
