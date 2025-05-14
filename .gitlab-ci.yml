@@ -145,7 +145,7 @@ trigger:
     FDO_DISTRIBUTION_VERSION: '40'
     FDO_REPO_SUFFIX: "$FEDORA_AMD64_SUFFIX"
     FDO_DISTRIBUTION_TAG: "$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
-    FDO_DISTRIBUTION_EXEC: 'GIT_BRANCH=$CI_COMMIT_REF_NAME GIT_URL=$CI_REPOSITORY_URL bash ci/docker/fedora/prepare.sh'
+    FDO_DISTRIBUTION_EXEC: 'bash ci/docker/fedora/prepare.sh'
 
 .fedora fluster image:
   variables:
@@ -199,7 +199,7 @@ fedora amd64 toolbox:
     FDO_DISTRIBUTION_VERSION: '12'
     FDO_REPO_SUFFIX: "$DEBIAN_AMD64_SUFFIX"
     FDO_DISTRIBUTION_TAG: "$DEBIAN_TAG-$GST_UPSTREAM_BRANCH"
-    FDO_DISTRIBUTION_EXEC: 'GIT_BRANCH=$CI_COMMIT_REF_NAME GIT_URL=$CI_REPOSITORY_URL bash ci/docker/debian/prepare.sh'
+    FDO_DISTRIBUTION_EXEC: 'bash ci/docker/debian/prepare.sh'
 
 debian amd64 docker:
   extends:
@@ -265,7 +265,7 @@ windows amd64 docker:
     FDO_BASE_IMAGE: '$CI_REGISTRY_IMAGE/$FDO_REPO_SUFFIX:$FEDORA_TAG-$GST_UPSTREAM_BRANCH'
     FDO_DISTRIBUTION_TAG: "abi-check-$ABI_CHECK_TAG-$GST_UPSTREAM_BRANCH"
     FDO_DISTRIBUTION_PACKAGES: 'libabigail'
-    FDO_DISTRIBUTION_EXEC: 'GIT_BRANCH=$CI_COMMIT_REF_NAME GIT_URL=$CI_REPOSITORY_URL bash ci/docker/abi-check/prepare.sh'
+    FDO_DISTRIBUTION_EXEC: 'bash ci/docker/abi-check/prepare.sh'
     ABI_CHECK_CACHE: '/abi-check-cache'
 
 abi-check docker:
