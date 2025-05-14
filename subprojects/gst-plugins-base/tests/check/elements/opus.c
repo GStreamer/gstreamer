@@ -26,15 +26,10 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
-
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-#define AFORMAT "S16BE"
-#else
-#define AFORMAT "S16LE"
-#endif
+#include <gst/audio/audio.h>
 
 #define AUDIO_CAPS_STRING "audio/x-raw, " \
-                           "format = (string) " AFORMAT ", "\
+                           "format = (string) " GST_AUDIO_NE (S16) ", "\
                            "layout = (string) interleaved, " \
                            "rate = (int) 48000, " \
                            "channels = (int) 1 "
@@ -385,19 +380,19 @@ GST_START_TEST (test_opusdec_getcaps)
 {
   /* default result */
   run_getcaps_check_from_strings (NULL, NULL,
-      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,8]");
+      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,255]");
 
   /* A single supported rate downstream - should accept any upstream anyway */
   run_getcaps_check_from_strings (NULL, "audio/x-raw, rate=(int)8000",
-      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,8]");
+      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,255]");
 
   /* Two supported rates (fields as a array, not as a single int) */
   run_getcaps_check_from_strings (NULL, "audio/x-raw, rate=(int){24000, 8000}",
-      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,8]");
+      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,255]");
 
   /* One supported and one unsupported rate */
   run_getcaps_check_from_strings (NULL, "audio/x-raw, rate=(int){24000, 1000}",
-      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,8]");
+      "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)[1,255]");
 
   /* Unsupported rate */
   run_getcaps_check_from_strings (NULL, "audio/x-raw, rate=(int)1000", "EMPTY");
@@ -415,12 +410,12 @@ GST_START_TEST (test_opusdec_getcaps)
   /* Formats not acceptable */
   run_getcaps_check_from_strings ("audio/x-opus, rate=(int)1000", NULL,
       "EMPTY");
-  run_getcaps_check_from_strings ("audio/x-opus, channels=(int)200", NULL,
+  run_getcaps_check_from_strings ("audio/x-opus, channels=(int)300", NULL,
       "EMPTY");
 
   /* Should restrict the result of the caps query to the selected rate/channels */
   run_getcaps_check_from_strings ("audio/x-opus, rate=(int)8000", NULL,
-      "audio/x-opus, rate=(int)8000, channels=(int)[1,8]");
+      "audio/x-opus, rate=(int)8000, channels=(int)[1,255]");
   run_getcaps_check_from_strings ("audio/x-opus, channels=(int)2", NULL,
       "audio/x-opus, rate=(int){48000, 24000, 16000, 12000, 8000}, channels=(int)2");
 }
