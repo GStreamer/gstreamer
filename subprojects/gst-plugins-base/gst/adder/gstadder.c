@@ -164,15 +164,11 @@ enum
 
 /* elementfactory information */
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define CAPS \
-  GST_AUDIO_CAPS_MAKE ("{ S32LE, U32LE, S16LE, U16LE, S8, U8, F32LE, F64LE }") \
+  GST_AUDIO_CAPS_MAKE ("{ " GST_AUDIO_NE (S32) ", " GST_AUDIO_NE (U32) ", " \
+  GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (U16) ", S8, U8, " \
+  GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (F64) " }") \
   ", layout = (string) { interleaved }"
-#else
-#define CAPS \
-  GST_AUDIO_CAPS_MAKE ("{ S32BE, U32BE, S16BE, U16BE, S8, U8, F32BE, F64BE }") \
-  ", layout = (string) { interleaved }"
-#endif
 
 static GstStaticPadTemplate gst_adder_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
