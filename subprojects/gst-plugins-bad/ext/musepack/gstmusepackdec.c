@@ -25,6 +25,7 @@
 
 #include "gstmusepackdec.h"
 #include "gstmusepackreader.h"
+#include <gst/audio/audio.h>
 
 GST_DEBUG_CATEGORY (musepackdec_debug);
 #define GST_CAT_DEFAULT musepackdec_debug
@@ -36,17 +37,9 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #ifdef MPC_FIXED_POINT
-# if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#  define GST_MPC_FORMAT "S32LE"
-# else
-#  define GST_MPC_FORMAT "S32BE"
-# endif
+# define GST_MPC_FORMAT GST_AUDIO_NE (S32)
 #else
-# if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#  define GST_MPC_FORMAT "F32LE"
-# else
-#  define GST_MPC_FORMAT "F32BE"
-# endif
+# define GST_MPC_FORMAT GST_AUDIO_NE (F32)
 #endif
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
