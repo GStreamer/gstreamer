@@ -22,12 +22,6 @@
 #include "mulaw-encode.h"
 #include "mulaw-decode.h"
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define INT_FORMAT "S16LE"
-#else
-#define INT_FORMAT "S16BE"
-#endif
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
