@@ -120,11 +120,8 @@ GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (flacdec, "flacdec", GST_RANK_PRIMARY,
     GST_TYPE_FLAC_DEC, flac_element_init (plugin));
 
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMATS "{ S8, S16LE, S24_32LE, S32LE } "
-#else
-#define FORMATS "{ S8, S16BE, S24_32BE, S32BE } "
-#endif
+#define FORMATS "{ S8, " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S24_32) ", " \
+    GST_AUDIO_NE (S32) " } "
 
 #define GST_FLAC_DEC_SRC_CAPS                             \
     "audio/x-raw, "                                       \
