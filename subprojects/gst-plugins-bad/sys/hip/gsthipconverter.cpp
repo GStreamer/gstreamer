@@ -1387,8 +1387,13 @@ gst_hip_converter_setup (GstHipConverter * self)
         std::string (priv->texture_fmt->sample_func);
     std::string output_define = std::string ("-DOUTPUT=Output") + output_name;
     std::string texture_define;
+    std::string arch_opt;
     if (priv->vendor == GST_HIP_VENDOR_AMD) {
       texture_define = std::string ("-DTextureObject_t=hipTextureObject_t");
+      hipDeviceProp_t prop;
+      ret = HipGetDeviceProperties (GST_HIP_VENDOR_AMD, &prop, device_id);
+      if (ret == hipSuccess)
+        arch_opt = std::string ("--gpu-architecture=") + prop.gcnArchName;
     } else {
       texture_define = std::string ("-DTextureObject_t=cudaTextureObject_t");
     }
@@ -1397,6 +1402,8 @@ gst_hip_converter_setup (GstHipConverter * self)
     opts.push_back (sampler_define.c_str ());
     opts.push_back (output_define.c_str ());
     opts.push_back (texture_define.c_str ());
+    if (priv->vendor == GST_HIP_VENDOR_AMD)
+      opts.push_back (arch_opt.c_str ());
 
     std::lock_guard < std::mutex > lk (g_kernel_table_lock);
 
@@ -1513,12 +1520,24 @@ gst_hip_converter_setup (GstHipConverter * self)
       else
         unpack_module_name += "_nvidia";
 
+      std::string arch_opt;
+      if (priv->vendor == GST_HIP_VENDOR_AMD) {
+        hipDeviceProp_t prop;
+        ret = HipGetDeviceProperties (GST_HIP_VENDOR_AMD, &prop, device_id);
+        if (ret == hipSuccess)
+          arch_opt = std::string ("--gpu-architecture=") + prop.gcnArchName;
+      }
+
+      std::vector < const char *>opts;
+      if (!arch_opt.empty ())
+        opts.push_back (arch_opt.c_str ());
+
       std::lock_guard < std::mutex > lk (g_kernel_table_lock);
       auto ptx = g_ptx_table.find (unpack_module_name);
       if (ptx == g_ptx_table.end ()) {
         GST_DEBUG_OBJECT (self, "Building PTX");
         program = gst_hip_rtc_compile (self->device, ConverterUnpack_str,
-            nullptr, 0);
+            opts.empty ()? nullptr : opts.data (), opts.size ());
         if (program)
           g_ptx_table[unpack_module_name] = program;
       } else {
