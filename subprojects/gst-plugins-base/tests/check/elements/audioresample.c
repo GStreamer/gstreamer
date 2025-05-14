@@ -39,11 +39,8 @@
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMATS  "{ F32LE, F64LE, S16LE, S32LE }"
-#else
-#define FORMATS  "{ F32BE, F64BE, S16BE, S32BE }"
-#endif
+#define FORMATS  "{ " GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (F64) ", " \
+    GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S32) " }"
 
 #define RESAMPLE_CAPS                   \
     "audio/x-raw, "                     \
