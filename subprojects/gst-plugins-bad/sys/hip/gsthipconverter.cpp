@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include "gsthip-config.h"
+
 #include "gsthip.h"
 #include "gsthipconverter.h"
 #include "gsthiprtc.h"
@@ -34,6 +36,12 @@
 #include "kernel/converter-unpack.cu"
 
 /* *INDENT-OFF* */
+#ifdef HIP_AMD_PRECOMPILED
+#include "kernel/converter_hsaco.h"
+#else
+static std::unordered_map<std::string, const unsigned char *> g_precompiled_hsaco_table;
+#endif
+
 static std::unordered_map<std::string, const char *> g_ptx_table;
 static std::mutex g_kernel_table_lock;
 /* *INDENT-ON* */
@@ -1331,33 +1339,52 @@ gst_hip_converter_setup (GstHipConverter * self)
     return FALSE;
   }
 
-  /* TODO: distinguish amd and nvidia */
-  guint device_id;
-  g_object_get (self->device, "device-id", &device_id, nullptr);
-  std::string kernel_name = "GstHipConverterMain_" +
-      std::string (priv->texture_fmt->sample_func) + "_" + output_name + "_" +
-      std::to_string (device_id);
-  if (priv->vendor == GST_HIP_VENDOR_AMD)
-    kernel_name += "_amd";
-  else
-    kernel_name += "_nvidia";
-  std::string sampler_define = std::string ("-DSAMPLER=Sample") +
-      std::string (priv->texture_fmt->sample_func);
-  std::string output_define = std::string ("-DOUTPUT=Output") + output_name;
-  std::string texture_define;
-  if (priv->vendor == GST_HIP_VENDOR_AMD) {
-    texture_define = std::string ("-DTextureObject_t=hipTextureObject_t");
-  } else {
-    texture_define = std::string ("-DTextureObject_t=cudaTextureObject_t");
-  }
-  std::vector < const char *>opts;
-  opts.push_back (sampler_define.c_str ());
-  opts.push_back (output_define.c_str ());
-  opts.push_back (texture_define.c_str ());
-
+  auto device_id = gst_hip_device_get_device_id (self->device);
   const gchar *program = nullptr;
 
-  {
+  std::string kernel_name_base = "GstHipConverterMain_" +
+      std::string (priv->texture_fmt->sample_func) + "_" + output_name;
+
+  if (priv->vendor == GST_HIP_VENDOR_AMD) {
+    auto kernel_name = kernel_name_base + "_amd";
+    auto precompiled = g_precompiled_hsaco_table.find (kernel_name);
+    if (precompiled != g_precompiled_hsaco_table.end ()) {
+      program = (const gchar *) precompiled->second;
+      ret = HipModuleLoadData (priv->vendor, &priv->main_module, program);
+      if (ret != hipSuccess) {
+        GST_WARNING_OBJECT (self,
+            "Could not load module from hsaco, ret %d", ret);
+        program = nullptr;
+        priv->main_module = nullptr;
+      } else {
+        GST_DEBUG_OBJECT (self, "Loaded precompiled hsaco");
+      }
+    }
+  }
+
+  if (!program) {
+    std::string kernel_name = kernel_name_base + "_" +
+        std::to_string (device_id);
+    if (priv->vendor == GST_HIP_VENDOR_AMD)
+      kernel_name += "_amd";
+    else
+      kernel_name += "_nvidia";
+
+    std::string sampler_define = std::string ("-DSAMPLER=Sample") +
+        std::string (priv->texture_fmt->sample_func);
+    std::string output_define = std::string ("-DOUTPUT=Output") + output_name;
+    std::string texture_define;
+    if (priv->vendor == GST_HIP_VENDOR_AMD) {
+      texture_define = std::string ("-DTextureObject_t=hipTextureObject_t");
+    } else {
+      texture_define = std::string ("-DTextureObject_t=cudaTextureObject_t");
+    }
+
+    std::vector < const char *>opts;
+    opts.push_back (sampler_define.c_str ());
+    opts.push_back (output_define.c_str ());
+    opts.push_back (texture_define.c_str ());
+
     std::lock_guard < std::mutex > lk (g_kernel_table_lock);
 
     auto ptx = g_ptx_table.find (kernel_name);
@@ -1437,18 +1464,36 @@ gst_hip_converter_setup (GstHipConverter * self)
     }
 
     priv->unpack_buffer.texture = texture;
-
     program = nullptr;
 
-    {
-      std::lock_guard < std::mutex > lk (g_kernel_table_lock);
-      std::string unpack_module_name =
-          "GstHipConverterUnpack_device_" + std::to_string (device_id);
+    std::string unpack_module_name_base = "GstHipConverterUnpack";
+
+    if (priv->vendor == GST_HIP_VENDOR_AMD) {
+      auto kernel_name = unpack_module_name_base + "_amd";
+      auto precompiled = g_precompiled_hsaco_table.find (kernel_name);
+      if (precompiled != g_precompiled_hsaco_table.end ()) {
+        program = (const gchar *) precompiled->second;
+        ret = HipModuleLoadData (priv->vendor, &priv->unpack_module, program);
+        if (ret != hipSuccess) {
+          GST_WARNING_OBJECT (self,
+              "Could not load module from hsaco, ret %d", ret);
+          program = nullptr;
+          priv->unpack_module = nullptr;
+        } else {
+          GST_DEBUG_OBJECT (self, "Loaded precompiled hsaco");
+        }
+      }
+    }
+
+    if (!program) {
+      std::string unpack_module_name = unpack_module_name_base + "_" +
+          std::to_string (device_id);
       if (priv->vendor == GST_HIP_VENDOR_AMD)
         unpack_module_name += "_amd";
       else
         unpack_module_name += "_nvidia";
 
+      std::lock_guard < std::mutex > lk (g_kernel_table_lock);
       auto ptx = g_ptx_table.find (unpack_module_name);
       if (ptx == g_ptx_table.end ()) {
         GST_DEBUG_OBJECT (self, "Building PTX");

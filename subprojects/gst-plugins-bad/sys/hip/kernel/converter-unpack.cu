@@ -18,6 +18,10 @@
  */
 
 #if defined(__NVCC__) || defined(__HIPCC__)
+#ifdef __HIPCC__
+#include <hip/hip_runtime.h>
+#endif
+
 extern "C" {
 __global__ void
 GstHipConverterUnpack_RGB_RGBx

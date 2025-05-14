@@ -18,10 +18,11 @@
  */
 
 #if defined(__NVCC__) || defined(__HIPCC__)
-#ifdef __NVCC__
-#define TextureObject_t cudaTextureObject_t
-#else
+#ifdef __HIPCC__
+#include <hip/hip_runtime.h>
 #define TextureObject_t hipTextureObject_t
+#else
+#define TextureObject_t cudaTextureObject_t
 #endif
 
 struct ColorMatrix

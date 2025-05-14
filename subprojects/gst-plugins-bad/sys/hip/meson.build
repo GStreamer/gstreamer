@@ -27,6 +27,7 @@ extra_args = [
 ]
 
 extra_deps = []
+hip_kernel_amd_precompiled = []
 
 hip_option = get_option('hip')
 if hip_option.disabled()
@@ -37,8 +38,32 @@ if host_system not in ['linux', 'windows']
   subdir_done()
 endif
 
-hip_incdir = include_directories('./stub')
+hip_precompile_amd_opt = get_option('hip-amd-precompile')
+have_hipcc = false
+if not hip_precompile_amd_opt.disabled() and not meson.is_cross_build()
+  if host_system == 'windows'
+    hipcc = find_program('hipcc.bin', required: false)
+    if not hipcc.found()
+      hip_root = run_command(python3, '-c', 'import os; print(os.environ.get("HIP_PATH"))', check: false).stdout().strip()
+      if hip_root != '' and hip_root != 'None'
+        hip_bin_path = join_paths(hip_root, 'bin')
+        hipcc = find_program('hipcc.bin',
+                              dirs: [hip_bin_path],
+                              required: hip_precompile_amd_opt)
+      endif
+    endif
+  else
+    hipcc = find_program('hipcc', required: hip_precompile_amd_opt)
+  endif
+  have_hipcc = hipcc.found()
+endif
+
 hip_cdata = configuration_data()
+if have_hipcc
+  hip_cdata.set('HIP_AMD_PRECOMPILED', true)
+  subdir('kernel')
+endif
+
 if gstcuda_dep.found()
   hip_cdata.set('HAVE_GST_CUDA', true)
   extra_deps += [gstcuda_dep]
@@ -49,7 +74,8 @@ configure_file(
   configuration: hip_cdata,
 )
 
-gsthip = library('gsthip', hip_sources,
+hip_incdir = include_directories('./stub')
+gsthip = library('gsthip', hip_sources + hip_kernel_amd_precompiled,
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc, hip_incdir],
