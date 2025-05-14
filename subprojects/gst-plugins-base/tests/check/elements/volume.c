@@ -26,6 +26,7 @@
 
 #include <gst/base/gstbasetransform.h>
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio.h>
 #include <gst/audio/streamvolume.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 #include <gst/controller/gstdirectcontrolbinding.h>
@@ -35,80 +36,63 @@
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMATS1 "{ S8, S16LE, S24LE, S32LE, F32LE, F64LE }"
-#define FORMATS2 "S8"
-#define FORMATS3 "S16LE"
-#define FORMATS4 "S24LE"
-#define FORMATS5 "S32LE"
-#define FORMATS6 "F32LE"
-#define FORMATS7 "F64LE"
-#define FORMATS8 "U16LE"
-#else
-#define FORMATS1 "{ S8, S16BE, S24BE, S32BE, F32BE, F64BE }"
-#define FORMATS2 "S8"
-#define FORMATS3 "S16BE"
-#define FORMATS4 "S24BE"
-#define FORMATS5 "S32BE"
-#define FORMATS6 "F32BE"
-#define FORMATS7 "F64BE"
-#define FORMATS8 "U16BE"
-#endif
+#define FORMATS "{ S8, " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (S24) ", " \
+    GST_AUDIO_NE (S32) ", " GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (F64) " }"
 
-#define VOLUME_CAPS_TEMPLATE_STRING     \
-    "audio/x-raw, "                     \
-    "format = (string) "FORMATS1", "    \
-    "channels = (int) [ 1, MAX ], "     \
-    "rate = (int) [ 1,  MAX ], "        \
+#define VOLUME_CAPS_TEMPLATE_STRING                \
+    "audio/x-raw, "                                \
+    "format = (string) " FORMATS ", "              \
+    "channels = (int) [ 1, MAX ], "                \
+    "rate = (int) [ 1,  MAX ], "                   \
     "layout = (string) interleaved"
 
-#define VOLUME_CAPS_STRING_S8           \
-    "audio/x-raw, "                     \
-    "format = (string) "FORMATS2", "   \
-    "channels = (int) 1, "              \
-    "rate = (int) 44100,"               \
+#define VOLUME_CAPS_STRING_S8                      \
+    "audio/x-raw, "                                \
+    "format = (string) S8, "                       \
+    "channels = (int) 1, "                         \
+    "rate = (int) 44100,"                          \
     "layout = (string) interleaved"
 
-#define VOLUME_CAPS_STRING_S16          \
-    "audio/x-raw, "                     \
-    "format = (string) "FORMATS3", "   \
-    "channels = (int) 1, "              \
-    "rate = (int) 44100,"               \
+#define VOLUME_CAPS_STRING_S16                     \
+    "audio/x-raw, "                                \
+    "format = (string) " GST_AUDIO_NE (S16) ", "   \
+    "channels = (int) 1, "                         \
+    "rate = (int) 44100,"                          \
     "layout = (string) interleaved"
 
-#define VOLUME_CAPS_STRING_S24          \
-    "audio/x-raw, "                     \
-    "format = (string) "FORMATS4", "   \
-    "channels = (int) 1, "              \
-    "rate = (int) 44100,"               \
+#define VOLUME_CAPS_STRING_S24                     \
+    "audio/x-raw, "                                \
+    "format = (string) " GST_AUDIO_NE (S24) ", "   \
+    "channels = (int) 1, "                         \
+    "rate = (int) 44100,"                          \
     "layout = (string) interleaved"
 
-#define VOLUME_CAPS_STRING_S32          \
-    "audio/x-raw, "                     \
-    "format = (string) "FORMATS5", "   \
-    "channels = (int) 1, "              \
-    "rate = (int) 44100,"               \
+#define VOLUME_CAPS_STRING_S32                     \
+    "audio/x-raw, "                                \
+    "format = (string) " GST_AUDIO_NE (S32) ", "   \
+    "channels = (int) 1, "                         \
+    "rate = (int) 44100,"                          \
     "layout = (string) interleaved"
 
-#define VOLUME_CAPS_STRING_F32          \
-    "audio/x-raw, "                     \
-    "format = (string) "FORMATS6", "   \
-    "channels = (int) 1, "              \
-    "rate = (int) 44100,"               \
+#define VOLUME_CAPS_STRING_F32                     \
+    "audio/x-raw, "                                \
+    "format = (string) " GST_AUDIO_NE (F32) ", "   \
+    "channels = (int) 1, "                         \
+    "rate = (int) 44100,"                          \
     "layout = (string) interleaved"
 
-#define VOLUME_CAPS_STRING_F64          \
-    "audio/x-raw, "                     \
-    "format = (string) "FORMATS7", "   \
-    "channels = (int) 1, "              \
-    "rate = (int) 44100,"               \
+#define VOLUME_CAPS_STRING_F64                     \
+    "audio/x-raw, "                                \
+    "format = (string) " GST_AUDIO_NE (F64) ", "   \
+    "channels = (int) 1, "                         \
+    "rate = (int) 44100,"                          \
     "layout = (string) interleaved"
 
-#define VOLUME_WRONG_CAPS_STRING        \
-    "audio/x-raw, "                     \
-    "format = (string) "FORMATS8", "   \
-    "channels = (int) 1, "              \
-    "rate = (int) 44100,"               \
+#define VOLUME_WRONG_CAPS_STRING                   \
+    "audio/x-raw, "                                \
+    "format = (string) " GST_AUDIO_NE (U16) ", "   \
+    "channels = (int) 1, "                         \
+    "rate = (int) 44100,"                          \
     "layout = (string) interleaved"
 
 
