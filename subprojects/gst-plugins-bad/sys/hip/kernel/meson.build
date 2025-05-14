@@ -57,46 +57,92 @@ conv_output_formats = [
   'GBRA',
 ]
 
-amd_header_collector = find_program('collect_hsaco_headers.py')
+if have_hipcc
+  amd_header_collector = find_program('collect_hsaco_headers.py')
+  amd_conv_precompiled = []
+  amd_opt_common = ['-w', '--genco', '-c', '@INPUT@', '-o', '@OUTPUT@']
+  amd_arch_opt = get_option('hip-hipcc-arch')
+  if amd_arch_opt != ''
+    amd_opt_common += ['--offload-arch=' + amd_arch_opt]
+  endif
 
-amd_conv_precompiled = []
-amd_opt_common = ['-w', '--genco', '-c', '@INPUT@', '-o', '@OUTPUT@']
-amd_arch_opt = get_option('hip-hipcc-arch')
-if amd_arch_opt != ''
-  amd_opt_common += ['--offload-arch=' + amd_arch_opt]
+  foreach input_format : conv_input_formats
+    foreach output_format : conv_output_formats
+      hsaco_name = 'GstHipConverterMain_@0@_@1@_amd.hsaco'.format(input_format, output_format)
+      opts = amd_opt_common + ['-DSAMPLER=Sample@0@'.format(input_format),
+              '-DOUTPUT=Output@0@'.format(output_format)]
+      compiled_kernel = custom_target(hsaco_name,
+          input : conv_source,
+          output : hsaco_name,
+          command : [hipcc] + opts)
+      amd_conv_precompiled += [compiled_kernel]
+    endforeach
+  endforeach
+
+  hsaco_name = 'GstHipConverterUnpack_amd.hsaco'
+  compiled_kernel = custom_target(hsaco_name,
+      input : conv_comm_source,
+      output : hsaco_name,
+      command : [hipcc] + amd_opt_common)
+  amd_conv_precompiled += [compiled_kernel]
+
+  amd_conv_hsaco_collection = custom_target('hip_converter_hsaco',
+      input : amd_conv_precompiled,
+      output : 'converter_hsaco.h',
+      command : [amd_header_collector,
+          '--input', meson.current_build_dir(),
+          '--prefix', 'GstHipConverter',
+          '--name', 'g_precompiled_hsaco_table',
+          '--output', '@OUTPUT@'
+      ])
+
+  hip_amd_precompiled += [
+    amd_conv_precompiled,
+    amd_conv_hsaco_collection,
+  ]
 endif
 
-foreach input_format : conv_input_formats
-  foreach output_format : conv_output_formats
-    hsaco_name = 'GstHipConverterMain_@0@_@1@_amd.hsaco'.format(input_format, output_format)
-    opts = amd_opt_common + ['-DSAMPLER=Sample@0@'.format(input_format),
-            '-DOUTPUT=Output@0@'.format(output_format)]
-    compiled_kernel = custom_target(hsaco_name,
-        input : conv_source,
-        output : hsaco_name,
-        command : [hipcc] + opts)
-    amd_conv_precompiled += [compiled_kernel]
+if have_nvcc
+  nvidia_header_collector = find_program('collect_ptx_headers.py')
+  nvidia_conv_precompiled = []
+  nvidia_opt_common = ['-ptx', '-w', '-o', '@OUTPUT@']
+  nvidia_arch_opt = get_option('hip-nvcc-arch')
+  if nvidia_arch_opt != ''
+    nvidia_opt_common += ['-arch=' + nvidia_arch_opt]
+  endif
+
+  foreach input_format : conv_input_formats
+    foreach output_format : conv_output_formats
+      ptx_name = 'GstHipConverterMain_@0@_@1@_nvidia.ptx'.format(input_format, output_format)
+      opts = nvidia_opt_common + ['-DSAMPLER=Sample@0@'.format(input_format),
+              '-DOUTPUT=Output@0@'.format(output_format), '@INPUT@']
+      compiled_kernel = custom_target(ptx_name,
+          input : conv_source,
+          output : ptx_name,
+          command : [nvcc] + opts)
+      nvidia_conv_precompiled += [compiled_kernel]
+    endforeach
   endforeach
-endforeach
 
-hsaco_name = 'GstHipConverterUnpack_amd.hsaco'
-compiled_kernel = custom_target(hsaco_name,
-    input : conv_comm_source,
-    output : hsaco_name,
-    command : [hipcc] + amd_opt_common)
-amd_conv_precompiled += [compiled_kernel]
+  ptx_name = 'GstHipConverterUnpack_nvidia.ptx'
+  compiled_kernel = custom_target(ptx_name,
+      input : conv_comm_source,
+      output : ptx_name,
+      command : [nvcc] + nvidia_opt_common + ['@INPUT@'])
+  nvidia_conv_precompiled += [compiled_kernel]
 
-amd_conv_hsaco_collection = custom_target('hip_converter_hsaco',
-    input : amd_conv_precompiled,
-    output : 'converter_hsaco.h',
-    command : [amd_header_collector,
-        '--input', meson.current_build_dir(),
-        '--prefix', 'GstHipConverter',
-        '--name', 'g_precompiled_hsaco_table',
-        '--output', '@OUTPUT@'
-    ])
+  nvidia_conv_ptx_collection = custom_target('hip_converter_ptx',
+      input : nvidia_conv_precompiled,
+      output : 'converter_ptx.h',
+      command : [nvidia_header_collector,
+          '--input', meson.current_build_dir(),
+          '--prefix', 'GstHipConverter',
+          '--name', 'g_precompiled_ptx_table',
+          '--output', '@OUTPUT@'
+      ])
 
-hip_kernel_amd_precompiled += [
-  amd_conv_precompiled,
-  amd_conv_hsaco_collection,
-]
+  hip_nvidia_precompiled += [
+    nvidia_conv_precompiled,
+    nvidia_conv_ptx_collection,
+  ]
+endif

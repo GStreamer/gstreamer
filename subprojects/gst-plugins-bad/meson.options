@@ -285,6 +285,8 @@ option('gpl', type: 'feature', value: 'disabled', yield: true,
 # HIP plugin options
 option('hip-amd-precompile', type : 'feature', value : 'disabled', description : 'Enable HIP kernel precompile for AMD')
 option('hip-hipcc-arch', type : 'string', value : '', description : 'GPU architectur for hipcc --offload-arch option')
+option('hip-nvidia-precompile', type : 'feature', value : 'disabled', description : 'Enable HIP kernel precompile for NVIDIA')
+option('hip-nvcc-arch', type : 'string', value : 'compute_52', description : 'GPU architectur for nvcc -arch option')
 
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)

@@ -27,7 +27,8 @@ extra_args = [
 ]
 
 extra_deps = []
-hip_kernel_amd_precompiled = []
+hip_amd_precompiled = []
+hip_nvidia_precompiled = []
 
 hip_option = get_option('hip')
 if hip_option.disabled()
@@ -39,7 +40,9 @@ if host_system not in ['linux', 'windows']
 endif
 
 hip_precompile_amd_opt = get_option('hip-amd-precompile')
+hip_precompile_nvidia_opt = get_option('hip-nvidia-precompile')
 have_hipcc = false
+have_nvcc = false
 if not hip_precompile_amd_opt.disabled() and not meson.is_cross_build()
   if host_system == 'windows'
     hipcc = find_program('hipcc.bin', required: false)
@@ -58,9 +61,15 @@ if not hip_precompile_amd_opt.disabled() and not meson.is_cross_build()
   have_hipcc = hipcc.found()
 endif
 
+if not hip_precompile_nvidia_opt.disabled() and not meson.is_cross_build()
+  nvcc = find_program('nvcc', required: hip_precompile_nvidia_opt)
+  have_nvcc = nvcc.found()
+endif
+
 hip_cdata = configuration_data()
-if have_hipcc
-  hip_cdata.set('HIP_AMD_PRECOMPILED', true)
+if have_hipcc or have_nvcc
+  hip_cdata.set('HIP_AMD_PRECOMPILED', have_hipcc)
+  hip_cdata.set('HIP_NVIDIA_PRECOMPILED', have_nvcc)
   subdir('kernel')
 endif
 
@@ -75,7 +84,7 @@ configure_file(
 )
 
 hip_incdir = include_directories('./stub')
-gsthip = library('gsthip', hip_sources + hip_kernel_amd_precompiled,
+gsthip = library('gsthip', hip_sources + hip_amd_precompiled + hip_nvidia_precompiled,
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc, hip_incdir],

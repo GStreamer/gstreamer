@@ -42,6 +42,12 @@
 static std::unordered_map<std::string, const unsigned char *> g_precompiled_hsaco_table;
 #endif
 
+#ifdef HIP_NVIDIA_PRECOMPILED
+#include "kernel/converter_ptx.h"
+#else
+static std::unordered_map<std::string, const char *> g_precompiled_ptx_table;
+#endif
+
 static std::unordered_map<std::string, const char *> g_ptx_table;
 static std::mutex g_kernel_table_lock;
 /* *INDENT-ON* */
@@ -1348,17 +1354,24 @@ gst_hip_converter_setup (GstHipConverter * self)
   if (priv->vendor == GST_HIP_VENDOR_AMD) {
     auto kernel_name = kernel_name_base + "_amd";
     auto precompiled = g_precompiled_hsaco_table.find (kernel_name);
-    if (precompiled != g_precompiled_hsaco_table.end ()) {
+    if (precompiled != g_precompiled_hsaco_table.end ())
       program = (const gchar *) precompiled->second;
-      ret = HipModuleLoadData (priv->vendor, &priv->main_module, program);
-      if (ret != hipSuccess) {
-        GST_WARNING_OBJECT (self,
-            "Could not load module from hsaco, ret %d", ret);
-        program = nullptr;
-        priv->main_module = nullptr;
-      } else {
-        GST_DEBUG_OBJECT (self, "Loaded precompiled hsaco");
-      }
+  } else {
+    auto kernel_name = kernel_name_base + "_nvidia";
+    auto precompiled = g_precompiled_ptx_table.find (kernel_name);
+    if (precompiled != g_precompiled_ptx_table.end ())
+      program = precompiled->second;
+  }
+
+  if (program) {
+    ret = HipModuleLoadData (priv->vendor, &priv->main_module, program);
+    if (ret != hipSuccess) {
+      GST_WARNING_OBJECT (self,
+          "Could not load module from precompiled, ret %d", ret);
+      program = nullptr;
+      priv->main_module = nullptr;
+    } else {
+      GST_DEBUG_OBJECT (self, "Loaded precompiled kernel");
     }
   }
 
@@ -1471,17 +1484,24 @@ gst_hip_converter_setup (GstHipConverter * self)
     if (priv->vendor == GST_HIP_VENDOR_AMD) {
       auto kernel_name = unpack_module_name_base + "_amd";
       auto precompiled = g_precompiled_hsaco_table.find (kernel_name);
-      if (precompiled != g_precompiled_hsaco_table.end ()) {
+      if (precompiled != g_precompiled_hsaco_table.end ())
         program = (const gchar *) precompiled->second;
-        ret = HipModuleLoadData (priv->vendor, &priv->unpack_module, program);
-        if (ret != hipSuccess) {
-          GST_WARNING_OBJECT (self,
-              "Could not load module from hsaco, ret %d", ret);
-          program = nullptr;
-          priv->unpack_module = nullptr;
-        } else {
-          GST_DEBUG_OBJECT (self, "Loaded precompiled hsaco");
-        }
+    } else {
+      auto kernel_name = unpack_module_name_base + "_nvidia";
+      auto precompiled = g_precompiled_ptx_table.find (kernel_name);
+      if (precompiled != g_precompiled_ptx_table.end ())
+        program = precompiled->second;
+    }
+
+    if (program) {
+      ret = HipModuleLoadData (priv->vendor, &priv->unpack_module, program);
+      if (ret != hipSuccess) {
+        GST_WARNING_OBJECT (self,
+            "Could not load module from precompiled, ret %d", ret);
+        program = nullptr;
+        priv->unpack_module = nullptr;
+      } else {
+        GST_DEBUG_OBJECT (self, "Loaded precompiled kernel");
       }
     }
 
