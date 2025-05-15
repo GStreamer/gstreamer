@@ -1014,6 +1014,16 @@ gst_decodebin_input_stream_src_probe (GstPad * pad, GstPadProbeInfo * info,
           gst_stream_set_caps (input->active_stream, caps);
       }
         break;
+      case GST_EVENT_TAG:
+      {
+        GstTagList *tags = NULL;
+        gst_event_parse_tag (ev, &tags);
+        GST_DEBUG_OBJECT (pad, "tags %" GST_PTR_FORMAT, tags);
+        if (tags && gst_tag_list_get_scope (tags) == GST_TAG_SCOPE_STREAM &&
+            input->active_stream)
+          gst_stream_set_tags (input->active_stream, tags);
+      }
+        break;
       case GST_EVENT_EOS:
       {
         GST_DEBUG_OBJECT (pad, "Marking input as EOS");
