@@ -30,11 +30,11 @@ G_BEGIN_DECLS
 #define GST_TYPE_WL_DISPLAY (gst_wl_display_get_type ())
 
 GST_WL_API
-G_DECLARE_FINAL_TYPE (GstWlDisplay, gst_wl_display, GST, WL_DISPLAY, GObject);
+G_DECLARE_FINAL_TYPE (GstWlDisplay, gst_wl_display, GST, WL_DISPLAY, GstObject);
 
 struct _GstWlDisplay
 {
-  GObject parent_instance;
+  GstObject parent_instance;
 };
 
 GST_WL_API
