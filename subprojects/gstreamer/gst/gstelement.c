@@ -1527,8 +1527,8 @@ gst_element_class_add_pad_template (GstElementClass * klass,
 
     /* Found pad with the same name, replace and return */
     if (strcmp (templ->name_template, padtempl->name_template) == 0) {
-      gst_object_ref_sink (padtempl);
       gst_object_unref (padtempl);
+      gst_object_ref_sink (templ);
       template_list->data = templ;
       return;
     }
