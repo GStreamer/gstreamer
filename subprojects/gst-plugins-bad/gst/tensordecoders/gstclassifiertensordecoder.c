@@ -72,6 +72,8 @@
 #include <gst/analytics/analytics.h>
 
 const gchar GST_MODEL_STD_IMAGE_CLASSIFICATION[] = "classification-generic-out";
+const gchar GST_MODEL_STD_IMAGE_CLASSIFICATION_SOFTMAXED[] =
+    "classification-generic-softmaxed-out";
 
 GST_DEBUG_CATEGORY_STATIC (classifier_tensor_decoder_debug);
 #define GST_CAT_DEFAULT classifier_tensor_decoder_debug
@@ -364,9 +366,30 @@ gst_classifier_tensor_decoder_change_state (GstElement * element,
   return ret;
 }
 
-static GstTensorMeta *
-gst_classifier_tensor_decoder_get_tensor_meta (GstClassifierTensorDecoder *
-    self, GstBuffer * buf)
+static const GstTensor *
+get_tensor (GstTensorMeta * tmeta, GQuark tensor_id)
+{
+  const GstTensor *tensor;
+  const gsize DIMS[] = { 1, G_MAXSIZE };
+
+  tensor = gst_tensor_meta_get_typed_tensor (tmeta, tensor_id,
+      GST_TENSOR_DATA_TYPE_FLOAT32, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 1, NULL);
+  if (tensor == NULL)
+    tensor = gst_tensor_meta_get_typed_tensor (tmeta, tensor_id,
+        GST_TENSOR_DATA_TYPE_FLOAT32, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 2, DIMS);
+  if (tensor == NULL)
+    tensor = gst_tensor_meta_get_typed_tensor (tmeta, tensor_id,
+        GST_TENSOR_DATA_TYPE_UINT8, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 1, NULL);
+  if (tensor == NULL)
+    tensor = gst_tensor_meta_get_typed_tensor (tmeta, tensor_id,
+        GST_TENSOR_DATA_TYPE_UINT8, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 2, DIMS);
+
+  return tensor;
+}
+
+static const GstTensor *
+gst_classifier_tensor_decoder_get_tensor (GstClassifierTensorDecoder *
+    self, GstBuffer * buf, gboolean * do_softmax)
 {
   GstMeta *meta = NULL;
   gpointer iter_state = NULL;
@@ -380,17 +403,20 @@ gst_classifier_tensor_decoder_get_tensor_meta (GstClassifierTensorDecoder *
   while ((meta = gst_buffer_iterate_meta_filtered (buf, &iter_state,
               GST_TENSOR_META_API_TYPE))) {
     GstTensorMeta *tensor_meta = (GstTensorMeta *) meta;
+    const GstTensor *tensor;
 
-    if (tensor_meta->num_tensors != 1)
-      continue;
-
-    gint index = gst_tensor_meta_get_index_from_id (tensor_meta,
+    tensor = get_tensor (tensor_meta,
         g_quark_from_static_string (GST_MODEL_STD_IMAGE_CLASSIFICATION));
 
-    if (index == -1)
-      continue;
+    if (tensor == NULL) {
+      tensor = get_tensor (tensor_meta,
+          g_quark_from_static_string
+          (GST_MODEL_STD_IMAGE_CLASSIFICATION_SOFTMAXED));
+      *do_softmax = FALSE;
+    }
 
-    return tensor_meta;
+    if (tensor)
+      return tensor;
   }
 
   return NULL;
@@ -398,7 +424,8 @@ gst_classifier_tensor_decoder_get_tensor_meta (GstClassifierTensorDecoder *
 
 static GstFlowReturn
 gst_classifier_tensor_decoder_decode (GstClassifierTensorDecoder * self,
-    GstBuffer * buf, GstAnalyticsRelationMeta * rmeta, GstTensorMeta * tmeta)
+    const GstTensor * tensor, gboolean do_softmax,
+    GstAnalyticsRelationMeta * rmeta)
 {
   GstMapInfo map_info = GST_MAP_INFO_INIT;
   gfloat max = 0.0;
@@ -406,31 +433,7 @@ gst_classifier_tensor_decoder_decode (GstClassifierTensorDecoder * self,
   gsize len;
   GQuark q, qmax;
   gint max_idx = -1;
-  const GstTensor *tensor;
   GstAnalyticsClsMtd cls_mtd;
-  const gsize DIMS[] = { 1, G_MAXSIZE };
-
-  tensor = gst_tensor_meta_get_typed_tensor (tmeta,
-      g_quark_from_static_string (GST_MODEL_STD_IMAGE_CLASSIFICATION),
-      GST_TENSOR_DATA_TYPE_FLOAT32, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 1, NULL);
-  if (tensor == NULL)
-    tensor = gst_tensor_meta_get_typed_tensor (tmeta,
-        g_quark_from_static_string (GST_MODEL_STD_IMAGE_CLASSIFICATION),
-        GST_TENSOR_DATA_TYPE_FLOAT32, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 2, DIMS);
-  if (tensor == NULL)
-    tensor = gst_tensor_meta_get_typed_tensor (tmeta,
-        g_quark_from_static_string (GST_MODEL_STD_IMAGE_CLASSIFICATION),
-        GST_TENSOR_DATA_TYPE_UINT8, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 1, NULL);
-  if (tensor == NULL)
-    tensor = gst_tensor_meta_get_typed_tensor (tmeta,
-        g_quark_from_static_string (GST_MODEL_STD_IMAGE_CLASSIFICATION),
-        GST_TENSOR_DATA_TYPE_UINT8, GST_TENSOR_DIM_ORDER_ROW_MAJOR, 2, DIMS);
-
-  if (tensor == NULL) {
-    GST_ELEMENT_ERROR (GST_BASE_TRANSFORM (self), STREAM, FAILED,
-        (NULL), ("Could not find classification tensor"));
-    return GST_FLOW_ERROR;
-  }
 
   len = tensor->dims[tensor->num_dims - 1];
 
@@ -457,16 +460,38 @@ gst_classifier_tensor_decoder_decode (GstClassifierTensorDecoder * self,
 
   switch (tensor->data_type) {
     case GST_TENSOR_DATA_TYPE_FLOAT32:
-      softmax_f32 (len, (gfloat *) map_info.data, softmax_res);
+      if (map_info.size != len * sizeof (gfloat)) {
+        GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+            ("Tensor size is not as expected for float"));
+        goto error_mapped;
+      }
+
+      if (do_softmax)
+        softmax_f32 (len, (gfloat *) map_info.data, softmax_res);
+      else
+        softmax_res = (gfloat *) map_info.data;
       break;
     case GST_TENSOR_DATA_TYPE_UINT8:
-      softmax_u8 (len, (guint8 *) map_info.data, softmax_res);
+      if (map_info.size != len) {
+        GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+            ("Tensor size is not as expected for uint8"));
+        goto error_mapped;
+      }
+
+      if (do_softmax) {
+        softmax_u8 (len, (guint8 *) map_info.data, softmax_res);
+      } else {
+        const guint8 *uint8_data = map_info.data;
+        for (gint i = 0; i < len; i++) {
+          softmax_res[i] = uint8_data[i] / 255.0;
+        }
+      }
       break;
     default:
-      g_return_val_if_reached (GST_FLOW_ERROR);
-      break;
+      GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
+          ("Can't handle data type %d", tensor->data_type));
+      goto error_mapped;
   }
-  gst_buffer_unmap (tensor->data, &map_info);
 
   for (gint j = 0; j < len; j++) {
     q = g_array_index (self->class_quark, GQuark, j);
@@ -477,6 +502,8 @@ gst_classifier_tensor_decoder_decode (GstClassifierTensorDecoder * self,
     }
   }
 
+  gst_buffer_unmap (tensor->data, &map_info);
+
   if (max_idx != -1) {
     gst_analytics_relation_meta_add_one_cls_mtd (rmeta, max, qmax, &cls_mtd);
 
@@ -485,6 +512,10 @@ gst_classifier_tensor_decoder_decode (GstClassifierTensorDecoder * self,
   }
 
   return GST_FLOW_OK;
+
+error_mapped:
+  gst_buffer_unmap (tensor->data, &map_info);
+  return GST_FLOW_ERROR;
 }
 
 static GstFlowReturn
@@ -492,17 +523,17 @@ gst_classifier_tensor_decoder_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf)
 {
   GstClassifierTensorDecoder *self = GST_CLASSIFIER_TENSOR_DECODER (trans);
-  GstTensorMeta *tmeta;
+  const GstTensor *tensor;
+  gboolean do_softmax = TRUE;
   GstAnalyticsRelationMeta *rmeta;
 
-  tmeta = gst_classifier_tensor_decoder_get_tensor_meta (self, buf);
-  if (tmeta != NULL) {
-    rmeta = gst_buffer_add_analytics_relation_meta (buf);
-    g_assert (rmeta != NULL);
-  } else {
+  tensor = gst_classifier_tensor_decoder_get_tensor (self, buf, &do_softmax);
+  if (tensor == NULL) {
     GST_WARNING_OBJECT (trans, "missing tensor meta");
-    return TRUE;
+    return GST_FLOW_OK;
   }
 
-  return gst_classifier_tensor_decoder_decode (self, buf, rmeta, tmeta);
+  rmeta = gst_buffer_add_analytics_relation_meta (buf);
+
+  return gst_classifier_tensor_decoder_decode (self, tensor, do_softmax, rmeta);
 }
