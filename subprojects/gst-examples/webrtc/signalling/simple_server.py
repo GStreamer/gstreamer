@@ -253,7 +253,7 @@ class WebRTCSimpleServer(object):
         return sslctx
 
     async def run(self):
-        async def handler(ws, path):
+        async def handler(ws, path=None):
             '''
             All incoming messages are handled here. @path is unused.
             '''
