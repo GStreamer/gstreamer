@@ -484,8 +484,8 @@ gst_rtmp_connection_input_ready (GInputStream * is, gpointer user_data)
   if (ret < 0) {
     gint code = error->code;
 
-    if (error->domain == G_IO_ERROR && (code == G_IO_ERROR_WOULD_BLOCK ||
-            code == G_IO_ERROR_TIMED_OUT || code == G_IO_ERROR_AGAIN)) {
+    if (error->domain == G_IO_ERROR &&
+        (code == G_IO_ERROR_WOULD_BLOCK || code == G_IO_ERROR_AGAIN)) {
       /* should retry */
       GST_DEBUG_OBJECT (sc, "read IO error %d %s, continuing",
           code, error->message);
