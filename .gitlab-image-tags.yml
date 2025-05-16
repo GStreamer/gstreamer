@@ -5,9 +5,9 @@ variables:
   # If you are hacking on them or need a them to rebuild, its enough
   # to change any part of the string of the image you want.
   ###
-  FEDORA_TAG:  '2025-04-15.0'
+  FEDORA_TAG:  '2025-05-23.0'
 
-  DEBIAN_TAG:  '2025-04-15.0'
+  DEBIAN_TAG:  '2025-05-23.0'
 
   CHECKS_TAG: '2025-02-04.0'
 

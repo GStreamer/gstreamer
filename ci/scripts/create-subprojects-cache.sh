@@ -2,14 +2,12 @@
 
 set -eux
 
-branch="${GST_UPSTREAM_BRANCH:-main}"
-repo_url="https://gitlab.freedesktop.org/gstreamer/gstreamer.git"
-
+# Path where cbuild checks out the repo
+cd /tmp/clone/
 # get gstreamer and make all subprojects available
-git clone -b "${branch}" --depth=1 "${repo_url}" /gstreamer
-git -C /gstreamer submodule update --init --depth=1
-meson subprojects download --sourcedir /gstreamer
-./ci/scripts/handle-subprojects-cache.py --build --cache-dir /subprojects /gstreamer/subprojects/
+git submodule update --init --depth=1
+meson subprojects download
+./ci/scripts/handle-subprojects-cache.py --build --cache-dir /subprojects /tmp/clone/subprojects/
 
 # Avoid the cache being owned by root
 # and make sure its readable to anyone
