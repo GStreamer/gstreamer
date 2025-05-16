@@ -30,7 +30,6 @@
 #define LAST_CONTAINER_QDATA g_quark_from_string("ges-structured-last-container")
 #define LAST_CHILD_QDATA g_quark_from_string("ges-structured-last-child")
 
-#ifdef G_HAVE_ISO_VARARGS
 #define REPORT_UNLESS(condition, errpoint, ...)                                \
   G_STMT_START {                                                               \
     if (!(condition)) {                                                        \
@@ -41,20 +40,6 @@
     }                                                                          \
   }                                                                            \
   G_STMT_END
-#else /* G_HAVE_GNUC_VARARGS */
-#ifdef G_HAVE_GNUC_VARARGS
-#define REPORT_UNLESS(condition, errpoint, args...)                            \
-  G_STMT_START {                                                               \
-    if (!(condition)) {                                                        \
-      gchar *tmp = gst_info_strdup_printf(##args);                            \
-      *error = g_error_new_literal (GES_ERROR, 0, tmp);                        \
-      g_free (tmp);                                                            \
-      goto errpoint;                                                           \
-    }                                                                          \
-  }                                                                            \
-  G_STMT_END
-#endif /* G_HAVE_ISO_VARARGS */
-#endif /* G_HAVE_GNUC_VARARGS */
 
 #define GET_AND_CHECK(name,type,var,label) G_STMT_START {\
   gboolean found = FALSE; \

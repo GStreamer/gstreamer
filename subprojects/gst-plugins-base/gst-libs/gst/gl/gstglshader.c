@@ -831,8 +831,6 @@ gst_gl_context_clear_shader (GstGLContext * context)
   g_return_if_fail (shader->priv->program_handle != 0);                     \
   location = _get_uniform_location (shader, name);
 
-#ifdef G_HAVE_ISO_VARARGS
-
 #define set_uniform_v(gl_suffix, c_type, debug_stride, debug_str, ...)      \
 void \
 G_PASTE(gst_gl_shader_set_uniform_,gl_suffix) (GstGLShader * shader,        \
@@ -860,44 +858,6 @@ G_PASTE(gst_gl_shader_set_uniform_,gl_suffix) (GstGLShader * shader,        \
       name, location, __VA_ARGS__);                                         \
   shader->context->gl_vtable->G_PASTE(Uniform,gl_suffix) (location, __VA_ARGS__); \
 }
-
-#else /* G_HAVE_ISO_VARARGS */
-#if G_HAVE_GNUC_VARARGS
-
-#define set_uniform_v(gl_suffix, c_type, debug_stride, debug_str, args...)  \
-void                                                                        \
-G_PASTE(gst_gl_shader_set_uniform_,gl_suffix) (GstGLShader * shader,        \
-        const gchar * name, guint count, const c_type * value)              \
-{                                                                           \
-  guint i;                                                                  \
-  set_uniform_pre_check(shader, name)                                       \
-  for (i = 0; i < count; i++) {                                             \
-    const c_type * item = &value[i * debug_stride];                         \
-    GST_TRACE_OBJECT (shader, "Setting uniform %s (%i) index %i to "        \
-        debug_str, name, location, i, ##args);                              \
-  }                                                                         \
-  shader->context->gl_vtable->G_PASTE(Uniform,gl_suffix) (location, count, value); \
-}
-
-#define set_uniform_func_decl(gl_suffix, args...)                           \
-void                                                                        \
-G_PASTE(gst_gl_shader_set_uniform_,gl_suffix) (GstGLShader * shader,        \
-    const gchar * name, ##args)
-
-#define set_uniform_body(gl_suffix, debug_str, args...)                     \
-{                                                                           \
-  set_uniform_pre_check(shader, name)                                       \
-  GST_TRACE_OBJECT (shader, "Setting uniform %s (%i) = " debug_str,         \
-      name, location, ##args);                                              \
-  shader->context->gl_vtable->G_PASTE(Uniform,gl_suffix) (location, ##args); \
-}
-
-#else
-
-#error "No vararg support in C macros. What kind of C compiler is this?!"
-
-#endif /* G_HAVE_GNUC_VARARGS */
-#endif /* G_HAVE_ISO_VARARGS */
 
 /* *INDENT-OFF* */
 /**

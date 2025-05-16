@@ -36,7 +36,6 @@ GST_DEBUG_CATEGORY_STATIC (nle_validate_debug);
 
 void nle_validate_init (void);
 
-#ifdef G_HAVE_ISO_VARARGS
 #define REPORT_UNLESS(condition, errpoint, ...)                                \
   G_STMT_START {                                                               \
     if (!(condition)) {                                                        \
@@ -48,20 +47,6 @@ void nle_validate_init (void);
     }                                                                          \
   }                                                                            \
   G_STMT_END
-#else /* G_HAVE_GNUC_VARARGS */
-#ifdef G_HAVE_GNUC_VARARGS
-#define REPORT_UNLESS(condition, errpoint, args...)                            \
-  G_STMT_START {                                                               \
-    if (!(condition)) {                                                        \
-      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;                        \
-      gst_validate_report_action(GST_VALIDATE_REPORTER(scenario), action,      \
-                                 SCENARIO_ACTION_EXECUTION_ERROR, ##args);     \
-      goto errpoint;                                                           \
-    }                                                                          \
-  }                                                                            \
-  G_STMT_END
-#endif /* G_HAVE_ISO_VARARGS */
-#endif /* G_HAVE_GNUC_VARARGS */
 
 #define NLE_START_VALIDATE_ACTION(funcname)                                    \
 static gint                                                                    \

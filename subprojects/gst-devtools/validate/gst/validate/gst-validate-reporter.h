@@ -51,7 +51,6 @@ G_BEGIN_DECLS
  * Reports a new issue in the GstValidate reporting system with @m
  * as the source of that issue.
  */
-#ifdef G_HAVE_ISO_VARARGS
 #define GST_VALIDATE_REPORT(m, issue_id, ...)				\
   G_STMT_START {							\
     gst_validate_report (GST_VALIDATE_REPORTER (m),			\
@@ -66,20 +65,6 @@ G_BEGIN_DECLS
 			 __VA_ARGS__ );					\
   } G_STMT_END
 
-#else /* G_HAVE_GNUC_VARARGS */
-#ifdef G_HAVE_GNUC_VARARGS
-#define GST_VALIDATE_REPORT(m, issue_id, args...)			\
-  G_STMT_START {							\
-    gst_validate_report (GST_VALIDATE_REPORTER (m),			\
-			 issue_id, ##args );	\
-  } G_STMT_END
-#define GST_VALIDATE_REPORT_ACTION(m, a, issue_id, args...)			\
-  G_STMT_START {							\
-    gst_validate_report_action (GST_VALIDATE_REPORTER (m), a,		\
-			 issue_id, ##args );	\
-  } G_STMT_END
-#endif /* G_HAVE_ISO_VARARGS */
-#endif /* G_HAVE_GNUC_VARARGS */
 GST_VALIDATE_API
 GType gst_validate_reporter_get_type (void);
 

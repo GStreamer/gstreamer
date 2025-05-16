@@ -92,28 +92,9 @@ void                gst_gl_async_debug_thaw                     (GstGLAsyncDebug
  *
  * Stores a debug message in @ad for later output
  */
-#ifdef G_HAVE_ISO_VARARGS
 #define GST_GL_ASYNC_CAT_LEVEL_LOG(ad,cat,level,object,format,...)              \
     gst_gl_async_debug_store_log_msg (ad, cat, level, __FILE__, GST_FUNCTION,   \
         __LINE__, object, format, __VA_ARGS__)
-#else /* G_HAVE_ISO_VARARGS */
-#if G_HAVE_GNUC_VARARGS
-#define GST_GL_ASYNC_CAT_LEVEL_LOG(ad,cat,level,object,format,args...)          \
-    gst_gl_async_debug_store_log_msg (ad, cat, level, __FILE__, GST_FUNCTION,   \
-        __LINE__, object, format, ##args)
-#else /* G_HAVE_GNUC_VARARGS */
-static inline void
-GST_GL_ASYNC_CAT_LEVEL_LOG(GstGLAsyncDebug * ad, GstDebugCategory * cat,
-    GstDebugLevel level, GObject * object, const gchar * format, ...)
-{
-  va_list varargs;
-
-  va_start (varargs, format);
-  GST_GL_ASYNC_CAT_LEVEL_LOG_valist (ad, cat, level, object, format, varargs);
-  va_end (varargs);
-}
-#endif /* G_HAVE_GNUC_VARARGS */
-#endif /* G_HAVE_ISO_VARARGS */
 
 #if !defined(GST_DISABLE_GST_DEBUG)
 
@@ -147,34 +128,9 @@ void        gst_gl_async_debug_store_log_msg_valist (GstGLAsyncDebug * ad,
 #define gst_gl_async_debug_output_log_msg(ad) G_STMT_START{ }G_STMT_END
 #define gst_gl_async_debug_store_log_msg_valist(ad,cat,level,file,function,line,object,format,args) G_STMT_START{ }G_STMT_END
 
-#ifdef G_HAVE_ISO_VARARGS
-
 #define gst_gl_insert_debug_marker(...) G_STMT_START{ }G_STMT_END
 #define gst_gl_async_debug_store_log_msg(...) G_STMT_START{ }G_STMT_END
 
-#else /* G_HAVE_ISO_VARARGS */
-#if G_HAVE_GNUC_VARARGS
-
-#define gst_gl_insert_debug_marker(args...) G_STMT_START{ }G_STMT_END
-#define gst_gl_async_debug_store_log_msg(args...) G_STMT_START{ }G_STMT_END
-
-#else /* G_HAVE_GNUC_VARARGS */
-
-static inline void
-gst_gl_insert_debug_marker (GstGLContext * context, const gchar * format, ...)
-{
-}
-
-static inline void
-gst_gl_async_debug_store_log_msg (GstGLAsyncDebug * ad,
-    GstDebugCategory * cat, GstDebugLevel level, const gchar * file,
-    const gchar * function, gint line, GstObject * object,
-    const gchar * format, ...)
-{
-}
-
-#endif /* G_HAVE_GNUC_VARARGS */
-#endif /* G_HAVE_ISO_VARARGS */
 #endif /* GST_DISABLE_GST_DEBUG */
 
 G_END_DECLS

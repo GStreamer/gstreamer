@@ -299,44 +299,12 @@ GST_DEBUG_CATEGORY_EXTERN (libzvbi_debug);
 
 #ifndef GST_DISABLE_GST_DEBUG
 /* Logging stuff. */
-#ifdef G_HAVE_ISO_VARARGS
 #define VBI_CAT_LEVEL_LOG(level,object,...) G_STMT_START{		\
   if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min)) {						\
 	  gst_debug_log (libzvbi_debug, (level), __FILE__, GST_FUNCTION, __LINE__, \
         (GObject *) (object), __VA_ARGS__);				\
   }									\
 }G_STMT_END
-#else /* G_HAVE_GNUC_VARARGS */
-#ifdef G_HAVE_GNUC_VARARGS
-#define VBI_CAT_LEVEL_LOG(level,object,args...) G_STMT_START{	\
-  if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min)) {						\
-	  gst_debug_log (libzvbi_debug, (level), __FILE__, GST_FUNCTION, __LINE__, \
-        (GObject *) (object), ##args );					\
-  }									\
-}G_STMT_END
-#else /* no variadic macros, use inline */
-static inline void
-VBI_CAT_LEVEL_LOG_valist (GstDebugCategory * cat,
-    GstDebugLevel level, gpointer object, const char *format, va_list varargs)
-{
-  if (G_UNLIKELY ((level) <= GST_LEVEL_MAX && (level) <= _gst_debug_min)) {
-    gst_debug_log_valist (cat, level, "", "", 0, (GObject *) object, format,
-        varargs);
-  }
-}
-
-static inline void
-VBI_CAT_LEVEL_LOG (GstDebugLevel level,
-    gpointer object, const char *format, ...)
-{
-  va_list varargs;
-
-  va_start (varargs, format);
-  GST_CAT_LEVEL_LOG_valist (libzvbi_debug, level, object, format, varargs);
-  va_end (varargs);
-}
-#endif
-#endif /* G_HAVE_ISO_VARARGS */
 #else
 static inline void
 VBI_CAT_LEVEL_LOG (GstDebugLevel level,
