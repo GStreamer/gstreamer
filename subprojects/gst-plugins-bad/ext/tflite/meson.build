@@ -26,8 +26,18 @@ if get_option('tflite').disabled()
   subdir_done()
 endif
 
-tensorflow_lite_dep = cc.find_library('tensorflowlite_c',
-				      required: get_option('tflite'))
+tensorflow_lite_dep = cc.find_library('tensorflowlite_c', required: false)
+
+if not tensorflow_lite_dep.found()
+  tensorflow_lite_dep = cc.find_library('tensorflow-lite',
+					required: get_option('tflite'))
+
+  if not cc.has_function('TfLiteInterpreterCreate',
+			 dependencies: tensorflow_lite_dep,
+			 required: get_option('tflite'))
+    tensorflow_lite_dep = disabler()
+  endif
+endif
 
 tensorflow_lite_header_found = cc.has_header('tensorflow/lite/c/c_api.h',
 					     dependencies: tensorflow_lite_dep,
