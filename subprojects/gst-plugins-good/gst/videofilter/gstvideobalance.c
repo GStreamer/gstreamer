@@ -52,6 +52,8 @@
 GST_DEBUG_CATEGORY_STATIC (videobalance_debug);
 #define GST_CAT_DEFAULT videobalance_debug
 
+static GQuark _tags_quark;
+
 /* GstVideoBalance properties */
 #define DEFAULT_PROP_CONTRAST		1.0
 #define DEFAULT_PROP_BRIGHTNESS		0.0
@@ -541,6 +543,54 @@ not_negotiated:
   }
 }
 
+/* This is public API in 1.28 */
+static gboolean
+gst_meta_api_type_tags_contain_only (GType api, const gchar ** valid_tags)
+{
+  const gchar **tags, **curr;
+  g_return_val_if_fail (api != 0, FALSE);
+
+  tags = g_type_get_qdata (api, _tags_quark);
+
+  if (!tags)
+    return TRUE;
+
+  for (curr = tags; *curr; ++curr) {
+
+    if (!g_strv_contains (valid_tags, *curr)) {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_video_balance_transform_meta (GstBaseTransform * bt,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
+{
+  const GstMetaInfo *info = meta->info;
+  gboolean should_copy = TRUE;
+  const gchar *valid_tags[] = {
+    GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR,
+    GST_META_TAG_VIDEO_COLORSPACE_STR,
+    NULL
+  };
+
+  should_copy = gst_meta_api_type_tags_contain_only (info->api, valid_tags);
+
+  /* Can't handle the tags in this meta, let the parent class handle it */
+  if (!should_copy) {
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (bt,
+        outbuf, meta, inbuf);
+  }
+
+  /* No need to transform, we can safely copy this meta */
+  return TRUE;
+}
+
 static void
 gst_video_balance_finalize (GObject * object)
 {
@@ -574,6 +624,8 @@ gst_video_balance_class_init (GstVideoBalanceClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (videobalance_debug, "videobalance", 0,
       "videobalance");
+
+  _tags_quark = g_quark_from_static_string ("tags");
 
   gobject_class->finalize = gst_video_balance_finalize;
   gobject_class->set_property = gst_video_balance_set_property;
@@ -610,6 +662,8 @@ gst_video_balance_class_init (GstVideoBalanceClass * klass)
   trans_class->transform_ip_on_passthrough = FALSE;
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_balance_transform_caps);
+  trans_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_video_balance_transform_meta);
 
   vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_video_balance_set_info);
   vfilter_class->transform_frame_ip =
