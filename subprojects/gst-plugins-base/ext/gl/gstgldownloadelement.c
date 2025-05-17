@@ -1458,13 +1458,31 @@ static gboolean
 gst_gl_download_element_transform_meta (GstBaseTransform * bt,
     GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
 {
+  const GstMetaInfo *info = meta->info;
+  gboolean should_copy = TRUE;
+  const gchar *valid_tags[] = {
+    GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR,
+    GST_META_TAG_VIDEO_COLORSPACE_STR,
+    NULL
+  };
+
   if (g_type_is_a (meta->info->api, GST_GL_SYNC_META_API_TYPE)) {
     GST_LOG_OBJECT (bt, "not copying GstGLSyncMeta onto output buffer");
     return FALSE;
   }
 
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (bt, outbuf,
-      meta, inbuf);
+  should_copy = gst_meta_api_type_tags_contain_only (info->api, valid_tags);
+
+  /* Cant handle the tags in this meta, let the parent class handle it */
+  if (!should_copy) {
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (bt,
+        outbuf, meta, inbuf);
+  }
+
+  /* No need to transform, we can safely copy this meta */
+  return TRUE;
 }
 
 static gboolean
