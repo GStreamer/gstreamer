@@ -970,7 +970,6 @@ gst_adaptive_demux_update_collection (GstAdaptiveDemux * demux,
 static gboolean
 gst_adaptive_demux_post_collection (GstAdaptiveDemux * demux)
 {
-  GstStreamCollection *collection;
   GstAdaptiveDemuxPeriod *period = demux->output_period;
   guint32 seqnum = g_atomic_int_get (&demux->priv->requested_selection_seqnum);
 
@@ -980,17 +979,18 @@ gst_adaptive_demux_post_collection (GstAdaptiveDemux * demux)
     return TRUE;
   }
 
-  collection = period->collection;
+  GstMessage *collection_msg =
+      gst_message_new_stream_collection (GST_OBJECT (demux),
+      period->collection);
 
-  GST_DEBUG_OBJECT (demux, "Posting collection for period %d",
-      period->period_num);
+  GST_DEBUG_OBJECT (demux, "Posting collection for period %d: %" GST_PTR_FORMAT,
+      period->period_num, collection_msg);
 
   /* Post collection */
   TRACKS_UNLOCK (demux);
   GST_MANIFEST_UNLOCK (demux);
 
-  gst_element_post_message (GST_ELEMENT_CAST (demux),
-      gst_message_new_stream_collection (GST_OBJECT (demux), collection));
+  gst_element_post_message (GST_ELEMENT_CAST (demux), collection_msg);
 
   GST_MANIFEST_LOCK (demux);
   TRACKS_LOCK (demux);
