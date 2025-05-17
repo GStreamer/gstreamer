@@ -541,6 +541,32 @@ not_negotiated:
   }
 }
 
+static gboolean
+gst_video_balance_transform_meta (GstBaseTransform * bt,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
+{
+  const GstMetaInfo *info = meta->info;
+  gboolean should_copy = TRUE;
+  const gchar *valid_tags[] = {
+    GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR,
+    GST_META_TAG_VIDEO_COLORSPACE_STR,
+    NULL
+  };
+
+  should_copy = gst_meta_api_type_tags_contain_only (info->api, valid_tags);
+
+  /* Can't handle the tags in this meta, let the parent class handle it */
+  if (!should_copy) {
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (bt,
+        outbuf, meta, inbuf);
+  }
+
+  /* No need to transform, we can safely copy this meta */
+  return TRUE;
+}
+
 static void
 gst_video_balance_finalize (GObject * object)
 {
@@ -610,6 +636,8 @@ gst_video_balance_class_init (GstVideoBalanceClass * klass)
   trans_class->transform_ip_on_passthrough = FALSE;
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_balance_transform_caps);
+  trans_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_video_balance_transform_meta);
 
   vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_video_balance_set_info);
   vfilter_class->transform_frame_ip =
