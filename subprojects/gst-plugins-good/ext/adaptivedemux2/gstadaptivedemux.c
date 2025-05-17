@@ -2786,6 +2786,7 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
       GST_MANIFEST_UNLOCK (demux);
       break;
     case GST_QUERY_SELECTABLE:
+      GST_LOG_OBJECT (demux, "Answering TRUE to selectable query");
       gst_query_set_selectable (query, TRUE);
       ret = TRUE;
       break;
@@ -2832,6 +2833,10 @@ gst_adaptive_demux_query (GstElement * element, GstQuery * query)
        * element query handler to fail, yet we can answer this query */
       return gst_adaptive_demux_handle_query_seeking (demux, query);
     }
+    case GST_QUERY_SELECTABLE:
+      GST_LOG_OBJECT (demux, "Answering TRUE to selectable query");
+      gst_query_set_selectable (query, TRUE);
+      return TRUE;
     default:
       break;
   }
