@@ -46,6 +46,7 @@
 
 #include "gstglelements.h"
 #include "gstglcolorscale.h"
+#include "gstglutils.h"
 
 #define GST_CAT_DEFAULT gst_gl_colorscale_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -75,6 +76,13 @@ static void gst_gl_colorscale_gl_stop (GstGLBaseFilter * base_filter);
 static gboolean gst_gl_colorscale_filter_texture (GstGLFilter * filter,
     GstGLMemory * in_tex, GstGLMemory * out_tex);
 
+static gboolean
+gst_gl_colorscale_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
+
+static GQuark _size_quark;
+static GQuark _scale_quark;
+
 static void
 gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
 {
@@ -90,6 +98,9 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
   base_filter_class = GST_GL_BASE_FILTER_CLASS (klass);
   filter_class = GST_GL_FILTER_CLASS (klass);
 
+  _size_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_SIZE_STR);
+  _scale_quark = gst_video_meta_transform_scale_get_quark ();
+
   gst_gl_filter_add_rgba_pad_templates (GST_GL_FILTER_CLASS (klass));
 
   gobject_class->set_property = gst_gl_colorscale_set_property;
@@ -101,6 +112,8 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
       "Matthew Waters <matthew@centricular.com>");
 
   basetransform_class->passthrough_on_same_caps = TRUE;
+  basetransform_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_gl_colorscale_transform_meta);
 
   base_filter_class->gl_start = GST_DEBUG_FUNCPTR (gst_gl_colorscale_gl_start);
   base_filter_class->gl_stop = GST_DEBUG_FUNCPTR (gst_gl_colorscale_gl_stop);
@@ -185,5 +198,42 @@ gst_gl_colorscale_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
     gst_gl_filter_render_to_target_with_shader (filter, in_tex, out_tex,
         colorscale->shader);
 
+  return TRUE;
+}
+
+static gboolean
+gst_gl_colorscale_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
+{
+  GstGLColorscale *colorscale = GST_GL_COLORSCALE (trans);
+  const GstMetaInfo *info = meta->info;
+  gboolean should_copy = TRUE;
+  const gchar *valid_tags[] = {
+    GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR,
+    GST_META_TAG_VIDEO_COLORSPACE_STR,
+    NULL
+  };
+
+  should_copy = gst_meta_api_type_tags_contain_only (info->api, valid_tags);
+
+  /* Cant handle the tags in this meta, let the parent class handle it */
+  if (!should_copy) {
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans,
+        outbuf, meta, inbuf);
+  }
+
+  /* This meta is size sensitive, try to transform it accordingly */
+  if (gst_meta_api_type_has_tag (info->api, _size_quark)) {
+    GstVideoMetaTransform trans =
+        { &colorscale->filter.in_info, &colorscale->filter.out_info };
+
+    if (info->transform_func)
+      info->transform_func (outbuf, meta, inbuf, _scale_quark, &trans);
+    return FALSE;
+  }
+
+  /* No need to transform, we can safely copy this meta */
   return TRUE;
 }
