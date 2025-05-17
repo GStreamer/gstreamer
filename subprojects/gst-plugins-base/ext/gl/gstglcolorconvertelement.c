@@ -27,6 +27,7 @@
 
 #include "gstglelements.h"
 #include "gstglcolorconvertelement.h"
+#include "gstglutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_color_convert_element_debug);
 #define gst_gl_color_convert_element_parent_class parent_class
@@ -57,6 +58,9 @@ static GstFlowReturn gst_gl_color_convert_element_transform (GstBaseTransform *
     bt, GstBuffer * inbuf, GstBuffer * outbuf);
 static GstCaps *gst_gl_color_convert_element_fixate_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
+static gboolean
+gst_gl_color_convert_transform_meta (GstBaseTransform * bt,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 static GstStateChangeReturn
 gst_gl_color_convert_element_change_state (GstElement * element,
     GstStateChange transition);
@@ -101,6 +105,7 @@ gst_gl_color_convert_element_class_init (GstGLColorConvertElementClass * klass)
       gst_gl_color_convert_element_prepare_output_buffer;
   bt_class->transform = gst_gl_color_convert_element_transform;
   bt_class->fixate_caps = gst_gl_color_convert_element_fixate_caps;
+  bt_class->transform_meta = gst_gl_color_convert_transform_meta;
 
   bt_class->passthrough_on_same_caps = TRUE;
 
@@ -244,6 +249,31 @@ gst_gl_color_convert_element_transform (GstBaseTransform * bt,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_gl_color_convert_transform_meta (GstBaseTransform * bt,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
+{
+  const GstMetaInfo *info = meta->info;
+  gboolean should_copy = TRUE;
+  const gchar *valid_tags[] = {
+    GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR,
+    NULL
+  };
+
+  should_copy = gst_meta_api_type_tags_contain_only (info->api, valid_tags);
+
+  /* Cant handle the tags in this meta, let the parent class handle it */
+  if (!should_copy) {
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (bt,
+        outbuf, meta, inbuf);
+  }
+
+  /* No need to transform, we can safely copy this meta */
+  return TRUE;
 }
 
 static GstCaps *

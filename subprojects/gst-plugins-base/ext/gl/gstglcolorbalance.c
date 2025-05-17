@@ -45,6 +45,7 @@
 
 #include "gstglelements.h"
 #include "gstglcolorbalance.h"
+#include "gstglutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (glcolorbalance_debug);
 #define GST_CAT_DEFAULT glcolorbalance_debug
@@ -391,6 +392,32 @@ gst_gl_color_balance_before_transform (GstBaseTransform * base, GstBuffer * buf)
 }
 
 static gboolean
+gst_gl_color_balance_transform_meta (GstBaseTransform * bt,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
+{
+  const GstMetaInfo *info = meta->info;
+  gboolean should_copy = TRUE;
+  const gchar *valid_tags[] = {
+    GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR,
+    GST_META_TAG_VIDEO_COLORSPACE_STR,
+    NULL
+  };
+
+  should_copy = gst_meta_api_type_tags_contain_only (info->api, valid_tags);
+
+  /* Can't handle the tags in this meta, let the parent class handle it */
+  if (!should_copy) {
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (bt,
+        outbuf, meta, inbuf);
+  }
+
+  /* No need to transform, we can safely copy this meta */
+  return TRUE;
+}
+
+static gboolean
 gst_gl_color_balance_filter_texture (GstGLFilter * filter, GstGLMemory * in_tex,
     GstGLMemory * out_tex)
 {
@@ -481,6 +508,7 @@ gst_gl_color_balance_class_init (GstGLColorBalanceClass * klass)
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_gl_color_balance_before_transform);
   trans_class->transform_ip_on_passthrough = FALSE;
+  trans_class->transform_meta = gst_gl_color_balance_transform_meta;
 
   base_filter_class->gl_start =
       GST_DEBUG_FUNCPTR (gst_gl_color_balance_gl_start);
