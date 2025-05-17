@@ -624,7 +624,10 @@ gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
 void
 gst_gl_window_wayland_egl_create_window (GstGLWindowWaylandEGL * window_egl)
 {
-  create_surfaces (window_egl);
+  GstGLWindow *window = GST_GL_WINDOW (window_egl);
+
+  if (gst_gl_window_get_request_output_surface (window))
+    create_surfaces (window_egl);
 }
 
 static guintptr

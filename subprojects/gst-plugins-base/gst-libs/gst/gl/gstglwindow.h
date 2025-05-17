@@ -277,6 +277,12 @@ guintptr       gst_gl_window_get_display    (GstGLWindow *window);
 GST_GL_API
 gboolean       gst_gl_window_has_output_surface (GstGLWindow *window);
 
+GST_GL_API
+void           gst_gl_window_set_request_output_surface (GstGLWindow *window, gboolean output_surface);
+
+GST_GL_API
+gboolean       gst_gl_window_get_request_output_surface (GstGLWindow *window);
+
 G_END_DECLS
 
 #endif /* __GST_GL_WINDOW_H__ */

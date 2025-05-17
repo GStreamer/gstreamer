@@ -1067,13 +1067,35 @@ _ensure_gl_setup (GstGLImageSink * gl_sink)
             gst_gl_display_get_gl_context_for_thread (gl_sink->display, NULL);
       }
 
-      if (!gst_gl_display_create_context (gl_sink->display,
-              other_context, &context, &error)) {
-        if (other_context)
-          gst_object_unref (other_context);
-        GST_OBJECT_UNLOCK (gl_sink->display);
-        goto context_error;
+      g_signal_emit_by_name (gl_sink->display, "create-context", other_context,
+          &context);
+      if (!context) {
+        GstGLWindow *window;
+        context = gst_gl_context_new (gl_sink->display);
+        if (!context) {
+          g_set_error (&error, GST_GL_CONTEXT_ERROR,
+              GST_GL_CONTEXT_ERROR_FAILED, "Failed to create GL context");
+          gst_clear_object (&other_context);
+          GST_OBJECT_UNLOCK (gl_sink->display);
+          goto context_error;
+        }
+
+        GST_DEBUG_OBJECT (gl_sink,
+            "creating context %" GST_PTR_FORMAT " from other context %"
+            GST_PTR_FORMAT, context, other_context);
+
+        window = gst_gl_display_create_window (context->display);
+        gst_gl_window_set_request_output_surface (window, TRUE);
+        gst_gl_context_set_window (context, window);
+        gst_clear_object (&window);
+        if (!gst_gl_context_create (context, other_context, &error)) {
+          gst_clear_object (&other_context);
+          gst_clear_object (&context);
+          GST_OBJECT_UNLOCK (gl_sink->display);
+          goto context_error;
+        }
       }
+
       _set_context (gl_sink, context);
       context = NULL;
 

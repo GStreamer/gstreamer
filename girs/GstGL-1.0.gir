@@ -8608,6 +8608,19 @@ require this to be called with a valid handle before drawing can commence.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_request_output_surface" c:identifier="gst_gl_window_get_request_output_surface" version="1.28">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglwindow.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglwindow.c">whether an visible output surface has been requested</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="window" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglwindow.c">a #GstGLWindow</doc>
+            <type name="GLWindow" c:type="GstGLWindow*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="get_surface_dimensions" c:identifier="gst_gl_window_get_surface_dimensions" version="1.6">
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglwindow.h"/>
         <return-value transfer-ownership="none">
@@ -8954,6 +8967,23 @@ according to the #GstVideoOverlay interface.</doc>
           <parameter name="height" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglwindow.c">height</doc>
             <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_request_output_surface" c:identifier="gst_gl_window_set_request_output_surface" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglwindow.c">Configure whether a visible output surface is requested.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglwindow.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="window" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglwindow.c">a #GstGLWindow</doc>
+            <type name="GLWindow" c:type="GstGLWindow*"/>
+          </instance-parameter>
+          <parameter name="output_surface" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglwindow.c">whether to request an output surface.</doc>
+            <type name="gboolean" c:type="gboolean"/>
           </parameter>
         </parameters>
       </method>

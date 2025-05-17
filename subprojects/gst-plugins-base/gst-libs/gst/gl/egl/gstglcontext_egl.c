@@ -1089,41 +1089,36 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     gst_gl_window_x11_create_window ((GstGLWindowX11 *) context->window);
   }
 #endif
-
-  if (other_context == NULL) {
-    /* FIXME: fails to show two outputs at all.  We need a property/option for
-     * glimagesink to say its a visible context */
 #if GST_GL_HAVE_WINDOW_WAYLAND
-    if (GST_IS_GL_WINDOW_WAYLAND_EGL (context->window)) {
-      gst_gl_window_wayland_egl_create_window ((GstGLWindowWaylandEGL *)
-          context->window);
-    }
+  if (GST_IS_GL_WINDOW_WAYLAND_EGL (context->window)) {
+    gst_gl_window_wayland_egl_create_window ((GstGLWindowWaylandEGL *)
+        context->window);
+  }
 #endif
 #if GST_GL_HAVE_WINDOW_WIN32
-    if (GST_IS_GL_WINDOW_WIN32 (context->window)) {
-      gst_gl_window_win32_create_window ((GstGLWindowWin32 *) context->window,
-          NULL);
-    }
+  if (GST_IS_GL_WINDOW_WIN32 (context->window)) {
+    gst_gl_window_win32_create_window ((GstGLWindowWin32 *) context->window,
+        NULL);
+  }
 #endif
 #if GST_GL_HAVE_WINDOW_DISPMANX
-    if (GST_IS_GL_WINDOW_DISPMANX_EGL (context->window)) {
-      gst_gl_window_dispmanx_egl_create_window ((GstGLWindowDispmanxEGL *)
-          context->window);
-    }
+  if (GST_IS_GL_WINDOW_DISPMANX_EGL (context->window)) {
+    gst_gl_window_dispmanx_egl_create_window ((GstGLWindowDispmanxEGL *)
+        context->window);
+  }
 #endif
 #if GST_GL_HAVE_WINDOW_GBM
-    if (GST_IS_GL_WINDOW_GBM_EGL (context->window)) {
-      gst_gl_window_gbm_egl_create_window ((GstGLWindowGBMEGL *)
-          context->window);
-    }
+  if (GST_IS_GL_WINDOW_GBM_EGL (context->window)) {
+    gst_gl_window_gbm_egl_create_window ((GstGLWindowGBMEGL *)
+        context->window);
+  }
 #endif
 #if GST_GL_HAVE_WINDOW_VIV_FB
-    if (GST_IS_GL_WINDOW_VIV_FB_EGL (context->window)) {
-      gst_gl_window_viv_fb_egl_create_window ((GstGLWindowVivFBEGL *)
-          context->window);
-    }
-#endif
+  if (GST_IS_GL_WINDOW_VIV_FB_EGL (context->window)) {
+    gst_gl_window_viv_fb_egl_create_window ((GstGLWindowVivFBEGL *)
+        context->window);
   }
+#endif
 
   if (window)
     window_handle = gst_gl_window_get_window_handle (window);

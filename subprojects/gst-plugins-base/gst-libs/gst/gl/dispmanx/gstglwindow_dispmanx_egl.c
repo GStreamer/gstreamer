@@ -164,10 +164,14 @@ gst_gl_window_dispmanx_egl_open (GstGLWindow * window, GError ** error)
 gboolean
 gst_gl_window_dispmanx_egl_create_window (GstGLWindowDispmanxEGL * window_egl)
 {
+  GstGLWindow *window = GST_GL_WINDOW (window_egl);
+
   window_egl->native.width = 0;
   window_egl->native.height = 0;
-  window_egl->display = vc_dispmanx_display_open (0);
-  window_resize (window_egl, 16, 16, FALSE);
+  if (gst_gl_window_get_request_output_window (window)) {
+    window_egl->display = vc_dispmanx_display_open (0);
+    window_resize (window_egl, 16, 16, FALSE);
+  }
   return TRUE;
 }
 
