@@ -914,6 +914,17 @@ on_server_connected (SoupSession * session, GAsyncResult * res,
   register_with_server ();
 }
 
+#if SOUP_CHECK_VERSION(3,0,0)
+static gboolean
+accept_certificate_cb (SoupMessage * msg G_GNUC_UNUSED,
+    GTlsCertificate * tls_cert G_GNUC_UNUSED,
+    GTlsCertificateFlags tls_errors G_GNUC_UNUSED,
+    gpointer user_data G_GNUC_UNUSED)
+{
+  return !strict_ssl;
+}
+#endif
+
 /*
  * Connect to the signalling server. This is the entrypoint for everything else.
  */
@@ -922,13 +933,16 @@ connect_to_websocket_server_async (void)
 {
   SoupLogger *logger;
   SoupMessage *message;
-  SoupSession *session;
+#if SOUP_CHECK_VERSION(3,0,0)
+  SoupSession *session = soup_session_new ();
+#else
   const char *https_aliases[] = { "wss", NULL };
-
-  session = soup_session_new_with_options ("ssl-strict", strict_ssl,
+  SoupSession *session =
+      soup_session_new_with_options ("ssl-strict", !disable_ssl,
       "ssl-use-system-ca-file", TRUE,
       //"ssl-ca-file", "/etc/ssl/certs/ca-bundle.crt",
       "http-aliases", https_aliases, NULL);
+#endif
 
 #if SOUP_CHECK_VERSION(3,0,0)
   logger = soup_logger_new (SOUP_LOGGER_LOG_BODY);
@@ -939,6 +953,10 @@ connect_to_websocket_server_async (void)
   g_object_unref (logger);
 
   message = soup_message_new (SOUP_METHOD_GET, server_url);
+#if SOUP_CHECK_VERSION(3,0,0)
+  g_signal_connect (message, "accept-certificate",
+      G_CALLBACK (accept_certificate_cb), NULL);
+#endif
 
   gst_print ("Connecting to server...\n");
 
