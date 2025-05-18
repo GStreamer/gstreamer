@@ -68,7 +68,9 @@ struct _GstVideoBox
 
   gint box_left, box_right, box_top, box_bottom;
 
-  gint crop_left, crop_right, crop_top, crop_bottom;
+  gint src_x, src_y;
+  gint dest_x, dest_y;
+  gint crop_w, crop_h;
 
   gdouble alpha;
   gdouble border_alpha;

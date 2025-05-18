@@ -2933,6 +2933,7 @@ bail:
 static gboolean
 gst_video_box_recalc_transform (GstVideoBox * video_box)
 {
+  gint br, bl, bt, bb;
   gboolean res = TRUE;
 
   /* if we have the same format in and out and we don't need to perform any
@@ -2950,6 +2951,56 @@ gst_video_box_recalc_transform (GstVideoBox * video_box)
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM_CAST (video_box),
         FALSE);
   }
+
+
+  video_box->crop_h = 0;
+  video_box->crop_w = 0;
+
+  br = video_box->box_right;
+  bl = video_box->box_left;
+  bt = video_box->box_top;
+  bb = video_box->box_bottom;
+
+  if (br >= 0 && bl >= 0) {
+    video_box->crop_w = video_box->in_width - (br + bl);
+  } else if (br >= 0 && bl < 0) {
+    video_box->crop_w = video_box->in_width - (br);
+  } else if (br < 0 && bl >= 0) {
+    video_box->crop_w = video_box->in_width - (bl);
+  } else if (br < 0 && bl < 0) {
+    video_box->crop_w = video_box->in_width;
+  }
+
+  if (bb >= 0 && bt >= 0) {
+    video_box->crop_h = video_box->in_height - (bb + bt);
+  } else if (bb >= 0 && bt < 0) {
+    video_box->crop_h = video_box->in_height - (bb);
+  } else if (bb < 0 && bt >= 0) {
+    video_box->crop_h = video_box->in_height - (bt);
+  } else if (bb < 0 && bt < 0) {
+    video_box->crop_h = video_box->in_height;
+  }
+
+  GST_DEBUG_OBJECT (video_box, "Borders are: L:%d, R:%d, T:%d, B:%d", bl, br,
+      bt, bb);
+
+  video_box->dest_x = video_box->src_x = 0;
+  video_box->dest_y = video_box->src_y = 0;
+
+  /* Top border */
+  if (bt < 0) {
+    video_box->dest_y = -bt;
+  } else {
+    video_box->src_y = bt;
+  }
+
+  /* Left border */
+  if (bl < 0) {
+    video_box->dest_x = -bl;
+  } else {
+    video_box->src_x = bl;
+  }
+
   return res;
 }
 
@@ -3159,71 +3210,30 @@ gst_video_box_process (GstVideoBox * video_box, GstVideoFrame * in,
   guint b_alpha = CLAMP (video_box->border_alpha * 256, 0, 255);
   guint i_alpha = CLAMP (video_box->alpha * 256, 0, 255);
   GstVideoBoxFill fill_type = video_box->fill_type;
-  gint br, bl, bt, bb, crop_w, crop_h;
+  gint br, bl, bt, bb;
 
-  crop_h = 0;
-  crop_w = 0;
+  GST_LOG_OBJECT (video_box, "Alpha value is: %u (frame) %u (border)",
+      i_alpha, b_alpha);
 
   br = video_box->box_right;
   bl = video_box->box_left;
   bt = video_box->box_top;
   bb = video_box->box_bottom;
 
-  if (br >= 0 && bl >= 0) {
-    crop_w = video_box->in_width - (br + bl);
-  } else if (br >= 0 && bl < 0) {
-    crop_w = video_box->in_width - (br);
-  } else if (br < 0 && bl >= 0) {
-    crop_w = video_box->in_width - (bl);
-  } else if (br < 0 && bl < 0) {
-    crop_w = video_box->in_width;
-  }
-
-  if (bb >= 0 && bt >= 0) {
-    crop_h = video_box->in_height - (bb + bt);
-  } else if (bb >= 0 && bt < 0) {
-    crop_h = video_box->in_height - (bb);
-  } else if (bb < 0 && bt >= 0) {
-    crop_h = video_box->in_height - (bt);
-  } else if (bb < 0 && bt < 0) {
-    crop_h = video_box->in_height;
-  }
-
-  GST_DEBUG_OBJECT (video_box, "Borders are: L:%d, R:%d, T:%d, B:%d", bl, br,
-      bt, bb);
-  GST_DEBUG_OBJECT (video_box, "Alpha value is: %u (frame) %u (border)",
-      i_alpha, b_alpha);
-
-  if (crop_h < 0 || crop_w < 0) {
+  if (video_box->crop_h < 0 || video_box->crop_w < 0) {
     video_box->fill (fill_type, b_alpha, out, video_box->out_sdtv);
   } else if (bb == 0 && bt == 0 && br == 0 && bl == 0) {
     video_box->copy (i_alpha, out, video_box->out_sdtv, 0, 0, in,
-        video_box->in_sdtv, 0, 0, crop_w, crop_h);
+        video_box->in_sdtv, 0, 0, video_box->crop_w, video_box->crop_h);
   } else {
-    gint src_x = 0, src_y = 0;
-    gint dest_x = 0, dest_y = 0;
-
     /* Fill everything if a border should be added somewhere */
     if (bt < 0 || bb < 0 || br < 0 || bl < 0)
       video_box->fill (fill_type, b_alpha, out, video_box->out_sdtv);
 
-    /* Top border */
-    if (bt < 0) {
-      dest_y += -bt;
-    } else {
-      src_y += bt;
-    }
-
-    /* Left border */
-    if (bl < 0) {
-      dest_x += -bl;
-    } else {
-      src_x += bl;
-    }
-
     /* Frame */
-    video_box->copy (i_alpha, out, video_box->out_sdtv, dest_x, dest_y,
-        in, video_box->in_sdtv, src_x, src_y, crop_w, crop_h);
+    video_box->copy (i_alpha, out, video_box->out_sdtv, video_box->dest_x,
+        video_box->dest_y, in, video_box->in_sdtv, video_box->src_x,
+        video_box->src_y, video_box->crop_w, video_box->crop_h);
   }
 
   GST_LOG_OBJECT (video_box, "image created");
