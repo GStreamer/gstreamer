@@ -68,6 +68,9 @@
 GST_DEBUG_CATEGORY_STATIC (videobox_debug);
 #define GST_CAT_DEFAULT videobox_debug
 
+static GQuark _size_quark;
+static GQuark _colorspace_quark;
+
 /* From videotestsrc.c */
 static const guint8 yuv_sdtv_colors_Y[VIDEO_BOX_FILL_LAST] =
     { 16, 145, 41, 81, 210, 235 };
@@ -2430,6 +2433,9 @@ static gboolean gst_video_box_set_info (GstVideoFilter * vfilter, GstCaps * in,
     GstVideoInfo * in_info, GstCaps * out, GstVideoInfo * out_info);
 static GstFlowReturn gst_video_box_transform_frame (GstVideoFilter * vfilter,
     GstVideoFrame * in_frame, GstVideoFrame * out_frame);
+static gboolean gst_video_box_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
+
 
 #define GST_TYPE_VIDEO_BOX_FILL (gst_video_box_fill_get_type())
 static GType
@@ -2517,11 +2523,18 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
       g_param_spec_boolean ("autocrop", "Auto crop",
           "Auto crop", FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+
+  _size_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_SIZE_STR);
+  _colorspace_quark =
+      g_quark_from_static_string (GST_META_TAG_VIDEO_COLORSPACE_STR);
+
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_video_box_before_transform);
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_box_transform_caps);
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_video_box_src_event);
+  trans_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_video_box_transform_meta);
 
   vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_video_box_set_info);
   vfilter_class->transform_frame =
@@ -3267,6 +3280,81 @@ gst_video_box_transform_frame (GstVideoFilter * vfilter,
   g_mutex_unlock (&video_box->mutex);
   return GST_FLOW_OK;
 }
+
+static gboolean
+gst_video_box_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
+{
+  GstVideoBox *video_box = GST_VIDEO_BOX (trans);
+  GstVideoFilter *video_filter = GST_VIDEO_FILTER (trans);
+  const GstMetaInfo *info = meta->info;
+  const gchar *const *tags;
+  const gchar *const *curr = NULL;
+  gboolean should_copy = TRUE;
+  const gchar *const valid_tags[] = {
+    GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR,
+    NULL
+  };
+
+  tags = gst_meta_api_type_get_tags (info->api);
+
+  /* No specific tags, we are good to copy */
+  if (!tags) {
+    return TRUE;
+  }
+
+  if (video_box->in_format != video_box->out_format &&
+      gst_meta_api_type_has_tag (info->api, _colorspace_quark)) {
+    /* don't copy colorspace specific metadata, FIXME, we need a MetaTransform
+     * for the colorspace metadata. */
+    return FALSE;
+  }
+
+  /* We are only changing size, we can preserve other metas tagged as
+     orientation and colorspace */
+  for (curr = tags; *curr; ++curr) {
+
+    /* We dont handle any other tag */
+    if (!g_strv_contains (valid_tags, *curr)) {
+      should_copy = FALSE;
+      break;
+    }
+  }
+
+  /* Cant handle the tags in this meta, let the parent class handle it */
+  if (!should_copy) {
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans,
+        outbuf, meta, inbuf);
+  }
+
+  /* This meta is size sensitive, try to transform it accordingly */
+  if (gst_meta_api_type_has_tag (info->api, _size_quark)) {
+    if (info->transform_func) {
+      GstVideoMetaTransformMatrix trans_matrix;
+      const GstVideoRectangle in_rectangle = { video_box->src_x,
+        video_box->src_y, video_box->crop_w, video_box->crop_h
+      };
+      const GstVideoRectangle out_rectangle =
+          { video_box->dest_x, video_box->dest_y,
+        video_box->crop_w, video_box->crop_h
+      };
+
+      gst_video_meta_transform_matrix_init (&trans_matrix,
+          &video_filter->in_info, &in_rectangle, &video_filter->out_info,
+          &out_rectangle);
+
+      info->transform_func (outbuf, meta, inbuf,
+          gst_video_meta_transform_matrix_get_quark (), &trans_matrix);
+    }
+    return FALSE;
+  }
+
+  /* No need to transform, we can safely copy this meta */
+  return TRUE;
+}
+
 
 /* FIXME: 0.11 merge with videocrop plugin */
 static gboolean
