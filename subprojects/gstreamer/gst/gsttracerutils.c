@@ -130,10 +130,11 @@ gst_tracer_utils_create_tracer (GstTracerFactory * factory, const gchar * name,
 {
   gchar *available_props = NULL;
   GObjectClass *gobject_class = g_type_class_ref (factory->type);
-  GstTracer *tracer;
+  GstTracer *tracer = NULL;
   const gchar **names = NULL;
   GValue *values = NULL;
   gint n_properties = 1;
+  GstStructure *structure = NULL;
 
   if (gst_tracer_class_uses_structure_params (GST_TRACER_CLASS (gobject_class))) {
     GST_DEBUG ("Use structure parameters for %s", params);
@@ -144,7 +145,7 @@ gst_tracer_utils_create_tracer (GstTracerFactory * factory, const gchar * name,
     }
 
     gchar *struct_str = g_strdup_printf ("%s,%s", name, params);
-    GstStructure *structure = gst_structure_from_string (struct_str, NULL);
+    structure = gst_structure_from_string (struct_str, NULL);
     g_free (struct_str);
 
     if (!structure) {
@@ -198,8 +199,6 @@ gst_tracer_utils_create_tracer (GstTracerFactory * factory, const gchar * name,
         goto done;
       }
     }
-
-    g_type_class_unref (gobject_class);
   } else {
     names = g_new0 (const gchar *, n_properties);
     names[0] = (const gchar *) "params";
@@ -215,20 +214,32 @@ create:
       GST_TRACER (g_object_new_with_properties (factory->type,
           n_properties, names, values));
 
-  for (gint j = 0; j < n_properties; j++) {
-    g_value_unset (&values[j]);
+done:
+  g_free (available_props);
+
+  if (structure)
+    gst_structure_free (structure);
+
+  if (values) {
+    for (gint j = 0; j < n_properties; j++) {
+      if (G_VALUE_TYPE (&values[j]) != G_TYPE_INVALID)
+        g_value_unset (&values[j]);
+    }
   }
+
   g_free (names);
   g_free (values);
 
-  /* Clear floating flag */
-  gst_object_ref_sink (tracer);
+  if (tracer) {
+    /* Clear floating flag */
+    gst_object_ref_sink (tracer);
 
-  /* tracers register them self to the hooks */
-  gst_object_unref (tracer);
+    /* tracers register them self to the hooks */
+    gst_object_unref (tracer);
 
-done:
-  g_free (available_props);
+  }
+
+  g_type_class_unref (gobject_class);
 }
 
 /* Initialize the tracing system */
