@@ -70,6 +70,8 @@
 GST_DEBUG_CATEGORY_STATIC (videocrop_debug);
 #define GST_CAT_DEFAULT videocrop_debug
 
+static GQuark _size_quark;
+
 enum
 {
   PROP_0,
@@ -112,6 +114,8 @@ static gboolean gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
     GstVideoInfo * in_info, GstCaps * out, GstVideoInfo * out_info);
 static GstFlowReturn gst_video_crop_transform_frame (GstVideoFilter * vfilter,
     GstVideoFrame * in_frame, GstVideoFrame * out_frame);
+static gboolean gst_video_crop_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 
 static gboolean gst_video_crop_decide_allocation (GstBaseTransform * trans,
     GstQuery * query);
@@ -195,12 +199,16 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
       "Crops video into a user-defined region",
       "Tim-Philipp Müller <tim centricular net>");
 
+  _size_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_SIZE_STR);
+
   basetransform_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_video_crop_before_transform);
   basetransform_class->transform_ip_on_passthrough = FALSE;
   basetransform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_crop_transform_caps);
   basetransform_class->src_event = GST_DEBUG_FUNCPTR (gst_video_crop_src_event);
+  basetransform_class->transform_meta = gst_video_crop_transform_meta;
+
   basetransform_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_video_crop_decide_allocation);
   basetransform_class->propose_allocation =
@@ -941,6 +949,71 @@ gst_video_crop_set_crop (GstVideoCrop * vcrop, gint new_value, gint * prop)
     *prop = new_value;
     vcrop->need_update = TRUE;
   }
+}
+
+static gboolean
+gst_video_crop_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
+{
+  GstVideoCrop *video_crop = GST_VIDEO_CROP (trans);
+  const GstMetaInfo *info = meta->info;
+  const gchar *const *tags;
+  const gchar *const *curr = NULL;
+  gboolean should_copy = TRUE;
+  const gchar *const valid_tags[] = {
+    GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR,
+    NULL
+  };
+
+  tags = gst_meta_api_type_get_tags (info->api);
+
+  /* No specific tags, we are good to copy */
+  if (!tags) {
+    return TRUE;
+  }
+
+  /* We are only changing size, we can preserve other metas tagged as
+     orientation and colorspace */
+  for (curr = tags; *curr; ++curr) {
+    /* We dont handle any other tag */
+    if (!g_strv_contains (valid_tags, *curr)) {
+      should_copy = FALSE;
+      break;
+    }
+  }
+  /* Cant handle the tags in this meta, let the parent class handle it */
+  if (!should_copy) {
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans,
+        outbuf, meta, inbuf);
+  }
+
+  /* This meta is size sensitive, try to transform it accordingly */
+  if (gst_meta_api_type_has_tag (info->api, _size_quark)) {
+    if (info->transform_func) {
+      GstVideoMetaTransformMatrix trans_matrix;
+      const GstVideoRectangle in_rectangle = { video_crop->crop_left,
+        video_crop->crop_top, GST_VIDEO_INFO_WIDTH (&video_crop->out_info),
+        GST_VIDEO_INFO_HEIGHT (&video_crop->out_info)
+      };
+      const GstVideoRectangle out_rectangle = { 0, 0,
+        GST_VIDEO_INFO_WIDTH (&video_crop->out_info),
+        GST_VIDEO_INFO_HEIGHT (&video_crop->out_info)
+      };
+
+      gst_video_meta_transform_matrix_init (&trans_matrix,
+          &video_crop->in_info, &in_rectangle,
+          &video_crop->out_info, &out_rectangle);
+
+      info->transform_func (outbuf, meta, inbuf,
+          gst_video_meta_transform_matrix_get_quark (), &trans_matrix);
+    }
+    return FALSE;
+  }
+
+  /* No need to transform, we can safely copy this meta */
+  return TRUE;
 }
 
 static void
