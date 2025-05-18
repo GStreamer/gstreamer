@@ -14586,22 +14586,22 @@ gst_video_overlay_composition_copy().</doc>
       </member>
     </enumeration>
     <record name="VideoRectangle" c:type="GstVideoRectangle">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideosink.h">Helper structure representing a rectangular area.</doc>
-      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideosink.h"/>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.h">Helper structure representing a rectangular area.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.h"/>
       <field name="x" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideosink.h">X coordinate of rectangle's top-left point</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.h">X coordinate of rectangle's top-left point</doc>
         <type name="gint" c:type="gint"/>
       </field>
       <field name="y" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideosink.h">Y coordinate of rectangle's top-left point</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.h">Y coordinate of rectangle's top-left point</doc>
         <type name="gint" c:type="gint"/>
       </field>
       <field name="w" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideosink.h">width of the rectangle</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.h">width of the rectangle</doc>
         <type name="gint" c:type="gint"/>
       </field>
       <field name="h" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideosink.h">height of the rectangle</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.h">height of the rectangle</doc>
         <type name="gint" c:type="gint"/>
       </field>
     </record>
