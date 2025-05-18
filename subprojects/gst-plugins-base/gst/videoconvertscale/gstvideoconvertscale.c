@@ -139,8 +139,6 @@ GST_DEBUG_CATEGORY_STATIC (CAT_PERFORMANCE);
 #define DEFAULT_PROP_PRIMARIES_MODE GST_VIDEO_PRIMARIES_MODE_NONE
 #define DEFAULT_PROP_N_THREADS 1
 
-static GQuark _colorspace_quark;
-
 enum
 {
   PROP_0,
@@ -288,8 +286,6 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
   GST_DEBUG_CATEGORY_INIT (video_convertscale_debug, "videoconvertscale", 0,
       "videoconvertscale element");
   GST_DEBUG_CATEGORY_GET (CAT_PERFORMANCE, "GST_PERFORMANCE");
-
-  _colorspace_quark = g_quark_from_static_string ("colorspace");
 
   gobject_class->finalize =
       (GObjectFinalizeFunc) gst_video_convert_scale_finalize;
@@ -705,39 +701,17 @@ gst_video_convert_scale_transform_meta (GstBaseTransform * trans,
 {
   GstVideoFilter *videofilter = GST_VIDEO_FILTER (trans);
   const GstMetaInfo *info = meta->info;
-  const gchar *const *tags;
-  const gchar *const *curr = NULL;
   gboolean should_copy = TRUE;
-  const gchar *const valid_tags[] = {
+  const gchar *valid_tags[] = {
     GST_META_TAG_VIDEO_STR,
     GST_META_TAG_VIDEO_ORIENTATION_STR,
     GST_META_TAG_VIDEO_SIZE_STR,
+    /* don't copy colorspace specific metadata, FIXME, we need a MetaTransform
+     * for the colorspace metadata. */
     NULL
   };
 
-  tags = gst_meta_api_type_get_tags (info->api);
-
-  /* No specific tags, we are good to copy */
-  if (!tags) {
-    return TRUE;
-  }
-
-  if (gst_meta_api_type_has_tag (info->api, _colorspace_quark)) {
-    /* don't copy colorspace specific metadata, FIXME, we need a MetaTransform
-     * for the colorspace metadata. */
-    return FALSE;
-  }
-
-  /* We are only changing size, we can preserve other metas tagged as
-     orientation and colorspace */
-  for (curr = tags; *curr; ++curr) {
-
-    /* We dont handle any other tag */
-    if (!g_strv_contains (valid_tags, *curr)) {
-      should_copy = FALSE;
-      break;
-    }
-  }
+  should_copy = gst_meta_api_type_tags_contain_only (info->api, valid_tags);
 
   /* Cant handle the tags in this meta, let the parent class handle it */
   if (!should_copy) {
