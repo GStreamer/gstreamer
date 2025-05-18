@@ -186,6 +186,7 @@ static GstStaticCaps gst_video_convert_scale_format_caps =
 
 static GQuark _size_quark;
 static GQuark _scale_quark;
+static GQuark _matrix_quark;
 
 #define GST_TYPE_VIDEO_SCALE_METHOD (gst_video_scale_method_get_type())
 static GType
@@ -408,6 +409,7 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
 
   _size_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_SIZE_STR);
   _scale_quark = gst_video_meta_transform_scale_get_quark ();
+  _matrix_quark = gst_video_meta_transform_matrix_get_quark ();
 
   gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_SCALE_METHOD, 0);
   trans_class->transform_caps =
@@ -774,6 +776,8 @@ gst_video_convert_scale_transform_meta (GstBaseTransform * trans,
     GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
 {
   GstVideoFilter *videofilter = GST_VIDEO_FILTER (trans);
+  GstVideoConvertScale *self = GST_VIDEO_CONVERT_SCALE (trans);
+  GstVideoConvertScalePrivate *priv = PRIV (self);
   const GstMetaInfo *info = meta->info;
   gboolean should_copy = TRUE;
   const gchar *valid_tags[] = {
@@ -795,11 +799,28 @@ gst_video_convert_scale_transform_meta (GstBaseTransform * trans,
 
   /* This meta is size sensitive, try to transform it accordingly */
   if (gst_meta_api_type_has_tag (info->api, _size_quark)) {
-    GstVideoMetaTransform trans =
-        { &videofilter->in_info, &videofilter->out_info };
+    if (info->transform_func) {
+      GstVideoMetaTransformMatrix trans_matrix;
+      GstVideoMetaTransform trans =
+          { &videofilter->in_info, &videofilter->out_info };
+      const GstVideoRectangle in_rectangle = { 0, 0,
+        GST_VIDEO_INFO_WIDTH (&videofilter->in_info),
+        GST_VIDEO_INFO_HEIGHT (&videofilter->in_info)
+      };
+      const GstVideoRectangle out_rectangle = {
+        priv->borders_w / 2, priv->borders_h / 2,
+        GST_VIDEO_INFO_WIDTH (&videofilter->out_info) - priv->borders_w,
+        GST_VIDEO_INFO_HEIGHT (&videofilter->out_info) - priv->borders_h
+      };
 
-    if (info->transform_func)
-      info->transform_func (outbuf, meta, inbuf, _scale_quark, &trans);
+      gst_video_meta_transform_matrix_init (&trans_matrix,
+          &videofilter->in_info,
+          &in_rectangle, &videofilter->out_info, &out_rectangle);
+
+      if (!info->transform_func (outbuf, meta, inbuf, _matrix_quark,
+              &trans_matrix))
+        info->transform_func (outbuf, meta, inbuf, _scale_quark, &trans);
+    }
     return FALSE;
   }
 
