@@ -357,12 +357,12 @@ static gboolean
 gst_analytics_relation_meta_transform (GstBuffer * transbuf,
     GstMeta * meta, GstBuffer * buffer, GQuark type, gpointer data)
 {
-
   GST_CAT_TRACE (GST_CAT_AN_RELATION, "meta transform %s",
       g_quark_to_string (type));
 
   if (GST_META_TRANSFORM_IS_COPY (type) ||
-      GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
+      GST_VIDEO_META_TRANSFORM_IS_SCALE (type) ||
+      GST_VIDEO_META_TRANSFORM_IS_MATRIX (type)) {
     GstAnalyticsRelationMeta *rmeta = (GstAnalyticsRelationMeta *) meta;
     GstAnalyticsRelationMeta *new = (GstAnalyticsRelationMeta *)
         gst_buffer_get_meta (transbuf, GST_ANALYTICS_RELATION_META_API_TYPE);

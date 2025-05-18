@@ -75,7 +75,21 @@ static gboolean
 gst_analytics_od_mtd_meta_transform (GstBuffer * transbuf,
     GstAnalyticsMtd * transmtd, GstBuffer * buffer, GQuark type, gpointer data)
 {
-  if (GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
+  if (GST_VIDEO_META_TRANSFORM_IS_MATRIX (type)) {
+    GstVideoMetaTransformMatrix *trans = data;
+    GstAnalyticsODMtdData *oddata =
+        gst_analytics_relation_meta_get_mtd_data (transmtd->meta,
+        transmtd->id);
+    GstVideoRectangle rect = { oddata->x, oddata->y, oddata->w, oddata->h };
+
+    if (!gst_video_meta_transform_matrix_rectangle (trans, &rect, FALSE))
+      return FALSE;
+
+    oddata->x = rect.x;
+    oddata->y = rect.y;
+    oddata->w = rect.w;
+    oddata->h = rect.h;
+  } else if (GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
     GstVideoMetaTransform *trans = data;
     gint ow, oh, nw, nh;
     GstAnalyticsODMtdData *oddata;
@@ -99,6 +113,8 @@ gst_analytics_od_mtd_meta_transform (GstBuffer * transbuf,
 
     oddata->h *= nh;
     oddata->h /= oh;
+  } else {
+    return FALSE;
   }
 
   return TRUE;
