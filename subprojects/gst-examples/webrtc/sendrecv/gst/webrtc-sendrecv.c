@@ -6,6 +6,7 @@
  *
  * Author: Nirbheek Chauhan <nirbheek@centricular.com>
  */
+#include <gio/gio.h>
 #include <gst/gst.h>
 #include <gst/sdp/sdp.h>
 #include <gst/rtp/rtp.h>
@@ -54,7 +55,7 @@ static enum AppState app_state = 0;
 static gchar *peer_id = NULL;
 static gchar *our_id = NULL;
 static const gchar *server_url = "wss://webrtc.gstreamer.net:8443";
-static gboolean disable_ssl = FALSE;
+static gboolean strict_ssl = TRUE;
 static gboolean remote_is_offerer = FALSE;
 static gboolean custom_ice = FALSE;
 
@@ -65,7 +66,7 @@ static GOptionEntry entries[] = {
       "String ID that the peer can use to connect to us", "ID"},
   {"server", 0, 0, G_OPTION_ARG_STRING, &server_url,
       "Signalling server to connect to", "URL"},
-  {"disable-ssl", 0, 0, G_OPTION_ARG_NONE, &disable_ssl, "Disable ssl", NULL},
+  {"strict-ssl", 0, 0, G_OPTION_ARG_NONE, &strict_ssl, "Strict SSL", NULL},
   {"remote-offerer", 0, 0, G_OPTION_ARG_NONE, &remote_is_offerer,
       "Request that the peer generate the offer and we'll answer", NULL},
   {"custom-ice", 0, 0, G_OPTION_ARG_NONE, &custom_ice,
@@ -973,6 +974,17 @@ on_server_connected (SoupSession * session, GAsyncResult * res,
   register_with_server ();
 }
 
+#if SOUP_CHECK_VERSION(3,0,0)
+static gboolean
+accept_certificate_cb (SoupMessage * msg G_GNUC_UNUSED,
+    GTlsCertificate * tls_cert G_GNUC_UNUSED,
+    GTlsCertificateFlags tls_errors G_GNUC_UNUSED,
+    gpointer user_data G_GNUC_UNUSED)
+{
+  return !strict_ssl;
+}
+#endif
+
 /*
  * Connect to the signalling server. This is the entrypoint for everything else.
  */
@@ -981,13 +993,16 @@ connect_to_websocket_server_async (void)
 {
   SoupLogger *logger;
   SoupMessage *message;
-  SoupSession *session;
+#if SOUP_CHECK_VERSION(3,0,0)
+  SoupSession *session = soup_session_new ();
+#else
   const char *https_aliases[] = { "wss", NULL };
-
-  session = soup_session_new_with_options ("ssl-strict", !disable_ssl,
+  SoupSession *session =
+      soup_session_new_with_options ("ssl-strict", strict_ssl,
       "ssl-use-system-ca-file", TRUE,
       //"ssl-ca-file", "/etc/ssl/certs/ca-bundle.crt",
       "http-aliases", https_aliases, NULL);
+#endif
 
 #if SOUP_CHECK_VERSION(3,0,0)
   logger = soup_logger_new (SOUP_LOGGER_LOG_BODY);
@@ -998,6 +1013,10 @@ connect_to_websocket_server_async (void)
   g_object_unref (logger);
 
   message = soup_message_new (SOUP_METHOD_GET, server_url);
+#if SOUP_CHECK_VERSION(3,0,0)
+  g_signal_connect (message, "accept-certificate",
+      G_CALLBACK (accept_certificate_cb), NULL);
+#endif
 
   gst_print ("Connecting to server...\n");
 
@@ -1075,7 +1094,7 @@ main (int argc, char *argv[])
     GstUri *uri = gst_uri_from_string (server_url);
     if (g_strcmp0 ("localhost", gst_uri_get_host (uri)) == 0 ||
         g_strcmp0 ("127.0.0.1", gst_uri_get_host (uri)) == 0)
-      disable_ssl = TRUE;
+      strict_ssl = FALSE;
     gst_uri_unref (uri);
   }
 
