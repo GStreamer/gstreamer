@@ -1337,7 +1337,7 @@ gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
     nw = GST_VIDEO_INFO_WIDTH (trans->out_info);
     oh = GST_VIDEO_INFO_HEIGHT (trans->in_info);
     nh = GST_VIDEO_INFO_HEIGHT (trans->out_info);
-    GST_DEBUG ("scaling region of interest metadata %dx%d -> %dx%d", ow, oh, nw,
+    GST_LOG ("scaling region of interest metadata %dx%d -> %dx%d", ow, oh, nw,
         nh);
 
     smeta = (GstVideoRegionOfInterestMeta *) meta;
@@ -1351,9 +1351,9 @@ gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
     dmeta->id = smeta->id;
     dmeta->parent_id = smeta->parent_id;
 
-    GST_DEBUG ("region of interest (id:%d, parent id:%d) offset %dx%d -> %dx%d",
+    GST_LOG ("region of interest (id:%d, parent id:%d) offset %dx%d -> %dx%d",
         smeta->id, smeta->parent_id, smeta->x, smeta->y, dmeta->x, dmeta->y);
-    GST_DEBUG ("region of interest size   %dx%d -> %dx%d", smeta->w, smeta->h,
+    GST_LOG ("region of interest size   %dx%d -> %dx%d", smeta->w, smeta->h,
         dmeta->w, dmeta->h);
   } else {
     /* return FALSE, if transform type is not supported */
