@@ -2547,10 +2547,6 @@ gst_video_box_init (GstVideoBox * video_box)
   video_box->box_left = DEFAULT_LEFT;
   video_box->box_top = DEFAULT_TOP;
   video_box->box_bottom = DEFAULT_BOTTOM;
-  video_box->crop_right = 0;
-  video_box->crop_left = 0;
-  video_box->crop_top = 0;
-  video_box->crop_bottom = 0;
   video_box->fill_type = DEFAULT_FILL_TYPE;
   video_box->alpha = DEFAULT_ALPHA;
   video_box->border_alpha = DEFAULT_BORDER_ALPHA;
@@ -2569,43 +2565,15 @@ gst_video_box_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LEFT:
       video_box->box_left = g_value_get_int (value);
-      if (video_box->box_left < 0) {
-        video_box->border_left = -video_box->box_left;
-        video_box->crop_left = 0;
-      } else {
-        video_box->border_left = 0;
-        video_box->crop_left = video_box->box_left;
-      }
       break;
     case PROP_RIGHT:
       video_box->box_right = g_value_get_int (value);
-      if (video_box->box_right < 0) {
-        video_box->border_right = -video_box->box_right;
-        video_box->crop_right = 0;
-      } else {
-        video_box->border_right = 0;
-        video_box->crop_right = video_box->box_right;
-      }
       break;
     case PROP_TOP:
       video_box->box_top = g_value_get_int (value);
-      if (video_box->box_top < 0) {
-        video_box->border_top = -video_box->box_top;
-        video_box->crop_top = 0;
-      } else {
-        video_box->border_top = 0;
-        video_box->crop_top = video_box->box_top;
-      }
       break;
     case PROP_BOTTOM:
       video_box->box_bottom = g_value_get_int (value);
-      if (video_box->box_bottom < 0) {
-        video_box->border_bottom = -video_box->box_bottom;
-        video_box->crop_bottom = 0;
-      } else {
-        video_box->border_bottom = 0;
-        video_box->crop_bottom = video_box->box_bottom;
-      }
       break;
     case PROP_FILL_TYPE:
       video_box->fill_type = g_value_get_enum (value);
@@ -2638,13 +2606,6 @@ gst_video_box_autocrop (GstVideoBox * video_box)
   gint crop_h = video_box->in_height - video_box->out_height;
 
   video_box->box_left = crop_w / 2;
-  if (video_box->box_left < 0) {
-    video_box->border_left = -video_box->box_left;
-    video_box->crop_left = 0;
-  } else {
-    video_box->border_left = 0;
-    video_box->crop_left = video_box->box_left;
-  }
 
   /* Round down/up for odd width differences */
   if (crop_w < 0)
@@ -2653,22 +2614,7 @@ gst_video_box_autocrop (GstVideoBox * video_box)
     crop_w += 1;
 
   video_box->box_right = crop_w / 2;
-  if (video_box->box_right < 0) {
-    video_box->border_right = -video_box->box_right;
-    video_box->crop_right = 0;
-  } else {
-    video_box->border_right = 0;
-    video_box->crop_right = video_box->box_right;
-  }
-
   video_box->box_top = crop_h / 2;
-  if (video_box->box_top < 0) {
-    video_box->border_top = -video_box->box_top;
-    video_box->crop_top = 0;
-  } else {
-    video_box->border_top = 0;
-    video_box->crop_top = video_box->box_top;
-  }
 
   /* Round down/up for odd height differences */
   if (crop_h < 0)
@@ -2676,14 +2622,6 @@ gst_video_box_autocrop (GstVideoBox * video_box)
   else
     crop_h += 1;
   video_box->box_bottom = crop_h / 2;
-
-  if (video_box->box_bottom < 0) {
-    video_box->border_bottom = -video_box->box_bottom;
-    video_box->crop_bottom = 0;
-  } else {
-    video_box->border_bottom = 0;
-    video_box->crop_bottom = video_box->box_bottom;
-  }
 }
 
 static void
