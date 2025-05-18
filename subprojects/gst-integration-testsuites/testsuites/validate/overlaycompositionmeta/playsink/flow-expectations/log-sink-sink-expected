@@ -1,0 +1,220 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_SELECT, group-id=(uint)1;
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_SELECT, group-id=(uint)1;
+event tag: GstTagList-global, taglist=(taglist)"taglist\,\ datetime\=\(datetime\)2025-05-18T10:42:13Z\,\ container-format\=\(string\)Matroska\;";
+event tag: GstTagList-global, taglist=(taglist)"taglist\,\ datetime\=\(datetime\)2025-05-18T10:42:13Z\,\ container-format\=\(string\)Matroska\;";
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ language-code\=\(string\)und\,\ container-specific-track-id\=\(string\)2\,\ bitrate\=\(uint\)73\,\ extended-comment\=\(string\)\{\ \"DURATION\\\=00:00:03.500000000\"\,\ \"NUMBER_OF_FRAMES\\\=4\"\,\ \"NUMBER_OF_BYTES\\\=32\"\,\ \"_STATISTICS_WRITING_APP\\\=mkvmerge\\\ v92.0\\\ \\\(\\\'Everglow\\\'\\\)\\\ 64-bit\"\,\ \"_STATISTICS_WRITING_DATE_UTC\\\=2025-05-18\\\ 10:42:13\"\,\ \"_STATISTICS_TAGS\\\=BPS\\\ DURATION\\\ NUMBER_OF_FRAMES\\\ NUMBER_OF_BYTES\"\ \}\;";
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ language-code\=\(string\)und\,\ container-specific-track-id\=\(string\)2\,\ bitrate\=\(uint\)73\,\ extended-comment\=\(string\)\{\ \"DURATION\\\=00:00:03.500000000\"\,\ \"NUMBER_OF_FRAMES\\\=4\"\,\ \"NUMBER_OF_BYTES\\\=32\"\,\ \"_STATISTICS_WRITING_APP\\\=mkvmerge\\\ v92.0\\\ \\\(\\\'Everglow\\\'\\\)\\\ 64-bit\"\,\ \"_STATISTICS_WRITING_DATE_UTC\\\=2025-05-18\\\ 10:42:13\"\,\ \"_STATISTICS_TAGS\\\=BPS\\\ DURATION\\\ NUMBER_OF_FRAMES\\\ NUMBER_OF_BYTES\"\ \}\;";
+event caps: video/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition), colorimetry=(string)bt601, format=(string)I420, framerate=(fraction)30/1, height=(int)240, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, width=(int)320;
+event caps: video/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition), colorimetry=(string)bt601, format=(string)I420, framerate=(fraction)30/1, height=(int)240, interlace-mode=(string)progressive, pixel-aspect-ratio=(fraction)1/1, width=(int)320;
+event tag: GstTagList-global, taglist=(taglist)"taglist\,\ datetime\=\(datetime\)2025-05-18T10:42:13Z\,\ container-format\=\(string\)Matroska\;";
+event tag: GstTagList-global, taglist=(taglist)"taglist\,\ datetime\=\(datetime\)2025-05-18T10:42:13Z\,\ container-format\=\(string\)Matroska\;";
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)H264\,\ container-specific-track-id\=\(string\)1\,\ encoder\=\(string\)x264\,\ bitrate\=\(uint\)4987\,\ extended-comment\=\(string\)\{\ \"DURATION\\\=00:00:03.333000000\"\,\ \"NUMBER_OF_FRAMES\\\=100\"\,\ \"NUMBER_OF_BYTES\\\=2078\"\,\ \"_STATISTICS_WRITING_APP\\\=mkvmerge\\\ v92.0\\\ \\\(\\\'Everglow\\\'\\\)\\\ 64-bit\"\,\ \"_STATISTICS_WRITING_DATE_UTC\\\=2025-05-18\\\ 10:42:13\"\,\ \"_STATISTICS_TAGS\\\=BPS\\\ DURATION\\\ NUMBER_OF_FRAMES\\\ NUMBER_OF_BYTES\"\ \}\;";
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)H264\,\ container-specific-track-id\=\(string\)1\,\ encoder\=\(string\)x264\,\ bitrate\=\(uint\)4987\,\ extended-comment\=\(string\)\{\ \"DURATION\\\=00:00:03.333000000\"\,\ \"NUMBER_OF_FRAMES\\\=100\"\,\ \"NUMBER_OF_BYTES\\\=2078\"\,\ \"_STATISTICS_WRITING_APP\\\=mkvmerge\\\ v92.0\\\ \\\(\\\'Everglow\\\'\\\)\\\ 64-bit\"\,\ \"_STATISTICS_WRITING_DATE_UTC\\\=2025-05-18\\\ 10:42:13\"\,\ \"_STATISTICS_TAGS\\\=BPS\\\ DURATION\\\ NUMBER_OF_FRAMES\\\ NUMBER_OF_BYTES\"\ \}\;";
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000, duration=0:00:03.500000000
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000, duration=0:00:03.500000000
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ \\\(Constrained\\\ Baseline\\\ Profile\\\)\"\,\ container-specific-track-id\=\(string\)1\,\ encoder\=\(string\)x264\,\ bitrate\=\(uint\)4987\,\ extended-comment\=\(string\)\{\ \"DURATION\\\=00:00:03.333000000\"\,\ \"NUMBER_OF_FRAMES\\\=100\"\,\ \"NUMBER_OF_BYTES\\\=2078\"\,\ \"_STATISTICS_WRITING_APP\\\=mkvmerge\\\ v92.0\\\ \\\(\\\'Everglow\\\'\\\)\\\ 64-bit\"\,\ \"_STATISTICS_WRITING_DATE_UTC\\\=2025-05-18\\\ 10:42:13\"\,\ \"_STATISTICS_TAGS\\\=BPS\\\ DURATION\\\ NUMBER_OF_FRAMES\\\ NUMBER_OF_BYTES\"\ \}\;";
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ \\\(Constrained\\\ Baseline\\\ Profile\\\)\"\,\ container-specific-track-id\=\(string\)1\,\ encoder\=\(string\)x264\,\ bitrate\=\(uint\)4987\,\ extended-comment\=\(string\)\{\ \"DURATION\\\=00:00:03.333000000\"\,\ \"NUMBER_OF_FRAMES\\\=100\"\,\ \"NUMBER_OF_BYTES\\\=2078\"\,\ \"_STATISTICS_WRITING_APP\\\=mkvmerge\\\ v92.0\\\ \\\(\\\'Everglow\\\'\\\)\\\ 64-bit\"\,\ \"_STATISTICS_WRITING_DATE_UTC\\\=2025-05-18\\\ 10:42:13\"\,\ \"_STATISTICS_TAGS\\\=BPS\\\ DURATION\\\ NUMBER_OF_FRAMES\\\ NUMBER_OF_BYTES\"\ \}\;";
+buffer: pts=0:00:00.000000000, dur=0:00:00.033333333, flags=discont, meta=GstVideoMeta, GstVideoSEIUserDataUnregisteredMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.000000000, dur=0:00:00.033333333, flags=discont, meta=GstVideoMeta, GstVideoSEIUserDataUnregisteredMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.033000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.033000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.067000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.067000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.100000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.100000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.133000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.133000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.167000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.167000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.200000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.200000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.233000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.233000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.267000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.267000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ \\\(Constrained\\\ Baseline\\\ Profile\\\)\"\,\ container-specific-track-id\=\(string\)1\,\ encoder\=\(string\)x264\,\ bitrate\=\(uint\)4987\,\ extended-comment\=\(string\)\{\ \"DURATION\\\=00:00:03.333000000\"\,\ \"NUMBER_OF_FRAMES\\\=100\"\,\ \"NUMBER_OF_BYTES\\\=2078\"\,\ \"_STATISTICS_WRITING_APP\\\=mkvmerge\\\ v92.0\\\ \\\(\\\'Everglow\\\'\\\)\\\ 64-bit\"\,\ \"_STATISTICS_WRITING_DATE_UTC\\\=2025-05-18\\\ 10:42:13\"\,\ \"_STATISTICS_TAGS\\\=BPS\\\ DURATION\\\ NUMBER_OF_FRAMES\\\ NUMBER_OF_BYTES\"\ \}\,\ minimum-bitrate\=\(uint\)2640\,\ maximum-bitrate\=\(uint\)2640\;";
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ \\\(Constrained\\\ Baseline\\\ Profile\\\)\"\,\ container-specific-track-id\=\(string\)1\,\ encoder\=\(string\)x264\,\ bitrate\=\(uint\)4987\,\ extended-comment\=\(string\)\{\ \"DURATION\\\=00:00:03.333000000\"\,\ \"NUMBER_OF_FRAMES\\\=100\"\,\ \"NUMBER_OF_BYTES\\\=2078\"\,\ \"_STATISTICS_WRITING_APP\\\=mkvmerge\\\ v92.0\\\ \\\(\\\'Everglow\\\'\\\)\\\ 64-bit\"\,\ \"_STATISTICS_WRITING_DATE_UTC\\\=2025-05-18\\\ 10:42:13\"\,\ \"_STATISTICS_TAGS\\\=BPS\\\ DURATION\\\ NUMBER_OF_FRAMES\\\ NUMBER_OF_BYTES\"\ \}\,\ minimum-bitrate\=\(uint\)2640\,\ maximum-bitrate\=\(uint\)2640\;";
+buffer: pts=0:00:00.300000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.300000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.333000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.333000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.367000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.367000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.400000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.400000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.433000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.433000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.467000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.467000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.500000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.500000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.533000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.533000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.567000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.567000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.600000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.600000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.633000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.633000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.667000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.667000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.700000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.700000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.733000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.733000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.767000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.767000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.800000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.800000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.833000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.833000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.867000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.867000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.900000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.900000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.933000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.933000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:00.967000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:00.967000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.000000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.000000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.033000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.033000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.067000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.067000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.100000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.100000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.133000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.133000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.167000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.167000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.200000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.200000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.233000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.233000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.267000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.267000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.300000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.300000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.333000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.333000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.367000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.367000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.400000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.400000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.433000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.433000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.467000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.467000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.500000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.500000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.533000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.533000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.567000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.567000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.600000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.600000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.633000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.633000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.667000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.667000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.700000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.700000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.733000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.733000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.767000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.767000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.800000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.800000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.833000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.833000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.867000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.867000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.900000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.900000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.933000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.933000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:01.967000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:01.967000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.000000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.000000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.033000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.033000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.067000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.067000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.100000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.100000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.133000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.133000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.167000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.167000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.200000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.200000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.233000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.233000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.267000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.267000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.300000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.300000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.333000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.333000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.367000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.367000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.400000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.400000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.433000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.433000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.467000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.467000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.500000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.500000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.533000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.533000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.567000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.567000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.600000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.600000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.633000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.633000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.667000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.667000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.700000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.700000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.733000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.733000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.767000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.767000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.800000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.800000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.833000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.833000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.867000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.867000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.900000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.900000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.933000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.933000000, dur=0:00:00.033333333, meta=GstVideoMeta
+buffer: pts=0:00:02.967000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:02.967000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.000000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.000000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.033000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.033000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.067000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.067000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.100000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.100000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.133000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.133000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.167000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.167000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.200000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.200000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.233000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.233000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.267000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.267000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.300000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+buffer: pts=0:00:03.300000000, dur=0:00:00.033333333, meta=GstVideoMeta, GstVideoOverlayCompositionMeta
+event eos: (no structure)
+event eos: (no structure)

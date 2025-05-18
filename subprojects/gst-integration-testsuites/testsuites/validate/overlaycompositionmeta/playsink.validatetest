@@ -1,0 +1,8 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    args = {
+         "filesrc location=$(media_dir)/defaults/matroska/h264_srt.mkv ! matroskademux name=demux ! h264parse ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! avdec_h264 ! subtitleoverlay name=overlay ! psink.video_sink  playsink name=psink video-sink=\"fakevideosink name=sink\"   demux. ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! overlay.subtitle_sink ",
+    },
+    configs = {
+       "$(validateflow), pad=sink:sink, record-buffers=true",
+    }
