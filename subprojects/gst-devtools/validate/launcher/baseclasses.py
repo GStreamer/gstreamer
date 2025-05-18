@@ -154,12 +154,13 @@ class Test(Loggable):
         @hard_timeout: Max time the test can take in absolute
         """
         Loggable.__init__(self)
-        self.timeout = timeout * TIMEOUT_FACTOR * options.timeout_factor
+        self.orig_timeout = self.timeout = timeout * TIMEOUT_FACTOR * options.timeout_factor
         if hard_timeout:
             self.hard_timeout = hard_timeout * TIMEOUT_FACTOR
             self.hard_timeout *= options.timeout_factor
         else:
             self.hard_timeout = hard_timeout
+        self.orig_hard_timeout = self.hard_timeout
         self.classname = classname
         self.options = options
         self.application = application_name
@@ -252,6 +253,8 @@ class Test(Loggable):
         self.__env_variable = []
         self.kill_subprocess()
         self.process = None
+        self.timeout = self.orig_timeout
+        self.hard_timeout = self.orig_hard_timeout
 
     def __str__(self):
         string = self.classname
