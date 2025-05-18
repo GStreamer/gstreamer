@@ -1314,11 +1314,10 @@ static gboolean
 gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
     GstBuffer * buffer, GQuark type, gpointer data)
 {
-  GstVideoRegionOfInterestMeta *dmeta, *smeta;
+  GstVideoRegionOfInterestMeta *smeta = (GstVideoRegionOfInterestMeta *) meta;
+  GstVideoRegionOfInterestMeta *dmeta;
 
   if (GST_META_TRANSFORM_IS_COPY (type)) {
-    smeta = (GstVideoRegionOfInterestMeta *) meta;
-
     GST_DEBUG ("copy region of interest metadata");
     dmeta =
         gst_buffer_add_video_region_of_interest_meta_id (dest,
@@ -1330,6 +1329,34 @@ gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
     dmeta->parent_id = smeta->parent_id;
     dmeta->params = g_list_copy_deep (smeta->params,
         (GCopyFunc) gst_structure_copy, NULL);
+  } else if (GST_VIDEO_META_TRANSFORM_IS_MATRIX (type)) {
+    GstVideoMetaTransformMatrix *trans = data;
+    GstVideoRectangle rect = { smeta->x, smeta->y, smeta->w, smeta->h };
+
+    GST_LOG ("Scaling and cropping region of interest metadata %dx%d+%d+%d"
+        " in (%dx%d) -> %dx%d+%d+%d in %dx%d", trans->in_rectangle.w,
+        trans->in_rectangle.h, trans->in_rectangle.x, trans->in_rectangle.y,
+        GST_VIDEO_INFO_WIDTH (trans->in_info),
+        GST_VIDEO_INFO_HEIGHT (trans->in_info), trans->out_rectangle.w,
+        trans->out_rectangle.h, trans->out_rectangle.x,
+        trans->out_rectangle.y, GST_VIDEO_INFO_WIDTH (trans->out_info),
+        GST_VIDEO_INFO_HEIGHT (trans->out_info));
+
+    if (!gst_video_meta_transform_matrix_rectangle_clipped (trans, &rect))
+      return FALSE;
+
+    dmeta = gst_buffer_add_video_region_of_interest_meta_id (dest,
+        smeta->roi_type, rect.x, rect.y, rect.w, rect.h);
+    if (!dmeta)
+      return FALSE;
+
+    dmeta->id = smeta->id;
+    dmeta->parent_id = smeta->parent_id;
+
+    GST_LOG ("region of interest (id:%d, parent id:%d) offset %dx%d -> %dx%d",
+        smeta->id, smeta->parent_id, smeta->x, smeta->y, dmeta->x, dmeta->y);
+    GST_LOG ("region of interest size   %dx%d -> %dx%d", smeta->w, smeta->h,
+        dmeta->w, dmeta->h);
   } else if (GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
     GstVideoMetaTransform *trans = data;
     gint ow, oh, nw, nh;
@@ -1340,7 +1367,6 @@ gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
     GST_LOG ("scaling region of interest metadata %dx%d -> %dx%d", ow, oh, nw,
         nh);
 
-    smeta = (GstVideoRegionOfInterestMeta *) meta;
     dmeta =
         gst_buffer_add_video_region_of_interest_meta_id (dest,
         smeta->roi_type, (smeta->x * nw) / ow, (smeta->y * nh) / oh,
