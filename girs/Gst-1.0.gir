@@ -27326,6 +27326,25 @@ write the result back into @aggregated_params.</doc>
           </parameter>
         </parameters>
       </function>
+      <function name="api_type_tags_contain_only" c:identifier="gst_meta_api_type_tags_contain_only" version="1.28">
+        <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">%TRUE if @api only contains tags from @valid_tags.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="api" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">an API</doc>
+            <type name="GType" c:type="GType"/>
+          </parameter>
+          <parameter name="valid_tags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a list of valid tags</doc>
+            <array c:type="const gchar**">
+              <type name="utf8"/>
+            </array>
+          </parameter>
+        </parameters>
+      </function>
       <function name="deserialize" c:identifier="gst_meta_deserialize" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">Recreate a #GstMeta from serialized data returned by
 gst_meta_serialize() and add it to @buffer.
@@ -55377,6 +55396,25 @@ write the result back into @aggregated_params.</doc>
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the aggregator function to be associated with the given API
              type.</doc>
           <type name="AllocationMetaParamsAggregator" c:type="GstAllocationMetaParamsAggregator"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="meta_api_type_tags_contain_only" c:identifier="gst_meta_api_type_tags_contain_only" moved-to="Meta.api_type_tags_contain_only" version="1.28">
+      <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">%TRUE if @api only contains tags from @valid_tags.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="api" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">an API</doc>
+          <type name="GType" c:type="GType"/>
+        </parameter>
+        <parameter name="valid_tags" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a list of valid tags</doc>
+          <array c:type="const gchar**">
+            <type name="utf8"/>
+          </array>
         </parameter>
       </parameters>
     </function>

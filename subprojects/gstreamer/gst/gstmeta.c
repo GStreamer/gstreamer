@@ -413,6 +413,36 @@ gst_meta_api_type_get_tags (GType api)
 }
 
 /**
+ * gst_meta_api_type_tags_contain_only:
+ * @api: an API
+ * @valid_tags: (array zero-terminated=1) (element-type utf8): a list of valid tags
+ *
+ * Returns: %TRUE if @api only contains tags from @valid_tags.
+ *
+ * Since: 1.28
+ */
+gboolean
+gst_meta_api_type_tags_contain_only (GType api, const gchar ** valid_tags)
+{
+  const gchar **tags, **curr;
+  g_return_val_if_fail (api != 0, FALSE);
+
+  tags = g_type_get_qdata (api, _gst_meta_tags_quark);
+
+  if (!tags)
+    return TRUE;
+
+  for (curr = tags; *curr; ++curr) {
+
+    if (!g_strv_contains (valid_tags, *curr)) {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+/**
  * gst_meta_api_type_aggregate_params:
  * @api: the GType of the API for which the parameters are being aggregated.
  * @aggregated_params: This structure will be updated with the
