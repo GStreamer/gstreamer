@@ -17,11 +17,11 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
+from gi.repository import Gst
+from common import TestCase, unittest
 import sys
 import overrides_hack
 overrides_hack
-from common import TestCase, unittest
-from gi.repository import Gst
 
 
 class TimeArgsTest(TestCase):
@@ -57,9 +57,9 @@ class TestNotInitialized(TestCase):
     def testNotDeinitialized(self):
         Gst.init(None)
 
-        assert(Gst.Caps.from_string("audio/x-raw"))
-        assert(Gst.Structure.from_string("audio/x-raw"))
-        assert(Gst.ElementFactory.make("identity", None))
+        self.assertIsNotNone(Gst.Caps.from_string("audio/x-raw"))
+        self.assertIsNotNone(Gst.Structure.from_string("audio/x-raw"))
+        self.assertIsNotNone(Gst.ElementFactory.make("identity", None))
 
         Gst.deinit()
         if sys.version_info >= (3, 0):
@@ -76,6 +76,73 @@ class TestNotInitialized(TestCase):
         with self.assertRaises(assert_type):
             Gst.ElementFactory.make("identity", None)
 
+
+class TestCaps(TestCase):
+
+    def test_writable_make_writable_no_copy(self):
+        Gst.init(None)
+        caps = Gst.Caps("audio/x-raw")
+        repr = caps.__repr__()
+        caps.make_writable()
+        self.assertEqual(repr, caps.__repr__())
+        del caps
+
+    def test_make_writable_with_copy(self):
+        Gst.init(None)
+
+        caps = Gst.Caps("audio/x-raw")
+        repr = caps.__repr__()
+        miniobj = caps.mini_object
+        self.assertFalse(caps.is_writable())
+        repr = caps.__repr__()
+        self.assertTrue(caps.make_writable())
+        self.assertNotEqual(repr, caps.__repr__())
+        self.assertTrue(caps.is_writable())
+        del caps
+        del miniobj
+
+    def test_no_writable(self):
+        Gst.init(None)
+        caps = Gst.Caps("audio/x-raw")
+        caps.mini_object.refcount += 1
+
+        with self.assertRaises(Gst.NotWritableCaps):
+            with caps.get_structure_writable(0) as s:
+                s.set_value("rate", 44100)
+
+        caps.mini_object.refcount -= 1
+
+    def test_make_writable(self):
+        Gst.init(None)
+        caps = Gst.Caps("audio/x-raw")
+
+        capsfilter = Gst.ElementFactory.make("capsfilter", None)
+
+        if not capsfilter:
+            self.skipTest("capsfilter not available")
+
+        capsfilter.set_property("caps", caps)
+        caps = capsfilter.get_property("caps")
+
+        with self.assertRaises(Gst.NotWritableCaps):
+            with caps.get_structure_writable(0) as s:
+                s.set_value("rate", 44100)
+        caps.make_writable()
+        with caps.get_structure_writable(0) as s:
+            s.set_value("rate", 44100)
+        capsfilter.set_property("caps", caps)
+        caps = capsfilter.get_property("caps")
+        self.assertEqual(caps[0]["rate"], 44100)
+
+    def test_writable(self):
+        Gst.init(None)
+        caps = Gst.Caps("audio/x-raw")
+
+        with caps.get_structure_writable(0) as s:
+            s.set_value("rate", 44100)
+            s.set_value("channels", 2)
+        self.assertEqual(caps[0]["rate"], 44100)
+        self.assertEqual(caps[0]["channels"], 2)
 
 class TestStructure(TestCase):
 
