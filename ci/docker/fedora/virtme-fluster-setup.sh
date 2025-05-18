@@ -29,7 +29,7 @@ popd
 # Build a linux image for virtme fluster tests
 bash ./ci/scripts/build-linux.sh \
     "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git" \
-    "v6.5.8" \
+    "v6.6.93" \
     /opt/linux/bzImage \
     'MEDIA_SUPPORT' \
     'MEDIA_TEST_SUPPORT' \

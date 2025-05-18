@@ -62,9 +62,7 @@ else
 fi
 
 # Apply visl patches until they are upstreamed
-for patch in ../ci/docker/fedora/patches/*.patch; do
-	patch -p1 < "${patch}"
-done
+git apply ../ci/docker/fedora/patches/*.patch
 
 make defconfig
 sync
