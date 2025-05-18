@@ -4002,6 +4002,14 @@ It is not valid to use this macro with a TILED format.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
+    <function-macro name="VIDEO_META_TRANSFORM_IS_MATRIX" c:identifier="GST_VIDEO_META_TRANSFORM_IS_MATRIX" version="1.28" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h">Checks if a #GType of a meta transformation is a matrix transformation</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
+      <parameters>
+        <parameter name="type">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="VIDEO_META_TRANSFORM_IS_SCALE" c:identifier="GST_VIDEO_META_TRANSFORM_IS_SCALE" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
       <parameters>
@@ -12626,7 +12634,10 @@ defined in @meta and will fail to update if they are not.</doc>
     </record>
     <record name="VideoMetaTransform" c:type="GstVideoMetaTransform">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h">Extra data passed to a video transform #GstMetaTransformFunction such as:
-"gst-video-scale".</doc>
+"gst-video-scale".
+
+This transformation can not express letterbox, cropping, or rotations,
+use #GstVideoMetaTransformMatrix instead</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
       <field name="in_info" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h">the input #GstVideoInfo</doc>
@@ -12638,6 +12649,146 @@ defined in @meta and will fail to update if they are not.</doc>
       </field>
       <function name="scale_get_quark" c:identifier="gst_video_meta_transform_scale_get_quark">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">Get the #GQuark for the "gst-video-scale" metadata transform operation.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a #GQuark</doc>
+          <type name="GLib.Quark" c:type="GQuark"/>
+        </return-value>
+      </function>
+    </record>
+    <record name="VideoMetaTransformMatrix" c:type="GstVideoMetaTransformMatrix" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h">Extra data passed to a video transform #GstMetaTransformFunction such as:
+"gst-video-matrix".
+
+The matrix represents a transformation that is applied to the content of
+@in_rectangle, and its output is put inside @out_rectangle. The coordinate
+system has it's (0, 0) in the top-left corner of the rectangles and
+goes down and right from there..
+
+It's a programming error to have a singular matrix.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
+      <field name="in_info" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h">the input #GstVideoInfo</doc>
+        <type name="VideoInfo" c:type="const GstVideoInfo*"/>
+      </field>
+      <field name="in_rectangle" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h">the input #GstVideoRectangle</doc>
+        <type name="VideoRectangle" c:type="GstVideoRectangle"/>
+      </field>
+      <field name="out_info" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h">the output #GstVideoInfo</doc>
+        <type name="VideoInfo" c:type="const GstVideoInfo*"/>
+      </field>
+      <field name="out_rectangle" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h">the output #GstVideoRectangle</doc>
+        <type name="VideoRectangle" c:type="GstVideoRectangle"/>
+      </field>
+      <field name="matrix" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h">a 3x3 matrix representing an homographic transformation</doc>
+        <array zero-terminated="0" fixed-size="9">
+          <type name="gfloat" c:type="gfloat"/>
+        </array>
+      </field>
+      <method name="init" c:identifier="gst_video_meta_transform_matrix_init" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">Based on the rectangles, initializes the matrix to do a translation and
+scaling from @in_rectangle to @out_rectangle</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="trans" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a #GstVideoMetaTransformMatrix with in_rectangle and out_rectangle
+ filled</doc>
+            <type name="VideoMetaTransformMatrix" c:type="GstVideoMetaTransformMatrix*"/>
+          </instance-parameter>
+          <parameter name="in_info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">The #GstVideoInfo of the input image</doc>
+            <type name="VideoInfo" c:type="GstVideoInfo*"/>
+          </parameter>
+          <parameter name="in_rectangle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">the input #GstVideoRectangle</doc>
+            <type name="VideoRectangle" c:type="const GstVideoRectangle*"/>
+          </parameter>
+          <parameter name="out_info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">the output #GstVideoInfo</doc>
+            <type name="VideoInfo" c:type="GstVideoInfo*"/>
+          </parameter>
+          <parameter name="out_rectangle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">the output #GstVideoRectangle</doc>
+            <type name="VideoRectangle" c:type="const GstVideoRectangle*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="point" c:identifier="gst_video_meta_transform_matrix_point" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">Transforms the (@x, @y) point from the input coordinates to the
+output ones.  The point's coordinates are transformed by first
+applying the @transform.matrix to it using the top left (x, y) of
+@transform.in_rectangle as the origin, then translate it to use
+the top-left of @transform.out_rectangle as new origin.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">FALSE if the point is outside of @transform.out_rectangle
+after the transformation has been applied</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="transform" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a #GstVideoMetaTransformMatrix</doc>
+            <type name="VideoMetaTransformMatrix" c:type="const GstVideoMetaTransformMatrix*"/>
+          </instance-parameter>
+          <parameter name="x" direction="inout" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a non-NULL pointer to the X value of the coordinate</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="y" direction="inout" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a non-NULL pointer to the Y value of the coordinate</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="clamp" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">If TRUE, (@x, @y) will be clamped inside
+  the @transform.out_rectangle</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="rectangle" c:identifier="gst_video_meta_transform_matrix_rectangle" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">Transforms @rect from the input coordinates to the
+output ones.  The point's coordinates are transformed by first
+applying the @transform.matrix to it using the top left (x, y) of
+@transform.in_rectangle as the origin, then translate it to use
+the top-left of @transform.out_rectangle as new origin.
+
+@rect is always axis aligned at input and this function only returns
+axis aligned rectangles as output, otherwise it returns FALSE.
+
+If the @clamp is %FALSE, the output rectangle could be in partially
+or totally outside of @transform.out_rectangle. If @clamp is true,
+rectangle will be clamped to fit inside @transform.out_rectangle.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">FALSE is the output rectangle is not axis aligned or if
+ the rectangle is entirely outside of the out_rectangle and @clamp
+ is %TRUE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="transform" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">A #GstVideoMetaTransformMatrix</doc>
+            <type name="VideoMetaTransformMatrix" c:type="const GstVideoMetaTransformMatrix*"/>
+          </instance-parameter>
+          <parameter name="rect" direction="inout" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a rectangle in the coordinate of the original image</doc>
+            <type name="VideoRectangle" c:type="GstVideoRectangle*"/>
+          </parameter>
+          <parameter name="clamp" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">TRUE if the output rectangle is cropped to the output image</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <function name="get_quark" c:identifier="gst_video_meta_transform_matrix_get_quark" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">Get the #GQuark for the "gst-video-matrix" metadata transform operation.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a #GQuark</doc>
@@ -19719,6 +19870,14 @@ see gst_video_formats_raw().</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
       <return-value transfer-ownership="none">
         <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+      </return-value>
+    </function>
+    <function name="video_meta_transform_matrix_get_quark" c:identifier="gst_video_meta_transform_matrix_get_quark" moved-to="VideoMetaTransformMatrix.get_quark" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">Get the #GQuark for the "gst-video-matrix" metadata transform operation.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.c">a #GQuark</doc>
+        <type name="GLib.Quark" c:type="GQuark"/>
       </return-value>
     </function>
     <function name="video_meta_transform_scale_get_quark" c:identifier="gst_video_meta_transform_scale_get_quark" moved-to="VideoMetaTransform.scale_get_quark">
