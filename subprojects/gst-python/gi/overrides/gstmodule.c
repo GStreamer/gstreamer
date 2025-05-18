@@ -21,6 +21,8 @@
  * Author: David I. Lehn <dlehn@users.sourceforge.net>
  */
 
+#include "gst/gstcaps.h"
+#include "gst/gstminiobject.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -931,6 +933,98 @@ err:
 }
 
 static PyObject *
+_gst_caps_is_writable (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_caps_type;
+  PyObject *py_caps;
+  GstCaps *caps;
+
+  /* Look up Gst.Caps and Gst.Structure parameters */
+  gst_caps_type = pygobject_lookup_class (_gst_caps_type);
+  if (!PyArg_ParseTuple (args, "O!", gst_caps_type, &py_caps))
+    return NULL;
+
+  /* Extract GstCaps from Gst.Caps parameter */
+  caps = GST_CAPS (pygobject_get (py_caps));
+  if (gst_caps_is_writable (caps)) {
+    Py_INCREF (Py_True);
+    return Py_True;
+  }
+
+  Py_INCREF (Py_False);
+  return Py_False;
+}
+
+static PyObject *
+_gst_caps_make_writable (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_caps_type;
+  PyObject *py_caps, *res;
+  GstCaps *caps;
+
+  /* Look up Gst.Caps and Gst.Structure parameters */
+  gst_caps_type = pygobject_lookup_class (_gst_caps_type);
+  if (!PyArg_ParseTuple (args, "O!", gst_caps_type, &py_caps))
+    return NULL;
+
+  /* Extract GstCaps from Gst.Caps parameter */
+  caps = GST_CAPS (pygobject_get (py_caps));
+
+  if (!gst_caps_is_writable (caps)) {
+    GstMiniObject *writable_caps =
+        gst_mini_object_copy (GST_MINI_OBJECT (caps));
+
+    GST_DEBUG ("Copied caps %p to writable caps %p", caps, writable_caps);
+
+    // Drop our reference to the original caps
+    gst_caps_unref (caps);
+    pyg_boxed_set_ptr (py_caps, writable_caps);
+    Py_INCREF (Py_True);
+    res = Py_True;
+  } else {
+    Py_INCREF (Py_False);
+    res = Py_False;
+  }
+
+  return res;
+}
+
+static PyObject *
+_gst_caps_get_writable_structure (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_caps_type;
+  PyObject *py_caps, *py_structure;
+  GstCaps *caps;
+  gint idx;
+
+  /* Look up Gst.Caps and Gst.Structure parameters */
+  gst_caps_type = pygobject_lookup_class (_gst_caps_type);
+  if (!PyArg_ParseTuple (args, "O!i", gst_caps_type, &py_caps, &idx))
+    return NULL;
+
+  /* Extract GstCaps from Gst.Caps parameter */
+  caps = GST_CAPS (pygobject_get (py_caps));
+  if (!gst_caps_is_writable (caps)) {
+    PyObject *gstmodule = PyImport_ImportModule ("gi.repository.Gst");
+    PyObject *exc_class = PyObject_GetAttrString (gstmodule, "NotWritableCaps");
+    PyObject *args_tuple = Py_BuildValue ("(s)",
+        "Trying to get writable structure from immutable caps");
+    PyObject *exc_instance = PyObject_Call (exc_class, args_tuple, NULL);
+
+    PyErr_SetObject (exc_class, exc_instance);
+    Py_DECREF (exc_instance);
+
+    return NULL;
+  }
+
+  /* Get the structure at the given index */
+  py_structure = pyg_boxed_new (_gst_structure_type,
+      gst_caps_get_structure (caps, idx), FALSE, FALSE);
+
+  return py_structure;
+}
+
+static PyObject *
 _gst_memory_override_unmap (PyObject * self, PyObject * args)
 {
   PyTypeObject *gst_memory_type;
@@ -1073,38 +1167,27 @@ _gst_buffer_override_unmap (PyObject * self, PyObject * args)
   return success;
 }
 
+/* *INDENT-OFF* */
 static PyMethodDef _gi_gst_functions[] = {
-  {"trace", (PyCFunction) _wrap_gst_trace, METH_VARARGS,
-      NULL},
-  {"log", (PyCFunction) _wrap_gst_log, METH_VARARGS,
-      NULL},
-  {"debug", (PyCFunction) _wrap_gst_debug, METH_VARARGS,
-      NULL},
-  {"info", (PyCFunction) _wrap_gst_info, METH_VARARGS,
-      NULL},
-  {"warning", (PyCFunction) _wrap_gst_warning, METH_VARARGS,
-      NULL},
-  {"error", (PyCFunction) _wrap_gst_error, METH_VARARGS,
-      NULL},
-  {"fixme", (PyCFunction) _wrap_gst_fixme, METH_VARARGS,
-      NULL},
-  {"memdump", (PyCFunction) _wrap_gst_memdump, METH_VARARGS,
-      NULL},
-  {"buffer_override_map_range", (PyCFunction) _gst_buffer_override_map_range,
-        METH_VARARGS,
-      NULL},
-  {"buffer_override_map", (PyCFunction) _gst_buffer_override_map, METH_VARARGS,
-      NULL},
-  {"buffer_override_unmap", (PyCFunction) _gst_buffer_override_unmap,
-        METH_VARARGS,
-      NULL},
-  {"memory_override_map", (PyCFunction) _gst_memory_override_map, METH_VARARGS,
-      NULL},
-  {"memory_override_unmap", (PyCFunction) _gst_memory_override_unmap,
-        METH_VARARGS,
-      NULL},
+  {"trace", (PyCFunction) _wrap_gst_trace, METH_VARARGS, NULL},
+  {"log", (PyCFunction) _wrap_gst_log, METH_VARARGS, NULL},
+  {"debug", (PyCFunction) _wrap_gst_debug, METH_VARARGS, NULL},
+  {"info", (PyCFunction) _wrap_gst_info, METH_VARARGS, NULL},
+  {"warning", (PyCFunction) _wrap_gst_warning, METH_VARARGS, NULL},
+  {"error", (PyCFunction) _wrap_gst_error, METH_VARARGS, NULL},
+  {"fixme", (PyCFunction) _wrap_gst_fixme, METH_VARARGS, NULL},
+  {"memdump", (PyCFunction) _wrap_gst_memdump, METH_VARARGS, NULL},
+  {"buffer_override_map_range", (PyCFunction) _gst_buffer_override_map_range, METH_VARARGS, NULL},
+  {"buffer_override_map", (PyCFunction) _gst_buffer_override_map, METH_VARARGS, NULL},
+  {"buffer_override_unmap", (PyCFunction) _gst_buffer_override_unmap, METH_VARARGS, NULL},
+  {"memory_override_map", (PyCFunction) _gst_memory_override_map, METH_VARARGS, NULL},
+  {"memory_override_unmap", (PyCFunction) _gst_memory_override_unmap, METH_VARARGS, NULL},
+  {"caps_get_writable_structure", (PyCFunction) _gst_caps_get_writable_structure, METH_VARARGS, NULL},
+  {"caps_make_writable", (PyCFunction) _gst_caps_make_writable, METH_VARARGS, NULL},
+  {"caps_is_writable", (PyCFunction) _gst_caps_is_writable, METH_VARARGS, NULL},
   {NULL, NULL, 0, NULL}
 };
+/* *INDENT-ON* */
 
 static const gchar *const *
 py_uri_handler_get_protocols (GType type)

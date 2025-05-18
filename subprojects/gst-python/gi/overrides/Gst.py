@@ -99,6 +99,20 @@ Bin = override(Bin)
 __all__.append('Bin')
 
 
+class NotWritableCaps(Exception):
+    pass
+
+
+__all__.append('NotWritableCaps')
+
+
+class NotWritableStructure(Exception):
+    pass
+
+
+__all__.append('NotWritableStructure')
+
+
 class Caps(Gst.Caps):
 
     def __nonzero__(self):
@@ -107,9 +121,11 @@ class Caps(Gst.Caps):
     def __new__(cls, *args):
         if not args:
             return Caps.new_empty()
-        elif len(args) > 1:
+        if len(args) > 1:
             raise TypeError("wrong arguments when creating GstCaps object")
-        elif isinstance(args[0], str):
+
+        assert len(args) == 1
+        if isinstance(args[0], str):
             return Caps.from_string(args[0])
         elif isinstance(args[0], Caps):
             return args[0].copy()
@@ -138,6 +154,15 @@ class Caps(Gst.Caps):
 
     def __len__(self):
         return self.get_size()
+
+    def get_structure_writable(self, index):
+        return StructureWrapper(_gi_gst.caps_get_writable_structure(self, index), self, True)
+
+    def make_writable(self):
+        return _gi_gst.caps_make_writable(self)
+
+    def is_writable(self):
+        return _gi_gst.caps_is_writable(self)
 
 
 Caps = override(Caps)
@@ -307,23 +332,32 @@ class Structure(Gst.Structure):
             if kwargs:
                 raise TypeError("wrong arguments when creating GstStructure, first argument"
                                 " must be the structure name.")
-            return Structure.new_empty()
+            struct = Structure.new_empty()
+            struct._writable = True
+            return struct
         elif len(args) > 1:
             raise TypeError("wrong arguments when creating GstStructure object")
         elif isinstance(args[0], str):
             if not kwargs:
-                return Structure.from_string(args[0])[0]
+                struct = Structure.from_string(args[0])[0]
+                struct._writable = True
+                return struct
             struct = Structure.new_empty(args[0])
+            struct._writable = True
             for k, v in kwargs.items():
                 struct[k] = v
 
+            struct._writable = True
             return struct
         elif isinstance(args[0], Structure):
-            return args[0].copy()
+            struct = args[0].copy()
+            struct._writable = True
+            return struct
 
         raise TypeError("wrong arguments when creating GstStructure object")
 
     def __init__(self, *args, **kwargs):
+        self._writable = False
         pass
 
     def __getitem__(self, key):
@@ -341,6 +375,14 @@ class Structure(Gst.Structure):
 
     def __setitem__(self, key, value):
         return self.set_value(key, value)
+
+    def set_value(self, key, value):
+        if not self._writable:
+            raise NotWritableStructure("Trying to write to a not writable."
+                                       " Make sure to use the right APIs to have access to structure"
+                                       " in a writable way.")
+
+        return Gst.Structure.set_value(self, key, value)
 
     def __str__(self):
         return self.to_string()
@@ -680,6 +722,21 @@ def pairwise(iterable):
     a, b = itertools.tee(iterable)
     next(b, None)
     return zip(a, b)
+
+
+class StructureWrapper:
+    def __init__(self, structure, parent, writable):
+        structure._writable = writable
+        self.__structure = structure
+        self.__parent__ = parent
+
+    def __enter__(self):
+        return self.__structure
+
+    def __exit__(self, _type, _value, _tb):
+        self.__structure._writable = False
+        self.__parent__ = False
+        return
 
 
 class MapInfo:
