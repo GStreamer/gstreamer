@@ -166,6 +166,7 @@ gstd3d12 = library('gstd3d12-' + api_version,
                   dxgi_lib, dx_headers_dep, gmodule_dep] + extra_deps,
   version : libversion,
   install : true,
+  override_options : ['cpp_std=c++14'],
 )
 
 pkgconfig.generate(gstd3d12,
