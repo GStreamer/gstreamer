@@ -11,6 +11,7 @@
 #include <gst/sdp/sdp.h>
 #include <gst/rtp/rtp.h>
 
+#define GST_USE_UNSTABLE_API
 #include <gst/webrtc/webrtc.h>
 #include <gst/webrtc/nice/nice.h>
 

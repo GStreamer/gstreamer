@@ -1,6 +1,7 @@
 #ifndef __CUSTOM_AGENT_H__
 #define __CUSTOM_AGENT_H__
 
+#define GST_USE_UNSTABLE_API
 #include <gst/webrtc/ice.h>
 
 G_BEGIN_DECLS
