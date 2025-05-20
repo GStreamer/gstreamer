@@ -3813,6 +3813,29 @@ no_rate:
   }
 }
 
+static gboolean
+_sdp_media_has_extmap (const GstSDPMedia * media, guint id)
+{
+  gchar id_str_space[5];
+  gchar id_str_slash[5];
+  guint i;
+
+  g_snprintf (id_str_space, 5, "%u ", id);
+  g_snprintf (id_str_slash, 5, "%u/", id);
+
+  for (i = 0;; i++) {
+    const gchar *fval = gst_sdp_media_get_attribute_val_n (media, "extmap", i);
+
+    if (fval == NULL)
+      return FALSE;
+
+    if (g_str_has_prefix (fval, id_str_space) ||
+        g_str_has_prefix (fval, id_str_slash))
+      return TRUE;
+  }
+
+}
+
 static GstSDPResult
 _add_media_format_from_structure (const GstStructure * s, GstSDPMedia * media)
 {
@@ -3959,6 +3982,12 @@ _add_media_format_from_structure (const GstStructure * s, GstSDPMedia * media)
       const GValue *arr;
 
       if (*endptr != '\0' || id == 0 || id == 15 || id > 9999)
+        continue;
+
+      /* The extmap are not per codec, so we don't want to duplicate them
+       * across codecs in the same media.
+       */
+      if (_sdp_media_has_extmap (media, id))
         continue;
 
       if ((fval = gst_structure_get_string (s, fname))) {
