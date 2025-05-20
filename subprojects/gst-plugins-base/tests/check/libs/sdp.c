@@ -27,6 +27,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/sdp/gstsdpmessage.h>
+#include <gst/pbutils/pbutils.h>
 
 /* *INDENT-OFF* */
 static const gchar *sdp = "v=0\r\n"
@@ -774,10 +775,14 @@ GST_START_TEST (media_from_caps_h264_with_profile_asymmetry_allowed)
   const GstSDPMedia *result_video;
   GstStructure *s_video;
   GstCaps *caps_video;
+  GstSDPMedia media;
+  GstSDPResult ret = GST_SDP_OK;
+  const gchar *fmtp;
+  gboolean profile_level_id_found = FALSE;
+  gchar **pairs;
 
   gst_sdp_message_new (&message);
   gst_sdp_message_parse_buffer ((guint8 *) h264_sdp, length, message);
-
 
   result_video = gst_sdp_message_get_media (message, 0);
   fail_unless (result_video != NULL);
@@ -789,6 +794,59 @@ GST_START_TEST (media_from_caps_h264_with_profile_asymmetry_allowed)
   fail_unless_equals_string (gst_structure_get_string (s_video, "profile"),
       "constrained-baseline");
 
+  /* Check that the conversion from caps to SDP preserved the profile and level
+   * caps fields, through the profile-level-id SDP sub-attribute of the fmtp
+   * attribute. */
+  memset (&media, 0, sizeof (media));
+  fail_unless_equals_int (GST_SDP_OK, gst_sdp_media_init (&media));
+
+  ret = gst_sdp_media_set_media_from_caps (caps_video, &media);
+  fail_unless (ret == GST_SDP_OK);
+
+  fmtp = gst_sdp_media_get_attribute_val (&media, "fmtp");
+  fail_unless (fmtp != NULL);
+  pairs = g_strsplit (fmtp, ";", 0);
+  for (int i = 0; pairs[i]; i++) {
+    gchar *valpos;
+    const gchar *val, *key;
+    valpos = strstr (pairs[i], "=");
+    if (valpos) {
+      /* we have a '=' and thus a value, remove the '=' with \0 */
+      *valpos = '\0';
+      /* value is everything between '=' and ';'. We split the pairs at ;
+       * boundaries so we can take the remainder of the value. Some servers
+       * put spaces around the value which we strip off here. Alternatively
+       * we could strip those spaces in the depayloaders should these spaces
+       * actually carry any meaning in the future. */
+      val = g_strstrip (valpos + 1);
+    } else {
+      /* simple <param>;.. is translated into <param>=1;... */
+      val = "1";
+    }
+    /* strip the key of spaces, convert key to lowercase but not the value. */
+    key = g_strstrip (pairs[i]);
+    if (!strcmp (key, "profile-level-id")) {
+      gint64 spsint;
+      guint8 sps[3];
+      spsint = g_ascii_strtoll (val, NULL, 16);
+      sps[0] = spsint >> 16;
+      sps[1] = (spsint >> 8) & 0xff;
+      sps[2] = spsint & 0xff;
+
+      g_print ("%s\n", val);
+
+      fail_unless_equals_string (gst_codec_utils_h264_get_profile (sps, 3),
+          "constrained-baseline");
+      fail_unless_equals_string (gst_codec_utils_h264_get_level (sps, 3),
+          "3.1");
+      profile_level_id_found = TRUE;
+      break;
+    }
+  }
+  g_strfreev (pairs);
+  fail_unless (profile_level_id_found);
+
+  gst_sdp_media_uninit (&media);
   gst_caps_unref (caps_video);
   gst_sdp_message_free (message);
 }

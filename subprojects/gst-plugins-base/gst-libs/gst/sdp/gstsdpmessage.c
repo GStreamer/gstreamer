@@ -3836,6 +3836,87 @@ _sdp_media_has_extmap (const GstSDPMedia * media, guint id)
 
 }
 
+/* This function tries to recreate the profile_idc and constraints, but
+ * it's not foolproof, as there could be many variants. To be perfectly
+ * compliant with the RFC, we'd need to store and return the orignal
+ * profile-level-id
+ */
+static gboolean
+h264_get_profile_idc (const gchar * profile, guint8 * profile_idc,
+    guint8 * constraint_flags)
+{
+  const guint8 CSF0 = 0x80;     /* Baseline compatible */
+  const guint8 CSF1 = 0x40;     /* Main compatible */
+  // const guint8 CSF2 = 0x20;     /* Extended compatible */
+  const guint8 CSF3 = 0x10;
+  const guint8 CSF4 = 0x08;
+  const guint8 CSF5 = 0x04;
+  g_return_val_if_fail (profile, FALSE);
+
+  *constraint_flags = 0;
+
+  if (!strcmp (profile, "constrained-baseline")) {
+    *profile_idc = 66;
+    *constraint_flags = CSF0 | CSF1;
+  } else if (!strcmp (profile, "baseline")) {
+    *profile_idc = 66;
+    *constraint_flags = CSF0;
+  } else if (!strcmp (profile, "main")) {
+    *profile_idc = 77;
+    *constraint_flags = CSF1;
+  } else if (!strcmp (profile, "extended")) {
+    *profile_idc = 88;
+    *constraint_flags = CSF3;
+  } else if (!strcmp (profile, "constrained-high")) {
+    *profile_idc = 100;
+    *constraint_flags = CSF4 | CSF5;
+  } else if (!strcmp (profile, "progressive-high")) {
+    *profile_idc = 100;
+    *constraint_flags = CSF4;
+  } else if (!strcmp (profile, "high-10")) {
+    *profile_idc = 110;
+  } else if (!strcmp (profile, "high-10-intra")) {
+    *profile_idc = 110;
+    *constraint_flags = CSF3;
+  } else if (!strcmp (profile, "progressive-high-10")) {
+    *profile_idc = 110;
+    *constraint_flags = CSF4;
+  } else if (!strcmp (profile, "high-4:2:2")) {
+    *profile_idc = 122;
+  } else if (!strcmp (profile, "high-4:2:2-intra")) {
+    *profile_idc = 122;
+    *constraint_flags = CSF3;
+  } else if (!strcmp (profile, "high-4:4:4")) {
+    *profile_idc = 244;
+  } else if (!strcmp (profile, "high-4:4:4-intra")) {
+    *profile_idc = 244;
+    *constraint_flags = CSF3;
+  } else if (!strcmp (profile, "cavlc-4:4:4-intra")) {
+    *profile_idc = 44;
+  } else if (!strcmp (profile, "multiview-high")) {
+    *profile_idc = 118;
+  } else if (!strcmp (profile, "stereo-high")) {
+    *profile_idc = 128;
+  } else if (!strcmp (profile, "scalable-baseline")) {
+    *profile_idc = 83;
+  } else if (!strcmp (profile, "scalable-constrained-baseline")) {
+    *profile_idc = 83;
+    *constraint_flags = CSF5;
+  } else if (!strcmp (profile, "scalable-high")) {
+    *profile_idc = 86;
+  } else if (!strcmp (profile, "scalable-constrained-high")) {
+    *profile_idc = 86;
+    *constraint_flags = CSF5;
+  } else if (!strcmp (profile, "scalable-high-intra")) {
+    *profile_idc = 86;
+    *constraint_flags = CSF3;
+  } else {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static GstSDPResult
 _add_media_format_from_structure (const GstStructure * s, GstSDPMedia * media)
 {
@@ -4091,11 +4172,19 @@ _add_media_format_from_structure (const GstStructure * s, GstSDPMedia * media)
        * representation */
       if (!g_strcmp0 (gst_structure_get_string (s, "encoding-name"), "H264")
           && !g_strcmp0 (fname, "profile")) {
-        fname = "level-asymmetry-allowed";
-        fval = "1";
-      }
+        guint8 profile_idc, constraint_flags;
 
-      g_string_append_printf (fmtp, "%s%s=%s", first ? "" : ";", fname, fval);
+        g_string_append_printf (fmtp, "%slevel-asymmetry-allowed=1",
+            first ? "" : ";");
+        if (h264_get_profile_idc (fval, &profile_idc, &constraint_flags))
+          g_string_append_printf (fmtp, ";profile-level-id=%02x%02x1f",
+              profile_idc, constraint_flags);
+        else
+          GST_FIXME ("Can't convert profile %s back into profile-level-id",
+              fval);
+      } else {
+        g_string_append_printf (fmtp, "%s%s=%s", first ? "" : ";", fname, fval);
+      }
       first = FALSE;
     }
   }
