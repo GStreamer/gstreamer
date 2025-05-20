@@ -1128,8 +1128,12 @@ switch_and_activate_input_locked (GstURIDecodeBin3 * uridecodebin,
     GstSourcePad *old_spad = iterold->data;
     if (old_spad->db3_sink_pad) {
       GST_DEBUG_OBJECT (uridecodebin, "Releasing no longer used db3 pad");
+      /* Temporarily release play items lock to avoid deadlock if releasing the
+       * pad causes a message that calls back into our message handler. */
+      PLAY_ITEMS_UNLOCK (uridecodebin);
       gst_element_release_request_pad (uridecodebin->decodebin,
           old_spad->db3_sink_pad);
+      PLAY_ITEMS_LOCK (uridecodebin);
       old_spad->db3_sink_pad = NULL;
     }
   }
