@@ -106,12 +106,15 @@ ges_src_uri_set_uri (GstURIHandler * handler, const gchar * uristr,
   GstUri *uri = gst_uri_from_string (uristr);
   GESProject *project = NULL;
   GESTimeline *timeline = NULL;
+  gchar *path;
 
-  if (!gst_uri_get_path (uri)) {
+  path = gst_uri_get_path (uri);
+  if (!path) {
     GST_INFO_OBJECT (handler, "User need to specify the timeline");
     res = TRUE;
     goto done;
   }
+  g_free (path);
 
   project = ges_project_new (uristr);
   timeline = (GESTimeline *) ges_asset_extract (GES_ASSET (project), NULL);
@@ -146,9 +149,22 @@ G_DEFINE_TYPE_WITH_CODE (GESSrc, ges_src, ges_base_bin_get_type (),
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, ges_src_uri_handler_init));
 
 static void
+ges_src_finalize (GObject * object)
+{
+  GESSrc *self = GES_SRC (object);
+
+  g_free (self->uri);
+
+  G_OBJECT_CLASS (ges_src_parent_class)->finalize (object);
+}
+
+static void
 ges_src_class_init (GESSrcClass * self_class)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (self_class);
   GstElementClass *gstelement_klass = GST_ELEMENT_CLASS (self_class);
+
+  gobject_class->finalize = ges_src_finalize;
 
   GST_DEBUG_CATEGORY_INIT (gessrc, "gessrc", 0, "ges src element");
   gst_element_class_set_static_metadata (gstelement_klass,
