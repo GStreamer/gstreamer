@@ -778,19 +778,21 @@ gst_validate_ssim_compare_image_file (GstValidateSsim * self,
   }
 
   if (*lowest < self->priv->min_lowest_similarity) {
-    if (outbuf)
+    if (outbuf) {
       output_failure_image =
           gst_validate_ssim_save_out (self, outbuf, real_ref_file, file,
           outfolder);
+    }
 
-    if (output_failure_image)
+    if (output_failure_image) {
       failure_info =
-          g_strdup_printf (" (See %s to check differences in images)",
+          g_strdup_printf ("\nSee `%s` to check differences in images",
           output_failure_image);
+    }
 
     GST_ERROR_OBJECT (self,
         "Lowest similarity '%f' between %s and %s inferior"
-        " than the minimum lowest similarity: %f%s", *lowest,
+        " than the minimum lowest similarity: %f\n%s", *lowest,
         real_ref_file, file, self->priv->min_lowest_similarity, failure_info);
 
     gst_video_frame_unmap (&ref_frame);
