@@ -303,6 +303,7 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
     GstPad *proxy_pad, *tmppad, *pad =
         ges_timeline_get_pad_for_track (timeline, track);
     GstStaticPadTemplate *template;
+    GstPadTemplate *pad_template;
 
     if (!pad) {
       GST_WARNING_OBJECT (sbin, "No pad for track: %" GST_PTR_FORMAT, track);
@@ -318,6 +319,7 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
       template = &video_src_template;
     } else {
       GST_INFO_OBJECT (sbin, "Track type not handled: %" GST_PTR_FORMAT, track);
+      gst_object_unref (pad);
       continue;
     }
 
@@ -328,6 +330,7 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
     if (!gst_bin_add (sbin, queue)) {
       g_free (name);
       gst_object_unref (queue);
+      gst_object_unref (pad);
       continue;
     }
 
@@ -341,14 +344,17 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
       g_free (name);
       gst_object_unref (tmppad);
       gst_bin_remove (sbin, queue);
+      gst_object_unref (pad);
       continue;
     }
 
     gst_object_unref (tmppad);
+
+    pad_template = gst_static_pad_template_get (template);
     tmppad = gst_element_get_static_pad (queue, "src");
-    gpad = gst_ghost_pad_new_from_template (name, tmppad,
-        gst_static_pad_template_get (template));
+    gpad = gst_ghost_pad_new_from_template (name, tmppad, pad_template);
     gst_object_unref (tmppad);
+    gst_object_unref (pad_template);
     g_free (name);
 
     gst_pad_set_active (gpad, TRUE);
@@ -367,6 +373,7 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
     gst_pad_set_chain_function (proxy_pad, ges_base_bin_src_chain);
     gst_pad_set_event_function (proxy_pad, ges_base_bin_event);
     gst_object_unref (proxy_pad);
+    gst_object_unref (pad);
 
     GST_DEBUG_OBJECT (sbin,
         "Added pad: %" GST_PTR_FORMAT " for track %" GST_PTR_FORMAT, gpad,
