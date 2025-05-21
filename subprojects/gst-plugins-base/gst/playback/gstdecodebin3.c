@@ -4549,6 +4549,8 @@ db_output_stream_free (DecodebinOutputStream * output)
 
   if (output->src_exposed) {
     gst_element_remove_pad ((GstElement *) dbin, output->src_pad);
+  } else {
+    gst_clear_object (&output->src_pad);
   }
   g_free (output);
 }

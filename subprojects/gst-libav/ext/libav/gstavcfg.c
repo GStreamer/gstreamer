@@ -623,6 +623,7 @@ gst_ffmpeg_cfg_get_property (AVCodecContext * refcontext, GValue * value,
       if ((res = av_opt_get (refcontext, opt->name,
                   AV_OPT_SEARCH_CHILDREN | AV_OPT_ALLOW_NULL, &val) >= 0)) {
         g_value_set_string (value, (gchar *) val);
+        av_free (val);
       }
       break;
     }
