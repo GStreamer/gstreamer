@@ -97,7 +97,7 @@ class TestTimeline(GESSimpleTimelineTest):
         xges = """<ges version='0.3'>
             <project properties='properties;' metadatas='metadatas;'>
                 <ressources>
-                    <asset id='%(uri)s' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)2003000000;' metadatas='metadatas, container-format=(string)Matroska, language-code=(string)und, application-name=(string)Lavc56.60.100, encoder-version=(uint)0, audio-codec=(string)Vorbis, nominal-bitrate=(uint)80000, bitrate=(uint)80000, video-codec=(string)&quot;On2\ VP8&quot;, file-size=(guint64)223340, foo=(string)bar;' >
+                    <asset id='%(uri)s' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)2003000000;' metadatas='metadatas, container-format=(string)Matroska, language-code=(string)und, application-name=(string)Lavc56.60.100, encoder-version=(uint)0, audio-codec=(string)Vorbis, nominal-bitrate=(uint)80000, bitrate=(uint)80000, video-codec=(string)&quot;On2 VP8&quot;, file-size=(guint64)223340, foo=(string)bar;' >
                     </asset>
                 </ressources>
             </project>
