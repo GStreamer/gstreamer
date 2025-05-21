@@ -4387,6 +4387,211 @@ GST_START_TEST (test_twcc_run_length_min)
 
 GST_END_TEST;
 
+GST_START_TEST (test_twcc_reference_time_wrap)
+{
+  SessionHarness *h = session_harness_new ();
+  guint i, j;
+  GstBuffer *buf;
+  GstEvent *event;
+  GValueArray *packets_array;
+
+  /* This fci packet is used as a template for generating fci packets in the
+   * test. In these packets only the reference time is patched, which means we
+   * get a completely unrealistic sequence of packets all claiming to report the
+   * status of packets with sequence number 1 and 2. This is fine in this test
+   * since we're only concerned with changes to the reference timestamp and want
+   * to get rid of other noise. */
+  guint8 fci[] = {
+    0x00, 0x01,                 /* base sequence number: 1 */
+    0x00, 0x02,                 /* packet status count: 2 */
+    0xcc, 0xcc, 0xcc,           /* reference time (will be replaced in each packet sent) */
+    0x00,                       /* feedback packet count: 0 */
+    0x40, 0x02,                 /* run-length with large delta for 2 packets: 0 1 0 0 0 0 0 0 | 0 0 0 0 0 0 1 0 */
+    /* recv deltas: */
+    0x0f, 0xa0,                 /* large delta: +0:00:01.000000000 */
+    0xe0, 0xc0,                 /* large delta: -0:00:02.000000000 */
+    /* padding */
+    0x00, 0x00
+  };
+
+  guint8 fci_base_times[][3] = {
+    {0x7f, 0xff, 0xfe},         /* 0x7ffffe <=> +149:07:50.784 */
+    /* increase over signed wrap */
+    {0x80, 0x00, 0x03},         /* 0x800003 <=> +149:07:51.104 */
+    /* decrease over signed wrap */
+    {0x7f, 0xff, 0xf7},         /* 0x7ffff7 <=> +149:07:50.336 */
+    /* increase over signed wrap again */
+    {0xff, 0xff, 0xf1},         /* 0xfffff1 <=> +298:15:40.864 */
+    /* increase over unsigned wrap */
+    {0x00, 0x00, 0x05},         /* 0x000005 (+0x1000000) <=> +298:15:42.144 */
+    /* decrease over unsigned wrap */
+    {0xff, 0xff, 0xfe},         /* 0xfffffe <=> +298:15:41.696 */
+    /* increase over unsigned wrap again */
+    {0x55, 0x55, 0x55},         /* 0x555555 (+0x1000000) <=> +397:40:55.744 */
+    /* increase over signed wrap again */
+    {0xaa, 0xaa, 0xaa},         /* 0xaaaaaa (+0x1000000) <=> +497:06:09.664 */
+    /* increase over unsigned wrap again */
+    {0x00, 0x00, 0x42},         /* 0x000042 (+0x1000000) <=> +597:31:27.872 */
+  };
+
+  GstClockTime exp_ts[] = {
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x07ffffeLL * 64 * GST_MSECOND +
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x07ffffeLL * 64 * GST_MSECOND -
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x0800003LL * 64 * GST_MSECOND +
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x0800003LL * 64 * GST_MSECOND -
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x07ffff7LL * 64 * GST_MSECOND +
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x07ffff7LL * 64 * GST_MSECOND -
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x0fffff1LL * 64 * GST_MSECOND +
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x0fffff1LL * 64 * GST_MSECOND -
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x1000005LL * 64 * GST_MSECOND +
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x1000005LL * 64 * GST_MSECOND -
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x0fffffeLL * 64 * GST_MSECOND +
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x0fffffeLL * 64 * GST_MSECOND -
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x1555555LL * 64 * GST_MSECOND +
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x1555555LL * 64 * GST_MSECOND -
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x1aaaaaaLL * 64 * GST_MSECOND +
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x1aaaaaaLL * 64 * GST_MSECOND -
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x2000042LL * 64 * GST_MSECOND +
+        1 * GST_SECOND,
+    TWCC_REF_TIME_INITIAL_OFFSET + 0x2000042LL * 64 * GST_MSECOND -
+        1 * GST_SECOND,
+  };
+
+  for (i = 0; i < sizeof (fci_base_times) / 3; ++i) {
+    /* patch our fci packet with a new reference time */
+    fci[4] = fci_base_times[i][0];
+    fci[5] = fci_base_times[i][1];
+    fci[6] = fci_base_times[i][2];
+    buf = generate_twcc_feedback_rtcp (fci, sizeof (fci));
+    session_harness_recv_rtcp (h, buf);
+  }
+
+  for (i = 0; i < 2; i++)
+    gst_event_unref (gst_harness_pull_upstream_event (h->send_rtp_h));
+
+  for (i = 0; i < sizeof (fci_base_times) / 3; ++i) {
+    event = gst_harness_pull_upstream_event (h->send_rtp_h);
+    packets_array =
+        g_value_get_boxed (gst_structure_get_value (gst_event_get_structure
+            (event), "packets"));
+
+    fail_unless_equals_int (packets_array->n_values, 2);
+
+    /* iterate all values in the array and check that the remote-ts property is set to 0 */
+    for (j = 0; j < packets_array->n_values; j++) {
+      const GstStructure *pkt_s =
+          gst_value_get_structure (g_value_array_get_nth (packets_array, j));
+      GstClockTime ts = 1;      /* initialize to non-zero */
+      fail_unless (gst_structure_get_clock_time (pkt_s, "remote-ts", &ts));
+      fail_unless_equals_clocktime (ts, exp_ts[i * 2 + j]);
+    }
+
+    gst_event_unref (event);
+  }
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_twcc_reference_time_wrap_start_negative)
+{
+  SessionHarness *h = session_harness_new ();
+  guint i, j;
+  GstBuffer *buf;
+  GstEvent *event;
+  GValueArray *packets_array;
+
+  /* This fci packet is used as a template for generating fci packets in the
+   * test. In these packets only the reference time is patched, which means we
+   * get a completely unrealistic sequence of packets all claiming to report the
+   * status of packets with sequence number 1 and 2. This is fine in this test
+   * since we're only concerned with changes to the reference timestamp and want
+   * to get rid of other noise. */
+  guint8 fci[] = {
+    0x00, 0x01,                 /* base sequence number: 1 */
+    0x00, 0x02,                 /* packet status count: 2 */
+    0xcc, 0xcc, 0xcc,           /* reference time (will be replaced in each packet sent) */
+    0x00,                       /* feedback packet count: 0 */
+    0x40, 0x02,                 /* run-length with large delta for 2 packets: 0 1 0 0 0 0 0 0 | 0 0 0 0 0 0 1 0 */
+    /* recv deltas: */
+    0x0f, 0xa0,                 /* large delta: +0:00:01.000000000 */
+    0xe0, 0xc0,                 /* large delta: -0:00:02.000000000 */
+    /* padding */
+    0x00, 0x00
+  };
+
+  guint8 fci_base_times[][3] = {
+    {0x80, 0x00, 0x03},         /* 0x800003 <=> +149:07:51.104 */
+    /* decrease over signed wrap */
+    {0x7f, 0xff, 0xf7},         /* 0x7ffff7 <=> +149:07:50.336 */
+    /* increase over signed wrap again */
+    {0xff, 0xff, 0xf1},         /* 0xfffff1 <=> +298:15:40.864 */
+  };
+
+  /* note that we should not add TWCC_REF_TIME_INITIAL_OFFSET here because we
+   * subtract from that */
+  GstClockTime exp_ts[] = {
+    0x800003LL * 64 * GST_MSECOND + 1 * GST_SECOND,
+    0x800003LL * 64 * GST_MSECOND - 1 * GST_SECOND,
+    0x7ffff7LL * 64 * GST_MSECOND + 1 * GST_SECOND,
+    0x7ffff7LL * 64 * GST_MSECOND - 1 * GST_SECOND,
+    0xfffff1LL * 64 * GST_MSECOND + 1 * GST_SECOND,
+    0xfffff1LL * 64 * GST_MSECOND - 1 * GST_SECOND,
+  };
+
+  for (i = 0; i < sizeof (fci_base_times) / 3; ++i) {
+    /* patch our fci packet with a new reference time */
+    fci[4] = fci_base_times[i][0];
+    fci[5] = fci_base_times[i][1];
+    fci[6] = fci_base_times[i][2];
+    buf = generate_twcc_feedback_rtcp (fci, sizeof (fci));
+    session_harness_recv_rtcp (h, buf);
+  }
+
+  for (i = 0; i < 2; i++)
+    gst_event_unref (gst_harness_pull_upstream_event (h->send_rtp_h));
+
+  for (i = 0; i < sizeof (fci_base_times) / 3; ++i) {
+    event = gst_harness_pull_upstream_event (h->send_rtp_h);
+    packets_array =
+        g_value_get_boxed (gst_structure_get_value (gst_event_get_structure
+            (event), "packets"));
+
+    fail_unless_equals_int (packets_array->n_values, 2);
+
+    /* iterate all values in the array and check that the remote-ts property is set to 0 */
+    for (j = 0; j < packets_array->n_values; j++) {
+      const GstStructure *pkt_s =
+          gst_value_get_structure (g_value_array_get_nth (packets_array, j));
+      GstClockTime ts = 1;      /* initialize to non-zero */
+      fail_unless (gst_structure_get_clock_time (pkt_s, "remote-ts", &ts));
+      fail_unless_equals_clocktime (ts, exp_ts[i * 2 + j]);
+    }
+
+    gst_event_unref (event);
+  }
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
 
 static Suite *
 rtpsession_suite (void)
@@ -4467,6 +4672,8 @@ rtpsession_suite (void)
       G_N_ELEMENTS (test_twcc_feedback_interval_ctx));
   tcase_add_test (tc_chain, test_twcc_feedback_count_wrap);
   tcase_add_test (tc_chain, test_twcc_feedback_old_seqnum);
+  tcase_add_test (tc_chain, test_twcc_reference_time_wrap);
+  tcase_add_test (tc_chain, test_twcc_reference_time_wrap_start_negative);
 
   return s;
 }
