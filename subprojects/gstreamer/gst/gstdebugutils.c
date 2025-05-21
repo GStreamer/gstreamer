@@ -790,10 +790,9 @@ debug_dump_get_tracers_info (GstDebugGraphDetails details)
 
     /* Make sure each tracer line ends with \l even if it has no properties */
     g_string_append (str, "\\l");
-
   }
 
-  g_list_free (tracers);
+  g_list_free_full (tracers, gst_object_unref);
   return g_string_free (str, FALSE);
 }
 

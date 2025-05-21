@@ -952,13 +952,14 @@ gst_dash_demux_setup_all_streams (GstDashDemux2 * demux)
     } else {
       /* Create the track this stream provides */
       track = gst_adaptive_demux_track_new (GST_ADAPTIVE_DEMUX_CAST (demux),
-          streamtype, GST_STREAM_FLAG_NONE, stream_id, codec_caps, tags);
+          streamtype, GST_STREAM_FLAG_NONE, stream_id, codec_caps,
+          tags ? gst_tag_list_ref (tags) : NULL);
     }
 
     g_free (stream_id);
     if (tags)
       gst_adaptive_demux2_stream_set_tags (GST_ADAPTIVE_DEMUX2_STREAM_CAST
-          (stream), gst_tag_list_ref (tags));
+          (stream), g_steal_pointer (&tags));
 
     gst_adaptive_demux2_add_stream (GST_ADAPTIVE_DEMUX_CAST (demux),
         GST_ADAPTIVE_DEMUX2_STREAM_CAST (stream));
