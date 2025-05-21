@@ -481,6 +481,7 @@ _set_videoconvert (ValidateSsimOverride * o,
   caps = gst_pad_get_current_caps (pad);
   gst_object_unref (pad);
   gst_caps_replace (&priv->last_caps, caps);
+  gst_caps_unref (caps);
 
   gst_video_info_init (&priv->in_info);
   gst_video_info_init (&priv->out_info);

@@ -2207,6 +2207,7 @@ select_stream_data_free (SelectStreamData * d)
 {
   gst_validate_action_unref (d->action);
   g_list_free_full (d->wanted_streams, g_free);
+  g_rec_mutex_clear (&d->m);
 }
 
 static void
@@ -4387,6 +4388,7 @@ _execute_appsrc_push (GstValidateScenario * scenario,
 
     g_signal_emit_by_name (appsink, "pull-sample", &sample, NULL);
 
+    g_strfreev (pipeline_elements);
     goto push_sample;
   }
 
@@ -5290,6 +5292,7 @@ handle_bus_message (MessageData * d)
       g_list_free_full (priv->seeks,
           (GDestroyNotify) gst_validate_seek_information_free);
       priv->seeks = NULL;
+      priv->current_seek = NULL;
       SCENARIO_UNLOCK (scenario);
 
       GST_DEBUG_OBJECT (scenario, "Got EOS; generate 'stop' action");
@@ -5958,6 +5961,7 @@ gst_validate_scenario_dispose (GObject * object)
   }
 
   gst_object_replace ((GstObject **) & priv->clock, NULL);
+  gst_object_unref (runner);
 
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->dispose (object);
 }
@@ -7598,6 +7602,7 @@ _execute_start_http_server (GstValidateScenario * scenario,
       err->message);
   REPORT_UNLESS (sscanf (line, "PORT: %d", &port) == 1, done,
       "Failed to parse port number from server output: %s", line);
+  g_free (line);
 
   server.port = port;
   server.subprocess = subprocess;

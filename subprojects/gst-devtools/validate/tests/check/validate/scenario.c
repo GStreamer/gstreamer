@@ -37,6 +37,9 @@ GST_START_TEST (test_expression_parser)
   fail_unless_equals_uint64 (start, 50 * GST_SECOND);
   gst_validate_action_unref (action);
 
+  gst_mini_object_unref (GST_MINI_OBJECT (seek_type));
+  gst_mini_object_unref (GST_MINI_OBJECT (set_vars));
+  gst_object_unref (scenario);
   gst_object_unref (runner);
 }
 

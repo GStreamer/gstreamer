@@ -488,6 +488,7 @@ _append_accept_caps_failure_details (GstValidatePadMonitor * monitor,
     }
   }
 
+  gst_caps_unref (refused_caps);
   gst_caps_unref (possible_caps);
   gst_object_unref (pad);
 
