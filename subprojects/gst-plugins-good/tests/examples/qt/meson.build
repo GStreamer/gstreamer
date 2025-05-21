@@ -8,7 +8,7 @@ if not qt5qml_dep.found()
 endif
 
 qt5qml_example_deps = dependency('qt5', modules : ['Core', 'Gui', 'Widgets', 'Qml', 'Quick'],
-                         required: get_option('examples'))
+                                 method: qt5_method, required: get_option('examples'))
 
 if not qt5qml_example_deps.found()
   subdir_done()
