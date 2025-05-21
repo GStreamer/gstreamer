@@ -257,6 +257,13 @@ _close_window (gpointer * data)
 
   [view removeFromSuperview];
 
+  if (!window_cocoa->priv->external_view) {
+    GstGLNSWindow *internal_win_id =
+        (__bridge GstGLNSWindow *) window_cocoa->priv->internal_win_id;
+
+    [internal_win_id close];
+  }
+
   CFBridgingRelease (window_cocoa->priv->internal_win_id);
   CFBridgingRelease (window_cocoa->priv->internal_view);
   window_cocoa->priv->internal_win_id = NULL;
