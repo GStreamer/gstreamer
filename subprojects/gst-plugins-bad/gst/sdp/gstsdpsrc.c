@@ -105,13 +105,15 @@ pad_added_cb (GstElement * element, GstPad * pad, gpointer user_data)
 {
   GstSdpSrc *self = GST_SDP_SRC_CAST (user_data);
   GstPad *ghost;
+  GstPadTemplate *pad_template;
 
+  pad_template = gst_static_pad_template_get (&src_template);
   ghost =
-      gst_ghost_pad_new_from_template (GST_PAD_NAME (pad), pad,
-      gst_static_pad_template_get (&src_template));
+      gst_ghost_pad_new_from_template (GST_PAD_NAME (pad), pad, pad_template);
   gst_pad_set_active (ghost, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (self), ghost);
   g_object_set_data (G_OBJECT (pad), "GstSdpSrc.ghostpad", ghost);
+  gst_object_unref (pad_template);
 }
 
 static void
