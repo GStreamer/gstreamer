@@ -449,6 +449,7 @@ gst_wpe_src_init (GstWpeSrc * src)
   GstPad *pad;
   GstPad *ghost_pad;
   GstProxyPad *proxy_pad;
+  GstPadTemplate *pad_template;
 
   gst_bin_set_suppressed_flags (GST_BIN_CAST (src),
       static_cast<GstElementFlags>(GST_ELEMENT_FLAG_SOURCE | GST_ELEMENT_FLAG_SINK));
@@ -461,9 +462,9 @@ gst_wpe_src_init (GstWpeSrc * src)
 
   gst_bin_add (GST_BIN_CAST (src), src->video_src);
 
+  pad_template = gst_static_pad_template_get (&video_src_factory);
   pad = gst_element_get_static_pad (GST_ELEMENT_CAST (src->video_src), "src");
-  ghost_pad = gst_ghost_pad_new_from_template ("video", pad,
-    gst_static_pad_template_get (&video_src_factory));
+  ghost_pad = gst_ghost_pad_new_from_template ("video", pad, pad_template);
   proxy_pad = gst_proxy_pad_get_internal (GST_PROXY_PAD (ghost_pad));
   gst_pad_set_active (GST_PAD_CAST (proxy_pad), TRUE);
 
@@ -473,6 +474,7 @@ gst_wpe_src_init (GstWpeSrc * src)
 
   gst_object_unref (proxy_pad);
   gst_object_unref (pad);
+  gst_object_unref (pad_template);
 }
 
 static gboolean

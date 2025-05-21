@@ -558,6 +558,7 @@ gst_rist_sink_init (GstRistSink * sink)
   GstCaps *ssrc_caps;
   GstStructure *sdes = NULL;
   RistSenderBond *bond;
+  GstPadTemplate *pad_template;
 
   sink->rtpext = gst_element_factory_make ("ristrtpext", "ristrtpext");
 
@@ -616,12 +617,14 @@ gst_rist_sink_init (GstRistSink * sink)
   g_object_set (sink->ssrc_filter, "caps", ssrc_caps, NULL);
   gst_caps_unref (ssrc_caps);
 
+  pad_template = gst_static_pad_template_get (&sink_templ);
   ssrc_filter_sinkpad = gst_element_get_static_pad (sink->ssrc_filter, "sink");
   sink->sinkpad = gst_ghost_pad_new_from_template ("sink", ssrc_filter_sinkpad,
-      gst_static_pad_template_get (&sink_templ));
+      pad_template);
   gst_pad_set_event_function (sink->sinkpad, gst_rist_sink_event);
   gst_element_add_pad (GST_ELEMENT (sink), sink->sinkpad);
   gst_object_unref (ssrc_filter_sinkpad);
+  gst_object_unref (pad_template);
 
   gst_pad_add_probe (sink->sinkpad, GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
       gst_rist_sink_fix_collision, sink, NULL);
