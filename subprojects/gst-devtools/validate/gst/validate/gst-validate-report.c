@@ -699,8 +699,6 @@ gst_validate_report_init (void)
     gchar **wanted_files;
     wanted_files = g_strsplit (file_env, G_SEARCHPATH_SEPARATOR_S, 0);
 
-    /* FIXME: Make sure it is freed in the deinit function when that is
-     * implemented */
     log_files =
         g_malloc0 (sizeof (FILE *) * (g_strv_length (wanted_files) + 1));
     for (i = 0; i < g_strv_length (wanted_files); i++) {
@@ -745,6 +743,16 @@ gst_validate_report_deinit (void)
 
   g_clear_object (&socket_client);
   g_clear_object (&server_connection);
+
+  if (log_files) {
+    gint i;
+    for (i = 0; log_files[i]; i++) {
+      if (log_files[i] != stdout && log_files[i] != stderr)
+        fclose (log_files[i]);
+    }
+    g_free (log_files);
+    log_files = NULL;
+  }
 }
 
 /**
