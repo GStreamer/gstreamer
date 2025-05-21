@@ -885,6 +885,7 @@ pipeline_error (GstRTSPMedia * media, GstMessage * message, guint * data)
   ck_assert_int_eq (gerror->code, GST_STREAM_ERROR_FAILED);
   ck_assert_str_eq (gerror->message, "Internal data stream error.");
   (*data)++;
+  g_error_free (gerror);
 
   return TRUE;
 }
