@@ -1762,11 +1762,19 @@ gst_gl_context_egl_fetch_dma_formats (GstGLContext * context)
 
   g_array_sort (dma_formats, _compare_dma_formats);
 
-  _print_all_dma_formats (context, dma_formats);
-
   GST_OBJECT_LOCK (context);
-  egl->dma_formats = dma_formats;
+  // Are we the first to initialize?
+  ret = egl->dma_formats == NULL;
+  if (ret)
+    egl->dma_formats = dma_formats;
   GST_OBJECT_UNLOCK (context);
+
+  if (ret) {
+    _print_all_dma_formats (context, dma_formats);
+  } else {
+    // We lost the race...
+    g_array_unref (dma_formats);
+  }
 
   g_free (formats);
   g_free (modifiers);
