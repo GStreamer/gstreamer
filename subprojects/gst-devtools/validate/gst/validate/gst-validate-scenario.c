@@ -2312,7 +2312,7 @@ done:
   if (selected_streams && d->message_sid &&
       d->wanted_n_calls >= 1 && d->n_calls == d->wanted_n_calls) {
     /* Consider action done once we get the STREAM_SELECTED signal */
-    gst_validate_action_set_done (gst_validate_action_ref (d->action));
+    gst_validate_action_set_done (d->action);
     gst_bus_disable_sync_message_emission (bus);
     g_signal_handler_disconnect (bus, d->message_sid);
     d->message_sid = 0;
@@ -2348,7 +2348,7 @@ stream_selection_scenario_stopping_cb (GstValidateScenario * scenario,
         d->wanted_n_calls, d->n_calls);
   }
 
-  gst_validate_action_set_done (gst_validate_action_ref (d->action));
+  gst_validate_action_set_done (d->action);
 
   if (bus && d->message_sid) {
     gst_bus_disable_sync_message_emission (bus);
@@ -2912,6 +2912,8 @@ _execute_on_sub_scenario (GstValidateScenario * scenario,
           data->subaction_done_sigid);
       data->subaction_done_sigid = 0;
     }
+
+    gst_validate_action_set_done (subaction);
   }
   g_mutex_unlock (&data->sigid_lock);
   validate_action_foreign_scenario_data_unref (data);
