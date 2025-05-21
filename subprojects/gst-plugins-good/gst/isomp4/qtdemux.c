@@ -18866,13 +18866,13 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       cmpd_node =
           qtdemux_tree_get_child_by_type_full (stsd_entry, FOURCC_cmpd,
           &reader);
-      if (!cmpd_node) {
+      if (uncC.version == 0 && !cmpd_node) {
         GST_WARNING_OBJECT (qtdemux,
             "Expected to find cmpd box when parsing uncv");
         break;
       }
 
-      if (!qtdemux_parse_cmpd (qtdemux, &reader, &cmpd)) {
+      if (cmpd_node && !qtdemux_parse_cmpd (qtdemux, &reader, &cmpd)) {
         GST_WARNING_OBJECT (qtdemux, "Failed parsing cmpd box");
         break;
       }
