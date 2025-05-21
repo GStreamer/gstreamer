@@ -651,9 +651,6 @@ class Test(Loggable):
         return command
 
     def use_valgrind(self, command, subenv):
-        vglogsfile = os.path.splitext(self.logfile)[0] + '.valgrind'
-        self.extra_logfiles.add(vglogsfile)
-
         vg_args = []
 
         for o, v in [('trace-children', 'yes'),
@@ -675,7 +672,7 @@ class Test(Loggable):
         if not self.options.redirect_logs:
             vglogsfile = os.path.splitext(self.logfile)[0] + '.valgrind'
             self.extra_logfiles.add(vglogsfile)
-            vg_args.append("--%s=%s" % ('log-file', vglogsfile))
+            vg_args.append("--%s=%s" % ('log-file', vglogsfile.replace("%", "%%")))
 
         for supp in self.get_valgrind_suppressions():
             vg_args.append("--suppressions=%s" % supp)
