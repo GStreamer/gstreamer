@@ -8365,6 +8365,14 @@ gst_hash_caps_features (const GstCapsFeatures * features, guint * res)
 {
   guint i;
 
+  if (gst_caps_features_is_any (features)) {
+    *res = g_str_hash ("ANY");
+    return TRUE;
+  } else if (gst_caps_features_get_size (features) == 0) {
+    *res = g_str_hash ("EMPTY");
+    return TRUE;
+  }
+
   *res = 0;
 
   for (i = 0; i < gst_caps_features_get_size (features); i++) {
@@ -8388,6 +8396,14 @@ gst_value_hash_caps (const GValue * v, guint * res)
   const GstCaps *caps = gst_value_get_caps (v);
   guint i;
   guint n = gst_caps_get_size (caps);
+
+  if (gst_caps_is_any (caps)) {
+    *res = g_str_hash ("ANY");
+    return TRUE;
+  } else if (n == 0) {
+    *res = g_str_hash ("EMPTY");
+    return TRUE;
+  }
 
   *res = 0;
   for (i = 0; i < n; i++) {

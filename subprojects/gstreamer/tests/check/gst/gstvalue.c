@@ -4168,6 +4168,7 @@ GST_START_TEST (test_hash)
     {GST_TYPE_CAPS, "video/x-raw", "audio/x-raw", TRUE},
     {GST_TYPE_CAPS, "video/x-raw,width=1920", "video/x-raw,width=800", TRUE},
     {GST_TYPE_CAPS, "video/x-raw", "video/x-raw(memory:DMABuf)", TRUE},
+    {GST_TYPE_CAPS, "ANY", "EMPTY", TRUE},
     {GST_TYPE_TAG_LIST, "taglist, title=(string)Title, artist=(string)Artist",
         "taglist, title=(string)Title2, artist=(string)Artist", TRUE},
     {G_TYPE_DATE, "1984-11-30", "1985-11-30", TRUE},
@@ -4180,6 +4181,7 @@ GST_START_TEST (test_hash)
         TRUE},
     {GST_TYPE_LIST, "{1, 2}", "{1, 3}", TRUE},
     {GST_TYPE_CAPS_FEATURES, "memory:DMABuf", "memory:GLMemory", FALSE},
+    {GST_TYPE_CAPS_FEATURES, "ANY", "", FALSE},
   };
 
   /* check that a and b are equal */
