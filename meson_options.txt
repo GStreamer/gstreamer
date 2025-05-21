@@ -61,6 +61,8 @@ option('extra-checks', type : 'feature', value : 'enabled', description : 'Enabl
 option('benchmarks', type : 'feature', value : 'auto')
 option('tools', type : 'feature', value : 'auto', yield : true, description : 'Build command line tools')
 option('orc', type : 'feature', value : 'auto', description : 'Optimized Inner Loop Runtime Compiler (SIMD)')
+option('qt-method', type: 'combo', value: 'auto', choices: ['auto', 'pkg-config', 'qmake'],
+       description: 'Method to use to find Qt')
 option('qt5', type : 'feature', value : 'auto', description : 'Qt5 toolkit support')
 option('qt6', type : 'feature', value : 'auto', description : 'Qt6 toolkit support')
 option('webrtc', type : 'feature', value : 'auto', description : 'WebRTC support')
