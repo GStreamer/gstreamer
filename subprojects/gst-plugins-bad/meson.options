@@ -268,7 +268,7 @@ option('mfx-modules-dir', type: 'string', value : '',
 # Qt6 plugin options
 option('qt6d3d11', type : 'feature', value : 'auto', description : 'Qt6 Direct3D11 plugin')
 option('qt-method', type: 'combo', value: 'auto', choices: ['auto', 'pkg-config', 'qmake'],
-       description: 'Method to use to find Qt')
+       yield: true, description: 'Method to use to find Qt')
 
 # Vulkan integration library and plugin options
 option('vulkan', type: 'feature', value: 'auto', description: 'Vulkan integration library and video sink plugin')
