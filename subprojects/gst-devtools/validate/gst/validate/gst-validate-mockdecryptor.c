@@ -168,6 +168,7 @@ gst_mockdecryptor_transform_caps (GstBaseTransform * base,
         gst_caps_intersect_full (transformed_caps, filter,
         GST_CAPS_INTERSECT_FIRST);
     gst_caps_replace (&transformed_caps, intersection);
+    gst_caps_unref (intersection);
   }
 
   GST_DEBUG_OBJECT (base, "returning %" GST_PTR_FORMAT, transformed_caps);

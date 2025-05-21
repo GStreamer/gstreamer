@@ -518,7 +518,8 @@ gst_validate_deinit (void)
   g_list_free (core_config);
   core_config = NULL;
 
-  g_list_free_full (all_configs, (GDestroyNotify) gst_structure_free);
+  g_list_free_full (g_steal_pointer (&all_configs),
+      (GDestroyNotify) gst_structure_free);
   gst_validate_deinit_runner ();
 
   gst_validate_scenario_deinit ();

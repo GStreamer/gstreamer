@@ -206,6 +206,10 @@ _create_issues (GstValidateRunner * runner)
   gst_object_unref (sinkpad);
   gst_object_unref (funnel_sink1);
   gst_object_unref (funnel_sink2);
+  free_element_monitor (fakemixer);
+  free_element_monitor (sink);
+  free_element_monitor (src2);
+  free_element_monitor (src1);
   gst_check_objects_destroyed_on_unref (fakemixer, funnel_sink1, funnel_sink2,
       NULL);
   gst_check_objects_destroyed_on_unref (src1, srcpad1, NULL);

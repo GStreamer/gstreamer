@@ -154,6 +154,7 @@ GST_START_TEST (buffer_before_segment)
   _check_reports_refcount (srcpad, 2);
   gst_object_unref (srcpad);
   gst_check_object_destroyed_on_unref (sink);
+  gst_object_unref (monitor);
   ASSERT_OBJECT_REFCOUNT (runner, "runner", 2);
   gst_object_unref (runner);
 }
@@ -221,11 +222,15 @@ GST_START_TEST (buffer_outside_segment)
     buffer = gst_discont_buffer_new ();
     GST_BUFFER_PTS (buffer) = 10 * GST_SECOND;
     GST_BUFFER_DURATION (buffer) = GST_SECOND;
-    fail_if (GST_PAD_IS_FLUSHING (gst_element_get_static_pad (identity,
-                "sink")));
-    fail_if (GST_PAD_IS_FLUSHING (gst_element_get_static_pad (identity,
-                "src")));
-    fail_if (GST_PAD_IS_FLUSHING (gst_element_get_static_pad (sink, "sink")));
+    pad = gst_element_get_static_pad (identity, "sink");
+    fail_if (GST_PAD_IS_FLUSHING (pad));
+    gst_clear_object (&pad);
+    pad = gst_element_get_static_pad (identity, "src");
+    fail_if (GST_PAD_IS_FLUSHING (pad));
+    gst_clear_object (&pad);
+    pad = gst_element_get_static_pad (sink, "sink");
+    fail_if (GST_PAD_IS_FLUSHING (pad));
+    gst_clear_object (&pad);
     fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
 
     reports = gst_validate_runner_get_reports (runner);
