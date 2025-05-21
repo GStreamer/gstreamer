@@ -11,9 +11,9 @@ moc_headers = [
   'qrenderer.h',
 ]
 
-moc_files = qt5_mod.preprocess(moc_headers : moc_headers)
+moc_files = qt5_mod.preprocess(moc_headers: moc_headers, method: qt5_method)
 executable('mousevideoverlay', sources, moc_files,
   cpp_args : [gst_plugins_base_args] + qt_cxx_warn_less,
   include_directories: [configinc, libsinc],
-  dependencies : [qt5core_dep, qt5gui_dep, gst_dep, video_dep, gstgl_dep, gstglproto_dep],
+  dependencies : [qt5gui_dep, gst_dep, video_dep, gstgl_dep, gstglproto_dep],
   install: false)
