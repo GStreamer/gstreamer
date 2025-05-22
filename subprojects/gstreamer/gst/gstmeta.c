@@ -425,7 +425,9 @@ gboolean
 gst_meta_api_type_tags_contain_only (GType api, const gchar ** valid_tags)
 {
   const gchar **tags, **curr;
+
   g_return_val_if_fail (api != 0, FALSE);
+  g_return_val_if_fail (valid_tags != NULL, FALSE);
 
   tags = g_type_get_qdata (api, _gst_meta_tags_quark);
 
