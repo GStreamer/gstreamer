@@ -323,7 +323,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   }
   GST_DEBUG_OBJECT (ffmpegenc, "chose caps %" GST_PTR_FORMAT, allowed_caps);
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
-      oclass->in_plugin->type, allowed_caps, ffmpegenc->context);
+      oclass->in_plugin->type, allowed_caps, ffmpegenc->context, TRUE);
 
   /* open codec */
   if (gst_ffmpeg_avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0) {

@@ -297,7 +297,7 @@ gst_ffmpegauddec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
 
   /* get size and so */
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
-      oclass->in_plugin->type, caps, ffmpegdec->context);
+      oclass->in_plugin->type, caps, ffmpegdec->context, FALSE);
 
   /* workaround encoder bugs */
   ffmpegdec->context->workaround_bugs |= FF_BUG_AUTODETECT;
