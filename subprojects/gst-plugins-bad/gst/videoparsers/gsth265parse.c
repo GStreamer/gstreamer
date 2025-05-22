@@ -231,6 +231,7 @@ gst_h265_parse_reset_stream_info (GstH265Parse * h265parse)
   h265parse->parsed_colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
   h265parse->parsed_colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;
   h265parse->parsed_colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
+  h265parse->lcevc = FALSE;
   h265parse->have_pps = FALSE;
   h265parse->have_sps = FALSE;
   h265parse->have_vps = FALSE;
@@ -698,8 +699,9 @@ gst_h265_parse_process_sei_user_data (GstH265Parse * h265parse,
   GstByteReader br;
   GstVideoParseUtilsField field = GST_VIDEO_PARSE_UTILS_FIELD_1;
 
-  /* only US country code is currently supported */
+  /* only US and UK country codes are currently supported */
   switch (rud->country_code) {
+    case ITU_T_T35_COUNTRY_CODE_UK:
     case ITU_T_T35_COUNTRY_CODE_US:
       break;
     default:
@@ -2562,6 +2564,11 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
           "Couldn't set content light level to caps");
     }
 
+    if (h265parse->user_data.lcevc_enhancement_data || h265parse->lcevc)
+      gst_caps_set_simple (caps, "lcevc", G_TYPE_BOOLEAN, TRUE, NULL);
+    else
+      gst_caps_set_simple (caps, "lcevc", G_TYPE_BOOLEAN, FALSE, NULL);
+
     src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h265parse));
 
     if (src_caps) {
@@ -3289,6 +3296,7 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       &h265parse->fps_den);
   gst_structure_get_fraction (str, "pixel-aspect-ratio",
       &h265parse->upstream_par_n, &h265parse->upstream_par_d);
+  gst_structure_get_boolean (str, "lcevc", &h265parse->lcevc);
 
   /* get upstream format and align from caps */
   gst_h265_parse_format_from_caps (caps, &format, &align);
