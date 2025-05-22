@@ -132,7 +132,8 @@ class TestCaps(TestCase):
             s.set_value("rate", 44100)
         capsfilter.set_property("caps", caps)
         caps = capsfilter.get_property("caps")
-        self.assertEqual(caps[0]["rate"], 44100)
+        with caps.get_structure(0) as s:
+            self.assertEqual(s["rate"], 44100)
 
     def test_writable(self):
         Gst.init(None)
@@ -141,8 +142,38 @@ class TestCaps(TestCase):
         with caps.get_structure_writable(0) as s:
             s.set_value("rate", 44100)
             s.set_value("channels", 2)
-        self.assertEqual(caps[0]["rate"], 44100)
-        self.assertEqual(caps[0]["channels"], 2)
+        with caps.get_structure(0) as s:
+            self.assertEqual(s["rate"], 44100)
+            self.assertEqual(s["channels"], 2)
+
+    def test_delete_caps_while_accessing(self):
+        Gst.init(None)
+        caps = Gst.Caps("audio/x-raw")
+
+        with caps.get_structure_writable(0) as s:
+            del caps
+            s.set_value("rate", 44100)
+            s.set_value("channels", 2)
+            self.assertEqual(s["rate"], 44100)
+            self.assertEqual(s["channels"], 2)
+
+    def test_read_no_copy(self):
+        Gst.init(None)
+        caps = Gst.Caps("audio/x-raw")
+
+        with caps.get_structure(0) as s:
+            ptr = s.__ptr__()
+
+        with caps.get_structure(0) as s:
+            self.assertEqual(ptr, s.__ptr__())
+
+        c2 = caps.mini_object
+        self.assertEqual(c2.refcount, 2)
+        caps.make_writable()
+
+        with caps.get_structure(0) as s:
+            self.assertNotEqual(ptr, s.__ptr__())
+
 
 class TestStructure(TestCase):
 

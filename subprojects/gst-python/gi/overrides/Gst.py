@@ -150,10 +150,15 @@ class Caps(Gst.Caps):
     def __getitem__(self, index):
         if index >= self.get_size():
             raise IndexError('structure index out of range')
-        return self.get_structure(index)
+
+        return Gst.Caps.get_structure(self, index)
 
     def __len__(self):
         return self.get_size()
+
+    def get_structure(self, index):
+        return StructureWrapper(_gi_gst.caps_get_structure(self, index), self,
+                                False)
 
     def get_structure_writable(self, index):
         return StructureWrapper(_gi_gst.caps_get_writable_structure(self, index), self, True)
@@ -359,6 +364,9 @@ class Structure(Gst.Structure):
     def __init__(self, *args, **kwargs):
         self._writable = False
         pass
+
+    def __ptr__(self):
+        return _gi_gst._get_object_ptr(self)
 
     def __getitem__(self, key):
         return self.get_value(key)
