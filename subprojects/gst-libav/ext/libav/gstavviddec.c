@@ -624,7 +624,7 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   /* FIXME : Create a method that takes GstVideoCodecState instead */
   /* get size and so */
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
-      oclass->in_plugin->type, state->caps, ffmpegdec->context);
+      oclass->in_plugin->type, state->caps, ffmpegdec->context, FALSE);
 
   GST_LOG_OBJECT (ffmpegdec, "size after %dx%d", ffmpegdec->context->width,
       ffmpegdec->context->height);

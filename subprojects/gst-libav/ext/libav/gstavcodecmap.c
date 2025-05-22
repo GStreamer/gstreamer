@@ -3858,7 +3858,8 @@ full_copy:
 
 void
 gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
-    enum AVMediaType codec_type, const GstCaps * caps, AVCodecContext * context)
+    enum AVMediaType codec_type, const GstCaps * caps,
+    AVCodecContext * context, gboolean encode)
 {
   GstStructure *str;
   const GValue *value;
@@ -3872,59 +3873,62 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
 
   str = gst_caps_get_structure (caps, 0);
 
-  /* extradata parsing (esds [mpeg4], wma/wmv, msmpeg4v1/2/3, etc.) */
-  if ((value = gst_structure_get_value (str, "codec_data"))) {
-    GstMapInfo map;
-
-    buf = gst_value_get_buffer (value);
-    gst_buffer_map (buf, &map, GST_MAP_READ);
-
+  /* only add extradata for decoding */
+  if (!encode) {
     /* free the old one if it is there */
     if (context->extradata)
       av_free (context->extradata);
 
+    /* extradata parsing (esds [mpeg4], wma/wmv, msmpeg4v1/2/3, etc.) */
+    if ((value = gst_structure_get_value (str, "codec_data"))) {
+      GstMapInfo map;
+
+      buf = gst_value_get_buffer (value);
+      gst_buffer_map (buf, &map, GST_MAP_READ);
+
 #if 0
-    if (codec_id == AV_CODEC_ID_H264) {
-      guint extrasize;
+      if (codec_id == AV_CODEC_ID_H264) {
+        guint extrasize;
 
-      GST_DEBUG ("copy, escaping codec_data %d", size);
-      /* ffmpeg h264 expects the codec_data to be escaped, there is no real
-       * reason for this but let's just escape it for now. Start by allocating
-       * enough space, x2 is more than enough.
-       *
-       * FIXME, we disabled escaping because some file already contain escaped
-       * codec_data and then we escape twice and fail. It's better to leave it
-       * as is, as that is what most players do. */
-      context->extradata =
-          av_mallocz (GST_ROUND_UP_16 (size * 2 +
-              AV_INPUT_BUFFER_PADDING_SIZE));
-      copy_config (context->extradata, data, size, &extrasize);
-      GST_DEBUG ("escaped size: %d", extrasize);
-      context->extradata_size = extrasize;
-    } else
+        GST_DEBUG ("copy, escaping codec_data %d", size);
+        /* ffmpeg h264 expects the codec_data to be escaped, there is no real
+         * reason for this but let's just escape it for now. Start by allocating
+         * enough space, x2 is more than enough.
+         *
+         * FIXME, we disabled escaping because some file already contain escaped
+         * codec_data and then we escape twice and fail. It's better to leave it
+         * as is, as that is what most players do. */
+        context->extradata =
+            av_mallocz (GST_ROUND_UP_16 (size * 2 +
+                AV_INPUT_BUFFER_PADDING_SIZE));
+        copy_config (context->extradata, data, size, &extrasize);
+        GST_DEBUG ("escaped size: %d", extrasize);
+        context->extradata_size = extrasize;
+      } else
 #endif
-    {
-      /* allocate with enough padding */
-      GST_DEBUG ("copy codec_data");
-      context->extradata =
-          av_mallocz (GST_ROUND_UP_16 (map.size +
-              AV_INPUT_BUFFER_PADDING_SIZE));
-      memcpy (context->extradata, map.data, map.size);
-      context->extradata_size = map.size;
+      {
+        /* allocate with enough padding */
+        GST_DEBUG ("copy codec_data");
+        context->extradata =
+            av_mallocz (GST_ROUND_UP_16 (map.size +
+                AV_INPUT_BUFFER_PADDING_SIZE));
+        memcpy (context->extradata, map.data, map.size);
+        context->extradata_size = map.size;
+      }
+
+      /* Hack for VC1. Sometimes the first (length) byte is 0 for some files */
+      if (codec_id == AV_CODEC_ID_VC1 && map.size > 0 && map.data[0] == 0) {
+        context->extradata[0] = (guint8) map.size;
+      }
+
+      GST_DEBUG ("have codec data of size %" G_GSIZE_FORMAT, map.size);
+
+      gst_buffer_unmap (buf, &map);
+    } else {
+      context->extradata = NULL;
+      context->extradata_size = 0;
+      GST_DEBUG ("no codec data");
     }
-
-    /* Hack for VC1. Sometimes the first (length) byte is 0 for some files */
-    if (codec_id == AV_CODEC_ID_VC1 && map.size > 0 && map.data[0] == 0) {
-      context->extradata[0] = (guint8) map.size;
-    }
-
-    GST_DEBUG ("have codec data of size %" G_GSIZE_FORMAT, map.size);
-
-    gst_buffer_unmap (buf, &map);
-  } else {
-    context->extradata = NULL;
-    context->extradata_size = 0;
-    GST_DEBUG ("no codec data");
   }
 
   switch (codec_id) {
@@ -5107,7 +5111,8 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       context->codec_type = AVMEDIA_TYPE_UNKNOWN;
     }
     context->codec_id = id;
-    gst_ffmpeg_caps_with_codecid (id, context->codec_type, caps, context);
+    // Say we're encoding since we don't want to allocate the extradata region
+    gst_ffmpeg_caps_with_codecid (id, context->codec_type, caps, context, TRUE);
   }
 
   if (id != AV_CODEC_ID_NONE) {

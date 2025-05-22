@@ -81,7 +81,8 @@ void
 gst_ffmpeg_caps_with_codecid (enum AVCodecID    codec_id,
                               enum AVMediaType  codec_type,
                               const GstCaps  *caps,
-                              AVCodecContext *context);
+                              AVCodecContext *context,
+                              gboolean        encode);
 
 /*
  * caps_with_codectype () transforms a GstCaps that belongs to
