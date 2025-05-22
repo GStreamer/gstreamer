@@ -990,6 +990,29 @@ _gst_caps_make_writable (PyObject * self, PyObject * args)
 }
 
 static PyObject *
+_gst_caps_get_structure (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_caps_type;
+  PyObject *py_caps, *py_structure;
+  GstCaps *caps;
+  gint idx;
+
+  /* Look up Gst.Caps and Gst.Structure parameters */
+  gst_caps_type = pygobject_lookup_class (_gst_caps_type);
+  if (!PyArg_ParseTuple (args, "O!i", gst_caps_type, &py_caps, &idx))
+    return NULL;
+
+  /* Extract GstCaps from Gst.Caps parameter */
+  caps = GST_CAPS (pygobject_get (py_caps));
+
+  /* Get the structure at the given index */
+  py_structure = pyg_boxed_new (_gst_structure_type,
+      gst_caps_get_structure (caps, idx), FALSE, FALSE);
+
+  return py_structure;
+}
+
+static PyObject *
 _gst_caps_get_writable_structure (PyObject * self, PyObject * args)
 {
   PyTypeObject *gst_caps_type;
@@ -1050,6 +1073,23 @@ _gst_memory_override_unmap (PyObject * self, PyObject * args)
   }
 
   return success;
+}
+
+
+static PyObject *
+_gst_get_object_ptr (PyObject * self, PyObject * args)
+{
+  PyObject *first_arg;
+
+  first_arg = PyTuple_GetItem (args, 0);
+  gpointer ptr = pygobject_get (first_arg);
+
+  if (ptr == NULL) {
+    PyErr_SetString (PyExc_TypeError, "Expected a PyGObject");
+    return NULL;
+  }
+
+  return PyLong_FromVoidPtr (ptr);
 }
 
 static PyObject *
@@ -1182,9 +1222,11 @@ static PyMethodDef _gi_gst_functions[] = {
   {"buffer_override_unmap", (PyCFunction) _gst_buffer_override_unmap, METH_VARARGS, NULL},
   {"memory_override_map", (PyCFunction) _gst_memory_override_map, METH_VARARGS, NULL},
   {"memory_override_unmap", (PyCFunction) _gst_memory_override_unmap, METH_VARARGS, NULL},
+  {"caps_get_structure", (PyCFunction) _gst_caps_get_structure, METH_VARARGS, NULL},
   {"caps_get_writable_structure", (PyCFunction) _gst_caps_get_writable_structure, METH_VARARGS, NULL},
   {"caps_make_writable", (PyCFunction) _gst_caps_make_writable, METH_VARARGS, NULL},
   {"caps_is_writable", (PyCFunction) _gst_caps_is_writable, METH_VARARGS, NULL},
+  {"_get_object_ptr", (PyCFunction) _gst_get_object_ptr, METH_VARARGS, NULL},
   {NULL, NULL, 0, NULL}
 };
 /* *INDENT-ON* */
