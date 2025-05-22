@@ -391,9 +391,10 @@ receive_enhanced_picture (GstLcevcDec * lcevc)
 {
   LCEVC_PictureHandle picture_handle = { 0, };
   LCEVC_DecodeInformation decode_info = { 0, };
+  LCEVC_ReturnCode ret;
 
-  while (LCEVC_ReceiveDecoderPicture (lcevc->decoder_handle, &picture_handle,
-          &decode_info) == LCEVC_Success) {
+  while ((ret = LCEVC_ReceiveDecoderPicture (lcevc->decoder_handle,
+              &picture_handle, &decode_info)) == LCEVC_Success) {
     LCEVC_PictureDesc pic_desc = { 0, };
     GstVideoCodecFrame *received_frame;
     GstVideoCropMeta *cmeta;
@@ -470,6 +471,13 @@ receive_enhanced_picture (GstLcevcDec * lcevc)
     }
   }
 
+  /* Make sure no errors happened */
+  if (ret == LCEVC_Error) {
+    GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
+        ("Could not receive enhanced picture"));
+    return FALSE;
+  }
+
   return TRUE;
 }
 
@@ -477,9 +485,10 @@ static gboolean
 receive_base_picture (GstLcevcDec * lcevc)
 {
   LCEVC_PictureHandle picture_handle = { 0, };
+  LCEVC_ReturnCode ret;
 
-  while (LCEVC_ReceiveDecoderBase (lcevc->decoder_handle, &picture_handle)
-      == LCEVC_Success) {
+  while ((ret = LCEVC_ReceiveDecoderBase (lcevc->decoder_handle,
+              &picture_handle)) == LCEVC_Success) {
     GST_DEBUG_OBJECT (lcevc, "Received base picture %" G_GUINTPTR_FORMAT,
         picture_handle.hdl);
 
@@ -490,6 +499,13 @@ receive_base_picture (GstLcevcDec * lcevc)
               picture_handle.hdl));
       return FALSE;
     }
+  }
+
+  /* Make sure no errors happened */
+  if (ret == LCEVC_Error) {
+    GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
+        ("Could not receive base picture"));
+    return FALSE;
   }
 
   return TRUE;
