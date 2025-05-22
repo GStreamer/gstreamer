@@ -1544,7 +1544,7 @@ gst_d3d12_device_get_queue_unchecked (GstD3D12Device * device,
  *
  * Gets fence handle of command queue
  *
- * Returns: (transfer none): ID3D12Fence handle
+ * Returns: (transfer none) (nullable): ID3D12Fence handle
  *
  * Since: 1.26
  */
@@ -1598,7 +1598,7 @@ gst_d3d12_device_get_format (GstD3D12Device * device,
  *
  * Gets #GstD3D12CmdQueue corresponding to @queue_type
  *
- * Returns: (transfer none): a #GstD3D12CmdQueue
+ * Returns: (transfer none) (nullable): a #GstD3D12CmdQueue
  *
  * Since: 1.26
  */
