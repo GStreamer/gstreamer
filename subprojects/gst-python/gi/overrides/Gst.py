@@ -99,6 +99,14 @@ Bin = override(Bin)
 __all__.append('Bin')
 
 
+class MiniObject:
+    def make_writable(self):
+        return _gi_gst.mini_object_make_writable(self)
+
+    def is_writable(self):
+        return _gi_gst.mini_object_is_writable(self)
+
+
 class NotWritableCaps(Exception):
     pass
 
@@ -113,7 +121,7 @@ class NotWritableStructure(Exception):
 __all__.append('NotWritableStructure')
 
 
-class Caps(Gst.Caps):
+class Caps(Gst.Caps, MiniObject):
 
     def __nonzero__(self):
         return not self.is_empty()
@@ -160,14 +168,8 @@ class Caps(Gst.Caps):
         return StructureWrapper(_gi_gst.caps_get_structure(self, index), self,
                                 False)
 
-    def get_structure_writable(self, index):
-        return StructureWrapper(_gi_gst.caps_get_writable_structure(self, index), self, True)
-
-    def make_writable(self):
-        return _gi_gst.caps_make_writable(self)
-
-    def is_writable(self):
-        return _gi_gst.caps_is_writable(self)
+    def writable_structure(self, index):
+        return StructureWrapper(_gi_gst.caps_writable_structure(self, index), self, True)
 
 
 Caps = override(Caps)

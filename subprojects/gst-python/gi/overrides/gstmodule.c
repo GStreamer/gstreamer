@@ -933,52 +933,53 @@ err:
 }
 
 static PyObject *
-_gst_caps_is_writable (PyObject * self, PyObject * args)
+_gst_mini_object_make_writable (PyObject * self, PyObject * args)
 {
-  PyTypeObject *gst_caps_type;
-  PyObject *py_caps;
-  GstCaps *caps;
+  PyObject *py_miniobj, *res;
+  GstMiniObject *mini_object;
 
-  /* Look up Gst.Caps and Gst.Structure parameters */
-  gst_caps_type = pygobject_lookup_class (_gst_caps_type);
-  if (!PyArg_ParseTuple (args, "O!", gst_caps_type, &py_caps))
+  py_miniobj = PyTuple_GetItem (args, 0);
+  if (py_miniobj == NULL) {
+    PyErr_SetString (PyExc_TypeError, "Expected a PyGObject");
     return NULL;
-
-  /* Extract GstCaps from Gst.Caps parameter */
-  caps = GST_CAPS (pygobject_get (py_caps));
-  if (gst_caps_is_writable (caps)) {
-    Py_INCREF (Py_True);
-    return Py_True;
   }
 
-  Py_INCREF (Py_False);
-  return Py_False;
+  /* Extract GstCaps from Gst.Caps parameter */
+  mini_object = GST_MINI_OBJECT (pygobject_get (py_miniobj));
+  if (!gst_mini_object_is_writable (mini_object)) {
+    GstMiniObject *writable_obj = gst_mini_object_copy (mini_object);
+
+    GST_DEBUG ("Copied miniobject %p to writable miniobject %p", mini_object,
+        writable_obj);
+
+    // Drop our reference to the original miniobject
+    gst_mini_object_unref (mini_object);
+    pyg_boxed_set_ptr (py_miniobj, writable_obj);
+    Py_INCREF (Py_True);
+    res = Py_True;
+  } else {
+    Py_INCREF (Py_False);
+    res = Py_False;
+  }
+
+  return res;
 }
 
 static PyObject *
-_gst_caps_make_writable (PyObject * self, PyObject * args)
+_gst_mini_object_is_writable (PyObject * self, PyObject * args)
 {
-  PyTypeObject *gst_caps_type;
-  PyObject *py_caps, *res;
-  GstCaps *caps;
+  PyObject *py_miniobj, *res;
+  GstMiniObject *mini_object;
 
-  /* Look up Gst.Caps and Gst.Structure parameters */
-  gst_caps_type = pygobject_lookup_class (_gst_caps_type);
-  if (!PyArg_ParseTuple (args, "O!", gst_caps_type, &py_caps))
+  py_miniobj = PyTuple_GetItem (args, 0);
+  if (py_miniobj == NULL) {
+    PyErr_SetString (PyExc_TypeError, "Expected a PyGObject");
     return NULL;
+  }
 
   /* Extract GstCaps from Gst.Caps parameter */
-  caps = GST_CAPS (pygobject_get (py_caps));
-
-  if (!gst_caps_is_writable (caps)) {
-    GstMiniObject *writable_caps =
-        gst_mini_object_copy (GST_MINI_OBJECT (caps));
-
-    GST_DEBUG ("Copied caps %p to writable caps %p", caps, writable_caps);
-
-    // Drop our reference to the original caps
-    gst_caps_unref (caps);
-    pyg_boxed_set_ptr (py_caps, writable_caps);
+  mini_object = GST_MINI_OBJECT (pygobject_get (py_miniobj));
+  if (gst_mini_object_is_writable (mini_object)) {
     Py_INCREF (Py_True);
     res = Py_True;
   } else {
@@ -1013,7 +1014,7 @@ _gst_caps_get_structure (PyObject * self, PyObject * args)
 }
 
 static PyObject *
-_gst_caps_get_writable_structure (PyObject * self, PyObject * args)
+_gst_caps_writable_structure (PyObject * self, PyObject * args)
 {
   PyTypeObject *gst_caps_type;
   PyObject *py_caps, *py_structure;
@@ -1222,10 +1223,13 @@ static PyMethodDef _gi_gst_functions[] = {
   {"buffer_override_unmap", (PyCFunction) _gst_buffer_override_unmap, METH_VARARGS, NULL},
   {"memory_override_map", (PyCFunction) _gst_memory_override_map, METH_VARARGS, NULL},
   {"memory_override_unmap", (PyCFunction) _gst_memory_override_unmap, METH_VARARGS, NULL},
+
   {"caps_get_structure", (PyCFunction) _gst_caps_get_structure, METH_VARARGS, NULL},
-  {"caps_get_writable_structure", (PyCFunction) _gst_caps_get_writable_structure, METH_VARARGS, NULL},
-  {"caps_make_writable", (PyCFunction) _gst_caps_make_writable, METH_VARARGS, NULL},
-  {"caps_is_writable", (PyCFunction) _gst_caps_is_writable, METH_VARARGS, NULL},
+  {"caps_writable_structure", (PyCFunction) _gst_caps_writable_structure, METH_VARARGS, NULL},
+
+  {"mini_object_make_writable", (PyCFunction) _gst_mini_object_make_writable, METH_VARARGS, NULL},
+  {"mini_object_is_writable", (PyCFunction) _gst_mini_object_is_writable, METH_VARARGS, NULL},
+
   {"_get_object_ptr", (PyCFunction) _gst_get_object_ptr, METH_VARARGS, NULL},
   {NULL, NULL, 0, NULL}
 };
