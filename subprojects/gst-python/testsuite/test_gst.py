@@ -16,6 +16,11 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+import gi
+
+
+gi.require_version('Gst', '1.0')
+
 
 from gi.repository import Gst
 from common import TestCase, unittest
@@ -107,7 +112,7 @@ class TestCaps(TestCase):
         caps.mini_object.refcount += 1
 
         with self.assertRaises(Gst.NotWritableCaps):
-            with caps.get_structure_writable(0) as s:
+            with caps.writable_structure(0) as s:
                 s.set_value("rate", 44100)
 
         caps.mini_object.refcount -= 1
@@ -125,10 +130,10 @@ class TestCaps(TestCase):
         caps = capsfilter.get_property("caps")
 
         with self.assertRaises(Gst.NotWritableCaps):
-            with caps.get_structure_writable(0) as s:
+            with caps.writable_structure(0) as s:
                 s.set_value("rate", 44100)
         caps.make_writable()
-        with caps.get_structure_writable(0) as s:
+        with caps.writable_structure(0) as s:
             s.set_value("rate", 44100)
         capsfilter.set_property("caps", caps)
         caps = capsfilter.get_property("caps")
@@ -139,7 +144,7 @@ class TestCaps(TestCase):
         Gst.init(None)
         caps = Gst.Caps("audio/x-raw")
 
-        with caps.get_structure_writable(0) as s:
+        with caps.writable_structure(0) as s:
             s.set_value("rate", 44100)
             s.set_value("channels", 2)
         with caps.get_structure(0) as s:
@@ -150,7 +155,7 @@ class TestCaps(TestCase):
         Gst.init(None)
         caps = Gst.Caps("audio/x-raw")
 
-        with caps.get_structure_writable(0) as s:
+        with caps.writable_structure(0) as s:
             del caps
             s.set_value("rate", 44100)
             s.set_value("channels", 2)
