@@ -966,6 +966,67 @@ _gst_mini_object_make_writable (PyObject * self, PyObject * args)
 }
 
 static PyObject *
+_gst_mini_object_flags (PyObject * self, PyObject * args)
+{
+  PyObject *py_miniobj;
+  GstMiniObject *mini_object;
+
+  py_miniobj = PyTuple_GetItem (args, 0);
+  if (py_miniobj == NULL) {
+    PyErr_SetString (PyExc_TypeError, "Expected a PyGObject");
+    return NULL;
+  }
+
+  mini_object = GST_MINI_OBJECT (pygobject_get (py_miniobj));
+  return pyg_flags_from_gtype (gst_mini_object_flags_get_type (),
+      mini_object->flags);
+}
+
+
+static PyObject *
+_gst_mini_object_set_flags (PyObject * self, PyObject * args)
+{
+  PyObject *py_miniobj, *py_flags;
+  GstMiniObject *mini_object;
+
+  py_miniobj = PyTuple_GetItem (args, 0);
+  if (py_miniobj == NULL) {
+    PyErr_SetString (PyExc_TypeError, "Expected a PyGObject");
+    return NULL;
+  }
+
+  mini_object = GST_MINI_OBJECT (pygobject_get (py_miniobj));
+  if (!gst_mini_object_is_writable (mini_object)) {
+
+    PyObject *gstmodule = PyImport_ImportModule ("gi.repository.Gst");
+    PyObject *exc_class =
+        PyObject_GetAttrString (gstmodule, "NotWritableMiniObject");
+    PyObject *args_tuple =
+        PyUnicode_FromFormat ("Trying to set flags on immutable `%s`",
+        g_type_name (GST_MINI_OBJECT_TYPE (mini_object)));
+    PyObject *exc_instance = PyObject_Call (exc_class, args_tuple, NULL);
+
+    PyErr_SetObject (exc_class, exc_instance);
+    Py_DECREF (exc_instance);
+
+    return NULL;
+  }
+
+  py_flags = PyTuple_GetItem (args, 1);
+  if (py_flags == NULL) {
+    PyErr_SetString (PyExc_TypeError, "Expected a flags");
+    return NULL;
+  }
+
+  GstMiniObjectFlags flags;
+  pyg_flags_get_value (gst_mini_object_flags_get_type (), py_flags, &flags);
+
+  mini_object->flags = flags;
+
+  Py_RETURN_NONE;
+}
+
+static PyObject *
 _gst_mini_object_is_writable (PyObject * self, PyObject * args)
 {
   PyObject *py_miniobj, *res;
@@ -977,7 +1038,6 @@ _gst_mini_object_is_writable (PyObject * self, PyObject * args)
     return NULL;
   }
 
-  /* Extract GstCaps from Gst.Caps parameter */
   mini_object = GST_MINI_OBJECT (pygobject_get (py_miniobj));
   if (gst_mini_object_is_writable (mini_object)) {
     Py_INCREF (Py_True);
@@ -1003,10 +1063,8 @@ _gst_caps_get_structure (PyObject * self, PyObject * args)
   if (!PyArg_ParseTuple (args, "O!i", gst_caps_type, &py_caps, &idx))
     return NULL;
 
-  /* Extract GstCaps from Gst.Caps parameter */
   caps = GST_CAPS (pygobject_get (py_caps));
 
-  /* Get the structure at the given index */
   py_structure = pyg_boxed_new (_gst_structure_type,
       gst_caps_get_structure (caps, idx), FALSE, FALSE);
 
@@ -1031,8 +1089,9 @@ _gst_caps_writable_structure (PyObject * self, PyObject * args)
   if (!gst_caps_is_writable (caps)) {
     PyObject *gstmodule = PyImport_ImportModule ("gi.repository.Gst");
     PyObject *exc_class = PyObject_GetAttrString (gstmodule, "NotWritableCaps");
-    PyObject *args_tuple = Py_BuildValue ("(s)",
-        "Trying to get writable structure from immutable caps");
+    PyObject *args_tuple =
+        PyUnicode_FromFormat ("Trying to write structure on immutable `%s`",
+        g_type_name (GST_MINI_OBJECT_TYPE (caps)));
     PyObject *exc_instance = PyObject_Call (exc_class, args_tuple, NULL);
 
     PyErr_SetObject (exc_class, exc_instance);
@@ -1044,6 +1103,176 @@ _gst_caps_writable_structure (PyObject * self, PyObject * args)
   /* Get the structure at the given index */
   py_structure = pyg_boxed_new (_gst_structure_type,
       gst_caps_get_structure (caps, idx), FALSE, FALSE);
+
+  return py_structure;
+}
+
+static PyObject *
+_gst_query_get_structure (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_query_type;
+  PyObject *py_query, *py_structure;
+  GstQuery *query;
+
+  /* Look up Gst.Query and Gst.Structure parameters */
+  gst_query_type = pygobject_lookup_class (_gst_query_type);
+  if (!PyArg_ParseTuple (args, "O!", gst_query_type, &py_query))
+    return NULL;
+
+  /* Extract GstQuery from Gst.Query parameter */
+  query = GST_QUERY (pygobject_get (py_query));
+
+  /* Get the structure at the given index */
+  py_structure = pyg_boxed_new (_gst_structure_type,
+      (GstStructure *) gst_query_get_structure (query), FALSE, FALSE);
+
+  return py_structure;
+}
+
+static PyObject *
+_gst_query_writable_structure (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_query_type;
+  PyObject *py_query, *py_structure;
+  GstQuery *query;
+
+  /* Look up Gst.Query and Gst.Structure parameters */
+  gst_query_type = pygobject_lookup_class (_gst_query_type);
+  if (!PyArg_ParseTuple (args, "O!", gst_query_type, &py_query))
+    return NULL;
+
+  /* Extract GstQuery from Gst.Query parameter */
+  query = GST_QUERY (pygobject_get (py_query));
+  if (!gst_query_is_writable (query)) {
+    PyObject *gstmodule = PyImport_ImportModule ("gi.repository.Gst");
+    PyObject *exc_class =
+        PyObject_GetAttrString (gstmodule, "NotWritableQuery");
+    PyObject *args_tuple = Py_BuildValue ("(s)",
+        "Trying to get writable structure from immutable query");
+    PyObject *exc_instance = PyObject_Call (exc_class, args_tuple, NULL);
+
+    PyErr_SetObject (exc_class, exc_instance);
+    Py_DECREF (exc_instance);
+
+    return NULL;
+  }
+
+  /* Get the structure at the given index */
+  py_structure = pyg_boxed_new (_gst_structure_type,
+      gst_query_writable_structure (query), FALSE, FALSE);
+
+  return py_structure;
+}
+
+static PyObject *
+_gst_event_get_structure (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_event_type;
+  PyObject *py_event, *py_structure;
+  GstEvent *event;
+
+  /* Look up Gst.Event and Gst.Structure parameters */
+  gst_event_type = pygobject_lookup_class (_gst_event_type);
+  if (!PyArg_ParseTuple (args, "O!", gst_event_type, &py_event))
+    return NULL;
+
+  /* Extract GstEvent from Gst.Event parameter */
+  event = GST_EVENT (pygobject_get (py_event));
+
+  /* Get the structure at the given index */
+  py_structure = pyg_boxed_new (_gst_structure_type,
+      (GstStructure *) gst_event_get_structure (event), FALSE, FALSE);
+
+  return py_structure;
+}
+
+static PyObject *
+_gst_event_writable_structure (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_event_type;
+  PyObject *py_event, *py_structure;
+  GstEvent *event;
+
+  /* Look up Gst.Event and Gst.Structure parameters */
+  gst_event_type = pygobject_lookup_class (_gst_event_type);
+  if (!PyArg_ParseTuple (args, "O!", gst_event_type, &py_event))
+    return NULL;
+
+  /* Extract GstEvent from Gst.Event parameter */
+  event = GST_EVENT (pygobject_get (py_event));
+  if (!gst_event_is_writable (event)) {
+    PyObject *gstmodule = PyImport_ImportModule ("gi.repository.Gst");
+    PyObject *exc_class =
+        PyObject_GetAttrString (gstmodule, "NotWritableEvent");
+    PyObject *args_tuple = Py_BuildValue ("(s)",
+        "Trying to get writable structure from immutable event");
+    PyObject *exc_instance = PyObject_Call (exc_class, args_tuple, NULL);
+
+    PyErr_SetObject (exc_class, exc_instance);
+    Py_DECREF (exc_instance);
+
+    return NULL;
+  }
+
+  /* Get the structure at the given index */
+  py_structure = pyg_boxed_new (_gst_structure_type,
+      gst_event_writable_structure (event), FALSE, FALSE);
+
+  return py_structure;
+}
+
+static PyObject *
+_gst_context_get_structure (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_context_type;
+  PyObject *py_context, *py_structure;
+  GstContext *context;
+
+  /* Look up Gst.Context and Gst.Structure parameters */
+  gst_context_type = pygobject_lookup_class (_gst_context_type);
+  if (!PyArg_ParseTuple (args, "O!", gst_context_type, &py_context))
+    return NULL;
+
+  /* Extract GstContext from Gst.Context parameter */
+  context = GST_CONTEXT (pygobject_get (py_context));
+
+  /* Get the structure at the given index */
+  py_structure = pyg_boxed_new (_gst_structure_type,
+      (GstStructure *) gst_context_get_structure (context), FALSE, FALSE);
+
+  return py_structure;
+}
+
+static PyObject *
+_gst_context_writable_structure (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_context_type;
+  PyObject *py_context, *py_structure;
+  GstContext *context;
+
+  /* Look up Gst.Context and Gst.Structure parameters */
+  gst_context_type = pygobject_lookup_class (_gst_context_type);
+  if (!PyArg_ParseTuple (args, "O!", gst_context_type, &py_context))
+    return NULL;
+
+  context = GST_CONTEXT (pygobject_get (py_context));
+  if (!gst_context_is_writable (context)) {
+    PyObject *gstmodule = PyImport_ImportModule ("gi.repository.Gst");
+    PyObject *exc_class =
+        PyObject_GetAttrString (gstmodule, "NotWritableContext");
+    PyObject *args_tuple = Py_BuildValue ("(s)",
+        "Trying to get writable structure from immutable context");
+    PyObject *exc_instance = PyObject_Call (exc_class, args_tuple, NULL);
+
+    PyErr_SetObject (exc_class, exc_instance);
+    Py_DECREF (exc_instance);
+
+    return NULL;
+  }
+
+  /* Get the structure at the given index */
+  py_structure = pyg_boxed_new (_gst_structure_type,
+      gst_context_writable_structure (context), FALSE, FALSE);
 
   return py_structure;
 }
@@ -1134,6 +1363,203 @@ _gst_buffer_override_map_range (PyObject * self, PyObject * args)
 err:
   Py_INCREF (Py_False);
   return Py_False;
+}
+
+static GstBuffer *
+get_buffer_from_args (PyObject * args)
+{
+  PyTypeObject *gst_buffer_type;
+  PyObject *py_buffer;
+
+  gst_buffer_type = pygobject_lookup_class (_gst_buffer_type);
+  if (!PyArg_ParseTuple (args, "O!", gst_buffer_type, &py_buffer)) {
+    PyErr_BadArgument ();
+    return NULL;
+  }
+
+  return GST_BUFFER (pygobject_get (py_buffer));
+}
+
+#define DECLARE_BUFFER(args) \
+  GstBuffer *buffer = get_buffer_from_args(args); \
+  if (!buffer) return NULL;
+
+static PyObject *
+_gst_buffer_get_dts (PyObject * self, PyObject * args)
+{
+  DECLARE_BUFFER (args);
+
+  return PyLong_FromUnsignedLong (buffer->dts);
+}
+
+static gboolean
+mini_object_check_writability (GstMiniObject * mini_object, const gchar * field)
+{
+  if (!gst_mini_object_is_writable (mini_object)) {
+
+    PyObject *gstmodule = PyImport_ImportModule ("gi.repository.Gst");
+    PyObject *exc_class =
+        PyObject_GetAttrString (gstmodule, "NotWritableMiniObject");
+    PyObject *args_tuple =
+        PyUnicode_FromFormat ("Trying to set %s on immutable `%s`",
+        field, g_type_name (GST_MINI_OBJECT_TYPE (mini_object)));
+    PyObject *exc_instance = PyObject_Call (exc_class, args_tuple, NULL);
+
+    PyErr_SetObject (exc_class, exc_instance);
+    Py_DECREF (exc_instance);
+
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+
+static PyObject *
+_gst_buffer_set_dts (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_buffer_type;
+  PyObject *py_buffer;
+  GstClockTime dts;
+  GstBuffer *buffer;
+
+  gst_buffer_type = pygobject_lookup_class (_gst_buffer_type);
+  if (!PyArg_ParseTuple (args, "O!K", gst_buffer_type, &py_buffer, &dts)) {
+    PyErr_BadArgument ();
+    return NULL;
+  }
+
+  buffer = GST_BUFFER (pygobject_get (py_buffer));
+  if (!mini_object_check_writability (GST_MINI_OBJECT (buffer), "dts"))
+    return NULL;
+
+  buffer->dts = dts;
+
+  Py_RETURN_NONE;
+}
+
+static PyObject *
+_gst_buffer_get_pts (PyObject * self, PyObject * args)
+{
+  DECLARE_BUFFER (args);
+
+  return PyLong_FromUnsignedLong (buffer->pts);
+}
+
+static PyObject *
+_gst_buffer_set_pts (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_buffer_type;
+  PyObject *py_buffer;
+  GstClockTime pts;
+  GstBuffer *buffer;
+
+  gst_buffer_type = pygobject_lookup_class (_gst_buffer_type);
+  if (!PyArg_ParseTuple (args, "O!K", gst_buffer_type, &py_buffer, &pts)) {
+    PyErr_BadArgument ();
+    return NULL;
+  }
+
+  buffer = GST_BUFFER (pygobject_get (py_buffer));
+  if (!mini_object_check_writability (GST_MINI_OBJECT (buffer), "pts"))
+    return NULL;
+
+  buffer->pts = pts;
+
+  Py_RETURN_NONE;
+}
+
+static PyObject *
+_gst_buffer_get_duration (PyObject * self, PyObject * args)
+{
+  DECLARE_BUFFER (args);
+
+  return PyLong_FromUnsignedLong (buffer->duration);
+}
+
+static PyObject *
+_gst_buffer_set_duration (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_buffer_type;
+  PyObject *py_buffer;
+  GstClockTime duration;
+  GstBuffer *buffer;
+
+  gst_buffer_type = pygobject_lookup_class (_gst_buffer_type);
+  if (!PyArg_ParseTuple (args, "O!K", gst_buffer_type, &py_buffer, &duration)) {
+    PyErr_BadArgument ();
+    return NULL;
+  }
+
+  buffer = GST_BUFFER (pygobject_get (py_buffer));
+  if (!mini_object_check_writability (GST_MINI_OBJECT (buffer), "duration"))
+    return NULL;
+
+  buffer->duration = duration;
+
+  Py_RETURN_NONE;
+}
+
+static PyObject *
+_gst_buffer_get_offset (PyObject * self, PyObject * args)
+{
+  DECLARE_BUFFER (args);
+
+  return PyLong_FromUnsignedLong (buffer->offset);
+}
+
+static PyObject *
+_gst_buffer_set_offset (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_buffer_type;
+  PyObject *py_buffer;
+  GstClockTime offset;
+  GstBuffer *buffer;
+
+  gst_buffer_type = pygobject_lookup_class (_gst_buffer_type);
+  if (!PyArg_ParseTuple (args, "O!K", gst_buffer_type, &py_buffer, &offset)) {
+    PyErr_BadArgument ();
+    return NULL;
+  }
+
+  buffer = GST_BUFFER (pygobject_get (py_buffer));
+  if (!mini_object_check_writability (GST_MINI_OBJECT (buffer), "offset"))
+    return NULL;
+
+  buffer->offset = offset;
+
+  Py_RETURN_NONE;
+}
+
+static PyObject *
+_gst_buffer_get_offset_end (PyObject * self, PyObject * args)
+{
+  DECLARE_BUFFER (args);
+
+  return PyLong_FromUnsignedLong (buffer->offset_end);
+}
+
+static PyObject *
+_gst_buffer_set_offset_end (PyObject * self, PyObject * args)
+{
+  PyTypeObject *gst_buffer_type;
+  PyObject *py_buffer;
+  GstClockTime offset_end;
+  GstBuffer *buffer;
+
+  gst_buffer_type = pygobject_lookup_class (_gst_buffer_type);
+  if (!PyArg_ParseTuple (args, "O!K", gst_buffer_type, &py_buffer, &offset_end)) {
+    PyErr_BadArgument ();
+    return NULL;
+  }
+
+  buffer = GST_BUFFER (pygobject_get (py_buffer));
+  if (!mini_object_check_writability (GST_MINI_OBJECT (buffer), "offset_end"))
+    return NULL;
+
+  buffer->offset_end = offset_end;
+
+  Py_RETURN_NONE;
 }
 
 static PyObject *
@@ -1229,6 +1655,28 @@ static PyMethodDef _gi_gst_functions[] = {
 
   {"mini_object_make_writable", (PyCFunction) _gst_mini_object_make_writable, METH_VARARGS, NULL},
   {"mini_object_is_writable", (PyCFunction) _gst_mini_object_is_writable, METH_VARARGS, NULL},
+  {"mini_object_flags", (PyCFunction) _gst_mini_object_flags, METH_VARARGS, NULL},
+  {"mini_object_set_flags", (PyCFunction) _gst_mini_object_set_flags, METH_VARARGS, NULL},
+
+  {"event_get_structure", (PyCFunction) _gst_event_get_structure, METH_VARARGS, NULL},
+  {"event_writable_structure", (PyCFunction) _gst_event_writable_structure, METH_VARARGS, NULL},
+
+  {"query_get_structure", (PyCFunction) _gst_query_get_structure, METH_VARARGS, NULL},
+  {"query_writable_structure", (PyCFunction) _gst_query_writable_structure, METH_VARARGS, NULL},
+
+  {"context_get_structure", (PyCFunction) _gst_context_get_structure, METH_VARARGS, NULL},
+  {"context_writable_structure", (PyCFunction) _gst_context_writable_structure, METH_VARARGS, NULL},
+
+  {"buffer_get_pts", (PyCFunction) _gst_buffer_get_pts, METH_VARARGS, NULL},
+  {"buffer_set_pts", (PyCFunction) _gst_buffer_set_pts, METH_VARARGS, NULL},
+  {"buffer_get_duration", (PyCFunction) _gst_buffer_get_duration, METH_VARARGS, NULL},
+  {"buffer_set_duration", (PyCFunction) _gst_buffer_set_duration, METH_VARARGS, NULL},
+  {"buffer_get_dts", (PyCFunction) _gst_buffer_get_dts, METH_VARARGS, NULL},
+  {"buffer_set_dts", (PyCFunction) _gst_buffer_set_dts, METH_VARARGS, NULL},
+  {"buffer_get_offset", (PyCFunction) _gst_buffer_get_offset, METH_VARARGS, NULL},
+  {"buffer_set_offset", (PyCFunction) _gst_buffer_set_offset, METH_VARARGS, NULL},
+  {"buffer_get_offset_end", (PyCFunction) _gst_buffer_get_offset_end, METH_VARARGS, NULL},
+  {"buffer_set_offset_end", (PyCFunction) _gst_buffer_set_offset_end, METH_VARARGS, NULL},
 
   {"_get_object_ptr", (PyCFunction) _gst_get_object_ptr, METH_VARARGS, NULL},
   {NULL, NULL, 0, NULL}

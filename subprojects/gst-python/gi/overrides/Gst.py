@@ -110,12 +110,84 @@ Bin = override(Bin)
 __all__.append('Bin')
 
 
+class NotWritableMiniObject(Exception):
+    pass
+
+
+__all__.append('NotWritableMiniObject')
+
+
 class MiniObject:
     def make_writable(self):
         return _gi_gst.mini_object_make_writable(self)
 
     def is_writable(self):
         return _gi_gst.mini_object_is_writable(self)
+
+    def flags(self):
+        return _gi_gst.mini_object_flags(self)
+
+    def set_flags(self, flags):
+        _gi_gst.mini_object_set_flags(self, flags)
+
+
+class NotWritableQuery(Exception):
+    pass
+
+
+__all__.append('NotWritableQuery')
+
+
+class Query(Gst.Query, MiniObject):
+    def get_structure(self):
+        return StructureWrapper(_gi_gst.query_get_structure(self), self,
+                                False)
+
+    def writable_structure(self):
+        return StructureWrapper(_gi_gst.query_writable_structure(self), self, True)
+
+
+Query = override(Query)
+__all__.append('Query')
+
+
+class NotWritableEvent(Exception):
+    pass
+
+
+__all__.append('NotWritableEvent')
+
+
+class Event(Gst.Event, MiniObject):
+    def get_structure(self):
+        return StructureWrapper(_gi_gst.event_get_structure(self), self,
+                                False)
+
+    def writable_structure(self):
+        return StructureWrapper(_gi_gst.event_writable_structure(self), self, True)
+
+
+Event = override(Event)
+__all__.append('Event')
+
+class NotWritableContext(Exception):
+    pass
+
+
+__all__.append('NotWritableContext')
+
+
+class Context(Gst.Context, MiniObject):
+    def get_structure(self):
+        return StructureWrapper(_gi_gst.context_get_structure(self), self,
+                                False)
+
+    def writable_structure(self):
+        return StructureWrapper(_gi_gst.context_writable_structure(self), self, True)
+
+
+Context = override(Context)
+__all__.append('Context')
 
 
 class NotWritableCaps(Exception):
@@ -826,7 +898,42 @@ class MapInfo:
 __all__.append("MapInfo")
 
 
-class Buffer(Gst.Buffer):
+class Buffer(Gst.Buffer, MiniObject):
+    def flags(self):
+        return MiniObject.flags(self)
+
+    def set_flags(self, flags):
+        return MiniObject.set_flags(self, flags)
+
+    def dts(self):
+        return _gi_gst.buffer_get_dts(self)
+
+    def set_dts(self, dts):
+        _gi_gst.buffer_set_dts(self, dts)
+
+    def pts(self):
+        return _gi_gst.buffer_get_pts(self)
+
+    def set_pts(self, pts):
+        _gi_gst.buffer_set_pts(self, pts)
+
+    def set_duration(self, duration):
+        _gi_gst.buffer_set_duration(self, duration)
+
+    def duration(self):
+        return _gi_gst.buffer_get_duration(self)
+
+    def offset(self):
+        return _gi_gst.buffer_get_offset(self)
+
+    def set_offset(self, offset):
+        _gi_gst.buffer_set_offset(self, offset)
+
+    def offset_end(self):
+        return _gi_gst.buffer_get_offset_end(self)
+
+    def set_offset_end(self, offset_end):
+        _gi_gst.buffer_set_offset_end(self, offset_end)
 
     def map_range(self, idx, length, flags):
         mapinfo = MapInfo()

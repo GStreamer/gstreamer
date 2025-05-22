@@ -191,6 +191,44 @@ class TestStructure(TestCase):
         self.assertEqual(test['test'], 1)
 
 
+class TestEvent(TestCase):
+    def test_writable(self):
+        Gst.init(None)
+        event = Gst.Event.new_caps(Gst.Caps("audio/x-raw"))
+
+        with event.writable_structure() as s:
+            s.set_value("rate", 44100)
+            s.set_value("channels", 2)
+
+        with event.get_structure() as s:
+            self.assertEqual(s["rate"], 44100)
+            self.assertEqual(s["channels"], 2)
+
+
+class TestQuery(TestCase):
+    def test_writable(self):
+        Gst.init(None)
+        query = Gst.Query.new_caps(Gst.Caps("audio/x-raw"))
+
+        with query.writable_structure() as s:
+            del query
+            s.set_value("rate", 44100)
+            s.set_value("channels", 2)
+            self.assertEqual(s["rate"], 44100)
+            self.assertEqual(s["channels"], 2)
+
+class TestContext(TestCase):
+    def test_writable(self):
+        Gst.init(None)
+        context = Gst.Context.new("test", True)
+
+        with context.writable_structure() as s:
+            s.set_value("one", 1)
+            s.set_value("two", 2)
+            self.assertEqual(s["one"], 1)
+            self.assertEqual(s["two"], 2)
+
+
 class TestBin(TestCase):
 
     def test_add_pad(self):
@@ -198,7 +236,33 @@ class TestBin(TestCase):
         self.assertEqual(Gst.ElementFactory.make("bin", None).sinkpads, [])
 
 
-class TestBufferMap(TestCase):
+class TestBuffer(TestCase):
+
+    def test_set_metas(self):
+        Gst.init(None)
+        buf = Gst.Buffer.new_wrapped([42])
+        buf.set_pts(42)
+        self.assertEqual(buf.pts(), 42)
+
+        make_not_writable = buf.mini_object
+        with self.assertRaises(Gst.NotWritableMiniObject):
+            buf.set_pts(52)
+
+        buf.make_writable()
+        buf.set_dts(62)
+        self.assertEqual(buf.dts(), 62)
+        self.assertTrue(buf.flags() & Gst.BufferFlags.DISCONT == 0)
+        buf.set_flags(Gst.BufferFlags.DISCONT)
+        buf.set_duration(72)
+        self.assertEqual(buf.duration(), 72)
+        buf.set_offset(82)
+        self.assertEqual(buf.offset(), 82)
+        buf.set_offset_end(92)
+        self.assertEqual(buf.offset_end(), 92)
+        del make_not_writable
+
+        meta = buf.add_reference_timestamp_meta(Gst.Caps("yes"), 10, 10)
+        self.assertEqual(buf.get_reference_timestamp_meta(), meta)
 
     def test_map_unmap_manual(self):
         Gst.init(None)
