@@ -67,6 +67,7 @@ typedef union
   orc_int32 x2[2];
   float x2f[2];
   orc_int16 x4[4];
+  orc_int8 x8[8];
 } orc_union64;
 #endif
 #ifndef ORC_RESTRICT
@@ -74,6 +75,8 @@ typedef union
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4
 #define ORC_RESTRICT __restrict__
+#elif defined(_MSC_VER)
+#define ORC_RESTRICT __restrict
 #else
 #define ORC_RESTRICT
 #endif
@@ -101,6 +104,7 @@ void orc_sad_nxm_u8 (orc_uint32 * ORC_RESTRICT a1,
 
 
 /* begin Orc C target preamble */
+#include <math.h>
 #define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
 #define ORC_ABS(a) ((a)<0 ? -(a) : (a))
 #define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))
@@ -136,6 +140,8 @@ void orc_sad_nxm_u8 (orc_uint32 * ORC_RESTRICT a1,
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4
 #define ORC_RESTRICT __restrict__
+#elif defined(_MSC_VER)
+#define ORC_RESTRICT __restrict
 #else
 #define ORC_RESTRICT
 #endif
@@ -219,42 +225,38 @@ orc_sad_nxm_u8 (orc_uint32 * ORC_RESTRICT a1, const orc_uint8 * ORC_RESTRICT s1,
     int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 7, 9, 14, 111, 114, 99, 95, 115, 97, 100, 95, 110, 120, 109, 95,
-        117, 56, 12, 1, 1, 12, 1, 1, 13, 4, 182, 12, 4, 5, 2, 0,
+    static const orc_uint8 bc[] = {
+      1, 7, 9, 14, 111, 114, 99, 95, 115, 97, 100, 95, 110, 120, 109, 95,
+      117, 56, 12, 1, 1, 12, 1, 1, 13, 4, 182, 12, 4, 5, 2, 0,
 
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p, _backup_orc_sad_nxm_u8);
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p, _backup_orc_sad_nxm_u8);
 #else
-      p = orc_program_new ();
-      orc_program_set_2d (p);
-      orc_program_set_name (p, "orc_sad_nxm_u8");
-      orc_program_set_backup_function (p, _backup_orc_sad_nxm_u8);
-      orc_program_add_source (p, 1, "s1");
-      orc_program_add_source (p, 1, "s2");
-      orc_program_add_accumulator (p, 4, "a1");
+    p = orc_program_new ();
+    orc_program_set_2d (p);
+    orc_program_set_name (p, "orc_sad_nxm_u8");
+    orc_program_set_backup_function (p, _backup_orc_sad_nxm_u8);
+    orc_program_add_source (p, 1, "s1");
+    orc_program_add_source (p, 1, "s2");
+    orc_program_add_accumulator (p, 4, "a1");
 
-      orc_program_append_2 (p, "accsadubl", 0, ORC_VAR_A1, ORC_VAR_S1,
-          ORC_VAR_S2, ORC_VAR_D1);
+    orc_program_append_2 (p, "accsadubl", 0, ORC_VAR_A1, ORC_VAR_S1, ORC_VAR_S2,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;

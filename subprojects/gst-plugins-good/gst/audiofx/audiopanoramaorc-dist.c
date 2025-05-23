@@ -67,6 +67,7 @@ typedef union
   orc_int32 x2[2];
   float x2f[2];
   orc_int16 x4[4];
+  orc_int8 x8[8];
 } orc_union64;
 #endif
 #ifndef ORC_RESTRICT
@@ -74,6 +75,8 @@ typedef union
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4
 #define ORC_RESTRICT __restrict__
+#elif defined(_MSC_VER)
+#define ORC_RESTRICT __restrict
 #else
 #define ORC_RESTRICT
 #endif
@@ -134,6 +137,7 @@ void audiopanoramam_orc_process_f32_ch2_sim_left (gfloat * ORC_RESTRICT d1,
 
 
 /* begin Orc C target preamble */
+#include <math.h>
 #define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
 #define ORC_ABS(a) ((a)<0 ? -(a) : (a))
 #define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))
@@ -169,6 +173,8 @@ void audiopanoramam_orc_process_f32_ch2_sim_left (gfloat * ORC_RESTRICT d1,
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4
 #define ORC_RESTRICT __restrict__
+#elif defined(_MSC_VER)
+#define ORC_RESTRICT __restrict
 #else
 #define ORC_RESTRICT
 #endif
@@ -251,44 +257,39 @@ audiopanoramam_orc_process_s16_ch1_none (gint16 * ORC_RESTRICT d1,
     const gint16 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 39, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115,
-        49,
-        54, 95, 99, 104, 49, 95, 110, 111, 110, 101, 11, 4, 4, 12, 2, 2,
-        195, 0, 4, 4, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch1_none);
+    static const orc_uint8 bc[] = {
+      1, 9, 39, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115, 49,
+      54, 95, 99, 104, 49, 95, 110, 111, 110, 101, 11, 4, 4, 12, 2, 2,
+      195, 0, 4, 4, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch1_none);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch1_none");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch1_none);
-      orc_program_add_destination (p, 4, "d1");
-      orc_program_add_source (p, 2, "s1");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch1_none");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch1_none);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_source (p, 2, "s1");
 
-      orc_program_append_2 (p, "mergewl", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_S1,
-          ORC_VAR_D1);
+    orc_program_append_2 (p, "mergewl", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_S1,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -377,44 +378,39 @@ audiopanoramam_orc_process_f32_ch1_none (gfloat * ORC_RESTRICT d1,
     const gfloat * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 39, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102,
-        51,
-        50, 95, 99, 104, 49, 95, 110, 111, 110, 101, 11, 8, 8, 12, 4, 4,
-        194, 0, 4, 4, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch1_none);
+    static const orc_uint8 bc[] = {
+      1, 9, 39, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102, 51,
+      50, 95, 99, 104, 49, 95, 110, 111, 110, 101, 11, 8, 8, 12, 4, 4,
+      194, 0, 4, 4, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch1_none);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch1_none");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch1_none);
-      orc_program_add_destination (p, 8, "d1");
-      orc_program_add_source (p, 4, "s1");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch1_none");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch1_none);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_source (p, 4, "s1");
 
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_S1,
-          ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_S1,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -489,44 +485,39 @@ audiopanoramam_orc_process_s16_ch2_none (gint16 * ORC_RESTRICT d1,
     const gint16 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 39, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115,
-        49,
-        54, 95, 99, 104, 50, 95, 110, 111, 110, 101, 11, 4, 4, 12, 4, 4,
-        21, 1, 79, 0, 4, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch2_none);
+    static const orc_uint8 bc[] = {
+      1, 9, 39, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115, 49,
+      54, 95, 99, 104, 50, 95, 110, 111, 110, 101, 11, 4, 4, 12, 4, 4,
+      21, 1, 79, 0, 4, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch2_none);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch2_none");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch2_none);
-      orc_program_add_destination (p, 4, "d1");
-      orc_program_add_source (p, 4, "s1");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch2_none");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch2_none);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_source (p, 4, "s1");
 
-      orc_program_append_2 (p, "copyw", 1, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1,
-          ORC_VAR_D1);
+    orc_program_append_2 (p, "copyw", 1, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -601,44 +592,39 @@ audiopanoramam_orc_process_f32_ch2_none (gfloat * ORC_RESTRICT d1,
     const gfloat * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 39, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102,
-        51,
-        50, 95, 99, 104, 50, 95, 110, 111, 110, 101, 11, 8, 8, 12, 8, 8,
-        21, 1, 112, 0, 4, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch2_none);
+    static const orc_uint8 bc[] = {
+      1, 9, 39, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102, 51,
+      50, 95, 99, 104, 50, 95, 110, 111, 110, 101, 11, 8, 8, 12, 8, 8,
+      21, 1, 112, 0, 4, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch2_none);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch2_none");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch2_none);
-      orc_program_add_destination (p, 8, "d1");
-      orc_program_add_source (p, 8, "s1");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch2_none");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch2_none);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_source (p, 8, "s1");
 
-      orc_program_append_2 (p, "copyl", 1, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1,
-          ORC_VAR_D1);
+    orc_program_append_2 (p, "copyl", 1, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -687,7 +673,7 @@ audiopanoramam_orc_process_s16_ch1_psy (gint16 * ORC_RESTRICT d1,
     /* 1: convswl */
     var39.i = var35.i;
     /* 2: convlf */
-    var40.f = var39.i;
+    var40.f = (float) var39.i;
     /* 4: mulf */
     {
       orc_union32 _src1;
@@ -772,7 +758,7 @@ _backup_audiopanoramam_orc_process_s16_ch1_psy (OrcExecutor * ORC_RESTRICT ex)
     /* 1: convswl */
     var39.i = var35.i;
     /* 2: convlf */
-    var40.f = var39.i;
+    var40.f = (float) var39.i;
     /* 4: mulf */
     {
       orc_union32 _src1;
@@ -829,63 +815,58 @@ audiopanoramam_orc_process_s16_ch1_psy (gint16 * ORC_RESTRICT d1,
     const gint16 * ORC_RESTRICT s1, float p1, float p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 38, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115,
-        49,
-        54, 95, 99, 104, 49, 95, 112, 115, 121, 11, 4, 4, 12, 2, 2, 17,
-        4, 17, 4, 20, 8, 20, 4, 20, 4, 153, 33, 4, 211, 33, 33, 202,
-        34, 33, 25, 202, 33, 33, 24, 194, 32, 33, 34, 21, 1, 210, 32, 32,
-        21, 1, 165, 0, 32, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch1_psy);
+    static const orc_uint8 bc[] = {
+      1, 9, 38, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115, 49,
+      54, 95, 99, 104, 49, 95, 112, 115, 121, 11, 4, 4, 12, 2, 2, 17,
+      4, 17, 4, 20, 8, 20, 4, 20, 4, 153, 33, 4, 211, 33, 33, 202,
+      34, 33, 25, 202, 33, 33, 24, 194, 32, 33, 34, 21, 1, 210, 32, 32,
+      21, 1, 165, 0, 32, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch1_psy);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch1_psy");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch1_psy);
-      orc_program_add_destination (p, 4, "d1");
-      orc_program_add_source (p, 2, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-      orc_program_add_parameter_float (p, 4, "p2");
-      orc_program_add_temporary (p, 8, "t1");
-      orc_program_add_temporary (p, 4, "t2");
-      orc_program_add_temporary (p, 4, "t3");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch1_psy");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch1_psy);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_source (p, 2, "s1");
+    orc_program_add_parameter_float (p, 4, "p1");
+    orc_program_add_parameter_float (p, 4, "p2");
+    orc_program_add_temporary (p, 8, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+    orc_program_add_temporary (p, 4, "t3");
 
-      orc_program_append_2 (p, "convswl", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convlf", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T3, ORC_VAR_T2, ORC_VAR_P2,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T3,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convfl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convssslw", 1, ORC_VAR_D1, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
+    orc_program_append_2 (p, "convswl", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convlf", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T3, ORC_VAR_T2, ORC_VAR_P2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convfl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convssslw", 1, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -1040,53 +1021,48 @@ audiopanoramam_orc_process_f32_ch1_psy (gfloat * ORC_RESTRICT d1,
     const gfloat * ORC_RESTRICT s1, float p1, float p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 38, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102,
-        51,
-        50, 95, 99, 104, 49, 95, 112, 115, 121, 11, 8, 8, 12, 4, 4, 17,
-        4, 17, 4, 20, 4, 20, 4, 202, 33, 4, 25, 202, 32, 4, 24, 194,
-        0, 32, 33, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch1_psy);
+    static const orc_uint8 bc[] = {
+      1, 9, 38, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102, 51,
+      50, 95, 99, 104, 49, 95, 112, 115, 121, 11, 8, 8, 12, 4, 4, 17,
+      4, 17, 4, 20, 4, 20, 4, 202, 33, 4, 25, 202, 32, 4, 24, 194,
+      0, 32, 33, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch1_psy);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch1_psy");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch1_psy);
-      orc_program_add_destination (p, 8, "d1");
-      orc_program_add_source (p, 4, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-      orc_program_add_parameter_float (p, 4, "p2");
-      orc_program_add_temporary (p, 4, "t1");
-      orc_program_add_temporary (p, 4, "t2");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch1_psy");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch1_psy);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_source (p, 4, "s1");
+    orc_program_add_parameter_float (p, 4, "p1");
+    orc_program_add_parameter_float (p, 4, "p2");
+    orc_program_add_temporary (p, 4, "t1");
+    orc_program_add_temporary (p, 4, "t2");
 
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_P2,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
-          ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_P2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -1149,8 +1125,8 @@ audiopanoramam_orc_process_s16_ch2_psy_right (gint16 * ORC_RESTRICT d1,
     var40.x2[0] = var36.x2[0];
     var40.x2[1] = var36.x2[1];
     /* 2: convlf */
-    var41.x2f[0] = var40.x2[0];
-    var41.x2f[1] = var40.x2[1];
+    var41.x2f[0] = (float) var40.x2[0];
+    var41.x2f[1] = (float) var40.x2[1];
     /* 3: select0ql */
     {
       orc_union64 _src;
@@ -1262,8 +1238,8 @@ _backup_audiopanoramam_orc_process_s16_ch2_psy_right (OrcExecutor *
     var40.x2[0] = var36.x2[0];
     var40.x2[1] = var36.x2[1];
     /* 2: convlf */
-    var41.x2f[0] = var40.x2[0];
-    var41.x2f[1] = var40.x2[1];
+    var41.x2f[0] = (float) var40.x2[0];
+    var41.x2f[1] = (float) var40.x2[1];
     /* 3: select0ql */
     {
       orc_union64 _src;
@@ -1342,71 +1318,66 @@ audiopanoramam_orc_process_s16_ch2_psy_right (gint16 * ORC_RESTRICT d1,
     const gint16 * ORC_RESTRICT s1, float p1, float p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 44, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115,
-        49,
-        54, 95, 99, 104, 50, 95, 112, 115, 121, 95, 114, 105, 103, 104, 116, 11,
-        4, 4, 12, 4, 4, 17, 4, 17, 4, 20, 8, 20, 4, 20, 4, 20,
-        4, 21, 1, 153, 32, 4, 21, 1, 211, 32, 32, 192, 33, 32, 193, 34,
-        32, 202, 35, 33, 25, 202, 33, 33, 24, 200, 34, 35, 34, 194, 32, 33,
-        34, 21, 1, 210, 32, 32, 21, 1, 165, 0, 32, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch2_psy_right);
+    static const orc_uint8 bc[] = {
+      1, 9, 44, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115, 49,
+      54, 95, 99, 104, 50, 95, 112, 115, 121, 95, 114, 105, 103, 104, 116, 11,
+      4, 4, 12, 4, 4, 17, 4, 17, 4, 20, 8, 20, 4, 20, 4, 20,
+      4, 21, 1, 153, 32, 4, 21, 1, 211, 32, 32, 192, 33, 32, 193, 34,
+      32, 202, 35, 33, 25, 202, 33, 33, 24, 200, 34, 35, 34, 194, 32, 33,
+      34, 21, 1, 210, 32, 32, 21, 1, 165, 0, 32, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch2_psy_right);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch2_psy_right");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch2_psy_right);
-      orc_program_add_destination (p, 4, "d1");
-      orc_program_add_source (p, 4, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-      orc_program_add_parameter_float (p, 4, "p2");
-      orc_program_add_temporary (p, 8, "t1");
-      orc_program_add_temporary (p, 4, "t2");
-      orc_program_add_temporary (p, 4, "t3");
-      orc_program_add_temporary (p, 4, "t4");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch2_psy_right");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch2_psy_right);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_source (p, 4, "s1");
+    orc_program_add_parameter_float (p, 4, "p1");
+    orc_program_add_parameter_float (p, 4, "p2");
+    orc_program_add_temporary (p, 8, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+    orc_program_add_temporary (p, 4, "t3");
+    orc_program_add_temporary (p, 4, "t4");
 
-      orc_program_append_2 (p, "convswl", 1, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convlf", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T2, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T3, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T4, ORC_VAR_T2, ORC_VAR_P2,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "addf", 0, ORC_VAR_T3, ORC_VAR_T4, ORC_VAR_T3,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T3,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convfl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convssslw", 1, ORC_VAR_D1, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
+    orc_program_append_2 (p, "convswl", 1, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convlf", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T3, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T4, ORC_VAR_T2, ORC_VAR_P2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "addf", 0, ORC_VAR_T3, ORC_VAR_T4, ORC_VAR_T3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convfl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convssslw", 1, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -1469,8 +1440,8 @@ audiopanoramam_orc_process_s16_ch2_psy_left (gint16 * ORC_RESTRICT d1,
     var40.x2[0] = var36.x2[0];
     var40.x2[1] = var36.x2[1];
     /* 2: convlf */
-    var41.x2f[0] = var40.x2[0];
-    var41.x2f[1] = var40.x2[1];
+    var41.x2f[0] = (float) var40.x2[0];
+    var41.x2f[1] = (float) var40.x2[1];
     /* 3: select0ql */
     {
       orc_union64 _src;
@@ -1582,8 +1553,8 @@ _backup_audiopanoramam_orc_process_s16_ch2_psy_left (OrcExecutor *
     var40.x2[0] = var36.x2[0];
     var40.x2[1] = var36.x2[1];
     /* 2: convlf */
-    var41.x2f[0] = var40.x2[0];
-    var41.x2f[1] = var40.x2[1];
+    var41.x2f[0] = (float) var40.x2[0];
+    var41.x2f[1] = (float) var40.x2[1];
     /* 3: select0ql */
     {
       orc_union64 _src;
@@ -1662,71 +1633,66 @@ audiopanoramam_orc_process_s16_ch2_psy_left (gint16 * ORC_RESTRICT d1,
     const gint16 * ORC_RESTRICT s1, float p1, float p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 43, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115,
-        49,
-        54, 95, 99, 104, 50, 95, 112, 115, 121, 95, 108, 101, 102, 116, 11, 4,
-        4, 12, 4, 4, 17, 4, 17, 4, 20, 8, 20, 4, 20, 4, 20, 4,
-        21, 1, 153, 32, 4, 21, 1, 211, 32, 32, 192, 33, 32, 193, 35, 32,
-        202, 34, 35, 24, 202, 35, 35, 25, 200, 33, 34, 33, 194, 32, 33, 35,
-        21, 1, 210, 32, 32, 21, 1, 165, 0, 32, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch2_psy_left);
+    static const orc_uint8 bc[] = {
+      1, 9, 43, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115, 49,
+      54, 95, 99, 104, 50, 95, 112, 115, 121, 95, 108, 101, 102, 116, 11, 4,
+      4, 12, 4, 4, 17, 4, 17, 4, 20, 8, 20, 4, 20, 4, 20, 4,
+      21, 1, 153, 32, 4, 21, 1, 211, 32, 32, 192, 33, 32, 193, 35, 32,
+      202, 34, 35, 24, 202, 35, 35, 25, 200, 33, 34, 33, 194, 32, 33, 35,
+      21, 1, 210, 32, 32, 21, 1, 165, 0, 32, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch2_psy_left);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch2_psy_left");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch2_psy_left);
-      orc_program_add_destination (p, 4, "d1");
-      orc_program_add_source (p, 4, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-      orc_program_add_parameter_float (p, 4, "p2");
-      orc_program_add_temporary (p, 8, "t1");
-      orc_program_add_temporary (p, 4, "t2");
-      orc_program_add_temporary (p, 4, "t3");
-      orc_program_add_temporary (p, 4, "t4");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch2_psy_left");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch2_psy_left);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_source (p, 4, "s1");
+    orc_program_add_parameter_float (p, 4, "p1");
+    orc_program_add_parameter_float (p, 4, "p2");
+    orc_program_add_temporary (p, 8, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+    orc_program_add_temporary (p, 4, "t3");
+    orc_program_add_temporary (p, 4, "t4");
 
-      orc_program_append_2 (p, "convswl", 1, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convlf", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T2, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T4, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T3, ORC_VAR_T4, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T4, ORC_VAR_T4, ORC_VAR_P2,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "addf", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_T2,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T4,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convfl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convssslw", 1, ORC_VAR_D1, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
+    orc_program_append_2 (p, "convswl", 1, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convlf", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T4, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T3, ORC_VAR_T4, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T4, ORC_VAR_T4, ORC_VAR_P2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "addf", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_T2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T4,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convfl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convssslw", 1, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -1932,61 +1898,56 @@ audiopanoramam_orc_process_f32_ch2_psy_right (gfloat * ORC_RESTRICT d1,
     const gfloat * ORC_RESTRICT s1, float p1, float p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 44, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102,
-        51,
-        50, 95, 99, 104, 50, 95, 112, 115, 121, 95, 114, 105, 103, 104, 116, 11,
-        8, 8, 12, 8, 8, 17, 4, 17, 4, 20, 4, 20, 4, 20, 4, 192,
-        32, 4, 193, 33, 4, 202, 34, 32, 25, 202, 32, 32, 24, 200, 33, 34,
-        33, 194, 0, 32, 33, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch2_psy_right);
+    static const orc_uint8 bc[] = {
+      1, 9, 44, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102, 51,
+      50, 95, 99, 104, 50, 95, 112, 115, 121, 95, 114, 105, 103, 104, 116, 11,
+      8, 8, 12, 8, 8, 17, 4, 17, 4, 20, 4, 20, 4, 20, 4, 192,
+      32, 4, 193, 33, 4, 202, 34, 32, 25, 202, 32, 32, 24, 200, 33, 34,
+      33, 194, 0, 32, 33, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch2_psy_right);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch2_psy_right");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch2_psy_right);
-      orc_program_add_destination (p, 8, "d1");
-      orc_program_add_source (p, 8, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-      orc_program_add_parameter_float (p, 4, "p2");
-      orc_program_add_temporary (p, 4, "t1");
-      orc_program_add_temporary (p, 4, "t2");
-      orc_program_add_temporary (p, 4, "t3");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch2_psy_right");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch2_psy_right);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_source (p, 8, "s1");
+    orc_program_add_parameter_float (p, 4, "p1");
+    orc_program_add_parameter_float (p, 4, "p2");
+    orc_program_add_temporary (p, 4, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+    orc_program_add_temporary (p, 4, "t3");
 
-      orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T1, ORC_VAR_S1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T2, ORC_VAR_S1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T3, ORC_VAR_T1, ORC_VAR_P2,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "addf", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_T2,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
-          ORC_VAR_D1);
+    orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T3, ORC_VAR_T1, ORC_VAR_P2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "addf", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_T2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -2192,61 +2153,56 @@ audiopanoramam_orc_process_f32_ch2_psy_left (gfloat * ORC_RESTRICT d1,
     const gfloat * ORC_RESTRICT s1, float p1, float p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 43, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102,
-        51,
-        50, 95, 99, 104, 50, 95, 112, 115, 121, 95, 108, 101, 102, 116, 11, 8,
-        8, 12, 8, 8, 17, 4, 17, 4, 20, 4, 20, 4, 20, 4, 192, 32,
-        4, 193, 34, 4, 202, 33, 34, 24, 202, 34, 34, 25, 200, 32, 33, 32,
-        194, 0, 32, 34, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch2_psy_left);
+    static const orc_uint8 bc[] = {
+      1, 9, 43, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102, 51,
+      50, 95, 99, 104, 50, 95, 112, 115, 121, 95, 108, 101, 102, 116, 11, 8,
+      8, 12, 8, 8, 17, 4, 17, 4, 20, 4, 20, 4, 20, 4, 192, 32,
+      4, 193, 34, 4, 202, 33, 34, 24, 202, 34, 34, 25, 200, 32, 33, 32,
+      194, 0, 32, 34, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch2_psy_left);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch2_psy_left");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch2_psy_left);
-      orc_program_add_destination (p, 8, "d1");
-      orc_program_add_source (p, 8, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-      orc_program_add_parameter_float (p, 4, "p2");
-      orc_program_add_temporary (p, 4, "t1");
-      orc_program_add_temporary (p, 4, "t2");
-      orc_program_add_temporary (p, 4, "t3");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch2_psy_left");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch2_psy_left);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_source (p, 8, "s1");
+    orc_program_add_parameter_float (p, 4, "p1");
+    orc_program_add_parameter_float (p, 4, "p2");
+    orc_program_add_temporary (p, 4, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+    orc_program_add_temporary (p, 4, "t3");
 
-      orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T1, ORC_VAR_S1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T3, ORC_VAR_S1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T3, ORC_VAR_T3, ORC_VAR_P2,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "addf", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T3,
-          ORC_VAR_D1);
+    orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T3, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T3, ORC_VAR_T3, ORC_VAR_P2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "addf", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T3,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -2301,7 +2257,7 @@ audiopanoramam_orc_process_s16_ch1_sim_right (gint16 * ORC_RESTRICT d1,
     /* 1: convswl */
     var38.i = var35.i;
     /* 2: convlf */
-    var39.f = var38.i;
+    var39.f = (float) var38.i;
     /* 4: mulf */
     {
       orc_union32 _src1;
@@ -2373,7 +2329,7 @@ _backup_audiopanoramam_orc_process_s16_ch1_sim_right (OrcExecutor *
     /* 1: convswl */
     var38.i = var35.i;
     /* 2: convlf */
-    var39.f = var38.i;
+    var39.f = (float) var38.i;
     /* 4: mulf */
     {
       orc_union32 _src1;
@@ -2420,60 +2376,55 @@ audiopanoramam_orc_process_s16_ch1_sim_right (gint16 * ORC_RESTRICT d1,
     const gint16 * ORC_RESTRICT s1, float p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 44, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115,
-        49,
-        54, 95, 99, 104, 49, 95, 115, 105, 109, 95, 114, 105, 103, 104, 116, 11,
-        4, 4, 12, 2, 2, 17, 4, 20, 8, 20, 4, 20, 4, 153, 33, 4,
-        211, 33, 33, 202, 34, 33, 24, 194, 32, 33, 34, 21, 1, 210, 32, 32,
-        21, 1, 165, 0, 32, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch1_sim_right);
+    static const orc_uint8 bc[] = {
+      1, 9, 44, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115, 49,
+      54, 95, 99, 104, 49, 95, 115, 105, 109, 95, 114, 105, 103, 104, 116, 11,
+      4, 4, 12, 2, 2, 17, 4, 20, 8, 20, 4, 20, 4, 153, 33, 4,
+      211, 33, 33, 202, 34, 33, 24, 194, 32, 33, 34, 21, 1, 210, 32, 32,
+      21, 1, 165, 0, 32, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch1_sim_right);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch1_sim_right");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch1_sim_right);
-      orc_program_add_destination (p, 4, "d1");
-      orc_program_add_source (p, 2, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-      orc_program_add_temporary (p, 8, "t1");
-      orc_program_add_temporary (p, 4, "t2");
-      orc_program_add_temporary (p, 4, "t3");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch1_sim_right");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch1_sim_right);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_source (p, 2, "s1");
+    orc_program_add_parameter_float (p, 4, "p1");
+    orc_program_add_temporary (p, 8, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+    orc_program_add_temporary (p, 4, "t3");
 
-      orc_program_append_2 (p, "convswl", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convlf", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T3, ORC_VAR_T2, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T3,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convfl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convssslw", 1, ORC_VAR_D1, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
+    orc_program_append_2 (p, "convswl", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convlf", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T3, ORC_VAR_T2, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convfl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convssslw", 1, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -2523,7 +2474,7 @@ audiopanoramam_orc_process_s16_ch1_sim_left (gint16 * ORC_RESTRICT d1,
     /* 1: convswl */
     var38.i = var35.i;
     /* 2: convlf */
-    var39.f = var38.i;
+    var39.f = (float) var38.i;
     /* 4: mulf */
     {
       orc_union32 _src1;
@@ -2595,7 +2546,7 @@ _backup_audiopanoramam_orc_process_s16_ch1_sim_left (OrcExecutor *
     /* 1: convswl */
     var38.i = var35.i;
     /* 2: convlf */
-    var39.f = var38.i;
+    var39.f = (float) var38.i;
     /* 4: mulf */
     {
       orc_union32 _src1;
@@ -2642,60 +2593,55 @@ audiopanoramam_orc_process_s16_ch1_sim_left (gint16 * ORC_RESTRICT d1,
     const gint16 * ORC_RESTRICT s1, float p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 43, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115,
-        49,
-        54, 95, 99, 104, 49, 95, 115, 105, 109, 95, 108, 101, 102, 116, 11, 4,
-        4, 12, 2, 2, 17, 4, 20, 8, 20, 4, 20, 4, 153, 34, 4, 211,
-        34, 34, 202, 33, 34, 24, 194, 32, 33, 34, 21, 1, 210, 32, 32, 21,
-        1, 165, 0, 32, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch1_sim_left);
+    static const orc_uint8 bc[] = {
+      1, 9, 43, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115, 49,
+      54, 95, 99, 104, 49, 95, 115, 105, 109, 95, 108, 101, 102, 116, 11, 4,
+      4, 12, 2, 2, 17, 4, 20, 8, 20, 4, 20, 4, 153, 34, 4, 211,
+      34, 34, 202, 33, 34, 24, 194, 32, 33, 34, 21, 1, 210, 32, 32, 21,
+      1, 165, 0, 32, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch1_sim_left);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch1_sim_left");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch1_sim_left);
-      orc_program_add_destination (p, 4, "d1");
-      orc_program_add_source (p, 2, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-      orc_program_add_temporary (p, 8, "t1");
-      orc_program_add_temporary (p, 4, "t2");
-      orc_program_add_temporary (p, 4, "t3");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch1_sim_left");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch1_sim_left);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_source (p, 2, "s1");
+    orc_program_add_parameter_float (p, 4, "p1");
+    orc_program_add_temporary (p, 8, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+    orc_program_add_temporary (p, 4, "t3");
 
-      orc_program_append_2 (p, "convswl", 0, ORC_VAR_T3, ORC_VAR_S1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convlf", 0, ORC_VAR_T3, ORC_VAR_T3, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T3,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convfl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convssslw", 1, ORC_VAR_D1, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
+    orc_program_append_2 (p, "convswl", 0, ORC_VAR_T3, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convlf", 0, ORC_VAR_T3, ORC_VAR_T3, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convfl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convssslw", 1, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -2748,8 +2694,8 @@ audiopanoramam_orc_process_s16_ch2_sim_right (gint16 * ORC_RESTRICT d1,
     var38.x2[0] = var35.x2[0];
     var38.x2[1] = var35.x2[1];
     /* 2: convlf */
-    var39.x2f[0] = var38.x2[0];
-    var39.x2f[1] = var38.x2[1];
+    var39.x2f[0] = (float) var38.x2[0];
+    var39.x2f[1] = (float) var38.x2[1];
     /* 3: select0ql */
     {
       orc_union64 _src;
@@ -2836,8 +2782,8 @@ _backup_audiopanoramam_orc_process_s16_ch2_sim_right (OrcExecutor *
     var38.x2[0] = var35.x2[0];
     var38.x2[1] = var35.x2[1];
     /* 2: convlf */
-    var39.x2f[0] = var38.x2[0];
-    var39.x2f[1] = var38.x2[1];
+    var39.x2f[0] = (float) var38.x2[0];
+    var39.x2f[1] = (float) var38.x2[1];
     /* 3: select0ql */
     {
       orc_union64 _src;
@@ -2896,65 +2842,60 @@ audiopanoramam_orc_process_s16_ch2_sim_right (gint16 * ORC_RESTRICT d1,
     const gint16 * ORC_RESTRICT s1, float p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 44, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115,
-        49,
-        54, 95, 99, 104, 50, 95, 115, 105, 109, 95, 114, 105, 103, 104, 116, 11,
-        4, 4, 12, 4, 4, 17, 4, 20, 8, 20, 4, 20, 4, 21, 1, 153,
-        32, 4, 21, 1, 211, 32, 32, 192, 33, 32, 193, 34, 32, 202, 34, 34,
-        24, 194, 32, 33, 34, 21, 1, 210, 32, 32, 21, 1, 165, 0, 32, 2,
-        0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch2_sim_right);
+    static const orc_uint8 bc[] = {
+      1, 9, 44, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115, 49,
+      54, 95, 99, 104, 50, 95, 115, 105, 109, 95, 114, 105, 103, 104, 116, 11,
+      4, 4, 12, 4, 4, 17, 4, 20, 8, 20, 4, 20, 4, 21, 1, 153,
+      32, 4, 21, 1, 211, 32, 32, 192, 33, 32, 193, 34, 32, 202, 34, 34,
+      24, 194, 32, 33, 34, 21, 1, 210, 32, 32, 21, 1, 165, 0, 32, 2,
+      0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch2_sim_right);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch2_sim_right");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch2_sim_right);
-      orc_program_add_destination (p, 4, "d1");
-      orc_program_add_source (p, 4, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-      orc_program_add_temporary (p, 8, "t1");
-      orc_program_add_temporary (p, 4, "t2");
-      orc_program_add_temporary (p, 4, "t3");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch2_sim_right");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch2_sim_right);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_source (p, 4, "s1");
+    orc_program_add_parameter_float (p, 4, "p1");
+    orc_program_add_temporary (p, 8, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+    orc_program_add_temporary (p, 4, "t3");
 
-      orc_program_append_2 (p, "convswl", 1, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convlf", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T2, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T3, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T3, ORC_VAR_T3, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T3,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convfl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convssslw", 1, ORC_VAR_D1, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
+    orc_program_append_2 (p, "convswl", 1, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convlf", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T3, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T3, ORC_VAR_T3, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convfl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convssslw", 1, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -3007,8 +2948,8 @@ audiopanoramam_orc_process_s16_ch2_sim_left (gint16 * ORC_RESTRICT d1,
     var38.x2[0] = var35.x2[0];
     var38.x2[1] = var35.x2[1];
     /* 2: convlf */
-    var39.x2f[0] = var38.x2[0];
-    var39.x2f[1] = var38.x2[1];
+    var39.x2f[0] = (float) var38.x2[0];
+    var39.x2f[1] = (float) var38.x2[1];
     /* 3: select0ql */
     {
       orc_union64 _src;
@@ -3095,8 +3036,8 @@ _backup_audiopanoramam_orc_process_s16_ch2_sim_left (OrcExecutor *
     var38.x2[0] = var35.x2[0];
     var38.x2[1] = var35.x2[1];
     /* 2: convlf */
-    var39.x2f[0] = var38.x2[0];
-    var39.x2f[1] = var38.x2[1];
+    var39.x2f[0] = (float) var38.x2[0];
+    var39.x2f[1] = (float) var38.x2[1];
     /* 3: select0ql */
     {
       orc_union64 _src;
@@ -3155,65 +3096,60 @@ audiopanoramam_orc_process_s16_ch2_sim_left (gint16 * ORC_RESTRICT d1,
     const gint16 * ORC_RESTRICT s1, float p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 43, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115,
-        49,
-        54, 95, 99, 104, 50, 95, 115, 105, 109, 95, 108, 101, 102, 116, 11, 4,
-        4, 12, 4, 4, 17, 4, 20, 8, 20, 4, 20, 4, 21, 1, 153, 32,
-        4, 21, 1, 211, 32, 32, 192, 33, 32, 193, 34, 32, 202, 33, 33, 24,
-        194, 32, 33, 34, 21, 1, 210, 32, 32, 21, 1, 165, 0, 32, 2, 0,
+    static const orc_uint8 bc[] = {
+      1, 9, 43, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 115, 49,
+      54, 95, 99, 104, 50, 95, 115, 105, 109, 95, 108, 101, 102, 116, 11, 4,
+      4, 12, 4, 4, 17, 4, 20, 8, 20, 4, 20, 4, 21, 1, 153, 32,
+      4, 21, 1, 211, 32, 32, 192, 33, 32, 193, 34, 32, 202, 33, 33, 24,
+      194, 32, 33, 34, 21, 1, 210, 32, 32, 21, 1, 165, 0, 32, 2, 0,
 
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch2_sim_left);
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch2_sim_left);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch2_sim_left");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_s16_ch2_sim_left);
-      orc_program_add_destination (p, 4, "d1");
-      orc_program_add_source (p, 4, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-      orc_program_add_temporary (p, 8, "t1");
-      orc_program_add_temporary (p, 4, "t2");
-      orc_program_add_temporary (p, 4, "t3");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_s16_ch2_sim_left");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_s16_ch2_sim_left);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_source (p, 4, "s1");
+    orc_program_add_parameter_float (p, 4, "p1");
+    orc_program_add_temporary (p, 8, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+    orc_program_add_temporary (p, 4, "t3");
 
-      orc_program_append_2 (p, "convswl", 1, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convlf", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T2, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T3, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T3,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convfl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convssslw", 1, ORC_VAR_D1, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
+    orc_program_append_2 (p, "convswl", 1, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convlf", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T3, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_T3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convfl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convssslw", 1, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -3342,52 +3278,47 @@ audiopanoramam_orc_process_f32_ch1_sim_right (gfloat * ORC_RESTRICT d1,
     const gfloat * ORC_RESTRICT s1, float p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 44, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102,
-        51,
-        50, 95, 99, 104, 49, 95, 115, 105, 109, 95, 114, 105, 103, 104, 116, 11,
-        8, 8, 12, 4, 4, 17, 4, 20, 4, 20, 4, 112, 32, 4, 202, 33,
-        4, 24, 194, 0, 32, 33, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch1_sim_right);
+    static const orc_uint8 bc[] = {
+      1, 9, 44, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102, 51,
+      50, 95, 99, 104, 49, 95, 115, 105, 109, 95, 114, 105, 103, 104, 116, 11,
+      8, 8, 12, 4, 4, 17, 4, 20, 4, 20, 4, 112, 32, 4, 202, 33,
+      4, 24, 194, 0, 32, 33, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch1_sim_right);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch1_sim_right");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch1_sim_right);
-      orc_program_add_destination (p, 8, "d1");
-      orc_program_add_source (p, 4, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-      orc_program_add_temporary (p, 4, "t1");
-      orc_program_add_temporary (p, 4, "t2");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch1_sim_right");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch1_sim_right);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_source (p, 4, "s1");
+    orc_program_add_parameter_float (p, 4, "p1");
+    orc_program_add_temporary (p, 4, "t1");
+    orc_program_add_temporary (p, 4, "t2");
 
-      orc_program_append_2 (p, "copyl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
-          ORC_VAR_D1);
+    orc_program_append_2 (p, "copyl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -3516,52 +3447,47 @@ audiopanoramam_orc_process_f32_ch1_sim_left (gfloat * ORC_RESTRICT d1,
     const gfloat * ORC_RESTRICT s1, float p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 43, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102,
-        51,
-        50, 95, 99, 104, 49, 95, 115, 105, 109, 95, 108, 101, 102, 116, 11, 8,
-        8, 12, 4, 4, 17, 4, 20, 4, 20, 4, 202, 32, 4, 24, 112, 33,
-        4, 194, 0, 32, 33, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch1_sim_left);
+    static const orc_uint8 bc[] = {
+      1, 9, 43, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102, 51,
+      50, 95, 99, 104, 49, 95, 115, 105, 109, 95, 108, 101, 102, 116, 11, 8,
+      8, 12, 4, 4, 17, 4, 20, 4, 20, 4, 202, 32, 4, 24, 112, 33,
+      4, 194, 0, 32, 33, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch1_sim_left);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch1_sim_left");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch1_sim_left);
-      orc_program_add_destination (p, 8, "d1");
-      orc_program_add_source (p, 4, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-      orc_program_add_temporary (p, 4, "t1");
-      orc_program_add_temporary (p, 4, "t2");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch1_sim_left");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch1_sim_left);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_source (p, 4, "s1");
+    orc_program_add_parameter_float (p, 4, "p1");
+    orc_program_add_temporary (p, 4, "t1");
+    orc_program_add_temporary (p, 4, "t2");
 
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "copyl", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
-          ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "copyl", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -3712,54 +3638,49 @@ audiopanoramam_orc_process_f32_ch2_sim_right (gfloat * ORC_RESTRICT d1,
     const gfloat * ORC_RESTRICT s1, float p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 44, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102,
-        51,
-        50, 95, 99, 104, 50, 95, 115, 105, 109, 95, 114, 105, 103, 104, 116, 11,
-        8, 8, 12, 8, 8, 17, 4, 20, 4, 20, 4, 192, 32, 4, 193, 33,
-        4, 202, 33, 33, 24, 194, 0, 32, 33, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch2_sim_right);
+    static const orc_uint8 bc[] = {
+      1, 9, 44, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102, 51,
+      50, 95, 99, 104, 50, 95, 115, 105, 109, 95, 114, 105, 103, 104, 116, 11,
+      8, 8, 12, 8, 8, 17, 4, 20, 4, 20, 4, 192, 32, 4, 193, 33,
+      4, 202, 33, 33, 24, 194, 0, 32, 33, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch2_sim_right);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch2_sim_right");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch2_sim_right);
-      orc_program_add_destination (p, 8, "d1");
-      orc_program_add_source (p, 8, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-      orc_program_add_temporary (p, 4, "t1");
-      orc_program_add_temporary (p, 4, "t2");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch2_sim_right");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch2_sim_right);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_source (p, 8, "s1");
+    orc_program_add_parameter_float (p, 4, "p1");
+    orc_program_add_temporary (p, 4, "t1");
+    orc_program_add_temporary (p, 4, "t2");
 
-      orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T1, ORC_VAR_S1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T2, ORC_VAR_S1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
-          ORC_VAR_D1);
+    orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
@@ -3910,54 +3831,49 @@ audiopanoramam_orc_process_f32_ch2_sim_left (gfloat * ORC_RESTRICT d1,
     const gfloat * ORC_RESTRICT s1, float p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 43, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
-        109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102,
-        51,
-        50, 95, 99, 104, 50, 95, 115, 105, 109, 95, 108, 101, 102, 116, 11, 8,
-        8, 12, 8, 8, 17, 4, 20, 4, 20, 4, 192, 32, 4, 193, 33, 4,
-        202, 32, 32, 24, 194, 0, 32, 33, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch2_sim_left);
+    static const orc_uint8 bc[] = {
+      1, 9, 43, 97, 117, 100, 105, 111, 112, 97, 110, 111, 114, 97, 109, 97,
+      109, 95, 111, 114, 99, 95, 112, 114, 111, 99, 101, 115, 115, 95, 102, 51,
+      50, 95, 99, 104, 50, 95, 115, 105, 109, 95, 108, 101, 102, 116, 11, 8,
+      8, 12, 8, 8, 17, 4, 20, 4, 20, 4, 192, 32, 4, 193, 33, 4,
+      202, 32, 32, 24, 194, 0, 32, 33, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch2_sim_left);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch2_sim_left");
-      orc_program_set_backup_function (p,
-          _backup_audiopanoramam_orc_process_f32_ch2_sim_left);
-      orc_program_add_destination (p, 8, "d1");
-      orc_program_add_source (p, 8, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-      orc_program_add_temporary (p, 4, "t1");
-      orc_program_add_temporary (p, 4, "t2");
+    p = orc_program_new ();
+    orc_program_set_name (p, "audiopanoramam_orc_process_f32_ch2_sim_left");
+    orc_program_set_backup_function (p,
+        _backup_audiopanoramam_orc_process_f32_ch2_sim_left);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_source (p, 8, "s1");
+    orc_program_add_parameter_float (p, 4, "p1");
+    orc_program_add_temporary (p, 4, "t1");
+    orc_program_add_temporary (p, 4, "t2");
 
-      orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T1, ORC_VAR_S1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T2, ORC_VAR_S1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
-          ORC_VAR_D1);
+    orc_program_append_2 (p, "select0ql", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "select1ql", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;

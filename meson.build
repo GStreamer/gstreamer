@@ -173,7 +173,7 @@ endif
 
 orc_option = get_option('orc')
 # There is a check below to keep this in sync with subprojects/gst-plugins-base/meson.build
-orc_req = '>= 0.4.24'
+orc_req = '>= 0.4.34'
 orc_source_option = get_option('orc-source')
 orc_subproject = disabler()
 if orc_option.allowed()

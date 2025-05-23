@@ -67,6 +67,7 @@ typedef union
   orc_int32 x2[2];
   float x2f[2];
   orc_int16 x4[4];
+  orc_int8 x8[8];
 } orc_union64;
 #endif
 #ifndef ORC_RESTRICT
@@ -74,6 +75,8 @@ typedef union
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4
 #define ORC_RESTRICT __restrict__
+#elif defined(_MSC_VER)
+#define ORC_RESTRICT __restrict
 #else
 #define ORC_RESTRICT
 #endif
@@ -99,6 +102,7 @@ void video_test_src_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n);
 
 
 /* begin Orc C target preamble */
+#include <math.h>
 #define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
 #define ORC_ABS(a) ((a)<0 ? -(a) : (a))
 #define ORC_MIN(a,b) ((a)<(b) ? (a) : (b))
@@ -134,6 +138,8 @@ void video_test_src_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n);
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4
 #define ORC_RESTRICT __restrict__
+#elif defined(_MSC_VER)
+#define ORC_RESTRICT __restrict
 #else
 #define ORC_RESTRICT
 #endif
@@ -188,40 +194,36 @@ void
 video_test_src_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcCode *c = 0;
-  void (*func) (OrcExecutor *);
+  static OrcOnce once = ORC_ONCE_INIT;
+  OrcCode *c;
+  OrcExecutorFunc func = NULL;
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcProgram *p;
+  if (!orc_once_enter (&once, (void **) &c)) {
+    OrcProgram *p;
 
 #if 1
-      static const orc_uint8 bc[] = {
-        1, 9, 28, 118, 105, 100, 101, 111, 95, 116, 101, 115, 116, 95, 115, 114,
-        99, 95, 111, 114, 99, 95, 115, 112, 108, 97, 116, 95, 117, 51, 50, 11,
-        4, 4, 16, 4, 128, 0, 24, 2, 0,
-      };
-      p = orc_program_new_from_static_bytecode (bc);
-      orc_program_set_backup_function (p, _backup_video_test_src_orc_splat_u32);
+    static const orc_uint8 bc[] = {
+      1, 9, 28, 118, 105, 100, 101, 111, 95, 116, 101, 115, 116, 95, 115, 114,
+      99, 95, 111, 114, 99, 95, 115, 112, 108, 97, 116, 95, 117, 51, 50, 11,
+      4, 4, 16, 4, 128, 0, 24, 2, 0,
+    };
+    p = orc_program_new_from_static_bytecode (bc);
+    orc_program_set_backup_function (p, _backup_video_test_src_orc_splat_u32);
 #else
-      p = orc_program_new ();
-      orc_program_set_name (p, "video_test_src_orc_splat_u32");
-      orc_program_set_backup_function (p, _backup_video_test_src_orc_splat_u32);
-      orc_program_add_destination (p, 4, "d1");
-      orc_program_add_parameter (p, 4, "p1");
+    p = orc_program_new ();
+    orc_program_set_name (p, "video_test_src_orc_splat_u32");
+    orc_program_set_backup_function (p, _backup_video_test_src_orc_splat_u32);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_parameter (p, 4, "p1");
 
-      orc_program_append_2 (p, "storel", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
-          ORC_VAR_D1);
+    orc_program_append_2 (p, "storel", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
+        ORC_VAR_D1);
 #endif
 
-      orc_program_compile (p);
-      c = orc_program_take_code (p);
-      orc_program_free (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
+    orc_program_compile (p);
+    c = orc_program_take_code (p);
+    orc_program_free (p);
+    orc_once_leave (&once, c);
   }
   ex->arrays[ORC_VAR_A2] = c;
   ex->program = 0;
