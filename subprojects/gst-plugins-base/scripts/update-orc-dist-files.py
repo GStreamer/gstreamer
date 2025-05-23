@@ -43,6 +43,3 @@ dist_c = orc_src_base + "-dist.c"
 # copy generated files from build dir into source dir
 shutil.copyfile(gen_header, dist_h)
 shutil.copyfile(gen_source, dist_c)
-
-# run gst-indent on the .c files
-subprocess.run(['gst-indent-1.0', dist_c])
