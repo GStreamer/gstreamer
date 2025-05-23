@@ -914,7 +914,7 @@ gst_vtenc_h264_parse_profile_level_key (GstVTEnc * self, const gchar * profile,
     profile = "main";
   if (level_arg == NULL)
     level_arg = "AutoLevel";
-  strncpy (level, level_arg, sizeof (level));
+  strlcpy (level, level_arg, sizeof (level));
 
   if (!strcmp (profile, "constrained-baseline") ||
       !strcmp (profile, "baseline")) {
