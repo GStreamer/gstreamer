@@ -794,7 +794,7 @@ GST_START_TEST (test_encoder_h264_i)
   enc = setup_h264_encoder (width, height, sps_id, pps_id);
   if (!enc) {
     GST_WARNING ("Unable to initialize H264 encoder");
-    return;
+    goto beach;
   }
 
   buffer_pool = allocate_buffer_pool (enc, width, height);
@@ -816,6 +816,7 @@ GST_START_TEST (test_encoder_h264_i)
   fail_unless (gst_buffer_pool_set_active (img_pool, FALSE));
   gst_object_unref (img_pool);
 
+beach:
   tear_down_encoder (enc);
 }
 
@@ -837,7 +838,7 @@ GST_START_TEST (test_encoder_h264_i_p)
   enc = setup_h264_encoder (width, height, sps_id, pps_id);
   if (!enc) {
     GST_WARNING ("Unable to initialize H264 encoder");
-    return;
+    goto beach;
   }
 
   buffer_pool = allocate_buffer_pool (enc, width, height);
@@ -872,6 +873,7 @@ GST_START_TEST (test_encoder_h264_i_p)
   fail_unless (gst_buffer_pool_set_active (img_pool, FALSE));
   gst_object_unref (img_pool);
 
+beach:
   tear_down_encoder (enc);
 }
 
@@ -895,7 +897,7 @@ GST_START_TEST (test_encoder_h264_i_p_b)
   enc = setup_h264_encoder (width, height, sps_id, pps_id);
   if (!enc) {
     GST_WARNING ("Unable to initialize H264 encoder");
-    return;
+    goto beach;
   }
 
   fail_unless (gst_vulkan_encoder_caps (enc, &enc_caps));
