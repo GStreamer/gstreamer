@@ -582,6 +582,9 @@ GST_API
 GstStructure *        gst_structure_intersect     (const GstStructure * struct1,
                                                    const GstStructure * struct2) G_GNUC_MALLOC;
 
+GST_API
+gboolean              gst_structure_is_writable   (const GstStructure        * structure);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstStructure, gst_structure_free)
 
 G_END_DECLS

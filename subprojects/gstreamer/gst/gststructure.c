@@ -4684,3 +4684,23 @@ gst_structure_get_flags (const GstStructure * structure,
 
   return TRUE;
 }
+
+
+/**
+ * gst_structure_is_writable:
+ * @structure: a #GstStructure
+ *
+ * Checks if the structure is writable. %TRUE if parent
+ * is not set or its refcount is 1, %FALSE otherwise.
+ *
+ * Returns: %TRUE if the structure is writable.
+ *
+ * Since: 1.28
+ */
+gboolean
+gst_structure_is_writable (const GstStructure * structure)
+{
+  g_return_val_if_fail (GST_IS_STRUCTURE (structure), FALSE);
+
+  return IS_MUTABLE (structure);
+}
