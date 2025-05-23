@@ -1027,6 +1027,30 @@ _gst_mini_object_set_flags (PyObject * self, PyObject * args)
 }
 
 static PyObject *
+_gst_structure_is_writable (PyObject * self, PyObject * args)
+{
+  PyObject *py_structure, *res;
+  GstStructure *structure;
+
+  py_structure = PyTuple_GetItem (args, 0);
+  if (py_structure == NULL) {
+    PyErr_SetString (PyExc_TypeError, "Expected a PyObject");
+    return NULL;
+  }
+
+  structure = GST_STRUCTURE (pygobject_get (py_structure));
+  if (gst_structure_is_writable (structure)) {
+    Py_INCREF (Py_True);
+    res = Py_True;
+  } else {
+    Py_INCREF (Py_False);
+    res = Py_False;
+  }
+
+  return res;
+}
+
+static PyObject *
 _gst_mini_object_is_writable (PyObject * self, PyObject * args)
 {
   PyObject *py_miniobj, *res;
@@ -1650,8 +1674,11 @@ static PyMethodDef _gi_gst_functions[] = {
   {"memory_override_map", (PyCFunction) _gst_memory_override_map, METH_VARARGS, NULL},
   {"memory_override_unmap", (PyCFunction) _gst_memory_override_unmap, METH_VARARGS, NULL},
 
+  {"structure_is_writable", (PyCFunction) _gst_structure_is_writable, METH_VARARGS, NULL},
+
   {"caps_get_structure", (PyCFunction) _gst_caps_get_structure, METH_VARARGS, NULL},
   {"caps_writable_structure", (PyCFunction) _gst_caps_writable_structure, METH_VARARGS, NULL},
+
 
   {"mini_object_make_writable", (PyCFunction) _gst_mini_object_make_writable, METH_VARARGS, NULL},
   {"mini_object_is_writable", (PyCFunction) _gst_mini_object_is_writable, METH_VARARGS, NULL},
