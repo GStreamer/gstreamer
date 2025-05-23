@@ -4439,12 +4439,25 @@ gst_matroska_mux_all_pads_have_codec_id (GstMatroskaMux * mux)
   return result;
 }
 
+static gboolean
+gst_matroska_mux_write_streams_header (GstMatroskaMux * mux)
+{
+  mux->state = GST_MATROSKA_MUX_STATE_HEADER;
+  gst_ebml_start_streamheader (mux->ebml_write);
+  if (!gst_matroska_mux_start_file (mux)) {
+    GST_ERROR_OBJECT (mux, "Failed to write headers");
+    return FALSE;
+  }
+  gst_matroska_mux_stop_streamheader (mux);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
 {
   GstMatroskaMux *mux = GST_MATROSKA_MUX (agg);
   GstClockTime buffer_timestamp, end_ts = GST_CLOCK_TIME_NONE;
-  GstEbmlWrite *ebml = mux->ebml_write;
   GstMatroskaMuxPad *best = NULL;
   GstBuffer *buf;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -4458,6 +4471,15 @@ gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
   if (best == NULL) {
     if (gst_matroska_mux_all_pads_eos (mux)) {
       GST_DEBUG_OBJECT (mux, "All pads EOS. Finishing...");
+      /* write headers if not already done */
+      if (mux->state == GST_MATROSKA_MUX_STATE_START) {
+        GST_WARNING_OBJECT (mux, "All pads EOS before any buffers received. "
+            "Writing stream headers before finishing");
+        if (!gst_matroska_mux_write_streams_header (mux)) {
+          ret = GST_FLOW_ERROR;
+          goto exit;
+        }
+      }
       if (!mux->ebml_write->streamable) {
         gst_matroska_mux_finish (mux);
       } else {
@@ -4476,13 +4498,10 @@ gst_matroska_mux_aggregate (GstAggregator * agg, gboolean timeout)
       ret = GST_AGGREGATOR_FLOW_NEED_DATA;
       goto exit;
     }
-    mux->state = GST_MATROSKA_MUX_STATE_HEADER;
-    gst_ebml_start_streamheader (ebml);
-    if (!gst_matroska_mux_start_file (mux)) {
+    if (!gst_matroska_mux_write_streams_header (mux)) {
       ret = GST_FLOW_ERROR;
       goto exit;
     }
-    gst_matroska_mux_stop_streamheader (mux);
     mux->state = GST_MATROSKA_MUX_STATE_DATA;
   }
 
