@@ -223,9 +223,18 @@ if qt6_option.require(have_qt_windowing, error_message: 'No windowing, enable on
   resource_file = configure_file(input: 'resources.qrc', output: 'resources.qrc', copy: true)
   qresources = qt6_mod.compile_resources(sources: resource_file, method: qt6_method)
 
+  qml6gl_kwargs = {}
+  if host_system == 'darwin'
+    fs = import('fs')
+    qt_bindir = fs.parent(find_program('qmake6').full_path())
+    qt_libdir = fs.parent(qt_bindir) / 'lib'
+    qml6gl_kwargs += {'build_rpath': qt_libdir}
+  endif
+
   gstqml6gl = library('gstqml6', qt6_sources, moc_files, qresources,
     cpp_args : gst_plugins_good_args + qt_defines,
     link_args : noseh_link_args,
+    kwargs: qml6gl_kwargs,
     include_directories: [configinc, libsinc],
     dependencies : [gst_dep, gstvideo_dep, gstgl_dep, gstglproto_dep, qt6qml_dep, optional_deps],
     override_options : ['cpp_std=c++17'],
