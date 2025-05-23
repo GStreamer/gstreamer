@@ -1021,6 +1021,28 @@ downloadhelper_stop (DownloadHelper * dh)
    * and need cleaning up */
   g_mutex_lock (&dh->transfer_lock);
 
+  while (1) {
+    GTask *transfer_task;
+    DownloadHelperTransfer *transfer;
+    DownloadRequest *request;
+
+    transfer_task = g_async_queue_try_pop (dh->transfer_requests);
+    if (!transfer_task)
+      break;
+
+    transfer = g_task_get_task_data (transfer_task);
+    request = transfer->request;
+
+    download_request_lock (request);
+    request->state = DOWNLOAD_REQUEST_STATE_UNSENT;
+    request->in_use = FALSE;
+    download_request_unlock (request);
+
+    g_cancellable_cancel (g_task_get_cancellable (transfer_task));
+    g_task_return_error_if_cancelled (transfer_task);
+    g_object_unref (transfer_task);
+  };
+
   for (i = 0; i < dh->active_transfers->len; i++) {
     GTask *transfer_task = g_array_index (dh->active_transfers, GTask *, i);
     DownloadHelperTransfer *transfer = g_task_get_task_data (transfer_task);
