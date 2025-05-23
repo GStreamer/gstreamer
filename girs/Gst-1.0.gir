@@ -44589,6 +44589,21 @@ structure name and for all fields that are existing in @superset,
           </parameter>
         </parameters>
       </method>
+      <method name="is_writable" c:identifier="gst_structure_is_writable" version="1.26.2">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Checks if the structure is writable. %TRUE if parent
+is not set or its refcount is 1, %FALSE otherwise.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%TRUE if the structure is writable.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="const GstStructure*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="map_in_place" c:identifier="gst_structure_map_in_place" deprecated="1" deprecated-version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Calls the provided function once for each field in the #GstStructure. In
 contrast to gst_structure_foreach(), the function may modify but not delete the
