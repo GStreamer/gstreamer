@@ -174,6 +174,9 @@ class TestCaps(TestCase):
 
         c2 = caps.mini_object
         self.assertEqual(c2.refcount, 2)
+        with caps.get_structure(0) as s:
+            with self.assertRaises(Gst.NotWritableStructure):
+                s.set_value("rate", 44100)
         caps.make_writable()
 
         with caps.get_structure(0) as s:

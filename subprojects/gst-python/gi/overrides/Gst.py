@@ -412,31 +412,25 @@ class Structure(Gst.Structure):
                 raise TypeError("wrong arguments when creating GstStructure, first argument"
                                 " must be the structure name.")
             struct = Structure.new_empty()
-            struct._writable = True
             return struct
         elif len(args) > 1:
             raise TypeError("wrong arguments when creating GstStructure object")
         elif isinstance(args[0], str):
             if not kwargs:
                 struct = Structure.from_string(args[0])[0]
-                struct._writable = True
                 return struct
             struct = Structure.new_empty(args[0])
-            struct._writable = True
             for k, v in kwargs.items():
                 struct[k] = v
 
-            struct._writable = True
             return struct
         elif isinstance(args[0], Structure):
             struct = args[0].copy()
-            struct._writable = True
             return struct
 
         raise TypeError("wrong arguments when creating GstStructure object")
 
     def __init__(self, *args, **kwargs):
-        self._writable = False
         pass
 
     def __ptr__(self):
@@ -459,8 +453,8 @@ class Structure(Gst.Structure):
         return self.set_value(key, value)
 
     def set_value(self, key, value):
-        if not self._writable:
-            raise NotWritableStructure("Trying to write to a not writable."
+        if not _gi_gst.structure_is_writable(self):
+            raise NotWritableStructure("Trying to write to a not writable structure."
                                        " Make sure to use the right APIs to have access to structure"
                                        " in a writable way.")
 
@@ -808,7 +802,6 @@ def pairwise(iterable):
 
 class StructureWrapper:
     def __init__(self, structure, parent, writable):
-        structure._writable = writable
         self.__structure = structure
         self.__parent__ = parent
 
@@ -816,7 +809,6 @@ class StructureWrapper:
         return self.__structure
 
     def __exit__(self, _type, _value, _tb):
-        self.__structure._writable = False
         self.__parent__ = False
         return
 
