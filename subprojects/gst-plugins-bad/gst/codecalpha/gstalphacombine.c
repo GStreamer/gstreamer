@@ -238,6 +238,7 @@ gst_alpha_combine_reset (GstAlphaCombine * self)
   gst_buffer_replace (&self->alpha_buffer, NULL);
   gst_buffer_replace (&self->last_alpha_buffer, NULL);
   self->last_flow_ret = GST_FLOW_OK;
+  self->alpha_eos = FALSE;
   g_mutex_unlock (&self->buffer_lock);
 }
 
