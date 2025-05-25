@@ -30,4 +30,8 @@ endif
 env.set('GST_OVERRIDE_SRC_PATH', meson.current_source_dir() / root_rel / 'subprojects/gst-python/gi/overrides')
 env.set('GST_OVERRIDE_BUILD_PATH', meson.current_build_dir() / root_rel / 'subprojects/gst-python/gi/overrides')
 
-test('python-full', python, args: [meson.current_source_dir() / 'python-full.py'], env: env)
+if building_full
+  test('python-full', python, args: [meson.current_source_dir() / 'python-full.py'], env: env)
+else
+  message('Skipping python full tests, not building gstreamer-full')
+endif
