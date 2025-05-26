@@ -1,3 +1,10 @@
+# Notes:
+# - Python commands must be prefixed with `python` because pre-commit refuses to
+#   special-case shebangs on Windows where `python3` does not commonly exists.
+#   Luckily, the `python` command exists in the virtualenv created by pre-commit
+#   on all platforms. https://github.com/pre-commit/pre-commit/issues/3415,
+#   https://github.com/pre-commit/pre-commit/issues/3468
+
 fail_fast: false
 repos:
 -   repo: https://github.com/jorisroovers/gitlint
@@ -16,7 +23,7 @@ repos:
     -   id: gst-indent
         name: gst-indent
         language: python
-        entry: ./scripts/gst-indent-all.py
+        entry: python ./scripts/gst-indent-all.py
         pass_filenames: false
         types_or: ["c", "c++"]
         additional_dependencies: ["gst-indent==1.0.0"]
@@ -30,6 +37,6 @@ repos:
     -   id: doc-checks
         name: doc-checks
         language: python
-        entry: ./scripts/git-hooks/pre-commit-python.hook
+        entry: python ./scripts/git-hooks/pre-commit-python.hook
         pass_filenames: false
         additional_dependencies: ["autopep8==2.3.2", "pycodestyle==2.12.1"]
