@@ -1342,8 +1342,9 @@ gst_riff_create_audio_caps (guint16 codec_id,
          * so either we calculate the bitrate or mark it as invalid as this
          * would probably confuse timing */
         strf->av_bps = 0;
-        if (strf->channels != 0 && strf->rate != 0 && strf->blockalign != 0) {
-          int spb = ((strf->blockalign - strf->channels * 7) / 2) * 2;
+        if (strf->channels != 0 && strf->rate != 0 && strf->blockalign != 0 &&
+            (strf->blockalign / strf->channels) >= 7) {
+          int spb = ((strf->blockalign / strf->channels) - 7) * 2 + 2;
           strf->av_bps =
               gst_util_uint64_scale_int (strf->rate, strf->blockalign, spb);
           GST_DEBUG ("fixing av_bps to calculated value %d of MS ADPCM",
@@ -1464,8 +1465,9 @@ gst_riff_create_audio_caps (guint16 codec_id,
          * header, so either we calculate the bitrate or mark it as invalid
          * as this would probably confuse timing */
         strf->av_bps = 0;
-        if (strf->channels != 0 && strf->rate != 0 && strf->blockalign != 0) {
-          int spb = ((strf->blockalign - strf->channels * 4) / 2) * 2;
+        if (strf->channels != 0 && strf->rate != 0 && strf->blockalign != 0 &&
+            (strf->blockalign / strf->channels) >= 4) {
+          int spb = ((strf->blockalign / strf->channels) - 4) * 2 + 1;
           strf->av_bps =
               gst_util_uint64_scale_int (strf->rate, strf->blockalign, spb);
           GST_DEBUG ("fixing av_bps to calculated value %d of IMA DVI ADPCM",
