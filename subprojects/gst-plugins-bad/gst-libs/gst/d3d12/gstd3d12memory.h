@@ -64,7 +64,7 @@ G_BEGIN_DECLS
 #define GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY "memory:D3D12Memory"
 
 /**
- * GST_MAP_D3D12:
+ * GST_MAP_D3D12: (value 131072) (type GstMapFlags)
  *
  * Flag indicating that we should map the D3D12 resource instead of to system memory.
  *
@@ -73,7 +73,7 @@ G_BEGIN_DECLS
 #define GST_MAP_D3D12 ((GstMapFlags) (GST_MAP_FLAG_LAST << 1))
 
 /**
- * GST_MAP_READ_D3D12:
+ * GST_MAP_READ_D3D12: (value 131073) (type GstMapFlags)
  *
  * GstMapFlags value alias for GST_MAP_READ | GST_MAP_D3D12
  *
@@ -82,7 +82,7 @@ G_BEGIN_DECLS
 #define GST_MAP_READ_D3D12 ((GstMapFlags) (GST_MAP_READ | GST_MAP_D3D12))
 
 /**
- * GST_MAP_WRITE_D3D12:
+ * GST_MAP_WRITE_D3D12: (value 131074) (type GstMapFlags)
  *
  * GstMapFlags value alias for GST_MAP_WRITE | GST_MAP_D3D12
  *
