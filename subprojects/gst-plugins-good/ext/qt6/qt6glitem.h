@@ -73,7 +73,10 @@ class Qt6GLVideoItem : public QQuickItem, protected QOpenGLFunctions
                READ getForceAspectRatio
                WRITE setForceAspectRatio
                NOTIFY forceAspectRatioChanged)
-
+    Q_PROPERTY(bool acceptEvents
+               READ getAcceptEvents
+               WRITE setAcceptEvents
+               NOTIFY acceptEventsChanged)
 public:
     Qt6GLVideoItem();
     ~Qt6GLVideoItem();
@@ -83,6 +86,8 @@ public:
     void setForceAspectRatio(bool);
     bool getForceAspectRatio();
     bool itemInitialized();
+    bool getAcceptEvents() const { return acceptEvents; }
+    void setAcceptEvents(bool accept);
 
     QSharedPointer<Qt6GLVideoItemInterface> getInterface() { return proxy; };
     /* private for C interface ... */
@@ -91,6 +96,7 @@ public:
 Q_SIGNALS:
     void itemInitializedChanged();
     void forceAspectRatioChanged(bool);
+    void acceptEventsChanged(bool acceptEvents);
 
 private Q_SLOTS:
     void handleWindowChanged(QQuickWindow * win);
@@ -120,6 +126,7 @@ private:
 
     quint32 mousePressedButton;
     bool mouseHovering;
+    bool acceptEvents = true;
 
     QSharedPointer<Qt6GLVideoItemInterface> proxy;
 };
