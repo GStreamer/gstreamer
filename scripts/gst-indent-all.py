@@ -1,10 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from itertools import filterfalse
 import os
 import re
 import subprocess
 from gst_indent_common import indent
+
 
 def readfile(f):
     if os.path.exists(f):
