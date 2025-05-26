@@ -180,9 +180,7 @@ pkgconfig.generate(gstd3d12,
 library_def = {'lib': gstd3d12}
 gen_sources = []
 
-# XXX: something gets wrong with DirectX-Header's static library in case of msvc.
-# Enable gir only for msys2
-if build_gir and cc.get_argument_syntax() != 'msvc'
+if build_gir
   gir = {
     'sources' : d3d12_sources + d3d12_headers,
     'namespace' : 'GstD3D12',
