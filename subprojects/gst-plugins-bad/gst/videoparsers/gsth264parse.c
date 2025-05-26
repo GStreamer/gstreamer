@@ -1336,7 +1336,7 @@ gst_h264_parse_handle_frame_packetized (GstBaseParse * parse,
       /* should not be happening for nice AVC */
       GST_WARNING_OBJECT (parse, "skipping leftover AVC data %d", left);
       frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DROP;
-      ret = gst_base_parse_finish_frame (parse, frame, map.size);
+      ret = gst_base_parse_finish_frame (parse, frame, left);
     }
   }
 
