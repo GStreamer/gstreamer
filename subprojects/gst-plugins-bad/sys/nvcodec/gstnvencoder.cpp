@@ -963,7 +963,7 @@ gst_nv_encoder_thread_func (GstNvEncoder * self)
     status = gst_nv_enc_task_lock_bitstream (task, &bitstream);
     if (status != NV_ENC_SUCCESS) {
       gst_nv_enc_task_unref (task);
-      gst_video_encoder_finish_frame (encoder, frame);
+      gst_video_encoder_release_frame (encoder, frame);
       GST_ELEMENT_ERROR (self, STREAM, ENCODE, (NULL),
           ("Failed to lock bitstream, status: %" GST_NVENC_STATUS_FORMAT,
               GST_NVENC_STATUS_ARGS (status)));
@@ -974,6 +974,7 @@ gst_nv_encoder_thread_func (GstNvEncoder * self)
     if (priv->last_flow != GST_FLOW_OK) {
       gst_nv_enc_task_unlock_bitstream (task);
       gst_nv_enc_task_unref (task);
+      gst_video_encoder_release_frame (encoder, frame);
       continue;
     }
 
@@ -2167,14 +2168,14 @@ gst_nv_encoder_handle_frame (GstVideoEncoder * encoder,
   if (priv->last_flow != GST_FLOW_OK) {
     GST_INFO_OBJECT (self, "Last flow was %s",
         gst_flow_get_name (priv->last_flow));
-    gst_video_encoder_finish_frame (encoder, frame);
+    gst_video_encoder_release_frame (encoder, frame);
 
     return priv->last_flow;
   }
 
   if (!priv->object && !gst_nv_encoder_init_session (self, in_buf)) {
     GST_ERROR_OBJECT (self, "Encoder object was not configured");
-    gst_video_encoder_finish_frame (encoder, frame);
+    gst_video_encoder_release_frame (encoder, frame);
 
     return GST_FLOW_NOT_NEGOTIATED;
   }
@@ -2183,7 +2184,7 @@ gst_nv_encoder_handle_frame (GstVideoEncoder * encoder,
   switch (reconfig) {
     case GST_NV_ENCODER_RECONFIGURE_BITRATE:
       if (!gst_nv_encoder_reconfigure_session (self)) {
-        gst_video_encoder_finish_frame (encoder, frame);
+        gst_video_encoder_release_frame (encoder, frame);
         return GST_FLOW_NOT_NEGOTIATED;
       }
       break;
@@ -2191,7 +2192,7 @@ gst_nv_encoder_handle_frame (GstVideoEncoder * encoder,
     {
       gst_nv_encoder_drain (self, TRUE);
       if (!gst_nv_encoder_init_session (self, nullptr)) {
-        gst_video_encoder_finish_frame (encoder, frame);
+        gst_video_encoder_release_frame (encoder, frame);
         return GST_FLOW_NOT_NEGOTIATED;
       }
       break;
@@ -2210,14 +2211,14 @@ gst_nv_encoder_handle_frame (GstVideoEncoder * encoder,
   if (priv->last_flow != GST_FLOW_OK) {
     GST_INFO_OBJECT (self, "Last flow was %s",
         gst_flow_get_name (priv->last_flow));
-    gst_video_encoder_finish_frame (encoder, frame);
+    gst_video_encoder_release_frame (encoder, frame);
 
     return priv->last_flow;
   }
 
   if (ret != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (self, "AcquireTask returned %s", gst_flow_get_name (ret));
-    gst_video_encoder_finish_frame (encoder, frame);
+    gst_video_encoder_release_frame (encoder, frame);
     return ret;
   }
 
@@ -2228,7 +2229,7 @@ gst_nv_encoder_handle_frame (GstVideoEncoder * encoder,
   if (ret != GST_FLOW_OK) {
     GST_ERROR_OBJECT (self, "Failed to upload frame");
     gst_nv_enc_task_unref (task);
-    gst_video_encoder_finish_frame (encoder, frame);
+    gst_video_encoder_release_frame (encoder, frame);
 
     return ret;
   }
@@ -2243,7 +2244,7 @@ gst_nv_encoder_handle_frame (GstVideoEncoder * encoder,
       gst_nv_encoder_get_pic_struct (self, in_buf), task);
   if (status != NV_ENC_SUCCESS) {
     GST_ERROR_OBJECT (self, "Failed to encode frame");
-    gst_video_encoder_finish_frame (encoder, frame);
+    gst_video_encoder_release_frame (encoder, frame);
 
     return GST_FLOW_ERROR;
   }
