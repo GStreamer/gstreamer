@@ -22,29 +22,14 @@
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
-#include <gst/check/gstcheck.h>
 #include <gst/codecparsers/gsth265parser.h>
-#include <gst/vulkan/vulkan.h>
-#include <gst/vulkan/gstvkencoder-private.h>
-
-
 #include <math.h>
+
+#include "vkvideoencodebase.c"
 
 // Include h265 std session params
 #include "vkcodecparams_h265.c"
 
-static GstVulkanInstance *instance;
-
-static GstVulkanQueue *encode_queue = NULL;
-static GstVulkanQueue *gfx_queue = NULL;
-static GstBufferPool *img_pool;
-static GstBufferPool *buffer_pool;
-
-static GstVulkanOperation *exec = NULL;
-
-static GstVideoInfo in_info;
-static GstVideoInfo out_info;
 typedef struct
 {
   GstVulkanEncoderPicture picture;
@@ -83,279 +68,15 @@ _h265_encode_frame_new (GstVulkanEncoder * enc, GstBuffer * img_buffer,
 static void
 _h265_encode_frame_free (GstVulkanEncoder * enc, gpointer pframe)
 {
-  GstVulkanH265EncodeFrame *frame = pframe;
+  GstVulkanH265EncodeFrame *frame = (GstVulkanH265EncodeFrame *) pframe;
 
   gst_vulkan_encoder_picture_clear (&frame->picture, enc);
   g_free (frame);
 }
 
-static void
-setup (void)
-{
-  instance = gst_vulkan_instance_new ();
-  fail_unless (gst_vulkan_instance_open (instance, NULL));
-}
-
-static void
-teardown (void)
-{
-  gst_clear_object (&encode_queue);
-  gst_clear_object (&gfx_queue);
-  gst_object_unref (instance);
-}
-
-/* initialize the input vulkan image buffer pool */
-static GstBufferPool *
-allocate_image_buffer_pool (GstVulkanEncoder * enc, uint32_t width,
-    uint32_t height)
-{
-  GstVideoFormat format = GST_VIDEO_FORMAT_NV12;
-  GstCaps *profile_caps, *caps = gst_caps_new_simple ("video/x-raw", "format",
-      G_TYPE_STRING, gst_video_format_to_string (format), "width", G_TYPE_INT,
-      width, "height", G_TYPE_INT, height, NULL);
-  GstBufferPool *pool = gst_vulkan_image_buffer_pool_new (encode_queue->device);
-  GstStructure *config = gst_buffer_pool_get_config (pool);
-  gsize frame_size = width * height * 2;        //NV12
-
-  gst_caps_set_features_simple (caps,
-      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
-          NULL));
-
-  fail_unless (gst_vulkan_encoder_create_dpb_pool (enc, caps));
-  gst_video_info_from_caps (&out_info, caps);
-
-  gst_buffer_pool_config_set_params (config, caps, frame_size, 1, 0);
-  gst_vulkan_image_buffer_pool_config_set_allocation_params (config,
-      VK_IMAGE_USAGE_TRANSFER_DST_BIT |
-      VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR,
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-      VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR,
-      VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT);
-
-  profile_caps = gst_vulkan_encoder_profile_caps (enc);
-  gst_vulkan_image_buffer_pool_config_set_encode_caps (config, profile_caps);
-
-  gst_caps_unref (caps);
-  gst_caps_unref (profile_caps);
-
-  fail_unless (gst_buffer_pool_set_config (pool, config));
-  fail_unless (gst_buffer_pool_set_active (pool, TRUE));
-  return pool;
-}
-
-/* initialize the raw input buffer pool */
-static GstBufferPool *
-allocate_buffer_pool (GstVulkanEncoder * enc, uint32_t width, uint32_t height)
-{
-  GstVideoFormat format = GST_VIDEO_FORMAT_NV12;
-  GstCaps *profile_caps, *caps = gst_caps_new_simple ("video/x-raw", "format",
-      G_TYPE_STRING, gst_video_format_to_string (format), "width", G_TYPE_INT,
-      width, "height", G_TYPE_INT, height, NULL);
-  gsize frame_size = width * height * 2;        //NV12
-  GstBufferPool *pool = gst_vulkan_buffer_pool_new (encode_queue->device);
-  GstStructure *config = gst_buffer_pool_get_config (pool);
-
-  gst_caps_set_features_simple (caps,
-      gst_caps_features_new_static_str (GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER,
-          NULL));
-
-  gst_video_info_from_caps (&in_info, caps);
-
-  gst_buffer_pool_config_set_params (config, caps, frame_size, 1, 0);
-
-  profile_caps = gst_vulkan_encoder_profile_caps (enc);
-  gst_vulkan_image_buffer_pool_config_set_encode_caps (config, profile_caps);
-
-  gst_caps_unref (caps);
-  gst_caps_unref (profile_caps);
-
-  gst_vulkan_image_buffer_pool_config_set_allocation_params (config,
-      VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
-      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-      VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR, VK_ACCESS_TRANSFER_WRITE_BIT);
-
-  fail_unless (gst_buffer_pool_set_config (pool, config));
-  fail_unless (gst_buffer_pool_set_active (pool, TRUE));
-
-  return pool;
-}
-
-/* generate a buffer representing a blue window in NV12 format */
-static GstBuffer *
-generate_input_buffer (GstBufferPool * pool, int width, int height)
-{
-  int i;
-  GstBuffer *buffer;
-  GstMapInfo info;
-  GstMemory *mem;
-
-  if ((gst_buffer_pool_acquire_buffer (pool, &buffer, NULL))
-      != GST_FLOW_OK)
-    goto out;
-
-  // PLANE Y COLOR BLUE
-  mem = gst_buffer_peek_memory (buffer, 0);
-  gst_memory_map (mem, &info, GST_MAP_WRITE);
-  for (i = 0; i < width * height; i++)
-    info.data[i] = 0x29;
-  gst_memory_unmap (mem, &info);
-
-  // PLANE UV
-  mem = gst_buffer_peek_memory (buffer, 1);
-  gst_memory_map (mem, &info, GST_MAP_WRITE);
-  for (i = 0; i < width * height / 2; i++) {
-    info.data[i] = 0xf0;
-    info.data[i++] = 0x6e;
-  }
-
-  gst_memory_unmap (mem, &info);
-
-out:
-  return buffer;
-}
-
-/* upload the raw input buffer pool into a vulkan image buffer */
-static GstFlowReturn
-upload_buffer_to_image (GstBufferPool * pool, GstBuffer * inbuf,
-    GstBuffer ** outbuf)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-  GError *error = NULL;
-  GstVulkanCommandBuffer *cmd_buf;
-  guint i, n_mems, n_planes;
-  GArray *barriers = NULL;
-  VkImageLayout dst_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-
-
-  if ((ret = gst_buffer_pool_acquire_buffer (pool, outbuf, NULL))
-      != GST_FLOW_OK)
-    goto out;
-
-  if (!exec) {
-    GstVulkanCommandPool *cmd_pool =
-        gst_vulkan_queue_create_command_pool (gfx_queue, &error);
-    if (!cmd_pool)
-      goto error;
-
-    exec = gst_vulkan_operation_new (cmd_pool);
-    gst_object_unref (cmd_pool);
-  }
-
-  if (!gst_vulkan_operation_add_dependency_frame (exec, *outbuf,
-          VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT))
-    goto error;
-
-  if (!gst_vulkan_operation_begin (exec, &error))
-    goto error;
-
-  cmd_buf = exec->cmd_buf;
-
-  if (!gst_vulkan_operation_add_frame_barrier (exec, *outbuf,
-          VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-          VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-          NULL))
-    goto unlock_error;
-
-  barriers = gst_vulkan_operation_retrieve_image_barriers (exec);
-  if (barriers->len == 0) {
-    ret = GST_FLOW_ERROR;
-    goto unlock_error;
-  }
-
-  VkDependencyInfoKHR dependency_info = {
-    .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO_KHR,
-    .pImageMemoryBarriers = (gpointer) barriers->data,
-    .imageMemoryBarrierCount = barriers->len,
-  };
-
-  gst_vulkan_operation_pipeline_barrier2 (exec, &dependency_info);
-  dst_layout = g_array_index (barriers, VkImageMemoryBarrier2KHR, 0).newLayout;
-
-  g_clear_pointer (&barriers, g_array_unref);
-
-  n_mems = gst_buffer_n_memory (*outbuf);
-  n_planes = GST_VIDEO_INFO_N_PLANES (&out_info);
-
-  for (i = 0; i < n_planes; i++) {
-    VkBufferImageCopy region;
-    GstMemory *in_mem, *out_mem;
-    GstVulkanBufferMemory *buf_mem;
-    GstVulkanImageMemory *img_mem;
-    const VkImageAspectFlags aspects[] = { VK_IMAGE_ASPECT_PLANE_0_BIT,
-      VK_IMAGE_ASPECT_PLANE_1_BIT, VK_IMAGE_ASPECT_PLANE_2_BIT,
-    };
-    VkImageAspectFlags plane_aspect;
-    guint idx;
-
-    in_mem = gst_buffer_peek_memory (inbuf, i);
-
-    buf_mem = (GstVulkanBufferMemory *) in_mem;
-
-    if (n_planes == n_mems)
-      plane_aspect = VK_IMAGE_ASPECT_COLOR_BIT;
-    else
-      plane_aspect = aspects[i];
-
-    /* *INDENT-OFF* */
-    region = (VkBufferImageCopy) {
-        .bufferOffset = 0,
-        .bufferRowLength = GST_VIDEO_INFO_COMP_WIDTH (&in_info, i),
-        .bufferImageHeight = GST_VIDEO_INFO_COMP_HEIGHT (&in_info, i),
-        .imageSubresource = {
-            .aspectMask = plane_aspect,
-            .mipLevel = 0,
-            .baseArrayLayer = 0,
-            .layerCount = 1,
-        },
-        .imageOffset = { .x = 0, .y = 0, .z = 0, },
-        .imageExtent = {
-            .width = GST_VIDEO_INFO_COMP_WIDTH (&out_info, i),
-            .height = GST_VIDEO_INFO_COMP_HEIGHT (&out_info, i),
-            .depth = 1,
-        }
-    };
-
-    idx = MIN (i, n_mems - 1);
-    out_mem = gst_buffer_peek_memory (*outbuf, idx);
-    if (!gst_is_vulkan_image_memory (out_mem)) {
-      GST_WARNING ("Output is not a GstVulkanImageMemory");
-      goto unlock_error;
-    }
-    img_mem = (GstVulkanImageMemory *) out_mem;
-
-    gst_vulkan_command_buffer_lock (cmd_buf);
-    vkCmdCopyBufferToImage (cmd_buf->cmd, buf_mem->buffer, img_mem->image,
-        dst_layout, 1, &region);
-    gst_vulkan_command_buffer_unlock (cmd_buf);
-  }
-
-  if (!gst_vulkan_operation_end (exec, &error))
-    goto error;
-
-   /*Hazard WRITE_AFTER_WRITE*/
-  gst_vulkan_operation_wait (exec);
-
-  ret = GST_FLOW_OK;
-
-out:
-  return ret;
-
-unlock_error:
-  gst_vulkan_operation_reset (exec);
-
-error:
-  if (error) {
-    GST_WARNING ("Error: %s", error->message);
-    g_clear_error (&error);
-  }
-  gst_clear_buffer (outbuf);
-  ret = GST_FLOW_ERROR;
-  goto out;
-}
-
 /* allocate a frame to be encoded from given buffer pools */
 static GstVulkanH265EncodeFrame *
-allocate_frame (GstVulkanEncoder * enc, int width,
+allocate_h265_frame (GstVulkanEncoder * enc, int width,
     int height, gboolean is_ref)
 {
   GstVulkanH265EncodeFrame *frame;
@@ -365,7 +86,7 @@ allocate_frame (GstVulkanEncoder * enc, int width,
   in_buffer = generate_input_buffer (buffer_pool, width, height);
 
   /* get a Vulkan image buffer out of the input buffer */
-  upload_buffer_to_image(img_pool, in_buffer, &img_buffer);
+  upload_buffer_to_image (img_pool, in_buffer, &img_buffer);
 
   frame = _h265_encode_frame_new (enc, img_buffer, width * height * 3, is_ref);
   fail_unless (frame);
@@ -726,7 +447,6 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
     gint sps_id, gint pps_id)
 {
   GstVulkanEncoder *enc;
-  int i;
   GError *err = NULL;
   uint32_t mbAlignedWidth, mbAlignedHeight;
   StdVideoH265ProfileIdc profile_idc = STD_VIDEO_H265_PROFILE_IDC_MAIN;
@@ -769,32 +489,24 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
   };
   /* *INDENT-ON* */
 
-  for (i = 0; i < instance->n_physical_devices; i++) {
-    GstVulkanDevice *device = gst_vulkan_device_new_with_index (instance, i);
-    encode_queue =
-        gst_vulkan_device_select_queue (device, VK_QUEUE_VIDEO_ENCODE_BIT_KHR);
-    gfx_queue = gst_vulkan_device_select_queue (device, VK_QUEUE_GRAPHICS_BIT);
-    gst_object_unref (device);
+  setup_queue (VK_QUEUE_VIDEO_DECODE_BIT_KHR,
+      VK_VIDEO_CODEC_OPERATION_ENCODE_H265_BIT_KHR);
 
-    if (encode_queue && gfx_queue)
-      break;
-  }
-
-  if (!encode_queue) {
+  if (!video_queue) {
     GST_WARNING ("Unable to find encoding queue");
     return NULL;
   }
 
-  if (!gfx_queue) {
+  if (!graphics_queue) {
     GST_WARNING ("Unable to find graphics queue");
     return NULL;
   }
 
-  enc = gst_vulkan_encoder_create_from_queue (encode_queue,
+  enc = gst_vulkan_encoder_create_from_queue (video_queue,
       VK_VIDEO_CODEC_OPERATION_ENCODE_H265_BIT_KHR);
 
   if (!enc) {
-    GST_WARNING ("Unable to create a vulkan encoder, queue=%p", encode_queue);
+    GST_WARNING ("Unable to create a vulkan encoder, queue=%p", video_queue);
     return NULL;
   }
 
@@ -973,7 +685,7 @@ GST_START_TEST (test_encoder_h265_i)
 
   /* Encode N_BUFFERS I-Frames */
   for (i = 0; i < N_BUFFERS; i++) {
-    frame = allocate_frame (enc, width, height, TRUE);
+    frame = allocate_h265_frame (enc, width, height, TRUE);
     encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_I,
         frame_num, NULL, 0, NULL, 0, vps_id, sps_id, pps_id);
     check_encoded_frame (frame, GST_H265_NAL_SLICE_IDR_W_RADL);
@@ -1016,7 +728,7 @@ GST_START_TEST (test_encoder_h265_i_p)
   buffer_pool = allocate_buffer_pool (enc, width, height);
   img_pool = allocate_image_buffer_pool (enc, width, height);
 
-  frame = allocate_frame (enc, width, height, TRUE);
+  frame = allocate_h265_frame (enc, width, height, TRUE);
   frame->pic_num = frame_num;
   /* Encode first picture as an IDR-Frame */
   encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_I,
@@ -1027,7 +739,7 @@ GST_START_TEST (test_encoder_h265_i_p)
 
   /* Encode following pictures as a P-Frames */
   for (i = 1; i < N_BUFFERS; i++) {
-    frame = allocate_frame (enc, width, height, TRUE);
+    frame = allocate_h265_frame (enc, width, height, TRUE);
     frame->pic_num = frame_num;
     encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_P,
         frame_num, list0, list0_num, NULL, 0, vps_id, sps_id, pps_id);
@@ -1081,7 +793,7 @@ GST_START_TEST (test_encoder_h265_i_p_b)
   img_pool = allocate_image_buffer_pool (enc, width, height);
 
   /* Encode first picture as an IDR-Frame */
-  frame = allocate_frame (enc, width, height, TRUE);
+  frame = allocate_h265_frame (enc, width, height, TRUE);
   frame->pic_num = frame_num;
   encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_I,
       frame_num, NULL, 0, NULL, 0, vps_id, sps_id, pps_id);
@@ -1090,7 +802,7 @@ GST_START_TEST (test_encoder_h265_i_p_b)
   frame_num++;
 
   /* Encode 4th picture as a P-Frame */
-  frame = allocate_frame (enc, width, height, TRUE);
+  frame = allocate_h265_frame (enc, width, height, TRUE);
   frame->pic_num = frame_num + 2;
   encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_P,
       frame_num, list0, list0_num, NULL, 0, vps_id, sps_id, pps_id);
@@ -1099,7 +811,7 @@ GST_START_TEST (test_encoder_h265_i_p_b)
   frame_num++;
 
   /* Encode 2nd picture as a B-Frame */
-  frame = allocate_frame (enc, width, height, FALSE);
+  frame = allocate_h265_frame (enc, width, height, FALSE);
   frame->pic_num = frame_num - 1;
   encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_B,
       frame_num, list0, list0_num, list1, list1_num, vps_id, sps_id, pps_id);
@@ -1108,7 +820,7 @@ GST_START_TEST (test_encoder_h265_i_p_b)
   _h265_encode_frame_free (enc, frame);
 
   /* Encode 3rd picture as a B-Frame */
-  frame = allocate_frame (enc, width, height, FALSE);
+  frame = allocate_h265_frame (enc, width, height, FALSE);
   frame->pic_num = frame_num - 1;
   encode_frame (enc, frame, STD_VIDEO_H265_SLICE_TYPE_B,
       frame_num, list0, list0_num, list1, list1_num, vps_id, sps_id, pps_id);
