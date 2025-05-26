@@ -59,6 +59,8 @@ static const gchar *server_url = "wss://webrtc.gstreamer.net:8443";
 static gboolean strict_ssl = TRUE;
 static gboolean remote_is_offerer = FALSE;
 static gboolean custom_ice = FALSE;
+static gboolean use_camera = FALSE;
+static const char *audiosrc_arg = NULL;
 
 static GOptionEntry entries[] = {
   {"peer-id", 0, 0, G_OPTION_ARG_STRING, &peer_id,
@@ -72,6 +74,10 @@ static GOptionEntry entries[] = {
       "Request that the peer generate the offer and we'll answer", NULL},
   {"custom-ice", 0, 0, G_OPTION_ARG_NONE, &custom_ice,
       "Use a custom ice agent", NULL},
+  {"camera", 0, 0, G_OPTION_ARG_NONE, &use_camera,
+      "Use an attached camera and mic instead of test sources", NULL},
+  {"audiosrc", 0, 0, G_OPTION_ARG_STRING, &audiosrc_arg,
+      "Use this pipeline fragment as the audio source", NULL},
   {NULL},
 };
 
@@ -482,6 +488,8 @@ static gboolean
 start_pipeline (gboolean create_offer, guint opus_pt, guint vp8_pt)
 {
   GstBus *bus;
+  const char *audio_src = audiosrc_arg;
+  const char *video_src = NULL;
   char *audio_desc, *video_desc;
   GstStateChangeReturn ret;
   GstWebRTCICE *custom_agent;
@@ -490,11 +498,20 @@ start_pipeline (gboolean create_offer, guint opus_pt, guint vp8_pt)
 
   pipe1 = gst_pipeline_new ("webrtc-pipeline");
 
+  if (use_camera) {
+    if (!audio_src)
+      audio_src = "autoaudiosrc";
+    video_src = "autovideosrc ! video/x-raw,framerate=[25/1,30/1]";
+  } else {
+    if (!audio_src)
+      audio_src = "audiotestsrc is-live=true wave=red-noise";
+    video_src = "videotestsrc is-live=true pattern=ball";
+  }
+
   audio_desc =
-      g_strdup_printf
-      ("audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample"
+      g_strdup_printf ("%s ! audioconvert ! audioresample"
       "! queue ! opusenc perfect-timestamp=true ! rtpopuspay name=audiopay pt=%u "
-      "! application/x-rtp, encoding-name=OPUS ! queue", opus_pt);
+      "! application/x-rtp, encoding-name=OPUS ! queue", audio_src, opus_pt);
   audio_bin = gst_parse_bin_from_description (audio_desc, TRUE, &audio_error);
   g_free (audio_desc);
   if (audio_error) {
@@ -503,9 +520,7 @@ start_pipeline (gboolean create_offer, guint opus_pt, guint vp8_pt)
     goto err;
   }
 
-  video_desc =
-      g_strdup_printf
-      ("videotestsrc is-live=true pattern=ball ! videoconvert ! queue ! "
+  video_desc = g_strdup_printf ("%s ! videoconvert ! queue ! "
       /* increase the default keyframe distance, browsers have really long
        * periods between keyframes and rely on PLI events on packet loss to
        * fix corrupted video.
@@ -513,7 +528,8 @@ start_pipeline (gboolean create_offer, guint opus_pt, guint vp8_pt)
       "vp8enc deadline=1 keyframe-max-dist=2000 ! "
       /* picture-id-mode=15-bit seems to make TWCC stats behave better, and
        * fixes stuttery video playback in Chrome */
-      "rtpvp8pay name=videopay picture-id-mode=15-bit pt=%u ! queue", vp8_pt);
+      "rtpvp8pay name=videopay picture-id-mode=15-bit pt=%u ! queue",
+      video_src, vp8_pt);
   video_bin = gst_parse_bin_from_description (video_desc, TRUE, &video_error);
   g_free (video_desc);
   if (video_error) {
