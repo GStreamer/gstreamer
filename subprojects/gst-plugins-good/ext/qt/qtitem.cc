@@ -207,6 +207,16 @@ QtGLVideoItem::getForceAspectRatio()
   return this->priv->force_aspect_ratio;
 }
 
+void
+QtGLVideoItem::setAcceptEvents(bool accept)
+{
+  if (accept == acceptEvents)
+    return;
+
+  acceptEvents = accept;
+  Q_EMIT acceptEventsChanged(acceptEvents);
+}
+
 bool
 QtGLVideoItem::itemInitialized()
 {
@@ -495,18 +505,21 @@ QtGLVideoItem::wheelEvent(QWheelEvent * event)
     g_object_unref (element);
   }
   g_mutex_unlock (&this->priv->lock);
+  event->setAccepted(acceptEvents);
 }
 
 void
-QtGLVideoItem::hoverEnterEvent(QHoverEvent *)
+QtGLVideoItem::hoverEnterEvent(QHoverEvent *event)
 {
   mouseHovering = true;
+  event->setAccepted(acceptEvents);
 }
 
 void
-QtGLVideoItem::hoverLeaveEvent(QHoverEvent *)
+QtGLVideoItem::hoverLeaveEvent(QHoverEvent *event)
 {
   mouseHovering = false;
+  event->setAccepted(acceptEvents);
 }
 
 void
@@ -535,6 +548,7 @@ QtGLVideoItem::hoverMoveEvent(QHoverEvent * event)
     }
   }
   g_mutex_unlock (&this->priv->lock);
+  event->setAccepted(acceptEvents);
 }
 
 void
@@ -597,6 +611,7 @@ QtGLVideoItem::touchEvent(QTouchEvent * event)
 
   g_object_unref (element);
   g_mutex_unlock (&this->priv->lock);
+  event->setAccepted(acceptEvents);
 }
 
 void
@@ -649,12 +664,14 @@ QtGLVideoItem::mousePressEvent(QMouseEvent * event)
 {
   forceActiveFocus();
   sendMouseEvent(event, TRUE);
+  event->setAccepted(acceptEvents);
 }
 
 void
 QtGLVideoItem::mouseReleaseEvent(QMouseEvent * event)
 {
   sendMouseEvent(event, FALSE);
+  event->setAccepted(acceptEvents);
 }
 
 void
