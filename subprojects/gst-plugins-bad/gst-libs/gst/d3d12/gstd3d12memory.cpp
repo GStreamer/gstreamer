@@ -1071,6 +1071,7 @@ gst_d3d12_memory_set_fence (GstD3D12Memory * mem, ID3D12Fence * fence,
     guint64 fence_value, gboolean wait)
 {
   g_return_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)));
+  g_return_if_fail (gst_mini_object_is_writable ((GstMiniObject *) mem));
 
   auto priv = mem->priv;
 
