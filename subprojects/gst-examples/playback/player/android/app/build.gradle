@@ -44,7 +44,9 @@ android {
             path 'src/main/jni/CMakeLists.txt'
         }
     }
+
     ndkVersion '25.2.9519653'
+    namespace 'org.freedesktop.gstreamer.play'
 }
 
 afterEvaluate {
