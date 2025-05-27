@@ -90,7 +90,7 @@ gst_webrtc_rtp_sender_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PRIORITY:
-      gst_webrtc_rtp_sender_set_priority (sender, g_value_get_uint (value));
+      gst_webrtc_rtp_sender_set_priority (sender, g_value_get_enum (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -107,7 +107,7 @@ gst_webrtc_rtp_sender_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PRIORITY:
       GST_OBJECT_LOCK (sender);
-      g_value_set_uint (value, sender->priority);
+      g_value_set_enum (value, sender->priority);
       GST_OBJECT_UNLOCK (sender);
       break;
     case PROP_TRANSPORT:
