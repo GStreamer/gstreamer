@@ -43,7 +43,6 @@ android {
                     java.srcDirs = ['src']
                     resources.srcDirs = ['src']
                     aidl.srcDirs = ['src']
-                    renderscript.srcDirs = ['src']
                     res.srcDirs = ['res']
                     assets.srcDirs = ['assets']
                 }
@@ -57,6 +56,12 @@ android {
         }
     }
     ndkVersion '25.2.9519653'
+
+    namespace 'org.freedesktop.gstreamer.tutorials.tutorial_3'
+
+    buildFeatures {
+        aidl true
+    }
 }
 
 afterEvaluate {
