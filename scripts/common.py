@@ -18,6 +18,7 @@ if os.name == 'nt':
     _GetShortPathNameW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
     _GetShortPathNameW.restype = wintypes.DWORD
 
+
 def win32_get_short_path_name(long_name):
     """
     Gets the short path name of a given long path.
@@ -44,8 +45,7 @@ def get_wine_shortpath(winecmd, wine_paths):
     try:
         with open(os.devnull, 'w') as stderr:
             wine_path = subprocess.check_output(
-                winecmd +
-                ['cmd', '/C', getShortPathScript] + wine_paths,
+                winecmd + ['cmd', '/C', getShortPathScript] + wine_paths,
                 stderr=stderr).decode('utf-8')
     except subprocess.CalledProcessError as e:
         print("Could not get short paths: %s" % e)
@@ -54,8 +54,8 @@ def get_wine_shortpath(winecmd, wine_paths):
         os.remove(getShortPathScript)
     if len(wine_path) > 2048:
         raise AssertionError('WINEPATH size {} > 2048'
-                                ' this will cause random failure.'.format(
-                                    len(wine_path)))
+                             ' this will cause random failure.'.format(
+                                 len(wine_path)))
     return wine_path
 
 
@@ -112,7 +112,6 @@ class Colors:
         cls.ENDC = '\033[0m'
 
 
-
 def git(*args, repository_path='.', fatal=True):
     try:
         ret = subprocess.check_output(["git"] + list(args), cwd=repository_path,
@@ -122,8 +121,9 @@ def git(*args, repository_path='.', fatal=True):
         if fatal:
             raise e
         print("Non-fatal error running git {}:\n{}".format(' '.join(args), e))
-        return None
+        return ''
     return ret
+
 
 def accept_command(commands):
     """Search @commands and returns the first found absolute path."""
@@ -133,16 +133,17 @@ def accept_command(commands):
             return command
     return None
 
+
 def get_meson():
     meson = os.path.join(ROOTDIR, 'meson', 'meson.py')
     if os.path.exists(meson):
         return [sys.executable, meson]
 
     mesonintrospect = os.environ.get('MESONINTROSPECT', '')
-    for comp in shlex.split (mesonintrospect):
+    for comp in shlex.split(mesonintrospect):
         # mesonintrospect might look like "/usr/bin/python /somewhere/meson introspect",
         # let's not get tricked
-        if 'python' in os.path.basename (comp):
+        if 'python' in os.path.basename(comp):
             continue
         if os.path.exists(comp):
             if comp.endswith('.py'):

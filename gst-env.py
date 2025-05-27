@@ -572,6 +572,7 @@ if __name__ == "__main__":
             else:
                 new_args += ['/c', 'start', '/b', '/wait'] + args
             args = new_args
+    prompt_export = None
     if not args:
         if os.name != 'nt':
             args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
@@ -601,7 +602,7 @@ if __name__ == "__main__":
             # Ignore SIGINT while using fish as the shell to make it behave
             # like other shells such as bash and zsh.
             # See: https://gitlab.freedesktop.org/gstreamer/gst-build/issues/18
-            signal.signal(signal.SIGINT, lambda x, y: True)
+            signal.signal(signal.SIGINT, lambda _, __: True)
             # Set the prompt
             args.append('--init-command')
             prompt_cmd = '''functions --copy fish_prompt original_fish_prompt
