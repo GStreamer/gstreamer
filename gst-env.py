@@ -509,6 +509,15 @@ def get_windows_shell():
     return result.decode().strip()
 
 
+def macos_sip_enabled():
+    if platform.system() != 'Darwin':
+        return False
+    ret = subprocess.run(["csrutil", "status"], text=True, capture_output=True)
+    if not ret.stdout:
+        return True
+    return 'enabled' in ret.stdout
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="gst-env")
 
@@ -634,6 +643,9 @@ if __name__ == "__main__":
                 print("Ignoring SIGINT when running on the CI,"
                       " as we get spurious sigint in there for some reason.")
                 signal.signal(signal.SIGINT, signal.SIG_IGN)
+            if macos_sip_enabled():
+                print('macOS System Integrity Protection is enabled: DYLD_LIBRARY_PATH cannot be set in the subshell')
+                print('To fix that, use `./gst-env.py --only-environment > gst.env && source gst.env`')
             exit(subprocess.call(args, close_fds=False, env=env))
 
     except subprocess.CalledProcessError as e:
