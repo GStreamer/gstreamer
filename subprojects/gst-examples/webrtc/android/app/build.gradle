@@ -50,6 +50,7 @@ android {
         abortOnError false
     }
   ndkVersion '25.2.9519653'
+  namespace 'org.freedesktop.gstreamer.webrtc'
 }
 
 afterEvaluate {
