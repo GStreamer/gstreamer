@@ -64,6 +64,9 @@ main (int argc, char *argv[])
   /* create a server instance */
   server = gst_rtsp_server_new ();
 
+  /* set port to any */
+  gst_rtsp_server_set_service (server, "0");
+
   /* attach the server to the default maincontext */
   if ((id = gst_rtsp_server_attach (server, NULL)) == 0)
     goto failed;
@@ -84,6 +87,9 @@ main (int argc, char *argv[])
   /* ERRORS */
 failed:
   {
+    g_object_unref (server);
+    g_main_loop_unref (loop);
+
     g_print ("failed to attach the server\n");
     return -1;
   }

@@ -207,6 +207,7 @@ test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
     onvif_event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
 
     gst_element_send_event (GST_ELEMENT (src), onvif_event);
+    gst_object_unref (clock);
   }
 
   if (src->segment->rate < 1.0) {
