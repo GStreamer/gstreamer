@@ -1198,6 +1198,11 @@ static void
       GST_PAD (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
           (monitor)));
 
+  if (PAD_PARENT_IS_ENCODER (monitor)) {
+    GST_DEBUG_OBJECT (pad, "Skipping timestamp in range check for encoder pad");
+    goto done;
+  }
+
   if (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))
       || !GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer))) {
     GST_DEBUG_OBJECT (pad,
