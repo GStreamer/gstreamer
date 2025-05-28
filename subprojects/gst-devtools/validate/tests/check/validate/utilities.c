@@ -41,20 +41,27 @@ GST_START_TEST (test_resolve_variables)
 
 GST_END_TEST;
 
+static void
+setup (void)
+{
+  gst_validate_init ();
+}
+
+static void
+teardown (void)
+{
+  gst_validate_deinit ();
+}
+
 static Suite *
 gst_validate_suite (void)
 {
   Suite *s = suite_create ("utilities");
   TCase *tc_chain = tcase_create ("utilities");
   suite_add_tcase (s, tc_chain);
+  tcase_add_checked_fixture (tc_chain, setup, teardown);
 
-  if (atexit (gst_validate_deinit) != 0) {
-    GST_ERROR ("failed to set gst_validate_deinit as exit function");
-  }
-
-  gst_validate_init ();
   tcase_add_test (tc_chain, test_resolve_variables);
-  gst_validate_deinit ();
 
   return s;
 }

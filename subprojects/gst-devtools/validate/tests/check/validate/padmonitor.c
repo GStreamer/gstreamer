@@ -1062,20 +1062,31 @@ GST_END_TEST;
 
 
 
+static void
+setup (void)
+{
+  /*
+   * Don't initialize validate here. Each test needs to setup the
+   * environment before initialization
+   */
+  /* gst_validate_init (); */
+
+  fake_elements_register ();
+}
+
+static void
+teardown (void)
+{
+  gst_validate_deinit ();
+}
+
 static Suite *
 gst_validate_suite (void)
 {
   Suite *s = suite_create ("padmonitor");
   TCase *tc_chain = tcase_create ("padmonitor");
   suite_add_tcase (s, tc_chain);
-
-  if (atexit (gst_validate_deinit) != 0) {
-    GST_ERROR ("failed to set gst_validate_deinit as exit function");
-  }
-  // Do not abort on critical issues, as this test will generate them on purpose.
-  g_setenv ("GST_VALIDATE", "print_issues", TRUE);
-
-  fake_elements_register ();
+  tcase_add_checked_fixture (tc_chain, setup, teardown);
 
   tcase_add_test (tc_chain, buffer_before_segment);
   tcase_add_test (tc_chain, buffer_outside_segment);
@@ -1101,6 +1112,9 @@ gst_validate_suite (void)
   tcase_add_test (tc_chain, caps_events);
   tcase_add_test (tc_chain, flow_error_without_message);
   tcase_add_test (tc_chain, flow_error_with_message);
+
+  // Do not abort on critical issues, as this test will generate them on purpose.
+  g_setenv ("GST_VALIDATE", "print_issues", TRUE);
 
   return s;
 }
