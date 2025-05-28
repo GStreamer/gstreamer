@@ -133,9 +133,8 @@ gst_validate_issue_unref (GstValidateIssue * issue)
   if (G_UNLIKELY (g_atomic_int_dec_and_test (&issue->refcount))) {
     g_free (issue->summary);
     g_free (issue->description);
-
-    /* We are using an string array for area and name */
-    g_strfreev (&issue->area);
+    g_free (issue->area);
+    g_free (issue->name);
 
     g_free (issue);
   }

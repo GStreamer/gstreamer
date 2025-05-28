@@ -112,6 +112,8 @@ _execute_set_restriction (GstValidateScenario * scenario,
   GstEncodingProfile *encoding_profile;
 
   g_object_get (pipeline, "profile", &encoding_profile, NULL);
+  gst_object_unref (pipeline);
+
   restriction_caps =
       gst_structure_get_string (action->structure, "restriction-caps");
   profile_type_name =
