@@ -111,6 +111,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 static GstBuffer *
 create_original_buffer (void)
 {
+  GstClock *clock;
+
   if (original_buffer != NULL)
     return original_buffer;
 
@@ -118,8 +120,9 @@ create_original_buffer (void)
       gst_buffer_new_wrapped ((guint8 *) payload, strlen (payload));
   fail_unless (original_buffer != NULL);
 
-  GST_BUFFER_TIMESTAMP (original_buffer) =
-      gst_clock_get_internal_time (gst_system_clock_obtain ());
+  clock = gst_system_clock_obtain ();
+  GST_BUFFER_TIMESTAMP (original_buffer) = gst_clock_get_internal_time (clock);
+  gst_object_unref (clock);
 
   return original_buffer;
 }
