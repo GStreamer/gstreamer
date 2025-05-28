@@ -95,7 +95,6 @@ struct _GstVulkanInstancePrivate
   VkDebugReportCallbackEXT msg_callback;
   PFN_vkCreateDebugReportCallbackEXT dbgCreateDebugReportCallback;
   PFN_vkDestroyDebugReportCallbackEXT dbgDestroyDebugReportCallback;
-  PFN_vkDebugReportMessageEXT dbgReportMessage;
 #endif
 };
 
@@ -1003,14 +1002,6 @@ gst_vulkan_instance_configure_debugging (GstVulkanInstance * instance,
       if (!priv->dbgDestroyDebugReportCallback) {
         g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
             "Failed to retrieve vkDestroyDebugReportCallback");
-        return FALSE;
-      }
-      priv->dbgReportMessage = (PFN_vkDebugReportMessageEXT)
-          gst_vulkan_instance_get_proc_address (instance,
-          "vkDebugReportMessageEXT");
-      if (!priv->dbgReportMessage) {
-        g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-            "Failed to retrieve vkDebugReportMessage");
         return FALSE;
       }
 
