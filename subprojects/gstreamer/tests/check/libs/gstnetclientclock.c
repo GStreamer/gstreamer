@@ -22,6 +22,10 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#endif
+
 #include <gst/check/gstcheck.h>
 #include <gst/net/gstnet.h>
 
@@ -43,6 +47,13 @@ GST_START_TEST (test_instantiation)
   ASSERT_OBJECT_REFCOUNT (local, "system clock", 2);
 
   gst_object_unref (local);
+
+#ifdef HAVE_VALGRIND
+  if (RUNNING_ON_VALGRIND) {
+    // Delay 60+ to allow cache to free clocks
+    g_usleep (65 * G_USEC_PER_SEC);
+  }
+#endif
 }
 
 GST_END_TEST;
@@ -114,6 +125,13 @@ GST_START_TEST (test_functioning)
 
   gst_object_unref (client);
   gst_object_unref (server);
+
+#ifdef HAVE_VALGRIND
+  if (RUNNING_ON_VALGRIND) {
+    // Delay 60+ to allow cache to free clocks
+    g_usleep (65 * G_USEC_PER_SEC);
+  }
+#endif
 }
 
 GST_END_TEST;
