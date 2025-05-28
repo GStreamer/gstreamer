@@ -34,6 +34,7 @@
 
 #define SAMPLE_CAPS "application/x-gst-check-test"
 
+static GMutex expected_mutex;
 static GstPad *mysinkpad;
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -47,6 +48,7 @@ setup_appsrc (void)
   GstElement *appsrc;
 
   GST_DEBUG ("setup_appsrc");
+  g_mutex_init (&expected_mutex);
   appsrc = gst_check_setup_element ("appsrc");
   mysinkpad = gst_check_setup_sink_pad (appsrc, &sinktemplate);
 
@@ -63,6 +65,7 @@ cleanup_appsrc (GstElement * appsrc)
   gst_check_drop_buffers ();
   gst_check_teardown_sink_pad (appsrc);
   gst_check_teardown_element (appsrc);
+  g_mutex_clear (&expected_mutex);
 }
 
 /*
@@ -614,6 +617,7 @@ appsrc_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GstEvent *exp;
   GstBuffer *exp_buf;
 
+  g_mutex_lock (&expected_mutex);
   if (GST_IS_EVENT (GST_PAD_PROBE_INFO_DATA (info))) {
     GstEvent *ev = GST_PAD_PROBE_INFO_EVENT (info);
     GST_DEBUG ("Got event %s", GST_EVENT_TYPE_NAME (ev));
@@ -709,6 +713,7 @@ appsrc_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     g_list_free1 (*expected);
     *expected = next;
   }
+  g_mutex_unlock (&expected_mutex);
 
   return GST_PAD_PROBE_OK;
 }
@@ -817,8 +822,10 @@ GST_START_TEST (test_appsrc_period_with_custom_segment)
       /* PREPARE SAMPLE */
       sample = gst_sample_new (buffer, NULL, &segment, NULL);
 
+      g_mutex_lock (&expected_mutex);
       expected = g_list_append (expected, gst_event_new_segment (&segment));
       expected = g_list_append (expected, gst_buffer_ref (buffer));
+      g_mutex_unlock (&expected_mutex);
 
       /* 1st sample includes buffer and segment */
       fail_unless (gst_app_src_push_sample (GST_APP_SRC (src), sample)
@@ -833,7 +840,9 @@ GST_START_TEST (test_appsrc_period_with_custom_segment)
         buffer = gst_buffer_new_and_alloc (4);
         GST_BUFFER_DTS (buffer) = GST_BUFFER_PTS (buffer) = j * GST_SECOND;
         GST_BUFFER_DURATION (buffer) = GST_SECOND;
+        g_mutex_lock (&expected_mutex);
         expected = g_list_append (expected, gst_buffer_ref (buffer));
+        g_mutex_unlock (&expected_mutex);
         fail_unless (gst_app_src_push_buffer (GST_APP_SRC (src), buffer)
             == GST_FLOW_OK);
       }
@@ -869,8 +878,10 @@ GST_START_TEST (test_appsrc_period_with_custom_segment)
       /* PREPARE SAMPLE */
       sample = gst_sample_new (buffer, NULL, &segment, NULL);
 
+      g_mutex_lock (&expected_mutex);
       expected = g_list_append (expected, gst_event_new_segment (&segment));
       expected = g_list_append (expected, gst_buffer_ref (buffer));
+      g_mutex_unlock (&expected_mutex);
 
       /* 1st sample includes buffer and segment */
       fail_unless (gst_app_src_push_sample (GST_APP_SRC (src), sample)
@@ -885,13 +896,17 @@ GST_START_TEST (test_appsrc_period_with_custom_segment)
         buffer = gst_buffer_new_and_alloc (4);
         GST_BUFFER_DTS (buffer) = GST_BUFFER_PTS (buffer) = j * GST_SECOND;
         GST_BUFFER_DURATION (buffer) = GST_SECOND;
+        g_mutex_lock (&expected_mutex);
         expected = g_list_append (expected, gst_buffer_ref (buffer));
+        g_mutex_unlock (&expected_mutex);
         fail_unless (gst_app_src_push_buffer (GST_APP_SRC (src), buffer)
             == GST_FLOW_OK);
       }
     }
 
+    g_mutex_lock (&expected_mutex);
     expected = g_list_append (expected, gst_event_new_eos ());
+    g_mutex_unlock (&expected_mutex);
     fail_unless (gst_app_src_end_of_stream (GST_APP_SRC (src)) == GST_FLOW_OK);
 
     msg =
@@ -906,7 +921,9 @@ GST_START_TEST (test_appsrc_period_with_custom_segment)
 
     ASSERT_SET_STATE (pipe, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
     gst_object_unref (pipe);
+    g_mutex_lock (&expected_mutex);
     fail_if (expected != NULL);
+    g_mutex_unlock (&expected_mutex);
   }
 
   g_mutex_clear (&test_data.lock);
@@ -991,7 +1008,9 @@ GST_START_TEST (test_appsrc_custom_segment_twice)
       if (tc == 0) {
         /* Test Case 0: Push a sample without buffer */
         sample = gst_sample_new (NULL, NULL, &segment, NULL);
+        g_mutex_lock (&expected_mutex);
         expected = g_list_append (expected, gst_event_new_segment (&segment));
+        g_mutex_unlock (&expected_mutex);
       } else if (tc == 2) {
         /* Test Case 2: Push a sample without buffer.
          * We don't expect this segment will be used,
@@ -999,8 +1018,10 @@ GST_START_TEST (test_appsrc_custom_segment_twice)
         sample = gst_sample_new (NULL, NULL, &segment, NULL);
       } else {
         sample = gst_sample_new (buffer, NULL, &segment, NULL);
+        g_mutex_lock (&expected_mutex);
         expected = g_list_append (expected, gst_event_new_segment (&segment));
         expected = g_list_append (expected, gst_buffer_ref (buffer));
+        g_mutex_unlock (&expected_mutex);
       }
       /* PUSH THE FIRST SAMPLE */
       fail_unless (gst_app_src_push_sample (GST_APP_SRC (src), sample)
@@ -1025,11 +1046,15 @@ GST_START_TEST (test_appsrc_custom_segment_twice)
       if (tc == 0 || tc == 1) {
         /* Test Case 0 or 1: Push a sample with duplicated segment */
         sample = gst_sample_new (buffer, NULL, &segment, NULL);
+        g_mutex_lock (&expected_mutex);
         expected = g_list_append (expected, gst_buffer_ref (buffer));
+        g_mutex_unlock (&expected_mutex);
       } else {
         sample = gst_sample_new (buffer, NULL, &segment, NULL);
+        g_mutex_lock (&expected_mutex);
         expected = g_list_append (expected, gst_event_new_segment (&segment));
         expected = g_list_append (expected, gst_buffer_ref (buffer));
+        g_mutex_unlock (&expected_mutex);
       }
 
       fail_unless (gst_app_src_push_sample (GST_APP_SRC (src), sample)
@@ -1039,7 +1064,9 @@ GST_START_TEST (test_appsrc_custom_segment_twice)
       gst_buffer_unref (buffer);
       gst_sample_unref (sample);
 
+      g_mutex_lock (&expected_mutex);
       expected = g_list_append (expected, gst_event_new_eos ());
+      g_mutex_unlock (&expected_mutex);
       fail_unless (gst_app_src_end_of_stream (GST_APP_SRC (src)) ==
           GST_FLOW_OK);
 
@@ -1055,7 +1082,9 @@ GST_START_TEST (test_appsrc_custom_segment_twice)
 
       ASSERT_SET_STATE (pipe, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
       gst_object_unref (pipe);
+      g_mutex_lock (&expected_mutex);
       fail_if (expected != NULL);
+      g_mutex_unlock (&expected_mutex);
     }
   }
 }
