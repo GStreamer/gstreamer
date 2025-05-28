@@ -79,6 +79,8 @@ gst_validate_pipeline_monitor_new_full (GstPipeline * pipeline,
 
 G_GNUC_INTERNAL gboolean gst_validate_extra_checks_init (void);
 G_GNUC_INTERNAL gboolean gst_validate_flow_init (void);
+G_GNUC_INTERNAL void _priv_validate_flow_deinit (void);
+
 G_GNUC_INTERNAL gboolean is_tty (void);
 
 /* MediaDescriptor structures */

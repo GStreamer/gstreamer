@@ -251,6 +251,7 @@ gst_validate_issue_new_full (GstValidateIssueId issue_id, const gchar * summary,
   }
 
   issue = g_new (GstValidateIssue, 1);
+  issue->refcount = 1;
   issue->issue_id = issue_id;
   issue->summary = g_strdup (summary);
   issue->description = g_strdup (description);
@@ -288,6 +289,7 @@ gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
   }
 
   issue = g_new (GstValidateIssue, 1);
+  issue->refcount = 1;
   issue->issue_id = issue_id;
   issue->summary = g_strdup (summary);
   issue->description = g_strdup (description);
@@ -735,6 +737,15 @@ gst_validate_report_init (void)
 void
 gst_validate_report_deinit (void)
 {
+#ifndef GST_DISABLE_GST_DEBUG
+  g_clear_pointer (&newline_regex, g_regex_unref);
+#endif
+
+  if (_gst_validate_issues)
+    g_hash_table_destroy (g_steal_pointer (&_gst_validate_issues));
+
+  _gst_validate_report_start_time = 0;
+
   if (server_ostream) {
     g_output_stream_close (server_ostream, NULL, NULL);
     server_ostream = NULL;
