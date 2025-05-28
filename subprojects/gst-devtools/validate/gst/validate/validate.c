@@ -530,6 +530,10 @@ gst_validate_deinit (void)
   testfile_structs = NULL;
   g_clear_pointer (&global_testfile, g_free);
 
+  if (validate_initialized)
+    g_rec_mutex_clear (&init_lock);
+
+  _priv_validate_flow_deinit ();
   _priv_validate_override_registry_deinit ();
   validate_initialized = FALSE;
   gst_validate_report_deinit ();

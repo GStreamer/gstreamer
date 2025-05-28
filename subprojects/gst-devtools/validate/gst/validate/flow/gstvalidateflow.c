@@ -709,3 +709,9 @@ gst_validate_flow_init (void)
 
   return TRUE;
 }
+
+void
+_priv_validate_flow_deinit (void)
+{
+  g_clear_list (&all_overrides, gst_object_unref);
+}
