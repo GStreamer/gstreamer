@@ -769,7 +769,7 @@ gst_validate_ssim_compare_image_file (GstValidateSsim * self,
           g_strdup_printf (" (See %s to check differences in images)",
           output_failure_image);
 
-    GST_VALIDATE_REPORT (self, SIMILARITY_ISSUE,
+    GST_ERROR_OBJECT (self,
         "Average similarity '%f' between %s and %s inferior"
         " than the minimum average: %f%s", *mean,
         real_ref_file, file, self->priv->min_avg_similarity, failure_info);
@@ -788,7 +788,7 @@ gst_validate_ssim_compare_image_file (GstValidateSsim * self,
           g_strdup_printf (" (See %s to check differences in images)",
           output_failure_image);
 
-    GST_VALIDATE_REPORT (self, SIMILARITY_ISSUE,
+    GST_ERROR_OBJECT (self,
         "Lowest similarity '%f' between %s and %s inferior"
         " than the minimum lowest similarity: %f%s", *lowest,
         real_ref_file, file, self->priv->min_lowest_similarity, failure_info);

@@ -114,6 +114,7 @@ static GType validate_ssim_override_get_type (void);
 /*  *INDENT-OFF* */
 G_DEFINE_TYPE_WITH_PRIVATE (ValidateSsimOverride, validate_ssim_override,
     GST_TYPE_VALIDATE_OVERRIDE)
+#define SIMILARITY_ISSUE g_quark_from_static_string ("ssim::image-not-similar-enough")
 /*  *INDENT-ON* */
 
 static void
@@ -192,6 +193,13 @@ runner_stopping (GstValidateRunner * runner, ValidateSsimOverride * self)
     g_free (bname);
   }
 
+  if (nfailures) {
+    GST_VALIDATE_REPORT (self, SIMILARITY_ISSUE, "Some images did not match. "
+        "Average similarity: %f, min_avg: %f, min_min: %f",
+        total_avg / nfiles, min_avg, min_min);
+
+  }
+
   gst_object_unref (ssim);
 
   gst_validate_printf (NULL,
@@ -238,7 +246,8 @@ validate_ssim_override_new (GstStructure * config)
 
   self->priv->config = gst_structure_copy (config);
   self->priv->result_outdir =
-      g_strdup (gst_structure_get_string (config, "result-output-dir"));
+      g_canonicalize_filename (gst_structure_get_string (config,
+          "result-output-dir"), NULL);
 
   format = gst_structure_get_string (config, "output-video-format");
   if (!format) {
