@@ -2403,6 +2403,8 @@ GST_START_TEST (test_record_tcp)
   g_free (session);
   /* release the reference to server_sink, obtained in media_constructed_cb */
   gst_object_unref (server_sink);
+
+  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
