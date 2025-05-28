@@ -367,6 +367,7 @@ validate_flow_format_buffer (GstBuffer * buffer, gint checksum_type,
           g_string_append_c (content, ' ');
         g_string_append_printf (content, "0x%02x", map.data[i]);
       }
+      gst_buffer_unmap (buffer, &map);
 
       buffer_parts[buffer_parts_index++] = g_string_free (content, FALSE);
     } else {
@@ -436,6 +437,7 @@ validate_flow_format_buffer (GstBuffer * buffer, gint checksum_type,
       buffer_parts_index > 0 ? g_strjoinv (", ",
       buffer_parts) : g_strdup ("(empty)");
 
+  g_strfreev (logged_fields);
   g_strfreev (ignored_fields);
   g_free (meta_str);
   g_free (flags_str);

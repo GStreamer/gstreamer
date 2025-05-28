@@ -758,6 +758,8 @@ _update_well_known_vars (GstValidateScenario * scenario)
   } else {
     GST_INFO_OBJECT (scenario, "Could not query position");
   }
+
+  gst_object_unref (pipeline);
 }
 
 static GstElement *_get_target_element (GstValidateScenario * scenario,
@@ -1391,6 +1393,7 @@ _set_timed_value (const GstIdStr * fieldname, const GValue * gvalue,
     gst_object_add_control_binding (obj, binding);
   } else {
     g_object_get (binding, "control-source", &source, NULL);
+    gst_clear_object (&binding);
   }
 
   REPORT_UNLESS (GST_IS_TIMED_VALUE_CONTROL_SOURCE (source), err,
@@ -1401,12 +1404,14 @@ _set_timed_value (const GstIdStr * fieldname, const GValue * gvalue,
       GST_TIME_ARGS (timestamp));
 
   gst_object_unref (obj);
+  gst_clear_object (&source);
   gst_structure_set (structure, "__res__", G_TYPE_INT, res, NULL);
 
   return TRUE;
 
 err:
   gst_clear_object (&obj);
+  gst_clear_object (&source);
   gst_structure_set (structure, "__res__", G_TYPE_INT,
       GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED, NULL);
 
@@ -2224,6 +2229,7 @@ stream_selection_cb (GstBus * bus, GstMessage * message, SelectStreamData * d)
   GstValidateScenario *scenario = NULL;
   GstStreamCollection *collection = NULL, *selected_streams = NULL;
   GList *streams = NULL;
+  GstElement *pipeline = NULL;
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_STREAM_COLLECTION:
@@ -2289,7 +2295,7 @@ stream_selection_cb (GstBus * bus, GstMessage * message, SelectStreamData * d)
   }
 
 
-  GstElement *pipeline = gst_validate_scenario_get_pipeline (scenario);
+  pipeline = gst_validate_scenario_get_pipeline (scenario);
   if (pipeline == NULL) {
     GST_VALIDATE_REPORT_ACTION (scenario, d->action,
         SCENARIO_ACTION_EXECUTION_ERROR,
@@ -2327,6 +2333,7 @@ done:
 
   gst_clear_object (&scenario);
   gst_clear_object (&collection);
+  gst_clear_object (&pipeline);
 
   g_rec_mutex_unlock (&d->m);
 }
@@ -2363,6 +2370,9 @@ stream_selection_scenario_stopping_cb (GstValidateScenario * scenario,
     d->stopping_sid = 0;
   }
   g_rec_mutex_unlock (&d->m);
+
+  gst_clear_object (&pipeline);
+  gst_clear_object (&bus);
 }
 
 static GstValidateExecuteActionReturn
@@ -3647,6 +3657,7 @@ _execute_wait_for_sub_pipeline (GstValidateScenario * scenario,
       (GClosureNotify) gst_validate_action_unref, G_CONNECT_AFTER);
 
   gst_clear_object (&bus);
+  gst_clear_object (&pipeline);
 
   return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
 }
@@ -4222,6 +4233,7 @@ chain_wrapper_function_free (ChainWrapperFunctionData * data)
 {
   g_list_free_full (data->actions, (GDestroyNotify) gst_validate_action_unref);
   g_mutex_clear (&data->actions_lock);
+  g_free (data);
 }
 
 static GstFlowReturn
@@ -4230,8 +4242,7 @@ _pad_chain_wrapper (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   ChainWrapperFunctionData *data =
       g_object_get_qdata (G_OBJECT (pad), chain_qdata);
 
-  return data->wrapper_function (pad, parent, buffer,
-      g_object_get_qdata (G_OBJECT (pad), chain_qdata));
+  return data->wrapper_function (pad, parent, buffer, data);
 }
 
 static void
@@ -6240,6 +6251,7 @@ gst_validate_scenario_new (GstValidateRunner *
     gst_validate_printf (NULL,
         "**-> Using clock %" GST_PTR_FORMAT " on %" GST_PTR_FORMAT "**\n",
         system_clock, pipeline);
+    gst_object_unref (system_clock);
   }
 
   gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (scenario),
@@ -7323,6 +7335,7 @@ typedef struct
 {
   GstValidateMonitor *monitor;
   GstValidateAction *action;
+  GstElement *pipeline;
 } SubPipelineData;
 
 static void
@@ -7330,7 +7343,8 @@ sub_pipeline_data_free (gpointer data)
 {
   SubPipelineData *sub_data = (SubPipelineData *) data;
 
-  g_clear_object (&sub_data->monitor);
+  gst_clear_object (&sub_data->monitor);
+  gst_clear_object (&sub_data->pipeline);
   gst_validate_action_unref (sub_data->action);
 }
 
@@ -7344,10 +7358,6 @@ static void
 subscenario_done_cb (GstBus * bus, GstMessage * message, gpointer data)
 {
   SubPipelineData *sub_data = (SubPipelineData *) data;
-  GstElement *pipeline =
-      GST_ELEMENT (gst_validate_monitor_get_target (sub_data->monitor));
-  g_assert (pipeline);
-
   GstState state;
 
   gst_message_parse_request_state (message, &state);
@@ -7357,7 +7367,7 @@ subscenario_done_cb (GstBus * bus, GstMessage * message, gpointer data)
     return;
   }
 
-  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_element_set_state (sub_data->pipeline, GST_STATE_NULL);
   gst_validate_action_set_done (sub_data->action);
 
   g_signal_handlers_disconnect_by_func (bus, subscenario_done_cb, data);
@@ -7404,6 +7414,7 @@ _create_sub_pipeline (GstValidateScenario * scenario,
           scenario_name ? scenario_name : (name ? name : "unnamed-subscenario"),
           scenario_structures, TRUE));
   data->action = gst_validate_action_ref (action);
+  data->pipeline = GST_ELEMENT_CAST (pipeline);
 
   gboolean monitor_handles_state;
   g_object_get (data->monitor, "handles-states", &monitor_handles_state, NULL);

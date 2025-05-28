@@ -326,7 +326,7 @@ _can_attach (GstValidateOverride * override, GstValidateMonitor * monitor)
     GST_INFO_OBJECT (pad,
         "Doesn't have template, can't use it %" GST_PTR_FORMAT,
         gst_pad_query_caps (pad, NULL));
-    return FALSE;
+    goto fail;
   }
 
   template_caps = GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad));
