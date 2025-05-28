@@ -386,8 +386,10 @@ gst_alpha_combine_sink_chain (GstPad * pad, GstObject * object,
   guint alpha_plane_idx;
 
   ret = gst_alpha_combine_peek_alpha_buffer (self, &alpha_buffer);
-  if (ret != GST_FLOW_OK)
+  if (ret != GST_FLOW_OK) {
+    gst_buffer_unref (src_buffer);
     return ret;
+  }
 
   GST_DEBUG_OBJECT (self, "Combining buffer %p with alpha buffer %p",
       src_buffer, alpha_buffer);
@@ -712,6 +714,9 @@ gst_alpha_combine_dispose (GObject * object)
     gst_pad_remove_probe (self->blocked_pad, self->pad_block_id);
   }
   g_clear_object (&self->blocked_pad);
+
+  gst_buffer_replace (&self->alpha_buffer, NULL);
+  gst_buffer_replace (&self->last_alpha_buffer, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
