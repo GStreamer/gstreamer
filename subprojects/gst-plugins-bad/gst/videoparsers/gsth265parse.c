@@ -1114,6 +1114,13 @@ gst_h265_parse_handle_frame_packetized (GstBaseParse * parse,
       gst_h265_parse_parse_frame (parse, &tmp_frame);
       ret = gst_base_parse_finish_frame (parse, &tmp_frame, nl + nalu.size);
       left -= nl + nalu.size;
+
+      /* Bail out if we get a flow error. */
+      if (ret != GST_FLOW_OK) {
+        gst_buffer_unmap (buffer, &map);
+        gst_buffer_unref (buffer);
+        return ret;
+      }
     }
 
     parse_res = gst_h265_parser_identify_nalu_hevc (h265parse->nalparser,
