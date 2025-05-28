@@ -1213,8 +1213,10 @@ sub_get_all_targets (gchar * subdir)
     if (target) {
       target->path = fullname;
       res = g_list_append (res, target);
-    } else
+    } else {
       GST_WARNING ("Failed to get a target from %s", fullname);
+      g_free (fullname);
+    }
   }
   g_dir_close (dir);
 
