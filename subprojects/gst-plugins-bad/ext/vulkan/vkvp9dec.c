@@ -341,7 +341,7 @@ gst_vulkan_vp9_decoder_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query)
 {
   GstVulkanVp9Decoder *self = GST_VULKAN_VP9_DECODER (decoder);
-  GstCaps *new_caps, *profile_caps, *caps = NULL;
+  GstCaps *new_caps, *profile_caps, *caps = NULL, *dpb_caps = NULL;
   GstBufferPool *pool = NULL;
   GstStructure *config;
   guint size, min, max;
@@ -409,13 +409,29 @@ gst_vulkan_vp9_decoder_decide_allocation (GstVideoDecoder * decoder,
 
   gst_object_unref (pool);
 
-  gst_vulkan_decoder_create_dpb_pool (self->decoder, new_caps);
+  /*
+   * When the pool is destroyed during resolution changes, previously decoded
+   * reference frames stored in the DPBs are lost, which can cause decoding
+   * errors or corruption when those reference frames are needed for inter-frame
+   * prediction at different resolutions. By sizing the pool for the maximum
+   * supported resolution upfront, we ensure reference frame continuity across
+   * resolution changes.
+   */
+  dpb_caps = gst_caps_copy (caps);
+  gst_caps_set_simple (dpb_caps, "width", G_TYPE_INT,
+      vk_caps.caps.maxCodedExtent.width, "height", G_TYPE_INT,
+      vk_caps.caps.maxCodedExtent.height, NULL);
+
+  if (!gst_vulkan_decoder_create_dpb_pool (self->decoder, dpb_caps))
+    goto bail;
+  gst_caps_unref (dpb_caps);
 
   return TRUE;
 
 bail:
   {
     gst_clear_caps (&new_caps);
+    gst_clear_caps (&dpb_caps);
     gst_clear_object (&pool);
     return FALSE;
   }
