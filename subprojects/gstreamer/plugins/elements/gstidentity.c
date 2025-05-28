@@ -913,18 +913,20 @@ gst_identity_set_property (GObject * object, guint prop_id,
       sync = g_value_get_boolean (value);
       GST_OBJECT_LOCK (identity);
       if (sync != identity->sync) {
+        GstClock *system_clock = gst_system_clock_obtain ();
         identity->sync = sync;
         if (sync) {
           GST_OBJECT_FLAG_SET (identity, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
           clock_message =
               gst_message_new_clock_provide (GST_OBJECT_CAST (identity),
-              gst_system_clock_obtain (), TRUE);
+              system_clock, TRUE);
         } else {
           GST_OBJECT_FLAG_UNSET (identity, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
           clock_message =
               gst_message_new_clock_lost (GST_OBJECT_CAST (identity),
-              gst_system_clock_obtain ());
+              system_clock);
         }
+        gst_object_unref (system_clock);
       }
       GST_OBJECT_UNLOCK (identity);
       if (clock_message)
