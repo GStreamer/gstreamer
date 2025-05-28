@@ -585,6 +585,23 @@ gst_vulkan_decoder_create_dpb_pool (GstVulkanDecoder * self, GstCaps * caps)
     max_buffers = 0;
   }
 
+  if (priv->dpb_pool) {
+    GstCaps *old_caps = NULL;
+    gboolean keep_pool = FALSE;
+
+    config = gst_buffer_pool_get_config (priv->dpb_pool);
+    gst_buffer_pool_config_get_params (config, &old_caps, NULL, NULL, NULL);
+    keep_pool = gst_caps_is_strictly_equal (caps, old_caps);
+    gst_structure_free (config);
+
+    if (keep_pool) {
+      GST_INFO_OBJECT (self, "Reusing existing DPB pool");
+      return TRUE;
+    }
+
+    gst_clear_object (&priv->dpb_pool);
+  }
+
   priv->dpb_pool = gst_vulkan_image_buffer_pool_new (self->queue->device);
 
   config = gst_buffer_pool_get_config (priv->dpb_pool);
