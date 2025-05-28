@@ -288,6 +288,9 @@ gst_gl_filtershader_get_property (GObject * object, guint prop_id,
 static void
 gst_gl_filtershader_gl_stop (GstGLBaseFilter * base)
 {
+  GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (base);
+  gst_clear_object (&filtershader->shader);
+  filtershader->new_source = TRUE;
   GST_GL_BASE_FILTER_CLASS (parent_class)->gl_stop (base);
 }
 
