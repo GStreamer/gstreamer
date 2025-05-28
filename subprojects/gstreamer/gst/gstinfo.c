@@ -2565,6 +2565,15 @@ _priv_gst_debug_cleanup (void)
     __log_functions = g_slist_delete_link (__log_functions, __log_functions);
   }
   g_rw_lock_writer_unlock (&__log_func_mutex);
+
+#ifdef HAVE_UNWIND
+# ifdef HAVE_DW
+  if (_global_dwfl) {
+    dwfl_end (_global_dwfl);
+    _global_dwfl = NULL;
+  }
+# endif
+#endif
 }
 
 static void
