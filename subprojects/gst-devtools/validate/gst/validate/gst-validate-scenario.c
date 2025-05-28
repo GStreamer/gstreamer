@@ -259,6 +259,8 @@ struct _GstValidateScenarioPrivate
   guint signal_handler_id;      /* MT safe. Protect with SCENARIO_LOCK */
   guint action_execution_interval;
 
+  gboolean has_stopped;
+
   /* Name of message the wait action is waiting for */
   GstValidateAction *wait_message_action;
 
@@ -2473,7 +2475,8 @@ _add_execute_actions_gsource (GstValidateScenario * scenario)
 
   SCENARIO_LOCK (scenario);
   if (priv->execute_actions_source_id == 0 && priv->wait_id == 0
-      && priv->signal_handler_id == 0 && priv->wait_message_action == NULL) {
+      && priv->signal_handler_id == 0 && priv->wait_message_action == NULL
+      && !priv->has_stopped) {
     if (!scenario->priv->action_execution_interval)
       priv->execute_actions_source_id =
           g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
@@ -3221,7 +3224,10 @@ execute_action:
           " to be done.");
 
       SCENARIO_LOCK (scenario);
-      priv->execute_actions_source_id = 0;
+      if (priv->execute_actions_source_id) {
+        g_source_remove (priv->execute_actions_source_id);
+        priv->execute_actions_source_id = 0;
+      }
       SCENARIO_UNLOCK (scenario);
 
       return G_SOURCE_REMOVE;
@@ -7108,6 +7114,8 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
     g_source_remove (priv->execute_actions_source_id);
     priv->execute_actions_source_id = 0;
   }
+  scenario->priv->has_stopped = TRUE;
+
   if (scenario->priv->actions || scenario->priv->non_blocking_running_actions ||
       scenario->priv->on_addition_actions) {
     guint nb_actions = 0;
