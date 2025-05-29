@@ -204,34 +204,36 @@ public class FileDialog extends ListActivity {
         TreeMap<String, String> dirsPathMap = new TreeMap<String, String>();
         TreeMap<String, String> filesMap = new TreeMap<String, String>();
         TreeMap<String, String> filesPathMap = new TreeMap<String, String>();
-        for (File file : files) {
-            if (file.isDirectory()) {
-                String dirName = file.getName();
-                dirsMap.put(dirName, dirName);
-                dirsPathMap.put(dirName, file.getPath());
-            } else {
-                final String fileName = file.getName();
-                final String fileNameLwr = fileName.toLowerCase();
-                // se ha um filtro de formatos, utiliza-o
-                if (formatFilter != null) {
-                    boolean contains = false;
-                    for (int i = 0; i < formatFilter.length; i++) {
-                        final String formatLwr = formatFilter[i].toLowerCase();
-                        if (fileNameLwr.endsWith(formatLwr)) {
-                            contains = true;
-                            break;
-                        }
-                    }
-                    if (contains) {
-                        filesMap.put(fileName, fileName);
-                        filesPathMap.put(fileName, file.getPath());
-                    }
-                    // senao, adiciona todos os arquivos
-                } else {
-                    filesMap.put(fileName, fileName);
-                    filesPathMap.put(fileName, file.getPath());
-                }
-            }
+        if (files != null) {
+          for (File file : files) {
+              if (file.isDirectory()) {
+                  String dirName = file.getName();
+                  dirsMap.put(dirName, dirName);
+                  dirsPathMap.put(dirName, file.getPath());
+              } else {
+                  final String fileName = file.getName();
+                  final String fileNameLwr = fileName.toLowerCase();
+                  // se ha um filtro de formatos, utiliza-o
+                  if (formatFilter != null) {
+                      boolean contains = false;
+                      for (int i = 0; i < formatFilter.length; i++) {
+                          final String formatLwr = formatFilter[i].toLowerCase();
+                          if (fileNameLwr.endsWith(formatLwr)) {
+                              contains = true;
+                              break;
+                          }
+                      }
+                      if (contains) {
+                          filesMap.put(fileName, fileName);
+                          filesPathMap.put(fileName, file.getPath());
+                      }
+                      // senao, adiciona todos os arquivos
+                  } else {
+                      filesMap.put(fileName, fileName);
+                      filesPathMap.put(fileName, file.getPath());
+                  }
+              }
+          }
         }
         item.addAll(dirsMap.tailMap("").values());
         item.addAll(filesMap.tailMap("").values());
