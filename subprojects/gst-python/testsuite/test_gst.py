@@ -16,16 +16,16 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+import overrides_hack
+import sys
+from common import TestCase, unittest
+from gi.repository import Gst
 import gi
 
 
 gi.require_version('Gst', '1.0')
 
 
-from gi.repository import Gst
-from common import TestCase, unittest
-import sys
-import overrides_hack
 overrides_hack
 
 
@@ -220,6 +220,7 @@ class TestQuery(TestCase):
             self.assertEqual(s["rate"], 44100)
             self.assertEqual(s["channels"], 2)
 
+
 class TestContext(TestCase):
     def test_writable(self):
         Gst.init(None)
@@ -244,24 +245,24 @@ class TestBuffer(TestCase):
     def test_set_metas(self):
         Gst.init(None)
         buf = Gst.Buffer.new_wrapped([42])
-        buf.set_pts(42)
-        self.assertEqual(buf.pts(), 42)
+        buf.pts = 42
+        self.assertEqual(buf.pts, 42)
 
         make_not_writable = buf.mini_object
         with self.assertRaises(Gst.NotWritableMiniObject):
-            buf.set_pts(52)
+            buf.pts = 52
 
         buf.make_writable()
-        buf.set_dts(62)
-        self.assertEqual(buf.dts(), 62)
-        self.assertTrue(buf.flags() & Gst.BufferFlags.DISCONT == 0)
-        buf.set_flags(Gst.BufferFlags.DISCONT)
-        buf.set_duration(72)
-        self.assertEqual(buf.duration(), 72)
-        buf.set_offset(82)
-        self.assertEqual(buf.offset(), 82)
-        buf.set_offset_end(92)
-        self.assertEqual(buf.offset_end(), 92)
+        buf.dts = 62
+        self.assertEqual(buf.dts, 62)
+        self.assertTrue(buf.flags & Gst.BufferFlags.DISCONT == 0)
+        buf.flags = Gst.BufferFlags.DISCONT
+        buf.duration = 72
+        self.assertEqual(buf.duration, 72)
+        buf.offset = 82
+        self.assertEqual(buf.offset, 82)
+        buf.offset_end = 92
+        self.assertEqual(buf.offset_end, 92)
         del make_not_writable
 
         meta = buf.add_reference_timestamp_meta(Gst.Caps("yes"), 10, 10)
