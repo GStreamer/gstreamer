@@ -429,13 +429,13 @@ public:
       }
     }
 
-    HDESK hdesk = OpenInputDesktop (0, FALSE, GENERIC_ALL);
+    auto prev_hdesk = GetThreadDesktop (GetCurrentThreadId ());
+    auto hdesk = OpenInputDesktop (0, FALSE, GENERIC_ALL);
     if (hdesk) {
       if (!SetThreadDesktop (hdesk)) {
         GST_WARNING ("SetThreadDesktop() failed, error %lu", GetLastError());
       }
 
-      CloseDesktop (hdesk);
     } else {
       GST_WARNING ("OpenInputDesktop() failed, error %lu", GetLastError());
     }
@@ -468,6 +468,12 @@ public:
 
     if (FAILED (hr))
       hr = output1->DuplicateOutput(device, &dupl_);
+
+    if (prev_hdesk)
+      SetThreadDesktop (prev_hdesk);
+
+    if (hdesk)
+      CloseDesktop (hdesk);
 
     if (FAILED (hr)) {
       if (hr == DXGI_ERROR_NOT_CURRENTLY_AVAILABLE) {
