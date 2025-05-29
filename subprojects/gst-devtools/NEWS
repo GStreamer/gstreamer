@@ -2,11 +2,11 @@ GStreamer 1.26 Release Notes
 
 GStreamer 1.26.0 was originally released on 11 March 2025.
 
-The latest bug-fix release in the stable 1.26 series is 1.26.1 and was released on 24 April 2025.
+The latest bug-fix release in the stable 1.26 series is 1.26.2 and was released on 29 May 2025.
 
 See https://gstreamer.freedesktop.org/releases/1.26/ for the latest version of this document.
 
-Last updated: Thursday 24 April 2025, 16:00 UTC (log)
+Last updated: Thursday 29 May 2025, 20:00 UTC (log)
 
 ## Introduction
 
@@ -1567,6 +1567,247 @@ List of merge requests and issues fixed in 1.26.1
 
 -   List of Merge Requests applied in 1.26.1
 -   List of Issues fixed in 1.26.1
+
+1.26.2
+
+The second 1.26 bug-fix release (1.26.2) was released on 29 May 2025.
+
+This release only contains bugfixes as well as a number of security fixes and important playback fixes, and it should be safe to
+update from 1.26.0.
+
+Highlighted bugfixes in 1.26.2
+
+-   Various security fixes and playback fixes
+-   aggregator base class fixes to not produce buffers too early in live mode
+-   AWS translate element improvements
+-   D3D12 video decoder workarounds for crashes on NVIDIA cards on resolution changes
+-   dav1d AV1-decoder performance improvements
+-   fmp4mux: tfdt and composition time offset fixes, plus AC-3 / EAC-3 audio support
+-   GStreamer editing services fixes for sources with non-1:1 aspect ratios
+-   MIDI parser improvements for tempo changes
+-   MP4 demuxer atom parsing improvements and security fixes
+-   New skia-based video compositor element
+-   Subtitle parser security fixes
+-   Subtitle rendering and seeking fixes
+-   Playbin3 and uridecodebin3 stability fixes
+-   GstPlay stream selection improvements
+-   WAV playback regression fix
+-   GTK4 paintable sink colorimetry support and other improvements
+-   WebRTC: allow webrtcsrc to wait for a webrtcsink producer to initiate the connection
+-   WebRTC: new Janus Video Room WebRTC source element
+-   vah264enc profile decision making logic fixes
+-   Python bindings gained support for handling mini object writability (buffers, caps, etc.)
+-   Various bug fixes, build fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   aggregator: Various state related fixes
+-   element: ref-sink the correct pad template when replacing an existing one
+-   pipeline: Store the actual latency even if no static latency was configured
+-   structure: Add gst_structure_is_writable() API to allow python bindings to be able to handle writability of MiniObjects
+-   tracerutils: Do not warn on empty string as tracername
+-   tracerutils: Fix leak in gst_tracer_utils_create_tracer()
+-   Ensure properties are freed before (re)setting with g_value_dup_object() or g_value_dup_boxed() and during cleanup
+-   Fix new warnings on Fedora 42, various meson warnings, and other small meson build/wrap fixes
+
+gst-plugins-base
+
+-   alsa: Avoid infinite loop in DSD rate detection
+-   gl: Implement basetransform meta transform function
+-   glshader: free shader on stop
+-   glupload: Only add texture-target field to GL caps
+-   gstaudioutilsprivate: Fix gcc 15 compiler error with function pointer
+-   mikey: Avoid infinite loop while parsing MIKEY payload with unhandled payload types
+-   properties: add G_PARAM_STATIC_STRINGS where missing
+-   riff-media: fix MS and DVI ADPCM av_bps calculations
+-   subtitleoverlay: Remove 0.10 hardware caps handling
+-   subtitleoverlay: Missing support for DMABuf(?)
+-   tests: opus: Update channel support and add to meson
+-   textoverlay: fix shading for RGBx / RGBA pixel format variants
+-   textoverlay background is wrong while cropping
+-   uridecodebin3: Don’t hold play items lock while releasing pads
+-   uridecodebin3: deadlock on PLAY_ITEMS_LOCK
+-   Fix new warnings on Fedora 42, various meson warnings, and other small meson build/wrap fixes
+-   Fix Qt detection in various places
+
+gst-plugins-good
+
+-   adaptivedemux2: Fixes for collection handling
+-   adaptivedemux2: Fix several races
+-   dash: mpdclient: Don’t pass terminating NUL to adapter
+-   gl: Implement basetransform meta transform function
+-   imagefreeze: Set seqnum from segment too
+-   interleave: Don’t hold object lock while querying caps downstream
+-   matroskamux: Write stream headers before finishing file, so that a correct file with headers is written if we finish without
+    any data
+-   meson: Add build_rpath for qt6 plugin on macOS
+-   meson: Fix qt detection in various places
+-   properties: add G_PARAM_STATIC_STRINGS where missing
+-   qtdemux: Check length of JPEG2000 colr box before parsing it
+-   qtdemux: Parse chan box and improve raw audio channel layout handling
+-   qtdemux: Improve track parsing
+-   qtdemux: Use byte reader to parse mvhd box
+-   qtdemux: cmpd box is only mandatory for uncompressed video with uncC version 0
+-   rtph264pay: Reject stream-format=avc without codec_data
+-   rtputils: Add debug category
+-   v4l2: pool: Send drop frame signal after dqbuf success
+-   v4l2: pool: fix assert when mapping video frame with DMA_DRM caps
+-   v4l2videoenc: report error only when buffer pool parameters are invalid
+-   wavparse: Ignore EOS when parsing the headers
+-   wavparse: Regression leading to unplaybable wav files that were working before
+-   Ensure properties are freed before (re)setting with g_value_dup_object() or g_value_dup_boxed() and during cleanup
+-   Fix new warnings on Fedora 42, various meson warnings, and other small meson build/wrap fixes
+-   Fixes for big endian
+-   Switch to GST_AUDIO_NE()
+-   Valgrind fixes
+
+gst-plugins-bad
+
+-   alphacombine: Fix seeking after EOS
+-   cuda: Fix runtime PTX compile, fix example code build with old CUDA SDK
+-   curl: Fix build with MSVC
+-   curl: small fixups p3
+-   d3d12: Fix gstreamer-full subproject build with gcc
+-   d3d12: Generate gir file
+-   d3d12decoder: Workaround for NVIDIA crash on resolution change
+-   d3d12memory: Allow set_fence() only against writable memory
+-   d3d12memory: Make D3D12 map flags inspectable
+-   d3d12screencapturesrc: Fix desktop handle leak
+-   dash: mpdclient: Don’t pass terminating NUL to adapter
+-   dvbsuboverlay: Actually make use of subtitle running time instead of using PTS
+-   dvbsuboverlay: No subtitles after seek
+-   h264parse: Never output stream-format=avc/avc3 caps without codec_data
+-   lcevc: Use portable printf formatting macros
+-   midiparse: Consider tempo changes when calculating duration
+-   nvencoder: Fix GstVideoCodecFrame leak on non-flow-ok return
+-   play: Improve stream selection
+-   properties: add G_PARAM_STATIC_STRINGS where missing
+-   rtpsender: fix ‘priority’ GValue get/set
+-   va: Fix H264 profile decision logic
+-   vulkan/wayland: Init debug category before usage
+-   Ensure properties are freed before (re)setting with g_value_dup_object() or g_value_dup_boxed() and during cleanup
+-   Fix new warnings on Fedora 42, various meson warnings, and other small meson build/wrap fixes
+-   Fixes for big endian
+-   Fix Qt detection in various places
+-   Switch to GST_AUDIO_NE()
+-   Valgrind fixes
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+-   awstranslate: improve control over accumulator behavior
+-   awstranslate: output buffer lists
+-   cea608tott: make test text less shocking by having more cues as context
+-   dav1ddec: Directly decode into downstream allocated buffers if possible
+-   deny: Allow webpki-root-certs license
+-   fmp4mux: Add support for AC-3 / EAC-3
+-   fmp4mux: Use earliest PTS for the base media decode time (tfdt)
+-   fmp4mux: Fix handling of negative DTS in composition time offset
+-   fmp4mux: Write lmsg as compatible brand into the last fragment
+-   mp4mux: add extra brands
+-   mp4: avoid dumping test output into build directory
+-   mp4: migrate to mp4-atom to check muxing
+-   mp4: test the trak structure
+-   gtk4: Update and adapt to texture builder API changes
+-   gtk4: Initial colorimetry support
+-   gtk4: Update default GTK4 target version to 4.10
+-   rtp: Update to bitstream-io 4.0
+-   skia: Implement a video compositor using skia
+-   webrtc: addressing a few deadlocks
+-   webrtc: Support for producer sessions targeted at a given consumer
+-   webrtc: add new JanusVR source element
+-   webrtc: janus: clean up and refactoring
+-   webrtcsink: Use seq number instead of Uuid for discovery
+-   webrtc: Make older peers less likely to crash when webrtcsrc is used
+-   Fix or silence various new clippy warnings
+-   Update Cargo.lock to fix duplicated target-lexicon
+
+gst-libav
+
+-   Valgrind fixes
+-   libav: Only allocate extradata while decoding
+
+gst-rtsp-server
+
+-   properties: add G_PARAM_STATIC_STRINGS where missing
+-   properties: ensure properties are freed before (re)setting with g_value_dup_object() or g_value_dup_boxed() and during
+    cleanup
+-   tests: Valgrind fixes
+
+gstreamer-vaapi
+
+-   Ensure properties are freed before (re)setting with g_value_dup_object() or g_value_dup_boxed() and during cleanup
+
+gstreamer-sharp
+
+-   No changes
+
+gst-python
+
+This release includes important fixes for the GStreamer Python bindings.
+
+Since pygobject 3.13 around 10 years ago, it wasn’t possible anymore to modify GStreamer miniobjects, e.g. modify caps or set
+buffer timestamps, as an implicit copy of the original would always be made. This should finally work again now.
+
+-   Fix new warnings on Fedora 42, various meson warnings, and other small meson build/wrap fixes
+-   python: Add overrides to be able to handle writability of MiniObjects
+-   python: Convert buffer metadata API to use @property decorators
+-   REGRESSION: pygobject 3.13 now copies the GstStructure when getting them from a GstCaps, making it impossible to properly
+    modify structures from caps in place
+
+gst-editing-services
+
+-   Fix frame position for sources with par < 1
+-   Fix video position for sources with pixel-aspect-ratio > 1
+-   Valgrind fixes
+-   properties: add G_PARAM_STATIC_STRINGS where missing
+-   Switch to GST_AUDIO_NE() to make things work properly on Big Endian systems
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   Fix new warnings on Fedora 42, various meson warnings, and other small meson build/wrap fixes
+-   validate: baseclasses: Reset Test timeouts between iterations
+-   validate: scenario: Fix race condition when ignoring EOS
+
+gst-examples
+
+-   Fix new warnings on Fedora 42, various meson warnings, and other small meson build/wrap fixes
+-   webrtc examples: Fix running against self-signed certs
+-   webrtc/signalling: fix compatibility with python 3.13
+
+gstreamer-docs
+
+-   No changes
+
+Development build environment
+
+-   Various wrap updates
+-   Add qt-method meson options to fix Qt detection in various places
+-   pre-commit: Workaround broken shebang on Windows
+
+Cerbero build tool and packaging changes in 1.26.2
+
+-   directx-headers: Fix g-ir-scanner expecting MSVC naming convention for gst-plugins-bad introspection
+-   m4: update recipe to fix hang in configure
+-   pango: Fix introspection missing since 1.56.2 update
+
+Contributors to 1.26.2
+
+Adrian Perez de Castro, Alexander Slobodeniuk, Alicia Boya García, Andoni Morales Alastruey, Biswapriyo Nath, Brad Hards, Branko
+Subasic, Christoph Reiter, Daniel Morin, Doug Nazar, Devon Sookhoo, Eva Pace, Guillaume Desmottes, Hou Qi, Jakub Adam, Jan
+Schmidt, Jochen Henneberg, Jordan Petridis, L. E. Segovia, Mathieu Duponchelle, Matthew Waters, Nicolas Dufresne, Nirbheek
+Chauhan, Olivier Crête, Pablo García, Piotr Brzeziński, Robert Mader, Sebastian Dröge, Seungha Yang, Thibault Saunier,
+Tim-Philipp Müller, Vasiliy Doylov, Wim Taymans, Xavier Claessens, Zhao, Gang,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.26.2
+
+-   List of Merge Requests applied in 1.26.2
+-   List of Issues fixed in 1.26.2
 
 Schedule for 1.28
 
