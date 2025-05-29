@@ -106,8 +106,11 @@ typedef struct
 enum
 {
   PROP_0,
+  PROP_TIMED_OUT,
   PROP_LAST
 };
+
+#define DEFAULT_TIMED_OUT FALSE
 
 GST_DEBUG_CATEGORY_STATIC (rtsp_stream_transport_debug);
 #define GST_CAT_DEFAULT rtsp_stream_transport_debug
@@ -118,6 +121,21 @@ G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPStreamTransport, gst_rtsp_stream_transport,
     G_TYPE_OBJECT);
 
 static void
+gst_rtsp_stream_transport_get_property (GObject * object, guint propid,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRTSPStreamTransport *transport = GST_RTSP_STREAM_TRANSPORT (object);
+
+  switch (propid) {
+    case PROP_TIMED_OUT:
+      g_value_set_boolean (value, transport->priv->timed_out);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
+  }
+}
+
+static void
 gst_rtsp_stream_transport_class_init (GstRTSPStreamTransportClass * klass)
 {
   GObjectClass *gobject_class;
@@ -125,6 +143,19 @@ gst_rtsp_stream_transport_class_init (GstRTSPStreamTransportClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->finalize = gst_rtsp_stream_transport_finalize;
+  gobject_class->get_property = gst_rtsp_stream_transport_get_property;
+
+  /**
+   * GstRTSPStreamTransport:timed-out:
+   *
+   * Whether this transport is timed out
+   *
+   * Since: 1.28
+   */
+  g_object_class_install_property (gobject_class, PROP_TIMED_OUT,
+      g_param_spec_boolean ("timed-out", "Timed Out",
+          "Whether this transport is timed out",
+          DEFAULT_TIMED_OUT, G_PARAM_READABLE));
 
   GST_DEBUG_CATEGORY_INIT (rtsp_stream_transport_debug, "rtspmediatransport",
       0, "GstRTSPStreamTransport");
@@ -589,6 +620,8 @@ gst_rtsp_stream_transport_set_timed_out (GstRTSPStreamTransport * trans,
   g_return_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans));
 
   trans->priv->timed_out = timedout;
+
+  g_object_notify (G_OBJECT (trans), "timed-out");
 }
 
 /**

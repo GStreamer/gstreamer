@@ -11269,6 +11269,10 @@ passed @tr.</doc>
           </parameter>
         </parameters>
       </method>
+      <property name="timed-out" version="1.28" transfer-ownership="none" default-value="FALSE">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream-transport.c">Whether this transport is timed out</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
       <field name="parent">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream-transport.h">parent instance</doc>
         <type name="GObject.Object" c:type="GObject"/>
