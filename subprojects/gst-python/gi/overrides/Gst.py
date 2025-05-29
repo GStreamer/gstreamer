@@ -113,10 +113,12 @@ class MiniObject:
     def is_writable(self):
         return _gi_gst.mini_object_is_writable(self)
 
+    @property
     def flags(self):
         return _gi_gst.mini_object_flags(self)
 
-    def set_flags(self, flags):
+    @flags.setter
+    def flags(self, flags):
         _gi_gst.mini_object_set_flags(self, flags)
 
 
@@ -158,6 +160,7 @@ class Event(Gst.Event, MiniObject):
 
 Event = override(Event)
 __all__.append('Event')
+
 
 class NotWritableContext(Exception):
     pass
@@ -844,40 +847,52 @@ __all__.append("MapInfo")
 
 
 class Buffer(Gst.Buffer, MiniObject):
+    @property
     def flags(self):
-        return MiniObject.flags(self)
+        return _gi_gst.mini_object_flags(self)
 
-    def set_flags(self, flags):
-        return MiniObject.set_flags(self, flags)
+    @flags.setter
+    def flags(self, flags):
+        _gi_gst.mini_object_set_flags(self, flags)
 
+    @property
     def dts(self):
         return _gi_gst.buffer_get_dts(self)
 
-    def set_dts(self, dts):
+    @dts.setter
+    def dts(self, dts):
         _gi_gst.buffer_set_dts(self, dts)
 
+    @property
     def pts(self):
         return _gi_gst.buffer_get_pts(self)
 
-    def set_pts(self, pts):
+    @pts.setter
+    def pts(self, pts):
         _gi_gst.buffer_set_pts(self, pts)
 
-    def set_duration(self, duration):
-        _gi_gst.buffer_set_duration(self, duration)
-
+    @property
     def duration(self):
         return _gi_gst.buffer_get_duration(self)
 
+    @duration.setter
+    def duration(self, duration):
+        _gi_gst.buffer_set_duration(self, duration)
+
+    @property
     def offset(self):
         return _gi_gst.buffer_get_offset(self)
 
-    def set_offset(self, offset):
+    @offset.setter
+    def offset(self, offset):
         _gi_gst.buffer_set_offset(self, offset)
 
+    @property
     def offset_end(self):
         return _gi_gst.buffer_get_offset_end(self)
 
-    def set_offset_end(self, offset_end):
+    @offset_end.setter
+    def offset_end(self, offset_end):
         _gi_gst.buffer_set_offset_end(self, offset_end)
 
     def map_range(self, idx, length, flags):
