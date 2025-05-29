@@ -1815,14 +1815,20 @@ gst_compositor_release_pad (GstElement * element, GstPad * pad)
   GST_ELEMENT_CLASS (parent_class)->release_pad (element, pad);
 }
 
+typedef struct
+{
+  GstEvent *event;
+  gboolean res;
+} SrcPadMouseEventData;
+
 static gboolean
 src_pad_mouse_event (GstElement * element, GstPad * pad, gpointer user_data)
 {
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR_CAST (element);
   GstCompositor *comp = GST_COMPOSITOR (element);
   GstCompositorPad *cpad = GST_COMPOSITOR_PAD (pad);
-  GstStructure *st =
-      gst_structure_copy (gst_event_get_structure (GST_EVENT_CAST (user_data)));
+  SrcPadMouseEventData *data = user_data;
+  GstStructure *st = gst_structure_copy (gst_event_get_structure (data->event));
   gdouble event_x, event_y;
   gint offset_x, offset_y;
   GstVideoRectangle rect;
@@ -1850,7 +1856,7 @@ src_pad_mouse_event (GstElement * element, GstPad * pad, gpointer user_data)
 
     gst_structure_set_static_str (st, "pointer_x", G_TYPE_DOUBLE, x,
         "pointer_y", G_TYPE_DOUBLE, y, NULL);
-    gst_pad_push_event (pad, gst_event_new_navigation (st));
+    data->res |= gst_pad_push_event (pad, gst_event_new_navigation (st));
   } else {
     gst_structure_free (st);
   }
@@ -1872,10 +1878,18 @@ _src_event (GstAggregator * agg, GstEvent * event)
         case GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE:
         case GST_NAVIGATION_EVENT_MOUSE_MOVE:
         case GST_NAVIGATION_EVENT_MOUSE_SCROLL:
+        {
+          SrcPadMouseEventData d = {
+            .event = event,
+            .res = FALSE
+          };
+
           gst_element_foreach_sink_pad (GST_ELEMENT_CAST (agg),
-              src_pad_mouse_event, event);
+              src_pad_mouse_event, &d);
           gst_event_unref (event);
-          return TRUE;
+
+          return d.res;
+        }
 
         default:
           break;

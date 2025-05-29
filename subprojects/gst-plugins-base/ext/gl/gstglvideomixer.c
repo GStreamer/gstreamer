@@ -1721,6 +1721,12 @@ is_point_contained (const GstVideoRectangle rect, const gint px, const gint py)
   return FALSE;
 }
 
+typedef struct
+{
+  GstEvent *event;
+  gboolean res;
+} SrcPadMouseEventData;
+
 static gboolean
 src_pad_mouse_event (GstElement * element, GstPad * pad, gpointer user_data)
 {
@@ -1728,6 +1734,7 @@ src_pad_mouse_event (GstElement * element, GstPad * pad, gpointer user_data)
   GstGLVideoMixerPad *mix_pad = GST_GL_VIDEO_MIXER_PAD (pad);
   GstVideoAggregatorPad *vagg_pad = GST_VIDEO_AGGREGATOR_PAD (mix_pad);
   GstStructure *event_st;
+  SrcPadMouseEventData *data = user_data;
   gdouble event_x, event_y;
   GstVideoRectangle rect;
 
@@ -1737,8 +1744,7 @@ src_pad_mouse_event (GstElement * element, GstPad * pad, gpointer user_data)
     return TRUE;
   }
 
-  event_st =
-      gst_structure_copy (gst_event_get_structure (GST_EVENT_CAST (user_data)));
+  event_st = gst_structure_copy (gst_event_get_structure (data->event));
   gst_structure_get (event_st, "pointer_x", G_TYPE_DOUBLE, &event_x,
       "pointer_y", G_TYPE_DOUBLE, &event_y, NULL);
 
@@ -1760,7 +1766,7 @@ src_pad_mouse_event (GstElement * element, GstPad * pad, gpointer user_data)
 
     gst_structure_set (event_st, "pointer_x", G_TYPE_DOUBLE, x,
         "pointer_y", G_TYPE_DOUBLE, y, NULL);
-    gst_pad_push_event (pad, gst_event_new_navigation (event_st));
+    data->res |= gst_pad_push_event (pad, gst_event_new_navigation (event_st));
   } else {
     gst_structure_free (event_st);
   }
@@ -1782,11 +1788,17 @@ gst_gl_video_mixer_src_event (GstAggregator * agg, GstEvent * event)
         case GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE:
         case GST_NAVIGATION_EVENT_MOUSE_MOVE:
         case GST_NAVIGATION_EVENT_MOUSE_SCROLL:
-          gst_element_foreach_sink_pad (GST_ELEMENT_CAST (agg),
-              src_pad_mouse_event, event);
-          gst_event_unref (event);
-          return FALSE;
+        {
+          SrcPadMouseEventData d = {
+            .event = event,
+            .res = FALSE
+          };
 
+          gst_element_foreach_sink_pad (GST_ELEMENT_CAST (agg),
+              src_pad_mouse_event, &d);
+          gst_event_unref (event);
+          return d.res;
+        }
         default:
           break;
       }

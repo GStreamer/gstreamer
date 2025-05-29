@@ -399,7 +399,7 @@ GST_START_TEST (test_navigation_events)
 
   /* send event and validate */
   res = gst_element_send_event (sink, event);
-  fail_unless (res == TRUE, NULL);
+  fail_unless (res == FALSE, NULL);
 
   /* check received events */
   ck_assert_msg (probe_events[0].received);
