@@ -381,16 +381,14 @@ gst_bayer2rgb_get_unit_size (GstBaseTransform * base, GstCaps * caps,
   GstBayer2RGB *bayer2rgb;
   int width;
   int height;
-  const char *name;
 
   structure = gst_caps_get_structure (caps, 0);
   bayer2rgb = GST_BAYER2RGB (base);
 
   if (gst_structure_get_int (structure, "width", &width) &&
       gst_structure_get_int (structure, "height", &height)) {
-    name = gst_structure_get_name (structure);
     /* Our name must be either video/x-bayer video/x-raw */
-    if (strcmp (name, "video/x-raw")) {
+    if (gst_structure_has_name (structure, "video/x-bayer")) {
       *size =
           GST_ROUND_UP_4 (width) * height * DIV_ROUND_UP (bayer2rgb->bpp, 8);
       return TRUE;
