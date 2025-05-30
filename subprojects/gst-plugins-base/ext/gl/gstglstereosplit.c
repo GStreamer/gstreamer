@@ -866,10 +866,13 @@ stereosplit_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_CAPS:
     {
       GstCaps *caps;
+      gboolean res;
 
       gst_event_parse_caps (event, &caps);
+      res = stereosplit_set_output_caps (split, caps);
+      gst_event_unref (event);
 
-      return stereosplit_set_output_caps (split, caps);
+      return res;
     }
     default:
       return gst_pad_event_default (pad, parent, event);
