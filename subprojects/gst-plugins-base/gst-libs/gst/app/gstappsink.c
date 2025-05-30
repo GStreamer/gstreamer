@@ -1836,7 +1836,7 @@ gst_app_sink_pull_sample (GstAppSink * appsink)
 }
 
 /**
- * gst_app_sink_pull_object: (skip)
+ * gst_app_sink_pull_object:
  * @appsink: a #GstAppSink
  *
  * This function blocks until a sample or an event becomes available or the appsink
@@ -2037,7 +2037,7 @@ gst_app_sink_try_pull_sample (GstAppSink * appsink, GstClockTime timeout)
 }
 
 /**
- * gst_app_sink_try_pull_object: (skip)
+ * gst_app_sink_try_pull_object:
  * @appsink: a #GstAppSink
  * @timeout: the maximum amount of time to wait for a sample
  *

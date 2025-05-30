@@ -1,4 +1,4 @@
-pysources = ['Gst.py', 'GstPbutils.py', 'GstVideo.py', 'GstAudio.py','GstAnalytics.py']
+pysources = ['Gst.py', 'GstPbutils.py', 'GstVideo.py', 'GstAudio.py','GstAnalytics.py', 'GstApp.py']
 python.install_sources(pysources,
   pure : false,
   subdir: 'gi/overrides',

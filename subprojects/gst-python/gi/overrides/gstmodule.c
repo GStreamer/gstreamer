@@ -1075,6 +1075,24 @@ _gst_mini_object_is_writable (PyObject * self, PyObject * args)
 }
 
 static PyObject *
+_gst_mini_object_to_subclass (PyObject * self, PyObject * args)
+{
+  PyObject *py_miniobj;
+  GstMiniObject *mini_object;
+
+  py_miniobj = PyTuple_GetItem (args, 0);
+  if (py_miniobj == NULL) {
+    PyErr_SetString (PyExc_TypeError, "Expected a PyGObject");
+    return NULL;
+  }
+
+  mini_object = pyg_boxed_get (py_miniobj, GstMiniObject);
+
+  return pyg_boxed_new (GST_MINI_OBJECT_TYPE (mini_object), mini_object, TRUE,
+      TRUE);
+}
+
+static PyObject *
 _gst_caps_get_structure (PyObject * self, PyObject * args)
 {
   PyTypeObject *gst_caps_type;
@@ -1684,6 +1702,7 @@ static PyMethodDef _gi_gst_functions[] = {
   {"mini_object_is_writable", (PyCFunction) _gst_mini_object_is_writable, METH_VARARGS, NULL},
   {"mini_object_flags", (PyCFunction) _gst_mini_object_flags, METH_VARARGS, NULL},
   {"mini_object_set_flags", (PyCFunction) _gst_mini_object_set_flags, METH_VARARGS, NULL},
+  {"mini_object_to_subclass", (PyCFunction) _gst_mini_object_to_subclass, METH_VARARGS, NULL},
 
   {"event_get_structure", (PyCFunction) _gst_event_get_structure, METH_VARARGS, NULL},
   {"event_writable_structure", (PyCFunction) _gst_event_writable_structure, METH_VARARGS, NULL},
