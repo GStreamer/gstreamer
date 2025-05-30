@@ -6447,7 +6447,8 @@ _list_scenarios_in_dir (GFile * dir, GKeyFile * kf)
     GFile *f = g_file_enumerator_get_child (fenum, info);
 
     _parse_scenario (f, kf);
-    gst_object_unref (f);
+    g_object_unref (info);
+    g_object_unref (f);
   }
 
   gst_object_unref (fenum);
