@@ -190,15 +190,13 @@ gst_rgb2bayer_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   GstStructure *structure;
   int width;
   int height;
-  const char *name;
 
   structure = gst_caps_get_structure (caps, 0);
 
   if (gst_structure_get_int (structure, "width", &width) &&
       gst_structure_get_int (structure, "height", &height)) {
-    name = gst_structure_get_name (structure);
     /* Our name must be either video/x-bayer video/x-raw */
-    if (g_str_equal (name, "video/x-bayer")) {
+    if (gst_structure_has_name (structure, "video/x-bayer")) {
       *size =
           GST_ROUND_UP_4 (width) * height * DIV_ROUND_UP (rgb2bayer->bpp, 8);
       return TRUE;
