@@ -1566,7 +1566,7 @@ GST_START_TEST (test_associate_segmentation_meta)
   fail_unless (gst_buffer_pool_acquire_buffer (mpool, &mbuf, NULL) ==
       GST_FLOW_OK);
 
-  gst_buffer_fill (mbuf, 0, post_proc_segmasks, 32 * 24);
+  gst_buffer_fill (mbuf, 0, post_proc_segmasks, 16 * 12);
 
   /* Masks contain 5 region types [0,1,2,3,4]. We intentionnally change the
    * order of region ids relative to their appearance in the output to
