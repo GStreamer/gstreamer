@@ -1190,7 +1190,7 @@ GST_START_TEST (test_parse_sc_with_half_nal)
 
   buf1 = composite_buffer (100, 0, 5, h266_vps, sizeof (h266_vps),
       h266_sps, sizeof (h266_sps), h266_pps, sizeof (h266_pps),
-      h266_prefix_aps, sizeof (h266_prefix_aps), h266_idr, 20);
+      h266_prefix_aps, sizeof (h266_prefix_aps), h266_idr, (gsize) 20);
   buf2 = composite_buffer (100, 0, 2, h266_idr + 20, sizeof (h266_idr) - 20,
       h266_suffix_sei, sizeof (h266_suffix_sei));
 
