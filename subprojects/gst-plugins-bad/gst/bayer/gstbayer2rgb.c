@@ -396,7 +396,7 @@ gst_bayer2rgb_get_unit_size (GstBaseTransform * base, GstCaps * caps,
       return TRUE;
     } else {
       /* For output, calculate according to format */
-      *size = width * height * DIV_ROUND_UP (bayer2rgb->bpp, 8);
+      *size = width * height * 4 * DIV_ROUND_UP (bayer2rgb->bpp, 8);
       return TRUE;
     }
 
