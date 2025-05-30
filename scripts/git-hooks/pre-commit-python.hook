@@ -125,6 +125,11 @@ def build_cache(builddir, subproject, targets, subdir):
         os.path.join(builddir, f'subprojects/{subproject}/docs/gst_plugins_cache.json'),
     ] + targets
 
+    env = os.environ.copy()
+    try:
+      del env['GST_PLUGIN_FEATURE_RANK']  # Ensure default ranks are applied
+    except KeyError:
+      pass
     subprocess.run(cmd)
 
 class StashManager:
