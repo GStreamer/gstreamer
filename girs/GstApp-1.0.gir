@@ -205,7 +205,7 @@ If an EOS event was received before any buffers, this function returns
           </instance-parameter>
         </parameters>
       </virtual-method>
-      <virtual-method name="try_pull_object" invoker="try_pull_object" version="1.20" introspectable="0">
+      <virtual-method name="try_pull_object" invoker="try_pull_object" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">This function blocks until a sample or an event or EOS becomes available or the appsink
 element is set to the READY/NULL state or the timeout expires.
 
@@ -502,7 +502,7 @@ PLAYING state.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="pull_object" c:identifier="gst_app_sink_pull_object" version="1.20" introspectable="0">
+      <method name="pull_object" c:identifier="gst_app_sink_pull_object" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">This function blocks until a sample or an event becomes available or the appsink
 element is set to the READY/NULL state.
 
@@ -800,7 +800,7 @@ case new buffers will be discarded.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="try_pull_object" c:identifier="gst_app_sink_try_pull_object" version="1.20" introspectable="0">
+      <method name="try_pull_object" c:identifier="gst_app_sink_try_pull_object" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">This function blocks until a sample or an event or EOS becomes available or the appsink
 element is set to the READY/NULL state or the timeout expires.
 

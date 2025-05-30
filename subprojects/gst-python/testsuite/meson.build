@@ -5,6 +5,7 @@ tests = [
     ['Test fundamentals', 'test_types.py'],
     ['Test plugins', 'test_plugin.py'],
     ['Test analytics', 'test_analytics.py', ['gst-plugins-bad/gst-libs/gst/analytics', 'gst-plugins-base/gst-libs/gst/video']],
+    ['Test appsink', 'test_appsink.py', ['gst-plugins-base/gst-libs/gst/app']],
 ]
 
 runcmd = run_command(python, '-c', '''with open("@0@/mesonconfig.py", "w") as f:
