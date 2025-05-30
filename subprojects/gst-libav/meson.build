@@ -154,7 +154,8 @@ if cc.has_argument('-fvisibility=hidden')
 endif
 
 # Don't export any symbols from static ffmpeg libraries
-if cc.has_link_argument('-Wl,--exclude-libs=ALL')
+# This also excludes the sanitizer libraries so disable if a sanitizer is enabled
+if get_option('b_sanitize') == 'none' and cc.has_link_argument('-Wl,--exclude-libs=ALL')
   add_project_link_arguments('-Wl,--exclude-libs=ALL', language: 'c')
 endif
 
