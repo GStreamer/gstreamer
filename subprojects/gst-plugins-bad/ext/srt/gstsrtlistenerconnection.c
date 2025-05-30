@@ -149,12 +149,80 @@ peeraddr_to_g_socket_address (const struct sockaddr *peeraddr)
   return g_socket_address_new_from_native ((gpointer) peeraddr, peeraddr_len);
 }
 
+/**
+ * parse_streamid:
+ * @streamid: The streamid string from an SRT connection
+ *
+ * Parses a streamid to extract the username/identifier for connection matching.
+ * Supports both simple streamids (used as-is) and structured streamids following
+ * the SRT access control specification.
+ *
+ * Structured streamids use the format: #!::key1=value1,key2=value2,...
+ * Common keys include:
+ *   - u: Username/user identifier
+ *   - r: Resource name 
+ *   - h: Hostname
+ *   - t: Stream type (stream, file, auth)
+ *   - m: Mode (request, publish, bidirectional)
+ *
+ * For structured streamids, this function extracts the value of the "u" key
+ * (standard username) or "streamid" key (compatibility). For simple streamids,
+ * the entire string is returned as the username.
+ *
+ * Examples:
+ *   - Simple: "mystream" → returns "mystream"
+ *   - Structured: "#!::u=admin,r=stream1" → returns "admin"
+ *   - Blackmagic: "#!::u=1288406c-...,bmd_uuid=..." → returns "1288406c-..."
+ *
+ * Returns: (transfer full): The extracted username/identifier,
+ *          or empty string if parsing fails. Caller must free with g_free().
+ */
+static gchar *
+parse_streamid (const char *streamid)
+{
+  if (!streamid) {
+    return g_strdup ("");       /* Handle NULL streamid - return empty string for compatibility */
+  }
+
+  if (*streamid == '\0') {
+    return g_strdup (streamid); /* Handle empty streamid - return as-is for compatibility */
+  }
+
+  /* Check for structured format starting with "#!::" */
+  static const char stdhdr[] = "#!::";
+  if (g_str_has_prefix (streamid, stdhdr)) {
+    /* Parse structured streamid format */
+    const char *content = streamid + sizeof (stdhdr) - 1;
+    gchar **items = g_strsplit (content, ",", 0);
+
+    for (gint i = 0; items[i]; i++) {
+      gchar **kv = g_strsplit (items[i], "=", 2);
+      if (kv[0] && kv[1] && (g_strcmp0 (g_strstrip (kv[0]), "u") == 0
+              || g_strcmp0 (g_strstrip (kv[0]), "streamid") == 0)) {
+        gchar *username = g_strdup (g_strstrip (kv[1]));
+        g_strfreev (kv);
+        g_strfreev (items);
+        return username;
+      }
+      g_strfreev (kv);
+    }
+    g_strfreev (items);
+
+    /* No username found in structured streamid - return empty string for compatibility */
+    return g_strdup ("");
+  }
+
+  /* For simple streamid, return the whole thing as username */
+  return g_strdup (streamid);
+}
+
 static gint
 srt_listen_callback_func (GstSRTListenerConnection * connection, SRTSOCKET sock,
     int hs_version, const struct sockaddr *peeraddr, const char *stream_id)
 {
   GSocketAddress *addr = NULL;
   GstSRTObject *object = NULL;
+  gchar *parsed_streamid = NULL;
 
   addr = peeraddr_to_g_socket_address (peeraddr);
   if (!addr) {
@@ -163,17 +231,21 @@ srt_listen_callback_func (GstSRTListenerConnection * connection, SRTSOCKET sock,
     return -1;
   }
 
-  object =
-      gst_srt_listener_connection_get_object (connection, (gchar *) stream_id);
+  /* Parse the streamid to extract username for structured access_control formats */
+  parsed_streamid = parse_streamid (stream_id);
+
+  object = gst_srt_listener_connection_get_object (connection, parsed_streamid);
   if (!object) {
     GList *iter = NULL;
-    GST_DEBUG ("Caller with streamid: %s not part of connection: %s",
-        stream_id, connection->key);
+    GST_DEBUG ("Caller with parsed streamid: %s not part of connection: %s",
+        parsed_streamid, connection->key);
     for (iter = connection->objects; iter; iter = iter->next) {
       object = iter->data;
       g_signal_emit_by_name (object->element, "caller-rejected", addr,
           stream_id);
     }
+    g_free (parsed_streamid);
+    g_object_unref (addr);
     return -1;
   }
 
@@ -190,15 +262,17 @@ srt_listen_callback_func (GstSRTListenerConnection * connection, SRTSOCKET sock,
 
   GST_INFO_OBJECT (object->element, "Accepting sink %d streamid: %s", sock,
       stream_id);
+  g_free (parsed_streamid);
   g_object_unref (addr);
   return 0;
 reject_auth:
   GST_WARNING_OBJECT (object->element,
-      "Rejecting baed on authentication, sink %d streamid: %s", sock,
+      "Rejecting based on authentication, sink %d streamid: %s", sock,
       stream_id);
 
   /* notifying caller-rejected */
   g_signal_emit_by_name (object->element, "caller-rejected", addr, stream_id);
+  g_free (parsed_streamid);
   g_object_unref (addr);
   return -1;
 }
@@ -269,9 +343,12 @@ gst_srt_accept_thread_func (gpointer data)
     int len = 512 + 1;
     srt_getsockopt (caller->sock, 0, SRTO_STREAMID, &caller_streamid, &len);
 
+    /* Parse the streamid to extract username for structured formats */
+    gchar *parsed_streamid = parse_streamid (caller_streamid);
+
     GstSRTObject *srtobject =
-        gst_srt_listener_connection_get_object (connection,
-        (gchar *) & caller_streamid);
+        gst_srt_listener_connection_get_object (connection, parsed_streamid);
+    g_free (parsed_streamid);
     if (srtobject == NULL) {
       gst_srt_caller_close (caller);
       continue;
