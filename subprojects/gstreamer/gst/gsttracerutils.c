@@ -305,9 +305,11 @@ _priv_gst_tracing_init (void)
         factory = GST_TRACER_FACTORY (gst_plugin_feature_load (feature));
         if (factory) {
           gst_tracer_utils_create_tracer (factory, t[i], params);
+          gst_object_unref (factory);
         } else {
           g_warning ("loading plugin containing feature %s failed!", t[i]);
         }
+        gst_object_unref (feature);
       } else if (t[i][0] != '\0') {
         g_warning ("no tracer named '%s'", t[i]);
       }
