@@ -1531,6 +1531,9 @@ GST_START_TEST (test_no_nice_elements_request_pad)
     gst_registry_add_feature (registry, nicesrc);
   if (nicesink)
     gst_registry_add_feature (registry, nicesink);
+
+  gst_clear_object (&nicesrc);
+  gst_clear_object (&nicesink);
 }
 
 GST_END_TEST;
@@ -1563,6 +1566,9 @@ GST_START_TEST (test_no_nice_elements_state_change)
     gst_registry_add_feature (registry, nicesrc);
   if (nicesink)
     gst_registry_add_feature (registry, nicesink);
+
+  gst_clear_object (&nicesrc);
+  gst_clear_object (&nicesink);
 }
 
 GST_END_TEST;
@@ -6654,18 +6660,13 @@ webrtcbin_suite (void)
         dtlssrtpdec);
   }
 
-  if (nicesrc)
-    gst_object_unref (nicesrc);
-  if (nicesink)
-    gst_object_unref (nicesink);
-  if (dtlssrtpdec)
-    gst_object_unref (dtlssrtpdec);
-  if (dtlssrtpenc)
-    gst_object_unref (dtlssrtpenc);
-  if (sctpenc)
-    gst_object_unref (sctpenc);
-  if (sctpdec)
-    gst_object_unref (sctpdec);
+  gst_clear_object (&nicesrc);
+  gst_clear_object (&nicesink);
+  gst_clear_object (&dtlssrtpdec);
+  gst_clear_object (&dtlssrtpenc);
+  gst_clear_object (&sctpenc);
+  gst_clear_object (&sctpdec);
+  gst_clear_object (&vp8enc);
 
   suite_add_tcase (s, tc);
 
