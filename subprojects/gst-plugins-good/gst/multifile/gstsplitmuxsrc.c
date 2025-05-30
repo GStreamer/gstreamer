@@ -381,6 +381,11 @@ gst_splitmux_src_dispose (GObject * object)
   splitmux->pads = NULL;
   SPLITMUX_SRC_PADS_WUNLOCK (splitmux);
 
+  if (splitmux->active_parts) {
+    g_queue_free_full (splitmux->active_parts, g_object_unref);
+    splitmux->active_parts = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -1219,6 +1224,8 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
       files = gst_split_util_find_files (dirname, basename, &err);
 
       if (files == NULL || *files == NULL) {
+        g_queue_free_full (splitmux->active_parts, g_object_unref);
+        splitmux->active_parts = NULL;
         SPLITMUX_SRC_UNLOCK (splitmux);
         goto no_files;
       }
@@ -1345,6 +1352,7 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
 
   /* Now the pad task is stopped we can destroy the readers */
   g_queue_free_full (splitmux->active_parts, g_object_unref);
+  splitmux->active_parts = NULL;
 
   for (i = 0; i < splitmux->num_parts; i++) {
     if (splitmux->parts[i] == NULL)
