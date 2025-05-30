@@ -87,18 +87,16 @@ foreach i: tests
     foreach j: i.get(2, [])
       path = meson.project_build_root() / '..' / j
       env.append('GI_TYPELIB_PATH', path)
-
-      if build_machine.system() == 'windows'
-	      env.append('PATH', path)
-	      env.append('PATH', testsenv_ld_library_path)
-      elif build_machine.system() == 'linux'
-	      env.append('LD_LIBRARY_PATH', path)
-	      env.append('LD_LIBRARY_PATH', testsenv_ld_library_path)
-      else
-	      env.append('DYLD_LIBRARY_PATH', path)
-	      env.append('DYLD_LIBRARY_PATH', testsenv_ld_library_path)
-      endif
+      testsenv_ld_library_path += path
     endforeach
+
+    if build_machine.system() == 'windows'
+      env.append('PATH', testsenv_ld_library_path)
+    elif build_machine.system() == 'linux'
+      env.append('LD_LIBRARY_PATH', testsenv_ld_library_path)
+   else
+      env.append('DYLD_LIBRARY_PATH', testsenv_ld_library_path)
+    endif
 
     test(test_name, python, args: [runtests, i.get(1)], env: env)
 endforeach
