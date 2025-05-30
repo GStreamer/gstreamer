@@ -530,8 +530,10 @@ gst_validate_deinit (void)
   testfile_structs = NULL;
   g_clear_pointer (&global_testfile, g_free);
 
-  if (validate_initialized)
+  if (validate_initialized) {
     g_rec_mutex_clear (&init_lock);
+    memset (&init_lock, 0, sizeof (GRecMutex));
+  }
 
   _priv_validate_flow_deinit ();
   _priv_validate_override_registry_deinit ();
