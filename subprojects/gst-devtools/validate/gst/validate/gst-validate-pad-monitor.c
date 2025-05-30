@@ -442,15 +442,15 @@ gst_validate_pad_monitor_check_raw_video_caps_complete (GstValidatePadMonitor *
     monitor, GstStructure * structure)
 {
   _check_field_type (monitor, structure, TRUE, "width", G_TYPE_INT,
-      GST_TYPE_INT_RANGE, 0);
+      GST_TYPE_INT_RANGE, (GType) 0);
   _check_field_type (monitor, structure, TRUE, "height", G_TYPE_INT,
-      GST_TYPE_INT_RANGE, 0);
+      GST_TYPE_INT_RANGE, (GType) 0);
   _check_field_type (monitor, structure, TRUE, "framerate", GST_TYPE_FRACTION,
-      GST_TYPE_FRACTION_RANGE, 0);
+      GST_TYPE_FRACTION_RANGE, (GType) 0);
   _check_field_type (monitor, structure, FALSE, "pixel-aspect-ratio",
-      GST_TYPE_FRACTION, GST_TYPE_FRACTION_RANGE, 0);
+      GST_TYPE_FRACTION, GST_TYPE_FRACTION_RANGE, (GType) 0);
   _check_field_type (monitor, structure, TRUE, "format", G_TYPE_STRING,
-      GST_TYPE_LIST);
+      GST_TYPE_LIST, (GType) 0);
 }
 
 static void
@@ -459,17 +459,17 @@ gst_validate_pad_monitor_check_raw_audio_caps_complete (GstValidatePadMonitor *
 {
   gint channels;
   _check_field_type (monitor, structure, TRUE, "format", G_TYPE_STRING,
-      GST_TYPE_LIST, 0);
+      GST_TYPE_LIST, (GType) 0);
   _check_field_type (monitor, structure, TRUE, "layout", G_TYPE_STRING,
-      GST_TYPE_LIST, 0);
+      GST_TYPE_LIST, (GType) 0);
   _check_field_type (monitor, structure, TRUE, "rate", G_TYPE_INT,
-      GST_TYPE_LIST, GST_TYPE_INT_RANGE, 0);
+      GST_TYPE_LIST, GST_TYPE_INT_RANGE, (GType) 0);
   _check_field_type (monitor, structure, TRUE, "channels", G_TYPE_INT,
-      GST_TYPE_LIST, GST_TYPE_INT_RANGE, 0);
+      GST_TYPE_LIST, GST_TYPE_INT_RANGE, (GType) 0);
   if (gst_structure_get_int (structure, "channels", &channels)) {
     if (channels > 2)
       _check_field_type (monitor, structure, TRUE, "channel-mask",
-          GST_TYPE_BITMASK, GST_TYPE_LIST, 0);
+          GST_TYPE_BITMASK, GST_TYPE_LIST, (GType) 0);
   }
 }
 
