@@ -1604,6 +1604,7 @@ _get_shader_string (GstGLViewConvert * viewconvert, GstGLShader * shader,
       GST_GL_TEXTURE_TARGET_2D, viewconvert->from_texture_target,
       viewconvert->context, &version, &profile);
 
+  g_free (tmp);
   return tmp2;
 }
 
