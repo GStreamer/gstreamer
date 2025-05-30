@@ -1041,6 +1041,7 @@ gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDDisplayModeFlags mode_flag
         caps = gst_caps_merge_structure (caps, s);
       }
     }
+    gst_structure_free (generic);
   } else {
     caps = gst_caps_merge_structure (caps, generic);
   }
