@@ -1348,9 +1348,12 @@ gst_xv_image_sink_navigation_send_event (GstNavigation * navigation,
   gst_event_ref (event);
   handled = gst_pad_push_event (GST_VIDEO_SINK_PAD (xvimagesink), event);
 
-  if (!handled)
+  if (!handled) {
+    /* If the event was not handled/used upstream,
+     * we post it as a message on the bus so that applications can handle it */
     gst_element_post_message ((GstElement *) xvimagesink,
         gst_navigation_message_new_event ((GstObject *) xvimagesink, event));
+  }
 
   gst_event_unref (event);
 }
