@@ -1079,9 +1079,10 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         g_mutex_lock (&camerabin->video_capture_mutex);
         GST_DEBUG_OBJECT (bin, "EOS from video branch");
         if (camerabin->video_state == GST_CAMERA_BIN_VIDEO_FINISHING) {
-          if (!g_thread_try_new ("reset-element-thread",
-                  gst_camera_bin_video_reset_elements,
-                  gst_object_ref (camerabin), NULL)) {
+          GThread *thread = g_thread_try_new ("reset-element-thread",
+              gst_camera_bin_video_reset_elements,
+              gst_object_ref (camerabin), NULL);
+          if (!thread) {
             GST_WARNING_OBJECT (camerabin,
                 "Failed to create thread to "
                 "reset video elements' state, video recordings may not work "
@@ -1089,6 +1090,7 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
             gst_object_unref (camerabin);
             camerabin->video_state = GST_CAMERA_BIN_VIDEO_IDLE;
           }
+          g_clear_pointer (&thread, g_thread_unref);
         } else if (camerabin->video_state == GST_CAMERA_BIN_VIDEO_IDLE) {
           GST_DEBUG_OBJECT (camerabin, "Received EOS from video branch but "
               "video recording is idle, ignoring");
