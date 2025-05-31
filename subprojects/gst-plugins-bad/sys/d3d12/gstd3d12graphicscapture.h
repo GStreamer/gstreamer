@@ -30,6 +30,8 @@ G_DECLARE_FINAL_TYPE (GstD3D12GraphicsCapture, gst_d3d12_graphics_capture,
 
 gboolean gst_d3d12_graphics_capture_load_library (void);
 
+void     gst_d3d12_graphics_capture_deinit (void);
+
 GstD3D12ScreenCapture * gst_d3d12_graphics_capture_new (GstD3D12Device * device,
                                                         HWND window_handle,
                                                         HMONITOR monitor_handle);
