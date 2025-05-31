@@ -83,14 +83,32 @@ gst_cpu_throttling_clock_set_property (GObject * object,
   }
 }
 
+typedef struct
+{
+  GWeakRef cpu_throttling_clock;
+} WaitData;
+
+static void
+_delete_wait_data (WaitData * wait_data)
+{
+  g_weak_ref_clear (&wait_data->cpu_throttling_clock);
+  g_free (wait_data);
+}
+
 static gboolean
 gst_transcoder_adjust_wait_time (GstClock * sync_clock, GstClockTime time,
-    GstClockID id, GstCpuThrottlingClock * self)
+    GstClockID id, WaitData * wait_data)
 {
   struct rusage ru;
   float delta_usage, usage, coef;
+  GstCpuThrottlingClockPrivate *priv;
 
-  GstCpuThrottlingClockPrivate *priv = self->priv;
+  GstCpuThrottlingClock *self =
+      g_weak_ref_get (&wait_data->cpu_throttling_clock);
+  if (!self)
+    return FALSE;
+
+  priv = self->priv;
 
   getrusage (RUSAGE_SELF, &ru);
   delta_usage = GST_TIMEVAL_TO_TIME (ru.ru_utime) -
@@ -113,6 +131,7 @@ gst_transcoder_adjust_wait_time (GstClock * sync_clock, GstClockTime time,
       "Avg is %f (wanted %d) => %" GST_TIME_FORMAT, usage,
       self->priv->wanted_cpu_usage, GST_TIME_ARGS (priv->current_wait_time));
 
+  g_object_unref (self);
   return TRUE;
 }
 
@@ -126,6 +145,9 @@ _wait (GstClock * clock, GstClockEntry * entry, GstClockTimeDiff * jitter)
       GST_ERROR_OBJECT (clock, "Could not find any system clock"
           " to start the wait time evaluation task");
     } else {
+      WaitData *wait_data = g_new (WaitData, 1);
+      g_weak_ref_init (&wait_data->cpu_throttling_clock, self);
+
       self->priv->evaluate_wait_time =
           gst_clock_new_periodic_id (self->priv->sclock,
           gst_clock_get_time (self->priv->sclock),
@@ -133,7 +155,7 @@ _wait (GstClock * clock, GstClockEntry * entry, GstClockTimeDiff * jitter)
 
       gst_clock_id_wait_async (self->priv->evaluate_wait_time,
           (GstClockCallback) gst_transcoder_adjust_wait_time,
-          (gpointer) self, NULL);
+          (gpointer) wait_data, (GDestroyNotify) _delete_wait_data);
     }
   }
 
