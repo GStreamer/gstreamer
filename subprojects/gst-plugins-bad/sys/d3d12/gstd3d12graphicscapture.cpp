@@ -48,6 +48,8 @@
 #include <windows.graphics.capture.interop.h>
 #include <windows.graphics.directx.direct3d11.h>
 #include <windows.graphics.directx.direct3d11.interop.h>
+#include <queue>
+#include <functional>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_screen_capture_debug);
 #define GST_CAT_DEFAULT gst_d3d12_screen_capture_debug
@@ -191,6 +193,249 @@ GstGetActivationFactory (InterfaceType ** factory)
   return g_vtable.WindowsDeleteString (class_id_hstring);
 }
 
+struct QueueManger;
+
+static gpointer dispatcher_main_thread (QueueManger * m);
+
+struct EnqueueData
+{
+  ComPtr<IDispatcherQueueHandler> handler;
+  std::mutex lock;
+  std::condition_variable cond;
+  bool signalled = false;
+  HRESULT hr;
+};
+
+enum LoopState
+{
+  LOOP_STATE_INIT,
+  LOOP_STATE_RUNNING,
+  LOOP_STATE_STOPPED,
+};
+
+struct QueueManger
+{
+  QueueManger (const QueueManger &) = delete;
+  QueueManger& operator= (const QueueManger &) = delete;
+
+  static QueueManger * GetInstance ()
+  {
+    static QueueManger *ins = nullptr;
+    GST_D3D12_CALL_ONCE_BEGIN {
+      ins = new QueueManger ();
+    } GST_D3D12_CALL_ONCE_END;
+
+    return ins;
+  }
+
+  HRESULT RunOnDispatcherThread (IDispatcherQueueHandler * handler)
+  {
+    if (!Init ())
+      return E_FAIL;
+
+    auto item = std::make_shared<EnqueueData> ();
+    item->handler = handler;
+
+    {
+      std::lock_guard <std::mutex> lk (loop_lock);
+      user_events.push (item);
+    }
+
+    SetEvent (enqueue_handle);
+
+    std::unique_lock <std::mutex> lk (item->lock);
+    while (!item->signalled)
+      item->cond.wait (lk);
+
+    return item->hr;
+  }
+
+  static void Deinit ()
+  {
+    auto ins = GetInstance ();
+    SetEvent (ins->shutdown_handle);
+    if (ins->thread)
+      g_thread_join (ins->thread);
+
+    delete ins;
+  }
+
+private:
+  QueueManger ()
+  {
+    shutdown_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+    enqueue_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+  }
+
+  ~QueueManger ()
+  {
+    CloseHandle (shutdown_handle);
+    CloseHandle (enqueue_handle);
+  }
+
+  bool Init ()
+  {
+    static std::once_flag once;
+    std::call_once (once, [] {
+      gst_d3d12_graphics_capture_load_library ();
+    });
+
+    if (!g_vtable.loaded)
+      return false;
+
+    std::unique_lock <std::mutex> lk (loop_lock);
+    if (!thread) {
+      thread = g_thread_new ("DispatcherThread",
+          (GThreadFunc) dispatcher_main_thread, this);
+    }
+
+    while (loop_state == LOOP_STATE_INIT)
+      loop_cond.wait (lk);
+
+    if (loop_state == LOOP_STATE_RUNNING)
+      return true;
+
+    return false;
+  }
+
+public:
+  LoopState loop_state = LOOP_STATE_INIT;
+  IDispatcherQueueController *queue_ctrl = nullptr;
+  HANDLE shutdown_handle;
+  HANDLE enqueue_handle;
+  GThread *thread = nullptr;
+  std::mutex loop_lock;
+  std::condition_variable loop_cond;
+  std::queue<std::shared_ptr<EnqueueData>> user_events;
+};
+
+class AsyncWaiter : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
+    FtmBase, IAsyncActionCompletedHandler>
+{
+public:
+  STDMETHODIMP
+  RuntimeClassInitialize (HANDLE event_handle)
+  {
+    event_handle_ = event_handle;
+    return S_OK;
+  }
+
+  STDMETHOD (Invoke) (IAsyncAction * action, AsyncStatus status)
+  {
+    SetEvent (event_handle_);
+
+    return S_OK;
+  }
+
+private:
+  HANDLE event_handle_;
+};
+
+static void
+dispatcher_main_thread_inner (QueueManger * m)
+{
+  DispatcherQueueOptions queue_opt;
+  queue_opt.dwSize = sizeof (DispatcherQueueOptions);
+  queue_opt.threadType = DQTYPE_THREAD_CURRENT;
+  queue_opt.apartmentType = DQTAT_COM_NONE;
+
+  auto hr = g_vtable.CreateDispatcherQueueController (queue_opt,
+      &m->queue_ctrl);
+  if (FAILED (hr)) {
+    GST_ERROR ("Couldn't create queue ctrl");
+    return;
+  }
+
+  ComPtr < AsyncWaiter > async_waiter;
+  ComPtr < IAsyncAction > shutdown_action;
+
+  HANDLE event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+  hr = MakeAndInitialize < AsyncWaiter > (&async_waiter, event_handle);
+  if (FAILED (hr)) {
+    GST_ERROR ("Couldn't create async waiter");
+    return;
+  }
+
+  {
+    std::lock_guard <std::mutex> lk (m->loop_lock);
+    GST_DEBUG ("Loop running");
+    m->loop_state = LOOP_STATE_RUNNING;
+    m->loop_cond.notify_all ();
+  }
+
+  HANDLE waitables[] = { m->shutdown_handle, event_handle, m->enqueue_handle };
+
+  while (true) {
+    MSG msg;
+    while (PeekMessage (&msg, nullptr, 0, 0, PM_REMOVE)) {
+      TranslateMessage (&msg);
+      DispatchMessage (&msg);
+    }
+
+    auto wait_ret = MsgWaitForMultipleObjects (G_N_ELEMENTS (waitables),
+            waitables, FALSE, INFINITE, QS_ALLINPUT);
+
+    if (wait_ret == WAIT_OBJECT_0) {
+      hr = m->queue_ctrl->ShutdownQueueAsync (&shutdown_action);
+      if (FAILED (hr)) {
+        GST_ERROR ("Shutdown failed");
+        return;
+      }
+
+      hr = shutdown_action->put_Completed (async_waiter.Get ());
+      if (FAILED (hr)) {
+        GST_ERROR ("Couldn't put completed");
+        return;
+      }
+    } else if (wait_ret == WAIT_OBJECT_0 + 1) {
+      GST_DEBUG ("Shutdown completed");
+      if (shutdown_action)
+        shutdown_action->GetResults ();
+
+      return;
+    } else if (wait_ret == WAIT_OBJECT_0 + 2) {
+      std::unique_lock <std::mutex> lk (m->loop_lock);
+      while (!m->user_events.empty ()) {
+        auto item = m->user_events.front ();
+        m->user_events.pop ();
+        lk.unlock ();
+
+        item->hr = item->handler->Invoke ();
+
+        {
+          std::lock_guard <std::mutex> item_lk (item->lock);
+          item->signalled = true;
+          item->cond.notify_all ();
+        }
+
+        lk.lock ();
+      }
+
+    } else if (wait_ret != WAIT_OBJECT_0 + G_N_ELEMENTS (waitables)) {
+      GST_ERROR ("Unexpected wait return %u", (guint) wait_ret);
+      return;
+    }
+  }
+}
+
+static gpointer
+dispatcher_main_thread (QueueManger * m)
+{
+  g_vtable.SetThreadDpiAwarenessContext
+      (DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
+  g_vtable.RoInitialize (RO_INIT_MULTITHREADED);
+
+  dispatcher_main_thread_inner (m);
+
+  g_vtable.RoUninitialize ();
+
+  std::lock_guard <std::mutex> lk (m->loop_lock);
+  m->loop_state = LOOP_STATE_STOPPED;
+  m->loop_cond.notify_all ();
+
+  return nullptr;
+}
+
 class GraphicsCapture : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
     FtmBase, IFrameArrivedHandler, IItemClosedHandler>
 {
@@ -202,7 +447,7 @@ public:
 
   virtual ~GraphicsCapture ()
   {
-    GST_INFO_OBJECT (obj_, "Fin");
+    GST_INFO_OBJECT (device12_, "Fin");
 
     if (d3d12_pool_) {
       gst_buffer_pool_set_active (d3d12_pool_, FALSE);
@@ -218,33 +463,109 @@ public:
   }
 
   STDMETHODIMP
-  RuntimeClassInitialize (GstD3D12GraphicsCapture * obj,
-      GstD3D12Device * device12, ID3D11Device * device11,
-      IDirect3DDevice * d3d_device,
-      IDirect3D11CaptureFramePoolStatics * pool_statics,
-      IGraphicsCaptureItem * item, HWND window_handle)
+  RuntimeClassInitialize (GstD3D12Device * device, HMONITOR monitor, HWND hwnd)
   {
-    obj_ = obj;
-    device12_ = (GstD3D12Device *) gst_object_ref (device12);
+    device12_ = (GstD3D12Device *) gst_object_ref (device);
 
-    device11->QueryInterface (IID_PPV_ARGS (&device11_));
-    if (!device11_) {
-      GST_ERROR_OBJECT (obj_, "ID3D11Device5 interface unavailable");
+    static const D3D_FEATURE_LEVEL feature_levels[] = {
+      D3D_FEATURE_LEVEL_11_1,
+      D3D_FEATURE_LEVEL_11_0,
+    };
+
+    hwnd_ = hwnd;
+
+    auto adapter = gst_d3d12_device_get_adapter_handle (device);
+    ComPtr<ID3D11Device> device11;
+
+    auto hr = D3D11CreateDevice (adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
+        D3D11_CREATE_DEVICE_BGRA_SUPPORT, feature_levels,
+        G_N_ELEMENTS (feature_levels), D3D11_SDK_VERSION,
+        &device11, nullptr, nullptr);
+
+    if (FAILED (hr)) {
+      hr = D3D11CreateDevice (adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
+          D3D11_CREATE_DEVICE_BGRA_SUPPORT, &feature_levels[1],
+          G_N_ELEMENTS (feature_levels) - 1, D3D11_SDK_VERSION,
+          &device11, nullptr, nullptr);
+    }
+
+    if (!device11) {
+      GST_ERROR_OBJECT (device, "Couldn't create d3d11 device");
       return E_FAIL;
     }
 
-    ComPtr<ID3D11DeviceContext> context;
-    device11_->GetImmediateContext (&context);
-    context.As (&context_);
-    if (!context_) {
-      GST_ERROR_OBJECT (obj_, "ID3D11DeviceContext4 interface unavailable");
+    hr = device11.As (&device11_);
+    if (FAILED (hr)) {
+      GST_ERROR_OBJECT (device, "Couldn't get ID3D11Device5 interface");
       return E_FAIL;
     }
 
-    auto hr = device11_->CreateFence (0, D3D11_FENCE_FLAG_SHARED,
+    ComPtr<ID3D11DeviceContext> ctx;
+    device11->GetImmediateContext (&ctx);
+    hr = ctx.As (&context11_);
+    if (FAILED (hr)) {
+      GST_ERROR_OBJECT (device, "Couldn't get ID3D11DeviceContext4 interface");
+      return E_FAIL;
+    }
+
+    ComPtr < ID3D10Multithread > multi_thread;
+    device11_.As (&multi_thread);
+    if (multi_thread)
+      multi_thread->SetMultithreadProtected (TRUE);
+
+    ComPtr < IDXGIDevice > dxgi_device;
+    hr = device11_.As (&dxgi_device);
+    if (FAILED (hr)) {
+      GST_ERROR_OBJECT (device, "Couldn't get IDXGIDevice interface");
+      return E_FAIL;
+    }
+
+    ComPtr < IInspectable > inspectable;
+    hr = g_vtable.CreateDirect3D11DeviceFromDXGIDevice (dxgi_device.Get (),
+        &inspectable);
+    if (FAILED (hr)) {
+      GST_ERROR_OBJECT (device, "CreateDirect3D11DeviceFromDXGIDevice failed");
+      return E_FAIL;
+    }
+
+    hr = inspectable.As (&d3d_device_);
+    if (FAILED (hr)) {
+      GST_ERROR_OBJECT (device, "Couldn't get IDirect3DDevice interface");
+      return E_FAIL;
+    }
+
+    ComPtr < IGraphicsCaptureItemInterop > item_interop;
+    hr = GstGetActivationFactory < IGraphicsCaptureItemInterop,
+        RuntimeClass_Windows_Graphics_Capture_GraphicsCaptureItem > (&item_interop);
+    if (FAILED (hr)) {
+      GST_ERROR_OBJECT (device, "IGraphicsCaptureItemInterop is not available");
+      return E_FAIL;
+    }
+
+    if (monitor)
+      hr = item_interop->CreateForMonitor (monitor, IID_PPV_ARGS (&item_));
+    else
+      hr = item_interop->CreateForWindow (hwnd, IID_PPV_ARGS (&item_));
+
+    if (FAILED (hr)) {
+      GST_ERROR_OBJECT (device, "Couldn't create item");
+      return E_FAIL;
+    }
+
+    ComPtr < IDirect3D11CaptureFramePoolStatics > pool_statics;
+    hr = GstGetActivationFactory < IDirect3D11CaptureFramePoolStatics,
+        RuntimeClass_Windows_Graphics_Capture_Direct3D11CaptureFramePool >
+        (&pool_statics);
+    if (FAILED (hr)) {
+      GST_ERROR_OBJECT (device,
+          "IDirect3D11CaptureFramePoolStatics is unavailable");
+      return E_FAIL;
+    }
+
+    hr = device11_->CreateFence (0, D3D11_FENCE_FLAG_SHARED,
         IID_PPV_ARGS (&shared_fence11_));
     if (FAILED (hr)) {
-      GST_ERROR_OBJECT (obj_, "Couldn't create d3d11 fence");
+      GST_ERROR_OBJECT (device, "Couldn't create d3d11 fence");
       return E_FAIL;
     }
 
@@ -252,52 +573,48 @@ public:
     hr = shared_fence11_->CreateSharedHandle (nullptr,
         GENERIC_ALL, nullptr, &fence_handle);
     if (FAILED (hr)) {
-      GST_ERROR_OBJECT (obj_, "Couldn't create shared handle");
+      GST_ERROR_OBJECT (device, "Couldn't create shared handle");
       return E_FAIL;
     }
 
-    auto device12_handle = gst_d3d12_device_get_device_handle (device12);
+    auto device12_handle = gst_d3d12_device_get_device_handle (device12_);
     hr = device12_handle->OpenSharedHandle (fence_handle,
         IID_PPV_ARGS (&shared_fence12_));
     CloseHandle (fence_handle);
-    if (!gst_d3d12_result (hr, device12)) {
-      GST_ERROR_OBJECT (obj_, "Couldn't open d3d12 fence");
+    if (!gst_d3d12_result (hr, device12_)) {
+      GST_ERROR_OBJECT (device, "Couldn't open d3d12 fence");
       return E_FAIL;
     }
 
-    device_ = d3d_device;
-    item_ = item;
-    hwnd_ = window_handle;
-
-    hr = item->get_Size (&frame_size_);
+    hr = item_->get_Size (&frame_size_);
     if (FAILED (hr)) {
-      GST_ERROR_OBJECT (obj, "Couldn't query item size");
+      GST_ERROR_OBJECT (device, "Couldn't query item size");
       return hr;
     }
 
-    hr = item->add_Closed (this, &closed_token_);
+    hr = item_->add_Closed (this, &closed_token_);
     if (FAILED (hr)) {
-      GST_ERROR_OBJECT (obj, "Couldn't install closed callback");
+      GST_ERROR_OBJECT (device, "Couldn't install closed callback");
       return hr;
     }
 
-    hr = pool_statics->Create (d3d_device,
+    hr = pool_statics->Create (d3d_device_.Get (),
         DirectXPixelFormat::DirectXPixelFormat_B8G8R8A8UIntNormalized,
-        CAPTURE_POOL_SIZE, frame_size_, &frame_pool_);
+        2, frame_size_, &frame_pool_);
     if (FAILED (hr)) {
-      GST_ERROR_OBJECT (obj, "Couldn't create frame pool");
+      GST_ERROR_OBJECT (device, "Couldn't create frame pool");
       return hr;
     }
 
     hr = frame_pool_->add_FrameArrived (this, &arrived_token_);
     if (FAILED (hr)) {
-      GST_ERROR_OBJECT (obj, "Couldn't install FrameArrived callback");
+      GST_ERROR_OBJECT (device, "Couldn't install FrameArrived callback");
       return hr;
     }
 
-    hr = frame_pool_->CreateCaptureSession (item, &session_);
+    hr = frame_pool_->CreateCaptureSession (item_.Get (), &session_);
     if (FAILED (hr)) {
-      GST_ERROR_OBJECT (obj, "Couldn't create session");
+      GST_ERROR_OBJECT (device, "Couldn't create session");
       return hr;
     }
 
@@ -311,7 +628,7 @@ public:
 
     hr = session_->StartCapture ();
     if (FAILED (hr)) {
-      GST_ERROR_OBJECT (obj, "Couldn't start capture");
+      GST_ERROR_OBJECT (device, "Couldn't start capture");
       return hr;
     }
 
@@ -322,24 +639,27 @@ public:
   {
     ComPtr < IDirect3D11CaptureFrame > frame;
 
-    GST_LOG_OBJECT (obj_, "Frame arrived");
+    GST_LOG_OBJECT (device12_, "Frame arrived");
+
+    if (!frame_pool_)
+      return S_OK;
 
     pool->TryGetNextFrame (&frame);
     if (!frame) {
-      GST_WARNING_OBJECT (obj_, "No frame");
+      GST_WARNING_OBJECT (device12_, "No frame");
       return S_OK;
     }
 
     SizeInt32 frame_size;
     auto hr = frame->get_ContentSize (&frame_size);
     if (FAILED (hr)) {
-      GST_WARNING_OBJECT (obj_, "Couldn't get content size");
+      GST_WARNING_OBJECT (device12_, "Couldn't get content size");
       return S_OK;
     }
 
     if (frame_size.Width != frame_size_.Width ||
         frame_size.Height != frame_size_.Height) {
-      GST_DEBUG_OBJECT (obj_, "Frame size changed %dx%d -> %dx%d",
+      GST_DEBUG_OBJECT (device12_, "Frame size changed %dx%d -> %dx%d",
           frame_size_.Width, frame_size_.Height,
           frame_size.Width, frame_size.Height);
       std::lock_guard <std::mutex> lk (lock_);
@@ -356,7 +676,7 @@ public:
       frame_ = nullptr;
       texture_ = nullptr;
       staging_ = nullptr;
-      pool->Recreate (device_.Get (),
+      pool->Recreate (d3d_device_.Get (),
           DirectXPixelFormat::DirectXPixelFormat_B8G8R8A8UIntNormalized,
           CAPTURE_POOL_SIZE, frame_size);
       frame_size_ = frame_size;
@@ -366,14 +686,14 @@ public:
     ComPtr < IDirect3DSurface > surface;
     frame->get_Surface (&surface);
     if (!surface) {
-      GST_WARNING_OBJECT (obj_, "IDirect3DSurface interface unavailable");
+      GST_WARNING_OBJECT (device12_, "IDirect3DSurface interface unavailable");
       return S_OK;
     }
 
     ComPtr < IDirect3DDxgiInterfaceAccess > access;
     surface.As (&access);
     if (!access) {
-      GST_WARNING_OBJECT (obj_,
+      GST_WARNING_OBJECT (device12_,
           "IDirect3DDxgiInterfaceAccess interface unavailable");
       return S_OK;
     }
@@ -381,7 +701,7 @@ public:
     ComPtr < ID3D11Texture2D > texture;
     access->GetInterface (IID_PPV_ARGS (&texture));
     if (!texture) {
-      GST_WARNING_OBJECT (obj_,
+      GST_WARNING_OBJECT (device12_,
           "ID3D11Texture2D interface unavailable");
       return S_OK;
     }
@@ -409,7 +729,7 @@ public:
 
   IFACEMETHOD(Invoke) (IGraphicsCaptureItem * pool, IInspectable * arg)
   {
-    GST_INFO_OBJECT (obj_, "Item closed");
+    GST_INFO_OBJECT (device12_, "Item closed");
 
     std::lock_guard <std::mutex> lk (lock_);
     closed_ = true;
@@ -474,7 +794,7 @@ public:
 
     if (!d3d12_pool_ || pool_info_.width != crop_w ||
         pool_info_.height != crop_h) {
-      GST_DEBUG_OBJECT (obj_, "Size changed, recrate buffer pool");
+      GST_DEBUG_OBJECT (device12_, "Size changed, recrate buffer pool");
 
       if (d3d12_pool_) {
         gst_buffer_pool_set_active (d3d12_pool_, FALSE);
@@ -485,7 +805,7 @@ public:
           crop_w, crop_h);
       d3d12_pool_ = gst_d3d12_buffer_pool_new (device12_);
       if (!d3d12_pool_) {
-        GST_ERROR_OBJECT (obj_, "Couldn't create buffer pool");
+        GST_ERROR_OBJECT (device12_, "Couldn't create buffer pool");
         return GST_FLOW_ERROR;
       }
 
@@ -501,13 +821,13 @@ public:
       gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
       gst_d3d12_allocation_params_free (params);
       if (!gst_buffer_pool_set_config (d3d12_pool_, config)) {
-        GST_ERROR_OBJECT (obj_, "Couldn't set buffer pool config");
+        GST_ERROR_OBJECT (device12_, "Couldn't set buffer pool config");
         gst_clear_object (&d3d12_pool_);
         return GST_FLOW_ERROR;
       }
 
       if (!gst_buffer_pool_set_active (d3d12_pool_, TRUE)) {
-        GST_ERROR_OBJECT (obj_, "Couldn't activate pool");
+        GST_ERROR_OBJECT (device12_, "Couldn't activate pool");
         gst_clear_object (&d3d12_pool_);
         return GST_FLOW_ERROR;
       }
@@ -516,7 +836,7 @@ public:
     GstBuffer *outbuf = nullptr;
     gst_buffer_pool_acquire_buffer (d3d12_pool_, &outbuf, nullptr);
     if (!outbuf) {
-      GST_ERROR_OBJECT (obj_, "Couldn't acquire buffer");
+      GST_ERROR_OBJECT (device12_, "Couldn't acquire buffer");
       return GST_FLOW_ERROR;
     }
 
@@ -529,21 +849,21 @@ public:
     auto texture11 = gst_d3d12_memory_get_d3d11_texture (dmem,
         device11_.Get ());
     if (!texture11) {
-      GST_ERROR_OBJECT (obj_, "Couldn't get sharable d3d11 texture");
+      GST_ERROR_OBJECT (device12_, "Couldn't get sharable d3d11 texture");
       gst_buffer_unref (outbuf);
       return GST_FLOW_ERROR;
     }
 
     if (!gst_memory_map (mem, &map_info, GST_MAP_WRITE_D3D12)) {
-      GST_ERROR_OBJECT (obj_, "Couldn't map memory");
+      GST_ERROR_OBJECT (device12_, "Couldn't map memory");
       gst_buffer_unref (outbuf);
       return GST_FLOW_ERROR;
     }
 
-    context_->CopySubresourceRegion (texture11,
+    context11_->CopySubresourceRegion (texture11,
         0, 0, 0, 0, texture_.Get (), 0, (const D3D11_BOX *) &crop_box);
     fence_val_++;
-    context_->Signal (shared_fence11_.Get (), fence_val_);
+    context11_->Signal (shared_fence11_.Get (), fence_val_);
     gst_memory_unmap (mem, &map_info);
 
     gst_d3d12_memory_set_fence (dmem,
@@ -588,7 +908,7 @@ public:
 
     if (!video_pool_ || pool_info_.width != crop_w ||
         pool_info_.height != crop_h) {
-      GST_DEBUG_OBJECT (obj_, "Size changed, recrate buffer pool");
+      GST_DEBUG_OBJECT (device12_, "Size changed, recrate buffer pool");
 
       if (video_pool_) {
         gst_buffer_pool_set_active (video_pool_, FALSE);
@@ -609,7 +929,7 @@ public:
 
       auto hr = device11_->CreateTexture2D (&desc, nullptr, &staging_);
       if (FAILED (hr)) {
-        GST_ERROR_OBJECT (obj_, "Couldn't create staging texture");
+        GST_ERROR_OBJECT (device12_, "Couldn't create staging texture");
         return GST_FLOW_ERROR;
       }
 
@@ -617,7 +937,7 @@ public:
           crop_w, crop_h);
       video_pool_ = gst_video_buffer_pool_new ();
       if (!video_pool_) {
-        GST_ERROR_OBJECT (obj_, "Couldn't create buffer pool");
+        GST_ERROR_OBJECT (device12_, "Couldn't create buffer pool");
         return GST_FLOW_ERROR;
       }
 
@@ -627,41 +947,41 @@ public:
       gst_caps_unref (caps);
 
       if (!gst_buffer_pool_set_config (video_pool_, config)) {
-        GST_ERROR_OBJECT (obj_, "Couldn't set buffer pool config");
+        GST_ERROR_OBJECT (device12_, "Couldn't set buffer pool config");
         gst_clear_object (&video_pool_);
         return GST_FLOW_ERROR;
       }
 
       if (!gst_buffer_pool_set_active (video_pool_, TRUE)) {
-        GST_ERROR_OBJECT (obj_, "Couldn't activate pool");
+        GST_ERROR_OBJECT (device12_, "Couldn't activate pool");
         gst_clear_object (&video_pool_);
         return GST_FLOW_ERROR;
       }
     }
 
-    context_->CopySubresourceRegion (staging_.Get (), 0, 0, 0, 0,
+    context11_->CopySubresourceRegion (staging_.Get (), 0, 0, 0, 0,
         texture_.Get (), 0, (const D3D11_BOX *) &crop_box);
 
     D3D11_MAPPED_SUBRESOURCE mapped_resource;
-    auto hr = context_->Map (staging_.Get (), 0, D3D11_MAP_READ,
+    auto hr = context11_->Map (staging_.Get (), 0, D3D11_MAP_READ,
         0, &mapped_resource);
     if (FAILED (hr)) {
-      GST_ERROR_OBJECT (obj_, "Couldn't map staging texture");
+      GST_ERROR_OBJECT (device12_, "Couldn't map staging texture");
       return GST_FLOW_ERROR;
     }
 
     GstBuffer *outbuf = nullptr;
     gst_buffer_pool_acquire_buffer (video_pool_, &outbuf, nullptr);
     if (!outbuf) {
-      GST_ERROR_OBJECT (obj_, "Couldn't acquire buffer");
-      context_->Unmap (staging_.Get (), 0);
+      GST_ERROR_OBJECT (device12_, "Couldn't acquire buffer");
+      context11_->Unmap (staging_.Get (), 0);
       return GST_FLOW_ERROR;
     }
 
     GstVideoFrame vframe;
     if (!gst_video_frame_map (&vframe, &pool_info_, outbuf, GST_MAP_WRITE)) {
-      GST_ERROR_OBJECT (obj_, "Couldn't map video frame");
-      context_->Unmap (staging_.Get (), 0);
+      GST_ERROR_OBJECT (device12_, "Couldn't map video frame");
+      context11_->Unmap (staging_.Get (), 0);
       gst_buffer_unref (outbuf);
       return GST_FLOW_ERROR;
     }
@@ -676,7 +996,7 @@ public:
       src += mapped_resource.RowPitch;
     }
     gst_video_frame_unmap (&vframe);
-    context_->Unmap (staging_.Get (), 0);
+    context11_->Unmap (staging_.Get (), 0);
 
     *width = crop_w;
     *height = crop_h;
@@ -694,36 +1014,60 @@ public:
 
   void Close ()
   {
-    if (item_)
-      item_->remove_Closed (closed_token_);
-
-    if (frame_pool_)
+    if (frame_pool_) {
       frame_pool_->remove_FrameArrived (arrived_token_);
 
-    texture_ = nullptr;
-    frame_ = nullptr;
-    staging_ = nullptr;
+      ComPtr<IClosable> closable;
+      frame_pool_.As (&closable);
+      if (closable)
+        closable->Close ();
+
+      frame_pool_ = nullptr;
+    }
+
+    if (item_) {
+      item_->remove_Closed (closed_token_);
+
+      ComPtr<IClosable> closable;
+      item_.As (&closable);
+      if (closable)
+        closable->Close ();
+
+      item_ = nullptr;
+    }
+
+    session3_ = nullptr;
+    session2_ = nullptr;
 
     if (session_) {
       ComPtr<IClosable> closable;
       session_.As (&closable);
       if (closable)
         closable->Close ();
+
+      session_ = nullptr;
     }
 
-    if (frame_pool_) {
+    if (d3d_device_) {
       ComPtr<IClosable> closable;
-      frame_pool_.As (&closable);
+      d3d_device_.As (&closable);
       if (closable)
         closable->Close ();
+
+      d3d_device_ = nullptr;
     }
 
-    if (item_) {
-      ComPtr<IClosable> closable;
-      item_.As (&closable);
-      if (closable)
-        closable->Close ();
-    }
+    texture_ = nullptr;
+    staging_ = nullptr;
+
+    shared_fence11_ = nullptr;
+    shared_fence12_ = nullptr;
+
+    if (context11_)
+      context11_->Flush ();
+
+    context11_ = nullptr;
+    device11_ = nullptr;
   }
 
 private:
@@ -790,15 +1134,14 @@ private:
   }
 
 private:
-  GstD3D12GraphicsCapture *obj_ = nullptr;
   HWND hwnd_ = nullptr;
   GstD3D12Device *device12_ = nullptr;
   GstVideoInfo pool_info_;
   GstBufferPool *d3d12_pool_ = nullptr;
   GstBufferPool *video_pool_ = nullptr;
   ComPtr<ID3D11Device5> device11_;
-  ComPtr<ID3D11DeviceContext4> context_;
-  ComPtr<IDirect3DDevice> device_;
+  ComPtr<ID3D11DeviceContext4> context11_;
+  ComPtr<IDirect3DDevice> d3d_device_;
   ComPtr<IGraphicsCaptureItem> item_;
   ComPtr<IDirect3D11CaptureFramePool> frame_pool_;
   ComPtr<IGraphicsCaptureSession> session_;
@@ -821,62 +1164,47 @@ private:
   ComPtr<ID3D12Fence> shared_fence12_;
 };
 
-class AsyncWaiter : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
-    FtmBase, IAsyncActionCompletedHandler>
+template<typename Fn>
+class LambdaHandler : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
+  IDispatcherQueueHandler>
 {
 public:
-  STDMETHODIMP
-  RuntimeClassInitialize (HANDLE event_handle)
+  LambdaHandler() = default;
+
+  HRESULT RuntimeClassInitialize(Fn&& fn)
   {
-    event_handle_ = event_handle;
+    func_ = std::move(fn);
     return S_OK;
   }
 
-  STDMETHOD (Invoke) (IAsyncAction * action, AsyncStatus status)
+  IFACEMETHODIMP Invoke() override
   {
-    SetEvent (event_handle_);
-
-    return S_OK;
+    return func_ ? func_() : S_OK;
   }
 
 private:
-  HANDLE event_handle_;
-};
-
-enum LoopState
-{
-  LOOP_STATE_INIT,
-  LOOP_STATE_RUNNING,
-  LOOP_STATE_STOPPED,
+  Fn func_;
 };
 
 struct GstD3D12GraphicsCapturePrivate
 {
-  GstD3D12GraphicsCapturePrivate ()
-  {
-    shutdown_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-  }
-
   ~GstD3D12GraphicsCapturePrivate ()
   {
-    SetEvent (shutdown_handle);
-    g_clear_pointer (&loop_thread, g_thread_join);
+    if (capture) {
+      ComPtr<IDispatcherQueueHandler> handler;
+      auto hr = MakeAndInitialize<LambdaHandler<std::function<HRESULT()>>>(&handler,
+          [object = capture.Detach ()]() -> HRESULT {
+            object->Close ();
+            object->Release ();
+            return S_OK;
+          });
 
-    CloseHandle (shutdown_handle);
-    gst_clear_object (&device);
+      if (SUCCEEDED (hr))
+        QueueManger::GetInstance ()->RunOnDispatcherThread (handler.Get ());
+    }
   }
 
-  GstD3D12Device *device = nullptr;
-  ComPtr<ID3D11Device> d3d11_device;
   ComPtr<GraphicsCapture> capture;
-  HMONITOR monitor_handle = nullptr;
-  HWND window_handle = nullptr;
-  HWND hidden_hwnd = nullptr;
-  HANDLE shutdown_handle;
-  GThread *loop_thread = nullptr;
-  LoopState loop_state = LOOP_STATE_INIT;
-  std::mutex loop_lock;
-  std::condition_variable loop_cond;
 };
 /* *INDENT-ON* */
 
@@ -937,231 +1265,6 @@ gst_d3d12_graphics_capture_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static gboolean
-open_device (GstD3D12GraphicsCapture * self, IDirect3DDevice ** d3d_device)
-{
-  auto priv = self->priv;
-
-  static const D3D_FEATURE_LEVEL feature_levels[] = {
-    D3D_FEATURE_LEVEL_11_1,
-    D3D_FEATURE_LEVEL_11_0,
-    D3D_FEATURE_LEVEL_10_1,
-    D3D_FEATURE_LEVEL_10_0,
-  };
-
-  auto adapter = gst_d3d12_device_get_adapter_handle (priv->device);
-  auto hr = D3D11CreateDevice (adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-      D3D11_CREATE_DEVICE_BGRA_SUPPORT, feature_levels,
-      G_N_ELEMENTS (feature_levels), D3D11_SDK_VERSION,
-      &priv->d3d11_device, nullptr, nullptr);
-
-  if (FAILED (hr)) {
-    hr = D3D11CreateDevice (adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-        D3D11_CREATE_DEVICE_BGRA_SUPPORT, &feature_levels[1],
-        G_N_ELEMENTS (feature_levels) - 1, D3D11_SDK_VERSION,
-        &priv->d3d11_device, nullptr, nullptr);
-  }
-
-  if (FAILED (hr)) {
-    GST_ERROR_OBJECT (self, "Couldn't create d3d11 device");
-    return FALSE;
-  }
-
-  ComPtr < ID3D10Multithread > multi_thread;
-  priv->d3d11_device.As (&multi_thread);
-  if (multi_thread)
-    multi_thread->SetMultithreadProtected (TRUE);
-
-  ComPtr < IDXGIDevice > dxgi_device;
-  hr = priv->d3d11_device.As (&dxgi_device);
-  if (FAILED (hr)) {
-    GST_WARNING_OBJECT (self, "IDXGIDevice interface unavailable");
-    return FALSE;
-  }
-
-  ComPtr < IInspectable > inspectable;
-  hr = g_vtable.CreateDirect3D11DeviceFromDXGIDevice (dxgi_device.Get (),
-      &inspectable);
-  if (FAILED (hr)) {
-    GST_WARNING_OBJECT (self, "CreateDirect3D11DeviceFromDXGIDevice failed");
-    return FALSE;
-  }
-
-  ComPtr < IDirect3DDevice > device;
-  hr = inspectable.As (&device);
-  if (FAILED (hr)) {
-    GST_WARNING_OBJECT (self, "IDirect3DDevice interface unavailable");
-    return FALSE;
-  }
-
-  *d3d_device = device.Detach ();
-
-  return TRUE;
-}
-
-static gboolean
-create_session (GstD3D12GraphicsCapture * self, IDirect3DDevice * d3d_device)
-{
-  auto priv = self->priv;
-  auto capture = priv->capture;
-
-  ComPtr < IGraphicsCaptureItemInterop > interop;
-  auto hr = GstGetActivationFactory < IGraphicsCaptureItemInterop,
-      RuntimeClass_Windows_Graphics_Capture_GraphicsCaptureItem > (&interop);
-  if (FAILED (hr)) {
-    GST_ERROR_OBJECT (self, "IGraphicsCaptureItemInterop is not available");
-    return FALSE;
-  }
-
-  ComPtr < IGraphicsCaptureItem > item;
-  if (priv->monitor_handle) {
-    hr = interop->CreateForMonitor (priv->monitor_handle, IID_PPV_ARGS (&item));
-  } else {
-    hr = interop->CreateForWindow (priv->window_handle, IID_PPV_ARGS (&item));
-  }
-
-  if (FAILED (hr)) {
-    GST_ERROR_OBJECT (self, "Couldn't create item");
-    return FALSE;
-  }
-
-  ComPtr < IDirect3D11CaptureFramePoolStatics > pool_statics;
-  hr = GstGetActivationFactory < IDirect3D11CaptureFramePoolStatics,
-      RuntimeClass_Windows_Graphics_Capture_Direct3D11CaptureFramePool >
-      (&pool_statics);
-  if (FAILED (hr)) {
-    GST_WARNING_OBJECT (self,
-        "IDirect3D11CaptureFramePoolStatics is unavailable");
-    return FALSE;
-  }
-
-  hr = MakeAndInitialize < GraphicsCapture > (&priv->capture,
-      self, priv->device, priv->d3d11_device.Get (), d3d_device,
-      pool_statics.Get (), item.Get (), priv->window_handle);
-  if (FAILED (hr)) {
-    GST_ERROR_OBJECT (self, "Couldn't initialize capture object");
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gpointer
-gst_d3d11_graphics_thread_func (GstD3D12GraphicsCapture * self)
-{
-  HRESULT hr;
-  ComPtr < IDispatcherQueueController > queue_ctrl;
-  auto priv = self->priv;
-  HANDLE event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-  ComPtr < IDirect3DDevice > d3d_device;
-  HANDLE waitables[] = { priv->shutdown_handle, event_handle };
-  ComPtr < AsyncWaiter > async_waiter;
-  ComPtr < IAsyncAction > shutdown_action;
-
-  GST_INFO_OBJECT (self, "Entering loop thread");
-
-  g_vtable.SetThreadDpiAwarenessContext
-      (DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
-
-  g_vtable.RoInitialize (RO_INIT_MULTITHREADED);
-
-  hr = MakeAndInitialize < AsyncWaiter > (&async_waiter, event_handle);
-  if (FAILED (hr)) {
-    GST_ERROR_OBJECT (self, "Couldn't create async waiter");
-    goto out;
-  }
-
-  DispatcherQueueOptions queue_opt;
-  queue_opt.dwSize = sizeof (DispatcherQueueOptions);
-  queue_opt.threadType = DQTYPE_THREAD_CURRENT;
-  queue_opt.apartmentType = DQTAT_COM_NONE;
-
-  hr = g_vtable.CreateDispatcherQueueController (queue_opt, &queue_ctrl);
-  if (FAILED (hr)) {
-    GST_ERROR_OBJECT (self, "Couldn't create dispatcher queue controller");
-    goto out;
-  }
-
-  if (!open_device (self, &d3d_device)) {
-    GST_ERROR_OBJECT (self, "Couldn't open device");
-    goto out;
-  }
-
-  if (!create_session (self, d3d_device.Get ())) {
-    GST_ERROR_OBJECT (self, "Couldn't open session");
-    goto out;
-  }
-
-  {
-    std::lock_guard < std::mutex > lk (priv->loop_lock);
-    priv->loop_state = LOOP_STATE_RUNNING;
-    priv->loop_cond.notify_all ();
-  }
-
-  while (true) {
-    MSG msg;
-    while (PeekMessage (&msg, nullptr, 0, 0, PM_REMOVE)) {
-      TranslateMessage (&msg);
-      DispatchMessage (&msg);
-    }
-
-    auto wait_ret = MsgWaitForMultipleObjects (G_N_ELEMENTS (waitables),
-        waitables, FALSE, INFINITE, QS_ALLINPUT);
-
-    if (wait_ret == WAIT_OBJECT_0) {
-      GST_DEBUG_OBJECT (self, "Begin shutdown");
-      priv->capture->Close ();
-      hr = queue_ctrl->ShutdownQueueAsync (&shutdown_action);
-      if (FAILED (hr)) {
-        GST_ERROR_OBJECT (self, "Shutdown failed");
-        break;
-      }
-
-      hr = shutdown_action->put_Completed (async_waiter.Get ());
-      if (FAILED (hr)) {
-        GST_ERROR_OBJECT (self, "Couldn't install shutdown callback");
-        break;
-      }
-    } else if (wait_ret == WAIT_OBJECT_0 + 1) {
-      GST_DEBUG_OBJECT (self, "Shutdown completed");
-      break;
-    } else if (wait_ret != WAIT_OBJECT_0 + G_N_ELEMENTS (waitables)) {
-      GST_ERROR_OBJECT (self, "Unexpected wait return %u", (guint) wait_ret);
-      break;
-    }
-  }
-
-out:
-  {
-    std::lock_guard < std::mutex > lk (priv->loop_lock);
-    priv->loop_state = LOOP_STATE_STOPPED;
-    priv->loop_cond.notify_all ();
-  }
-
-  priv->capture = nullptr;
-  queue_ctrl = nullptr;
-  shutdown_action = nullptr;
-  async_waiter = nullptr;
-
-  if (d3d_device) {
-    ComPtr < IClosable > closable;
-    d3d_device.As (&closable);
-    if (closable)
-      closable->Close ();
-
-    closable = nullptr;
-    d3d_device = nullptr;
-  }
-
-  CloseHandle (event_handle);
-
-  g_vtable.RoUninitialize ();
-
-  GST_INFO_OBJECT (self, "Leaving loop thread");
-
-  return nullptr;
-}
-
 static GstFlowReturn
 gst_d3d12_graphics_capture_prepare (GstD3D12ScreenCapture * capture,
     guint flags)
@@ -1200,6 +1303,7 @@ gst_d3d12_graphics_capture_unlock_stop (GstD3D12ScreenCapture * capture)
   return TRUE;
 }
 
+/* *INDENT-OFF* */
 GstD3D12ScreenCapture *
 gst_d3d12_graphics_capture_new (GstD3D12Device * device, HWND window_handle,
     HMONITOR monitor_handle)
@@ -1207,12 +1311,38 @@ gst_d3d12_graphics_capture_new (GstD3D12Device * device, HWND window_handle,
   g_return_val_if_fail (device, nullptr);
 
   if (!gst_d3d12_graphics_capture_load_library ()) {
-    GST_WARNING ("Couldn't load library");
+    GST_WARNING_OBJECT (device, "Couldn't load library");
     return nullptr;
   }
 
   if (window_handle && !IsWindow (window_handle)) {
-    GST_ERROR ("%p is not a valid HWND", window_handle);
+    GST_ERROR_OBJECT (device, "%p is not a valid HWND", window_handle);
+    return nullptr;
+  }
+
+  ComPtr<GraphicsCapture> capture;
+  ComPtr<IDispatcherQueueHandler> handler;
+  auto hr = MakeAndInitialize<LambdaHandler<std::function<HRESULT()>>>(&handler,
+      [device, monitor_handle, window_handle, output = capture.GetAddressOf()]() -> HRESULT
+      {
+        ComPtr<GraphicsCapture> capture;
+        HRESULT hr = MakeAndInitialize<GraphicsCapture>(&capture,
+              device, monitor_handle, window_handle);
+        if (FAILED(hr))
+          return hr;
+
+        *output = capture.Detach();
+        return S_OK;
+      });
+
+  if (FAILED (hr)) {
+    GST_ERROR_OBJECT (device, "Couldn't create callback object");
+    return nullptr;
+  }
+
+  hr = QueueManger::GetInstance ()->RunOnDispatcherThread (handler.Get ());
+  if (FAILED (hr)) {
+    GST_ERROR_OBJECT (device, "Couldn't create capture object");
     return nullptr;
   }
 
@@ -1220,29 +1350,11 @@ gst_d3d12_graphics_capture_new (GstD3D12Device * device, HWND window_handle,
       g_object_new (GST_TYPE_D3D12_GRAPHICS_CAPTURE, nullptr);
   gst_object_ref_sink (self);
 
-  auto priv = self->priv;
-  priv->device = (GstD3D12Device *) gst_object_ref (device);
-  priv->window_handle = window_handle;
-  priv->monitor_handle = monitor_handle;
-
-  priv->loop_thread = g_thread_new ("GstD3D12GraphicsCapture",
-      (GThreadFunc) gst_d3d11_graphics_thread_func, self);
-
-  bool configured = false;
-  {
-    std::unique_lock < std::mutex > lk (priv->loop_lock);
-    while (priv->loop_state == LOOP_STATE_INIT)
-      priv->loop_cond.wait (lk);
-
-    if (priv->loop_state == LOOP_STATE_RUNNING)
-      configured = true;
-  }
-
-  if (!configured)
-    gst_clear_object (&self);
+  self->priv->capture = capture;
 
   return (GstD3D12ScreenCapture *) self;
 }
+/* *INDENT-ON* */
 
 void
 gst_d3d12_graphics_capture_show_border (GstD3D12GraphicsCapture * capture,
@@ -1279,4 +1391,10 @@ gst_d3d12_graphics_capture_do_capture (GstD3D12GraphicsCapture * capture,
     return priv->capture->GetD3D12Frame (crop_rect, buffer, width, height);
 
   return priv->capture->GetVideoFrame (crop_rect, buffer, width, height);
+}
+
+void
+gst_d3d12_graphics_capture_deinit (void)
+{
+  QueueManger::Deinit ();
 }

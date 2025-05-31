@@ -66,6 +66,10 @@
 #include "gstd3d12upload.h"
 #endif
 
+#ifdef HAVE_WGC
+#include "gstd3d12graphicscapture.h"
+#endif
+
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
@@ -73,6 +77,9 @@ using namespace Microsoft::WRL;
 static void
 plugin_deinit (gpointer data)
 {
+#ifdef HAVE_WGC
+  gst_d3d12_graphics_capture_deinit ();
+#endif
   gst_d3d12_ipc_client_deinit ();
   gst_d3d12_flush_all_devices ();
 }
