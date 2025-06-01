@@ -376,7 +376,7 @@ gst_d3d12_unpack_upload (GstD3D12Unpack * self, GstBuffer * in_buf,
     return nullptr;
   }
 
-  if (gst_d3d12_buffer_copy_into (upload_buf, in_buf, &priv->upload_info)) {
+  if (!gst_d3d12_buffer_copy_into (upload_buf, in_buf, &priv->upload_info)) {
     GST_ERROR_OBJECT (self, "Couldn't copy to upload buffer");
     gst_buffer_unref (upload_buf);
     return nullptr;
