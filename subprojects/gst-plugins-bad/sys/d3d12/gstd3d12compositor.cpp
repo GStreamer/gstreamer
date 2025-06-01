@@ -951,7 +951,6 @@ gst_d3d12_compositor_pad_check_frame_obscured (GstVideoAggregatorPad * pad,
    *     left unscaled)
    */
 
-  std::lock_guard < std::recursive_mutex > lk (priv->lock);
   if (priv->alpha == 0)
     return TRUE;
 
@@ -982,8 +981,6 @@ gst_d3d12_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
   GstVideoRectangle frame_rect;
   gboolean output_has_alpha_comp = FALSE;
   gint x_offset, y_offset;
-
-  std::lock_guard < std::recursive_mutex > lk (priv->lock);
 
   if (GST_VIDEO_INFO_HAS_ALPHA (info) ||
       GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_BGRx ||
@@ -1090,30 +1087,42 @@ gst_d3d12_compositor_preprare_func (GstVideoAggregatorPad * pad,
     return FALSE;
   }
 
-  /* Skip this frame */
-  if (gst_d3d12_compositor_pad_check_frame_obscured (pad, vagg))
-    return TRUE;
+  {
+    std::lock_guard < std::recursive_mutex > lk (priv->lock);
+    /* Skip this frame */
+    if (gst_d3d12_compositor_pad_check_frame_obscured (pad, vagg))
+      return TRUE;
 
-  if (!gst_d3d12_compositor_pad_setup_converter (pad, vagg))
-    return FALSE;
+    if (!gst_d3d12_compositor_pad_setup_converter (pad, vagg))
+      return FALSE;
 
-  gint x, y, w, h;
-  auto crop_meta = gst_buffer_get_video_crop_meta (buffer);
-  if (crop_meta) {
-    x = crop_meta->x;
-    y = crop_meta->y;
-    w = crop_meta->width;
-    h = crop_meta->height;
-  } else {
-    x = y = 0;
-    w = pad->info.width;
-    h = pad->info.height;
+    gint x, y, w, h;
+    gint x_offset = 0;
+    gint y_offset = 0;
+
+    if (priv->xpos < 0)
+      x_offset = priv->xpos;
+
+    if (priv->ypos < 0)
+      y_offset = priv->ypos;
+
+    auto crop_meta = gst_buffer_get_video_crop_meta (buffer);
+    if (crop_meta) {
+      x = crop_meta->x;
+      y = crop_meta->y;
+      w = crop_meta->width;
+      h = crop_meta->height;
+    } else {
+      x = y = 0;
+      w = pad->info.width;
+      h = pad->info.height;
+    }
+
+    g_assert (priv->ctx);
+
+    g_object_set (priv->ctx->conv, "src-x", x - x_offset, "src-y", y - y_offset,
+        "src-width", w + x_offset, "src-height", h + y_offset, nullptr);
   }
-
-  g_assert (priv->ctx);
-
-  g_object_set (priv->ctx->conv, "src-x", x, "src-y", y, "src-width", w,
-      "src-height", h, nullptr);
 
   GstD3D12CmdAlloc *gst_ca;
   if (!gst_d3d12_cmd_alloc_pool_acquire (priv->ctx->ca_pool, &gst_ca)) {
