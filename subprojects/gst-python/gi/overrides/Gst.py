@@ -129,7 +129,7 @@ class NotWritableQuery(Exception):
 __all__.append('NotWritableQuery')
 
 
-class Query(Gst.Query, MiniObject):
+class Query(MiniObject, Gst.Query):
     def get_structure(self):
         s = _gi_gst.query_get_structure(self)
         return s._set_parent(self) if s is not None else None
@@ -149,7 +149,7 @@ class NotWritableEvent(Exception):
 __all__.append('NotWritableEvent')
 
 
-class Event(Gst.Event, MiniObject):
+class Event(MiniObject, Gst.Event):
     def get_structure(self):
         s = _gi_gst.event_get_structure(self)
         return s._set_parent(self) if s is not None else None
@@ -169,7 +169,7 @@ class NotWritableContext(Exception):
 __all__.append('NotWritableContext')
 
 
-class Context(Gst.Context, MiniObject):
+class Context(MiniObject, Gst.Context):
     def get_structure(self):
         s = _gi_gst.context_get_structure(self)
         return s._set_parent(self) if s is not None else None
@@ -196,7 +196,7 @@ class NotWritableStructure(Exception):
 __all__.append('NotWritableStructure')
 
 
-class Caps(Gst.Caps, MiniObject):
+class Caps(MiniObject, Gst.Caps):
 
     def __nonzero__(self):
         return not self.is_empty()
@@ -856,7 +856,7 @@ class MapInfo:
 __all__.append("MapInfo")
 
 
-class Buffer(Gst.Buffer, MiniObject):
+class Buffer(MiniObject, Gst.Buffer):
     @property
     def flags(self):
         return _gi_gst.mini_object_flags(self)
