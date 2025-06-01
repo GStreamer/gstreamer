@@ -131,11 +131,11 @@ __all__.append('NotWritableQuery')
 
 class Query(Gst.Query, MiniObject):
     def get_structure(self):
-        return StructureWrapper(_gi_gst.query_get_structure(self), self,
-                                False)
+        s = _gi_gst.query_get_structure(self)
+        return s._set_parent(self) if s is not None else None
 
     def writable_structure(self):
-        return StructureWrapper(_gi_gst.query_writable_structure(self), self, True)
+        return StructureWrapper(_gi_gst.query_writable_structure(self)._set_parent(self))
 
 
 Query = override(Query)
@@ -151,11 +151,11 @@ __all__.append('NotWritableEvent')
 
 class Event(Gst.Event, MiniObject):
     def get_structure(self):
-        return StructureWrapper(_gi_gst.event_get_structure(self), self,
-                                False)
+        s = _gi_gst.event_get_structure(self)
+        return s._set_parent(self) if s is not None else None
 
     def writable_structure(self):
-        return StructureWrapper(_gi_gst.event_writable_structure(self), self, True)
+        return StructureWrapper(_gi_gst.event_writable_structure(self)._set_parent(self))
 
 
 Event = override(Event)
@@ -171,11 +171,11 @@ __all__.append('NotWritableContext')
 
 class Context(Gst.Context, MiniObject):
     def get_structure(self):
-        return StructureWrapper(_gi_gst.context_get_structure(self), self,
-                                False)
+        s = _gi_gst.context_get_structure(self)
+        return s._set_parent(self) if s is not None else None
 
     def writable_structure(self):
-        return StructureWrapper(_gi_gst.context_writable_structure(self), self, True)
+        return StructureWrapper(_gi_gst.context_writable_structure(self)._set_parent(self))
 
 
 Context = override(Context)
@@ -240,11 +240,11 @@ class Caps(Gst.Caps, MiniObject):
         return self.get_size()
 
     def get_structure(self, index):
-        return StructureWrapper(_gi_gst.caps_get_structure(self, index), self,
-                                False)
+        s = _gi_gst.caps_get_structure(self, index)
+        return s._set_parent(self) if s is not None else None
 
     def writable_structure(self, index):
-        return StructureWrapper(_gi_gst.caps_writable_structure(self, index), self, True)
+        return StructureWrapper(_gi_gst.caps_writable_structure(self, index)._set_parent(self))
 
 
 Caps = override(Caps)
@@ -465,6 +465,16 @@ class Structure(Gst.Structure):
 
     def __str__(self):
         return self.to_string()
+
+    def _set_parent(self, parent):
+        self.__parent__ = parent
+        return self
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, _type, _value, _tb):
+        self._set_parent(None)
 
 
 Structure = override(Structure)
@@ -804,16 +814,16 @@ def pairwise(iterable):
 
 
 class StructureWrapper:
-    def __init__(self, structure, parent, writable):
+    """A Gst.Structure wrapper to force usage of a context manager.
+    """
+    def __init__(self, structure):
         self.__structure = structure
-        self.__parent__ = parent
 
     def __enter__(self):
         return self.__structure
 
     def __exit__(self, _type, _value, _tb):
-        self.__parent__ = False
-        return
+        self.__structure._set_parent(None)
 
 
 class MapInfo:
