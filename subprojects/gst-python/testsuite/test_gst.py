@@ -182,6 +182,25 @@ class TestCaps(TestCase):
         with caps.get_structure(0) as s:
             self.assertNotEqual(ptr, s.__ptr__())
 
+    def test_read_no_copy_no_cm(self):
+        Gst.init(None)
+        caps = Gst.Caps("audio/x-raw")
+
+        s = caps.get_structure(0)
+        ptr = s.__ptr__()
+
+        s2 = caps.get_structure(0)
+        self.assertEqual(ptr, s2.__ptr__())
+
+        c2 = caps.mini_object
+        self.assertEqual(c2.refcount, 2)
+        with self.assertRaises(Gst.NotWritableStructure):
+            caps.get_structure(0).set_value("rate", 44100)
+
+        caps.make_writable()
+        s = caps.get_structure(0)
+        self.assertNotEqual(ptr, s.__ptr__())
+
 
 class TestStructure(TestCase):
 
@@ -206,6 +225,12 @@ class TestEvent(TestCase):
         with event.get_structure() as s:
             self.assertEqual(s["rate"], 44100)
             self.assertEqual(s["channels"], 2)
+
+    def test_no_structure(self):
+        Gst.init(None)
+        event = Gst.Event.new_flush_start()
+        s = event.get_structure()
+        self.assertIsNone(s)
 
 
 class TestQuery(TestCase):
