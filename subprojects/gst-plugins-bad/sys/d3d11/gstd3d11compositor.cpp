@@ -2083,6 +2083,8 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
     GstVideoFrame *prepared_frame =
         gst_video_aggregator_pad_get_prepared_frame (pad);
     gint x, y, w, h;
+    gint x_offset = 0;
+    gint y_offset = 0;
     GstVideoCropMeta *crop_meta;
 
     if (!prepared_frame)
@@ -2093,6 +2095,12 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
       ret = GST_FLOW_ERROR;
       break;
     }
+
+    if (cpad->xpos < 0)
+      x_offset = cpad->xpos;
+
+    if (cpad->ypos < 0)
+      y_offset = cpad->ypos;
 
     crop_meta = gst_buffer_get_video_crop_meta (prepared_frame->buffer);
     if (crop_meta) {
@@ -2106,8 +2114,8 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
       h = pad->info.height;
     }
 
-    g_object_set (cpad->convert, "src-x", x, "src-y", y, "src-width", w,
-        "src-height", h, nullptr);
+    g_object_set (cpad->convert, "src-x", x - x_offset, "src-y", y - y_offset,
+        "src-width", w + x_offset, "src-height", h + y_offset, nullptr);
 
     if (!gst_d3d11_converter_convert_buffer_unlocked (cpad->convert,
             prepared_frame->buffer, target_buf)) {
