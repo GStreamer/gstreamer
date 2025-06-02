@@ -1,0 +1,54 @@
+From c699e4a4106fdce2dccef5af15a2e7a54ed458fb Mon Sep 17 00:00:00 2001
+From: "L. E. Segovia" <amy@centricular.com>
+Date: Thu, 26 Jun 2025 22:36:39 -0300
+Subject: [PATCH 8/9] meson: Fix fs.copyfile semantics breaking GIR build with
+ Ninja 1.12+
+
+Unlike configure_file, fs.copyfile runs at build time. This, along
+with Ninja 1.12+'s stricter dependency semantics, means that all
+GIR files built by g-i may not be available for other subprojects
+in a subproject build.
+
+This breaks harfbuzz wrap's GIR build inside GStreamer.
+
+See https://github.com/ninja-build/ninja/releases/tag/v1.12.0
+
+See https://mesonbuild.com/Release-notes-for-0-64-0.html#fscopyfile-to-replace-configure_filecopy-true
+---
+ gir/meson.build | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/gir/meson.build b/gir/meson.build
+index a23c0a91..792faa73 100644
+--- a/gir/meson.build
++++ b/gir/meson.build
+@@ -1,4 +1,4 @@
+-gir_files = [
++base_gir_files = [
+   {'name': 'DBus', 'file': 'DBus-1.0.gir' },
+   {'name': 'DBus-GLib', 'file': 'DBusGLib-1.0.gir' },
+   {'name': 'fontconfig', 'file': 'fontconfig-2.0.gir' },
+@@ -18,8 +18,9 @@ uninstalled_gir_files = []
+ # Copy gir files to build directory to have them all in a single place.
+ # This is needed when gobject-introspection is a subproject because Meson
+ # will add --includedir pointing to build directory automatically.
+-foreach gir: gir_files
+-  fs.copyfile(gir.get('file'))
++gir_files = []
++foreach gir: base_gir_files
++  gir_files += [{'name': gir.get('name'), 'file': fs.copyfile(gir.get('file'))}]
+ endforeach
+ 
+ cairo_conf = configuration_data()
+@@ -49,7 +50,7 @@ gir_files += [{'name': 'cairo', 'file': cairo_gir}]
+ 
+ typelibdir = join_paths(get_option('libdir'), 'girepository-1.0')
+ installed_gir_files = []
+-foreach gir: gir_files
++foreach gir: base_gir_files
+   installed_gir_files += gir.get('file')
+ endforeach
+ 
+-- 
+2.47.0.windows.2
+

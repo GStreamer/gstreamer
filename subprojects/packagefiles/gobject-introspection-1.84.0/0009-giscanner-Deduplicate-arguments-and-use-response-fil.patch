@@ -1,0 +1,54 @@
+From d664384d9c1f3ff85910035b08feb1204f3e48c2 Mon Sep 17 00:00:00 2001
+From: "L. E. Segovia" <amy@centricular.com>
+Date: Fri, 27 Jun 2025 00:20:23 -0300
+Subject: [PATCH 9/9] giscanner: Deduplicate arguments and use response files
+ for MSVC
+
+Alleviates GStreamer CI crashing because deeply nested GIR modules
+can exhaust CreateProcessW because of the number of duplicated flags
+(mainly include flags), and distutils has no provision for it.
+---
+ giscanner/ccompiler.py | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/giscanner/ccompiler.py b/giscanner/ccompiler.py
+index 9c27cba7..9e2e2aed 100644
+--- a/giscanner/ccompiler.py
++++ b/giscanner/ccompiler.py
+@@ -390,11 +390,32 @@ class CCompiler(object):
+         includes.extend(include_paths)
+         extra_postargs.extend(extra_args)
+ 
+-        return self.compiler.compile(sources=source,
++        tmp = None
++
++        rsp_len = sum(len(i) + 1 for i in list(*source) + extra_postargs) + sum(len(i) + 3 for i in macros + includes)
++
++        # Serialize to a response file if CommandLineToArgW etc.
++        # can get overloaded. The limit is 32k but e.g. GStreamer's CI
++        # can pile up pretty quickly, so let's follow Meson here.
++        if self.check_is_msvc() and rsp_len >= 8192:
++            # There seems to be no provision for deduplication in higher layers
++            includes = list(set(includes))
++            macros = list(set(macros))
++            if extra_postargs:
++                tmp = tempfile.mktemp()
++                with open(tmp, 'w') as f:
++                    f.write(' '.join(extra_postargs))
++                extra_postargs = [f'@{tmp}']
++
++        try:
++            return self.compiler.compile(sources=source,
+                                      macros=macros,
+                                      include_dirs=includes,
+                                      extra_postargs=extra_postargs,
+                                      output_dir=os.path.abspath(os.sep))
++        finally:
++            if tmp and not utils.have_debug_flag('save-temps'):
++                os.unlink(tmp)
+ 
+     def resolve_windows_libs(self, libraries, options):
+         args = []
+-- 
+2.47.0.windows.2
+

@@ -1,11 +1,11 @@
 [wrap-file]
-directory = gobject-introspection-1.74.0
-source_url = https://download.gnome.org/sources/gobject-introspection/1.74/gobject-introspection-1.74.0.tar.xz
-source_fallback_url = https://deb.debian.org/debian/pool/main/g/gobject-introspection/gobject-introspection_1.74.0.orig.tar.xz
-source_filename = gobject-introspection-1.74.0.tar.xz
-source_hash = 347b3a719e68ba4c69ff2d57ee2689233ea8c07fc492205e573386779e42d653
-wrapdb_version = 1.74.0-0
-diff_files = gobject-introspection-1.74.0/0001-Fix-gir-build-when-using-subprojects-dependencies.patch, gobject-introspection-1.74.0/0001-gir-stop-assuming-glib-source-and-build-dirs-using-v.patch, gobject-introspection-1.74.0/0001-build-Work-around-an-undocumented-GLib-variable-rena.patch
+directory = gobject-introspection-1.84.0
+source_url = https://download.gnome.org/sources/gobject-introspection/1.84/gobject-introspection-1.84.0.tar.xz
+source_fallback_url = https://ftp.acc.umu.se/pub/gnome/sources/gobject-introspection/1.84/gobject-introspection-1.84.0.tar.xz
+source_filename = gobject-introspection-1.84.0.tar.xz
+source_hash = 945b57da7ec262e5c266b89e091d14be800cc424277d82a02872b7d794a84779
+wrapdb_version = 1.84.0-0
+diff_files = gobject-introspection-1.84.0/0003-girepository-Load-typelibs-from-a-relocatable-prefix.patch, gobject-introspection-1.84.0/0004-build-Fix-b_vscrt-value-use-without-converting-it-to.patch, gobject-introspection-1.84.0/0006-tests-Fix-path-parsing-for-Windows.patch, gobject-introspection-1.84.0/0007-g-ir-tools-Support-reading-rspfiles-for-arguments.patch, gobject-introspection-1.84.0/0008-meson-Fix-fs.copyfile-semantics-breaking-GIR-build-w.patch, gobject-introspection-1.84.0/0009-giscanner-Deduplicate-arguments-and-use-response-fil.patch
 
 [provide]
 dependency_names = gobject-introspection-1.0

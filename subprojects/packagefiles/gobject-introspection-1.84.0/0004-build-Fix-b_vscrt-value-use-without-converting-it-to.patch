@@ -1,0 +1,26 @@
+From a0b42aa4218bea84de902065f95d0e63bdb1c0d2 Mon Sep 17 00:00:00 2001
+From: "L. E. Segovia" <amy@centricular.com>
+Date: Wed, 4 Jun 2025 18:28:24 -0300
+Subject: [PATCH 4/9] build: Fix b_vscrt value use without converting it to a
+ flag
+
+---
+ meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index 7b8bf1c3..8e944824 100644
+--- a/meson.build
++++ b/meson.build
+@@ -96,7 +96,7 @@ if cc.get_argument_syntax() == 'msvc'
+       msvc_crt_cflag = b_vscrt == 'static_from_buildtype' ? '/MT' : '/MD'
+     endif
+   else
+-    msvc_crt_cflag = b_vscrt
++    msvc_crt_cflag = '/' + b_vscrt
+   endif
+   extra_giscanner_cflags += msvc_crt_cflag
+   extra_giscanner_args = ['--cflags-begin'] + extra_giscanner_cflags + ['--cflags-end']
+-- 
+2.47.0.windows.2
+

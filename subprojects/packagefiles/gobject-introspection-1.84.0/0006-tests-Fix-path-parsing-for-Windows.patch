@@ -1,0 +1,48 @@
+From 95125183cd7d45c37d49147ee913f06a603c871a Mon Sep 17 00:00:00 2001
+From: "L. E. Segovia" <amy@centricular.com>
+Date: Thu, 26 Jun 2025 13:22:14 -0300
+Subject: [PATCH 6/9] tests: Fix path parsing for Windows
+
+---
+ tests/meson.build         | 2 +-
+ tests/scanner/meson.build | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/tests/meson.build b/tests/meson.build
+index e82d79f9..7e4b9887 100644
+--- a/tests/meson.build
++++ b/tests/meson.build
+@@ -198,7 +198,7 @@ if (glib_dep.type_name() == 'pkgconfig' and
+   # FIXME: Remove? Those tests doesn't actually do anything for typelibs ...
+   foreach typelib : test_typelibs
+     gi_tester = files('gi-tester')
+-    typelib_name = typelib.full_path().split('/')[-1]
++    typelib_name = typelib.full_path().replace('\\', '/').split('/')[-1]
+     test(
+       'gi-tester' + typelib_name,
+       python,
+diff --git a/tests/scanner/meson.build b/tests/scanner/meson.build
+index 5634ee4f..402547dc 100644
+--- a/tests/scanner/meson.build
++++ b/tests/scanner/meson.build
+@@ -587,7 +587,7 @@ endif
+ gi_tester = files(join_paths('..', 'gi-tester'))
+ 
+ foreach gir : test_girs
+-  gir_name = gir.full_path().split('/')[-1]
++  gir_name = gir.full_path().replace('\\', '/').split('/')[-1]
+   test(
+     'gi-tester-' + gir_name,
+     python,
+@@ -663,7 +663,7 @@ if has_girdoctool and glib_dep.type_name() == 'pkgconfig'
+ endif
+ 
+ foreach typelib : test_typelibs
+-  typelib_name = typelib.full_path().split('/')[-1]
++  typelib_name = typelib.full_path().replace('\\', '/').split('/')[-1]
+   test(
+     'gi-tester-' + typelib_name,
+     python,
+-- 
+2.47.0.windows.2
+

@@ -1,0 +1,62 @@
+From 67f5fc047ccdbfcc3396b42fba54e9f06db93382 Mon Sep 17 00:00:00 2001
+From: "L. E. Segovia" <amy@centricular.com>
+Date: Thu, 5 Jun 2025 12:25:14 -0300
+Subject: [PATCH 7/9] g-ir-tools: Support reading @rspfiles for arguments
+
+This is needed on Windows, where the argument list can exceed the
+maximum command-line length when many cflags are being passed.
+
+It is easily reproducible on GStreamer CI when g-ir-scanner
+is being pulled from a wrap.
+
+See https://gitlab.gnome.org/GNOME/glib/-/commit/17316b2c16cf17ae9692ed2733f776f1082e74e5
+
+(cherry picked from commit b0daeaa67828a61af250b438dd918c01aad8457e)
+---
+ tools/g-ir-tool-template.in | 32 +++++++++++++++++++++++++++++++-
+ 1 file changed, 31 insertions(+), 1 deletion(-)
+
+diff --git a/tools/g-ir-tool-template.in b/tools/g-ir-tool-template.in
+index 469af0ca..648c9abc 100755
+--- a/tools/g-ir-tool-template.in
++++ b/tools/g-ir-tool-template.in
+@@ -100,5 +100,35 @@ from giscanner.utils import dll_dirs
+ dll_dirs = dll_dirs()
+ dll_dirs.add_dll_dirs(['gio-2.0'])
+ 
++def get_rspfile_args(rspfile):
++    '''
++    Response files are useful on Windows where there is a command-line character
++    limit of 8191 because when passing sources as arguments to glib-mkenums this
++    limit can be exceeded in large codebases.
++
++    There is no specification for response files and each tool that supports it
++    generally writes them out in slightly different ways, but some sources are:
++    https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-response-files
++    https://docs.microsoft.com/en-us/windows/desktop/midl/the-response-file-command
++    '''
++    import shlex
++    if not os.path.isfile(rspfile):
++        sys.exit('Response file {!r} does not exist'.format(rspfile))
++    try:
++        with open(rspfile, 'r') as f:
++            cmdline = f.read()
++    except OSError as e:
++        sys.exit('Response file {!r} could not be read: {}'
++                 .format(rspfile, e.strerror))
++    return shlex.split(cmdline)
++
++
++# Support reading an rspfile of the form @filename which contains the args
++# to be parsed
++if sys.argv[-1].startswith('@'):
++    args = sys.argv[0:-1] + get_rspfile_args(sys.argv[-1][1:])
++else:
++    args = sys.argv
++
+ from giscanner.@TOOL_MODULE@ import @TOOL_FUNCTION@
+-sys.exit(@TOOL_FUNCTION@(sys.argv))
++sys.exit(@TOOL_FUNCTION@(args))
+-- 
+2.47.0.windows.2
+
