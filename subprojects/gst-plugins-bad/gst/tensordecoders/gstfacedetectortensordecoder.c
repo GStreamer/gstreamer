@@ -294,16 +294,18 @@ gst_face_detector_tensor_decoder_set_caps (GstBaseTransform * trans,
  * @buf:in: buffer
  * @boxes_tensor:out: Boxes tensor
  * @scores_tensor:out: scores tensor
- * @return: TRUE if buf has boxes and scores tensor attach to it.
+ * 
  * Retrieve FaceDetection boxes and scores tensors from buffer.
+ * 
+ * @return: TRUE if buf has boxes and scores tensor with desired features are attached to it.
+ * Otherwise FALSE will be returned.
  */
 static gboolean
 gst_face_detector_tensor_decoder_get_tensor_meta (GstFaceDetectorTensorDecoder
-    * self, GstBuffer * buf, GstTensor ** boxes_tensor,
-    GstTensor ** scores_tensor)
+    * self, GstBuffer * buf, const GstTensor ** boxes_tensor,
+    const GstTensor ** scores_tensor)
 {
   GstTensorMeta *tensor_meta;
-  gint boxes_tensor_idx, scores_tensor_idx;
 
   g_return_val_if_fail (boxes_tensor != NULL, FALSE);
   g_return_val_if_fail (scores_tensor != NULL, FALSE);
@@ -320,29 +322,26 @@ gst_face_detector_tensor_decoder_get_tensor_meta (GstFaceDetectorTensorDecoder
 
   GST_LOG_OBJECT (self, "Num tensors %zu", tensor_meta->num_tensors);
 
-  /* Retrieve the index of the tensor that has a tensor-id matching
-   * BOXES_TENSOR_ID_QUARK in the GstTensorMeta. */
-  boxes_tensor_idx = gst_tensor_meta_get_index_from_id (tensor_meta,
-      BOXES_TENSOR_ID_QUARK);
+  /* Retrieve the tensor that has a tensor-id matching
+   * BOXES_TENSOR_ID_QUARK in the GstTensorMeta along with
+   * the reading order from the memory matching with GST_TENSOR_DIM_ORDER_ROW_MAJOR,
+   * 3 dimensions and the data type matching with GST_TENSOR_DATA_TYPE_FLOAT32 */
+  *boxes_tensor =
+      gst_tensor_meta_get_typed_tensor (tensor_meta, BOXES_TENSOR_ID_QUARK,
+      GST_TENSOR_DIM_ORDER_ROW_MAJOR, 3, GST_TENSOR_DATA_TYPE_FLOAT32, buf);
 
-  /* Retrieve the index of the tensor that has a tensor-id matching*
-   * SCORES_TENSOR_ID_QUARK in the GstTensorMeta. */
-  scores_tensor_idx =
-      gst_tensor_meta_get_index_from_id (tensor_meta, SCORES_TENSOR_ID_QUARK);
+  /* Retrieve the tensor that has a tensor-id matching
+   * SCORES_TENSOR_ID_QUARK in the GstTensorMeta along with
+   * the reading order from the memory matching with GST_TENSOR_DIM_ORDER_ROW_MAJOR,
+   * 3 dimensions and the data type matching with GST_TENSOR_DATA_TYPE_FLOAT32 */
+  *scores_tensor =
+      gst_tensor_meta_get_typed_tensor (tensor_meta, SCORES_TENSOR_ID_QUARK,
+      GST_TENSOR_DIM_ORDER_ROW_MAJOR, 3, GST_TENSOR_DATA_TYPE_FLOAT32, buf);
 
-  if (boxes_tensor_idx >= 0 && scores_tensor_idx >= 0) {
-    GST_LOG_OBJECT (self, "Boxes tensor id: %d", boxes_tensor_idx);
-    GST_LOG_OBJECT (self, "Scores tensor id: %d", scores_tensor_idx);
+  if (*boxes_tensor == NULL || *scores_tensor == NULL)
+    return FALSE;
 
-    *boxes_tensor = tensor_meta->tensors[boxes_tensor_idx];
-    *scores_tensor = tensor_meta->tensors[scores_tensor_idx];
-
-    return TRUE;
-  } else {
-    GST_INFO_OBJECT (self, "Couldn't find boxes or scores tensor, skipping");
-  }
-
-  return FALSE;
+  return TRUE;
 }
 
 /* Compare c1 and c2
@@ -472,16 +471,13 @@ hard_nms (const GPtrArray * sel_candidates,
  */
 static void
 gst_face_detector_tensor_decoder_decode_boxes_f32 (GstFaceDetectorTensorDecoder
-    * self, GstTensor * boxes_tensor, GstTensor * scores_tensor,
+    * self, const GstTensor * boxes_tensor, const GstTensor * scores_tensor,
     GstAnalyticsRelationMeta * rmeta)
 {
   GstMapInfo map_info_boxes, map_info_scores;
   gfloat *candidate, *score;
   gboolean rv;
   GPtrArray *sel_candidates = self->sel_candidates, *selected = self->selected;
-
-  /* Retrieve memory at index 0 from boxes_tensor in READ mode */
-  boxes_tensor->data = gst_buffer_make_writable (boxes_tensor->data);
 
   rv = gst_buffer_map (boxes_tensor->data, &map_info_boxes, GST_MAP_READ);
   g_assert (rv);
@@ -638,33 +634,15 @@ gst_face_detector_tensor_decoder_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf)
 {
   GstFaceDetectorTensorDecoder *self = GST_FACE_DETECTOR_TENSOR_DECODER (trans);
-  GstTensor *boxes_tensor, *scores_tensor;
+  const GstTensor *boxes_tensor, *scores_tensor;
   GstAnalyticsRelationMeta *rmeta;
 
+  /* Retrive the desired Face Detection tensors.
+   * Return Flow Error if the desired tensors were not supported. */
   if (!gst_face_detector_tensor_decoder_get_tensor_meta (self, buf,
-          &boxes_tensor, &scores_tensor))
-    return GST_FLOW_OK;
-
-  if (boxes_tensor->num_dims != 3) {
+          &boxes_tensor, &scores_tensor)) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE, (NULL),
-        ("Boxes tensor must have 3 dimensions but has %zu",
-            boxes_tensor->num_dims));
-    return GST_FLOW_ERROR;
-  }
-
-  if (scores_tensor->num_dims != 3) {
-    GST_ELEMENT_ERROR (self, STREAM, DECODE, (NULL),
-        ("scores tensor must have 3 dimensions but has %zu",
-            boxes_tensor->num_dims));
-    return GST_FLOW_ERROR;
-  }
-
-  if (boxes_tensor->data_type != GST_TENSOR_DATA_TYPE_FLOAT32 &&
-      scores_tensor->data_type != GST_TENSOR_DATA_TYPE_FLOAT32) {
-    GST_ELEMENT_ERROR (self, STREAM, NOT_IMPLEMENTED,
-        ("Only data-type FLOAT32 support is implemented"),
-        ("Please implement."));
-
+        ("Tensor doens't have the expected data type or shape."));
     return GST_FLOW_ERROR;
   }
 

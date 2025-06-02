@@ -152,6 +152,10 @@ GType gst_tensor_get_type (void);
 GST_ANALYTICS_META_API
 const gchar *gst_tensor_data_type_get_name (GstTensorDataType data_type);
 
+GST_ANALYTICS_META_API
+gboolean gst_tensor_check_type(const GstTensor * tensor, GstTensorDimOrder order,
+          gsize num_dims, GstTensorDataType data_type, GstBuffer * data);
+
 G_END_DECLS
 
 #endif /* __GST_TENSOR_H__ */

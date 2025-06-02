@@ -1338,6 +1338,39 @@ dimension is dynamic.</doc>
           </parameter>
         </parameters>
       </constructor>
+      <method name="check_type" c:identifier="gst_tensor_check_type" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Validate the tensor whether it mathces the reading order, dimensions and the data type.
+Validate whether the #GstBuffer has enough size to hold the tensor data.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">TRUE if the #GstTensor has the reading order from the memory matching @order,
+dimensions matching @num_dims, data type matching @data_type and the #GstBuffer mathcing @data
+has enough size to hold the tensor data.
+Otherwise FALSE will be returned.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="tensor" transfer-ownership="none">
+            <type name="Tensor" c:type="const GstTensor*"/>
+          </instance-parameter>
+          <parameter name="order" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">The order of the tensor to read from the memory</doc>
+            <type name="TensorDimOrder" c:type="GstTensorDimOrder"/>
+          </parameter>
+          <parameter name="num_dims" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">The number of dimensions that the tensor can have</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="data_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">The data type of the tensor</doc>
+            <type name="TensorDataType" c:type="GstTensorDataType"/>
+          </parameter>
+          <parameter name="data" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">#GstBuffer holding tensor data</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="copy" c:identifier="gst_tensor_copy" version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Create a copy of @tensor.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
@@ -1530,6 +1563,46 @@ Otherwise NULL will be returned.</doc>
           <parameter name="id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">The tensor id to look for</doc>
             <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_typed_tensor" c:identifier="gst_tensor_meta_get_typed_tensor" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">Get the first tensor from the #GstTensorMeta identified by @tensor_id, mathcing
+the reading order, dimensions and the data type.
+Validate whether the #GstBuffer has enough size to hold the tensor data.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">a GstTensor with id matching @tensor_id,
+reading order from the memory matching @order, dimensions matching @num_dims,
+data type matching @data_type. The #GstBuffer mathcing @data should
+have enough size to hold the tensor data.
+Otherwise NULL will be returned.</doc>
+          <type name="Tensor" c:type="const GstTensor*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="tmeta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">A #GstTensorMeta</doc>
+            <type name="TensorMeta" c:type="GstTensorMeta*"/>
+          </instance-parameter>
+          <parameter name="tensor_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">A #GQuark identifying the tensor-encoding</doc>
+            <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+          <parameter name="order" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">The order of the tensor to read from the memory</doc>
+            <type name="TensorDimOrder" c:type="GstTensorDimOrder"/>
+          </parameter>
+          <parameter name="num_dims" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">The number of dimensions that the tensor can have</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="data_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">The data type of the tensor</doc>
+            <type name="TensorDataType" c:type="GstTensorDataType"/>
+          </parameter>
+          <parameter name="data" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">#GstBuffer holding tensor data</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
           </parameter>
         </parameters>
       </method>

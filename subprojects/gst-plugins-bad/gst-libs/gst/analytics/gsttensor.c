@@ -256,3 +256,61 @@ gst_tensor_data_type_get_name (GstTensorDataType data_type)
       return NULL;
   }
 }
+
+/**
+ * gst_tensor_check_type:
+ * @tmeta: A #GstTensor
+ * @order: The order of the tensor to read from the memory
+ * @num_dims: The number of dimensions that the tensor can have
+ * @data_type: The data type of the tensor
+ * @data: (transfer full): #GstBuffer holding tensor data
+ *
+ * Validate the tensor whether it mathces the reading order, dimensions and the data type.
+ * Validate whether the #GstBuffer has enough size to hold the tensor data.
+ *
+ * Returns: TRUE if the #GstTensor has the reading order from the memory matching @order,
+ * dimensions matching @num_dims, data type matching @data_type and the #GstBuffer mathcing @data
+ * has enough size to hold the tensor data.
+ * Otherwise FALSE will be returned.
+ *
+ * Since: 1.28
+ */
+gboolean
+gst_tensor_check_type (const GstTensor * tensor, GstTensorDimOrder order,
+    gsize num_dims, GstTensorDataType data_type, GstBuffer * data)
+{
+  gsize num_elements = 1, tensor_size, i;
+
+  if (tensor->dims_order != order) {
+    GST_DEBUG ("Tensor has order %d, expected %d", tensor->dims_order, order);
+    return FALSE;
+  }
+
+  if (tensor->num_dims != num_dims) {
+    GST_DEBUG ("Tensor has %zu dimensions, expected %zu", tensor->num_dims,
+        num_dims);
+    return FALSE;
+  }
+
+  if (tensor->data_type != data_type) {
+    GST_DEBUG ("Tensor has data type \"%s\", expected \"%s\".",
+        gst_tensor_data_type_get_name (tensor->data_type),
+        gst_tensor_data_type_get_name (data_type));
+    return FALSE;
+  }
+
+  for (i = 0; i < tensor->num_dims; i++) {
+    num_elements *= tensor->dims[i];
+  }
+
+  tensor_size = size_for_elements (tensor->data_type, num_elements);
+
+  if (gst_buffer_get_size (data) < tensor_size) {
+    GST_DEBUG ("Expected buffer of size %zu (%zu elements),"
+        " but buffer has size %zu", tensor_size, num_elements,
+        gst_buffer_get_size (data));
+    return FALSE;
+  }
+
+  return TRUE;
+}

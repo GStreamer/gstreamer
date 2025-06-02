@@ -207,6 +207,43 @@ gst_tensor_meta_get_by_id (GstTensorMeta * tmeta, GQuark id)
 }
 
 /**
+ * gst_tensor_meta_get_typed_tensor:
+ * @tmeta: A #GstTensorMeta
+ * @tensor_id: A #GQuark identifying the tensor-encoding
+ * @order: The order of the tensor to read from the memory
+ * @num_dims: The number of dimensions that the tensor can have
+ * @data_type: The data type of the tensor
+ * @data: (transfer full): #GstBuffer holding tensor data
+ *
+ * Get the first tensor from the #GstTensorMeta identified by @tensor_id, mathcing
+ * the reading order, dimensions and the data type.
+ * Validate whether the #GstBuffer has enough size to hold the tensor data.
+ *
+ * Return: (nullable)(transfer none): a GstTensor with id matching @tensor_id,
+ * reading order from the memory matching @order, dimensions matching @num_dims,
+ * data type matching @data_type. The #GstBuffer mathcing @data should
+ * have enough size to hold the tensor data.
+ * Otherwise NULL will be returned.
+ *
+ * Since: 1.28
+ */
+const GstTensor *
+gst_tensor_meta_get_typed_tensor (GstTensorMeta * tmeta,
+    GQuark tensor_id, GstTensorDimOrder order, gsize num_dims,
+    GstTensorDataType data_type, GstBuffer * data)
+{
+  const GstTensor *tensor;
+
+  tensor = gst_tensor_meta_get_by_id (tmeta, tensor_id);
+
+  if (!gst_tensor_check_type (tensor, order, num_dims, data_type, data)) {
+    return NULL;
+  }
+
+  return tensor;
+}
+
+/**
  * gst_tensor_meta_get:
  * @tmeta: A #GstTensorMeta
  * @index: The number of the tensor to get
