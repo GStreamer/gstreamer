@@ -1,0 +1,52 @@
+From 079cd66c77d53cdf5007002bd225658e221715c3 Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Wed, 12 Feb 2025 20:32:59 +0530
+Subject: [PATCH 3/9] girepository: Load typelibs from a relocatable prefix on
+ macOS
+
+This is already relocatable on Windows.
+---
+ girepository/girepository.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/girepository/girepository.c b/girepository/girepository.c
+index 12eaf366..ca47cd55 100644
+--- a/girepository/girepository.c
++++ b/girepository/girepository.c
+@@ -125,6 +125,33 @@ DllMain (HINSTANCE hinstDLL,
+   g_build_filename (g_win32_get_package_installation_directory_of_module (girepository_dll), \
+ 		    "lib", \
+ 		    NULL)
++#elif defined(__APPLE__)
++
++#include <dlfcn.h>
++
++#undef GOBJECT_INTROSPECTION_LIBDIR
++#define GOBJECT_INTROSPECTION_LIBDIR _get_portable_libdir ()
++
++static char*
++_get_portable_libdir (void)
++{
++  char *path, *p;
++  Dl_info info;
++
++  /* Get the location of the current dylib */
++  if (!dladdr (_get_portable_libdir, &info))
++    return NULL;
++  path = strdup (info.dli_fname);
++
++  /* Get dylib directory: PREFIX/lib */
++  if ((p = strrchr (path, '/')) == NULL) {
++    free (path);
++    return NULL;
++  }
++  *p = '\0';
++
++  return path;
++}
+ 
+ #endif
+ 
+-- 
+2.47.0.windows.2
+
