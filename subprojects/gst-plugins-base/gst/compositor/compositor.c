@@ -1635,6 +1635,45 @@ blend_pads (struct CompositeTask *comp)
   }
 }
 
+static void
+copy_metas (GstCompositor * compositor, GstCompositorPad * cpad,
+    GstVideoFrame * in_frame, GstBuffer * out_buffer)
+{
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR_CAST (compositor);
+  GstMeta *meta;
+  gpointer state = NULL;
+  const gchar *valid_tags[] = {
+    GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR,
+    GST_META_TAG_VIDEO_COLORSPACE_STR,
+    NULL
+  };
+  GstVideoMetaTransformMatrix trans_matrix;
+  const GstVideoRectangle in_rectangle = { 0, 0,
+    GST_VIDEO_INFO_WIDTH (&in_frame->info),
+    GST_VIDEO_INFO_HEIGHT (&in_frame->info)
+  };
+  const GstVideoRectangle out_rectangle = { cpad->xpos + cpad->x_offset,
+    cpad->ypos + cpad->y_offset, GST_VIDEO_INFO_WIDTH (&in_frame->info),
+    GST_VIDEO_INFO_HEIGHT (&in_frame->info)
+  };
+
+  gst_video_meta_transform_matrix_init (&trans_matrix, &in_frame->info,
+      &in_rectangle, &vagg->info, &out_rectangle);
+
+  while ((meta = gst_buffer_iterate_meta (in_frame->buffer, &state))) {
+    if (meta->info->transform_func == NULL)
+      continue;
+
+    if (!gst_meta_api_type_tags_contain_only (meta->info->api, valid_tags))
+      continue;
+
+    meta->info->transform_func (out_buffer, meta, in_frame->buffer,
+        gst_video_meta_transform_matrix_get_quark (), &trans_matrix);
+  }
+}
+
 static GstFlowReturn
 gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
 {
@@ -1773,6 +1812,13 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
   }
 
   gst_video_frame_unmap (&out_frame);
+
+  GST_OBJECT_LOCK (vagg);
+  for (i = 0; i < n_pads; i++) {
+    copy_metas (compositor, pads_info[i].pad, pads_info[i].prepared_frame,
+        outbuf);
+  }
+  GST_OBJECT_UNLOCK (vagg);
 
   return GST_FLOW_OK;
 }
