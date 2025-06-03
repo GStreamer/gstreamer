@@ -511,7 +511,9 @@ gst_v4l2_object_install_m2m_properties_helper (GObjectClass * gobject_class)
   g_object_class_install_property (gobject_class, PROP_EXTRA_CONTROLS,
       g_param_spec_boxed ("extra-controls", "Extra Controls",
           "Extra v4l2 controls (CIDs) for the device",
-          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_STRUCTURE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
 }
 
 /* Support for 32bit off_t, this wrapper is casting off_t to gint64 */
