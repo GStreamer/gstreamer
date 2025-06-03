@@ -6678,6 +6678,28 @@ option and values.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="transform_metas" c:identifier="gst_video_converter_transform_metas" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.c">Transform the GstMeta of @src into @dest using @convert.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.c">TRUE if any meta was copied</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="convert" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.c">a #GstVideoConverter</doc>
+            <type name="VideoConverter" c:type="GstVideoConverter*"/>
+          </instance-parameter>
+          <parameter name="src" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.c">a #GstBuffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+          <parameter name="dest" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.c">a writable #GstBuffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </method>
       <function name="new" c:identifier="gst_video_converter_new" version="1.6" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-converter.c">Create a new converter object to convert between @in_info and @out_info
 with @config.

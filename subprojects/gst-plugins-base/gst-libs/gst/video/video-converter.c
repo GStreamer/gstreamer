@@ -8922,3 +8922,73 @@ gst_video_converter_get_out_info (GstVideoConverter * convert)
 {
   return &convert->out_info;
 }
+
+/**
+ * gst_video_converter_transform_metas:
+ * @convert: a #GstVideoConverter
+ * @dest: a writable #GstBuffer
+ * @src: a #GstBuffer
+ *
+ * Transform the GstMeta of @src into @dest using @convert.
+ *
+ * Returns: TRUE if any meta was copied
+ *
+ * Since: 1.28
+ */
+gboolean
+gst_video_converter_transform_metas (GstVideoConverter * convert,
+    GstBuffer * src, GstBuffer * dest)
+{
+  GstMeta *meta;
+  gpointer state = NULL;
+  const gchar *valid_tags[] = {
+    GST_META_TAG_VIDEO_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR,
+    GST_META_TAG_VIDEO_COLORSPACE_STR,
+    NULL
+  };
+  gboolean ret = FALSE;
+  gboolean crop = convert->in_x || convert->in_y
+      || convert->in_width != convert->in_maxwidth
+      || convert->in_height != convert->in_maxheight;
+  gboolean border = convert->out_x || convert->out_y
+      || convert->out_width != convert->out_maxwidth
+      || convert->out_height != convert->out_maxheight;
+
+  GstVideoMetaTransformMatrix trans_matrix;
+  const GstVideoRectangle in_rectangle = { convert->in_x, convert->in_y,
+    convert->in_width, convert->in_height
+  };
+  const GstVideoRectangle out_rectangle = { convert->out_x, convert->out_y,
+    convert->out_width, convert->out_height
+  };
+  GstVideoMetaTransform trans = {
+    &convert->in_info,
+    &convert->out_info,
+  };
+
+  g_return_val_if_fail (gst_buffer_is_writable (dest), FALSE);
+
+  gst_video_meta_transform_matrix_init (&trans_matrix, &convert->in_info,
+      &in_rectangle, &convert->out_info, &out_rectangle);
+
+  while ((meta = gst_buffer_iterate_meta (src, &state))) {
+    if (meta->info->transform_func == NULL)
+      continue;
+
+    if (!gst_meta_api_type_tags_contain_only (meta->info->api, valid_tags))
+      continue;
+
+    if (!meta->info->transform_func (dest, meta, src,
+            gst_video_meta_transform_matrix_get_quark (), &trans_matrix)) {
+      if (!crop && !border)
+        ret |= meta->info->transform_func (dest, meta, src,
+            gst_video_meta_transform_scale_get_quark (), &trans);
+    } else {
+      ret = TRUE;
+    }
+  }
+
+  return ret;
+}
