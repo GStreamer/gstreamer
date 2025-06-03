@@ -545,6 +545,9 @@ gst_video_aggregator_convert_pad_prepare_frame (GstVideoAggregatorPad * vpad,
     converted_size = converted_size > outsize ? converted_size : outsize;
     converted_buf = gst_buffer_new_allocate (NULL, converted_size, &params);
 
+    gst_video_converter_transform_metas (pad->priv->convert, buffer,
+        converted_buf);
+
     if (!gst_video_frame_map (&converted_frame, &(pad->priv->conversion_info),
             converted_buf, GST_MAP_READWRITE)) {
       GST_WARNING_OBJECT (vagg, "Could not map converted frame");
@@ -854,6 +857,9 @@ static void
     outsize = GST_VIDEO_INFO_SIZE (&vagg->info);
     converted_size = converted_size > outsize ? converted_size : outsize;
     converted_buf = gst_buffer_new_allocate (NULL, converted_size, &params);
+
+    gst_video_converter_transform_metas (pad->priv->convert, buffer,
+        converted_buf);
 
     if (!gst_video_frame_map (prepared_frame, &(pad->priv->conversion_info),
             converted_buf, GST_MAP_READWRITE)) {
