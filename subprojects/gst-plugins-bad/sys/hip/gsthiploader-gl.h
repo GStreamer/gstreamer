@@ -1,4 +1,5 @@
-/* CUDA stub header
+/* GStreamer
+ * Copyright (C) 2025 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,22 +19,24 @@
 
 #pragma once
 
-#include <glib.h>
+#include <gst/gst.h>
+#include <hip/hip_runtime.h>
+#include <hip/hip_gl_interop.h>
+#include "gsthip-enums.h"
 
 G_BEGIN_DECLS
-typedef enum
-{
-  CU_GL_DEVICE_LIST_ALL = 0x01,
-} CUGLDeviceList;
 
-enum cudaGLDeviceList
-{
-  cudaGLDeviceListAll = 1,
-  cudaGLDeviceListCurrentFrame = 2,
-  cudaGLDeviceListNextFrame = 3
-};
+hipError_t HipGLGetDevices (GstHipVendor vendor,
+                            unsigned int* pHipDeviceCount,
+                            int* pHipDevices,
+                            unsigned int hipDeviceCount,
+                            hipGLDeviceList deviceList);
 
-#define cuGLGetDevices cuGLGetDevices_v2
+hipError_t HipGraphicsGLRegisterBuffer (GstHipVendor vendor,
+                                        hipGraphicsResource** resource,
+                                        unsigned int buffer,
+                                        unsigned int flags);
 
 G_END_DECLS
+
 

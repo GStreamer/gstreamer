@@ -78,6 +78,11 @@ if gstcuda_dep.found()
   extra_deps += [gstcuda_dep]
 endif
 
+if gstgl_dep.found()
+  hip_cdata.set('HAVE_GST_GL', true)
+  extra_deps += [gstgl_dep]
+endif
+
 configure_file(
   output: 'gsthip-config.h',
   configuration: hip_cdata,

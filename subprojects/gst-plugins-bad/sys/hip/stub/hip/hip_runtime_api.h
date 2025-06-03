@@ -466,6 +466,20 @@ typedef enum hipError_t {
     hipErrorTbd  ///< Marker that more error codes are needed.
 } hipError_t;
 
+typedef enum hipGraphicsRegisterFlags {
+    hipGraphicsRegisterFlagsNone = 0,
+    hipGraphicsRegisterFlagsReadOnly = 1,  ///< HIP will not write to this registered resource
+    hipGraphicsRegisterFlagsWriteDiscard =
+        2,  ///< HIP will only write and will not read from this registered resource
+    hipGraphicsRegisterFlagsSurfaceLoadStore = 4,  ///< HIP will bind this resource to a surface
+    hipGraphicsRegisterFlagsTextureGather =
+        8  ///< HIP will perform texture gather operations on this registered resource
+} hipGraphicsRegisterFlags;
+
+typedef struct _hipGraphicsResource hipGraphicsResource;
+
+typedef hipGraphicsResource* hipGraphicsResource_t;
+
 typedef struct ihipStream_t* hipStream_t;
 typedef struct ihipModule_t* hipModule_t;
 typedef struct ihipModuleSymbol_t* hipFunction_t;

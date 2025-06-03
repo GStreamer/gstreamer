@@ -113,6 +113,24 @@ hipError_t HipTexObjectCreate (GstHipVendor vendor,
 hipError_t HipTexObjectDestroy (GstHipVendor vendor,
                                 hipTextureObject_t texObject);
 
+hipError_t HipGraphicsMapResources (GstHipVendor vendor,
+                                    int count,
+                                    hipGraphicsResource_t* resources,
+                                    hipStream_t stream);
+
+hipError_t HipGraphicsResourceGetMappedPointer (GstHipVendor vendor,
+                                                void** devPtr,
+                                                size_t* size,
+                                                hipGraphicsResource_t resource);
+
+hipError_t HipGraphicsUnmapResources (GstHipVendor vendor,
+                                      int count,
+                                      hipGraphicsResource_t* resources,
+                                      hipStream_t stream);
+
+hipError_t HipGraphicsUnregisterResource (GstHipVendor vendor,
+                                          hipGraphicsResource_t resource);
+
 G_END_DECLS
 
 

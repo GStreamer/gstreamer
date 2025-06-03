@@ -21,12 +21,19 @@
 #include "config.h"
 #endif
 
+#include "gsthip-config.h"
+
 #include "gsthip.h"
 #include "gsthiploader.h"
 #include <gmodule.h>
 #include <mutex>
 #include <hip/nvidia_hip_runtime_api.h>
 #include <string.h>
+
+#ifdef HAVE_GST_GL
+#include "gsthiploader-gl.h"
+#include <cudaGL.h>
+#endif
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
@@ -80,6 +87,20 @@ struct GstHipFuncTableAmd
     const HIP_RESOURCE_DESC * pResDesc, const HIP_TEXTURE_DESC * pTexDesc,
     const HIP_RESOURCE_VIEW_DESC * pResViewDesc);
   hipError_t (*hipTexObjectDestroy) (hipTextureObject_t texObject);
+  hipError_t (*hipGraphicsMapResources) (int count,
+    hipGraphicsResource_t* resources, hipStream_t stream);
+  hipError_t (*hipGraphicsResourceGetMappedPointer) (void** devPtr,
+    size_t* size, hipGraphicsResource_t resource);
+  hipError_t (*hipGraphicsUnmapResources) (int count,
+    hipGraphicsResource_t* resources, hipStream_t stream);
+  hipError_t (*hipGraphicsUnregisterResource) (hipGraphicsResource_t resource);
+#ifdef HAVE_GST_GL
+  hipError_t (*hipGLGetDevices) (unsigned int* pHipDeviceCount,
+      int* pHipDevices, unsigned int hipDeviceCount,
+      hipGLDeviceList deviceList);
+  hipError_t (*hipGraphicsGLRegisterBuffer) (hipGraphicsResource** resource,
+      unsigned int buffer, unsigned int flags);
+#endif
 };
 
 struct GstHipFuncTableCuda
@@ -126,6 +147,20 @@ struct GstHipFuncTableCudaRt
   cudaError_t (CUDAAPI *cudaMallocHost) (void **ptr, size_t size, unsigned int flags);
   cudaError_t (CUDAAPI *cudaFreeHost) (void *ptr);
   cudaError_t (CUDAAPI *cudaStreamSynchronize) (cudaStream_t stream);
+  cudaError_t (CUDAAPI *cudaGraphicsMapResources) (int count,
+    cudaGraphicsResource_t *resources, cudaStream_t stream);
+  cudaError_t (CUDAAPI *cudaGraphicsResourceGetMappedPointer) (void **devPtr,
+    size_t *size, cudaGraphicsResource_t resource);
+  cudaError_t (CUDAAPI *cudaGraphicsUnmapResources) (int count,
+    cudaGraphicsResource_t *resources, cudaStream_t stream);
+  cudaError_t (CUDAAPI *cudaGraphicsUnregisterResource) (cudaGraphicsResource_t resource);
+#ifdef HAVE_GST_GL
+  cudaError_t (CUDAAPI *cudaGLGetDevices) (unsigned int *pCudaDeviceCount,
+    int *pCudaDevices, unsigned int cudaDeviceCount,
+    enum cudaGLDeviceList deviceList);
+  cudaError_t (CUDAAPI *cudaGraphicsGLRegisterBuffer) (struct cudaGraphicsResource **resource,
+    unsigned int buffer, unsigned int flags);
+#endif
 };
 /* *INDENT-ON* */
 
@@ -203,6 +238,14 @@ load_amd_func_table (void)
   LOAD_SYMBOL (hipMemcpyParam2DAsync);
   LOAD_SYMBOL (hipTexObjectCreate);
   LOAD_SYMBOL (hipTexObjectDestroy);
+  LOAD_SYMBOL (hipGraphicsMapResources);
+  LOAD_SYMBOL (hipGraphicsResourceGetMappedPointer);
+  LOAD_SYMBOL (hipGraphicsUnmapResources);
+  LOAD_SYMBOL (hipGraphicsUnregisterResource);
+#ifdef HAVE_GST_GL
+  LOAD_SYMBOL (hipGLGetDevices);
+  LOAD_SYMBOL (hipGraphicsGLRegisterBuffer);
+#endif
 
   table->loaded = TRUE;
 }
@@ -301,6 +344,14 @@ load_cudart_func_table (guint major_ver, guint minor_ver)
   LOAD_SYMBOL (cudaMallocHost);
   LOAD_SYMBOL (cudaFreeHost);
   LOAD_SYMBOL (cudaStreamSynchronize);
+  LOAD_SYMBOL (cudaGraphicsMapResources);
+  LOAD_SYMBOL (cudaGraphicsResourceGetMappedPointer);
+  LOAD_SYMBOL (cudaGraphicsUnmapResources);
+  LOAD_SYMBOL (cudaGraphicsUnregisterResource);
+#ifdef HAVE_GST_GL
+  LOAD_SYMBOL (cudaGLGetDevices);
+  LOAD_SYMBOL (cudaGraphicsGLRegisterBuffer);
+#endif
 
   table->loaded = TRUE;
 }
@@ -987,3 +1038,96 @@ HipTexObjectDestroy (GstHipVendor vendor, hipTextureObject_t texObject)
   auto cuda_ret = cuda_ftable.cuTexObjectDestroy ((CUtexObject) texObject);
   return hipCUResultTohipError (cuda_ret);
 }
+
+hipError_t
+HipGraphicsMapResources (GstHipVendor vendor, int count,
+    hipGraphicsResource_t * resources, hipStream_t stream)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipGraphicsMapResources (count, resources, stream);
+
+  auto cuda_ret = cudart_ftable.cudaGraphicsMapResources (count,
+      (cudaGraphicsResource_t *) resources, stream);
+  return hipCUDAErrorTohipError (cuda_ret);
+}
+
+hipError_t
+HipGraphicsResourceGetMappedPointer (GstHipVendor vendor, void **devPtr,
+    size_t *size, hipGraphicsResource_t resource)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD) {
+    return amd_ftable.hipGraphicsResourceGetMappedPointer (devPtr,
+        size, resource);
+  }
+
+  auto cuda_ret = cudart_ftable.cudaGraphicsResourceGetMappedPointer (devPtr,
+      size, (cudaGraphicsResource_t) resource);
+  return hipCUDAErrorTohipError (cuda_ret);
+}
+
+hipError_t
+HipGraphicsUnmapResources (GstHipVendor vendor, int count,
+    hipGraphicsResource_t * resources, hipStream_t stream)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipGraphicsUnmapResources (count, resources, stream);
+
+  auto cuda_ret = cudart_ftable.cudaGraphicsUnmapResources (count,
+      (cudaGraphicsResource_t *) resources, stream);
+  return hipCUDAErrorTohipError (cuda_ret);
+}
+
+hipError_t
+HipGraphicsUnregisterResource (GstHipVendor vendor,
+    hipGraphicsResource_t resource)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipGraphicsUnregisterResource (resource);
+
+  auto cuda_ret =
+      cudart_ftable.cudaGraphicsUnregisterResource ((cudaGraphicsResource_t)
+      resource);
+  return hipCUDAErrorTohipError (cuda_ret);
+}
+
+#ifdef HAVE_GST_GL
+hipError_t
+HipGLGetDevices (GstHipVendor vendor, unsigned int *pHipDeviceCount,
+    int *pHipDevices, unsigned int hipDeviceCount, hipGLDeviceList deviceList)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD) {
+    return amd_ftable.hipGLGetDevices (pHipDeviceCount, pHipDevices,
+        hipDeviceCount, deviceList);
+  }
+
+  auto cuda_ret = cudart_ftable.cudaGLGetDevices (pHipDeviceCount, pHipDevices,
+      hipDeviceCount, (enum cudaGLDeviceList) deviceList);
+  return hipCUDAErrorTohipError (cuda_ret);
+}
+
+hipError_t
+HipGraphicsGLRegisterBuffer (GstHipVendor vendor,
+    hipGraphicsResource ** resource, unsigned int buffer, unsigned int flags)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipGraphicsGLRegisterBuffer (resource, buffer, flags);
+
+  auto cuda_ret =
+      cudart_ftable.cudaGraphicsGLRegisterBuffer ((struct cudaGraphicsResource
+          **) resource,
+      buffer, flags);
+  return hipCUDAErrorTohipError (cuda_ret);
+}
+#endif

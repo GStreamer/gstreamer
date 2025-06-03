@@ -396,5 +396,9 @@ enum cudaDeviceAttr
 
 typedef gpointer cudaStream_t;
 
+struct cudaGraphicsResource;
+
+typedef struct cudaGraphicsResource *cudaGraphicsResource_t;
+
 G_END_DECLS
 
