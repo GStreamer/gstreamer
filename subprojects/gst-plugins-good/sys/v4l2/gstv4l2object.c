@@ -2596,19 +2596,66 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
       else
         colorspace = fmt.fmt.pix.colorspace;
 
-      if (colorspace == req_cspace) {
-        if (gst_v4l2_object_get_colorspace (v4l2object, &fmt, &cinfo))
-          gst_v4l2_object_fill_colorimetry_list (&list, &cinfo);
-        if (colorspace == V4L2_COLORSPACE_REC709) {
-          /* support for full-range variants of colorspaces V4L2_COLORSPACE_REC709
-           * (such as Apple's full-range bt709 variant 1:3:5:1) */
-          struct v4l2_format alt_fmt;
-          memcpy (&alt_fmt, &fmt, sizeof (alt_fmt));
+      if (colorspace != req_cspace)
+        continue;
 
-          if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type))
-            alt_fmt.fmt.pix_mp.quantization = V4L2_QUANTIZATION_FULL_RANGE;
-          else
-            alt_fmt.fmt.pix.quantization = V4L2_QUANTIZATION_FULL_RANGE;
+      if (gst_v4l2_object_get_colorspace (v4l2object, &fmt, &cinfo))
+        gst_v4l2_object_fill_colorimetry_list (&list, &cinfo);
+
+      if (colorspace == V4L2_COLORSPACE_REC709 ||
+          colorspace == V4L2_COLORSPACE_470_SYSTEM_BG) {
+        /* support for full-range variants of colorspaces V4L2_COLORSPACE_REC709
+         * (such as Apple's full-range bt709 variant 1:3:5:1) and colorspace
+         * V4L2_COLORSPACE_470_SYSTEM_BG */
+        struct v4l2_format alt_fmt;
+        enum v4l2_quantization quantization;
+        memcpy (&alt_fmt, &fmt, sizeof (alt_fmt));
+
+        if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type))
+          alt_fmt.fmt.pix_mp.quantization = V4L2_QUANTIZATION_FULL_RANGE;
+        else
+          alt_fmt.fmt.pix.quantization = V4L2_QUANTIZATION_FULL_RANGE;
+
+        if (gst_v4l2_object_try_fmt (v4l2object, &alt_fmt) == 0) {
+          if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
+            colorspace = alt_fmt.fmt.pix_mp.colorspace;
+            quantization = alt_fmt.fmt.pix_mp.quantization;
+          } else {
+            colorspace = alt_fmt.fmt.pix.colorspace;
+            quantization = alt_fmt.fmt.pix.quantization;
+          }
+
+          if (colorspace != req_cspace
+              || quantization != V4L2_QUANTIZATION_FULL_RANGE)
+            continue;
+
+          if (gst_v4l2_object_get_colorspace (v4l2object, &alt_fmt, &cinfo))
+            gst_v4l2_object_fill_colorimetry_list (&list, &cinfo);
+        }
+      }
+      if (colorspace == V4L2_COLORSPACE_BT2020) {
+        /* support for colorimetry bt2100-pq, variant of colorspace
+         * V4L2_COLORSPACE_BT2020 */
+        struct v4l2_format alt_fmt;
+        enum v4l2_xfer_func xfer_func;
+        memcpy (&alt_fmt, &fmt, sizeof (alt_fmt));
+
+        if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type))
+          alt_fmt.fmt.pix_mp.xfer_func = V4L2_XFER_FUNC_SMPTE2084;
+        else
+          alt_fmt.fmt.pix.xfer_func = V4L2_XFER_FUNC_SMPTE2084;
+
+        if (gst_v4l2_object_try_fmt (v4l2object, &alt_fmt) == 0) {
+          if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
+            colorspace = alt_fmt.fmt.pix_mp.colorspace;
+            xfer_func = alt_fmt.fmt.pix_mp.xfer_func;
+          } else {
+            colorspace = alt_fmt.fmt.pix.colorspace;
+            xfer_func = alt_fmt.fmt.pix.xfer_func;
+          }
+
+          if (colorspace != req_cspace || xfer_func != V4L2_XFER_FUNC_SMPTE2084)
+            continue;
 
           if (gst_v4l2_object_get_colorspace (v4l2object, &alt_fmt, &cinfo))
             gst_v4l2_object_fill_colorimetry_list (&list, &cinfo);
