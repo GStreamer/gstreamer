@@ -808,7 +808,7 @@ gst_vec_deque_is_empty (GstVecDeque * array)
 gboolean
 gst_vec_deque_drop_struct (GstVecDeque * array, gsize idx, gpointer p_struct)
 {
-  int first_item_index, last_item_index;
+  gsize first_item_index, last_item_index;
   gsize actual_idx;
   gsize elt_size;
 
