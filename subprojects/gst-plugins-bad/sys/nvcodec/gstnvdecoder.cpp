@@ -1988,11 +1988,22 @@ gst_nv_decoder_negotiate (GstNvDecoder * decoder,
   }
 #endif
 
-  state = gst_video_decoder_set_interlaced_output_state (videodec,
+  state = gst_video_decoder_set_output_state (videodec,
       GST_VIDEO_INFO_FORMAT (&decoder->output_info),
-      GST_VIDEO_INFO_INTERLACE_MODE (&decoder->output_info),
       GST_VIDEO_INFO_WIDTH (&decoder->output_info),
       GST_VIDEO_INFO_HEIGHT (&decoder->output_info), input_state);
+
+  if (GST_VIDEO_INFO_IS_INTERLACED (&decoder->info)) {
+    auto in_s = gst_caps_get_structure (input_state->caps, 0);
+    if (!gst_structure_has_field (in_s, "interlace-mode")) {
+      /* Use our parsed info if missed in upstream */
+      GST_VIDEO_INFO_INTERLACE_MODE (&state->info) =
+          GST_VIDEO_INFO_INTERLACE_MODE (&decoder->info);
+      GST_VIDEO_INFO_FIELD_ORDER (&state->info) =
+          GST_VIDEO_INFO_FIELD_ORDER (&decoder->info);
+    }
+  }
+
   state->caps = gst_video_info_to_caps (&state->info);
 
   switch (decoder->output_type) {
