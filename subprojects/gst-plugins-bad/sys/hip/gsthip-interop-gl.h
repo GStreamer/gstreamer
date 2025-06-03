@@ -20,14 +20,15 @@
 #pragma once
 
 #include <gst/gst.h>
-
-#include <hip/hip_runtime.h>
-#include "gsthip_fwd.h"
-#include "gsthip-enums.h"
-#include "gsthipdevice.h"
-#include "gsthipmemory.h"
-#include "gsthipbufferpool.h"
-#include "gsthiputils.h"
-#include "gsthiploader.h"
 #include "gsthip-interop.h"
+#include <gst/gl/gl.h>
+
+G_BEGIN_DECLS
+
+hipError_t
+gst_hip_get_graphics_resource_from_gl_memory (GstHipDevice * device,
+                                              GstMemory * mem,
+                                              GstHipGraphicsResource ** resource);
+
+G_END_DECLS
 

@@ -10,6 +10,7 @@ hip_sources = [
   'gsthipmemorycopy.cpp',
   'gsthiprtc.cpp',
   'gsthiputils.cpp',
+  'gsthip-interop.cpp',
   'plugin.cpp',
 ]
 

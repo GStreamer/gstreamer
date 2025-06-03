@@ -20,14 +20,28 @@
 #pragma once
 
 #include <gst/gst.h>
-
-#include <hip/hip_runtime.h>
 #include "gsthip_fwd.h"
-#include "gsthip-enums.h"
-#include "gsthipdevice.h"
-#include "gsthipmemory.h"
-#include "gsthipbufferpool.h"
-#include "gsthiputils.h"
-#include "gsthiploader.h"
-#include "gsthip-interop.h"
+#include <hip/hip_runtime.h>
+
+G_BEGIN_DECLS
+
+GType gst_hip_graphics_resource_get_type (void);
+
+hipError_t gst_hip_graphics_resource_map (GstHipGraphicsResource * resource,
+                                          hipStream_t stream);
+
+hipError_t gst_hip_graphics_resource_unmap (GstHipGraphicsResource * resource,
+                                            hipStream_t stream);
+
+hipError_t gst_hip_graphics_resource_get_mapped_pointer (GstHipGraphicsResource * resource,
+                                                         void ** dev_ptr,
+                                                         size_t * size);
+
+GstHipGraphicsResource * gst_hip_graphics_resource_ref (GstHipGraphicsResource * resource);
+
+void gst_hip_graphics_resource_unref (GstHipGraphicsResource * resource);
+
+void gst_clear_hip_graphics_resource (GstHipGraphicsResource ** resource);
+
+G_END_DECLS
 
