@@ -134,7 +134,6 @@ typedef enum {
   GST_PADDING_INIT \
 }
 
-typedef struct _GstCaps GstCaps;
 typedef struct _GstStaticCaps GstStaticCaps;
 
 GST_API GstCaps * _gst_caps_any;

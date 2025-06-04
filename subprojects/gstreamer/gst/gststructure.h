@@ -32,6 +32,7 @@ G_BEGIN_DECLS
 GST_API GType _gst_structure_type;
 
 typedef struct _GstStructure GstStructure;
+typedef struct _GstCaps GstCaps;
 
 /**
  * GST_SERIALIZE_FLAG_STRICT:
@@ -581,6 +582,10 @@ gboolean              gst_structure_can_intersect (const GstStructure * struct1,
 GST_API
 GstStructure *        gst_structure_intersect     (const GstStructure * struct1,
                                                    const GstStructure * struct2) G_GNUC_MALLOC;
+GST_API
+gboolean              gst_structure_get_caps      (const GstStructure * structure,
+                                                   const gchar * fieldname,
+                                                   const GstCaps ** caps);
 
 GST_API
 gboolean              gst_structure_is_writable   (const GstStructure        * structure);

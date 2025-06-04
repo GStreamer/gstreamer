@@ -4685,7 +4685,6 @@ gst_structure_get_flags (const GstStructure * structure,
   return TRUE;
 }
 
-
 /**
  * gst_structure_is_writable:
  * @structure: a #GstStructure
@@ -4703,4 +4702,38 @@ gst_structure_is_writable (const GstStructure * structure)
   g_return_val_if_fail (GST_IS_STRUCTURE (structure), FALSE);
 
   return IS_MUTABLE (structure);
+}
+
+/**
+ * gst_structure_get_caps:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field
+ * @caps: (out): a pointer to a pointer on caps
+ *
+ * Set pointer pointed by @caps to the address of the value of type caps
+ * correspondind to field with fieldname @fieldname. Caller is responsible
+ * for making sure the field exists and has the correct type.
+ *
+ * Returns: %TRUE if could be set correctly. If there was no field with
+ * @fieldname or the existing field did not contain a caps, this function return
+ * %FALSE.
+ *
+ * Since: 1.28
+ */
+gboolean
+gst_structure_get_caps (const GstStructure * structure,
+    const gchar * fieldname, const GstCaps ** caps)
+{
+  GstStructureField *field;
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (fieldname != NULL, FALSE);
+  g_return_val_if_fail (caps != NULL, FALSE);
+
+  field = gst_structure_get_field (structure, fieldname);
+
+  if (field == NULL || G_VALUE_TYPE (&field->value) != GST_TYPE_CAPS)
+    return FALSE;
+
+  *caps = gst_value_get_caps (&field->value);
+  return TRUE;
 }
