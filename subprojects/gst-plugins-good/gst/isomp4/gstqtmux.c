@@ -4198,9 +4198,18 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
       ret = gst_qt_mux_send_extra_atoms (qtmux, FALSE, &offset, FALSE);
       if (ret != GST_FLOW_OK)
         return ret;
+
+      offset =
+          atom_moov_calc_stco_to_co64_conversion_total_offset (qtmux->moov,
+          offset);
       break;
     }
     default:
+      /* The file is not being written as faststart, so the offset, which
+       * corresponds to the file size up to the start of the mdat payload, does
+       * not include the size of the moov atom, as this comes after the mdat
+       * atom. Therefore, any changes to the moov atom will not affect the
+       * offset value assigned here */
       offset = qtmux->header_size;
       break;
   }
