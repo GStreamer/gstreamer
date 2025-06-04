@@ -482,7 +482,7 @@ gst_encode_base_bin_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PROFILE:
       gst_encode_base_bin_set_profile (ebin,
-          (GstEncodingProfile *) g_value_get_object (value));
+          (GstEncodingProfile *) g_value_dup_object (value));
       break;
     case PROP_QUEUE_BUFFERS_MAX:
       ebin->queue_buffers_max = g_value_get_uint (value);
@@ -2610,8 +2610,7 @@ gst_encode_base_bin_tear_down_profile (GstEncodeBaseBin * ebin)
   }
 
   /* free/clear profile */
-  gst_encoding_profile_unref (ebin->profile);
-  ebin->profile = NULL;
+  gst_clear_object (&ebin->profile);
 }
 
 static gboolean
@@ -2627,7 +2626,6 @@ gst_encode_base_bin_setup_profile (GstEncodeBaseBin * ebin,
       gst_encoding_profile_get_type_nick (profile));
 
   ebin->profile = profile;
-  gst_object_ref (ebin->profile);
 
   /* Create elements */
   res = create_elements_and_pads (ebin);
@@ -2648,6 +2646,7 @@ gst_encode_base_bin_set_profile (GstEncodeBaseBin * ebin,
 
   if (G_UNLIKELY (ebin->active)) {
     GST_WARNING_OBJECT (ebin, "Element already active, can't change profile");
+    gst_clear_object (&profile);
     return FALSE;
   }
 
