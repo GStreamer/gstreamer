@@ -84,6 +84,7 @@ struct _GstOnnxInference
   gpointer onnx_client;
   gboolean onnx_disabled;
   GstVideoInfo video_info;
+  GstStructure *tensors;
 };
 
 GST_DEBUG_CATEGORY (onnx_inference_debug);
@@ -345,6 +346,10 @@ gst_onnx_inference_init (GstOnnxInference * self)
 {
   self->onnx_client = new GstOnnxNamespace::GstOnnxClient (GST_ELEMENT(self));
   self->onnx_disabled = TRUE;
+
+  /* TODO: at the moment onnx inference only support video output. We
+   * should revisit this once we generalize this aspect */
+  self->tensors = gst_structure_new_empty ("video/x-raw");
 }
 
 static void
@@ -353,6 +358,7 @@ gst_onnx_inference_finalize (GObject * object)
   GstOnnxInference *self = GST_ONNX_INFERENCE (object);
 
   g_free (self->model_file);
+  gst_structure_free(self->tensors);
   delete GST_ONNX_CLIENT_MEMBER (self);
   G_OBJECT_CLASS (gst_onnx_inference_parent_class)->finalize (object);
 }
@@ -456,7 +462,7 @@ gst_onnx_inference_create_session (GstBaseTransform * trans)
     gboolean ret =
         GST_ONNX_CLIENT_MEMBER (self)->createSession (self->model_file,
         self->optimization_level,
-        self->execution_provider);
+        self->execution_provider, self->tensors);
     if (!ret) {
       GST_ERROR_OBJECT (self,
           "Unable to create ONNX session. Model is disabled.");
@@ -537,6 +543,15 @@ gst_onnx_inference_transform_caps (GstBaseTransform *
 
   GST_DEBUG_OBJECT(self, "Applying caps restrictions: %" GST_PTR_FORMAT,
     restrictions);
+
+  if (direction == GST_PAD_SINK) {
+    GstCaps * tensors_caps = gst_caps_new_full (gst_structure_copy (
+          self->tensors), NULL);
+    GstCaps *intersect = gst_caps_intersect (restrictions, tensors_caps);
+    gst_caps_replace (&restrictions, intersect);
+    gst_caps_unref (tensors_caps);
+    gst_caps_unref (intersect);
+  }
 
   other_caps = gst_caps_intersect_full (caps, restrictions,
                                         GST_CAPS_INTERSECT_FIRST);

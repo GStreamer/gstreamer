@@ -64,7 +64,8 @@ namespace GstOnnxNamespace {
     GstOnnxClient(GstElement *debug_parent);
     ~GstOnnxClient(void);
     bool createSession(std::string modelFile, GstOnnxOptimizationLevel optim,
-                       GstOnnxExecutionProvider provider);
+                       GstOnnxExecutionProvider provider, GstStructure *
+                       tensors);
     bool hasSession(void);
     void setInputImageFormat(GstMlInputImageFormat format);
     GstMlInputImageFormat getInputImageFormat(void);
@@ -90,6 +91,7 @@ namespace GstOnnxNamespace {
     void convert_image_remove_alpha (T *dest, GstMlInputImageFormat hwc,
         uint8_t **srcPtr, uint32_t srcSamplesPerPixel, uint32_t stride, T offset, T div);
     bool doRun(uint8_t * img_data, GstVideoInfo vinfo, std::vector < Ort::Value > &modelOutput);
+    bool setTensorDescDatatype (ONNXTensorElementDataType dt, GstStructure * tensor_desc);
     Ort::Env env;
     Ort::Session * session;
     int32_t width;
