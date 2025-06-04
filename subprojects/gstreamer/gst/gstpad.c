@@ -3272,8 +3272,9 @@ gst_pad_query_accept_caps_default (GstPad * pad, GstQuery * query)
       result = gst_caps_is_subset (caps, allowed);
     }
     if (!result) {
-      GST_CAT_WARNING_OBJECT (GST_CAT_CAPS, pad, "caps: %" GST_PTR_FORMAT
-          " were not compatible with: %" GST_PTR_FORMAT, caps, allowed);
+      GST_INFO_OBJECT (pad,
+          "caps: %" GST_PTR_FORMAT " were not compatible with: %"
+          GST_PTR_FORMAT, caps, allowed);
     }
     gst_caps_unref (allowed);
   } else {
