@@ -1539,7 +1539,7 @@ _create_stream_group (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
 
   sgroup = g_new0 (StreamGroup, 1);
   sgroup->ebin = ebin;
-  sgroup->profile = sprof;
+  sgroup->profile = gst_object_ref (sprof);
 
   /* NOTE for people reading this code:
    *
@@ -2563,6 +2563,8 @@ stream_group_free (GstEncodeBaseBin * ebin, StreamGroup * sgroup)
 
   if (sgroup->outfilter)
     gst_bin_remove ((GstBin *) ebin, sgroup->outfilter);
+
+  gst_clear_object (&sgroup->profile);
 
   g_free (sgroup);
 }
