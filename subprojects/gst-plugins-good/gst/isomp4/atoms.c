@@ -3475,6 +3475,67 @@ atom_moov_chunks_set_offset (AtomMOOV * moov, guint32 offset)
   moov->chunks_offset = offset;
 }
 
+guint64
+atom_moov_calc_stco_to_co64_conversion_total_offset (AtomMOOV * moov,
+    guint64 offset)
+{
+  /* Whenever any stco32 chunk offset exceeds its 32-bit limit, the
+   * corresponding stco32 atom must be converted to a stco64 atom, increasing
+   * its size. Because faststart files place the moov atom before the mdat
+   * atom, this conversion must increase the value of the chunk offsets in all
+   * stco32 and stco64 atoms, so they continue to point to the correct
+   * positions within the mdat atom. Increasing the chunk offsets in a single
+   * stco32 atom may require its conversion to stco64. This in turn increases
+   * the chunk offsets of other atoms, some of which may also need to be
+   * converted, potentially requiring further conversions.
+   *
+   * This function takes as input an offset representing the size from the
+   * start of the moov atom to the start of the mdat data. It uses this offset
+   * to determine whether any stco32 atom would require conversion to stco64,
+   * incrementing the offset accordingly. The function returns this total
+   * offset that should be applied to adjust the chunk offsets in all
+   * stco32 and stco64 atoms. It does not perform any atom conversions nor
+   * update any chunk offsets itself, as this is done by subsequent calls to
+   * atom_moov_chunks_set_offset() and atom_moov_copy_data() (in that order).
+   */
+
+  GList *stco32_atoms = NULL;
+  for (GList * l = moov->traks; l; l = l->next) {
+    AtomTRAK *trak = (AtomTRAK *) l->data;
+    AtomSTCO64 *stco64 = (AtomSTCO64 *) & trak->mdia.minf.stbl.stco64;
+    if (stco64->header.header.type == FOURCC_stco) {
+      stco32_atoms = g_list_prepend (stco32_atoms, stco64);
+    }
+  }
+
+  GList *pending_stco32_atoms = stco32_atoms;
+  while (pending_stco32_atoms) {
+    AtomSTCO64 *stco64 = (AtomSTCO64 *) pending_stco32_atoms->data;
+
+    if ((stco64->max_offset + offset) > G_MAXUINT32) {
+      /* This stco32 atom must be converted to stco64 to be able to accommodate
+       * its new maximum offset, which exceeds the representable range of a
+       * 32-bit entry and therefore requires a 64-bit one. Neither this
+       * conversion nor the update of the atom's maximum chunk offset is
+       * performed by this function.
+       * However, the value of the total offset must be increased to account
+       * for the larger size of a stco64 atom, as each one of its chunk offset
+       * entries will be increased from 4 bytes to 8 bytes. */
+      offset += atom_array_get_len (&stco64->entries) * 4;
+      /* This atom must be treated as it were already converted to stco64. All
+       * stco32 atoms must be re-evaluated considering the updated offset. */
+      stco32_atoms = g_list_remove (stco32_atoms, stco64);
+      pending_stco32_atoms = stco32_atoms;
+    } else {
+      pending_stco32_atoms = g_list_next (pending_stco32_atoms);
+    }
+  }
+
+  g_list_free (stco32_atoms);
+
+  return offset;
+}
+
 void
 atom_trak_update_bitrates (AtomTRAK * trak, guint32 avg_bitrate,
     guint32 max_bitrate)
