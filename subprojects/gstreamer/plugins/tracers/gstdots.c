@@ -167,7 +167,7 @@ clean_dot_files (const gchar * dir_path)
   /* Delete all matched files */
   for (l = paths; l; l = l->next) {
     if (g_unlink (l->data) != 0) {
-      GST_WARNING ("Could not delete file %s", (gchar *) l->data);
+      GST_DEBUG ("Could not delete file %s", (gchar *) l->data);
     }
   }
 
