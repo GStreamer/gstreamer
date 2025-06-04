@@ -76,6 +76,7 @@ struct _GstObjectDetectionOverlay
   guint labels_color;
   gdouble labels_stroke_width;
   gdouble labels_outline_ofs;
+  GstClockTime expire_overlay;
 
   /* composition */
   gboolean attach_compo_to_buffer;
@@ -83,6 +84,7 @@ struct _GstObjectDetectionOverlay
   gint canvas_length;
   GstVideoOverlayComposition *composition;
   GstVideoOverlayComposition *upstream_composition;
+  GstClockTime last_composition_update;
 
   /* Graphic Outline */
   PangoContext *pango_context;
@@ -102,6 +104,7 @@ enum
   PROP_DRAW_LABELS,
   PROP_LABELS_COLOR,
   PROP_FILLED_BOX,
+  PROP_EXPIRE_OVERLAY,
   _PROP_COUNT
 };
 
@@ -244,6 +247,22 @@ gst_object_detection_overlay_class_init (GstObjectDetectionOverlayClass * klass)
           "Draw a filled box",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+   /**
+   * GstObjectDetectionOverlay:expire-overlay
+   *
+   * Re-uses the last overlay for the specified amount of time before
+   * expiring it (in ns), NONE for never
+   *
+   * Since: 1.28
+   */
+  g_object_class_install_property (gobject_class, PROP_EXPIRE_OVERLAY,
+      g_param_spec_uint64 ("expire-overlay",
+          "Expire overlay",
+          "Re-uses the last overlay for the specified amount of time before"
+          " expiring it (in ns), MAX for never",
+          0, GST_CLOCK_TIME_NONE, GST_SECOND,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   element_class = (GstElementClass *) klass;
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
@@ -307,6 +326,7 @@ gst_object_detection_overlay_init (GstObjectDetectionOverlay * overlay)
   overlay->composition = NULL;
   overlay->upstream_composition = NULL;
   overlay->flushing = FALSE;
+  overlay->expire_overlay = GST_SECOND;
   GST_DEBUG_CATEGORY_INIT (objectdetectionoverlay_debug,
       "analytics_overlay_od", 0, "Object detection overlay");
 }
@@ -330,6 +350,9 @@ gst_object_detection_overlay_set_property (GObject * object, guint prop_id,
       break;
     case PROP_FILLED_BOX:
       overlay->filled_box = g_value_get_boolean (value);
+      break;
+    case PROP_EXPIRE_OVERLAY:
+      overlay->expire_overlay = g_value_get_uint64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -355,6 +378,9 @@ gst_object_detection_overlay_get_property (GObject * object,
       break;
     case PROP_FILLED_BOX:
       g_value_set_boolean (value, od_overlay->filled_box);
+      break;
+    case PROP_EXPIRE_OVERLAY:
+      g_value_set_uint64 (value, od_overlay->expire_overlay);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -692,6 +718,7 @@ static GstFlowReturn
 gst_object_detection_overlay_transform_frame_ip (GstVideoFilter * filter,
     GstVideoFrame * frame)
 {
+  GstBaseTransform *baset = GST_BASE_TRANSFORM (filter);
   GstObjectDetectionOverlay *overlay = GST_OBJECT_DETECTION_OVERLAY (filter);
   GstVideoOverlayCompositionMeta *composition_meta;
   gpointer state = NULL;
@@ -702,6 +729,7 @@ gst_object_detection_overlay_transform_frame_ip (GstVideoFilter * filter,
   gint x, y, w, h;
   gfloat loc_confi_lvl;
   gboolean success;
+  GstClockTime rt = GST_CLOCK_TIME_NONE;
 
   GST_DEBUG_OBJECT (filter, "buffer writeable=%d",
       gst_buffer_is_writable (frame->buffer));
@@ -723,6 +751,10 @@ gst_object_detection_overlay_transform_frame_ip (GstVideoFilter * filter,
   } else if (overlay->upstream_composition != NULL) {
     overlay->upstream_composition = NULL;
   }
+
+  if (baset->have_segment)
+    rt = gst_segment_to_running_time (&baset->segment, GST_FORMAT_TIME,
+        GST_BUFFER_PTS (frame->buffer));
 
   GstAnalyticsRelationMeta *rmeta = (GstAnalyticsRelationMeta *)
       gst_buffer_get_meta (GST_BUFFER (frame->buffer),
@@ -759,6 +791,8 @@ gst_object_detection_overlay_transform_frame_ip (GstVideoFilter * filter,
     } else {
       overlay->composition = gst_video_overlay_composition_new (NULL);
     }
+
+    overlay->last_composition_update = rt;
 
     /* Get quark represent object detection metadata type */
     GstAnalyticsMtdType rlt_type = gst_analytics_od_mtd_get_mtd_type ();
@@ -821,6 +855,15 @@ gst_object_detection_overlay_transform_frame_ip (GstVideoFilter * filter,
     gst_object_detection_overlay_destroy_cairo_context (&cairo_ctx);
     gst_buffer_unmap (buffer, &map);
 
+  } else {
+    if (rt != GST_CLOCK_TIME_NONE &&
+        overlay->expire_overlay != GST_CLOCK_TIME_NONE &&
+        overlay->last_composition_update != GST_CLOCK_TIME_NONE &&
+        overlay->composition &&
+        overlay->last_composition_update + overlay->expire_overlay <= rt) {
+      gst_video_overlay_composition_unref (overlay->composition);
+      overlay->composition = NULL;
+    }
   }
 
   if (overlay->composition) {
