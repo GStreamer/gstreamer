@@ -1739,9 +1739,22 @@ gst_d3d11_decoder_negotiate (GstD3D11Decoder * decoder,
       state->info.fps_n *= 2;
     }
   } else {
-    state = gst_video_decoder_set_interlaced_output_state (videodec,
-        GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_INTERLACE_MODE (info),
-        GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info), input_state);
+    state = gst_video_decoder_set_output_state (videodec,
+        GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
+        GST_VIDEO_INFO_HEIGHT (info), input_state);
+
+    if (state) {
+      if (GST_VIDEO_INFO_IS_INTERLACED (info)) {
+        auto in_s = gst_caps_get_structure (input_state->caps, 0);
+        if (!gst_structure_has_field (in_s, "interlace-mode")) {
+          /* Use our parsed info if missed in upstream */
+          GST_VIDEO_INFO_INTERLACE_MODE (&state->info) =
+              GST_VIDEO_INFO_INTERLACE_MODE (info);
+          GST_VIDEO_INFO_FIELD_ORDER (&state->info) =
+              GST_VIDEO_INFO_FIELD_ORDER (info);
+        }
+      }
+    }
   }
 
   if (!state) {
