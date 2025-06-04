@@ -67,6 +67,7 @@ namespace GstOnnxNamespace {
                        GstOnnxExecutionProvider provider, GstStructure *
                        tensors);
     bool hasSession(void);
+    void destroySession(void);
     void setInputImageFormat(GstMlInputImageFormat format);
     GstMlInputImageFormat getInputImageFormat(void);
     GstTensorDataType getInputImageDatatype(void);

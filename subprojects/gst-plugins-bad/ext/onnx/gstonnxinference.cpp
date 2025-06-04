@@ -136,6 +136,7 @@ static gboolean
 gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps);
 static gboolean gst_onnx_inference_start (GstBaseTransform * trans);
+static gboolean gst_onnx_inference_stop (GstBaseTransform * trans);
 
 G_DEFINE_TYPE (GstOnnxInference, gst_onnx_inference, GST_TYPE_BASE_TRANSFORM);
 
@@ -332,6 +333,8 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
       GST_DEBUG_FUNCPTR (gst_onnx_inference_set_caps);
   basetransform_class->start =
     GST_DEBUG_FUNCPTR(gst_onnx_inference_start);
+  basetransform_class->stop =
+    GST_DEBUG_FUNCPTR(gst_onnx_inference_stop);
 
   gst_type_mark_as_plugin_api (GST_TYPE_ONNX_OPTIMIZATION_LEVEL,
 			       (GstPluginAPIFlags) 0);
@@ -567,6 +570,19 @@ gst_onnx_inference_start (GstBaseTransform * trans)
   return ret;
 }
 
+static gboolean
+gst_onnx_inference_stop (GstBaseTransform * trans)
+{
+  GstOnnxInference *self = GST_ONNX_INFERENCE (trans);
+  auto onnxClient = GST_ONNX_CLIENT_MEMBER (self);
+
+  GST_OBJECT_LOCK (self);
+  if (onnxClient->hasSession ())
+    GST_ONNX_CLIENT_MEMBER (self)->destroySession ();
+  GST_OBJECT_UNLOCK (self);
+
+  return TRUE;
+}
 
 static gboolean
 gst_onnx_inference_set_caps (GstBaseTransform * trans, GstCaps * incaps,

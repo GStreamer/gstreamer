@@ -419,6 +419,15 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
     return true;
   }
 
+  void GstOnnxClient::destroySession (void)
+  {
+    if (session == NULL)
+      return;
+
+    delete session;
+    session = NULL;
+  }
+
   void GstOnnxClient::parseDimensions (GstVideoInfo vinfo)
   {
     int32_t newWidth = fixedInputImageSize ? width : vinfo.width;
