@@ -1798,13 +1798,24 @@ gst_d3d12_decoder_negotiate (GstD3D12Decoder * decoder,
   auto info = &priv->session->output_info;
 
   /* TODO: add support alternate interlace */
-  auto state = gst_video_decoder_set_interlaced_output_state (videodec,
-      GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_INTERLACE_MODE (info),
-      GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info), input_state);
+  auto state = gst_video_decoder_set_output_state (videodec,
+      GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
+      GST_VIDEO_INFO_HEIGHT (info), input_state);
 
   if (!state) {
     GST_ERROR_OBJECT (decoder, "Couldn't set output state");
     return FALSE;
+  }
+
+  if (GST_VIDEO_INFO_IS_INTERLACED (info)) {
+    auto in_s = gst_caps_get_structure (input_state->caps, 0);
+    if (!gst_structure_has_field (in_s, "interlace-mode")) {
+      /* Use our parsed info if missed in upstream */
+      GST_VIDEO_INFO_INTERLACE_MODE (&state->info) =
+          GST_VIDEO_INFO_INTERLACE_MODE (info);
+      GST_VIDEO_INFO_FIELD_ORDER (&state->info) =
+          GST_VIDEO_INFO_FIELD_ORDER (info);
+    }
   }
 
   state->caps = gst_video_info_to_caps (&state->info);
