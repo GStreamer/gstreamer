@@ -23824,7 +23824,7 @@ GST_LOG_CONTEXT_STATIC_DEFINE(custom_cat_ctx, GST_LOG_CONTEXT_FLAG_NONE,
       <method name="get_category" c:identifier="gst_log_context_get_category" version="1.28" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Get the #GstDebugCategory associated with this log context.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
-        <return-value>
+        <return-value nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the #GstDebugCategory to which the context is bound</doc>
           <type name="DebugCategory" c:type="GstDebugCategory*"/>
         </return-value>

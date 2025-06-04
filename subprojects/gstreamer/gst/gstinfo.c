@@ -2887,7 +2887,7 @@ gst_log_context_builder_build (GstLogContextBuilder * builder)
  *
  * Get the #GstDebugCategory associated with this log context.
  *
- * Returns: the #GstDebugCategory to which the context is bound
+ * Returns: (nullable): the #GstDebugCategory to which the context is bound
  *
  * Since: 1.28
  */
@@ -3487,6 +3487,51 @@ _gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
     const guint8 * data, guint length)
 {
 }
+
+void
+gst_log_context_free (GstLogContext * ctx)
+{
+}
+
+void
+gst_log_context_reset (GstLogContext * ctx)
+{
+}
+
+GstDebugCategory *
+gst_log_context_get_category (GstLogContext * context)
+{
+  return NULL;
+}
+
+void
+gst_debug_log_with_context (GstLogContext * ctx, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line, GObject * object,
+    const gchar * format, ...)
+{
+}
+
+void
+gst_debug_log_with_context_valist (GstLogContext * ctx, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line, GObject * object,
+    const gchar * format, va_list args)
+{
+}
+
+void
+gst_debug_log_literal_with_context (GstLogContext * ctx, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line, GObject * object,
+    const gchar * message)
+{
+}
+
+void
+gst_debug_log_id_with_context (GstLogContext * ctx, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line, const gchar * id,
+    const gchar * format, ...)
+{
+}
+
 #endif /* GST_REMOVE_DISABLED */
 #endif /* GST_DISABLE_GST_DEBUG */
 
