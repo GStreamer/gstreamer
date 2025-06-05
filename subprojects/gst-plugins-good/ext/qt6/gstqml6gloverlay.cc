@@ -371,7 +371,6 @@ gst_qml6_gl_overlay_gl_start (GstGLBaseFilter * bfilter)
       GST_ELEMENT_ERROR (GST_ELEMENT (bfilter), RESOURCE, NOT_FOUND,
           ("%s", error->message), (NULL));
       goto fail_renderer;
-      return FALSE;
     }
 
     root = qml6_gl_overlay->renderer->rootItem();
