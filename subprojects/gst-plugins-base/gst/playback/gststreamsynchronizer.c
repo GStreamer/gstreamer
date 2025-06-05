@@ -363,6 +363,7 @@ gst_stream_synchronizer_iterate_internal_links (GstPad * pad,
   GstIterator *it = NULL;
   GstPad *opad;
 
+  GST_STREAM_SYNCHRONIZER_LOCK (parent);
   opad =
       gst_stream_get_other_pad_from_pad (GST_STREAM_SYNCHRONIZER (parent), pad);
   if (opad) {
@@ -374,6 +375,7 @@ gst_stream_synchronizer_iterate_internal_links (GstPad * pad,
     g_value_unset (&value);
     gst_object_unref (opad);
   }
+  GST_STREAM_SYNCHRONIZER_UNLOCK (parent);
 
   return it;
 }
