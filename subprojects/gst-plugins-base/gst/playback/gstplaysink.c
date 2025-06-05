@@ -5069,34 +5069,49 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       playsink->need_async_start = TRUE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:{
+      GList *pads_to_release = NULL;
+      gboolean remove_audio_ssync_queue = FALSE;
+
+      GST_PLAY_SINK_LOCK (playsink);
       if (playsink->video_sinkpad_stream_synchronizer) {
-        gst_element_release_request_pad (GST_ELEMENT_CAST
-            (playsink->stream_synchronizer),
+        pads_to_release = g_list_prepend (pads_to_release,
             playsink->video_sinkpad_stream_synchronizer);
-        gst_object_unref (playsink->video_sinkpad_stream_synchronizer);
+        pads_to_release = g_list_prepend (pads_to_release,
+            playsink->video_srcpad_stream_synchronizer);
         playsink->video_sinkpad_stream_synchronizer = NULL;
-        gst_object_unref (playsink->video_srcpad_stream_synchronizer);
         playsink->video_srcpad_stream_synchronizer = NULL;
       }
       if (playsink->audio_sinkpad_stream_synchronizer) {
-        gst_element_release_request_pad (GST_ELEMENT_CAST
-            (playsink->stream_synchronizer),
+        pads_to_release = g_list_prepend (pads_to_release,
             playsink->audio_sinkpad_stream_synchronizer);
-        gst_object_unref (playsink->audio_sinkpad_stream_synchronizer);
+        pads_to_release = g_list_prepend (pads_to_release,
+            playsink->audio_srcpad_stream_synchronizer);
         playsink->audio_sinkpad_stream_synchronizer = NULL;
-        gst_object_unref (playsink->audio_srcpad_stream_synchronizer);
         playsink->audio_srcpad_stream_synchronizer = NULL;
-
-        gst_play_sink_remove_audio_ssync_queue (playsink);
+        remove_audio_ssync_queue = TRUE;
       }
       if (playsink->text_sinkpad_stream_synchronizer) {
-        gst_element_release_request_pad (GST_ELEMENT_CAST
-            (playsink->stream_synchronizer),
+        pads_to_release = g_list_prepend (pads_to_release,
             playsink->text_sinkpad_stream_synchronizer);
-        gst_object_unref (playsink->text_sinkpad_stream_synchronizer);
+        pads_to_release = g_list_prepend (pads_to_release,
+            playsink->text_srcpad_stream_synchronizer);
         playsink->text_sinkpad_stream_synchronizer = NULL;
-        gst_object_unref (playsink->text_srcpad_stream_synchronizer);
         playsink->text_srcpad_stream_synchronizer = NULL;
+      }
+      GST_PLAY_SINK_UNLOCK (playsink);
+
+      for (GList * l = pads_to_release; l; l = l->next) {
+        GstPad *pad = GST_PAD (l->data);
+        if (GST_PAD_IS_SINK (pad)) {
+          gst_element_release_request_pad (GST_ELEMENT_CAST
+              (playsink->stream_synchronizer), pad);
+        }
+        gst_object_unref (pad);
+      }
+      g_list_free (pads_to_release);
+
+      if (remove_audio_ssync_queue) {
+        gst_play_sink_remove_audio_ssync_queue (playsink);
       }
     }
       /* fall through */
