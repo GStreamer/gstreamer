@@ -1478,6 +1478,34 @@ Otherwise FALSE will be returned.</doc>
       <member name="bfloat16" value="13" c:identifier="GST_TENSOR_DATA_TYPE_BFLOAT16">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">"brain" 16 bit floating point tensor data</doc>
       </member>
+      <member name="string" value="14" c:identifier="GST_TENSOR_DATA_TYPE_STRING" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">UTF-8 string</doc>
+      </member>
+      <member name="bool" value="15" c:identifier="GST_TENSOR_DATA_TYPE_BOOL" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">A boolean value stored in 1 byte.</doc>
+      </member>
+      <member name="complex64" value="16" c:identifier="GST_TENSOR_DATA_TYPE_COMPLEX64" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">A 64-bit complex number stored in 2 32-bit values.</doc>
+      </member>
+      <member name="complex128" value="17" c:identifier="GST_TENSOR_DATA_TYPE_COMPLEX128" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">A 128-bit complex number stored in 2 64-bit values.</doc>
+      </member>
+      <member name="float8e4m3fn" value="18" c:identifier="GST_TENSOR_DATA_TYPE_FLOAT8E4M3FN" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">A non-IEEE 8-bit floating point format with 4 exponent bits and 3 mantissa bits, with NaN and no infinite values (FN).
+See [this paper for more details](https://onnx.ai/onnx/technical/float8.html)</doc>
+      </member>
+      <member name="float8e4m3fnuz" value="19" c:identifier="GST_TENSOR_DATA_TYPE_FLOAT8E4M3FNUZ" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">A non-IEEE 8-bit floating point format with 4 exponent bits and 3 mantissa bits, with NaN, no infinite values (FN) and no negative zero (UZ).
+See [this paper for more details](https://onnx.ai/onnx/technical/float8.html)</doc>
+      </member>
+      <member name="float8e5m2" value="20" c:identifier="GST_TENSOR_DATA_TYPE_FLOAT8E5M2" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">A non-IEEE 8-bit floating point format with 5 exponent bits and 2 mantissa bits.
+See [this paper for more details](https://onnx.ai/onnx/technical/float8.html)</doc>
+      </member>
+      <member name="float8e5m2fnuz" value="21" c:identifier="GST_TENSOR_DATA_TYPE_FLOAT8E5M2FNUZ" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">A non-IEEE 8-bit floating point format with 5 exponent bits and 2 mantissa bits, with NaN, no infinite values (FN) and no negative zero (UZ).
+See [this paper for more details](https://onnx.ai/onnx/technical/float8.html)</doc>
+      </member>
     </enumeration>
     <enumeration name="TensorDimOrder" version="1.26" c:type="GstTensorDimOrder">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h">Indicate to read tensor from memory in row-major or column-major order.</doc>

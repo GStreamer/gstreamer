@@ -66,7 +66,75 @@ typedef enum _GstTensorDataType
   GST_TENSOR_DATA_TYPE_FLOAT16,
   GST_TENSOR_DATA_TYPE_FLOAT32,
   GST_TENSOR_DATA_TYPE_FLOAT64,
-  GST_TENSOR_DATA_TYPE_BFLOAT16
+  GST_TENSOR_DATA_TYPE_BFLOAT16,
+  /**
+   * GST_TENSOR_DATA_TYPE_STRING:
+   *
+   * UTF-8 string
+   *
+   * Since: 1.28
+   */
+  GST_TENSOR_DATA_TYPE_STRING,
+  /**
+   * GST_TENSOR_DATA_TYPE_BOOL:
+   *
+   * A boolean value stored in 1 byte.
+   *
+   * Since: 1.28
+   */
+  GST_TENSOR_DATA_TYPE_BOOL,
+  /**
+   * GST_TENSOR_DATA_TYPE_COMPLEX64:
+   *
+   * A 64-bit complex number stored in 2 32-bit values.
+   *
+   * Since: 1.28
+   */
+  GST_TENSOR_DATA_TYPE_COMPLEX64,
+  /**
+   * GST_TENSOR_DATA_TYPE_COMPLEX128:
+   *
+   * A 128-bit complex number stored in 2 64-bit values.
+   *
+   * Since: 1.28
+   */
+  GST_TENSOR_DATA_TYPE_COMPLEX128,
+  /**
+   * GST_TENSOR_DATA_TYPE_FLOAT8E4M3FN:
+   *
+   * A non-IEEE 8-bit floating point format with 4 exponent bits and 3 mantissa bits, with NaN and no infinite values (FN).
+   * See [this paper for more details](https://onnx.ai/onnx/technical/float8.html)
+   *
+   * Since: 1.28
+   */
+  GST_TENSOR_DATA_TYPE_FLOAT8E4M3FN,
+  /**
+   * GST_TENSOR_DATA_TYPE_FLOAT8E4M3FNUZ:
+   *
+   * A non-IEEE 8-bit floating point format with 4 exponent bits and 3 mantissa bits, with NaN, no infinite values (FN) and no negative zero (UZ).
+   * See [this paper for more details](https://onnx.ai/onnx/technical/float8.html)
+   *
+   * Since: 1.28
+   */
+  GST_TENSOR_DATA_TYPE_FLOAT8E4M3FNUZ,
+  /**
+   * GST_TENSOR_DATA_TYPE_FLOAT8E5M2:
+   *
+   * A non-IEEE 8-bit floating point format with 5 exponent bits and 2 mantissa bits.
+   * See [this paper for more details](https://onnx.ai/onnx/technical/float8.html)
+   *
+   * Since: 1.28
+   */
+  GST_TENSOR_DATA_TYPE_FLOAT8E5M2,
+  /**
+   * GST_TENSOR_DATA_TYPE_FLOAT8E5M2FNUZ:
+   *
+   * A non-IEEE 8-bit floating point format with 5 exponent bits and 2 mantissa bits, with NaN, no infinite values (FN) and no negative zero (UZ).
+   * See [this paper for more details](https://onnx.ai/onnx/technical/float8.html)
+   *
+   * Since: 1.28
+   */
+  GST_TENSOR_DATA_TYPE_FLOAT8E5M2FNUZ
 } GstTensorDataType;
 
 /**
