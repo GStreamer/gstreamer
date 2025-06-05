@@ -6,6 +6,7 @@ qt6_sources = [
   'gstqml6glsink.cc',
   'gstqml6glsrc.cc',
   'gstqml6glmixer.cc',
+  'gstqml6glrendersrc.cc',
   'gstqml6gloverlay.cc',
   'qt6glitem.cc',
   'qt6glwindow.cc',
@@ -23,6 +24,7 @@ qt6_headers = [
   'qt6glwindow.h',
   'gstqml6glsrc.h',
   'gstqml6glmixer.h',
+  'gstqml6glrendersrc.h',
   'gstqml6gloverlay.h',
 ]
 

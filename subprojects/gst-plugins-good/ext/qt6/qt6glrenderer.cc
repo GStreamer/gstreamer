@@ -557,6 +557,12 @@ gl_params_get_QSize(GstGLAllocationParams * gl_params)
     return QSize(GST_VIDEO_INFO_WIDTH (gl_vid_params->v_info), GST_VIDEO_INFO_HEIGHT(gl_vid_params->v_info));
 }
 
+static QSize
+gl_memory_get_QSize(GstGLMemory * gl_mem)
+{
+  return QSize(gst_gl_memory_get_texture_width (gl_mem), gst_gl_memory_get_texture_height (gl_mem));
+}
+
 void
 GstQt6QuickRenderer::renderGstGL ()
 {
@@ -573,18 +579,20 @@ GstQt6QuickRenderer::renderGstGL ()
 
     loop.exit();
 
-   if (gl_params && gl_params_get_QSize(gl_params) != m_sharedRenderData->m_surface->size()) {
-        gst_gl_allocation_params_free(gl_params);
-        gl_params = NULL;
+    if (!gl_mem) {
+      if (gl_params && gl_params_get_QSize(gl_params) != m_sharedRenderData->m_surface->size()) {
+          gst_gl_allocation_params_free(gl_params);
+          gl_params = NULL;
+      }
+
+      if (!gl_params)
+          gl_params = (GstGLAllocationParams *)
+              gst_gl_video_allocation_params_new (gl_context,
+                  NULL, &this->v_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, GST_GL_RGBA8);
+
+      gl_mem = (GstGLMemory *) gst_gl_base_memory_alloc (gl_allocator, gl_params);
     }
-
-    if (!gl_params)
-        gl_params = (GstGLAllocationParams *)
-            gst_gl_video_allocation_params_new (gl_context,
-                NULL, &this->v_info, 0, NULL, GST_GL_TEXTURE_TARGET_2D, GST_GL_RGBA8);
-
-    gl_mem = (GstGLMemory *) gst_gl_base_memory_alloc (gl_allocator, gl_params);
-    m_quickWindow->setRenderTarget(QQuickRenderTarget::fromOpenGLTexture(gst_gl_memory_get_texture_id (gl_mem), gl_params_get_QSize(gl_params)));
+    m_quickWindow->setRenderTarget(QQuickRenderTarget::fromOpenGLTexture(gst_gl_memory_get_texture_id (gl_mem), gl_memory_get_QSize(gl_mem)));
 
     m_renderControl->beginFrame();
     if (m_renderControl->sync())
@@ -601,29 +609,43 @@ GstQt6QuickRenderer::renderGstGL ()
 
 GstGLMemory *GstQt6QuickRenderer::generateOutput(GstClockTime input_ns)
 {
-    m_sharedRenderData->m_animationDriver->setNextTime(input_ns / GST_MSECOND);
+  gl_mem = NULL;
+  generate(input_ns);
 
-    /* run an event loop to update any changed values for rendering */
-    QEventLoop loop;
-    if (loop.processEvents())
-        GST_LOG ("pending QEvents processed");
+  GstGLMemory *tmp = gl_mem;
+  gl_mem = NULL;
 
-    GST_LOG ("generating output for time %" GST_TIME_FORMAT " ms: %"
-        G_GUINT64_FORMAT, GST_TIME_ARGS (input_ns), input_ns / GST_MSECOND);
+  return tmp;
+}
 
-    m_quickWindow->update();
+bool GstQt6QuickRenderer::generateInto(GstClockTime input_ns, GstGLMemory * input_gl_mem)
+{
+  gl_mem = input_gl_mem;
+  generate(input_ns);
+  gl_mem = NULL;
+  return true;
+}
 
-    /* Polishing happens on the gui thread. */
-    m_renderControl->polishItems();
+void GstQt6QuickRenderer::generate(GstClockTime input_ns)
+{
+  m_sharedRenderData->m_animationDriver->setNextTime(input_ns / GST_MSECOND);
 
-    /* TODO: an async version could be used instead */
-    gst_gl_context_thread_add (gl_context,
-            (GstGLContextThreadFunc) GstQt6QuickRenderer::render_gst_gl_c, this);
+  /* run an event loop to update any changed values for rendering */
+  QEventLoop loop;
+  if (loop.processEvents())
+      GST_LOG ("pending QEvents processed");
 
-    GstGLMemory *tmp = gl_mem;
-    gl_mem = NULL;
+  GST_LOG ("generating output for time %" GST_TIME_FORMAT " ms: %"
+      G_GUINT64_FORMAT, GST_TIME_ARGS (input_ns), input_ns / GST_MSECOND);
 
-    return tmp;
+  m_quickWindow->update();
+
+  /* Polishing happens on the gui thread. */
+  m_renderControl->polishItems();
+
+  /* TODO: an async version could be used instead */
+  gst_gl_context_thread_add (gl_context,
+          (GstGLContextThreadFunc) GstQt6QuickRenderer::render_gst_gl_c, this);
 }
 
 void GstQt6QuickRenderer::initializeGstGL ()
@@ -733,8 +755,14 @@ void GstQt6QuickRenderer::updateSizes()
 
 void GstQt6QuickRenderer::setSize(int w, int h)
 {
-    static_cast<GstQt6BackingSurface *>(m_sharedRenderData->m_surface)->setSize(w, h);
-    updateSizes();
+    if (!m_sharedRenderData)
+        return;
+
+    GstQt6BackingSurface *surface = static_cast<GstQt6BackingSurface *>(m_sharedRenderData->m_surface);
+    if (surface) {
+        surface->setSize(w, h);
+        updateSizes();
+    }
 }
 
 bool GstQt6QuickRenderer::setQmlScene (const gchar * scene, GError ** error)

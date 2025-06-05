@@ -66,7 +66,8 @@ gst_qml6_get_gl_display (gboolean sink)
   QGuiApplication *app = static_cast<QGuiApplication *> (QCoreApplication::instance ());
   static gsize _debug;
 
-  g_assert (app != NULL);
+  if (!app)
+    return NULL;
 
   if (g_once_init_enter (&_debug)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "qtglutility", 0,
@@ -340,23 +341,16 @@ qt6_opengl_native_context_from_gst_gl_context (GstGLContext * context)
       GstGLDisplayEGL *display_egl = gst_gl_display_egl_from_gl_display (display);
 #if GST_GL_HAVE_WINDOW_WAYLAND && defined (HAVE_QT_WAYLAND)
       if (gst_gl_display_get_handle_type (display) == GST_GL_DISPLAY_TYPE_WAYLAND) {
-#if 0
-        g_warning ("Qt does not support wrapping native OpenGL contexts "
-            "on wayland. See https://bugreports.qt.io/browse/QTBUG-82528");
-        gst_object_unref (display_egl);
-        gst_object_unref (display);
-        return NULL;
-#else
+        g_warning ("Qt support for wrapping native OpenGL contexts "
+            "on wayland is experimental and may crash");
         if (display_egl)
           egl_display = (EGLDisplay) gst_gl_display_get_handle ((GstGLDisplay *) display_egl);
-#endif
       }
 #endif
       gst_object_unref (display_egl);
       gst_object_unref (display);
-      GST_ERROR ("creating native context from context %p and display %p", (void *) handle, egl_display);
+      GST_INFO ("creating Qt native context from context %p and display %p", (void *) handle, egl_display);
       ret = egl->fromNative((EGLContext) handle, egl_display);
-      GST_ERROR ("created native context %p", ret);
     }
   }
 #endif

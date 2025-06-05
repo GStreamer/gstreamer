@@ -56,6 +56,7 @@ public:
     void setSize(int w, int h);
 
     GstGLMemory *generateOutput(GstClockTime input_ns);
+    bool generateInto(GstClockTime input_ns, GstGLMemory *input_gl_mem);
 
     /* cleanup any resources.  Any use of this object after calling this
      * function may result in undefined behaviour */
@@ -74,6 +75,7 @@ private:
     void ensureFbo();
 
     void updateSizes();
+    void generate(GstClockTime input_ns);
 
     static void render_gst_gl_c (GstGLContext * context, GstQt6QuickRenderer * self) { self->renderGstGL (); }
     void renderGstGL ();
