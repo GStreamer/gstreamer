@@ -1113,14 +1113,16 @@ gst_v4l2_decoder_install_properties (GObjectClass * gobject_class,
     video_device_path = device->video_device_path;
   }
 
-  g_object_class_install_property (gobject_class, PROP_MEDIA_DEVICE,
-      g_param_spec_string ("media-device", "Media Device Path",
-          "Path to the media device node", media_device_path,
+  g_object_class_install_property (gobject_class,
+      PROP_MEDIA_DEVICE + prop_offset, g_param_spec_string ("media-device",
+          "Media Device Path", "Path to the media device node",
+          media_device_path,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_VIDEO_DEVICE,
-      g_param_spec_string ("video-device", "Video Device Path",
-          "Path to the video device node", video_device_path,
+  g_object_class_install_property (gobject_class,
+      PROP_VIDEO_DEVICE + prop_offset, g_param_spec_string ("video-device",
+          "Video Device Path", "Path to the video device node",
+          video_device_path,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
