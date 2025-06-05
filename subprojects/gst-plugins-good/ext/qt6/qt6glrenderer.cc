@@ -6,6 +6,7 @@
 #include <QQuickWindow>
 #include <QQuickGraphicsDevice>
 #include <QQuickItem>
+#include <QQuickOpenGLUtils>
 #include <QQuickRenderTarget>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
@@ -559,7 +560,7 @@ gl_params_get_QSize(GstGLAllocationParams * gl_params)
 void
 GstQt6QuickRenderer::renderGstGL ()
 {
-//    const GstGLFuncs *gl = gl_context->gl_vtable;
+    const GstGLFuncs *gl = gl_context->gl_vtable;
 
     GST_TRACE ("%p current QOpenGLContext %p", this,
         QOpenGLContext::currentContext());
@@ -592,9 +593,10 @@ GstQt6QuickRenderer::renderGstGL ()
     m_renderControl->render();
     m_renderControl->endFrame();
 
+    QQuickOpenGLUtils::resetOpenGLState ();
     /* Qt doesn't seem to reset this, breaking glimagesink */
-//    if (gl->DrawBuffer)
-//      gl->DrawBuffer (GL_BACK);
+    if (gl->DrawBuffer)
+      gl->DrawBuffer (GL_BACK);
 }
 
 GstGLMemory *GstQt6QuickRenderer::generateOutput(GstClockTime input_ns)
