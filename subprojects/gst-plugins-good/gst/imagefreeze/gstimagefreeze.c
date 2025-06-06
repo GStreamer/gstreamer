@@ -72,6 +72,8 @@ static void gst_image_freeze_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstFlowReturn gst_image_freeze_sink_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buffer);
+static gboolean gst_image_freeze_send_event (GstElement * element,
+    GstEvent * event);
 static gboolean gst_image_freeze_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_image_freeze_sink_setcaps (GstImageFreeze * self,
@@ -149,6 +151,8 @@ gst_image_freeze_class_init (GstImageFreezeClass * klass)
       GST_DEBUG_FUNCPTR (gst_image_freeze_change_state);
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_image_freeze_provide_clock);
+  gstelement_class->send_event =
+      GST_DEBUG_FUNCPTR (gst_image_freeze_send_event);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Still frame stream generator",
@@ -222,6 +226,7 @@ gst_image_freeze_reset (GstImageFreeze * self)
   gst_segment_init (&self->segment, GST_FORMAT_TIME);
   self->need_segment = TRUE;
   self->flushing = TRUE;
+  self->direct_eos = FALSE;
 
   self->negotiated_framerate = FALSE;
   self->fps_n = self->fps_d = 0;
@@ -611,6 +616,40 @@ gst_image_freeze_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   return ret;
 }
 
+static gboolean
+gst_image_freeze_send_event (GstElement * element, GstEvent * event)
+{
+  GstImageFreeze *self = GST_IMAGE_FREEZE (element);
+  gboolean ret = FALSE;
+
+  GST_LOG_OBJECT (element, "Got %s event", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:{
+      GST_DEBUG_OBJECT (self, "Received direct EOS, shutting down src loop");
+      g_mutex_lock (&self->lock);
+      self->direct_eos = TRUE;
+      if (self->clock_id) {
+        GST_DEBUG_OBJECT (self, "unlock clock wait");
+        gst_clock_id_unschedule (self->clock_id);
+      }
+      g_cond_signal (&self->blocked_cond);
+      g_mutex_unlock (&self->lock);
+
+      gst_pad_pause_task (self->srcpad);
+      GST_DEBUG_OBJECT (self, "Sending EOS to srcpad");
+      gst_pad_push_event (self->srcpad, event);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
+      break;
+  }
+
+  return ret;
+}
+
 
 static gboolean
 gst_image_freeze_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
@@ -868,6 +907,13 @@ gst_image_freeze_sink_chain (GstPad * pad, GstObject * parent,
   GstFlowReturn flow_ret;
 
   g_mutex_lock (&self->lock);
+  if (self->direct_eos) {
+    GST_DEBUG_OBJECT (pad, "Dropping because of EOS from send_event");
+    gst_buffer_unref (buffer);
+    g_mutex_unlock (&self->lock);
+    return GST_FLOW_EOS;
+  }
+
   if (self->buffer && !self->allow_replace) {
     GST_DEBUG_OBJECT (pad, "Already have a buffer, dropping");
     gst_buffer_unref (buffer);
@@ -913,6 +959,9 @@ gst_image_freeze_src_loop (GstPad * pad)
     flow_ret = GST_FLOW_FLUSHING;
     g_mutex_unlock (&self->lock);
     goto pause_task;
+  } else if (self->direct_eos) {
+    g_mutex_unlock (&self->lock);
+    goto direct_eos;
   } else if (!self->buffer) {
     GST_ERROR_OBJECT (pad, "Have no buffer yet");
     flow_ret = GST_FLOW_ERROR;
@@ -995,10 +1044,17 @@ gst_image_freeze_src_loop (GstPad * pad)
     clock = gst_element_get_clock (GST_ELEMENT (self));
 
     /* Wait until the element went to PLAYING or flushing */
-    while ((!clock || self->blocked) && !self->flushing) {
+    while ((!clock || self->blocked) && !self->flushing && !self->direct_eos) {
       g_cond_wait (&self->blocked_cond, &self->lock);
       gst_clear_object (&clock);
       clock = gst_element_get_clock (GST_ELEMENT (self));
+    }
+
+    if (self->direct_eos) {
+      g_mutex_unlock (&self->lock);
+      gst_buffer_unref (buffer);
+      gst_clear_object (&clock);
+      goto direct_eos;
     }
 
     if (self->flushing) {
@@ -1033,6 +1089,12 @@ gst_image_freeze_src_loop (GstPad * pad)
     gst_clock_id_unref (self->clock_id);
     self->clock_id = NULL;
     gst_object_unref (clock);
+
+    if (self->direct_eos) {
+      g_mutex_unlock (&self->lock);
+      gst_buffer_unref (buffer);
+      goto direct_eos;
+    }
 
     if (self->flushing || clock_ret == GST_CLOCK_UNSCHEDULED) {
       g_mutex_unlock (&self->lock);
@@ -1136,6 +1198,11 @@ gst_image_freeze_src_loop (GstPad * pad)
     goto pause_task;
   }
 
+  return;
+
+direct_eos:
+  GST_DEBUG_OBJECT (pad, "pausing task because of send_event EOS");
+  gst_pad_pause_task (pad);
   return;
 
 pause_task:

@@ -71,6 +71,8 @@ struct _GstImageFreeze
   guint64 offset;
 
   gboolean flushing;
+  /* Indicates EOS received via send_event() */
+  gboolean direct_eos;
 };
 
 struct _GstImageFreezeClass
