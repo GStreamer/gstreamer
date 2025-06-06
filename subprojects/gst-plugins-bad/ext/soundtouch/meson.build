@@ -20,6 +20,7 @@ plugin_sources += {
 
 soundtouch_cargs = ['-DHAVE_SOUNDTOUCH']
 if get_option('soundtouch').disabled()
+  soundtouch_dep = dependency('', required: false)
   subdir_done()
 endif
 
