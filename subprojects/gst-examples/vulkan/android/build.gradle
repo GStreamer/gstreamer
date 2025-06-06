@@ -43,7 +43,6 @@ android {
                     java.srcDirs = ['src']
                     resources.srcDirs = ['src']
                     aidl.srcDirs = ['src']
-                    renderscript.srcDirs = ['src']
                     res.srcDirs = ['res']
                     assets.srcDirs = ['assets']
                 }
@@ -56,7 +55,14 @@ android {
             path 'jni/CMakeLists.txt'
         }
     }
+
     ndkVersion '25.2.9519653'
+
+    namespace 'org.freedesktop.gstreamer.vulkan.vulkan_1'
+
+    buildFeatures {
+        aidl true
+    }
 }
 
 afterEvaluate {
@@ -79,7 +85,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.10.1'
     }
 }
 
