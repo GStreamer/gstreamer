@@ -44421,6 +44421,32 @@ function returns %FALSE.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="get_caps" c:identifier="gst_structure_get_caps" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Set pointer pointed by @caps to the address of the value of type caps
+correspondind to field with fieldname @fieldname. Caller is responsible
+for making sure the field exists and has the correct type.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gststructure.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">%TRUE if could be set correctly. If there was no field with
+@fieldname or the existing field did not contain a caps, this function return
+%FALSE.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a #GstStructure</doc>
+            <type name="Structure" c:type="const GstStructure*"/>
+          </instance-parameter>
+          <parameter name="fieldname" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">the name of the field</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="caps" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">a pointer to a pointer on caps</doc>
+            <type name="Caps" c:type="const GstCaps**"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_clock_time" c:identifier="gst_structure_get_clock_time">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststructure.c">Sets the clock time pointed to by @value corresponding to the clock time
 of the given field.  Caller is responsible for making sure the field exists
