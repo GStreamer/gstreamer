@@ -577,6 +577,10 @@ gst_tflite_inference_start (GstBaseTransform * trans)
       if (num_means != priv->channels) {
         priv->means = g_renew (gdouble, priv->means, priv->channels);
 
+        /* initialize means array to zeroes */
+        if (num_means == 0) {
+          priv->means[0] = 0;
+        }
         for (guint j = 1; j < priv->channels; j++)
           priv->means[j] = priv->means[0];
       }
@@ -586,6 +590,10 @@ gst_tflite_inference_start (GstBaseTransform * trans)
       if (num_stddevs != priv->channels) {
         priv->stddevs = g_renew (gdouble, priv->stddevs, priv->channels);
 
+        /* initialize stddevs array to ones */
+        if (num_stddevs == 0) {
+          priv->stddevs[0] = 1.0;
+        }
         for (guint j = 1; j < priv->channels; j++)
           priv->stddevs[j] = priv->stddevs[0];
       }
