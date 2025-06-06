@@ -4511,6 +4511,41 @@ gst_value_is_subset_list (const GValue * value1, const GValue * value2)
   return FALSE;
 }
 
+static gboolean
+gst_value_is_subset_array_array (const GValue * val_sub, const GValue * val_sup)
+{
+  /* Check if each element of the subset is within the subset while
+   * respecting order. Not all element of superset has to be present in
+   * subset.*/
+
+  GstValueList *superset = VALUE_LIST_ARRAY (val_sup);
+  GstValueList *subset = VALUE_LIST_ARRAY (val_sub);
+  gint it1, it2, len1, len2;
+  gboolean is_subset;
+
+  len2 = superset->len;
+  len1 = subset->len;
+  is_subset = len1 <= len2;
+
+  for (it1 = 0, it2 = 0; is_subset && it1 < len1; it1++, it2++) {
+    const GValue *child1 = &subset->fields[it1];
+    const GValue *child2 = &superset->fields[it2];
+
+    is_subset = gst_value_is_subset (child1, child2);
+    if (is_subset == FALSE) {
+      /* try to find an element in superset that is a superset of subset[it1] */
+      for (it2 = it2 + 1; it2 < len2 && it2 + len1 <= len2; it2++) {
+        child2 = &superset->fields[it2];
+        if ((is_subset = gst_value_is_subset (child1, child2)) == TRUE)
+          break;
+      }
+    }
+  }
+
+  return is_subset;
+}
+
+
 /**
  * gst_value_is_subset:
  * @value1: a #GValue
@@ -4548,6 +4583,8 @@ gst_value_is_subset (const GValue * value1, const GValue * value2)
   } else if (type2 == GST_TYPE_CAPS) {
     return gst_caps_is_subset (gst_value_get_caps (value1),
         gst_value_get_caps (value2));
+  } else if (type1 == GST_TYPE_ARRAY && type2 == GST_TYPE_ARRAY) {
+    return gst_value_is_subset_array_array (value1, value2);
   }
 
   /*
