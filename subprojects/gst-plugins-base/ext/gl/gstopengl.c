@@ -48,15 +48,12 @@
 #include "gstglmixerbin.h"
 #include "gstglvideomixer.h"
 #include "gstglstereomix.h"
-#include "gstglutils.h"
 
 /* Register filters that make up the gstgl plugin */
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
-
-  _gst_gl_tags_quark = g_quark_from_static_string ("tags");
 
   ret |= GST_ELEMENT_REGISTER (glimagesink, plugin);
   ret |= GST_ELEMENT_REGISTER (glimagesinkelement, plugin);

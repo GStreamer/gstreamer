@@ -29,9 +29,6 @@ gboolean gst_gl_context_gen_shader (GstGLContext * context,
     const gchar * shader_vertex_source,
     const gchar * shader_fragment_source, GstGLShader ** shader);
 
-/* Populated in the plugin init function */
-extern GQuark _gst_gl_tags_quark;
-
 /* This is public API in 1.28 */
 #define gst_meta_api_type_tags_contain_only(api,valid_tags) \
   gst_gl_gst_meta_api_type_tags_contain_only(api,valid_tags)
