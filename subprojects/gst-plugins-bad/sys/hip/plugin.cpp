@@ -25,6 +25,7 @@
 #include "gsthipdevice.h"
 #include "gsthipmemorycopy.h"
 #include "gsthipconvertscale.h"
+#include "gsthipcompositor.h"
 #include "gsthiprtc.h"
 
 static gboolean
@@ -59,6 +60,8 @@ plugin_init (GstPlugin * plugin)
         "hipconvert", GST_RANK_NONE, GST_TYPE_HIP_CONVERT);
     gst_element_register (plugin,
         "hipscale", GST_RANK_NONE, GST_TYPE_HIP_SCALE);
+    gst_element_register (plugin,
+        "hipcompositor", GST_RANK_NONE, GST_TYPE_HIP_COMPOSITOR);
   }
 
   gst_clear_object (&device);

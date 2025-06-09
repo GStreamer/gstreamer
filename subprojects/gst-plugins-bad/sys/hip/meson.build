@@ -11,6 +11,7 @@ hip_sources = [
   'gsthiprtc.cpp',
   'gsthiputils.cpp',
   'gsthip-interop.cpp',
+  'gsthipcompositor.cpp',
   'plugin.cpp',
 ]
 
