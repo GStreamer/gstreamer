@@ -2458,6 +2458,35 @@ stack and initialized with gst_sdp_media_init().</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <function name="add_media_from_structure" c:identifier="gst_sdp_media_add_media_from_structure" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">Mapping of structure fields to SDP attributes:
+
+a=rtpmap:(payload) (encoding_name) or (clock_rate)[or (encoding_params)]
+
+a=framesize:(payload) (width)-(height)
+
+a=fmtp:(payload) (param)[=(value)];...
+
+a=rtcp-fb:(payload) (param1) [param2]...
+
+a=extmap:(id)[/direction] (extensionname) (extensionattributes)</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">a #GstSDPResult.</doc>
+          <type name="SDPResult" c:type="GstSDPResult"/>
+        </return-value>
+        <parameters>
+          <parameter name="structure" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">a #GstStructure belonging to a #GstCaps SDP mapping, see also
+`gst_sdp_media_get_caps_from_media()`</doc>
+            <type name="Gst.Structure" c:type="const GstStructure*"/>
+          </parameter>
+          <parameter name="media" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">a #GstSDPMedia</doc>
+            <type name="SDPMedia" c:type="GstSDPMedia*"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="init" c:identifier="gst_sdp_media_init">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">Initialize @media so that its contents are as if it was freshly allocated
 with gst_sdp_media_new(). This function is mostly used to initialize a media
@@ -2502,7 +2531,9 @@ a=fmtp:(payload) (param)[=(value)];...
 
 a=rtcp-fb:(payload) (param1) [param2]...
 
-a=extmap:(id)[/direction] (extensionname) (extensionattributes)</doc>
+a=extmap:(id)[/direction] (extensionname) (extensionattributes)
+
+Only the first #GstStructure of the @caps is used.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">a #GstSDPResult.</doc>
@@ -4161,6 +4192,35 @@ messages.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="sdp_media_add_media_from_structure" c:identifier="gst_sdp_media_add_media_from_structure" moved-to="SDPMedia.add_media_from_structure" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">Mapping of structure fields to SDP attributes:
+
+a=rtpmap:(payload) (encoding_name) or (clock_rate)[or (encoding_params)]
+
+a=framesize:(payload) (width)-(height)
+
+a=fmtp:(payload) (param)[=(value)];...
+
+a=rtcp-fb:(payload) (param1) [param2]...
+
+a=extmap:(id)[/direction] (extensionname) (extensionattributes)</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">a #GstSDPResult.</doc>
+        <type name="SDPResult" c:type="GstSDPResult"/>
+      </return-value>
+      <parameters>
+        <parameter name="structure" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">a #GstStructure belonging to a #GstCaps SDP mapping, see also
+`gst_sdp_media_get_caps_from_media()`</doc>
+          <type name="Gst.Structure" c:type="const GstStructure*"/>
+        </parameter>
+        <parameter name="media" direction="out" caller-allocates="1" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">a #GstSDPMedia</doc>
+          <type name="SDPMedia" c:type="GstSDPMedia*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="sdp_media_init" c:identifier="gst_sdp_media_init" moved-to="SDPMedia.init">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">Initialize @media so that its contents are as if it was freshly allocated
 with gst_sdp_media_new(). This function is mostly used to initialize a media
@@ -4205,7 +4265,9 @@ a=fmtp:(payload) (param)[=(value)];...
 
 a=rtcp-fb:(payload) (param1) [param2]...
 
-a=extmap:(id)[/direction] (extensionname) (extensionattributes)</doc>
+a=extmap:(id)[/direction] (extensionname) (extensionattributes)
+
+Only the first #GstStructure of the @caps is used.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">a #GstSDPResult.</doc>

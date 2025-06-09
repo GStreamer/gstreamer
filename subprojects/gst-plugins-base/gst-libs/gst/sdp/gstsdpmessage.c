@@ -3813,54 +3813,18 @@ no_rate:
   }
 }
 
-/**
- * gst_sdp_media_set_media_from_caps:
- * @caps: a #GstCaps
- * @media: (out caller-allocates): a #GstSDPMedia
- *
- * Mapping of caps to SDP fields:
- *
- * a=rtpmap:(payload) (encoding_name) or (clock_rate)[or (encoding_params)]
- *
- * a=framesize:(payload) (width)-(height)
- *
- * a=fmtp:(payload) (param)[=(value)];...
- *
- * a=rtcp-fb:(payload) (param1) [param2]...
- *
- * a=extmap:(id)[/direction] (extensionname) (extensionattributes)
- *
- * Returns: a #GstSDPResult.
- *
- * Since: 1.8
- */
-GstSDPResult
-gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
+static GstSDPResult
+_add_media_format_from_structure (const GstStructure * s, GstSDPMedia * media)
 {
-  const gchar *caps_str, *caps_enc, *caps_params;
+  const gchar *caps_enc, *caps_params;
   gchar *tmp;
   gint caps_pt, caps_rate;
   guint n_fields, j;
   gboolean first, nack, nack_pli, ccm_fir, transport_cc;
   GString *fmtp;
-  GstStructure *s;
 
   g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
-  g_return_val_if_fail (caps != NULL && GST_IS_CAPS (caps), GST_SDP_EINVAL);
-
-  s = gst_caps_get_structure (caps, 0);
-  if (s == NULL) {
-    GST_ERROR ("ignoring stream without media type");
-    goto error;
-  }
-
-  /* get media type and payload for the m= line */
-  caps_str = gst_structure_get_string (s, "media");
-  if (!caps_str) {
-    GST_ERROR ("ignoring stream without media type");
-    goto error;
-  }
-  gst_sdp_media_set_media (media, caps_str);
+  g_return_val_if_fail (s != NULL, GST_SDP_EINVAL);
 
   if (!gst_structure_get_int (s, "payload", &caps_pt)) {
     GST_ERROR ("ignoring stream without payload type");
@@ -4118,8 +4082,93 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
   return GST_SDP_OK;
 
   /* ERRORS */
-error:
-  {
+error:{
+    GST_DEBUG ("ignoring stream");
+    return GST_SDP_EINVAL;
+  }
+}
+
+/**
+ * gst_sdp_media_set_media_from_caps:
+ * @caps: a #GstCaps
+ * @media: (out caller-allocates): a #GstSDPMedia
+ *
+ * Mapping of caps to SDP fields:
+ *
+ * a=rtpmap:(payload) (encoding_name) or (clock_rate)[or (encoding_params)]
+ *
+ * a=framesize:(payload) (width)-(height)
+ *
+ * a=fmtp:(payload) (param)[=(value)];...
+ *
+ * a=rtcp-fb:(payload) (param1) [param2]...
+ *
+ * a=extmap:(id)[/direction] (extensionname) (extensionattributes)
+ *
+ * Only the first #GstStructure of the @caps is used.
+ *
+ * Returns: a #GstSDPResult.
+ *
+ * Since: 1.8
+ */
+GstSDPResult
+gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
+{
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (caps != NULL && GST_IS_CAPS (caps), GST_SDP_EINVAL);
+
+  return gst_sdp_media_add_media_from_structure (gst_caps_get_structure (caps,
+          0), media);
+}
+
+/**
+ * gst_sdp_media_add_media_from_structure:
+ * @structure: a #GstStructure belonging to a #GstCaps SDP mapping, see also
+ * `gst_sdp_media_get_caps_from_media()`
+ * @media: (out caller-allocates): a #GstSDPMedia
+ *
+ * Mapping of structure fields to SDP attributes:
+ *
+ * a=rtpmap:(payload) (encoding_name) or (clock_rate)[or (encoding_params)]
+ *
+ * a=framesize:(payload) (width)-(height)
+ *
+ * a=fmtp:(payload) (param)[=(value)];...
+ *
+ * a=rtcp-fb:(payload) (param1) [param2]...
+ *
+ * a=extmap:(id)[/direction] (extensionname) (extensionattributes)
+ *
+ * Returns: a #GstSDPResult.
+ *
+ * Since: 1.28
+ */
+GstSDPResult
+gst_sdp_media_add_media_from_structure (const GstStructure * structure,
+    GstSDPMedia * media)
+{
+  const gchar *caps_str;
+
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (structure != NULL
+      && GST_IS_STRUCTURE (structure), GST_SDP_EINVAL);
+
+  if (structure == NULL) {
+    GST_ERROR ("ignoring stream without media type");
+    goto error;
+  }
+
+  /* get media type and payload for the m= line */
+  caps_str = gst_structure_get_string (structure, "media");
+  if (!caps_str) {
+    GST_ERROR ("ignoring stream without media type");
+    goto error;
+  }
+  gst_sdp_media_set_media (media, caps_str);
+  return _add_media_format_from_structure (structure, media);
+
+  /* ERRORS */
+error:{
     GST_DEBUG ("ignoring stream");
     return GST_SDP_EINVAL;
   }

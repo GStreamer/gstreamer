@@ -80,6 +80,17 @@ static const gchar caps_audio_string[] =
     "application/x-unknown, media=(string)audio, payload=(int)14, "
     "clock-rate=(int)90000";
 
+static const gchar caps_opus_dtmf[] =
+    "application/x-unknown, media=(string)audio, payload=(int)98, "
+    "clock-rate=(int)48000, encoding-name=(string)OPUS; "
+    "application/x-unknown, media=(string)audio, payload=(int)110, "
+    "clock-rate=(int)48000, encoding-name=(string)TELEPHONE-EVENT;";
+
+static const gchar *sdp_opus_dtmf =
+    "m=audio 0 (null) 98 110\r\n"
+    "a=rtpmap:98 OPUS/48000\r\n"
+    "a=rtpmap:110 TELEPHONE-EVENT/48000\r\n";
+
 static const gchar * sdp_rtcp_fb = "v=0\r\n"
     "o=- 123456 2 IN IP4 127.0.0.1 \r\n"
     "s=-\r\n"
@@ -984,6 +995,37 @@ GST_START_TEST (media_remove)
 }
 
 GST_END_TEST
+GST_START_TEST (media_from_all_caps)
+{
+  GstSDPResult ret = GST_SDP_OK;
+  GstCaps *caps = gst_caps_from_string (caps_opus_dtmf);
+  GstSDPMedia *media;
+  gchar *sdp;
+  guint caps_size = gst_caps_get_size (caps);
+
+  gst_sdp_media_new (&media);
+  fail_unless (media != NULL);
+
+  for (guint i = 0; i < caps_size; i++) {
+    const GstStructure *s = gst_caps_get_structure (caps, i);
+    ret = gst_sdp_media_add_media_from_structure (s, media);
+    fail_unless (ret == GST_SDP_OK);
+  }
+
+  gst_caps_unref (caps);
+
+  fail_unless_equals_int (gst_sdp_media_formats_len (media), 2);
+  fail_unless_equals_string (gst_sdp_media_get_format (media, 0), "98");
+  fail_unless_equals_string (gst_sdp_media_get_format (media, 1), "110");
+
+  sdp = gst_sdp_media_as_text (media);
+  fail_unless_equals_string (sdp, sdp_opus_dtmf);
+  g_free (sdp);
+
+  gst_sdp_media_free (media);
+}
+
+GST_END_TEST
 /*
  * End of test cases
  */
@@ -1014,6 +1056,7 @@ sdp_suite (void)
   tcase_add_test (tc_chain, caps_multiple_rid_parse_with_params);
   tcase_add_test (tc_chain, media_from_caps_with_source_filters);
   tcase_add_test (tc_chain, media_remove);
+  tcase_add_test (tc_chain, media_from_all_caps);
 
   return s;
 }

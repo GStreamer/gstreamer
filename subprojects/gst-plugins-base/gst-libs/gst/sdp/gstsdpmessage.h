@@ -744,6 +744,10 @@ GST_SDP_API
 GstSDPResult            gst_sdp_media_set_media_from_caps   (const GstCaps* caps, GstSDPMedia *media);
 
 GST_SDP_API
+GstSDPResult            gst_sdp_media_add_media_from_structure (const GstStructure *structure,
+                                                                GstSDPMedia        *media);
+
+GST_SDP_API
 gchar *                 gst_sdp_make_keymgmt                (const gchar *uri, const gchar *base64);
 
 GST_SDP_API
