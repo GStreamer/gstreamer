@@ -4685,12 +4685,26 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
           gst_structure_remove_fields (s, "rtcp-fb-nack", NULL);
       }
 
-      if (gst_sdp_media_set_media_from_caps (answer_caps, media) != GST_SDP_OK) {
-        GST_WARNING_OBJECT (webrtc,
-            "Could not build media from caps %" GST_PTR_FORMAT, answer_caps);
-        gst_clear_caps (&answer_caps);
-        gst_clear_caps (&offer_caps);
-        goto rejected;
+      static const gchar *disallowed_payloads[4] = { "rtx", "red", "ulpfec",
+        NULL
+      };
+      guint answer_caps_size = gst_caps_get_size (answer_caps);
+      for (guint l = 0; l < answer_caps_size; l++) {
+        const GstStructure *s = gst_caps_get_structure (answer_caps, l);
+        const gchar *enc_name = gst_structure_get_string (s, "encoding-name");
+        gchar *tmp = g_ascii_strdown (enc_name, -1);
+        if (g_strv_contains (disallowed_payloads, tmp)) {
+          g_free (tmp);
+          continue;
+        }
+        g_free (tmp);
+        if (gst_sdp_media_add_media_from_structure (s, media) != GST_SDP_OK) {
+          GST_WARNING_OBJECT (webrtc,
+              "Could not set media from %" GST_PTR_FORMAT, s);
+          gst_clear_caps (&answer_caps);
+          gst_clear_caps (&offer_caps);
+          goto rejected;
+        }
       }
 
       _get_rtx_target_pt_and_ssrc_from_caps (answer_caps, &target_pt,
