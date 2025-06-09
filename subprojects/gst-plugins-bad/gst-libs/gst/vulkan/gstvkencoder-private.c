@@ -1309,13 +1309,18 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   priv->vk.CmdEndVideoCoding (cmd_buf->cmd, &end_coding);
 
   if (!gst_vulkan_operation_end (priv->exec, &err)) {
-    GST_ERROR_OBJECT (self, "The operation did not complete properly");
+    GST_ERROR_OBJECT (self, "The operation did not complete properly: %s",
+        err->message);
     goto bail;
   }
   /* Wait the operation to complete or we might have a failing query */
   gst_vulkan_operation_wait (priv->exec);
 
-  gst_vulkan_operation_get_query (priv->exec, (gpointer *) & encode_res, &err);
+  if (!gst_vulkan_operation_get_query (priv->exec, (gpointer *) & encode_res,
+          &err)) {
+    GST_ERROR_OBJECT (self, "Failed to query the operation: %s", err->message);
+    goto bail;
+  }
   if (encode_res->status == VK_QUERY_RESULT_STATUS_COMPLETE_KHR) {
     GST_INFO_OBJECT (self, "The frame %p has been encoded with size %"
         G_GUINT64_FORMAT, pic, encode_res->data_size + pic->offset);
@@ -1330,6 +1335,8 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self, GstVideoInfo * info,
   return ret;
 bail:
   {
+    if (err)
+      g_error_free (err);
     return FALSE;
   }
 }
