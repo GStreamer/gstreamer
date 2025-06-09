@@ -83,6 +83,12 @@ struct GstHipFuncTableAmd
     void **kernelParams, void **extra);
   hipError_t (*hipMemcpyParam2DAsync) (const hip_Memcpy2D * pCopy,
     hipStream_t stream);
+  hipError_t (*hipMemsetD8Async) (hipDeviceptr_t dest, unsigned char value,
+    size_t count, hipStream_t stream);
+  hipError_t (*hipMemsetD16Async) (hipDeviceptr_t dest, unsigned short value,
+    size_t count, hipStream_t stream);
+  hipError_t (*hipMemsetD32Async) (hipDeviceptr_t dst, int value, size_t count,
+    hipStream_t stream);
   hipError_t (*hipTexObjectCreate) (hipTextureObject_t * pTexObject,
     const HIP_RESOURCE_DESC * pResDesc, const HIP_TEXTURE_DESC * pTexDesc,
     const HIP_RESOURCE_VIEW_DESC * pResViewDesc);
@@ -123,6 +129,12 @@ struct GstHipFuncTableCuda
     void **kernelParams, void **extra);
   CUresult (CUDAAPI *cuMemcpy2DAsync) (const CUDA_MEMCPY2D * pCopy,
     CUstream stream);
+  CUresult (CUDAAPI *cuMemsetD8Async) (CUdeviceptr dstDevice,
+    unsigned char uc, size_t N, CUstream hStream);
+  CUresult (CUDAAPI *cuMemsetD16Async) (CUdeviceptr dstDevice,
+    unsigned short us, size_t N, CUstream hStream);
+  CUresult (CUDAAPI *cuMemsetD32Async) (CUdeviceptr dstDevice, unsigned int ui,
+    size_t N, CUstream hStream);
   CUresult (CUDAAPI *cuTexObjectCreate) (CUtexObject * pTexObject,
     const CUDA_RESOURCE_DESC * pResDesc, const CUDA_TEXTURE_DESC * pTexDesc,
     const CUDA_RESOURCE_VIEW_DESC * pResViewDesc);
@@ -236,6 +248,9 @@ load_amd_func_table (void)
   LOAD_SYMBOL (hipModuleGetFunction);
   LOAD_SYMBOL (hipModuleLaunchKernel);
   LOAD_SYMBOL (hipMemcpyParam2DAsync);
+  LOAD_SYMBOL (hipMemsetD8Async);
+  LOAD_SYMBOL (hipMemsetD16Async);
+  LOAD_SYMBOL (hipMemsetD32Async);
   LOAD_SYMBOL (hipTexObjectCreate);
   LOAD_SYMBOL (hipTexObjectDestroy);
   LOAD_SYMBOL (hipGraphicsMapResources);
@@ -273,6 +288,9 @@ load_cuda_func_table (void)
   LOAD_SYMBOL (cuModuleGetFunction);
   LOAD_SYMBOL (cuLaunchKernel);
   LOAD_SYMBOL (cuMemcpy2DAsync);
+  LOAD_SYMBOL (cuMemsetD8Async);
+  LOAD_SYMBOL (cuMemsetD16Async);
+  LOAD_SYMBOL (cuMemsetD32Async);
   LOAD_SYMBOL (cuTexObjectCreate);
   LOAD_SYMBOL (cuTexObjectDestroy);
 
@@ -1004,6 +1022,48 @@ HipMemcpyParam2DAsync (GstHipVendor vendor, const hip_Memcpy2D * pCopy,
     cuda_ret = cuda_ftable.cuMemcpy2DAsync (&cudaCopy, (CUstream) stream);
   }
 
+  return hipCUResultTohipError (cuda_ret);
+}
+
+hipError_t
+HipMemsetD8Async (GstHipVendor vendor, hipDeviceptr_t dest, unsigned char value,
+    size_t count, hipStream_t stream)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipMemsetD8Async (dest, value, count, stream);
+
+  auto cuda_ret = cuda_ftable.cuMemsetD8Async ((CUdeviceptr) dest, value,
+      count, (CUstream) stream);
+  return hipCUResultTohipError (cuda_ret);
+}
+
+hipError_t
+HipMemsetD16Async (GstHipVendor vendor, hipDeviceptr_t dest,
+    unsigned short value, size_t count, hipStream_t stream)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipMemsetD16Async (dest, value, count, stream);
+
+  auto cuda_ret = cuda_ftable.cuMemsetD16Async ((CUdeviceptr) dest, value,
+      count, (CUstream) stream);
+  return hipCUResultTohipError (cuda_ret);
+}
+
+hipError_t
+HipMemsetD32Async (GstHipVendor vendor, hipDeviceptr_t dst, int value,
+    size_t count, hipStream_t stream)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipMemsetD32Async (dst, value, count, stream);
+
+  auto cuda_ret = cuda_ftable.cuMemsetD32Async ((CUdeviceptr) dst, value,
+      count, (CUstream) stream);
   return hipCUResultTohipError (cuda_ret);
 }
 

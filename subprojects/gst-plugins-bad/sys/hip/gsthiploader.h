@@ -104,6 +104,24 @@ hipError_t HipMemcpyParam2DAsync (GstHipVendor vendor,
                                   const hip_Memcpy2D* pCopy,
                                   hipStream_t stream);
 
+hipError_t HipMemsetD8Async (GstHipVendor vendor,
+                             hipDeviceptr_t dest,
+                             unsigned char value,
+                             size_t count,
+                             hipStream_t stream);
+
+hipError_t HipMemsetD16Async (GstHipVendor vendor,
+                              hipDeviceptr_t dest,
+                              unsigned short value,
+                              size_t count,
+                              hipStream_t stream);
+
+hipError_t HipMemsetD32Async (GstHipVendor vendor,
+                              hipDeviceptr_t dst,
+                              int value,
+                              size_t count,
+                              hipStream_t stream);
+
 hipError_t HipTexObjectCreate (GstHipVendor vendor,
                                hipTextureObject_t* pTexObject,
                                const HIP_RESOURCE_DESC* pResDesc,
