@@ -5013,6 +5013,8 @@ gst_util_filename_compare (const gchar * a, const gchar * b)
   b_utf8 = g_filename_to_utf8 (b, -1, NULL, NULL, NULL);
 
   if (a_utf8 == NULL || b_utf8 == NULL) {
+    g_free (a_utf8);
+    g_free (b_utf8);
     return strcmp (a, b);
   }
 
