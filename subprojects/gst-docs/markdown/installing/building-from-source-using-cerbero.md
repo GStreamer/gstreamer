@@ -332,10 +332,6 @@ On Windows, `INTELMEDIASDKROOT` automatically set by the installer. On Linux,
 if you need to set this, you must set it to point to the directory that
 contains the mediasdk `include` and `lib64` dirs.
 
-For VA-API, the [variant to enable](#enabling-optional-features-with-variants)
-is `vaapi` which will build the gstreamer-vaapi plugins with all
-options enabled if possible.
-
 ### Nvidia Hardware Codecs
 
 Since 1.17.1, the `nvcodec` plugin does not need access to the Nvidia Video SDK

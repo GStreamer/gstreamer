@@ -59,7 +59,6 @@ variables:
     -Ddevtools=enabled
     -Dges=enabled
     -Drtsp_server=enabled
-    -Dvaapi=enabled
     -Dsharp=disabled
     -Drs=disabled
     -Dgpl=enabled
@@ -374,9 +373,6 @@ pre-commit checks:
     - changes:
         paths:
           *modules_changes
-    - changes:
-        paths:
-          - "subprojects/gstreamer-vaapi/**/*"
 
 .build simple:
   extends:
@@ -431,9 +427,6 @@ build fedora gcc:
         # https://github.com/mesonbuild/meson/issues/5214
         # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4281?commit_id=d1a687b61d8fbc5ae35b4bb62aa7fd1d091818f2#note_1875699
         #
-        # VAAPI can't be build statically yet
-        # subprojects/gstreamer-vaapi/meson.build:8:2: ERROR: Problem encountered: GStreamer-VAAPI plugin not supported with `static` builds yet.
-        #
         # Disabling gstreamer-sharp tests because they download things as part of configure with
         # nuget which frequently fails on the CI (possibly because we're hammering the site)
         #
@@ -441,7 +434,6 @@ build fedora gcc:
         MESON_ARGS: >-
           ${DEFAULT_MESON_ARGS}
           -Dgst-devtools:dots_viewer=enabled
-          -Dvaapi=disabled
           -Dpython=auto
           -Dgst-editing-services:python=disabled
           -Dintrospection=disabled
@@ -463,16 +455,12 @@ build fedora clang:
 
       - BUILD_TYPE: ["--default-library=static"]
         BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
-        # VAAPI can't be build statically yet
-        # subprojects/gstreamer-vaapi/meson.build:8:2: ERROR: Problem encountered: GStreamer-VAAPI plugin not supported with `static` builds yet.
-        #
         # Disabling gstreamer-sharp tests because they download things as part of configure with
         # nuget which frequently fails on the CI (possibly because we're hammering the site)
         #
         # Disabling building both qt5 and qt6 when doing static builds since we can only link against one
         MESON_ARGS: >-
           ${DEFAULT_MESON_ARGS}
-          -Dvaapi=disabled
           -Dintrospection=disabled
           -Dpython=disabled
           -Ddoc=disabled
@@ -506,7 +494,6 @@ build debian x86_64:
     MESON_ARGS: >-
       ${DEFAULT_MESON_ARGS}
       -Dlibav=disabled
-      -Dvaapi=disabled
       -Dgst-plugins-base:pango=enabled
       -Dgst-plugins-good:cairo=enabled
       -Dgst-plugins-good:soup=enabled
@@ -655,11 +642,9 @@ build macos:
       - BUILD_TYPE: ["--default-library=both"]
         BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true"]
         # FIXME: We currently don't have pkg-config required by gobject-introspection/pygobject/sharp
-        # macos doesn't support vaapi
         MESON_ARGS: >-
           ${SIMPLE_BUILD}
           -Dintrospection=disabled
-          -Dvaapi=disabled
           -Dsharp=disabled
           -Dpython=disabled
           -Ddoc=disabled
@@ -754,9 +739,6 @@ check fedora:
     - changes:
         paths:
           *modules_changes
-    - changes:
-        paths:
-          - "subprojects/gstreamer-vaapi/**/*"
 
 integration testsuites fedora:
   extends: '.test fedora x86_64'
@@ -765,7 +747,6 @@ integration testsuites fedora:
     MESON_ARGS: >-
       ${SIMPLE_BUILD}
       -Dsharp=disabled
-      -Dvaapi=disabled
       -Dexamples=disabled
       -Dgst-examples=disabled
       -Dtests=disabled
@@ -924,9 +905,6 @@ fluster v4l2-stateless on visl:
     - changes:
         paths:
           *modules_changes
-    - changes:
-        paths:
-          - "subprojects/gstreamer-vaapi/**/*"
 
 valgrind core:
   extends: '.valgrind fedora x86_64'
@@ -1095,7 +1073,6 @@ build documentation:
           - "subprojects/gst-plugins-good/**/*"
           - "subprojects/gst-plugins-ugly/**/*"
           - "subprojects/gstreamer/**/*"
-          - "subprojects/gstreamer-vaapi/**/*"
           - "subprojects/gst-rtsp-server/**/*"
 
 # FIXME: Using trigger: causes permission issues, workaround using old REST API.

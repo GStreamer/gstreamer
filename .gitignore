@@ -22,7 +22,6 @@ prefix/
 /gst-devtools
 /gst-integration-testsuites
 /gst-editing-services
-/gstreamer-vaapi
 /gstreamer-sharp
 /pygobject
 /gst-python
@@ -54,7 +53,6 @@ subprojects/*/
 !subprojects/gst-python
 !subprojects/gstreamer
 !subprojects/gstreamer-sharp
-!subprojects/gstreamer-vaapi
 !subprojects/gst-rtsp-server
 !subprojects/macos-bison-binary
 !subprojects/win-flex-bison-binaries

@@ -203,7 +203,7 @@
  *
  *     $ gst-launch-1.0 clockselect. \( clockid=ptp avtpsrc ifname=$IFNAME ! \
  *         avtpcrfcheck ifname=$IFNAME ! avtpcvfdepay ! \
- *         vaapih264dec ! videoconvert ! clockoverlay halignment=right ! \
+ *         vah264dec ! videoconvert ! clockoverlay halignment=right ! \
  *         queue ! autovideosink \)
  *
  * ### Pipeline clock

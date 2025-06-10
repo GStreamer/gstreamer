@@ -12,7 +12,6 @@ release_modules = [
   'gst-editing-services',
   'gst-devtools',
   'gst-python',
-  'gstreamer-vaapi',
   'gst-docs',
   'gstreamer-sharp',
 ]
@@ -43,7 +42,7 @@ if out_of_sync_list.length() > 0
 
         Run
 
-          for m in @1@; do cp scripts/gen-changelog.py subprojects/$m/scripts/gen-changelog.py; done 
+          for m in @1@; do cp scripts/gen-changelog.py subprojects/$m/scripts/gen-changelog.py; done
 
         from the top-level git source directory to sync them up.
 
