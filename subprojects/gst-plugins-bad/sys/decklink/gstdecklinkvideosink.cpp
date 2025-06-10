@@ -757,6 +757,8 @@ static GstCaps *gst_decklink_video_sink_get_caps (GstBaseSink * bsink,
     GstCaps * filter);
 static gboolean gst_decklink_video_sink_set_caps (GstBaseSink * bsink,
     GstCaps * caps);
+static GstFlowReturn gst_decklink_video_sink_preroll (GstBaseSink * bsink,
+    GstBuffer * buffer);
 static GstFlowReturn gst_decklink_video_sink_render (GstBaseSink * bsink,
     GstBuffer * buffer);
 static gboolean gst_decklink_video_sink_open (GstBaseSink * bsink);
@@ -810,6 +812,7 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_decklink_video_sink_get_caps);
   basesink_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_decklink_video_sink_set_caps);
+  basesink_class->preroll = GST_DEBUG_FUNCPTR (gst_decklink_video_sink_preroll);
   basesink_class->render = GST_DEBUG_FUNCPTR (gst_decklink_video_sink_render);
   // FIXME: These are misnamed in basesink!
   basesink_class->start = GST_DEBUG_FUNCPTR (gst_decklink_video_sink_open);
@@ -2001,6 +2004,49 @@ out:
 }
 
 static GstFlowReturn
+gst_decklink_video_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
+{
+  GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (bsink);
+  GstFlowReturn flow_ret = GST_FLOW_OK;
+  GstDecklinkVideoFrame *frame;
+  GstClockTime running_time, frame_duration;
+  HRESULT ret;
+
+  if ((flow_ret = gst_decklink_video_sink_prepare (bsink, buffer)) != GST_FLOW_OK)
+    return flow_ret;
+
+  frame =
+        (GstDecklinkVideoFrame *) g_queue_pop_head (self->pending_frames);
+  running_time = gst_clock_get_internal_time (self->output->clock);
+
+  frame_duration =
+      gst_util_uint64_scale_int (GST_SECOND, self->output->mode->fps_d,
+      self->output->mode->fps_n);
+  running_time = gst_util_uint64_scale (running_time, 1, frame_duration);
+  running_time = gst_util_uint64_scale_ceil (running_time, frame_duration, 1);
+
+  GST_DEBUG_OBJECT (self, "Scheduling preroll video frame %p at %" GST_TIME_FORMAT
+      " with duration %" GST_TIME_FORMAT, frame, GST_TIME_ARGS (running_time),
+      GST_TIME_ARGS (frame_duration));
+
+  ret = self->output->output->ScheduleVideoFrame (frame,
+      running_time, frame_duration, GST_SECOND);
+  if (ret != S_OK) {
+    GST_ELEMENT_ERROR (self, STREAM, FAILED,
+        (NULL), ("Failed to schedule frame: 0x%08lx", (unsigned long) ret));
+    frame->Release ();
+    flow_ret = GST_FLOW_ERROR;
+    goto out;
+  }
+  frame->Release ();
+
+  return flow_ret;
+
+out:
+  return flow_ret;
+}
+
+static GstFlowReturn
 gst_decklink_video_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 {
   GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (bsink);
@@ -2074,7 +2120,6 @@ gst_decklink_video_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     }
   }
   GST_OBJECT_UNLOCK (self);
-
 
   while (self->pending_frames->length > 0) {
     GstDecklinkVideoFrame *frame =
