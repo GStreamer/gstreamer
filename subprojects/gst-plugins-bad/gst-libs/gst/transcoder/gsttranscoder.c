@@ -277,6 +277,7 @@ gst_transcoder_constructed (GObject * object)
 
   self->transcodebin =
       gst_element_factory_make ("uritranscodebin", "uritranscodebin");
+  gst_object_ref_sink (self->transcodebin);
 
   g_object_set (self->transcodebin, "source-uri", self->source_uri,
       "dest-uri", self->dest_uri, "profile", self->profile,
@@ -843,7 +844,7 @@ gst_transcoder_main (gpointer data)
   self->current_state = GST_STATE_NULL;
   if (self->transcodebin) {
     gst_element_set_state (self->transcodebin, GST_STATE_NULL);
-    g_clear_object (&self->transcodebin);
+    gst_clear_object (&self->transcodebin);
   }
 
   GST_TRACE_OBJECT (self, "Stopped main thread");
