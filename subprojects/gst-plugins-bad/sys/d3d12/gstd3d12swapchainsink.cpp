@@ -41,6 +41,7 @@
 #include <wrl.h>
 #include <vector>
 #include <memory>
+#include <math.h>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -83,6 +84,8 @@ enum
 enum
 {
   SIGNAL_RESIZE,
+  SIGNAL_UV_REMAP,
+  SIGNAL_REDRAW,
   SIGNAL_LAST
 };
 
@@ -225,6 +228,11 @@ struct GstD3D12SwapChainSinkPrivate
   FLOAT border_color_val[4];
   GstVideoRectangle viewport = { };
   gboolean auto_resize = FALSE;
+  gboolean did_redraw = FALSE;
+
+  std::vector<ComPtr<ID3D12Resource>> uv_remap;
+  std::vector<D3D12_VIEWPORT> uv_remap_viewport_origin;
+  std::vector<GstVideoRectangle> uv_remap_viewport;
 
   gint adapter = DEFAULT_ADAPTER;
   gint force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
@@ -272,6 +280,9 @@ static GstFlowReturn gst_d3d12_swapchain_sink_show_frame (GstVideoSink * sink,
     GstBuffer * buf);
 static void gst_d3d12_swapchain_sink_resize (GstD3D12SwapChainSink * self,
     guint width, guint height);
+static void gst_d3d12_swapchain_sink_uv_remap (GstD3D12SwapChainSink * self,
+    guint num_lut, ID3D12Resource ** lut, D3D12_VIEWPORT * viewport);
+static void gst_d3d12_swapchain_sink_redraw (GstD3D12SwapChainSink * self);
 static void
 gst_d3d12_swapchain_sink_resize_internal (GstD3D12SwapChainSink * self,
     guint width, guint height);
@@ -387,6 +398,44 @@ gst_d3d12_swapchain_sink_class_init (GstD3D12SwapChainSinkClass * klass)
       (GSignalFlags) (G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
       G_CALLBACK (gst_d3d12_swapchain_sink_resize), nullptr, nullptr, nullptr,
       G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_UINT);
+
+  /**
+   * GstD3D12SwapChainSink::uv-remap
+   * @videosink: the #GstD3D12SwapChainSink
+   * @num_lut: LUT resource array length
+   * @lut: Array of ID3D12Resource used for UV remap operation
+   * @viewport: Array of D3D12_VIEWPORT
+   *
+   * Sets list of ID3D12Resource for UV coordinates remapping.
+   * Valid formats are R8G8B8A8_UNORM and R16G16B16A16_UNORM.
+   * R -> U, G -> U, B -> unused, and A -> mask where A >= 0.5
+   * applies remapping, otherwise fill background color"
+   *
+   * TopLeftX, TopLeftY, Width, and Height values are used to calculate
+   * final viewport size. The coordinates must be normalized value in [0, 1]
+   * range instead of real viewport size.
+   *
+   * Since: 1.28
+   */
+  d3d12_swapchain_sink_signals[SIGNAL_UV_REMAP] =
+      g_signal_new_class_handler ("uv-remap", G_TYPE_FROM_CLASS (klass),
+      (GSignalFlags) (G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
+      G_CALLBACK (gst_d3d12_swapchain_sink_uv_remap), nullptr, nullptr, nullptr,
+      G_TYPE_NONE, 3, G_TYPE_UINT, G_TYPE_POINTER, G_TYPE_POINTER);
+
+  /**
+   * GstD3D12SwapChainSink::redraw
+   * @videosink: the #GstD3D12SwapChainSink
+   *
+   * Redraw last buffer and present it
+   *
+   * Since: 1.28
+   */
+  d3d12_swapchain_sink_signals[SIGNAL_REDRAW] =
+      g_signal_new_class_handler ("redraw", G_TYPE_FROM_CLASS (klass),
+      (GSignalFlags) (G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
+      G_CALLBACK (gst_d3d12_swapchain_sink_redraw), nullptr, nullptr, nullptr,
+      G_TYPE_NONE, 0);
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d12_swapchain_sink_set_context);
@@ -855,6 +904,53 @@ gst_d3d12_swapchain_sink_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
   return TRUE;
 }
 
+static void
+calculate_remap_viewport (GstD3D12SwapChainSink * self,
+    const D3D12_VIEWPORT * d3d12_viewport, GstVideoRectangle * viewport)
+{
+  auto priv = self->priv;
+
+  if (priv->viewport.w > 0 && priv->viewport.h > 0) {
+    double x = d3d12_viewport->TopLeftX;
+    double y = d3d12_viewport->TopLeftY;
+    double w = d3d12_viewport->Width;
+    double h = d3d12_viewport->Height;
+
+    /* Ensure normalized coordinate */
+    x = CLAMP (x, 0.0, 1.0);
+    y = CLAMP (y, 0.0, 1.0);
+    w = CLAMP (w, 0.0, 1.0);
+    h = CLAMP (h, 0.0, 1.0);
+
+    /* Scale to real viewport size */
+    gint xi = (gint) round ((double) priv->viewport.w * x) + priv->viewport.x;
+    gint yi = (gint) round ((double) priv->viewport.h * y) + priv->viewport.y;
+    gint wi = (gint) round ((double) priv->viewport.w * w);
+    gint hi = (gint) round ((double) priv->viewport.h * h);
+
+    /* clamp */
+    auto r = xi + wi;
+    auto rr = priv->viewport.x + priv->viewport.w;
+    if (rr < r)
+      wi = rr - xi;
+
+    auto b = yi + hi;
+    auto bb = priv->viewport.y + priv->viewport.h;
+    if (bb < b)
+      hi = bb - hi;
+
+    viewport->x = xi;
+    viewport->y = yi;
+    viewport->w = wi;
+    viewport->h = hi;
+  } else {
+    viewport->x = 0;
+    viewport->y = 0;
+    viewport->w = 0;
+    viewport->h = 0;
+  }
+}
+
 static gboolean
 gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
 {
@@ -879,7 +975,7 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
     priv->prev_crop_rect = crop_rect;
   }
 
-  priv->lock.lock ();
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
   if (priv->first_present || priv->output_updated) {
     GstVideoRectangle dst_rect = { };
     dst_rect.w = priv->width;
@@ -895,6 +991,14 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
       priv->viewport = dst_rect;
     }
 
+    priv->uv_remap_viewport.clear ();
+    for (size_t i = 0; i < priv->uv_remap_viewport_origin.size (); i++) {
+      GstVideoRectangle uv_viewport = { };
+      calculate_remap_viewport (self, &priv->uv_remap_viewport_origin[i],
+          &uv_viewport);
+      priv->uv_remap_viewport.push_back (uv_viewport);
+    }
+
     g_object_set (priv->conv, "dest-x", priv->viewport.x,
         "dest-y", priv->viewport.y, "dest-width", priv->viewport.w,
         "dest-height", priv->viewport.h, "hue", priv->hue,
@@ -906,7 +1010,6 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
     priv->first_present = false;
     priv->output_updated = false;
   }
-  priv->lock.unlock ();
 
   gst_d3d12_overlay_compositor_upload (priv->comp, priv->cached_buf);
 
@@ -974,17 +1077,37 @@ gst_d3d12_swapchain_sink_render (GstD3D12SwapChainSink * self)
 
   if (priv->viewport.x != 0 || priv->viewport.y != 0 ||
       (guint) priv->viewport.w != priv->width ||
-      (guint) priv->viewport.h != priv->height) {
+      (guint) priv->viewport.h != priv->height || !priv->uv_remap.empty ()) {
     auto rtv_heap = gst_d3d12_memory_get_render_target_view_heap (mem);
     auto cpu_handle = GetCPUDescriptorHandleForHeapStart (rtv_heap);
     cl->ClearRenderTargetView (cpu_handle, priv->border_color_val, 0, nullptr);
   }
 
-  if (!gst_d3d12_converter_convert_buffer (priv->conv,
-          priv->cached_buf, conv_outbuf, fence_data, cl.Get (), TRUE)) {
-    GST_ERROR_OBJECT (self, "Couldn't build convert command");
-    gst_d3d12_fence_data_unref (fence_data);
-    return FALSE;
+  if (!priv->uv_remap.empty ()) {
+    std::vector < ID3D12Resource * >uv_remap;
+
+    for (size_t i = 0; i < priv->uv_remap.size (); i++)
+      uv_remap.push_back (priv->uv_remap[i].Get ());
+
+    if (!gst_d3d12_converter_convert_buffer_for_uv_remap (priv->conv,
+            priv->cached_buf, conv_outbuf, fence_data, cl.Get (), TRUE,
+            (guint) priv->uv_remap.size (), uv_remap.data (),
+            priv->uv_remap_viewport.data ())) {
+      GST_ERROR_OBJECT (self, "Couldn't build convert command");
+      gst_d3d12_fence_data_unref (fence_data);
+      return FALSE;
+    }
+  } else {
+    gst_d3d12_converter_update_viewport (priv->conv, priv->viewport.x,
+        priv->viewport.y, priv->viewport.w, priv->viewport.h);
+    gst_d3d12_converter_set_remap (priv->conv, nullptr);
+
+    if (!gst_d3d12_converter_convert_buffer (priv->conv,
+            priv->cached_buf, conv_outbuf, fence_data, cl.Get (), TRUE)) {
+      GST_ERROR_OBJECT (self, "Couldn't build convert command");
+      gst_d3d12_fence_data_unref (fence_data);
+      return FALSE;
+    }
   }
 
   if (!gst_d3d12_overlay_compositor_draw (priv->comp,
@@ -1074,7 +1197,12 @@ gst_d3d12_swapchain_sink_set_buffer (GstD3D12SwapChainSink * self,
             GST_VIDEO_SINK_WIDTH (self), GST_VIDEO_SINK_HEIGHT (self));
       }
     } else {
-      need_render = false;
+      if (priv->did_redraw) {
+        need_render = true;
+      } else {
+        need_render = false;
+      }
+
       update_converter = false;
     }
   }
@@ -1135,6 +1263,7 @@ gst_d3d12_swapchain_sink_set_buffer (GstD3D12SwapChainSink * self,
   if (!need_render)
     return TRUE;
 
+  priv->did_redraw = FALSE;
   auto mem = gst_buffer_peek_memory (buffer, 0);
   if (!gst_is_d3d12_memory (mem)) {
     GstBuffer *upload = nullptr;
@@ -1205,6 +1334,29 @@ gst_d3d12_swapchain_sink_resize_internal (GstD3D12SwapChainSink * self,
 }
 
 static void
+gst_d3d12_swapchain_sink_redraw (GstD3D12SwapChainSink * self)
+{
+  auto priv = self->priv;
+
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+
+  GST_DEBUG_OBJECT (self, "Redraw");
+
+  if (priv->swapchain && priv->cached_buf &&
+      gst_d3d12_swapchain_sink_render (self)) {
+    GST_DEBUG_OBJECT (self, "Presenting redraw frame");
+    auto hr = priv->swapchain->Present (0, 0);
+    if (!gst_d3d12_result (hr, self->device))
+      GST_ERROR_OBJECT (self, "Present failed");
+
+    gst_d3d12_cmd_queue_execute_command_lists (priv->cq,
+        0, nullptr, &priv->fence_val);
+
+    priv->did_redraw = TRUE;
+  }
+}
+
+static void
 gst_d3d12_swapchain_sink_resize (GstD3D12SwapChainSink * self, guint width,
     guint height)
 {
@@ -1236,6 +1388,31 @@ gst_d3d12_swapchain_sink_resize (GstD3D12SwapChainSink * self, guint width,
   }
 
   gst_d3d12_swapchain_sink_resize_internal (self, width, height);
+}
+
+static void
+gst_d3d12_swapchain_sink_uv_remap (GstD3D12SwapChainSink * self, guint num_lut,
+    ID3D12Resource ** lut, D3D12_VIEWPORT * viewport)
+{
+  auto priv = self->priv;
+
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  priv->uv_remap.clear ();
+  priv->uv_remap_viewport.clear ();
+  priv->uv_remap_viewport_origin.clear ();
+
+  for (guint i = 0; i < num_lut; i++) {
+    ComPtr < ID3D12Resource > remap = lut[i];
+    priv->uv_remap.push_back (remap);
+    priv->uv_remap_viewport_origin.push_back (viewport[i]);
+
+    GstVideoRectangle rect = { };
+    calculate_remap_viewport (self, &viewport[i], &rect);
+    GST_DEBUG_OBJECT (self,
+        "Calculated viewport %d (x, y, w, h): %d, %d, %d, %d", i,
+        rect.x, rect.y, rect.w, rect.h);
+    priv->uv_remap_viewport.push_back (rect);
+  }
 }
 
 static gboolean
@@ -1375,6 +1552,8 @@ gst_d3d12_swapchain_sink_prepare (GstBaseSink * sink, GstBuffer * buffer)
   auto self = GST_D3D12_SWAPCHAIN_SINK (sink);
   auto priv = self->priv;
 
+  GST_TRACE_OBJECT (self, "Prepare");
+
   auto pts = GST_BUFFER_PTS (buffer);
   if (GST_CLOCK_TIME_IS_VALID (pts)) {
     auto stream_time = gst_segment_to_stream_time (&sink->segment,
@@ -1397,6 +1576,8 @@ gst_d3d12_swapchain_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 {
   auto self = GST_D3D12_SWAPCHAIN_SINK (sink);
   auto priv = self->priv;
+
+  GST_TRACE_OBJECT (self, "Show frame");
 
   std::lock_guard < std::recursive_mutex > lk (priv->lock);
   if (!gst_d3d12_swapchain_sink_set_buffer (self, buf, FALSE)) {
