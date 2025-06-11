@@ -503,6 +503,7 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
     GstBitReader br;
     guint32 tmp;
     guint8 tmp8 = 0;
+    gsize src_offset, dst_offset;
     guint32 max_sub_layers_minus1, temporal_id_nesting_flag, chroma_format_idc,
         bit_depth_luma_minus8, bit_depth_chroma_minus8,
         min_spatial_segmentation_idc;
@@ -544,7 +545,42 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
     max_sub_layers_minus1 = ((nalmap.data[2]) >> 1) & 0x07;
     temporal_id_nesting_flag = nalmap.data[2] & 0x01;
 
-    gst_bit_reader_init (&br, nalmap.data + 15, nalmap.size - 15);
+    /* HEVCDecoderConfigurationVersion = 1 */
+    data[0] = 1;
+
+    /* Copy from profile_tier_level (Rec. ITU-T H.265 (04/2013) section 7.3.3
+     *
+     * profile_space | tier_flat | profile_idc |
+     * profile_compatibility_flags | constraint_indicator_flags |
+     * level_idc | progressive_source_flag | interlaced_source_flag
+     * non_packed_constraint_flag | frame_only_constraint_flag
+     * reserved_zero_44bits | level_idc */
+
+    guint n_zero_bytes = 0;
+    // 16 bit nal header and sps-vps id.
+    for (src_offset = 3, dst_offset = 1; dst_offset < 13; src_offset++) {
+      if (src_offset >= nalmap.size)
+        // SPS not long enough
+        return FALSE;
+
+      if (n_zero_bytes == 2 && nalmap.data[src_offset] == 0x03) {
+        n_zero_bytes = 0;
+        // ignore emulation prevention bytes: [0x00, 0x00, 0x03]
+        continue;
+      }
+
+      if (nalmap.data[src_offset] == 0x00)
+        n_zero_bytes++;
+      else
+        n_zero_bytes = 0;
+
+      data[dst_offset] = nalmap.data[src_offset];
+      dst_offset++;
+    }
+
+    // FIXME: does not parse any sub layers
+    gst_bit_reader_init (&br, nalmap.data + src_offset,
+        nalmap.size - src_offset);
 
     gst_rtp_read_golomb (&br, &tmp);    /* sps_seq_parameter_set_id */
     gst_rtp_read_golomb (&br, &chroma_format_idc);      /* chroma_format_idc */
@@ -570,23 +606,6 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
         "Ignoring min_spatial_segmentation for now (assuming zero)");
 
     min_spatial_segmentation_idc = 0;   /* NOTE - we ignore this for now, but in a perfect world, we should continue parsing to obtain the real value */
-
-    gst_buffer_unmap (g_ptr_array_index (rtph265depay->sps, 0), &nalmap);
-
-    /* HEVCDecoderConfigurationVersion = 1 */
-    data[0] = 1;
-
-    /* Copy from profile_tier_level (Rec. ITU-T H.265 (04/2013) section 7.3.3
-     *
-     * profile_space | tier_flat | profile_idc |
-     * profile_compatibility_flags | constraint_indicator_flags |
-     * level_idc | progressive_source_flag | interlaced_source_flag
-     * non_packed_constraint_flag | frame_only_constraint_flag
-     * reserved_zero_44bits | level_idc */
-    gst_buffer_map (g_ptr_array_index (rtph265depay->sps, 0), &nalmap,
-        GST_MAP_READ);
-    for (i = 0; i < 12; i++)
-      data[i + 1] = nalmap.data[i];
     gst_buffer_unmap (g_ptr_array_index (rtph265depay->sps, 0), &nalmap);
 
     /* min_spatial_segmentation_idc */
