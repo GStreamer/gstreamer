@@ -81,6 +81,10 @@ struct _GstRtpH265Pay
   guint bundle_size;
   gboolean bundle_contains_vcl_or_suffix;
   GstRTPH265AggregateMode aggregate_mode;
+
+  guint8 profile_id;
+  guint8 level_id;
+  guint8 tier_flag;
 };
 
 struct _GstRtpH265PayClass

@@ -547,11 +547,30 @@ gst_rtp_h265_pay_set_vps_sps_pps (GstRTPBasePayload * basepayload)
   }
 
   if (G_LIKELY (count)) {
-    /* combine into output caps */
-    res = gst_rtp_base_payload_set_outcaps (basepayload,
+    GstStructure *s = gst_structure_new_empty ("unused");
+    gst_structure_set (s,
         "sprop-vps", G_TYPE_STRING, vps->str,
         "sprop-sps", G_TYPE_STRING, sps->str,
         "sprop-pps", G_TYPE_STRING, pps->str, NULL);
+
+    if (payloader->profile_id) {
+      char *str = g_strdup_printf ("%u", payloader->profile_id);
+      gst_structure_set (s, "profile-id", G_TYPE_STRING, str, NULL);
+      g_free (str);
+
+      str = g_strdup_printf ("%u", payloader->tier_flag == TRUE);
+      gst_structure_set (s, "tier-flag", G_TYPE_STRING, str, NULL);
+      g_free (str);
+    }
+    if (payloader->level_id) {
+      char *str = g_strdup_printf ("%u", payloader->level_id);
+      gst_structure_set (s, "level-id", G_TYPE_STRING, str, NULL);
+      g_free (str);
+    }
+
+    /* combine into output caps */
+    res = gst_rtp_base_payload_set_outcaps_structure (basepayload, s);
+    gst_structure_free (s);
   } else {
     res = gst_rtp_base_payload_set_outcaps (basepayload, NULL);
   }
@@ -632,6 +651,9 @@ gst_rtp_h265_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 
     /* profile_space | tier_flag | profile_idc */
     GST_DEBUG_OBJECT (rtph265pay, "profile %06x", data[1]);
+    rtph265pay->tier_flag = (data[1] & 0x20) >> 5;
+    rtph265pay->profile_id = data[1] & 0x1f;
+    rtph265pay->level_id = data[12];
 
     /* profile_compatibility_flags */
     for (i = 2; i < 6; i++) {
