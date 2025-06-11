@@ -1,3 +1,8 @@
+valgrind_dep = dependency('valgrind', required: false).partial_dependency(compile_args : true)
+if valgrind_dep.found()
+  cdata.set('HAVE_VALGRIND', 1)
+endif
+
 # tests and condition when to skip the test
 ges_tests = [
     ['ges/asset'],

@@ -483,14 +483,19 @@ GST_START_TEST (test_project_add_properties)
 
   _check_properties (timeline);
 
-  gst_object_unref (timeline);
-  gst_object_unref (project);
-
-  g_main_loop_unref (mainloop);
   g_signal_handlers_disconnect_by_func (project, (GCallback) project_loaded_cb,
       mainloop);
   g_signal_handlers_disconnect_by_func (project, (GCallback) asset_added_cb,
       NULL);
+
+  gst_object_unref (timeline);
+  gst_object_unref (project);
+  g_main_loop_unref (mainloop);
+
+  /* discovery cleanup may be delayed */
+  g_usleep (G_USEC_PER_SEC * 2);
+  while (g_main_context_iteration (NULL, FALSE))
+    continue;
 
   ges_deinit ();
 }
@@ -564,18 +569,24 @@ GST_START_TEST (test_project_load_xges)
           (loaded_project), GES_META_FORMAT_VERSION),
       ges_meta_container_get_string (GES_META_CONTAINER (loaded_project),
           GES_META_FORMAT_VERSION));
-  gst_object_unref (timeline);
-  gst_object_unref (saved_project);
-  gst_object_unref (loaded_project);
-  g_free (uri);
 
-  ASSERT_OBJECT_REFCOUNT (saved_project, "Still 1 ref for asset cache", 1);
-
-  g_main_loop_unref (mainloop);
   g_signal_handlers_disconnect_by_func (saved_project,
       (GCallback) project_loaded_cb, mainloop);
   g_signal_handlers_disconnect_by_func (saved_project,
       (GCallback) asset_added_cb, NULL);
+
+  g_free (uri);
+  gst_object_unref (timeline);
+  gst_object_unref (saved_project);
+  gst_object_unref (loaded_project);
+  g_main_loop_unref (mainloop);
+
+  ASSERT_OBJECT_REFCOUNT (saved_project, "Still 1 ref for asset cache", 1);
+
+  /* discovery cleanup may be delayed */
+  g_usleep (G_USEC_PER_SEC * 2);
+  while (g_main_context_iteration (NULL, FALSE))
+    continue;
 
   ges_deinit ();
 }
@@ -652,16 +663,21 @@ GST_START_TEST (test_project_auto_transition)
     fail_unless (ges_layer_get_auto_transition (layer));
   }
 
-  g_list_free_full (layers, gst_object_unref);
-  gst_object_unref (timeline);
-  gst_object_unref (project);
-  g_free (tmpuri);
-
-  g_main_loop_unref (mainloop);
   g_signal_handlers_disconnect_by_func (project, (GCallback) project_loaded_cb,
       mainloop);
   g_signal_handlers_disconnect_by_func (project, (GCallback) asset_added_cb,
       NULL);
+
+  g_free (tmpuri);
+  g_list_free_full (layers, gst_object_unref);
+  gst_object_unref (timeline);
+  gst_object_unref (project);
+  g_main_loop_unref (mainloop);
+
+  /* discovery cleanup may be delayed */
+  g_usleep (G_USEC_PER_SEC * 2);
+  while (g_main_context_iteration (NULL, FALSE))
+    continue;
 
   ges_deinit ();
 }

@@ -1191,6 +1191,8 @@ GST_START_TEST (test_layer_meta_string)
 
   assert_equals_string (result, "blub");
 
+  gst_object_unref (timeline);
+
   ges_deinit ();
 }
 
@@ -1214,6 +1216,8 @@ GST_START_TEST (test_layer_meta_boolean)
           (layer), "ges-test", &result));
 
   fail_unless (result);
+
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }
@@ -1239,6 +1243,8 @@ GST_START_TEST (test_layer_meta_int)
 
   assert_equals_int (result, 1234);
 
+  gst_object_unref (timeline);
+
   ges_deinit ();
 }
 
@@ -1262,6 +1268,8 @@ GST_START_TEST (test_layer_meta_uint)
           (layer), "ges-test", &result));
 
   assert_equals_int (result, 42);
+
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }
@@ -1287,6 +1295,8 @@ GST_START_TEST (test_layer_meta_int64)
 
   assert_equals_int64 (result, 1234);
 
+  gst_object_unref (timeline);
+
   ges_deinit ();
 }
 
@@ -1310,6 +1320,8 @@ GST_START_TEST (test_layer_meta_uint64)
           (layer), "ges-test", &result));
 
   assert_equals_uint64 (result, 42);
+
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }
@@ -1335,6 +1347,8 @@ GST_START_TEST (test_layer_meta_float)
           "ges-test", &result));
 
   assert_equals_float (result, 23.456f);
+
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }
@@ -1362,6 +1376,8 @@ GST_START_TEST (test_layer_meta_double)
 
   //TODO CHECK
   assert_equals_float (result, 23.456);
+
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }
@@ -1392,6 +1408,8 @@ GST_START_TEST (test_layer_meta_date)
 
   g_date_free (input);
   g_date_free (result);
+
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }
@@ -1427,6 +1445,8 @@ GST_START_TEST (test_layer_meta_date_time)
   gst_date_time_unref (input);
   gst_date_time_unref (result);
 
+  gst_object_unref (timeline);
+
   ges_deinit ();
 }
 
@@ -1458,6 +1478,8 @@ GST_START_TEST (test_layer_meta_value)
   assert_equals_string (g_value_get_string (result), "Hello world!");
 
   g_value_unset (&data);
+
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }
@@ -1554,6 +1576,8 @@ GST_START_TEST (test_layer_meta_register)
       "ges-test-value");
   assert_equals_string (result, "Hello world!");
 
+  gst_object_unref (timeline);
+
   ges_deinit ();
 }
 
@@ -1585,6 +1609,8 @@ GST_START_TEST (test_layer_meta_foreach)
 
   ges_meta_container_foreach (GES_META_CONTAINER (layer),
       (GESMetaForeachFunc) test_foreach, NULL);
+
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }
@@ -1702,6 +1728,8 @@ GST_START_TEST (test_layer_get_clips_in_interval)
   current = current->next;
   fail_unless (current->data == GES_TIMELINE_ELEMENT (clip2));
   g_list_free_full (objects, gst_object_unref);
+
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }

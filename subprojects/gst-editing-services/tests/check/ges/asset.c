@@ -90,8 +90,10 @@ custom_context_thread_func (CustomContextData * data)
       GINT_TO_POINTER (data->expected_ok));
   g_main_loop_run (mainloop);
 
-  g_main_context_pop_thread_default (context);
+  // and deinit also in the thread context
   ges_deinit ();
+
+  g_main_context_pop_thread_default (context);
   g_main_context_unref (context);
   g_main_loop_unref (mainloop);
 
@@ -232,13 +234,11 @@ GST_START_TEST (test_uri_clip_change_asset)
   fail_unless_equals_int (g_list_length (GES_CONTAINER_CHILDREN (extractable)),
       1);
 
-  gst_object_unref (extractable);
-
   g_free (uri);
   g_free (uri1);
 
   gst_object_unref (asset1);
-  gst_object_unref (asset);
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }

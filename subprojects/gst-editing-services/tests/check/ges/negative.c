@@ -21,6 +21,14 @@
 #include <gst/check/gstcheck.h>
 #include <signal.h>
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#endif
+
 static void
 sigabrt_handler (int signum)
 {
@@ -65,7 +73,13 @@ ges_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-  tcase_add_test (tc_chain, test_inconsistent_init_deinit_thread);
+#ifdef HAVE_VALGRIND
+  if (RUNNING_ON_VALGRIND) {
+  } else
+#endif
+  {
+    tcase_add_test (tc_chain, test_inconsistent_init_deinit_thread);
+  }
 
   return s;
 }

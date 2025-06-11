@@ -105,7 +105,7 @@ GST_START_TEST (test_title_source_properties)
 
   ges_container_remove (GES_CONTAINER (clip),
       GES_TIMELINE_ELEMENT (trackelement));
-  gst_object_unref (clip);
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }
