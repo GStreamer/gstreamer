@@ -209,6 +209,12 @@ ges_source_create_topbin (GESSource * source, const gchar * bin_name,
     return NULL;
   }
 
+  /* We may be creating an embedded topbin */
+  gst_clear_object (&priv->first_converter);
+  gst_clear_object (&priv->last_converter);
+  gst_clear_object (&priv->topbin);
+  gst_clear_object (&priv->ghostpad);
+
   priv->ghostpad = gst_object_ref (gst_ghost_pad_new_no_target ("src",
           GST_PAD_SRC));
   gst_pad_set_active (priv->ghostpad, TRUE);
