@@ -71,18 +71,20 @@ if gstd3d12_dep.found()
       dependencies: [gst_dep, gstd3d12_dep, gstvideo_dep, d3dcompile_lib, dx_headers_dep],
       install: false
     )
-  endif
-endif
 
-if cc.get_id() == 'msvc' and have_dcomp_h and dcomp_dep.found() and \
-    have_d3d11_h and d3d11_dep.found() and have_dxgi_h and dxgi_dep.found()
-  executable('d3d12swapchainsink-win32', 'd3d12swapchainsink-win32.cpp',
-    c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
-    cpp_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
-    include_directories : [configinc, libsinc],
-    dependencies: [gst_dep, gstvideo_dep, dcomp_dep, d3d11_dep, dxgi_dep],
-    install: false,
-  )
+    if cc.get_id() == 'msvc' and have_dcomp_h and dcomp_dep.found() and \
+        have_d3d11_h and d3d11_dep.found() and have_dxgi_h and dxgi_dep.found()
+      executable('d3d12swapchainsink-win32',
+        ['d3d12swapchainsink-win32.cpp', '../key-handler.c'],
+        c_args : gst_plugins_bad_args + extra_args,
+        cpp_args : gst_plugins_bad_args + extra_args,
+        include_directories : [configinc, libsinc],
+        dependencies: [gst_dep, gstvideo_dep, gstd3d12_dep, d3dcompile_lib,
+                       dx_headers_dep, dcomp_dep, d3d11_dep, dxgi_dep],
+        install: false,
+      )
+    endif
+  endif
 endif
 
 have_winrt_comp_headers = true
