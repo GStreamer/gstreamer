@@ -2,11 +2,13 @@ GStreamer 1.24 Release Notes
 
 GStreamer 1.24.0 was originally released on 4 March 2024.
 
-The latest bug-fix release in the stable 1.24 series is 1.24.10 and was released on 06 January 2025.
+The latest and most likely last bug-fix release in the stable 1.24 series is 1.24.13 and was released on 11 June 2025.
 
 See https://gstreamer.freedesktop.org/releases/1.24/ for the latest version of this document.
 
-Last updated: Tuesday 06 January 2025, 19:30 UTC (log)
+The GStreamer 1.24 stable series has now been superseded by the GStreamer 1.26 stable release series.
+
+Last updated: Wednesday 11 June 2025, 01:00 UTC (log)
 
 ## Introduction
 
@@ -3171,15 +3173,199 @@ List of merge requests and issues fixed in 1.24.12
 -   List of Merge Requests applied in 1.24.12
 -   List of Issues fixed in 1.24.12
 
+1.24.13
+
+The thirteenth, and most likely final, 1.24 bug-fix release (1.24.13) was released on 11 June 2025.
+
+This release only contains bugfixes as well as a number of security fixes and it should be safe to update from 1.24.x.
+
+The 1.24 stable series is no longer actively maintained and has been superseded by the GStreamer 1.26 stable series now.
+
+Highlighted bugfixes in 1.24.13
+
+-   Various security fixes and playback fixes
+-   MP4 demuxer atom parsing improvements and security fixes
+-   H.265 decoder base class and caption inserter SPS/PPS handling fixes
+-   Subtitle parser security fixes
+-   Subtitle rendering and seeking fixes
+-   Closed caption fixes
+-   Matroska rotation tag support and v4 muxing support
+-   Ogg seeking improvements in streaming mode
+-   Windows plugin loading fixes
+-   MIDI parser improvements for tempo changes
+-   Video time code support for 119.88 fps and drop-frames-related conversion fixes
+-   GStreamer editing services fixes for sources with non-1:1 aspect ratios
+-   RTP session handling and RTSP server fixes
+-   Thread-safety improvements for the Media Source Extension (MSE) library
+-   macOS video capture improvements for external devices
+-   Python bindings: Fix compatibility with PyGObject >= 3.52.0
+-   cerbero: bootstrapping fixes on Windows, improved support for RHEL, and openh264 recipe update
+-   Various bug fixes, build fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   Correctly handle whitespace paths when executing gst-plugin-scanner
+-   buffer: Mark gst_buffer_extract() size parameter as in-parameter
+-   element: ref-sink the correct pad template when replacing an existing one
+-   gstvalue: fix a couple of leaks
+-   pipeline: Store the actual latency even if no static latency was configured
+-   pluginloader-win32: Fix helper executable path under devenv
+-   pluginloader-win32: create no window
+-   pluginloader: fix pending_plugins Glist use-after-free issue
+
+gst-plugins-base
+
+-   alsadeviceprovider: Fix leak of Alsa longname
+-   appsink: fix initial pile-up of caps events
+-   audiobasesink: Fix custom slaving driftsamples calculation and add custom audio clock slaving callback example
+-   convertframe: Fix video crop meta handling
+-   decodebin3: Don’t avoid parsebin even if we have a matching decoder
+-   gl: Implement basetransform meta transform function
+-   glupload: Fix for wrongly recognized reconfigure condition
+-   gstaudioutilsprivate: Fix gcc 15 compiler error with function pointer
+-   mikey: Avoid infinite loop while parsing MIKEY payload with unhandled payload types
+-   oggdemux: Don’t push new packets if there is a pending seek
+-   oggdemux: Fix racy decode error
+-   pitch, playbin3: fix build error and wrong locking
+-   smartencoder: Don’t assert if the caps have unknown chroma-site
+-   subparse: various subtitle text parsing fixes
+-   textoverlay: fix shading for RGBx / RGBA pixel format variants
+-   uridecodebin3: Don’t hold play items lock while activating source items
+-   urisourcebin: Make parsebin activation more reliable
+-   videoconvertscale: Explicitly handle overlaycomposition meta caps feature
+-   videoencoder: Use the correct segment and buffer timestamp in the chain function
+-   videotimecode: Fix conversion of timecode to datetime with drop-frame timecodes and handle 119.88 fps correctly in all
+    places
+
+gst-plugins-good
+
+-   adaptivedemux2: free cancellable when freeing transfer task
+-   gl: Implement basetransform meta transform function
+-   interleave: Don’t hold object lock while querying caps downstream
+-   Matroska mux v4 support
+-   matroska-demux: Prevent corrupt cluster duplication
+-   matroska: Implement rotation tag support
+-   qtdemux: Check length of JPEG2000 colr box before parsing it
+-   qtdemux: Fix stsc size check in qtdemux_merge_sample_table()
+-   qtdemux: Ignore non-zero values for UV/XY in transformation matrix
+-   qtdemux: Use byte reader to parse mvhd box
+-   qtdemux: unref simple caps after use
+-   qtmux: Implement rotation tag support
+-   rtph264pay: Reject stream-format=avc without codec_data
+-   rtpmanager: skip RTPSources if last_rtime is not set yet
+-   rtpsession: Do not push events while holding SESSION_LOCK
+-   v4l2: bufferpool: Fix buffer state after group release
+-   wavparse: Ignore EOS when parsing the headers
+-   y4menc: handle frames with GstVideoMeta
+
+gst-plugins-bad
+
+-   alphacombine: De-couple flush-start/stop events handling
+-   analytics: objectdetectionoverlay: improve event handling for EOS and flush events
+-   avfvideosrc: Guess reasonable framerate values for some 3rd party devices
+-   avtpsrc: Use GSocket to have cancellable wait
+-   bayer2rgb: Fix RGB stride calculation
+-   cccombiner: Fix critical warnings
+-   cccombiner: Fix wrong caps and buffer ordering
+-   dashsink: Make sure to use a non-NULL pad name when requesting a pad from splitmuxsink
+-   docs: Do not try to generate cuda documentation when gir is not generated
+-   h264parse: Force full timestamp on all timecode updates. Was invalid between midnight and 1am
+-   h265decoder,h265ccinserter: Fix broken SPS/PPS link
+-   h265parser: Fix num_long_term_pics bound check
+-   mediafoundation: Fix memory leak and codec profile check
+-   meson: fix building -bad tests with disabled soundtouch
+-   midiparse: Consider tempo changes when calculating duration
+-   mpegts: Fix PCR Discontinuity handling for HLS
+-   mpegts: Take into account adaptation field discont
+-   mpegtsdescriptor: Add (transfer none) annotation to out parameter of parse_registration()
+-   mpegtsmux: Fix deadlock when requesting pad for PID < 0x40
+-   mse: Improved Thread Safety of API
+-   pitch, playbin3: fix build error and wrong locking
+-   uvcgadget: Properly implement GET_INFO control responses
+-   vacompositor: Add missing GST_VIDEO_CROP_META_API_TYPE
+-   webrtc: fix pkg-config missing sdp dependency
+-   webrtc: fix recursive G_BEGIN_DECLS and include missing sctptransport.h in webrtc.h
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+-   cargo: Default to thin lto for the release profile
+-   webrtc: Require livekit-protocol < 0.3.4 due to uncoordinated breaking changes
+-   cargo_wrapper: Force log file to be written in utf-8
+
+gst-libav
+
+-   Only allocate extradata while decoding
+
+gst-rtsp-server
+
+-   Media: Fix locking in gst_rtsp_media_get_dscp_qos()
+-   Initial RTCP SR may contain incorrect RTP timestamp for streams with “irregular” frame rate
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   Fix compatibility with PyGObject>=3.52.0
+
+gst-editing-services
+
+-   Fix frame position for sources with par < 1
+-   Fix video position for sources with pixel-aspect-ratio > 1
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   No changes
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   No changes
+
+Cerbero build tool and packaging changes in 1.24.13
+
+-   Improve support for RHEL based distros
+-   Various fixes for bootstrapping and building on Windows
+-   Force-build our own cmake if it’s too new
+-   cdparanoia: configure.guess updated to the latest available version
+-   m4.recipe: Fix build on Fedora 42
+-   openh264: bump to 2.6.0 (1.24 branch)
+
+Contributors to 1.24.13
+
+Andoni Morales Alastruey, Biswapriyo Nath, Carlo Caione, Carlos Rafael Giani, Corentin Damman, David Smitmanis, Denis Yuji
+Shimizu, Dongyun Seo, Doug Nazar, Edward Hervey, Eli Mallon, eri, Gang Zhao, Glyn Davies, Guillaume Desmottes, Jakub Adam, Jan
+Schmidt, Jochen Henneberg, Jordan Petridis, Jordan Yelloz, Mart Raudsepp, Matteo Bruni, Nirbheek Chauhan, Ognyan Tonchev,
+Olivier Blin, Olivier Crête, Philippe Normand, Piotr Brzeziński, Robert Mader, Ruben Gonzalez, Sebastian Dröge, Sergey Radionov,
+Seungha Yang, Shengqi Yu (喻盛琪), Stefan Andersson, Thibault Saunier, Tim-Philipp Müller, Víctor Manuel Jáquez Leal, Wilhelm
+Bartel,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.24.13
+
+-   List of Merge Requests applied in 1.24.13
+-   List of Issues fixed in 1.24.13
+
 Schedule for 1.26
 
-Our next major feature release will be 1.26, and 1.25 will be the unstable development version leading up to the stable 1.26
-release. The development of 1.25/1.25 will happen in the git main branch of the GStreamer mono repository.
-
-The schedule for 1.26 is yet to be decided.
-
-1.26 will be backwards-compatible to the stable 1.24, 1.22, 1.20, 1.18, 1.16, 1.14, 1.12, 1.10, 1.8, 1.6, 1.4, 1.2 and 1.0
-release series.
+GStreamer 1.26 was released on 29 May 2025.
 
 --------------------------------------------------------------------------------------------------------------------------------
 
