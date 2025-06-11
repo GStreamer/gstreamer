@@ -6730,6 +6730,8 @@ _sink_matches_last_sample_specs (GstElement * sink, const gchar * name,
     return FALSE;
 
   tmpcaps = gst_pad_get_current_caps (sinkpad);
+  gst_object_unref (sinkpad);
+
   if (tmpcaps) {
     gboolean res = gst_caps_can_intersect (tmpcaps, sinkpad_caps);
 
