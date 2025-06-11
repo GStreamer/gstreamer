@@ -55,6 +55,10 @@
 #include <gst/audio/gstdsd.h>
 #include <glib/gi18n-lib.h>
 
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#endif
+
 #ifndef ESTRPIPE
 #define ESTRPIPE EPIPE
 #endif
@@ -139,6 +143,12 @@ gst_alsasink_finalise (GObject * object)
     output = NULL;
   }
   g_mutex_unlock (&output_mutex);
+
+#ifdef HAVE_VALGRIND
+  if (RUNNING_ON_VALGRIND) {
+    snd_config_update_free_global ();
+  }
+#endif
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

@@ -50,6 +50,10 @@
 
 #include <glib/gi18n-lib.h>
 
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#endif
+
 #ifndef ESTRPIPE
 #define ESTRPIPE EPIPE
 #endif
@@ -122,6 +126,12 @@ gst_alsasrc_finalize (GObject * object)
 
   g_free (src->device);
   g_mutex_clear (&src->alsa_lock);
+
+#ifdef HAVE_VALGRIND
+  if (RUNNING_ON_VALGRIND) {
+    snd_config_update_free_global ();
+  }
+#endif
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
