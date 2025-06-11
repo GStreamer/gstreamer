@@ -557,9 +557,9 @@ gst_aac_parse_program_config_element (GstAacParse * aacparse,
   guint8 num_lfe_channel_elements;
   guint8 program_config_skipping_data;
   guint8 mixdown_present_skipflag;
-  guint8 G_GNUC_UNUSED is_cpe;
-  guint8 G_GNUC_UNUSED total_num_channel_elements;
-  guint8 G_GNUC_UNUSED total_num_channel;
+  guint8 is_cpe;
+  guint8 total_num_channel_elements;
+  guint8 total_num_channel;
   guint8 channel_element_tag;
 
   if (!gst_bit_reader_get_bits_uint8 (br, &element_instance_tag, 4))
@@ -611,6 +611,7 @@ gst_aac_parse_program_config_element (GstAacParse * aacparse,
       num_back_channel_elements;
 
   total_num_channel = total_num_channel_elements + num_lfe_channel_elements;
+  // If cpe (coupled), then each single channel element represents two channels
   for (guint8 i = 0; i < total_num_channel_elements; i++) {
     if (!gst_bit_reader_get_bits_uint8 (br, &is_cpe, 1))
       return FALSE;
