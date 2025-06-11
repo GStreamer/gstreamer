@@ -910,6 +910,8 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement1, 25, 5, 47);
   CHECK_OBJECT_PROPS (trackelement2, 72, 10, 50);
 
+  gst_object_unref (timeline);
+
   ges_deinit ();
 }
 
