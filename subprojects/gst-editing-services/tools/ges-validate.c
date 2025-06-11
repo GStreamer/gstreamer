@@ -229,8 +229,10 @@ ges_validate_clean (GstPipeline * pipeline)
   gst_object_unref (pipeline);
   if (runner)
     gst_object_unref (runner);
-  if (monitor)
+  if (monitor) {
+    gst_validate_reporter_purge_reports (GST_VALIDATE_REPORTER (monitor));
     gst_object_unref (monitor);
+  }
 
   return res;
 }

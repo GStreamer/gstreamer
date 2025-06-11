@@ -1190,8 +1190,10 @@ _run_pipeline (GESLauncher * self)
         ges_printerr ("Could not load timeline: %s\n",
             opts->sanitized_timeline);
         g_clear_pointer (&opts->sanitized_timeline, &g_free);
+        gst_object_unref (project);
         return FALSE;
       }
+      gst_object_unref (project);
     }
 
     if (!_timeline_set_user_options (self, self->priv->timeline, NULL)) {
@@ -1209,6 +1211,7 @@ _run_pipeline (GESLauncher * self)
   gst_bus_add_signal_watch (bus);
   g_signal_connect_object (bus, "message", G_CALLBACK (bus_message_cb), self,
       0);
+  gst_object_unref (bus);
 
   g_application_hold (G_APPLICATION (self));
 
@@ -1761,8 +1764,16 @@ _shutdown (GApplication * application)
   _save_timeline (self);
 
   if (self->priv->pipeline) {
+    GstBus *bus;
+
     gst_element_set_state (GST_ELEMENT (self->priv->pipeline), GST_STATE_NULL);
+
+    bus = gst_pipeline_get_bus (GST_PIPELINE (self->priv->pipeline));
+    gst_bus_remove_signal_watch (bus);
+    gst_object_unref (bus);
+
     validate_res = ges_validate_clean (GST_PIPELINE (self->priv->pipeline));
+    self->priv->pipeline = NULL;
   }
 
   if (self->priv->seenerrors == FALSE)
@@ -1770,6 +1781,10 @@ _shutdown (GApplication * application)
 
 #ifdef G_OS_UNIX
   g_source_remove (self->priv->signal_watch_id);
+#endif
+
+#ifdef HAVE_GST_VALIDATE
+  gst_validate_deinit ();
 #endif
 
   g_free (opts->sanitized_timeline);
