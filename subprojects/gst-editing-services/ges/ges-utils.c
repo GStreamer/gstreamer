@@ -333,6 +333,7 @@ ges_timeout_add (guint interval, GSourceFunc func, gpointer udata,
 
   g_source_set_callback (source, func, udata, notify);
   g_source_attach (source, context);
+  g_source_unref (source);
 }
 
 void
@@ -345,7 +346,7 @@ ges_idle_add (GSourceFunc func, gpointer udata, GDestroyNotify notify)
 
   g_source_set_callback (source, func, udata, notify);
   g_source_attach (source, context);
-
+  g_source_unref (source);
 }
 
 gboolean

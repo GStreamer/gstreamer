@@ -1639,6 +1639,9 @@ ges_track_element_copy_properties (GESTimelineElement * element,
     g_value_unset (&val);
   }
 
+  for (n = 0; n < n_specs; ++n) {
+    g_param_spec_unref (specs[n]);
+  }
   g_free (specs);
 }
 
@@ -1780,6 +1783,9 @@ ges_track_element_copy_bindings (GESTrackElement * element,
     gst_object_unref (new_source);
   }
 
+  for (n = 0; n < n_specs; ++n) {
+    g_param_spec_unref (specs[n]);
+  }
   g_free (specs);
 }
 

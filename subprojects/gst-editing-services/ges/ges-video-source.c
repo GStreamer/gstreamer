@@ -207,6 +207,7 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   g_assert (vsource_class->ABI.abi.create_filters);
   if (!vsource_class->ABI.abi.create_filters (self, elements, needs_converters)) {
     g_ptr_array_free (elements, TRUE);
+    gst_object_unref (sub_element);
 
     return NULL;
   }

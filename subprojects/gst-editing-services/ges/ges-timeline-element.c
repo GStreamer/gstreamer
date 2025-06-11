@@ -1932,15 +1932,18 @@ ges_timeline_element_set_child_property_full (GESTimelineElement * self,
     const gchar * property_name, const GValue * value, GError ** error)
 {
   GParamSpec *pspec;
-  GObject *child;
+  gboolean res;
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
   g_return_val_if_fail (!error || !*error, FALSE);
 
-  if (!ges_timeline_element_lookup_child (self, property_name, &child, &pspec))
+  if (!ges_timeline_element_lookup_child (self, property_name, NULL, &pspec))
     goto not_found;
 
-  return set_child_property_by_pspec (self, pspec, value, error);
+  res = set_child_property_by_pspec (self, pspec, value, error);
+
+  g_param_spec_unref (pspec);
+  return res;
 
 not_found:
   {

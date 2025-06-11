@@ -1010,6 +1010,7 @@ _destroy_auto_transition_cb (GESAutoTransition * auto_transition,
   priv->auto_transitions =
       g_list_remove (priv->auto_transitions, auto_transition);
   gst_object_unref (auto_transition);
+  gst_object_unref (layer);
 }
 
 GESAutoTransition *
@@ -1995,11 +1996,10 @@ update_stream_object (TrackPrivate * tr_priv)
   if (!tr_priv->stream ||
       g_strcmp0 (stream_id, gst_stream_get_stream_id (tr_priv->stream))) {
     res = TRUE;
-    gst_object_replace ((GstObject **) & tr_priv->stream,
-        (GstObject *) gst_stream_new (stream_id,
-            (GstCaps *) ges_track_get_caps (tr_priv->track),
-            type, GST_STREAM_FLAG_NONE)
-        );
+    gst_clear_object (&tr_priv->stream);
+    tr_priv->stream = gst_stream_new (stream_id,
+        (GstCaps *) ges_track_get_caps (tr_priv->track),
+        type, GST_STREAM_FLAG_NONE);
   }
 
   g_free (stream_id);
@@ -2632,6 +2632,7 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
 
   tr_priv = tmp->data;
   gst_object_unref (tr_priv->pad);
+  gst_object_unref (tr_priv->stream);
   priv->priv_tracks = g_list_remove (priv->priv_tracks, tr_priv);
   UNLOCK_DYN (timeline);
 
