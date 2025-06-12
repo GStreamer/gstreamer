@@ -1,0 +1,13 @@
+[wrap-file]
+directory = SVT-JPEG-XS-0.9.0
+source_filename = SVT-JPEG-XS-0.9.0.tar.gz
+source_url = https://github.com/OpenVisualCloud/SVT-JPEG-XS/archive/refs/tags/v0.9.0.tar.gz
+source_hash = ff5dfb3b98348a39049da4fd3062d3391cbadec4c4b61825a9f3435ca671effa
+patch_filename = svtjpegxs_0.9.0-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/svtjpegxs_0.9.0-1/get_patch
+patch_hash = d3f52d1f6be84045157ed9dcae72017d9b0dbed32d910297786b733235edba1d
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/svtjpegxs_0.9.0-1/SVT-JPEG-XS-0.9.0.tar.gz
+wrapdb_version = 0.9.0-1
+
+[provide]
+dependency_names = SvtJpegxs
