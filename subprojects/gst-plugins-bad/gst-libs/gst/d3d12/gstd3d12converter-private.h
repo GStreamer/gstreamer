@@ -48,4 +48,22 @@ GST_D3D12_API
 gboolean  gst_d3d12_converter_set_remap (GstD3D12Converter * converter,
                                          ID3D12Resource * remap_vector);
 
+GST_D3D12_API
+gboolean  gst_d3d12_converter_update_viewport (GstD3D12Converter * converter,
+                                               gint x,
+                                               gint y,
+                                               gint width,
+                                               gint height);
+
+GST_D3D12_API
+gboolean  gst_d3d12_converter_convert_buffer_for_uv_remap (GstD3D12Converter * converter,
+                                                           GstBuffer * in_buf,
+                                                           GstBuffer * out_buf,
+                                                           GstD3D12FenceData * fence_data,
+                                                           ID3D12GraphicsCommandList * command_list,
+                                                           gboolean execute_gpu_wait,
+                                                           guint num_remap,
+                                                           ID3D12Resource ** lut,
+                                                           GstVideoRectangle * viewport);
+
 G_END_DECLS
