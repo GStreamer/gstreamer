@@ -69,6 +69,7 @@ struct _GstWaylandSink
 
   gchar *drm_device;
   gboolean skip_dumb_buffer_copy;
+  gboolean force_aspect_ratio;
 };
 
 struct _GstWaylandSinkClass

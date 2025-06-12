@@ -74,4 +74,8 @@ GST_WL_API
 void gst_wl_window_set_rotate_method (GstWlWindow               *self,
         GstVideoOrientationMethod  rotate_method);
 
+GST_WL_API
+void gst_wl_window_set_force_aspect_ratio (GstWlWindow * self,
+        gboolean force_aspect_ratio);
+
 G_END_DECLS

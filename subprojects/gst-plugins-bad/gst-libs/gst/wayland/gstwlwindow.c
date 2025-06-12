@@ -73,6 +73,8 @@ typedef struct _GstWlWindowPrivate
 
   enum wl_output_transform buffer_transform;
 
+  gboolean force_aspect_ratio;
+
   /* when this is not set both the area_surface and the video_surface are not
    * visible and certain steps should be skipped */
   gboolean is_area_surface_mapped;
@@ -257,6 +259,7 @@ gst_wl_window_new_internal (GstWlDisplay * display, GMutex * render_lock)
   priv->display = g_object_ref (display);
   priv->render_lock = render_lock;
   g_cond_init (&priv->configure_cond);
+  priv->force_aspect_ratio = TRUE;
 
   compositor = gst_wl_display_get_compositor (display);
   priv->area_surface = wl_compositor_create_surface (compositor);
@@ -502,7 +505,10 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
 
   /* center the video_subsurface inside area_subsurface */
   if (priv->video_viewport) {
-    gst_video_center_rect (&src, &dst, &res, TRUE);
+    if (!priv->force_aspect_ratio)
+      res = dst;
+    else
+      gst_video_center_rect (&src, &dst, &res, TRUE);
     wp_viewport_set_source (priv->video_viewport, wl_fixed_from_int (0),
         wl_fixed_from_int (0), wl_fixed_from_int (wp_src_width),
         wl_fixed_from_int (wp_src_height));
@@ -1102,4 +1108,15 @@ gst_wl_window_set_colorimetry (GstWlWindow * self,
   gst_wl_window_set_color_representation (self, colorimetry);
 
   GST_OBJECT_UNLOCK (self);
+}
+
+void
+gst_wl_window_set_force_aspect_ratio (GstWlWindow * self,
+    gboolean force_aspect_ratio)
+{
+  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+
+  priv->force_aspect_ratio = force_aspect_ratio;
+
+  gst_wl_window_update_geometry (self);
 }
