@@ -2281,6 +2281,89 @@ GST_START_TEST (test_96_channels_conversion)
 
 GST_END_TEST;
 
+static void
+update_mix_matrix (GstElement * audioconvert, gint in_channels,
+    gint out_channels)
+{
+  GValue mix_matrix = G_VALUE_INIT;
+
+  g_value_init (&mix_matrix, GST_TYPE_ARRAY);
+  for (int i = 0; i < out_channels; i++) {
+    GValue row = G_VALUE_INIT;
+    g_value_init (&row, GST_TYPE_ARRAY);
+    for (int j = 0; j < in_channels; j++) {
+      GValue value = G_VALUE_INIT;
+      g_value_init (&value, G_TYPE_FLOAT);
+      g_value_set_float (&value, (i == j) ? 1.0 : 0.0);
+      gst_value_array_append_value (&row, &value);
+      g_value_unset (&value);
+    }
+    gst_value_array_append_value (&mix_matrix, &row);
+    g_value_unset (&row);
+  }
+  g_object_set_property (G_OBJECT (audioconvert), "mix-matrix", &mix_matrix);
+  g_value_unset (&mix_matrix);
+}
+
+GST_START_TEST (test_dynamic_mix_matrix)
+{
+  GstCaps *incaps = gst_caps_from_string ("audio/x-raw, "
+      "format = (string) S16LE, "
+      "layout = (string) interleaved, "
+      "channel-mask = (bitmask) 0, "
+      "rate = (int) 44100, " "channels = (int) 2 ");
+  GstCaps *outcaps = gst_caps_from_string ("audio/x-raw,channels = (int) 2");
+  GstElement *audioconvert =
+      setup_audioconvert (outcaps, FALSE, &(GValue) G_VALUE_INIT);
+  fail_unless (gst_element_set_state (audioconvert,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+  gst_check_setup_events (mysrcpad, audioconvert, incaps, GST_FORMAT_TIME);
+
+  /* Should be passthrough initially */
+  GstBuffer *outbuffer = NULL;
+  GstBuffer *buffer = gst_buffer_new_and_alloc (1 * 2 * 2);
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
+  fail_unless (g_list_length (buffers) == 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (outbuffer == buffer);
+  buffers = g_list_remove (buffers, outbuffer);
+  gst_buffer_unref (outbuffer);
+
+  /* Set a 8:2 mix matrix, that's invalid with current caps, we should get an
+   * error if we push a buffer. This tests that setting an invalid mix matrix
+   * still got us out of passthrough mode. */
+  update_mix_matrix (audioconvert, 8, 2);
+  buffer = gst_buffer_new_and_alloc (1 * 2 * 2);
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_ERROR);
+  fail_unless (buffers == NULL, "Pushing a buffer should have failed");
+
+  /* Now update caps */
+  gst_caps_take (&incaps, gst_caps_from_string ("audio/x-raw, "
+          "format = (string) S16LE, "
+          "layout = (string) interleaved, "
+          "channel-mask = (bitmask) 0, "
+          "rate = (int) 44100, " "channels = (int) 8 "));
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (incaps)));
+
+  /* Pushing a buffer should work */
+  buffer = gst_buffer_new_and_alloc (1 * 2 * 8);
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buffer), GST_FLOW_OK);
+  fail_unless (g_list_length (buffers) == 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless_equals_int (gst_buffer_get_size (outbuffer), 1 * 2 * 2);
+  buffers = g_list_remove (buffers, outbuffer);
+  gst_buffer_unref (outbuffer);
+
+  /* cleanup */
+  fail_unless (gst_element_set_state (audioconvert,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+  cleanup_audioconvert (audioconvert);
+  gst_caps_unref (incaps);
+  gst_caps_unref (outcaps);
+}
+
+GST_END_TEST;
 
 static Suite *
 audioconvert_suite (void)
@@ -2307,6 +2390,7 @@ audioconvert_suite (void)
   tcase_add_test (tc_chain, test_layout_conversion);
   tcase_add_test (tc_chain, test_layout_conv_fixate_caps);
   tcase_add_test (tc_chain, test_96_channels_conversion);
+  tcase_add_test (tc_chain, test_dynamic_mix_matrix);
 
   return s;
 }
