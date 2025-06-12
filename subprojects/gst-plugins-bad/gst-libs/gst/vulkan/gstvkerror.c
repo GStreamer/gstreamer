@@ -54,6 +54,9 @@ static const struct
   {VK_ERROR_OUT_OF_DATE_KHR, "Out of date"},
   {VK_ERROR_INCOMPATIBLE_DISPLAY_KHR, "Incompatible display"},
   {VK_ERROR_NATIVE_WINDOW_IN_USE_KHR, "Native window in use"},
+#if defined(VK_KHR_video_encode_queue)
+  {VK_ERROR_INVALID_VIDEO_STD_PARAMETERS_KHR, "Invalid video std parameters"},
+#endif
 };
 /* *INDENT-ON* */
 
