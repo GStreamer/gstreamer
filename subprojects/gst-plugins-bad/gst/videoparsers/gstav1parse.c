@@ -75,6 +75,7 @@
 #include <gst/video/video.h>
 #include <gst/pbutils/pbutils.h>
 #include "gstvideoparserselements.h"
+#include "gstvideoparseutils.h"
 #include "gstav1parse.h"
 
 #include <string.h>
@@ -148,6 +149,7 @@ struct _GstAV1Parse
   gboolean keyframe;
   gboolean show_frame;
   gboolean seen_non_padding;
+  GstVideoParseUserData user_data;
 
   GstClockTime buffer_pts;
   GstClockTime buffer_dts;
@@ -357,6 +359,7 @@ gst_av1_parse_reset (GstAV1Parse * self)
   self->highest_spatial_id = 0;
   self->first_frame = TRUE;
   self->seen_non_padding = FALSE;
+  gst_video_clear_user_data (&self->user_data, FALSE);
   gst_av1_parse_reset_obu_data_state (self);
   g_clear_pointer (&self->colorimetry, g_free);
   g_clear_pointer (&self->parser, gst_av1_parser_free);
@@ -828,6 +831,12 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
       !gst_video_content_light_level_add_to_caps
       (&self->content_light_level, final_caps)) {
     GST_WARNING_OBJECT (self, "Couldn't set content light level to caps");
+  }
+
+  if (self->user_data.has_hdr10_plus_data) {
+    gst_caps_set_simple (final_caps,
+        "hdr-format", G_TYPE_STRING,
+        gst_video_hdr_format_to_string (GST_VIDEO_HDR_FORMAT_HDR10_PLUS), NULL);
   }
 
   src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (self));
@@ -1555,6 +1564,36 @@ fixed_scale (guint in, guint fracbits, guint scale, guint max_bits)
   return out;
 }
 
+static void
+gst_av1_parse_process_itut_t35 (GstAV1Parse * self,
+    GstAV1MetadataITUT_T35 * itut_t35)
+{
+  guint16 provider_code;
+  GstByteReader br;
+
+  switch (itut_t35->itu_t_t35_country_code) {
+    case ITU_T_T35_COUNTRY_CODE_US:
+      break;
+    default:
+      GST_LOG_OBJECT (self, "Unsupported country code %d",
+          itut_t35->itu_t_t35_country_code);
+      return;
+  }
+
+  if (itut_t35->itu_t_t35_payload_bytes == NULL
+      || itut_t35->itu_t_t35_payload_size < 2) {
+    return;
+  }
+
+  gst_byte_reader_init (&br, itut_t35->itu_t_t35_payload_bytes,
+      itut_t35->itu_t_t35_payload_size);
+
+  provider_code = gst_byte_reader_get_uint16_be_unchecked (&br);
+
+  gst_video_parse_user_data (GST_ELEMENT (self), &self->user_data, &br,
+      GST_VIDEO_PARSE_UTILS_FIELD_1, provider_code);
+}
+
 /* frame_complete will be set true if it is the frame edge. */
 static GstAV1ParserResult
 gst_av1_parse_handle_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
@@ -1769,6 +1808,9 @@ gst_av1_parse_handle_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
         self->mastering_display_info_state = GST_AV1_PARSE_OBU_PARSED;
         break;
       }
+      case GST_AV1_METADATA_TYPE_ITUT_T35:
+        gst_av1_parse_process_itut_t35 (self, &metadata.itut_t35);
+        break;
       default:
         break;
     }
@@ -2481,6 +2523,9 @@ gst_av1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       GST_TIME_ARGS (GST_BUFFER_DTS (frame->buffer)),
       GST_TIME_ARGS (GST_BUFFER_PTS (frame->buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (frame->buffer)));
+
+  gst_video_push_user_data (GST_ELEMENT (self), &self->user_data,
+      frame->buffer);
 
   return GST_FLOW_OK;
 }

@@ -873,12 +873,22 @@ struct _GstAV1SequenceHeaderOBU {
  *   country code by Annex B of Recommendation ITU-T T.35.
  * @itu_t_t35_payload_bytes: shall be bytes containing data registered as specified in
  *   Recommendation ITU-T T.35.
+ * @itu_t_t35_payload_size: the size of @itu_t_t35_payload_bytes. (Since: 1.30)
  */
 struct _GstAV1MetadataITUT_T35 {
   guint8 itu_t_t35_country_code;
   guint8 itu_t_t35_country_code_extention_byte;
   /* itu_t_t35_payload_bytes - not specified at this spec */
   guint8 *itu_t_t35_payload_bytes;
+
+  /**
+   * GstAV1MetadataITUT_T35.itu_t_t35_payload_size:
+   *
+   * Contains the byte size of @itu_t_t35_payload_bytes.
+   *
+   * Since: 1.30
+   */
+  guint itu_t_t35_payload_size;
 };
 
 /**

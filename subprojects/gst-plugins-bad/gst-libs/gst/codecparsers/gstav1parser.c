@@ -1509,8 +1509,8 @@ gst_av1_parse_metadata_itut_t35 (GstAV1Parser * parser, GstBitReader * br,
     if (ret != GST_AV1_PARSER_OK)
       return ret;
   }
-  /* itu_t_t35_payload_bytes is not defined in specification.
-     Just skip this part. */
+  itut_t35->itu_t_t35_payload_bytes = (guint8 *) br->data + br->byte;
+  itut_t35->itu_t_t35_payload_size = AV1_REMAINING_BYTES (br);
 
   return GST_AV1_PARSER_OK;
 }
