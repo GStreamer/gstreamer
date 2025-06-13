@@ -2269,6 +2269,398 @@ GST_START_TEST (test_value_subtract_fraction_list)
 
 GST_END_TEST;
 
+/* Test gst_value_is_subset(set, superset) for general case.
+ *
+ * Special cases:
+ *
+ * | set type                 | superset type         |
+ * |--------------------      | --------------------  |
+ * | GST_TYPE_INT_RANGE       | GST_TYPE_INT_RANGE    |
+ * | GST_TYPE_INT64_RANGE     | GST_TYPE_INT64_RANGE  |
+ * | GST_TYPE_FLAG_SET        | GST_TYPE_FLAG_SET     |
+ * | GST_TYPE_STRUCTURE       | GST_TYPE_STRUCTURE    |
+ * | ANY                      | GST_TYPE_LIST         |
+ * | GST_TYPE_LIST            | GST_TYPE_LIST         |
+ * | ANY                      | GST_TYPE_CAPS         |
+ * | GST_TYPE_ARRAY           | GST_TYPE_ARRAY        |
+ *
+ * Other cases are the general case and require a 'set' not to be equal to
+ * a the superset to be considered a subset. (use strict subset definition)
+ */
+GST_START_TEST (test_value_is_subset_general_cases)
+{
+  GValue set = { 0 };
+  GValue superset = { 0 };
+  GValue v1 = { 0 };
+  GValue v2 = { 0 };
+
+  /* _is_subset for general cases is more specifically a strict subset test
+   * https://en.wikipedia.org/wiki/Subset when applied to . Improper subset,
+   * meaning set and and superset can't be equal, are not considered a subset.*/
+
+  /* TEST: equality cases */
+
+  g_value_init (&set, G_TYPE_INT);
+  g_value_set_int (&set, 1);
+  g_value_init (&superset, G_TYPE_INT);
+  g_value_set_int (&superset, 1);
+
+  /* For fixed value, equality is not a subset */
+  fail_if (gst_value_is_subset (&set, &superset));
+  g_value_unset (&set);
+  g_value_unset (&superset);
+
+  g_value_init (&set, G_TYPE_STRING);
+  g_value_set_static_string (&set, "a");
+  g_value_init (&superset, G_TYPE_STRING);
+  g_value_set_static_string (&superset, "a");
+
+  fail_if (gst_value_is_subset (&set, &superset));
+  g_value_unset (&set);
+  g_value_unset (&superset);
+
+  g_value_init (&set, G_TYPE_DOUBLE);
+  g_value_set_double (&set, 1.0);
+  g_value_init (&superset, G_TYPE_DOUBLE);
+  g_value_set_double (&set, 1.0);
+
+  fail_if (gst_value_is_subset (&set, &superset));
+  g_value_unset (&set);
+  g_value_unset (&superset);
+
+  /* TEST: testing between between different types */
+
+  g_value_init (&set, G_TYPE_INT);
+  g_value_set_int (&set, 1);
+  g_value_init (&superset, G_TYPE_DOUBLE);
+  g_value_set_double (&superset, 1.0);
+
+  fail_if (gst_value_is_subset (&set, &superset));
+  g_value_unset (&set);
+  g_value_unset (&superset);
+
+  /* TEST: between singleton value and array */
+
+  /* set */
+  g_value_init (&set, G_TYPE_INT);
+  g_value_set_int (&set, 1);
+
+  /* superset */
+  g_value_init (&v1, G_TYPE_INT);
+  g_value_set_int (&v1, 1);
+  g_value_init (&v2, G_TYPE_INT);
+  g_value_set_int (&v2, 2);
+  g_value_init (&superset, GST_TYPE_ARRAY);
+  gst_value_array_append_value (&superset, &v1);
+  gst_value_array_append_value (&superset, &v2);
+
+  fail_unless (gst_value_is_subset (&set, &superset));
+  fail_if (gst_value_is_subset (&superset, &set));
+
+  g_value_unset (&set);
+  g_value_unset (&superset);
+  g_value_unset (&v1);
+  g_value_unset (&v2);
+}
+
+GST_END_TEST;
+
+/* Test gst_value_is_subset on unfixed value. */
+GST_START_TEST (test_value_is_subset_not_fixed)
+{
+  GValue set = { 0 };
+  GValue not_subset1 = { 0 };
+  GValue not_subset2 = { 0 };
+  GValue superset = { 0 };
+  GValue v1 = { 0 };
+  GValue v2 = { 0 };
+  GValue v3 = { 0 };
+  GValue v4 = { 0 };
+  GValue v5 = { 0 };
+  GValue v6 = { 0 };
+
+  /* TEST: between singleton value and list
+   * candidate_set = 1
+   * candidate_not_set = 2
+   * candidate_superset = {1, 10, 100}
+   * is_subset (1, {1, 10, 100}) => TRUE
+   * is_subset (2, {1, 10, 100}) => FALSE
+   * */
+
+  /* set */
+  g_value_init (&set, G_TYPE_INT);
+  g_value_set_int (&set, 1);
+
+  /* superset */
+  g_value_init (&v2, G_TYPE_INT);
+  g_value_set_int (&v2, 1);
+
+  g_value_init (&v3, G_TYPE_INT);
+  g_value_set_int (&v3, 10);
+
+  g_value_init (&v4, G_TYPE_INT);
+  g_value_set_int (&v4, 100);
+
+  g_value_init (&not_subset1, G_TYPE_INT);
+  g_value_set_int (&not_subset1, 2);
+
+  g_value_init (&superset, GST_TYPE_LIST);
+  gst_value_list_append_value (&superset, &v2);
+  gst_value_list_append_value (&superset, &v3);
+  gst_value_list_append_value (&superset, &v4);
+
+  /* Check positive */
+  fail_unless (gst_value_is_subset (&set, &superset));
+
+  /* Check false positive */
+  fail_if (gst_value_is_subset (&not_subset1, &superset));
+
+  g_value_unset (&set);
+  g_value_unset (&superset);
+  g_value_unset (&v2);
+  g_value_unset (&v3);
+  g_value_unset (&v4);
+  g_value_unset (&not_subset1);
+
+  /* TEST: between fixed value array and unfixed array
+   * candidate_set = <1, 1000>
+   * candidate_not_set_1 = <1, 2000>
+   * candidate_not_set_2 = <0, 1000>
+   * candidate_superset = <1, [1, 1000]>
+   * is_subset (<1, 1000>, <1, [1, 1000]>) => TRUE
+   * is_subset (<1, 2000>, <1, [1, 1000]>) => FALSE
+   * is_subset (<0, 1000>, <1, [1, 1000]>) => FALSE
+   */
+
+  g_value_init (&v1, G_TYPE_INT);
+  g_value_set_int (&v1, 1);
+  g_value_init (&v2, G_TYPE_INT);
+  g_value_set_int (&v2, 1000);
+  g_value_init (&v3, GST_TYPE_INT_RANGE);
+  gst_value_set_int_range (&v3, 1, 1000);
+  g_value_init (&v4, G_TYPE_INT);
+  g_value_set_int (&v4, 2000);
+  g_value_init (&v5, G_TYPE_INT);
+  g_value_set_int (&v5, 0);
+
+  /* set = <1, 1000> */
+  g_value_init (&set, GST_TYPE_ARRAY);
+  gst_value_array_append_value (&set, &v1);
+  gst_value_array_append_value (&set, &v2);
+
+  /* not_subset1 = <1, 2000> */
+  g_value_init (&not_subset1, GST_TYPE_ARRAY);
+  gst_value_array_append_value (&not_subset1, &v1);
+  gst_value_array_append_value (&not_subset1, &v4);
+
+  /* not_subset2 = <0, 1000> */
+  g_value_init (&not_subset2, GST_TYPE_ARRAY);
+  gst_value_array_append_value (&not_subset2, &v5);
+  gst_value_array_append_value (&not_subset2, &v2);
+
+  /* superset */
+  g_value_init (&superset, GST_TYPE_ARRAY);
+  gst_value_array_append_value (&superset, &v1);
+  gst_value_array_append_value (&superset, &v3);
+
+  /* Check positive case */
+  fail_unless (gst_value_is_subset (&set, &superset));
+
+  /* Check false positives */
+  fail_if (gst_value_is_subset (&not_subset1, &superset));
+  fail_if (gst_value_is_subset (&not_subset2, &superset));
+
+  g_value_unset (&set);
+  g_value_unset (&not_subset1);
+  g_value_unset (&not_subset2);
+  g_value_unset (&superset);
+  g_value_unset (&v1);
+  g_value_unset (&v2);
+  g_value_unset (&v3);
+  g_value_unset (&v4);
+  g_value_unset (&v5);
+
+  /* TEST: between fixed and multi-unfixed
+   * is_subset (<1, 10, 100>, <1, [8, 12], [20, 100]) => TRUE
+   */
+  g_value_init (&v1, G_TYPE_INT);
+  g_value_set_int (&v1, 1);
+
+  g_value_init (&v2, G_TYPE_INT);
+  g_value_set_int (&v2, 10);
+
+  g_value_init (&v3, G_TYPE_INT);
+  g_value_set_int (&v3, 100);
+
+  g_value_init (&v4, GST_TYPE_INT_RANGE);
+  gst_value_set_int_range (&v4, 8, 12);
+
+  g_value_init (&v5, GST_TYPE_INT_RANGE);
+  gst_value_set_int_range (&v5, 20, 100);
+
+  g_value_init (&v6, G_TYPE_INT);
+  g_value_set_int (&v6, 13);
+
+  g_value_init (&set, GST_TYPE_ARRAY);
+  gst_value_array_append_value (&set, &v1);
+  gst_value_array_append_value (&set, &v2);
+  gst_value_array_append_value (&set, &v3);
+
+  g_value_init (&not_subset1, GST_TYPE_ARRAY);
+  gst_value_array_append_value (&not_subset1, &v1);
+  gst_value_array_append_value (&not_subset1, &v6);
+  gst_value_array_append_value (&not_subset1, &v3);
+
+  g_value_init (&superset, GST_TYPE_ARRAY);
+  gst_value_array_append_value (&superset, &v1);
+  gst_value_array_append_value (&superset, &v4);
+  gst_value_array_append_value (&superset, &v5);
+
+  /* Check positive */
+  fail_unless (gst_value_is_subset (&set, &superset));
+
+  /* Check false positive */
+  fail_if (gst_value_is_subset (&not_subset1, &superset));
+
+  g_value_unset (&set);
+  g_value_unset (&not_subset1);
+  g_value_unset (&superset);
+  g_value_unset (&v1);
+  g_value_unset (&v2);
+  g_value_unset (&v3);
+  g_value_unset (&v4);
+  g_value_unset (&v5);
+  g_value_unset (&v6);
+
+
+  /* TEST: unfixed , fixed
+   * is_subset (<1, 1>, <[0, 100], [0, 100]>) => TRUE
+   * is_subset (<[0, 100], [0, 100]>, <1, 1>) => FALSE
+   */
+  g_value_init (&v1, G_TYPE_INT);
+  g_value_set_int (&v1, 0);
+
+  g_value_init (&v2, G_TYPE_INT);
+  g_value_set_int (&v2, 1);
+
+  g_value_init (&v3, G_TYPE_INT);
+  g_value_set_int (&v3, 100);
+
+  g_value_init (&set, GST_TYPE_ARRAY);
+  gst_value_array_append_value (&set, &v2);
+  gst_value_array_append_value (&set, &v2);
+
+  g_value_init (&v4, GST_TYPE_INT_RANGE);
+  gst_value_set_int_range (&v4, 0, 100);
+
+  g_value_init (&v5, GST_TYPE_INT_RANGE);
+  gst_value_set_int_range (&v5, 50, 70);
+
+  g_value_init (&superset, GST_TYPE_ARRAY);
+  gst_value_array_append_value (&superset, &v4);
+  gst_value_array_append_value (&superset, &v4);
+
+  fail_unless (gst_value_is_subset (&set, &superset));
+  fail_if (gst_value_is_subset (&superset, &set));
+
+  g_value_unset (&set);
+
+  /* TEST: is_subset (<1, [50, 70]>, <[0, 100], [0, 100]>) => TRUE
+   * TEST: is_subset (<[0, 100], [0, 100]>, <1, [50, 70]> ) => FALSE
+   */
+  g_value_init (&set, GST_TYPE_ARRAY);
+  gst_value_array_append_value (&set, &v2);
+  gst_value_array_append_value (&set, &v5);
+
+  fail_unless (gst_value_is_subset (&set, &superset));
+  fail_if (gst_value_is_subset (&superset, &set));
+
+  g_value_unset (&set);
+  g_value_unset (&superset);
+  g_value_unset (&v1);
+  g_value_unset (&v2);
+  g_value_unset (&v3);
+  g_value_unset (&v4);
+  g_value_unset (&v5);
+}
+
+GST_END_TEST;
+
+/* Test gst_value_is_subset on fixed arrays. */
+GST_START_TEST (test_value_is_subset_fixed_array)
+{
+  GValue set = { 0 };
+  GValue superset = { 0 };
+  GValue v1 = { 0 };
+  GValue v2 = { 0 };
+  GValue v3 = { 0 };
+  GValue v4 = { 0 };
+
+  /* TEST: between singleton value and fixed arrays
+   * is_subset (1, <1, 10, 100>) => TRUE
+   * */
+
+  /* set */
+  g_value_init (&set, G_TYPE_INT);
+  g_value_set_int (&set, 1);
+
+  /* superset */
+  g_value_init (&v1, G_TYPE_INT);
+  g_value_set_int (&v1, 1);
+
+  g_value_init (&v2, G_TYPE_INT);
+  g_value_set_int (&v2, 10);
+
+  g_value_init (&v3, G_TYPE_INT);
+  g_value_set_int (&v3, 100);
+
+  g_value_init (&v4, G_TYPE_INT);
+  g_value_set_int (&v4, 2);
+
+  g_value_init (&superset, GST_TYPE_ARRAY);
+  gst_value_array_append_value (&superset, &v1);
+  gst_value_array_append_value (&superset, &v2);
+  gst_value_array_append_value (&superset, &v3);
+
+  fail_unless (gst_value_is_subset (&set, &superset));
+
+  /* Check false positive */
+  fail_if (gst_value_is_subset (&v4, &superset));
+
+  g_value_unset (&set);
+  g_value_unset (&v1);
+  g_value_unset (&v2);
+  g_value_unset (&v3);
+  g_value_unset (&v4);
+  g_value_unset (&set);
+  g_value_unset (&superset);
+
+  /* TEST: equal fixed arrays (strict subset applies)
+   * is_subset (<1, 1>, <1, 1>) => FALSE
+   */
+  g_value_init (&v1, G_TYPE_INT);
+  g_value_set_int (&v1, 1);
+
+  g_value_init (&set, GST_TYPE_ARRAY);
+  g_value_init (&superset, GST_TYPE_ARRAY);
+
+  gst_value_array_append_value (&set, &v1);
+  gst_value_array_append_value (&set, &v1);
+
+  gst_value_array_append_value (&superset, &v1);
+  gst_value_array_append_value (&superset, &v1);
+
+  /* set & superset are fixed => equality is not subset. */
+  fail_if (gst_value_is_subset (&set, &superset));
+
+  g_value_unset (&set);
+  g_value_unset (&v1);
+  g_value_unset (&set);
+  g_value_unset (&superset);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_date)
 {
   GstStructure *s;
@@ -4530,6 +4922,9 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_value_subtract_fraction);
   tcase_add_test (tc_chain, test_value_subtract_fraction_range);
   tcase_add_test (tc_chain, test_value_subtract_fraction_list);
+  tcase_add_test (tc_chain, test_value_is_subset_general_cases);
+  tcase_add_test (tc_chain, test_value_is_subset_not_fixed);
+  tcase_add_test (tc_chain, test_value_is_subset_fixed_array);
   tcase_add_test (tc_chain, test_date);
   tcase_add_test (tc_chain, test_date_time);
   tcase_add_test (tc_chain, test_fraction_range);
