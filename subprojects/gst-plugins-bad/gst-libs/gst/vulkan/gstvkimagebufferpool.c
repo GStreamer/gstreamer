@@ -212,7 +212,7 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   guint min_buffers, max_buffers;
   GstCaps *caps = NULL, *decode_caps = NULL, *encode_caps = NULL;
   GstCapsFeatures *features;
-  gboolean found, no_multiplane, ret = TRUE;
+  gboolean found, no_multiplane;
   guint i;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
@@ -378,7 +378,7 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
 
   priv->usage = requested_usage;
 
-  return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config) && ret;
+  return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
   /* ERRORS */
 wrong_config:
