@@ -1094,7 +1094,8 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
         }
       } else if (rtph265pay->vps_sps_pps_interval == -1
           && (nal_type == GST_H265_NAL_SLICE_IDR_W_RADL
-              || nal_type == GST_H265_NAL_SLICE_IDR_N_LP)) {
+              || nal_type == GST_H265_NAL_SLICE_IDR_N_LP
+              || nal_type == GST_H265_NAL_SLICE_CRA_NUT)) {
         /* send VPS/SPS/PPS before every IDR frame */
         send_ps = TRUE;
       }
