@@ -283,7 +283,7 @@ _raw_to_buffer_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     plane_size =
         GST_VIDEO_INFO_PLANE_STRIDE (&raw->out_info,
         i) * GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i);
-    g_assert (plane_size < map_info.size);
+    g_assert (plane_size <= map_info.size);
     memcpy (map_info.data, v_frame.data[i], plane_size);
 
     gst_memory_unmap (GST_MEMORY_CAST (mem), &map_info);
@@ -1336,6 +1336,20 @@ gst_vulkan_upload_propose_allocation (GstBaseTransform * bt,
   return TRUE;
 }
 
+static GstBufferPool *
+gst_vulkan_upload_create_buffer_pool (GstVulkanUpload * vk_upload)
+{
+  gboolean is_image;
+  GstCapsFeatures *feats = gst_caps_get_features (vk_upload->out_caps, 0);
+
+  is_image =
+      gst_caps_features_contains (feats, GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE);
+
+  if (is_image)
+    return gst_vulkan_image_buffer_pool_new (vk_upload->device);
+  return gst_vulkan_buffer_pool_new (vk_upload->device);
+}
+
 static gboolean
 gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
 {
@@ -1360,13 +1374,15 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
     update_pool = TRUE;
-    is_vulkan_pool = GST_IS_VULKAN_IMAGE_BUFFER_POOL (pool);
+    is_vulkan_pool = GST_IS_VULKAN_IMAGE_BUFFER_POOL (pool)
+        || GST_IS_VULKAN_BUFFER_POOL (pool);
   } else {
     GstVideoInfo vinfo;
 
     gst_video_info_init (&vinfo);
     gst_video_info_from_caps (&vinfo, caps);
-    size = vinfo.size;
+
+    size = GST_VIDEO_INFO_SIZE (&vinfo);
     min = max = 0;
     is_vulkan_pool = update_pool = FALSE;
   }
@@ -1374,12 +1390,12 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
   if (!pool || !is_vulkan_pool) {
     if (pool)
       gst_object_unref (pool);
-    pool = gst_vulkan_image_buffer_pool_new (vk_upload->device);
+    pool = gst_vulkan_upload_create_buffer_pool (vk_upload);
   }
 
   config = gst_buffer_pool_get_config (pool);
 
-  if (is_vulkan_pool) {
+  if (GST_IS_VULKAN_IMAGE_BUFFER_POOL (pool)) {
     gst_vulkan_image_buffer_pool_config_get_allocation_params (config, &usage,
         &mem_props, &layout, &access);
     /* these usage parameters are essential for upload */
@@ -1387,8 +1403,11 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
   }
 
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
-  gst_vulkan_image_buffer_pool_config_set_allocation_params (config, usage,
-      mem_props, layout, access);
+
+  if (GST_IS_VULKAN_IMAGE_BUFFER_POOL (pool)) {
+    gst_vulkan_image_buffer_pool_config_set_allocation_params (config, usage,
+        mem_props, layout, access);
+  }
 
   if (!gst_buffer_pool_set_config (pool, config)) {
     GST_ERROR_OBJECT (pool, "Vulkan Image buffer pool doesn't support requested"
