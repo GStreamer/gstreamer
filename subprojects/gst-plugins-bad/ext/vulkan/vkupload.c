@@ -239,13 +239,33 @@ _raw_to_buffer_propose_allocation (gpointer impl, GstQuery * decide_query,
   _buffer_propose_allocation (impl, decide_query, query);
 }
 
+static gboolean
+_copy_frames (const GstVideoInfo * vinfo, GstBuffer * inbuf, GstBuffer * outbuf)
+{
+  GstVideoFrame in_frame, out_frame;
+  gboolean copied;
+
+  if (!gst_video_frame_map (&in_frame, vinfo, inbuf, GST_MAP_READ))
+    return FALSE;
+
+  if (!gst_video_frame_map (&out_frame, vinfo, outbuf, GST_MAP_WRITE)) {
+    gst_video_frame_unmap (&in_frame);
+    return FALSE;
+  }
+
+  copied = gst_video_frame_copy (&out_frame, &in_frame);
+
+  gst_video_frame_unmap (&in_frame);
+  gst_video_frame_unmap (&out_frame);
+
+  return copied;
+}
+
 static GstFlowReturn
 _raw_to_buffer_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 {
   struct RawToBufferUpload *raw = impl;
-  GstVideoFrame v_frame, out_frame;
   GstFlowReturn ret = GST_FLOW_ERROR;
-  gboolean copied;
   GstBufferPool *pool;
 
   pool = gst_base_transform_get_buffer_pool
@@ -258,28 +278,11 @@ _raw_to_buffer_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       != GST_FLOW_OK)
     goto out;
 
-  if (!gst_video_frame_map (&v_frame, &raw->in_info, inbuf, GST_MAP_READ)) {
+  ret = _copy_frames (&raw->in_info, inbuf, *outbuf);
+  if (!ret) {
     GST_ELEMENT_ERROR (raw->upload, RESOURCE, NOT_FOUND,
         ("%s", "Failed to map input buffer"), NULL);
-    goto out;
   }
-
-  if (!gst_video_frame_map (&out_frame, &raw->in_info, *outbuf,
-          GST_MAP_WRITE)) {
-    gst_video_frame_unmap (&v_frame);
-    GST_WARNING_OBJECT (raw->upload, "Failed to map input buffer");
-    goto out;
-  }
-
-  copied = gst_video_frame_copy (&out_frame, &v_frame);
-
-  gst_video_frame_unmap (&v_frame);
-  gst_video_frame_unmap (&out_frame);
-
-  if (!copied)
-    GST_WARNING_OBJECT (raw->upload, "Failed to copy input buffer");
-  else
-    ret = GST_FLOW_OK;
 
 out:
   gst_object_unref (pool);
@@ -768,8 +771,6 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       g_assert (gst_is_vulkan_buffer_memory (in_mem));
       buf_mem = (GstVulkanBufferMemory *) in_mem;
     } else {
-      GstVideoFrame in_frame, out_frame;
-
       GST_TRACE_OBJECT (raw->upload,
           "Copying input to a new GstVulkanBufferMemory");
       if (!raw->in_pool) {
@@ -794,27 +795,10 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
         goto unlock_error;
       }
 
-      if (!gst_video_frame_map (&in_frame, &raw->in_info, inbuf, GST_MAP_READ)) {
-        GST_WARNING_OBJECT (raw->upload, "Failed to map input buffer");
+      if (!_copy_frames (&raw->in_info, inbuf, *outbuf)) {
+        GST_ERROR_OBJECT (raw->upload, "Failed to copy to Vulkan buffer");
         goto unlock_error;
       }
-
-      if (!gst_video_frame_map (&out_frame, &raw->in_info, in_vk_copy,
-              GST_MAP_WRITE)) {
-        gst_video_frame_unmap (&in_frame);
-        GST_WARNING_OBJECT (raw->upload, "Failed to map input buffer");
-        goto unlock_error;
-      }
-
-      if (!gst_video_frame_copy (&out_frame, &in_frame)) {
-        gst_video_frame_unmap (&in_frame);
-        gst_video_frame_unmap (&out_frame);
-        GST_WARNING_OBJECT (raw->upload, "Failed to copy input buffer");
-        goto unlock_error;
-      }
-
-      gst_video_frame_unmap (&in_frame);
-      gst_video_frame_unmap (&out_frame);
 
       in_mem = gst_buffer_peek_memory (in_vk_copy, i);
       buf_mem = (GstVulkanBufferMemory *) in_mem;
