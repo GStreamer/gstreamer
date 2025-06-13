@@ -243,9 +243,9 @@ static GstFlowReturn
 _raw_to_buffer_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 {
   struct RawToBufferUpload *raw = impl;
-  GstVideoFrame v_frame;
-  GstFlowReturn ret;
-  guint i, n_mems;
+  GstVideoFrame v_frame, out_frame;
+  GstFlowReturn ret = GST_FLOW_ERROR;
+  gboolean copied;
   GstBufferPool *pool;
 
   pool = gst_base_transform_get_buffer_pool
@@ -261,37 +261,25 @@ _raw_to_buffer_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   if (!gst_video_frame_map (&v_frame, &raw->in_info, inbuf, GST_MAP_READ)) {
     GST_ELEMENT_ERROR (raw->upload, RESOURCE, NOT_FOUND,
         ("%s", "Failed to map input buffer"), NULL);
-    return GST_FLOW_ERROR;
+    goto out;
   }
 
-  n_mems = gst_buffer_n_memory (*outbuf);
-  for (i = 0; i < n_mems; i++) {
-    GstMapInfo map_info;
-    gsize plane_size;
-    GstMemory *mem;
-
-    mem = gst_buffer_peek_memory (*outbuf, i);
-    if (!gst_memory_map (GST_MEMORY_CAST (mem), &map_info, GST_MAP_WRITE)) {
-      GST_ELEMENT_ERROR (raw->upload, RESOURCE, NOT_FOUND,
-          ("%s", "Failed to map output memory"), NULL);
-      gst_buffer_unref (*outbuf);
-      *outbuf = NULL;
-      ret = GST_FLOW_ERROR;
-      goto out;
-    }
-
-    plane_size =
-        GST_VIDEO_INFO_PLANE_STRIDE (&raw->out_info,
-        i) * GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i);
-    g_assert (plane_size <= map_info.size);
-    memcpy (map_info.data, v_frame.data[i], plane_size);
-
-    gst_memory_unmap (GST_MEMORY_CAST (mem), &map_info);
+  if (!gst_video_frame_map (&out_frame, &raw->in_info, *outbuf,
+          GST_MAP_WRITE)) {
+    gst_video_frame_unmap (&v_frame);
+    GST_WARNING_OBJECT (raw->upload, "Failed to map input buffer");
+    goto out;
   }
+
+  copied = gst_video_frame_copy (&out_frame, &v_frame);
 
   gst_video_frame_unmap (&v_frame);
+  gst_video_frame_unmap (&out_frame);
 
-  ret = GST_FLOW_OK;
+  if (!copied)
+    GST_WARNING_OBJECT (raw->upload, "Failed to copy input buffer");
+  else
+    ret = GST_FLOW_OK;
 
 out:
   gst_object_unref (pool);
