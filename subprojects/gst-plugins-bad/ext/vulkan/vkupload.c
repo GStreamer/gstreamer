@@ -392,6 +392,7 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   GArray *barriers = NULL;
   VkImageLayout dst_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
   GstBufferPool *pool;
+  GstVideoMeta *in_vmeta, *out_vmeta;
 
   pool = gst_base_transform_get_buffer_pool
       (GST_BASE_TRANSFORM_CAST (raw->upload));
@@ -458,7 +459,10 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   g_clear_pointer (&barriers, g_array_unref);
 
   n_mems = gst_buffer_n_memory (*outbuf);
+  out_vmeta = gst_buffer_get_video_meta (*outbuf);
   n_planes = GST_VIDEO_INFO_N_PLANES (&raw->out_info);
+
+  in_vmeta = gst_buffer_get_video_meta (inbuf);
 
   for (i = 0; i < n_planes; i++) {
     VkBufferImageCopy region;
@@ -469,9 +473,19 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       VK_IMAGE_ASPECT_PLANE_1_BIT, VK_IMAGE_ASPECT_PLANE_2_BIT,
     };
     VkImageAspectFlags plane_aspect;
-    guint idx;
+    guint idx, len;
+    gsize offset, skip;
 
+    offset = in_vmeta ? in_vmeta->offset[i]
+        : GST_VIDEO_INFO_PLANE_OFFSET (&raw->in_info, i);
+    if (!gst_buffer_find_memory (inbuf, offset, 1, &idx, &len, &skip)) {
+      GST_WARNING_OBJECT (raw->upload,
+          "Input buffer plane %u, no memory at offset %" G_GSIZE_FORMAT, i,
+          offset);
+      goto unlock_error;
+    }
     in_mem = gst_buffer_peek_memory (inbuf, i);
+
     if (!gst_is_vulkan_buffer_memory (in_mem)) {
       GST_WARNING_OBJECT (raw->upload, "Input is not a GstVulkanBufferMemory");
       goto unlock_error;
@@ -502,8 +516,16 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
         }
     };
 
-    idx = MIN (i, n_mems - 1);
+    offset = out_vmeta ? out_vmeta->offset[i]
+        : GST_VIDEO_INFO_PLANE_OFFSET (&raw->out_info, i);
+    if (!gst_buffer_find_memory (*outbuf, offset, 1, &idx, &len, &skip)) {
+      GST_WARNING_OBJECT (raw->upload,
+          "Output buffer plane %u, no memory at offset %" G_GSIZE_FORMAT, i,
+          offset);
+      goto unlock_error;
+    }
     out_mem = gst_buffer_peek_memory (*outbuf, idx);
+
     if (!gst_is_vulkan_image_memory (out_mem)) {
       GST_WARNING_OBJECT (raw->upload, "Output is not a GstVulkanImageMemory");
       goto unlock_error;
@@ -654,9 +676,10 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   GstVulkanCommandBuffer *cmd_buf;
   GError *error = NULL;
   GArray *barriers = NULL;
-  guint i, n_mems, n_planes, n_out_mems;
+  guint i, n_planes, n_out_mems;
   VkImageLayout dst_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
   GstBufferPool *pool;
+  GstVideoMeta *in_vmeta, *out_vmeta;
 
   pool = gst_base_transform_get_buffer_pool
       (GST_BASE_TRANSFORM_CAST (raw->upload));
@@ -720,11 +743,12 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   }
   g_clear_pointer (&barriers, g_array_unref);
 
-  n_mems = gst_buffer_n_memory (inbuf);
+  in_vmeta = gst_buffer_get_video_meta (inbuf);
   n_out_mems = gst_buffer_n_memory (*outbuf);
+  out_vmeta = gst_buffer_get_video_meta (*outbuf);
   n_planes = GST_VIDEO_INFO_N_PLANES (&raw->in_info);
 
-  for (i = 0; i < n_out_mems; i++) {
+  for (i = 0; i < n_planes; i++) {
     VkBufferImageCopy region;
     GstMemory *in_mem = NULL, *out_mem;
     GstVulkanBufferMemory *buf_mem;
@@ -733,10 +757,18 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       VK_IMAGE_ASPECT_PLANE_1_BIT, VK_IMAGE_ASPECT_PLANE_2_BIT,
     };
     VkImageAspectFlags plane_aspect;
-    guint idx;
+    guint idx, len;
+    gsize offset, skip;
 
-    if (i < n_mems)
-      in_mem = gst_buffer_peek_memory (inbuf, i);
+    offset = in_vmeta ? in_vmeta->offset[i] :
+        GST_VIDEO_INFO_PLANE_OFFSET (&raw->in_info, i);
+    if (!gst_buffer_find_memory (inbuf, offset, 1, &idx, &len, &skip)) {
+      GST_WARNING_OBJECT (raw->upload,
+          "Input buffer plane %u, no memory at offset %" G_GSIZE_FORMAT, i,
+          offset);
+      goto unlock_error;
+    }
+    in_mem = gst_buffer_peek_memory (inbuf, idx);
 
     if (gst_is_vulkan_buffer_memory (in_mem)) {
       GST_TRACE_OBJECT (raw->upload, "Input is a GstVulkanBufferMemory");
@@ -800,8 +832,15 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       buf_mem = (GstVulkanBufferMemory *) in_mem;
     }
 
-    idx = MIN (i, n_out_mems - 1);
+    offset = out_vmeta ? out_vmeta->offset[i] : GST_VIDEO_INFO_PLANE_OFFSET (&raw->out_info, i);
+    if (!gst_buffer_find_memory (*outbuf, offset, 1, &idx, &len, &skip)) {
+      GST_WARNING_OBJECT (raw->upload,
+          "Output buffer plane %u, no memory at offset %" G_GSIZE_FORMAT, i,
+          offset);
+      goto unlock_error;
+    }
     out_mem = gst_buffer_peek_memory (*outbuf, idx);
+
     if (!gst_is_vulkan_image_memory (out_mem)) {
       GST_WARNING_OBJECT (raw->upload, "Output is not a GstVulkanImageMemory");
       goto unlock_error;
@@ -1407,6 +1446,11 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
   if (GST_IS_VULKAN_IMAGE_BUFFER_POOL (pool)) {
     gst_vulkan_image_buffer_pool_config_set_allocation_params (config, usage,
         mem_props, layout, access);
+  }
+
+  if (gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_META)) {
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
   }
 
   if (!gst_buffer_pool_set_config (pool, config)) {
