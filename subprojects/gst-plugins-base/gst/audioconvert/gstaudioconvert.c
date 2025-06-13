@@ -1394,8 +1394,7 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
           GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
       has_in_mask = TRUE;
     } else if (in_chans > 2)
-      g_warning ("%s: Upstream caps contain no channel mask",
-          GST_ELEMENT_NAME (base));
+      GST_WARNING_OBJECT (base, "Upstream caps contain no channel mask");
   }
 
   if (!has_out_mask && out_chans == 1 && (in_chans != out_chans
@@ -1421,8 +1420,8 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
 
     if (n_bits_set (out_mask) < in_chans) {
       /* Not much we can do here, this shouldn't just happen */
-      g_warning ("%s: Invalid downstream channel-mask with too few bits set",
-          GST_ELEMENT_NAME (base));
+      GST_WARNING_OBJECT (base,
+          "Invalid downstream channel-mask with too few bits set");
     } else {
       guint64 intersection;
 
@@ -1876,7 +1875,7 @@ gst_audio_convert_set_mix_matrix (GstAudioConvert * this, const GValue * value)
       g_value_copy (value, &this->mix_matrix);
       this->mix_matrix_is_set = TRUE;
     } else {
-      g_warning ("Empty mix matrix's first row.");
+      GST_WARNING_OBJECT (this, "Empty mix matrix's first row.");
       restore = TRUE;
       goto done;
     }
@@ -1894,7 +1893,7 @@ gst_audio_convert_set_mix_matrix (GstAudioConvert * this, const GValue * value)
           &this->in_info, &this->out_info)) {
     gst_base_transform_reconfigure_sink (GST_BASE_TRANSFORM (this));
   } else {
-    g_warning ("Cannot build converter with this mix matrix");
+    GST_WARNING_OBJECT (this, "Cannot build converter with this mix matrix");
     restore = TRUE;
     goto done;
   }
