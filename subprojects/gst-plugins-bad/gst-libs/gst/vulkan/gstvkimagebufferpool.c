@@ -57,6 +57,7 @@ struct _GstVulkanImageBufferPoolPrivate
   guint32 n_profiles;
   GstVulkanVideoProfile profiles[2];
   GstVulkanOperation *exec;
+  gboolean add_videometa;
 };
 
 static void gst_vulkan_image_buffer_pool_finalize (GObject * object);
@@ -378,6 +379,10 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
 
   priv->usage = requested_usage;
 
+  /* enable metadata based on config of the pool */
+  priv->add_videometa = gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_META);
+
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
   /* ERRORS */
@@ -512,6 +517,7 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   VkImageCreateInfo image_info;
   GstBuffer *buf;
   guint i;
+  gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
 
   /* *INDENT-OFF* */
   image_info = (VkImageCreateInfo) {
@@ -576,10 +582,23 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
       goto mem_create_failed;
     }
 
+    if (i < GST_VIDEO_MAX_PLANES - 1)
+      offset[i + 1] = mem->size;
+
     gst_buffer_append_memory (buf, mem);
   }
 
   prepare_buffer (vk_pool, buf);
+
+  if (priv->add_videometa) {
+    gsize *off = (priv->n_imgs == 1) ? priv->v_info.offset : offset;
+
+    gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
+        GST_VIDEO_INFO_FORMAT (&priv->v_info),
+        GST_VIDEO_INFO_WIDTH (&priv->v_info),
+        GST_VIDEO_INFO_HEIGHT (&priv->v_info),
+        GST_VIDEO_INFO_N_PLANES (&priv->v_info), off, priv->v_info.stride);
+  }
 
   *buffer = buf;
 
@@ -628,6 +647,13 @@ gst_vulkan_image_buffer_pool_reset_buffer (GstBufferPool * pool,
   }
 }
 
+static const gchar **
+gst_vulkan_image_buffer_pool_get_options (GstBufferPool * pool)
+{
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL };
+  return options;
+}
+
 /**
  * gst_vulkan_image_buffer_pool_new:
  * @device: the #GstVulkanDevice to use
@@ -663,6 +689,7 @@ gst_vulkan_image_buffer_pool_class_init (GstVulkanImageBufferPoolClass * klass)
   gstbufferpool_class->alloc_buffer = gst_vulkan_image_buffer_pool_alloc;
   gstbufferpool_class->stop = gst_vulkan_image_buffer_pool_stop;
   gstbufferpool_class->reset_buffer = gst_vulkan_image_buffer_pool_reset_buffer;
+  gstbufferpool_class->get_options = gst_vulkan_image_buffer_pool_get_options;
 }
 
 static void
