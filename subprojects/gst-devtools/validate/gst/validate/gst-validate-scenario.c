@@ -7135,6 +7135,12 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
   }
   scenario->priv->has_stopped = TRUE;
 
+  if (scenario->priv->wait_message_action) {
+    // Clear the wait action so that it is not executed
+    gst_validate_action_unref (scenario->priv->wait_message_action);
+    scenario->priv->wait_message_action = NULL;
+  }
+
   if (scenario->priv->actions || scenario->priv->non_blocking_running_actions ||
       scenario->priv->on_addition_actions) {
     guint nb_actions = 0;
