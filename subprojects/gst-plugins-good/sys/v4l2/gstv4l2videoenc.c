@@ -660,8 +660,7 @@ gst_v4l2_video_enc_loop (GstVideoEncoder * encoder)
 
   ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
   if (ret != GST_FLOW_OK) {
-    if (cpool)
-      gst_object_unref (cpool);
+    gst_object_unref (cpool);
     goto beach;
   }
 
@@ -669,8 +668,7 @@ gst_v4l2_video_enc_loop (GstVideoEncoder * encoder)
 
   GST_LOG_OBJECT (encoder, "Process output buffer");
   ret = gst_v4l2_buffer_pool_process (cpool, &buffer, NULL);
-  if (cpool)
-    gst_object_unref (cpool);
+  gst_object_unref (cpool);
   if (ret != GST_FLOW_OK)
     goto beach;
 
@@ -789,26 +787,23 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
                 self->input_state->caps, self->v4l2output->info.vinfo.size, min,
                 min)) {
           gst_structure_free (config);
-          if (opool)
-            gst_object_unref (opool);
+          gst_object_unref (opool);
           goto activate_failed;
         }
 
         if (!gst_buffer_pool_set_config (opool, config)) {
-          if (opool)
-            gst_object_unref (opool);
+          gst_object_unref (opool);
           goto activate_failed;
         }
       }
 
       if (!gst_buffer_pool_set_active (opool, TRUE)) {
-        if (opool)
-          gst_object_unref (opool);
+        gst_object_unref (opool);
         goto activate_failed;
       }
     }
-    if (opool)
-      gst_object_unref (opool);
+
+    gst_object_unref (opool);
   }
 
   if (task_state == GST_TASK_STOPPED || task_state == GST_TASK_PAUSED) {
@@ -816,8 +811,7 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
       GstBufferPool *cpool =
           gst_v4l2_object_get_buffer_pool (self->v4l2capture);
       active = gst_buffer_pool_set_active (cpool, TRUE);
-      if (cpool)
-        gst_object_unref (cpool);
+      gst_object_unref (cpool);
     }
     if (!active) {
       GST_WARNING_OBJECT (self, "Could not activate capture buffer pool.");
@@ -854,8 +848,7 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
       GstBufferPool *opool = gst_v4l2_object_get_buffer_pool (self->v4l2output);
       ret = gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (opool),
           &frame->input_buffer, &frame->system_frame_number);
-      if (opool)
-        gst_object_unref (opool);
+      gst_object_unref (opool);
     }
 
     GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
