@@ -932,6 +932,7 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
         self->v4l2output->mode == GST_V4L2_IO_DMABUF_IMPORT) {
       if (!gst_v4l2_object_try_import (self->v4l2output, inbuf)) {
         GST_ERROR_OBJECT (self, "cannot import buffers from upstream");
+        gst_object_unref (pool);
         return GST_FLOW_ERROR;
       }
 
@@ -961,8 +962,7 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
     goto beach;
 
   do {
-    if (pool)
-      g_object_unref (pool);
+    g_object_unref (pool);
     pool = gst_base_transform_get_buffer_pool (trans);
 
     if (!gst_buffer_pool_set_active (pool, TRUE))
@@ -995,8 +995,7 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
     }
 
 beach:
-  if (pool)
-    g_object_unref (pool);
+  g_object_unref (pool);
   return ret;
 
 activate_failed:
