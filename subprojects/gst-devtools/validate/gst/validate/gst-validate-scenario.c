@@ -7983,6 +7983,9 @@ register_action_types (void)
   GBytes *meta_features_rank_doc =
       g_resource_lookup_data (resource, "/validate/doc/meta-features-rank.md",
       G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
+  GBytes *meta_overrides_doc =
+      g_resource_lookup_data (resource, "/validate/doc/meta-overrides.md",
+      G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
 
   /*  *INDENT-OFF* */
   REGISTER_ACTION_TYPE ("meta", NULL,
@@ -8160,6 +8163,14 @@ register_action_types (void)
         .def = "{}"
       },
       {
+        .name="overrides",
+        .description=g_bytes_get_data (meta_overrides_doc, NULL),
+        .mandatory = FALSE,
+        .types = "{GstStructure as string}",
+        .possible_variables = NULL,
+        .def = "{}"
+      },
+      {
         .name="features-rank",
         .description=g_bytes_get_data (meta_features_rank_doc, NULL),
         .mandatory = FALSE,
@@ -8184,6 +8195,7 @@ register_action_types (void)
   g_bytes_unref (meta_config_doc);
   g_bytes_unref (meta_expected_issues_doc);
   g_bytes_unref (meta_features_rank_doc);
+  g_bytes_unref (meta_overrides_doc);
 
   REGISTER_ACTION_TYPE ("seek", _execute_seek,
       ((GstValidateActionParameter [])  {

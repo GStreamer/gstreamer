@@ -1,0 +1,14 @@
+meta,
+    args = {
+        "videotestsrc ! capsfilter name=cf ! fakesink",
+    },
+    overrides = {
+        [change-severity, issue-id=runtime::not-negotiated, new-severity=warning],
+        [change-severity, issue-id=scenario::not-ended, new-severity=warning],
+    }
+
+set-properties, cf::caps="audio/x-raw"
+
+wait, message-type=error
+
+set-state, state=null

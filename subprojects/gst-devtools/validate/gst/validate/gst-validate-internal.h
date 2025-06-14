@@ -54,6 +54,7 @@ G_GNUC_INTERNAL gboolean gst_validate_scenario_check_and_set_needs_clock_sync (G
 #define GST_VALIDATE_SCENARIO_SUFFIX ".scenario"
 G_GNUC_INTERNAL gchar** gst_validate_scenario_get_include_paths(const gchar* relative_scenario);
 G_GNUC_INTERNAL void _priv_validate_override_registry_deinit(void);
+G_GNUC_INTERNAL gboolean _priv_add_override_from_struct (GstStructure * soverride);
 
 G_GNUC_INTERNAL GstValidateReportingDetails gst_validate_runner_get_default_reporting_details (GstValidateRunner *runner);
 G_GNUC_INTERNAL void gst_validate_runner_set_monitor_all_pipelines (GstValidateRunner *runner, gboolean monitor_all_pipelines);

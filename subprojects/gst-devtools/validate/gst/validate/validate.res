@@ -4,6 +4,7 @@
     <file>doc/meta-configs.md</file>
     <file>doc/meta-expected-issues.md</file>
     <file>doc/meta-features-rank.md</file>
+    <file>doc/meta-overrides.md</file>
   </gresource>
 </gresources>
 

@@ -501,6 +501,16 @@ gst_validate_init (void)
   /* Ensure we load overrides before any use of a monitor */
   gst_validate_override_registry_preload ();
 
+  /* Load overrides from test file meta if any */
+  GList *overrides = get_structures_from_array_in_meta ("overrides");
+  for (GList * tmp = overrides; tmp; tmp = tmp->next) {
+    if (!_priv_add_override_from_struct (tmp->data)) {
+      GST_ERROR ("Failed to add override from test file: %" GST_PTR_FORMAT,
+          tmp->data);
+    }
+  }
+  g_list_free (overrides);
+
   validate_initialized = TRUE;
 
   gst_validate_extra_checks_init ();

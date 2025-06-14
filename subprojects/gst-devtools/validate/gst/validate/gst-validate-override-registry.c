@@ -252,8 +252,8 @@ enum
   OK
 };
 
-static gboolean
-_add_override_from_struct (GstStructure * soverride)
+gboolean
+_priv_add_override_from_struct (GstStructure * soverride)
 {
   GQuark issue_id;
   GstValidateReportLevel level;
@@ -367,7 +367,7 @@ _load_text_override_file (const gchar * filename)
 
     for (tmp = structs; tmp; tmp = tmp->next) {
       GstStructure *_struct = (GstStructure *) tmp->data;
-      if (!_add_override_from_struct (_struct)) {
+      if (!_priv_add_override_from_struct (_struct)) {
         GST_ERROR ("Wrong overrides %" GST_PTR_FORMAT, _struct);
         ret = WRONG_OVERRIDES;
       }
@@ -394,7 +394,7 @@ gst_validate_override_registry_preload (void)
   GList *tmp, *overrides = gst_validate_get_config ("change-issue-severity");
 
   for (tmp = overrides; tmp; tmp = tmp->next)
-    _add_override_from_struct (tmp->data);
+    _priv_add_override_from_struct (tmp->data);
   g_list_free (overrides);
 
   sos = g_getenv ("GST_VALIDATE_OVERRIDE");
