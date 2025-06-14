@@ -1314,9 +1314,9 @@ gst_validate_report_set_master_report (GstValidateReport * report,
 void
 gst_validate_report_print_level (GstValidateReport * report)
 {
-  gst_validate_printf (NULL, "%10s : %s\n",
+  gst_validate_printf (NULL, "%10s : %s (%s)\n",
       gst_validate_report_level_get_name (report->level),
-      report->issue->summary);
+      report->issue->summary, g_quark_to_string (report->issue->issue_id));
 }
 
 void
