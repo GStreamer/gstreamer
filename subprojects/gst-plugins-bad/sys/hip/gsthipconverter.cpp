@@ -1807,6 +1807,21 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
     return FALSE;
   }
 
+  auto in_hmem = (GstHipMemory *) gst_buffer_peek_memory (in_buf, 0);
+  auto out_hmem = (GstHipMemory *) gst_buffer_peek_memory (out_buf, 0);
+
+  auto in_stream = gst_hip_memory_get_stream (in_hmem);
+  auto out_stream = gst_hip_memory_get_stream (out_hmem);
+
+  gboolean set_event = FALSE;
+  /* Avoid sync if in/out mem use the same hip stream */
+  priv->stream = gst_hip_stream_get_handle (out_stream);
+  if (in_stream != out_stream) {
+    gst_hip_memory_sync (in_hmem);
+  } else {
+    set_event = TRUE;
+  }
+
   priv = converter->priv;
   format = priv->texture_fmt;
 
@@ -1891,7 +1906,15 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
     return FALSE;
   }
 
-  HipStreamSynchronize (priv->vendor, priv->stream);
+  auto stream = gst_hip_device_get_stream (converter->device);
+  GstHipEvent *event;
+  if (set_event && gst_hip_stream_record_event (stream, &event)) {
+    auto hmem = (GstHipMemory *) gst_buffer_peek_memory (out_buf, 0);
+    gst_hip_memory_set_event (hmem, event);
+    gst_hip_event_unref (event);
+  } else {
+    HipStreamSynchronize (priv->vendor, priv->stream);
+  }
 
   return TRUE;
 }
