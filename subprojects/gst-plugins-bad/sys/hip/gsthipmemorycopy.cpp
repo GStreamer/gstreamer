@@ -1024,13 +1024,14 @@ gst_hip_memory_copy_device_copy (GstHipMemoryCopy * self, GstBuffer * inbuf,
     return FALSE;
   }
 
-  GstCudaMemory *cmem;
-  if (priv->transfer_type == TransferType::CUDA_TO_HIP)
-    cmem = (GstCudaMemory *) gst_buffer_peek_memory (inbuf, 0);
-  else
-    cmem = (GstCudaMemory *) gst_buffer_peek_memory (outbuf, 0);
-
-  stream = gst_cuda_stream_get_handle (gst_cuda_memory_get_stream (cmem));
+  if (priv->transfer_type == TransferType::CUDA_TO_HIP) {
+    auto cmem = (GstCudaMemory *) gst_buffer_peek_memory (inbuf, 0);
+    stream = gst_cuda_stream_get_handle (gst_cuda_memory_get_stream (cmem));
+  } else {
+    auto hmem = (GstHipMemory *) gst_buffer_peek_memory (inbuf, 0);
+    stream =
+        (CUstream) gst_hip_stream_get_handle (gst_hip_memory_get_stream (hmem));
+  }
 
   if (!gst_video_frame_map (&in_frame, &priv->info, inbuf, GST_MAP_READ_HIP)) {
     GST_ERROR_OBJECT (self, "Couldn't map input frame");
@@ -1102,8 +1103,6 @@ gl_copy_thread_func (GstGLContext * gl_ctx, GLCopyData * data)
   GstVideoFrame hip_frame;
   hipStream_t stream = nullptr;
 
-  stream = gst_hip_stream_get_handle (gst_hip_device_get_stream (data->device));
-
   data->ret = FALSE;
 
   auto hip_ret = HipGLGetDevices (vendor,
@@ -1165,6 +1164,13 @@ gl_copy_thread_func (GstGLContext * gl_ctx, GLCopyData * data)
 
     return;
   }
+
+  auto hmem = (GstHipMemory *) gst_buffer_peek_memory (data->hip_buf, 0);
+  auto gst_stream = gst_hip_memory_get_stream (hmem);
+  if (!gst_stream)
+    gst_stream = gst_hip_device_get_stream (hmem->device);
+
+  stream = gst_hip_stream_get_handle (gst_stream);
 
   gboolean copy_ret = TRUE;
   for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&hip_frame); i++) {
