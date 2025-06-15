@@ -47,6 +47,11 @@ static GstHipAllocator *_hip_memory_allocator = nullptr;
 #define N_TEX_FILTER_MODES 2
 struct _GstHipMemoryPrivate
 {
+  ~_GstHipMemoryPrivate ()
+  {
+    gst_clear_hip_stream (&stream);
+  }
+
   GstHipVendor vendor;
   void *data = nullptr;
   void *staging = nullptr;
@@ -55,6 +60,7 @@ struct _GstHipMemoryPrivate
   guint height = 0;
   gboolean texture_support = FALSE;
   hipTextureObject_t texture[4][N_TEX_ADDR_MODES][N_TEX_FILTER_MODES] = { };
+  GstHipStream *stream = nullptr;
 
   std::mutex lock;
 };
@@ -222,7 +228,7 @@ do_align (size_t value, size_t align)
 static GstMemory *
 gst_hip_allocator_alloc_internal (GstHipAllocator * self,
     GstHipDevice * device, const GstVideoInfo * info,
-    guint width_in_bytes, guint alloc_height)
+    guint width_in_bytes, guint alloc_height, GstHipStream * stream)
 {
   hipError_t hip_ret = hipSuccess;
 
@@ -263,6 +269,9 @@ gst_hip_allocator_alloc_internal (GstHipAllocator * self,
   priv->width_in_bytes = width_in_bytes;
   priv->height = alloc_height;
   priv->vendor = vendor;
+  priv->stream = stream;
+  if (stream)
+    gst_hip_stream_ref (stream);
 
   g_object_get (device, "texture2d-support", &priv->texture_support, nullptr);
 
@@ -329,10 +338,10 @@ gst_hip_memory_upload (GstHipAllocator * self, GstHipMemory * mem)
   param.WidthInBytes = priv->width_in_bytes;
   param.Height = priv->height;
 
-  /* TODO use stream */
-  auto hip_ret = HipMemcpyParam2DAsync (priv->vendor, &param, nullptr);
+  auto stream = gst_hip_stream_get_handle (priv->stream);
+  auto hip_ret = HipMemcpyParam2DAsync (priv->vendor, &param, stream);
   if (gst_hip_result (hip_ret, priv->vendor))
-    hip_ret = HipStreamSynchronize (priv->vendor, nullptr);
+    hip_ret = HipStreamSynchronize (priv->vendor, stream);
 
   GST_MEMORY_FLAG_UNSET (mem, GST_HIP_MEMORY_TRANSFER_NEED_UPLOAD);
 
@@ -372,11 +381,11 @@ gst_hip_memory_download (GstHipAllocator * self, GstHipMemory * mem)
   param.dstPitch = priv->pitch;
   param.WidthInBytes = priv->width_in_bytes;
   param.Height = priv->height;
+  auto stream = gst_hip_stream_get_handle (priv->stream);
 
-  /* TODO use stream */
-  auto hip_ret = HipMemcpyParam2DAsync (priv->vendor, &param, nullptr);
+  auto hip_ret = HipMemcpyParam2DAsync (priv->vendor, &param, stream);
   if (gst_hip_result (hip_ret, priv->vendor))
-    hip_ret = HipStreamSynchronize (priv->vendor, nullptr);
+    hip_ret = HipStreamSynchronize (priv->vendor, stream);
 
   GST_MEMORY_FLAG_UNSET (mem, GST_HIP_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
@@ -431,6 +440,7 @@ hip_mem_copy (GstMemory * mem, gssize offset, gssize size)
   GstMapInfo src_info, dst_info;
   hip_Memcpy2D param = { };
   GstMemory *copy = nullptr;
+  auto stream = gst_hip_device_get_stream (device);
 
   /* non-zero offset or different size is not supported */
   if (offset != 0 || (size != -1 && (gsize) size != mem->size)) {
@@ -445,7 +455,8 @@ hip_mem_copy (GstMemory * mem, gssize offset, gssize size)
 
   if (!copy) {
     copy = gst_hip_allocator_alloc_internal (self, device,
-        &src_mem->info, src_mem->priv->width_in_bytes, src_mem->priv->height);
+        &src_mem->info, src_mem->priv->width_in_bytes, src_mem->priv->height,
+        stream);
   }
 
   if (!copy) {
@@ -484,10 +495,11 @@ hip_mem_copy (GstMemory * mem, gssize offset, gssize size)
   param.WidthInBytes = src_mem->priv->width_in_bytes;
   param.Height = src_mem->priv->height;
 
-  /* TODO: use stream */
-  auto ret = HipMemcpyParam2DAsync (vendor, &param, nullptr);
+  auto stream_handle = gst_hip_stream_get_handle (stream);
+
+  auto ret = HipMemcpyParam2DAsync (vendor, &param, stream_handle);
   if (gst_hip_result (ret, vendor))
-    ret = HipStreamSynchronize (vendor, nullptr);
+    ret = HipStreamSynchronize (vendor, stream_handle);
 
   gst_memory_unmap (mem, &src_info);
   gst_memory_unmap (copy, &dst_info);
@@ -661,6 +673,14 @@ gst_hip_memory_get_texture (GstHipMemory * mem, guint plane,
   return TRUE;
 }
 
+GstHipStream *
+gst_hip_memory_get_stream (GstHipMemory * mem)
+{
+  g_return_val_if_fail (gst_is_hip_memory (GST_MEMORY_CAST (mem)), nullptr);
+
+  return mem->priv->stream;
+}
+
 static guint
 gst_hip_allocator_calculate_alloc_height (const GstVideoInfo * info)
 {
@@ -738,7 +758,7 @@ gst_hip_allocator_alloc (GstHipAllocator * allocator,
   alloc_height = gst_hip_allocator_calculate_alloc_height (info);
 
   return gst_hip_allocator_alloc_internal (allocator, device,
-      info, info->stride[0], alloc_height);
+      info, info->stride[0], alloc_height, gst_hip_device_get_stream (device));
 }
 
 gboolean
@@ -962,7 +982,8 @@ gst_hip_pool_allocator_alloc (GstHipPoolAllocator * self, GstMemory ** mem)
   auto priv = self->priv;
 
   auto new_mem = gst_hip_allocator_alloc_internal (_hip_memory_allocator,
-      self->device, &self->info, self->info.stride[0], priv->alloc_height);
+      self->device, &self->info, self->info.stride[0], priv->alloc_height,
+      gst_hip_device_get_stream (self->device));
 
   if (!new_mem) {
     GST_ERROR_OBJECT (self, "Failed to allocate new memory");

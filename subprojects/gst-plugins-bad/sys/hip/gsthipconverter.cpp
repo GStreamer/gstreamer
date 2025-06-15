@@ -731,6 +731,7 @@ struct _GstHipConverterPrivate
   GstHipVendor vendor;
   GstVideoInfo in_info;
   GstVideoInfo out_info;
+  hipStream_t stream = nullptr;
 
   GstStructure *config = nullptr;
 
@@ -1626,6 +1627,7 @@ gst_hip_converter_new (GstHipDevice * device, const GstVideoInfo * in_info,
   priv->dest_height = out_info->height;
   priv->tex_align = tex_align;
   priv->vendor = gst_hip_device_get_vendor (device);
+  priv->stream = gst_hip_stream_get_handle (gst_hip_device_get_stream (device));
 
   if (config)
     gst_hip_converter_set_config (self, config);
@@ -1720,7 +1722,7 @@ gst_hip_converter_create_texture (GstHipConverter * self,
       * GST_VIDEO_INFO_COMP_PSTRIDE (&priv->in_info, plane),
       params.Height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->in_info, plane);
 
-  auto hip_ret = HipMemcpyParam2DAsync (priv->vendor, &params, nullptr);
+  auto hip_ret = HipMemcpyParam2DAsync (priv->vendor, &params, priv->stream);
   if (!gst_hip_result (hip_ret, priv->vendor)) {
     GST_ERROR_OBJECT (self, "Couldn't copy to fallback buffer");
     return nullptr;
@@ -1759,7 +1761,7 @@ gst_hip_converter_unpack_rgb (GstHipConverter * self, GstVideoFrame * src_frame)
 
   auto hip_ret = HipModuleLaunchKernel (priv->vendor, priv->unpack_func,
       DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y), 1,
-      HIP_BLOCK_X, HIP_BLOCK_Y, 1, 0, nullptr, args, nullptr);
+      HIP_BLOCK_X, HIP_BLOCK_Y, 1, 0, priv->stream, args, nullptr);
   if (!gst_hip_result (hip_ret, priv->vendor)) {
     GST_ERROR_OBJECT (self, "Couldn't unpack source RGB");
     return FALSE;
@@ -1879,7 +1881,7 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
   auto hip_ret = HipModuleLaunchKernel (priv->vendor, priv->main_func,
       DIV_UP (width, HIP_BLOCK_X), DIV_UP (height, HIP_BLOCK_Y), 1,
       HIP_BLOCK_X, HIP_BLOCK_Y, 1,
-      0, nullptr, args, nullptr);
+      0, priv->stream, args, nullptr);
 
   gst_video_frame_unmap (&out_frame);
   gst_video_frame_unmap (&in_frame);
@@ -1889,7 +1891,7 @@ gst_hip_converter_convert_frame (GstHipConverter * converter,
     return FALSE;
   }
 
-  HipStreamSynchronize (priv->vendor, nullptr);
+  HipStreamSynchronize (priv->vendor, priv->stream);
 
   return TRUE;
 }

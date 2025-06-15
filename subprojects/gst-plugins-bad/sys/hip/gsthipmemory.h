@@ -72,11 +72,13 @@ void      gst_hip_memory_init_once (void);
 
 gboolean  gst_is_hip_memory   (GstMemory * mem);
 
-gboolean gst_hip_memory_get_texture (GstHipMemory * mem,
-                                     guint plane,
-                                     guint filter_mode,
-                                     guint address_mode,
-                                     hipTextureObject_t * texture);
+gboolean  gst_hip_memory_get_texture (GstHipMemory * mem,
+                                      guint plane,
+                                      guint filter_mode,
+                                      guint address_mode,
+                                      hipTextureObject_t * texture);
+
+GstHipStream * gst_hip_memory_get_stream (GstHipMemory * mem);
 
 struct _GstHipAllocator
 {

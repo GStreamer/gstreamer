@@ -1556,6 +1556,8 @@ gst_hip_compositor_aggregate_frames (GstVideoAggregator * vagg,
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoFrame frame;
   hipStream_t stream = nullptr;
+  auto gst_stream = gst_hip_device_get_stream (self->device);
+  stream = gst_hip_stream_get_handle (gst_stream);
 
   GST_LOG_OBJECT (self, "aggregate");
 

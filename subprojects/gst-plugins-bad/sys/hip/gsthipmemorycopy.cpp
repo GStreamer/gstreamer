@@ -1100,8 +1100,9 @@ gl_copy_thread_func (GstGLContext * gl_ctx, GLCopyData * data)
   int device_list[1] = { 0, };
   GstHipGraphicsResource *resources[4] = { };
   GstVideoFrame hip_frame;
-  /* TODO: use stream */
   hipStream_t stream = nullptr;
+
+  stream = gst_hip_stream_get_handle (gst_hip_device_get_stream (data->device));
 
   data->ret = FALSE;
 
