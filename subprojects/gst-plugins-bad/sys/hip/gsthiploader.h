@@ -72,6 +72,12 @@ hipError_t HipHostMalloc (GstHipVendor vendor,
 hipError_t HipHostFree (GstHipVendor vendor,
                         void* ptr);
 
+hipError_t HipStreamCreate (GstHipVendor vendor,
+                            hipStream_t* stream);
+
+hipError_t HipStreamDestroy (GstHipVendor vendor,
+                             hipStream_t stream);
+
 hipError_t HipStreamSynchronize (GstHipVendor vendor,
                                  hipStream_t stream);
 

@@ -51,9 +51,14 @@ enum
 
 struct _GstHipDevicePrivate
 {
+  ~_GstHipDevicePrivate ()
+  {
+    gst_clear_hip_stream (&stream);
+  }
   guint device_id;
   GstHipVendor vendor;
   gboolean texture_support;
+  GstHipStream *stream = nullptr;
 };
 
 #define gst_hip_device_parent_class parent_class
@@ -171,11 +176,18 @@ gst_hip_device_new (GstHipVendor vendor, guint device_id)
     }
   }
 
+  auto stream = gst_hip_stream_new (vendor, device_id);
+  if (!stream) {
+    GST_ERROR ("Couldn't create stream");
+    return nullptr;
+  }
+
   auto self = (GstHipDevice *) g_object_new (GST_TYPE_HIP_DEVICE, nullptr);
   gst_object_ref_sink (self);
   self->priv->device_id = device_id;
   self->priv->vendor = vendor;
   self->priv->texture_support = texture_support;
+  self->priv->stream = stream;
 
   return self;
 }
@@ -240,4 +252,12 @@ gst_hip_device_get_device_id (GstHipDevice * device)
   g_return_val_if_fail (GST_IS_HIP_DEVICE (device), (guint) - 1);
 
   return device->priv->device_id;
+}
+
+GstHipStream *
+gst_hip_device_get_stream (GstHipDevice * device)
+{
+  g_return_val_if_fail (GST_IS_HIP_DEVICE (device), nullptr);
+
+  return device->priv->stream;
 }

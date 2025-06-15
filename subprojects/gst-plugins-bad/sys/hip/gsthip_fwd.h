@@ -44,5 +44,7 @@ typedef struct _GstHipBufferPoolPrivate GstHipBufferPoolPrivate;
 
 typedef struct _GstHipGraphicsResource GstHipGraphicsResource;
 
+typedef struct _GstHipStream GstHipStream;
+
 G_END_DECLS
 

@@ -20,15 +20,28 @@
 #pragma once
 
 #include <gst/gst.h>
-
-#include <hip/hip_runtime.h>
 #include "gsthip_fwd.h"
 #include "gsthip-enums.h"
-#include "gsthipdevice.h"
-#include "gsthipmemory.h"
-#include "gsthipbufferpool.h"
-#include "gsthiputils.h"
-#include "gsthiploader.h"
-#include "gsthip-interop.h"
-#include "gsthipstream.h"
+#include <hip/hip_runtime.h>
+
+G_BEGIN_DECLS
+
+GType gst_hip_stream_get_type (void);
+
+GstHipStream * gst_hip_stream_new (GstHipVendor vendor,
+                                   guint device_id);
+
+GstHipVendor   gst_hip_stream_get_vendor (GstHipStream * stream);
+
+guint          gst_hip_stream_get_device_id (GstHipStream * stream);
+
+hipStream_t    gst_hip_stream_get_handle (GstHipStream * stream);
+
+GstHipStream * gst_hip_stream_ref (GstHipStream * stream);
+
+void           gst_hip_stream_unref (GstHipStream * stream);
+
+void           gst_clear_hip_stream (GstHipStream ** stream);
+
+G_END_DECLS
 

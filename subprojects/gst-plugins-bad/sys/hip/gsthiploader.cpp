@@ -70,6 +70,8 @@ struct GstHipFuncTableAmd
   hipError_t (*hipFree) (void *ptr);
   hipError_t (*hipHostMalloc) (void **ptr, size_t size, unsigned int flags);
   hipError_t (*hipHostFree) (void *ptr);
+  hipError_t (*hipStreamCreate) (hipStream_t* stream);
+  hipError_t (*hipStreamDestroy) (hipStream_t stream);
   hipError_t (*hipStreamSynchronize) (hipStream_t stream);
   hipError_t (*hipModuleLoadData) (hipModule_t * module, const void *image);
   hipError_t (*hipModuleUnload) (hipModule_t module);
@@ -158,6 +160,8 @@ struct GstHipFuncTableCudaRt
   cudaError_t (CUDAAPI *cudaFree) (void *ptr);
   cudaError_t (CUDAAPI *cudaMallocHost) (void **ptr, size_t size, unsigned int flags);
   cudaError_t (CUDAAPI *cudaFreeHost) (void *ptr);
+  cudaError_t (CUDAAPI *cudaStreamCreate) (cudaStream_t *pStream);
+  cudaError_t (CUDAAPI *cudaStreamDestroy) (cudaStream_t stream);
   cudaError_t (CUDAAPI *cudaStreamSynchronize) (cudaStream_t stream);
   cudaError_t (CUDAAPI *cudaGraphicsMapResources) (int count,
     cudaGraphicsResource_t *resources, cudaStream_t stream);
@@ -242,6 +246,8 @@ load_amd_func_table (void)
   LOAD_SYMBOL (hipFree);
   LOAD_SYMBOL (hipHostMalloc);
   LOAD_SYMBOL (hipHostFree);
+  LOAD_SYMBOL (hipStreamCreate);
+  LOAD_SYMBOL (hipStreamDestroy);
   LOAD_SYMBOL (hipStreamSynchronize);
   LOAD_SYMBOL (hipModuleLoadData);
   LOAD_SYMBOL (hipModuleUnload);
@@ -361,6 +367,8 @@ load_cudart_func_table (guint major_ver, guint minor_ver)
   LOAD_SYMBOL (cudaFree);
   LOAD_SYMBOL (cudaMallocHost);
   LOAD_SYMBOL (cudaFreeHost);
+  LOAD_SYMBOL (cudaStreamCreate);
+  LOAD_SYMBOL (cudaStreamDestroy);
   LOAD_SYMBOL (cudaStreamSynchronize);
   LOAD_SYMBOL (cudaGraphicsMapResources);
   LOAD_SYMBOL (cudaGraphicsResourceGetMappedPointer);
@@ -929,6 +937,30 @@ HipHostFree (GstHipVendor vendor, void *ptr)
     return amd_ftable.hipHostFree (ptr);
 
   auto cuda_ret = cudart_ftable.cudaFreeHost (ptr);
+  return hipCUDAErrorTohipError (cuda_ret);
+}
+
+hipError_t
+HipStreamCreate (GstHipVendor vendor, hipStream_t * stream)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipStreamCreate (stream);
+
+  auto cuda_ret = cudart_ftable.cudaStreamCreate ((cudaStream_t *) stream);
+  return hipCUDAErrorTohipError (cuda_ret);
+}
+
+hipError_t
+HipStreamDestroy (GstHipVendor vendor, hipStream_t stream)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipStreamDestroy (stream);
+
+  auto cuda_ret = cudart_ftable.cudaStreamDestroy (stream);
   return hipCUDAErrorTohipError (cuda_ret);
 }
 

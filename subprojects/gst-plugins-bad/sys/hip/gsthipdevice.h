@@ -66,5 +66,7 @@ GstHipVendor   gst_hip_device_get_vendor  (GstHipDevice * device);
 
 guint          gst_hip_device_get_device_id  (GstHipDevice * device);
 
+GstHipStream * gst_hip_device_get_stream (GstHipDevice * device);
+
 G_END_DECLS
 
