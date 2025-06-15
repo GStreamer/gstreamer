@@ -31,4 +31,5 @@
 #include "gsthiploader.h"
 #include "gsthip-interop.h"
 #include "gsthipstream.h"
+#include "gsthipevent.h"
 

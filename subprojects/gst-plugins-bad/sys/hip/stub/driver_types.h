@@ -399,6 +399,7 @@ typedef gpointer cudaStream_t;
 struct cudaGraphicsResource;
 
 typedef struct cudaGraphicsResource *cudaGraphicsResource_t;
+typedef struct CUevent_st *cudaEvent_t;
 
 G_END_DECLS
 

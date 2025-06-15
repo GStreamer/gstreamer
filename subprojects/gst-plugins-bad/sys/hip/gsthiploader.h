@@ -81,6 +81,23 @@ hipError_t HipStreamDestroy (GstHipVendor vendor,
 hipError_t HipStreamSynchronize (GstHipVendor vendor,
                                  hipStream_t stream);
 
+hipError_t HipEventCreateWithFlags (GstHipVendor vendor,
+                                    hipEvent_t* event,
+                                    unsigned flags);
+
+hipError_t HipEventRecord (GstHipVendor vendor,
+                           hipEvent_t event,
+                           hipStream_t stream);
+
+hipError_t HipEventDestroy (GstHipVendor vendor,
+                            hipEvent_t event);
+
+hipError_t HipEventSynchronize (GstHipVendor vendor,
+                                hipEvent_t event);
+
+hipError_t HipEventQuery (GstHipVendor vendor,
+                          hipEvent_t event);
+
 hipError_t HipModuleLoadData (GstHipVendor vendor,
                               hipModule_t* module,
                               const void* image);

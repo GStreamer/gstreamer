@@ -37,6 +37,9 @@ guint          gst_hip_stream_get_device_id (GstHipStream * stream);
 
 hipStream_t    gst_hip_stream_get_handle (GstHipStream * stream);
 
+gboolean       gst_hip_stream_record_event (GstHipStream * stream,
+                                            GstHipEvent ** event);
+
 GstHipStream * gst_hip_stream_ref (GstHipStream * stream);
 
 void           gst_hip_stream_unref (GstHipStream * stream);

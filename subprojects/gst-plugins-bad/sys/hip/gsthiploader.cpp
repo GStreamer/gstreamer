@@ -73,6 +73,11 @@ struct GstHipFuncTableAmd
   hipError_t (*hipStreamCreate) (hipStream_t* stream);
   hipError_t (*hipStreamDestroy) (hipStream_t stream);
   hipError_t (*hipStreamSynchronize) (hipStream_t stream);
+  hipError_t (*hipEventCreateWithFlags) (hipEvent_t* event, unsigned flags);
+  hipError_t (*hipEventRecord) (hipEvent_t event, hipStream_t stream);
+  hipError_t (*hipEventDestroy) (hipEvent_t event);
+  hipError_t (*hipEventSynchronize) (hipEvent_t event);
+  hipError_t (*hipEventQuery) (hipEvent_t event);
   hipError_t (*hipModuleLoadData) (hipModule_t * module, const void *image);
   hipError_t (*hipModuleUnload) (hipModule_t module);
   hipError_t (*hipModuleGetFunction) (hipFunction_t * function,
@@ -163,6 +168,12 @@ struct GstHipFuncTableCudaRt
   cudaError_t (CUDAAPI *cudaStreamCreate) (cudaStream_t *pStream);
   cudaError_t (CUDAAPI *cudaStreamDestroy) (cudaStream_t stream);
   cudaError_t (CUDAAPI *cudaStreamSynchronize) (cudaStream_t stream);
+  cudaError_t (CUDAAPI *cudaEventCreateWithFlags) (cudaEvent_t *event,
+    unsigned int flags);
+  cudaError_t (CUDAAPI *cudaEventRecord) (cudaEvent_t event, cudaStream_t stream);
+  cudaError_t (CUDAAPI *cudaEventDestroy) (cudaEvent_t event);
+  cudaError_t (CUDAAPI *cudaEventSynchronize)(cudaEvent_t event);
+  cudaError_t (CUDAAPI *cudaEventQuery) (cudaEvent_t event);
   cudaError_t (CUDAAPI *cudaGraphicsMapResources) (int count,
     cudaGraphicsResource_t *resources, cudaStream_t stream);
   cudaError_t (CUDAAPI *cudaGraphicsResourceGetMappedPointer) (void **devPtr,
@@ -249,6 +260,11 @@ load_amd_func_table (void)
   LOAD_SYMBOL (hipStreamCreate);
   LOAD_SYMBOL (hipStreamDestroy);
   LOAD_SYMBOL (hipStreamSynchronize);
+  LOAD_SYMBOL (hipEventCreateWithFlags);
+  LOAD_SYMBOL (hipEventRecord);
+  LOAD_SYMBOL (hipEventDestroy);
+  LOAD_SYMBOL (hipEventSynchronize);
+  LOAD_SYMBOL (hipEventQuery);
   LOAD_SYMBOL (hipModuleLoadData);
   LOAD_SYMBOL (hipModuleUnload);
   LOAD_SYMBOL (hipModuleGetFunction);
@@ -370,6 +386,11 @@ load_cudart_func_table (guint major_ver, guint minor_ver)
   LOAD_SYMBOL (cudaStreamCreate);
   LOAD_SYMBOL (cudaStreamDestroy);
   LOAD_SYMBOL (cudaStreamSynchronize);
+  LOAD_SYMBOL (cudaEventCreateWithFlags);
+  LOAD_SYMBOL (cudaEventRecord);
+  LOAD_SYMBOL (cudaEventDestroy);
+  LOAD_SYMBOL (cudaEventSynchronize);
+  LOAD_SYMBOL (cudaEventQuery);
   LOAD_SYMBOL (cudaGraphicsMapResources);
   LOAD_SYMBOL (cudaGraphicsResourceGetMappedPointer);
   LOAD_SYMBOL (cudaGraphicsUnmapResources);
@@ -973,6 +994,68 @@ HipStreamSynchronize (GstHipVendor vendor, hipStream_t stream)
     return amd_ftable.hipStreamSynchronize (stream);
 
   auto cuda_ret = cudart_ftable.cudaStreamSynchronize (stream);
+  return hipCUDAErrorTohipError (cuda_ret);
+}
+
+hipError_t
+HipEventCreateWithFlags (GstHipVendor vendor, hipEvent_t * event,
+    unsigned flags)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipEventCreateWithFlags (event, flags);
+
+  auto cuda_ret = cudart_ftable.cudaEventCreateWithFlags ((cudaEvent_t *) event,
+      flags);
+  return hipCUDAErrorTohipError (cuda_ret);
+}
+
+hipError_t
+HipEventRecord (GstHipVendor vendor, hipEvent_t event, hipStream_t stream)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipEventRecord (event, stream);
+
+  auto cuda_ret = cudart_ftable.cudaEventRecord ((cudaEvent_t) event, stream);
+  return hipCUDAErrorTohipError (cuda_ret);
+}
+
+hipError_t
+HipEventDestroy (GstHipVendor vendor, hipEvent_t event)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipEventDestroy (event);
+
+  auto cuda_ret = cudart_ftable.cudaEventDestroy ((cudaEvent_t) event);
+  return hipCUDAErrorTohipError (cuda_ret);
+}
+
+hipError_t
+HipEventSynchronize (GstHipVendor vendor, hipEvent_t event)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipEventSynchronize (event);
+
+  auto cuda_ret = cudart_ftable.cudaEventSynchronize ((cudaEvent_t) event);
+  return hipCUDAErrorTohipError (cuda_ret);
+}
+
+hipError_t
+HipEventQuery (GstHipVendor vendor, hipEvent_t event)
+{
+  CHECK_VENDOR (vendor);
+
+  if (vendor == GST_HIP_VENDOR_AMD)
+    return amd_ftable.hipEventQuery (event);
+
+  auto cuda_ret = cudart_ftable.cudaEventQuery ((cudaEvent_t) event);
   return hipCUDAErrorTohipError (cuda_ret);
 }
 

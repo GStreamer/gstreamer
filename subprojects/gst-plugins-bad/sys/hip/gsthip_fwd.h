@@ -46,5 +46,10 @@ typedef struct _GstHipGraphicsResource GstHipGraphicsResource;
 
 typedef struct _GstHipStream GstHipStream;
 
+typedef struct _GstHipEvent GstHipEvent;
+typedef struct _GstHipEventPool GstHipEventPool;
+typedef struct _GstHipEventPoolClass GstHipEventPoolClass;
+typedef struct _GstHipEventPoolPrivate GstHipEventPoolPrivate;
+
 G_END_DECLS
 

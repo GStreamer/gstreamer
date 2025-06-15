@@ -51,9 +51,12 @@ struct _GstHipStream : public GstMiniObject
       if (gst_hip_result (hip_ret, vendor))
         HipStreamDestroy (vendor, handle);
     }
+
+    gst_clear_object (&event_pool);
   }
 
   hipStream_t handle = nullptr;
+  GstHipEventPool *event_pool = nullptr;
   GstHipVendor vendor;
   guint device_id;
 };
@@ -89,6 +92,7 @@ gst_hip_stream_new (GstHipVendor vendor, guint device_id)
   stream->handle = handle;
   stream->vendor = vendor;
   stream->device_id = device_id;
+  stream->event_pool = gst_hip_event_pool_new (vendor, device_id);
 
   gst_mini_object_init (stream, 0, gst_hip_stream_get_type (),
       nullptr, nullptr, (GstMiniObjectFreeFunction) gst_hip_stream_free);
@@ -119,6 +123,36 @@ gst_hip_stream_get_handle (GstHipStream * stream)
     return nullptr;
 
   return stream->handle;
+}
+
+gboolean
+gst_hip_stream_record_event (GstHipStream * stream, GstHipEvent ** event)
+{
+  g_return_val_if_fail (stream, FALSE);
+  g_return_val_if_fail (event, FALSE);
+
+  auto hip_ret = HipSetDevice (stream->vendor, stream->device_id);
+  if (!gst_hip_result (hip_ret, stream->vendor)) {
+    GST_ERROR ("Couldn't set device");
+    return FALSE;
+  }
+
+  GstHipEvent *new_event;
+  if (!gst_hip_event_pool_acquire (stream->event_pool, &new_event)) {
+    GST_ERROR ("Couldn't acquire event");
+    return FALSE;
+  }
+
+  hip_ret = gst_hip_event_record (new_event, stream->handle);
+  if (!gst_hip_result (hip_ret, stream->vendor)) {
+    GST_ERROR ("Couldn't record event");
+    gst_hip_event_unref (new_event);
+    return FALSE;
+  }
+
+  *event = new_event;
+
+  return TRUE;
 }
 
 GstHipStream *
