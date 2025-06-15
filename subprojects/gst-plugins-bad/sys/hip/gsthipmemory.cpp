@@ -49,6 +49,7 @@ struct _GstHipMemoryPrivate
 {
   ~_GstHipMemoryPrivate ()
   {
+    gst_clear_hip_event (&event);
     gst_clear_hip_stream (&stream);
   }
 
@@ -61,6 +62,7 @@ struct _GstHipMemoryPrivate
   gboolean texture_support = FALSE;
   hipTextureObject_t texture[4][N_TEX_ADDR_MODES][N_TEX_FILTER_MODES] = { };
   GstHipStream *stream = nullptr;
+  GstHipEvent *event = nullptr;
 
   std::mutex lock;
 };
@@ -343,6 +345,9 @@ gst_hip_memory_upload (GstHipAllocator * self, GstHipMemory * mem)
   if (gst_hip_result (hip_ret, priv->vendor))
     hip_ret = HipStreamSynchronize (priv->vendor, stream);
 
+  /* Already synchronized */
+  gst_clear_hip_event (&priv->event);
+
   GST_MEMORY_FLAG_UNSET (mem, GST_HIP_MEMORY_TRANSFER_NEED_UPLOAD);
 
   return gst_hip_result (hip_ret, priv->vendor);
@@ -386,6 +391,9 @@ gst_hip_memory_download (GstHipAllocator * self, GstHipMemory * mem)
   auto hip_ret = HipMemcpyParam2DAsync (priv->vendor, &param, stream);
   if (gst_hip_result (hip_ret, priv->vendor))
     hip_ret = HipStreamSynchronize (priv->vendor, stream);
+
+  /* Already synchronized */
+  gst_clear_hip_event (&priv->event);
 
   GST_MEMORY_FLAG_UNSET (mem, GST_HIP_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
@@ -679,6 +687,34 @@ gst_hip_memory_get_stream (GstHipMemory * mem)
   g_return_val_if_fail (gst_is_hip_memory (GST_MEMORY_CAST (mem)), nullptr);
 
   return mem->priv->stream;
+}
+
+void
+gst_hip_memory_set_event (GstHipMemory * mem, GstHipEvent * event)
+{
+  g_return_if_fail (gst_is_hip_memory (GST_MEMORY_CAST (mem)));
+
+  auto priv = mem->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  gst_clear_hip_event (&priv->event);
+  priv->event = event;
+  if (priv->event)
+    gst_hip_event_ref (priv->event);
+}
+
+void
+gst_hip_memory_sync (GstHipMemory * mem)
+{
+  g_return_if_fail (gst_is_hip_memory (GST_MEMORY_CAST (mem)));
+
+  auto priv = mem->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (priv->event)
+    gst_hip_event_synchronize (priv->event);
+
+  gst_clear_hip_event (&priv->event);
 }
 
 static guint

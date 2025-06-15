@@ -80,6 +80,11 @@ gboolean  gst_hip_memory_get_texture (GstHipMemory * mem,
 
 GstHipStream * gst_hip_memory_get_stream (GstHipMemory * mem);
 
+void           gst_hip_memory_set_event (GstHipMemory * mem,
+                                         GstHipEvent * event);
+
+void           gst_hip_memory_sync (GstHipMemory * mem);
+
 struct _GstHipAllocator
 {
   GstAllocator allocator;

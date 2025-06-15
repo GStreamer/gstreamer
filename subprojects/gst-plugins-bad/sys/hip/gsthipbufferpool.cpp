@@ -43,6 +43,8 @@ static gboolean gst_hip_buffer_pool_start (GstBufferPool * pool);
 static gboolean gst_hip_buffer_pool_stop (GstBufferPool * pool);
 static GstFlowReturn gst_hip_buffer_pool_alloc (GstBufferPool * pool,
     GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
+static GstFlowReturn gst_hip_buffer_pool_acquire_buffer (GstBufferPool * pool,
+    GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
 
 static void
 gst_hip_buffer_pool_class_init (GstHipBufferPoolClass * klass)
@@ -57,6 +59,7 @@ gst_hip_buffer_pool_class_init (GstHipBufferPoolClass * klass)
   pool_class->start = gst_hip_buffer_pool_start;
   pool_class->stop = gst_hip_buffer_pool_stop;
   pool_class->alloc_buffer = gst_hip_buffer_pool_alloc;
+  pool_class->acquire_buffer = gst_hip_buffer_pool_acquire_buffer;
 
   GST_DEBUG_CATEGORY_INIT (gst_hip_buffer_pool_debug, "hipbufferpool", 0,
       "hipbufferpool");
@@ -177,12 +180,28 @@ gst_hip_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   gst_buffer_append_memory (buf, mem);
 
   auto hmem = GST_HIP_MEMORY_CAST (mem);
+  gst_hip_memory_sync (hmem);
   gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
       GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
       GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
       hmem->info.offset, hmem->info.stride);
 
   *buffer = buf;
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_hip_buffer_pool_acquire_buffer (GstBufferPool * pool,
+    GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
+{
+  auto ret = GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (pool,
+      buffer, params);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  auto mem = (GstHipMemory *) gst_buffer_peek_memory (*buffer, 0);
+  gst_hip_memory_sync (mem);
 
   return GST_FLOW_OK;
 }
