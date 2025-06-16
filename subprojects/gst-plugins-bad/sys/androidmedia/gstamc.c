@@ -150,7 +150,8 @@ scan_codecs (GstPlugin * plugin)
   }
 
   if (!gst_amc_codeclist_get_count (&codec_count, &error)) {
-    GST_ERROR ("Failed to get number of available codecs");
+    GST_ERROR ("Failed to get number of available codecs: %s",
+        error ? error->message : "unknown error");
     ret = FALSE;
     goto done;
   }
@@ -171,14 +172,16 @@ scan_codecs (GstPlugin * plugin)
 
     codec_info = gst_amc_codeclist_get_codec_info_at (i, &error);
     if (!codec_info) {
-      GST_ERROR ("Failed to get codec info %d", i);
+      GST_ERROR ("Failed to get codec info %d: %s", i,
+          error ? error->message : "unknown error");
       valid_codec = FALSE;
       goto next_codec;
     }
 
     name_str = gst_amc_codec_info_handle_get_name (codec_info, &error);
     if (!name_str) {
-      GST_ERROR ("Failed to get codec name");
+      GST_ERROR ("Failed to get codec name: %s",
+          error ? error->message : "unknown error");
       valid_codec = FALSE;
       goto next_codec;
     }
@@ -232,7 +235,8 @@ scan_codecs (GstPlugin * plugin)
     gst_codec_info->name = g_strdup (name_str);
 
     if (!gst_amc_codec_info_handle_is_encoder (codec_info, &is_encoder, &error)) {
-      GST_ERROR ("Failed to detect if codec is an encoder");
+      GST_ERROR ("Failed to detect if codec is an encoder: %s",
+          error ? error->message : "unknown error");
       valid_codec = FALSE;
       goto next_codec;
     }
@@ -243,7 +247,8 @@ scan_codecs (GstPlugin * plugin)
         gst_amc_codec_info_handle_get_supported_types (codec_info,
         &n_supported_types, &error);
     if (!supported_types) {
-      GST_ERROR ("Failed to get supported types");
+      GST_ERROR ("Failed to get supported types: %s",
+          error ? error->message : "unknown error");
       valid_codec = FALSE;
       goto next_codec;
     }
@@ -277,7 +282,8 @@ scan_codecs (GstPlugin * plugin)
           gst_amc_codec_info_handle_get_capabilities_for_type (codec_info,
           supported_type_str, &error);
       if (!capabilities) {
-        GST_ERROR ("Failed to get capabilities for supported type");
+        GST_ERROR ("Failed to get capabilities for supported type: %s",
+            error ? error->message : "unknown error");
         valid_codec = FALSE;
         goto next_supported_type;
       }
@@ -287,7 +293,8 @@ scan_codecs (GstPlugin * plugin)
             gst_amc_codec_capabilities_handle_get_color_formats (capabilities,
             &gst_codec_type->n_color_formats, &error);
         if (!gst_codec_type->color_formats) {
-          GST_ERROR ("Failed to get color format elements");
+          GST_ERROR ("Failed to get color format elements: %s",
+              error ? error->message : "unknown error");
           valid_codec = FALSE;
           goto next_supported_type;
         }
@@ -317,7 +324,8 @@ scan_codecs (GstPlugin * plugin)
           gst_amc_codec_capabilities_handle_get_profile_levels (capabilities,
           &gst_codec_type->n_profile_levels, &error);
       if (error) {
-        GST_ERROR ("Failed to get profile/levels: %s", error->message);
+        GST_ERROR ("Failed to get profile/levels: %s",
+            error ? error->message : "unknown error");
         valid_codec = FALSE;
         goto next_supported_type;
       }
