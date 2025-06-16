@@ -62,6 +62,19 @@ static gboolean ignore_unknown_color_formats = FALSE;
 static gboolean accepted_color_formats (GstAmcCodecType * type,
     gboolean is_encoder);
 
+static const char *
+gst_amc_accel_to_string (GstAmcCodecAccel accel)
+{
+  switch (accel) {
+    case AMC_CODEC_ACCEL_IS_SW:
+      return "SW";
+    case AMC_CODEC_ACCEL_IS_HW:
+      return "HW";
+    case AMC_CODEC_ACCEL_IS_UNKNOWN:
+      return "unknown acceleration";
+  }
+}
+
 static gboolean
 scan_codecs (GstPlugin * plugin)
 {
@@ -162,7 +175,7 @@ scan_codecs (GstPlugin * plugin)
     GstAmcCodecInfo *gst_codec_info;
     GstAmcCodecInfoHandle *codec_info = NULL;
     gchar *name_str = NULL;
-    gboolean is_encoder;
+    gboolean is_encoder, is_hw;
     gchar **supported_types = NULL;
     gsize n_supported_types;
     gsize j;
@@ -243,6 +256,17 @@ scan_codecs (GstPlugin * plugin)
     gst_codec_info->is_encoder = is_encoder;
     gst_codec_info->gl_output_only = FALSE;
 
+    if (!gst_amc_codec_info_handle_is_hardware_accelerated (codec_info, &is_hw,
+            &error)) {
+      GST_WARNING ("Failed to detect if codec is hardware-accelerated: %s",
+          error ? error->message : "unknown error");
+      g_clear_error (&error);
+      gst_codec_info->accel = AMC_CODEC_ACCEL_IS_UNKNOWN;
+    } else {
+      gst_codec_info->accel =
+          is_hw ? AMC_CODEC_ACCEL_IS_HW : AMC_CODEC_ACCEL_IS_SW;
+    }
+
     supported_types =
         gst_amc_codec_info_handle_get_supported_types (codec_info,
         &n_supported_types, &error);
@@ -253,7 +277,8 @@ scan_codecs (GstPlugin * plugin)
       goto next_codec;
     }
 
-    GST_INFO ("Codec '%s' has %" G_GSIZE_FORMAT " supported types", name_str,
+    GST_INFO ("Codec '%s' (%s) has %" G_GSIZE_FORMAT " supported types",
+        name_str, gst_amc_accel_to_string (gst_codec_info->accel),
         n_supported_types);
 
     gst_codec_info->supported_types =
@@ -1740,40 +1765,33 @@ register_codecs (GstPlugin * plugin)
 
   for (l = codec_infos.head; l; l = l->next) {
     GstAmcCodecInfo *codec_info = l->data;
-    gboolean is_audio = FALSE;
-    gboolean is_video = FALSE;
+    gboolean is_video;
     gint i;
-    gint n_types;
 
     GST_INFO ("Registering codec '%s'", codec_info->name);
     for (i = 0; i < codec_info->n_supported_types; i++) {
-      GstAmcCodecType *codec_type = &codec_info->supported_types[i];
-
-      if (g_str_has_prefix (codec_type->mime, "audio/"))
-        is_audio = TRUE;
-      else if (g_str_has_prefix (codec_type->mime, "video/"))
-        is_video = TRUE;
-    }
-
-    n_types = 0;
-    if (is_audio)
-      n_types++;
-    if (is_video)
-      n_types++;
-
-    for (i = 0; i < n_types; i++) {
       GTypeQuery type_query;
       GTypeInfo type_info = { 0, };
       GType type, subtype;
       gchar *type_name, *element_name;
       guint rank;
+      GstAmcCodecType *codec_type = &codec_info->supported_types[i];
+
+      if (g_str_has_prefix (codec_type->mime, "audio/")) {
+        is_video = FALSE;
+      } else if (g_str_has_prefix (codec_type->mime, "video/")) {
+        is_video = TRUE;
+      } else {
+        GST_INFO ("Skipping codec %s: unsupported type", codec_info->name);
+        continue;
+      }
 
       if (is_video) {
         if (codec_info->is_encoder)
           type = gst_amc_video_enc_get_type ();
         else
           type = gst_amc_video_dec_get_type ();
-      } else if (is_audio) {
+      } else {
         if (codec_info->is_encoder) {
           GST_FIXME ("Skipping %s: audio encoders are not supported yet",
               codec_info->name);
@@ -1781,9 +1799,6 @@ register_codecs (GstPlugin * plugin)
         } else {
           type = gst_amc_audio_dec_get_type ();
         }
-      } else {
-        GST_INFO ("Skipping codec %s: unsupported type", codec_info->name);
-        continue;
       }
 
       g_type_query (type, &type_query);
@@ -1808,26 +1823,61 @@ register_codecs (GstPlugin * plugin)
           create_element_name (is_video, codec_info->is_encoder,
           codec_info->name);
 
-      /* Give the Google software codec a secondary rank,
-       * everything else is likely a hardware codec, except
-       * OMX.SEC.*.sw.dec (as seen in Galaxy S4).
-       *
-       * Also on some devices there are codecs that don't start
-       * with OMX., while there are also some that do. And on
-       * some of these devices the ones that don't start with
-       * OMX. just crash during initialization while the others
-       * work. To make things even more complicated other devices
-       * have codecs with the same name that work and no alternatives.
-       * So just give a lower rank to these non-OMX codecs and hope
-       * that there's an alternative with a higher rank.
-       */
-      if (g_str_has_prefix (codec_info->name, "OMX.google") ||
-          g_str_has_suffix (codec_info->name, ".sw.dec")) {
-        /* For video we prefer hardware codecs, for audio we prefer software
-         * codecs. Hardware codecs don't make much sense for audio */
-        rank = is_video ? GST_RANK_SECONDARY : GST_RANK_PRIMARY;
-      } else if (g_str_has_prefix (codec_info->name, "OMX.Exynos.")
-          && !is_video) {
+      if (is_video) {
+        /* Give PRIMARY+1 rank to all hardware-accelerated video codecs and
+         * MARGINAL to sw video codecs, because any gstreamer-native codecs
+         * compiled-in may be higher quality */
+        switch (codec_info->accel) {
+          case AMC_CODEC_ACCEL_IS_HW:
+            rank = GST_RANK_PRIMARY + 1;
+            break;
+          case AMC_CODEC_ACCEL_IS_SW:
+            rank = GST_RANK_MARGINAL;
+            break;
+          case AMC_CODEC_ACCEL_IS_UNKNOWN:
+            /* Android version is too old, could not auto-detect hw-accel
+             * status. Try guessing from the name.
+             *
+             * Amlogic/Exynos hardware video codecs end in .encoder/.decoder:
+             *  c2.amlogic.avc.decoder
+             *  c2.amlogic.avc.encoder
+             *  c2.amlogic.hevc.decoder
+             *  c2.amlogic.av1.decoder
+             *  c2.exynos.h264.decoder
+             *  c2.exynos.h264.encoder
+             *  c2.exynos.hevc.decoder
+             *  c2.exynos.hevc.encoder
+             *  c2.exynos.vp9.decoder
+             *  c2.exynos.vp9.encoder
+             * NOTE: c2.google.av1.decoder can be a hw decoder, but it's only
+             *       available in newer Android versions and codec_info->accel
+             *       will work reliably there.
+             * Software video codecs end in .sw or .secure (usually?):
+             *  c2.amlogic.vp8.decoder.sw
+             *  c2.amlogic.wmv3.decoder.sw
+             *  c2.amlogic.avc.decoder.secure
+             * As an aside, software audio codecs look like this:
+             *  c2.amlogic.audio.decoder.mp2
+             *  c2.amlogic.audio.decoder.eac3
+             * But we only rank video here.
+             */
+            if ((g_str_has_prefix (codec_info->name, "c2.amlogic") ||
+                    g_str_has_prefix (codec_info->name, "c2.exynos")) &&
+                (g_str_has_suffix (codec_info->name, "decoder") ||
+                    g_str_has_suffix (codec_info->name, "encoder"))) {
+              rank = GST_RANK_PRIMARY + 1;
+            } else {
+              rank = GST_RANK_MARGINAL;
+            }
+            break;
+        }
+      } else if (g_str_has_prefix (codec_info->name, "OMX.google.") ||
+          g_str_has_prefix (codec_info->name, "c2.android.") ||
+          g_str_has_prefix (codec_info->name, "c2.amlogic.") ||
+          g_str_has_prefix (codec_info->name, "c2.exynos.")) {
+        /* Known-high-quality audio codecs get PRIMARY+1 rank */
+        rank = GST_RANK_PRIMARY + 1;
+      } else if (g_str_has_prefix (codec_info->name, "OMX.Exynos.")) {
         /* OMX.Exynos. audio codecs are existing on some devices like the
          * Galaxy S5 mini, and cause random crashes (of the device,
          * not the app!) and generally misbehave. That specific device
@@ -1837,18 +1887,28 @@ register_codecs (GstPlugin * plugin)
          * ones
          */
         rank = GST_RANK_MARGINAL;
-      } else if (g_str_has_prefix (codec_info->name, "OMX.")) {
-        rank = is_video ? GST_RANK_PRIMARY : GST_RANK_SECONDARY;
       } else {
-        rank = GST_RANK_MARGINAL;
+        /* On some devices there are audio codecs that don't start
+         * with OMX., while there are also some that do. And on
+         * some of these devices the ones that don't start with
+         * OMX. just crash during initialization while the others
+         * work. To make things even more complicated other devices
+         * have codecs with the same name that work and no alternatives.
+         * So just give a lower rank to these non-OMX codecs and hope
+         * that there's an alternative with a higher rank.
+         */
+        if (g_str_has_prefix (codec_info->name, "OMX.")) {
+          rank = GST_RANK_SECONDARY;
+        } else {
+          rank = GST_RANK_MARGINAL;
+        }
       }
 
       ret |= gst_element_register (plugin, element_name, rank, subtype);
       g_free (element_name);
 
-      GST_INFO ("Registered codec '%s' with rank %u", codec_info->name, rank);
-
-      is_video = FALSE;
+      GST_INFO ("Registered %s codec '%s' with rank %u",
+          gst_amc_accel_to_string (codec_info->accel), codec_info->name, rank);
     }
   }
 
@@ -2446,13 +2506,22 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
     }
   }
 
+  /* Split caps into structures to bypass logcat line length limit */
   if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_INFO) {
-    char *raw_caps = gst_caps_to_string (raw_ret);
-    char *encoded_caps = gst_caps_to_string (encoded_ret);
-    GST_INFO ("Returning caps for '%s':\nraw caps: %s\nencoded caps: %s",
-        codec_info->name, raw_caps, encoded_caps);
-    g_free (encoded_caps);
-    g_free (raw_caps);
+    guint i, n;
+    GST_INFO ("Returning caps for '%s':", codec_info->name);
+
+    GST_INFO (" raw caps:");
+    n = gst_caps_get_size (raw_ret);
+    for (i = 0; i < n; i++) {
+      GST_INFO ("  %" GST_PTR_FORMAT, gst_caps_get_structure (raw_ret, i));
+    }
+
+    GST_INFO (" encoded caps:");
+    n = gst_caps_get_size (encoded_ret);
+    for (i = 0; i < n; i++) {
+      GST_INFO ("  %" GST_PTR_FORMAT, gst_caps_get_structure (encoded_ret, i));
+    }
   }
 }
 

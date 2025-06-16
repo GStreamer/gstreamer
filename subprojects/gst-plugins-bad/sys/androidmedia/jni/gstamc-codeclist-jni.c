@@ -52,6 +52,7 @@ static struct
   jmethodID get_name;
   jmethodID get_supported_types;
   jmethodID is_encoder;
+  jmethodID is_hardware_accelerated;
 } media_codecinfo;
 
 static struct
@@ -154,6 +155,16 @@ gst_amc_codeclist_jni_static_init (void)
   if (!media_codecinfo.is_encoder) {
     GST_ERROR ("Failed to get android.media.MediaCodecInfo isEncoder(): %s",
         err->message);
+    g_clear_error (&err);
+    return FALSE;
+  }
+
+  media_codecinfo.is_hardware_accelerated =
+      gst_amc_jni_get_method_id (env, &err, media_codecinfo.klass,
+      "isHardwareAccelerated", "()Z");
+  if (!media_codecinfo.is_hardware_accelerated) {
+    GST_ERROR ("Failed to get android.media.MediaCodecInfo "
+        "isHardwareAccelerated(): %s", err->message);
     g_clear_error (&err);
     return FALSE;
   }
@@ -304,6 +315,24 @@ gst_amc_codec_info_handle_is_encoder (GstAmcCodecInfoHandle * handle,
 
   if (!gst_amc_jni_call_boolean_method (env, err, handle->object,
           media_codecinfo.is_encoder, is_encoder))
+    return FALSE;
+
+  return TRUE;
+}
+
+gboolean
+gst_amc_codec_info_handle_is_hardware_accelerated (GstAmcCodecInfoHandle *
+    handle, gboolean * is_hardware_accelerated, GError ** err)
+{
+  JNIEnv *env;
+
+  g_return_val_if_fail (handle != NULL, FALSE);
+  g_return_val_if_fail (is_hardware_accelerated != NULL, FALSE);
+
+  env = gst_amc_jni_get_env ();
+
+  if (!gst_amc_jni_call_boolean_method (env, err, handle->object,
+          media_codecinfo.is_hardware_accelerated, is_hardware_accelerated))
     return FALSE;
 
   return TRUE;

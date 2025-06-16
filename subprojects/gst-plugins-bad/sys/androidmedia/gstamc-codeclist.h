@@ -44,6 +44,8 @@ gchar * gst_amc_codec_info_handle_get_name (GstAmcCodecInfoHandle * handle,
     GError ** err);
 gboolean gst_amc_codec_info_handle_is_encoder (GstAmcCodecInfoHandle * handle,
     gboolean * is_encoder, GError ** err);
+gboolean gst_amc_codec_info_handle_is_hardware_accelerated (GstAmcCodecInfoHandle * handle,
+    gboolean * is_hardware_accelerated, GError ** err);
 gchar ** gst_amc_codec_info_handle_get_supported_types (
     GstAmcCodecInfoHandle * handle, gsize * length, GError ** err);
 GstAmcCodecCapabilitiesHandle * gst_amc_codec_info_handle_get_capabilities_for_type (

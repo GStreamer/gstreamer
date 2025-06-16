@@ -43,9 +43,17 @@ struct _GstAmcCodecType {
   gsize n_profile_levels;
 };
 
+typedef enum
+{
+  AMC_CODEC_ACCEL_IS_SW,
+  AMC_CODEC_ACCEL_IS_HW,
+  AMC_CODEC_ACCEL_IS_UNKNOWN,
+} GstAmcCodecAccel;
+
 struct _GstAmcCodecInfo {
   gchar *name;
   gboolean is_encoder;
+  GstAmcCodecAccel accel;
   gboolean gl_output_only;
   GstAmcCodecType *supported_types;
   gint n_supported_types;
