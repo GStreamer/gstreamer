@@ -27,6 +27,7 @@
 
 #include <gst/base/gstbitreader.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/pbutils/pbutils.h>
 #include <gst/video/video.h>
 #include "gstrtpelements.h"
 #include "gstrtph265depay.h"
@@ -507,6 +508,7 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
     guint32 max_sub_layers_minus1, temporal_id_nesting_flag, chroma_format_idc,
         bit_depth_luma_minus8, bit_depth_chroma_minus8,
         min_spatial_segmentation_idc;
+    const char *level, *profile, *tier;
 
     /* Fixme: Current implementation is not embedding SEI in codec_data */
 
@@ -606,6 +608,7 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
         "Ignoring min_spatial_segmentation for now (assuming zero)");
 
     min_spatial_segmentation_idc = 0;   /* NOTE - we ignore this for now, but in a perfect world, we should continue parsing to obtain the real value */
+
     gst_buffer_unmap (g_ptr_array_index (rtph265depay->sps, 0), &nalmap);
 
     /* min_spatial_segmentation_idc */
@@ -693,12 +696,25 @@ gst_rtp_h265_set_src_caps (GstRtpH265Depay * rtph265depay)
     }
 
     new_size = data - map.data;
+
+    // skip HEVCDecoderConfigurationVersion
+    profile = gst_codec_utils_h265_get_profile (&map.data[1], new_size - 1);
+    tier = gst_codec_utils_h265_get_tier (&map.data[1], new_size - 1);
+    level = gst_codec_utils_h265_get_level (&map.data[1], new_size - 1);
+
     gst_buffer_unmap (codec_data, &map);
     gst_buffer_set_size (codec_data, new_size);
 
     gst_caps_set_simple (srccaps,
         "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
     gst_buffer_unref (codec_data);
+
+    if (profile)
+      gst_caps_set_simple (srccaps, "profile", G_TYPE_STRING, profile, NULL);
+    if (tier)
+      gst_caps_set_simple (srccaps, "tier", G_TYPE_STRING, tier, NULL);
+    if (level)
+      gst_caps_set_simple (srccaps, "level", G_TYPE_STRING, level, NULL);
   }
 
   srcpad = GST_RTP_BASE_DEPAYLOAD_SRCPAD (rtph265depay);
