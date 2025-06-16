@@ -70,13 +70,13 @@ scan_codecs (GstPlugin * plugin)
   const GstStructure *cache_data;
   GError *error = NULL;
 
-  GST_DEBUG ("Scanning codecs");
+  GST_INFO ("Scanning codecs");
 
   if ((cache_data = gst_plugin_get_cache_data (plugin))) {
     const GValue *arr = gst_structure_get_value (cache_data, "codecs");
     guint i, n;
 
-    GST_DEBUG ("Getting codecs from cache");
+    GST_INFO ("Getting codecs from cache");
     n = gst_value_array_get_size (arr);
     for (i = 0; i < n; i++) {
       const GValue *cv = gst_value_array_get_value (arr, i);
@@ -1736,7 +1736,7 @@ register_codecs (GstPlugin * plugin)
   gboolean ret = TRUE;
   GList *l;
 
-  GST_DEBUG ("Registering plugins");
+  GST_INFO ("Registering plugins");
 
   for (l = codec_infos.head; l; l = l->next) {
     GstAmcCodecInfo *codec_info = l->data;
@@ -1745,7 +1745,7 @@ register_codecs (GstPlugin * plugin)
     gint i;
     gint n_types;
 
-    GST_DEBUG ("Registering codec '%s'", codec_info->name);
+    GST_INFO ("Registering codec '%s'", codec_info->name);
     for (i = 0; i < codec_info->n_supported_types; i++) {
       GstAmcCodecType *codec_type = &codec_info->supported_types[i];
 
@@ -1776,7 +1776,7 @@ register_codecs (GstPlugin * plugin)
       } else if (is_audio && !codec_info->is_encoder) {
         type = gst_amc_audio_dec_get_type ();
       } else {
-        GST_DEBUG ("Skipping unsupported codec type");
+        GST_INFO ("Skipping codec %s: unsupported type", codec_info->name);
         continue;
       }
 
@@ -1839,6 +1839,8 @@ register_codecs (GstPlugin * plugin)
 
       ret |= gst_element_register (plugin, element_name, rank, subtype);
       g_free (element_name);
+
+      GST_INFO ("Registered codec '%s' with rank %u", codec_info->name, rank);
 
       is_video = FALSE;
     }
@@ -2438,9 +2440,14 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
     }
   }
 
-  GST_DEBUG ("Returning caps for '%s':", codec_info->name);
-  GST_DEBUG ("  raw caps: %" GST_PTR_FORMAT, raw_ret);
-  GST_DEBUG ("  encoded caps: %" GST_PTR_FORMAT, encoded_ret);
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_INFO) {
+    char *raw_caps = gst_caps_to_string (raw_ret);
+    char *encoded_caps = gst_caps_to_string (encoded_ret);
+    GST_INFO ("Returning caps for '%s':\nraw caps: %s\nencoded caps: %s",
+        codec_info->name, raw_caps, encoded_caps);
+    g_free (encoded_caps);
+    g_free (raw_caps);
+  }
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
