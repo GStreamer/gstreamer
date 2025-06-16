@@ -973,36 +973,48 @@ build documentation:
       - subprojects/gstreamer-vaapi/**/*
       - subprojects/gst-rtsp-server/**/*
 
-# FIXME: Using trigger: causes permission issues, workaround using old REST API.
-# https://gitlab.com/gitlab-org/gitlab/-/issues/341737
+# FIXME: We used to automatically run against matching user branch
+# whever that branch existed.
+# See ci/gitlab/trigger_cerbero_pipline.py.
+.cerbero trigger changes: &cerbero_trigger_changes
+  changes:
+    paths:
+      - ".gitlab-ci.yml"
+      - "ci/gitlab/*.py"
+      - "subprojects/gst-devtools/**/*"
+      - "subprojects/gst-editing-services/**/*"
+      - "subprojects/gst-libav/**/*"
+      - "subprojects/gst-plugins-bad/**/*"
+      - "subprojects/gst-plugins-base/**/*"
+      - "subprojects/gst-plugins-good/**/*"
+      - "subprojects/gst-plugins-ugly/**/*"
+      - "subprojects/gst-python/**/*"
+      - "subprojects/gstreamer/**/*"
+      - "subprojects/gst-rtsp-server/**/*"
+      - "subprojects/gst-examples/**/*"
+
 cerbero trigger:
   stage: build
-  timeout: '4h'
-  tags:
-    - placeholder-job
-  image: python:alpine
+  trigger:
+    project: gstreamer/cerbero
+    branch: '1.24'
+    strategy: depend
   needs:
     - "trigger"
-  script:
-    - pip install python-gitlab
-    - python ci/gitlab/trigger_cerbero_pipeline.py
-
+  variables:
+    CI_GSTREAMER_PATH: '$CI_PROJECT_PATH'
+    CI_GSTREAMER_REF_NAME: '$CI_COMMIT_REF_NAME'
+    CI_GSTREAMER_TRIGGERED: 'true'
   rules:
     - if: '$MESON_COMMIT'
     # Never run post merge
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: never
-    - changes:
-      - .gitlab-ci.yml
-      - ci/gitlab/*.py
-      - subprojects/gst-devtools/**/*
-      - subprojects/gst-editing-services/**/*
-      - subprojects/gst-libav/**/*
-      - subprojects/gst-plugins-bad/**/*
-      - subprojects/gst-plugins-base/**/*
-      - subprojects/gst-plugins-good/**/*
-      - subprojects/gst-plugins-ugly/**/*
-      - subprojects/gst-python/**/*
-      - subprojects/gstreamer/**/*
-      - subprojects/gst-rtsp-server/**/*
-      - subprojects/gst-examples/**/*
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # For merge reqest, we want to test user branch
+      <<: *cerbero_trigger_changes
+      variables:
+        CI_GSTREAMER_PATH: '$CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
+        CI_GSTREAMER_REF_NAME: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME'
+    - <<: *cerbero_trigger_changes
+
