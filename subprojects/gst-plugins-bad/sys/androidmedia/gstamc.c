@@ -1773,8 +1773,14 @@ register_codecs (GstPlugin * plugin)
           type = gst_amc_video_enc_get_type ();
         else
           type = gst_amc_video_dec_get_type ();
-      } else if (is_audio && !codec_info->is_encoder) {
-        type = gst_amc_audio_dec_get_type ();
+      } else if (is_audio) {
+        if (codec_info->is_encoder) {
+          GST_FIXME ("Skipping %s: audio encoders are not supported yet",
+              codec_info->name);
+          continue;
+        } else {
+          type = gst_amc_audio_dec_get_type ();
+        }
       } else {
         GST_INFO ("Skipping codec %s: unsupported type", codec_info->name);
         continue;
