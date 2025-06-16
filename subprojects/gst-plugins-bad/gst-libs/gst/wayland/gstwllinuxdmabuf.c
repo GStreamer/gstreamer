@@ -110,7 +110,7 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
   guint nplanes = 0, flags = 0;
   struct zwp_linux_buffer_params_v1 *params;
   gint64 timeout;
-  ConstructBufferData data;
+  ConstructBufferData data = { 0 };
 
   g_return_val_if_fail (gst_wl_display_check_format_for_dmabuf (display,
           drm_info), NULL);
