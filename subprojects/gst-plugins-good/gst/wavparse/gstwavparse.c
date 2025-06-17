@@ -1482,7 +1482,6 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           buf = NULL;
           res =
               gst_wavparse_pull_range_exact (wav, wav->offset + 8, size, &buf);
-          goto header_pull_error;
           if (res == GST_FLOW_EOS)
             break;
           else if (res != GST_FLOW_OK)
