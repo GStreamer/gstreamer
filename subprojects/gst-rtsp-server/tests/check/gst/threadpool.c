@@ -39,7 +39,6 @@ GST_START_TEST (test_pool_get_thread)
 
   gst_rtsp_thread_stop (thread);
   g_object_unref (pool);
-  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
@@ -60,7 +59,6 @@ GST_START_TEST (test_pool_get_media_thread)
 
   gst_rtsp_thread_stop (thread);
   g_object_unref (pool);
-  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
@@ -91,8 +89,6 @@ GST_START_TEST (test_pool_get_thread_reuse)
   gst_rtsp_thread_stop (thread1);
   gst_rtsp_thread_stop (thread2);
   g_object_unref (pool);
-
-  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
@@ -171,8 +167,6 @@ do_test_pool_max_thread (gboolean use_property)
   fail_if (GST_IS_RTSP_THREAD (thread1));
 
   g_object_unref (pool);
-
-  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_START_TEST (test_pool_max_threads)
@@ -210,10 +204,16 @@ GST_START_TEST (test_pool_thread_copy)
   gst_rtsp_thread_stop (thread1);
   gst_rtsp_thread_stop (thread2);
   g_object_unref (pool);
-  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
+
+
+static void
+teardown (void)
+{
+  gst_rtsp_thread_pool_cleanup ();
+}
 
 static Suite *
 rtspthreadpool_suite (void)
@@ -222,6 +222,7 @@ rtspthreadpool_suite (void)
   TCase *tc = tcase_create ("general");
 
   suite_add_tcase (s, tc);
+  tcase_add_checked_fixture (tc, NULL, teardown);
   tcase_set_timeout (tc, 20);
   tcase_add_test (tc, test_pool_get_thread);
   tcase_add_test (tc, test_pool_get_media_thread);
