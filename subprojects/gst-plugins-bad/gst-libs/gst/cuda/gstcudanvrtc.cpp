@@ -318,7 +318,7 @@ gst_cuda_nvrtc_compile_with_option (const gchar * source,
 
   ret = NvrtcCreateProgram (&prog, source, nullptr, 0, nullptr, nullptr);
   if (ret != NVRTC_SUCCESS) {
-    GST_ERROR ("couldn't create nvrtc program, ret %d", ret);
+    GST_WARNING ("couldn't create nvrtc program, ret %d", ret);
     return nullptr;
   }
 
@@ -335,12 +335,12 @@ gst_cuda_nvrtc_compile_with_option (const gchar * source,
   if (ret != NVRTC_SUCCESS) {
     gsize log_size;
 
-    GST_ERROR ("couldn't compile nvrtc program, ret %d", ret);
+    GST_WARNING ("couldn't compile nvrtc program, ret %d", ret);
     if (NvrtcGetProgramLogSize (prog, &log_size) == NVRTC_SUCCESS &&
         log_size > 0) {
       gchar *compile_log = (gchar *) g_alloca (log_size);
       if (NvrtcGetProgramLog (prog, compile_log) == NVRTC_SUCCESS) {
-        GST_ERROR ("nvrtc compile log %s", compile_log);
+        GST_INFO ("nvrtc compile log %s", compile_log);
       }
     }
 
