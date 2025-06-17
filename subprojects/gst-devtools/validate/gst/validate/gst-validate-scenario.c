@@ -3204,7 +3204,8 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
   }
 
   if (message) {
-    if (!_check_message_type (scenario, act, message))
+    if (!_check_message_type (scenario, act, message)
+        && GST_MESSAGE_TYPE (message) != GST_MESSAGE_ERROR)
       return G_SOURCE_CONTINUE;
   } else if ((act && gst_structure_get_string (act->structure, "on-message") &&
           !GST_CLOCK_TIME_IS_VALID (act->playback_time)) ||
