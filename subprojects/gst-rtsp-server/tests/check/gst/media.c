@@ -135,8 +135,6 @@ GST_START_TEST (test_media_seek)
   g_object_unref (factory);
 
   g_object_unref (pool);
-
-  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
@@ -218,8 +216,6 @@ media_playback_seek_one_active_stream (const gchar * launch_line)
   g_object_unref (factory);
 
   g_object_unref (pool);
-
-  gst_rtsp_thread_pool_cleanup ();
 }
 
 /* case: media is complete and contains two streams but only one is active,
@@ -316,8 +312,6 @@ GST_START_TEST (test_media_seek_no_sinks)
   g_object_unref (factory);
 
   g_object_unref (pool);
-
-  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
@@ -449,7 +443,6 @@ GST_START_TEST (test_media_prepare)
   g_object_unref (factory);
 
   g_object_unref (pool);
-  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
@@ -616,7 +609,6 @@ GST_START_TEST (test_media_shared_race_test_unsuspend_vs_set_state_null)
   gst_rtsp_url_free (url);
   g_object_unref (factory);
   g_object_unref (pool);
-  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
@@ -708,8 +700,6 @@ GST_START_TEST (test_media_dyn_prepare)
   gst_object_unref (srcpad);
   g_object_unref (media);
   g_object_unref (pool);
-
-  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
@@ -788,8 +778,6 @@ GST_START_TEST (test_media_reset)
   gst_rtsp_url_free (url);
   g_object_unref (factory);
   g_object_unref (pool);
-
-  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
@@ -866,8 +854,6 @@ GST_START_TEST (test_media_multidyn_prepare)
   gst_object_unref (srcpad1);
   g_object_unref (media);
   g_object_unref (pool);
-
-  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
@@ -930,11 +916,17 @@ GST_START_TEST (test_media_pipeline_error)
   g_object_unref (factory);
 
   g_object_unref (pool);
-  gst_rtsp_thread_pool_cleanup ();
 }
 
 GST_END_TEST;
 
+
+
+static void
+teardown (void)
+{
+  gst_rtsp_thread_pool_cleanup ();
+}
 
 static Suite *
 rtspmedia_suite (void)
@@ -944,6 +936,7 @@ rtspmedia_suite (void)
   gboolean has_avidemux;
 
   suite_add_tcase (s, tc);
+  tcase_add_checked_fixture (tc, NULL, teardown);
   tcase_set_timeout (tc, 20);
 
   has_avidemux = gst_registry_check_feature_version (gst_registry_get (),
