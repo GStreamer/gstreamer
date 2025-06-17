@@ -4,23 +4,23 @@ ONNX Build Instructions
 ### Build
 
  1. do a recursive checkout of [onnxruntime tag 1.16.3](https://github.com/microsoft/onnxruntime)
- 1. `$SRC_DIR` and `$BUILD_DIR` are local source and build directories
- 1. To run with CUDA, both [CUDA](https://developer.nvidia.com/cuda-downloads) and [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/archives/cudnn_762/cudnn-install/index.html) libraries must be installed.
+ 2. `$SRC_DIR` and `$BUILD_DIR` are local source and build directories
+ 3. To run with CUDA, both [CUDA](https://developer.nvidia.com/cuda-downloads) and [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/archives/cudnn_762/cudnn-install/index.html) libraries must be installed.
 
 ```
 $ cd $SRC_DIR
 $ git clone --recursive https://github.com/microsoft/onnxruntime.git && cd onnxruntime && git checkout -b v1.16.3 refs/tags/v1.16.3
 $ mkdir $BUILD_DIR/onnxruntime && cd $BUILD_DIR/onnxruntime
-
+$ apt-get update && apt-get install -y libeigen3-dev
 ```
 
 1. CPU
 ```
-$ cmake -Donnxruntime_BUILD_SHARED_LIB=ON -DBUILD_TESTING=OFF -Donnxruntime_BUILD_UNIT_TESTS=OFF $SRC_DIR/onnxruntime/cmake && make -j$(nproc) && sudo make install
+$ cmake -Donnxruntime_BUILD_SHARED_LIB=ON -DBUILD_TESTING=OFF -Donnxruntime_BUILD_UNIT_TESTS=OFF -Donnxruntime_USE_PREINSTALLED_EIGEN=ON -Deigen_SOURCE_PATH=/usr/include/eigen3 $SRC_DIR/onnxruntime/cmake && make -j$(nproc) && sudo make install
 ```
 2. CUDA
 ```
-cmake -Donnxruntime_BUILD_SHARED_LIB=ON -DBUILD_TESTING=OFF -Donnxruntime_BUILD_UNIT_TESTS=OFF -Donnxruntime_USE_CUDA=ON -Donnxruntime_CUDA_HOME=/usr/local/cuda -Donnxruntime_CUDNN_HOME=/usr/local/cuda -DCMAKE_CUDA_ARCHITECTURES=native -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc $SRC_DIR/onnxruntime/cmake && make -j$(nproc) && sudo make install
+cmake -Donnxruntime_BUILD_SHARED_LIB=ON -DBUILD_TESTING=OFF -Donnxruntime_BUILD_UNIT_TESTS=OFF -Donnxruntime_USE_CUDA=ON -Donnxruntime_CUDA_HOME=/usr/local/cuda -Donnxruntime_CUDNN_HOME=/usr/local/cuda -DCMAKE_CUDA_ARCHITECTURES=native -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc -Donnxruntime_USE_PREINSTALLED_EIGEN=ON -Deigen_SOURCE_PATH=/usr/include/eigen3 $SRC_DIR/onnxruntime/cmake && make -j$(nproc) && sudo make install
 ```
 3. Intel oneDNN
 
