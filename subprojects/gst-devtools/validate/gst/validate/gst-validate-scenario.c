@@ -2333,6 +2333,7 @@ done:
 
   gst_clear_object (&scenario);
   gst_clear_object (&collection);
+  gst_clear_object (&selected_streams);
   gst_clear_object (&pipeline);
 
   g_rec_mutex_unlock (&d->m);
@@ -2399,6 +2400,7 @@ _execute_select_streams (GstValidateScenario * scenario,
   g_rec_mutex_unlock (&d->m);
 
   gst_object_unref (bus);
+  gst_object_unref (pipeline);
 
   return GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING;
 }
@@ -2964,6 +2966,7 @@ gst_validate_execute_action (GstValidateActionType * action_type,
     res = action_type->prepare (action);
     if (res == GST_VALIDATE_EXECUTE_ACTION_DONE) {
       gst_validate_print_action (action, NULL);
+      gst_object_unref (scenario);
       return GST_VALIDATE_EXECUTE_ACTION_OK;
     }
 
@@ -6961,8 +6964,6 @@ _execute_request_key_unit (GstValidateScenario * scenario,
   GstSegment segment = { 0, };
   const gchar *direction = gst_structure_get_string (action->structure,
       "direction"), *pad_name, *srcpad_name;
-
-  DECLARE_AND_GET_PIPELINE (scenario, action);
 
   if (gst_structure_get_string (action->structure, "target-element-name")) {
     GstElement *target = _get_target_element (scenario, action);
