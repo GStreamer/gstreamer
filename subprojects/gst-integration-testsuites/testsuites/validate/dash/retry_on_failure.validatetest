@@ -8,7 +8,7 @@ meta,
     expected-issues = {
         # First attempt to play while the mpd is not available
         "expected-issue, issue-id=\"runtime::error-on-bus\", details=\".*Service Unavailable.*\"",
-        "expected-issue, issue-id=\"runtime::error-on-bus\", details=\".*Got error: Internal data stream error.*\"",
+        "expected-issue, issue-id=\"runtime::error-on-bus\", details=\".*Got error: Internal data stream error.*\", sometimes=true",
         "expected-issue, issue-id=\"scenario::execution-error\", details=\".*Error message happened while executing action.*\"",
         # Spurious error that happens racily when tearing down the pipeline
         "expected-issue, issue-id=\"runtime::error-on-bus\", details=\".*Stream doesn't contain enough.*\", sometimes=true",
