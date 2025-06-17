@@ -5054,7 +5054,11 @@ _check_waiting_for_message (GstValidateScenario * scenario,
     }
   }
 
-  gst_validate_action_set_done (priv->wait_message_action);
+  GstValidateAction *action =
+      gst_validate_action_ref (priv->wait_message_action);
+  gst_validate_action_set_done (action);
+  gst_validate_action_unref (action);
+
   _add_execute_actions_gsource (scenario);
 }
 
@@ -7324,7 +7328,7 @@ gst_validate_action_set_done (GstValidateAction * action)
   }
   gst_clear_object (&scenario);
 
-  g_main_context_invoke_full (action->priv->context,
+  g_main_context_invoke_full (context,
       G_PRIORITY_DEFAULT_IDLE,
       (GSourceFunc) _action_set_done,
       gst_validate_action_ref (action),
