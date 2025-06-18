@@ -63,10 +63,6 @@ struct _GstDecklinkVideoSink
   GstClockTime internal_base_time;
   GstClockTime external_base_time;
 
-  /* really an internal start time */
-  GstClockTime internal_time_offset;
-  GstClockTime internal_pause_time;
-
   GstDecklinkOutput *output;
 
   GstVideoVBIEncoder *vbiencoder;
