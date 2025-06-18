@@ -1298,8 +1298,8 @@ latin1_convert (const GstTagList * list, const gchar * tag,
     len = MIN (len, maxlen);
     memcpy (dst, latin1, len);
     *wrote_tag = TRUE;
-    g_free (latin1);
   }
+  g_free (latin1);
 
   g_free (str);
 }
