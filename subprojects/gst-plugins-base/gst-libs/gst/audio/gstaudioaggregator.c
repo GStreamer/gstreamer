@@ -2176,7 +2176,6 @@ gst_audio_aggregator_peek_next_sample (GstAggregator * agg,
 
     sample = gst_sample_new (pad->priv->buffer, caps, &aggpad->segment, info);
     gst_caps_unref (caps);
-    gst_structure_free (info);
   }
 
   return sample;
