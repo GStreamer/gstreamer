@@ -3595,6 +3595,46 @@ error:
   }
 }
 
+/* Extract Access Unit content in the format used by GStreamer */
+static GstBuffer *
+parse_access_unit (GstTSDemux * demux, TSDemuxStream * stream,
+    GstBufferList ** ret_buffer_list)
+{
+  MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
+  GstBuffer *buffer = NULL;
+  GstBufferList *buffer_list = NULL;
+
+  if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_PRIVATE_PES_PACKETS &&
+      bs->registration_id == DRF_ID_OPUS) {
+    buffer_list = parse_opus_access_unit (stream);
+  } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K) {
+    buffer = parse_jp2k_access_unit (stream);
+  } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_ADTS) {
+    buffer = parse_aac_adts_frame (stream);
+  } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_METADATA_PES_PACKETS
+      && bs->registration_id == DRF_ID_KLVA) {
+    buffer_list = parse_pes_metadata_frame (stream);
+  } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JPEG_XS) {
+    buffer = parse_jpegxs_access_unit (stream);
+  } else {
+    buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
+  }
+
+  if (buffer_list != NULL && gst_buffer_list_length (buffer_list) == 1) {
+    buffer = gst_buffer_ref (gst_buffer_list_get (buffer_list, 0));
+    gst_buffer_list_unref (buffer_list);
+    buffer_list = NULL;
+  }
+
+  if (buffer == NULL && buffer_list == NULL) {
+    GST_WARNING_OBJECT (stream->pad, "Failed to extract access unit");
+  }
+
+  *ret_buffer_list = buffer_list;
+
+  return buffer;
+}
+
 static GstFlowReturn
 gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
     MpegTSBaseProgram * target_program)
@@ -3640,22 +3680,8 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
           "Got Keyframe, ready to go at %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->pts));
 
-      if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_PRIVATE_PES_PACKETS &&
-          bs->registration_id == DRF_ID_OPUS) {
-        buffer_list = parse_opus_access_unit (stream);
-      } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K) {
-        buffer = parse_jp2k_access_unit (stream);
-      } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_METADATA_PES_PACKETS
-          && bs->registration_id == DRF_ID_KLVA) {
-        buffer_list = parse_pes_metadata_frame (stream);
-      } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JPEG_XS) {
-        buffer = parse_jpegxs_access_unit (stream);
-      } else {
-        buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
-      }
-
+      buffer = parse_access_unit (demux, stream, &buffer_list);
       if (buffer == NULL && buffer_list == NULL) {
-        res = GST_FLOW_ERROR;
         goto beach;
       }
 
@@ -3690,23 +3716,9 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
       goto beach;
     }
   } else {
-    if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_PRIVATE_PES_PACKETS &&
-        bs->registration_id == DRF_ID_OPUS) {
-      buffer_list = parse_opus_access_unit (stream);
-    } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K) {
-      buffer = parse_jp2k_access_unit (stream);
-    } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_ADTS) {
-      buffer = parse_aac_adts_frame (stream);
-    } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_METADATA_PES_PACKETS
-        && bs->registration_id == DRF_ID_KLVA) {
-      buffer_list = parse_pes_metadata_frame (stream);
-    } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JPEG_XS) {
-      buffer = parse_jpegxs_access_unit (stream);
-    } else {
-      buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
-    }
+    buffer = parse_access_unit (demux, stream, &buffer_list);
+
     if (buffer == NULL && buffer_list == NULL) {
-      res = GST_FLOW_ERROR;
       goto beach;
     }
 
@@ -3736,13 +3748,6 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
           "Not enough information to push buffers yet, storing buffer");
       goto beach;
     }
-  }
-
-
-  if (buffer_list != NULL && gst_buffer_list_length (buffer_list) == 1) {
-    buffer = gst_buffer_ref (gst_buffer_list_get (buffer_list, 0));
-    gst_buffer_list_unref (buffer_list);
-    buffer_list = NULL;
   }
 
   if (G_UNLIKELY (stream->need_newsegment))
