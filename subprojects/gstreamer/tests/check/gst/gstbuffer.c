@@ -1001,6 +1001,45 @@ GST_START_TEST (test_reference_timestamp_meta_serialization)
 
 GST_END_TEST;
 
+GST_START_TEST (test_reference_timestamp_meta_with_info_serialization)
+{
+  GstCaps *reference =
+      gst_caps_new_simple ("timestamp/x-unix", NULL, NULL, NULL);
+  GstStructure *info =
+      gst_structure_new ("info", "field1", G_TYPE_INT, 123, "field2",
+      G_TYPE_STRING, "hello", NULL);
+
+  /* Serialize */
+  GstBuffer *buffer = gst_buffer_new ();
+  GstReferenceTimestampMeta *meta =
+      gst_buffer_add_reference_timestamp_meta (buffer, reference, 1, 2);
+  meta->info = gst_structure_copy (info);
+  GByteArray *data = g_byte_array_new ();
+  fail_unless (gst_meta_serialize_simple ((GstMeta *) meta, data));
+  gst_buffer_unref (buffer);
+
+  /* Deserialize */
+  buffer = gst_buffer_new ();
+  guint32 consumed;
+  meta = (GstReferenceTimestampMeta *) gst_meta_deserialize (buffer, data->data,
+      data->len, &consumed);
+  fail_unless (meta);
+  fail_unless (consumed == data->len);
+  fail_unless (GST_IS_CAPS (meta->reference));
+  fail_unless (gst_caps_is_equal (meta->reference, reference));
+  fail_unless_equals_uint64 (meta->timestamp, 1);
+  fail_unless_equals_uint64 (meta->duration, 2);
+  fail_unless (GST_IS_STRUCTURE (meta->info));
+  fail_unless (gst_structure_is_equal (meta->info, info));
+  gst_buffer_unref (buffer);
+
+  gst_caps_unref (reference);
+  gst_structure_free (info);
+  g_byte_array_unref (data);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_suite (void)
 {
@@ -1029,6 +1068,8 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_new_memdup);
   tcase_add_test (tc_chain, test_auto_unmap);
   tcase_add_test (tc_chain, test_reference_timestamp_meta_serialization);
+  tcase_add_test (tc_chain,
+      test_reference_timestamp_meta_with_info_serialization);
 
   return s;
 }

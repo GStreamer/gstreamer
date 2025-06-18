@@ -2763,6 +2763,7 @@ gst_buffer_add_reference_timestamp_meta (GstBuffer * buffer,
   meta->reference = gst_caps_ref (reference);
   meta->timestamp = timestamp;
   meta->duration = duration;
+  meta->info = NULL;
 
   return meta;
 }
@@ -2770,7 +2771,7 @@ gst_buffer_add_reference_timestamp_meta (GstBuffer * buffer,
 /**
  * gst_buffer_get_reference_timestamp_meta:
  * @buffer: a #GstBuffer
- * @reference: (allow-none): a reference #GstCaps
+ * @reference: (nullable): a reference #GstCaps
  *
  * Finds the first #GstReferenceTimestampMeta on @buffer that conforms to
  * @reference. Conformance is tested by checking if the meta's reference is a
@@ -2822,7 +2823,11 @@ _gst_reference_timestamp_meta_transform (GstBuffer * dest, GstMeta * meta,
               GST_REFERENCE_TIMESTAMP_META_API_TYPE))) {
     if (ometa->timestamp == smeta->timestamp
         && ometa->duration == smeta->duration
-        && gst_caps_is_equal (ometa->reference, smeta->reference)) {
+        && gst_caps_is_equal (ometa->reference, smeta->reference)
+        && ((ometa->info == NULL && smeta->info == NULL) ||
+            (ometa->info != NULL && smeta->info != NULL
+                && gst_structure_is_equal (ometa->info, smeta->info))
+        )) {
       GST_CAT_TRACE (gst_reference_timestamp_meta_debug,
           "Not copying reference timestamp metadata from buffer %p to %p because equal meta already exists",
           buffer, dest);
@@ -2835,6 +2840,8 @@ _gst_reference_timestamp_meta_transform (GstBuffer * dest, GstMeta * meta,
       smeta->timestamp, smeta->duration);
   if (!dmeta)
     return FALSE;
+  if (smeta->info)
+    dmeta->info = gst_structure_copy (smeta->info);
 
   GST_CAT_DEBUG (gst_reference_timestamp_meta_debug,
       "copy reference timestamp metadata from buffer %p to %p", buffer, dest);
@@ -2848,6 +2855,8 @@ _gst_reference_timestamp_meta_free (GstReferenceTimestampMeta * meta,
 {
   if (meta->reference)
     gst_caps_unref (meta->reference);
+  if (meta->info)
+    gst_structure_free (meta->info);
 }
 
 static gboolean
@@ -2865,6 +2874,7 @@ _gst_reference_timestamp_meta_init (GstReferenceTimestampMeta * meta,
   meta->reference = NULL;
   meta->timestamp = GST_CLOCK_TIME_NONE;
   meta->duration = GST_CLOCK_TIME_NONE;
+  meta->info = NULL;
 
   return TRUE;
 }
@@ -2893,13 +2903,23 @@ timestamp_meta_serialize (const GstMeta * meta, GstByteArrayInterface * data,
 {
   const GstReferenceTimestampMeta *rtmeta =
       (const GstReferenceTimestampMeta *) meta;
+  gchar *info_str = rtmeta->info ? gst_structure_serialize_full (rtmeta->info,
+      GST_SERIALIZE_FLAG_STRICT) : NULL;
+  gsize info_str_len = info_str ? strlen (info_str) : 0;
+
+  if (rtmeta->info && !info_str) {
+    GST_WARNING ("Failed serializing GstReferenceTimestampMeta");
+    return FALSE;
+  }
+
   gchar *caps_str = gst_caps_to_string (rtmeta->reference);
   gsize caps_str_len = strlen (caps_str);
 
-  gsize size = 16 + caps_str_len + 1;
+  gsize size = 16 + caps_str_len + 1 + (info_str ? info_str_len + 1 : 0);
   guint8 *ptr = gst_byte_array_interface_append (data, size);
   if (ptr == NULL) {
     g_free (caps_str);
+    g_free (info_str);
     return FALSE;
   }
 
@@ -2907,6 +2927,9 @@ timestamp_meta_serialize (const GstMeta * meta, GstByteArrayInterface * data,
   GST_WRITE_UINT64_LE (ptr + 8, rtmeta->duration);
   memcpy (ptr + 16, caps_str, caps_str_len + 1);
   g_free (caps_str);
+  if (info_str)
+    memcpy (ptr + 16 + caps_str_len + 1, info_str, info_str_len + 1);
+  g_free (info_str);
 
   return TRUE;
 }
@@ -2915,19 +2938,31 @@ static GstMeta *
 timestamp_meta_deserialize (const GstMetaInfo * info, GstBuffer * buffer,
     const guint8 * data, gsize size, guint8 version)
 {
-  /* Sanity check: caps_str must be 0-terminated. */
+  /* Sanity check: caps_str / info_str must be 0-terminated. */
   if (version != 0 || size < 2 * sizeof (guint64) + 1 || data[size - 1] != '\0')
     return NULL;
 
   guint64 timestamp = GST_READ_UINT64_LE (data);
   guint64 duration = GST_READ_UINT64_LE (data + 8);
   const gchar *caps_str = (const gchar *) data + 16;
+  gsize caps_str_len = strlen (caps_str);
   GstCaps *reference = gst_caps_from_string (caps_str);
-  GstMeta *meta = (GstMeta *) gst_buffer_add_reference_timestamp_meta (buffer,
+
+  /* Have additional data afterward the reference, which is for the optional
+   * info structure */
+  GstStructure *rtinfo = NULL;
+  if (size > 16 + caps_str_len + 1) {
+    const gchar *info_str = (const gchar *) data + 16 + caps_str_len + 1;
+    rtinfo = gst_structure_from_string (info_str, NULL);
+  }
+
+  GstReferenceTimestampMeta *meta =
+      gst_buffer_add_reference_timestamp_meta (buffer,
       reference, timestamp, duration);
   gst_caps_unref (reference);
+  meta->info = rtinfo;
 
-  return meta;
+  return (GstMeta *) meta;
 }
 
 /**

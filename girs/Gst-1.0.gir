@@ -40524,7 +40524,14 @@ references would be
    the local clock.
 
 Since 1.24 it can be serialized using gst_meta_serialize() and
-gst_meta_deserialize().</doc>
+gst_meta_deserialize().
+
+Since 1.28 additional information about the timestamp can be provided via the
+optional @info structure. This should only be used for information about the
+timestamp and not for information about the clock source. The latter should
+be stored in the @reference instead.
+
+Interpretation of the fields of @info depends on the @reference.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstbuffer.h"/>
       <field name="parent" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">the parent #GstMeta structure</doc>
@@ -40541,6 +40548,10 @@ gst_meta_deserialize().</doc>
       <field name="duration" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">duration, or %GST_CLOCK_TIME_NONE</doc>
         <type name="ClockTime" c:type="GstClockTime"/>
+      </field>
+      <field name="info" version="1.28" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.h">Additional information about the timestamp.</doc>
+        <type name="Structure" c:type="GstStructure*"/>
       </field>
       <function name="get_info" c:identifier="gst_reference_timestamp_meta_get_info" version="1.14">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbuffer.c">Gets the global #GstMetaInfo describing the #GstReferenceTimestampMeta meta.</doc>

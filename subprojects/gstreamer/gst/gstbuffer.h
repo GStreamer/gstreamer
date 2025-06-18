@@ -743,6 +743,7 @@ typedef struct _GstReferenceTimestampMeta GstReferenceTimestampMeta;
  * @reference: identifier for the timestamp reference.
  * @timestamp: timestamp
  * @duration: duration, or %GST_CLOCK_TIME_NONE
+ * @info: (nullable): optional additional information about the timestamp
  *
  * #GstReferenceTimestampMeta can be used to attach alternative timestamps and
  * possibly durations to a #GstBuffer. These are generally not according to
@@ -766,6 +767,13 @@ typedef struct _GstReferenceTimestampMeta GstReferenceTimestampMeta;
  * Since 1.24 it can be serialized using gst_meta_serialize() and
  * gst_meta_deserialize().
  *
+ * Since 1.28 additional information about the timestamp can be provided via the
+ * optional @info structure. This should only be used for information about the
+ * timestamp and not for information about the clock source. The latter should
+ * be stored in the @reference instead.
+ *
+ * Interpretation of the fields of @info depends on the @reference.
+ *
  * Since: 1.14
  */
 struct _GstReferenceTimestampMeta
@@ -775,6 +783,15 @@ struct _GstReferenceTimestampMeta
   /*< public >*/
   GstCaps *reference;
   GstClockTime timestamp, duration;
+
+  /**
+   * GstReferenceTimestampMeta.info:
+   *
+   * Additional information about the timestamp.
+   *
+   * Since: 1.28
+   */
+  GstStructure *info;
 };
 
 GST_API
