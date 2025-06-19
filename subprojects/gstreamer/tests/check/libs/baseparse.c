@@ -269,8 +269,8 @@ run_parser_playback_test (GList * input, gint expected_output, gdouble rate)
   GstSegment segment;
 
   gst_pad_set_active (mysrcpad, TRUE);
-  gst_element_set_state (parsetest, GST_STATE_PLAYING);
   gst_pad_set_active (mysinkpad, TRUE);
+  gst_element_set_state (parsetest, GST_STATE_PLAYING);
 
   send_startup_events ();
 
@@ -477,8 +477,8 @@ GST_START_TEST (parser_reverse_playback)
   gst_pad_set_event_function (mysinkpad, _sink_event);
 
   gst_pad_set_active (mysrcpad, TRUE);
-  gst_element_set_state (parsetest, GST_STATE_PLAYING);
   gst_pad_set_active (mysinkpad, TRUE);
+  gst_element_set_state (parsetest, GST_STATE_PLAYING);
 
   g_main_loop_run (loop);
   fail_unless (have_eos == TRUE);
@@ -582,8 +582,8 @@ GST_START_TEST (parser_pull_short_read)
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (parsetest), 1024);
 
   gst_pad_set_active (mysrcpad, TRUE);
-  gst_element_set_state (parsetest, GST_STATE_PLAYING);
   gst_pad_set_active (mysinkpad, TRUE);
+  gst_element_set_state (parsetest, GST_STATE_PLAYING);
 
   g_main_loop_run (loop);
   fail_unless_equals_int (have_eos, TRUE);
@@ -662,8 +662,8 @@ GST_START_TEST (parser_pull_frame_growth)
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (parsetest), 1024);
 
   gst_pad_set_active (mysrcpad, TRUE);
-  gst_element_set_state (parsetest, GST_STATE_PLAYING);
   gst_pad_set_active (mysinkpad, TRUE);
+  gst_element_set_state (parsetest, GST_STATE_PLAYING);
 
   g_main_loop_run (loop);
   fail_unless (have_eos == TRUE);
@@ -739,8 +739,8 @@ GST_START_TEST (parser_convert_duration)
   gst_pad_set_event_function (mysinkpad, _sink_event);
 
   gst_pad_set_active (mysrcpad, TRUE);
-  gst_element_set_state (parsetest, GST_STATE_PLAYING);
   gst_pad_set_active (mysinkpad, TRUE);
+  gst_element_set_state (parsetest, GST_STATE_PLAYING);
 
   g_main_loop_run (loop);
   fail_unless (have_eos == TRUE);
