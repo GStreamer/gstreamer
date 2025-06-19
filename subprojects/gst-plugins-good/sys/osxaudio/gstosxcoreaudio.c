@@ -388,7 +388,7 @@ gst_core_audio_update_timing (GstCoreAudio * core_audio,
     core_audio->anchor_pend_samples = inNumberFrames;
     core_audio->rate_scalar = inTimeStamp->mRateScalar;
 
-    GST_DEBUG_OBJECT (core_audio,
+    GST_LOG_OBJECT (core_audio,
         "anchor hosttime_ns %" G_GUINT64_FORMAT
         " scalar_rate %f anchor_pend_samples %u",
         core_audio->anchor_hosttime_ns,
