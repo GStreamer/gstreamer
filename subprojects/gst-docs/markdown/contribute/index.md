@@ -610,9 +610,19 @@ different revisions of a merge request branch, so just keep the branch always
 to the "latest clean version". See the [Rewriting History](https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History)
 section of the [Pro Git book](https://git-scm.com/book/en/v2) for more details.
 
+GStreamer does not use merge commits, and all merge requests will be rebased
+automatically by `gstreamer-merge-bot` before merging. Unless necessary due to
+conflicts, you should not rebase your merge request on top of the latest
+`main` branch. It makes it harder for reviewers to review changes pushed to the
+merge request, since it breaks the "Compare with previous version" option.
+
 GStreamer maintainers will typically receive e-mail notifications when you add
-a comment and when all oustanding discussions have been resolved. They may or
-may not receive e-mail notifications when you update the commits in your branch.
+a comment and when all oustanding discussions have been resolved. They may
+receive notifications when you push new commits, but will generally not receive
+notifications for rebases, so if you want to send a gentle review reminder,
+posting a comment is the best way to do it.
+
+![Compare with previous version](images/contribute/compare.png)
 
 # Workflows for GStreamer developers
 
