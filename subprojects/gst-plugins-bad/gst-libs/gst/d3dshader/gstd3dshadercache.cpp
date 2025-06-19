@@ -96,6 +96,9 @@ static const ShaderItem g_cs_map[] = {
   {GST_D3D_PLUGIN_CS_YADIF_1_12, BUILD_SOURCE (CSMain_yadif_1_12)},
   {GST_D3D_PLUGIN_CS_YADIF_2, BUILD_SOURCE (CSMain_yadif_2)},
   {GST_D3D_PLUGIN_CS_YADIF_4, BUILD_SOURCE (CSMain_yadif_4)},
+  {GST_D3D_PLUGIN_CS_FISHEYE_EQUIRECT, BUILD_SOURCE (CSMain_fisheye_equirect)},
+  {GST_D3D_PLUGIN_CS_FISHEYE_PANORAMA, BUILD_SOURCE (CSMain_fisheye_panorama)},
+  {GST_D3D_PLUGIN_CS_FISHEYE_PERSPECTIVE, BUILD_SOURCE (CSMain_fisheye_perspective)},
 };
 
 #undef BUILD_SOURCE

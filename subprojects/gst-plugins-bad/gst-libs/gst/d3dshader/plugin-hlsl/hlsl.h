@@ -41,3 +41,6 @@
 #include "CSMain_yadif_1_12.hlsl"
 #include "CSMain_yadif_2.hlsl"
 #include "CSMain_yadif_4.hlsl"
+#include "CSMain_fisheye_equirect.hlsl"
+#include "CSMain_fisheye_panorama.hlsl"
+#include "CSMain_fisheye_perspective.hlsl"

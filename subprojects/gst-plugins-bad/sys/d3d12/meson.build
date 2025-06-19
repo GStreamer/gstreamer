@@ -35,6 +35,7 @@ d3d12_sources = [
   'gstd3d12window-swapchain.cpp',
   'gstd3d12window-win32.cpp',
   'gstd3d12window.cpp',
+  'gstd3d12fisheyedewarp.cpp',
   'plugin.cpp',
 ]
 
@@ -81,6 +82,7 @@ d3d12_headers = [
   'gstd3d12basefilter.h',
   'gstd3d12testsrc.h',
   'gstd3d12vp8dec.h',
+  'gstd3d12fisheyedewarp.h',
 ]
 
 graphicscapture_sources = [

@@ -21,6 +21,9 @@ hlsl_sources = [
   ['CSMain_yadif_1', 'cs'],
   ['CSMain_yadif_2', 'cs'],
   ['CSMain_yadif_4', 'cs'],
+  ['CSMain_fisheye_equirect', 'cs'],
+  ['CSMain_fisheye_panorama', 'cs'],
+  ['CSMain_fisheye_perspective', 'cs'],
 ]
 
 shader_model = '5_0'
