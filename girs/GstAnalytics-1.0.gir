@@ -12,6 +12,172 @@ and/or use gtk-doc annotations.  -->
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <type name="guintptr" c:type="guintptr"/>
     </alias>
+    <record name="BatchBuffer" c:type="GstAnalyticsBatchBuffer" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">The intended use of this struct is that analytics elements read the buffer or
+buffer list and potentially attach new #GstMeta with additional information.
+Only one of @buffer or @buffer_list is going to be set, or both are %NULL.
+
+Elements that need to modify @buffer (e.g. to attach a new meta) must first
+call gst_buffer_make_writable() and store the writable buffer in this struct.
+Similarly, a writable @buffer_list must be ensured with
+gst_buffer_list_make_writable().
+
+Modifying any other fields must be done with special care to ensure that the
+data flow of the stream is not broken.
+
+It is possible for @buffer and @buffer_list to be %NULL, e.g. if there was no
+buffer for this batch but there were serialized events like a gap event.
+
+Note that @serialized_events always contains all currently active serialized
+events and not only the changed events compared to the previous buffer.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h"/>
+      <field name="sticky_events" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">All sticky #GstEvent that relate to this buffer</doc>
+        <array length="1" zero-terminated="0" c:type="GstEvent**">
+          <type name="Gst.Event" c:type="GstEvent*"/>
+        </array>
+      </field>
+      <field name="n_sticky_events" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">Number of sticky events.</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="serialized_events" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">All non-sticky, serialized #GstEvent that arrived
+                    after the previous and before this buffer</doc>
+        <array length="3" zero-terminated="0" c:type="GstEvent**">
+          <type name="Gst.Event" c:type="GstEvent*"/>
+        </array>
+      </field>
+      <field name="n_serialized_events" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">Number of serialized events.</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="buffer" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">The buffer, if any.</doc>
+        <type name="Gst.Buffer" c:type="GstBuffer*"/>
+      </field>
+      <field name="buffer_list" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">The buffer list, if any.</doc>
+        <type name="Gst.BufferList" c:type="GstBufferList*"/>
+      </field>
+      <field name="padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <method name="get_caps" c:identifier="gst_analytics_batch_buffer_get_caps" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">Gets the #GstCaps from a buffer</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">The #GstCaps if there are any</doc>
+          <type name="Gst.Caps" c:type="GstCaps*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="buffer" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">A #GstAnalyticsBatchBuffer</doc>
+            <type name="BatchBuffer" c:type="GstAnalyticsBatchBuffer*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_segment" c:identifier="gst_analytics_batch_buffer_get_segment" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">Gets the #GstSegment from a buffer</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">The #GstSegment if there is one</doc>
+          <type name="Gst.Segment" c:type="const GstSegment*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="buffer" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">A #GstAnalyticsBatchBuffer</doc>
+            <type name="BatchBuffer" c:type="GstAnalyticsBatchBuffer*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_stream_id" c:identifier="gst_analytics_batch_buffer_get_stream_id" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">Gets the current stream id from a buffer</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">The stream id if there is any</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="buffer" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">A #GstAnalyticsBatchBuffer</doc>
+            <type name="BatchBuffer" c:type="GstAnalyticsBatchBuffer*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <record name="BatchMeta" c:type="GstAnalyticsBatchMeta" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">This meta represents a batch of buffers from one or more streams together
+with the relevant events to be able to interpret the buffers and to be able
+to reconstruct the original streams.
+
+When used for multiple streams and batching them temporarily, caps of type
+`multistream/x-analytics-batch(meta:GstAnalyticsBatchMeta)` should be used,
+with the original caps of each stream in an array-typed `streams` field. The
+original caps of each stream might be extended by additional fields and the
+order of the streams in the array corresponds to the order of the @streams
+array of the meta. In this case, empty buffers would be used without any
+#GstMemory and
+
+When used for a single stream, the original caps might be used together with
+the `meta:GstAnalyticsBatchMeta` caps feature and potentially extended by
+additional fields to describe the kind of batching and its configuration,
+e.g. that each batch is made of 25% overlapping 320x320 slices of the
+original video frame.
+
+The timestamp, duration and other metadata of each batch can be retrieved
+from the parent buffer of this meta.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h"/>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">parent</doc>
+        <type name="Gst.Meta" c:type="GstMeta"/>
+      </field>
+      <field name="streams" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">#GstAnalyticsBatchStream for this batch</doc>
+        <array length="2" zero-terminated="0" c:type="GstAnalyticsBatchStream*">
+          <type name="BatchStream" c:type="GstAnalyticsBatchStream"/>
+        </array>
+      </field>
+      <field name="n_streams" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">Number of streams</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <function name="get_info" c:identifier="gst_analytics_batch_meta_get_info" version="1.28" introspectable="0">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+        </return-value>
+      </function>
+    </record>
+    <record name="BatchStream" c:type="GstAnalyticsBatchStream" version="1.28">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h"/>
+      <field name="index" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">Index of the stream in the meta's stream array</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="buffers" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">#GstAnalyticsBatchBuffer in this batch for this stream</doc>
+        <array length="2" zero-terminated="0" c:type="GstAnalyticsBatchBuffer*">
+          <type name="BatchBuffer" c:type="GstAnalyticsBatchBuffer"/>
+        </array>
+      </field>
+      <field name="n_buffers" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">Number of buffers</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <constant name="CAPS_FEATURE_META_GST_ANALYTICS_BATCH_META" value="meta:GstAnalyticsBatchMeta" c:type="GST_CAPS_FEATURE_META_GST_ANALYTICS_BATCH_META" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h">The caps feature to be used on streams that make use of this meta.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <record name="ClsMtd" c:type="GstAnalyticsClsMtd" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h">Handle containing data required to use gst_analytics_cls_mtd APIs. This type
 is generally expected to be allocated on the stack.</doc>
@@ -1747,6 +1913,32 @@ Get the opaque id identifying the relatable type</doc>
         </return-value>
       </function>
     </record>
+    <function name="batch_meta_api_get_type" c:identifier="gst_analytics_batch_meta_api_get_type" version="1.28" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h"/>
+      <return-value transfer-ownership="none">
+        <type name="GType" c:type="GType"/>
+      </return-value>
+    </function>
+    <function name="batch_meta_get_info" c:identifier="gst_analytics_batch_meta_get_info" moved-to="BatchMeta.get_info" version="1.28" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h"/>
+      <return-value transfer-ownership="none">
+        <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+      </return-value>
+    </function>
+    <function name="buffer_add_analytics_batch_meta" c:identifier="gst_buffer_add_analytics_batch_meta" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">Adds a #GstAnalyticsBatchMeta to a buffer or returns the existing one</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">The new #GstAnalyticsBatchMeta</doc>
+        <type name="BatchMeta" c:type="GstAnalyticsBatchMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">A writable #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="buffer_add_analytics_relation_meta" c:identifier="gst_buffer_add_analytics_relation_meta" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Attach a analysis-results-meta-relation  meta (#GstAnalyticsRelationMeta)to @buffer.
 
@@ -1796,6 +1988,20 @@ analysis meta.</doc>
       <parameters>
         <parameter name="buffer" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">A writable #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="buffer_get_analytics_batch_meta" c:identifier="gst_buffer_get_analytics_batch_meta" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">Gets the #GstAnalyticsBatchMeta from a buffer</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.h"/>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">The #GstAnalyticsBatchMeta if there is one</doc>
+        <type name="BatchMeta" c:type="GstAnalyticsBatchMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsbatchmeta.c">A #GstBuffer</doc>
           <type name="Gst.Buffer" c:type="GstBuffer*"/>
         </parameter>
       </parameters>
