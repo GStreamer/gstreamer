@@ -38,10 +38,8 @@ gdouble current_rate;
 static void
 tempdir_setup (void)
 {
-  const gchar *systmp = g_get_tmp_dir ();
-  tmpdir = g_build_filename (systmp, "dashsink-test-XXXXXX", NULL);
-  /* Rewrites tmpdir template input: */
-  tmpdir = g_mkdtemp (tmpdir);
+  tmpdir = g_dir_make_tmp ("dashsink-test-XXXXXX", NULL);
+  fail_if (tmpdir == NULL);
 }
 
 static void
@@ -127,7 +125,6 @@ run_pipeline (GstElement * pipeline, guint num_segments_expected,
         guint segment_id;
         fail_unless (gst_structure_get_uint (s, "segment-id", &segment_id));
         fail_unless (segment_id < num_segments_expected);
-
         fail_unless (gst_structure_get_clock_time (s, "duration",
                 &segment_duration));
 
@@ -152,7 +149,7 @@ run_pipeline (GstElement * pipeline, guint num_segments_expected,
     dump_error (msg);
   else if (num_segments_expected != 0) {
     // Success. Check we got the expected number of fragment messages
-    fail_unless (segments_seen == num_segments_expected);
+    assert_equals_uint64 (segments_seen, num_segments_expected);
   }
 
   return msg;
