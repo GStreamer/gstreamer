@@ -1,0 +1,62 @@
+From c0fc6aaa53d34b374c1c6c12cc4c4e7a0176f803 Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Sun, 2 Mar 2025 20:26:11 +0530
+Subject: [PATCH] gi: Call os.add_dll_directory() on Windows when possible
+
+On macOS and Linux, the dynamic linker is used to find dependent
+shared libraries when loading a module. This usually means RPATH.
+
+On Windows, there is no RPATH, so the dynamic linker usually uses the
+PATH environment variable for dependent DLL resolution. Starting with
+Python 3.8, this is disabled, and you must manually call
+os.add_dll_directory() on each directory which contains DLLs you want
+to use. This can be disabled with PYTHONLEGACYWINDOWSDLLLOADING=1
+
+In most cases we are running as part of a "prefix", and we can deduce
+the bindir with all the DLLs automatically. In other cases, such as if
+we're inside a meson devenv, there is no such prefix and in fact there
+may be many directories with DLLs that we need. For those, add
+PYGI_DLL_DIRS which must be a patsep-separated list of directories to
+use.
+
+Co-Authored-by: L. E. Segovia <amy@centricular.com>
+---
+ gi/__init__.py | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/gi/__init__.py b/gi/__init__.py
+index 826489a1..a7af6152 100644
+--- a/gi/__init__.py
++++ b/gi/__init__.py
+@@ -36,6 +36,28 @@ _static_binding_error = ('When using gi.repository you must not import static '
+ if 'gobject' in sys.modules:
+     raise ImportError(_static_binding_error)
+ 
++if sys.platform.startswith('win'):
++    bindirs = []
++    if 'PYGI_DLL_DIRS' in os.environ:
++        bindirs = os.environ['PYGI_DLL_DIRS'].split(os.pathsep)
++    else:
++        # Find prefix assuming directory layout is Lib/site-packages/gi (msvc)
++        prefix = os.path.abspath(os.path.join(
++            os.path.dirname(__file__),
++            os.path.pardir,
++            os.path.pardir,
++            os.path.pardir
++        ))
++        bindir = os.path.join(prefix, 'bin')
++        if not os.path.isdir(bindir):
++            # Find prefix assuming layout is lib/pythonx.y/site-packages/gi (mingw)
++            prefix = os.path.dirname(prefix)
++            bindir = os.path.join(prefix, 'bin')
++        if not os.path.isdir(bindir):
++            raise ImportError('Could not deduce DLL directories, please set PYGI_DLL_DIRS')
++        bindirs = [bindir]
++    for bindir in bindirs:
++        os.add_dll_directory(bindir)
+ 
+ from . import _gi
+ from ._gi import _API  # noqa: F401
+-- 
+2.45.2.windows.1
+

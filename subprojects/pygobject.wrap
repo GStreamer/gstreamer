@@ -4,6 +4,7 @@ source_url = https://download.gnome.org/sources/pygobject/3.42/pygobject-3.42.2.
 source_fallback_url = https://deb.debian.org/debian/pool/main/p/pygobject/pygobject_3.42.2.orig.tar.xz
 source_filename = pygobject-3.42.2.tar.xz
 source_hash = ade8695e2a7073849dd0316d31d8728e15e1e0bc71d9ff6d1c09e86be52bc957
+diff_files = pygobject-3.42.2/0001-gi-Call-os.add_dll_directory-on-Windows-when-possibl.patch
 
 [provide]
 pygobject-3.0 = pygobject_dep
