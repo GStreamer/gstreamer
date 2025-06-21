@@ -763,7 +763,7 @@ gst_dash_sink_get_stream_metadata (GstDashSink * sink,
   GstStructure *s;
   GstCaps *caps = gst_pad_get_current_caps (stream->pad);
 
-  GST_DEBUG_OBJECT (sink, "stream caps %s", gst_caps_to_string (caps));
+  GST_DEBUG_OBJECT (sink, "stream caps %" GST_PTR_FORMAT, caps);
   s = gst_caps_get_structure (caps, 0);
 
   g_free (stream->codec);
