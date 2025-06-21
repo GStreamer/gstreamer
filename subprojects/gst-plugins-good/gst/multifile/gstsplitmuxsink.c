@@ -184,6 +184,7 @@ GST_STATIC_PAD_TEMPLATE ("caption_%u",
 static GQuark PAD_CONTEXT;
 static GQuark EOS_FROM_US;
 static GQuark SINK_FRAGMENT_INFO;
+static GQuark SENT_FRAGMENT_CLOSED;
 /* EOS_FROM_US is only valid in async-finalize mode. We need to know whether
  * to forward an incoming EOS message, but we cannot rely on the state of the
  * splitmux anymore, so we set this qdata on the sink instead.
@@ -207,6 +208,8 @@ _do_init (void)
   EOS_FROM_US = g_quark_from_static_string ("splitmuxsink-eos-from-us");
   SINK_FRAGMENT_INFO =
       g_quark_from_static_string ("splitmuxsink-fragment-info");
+  SENT_FRAGMENT_CLOSED =
+      g_quark_from_static_string ("splitmuxsink-sent-fragment-closed");
   GST_DEBUG_CATEGORY_INIT (splitmux_debug, "splitmuxsink", 0,
       "Split File Muxing Sink");
 }
@@ -2322,6 +2325,7 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   g_list_foreach (splitmux->contexts, (GFunc) restart_context, splitmux);
 
   update_output_fragment_info (splitmux);
+  g_object_set_qdata ((GObject *) sink, SENT_FRAGMENT_CLOSED, NULL);
   send_fragment_opened_closed_msg (splitmux, TRUE, sink);
 
   /* FIXME: Is this always the correct next state? */
@@ -2376,7 +2380,11 @@ bus_handler (GstBin * bin, GstMessage * message)
       sink = GST_ELEMENT (GST_MESSAGE_SRC (message));
       GST_SPLITMUX_LOCK (splitmux);
 
-      send_fragment_opened_closed_msg (splitmux, FALSE, sink);
+      if (!g_object_get_qdata ((GObject *) sink, SENT_FRAGMENT_CLOSED)) {
+        send_fragment_opened_closed_msg (splitmux, FALSE, sink);
+        g_object_set_qdata ((GObject *) sink, SENT_FRAGMENT_CLOSED,
+            GINT_TO_POINTER (TRUE));
+      }
 
       if (splitmux->async_finalize) {
 
