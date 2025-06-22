@@ -1265,6 +1265,9 @@ ges_clip_can_set_time_property_of_child (GESClip * clip,
       GList *child_data;
       DurationLimitData *data = _duration_limit_data_new (child);
       GValue *copy = g_new0 (GValue, 1);
+      gboolean might_log =
+          gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_INFO;
+      gchar *prop_name_log = might_log ? g_strdup (prop_name) : NULL;
 
       g_value_init (copy, pspec->value_type);
       g_value_copy (value, copy);
@@ -1277,10 +1280,12 @@ ges_clip_can_set_time_property_of_child (GESClip * clip,
         gchar *val_str = gst_value_serialize (value);
         GST_INFO_OBJECT (clip, "Cannot set the child-property %s of "
             "child %" GES_FORMAT " to %s because the duration-limit "
-            "cannot be adjusted", prop_name, GES_ARGS (child), val_str);
+            "cannot be adjusted", prop_name_log, GES_ARGS (child), val_str);
         g_free (val_str);
+        g_free (prop_name_log);
         return FALSE;
       }
+      g_free (prop_name_log);
     }
   }
   return TRUE;
