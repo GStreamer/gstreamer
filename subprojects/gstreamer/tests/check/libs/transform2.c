@@ -117,7 +117,7 @@ GST_START_TEST (basetransform_chain_collate)
   gst_pad_push_event (trans->srcpad, gst_event_new_flush_start ());
   gst_pad_push_event (trans->srcpad, gst_event_new_flush_stop (TRUE));
 
-  GST_DEBUG_OBJECT (trans, "buffer with caps %" GST_PTR_FORMAT, incaps);
+  GST_DEBUG ("buffer with caps %" GST_PTR_FORMAT, incaps);
   gst_test_trans_setcaps (trans, incaps);
   gst_test_trans_push_segment (trans);
 
