@@ -207,15 +207,7 @@ push_newsegment_events (GList * input_pads)
   GstSegment seg;
   GList *l;
 
-  seg.flags = GST_SEGMENT_FLAG_NONE;
-  seg.rate = seg.applied_rate = 1.0;
-  seg.format = GST_FORMAT_BYTES;
-  seg.base = 0;
-  seg.start = 0;
-  seg.stop = -1;
-  seg.time = 0;
-  seg.position = 0;
-  seg.duration = -1;
+  gst_segment_init (&seg, GST_FORMAT_BYTES);
 
   for (l = input_pads; l; l = l->next) {
     GstPad *pad = l->data;
