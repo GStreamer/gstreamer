@@ -244,11 +244,11 @@ gst_proxy_src_dispose (GObject * object)
 {
   GstProxySrc *self = GST_PROXY_SRC (object);
 
-  gst_object_unparent (GST_OBJECT (self->dummy_sinkpad));
-  self->dummy_sinkpad = NULL;
-
   gst_object_unparent (GST_OBJECT (self->internal_srcpad));
   self->internal_srcpad = NULL;
+
+  gst_object_unparent (GST_OBJECT (self->dummy_sinkpad));
+  self->dummy_sinkpad = NULL;
 
   g_weak_ref_set (&self->proxysink, NULL);
 
