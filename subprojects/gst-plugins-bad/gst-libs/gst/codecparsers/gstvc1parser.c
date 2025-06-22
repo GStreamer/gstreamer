@@ -910,6 +910,8 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
 
   GST_DEBUG ("Parsing Frame header advanced %u", advhdr->interlace);
 
+  memset (framehdr, 0, sizeof (GstVC1FrameHdr));
+
   /* Set the conveninence fields */
   framehdr->profile = seqhdr->profile;
   framehdr->dquant = entrypthdr->dquant;
