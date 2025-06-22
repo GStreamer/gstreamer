@@ -154,7 +154,7 @@ gst_srt_src_fill (GstPushSrc * src, GstBuffer * outbuf)
   GstClockTime capture_time;
   GstClockTimeDiff delay;
   int64_t srt_time;
-  SRT_MSGCTRL mctrl;
+  SRT_MSGCTRL mctrl = { 0, };
 
 retry:
   if (g_cancellable_is_cancelled (self->srtobject->cancellable)) {
@@ -194,7 +194,7 @@ retry:
   gst_buffer_unmap (outbuf, &info);
 
   GST_LOG_OBJECT (src,
-      "recv_len:%" G_GSIZE_FORMAT " pktseq:%d msgno:%d srctime:%"
+      "recv_len:%" G_GSSIZE_FORMAT " pktseq:%d msgno:%d srctime:%"
       G_GINT64_FORMAT, recv_len, mctrl.pktseq, mctrl.msgno, mctrl.srctime);
 
   if (g_cancellable_is_cancelled (self->srtobject->cancellable)) {
