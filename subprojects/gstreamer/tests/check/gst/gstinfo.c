@@ -228,6 +228,8 @@ GST_START_TEST (info_log_handler)
 
 GST_END_TEST;
 
+static gboolean log_found_match = FALSE;
+
 static void
 compare_gst_log_func (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line, GObject * object,
@@ -243,7 +245,10 @@ compare_gst_log_func (GstDebugCategory * category, GstDebugLevel level,
 
   match = g_pattern_match_simple ("*:*:*.*0*DEBUG*check*gstinfo.c:*"
       ":info_log_handler_get_line: test message\n", log_line);
-  fail_unless_equals_int (match, TRUE);
+
+  if (match)
+    log_found_match = TRUE;
+
   g_free (log_line);
 }
 
@@ -254,6 +259,8 @@ GST_START_TEST (info_log_handler_get_line)
 
   gst_debug_set_threshold_from_string ("LOG", TRUE);
   GST_DEBUG ("test message");
+
+  fail_unless (log_found_match == TRUE);
 
   /* clean up */
   gst_debug_set_default_threshold (GST_LEVEL_NONE);
