@@ -316,7 +316,7 @@ GST_START_TEST (test_payloader_invalid_caps)
   gst_caps_unref (caps);
 
   /* Send a 'codec_data' too small */
-  codec_data = gst_buffer_new_allocate (NULL, 6, NULL);
+  codec_data = gst_buffer_new_wrapped (g_malloc0 (6), 6);
   caps = gst_caps_new_simple ("video/x-h264",
       "stream-format", G_TYPE_STRING, "avc",
       "alignment", G_TYPE_STRING, "au",
