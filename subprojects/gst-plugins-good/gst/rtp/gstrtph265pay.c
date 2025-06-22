@@ -1336,7 +1336,9 @@ gst_rtp_h265_pay_send_bundle (GstRtpH265Pay * rtph265pay, gboolean marker)
       guint8 nal_layer_id;
       guint8 nal_temporal_id;
 
-      gst_buffer_extract (buf, 0, &nal_header, sizeof nal_header);
+      if (gst_buffer_extract (buf, 0, &nal_header,
+              sizeof nal_header) < sizeof nal_header)
+        continue;
 
       /* Propagate F bit */
       if ((nal_header[0] & 0x80))
@@ -1560,32 +1562,34 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
             nal_len);
       }
 
-      paybuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, offset,
-          nal_len);
-      g_ptr_array_add (paybufs, paybuf);
+      if (G_LIKELY (nal_len > 1)) {
+        paybuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, offset,
+            nal_len);
+        g_ptr_array_add (paybufs, paybuf);
 
-      /* If we're at the end of the buffer, then we're at the end of the
-       * access unit
-       */
-      GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_MARKER);
-      if (remaining_buffer_size - nal_len <= nal_length_size) {
-        if (rtph265pay->alignment == GST_H265_ALIGNMENT_AU || marker)
-          GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_MARKER);
+        /* If we're at the end of the buffer, then we're at the end of the
+         * access unit
+         */
+        GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_MARKER);
+        if (remaining_buffer_size - nal_len <= nal_length_size) {
+          if (rtph265pay->alignment == GST_H265_ALIGNMENT_AU || marker)
+            GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_MARKER);
+        }
+
+        GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_DISCONT);
+        if (discont) {
+          GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_DISCONT);
+          discont = FALSE;
+        }
+
+        GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_DELTA_UNIT);
+        if (!rtph265pay->delta_unit)
+          GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_DELTA_UNIT);
+
+        if (!rtph265pay->delta_unit)
+          /* only the first outgoing packet doesn't have the DELTA_UNIT flag */
+          rtph265pay->delta_unit = TRUE;
       }
-
-      GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_DISCONT);
-      if (discont) {
-        GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_DISCONT);
-        discont = FALSE;
-      }
-
-      GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_DELTA_UNIT);
-      if (!rtph265pay->delta_unit)
-        GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_DELTA_UNIT);
-
-      if (!rtph265pay->delta_unit)
-        /* only the first outgoing packet doesn't have the DELTA_UNIT flag */
-        rtph265pay->delta_unit = TRUE;
 
       /* Skip current nal. If it is split over multiple GstMemory
        * advance_bytes () will switch to the correct GstMemory. The payloader
@@ -1717,35 +1721,40 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
         for (; size > 2 && data[size - 1] == 0x0; size--)
           /* skip */ ;
 
-      paybuf = gst_adapter_take_buffer (rtph265pay->adapter, size);
-      g_assert (paybuf);
-      g_ptr_array_add (paybufs, paybuf);
+      if (G_LIKELY (size > 1)) {
+        paybuf = gst_adapter_take_buffer (rtph265pay->adapter, size);
+        g_assert (paybuf);
+        g_ptr_array_add (paybufs, paybuf);
 
-      /* If it's the last nal unit we have in non-bytestream mode, we can
-       * assume it's the end of an access-unit */
-      GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_MARKER);
-      if (i == nal_queue->len - 1) {
-        if (rtph265pay->alignment == GST_H265_ALIGNMENT_AU ||
-            marker || draining)
-          GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_MARKER);
-      }
+        /* If it's the last nal unit we have in non-bytestream mode, we can
+         * assume it's the end of an access-unit */
+        GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_MARKER);
+        if (i == nal_queue->len - 1) {
+          if (rtph265pay->alignment == GST_H265_ALIGNMENT_AU ||
+              marker || draining)
+            GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_MARKER);
+        }
 
-      GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_DISCONT);
-      if (discont) {
-        GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_DISCONT);
-        discont = FALSE;
-      }
+        GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_DISCONT);
+        if (discont) {
+          GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_DISCONT);
+          discont = FALSE;
+        }
 
-      GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_DELTA_UNIT);
-      if (!rtph265pay->delta_unit)
-        GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_DELTA_UNIT);
+        GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_DELTA_UNIT);
+        if (!rtph265pay->delta_unit)
+          GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
-      if (delayed_not_delta_unit) {
-        rtph265pay->delta_unit = FALSE;
-        delayed_not_delta_unit = FALSE;
+        if (delayed_not_delta_unit) {
+          rtph265pay->delta_unit = FALSE;
+          delayed_not_delta_unit = FALSE;
+        } else {
+          /* only the first outgoing packet doesn't have the DELTA_UNIT flag */
+          rtph265pay->delta_unit = TRUE;
+        }
       } else {
-        /* only the first outgoing packet doesn't have the DELTA_UNIT flag */
-        rtph265pay->delta_unit = TRUE;
+        /* nal length too short, skip */
+        gst_adapter_flush (rtph265pay->adapter, size);
       }
 
       /* move to next NAL packet */
