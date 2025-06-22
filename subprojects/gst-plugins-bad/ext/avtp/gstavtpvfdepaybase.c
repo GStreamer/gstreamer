@@ -97,6 +97,7 @@ gst_avtp_vf_depay_base_push (GstAvtpVfDepayBase * avtpvfdepaybase)
         GST_DEBUG_OBJECT (avtpvfdepaybase,
             "Sending initial CAPS and SEGMENT, pipeline time: %"
             GST_TIME_FORMAT, GST_TIME_ARGS (gst_clock_get_time (clock)));
+        gst_object_unref (clock);
       }
     }
 
