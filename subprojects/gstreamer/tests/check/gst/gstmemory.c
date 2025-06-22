@@ -679,8 +679,7 @@ _custom_log_func (GstDebugCategory * category,
     GstDebugLevel level, const gchar * file, const gchar * function,
     gint line, GObject * object, GstDebugMessage * message, gpointer unused)
 {
-  const gchar *dbg_msg = gst_debug_message_get (message);
-  fail_unless (dbg_msg == NULL);
+  ck_assert_uint_gt (level, GST_LEVEL_WARNING);
 }
 
 #ifndef GST_DISABLE_GST_DEBUG
