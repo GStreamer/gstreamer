@@ -185,10 +185,12 @@ static gboolean
 print_field (const GstIdStr * fieldname, const GValue * value, gpointer pfx)
 {
   gchar *str = gst_value_serialize (value);
+  const gchar *type_name = g_type_name (G_VALUE_TYPE (value));
 
-  n_print ("%s  %s%15s%s: %s%s%s\n",
+  n_print ("%s  %s%15s%s: %s%s%s %s(%s)%s\n",
       (gchar *) pfx, FIELD_NAME_COLOR, gst_id_str_as_str (fieldname),
-      RESET_COLOR, FIELD_VALUE_COLOR, str, RESET_COLOR);
+      RESET_COLOR, FIELD_VALUE_COLOR, str, RESET_COLOR,
+      DATATYPE_COLOR, type_name, RESET_COLOR);
   g_free (str);
   return TRUE;
 }
