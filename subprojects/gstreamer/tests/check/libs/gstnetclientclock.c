@@ -48,12 +48,7 @@ GST_START_TEST (test_instantiation)
 
   gst_object_unref (local);
 
-#ifdef HAVE_VALGRIND
-  if (RUNNING_ON_VALGRIND) {
-    // Delay 60+ to allow cache to free clocks
-    g_usleep (65 * G_USEC_PER_SEC);
-  }
-#endif
+  gst_net_client_clock_deinit ();
 }
 
 GST_END_TEST;
@@ -126,12 +121,7 @@ GST_START_TEST (test_functioning)
   gst_object_unref (client);
   gst_object_unref (server);
 
-#ifdef HAVE_VALGRIND
-  if (RUNNING_ON_VALGRIND) {
-    // Delay 60+ to allow cache to free clocks
-    g_usleep (65 * G_USEC_PER_SEC);
-  }
-#endif
+  gst_net_client_clock_deinit ();
 }
 
 GST_END_TEST;

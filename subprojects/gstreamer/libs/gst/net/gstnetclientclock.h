@@ -73,6 +73,9 @@ GST_NET_API
 GType           gst_net_client_clock_get_type	(void);
 
 GST_NET_API
+void            gst_net_client_clock_deinit (void);
+
+GST_NET_API
 GstClock*	gst_net_client_clock_new	(const gchar *name, const gchar *remote_address,
                                                  gint remote_port, GstClockTime base_time);
 

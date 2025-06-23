@@ -1539,3 +1539,36 @@ gst_ntp_clock_new (const gchar * name, const gchar * remote_address,
 
   return ret;
 }
+
+static void
+_free_clock_cache (gpointer data)
+{
+  ClockCache *cache = data;
+
+  g_assert (cache->clocks == NULL);
+
+  if (cache->remove_id) {
+    gst_clock_id_unschedule (cache->remove_id);
+    gst_clock_id_unref (cache->remove_id);
+  }
+
+  gst_object_unref (cache->clock);
+  g_free (cache);
+}
+
+/**
+ * gst_net_client_clock_deinit:
+ *
+ * Clears any cached #GstNetClientClock clocks.
+ * All references should be released beforehand.
+ * Mainly used for testing.
+ *
+ * Since: 1.28
+ */
+void
+gst_net_client_clock_deinit (void)
+{
+  G_LOCK (clocks_lock);
+  g_list_free_full (g_steal_pointer (&clocks), _free_clock_cache);
+  G_UNLOCK (clocks_lock);
+}
