@@ -186,6 +186,15 @@ clock.</doc>
           </parameter>
         </parameters>
       </constructor>
+      <function name="deinit" c:identifier="gst_net_client_clock_deinit" version="1.28">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/net/gstnetclientclock.c">Clears any cached #GstNetClientClock clocks.
+All references should be released beforehand.
+Mainly used for testing.</doc>
+        <source-position filename="../subprojects/gstreamer/libs/gst/net/gstnetclientclock.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </function>
       <property name="address" writable="1" construct="1" transfer-ownership="none" default-value="127.0.0.1">
         <type name="utf8" c:type="gchar*"/>
       </property>
