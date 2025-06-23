@@ -2533,13 +2533,11 @@ gst_decklink_clock_get_internal_time (GstClock * clock)
 {
   GstDecklinkClock *self = GST_DECKLINK_CLOCK (clock);
   GstClockTime result, start_time, last_time;
-  GstClockTimeDiff offset;
   BMDTimeValue time;
   HRESULT ret;
 
   g_mutex_lock (&self->output->lock);
   start_time = self->output->clock_start_time;
-  offset = self->output->clock_offset;
   last_time = self->output->clock_last_time;
   time = -1;
   if (!self->output->started) {
@@ -2560,13 +2558,6 @@ gst_decklink_clock_get_internal_time (GstClock * clock)
       else
         result = 0;
 
-      if (self->output->clock_restart) {
-        self->output->clock_offset = result - last_time;
-        offset = self->output->clock_offset;
-        self->output->clock_restart = FALSE;
-      }
-      result = MAX (last_time, result);
-      result -= offset;
       result = MAX (last_time, result);
     } else {
       result = last_time;
@@ -2579,9 +2570,8 @@ gst_decklink_clock_get_internal_time (GstClock * clock)
 
   GST_LOG_OBJECT (clock,
       "result %" GST_TIME_FORMAT " time %" GST_TIME_FORMAT " last time %"
-      GST_TIME_FORMAT " offset %" GST_TIME_FORMAT " start time %"
-      GST_TIME_FORMAT " (ret: 0x%08lx)", GST_TIME_ARGS (result),
-      GST_TIME_ARGS (time), GST_TIME_ARGS (last_time), GST_TIME_ARGS (offset),
+      GST_TIME_FORMAT " start time %" GST_TIME_FORMAT " (ret: 0x%08lx)",
+      GST_TIME_ARGS (result), GST_TIME_ARGS (time), GST_TIME_ARGS (last_time),
       GST_TIME_ARGS (start_time), (unsigned long) ret);
 
   return result;

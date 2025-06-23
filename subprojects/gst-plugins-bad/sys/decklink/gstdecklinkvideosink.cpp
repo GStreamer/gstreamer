@@ -2191,7 +2191,6 @@ gst_decklink_video_sink_open (GstBaseSink * bsink)
   self->output->clock_start_time = GST_CLOCK_TIME_NONE;
   self->output->clock_epoch += self->output->clock_last_time;
   self->output->clock_last_time = 0;
-  self->output->clock_offset = 0;
   GST_OBJECT_LOCK (self);
   self->internal_base_time = GST_CLOCK_TIME_NONE;
   self->external_base_time = GST_CLOCK_TIME_NONE;
@@ -2407,7 +2406,6 @@ gst_decklink_video_sink_change_state (GstElement * element,
       g_mutex_lock (&self->output->lock);
       self->output->clock_epoch += self->output->clock_last_time;
       self->output->clock_last_time = 0;
-      self->output->clock_offset = 0;
       g_mutex_unlock (&self->output->lock);
       gst_element_post_message (element,
           gst_message_new_clock_provide (GST_OBJECT_CAST (element),
@@ -2451,7 +2449,6 @@ gst_decklink_video_sink_change_state (GstElement * element,
       g_mutex_lock (&self->output->lock);
       self->output->clock_epoch += self->output->clock_last_time;
       self->output->clock_last_time = 0;
-      self->output->clock_offset = 0;
       g_mutex_unlock (&self->output->lock);
       gst_decklink_video_sink_stop (self);
       GST_OBJECT_LOCK (self);
