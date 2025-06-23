@@ -6000,7 +6000,9 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
         goto flushing;
 
       switch (event_type) {
-        case GST_EVENT_STREAM_START:
+        case GST_EVENT_STREAM_START:{
+          gboolean changed_stream_id = TRUE;
+
           /* Take the stream lock to unset the EOS status. This is to ensure
            * there isn't any other serialized event passing through while this
            * EOS status is being unset */
@@ -6012,13 +6014,38 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
           if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
             goto flushing;
 
+          for (guint i = 0; i < pad->priv->events->len; i++) {
+            PadEvent *ev = &g_array_index (pad->priv->events, PadEvent, i);
+
+            if (GST_EVENT_TYPE (ev->event) == GST_EVENT_STREAM_START) {
+              if (event == ev->event) {
+                changed_stream_id = FALSE;
+                break;
+              }
+
+              const gchar *old_stream_id, *new_stream_id;
+
+              gst_event_parse_stream_start (ev->event, &old_stream_id);
+              gst_event_parse_stream_start (event, &new_stream_id);
+
+              changed_stream_id = !g_str_equal (old_stream_id, new_stream_id);
+
+              break;
+            }
+          }
+
           /* Remove sticky EOS events */
           GST_LOG_OBJECT (pad, "Removing pending EOS events");
           remove_event_by_type (pad, GST_EVENT_EOS);
           remove_event_by_type (pad, GST_EVENT_STREAM_GROUP_DONE);
-          remove_event_by_type (pad, GST_EVENT_TAG);
           GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
+
+          if (changed_stream_id) {
+            GST_LOG_OBJECT (pad, "Removing pending TAG events");
+            remove_event_by_type (pad, GST_EVENT_TAG);
+          }
           break;
+        }
         case GST_EVENT_RECONFIGURE:
           if (GST_PAD_IS_SRC (pad))
             GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
