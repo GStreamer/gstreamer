@@ -552,9 +552,7 @@ struct _GstDecklinkOutput {
 
   GstClock *clock;
   GstClockTime clock_start_time, clock_last_time, clock_epoch;
-  GstClockTimeDiff clock_offset;
   gboolean started;
-  gboolean clock_restart;
 
   /* Everything below protected by mutex */
   GMutex lock;
