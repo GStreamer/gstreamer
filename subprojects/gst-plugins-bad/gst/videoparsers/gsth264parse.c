@@ -265,6 +265,7 @@ gst_h264_parse_reset_stream_info (GstH264Parse * h264parse)
   h264parse->parsed_colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
   h264parse->parsed_colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;
   h264parse->parsed_colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
+  h264parse->lcevc = FALSE;
 
   h264parse->have_pps = FALSE;
   h264parse->have_sps = FALSE;
@@ -2534,7 +2535,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
           "Couldn't set content light level to caps");
     }
 
-    if (h264parse->user_data.lcevc_enhancement_data)
+    if (h264parse->user_data.lcevc_enhancement_data || h264parse->lcevc)
       gst_caps_set_simple (caps, "lcevc", G_TYPE_BOOLEAN, TRUE, NULL);
     else
       gst_caps_set_simple (caps, "lcevc", G_TYPE_BOOLEAN, FALSE, NULL);
@@ -3713,6 +3714,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       &h264parse->fps_den);
   gst_structure_get_fraction (str, "pixel-aspect-ratio",
       &h264parse->upstream_par_n, &h264parse->upstream_par_d);
+  gst_structure_get_boolean (str, "lcevc", &h264parse->lcevc);
 
   /* get upstream format and align from caps */
   gst_h264_parse_format_from_caps (caps, &format, &align);
