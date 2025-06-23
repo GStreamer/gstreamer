@@ -39,6 +39,63 @@
 #define NSWindowStyleMaskMiniaturizable      NSMiniaturizableWindowMask
 #endif
 
+static const gchar*
+gst_gl_cocoa_keycode_to_keyname (NSEvent *event)
+{
+  switch ([event keyCode]) {
+    /* The key codes are taken from Events.h which is included only from
+     * Carbon/Carbon.h, which is deprecated in macOS 10.8, using their values
+     * directly as cocoa does not provide any replacement for those.
+     */
+    case 0x18: return "equal";
+    case 0x1B: return "minus";
+    case 0x1E: return "bracketright";
+    case 0x21: return "bracketleft";
+    case 0x27: return "apostrophe";
+    case 0x29: return "semicolon";
+    case 0x2A: return "backslash";
+    case 0x2B: return "comma";
+    case 0x2C: return "slash";
+    case 0x2F: return "period";
+    case 0x32: return "grave";
+
+    case 0x24: return "Return";
+    case 0x30: return "Tab";
+    case 0x31: return "space";
+    case 0x33: return "BackSpace";
+    case 0x35: return "Escape";
+    case 0x37: return "Command";
+    case 0x38: return "Shift_L";
+    case 0x39: return "Caps_Lock";
+    case 0x3A: return "Alt_L";
+    case 0x3B: return "Control_L";
+    case 0x3C: return "Shift_R";
+    case 0x3D: return "Alt_R";
+    case 0x3E: return "Control_R";
+    case 0x7A: return "F1";
+    case 0x78: return "F2";
+    case 0x63: return "F3";
+    case 0x76: return "F4";
+    case 0x60: return "F5";
+    case 0x61: return "F6";
+    case 0x62: return "F7";
+    case 0x64: return "F8";
+    case 0x65: return "F9";
+    case 0x6D: return "F10";
+    case 0x67: return "F11";
+    case 0x6F: return "F12";
+    case 0x73: return "Home";
+    case 0x77: return "End";
+    case 0x74: return "Page_Up";
+    case 0x79: return "Page_Down";
+    case 0x7B: return "Left";
+    case 0x7C: return "Right";
+    case 0x7D: return "Down";
+    case 0x7E: return "Up";
+    default: return [event characters].UTF8String;
+  }
+}
+
 /* =============================================================*/
 /*                                                              */
 /*               GstGLNSWindow declaration                      */
@@ -728,7 +785,129 @@ close_window_cb (gpointer data)
 
   [self setWantsBestResolutionOpenGLSurface:YES];
 
+  /* Set up mouse tracking */
+  NSTrackingArea *trackingArea = [[NSTrackingArea alloc] initWithRect:[self bounds]
+      options:(NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveInKeyWindow)
+      owner:self userInfo:nil];
+  [self addTrackingArea:trackingArea];
+
   return self;
+}
+
+- (BOOL)acceptsFirstResponder {
+  return YES;
+}
+
+- (void)updateTrackingAreas {
+  [super updateTrackingAreas];
+
+  for (NSTrackingArea *area in [self trackingAreas]) {
+    [self removeTrackingArea:area];
+  }
+
+  NSTrackingArea *trackingArea = [[NSTrackingArea alloc] initWithRect:[self bounds]
+      options:(NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveInKeyWindow)
+      owner:self userInfo:nil];
+  [self addTrackingArea:trackingArea];
+}
+
+- (void)keyDown:(NSEvent *)event {
+  const gchar *event_name = "key-press";
+  const gchar *key_str = gst_gl_cocoa_keycode_to_keyname(event);
+
+  if (key_str && *key_str) {
+    gst_gl_window_send_key_event (GST_GL_WINDOW (window_cocoa), event_name, key_str);
+  }
+
+  [super keyDown:event];
+}
+
+- (void)keyUp:(NSEvent *)event {
+  const gchar *event_name = "key-release";
+  const gchar *key_str = gst_gl_cocoa_keycode_to_keyname(event);
+
+  if (key_str && *key_str) {
+    gst_gl_window_send_key_event (GST_GL_WINDOW (window_cocoa), event_name, key_str);
+  }
+
+  [super keyUp:event];
+}
+
+- (void)mouseDown:(NSEvent *)event {
+  NSPoint location = [self convertPoint:[event locationInWindow] fromView:nil];
+  gst_gl_window_send_mouse_event (GST_GL_WINDOW (window_cocoa),
+      "mouse-button-press", 1, location.x, location.y);
+  [super mouseDown:event];
+}
+
+- (void)mouseUp:(NSEvent *)event {
+  NSPoint location = [self convertPoint:[event locationInWindow] fromView:nil];
+  gst_gl_window_send_mouse_event (GST_GL_WINDOW (window_cocoa),
+      "mouse-button-release", 1, location.x, location.y);
+  [super mouseUp:event];
+}
+
+- (void)rightMouseDown:(NSEvent *)event {
+  NSPoint location = [self convertPoint:[event locationInWindow] fromView:nil];
+  gst_gl_window_send_mouse_event (GST_GL_WINDOW (window_cocoa),
+      "mouse-button-press", 2, location.x, location.y);
+  [super rightMouseDown:event];
+}
+
+- (void)rightMouseUp:(NSEvent *)event {
+  NSPoint location = [self convertPoint:[event locationInWindow] fromView:nil];
+  gst_gl_window_send_mouse_event (GST_GL_WINDOW (window_cocoa),
+      "mouse-button-release", 2, location.x, location.y);
+  [super rightMouseUp:event];
+}
+
+- (void)otherMouseDown:(NSEvent *)event {
+  NSPoint location = [self convertPoint:[event locationInWindow] fromView:nil];
+  gst_gl_window_send_mouse_event (GST_GL_WINDOW (window_cocoa),
+      "mouse-button-press", [event buttonNumber], location.x, location.y);
+  [super otherMouseDown:event];
+}
+
+- (void)otherMouseUp:(NSEvent *)event {
+  NSPoint location = [self convertPoint:[event locationInWindow] fromView:nil];
+  gst_gl_window_send_mouse_event (GST_GL_WINDOW (window_cocoa),
+      "mouse-button-release", [event buttonNumber], location.x, location.y);
+  [super otherMouseUp:event];
+}
+
+- (void)mouseMoved:(NSEvent *)event {
+  NSPoint location = [self convertPoint:[event locationInWindow] fromView:nil];
+  gst_gl_window_send_mouse_event (GST_GL_WINDOW (window_cocoa),
+      "mouse-move", event.buttonNumber, location.x, location.y);
+  [super mouseMoved:event];
+}
+
+- (void)mouseDragged:(NSEvent *)event {
+  NSPoint location = [self convertPoint:[event locationInWindow] fromView:nil];
+  gst_gl_window_send_mouse_event (GST_GL_WINDOW (window_cocoa),
+      "mouse-move", event.buttonNumber, location.x, location.y);
+  [super mouseDragged:event];
+}
+
+- (void)rightMouseDragged:(NSEvent *)event {
+  NSPoint location = [self convertPoint:[event locationInWindow] fromView:nil];
+  gst_gl_window_send_mouse_event (GST_GL_WINDOW (window_cocoa),
+      "mouse-move", event.buttonNumber, location.x, location.y);
+  [super rightMouseDragged:event];
+}
+
+- (void)otherMouseDragged:(NSEvent *)event {
+  NSPoint location = [self convertPoint:[event locationInWindow] fromView:nil];
+  gst_gl_window_send_mouse_event (GST_GL_WINDOW (window_cocoa),
+      "mouse-move", event.buttonNumber, location.x, location.y);
+  [super otherMouseDragged:event];
+}
+
+- (void)scrollWheel:(NSEvent *)event {
+  NSPoint location = [self convertPoint:[event locationInWindow] fromView:nil];
+  gst_gl_window_send_scroll_event (GST_GL_WINDOW (window_cocoa),
+      location.x, location.y, [event deltaX], [event deltaY]);
+  [super scrollWheel:event];
 }
 
 - (void) dealloc {
