@@ -1620,6 +1620,10 @@ gst_h266_parser_parse_subpic_level_info (GstH266SubPicLevelInfo * sli,
     READ_UE_MAX (nr, sli->num_subpics_minus1, GST_H266_MAX_SLICES_PER_AU - 1);
 
   READ_UINT8 (nr, sli->max_sublayers_minus1, 3);
+  /* The value of sli_max_sublayers_minus1 shall be equal to
+     vps_max_sublayers_minus1. */
+  CHECK_ALLOWED_MAX (sli->max_sublayers_minus1, GST_H266_MAX_SUBLAYERS - 1);
+
   READ_UINT8 (nr, sli->sublayer_info_present_flag, 1);
 
   while (!nal_reader_is_byte_aligned (nr))
