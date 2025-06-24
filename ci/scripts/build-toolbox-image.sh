@@ -11,15 +11,9 @@ die() {
   exit 1
 }
 
-check_image_base() {
-  local base=$(
-    skopeo inspect docker://$TOOLBOX_IMAGE 2>/dev/null |
-    jq -r '.Labels["org.opencontainers.image.base.name"]')
-  [[ "$base" == "$BASE_CI_IMAGE" ]]
-}
-
 build_container() {
-  echo Building $TOOLBOX_IMAGE from $BASE_CI_IMAGE
+  local tmptag="localhost/rebuilt-tmp-tag"
+  echo Rebuilding image: $BASE_CI_IMAGE
 
   export BUILDAH_ISOLATION=chroot
   export BUILDAH_FORMAT=docker
@@ -116,38 +110,38 @@ build_container() {
     --label org.opencontainers.image.base.name=$BASE_CI_IMAGE \
     $build_cntr
 
-  buildah commit $build_cntr $TOOLBOX_IMAGE
-  buildah tag $TOOLBOX_IMAGE $TOOLBOX_LATEST
+  buildah commit $build_cntr $tmptag
+
+  # Retag the image to have the same tag as the base image
+  buildah tag $tmptag $BASE_CI_IMAGE
+
+  # Unmount and remove the container
+  buildah umount "$build_cntr"
+  buildah rm "$build_cntr"
 }
 
 BASE_CI_IMAGE="$1"
-TOOLBOX_BRANCH="$2"
-GST_UPSTREAM_BRANCH="$3"
+gstbranch="${GST_UPSTREAM_BRANCH:-main}"
 
-TOOLBOX_IMAGE="$CI_REGISTRY_IMAGE/$FDO_REPO_SUFFIX:gst-toolbox-${TOOLBOX_BRANCH}"
-# push an unversioned tag to make it easier to use.
-# ex. pull foobar:toolbox-main
-TOOLBOX_LATEST="$CI_REGISTRY_IMAGE/$FDO_REPO_SUFFIX:gst-toolbox-${GST_UPSTREAM_BRANCH}"
-
-[[ -n "$BASE_CI_IMAGE" && -n "$TOOLBOX_BRANCH" && -n "$GST_UPSTREAM_BRANCH" ]] ||
-  die "Usage: $(basename $0) BASE_CI_IMAGE TOOLBOX TAG GST_UPSTREAM_BRANCH"
+[[ -n "$BASE_CI_IMAGE" ]] ||
+  die "Usage: $(basename $0) BASE_CI_IMAGE "
 
 [[ -n "$CI_REGISTRY" && -n "$CI_REGISTRY_USER" && -n "$CI_REGISTRY_PASSWORD" ]] ||
   die "Insufficient information to log in."
 
 podman login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
-if ! check_image_base; then
-  build_container
+build_container
 
-  podman push "$TOOLBOX_IMAGE"
-  if [ "$GST_UPSTREAM_BRANCH" == "$CI_COMMIT_BRANCH" ]; then
-    podman push "$TOOLBOX_LATEST"
-  fi
+echo "Publishing $BASE_CI_IMAGE"
+podman push "$BASE_CI_IMAGE"
+
+# Publish an unversioned ref as well that we can always fetch
+if [ "$CI_COMMIT_BRANCH" == "main" ] && [ "$CI_PROJECT_NAMESAPCE" == "gstreamer" ]; then
+  latest="$CI_REGISTRY_IMAGE/$FDO_REPO_SUFFIX:gst-toolbox-main"
+  podman tag "$BASE_CI_IMAGE" "$latest"
+  podman push "$latest"
 fi
 
 echo "Create your toolbox with either of the following commands"
-echo "     $ toolbox create gst-$TOOLBOX_BRANCH --image $TOOLBOX_IMAGE"
-if [ "$GST_UPSTREAM_BRANCH" == "$CI_COMMIT_BRANCH" ]; then
-  echo "     $ toolbox create gst-$GST_UPSTREAM_BRANCH --image $TOOLBOX_LATEST"
-fi
+echo "     $ toolbox create gst-$gstbranch --image $BASE_CI_IMAGE"
