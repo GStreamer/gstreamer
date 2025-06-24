@@ -43,6 +43,8 @@ G_BEGIN_DECLS
 /* 7.4.3.3 The value of vps_max_sublayers_minus1
  * shall be in the range of 0 to 6, inclusive */
 #define GST_H266_MAX_SUBLAYERS 7
+/* 3-bit minus1 value, so max is 7+1 */
+#define GST_H266_MAX_SLI_REF_LEVELS 8
 /* 7.4.3.3 vps_num_output_layer_sets_minus2 is u(8) */
 #define GST_H266_MAX_TOTAL_NUM_OLSS 257
 /* 7.4.3.3 vps_num_ptls_minus1 shall be less than TotalNumOlss,
@@ -3171,9 +3173,9 @@ struct _GstH266SubPicLevelInfo {
   guint16 num_subpics_minus1;
   guint8 max_sublayers_minus1;
   guint8 sublayer_info_present_flag;
-  guint8 non_subpic_layers_fraction[GST_H266_MAX_SUBLAYERS][GST_H266_MAX_SUBLAYERS];
-  guint8 ref_level_idc[GST_H266_MAX_SUBLAYERS][GST_H266_MAX_SUBLAYERS];
-  guint8 ref_level_fraction_minus1[GST_H266_MAX_SUBLAYERS][GST_H266_MAX_SLICES_PER_AU][GST_H266_MAX_SUBLAYERS];
+  guint8 non_subpic_layers_fraction[GST_H266_MAX_SLI_REF_LEVELS][GST_H266_MAX_SUBLAYERS];
+  guint8 ref_level_idc[GST_H266_MAX_SLI_REF_LEVELS][GST_H266_MAX_SUBLAYERS];
+  guint8 ref_level_fraction_minus1[GST_H266_MAX_SLI_REF_LEVELS][GST_H266_MAX_SLICES_PER_AU][GST_H266_MAX_SUBLAYERS];
 };
 
 /**
