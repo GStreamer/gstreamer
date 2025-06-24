@@ -17,6 +17,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * plugin-hip:
+ *
+ * Since: 1.28
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -65,6 +71,7 @@ plugin_init (GstPlugin * plugin)
   }
 
   gst_clear_object (&device);
+  gst_type_mark_as_plugin_api (GST_TYPE_HIP_VENDOR, (GstPluginAPIFlags) 0);
 
   return TRUE;
 }
