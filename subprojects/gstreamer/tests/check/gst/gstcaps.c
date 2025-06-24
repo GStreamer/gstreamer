@@ -407,6 +407,20 @@ GST_START_TEST (test_subset)
   fail_if (gst_caps_is_equal (c1, c2));
   gst_caps_unref (c1);
   gst_caps_unref (c2);
+
+  c1 = gst_caps_from_string ("tensor/strided, dims=<(int)1, (int)11>");
+  c2 = gst_caps_from_string ("tensor/strided, dims=<(int)[0,1], (int)[10,15]>");
+  fail_unless (gst_caps_is_subset (c1, c2));
+  fail_if (gst_caps_is_subset (c2, c1));
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+
+  c1 = gst_caps_from_string ("tensor/strided, dims=<(int)1, (int)11>");
+  c2 = gst_caps_from_string ("tensor/strided, dims=<(int)1, (int)[10,15]>");
+  fail_unless (gst_caps_is_subset (c1, c2));
+  fail_if (gst_caps_is_subset (c2, c1));
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
 }
 
 GST_END_TEST;
@@ -1961,17 +1975,28 @@ GST_END_TEST;
 
 GST_START_TEST (test_array_subset)
 {
-  GstCaps *caps1, *caps2;
+  GstCaps *superset, *subset;
 
-  caps1 = gst_caps_from_string ("tensor/strided,"
+  superset = gst_caps_from_string ("tensor/strided,"
       "dims=<(int)[0,1], (int)[1,9999]>");
 
-  caps2 = gst_caps_from_string ("tensor/strided, dims=<1, 1000>");
+  subset = gst_caps_from_string ("tensor/strided, dims=<1, 1000>");
 
-  fail_unless (gst_caps_is_subset (caps2, caps1));
+  fail_unless (gst_caps_is_subset (subset, superset));
 
-  gst_caps_unref (caps1);
-  gst_caps_unref (caps2);
+  gst_caps_unref (superset);
+  gst_caps_unref (subset);
+
+  superset = gst_caps_from_string ("tensor/strided,"
+      "dims=<(int)1, (int)[1,9999]>");
+
+  subset = gst_caps_from_string ("tensor/strided, dims=<1, 1000>");
+
+  fail_unless (gst_caps_is_subset (subset, superset));
+
+  gst_caps_unref (superset);
+  gst_caps_unref (subset);
+
 }
 
 GST_END_TEST;
