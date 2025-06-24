@@ -4516,33 +4516,60 @@ gst_value_is_subset_array_array (const GValue * val_sub, const GValue * val_sup)
 {
   /* Check if each element of the subset is within the subset while
    * respecting order. Not all element of superset has to be present in
-   * subset.*/
+   * subset. If at least one element in val_sub is a subset of the corresponding
+   * element in val_sup, and other elements of val_sub are equal to
+   * corresponding elements of val_sup then val_sub is still a subset of val_sup
+   */
 
   GstValueList *superset = VALUE_LIST_ARRAY (val_sup);
   GstValueList *subset = VALUE_LIST_ARRAY (val_sub);
   gint it1, it2, len1, len2;
-  gboolean is_subset;
+  gboolean is_subset, is_equal = FALSE;
+  gsize subset_count = 0;
+  gsize equal_count = 0;
 
   len2 = superset->len;
   len1 = subset->len;
   is_subset = len1 <= len2;
 
-  for (it1 = 0, it2 = 0; is_subset && it1 < len1; it1++, it2++) {
+  for (it1 = 0, it2 = 0; (is_subset || is_equal) && it1 < len1; it1++, it2++) {
     const GValue *child1 = &subset->fields[it1];
     const GValue *child2 = &superset->fields[it2];
 
-    is_subset = gst_value_is_subset (child1, child2);
-    if (is_subset == FALSE) {
+    is_equal = gst_value_compare (child1, child2) == GST_VALUE_EQUAL;
+    if (is_equal)
+      equal_count++;
+    else if ((is_subset = gst_value_is_subset (child1, child2)))
+      subset_count++;
+    else if (subset_count == 0 && equal_count == 0) {
       /* try to find an element in superset that is a superset of subset[it1] */
       for (it2 = it2 + 1; it2 < len2 && it2 + len1 <= len2; it2++) {
         child2 = &superset->fields[it2];
-        if ((is_subset = gst_value_is_subset (child1, child2)) == TRUE)
+        if (gst_value_compare (child1, child2) == GST_VALUE_EQUAL) {
+          is_equal = TRUE;
+          equal_count++;
           break;
+        } else if ((is_subset = gst_value_is_subset (child1, child2))) {
+          subset_count++;
+          break;
+        }
       }
     }
   }
 
-  return is_subset;
+  if (is_equal || is_subset) {
+    if (gst_value_is_fixed (val_sup) && gst_value_is_fixed (val_sub)) {
+      /* With two fixed array we don't allow both array to be equal for
+       * consistency with other is_subset operation on other fixed values */
+      return subset_count > 0;
+    } else {
+
+      /* For un-fixed value we consider equal value to be a subset */
+      return TRUE;
+    }
+  } else {
+    return FALSE;
+  }
 }
 
 
@@ -4551,9 +4578,11 @@ gst_value_is_subset_array_array (const GValue * val_sub, const GValue * val_sup)
  * @value1: a #GValue
  * @value2: a #GValue
  *
- * Check that @value1 is a subset of @value2.
+ * Check that @value1 is a subset of @value2. If @value1 and @value2 is are
+ * fixed value, value1 must be a subset of value2 and not equal to @value2 to
+ * be a subset of @value2.
  *
- * Return: %TRUE is @value1 is a subset of @value2
+ * Return: %TRUE is @value1 is a subset, strict subset if both values are  of @value2
  */
 gboolean
 gst_value_is_subset (const GValue * value1, const GValue * value2)
@@ -4588,23 +4617,38 @@ gst_value_is_subset (const GValue * value1, const GValue * value2)
   }
 
   /*
+   * First (superset - subset) needs to return a non-empty set, second
+   * (subset - superset) needs to give an empty set. Requiring (subset - superset)
+   * to give an empty set enforce a subset (value1) to be a proper/strict
+   * subset of the superset (value2).
+   *
+   * Example with range:
+   * subset = [1, 2]
+   * superset = 1
    * 1 - [1,2] = empty
    * -> !subset
    *
+   * Example with range:
+   * subset = 1
+   * superset = [1, 2]
    * [1,2] - 1 = 2
-   *  -> 1 - [1,2] = empty
+   *  and 1 - [1,2] = empty
    *  -> subset
    *
+   * Example with range:
+   * subset = [1, 2]
+   * superset = [1, 3]
    * [1,3] - [1,2] = 3
-   * -> [1,2] - [1,3] = empty
-   * -> subset
+   *  and [1,2] - [1,3] = empty
+   *  -> subset
    *
-   * {1,2} - {1,3} = 2
-   * -> {1,3} - {1,2} = 3
-   * -> !subset
+   * Example  with list:
+   * subset: {1, 3}
+   * superset: {1, 2}
+   * {1,2} - {1,3} = empty
+   *  and {1,3} - {1,2} = 3
+   *  -> !subset
    *
-   *  First caps subtraction needs to return a non-empty set, second
-   *  subtractions needs to give en empty set.
    *  Both substractions are switched below, as it's faster that way.
    */
   if (!gst_value_subtract (NULL, value1, value2)) {
@@ -5913,6 +5957,94 @@ gst_value_subtract_list (GValue * dest, const GValue * minuend,
   return TRUE;
 }
 
+/*
+ * This function is used to handle subtraction cases where the minuend is a
+ * GST_TYPE_ARRAY. The implementation is limited to subtrahends of fixed types.
+ *
+ * NOTE: Current use case is gst_value_is_subset () where only one of the
+ *  GValue is a GST_TYPE_ARRAY. For these use cases gst_value_is_subset ()
+ *  uses subtractions to evaluate if a value is a subset of another value.
+ */
+static gboolean
+gst_value_subtract_from_array (GValue * dest,
+    const GValue * minuend, const GValue * subtrahend)
+{
+  GstValueList *m = VALUE_LIST_ARRAY (minuend);
+  gint it;
+  gint consumed = FALSE;
+  gboolean dest_init = FALSE;
+  GType stype = G_VALUE_TYPE (subtrahend);
+
+  if (stype != GST_TYPE_ARRAY && gst_type_is_fixed (stype)) {
+    for (it = 0; it < m->len; it++) {
+      const GValue *child = &m->fields[it];
+
+      if (G_VALUE_TYPE (child) == stype) {
+        if (!consumed && gst_value_compare (subtrahend, child) ==
+            GST_VALUE_EQUAL) {
+          consumed = TRUE;
+          continue;
+        } else if (dest) {
+          if (!dest_init) {
+            g_value_init (dest, G_TYPE_ARRAY);
+            dest_init = TRUE;
+          }
+          gst_value_array_append_value (dest, child);
+        }
+      }
+    }
+
+    if (consumed && m->len == 1) {
+      if (dest_init)
+        g_value_unset (dest);
+      return FALSE;
+    }
+
+  } else {
+    g_warning ("not implemented");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/*
+ * This function is used to handle subtraction cases where the subtrahend is a
+ * GST_TYPE_ARRAY. The implementation is limited to minuends of fixed types.
+ *
+ * NOTE: Current use case is gst_value_is_subset () where only one of the
+ *  GValue is a GST_TYPE_ARRAY. For these use cases gst_value_is_subset ()
+ *  uses subtractions to evaluate if a value is a subset of another value.
+ */
+static gboolean
+gst_value_subtract_array (GValue * dest, const GValue * minuend,
+    const GValue * subtrahend)
+{
+  GstValueList *s = VALUE_LIST_ARRAY (subtrahend);
+  gint it;
+  GType mtype = G_VALUE_TYPE (minuend);
+
+  if (mtype != GST_TYPE_ARRAY && gst_type_is_fixed (mtype)) {
+
+    for (it = 0; it < s->len; it++) {
+      const GValue *child = &s->fields[it];
+
+      if (G_VALUE_TYPE (child) == mtype) {
+        if (gst_value_compare (minuend, child) == GST_VALUE_EQUAL)
+          return FALSE;
+      }
+    }
+
+    if (dest)
+      gst_value_init_and_copy (dest, minuend);
+  } else {
+    g_warning ("not implemented");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static gboolean
 gst_value_subtract_fraction_fraction_range (GValue * dest,
     const GValue * minuend, const GValue * subtrahend)
@@ -6573,6 +6705,14 @@ gst_value_subtract (GValue * dest, const GValue * minuend,
     return gst_value_subtract_from_list (dest, minuend, subtrahend);
   if (stype == GST_TYPE_LIST)
     return gst_value_subtract_list (dest, minuend, subtrahend);
+
+  if (mtype == GST_TYPE_ARRAY && stype != GST_TYPE_ARRAY &&
+      gst_type_is_fixed (stype))
+    return gst_value_subtract_from_array (dest, minuend, subtrahend);
+
+  if (stype == GST_TYPE_ARRAY && mtype != GST_TYPE_ARRAY &&
+      gst_type_is_fixed (mtype))
+    return gst_value_subtract_array (dest, minuend, subtrahend);
 
   len = gst_value_subtract_funcs->len;
   for (i = 0; i < len; i++) {
