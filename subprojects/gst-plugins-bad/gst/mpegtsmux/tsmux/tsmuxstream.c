@@ -1054,7 +1054,8 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
         descriptor = gst_mpegts_descriptor_from_registration ("AV1G", NULL, 0);
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
         if (stream->pmt_descriptor)
-          g_ptr_array_add (pmt_stream->descriptors, stream->pmt_descriptor);
+          g_ptr_array_add (pmt_stream->descriptors,
+              gst_mpegts_descriptor_copy (stream->pmt_descriptor));
       }
       if (stream->internal_stream_type == TSMUX_ST_PS_TELETEXT) {
         // FIXME empty descriptor for now;
