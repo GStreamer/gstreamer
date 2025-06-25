@@ -7246,6 +7246,9 @@ again:
 
 send_error:
   {
+    if (src->busy_cmd == CMD_CLOSE && res == GST_RTSP_EEOF)
+      return res;
+
     gchar *str = gst_rtsp_strresult (res);
 
     if (res != GST_RTSP_EINTR) {
@@ -9279,6 +9282,9 @@ create_request_failed:
   }
 send_error:
   {
+    if (res == GST_RTSP_EEOF)
+      goto close;
+
     gchar *str = gst_rtsp_strresult (res);
 
     gst_rtsp_message_unset (&request);
