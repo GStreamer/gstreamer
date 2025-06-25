@@ -223,10 +223,12 @@ gst_wayland_sink_set_fullscreen (GstWaylandSink * self, gboolean fullscreen)
   if (fullscreen == self->fullscreen)
     return;
 
-  g_mutex_lock (&self->render_lock);
   self->fullscreen = fullscreen;
-  gst_wl_window_ensure_fullscreen (self->window, fullscreen);
-  g_mutex_unlock (&self->render_lock);
+  if (self->window) {
+    g_mutex_lock (&self->render_lock);
+    gst_wl_window_ensure_fullscreen (self->window, fullscreen);
+    g_mutex_unlock (&self->render_lock);
+  }
 }
 
 static void
