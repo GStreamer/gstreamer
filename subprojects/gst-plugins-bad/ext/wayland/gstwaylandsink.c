@@ -219,6 +219,7 @@ gst_wayland_sink_init (GstWaylandSink * self)
   self->force_aspect_ratio = TRUE;
 }
 
+/* must be called with the OBJECT_LOCK */
 static void
 gst_wayland_sink_set_fullscreen (GstWaylandSink * self, gboolean fullscreen)
 {

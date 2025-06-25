@@ -60,6 +60,8 @@ struct _GstWaylandSink
 
   gchar *display_name;
 
+  /* If both OBJECT_LOCK and render_lock are needed,
+   * OBJECT_LOCK must be taken first */
   GMutex render_lock;
   GstBuffer *last_buffer;
 
