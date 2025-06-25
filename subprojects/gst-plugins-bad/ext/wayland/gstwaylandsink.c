@@ -160,7 +160,8 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
       g_param_spec_boolean ("fullscreen", "Fullscreen",
           "Whether the surface should be made fullscreen ", FALSE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
 
   /**
    * waylandsink:rotate-method:
@@ -172,7 +173,8 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
           "rotate method",
           "rotate method",
           GST_TYPE_VIDEO_ORIENTATION_METHOD, GST_VIDEO_ORIENTATION_IDENTITY,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
 
  /**
    * waylandsink:drm-device:
