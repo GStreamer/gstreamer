@@ -4535,7 +4535,7 @@
       <constant value="1" ctype="gint" gtype="gint"     name="VERSION_MAJOR" />
       <constant value="3" ctype="gint" gtype="gint"     name="VERSION_MICRO" />
       <constant value="26" ctype="gint" gtype="gint"     name="VERSION_MINOR" />
-      <constant value="0" ctype="gint" gtype="gint"        name="VERSION_NANO" />
+      <constant value="1" ctype="gint" gtype="gint"         name="VERSION_NANO" />
     </object>
   </namespace>
 </api>
