@@ -1365,7 +1365,7 @@ Otherwise FALSE will be returned.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">The data type of the tensor</doc>
             <type name="TensorDataType" c:type="GstTensorDataType"/>
           </parameter>
-          <parameter name="data" transfer-ownership="full">
+          <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">#GstBuffer holding tensor data</doc>
             <type name="Gst.Buffer" c:type="GstBuffer*"/>
           </parameter>
@@ -1628,7 +1628,7 @@ Otherwise NULL will be returned.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">The data type of the tensor</doc>
             <type name="TensorDataType" c:type="GstTensorDataType"/>
           </parameter>
-          <parameter name="data" transfer-ownership="full">
+          <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensormeta.c">#GstBuffer holding tensor data</doc>
             <type name="Gst.Buffer" c:type="GstBuffer*"/>
           </parameter>

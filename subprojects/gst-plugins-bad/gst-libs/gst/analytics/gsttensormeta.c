@@ -213,13 +213,13 @@ gst_tensor_meta_get_by_id (GstTensorMeta * tmeta, GQuark id)
  * @order: The order of the tensor to read from the memory
  * @num_dims: The number of dimensions that the tensor can have
  * @data_type: The data type of the tensor
- * @data: (transfer full): #GstBuffer holding tensor data
+ * @data: #GstBuffer holding tensor data
  *
  * Get the first tensor from the #GstTensorMeta identified by @tensor_id, mathcing
  * the reading order, dimensions and the data type.
  * Validate whether the #GstBuffer has enough size to hold the tensor data.
  *
- * Return: (nullable)(transfer none): a GstTensor with id matching @tensor_id,
+ * Return: (nullable) (transfer none): a GstTensor with id matching @tensor_id,
  * reading order from the memory matching @order, dimensions matching @num_dims,
  * data type matching @data_type. The #GstBuffer mathcing @data should
  * have enough size to hold the tensor data.

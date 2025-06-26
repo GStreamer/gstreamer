@@ -263,7 +263,7 @@ gst_tensor_data_type_get_name (GstTensorDataType data_type)
  * @order: The order of the tensor to read from the memory
  * @num_dims: The number of dimensions that the tensor can have
  * @data_type: The data type of the tensor
- * @data: (transfer full): #GstBuffer holding tensor data
+ * @data: #GstBuffer holding tensor data
  *
  * Validate the tensor whether it mathces the reading order, dimensions and the data type.
  * Validate whether the #GstBuffer has enough size to hold the tensor data.
