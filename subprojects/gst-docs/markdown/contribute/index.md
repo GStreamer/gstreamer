@@ -815,3 +815,16 @@ or not later.
 
 [needs-backport]: https://gitlab.freedesktop.org/groups/gstreamer/-/merge_requests?state=merged&label_name[]=Needs%20backport
 [maybe-backport]: https://gitlab.freedesktop.org/groups/gstreamer/-/merge_requests?state=merged&label_name[]=Maybe%20backport
+
+## Deleting branch in your personal fork when Merge Request gets merged
+
+When filing a Merge Request in GitLab, there's a checkbox that can be ticked
+to make GitLab automatically delete the feature branch in your personal fork
+when the Merge Request gets merged.
+
+This only works if the GitLab user merging the Merge Request has developer
+permissions in your personal fork though, so to make this work you will need
+to add the GStreamer Marge bot user as member to your personal fork.
+
+Alternatively there's a "Delete merged branches" menu item in the vertical dots
+menu on the "Branches" page of your personal fork in GitLab.
