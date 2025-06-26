@@ -312,16 +312,20 @@ gst_adaptive_demux2_stream_finish_download (GstAdaptiveDemux2Stream *
       GST_ADAPTIVE_DEMUX2_STREAM_GET_CLASS (stream);
 
   GST_DEBUG_OBJECT (stream,
-      "%s download finish: %d %s - err: %p", uritype (stream), ret,
-      gst_flow_get_name (ret), err);
+      "%s download finish: %d %s - err: %p, segment rate: %f", uritype (stream),
+      ret, gst_flow_get_name (ret), err, stream->demux->segment.rate);
 
   stream->download_finished = TRUE;
 
   /* finish_fragment might call gst_adaptive_demux2_stream_advance_fragment,
    * which can look at the last_ret - so make sure it's stored before calling that.
    * Also, for not-linked or other errors passed in that are going to make
-   * this stream stop, we'll need to store it */
-  stream->last_ret = ret;
+   * this stream stop, we'll need to store it.
+   * BUT: Don't set last_ret to EOS yet if we're in reverse playback, as we need
+   * to try advancing to the previous fragment first. */
+  if (ret != GST_FLOW_EOS || stream->demux->segment.rate >= 0.0) {
+    stream->last_ret = ret;
+  }
 
   if (err) {
     g_clear_error (&stream->last_error);
@@ -360,6 +364,9 @@ gst_adaptive_demux2_stream_finish_download (GstAdaptiveDemux2Stream *
   } else if (!klass->need_another_chunk || stream->fragment.chunk_size == -1
       || !klass->need_another_chunk (stream)
       || stream->fragment.chunk_size == 0) {
+    GST_DEBUG_OBJECT (stream,
+        "Fragment download complete, calling finish_fragment (segment rate: %f)",
+        stream->demux->segment.rate);
     stream->fragment.finished = TRUE;
     ret = klass->finish_fragment (stream);
 
@@ -397,7 +404,6 @@ gst_adaptive_demux2_stream_finish_download (GstAdaptiveDemux2Stream *
    * to load */
   if (ret == GST_FLOW_EOS) {
     stream->last_ret = ret;
-
     gst_adaptive_demux2_stream_handle_playlist_eos (stream);
     return;
   }
