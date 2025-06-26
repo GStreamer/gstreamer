@@ -1930,7 +1930,7 @@ static const GstClockTime times5[] = {
   3097518938513564, 3097518907369715
 };
 
-struct test_entry
+static const struct test_entry
 {
   gint n;
   const GstClockTime *v;
