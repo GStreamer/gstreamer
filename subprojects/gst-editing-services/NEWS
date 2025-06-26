@@ -1809,6 +1809,213 @@ List of merge requests and issues fixed in 1.26.2
 -   List of Merge Requests applied in 1.26.2
 -   List of Issues fixed in 1.26.2
 
+1.26.3
+
+The third 1.26 bug-fix release (1.26.3) was released on 26 June 2025.
+
+This release only contains bugfixes including some important playback fixes, and it should be safe to update from 1.26.x.
+
+Highlighted bugfixes in 1.26.3
+
+-   Security fix for the H.266 video parser
+-   Fix regression for WAV files with acid chunks
+-   Fix high memory consumption caused by a text handling regression in uridecodebin3 and playbin3
+-   Fix panic on late GOP in fragmented MP4 muxer
+-   Closed caption conversion, rendering and muxing improvements
+-   Decklink video sink preroll frame rendering and clock drift handling fixes
+-   MPEG-TS demuxing and muxing fixes
+-   MP4 muxer fixes for creating very large files with faststart support
+-   New thread-sharing 1:N inter source and sink elements, and a ts-rtpdtmfsrc
+-   New speech synthesis element around ElevenLabs API
+-   RTP H.265 depayloader fixes and improvements, as well as TWCC and GCC congestion control fixes
+-   Seeking improvements in DASH client for streams with gaps
+-   WebRTC sink and source fixes and enhancements, including to LiveKit and WHIP signallers
+-   The macOS osxvideosink now posts navigation messages
+-   QtQML6GL video sink input event handling improvements
+-   Overhaul detection of hardware-accelerated video codecs on Android
+-   Video4Linux capture source fixes and support for BT.2100 PQ and 1:4:5:3 colorimetry
+-   Vulkan buffer upload and memory handling regression fixes
+-   gst-python: fix various regressions introduced in 1.26.2
+-   cerbero: fix text relocation issues on 32-bit Android and fix broken VisualStudio VC templates
+-   packages: ship pbtypes plugin and update openssl to 3.5.0 LTS
+-   Various bug fixes, build fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   aggregator: Do not set event seqnum to INVALID
+-   baseparse: test: Fix race on test start
+-   pad: Only remove TAG events on STREAM_START if the stream-id actually changes
+-   utils: Mark times array as static to avoid symbol conflict with the POSIX function
+-   vecdeque: Use correct index type gst_vec_deque_drop_struct()
+
+gst-plugins-base
+
+-   GstAudioAggregator: fix structure unref in peek_next_sample()
+-   audioconvert: Fix setting mix-matrix when input caps changes
+-   encodebasebin: Duplicate encoding profile in property setter
+-   gl: simplify private gst_gl_gst_meta_api_type_tags_contain_only()
+-   osxvideosink: Use gst_pad_push_event() and post navigation messages
+-   playsink: Fix race condition in stream synchronizer pad cleanup during state changes
+-   python: Fix pulling events from appsink
+-   streamsynchronizer: Consider streams having received stream-start as waiting
+-   urisourcebin: Text tracks are no longer set as sparse stream in urisourcebin’s multiqueue
+
+gst-plugins-good
+
+-   aacparse: Fix counting audio channels in program_config_element
+-   adaptivedemux2: free cancellable when freeing transfer task
+-   dashdemux2: Fix seeking in a stream with gaps
+-   decodebin wavparse cannot pull header
+-   imagefreeze: fix not negotiate log when stop
+-   osxvideosink: Use gst_pad_push_event() and post navigation messages
+-   qml6glsink: Allow configuring if the item will consume input events
+-   qtmux: Update chunk offsets when converting stco to co64 with faststart
+-   splitmuxsink: Only send closed message once per open fragment
+-   rtph265depay: CRA_NUT can also start an (open) GOP
+-   rtph265depay: fix codec_data generation
+-   rtspsrc: Don’t emit error during close if server is EOF
+-   twcc: Fix reference timestamp wrapping (again)
+-   v4l2: Fix possible internal pool leak
+-   v4l2object: Add support for colorimetry bt2100-pq and 1:4:5:3
+-   wavparse: Don’t error out always when parsing acid chunks
+
+gst-plugins-bad
+
+-   amc: Overhaul hw-accelerated video codecs detection
+-   bayer2rgb: Fix RGB stride calculation
+-   d3d12compositor: Fix critical warnings
+-   dashsink: Fix failing test
+-   decklink: calculate internal using values closer to the current clock times
+-   decklinkvideosink: show preroll frame correctly
+-   decklink: clock synchronization after pause
+-   h266parser: Fix overflow when parsing subpic_level_info
+-   lcevcdec: Check for errors after receiving all enhanced and base pictures
+-   meson: fix building -bad tests with disabled soundtouch
+-   mpegts: handle MPEG2-TS with KLV metadata safely by preventing out of bounds
+-   mpegtsmux: Corrections around Teletext handling
+-   srtsink: Fix header buffer filtering
+-   transcoder: Fix uritranscodebin reference handling
+-   tsdemux: Allow access unit parsing failures
+-   tsdemux: Send new-segment before GAP
+-   vulkanupload: fix regression for uploading VulkanBuffer
+-   vulkanupload: fix regression when uploading to single memory multiplaned memory images.
+-   webrtcbin: disconnect signal ICE handlers on dispose
+-   {d3d12,d3d11}compositor: Fix negative position handling
+-   {nv,d3d12,d3d11}decoder: Use interlace info in input caps
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+-   Add new speech synthesis element around ElevenLabs API
+-   cea708mux: fix another WouldOverflow case
+-   cea708mux: support configuring a limit to how much data will be pending
+-   cea708overlay: also reset the output size on flush stop
+-   gcc: handle out of order packets
+-   fmp4mux: Fix panic on late GOP
+-   livekit: expose a connection state property
+-   mp4mux: add taic box
+-   mp4mux: test the trak structure
+-   pcap_writer: Make target-property and pad-path properties writable again
+-   skia: Don’t build skia plugin by default for now
+-   threadshare: cleanups & usability improvements
+-   threadshare: sync runtime with latest async-io
+-   threadshare: fix kqueue reactor
+-   threadshare: Update to getifaddrs 0.2
+-   threadshare: add new thread-sharing inter elements
+-   threadshare: add a ts-rtpdtmfsrc element
+-   transcriberbin: fix naming of subtitle pads
+-   tttocea708: don’t panic if a new service would overflow
+-   webrtc: android: Update Gradle and migrate to FindGStreamerMobile
+-   webrtc: add new examples for stream selection over data channel
+-   webrtcsrc: the webrtcbin get-transceiver index is not mlineindex
+-   webrtcsrc: send CustomUpstream events over control channel ..
+-   webrtcsink: Don’t require encoder element for pre-encoded streams
+-   webrtcsink: Don’t reject caps events if the codec_data changes
+-   whip: server: pick session-id from the endpoint if specified
+-   cargo: add config file to force CARGO_NET_GIT_FETCH_WITH_CLI=true
+-   Cargo.lock, deny: Update dependencies and log duplicated targo-lexicon
+-   Update windows-sys dependency from “>=0.52, <=0.59” to “>=0.52, <=0.60”
+-   deny: Add override for windows-sys 0.59
+-   deny: Update lints
+-   cargo_wrapper: Fix backslashes being parsed as escape codes on Windows
+-   Fixes for Clock: non-optional return types
+-   Rename relationmeta plugin to analytics
+
+gst-libav
+
+-   No changes
+
+gst-rtsp-server
+
+-   rtsp-server: tests: Fix a few memory leaks
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-python
+
+This release includes some important regression fixes for the GStreamer Python bindings for regressions introduced in 1.26.2.
+
+-   gst-python/tests: don’t depend on webrtc and rtsp-server
+-   python: Fix pulling events from appsink and other fixes
+
+gst-editing-services
+
+-   No changes
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   validate: More memory leaks
+-   validate: Valgrind fixes
+
+gst-examples
+
+-   No changes
+
+gstreamer-docs
+
+-   No changes
+
+Development build environment
+
+-   gst-env: Emit a warning about DYLD_LIBRARY_PATH on macOS
+
+Cerbero build tool and packaging changes in 1.26.3
+
+-   WiX: fix broken VC templates
+-   android: Don’t ignore text relocation errors on 32-bit, and error out if any are found
+-   build: source: handle existing .cargo/config.toml as in plugins-rs
+-   ci: Detect text relocations when building android examples
+-   gst-plugins-base: Ship pbtypes
+-   gst-plugins-base: Fix category of pbtypes
+-   gst-plugins-rs: Update for relationmeta -> analytics plugin rename
+-   libsoup.recipe: XML-RPC support was removed before the 3.0 release
+-   openssl: Update to 3.5.0 LTS
+
+Contributors to 1.26.3
+
+Albert Sjolund, Aleix Pol, Ben Butterworth, Brad Hards, César Alejandro Torrealba Vázquez, Changyong Ahn, Doug Nazar, Edward
+Hervey, Elliot Chen, Enrique Ocaña González, François Laignel, Glyn Davies, He Junyan, Jakub Adam, James Cowgill, Jan Alexander
+Steffens (heftig), Jan Schmidt, Jochen Henneberg, Johan Sternerup, Julian Bouzas, L. E. Segovia, Loïc Le Page, Mathieu
+Duponchelle, Matthew Waters, Nicolas Dufresne, Nirbheek Chauhan, Philippe Normand, Pratik Pachange, Qian Hu (胡骞), Sebastian
+Dröge, Seungha Yang, Taruntej Kanakamalla, Théo Maillart, Thibault Saunier, Tim-Philipp Müller, Víctor Manuel Jáquez Leal,
+Xavier Claessens,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.26.3
+
+-   List of Merge Requests applied in 1.26.3
+-   List of Issues fixed in 1.26.3
+
 Schedule for 1.28
 
 Our next major feature release will be 1.28, and 1.27 will be the unstable development version leading up to the stable 1.28
