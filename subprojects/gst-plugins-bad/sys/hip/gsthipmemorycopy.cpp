@@ -1279,6 +1279,7 @@ gst_hip_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   auto self = GST_HIP_MEMORY_COPY (trans);
   auto priv = self->priv;
 
+#ifdef HAVE_GST_GL
   if (priv->transfer_type == TransferType::GL_TO_HIP ||
       priv->transfer_type == TransferType::HIP_TO_GL) {
     if (gst_hip_memory_copy_gl_copy (self, inbuf, outbuf)) {
@@ -1290,6 +1291,8 @@ gst_hip_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
         "GL interop copy failed, fallback to system copy");
     priv->transfer_type = TransferType::SYSTEM;
   }
+#endif
+
 #ifdef HAVE_GST_CUDA
   if (priv->transfer_type == TransferType::HIP_TO_CUDA ||
       priv->transfer_type == TransferType::CUDA_TO_HIP) {
