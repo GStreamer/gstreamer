@@ -119,7 +119,6 @@ struct _GstV4l2CodecMpeg2Dec
   GstV4l2CodecAllocator *src_allocator;
   GstV4l2CodecPool *src_pool;
   gint min_pool_size;
-  gboolean has_videometa;
   gboolean streaming;
 
   GstMemory *bitstream;
@@ -376,6 +375,7 @@ gst_v4l2_codec_mpeg2_dec_decide_allocation (GstVideoDecoder * decoder,
   GstV4l2CodecMpeg2Dec *self = GST_V4L2_CODEC_MPEG2_DEC (decoder);
   GstCaps *caps = NULL;
   guint min = 0, num_bitstream;
+  gboolean has_videometa;
 
   /* If we are streaming here, then it means there is nothing allocation
    * related in the new state and allocation can be ignored */
@@ -386,7 +386,7 @@ gst_v4l2_codec_mpeg2_dec_decide_allocation (GstVideoDecoder * decoder,
   g_clear_object (&self->src_allocator);
   g_clear_object (&self->sink_allocator);
 
-  self->has_videometa = gst_query_find_allocation_meta (query,
+  has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
 
   gst_query_parse_allocation (query, &caps, NULL);
@@ -395,14 +395,14 @@ gst_v4l2_codec_mpeg2_dec_decide_allocation (GstVideoDecoder * decoder,
     return FALSE;
   }
 
-  if (gst_video_is_dma_drm_caps (caps) && !self->has_videometa) {
+  if (gst_video_is_dma_drm_caps (caps) && !has_videometa) {
     GST_ERROR_OBJECT (self,
         "DMABuf caps negotiated without the mandatory support of VideoMeta");
     return FALSE;
   }
 
   /* Check if we can zero-copy buffers */
-  if (!self->has_videometa) {
+  if (!has_videometa) {
     GstVideoInfo ref_vinfo;
     gint i;
 
