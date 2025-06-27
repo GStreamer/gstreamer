@@ -27,6 +27,8 @@
 #include <audioclient.h>
 #include <mmdeviceapi.h>
 #include <winternl.h>
+#include <mutex>
+#include <string.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_wasapi2_debug);
 #define GST_CAT_DEFAULT gst_wasapi2_debug
@@ -320,7 +322,7 @@ gst_wasapi2_util_waveformatex_to_channel_mask (WAVEFORMATEX * format,
 
   /* Too many channels, have to assume that they are all non-positional */
   if (nChannels > G_N_ELEMENTS (wasapi_to_gst_pos)) {
-    GST_INFO ("Got too many (%i) channels, assuming non-positional", nChannels);
+    GST_LOG ("Got too many (%i) channels, assuming non-positional", nChannels);
     goto out;
   }
 
@@ -344,7 +346,7 @@ gst_wasapi2_util_waveformatex_to_channel_mask (WAVEFORMATEX * format,
 
   /* XXX: Warn if some channel masks couldn't be mapped? */
 
-  GST_DEBUG ("Converted WASAPI mask 0x%" G_GINT64_MODIFIER "x -> 0x%"
+  GST_TRACE ("Converted WASAPI mask 0x%" G_GINT64_MODIFIER "x -> 0x%"
       G_GINT64_MODIFIER "x", (guint64) dwChannelMask, (guint64) mask);
 
 out:
@@ -377,10 +379,10 @@ gst_wasapi2_util_waveformatex_to_audio_format (WAVEFORMATEX * format)
     case WAVE_FORMAT_EXTENSIBLE:
     {
       WAVEFORMATEXTENSIBLE *ex = (WAVEFORMATEXTENSIBLE *) format;
-      if (IsEqualGUID (&ex->SubFormat, &KSDATAFORMAT_SUBTYPE_PCM)) {
+      if (IsEqualGUID (ex->SubFormat, KSDATAFORMAT_SUBTYPE_PCM)) {
         fmt = gst_audio_format_build_integer (TRUE, G_LITTLE_ENDIAN,
             format->wBitsPerSample, ex->Samples.wValidBitsPerSample);
-      } else if (IsEqualGUID (&ex->SubFormat, &KSDATAFORMAT_SUBTYPE_IEEE_FLOAT)) {
+      } else if (IsEqualGUID (ex->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT)) {
         if (format->wBitsPerSample == 32
             && ex->Samples.wValidBitsPerSample == 32)
           fmt = GST_AUDIO_FORMAT_F32LE;
@@ -453,9 +455,8 @@ gst_wasapi2_can_automatic_stream_routing (void)
   return TRUE;
 #else
   static gboolean ret = FALSE;
-  static gsize version_once = 0;
 
-  if (g_once_init_enter (&version_once)) {
+  GST_WASAPI2_CALL_ONCE_BEGIN {
     OSVERSIONINFOEXW osverinfo;
     typedef NTSTATUS (WINAPI fRtlGetVersion) (PRTL_OSVERSIONINFOEXW);
     fRtlGetVersion *RtlGetVersion = NULL;
@@ -481,11 +482,10 @@ gst_wasapi2_can_automatic_stream_routing (void)
 
     if (hmodule)
       FreeLibrary (hmodule);
-
-    g_once_init_leave (&version_once, 1);
   }
+  GST_WASAPI2_CALL_ONCE_END;
 
-  GST_INFO ("Automatic stream routing support: %d", ret);
+  GST_TRACE ("Automatic stream routing support: %d", ret);
 
   return ret;
 #endif
@@ -500,9 +500,8 @@ gst_wasapi2_can_process_loopback (void)
   return FALSE;
 #else
   static gboolean ret = FALSE;
-  static gsize version_once = 0;
 
-  if (g_once_init_enter (&version_once)) {
+  GST_WASAPI2_CALL_ONCE_BEGIN {
     OSVERSIONINFOEXW osverinfo;
     typedef NTSTATUS (WINAPI fRtlGetVersion) (PRTL_OSVERSIONINFOEXW);
     fRtlGetVersion *RtlGetVersion = NULL;
@@ -535,9 +534,8 @@ gst_wasapi2_can_process_loopback (void)
 
     if (hmodule)
       FreeLibrary (hmodule);
-
-    g_once_init_leave (&version_once, 1);
   }
+  GST_WASAPI2_CALL_ONCE_END;
 
   GST_INFO ("Process loopback support: %d", ret);
 
@@ -552,7 +550,7 @@ gst_wasapi2_get_default_mix_format (void)
 
   /* virtual loopback device might not provide mix format. Create our default
    * mix format */
-  format = CoTaskMemAlloc (sizeof (WAVEFORMATEX));
+  format = (WAVEFORMATEX *) CoTaskMemAlloc (sizeof (WAVEFORMATEX));
   format->wFormatTag = WAVE_FORMAT_PCM;
   format->nChannels = 2;
   format->nSamplesPerSec = 44100;
@@ -561,4 +559,47 @@ gst_wasapi2_get_default_mix_format (void)
   format->nAvgBytesPerSec = format->nSamplesPerSec * format->nBlockAlign;
 
   return format;
+}
+
+const wchar_t *
+gst_wasapi2_get_default_device_id_wide (EDataFlow flow)
+{
+  static wchar_t *capture = nullptr;
+  static wchar_t *render = nullptr;
+
+  GST_WASAPI2_CALL_ONCE_BEGIN {
+    StringFromIID (DEVINTERFACE_AUDIO_CAPTURE, &capture);
+    StringFromIID (DEVINTERFACE_AUDIO_RENDER, &render);
+  } GST_WASAPI2_CALL_ONCE_END;
+
+  if (flow == eCapture)
+    return (const wchar_t *) capture;
+
+  return (const wchar_t *) render;
+}
+
+const char *
+gst_wasapi2_get_default_device_id (EDataFlow flow)
+{
+  static char *capture = nullptr;
+  static char *render = nullptr;
+
+  GST_WASAPI2_CALL_ONCE_BEGIN {
+    auto wstr = gst_wasapi2_get_default_device_id_wide (eCapture);
+    if (wstr) {
+      capture = g_utf16_to_utf8 ((const gunichar2 *) wstr,
+          -1, nullptr, nullptr, nullptr);
+    }
+
+    wstr = gst_wasapi2_get_default_device_id_wide (eRender);
+    if (wstr) {
+      render = g_utf16_to_utf8 ((const gunichar2 *) wstr,
+          -1, nullptr, nullptr, nullptr);
+    }
+  } GST_WASAPI2_CALL_ONCE_END;
+
+  if (flow == eCapture)
+    return (const char *) capture;
+
+  return (const char *) render;
 }

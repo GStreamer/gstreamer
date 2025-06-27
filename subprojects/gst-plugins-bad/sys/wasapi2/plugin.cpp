@@ -41,7 +41,7 @@ plugin_deinit (gpointer data)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GstRank rank = GST_RANK_PRIMARY + 1;
+  guint rank = GST_RANK_PRIMARY + 1;
   HRESULT hr;
 
   /**
@@ -52,7 +52,7 @@ plugin_init (GstPlugin * plugin)
 
   hr = MFStartup (MF_VERSION, MFSTARTUP_NOSOCKET);
   if (!gst_wasapi2_result (hr)) {
-    GST_WARNING ("MFStartup failure, hr: 0x%x", hr);
+    GST_WARNING ("MFStartup failure, hr: 0x%x", (guint) hr);
     return TRUE;
   }
 
@@ -63,10 +63,11 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin, "wasapi2sink", rank, GST_TYPE_WASAPI2_SINK);
   gst_element_register (plugin, "wasapi2src", rank, GST_TYPE_WASAPI2_SRC);
 
-  gst_wasapi2_device_provider_register (plugin, rank);
+  gst_device_provider_register (plugin, "wasapi2deviceprovider", rank,
+      GST_TYPE_WASAPI2_DEVICE_PROVIDER);
 
   g_object_set_data_full (G_OBJECT (plugin),
-      "plugin-wasapi2-shutdown", "shutdown-data",
+      "plugin-wasapi2-shutdown", (gpointer) "shutdown-data",
       (GDestroyNotify) plugin_deinit);
 
   return TRUE;

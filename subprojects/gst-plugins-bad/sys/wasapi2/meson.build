@@ -1,11 +1,13 @@
 wasapi2_sources = [
   'gstwasapi2src.c',
   'gstwasapi2sink.c',
-  'gstwasapi2util.c',
+  'gstwasapi2util.cpp',
   'gstwasapi2client.cpp',
-  'gstwasapi2device.c',
+  'gstwasapi2device.cpp',
   'gstwasapi2ringbuffer.cpp',
-  'plugin.c',
+  'gstwasapi2activator.cpp',
+  'gstwasapi2enumerator.cpp',
+  'plugin.cpp',
 ]
 
 wasapi2_headers = [
@@ -15,6 +17,7 @@ wasapi2_headers = [
   'gstwasapi2src.h',
   'gstwasapi2sink.h',
   'gstwasapi2client.h',
+  'gstwasapi2object.h',
   'AsyncOperations.h',
 ]
 
@@ -163,6 +166,7 @@ gstwasapi2 = library('gstwasapi2',
   cpp_args : gst_plugins_bad_args + extra_args + extra_cpp_args,
   include_directories : [configinc],
   dependencies : [gstaudio_dep, gstwinrt_dep] + wasapi2_dep,
+  override_options : ['cpp_std=c++14'],
   install : true,
   install_dir : plugins_install_dir)
 plugins += [gstwasapi2]

@@ -84,12 +84,9 @@ typedef struct
 } GST_AUDIOCLIENT_ACTIVATION_PARAMS;
 /* End of audioclientactivationparams.h */
 
-G_BEGIN_DECLS
-
 GST_DEBUG_CATEGORY_EXTERN (gst_wasapi2_client_debug);
 #define GST_CAT_DEFAULT gst_wasapi2_client_debug
 
-G_END_DECLS
 /* *INDENT-ON* */
 
 static void
