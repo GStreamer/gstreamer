@@ -401,6 +401,28 @@ gst_v4l2_codec_mpeg2_dec_decide_allocation (GstVideoDecoder * decoder,
     return FALSE;
   }
 
+  /* Check if we can zero-copy buffers */
+  if (!self->has_videometa) {
+    GstVideoInfo ref_vinfo;
+    gint i;
+
+    gst_video_info_set_format (&ref_vinfo,
+        GST_VIDEO_INFO_FORMAT (&self->vinfo_drm.vinfo), self->width,
+        self->height);
+
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->vinfo_drm.vinfo); i++) {
+      if (self->vinfo_drm.vinfo.stride[i] != ref_vinfo.stride[i] ||
+          self->vinfo_drm.vinfo.offset[i] != ref_vinfo.offset[i]) {
+        GST_WARNING_OBJECT (self,
+            "GstVideoMeta support required, copying frames.");
+        self->copy_frames = TRUE;
+        break;
+      }
+    }
+  } else {
+    self->copy_frames = FALSE;
+  }
+
   if (gst_query_get_n_allocation_pools (query) > 0)
     gst_query_parse_nth_allocation_pool (query, 0, NULL, NULL, &min, NULL);
 
@@ -527,28 +549,6 @@ gst_v4l2_codec_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
   } else {
     self->need_sequence = TRUE;
     self->need_quantiser = TRUE;
-  }
-
-  /* Check if we can zero-copy buffers */
-  if (!self->has_videometa) {
-    GstVideoInfo ref_vinfo;
-    gint i;
-
-    gst_video_info_set_format (&ref_vinfo,
-        GST_VIDEO_INFO_FORMAT (&self->vinfo_drm.vinfo), self->width,
-        self->height);
-
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->vinfo_drm.vinfo); i++) {
-      if (self->vinfo_drm.vinfo.stride[i] != ref_vinfo.stride[i] ||
-          self->vinfo_drm.vinfo.offset[i] != ref_vinfo.offset[i]) {
-        GST_WARNING_OBJECT (self,
-            "GstVideoMeta support required, copying frames.");
-        self->copy_frames = TRUE;
-        break;
-      }
-    }
-  } else {
-    self->copy_frames = FALSE;
   }
 
   return GST_FLOW_OK;
