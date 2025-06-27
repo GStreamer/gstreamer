@@ -1470,19 +1470,20 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
     ret = tmp;
   } else {
     gint i, n;
-    GstCaps *tmp_caps;
 
-    /* The src caps may only contain RGBA format, and we should list
-       all possible supported formats to detect the conversion for
-       DMABuf kind memory. */
-    tmp_caps = gst_caps_copy (caps);
-    for (i = 0; i < gst_caps_get_size (tmp_caps); i++)
-      _set_default_formats_list (gst_caps_get_structure (tmp_caps, i));
-
-    ret = _dma_buf_upload_transform_caps_common (tmp_caps, context, direction,
+    /* The src caps may only contain RGBA format, which in turn should expend to
+     * any support modifier. We rely on the EGL stack for the color conversion */
+    ret = _dma_buf_upload_transform_caps_common (caps, context, direction,
         flags, 1 << dmabuf->target, GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
         GST_CAPS_FEATURE_MEMORY_DMABUF);
-    gst_caps_unref (tmp_caps);
+
+    if (context && ret) {
+      GValue direct_fmts = G_VALUE_INIT;
+      g_value_init (&direct_fmts, GST_TYPE_LIST);
+      gst_gl_context_egl_format_list_all_drm_formats (context, &direct_fmts);
+      gst_caps_set_value_static_str (ret, "drm-format", &direct_fmts);
+      g_value_unset (&direct_fmts);
+    }
 
     tmp = _dma_buf_upload_transform_caps_common (caps, context, direction,
         flags, 1 << dmabuf->target, GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
