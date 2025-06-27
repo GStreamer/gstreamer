@@ -259,6 +259,8 @@ struct _MpegTSPacketizer2 {
 
   /* clock skew calculation */
   gboolean       calculate_skew;
+  /* skew_correction: apply skew correction to values */
+  gboolean       skew_correction;
 
   /* offset/bitrate calculator */
   gboolean       calculate_offset;
