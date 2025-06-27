@@ -507,6 +507,28 @@ gst_v4l2_codec_h265_dec_decide_allocation (GstVideoDecoder * decoder,
     return FALSE;
   }
 
+  /* Check if we can zero-copy buffers */
+  if (!self->has_videometa) {
+    GstVideoInfo ref_vinfo;
+    gint i;
+
+    gst_video_info_set_format (&ref_vinfo,
+        GST_VIDEO_INFO_FORMAT (&self->vinfo_drm.vinfo), self->display_width,
+        self->display_height);
+
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->vinfo_drm.vinfo); i++) {
+      if (self->vinfo_drm.vinfo.stride[i] != ref_vinfo.stride[i] ||
+          self->vinfo_drm.vinfo.offset[i] != ref_vinfo.offset[i]) {
+        GST_WARNING_OBJECT (self,
+            "GstVideoMeta support required, copying frames.");
+        self->copy_frames = TRUE;
+        break;
+      }
+    }
+  } else {
+    self->copy_frames = self->need_crop;
+  }
+
   if (gst_query_get_n_allocation_pools (query) > 0)
     gst_query_parse_nth_allocation_pool (query, 0, NULL, NULL, &min, NULL);
 
@@ -991,28 +1013,6 @@ gst_v4l2_codec_h265_dec_new_sequence (GstH265Decoder * decoder,
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return GST_FLOW_NOT_NEGOTIATED;
     }
-  }
-
-  /* Check if we can zero-copy buffers */
-  if (!self->has_videometa) {
-    GstVideoInfo ref_vinfo;
-    gint i;
-
-    gst_video_info_set_format (&ref_vinfo,
-        GST_VIDEO_INFO_FORMAT (&self->vinfo_drm.vinfo), self->display_width,
-        self->display_height);
-
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->vinfo_drm.vinfo); i++) {
-      if (self->vinfo_drm.vinfo.stride[i] != ref_vinfo.stride[i] ||
-          self->vinfo_drm.vinfo.offset[i] != ref_vinfo.offset[i]) {
-        GST_WARNING_OBJECT (self,
-            "GstVideoMeta support required, copying frames.");
-        self->copy_frames = TRUE;
-        break;
-      }
-    }
-  } else {
-    self->copy_frames = self->need_crop;
   }
 
   return GST_FLOW_OK;
