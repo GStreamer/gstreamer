@@ -501,10 +501,18 @@ gst_v4l2_codec_h265_dec_decide_allocation (GstVideoDecoder * decoder,
     return FALSE;
   }
 
-  if (gst_video_is_dma_drm_caps (caps) && !has_videometa) {
-    GST_ERROR_OBJECT (self,
-        "DMABuf caps negotiated without the mandatory support of VideoMeta");
-    return FALSE;
+  if (gst_video_is_dma_drm_caps (caps)) {
+    if (!has_videometa) {
+      GST_ERROR_OBJECT (self,
+          "DMABuf caps negotiated without the mandatory support of VideoMeta");
+      return FALSE;
+    }
+
+    if (self->need_crop) {
+      GST_ERROR_OBJECT (self,
+          "Frame cropping is not supported when DMABuf caps is negotiated.");
+      return FALSE;
+    }
   }
 
   /* Check if we can zero-copy buffers */
