@@ -971,10 +971,12 @@ gst_v4l2_codec_h265_dec_new_sequence (GstH265Decoder * decoder,
     self->crop_rect_x = sps->crop_rect_x;
     self->crop_rect_y = sps->crop_rect_y;
 
-    /* conformance_window_flag could be set but with zeroed
-     * parameters so check if we really need to crop */
-    self->need_crop |= self->crop_rect_width != sps->width;
-    self->need_crop |= self->crop_rect_height != sps->height;
+    /*
+     * Conformance_window_flag could be set but with zeroed
+     * parameters so check if we really need to crop. We only need
+     * to crop if the x/y are not zero, otherwise it can be handled by
+     * GstVideoMeta in a zero-copy fashion.
+     */
     self->need_crop |= self->crop_rect_x != 0;
     self->need_crop |= self->crop_rect_y != 0;
   }
