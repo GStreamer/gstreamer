@@ -1560,23 +1560,31 @@ _print_all_dma_formats (GstGLContext * context, GArray * dma_formats)
     dma_fmt = &g_array_index (dma_formats, GstGLDmaFormat, i);
 
     gst_fmt_str = gst_video_format_to_string
-        (gst_video_dma_drm_fourcc_to_format (dma_fmt->fourcc));
+        (gst_video_dma_drm_format_to_gst_format (dma_fmt->fourcc, 0));
 
-    g_string_append_printf (str, "\n| %-12s |", gst_fmt_str);
+    g_string_append_printf (str, "\n");
 
     if (!dma_fmt->modifiers) {
       fmt_str = gst_video_dma_drm_fourcc_to_string (dma_fmt->fourcc, 0);
+      g_string_append_printf (str, "| %-12s |", gst_fmt_str);
       g_string_append_printf (str, " %-23s |", fmt_str);
       g_string_append_printf (str, " %-13s |\n", "external only");
     } else {
       for (j = 0; j < dma_fmt->modifiers->len; j++) {
+        GstVideoFormat gst_fmt;
         dma_modifier = &g_array_index (dma_fmt->modifiers, GstGLDmaModifier, j);
+
+        gst_fmt = gst_video_dma_drm_format_to_gst_format (dma_fmt->fourcc,
+            dma_modifier->modifier);
+        gst_fmt_str = gst_video_format_to_string (gst_fmt);
+
+        if (gst_fmt == GST_VIDEO_FORMAT_UNKNOWN)
+          g_string_append_printf (str, "|              |");
+        else
+          g_string_append_printf (str, "| %-12s |", gst_fmt_str);
 
         fmt_str = gst_video_dma_drm_fourcc_to_string (dma_fmt->fourcc,
             dma_modifier->modifier);
-
-        if (j > 0)
-          g_string_append_printf (str, "|              |");
 
         g_string_append_printf (str, " %-23s |", fmt_str);
         g_string_append_printf (str, " %-13s |\n", dma_modifier->external_only ?
