@@ -109,7 +109,6 @@ struct _GstV4l2CodecH265Dec
   GstV4l2CodecAllocator *src_allocator;
   GstV4l2CodecPool *src_pool;
   gint min_pool_size;
-  gboolean has_videometa;
   gboolean streaming;
   gboolean copy_frames;
   gboolean need_sequence;
@@ -484,6 +483,7 @@ gst_v4l2_codec_h265_dec_decide_allocation (GstVideoDecoder * decoder,
   GstV4l2CodecH265Dec *self = GST_V4L2_CODEC_H265_DEC (decoder);
   GstCaps *caps = NULL;
   guint min = 0, num_bitstream;
+  gboolean has_videometa;
 
   if (self->streaming)
     goto no_internal_changes;
@@ -492,7 +492,7 @@ gst_v4l2_codec_h265_dec_decide_allocation (GstVideoDecoder * decoder,
   g_clear_object (&self->src_allocator);
   g_clear_object (&self->sink_allocator);
 
-  self->has_videometa = gst_query_find_allocation_meta (query,
+  has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
 
   gst_query_parse_allocation (query, &caps, NULL);
@@ -501,14 +501,14 @@ gst_v4l2_codec_h265_dec_decide_allocation (GstVideoDecoder * decoder,
     return FALSE;
   }
 
-  if (gst_video_is_dma_drm_caps (caps) && !self->has_videometa) {
+  if (gst_video_is_dma_drm_caps (caps) && !has_videometa) {
     GST_ERROR_OBJECT (self,
         "DMABuf caps negotiated without the mandatory support of VideoMeta");
     return FALSE;
   }
 
   /* Check if we can zero-copy buffers */
-  if (!self->has_videometa) {
+  if (!has_videometa) {
     GstVideoInfo ref_vinfo;
     gint i;
 
