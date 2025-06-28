@@ -22,7 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
-#include "gstwasapi2client.h"
+#include "gstwasapi2util.h"
 
 G_BEGIN_DECLS
 
@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GstWasapi2RingBuffer, gst_wasapi2_ring_buffer,
     GST, WASAPI2_RING_BUFFER, GstAudioRingBuffer);
 
-GstAudioRingBuffer *   gst_wasapi2_ring_buffer_new (GstWasapi2ClientDeviceClass device_class,
+GstAudioRingBuffer *   gst_wasapi2_ring_buffer_new (GstWasapi2EndpointClass device_class,
                                                     gboolean low_latency,
                                                     const gchar *device_id,
                                                     gpointer dispatcher,
