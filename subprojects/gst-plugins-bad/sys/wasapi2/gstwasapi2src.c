@@ -194,7 +194,7 @@ gst_wasapi2_src_class_init (GstWasapi2SrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
           "Audio device ID as provided by "
-          "Windows.Devices.Enumeration.DeviceInformation.Id",
+          "WASAPI device endpoint ID as provided by IMMDevice::GetId",
           NULL, GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS));
 
@@ -493,20 +493,19 @@ gst_wasapi2_src_create_ringbuffer (GstAudioBaseSrc * src)
   GstWasapi2Src *self = GST_WASAPI2_SRC (src);
   GstAudioRingBuffer *ringbuffer;
   gchar *name;
-  GstWasapi2ClientDeviceClass device_class =
-      GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE;
+  GstWasapi2EndpointClass device_class = GST_WASAPI2_ENDPOINT_CLASS_CAPTURE;
 
   if (self->loopback_pid) {
     if (self->loopback_mode == GST_WASAPI2_SRC_LOOPBACK_INCLUDE_PROCESS_TREE) {
       device_class =
-          GST_WASAPI2_CLIENT_DEVICE_CLASS_INCLUDE_PROCESS_LOOPBACK_CAPTURE;
+          GST_WASAPI2_ENDPOINT_CLASS_INCLUDE_PROCESS_LOOPBACK_CAPTURE;
     } else if (self->loopback_mode ==
         GST_WASAPI2_SRC_LOOPBACK_EXCLUDE_PROCESS_TREE) {
       device_class =
-          GST_WASAPI2_CLIENT_DEVICE_CLASS_EXCLUDE_PROCESS_LOOPBACK_CAPTURE;
+          GST_WASAPI2_ENDPOINT_CLASS_EXCLUDE_PROCESS_LOOPBACK_CAPTURE;
     }
   } else if (self->loopback) {
-    device_class = GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE;
+    device_class = GST_WASAPI2_ENDPOINT_CLASS_LOOPBACK_CAPTURE;
   }
 
   GST_DEBUG_OBJECT (self, "Device class %d", device_class);

@@ -124,7 +124,7 @@ gst_wasapi2_sink_class_init (GstWasapi2SinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
           "Audio device ID as provided by "
-          "Windows.Devices.Enumeration.DeviceInformation.Id",
+          "WASAPI device endpoint ID as provided by IMMDevice::GetId",
           NULL, GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS));
 
@@ -333,7 +333,7 @@ gst_wasapi2_sink_create_ringbuffer (GstAudioBaseSink * sink)
   name = g_strdup_printf ("%s-ringbuffer", GST_OBJECT_NAME (sink));
 
   ringbuffer =
-      gst_wasapi2_ring_buffer_new (GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER,
+      gst_wasapi2_ring_buffer_new (GST_WASAPI2_ENDPOINT_CLASS_RENDER,
       self->low_latency, self->device_id, self->dispatcher, name, 0);
 
   g_free (name);

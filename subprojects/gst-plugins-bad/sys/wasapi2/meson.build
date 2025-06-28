@@ -7,6 +7,7 @@ wasapi2_sources = [
   'gstwasapi2ringbuffer.cpp',
   'gstwasapi2activator.cpp',
   'gstwasapi2enumerator.cpp',
+  'gstwasapi2object.cpp',
   'plugin.cpp',
 ]
 
