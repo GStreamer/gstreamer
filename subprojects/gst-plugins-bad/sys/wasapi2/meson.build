@@ -2,7 +2,6 @@ wasapi2_sources = [
   'gstwasapi2src.c',
   'gstwasapi2sink.c',
   'gstwasapi2util.cpp',
-  'gstwasapi2client.cpp',
   'gstwasapi2device.cpp',
   'gstwasapi2ringbuffer.cpp',
   'gstwasapi2activator.cpp',
@@ -17,9 +16,7 @@ wasapi2_headers = [
   'gstwasapi2util.h',
   'gstwasapi2src.h',
   'gstwasapi2sink.h',
-  'gstwasapi2client.h',
   'gstwasapi2object.h',
-  'AsyncOperations.h',
 ]
 
 mmdeviceapi_symbols = [
@@ -48,11 +45,10 @@ endif
 
 ole32_dep = cc.find_library('ole32', required : get_option('wasapi2'))
 ksuser_dep = cc.find_library('ksuser', required : get_option('wasapi2'))
-runtimeobject_dep = cc.find_library('runtimeobject', required : get_option('wasapi2'))
 mmdeviceapi_dep = cc.find_library('mmdevapi', required : get_option('wasapi2'))
 mfplat_dep = cc.find_library('mfplat', required : get_option('wasapi2'))
-wasapi2_dep = [ole32_dep, ksuser_dep, runtimeobject_dep, mmdeviceapi_dep, mfplat_dep]
-extra_args = ['-DGST_USE_UNSTABLE_API']
+wasapi2_dep = [ole32_dep, ksuser_dep, mmdeviceapi_dep, mfplat_dep]
+extra_args = []
 
 foreach dep: wasapi2_dep
   if not dep.found()
@@ -81,40 +77,6 @@ foreach symbol: mmdeviceapi_symbols
     endif
   endif
 endforeach
-
-winapi_app = cxx.compiles('''#include <winapifamily.h>
-  #include <windows.applicationmodel.core.h>
-  #include <wrl.h>
-  #include <wrl/wrappers/corewrappers.h>
-  #include <audioclient.h>
-  #include <mmdeviceapi.h>
-  #if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
-  #error "not winrt"
-  #endif
-  int main (int argc, char ** argv) {
-    IAudioClient3 *client = NULL;
-    return 0;
-  } ''',
-  dependencies: wasapi2_dep,
-  name: 'building for WINAPI_PARTITION_APP')
-
-if not winapi_app
-  if wasapi2_option.enabled()
-    error('wasapi2 plugin was enabled explicitly, but build target is not include WINAPI_PARTITION_APP')
-  else
-    subdir_done()
-  endif
-endif
-
-winapi_desktop = cxx.compiles('''#include <winapifamily.h>
-    #if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
-    #error "not win32"
-    #endif''',
-    name: 'building for WINAPI_PARTITION_DESKTOP')
-
-if winapi_app and not winapi_desktop
-  extra_args += ['-DGST_WASAPI2_WINAPI_ONLY_APP']
-endif
 
 win10_sdk = cxx.compiles('''#include <windows.h>
     #ifndef WDK_NTDDI_VERSION
@@ -149,24 +111,12 @@ if not building_for_win10
   extra_args += ['-U_WIN32_WINNT', '-UWINVER', '-DWINVER=0x0A00', '-D_WIN32_WINNT=0x0A00', '-DNTDDI_VERSION=WDK_NTDDI_VERSION']
 endif
 
-if not gstwinrt_dep.found()
-  if wasapi2_option.enabled()
-    error('wasapi2 plugin was enabled explicitly, but GstWinRt library is unavailable')
-  else
-    subdir_done()
-  endif
-endif
-
-# Work around for Windows SDK header issue
-# https://docs.microsoft.com/en-us/cpp/build/reference/permissive-standards-conformance?view=msvc-160#windows-header-issues
-extra_cpp_args = cxx.get_supported_arguments(['/Zc:twoPhase-'])
-
 gstwasapi2 = library('gstwasapi2',
   wasapi2_sources,
-  c_args : gst_plugins_bad_args + ['-DCOBJMACROS'] + extra_args,
-  cpp_args : gst_plugins_bad_args + extra_args + extra_cpp_args,
+  c_args : gst_plugins_bad_args + extra_args,
+  cpp_args : gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
-  dependencies : [gstaudio_dep, gstwinrt_dep] + wasapi2_dep,
+  dependencies : [gstaudio_dep] + wasapi2_dep,
   override_options : ['cpp_std=c++14'],
   install : true,
   install_dir : plugins_install_dir)
