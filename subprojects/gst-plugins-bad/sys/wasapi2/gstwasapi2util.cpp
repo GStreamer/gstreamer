@@ -450,10 +450,6 @@ gst_wasapi2_util_parse_waveformatex (WAVEFORMATEX * format,
 gboolean
 gst_wasapi2_can_automatic_stream_routing (void)
 {
-#ifdef GST_WASAPI2_WINAPI_ONLY_APP
-  /* Assume we are on very recent OS */
-  return TRUE;
-#else
   static gboolean ret = FALSE;
 
   GST_WASAPI2_CALL_ONCE_BEGIN {
@@ -488,17 +484,11 @@ gst_wasapi2_can_automatic_stream_routing (void)
   GST_TRACE ("Automatic stream routing support: %d", ret);
 
   return ret;
-#endif
 }
 
 gboolean
 gst_wasapi2_can_process_loopback (void)
 {
-#ifdef GST_WASAPI2_WINAPI_ONLY_APP
-  /* FIXME: Needs WinRT (Windows.System.Profile) API call
-   * for OS version check */
-  return FALSE;
-#else
   static gboolean ret = FALSE;
 
   GST_WASAPI2_CALL_ONCE_BEGIN {
@@ -540,7 +530,6 @@ gst_wasapi2_can_process_loopback (void)
   GST_INFO ("Process loopback support: %d", ret);
 
   return ret;
-#endif
 }
 
 WAVEFORMATEX *
