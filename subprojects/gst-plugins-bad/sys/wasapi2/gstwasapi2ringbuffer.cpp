@@ -60,11 +60,13 @@ public:
   {
   }
 
+  virtual ~GstWasapiAsyncCallback () { }
+
   /* IUnknown */
   STDMETHODIMP_ (ULONG)
   AddRef (void)
   {
-    GST_TRACE ("%p, %d", this, ref_count_);
+    GST_TRACE ("%p, %u", this, (guint) ref_count_);
     return InterlockedIncrement (&ref_count_);
   }
   STDMETHODIMP_ (ULONG)
@@ -72,7 +74,7 @@ public:
   {
     ULONG ref_count;
 
-    GST_TRACE ("%p, %d", this, ref_count_);
+    GST_TRACE ("%p, %u", this, (guint) ref_count_);
     ref_count = InterlockedDecrement (&ref_count_);
 
     if (ref_count == 0) {
@@ -381,13 +383,14 @@ gst_wasapi2_ring_buffer_post_io_error (GstWasapi2RingBuffer * self, HRESULT hr)
 
   error_msg = gst_wasapi2_util_get_error_message (hr);
 
-  GST_ERROR_OBJECT (self, "Posting I/O error %s (hr: 0x%x)", error_msg, hr);
+  GST_ERROR_OBJECT (self, "Posting I/O error %s (hr: 0x%x)", error_msg,
+      (guint) hr);
   if (self->device_class == GST_WASAPI2_ENDPOINT_CLASS_RENDER) {
     GST_ELEMENT_ERROR (parent, RESOURCE, WRITE,
-        ("Failed to write to device"), ("%s, hr: 0x%x", error_msg, hr));
+        ("Failed to write to device"), ("%s, hr: 0x%x", error_msg, (guint) hr));
   } else {
     GST_ELEMENT_ERROR (parent, RESOURCE, READ,
-        ("Failed to read from device"), ("%s hr: 0x%x", error_msg, hr));
+        ("Failed to read from device"), ("%s hr: 0x%x", error_msg, (guint) hr));
   }
 
   g_free (error_msg);
@@ -542,7 +545,7 @@ gst_wasapi2_ring_buffer_read (GstWasapi2RingBuffer * self)
     g_assert (self->segoffset >= 0);
 
     len -= self->segoffset;
-    if (len > gap_size)
+    if (len > (gint) gap_size)
       len = gap_size;
 
     gst_audio_format_info_fill_silence (ringbuffer->spec.info.finfo,
@@ -565,7 +568,7 @@ gst_wasapi2_ring_buffer_read (GstWasapi2RingBuffer * self)
     }
 
     len -= self->segoffset;
-    if (len > to_read_bytes)
+    if (len > (gint) to_read_bytes)
       len = to_read_bytes;
 
     if (((flags & AUDCLNT_BUFFERFLAGS_SILENT) == AUDCLNT_BUFFERFLAGS_SILENT) ||
@@ -669,7 +672,7 @@ gst_wasapi2_ring_buffer_write (GstWasapi2RingBuffer * self, gboolean preroll)
 
     len -= self->segoffset;
 
-    if (len > can_write_bytes)
+    if (len > (gint) can_write_bytes)
       len = can_write_bytes;
 
     can_write = len / GST_AUDIO_INFO_BPF (&ringbuffer->spec.info);
@@ -1498,7 +1501,7 @@ gst_wasapi2_ring_buffer_get_mute (GstWasapi2RingBuffer * buf, gboolean * mute)
 HRESULT
 gst_wasapi2_ring_buffer_set_volume (GstWasapi2RingBuffer * buf, gfloat volume)
 {
-  HRESULT hr;
+  HRESULT hr = S_OK;
 
   g_return_val_if_fail (GST_IS_WASAPI2_RING_BUFFER (buf), E_INVALIDARG);
   g_return_val_if_fail (volume >= 0 && volume <= 1.0, E_INVALIDARG);
