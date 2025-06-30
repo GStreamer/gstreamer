@@ -494,7 +494,6 @@ gst_stream_synchronizer_handle_stream_start (GstStreamSynchronizer * self,
   gboolean have_group_id;
   GList *l;
   gboolean all_wait = TRUE;
-  gboolean others_not_wait = TRUE;
   gboolean new_stream = TRUE;
 
   have_group_id = gst_event_parse_group_id (event, &group_id);
@@ -550,35 +549,15 @@ gst_stream_synchronizer_handle_stream_start (GstStreamSynchronizer * self,
 
     stream->wait = TRUE;
 
-    /* This variable checks if all the other streams except this one
-       are not waiting. There's an initial special case: If there's only
-       one stream and it's this one, set to FALSE */
-    others_not_wait = self->streams != NULL && !(self->streams->next == NULL
-        && self->streams->data == stream);
-
     for (l = self->streams; l; l = l->next) {
       GstSyncStream *ostream = l->data;
-      /* This condition is reused for compuing both all_wait and
-         others_not_wait, but the former can also support sparse streams */
-      gboolean this_wait = ostream->wait && (!have_group_id
-          || ostream->group_id == group_id);
 
       all_wait = all_wait && ((ostream->flags & GST_STREAM_FLAG_SPARSE)
-          || this_wait);
-
-      if (ostream != stream) {
-        others_not_wait = others_not_wait && !this_wait;
-      }
+          || (ostream->wait && (!have_group_id
+                  || ostream->group_id == group_id)));
+      if (!all_wait)
+        break;
     }
-
-    /* When all the streams of a media have been waiting, all of them are
-       unblocked for playback, but if a new stream appears after that (this is
-       detected when stream-start comes), it will be waiting and unaware of
-       all its sibling streams having already been unblocked, leading to a
-       stall. All_but_this_nowait detects that case and automatically sets the
-       new stream (this one) as not waiting. */
-    if (others_not_wait)
-      stream->wait = FALSE;
 
     if (all_wait) {
       gint64 position = 0;
