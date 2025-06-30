@@ -259,7 +259,7 @@ gst_tensor_data_type_get_name (GstTensorDataType data_type)
 
 /**
  * gst_tensor_check_type:
- * @tmeta: A #GstTensor
+ * @tensor: A #GstTensor
  * @order: The order of the tensor to read from the memory
  * @num_dims: The number of dimensions that the tensor can have
  * @data_type: The data type of the tensor
