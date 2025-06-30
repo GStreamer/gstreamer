@@ -3,7 +3,7 @@
 
 #if GST_GL_HAVE_PLATFORM_EGL
 #include <gst/gl/egl/gstgldisplay_egl.h>
-#include <gst/gl/egl/gstglcontext_egl.h>
+#include <gst/gl/egl/gstglcontext_egl_private.h>
 #include <gst/gl/egl/gstglmemoryegl.h>
 #endif
 

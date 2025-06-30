@@ -25,7 +25,7 @@
 
 #include "../gstgl_fwd.h"
 #include <gst/gl/gstglcontext.h>
-#include <gst/gl/egl/gstglcontext_egl.h>
+#include <gst/gl/egl/gstglcontext_egl_private.h>
 
 #include "gstgldisplay_gbm.h"
 #include "gstglwindow_gbm_egl.h"

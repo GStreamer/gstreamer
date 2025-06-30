@@ -34,7 +34,7 @@
 #include "egl/gsteglimage_private.h"
 #include "egl/gsteglimagecache.h"
 #include "egl/gstglmemoryegl.h"
-#include "egl/gstglcontext_egl.h"
+#include "egl/gstglcontext_egl_private.h"
 #endif
 
 #if GST_GL_HAVE_DMABUF

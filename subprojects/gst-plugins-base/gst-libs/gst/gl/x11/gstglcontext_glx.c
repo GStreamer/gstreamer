@@ -35,7 +35,7 @@
 #include <gst/gl/gstglcontext.h>
 
 #include <gst/gl/gl.h>
-#include "gstglcontext_glx.h"
+#include "gstglcontext_glx_private.h"
 #include "../utils/opengl_versions.h"
 #include "../gstglcontext_private.h"
 

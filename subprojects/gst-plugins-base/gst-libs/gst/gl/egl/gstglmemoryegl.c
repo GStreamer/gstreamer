@@ -44,7 +44,7 @@
 
 #include "gstegl.h"
 #include "gsteglimage.h"
-#include "gstglcontext_egl.h"
+#include "gstglcontext_egl_private.h"
 
 static GstAllocator *_gl_memory_egl_allocator;
 

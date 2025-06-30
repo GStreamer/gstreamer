@@ -30,7 +30,7 @@
 
 #include <gst/gst.h>
 
-#include <gst/gl/egl/gstglcontext_egl.h>
+#include <gst/gl/egl/gstglcontext_egl_private.h>
 #include "gstglwindow_android_egl.h"
 #include "../gstglwindow_private.h"
 

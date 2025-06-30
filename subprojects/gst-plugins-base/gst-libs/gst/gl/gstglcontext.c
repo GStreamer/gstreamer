@@ -73,10 +73,10 @@
 #endif
 
 #if GST_GL_HAVE_PLATFORM_GLX
-#include "x11/gstglcontext_glx.h"
+#include "x11/gstglcontext_glx_private.h"
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL
-#include "egl/gstglcontext_egl.h"
+#include "egl/gstglcontext_egl_private.h"
 #endif
 #if GST_GL_HAVE_PLATFORM_CGL
 #include "cocoa/gstglcontext_cocoa.h"

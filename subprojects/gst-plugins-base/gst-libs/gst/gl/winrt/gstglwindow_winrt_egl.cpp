@@ -23,7 +23,7 @@
 #endif
 
 #include <gst/gl/gstglcontext.h>
-#include <gst/gl/egl/gstglcontext_egl.h>
+#include <gst/gl/egl/gstglcontext_egl_private.h>
 
 #include "gstglwindow_winrt_egl.h"
 #include "../gstglwindow_private.h"

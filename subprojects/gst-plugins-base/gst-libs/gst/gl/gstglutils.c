@@ -46,7 +46,7 @@
 #endif
 
 #if GST_GL_HAVE_PLATFORM_EGL
-#include "egl/gstglcontext_egl.h"
+#include "egl/gstglcontext_egl_private.h"
 #include "egl/gsteglimage.h"
 #if GST_GL_HAVE_DMABUF
 #ifdef HAVE_LIBDRM

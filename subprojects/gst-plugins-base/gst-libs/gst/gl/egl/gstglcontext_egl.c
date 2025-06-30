@@ -28,7 +28,7 @@
  * may need to box it.
  */
 
-#include "gstglcontext_egl.h"
+#include "gstglcontext_egl_private.h"
 
 #include <gst/gl/gl.h>
 #include <gst/gl/gstglcontext_private.h>

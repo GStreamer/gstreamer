@@ -47,7 +47,7 @@
 #include <gst/gl/gstglmemory.h>
 
 #include "gst/gl/egl/gstegl.h"
-#include "gst/gl/egl/gstglcontext_egl.h"
+#include "gst/gl/egl/gstglcontext_egl_private.h"
 #include "gst/gl/egl/gstgldisplay_egl.h"
 
 #if GST_GL_HAVE_DMABUF
