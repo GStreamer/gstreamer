@@ -539,7 +539,7 @@ send_enhancement_data (GstLcevcDec * lcevc, GstBuffer * input_buffer)
   }
 
   if (LCEVC_SendDecoderEnhancementData (lcevc->decoder_handle,
-          input_buffer->pts, TRUE, enhancement_info.data,
+          input_buffer->pts, enhancement_info.data,
           enhancement_info.size) != LCEVC_Success) {
     GST_INFO_OBJECT (lcevc,
         "Could not send input buffer %" GST_TIME_FORMAT
@@ -581,7 +581,7 @@ send_base_picture (GstLcevcDec * lcevc, GstBuffer * input_buffer)
     goto done;
   }
 
-  if (LCEVC_SendDecoderBase (lcevc->decoder_handle, input_buffer->pts, TRUE,
+  if (LCEVC_SendDecoderBase (lcevc->decoder_handle, input_buffer->pts,
           picture_handle, 1000000, NULL) != LCEVC_Success) {
     GST_ELEMENT_ERROR (lcevc, STREAM, DECODE, (NULL),
         ("Could not send input buffer %" GST_TIME_FORMAT " base picture",
