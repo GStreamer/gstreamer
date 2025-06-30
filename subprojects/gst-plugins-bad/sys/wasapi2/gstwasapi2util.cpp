@@ -33,6 +33,13 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_wasapi2_debug);
 #define GST_CAT_DEFAULT gst_wasapi2_debug
 
+/* Define GUIDs instead of linking ksuser.lib */
+DEFINE_GUID (GST_KSDATAFORMAT_SUBTYPE_PCM, 0x00000001, 0x0000, 0x0010,
+    0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
+
+DEFINE_GUID (GST_KSDATAFORMAT_SUBTYPE_IEEE_FLOAT, 0x00000003, 0x0000, 0x0010,
+    0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
+
 /* Desktop only defines */
 #ifndef KSAUDIO_SPEAKER_MONO
 #define KSAUDIO_SPEAKER_MONO            (SPEAKER_FRONT_CENTER)
@@ -379,10 +386,11 @@ gst_wasapi2_util_waveformatex_to_audio_format (WAVEFORMATEX * format)
     case WAVE_FORMAT_EXTENSIBLE:
     {
       WAVEFORMATEXTENSIBLE *ex = (WAVEFORMATEXTENSIBLE *) format;
-      if (IsEqualGUID (ex->SubFormat, KSDATAFORMAT_SUBTYPE_PCM)) {
+      if (IsEqualGUID (ex->SubFormat, GST_KSDATAFORMAT_SUBTYPE_PCM)) {
         fmt = gst_audio_format_build_integer (TRUE, G_LITTLE_ENDIAN,
             format->wBitsPerSample, ex->Samples.wValidBitsPerSample);
-      } else if (IsEqualGUID (ex->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT)) {
+      } else if (IsEqualGUID (ex->SubFormat,
+              GST_KSDATAFORMAT_SUBTYPE_IEEE_FLOAT)) {
         if (format->wBitsPerSample == 32
             && ex->Samples.wValidBitsPerSample == 32)
           fmt = GST_AUDIO_FORMAT_F32LE;

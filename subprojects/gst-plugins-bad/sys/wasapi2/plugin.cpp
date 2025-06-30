@@ -21,13 +21,10 @@
 #include <config.h>
 #endif
 
-#include <winapifamily.h>
-
 #include "gstwasapi2sink.h"
 #include "gstwasapi2src.h"
 #include "gstwasapi2device.h"
 #include "gstwasapi2util.h"
-#include <mfapi.h>
 
 GST_DEBUG_CATEGORY (gst_wasapi2_debug);
 GST_DEBUG_CATEGORY (gst_wasapi2_client_debug);
@@ -35,14 +32,12 @@ GST_DEBUG_CATEGORY (gst_wasapi2_client_debug);
 static void
 plugin_deinit (gpointer data)
 {
-  MFShutdown ();
 }
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   guint rank = GST_RANK_PRIMARY + 1;
-  HRESULT hr;
 
   /**
    * plugin-wasapi2:
@@ -50,15 +45,7 @@ plugin_init (GstPlugin * plugin)
    * Since: 1.18
    */
 
-  hr = MFStartup (MF_VERSION, MFSTARTUP_NOSOCKET);
-  if (!gst_wasapi2_result (hr)) {
-    GST_WARNING ("MFStartup failure, hr: 0x%x", (guint) hr);
-    return TRUE;
-  }
-
   GST_DEBUG_CATEGORY_INIT (gst_wasapi2_debug, "wasapi2", 0, "wasapi2");
-  GST_DEBUG_CATEGORY_INIT (gst_wasapi2_client_debug, "wasapi2client",
-      0, "wasapi2client");
 
   gst_element_register (plugin, "wasapi2sink", rank, GST_TYPE_WASAPI2_SINK);
   gst_element_register (plugin, "wasapi2src", rank, GST_TYPE_WASAPI2_SRC);

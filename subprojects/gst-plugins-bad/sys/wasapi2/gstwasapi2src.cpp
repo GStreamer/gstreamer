@@ -43,7 +43,8 @@
 
 #include "gstwasapi2src.h"
 #include "gstwasapi2util.h"
-#include "gstwasapi2ringbuffer.h"
+#include "gstwasapi2rbuf.h"
+#include <mutex>
 
 GST_DEBUG_CATEGORY_STATIC (gst_wasapi2_src_debug);
 #define GST_CAT_DEFAULT gst_wasapi2_src_debug
@@ -103,13 +104,12 @@ gst_wasapi2_src_loopback_mode_get_type (void)
     {GST_WASAPI2_SRC_LOOPBACK_EXCLUDE_PROCESS_TREE,
           "Exclude process and its child processes",
         "exclude-process-tree"},
-    {0, NULL, NULL}
+    {0, nullptr, nullptr}
   };
 
-  if (g_once_init_enter (&loopback_type)) {
-    GType gtype = g_enum_register_static ("GstWasapi2SrcLoopbackMode", types);
-    g_once_init_leave (&loopback_type, gtype);
-  }
+  GST_WASAPI2_CALL_ONCE_BEGIN {
+    loopback_type = g_enum_register_static ("GstWasapi2SrcLoopbackMode", types);
+  } GST_WASAPI2_CALL_ONCE_END;
 
   return loopback_type;
 }
@@ -135,23 +135,35 @@ enum
   PROP_LOOPBACK_SILENCE_ON_DEVICE_MUTE,
 };
 
+/* *INDENT-OFF* */
+struct GstWasapi2SrcPrivate
+{
+  ~GstWasapi2SrcPrivate ()
+  {
+    gst_object_unref (rbuf);
+    g_free (device_id);
+  }
+
+  GstWasapi2Rbuf *rbuf = nullptr;
+
+  std::mutex lock;
+
+  /* properties */
+  gchar *device_id = nullptr;
+  gboolean low_latency = DEFAULT_LOW_LATENCY;
+  gboolean loopback = DEFAULT_LOOPBACK;
+  GstWasapi2SrcLoopbackMode loopback_mode = DEFAULT_LOOPBACK_MODE;
+  guint loopback_pid = 0;
+  gboolean loopback_silence_on_device_mute =
+      DEFAULT_LOOPBACK_SILENCE_ON_DEVICE_MUTE;
+};
+/* *INDENT-ON* */
+
 struct _GstWasapi2Src
 {
   GstAudioBaseSrc parent;
 
-  /* properties */
-  gchar *device_id;
-  gboolean low_latency;
-  gboolean mute;
-  gdouble volume;
-  gpointer dispatcher;
-  gboolean loopback;
-  GstWasapi2SrcLoopbackMode loopback_mode;
-  guint loopback_pid;
-  gboolean loopback_silence_on_device_mute;
-
-  gboolean mute_changed;
-  gboolean volume_changed;
+  GstWasapi2SrcPrivate *priv;
 };
 
 static void gst_wasapi2_src_finalize (GObject * object);
@@ -160,32 +172,22 @@ static void gst_wasapi2_src_set_property (GObject * object, guint prop_id,
 static void gst_wasapi2_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstStateChangeReturn gst_wasapi2_src_change_state (GstElement *
-    element, GstStateChange transition);
-
 static GstCaps *gst_wasapi2_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter);
 static GstAudioRingBuffer *gst_wasapi2_src_create_ringbuffer (GstAudioBaseSrc *
     src);
 
-static void gst_wasapi2_src_set_mute (GstWasapi2Src * self, gboolean mute);
-static gboolean gst_wasapi2_src_get_mute (GstWasapi2Src * self);
-static void gst_wasapi2_src_set_volume (GstWasapi2Src * self, gdouble volume);
-static gdouble gst_wasapi2_src_get_volume (GstWasapi2Src * self);
-static void gst_wasapi2_src_set_silence_on_mute (GstWasapi2Src * self,
-    gboolean value);
-
 #define gst_wasapi2_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstWasapi2Src, gst_wasapi2_src,
     GST_TYPE_AUDIO_BASE_SRC,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL));
+    G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, nullptr));
 
 static void
 gst_wasapi2_src_class_init (GstWasapi2SrcClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstBaseSrcClass *basesrc_class = GST_BASE_SRC_CLASS (klass);
-  GstAudioBaseSrcClass *audiobasesrc_class = GST_AUDIO_BASE_SRC_CLASS (klass);
+  auto gobject_class = G_OBJECT_CLASS (klass);
+  auto element_class = GST_ELEMENT_CLASS (klass);
+  auto basesrc_class = GST_BASE_SRC_CLASS (klass);
+  auto audiobasesrc_class = GST_AUDIO_BASE_SRC_CLASS (klass);
 
   gobject_class->finalize = gst_wasapi2_src_finalize;
   gobject_class->set_property = gst_wasapi2_src_set_property;
@@ -195,25 +197,24 @@ gst_wasapi2_src_class_init (GstWasapi2SrcClass * klass)
       g_param_spec_string ("device", "Device",
           "Audio device ID as provided by "
           "WASAPI device endpoint ID as provided by IMMDevice::GetId",
-          NULL, GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
-          G_PARAM_STATIC_STRINGS));
+          nullptr, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_LOW_LATENCY,
       g_param_spec_boolean ("low-latency", "Low latency",
           "Optimize all settings for lowest latency. Always safe to enable.",
-          DEFAULT_LOW_LATENCY, GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
-          G_PARAM_STATIC_STRINGS));
+          DEFAULT_LOW_LATENCY, (GParamFlags) (GST_PARAM_MUTABLE_READY |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_MUTE,
       g_param_spec_boolean ("mute", "Mute", "Mute state of this stream",
-          DEFAULT_MUTE, GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE |
-          G_PARAM_STATIC_STRINGS));
+          DEFAULT_MUTE, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_VOLUME,
       g_param_spec_double ("volume", "Volume", "Volume of this stream",
-          0.0, 1.0, DEFAULT_VOLUME,
-          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE |
-          G_PARAM_STATIC_STRINGS));
+          0.0, 1.0, DEFAULT_VOLUME, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
    * GstWasapi2Src:dispatcher:
@@ -230,7 +231,8 @@ gst_wasapi2_src_class_init (GstWasapi2SrcClass * klass)
           "the reference count of given ICoreDispatcher and release it after "
           "use. Therefore, caller does not need to consider additional "
           "reference count management",
-          GST_PARAM_MUTABLE_READY | G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (GST_PARAM_MUTABLE_READY | G_PARAM_WRITABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   /**
    * GstWasapi2Src:loopback:
@@ -242,8 +244,8 @@ gst_wasapi2_src_class_init (GstWasapi2SrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_LOOPBACK,
       g_param_spec_boolean ("loopback", "Loopback recording",
           "Open render device for loopback recording", DEFAULT_LOOPBACK,
-          GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
-          G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS)));
 
   if (gst_wasapi2_can_process_loopback ()) {
     /**
@@ -260,8 +262,9 @@ gst_wasapi2_src_class_init (GstWasapi2SrcClass * klass)
         g_param_spec_enum ("loopback-mode", "Loopback Mode",
             "Loopback mode to use", GST_TYPE_WASAPI2_SRC_LOOPBACK_MODE,
             DEFAULT_LOOPBACK_MODE,
-            GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_READY |
-            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+                GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+                G_PARAM_STATIC_STRINGS)));
 
     /**
      * GstWasapi2Src:loopback-target-pid:
@@ -276,8 +279,9 @@ gst_wasapi2_src_class_init (GstWasapi2SrcClass * klass)
         g_param_spec_uint ("loopback-target-pid", "Loopback Target PID",
             "Process ID to be recorded or excluded for process loopback mode",
             0, G_MAXUINT32, 0,
-            GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_READY |
-            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+                GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+                G_PARAM_STATIC_STRINGS)));
   }
 
   /**
@@ -293,19 +297,14 @@ gst_wasapi2_src_class_init (GstWasapi2SrcClass * klass)
           "Loopback Silence On Device Mute",
           "When loopback recording, if the device is muted, inject silence in the pipeline",
           DEFAULT_LOOPBACK_SILENCE_ON_DEVICE_MUTE,
-          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE |
-          G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_add_static_pad_template (element_class, &src_template);
   gst_element_class_set_static_metadata (element_class, "Wasapi2Src",
       "Source/Audio/Hardware",
       "Stream audio from an audio capture device through WASAPI",
-      "Nirbheek Chauhan <nirbheek@centricular.com>, "
-      "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>, "
       "Seungha Yang <seungha@centricular.com>");
-
-  element_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_wasapi2_src_change_state);
 
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_wasapi2_src_get_caps);
 
@@ -315,65 +314,126 @@ gst_wasapi2_src_class_init (GstWasapi2SrcClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_wasapi2_src_debug, "wasapi2src",
       0, "Windows audio session API source");
 
-  if (gst_wasapi2_can_process_loopback ())
-    gst_type_mark_as_plugin_api (GST_TYPE_WASAPI2_SRC_LOOPBACK_MODE, 0);
+  if (gst_wasapi2_can_process_loopback ()) {
+    gst_type_mark_as_plugin_api (GST_TYPE_WASAPI2_SRC_LOOPBACK_MODE,
+        (GstPluginAPIFlags) 0);
+  }
 }
 
 static void
 gst_wasapi2_src_init (GstWasapi2Src * self)
 {
-  self->mute = DEFAULT_MUTE;
-  self->volume = DEFAULT_VOLUME;
-  self->low_latency = DEFAULT_LOW_LATENCY;
-  self->loopback = DEFAULT_LOOPBACK;
-  self->loopback_silence_on_device_mute =
-      DEFAULT_LOOPBACK_SILENCE_ON_DEVICE_MUTE;
+  auto priv = new GstWasapi2SrcPrivate ();
+
+  priv->rbuf = gst_wasapi2_rbuf_new (self);
+  gst_wasapi2_rbuf_set_device (priv->rbuf, nullptr,
+      GST_WASAPI2_ENDPOINT_CLASS_CAPTURE, 0, DEFAULT_LOW_LATENCY);
+
+  self->priv = priv;
 }
 
 static void
 gst_wasapi2_src_finalize (GObject * object)
 {
-  GstWasapi2Src *self = GST_WASAPI2_SRC (object);
+  auto self = GST_WASAPI2_SRC (object);
 
-  g_free (self->device_id);
+  delete self->priv;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_wasapi2_src_set_device (GstWasapi2Src * self)
+{
+  auto priv = self->priv;
+  GstWasapi2EndpointClass device_class = GST_WASAPI2_ENDPOINT_CLASS_CAPTURE;
+
+  if (priv->loopback_pid) {
+    if (priv->loopback_mode == GST_WASAPI2_SRC_LOOPBACK_INCLUDE_PROCESS_TREE) {
+      device_class =
+          GST_WASAPI2_ENDPOINT_CLASS_INCLUDE_PROCESS_LOOPBACK_CAPTURE;
+    } else if (priv->loopback_mode ==
+        GST_WASAPI2_SRC_LOOPBACK_EXCLUDE_PROCESS_TREE) {
+      device_class =
+          GST_WASAPI2_ENDPOINT_CLASS_EXCLUDE_PROCESS_LOOPBACK_CAPTURE;
+    }
+  } else if (priv->loopback) {
+    device_class = GST_WASAPI2_ENDPOINT_CLASS_LOOPBACK_CAPTURE;
+  }
+
+  gst_wasapi2_rbuf_set_device (priv->rbuf, priv->device_id, device_class,
+      priv->loopback_pid, priv->low_latency);
 }
 
 static void
 gst_wasapi2_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstWasapi2Src *self = GST_WASAPI2_SRC (object);
+  auto self = GST_WASAPI2_SRC (object);
+  auto priv = self->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
 
   switch (prop_id) {
     case PROP_DEVICE:
-      g_free (self->device_id);
-      self->device_id = g_value_dup_string (value);
+    {
+      auto new_val = g_value_get_string (value);
+      if (g_strcmp0 (new_val, priv->device_id) != 0) {
+        g_free (priv->device_id);
+        priv->device_id = g_strdup (new_val);
+        gst_wasapi2_src_set_device (self);
+      }
       break;
+    }
     case PROP_LOW_LATENCY:
-      self->low_latency = g_value_get_boolean (value);
+    {
+      auto new_val = g_value_get_boolean (value);
+      if (new_val != priv->low_latency) {
+        priv->low_latency = new_val;
+        gst_wasapi2_src_set_device (self);
+      }
       break;
+    }
     case PROP_MUTE:
-      gst_wasapi2_src_set_mute (self, g_value_get_boolean (value));
+      gst_wasapi2_rbuf_set_mute (priv->rbuf, g_value_get_boolean (value));
       break;
     case PROP_VOLUME:
-      gst_wasapi2_src_set_volume (self, g_value_get_double (value));
+      gst_wasapi2_rbuf_set_volume (priv->rbuf, g_value_get_double (value));
       break;
     case PROP_DISPATCHER:
-      self->dispatcher = g_value_get_pointer (value);
+      /* Unused */
       break;
     case PROP_LOOPBACK:
-      self->loopback = g_value_get_boolean (value);
+    {
+      auto new_val = g_value_get_boolean (value);
+      if (new_val != priv->loopback) {
+        priv->loopback = new_val;
+        gst_wasapi2_src_set_device (self);
+      }
       break;
+    }
     case PROP_LOOPBACK_MODE:
-      self->loopback_mode = g_value_get_enum (value);
+    {
+      auto new_val = (GstWasapi2SrcLoopbackMode) g_value_get_enum (value);
+      if (new_val != priv->loopback_mode) {
+        priv->loopback_mode = new_val;
+        gst_wasapi2_src_set_device (self);
+      }
       break;
+    }
     case PROP_LOOPBACK_TARGET_PID:
-      self->loopback_pid = g_value_get_uint (value);
+    {
+      auto new_val = g_value_get_uint (value);
+      if (new_val != priv->loopback_pid) {
+        priv->loopback_pid = new_val;
+        gst_wasapi2_src_set_device (self);
+      }
       break;
+    }
     case PROP_LOOPBACK_SILENCE_ON_DEVICE_MUTE:
-      gst_wasapi2_src_set_silence_on_mute (self, g_value_get_boolean (value));
+      priv->loopback_silence_on_device_mute = g_value_get_boolean (value);
+      gst_wasapi2_rbuf_set_device_mute_monitoring (priv->rbuf,
+          priv->loopback_silence_on_device_mute);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -385,32 +445,35 @@ static void
 gst_wasapi2_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstWasapi2Src *self = GST_WASAPI2_SRC (object);
+  auto self = GST_WASAPI2_SRC (object);
+  auto priv = self->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
 
   switch (prop_id) {
     case PROP_DEVICE:
-      g_value_set_string (value, self->device_id);
+      g_value_set_string (value, priv->device_id);
       break;
     case PROP_LOW_LATENCY:
-      g_value_set_boolean (value, self->low_latency);
+      g_value_set_boolean (value, priv->low_latency);
       break;
     case PROP_MUTE:
-      g_value_set_boolean (value, gst_wasapi2_src_get_mute (self));
+      g_value_set_boolean (value, gst_wasapi2_rbuf_get_mute (priv->rbuf));
       break;
     case PROP_VOLUME:
-      g_value_set_double (value, gst_wasapi2_src_get_volume (self));
+      g_value_set_double (value, gst_wasapi2_rbuf_get_volume (priv->rbuf));
       break;
     case PROP_LOOPBACK:
-      g_value_set_boolean (value, self->loopback);
+      g_value_set_boolean (value, priv->loopback);
       break;
     case PROP_LOOPBACK_MODE:
-      g_value_set_enum (value, self->loopback_mode);
+      g_value_set_enum (value, priv->loopback_mode);
       break;
     case PROP_LOOPBACK_TARGET_PID:
-      g_value_set_uint (value, self->loopback_pid);
+      g_value_set_uint (value, priv->loopback_pid);
       break;
     case PROP_LOOPBACK_SILENCE_ON_DEVICE_MUTE:
-      g_value_set_boolean (value, self->loopback_silence_on_device_mute);
+      g_value_set_boolean (value, priv->loopback_silence_on_device_mute);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -418,59 +481,12 @@ gst_wasapi2_src_get_property (GObject * object, guint prop_id,
   }
 }
 
-static GstStateChangeReturn
-gst_wasapi2_src_change_state (GstElement * element, GstStateChange transition)
-{
-  GstWasapi2Src *self = GST_WASAPI2_SRC (element);
-  GstAudioBaseSrc *asrc = GST_AUDIO_BASE_SRC_CAST (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      /* If we have pending volume/mute values to set, do here */
-      GST_OBJECT_LOCK (self);
-      if (asrc->ringbuffer) {
-        GstWasapi2RingBuffer *ringbuffer =
-            GST_WASAPI2_RING_BUFFER (asrc->ringbuffer);
-
-        if (self->volume_changed) {
-          gst_wasapi2_ring_buffer_set_volume (ringbuffer, self->volume);
-          self->volume_changed = FALSE;
-        }
-
-        if (self->mute_changed) {
-          gst_wasapi2_ring_buffer_set_mute (ringbuffer, self->mute);
-          self->mute_changed = FALSE;
-        }
-      }
-      GST_OBJECT_UNLOCK (self);
-      break;
-    default:
-      break;
-  }
-
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-}
-
 static GstCaps *
 gst_wasapi2_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 {
-  GstAudioBaseSrc *asrc = GST_AUDIO_BASE_SRC_CAST (bsrc);
-  GstCaps *caps = NULL;
-
-  GST_OBJECT_LOCK (bsrc);
-  if (asrc->ringbuffer) {
-    GstWasapi2RingBuffer *ringbuffer =
-        GST_WASAPI2_RING_BUFFER (asrc->ringbuffer);
-
-    gst_object_ref (ringbuffer);
-    GST_OBJECT_UNLOCK (bsrc);
-
-    /* Get caps might be able to block if device is not activated yet */
-    caps = gst_wasapi2_ring_buffer_get_caps (ringbuffer);
-    gst_object_unref (ringbuffer);
-  } else {
-    GST_OBJECT_UNLOCK (bsrc);
-  }
+  auto self = GST_WASAPI2_SRC (bsrc);
+  auto priv = self->priv;
+  auto caps = gst_wasapi2_rbuf_get_caps (priv->rbuf);
 
   if (!caps)
     caps = gst_pad_get_pad_template_caps (bsrc->srcpad);
@@ -482,7 +498,7 @@ gst_wasapi2_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
     caps = filtered;
   }
 
-  GST_DEBUG_OBJECT (bsrc, "returning caps %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (self, "returning caps %" GST_PTR_FORMAT, caps);
 
   return caps;
 }
@@ -490,174 +506,8 @@ gst_wasapi2_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 static GstAudioRingBuffer *
 gst_wasapi2_src_create_ringbuffer (GstAudioBaseSrc * src)
 {
-  GstWasapi2Src *self = GST_WASAPI2_SRC (src);
-  GstAudioRingBuffer *ringbuffer;
-  gchar *name;
-  GstWasapi2EndpointClass device_class = GST_WASAPI2_ENDPOINT_CLASS_CAPTURE;
+  auto self = GST_WASAPI2_SRC (src);
+  auto priv = self->priv;
 
-  if (self->loopback_pid) {
-    if (self->loopback_mode == GST_WASAPI2_SRC_LOOPBACK_INCLUDE_PROCESS_TREE) {
-      device_class =
-          GST_WASAPI2_ENDPOINT_CLASS_INCLUDE_PROCESS_LOOPBACK_CAPTURE;
-    } else if (self->loopback_mode ==
-        GST_WASAPI2_SRC_LOOPBACK_EXCLUDE_PROCESS_TREE) {
-      device_class =
-          GST_WASAPI2_ENDPOINT_CLASS_EXCLUDE_PROCESS_LOOPBACK_CAPTURE;
-    }
-  } else if (self->loopback) {
-    device_class = GST_WASAPI2_ENDPOINT_CLASS_LOOPBACK_CAPTURE;
-  }
-
-  GST_DEBUG_OBJECT (self, "Device class %d", device_class);
-
-  name = g_strdup_printf ("%s-ringbuffer", GST_OBJECT_NAME (src));
-
-  ringbuffer =
-      gst_wasapi2_ring_buffer_new (device_class,
-      self->low_latency, self->device_id, self->dispatcher, name,
-      self->loopback_pid);
-  g_free (name);
-
-  if (self->loopback) {
-    gst_wasapi2_ring_buffer_set_device_mute_monitoring (GST_WASAPI2_RING_BUFFER
-        (ringbuffer), self->loopback_silence_on_device_mute);
-  }
-
-  return ringbuffer;
-}
-
-static void
-gst_wasapi2_src_set_mute (GstWasapi2Src * self, gboolean mute)
-{
-  GstAudioBaseSrc *bsrc = GST_AUDIO_BASE_SRC_CAST (self);
-  HRESULT hr;
-
-  GST_OBJECT_LOCK (self);
-
-  self->mute = mute;
-  self->mute_changed = TRUE;
-
-  if (bsrc->ringbuffer) {
-    GstWasapi2RingBuffer *ringbuffer =
-        GST_WASAPI2_RING_BUFFER (bsrc->ringbuffer);
-
-    hr = gst_wasapi2_ring_buffer_set_mute (ringbuffer, mute);
-    if (FAILED (hr)) {
-      GST_INFO_OBJECT (self, "Couldn't set mute");
-    } else {
-      self->mute_changed = FALSE;
-    }
-  }
-
-  GST_OBJECT_UNLOCK (self);
-}
-
-static gboolean
-gst_wasapi2_src_get_mute (GstWasapi2Src * self)
-{
-  GstAudioBaseSrc *bsrc = GST_AUDIO_BASE_SRC_CAST (self);
-  gboolean mute;
-  HRESULT hr;
-
-  GST_OBJECT_LOCK (self);
-
-  mute = self->mute;
-
-  if (bsrc->ringbuffer) {
-    GstWasapi2RingBuffer *ringbuffer =
-        GST_WASAPI2_RING_BUFFER (bsrc->ringbuffer);
-
-    hr = gst_wasapi2_ring_buffer_get_mute (ringbuffer, &mute);
-
-    if (FAILED (hr)) {
-      GST_INFO_OBJECT (self, "Couldn't get mute");
-    } else {
-      self->mute = mute;
-    }
-  }
-
-  GST_OBJECT_UNLOCK (self);
-
-  return mute;
-}
-
-static void
-gst_wasapi2_src_set_volume (GstWasapi2Src * self, gdouble volume)
-{
-  GstAudioBaseSrc *bsrc = GST_AUDIO_BASE_SRC_CAST (self);
-  HRESULT hr;
-
-  GST_OBJECT_LOCK (self);
-
-  self->volume = volume;
-  /* clip volume value */
-  self->volume = MAX (0.0, self->volume);
-  self->volume = MIN (1.0, self->volume);
-  self->volume_changed = TRUE;
-
-  if (bsrc->ringbuffer) {
-    GstWasapi2RingBuffer *ringbuffer =
-        GST_WASAPI2_RING_BUFFER (bsrc->ringbuffer);
-
-    hr = gst_wasapi2_ring_buffer_set_volume (ringbuffer, (gfloat) self->volume);
-
-    if (FAILED (hr)) {
-      GST_INFO_OBJECT (self, "Couldn't set volume");
-    } else {
-      self->volume_changed = FALSE;
-    }
-  }
-
-  GST_OBJECT_UNLOCK (self);
-}
-
-static gdouble
-gst_wasapi2_src_get_volume (GstWasapi2Src * self)
-{
-  GstAudioBaseSrc *bsrc = GST_AUDIO_BASE_SRC_CAST (self);
-  gfloat volume;
-  HRESULT hr;
-
-  GST_OBJECT_LOCK (self);
-
-  volume = (gfloat) self->volume;
-
-  if (bsrc->ringbuffer) {
-    GstWasapi2RingBuffer *ringbuffer =
-        GST_WASAPI2_RING_BUFFER (bsrc->ringbuffer);
-
-    hr = gst_wasapi2_ring_buffer_get_volume (ringbuffer, &volume);
-
-    if (FAILED (hr)) {
-      GST_INFO_OBJECT (self, "Couldn't set volume");
-    } else {
-      self->volume = volume;
-    }
-  }
-
-  GST_OBJECT_UNLOCK (self);
-
-  volume = MAX (0.0, volume);
-  volume = MIN (1.0, volume);
-
-  return volume;
-}
-
-static void
-gst_wasapi2_src_set_silence_on_mute (GstWasapi2Src * self, gboolean value)
-{
-  GstAudioBaseSrc *bsrc = GST_AUDIO_BASE_SRC_CAST (self);
-
-  GST_OBJECT_LOCK (self);
-
-  self->loopback_silence_on_device_mute = value;
-
-  if (self->loopback && bsrc->ringbuffer) {
-    GstWasapi2RingBuffer *ringbuffer =
-        GST_WASAPI2_RING_BUFFER (bsrc->ringbuffer);
-
-    gst_wasapi2_ring_buffer_set_device_mute_monitoring (ringbuffer, value);
-  }
-
-  GST_OBJECT_UNLOCK (self);
+  return GST_AUDIO_RING_BUFFER (priv->rbuf);
 }

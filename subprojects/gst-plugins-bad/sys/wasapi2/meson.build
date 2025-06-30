@@ -1,22 +1,20 @@
 wasapi2_sources = [
-  'gstwasapi2src.c',
-  'gstwasapi2sink.c',
+  'gstwasapi2src.cpp',
+  'gstwasapi2sink.cpp',
   'gstwasapi2util.cpp',
   'gstwasapi2device.cpp',
-  'gstwasapi2ringbuffer.cpp',
   'gstwasapi2activator.cpp',
   'gstwasapi2enumerator.cpp',
-  'gstwasapi2object.cpp',
+  'gstwasapi2rbuf.cpp',
   'plugin.cpp',
 ]
 
 wasapi2_headers = [
-  'gstwasapi2ringbuffer.h',
   'gstwasapi2device.h',
   'gstwasapi2util.h',
   'gstwasapi2src.h',
   'gstwasapi2sink.h',
-  'gstwasapi2object.h',
+  'gstwasapi2rbuf.h',
 ]
 
 mmdeviceapi_symbols = [
@@ -44,10 +42,9 @@ if host_system != 'windows'
 endif
 
 ole32_dep = cc.find_library('ole32', required : get_option('wasapi2'))
-ksuser_dep = cc.find_library('ksuser', required : get_option('wasapi2'))
 mmdeviceapi_dep = cc.find_library('mmdevapi', required : get_option('wasapi2'))
-mfplat_dep = cc.find_library('mfplat', required : get_option('wasapi2'))
-wasapi2_dep = [ole32_dep, ksuser_dep, mmdeviceapi_dep, mfplat_dep]
+avrt_dep = cc.find_library('avrt', required : get_option('wasapi2'))
+wasapi2_dep = [ole32_dep, mmdeviceapi_dep, avrt_dep]
 extra_args = []
 
 foreach dep: wasapi2_dep
