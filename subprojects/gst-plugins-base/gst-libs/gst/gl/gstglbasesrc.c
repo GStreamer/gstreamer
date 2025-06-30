@@ -52,6 +52,8 @@ struct _GstGLBaseSrcPrivate
 
   GstGLMemory *out_tex;
   gint64 timestamp_offset;      /* base offset */
+  gint64 accum_rtime;
+  gint64 accum_frames;
   gint64 n_frames;              /* total frames sent */
   gboolean negotiated;
   gboolean gl_result;
@@ -209,6 +211,12 @@ gst_gl_base_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
     goto wrong_caps;
 
   glbasesrc->priv->negotiated = TRUE;
+
+  glbasesrc->priv->accum_rtime += glbasesrc->running_time;
+  glbasesrc->priv->accum_frames += glbasesrc->priv->n_frames;
+
+  glbasesrc->running_time = 0;
+  glbasesrc->priv->n_frames = 0;
 
   gst_caps_replace (&glbasesrc->out_caps, caps);
 
@@ -422,10 +430,11 @@ gst_gl_base_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   g_rec_mutex_unlock (&src->priv->context_lock);
 
   GST_BUFFER_TIMESTAMP (buffer) =
-      src->priv->timestamp_offset + src->running_time;
-  GST_BUFFER_OFFSET (buffer) = src->priv->n_frames;
+      src->priv->accum_rtime + src->priv->timestamp_offset + src->running_time;
+  GST_BUFFER_OFFSET (buffer) = src->priv->accum_frames + src->priv->n_frames;
   src->priv->n_frames++;
-  GST_BUFFER_OFFSET_END (buffer) = src->priv->n_frames;
+  GST_BUFFER_OFFSET_END (buffer) =
+      src->priv->accum_frames + src->priv->n_frames;
   if (src->out_info.fps_n) {
     next_time = gst_util_uint64_scale_int (src->priv->n_frames * GST_SECOND,
         src->out_info.fps_d, src->out_info.fps_n);
@@ -720,9 +729,11 @@ gst_gl_base_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
   if (src->out_info.fps_n) {
     src->priv->n_frames = gst_util_uint64_scale (time,
         src->out_info.fps_n, src->out_info.fps_d * GST_SECOND);
-  } else
+  } else {
     src->priv->n_frames = 0;
-
+  }
+  src->priv->accum_frames = 0;
+  src->priv->accum_rtime = 0;
   if (src->out_info.fps_n) {
     src->running_time = gst_util_uint64_scale (src->priv->n_frames,
         src->out_info.fps_d * GST_SECOND, src->out_info.fps_n);
