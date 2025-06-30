@@ -28,39 +28,42 @@
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
 #include <QQuickItem>
-#include <QRunnable>
 #include <QDirIterator>
+#include <QTimer>
 #include <gst/gst.h>
 
-class SetPlaying : public QRunnable
-{
+class SwitchFramerate : public QTimer {
 public:
-  SetPlaying(GstElement *);
-  ~SetPlaying();
+  SwitchFramerate(GstElement *capsfilter) : QTimer() {
+    m_capsfilter = (GstElement *) gst_object_ref ((gpointer) capsfilter);
+    QObject::connect(this, &QTimer::timeout, this, QOverload<>::of(&SwitchFramerate::switchFramerate));
+    m_currentFramerate = 10;
+  }
+  ~SwitchFramerate() {
+    gst_object_unref (m_capsfilter);
+  }
 
-  void run ();
+  void switchFramerate() {
+    GstCaps* caps;
+    g_object_get (m_capsfilter, "caps", &caps, NULL);
+    if (!caps)
+      return;
 
-private:
-  GstElement * pipeline_;
+    caps = gst_caps_make_writable (caps);
+    if (m_currentFramerate <= 10) {
+      m_currentFramerate = 20;
+    } else {
+      m_currentFramerate = 10;
+    }
+    gst_println ("changing framerate to %u", m_currentFramerate);
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, m_currentFramerate, 1, NULL);
+    g_object_set (m_capsfilter, "caps", caps, NULL);
+    gst_clear_caps (&caps);
+  }
+
+  GstElement *m_capsfilter;
+  int m_currentFramerate;
 };
-
-SetPlaying::SetPlaying (GstElement * pipeline)
-{
-  this->pipeline_ = pipeline ? static_cast<GstElement *> (gst_object_ref (pipeline)) : NULL;
-}
-
-SetPlaying::~SetPlaying ()
-{
-  if (this->pipeline_)
-    gst_object_unref (this->pipeline_);
-}
-
-void
-SetPlaying::run ()
-{
-  if (this->pipeline_)
-    gst_element_set_state (this->pipeline_, GST_STATE_PLAYING);
-}
 
 int main(int argc, char *argv[])
 {
@@ -98,13 +101,14 @@ int main(int argc, char *argv[])
     rootItem = static_cast<QQuickItem *> (engine.rootObjects().first());
     g_object_set(src, "root-item", rootItem, NULL);
 
-    auto playing = new SetPlaying (pipeline);
-    playing->run();
-    delete playing;
-    //rootObject->scheduleRenderJob (new SetPlaying (pipeline),
-    //    QQuickWindow::BeforeSynchronizingStage);
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+    SwitchFramerate *timer = new SwitchFramerate(capsfilter);
+    timer->start(2000);
 
     ret = app.exec();
+
+    delete timer;
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
     gst_object_unref (pipeline);
