@@ -3264,7 +3264,9 @@ gst_aggregator_pad_has_space (GstAggregator * self, GstAggregatorPad * aggpad)
   /* On top of our latency, we also want to allow buffering up to the
    * minimum upstream latency to allow queue free sources with lower then
    * upstream latency. */
-  max_time_level = self->priv->latency + self->priv->peer_latency_min;
+  max_time_level =
+      self->priv->latency + self->priv->sub_latency_min +
+      self->priv->peer_latency_min;
 
   /* zero latency, if there is a buffer, it's full */
   if (max_time_level == 0)
