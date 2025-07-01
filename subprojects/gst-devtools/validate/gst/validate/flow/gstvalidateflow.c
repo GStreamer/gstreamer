@@ -509,6 +509,13 @@ validate_flow_override_new (GstStructure * config)
     g_free (pad_name_safe);
   }
 
+  /* extra-serialized-metas */  {
+    gchar **m = gst_validate_utils_get_strv (config, "extra-serialized-metas");
+    flow->extra_serialized_metas = m;
+    flow->extra_serialized_metas_all =
+        m && g_strv_contains ((const gchar * const *) m, "all");
+  }
+
   flow->was_attached = FALSE;
 
   gst_validate_override_register_by_name (flow->pad_name, override);
@@ -764,6 +771,7 @@ validate_flow_override_finalize (GObject * object)
   g_strfreev (flow->logged_upstream_event_types);
   g_strfreev (flow->ignored_event_types);
   g_strfreev (flow->logged_unregistered_sei_uuids);
+  g_strfreev (flow->extra_serialized_metas);
   if (flow->ignored_fields)
     gst_structure_free (flow->ignored_fields);
   g_strfreev (flow->expected_lines);

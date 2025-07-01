@@ -61,6 +61,8 @@ struct _ValidateFlowOverride
 
   gchar *expectations_file_path;
   gchar *actual_results_file_path;
+  gchar **extra_serialized_metas;
+  gboolean extra_serialized_metas_all;
   ValidateFlowMode mode;
   gboolean was_attached;
   GstStructure *config;

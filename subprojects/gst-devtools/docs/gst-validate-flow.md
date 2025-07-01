@@ -167,7 +167,12 @@ several overrides and listening to different pads with different settings.
    expectation file will be required. If a validateflow config is used without
    specifying any other parametters, the validateflow plugin will consider that
    all validateflow overrides will use that value.
-
+* `extra-serialized-metas`: Default: 'none'. List of serializable `GstMeta` to
+  record in Base64.
+  * `none`: No serializable `GstMeta` will be recorded.
+  * `all`: Record every serializable `GstMeta`
+  * `{<gst_meta_type_name>[, ...]}`: List of serializable `GstMeta` types to
+    record.
 
 ## Scenario actions
 

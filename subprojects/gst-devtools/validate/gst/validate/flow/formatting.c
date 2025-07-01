@@ -288,13 +288,26 @@ format_sei_uuid (gchar * dest_str, const guint8 * uuid)
       uuid[12], uuid[13], uuid[14], uuid[15]);
 }
 
+static gboolean
+must_serialize_meta (const ValidateFlowOverride * flow, GstMeta * meta)
+{
+  const gchar *name = g_type_name (meta->info->type);
+  const gboolean is_serializable = meta->info->serialize_func != NULL;
+  const gchar *const *req_metas = CONSTIFY (flow->extra_serialized_metas);
+  const gboolean requested = req_metas && g_strv_contains (req_metas, name);
+  const gboolean requested_all = flow->extra_serialized_metas_all;
+
+  return is_serializable && (requested_all || requested);
+}
+
 /* Returns a newly-allocated string describing the metas on this buffer, or NULL */
 static gchar *
-buffer_get_meta_string (GstBuffer * buffer, gchar ** logged_sei_uuids)
+buffer_get_meta_string (const ValidateFlowOverride * flow, GstBuffer * buffer)
 {
   gpointer state = NULL;
   GstMeta *meta;
   GString *s = NULL;
+  gchar **logged_sei_uuids = flow->logged_unregistered_sei_uuids;
 
   while ((meta = gst_buffer_iterate_meta (buffer, &state))) {
     const gchar *desc = g_type_name (meta->info->type);
@@ -325,7 +338,21 @@ buffer_get_meta_string (GstBuffer * buffer, gchar ** logged_sei_uuids)
     else
       g_string_append (s, ", ");
 
-    if (meta->info->api == GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE) {
+    if (must_serialize_meta (flow, meta)) {
+      g_string_append (s, desc);
+
+      // Append Base64 serialized metadata if possible
+      GByteArray *ba = g_byte_array_new ();
+      gboolean serialized = gst_meta_serialize_simple (meta, ba);
+      if (serialized && ba->data) {
+        g_string_append (s, "(");
+        gchar *serialized_meta = g_base64_encode (ba->data, ba->len);
+        g_string_append (s, serialized_meta);
+        g_free (serialized_meta);
+        g_string_append (s, ")");
+      }
+      g_byte_array_free (ba, TRUE);
+    } else if (meta->info->api == GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE) {
       GstVideoRegionOfInterestMeta *roi = (GstVideoRegionOfInterestMeta *) meta;
       g_string_append_printf (s,
           "GstVideoRegionOfInterestMeta[x=%" G_GUINT32_FORMAT ", y=%"
@@ -504,7 +531,7 @@ validate_flow_format_buffer (const ValidateFlowOverride * flow,
         g_strdup_printf ("flags=%s", flags_str);
   }
 
-  meta_str = buffer_get_meta_string (buffer, logged_sei_uuids);
+  meta_str = buffer_get_meta_string (flow, buffer);
   if (meta_str && use_field ("meta", logged_fields, ignored_fields))
     buffer_parts[buffer_parts_index++] = g_strdup_printf ("meta=%s", meta_str);
 
