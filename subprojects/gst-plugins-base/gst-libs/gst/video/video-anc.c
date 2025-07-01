@@ -986,19 +986,80 @@ gst_video_caption_meta_free (GstMeta * meta, GstBuffer * buffer)
   g_free (emeta->data);
 }
 
+static gboolean
+gst_video_caption_meta_serialize (const GstMeta * meta,
+    GstByteArrayInterface * bai, guint8 * version)
+{
+  const GstVideoCaptionMeta *emeta = (const GstVideoCaptionMeta *) meta;
+  const guint32 caption_type = emeta->caption_type;
+  const guint8 *data = emeta->data;
+  const guint32 data_size = emeta->size;
+  const gsize total_size = 4 + 4 + data_size;
+
+  guint8 *bai_data = gst_byte_array_interface_append (bai, total_size);
+  if (!bai_data)
+    return FALSE;
+
+  GST_WRITE_UINT32_LE (bai_data, caption_type);
+  bai_data += 4;
+  GST_WRITE_UINT32_LE (bai_data, data_size);
+  bai_data += 4;
+  memcpy (bai_data, data, data_size);
+
+  return TRUE;
+}
+
+static GstMeta *
+gst_video_caption_meta_deserialize (const GstMetaInfo * info,
+    GstBuffer * buffer, const guint8 * ser_data, gsize ser_size, guint8 version)
+{
+  const gsize header_size = 4 + 4;      // caption_type + data_size
+
+  if (ser_size < header_size) {
+    GST_ERROR ("Bad serialized GstVideoCaptionMeta header."
+        " Not enough data (%" G_GSIZE_FORMAT ")", ser_size);
+    return NULL;
+  }
+
+  const GstVideoCaptionType caption_type = GST_READ_UINT32_LE (ser_data);
+  ser_data += 4;
+  const gsize data_size = GST_READ_UINT32_LE (ser_data);
+  ser_data += 4;
+  const guint8 *data = ser_data;
+
+  const gsize total_size = data_size + header_size;
+  if (data_size == 0) {
+    GST_ERROR ("Bad serialized GstVideoCaptionMeta header. Data size = 0");
+    return NULL;
+  }
+  if (total_size > ser_size) {
+    GST_ERROR ("Bad serialized GstVideoCaptionMeta header."
+        " Data required = %" G_GSIZE_FORMAT
+        ", data available = %" G_GSIZE_FORMAT, total_size, ser_size);
+    return NULL;
+  }
+
+  return (GstMeta *) gst_buffer_add_video_caption_meta (buffer, caption_type,
+      data, data_size);
+}
+
 const GstMetaInfo *
 gst_video_caption_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
   if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
-    const GstMetaInfo *mi = gst_meta_register (GST_VIDEO_CAPTION_META_API_TYPE,
+    const GstMetaInfo *meta = NULL;
+    GstMetaInfo *info = gst_meta_info_new (GST_VIDEO_CAPTION_META_API_TYPE,
         "GstVideoCaptionMeta",
-        sizeof (GstVideoCaptionMeta),
-        gst_video_caption_meta_init,
-        gst_video_caption_meta_free,
-        gst_video_caption_meta_transform);
-    g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) mi);
+        sizeof (GstVideoCaptionMeta));
+    info->init_func = gst_video_caption_meta_init;
+    info->free_func = gst_video_caption_meta_free;
+    info->transform_func = gst_video_caption_meta_transform;
+    info->serialize_func = gst_video_caption_meta_serialize;
+    info->deserialize_func = gst_video_caption_meta_deserialize;
+    meta = gst_meta_info_register (info);
+    g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) meta);
   }
   return meta_info;
 }

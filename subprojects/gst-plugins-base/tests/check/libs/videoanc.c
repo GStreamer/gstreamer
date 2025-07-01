@@ -339,6 +339,34 @@ GST_START_TEST (encode_10bit)
 
 GST_END_TEST;
 
+GST_START_TEST (serialize_video_caption_meta)
+{
+  static const guint8 data[] = { 0x94, 0x20 };  /* CEA-608 RCL */
+
+  GstBuffer *buffer_a = gst_buffer_new ();
+  GstBuffer *buffer_b = gst_buffer_new ();
+  GByteArray *ba = g_byte_array_new ();
+  guint32 consumed;
+
+  GstVideoCaptionMeta *meta = gst_buffer_add_video_caption_meta (buffer_a,
+      GST_VIDEO_CAPTION_TYPE_CEA608_RAW, data, sizeof (data));
+
+  fail_unless (gst_meta_serialize_simple (GST_META_CAST (meta), ba));
+  GstVideoCaptionMeta *deserialized_meta = (GstVideoCaptionMeta *)
+      gst_meta_deserialize (buffer_b, ba->data, ba->len, &consumed);
+  fail_unless (deserialized_meta);
+
+  ck_assert_int_eq (meta->caption_type, deserialized_meta->caption_type);
+  ck_assert_uint_eq (meta->size, deserialized_meta->size);
+  fail_unless (memcmp (meta->data, deserialized_meta->data, meta->size) == 0);
+
+  g_byte_array_free (ba, TRUE);
+  gst_buffer_unref (buffer_a);
+  gst_buffer_unref (buffer_b);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videoanc_suite (void)
 {
@@ -352,6 +380,8 @@ gst_videoanc_suite (void)
 
   tcase_add_test (tc, encode_8bit);
   tcase_add_test (tc, encode_10bit);
+
+  tcase_add_test (tc, serialize_video_caption_meta);
 
   return s;
 }
