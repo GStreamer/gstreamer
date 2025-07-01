@@ -4493,7 +4493,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
             break;
           }
           sbgp_node = qtdemux_tree_get_sibling_by_type_full (sbgp_node,
-              FOURCC_sgpd, &sbgp_data);
+              FOURCC_sbgp, &sbgp_data);
         }
       }
     }
