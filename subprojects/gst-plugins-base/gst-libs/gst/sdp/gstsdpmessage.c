@@ -3606,8 +3606,7 @@ gst_sdp_media_caps_adjust_h264 (GstCaps * caps)
   gst_structure_set (s, "profile", G_TYPE_STRING,
       gst_codec_utils_h264_get_profile (sps, 2), NULL);
 
-  gst_structure_remove_fields (s, "level-asymmetry-allowed", "profile-level-id",
-      NULL);
+  gst_structure_remove_fields (s, "level-asymmetry-allowed", NULL);
 }
 
 /**
@@ -4176,12 +4175,14 @@ _add_media_format_from_structure (const GstStructure * s, GstSDPMedia * media)
 
         g_string_append_printf (fmtp, "%slevel-asymmetry-allowed=1",
             first ? "" : ";");
-        if (h264_get_profile_idc (fval, &profile_idc, &constraint_flags))
-          g_string_append_printf (fmtp, ";profile-level-id=%02x%02x1f",
-              profile_idc, constraint_flags);
-        else
-          GST_FIXME ("Can't convert profile %s back into profile-level-id",
-              fval);
+        if (!gst_structure_has_field (s, "profile-level-id")) {
+          if (h264_get_profile_idc (fval, &profile_idc, &constraint_flags))
+            g_string_append_printf (fmtp, ";profile-level-id=%02x%02x1f",
+                profile_idc, constraint_flags);
+          else
+            GST_FIXME ("Can't convert profile %s back into profile-level-id",
+                fval);
+        }
       } else {
         g_string_append_printf (fmtp, "%s%s=%s", first ? "" : ";", fname, fval);
       }
