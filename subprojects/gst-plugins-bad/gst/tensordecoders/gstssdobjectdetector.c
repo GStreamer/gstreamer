@@ -484,7 +484,7 @@ DEFINE_GET_FUNC (guint32, UINT32_MAX)
     GQuark label = 0;
     GstAnalyticsODMtd odmtd;
 
-    if (!get_float_at_index (tmeta->tensors[numdetect_index], &scores_map,
+    if (!get_float_at_index (tmeta->tensors[scores_index], &scores_map,
             i, &score))
       continue;
 
