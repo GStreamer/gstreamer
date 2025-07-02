@@ -4403,16 +4403,6 @@ _update_transceiver_kind_from_caps (GstWebRTCRTPTransceiver * trans,
   }
 }
 
-static void
-_get_rtx_target_pt_and_ssrc_from_caps (GstCaps * answer_caps, gint * target_pt,
-    guint * target_ssrc)
-{
-  const GstStructure *s = gst_caps_get_structure (answer_caps, 0);
-
-  gst_structure_get_int (s, "payload", target_pt);
-  gst_structure_get_uint (s, "ssrc", target_ssrc);
-}
-
 /* TODO: use the options argument */
 static GstSDPMessage *
 _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
@@ -4592,9 +4582,6 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
       GstWebRTCRTPTransceiver *rtp_trans = NULL;
       WebRTCTransceiver *trans = NULL;
       GstWebRTCRTPTransceiverDirection offer_dir, answer_dir;
-      gint target_pt = -1;
-      gint original_target_pt = -1;
-      guint target_ssrc = 0;
 
       gst_sdp_media_set_proto (media, "UDP/TLS/RTP/SAVPF");
       offer_caps = _rtp_caps_from_media (offer_media);
@@ -4693,6 +4680,10 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
         const GstStructure *s = gst_caps_get_structure (answer_caps, l);
         const gchar *enc_name = gst_structure_get_string (s, "encoding-name");
         gchar *tmp = g_ascii_strdown (enc_name, -1);
+        gint target_pt = -1;
+        gint original_target_pt = -1;
+        guint target_ssrc = 0;
+
         if (g_strv_contains (disallowed_payloads, tmp)) {
           g_free (tmp);
           continue;
@@ -4705,19 +4696,18 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
           gst_clear_caps (&offer_caps);
           goto rejected;
         }
-      }
 
-      _get_rtx_target_pt_and_ssrc_from_caps (answer_caps, &target_pt,
-          &target_ssrc);
+        gst_structure_get_int (s, "payload", &target_pt);
+        gst_structure_get_uint (s, "ssrc", &target_ssrc);
+        original_target_pt = target_pt;
 
-      original_target_pt = target_pt;
-
-      _media_add_fec (media, trans, offer_caps, &target_pt);
-      if (trans->do_nack) {
-        _media_add_rtx (media, trans, offer_caps, target_pt, target_ssrc);
-        if (target_pt != original_target_pt)
-          _media_add_rtx (media, trans, offer_caps, original_target_pt,
-              target_ssrc);
+        _media_add_fec (media, trans, offer_caps, &target_pt);
+        if (trans->do_nack) {
+          _media_add_rtx (media, trans, offer_caps, target_pt, target_ssrc);
+          if (target_pt != original_target_pt)
+            _media_add_rtx (media, trans, offer_caps, original_target_pt,
+                target_ssrc);
+        }
       }
 
       if (answer_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY)
