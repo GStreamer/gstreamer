@@ -82,7 +82,7 @@ gst_analytics_od_mtd_meta_transform (GstBuffer * transbuf,
         transmtd->id);
     GstVideoRectangle rect = { oddata->x, oddata->y, oddata->w, oddata->h };
 
-    if (!gst_video_meta_transform_matrix_rectangle (trans, &rect, FALSE))
+    if (!gst_video_meta_transform_matrix_rectangle (trans, &rect))
       return FALSE;
 
     oddata->x = rect.x;
