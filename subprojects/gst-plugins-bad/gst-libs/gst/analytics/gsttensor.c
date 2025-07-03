@@ -91,11 +91,14 @@ size_for_elements (GstTensorDataType data_type, gsize elements)
  * @data: (transfer full): #GstBuffer holding tensor data
  * @dims_order: Indicate tensor dimension indexing order
  * @num_dims: number of tensor dimensions
- * @dims: (array length=num_dims): tensor dimensions. Value of 0 mean the
- * dimension is dynamic.
+ * @dims: (array length=num_dims): size of tensor in each dimension.
+ *     A value of 0 means the dimension is dynamic.
  *
  * Allocates a new #GstTensor of @dims_order ROW_MAJOR or COLUMN_MAJOR and
- * with an interleaved layout
+ * with an interleaved layout.
+ *
+ * For example, a two-dimensional tensor with 32 rows and 4 columns, @dims would
+ * be the two element array `[32, 4]`.
  *
  * Returns: A newly allocated #GstTensor
  *

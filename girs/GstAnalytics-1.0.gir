@@ -1468,7 +1468,10 @@ pixel to instance of an object is identified.</doc>
       </constructor>
       <constructor name="new_simple" c:identifier="gst_tensor_new_simple" version="1.26">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">Allocates a new #GstTensor of @dims_order ROW_MAJOR or COLUMN_MAJOR and
-with an interleaved layout</doc>
+with an interleaved layout.
+
+For example, a two-dimensional tensor with 32 rows and 4 columns, @dims would
+be the two element array `[32, 4]`.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">A newly allocated #GstTensor</doc>
@@ -1496,8 +1499,8 @@ with an interleaved layout</doc>
             <type name="gsize" c:type="gsize"/>
           </parameter>
           <parameter name="dims" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">tensor dimensions. Value of 0 mean the
-dimension is dynamic.</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gsttensor.c">size of tensor in each dimension.
+    A value of 0 means the dimension is dynamic.</doc>
             <array length="4" zero-terminated="0" c:type="gsize*">
               <type name="gsize" c:type="gsize"/>
             </array>
