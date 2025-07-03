@@ -102,7 +102,7 @@ gst_dtls_certificate_class_init (GstDtlsCertificateClass * klass)
   properties[PROP_PEM] =
       g_param_spec_string ("pem",
       "Pem string",
-      "A string containing a X509 certificate and RSA private key in PEM format",
+      "A string containing a X509 certificate and private key in PEM format",
       DEFAULT_PEM,
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
@@ -192,7 +192,8 @@ static void
 init_generated (GstDtlsCertificate * self)
 {
   GstDtlsCertificatePrivate *priv = self->priv;
-  RSA *rsa;
+  EC_KEY *ec;
+  int curve;
   BIGNUM *serial_number;
   ASN1_INTEGER *asn1_serial_number;
   X509_NAME *name = NULL;
@@ -218,38 +219,15 @@ init_generated (GstDtlsCertificate * self)
     return;
   }
 
-  /* XXX: RSA_generate_key is actually deprecated in 0.9.8 */
-#if OPENSSL_VERSION_NUMBER < 0x10100001L
-  rsa = RSA_generate_key (2048, RSA_F4, NULL, NULL);
-#else
-  /*
-   * OpenSSL 3.0 deprecated all low-level APIs, so we need to rewrite this code
-   * to get rid of the warnings. The porting guide explicitly recommends
-   * disabling the warnings if this is not feasible, so let's do that for now:
-   * https://wiki.openssl.org/index.php/OpenSSL_3.0#Upgrading_to_OpenSSL_3.0_from_OpenSSL_1.1.1
-   */
+  GST_INFO_OBJECT (self,
+      "Generating a default DTLS certificate with a ECDSA P-256 private key");
+  curve = OBJ_txt2nid ("prime256v1");
   G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
-  rsa = RSA_new ();
+  ec = EC_KEY_new_by_curve_name (curve);
   G_GNUC_END_IGNORE_DEPRECATIONS;
-  if (rsa != NULL) {
-    BIGNUM *e = BN_new ();
-    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
-    if (e == NULL || !BN_set_word (e, RSA_F4)
-        || !RSA_generate_key_ex (rsa, 2048, e, NULL)) {
-      RSA_free (rsa);
-      rsa = NULL;
-    }
-    G_GNUC_END_IGNORE_DEPRECATIONS;
-    if (e)
-      BN_free (e);
-  }
-#endif
-
-  if (!rsa) {
-    GST_WARNING_OBJECT (self, "failed to generate RSA");
-    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
+  if (!ec) {
+    GST_WARNING_OBJECT (self, "failed to create EC");
     EVP_PKEY_free (priv->private_key);
-    G_GNUC_END_IGNORE_DEPRECATIONS;
     priv->private_key = NULL;
     X509_free (priv->x509);
     priv->x509 = NULL;
@@ -257,18 +235,30 @@ init_generated (GstDtlsCertificate * self)
   }
 
   G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
-  if (!EVP_PKEY_assign_RSA (priv->private_key, rsa)) {
-    GST_WARNING_OBJECT (self, "failed to assign RSA");
-    RSA_free (rsa);
-    G_GNUC_END_IGNORE_DEPRECATIONS;
-    rsa = NULL;
+  EC_KEY_set_asn1_flag (ec, OPENSSL_EC_NAMED_CURVE);
+
+  if (!EC_KEY_generate_key (ec)) {
+    GST_WARNING_OBJECT (self, "failed to generate EC");
+    EC_KEY_free (ec);
+    ec = NULL;
     EVP_PKEY_free (priv->private_key);
     priv->private_key = NULL;
     X509_free (priv->x509);
     priv->x509 = NULL;
     return;
   }
-  rsa = NULL;
+
+  if (!EVP_PKEY_assign_EC_KEY (priv->private_key, ec)) {
+    GST_WARNING_OBJECT (self, "failed to assign EC");
+    EC_KEY_free (ec);
+    ec = NULL;
+    EVP_PKEY_free (priv->private_key);
+    priv->private_key = NULL;
+    X509_free (priv->x509);
+    priv->x509 = NULL;
+    return;
+  }
+  G_GNUC_END_IGNORE_DEPRECATIONS;
 
   X509_set_version (priv->x509, 2);
 
