@@ -294,6 +294,7 @@ gst_vp9_parse_negotiate (GstVp9Parse * self, GstVp9ParseAlignment in_align,
   /* concentrate on leading structure, since decodebin parser
    * capsfilter always includes parser template caps */
   if (caps) {
+    caps = gst_caps_make_writable (caps);
     while (gst_caps_get_size (caps) > 0) {
       GstStructure *s = gst_caps_get_structure (caps, 0);
 
@@ -310,18 +311,6 @@ gst_vp9_parse_negotiate (GstVp9Parse * self, GstVp9ParseAlignment in_align,
       gst_caps_unref (caps);
       caps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (self));
     }
-
-    /* Sort super-frame alignment first before truncating */
-    GstCaps *ordered_caps = gst_caps_new_full (gst_structure_new ("video/x-vp9",
-            "alignment", G_TYPE_STRING, "super-frame", NULL),
-        gst_structure_new ("video/x-vp9",
-            "alignment", G_TYPE_STRING, "frame", NULL),
-        NULL);
-    GstCaps *tmp = caps;
-    caps =
-        gst_caps_intersect_full (ordered_caps, tmp, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (ordered_caps);
-    gst_caps_unref (tmp);
 
     caps = gst_caps_truncate (caps);
     GST_DEBUG_OBJECT (self, "negotiating with caps: %" GST_PTR_FORMAT, caps);
