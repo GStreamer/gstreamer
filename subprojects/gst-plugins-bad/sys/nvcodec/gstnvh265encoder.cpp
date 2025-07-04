@@ -50,8 +50,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_nv_h265_encoder_debug);
 
 #define DOC_SINK_CAPS_COMM \
     "format = (string) { NV12, P010_10LE, Y444, Y444_16LE, GBR, GBR_16LE, VUYA, RGBA, RGBx, BGRA, BGRx, RGB10A2_LE }, " \
-    "width = (int) [ 144, 8192 ], height = (int) [ 48, 8192 ], " \
-    "interlace-mode = (string) progressive"
+    "width = (int) [ 144, 8192 ], height = (int) [ 48, 8192 ]"
 
 #define DOC_SINK_CAPS \
     "video/x-raw(memory:CUDAMemory), " DOC_SINK_CAPS_COMM "; " \
@@ -2367,8 +2366,7 @@ gst_nv_h265_encoder_create_class_data (GstObject * device, gpointer session,
       std::to_string (GST_ROUND_UP_16 (dev_caps.height_min))
       + ", " + std::to_string (dev_caps.height_max) + " ]";
 
-  sink_caps_str = "video/x-raw, " + format_str + ", " + resolution_str
-      + ", interlace-mode = (string) progressive";
+  sink_caps_str = "video/x-raw, " + format_str + ", " + resolution_str;
 
   src_caps_str = "video/x-h265, " + resolution_str + ", " + profile_str +
       ", stream-format = (string) { byte-stream, hvc1, hev1 }" +
@@ -2714,8 +2712,7 @@ gst_nv_h265_encoder_register_auto_select (GstPlugin * plugin,
       std::to_string (GST_ROUND_UP_16 (dev_caps.height_min))
       + ", " + std::to_string (dev_caps.height_max) + " ]";
 
-  sink_caps_str = "video/x-raw, " + format_str + ", " + resolution_str
-      + ", interlace-mode = (string) progressive";
+  sink_caps_str = "video/x-raw, " + format_str + ", " + resolution_str;
 
   src_caps_str = "video/x-h265, " + resolution_str + ", " + profile_str +
       ", stream-format = (string) { byte-stream, hvc1, hev1 }" +

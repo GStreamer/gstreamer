@@ -859,43 +859,6 @@ gst_nv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   return TRUE;
 }
 
-static NV_ENC_PIC_STRUCT
-gst_nv_encoder_get_pic_struct (GstNvEncoder * self, GstBuffer * buffer)
-{
-  GstNvEncoderPrivate *priv = self->priv;
-  GstVideoInfo *info = &priv->input_state->info;
-
-  if (!GST_VIDEO_INFO_IS_INTERLACED (info))
-    return NV_ENC_PIC_STRUCT_FRAME;
-
-  if (GST_VIDEO_INFO_INTERLACE_MODE (info) == GST_VIDEO_INTERLACE_MODE_MIXED) {
-    if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
-      return NV_ENC_PIC_STRUCT_FRAME;
-    }
-
-    if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF))
-      return NV_ENC_PIC_STRUCT_FIELD_TOP_BOTTOM;
-
-    return NV_ENC_PIC_STRUCT_FIELD_BOTTOM_TOP;
-  }
-
-  switch (GST_VIDEO_INFO_FIELD_ORDER (info)) {
-    case GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST:
-      return NV_ENC_PIC_STRUCT_FIELD_TOP_BOTTOM;
-      break;
-    case GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST:
-      return NV_ENC_PIC_STRUCT_FIELD_BOTTOM_TOP;
-      break;
-    default:
-      break;
-  }
-
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF))
-    return NV_ENC_PIC_STRUCT_FIELD_TOP_BOTTOM;
-
-  return NV_ENC_PIC_STRUCT_FIELD_BOTTOM_TOP;
-}
-
 static GstVideoCodecFrame *
 gst_nv_encoder_find_output_frame (GstVideoEncoder * self, GstNvEncTask * task)
 {
@@ -2242,8 +2205,12 @@ gst_nv_encoder_handle_frame (GstVideoEncoder * encoder,
         gst_nv_enc_task_get_sei_payload (task));
   }
 
-  status = priv->object->Encode (frame,
-      gst_nv_encoder_get_pic_struct (self, in_buf), task);
+  auto pic_struct = NV_ENC_PIC_STRUCT_FRAME;
+  if (klass->get_pic_struct) {
+    pic_struct = klass->get_pic_struct (self, &priv->input_state->info, in_buf);
+  }
+
+  status = priv->object->Encode (frame, pic_struct, task);
   if (status != NV_ENC_SUCCESS) {
     GST_ERROR_OBJECT (self, "Failed to encode frame");
     gst_video_encoder_release_frame (encoder, frame);
