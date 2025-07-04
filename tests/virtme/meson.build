@@ -15,7 +15,9 @@ virtme_run = find_program('virtme-run.sh')
 
 supported_decoders = {
   'vp8': [],
-  'vp9': [],
+  'vp9': [
+    'vp90-2-22-svc_1280x720_3.ivf'
+  ],
   'h.264': [
     'FM1_BT_B',
     'FM2_SVA_C'
