@@ -433,10 +433,7 @@ gst_wasapi2_enumerator_activate_notification (GstWasapi2Enumerator * object,
 void
 gst_wasapi2_enumerator_entry_free (GstWasapi2EnumeratorEntry * entry)
 {
-  g_free (entry->device_id);
-  g_free (entry->device_name);
-  gst_clear_caps (&entry->caps);
-  g_free (entry);
+  delete entry;
 }
 
 /* *INDENT-OFF* */
@@ -462,7 +459,9 @@ static void
 gst_wasapi2_enumerator_add_entry (GstWasapi2Enumerator * self,
     IAudioClient * client,
     GstCaps * static_caps, EDataFlow flow, gboolean is_default,
-    gchar * device_id, gchar * device_name, GPtrArray * device_list)
+    gchar * device_id, gchar * device_name,
+    gchar * actual_device_id, gchar * actual_device_name,
+    GstWasapi2DeviceProps * device_props, GPtrArray * device_list)
 {
   WAVEFORMATEX *mix_format = nullptr;
   GstCaps *supported_caps = nullptr;
@@ -471,6 +470,8 @@ gst_wasapi2_enumerator_add_entry (GstWasapi2Enumerator * self,
   if (!mix_format) {
     g_free (device_id);
     g_free (device_name);
+    g_free (actual_device_id);
+    g_free (actual_device_name);
     return;
   }
 
@@ -481,21 +482,101 @@ gst_wasapi2_enumerator_add_entry (GstWasapi2Enumerator * self,
   if (!supported_caps) {
     g_free (device_id);
     g_free (device_name);
+    g_free (actual_device_id);
+    g_free (actual_device_name);
     return;
   }
 
-  auto entry = g_new0 (GstWasapi2EnumeratorEntry, 1);
+  auto entry = new GstWasapi2EnumeratorEntry ();
 
   entry->device_id = device_id;
   entry->device_name = device_name;
   entry->caps = supported_caps;
   entry->flow = flow;
   entry->is_default = is_default;
+  if (actual_device_id)
+    entry->actual_device_id = actual_device_id;
+  if (actual_device_name)
+    entry->actual_device_name = actual_device_name;
+
+  if (device_props) {
+    entry->device_props.form_factor = device_props->form_factor;
+    entry->device_props.enumerator_name = device_props->enumerator_name;
+  }
 
   GST_LOG_OBJECT (self, "Adding entry %s (%s), flow %d, caps %" GST_PTR_FORMAT,
       device_id, device_name, flow, supported_caps);
+  g_free (device_id);
+  g_free (device_name);
+  g_free (actual_device_id);
+  g_free (actual_device_name);
 
   g_ptr_array_add (device_list, entry);
+}
+
+static void
+gst_wasapi2_enumerator_probe_props (IPropertyStore * store,
+    GstWasapi2DeviceProps * props)
+{
+  PROPVARIANT var;
+  PropVariantInit (&var);
+
+  auto hr = store->GetValue (PKEY_AudioEndpoint_FormFactor, &var);
+  if (SUCCEEDED (hr) && var.vt == VT_UI4)
+    props->form_factor = (EndpointFormFactor) var.ulVal;
+
+  PropVariantClear (&var);
+
+  hr = store->GetValue (PKEY_Device_EnumeratorName, &var);
+  if (SUCCEEDED (hr) && var.vt == VT_LPWSTR) {
+    auto name = g_utf16_to_utf8 ((gunichar2 *) var.pwszVal,
+        -1, nullptr, nullptr, nullptr);
+    props->enumerator_name = name;
+    g_free (name);
+  }
+
+  PropVariantClear (&var);
+}
+
+static void
+probe_default_device_props (GstWasapi2Enumerator * self, EDataFlow flow,
+    GstWasapi2DeviceProps * props, gchar ** actual_device_id,
+    gchar ** actual_device_name)
+{
+  auto priv = self->priv;
+  ComPtr < IMMDevice > device;
+  ComPtr < IPropertyStore > prop;
+
+  *actual_device_id = nullptr;
+  *actual_device_name = nullptr;
+
+  auto hr = priv->handle->GetDefaultAudioEndpoint (flow,
+      eConsole, &device);
+  if (FAILED (hr))
+    return;
+
+  LPWSTR wid = nullptr;
+  hr = device->GetId (&wid);
+  if (SUCCEEDED (hr)) {
+    *actual_device_id = g_utf16_to_utf8 ((gunichar2 *) wid,
+        -1, nullptr, nullptr, nullptr);
+    CoTaskMemFree (wid);
+  }
+
+  hr = device->OpenPropertyStore (STGM_READ, &prop);
+  if (FAILED (hr))
+    return;
+
+  PROPVARIANT var;
+  PropVariantInit (&var);
+  hr = prop->GetValue (PKEY_Device_FriendlyName, &var);
+  if (SUCCEEDED (hr)) {
+    *actual_device_name = g_utf16_to_utf8 ((gunichar2 *) var.pwszVal,
+        -1, nullptr, nullptr, nullptr);
+    PropVariantClear (&var);
+  }
+
+  gst_wasapi2_enumerator_probe_props (prop.Get (), props);
 }
 
 static gboolean
@@ -529,23 +610,47 @@ gst_wasapi2_enumerator_enumerate_internal (EnumerateData * data)
     priv->render_activator->GetClient (&default_render_client, 10000);
 
   if (default_capture_client) {
+    GstWasapi2DeviceProps props;
+    props.form_factor = UnknownFormFactor;
+    props.enumerator_name = "UNKNOWN";
+
+    gchar *actual_device_id = nullptr;
+    gchar *actual_device_name = nullptr;
+    probe_default_device_props (self, eCapture, &props, &actual_device_id,
+        &actual_device_name);
+
     gst_wasapi2_enumerator_add_entry (self, default_capture_client.Get (),
         scaps, eCapture, TRUE,
         g_strdup (gst_wasapi2_get_default_device_id (eCapture)),
-        g_strdup ("Default Audio Capture Device"), data->device_list);
+        g_strdup ("Default Audio Capture Device"), actual_device_id,
+        actual_device_name, &props, data->device_list);
   }
 
   if (default_render_client) {
+    GstWasapi2DeviceProps props;
+    props.form_factor = UnknownFormFactor;
+    props.enumerator_name = "UNKNOWN";
+
+    gchar *actual_device_id = nullptr;
+    gchar *actual_device_name = nullptr;
+    probe_default_device_props (self, eRender, &props, &actual_device_id,
+        &actual_device_name);
+
     gst_wasapi2_enumerator_add_entry (self, default_render_client.Get (),
         scaps, eRender, TRUE,
         g_strdup (gst_wasapi2_get_default_device_id (eRender)),
-        g_strdup ("Default Audio Render Device"), data->device_list);
+        g_strdup ("Default Audio Render Device"), actual_device_id,
+        actual_device_name, &props, data->device_list);
   }
 
   for (UINT i = 0; i < count; i++) {
     ComPtr < IMMDevice > device;
     ComPtr < IMMEndpoint > endpoint;
     EDataFlow flow;
+
+    GstWasapi2DeviceProps props;
+    props.form_factor = UnknownFormFactor;
+    props.enumerator_name = "UNKNOWN";
 
     hr = collection->Item (i, &device);
     if (!gst_wasapi2_result (hr))
@@ -594,8 +699,10 @@ gst_wasapi2_enumerator_enumerate_internal (EnumerateData * data)
       continue;
     }
 
+    gst_wasapi2_enumerator_probe_props (prop.Get (), &props);
+
     gst_wasapi2_enumerator_add_entry (self, client.Get (), scaps, flow, FALSE,
-        device_id, desc, data->device_list);
+        device_id, desc, nullptr, nullptr, &props, data->device_list);
   }
 
   gst_caps_unref (scaps);
@@ -617,4 +724,32 @@ gst_wasapi2_enumerator_enumerate_devices (GstWasapi2Enumerator * object,
       (GSourceFunc) gst_wasapi2_enumerator_enumerate_internal, &data);
 
   WaitForSingleObject (data.event, INFINITE);
+}
+
+const gchar *
+gst_wasapi2_form_factor_to_string (EndpointFormFactor form_factor)
+{
+  switch (form_factor) {
+    case RemoteNetworkDevice:
+      return "RemoteNetworkDevice";
+    case Speakers:
+      return "Speakers";
+    case LineLevel:
+      return "LineLevel";
+    case Microphone:
+      return "Microphone";
+    case Headset:
+      return "Headset";
+    case Handset:
+      return "Handset";
+    case UnknownDigitalPassthrough:
+      return "UnknownDigitalPassthrough";
+    case SPDIF:
+      return "SPDIF";
+    case DigitalAudioDisplayDevice:
+      return "DigitalAudioDisplayDevice";
+    case UnknownFormFactor:
+    default:
+      return "UnknownFormFactor";
+  }
 }

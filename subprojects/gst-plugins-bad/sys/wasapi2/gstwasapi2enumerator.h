@@ -21,6 +21,7 @@
 
 #include <gst/gst.h>
 #include "gstwasapi2util.h"
+#include <string>
 
 G_BEGIN_DECLS
 
@@ -28,14 +29,30 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GstWasapi2Enumerator, gst_wasapi2_enumerator,
     GST, WASAPI2_ENUMERATOR, GstObject);
 
-typedef struct _GstWasapi2EnumeratorEntry
+G_END_DECLS
+
+struct GstWasapi2DeviceProps
 {
-  gchar *device_id;
-  gchar *device_name;
-  gboolean is_default;
-  GstCaps *caps;
+  EndpointFormFactor form_factor;
+  std::string enumerator_name;
+};
+
+struct GstWasapi2EnumeratorEntry
+{
+  ~GstWasapi2EnumeratorEntry()
+  {
+    gst_clear_caps (&caps);
+  }
+
+  std::string device_id;
+  std::string device_name;
+  std::string actual_device_id;
+  std::string actual_device_name;
+  gboolean is_default = FALSE;
+  GstCaps *caps = nullptr;
   EDataFlow flow;
-} GstWasapi2EnumeratorEntry;
+  GstWasapi2DeviceProps device_props = { };
+};
 
 GstWasapi2Enumerator * gst_wasapi2_enumerator_new (void);
 
@@ -47,5 +64,5 @@ void gst_wasapi2_enumerator_entry_free (GstWasapi2EnumeratorEntry * entry);
 void gst_wasapi2_enumerator_enumerate_devices (GstWasapi2Enumerator * object,
                                                GPtrArray * entry);
 
-G_END_DECLS
+const gchar * gst_wasapi2_form_factor_to_string (EndpointFormFactor form_factor);
 
