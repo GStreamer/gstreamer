@@ -3510,6 +3510,10 @@ extension.</doc>
       <member name="include_emulated" value="4" c:identifier="GST_GL_DRM_FORMAT_INCLUDE_EMULATED" version="1.26" glib:nick="include-emulated" glib:name="GST_GL_DRM_FORMAT_INCLUDE_EMULATED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.h">include emulated formats</doc>
       </member>
+      <member name="direct_import" value="8" c:identifier="GST_GL_DRM_FORMAT_DIRECT_IMPORT" version="1.28" glib:nick="direct-import" glib:name="GST_GL_DRM_FORMAT_DIRECT_IMPORT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglutils.h">EGL is responsible for the colorspace conversion. In this case, all
+supported modifiers get translated to RGBA.</doc>
+      </member>
     </bitfield>
     <class name="GLFilter" c:symbol-prefix="gl_filter" c:type="GstGLFilter" parent="GLBaseFilter" glib:type-name="GstGLFilter" glib:get-type="gst_gl_filter_get_type" glib:type-struct="GLFilterClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglfilter.c">#GstGLFilter helps to implement simple OpenGL filter elements taking a

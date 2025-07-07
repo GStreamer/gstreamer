@@ -1402,7 +1402,7 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
 {
   struct DmabufUpload *dmabuf = impl;
   GstCaps *ret, *tmp;
-  GstGLDrmFormatFlags flags = 0;
+  GstGLDrmFormatFlags flags = GST_GL_DRM_FORMAT_DIRECT_IMPORT;
 
   if (dmabuf->target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
     flags |= GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL;
@@ -1449,13 +1449,6 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
       return NULL;
     }
 
-    /* The direct mode, sampling an imported texture will return an RGBA
-       vector in the same colorspace as the source image. If the source
-       image is stored in YUV(or some other basis) then the YUV values will
-       be transformed to RGB values. So, any input format is transformed to:
-       "video/x-raw(memory:GLMemory), format=(string)RGBA" as output. */
-    gst_caps_set_simple (ret, "format", G_TYPE_STRING, "RGBA", NULL);
-
     n = gst_caps_get_size (ret);
     for (i = 0; i < n; i++) {
       GstStructure *s = gst_caps_get_structure (ret, i);
@@ -1476,14 +1469,6 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
     ret = _dma_buf_upload_transform_caps_common (caps, context, direction,
         flags, 1 << dmabuf->target, GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
         GST_CAPS_FEATURE_MEMORY_DMABUF);
-
-    if (context && ret) {
-      GValue direct_fmts = G_VALUE_INIT;
-      g_value_init (&direct_fmts, GST_TYPE_LIST);
-      gst_gl_context_egl_format_list_all_drm_formats (context, &direct_fmts);
-      gst_caps_set_value_static_str (ret, "drm-format", &direct_fmts);
-      g_value_unset (&direct_fmts);
-    }
 
     tmp = _dma_buf_upload_transform_caps_common (caps, context, direction,
         flags, 1 << dmabuf->target, GST_CAPS_FEATURE_MEMORY_GL_MEMORY,

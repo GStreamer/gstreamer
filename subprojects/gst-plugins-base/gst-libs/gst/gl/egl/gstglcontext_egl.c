@@ -1893,25 +1893,25 @@ gst_gl_context_egl_format_supports_modifier (GstGLContext * context,
 }
 
 /**
- * gst_gl_context_egl_format_list_all_drm_formats:
+ * gst_gl_context_egl_append_all_drm_formats:
  * @context: an EGL #GstGLContext
- * @drm_fmt_list: a #GValue initialized to hold %GST_TYPE_LIST
+ * @drm_fromats: a #GPtrArray holding strings
+ * @external_only: set to %TRUE to include external only formats
  *
- * Append all fourcc/modifier pair supported for this egl context. This is
+ * Append all fourcc/modifier pair supported for this EGL context. This is
  * useful when implementating direct dmabuf upload as all the formats can be
  * processed as RGBA in this case.
  *
  * Since 1.28
  */
 void
-gst_gl_context_egl_format_list_all_drm_formats (GstGLContext * context,
-    GValue * drm_fmt_list)
+gst_gl_context_egl_append_all_drm_formats (GstGLContext * context,
+    GPtrArray * drm_formats, gboolean include_external)
 {
 #if GST_GL_HAVE_DMABUF
   GstGLContextEGL *egl;
 
   g_return_if_fail (GST_IS_GL_CONTEXT_EGL (context));
-  g_return_if_fail (GST_VALUE_HOLDS_LIST (drm_fmt_list));
 
   if (!gst_gl_context_egl_fetch_dma_formats (context))
     return;
@@ -1928,14 +1928,14 @@ gst_gl_context_egl_format_list_all_drm_formats (GstGLContext * context,
 
     for (gint j = 0; j < format->modifiers->len; j++) {
       GstGLDmaModifier *modifier;
-      GValue value = G_VALUE_INIT;
-      g_value_init (&value, G_TYPE_STRING);
-
       modifier = &g_array_index (format->modifiers, GstGLDmaModifier, j);
+
+      if (modifier->external_only && !include_external)
+        continue;
+
       gchar *drm_fmt_str = gst_video_dma_drm_fourcc_to_string (format->fourcc,
           modifier->modifier);
-      g_value_take_string (&value, drm_fmt_str);
-      gst_value_list_append_and_take_value (drm_fmt_list, &value);
+      g_ptr_array_add (drm_formats, drm_fmt_str);
     }
   }
 

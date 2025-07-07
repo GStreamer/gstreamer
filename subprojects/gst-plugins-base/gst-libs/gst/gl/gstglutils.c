@@ -935,9 +935,18 @@ _append_drm_formats_from_video_format (GstGLContext * context,
 {
   const gboolean include_external =
       !!(flags & GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL);
+  const gboolean direct_import = !!(flags & GST_GL_DRM_FORMAT_DIRECT_IMPORT);
   guint32 fourcc;
   guint64 modifier;
   char *drm_format;
+
+  if (direct_import) {
+    if (format != GST_VIDEO_FORMAT_RGBA)
+      return;
+    gst_gl_context_egl_append_all_drm_formats (context, drm_formats,
+        include_external);
+    return;
+  }
 
   fourcc = gst_video_dma_drm_format_from_gst_format (format, &modifier);
   if (fourcc == DRM_FORMAT_INVALID)
@@ -1057,7 +1066,11 @@ _get_video_format_from_drm_format (GstGLContext * context,
       modifier != DRM_FORMAT_MOD_LINEAR)
     return GST_VIDEO_FORMAT_UNKNOWN;
 
-  gst_format = gst_video_dma_drm_format_to_gst_format (fourcc, modifier);
+  if (flags & GST_GL_DRM_FORMAT_DIRECT_IMPORT)
+    gst_format = GST_VIDEO_FORMAT_RGBA;
+  else
+    gst_format = gst_video_dma_drm_format_to_gst_format (fourcc, modifier);
+
   if (gst_format == GST_VIDEO_FORMAT_UNKNOWN)
     return GST_VIDEO_FORMAT_UNKNOWN;
 

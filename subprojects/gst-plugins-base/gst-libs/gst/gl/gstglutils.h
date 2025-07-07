@@ -72,6 +72,7 @@ void gst_gl_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * resul
  * @GST_GL_DRM_FORMAT_INCLUDE_EXTERNAL: include external-only formats (Since: 1.26)
  * @GST_GL_DRM_FORMAT_LINEAR_ONLY: only include formats with linear modifier (Since: 1.26)
  * @GST_GL_DRM_FORMAT_INCLUDE_EMULATED: include emulated formats (Since: 1.26)
+ * @GST_GL_DRM_FORMAT_DIRECT_IMPORT: EGL is doing the color convertion (Since: 1.28)
  *
  * Since: 1.26
  */
@@ -101,6 +102,15 @@ typedef enum
    * Since: 1.26
    */
   GST_GL_DRM_FORMAT_INCLUDE_EMULATED = 1 << 2,
+  /**
+   * GST_GL_DRM_FORMAT_DIRECT_IMPORT:
+   *
+   * EGL is responsible for the colorspace conversion. In this case, all
+   * supported modifiers get translated to RGBA.
+   *
+   * Since: 1.28
+   */
+  GST_GL_DRM_FORMAT_DIRECT_IMPORT = 1 << 3,
 } GstGLDrmFormatFlags;
 
 GST_GL_API
