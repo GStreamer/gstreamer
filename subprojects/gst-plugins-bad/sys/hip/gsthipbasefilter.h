@@ -22,7 +22,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
-#include "gsthip.h"
+#include <gst/hip/gsthip.h>
 
 G_BEGIN_DECLS
 

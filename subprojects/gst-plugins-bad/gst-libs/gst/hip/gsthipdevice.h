@@ -20,9 +20,8 @@
 #pragma once
 
 #include <gst/gst.h>
-#include "gsthip_fwd.h"
-#include "gsthip-enums.h"
-#include <hip/hip_runtime.h>
+#include <gst/hip/gsthip_fwd.h>
+#include <gst/hip/gsthip-enums.h>
 
 G_BEGIN_DECLS
 
@@ -35,37 +34,63 @@ G_BEGIN_DECLS
 
 #define GST_HIP_DEVICE_CONTEXT_TYPE "gst.hip.device"
 
+/**
+ * GstHipDevice:
+ *
+ * Opaque GstHipDevice struct
+ *
+ * Since: 1.28
+ */
 struct _GstHipDevice
 {
   GstObject object;
 
   /*< private >*/
   GstHipDevicePrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstHipDeviceClass:
+ *
+ * Opaque GstHipDeviceClass struct
+ *
+ * Since: 1.28
+ */
 struct _GstHipDeviceClass
 {
   GstObjectClass parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_HIP_API
 GType          gst_hip_device_get_type    (void);
 
+GST_HIP_API
 GstHipDevice * gst_hip_device_new         (GstHipVendor vendor,
                                            guint device_id);
 
+GST_HIP_API
 gboolean       gst_hip_device_set_current (GstHipDevice * device);
 
+GST_HIP_API
 hipError_t     gst_hip_device_get_attribute (GstHipDevice * device,
                                              hipDeviceAttribute_t attr,
                                              gint * value);
 
+GST_HIP_API
 gboolean       gst_hip_device_is_equal    (GstHipDevice * device1,
                                            GstHipDevice * device2);
 
+GST_HIP_API
 GstHipVendor   gst_hip_device_get_vendor  (GstHipDevice * device);
 
+GST_HIP_API
 guint          gst_hip_device_get_device_id  (GstHipDevice * device);
 
+GST_HIP_API
 GstHipStream * gst_hip_device_get_stream (GstHipDevice * device);
 
 G_END_DECLS

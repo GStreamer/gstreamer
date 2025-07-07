@@ -19,16 +19,8 @@
 
 #pragma once
 
-#include <gst/gst.h>
-#include "gsthipdevice.h"
+#include <gst/hip/gsthip.h>
+#include <gst/hip/gsthip-interop-gl.h>
+#include <gst/hip/hip-gst-gl.h>
+#include <gst/gl/gl.h>
 
-G_BEGIN_DECLS
-
-gboolean  gst_hip_rtc_load_library (GstHipVendor vendor);
-
-gchar *   gst_hip_rtc_compile (GstHipDevice * device,
-                               const gchar * source,
-                               const gchar ** options,
-                               guint num_options);
-
-G_END_DECLS

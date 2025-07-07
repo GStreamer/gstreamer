@@ -29,9 +29,10 @@
 #include <mutex>
 #include <hip/nvidia_hip_runtime_api.h>
 #include <string.h>
+#include "gsthiputils-private.h"
 
 #ifdef HAVE_GST_GL
-#include "gsthiploader-gl.h"
+#include "gsthip-gl.h"
 #include <cudaGL.h>
 #endif
 
@@ -451,6 +452,16 @@ gst_hip_load_library_nvidia (void)
 }
 /* *INDENT-ON* */
 
+/**
+ * gst_hip_load_library:
+ * @vendor: a #GstHipVendor
+ *
+ * Opens @vendor specific runtime libraries
+ *
+ * Returns: %TRUE if succeeded
+ *
+ * Since: 1.28
+ */
 gboolean
 gst_hip_load_library (GstHipVendor vendor)
 {

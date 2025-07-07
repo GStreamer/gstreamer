@@ -28,8 +28,7 @@
 #include <condition_variable>
 
 #ifdef HAVE_GST_GL
-#include "gsthip-interop-gl.h"
-#include "gsthiploader-gl.h"
+#include "gsthip-gl.h"
 #endif
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -106,6 +105,17 @@ unregister_resource_on_gl_thread (GstGLContext * gl_context,
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstHipGraphicsResource, gst_hip_graphics_resource);
 
+/**
+ * gst_hip_graphics_resource_map:
+ * @resource: a #GstHipGraphicsResource
+ * @stream: (nullable): a hipStream_t handle
+ *
+ * Map registered @resource for I/O operation
+ *
+ * Returns: hipError_t error code
+ *
+ * Since: 1.28
+ */
 hipError_t
 gst_hip_graphics_resource_map (GstHipGraphicsResource * resource,
     hipStream_t stream)
@@ -134,6 +144,17 @@ gst_hip_graphics_resource_map (GstHipGraphicsResource * resource,
   return hipSuccess;
 }
 
+/**
+ * gst_hip_graphics_resource_unmap:
+ * @resource: a #GstHipGraphicsResource
+ * @stream: (nullable): a hipStream_t handle
+ *
+ * Unmap mapped @resource via gst_hip_graphics_resource_map()
+ *
+ * Returns: hipError_t error code
+ *
+ * Since: 1.28
+ */
 hipError_t
 gst_hip_graphics_resource_unmap (GstHipGraphicsResource * resource,
     hipStream_t stream)
@@ -164,6 +185,20 @@ gst_hip_graphics_resource_unmap (GstHipGraphicsResource * resource,
   return ret;
 }
 
+/**
+ * gst_hip_graphics_resource_get_mapped_pointer:
+ * @resource: a #GstHipGraphicsResource
+ * @dev_ptr: (out) (optional): a pointer to mapped device memory
+ * @size: (out) (optional): the size of mapped device memory
+ *
+ * Get mapped device pointer from @resource.
+ * Caller must map @resource via gst_hip_graphics_resource_map()
+ * before getting mapped device memory
+ *
+ * Returns: hipError_t error code
+ *
+ * Since: 1.28
+ */
 hipError_t
 gst_hip_graphics_resource_get_mapped_pointer (GstHipGraphicsResource * resource,
     void **dev_ptr, size_t *size)
@@ -193,18 +228,44 @@ gst_hip_graphics_resource_get_mapped_pointer (GstHipGraphicsResource * resource,
   return hipSuccess;
 }
 
+/**
+ * gst_hip_graphics_resource_ref:
+ * @resource: a #GstHipGraphicsResource
+ *
+ * Increments the reference count on @resource
+ *
+ * Returns: (transfer full): a pointer to @resource
+ *
+ * Since: 1.28
+ */
 GstHipGraphicsResource *
 gst_hip_graphics_resource_ref (GstHipGraphicsResource * resource)
 {
   return (GstHipGraphicsResource *) gst_mini_object_ref (resource);
 }
 
+/**
+ * gst_hip_graphics_resource_unref:
+ * @resource: a #GstHipGraphicsResource
+ *
+ * Decrements the reference count on @resource
+ *
+ * Since: 1.28
+ */
 void
 gst_hip_graphics_resource_unref (GstHipGraphicsResource * resource)
 {
   gst_mini_object_unref (resource);
 }
 
+/**
+ * gst_clear_hip_graphics_resource: (skip)
+ * @resource: a pointer to a #GstHipGraphicsResource
+ *
+ * Clears a reference to the @resource
+ *
+ * Since: 1.28
+ */
 void
 gst_clear_hip_graphics_resource (GstHipGraphicsResource ** resource)
 {
@@ -279,8 +340,21 @@ get_resource_on_gl_thread (GstGLContext * gl_context, GetResourceData * data)
   data->ret = hipSuccess;
 }
 
+/**
+ * gst_hip_gl_get_graphics_resource_from_memory:
+ * @device: a #GstHipDevice
+ * @mem: a #GstMemory
+ * @resource: (out) (transfer full) (nullable): a location to store created #GstHipGraphicsResource
+ *
+ * Creates a new #GstHipGraphicsResource from gl memory.
+ * @mem must be a valid #GstGLMemoryPBO
+ *
+ * Returns: hipError_t error code
+ *
+ * Since: 1.28
+ */
 hipError_t
-gst_hip_get_graphics_resource_from_gl_memory (GstHipDevice * device,
+gst_hip_gl_get_graphics_resource_from_memory (GstHipDevice * device,
     GstMemory * mem, GstHipGraphicsResource ** resource)
 {
   g_return_val_if_fail (GST_IS_HIP_DEVICE (device), hipErrorInvalidValue);

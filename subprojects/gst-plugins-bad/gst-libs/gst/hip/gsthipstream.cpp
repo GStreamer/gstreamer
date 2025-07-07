@@ -70,6 +70,17 @@ gst_hip_stream_free (GstHipStream * stream)
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstHipStream, gst_hip_stream);
 
+/**
+ * gst_hip_stream_new:
+ * @vendor: a #GstHipVendor
+ * @device_id: device identifier
+ *
+ * Creates a new #GstHipStream object
+ *
+ * Returns: (transfer full) (nullable): a #GstHipStream object or %NULL if failed
+ *
+ * Since: 1.28
+ */
 GstHipStream *
 gst_hip_stream_new (GstHipVendor vendor, guint device_id)
 {
@@ -100,6 +111,16 @@ gst_hip_stream_new (GstHipVendor vendor, guint device_id)
   return stream;
 }
 
+/**
+ * gst_hip_stream_get_vendor:
+ * @stream: a #GstHipStream
+ *
+ * Gets device vendor of @stream object
+ *
+ * Returns: #GstHipVendor
+ *
+ * Since: 1.28
+ */
 GstHipVendor
 gst_hip_stream_get_vendor (GstHipStream * stream)
 {
@@ -108,6 +129,16 @@ gst_hip_stream_get_vendor (GstHipStream * stream)
   return stream->vendor;
 }
 
+/**
+ * gst_hip_stream_get_device_id:
+ * @stream: a #GstHipStream
+ *
+ * Gets numeric device identifier of @stream object
+ *
+ * Returns: device identifier
+ *
+ * Since: 1.28
+ */
 guint
 gst_hip_stream_get_device_id (GstHipStream * stream)
 {
@@ -116,6 +147,16 @@ gst_hip_stream_get_device_id (GstHipStream * stream)
   return stream->vendor;
 }
 
+/**
+ * gst_hip_stream_get_handle:
+ * @stream: (allow-none): a #GstHipStream
+ *
+ * Gets hipStream_t handle owned by @stream
+ *
+ * Returns: hipStream_t handle
+ *
+ * Since: 1.28
+ */
 hipStream_t
 gst_hip_stream_get_handle (GstHipStream * stream)
 {
@@ -125,6 +166,17 @@ gst_hip_stream_get_handle (GstHipStream * stream)
   return stream->handle;
 }
 
+/**
+ * gst_hip_stream_record_event:
+ * @stream: a #GstHipStream
+ * @event: (out) (transfer full) (nullable): a location to store #GstHipEvent
+ *
+ * Records currently scheduled operations in @stream to #GstHipEvent
+ *
+ * Returns: %TRUE if succeeded
+ *
+ * Since: 1.28
+ */
 gboolean
 gst_hip_stream_record_event (GstHipStream * stream, GstHipEvent ** event)
 {
@@ -155,18 +207,44 @@ gst_hip_stream_record_event (GstHipStream * stream, GstHipEvent ** event)
   return TRUE;
 }
 
+/**
+ * gst_hip_stream_ref:
+ * @stream: a #GstHipStream
+ *
+ * Increments the reference count on @stream
+ *
+ * Returns: (transfer full): a pointer to @stream
+ *
+ * Since: 1.28
+ */
 GstHipStream *
 gst_hip_stream_ref (GstHipStream * stream)
 {
   return (GstHipStream *) gst_mini_object_ref (stream);
 }
 
+/**
+ * gst_hip_stream_unref:
+ * @stream: a #GstHipStream
+ *
+ * Decrements the reference count on @stream
+ *
+ * Since: 1.28
+ */
 void
 gst_hip_stream_unref (GstHipStream * stream)
 {
   return gst_mini_object_unref (stream);
 }
 
+/**
+ * gst_clear_hip_stream: (skip)
+ * @stream: a pointer to a #GstHipStream
+ *
+ * Clears a reference to the @stream
+ *
+ * Since: 1.28
+ */
 void
 gst_clear_hip_stream (GstHipStream ** stream)
 {

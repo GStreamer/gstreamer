@@ -20,6 +20,8 @@
 #pragma once
 
 #include <gst/gst.h>
+#include <gst/hip/hip-prelude.h>
+#include <hip/hip_runtime.h>
 
 G_BEGIN_DECLS
 

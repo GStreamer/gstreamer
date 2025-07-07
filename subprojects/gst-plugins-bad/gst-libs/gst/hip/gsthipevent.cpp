@@ -111,6 +111,18 @@ gst_hip_event_pool_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/**
+ * gst_hip_event_pool_new:
+ * @vendor: a #GstHipVendor
+ * @device_id: device identifier
+ *
+ * Creates a new event pool instance with @vendor and @device_id.
+ *
+ * Returns: (transfer full) (nullable): a #GstHipEventPool if succeeded,
+ * otherwise %NULL
+ *
+ * Since: 1.28
+ */
 GstHipEventPool *
 gst_hip_event_pool_new (GstHipVendor vendor, guint device_id)
 {
@@ -159,6 +171,17 @@ gst_hip_event_free (GstHipEvent * event)
   delete event;
 }
 
+/**
+ * gst_hip_event_pool_acquire:
+ * @pool: a #GstHipEventPool
+ * @event: (out) (transfer full) (nullable): a location to store #GstHipEvent
+ *
+ * Acquires #GstHipEvent from @pool
+ *
+ * Returns: %TRUE if succeeded
+ *
+ * Since: 1.28
+ */
 gboolean
 gst_hip_event_pool_acquire (GstHipEventPool * pool, GstHipEvent ** event)
 {
@@ -211,6 +234,16 @@ gst_hip_event_pool_acquire (GstHipEventPool * pool, GstHipEvent ** event)
   return TRUE;
 }
 
+/**
+ * gst_hip_event_get_vendor:
+ * @event: a #GstHipEvent
+ *
+ * Gets device vendor of @event object
+ *
+ * Returns: #GstHipVendor
+ *
+ * Since: 1.28
+ */
 GstHipVendor
 gst_hip_event_get_vendor (GstHipEvent * event)
 {
@@ -219,6 +252,16 @@ gst_hip_event_get_vendor (GstHipEvent * event)
   return event->vendor;
 }
 
+/**
+ * gst_hip_event_get_device_id:
+ * @event: a #GstHipEvent
+ *
+ * Gets numeric device identifier of @event object
+ *
+ * Returns: device identifier
+ *
+ * Since: 1.28
+ */
 guint
 gst_hip_event_get_device_id (GstHipEvent * event)
 {
@@ -227,6 +270,17 @@ gst_hip_event_get_device_id (GstHipEvent * event)
   return event->vendor;
 }
 
+/**
+ * gst_hip_event_record:
+ * @event: a #GstHipEvent
+ * @stream: a hipStream_t handle
+ *
+ * Records operations currently scheduled by @stream to @event
+ *
+ * Returns: hipError_t error code
+ *
+ * Since: 1.28
+ */
 hipError_t
 gst_hip_event_record (GstHipEvent * event, hipStream_t stream)
 {
@@ -239,6 +293,16 @@ gst_hip_event_record (GstHipEvent * event, hipStream_t stream)
   return HipEventRecord (event->vendor, event->handle, stream);
 }
 
+/**
+ * gst_hip_event_query:
+ * @event: a #GstHipEvent
+ *
+ * Queries event status via hipEventQuery()
+ *
+ * Returns: hipError_t error code
+ *
+ * Since: 1.28
+ */
 hipError_t
 gst_hip_event_query (GstHipEvent * event)
 {
@@ -251,6 +315,16 @@ gst_hip_event_query (GstHipEvent * event)
   return HipEventQuery (event->vendor, event->handle);
 }
 
+/**
+ * gst_hip_event_synchronize:
+ * @event: a #GstHipEvent
+ *
+ * Waits for recorded operations via hipEventSynchronize()
+ *
+ * Returns: hipError_t error code
+ *
+ * Since: 1.28
+ */
 hipError_t
 gst_hip_event_synchronize (GstHipEvent * event)
 {
@@ -263,18 +337,44 @@ gst_hip_event_synchronize (GstHipEvent * event)
   return HipEventSynchronize (event->vendor, event->handle);
 }
 
+/**
+ * gst_hip_event_ref:
+ * @event: a #GstHipEvent
+ *
+ * Increments the reference count on @event
+ *
+ * Returns: (transfer full): a pointer to @event
+ *
+ * Since: 1.28
+ */
 GstHipEvent *
 gst_hip_event_ref (GstHipEvent * event)
 {
   return (GstHipEvent *) gst_mini_object_ref (event);
 }
 
+/**
+ * gst_hip_event_unref:
+ * @event: a #GstHipEvent
+ *
+ * Decrements the reference count on @event
+ *
+ * Since: 1.28
+ */
 void
 gst_hip_event_unref (GstHipEvent * event)
 {
   return gst_mini_object_unref (event);
 }
 
+/**
+ * gst_clear_hip_event: (skip)
+ * @event: a pointer to a #GstHipEvent
+ *
+ * Clears a reference to the @event
+ *
+ * Since: 1.28
+ */
 void
 gst_clear_hip_event (GstHipEvent ** event)
 {

@@ -19,19 +19,26 @@
 
 #pragma once
 
+#ifndef GST_USE_UNSTABLE_API
+#pragma message ("The hip library from gst-plugins-bad is unstable API and may change in future.")
+#pragma message ("You can define GST_USE_UNSTABLE_API to avoid this warning.")
+#endif
+
+#include <hip/hip_runtime.h>
+
 #include <gst/gst.h>
+#include <gst/hip/hip-gst.h>
+#include <gst/hip/hip-prelude.h>
+#include <gst/hip/gsthip_fwd.h>
+#include <gst/hip/gsthip-enums.h>
+#include <gst/hip/gsthip-interop.h>
+#include <gst/hip/gsthipbufferpool.h>
+#include <gst/hip/gsthipdevice.h>
+#include <gst/hip/gsthipevent.h>
+#include <gst/hip/gsthiploader.h>
+#include <gst/hip/gsthipmemory.h>
+#include <gst/hip/gsthiprtc.h>
+#include <gst/hip/gsthipstream.h>
+#include <gst/hip/gsthiputils.h>
 
-G_BEGIN_DECLS
-
-typedef enum
-{
-  GST_HIP_VENDOR_UNKNOWN,
-  GST_HIP_VENDOR_AMD,
-  GST_HIP_VENDOR_NVIDIA,
-} GstHipVendor;
-
-#define GST_TYPE_HIP_VENDOR (gst_hip_vendor_get_type())
-GType gst_hip_vendor_get_type (void);
-
-G_END_DECLS
 

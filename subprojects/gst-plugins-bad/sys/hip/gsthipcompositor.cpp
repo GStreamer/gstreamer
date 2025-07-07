@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "gsthip.h"
+#include <gst/hip/gsthip.h>
 #include "gsthipcompositor.h"
 #include "gsthipconverter.h"
 #include <mutex>

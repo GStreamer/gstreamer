@@ -24,6 +24,7 @@
 #include "gsthip.h"
 #include <mutex>
 #include <gmodule.h>
+#include "gsthiputils-private.h"
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
@@ -173,6 +174,24 @@ run_hip_context_query (GstElement * element, GstHipDevice ** device)
   gst_query_unref (query);
 }
 
+/**
+ * gst_hip_ensure_element_data:
+ * @element: the #GstElement running the query
+ * @vendor: a #GstHipVendor
+ * @device_id: preferred device-id, pass device_id >=0 when
+ *             the device_id explicitly required. Otherwise, set -1.
+ * @device: (inout): the resulting #GstHipDevice
+ *
+ * Perform the steps necessary for retrieving a #GstHipDevice from the
+ * surrounding elements or from the application using the #GstContext mechanism.
+ *
+ * If the content of @device is not %NULL, then no #GstContext query is
+ * necessary for #GstHipDevice.
+ *
+ * Returns: whether a #GstHipDevice exists in @device
+ *
+ * Since: 1.28
+ */
 gboolean
 gst_hip_ensure_element_data (GstElement * element, GstHipVendor vendor,
     gint device_id, GstHipDevice ** device)
@@ -204,6 +223,24 @@ gst_hip_ensure_element_data (GstElement * element, GstHipVendor vendor,
   return TRUE;
 }
 
+/**
+ * gst_hip_handle_set_context:
+ * @element: a #GstElement
+ * @context: a #GstContext
+ * @vendor: a #GstHipVendor
+ * @device_id: preferred device-id, pass device_id >=0 when
+ *             the device_id explicitly required. Otherwise, set -1.
+ * @device: (inout) (transfer full): location of a #GstHipDevice
+ *
+ * Helper function for implementing #GstElementClass.set_context() in
+ * HIP capable elements.
+ *
+ * Retrieves the #GstHipDevice in @context and places the result in @device.
+ *
+ * Returns: whether the @device could be set successfully
+ *
+ * Since: 1.28
+ */
 gboolean
 gst_hip_handle_set_context (GstElement * element, GstContext * context,
     GstHipVendor vendor, gint device_id, GstHipDevice ** device)
@@ -241,6 +278,17 @@ gst_hip_handle_set_context (GstElement * element, GstContext * context,
   return FALSE;
 }
 
+/**
+ * gst_hip_handle_context_query:
+ * @element: a #GstElement
+ * @query: a #GstQuery of type %GST_QUERY_CONTEXT
+ * @device: (transfer none) (nullable): a #GstHipDevice
+ *
+ * Returns: Whether the @query was successfully responded to from the passed
+ *          @context.
+ *
+ * Since: 1.28
+ */
 gboolean
 gst_hip_handle_context_query (GstElement * element, GstQuery * query,
     GstHipDevice * device)
@@ -275,6 +323,14 @@ gst_hip_handle_context_query (GstElement * element, GstQuery * query,
   return TRUE;
 }
 
+/**
+ * gst_context_new_hip_device:
+ * @device: (transfer none): a #GstHipDevice
+ *
+ * Returns: (transfer full): a new #GstContext embedding the @device
+ *
+ * Since: 1.28
+ */
 GstContext *
 gst_context_new_hip_device (GstHipDevice * device)
 {

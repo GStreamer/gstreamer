@@ -22,18 +22,16 @@
 #endif
 
 #include "gsthip-config.h"
+#include <gst/hip/gsthip.h>
 
 #ifdef HAVE_GST_CUDA
 #include <gst/cuda/gstcuda.h>
 #endif
 
-#ifdef HAVE_GST_GL
-#include <gst/gl/gl.h>
-#include "gsthiploader-gl.h"
-#include "gsthip-interop-gl.h"
+#ifdef HAVE_GST_HIP_GL
+#include <gst/hip/gsthip-gl.h>
 #endif
 
-#include "gsthip.h"
 #include "gsthipmemorycopy.h"
 #include <mutex>
 
@@ -104,7 +102,7 @@ struct _GstHipMemoryCopyPrivate
 #ifdef HAVE_GST_CUDA
       gst_clear_object (&cuda_ctx);
 #endif
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
       gst_clear_object (&other_gl_ctx);
       gst_clear_object (&gl_ctx);
       gst_clear_object (&gl_dpy);
@@ -125,7 +123,7 @@ struct _GstHipMemoryCopyPrivate
   GstCudaContext *cuda_ctx = nullptr;
 #endif
 
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
   GstGLDisplay *gl_dpy = nullptr;
   GstGLContext *gl_ctx = nullptr;
   GstGLContext *other_gl_ctx = nullptr;
@@ -287,7 +285,7 @@ gst_hip_memory_copy_set_context (GstElement * element, GstContext * context)
 
   {
     std::lock_guard < std::recursive_mutex > lk (priv->lock);
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
     gst_gl_handle_set_context (element, context, &priv->gl_dpy,
         &priv->other_gl_ctx);
 #endif
@@ -424,7 +422,7 @@ gst_hip_memory_copy_ensure_device (GstHipMemoryCopy * self)
 }
 #endif
 
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
 static gboolean
 gst_hip_memory_copy_ensure_gl_context (GstHipMemoryCopy * self)
 {
@@ -514,7 +512,7 @@ gst_hip_memory_copy_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     priv->in_type = MemoryType::CUDA;
   }
 #endif
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
   else if (gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
     priv->in_type = MemoryType::GL;
@@ -532,7 +530,7 @@ gst_hip_memory_copy_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     priv->out_type = MemoryType::CUDA;
   }
 #endif
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
   else if (gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
     priv->out_type = MemoryType::GL;
@@ -540,7 +538,7 @@ gst_hip_memory_copy_set_caps (GstBaseTransform * trans, GstCaps * incaps,
 #endif
 
   priv->transfer_type = TransferType::SYSTEM;
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
   if (priv->in_type == MemoryType::GL && priv->out_type == MemoryType::HIP &&
       gst_hip_memory_copy_ensure_gl_context (self)) {
     priv->transfer_type = TransferType::GL_TO_HIP;
@@ -569,7 +567,7 @@ gst_hip_memory_copy_query (GstBaseTransform * trans,
     if (gst_hip_handle_context_query (elem, query, priv->device))
       return TRUE;
 
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
     if (gst_gl_handle_context_query (elem, query,
             priv->gl_dpy, priv->gl_ctx, priv->other_gl_ctx)) {
       return TRUE;
@@ -734,7 +732,7 @@ gst_hip_memory_copy_transform_caps (GstBaseTransform * trans,
           _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY);
       ret = gst_caps_merge (ret, caps_cuda);
 #endif
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
       auto caps_gl =
           _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
       ret = gst_caps_merge (ret, caps_gl);
@@ -753,7 +751,7 @@ gst_hip_memory_copy_transform_caps (GstBaseTransform * trans,
           _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY);
       ret = gst_caps_merge (ret, caps_cuda);
 #endif
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
       auto caps_gl =
           _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
       ret = gst_caps_merge (ret, caps_gl);
@@ -832,7 +830,7 @@ gst_hip_memory_copy_propose_allocation (GstBaseTransform * trans,
       is_system = false;
     }
 #endif
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
     else if (gst_caps_features_contains (features,
             GST_CAPS_FEATURE_MEMORY_GL_MEMORY) &&
         gst_hip_memory_copy_ensure_gl_context (self)) {
@@ -943,7 +941,7 @@ gst_hip_memory_copy_decide_allocation (GstBaseTransform * trans,
       pool = gst_cuda_buffer_pool_new (priv->cuda_ctx);
   }
 #endif
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
   else if (gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_GL_MEMORY) &&
       gst_hip_memory_copy_ensure_gl_context (self)) {
@@ -1080,7 +1078,7 @@ gst_hip_memory_copy_device_copy (GstHipMemoryCopy * self, GstBuffer * inbuf,
 }
 #endif
 
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
 struct GLCopyData
 {
   GstHipMemoryCopy *self;
@@ -1127,7 +1125,7 @@ gl_copy_thread_func (GstGLContext * gl_ctx, GLCopyData * data)
     auto mem = gst_buffer_peek_memory (data->gl_buf, i);
     auto pbo_mem = (GstGLMemoryPBO *) mem;
 
-    hip_ret = gst_hip_get_graphics_resource_from_gl_memory (data->device,
+    hip_ret = gst_hip_gl_get_graphics_resource_from_memory (data->device,
         mem, &resources[i]);
     if (!gst_hip_result (hip_ret, vendor)) {
       GST_WARNING_OBJECT (self, "Couldn't get graphics resource");
@@ -1286,7 +1284,7 @@ gst_hip_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   auto self = GST_HIP_MEMORY_COPY (trans);
   auto priv = self->priv;
 
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
   if (priv->transfer_type == TransferType::GL_TO_HIP ||
       priv->transfer_type == TransferType::HIP_TO_GL) {
     if (gst_hip_memory_copy_gl_copy (self, inbuf, outbuf)) {
@@ -1341,7 +1339,7 @@ gst_hip_upload_class_init (GstHipUploadClass * klass)
       gst_caps_ref (sys_caps));
 
   auto sink_caps = sys_caps;
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
   auto gl_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
       (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, GST_HIP_FORMATS));
   sink_caps = gst_caps_merge (sink_caps, gl_caps);
@@ -1396,7 +1394,7 @@ gst_hip_download_class_init (GstHipDownloadClass * klass)
       gst_caps_ref (sys_caps));
 
   auto src_caps = sys_caps;
-#ifdef HAVE_GST_GL
+#ifdef HAVE_GST_HIP_GL
   auto gl_caps = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
       (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, GST_HIP_FORMATS));
   src_caps = gst_caps_merge (src_caps, gl_caps);

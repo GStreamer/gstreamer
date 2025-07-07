@@ -22,7 +22,7 @@
 #endif
 
 #include "gsthip.h"
-#include "gsthiploader.h"
+#include "gsthip-private.h"
 #include <mutex>
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -131,6 +131,18 @@ gst_hip_device_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/**
+ * gst_hip_device_new:
+ * @vendor: a #GstHipVendor
+ * @device_id: device identifier
+ *
+ * Creates a new device instance with @vendor and @device_id.
+ *
+ * Returns: (transfer full) (nullable): a #GstHipDevice if succeeded,
+ * otherwise %NULL
+ *
+ * Since: 1.28
+ */
 GstHipDevice *
 gst_hip_device_new (GstHipVendor vendor, guint device_id)
 {
@@ -192,6 +204,16 @@ gst_hip_device_new (GstHipVendor vendor, guint device_id)
   return self;
 }
 
+/**
+ * gst_hip_device_set_current:
+ * @device: a #GstHipDevice
+ *
+ * Sets @device to current stack via hipSetDevice
+ *
+ * Returns: %TRUE if hipSetDevice call succeeded
+ *
+ * Since: 1.28
+ */
 gboolean
 gst_hip_device_set_current (GstHipDevice * device)
 {
@@ -207,6 +229,18 @@ gst_hip_device_set_current (GstHipDevice * device)
   return TRUE;
 }
 
+/**
+ * gst_hip_device_get_attribute:
+ * @device: a #GstHipDevice
+ * @attr: a hipDeviceAttribute_t value
+ * @value: (out): an attribute value
+ *
+ * Gets a device attribute via hipDeviceGetAttribute
+ *
+ * Returns: hipError_t error code
+ *
+ * Since: 1.28
+ */
 hipError_t
 gst_hip_device_get_attribute (GstHipDevice * device, hipDeviceAttribute_t attr,
     gint * value)
@@ -218,6 +252,17 @@ gst_hip_device_get_attribute (GstHipDevice * device, hipDeviceAttribute_t attr,
   return HipDeviceGetAttribute (priv->vendor, value, attr, priv->device_id);
 }
 
+/**
+ * gst_hip_device_is_equal:
+ * @device1: a #GstHipDevice
+ * @device2: a #GstHipDevice
+ *
+ * Checks equality of @device1 and @device2
+ *
+ * Returns: %TRUE if both devices are associated with the same hardware device
+ *
+ * Since: 1.28
+ */
 gboolean
 gst_hip_device_is_equal (GstHipDevice * device1, GstHipDevice * device2)
 {
@@ -238,6 +283,16 @@ gst_hip_device_is_equal (GstHipDevice * device1, GstHipDevice * device2)
   return FALSE;
 }
 
+/**
+ * gst_hip_device_get_vendor:
+ * @device: a #GstHipDevice
+ *
+ * Gets vendor of @device
+ *
+ * Returns: #GstHipVendor
+ *
+ * Since: 1.28
+ */
 GstHipVendor
 gst_hip_device_get_vendor (GstHipDevice * device)
 {
@@ -246,6 +301,16 @@ gst_hip_device_get_vendor (GstHipDevice * device)
   return device->priv->vendor;
 }
 
+/**
+ * gst_hip_device_get_device_id:
+ * @device: a #GstHipDevice
+ *
+ * Gets numeric device identifier of @device
+ *
+ * Returns: the device identifier
+ *
+ * Since: 1.28
+ */
 guint
 gst_hip_device_get_device_id (GstHipDevice * device)
 {
@@ -254,6 +319,16 @@ gst_hip_device_get_device_id (GstHipDevice * device)
   return device->priv->device_id;
 }
 
+/**
+ * gst_hip_device_get_stream:
+ * @device: a #GstHipDevice
+ *
+ * Gets per #GstHipDevice default #GstHipStream owned by @device
+ *
+ * Returns: a #GstHipStream
+ *
+ * Since: 1.28
+ */
 GstHipStream *
 gst_hip_device_get_stream (GstHipDevice * device)
 {

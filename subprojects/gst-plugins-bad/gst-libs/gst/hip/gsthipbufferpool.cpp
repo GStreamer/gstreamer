@@ -129,7 +129,7 @@ gst_hip_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     gst_clear_object (&priv->alloc);
   }
 
-  priv->alloc = gst_hip_pool_allocator_new (self->device, &info, nullptr);
+  priv->alloc = gst_hip_pool_allocator_new (self->device, &info);
 
   if (!priv->alloc) {
     GST_ERROR_OBJECT (self, "Couldn't create allocator");
@@ -232,6 +232,17 @@ gst_hip_buffer_pool_stop (GstBufferPool * pool)
   return GST_BUFFER_POOL_CLASS (parent_class)->stop (pool);
 }
 
+/**
+ * gst_hip_buffer_pool_new:
+ * @device: a #GstHipDevice
+ *
+ * Creates new #GstHipBufferPool instance
+ *
+ * Returns: (transfer full): a #GstBufferPool that allocates buffers with
+ * #GstHipMemory
+ *
+ * Since: 1.28
+ */
 GstBufferPool *
 gst_hip_buffer_pool_new (GstHipDevice * device)
 {

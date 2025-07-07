@@ -20,28 +20,25 @@
 #pragma once
 
 #include <gst/gst.h>
-#include "gsthip_fwd.h"
+#include <gst/hip/hip-prelude.h>
+#include <gst/hip/gsthip-enums.h>
 #include <hip/hip_runtime.h>
+#include <hip/hip_gl_interop.h>
 
 G_BEGIN_DECLS
 
-GType gst_hip_graphics_resource_get_type (void);
+GST_HIP_API
+hipError_t HipGLGetDevices (GstHipVendor vendor,
+                            unsigned int* pHipDeviceCount,
+                            int* pHipDevices,
+                            unsigned int hipDeviceCount,
+                            hipGLDeviceList deviceList);
 
-hipError_t gst_hip_graphics_resource_map (GstHipGraphicsResource * resource,
-                                          hipStream_t stream);
-
-hipError_t gst_hip_graphics_resource_unmap (GstHipGraphicsResource * resource,
-                                            hipStream_t stream);
-
-hipError_t gst_hip_graphics_resource_get_mapped_pointer (GstHipGraphicsResource * resource,
-                                                         void ** dev_ptr,
-                                                         size_t * size);
-
-GstHipGraphicsResource * gst_hip_graphics_resource_ref (GstHipGraphicsResource * resource);
-
-void gst_hip_graphics_resource_unref (GstHipGraphicsResource * resource);
-
-void gst_clear_hip_graphics_resource (GstHipGraphicsResource ** resource);
+GST_HIP_API
+hipError_t HipGraphicsGLRegisterBuffer (GstHipVendor vendor,
+                                        hipGraphicsResource** resource,
+                                        unsigned int buffer,
+                                        unsigned int flags);
 
 G_END_DECLS
 

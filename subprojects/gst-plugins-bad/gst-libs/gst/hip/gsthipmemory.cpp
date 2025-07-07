@@ -22,6 +22,7 @@
 #endif
 
 #include "gsthip.h"
+#include "gsthip-private.h"
 #include <mutex>
 #include <condition_variable>
 #include <queue>
@@ -536,6 +537,14 @@ gst_hip_memory_init_once (void)
       });
 }
 
+/**
+ * gst_is_hip_memory:
+ * @mem: a #GstMemory
+ *
+ * Returns: %TRUE if @mem is a #GstHipMemory
+ *
+ * Since: 1.28
+ */
 gboolean
 gst_is_hip_memory (GstMemory * mem)
 {
@@ -601,14 +610,27 @@ static const TextureFormat format_map[] = {
   MAKE_FORMAT_RGB (VUYA, UNSIGNED_INT8),
 };
 
+/**
+ * gst_hip_memory_get_texture:
+ * @mem: a #GstHipMemory
+ * @plane: the plane index
+ * @filter_mode: filter mode
+ * @address_mode: address mode
+ * @texture: (out) (transfer none): a pointer to hipTextureObject_t object
+ *
+ * Creates hipTextureObject_t with given parameters
+ *
+ * Returns: %TRUE if succeeded
+ *
+ * Since: 1.28
+ */
 gboolean
 gst_hip_memory_get_texture (GstHipMemory * mem, guint plane,
-    guint filter_mode, guint address_mode, hipTextureObject_t * texture)
+    HIPfilter_mode filter_mode, HIPaddress_mode address_mode,
+    hipTextureObject_t * texture)
 {
   g_return_val_if_fail (gst_is_hip_memory (GST_MEMORY_CAST (mem)), FALSE);
   g_return_val_if_fail (GST_VIDEO_INFO_N_PLANES (&mem->info) > plane, FALSE);
-  g_return_val_if_fail (N_TEX_FILTER_MODES > filter_mode, FALSE);
-  g_return_val_if_fail (N_TEX_ADDR_MODES > address_mode, FALSE);
   g_return_val_if_fail (texture, FALSE);
 
   auto priv = mem->priv;
@@ -661,9 +683,9 @@ gst_hip_memory_get_texture (GstHipMemory * mem, guint plane,
   /* Will read texture value as a normalized [0, 1] float value
    * with [0, 1) coordinates */
   tex_desc.flags = HIP_TRSF_NORMALIZED_COORDINATES;
-  tex_desc.addressMode[0] = (HIPaddress_mode) address_mode;
-  tex_desc.addressMode[1] = (HIPaddress_mode) address_mode;
-  tex_desc.addressMode[2] = (HIPaddress_mode) address_mode;
+  tex_desc.addressMode[0] = address_mode;
+  tex_desc.addressMode[1] = address_mode;
+  tex_desc.addressMode[2] = address_mode;
 
   hipTextureObject_t tex_obj;
   auto hip_ret =
@@ -681,6 +703,17 @@ gst_hip_memory_get_texture (GstHipMemory * mem, guint plane,
   return TRUE;
 }
 
+/**
+ * gst_hip_memory_get_stream:
+ * @mem: a #GstHipMemory
+ *
+ * Gets HIP stream object associated with @mem
+ *
+ * Returns: (transfer none) (nullable): a #GstHipStream or %NULL if default
+ * HIP stream is in use
+ *
+ * Since: 1.28
+ */
 GstHipStream *
 gst_hip_memory_get_stream (GstHipMemory * mem)
 {
@@ -689,6 +722,15 @@ gst_hip_memory_get_stream (GstHipMemory * mem)
   return mem->priv->stream;
 }
 
+/**
+ * gst_hip_memory_set_event:
+ * @mem: a #GstHipMemory
+ * @event: (transfer none) (allow-none): a #GstHipEvent
+ *
+ * Sets @event to @mem for later synchronization operation
+ *
+ * Since: 1.28
+ */
 void
 gst_hip_memory_set_event (GstHipMemory * mem, GstHipEvent * event)
 {
@@ -703,6 +745,15 @@ gst_hip_memory_set_event (GstHipMemory * mem, GstHipEvent * event)
     gst_hip_event_ref (priv->event);
 }
 
+/**
+ * gst_hip_memory_sync:
+ * @mem: a #GstHipMemory
+ *
+ * Waits for device synchronization by using previously configured #GstHipEvent
+ * via gst_hip_memory_set_event()
+ *
+ * Since: 1.28
+ */
 void
 gst_hip_memory_sync (GstHipMemory * mem)
 {
@@ -779,6 +830,19 @@ gst_hip_allocator_calculate_alloc_height (const GstVideoInfo * info)
   return alloc_height;
 }
 
+/**
+ * gst_hip_allocator_alloc:
+ * @allocator: (allow-none): a #GstHipAllocator
+ * @device: a #GstHipDevice
+ * @info: a #GstVideoInfo
+ *
+ * Allocates a new GstHipMemory
+ *
+ * Returns: (transfer full) (nullable): a newly allocated #GstHipMemory
+ * or %NULL if allocation failed
+ *
+ * Since: 1.28
+ */
 GstMemory *
 gst_hip_allocator_alloc (GstHipAllocator * allocator,
     GstHipDevice * device, const GstVideoInfo * info)
@@ -797,6 +861,17 @@ gst_hip_allocator_alloc (GstHipAllocator * allocator,
       info, info->stride[0], alloc_height, gst_hip_device_get_stream (device));
 }
 
+/**
+ * gst_hip_allocator_set_active:
+ * @allocator: a #GstCudaAllocator
+ * @active: the new active state
+ *
+ * Controls the active state of @allocator.
+ *
+ * Returns: %TRUE if active state of @allocator was successfully updated.
+ *
+ * Since: 1.28
+ */
 gboolean
 gst_hip_allocator_set_active (GstHipAllocator * allocator, gboolean active)
 {
@@ -1069,9 +1144,19 @@ gst_hip_pool_allocator_acquire_memory_internal (GstHipPoolAllocator * self,
   return ret;
 }
 
+/**
+ * gst_hip_pool_allocator_new:
+ * @device: a #GstHipDevice
+ * @info: a #GstVideoInfo
+ *
+ * Creates a new #GstHipPoolAllocator instance
+ *
+ * Returns: (transfer full): a #GstHipPoolAllocator
+ *
+ * Since: 1.28
+ */
 GstHipPoolAllocator *
-gst_hip_pool_allocator_new (GstHipDevice * device, const GstVideoInfo * info,
-    GstStructure * config)
+gst_hip_pool_allocator_new (GstHipDevice * device, const GstVideoInfo * info)
 {
   g_return_val_if_fail (GST_IS_HIP_DEVICE (device), nullptr);
   g_return_val_if_fail (info, nullptr);
@@ -1088,6 +1173,19 @@ gst_hip_pool_allocator_new (GstHipDevice * device, const GstVideoInfo * info,
   return self;
 }
 
+/**
+ * gst_hip_pool_allocator_acquire_memory:
+ * @allocator: a #GstHipPoolAllocator
+ * @memory: (out) (transfer full) (nullable): a #GstMemory
+ *
+ * Acquires a #GstMemory from @allocator. @memory should point to a memory
+ * location that can hold a pointer to the new #GstMemory.
+ *
+ * Returns: a #GstFlowReturn such as %GST_FLOW_FLUSHING when the allocator is
+ * inactive.
+ *
+ * Since: 1.28
+ */
 GstFlowReturn
 gst_hip_pool_allocator_acquire_memory (GstHipPoolAllocator * allocator,
     GstMemory ** memory)

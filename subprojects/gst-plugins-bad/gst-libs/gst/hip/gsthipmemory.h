@@ -21,7 +21,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include "gsthip_fwd.h"
+#include <gst/hip/gsthip_fwd.h>
 
 G_BEGIN_DECLS
 
@@ -55,6 +55,13 @@ typedef enum
   GST_HIP_MEMORY_TRANSFER_NEED_UPLOAD = (GST_MEMORY_FLAG_LAST << 1)
 } GstHipMemoryTransfer;
 
+/**
+ * GstHipMemory:
+ *
+ * Opaque GstHipMemory struct
+ *
+ * Since: 1.28
+ */
 struct _GstHipMemory
 {
   GstMemory mem;
@@ -68,23 +75,33 @@ struct _GstHipMemory
   gpointer _gst_reserved[GST_PADDING];
 };
 
-void      gst_hip_memory_init_once (void);
-
+GST_HIP_API
 gboolean  gst_is_hip_memory   (GstMemory * mem);
 
+GST_HIP_API
 gboolean  gst_hip_memory_get_texture (GstHipMemory * mem,
                                       guint plane,
-                                      guint filter_mode,
-                                      guint address_mode,
+                                      HIPfilter_mode filter_mode,
+                                      HIPaddress_mode address_mode,
                                       hipTextureObject_t * texture);
 
+GST_HIP_API
 GstHipStream * gst_hip_memory_get_stream (GstHipMemory * mem);
 
+GST_HIP_API
 void           gst_hip_memory_set_event (GstHipMemory * mem,
                                          GstHipEvent * event);
 
+GST_HIP_API
 void           gst_hip_memory_sync (GstHipMemory * mem);
 
+/**
+ * GstHipAllocator:
+ *
+ * Opaque GstHipAllocator struct
+ *
+ * Since: 1.28
+ */
 struct _GstHipAllocator
 {
   GstAllocator allocator;
@@ -95,6 +112,13 @@ struct _GstHipAllocator
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstHipAllocatorClass:
+ *
+ * Opaque GstHipAllocatorClass struct
+ *
+ * Since: 1.28
+ */
 struct _GstHipAllocatorClass
 {
   GstAllocatorClass allocator_class;
@@ -106,15 +130,25 @@ struct _GstHipAllocatorClass
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
+GST_HIP_API
 GType       gst_hip_allocator_get_type (void);
 
+GST_HIP_API
 GstMemory * gst_hip_allocator_alloc (GstHipAllocator * allocator,
                                      GstHipDevice * device,
                                      const GstVideoInfo * info);
 
+GST_HIP_API
 gboolean    gst_hip_allocator_set_active (GstHipAllocator * allocator,
                                           gboolean active);
 
+/**
+ * GstHipPoolAllocator:
+ *
+ * Opaque GstHipPoolAllocator struct
+ *
+ * Since: 1.28
+ */
 struct _GstHipPoolAllocator
 {
   GstHipAllocator parent;
@@ -127,6 +161,13 @@ struct _GstHipPoolAllocator
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstHipPoolAllocatorClass:
+ *
+ * Opaque GstHipPoolAllocatorClass struct
+ *
+ * Since: 1.28
+ */
 struct _GstHipPoolAllocatorClass
 {
   GstHipAllocatorClass parent_class;
@@ -135,12 +176,14 @@ struct _GstHipPoolAllocatorClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_HIP_API
 GType                 gst_hip_pool_allocator_get_type (void);
 
+GST_HIP_API
 GstHipPoolAllocator * gst_hip_pool_allocator_new (GstHipDevice * device,
-                                                   const GstVideoInfo * info,
-                                                   GstStructure * config);
+                                                   const GstVideoInfo * info);
 
+GST_HIP_API
 GstFlowReturn         gst_hip_pool_allocator_acquire_memory (GstHipPoolAllocator * allocator,
                                                                GstMemory ** memory);
 

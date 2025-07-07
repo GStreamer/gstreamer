@@ -22,6 +22,8 @@ THE SOFTWARE.
 
 #pragma once
 
+#include <stdint.h>
+#include <stddef.h>
 #include <hip/texture_types.h>
 
 typedef struct {

@@ -20,23 +20,19 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <hip/hip_runtime.h>
-#include <hip/hip_gl_interop.h>
-#include "gsthip-enums.h"
+#include <gst/hip/hip-prelude.h>
+#include <gst/hip/gsthip_fwd.h>
+#include <gst/hip/gsthip-enums.h>
 
 G_BEGIN_DECLS
 
-hipError_t HipGLGetDevices (GstHipVendor vendor,
-                            unsigned int* pHipDeviceCount,
-                            int* pHipDevices,
-                            unsigned int hipDeviceCount,
-                            hipGLDeviceList deviceList);
+GST_HIP_API
+gboolean  gst_hip_rtc_load_library (GstHipVendor vendor);
 
-hipError_t HipGraphicsGLRegisterBuffer (GstHipVendor vendor,
-                                        hipGraphicsResource** resource,
-                                        unsigned int buffer,
-                                        unsigned int flags);
+GST_HIP_API
+gchar *   gst_hip_rtc_compile (GstHipDevice * device,
+                               const gchar * source,
+                               const gchar ** options,
+                               guint num_options);
 
 G_END_DECLS
-
-

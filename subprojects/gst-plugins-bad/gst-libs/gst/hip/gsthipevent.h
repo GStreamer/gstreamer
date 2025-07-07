@@ -20,9 +20,8 @@
 #pragma once
 
 #include <gst/gst.h>
-#include "gsthip_fwd.h"
-#include "gsthip-enums.h"
-#include <hip/hip_runtime.h>
+#include <gst/hip/gsthip_fwd.h>
+#include <gst/hip/gsthip-enums.h>
 
 G_BEGIN_DECLS
 
@@ -34,6 +33,13 @@ G_BEGIN_DECLS
 #define GST_HIP_EVENT_POOL_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_HIP_EVENT_POOL, GstHipEventPoolClass))
 #define GST_HIP_EVENT_POOL_CAST(obj)           ((GstHipEventPool*)(obj))
 
+/**
+ * GstHipEventPool:
+ *
+ * Opaque GstHipEventPool struct
+ *
+ * Since: 1.28
+ */
 struct _GstHipEventPool
 {
   GstObject parent;
@@ -43,6 +49,13 @@ struct _GstHipEventPool
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstHipEventPoolClass:
+ *
+ * Opaque GstHipEventPoolClass struct
+ *
+ * Since: 1.28
+ */
 struct _GstHipEventPoolClass
 {
   GstObjectClass parent_class;
@@ -51,31 +64,43 @@ struct _GstHipEventPoolClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_HIP_API
 GType gst_hip_event_pool_get_type (void);
 
+GST_HIP_API
 GType gst_hip_event_get_type (void);
 
+GST_HIP_API
 GstHipEventPool * gst_hip_event_pool_new (GstHipVendor vendor,
                                           guint device_id);
 
+GST_HIP_API
 gboolean          gst_hip_event_pool_acquire (GstHipEventPool * pool,
                                               GstHipEvent ** event);
 
+GST_HIP_API
 GstHipVendor      gst_hip_event_get_vendor (GstHipEvent * event);
 
+GST_HIP_API
 guint             gst_hip_event_get_device_id (GstHipEvent * event);
 
+GST_HIP_API
 hipError_t        gst_hip_event_record (GstHipEvent * event,
                                         hipStream_t stream);
 
+GST_HIP_API
 hipError_t        gst_hip_event_query (GstHipEvent * event);
 
+GST_HIP_API
 hipError_t        gst_hip_event_synchronize (GstHipEvent * event);
 
+GST_HIP_API
 GstHipEvent *     gst_hip_event_ref (GstHipEvent * event);
 
+GST_HIP_API
 void              gst_hip_event_unref (GstHipEvent * event);
 
+GST_HIP_API
 void              gst_clear_hip_event (GstHipEvent ** event);
 
 G_END_DECLS

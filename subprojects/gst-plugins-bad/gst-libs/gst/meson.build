@@ -11,6 +11,7 @@ subdir('d3d12')
 # cuda can depend on d3d11
 subdir('cuda')
 subdir('dxva')
+subdir('hip')
 subdir('insertbin')
 subdir('interfaces')
 subdir('isoff')

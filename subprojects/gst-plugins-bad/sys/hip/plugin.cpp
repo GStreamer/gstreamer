@@ -28,11 +28,10 @@
 #endif
 
 #include <gst/gst.h>
-#include "gsthipdevice.h"
+#include <gst/hip/gsthip.h>
 #include "gsthipmemorycopy.h"
 #include "gsthipconvertscale.h"
 #include "gsthipcompositor.h"
-#include "gsthiprtc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)

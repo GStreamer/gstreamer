@@ -6,6 +6,7 @@ subprojects/gst-plugins-bad/gst-libs/gst/cuda
 subprojects/gst-plugins-bad/gst-libs/gst/d3d11
 subprojects/gst-plugins-bad/gst-libs/gst/d3d12
 subprojects/gst-plugins-bad/gst-libs/gst/dxva
+subprojects/gst-plugins-bad/gst-libs/gst/hip
 subprojects/gst-plugins-bad/gst-libs/gst/va
 subprojects/gst-plugins-bad/gst-libs/gst/winrt
 subprojects/gst-plugins-bad/sys/amfcodec

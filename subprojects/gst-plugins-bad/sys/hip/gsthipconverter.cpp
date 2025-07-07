@@ -23,10 +23,7 @@
 
 #include "gsthip-config.h"
 
-#include "gsthip.h"
 #include "gsthipconverter.h"
-#include "gsthiprtc.h"
-#include <hip/hip_runtime.h>
 #include <string.h>
 #include <mutex>
 #include <unordered_map>

@@ -1,5 +1,7 @@
 /* GStreamer
- * Copyright (C) 2025 Seungha Yang <seungha@centricular.com>
+ * Copyright (C) 2025 GStreamer developers
+ *
+ * -prelude.h: prelude include header for gst-hip library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,15 +22,13 @@
 #pragma once
 
 #include <gst/gst.h>
-#include "gsthip-interop.h"
-#include <gst/gl/gl.h>
 
-G_BEGIN_DECLS
+#ifndef GST_HIP_API
+# ifdef BUILDING_GST_HIP
+#  define GST_HIP_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_HIP_API GST_API_IMPORT
+# endif
+#endif
 
-hipError_t
-gst_hip_get_graphics_resource_from_gl_memory (GstHipDevice * device,
-                                              GstMemory * mem,
-                                              GstHipGraphicsResource ** resource);
-
-G_END_DECLS
 

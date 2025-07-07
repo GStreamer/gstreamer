@@ -19,17 +19,12 @@
 
 #pragma once
 
-#include <gst/gst.h>
+#include <gst/hip/gsthip.h>
 
-#include <hip/hip_runtime.h>
-#include "gsthip_fwd.h"
-#include "gsthip-enums.h"
-#include "gsthipdevice.h"
-#include "gsthipmemory.h"
-#include "gsthipbufferpool.h"
-#include "gsthiputils.h"
-#include "gsthiploader.h"
-#include "gsthip-interop.h"
-#include "gsthipstream.h"
-#include "gsthipevent.h"
+G_BEGIN_DECLS
+
+GST_HIP_API
+void  gst_hip_memory_init_once (void);
+
+G_END_DECLS
 

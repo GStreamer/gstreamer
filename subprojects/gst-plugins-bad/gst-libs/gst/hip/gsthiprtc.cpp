@@ -21,7 +21,6 @@
 #include "config.h"
 #endif
 
-#include "gsthiprtc.h"
 #include "gsthip.h"
 #include <hip/hiprtc.h>
 #include <mutex>
@@ -29,6 +28,7 @@
 #include <string>
 #include <gmodule.h>
 #include <string.h>
+#include "gsthiputils-private.h"
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
@@ -269,6 +269,16 @@ gst_hip_rtc_load_library_nvidia (void)
 }
 /* *INDENT-ON* */
 
+/**
+ * gst_hip_rtc_load_library:
+ * @vendor: a #GstHipVendor
+ *
+ * Opens @vendor specific runtime compiler libraries
+ *
+ * Returns: %TRUE if succeeded
+ *
+ * Since: 1.28
+ */
 gboolean
 gst_hip_rtc_load_library (GstHipVendor vendor)
 {
@@ -388,6 +398,19 @@ gst_hip_rtc_compile_nvidia (GstHipDevice * device,
   return code;
 }
 
+/**
+ * gst_hip_rtc_compile:
+ * @device: a #GstHipDevice
+ * @source: HIP kernel source
+ * @options: array of compile option string
+ * @num_options: option array size
+ *
+ * Compiles @source with given compile options
+ *
+ * Returns: (transfer full) (nullable): Compiled kernel blob or %NULL if failed.
+ *  *
+ * Since: 1.28
+ */
 gchar *
 gst_hip_rtc_compile (GstHipDevice * device,
     const gchar * source, const gchar ** options, guint num_options)
