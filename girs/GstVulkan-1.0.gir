@@ -2647,6 +2647,7 @@ gst_vulkan_full_screen_quad_set_blend_factors().</doc>
         </parameters>
       </method>
       <method name="fill_command_buffer" c:identifier="gst_vulkan_full_screen_quad_fill_command_buffer" version="1.18" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">@cmd must be locked with gst_vulkan_command_buffer_lock().</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">whether @cmd could be filled with the necessary commands</doc>
