@@ -155,7 +155,8 @@ gst_gtk_wayland_sink_class_init (GstGtkWaylandSinkClass * klass)
           "rotate method",
           "rotate method",
           GST_TYPE_VIDEO_ORIENTATION_METHOD, GST_VIDEO_ORIENTATION_IDENTITY,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
 
   /**
    * GstGtkWaylandSink:drm-device:
