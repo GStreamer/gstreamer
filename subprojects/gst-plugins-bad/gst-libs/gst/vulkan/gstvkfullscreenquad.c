@@ -84,7 +84,7 @@ struct Vertex vertices[] = {
 };
 
 gushort indices[] = {
-  0, 1, 2, 0, 2, 3,
+  0, 1, 3, 2,
 };
 
 static gboolean
