@@ -367,7 +367,7 @@ real_main (int argc, char **argv)
   /* process optional remaining arguments in the form
    * DEVICE_CLASSES or DEVICE_CLASSES:FILTER_CAPS */
   for (arg = args; arg != NULL && *arg != NULL; ++arg) {
-    gchar **filters = g_strsplit (*arg, ":", -1);
+    gchar **filters = g_strsplit (*arg, ":", 2);
     if (filters != NULL && filters[0] != NULL) {
       GstCaps *caps = NULL;
 
