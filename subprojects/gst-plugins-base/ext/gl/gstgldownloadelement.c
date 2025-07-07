@@ -960,7 +960,9 @@ _convert_dma_drm (GstGLContext * context, GstStructure * s)
     GValue newfmtval = G_VALUE_INIT;
 
     if (context && gst_gl_dma_buf_transform_drm_formats_to_gst_formats (context,
-            drmval, GST_GL_DRM_FORMAT_INCLUDE_EMULATED, &newfmtval)) {
+            drmval,
+            GST_GL_DRM_FORMAT_INCLUDE_EMULATED |
+            GST_GL_DRM_FORMAT_DIRECT_IMPORT, &newfmtval)) {
       gst_structure_set_value (s, "format", &newfmtval);
       gst_structure_remove_field (s, "drm-format");
       g_value_unset (&newfmtval);
@@ -974,7 +976,7 @@ _convert_dma_drm (GstGLContext * context, GstStructure * s)
     if (!context) {
       gst_structure_remove_field (s, "drm-format");
     } else if (gst_gl_dma_buf_transform_gst_formats_to_drm_formats (context,
-            fmtval, 0, &drmfmtval)) {
+            fmtval, GST_GL_DRM_FORMAT_DIRECT_IMPORT, &drmfmtval)) {
       gst_structure_set_value (s, "drm-format", &drmfmtval);
       g_value_unset (&drmfmtval);
     } else {
