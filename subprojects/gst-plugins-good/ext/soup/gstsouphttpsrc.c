@@ -1557,6 +1557,37 @@ gst_soup_http_src_got_headers (GstSoupHTTPSrc * src, SoupMessage * msg)
           _soup_message_headers_get_one (response_headers, "Accept-Ranges"))) {
     if (g_ascii_strcasecmp (accept_ranges, "none") == 0)
       src->seekable = FALSE;
+  } else {
+    /* Python's SimpleHTTP server doesn't add Accept-Ranges and also doesn't
+     * support range requests: https://github.com/python/cpython/issues/86809
+     *
+     * According to the spec, this means the server may or may not support
+     * Range requests, but we know that SimpleHTTP server doesn't, so let's
+     * disable it. If they fix it, they will hopefully add an Accept-Ranges
+     * header.
+     *
+     * FIXME: this will break if there are some silly implementations that
+     * derive from http.server and support Range requests, but also don't set
+     * the Accept-Ranges response header. We could potentially change
+     * src->seekable to a tristate and do some auto-detection if the
+     * seekability is unknown and remove this special-casing, but it's not
+     * clear if it's worth it at present.
+     */
+    const char *server = NULL;
+    if ((server = _soup_message_headers_get_one (response_headers, "Server"))) {
+      if (g_str_has_prefix (server, "SimpleHTTP/")
+          && strstr (server, "Python/") != NULL) {
+        src->seekable = FALSE;
+        GST_WARNING_OBJECT (src, "No Accept-Ranges response header from "
+            "Python's SimpleHTTP server, assuming no support for Range "
+            "requests");
+      }
+    }
+
+    if (src->seekable) {
+      GST_WARNING_OBJECT (src, "No Accept-Ranges response header, assuming "
+          "server supports Range requests");
+    }
   }
 
   /* Icecast stuff */
