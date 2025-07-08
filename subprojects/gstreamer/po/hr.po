@@ -7,13 +7,13 @@
 # https://gstreamer.freedesktop.org/data/doc/gstreamer/head/manual/html/index.html
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2017, 2018, 2019, 2021, 2022, 2024.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2017, 2018, 2019, 2021, 2022, 2024, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
-"PO-Revision-Date: 2024-03-08 10:47-0800\n"
+"POT-Creation-Date: 2025-07-08 17:06+0100\n"
+"PO-Revision-Date: 2025-03-26 20:57-0700\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr_HR\n"
@@ -77,7 +77,7 @@ msgid ""
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
 "popis PLUGINA (odvojenih zarezom) koje treba učitati pored onih iz popisa "
-"spremljenog u varijabli okoline GST_PLUGIN_PATH"
+"spremljenog u varijabli okruženja GST_PLUGIN_PATH"
 
 msgid "PLUGINS"
 msgstr "PLUGINI"
