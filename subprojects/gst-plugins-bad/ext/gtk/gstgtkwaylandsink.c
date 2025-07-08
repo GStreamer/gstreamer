@@ -105,6 +105,10 @@ typedef struct _GstGtkWaylandSinkPrivate
   gboolean video_info_changed;
   GstVideoInfo video_info;
   GstVideoInfoDmaDrm drm_info;
+  GstVideoMasteringDisplayInfo minfo;
+  GstVideoContentLightLevel linfo;
+  gboolean have_mastering_info;
+  gboolean have_light_info;
   GstCaps *caps;
 
   GMutex render_lock;
@@ -931,6 +935,11 @@ gst_gtk_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
       gst_video_info_dma_drm_init (&priv->drm_info);
   }
 
+  priv->have_mastering_info =
+      gst_video_mastering_display_info_from_caps (&priv->minfo, caps);
+  priv->have_light_info =
+      gst_video_content_light_level_from_caps (&priv->linfo, caps);
+
   priv->video_info_changed = TRUE;
   priv->skip_dumb_buffer_copy = FALSE;
 
@@ -1050,6 +1059,8 @@ render_last_buffer (GstGtkWaylandSink * self, gboolean redraw)
       gst_gtk_wayland_sink_get_instance_private (self);
   GstWlBuffer *wlbuffer;
   const GstVideoInfo *info = NULL;
+  const GstVideoMasteringDisplayInfo *minfo = NULL;
+  const GstVideoContentLightLevel *linfo = NULL;
 
   if (!priv->wl_window)
     return FALSE;
@@ -1058,9 +1069,17 @@ render_last_buffer (GstGtkWaylandSink * self, gboolean redraw)
 
   if (G_UNLIKELY (priv->video_info_changed && !redraw)) {
     info = &priv->video_info;
+
+    if (priv->have_mastering_info)
+      minfo = &priv->minfo;
+
+    if (priv->have_light_info)
+      linfo = &priv->linfo;
+
     priv->video_info_changed = FALSE;
   }
-  return gst_wl_window_render (priv->wl_window, wlbuffer, info);
+  return gst_wl_window_render_hdr (priv->wl_window, wlbuffer, info, minfo,
+      linfo);
 }
 
 static GstFlowReturn

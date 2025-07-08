@@ -82,6 +82,8 @@ typedef struct _GstWlWindowPrivate
   GMutex window_lock;
   GstWlBuffer *next_buffer;
   GstVideoInfo *next_video_info;
+  GstVideoMasteringDisplayInfo *next_minfo;
+  GstVideoContentLightLevel *next_linfo;
   GstWlBuffer *staged_buffer;
   gboolean clear_window;
   struct wl_callback *frame_callback;
@@ -111,7 +113,9 @@ static void gst_wl_window_commit_buffer (GstWlWindow * self,
     GstWlBuffer * buffer);
 
 static void gst_wl_window_set_colorimetry (GstWlWindow * self,
-    GstVideoColorimetry * colorimetry);
+    const GstVideoColorimetry * colorimetry,
+    const GstVideoMasteringDisplayInfo * minfo,
+    const GstVideoContentLightLevel * linfo);
 
 static void
 handle_xdg_toplevel_close (void *data, struct xdg_toplevel *xdg_toplevel)
@@ -583,6 +587,8 @@ gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
   GstVideoInfo *info = priv->next_video_info;
+  GstVideoMasteringDisplayInfo *minfo = priv->next_minfo;
+  GstVideoContentLightLevel *linfo = priv->next_linfo;
   struct wl_callback *callback;
 
   if (G_UNLIKELY (info)) {
@@ -595,7 +601,7 @@ gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer)
     gst_wl_window_resize_video_surface (self, FALSE);
     gst_wl_window_set_opaque (self, info);
 
-    gst_wl_window_set_colorimetry (self, &info->colorimetry);
+    gst_wl_window_set_colorimetry (self, &info->colorimetry, minfo, linfo);
   }
 
   if (G_LIKELY (buffer)) {
@@ -630,6 +636,8 @@ gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer)
     wl_subsurface_set_desync (priv->video_subsurface);
     gst_video_info_free (priv->next_video_info);
     priv->next_video_info = NULL;
+    g_clear_pointer (&priv->next_minfo, g_free);
+    g_clear_pointer (&priv->next_linfo, g_free);
   }
 
 }
@@ -662,6 +670,14 @@ gboolean
 gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
     const GstVideoInfo * info)
 {
+  return gst_wl_window_render_hdr (self, buffer, info, NULL, NULL);
+}
+
+gboolean
+gst_wl_window_render_hdr (GstWlWindow * self, GstWlBuffer * buffer,
+    const GstVideoInfo * info, const GstVideoMasteringDisplayInfo * minfo,
+    const GstVideoContentLightLevel * linfo)
+{
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
   gboolean ret = TRUE;
 
@@ -671,6 +687,16 @@ gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
   g_mutex_lock (&priv->window_lock);
   if (G_UNLIKELY (info))
     priv->next_video_info = gst_video_info_copy (info);
+
+  if (G_UNLIKELY (minfo)) {
+    g_clear_pointer (&priv->next_minfo, g_free);
+    priv->next_minfo = g_memdup2 (minfo, sizeof (*minfo));
+  }
+
+  if (G_UNLIKELY (linfo)) {
+    g_clear_pointer (&priv->next_linfo, g_free);
+    priv->next_linfo = g_memdup2 (linfo, sizeof (*linfo));
+  }
 
   if (priv->next_buffer && priv->staged_buffer) {
     GST_LOG_OBJECT (self, "buffer %p dropped (replaced)", priv->staged_buffer);
@@ -954,7 +980,9 @@ gst_colorimetry_range_to_wl (GstVideoColorRange range)
 
 static void
 gst_wl_window_set_image_description (GstWlWindow * self,
-    GstVideoColorimetry * colorimetry)
+    const GstVideoColorimetry * colorimetry,
+    const GstVideoMasteringDisplayInfo * minfo,
+    const GstVideoContentLightLevel * linfo)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
   struct wl_display *wl_display;
@@ -1010,6 +1038,41 @@ gst_wl_window_set_image_description (GstWlWindow * self,
   wp_image_description_creator_params_v1_set_primaries_named (params,
       wl_primaries);
 
+  if (gst_wl_display_is_color_mastering_display_supported (priv->display)
+      && minfo) {
+    /* first validate our luminance range */
+    guint min_luminance = minfo->min_display_mastering_luminance / 10000;
+    guint max_luminance =
+        MAX (min_luminance + 1, minfo->max_display_mastering_luminance / 10000);
+
+    /* We need to convert from 0.00002 unit to 0.000001 */
+    const guint f = 20;
+    wp_image_description_creator_params_v1_set_mastering_display_primaries
+        (params,
+        minfo->display_primaries[0].x * f, minfo->display_primaries[0].y * f,
+        minfo->display_primaries[1].x * f, minfo->display_primaries[1].y * f,
+        minfo->display_primaries[2].x * f, minfo->display_primaries[2].y * f,
+        minfo->white_point.x, minfo->white_point.y);
+    wp_image_description_creator_params_v1_set_mastering_luminance (params,
+        minfo->min_display_mastering_luminance, max_luminance);
+
+    /*
+     * FIXME its unclear what makes a color volume exceeds the primary volume,
+     * and how to verify it, ignoring this aspect for now, but may need to be
+     * revisited.
+     */
+
+    /* We can't set the light level if we don't know the luminance range */
+    if (linfo) {
+      guint maxFALL = CLAMP (min_luminance + 1,
+          linfo->max_frame_average_light_level, max_luminance);
+      guint maxCLL =
+          CLAMP (maxFALL, linfo->max_content_light_level, max_luminance);
+      wp_image_description_creator_params_v1_set_max_cll (params, maxCLL);
+      wp_image_description_creator_params_v1_set_max_fall (params, maxFALL);
+    }
+  }
+
   image_description = wp_image_description_creator_params_v1_create (params);
   wp_image_description_v1_add_listener (image_description,
       &description_listerer, &image_description_feedback);
@@ -1040,7 +1103,7 @@ gst_wl_window_set_image_description (GstWlWindow * self,
 
 static void
 gst_wl_window_set_color_representation (GstWlWindow * self,
-    GstVideoColorimetry * colorimetry)
+    const GstVideoColorimetry * colorimetry)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
   struct wp_color_representation_manager_v1 *cr_manager;
@@ -1097,14 +1160,16 @@ gst_wl_window_set_color_representation (GstWlWindow * self,
 
 static void
 gst_wl_window_set_colorimetry (GstWlWindow * self,
-    GstVideoColorimetry * colorimetry)
+    const GstVideoColorimetry * colorimetry,
+    const GstVideoMasteringDisplayInfo * minfo,
+    const GstVideoContentLightLevel * linfo)
 {
   GST_OBJECT_LOCK (self);
 
   GST_INFO_OBJECT (self, "Trying to set colorimetry: %s",
       gst_video_colorimetry_to_string (colorimetry));
 
-  gst_wl_window_set_image_description (self, colorimetry);
+  gst_wl_window_set_image_description (self, colorimetry, minfo, linfo);
   gst_wl_window_set_color_representation (self, colorimetry);
 
   GST_OBJECT_UNLOCK (self);

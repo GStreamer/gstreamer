@@ -64,6 +64,11 @@ gboolean gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
         const GstVideoInfo * info);
 
 GST_WL_API
+gboolean gst_wl_window_render_hdr (GstWlWindow * self, GstWlBuffer * buffer,
+        const GstVideoInfo * info, const GstVideoMasteringDisplayInfo *minfo,
+        const GstVideoContentLightLevel *linfo);
+
+GST_WL_API
 void gst_wl_window_set_render_rectangle (GstWlWindow * self, gint x, gint y,
         gint w, gint h);
 

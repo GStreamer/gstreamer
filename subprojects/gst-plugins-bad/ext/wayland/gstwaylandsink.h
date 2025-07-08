@@ -55,6 +55,10 @@ struct _GstWaylandSink
   gboolean video_info_changed;
   GstVideoInfo video_info;
   GstVideoInfoDmaDrm drm_info;
+  GstVideoMasteringDisplayInfo minfo;
+  GstVideoContentLightLevel linfo;
+  gboolean have_mastering_info;
+  gboolean have_light_info;
   gboolean fullscreen;
   GstCaps *caps;
 
