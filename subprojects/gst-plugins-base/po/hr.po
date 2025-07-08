@@ -4,13 +4,13 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 0016, 2018, 2019, 2021, 2022, 2023, 2024.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016-2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
-"PO-Revision-Date: 2024-03-08 10:50-0800\n"
+"POT-Creation-Date: 2025-07-08 17:06+0100\n"
+"PO-Revision-Date: 2025-03-26 20:57-0700\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"
@@ -85,10 +85,10 @@ msgstr "Ovo izgleda kao tekstna datoteka"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Nema elementa „%s“ -- provjerite vašu GStreamer instalaciju."
+msgstr "Nema elementa „%s” -- provjerite vašu GStreamer instalaciju."
 
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Nije moguće stvoriti element „uridecodebin“."
+msgstr "Nije moguće stvoriti element „uridecodebin”."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -138,24 +138,24 @@ msgstr ""
 
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr "Dekoder za tip „%s“ nije na raspolaganju."
+msgstr "Dekoder za tip „%s” nije na raspolaganju."
 
 msgid "No URI specified to play from."
 msgstr "Nije naveden URI izvor za reprodukciju."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "URI adresa „%s“ nije valjana."
+msgstr "URI adresa „%s” nije valjana."
 
 msgid "This stream type cannot be played yet."
 msgstr "Ovaj tip protoka još se ne može reproducirati."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr "Nijedan URI rukovatelj nije realiziran za „%s“."
+msgstr "Nijedan URI rukovatelj nije realiziran za „%s”."
 
 msgid "Source element can't be prepared"
-msgstr "Element izvor se ne može pripremiti."
+msgstr "Element izvor nije moguće pripremiti."
 
 msgid "Source element is invalid."
 msgstr "Element izvor nije valjan."
@@ -169,10 +169,10 @@ msgstr "Element izvor nema sučelje."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr "Greška pri slanju podataka u „%s:%d“."
+msgstr "Greška pri slanju podataka u „%s:%d”."
 
 msgid "Can't record audio fast enough"
-msgstr "Audio se ne može dovoljno brzo snimati"
+msgstr "Audio nije moguće dovoljno brzo snimati"
 
 msgid "This CD has no audio tracks"
 msgstr "Ovaj CD nema audio zapisa"
@@ -676,12 +676,12 @@ msgid "decrease playback rate"
 msgstr "sporije"
 
 msgid "change playback direction"
-msgstr "promjeni smjer reprodukcije"
+msgstr "promijeni smjer reprodukcije"
 
 # A feature of digital video systems that mimics the visual feedback given during fast forward and rewind operations that were provided by analog systems such as VCRs.
 msgid "enable/disable trick modes"
 msgstr ""
-"omogući/onemogući „trick modes“ (simulira brzo premotavanje analognih VCR)"
+"omogući/onemogući „trick modes” (simulira brzo premotavanje analognih VCR)"
 
 msgid "change to previous/next audio track"
 msgstr "promijeni na prethodni/slijedeći audio zapis"
@@ -710,7 +710,7 @@ msgstr "ispiše status i obavijesti o svojstvima"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr ""
-"Upravljajte ponašanjem reprodukcije postavkama za „playbin“ via „flags“"
+"Upravljajte ponašanjem reprodukcije postavkama za „playbin” via „flags”"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Videosink koji će se koristiti (zadano: autovideosink)"
@@ -744,7 +744,7 @@ msgstr ""
 "Datoteka s popisom za reprodukciju koja sadrži ulazne multimedijalne datoteke"
 
 msgid "Use the experimental instant-rate-change flag when changing rate"
-msgstr "Koristi pokusni „instant-rate-change flag“ pri promjeni brzine"
+msgstr "Koristi pokusni „instant-rate-change flag” pri promjeni brzine"
 
 msgid "Do not print any output (apart from errors)"
 msgstr "Ne ispisuje nikakve izlazne informacije (osim greški)"
@@ -760,7 +760,7 @@ msgid ""
 "(gapless is ignored)"
 msgstr ""
 "Nastavi pokazivati posljednji okvir na EOS-u dok ne napustite ili "
-"promijenite naredbu za promjenu popisa za reprodukciju (zanemaruje „gapless“)"
+"promijenite naredbu za promjenu popisa za reprodukciju (zanemaruje „gapless”)"
 
 msgid "Do not print current position of pipeline"
 msgstr "Ne ispiše trenutnu poziciju cjevovoda"
@@ -773,7 +773,7 @@ msgid "You must provide at least one filename or URI to play."
 msgstr "Morate navesti barem jednu datoteku ili URI adresu za reprodukciju."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
-msgstr "Pritisnite „k“ da pogledate listu tipkovničkih prečaca.\n"
+msgstr "Pritisnite „k” da pogledate listu tipkovničkih prečaca.\n"
 
 #~ msgid "failed to draw pattern"
 #~ msgstr "nije uspjelo iscrtati uzorak"
@@ -786,19 +786,19 @@ msgstr "Pritisnite „k“ da pogledate listu tipkovničkih prečaca.\n"
 #~ "variable)"
 #~ msgstr ""
 #~ "Koristi playbin3 cjevovod (zadano varira ovisno o 'USE_PLAYBIN' varijabli "
-#~ "okoline)"
+#~ "okruženja)"
 
 #~ msgid "Could not create \"uridecodebin3\" element."
-#~ msgstr "Nije moguće stvoriti element „uridecodebin3“."
+#~ msgstr "Nije moguće stvoriti element „uridecodebin3”."
 
 #~ msgid "Unknown ponor element"
 #~ msgstr "Nepoznati element-ponor"
 
 #~ msgid "Could not create \"decodebin3\" element."
-#~ msgstr "Element „decodebin3“ nije bilo moguće napraviti."
+#~ msgstr "Element „decodebin3” nije bilo moguće napraviti."
 
 #~ msgid "Could not create \"urisourcebin\" element."
-#~ msgstr "Element „urisourcebin“ nije bilo moguće napraviti."
+#~ msgstr "Element „urisourcebin” nije bilo moguće napraviti."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Interna greška toka (stream) podataka."
