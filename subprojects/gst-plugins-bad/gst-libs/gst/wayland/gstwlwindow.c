@@ -685,8 +685,10 @@ gst_wl_window_render_hdr (GstWlWindow * self, GstWlBuffer * buffer,
     gst_wl_buffer_ref_gst_buffer (buffer);
 
   g_mutex_lock (&priv->window_lock);
-  if (G_UNLIKELY (info))
+  if (G_UNLIKELY (info)) {
+    gst_video_info_free (priv->next_video_info);
     priv->next_video_info = gst_video_info_copy (info);
+  }
 
   if (G_UNLIKELY (minfo)) {
     g_clear_pointer (&priv->next_minfo, g_free);
