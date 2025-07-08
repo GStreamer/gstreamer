@@ -14,6 +14,7 @@ vulkan_headers = [
   'vkdownload.h',
   'vkh264dec.h',
   'vkh265dec.h',
+  'vkvp9dec.h',
   'vkimageidentity.h',
   'vkoverlaycompositor.h',
   'vkshaderspv.h',
@@ -35,6 +36,7 @@ video_sources = [
   'vkh264enc.c',
   'vkh264dec.c',
   'vkh265dec.c',
+  'vkvp9dec.c',
 ]
 
 doc_sources = []

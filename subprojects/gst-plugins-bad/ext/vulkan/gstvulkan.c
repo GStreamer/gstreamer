@@ -46,7 +46,8 @@
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
 #include "vkh264dec.h"
 #include "vkh265dec.h"
-# include "vkh264enc.h"
+#include "vkvp9dec.h"
+#include "vkh264enc.h"
 #endif
 
 static gboolean
@@ -104,6 +105,10 @@ plugin_init (GstPlugin * plugin)
       if (gst_vulkan_device_is_extension_enabled (device,
               VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME)) {
         ret |= gst_vulkan_h265_decoder_register (plugin, device, GST_RANK_NONE);
+      }
+      if (gst_vulkan_device_is_extension_enabled (device,
+              VK_KHR_VIDEO_DECODE_VP9_EXTENSION_NAME)) {
+        ret |= gst_vulkan_vp9_decoder_register (plugin, device, GST_RANK_NONE);
       }
       if (gst_vulkan_device_is_extension_enabled (device,
               VK_KHR_VIDEO_ENCODE_H264_EXTENSION_NAME)) {
