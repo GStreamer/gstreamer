@@ -131,6 +131,9 @@ GST_WL_API
 gboolean gst_wl_display_is_color_parametric_creator_supported (GstWlDisplay * self);
 
 GST_WL_API
+gboolean gst_wl_display_is_color_mastering_display_supported (GstWlDisplay * self);
+
+GST_WL_API
 gboolean gst_wl_display_is_color_transfer_function_supported (GstWlDisplay * self, uint32_t transfer_function);
 
 GST_WL_API
