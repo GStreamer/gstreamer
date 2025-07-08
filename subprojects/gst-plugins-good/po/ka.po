@@ -5,19 +5,19 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.19.2\n"
+"Project-Id-Version: gst-plugins-good-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-03 17:36+0000\n"
-"PO-Revision-Date: 2022-10-15 15:03+0200\n"
+"POT-Creation-Date: 2025-07-08 17:06+0100\n"
+"PO-Revision-Date: 2025-03-02 06:00+0100\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <(nothing)>\n"
 "Language: ka\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.1.1\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.5\n"
 
 msgid "Jack server not found"
 msgstr "Jack სერვერი ვერ ვიპოვე"
@@ -324,9 +324,8 @@ msgstr "ენკოდერს მოწყობილობაზე %s მ�
 msgid "Encoder on device %s has no supported input format"
 msgstr "ენკოდერს მოწყობილობაზე %s მხარდაჭერილი შეყვანის ფორმატი არ გააჩნია"
 
-#, fuzzy
 msgid "Failed to force keyframe."
-msgstr "კადრის დამუშავების შეცდომა."
+msgstr "საკვანძო კადრის ნაძალადევი დაყენების შეცდომა."
 
 msgid "Failed to start encoding thread."
 msgstr "ენკოდერის ნაკადის გაშვების შეცდომა."
