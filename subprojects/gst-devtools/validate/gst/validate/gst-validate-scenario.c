@@ -7323,6 +7323,9 @@ gst_validate_action_set_done (GstValidateAction * action)
       SCENARIO_UNLOCK (scenario);
     }
 
+    /* Clear the list reference if we found it on the list.
+     * We'll handle the other cases in _action_set_done().
+     * We're still protected by the ref the caller is holding. */
     if (item)
       gst_validate_action_unref (action);
   }
