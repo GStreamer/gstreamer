@@ -5,19 +5,19 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.21.90\n"
+"Project-Id-Version: gst-plugins-base-1.24.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-23 16:55+0000\n"
-"PO-Revision-Date: 2023-02-25 08:25+0100\n"
+"POT-Creation-Date: 2025-07-08 17:06+0100\n"
+"PO-Revision-Date: 2025-03-02 05:59+0100\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <(nothing)>\n"
 "Language: ka\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.5\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "მოწყობილობის მონო რეჟიმში დასაკრავად გახსნის შეცდომა."
@@ -150,16 +150,15 @@ msgstr "ნაკადის ტიპის დაკვრა ჯერჯე
 msgid "No URI handler implemented for \"%s\"."
 msgstr "URI-ის (\"%s\") დამმუშავებელი ჯერჯერობით მიუწვდომელია."
 
-#, fuzzy
 msgid "Source element can't be prepared"
-msgstr "საწყისი ელემენტი არასწორია."
+msgstr "წყარო ელემენტის მომზადება შეუძლებელია"
 
 msgid "Source element is invalid."
 msgstr "საწყისი ელემენტი არასწორია."
 
 #, c-format
 msgid "Failed to create download directory '%s'."
-msgstr ""
+msgstr "ჩავარდა შექმნა გადმოწერის საქაღალდისთვის '%s'."
 
 msgid "Source element has no pads."
 msgstr ""
@@ -174,15 +173,14 @@ msgstr "აუდიოს საკმარისი სისწრაფი�
 msgid "This CD has no audio tracks"
 msgstr "ამ CD-ს აუდიო ტრეკები არ აქვს"
 
-#, fuzzy
 msgid "An OpenGL error occurred"
-msgstr "GL-ის შეცდომა"
+msgstr "აღმოჩენილია OpenGL-ის შეცდომა"
 
 msgid "The GL API is not compatible with the current GL context"
-msgstr ""
+msgstr "GL API თავსებადი არაა მიმდინარე GL-ის კონტექსტთან"
 
 msgid "Subclass failed to initialize."
-msgstr ""
+msgstr "ქვეკლასის ინიციალიზაცია ჩავარდა."
 
 msgid "ID3 tag"
 msgstr "ID3 ჭდე"
@@ -709,13 +707,13 @@ msgid "Enable gapless playback"
 msgstr "პაუზის-გარეშე დაკვრის ჩართვა"
 
 msgid "Enable instantaneous uri changes (only with playbin3)"
-msgstr ""
+msgstr "მყისიერი uri-ის ცვლილებების ჩართვა (მხოლოდ playbin3-თან ერთად)"
 
 msgid "Shuffle playlist"
 msgstr "დასაკრავი სიის შემთხვევითობა"
 
 msgid "Disable interactive control via the keyboard"
-msgstr ""
+msgstr "კლავიატურით ინტერაქტიური კონტროლის გამორთვა"
 
 msgid "Volume"
 msgstr "ხმა"
@@ -724,7 +722,7 @@ msgid "Start position in seconds."
 msgstr "დაწყების პოზიცია, წამებში."
 
 msgid "Enable accurate seeking"
-msgstr ""
+msgstr "ზუსტი გადახვევის ჩართვა"
 
 msgid "Playlist file containing input media files"
 msgstr "დასაკრავი სიის ფაილი, რომელიც შესაყვან მედია ფაილებს შეიცავს"
