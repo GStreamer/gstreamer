@@ -89,7 +89,7 @@ static void
 gst_ffmpeg_log_callback (void *ptr, int level, const char *fmt, va_list vl)
 {
   GstDebugLevel gst_level;
-  gint len = strlen (fmt);
+  gint len;
   gchar *fmt2 = NULL;
 
   switch (level) {
@@ -110,7 +110,12 @@ gst_ffmpeg_log_callback (void *ptr, int level, const char *fmt, va_list vl)
       break;
   }
 
+  /* Don't create lines which won't be needed */
+  if (ffmpeg_debug->threshold < gst_level)
+    return;
+
   /* remove trailing newline as it gets already appended by the logger */
+  len = strlen (fmt);
   if (fmt[len - 1] == '\n') {
     fmt2 = g_strdup (fmt);
     fmt2[len - 1] = '\0';
