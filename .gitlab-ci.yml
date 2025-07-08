@@ -1131,6 +1131,11 @@ cerbero trigger:
     CI_GSTREAMER_PATH: '$CI_PROJECT_PATH'
     CI_GSTREAMER_REF_NAME: '$CI_COMMIT_REF_NAME'
     CI_GSTREAMER_TRIGGERED: 'true'
+  inherit:
+    # Inherit default (not predefined) variables used for the job in `rules:` and `variables:`
+    variables:
+      - MESON_COMMIT
+      - GST_UPSTREAM_BRANCH
   rules:
     - if: '$MESON_COMMIT'
     # Never run post merge
