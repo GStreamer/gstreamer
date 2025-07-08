@@ -1164,9 +1164,6 @@ send_create_stream (GTask * task)
     gst_rtmp_connection_send_command (connection, NULL, NULL, 0,
         "FCPublish", command_object, stream_name, NULL);
   } else {
-    /* Matches librtmp */
-    gst_rtmp_connection_request_window_size (connection,
-        GST_RTMP_DEFAULT_WINDOW_ACK_SIZE);
     send_set_buffer_length (connection, 0, 300);
   }
 
