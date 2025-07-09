@@ -1056,7 +1056,8 @@ bus_message_cb (GstBus * bus, GstMessage * message, GESLauncher * self)
       GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (self->priv->pipeline),
           GST_DEBUG_GRAPH_SHOW_ALL, "ges-launch-error");
       ges_printerr ("ERROR from element %s: %s\n",
-          GST_OBJECT_NAME (message->src), err->message);
+          message->src ? GST_OBJECT_NAME (message->src) : "unknown",
+          err->message);
       ges_printerr ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
       g_clear_error (&err);
       g_free (dbg_info);
