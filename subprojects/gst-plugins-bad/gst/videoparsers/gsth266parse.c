@@ -276,6 +276,7 @@ gst_h266_parse_reset_stream_info (GstH266Parse * h266parse)
   h266parse->parsed_colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
   h266parse->parsed_colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;
   h266parse->parsed_colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
+  h266parse->lcevc = FALSE;
   h266parse->have_pps = FALSE;
   h266parse->have_sps = FALSE;
   h266parse->have_vps = FALSE;
@@ -2556,6 +2557,11 @@ gst_h266_parse_update_src_caps (GstH266Parse * h266parse, GstCaps * caps)
           "Couldn't set content light level to caps");
     }
 
+    if (h266parse->user_data.lcevc_enhancement_data || h266parse->lcevc)
+      gst_caps_set_simple (caps, "lcevc", G_TYPE_BOOLEAN, TRUE, NULL);
+    else
+      gst_caps_set_simple (caps, "lcevc", G_TYPE_BOOLEAN, FALSE, NULL);
+
     src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h266parse));
 
     if (src_caps) {
@@ -3151,6 +3157,7 @@ gst_h266_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       &h266parse->fps_den);
   gst_structure_get_fraction (str, "pixel-aspect-ratio",
       &h266parse->upstream_par_n, &h266parse->upstream_par_d);
+  gst_structure_get_boolean (str, "lcevc", &h266parse->lcevc);
 
   /* get upstream format and align from caps */
   gst_h266_parse_format_from_caps (h266parse, caps, &format, &align);
@@ -3337,6 +3344,7 @@ gst_h266_parse_process_sei_user_data (GstH266Parse * h266parse,
 
   /* only US and UK country codes are currently supported */
   switch (rud->country_code) {
+    case ITU_T_T35_COUNTRY_CODE_UK:
     case ITU_T_T35_COUNTRY_CODE_US:
       break;
     default:
