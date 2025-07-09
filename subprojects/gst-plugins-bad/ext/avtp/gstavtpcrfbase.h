@@ -43,6 +43,7 @@ struct _GstAvtpCrfThreadData
 {
   GThread *thread;
   gboolean is_running;
+  gint fd;
 
   guint64 num_pkt_tstamps;
   GstClockTime timestamp_interval;
