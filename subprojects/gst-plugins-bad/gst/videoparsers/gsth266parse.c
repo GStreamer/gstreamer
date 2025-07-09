@@ -163,6 +163,10 @@ static GstCaps *gst_h266_parse_get_caps (GstBaseParse * parse,
     GstCaps * filter);
 
 static void
+gst_h266_parse_process_sei_user_data (GstH266Parse * h266parse,
+    GstH266RegisteredUserData * rud);
+
+static void
 gst_h266_parse_class_init (GstH266ParseClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
@@ -617,6 +621,10 @@ gst_h266_parse_process_sei (GstH266Parse * h266parse, GstH266NalUnit * nalu)
         break;
       case GST_H266_SEI_SUBPIC_LEVEL_INFO:
         /* FIXME */
+        break;
+      case GST_H266_SEI_REGISTERED_USER_DATA:
+        gst_h266_parse_process_sei_user_data (h266parse,
+            &sei.payload.registered_user_data);
         break;
       default:
         break;
@@ -3317,6 +3325,35 @@ gst_h266_parse_get_caps (GstBaseParse * parse, GstCaps * filter)
 
   gst_caps_unref (peercaps);
   return res;
+}
+
+static void
+gst_h266_parse_process_sei_user_data (GstH266Parse * h266parse,
+    GstH266RegisteredUserData * rud)
+{
+  guint16 provider_code;
+  GstByteReader br;
+  GstVideoParseUtilsField field = GST_VIDEO_PARSE_UTILS_FIELD_1;
+
+  /* only US and UK country codes are currently supported */
+  switch (rud->country_code) {
+    case ITU_T_T35_COUNTRY_CODE_US:
+      break;
+    default:
+      GST_LOG_OBJECT (h266parse, "Unsupported country code %d",
+          rud->country_code);
+      return;
+  }
+
+  if (rud->data == NULL || rud->size < 2)
+    return;
+
+  gst_byte_reader_init (&br, rud->data, rud->size);
+
+  provider_code = gst_byte_reader_get_uint16_be_unchecked (&br);
+
+  gst_video_parse_user_data ((GstElement *) h266parse, &h266parse->user_data,
+      &br, field, provider_code);
 }
 
 static void

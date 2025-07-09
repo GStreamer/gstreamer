@@ -448,6 +448,7 @@ typedef struct _GstH266DCI                      GstH266DCI;
 
 typedef struct _GstH266BufferingPeriod          GstH266BufferingPeriod;
 typedef struct _GstH266PicTiming                GstH266PicTiming;
+typedef struct _GstH266RegisteredUserData       GstH266RegisteredUserData;
 typedef struct _GstH266DUInfo                   GstH266DUInfo;
 typedef struct _GstH266ScalableNesting          GstH266ScalableNesting;
 typedef struct _GstH266SubPicLevelInfo          GstH266SubPicLevelInfo;
@@ -3073,6 +3074,28 @@ struct _GstH266PicTiming {
 };
 
 /**
+ * GstH266RegisteredUserData:
+ *
+ * The User data registered by Rec. ITU-T T.35 SEI message.
+ *
+ * @country_code: an itu_t_t35_country_code.
+ * @country_code_extension: an itu_t_t35_country_code_extension_byte.
+ *   Should be ignored when @country_code is not 0xff
+ * @size: the size of @data in bytes
+ * @data: the data of itu_t_t35_payload_byte
+ *   excluding @country_code and @country_code_extension
+ *
+ * Since: 1.28
+ */
+struct _GstH266RegisteredUserData
+{
+  guint8 country_code;
+  guint8 country_code_extension;
+  guint size;
+  const guint8 *data;
+};
+
+/**
  * GstH266DUInfo:
  *
  * Structure defining the H266 decoding unit info.
@@ -3232,6 +3255,7 @@ struct _GstH266FrameFieldInfo {
  * @scalable_nesting: scalable nesting sei of #GstH266ScalableNesting.
  * @subpic_level_info: subpicture level info sei of #GstH266SubPicLevelInfo.
  * @frame_field_info: frame field info sei of #GstH266FrameFieldInfo.
+ * @registered_user_data: registered user data sei of #GstH266RegisteredUserData. (Since: 1.28)
  *
  * Since: 1.26
  */
@@ -3247,7 +3271,19 @@ struct _GstH266SEIMessage
     GstH266SubPicLevelInfo subpic_level_info;
     GstH266FrameFieldInfo frame_field_info;
 
+    /**
+     * _GstH266SEIMessage.payload.registered_user_data:
+     *
+     * Registered user data sei of #GstH266RegisteredUserData.
+     *
+     * Since: 1.28
+     */
+    GstH266RegisteredUserData registered_user_data;
+
     /* ... could implement more */
+
+    /*< private >*/
+    gpointer padding[GST_PADDING_LARGE];
   } payload;
 };
 
