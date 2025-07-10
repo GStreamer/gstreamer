@@ -550,7 +550,7 @@ gst_wasapi2_get_default_mix_format (void)
   format = (WAVEFORMATEX *) CoTaskMemAlloc (sizeof (WAVEFORMATEX));
   format->wFormatTag = WAVE_FORMAT_PCM;
   format->nChannels = 2;
-  format->nSamplesPerSec = 44100;
+  format->nSamplesPerSec = 48000;
   format->wBitsPerSample = 16;
   format->nBlockAlign = format->nChannels * format->wBitsPerSample / 8;
   format->nAvgBytesPerSec = format->nSamplesPerSec * format->nBlockAlign;
