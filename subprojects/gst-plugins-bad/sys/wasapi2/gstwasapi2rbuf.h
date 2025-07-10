@@ -29,7 +29,10 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GstWasapi2Rbuf, gst_wasapi2_rbuf,
     GST, WASAPI2_RBUF, GstAudioRingBuffer);
 
-GstWasapi2Rbuf * gst_wasapi2_rbuf_new (gpointer parent);
+typedef void (*GstWasapi2RbufCallback) (gpointer elem);
+
+GstWasapi2Rbuf * gst_wasapi2_rbuf_new (gpointer parent,
+                                       GstWasapi2RbufCallback callback);
 
 void             gst_wasapi2_rbuf_set_device (GstWasapi2Rbuf * rbuf,
                                               const gchar * device_id,
@@ -51,6 +54,9 @@ gdouble          gst_wasapi2_rbuf_get_volume (GstWasapi2Rbuf * rbuf);
 
 void             gst_wasapi2_rbuf_set_device_mute_monitoring (GstWasapi2Rbuf * rbuf,
                                                               gboolean value);
+
+void             gst_wasapi2_rbuf_set_continue_on_error (GstWasapi2Rbuf * rbuf,
+                                                         gboolean value);
 
 G_END_DECLS
 

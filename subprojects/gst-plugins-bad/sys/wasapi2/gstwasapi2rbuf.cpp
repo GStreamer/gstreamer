@@ -78,6 +78,11 @@ GST_DEBUG_CATEGORY_STATIC (gst_wasapi2_rbuf_debug);
 
 static GstStaticCaps template_caps = GST_STATIC_CAPS (GST_WASAPI2_STATIC_CAPS);
 
+/* Defined for _WIN32_WINNT >= _NT_TARGET_VERSION_WIN10_RS4 */
+#ifndef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
+#define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION 0x00000002
+#endif
+
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 
@@ -85,7 +90,8 @@ static gpointer device_manager_com_thread (gpointer manager);
 
 struct RbufCtx
 {
-  RbufCtx ()
+  RbufCtx () = delete;
+  RbufCtx (const std::string & id) : device_id (id)
   {
     capture_event = CreateEvent (nullptr, FALSE, FALSE, nullptr);
     render_event = CreateEvent (nullptr, FALSE, FALSE, nullptr);
@@ -182,6 +188,7 @@ struct RbufCtx
   ComPtr<IAudioStreamVolume> stream_volume;
   ComPtr<IAudioEndpointVolume> endpoint_volume;
   ComPtr<IAudioEndpointVolumeCallback> volume_callback;
+  std::string device_id;
   std::vector<float> volumes;
   std::atomic<bool> endpoint_muted = { false };
   HANDLE capture_event;
@@ -194,6 +201,7 @@ struct RbufCtx
   UINT32 dummy_buf_size = 0;
   bool is_default = false;
   bool running = false;
+  bool error_posted = false;
 };
 
 typedef std::shared_ptr<RbufCtx> RbufCtxPtr;
@@ -277,8 +285,10 @@ struct CommandSetDevice : public CommandData
 
 struct CommandUpdateDevice : public CommandData
 {
-  CommandUpdateDevice () : CommandData (CommandType::UpdateDevice) {}
+  CommandUpdateDevice (const std::string & id)
+    : CommandData (CommandType::UpdateDevice), device_id (id) {}
   std::shared_ptr<RbufCtx> ctx;
+  std::string device_id;
 };
 
 struct CommandGetCaps : public CommandData
@@ -638,7 +648,7 @@ gst_wasapi2_device_manager_create_ctx (IMMDeviceEnumerator * enumerator,
   /* For debug */
   gst_wasapi2_result (hr);
 
-  auto ctx = std::make_shared<RbufCtx> ();
+  auto ctx = std::make_shared<RbufCtx> (desc->device_id);
   if (activator) {
     activator->ActivateAsync ();
     activator->GetClient (&ctx->client, INFINITE);
@@ -913,7 +923,7 @@ struct Wasapi2DeviceManager
   RbufCtxPtr
   CreateCtx (const std::string & device_id,
       GstWasapi2EndpointClass endpoint_class, guint pid, gint64 buffer_time,
-      gint64 latency_time, gboolean low_latency)
+      gint64 latency_time, gboolean low_latency, WAVEFORMATEX * mix_format)
   {
     auto desc = std::make_shared<RbufCtxDesc> ();
     desc->device_id = device_id;
@@ -922,6 +932,8 @@ struct Wasapi2DeviceManager
     desc->buffer_time = buffer_time;
     desc->latency_time = latency_time;
     desc->low_latency = low_latency;
+    if (mix_format)
+      desc->mix_format = copy_wave_format (mix_format);
 
     {
       std::lock_guard <std::mutex> lk (lock);
@@ -993,19 +1005,18 @@ device_manager_com_thread (gpointer manager)
           lk.unlock ();
           GST_LOG ("Creating new context");
           gst_wasapi2_device_manager_create_ctx (enumerator.Get (), desc.get ());
+
+          if (desc->mix_format)
+            CoTaskMemFree (desc->mix_format);
+
           SetEvent (desc->event_handle);
 
           if (desc->rbuf) {
-            if (desc->mix_format)
-              CoTaskMemFree (desc->mix_format);
+            auto cmd = std::make_shared < CommandUpdateDevice > (desc->device_id);
+            cmd->ctx = std::move (desc->ctx);
 
-            if (desc->ctx) {
-              auto cmd = std::make_shared < CommandUpdateDevice > ();
-              cmd->ctx = std::move (desc->ctx);
-
-              gst_wasapi2_rbuf_push_command (desc->rbuf, cmd);
-              WaitForSingleObject (cmd->event_handle, INFINITE);
-            }
+            gst_wasapi2_rbuf_push_command (desc->rbuf, cmd);
+            WaitForSingleObject (cmd->event_handle, INFINITE);
 
             gst_object_unref (desc->rbuf);
           }
@@ -1034,6 +1045,8 @@ struct GstWasapi2RbufPrivate
   {
     command_handle = CreateEvent (nullptr, FALSE, FALSE, nullptr);
     g_weak_ref_init (&parent, nullptr);
+
+    QueryPerformanceFrequency (&qpc_freq);
   }
 
   ~GstWasapi2RbufPrivate ()
@@ -1063,13 +1076,26 @@ struct GstWasapi2RbufPrivate
 
   std::atomic<float> volume = { 1.0 };
   std::atomic<bool> mute = { false };
+  std::atomic<bool> allow_dummy = { false };
 
   bool is_first = true;
   gint segoffset = 0;
   guint64 write_frame_offset = 0;
   guint64 expected_position = 0;
 
+  HANDLE fallback_timer = nullptr;
+  bool fallback_timer_armed = false;
+  UINT64 fallback_frames_processed = 0;
+  bool configured_allow_dummy = false;
+
+  LARGE_INTEGER qpc_freq;
+  LARGE_INTEGER fallback_qpc_base;
+
+  HANDLE monitor_timer = nullptr;
+  bool monitor_timer_armed = false;
+
   GWeakRef parent;
+  GstWasapi2RbufCallback invalidated_cb;
 };
 /* *INDENT-ON* */
 
@@ -1160,7 +1186,8 @@ gst_wasapi2_rbuf_finalize (GObject * object)
 }
 
 static void
-gst_wasapi2_rbuf_post_open_error (GstWasapi2Rbuf * self)
+gst_wasapi2_rbuf_post_open_error (GstWasapi2Rbuf * self,
+    const gchar * device_id)
 {
   auto priv = self->priv;
   auto parent = g_weak_ref_get (&priv->parent);
@@ -1168,8 +1195,16 @@ gst_wasapi2_rbuf_post_open_error (GstWasapi2Rbuf * self)
   if (!parent)
     return;
 
-  GST_ELEMENT_ERROR (parent, RESOURCE, OPEN_READ_WRITE,
-      (nullptr), ("Failed to open device"));
+  priv->invalidated_cb (parent);
+
+  if (priv->configured_allow_dummy) {
+    GST_ELEMENT_WARNING (parent, RESOURCE, OPEN_READ_WRITE,
+        (nullptr), ("Failed to open device %s", GST_STR_NULL (device_id)));
+  } else {
+    GST_ELEMENT_ERROR (parent, RESOURCE, OPEN_READ_WRITE,
+        (nullptr), ("Failed to open device %s", GST_STR_NULL (device_id)));
+  }
+
   g_object_unref (parent);
 }
 
@@ -1184,12 +1219,28 @@ gst_wasapi2_rbuf_post_io_error (GstWasapi2Rbuf * self, HRESULT hr,
   GST_ERROR_OBJECT (self, "Posting I/O error %s (hr: 0x%x)", error_msg,
       (guint) hr);
 
+  priv->invalidated_cb (parent);
+
   if (is_write) {
-    GST_ELEMENT_ERROR (parent, RESOURCE, WRITE,
-        ("Failed to write to device"), ("%s, hr: 0x%x", error_msg, (guint) hr));
+    if (priv->configured_allow_dummy) {
+      GST_ELEMENT_WARNING (parent, RESOURCE, WRITE,
+          ("Failed to write to device"), ("%s, hr: 0x%x", error_msg,
+              (guint) hr));
+    } else {
+      GST_ELEMENT_ERROR (parent, RESOURCE, WRITE,
+          ("Failed to write to device"), ("%s, hr: 0x%x", error_msg,
+              (guint) hr));
+    }
   } else {
-    GST_ELEMENT_ERROR (parent, RESOURCE, READ,
-        ("Failed to read from device"), ("%s hr: 0x%x", error_msg, (guint) hr));
+    if (priv->configured_allow_dummy) {
+      GST_ELEMENT_WARNING (parent, RESOURCE, READ,
+          ("Failed to read from device"), ("%s hr: 0x%x", error_msg,
+              (guint) hr));
+    } else {
+      GST_ELEMENT_ERROR (parent, RESOURCE, READ,
+          ("Failed to read from device"), ("%s hr: 0x%x", error_msg,
+              (guint) hr));
+    }
   }
 
   g_free (error_msg);
@@ -1216,7 +1267,8 @@ gst_wasapi2_rbuf_create_ctx (GstWasapi2Rbuf * self)
   auto inst = Wasapi2DeviceManager::GetInstance ();
 
   return inst->CreateCtx (priv->device_id, priv->endpoint_class,
-      priv->pid, buffer_time, latency_time, priv->low_latency);
+      priv->pid, buffer_time, latency_time, priv->low_latency,
+      priv->mix_format);
 }
 
 static void
@@ -1255,12 +1307,7 @@ gst_wasapi2_rbuf_open_device (GstAudioRingBuffer * buf)
 
   WaitForSingleObject (cmd->event_handle, INFINITE);
 
-  if (!gst_wasapi2_result (cmd->hr)) {
-    GST_ERROR_OBJECT (self, "Couldn't set context");
-    return FALSE;
-  }
-
-  return TRUE;
+  return gst_wasapi2_result (cmd->hr);
 }
 
 static gboolean
@@ -1291,12 +1338,7 @@ gst_wasapi2_rbuf_acquire (GstAudioRingBuffer * buf,
 
   WaitForSingleObject (cmd->event_handle, INFINITE);
 
-  if (!gst_wasapi2_result (cmd->hr)) {
-    gst_wasapi2_rbuf_post_open_error (self);
-    return FALSE;
-  }
-
-  return TRUE;
+  return gst_wasapi2_result (cmd->hr);
 }
 
 static gboolean
@@ -1323,12 +1365,7 @@ gst_wasapi2_rbuf_start_internal (GstWasapi2Rbuf * self)
 
   WaitForSingleObject (cmd->event_handle, INFINITE);
 
-  if (!gst_wasapi2_result (cmd->hr)) {
-    gst_wasapi2_rbuf_post_open_error (self);
-    return FALSE;
-  }
-
-  return TRUE;
+  return gst_wasapi2_result (cmd->hr);
 }
 
 static gboolean
@@ -1646,24 +1683,22 @@ fill_loopback_silence (GstWasapi2Rbuf * self)
   return gst_wasapi2_result (hr);
 }
 
-static HRESULT
+static void
 gst_wasapi2_rbuf_process_acquire (GstWasapi2Rbuf * self,
     GstAudioRingBufferSpec * spec)
 {
   auto buf = GST_AUDIO_RING_BUFFER (self);
   auto priv = self->priv;
-  if (!priv->ctx)
-    priv->ctx = gst_wasapi2_rbuf_create_ctx (self);
 
-  if (!priv->ctx) {
-    GST_ERROR_OBJECT (self, "No context configured");
-    return E_FAIL;
+  guint client_buf_size = 0;
+  gint period_frames = 480;
+
+  if (priv->ctx) {
+    client_buf_size = priv->ctx->client_buf_size;
+    period_frames = priv->ctx->period;
   }
 
-  auto & ctx = priv->ctx;
-
   gint bpf = GST_AUDIO_INFO_BPF (&buf->spec.info);
-  gint period_frames = ctx->period;
   gint rate = GST_AUDIO_INFO_RATE (&buf->spec.info);
   gint target_frames = rate / 2;        /* 500ms duration */
 
@@ -1677,11 +1712,11 @@ gst_wasapi2_rbuf_process_acquire (GstWasapi2Rbuf * self,
 
   GST_INFO_OBJECT (self,
       "Buffer size: %d frames, period: %d frames, segsize: %d bytes, "
-      "segtotal: %d", ctx->client_buf_size, ctx->period,
+      "segtotal: %d", client_buf_size, period_frames,
       spec->segsize, spec->segtotal);
 
   GstAudioChannelPosition *position = nullptr;
-  gst_wasapi2_util_waveformatex_to_channel_mask (ctx->mix_format, &position);
+  gst_wasapi2_util_waveformatex_to_channel_mask (priv->mix_format, &position);
   if (position)
     gst_audio_ring_buffer_set_channel_positions (buf, position);
   g_free (position);
@@ -1690,8 +1725,6 @@ gst_wasapi2_rbuf_process_acquire (GstWasapi2Rbuf * self,
   buf->memory = (guint8 *) g_malloc (buf->size);
   gst_audio_format_info_fill_silence (buf->spec.info.finfo,
       buf->memory, buf->size);
-
-  return S_OK;
 }
 
 static HRESULT
@@ -1704,12 +1737,87 @@ gst_wasapi2_rbuf_process_release (GstWasapi2Rbuf * self)
   return S_OK;
 }
 
-static HRESULT
-gst_wasapi2_rbuf_process_start (GstWasapi2Rbuf * self)
+static void
+gst_wasapi2_rbuf_start_fallback_timer (GstWasapi2Rbuf * self)
+{
+  auto rb = GST_AUDIO_RING_BUFFER_CAST (self);
+  auto priv = self->priv;
+
+  if (priv->fallback_timer_armed || !priv->configured_allow_dummy)
+    return;
+
+  GST_DEBUG_OBJECT (self, "Start fallback timer");
+
+  auto period_frames = rb->spec.segsize / GST_AUDIO_INFO_BPF (&rb->spec.info);
+  UINT64 period_100ns = (10000000ULL * period_frames) /
+      GST_AUDIO_INFO_RATE (&rb->spec.info);
+
+  LARGE_INTEGER due_time;
+  due_time.QuadPart = -static_cast < LONGLONG > (period_100ns);
+
+  SetWaitableTimer (priv->fallback_timer,
+      &due_time,
+      static_cast < LONG > (period_100ns / 10000), nullptr, nullptr, FALSE);
+
+  QueryPerformanceCounter (&priv->fallback_qpc_base);
+  priv->fallback_frames_processed = 0;
+  priv->fallback_timer_armed = true;
+}
+
+static void
+gst_wasapi2_rbuf_stop_fallback_timer (GstWasapi2Rbuf * self)
 {
   auto priv = self->priv;
 
-  if (!priv->ctx) {
+  if (!priv->fallback_timer_armed)
+    return;
+
+  GST_DEBUG_OBJECT (self, "Stop fallback timer");
+
+  CancelWaitableTimer (priv->fallback_timer);
+  priv->fallback_timer_armed = false;
+}
+
+static void
+gst_wasapi2_rbuf_start_monitor_timer (GstWasapi2Rbuf * self)
+{
+  auto priv = self->priv;
+
+  if (priv->monitor_timer_armed)
+    return;
+
+  GST_DEBUG_OBJECT (self, "Start monitor timer");
+
+  /* Run 15ms timer to monitor device status */
+  LARGE_INTEGER due_time;
+  due_time.QuadPart = -1500000LL;
+
+  SetWaitableTimer (priv->monitor_timer,
+      &due_time, 15, nullptr, nullptr, FALSE);
+
+  priv->monitor_timer_armed = true;
+}
+
+static void
+gst_wasapi2_rbuf_stop_monitor_timer (GstWasapi2Rbuf * self)
+{
+  auto priv = self->priv;
+
+  if (!priv->monitor_timer_armed)
+    return;
+
+  GST_DEBUG_OBJECT (self, "Stop monitor timer");
+
+  CancelWaitableTimer (priv->monitor_timer);
+  priv->monitor_timer_armed = false;
+}
+
+static HRESULT
+gst_wasapi2_rbuf_process_start (GstWasapi2Rbuf * self, gboolean reset_offset)
+{
+  auto priv = self->priv;
+
+  if (!priv->ctx && !priv->configured_allow_dummy) {
     GST_WARNING_OBJECT (self, "No context to start");
     return E_FAIL;
   }
@@ -1717,16 +1825,31 @@ gst_wasapi2_rbuf_process_start (GstWasapi2Rbuf * self)
   if (priv->running)
     return S_OK;
 
-  auto hr = priv->ctx->Start ();
-  if (gst_wasapi2_result (hr)) {
-    priv->running = true;
-    priv->is_first = true;
+  priv->is_first = true;
+  if (reset_offset)
     priv->segoffset = 0;
-    priv->write_frame_offset = 0;
-    priv->expected_position = 0;
+  priv->write_frame_offset = 0;
+  priv->expected_position = 0;
+
+  if (priv->ctx) {
+    auto hr = priv->ctx->Start ();
+
+    if (!gst_wasapi2_result (hr)) {
+      GST_WARNING_OBJECT (self, "Couldn't start device");
+      gst_wasapi2_rbuf_post_open_error (self, priv->ctx->device_id.c_str ());
+      if (!priv->configured_allow_dummy)
+        return hr;
+
+      gst_wasapi2_rbuf_start_fallback_timer (self);
+    }
+  } else {
+    gst_wasapi2_rbuf_start_fallback_timer (self);
   }
 
-  return hr;
+  gst_wasapi2_rbuf_start_monitor_timer (self);
+  priv->running = true;
+
+  return S_OK;
 }
 
 static inline void
@@ -1753,7 +1876,71 @@ gst_wasapi2_rbuf_process_stop (GstWasapi2Rbuf * self)
   priv->write_frame_offset = 0;
   priv->expected_position = 0;
 
+  gst_wasapi2_rbuf_stop_fallback_timer (self);
+  gst_wasapi2_rbuf_stop_monitor_timer (self);
+
   return hr;
+}
+
+static void
+gst_wasapi2_rbuf_discard_frames (GstWasapi2Rbuf * self, guint frames)
+{
+  auto rb = GST_AUDIO_RING_BUFFER_CAST (self);
+  auto priv = self->priv;
+  guint len = frames * GST_AUDIO_INFO_BPF (&rb->spec.info);
+
+  while (len > 0) {
+    gint seg;
+    guint8 *ptr;
+    gint avail;
+
+    if (!gst_audio_ring_buffer_prepare_read (rb, &seg, &ptr, &avail))
+      return;
+
+    avail -= priv->segoffset;
+    gint to_consume = MIN ((gint) len, avail);
+
+    priv->segoffset += to_consume;
+    len -= to_consume;
+
+    if (priv->segoffset == rb->spec.segsize) {
+      gst_audio_ring_buffer_clear (rb, seg);
+      gst_audio_ring_buffer_advance (rb, 1);
+      priv->segoffset = 0;
+    }
+  }
+}
+
+static void
+gst_wasapi2_rbuf_insert_silence_frames (GstWasapi2Rbuf * self, guint frames)
+{
+  auto rb = GST_AUDIO_RING_BUFFER_CAST (self);
+  auto priv = self->priv;
+  guint bpf = GST_AUDIO_INFO_BPF (&rb->spec.info);
+  guint len = frames * bpf;
+
+  while (len > 0) {
+    gint segment;
+    guint8 *writeptr;
+    gint avail;
+
+    if (!gst_audio_ring_buffer_prepare_read (rb, &segment, &writeptr, &avail))
+      break;
+
+    avail -= priv->segoffset;
+    gint to_write = MIN ((gint) len, avail);
+
+    gst_audio_format_info_fill_silence (rb->spec.info.finfo,
+        writeptr + priv->segoffset, to_write);
+
+    priv->segoffset += to_write;
+    len -= to_write;
+
+    if (priv->segoffset == rb->spec.segsize) {
+      gst_audio_ring_buffer_advance (rb, 1);
+      priv->segoffset = 0;
+    }
+  }
 }
 
 static gpointer
@@ -1771,7 +1958,22 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
   auto dummy_render = CreateEvent (nullptr, FALSE, FALSE, nullptr);
   auto dummy_capture = CreateEvent (nullptr, FALSE, FALSE, nullptr);
 
-  HANDLE waitables[] = { dummy_render, dummy_capture, priv->command_handle };
+  priv->fallback_timer = CreateWaitableTimerExW (nullptr,
+      nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
+
+  if (!priv->fallback_timer) {
+    GST_WARNING_OBJECT (self,
+        "High-resolution timer not available, using default");
+    priv->fallback_timer = CreateWaitableTimer (nullptr, FALSE, nullptr);
+  }
+
+  /* Another timer to detect device-removed state, since I/O event
+   * would not be singalled on device-removed state */
+  priv->monitor_timer = CreateWaitableTimer (nullptr, FALSE, nullptr);
+
+  HANDLE waitables[] = { dummy_render, dummy_capture,
+    priv->fallback_timer, priv->monitor_timer, priv->command_handle
+  };
 
   GST_DEBUG_OBJECT (self, "Entering loop");
 
@@ -1792,8 +1994,10 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
             hr = gst_wasapi2_rbuf_process_write (self);
           }
 
-          if (FAILED (hr))
+          if (FAILED (hr)) {
             gst_wasapi2_rbuf_post_io_error (self, hr, TRUE);
+            gst_wasapi2_rbuf_start_fallback_timer (self);
+          }
         }
         break;
       case WAIT_OBJECT_0 + 1:
@@ -1807,11 +2011,57 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
             hr = S_OK;
           }
 
-          if (FAILED (hr))
+          if (FAILED (hr)) {
             gst_wasapi2_rbuf_post_io_error (self, hr, FALSE);
+            gst_wasapi2_rbuf_start_fallback_timer (self);
+          }
         }
         break;
       case WAIT_OBJECT_0 + 2:
+      {
+        if (!priv->running || !priv->fallback_timer_armed)
+          break;
+
+        LARGE_INTEGER qpc_now;
+        QueryPerformanceCounter (&qpc_now);
+
+        LONGLONG elapsed = qpc_now.QuadPart - priv->fallback_qpc_base.QuadPart;
+        UINT64 elapsed_100ns = elapsed * 10000000ULL / priv->qpc_freq.QuadPart;
+        UINT32 rate = priv->mix_format->nSamplesPerSec;
+        UINT64 expected_frames = (elapsed_100ns * rate) / 10000000ULL;
+        UINT64 delta = expected_frames - priv->fallback_frames_processed;
+
+        if (delta > 0) {
+          GST_TRACE_OBJECT (self,
+              "procssing fallback %u frames", (guint) delta);
+
+          if (priv->endpoint_class == GST_WASAPI2_ENDPOINT_CLASS_RENDER)
+            gst_wasapi2_rbuf_discard_frames (self, (guint) delta);
+          else
+            gst_wasapi2_rbuf_insert_silence_frames (self, (guint) delta);
+
+          priv->fallback_frames_processed += delta;
+        }
+
+        break;
+      }
+      case WAIT_OBJECT_0 + 3:
+      {
+        if (!priv->running || !priv->ctx || !priv->monitor_timer_armed)
+          break;
+
+        UINT32 dummy;
+        auto hr = priv->ctx->client->GetCurrentPadding (&dummy);
+        if (hr == AUDCLNT_E_DEVICE_INVALIDATED && !priv->ctx->error_posted) {
+          priv->ctx->error_posted = true;
+          gst_wasapi2_rbuf_post_io_error (self, AUDCLNT_E_DEVICE_INVALIDATED,
+              priv->endpoint_class == GST_WASAPI2_ENDPOINT_CLASS_RENDER);
+          gst_wasapi2_rbuf_start_fallback_timer (self);
+        }
+
+        break;
+      }
+      case WAIT_OBJECT_0 + 4:
         /* Wakeup event for event processing */
         break;
       default:
@@ -1861,30 +2111,41 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
             if (priv->opened) {
               GST_DEBUG_OBJECT (self, "Updating device");
 
-              priv->ctx = ucmd->ctx;
-              waitables[0] = priv->ctx->render_event;
-              waitables[1] = priv->ctx->capture_event;
+              gst_wasapi2_rbuf_stop_fallback_timer (self);
 
-              if (priv->mute)
-                priv->ctx->SetVolume (0);
-              else
-                priv->ctx->SetVolume (priv->volume);
+              priv->ctx = ucmd->ctx;
+
+              if (priv->ctx) {
+                waitables[0] = priv->ctx->render_event;
+                waitables[1] = priv->ctx->capture_event;
+
+                if (priv->mute)
+                  priv->ctx->SetVolume (0);
+                else
+                  priv->ctx->SetVolume (priv->volume);
+              } else {
+                waitables[0] = dummy_render;
+                waitables[1] = dummy_capture;
+
+                gst_wasapi2_rbuf_post_open_error (self,
+                    ucmd->device_id.c_str ());
+                if (!priv->configured_allow_dummy) {
+                  SetEvent (cmd->event_handle);
+                  break;
+                }
+              }
 
               if (priv->running) {
-                auto hr = priv->ctx->Start ();
-                if (gst_wasapi2_result (hr)) {
-                  priv->is_first = true;
-                  priv->write_frame_offset = 0;
-                  priv->expected_position = 0;
-                } else {
-                  gst_wasapi2_rbuf_post_open_error (self);
-                }
+                priv->running = false;
+                gst_wasapi2_rbuf_process_start (self, FALSE);
               }
             }
             SetEvent (cmd->event_handle);
             break;
           }
           case CommandType::Open:
+            priv->configured_allow_dummy = priv->allow_dummy;
+            ClearMixFormat (&priv->mix_format);
             priv->ctx = gst_wasapi2_rbuf_create_ctx (self);
 
             if (priv->ctx) {
@@ -1898,14 +2159,27 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
                 priv->ctx->SetVolume (priv->volume);
 
               priv->opened = true;
-              ClearMixFormat (&priv->mix_format);
               priv->mix_format = copy_wave_format (priv->ctx->mix_format);
               cmd->hr = S_OK;
             } else {
               gst_clear_caps (&priv->caps);
               waitables[0] = dummy_render;
               waitables[1] = dummy_capture;
-              cmd->hr = E_FAIL;
+              gst_wasapi2_rbuf_post_open_error (self, priv->device_id.c_str ());
+
+              if (priv->configured_allow_dummy) {
+                priv->mix_format = gst_wasapi2_get_default_mix_format ();
+
+                auto scaps = gst_static_caps_get (&template_caps);
+                gst_wasapi2_util_parse_waveformatex (priv->mix_format,
+                    scaps, &priv->caps, nullptr);
+                gst_caps_unref (scaps);
+                priv->opened = true;
+
+                cmd->hr = S_OK;
+              } else {
+                cmd->hr = E_FAIL;
+              }
             }
             SetEvent (cmd->event_handle);
             break;
@@ -1918,22 +2192,58 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
             SetEvent (cmd->event_handle);
             priv->opened = false;
             ClearMixFormat (&priv->mix_format);
+            gst_wasapi2_rbuf_stop_fallback_timer (self);
             break;
           case CommandType::Acquire:
           {
             auto acquire_cmd =
                 std::dynamic_pointer_cast < CommandAcquire > (cmd);
-            cmd->hr = gst_wasapi2_rbuf_process_acquire (self,
-                acquire_cmd->spec);
+
+            if (!priv->ctx) {
+              priv->ctx = gst_wasapi2_rbuf_create_ctx (self);
+              if (!priv->ctx) {
+                GST_WARNING_OBJECT (self, "No context configured");
+                gst_wasapi2_rbuf_post_open_error (self,
+                    priv->device_id.c_str ());
+                if (!priv->configured_allow_dummy) {
+                  cmd->hr = E_FAIL;
+                  SetEvent (cmd->event_handle);
+                  break;
+                }
+              }
+            }
+
+            priv->opened = true;
+            if (priv->ctx) {
+              waitables[0] = priv->ctx->render_event;
+              waitables[1] = priv->ctx->capture_event;
+              gst_caps_replace (&priv->caps, priv->ctx->caps);
+
+              if (priv->mute)
+                priv->ctx->SetVolume (0);
+              else
+                priv->ctx->SetVolume (priv->volume);
+
+              ClearMixFormat (&priv->mix_format);
+              priv->mix_format = copy_wave_format (priv->ctx->mix_format);
+            } else {
+              waitables[0] = dummy_render;
+              waitables[1] = dummy_capture;
+            }
+
+            gst_wasapi2_rbuf_process_acquire (self, acquire_cmd->spec);
+
+            cmd->hr = S_OK;
             SetEvent (cmd->event_handle);
             break;
           }
           case CommandType::Release:
             cmd->hr = gst_wasapi2_rbuf_process_release (self);
+            gst_wasapi2_rbuf_stop_fallback_timer (self);
             SetEvent (cmd->event_handle);
             break;
           case CommandType::Start:
-            cmd->hr = gst_wasapi2_rbuf_process_start (self);
+            cmd->hr = gst_wasapi2_rbuf_process_start (self, TRUE);
             SetEvent (cmd->event_handle);
             break;
           case CommandType::Stop:
@@ -1982,6 +2292,12 @@ gst_wasapi2_rbuf_loop_thread (GstWasapi2Rbuf * self)
   CloseHandle (dummy_render);
   CloseHandle (dummy_capture);
 
+  CancelWaitableTimer (priv->monitor_timer);
+  CloseHandle (priv->monitor_timer);
+
+  CancelWaitableTimer (priv->fallback_timer);
+  CloseHandle (priv->fallback_timer);
+
   return nullptr;
 }
 
@@ -2008,12 +2324,13 @@ gst_wasapi2_rbuf_delay (GstAudioRingBuffer * buf)
 }
 
 GstWasapi2Rbuf *
-gst_wasapi2_rbuf_new (gpointer parent)
+gst_wasapi2_rbuf_new (gpointer parent, GstWasapi2RbufCallback callback)
 {
   auto self = (GstWasapi2Rbuf *) g_object_new (GST_TYPE_WASAPI2_RBUF, nullptr);
   gst_object_ref_sink (self);
 
   auto priv = self->priv;
+  priv->invalidated_cb = callback;
   g_weak_ref_set (&priv->parent, parent);
   priv->thread = g_thread_new ("GstWasapi2Rbuf",
       (GThreadFunc) gst_wasapi2_rbuf_loop_thread, self);
@@ -2096,4 +2413,12 @@ gst_wasapi2_rbuf_set_device_mute_monitoring (GstWasapi2Rbuf * rbuf,
   auto priv = rbuf->priv;
 
   priv->monitor_device_mute.store (value, std::memory_order_release);
+}
+
+void
+gst_wasapi2_rbuf_set_continue_on_error (GstWasapi2Rbuf * rbuf, gboolean value)
+{
+  auto priv = rbuf->priv;
+
+  priv->allow_dummy = value;
 }
