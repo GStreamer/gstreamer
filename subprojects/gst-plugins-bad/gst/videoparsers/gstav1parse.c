@@ -145,6 +145,18 @@ struct _GstAV1Parse
   GstClockTime buffer_pts;
   GstClockTime buffer_dts;
   GstClockTime buffer_duration;
+
+  GstVideoMasteringDisplayInfo mastering_display_info;
+  guint mastering_display_info_state;
+
+  GstVideoContentLightLevel content_light_level;
+  guint content_light_level_state;
+};
+
+enum
+{
+  GST_AV1_PARSE_OBU_EXPIRED = 0,
+  GST_AV1_PARSE_OBU_PARSED = 1,
 };
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -342,6 +354,10 @@ gst_av1_parse_reset (GstAV1Parse * self)
   gst_adapter_clear (self->cache_out);
   gst_adapter_clear (self->frame_cache);
   gst_av1_parse_reset_tu_timestamp (self);
+  gst_video_mastering_display_info_init (&self->mastering_display_info);
+  self->mastering_display_info_state = GST_AV1_PARSE_OBU_EXPIRED;
+  gst_video_content_light_level_init (&self->content_light_level);
+  self->content_light_level_state = GST_AV1_PARSE_OBU_EXPIRED;
 }
 
 static void
@@ -745,6 +761,8 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
   const gchar *profile = NULL;
   const gchar *level = NULL;
   const gchar *tier = NULL;
+  const gchar *mdi_str = NULL;
+  const gchar *cll_str = NULL;
 
   if (G_UNLIKELY (!gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (self))))
     self->update_caps = TRUE;
@@ -861,6 +879,28 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
       GST_WARNING_OBJECT (self, "Invalid max level idx %d",
           self->max_seq_level_idx);
     }
+  }
+
+  if (s)
+    mdi_str = gst_structure_get_string (s, "mastering-display-info");
+  if (mdi_str) {
+    gst_caps_set_simple (caps, "mastering-display-info", G_TYPE_STRING,
+        mdi_str, NULL);
+  } else if (self->mastering_display_info_state != GST_AV1_PARSE_OBU_EXPIRED &&
+      !gst_video_mastering_display_info_add_to_caps
+      (&self->mastering_display_info, final_caps)) {
+    GST_WARNING_OBJECT (self, "Couldn't set mastering display info to caps");
+  }
+
+  if (s)
+    cll_str = gst_structure_get_string (s, "content-light-level");
+  if (mdi_str) {
+    gst_caps_set_simple (final_caps, "content-light-level", G_TYPE_STRING,
+        cll_str, NULL);
+  } else if (self->content_light_level_state != GST_AV1_PARSE_OBU_EXPIRED &&
+      !gst_video_content_light_level_add_to_caps
+      (&self->content_light_level, final_caps)) {
+    GST_WARNING_OBJECT (self, "Couldn't set content light level to caps");
   }
 
   src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (self));
@@ -1529,6 +1569,27 @@ new_tu:
   return ret;
 }
 
+static guint64
+fixed_scale (guint in, guint fracbits, guint scale, guint max_bits)
+{
+  guint fracmax = 1 << fracbits;
+  guint fracmask = fracmax - 1;
+  guint whole;
+  guint64 out;
+
+  out = in & fracmask;
+  out = gst_util_uint64_scale_int (scale, out, fracmask);
+  whole = in >> fracbits;
+  out += scale * whole;
+
+  if (max_bits == 16)
+    out = MIN (out, G_MAXUINT16);
+  else if (max_bits == 32)
+    out = MIN (out, G_MAXUINT32);
+
+  return out;
+}
+
 /* frame_complete will be set true if it is the frame edge. */
 static GstAV1ParserResult
 gst_av1_parse_handle_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
@@ -1683,6 +1744,67 @@ gst_av1_parse_handle_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
     if (tg->tg_end == tg->num_tiles - 1) {
       *frame_complete = TRUE;
       self->within_one_frame = FALSE;
+    }
+  }
+
+  if (obu->obu_type == GST_AV1_OBU_METADATA) {
+    switch (metadata.metadata_type) {
+      case GST_AV1_METADATA_TYPE_HDR_CLL:
+      {
+        GstVideoContentLightLevel new_cll;
+
+        new_cll.max_content_light_level = metadata.hdr_cll.max_cll;
+        new_cll.max_frame_average_light_level = metadata.hdr_cll.max_fall;
+
+        if (self->content_light_level_state == GST_AV1_PARSE_OBU_EXPIRED) {
+          self->update_caps = TRUE;
+        } else if (new_cll.max_content_light_level !=
+            self->content_light_level.max_content_light_level ||
+            new_cll.max_frame_average_light_level !=
+            self->content_light_level.max_frame_average_light_level) {
+          self->update_caps = TRUE;
+        }
+
+        self->content_light_level = new_cll;
+        self->content_light_level_state = GST_AV1_PARSE_OBU_PARSED;
+        break;
+      }
+      case GST_AV1_METADATA_TYPE_HDR_MDCV:
+      {
+        GstVideoMasteringDisplayInfo new_minfo;
+        GstAV1MetadataHdrMdcv *mdcv = &metadata.hdr_mdcv;
+        gint i;
+
+        for (i = 0; i < 3; i++) {
+          new_minfo.display_primaries[i].x =
+              fixed_scale (mdcv->primary_chromaticity_x[i], 16, 50000, 16);
+
+          new_minfo.display_primaries[i].y =
+              fixed_scale (mdcv->primary_chromaticity_y[i], 16, 50000, 16);
+        }
+
+        new_minfo.white_point.x =
+            fixed_scale (mdcv->white_point_chromaticity_x, 16, 50000, 16);
+        new_minfo.white_point.y =
+            fixed_scale (mdcv->white_point_chromaticity_y, 16, 50000, 16);
+        new_minfo.max_display_mastering_luminance =
+            fixed_scale (mdcv->luminance_max, 8, 10000, 32);
+        new_minfo.min_display_mastering_luminance =
+            fixed_scale (mdcv->luminance_min, 14, 10000, 32);
+
+        if (self->mastering_display_info_state == GST_AV1_PARSE_OBU_EXPIRED) {
+          self->update_caps = TRUE;
+        } else if (!gst_video_mastering_display_info_is_equal
+            (&self->mastering_display_info, &new_minfo)) {
+          self->update_caps = TRUE;
+        }
+
+        self->mastering_display_info = new_minfo;
+        self->mastering_display_info_state = GST_AV1_PARSE_OBU_PARSED;
+        break;
+      }
+      default:
+        break;
     }
   }
 
