@@ -795,7 +795,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
         goto unlock_error;
       }
 
-      if (!_copy_frames (&raw->in_info, inbuf, *outbuf)) {
+      if (!_copy_frames (&raw->in_info, inbuf, in_vk_copy)) {
         GST_ERROR_OBJECT (raw->upload, "Failed to copy to Vulkan buffer");
         goto unlock_error;
       }
